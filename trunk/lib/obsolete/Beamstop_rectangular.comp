@@ -1,8 +1,7 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package.
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Beamstop_rectangular component
+*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * Component: Beamstop_rectangular
 *
@@ -10,8 +9,8 @@
 *
 * Written by: Kristian Nielsen
 * Date: January 2000
-* Origin: McStas release
-* Version: $Revision: 1.2 $
+* Origin: McStas 1.4.2
+* Version: $Revision: 1.3 $
 *
 * Rectangular beam stop.
 *
@@ -34,6 +33,7 @@ DEFINE COMPONENT Beamstop_rectangular
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 TRACE
 %{
     PROP_Z0;
