@@ -3983,7 +3983,7 @@ B.1.1 Source at
 * Written by: KL
 * Modified by: KL, KN, October 5, 1998
 * Date: October 30, 1997
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Neutron source with flat energy spectrum and arbitrary flux
@@ -4066,7 +4066,7 @@ B.1.3 Source ux lambda
 * %I
 * Written by: KN
 * Date: 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 * Modified by: KN, 1998 from Source_flat.comp
 *
@@ -4151,7 +4151,7 @@ B.1.4 Source div
 * %I
 * Written by: KL
 * Date: November 20, 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Neutron source with Gaussian divergence
@@ -4230,7 +4230,7 @@ B.1.5 Moderator
 * %I
 * Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * A simple pulsed source for time-of-flight.
@@ -4317,7 +4317,7 @@ B.1.6 Source adapt
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Neutron source with adaptive importance sampling
@@ -4543,7 +4543,7 @@ B.2.1 Arm
 *
 * Written by: KL, KN
 * Date: September 1997
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Arm/optical bench
@@ -4587,7 +4587,7 @@ B.2.2 Slit
 * %I
 * Written by: KL, HMR
 * Date: June 16, 1997
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Rectangular slit.
@@ -4649,7 +4649,7 @@ B.2.6 Soller
 * %I
 * Written by: KN
 * Date: August 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * A simple analytical Soller collimator.
@@ -4734,7 +4734,7 @@ B.2.7 Filter
 * %I
 * Written by: KL, KN
 * Date: Sept. 14 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * A simple neutron filter.
@@ -4822,7 +4822,7 @@ B.3.3 Guide
 * %I
 * Written by: KN
 * Date: September 2 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 * Modified by: KL, October 6, 1998
 *
@@ -4998,7 +4998,7 @@ B.3.4 Channeled Guide
 * %I
 * Written by: KN
 * Date: 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Neutron guide with channels (bender section).
@@ -5234,7 +5234,7 @@ B.4.1 V selector.comp
 * %I
 * Written by: KL
 * Date: Nov 25, 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 * Modified by: KL, Jan 22, 1999
 *
@@ -5365,7 +5365,7 @@ B.4.2 Chopper.comp
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Disk chopper.
@@ -5429,7 +5429,7 @@ B.5.1 Monitor
 * %I
 * Written by: KL
 * Date: October 4, 1997
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Simple single detector/monitor.
@@ -5508,7 +5508,7 @@ B.5.3 PSD monitor
 * %I
 * Written by: KL
 * Date: Feb 3, 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Position-sensitive monitor.
@@ -5606,7 +5606,7 @@ B.5.4 PSD monitor 4PI
 * %I
 * Written by: KL and KN
 * Date: April 17, 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Spherical position-sensitive detector.
@@ -5718,7 +5718,7 @@ B.5.6 TOF monitor
 * %I
 * Written by: KN, M. Hagan
 * Date: August 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 * Modified by: KL, October 7, 1998
 *
@@ -5816,7 +5816,7 @@ B.5.7 E monitor
 * %I
 * Written by: KN,KL
 * Date: April 20, 1998
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 * Modified by: KL, Octorber 7, 1998
 *
@@ -5918,7 +5918,7 @@ B.5.13 Res monitor
 * %I
 * Written by: KN
 * Date: 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Monitor for resolution calculations
@@ -6016,7 +6016,7 @@ B.5.14 Adapt check
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Optimization specifier for the Source_adapt component.
@@ -6076,7 +6076,7 @@ B.6.1 Mosaic simple
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Mosaic crystal, possibly off-cut.
@@ -6285,7 +6285,7 @@ B.6.3 Single crystal
 * %I
 * Written by: KN
 * Date: December 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Mosaic single crystal with multiple scattering vectors.
@@ -6943,7 +6943,7 @@ B.7.2 V sample
 * %I
 * Written by: KL, KN
 * Date: 15.4.98
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Vanadium sample.
@@ -7079,7 +7079,7 @@ B.7.3 Powder1
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 *
@@ -7209,7 +7209,7 @@ B.8.1 Res sample
 * %I
 * Written by: KN
 * Date: 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Sample for resolution function calculation.

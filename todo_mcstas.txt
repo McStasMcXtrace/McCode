@@ -78,6 +78,7 @@ Runtime:
 + save monitor data in different formats: 
     McStas ascii, NeXus XML, HTML, Scilab
     binary float, binary double
+  for XML, recommand http://gxmlviewer.sourceforge.net/
 - Retrieve old monitor data, read from file by Virtual_input ->
   mcstas_r. not so easy -> NeXus -> runtime
   utility to identify which file is the right one ! read header for all, 
@@ -128,7 +129,6 @@ Components:
   number of linear guides.
 - Filter_powder.comp, Single_crystal.comp : use Table_Read, extend_list  
 - Source_Optimizer to be tested 
-- Use Read_Table-lib for Single_crystal
 
 - $Log: not supported by cvs2svn $ - cvs revision no, etc. for both McStas kernel / lib,
   automated using cvs?. Origin indicates research institution,
@@ -233,22 +233,3 @@ Documentation:
 
 Community related:
 
-
-
-MCSTAS=/home/farhi/local/mcstas/mcstas-1.6.3/lib    
-
-deff('p=mcplot(d,p)',['S=size(d.data);','if max(S),','xbasc(p);','if min(S)==1,l=d.xlimits+'' 0 0''; else l=d.xylimits; end','execstr(''l=[''+l+'']''); f=round(log10(max(d.data))); d.data=d.data/10^f;','x=linspace(l(1),l(2),S(1)); y=linspace(l(3),l(4),S(2));','if min(S)==1, plot(x,y,d.data);','else plot3d1(x,y,d.data); end','xtitle([d.title+'' [*10^''+string(f)+'']''],d.xlabel,d.ylabel);','xname(d.filename+'':''+d.title);p=p+1;end']);
-
-c=[linspace(0,1,15), ones(1,15), linspace(1,0,15)];
-c1=[(1:19)*0,c ];
-c2=[(1:8)*0,c,(1:11)*0];
-c3=[c(6:$), (1:24)*0];
-jet=[c1' c2' c3'];
-xset('colormap',jet)
-
-
-Windows compile:
-on Unix machine, create lex/bison files (*.tab.c) by ./configure; make
-mcstas-1.6.4 ok if HAVE_STRCASECMP defined
-mcstas.exe works ok
-segv at exec on built instruments when calling output routines (mcfile_*)

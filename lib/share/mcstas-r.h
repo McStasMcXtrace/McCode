@@ -17,7 +17,7 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.49 2003-01-23 10:57:50 pkwi Exp $
+* $Id: mcstas-r.h,v 1.50 2003-02-11 12:28:46 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.5 2002/10/19 22:46:21 ef
@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.49 $"
+#define MCSTAS_R_H "$Revision: 1.50 $"
 
 #include <math.h>
 #include <string.h>
@@ -628,8 +628,8 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "t=[t1,'  '+d.variables+'=['+d.values+']','  '+d.signal,'  '+d.statistics]\n"
       "print,t\n"
       "if strpos(d.type,'0d') ge 0 then return,d\n"
-      "d.xlabel=strjoin(strsplit(d.xlabel,'/\\;*?$!~<>()[]{}%%&.,',/extract),'_')\n"
-      "d.ylabel=strjoin(strsplit(d.ylabel,'/\\;*?$!~<>()[]{}%%&.,',/extract),'_')\n"
+      "d.xlabel=strjoin(strsplit(d.xlabel,'`!\"£$%^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
+      "d.ylabel=strjoin(strsplit(d.ylabel,'`!\"£$%^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
       "stv,d,'x',l(0)+indgen(S(0))*(l(1)-l(0))/S(0)\n"
       "if strpos(d.type,'2d') ge 0 then begin\n"
       "  name={DATA:d.func,IX:d.xlabel,IY:d.ylabel}\n"

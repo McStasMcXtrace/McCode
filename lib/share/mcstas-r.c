@@ -18,9 +18,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.50 2003-01-23 10:57:50 pkwi Exp $
+* $Id: mcstas-r.c,v 1.51 2003-02-11 12:28:46 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.50  2003/02/06 14:25:05  farhi
+* Made --no-output-files work again and 1D McStas data 4 columns again
+*
+* : ----------------------------------------------------------------------
+*
 * Revision 1.7 2002/10/19 22:46:21 ef
 *        gravitation for all with -g. Various output formats.
 *
@@ -2023,6 +2028,7 @@ mcsiminfo_init(FILE *f)
 static void
 mcsiminfo_close(void)
 {
+  if (mcdisable_output_files) return;
   if(mcsiminfo_file)
   {
     int  ismcstas;
@@ -2089,7 +2095,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   
   isdata_present=((isdata==1 && p1) || (isdata==2 && p2) || (isdata==0 && p0));
   
-  is1d = (!y1 && y1 == y2 && strstr(format.Name,"McStas"));
+  is1d = (y1 == x1 && y2 == x2 && strstr(format.Name,"McStas"));
   mcvalid_name(valid_xlabel, xlabel, 64);
   mcvalid_name(valid_ylabel, ylabel, 64);
   mcvalid_name(valid_zlabel, zlabel, 64);
@@ -2193,7 +2199,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     isIDL    = (strstr(format.Name, "IDL") != NULL);
     isPython = (strstr(format.Name, "Python") != NULL);
     if (isIDL) strcpy(eol_char,"$\n"); else strcpy(eol_char,"\n");
-      
+         
     for(j = 0; j < n*p; j++)  /* loop on rows(y) */
     {
       if(datafile && !isBinary)
@@ -2425,25 +2431,31 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     istransposed = 1; 
     tmp1=x1; tmp2=x2;
     x1=y1; x2=y2; y1=tmp1; y2=tmp2;
-    lab = xlabel; xlabel=ylabel; ylabel=lab;
-    lab = xvar; xvar=yvar; yvar=lab;
+    if (x1 != y1 || x2 != y2) { /* do not swap for 1D */
+      lab = xlabel; xlabel=ylabel; ylabel=lab;
+      lab = xvar; xvar=yvar; yvar=lab;
+    }
     i=m; m=abs(n); n=abs(i); p=abs(p); 
   }
 
   if (!strstr(format.Name,"partial")) local_f = mcsiminfo_file;
   if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
   
-  mcfile_section(local_f, format, "begin", pre, parent, "component", simname, 3);
-  mcfile_section(local_f, format, "begin", pre, filename, "data", parent, 4);
-  mcfile_data(local_f, format, 
-    pre, parent, 
-    p0, p1, p2, m, n, p,
-    xlabel, ylabel, zlabel, title,
-    xvar, yvar, zvar, 
-    x1, x2, y1, y2, z1, z2, filename, istransposed);
+  if (!mcdisable_output_files)
+  {
   
-  mcfile_section(local_f, format, "end", pre, filename, "data", parent, 4);
-  mcfile_section(local_f, format, "end", pre, parent, "component", simname, 3);
+    mcfile_section(local_f, format, "begin", pre, parent, "component", simname, 3);
+    mcfile_section(local_f, format, "begin", pre, filename, "data", parent, 4);
+    mcfile_data(local_f, format, 
+      pre, parent, 
+      p0, p1, p2, m, n, p,
+      xlabel, ylabel, zlabel, title,
+      xvar, yvar, zvar, 
+      x1, x2, y1, y2, z1, z2, filename, istransposed);
+
+    mcfile_section(local_f, format, "end", pre, filename, "data", parent, 4);
+    mcfile_section(local_f, format, "end", pre, parent, "component", simname, 3);
+  }
 
   if (local_f)
   {

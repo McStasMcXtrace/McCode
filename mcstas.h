@@ -17,7 +17,7 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.36 2003-01-23 10:57:50 pkwi Exp $
+* $Id: mcstas.h,v 1.37 2003-02-11 12:28:45 farhi Exp $
 *
 *******************************************************************************/
 

@@ -206,7 +206,11 @@ sub q_hist2 {
     ($ymin,$ymax) = minmax($y);
     $dx=($xmax-$xmin)/$npts;
     $dy=($ymax-$ymin)/$npts;
-    my $tr = pdl [ $xmin + $dx/2, $dx, 0, $ymin + $dy/2, 0, $dy ];
+    my $tr;
+    if (defined(&label_axes)) 
+    { $tr = pdl [$xmin + $dx/2, $dx, 0, $ymin + $dy/2, 0, $dy]; }
+    else
+    { $tr = cat $xmin + $dx/2, $dx, pdl(0), $ymin + $dy/2, pdl(0), $dy; }
     $hxy = histogram2d($x, $y, $dx, $xmin, $npts, $dy, $ymin, $npts);
     my ($min, $max) = (min($hxy), max($hxy));
     if ($min == $max) {
@@ -244,7 +248,7 @@ sub q_hist2 {
       pgscr(0, $r0, $g0, $b0);
       pgscr(1, $r1, $g1, $b1);
     }
-    label_axes($xl, $yl,"");
+    pglab($xl, $yl,"");
 }
 
 sub matout {

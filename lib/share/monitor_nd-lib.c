@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.7 2003-01-21 08:55:33 pkwi Exp $
+* $Id: monitor_nd-lib.c,v 1.8 2003-02-11 12:28:46 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/28 11:39:00 ef
@@ -37,11 +37,17 @@
 /* this routine is used to parse options */ 
 /* ========================================================================= */
   
-void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_zthick, mc_mn_xmin, mc_mn_xmax, mc_mn_ymin, mc_mn_ymax, mc_mn_zmin, mc_mn_zmax)
-  MonitornD_Defines_type *mc_mn_DEFS;
-  MonitornD_Variables_type *mc_mn_Vars;
-  MCNUM mc_mn_xwidth, mc_mn_yheight, mc_mn_zthick;
-  MCNUM mc_mn_xmin, mc_mn_xmax, mc_mn_ymin, mc_mn_ymax, mc_mn_zmin, mc_mn_zmax;
+void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
+  MonitornD_Variables_type *mc_mn_Vars, 
+  MCNUM mc_mn_xwidth,
+  MCNUM mc_mn_yheight, 
+  MCNUM mc_mn_zthick, 
+  MCNUM mc_mn_xmin, 
+  MCNUM mc_mn_xmax, 
+  MCNUM mc_mn_ymin, 
+  MCNUM mc_mn_ymax, 
+  MCNUM mc_mn_zmin, 
+  MCNUM mc_mn_zmax)
   {
     long mc_mn_carg = 1;
     char *mc_mn_option_copy, *mc_mn_token;
@@ -175,7 +181,7 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     mc_mn_option_copy = (char*)malloc(strlen(mc_mn_Vars->option)+1);
     if (mc_mn_option_copy == NULL)
     {
-      fprintf(stderr,"Monitor_nD: %s cannot allocate mc_mn_option_copy (%i). Fatal.\n", mc_mn_Vars->compcurname, strlen(mc_mn_Vars->option));
+      fprintf(stderr,"Monitor_nD: %s cannot allocate mc_mn_option_copy (%li). Fatal.\n", mc_mn_Vars->compcurname, strlen(mc_mn_Vars->option));
       exit(-1);
     }
 
@@ -601,10 +607,7 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
 /* this routine is used to monitor one propagating neutron */ 
 /* ========================================================================= */
  
-  
-double Monitor_nD_Trace(mc_mn_DEFS, mc_mn_Vars)
-  MonitornD_Defines_type *mc_mn_DEFS;
-  MonitornD_Variables_type *mc_mn_Vars;
+double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_type *mc_mn_Vars)
 {
 
   double  mc_mn_XY=0;
@@ -766,7 +769,7 @@ double Monitor_nD_Trace(mc_mn_DEFS, mc_mn_Vars)
 
         if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_ABS) mc_mn_XY=fabs(mc_mn_XY);
 
-        if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_LOG)
+        if (mc_mn_i && (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_LOG)) /* not for the flux */
         {  if (mc_mn_XY > 0) mc_mn_XY = log(mc_mn_XY)/log(10);
            else mc_mn_XY = -100; }
 
@@ -1073,7 +1076,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
               mc_mn_p1m[mc_mn_j] = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
               mc_mn_p2m[mc_mn_j] = mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j];
               if (mc_mn_Vars->Flag_signal != mc_mn_DEFS->COORD_P && mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j] > 0)
-              {
+              { /* normalize mean signal to the number of events */
                 mc_mn_p1m[mc_mn_j] /= mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
                 mc_mn_p2m[mc_mn_j] /= mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j]*mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
               }
@@ -1200,7 +1203,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
 /* this routine is used to free memory */ 
 /* ========================================================================= */
   
-  void Monitor_nD_Finally(MonitornD_Defines_type *mc_mn_DEFS,
+void Monitor_nD_Finally(MonitornD_Defines_type *mc_mn_DEFS,
   MonitornD_Variables_type *mc_mn_Vars)
   {
     int mc_mn_i;
@@ -1246,7 +1249,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
 /* this routine is used to display component */ 
 /* ========================================================================= */
   
-  void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,
+void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,
   MonitornD_Variables_type *mc_mn_Vars)
   {
     double mc_mn_radius, mc_mn_h;

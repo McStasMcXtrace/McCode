@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.7 2003-01-21 08:55:33 pkwi Exp $
+* $Id: read_table-lib.c,v 1.8 2003-02-11 12:28:46 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.8  2003/02/06 14:14:41  farhi
+*	Corrected MC_SYS_DIR into MCSTAS definition of default lib location
+*	
 * Revision 1.2 2002/12/19 12:48:07 ef
 *	Added binary import. Fixed Rebin. Added Stat.
 *
@@ -81,7 +84,7 @@
       if (!strchr(mc_rt_File, MC_PATHSEP_C))
       {
         if (getenv("MCSTAS")) strcpy(mc_rt_dir, getenv("MCSTAS"));
-        else strcpy(mc_rt_dir, MC_SYS_DIR);
+        else strcpy(mc_rt_dir, MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
         mc_rt_hfile = fopen(mc_rt_path, "r");
       }
@@ -132,7 +135,7 @@
       if (!strchr(mc_rt_File, MC_PATHSEP_C))
       {
         if (getenv("MCSTAS")) strcpy(mc_rt_dir, getenv("MCSTAS"));
-        else strcpy(mc_rt_dir, MC_SYS_DIR);
+        else strcpy(mc_rt_dir, MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
         mc_rt_hfile = fopen(mc_rt_path, "r");
       }
