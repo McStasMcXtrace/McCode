@@ -1,19 +1,19 @@
 /*******************************************************************************
 *
 * McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*         Maintained by Per-Olof Astrand and Kim Lefmann,
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
 * Written by: KL
 * Date: November 22 2000
-* Version: $Revision: 1.1 $
-* Origin: McStas release, component Guide
+* Version: $Revision: 1.2 $
+* Origin: McStas release
 * Modified by: KL, March 15, 2001
+* Modified by: POA, March 15, 2001; small changes of documentation
 *
 * Neutron guide with gravity.
-* NB! This is a temporary component to be abandoned when/if information about
-* gravity is included in the kernel.
+* To do: information about gravity should be included in the kernel.
 *
 * %D
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
