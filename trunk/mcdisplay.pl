@@ -5,6 +5,12 @@
 
 use PGPLOT;
 
+if($ENV{"MCSTAS"}) {
+    use lib $ENV{"MCSTAS"};
+} else {
+    use lib "/usr/local/lib/mcstas";
+}
+
 $magnification = 1;
 
 my (%transformations, @components);
