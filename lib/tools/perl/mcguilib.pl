@@ -625,8 +625,13 @@ sub comp_select_dialog {
     $bot_frame->pack(-side => "top", -fill => "both",
                      -ipady => 3, -ipadx => 3);
     my $selected;
+    my $chosen_cmp;
     my $select_cmd = sub {
-        my $cname = $sorted[$list->curselection()];
+	# On some platforms, e.g. RedHat 9,
+	# $list->curselection is not a scalar!
+	my @sel = $list->curselection();
+        my $cname = $sorted[$sel[0]];
+	$chosen_cmp = $cname;
         my $info = fetch_comp_info($cname, $cinfo);
         $name->configure(-text => "Name: $info->{'name'}");
         $loc->configure(-text => "Location: $cname");
@@ -659,7 +664,7 @@ sub comp_select_dialog {
     $dlg->grab;
     $dlg->waitVariable(\$selected);
     my $selected_comp = ($selected eq 'Ok' ?
-                         $sorted[$list->curselection()] :
+                         $chosen_cmp :
                          undef);
     $dlg->grabRelease;
     $dlg->destroy;
