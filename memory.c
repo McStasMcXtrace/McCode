@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: memory.c,v 1.7 1998-11-13 07:33:09 kn Exp $
+*	$Id: memory.c,v 1.8 1998-11-26 08:46:17 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.7  1998/11/13 07:33:09  kn
+*	Added str_quote() function.
+*
 *	Revision 1.6  1998/10/02 08:39:02  kn
 *	Fixed header comment.
 *
@@ -173,4 +176,54 @@ void
 str_free(char *string)
 {
   memfree(string);
+}
+
+
+struct Pool_header
+  {
+    List list;
+  };
+
+/*******************************************************************************
+* Create a pool in which to allocate memory that may be easily freed all at a
+* time by freeing the pool.
+*******************************************************************************/
+Pool
+pool_create(void)
+{
+  Pool p;
+
+  palloc(p);
+  p->list = list_create();
+  return p;
+}
+
+/*******************************************************************************
+* Deallocate a pool as well as all memory allocated within it.
+*******************************************************************************/
+void
+pool_free(Pool p)
+{
+  List_handle liter;
+  void *mem;
+  
+  liter = list_iterate(p->list);
+  while(mem = list_next(liter))
+  {
+    memfree(mem);
+  }
+  list_iterate_end(liter);
+  memfree(p);
+}
+
+
+/*******************************************************************************
+* Allocate memory in a pool.
+*******************************************************************************/
+void *
+pool_mem(Pool p, size_t size)
+{
+  void *m = mem(size);
+  list_add(p->list, m);
+  return m;
 }
