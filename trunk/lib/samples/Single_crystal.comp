@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: December 1999
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: McStas release
 *
 * Mosaic single crystal with multiple scattering vectors.
@@ -46,8 +46,9 @@
 *
 * Optional input parameters:
 *
-* p_transmit  : Monte Carlo probability for neutrons to be
-*               transmitted without any scattering [1]
+* p_transmit  : Monte Carlo probability for neutrons to be transmitted
+*               without any scattering. Used to improve statistics from
+*               weak reflections [1]
 * absorbtion  : Absorbtion cross-section per unit cell at 2200 m/s [barns]
 * incoherent  : Incoherent scattering cross-section per unit cell [barns]
 *
@@ -81,9 +82,9 @@
        the neutron weight.
 
   (5). Transmission in the first event is selected with the Monte
-       Carlo probability p_transmit, which will usually be set to
-       0. After the first event, transmission is selected with the
-       correct Monte Carlo probability.
+       Carlo probability p_transmit, which defaults to the actual
+       transmission probability. After the first event, transmission
+       is selected with the correct Monte Carlo probability.
 
   (6). Incoherent scattering is done simply by selecting a random
        direction for the outgoing wave vector kf.
@@ -111,7 +112,7 @@ DEFINITION PARAMETERS(reflections)
 SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d, mosaic = -1,
 		   mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
                    ax, ay, az, bx, by, bz, cx, cy, cz,
-                   p_transmit = 0, absorbtion = 0, incoherent = 0)
+                   p_transmit = -1, absorbtion = 0, incoherent = 0)
 OUTPUT PARAMETERS(hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -254,8 +255,9 @@ read_hkl_data(char *file, struct hkl_info *info)
       mos_D[2][2] = 1/((FWHM2RMS*MIN2RAD*mosaic_v)*(FWHM2RMS*MIN2RAD*mosaic_v));
       /* ToDo: This is the place to apply a rotation U to the mosaic Gaussian,
          by setting D := U^T D U. */
-      /* Now compute the 2D intersection Gauss between the 3D mosaic Gauss and
-         the plane spanned by b1 and b2. */
+      /* Now compute the 2D intersection Gauss (B^T D B) between the 3D mosaic
+         Gauss D and the plane spanned by b1 and b2 (matrix B). The matrix
+         (B^T D B) is 2x2 symmetric and positive definite.*/
       mos_a = mos_b = mos_c = 0;
       for(j1 = 0; j1 < 3; j1++) {
 	for(j2 = 0; j2 < 3; j2++) {
@@ -354,7 +356,7 @@ INITIALIZE
   hkl_info.cz = cz;
   /* Compute reciprocal lattice vectors. */
   vec_prod(tmp_x, tmp_y, tmp_z, bx, by, bz, cx, cy, cz);
-  hkl_info.V0 = scalar_prod(ax, ay, az, tmp_x, tmp_y, tmp_z);
+  hkl_info.V0 = fabs(scalar_prod(ax, ay, az, tmp_x, tmp_y, tmp_z));
   hkl_info.asx = 2*PI/hkl_info.V0*tmp_x;
   hkl_info.asy = 2*PI/hkl_info.V0*tmp_y;
   hkl_info.asz = 2*PI/hkl_info.V0*tmp_z;
@@ -542,7 +544,7 @@ TRACE
 
     /* (5). Transmission */
     p_trans = exp(-tot_xlen*l_full);
-    if(firstevent) {
+    if(firstevent && p_transmit >= 0) {
       mc_trans = p_transmit;
     } else {
       mc_trans = p_trans;
@@ -566,7 +568,12 @@ TRACE
                 = (1 - exp(-tot_xlen*l0))/tot_xlen
        l = -log(1 - tot_xlen*rand0max(P(l<l_full)))/tot_xlen
      */
-    l = -log(1 - rand0max((1 - exp(-tot_xlen*l_full))))/tot_xlen;
+    if(tot_xlen*l_full < 1e-6)
+      /* For very weak scattering, use simple uniform sampling of scattering
+	 point to avoid rounding errors. */
+      l = rand0max(l_full);
+    else
+      l = -log(1 - rand0max((1 - exp(-tot_xlen*l_full))))/tot_xlen;
     PROP_DT(l/v);
     
     /* (4). Account for the probability of absorbtion */
@@ -585,7 +592,8 @@ TRACE
       continue;                      /* Go for next scattering event */
     }
     /* 7. Coherent scattering. Select reciprocal lattice point. */
-if(coh_refl <= 0) ABSORB;
+    if(coh_refl <= 0)
+      ABSORB;
     r = rand0max(coh_refl);
     sum = 0;
     for(j = 0; j < tau_count; j++)
