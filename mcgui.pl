@@ -148,7 +148,11 @@ sub menu_edit_current {
     if($edit_control) {
         $edit_window->raise();
     } else {
-        setup_edit($main_window);
+	if ($MCSTAS::mcstas_config{'EDITOR'} eq 0) {
+	    setup_edit_1_7($main_window);
+	} else {
+	    setup_edit($main_window);
+	}
     }
 }
 
@@ -945,14 +949,18 @@ sub menu_choose_backend {
     # sub for selection of mcdisplay "backend". 
     # Default read from $MCSTAS::mcstas_config{'PLOTTER'}
     # PW 20030314
+    # Added entry for selection of internal editor
+    # PW 20040527
     my ($w) = @_;
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
+    my $editor = $MCSTAS::mcstas_config{'EDITOR'};
     my $ret;
     my $binary;
     my $output_file;
-    ($ret, $binary, $plotter) = backend_dialog($w, $inf_sim->{'Binary'},$plotter);
+    ($ret, $binary, $plotter,$editor) = backend_dialog($w, $inf_sim->{'Binary'},$plotter,$editor);
     $inf_sim->{'Binary'} = $binary;
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
+    $MCSTAS::mcstas_config{'EDITOR'} = $editor;
 }
 
 
@@ -1228,7 +1236,7 @@ sub setup_menu {
                       -command => sub {menu_plot_results($w);});
     $w->bind('<Alt-p>' => [\&menu_plot_results, $w]);
     $simmenu->separator;
-    $simmenu->command(-label => 'Choose backend (plotter)...',
+    $simmenu->command(-label => 'Configuration options',
                       -underline => 0,
                       -accelerator => 'Alt+C',
                       -command => sub {menu_choose_backend($w);});
@@ -1339,6 +1347,73 @@ sub Tk::CodeText::selectionModify {
 		}
 		$cw->tagAdd('sel', @ranges);
 	    }
+}
+
+sub setup_edit_1_7 {
+    # BEWARE: The code in this sub is from McStas 1.7, 
+    # added only for those users unable to use the CodeText
+    # based highlighting editor below. Other features are
+    # also missing.
+    my ($mw) = @_;
+    # Create the editor window.
+    my $w = $mw->Toplevel;
+    my $e;
+    # Create the editor menus.
+    my $menu = $w->Frame(-relief => 'raised', -borderwidth => 2);
+    $menu->pack(-fill => 'x');
+    my $filemenu = $menu->Menubutton(-text => 'File', -underline => 0);
+    $filemenu->command(-label => 'New instrument',
+		       -command => [\&menu_new, $w],
+		       -underline => 0);
+    $filemenu->command(-label => 'Save instrument',
+		       -accelerator => 'Alt+S',
+		       -command => [\&menu_save, $w],
+		       -underline => 0);
+    $w->bind('<Alt-s>' => [\&menu_save, $w]);
+    $filemenu->command(-label => 'Save instrument as ...',
+		       -underline => 16,
+		       -command => sub {menu_saveas($w)});
+    $filemenu->separator;
+    $filemenu->command(-label => 'Close',
+		       -underline => 0,
+		       -accelerator => 'Alt+C',
+		       -command => sub { editor_quit($w) } );
+    $w->bind('<Alt-c>' => sub { editor_quit($w) } );
+    $filemenu->pack(-side=>'left');
+    my $editmenu = $menu->Menubutton(-text => 'Edit', -underline => 0);
+    $editmenu->command(-label => 'Undo',
+		       -accelerator => 'Ctrl+Z',
+		       -command => [\&menu_undo, $w], -underline => 0);
+    $w->bind('<Control-z>' => [\&menu_undo, $w]);
+    $editmenu->separator;
+    $editmenu->command(-label => 'Cut',
+		       -accelerator => 'Ctrl+X',
+		       -command => sub { $e->clipboardCut(); },
+		       -underline => 0);
+    $editmenu->command(-label => 'Copy',
+		       -accelerator => 'Ctrl+C',
+		       -command => sub { $e->clipboardCopy(); },
+		       -underline => 1);
+    $editmenu->command(-label => 'Paste',
+		       -accelerator => 'Ctrl+V',
+		       -command => sub { $e->clipboardPaste(); },
+		       -underline => 0);
+    $editmenu->pack(-side=>'left');
+    my $insert_menu = $menu->Menubutton(-text => 'Insert', -underline => 0);
+    make_insert_menu($w, $insert_menu);
+
+    # Create the editor text widget.
+    $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
+		      -height => 24);
+    my $s = $w->Scrollbar(-command => [$e, 'yview']);
+    $e->configure(-yscrollcommand =>  [$s, 'set']);
+    $s->pack(-side => 'right', -fill => 'y');
+    $e->pack(-expand => 'yes', -fill => 'both');
+    $e->mark('set', 'insert', '0.0');
+    $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def; 
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
+    $edit_control = $e;
+    $edit_window = $w;
 }
 
 
