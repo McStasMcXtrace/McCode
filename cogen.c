@@ -16,7 +16,7 @@
 *
 * Code generation from instrument definition.
 *
-* $Id: cogen.c,v 1.31 2003-01-21 08:29:46 pkwi Exp $
+* $Id: cogen.c,v 1.32 2003-01-21 08:33:57 pkwi Exp $
 *
 *******************************************************************************/
 

@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.1 2003-01-21 08:29:48 pkwi Exp $
+* $Id: monitor_nd-lib.c,v 1.2 2003-01-21 08:33:59 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/28 11:39:00 ef
