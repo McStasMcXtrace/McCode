@@ -343,7 +343,7 @@ sub open_instr_def {
 sub menu_open {
     my ($w) = @_;
     return 0 unless(is_erase_ok($w));
-    my $file = $w->getOpenFile(-defaultextension => "instr",
+    my $file = $w->getOpenFile(-defaultextension => ".instr",
                                -title => "Select instrument file", -initialdir => "$ENV{'PWD'}");
     return 0 unless $file;
     open_instr_def($w, $file);
@@ -376,12 +376,12 @@ sub menu_saveas {
         } else {
             ($inidir, $inifile) = ("", $current_sim_def);
         }
-        $file = $w->getSaveFile(-defaultextension => "instr",
+        $file = $w->getSaveFile(-defaultextension => ".instr",
                                 -title => "Select instrument file name",
                                 -initialdir => $inidir,
                                 -initialfile => $inifile);
     } else {
-        $file = $w->getSaveFile(-defaultextension => "instr",
+        $file = $w->getSaveFile(-defaultextension => ".instr",
                                 -title => "Select instrument file name");
     }
     return 0 unless $file;
@@ -394,7 +394,7 @@ sub menu_saveas {
 sub menu_new {
     my ($w) = @_;
     return 0 unless(is_erase_ok($w));
-    my $file = $w->getSaveFile(-defaultextension => "instr",
+    my $file = $w->getSaveFile(-defaultextension => ".instr",
                                -title => "Select instrument file name");
     return 0 unless $file;
     $edit_control->delete("1.0", "end");
@@ -436,7 +436,7 @@ sub read_sim_data {
 
 sub load_sim_file {
     my ($w) = @_;
-    my $file = $w->getOpenFile(-defaultextension => "sim",
+    my $file = $w->getOpenFile(-defaultextension => ".sim",
                                -title => "Select simulation file", -initialdir => "$ENV{'PWD'}");
     if($file && -r $file) {
         $current_sim_file = $file ;
@@ -1076,7 +1076,7 @@ sub setup_menu {
                        -command => [\&menu_open, $w],
                        -underline => 0);
     $w->bind('<Alt-o>' => [\&menu_open, $w]);
-    $filemenu->command(-label => 'Edit current',
+    $filemenu->command(-label => 'Edit current/New',
                        -underline => 0,
                        -command => \&menu_edit_current);
     if($external_editor) {
@@ -1152,7 +1152,7 @@ sub setup_cmdwin {
                                -anchor => 'w',
                                -justify => 'left');
     $instr_lab->pack(-side => 'left');
-    my $instr_but = $f2->Button(-text => "Edit",
+    my $instr_but = $f2->Button(-text => "Edit/New",
                                 -command => \&menu_edit_current);
     $instr_but->pack(-side => "right", -padx => 1, -pady => 1);
     my $f3 = $w->Frame();
