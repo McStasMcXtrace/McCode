@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.65 2003-06-05 09:25:59 farhi Exp $
+* $Id: mcstas-r.c,v 1.66 2003-06-10 11:29:58 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.65  2003/06/05 09:25:59  farhi
+* restore header support in data files when --format option found
+*
 * Revision 1.64  2003/05/26 10:21:00  farhi
 * Correct core dump for instrument STRING parameters in 'string printer'
 *
@@ -3090,12 +3093,14 @@ mcparseoptions(int argc, char *argv[])
       mcgravitation = 1;
     else if(!strcmp("-g", argv[i]))
       mcgravitation = 1;
-    else if(!strncmp("--format=", argv[i], 9))
+    else if(!strncmp("--format=", argv[i], 9)) {
       mcascii_only = 0;
       mcuse_format(&argv[i][9]);
-    else if(!strcmp("--format", argv[i]) && (i + 1) < argc)
+    }
+    else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcascii_only = 0;
       mcuse_format(argv[++i]);
+    }
     else if(!strcmp("--no-output-files", argv[i]))  
       mcdisable_output_files = 1;
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
