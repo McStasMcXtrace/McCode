@@ -67,7 +67,12 @@ sub make_instr_file {
     }
 
     print $F <<INSTR_END;
-DEFINE INSTRUMENT $comp_name()
+DEFINE INSTRUMENT McStas_$comp_name()
+/*
+ * This file has been automatically generated using the mcstas2vitess tool.
+ * See http://mcstas.risoe.dk
+ * Component $comp_name converted into an instrument with Vitess I/O functions
+ */
 DECLARE
 %{
 /* Component parameters. */
@@ -207,7 +212,7 @@ my $compname = $compfile;
 $compname = $1 if $compname =~ /^(.*)\.(comp|cmp|com)$/;
 
 my $data = component_information($compfile);
-die "Failed to get information for component '$compfile'" 
+die "Failed to get information for component '$compfile'"
     unless defined($data);
 
 # Read the corresponding .vif file if available.
@@ -252,21 +257,22 @@ for $p (@{$data->{'inputpar'}}) {
         } while($let && $vifletters{$let});
         die "Too many component parameters!" unless $let;
     }
-    if($p =~ /(char\s*\*|string)\s+([a-zA-ZæøåÆØÅ0-9_]+)/i) 
+    if($p =~ /(char\s*\*|string)\s+([a-zA-ZæøåÆØÅ0-9_]+)/i)
       { $typ = 'string'; $p=$2; }
     $typ = 'double' unless $typ;
     push @param, [$p, $let, $typ];
 }
 
+print "mcstas2vitess: Converting McStas component ${compname} into Vitess Module 'McStas_${compname}'\n";
 # Output the .instr file.
 my $INSTR = new FileHandle;
-my $instr_name = "${compname}_VITESS.instr";
-my $c_name = "${compname}_VITESS.c";
+my $instr_name = "McStas_${compname}.instr";
+my $c_name = "McStas_${compname}.c";
 open($INSTR, ">$instr_name") ||
-    die "Could not open output instrument file '$instr_name'.";
+    die "Could not open output Vitess Module instrument file '$instr_name'.";
 make_instr_file($INSTR, \@param, $data);
 close($INSTR);
-print "Wrote instrument file '$instr_name'.\n";
+print "Wrote Vitess Module instrument file '$instr_name'.\n";
 
 my @mcstas_cmd = ("mcstas", "--no-main", "-o", $c_name, $instr_name);
 print join(" ", @mcstas_cmd), "\n";
@@ -277,7 +283,7 @@ if(system(@mcstas_cmd)) {
 }
 print "Wrote C file '$c_name'.\n";
 
-my $out_name = "${compname}_VITESS";
+my $out_name = "McStas_${compname}";
 my $cc = $ENV{'MCSTAS_CC'} || $MCSTAS::mcstas_config{CC};
 my $cflags = $ENV{'MCSTAS_CFLAGS'} || $MCSTAS::mcstas_config{CFLAGS};
 my $vitess_lib_name = "vitess-lib.c";
@@ -293,15 +299,16 @@ if(system(@cc_cmd)) {
     print STDERR "C compilation failed.\n";
     exit 1;
 }
-print "Wrote executable file '$out_name'.\n";
+print "Wrote executable Vitess Module file '$out_name'.\n";
 
 # Output the .tcl file for the VITESS gui.
 my $TCL = new FileHandle;
-my $tcl_name = "${compname}_VITESS.tcl";
+my $tcl_name = "McStas_${compname}.tcl";
 open($TCL, ">$tcl_name") ||
-    die "Could not open output Tcl file '$tcl_name'.";
+    die "Could not open output Vitess Module Tcl file '$tcl_name'.";
 make_tcl_file($TCL, \@param, $data);
 close($TCL);
-print "Wrote Tcl GUI file '$tcl_name'.\n";
+print "Wrote Vitess Module Tcl GUI file '$tcl_name'.\n";
+print "mcstas2vitess: Convertion has been performed\n";
 
 exit 0;
