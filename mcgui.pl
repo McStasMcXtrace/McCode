@@ -869,6 +869,7 @@ sub menu_run_simulation {
         my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;
+	$inf_sim=$newsi;
         return unless $success;
         my $ext;
         if ($plotter eq 0) {
