@@ -1,14 +1,18 @@
 /*******************************************************************************
 * Bison parser for instrument definition files.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: instrument.y
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.13 1998-10-01 11:46:35 kn Exp $
+*	$Id: instrument.y,v 1.14 1998-10-02 08:36:45 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.13  1998/10/01 11:46:35  kn
+*	Also abort compilation if there is a non-syntax error during parse.
+*	Added support for string expressions.
+*
 *	Revision 1.12  1998/10/01 08:11:07  kn
 *	Changed handling of command line options.
 *	Use search path for component definitions.
@@ -50,7 +54,7 @@
 *	copy of the name.
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 
@@ -83,7 +87,7 @@
   Coords_exp coords;		/* Coordinates for location or rotation. */
   List formals;			/* List of formal parameters. */
   Symtab actuals;		/* Values for formal parameters. */
-  struct {List def, set, state;} parms;	/* Parameter lists. */
+  struct {List def, set, out, state;} parms;	/* Parameter lists. */
   struct instr_def *instrument;	/* Instrument definition. */
   struct comp_inst *instance;	/* Component instance. */
   struct comp_place place;	/* Component place. */
@@ -103,6 +107,7 @@
 %token TOK_EXTERN	"EXTERN"
 %token TOK_INITIALIZE	"INITIALIZE"
 %token TOK_INSTRUMENT	"INSTRUMENT"
+%token TOK_OUTPUT	"OUTPUT"
 %token TOK_PARAMETERS	"PARAMETERS"
 %token TOK_RELATIVE	"RELATIVE"
 %token TOK_ROTATED	"ROTATED"
@@ -127,7 +132,7 @@
 %type <coords>  coords
 %type <exp> exp
 %type <actuals> actuallist actuals actuals1
-%type <formals> formallist formals formals1 def_par set_par state_par
+%type <formals> formallist formals formals1 def_par set_par out_par state_par
 %type <parms> parameters
 %type <place> place
 %type <ori> orientation
@@ -148,6 +153,7 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace final
 		    c->name = $3;
 		    c->def_par = $4.def;
 		    c->set_par = $4.set;
+		    c->out_par = $4.out;
 		    c->state_par = $4.state;
 		    c->decl_code = $5;
 		    c->init_code = $6;
@@ -159,11 +165,12 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace final
 		  }
 ;
 
-parameters:	  def_par set_par state_par
+parameters:	  def_par set_par out_par state_par
 		  {
 		    $$.def = $1;
 		    $$.set = $2;
-		    $$.state = $3;
+		    $$.out = $3;
+		    $$.state = $4;
 		  }
 ;
 
@@ -175,6 +182,16 @@ def_par:	  "DEFINITION" "PARAMETERS" formallist
 ;
 
 set_par:	  "SETTING" "PARAMETERS" formallist
+		  {
+		    $$ = $3;
+		  }
+;
+
+out_par:	  /* empty */
+		  {
+		    $$ = list_create();
+		  }
+		| "OUTPUT" "PARAMETERS" formallist
 		  {
 		    $$ = $3;
 		  }
