@@ -17,13 +17,24 @@
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions.
 *
+* This library may be used directly as an external library. It has no dependency
+*
 * Usage: within SHARE
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.8 2003-02-11 12:28:46 farhi Exp $
+* $Id: read_table-lib.h,v 1.9 2004-09-10 15:12:02 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.8  2003/02/11 12:28:46  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*	
 * Revision 1.1 2002/08/29 11:39:00 ef
 *	Initial revision extracted from lib/optics/Monochromators...
 *******************************************************************************/
@@ -31,7 +42,36 @@
 #ifndef READ_TABLE_LIB_H
 #define READ_TABLE_LIB_H "1.1.0"
 
+#ifndef MC_PATHSEP_C
+#ifdef WIN32
+#define MC_PATHSEP_C '\\'
+#define MC_PATHSEP_S "\\"
+#else  /* !WIN32 */
+#ifdef MAC
+#define MC_PATHSEP_C ':'
+#define MC_PATHSEP_S ":"
+#else  /* !MAC */
+#define MC_PATHSEP_C '/'
+#define MC_PATHSEP_S "/"
+#endif /* !MAC */
+#endif /* !WIN32 */
+#endif /* !MC_PATHSEP_C */
+
+#ifndef MCSTAS
+#ifdef WIN32
+#define MCSTAS "C:\\mcstas\\lib"
+#else  /* !WIN32 */
+#ifdef MAC
+#define MCSTAS ":mcstas:lib" /* ToDo: What to put here? */
+#else  /* !MAC */
+#define MCSTAS "/usr/local/lib/mcstas"
+#endif /* !MAC */
+#endif /* !WIN32 */
+#endif /* !MCSTAS */
+
 #include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
 
   typedef struct struct_table
   {
