@@ -7,9 +7,13 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.10 1998-10-01 08:13:26 kn Exp $
+* 	$Id: mcstas.h,v 1.11 1998-10-01 11:47:24 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.10  1998/10/01 08:13:26  kn
+* 	Added definitions for file.c
+* 	Added information to struct instr_def
+*
 * 	Revision 1.9  1998/09/24 12:15:52  kn
 * 	Added print_warn() function.
 * 	Rotation angles in instrument definitions are now given in degrees, with
@@ -63,6 +67,7 @@
 void *mem(size_t);		/* Allocate memory. */
 void memfree(void *);		/* Free memory. */
 char *str_dup(char *);		/* Allocate new copy of string. */
+char *str_dup_n(char *string, int n); /* Copies only first N chars. */
 char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
 void str_free(char *);		/* Free memory for string. */
 
@@ -137,6 +142,7 @@ typedef char *CExp;
 CExp exp_id(char *id);		/* Make normal identifier. */
 CExp exp_extern_id(char *id);	/* Make extern identifier. */
 CExp exp_number(double n);	/* Make expression from number. */
+CExp exp_string(char *s);	/* Make expression from string. */
 char *exp_tostring(CExp e);	/* Convert expression to string. */
 void exp_fprint(FILE *f, CExp e); /* Output an expression to file. */
 
@@ -298,6 +304,8 @@ void cogen(char *output_name, struct instr_def *instr);
 /*******************************************************************************
 * Functions and variables defined in debug.c
 *******************************************************************************/
+
+extern int error_encountered;	/* Set to 1 when print_error called. */
 
 void print_error(char *, ...);	/* Normal error messages. */
 void print_warn(int *flag, char *format, ...); /* Warning. */
