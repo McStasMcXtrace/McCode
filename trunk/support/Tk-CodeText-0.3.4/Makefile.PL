@@ -8,16 +8,12 @@ WriteMakefile(
 	NAME => "Tk::$pm",
 	PREREQ_PM => {
 		'Tk' => '800.024',
-		'Syntax::Highlight::Perl' => 0,
 	},
 #	PMLIBDIRS => ['Tk'],
 	PM => {
 		"$pm.pm" => "$ld/$pm.pm",
-		"$pm/Bash.pm" => "$ld/$pm/Bash.pm",
-		"$pm/HTML.pm" => "$ld/$pm/HTML.pm",
 		"$pm/None.pm" => "$ld/$pm/None.pm",
-		"$pm/Perl.pm" => "$ld/$pm/Perl.pm",
-		"$pm/Pod.pm" => "$ld/$pm/Pod.pm",
+		"$pm/McStas.pm" => "$ld/$pm/McStas.pm",
 		"$pm/Template.pm" => "$ld/$pm/Template.pm",
 		"$pm/Xresources.pm" => "$ld/$pm/Xresources.pm",
 		"$pm.pod" => "$ld/$pm.pod",
