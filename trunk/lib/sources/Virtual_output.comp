@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -137,6 +137,7 @@ FINALLY
 %{
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
+  print("Virtual_output: %s: Saved %d events in file %s\n", Vars.Nsum, Vars.Mon_File); exit(-1); }
 %}
 
 MCDISPLAY
