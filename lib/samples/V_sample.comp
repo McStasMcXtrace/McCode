@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -19,11 +19,14 @@
 * %D
 * A Double-cylinder shaped incoherent scatterer (a V-sample)
 * No multiple scattering. Absorbtion included.
+* The shape of the sample may be a box with dimensions xwidth, yheight, zthick.
 * The area to scatter to is a disk of radius 'focus_r' situated at the target.
-* This area may also be rectangular if specifying focus_xw and focus_yh.
-* The target itself is either situated according to given coordinates, or
-* setting the relative index of the component to focus at (next is +1).
-* The shape of the sample may be box shaped with dimensions xwidth, yheight, zthick.
+* This target area may also be rectangular if specified focus_xw and focus_yh
+* or focus_aw and focus_ah, respectively in meters and degrees.
+* The target itself is either situated according to given coordinates (x,y,z), or
+* setting the relative target_index of the component to focus at (next is +1).
+* This target position will be set to its AT position. When targeting to centered
+* components, such as spheres or cylinders, define an Arm component where to focus at.
 *
 * Example: V_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,pack=1, 
 *           target_x = 0, target_y = 0, target_z = 0.235)
@@ -46,6 +49,8 @@
 * zthick    : thickness of sample (m)
 * focus_xw  : horiz. dimension of a rectangular area (m)
 * focus_yh  : vert.. dimension of a rectangular area (m)
+* focus_aw  : horiz. angular dimension of a rectangular area (deg)
+* focus_ah  : vert.. angular dimension of a rectangular area (deg)
 * target_index: relative index of component to focus at, e.g. next is +1 (1).
 *
 * Variables calculated in the component
@@ -62,7 +67,9 @@
 
 DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0.035, pack = 1, target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0, xwidth=0, yheight=0, zthick=0, int target_index=0)
+SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0.035, pack = 1, 
+  target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0, 
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, int target_index=0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -76,7 +83,8 @@ DECLARE
     double my_s;
     double my_a_v;
     char   isrect;      /* true when sample is a box */
-    double isfocusrect; /* when non zero, gives rect target distance */
+    double distance;    /* when non zero, gives rect target distance */
+    double aw,ah;       /* rectangukar angular dimensions */
     double tx,ty,tz;    /* target coords */
   } VarsV;
 %}
@@ -89,7 +97,7 @@ INITIALIZE
     else VarsV.isrect=1; }
   else VarsV.isrect=0;
  
-  VarsV.sigma_a=5.08; 
+  VarsV.sigma_a=5.08; /* in barns */
   VarsV.sigma_i=4.935;
   VarsV.rho = (2*pack/(3.024*3.024*3.024));
   VarsV.my_s=(VarsV.rho * 100 * VarsV.sigma_i);
@@ -106,9 +114,14 @@ INITIALIZE
   else
   { VarsV.tx = target_x; VarsV.ty = target_y; VarsV.tz = target_z; }
   
-  if (focus_xw && focus_yh)
-    VarsV.isfocusrect=sqrt(VarsV.tx*VarsV.tx+VarsV.ty*VarsV.ty+VarsV.tz*VarsV.tz);
-  else VarsV.isfocusrect=0;
+  VarsV.distance=sqrt(VarsV.tx*VarsV.tx+VarsV.ty*VarsV.ty+VarsV.tz*VarsV.tz);
+  
+  /* different ways of setting rectangular area */
+  VarsV.aw  = VarsV.ah = 0;
+  if (focus_xw) VarsV.aw = atan2(focus_xw,VarsV.distance);
+  if (focus_yh) VarsV.ah = atan2(focus_yh,VarsV.distance);
+  if (focus_aw) VarsV.aw = DEG2RAD*focus_aw;
+  if (focus_ah) VarsV.ah = DEG2RAD*focus_ah;
 %}
                                                                            
 TRACE
@@ -151,8 +164,9 @@ TRACE
     aim_x = VarsV.tx-x;         /* Vector pointing at target (anal./det.) */
     aim_y = VarsV.ty-y;
     aim_z = VarsV.tz-z;
-    if(VarsV.isfocusrect)
-      randvec_target_rect(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, atan2(focus_xw,VarsV.isfocusrect), atan2(focus_yh,VarsV.isfocusrect));
+    if(VarsV.aw && VarsV.ah)
+      randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
+        aim_x, aim_y, aim_z, VarsV.aw, VarsV.ah);
     else
       randvec_target_circle(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
     NORM(vx, vy, vz);

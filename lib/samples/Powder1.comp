@@ -10,15 +10,18 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
 * General powder sample with a single scattering vector.
+* The shape of the sample may be a cylinder of given radius or a box with dimensions 
+* xwidth, yheight, zthick.
 * The area to scatter to is a disk of angular radius 'd_phi0' situated at the target.
-* The shape of the sample may be box shaped with dimensions xwidth, yheight, zthick.
-* The target itself is either situated according to given coordinates, or
-* setting the relative index of the component to focus at (next is +1).
+* The target itself is either situated according to given coordinates (x,y,z), or
+* setting the relative target_index of the component to focus at (next is +1).
+* This target position will be set to its AT position. When targeting to centered
+* components, such as spheres or cylinders, define an Arm component where to focus at.
 *
 * Example: Powder1(radius=0.015,h=0.05,q =1.8049,d_phi0 =0.07,pack=1,j=6,DW=1, 
 *       F2=56.8,Vc=85.0054,sigma_a=0.463,target_x=0,target_y=0, target_z=1000)
