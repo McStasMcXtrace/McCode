@@ -8,9 +8,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.10 1998-08-26 12:43:21 kn Exp $
+*	$Id: instrument.l,v 1.11 1998-09-23 13:58:47 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.10  1998/08/26 12:43:21  kn
+*	Merged in the functionality from component.l.
+*	Added %include facility.
+*
 *	Revision 1.9  1998/05/13 13:03:29  kn
 *	Now really fix the number syntax problem.
 *
@@ -187,6 +191,9 @@ TRACE		return TOK_TRACE;
 				      instr_current_line);
 			  BEGIN(INITIAL);
 			}
+
+ /* C++ "//"-style comments - ignore everything to end of line. */
+"//"[^\n]*\n	instr_current_line++; /* Ignore comment. */
 
  /* C-style comments. */
 "/*"		BEGIN(ccomment);
