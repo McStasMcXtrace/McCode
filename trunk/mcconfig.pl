@@ -11,17 +11,22 @@ if ($Config{'osname'} eq "MSWin32") {
 
     print STDOUT "\nLooking for scilab:\n";
     my $scilab=system('which.exe runscilab.exe');
+    my $runscilab='runscilab';
+    if ($scilab ==0) { 
+      $scilab=system('which.exe scilab.exe'); 
+      $runscilab='scilab';
+    }
     
     # On Win32, matlab is preferred before scilab, which
     # lack certian functionality...
     if ($matlab == 0) {
-	print STDOUT "\n\nMatlab found, configuring McStas\n";
-	configure_mcstas("1");
+        print STDOUT "\n\nMatlab found, configuring McStas\n";
+        configure_mcstas("1");
     } elsif ($scilab ==0) {
-	print STDOUT "\n\nScilab found, configuring McStas\n";
-	configure_mcstas("3");
+        print STDOUT "\n\nScilab found ($runscilab), configuring McStas\n";
+        configure_mcstas("3");
     } else {
-	print STDERR "\n\nSorry, neither Matlab or Scilab found, no plotting available.\n";
+        print STDERR "\n\nSorry, neither Matlab or Scilab found, no plotting available.\n";
     }
     
     print STDOUT "\nCalling ppm to make sure Tk-CodeText is installed...\n\n";
@@ -36,11 +41,13 @@ sub configure_mcstas{
     my $fid = open(READ,"<lib/tools/perl/mcstas_config.perl") || die "Could not open config file\n";
     my $fid2 = open(WRITE,">lib/tools/perl/mcstas_config.perl.new") || die "Could not write to new config file\n";
     while (<READ>) {
-	if (/\w*PLOTTER \=\w*/) {
-	    print WRITE "     PLOTTER => $plotter,\n";
-	} else {
-	    print WRITE;
-	}
+        if (/\w*PLOTTER \=\w*/) {
+            print WRITE "     PLOTTER => $plotter,\n";
+        } elsif (/\w*SCILAB \=\w*/) {
+            print WRITE "     SCILAB => '$runscilab',\n";
+        } else {
+            print WRITE;
+        }
     }
     close(WRITE);
     # It should now be ok to overwrite the config file:
