@@ -18,9 +18,16 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.73 2003-09-05 08:59:17 farhi Exp $
+* $Id: mcstas-r.c,v 1.74 2003-10-21 11:54:48 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.73  2003/09/05 08:59:17  farhi
+* added INSTRUMENT parameter default value grammar
+* mcinputtable now has also default values
+* mcreadpar now uses default values if parameter not given
+* extended instr_formal parameter struct
+* extended mcinputtable structure type
+*
 * Revision 1.72  2003/08/26 12:32:43  farhi
 * Corrected 4PI random vector generation to retain initial vector length
 *
@@ -945,31 +952,41 @@ mcreadparams(void)
   {
     do
     {
-      if (mcinputtable[i].val && !strlen(mcinputtable[i].val)) {
+      if (mcinputtable[i].val && strlen(mcinputtable[i].val))
+        printf("Set value of instrument parameter %s (%s) [default='%s']:\n",
+             mcinputtable[i].name,
+             (*mcinputtypes[mcinputtable[i].type].parminfo)
+                  (mcinputtable[i].name), mcinputtable[i].val);
+      else
         printf("Set value of instrument parameter %s (%s):\n",
-               mcinputtable[i].name,
-               (*mcinputtypes[mcinputtable[i].type].parminfo)
-                    (mcinputtable[i].name));
-        fflush(stdout);
-        p = fgets(buf, 1024, stdin);
-        if(p == NULL)
-        {
-          fprintf(stderr, "Error: empty input\n");
-          exit(1);
-        }
-        len = strlen(buf);
-        for(j = 0; j < 2; j++)
-        {
-          if(len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
-          {
-            len--;
-            buf[len] = '\0';
-          }
-        }
-      } else {
-        strncpy(buf, mcinputtable[i].val, 1024);
-        fprintf(stderr, "Using %s=%s (default value).\n", mcinputtable[i].name, mcinputtable[i].val);
+             mcinputtable[i].name,
+             (*mcinputtypes[mcinputtable[i].type].parminfo)
+                  (mcinputtable[i].name));
+      
+      fflush(stdout);
+      p = fgets(buf, 1024, stdin);
+      if(p == NULL)
+      {
+        fprintf(stderr, "Error: empty input for paramater %s\n", mcinputtable[i].name);
+        exit(1);
       }
+      len = strlen(buf);
+      if (!len || (len == 1 && (buf[0] == '\n' || buf[0] == '\r')))
+      {
+        if (mcinputtable[i].val && strlen(mcinputtable[i].val)) {
+          strncpy(buf, mcinputtable[i].val, 1024);  /* use default value */
+          len = strlen(buf);
+        }
+      }
+      for(j = 0; j < 2; j++)
+      {
+        if(len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+        {
+          len--;
+          buf[len] = '\0';
+        }
+      }
+      
       status = (*mcinputtypes[mcinputtable[i].type].getparm)
                    (buf, mcinputtable[i].par);
       if(!status)
@@ -3143,6 +3160,21 @@ mcparseoptions(int argc, char *argv[])
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
+      for(j = 0; j < mcnumipar; j++)
+        if (!paramset && mcinputtable[j].val && strlen(mcinputtable[j].val))
+        {
+          char buf[1024];
+          int  status;
+          strncpy(buf, mcinputtable[j].val, 1024);
+          status = (*mcinputtypes[mcinputtable[j].type].getparm)
+                   (buf, mcinputtable[j].par);
+          if(!status) fprintf(stderr, "Invalid %s default value %s in instrument definition.\n", mcinputtable[j].name, buf);
+          else {
+            paramsetarray[j] = 1;
+            fprintf(stderr,"Using %s=%s (default value)\n", mcinputtable[j].name, buf);
+          }
+        }
+
       for(j = 0; j < mcnumipar; j++)
         if(!strcmp(mcinputtable[j].name, argv[i]))
         {
