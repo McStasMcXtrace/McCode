@@ -39,8 +39,8 @@ OBJECTS=instrument.tab.o lex.yy.o debug.o \
 	memory.o list.o symtab.o coords.o rotation.o cexp.o position.o \
 	file.o cogen.o
 
-PERLOBJ=gscan.fixpl mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl
-PERLBIN=gscan mcdisplay mcplot mcresplot
+PERLOBJ=gscan.fixpl mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl
+PERLBIN=gscan mcdisplay mcplot mcresplot mcrun
 BINOBJS=$(PERLOBJ) mcstas
 
 .SUFFIXES: .c .o .pl .fixpl
@@ -94,8 +94,7 @@ cogen.o: mcstas.h
 port.o: port.h
 
 instrument.tab.c instrument.tab.h: instrument.y
-	$(BISON) $(BISONFLAGS) $<
+	$(BISON) $(BISONFLAGS) instrument.y
 
 lex.yy.c: instrument.l
-	$(FLEX) $(FLEXFLAGS) $<
-
+	$(FLEX) $(FLEXFLAGS) instrument.l
