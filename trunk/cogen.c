@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.15 1999-03-18 07:27:59 kn Exp $
+* 	$Id: cogen.c,v 1.16 1999-04-16 07:15:09 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.15  1999/03/18 07:27:59  kn
+* 	Handle polarised neutrons.
+*
 * 	Revision 1.14  1999/03/16 13:09:36  kn
 * 	Output #line directives in the generated code that refer to the output
 * 	file itself, so that compilers, debuggers etc. refer to correct line
@@ -595,9 +598,8 @@ cogen_init(struct instr_def *instr)
   coutf("    Coords %stc1, %stc2;", ID_PRE, ID_PRE);
   coutf("    Rotation %str1, %str2;", ID_PRE, ID_PRE);
   cout("");
-  /* Conversion factor degrees->radians for rotation angles. This may be 1 for
-     backward compatibility with old instrument definitions. */
-  d2r = instr->rotations_in_radians ? "1" : "DEG2RAD";
+  /* Conversion factor degrees->radians for rotation angles. */
+  d2r = "DEG2RAD";
 
   liter = list_iterate(instr->complist);
   last = NULL;
@@ -922,6 +924,8 @@ cogen_runtime(struct instr_def *instr)
     cout("#define MC_USE_DEFAULT_MAIN");
   if(instr->enable_trace)
     cout("#define MC_TRACE_ENABLED");
+  if(instr->portable)
+    cout("#define MC_PORTABLE");
   if(instr->include_runtime)
   {
     cout("#define MC_EMBEDDED_RUNTIME"); /* Some stuff will be static. */
@@ -932,7 +936,11 @@ cogen_runtime(struct instr_def *instr)
   {
     cout("#include \"mcstas-r.h\"");
   }
-  coutf("int %straceenabled = %d;", ID_PRE, instr->enable_trace);
+  coutf("#ifdef MC_TRACE_ENABLED");
+  coutf("int %straceenabled = 1;", ID_PRE);
+  coutf("#else");
+  coutf("int %straceenabled = 0;", ID_PRE);
+  coutf("#endif");
   coutf("int %sdefaultmain = %d;", ID_PRE, instr->use_default_main);
   coutf("char %sinstrument_name[] = \"%s\";", ID_PRE, instr->name);
   coutf("char %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
