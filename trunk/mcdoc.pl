@@ -594,7 +594,7 @@ if (not $is_single_file) {
 if ($use_local) {
   # define local and lib sections
   @sections = ("sources", "optics", "samples", "monitors", 
-               "misc", "contrib", "obsolete","examples","local","data","share");
+               "misc", "contrib", "obsolete","examples","local","data","share","doc");
   %section_headers =
     ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
      "optics" => '<B><FONT COLOR="#FF0000">Optics</FONT></B>',
@@ -606,7 +606,8 @@ if ($use_local) {
      "examples" => '<B><FONT COLOR="#FF0000">Instrument Examples</FONT></B>',
      "local" => '<B><FONT COLOR="#FF0000">Local components</FONT></B>',
      "data" => '<B><FONT COLOR="#FF0000">Data files</FONT></B>',
-     "share" => '<B><FONT COLOR="#FF0000">Shared libraries</FONT></B>');
+     "share" => '<B><FONT COLOR="#FF0000">Shared libraries</FONT></B>',
+     "doc"   => '<B><FONT COLOR="#FF0000">Documentation</FONT></B>');
 } else {
   # define lib sections
   @sections = ("sources", "optics", "samples", "monitors", "misc", "contrib","examples");
