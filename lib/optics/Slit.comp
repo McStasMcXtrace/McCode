@@ -1,15 +1,21 @@
-/***********************************************************************
+/*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Slit
+* %I
+* Written by: KL, HMR 
+* Date: June 16, 1997
+* Version: $Revision: 1.4 $
+* Origin: McStas release
 *
-* Written by: KL, HMR  June 16, 1997
+* Rectangular slit.
 *
+* %D
 * A simple rectangular slit. No transmission around the slit is allowed.
 *
+* %P
 * INPUT PARAMETERS
 *
 * xmin: Lower x bound (m)
@@ -17,7 +23,8 @@
 * ymin: Lower y bound (m)
 * ymax: Upper y bound (m)
 *
-***********************************************************************/
+* %E
+*******************************************************************************/
 
 
 DEFINE COMPONENT Slit

@@ -1,21 +1,29 @@
-/***********************************************************************
+/*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Arm
+* %I
 *
-* Written by: KL, KN, September 1997
+* Written by: KL, KN
+* Date: September 1997
+* Version: $Revision: 1.4 $
+* Origin: McStas release
 *
+* Arm/optical bench
+*
+* %D
 * An arm does not actually do anything, it is just there to set
 * up a new coordinate system. 
 *
+* %P
 * Input parameters:
 *
 * (none)
 *
-***********************************************************************/
+* %E
+*******************************************************************************/
 
 DEFINE COMPONENT Arm
 DEFINITION PARAMETERS ()
