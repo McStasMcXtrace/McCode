@@ -117,10 +117,6 @@ sub read_instrument {
               write_process("addpath('$MCSTAS::sys_dir/tools/matlab');\n");
               write_process("mcdisplay('Init');\n");
               write_process("global INSTRUMENT;\n");
-	      if ($Config{'osname'} eq 'MSWin32') {
-		my $sim_tmp = Win32::GetLongPathName($sim);
-		if ($sim_tmp) { $sim = $sim_tmp; }
-	      }
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
               if ($first) {
@@ -133,9 +129,6 @@ sub read_instrument {
             if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
               # Initialize scilab struct...
               write_process("exec('$MCSTAS::sys_dir/tools/scilab/mcdisplay.sci',-1);\n");
-	      if ($Config{'osname'} eq 'MSWin32') {
-		$sim = Win32::GetLongPathName($sim);
-	      }
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
               if ($first) {
