@@ -133,85 +133,86 @@ which can be run on your computer. Optionally, the program takes
 input arguments to tune the setup of your instrument/simulation. 
 This section will take you through a (very) simple example instrument 
 to learn you the basic instrument language of McStas. (Instrument 
-filename is vanadium\_example.instr, should be available in your
-\texttt{vanadium} folder). Please study the instructive comments,
+filename is vanadium\_example.instr, can be loaded using the
+\verb+Neutron Site/Tutorial+ menu item of the \verb+mcgui+, see below)
+Please study the instructive comments,
 marked by \verb+/* ... */+ characters
     
 \begin{verbatim}
-    /* The line below defines the 'name' of our instrument */
-    /* Here, we have a single input parameter, ROT         */
-    DEFINE INSTRUMENT vanadium_example(ROT)
+/* The line below defines the 'name' of our instrument */
+/* Here, we have a single input parameter, ROT         */
+DEFINE INSTRUMENT vanadium_example(ROT=0)
 
-    /* The DECLARE section allows us to declare variables  */
-    /* in c syntax. Here, coll_div (collimator divergence) */
-    /* is set to 60 degrees...                             */
-    DECLARE
-    %{
-      double coll_div = 60;
-    %}
+/* The DECLARE section allows us to declare variables  */
+/* in c syntax. Here, coll_div (collimator divergence) */
+/* is set to 60 degrees...                             */
+DECLARE
+%{
+  double coll_div = 60;
+%}
 
-    /* Here comes the TRACE section, where the actual      */
-    /* instrument is defined....                           */
-    TRACE
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined....                           */
+TRACE
 
-    /* The Arm() class component defines reference points  */
-    /* in 3D space. Every component instance must have a   */
-    /* unique name. Here, arm is used. This Arm() component*/
-    /* is set to define the origin of our global coordinate*/
-    /* system (AT (0,0,0) ABSOLUTE)                        */
-    COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
+/* The Arm() class component defines reference points  */
+/* in 3D space. Every component instance must have a   */
+/* unique name. Here, arm is used. This Arm() component*/
+/* is set to define the origin of our global coordinate*/
+/* system (AT (0,0,0) ABSOLUTE)                        */
+COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
 
-    /* Next, we need some neutrons. Let's place a neutron  */
-    /* source. Refer to documentation of Source_flat to    */
-    /* understand the different input parameters.          */
-    /* The source component is placed RELATIVE to the arm  */
-    /* component, meaning that modifying the position or   */
-    /* orientation of the arm will also affect the source  */
-    /* component (and other components after that one...   */
-    COMPONENT source = Source_flat(radius = 0.015, dist = 1,
-      xw=0.024, yh=0.015, E0=5, dE=0.2)
-     AT (0,0,0) RELATIVE arm
+/* Next, we need some neutrons. Let's place a neutron  */
+/* source. Refer to documentation of Source_flat to    */
+/* understand the different input parameters.          */
+/* The source component is placed RELATIVE to the arm  */
+/* component, meaning that modifying the position or   */
+/* orientation of the arm will also affect the source  */
+/* component (and other components after that one...   */
+COMPONENT source = Source_flat(radius = 0.015, dist = 1,
+  xw=0.024, yh=0.015, E0=5, dE=0.2)
+ AT (0,0,0) RELATIVE arm
 
-    /* Here we have a collimator - or Soller - placed to   */
-    /* improve beam divergence.                            */
-    /* The component is placed at a distance RELATIVE to   */
-    /* a previous component...                             */
-    COMPONENT collimator = Collimator_linear(len = 0.2, 
-      divergence = coll_div, xmin = -0.02, xmax = 0.02, 
-      ymin = -0.03, ymax = 0.03)
-      AT (0, 0, 0.4) RELATIVE arm
+/* Here we have a collimator - or Soller - placed to   */
+/* improve beam divergence.                            */
+/* The component is placed at a distance RELATIVE to   */
+/* a previous component...                             */
+COMPONENT collimator = Collimator_linear(len = 0.2, 
+  divergence = coll_div, xmin = -0.02, xmax = 0.02, 
+  ymin = -0.03, ymax = 0.03)
+  AT (0, 0, 0.4) RELATIVE arm
 
-    /* We also need something to 'shoot at' - here a sample*/
-    /* made from vanadium - an isotrope scatterer. Options */
-    /* are available to restrict the solid angle in which  */
-    /* neutrons are emitted (no need to simulate anything  */
-    /* that we know for sure will not gain us more insight)*/
-    /* Other options for smart targeting are available -   */
-    /* refer to component documentation for info.          */
-    COMPONENT target = V_sample(radius_i = 0.008, 
-      radius_o = 0.012, h = 0.015, focus_r = 0, pack = 1,
-      target_x = 0, target_y = 0, target_z = 1)
-      AT (0,0,1) RELATIVE arm
+/* We also need something to 'shoot at' - here a sample*/
+/* made from vanadium - an isotrope scatterer. Options */
+/* are available to restrict the solid angle in which  */
+/* neutrons are emitted (no need to simulate anything  */
+/* that we know for sure will not gain us more insight)*/
+/* Other options for smart targeting are available -   */
+/* refer to component documentation for info.          */
+COMPONENT target = V_sample(radius_i = 0.008, radius_o = 0.012, 
+  h = 0.015, focus_r = 0, pack = 1,
+  target_x = 0, target_y = 0, target_z = 1)
+  AT (0,0,1) RELATIVE arm
 
-    /* Here, a secondary arm - or reference point, placed  */
-    /* on the sample position. The ROT parameter above     */
-    /* defines rotation of this arm (and components        */
-    /* relative to the arm)                                */
-    COMPONENT arm2 = Arm() 
-      AT (0,0,0) RELATIVE target
-      ROTATED (0,ROT,0) relative arm
+/* Here, a secondary arm - or reference point, placed  */
+/* on the sample position. The ROT parameter above     */
+/* defines rotation of this arm (and components        */
+/* relative to the arm)                                */
+COMPONENT arm2 = Arm() 
+  AT (0,0,0) RELATIVE target
+  ROTATED (0,ROT,0) relative arm
 
-    /* For data output, let us place a detector. This      */
-    /* detector is not very realistic, since it is sphere  */
-    /* shaped and has a 1e6 m radius, but has the advantage*/
-    /* that EVERYTHING emitted from the sample will be     */
-    /* picked up. Notice that this component changes       */
-    /* orientation with the ROT input parameter of the     */
-    /* instrument.                                         */
-    COMPONENT PSD_4pi = PSD_monitor_4PI(radius=1e6, nx=101, 
-      ny=51, filename="vanadium.psd")
-      AT (0,0,0) RELATIVE arm2 
-    END
+/* For data output, let us place a detector. This      */
+/* detector is not very realistic, since it is sphere  */
+/* shaped and has a 10 m radius, but has the advantage */
+/* that EVERYTHING emitted from the sample will be     */
+/* picked up. Notice that this component changes       */
+/* orientation with the ROT input parameter of the     */
+/* instrument.                                         */
+COMPONENT PSD_4pi = PSD_monitor_4PI(radius=10, nx=101, ny=51,
+  filename="vanadium.psd")
+  AT (0,0,0) RELATIVE target ROTATED (ROT,0,0) RELATIVE arm2
+END
 \end{verbatim}
 Enlightened by the above example, you are probably now ready to learn
 a few more important details and tips about McStas.
