@@ -23,12 +23,13 @@ my ($inf_instr, $inf_sim, $inf_data);
 my %inf_param_map;
 my $current_sim_def;
 my $main_window;
-my $edit_control;
+my ($edit_window, $edit_control);
+my $external_editor;
 my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
 
 sub ask_save_before_simulate {
     my ($w) = @_;
-    if($edit_control->numberChanges() > 0) {
+    if($edit_control && $edit_control->numberChanges() > 0) {
 	my $ret = $w->messageBox(
 	  -message => "Save instrument \"$current_sim_def\" first?",
 	  -title => "Save file?",
@@ -44,7 +45,7 @@ sub ask_save_before_simulate {
 
 sub is_erase_ok {
     my ($w) = @_;
-    if($edit_control->numberChanges() > 0) {
+    if($edit_control && $edit_control->numberChanges() > 0) {
 	my $ret = $w->messageBox(-message => "Ok to loose changes?",
 				 -title => "Erase ok?",
 				 -type => 'OKCancel',
@@ -62,6 +63,49 @@ sub menu_quit {
     }
 }
 
+sub menu_edit_current {
+    if($edit_control) {
+	$edit_window->raise();
+    } else {
+	setup_edit($main_window);
+    }
+}
+
+sub check_external_editor {
+    $external_editor = $ENV{'VISUAL'} || $ENV{'EDITOR'};
+}
+
+sub menu_spawn_editor {
+    my ($w) = @_;
+    my $cmd = $external_editor ? $external_editor : "vi";
+    my $pid = fork();
+    if(!defined($pid)) {
+	$w->messageBox(-message =>
+		       "Failed to spawn editor \"$external_editor\".",
+		       -title => "Command failed",
+		       -type => 'OK',
+		       -icon => 'error');
+	return 0;
+    } elsif($pid > 0) {
+	waitpid($pid, 0);
+	return 1;
+    } else {
+	# Double fork to avoid having to wait() for the editor to
+	# finish (or having it become a zombie). See man perlfunc.
+	unless(fork()) {
+	    if($current_sim_def) {
+		exec($external_editor, $current_sim_def);
+	    } else {
+		exec($external_editor);
+	    }
+	    # If we get here, the exec() failed.
+	    print STDERR "Error: exec() of $external_editor failed!\n";
+	    CORE::exit(1);	# CORE:exit needed to avoid Perl/Tk failure.
+	}
+	CORE::exit(0);		# CORE:exit needed to avoid Perl/Tk failure.
+    }
+}
+
 sub new_simulation_results {
     my ($w) = @_;
     my $text = $current_sim_file ? $current_sim_file : "<None>";
@@ -75,6 +119,8 @@ sub new_sim_def_name {
 	new_simulation_results($w);
     }	
     $current_sim_def = $name;
+    # Strip any repeated "/" charactors (ie. "///" -> "/").
+    $current_sim_def =~ s!//!/!g;
     # Strip any redundant leading "./".
     while($current_sim_def =~ m!^\./(.*)$!) {
 	$current_sim_def = $1;
@@ -87,7 +133,7 @@ sub new_sim_def_name {
 #     while($current_sim_def =~ m!^(.*)/[^/]+/\.\./(.*)$!) {
 # 	$current_sim_def = "$1/$2";
 #     }
-    $w->title("McStas: $current_sim_def");
+    $main_window->title("McStas: $current_sim_def");
     my $text = "Instrument file: " .
 	($current_sim_def ? $current_sim_def : "<None>");
     $current_instr_label->configure(-text => $text);
@@ -95,7 +141,7 @@ sub new_sim_def_name {
 
 sub open_instr_def {
     my ($w, $file) = @_;
-    $edit_control->Load($file);
+    $edit_control->Load($file) if $edit_control;
     new_sim_def_name($w, $file);
 }
 
@@ -111,7 +157,11 @@ sub menu_open {
 
 sub menu_save {
     my ($w) = @_;
-    $edit_control->Save($current_sim_def);
+    if($current_sim_def) {
+	$edit_control->Save($current_sim_def);
+    } else {
+	menu_saveas($w);
+    }
 }
 
 sub menu_saveas {
@@ -136,6 +186,18 @@ sub menu_saveas {
     $edit_control->FileName($file);
     new_sim_def_name($w, $file);
     menu_save($w);
+    return 1;
+}
+
+sub menu_new {
+    my ($w) = @_;
+    return 0 unless(is_erase_ok($w));
+    my $file = $w->getSaveFile(-defaultextension => "instr",
+			       -title => "Select instrument file name");
+    return 0 unless $file;
+    $edit_control->delete("1.0", "end");
+    $edit_control->FileName($file);
+    new_sim_def_name($w, $file);
     return 1;
 }
 
@@ -260,7 +322,7 @@ sub run_dialog {
     run_dialog_retract($dlg, $savefocus);
     my $status = close($fh);
     $status_label->configure(-text => "Status: Done");
-    if(!$success || !defined($status) || ($? != 0)) {
+    if(!$success || (! $status && ($? != 0 || $!))) {
 	putmsg($cmdwin, "Simulation exited abnormally.\n", 'msg');
 	return undef;
     } else {
@@ -319,7 +381,7 @@ sub dialog_get_out_file {
 		    } until $state;
 		    my $ret = close($fh);
 		    undef($pid);
-		    unless($cmd_success && defined($ret) && $? == 0) {
+		    unless($cmd_success && ($ret || ($? == 0 && ! $!))) {
 			&$printer("** Error exit **.");
 			last;
 		    }
@@ -364,7 +426,15 @@ sub compile_instrument {
 
 sub menu_compile{
     my ($w) = @_;
+    unless($current_sim_def) {
+	$w->messageBox(-message => "No simulation definition loaded.",
+		       -title => "Compilation error",
+		       -type => 'OK',
+		       -icon => 'error');
+	return undef;
+    }
     compile_instrument($w, 1);	# Force recompilation.
+    return 1;
 }
 
 sub my_system {
@@ -392,6 +462,9 @@ sub my_system {
 
 sub menu_run_simulation {
     my ($w) = @_;
+    unless($current_sim_def) {
+	return undef unless menu_open($w);
+    }
     my $out_name = compile_instrument($w);
     return 0 unless $out_name;
     # Attempt to avoid problem with missing "." in $PATH.
@@ -453,6 +526,12 @@ sub menu_plot_results {
     return 1;
 }
 
+sub menu_read_sim_file {
+    my ($w) = @_;
+    load_sim_file($w); 
+    menu_plot_results($w);
+}
+
 sub menu_usingmcstas {
     my ($w) = @_;
 }
@@ -466,20 +545,23 @@ sub setup_menu {
     my $menu = $w->Frame(-relief => 'raised', -borderwidth => 2);
     $menu->pack(-fill => 'x');
     my $filemenu = $menu->Menubutton(-text => 'File', -underline => 0);
+    $filemenu->command(-label => 'New instrument',
+		       -command => [\&menu_new, $w],
+		       -underline => 0);
     $filemenu->command(-label => 'Open instrument ...',
 		       -accelerator => 'Alt+O',
 		       -command => [\&menu_open, $w],
 		       -underline => 0);
     $w->bind('<Alt-o>' => [\&menu_open, $w]);
-    $filemenu->command(-label => 'Save instrument',
-		       -accelerator => 'Alt+S',
-		       -command => [\&menu_save, $w],
-		       -underline => 0);
-    $w->bind('<Alt-s>' => [\&menu_save, $w]);
-    $filemenu->command(-label => 'Save instrument as ...',
-		       -underline => 16,
-		       -command => sub {menu_saveas($w)});
-    $filemenu->separator;
+    $filemenu->command(-label => 'Edit current',
+		       -underline => 0,
+		       -command => \&menu_edit_current);
+    if($external_editor) {
+	my $shortname = (split " ", $external_editor)[0];
+	$shortname = (split "/", $shortname)[-1];
+	$filemenu->command(-label => 'Spawn editor "' . $shortname . '"',
+			   -command => sub { menu_spawn_editor($w) } );
+    }
     $filemenu->command(-label => 'Compile instrument',
 		       -underline => 0,
 		       -command => sub {menu_compile($w)});
@@ -490,17 +572,10 @@ sub setup_menu {
 		       -command => \&menu_quit);
     $w->bind('<Alt-q>' => \&menu_quit);
     $filemenu->pack(-side=>'left');
-    my $editmenu = $menu->Menubutton(-text => 'Edit', -underline => 0);
-    $editmenu->command(-label => 'Undo',
-		       -accelerator => 'Ctrl+Z',
-		       -command => [\&menu_undo, $w], -underline => 0);
-    $w->bind('<Control-z>' => [\&menu_undo, $w]);
-    $editmenu->pack(-side=>'left');
-    my $simmenu = $menu->Menubutton(-text => 'Run', -underline => 0);
+    my $simmenu = $menu->Menubutton(-text => 'Simulation', -underline => 2);
     $simmenu->command(-label => 'Read old simulation ...',
 		       -underline => 0,
-		       -command => sub {load_sim_file($w); 
-					menu_plot_results($w);});
+		       -command => sub { menu_read_sim_file($w) });
     $simmenu->separator;
     $simmenu->command(-label => 'Run simulation ...',
 		      -underline => 1,
@@ -513,37 +588,49 @@ sub setup_menu {
 		      -command => sub {menu_plot_results($w);});
     $w->bind('<Alt-p>' => [\&menu_plot_results, $w]);
     $simmenu->pack(-side=>'left');
-    my $helpmenu = $menu->Menubutton(-text => 'Help', -underline => 0);
-    $helpmenu->command(-label => 'Using McGui',
-		       -underline => 6,
-		       -command => sub {menu_usingmcstas($w)});
-    $helpmenu->command(-label => 'About',
-		       -underline => 0,
-		       -command => sub {menu_about($w)});
-    $helpmenu->pack(-side=>'right');
+    if(0) {			# No help menu implemented yet.
+	my $helpmenu = $menu->Menubutton(-text => 'Help', -underline => 0);
+	$helpmenu->command(-label => 'Using McGui',
+			   -underline => 6,
+			   -command => sub {menu_usingmcstas($w)});
+	$helpmenu->command(-label => 'About',
+			   -underline => 0,
+			   -command => sub {menu_about($w)});
+	$helpmenu->pack(-side=>'right');
+    }
 }
 
 sub setup_cmdwin {
     my ($w) = @_;
-    my $f = $w->Frame(-relief => 'raised', -borderwidth => 2);
-    $f->pack(-fill => 'x');
-    my $instr_lab = $f->Label(-text => "Instrument file: <None>",
-			      -anchor => 'w',
-			      -justify => 'left');
-    $instr_lab->pack(-fill => 'x');
-    my $res_lab = $f->Label(-text => "Simulation results: <None>",
-			    -anchor => 'w',
-			    -justify => 'left');
-    $res_lab->pack(-fill => 'x');
-    my $status_lab = $f->Label(-text => "Status: Ok",
+    my $f1 = $w->Frame(-relief => 'raised', -borderwidth => 2);
+    $f1->pack(-fill => 'x');
+    my $f2 = $f1->Frame();
+    $f2->pack(-fill => 'x');
+    my $instr_lab = $f2->Label(-text => "Instrument file: <None>",
 			       -anchor => 'w',
 			       -justify => 'left');
+    $instr_lab->pack(-side => 'left');
+    my $instr_but = $f2->Button(-text => "Edit",
+				-command => \&menu_edit_current);
+    $instr_but->pack(-side => "right", -padx => 1, -pady => 1);
+    my $f3 = $f1->Frame();
+    $f3->pack(-fill => 'x');
+    my $res_lab = $f3->Label(-text => "Simulation results: <None>",
+			     -anchor => 'w',
+			     -justify => 'left');
+    $res_lab->pack(-side => 'left');
+    my $sim_but = $f3->Button(-text => "Read",
+				-command => sub { menu_read_sim_file($w) });
+    $sim_but->pack(-side => "right", -padx => 1, -pady => 1);
+    my $status_lab = $f1->Label(-text => "Status: Ok",
+				-anchor => 'w',
+				-justify => 'left');
     $status_lab->pack(-fill => 'x');
     # Add the main text field, with scroll bar
-    my $rotext = $f->ROText(-relief => 'sunken', -bd => '2',
-			    -setgrid => 'true',
-			    -height => 15, -width => 80);
-    my $s = $f->Scrollbar(-command => [$rotext, 'yview']);
+    my $rotext = $f1->ROText(-relief => 'sunken', -bd => '2',
+			     -setgrid => 'true',
+			     -height => 24, -width => 80);
+    my $s = $f1->Scrollbar(-command => [$rotext, 'yview']);
     $rotext->configure(-yscrollcommand =>  [$s, 'set']);
     $s->pack(-side => 'right', -fill => 'y');
     $rotext->pack(-expand => 'yes', -fill => 'both');
@@ -553,18 +640,82 @@ sub setup_cmdwin {
     $current_results_label = $res_lab;
     $status_label = $status_lab;
     $cmdwin = $rotext;
+    # Insert "mcstas --version" message in window. Do it a line at the
+    # time, since otherwise the tags mechanism seems to get confused.
+    my $l;
+    for $l (split "\n", `mcstas --version`) {
+	$cmdwin->insert('end', "$l\n", 'msg');
+    }
 }
 
-sub setup_edit {
+sub editor_quit {
     my ($w) = @_;
-    my $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
-		      -height => 30);
+    if(is_erase_ok($w)) {
+	$w->destroy;
+	$edit_window = undef;
+	$edit_control = undef;
+    }
+}    
+
+sub setup_edit {
+    my ($mw) = @_;
+    # Create the editor window.
+    my $w = $mw->Toplevel;
+    my $e;
+    # Create the editor menus.
+    my $menu = $w->Frame(-relief => 'raised', -borderwidth => 2);
+    $menu->pack(-fill => 'x');
+    my $filemenu = $menu->Menubutton(-text => 'File', -underline => 0);
+    $filemenu->command(-label => 'New instrument',
+		       -command => [\&menu_new, $w],
+		       -underline => 0);
+    $filemenu->command(-label => 'Save instrument',
+		       -accelerator => 'Alt+S',
+		       -command => [\&menu_save, $w],
+		       -underline => 0);
+    $w->bind('<Alt-s>' => [\&menu_save, $w]);
+    $filemenu->command(-label => 'Save instrument as ...',
+		       -underline => 16,
+		       -command => sub {menu_saveas($w)});
+    $filemenu->separator;
+    $filemenu->command(-label => 'Close',
+		       -underline => 0,
+		       -accelerator => 'Alt+C',
+		       -command => sub { editor_quit($w) } );
+    $w->bind('<Alt-c>' => sub { editor_quit($w) } );
+    $filemenu->pack(-side=>'left');
+    my $editmenu = $menu->Menubutton(-text => 'Edit', -underline => 0);
+    $editmenu->command(-label => 'Undo',
+		       -accelerator => 'Ctrl+Z',
+		       -command => [\&menu_undo, $w], -underline => 0);
+    $w->bind('<Control-z>' => [\&menu_undo, $w]);
+    $editmenu->separator;
+    $editmenu->command(-label => 'Cut',
+		       -accelerator => 'Ctrl+X',
+		       -command => sub { $e->clipboardCut(); },
+		       -underline => 0);
+    $editmenu->command(-label => 'Copy',
+		       -accelerator => 'Ctrl+C',
+		       -command => sub { $e->clipboardCopy(); },
+		       -underline => 1);
+    $editmenu->command(-label => 'Paste',
+		       -accelerator => 'Ctrl+V',
+		       -command => sub { $e->clipboardPaste(); },
+		       -underline => 0);
+    $editmenu->pack(-side=>'left');
+
+    # Create the editor text widget.
+    $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
+		      -height => 24);
     my $s = $w->Scrollbar(-command => [$e, 'yview']);
     $e->configure(-yscrollcommand =>  [$s, 'set']);
     $s->pack(-side => 'right', -fill => 'y');
     $e->pack(-expand => 'yes', -fill => 'both');
     $e->mark('set', 'insert', '0.0');
+    $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def; 
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
     $edit_control = $e;
+    $edit_window = $w;
 }
 
 # Check if simulation needs recompiling.
@@ -585,11 +736,15 @@ sub check_if_need_recompile {
 }
 
 my $win = new MainWindow;
+check_external_editor();
 $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
-setup_edit($win);
 
-open_instr_def($win, $ARGV[0]) if @ARGV;
+if(@ARGV) {
+    open_instr_def($win, $ARGV[0]);
+} else {
+#    menu_open($win);
+}
 
 MainLoop;
