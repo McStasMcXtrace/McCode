@@ -257,7 +257,7 @@ function mcplot_edit_file(filename)
 
   if length(filename)
       if ~exist(filename, 'file'), filename = [ '..' filesep filename]; end % try one level up
-      if ~exist(filename, 'file'), filename = ['..' filesep filename]; end % try one level up
+      if ~exist(filename, 'file'), filename = [ '..' filesep filename]; end % try one level up
       if exist(filename, 'file')
         t = ['McPlot: Editing file ' filename];
         setstatus(t); fprintf(1,'%s\n',t);
@@ -367,7 +367,7 @@ function d=mcplot_plot(d,p)
   axis tight;
   if p==1, set(gca,'position',[.18,.18,.7,.65]);  end
   set(gcf,'name',t1);grid on;
-  if ~isempty(strfind(d.type,'2d')), colorbar; end
+  % if ~isempty(strfind(d.type,'2d')), colorbar; end
 % end mcplot_plot
 
 function mcplot_set_global(s, gwin, p_in)

@@ -17,9 +17,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.52 2003-04-04 18:20:21 farhi Exp $
+* $Id: mcstas-r.h,v 1.53 2003-04-07 11:50:51 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.52  2003/04/04 18:20:21  farhi
+*	remove some warnings (duplicated decl) for --no-runtime on Dec OSF
+*	
 *	Revision 1.51  2003/04/04 14:27:19  farhi
 *	Moved format definitions to mcstas-r.c for --no-runtime to work
 *	
@@ -51,7 +54,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.52 $"
+#define MCSTAS_R_H "$Revision: 1.53 $"
 
 #include <math.h>
 #include <string.h>
@@ -86,11 +89,13 @@
 #endif /* !MAC */
 #endif /* !WIN32 */
 
+#ifndef MC_PORTABLE
 #ifndef MAC
 #ifndef WIN32
 #include <signal.h>
 #endif /* !MAC */
 #endif /* !WIN32 */
+#endif /* MC_PORTABLE */
 
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
