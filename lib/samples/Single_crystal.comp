@@ -10,9 +10,10 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 * Origin: Risoe
 * Release: McStas 1.6
+* Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
 *
 * Mosaic single crystal with multiple scattering vectors.
 *
@@ -23,7 +24,7 @@
 * parameter, OR anisotropic by setting the mosaic_h, mosaic_v, and mosaic_n
 * parameters.
 * Crystal structure is specified with an ascii data file. Each line
-* contains seven numbers, separated by white space. The first three numbers
+* contains 4 or more numbers, separated by white space. The first three numbers
 * are the (h,k,l) indices of the reciprocal lattice point, and the last
 * number is the value of the structure factor |F|**2, in barns. (The rest of
 * the numbers are not used; the file is in the format output by the
@@ -33,8 +34,8 @@
 *           delta_d_d=1e-4, mosaic = 5, 
 *           ax = 3.8186, ay = 0, az = 0,
 *           bx = 0, by = 3.8843, bz = 0,
-*           cx = 0, cy = 0, cz = 11.6777
-*           reflections="YBaCuO.dat")
+*           cx = 0, cy = 0, cz = 11.6777,
+*           reflections="YBaCuO.lau")
 * %P
 * INPUT PARAMETERS:
 *
@@ -133,10 +134,27 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
 %{
+  /* used for reading data table from file */
+  %include "read_table-lib"
 /* Declare structures and functions only once in each instrument. */
 #ifndef SINGLE_CRYSTAL_DECL
 #define SINGLE_CRYSTAL_DECL
 
+    struct hkl_data
+    {
+      int h,k,l;                  /* Indices for this reflection */
+      double F2;                  /* Value of structure factor */
+      double tau_x, tau_y, tau_z; /* Coordinates in reciprocal space */
+      double tau;                 /* Length of (tau_x, tau_y, tau_z) */
+      double u1x, u1y, u1z;       /* First axis of local coordinate system */
+      double u2x, u2y, u2z;       /* Second axis of local coordinate system */
+      double u3x, u3y, u3z;       /* Third axis of local coordinate system */
+      double sig1, sig2, sig3;    /* RMSs of Gauss axis */
+      double sig123;              /* The product sig1*sig2*sig3 */
+      double m1, m2, m3;          /* Diagonal matrix representation of Gauss */
+      double cutoff;              /* Cutoff value for Gaussian tails */
+    };
+  
   struct hkl_info_struct
     {
       struct hkl_data *list;      /* Reflection array */
@@ -150,21 +168,6 @@ SHARE
       double bsx,bsy,bsz;         /* Second reciprocal lattice axis */
       double csx,csy,csz;         /* Third reciprocal lattice axis */
       double V0;                  /* Unit cell volume (AA**3) */
-    };
-
-  struct hkl_data
-    {
-      int h,k,l;                  /* Indices for this reflection */
-      double F2;                  /* Value of structure factor */
-      double tau_x, tau_y, tau_z; /* Coordinates in reciprocal space */
-      double tau;                 /* Length of (tau_x, tau_y, tau_z) */
-      double u1x, u1y, u1z;       /* First axis of local coordinate system */
-      double u2x, u2y, u2z;       /* Second axis of local coordinate system */
-      double u3x, u3y, u3z;       /* Third axis of local coordinate system */
-      double sig1, sig2, sig3;    /* RMSs of Gauss axis */
-      double sig123;              /* The product sig1*sig2*sig3 */
-      double m1, m2, m3;          /* Diagonal matrix representation of Gauss */
-      double cutoff;              /* Cutoff value for Gaussian tails */
     };
 
   struct tau_data
@@ -187,169 +190,154 @@ SHARE
     };
 
   void
-  read_hkl_data(char *file, struct hkl_info_struct *info)
+  read_hkl_data(char *SC_file, struct hkl_info_struct *info, 
+    double SC_mosaic, double SC_mosaic_h, double SC_mosaic_v, double SC_mosaic_n)
   {
     struct hkl_data *list = NULL;
     int size = 0;
-    FILE *f;
-    int i;
+    t_Table sTable; /* sample data table structure from SC_file */
+    int i=0;
 
-    f = fopen(file, "r");
-    if(!f)
+    Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+    if (sTable.columns < 4)
+      exit(fprintf(stderr, "Single_crystal: Error: The number of columns in %s should be at least %d for [h,k,l,F2]\n", SC_file, 4));
+    if (!sTable.rows)
+      exit(fprintf(stderr, "Single_crystal: Error: The number of rows in %s should be at least %d\n", SC_file, 1));
+    else size = sTable.rows;
+    
+    /* allocate hkl_data array */
+    list = (struct hkl_data*)malloc(size*sizeof(struct hkl_data));
+
+    for (i=0; i<size; i++)
     {
-      fprintf(stderr, "Single crystal: Error: file '%s' cannot be opened.\n",
-              file);
-      exit(1);
-    }
-    i = 0;
-    while(!feof(f))
-    {
-      double h, k, l, multiplicity, d, ttheta, F2;
+      double h, k, l, F2;
       double b1[3], b2[3];
-      int ret;
-      char Buffer[1024];
-
-      ret = fscanf(f, "%lf %lf %lf %lf %lf %lf %lf\n",
-                   &h, &k, &l, &multiplicity, &d, &ttheta, &F2);
-      if(ret == EOF)
-        break;
-      if(ret != 7)
-      {
-        fgets(Buffer, 1024, f);
-        /*
-        fprintf(stderr,
-                "Single_crystal: line %d in file '%s'\n",
-                i+1, file);
-        fprintf(stderr,
-                "              : %s\n", Buffer); */
-        continue;
-      }
-      else
-      {
-        /* Extend list if not large enough. */
-        extend_list(i, (void **)&list, &size, sizeof(*list));
-        list[i].h = h;
-        list[i].k = k;
-        list[i].l = l;
-        list[i].F2 = F2;
-        /* Precompute some values */
-        list[i].tau_x = h*info->asx + k*info->bsx + l*info->csx;
-        list[i].tau_y = h*info->asy + k*info->bsy + l*info->csy;
-        list[i].tau_z = h*info->asz + k*info->bsz + l*info->csz;
-        list[i].tau = sqrt(list[i].tau_x*list[i].tau_x +
-                           list[i].tau_y*list[i].tau_y +
-                           list[i].tau_z*list[i].tau_z);
-        list[i].u1x = list[i].tau_x/list[i].tau;
-        list[i].u1y = list[i].tau_y/list[i].tau;
-        list[i].u1z = list[i].tau_z/list[i].tau;
-        list[i].sig1 = FWHM2RMS*info->m_delta_d_d*list[i].tau;
-        /* Find two arbitrary axes perpendicular to tau and each other. */
-        normal_vec(&b1[0], &b1[1], &b1[2],
-                   list[i].u1x, list[i].u1y, list[i].u1z);
-        vec_prod(b2[0], b2[1], b2[2],
-                 list[i].u1x, list[i].u1y, list[i].u1z,
-                 b1[0], b1[1], b1[2]);
-        /* Find the two mosaic axes perpendicular to tau. */
-        if(mosaic > 0) {
-          /* Use isotropic mosaic. */
-          list[i].u2x = b1[0];
-          list[i].u2y = b1[1];
-          list[i].u2z = b1[2];
-          list[i].sig2 = FWHM2RMS*list[i].tau*MIN2RAD*mosaic;
-          list[i].u3x = b2[0];
-          list[i].u3y = b2[1];
-          list[i].u3z = b2[2];
-          list[i].sig3 = FWHM2RMS*list[i].tau*MIN2RAD*mosaic;
-        } else if(mosaic_h > 0 && mosaic_v > 0 && mosaic_n > 0) {
-          /* Use anisotropic mosaic. */
-          double mos_D[3][3];
-          double mos_a, mos_b, mos_c, mos_det, mos_l1, mos_l2;
-          double mos_e1_x, mos_e1_y, mos_e1_len, mos_e2_x, mos_e2_y, mos_e2_len;
-          int j1, j2;
-          /* Define the 3D Gaussian for the mosaic in Euler coordinates. */
-          mos_D[0][0] = 1/((FWHM2RMS*MIN2RAD*mosaic_n)*(FWHM2RMS*MIN2RAD*mosaic_n));
-          mos_D[0][1] = 0;
-          mos_D[0][2] = 0;
-          mos_D[1][0] = 0;
-          mos_D[1][1] = 1/((FWHM2RMS*MIN2RAD*mosaic_h)*(FWHM2RMS*MIN2RAD*mosaic_h));
-          mos_D[1][2] = 0;
-          mos_D[2][0] = 0;
-          mos_D[2][1] = 0;
-          mos_D[2][2] = 1/((FWHM2RMS*MIN2RAD*mosaic_v)*(FWHM2RMS*MIN2RAD*mosaic_v));
-          /* ToDo: This is the place to apply a rotation U to the mosaic Gaussian,
-             by setting D := U^T D U. */
-          /* Now compute the 2D intersection Gauss (B^T D B) between the 3D mosaic
-             Gauss D and the plane spanned by b1 and b2 (matrix B). The matrix
-             (B^T D B) is 2x2 symmetric and positive definite.*/
-          mos_a = mos_b = mos_c = 0;
-          for(j1 = 0; j1 < 3; j1++) {
-            for(j2 = 0; j2 < 3; j2++) {
-              mos_a += b1[j1]*b1[j2]*mos_D[j1][j2];
-              mos_b += b1[j1]*b2[j2]*mos_D[j1][j2];
-              mos_c += b2[j1]*b2[j2]*mos_D[j1][j2];
-            }
+      
+      /* get data from table */
+      h = Table_Index(sTable, i, 0);
+      k = Table_Index(sTable, i, 1);
+      l = Table_Index(sTable, i, 2);
+      F2= Table_Index(sTable, i, sTable.columns-1); /* last column */
+      
+      list[i].h = h;
+      list[i].k = k;
+      list[i].l = l;
+      list[i].F2 = F2;
+      /* Precompute some values */
+      list[i].tau_x = h*info->asx + k*info->bsx + l*info->csx;
+      list[i].tau_y = h*info->asy + k*info->bsy + l*info->csy;
+      list[i].tau_z = h*info->asz + k*info->bsz + l*info->csz;
+      list[i].tau = sqrt(list[i].tau_x*list[i].tau_x +
+                         list[i].tau_y*list[i].tau_y +
+                         list[i].tau_z*list[i].tau_z);
+      list[i].u1x = list[i].tau_x/list[i].tau;
+      list[i].u1y = list[i].tau_y/list[i].tau;
+      list[i].u1z = list[i].tau_z/list[i].tau;
+      list[i].sig1 = FWHM2RMS*info->m_delta_d_d*list[i].tau;
+      /* Find two arbitrary axes perpendicular to tau and each other. */
+      normal_vec(&b1[0], &b1[1], &b1[2],
+                 list[i].u1x, list[i].u1y, list[i].u1z);
+      vec_prod(b2[0], b2[1], b2[2],
+               list[i].u1x, list[i].u1y, list[i].u1z,
+               b1[0], b1[1], b1[2]);
+      /* Find the two mosaic axes perpendicular to tau. */
+      if(SC_mosaic > 0) {
+        /* Use isotropic mosaic. */
+        list[i].u2x = b1[0];
+        list[i].u2y = b1[1];
+        list[i].u2z = b1[2];
+        list[i].sig2 = FWHM2RMS*list[i].tau*MIN2RAD*SC_mosaic;
+        list[i].u3x = b2[0];
+        list[i].u3y = b2[1];
+        list[i].u3z = b2[2];
+        list[i].sig3 = FWHM2RMS*list[i].tau*MIN2RAD*SC_mosaic;
+      } else if(SC_mosaic_h > 0 && SC_mosaic_v > 0 && SC_mosaic_n > 0) {
+        /* Use anisotropic mosaic. */
+        double mos_D[3][3];
+        double mos_a, mos_b, mos_c, mos_det, mos_l1, mos_l2;
+        double mos_e1_x, mos_e1_y, mos_e1_len, mos_e2_x, mos_e2_y, mos_e2_len;
+        int j1, j2;
+        /* Define the 3D Gaussian for the mosaic in Euler coordinates. */
+        mos_D[0][0] = 1/((FWHM2RMS*MIN2RAD*SC_mosaic_n)*(FWHM2RMS*MIN2RAD*SC_mosaic_n));
+        mos_D[0][1] = 0;
+        mos_D[0][2] = 0;
+        mos_D[1][0] = 0;
+        mos_D[1][1] = 1/((FWHM2RMS*MIN2RAD*SC_mosaic_h)*(FWHM2RMS*MIN2RAD*SC_mosaic_h));
+        mos_D[1][2] = 0;
+        mos_D[2][0] = 0;
+        mos_D[2][1] = 0;
+        mos_D[2][2] = 1/((FWHM2RMS*MIN2RAD*SC_mosaic_v)*(FWHM2RMS*MIN2RAD*SC_mosaic_v));
+        /* ToDo: This is the place to apply a rotation U to the mosaic Gaussian,
+           by setting D := U^T D U. */
+        /* Now compute the 2D intersection Gauss (B^T D B) between the 3D SC_mosaic
+           Gauss D and the plane spanned by b1 and b2 (matrix B). The matrix
+           (B^T D B) is 2x2 symmetric and positive definite.*/
+        mos_a = mos_b = mos_c = 0;
+        for(j1 = 0; j1 < 3; j1++) {
+          for(j2 = 0; j2 < 3; j2++) {
+            mos_a += b1[j1]*b1[j2]*mos_D[j1][j2];
+            mos_b += b1[j1]*b2[j2]*mos_D[j1][j2];
+            mos_c += b2[j1]*b2[j2]*mos_D[j1][j2];
           }
-          /* Compute the eigenvalues of the 2D Gaussian. */
-          if(mos_b*mos_b < 1e-20*(mos_a*mos_a + mos_c*mos_c)) {
-            /* Matrix is diagonal. */
-            mos_l1 = mos_a;
-            mos_e1_x = 1;
-            mos_e1_y = 0;
-            mos_l2 = mos_c;
-            mos_e2_x = 0;
-            mos_e2_y = 1;
-          } else {                  /* Not diagonal */
-            mos_det = (mos_a - mos_c)*(mos_a - mos_c) + 4*mos_b*mos_b;
-            mos_l1 = 0.5*(mos_a + mos_c - sqrt(mos_det));
-            mos_l2 = 0.5*(mos_a + mos_c + sqrt(mos_det));
-            /* Compute the eigenvectors. */
-            mos_e1_x = -mos_b;
-            mos_e1_y = mos_a - mos_l1;
-            mos_e1_len = sqrt(mos_e1_x*mos_e1_x + mos_e1_y*mos_e1_y);
-            mos_e1_x /= mos_e1_len;
-            mos_e1_y /= mos_e1_len;
-            mos_e2_x = -mos_c - mos_l2;
-            mos_e2_y = -mos_b;
-            mos_e2_len = sqrt(mos_e2_x*mos_e2_x + mos_e2_y*mos_e2_y);
-            mos_e2_x /= mos_e2_len;
-            mos_e2_y /= mos_e2_len;
-          }
-          /* Now finally compute the axes (in reciprocal space) and RMSs of the
-             reciprocal lattice point Gaussian that are perpendicular to tau. */
-          list[i].u2x = b1[0]*mos_e2_x + b2[0]*mos_e2_y;
-          list[i].u2y = b1[1]*mos_e2_x + b2[1]*mos_e2_y;
-          list[i].u2z = b1[2]*mos_e2_x + b2[2]*mos_e2_y;
-          list[i].sig2 = list[i].tau/sqrt(mos_l1);
-          list[i].u3x = b1[0]*mos_e1_x + b2[0]*mos_e1_y;
-          list[i].u3y = b1[1]*mos_e1_x + b2[1]*mos_e1_y;
-          list[i].u3z = b1[2]*mos_e1_x + b2[2]*mos_e1_y;
-          list[i].sig3 = list[i].tau/sqrt(mos_l2);
-        } else {
-          fprintf(stderr,
-                  "Single_crystal: Error: EITHER mosaic OR (mosaic_h, mosaic_v, mosaic_n)\n"
-                  "must be given and be >0.\n");
-          exit(1);
         }
-        list[i].sig123 = list[i].sig1*list[i].sig2*list[i].sig3;
-        list[i].m1 = 1/(2*list[i].sig1*list[i].sig1);
-        list[i].m2 = 1/(2*list[i].sig2*list[i].sig2);
-        list[i].m3 = 1/(2*list[i].sig3*list[i].sig3);
-        /* Set Gauss cutoff to 5 times the maximal sigma. */
-        if(list[i].sig1 > list[i].sig2)
-          if(list[i].sig1 > list[i].sig3)
-            list[i].cutoff = 5*list[i].sig1;
-          else
-            list[i].cutoff = 5*list[i].sig3;
-        else
-          if(list[i].sig2 > list[i].sig3)
-            list[i].cutoff = 5*list[i].sig2;
-          else
-            list[i].cutoff = 5*list[i].sig3;
-        i++;
+        /* Compute the eigenvalues of the 2D Gaussian. */
+        if(mos_b*mos_b < 1e-20*(mos_a*mos_a + mos_c*mos_c)) {
+          /* Matrix is diagonal. */
+          mos_l1 = mos_a;
+          mos_e1_x = 1;
+          mos_e1_y = 0;
+          mos_l2 = mos_c;
+          mos_e2_x = 0;
+          mos_e2_y = 1;
+        } else {                  /* Not diagonal */
+          mos_det = (mos_a - mos_c)*(mos_a - mos_c) + 4*mos_b*mos_b;
+          mos_l1 = 0.5*(mos_a + mos_c - sqrt(mos_det));
+          mos_l2 = 0.5*(mos_a + mos_c + sqrt(mos_det));
+          /* Compute the eigenvectors. */
+          mos_e1_x = -mos_b;
+          mos_e1_y = mos_a - mos_l1;
+          mos_e1_len = sqrt(mos_e1_x*mos_e1_x + mos_e1_y*mos_e1_y);
+          mos_e1_x /= mos_e1_len;
+          mos_e1_y /= mos_e1_len;
+          mos_e2_x = -mos_c - mos_l2;
+          mos_e2_y = -mos_b;
+          mos_e2_len = sqrt(mos_e2_x*mos_e2_x + mos_e2_y*mos_e2_y);
+          mos_e2_x /= mos_e2_len;
+          mos_e2_y /= mos_e2_len;
+        }
+        /* Now finally compute the axes (in reciprocal space) and RMSs of the
+           reciprocal lattice point Gaussian that are perpendicular to tau. */
+        list[i].u2x = b1[0]*mos_e2_x + b2[0]*mos_e2_y;
+        list[i].u2y = b1[1]*mos_e2_x + b2[1]*mos_e2_y;
+        list[i].u2z = b1[2]*mos_e2_x + b2[2]*mos_e2_y;
+        list[i].sig2 = list[i].tau/sqrt(mos_l1);
+        list[i].u3x = b1[0]*mos_e1_x + b2[0]*mos_e1_y;
+        list[i].u3y = b1[1]*mos_e1_x + b2[1]*mos_e1_y;
+        list[i].u3z = b1[2]*mos_e1_x + b2[2]*mos_e1_y;
+        list[i].sig3 = list[i].tau/sqrt(mos_l2);
+      } else {
+        fprintf(stderr,
+                "Single_crystal: Error: EITHER mosaic OR (mosaic_h, mosaic_v, mosaic_n)\n"
+                "must be given and be >0.\n");
+        exit(1);
       }
+      list[i].sig123 = list[i].sig1*list[i].sig2*list[i].sig3;
+      list[i].m1 = 1/(2*list[i].sig1*list[i].sig1);
+      list[i].m2 = 1/(2*list[i].sig2*list[i].sig2);
+      list[i].m3 = 1/(2*list[i].sig3*list[i].sig3);
+      /* Set Gauss cutoff to 5 times the maximal sigma. */
+      if(list[i].sig1 > list[i].sig2)
+        if(list[i].sig1 > list[i].sig3)
+          list[i].cutoff = 5*list[i].sig1;
+        else
+          list[i].cutoff = 5*list[i].sig3;
+      else
+        if(list[i].sig2 > list[i].sig3)
+          list[i].cutoff = 5*list[i].sig2;
+        else
+          list[i].cutoff = 5*list[i].sig3;
     }
-    fclose(f);
-    printf("Single_crystal: Read %d reflections from file '%s'\n", i, file);
+    Table_Free(&sTable);
     info->list = list;
     info->count = i;
     info->tau_list = malloc(i*sizeof(*info->tau_list));
@@ -412,7 +400,8 @@ INITIALIZE
   hkl_info.csy = 2*PI/hkl_info.V0*tmp_y;
   hkl_info.csz = 2*PI/hkl_info.V0*tmp_z;
   /* Read in structure factors, and do some pre-calculations. */
-  read_hkl_data(reflections, &hkl_info);
+  read_hkl_data(reflections, &hkl_info, mosaic, mosaic_h, mosaic_v, mosaic_n);
+  printf("Single_crystal: %s: Read %d reflections from file '%s'\n", NAME_CURRENT_COMP, hkl_info.count, reflections);
 %}
 
 TRACE
