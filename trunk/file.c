@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Sep 25, 1998
 *
-*	$Id: file.c,v 1.2 1998-10-02 08:36:21 kn Exp $
+*	$Id: file.c,v 1.3 2000-02-15 07:40:59 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.2  1998/10/02 08:36:21  kn
+*	Fixed header comment.
+*
 *	Revision 1.1  1998/10/01 08:13:41  kn
 *	Initial revision
 *
@@ -22,6 +25,9 @@
 #include "mcstas.h"
 
 static List search_list = NULL;
+
+static char *sys_subdir_table[] =
+  { "samples", "monitors", "sources", "optics", "misc" };
 
 /* Attempt to open FILE in directory DIR (or current directory if DIR is
    NULL). */
@@ -86,6 +92,7 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
   List_handle liter;
   char *dir;
   FILE *f;
+  int i;
 
   f = (*try_open)(NULL, name);
   if(f != NULL)
@@ -100,9 +107,18 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
 	return f;
     }
   }
+  /* Now look in the system directory. */
   f = (*try_open)(get_sys_dir(), name);
   if(f != NULL)
     return f;
+  /* Finally look in the fixed list of system subdirectories. */
+  for(i = 0; i < sizeof(sys_subdir_table)/sizeof(char *); i++) {
+    dir = str_cat(get_sys_dir(), PATHSEP_S, sys_subdir_table[i], NULL);
+    f = (*try_open)(dir, name);
+    str_free(dir);
+    if(f != NULL)
+      return f;
+  }
   /* Not found. */
   return NULL;
 }
