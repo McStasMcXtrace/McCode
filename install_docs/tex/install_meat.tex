@@ -31,6 +31,7 @@ website at
     7}{http://www.bloodshed.net/dev/devcpp.html}
    - Refer to section \ref{s:winbin}}
 \end{itemize}
+
 \section{Source code build}
 \label{s:src}
 The \htmladdnormallink{McStas}{http://mcstas.risoe.dk} package is
@@ -38,6 +39,7 @@ beeing co-developed for mainly Linux and Windows systems, however
 the Linux build instructions below will work on most Unix
 systems. For an updated list of platforms on which McStas has been
 built, refer to the \htmladdnormallink{project website}{http://mcstas.risoe.dk/developments/platforms/}.
+
 \subsection{Windows build}
 \begin{itemize}
 \item{Start by unpacking the \texttt{mcstas-1.7-src.tar.gz} package using
@@ -53,6 +55,7 @@ instructions.}
 \item{When the build has been done (e.g. \texttt{mcstas.exe}
 has been produced), proceed to install (Section \ref{s:winbin}).}
 \end{itemize}
+
 \subsection{Unix build}
 McStas uses autoconf to detect the system configuration and create the
 proper Makefiles needed for compilation. On Unix-like systems, you
@@ -154,9 +157,11 @@ you must also install the following packages:
 \item{Perl, Tk and perl-Tk for GUI (see Section \ref{s:perltk})}
 \item{Matlab, Scilab or (PGPLOT+pgperl+PDL) for plotting (see Section \ref{s:plotting})}
 \end{itemize}
+
 \section{Binary install, Linux}
 \label{s:linbin}
 Should be very easy, simply start from 'make install' in Section \ref{s:src}.
+
 \section{Binary install, Windows}
 \label{s:winbin}
 \begin{itemize}
@@ -179,6 +184,7 @@ Variables'\\\ \\}
     \item{Matlab or Scilab for plotting (see Section \ref{s:plotting})}
   \end{itemize}
 \end{itemize}
+
 \section{Installing support Apps}
 \subsection{Bloodshed Dev-C++ (Win32)}
 \label{s:instblood}
@@ -225,5 +231,19 @@ For plotting with McStas, different support packages can be used:
 \item{Matlab (Some Unix/Win32) - refer to
     \htmladdnormallink{http://www.mathworks.com}{http://www.mathworks.com}. Matlab licenses are rather costly, but discount programmes for university and research departments exist.}
 \item{Scilab (Unix/Win32/Mac...) - a free 'Matlab-like' package, available from
-    \htmladdnormallink{http://www-rocq.inria.fr/scilab/}{http://www-rocq.inria.fr/scilab/}. McStas also requires the Plolib library from \htmladdnormallink{http://www.dma.utc.fr/~mottelet/myplot.html}{http://www.dma.utc.fr/~mottelet/myplot.html}.}
+    \htmladdnormallink{http://www-rocq.inria.fr/scilab/}{http://www-rocq.inria.fr/scilab/}. McStas also requires the Plolib library from \\ \htmladdnormallink{http://www.dma.utc.fr/~mottelet/myplot.html}{http://www.dma.utc.fr/~mottelet/myplot.html}.}
 \end{itemize}
+
+\section{Testing the McStas distribution}
+\label{s:testing}
+
+The \verb+examples+ directory of the distribution contains an automatic distribution test procedure, which is executed (under Unix-like systems) with:
+\begin{verbatim}
+    ./examples/selftest
+\end{verbatim}
+This test takes a few minutes to complete, and should essentially display messages saying that some of the components used in the test instruments are obsolete (but still work).
+Additionally, plots from results may be generated automatically from the command
+\begin{verbatim}
+    ./examples/showtest
+\end{verbatim}
+which will use by default the PGPLOT plotting back-end (see below). Other back-ends (see Section~\ref{s:plotting}) may be specified when setting the MCSTAS\_FORMAT environment variable.
