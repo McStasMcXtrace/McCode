@@ -56,8 +56,12 @@ if ($Config{'osname'} eq "MSWin32") {
     print STDOUT "$terminal\n";
     
     print STDOUT "Checking for Tcl/Tk: ";
-    $failed=system('which.exe wish.exe');
-    $tcltk = (not $failed) ? "wish.exe" : "no";
+    $failed=system('which.exe wperl.exe');
+    $tcltk = (not $failed) ? "wperl.exe" : "no";
+    if ($failed) { 
+      $failed=system('which.exe wish.exe'); 
+      $tcltk = (not $failed) ? "wish.exe" : "no";
+    }
     print STDOUT "$tcltk\n";
     
     print STDOUT "Checking for MPI compiler: ";
