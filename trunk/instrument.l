@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.9 1998-05-13 13:03:29 kn Exp $
+*	$Id: instrument.l,v 1.10 1998-08-26 12:43:21 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.9  1998/05/13 13:03:29  kn
+*	Now really fix the number syntax problem.
+*
 *	Revision 1.9  1998/05/13 13:02:35  kn
 *	Now really fix the number syntax problem.
 *
@@ -50,15 +53,48 @@
 %{
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "mcstas.h"
 #include "instrument.tab.h"
+
+/* Fix things for bison option %pure_parser. */
+#define YY_DECL int yylex(YYSTYPE *yylvalp)
+#define yylval (*yylvalp)
+
+
+/* Structure to hold the state of a file being parsed. */
+struct file_state
+  {
+    YY_BUFFER_STATE buffer;
+    char *filename;
+    int line;
+    int oldstate;		/* Saved lexer start condition. */
+    int visible_eof;		/* If true, tell parser about end-of-file. */
+  };
+
+#define MAX_INCLUDE 50
+static struct file_state file_stack[MAX_INCLUDE + 1];
+static int file_stack_ptr = 0;
+
+static void push_include(char *name);
+
 %}
 
 
-/* Lexer states. The state ccomment is used for scanning c-style comments. The
-   state ccode is used when scanning embedded C code blocks. */
+/* Lexer states. */
+
+/* The state ccomment is used for scanning c-style comments. The state ccode
+   is used when scanning embedded C code blocks. */
 %x ccomment ccode
+
+/* The state initial_token is only used to output an initial token to
+   discriminate between parsing general instrument definitions and autoloaded
+   component definitions. */
+%x initial_token
+
+/* Get file name in %include. */
+%x inclname
 
 
 /* Abbreviations. */
@@ -71,18 +107,32 @@ ID		{DIGIT}*{ALPHA}{ALPHANUM}*
 
 %%
 
+ /* Initially, output a single token to the parser to tell it whether to parse
+    general instrument definitions or autoloaded component definitions. */
+<initial_token>.|\n |
+<initial_token><<EOF>> {
+		  yyless(0);
+		  BEGIN(INITIAL);
+		  return parse_restricted ? TOK_RESTRICTED : TOK_GENERAL;
+		}
+
 ABSOLUTE	return TOK_ABSOLUTE;
 AT		return TOK_AT;
 COMPONENT	return TOK_COMPONENT;
 DECLARE		return TOK_DECLARE;
 DEFINE		return TOK_DEFINE;
+DEFINITION	return TOK_DEFINITION;
 END		return TOK_END;
 FINALLY		return TOK_FINALLY;
 EXTERN		return TOK_EXTERN;
 INITIALIZE	return TOK_INITIALIZE;
 INSTRUMENT	return TOK_INSTRUMENT;
+PARAMETERS	return TOK_PARAMETERS;
 RELATIVE	return TOK_RELATIVE;
 ROTATED		return TOK_ROTATED;
+SETTING		return TOK_SETTING;
+STATE		return TOK_STATE;
+TRACE		return TOK_TRACE;
 
 "("|")"|","	return yytext[0]; /* Punctuation. */
 "="		return yytext[0]; /* Operator. */
@@ -114,12 +164,29 @@ ROTATED		return TOK_ROTATED;
 			  print_error("%%} terminator not on a line by itself.\n");
 			  return TOK_CODE_END;
 			}
- [^\n]*\n		instr_current_line++; yylval.string = str_dup(yytext); return TOK_CODE_LINE;
-}
+ [^\n]*\n		{
+			  instr_current_line++;
+			  yylval.string = str_dup(yytext);
+			  return TOK_CODE_LINE;
+			}
+ }
 
  /* %-style comments - ignore everything to end of line. */
 "%"\n		instr_current_line++; /* Ignore comment. */
-"%"[^{}\n][^\n]*\n instr_current_line++; /* Ignore comment. */
+"% "[^\n]*\n	instr_current_line++; /* Ignore comment. */
+
+ /* Include files. */
+"%include"[ \t]+\"	BEGIN(inclname);
+<inclname>[^\"\n]+\"	{
+			  yytext[yyleng - 1] = '\0';
+			  BEGIN(INITIAL);
+			  push_include(yytext);
+			}
+<inclname>[\"\n].*	{
+			  print_error("Error in %include statement line %d.\n",
+				      instr_current_line);
+			  BEGIN(INITIAL);
+			}
 
  /* C-style comments. */
 "/*"		BEGIN(ccomment);
@@ -131,10 +198,33 @@ ROTATED		return TOK_ROTATED;
  "*"+"/"	BEGIN(INITIAL);	/* End of comment. */
 }
 
-[ \t]+		/* Ignore whitespace. */
-[ \t]*\n	instr_current_line++; /* Ignore whitespace. */
+[ \t]+			/* Ignore whitespace. */
+[ \t]*\n		instr_current_line++; /* Ignore whitespace. */
 
-.               print_error("Invalid character `%s'.\n", yytext); return TOK_INVALID;
+<INITIAL><<EOF>> {
+		  if(file_stack_ptr <= 0)
+		  {
+		    /* EOF on main instrument file. */
+		    yyterminate();
+		  }
+		  else
+		  {
+		    --file_stack_ptr;
+		    yy_delete_buffer(YY_CURRENT_BUFFER);
+		    yy_switch_to_buffer(file_stack[file_stack_ptr].buffer);
+		    instr_current_filename = file_stack[file_stack_ptr].filename;
+		    instr_current_line = file_stack[file_stack_ptr].line;
+		    BEGIN(file_stack[file_stack_ptr].oldstate);
+		    if(file_stack[file_stack_ptr].visible_eof)
+		      yyterminate();
+		  }
+		}
+
+.               {
+		  print_error("Invalid character `%s' in file '%s', line %d.\n",
+			      yytext, instr_current_filename, instr_current_line);
+		  return TOK_INVALID;
+		}
 
 
 
@@ -142,4 +232,58 @@ ROTATED		return TOK_ROTATED;
 
 /* User code section. */
 
+/* This flag is set when autoloading component definitions to make the lexer
+   output the special initial token to switch the parser to restricted
+   mode. */
+static int parse_restricted = FALSE;
 
+/* Prepare to run lexical analysis on new file. */
+void
+lex_new_file(FILE *file)
+{
+  parse_restricted = FALSE;
+  BEGIN(initial_token);
+  yyrestart(file);
+}
+
+
+/* This handles the details of switching the lexer to a new file. */
+static void
+push_file(FILE *file, int restricted, int visible_eof)
+{
+  if(file_stack_ptr >= MAX_INCLUDE)
+    fatal_error("Too deeply nested includes at line %d.\n",
+		instr_current_line);
+  file_stack[file_stack_ptr].buffer = YY_CURRENT_BUFFER;
+  file_stack[file_stack_ptr].filename = instr_current_filename;
+  file_stack[file_stack_ptr].line = instr_current_line;
+  file_stack[file_stack_ptr].oldstate = YY_START;
+  file_stack[file_stack_ptr].visible_eof = visible_eof;
+  file_stack_ptr++;
+
+  yy_switch_to_buffer(yy_create_buffer(file, YY_BUF_SIZE));
+  parse_restricted = restricted;
+}
+
+/* Handle a new %include file. */
+static void
+push_include(char *name)
+{
+  FILE *file;
+
+  file = fopen(name, "r");
+  if(file == NULL)
+    fatal_error("Cannot open include file '%s' at line %d.\n",
+		name, instr_current_line);
+  push_file(file, FALSE, FALSE);
+  instr_current_filename = name;
+  instr_current_line = 1;
+}
+
+/* Handle a new autoincluded file (uses recursive parser call). */
+void
+push_autoload(FILE *file)
+{
+  push_file(file, TRUE, TRUE);
+  BEGIN(initial_token);
+}
