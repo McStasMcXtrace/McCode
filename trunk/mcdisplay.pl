@@ -104,6 +104,7 @@ sub make_instrument {
 	$z[$i] = $T[2];
 	$zmin = $z[$i] if !$zmin || $z[$i] < $zmin;
 	$zmax = $z[$i] if !$zmax || $z[$i] > $zmax;
+
 	@U = ($T[3], $T[4], $T[5], $T[6], $T[7], $T[8], $T[9], $T[10], $T[11]);
 	$ori[$i] = \@U;
 	$comp[$i] = $c;
@@ -138,11 +139,32 @@ sub make_instrument {
 	}
 	$i++;
     }
+    if($xmin == $xmax) {
+	$xmin--;
+	$xmax++;
+    }
+    if($ymin == $ymax) {
+	$ymin--;
+	$ymax++;
+    }
+    if($zmin == $zmax) {
+	$zmin--;
+	$zmax++;
+    }
+    $xmin -= ($xmax - $xmin) / 6;
+    $xmax += ($xmax - $xmin) / 6;
+    $ymin -= ($xmax - $xmin) / 6;
+    $ymax += ($xmax - $xmin) / 6;
+    $zmin -= ($xmax - $xmin) / 6;
+    $zmax += ($xmax - $xmin) / 6;
     %instr = ('x' => \@x, 'y' => \@y, z => \@z,
 	      ori => \@ori, dis => \@dis, comp => \@comp,
 	      xmin => $xmin, xmax => $xmax,
 	      ymin => $ymin, ymax => $ymax,
-	      zmin => $zmin, zmax => $zmax);
+	      zmin => $zmin, zmax => $zmax,
+	      zoom_xmin => $xmin, zoom_xmax => $xmax,
+	      zoom_ymin => $ymin, zoom_ymax => $ymax,
+	      zoom_zmin => $zmin, zoom_zmax => $zmax);
     return %instr;
 }    
 	
@@ -260,8 +282,6 @@ sub plot_components {
 	    pgsch(1.4);
 	    pgpt(1, $x[$i], $y[$i], 26);
 	}
-#	pgsch(1.1);
-#	pgtext($x[$i], $y[$i], $components[$i]);
     }
 }
 
@@ -305,28 +325,12 @@ sub show_comp_names {
 
 
 sub plot_instrument {
-    my ($xmin, $xmax, $ymin, $ymax, $zmin, $zmax, $rinstr, $rneutron) = @_;
+    my ($rinstr, $rneutron) = @_;
     my %instr = %$rinstr;
     my %neutron = %$rneutron;
-
-    if($xmin == $xmax) {
-	$xmin--;
-	$xmax++;
-    }
-    if($ymin == $ymax) {
-	$ymin--;
-	$ymax++;
-    }
-    if($zmin == $zmax) {
-	$zmin--;
-	$zmax++;
-    }
-    $xmin -= ($xmax - $xmin) / 6;
-    $xmax += ($xmax - $xmin) / 6;
-    $ymin -= ($xmax - $xmin) / 6;
-    $ymax += ($xmax - $xmin) / 6;
-    $zmin -= ($xmax - $xmin) / 6;
-    $zmax += ($xmax - $xmin) / 6;
+    my ($xmin, $xmax, $ymin, $ymax, $zmin, $zmax) =
+	($instr{'zoom_xmin'}, $instr{'zoom_xmax'}, $instr{'zoom_ymin'},
+	 $instr{'zoom_ymax'}, $instr{'zoom_zmin'}, $instr{'zoom_zmax'});
 
     pgbbuf;
 
@@ -368,6 +372,30 @@ sub plot_instrument {
     my ($cx, $cy, $cc);
     $cx = $cy = 0;
     pgband(0, 0, 0, 0, $cx, $cy, $cc);
+    if($cc =~ /[qQ]/) {
+	exit 0;			# Finished.
+    } elsif($cc =~ /[zZ]/) {	# Zoom.
+	my ($cx1, $cy1, $cc1) = (0, 0, 0);
+	pgband(0, 0, 0, 0, $cx, $cy, $cc);
+	pgband(2,0,$cx,$cy,$cx1,$cy1,$cc1);
+	my $tmp;
+	$tmp = $cx, $cx = $cx1, $cx1 = $tmp if $cx > $cx1;
+	$tmp = $cy, $cy = $cy1, $cy1 = $tmp if $cy > $cy1;
+	$rinstr->{'zoom_xmin'} = $cx;
+	$rinstr->{'zoom_xmax'} = $cx1;
+	$rinstr->{'zoom_zmin'} = $cy;
+	$rinstr->{'zoom_zmax'} = $cy1;
+	return 1;
+    } elsif($cc =~ /[xX]/) {	# Reset zoom.
+	$rinstr->{'zoom_xmin'} = $instr{'xmin'};
+	$rinstr->{'zoom_xmax'} = $instr{'xmax'};
+	$rinstr->{'zoom_ymin'} = $instr{'ymin'};
+	$rinstr->{'zoom_ymax'} = $instr{'ymax'};
+	$rinstr->{'zoom_zmin'} = $instr{'zmin'};
+	$rinstr->{'zoom_zmax'} = $instr{'zmax'};
+	return 1;
+    }
+    return 0;			# Default: do not repeat this neutron.
 }
 
 
@@ -421,10 +449,10 @@ $inspect_pos = get_inspect_pos($inspect, @components);
 
 while(!eof(IN)) {
     %neutron = read_neutron(IN);
-    plot_instrument($instr{'xmin'},$instr{'xmax'},$instr{'ymin'},
-		    $instr{'ymax'},$instr{'zmin'},$instr{'zmax'},
-		    \%instr, \%neutron)
-	if @{$neutron{'comp'}} > $inspect_pos;
+    next if @{$neutron{'comp'}} <= $inspect_pos;
+
+    while(plot_instrument(\%instr, \%neutron))
+    { }
 }
 
 close(IN);
