@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.4 1997-12-03 13:34:19 kn Exp $
+*	$Id: mcstas-r.h,v 1.5 1998-03-16 08:04:16 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.4  1997/12/03 13:34:19  kn
+*	Added definition of ABSORB macro.
+*
 *	Revision 1.3  1997/10/16 14:27:28  kn
 *	Added debugging output used by the "display" graphical visualization
 *	tool.
@@ -73,3 +76,4 @@ Coords rot_apply(Rotation t, Coords a);
 void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 		double t, double s1, double s2, double p);
 void mcgenstate(void);
+double randnorm(void);

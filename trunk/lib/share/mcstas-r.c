@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.4 1997-10-16 14:27:05 kn Exp $
+* 	$Id: mcstas-r.c,v 1.5 1998-03-16 08:03:41 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.4  1997/10/16 14:27:05  kn
+* 	Add missing #include. Change in mcreadparams() to fit better with the
+* 	"display" visualization tool.
+*
 * 	Revision 1.3  1997/09/08 11:31:22  kn
 * 	Added mcsetstate() function.
 *
@@ -24,6 +28,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "mcstas-r.h"
 
 /* Assign coordinates. */
@@ -226,4 +231,33 @@ void
 mcgenstate(void)
 {
   mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 1);
+}
+
+double
+randnorm(void)
+{
+  static double v1, v2, s;
+  static int phase = 0;
+  double X, u1, u2;
+
+  if(phase == 0)
+  {
+    do
+    {
+      u1 = (double)rand() / RAND_MAX;
+      u2 = (double)rand() / RAND_MAX;
+      v1 = 2*u1 - 1;
+      v2 = 2*u2 - 1;
+      s = v1*v1 + v2*v2;
+    } while(s >= 1 || s == 0);
+
+    X = v1*sqrt(-2*log(s)/s);
+  }
+  else
+  {
+    X = v2*sqrt(-2*log(s)/s);
+  }
+
+  phase = 1 - phase;
+  return X;
 }
