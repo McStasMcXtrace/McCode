@@ -11,7 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
@@ -96,10 +96,11 @@ SHARE
 #ifndef GAUSS
   /* Define these arrays only once for all instances. */
   /* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
-     James O Wilkes, "Applied numerical methods", Wiley, 1996, page 103. */
-  double Gauss_X[] = {-0.987992518020485, 0.937273392400706, 0.848206583410427,
-                0.724417731360170, 0.570972172608539, 0.394151347077563,
-                0.201194093997435, 0, 0.201194093997435,
+     James O Wilkes, "Applied numerical methods", Wiley, 1969, page 103. 
+     This reference is available from the Copenhagen UB2 library */
+  double Gauss_X[] = {-0.987992518020485, -0.937273392400706, -0.848206583410427,
+                -0.724417731360170, -0.570972172608539, -0.394151347077563,
+                -0.201194093997435, 0, 0.201194093997435,
                 0.394151347077563, 0.570972172608539, 0.724417731360170,
                 0.848206583410427, 0.937273392400706, 0.987992518020485};
   double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
