@@ -14,23 +14,28 @@ use lib $MCSTAS::sys_dir;
 
 use FileHandle;
 
-require "mcfrontlib.pl";
 require "mcstas_config.perl";
+require "mcrunlib.pl";
 
 sub make_instr_file {
     my ($F, $par, $d) = @_;
-    my ($double_decl, $str_decl, $double_adr, $str_adr, $double_letters,
-	$str_letters, $comp_name, $comp_actuals);
-    $comp_name = $d->{'name'};
+    my $double_decl = "";
+    my $str_decl = "";
+    my $double_adr = "";
+    my $str_adr = "";
+    my $double_letters = "";
+    my $str_letters = "";
+    my $comp_name = $d->{'name'};
+    my $comp_actuals = "";
     for (@$par) {
 	my ($p, $let, $typ) = @$_;
 	$comp_actuals = $comp_actuals ? "$comp_actuals, $p=$p" : "$p=$p";
 	if($typ eq 'double') {
-	    $double_decl = $double_decl ? "$double_decl, $p" : $p;
+	    $double_decl = $double_decl ? "$double_decl, $p" : "double $p";
 	    $double_adr = $double_adr ? "$double_adr &$p," : "&$p,";
 	    $double_letters = $double_letters ? "$double_letters '$let'," : "'$let',";
 	} elsif($typ eq 'string') {
-	    $str_decl = $str_decl ? "$str_decl, *$p" : $p;
+	    $str_decl = $str_decl ? "$str_decl, *$p" : "char *$p";
 	    $str_adr = $str_adr ? "$str_adr &$p," : "&$p,";
 	    $str_letters = $str_letters ? "$str_letters '$let'," : "'$let',";
 	} else {
@@ -43,8 +48,8 @@ DEFINE INSTRUMENT V_sample()
 DECLARE
 %{
 /* Component parameters. */
-double $double_decl;
-char *$str_decl;
+$double_decl;
+$str_decl;
 double pos_x, pos_y, pos_z;
 double *dptr[] =
   {
@@ -111,7 +116,7 @@ sub make_tcl_file {
     my ($F, $par, $d) = @_;
 
     print $F "### $d->{'name'}\n###\n";
-    print $F "gSet $d->{'name'}ESET {\n";
+    print $F "gSet ", lc($d->{'name'}), "ESET {\n";
     my $dsc = $d->{'identification'}{'short'};
     chomp $dsc;
     $dsc =~ s/\n/\\n/g;
@@ -157,6 +162,9 @@ sub make_tcl_file {
 	}
 	print $F "}\n";
     }
+    print $F "  {xpos float 0 {\"X position [m]\" \"X position of module\" \"\" x}}\n";
+    print $F "  {ypos float 0 {\"Y position [m]\" \"Y position of module\" \"\" y}}\n";
+    print $F "  {zpos float 0 {\"Z position [m]\" \"Z position of module\" \"\" z}}\n";
     print $F "}\n";
 }
 
