@@ -501,7 +501,11 @@ sub comp_instance_dialog {
     $t->pack(-expand => 'yes', -fill => 'both');
     $t->tagConfigure('BLUE', -foreground => 'blue');
     $t->tagConfigure('RED', -foreground => 'red');
-    $t->insert('end', "PARAMETERS:\n\n", 'RED');
+
+    $t->insert('end', "DESCRIPTION: (read it and fill-in PARAMETERS section below)\n\n", 'RED');
+    $t->insert('end', $comp->{'description'});
+
+    $t->insert('end', "PARAMETERS:\n  (optional parameters may be left blank, see DESCRIPTION section)\n\n", 'RED');
     for $p (@{$comp->{'inputpar'}}) {
         $t->insert('end', "$p:", 'BLUE');
         my $entry = $t->Entry(-relief => 'sunken', -width => 10,
@@ -521,8 +525,6 @@ sub comp_instance_dialog {
             if $comp->{'parhelp'}{$p}{'text'};
         $t->insert('end', "\n\n");
     }
-    $t->insert('end', "DESCRIPTION:\n\n", 'RED');
-    $t->insert('end', $comp->{'description'});
     $t->see("1.0");
     $t->markSet('insert', "1.0");
 
