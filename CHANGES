@@ -11,8 +11,8 @@
 * Written by: KN, KL, PEO, EF, PW
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
-* Release: McStas 1.7
-* Version: 1.7
+* Release: McStas 1.8
+* Version: 1.8
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -21,8 +21,9 @@
 * Modified by: KN, PEO, March 16, 2001: release 1.4.1
 * Modified by: PEO, EF, October, 10th, 2001: release 1.5
 * Modified by: PW, EF, May 19th 2003: version 1.7
+* Modified by: PW, EF, March 4th 2004: version 1.8
 *
-* This file is part of McStas  version 1.7, released May, 19th, 2003.
+* This file is part of McStas  version 1.8, released March, 4th, 2004.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
