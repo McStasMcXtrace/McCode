@@ -110,9 +110,9 @@ sub ask_save_before_simulate {
           -message => "Save instrument \"$current_sim_def\" first?",
           -title => "Save file?",
           -type => 'YesNoCancel',
-          -icon => 'questhead',
-          -default => 'Yes');
-        menu_save($w) if $ret eq "Yes";
+          -icon => 'question',
+          -default => 'yes');
+        menu_save($w) if $ret eq "yes";
         return $ret eq "Cancel" ? 0 : 1;
     } else {
         return 1;
@@ -125,7 +125,7 @@ sub is_erase_ok {
         my $ret = $w->messageBox(-message => "Ok to loose changes?",
                                  -title => "Erase ok?",
                                  -type => 'OKCancel',
-                                 -icon => 'questhead',
+                                 -icon => 'question',
                                  -default => 'Cancel');
         return $ret eq "Ok" ? 1 : 0;
     } else {
