@@ -12,7 +12,7 @@ BEGIN {
         $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
       if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
+        $MCSTAS::sys_dir = "c:\\mcstas\\lib";
       } else {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
       }
@@ -128,10 +128,10 @@ sub parse_args {
         } elsif(/^-([s])$/) {
             push @options, "-$1$ARGV[++$i]";
         } elsif(/^--(format)$/ || /^--(plotter)$/) {
-            push @options, "--$1=$ARGV[++$i]";
+            push @options, "--$1='$ARGV[++$i]'";
             $plotter = $ARGV[$i];
         } elsif(/^--(format)\=(.*)$/ || /^--(plotter)\=(.*)$/) {
-            push @options, "--$1=$2";
+            push @options, "--$1='$2'";
             $plotter = $2;
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
@@ -151,6 +151,20 @@ sub parse_args {
             }
         }
     }
+    my $cc = defined($ENV{'MCSTAS_CC'}) ?
+        $ENV{'MCSTAS_CC'} : $MCSTAS::mcstas_config{CC};
+    my $cflags = defined($ENV{'MCSTAS_CFLAGS'}) ?
+        $ENV{'MCSTAS_CFLAGS'} : $MCSTAS::mcstas_config{CFLAGS};
+    my $mcstas_format = $plotter;
+    if ($mcstas_format =~ /0/) { $mcstas_format = "McStas PGPLOT"; }
+    elsif ($mcstas_format =~ /1/ || $mcstas_format =~ /2/) { $mcstas_format = "Matlab"; }
+    elsif ($mcstas_format =~ /3/ || $mcstas_format =~ /4/) { $mcstas_format = "Scilab"; }
+      
+    if ($cflags eq "") { $cflags = "default, e.g. -O"; }
+    if ($cc eq "") { $cc = "default, e.g. gcc"; }
+    if ($mcstas_format eq "") { $mcstas_format = "default, e.g. Scilab"; }
+    
+    
     die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max}
   mcrun options:
    -c        --force-compile  Force rebuilding of instrument.
@@ -174,10 +188,10 @@ This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be 
 specified for building the instrument:
   MCSTAS        Location of the McStas and component library 
-                (e.g. /usr/local/lib/mcstas).
-  MCSTAS_CC     Name of the C compiler (e.g. cc or gcc)
-  MCSTAS_CFLAGS Options for compilation (e.g. '-O')
-  MCSTAS_FORMAT Default FORMAT to use for data files
+                  ($MCSTAS::sys_dir).
+  MCSTAS_CC     Name of the C compiler               ($cc)
+  MCSTAS_CFLAGS Options for compilation              ($cflags)
+  MCSTAS_FORMAT Default FORMAT to use for data files ($mcstas_format)
 SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://neutron.risoe.dk/mcstas/
 ** No instrument definition name given\n" unless $sim_def;
@@ -217,7 +231,7 @@ sub exec_sim {
     my (@options) = @_;
     my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params));
     # ToDo: This is broken in that it does not show the proper quoting
-    # that would be necessary if the user actually wantet to run the
+    # that would be necessary if the user actually wanted to run the
     # command manually. (Note that the exec() call is correct since it
     # does not need any quoting).
     print join(" ", @cmdlist), "\n";
@@ -373,7 +387,7 @@ sub do_data_header {
     }
     # Here, we need special handling of the Matlab/Scilab output cases, since 
     # each monitor dataset must be defined in its own class 'data' structure for mcplot
-    if ($plotter =~ /McStas|PGPLOT/i) {
+    if ($plotter =~ /McStas|PGPLOT|0/i) {
     print $OUT <<END
 ${pr}type$format_assign ${format_start_value}multiarray_1d($numpoints)$format_end_value
 ${pr}title$format_assign ${format_start_value}Scan of $scannedvars$format_end_value
@@ -385,7 +399,7 @@ ${pr}${format_limprefix}limits$format_assign ${format_start_value}$min $max$form
 ${pr}filename$format_assign ${format_start_value}$datfile$format_end_value
 ${pr}variables$format_assign ${format_start_value}$variables$format_end_value
 END
-    } elsif ($plotter =~ /Matlab|Scilab/i) {
+    } elsif ($plotter =~ /Matlab|Scilab|1|2|3|4/i) {
 	if (! $datablock eq "") {
 	    print $OUT "DataBlock=[$datablock];\n";
 	    # Now loop across all the youts...
@@ -403,6 +417,8 @@ END
     print $OUT "$pr$y_label.errors=[DataBlock(:,$idx+1)];\n";
 		$idx = $idx+2;
 		print $OUT "$pr$y_label.parent='$y_label';\n";
+    print $OUT "$pr$y_label.Source='$sim_def';\n";
+    print $OUT "$pr$y_label.ratio ='$ncount';\n";
 		print $OUT "$pr$y_label.values='';\n";
 		print $OUT "$pr$y_label.signal='';\n";
 		print $OUT "$pr$y_label.statistics='';\n";
@@ -433,6 +449,11 @@ sub output_sim_file {
     my $SIM = new FileHandle;
     my $loc_prefix = "";
     my $instr_name = $sim_def;
+    my $i = $info->{VARS}[0]; # Index of variable to be scanned
+    my $minvar = $info->{MIN}[0] ? $info->{MIN}[0] : 0;
+    my $maxvar = $info->{MAX}[0] ? $info->{MAX}[0] : 0;
+    my $namvar = defined($i) && $params[$i] ? $params[$i] : "nothing";
+    
     $instr_name =~ s/\.instr$//;        # Strip any trailing ".instr" extension ...
     open($SIM, ">$filename") ||
         die "mcrun: Failed to write info file '$filename'";
@@ -444,13 +465,13 @@ sub output_sim_file {
       do_instr_init($SIM);
       do_instr_header("% ", $SIM);
       print $SIM "\nsim.class='simulation';\n";
-      print $SIM "\nsim.name='$filename';\n";
+      print $SIM "sim.name='$filename';\n";
       $loc_prefix = "sim.";
     } else {
       do_instr_init($SIM);
       do_instr_header("// ", $SIM);
       print $SIM "\nsim = struct(); sim.class='simulation';\n";
-      print $SIM "\nsim.name='$filename';\n";
+      print $SIM "sim.name='$filename';\n";
       $loc_prefix = "sim.";
     }
     do_sim_header($loc_prefix, $SIM);
@@ -458,25 +479,35 @@ sub output_sim_file {
       print $SIM "end simulation\n\nbegin data\n";
     } elsif ($plotter =~ /Matlab/i) {
       print $SIM "\nmcstas.sim = sim; clear sim;\n";
-      print $SIM "\nmcstas.File= '$filename';\n";
-      print $SIM "\nmcstas.instrument.Source= '$sim_def';\n";
-      print $SIM "\nmcstas.instrument.parent= 'mcstas';\n";
-      print $SIM "\nmcstas.instrument.class = 'instrument';\n";
-      print $SIM "\nmcstas.instrument.name  = '$instr_name';\n";
-      print $SIM "\nmcstas.instrument.Parameters  = '...';\n";
+      print $SIM "mcstas.File= '$filename';\n";
+      print $SIM "mcstas.instrument.Source= '$sim_def';\n";
+      print $SIM "mcstas.instrument.parent= 'mcstas';\n";
+      print $SIM "mcstas.instrument.class = 'instrument';\n";
+      print $SIM "mcstas.instrument.name  = '$instr_name';\n";
+      print $SIM "mcstas.instrument.Parameters  = '...';\n";
       print $SIM "\ndata.class = 'superdata';\n";
+      print $SIM "data.name = 'Scan of $namvar';\n";
+      print $SIM "data.scannedvar = '$namvar';\n";
+      print $SIM "data.numpoints  = $numpoints;\n";
+      print $SIM "data.minvar  = $minvar;\n";
+      print $SIM "data.maxvar  = $maxvar;\n";
       $loc_prefix = "data.";
     } else {
       print $SIM "\nmcstas = struct(); mcstas.sim = 0; mcstas.sim = sim; clear sim;\n";
-      print $SIM "\nmcstas.File= '$filename';\n";
-      print $SIM "\ninstrument = struct();\n";
-      print $SIM "\ninstrument.Source= '$sim_def';\n";
-      print $SIM "\ninstrument.parent= 'mcstas';\n";
-      print $SIM "\ninstrument.class = 'instrument';\n";
-      print $SIM "\ninstrument.name  = '$instr_name';\n";
-      print $SIM "\ninstrument.Parameters  = '...';\n";
-      print $SIM "\nmcstas.instrument = 0; mcstas.instrument = instrument; clear instrument;\n";
+      print $SIM "mcstas.File= '$filename';\n";
+      print $SIM "instrument = struct();\n";
+      print $SIM "instrument.Source= '$sim_def';\n";
+      print $SIM "instrument.parent= 'mcstas';\n";
+      print $SIM "instrument.class = 'instrument';\n";
+      print $SIM "instrument.name  = '$instr_name';\n";
+      print $SIM "instrument.Parameters  = '...';\n";
+      print $SIM "mcstas.instrument = 0; mcstas.instrument = instrument; clear instrument;\n";
       print $SIM "\ndata = struct(); data.class = 'superdata';\n";
+      print $SIM "data.name = 'Scan of $namvar';\n";
+      print $SIM "data.scannedvar = '$namvar';\n";
+      print $SIM "data.numpoints  = $numpoints;\n";
+      print $SIM "data.minvar  = $minvar;\n";
+      print $SIM "data.maxvar  = $maxvar;\n";
       $loc_prefix = "data.";
     }
     do_data_header($loc_prefix, $SIM, $info, $youts, $variables, $datfile, $datablock);
@@ -650,7 +681,8 @@ exit(1) if $ncount == 0;
 # contrary to normal use, this is what the user expects here.
 $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
 
-$instr_info = get_sim_info("$out_file --format=$plotter");
+$instr_info = get_sim_info("$out_file --format='$plotter'");
+
 if($numpoints == 1) {
     do_single();
 } else {
