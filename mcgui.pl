@@ -10,6 +10,8 @@ use strict;
 use FileHandle;
 use Tk;
 use Tk::TextUndo;
+use Tk::ROText;
+use Tk::DialogBox;
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
@@ -22,10 +24,26 @@ my %inf_param_map;
 my $current_sim_def;
 my $edit_control;
 
+sub ask_save_before_simulate {
+    my ($w) = @_;
+    if($edit_control->numberChanges() > 0) {
+	my $ret = $w->messageBox(
+	  -message => "Save instrument \"$current_sim_def\" first?",
+	  -title => "Save file?",
+	  -type => 'YesNoCancel',
+	  -icon => 'questhead',
+	  -default => 'Yes');
+	menu_save($w) if $ret eq "Yes";
+	return $ret eq "Cancel" ? 0 : 1;
+    } else {
+	return 1;
+    }
+}
+
 sub is_erase_ok {
     my ($w) = @_;
     if($edit_control->numberChanges() > 0) {
-	my $ret = $w->messageBox(-message => "Ok to loose changes?'.",
+	my $ret = $w->messageBox(-message => "Ok to loose changes?",
 				 -title => "Erase ok?",
 				 -type => 'OKCancel',
 				 -icon => 'questhead',
@@ -41,17 +59,6 @@ sub menu_quit {
     if(is_erase_ok($w)) {
 	$w->destroy;
     }
-}
-
-sub read_file {
-    my ($f) = @_;
-    return undef unless $f && -r $f;
-    my $H = new FileHandle;
-    open($H, $f) || return undef;
-    local $/ = undef;		# Read whole file in one go
-    my $content = <$H>;
-    close($H);
-    return $content;
 }
 
 sub open_instr_def {
@@ -95,9 +102,35 @@ sub menu_saveas {
     return 1;
 }
 
+sub compile_instrument {
+    my ($w, $force) = @_;
+    return undef unless ask_save_before_simulate($w);
+    my $out_name = get_out_file($current_sim_def, $force);
+    unless($out_name && -x $out_name) {
+	$w->messageBox(-message => "Could not compile simulation.",
+		       -title => "Compile failed",
+		       -type => 'OK',
+		       -icon => 'error');
+	return undef;
+    }
+    return $out_name;
+}
+
+sub menu_compile{
+    my ($w) = @_;
+    compile_instrument($w, 1);	# Force recompilation.
+}
+
 sub menu_undo {
     my ($w) = @_;
-    $edit_control->eventGenerate("<<Undo>>");
+    if($edit_control->numberChanges() > 0) {
+	$w->messageBox(-message => "There is no further undo information.",
+		       -title => "Undo not possible",
+		       -type => 'OK',
+		       -icon => 'error');
+    } else {
+	$edit_control->eventGenerate("<<Undo>>");
+    }
 }
 
 sub read_sim_data {
@@ -124,16 +157,151 @@ sub load_sim_file {
     read_sim_data($w);
 }
 
-sub menu_run_simulation {
-    my ($w) = @_;
-    my $out_name = get_out_file($current_sim_def);
-    unless($out_name && -x $out_name) {
-	$w->messageBox(-message => "Could not compile simulation.",
+sub myreader {
+    my ($dlg, $rotext, $fh) = @_;
+    my $s;
+    my $len = sysread($fh, $s, 256, 0);
+    if(defined($len)) {
+	if($len) {
+	    $rotext->insert('end', $s);
+	} else {
+	    $dlg->fileevent($fh,'readable', "");
+	    $rotext->insert('end', "\nEOF\n");
+	}
+    } else {
+	$dlg->fileevent($fh,'readable', "");
+	$rotext->insert('end', "\nERROR: $!\n");
+    }
+}
+
+sub putmsg {
+    my ($t, $m, $tag) = @_;
+    $t->insert('end', $m, $tag);
+    $t->see('end');
+}
+
+sub run_dialog_create {
+    my ($w, $title, $instr, $cancel_cmd) = @_;
+    my $dlg = $w->Toplevel(-title => $title);
+    $dlg->transient($dlg->Parent->toplevel);
+    $dlg->withdraw;
+    $dlg->protocol("WM_DELETE_WINDOW" => sub { } );
+    # Add labels
+    $dlg->Label(-text => $instr,
+		-anchor => 'w',
+		-justify => 'left')->pack(-fill => 'x');
+    my $status_lab = $dlg->Label(-text => "Status: running",
+				 -anchor => 'w',
+				 -justify => 'left');
+    $status_lab->pack(-fill => 'x');
+    # Add the main text field, with scroll bar
+    my $rotext = $dlg->ROText(-relief => 'sunken', -bd => '2',
+			      -setgrid => 'true',
+			      -height => 30, -width => 80);
+    my $s = $dlg->Scrollbar(-command => [$rotext, 'yview']);
+    $rotext->configure(-yscrollcommand =>  [$s, 'set']);
+    $s->pack(-side => 'right', -fill => 'y');
+    $rotext->pack(-expand => 'yes', -fill => 'both');
+    $rotext->mark('set', 'insert', '0.0');
+    $rotext->tagConfigure('msg', -foreground => 'blue');
+    # Add buttons, in a frame at the bottom
+    my $bot_frame = $dlg->Frame(-relief => "raised", -bd => 1);
+    $bot_frame->pack(-side => "top", -fill => "both",
+		     -ipady => 3, -ipadx => 3);
+    my $but = $bot_frame->Button(-text => "Cancel", -command => $cancel_cmd);
+    $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
+    return ($dlg, $status_lab,  $rotext, $but);
+}
+
+sub run_dialog_popup {
+    my ($dlg) = @_;
+    # Display the dialog box
+    my $old_focus = $dlg->focusSave;
+    my $old_grab = $dlg->grabSave;
+    $dlg->Popup;
+    $dlg->grab;
+    return [$old_focus, $old_grab];
+}
+
+sub run_dialog_retract {
+    my ($dlg, $oldfg) = @_;
+    my $old_focus = $oldfg->[0];
+    my $old_grab = $oldfg->[1];
+    $dlg->grabRelease;
+    $dlg->destroy;
+    &$old_focus;
+    &$old_grab;
+}
+
+sub run_dialog {
+    my ($w, $fh, $pid, $inittext) = @_;
+    # The $state variable gets bit 0 set when the simulation finishes
+    # and bit 1 set when the cancel/ok button is presssed. Thus we
+    # exit when it gets to the value 3.
+    my ($state, $success) = (0, 0);
+    # Initialize the dialog.
+    my ($dlg, $status_lab, $rotext, $but) =
+	run_dialog_init($w, "Running simulation ...",
+			"Instrument: $current_sim_def",
+			sub { kill 'SIGTERM', $pid unless $state & 1;
+			      $state |= 2; });
+    putmsg($rotext, $inittext, 'msg'); # Must appear before any other output
+    # Set up the pipe reader callback
+    $dlg->fileevent($fh,'readable',
+	sub {
+	    my $s;
+	    my $len = sysread($fh, $s, 256, 0);
+	    if($len) {
+		putmsg($rotext, $s);
+	    } else {
+		$dlg->fileevent($fh,'readable', "");
+		return if $state & 1;
+		$state |= 1;
+		if(!defined($len)) {
+		    putmsg($rotext, "Simulation exited abnormally.\n", 'msg');
+		    $success = undef;
+		} else {
+		    putmsg($rotext, "Simulation finished.\n", 'msg');
+		    $success = 1;
+		}
+		$status_lab->configure(-text => "Status: done");
+		$but->configure(-text => "Ok",
+				-command => sub { $state |= 2; } );
+	    }
+	});
+    $savefocus = run_dialog_popup($dlg);
+    do {
+        $dlg->waitVariable(\$state);
+    } until $state == 3;
+    run_dialog_retract($dlg, $savefocus);
+    return $success;
+}
+
+sub my_system {
+    my ($w, $inittext, @sysargs) = @_;
+    my $fh = new FileHandle;
+    my $child_pid = open($fh, "-|");
+    unless(defined($child_pid)) {
+	$w->messageBox(-message => "Could not run simulation.",
 		       -title => "Run failed",
 		       -type => 'OK',
 		       -icon => 'error');
-	return 0;
+	return undef;
     }
+    if($child_pid) {		# Parent
+	my $ret1 = run_dialog($w, $fh, $child_pid, $inittext);
+	my $ret2 = close($fh);
+	return $ret1 && $ret2;
+    } else {			# Child
+	open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+	exec @sysargs;
+    }
+}
+
+sub menu_run_simulation {
+    my ($w) = @_;
+    my $out_name = compile_instrument($w);
+    return 0 unless $out_name;
     # Attempt to avoid problem with missing "." in $PATH.
     unless($out_name =~ "/") {
 	$out_name = "./$out_name";
@@ -158,9 +326,10 @@ sub menu_run_simulation {
 	for (keys %{$newsi->{'Params'}}) {
 	    push @command, "$_=$newsi->{'Params'}{$_}";
 	}
-	print "Running simulation '$out_name' ...\n";
-	print join(" ", @command), "\n";
-	my @retval = system @command;
+	my $inittext = "Running simulation '$out_name' ...\n" .
+	    join(" ", @command) . "\n";
+	my $success = my_system $w, $inittext, @command;
+	return unless $success;
 	$current_sim_file = $newsi->{'Dir'} ?
 	    "$newsi->{'Dir'}/mcstas.sim" :
 	    "mcstas.sim";
@@ -207,6 +376,11 @@ sub setup_menu {
     $filemenu->command(-label => 'Save instrument as ...',
 		       -underline => 16,
 		       -command => sub {menu_saveas($w)});
+    $filemenu->separator;
+    $filemenu->command(-label => 'Compile instrument',
+		       -underline => 0,
+		       -command => sub {menu_compile($w)});
+    $filemenu->separator;
     $filemenu->command(-label => 'Quit',
 		       -underline => 0,
 		       -accelerator => 'Alt+Q',
@@ -225,7 +399,7 @@ sub setup_menu {
 					menu_plot_results($w);});
     $simmenu->separator;
     $simmenu->command(-label => 'Run simulation ...',
-		      -underline => 0,
+		      -underline => 1,
 		      -accelerator => 'Alt+U',
 		      -command => sub {menu_run_simulation($w);});
     $w->bind('<Alt-u>' => [\&menu_run_simulation, $w]);
