@@ -1373,6 +1373,67 @@ sphere_intersect(double *t0, double *t1, double x, double y, double z,
   return 1;
 }
 
+/* plane_intersect_Gfast 
+ * intersection of a plane and a trajectory with gravitation */
+/* this function calculates the intersection between a neutron trajectory
+ * and a plane with acceleration gx,gy,gz. The neutron starts at point x,y,z
+ * with velocity vx, vy, vz. The plane has a normal vector nx,ny,nz and 
+ * contains the point wx,wy,wz
+ * The function returns 0 if no intersection occured after the neutron started
+ * and 1 if there is an intersection. Then *Idt is the elapsed time until 
+ * the neutron hits the roof.
+ */
+/* Let n=(nx,ny,nz) be the normal plane vector (one of the six sides) 
+ * Let W=(wx,wy,wz) be Any point on this plane (for instance at z=0)
+ * The problem consists in solving the 2nd order equation:
+ *      1/2.n.g.t^2 + n.v.t + n.(r-W) = 0 (1)
+ * Without acceleration, t=-n.(r-W)/n.v
+ */
+  
+int plane_intersect_Gfast(double *Idt, double A, double B, double C)
+{
+    /* plane_intersect_Gfast(&dt, A, B, C)
+     * A = 0.5 n.g; B = n.v; C = n.(r-W);
+     * no cceleration when A=0
+     */
+    double D, sD;
+    double dt1, dt2;
+    
+    *Idt = -1;
+    
+    if (A == 0) /* this plane is parallel to the acceleration */
+    {
+      if (B == 0)  /* the speed is parallel to the plane, no intersection */
+        return (0);
+      else  /* no acceleration case */
+        { *Idt = -C/B; 
+          if (*Idt >= 0) return (2);
+          else return (0); }
+    }
+    else
+    {
+      /* Delta > 0: neutron trajectory hits the mirror */
+      D = B*B - 4*A*C;
+      if (D >= 0)
+      {
+        sD = sqrt(D);
+        dt1 = (-B + sD)/2/A;
+        dt2 = (-B - sD)/2/A;
+        if (dt1 <0 && dt2 >=0) *Idt = dt2;
+        else
+        if (dt2 <0 && dt1 >=0) *Idt = dt1;
+        else
+        if (dt1 <0 && dt2 < 0) return (0);
+        else
+        if (dt1 < dt2) *Idt = dt1;
+        else
+          *Idt = dt2;
+        return (1);
+      }
+      else  /* Delta <0: no intersection */
+        return (0);
+    }     
+}
 
 /* Choose random direction towards target at (x,y,z) with given radius. */
 /* If radius is zero, choose random direction in full 4PI, no target. */
