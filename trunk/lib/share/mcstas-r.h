@@ -17,7 +17,7 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.44 2003-01-21 08:38:42 pkwi Exp $
+* $Id: mcstas-r.h,v 1.45 2003-01-21 08:42:48 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.4 2002/09/17 12:01:21 ef
@@ -36,7 +36,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.44 $"
+#define MCSTAS_R_H "$Revision: 1.45 $"
 
 #include <math.h>
 #include <string.h>
@@ -120,6 +120,8 @@ void mcdisplay(void);
      mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP)
 #define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
      mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP)
+#define DETECTOR_OUT_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f) \
+     mcdetector_out_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f,NAME_CURRENT_COMP)     
 /* ADD: E. Farhi, Sep 20th 2001 save neutron state (in local coords) */
 #define STORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p) \
   mcstore_neutron(mccomp_storein,index, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
@@ -233,6 +235,15 @@ void mt_srandom (unsigned long x);
 #define rand0max(max) ( ((double)random()) / (((double)MC_RAND_MAX+1)/(max)) )
 #define randminmax(min,max) ( rand0max((max)-(min)) + (min) )
 
+#define PROP_DT(dt) \
+  do { \
+    if(dt < 0) ABSORB; \
+    mcnlx += mcnlvx*(dt); \
+    mcnly += mcnlvy*(dt); \
+    mcnlz += mcnlvz*(dt); \
+    mcnlt += (dt); \
+  } while(0)
+
 #define PROP_Z0 \
   do { \
     double mc_dt; \
@@ -245,14 +256,7 @@ void mt_srandom (unsigned long x);
     mcnlz = 0; \
   } while(0)
 
-#define PROP_DT(dt) \
-  do { \
-    if(dt < 0) ABSORB; \
-    mcnlx += mcnlvx*(dt); \
-    mcnly += mcnlvy*(dt); \
-    mcnlz += mcnlvz*(dt); \
-    mcnlt += (dt); \
-  } while(0)
+
 
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with gravitation */
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
@@ -394,62 +398,64 @@ struct mcformats_struct {
  * ex: fprintf(f, "printed:%1$s %3$s not printed: %2$.0s\n", "1", "2", "3");
  * such are the joys of ANSI C99 and Single Unix Specification ! 
  * This 0-precision for unused data is automatically checked in mccheck_format
+ * Maximum number of positional arguments is NL_RGMAX, which is 9 on System V
+ * machines (Dec/Compaq/HP). Some more enjoyable  stuff !!
  */ 
   
 struct mcformats_struct mcformats[mcNUMFORMATS] = {
   "McStas", "sim",
-    "%1$sFormat: %5$s file\n"
+    "%1$sFormat: %4$s file\n"
       "%1$sURL:    http://neutron.risoe.dk/\n"
-      "%1$sEditor: %8$s on %9$s\n"
-      "%1$sCreator:%10$s (%2$s) simulation (McStas " MCSTAS_VERSION ")\n"
-      "%1$sDate:   Simulation started (%7$li) %6$s\n"
-      "%1$sFile:   %3$s" MC_PATHSEP_S "%4$s\n",
-    "%1$sEndDate:%6$s\n",
+      "%1$sEditor: %6$s\n"
+      "%1$sCreator:%2$s simulation (McStas " MCSTAS_VERSION ")\n"
+      "%1$sDate:   Simulation started (%8$li) %5$s\n"
+      "%1$sFile:   %3$s\n",
+    "%1$sEndDate:%5$s\n",
     "%1$sbegin %2$s\n",
     "%1$send %2$s\n",
     "%1$s%3$s: %4$s\n",
     "", 
-    "%1$sErrors [%2$s/%3$s]: \n",
-    "%1$sNcount [%2$s/%3$s]: \n",
+    "%1$sErrors [%2$s/%4$s]: \n",
+    "%1$sNcount [%2$s/%4$s]: \n",
     "", "", "",
   "XML", "xml",
     "<?xml version=\"1.0\" ?>\n<!--\n"
       "URL:    http://www.neutron.anl.gov/nexus/xml/NXgroup.xml\n"
-      "Editor: %8$s on %9$s\n"
-      "Creator:%10$s (%2$s) McStas " MCSTAS_VERSION " [neutron.risoe.dk].\n"
-      "Date:   Simulation started (%7$li) %6$s\n"
-      "File:   %3$s" MC_PATHSEP_S "%4$s\n-->\n"
-      "<NX%11$s file_name=\"%3$s" MC_PATHSEP_S "%4$s\" file_time=\"%6$s\""
+      "Editor: %6$s\n"
+      "Creator:%2$s McStas " MCSTAS_VERSION " [neutron.risoe.dk].\n"
+      "Date:   Simulation started (%8$li) %5$s\n"
+      "File:   %3$s\n-->\n"
+      "<NX%7$s file_name=\"%3$s\" file_time=\"%5$s\""
         " McStas_version=\"" MCSTAS_VERSION "\">\n",
-    "</NX%11$s>\n<!-- EndDate:%6$s -->\n",
+    "</NX%7$s>\n<!-- EndDate:%5$s -->\n",
     "%1$s<NX%2$s name=\"%3$s\">\n",
     "%1$s</NX%2$s>\n",
     "%1$s<%3$s>%4$s</%3$s>\n",
-    "%1$s<%7$s long_name=\"%6$s\" axis=\"1\" primary=\"1\" min=\"%15$g\""
-        " max=\"%16$g\" dims=\"%4$li\" range=\"1\"></%7$s>\n"
-      "%1$s<%9$s long_name=\"%8$s\" axis=\"2\" primary=\"1\" min=\"%17$g\""
-        " max=\"%18$g\" dims=\"%5$li\" range=\"1\"></%9$s>\n"
-      "%1$s<%11$s long_name=\"%10$s\" axis=\"3\" primary=\"1\" min=\"%19$g\""
-        " max=\"%20$g\" dims=\"1\" range=\"1\"></%11$s>\n"
-      "%1$s<data long_name=\"%3$s\" signal=\"1\"  axis=\"[%7$s,%9$s]\" file_name=\"%21$s\">",
+    "%1$s<%6$s long_name=\"%5$s\" axis=\"1\" primary=\"1\" min=\"%17$g\""
+        " max=\"%18$g\" dims=\"%14$d\" range=\"1\"></%6$s>\n"
+      "%1$s<%8$s long_name=\"%7$s\" axis=\"2\" primary=\"1\" min=\"%19$g\""
+        " max=\"%20$g\" dims=\"%15$d\" range=\"1\"></%8$s>\n"
+      "%1$s<%10$s long_name=\"%9$s\" axis=\"3\" primary=\"1\" min=\"%21$g\""
+        " max=\"%22$g\" dims=\"%16$d\" range=\"1\"></%10$s>\n"
+      "%1$s<data long_name=\"%3$s\" signal=\"1\"  axis=\"[%6$s,%8$s,%10$s]\" file_name=\"%4$s\">",
     "%1$s<errors>", "%1$s<monitor>",
     "%1$s</data>\n", "%1$s</errors>\n", "%1$s</monitor>\n",
   "HTML", "html",
     "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD %5$s//EN\"\n"
       "\"http://www.w3.org/TR/html4/strict.dtd\">\n"
-      "<HTML><HEAD><META name=\"Author\" content=\"%8$s on %9$s\">\n"
+      "<HTML><HEAD><META name=\"Author\" content=\"%7$s\">\n"
       "<META name=\"Creator\" content=\"%2$s McStas " MCSTAS_VERSION " [neutron.risoe.dk] simulation\">\n"
-      "<META name=\"Date\" content=\"%6$s\">\n"
-      "<TITLE>[McStas %2$s]%3$s" MC_PATHSEP_S "%4$s</TITLE></HEAD>\n"
-      "<BODY><h1><a name=\"%11$s\">"
-        "McStas simulation %10$s (%2$s): %3$s" MC_PATHSEP_S "%4$s</a></h1><br>\n"
+      "<META name=\"Date\" content=\"%5$s\">\n"
+      "<TITLE>[McStas %2$s]%3$s</TITLE></HEAD>\n"
+      "<BODY><h1><a name=\"%7$s\">"
+        "McStas simulation %2$s: %3$s</a></h1><br>\n"
         "This simulation report was automatically created by"
         " <a href=\"http://neutron.risoe.dk/\"><i>McStas " MCSTAS_VERSION "</i></a><br>\n"
-        "<pre>User:    %8$s on %9$s<br>\n"
-        "%1$sCreator: %10$s (<a href=\"%2$s\">%2$s</a>) McStas simulation<br>\n"
-        "%1$sDate:    (%7$li) %6$s<br></pre>\n",
-    "<b>EndDate: </b>(%7$li) %6$s<br></BODY></HTML>\n",
-    "%1$s<h%7$li><a name=\"%3$s\">%2$s %3$s</a></h%7$li> "
+        "<pre>User:   %6$s<br>\n"
+        "%1$sCreator: <a href=\"%2$s\">%2$s</a> McStas simulation<br>\n"
+        "%1$sDate:    (%8$li) %5$s<br></pre>\n",
+    "<b>EndDate: </b>(%8$li) %5$s<br></BODY></HTML>\n",
+    "%1$s<h%7$d><a name=\"%3$s\">%2$s %3$s</a></h%7$d> "
       "[child of <a href=\"#%5$s\">%5$s</a>]<br>\n"
       "%1$sAssociated <a href=\"%3$s\">data file %3$s</a><br>\n"
         "%1$sAssociated <a href=\"%3$s.png\">%2$s image %3$s.png<br>\n"
@@ -458,37 +464,37 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%1$s<b>%3$s: </b>%4$s<br>\n",
     "<APPLET Codebase=\"V3D\" Code=\"V3D.class\" archive=\"V3D.jar\" Width=\"300\" Height=\"70\">\n"
       "%1$s<PARAM Name=\"Action\"   Value=\"Exec\">\n"
- 	    "%1$s<PARAM Name=\"File\"     Value=\"%21$s\">\n"
+ 	    "%1$s<PARAM Name=\"File\"     Value=\"%4$s\">\n"
 	    "%1$s<PARAM Name=\"Format\"   Value=\"ascii\">\n"
 	    "%1$s<PARAM Name=\"Type\"     Value=\"4\">\n"
 	    "%1$s<PARAM Name=\"Title\"    Value=\"%3$s\">\n"
-	    "%1$s<PARAM Name=\"TitleX\"   Value=\"%6$s\">\n"
-	    "%1$s<PARAM Name=\"TitleY\"   Value=\"%8$s\">\n"
-	    "%1$s<PARAM Name=\"SubTitle\" Value=\"%12$s %13$s %14$s\">\n"
-	    "%1$s<PARAM Name=\"NbX\"      Value=\"%4$li\">\n"
-	    "%1$s<PARAM Name=\"X0\"       Value=\"%15$g\">\n"
-	    "%1$s<PARAM Name=\"X1\"       Value=\"%15$g\">\n"
-	    "%1$s<PARAM Name=\"Xn\"       Value=\"%16$g\">\n"
-	    "%1$s<PARAM Name=\"NbY\"      Value=\"%5$li\">\n"
-	    "%1$s<PARAM Name=\"Y0\"       Value=\"%17$g\">\n"
-	    "%1$s<PARAM Name=\"Y1\"       Value=\"%17$g\">\n"
-	    "%1$s<PARAM Name=\"Yn\"       Value=\"%18$g\">\n"
-      "%1$s</APPLET>DATA<--%19$.0g%20$.0g--><br>\n",
+	    "%1$s<PARAM Name=\"TitleX\"   Value=\"%5$s\">\n"
+	    "%1$s<PARAM Name=\"TitleY\"   Value=\"%7$s\">\n"
+	    "%1$s<PARAM Name=\"SubTitle\" Value=\"%11$s %12$s %13$s\">\n"
+	    "%1$s<PARAM Name=\"NbX\"      Value=\"%14$d\">\n"
+	    "%1$s<PARAM Name=\"X0\"       Value=\"%17$g\">\n"
+	    "%1$s<PARAM Name=\"X1\"       Value=\"%17$g\">\n"
+	    "%1$s<PARAM Name=\"Xn\"       Value=\"%18$g\">\n"
+	    "%1$s<PARAM Name=\"NbY\"      Value=\"%15$d\">\n"
+	    "%1$s<PARAM Name=\"Y0\"       Value=\"%19$g\">\n"
+	    "%1$s<PARAM Name=\"Y1\"       Value=\"%19$g\">\n"
+	    "%1$s<PARAM Name=\"Yn\"       Value=\"%20$g\">\n"
+      "%1$s</APPLET>DATA<br>\n",
       "%1$sERRORS<br>\n","%1$sNCOUNT<br>\n",
       "%1$sEnd of DATA<br>\n", "%1$sEnd of ERRORS<br>\n", "%1$sEnd of NCOUNT<br>\n", 
   "Matlab", "m",
-    "function %11$s = get_%11$s(p)\n"
-      "%% %5$s function issued from McStas on %6$s\n"
-      "%% McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
-      "%% import data using s=get_%11$s;\n"
+    "function %7$s = get_%7$s(p)\n"
+      "%% %4$s function issued from McStas on %5$s\n"
+      "%% McStas simulation %2$s: %3$s\n"
+      "%% import data using s=%7$s('plot');\n"
       "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
-      "%11$s.Format ='%5$s';\n"
-      "%11$s.URL    ='http://neutron.risoe.dk';\n"
-      "%11$s.Editor ='%8$s on %9$s';\n"
-      "%11$s.Creator='%10$s (%2$s) McStas " MCSTAS_VERSION " simulation';\n"
-      "%11$s.Date   =%7$li; %% for datestr\n"
-      "%11$s.File   ='%3$s" MC_PATHSEP_S "%4$s';\n",
-    "%11$s.EndDate=%7$li; %% for datestr\n"
+      "%7$s.Format ='%4$s';\n"
+      "%7$s.URL    ='http://neutron.risoe.dk';\n"
+      "%7$s.Editor ='%6$s';\n"
+      "%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
+      "%7$s.Date   =%8$li; %% for datestr\n"
+      "%7$s.File   ='%3$s';\n",
+    "%7$s.EndDate=%8$li; %% for datestr\n"
       "function d=mcload_inline(d)\n"
       "%% local inline function to load data\n"
       "copyfile(d.filename,[d.func,'.m']);p=d.parent;"
@@ -506,34 +512,34 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "else\nfigure; x=linspace(l(1),l(2),max(S));\nplot(x,d.data);end\n"
       "xlabel(d.xlabel); ylabel(d.ylabel); title(t);"
       "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n",
-    "%% Section %2$s [%3$s] (level %7$li)\n"
+    "%% Section %2$s [%3$s] (level %7$d)\n"
       "%4$s.class = '%2$s';",
     "%6$s.%4$s = %4$s; clear %4$s;\n",
     "%1$s%2$s.%3$s = '%4$s';\n",
     "%1$s%2$s.func='%2$s';\n%1$s%2$s.data = [ ",
     "%1$s%2$s.errors = [ ",
     "%1$s%2$s.ncount = [ ",
-    " ]; %% end of data\nmcplot_inline(%2$s,p);\n",
+    " ]; %% end of data \nmcplot_inline(%2$s,p);\n",
     " ]; %% end of errors\n",
     " ]; %% end of ncount\n",
   "Scilab", "sci",
-    "function %11$s = get_%11$s(p)\n"
-      "// %5$s function issued from McStas on %6$s\n"
+    "function %7$s = get_%7$s(p)\n"
+      "// %4$s function issued from McStas on %5$s\n"
       "// McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
-      "// import data using s=get_%11$s();\nmode(-1); //silent execution\n"
+      "// import data using exec('%7$s.sci',-1); s=get_%7$s('plot');\nmode(-1); //silent execution\n"
       "if argn(2) > 0, p=1; else p=0; end\n"
-      "%11$s = struct();\n"
-      "%11$s.Format ='%5$s';\n"
-      "%11$s.URL    ='http://neutron.risoe.dk';\n"
-      "%11$s.Editor ='%8$s on %9$s';\n"
-      "%11$s.Creator='%10$s (%2$s) McStas " MCSTAS_VERSION " simulation';\n"
-      "%11$s.Date   =%7$li; // for getdate\n"
-      "%11$s.filename   ='%3$s" MC_PATHSEP_S "%4$s';\n",
-    "%11$s.EndDate=%7$li; // for getdate\nendfunction\n"
+      "%7$s = struct();\n"
+      "%7$s.Format ='%4$s';\n"
+      "%7$s.URL    ='http://neutron.risoe.dk';\n"
+      "%7$s.Editor ='%6$s';\n"
+      "%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
+      "%7$s.Date   =%8$li; // for getdate\n"
+      "%7$s.File   ='%3$s';\n",
+    "%7$s.EndDate=%8$li; // for getdate\nendfunction\n"
     "function d=mcload_inline(d)\n"
       "// local inline func to load data\n"
       "exec(d.filename,-1);p=d.parent;"
-      "if ~execstr('d2='+d.func+'();','errcatch'),d2=d; d.parent=p;end\nendfunction\n"
+      "if ~execstr('d2='+d.func+'();','errcatch'),d=d2; d.parent=p;end\nendfunction\n"
       "function d=mcplot_inline(d,p)\n"
       "// local inline func to plot data\n"
       "if ~p, return; end;if ~length(d.data) & ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\n"
@@ -553,8 +559,8 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "xset('colormap',hotcolormap(64));plot3d1(x,y,z);\n"
       "else\nx=linspace(l(1),l(2),max(S));\nplot2d(x,d.data);end\nend\n"
       "xtitle(t,d.xlabel,d.ylabel); xname(t1);endfunction\n"
-    "%11$s=get_%11$s();",
-    "// Section %2$s [%3$s] (level %7$li)\n"
+    "%7$s=get_%7$s();",
+    "// Section %2$s [%3$s] (level %7$d)\n"
       "%1$s%4$s = struct(); %4$s.class = '%2$s';",
     "%1$s%6$s.%4$s = 0; %6$s.%4$s = %4$s; clear %4$s;\n",
     "%1$s%2$s.%3$s = '%4$s';\n",
@@ -588,25 +594,26 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "    d=execute('S={'+T+':V'+ ES +'}')\n"
       "   endif else d=execute('S.' +T+'=V')\n"
       "end; PRO stv:{s.t=v}\n"
-      "function get_%11$s\n"
-      "; %5$s function issued from McStas on %6$s\n"
-      "; McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
-      "%11$s={Format:'%5$s',URL:'http://neutron.risoe.dk',"
-      "Editor:'%8$s on %9$s',$\n"
-      "Creator:'%10$s (%2$s) McStas " MCSTAS_VERSION " simulation',$\n"
-      "Date:%7$li,"
-      "File:'%3$s" MC_PATHSEP_S "%4$s'}\n",
-    "stv,%11$s,'EndDate',%7$li ; for systime\nreturn, %11$s\nend\n",
-    "; Section %2$s [%3$s] (level %7$li)\n"
+      "function get_%7$s\n"
+      "; %4$s function issued from McStas on %5$s\n" 
+      "; McStas simulation %2$s: %3$s\n"
+      "; import using .run %7$s\n"
+      "%7$s={Format:'%4$s',URL:'http://neutron.risoe.dk',"
+      "Editor:'%6$s',$\n"
+      "Creator:'%2$s McStas " MCSTAS_VERSION " simulation',$\n"
+      "Date:%8$li,"
+      "File:'%3$s'}\n",
+    "stv,%7$s,'EndDate',%8$li ; for systime\nreturn, %7$s\nend\n",
+    "; Section %2$s [%3$s] (level %7$d)\n"
       "%1$s%4$s={class:'%2$s'}\n",
     "%1$sstv,%6$s,'%4$s',%4$s\n",
     "%1$sstv,%2$s,'%3$s','%4$s'\n",
     "%1$sdata=[ ",
     "%1$serrors=[ ",
     "%1$sncount=[ ",
-    " ]\n%1$sstv,%2$s,'data',reform(data,%4$li,%5$li,/over)\n",
-    " ]\n%1$sstv,%2$s,'errors',reform(errors,%4$li,%5$li,/over)\n",
-    " ]\n%1$sstv,%2$s,'ncount',reform(ncount,%4$li,%5$li,/over)\n\n"
+    " ]\n%1$sstv,%2$s,'data',reform(data,%14$d,%15$d,/over)\n",
+    " ]\n%1$sstv,%2$s,'errors',reform(errors,%14$d,%15$d,/over)\n",
+    " ]\n%1$sstv,%2$s,'ncount',reform(ncount,%14$d,%15$d,/over)\n\n"
     };
     
 struct mcformats_struct mcformat;

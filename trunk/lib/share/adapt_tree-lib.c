@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "adapt_tree-lib"
 *
-* $Id: adapt_tree-lib.c,v 1.1 2003-01-21 08:38:42 pkwi Exp $
+* $Id: adapt_tree-lib.c,v 1.2 2003-01-21 08:42:48 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/09/02 18:59:05 ef

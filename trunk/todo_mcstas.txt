@@ -71,7 +71,7 @@ Kernel:
   
 Runtime:
 - Gravity (functions defined, only used in gravity guide - merge
-  propagation routines, easy task)
+  propagation routines, easy task) g*,mcrotaComp
 + save monitor data in different formats: 
     McStas ascii, NeXus XML, HTML, Scilab
     binary float, binary double
