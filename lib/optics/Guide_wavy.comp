@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -61,6 +61,7 @@ alpha2, m2, W2,
 alpha3, m3, W3, 
 alpha4, m4, W4, 
 wavy_z, wavy_xy)
+OUTPUT PARAMETERS (whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
