@@ -33,3 +33,4 @@
 @echo Please remember to add %MCSTAS_SITE%\bin to your path!
 @echo Also, set the MCSTAS environment variable to %MCSTAS_SITE%\lib
 @echo ..............................................................
+@pause
