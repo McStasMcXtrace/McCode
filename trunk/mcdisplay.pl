@@ -118,7 +118,8 @@ sub read_instrument {
               write_process("mcdisplay('Init');\n");
               write_process("global INSTRUMENT;\n");
 	      if ($Config{'osname'} eq 'MSWin32') {
-		$sim = Win32::GetLongPathName($sim);
+		my $sim_tmp = Win32::GetLongPathName($sim);
+		if ($sim_tmp) { $sim = $sim_tmp; }
 	      }
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp

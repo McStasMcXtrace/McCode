@@ -177,6 +177,7 @@ if INSTRUMENT.DoExport==2
     else Stop=1 // Cancel
   end
   if Stop==0 
+    if ~length(INSTRUMENT.descr), INSTRUMENT.descr = 'mcstas'; end
     filename=strcat([INSTRUMENT.descr,ext]);
     disp(strcat(['exporting ' filename ' in ' Formats(INSTRUMENT.ExportFormat) ' format']));
     if ext ~= '.scg'
