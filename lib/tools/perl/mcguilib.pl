@@ -71,6 +71,7 @@ sub simulation_dialog {
     $si{'Ncount'} = 1e6 unless $si{'Ncount'};
     $si{'Trace'} = 0 unless $si{'Trace'};
     $si{'NScan'} = 0 unless $si{'NScan'};
+    $si{'Multi'} = 0 unless $si{'Multi'};
     # 'Inspect' field for use of mcdisplay's built-in
     # neutron filter, filtering away all neutrons not
     # reaching a given component
@@ -153,6 +154,11 @@ sub simulation_dialog {
     $opt_frame->Checkbutton(-text => "Plot results",
                             -variable => \$si{'Autoplot'},
                             -relief => 'flat')->pack(-anchor => 'w');
+    if (!($Config{'osname'} eq 'MSWin32')) {
+	$opt_frame->Checkbutton(-text => "Distribute mcrun scans",
+				-variable => \$si{'Multi'},
+				-relief => 'flat')->pack(-anchor => 'w');
+    }
     my $f2 = $opt_frame->Frame;
     $f2->pack(-anchor => 'w');
     $f2->Radiobutton(-text => "Random seed",
