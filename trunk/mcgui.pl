@@ -744,6 +744,7 @@ sub menu_run_simulation {
             if ($newsi->{'Trace'} eq 2) { # 'mcrun' mode
               push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix";
               push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'};
+	      push @command, "--multi" if $newsi->{'Multi'};
             } else { # 'mcrun' mode
               push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
               if ($plotter eq 0) {
