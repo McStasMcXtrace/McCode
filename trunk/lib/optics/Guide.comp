@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: September 2 1998
-* Version: $Revision: 1.9 $
-* Origin: McStas release
+* Version: $Revision: 1.10 $
+* Origin: McStas 1.5
 *
 * Neutron guide.
 *
@@ -41,7 +41,6 @@ DEFINE COMPONENT Guide
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc, alpha, m, W)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 TRACE
 %{
