@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.102 2004-11-29 14:29:02 farhi Exp $
+* $Id: mcstas-r.c,v 1.103 2004-11-30 16:13:22 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.102  2004/11/29 14:29:02  farhi
+* Show title as filename in 'Detector: ... "filename"' line if no file name given
+*
 * Revision 1.101  2004/11/16 13:35:47  farhi
 * Correct HTML -> VRML data format pre selection. May be overridden when using the --format_data option (currently undocumented)
 *
@@ -2971,8 +2974,8 @@ mcstore_neutron(MCNUM *s, int index, double x, double y, double z,
     s[11*index+7]  = t ; 
     s[11*index+8]  = sx; 
     s[11*index+9]  = sy; 
-    s[11*index+10]  = sz; 
-    s[11*index+0] = p ; 
+    s[11*index+10] = sz; 
+    s[11*index+0]  = p ; 
 } 
 
 void
@@ -3964,15 +3967,22 @@ mchelp(char *pgmname)
   fprintf(stderr, "\n  Format modifiers: FORMAT may be followed by 'binary float' or \n");
   fprintf(stderr, "  'binary double' to save data blocks as binary. This removes text headers.\n");
   fprintf(stderr, "  The MCSTAS_FORMAT environment variable may set the default FORMAT to use.\n");
-#ifndef MC_PORTABLE
-#ifndef MAC
-#ifndef WIN32  
-#ifndef USE_MPI
-  fprintf(stderr, "Known signals are: USR1 (status) USR2(save) TERM (save and exit)\n");
-#endif /* !USE_MPI */
-#endif /* !MAC */
-#endif /* !WIN32 */
-#endif /* !MC_PORTABLE */  
+#ifndef NOSIGNALS
+  fprintf(stderr, "Known signals are: " 
+#ifdef SIGUSR1
+  "USR1 (status) "
+#endif
+#ifdef SIGUSR2
+  "USR2 (save) "
+#endif
+#ifdef SIGBREAK
+  "BREAK (save) "
+#endif
+#ifdef SIGTERM  
+  "TERM (save and exit)"
+#endif 
+  "\n");
+#endif /* !NOSIGNALS */  
 }
 
 static void
@@ -4193,45 +4203,82 @@ mcparseoptions(int argc, char *argv[])
   free(paramsetarray);
 } /* mcparseoptions */
 
+#ifndef NOSIGNALS
 mcstatic char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 
-#ifndef MC_PORTABLE
-#ifndef MAC
-#ifndef WIN32
+
 /* This is the signal handler that makes simulation stop, and save results */
 void sighandler(int sig)
 {
   /* MOD: E. Farhi, Sep 20th 2001: give more info */
   time_t t1;
+#define SIG_SAVE 0
+#define SIG_TERM 1
+#define SIG_STAT 2
+#define SIG_ABRT 3
 
   printf("\n# McStas: [pid %i] Signal %i detected", getpid(), sig);
+#if defined(SIGUSR1) && defined(SIGUSR2) && defined(SIGKILL)
   if (!strcmp(mcsig_message, "sighandler") && (sig != SIGUSR1) && (sig != SIGUSR2))
   {
     printf("\n# Fatal : unrecoverable loop ! Suicide (naughty boy).\n"); 
     kill(0, SIGKILL); /* kill myself if error occurs within sighandler: loops */
   }
+#endif
   switch (sig) {
-    case SIGINT : printf(" SIGINT (interrupt from terminal, Ctrl-C)"); break;
-    case SIGQUIT : printf(" SIGQUIT (Quit from terminal)"); break;
-    case SIGABRT : printf(" SIGABRT (Abort)"); break;
-    case SIGTRAP : printf(" SIGTRAP (Trace trap)"); break;
-    case SIGTERM : printf(" SIGTERM (Termination)"); break;
-    case SIGPIPE : printf(" SIGPIPE (Broken pipe)"); break;
-    case SIGUSR1 : printf(" SIGUSR1 (Display info)"); break;
-    case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); break;
-    case SIGHUP  : printf(" SIGHUP (Hangup/update)"); break;
-    case SIGILL  : printf(" SIGILL (Illegal instruction)"); break;
-    case SIGFPE  : printf(" SIGFPE (Math Error)"); break;
-    case SIGBUS  : printf(" SIGBUS (Bus error)"); break;
-    case SIGSEGV : printf(" SIGSEGV (Mem Error)"); break;
-    case SIGURG  : printf(" SIGURG (Urgent socket condition)"); break;
-    default : printf(" (look at signal list for signification)"); break;
+#ifdef SIGINT
+    case SIGINT : printf(" SIGINT (interrupt from terminal, Ctrl-C)"); sig = SIG_TERM; break;
+#endif
+#ifdef SIGILL
+    case SIGILL  : printf(" SIGILL (Illegal instruction)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGFPE
+    case SIGFPE  : printf(" SIGFPE (Math Error)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGSEGV
+    case SIGSEGV : printf(" SIGSEGV (Mem Error)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGTERM
+    case SIGTERM : printf(" SIGTERM (Termination)"); sig = SIG_TERM; break;
+#endif
+#ifdef SIGABRT
+    case SIGABRT : printf(" SIGABRT (Abort)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGQUIT
+    case SIGQUIT : printf(" SIGQUIT (Quit from terminal)"); sig = SIG_TERM; break;
+#endif
+#ifdef SIGTRAP
+    case SIGTRAP : printf(" SIGTRAP (Trace trap)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGPIPE
+    case SIGPIPE : printf(" SIGPIPE (Broken pipe)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGUSR1
+    case SIGUSR1 : printf(" SIGUSR1 (Display info)"); sig = SIG_STAT; break;
+#endif
+#ifdef SIGUSR2
+    case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); sig = SIG_SAVE; break;
+#endif
+#ifdef SIGHUP
+    case SIGHUP  : printf(" SIGHUP (Hangup/update)"); sig = SIG_SAVE; break;
+#endif
+#ifdef SIGBUS
+    case SIGBUS  : printf(" SIGBUS (Bus error)"); sig = SIG_ABRT; break;
+#endif
+#ifdef SIGURG
+    case SIGURG  : printf(" SIGURG (Urgent socket condition)"); sig = SIG_ABRT; break;
+#endif 
+#ifdef SIGBREAK
+    case SIGBREAK: printf(" SIGBREAK (Break signal, Ctrl-Break)"); sig = SIG_SAVE; break;
+#endif    
+    default : printf(" (look at signal list for signification)"); sig = SIG_ABRT; break;
   }
   printf("\n");
   printf("# Simulation: %s (%s) \n", mcinstrument_name, mcinstrument_source);
   printf("# Breakpoint: %s ", mcsig_message); 
-  if (!strcmp(mcsig_message, "Save") && (sig == SIGUSR2)) sig = SIGUSR1;
-  strcpy(mcsig_message, "sighandler");
+  if (strstr(mcsig_message, "Save") && (sig == SIG_SAVE)) 
+    sig = SIG_STAT;
+  SIG_MESSAGE("sighandler");
   if (mcget_ncount() == 0)
     printf("(0 %%)\n" );
   else
@@ -4241,14 +4288,14 @@ void sighandler(int sig)
   t1 = time(NULL);
   printf("# Date      : %s",ctime(&t1));
   
-  if (sig == SIGUSR1)
+  if (sig == SIG_STAT)
   {
     printf("# McStas: Resuming simulation (continue)\n");
     fflush(stdout);
     return;
   }
   else
-  if (sig == SIGUSR2 || sig == SIGHUP)
+  if (sig == SIG_SAVE)
   {
     printf("# McStas: Saving data and resume simulation (continue)\n");
     mcsave(NULL);
@@ -4256,7 +4303,7 @@ void sighandler(int sig)
     return;
   }
   else
-  if ((sig == SIGTERM) || (sig == SIGINT) || (sig == SIGABRT) || (sig == SIGQUIT))
+  if (sig == SIG_TERM)
   {
     printf("# McStas: Finishing simulation (save results and exit)\n");
     mcfinally();
@@ -4269,11 +4316,13 @@ void sighandler(int sig)
     printf("# McStas: Simulation stop (abort)\n"); 
     exit(-1);
   }
+#undef SIG_SAVE
+#undef SIG_TERM
+#undef SIG_STAT
+#undef SIG_ABRT
  
 }
-#endif /* !MAC */
-#endif /* !WIN32 */
-#endif /* !MC_PORTABLE */
+#endif /* !NOSIGNALS */
 
 /* McStas main() function. */
 int
@@ -4283,8 +4332,8 @@ mcstas_main(int argc, char *argv[])
   time_t t;
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
-  int mpi_node_name_len;
-  int mpi_mcncount;
+  int  mpi_node_name_len;
+  int  mpi_mcncount;
 #endif /* USE_MPI */
   
 #ifdef MAC
@@ -4307,7 +4356,7 @@ mcstas_main(int argc, char *argv[])
 #endif /* !USE_MPI */
   mcstartdate = t;
 
-  strcpy(mcsig_message, "main (Start)");
+  SIG_MESSAGE("main (Start)");
   mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
   /* default is to output as McStas format */
   mcformat_data.Name=NULL;
@@ -4315,48 +4364,54 @@ mcstas_main(int argc, char *argv[])
   if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
 
-#ifndef MC_PORTABLE
-#ifndef MAC
-#ifndef WIN32
-#ifndef USE_MPI
   /* install sig handler, but only once !! after parameters parsing */
+#ifdef SIGQUIT   
   signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
+#endif
+#ifdef SIGABRT   
   signal( SIGABRT ,sighandler);   /* used by abort, replace SIGIOT in the future */
+#endif
+#ifdef SIGTERM   
   signal( SIGTERM ,sighandler);   /* software termination signal from kill */
-
+#endif
+#ifdef SIGUSR1 
   signal( SIGUSR1 ,sighandler);   /* display simulation status */
+#endif
+#ifdef SIGUSR2   
   signal( SIGUSR2 ,sighandler);
+#endif
+#ifdef SIGHUP   
   signal( SIGHUP ,sighandler);
+#endif
+#ifdef SIGILL   
   signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
+#endif
+#ifdef SIGFPE   
   signal( SIGFPE ,sighandler);    /* floating point exception */
+#endif
+#ifdef SIGBUS   
   signal( SIGBUS ,sighandler);    /* bus error */
+#endif
+#ifdef SIGSEGV   
   signal( SIGSEGV ,sighandler);   /* segmentation violation */
-#endif /* !USE_MPI */
-#endif /* !MAC */
-#endif /* !WIN32 */
-#endif /* !MC_PORTABLE */
+#endif  
   mcsiminfo_init(NULL); mcsiminfo_close();  /* makes sure we can do that */
-  strcpy(mcsig_message, "main (Init)");
+  SIG_MESSAGE("main (Init)");
   mcinit();
-  #ifndef MC_PORTABLE
-#ifndef MAC
-#ifndef WIN32  
+#ifdef SIGINT  
   signal( SIGINT ,sighandler);    /* interrupt (rubout) only after INIT */
-#endif /* !MAC */
-#endif /* !WIN32 */
-#endif /* !MC_PORTABLE */
+#endif
 
+/* ================ main neutron generation/propagation loop ================ */
 #ifdef USE_MPI
   mpi_mcncount = mcncount / mpi_node_count;
-#endif /* !USE_MPI */
-  
-#ifdef USE_MPI
+
   while(mcrun_num < mpi_mcncount)
-    {
-      mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
-      mcraytrace();
-      mcrun_num++;
-    }
+  {
+    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
+    mcraytrace();
+    mcrun_num++;
+  }
 
   mc_MPI_Reduce(&mcrun_num, &mcrun_num, 1, MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
   
