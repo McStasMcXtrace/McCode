@@ -6,8 +6,8 @@
 * %I
 * Written by: Kim Lefmann
 * Date: November 20, 1998
-* Version: $Revision: 1.5 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.6 $
+* Origin: McStas 1.5
 *
 * Neutron source with Gaussian divergence
 *
@@ -34,7 +34,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (width, height, hdiv, vdiv, E0, dE)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   double thetah, thetav, sigmah, sigmav, tan_h, tan_v;
