@@ -125,10 +125,10 @@ sub is_erase_ok {
     if($edit_control && $edit_control->numberChanges() > 0) {
         my $ret = $w->messageBox(-message => "Ok to loose changes?",
                                  -title => "Erase ok?",
-                                 -type => 'OKCancel',
+                                 -type => 'okcancel',
                                  -icon => 'question',
-                                 -default => 'Cancel');
-        return $ret eq "Ok" ? 1 : 0;
+                                 -default => 'cancel');
+        return $ret eq "ok" ? 1 : 0;
     } else {
         return 1;
     }
@@ -312,7 +312,7 @@ sub mcdoc_about {
                                  -title => "About McStas:McGUI",
                                  -type => 'OK',
                                  -icon => 'info',
-                                 -default => 'Cancel');
+                                 -default => 'cancel');
 }
 
 
