@@ -4,7 +4,7 @@
 *         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Source_aim
+* Component: Source_flat
 *
 * Written by: KL, October 30, 1997
 * Modified by: KL, KN, October 5, 1998
@@ -16,15 +16,15 @@
 *
 * ToDo: More flexible specification of E distribution.
 *
-* radius : Radius of circle in (x,y,0) plane where neutrons
-* 	   are generated (m).
-* dist   : Distance to target along z axis (m).
-* xw     : Width(x) of target (m)
-* yh     : Height(y) of target (m)
-* E0     : Mean energy of neutrons (meV).
-* dE     : Energy spread of neutrons (meV).
+* radius: (m)   Radius of circle in (x,y,0) plane where neutrons
+*               are generated.
+* dist:   (m)   Distance to target along z axis.
+* xw:     (m)   Width(x) of target
+* yh:     (m)   Height(y) of target
+* E0:     (meV) Mean energy of neutrons.
+* dE:     (meV) Energy spread of neutrons.
 *
-*/
+***********************************************************************/
 
 DEFINE COMPONENT Source_flat
 DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE)
