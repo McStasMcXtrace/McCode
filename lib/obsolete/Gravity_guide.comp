@@ -6,18 +6,20 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.5 $
-* Origin: <a href="http://www.ill.fr">ILL (France)</a>. Aug 03 2001.
+* Version: $Revision: 1.6 $
+* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL (France)</a>.
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
+* Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
 *
-* Neutron guide with gravity.
+* Neutron guide with gravity. Can be channeled and focusing.
 *
 * %D
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
 * in the X-Y plane. Gravitation applies also when reaching the guide input
 * window. The guide can be channeled (k,d parameters). The guide coating
 * specifications may be entered via different ways (global, opposite side 
-* pars, each wall m-value).
+* parts, each wall m-value).
+* The gravitation vector is given in the local component coordinates.
 * For details on the geometry calculation see the description in the McStas
 * reference manual.
 *
@@ -37,12 +39,12 @@
 * d:       (m)    Thickness of subdividing walls [0]
 * k:       (1)    Number of channels in the guide (>= 1) [1]
 *
-* Optional input parameters: (different ways for m-specifications)
+* Optional input parameters: (different ways for G and m-specifications)
 *
-* G:       (m/s2) Gravitation acceleration along y axis [-9.81]
-* Gx:      (m/s2) Gravitation acceleration along x axis [0]
-* Gy:      (m/s2) Gravitation acceleration along y axis [-9.81]
-* Gz:      (m/s2) Gravitation acceleration along z axis [0]
+* G:       (m/sgn2) Gravitation acceleration along y axis [-9.81]
+* Gx:      (m/sgn2) Gravitation acceleration along x axis [0]
+* Gy:      (m/sgn2) Gravitation acceleration along y axis [-9.81]
+* Gz:      (m/sgn2) Gravitation acceleration along z axis [0]
 * mh:      (1)    m-value of material for left/right vert. mirrors
 * mv:      (1)    m-value of material for top/bottom horz. mirrors
 * mx:      (1)    m-value of material for left/right vert. mirrors
@@ -52,12 +54,23 @@
 * mtop:    (1)    m-value of material for top.    horz. mirror
 * mbottom: (1)    m-value of material for bottom. horz. mirror
 * 
+* OUTPUT PARAMETERS
+*
+* N_reflection: (1) Array of the cumulated Number of reflections 
+*                   N_reflection[0] total nb of reflections
+*                   N_reflection[1,2,3,4] l/r/t/b reflections
+*                   N_reflection[5] total nb neutrons exiting guide
+*                   N_reflection[6] total nb neutrons entering guide
 *
 * %D
 * Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
 *
 * %E
 *******************************************************************************/
+
+#ifndef PROP_GRAV_DT
+#error McStas : You need McStas >= 1.4.3 to run this component
+#endif
 
 DEFINE COMPONENT Gravity_guide
 DEFINITION PARAMETERS ()
@@ -66,9 +79,8 @@ SETTING PARAMETERS (w1, h1, w2, h2, l,
   Gx=0,Gy=-9.81,Gz=0, G=0,
   mh=-1,mv=-1,mx=-1, my=-1, 
   mleft=-1, mright=-1, mtop=-1, mbottom=-1)
-OUTPUT PARAMETERS (gx,gy,gz,nx,ny,nz,wx,wy,wz,A,norm_n,norm_n2,N_reflection,w1c,w2c,M)
+OUTPUT PARAMETERS (gx,gy,gz,nx,ny,nz,wx,wy,wz,A,norm_n,norm_n2,N_reflection,w1c,w2c,M, nzC, norm_n2c, Ac)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE 
 %{
@@ -83,6 +95,7 @@ DECLARE
   double w1c;
   double w2c;
   double M[5]={0,0,0,0,0};
+  double nzC[3], norm_n2c[3], Ac[3];
 %}
 
 INITIALIZE
@@ -100,9 +113,9 @@ INITIALIZE
   
   for (i=0; i <= 4; M[i++]=m);
   if (mx >= 0) { M[1] = mx; M[2] = mx; }
-  if (mh >= 0) { M[1] = mh; M[2] = mh; }
-  if (my >= 0) { M[1] = my; M[2] = my; }
   if (mv >= 0) { M[1] = mv; M[2] = mv; }
+  if (my >= 0) { M[3] = my; M[4] = my; }
+  if (mh >= 0) { M[3] = mh; M[4] = mh; }
   if (mleft   >= 0) M[1] = mleft  ;
   if (mright  >= 0) M[2] = mright ;
   if (mtop    >= 0) M[3] = mtop   ;
@@ -111,7 +124,7 @@ INITIALIZE
   /* This is now the downward gravitation vector */
                                                      
   nx[1] =  l; ny[1] =  0; nz[1] = -0.5*(w2c-w1c); /* 1:+X left       */
-  nx[2] = -l; ny[2] =  0; nz[2] =  nz[1];         /* 2:-X right      */
+  nx[2] =  l; ny[2] =  0; nz[2] = -nz[1];         /* 2:-X right      */
   nx[3] =  0; ny[3] =  l; nz[3] = -0.5*(h2-h1);   /* 3:+Y top        */
   nx[4] =  0; ny[4] = -l; nz[4] =  nz[3];         /* 4:-Y bottom     */
   nx[5] =  0; ny[5] =  0; nz[5] =  1;             /* 5:+Z exit       */
@@ -133,8 +146,14 @@ INITIALIZE
     else
       norm_n[i] = sqrt(norm_n2[i]);
   }
-  
-  
+  /* partial computations for l/r sides, to save computing time */  
+  nzC[1]      = nz[1]; 
+  norm_n2c[1] = nx[1]*nx[1] + ny[1]*ny[1];
+  Ac[1]       = nx[1]*gx    + ny[1]*gy;
+  nzC[2]      = nz[2]; 
+  norm_n2c[2] = nx[2]*nx[2] + ny[2]*ny[2];
+  Ac[2]       = nx[2]*gx    + ny[2]*gy;
+
 %}
 
 TRACE
@@ -144,7 +163,8 @@ TRACE
   double q;
   int    ret, side;
   double edge;
-  double hadj;                                  /* Channel displacement */
+  double hadj;    /* Channel displacement */
+  double n1, n2, Ch_num;
 
   
   dt = -1; dt0 = -1;
@@ -160,11 +180,12 @@ TRACE
   }
   /* check if we are in the box input, else absorb */
   if(dt < 0 || x <= -w1/2 || x >= w1/2 || y <= -h1/2 || y >= h2/2)
-    { ABSORB; }
+    ABSORB;
     
   /* Shift origin to center of channel hit (absorb if hit dividing walls) */
   x += w1/2.0;
-  edge = floor(x/w1c)*w1c;
+  Ch_num = floor(x/w1c);  /* 0= right side, k+1=left side  */
+  edge = Ch_num*w1c; 
   if(x - edge > w1c - d)
   {
     x -= w1/2.0; /* Re-adjust origin */
@@ -188,7 +209,7 @@ TRACE
     side = 0;
     /* starts with the exit side intersection (the last one !)*/
     
-   /* 5=+Z side: n=(0, 0, 1) ; W = (0, 0, l) (at z=l, guide exit)*/
+    /* 5=+Z side: n=(0, 0, 1) ; W = (0, 0, l) (at z=l, guide exit)*/
     B = vz; C = z - wz[5];
     ret = plane_intersect_Gfast(&dt0, A[5], B, C);
     if (ret && dt0>0)     
@@ -198,19 +219,7 @@ TRACE
     { fprintf(stderr,"%s: warning: neutron trajectory is parallel to guide exit, and thus can not exit\n", mccompcurname); x += hadj; ABSORB; }
       
     /* now look if there is a previous intersection with guide sides */
-    
-    /* 1=+X side: n=(l, 0, -0.5*(w2-w1)) ; W = (+w1/2, 0, 0) (left)*/ 
-    B = nx[1]*vx + nz[1]*vz; C = nx[1]*(x-wx[1]) + nz[1]*z; /* ny=wz=0 */
-    ret = plane_intersect_Gfast(&dt0, A[1], B, C);
-    if (ret && dt0>10e-10 && dt0<dt)
-    { dt = dt0; side=1; n_dot_v[1] = B; }
-    
-    /* 2=-X side: n=(l, 0, +0.5*(w2-w1)) ; W = (-w1/2, 0, 0) (right) */
-    B = nx[2]*vx + nz[2]*vz; C = nx[2]*(x-wx[2]) + nz[2]*z; /* ny=wz=0 */
-    ret = plane_intersect_Gfast(&dt0, A[2], B, C);
-    if (ret && dt0>10e-10 && dt0<dt)
-    { dt = dt0; side=2; n_dot_v[2] = B; }
-    
+
     /* 3=+Y side: n=(0, l, -0.5*(h2-h1)) ; W = (0, +h1/2, 0) (up) */
     B = ny[3]*vy + nz[3]*vz; C = ny[3]*(y-wy[3]) + nz[3]*z; /* nx=wz=0 */
     ret = plane_intersect_Gfast(&dt0, A[3], B, C);
@@ -222,6 +231,26 @@ TRACE
     ret = plane_intersect_Gfast(&dt0, A[4], B, C);
     if (ret && dt0>10e-10 && dt0<dt)
     { dt = dt0; side=4; n_dot_v[4] = B; }
+    
+    /* 1=+X side: n=(l, 0, -0.5*(w2-w1)) ; W = (+w1/2, 0, 0) (left)*/ 
+    n1 = 2*(Ch_num+1) - k;  /* slope of l/r sides depends on the channel ! */ 
+    nz[1] = nzC[1]*n1;
+    A[1] = Ac[1] + nz[1]*gz;
+    B = nx[1]*vx + nz[1]*vz; C = nx[1]*(x-wx[1]) + nz[1]*z; /* ny=wz=0 */
+    ret = plane_intersect_Gfast(&dt0, A[1], B, C);
+    if (ret && dt0>10e-10 && dt0<dt)
+    { dt = dt0; side=1; n_dot_v[1] = B; 
+      norm_n2[1] = norm_n2c[1] + nz[1]*nz[1]; norm_n[1] = sqrt(norm_n2[1]); }
+    
+    /* 2=-X side: n=(l, 0, +0.5*(w2-w1)) ; W = (-w1/2, 0, 0) (right) */
+    n2 = 2*(Ch_num) - k;  /* slope of l/r sides depends on the channel ! */ 
+    nz[2] = nzC[1]*n2;
+    A[2] = Ac[2] + nz[2]*gz;
+    B = nx[2]*vx + nz[2]*vz; C = nx[2]*(x-wx[2]) + nz[2]*z; /* ny=wz=0 */
+    ret = plane_intersect_Gfast(&dt0, A[2], B, C);
+    if (ret && dt0>10e-10 && dt0<dt)
+    { dt = dt0; side=2; n_dot_v[2] = B; 
+      norm_n2[2] = norm_n2c[2] + nz[2]*nz[2]; norm_n[2] = sqrt(norm_n2[2]); }
     
     /* only positive dt are valid */
     /* exit reflection loops if no intersection (neutron is after box) */
