@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Channeled_guide.comp
+*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KN
+* Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.6 $
-* Origin: McStas release
+* Version: $Revision: 1.7 $
+* Origin: McStas 1.4.2
 *
 * Neutron guide with channels (bender section).
 *
@@ -50,9 +49,10 @@
 DEFINE COMPONENT Channeled_guide
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2, h2, d, k, l,
-		    R0, Qcx,  Qcy, alphax, alphay, mx, my, W)
+		    R0, Qcx, Qcy, alphax, alphay, mx, my, W)
 OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
