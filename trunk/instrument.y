@@ -593,7 +593,7 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.13 ALPHA, May 1999\n"
+  printf("McStas version 1.17 ALPHA, October 1999\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-1999\n"
 	  "All rights reserved\n");
   exit(0);
@@ -735,11 +735,15 @@ main(int argc, char *argv[])
   err = mc_yyparse();
   fclose(file);
   if(err != 0 || error_encountered != 0)
+  {
     print_error("Errors encountered during parse.\n");
+    exit(1);
+  }
   else
+  {
     cogen(output_filename, instrument_definition);
-
-  exit(0);
+    exit(0);
+  }
 }
 
 
