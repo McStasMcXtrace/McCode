@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright 1997-2003, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: KN, KL, PEO, EF, PW
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
-* Release: McStas 1.6
-* Version: 1.6
+* Release: McStas 1.7
+* Version: 1.7
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -20,19 +20,14 @@
 * Modified by: KN, July 28, 2000    : release 1.4
 * Modified by: KN, PEO, March 16, 2001: release 1.4.1
 * Modified by: PEO, EF, October, 10th, 2001: release 1.5
-* Modified by: EF, October 29th, 2001: unofficial release 1.6-ill (alpha)
-* Modified by: EF, Feb 18th, 2002: unofficial release 1.6.1 (beta)
-* Modified by: PW, KL, EF, autumn 2002 : merged release (1.6)
-* Modified by: EF, January 17th 2003: version 1.6.4d dev
+* Modified by: PW, EF, May 19th 2003: version 1.7
 *
-* This file is part of McStas  version 1.6, released <today Aug 28th, 2002>.
+* This file is part of McStas  version 1.7, released May, 19th, 2003.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
 
-Changes in McStas v1.6.4d (beta dev. release), Jan 17, 2003
-This version is a development version, highly improved from the 1.5 and 1.6*-ill
-versions, built by the Risoe and ILL teams.
+Changes in McStas v1.7, Jan 17, 2003
 
   Kernel (i.e. the 'mcstas' program)
   - components may have a SHARE section, which is imported only once per type
