@@ -1,5 +1,9 @@
 #! /usr/bin/perl -w
 
+# Config module needed for various platform checks.
+# PW, 20030702
+use Config;
+
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
@@ -7,7 +11,11 @@ BEGIN {
     if($ENV{"MCSTAS"}) {
         $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
+      } else {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
 }
@@ -17,6 +25,7 @@ use FileHandle;
 use strict;
 
 require "mcrunlib.pl";
+require "mcstas_config.perl";
 
 # Turn off buffering on stdout. This improves the use with the Unix
 # "tee" program to create log files of scans.
@@ -30,6 +39,13 @@ my @params = ();                # List of input parameters
 my %vals;                       # Hash of input parameter values
 my @options = ();               # Additional command line options (mcstas)
 my @ccopts = ();                # Additional command line options (cc)
+my ($plotter);                  # sim/data file format
+my $format_ext;                 # sim file extension
+my $format_assign;              # assignation symbol ':', '='
+my $format_start_value;         # symbol before field value
+my $format_end_value;           # symbol after field value
+my $format_prefix;              # symbol for line prefix
+my $format_limprefix;           # symbol for 'x' / 'xy' limits definition
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -111,10 +127,12 @@ sub parse_args {
             push @options, "--$1=$ARGV[++$i]";
         } elsif(/^-([s])$/) {
             push @options, "-$1$ARGV[++$i]";
-        } elsif(/^--(format)$/) {
+        } elsif(/^--(format)$/ || /^--(plotter)$/) {
             push @options, "--$1=$ARGV[++$i]";
-        } elsif(/^--(format)\=(.*)$/) {
+            $plotter = $ARGV[$i];
+        } elsif(/^--(format)\=(.*)$/ || /^--(plotter)\=(.*)$/) {
             push @options, "--$1=$2";
+            $plotter = $2;
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
@@ -222,20 +240,120 @@ sub do_instr_header {
     print $OUT join("", map("$prefix$_", @{$instr_info->{'RAW'}}));
 }
 
+# Write Matlab/Scilab function header to datafile
+sub do_instr_init {
+    my ($OUT) = @_;
+    if ($plotter =~ /Matlab/i) {
+	print $OUT <<ENDCODE
+function mcstas = get_mcstas(p)
+% Embedded function for building 'mcplot' compatible structure
+% PW, RISOE, 20030701
+%
+% import data using s=mcstas('plot');
+if nargout == 0 | nargin > 0, p=1; else p=0; end
+ENDCODE
+    } else {
+	print $OUT <<ENDCODE
+function mcstas = get_mcstas(p)
+// Embedded function for building 'mcplot' compatible structure
+// PW, RISOE, 20030701
+//
+// import data using exec('mcstas.sci',-1); s=get_mcstas('plot');
+mode(-1); //silent execution
+if argn(2) > 0, p=1; else p=0; end
+ENDCODE
+   }
+    
+    
+}
+
+# Write Matlab/Scilab embedded plotting functions to datafile
+sub do_sim_tail{
+    my ($OUT) = @_;
+    if ($plotter =~ /Matlab/i) {
+	print $OUT <<ENDCODE
+
+function d=mcplot_inline(d,p)
+% local inline function to plot data
+if ~p, return; end;
+eval(['l=[',d.xylimits,'];']); S=size(d.data);
+t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);
+disp(t);
+if ~isempty(findstr(d.type,'1d')), return; end
+figure; 
+if ~isempty(findstr(d.type,'1d'))
+    d.x=linspace(l(1),l(2),S(1)); 
+    h=errorbar(d.x,d.data(:,1),d.data(:,2));
+end
+xlabel(d.xlabel); ylabel(d.ylabel); title(t); axis tight;set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;
+if ~isempty(findstr(d.type,'2d')), colorbar; end
+
+% end of datafile...
+ENDCODE
+    } else {
+	print $OUT <<ENDCODE
+
+endfunction
+
+function d=mcplot_inline(d,p)
+// local inline func to plot data
+if ~p, return; end;
+execstr(['l=[',d.xylimits,'];']); S=size(d.data);
+t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];
+mprintf('%s\\n',t(:));
+if ~length(strindex(d.type,'1d')),return;
+else
+  w=winsid();if length(w),w=w(\$)+1; else w=0; end
+  xbasr(w); xset('window',w);
+  if length(strindex(d.type,'1d'))
+    d.x=linspace(l(1),l(2),S(1));
+    mcplot_errorbar(d.x,d.data(:,1),d.data(:,2));
+    if p == 2, t = t1; end
+    xtitle(t,d.xlabel,d.ylabel)
+  end
+end
+xname(t1);
+endfunction // mcplot_inline
+
+function mcplot_errorbar(x,y,e)
+// function for creating simple errorbar plots...
+  // first, estimate plot range
+  xmin=min(x);
+  xmax=max(x);
+  ymin=min(y-e);
+  ymax=max(y+e);
+  plot2d(x,y,rect=[xmin ymin xmax ymax]);
+  errbar(x,y,e,e);
+endfunction // mcplot_errorbar
+
+mcstas=get_mcstas();
+
+ENDCODE
+    } 
+}
+
+
 sub do_sim_header {
     my ($prefix, $OUT) = @_;
     my $date = localtime(time());
-    print $OUT "${prefix}Date: $date\n";
-    print $OUT "${prefix}Ncount: $ncount\n";
-    print $OUT "${prefix}Numpoints: $numpoints\n";
-    my $paramtext = join("\n", map("${prefix}Param: $_=$vals{$_}", @params));
+    my $format_member=".";
+    if ($plotter =~ /McStas|PGPLOT/i) { $format_member=": "; }
+    print $OUT "${prefix}Date$format_assign $format_start_value$date$format_end_value\n";
+    print $OUT "${prefix}Ncount$format_assign $format_start_value$ncount$format_end_value\n";
+    print $OUT "${prefix}Numpoints$format_assign $format_start_value$numpoints$format_end_value\n";
+    # Scilab needs initalisation of Param here...
+    if ($plotter =~ /Scilab|3|4/i) { 
+      print $OUT "${prefix}Param=[]\n";
+    }
+    my $paramtext = join("\n", map("${prefix}Param$format_member$_ = $format_start_value$vals{$_}$format_end_value", @params));
     print $OUT $paramtext, "\n";
 }
 
 sub do_data_header {
-    my ($pr, $OUT, $info, $youts, $variables, $datfile) = @_;
+    my ($pr, $OUT, $info, $youts, $variables, $datfile, $datablock) = @_;
     my $scannedvars;
     my $xvars;
+    my $xvar_list;
     my $yvars = join " ", @$youts;
     my $xlabel;
     my $min;
@@ -245,44 +363,119 @@ sub do_data_header {
       $xlabel = $params[$info->{VARS}[0]]; 
       $scannedvars = join ", ", map($params[$_], @{$info->{VARS}}); 
       $xvars = join " ", map($params[$_], @{$info->{VARS}}); 
+      push @$xvar_list, map($params[$_], @{$info->{VARS}});
       $min = $info->{MIN}[0]; $max = $info->{MAX}[0];
     }
+    # Here, we need special handling of the Matlab/Scilab output cases, since 
+    # each monitor dataset must be defined in its own class 'data' structure for mcplot
+    if ($plotter =~ /McStas|PGPLOT/i) {
     print $OUT <<END
-${pr}type: multiarray_1d($numpoints)
-${pr}title: 'Scan of $scannedvars'
-${pr}xvars: $xvars
-${pr}yvars: $yvars
-${pr}xlabel: '$xlabel'
-${pr}ylabel: 'Intensity'
-${pr}xlimits: $min $max
-${pr}filename: $datfile
-${pr}variables: $variables
+${pr}type$format_assign ${format_start_value}multiarray_1d($numpoints)$format_end_value
+${pr}title$format_assign ${format_start_value}Scan of $scannedvars$format_end_value
+${pr}xvars$format_assign ${format_start_value}$xvars$format_end_value
+${pr}yvars$format_assign ${format_start_value}$yvars$format_end_value
+${pr}xlabel$format_assign '$xlabel'
+${pr}ylabel$format_assign 'Intensity'
+${pr}${format_limprefix}limits$format_assign ${format_start_value}$min $max$format_end_value
+${pr}filename$format_assign ${format_start_value}$datfile$format_end_value
+${pr}variables$format_assign ${format_start_value}$variables$format_end_value
 END
+    } elsif ($plotter =~ /Matlab|Scilab/i) {
+	if (! $datablock eq "") {
+	    print $OUT "DataBlock=[$datablock];\n";
+	    # Now loop across all the youts...
+	    my $idx = scalar(@$xvar_list) + 1;
+	    foreach my $y_pair (@$youts) {
+		# Cut out the relevant descriptor
+		my $start_char = index($y_pair, "(") + 1;
+		my $end_char = index($y_pair, ",") - $start_char;
+		my $y_label = substr($y_pair, $start_char, $end_char);
+		if ($plotter =~ /Scilab/i) {
+		    print $OUT "$pr$y_label = struct();\n";
+		}
+		print $OUT "$pr$y_label.class='data';\n";
+		print $OUT "$pr$y_label.data=[DataBlock(:,$idx:$idx+1)];\n";
+		$idx = $idx+2;
+		print $OUT "$pr$y_label.parent='$y_label';\n";
+		print $OUT "$pr$y_label.values=' ... ';\n";
+		print $OUT "$pr$y_label.signal='';\n";
+		print $OUT "$pr$y_label.statistics='';\n";
+		my $pr_label = "$pr$y_label.";
+		# Fill the struct
+		print $OUT <<ENDCODE
+${pr_label}type$format_assign ${format_start_value}multiarray_1d($numpoints)$format_end_value
+${pr_label}title$format_assign ${format_start_value}Scan of $scannedvars$format_end_value
+${pr_label}xvars$format_assign ${format_start_value}$xvars$format_end_value
+${pr_label}yvars$format_assign ${format_start_value}$y_label$format_end_value
+${pr_label}xlabel$format_assign '$xlabel'
+${pr_label}ylabel$format_assign 'Intensity'
+${pr_label}${format_limprefix}limits$format_assign ${format_start_value}$min $max$format_end_value
+${pr_label}filename$format_assign ${format_start_value}$y_label$format_end_value
+${pr_label}variables$format_assign ${format_start_value}$y_pair$format_end_value
+${pr}$y_label=mcplot_inline(${pr}$y_label,p);
+
+ENDCODE
+            }
+        print $OUT "clear Datablock;\n";
+	}
+    }
 }
 
 # Write <NAME>.sim information file, to be read by mcplot.
 sub output_sim_file {
-    my ($filename, $info, $youts, $variables, $datfile) = @_;
+    my ($filename, $info, $youts, $variables, $datfile, $datablock) = @_;
     my $SIM = new FileHandle;
+    my $loc_prefix = "";
     open($SIM, ">$filename") ||
         die "Failed to write info file '$filename'";
-    # print $SIM "begin instrument\n";
-    do_instr_header("", $SIM);
-    # print $SIM "end instrument\n\n";
-    print $SIM "\nbegin simulation\n";
-    do_sim_header("  ", $SIM);
-    print $SIM "end simulation\n\nbegin data\n";
-    do_data_header("  ", $SIM, $info, $youts, $variables, $datfile);
-    print $SIM "end data\n";
+    if ($plotter =~ /McStas|PGPLOT/i) {
+      do_instr_header("", $SIM);
+      print $SIM "\nbegin simulation\n";
+      $loc_prefix = "";
+    } elsif ($plotter =~ /Matlab/i) {	
+      do_instr_init($SIM);
+      do_instr_header("% ", $SIM);
+      print $SIM "\nsim.class='simulation';\n";
+      print $SIM "\nsim.name='$sim_def';\n";
+      $loc_prefix = "sim.";
+    } else {
+      do_instr_init($SIM);
+      do_instr_header("// ", $SIM);
+      print $SIM "\nsim = struct(); sim.class='simulation';\n";
+      print $SIM "\nsim.name='$sim_def';\n";
+      $loc_prefix = "sim.";
+    }
+    do_sim_header($loc_prefix, $SIM);
+    if ($plotter =~ /McStas|PGPLOT/i) {
+      print $SIM "end simulation\n\nbegin data\n";
+    } elsif ($plotter =~ /Matlab/i) {
+      print $SIM "\nmcstas.sim = sim; clear sim;\n";
+      print $SIM "\ndata.class = 'superdata';\n";
+      $loc_prefix = "data.";
+    } else {
+      print $SIM "\nmcstas.sim = 0; mcstas.sim = sim; clear sim;\n";
+      print $SIM "\ndata = struct(); data.class = 'superdata';\n";
+      $loc_prefix = "data.";
+    }
+    do_data_header($loc_prefix, $SIM, $info, $youts, $variables, $datfile, $datablock);
+    if ($plotter =~ /McStas|PGPLOT/i) {
+      print $SIM "end data\n";
+    } elsif ($plotter =~ /Matlab/i) {
+      print $SIM "\nmcstas.sim.data = data; clear data;\n";
+      do_sim_tail($SIM);
+    } else {
+      print $SIM "\nmcstas.sim.data = 0; mcstas.sim.data = data; clear data;\n";
+      do_sim_tail($SIM);
+    }
     close($SIM);
 }
 
 # Output header information for mcrun .dat scan file.
 sub output_dat_header {
-    my ($OUT, $info, $youts, $variables, $datfile) = @_;
-    print $OUT "# Instrument-source: '$instr_info->{'Instrument-source'}'\n";
-    do_sim_header("# ", $OUT);
-    do_data_header("# ", $OUT, $info, $youts, $variables, $datfile);
+    my ($OUT, $format_prefix, $info, $youts, $variables, $datfile) = @_;
+    print $OUT "${format_prefix}Instrument-source: '$instr_info->{'Instrument-source'}'\n";
+    do_sim_header($format_prefix, $OUT);
+    do_data_header($format_prefix, $OUT, $info, $youts, $variables, $datfile, "");
 }
 
 # Do a scan: Run a series of simulations, varying one or more input
@@ -304,14 +497,24 @@ sub do_scan {
     $datfile .= ".dat" unless $datfile =~ m'\.[^/]*$'; # Quote hack ';
     my $simfile = $datfile;
     $simfile =~ s/\.dat$//;        # Strip any trailing ".dat" extension ...
-    $simfile .= ".sim";        # ... and add ".sim" extension.
-    my $DAT = new FileHandle;
-    open($DAT, ">${prefix}$datfile");
-    autoflush $DAT 1;                # Preserves data even if interrupted.
+    $simfile .= $format_ext;        # ... and add ".sim|m|sci" extension.
+    my $DAT;
+    # Only initialize / use $DAT datafile if format is PGPLOT
+    if ($plotter =~ /PGPLOT|McStas|0/i) {
+      $DAT = new FileHandle;
+      open($DAT, ">${prefix}$datfile");
+      autoflush $DAT 1;                # Preserves data even if interrupted.
+    } else {
+      $datfile = $simfile;             # Any reference should be to the simfile
+    }
     my $firsttime = 1;
     my $variables = "";
     my @youts = ();
     my $point;
+    my @lab_datablock = ();          # Storing of scan data in variable
+                                     # for saving datablock in matlab/scilab
+    my $datablock = "";              # 'sim' file.
+    # Initialize the @lab_datablock according to 'format'
     for($point = 0; $point < $numpoints; $point++) {
         my $out = "";
         my $j;
@@ -321,15 +524,21 @@ sub do_scan {
                 ($info->{MAX}[$j] - $info->{MIN}[$j])/($numpoints - 1)*$point +
                     $info->{MIN}[$j];
             $out .= "$vals{$params[$i]} ";
-            $variables .= "$params[$i] " if $firsttime
+	    $variables .= "$params[$i] " if $firsttime
             }
         if (@{$info->{VARS}} == 0) { $out .= "$point "; $variables .= "Point " if $firsttime; }
         # Decide how to handle output files.
         my $output_opt =
             $data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
         my $got_error = 0;
-        my $pid = open(SIM, "-|");
-        die "Failed to spawn simulation command" unless defined($pid);
+	my $pid;
+	if ($Config{'osname'} eq 'MSWin32') {
+	  my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params));
+	  $pid = open(SIM, "@cmdlist |");
+	} else {
+	  $pid = open(SIM, "-|");
+	}
+	die "Failed to spawn simulation command" unless defined($pid);
         if($pid) {                # Parent
             while(<SIM>) {
                 chomp;
@@ -353,14 +562,26 @@ sub do_scan {
         }
         my $ret = close(SIM);
         die "Exit due to error returned by simulation program"
-            if $got_error || (! $ret && ($? != 0 || $!));
-        output_dat_header($DAT, $info, \@youts, $variables, $datfile)
-            if $firsttime;
-        print $DAT "$out\n";
-        $firsttime = 0;
+	  if $got_error || (! $ret && ($? != 0 || $!));
+	if ($firsttime eq 1) {
+	  if ($plotter =~ /PGPLOT|McStas|0/i) {
+	    output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
+	  }
+	} else {
+	  push @lab_datablock, "\n";
+	}
+        if ($plotter =~ /PGPLOT|McStas|0/i) {
+	  print $DAT "$out\n";
+	}
+	push @lab_datablock, "$out";
+	$firsttime = 0;
     }
-    close($DAT);
-    output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile);
+    if ($plotter =~ /PGPLOT|McStas|0/i) {
+      close($DAT);
+    }
+    $datablock = join(" ", @lab_datablock);
+    output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile, $datablock);
+    
     print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
 }
 
@@ -369,7 +590,35 @@ sub do_scan {
                     # Start of main program. #
                     ##########################
 
-parse_args();                        # Parse command line arguments
+# set default plotter
+$plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
+                $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
+
+parse_args();                         # Parse command line arguments
+# Check value of $plotter variable
+if ($plotter =~ /PGPLOT|McStas|0/i) {
+  $plotter="McStas"; $format_ext = ".sim";
+  $format_assign     =":";    
+  $format_start_value="";
+  $format_end_value  =""; 
+  $format_prefix     ="# ";  
+  $format_limprefix  ="x";
+} elsif ($plotter =~ /Matlab|1|2/i) {
+  $plotter="Matlab"; $format_ext = ".m";
+  $format_assign     ="=";    
+  $format_start_value="'";
+  $format_end_value  ="'"; 
+  $format_prefix     ="% ";  
+  $format_limprefix  ="xy";
+} elsif ($plotter =~ /Scilab|3|4/i) {
+  $plotter="Scilab"; $format_ext = ".sci";
+  $format_assign     ="=";
+  $format_start_value="'";
+  $format_end_value  ="'";
+  $format_prefix     ="// ";
+  $format_limprefix  ="xy";
+}
+
 my $scan_info = check_input_params(); # Get variables to scan, if any
 $out_file = get_out_file($sim_def, $force_compile, @ccopts);
 exit(1) unless $out_file;
@@ -379,9 +628,9 @@ exit(1) if $ncount==0;
 # contrary to normal use, this is what the user expects here.
 $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
 
-$instr_info = get_sim_info($out_file);
+$instr_info = get_sim_info("$out_file --format=$plotter");
 if($numpoints == 1) {
     do_single();
 } else {
-    do_scan($scan_info);
+    do_scan($scan_info),;
 }

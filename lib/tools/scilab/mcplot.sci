@@ -483,7 +483,9 @@ endfunction // mcplot_subplot
 
 function d=mcplot_load(d)
 // func to load data
-execstr(['S=['+part(d.type,10:(length(d.type)-1))+'];']);
+// Find first '(' character:
+idx=strindex(d.type,'(')+1;
+execstr(['S=['+part(d.type,idx:(length(d.type)-1))+'];']);
 if ~length(d.data)
  if ~length(strindex(d.format, 'binary'))
   exec(d.filename,-1);p=d.parent;
@@ -510,7 +512,7 @@ function d=mcplot_plot(d,p)
   // func to plot data
   if ~length(strindex(d.type,'0d')), d=mcplot_load(d); end
   if ~p, return; end;
-  execstr(['l=[',d.xylimits,'];']); 
+  execstr(['l=[',d.xylimits,'];'],'errcatch'); 
   S=size(d.data);
   t1=['['+d.parent+'] '+d.filename+': '+d.title];
   t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];
@@ -533,6 +535,11 @@ function d=mcplot_plot(d,p)
       plot3d1(x,y,z',90,0,xlab+'@'+ylab+'@'+d.zlabel);    
       if p == 2, t = t1; end
       xtitle(t);       
+    elseif length(strindex(d.type,'1d'))
+      d.x=linspace(l(1),l(2),S(1));
+      mcplot_errorbar(d.x,d.data(:,1),d.data(:,2));
+      if p == 2, t = t1; end
+      xtitle(t,d.xlabel,d.ylabel);
     else
       d.x=linspace(l(1),l(2),max(S));
       plot2d(d.x,d.data);
@@ -543,6 +550,18 @@ function d=mcplot_plot(d,p)
   xname(t1);
   
 endfunction // mcplot_plot
+
+function mcplot_errorbar(x,y,e)
+// function for creating simple errorbar plots...
+  // first, estimate plot range
+  xmin=min(x);
+  xmax=max(x);
+  ymin=min(y-e);
+  ymax=max(y+e);
+//  rect=[xmin xmax ymin ymax];
+  plot2d(x,y,rect=[xmin ymin xmax ymax]);
+  errbar(x,y,e,e);
+endfunction // mcplot_errorbar
 
 function mcplot_set_global(s, gwin, p_in)
   global MCPLOT

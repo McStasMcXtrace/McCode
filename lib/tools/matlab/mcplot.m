@@ -327,7 +327,9 @@ function mcplot_output(form, win, filename)
 
 function d=mcplot_load(d)
 % local inline function to load data
-S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);
+S=d.type; 
+StartIdx=findstr('(',S)+1;
+eval(['S=[ ' S(StartIdx:(length(S)-1)) ' ];']);
 if isempty(d.data)
  if ~length(findstr(d.format, 'binary'))
   copyfile(d.filename,[d.func,'.m']);p=d.parent;
@@ -369,6 +371,9 @@ function d=mcplot_plot(d,p)
       d.y=linspace(l(3),l(4),S(1));
       h=surface(d.x,d.y,d.data); 
       shading flat;         
+    elseif ~isempty(findstr(d.type,'1d'))
+      d.x=linspace(l(1),l(2),S(1));
+      h=errorbar(d.x,d.data(:,1),d.data(:,2));
     else
       d.x=linspace(l(1),l(2),max(S));
       h=plot(d.x,d.data);
@@ -386,9 +391,15 @@ function d=mcplot_plot(d,p)
     uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.5);');
     uimenu(hm, 'Label',['Export into ' d.filename ],'Callback', [ 'evalin(''base'',''' d.filename ' = get(gco,''''userdata''''); disp([''''Exported data into variable ' d.filename ''''']);'');'])
     set(h, 'UIContextMenu', hm);
+    % Also set this UIContextMenu on the axis...
+    % Could also be done using gca as handle, but
+    % can break in certain setups...
+    for j=1:length(h)
+      set(get(h(j),'parent'), 'UIContextMenu', hm, 'userdata',get(h(j),'userdata'));
+    end
   end
   if p == 2, t = t1; end
-  xlabel(d.xlabel); ylabel(d.ylabel); title(t);
+  xlabel(d.xlabel); ylabel(d.ylabel); title(t,'interpreter','none');
   axis tight;
   if p==1, set(gca,'position',[.18,.18,.7,.65]);  end
   set(gcf,'name',t1);grid on;
