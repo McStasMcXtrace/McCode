@@ -7,7 +7,7 @@
 * Component: V_selector
 *
 * Written by:  KL, Nov 25, 1998
-* Last change: KL, Dec 18, 1998
+* Last change: KL, Jan 22, 1999
 *
 * Velocity selector consisting of rotating Soller-like blades
 * defining a helically twisted passage.
@@ -24,7 +24,6 @@
 * phi:       (rad) Twist angle along the cylinder
 * l1:        (m)   Length of cylinder (less than l0)
 * tb:        (m)   Thickness of blades
-* Tl:        (1)   Mean leak transmittance
 * rot:       (rpm) Cylinder rotation speed, counter-clockwise
 * nb:        (1)   Number of Soller blades
 *
@@ -32,22 +31,23 @@
 
 
 DEFINE COMPONENT V_selector
-DEFINITION PARAMETERS (width, height, l0, r0, phi, l1, tb, Tl, rot, nb)
+DEFINITION PARAMETERS (width, height, l0, r0, phi, l1, tb, rot, nb)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-    double dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f;
-    double A, d_s_phi, phi_rad, omega;
+  double RPM2OM, omega, phi_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_phi;
 %}
 INITIALIZE
 %{
-#define RPM2OM 2*PI/60.0
+    RPM2OM = 2*PI/60.0;
     omega=rot*RPM2OM;
     phi_rad = phi*DEG2RAD;
 %}
 TRACE
 %{
+    if (vz == 0)
+      ABSORB;
     dt1= (-l0/2.0 - z)/vz;
     PROP_DT(dt1); /* Propagate to the entry aperture */
     if (x<(-width/2.0) || x>(width/2.0) || y<(-height/2.0) || y>(height/2.0))
@@ -75,6 +75,6 @@ TRACE
     A = nb/(2*PI)*( tb/r_mean + fabs(phi_rad+d_s_phi-omega*l1/vz) ); 
     if (A >= 1)
       ABSORB;
-    p*= Tl+(1-Tl)*(1-A);
+    p*= (1-A);
 %}
 END
