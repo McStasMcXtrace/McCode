@@ -1,6 +1,5 @@
-This is McStas version 1.4, released July 28, 2000.
-(with minor modifications included in version 1.4.1, released March 16, 2001)
-Copyright (C) Risoe National Laboratory, 1997-2000. All rights reserved.
+This is McStas version 1.5, released September 18, 2001.
+Copyright (C) Risoe National Laboratory, 1997-2001. All rights reserved.
 See the file LICENSE for conditions on use.
 Since simulations produced with McStas will include code from the files
 in the lib/ directory, such simulations are derived works of these
@@ -73,6 +72,10 @@ Information on PgPerl may be found on
     http://www.aao.gov.au/local/www/kgb/pgperl/
 Information on PDL may be found on
     http://www.aao.gov.au/local/www/kgb/perldl/
+
+
+
+
 
 
 
