@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.12 2003-04-15 16:01:28 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.13 2003-08-26 12:33:27 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.12  2003/04/15 16:01:28  farhi
+*	incoming/outgoing syntax mismatch correction
+*	
 *	Revision 1.11  2003/04/15 15:45:56  farhi
 *	outgoing time is default (vs. incoming)
 *	
@@ -775,7 +778,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)  { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cx,mc_mn_Vars->cz); } 
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI) { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cy,mc_mn_Vars->cz); } 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI) { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(sqrt(mc_mn_Vars->cx*mc_mn_Vars->cx+mc_mn_Vars->cy*mc_mn_Vars->cy),mc_mn_Vars->cz); } 
         else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1) mc_mn_XY = mc_mn_Vars->UserVariable1;
         else
