@@ -17,10 +17,19 @@
 * Code generation from instrument definition.
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.39  2003/02/11 12:28:45  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*	
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.39 2003-02-11 12:28:45 farhi Exp $
+* $Id: cogen.c,v 1.40 2003-08-12 13:32:25 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1249,6 +1258,13 @@ cogen_runtime(struct instr_def *instr)
 void
 cogen(char *output_name, struct instr_def *instr)
 { 
+  time_t t;
+  char date[64];
+  
+  time(&t);
+  strncpy(date, ctime(&t), 64); 
+  if (strlen(date)) date[strlen(date)-1] = '\0';
+  
   /* Initialize output file. */
   if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
   {
@@ -1265,9 +1281,10 @@ cogen(char *output_name, struct instr_def *instr)
     fatal_error("Error opening output file '%s'\n", output_name);
   
   cout("/* Automatically generated file. Do not edit. ");
-  cout(" * Format:  ANSI C source code");
-  cout(" * Creator: McStas <http://neutron.risoe.dk>");
+  cout(" * Format:     ANSI C source code");
+  cout(" * Creator:    McStas <http://neutron.risoe.dk>");
   coutf(" * Instrument: %s (%s)", instr->source, instr->name);
+  coutf(" * Date:       %s", date);
   cout(" */\n");
   cout("");
   coutf("#define MCSTAS_VERSION \"%s\"", MCSTAS_VERSION);
