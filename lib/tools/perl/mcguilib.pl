@@ -39,7 +39,13 @@ sub simulation_dialog {
     $si{'Autoplot'} = 0 unless $si{'Autoplot'};
     $si{'Ncount'} = 1e6 unless $si{'Ncount'};
     $si{'Trace'} = 0 unless $si{'Trace'};
-
+    # 'Inspect' field for use of mcdisplay's built-in
+    # neutron filter, filtering away all neutrons not
+    # reaching a given component
+    # PW 20030314
+    $si{'Inspect'} = '' unless $si{'Inspect'};
+    $si{'InsNum'} = 0 unless $si{'InsNum'};
+    
     my $dlg = $win->DialogBox(-title => "Run simulation",
 			      -buttons => ["Start", "Cancel"]);
 
@@ -136,9 +142,28 @@ sub simulation_dialog {
 		     -variable => \$si{'Trace'},
 		     -relief => 'flat',
 		     -value => 1)->pack(-side => 'left');
-
+    
+    # Gui stuff for selection of 'inspect' parameter
+    # PW 20030314
+    my $f4 = $opt_frame->Frame;
+    $f4->pack(-anchor => 'w', -side => 'bottom', -fill => 'x');
+    $f4->Label(-text => "Inspect component: ", -height => '2')->pack(-side => 'left');
+    my($ListBox)=$f4->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe')->pack(-side => 'right');
+    
+    my @data;
+    @data=instrument_information($ii->{'Instrument-source'});
+    foreach my $dat (@data) {
+	$ListBox->insert('end', $dat);
+    }
+    $ListBox->activate(0);
     my $res = $dlg->Show;
     $si{'Seed'} = 0 unless $doseed;
+    # Check value of ListBox - 
+    my ($index) = $ListBox->curselection();
+    if ($index) {
+	$si{'Inspect'} = $ListBox->get($index);
+	$si{'InsNum'} = $index;
+    }
     return ($res, \%si);
 }
 
@@ -146,97 +171,140 @@ my $current_plot;
 
 sub dialog_plot_single {
     my ($cl,$di) = @_;
-    $current_plot = $cl->index('active');
-    single_plot("/xserv", $di->[$current_plot], 0);
+    # Should only do something if we are using PGPLOT
+    # PW 20030314
+    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
+    if ($plotter eq 0) {
+	$current_plot = $cl->index('active');
+	single_plot("/xserv", $di->[$current_plot], 0);
+    }
 }
 
 sub dialog_hardcopy {
     my ($dlg, $di, $type) = @_;
-    my $default = $current_plot == -1 ?
-	"mcstas.ps" :
-	($di->[$current_plot]{'Filename'} . ".ps");
-    my $oldgrab = $dlg->grabStatus;
-    $dlg->grabRelease;
-    if ($type =~ "gif") { $default = $current_plot == -1 ?
-	"mcstas.gif" :
-	($di->[$current_plot]{'Filename'} . ".gif"); }
-    my $f = $dlg->getSaveFile(-defaultextension => "ps",
-			      -title => "Select postscript file name",
-			      -initialfile => $default);
-    $dlg->grab if $oldgrab eq 'local';
-    return 0 unless $f;
-    if($current_plot == -1) {
-	overview_plot("\"$f\"/$type", $di, 0);
-    } else {
-	my $comp = $di->[$current_plot]{'Filename'};
-	single_plot("\"$f\"/$type", $di->[$current_plot], 0);
+    # Should only be done if we are using PGPLOT
+    # PW 20030314
+    if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
+	my $default = $current_plot == -1 ?
+	    "mcstas.ps" :
+		($di->[$current_plot]{'Filename'} . ".ps");
+	my $oldgrab = $dlg->grabStatus;
+	$dlg->grabRelease;
+	if ($type =~ "gif") { 
+	    $default = $current_plot == -1 ?
+		"mcstas.gif" :
+		    ($di->[$current_plot]{'Filename'} . ".gif"); 
+	}
+	my $f = $dlg->getSaveFile(-defaultextension => "ps",
+				  -title => "Select postscript file name",
+				  -initialfile => $default);
+	$dlg->grab if $oldgrab eq 'local';
+	return 0 unless $f;
+	if($current_plot == -1) {
+	    overview_plot("\"$f\"/$type", $di, 0);
+	} else {
+	    my $comp = $di->[$current_plot]{'Filename'};
+	    single_plot("\"$f\"/$type", $di->[$current_plot], 0);
+	}
     }
 }
     
 sub plot_dialog {
     my ($win, $ii, $si, $di, $sim_file_name) = @_;
-    $current_plot = -1;	# Component index, or -1 -> overview.
-    my $dlg = $win->DialogBox(-title => "McStas: Plot results",
-			      -buttons => ["Close"]);
-
-    my $lf = $dlg->add('Frame');
-    $lf->pack(-side => 'left');
-    $lf->Label(-text => "Monitors and detectors",
-	       -anchor => 'w')->pack(-fill => 'x');
-    my $cl = $lf->Scrolled('Listbox',
-			  -width => 25,
-			  -height => 10,
-			  -setgrid => 1,
-			  -scrollbars => 'se');
-    $cl->pack(-expand => 'yes', -fill => 'y', -anchor => 'w');
-    $cl->bind('<Double-Button-1>' => sub { dialog_plot_single($cl,$di);
-				       $dlg->raise; } );
-    $cl->insert(0, map "$_->{'Component'}: $_->{'Filename'}", @$di);
-    $cl->activate(0);
- 
-    my $rf = $dlg->add('Frame');
-    $rf->pack(-side => 'top');
-    $rf->Label(-text => <<END,
+    # Should only be done if we are using PGPLOT
+    # PW 20030314
+    if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
+	# Load PGPLOT dependent stuff...
+	require "mcplotlib.pl";
+	$current_plot = -1;	# Component index, or -1 -> overview.
+	my $dlg = $win->DialogBox(-title => "McStas: Plot results",
+				  -buttons => ["Close"]);
+	
+	my $lf = $dlg->add('Frame');
+	$lf->pack(-side => 'left');
+	$lf->Label(-text => "Monitors and detectors",
+		   -anchor => 'w')->pack(-fill => 'x');
+	my $cl = $lf->Scrolled('Listbox',
+			       -width => 25,
+			       -height => 10,
+			       -setgrid => 1,
+			       -scrollbars => 'se');
+	$cl->pack(-expand => 'yes', -fill => 'y', -anchor => 'w');
+	$cl->bind('<Double-Button-1>' => sub { dialog_plot_single($cl,$di);
+					       $dlg->raise; } );
+	$cl->insert(0, map "$_->{'Component'}: $_->{'Filename'}", @$di);
+	$cl->activate(0);
+	
+	my $rf = $dlg->add('Frame');
+	$rf->pack(-side => 'top');
+	$rf->Label(-text => <<END,
 Date: $si->{'Date'}
 Instrument name: $ii->{'Name'}
 Source: $ii->{'Instrument-source'}
 Neutron count: $si->{'Ncount'}
 Simulation file: $sim_file_name
 END
-	       -anchor => 'w',
-	       -justify => 'left')->pack(-fill => 'x');
-    $rf->Button(-text => "Plot",
-		-command => sub { dialog_plot_single($cl,$di);
-			          $dlg->raise; } )->pack;
-    $rf->Button(-text => "Overview plot",
-		-command => sub {
-		    overview_plot("/xserv", $di, 0);
-		    $dlg->raise;
-		    $current_plot = -1; }
-		)->pack;
-    $rf->Button(-text => "B&W postscript",
-		-command => sub { dialog_hardcopy($dlg,
-						  $di, "ps"); }
-		)->pack;
-    $rf->Button(-text => "Colour postscript",
-		-command => sub { dialog_hardcopy($dlg,
-						  $di, "cps"); }
-		)->pack;
-    $rf->Button(-text => "Colour GIF",
-		-command => sub { dialog_hardcopy($dlg,
-						  $di, "gif"); }
-		)->pack;
+		   -anchor => 'w',
+		   -justify => 'left')->pack(-fill => 'x');
+	$rf->Button(-text => "Plot",
+		    -command => sub { dialog_plot_single($cl,$di);
+				      $dlg->raise; } )->pack;
+	$rf->Button(-text => "Overview plot",
+		    -command => sub {
+			overview_plot("/xserv", $di, 0);
+			$dlg->raise;
+			$current_plot = -1; }
+		    )->pack;
+	$rf->Button(-text => "B&W postscript",
+		    -command => sub { dialog_hardcopy($dlg,
+						      $di, "ps"); }
+		    )->pack;
+	$rf->Button(-text => "Colour postscript",
+		    -command => sub { dialog_hardcopy($dlg,
+						      $di, "cps"); }
+		    )->pack;
+	$rf->Button(-text => "Colour GIF",
+		    -command => sub { dialog_hardcopy($dlg,
+						      $di, "gif"); }
+		    )->pack;
 #     $lf->Button(-text => "Select from overview",
 # 		-command => sub {
 # 		    my ($c, $idx) = overview_plot("/xserv", $di, 1);
 # 		    $cl->activate($idx);
 # 		    $current_plot = -1;}
 # 		)->pack;
-
-    overview_plot("/xserv", $di, 0);
-    my $res = $dlg->Show;
-    return ($res);
+	
+	overview_plot("/xserv", $di, 0);
+	my $res = $dlg->Show;
+	return ($res);
+    }
 }
+
+sub backend_dialog {
+    # Choice of plotting backend
+    # PW 20030314
+    my ($win,$plotter) = @_;
+    my $dlg = $win->DialogBox(-title => "McStas:Plot backend",
+			      -buttons => ["Close"]);
+    my $lf = $dlg->add('Frame');
+    my $buttons;
+    $lf->pack(-side => 'left');
+    $buttons[0]=$lf->Radiobutton(-text => "PGPLOT (standard mcdisplay.pl)",
+	       -anchor => 'w','value',0,'variable',\$plotter)->pack(-fill => 'x');
+    $buttons[1]=$lf->Radiobutton(-text => "Matlab (requires Matlab)",
+	       -anchor => 'w','value',1,'variable',\$plotter)->pack(-fill => 'x');
+    $buttons[2]=$lf->Radiobutton(-text => "Matlab scriptfile",
+	       -anchor => 'w','value',2,'variable',\$plotter)->pack(-fill => 'x');
+    $buttons[3]=$lf->Radiobutton(-text => "Scilab (requires Scilab)",
+	       -anchor => 'w','value',3,'variable',\$plotter)->pack(-fill => 'x');
+    $buttons[4]=$lf->Radiobutton(-text => "Scilab scriptfile",
+	       -anchor => 'w','value',4,'variable',\$plotter)->pack(-fill => 'x');
+    $buttons[$plotter]->select;
+    my $res = $dlg->Show;
+    
+    return ($res, $plotter);
+}
+
 
 sub fetch_comp_info {
     my ($cname, $cinfo) = @_;

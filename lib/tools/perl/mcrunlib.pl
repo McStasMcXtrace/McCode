@@ -1,4 +1,29 @@
 require "mcstas_config.perl";
+# If this is Win32, locate mcstas.exe -> $prefix for running 
+# mcdisplay* perl scripts. Sort of a hack for lack of 'which'
+# command on Win32.
+# PW 20030314
+if ($Config{'osname'} eq 'MSWin32') {
+  my @PATH = split(';',$ENV{PATH});
+  my $located=0;
+  my $mcstas_exe;
+  foreach my $path (@PATH) {
+    if ($located eq 0) {
+      $mcstas_exe="$path\\mcstas.exe";
+      if (-e $mcstas_exe) {
+	$located=1;
+	$MCSTAS::mcstas_config{'prefix'}="$path\\";
+      }
+    }
+  }
+  if ($located eq 0) {
+    die "mcstas.exe not found on NT command PATH!";
+  }
+} else {
+  $MCSTAS::mcstas_config{'prefix'}='';
+}
+
+
 
 # Strip any single quotes around argument.
 sub strip_quote {
@@ -98,12 +123,20 @@ sub get_out_file_init {
     return(undef, "Simulation '$sim_def' not found") unless -e $sim_def;
     my $file_type = MCSTAS;
     my $base_name = $sim_def;
+    # Different executable suffixes on Win32 vs. unix
+    # PW 20030314
+    my $ext;
+    if ($Config{'osname'} eq 'MSWin32') {
+      $ext="exe";
+    } else {
+      $ext="out";
+    }
     if($sim_def =~ /(.*)\.instr$/) {
         $base_name = $1;
     } elsif($sim_def =~ /(.*)\.c$/) {
         $base_name = $1;
         $file_type = C;
-    } elsif($sim_def =~ /(.*)\.out$/) {
+    } elsif($sim_def =~ /(.*)\.$ext$/) {
         $base_name = $1;
         $file_type = OUT;
     }
@@ -112,7 +145,7 @@ sub get_out_file_init {
         $dir = $1;
     }
     my $c_name = "$base_name.c";
-    my $out_name = "$base_name.out";
+    my $out_name = "$base_name.$ext";
     $sim_def = "$base_name.instr" unless $file_type eq MCSTAS;
     my $v = { };
     $v->{'force'} = $force;
@@ -459,4 +492,36 @@ sub component_information {
     return $data;
 }
 
+# Open .instr file for component information
+# Needed for implementation of 'inspect' feature
+# in mcgui.pl
+# PW 20030314
+sub instrument_information {
+    my ($instr) = @_;
+    my $file = new FileHandle;
+    open($file, $instr) || return undef;
+    my @data = parse_instrument($file);
+    close($file);
+    return @data;
+}
+
+# Parse .instr file
+sub parse_instrument {
+    my ($f) = @_;
+    my @d;
+    my ($i,$where, $thisparm);
+    while(<$f>) {
+        if(/^\s*COMPONENT \s*([a-zA-Z0-9_Ê¯Â∆ÿ≈]+)\s=*/) {
+	    push @d, $1;
+        } else  {
+	} 
+    }
+    return @d;
+    
+}
+
+
 1;
+
+
+
