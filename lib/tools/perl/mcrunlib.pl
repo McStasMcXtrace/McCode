@@ -1,5 +1,18 @@
 use Config;
 require "mcstas_config.perl";
+# Check if MCSTAS_FORMAT env var is set. If so, set 
+# MCSTAS::mcstas_config{'PLOTTER'} accordingly
+my $plotter=$ENV{'MCSTAS_FORMAT'};
+if ($plotter) {
+    if ($plotter =~ /PGPLOT|McStas|0/i) {
+	$MCSTAS::mcstas_config{'PLOTTER'}=0;
+    } elsif ($plotter =~ /Matlab|1/i) {
+	$MCSTAS::mcstas_config{'PLOTTER'}=1;
+    } elsif ($plotter =~ /Scilab|3/i) {
+	$MCSTAS::mcstas_config{'PLOTTER'}=3;  
+    }
+}
+
 # If this is Win32, locate mcstas.exe -> $prefix for running 
 # mcdisplay* perl scripts. Sort of a hack for lack of 'which'
 # command on Win32.
