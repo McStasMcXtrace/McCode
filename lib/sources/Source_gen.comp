@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -81,6 +81,9 @@
 * gaussian  (0/1) Use gaussian beam (normal distributions)
 * verbose   (0/1) display info about the source. -1 unactivate source.
 *
+* %L
+* <href="http://www.ill.fr/Yellowbook">The ILL Yellow book</a>
+* P. Ageron, Nucl. Inst. Meth. A 284 (1989) 197
 * %E
 *******************************************************************************/
 
