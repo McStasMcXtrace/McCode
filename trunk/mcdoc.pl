@@ -431,6 +431,7 @@ my $index         = 0;
 my $file;
 my $show_website  = 0;
 my $show_manual   = 0;
+my $show_compman  = 0;
 my $show_tutorial = 0;     
 
 for($i = 0; $i < @ARGV; $i++) {
@@ -450,6 +451,8 @@ for($i = 0; $i < @ARGV; $i++) {
         $show_website = 1;
   } elsif(/^--manual$/i || /^-m$/i) {
         $show_manual = 1; 
+  } elsif(/^--comp$/i || /^-c$/i) {
+        $show_compman = 1; 
   } elsif(/^--tutorial$/i) {
         $show_tutorial = 1; 
   } elsif(/^--local$/i) {
@@ -462,7 +465,8 @@ for($i = 0; $i < @ARGV; $i++) {
       print "   -f    --force    Force re-writting of existing HTML doc locally\n";
       print "   -h    --help     Show this help\n";
       print "   -l    --tools    Display the McStas tools list\n";
-      print "   -m    --manual   Open the McStas manual\n";
+      print "   -m    --manual   Open the McStas User manual\n";
+      print "   -c    --comp     Open the McStas Component manual\n";
       print "   -s    --show     Open the generated help file using the BROWSER env. variable\n";
       print "   -t    --text     For single component, display as text\n";
       print "   -w    --web      Open the McStas web page http://mcstas.risoe.dk/\n";
@@ -513,7 +517,22 @@ if ($show_manual) {
     }
     print "mcdoc: Starting $browser $manual\n";
     system("$browser $manual\n");
-    die "mcdoc: manual done.\n";
+    die "mcdoc: User manual done.\n";
+  }
+}
+
+if ($show_compman) {
+  if ($browser =~ "text") {
+    die "mcdoc: Set the BROWSER environment variable first\n";
+  } else {
+    # open the index.html
+    my $manual = "$MCSTAS::sys_dir/doc/mcstas-components.pdf";
+    if ($Config{'osname'} eq "MSWin32") {
+	$manual =~ s!/!\\!g;
+    }
+    print "mcdoc: Starting $browser $manual\n";
+    system("$browser $manual\n");
+    die "mcdoc: Component manual done.\n";
   }
 }
 
