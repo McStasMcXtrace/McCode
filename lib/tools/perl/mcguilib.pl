@@ -755,7 +755,7 @@ sub sitemenu_runsub {
         return 0;
     }
     if (-e "./$base$suffix") {
-        new_sim_def_name($w,"./$base$suffix");
+	open_instr_def($w,"./$base$suffix");
     }
 }
 
