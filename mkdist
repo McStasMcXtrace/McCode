@@ -74,6 +74,11 @@ latex2html -local_icons -dir ../html install.tex
 rm install.aux
 rm install.log
 cd ../..
+# Update the tutorial files
+cd lib/doc/tutorial
+./update
+rm update
+cd ../../..
 
 # A bit ugly with seperate date commands..
 MONTH=`date +"%b"`
