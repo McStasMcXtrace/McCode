@@ -1,0 +1,12 @@
+ChangeLog
+INSTALL
+MANIFEST
+Makefile.PL
+README
+Syntax::Highlight::Perl.html
+lib
+lib/Syntax
+lib/Syntax/Highlight
+lib/Syntax/Highlight/Perl.pm
+viewperl
+

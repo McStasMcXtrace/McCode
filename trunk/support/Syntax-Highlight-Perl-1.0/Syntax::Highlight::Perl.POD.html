@@ -1,0 +1,708 @@
+<HTML>
+<HEAD>
+<TITLE>Syntax::Highlight::Perl  -  Highlighting of Perl Syntactical Structures</TITLE>
+<LINK REV="made" HREF="mailto:root@porky.devel.redhat.com">
+</HEAD>
+
+<BODY>
+
+<!-- INDEX BEGIN -->
+
+<UL>
+
+	<LI><A HREF="#NAME">NAME</A>
+	<LI><A HREF="#VERSION">VERSION</A>
+	<LI><A HREF="#SYNOPSIS">SYNOPSIS</A>
+	<LI><A HREF="#DESCRIPTION">DESCRIPTION</A>
+	<UL>
+
+		<LI><A HREF="#Constructors">Constructors</A>
+		<LI><A HREF="#Formatting">Formatting</A>
+		<LI><A HREF="#Setting_and_Getting_Formats">Setting and Getting Formats</A>
+		<LI><A HREF="#Checking_and_Setting_the_State">Checking and Setting the State</A>
+		<LI><A HREF="#Stable_and_Unstable_Formatting_M">Stable and Unstable Formatting Modes</A>
+		<LI><A HREF="#Substitutions">Substitutions</A>
+	</UL>
+
+	<LI><A HREF="#FORMAT_TYPES">FORMAT TYPES</A>
+	<LI><A HREF="#PROCEDURAL_vs_OBJECT_ORIENTED">PROCEDURAL vs. OBJECT ORIENTED</A>
+	<LI><A HREF="#METHODS">METHODS</A>
+	<LI><A HREF="#KNOWN_ISSUES_or_LIMITATIONS">KNOWN ISSUES or LIMITATIONS</A>
+	<LI><A HREF="#AUTHOR">AUTHOR</A>
+	<LI><A HREF="#TO_DO">TO DO</A>
+	<LI><A HREF="#REVISIONS">REVISIONS</A>
+	<UL>
+
+		<LI><A HREF="#04_04_2001_Cory_Johns">04-04-2001  Cory Johns</A>
+		<LI><A HREF="#03_30_2001_Cory_Johns">03-30-2001  Cory Johns</A>
+		<LI><A HREF="#03_29_2001_Cory_Johns">03-29-2001  Cory Johns</A>
+		<LI><A HREF="#03_27_2001_Cory_Johns">03-27-2001  Cory Johns</A>
+		<LI><A HREF="#03_20_2001_Cory_Johns">03-20-2001  Cory Johns</A>
+	</UL>
+
+</UL>
+<!-- INDEX END -->
+
+<HR>
+<P>
+<H1><A NAME="NAME">NAME</A></H1>
+<P>
+Syntax::Highlight::Perl - Highlighting of Perl Syntactical Structures
+
+<P>
+<HR>
+<H1><A NAME="VERSION">VERSION</A></H1>
+<P>
+This file documents Syntax::Highlight::Perl version <STRONG>1.0</STRONG>.
+
+<P>
+<HR>
+<H1><A NAME="SYNOPSIS">SYNOPSIS</A></H1>
+<P>
+<PRE>    # simple procedural
+    use Syntax::Highlight::Perl ':BASIC';  # or ':FULL'
+</PRE>
+<P>
+<PRE>    print format_string($my_string);
+</PRE>
+<P>
+<PRE>    # OO
+    use Syntax::Highlight::Perl;
+</PRE>
+<P>
+<PRE>    my $formatter = new Syntax::Highlight::Perl;
+    print $formatter-&gt;format_string($my_string);
+</PRE>
+<P>
+<HR>
+<H1><A NAME="DESCRIPTION">DESCRIPTION</A></H1>
+<P>
+This module provides syntax highlighting for Perl code. The design bias is
+roughly line-oriented and streamed (ie, processing a file line-by-line in a
+single pass). Provisions <EM>may</EM> be made in the future for tasks related to ``back-tracking'' (ie, re-doing
+a single line in the middle of a stream) such as speeding up state copying.
+
+<H2><A NAME="Constructors">Constructors</A></H2>
+<P>
+The only constructor provided is <A HREF="#item_new">new()</A>. When called on an existing object, <A HREF="#item_new">new()</A> will create a new <EM><STRONG>copy</STRONG></EM> of that object. Otherwise, <A HREF="#item_new">new()</A> creates a new copy of the (internal)
+<EM>Default Object</EM>. Note that the use of the procedural syntax modifies the <EM>Default Object</EM>
+and that those changes <EM>will</EM> be reflected in any subsequent <A HREF="#item_new">new()</A> calls.
+
+<H2><A NAME="Formatting">Formatting</A></H2>
+<P>
+Formatting is done using the <A HREF="#item_format_string">format_string()</A> method. Call <A HREF="#item_format_string">format_string()</A> with one or more strings to format, or it will default to using <CODE>$_</CODE>.
+
+<H2><A NAME="Setting_and_Getting_Formats">Setting and Getting Formats</A></H2>
+<P>
+You can set the text used for formatting a syntax element using <A HREF="#item_set_format">set_format()</A> (or set the start and end format individually using <A HREF="#item_set_start_format">set_start_format()</A> and <A HREF="#item_set_end_format">set_end_format()</A>, respectively).
+
+<P>
+You can also retrieve the text used for formatting for an element via <A HREF="#item_get_start_format">get_start_format()</A>
+or <A HREF="#item_get_end_format">get_end_format</A>. Bulk retrieval of the names or values of defined formats is possible via <A HREF="#item_get_format_names_list">get_format_names_list()</A> (names), <A HREF="#item_get_start_format_values_list">get_start_format_values_list()</A> and <A HREF="#item_get_end_format_values_list">get_end_format_values_list()</A>.
+
+<P>
+See <A HREF="#FORMAT_TYPES">FORMAT TYPES</A> later in this document for information on what format elements can be used.
+
+<H2><A NAME="Checking_and_Setting_the_State">Checking and Setting the State</A></H2>
+<P>
+You can check certain aspects of the state of the formatter via the
+methods: <A HREF="#item_in_heredoc">in_heredoc()</A>,
+<A HREF="#item_in_string">in_string()</A>, <A HREF="#item_in_pod">in_pod()</A>, <A HREF="#item_was_pod">was_pod()</A>, <A HREF="#item_in_data">in_data()</A>, and <A HREF="#item_line_count">line_count()</A>.
+
+<P>
+You can reset all of the above states (and a few other internal ones) using <A HREF="#item_reset">reset()</A>.
+
+<H2><A NAME="Stable_and_Unstable_Formatting_M">Stable and Unstable Formatting Modes</A></H2>
+<P>
+You can set or check the stability of formatting via <A HREF="#item_unstable">unstable()</A>.
+
+<P>
+In unstable (TRUE) mode, formatting is not considered to be persistent with
+nested formats. Or, put another way, when unstable, the formatter can only
+``remember'' one format at a time and must reinstate formatting for each
+token. An example of unstable formatting is using ANSI color escape
+sequences in a terminal.
+
+<P>
+In stable (FALSE) mode (the default), formatting is considered persistent
+within arbitrarily nested formats. Even in stable mode, however, formatting
+is never allowed to span multiple lines; it is always fully closed at the
+end of the line and reinstated at the beginning of a new line, if
+necessary. This is to ensure properly balanced tags when only formatting a
+partial code snippet. An example of stable formatting is HTML.
+
+<H2><A NAME="Substitutions">Substitutions</A></H2>
+<P>
+Using <A HREF="#item_define_substitution">define_substitution()</A>, you can have the formatter substitute certain strings with others, after
+the original string has been parsed (but before formatting is applied).
+This is useful for escaping characters special to the output mode (eg, &gt; and &lt; in HTML) without them affecting the way the code is parsed.
+
+<P>
+You can retrieve the current substitutions (as a hash-ref) via <A HREF="#item_substitutions">substitutions()</A>.
+
+
+<P>
+<HR>
+<H1><A NAME="FORMAT_TYPES">FORMAT TYPES</A></H1>
+<P>
+The Syntax::Highlight::Perl formatter recognizes and differentiates between
+many Perl syntactical elements. Each type of syntactical element has a
+Format Type associated with it. There is also a 'DEFAULT' type that is
+applied to any element who's Format Type does not have a value.
+
+<P>
+Several of the Format Types have underscores in their name. This underscore
+is special, and indicates that the Format Type can be ``generalized.'' This
+means that you can assign a value to just the first part of the Format Type
+name (the part before the underscore) and that value will be applied to all
+Format Types with the same first part. For example, the Format Types for
+all types of variables begin with ``Variable_''. Thus, if you assign a
+value to the Format Type ``Variable'', it will be applied to any type of
+variable. Generalized Format Types take precedence over non-generalized
+Format Types. So the value assigned to ``Variable'' would be applied to
+``Variable_Scalar'', even if ``Variable_Scalar'' had a value explicitly
+assigned to it.
+
+<P>
+You can also define a ``short-cut'' name for each Format Type that can be
+generalized. The short-cut name would be the part of the Format Type name
+after the underscore. For example, the short-cut for ``Variable_Scalar''
+would be ``Scalar''. Short-cut names have the least precedence and are only
+assigned if neither the generalized Type name, nor the full Type name have
+values.
+
+<P>
+Following is a list of all the syntactical elements that
+Syntax::Highlight::Perl currently recognizes, along with a short
+description of what each would be applied to.
+
+<DL>
+<DT><STRONG><A NAME="item_Comment_Normal">Comment_Normal</A></STRONG><DD>
+<P>
+A normal Perl comment. Starts with '#' and goes until the end of the line.
+
+<DT><STRONG><A NAME="item_Comment_POD">Comment_POD</A></STRONG><DD>
+<P>
+Inline documentation. Starts with a line beginning with an equal sign ('=')
+followed by a word (eg: '=pod') and continuing until a line beginning with
+'=cut'.
+
+<DT><STRONG><A NAME="item_Directive">Directive</A></STRONG><DD>
+<P>
+Either the ``she-bang'' line at the beginning of the file, or a line
+directive altering what the compiler thinks the current line and file is.
+
+<DT><STRONG><A NAME="item_Label">Label</A></STRONG><DD>
+<P>
+A loop or statement label (to be the target of a goto, next, last or redo).
+
+<DT><STRONG><A NAME="item_Quote">Quote</A></STRONG><DD>
+<P>
+Any string or character that begins or ends a String. Including, but not
+necessarily limited to: quote-like regular expression operators (<CODE>m//</CODE>, <CODE>s///</CODE>, <CODE>tr///</CODE>, etc), a Here-Document terminating line, the lone period terminating a
+format, and, of course, normal quotes (<CODE>'</CODE>, <CODE>&quot;</CODE>, <CODE>`</CODE>, <CODE>q{}</CODE>,
+<CODE>qq{}</CODE>, <CODE>qr{}</CODE>, <CODE>qx{}</CODE>).
+
+<DT><STRONG><A NAME="item_String">String</A></STRONG><DD>
+<P>
+Any text within quotes, <CODE>format</CODE>s, Here-Documents, Regular Expressions, and the like.
+
+<DT><STRONG><A NAME="item_Subroutine">Subroutine</A></STRONG><DD>
+<P>
+The identifier used to define, identify, or call a subroutine (or method).
+Note that Syntax::Highlight::Perl cannot recognize a subroutine if it is
+called without using parentheses or an ampersand, or methods called using
+the indirect object syntax. It formats those as barewords.
+
+<DT><STRONG><A NAME="item_Variable_Scalar">Variable_Scalar</A></STRONG><DD>
+<P>
+A scalar variable.
+
+<P>
+Note that (theoretically) this format is not applied to non-scalar
+variables that are being used as scalars (ie: array or hash lookups, nor
+references to anything other than scalars). Syntax::Highlight::Perl figures
+out (or at least tries to) the actual <EM>type</EM> of the variable being used (by looking at how you're subscripting it) and
+formats it accordingly. The first character of the variable (ie, the <CODE>$</CODE>, <CODE>@</CODE>, <CODE>%</CODE>, or <CODE>*</CODE>) tells you the type of value being used, and the color (hopefully) tells
+you the type of variable being used to get that value.
+
+<P>
+(See <A HREF="#KNOWN_ISSUES">KNOWN ISSUES</A> for information about when this doesn't work quite right.)
+
+<DT><STRONG><A NAME="item_Variable_Array">Variable_Array</A></STRONG><DD>
+<P>
+An array variable (but not usually a slice; see above).
+
+<DT><STRONG><A NAME="item_Variable_Hash">Variable_Hash</A></STRONG><DD>
+<P>
+A hash variable.
+
+<DT><STRONG><A NAME="item_Variable_Typeglob">Variable_Typeglob</A></STRONG><DD>
+<P>
+A typeglob. Note that typeglobs not beginning with an asterisk (*) (eg:
+filehandles) are formatted as barewords. This is because, well, they are.
+
+<DT><STRONG><A NAME="item_Whitespace">Whitespace</A></STRONG><DD>
+<P>
+Whitespace. Not usually formatted but it can be.
+
+<DT><STRONG><A NAME="item_Character">Character</A></STRONG><DD>
+<P>
+A special, or backslash-escaped, character. For example: <CODE>\n</CODE> (newline), or <CODE>\d</CODE> (digits).
+
+<P>
+Only occurs within strings or regular expressions.
+
+<DT><STRONG><A NAME="item_Keyword">Keyword</A></STRONG><DD>
+<P>
+A Perl keyword. Some examples include: my, local, sub, next.
+
+<P>
+Note that Perl does not make any distinction between keywords and built-in
+functions (at least not in the documentation). Thus I had to make a
+subjective call as to what would be considered keywords and what would be
+built-in functions.
+
+<P>
+The list of keywords can be found (and overloaded) in the variable
+<CODE>$Syntax::Highlight::Perl::keyword_list_re</CODE> as a pre-compiled regular expression.
+
+<DT><STRONG><A NAME="item_Builtin_Function">Builtin_Function</A></STRONG><DD>
+<P>
+A Perl built-in function, called as a function (ie, using parentheses).
+
+<P>
+The list of built-in functions can be found (and overloaded) in the
+variable
+<CODE>$Syntax::Highlight::Perl::builtin_list_re</CODE> as a pre-compiled regular expression.
+
+<DT><STRONG><A NAME="item_Builtin_Operator">Builtin_Operator</A></STRONG><DD>
+<P>
+A Perl built-in function, called as a list or unary operator (ie, without
+using parentheses).
+
+<P>
+The list of built-in functions can be found (and overloaded) in the
+variable
+<CODE>$Syntax::Highlight::Perl::builtin_list_re</CODE> as a pre-compiled regular expression.
+
+<DT><STRONG><A NAME="item_Operator">Operator</A></STRONG><DD>
+<P>
+A Perl operator.
+
+<P>
+The list of operators can be found (and overloaded) in the variable
+<CODE>$Syntax::Highlight::Perl::operator_list_re</CODE> as a pre-compiled regular expression.
+
+<DT><STRONG><A NAME="item_Bareword">Bareword</A></STRONG><DD>
+<P>
+A bareword. This can be user-defined subroutine called without parentheses,
+a typeglob used without an asterisk (*), or just a plain old bareword.
+
+<DT><STRONG><A NAME="item_Package">Package</A></STRONG><DD>
+<P>
+The name of a package or pragmatic module.
+
+<P>
+Note that this does not apply to the package portion of a fully qualified
+variable name.
+
+<DT><STRONG><A NAME="item_Number">Number</A></STRONG><DD>
+<P>
+A numeric literal.
+
+<DT><STRONG><A NAME="item_Symbol">Symbol</A></STRONG><DD>
+<P>
+A symbol (ie, non-operator punctuation).
+
+<DT><STRONG><A NAME="item_CodeTerm">CodeTerm</A></STRONG><DD>
+<P>
+The special tokens that signal the end of executable code and the begining
+of the DATA section. Specifically, '<CODE>__END__</CODE>' and '<CODE>__DATA__</CODE>'.
+
+<DT><STRONG><A NAME="item_DATA">DATA</A></STRONG><DD>
+<P>
+Anything in the DATA section (see <A HREF="#item_CodeTerm">CodeTerm</A>).
+
+</DL>
+<P>
+<HR>
+<H1><A NAME="PROCEDURAL_vs_OBJECT_ORIENTED">PROCEDURAL vs. OBJECT ORIENTED</A></H1>
+<P>
+Syntax::Highlight::Perl uses OO method-calls internally (and actually
+defines a Default Object that is used when the functions are invoked
+procedurally) so you will not gain anything (efficiency-wise) by using the
+procedural interface. It is just a matter of style.
+
+<P>
+It is actually recommended that you use the OO interface, as this allows
+you to instantiate multiple, concurrent-yet-separate formatters. Though I
+cannot think of <EM>why</EM> you would <EM>need</EM>
+multiple formatters instantiated. :-)
+
+<P>
+One point to note: the <A HREF="#item_new">new()</A> method uses the Default Object to initialize new objects. This means that
+any changes to the state of the Default Object (including Format
+definitions) made by using the procedural interface will be reflected in
+any subsequently created objects. This can be useful in some cases (eg,
+call <A HREF="#item_set_format">set_format()</A> procedurally just before creating a batch of new objects to define default
+Formats for them all) but will most likely lead to trouble.
+
+<P>
+<HR>
+<H1><A NAME="METHODS">METHODS</A></H1>
+<DL>
+<DT><STRONG><A NAME="item_new">new PACKAGE</A></STRONG><DD>
+<DT><STRONG>new OBJECT</STRONG><DD>
+<P>
+Creates a new object. If called on an existing object, creates a new copy
+of that object (which is thenceforth totally separate from the original).
+
+<DT><STRONG><A NAME="item_reset">reset</A></STRONG><DD>
+<P>
+Resets the object's internal state. This breaks out of strings and
+here-docs, ends PODs, resets the line-count, and otherwise gets the object
+back into a ``normal'' state to begin processing a new stream.
+
+<P>
+Note that this does <STRONG><EM>not</EM></STRONG> reset any user options (including formats and format stability).
+
+<DT><STRONG><A NAME="item_unstable">unstable EXPR</A></STRONG><DD>
+<DT><STRONG>unstable</STRONG><DD>
+<P>
+Returns true if the formatter is in unstable mode.
+
+<P>
+If called with a non-zero number, puts the formatter into unstable
+formatting mode.
+
+<P>
+In unstable mode, it is assumed that formatting is not persistent one token
+to the next and that each token must be explicitly formatted.
+
+<DT><STRONG><A NAME="item_in_heredoc">in_heredoc</A></STRONG><DD>
+<P>
+Returns true if the next string to be formatted will be inside a
+Here-Document.
+
+<DT><STRONG><A NAME="item_in_string">in_string</A></STRONG><DD>
+<P>
+Returns true if the next string to be formatted will be inside a multi-line
+string.
+
+<DT><STRONG><A NAME="item_in_pod">in_pod</A></STRONG><DD>
+<P>
+Returns true if the formatter would consider the next string passed to it
+as begin within a POD structure. This is false immediately before any POD
+instigators (<CODE>=pod</CODE>, <CODE>=head1</CODE>, <CODE>=item</CODE>, etc), true immediately after an instigator, throughout the POD and
+immediately before the POD terminator (<CODE>=cut</CODE>), and false immediately after the POD terminator.
+
+<DT><STRONG><A NAME="item_was_pod">was_pod</A></STRONG><DD>
+<P>
+Returns true if the last line of the string just formatted was part of a
+POD structure. This includes the <CODE>/^=\w+/</CODE> POD instigators and terminators.
+
+<DT><STRONG><A NAME="item_in_data">in_data</A></STRONG><DD>
+<P>
+Returns true if the next string to be formatted will be inside the DATA
+section (ie, follows a <CODE>__DATA__</CODE> or <CODE>__END__</CODE> tag).
+
+<DT><STRONG><A NAME="item_line_count">line_count</A></STRONG><DD>
+<P>
+Returns the number of lines processed by the formatter.
+
+<DT><STRONG><A NAME="item_substitutions">substitutions</A></STRONG><DD>
+<P>
+Returns a reference to the substitution table used. The substitution table
+is a hash whose keys are the strings to be replaced, and whose values are
+what to replace them with.
+
+<DT><STRONG><A NAME="item_define_substitution">define_substitution HASH_REF</A></STRONG><DD>
+<DT><STRONG>define_substitution LIST</STRONG><DD>
+<P>
+Allows user to define certain characters that will be substituted before
+formatting is done (but after they have been processed for meaning).
+
+<P>
+If the first parameter is a reference to a hash, the formatter will replace
+it's own hash with the given one, and subsequent changes to the hash
+outside the formatter will be reflected.
+
+<P>
+Otherwise, it will copy the arguments passed into it's own hash, and any
+substitutions already defined (but not in the parameter list) will be
+preserved. (ie, the new substitutions will be added, without destroying
+what was there already.)
+
+<DT><STRONG><A NAME="item_set_start_format">set_start_format HASH_REF</A></STRONG><DD>
+<DT><STRONG>set_start_format LIST</STRONG><DD>
+<P>
+Given either a list of keys/values, or a reference to a hash of
+keys/values, copy them into the object's Formats list.
+
+<DT><STRONG><A NAME="item_set_end_format">set_end_format HASH_REF</A></STRONG><DD>
+<DT><STRONG>set_end_format LIST</STRONG><DD>
+<P>
+Given either a list of keys/values, or a reference to a hash of
+keys/values, copy them into the object's Formats list.
+
+<DT><STRONG><A NAME="item_set_format">set_format LIST</A></STRONG><DD>
+<P>
+Sets the formatting string for one or more formats.
+
+<P>
+You should pass a list of keys/values where the keys are the format names
+and the values are references to arrays containing the starting and ending
+formatting strings (in that order) for that format.
+
+<DT><STRONG><A NAME="item_get_start_format">get_start_format LIST</A></STRONG><DD>
+<P>
+Retrieve the string that is inserted to begin a given format type (starting
+format string).
+
+<P>
+The names are looked for in the following order:
+
+<P>
+<STRONG>First:</STRONG> Prefer the names joined by underscore, from most general to least. For
+example, given (``Variable'', ``Scalar''): ``Variable'' then
+``Variable_Scalar''.
+
+<P>
+<STRONG>Second:</STRONG> Then try each name singly, in reverse order. For example, ``Scalar'' then
+``Variable''.
+
+<P>
+See <A HREF="#FORMAT_TYPES">FORMAT TYPES</A> for more information.
+
+<DT><STRONG><A NAME="item_get_end_format">get_end_format LIST</A></STRONG><DD>
+<P>
+Retrieve the string that is inserted to end a given format type (ending
+format string).
+
+<DT><STRONG><A NAME="item_get_format_names_list">get_format_names_list</A></STRONG><DD>
+<P>
+Returns a list of the <EM>names</EM> of all the Formats defined.
+
+<DT><STRONG><A NAME="item_get_start_format_values_list">get_start_format_values_list</A></STRONG><DD>
+<P>
+Returns a list of the <EM>values</EM> of all the start Formats defined (in the same order as the names returned
+by <A HREF="#item_get_format_names_list">get_format_names_list()</A>).
+
+<DT><STRONG><A NAME="item_get_end_format_values_list">get_end_format_values_list</A></STRONG><DD>
+<P>
+Returns a list of the <EM>values</EM> of all the end Formats defined (in the same order as the names returned by <A HREF="#item_get_format_names_list">get_format_names_list()</A>).
+
+<DT><STRONG><A NAME="item_format_string">format_string LIST</A></STRONG><DD>
+<P>
+Formats one or more strings of Perl code. If no strings are specified,
+defaults to <CODE>$_</CODE>. Returns the list of formatted strings (or the first string formatted if
+called in scalar context).
+
+<P>
+<STRONG>Note:</STRONG>  The end of the string is considered to be the end of a line, regardless of
+whether or not there is a trailing line-break (but trailing line-breaks
+will <EM>not</EM> cause an extra, empty line).
+
+<P>
+<STRONG>Another Note:</STRONG>  The function actually uses <CODE>$/</CODE> to determine line-breaks, unless <CODE>$/</CODE> is set to <CODE>\n</CODE> (newline). If <CODE>$/</CODE>  <EM>is</EM>  <CODE>\n</CODE>, then it looks for the first match of <CODE>m/\r?\n|\n?\r/</CODE> in the string and uses that to determine line-breaks. This is to make it
+easy to handle non-unix text. Whatever characters it ends up using as
+line-breaks are preserved.
+
+<DT><STRONG><A NAME="item_format_token">format_token TOKEN, LIST</A></STRONG><DD>
+<P>
+Returns TOKEN wrapped in the start and end Formats corresponding to LIST
+(as would be returned by <A HREF="#item_get_start_format">get_start_format( LIST )</A> and <A HREF="#item_get_end_format">get_end_format( LIST )</A>, respectively).
+
+<P>
+No syntax checking is done on TOKEN but substitutions defined with <A HREF="#item_define_substitution">define_substitution()</A>
+are performed.
+
+</DL>
+<P>
+<HR>
+<H1><A NAME="KNOWN_ISSUES_or_LIMITATIONS">KNOWN ISSUES or LIMITATIONS</A></H1>
+<UL>
+<LI>
+<P>
+Barewords used as keys to a hash are formatted as strings. This is Good.
+They should not be, however, if they are not the only thing within the
+curly braces. That can be fixed.
+
+<LI>
+<P>
+This version does not handle formats (see <a target="_top" href="http://www.perl.com/pub/doc/manual/html/pod/perlform.html">perlform(1)</a>) very well. It treats them as Here-Documents and ignores the rules for
+comment lines, as well as the fact that picture lines are not supposed to
+be interpolated. Thus, your picture lines will look strange with the '@'s
+being formatted as array variables (albeit, invalid ones). Ideally, it
+would also treat value lines as normal Perl code and format accordingly. I
+think I'll get to the comment lines and non-interpolating picture lines
+first. If/When I do get this fixed, I will most likely add a format type of
+'Format' or something, so that they can be formatted differently, if so
+desired.
+
+<LI>
+<P>
+This version does not handle Regular Expression significant characters. It
+simply treats Regular Expressions as interpolated strings.
+
+<LI>
+<P>
+User-defined subroutines, called without parentheses, are formatted as
+barewords. This is because there is no way to tell them apart from
+barewords without parsing the code, and would require us to go as far as
+perl does when doing the <CODE>-c</CODE> check (ie, executing BEGIN and END blocks and the like). That's not going
+to happen.
+
+<LI>
+<P>
+If you are indexing (subscripting) an array or hash, the formatter tries to
+figure out the ``real'' variable class by looking at how you index the
+variable. However, if you do something funky (but legal in Perl) and put
+line-breaks or comments between the variable class character ($) and your
+identifier, the formatter will get confused and treat your variable as a
+scalar. Until it finds the index character. Then it will format the scalar
+class character ($) as a scalar and your identifier as the ``correct''
+class.
+
+<LI>
+<P>
+If you put a line-break between your variable identifier and it's indexing
+character (see above), which is also legal in Perl, the formatter will
+never find it and treat your variable as a scalar.
+
+<LI>
+<P>
+If you put a line-break between a bareword hash-subscript and the hash
+variable, or between a bareword and its associated <CODE>=&gt;</CODE> operator, the bareword will not be formatted correctly (as a string).  <EM>(Noticing a pattern here?)</EM>
+
+
+
+</UL>
+<P>
+<HR>
+<H1><A NAME="AUTHOR">AUTHOR</A></H1>
+<P>
+Cory Johns <STRONG>darkness@yossman.net</STRONG>
+
+
+
+<P>
+Copyright (c) 2001 Cory Johns. This library is free software; you can
+redistribute and/or modify it under the same conditions as Perl itself.
+
+<P>
+<HR>
+<H1><A NAME="TO_DO">TO DO</A></H1>
+<OL>
+<LI>
+<P>
+Improve handling of regular expressions. Add support for regexp-special
+characters. Recognize the /e option to the substitution operator (maybe).
+
+<LI>
+<P>
+Improve handling of formats. Don't treat format definitions as
+interpolating. Handle format-comments. Possibly format value lines as
+normal Perl code.
+
+<LI>
+<P>
+Create in-memory deep-copy routine to replace <CODE>eval(Data::Dumper)</CODE> deep-copy.
+
+<LI>
+<P>
+Generalize state transitions (<A HREF="#item_reset">reset()</A> and, in the future, <CODE>copy_state()</CODE>) to use non-hard-coded keys and values for state variables. Probably will
+extrapolate them into an overloadable hash, and use the aforementioned
+deep-copy to assign them.
+
+<LI>
+<P>
+Create a method to save or copy states between objects (<CODE>copy_state()</CODE>). Would be useful for using this module in an editor.
+
+<LI>
+<P>
+Add support for greater-than-one length special characters. Specifically,
+octal, hexidecimal, and control character codes. For example, <CODE>\644</CODE>, <CODE>\x1a4</CODE> or <CODE>\c[</CODE>.
+
+</OL>
+<P>
+<HR>
+<H1><A NAME="REVISIONS">REVISIONS</A></H1>
+<P>
+<HR>
+<H2><A NAME="04_04_2001_Cory_Johns">04-04-2001  Cory Johns</A></H2>
+<UL>
+<LI>
+<P>
+Fixed problem with special characters not formatting inside of
+Here-Documents.
+
+<LI>
+<P>
+Fixed bug causing hash variables to format inside of Here-Documents.
+
+</UL>
+<P>
+<HR>
+<H2><A NAME="03_30_2001_Cory_Johns">03-30-2001  Cory Johns</A></H2>
+<UL>
+<LI>
+<P>
+Fixed bug where quote-terminators were checked for inside of
+Here-Documents.
+
+</UL>
+<P>
+<HR>
+<H2><A NAME="03_29_2001_Cory_Johns">03-29-2001  Cory Johns</A></H2>
+<UL>
+<LI>
+<P>
+Moved token processing tests from <CODE>_format_line()</CODE> into
+<CODE>_process_token()</CODE> (where they should've been all along),
+generally making <CODE>_format_line()</CODE> more logical. Contemplating
+extrapolating the tokenizing and token loop into its own subroutine to
+avoid all the recursive calls.
+
+<LI>
+<P>
+Fixed bug that caused special characters to be recognized outside of
+strings.
+
+<LI>
+<P>
+Added <CODE>$VERSION</CODE> variable.
+
+<LI>
+<P>
+Added support for different types of literal numbers: floating point,
+exponential notation (eg: 1.3e10), hexidecimal, and underscore-separated.
+
+<LI>
+<P>
+Added the <A HREF="#item_CodeTerm">CodeTerm</A> and <A HREF="#item_DATA">DATA</A> Formats.
+
+</UL>
+<P>
+<HR>
+<H2><A NAME="03_27_2001_Cory_Johns">03-27-2001  Cory Johns</A></H2>
+<UL>
+<LI>
+<P>
+Added <CODE>was_pod()</CODE> and updated the documentation for
+<CODE>in_pod().</CODE>
+
+</UL>
+<P>
+<HR>
+<H2><A NAME="03_20_2001_Cory_Johns">03-20-2001  Cory Johns</A></H2>
+<UL>
+<LI>
+<P>
+Added support for Perl formats (ie, `<CODE>format = ...</CODE>').
+
+</UL>
+</BODY>
+
+</HTML>

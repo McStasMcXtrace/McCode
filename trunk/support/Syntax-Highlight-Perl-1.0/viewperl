@@ -1,0 +1,311 @@
+#!/usr/bin/perl -w
+#
+# viewperl  -  A simple program to quickly view syntax highlighted
+#              Perl code quickly from the command-line
+#
+# This file is freely distributable under the same conditions as Perl itself.
+#
+
+require 5.004;
+use strict;
+
+
+#=====================================================================
+#                              Includes
+#=====================================================================
+
+use FileHandle;
+use Getopt::Long;
+use Syntax::Highlight::Perl 1.0;
+
+
+#=====================================================================
+#                          Global Variables
+#=====================================================================
+use vars qw(%OPTIONS $PAGER %ANSI_colors $formatter @FILES);
+
+%OPTIONS = (
+    'Lines'       => 0,   # Flag indicating whether we should display line-numbers.
+    'Module'      => 0,   # Flag indicating that we've seen at least one module.
+    'Name'        => 1,   # Flag indicating whether we should display file names.
+    'POD'         => 0,   # Flag indicating whether or not to display in-line POD.
+    'Reset'       => 1,   # Flag to supress resetting line-numbers and formatting between files.
+    'Shift'       => 4,   # Width of expanded tabs (shift-width).
+    'Expand Tabs' => 1,   # Flag to expand tabs or not.
+);
+
+$PAGER         = '| less -rF';
+
+#
+# Could use Term::ANSIColor but it wasn't installed on my machine, and I "know" the
+# colors anyway.  If this causes problems, replace with Term::ANSIColor data.
+#
+%ANSI_colors = (
+    none      => "\e[0m",
+
+    red       => "\e[0;31m",
+    green     => "\e[0;32m",
+    yellow    => "\e[0;33m",
+    blue      => "\e[0;34m",
+    magenta   => "\e[0;35m",
+    cyan      => "\e[0;36m",
+    white     => "\e[0;37m",
+
+    gray      => "\e[1;30m",
+    bred      => "\e[1;31m",
+    bgreen    => "\e[1;32m",
+    byellow   => "\e[1;33m",
+    bblue     => "\e[1;34m",
+    bmagenta  => "\e[1;35m",
+    bcyan     => "\e[1;36m",
+    bwhite    => "\e[1;37m",
+
+    bgred     => "\e[41m",
+    bggreen   => "\e[42m",
+    bgyellow  => "\e[43m",
+    bgblue    => "\e[44m",
+    bgmagenta => "\e[45m",
+    bgcyan    => "\e[46m",
+    bgwhite   => "\e[47m",
+);
+
+$formatter = new Syntax::Highlight::Perl;
+
+#
+# Set up formatter to do ANSI colors.
+#
+$formatter->unstable(1);
+$formatter->set_format(
+    'Comment_Normal'   => [$ANSI_colors{'bblue'},    $ANSI_colors{'none'}],
+    'Comment_POD'      => [$ANSI_colors{'bblue'},    $ANSI_colors{'none'}],
+    'Directive'        => [$ANSI_colors{'magenta'},  $ANSI_colors{'none'}],
+    'Label'            => [$ANSI_colors{'magenta'},  $ANSI_colors{'none'}],
+    'Quote'            => [$ANSI_colors{'bwhite'},   $ANSI_colors{'none'}],
+    'String'           => [$ANSI_colors{'bcyan'},    $ANSI_colors{'none'}],
+    'Subroutine'       => [$ANSI_colors{'byellow'},  $ANSI_colors{'none'}],
+    'Variable_Scalar'  => [$ANSI_colors{'bgreen'},   $ANSI_colors{'none'}],
+    'Variable_Array'   => [$ANSI_colors{'bgreen'},   $ANSI_colors{'none'}],
+    'Variable_Hash'    => [$ANSI_colors{'bgreen'},   $ANSI_colors{'none'}],
+    'Variable_Typeglob'=> [$ANSI_colors{'bwhite'},   $ANSI_colors{'none'}],
+    'Whitespace'       => ['',                       ''                  ],
+    'Character'        => [$ANSI_colors{'bred'},     $ANSI_colors{'none'}],
+    'Keyword'          => [$ANSI_colors{'bwhite'},   $ANSI_colors{'none'}],
+    'Builtin_Function' => [$ANSI_colors{'bwhite'},   $ANSI_colors{'none'}],
+    'Builtin_Operator' => [$ANSI_colors{'bwhite'},   $ANSI_colors{'none'}],
+    'Operator'         => [$ANSI_colors{'white'},    $ANSI_colors{'none'}],
+    'Bareword'         => [$ANSI_colors{'white'},    $ANSI_colors{'none'}],
+    'Package'          => [$ANSI_colors{'green'},    $ANSI_colors{'none'}],
+    'Number'           => [$ANSI_colors{'bmagenta'}, $ANSI_colors{'none'}],
+    'Symbol'           => [$ANSI_colors{'white'},    $ANSI_colors{'none'}],
+    'CodeTerm'         => [$ANSI_colors{'gray'},     $ANSI_colors{'none'}],
+    'DATA'             => [$ANSI_colors{'gray'},     $ANSI_colors{'none'}],
+
+    'Line'             => [$ANSI_colors{'byellow'},  $ANSI_colors{'none'}],
+    'File_Name'        => [$ANSI_colors{'red'} . $ANSI_colors{'bgwhite'}, $ANSI_colors{'none'}],
+);
+
+@FILES = ();
+
+
+
+#=====================================================================
+#                          Initializations
+#=====================================================================
+
+$SIG{PIPE} = sub { };  # Supress broken pipe error messages.
+
+Getopt::Long::Configure('bundling');
+GetOptions(
+    'c|code=s'   => sub { push @::FILES, \$_[1] },
+    'l|lines'    => sub { $::OPTIONS{'Lines'}       =    1  },
+    'L|no-lines' => sub { $::OPTIONS{'Lines'}       =    0  },
+    'n|name'     => sub { $::OPTIONS{'Name'}        =    1  },
+    'N|no-name'  => sub { $::OPTIONS{'Name'}        =    0  },
+    'p|pod'      => sub { $::OPTIONS{'POD'}         =    1  },
+    'P|no-pod'   => sub { $::OPTIONS{'POD'}         =    0  },
+    'r|reset'    => sub { $::OPTIONS{'Reset'}       =    1  },
+    'R|no-reset' => sub { $::OPTIONS{'Reset'}       =    0;
+                          $::OPTIONS{'Name'}        =    0  },
+    's|shift=i'  => sub { $::OPTIONS{'Shift'}       = $_[1] },
+    't|tabs'     => sub { $::OPTIONS{'Expand Tabs'} =    0  },
+    'T|no-tabs'  => sub { $::OPTIONS{'Expand Tabs'} =    0  },
+    'm|module=s' => sub {
+        my $fn = mod2file($_[1]);
+        if(defined $fn) { push @::FILES, $fn } else { warn "Module not found: $_[1]\n" }
+    },
+    'help'       => \&show_help,
+    '<>'         => sub { push @::FILES, $_[0] },
+);
+
+process_files();
+
+
+#=====================================================================
+#                            Subroutines
+#=====================================================================
+
+sub show_help {
+
+    my $self = $0;  $self =~ s/^.*\///;
+
+    print << "END_OF_HELP";
+Usage: $self [OPTION]... FILE...
+View a Perl source code file, syntax highlighted.
+
+  -c, --code=CODE       view CODE, syntax highlighted
+  -l, --lines           display line numbers
+  -L, --no-lines        supress display of line numbers (default)
+  -m, --module=FILE     consider FILE the name of a module, not a file name
+  -n, --name            display the name of each file (default)
+  -N, --no-name         supress display of file names (implied by --no-reset)
+  -p, --pod             display inline POD documentation (default)
+  -P, --no-pod          hide POD documentation (line numbers still increment)
+  -r, --reset           reset formatting and line numbers each file (default)
+  -R, --no-reset        supress resetting of formatting and line numbers
+  -s, --shift=WIDTH     set tab width (default is 4)
+  -t, --tabs            translate tabs into spaces (default)
+  -T, --no-tabs         supress translating of tabs into spaces
+
+      --help            display this help and exit
+
+Note that module names should be given as they would appear after a Perl `use' or
+`require' statement.  `Getopt::Long', for example.
+
+Each string given using -c is considered a different file, so line number and
+formatting resets will apply.
+END_OF_HELP
+
+    exit;
+
+}
+
+
+sub process_files {
+
+    #
+    # Don't read from STDIN if modules were specified and not found.
+    #  (They've already seen the error and we should put them back to the command-line.)
+    #
+    return if not @FILES and $OPTIONS{'Module'};
+
+    my $INPUT  = new FileHandle;
+    my $OUTPUT = new FileHandle;
+
+    #
+    # Open the pager if our STDOUT is attached to a tty but *not* if STDIN is also
+    # attached to a tty (unless we're not going to be reading from STDIN, ie @ARGV
+    # has values and none of them are '-') because then both we and the pager are
+    # trying to read from the tty (STDIN) at the same time.  And that's bad mojo.
+    # (Besides, if they're typing data in from a tty by hand, they don't need it
+    # to be paged since we process each line they enter as soon as they hit return.)
+    #
+    # If both in and out _are_ tty's, just dup STDOUT and make them page it themselves.
+    #
+    if(-t STDOUT and (not -t STDIN or (@FILES and join("\n", @FILES) !~ /^-$/ms))) {
+        $OUTPUT->open($PAGER) or die "$0: can't open pager '$PAGER': $!\n";
+    } else {
+        $OUTPUT->open('>& STDOUT') or die "$0: can't dup STDOUT: $!\n";
+    }
+
+    push @FILES, '-' unless(@FILES);  # Use STDIN if nothing specified.
+
+    foreach my $file (@FILES) {
+
+        my $use_code = 0;
+        my @CODE;
+
+        #
+        # Ref's are code passed in via -c
+        #
+        if(ref $file) {
+            $use_code = 1;
+            push @CODE, $$file;
+        } else {
+            $INPUT->open(" $file") or die "$0: can't open $file: $!\n";
+        }
+
+        #
+        # Reset so that line numbers start over and un-ended PODs, string, etc
+        # don't carry over into the next file.
+        #
+        if($OPTIONS{'Reset'}) {
+
+            $formatter->reset();
+
+        };
+
+        #
+        # Display the name of the current file.
+        #
+        if($OPTIONS{'Name'}) {
+            my $fn = ref $file ? "CODE" : $file;
+            print $OUTPUT "\n   ", $formatter->format_token("  -- $fn --  ", 'File_Name'), "\n\n";
+        }
+
+        while($_ = $use_code ? shift(@CODE) : <$INPUT>) {
+            chomp;
+
+            #
+            # Expand tabs.
+            #
+            if($OPTIONS{'Expand Tabs'}) {
+                1 while s/\t+/' ' x (length($&) * $OPTIONS{'Shift'} - length($`) % $OPTIONS{'Shift'})/e;
+            }
+
+            #
+            # Do formatting.
+            #
+            my $line = $formatter->format_string($_);
+
+            if($OPTIONS{'POD'} or not $formatter->was_pod()) {
+
+                if($OPTIONS{'Lines'}) {
+                    print $OUTPUT $formatter->format_token(sprintf("%5s ", $formatter->line_count()), 'Line');
+                }
+
+                print $OUTPUT "$line\n";
+
+            }
+
+        }
+
+        unless($use_code) {
+            $INPUT->close or die "$0: can't close $file: $!\n";
+        }
+
+    }
+
+    unless($OUTPUT->close() or $! =~ /Broken pipe/) {
+        die "$0: can't close output stream: $!\n";
+    }
+
+}
+
+
+#
+# Convert module names (eg, Syntax::Highlight::Perl) to
+# fully qualified file names using current state of @INC.
+#
+# Returns undef on error (file-not-found).
+#
+sub mod2file {
+
+    my $modname = shift or return undef;
+
+    my $filename = ($modname !~ m|^(.*/)?[^/]*\.[^/]*$|) ? "$modname.pm" : $modname;
+
+    $filename =~ s|^(.*/)||; # Strip leading path info ...
+    my $startpath = $1;      # ... but save it in $startpath (we'll look there first).
+
+    $filename =~ s|::|/|g;
+
+    return "$startpath$filename" if($modname =~ m|/| and -e "$startpath$filename");
+
+
+    foreach my $basedir ('.', @INC) {
+        return "$basedir/$filename" if(-e "$basedir/$filename");
+    }
+
+    return undef;
+
+}

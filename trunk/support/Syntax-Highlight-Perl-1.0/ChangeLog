@@ -1,0 +1,43 @@
+
+REVISIONS
+
+  04-04-2001  Cory Johns
+
+    *   Fixed problem with special characters not formatting inside of
+        Here-Documents.
+
+    *   Fixed bug causing hash variables to format inside of Here-
+        Documents.
+
+  03-30-2001  Cory Johns
+
+    *   Fixed bug where quote-terminators were checked for inside of
+        Here-Documents.
+
+  03-29-2001  Cory Johns
+
+    *   Moved token processing tests from _format_line() into
+        _process_token() (where they should've been all along),
+        generally making _format_line() more logical. Contemplating
+        extrapolating the tokenizing and token loop into its own
+        subroutine to avoid all the recursive calls.
+
+    *   Fixed bug that caused special characters to be recognized
+        outside of strings.
+
+    *   Added $VERSION variable.
+
+    *   Added support for different types of literal numbers: floating
+        point, exponential notation (eg: 1.3e10), hexidecimal, and
+        underscore-separated.
+
+    *   Added the `CodeTerm' and `DATA' Formats.
+
+  03-27-2001  Cory Johns
+
+    *   Added was_pod() and updated the documentation for in_pod().
+
+  03-20-2001  Cory Johns
+
+    *   Added support for Perl formats (ie, ``format = ...'').
+
