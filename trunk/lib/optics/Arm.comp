@@ -7,8 +7,8 @@
 *
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: September 1997
-* Version: $Revision: 1.6 $
-* Origin: McStas homepage
+* Version: $Revision: 1.7 $
+* Origin: McStas 1.5
 *
 * Arm/optical bench
 *
@@ -28,7 +28,6 @@ DEFINE COMPONENT Arm
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
 STATE PARAMETERS ()
-POLARISATION PARAMETERS (sx,sy,sz)
 TRACE
 %{
 %}
