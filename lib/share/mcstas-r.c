@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.20 1999-03-16 13:46:07 kn Exp $
+* 	$Id: mcstas-r.c,v 1.21 1999-03-16 13:50:49 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.20  1999/03/16 13:46:07  kn
+* 	mcsiminfo_init()/mcsiminfo_close() functions.
+* 	More info in the mcstas.sim file.
+*
 * 	Revision 1.19  1999/02/22 12:40:28  kn
 * 	Implemented mcstas.sim simulation information file to describe a
 * 	simulation run, used by the mcplot front-end.
@@ -393,9 +397,15 @@ mcdetector_out(char *cname, double p0, double p1, double p2)
 }
 
 
+/*******************************************************************************
+* Output 1d detector data (p0, p1, p2) for n bins linearly
+* distributed across the range x1..x2 (x1 is lower limit of first
+* bin, x2 is upper limit of last bin). Title is t, axis labels are xl
+* and yl. File name is f, component name is c.
+*******************************************************************************/
 void
 mcdetector_out_1D(char *t, char *xl, char *yl,
-		  double x1, double x2, int n,
+		  char *xvar, double x1, double x2, int n,
 		  int *p0, double *p1, double *p2, char *f, char *c)
 {
   int i;
@@ -414,8 +424,8 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
   for(i = 0; i < n; i++)
   {
     if(outfile)
-      fprintf(outfile, "%g %d %g %g\n", x1 + (i + 0.5)/n*(x2 - x1),
-	      p0[i], p1[i], p2[i]);
+      fprintf(outfile, "%g %g %g %d\n", x1 + (i + 0.5)/n*(x2 - x1),
+	      p1[i], mcestimate_error(p0[i],p1[i],p2[i]), p0[i]);
     Nsum += p0[i];
     Psum += p1[i];
     P2sum += p2[i];
@@ -428,6 +438,9 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
   mcsiminfo_out("  title: %s\n", t);
   if(f)
     mcsiminfo_out("  filename: '%s'\n", f);
+  mcsiminfo_out("  variables: %s I I_err N\n", xvar, xl, yl);
+  mcsiminfo_out("  xvar: %s\n", xvar);
+  mcsiminfo_out("  yvar: (I,I_err)\n");
   mcsiminfo_out("  xlabel: '%s'\n  ylabel: '%s'\n", xl, yl);
   mcsiminfo_out("  xlimits: %g %g\n", x1, x2);
   mcsiminfo_out("end data\n");
