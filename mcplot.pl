@@ -167,13 +167,14 @@ if ($plotter =~ /Scilab/i) {
     $fh = new FileHandle "> $tmp_file";
   }
   if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
+  autoflush $fh 1;
   # write the scilab script
   printf $fh "s = stacksize(); if s(1) < 1e7 then stacksize(1e7); end\n";
   printf $fh "getf('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
   printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
   printf $fh "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');\n";
   printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')\\n');\n";
-  printf $fh "mdelete('$tmp_file');\n";
+  printf $fh "errcatch('mdelete(''$tmp_file'');','errcatch');\n";
   if ($passed_arg_str_quit) {
     printf $fh "quit\n";
   } else {
