@@ -608,10 +608,11 @@ sub menu_run_simulation {
 	      # Set $suffix to .pl
 	      $suffix='.pl';
 	    }
+            push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
 	    # Check 'Plotter' setting
 	    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 	    if ($plotter eq 0) {
-		push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
+		push @command, "--plotter=PGPLOT";
 		# Be sure to read mcplotlib.pl in this case...
 		require "mcplotlib.pl";
 		# Standard mcdisplay.pl with PGPLOT bindings
@@ -622,19 +623,19 @@ sub menu_run_simulation {
 	        ensure_pgplot_xserv_started();
 	    } 
 	    elsif ($plotter eq 1) {
-	      push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay_matlab$suffix";
+	      push @command, "-pMatlab";
 	    }
 	    elsif ($plotter eq 2) {
-		push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay_matlab$suffix";
+		push @command, "-pMatlab";
 		my $output_file = save_disp_file($w,'m');
 		if (!$output_file) {
 		    putmsg($cmdwin, "Trace canclled...\n");
 		    return;
 		}
-		push @command, "--output=$output_file";
+		push @command, "-f$output_file";
 	    }
 	    elsif ($plotter eq 3) {
-		push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay_scilab$suffix";
+		push @command, "-pScilab";
 		if ($Config{'osname'} eq 'MSWin32') {
 		    # Calling through pipe does not work on Win32 :( - revert to 'scilab script'
 		    putmsg($cmdwin, "Sorry, scilab pipe non-funtional on Win32 systems. Reverting to sciptfile...\n");
@@ -643,17 +644,17 @@ sub menu_run_simulation {
 			putmsg($cmdwin, "Trace canclled...\n");
 			return;
 		    }
-		    push @command, "--output=$output_file";
+		    push @command, "-f$output_file";
 		}
 	    }
 	    elsif ($plotter eq 4) {
-		push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay_scilab$suffix";
+		push @command, "-pScilab";
 		my $output_file = save_disp_file($w,'sci');
 		if (!$output_file) {
 		    putmsg($cmdwin, "Trace canclled...\n");
 		    return;
 		}
-		push @command, "--output=$output_file";
+		push @command, "-f$output_file";
 	    }
 	    push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
 	}
