@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.66 2003-06-10 11:29:58 pkwi Exp $
+* $Id: mcstas-r.c,v 1.67 2003-06-12 10:22:00 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.66  2003/06/10 11:29:58  pkwi
+* Corrected multiple parse errors: Added two missing sets of curly brackets { } in parameter parsing function.
+*
 * Revision 1.65  2003/06/05 09:25:59  farhi
 * restore header support in data files when --format option found
 *
@@ -3012,7 +3015,6 @@ void mcuse_format(char *format)
 static void
 mcinfo(void)
 {
-  mcuse_format(MCSTAS_FORMAT);
   mcsiminfo_init(stdout);
   mcsiminfo_close();
   exit(0);
@@ -3075,8 +3077,10 @@ mcparseoptions(int argc, char *argv[])
       mcshowhelp(argv[0]);
     else if(!strcmp("--help", argv[i]))
       mcshowhelp(argv[0]);
-    else if(!strcmp("-i", argv[i]))
+    else if(!strcmp("-i", argv[i])) {
+      mcuse_format(MCSTAS_FORMAT);
       mcinfo();
+    }
     else if(!strcmp("--info", argv[i]))
       mcinfo();
     else if(!strcmp("-t", argv[i]))
