@@ -1,7 +1,7 @@
-# McStas configuration options 
+# McStas configuration options
 #
 # In this file, you can set up configuration options
-# used by the McStas perl tools. 
+# used by the McStas perl tools.
 #
 # CFLAGS   - compiler flags (should not require changes)
 # LDFLAGS  - linker flags (should not require changes)
@@ -29,8 +29,8 @@
 # SCILAB   - comand to launch scilab
 # EXE      - executable suffix (out or exe)
 # HOSTFILE - MPI/grid hosts/machine list
-# MATLAB_COMMAND - options to execute matlab 
-# SCILAB_COMMAND - options to execute scilab 
+# MATLAB_COMMAND - options to execute matlab
+# SCILAB_COMMAND - options to execute scilab
 # EXE      - executable extension
 # CODETEXT - check for Tk::CodeText availability
 # PROCSIMPLE - check for Proc::Simple availability
@@ -56,8 +56,8 @@ use Config;
      SUFFIX => '',
      PLOTTER => 'Scilab',
      EDITOR => 1,
-     MATLAB => 'matlab',
-     SCILAB => 'scilab',
+     MATLAB => '@MATLAB@',
+     SCILAB => '@SCILAB@',
      MATLAB_COMMAND => '-nojvm',
      SCILAB_COMMAND => '-nw',
      EXE => 'out',
@@ -107,25 +107,25 @@ foreach $inc (@INC) {
   if (-e "$where") {
     $MCSTAS::mcstas_config{'CODETEXT'} = $where; # we got Tk::CodeText
   }
-  
+
   $where="$inc/Proc/Simple.pm";
   if (-e "$where") {
     $MCSTAS::mcstas_config{'PROCSIMPLE'} = $where; # we got Proc::Simple
   }
-  
+
   $where="$inc/Temp.pm";
   if (-e $where) { $temp_avail=$where; }
   $where="$inc/File/Temp.pm";
   if (-e $where) { $temp_avail=$where; }
-  if ($temp_avail ne "") { 
-    $MCSTAS::mcstas_config{'TEMP'} = $temp_avail; 
+  if ($temp_avail ne "") {
+    $MCSTAS::mcstas_config{'TEMP'} = $temp_avail;
   }
-  
+
   $where="$inc/Tk/TextEdit.pm";
   if (-e "$where") {
     $textedit = $where; # we got CodeText+TextEdit
   }
-  
+
   $where="$inc/Storable.pm";
   if (-e "$where") {
     $storable = $where; # we got CodeText+TextEdit
@@ -158,7 +158,7 @@ if ($ENV{'MCSTAS_FORMAT'}) {
 }
 
 # Check value of $MCSTAS::mcstas_config{'PLOTTER'} variable
-if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) { 
+if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
   if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /binary|float|double/i) {
     $MCSTAS::mcstas_config{'PLOTTER'} =~ s/binary//; # PGPLOT binary format is invalid. solving.
     $MCSTAS::mcstas_config{'PLOTTER'} =~ s/float//;
