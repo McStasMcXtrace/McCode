@@ -15,12 +15,13 @@
 *
 * INPUT PARAMETERS:
 *
-* xmin:       Lower x bound on slits
-* xmax:       Upper x bound on slits
-* ymin:       Lower y bound on slits
-* ymax:       Upper y bound on slits
-* len:        Distance between slits (m)
-* divergence: Divergence angle (calculated as atan(d/len), where d is the blade spacing)
+* xmin:       (m)              Lower x bound on slits
+* xmax:       (m)              Upper x bound on slits
+* ymin:       (m)              Lower y bound on slits
+* ymax:       (m)              Upper y bound on slits
+* len:        (m)              Distance between slits
+* divergence: (minutes of arc) Divergence angle (calculated as atan(d/len),
+*                              where d is the blade spacing) 
 *
 *******************************************************************************/
 
@@ -28,7 +29,16 @@
 DEFINE COMPONENT Soller
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, divergence)
 SETTING PARAMETERS ()
+OUTPUT PARAMETERS (slope)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  double slope;
+%}
+INITIALIZE
+%{
+  slope = tan(MIN2RAD*divergence);
+%}
 TRACE
 %{
     double phi, dt;
@@ -41,13 +51,13 @@ TRACE
     if (x<xmin || x>xmax || y<ymin || y>ymax)
       ABSORB;
 
-    if(divergence != 0.0)
+    if(slope > 0.0)
     {
       phi = fabs(vx/vz);  
-      if (phi > divergence)   
-	ABSORB;
+      if (phi > slope)   
+        ABSORB;
       else
-	p *= 1.0 - phi/divergence;
+        p *= 1.0 - phi/slope;
     }
 %}
 END
