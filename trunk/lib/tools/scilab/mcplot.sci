@@ -87,7 +87,7 @@ function win = mcplot_addmenu()
   delmenu(win,'McStas')
   // creates a local McStas menu for looking at data files, and direct exporting
   menu_installed = 0;
-  if exists('with_gtk') & 0
+  if exists('with_gtk')
     if with_gtk() // with scilab 2.7 on Linux with GTK+ libs
       addmenu(win, '_McStas', ...
       [ 'Open in a separate window', ...      
@@ -110,7 +110,6 @@ function win = mcplot_addmenu()
         'Colormap/Gray',...
         'Colormap/_Pink',...
         'Colormap/Inv. Pink',...
-        'Exit',...
         'About McStas...'], ...              
         list(2,'mcplot_menu_action'));
       menu_installed = 1;
@@ -137,12 +136,9 @@ function win = mcplot_addmenu()
       'Colormap Gray',...
       'Colormap Pink',...
       'Colormap Inv. Pink',...
-      'Exit', ...
       'About McStas...'];
     if getversion() == 'scilab-2.6'
-      addmenu(win, 'McStas', ...
-        t, ...              
-        list(2,'mcplot_menu_action'));
+      disp('Sorry, I can not install the McStas menu in Scilab <= 2.6');
     else
       global MCPLOT
       
@@ -158,12 +154,12 @@ function win = mcplot_addmenu()
          '  }'
          '}'];
         //creating mcplot_menu_C.c file
-        dir=getcwd(); chdir(TMPDIR)
+        dir1=getcwd(); chdir(TMPDIR)
         mputl(code,TMPDIR+'/mcplot_menu_C.c');
         //reating Makefile
         ilib_for_link('mcplot_menu_C','mcplot_menu_C.o',[],'c');
         exec('loader.sce');
-        chdir(dir);
+        chdir(dir1);
 	MCPLOT.MenuInstalled = 1;
       end
       //add menu
@@ -184,12 +180,23 @@ function mcplot_menu_action(k, gwin)
   filename = '';
   execstr('filename = ThisFigure.filename','errcatch');
   
-  if argn(2) == 0, k = 0; end
+  if MCPLOT.ShiftedItems
+    k = k+1;
+  end
+  
+  if argn(2) == 0, k = 1; end
+  if k <= 0
+  	disp('Oops, the Tcl/Tk uses shifted menu item indexes');
+	  disp('This should be corrected now...');
+	  MCPLOT.ShiftedItems = 1;
+  end
   if argn(2) <= 1, gwin = 0; end
   xset('window', gwin); // raise menu activated window 
-  item = [ 1, 2, 19, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20,21,18, 22]
+  item = [ 1, 2, 19, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20,21,22]
   
   select item(k)
+    case 0 then
+    	disp('Invalid menu item');
     case 1 then // Open in a separate window
       t='Figure '+string(gwin)+': Click on the plot to duplicate/enlarge.';
       xinfo(t); mprintf('%s\n',t);
@@ -486,6 +493,7 @@ function mcplot_set_global(s, gwin, p_in)
     MCPLOT = struct();
     MCPLOT.Figure_0 = 0;
     MCPLOT.MenuInstalled = 0;
+    MCPLOT.ShiftedItems = 0;
   end
   if ~length(ThisFigure)
     ThisFigure = struct();
