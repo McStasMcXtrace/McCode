@@ -24,4 +24,11 @@ TRACE
   if(x*x + y*y > radius*radius)
     ABSORB;
 %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy", 0, 0, 0, radius);
+%}
+
 END

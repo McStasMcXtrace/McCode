@@ -106,4 +106,21 @@ TRACE
     ABSORB;
 %}
 
+MCDISPLAY
+%{
+  magnify("xyz");
+  circle("xz", 0,  h/2.0, 0, radius_i);
+  circle("xz", 0,  h/2.0, 0, radius_o);
+  circle("xz", 0, -h/2.0, 0, radius_i);
+  circle("xz", 0, -h/2.0, 0, radius_o);
+  line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
+  line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
+  line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
+  line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
+  line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
+  line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
+  line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
+  line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
+%}
+
 END
