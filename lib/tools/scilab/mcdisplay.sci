@@ -214,7 +214,7 @@ if INSTRUMENT.save==0
 end
 PlotInstrument3D();
 if INSTRUMENT.save==1
-  xsave(strcat([INSTRUMENT.descr '.scf']));
+  xsave(strcat([INSTRUMENT.descr '.scg']));
   INSTRUMENT.save=0;
 end
 endfunction
