@@ -5,81 +5,7 @@ use PDL;
 use PDL::Graphics::PGPLOT;
 use PGPLOT;
 
-sub strip_quote {
-    my ($str) = @_;
-    $str = $1 if($str =~ /^'(.*)'$/); # Remove quotes if present.
-    return $str;
-}
-    
-sub read_data_info {
-    my ($handle) = @_;
-    my ($type,$fname);
-    my ($compname,$title,$xlabel,$ylabel) = ("","","","");
-    my ($xmin,$xmax,$ymin,$ymax) = (0,1,0,1);
-    while(<$handle>) {
-	if(/^\s*type:\s*(.*?)\s*$/i) {
-	    $type = $1;
-	} elsif(/^\s*component:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*$/i) {
-	    $compname = $1;
-	} elsif(/^\s*title:\s*(.*?)\s*$/i) {
-	    $title = strip_quote($1);
-	} elsif(/^\s*filename:\s*(.*?)\s*$/i) {
-	    $fname = strip_quote($1);
-	} elsif(/^\s*xlabel:\s*(.*?)\s*$/i) {
-	    $xlabel = strip_quote($1);
-	} elsif(/^\s*ylabel:\s*(.*?)\s*$/i) {
-	    $ylabel = strip_quote($1);
-	} elsif(/^\s*xylimits:\s*
-		([-+0-9.eE]+)\s+
-		([-+0-9.eE]+)\s+
-		([-+0-9.eE]+)\s+
-		([-+0-9.eE]+)\s*$/ix) {
-	    ($xmin,$xmax,$ymin,$ymax) = ($1,$2,$3,$4);
-	} elsif(/^\s*xlimits:\s*
-		([-+0-9.eE]+)\s+
-		([-+0-9.eE]+)\s*$/ix) {
-	    ($xmin,$xmax) = ($1,$2);
-	} elsif(/^\s*end\s+data\s*$/i) {
-	    last;
-	} else {
-	    die "Invalid line in siminfo file:\n'$_'";
-	}
-    }
-    die "Missing type for component $compname"
-	unless $type;
-    die "Missing filename for component $compname"
-	unless $fname;
-    return { Type => $type,
-	     Component => $compname,
-	     Title => $title,
-	     Filename => $fname,
-	     Xlabel => $xlabel,
-	     Ylabel => $ylabel,
-	     Limits => [$xmin,$xmax,$ymin,$ymax]
-	 };
-}
-
-sub read_sim_info {
-    my ($handle) = @_;
-    my @datalist = ();
-    while(<$handle>) {
-	if(/^\s*begin\s+data\s*$/i) {
-	    push @datalist, read_data_info($handle);
-	} elsif(/^\s*$/) {
-	    next;
-	} else {
-	    die "Invalid line in siminfo file:\n'$_'";
-	}
-    }
-    return \@datalist;
-}
-
-sub read_sim_file {
-    my ($file) = @_;
-    my $handle = new FileHandle;
-    open $handle, $file or die "Could not open file '$file'";
-    read_sim_info($handle);
-}
+require "mcfrontlib.pl";
 
 sub plot_array_2d {
     my ($info,$m,$n) = @_;
@@ -179,7 +105,7 @@ sub plot_dat_info {
 
 my ($file) = @ARGV;
 $file = "mcstas.sim" unless $file;
-my $datalist = read_sim_file($file);
+my ($instr_inf, $sim_inf, $datalist) = read_sim_file($file);
 
 for(;;) {
     my $dev = pgopen("/xserv");
