@@ -9,12 +9,11 @@
 *
 * %Identification
 *
-* Written by: 	Markus Poehlmann     <Markus.Poehlmann@ph.tum.de>
-*		            Christian Carbogno   <carbogno@ph.tum.de>
-*             	and Helmut Schober   <schober@ill.fr> 
-* Date: May 2002    
+* Written by: M. Poehlmann, C. Carbogno, H. Schober
+* Date:       May 2002    
 * Origin:     ILL Grenoble / TU Muenchen
 * Version:    2.0
+* Release:    McStas 1.6
 *
 * Fermi Chopper with rotating frame.
 *
@@ -27,6 +26,10 @@
 *   ymin=-0.04, ymax=0.04, w=0.00022475, Nslit=200.0, R0=0.0,
 *   Qc=0.02176, alpham=2.33, m=0.0, Wi=2e-3, Vi=Vi,  slit=0.012)
 *  
+* Markus Poehlmann     <Markus.Poehlmann@ph.tum.de>
+* Christian Carbogno   <carbogno@ph.tum.de>
+* and Helmut Schober   <schober@ill.fr> 
+*
 * %Parameters
 * INPUT PARAMETERS:
 *

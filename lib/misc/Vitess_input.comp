@@ -8,8 +8,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: McStas 1.5.0
+* Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
 * Read neutron state parameters from VITESS neutron file.
