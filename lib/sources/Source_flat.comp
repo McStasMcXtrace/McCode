@@ -12,7 +12,7 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -66,8 +66,8 @@ TRACE
  randvec_target_rect(&xf, &yf, &rf, &pdir, 
         0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
  
- dx = xf;
- dy = yf;
+ dx = xf-x;
+ dy = yf-y;
  rf = sqrt(dx*dx+dy*dy+dist*dist);
  
  p = pdir*pmul;
