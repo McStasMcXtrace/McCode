@@ -99,6 +99,8 @@ export INSTALL="./install-sh -c"
 # Also, do a ./configure to create Makefile and mcstas_config.perl
 # These will be dependent on this system, ofcourse...
 ./configure
+# Select scilab as default plotter
+make scilab
 
 # Clean up
 rm mkdist
@@ -118,6 +120,8 @@ cd $DIST
 # Default again to Linux' /usr/bin/install -c (or whatever ./configure finds)
 export INSTALL=
 ./configure
+# Select scilab as default plotter
+make scilab
 
 make
 UNAME=`uname`
