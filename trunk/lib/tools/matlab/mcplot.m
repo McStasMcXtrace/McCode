@@ -317,6 +317,7 @@ S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);
 if isempty(d.data)
  if ~length(findstr(d.format, 'binary'))
   copyfile(d.filename,[d.func,'.m']);p=d.parent;
+  path(path);
   eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);
  else
   if length(findstr(d.format, 'float')), t='single';
