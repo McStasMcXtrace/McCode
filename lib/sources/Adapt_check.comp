@@ -19,15 +19,18 @@ TRACE
 %{
   double adj_dv;
 
-  a_total_psi += p/a_pi;
+  if(p == 0)
+    ABSORB;
   a_psi[aindex] += p/a_pi;
-/* printf("%4d: old=%g psi=%g psi_i=%g psi_tot=%g", aindex, atree->v[aindex], */
-/*        p/a_pi, a_psi[aindex]/a_n[aindex], */
-/*        a_total_psi/a_total_n); */
-  adj_dv = ((1-beta)*(a_psi[aindex]/a_n[aindex])/(a_total_psi/a_total_n) + beta)/
-    a_num - atree->v[aindex];
+  a_total_psi += (p/a_pi)/a_n[aindex];
+/* if(a_n[aindex]<5 || a_psi[aindex] <= 1.001*p/a_pi) */
+/* printf("%4d: old=%8.3g pi=%8.3g pf=%8.3g psi=%8.3g psi_i=%8.3g psi_tot=%8.3g", aindex, */
+/*        atree->v[aindex], a_pi, p, p/a_pi, a_psi[aindex]/a_n[aindex], a_total_psi); */
+  adj_dv = (1-beta)*a_psi[aindex]/(a_n[aindex]*a_total_psi) + beta/a_num -
+    atree->v[aindex];
   adapt_tree_add(atree, aindex, adj_dv);
-/* printf(" new=%g\n", atree->v[aindex]); */
+/* if(a_n[aindex]<5 || a_psi[aindex] <= 1.001*p/a_pi) */
+/* printf(" new=%8.3g total=%8.3g\n", atree->v[aindex], atree->total); */
 %}
 
 FINALLY
