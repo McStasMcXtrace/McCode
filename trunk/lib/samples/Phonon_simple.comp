@@ -7,7 +7,7 @@
 * Written by: Kim Lefmann 
 * Date: 04.02.04
 * Modified by: 
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 *
 *
@@ -37,6 +37,10 @@
 * radius_o  : (m)  Outer radius of sample in (x,z) plane       
 * h         : (m)  Height of sample in y direction 
 * focus_r   : (m) Radius of sphere containing target.
+* focus_xw  : horiz. dimension of a rectangular area (m)
+* focus_yh  : vert.. dimension of a rectangular area (m)
+* focus_aw  : horiz. angular dimension of a rectangular area (deg)
+* focus_ah  : vert.. angular dimension of a rectangular area (deg)
 * target_x  :
 * target_y  : (m) position of target to focus at (m)
 * target_z  :
@@ -61,7 +65,7 @@
 
 DEFINE COMPONENT Phonon_simple
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius_o,h,focus_r,sigma_a,sigma_i,a,b,M,c,DW,T,target_x, target_y, target_z)
+SETTING PARAMETERS (radius_o,h,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0,sigma_a,sigma_i,a,b,M,c,DW,T,target_x=0, target_y=0, target_z=0, int target_index=0)
 OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -223,7 +227,7 @@ INITIALIZE
   V_rho = 4/(a*a*a);
   V_my_s = (V_rho * 100 * sigma_i);
   V_my_a_v = (V_rho * 100 * sigma_a * 2200);
-  DV = 0.001;   /* Velocity change used for numerical derivative */
+  DV = 0.001;   /* Velocity change used for numerical derivative */    
 %}                                                                             
 TRACE
 %{
@@ -263,11 +267,26 @@ TRACE
     vz_i=vz;
     PROP_DT(dt+t0);             /* Point of scattering */
     
+    /* now compute target coords if a component index is supplied */
+    if (target_index){
+      Coords ToTarget; 
+      ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+      ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+      coords_get(ToTarget, &target_x, &target_y, &target_z);
+    }
     aim_x = target_x-x;         /* Vector pointing at target (e.g. analyzer) */
     aim_y = target_y-y;
     aim_z = target_z-z;
-
-    randvec_target_sphere(&vx,&vy,&vz,&solid_angle,aim_x,aim_y,aim_z, focus_r);
+    
+    if(focus_aw && focus_ah) {
+      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 
+        aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
+    } else if(focus_xw && focus_yh) {
+      randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
+        aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+    } else {
+      randvec_target_sphere(&vx,&vy,&vz,&solid_angle,aim_x,aim_y,aim_z, focus_r);
+    }
     NORM(vx, vy, vz);
 /*    printf("focussed direction (vx,vy,vz=(%g %g %g) \n",vx,vy,vz); */
     nf=0;
