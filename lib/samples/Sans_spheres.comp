@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -42,7 +42,8 @@
 * my_s      : Attenuation factor due to scattering (m^-1)
 * my_a      : Attenuation factor due to absorbtion (m^-1)
 *
-* %L
+* %Link
+*
 * %E
 *******************************************************************************/
 
