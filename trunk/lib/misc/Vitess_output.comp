@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
+* McStas, the neutron ray-tracing package: Vitess_output.comp
 *         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.2 $
-* Origin: McStas release
+* Version: $Revision: 1.3 $
+* Origin: McStas 1.4.2
 *
 * Write neutron state parameters to VITESS neutron file.
 *
@@ -39,6 +38,7 @@ DEFINITION PARAMETERS (outname = 0)
 SETTING PARAMETERS (bufsize = 10000, progress = 0)
 OUTPUT PARAMETERS (file, buf, pos)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
 
