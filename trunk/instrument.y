@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.5 1997-09-07 17:57:54 kn Exp $
+*	$Id: instrument.y,v 1.6 1997-09-07 20:16:08 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.5  1997/09/07 17:57:54  kn
+*	Snapshot with (untested) code generation complete.
+*
 *	Revision 1.4  1997/08/13 09:14:59  kn
 *	First version to properly parse instrument definition files.
 *
@@ -61,6 +64,7 @@
 %token TOK_DECLARE	"DECLARE"
 %token TOK_DEFINE	"DEFINE"
 %token TOK_END		"END"
+%token TOK_FINALLY	"FINALLY"
 %token TOK_EXTERN	"EXTERN"
 %token TOK_INITIALIZE	"INITIALIZE"
 %token TOK_INSTRUMENT	"INSTRUMENT"
@@ -79,7 +83,7 @@
 %token TOK_INVALID
 
 %type <instance> compdef compref reference
-%type <ccode> code codeblock initialize declare
+%type <ccode> code codeblock initialize finally declare
 %type <coords>  coords
 %type <exp> exp
 %type <actuals> actuallist actuals actuals1
@@ -89,7 +93,7 @@
 %%
 
 
-instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist declare initialize complist "END"
+instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist declare initialize complist finally "END"
 		  {
 		    struct instr_def *instr;
 
@@ -98,6 +102,7 @@ instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist declare initialize complis
 		    instr->formals = $4;
 		    instr->decls = $5;
 		    instr->inits = $6;
+		    instr->finals = $8;
 		    instr->compmap = comp_instances;
 		    instr->complist = comp_instances_list;
 		    /* The result from parsing is stored in a global pointer
@@ -121,6 +126,16 @@ initialize:	  /* empty */
 		    $$ = codeblock_new();
 		  }
 		| "INITIALIZE" codeblock
+		  {
+		    $$ = $2;
+		  }
+;
+
+finally:	  /* empty */
+		  {
+		    $$ = codeblock_new();
+		  }
+		| "FINALLY" codeblock
 		  {
 		    $$ = $2;
 		  }

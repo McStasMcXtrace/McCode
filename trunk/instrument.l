@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.5 1997-09-07 17:57:40 kn Exp $
+*	$Id: instrument.l,v 1.6 1997-09-07 20:16:03 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.5  1997/09/07 17:57:40  kn
+*	Snapshot with (untested) code generation complete.
+*
 *	Revision 1.4  1997/08/13 09:14:48  kn
 *	First version to properly parse instrument definition files.
 *
@@ -62,6 +65,7 @@ COMPONENT	return TOK_COMPONENT;
 DECLARE		return TOK_DECLARE;
 DEFINE		return TOK_DEFINE;
 END		return TOK_END;
+FINALLY		return TOK_FINALLY;
 EXTERN		return TOK_EXTERN;
 INITIALIZE	return TOK_INITIALIZE;
 INSTRUMENT	return TOK_INSTRUMENT;
