@@ -127,6 +127,8 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace final
 		    c->finally_code = $8;
 		    c->mcdisplay_code = $9;
 
+		    /* Check definition and setting params for uniqueness */
+		    check_comp_formals(c->def_par, c->set_par, c->name);
 		    /* Put component definition in table. */
 		    symtab_add(read_components, c->name, c);
 		  }
@@ -196,6 +198,10 @@ instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist
 		    instrument_definition->finals = $9;
 		    instrument_definition->compmap = comp_instances;
 		    instrument_definition->complist = comp_instances_list;
+
+		    /* Check instrument parameterss for uniqueness */
+		    check_instrument_formals(instrument_definition->formals,
+					     instrument_definition->name);
 		  }
 ;
 
@@ -246,19 +252,6 @@ mcdisplay:	  /* empty */
 ;
 
 instr_trace:	  "TRACE" complist
-		  {
-		    instrument_definition->rotations_in_radians = 0;
-		  }
-		| complist
-		  {
-		    /* Backward compatibility mode, rotations in radians. */
-		    static did_warn = 0;
-		    print_warn(&did_warn,
-	"Missing TRACE keyword in instrument definition. This is only\n"
-	"supported for backwards compatibility, and should not be used.\n"
-	"NOTE: All rotation angles will be interpreted as radians!\n");
-		    instrument_definition->rotations_in_radians = 1;
-		  }
 
 complist:	  /* empty */
 		  {
@@ -591,7 +584,7 @@ static void
 print_usage(void)
 {
   fprintf(stderr, "Usage:\n"
-	  "  mcstas [-o file] [-I dir1 ...] [-t] [-v] "
+	  "  mcstas [-o file] [-I dir1 ...] [-t] [-p] [-v] "
 	  "[--no-main] [--no-runtime] file\n");
   exit(1);
 }
@@ -600,7 +593,7 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.04 ALPHA, March 17, 1999\n"
+  printf("McStas version 1.1, March 31, 1999\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-1999\n"
 	  "All rights reserved\n");
   exit(0);
@@ -654,6 +647,7 @@ parse_command_line(int argc, char *argv[])
   instrument_definition->use_default_main = 1;
   instrument_definition->include_runtime = 1;
   instrument_definition->enable_trace = 0;
+  instrument_definition->portable = 0;
   instrument_definition->polarised = 0;
   for(i = 1; i < argc; i++)
   {
@@ -677,6 +671,10 @@ parse_command_line(int argc, char *argv[])
       instrument_definition->enable_trace = 1;
     else if(!strcmp("--trace", argv[i]))
       instrument_definition->enable_trace = 1;
+    else if(!strcmp("-p", argv[i]))
+      instrument_definition->portable = 1;
+    else if(!strcmp("--portable", argv[i]))
+      instrument_definition->portable = 1;
     else if(!strcmp("-v", argv[i]))
       print_version();
     else if(!strcmp("--version", argv[i]))
@@ -709,7 +707,11 @@ main(int argc, char *argv[])
 {
   FILE *file;
   int err;
-  
+
+#ifdef MAC
+  argc = ccommand(&argv);
+#endif
+
   yydebug = 0;			/* If 1, then bison gives verbose parser debug info. */
 
   palloc(instrument_definition); /* Allocate instrument def. structure. */
@@ -749,12 +751,82 @@ yyerror(char *s)
 
 
 /*******************************************************************************
+* Check that all formal parameters of a component definition are unique.
+*******************************************************************************/
+void
+check_comp_formals(List deflist, List setlist, char *compname)
+{
+  Symtab formals;
+  char *formal;
+  struct Symtab_entry *entry;
+  List_handle liter;
+
+  /* We check the uniqueness by adding all the formals to a symbol table with
+     a dummy pointer value. Any formal parameter that already appears in the
+     symbol table is an error. */
+  formals = symtab_create();
+  liter = list_iterate(deflist);
+  while(formal = list_next(liter))
+  {
+    entry = symtab_lookup(formals, formal);
+    if(entry != NULL)
+      print_error("Definition parameter name %s is used multiple times "
+		  "in component %s\n", formal, compname);
+    else
+      symtab_add(formals, formal, NULL);
+  }
+  list_iterate_end(liter);
+  liter = list_iterate(setlist);
+  while(formal = list_next(liter))
+  {
+    entry = symtab_lookup(formals, formal);
+    if(entry != NULL)
+      print_error("Setting parameter name %s is used multiple times "
+		  "in component %s\n", formal, compname);
+    else
+      symtab_add(formals, formal, NULL);
+  }
+  list_iterate_end(liter);
+  symtab_free(formals, NULL);
+}
+
+
+/*******************************************************************************
+* Check that all formal parameters of an instrument definition are unique.
+*******************************************************************************/
+void
+check_instrument_formals(List formallist, char *instrname)
+{
+  Symtab formals;
+  char *formal;
+  struct Symtab_entry *entry;
+  List_handle liter;
+
+  /* We check the uniqueness by adding all the formals to a symbol table with
+     a dummy pointer value. Any formal parameter that already appears in the
+     symbol table is an error. */
+  formals = symtab_create();
+  liter = list_iterate(formallist);
+  while(formal = list_next(liter))
+  {
+    entry = symtab_lookup(formals, formal);
+    if(entry != NULL)
+      print_error("Instrument parameter name %s is used multiple times "
+		  "in instrument %s\n", formal, instrname);
+    else
+      symtab_add(formals, formal, NULL);
+  }
+  list_iterate_end(liter);
+  symtab_free(formals, NULL);
+}
+
+
+/*******************************************************************************
 * Check the actual parameters to a component against the formal parameters.
 *******************************************************************************/
 void
 comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
 {
-  int error = 0;		/* Set to 1 in case of error. */
   List_handle liter;
   char *formal;
   struct Symtab_entry *entry;
@@ -763,7 +835,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
   
   /* We need to check
      1. That all actual parameters correspond to formal parameters.
-     2. That all formal parameters are assigned catual parameters. */
+     2. That all formal parameters are assigned actual parameters. */
 
   /* First check the formal parameters one by one. */
   defpar = symtab_create();
@@ -777,7 +849,6 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       print_error("Unassigned definition parameter %s for component %s.\n",
 		  formal, comp->name);
       symtab_add(defpar, formal, exp_number(0));
-      error = 1;
     } else {
       symtab_add(defpar, formal, entry->val);
     }
@@ -792,7 +863,6 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       print_error("Unassigned setting parameter %s for component %s.\n",
 		  formal, comp->name);
       symtab_add(setpar, formal, exp_number(0));
-      error = 1;
     } else {
       symtab_add(setpar, formal, entry->val);
     }
@@ -808,7 +878,6 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
     {
       print_error("Unmatched actual parameter %s for component %s.\n",
 		  entry->name, comp->name);
-      error = 1;
     }
   }
   comp->defpar = defpar;
