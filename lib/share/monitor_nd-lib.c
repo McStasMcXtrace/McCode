@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.22 2005-02-22 16:11:03 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.23 2005-02-25 15:26:02 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.22  2005/02/22 16:11:03  farhi
+*	Now saving absolute position of monitors as "position" field in header
+*	Useful for plotting e.g. flux vs distance
+*
 *	Revision 1.21  2005/02/21 16:05:13  farhi
 *	Misprint correction
 *
@@ -301,7 +305,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_EVNT)
         {
           if (!strcmp(mc_mn_token, "all") || mc_mn_Flag_All) mc_mn_Vars->Flag_List = 2;
-          else { mc_mn_i = (long)round(atof(mc_mn_token)); if (mc_mn_i) mc_mn_Vars->Buffer_Block = mc_mn_i;
+          else { mc_mn_i = (long)ceil(atof(mc_mn_token)); if (mc_mn_i) mc_mn_Vars->Buffer_Block = mc_mn_i;
             mc_mn_Vars->Flag_List = 1; }
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
         }

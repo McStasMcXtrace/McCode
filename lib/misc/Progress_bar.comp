@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -51,7 +51,7 @@ DECLARE
 
 INITIALIZE
 %{
-  fprintf(stdout, "[%s] Init\n", mcinstrument_name);
+  fprintf(stdout, "[%s] Initialize\n", mcinstrument_name);
   if (percent*mcget_ncount()/100 < 1e5) {
     percent=1e5*100.0/mcget_ncount();
   }
@@ -72,7 +72,7 @@ TRACE
       EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
                            *mcget_ncount()/ncount);
       IntermediateCnts = 0;
-      fprintf(stdout, "Trace ETA ");
+      fprintf(stdout, "\nTrace ETA ");
       if (difftime(EndTime,StartTime) < 60.0)
         fprintf(stdout, "%g [s] ", difftime(EndTime,StartTime));
       else if (difftime(EndTime,StartTime) > 3600.0)
@@ -95,7 +95,7 @@ TRACE
 
 SAVE
 %{
-  fprintf(stdout, "\nSave [%s] ", mcinstrument_name);
+  fprintf(stdout, "\nSave [%s]\n", mcinstrument_name);
 %}
 
 FINALLY
