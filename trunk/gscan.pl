@@ -6,12 +6,6 @@
 #  [perl] gscan.pl numpoint sim-exec file (VAL | VAL,VAL) ...
 #
 
-if($ENV{"MCSTAS"}) {
-    use lib $ENV{"MCSTAS"};
-} else {
-    use lib "/usr/local/lib/mcstas";
-}
-
 die "Usage:
   [perl] gscan.pl numpoint numneutrons sim-exec file PARM=(VAL|VAL,VAL) ..."
     unless $#ARGV >= 4;
