@@ -11,6 +11,8 @@ the user community, and we shall be glad to include user contributions in the pa
 
 To get a fully functional McStas installation, a few support applications are required. Essentially, you will need a C compiler, Perl and Perl-Tk, as well as a plotter such as Matlab, Scilab or PGPLOT (which we do not support but is still functional). These should better be installed before McStas.
 
+Under Windows, we recommand to avoid using spaces when specifying the location of packages during their installation.
+
 \subsection{C compiler}
 \label{s:Ccompiler}
 
@@ -242,9 +244,9 @@ Actually, the modifications to your environnement variables should be
     C:$\backslash$mcstas$\backslash$bin;c:$\backslash$Program Files$\backslash$Scilab-2.7.2$\backslash$bin;C:$\backslash$Perl$\backslash$bin$\backslash$;C:$\backslash$Dev-Cpp$\backslash$bin;}
     \item{\verb+MCSTAS+ Create it as e.g. C:$\backslash$mcstas$\backslash$lib}
 \end{itemize}
-using menu item 'Start/Settings/Control Panel/System/Advanced/Environment Variables'.
+using menu item 'Start/Settings/Control Panel/System/Advanced/Environment Variables'. On some Windows systems, it may be necessary to logout/login (no need to restart the computer) to make these changes active for the whole session.
 
-\section{Testing the McStas distribution}
+\section{Finishing and Testing the McStas distribution}
 \label{s:testing}
 
 The \verb+examples+ directory of the distribution contains a set of instrument examples. These are used for the McStas self test procedure, which is executed with
