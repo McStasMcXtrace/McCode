@@ -387,6 +387,7 @@ sub new_sim_def_name {
     if ($Config{'osname'} eq 'MSWin32') {
         chdir(dirname($current_sim_def));
     }
+    putmsg($cmdwin, "$text", 'msg');
 }
 
 sub open_instr_def {
