@@ -50,6 +50,9 @@ if strcmp(options,'action')
   return
 end
 
+pathname = '';
+filename = '';
+
 % handle file name specification in 'object'
 if ischar(object) % if object is a string
   if size(object,1) > 1
@@ -59,10 +62,12 @@ if ischar(object) % if object is a string
     return
   end
   % if object is a '' string, s = 'mcstas'.
-  if length(object) == 0, object = 'mcstas.m'; end
+  if ~length(object), object = 'mcstas.m'; end
+  % checks for directories
+  if exist(object,'dir'), object = [ object filesep 'mcstas.m']; end
   [fid, err] = fopen(object, 'r');
   if fid == -1 % error occured. Calls fileselector (uigetfile)
-    [object, pathname] = uigetfile('*.m', 'Select a McStas simulation file to load');
+    [object, pathname] = uigetfile('*.m', 'Select a McStas/Matlab simulation file to load');
     if ~ischar(object), return; end
     [fid, err] = fopen(object, 'r');
     if fid == -1
@@ -73,25 +78,38 @@ if ischar(object) % if object is a string
   end
   fclose(fid);
   %    opens filename and evaluate it
+  object_orig = object;
+  [pathname, object, ext]=fileparts(object);
+  dorename = 0;
+  if isempty(ext), dorename = 1;
+  elseif ~strcmp(ext, '.m'), dorename = 1;
+  end
+  if dorename
+    new_name = strrep(object_orig,'.','_');
+    copyfile(object_orig, [ new_name '.m' ]);
+    object = new_name;
+  end
+  filename = object;
   object = strrep(object,'.m','');
-  [pathname, object]=fileparts(object);
-  if not(isempty(pathname))
+  if length(pathname)
     cur_dir = pwd;
     cd(pathname);  % go into directory where object is
+    pathname = [ pathname filesep ];
   end
   m = [];
   m = eval(object,'[]');
   if ~length(m)
     disp(['mcplot: Could not extract McStas structure from file ' object]);
+    disp( '        This is not a Matlab script (other format or binary ?)');
     disp(['mcplot: ' lasterr]);
+    if dorename,delete([ new_name '.m' ]); end
+    if length(pathname), cd(cur_dir); end
     return
-  end
+  elseif dorename,delete([ new_name '.m' ]); end
   if length(m)
     object = m; clear m
   end
-  if not(isempty(pathname))
-    cd(cur_dir);
-  end
+  if length(pathname), cd(cur_dir); end
 end
 
 % handles structure loading and ploting
@@ -101,6 +119,71 @@ if ~isstruct(object)
 else  % if 's' is a 'struct'
   %    send to mcplot_scan(s, options)
   [count, object] = mcplot_scan(object, options, id);
+  
+  % set title to instrument+dirname+filename+parameters
+  fud = get(gcf,'UserData');
+  source   = eval('fud.instrument.Source','[]');
+  if ~length(source), source   = eval('fud.Source','''McStas'''); end
+  sdate    = eval('fud.Date','now');
+  if ~ischar(sdate), sdate = datestr(sdate); end
+  ncount   = eval('fud.Ncount','''unknown''');
+  overview = eval('fud.overview','[]');
+  if ~length(filename) & isfield(object,'filename'), filename=object.filename; end
+  if ~length(filename) & isfield(fud,'filename'),    filename=fud.filename; end
+  if ~length(pathname) & isfield(object,'pathname'), pathname=object.pathname; end
+  fud.pathname = pathname;
+  set(gcf,'UserData',fud);
+  t1 = [ '[' source '] ' pathname filename ];
+  if length(overview), set(gcf,'Name',t1,'unit','pixel'); end
+  % print simulation informations
+  t2 = [ 'Ncount:' ncount '; Date: ' sdate ];
+  if isfield(fud,'superdata')
+        if isfield(fud.superdata, 'scannedvar')
+        t2 = [ t2 '; Scan of ' fud.superdata.scannedvar '=' num2str(fud.superdata.minvar) ':' num2str(fud.superdata.maxvar) ' in ' num2str(fud.superdata.numpoints) ' points.'];
+        end
+  end
+  parameters = eval('fud.parameters','[]');
+  if ~isempty(parameters) 
+    t3 = '';
+    % scan parameters structure, excluding 'class','parent','name'
+    tmp_fields = fieldnames(parameters);
+    for field=1:length(tmp_fields)
+      switch tmp_fields{field}
+      case {'class','parent','name'}
+      otherwise
+        t3 = [ t3 tmp_fields{field} '=' num2str(getfield(parameters, tmp_fields{field})) ' ' ];
+      end
+    end
+  else
+    t3 = 'unknown parameters';
+  end
+  
+  % redimension all subplot axes in figure to make room for legend
+  set(gcf,'unit','characters');
+  posf  = get(gcf,'position');
+  ratio = max(posf(end)-4,5)/posf(end);
+  h = findobj(gcf,'type','axes');
+  for index=1:length(h)
+    pos = get(h(index),'position');
+    pos = pos.*[1 ratio 1 ratio];
+    set(h(index),'position',pos);
+  end
+  
+  % create legend uicontrol
+  pos = [ 1 posf(end)-4 posf(3) 4 ];
+  NL = sprintf('\n');
+  h = uicontrol('style','edit','max',4,'min',0,'unit','characters',...
+        'position',pos,'string',{t1;t2;t3},...
+        'ToolTipString',[ 'Simulation: ' t1 NL '  with ' t2 NL 'Parameters: ' t3]);
+  set(h,'unit','normalized');
+  
+  % if it is a scan overview, add a menu item to call scan step selection
+  if length(fud.overview) & isfield(fud,'superdata')
+        h = findobj(gcf,'Tag','McStasMenu');
+        uimenu(h,'Separator','on','Label','View scan step...','callback',['mcplot(''scanstep'',''action'', gcf);']);
+  end
+  set(gcf,'Toolbar','figure');  % make sure the tool bar is there
+  
   %    if output is not empty, setup output file
   if length(findstr(options,'-gif'))
     disp('McPlot: GIF output not available, substituting with PNG.')
@@ -114,7 +197,6 @@ else  % if 's' is a 'struct'
   | length(findstr(options,'-tif')) ... 
   | length(findstr(options,'-png')) ... 
   | length(findstr(options,'-fig')), 
-    filename = '';
     filename = eval('object.File','[]');
     if length(filename) == 0, filename = eval('object.filename','[]'); end
     if length(filename) == 0, filename='mcstas'; end
@@ -135,11 +217,10 @@ function win = mcplot_addmenu()
   if ~isempty(h), delete(h); end
   % creates a local McStas menu for looking at data files, and direct exporting
   h = uimenu(win, 'Label', '&McStas', 'Tag', 'McStasMenu');
-  t = {'Edit &data file', 'edit_data', ... 
-    'Edit &instrument file', 'edit_instr', ...                
-    'View &the instrument','view_instr', ...
-    'Add &colorbar', 'add_colorbar', ...  
-    'Save as &PNG', 'save_png', ...           
+  hcolor = uimenu(h, 'Label', '&Colors');
+  hsave  = uimenu(h, 'Label', '&Save');
+  hedit  = uimenu(h, 'Label', '&Edit');
+  t = {'Save as &PNG', 'save_png', ...           
     'Save as EPS (BW)', 'save_eps', ...     
     'Save as &EPS (Color)', 'save_epsc', ...   
     'Save as JPEG', 'save_jpg', ...    
@@ -152,11 +233,21 @@ function win = mcplot_addmenu()
     'Colormap Gray', 'cmap_gray', ...
     'Colormap Pink', 'cmap_pink', ...
     'Colormap Inv. Pink', 'cmap_rpink', ...
+    'Colormap : others...','set_color', ...
+    'Edit &data file', 'edit_data', ... 
+    'Edit &instrument file', 'edit_instr', ...                
+    'View &the instrument','view_instr', ...
+    'Add colorbar', 'add_colorbar', ...  
     'Exit...', 'exit', ...
     'About McStas...', 'about'};
   for index = 1:2:length(t) % setup the callbacks
-    uimenu(h, 'Label', t{index}, ...
-    'callback', ['mcplot(''' t{index+1} ''',''action'', gcf);']);
+    this_item = t{index};
+    if length(strmatch(strtok(this_item),'Colormap')), sub_menu=hcolor;
+    elseif length(strmatch(strtok(this_item),'Save')), sub_menu=hsave;
+    elseif length(strmatch(strtok(this_item),'Edit')), sub_menu=hedit;
+    else sub_menu=h; end
+    uimenu(sub_menu, 'Label', this_item, ...
+      'callback', ['mcplot(''' t{index+1} ''',''action'', gcf);']);
   end
 % end mcplot_addmenu
 
@@ -173,7 +264,7 @@ function mcplot_menu_action(action, object)
   
   switch action
     case 'set_color'  % Sets a colormap
-      if any(strcmp(get(object,'Type'), 'surface'))
+      if any([strcmp(get(object,'Type'), 'surface') strcmp(get(object,'Type'), 'figure')])
         ColordListDlg =     {...
           'Default (usually Jet)',...
           'HSV (from red, throught yellow, green, cyan, blue, magenta, to red...)','Jet (from blue, through cyan, yellow, and orange, to red)',...
@@ -201,18 +292,26 @@ function mcplot_menu_action(action, object)
       end 
     case 'edit_data'  % Edit/_data file
       if ~length(filename)
-        filename = eval('fud.simulation','[]');
+        filename = eval('fud.filename','[]');
       end
       if length(filename), mcplot_edit_file(filename); end
+    case 'duplicate'  % duplicate graph
+      d=get(object,'UserData'); 
+      fud0 = get(gcf, 'UserData');
+      if ~isfield(d,'Source') & isfield(fud0,'Source'), d.Source = fud0.Source; end
+      if ~isfield(d,'Ncount') & isfield(fud0,'Ncount'), d.Ncount = fud0.Ncount; end
+      if ~isfield(d,'parameters') & isfield(fud0,'parameters'), d.parameters = fud0.parameters; end
+      if ~isfield(d,'pathname') & isfield(fud0,'pathname'), d.pathname = fud0.pathname; end
+      mcplot(d,'-plot');
     case 'edit_instr'  % Edit/instrument file
-      filename = eval('fud.instrument.Source','[]');
+      filename = eval('fud.Source','[]');
       if length(filename), mcplot_edit_file(filename); end
     case 'view_instr'  % Plot existing .fig if available
-      figname = eval('fud.instrument.Source','[]');
+      figname = eval('fud.Source','[]');
       % get the file name without the path and the extension
       [tmp_path, figname] = fileparts(figname);
       if ~exist([figname '.fig'],'file')
-        parameters = eval('fud.parameters',[]);
+        parameters = eval('fud.parameters','[]');
         if ~isempty(parameters)
           % scan parameters structure, excluding 'class','parent','name'
           tmp_parcmd = [ '!mcdisplay -pMatlab --save ' figname '.instr ' ];
@@ -270,6 +369,32 @@ function mcplot_menu_action(action, object)
       colormap(pink);
     case 'cmap_rpink'  % Colormap/inverted pink
       colormap(1-pink);
+    case 'scanstep'    % opens a list dialog for a Scan Step selection to open
+      pathname = eval('fud.pathname','[]');
+      filename = eval('fud.filename','[]');
+      source   = eval('fud.Source','[]');
+      ncount   = eval('fud.Ncount','''unknown''');
+      if isfield(fud,'superdata')
+        if isfield(fud.superdata, 'scannedvar')
+          % make a list of scan step items
+          index = cellstr(num2str(transpose(0:(fud.superdata.numpoints-1))));
+          scannedvar = linspace(fud.superdata.minvar, fud.superdata.maxvar, fud.superdata.numpoints);
+          scannedvar = cellstr(num2str(transpose(scannedvar)));
+          scannedvar = strcat('[#', index, '] ', [ fud.superdata.scannedvar '=' ], scannedvar);
+          prompt = {'Select scan step(s) open for',[ '[' source '] ' pathname filename ], ...
+          [ 'Scan of ' fud.superdata.scannedvar '=' num2str(fud.superdata.minvar) ':' num2str(fud.superdata.maxvar) ' in ' num2str(fud.superdata.numpoints) ' points.']};
+          selection = listdlg('ListString',scannedvar, 'SelectionMode','multiple',...
+                  'PromptString', prompt, 'ListSize', [200 100], ...
+                  'Name',[ '[' source '] Select scan step for ' filename ]);
+          if ~isempty(selection)
+            for index=1:length(selection)
+              disp([ 'mcplot(''' deblank([ pathname num2str(selection(index)-1) ]) ''',''-overview'');' ]);
+              figure;
+              mcplot(deblank([ pathname num2str(selection(index)-1) ]),'-overview');
+            end
+          end   
+        end
+      end
     case 'exit'  % Close all
       Stop=questdlg('Exit Matlab/McPlot ?','McPlot: Exit ?','Yes','No','Yes');
       if strcmp(Stop,'Yes')
@@ -281,6 +406,8 @@ function mcplot_menu_action(action, object)
         'This is the McStas McPlot tool menu',...
         'It enables to customize the plot aspects and colors,'...
         'add objects, as well as export in various formats.', ...
+        '','Use contextual menus on lines and surfaces to access',...
+        'additional functionalities',...
         '','Please visit <http://www.neutron.risoe.dk/mcstas>','', ...
         'McStas comes with ABSOLUTELY NO WARRANTY',...
         'This is free software, and you are welcome',...
@@ -295,7 +422,7 @@ function mcplot_edit_file(filename)
 
   if length(filename)
       if ~exist(filename, 'file'), filename = [ '..' filesep filename]; end % try one level up
-      if ~exist(filename, 'file'), filename = [ '..' filesep filename]; end % try one level up
+      if ~exist(filename, 'file'), filename = [ '..' filesep filename]; end % try two levels up
       if exist(filename, 'file')
         t = ['McPlot: Editing file ' filename];
         setstatus(t); fprintf(1,'%s\n',t);
@@ -377,6 +504,8 @@ end
 function d=mcplot_plot(d,p)
   % func to plot data
   if isempty(findstr(d.type,'0d')), d=mcplot_load(d); end
+  if ~length(d.values), d.values = [ num2str(sum(sum(d.data)),'%.4g') ' ' num2str(sum(sum(d.errors)),'%.4g') ]; end
+  if ~length(d.signal), d.signal = [ 'Min=' num2str(min(min(d.data)),'%.4g') '; Max=' num2str(max(max(d.data)),'%.4g') '; Mean=' num2str(mean(mean(d.data)),'%.4g') ]; end
   if ~p, return; end;
   eval(['l=[',d.xylimits,'];']);
   S=size(d.data);
@@ -394,7 +523,7 @@ function d=mcplot_plot(d,p)
       h=surface(d.x,d.y,d.data); 
       shading flat;         
     elseif ~isempty(findstr(d.type,'1d'))
-      d.x=linspace(l(1),l(2),S(1));
+      d.x=linspace(l(1),l(2),max(S));
       h=errorbar(d.x,d.data,d.errors);
     else
       d.x=linspace(l(1),l(2),max(S));
@@ -403,15 +532,21 @@ function d=mcplot_plot(d,p)
     set(h, 'UserData', d);
     hm = uicontextmenu;
     uimenu(hm, 'Label',['Duplicate ' d.filename], 'Callback', ...
-      'd=get(gco,''UserData''); mcplot(d,''-plot'');');
+      'mcplot(''duplicate'', ''action'', gco);');
     uimenu(hm, 'Label',['Edit ' d.filename], 'Callback', ...
       [ 'mcplot(''edit_data'', ''action'', gco);' ]);
     uimenu(hm, 'Label','Select Color', 'Callback', ...
       [ 'mcplot(''set_color'', ''action'', gco);' ]);
     uimenu(hm, 'Label','Reset View', 'Callback','view(0,90);lighting none;alpha(1);');
-    uimenu(hm, 'Label','Add Light','Callback', 'light;lighting phong;');
-    uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.5);');
+    if ~isempty(findstr(d.type,'2d'))
+        uimenu(hm, 'Label','Add Light','Callback', 'light;lighting phong;');
+        uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.5);');
+    end
     uimenu(hm, 'Label',['Export into ' d.filename ],'Callback', [ 'evalin(''base'',''' d.filename ' = get(gco,''''userdata''''); disp([''''Exported data into variable ' d.filename ''''']);'');'])
+    fud = get(gcf,'UserData');
+    if isfield(fud,'superdata')
+        uimenu(hm,'Separator','on','Label','View scan step...','callback',['mcplot(''scanstep'',''action'', gcf);']);
+    end
     set(h, 'UIContextMenu', hm);
     % Also set this UIContextMenu on the axis...
     % Could also be done using gca as handle, but
@@ -421,7 +556,7 @@ function d=mcplot_plot(d,p)
     end
   end
   if p == 2, t = t1; end
-  xlabel(d.xlabel); ylabel(d.ylabel); title(t,'interpreter','none');
+  xlabel(d.xlabel); ylabel(d.ylabel); h=title(t); set(h,'interpreter','none');
   axis tight;
   if p==1, set(gca,'position',[.18,.18,.7,.65]);  end
   set(gcf,'name',t1);grid on;
@@ -430,7 +565,12 @@ function d=mcplot_plot(d,p)
 
 function mcplot_set_global(s, gwin, p_in)
 
-  p = p_in;
+  if length(p_in) == 3
+    m = p_in(1);
+    n = p_in(2);
+    p = p_in(3);
+    p_in = p;
+  else m=0; n=0; p=p_in; end
   if ~p, p=1; end
   
   if ~length(gwin), gwin = gcf; end
@@ -439,8 +579,13 @@ function mcplot_set_global(s, gwin, p_in)
   if ~length(ThisFigure)
     filename = eval('s.File','[]');
     if length(filename) == 0, filename = eval('s.filename','[]'); end
-    if length(filename), ThisFigure.simulation = filename; end
+    if length(filename), ThisFigure.filename = filename; end
+    ThisFigure.overview  = [];
   end
+  if isfield(s,'Source'), ThisFigure.Source     = s.Source; end
+  if isfield(s,'Date'), ThisFigure.Date     = s.Date; end
+  if isfield(s,'Ncount'), ThisFigure.Ncount     = s.Ncount; end
+  if isfield(s,'parameters'), ThisFigure.parameters = s.parameters; end
   if strcmp(s.class,'instrument')
     instrument.Source     = s.Source;
     instrument.name       = s.name;
@@ -450,14 +595,19 @@ function mcplot_set_global(s, gwin, p_in)
   elseif strcmp(s.class,'simulation')
     [a,b,ext] = fileparts(s.name);
     if ~strcmp(ext,'.m')
-        ThisFigure.simulation = [s.name '.m'];
-    else ThisFigure.simulation = s.name; end
+        ThisFigure.filename = [s.name '.m'];
+    else ThisFigure.filename = s.name; end
   elseif strcmp(s.class,'parameters')
     ThisFigure.parameters = s;
   elseif strcmp(s.class,'data')
-    if ~p_in, ThisFigure.filename = s.filename; 
-    else ThisFigure.filename = ThisFigure.simulation; end
+    if ~p_in, ThisFigure.filename = s.filename; end
+    if isfield(s,'ratio') & ~isfield(ThisFigure,'Ncount')
+        ThisFigure.Ncount = s.ratio; end
+  elseif strcmp(s.class,'superdata')
+    ThisFigure.superdata = s;
   end % ignore other classes
+  
+  if m*n, ThisFigure.overview = [m n p]; end
 
   % store Figure McPlot info
   set(gcf,'UserData', ThisFigure);
@@ -501,7 +651,8 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
   else data_count = p;
   end
   if ~strcmp(s.class,'data')
-    if strcmp(s.class,'parameters') | strcmp(s.class,'simulation') | strcmp(s.class,'instrument')
+    if strcmp(s.class,'parameters') | strcmp(s.class,'simulation') | ...
+       strcmp(s.class,'instrument') | strcmp(s.class,'superdata') 
       mcplot_set_global(s, [], 0);
     end
     for i=1:max(size(tag_names))
@@ -531,7 +682,7 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
       elseif length(findstr(action,'-overview'))
         subplot(m,n,data_count+1);
         s = mcplot_plot(s, 2);
-        mcplot_set_global(s, [], data_count+1);
+        mcplot_set_global(s, [], [m,n,data_count+1]);
       end
       data_count = data_count+1; 
     end
