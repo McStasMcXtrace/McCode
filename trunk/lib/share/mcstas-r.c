@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.19 1999-02-22 12:40:28 kn Exp $
+* 	$Id: mcstas-r.c,v 1.20 1999-03-16 13:46:07 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.19  1999/02/22 12:40:28  kn
+* 	Implemented mcstas.sim simulation information file to describe a
+* 	simulation run, used by the mcplot front-end.
+*
 * 	Revision 1.18  1999/01/28 07:56:21  kn
 * 	Support for MCDISPLAY section in component definitions.
 *
@@ -79,6 +83,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #ifndef MCSTAS_R_H
 #include "mcstas-r.h"
@@ -295,26 +300,74 @@ mcestimate_error(int N, double p1, double p2)
 }
 
 
+static long mcseed = 0;
+mcstatic int mcdotrace = 0;
+
+
+static void
+mcinfo_out(FILE *f)
+{
+  int i;
+  
+  fprintf(f, "Name: %s\n", mcinstrument_name);
+  fprintf(f, "Parameters:");
+  for(i = 0; i < mcnumipar; i++)
+    fprintf(f, " %s", mcinputtable[i].name);
+  fprintf(f, "\n");
+  fprintf(f, "Instrument-source: %s\n", mcinstrument_source);
+  fprintf(f, "Trace-enabled: %s\n", mctraceenabled ? "yes" : "no");
+  fprintf(f, "Default-main: %s\n", mcdefaultmain ? "yes" : "no");
+  fprintf(f, "Embedded-runtime: %s\n",
+#ifdef MC_EMBEDDED_RUNTIME
+	 "yes"
+#else
+	 "no"
+#endif
+	 );
+}
+
+
 #define MCSIMINFO_NAME "mcstas.sim"
+
+static FILE *mcsiminfo_file = NULL;
+
+void
+mcsiminfo_init(void)
+{
+  mcsiminfo_file = fopen(MCSIMINFO_NAME, "w");
+  if(!mcsiminfo_file)
+    fprintf(stderr,
+	    "Warning: could not open simulation description file '%s'\n",
+	    MCSIMINFO_NAME);
+  else
+  {
+    int i;
+    time_t t;
+
+    mcsiminfo_out("begin instrument\n");
+    mcinfo_out(mcsiminfo_file);
+    mcsiminfo_out("end instrument\n");
+    mcsiminfo_out("\nbegin simulation\n");
+    time(&t);
+    mcsiminfo_out("  Date: %s", ctime(&t)); /* Note: ctime adds '\n' ! */
+    mcsiminfo_out("  Ncount: %g\n", mcget_ncount());
+    mcsiminfo_out("  Trace: %s\n", mcdotrace ? "yes" : "no");
+    if(mcseed)
+      mcsiminfo_out("  Seed: %ld\n", mcseed);
+    for(i = 0; i < mcnumipar; i++)
+      fprintf(mcsiminfo_file, "  Param: %s=%g\n",
+	      mcinputtable[i].name, *mcinputtable[i].par);
+    mcsiminfo_out("end simulation\n");
+  }
+}
+
 
 void
 mcsiminfo_out(char *format, ...)
 {
-  static FILE *mcsiminfo_file;
-  static int mcinfo_file_opened = 0;
-  
   va_list ap;
   double x,y,z;
 
-  if(!mcinfo_file_opened)
-  {
-    mcsiminfo_file = fopen(MCSIMINFO_NAME, "w");
-    if(!mcsiminfo_file)
-      fprintf(stderr,
-	      "Warning: could not open simulation description file '%s'\n",
-	      MCSIMINFO_NAME);
-    mcinfo_file_opened = 1;
-  }
   if(mcsiminfo_file)
   {
     va_start(ap, format);
@@ -323,6 +376,13 @@ mcsiminfo_out(char *format, ...)
   }
 }
 
+
+void
+mcsiminfo_close()
+{
+  if(mcsiminfo_file)
+    fclose(mcsiminfo_file);
+}
 
 
 void
@@ -426,7 +486,6 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
 void
 mcreadparams(void)
 {
-  extern struct mcinputtable_struct mcinputtable[];
   int i;
 
   for(i = 0; mcinputtable[i].name != 0; i++)
@@ -734,7 +793,11 @@ mcset_ncount(double count)
   mcncount = count;
 }
 
-mcstatic int mcdotrace = 0;
+double
+mcget_ncount(void)
+{
+  return mcncount;
+}
 
 static void
 mcsetn_arg(char *arg)
@@ -745,7 +808,14 @@ mcsetn_arg(char *arg)
 static void
 mcsetseed(char *arg)
 {
-  srandom(atol(arg));
+  mcseed = atol(arg);
+  if(mcseed)
+    srandom(mcseed);
+  else
+  {
+    fprintf(stderr, "Error seed most not be zero.\n");
+    exit(1);
+  }
 }
 
 static void
@@ -756,7 +826,7 @@ mchelp(char *pgmname)
   fprintf(stderr, "Usage: %s [options] [parm=value ...]\n", pgmname);
   fprintf(stderr,
 "Options are:\n"
-"  -s seed   --seed=seed      Set random seed\n"
+"  -s seed   --seed=seed      Set random seed (must be != 0)\n"
 "  -n count  --ncount=count   Set number of neutrons to simulate.\n"
 "  -t        --trace          Enable trace of neutron through instrument\n"
 "  -h        --help           Show help message\n"
@@ -782,27 +852,10 @@ mcusage(char *pgmname)
 }
 
 static void
-mcinfo(void)
-{
-  int i;
-  
-  printf("Name: %s\n", mcinstrument_name);
-  printf("Parameters:");
-  for(i = 0; i < mcnumipar; i++)
-    printf(" %s", mcinputtable[i].name);
-  printf("\n");
-  printf("Instrument-source: %s\n", mcinstrument_source);
-  printf("Trace-enabled: %s\n", mctraceenabled ? "yes" : "no");
-  printf("Default-main: %s\n", mcdefaultmain ? "yes" : "no");
-  printf("Embedded-runtime: %s\n",
-#ifdef MC_EMBEDDED_RUNTIME
-	 "yes"
-#else
-	 "no"
-#endif
-	 );
+mcinfo(void){
+  mcinfo_out(stdout);
   exit(0);
-}
+} 
 
 static void
 mcenabletrace(void)
@@ -908,6 +961,7 @@ mcstas_main(int argc, char *argv[])
 
   srandom(time(NULL));
   mcparseoptions(argc, argv);
+  mcsiminfo_init();
   mcinit();
   while(run_num < mcncount)
   {
@@ -916,5 +970,6 @@ mcstas_main(int argc, char *argv[])
     run_num++;
   }
   mcfinally();
+  mcsiminfo_close();
   return 0;
 }
