@@ -19,7 +19,7 @@ if MCSTAS==''
     MCSTAS='/usr/local/lib/mcstas';
   end
 end
-exec(MCSTAS+'/tools/scilab/plotlib018b1/loader.sce');
+exec(MCSTAS+'/tools/scilab/plotlib/loader.sce');
 
 global INSTRUMENT;
 INSTRUMENT=struct();
