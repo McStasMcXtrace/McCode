@@ -100,7 +100,7 @@ sub html_main_start {
 <HTML>
 <HEAD>
    <META NAME="GENERATOR" CONTENT="McDoc">
-   <TITLE>McStas : Library Components/Instrument</TITLE>
+   <TITLE>McStas : Components/Instruments Library </TITLE>
 </HEAD>
 <BODY>
 
@@ -156,7 +156,7 @@ sub html_main_end {
 <P>This Component list was updated on $date.
 <HR WIDTH="100%">
 <CENTER>
-  [ <A HREF="http://www.ill.fr/tas/mcstas/mcstas_ill.html"><I>McStas</I> at ILL</A>
+  [ <A HREF="http://www.ill.fr/tas/mcstas/"><I>McStas</I> at ILL</A>
   | <A href="http://mcstas.risoe.dk/"><I>McStas</I> at Ris&oslash;</A> ]
 </CENTER>
 
