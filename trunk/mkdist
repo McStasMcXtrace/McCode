@@ -86,9 +86,12 @@ cd ../../..
 MONTH=`date +"%b"`
 DAY=`date +"%d"`
 YEAR=`date +"%Y"`
-sed 's/1.6.4d, Jan 17th, 2003/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.h > mcstas.h.tmp
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.h > mcstas.h.tmp
 cat mcstas.h.tmp > mcstas.h
 rm -f mcstas.h.tmp
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.c > mcformat.c.tmp
+cat mcformat.c.tmp > mcformat.c
+rm -f mcformat.c.tmp
 
 # Create configure
 autoconf configure.in > configure
