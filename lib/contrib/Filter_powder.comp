@@ -253,14 +253,14 @@ SHARE
 
 
   /* Calculate a new pf_velocity on the Debye-Scherre cone */
-  int pf_velocity(double *vx, double *vy, double *vz, double v, double theta)
+  int pf_velocity(double *vx, double *vy, double *vz, double v, double theta, double vxx, double vyy, double vzz)
   {
     double phi;
-    double v1x, v1y, v1z, v2x, v2y, v2z, vxx, vyy, vzz;
+    double v1x, v1y, v1z, v2x, v2y, v2z;
 
     phi = rand01()*2.0*PI;
 
-    vxx = *vx;  vyy = *vy;  vzz=*vz;
+    /* vxx = *vx;  vyy = *vy;  vzz=*vz; */
     vec_prod_norm(v1x, v1y, v1z, 1, 0, 0, vxx, vyy, vzz);
     vec_prod_norm(v2x, v2y, v2z, v1x, v1y, v1z,  vxx, vyy, vzz);
     *vx = cos(2*theta)*vxx + v*sin(2*theta)*(sin(phi)*v1x + cos(phi)*v2x);
@@ -348,6 +348,9 @@ TRACE
   if(box_intersect(&dt_in, &dt_out, x-(xmax+xmin)/2 , y-(ymax+ymin)/2,
     z-(zmax+zmin)/2, vx, vy, vz, xmax-xmin, ymax-ymin, zmax-zmin))
   {
+    double vxx, vyy, vzz;
+    
+    vxx = vx; vyy = vy; vzz = vz; /* initial velocity */
     v = sqrt(vx*vx + vy*vy + vz*vz);
     k = V2K*v;
     tau_max=(2*k);
@@ -408,7 +411,7 @@ TRACE
       if(pf_hitblade(x-(xmax+xmin)/2,y-(ymax+ymin)/2, xb, xt, yb, yt, XBlades, YBlades)) ABSORB;	
       i = pf_cones(p_cone, size);
       theta=asin(T[i].tau/(2*k));
-      pf_velocity(&vx, &vy, &vz, v, theta);
+      pf_velocity(&vx, &vy, &vz, v, theta, vxx, vyy, vzz);
       SCATTER;
       box_intersect(&dt_in, &dt_out, x-(xmax+xmin)/2 , y-(ymax+ymin)/2,
         z-(zmax+zmin)/2, vx, vy, vz, xmax-xmin, ymax-ymin, zmax-zmin);	
