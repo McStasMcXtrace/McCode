@@ -6,8 +6,8 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: October 30, 1997
-* Version: $Revision: 1.7 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.8 $
+* Origin: McStas 1.5
 *
 * Neutron source with flat energy spectrum and arbitrary flux
 *
@@ -40,7 +40,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, dist, xw, yh, E0, dE)
 OUTPUT PARAMETERS (hdiv, vdiv, p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
  double hdiv,vdiv;
