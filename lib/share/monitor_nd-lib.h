@@ -20,12 +20,19 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.10 2005-01-18 10:35:56 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.11 2005-02-22 16:11:03 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.10  2005/01/18 10:35:56  farhi
+*	Intall new MACROs for easy User Variable usage in Monitor_nD
+*	MONND_DECLARE(comp)
+*	MONND_USER_TITLE(comp, num, title)
+*	MONND_USER_VALUE(comp, num, value)
+*	comp is the name of a Monitor_nD component; num is 1 or 2 for UserVariable
+*
 *	Revision 1.9  2004/11/30 16:11:37  farhi
 *	defined some macros for an easier User variable handling. Should be updated in the header and Comp doc
-*	
+*
 *	Revision 1.8  2003/02/11 12:28:46  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
@@ -34,7 +41,7 @@
 *	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
 *	Progress_bar: precent -> percent parameter
 *	CS: ----------------------------------------------------------------------
-*	
+*
 * Revision 1.1 2002/08/28 11:39:00 ef
 *	Initial revision extracted from lib/monitors/Monitor_nD.comp
 *******************************************************************************/
@@ -62,17 +69,17 @@
     char COORD_KY    ;
     char COORD_KZ    ;
     char COORD_K     ;
-    char COORD_V     ; 
-    char COORD_ENERGY; 
-    char COORD_LAMBDA; 
-    char COORD_RADIUS; 
-    char COORD_HDIV  ; 
-    char COORD_VDIV  ; 
-    char COORD_ANGLE ; 
-    char COORD_NCOUNT; 
-    char COORD_THETA ; 
-    char COORD_PHI   ; 
-    char COORD_USER1 ; 
+    char COORD_V     ;
+    char COORD_ENERGY;
+    char COORD_LAMBDA;
+    char COORD_RADIUS;
+    char COORD_HDIV  ;
+    char COORD_VDIV  ;
+    char COORD_ANGLE ;
+    char COORD_NCOUNT;
+    char COORD_THETA ;
+    char COORD_PHI   ;
+    char COORD_USER1 ;
     char COORD_USER2 ;
 
     /* token modifiers */
@@ -92,14 +99,14 @@
     char TOKEN_DEL[32]; /* token separators */
 
     char SHAPE_SQUARE; /* shape of the monitor */
-    char SHAPE_DISK  ; 
-    char SHAPE_SPHERE; 
-    char SHAPE_CYLIND; 
+    char SHAPE_DISK  ;
+    char SHAPE_SPHERE;
+    char SHAPE_CYLIND;
     char SHAPE_BANANA; /* cylinder without top/bottom, on restricted angular area */
-    char SHAPE_BOX   ; 
-    
+    char SHAPE_BOX   ;
+
   } MonitornD_Defines_type;
-  
+
   typedef struct MonitornD_Variables
   {
     double area;
@@ -118,7 +125,7 @@
     char   Flag_Binary_List  ;
     char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
     int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
-    
+
     long   Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
     long   Buffer_Block      ;   /* Buffer size for list or auto limits */
     long   Neutron_Counter   ;   /* event counter, simulation total counts is mcget_ncount() */
@@ -128,7 +135,7 @@
     char   Coord_Label[MONnD_COORD_NMAX][30];       /* label of variable */
     char   Coord_Var[MONnD_COORD_NMAX][30]; /* short id of variable */
     long   Coord_Bin[MONnD_COORD_NMAX];             /* bins of variable array */
-    double Coord_Min[MONnD_COORD_NMAX];             
+    double Coord_Min[MONnD_COORD_NMAX];
     double Coord_Max[MONnD_COORD_NMAX];
     char   Monitor_Label[MONnD_COORD_NMAX*30];      /* Label for monitor */
     char   Mon_File[128];    /* output file name */
@@ -146,30 +153,31 @@
     double Intermediate;
     double IntermediateCnts;
     char   option[1024];
-    
+
     double Nsum;
     double psum, p2sum;
     double **Mon2D_N;
     double **Mon2D_p;
     double **Mon2D_p2;
     double *Mon2D_Buffer;
-    
+
     double mxmin,mxmax,mymin,mymax,mzmin,mzmax;
-    
+
     char   compcurname[128];
+    Coords compcurpos;
 
   } MonitornD_Variables_type;
-  
+
 /* monitor_nd-lib function prototypes */
 /* ========================================================================= */
-  
+
 void Monitor_nD_Init(MonitornD_Defines_type *, MonitornD_Variables_type *, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM);
 double Monitor_nD_Trace(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_Finally(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_McDisplay(MonitornD_Defines_type *,
  MonitornD_Variables_type *);
- 
+
 #define MONND_DECLARE(monname) \
   struct MonitornD_Variables *mcmonnd ## monname;
 #define MONND_USER_TITLE(monname, num, title) \
