@@ -232,7 +232,7 @@ sub simulation_dialog {
     $ListBoxFirst->activate(0);
     my $res = $dlg->Show;
     $si{'Seed'} = 0 unless $doseed;
-    # Check value of ListBoxes - 
+    # Check value of ListBoxes -
     my ($index) = $ListBox->curselection();
     if ($index) {
         $si{'Inspect'} = $ListBox->get($index);
@@ -273,7 +273,7 @@ sub dialog_hardcopy {
         $default .= ".$ext";
         my $oldgrab = $dlg->grabStatus;
         $dlg->grabRelease;
-        
+
         my $f = $dlg->getSaveFile(-defaultextension => ".$ext",
                                   -title => "Select $ext output file name",
                                   -initialfile => $default);
@@ -287,7 +287,7 @@ sub dialog_hardcopy {
         }
     }
 }
-    
+
 sub plot_dialog {
     my ($win, $ii, $si, $di, $sim_file_name) = @_;
     # Platform checks. Assumption: Either unix type os / Win32.
@@ -309,7 +309,7 @@ sub plot_dialog {
         $current_plot = -1;        # Component index, or -1 -> overview.
         my $dlg = $win->DialogBox(-title => "McStas: Plot results",
                                   -buttons => ["Close"]);
-        
+
         my $lf = $dlg->add('Frame');
         $lf->pack(-side => 'left');
         $lf->Label(-text => "Monitors and detectors",
@@ -324,7 +324,7 @@ sub plot_dialog {
                                                $dlg->raise; } );
         $cl->insert(0, map "$_->{'Component'}: $_->{'Filename'}", @$di);
         $cl->activate(0);
-        
+
         my $rf = $dlg->add('Frame');
         $rf->pack(-side => 'top');
         $rf->Label(-text => <<END,
@@ -367,7 +367,7 @@ END
 #                     $cl->activate($idx);
 #                     $current_plot = -1;}
 #                 )->pack;
-        
+
         overview_plot("/xserv", $di, 0);
         my $res = $dlg->Show;
         return ($res);
@@ -393,6 +393,7 @@ sub preferences_dialog {
     my $rf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
     my $buttons, $edit_buttons;
     my $plotter_id=0;
+    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
     $lf->pack(-side => 'left', -fill => 'both');
     $lf->Label(-text => "Plotting options:", -anchor => 'w')->pack(-fill => 'x');
@@ -417,15 +418,15 @@ sub preferences_dialog {
     } elsif ($plotter =~ /Matlab/i) {
       $plotter_id=1;
     } elsif ($plotter =~ /Scilab/i && $plotter =~ /scriptfile/i) {
-      $plotter_id=4;  
+      $plotter_id=4;
     } elsif ($plotter =~ /Scilab/i) {
-      $plotter_id=3;  
+      $plotter_id=3;
     } elsif ($plotter =~ /HTML/i || $plotter =~ /VRML/i) {
-      $plotter_id=5;  
+      $plotter_id=5;
     }
     $buttons[$plotter_id]->select;
     if ($binary == 1) { $buttons[6]->select; }
-    
+
     $editor = $MCSTAS::mcstas_config{'EDITOR'};
     $rf->pack(-side => 'top', -fill => 'both');
     $rf->Label(-text => "Editor options:", -anchor => 'w')->pack(-fill => 'x');
@@ -437,14 +438,14 @@ sub preferences_dialog {
     $edit_buttons[2]=$rf->Radiobutton(-text => "External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})",
                -anchor => 'w', -value => 2, -variable => \$editor)->pack(-fill => 'x');
     $edit_buttons[$editor]->select;
-    
+
     my $res = $dlg->Show;
     # add binary flag to plotter
     if ($binary == 1 && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
     # finally set the PLOTTER
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
     $MCSTAS::mcstas_config{'EDITOR'}  = $editor;
-    
+
     return ($res);
 }
 
@@ -721,8 +722,8 @@ sub sitemenu_build {
     my $sites;
     my $sitemenu = $menu->Menubutton(-text => 'Neutron site', -underline => 0);
     $sitemenu->pack(-side=>'left');
-    
-    # Scan each .instr file in the examples folder, find out which 
+
+    # Scan each .instr file in the examples folder, find out which
     # site it belongs to...
     if (opendir(DIR,"$MCSTAS::sys_dir/examples/")) {
         my @instruments = readdir(DIR);
@@ -731,14 +732,14 @@ sub sitemenu_build {
         @paths = map("$MCSTAS::sys_dir/examples/$_", grep(/\.(instr)$/, @instruments));
         my $j;
         my @added; # Names of sites
-        my @handles; # Menu handles        
+        my @handles; # Menu handles
         my $index;
         my $CurrentSub;
 	# Add subitem for instruments without cathegory
 	push @added, "Undefined site";
 	$CurrentSub = $sitemenu->cascade(-label => "Undefined site");
 	push @sites, $CurrentSub;
-	
+
         for ($j=0 ; $j<@paths; $j++) {
             # What site is this one from?
             my $pid = open(READER,$paths[$j]);
@@ -746,7 +747,7 @@ sub sitemenu_build {
             my ($base, $dirname, $suffix);
             $base = "";
 	    my $site_tag=0;
-            while(<READER>) { 
+            while(<READER>) {
                 # Look for real instrument name
                 if (m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]+)\s*(.*)!i) {
                   $cname = $1;
