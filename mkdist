@@ -16,10 +16,22 @@ TMPDIR='..'
 PW=`pwd`
 DIST=$TMPDIR/mcstas-$1
 
-# Copy current checkout there
-cp -rp $PW $DIST
+# Create the doc's from tex
+cd $PW/../tex
+./build $1
+mv *.ps.gz $PW/..
+mv *.pdf $PW/..
 
-# Go there, clean up CVS information
+# Copy current PW checkout to DIST
+cd $PW
+cp -rp $PW $DIST
+# copy the doc in DIST/lib/doc 
+cp $PW/../mcstas-$1-manual.ps.gz $DIST/lib/doc/mcstas-manual.ps.gz
+cp $PW/../mcstas-$1-manual.pdf $DIST/lib/doc/mcstas-manual.pdf
+cp $PW/../mcstas-$1-components.ps.gz $DIST/lib/doc/mcstas-components.ps.gz
+cp $PW/../mcstas-$1-components.pdf $DIST/lib/doc/mcstas-components.pdf
+
+# Go in DIST, clean up CVS information
 cd $DIST
 find . -name CVS -exec rm -r \{\} \; 2> /dev/null
 
@@ -98,13 +110,6 @@ sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
 mv build.bat.new build.bat
 cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
-
-# Create the doc's 
-cd $PW/../tex
-./build $1
-mv *.ps.gz $PW/..
-mv *.pdf $PW/..
-cd ..
 
 echo
 echo
