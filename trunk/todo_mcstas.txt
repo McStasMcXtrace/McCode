@@ -1,5 +1,4 @@
 DONE/TODO/FUTURE list for next release of McStas (1.6)
-Nov 27st, 2002 McStas 1.6.3k dev
 
 Compiled by PW/EF from user wishes and different notes.
 
@@ -90,7 +89,6 @@ Runtime:
     with right sim ratio)
 + binary export: ok (Virtual_input/output use that).
 + scilab export: rescale x,y,z to have cubic 2d plots
-+ use extended output formats. Default should be mcstas+scilab. cc -D ALL_FORMATS ...
 + read_table-lib can read text files, binary files, starting at given offset, for a given number of lines
 + mcstas-r.c: handle binary file export ok, also for 'hidden/partial' files (not listed in .sim, as e.g. virtual sources = big files)
   
