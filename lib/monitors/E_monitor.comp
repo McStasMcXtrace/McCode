@@ -72,19 +72,13 @@ TRACE
   %}
 FINALLY
   %{
-    int i;
-    FILE *outfile;
-
-    outfile=fopen(filename,"w");
-    if(outfile == NULL)
-      fprintf(stderr, "Error: could not open output file '%s'\n", filename);
-    else
-    {
-      for (i=0; i<nchan; i++)
-        fprintf(outfile,"%g %d %g %g\n", 
-                Emin + (double)i/nchan*(Emax-Emin), E_N[i], E_p[i], E_p2[i]);
-      fclose(outfile);
-    }
+    DETECTOR_OUT_1D(
+	"Energy monitor",
+	"Energy [meV]",
+	"Intensity",
+	Emin, Emax, nchan,
+	&E_N[0],&E_p[0],&E_p2[0],
+	filename);
   %}
 
 MCDISPLAY
