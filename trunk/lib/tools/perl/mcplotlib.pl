@@ -33,8 +33,24 @@ sub plot_array_2d {
     pgbox("BCNSTI", 0.0, 0.0, "BCNSTI", 0.0, 0.0);
     pgscir(16,16+$numcol-1);
     ctab $ramp;
+    # If using the black&white postscript driver, swap foreground and
+    # background when doing the image to get more printer-friendly
+    # output.
+    my ($buf, $len);
+    my ($r0, $g0, $b0, $r1, $g1, $b1);
+    pgqinf("TYPE", $buf, $len);
+    if($buf =~ /^V?PS$/i) {
+	pgqcr(0, $r0, $g0, $b0);
+	pgqcr(1, $r1, $g1, $b1);
+	pgscr(0, $r1, $g1, $b1);
+	pgscr(1, $r0, $g0, $b0);
+    }
     imag $data, $min, $max, $tr;
     pgwedg("RI", 0.5, 3.0, $min, $max, ' ');
+    if($buf =~ /^V?PS$/i) {
+	pgscr(0, $r0, $g0, $b0);
+	pgscr(1, $r1, $g1, $b1);
+    }
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
     pgmtxt("T", 2.5, 0.5, 0.5, "$info->{'Title'}     $info->{'Component'}");
     pgmtxt("T", 1.0, 0.5, 0.5, "[$info->{'Filename'}]");
