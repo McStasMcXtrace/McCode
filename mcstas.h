@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.4 1997-09-07 17:58:19 kn Exp $
+* 	$Id: mcstas.h,v 1.5 1997-09-07 20:16:16 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.4  1997/09/07 17:58:19  kn
+* 	Snapshot with (untested) code generation complete.
+*
 * 	Revision 1.3  1997/08/13 09:15:28  kn
 * 	First version to properly parse instrument definition files.
 *
@@ -309,6 +312,7 @@ struct comp_def
     struct code_block *decl_code; /* Declaration code. */
     struct code_block *init_code; /* Initializeation code. */
     struct code_block *trace_code; /* Ray-trace simulation code. */
+    struct code_block *finally_code; /* Code for simulation end. */
   };
 
 
@@ -328,6 +332,7 @@ struct instr_def
     char *name;			/* Instrument name. */
     struct code_block *decls;	/* Code for declarations. */
     struct code_block *inits;	/* Code for initializations. */
+    struct code_block *finals;	/* Code for simulation end. */
     List formals;		/* List of formal parameters. */
     Symtab compmap;		/* Map of component names to instances. */
     List complist;		/* List of components in declaration order. */
