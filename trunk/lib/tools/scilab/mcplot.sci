@@ -423,10 +423,37 @@ function mcplot_output(form, win, filename)
     else xsave(filename);
     end
     if ext == '.eps'
+      // Ugly hack for problem with Scilab's BEpsf which 
+      // disallows output filenames with more than one dot...
+       
+      // Last occurance of '/' or '\' - defines Dirname...
+      if MSDOS then
+        idx_slash=strindex(filename,'\');
+      else
+        idx_slash=strindex(filename,'/');
+      end
+      idx_slash=idx_slash(length(idx_slash));
+  	    
+      filecode=str2code(filename);
+      if ~isempty(idx_slash) then
+        Dirname=code2str(filecode(1:idx_slash));
+      else
+	Dirname="";
+        idx_slash=0;
+      end
+      
+      // First occurance of '.' after idx_slash
+      idx_dot=strindex(filename,'.');
+      idx_dot=idx_dot(idx_dot>idx_slash);
+      idx_dot=idx_dot(1);
+      
+      Basename=code2str(filecode(idx_slash+1:idx_dot-1));
       if MSDOS then
         unix_g('""'+SCI+'\bin\BEpsf"" -landscape '+filename);
+	unix_g('move '+Dirname+Basename+'.eps '+filename);
       else
         unix_g(SCI+'/bin/BEpsf -landscape '+filename);
+	unix_g('mv '+Dirname+Basename+'.eps '+filename);
       end
     end
   end

@@ -1,18 +1,21 @@
 @echo off
-@REM Simple batch script for building McStas on Win32 systems,
-@REM after build using Bloodshed Dev-Cpp. 
-@REM Requires 
-@REM   c compiler (defaults to gcc)
-@REM   includes (defaults to Dev-Cpp standard location
-@REM
-@REM *** Start of User configuration ***
-@SET CC=c:\Dev-Cpp\bin\gcc.exe
-@SET INCLUDE="C:/Dev-Cpp/include"
-@SET LIB="C:/Dev-Cpp/lib"
-@SET DOZIP="0"
-@REM *** End of User configuration ***
-@REM
-@SET VERSION=MCSTAS_VERSION
+@rem Simple batch script for building McStas on Win32 systems,
+@rem after build using Bloodshed Dev-Cpp. 
+@rem Requires 
+@rem   c compiler (defaults to gcc)
+@rem   includes (defaults to Dev-Cpp standard location
+@rem
+@rem *** Start of User configuration ***
+@set CC=c:\Dev-Cpp\bin\gcc.exe
+@set /P CC=Set CC compiler variable (default is %CC%): 
+@set INCLUDE="C:/Dev-Cpp/include"
+@set /P INCLUDE=Set INCLUDE variable (default is %INCLUDE%): 
+@set LIB="C:/Dev-Cpp/lib"
+@set /P LIB=Set LIB variable (default is %LIB%): 
+@set DOZIP="0"
+@rem *** End of User configuration ***
+@rem
+@set VERSION=MCSTAS_VERSION
 @echo Doing Win32 build using %CC% -I%INCLUDE% -L%LIB%
 @del *.o
 @del mcstas.exe
