@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -197,21 +197,21 @@ MCDISPLAY
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
     double ymax =  0.5*yheight;
-    double len = zthick;
-    multiline(5, xmin, ymin, 0.0,
-                 xmax, ymin, 0.0,
-                 xmax, ymax, 0.0,
-                 xmin, ymax, 0.0,
-                 xmin, ymin, 0.0);
+    double len = zthick/2;
+    multiline(5, xmin, ymin, -len,
+                 xmax, ymin, -len,
+                 xmax, ymax, -len,
+                 xmin, ymax, -len,
+                 xmin, ymin, -len);
     multiline(5, xmin, ymin, len,
                  xmax, ymin, len,
                  xmax, ymax, len,
                  xmin, ymax, len,
                  xmin, ymin, len);
-    line(xmin, ymin, 0.0, xmin, ymin, len);
-    line(xmax, ymin, 0.0, xmax, ymin, len);
-    line(xmin, ymax, 0.0, xmin, ymax, len);
-    line(xmax, ymax, 0.0, xmax, ymax, len);
+    line(xmin, ymin, -len, xmin, ymin, len);
+    line(xmax, ymin, -len, xmax, ymin, len);
+    line(xmin, ymax, -len, xmin, ymax, len);
+    line(xmax, ymax, -len, xmax, ymax, len);
   }
   else
   {
