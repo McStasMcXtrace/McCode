@@ -36,9 +36,12 @@ SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-#define RPM2OM 2*PI/60;
     double dt0, dt1, r_i, r_f, theta_i, theta_f;
     double A, psi;
+%}
+INITIALIZE
+%{
+#define RPM2OM 2*PI/60;
     double omega=rot*RPM2OM;
 %}
 TRACE
@@ -65,7 +68,7 @@ TRACE
     /* Calculate analytical transmission assuming continuous source */
     
     psi = theta_f-theta_i;
-    A = Nb/(2*PI)*( 2.0*tb/(r_i+r_f)+abs(phi+psi-omega*l1/vz) ); 
+    A = nb/(2*PI)*( 2.0*tb/(r_i+r_f)+abs(phi+psi-omega*l1/vz) ); 
     if (A >= 1)
       ABSORB;
     p*= Tl+(1-Tl)*(1-A);
