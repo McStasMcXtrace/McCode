@@ -172,7 +172,7 @@ if ($plotter eq 3 || $plotter eq 4) {
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
     printf $fh "end\n";
   }
-  printf $fh "if MSDOS \n  s.tempfile='$tmp_file';\nend\n";
+  printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
   close($fh);
   if ($nowindow) { system("$MCSTAS::runscilab -nw -f $tmp_file\n"); }
   else { system("$MCSTAS::runscilab -f $tmp_file\n"); }
