@@ -327,6 +327,9 @@ sub new_sim_def_name {
     $main_window->title("McStas: $current_sim_def");
     my $text = "Instrument file: " .
         ($current_sim_def ? $current_sim_def : "<None>");
+    if ($current_sim_def && $edit_window) {
+      $edit_window->title("Edit: $current_sim_def");
+    }
     $current_instr_label->configure(-text => $text);
     # On Win32, doing a chdir is probably better at this point...
     if ($Config{'osname'} eq 'MSWin32') {
@@ -354,6 +357,7 @@ sub menu_save {
     my ($w) = @_;
     if($current_sim_def) {
         $edit_control->Save($current_sim_def);
+        $edit_window->title("Edit: $current_sim_def");
     } else {
         $error_override = sub {        # Temporary Tk::Error override
             $w->messageBox(-message => "Could not save file:\n$_[1].",
@@ -921,12 +925,14 @@ sub make_comp_inst {
     my $col = "";
     for $p (@{$cdata->{'inputpar'}}) {
         my $add;
+        my @p_splitted = split(" ", $p);
+        my $p_last_word = $p_splitted[length(@p_splitted)];
         if(defined($r->{'VALUE'}{$p}) && $r->{'VALUE'}{$p} !~ /^\s*$/) {
-            $add .= "$p = $r->{'VALUE'}{$p}";
+            $add .= "$p_last_word = $r->{'VALUE'}{$p}";
         } elsif(defined($cdata->{'parhelp'}{$p}{'default'})) {
             next;                # Omit non-specified default parameter
         } else {
-            $add.= "$p = ";
+            $add.= "$p_last_word = ";
         }
         if(length($col) > 0) {
             if(length("$col, $add") > 60) {
@@ -962,6 +968,7 @@ INITIALIZE
 %}
 TRACE
 
+/* This Arm may serve as the absolute origin for further RELATIVE reference */
 COMPONENT a1 = Arm()
   AT (0,0,0) ABSOLUTE
 INSTR_FINISH
@@ -981,6 +988,9 @@ sub menu_insert_instr_template {
         my $currentpos = $edit_control->index('insert');
         $edit_control->insert('end', $instr_template_end);
         $edit_control->markSet('insert', $currentpos);
+        if (not $current_sim_def) {
+          $edit_window->title("Edit: insert components in TRACE and save your instrument");
+        }
     }
 }
 
@@ -1257,6 +1267,11 @@ sub setup_edit {
     $e->pack(-expand => 'yes', -fill => 'both');
     $e->mark('set', 'insert', '0.0');
     $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def; 
+    if ($current_sim_def) {
+      $w->title("Edit: $current_sim_def");
+    } else {
+      $w->title("Edit: Start with Insert/Instrument template");
+    }
     $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
     $edit_control = $e;
     $edit_window = $w;
