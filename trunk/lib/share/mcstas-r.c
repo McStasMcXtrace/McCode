@@ -2908,7 +2908,7 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
               }
               else
               {
-                if (aVars->Mon2D_p[i][j] > 0) && (aVars->Mon2D_p2[i][j] > 0))
+                if ((aVars->Mon2D_p[i][j] > 0) && (aVars->Mon2D_p2[i][j] > 0))
                 {
                   p1m[j] = log(aVars->Mon2D_p[i][j])/log(10);
                   p2m[j] = (aVars->Mon2D_p2[i][j])/(aVars->Mon2D_p[i][j]*aVars->Mon2D_p[i][j]);
