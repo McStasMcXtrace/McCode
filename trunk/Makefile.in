@@ -65,7 +65,7 @@ clean:
 	instrument.tab.c instrument.tab.h instrument.output lex.yy.c
 
 TAGS:
-	etags `find . -name '*.[chly]'`
+	etags *.[chly]
 
 install: installdirs $(BINOBJS)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
