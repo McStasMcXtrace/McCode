@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.13 2003-08-26 12:33:27 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.14 2004-02-04 18:01:12 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.13  2003/08/26 12:33:27  farhi
+*	Corrected computation of angle PHI (was projected on vertical plane)
+*	
 *	Revision 1.12  2003/04/15 16:01:28  farhi
 *	incoming/outgoing syntax mismatch correction
 *	
@@ -1302,9 +1305,9 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,
     {
       int mc_mn_Set_Vars_Coord_Type;
       mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV) 
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV || mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA) 
       { mc_mn_hdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i]; mc_mn_hdiv_max = mc_mn_Vars->Coord_Max[mc_mn_i]; mc_mn_restricted = 1; }
-      else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV) 
+      else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV || mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI) 
       { mc_mn_vdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i]; mc_mn_vdiv_max = mc_mn_Vars->Coord_Max[mc_mn_i];mc_mn_restricted = 1;  }
       else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE) 
       { mc_mn_hdiv_min = mc_mn_vdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i]; 
