@@ -28,6 +28,7 @@
      TERMINAL => '@TERM@',
      PLOTTER => 3,
      EDITOR => 1,
+     SCILAB => 'scilab',
      MATLAB_COMMAND => 'matlab -nojvm > /dev/null',
      SCILAB_COMMAND => 'scilab -nw > /dev/null'
      );
