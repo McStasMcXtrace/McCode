@@ -83,6 +83,13 @@ mv build.bat.new build.bat
 cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
 
+# Create the doc's 
+cd $PW/../tex
+./build $1
+mv *.ps.gz $PW/..
+mv *.pdf $PW/..
+cd ..
+
 echo
 echo
 echo Your mcstas dist packages are placed in 
@@ -91,7 +98,14 @@ echo ../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz
 echo ../mcstas-$1-Win32-src.tar.gz
 echo
 echo NOTE: Win32 version must be built using \'build.bat\' of the Win32-src package
+echo 
+echo Your mcstas doc packages are placed in
+echo ../mcstas-$1-manual.ps.gz
+echo ../mcstas-$1-manual.pdf
+echo ../mcstas-$1-components.ps.gz
+echo ../mcstas-$1-components.pdf
 echo
+
 
 
 
