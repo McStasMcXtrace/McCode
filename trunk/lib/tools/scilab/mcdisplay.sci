@@ -281,6 +281,8 @@ function PlotInstrument3D()
  global INSTRUMENT;
  clf(0);
   colors=['y','m','c','g','b'];
+  // Needed for string quoting below...
+  quote=code2str(53);
   // Loop over all component names:
   cidx=0;
   centres=[];
@@ -303,24 +305,28 @@ function PlotInstrument3D()
       component=INSTRUMENT.name(j);
       T=evstr(strcat(['INSTRUMENT.' component '.T;']));
       centres=[centres T(:,4)];
-      Lines=evstr(strcat(['INSTRUMENT.' component '.K;']));
-      for k=1:length(Lines)
-        xyz=T*Lines(k);
-        x=xyz(1,:);
-        y=xyz(2,:);
-        z=xyz(3,:);
- 	Pcount=Pcount+1;
-        Plist(Pcount)=xyz(3,:);
-        Pcount=Pcount+1;
-        Plist(Pcount)=xyz(1,:);
-        Pcount=Pcount+1;
-        Plist(Pcount)=xyz(2,:);
-        Pcount=Pcount+1;
-        Plist(Pcount)=col;
+      // Check if current component has any coordinates...
+      
+      if (evstr(strcat(['isfield(INSTRUMENT.' component ',' quote 'K' quote ')']))==1)
+        Lines=evstr(strcat(['INSTRUMENT.' component '.K;']));
+        for k=1:length(Lines)
+          xyz=T*Lines(k);
+          x=xyz(1,:);
+          y=xyz(2,:);
+          z=xyz(3,:);
+ 	  Pcount=Pcount+1;
+          Plist(Pcount)=xyz(3,:);
+          Pcount=Pcount+1;
+          Plist(Pcount)=xyz(1,:);
+          Pcount=Pcount+1;
+          Plist(Pcount)=xyz(2,:);
+          Pcount=Pcount+1;
+          Plist(Pcount)=col;
+        end
       end
-    end
-    if j==lastcomp
-      firstcomp=lastcomp;
+      if j==lastcomp
+        firstcomp=lastcomp;
+      end
     end
   end
   plot3(Plist,'axis','equal','view',view,'xlabel','z/[m]','ylabel','x/[m]','zlabel','y/[m]');
