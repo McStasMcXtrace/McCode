@@ -10,6 +10,11 @@ use Config;
 BEGIN {
     if($ENV{"MCSTAS"}) {
       $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::runscilab ="runscilab";
+      } else {
+	$MCSTAS::runscilab ="scilab";
+      }
     } else {
       if ($Config{'osname'} eq 'MSWin32') {
         $MCSTAS::sys_dir = "c:\\mcstas\\lib";
@@ -20,7 +25,6 @@ BEGIN {
         # install atexit-style handler so that when we exit or die,
         # we automatically delete this temporary file
         END { if ($tmp_file && !$Config{'osname'} eq 'MSWin32') { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
-
       }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
