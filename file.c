@@ -16,9 +16,18 @@
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.15 2003-02-11 12:28:45 farhi Exp $
+*	$Id: file.c,v 1.16 2004-09-10 15:09:56 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.15  2003/02/11 12:28:45  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*	
 *	Revision 1.3  2000/02/15 07:40:59  kn
 *	Also search for components in a fixed list of system dir subdirectories.
 *
@@ -47,7 +56,7 @@ static FILE *
 try_open_file(char *dir, char *name)
 {
   char *path =
-    dir != NULL ? str_cat (dir, PATHSEP_S, name, NULL) : str_dup(name);
+    dir != NULL ? str_cat (dir, MC_PATHSEP_S, name, NULL) : str_dup(name);
   FILE *f = fopen(path, "r");
   str_free(path);
   return f;
@@ -68,7 +77,7 @@ try_open_component(char *dir, char *name)
   {
     char *path =
       dir != NULL ?
-      str_cat (dir, PATHSEP_S, name, suffixes[i], NULL) :
+      str_cat (dir, MC_PATHSEP_S, name, suffixes[i], NULL) :
       str_cat(name, suffixes[i], NULL);
     FILE *f = fopen(path, "r");
     if(f != NULL)
@@ -91,7 +100,7 @@ get_sys_dir(void)
   {
     sys_dir = getenv("MCSTAS");
     if(sys_dir == NULL)
-      sys_dir = MC_SYS_DIR;
+      sys_dir = MCSTAS;
     sys_dir = str_dup(sys_dir);
   }
   return sys_dir;
@@ -125,7 +134,7 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
     return f;
   /* Finally look in the fixed list of system subdirectories. */
   for(i = 0; i < sizeof(sys_subdir_table)/sizeof(char *); i++) {
-    dir = str_cat(get_sys_dir(), PATHSEP_S, sys_subdir_table[i], NULL);
+    dir = str_cat(get_sys_dir(), MC_PATHSEP_S, sys_subdir_table[i], NULL);
     f = (*try_open)(dir, name);
     str_free(dir);
     if(f != NULL)

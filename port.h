@@ -16,7 +16,7 @@
 *
 * Header file for portability related stuff.
 *
-* $Id: port.h,v 1.12 2003-02-11 12:28:45 farhi Exp $
+* $Id: port.h,v 1.13 2004-09-10 15:09:56 farhi Exp $
 *
 *******************************************************************************/
 
@@ -28,33 +28,35 @@
 #endif
 
 /* File system details. */
+#ifndef MC_PATHSEP_C
 #ifdef WIN32
-#define PATHSEP_S "\\"
-#define PATHSEP_C '\\'
+#define MC_PATHSEP_S "\\"
+#define MC_PATHSEP_C '\\'
 #define CURRENT_DIR_S "."
 #else  /* !WIN32 */
 #ifdef MAC
-#define PATHSEP_S ":"
-#define PATHSEP_C ':'
+#define MC_PATHSEP_S ":"
+#define MC_PATHSEP_C ':'
 #define CURRENT_DIR_S ""	/* Apparently no Mac equivalent for this. */
 #else  /* !WIN32 && !MAC */
-#define PATHSEP_S "/"
-#define PATHSEP_C '/'
+#define MC_PATHSEP_S "/"
+#define MC_PATHSEP_C '/'
 #define CURRENT_DIR_S "."
 #endif /* !MAC */
 #endif /* !WIN32 */
+#endif /* MC_PATHSEP_C */
 
-#ifndef MC_SYS_DIR
+#ifndef MCSTAS
 #ifdef WIN32
-#define MC_SYS_DIR "C:\\mcstas\\lib"
+#define MCSTAS "C:\\mcstas\\lib"
 #else  /* !WIN32 */
 #ifdef MAC
-#define MC_SYS_DIR ":mcstas:lib" /* ToDo: What to put here? */
+#define MCSTAS ":mcstas:lib" /* ToDo: What to put here? */
 #else  /* !MAC */
-#define MC_SYS_DIR "/usr/local/lib/mcstas"
+#define MCSTAS "/usr/local/lib/mcstas"
 #endif /* !MAC */
 #endif /* !WIN32 */
-#endif /* MC_SYS_DIR */
+#endif /* MCSTAS */
 
 #ifdef WIN32
 #define HAVE_STRCASECMP
