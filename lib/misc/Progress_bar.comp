@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -51,7 +51,7 @@ DECLARE
 
 INITIALIZE
 %{
-  fprintf(stderr, "[%s] Init ", mcinstrument_name);
+  fprintf(stdout, "[%s] Init\n", mcinstrument_name);
   if (percent*mcget_ncount()/100 < 1e5) {
     percent=1e5*100.0/mcget_ncount();
   }
@@ -72,8 +72,13 @@ TRACE
       EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
                            *mcget_ncount()/ncount);
       IntermediateCnts = 0;
-      if (difftime(EndTime,StartTime) > 60) fprintf(stderr, "ETA %g [min] ",
-        difftime(EndTime,StartTime)/60.0);
+      fprintf(stdout, "Trace ETA ");
+      if (difftime(EndTime,StartTime) < 60.0)
+        fprintf(stdout, "%g [s] ", difftime(EndTime,StartTime));
+      else if (difftime(EndTime,StartTime) > 3600.0)
+        fprintf(stdout, "%g [h] ", difftime(EndTime,StartTime)/3660.0);
+      else
+        fprintf(stdout, "%g [min] ", difftime(EndTime,StartTime)/60.0);
     } else IntermediateCnts += 1e5;
   }
 
@@ -81,24 +86,30 @@ TRACE
   {
     double tmp;
     tmp = percent*mcget_ncount()/100;
-    fprintf(stderr, "%d ", (int)(ncount*100/mcget_ncount()));
+    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount()));
     IntermediateCnts = ncount + tmp;
     if (IntermediateCnts+tmp > mcget_ncount())
-      fprintf(stderr, "\n");  /* last percent number to be displayed */
+      fprintf(stdout, "\n");  /* last percent number to be displayed */
     else if (flag_save) mcsave(NULL);
   }
 %}
 
 SAVE
 %{
-  fprintf(stderr, "Save [%s]\n", mcinstrument_name);
+  fprintf(stdout, "Save [%s]\n", mcinstrument_name);
 %}
 
 FINALLY
 %{
   time_t NowTime;
   time(&NowTime);
-  fprintf(stderr, "Finally. Time: %g [min]\n", difftime(NowTime,StartTime)/60);
+  fprintf(stdout, "Finally. Time: ");
+  if (difftime(NowTime,StartTime) < 60.0)
+    fprintf(stdout, "%g [s] ", difftime(NowTime,StartTime));
+  else if (difftime(NowTime,StartTime) > 3600.0)
+    fprintf(stdout, "%g [h] ", difftime(NowTime,StartTime)/3660.0);
+  else
+    fprintf(stdout, "%g [min] ", difftime(NowTime,StartTime)/60.0);
 %}
 
 END
