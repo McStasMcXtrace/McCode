@@ -255,7 +255,7 @@ function mcplot_menu_action(action, object)
         'This is free software, and you are welcome',...
         'to redistribute it under certain conditions',...
         'as specified in Licence files.'};
-      msgbox(t, 'McPlot: About','help','non-modal');
+      msgbox(t, 'McPlot: About','help','non-modal');      
     end 
 % end mcplot_menu_action  
 
@@ -368,7 +368,8 @@ function d=mcplot_plot(d,p)
       [ 'mcplot(''set_color'', ''action'', gco);' ]);
     uimenu(hm, 'Label','Reset View', 'Callback','view(0,90);lighting none;alpha(1);');
     uimenu(hm, 'Label','Add Light','Callback', 'light;lighting phong;');
-    uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.5);')
+    uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.5);');
+    uimenu(hm, 'Label',['Export into ' d.filename ],'Callback', [ 'evalin(''base'',''' d.filename ' = get(gco,''''userdata''''); disp([''''Exported data into variable ' d.filename ''''']);'');'])
     set(h, 'UIContextMenu', hm);
   end
   if p == 2, t = t1; end
