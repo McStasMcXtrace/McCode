@@ -83,7 +83,8 @@ sub simulation_dialog {
     $si{'First'} = '' unless $si{'First'};
     $si{'Last'} = '' unless $si{'Last'};
 
-    my $dlg = $win->DialogBox(-title => "Run simulation",
+    my $name_instr = $ii->{'Instrument-source'};
+    my $dlg = $win->DialogBox(-title => "Run simulation $name_instr",
                               -buttons => ["Start", "Cancel"]);
 
     $dlg->add('Label',
@@ -133,7 +134,7 @@ sub simulation_dialog {
 
     my $f0 = $opt_frame->Frame;
     $f0->pack(-anchor => 'w');
-    $f0->Label(-text => "Output to:")->pack(-side => 'left');
+    $f0->Label(-text => "Output to (dir):")->pack(-side => 'left');
     my $dir_entry = $f0->Entry(-relief => 'sunken',
                                -width=>30,
                                -justify => 'left',
@@ -151,14 +152,18 @@ sub simulation_dialog {
                                   -justify => 'right',
                                   -textvariable => \$si{'Ncount'});
     $ncount_entry->pack(-side => 'left');
-    $opt_frame->Checkbutton(-text => "Plot results",
-                            -variable => \$si{'Autoplot'},
-                            -relief => 'flat')->pack(-anchor => 'w');
     if (!($Config{'osname'} eq 'MSWin32')) {
-	$opt_frame->Checkbutton(-text => "Distribute mcrun scans",
+      $f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
 				-variable => \$si{'Multi'},
 				-relief => 'flat')->pack(-anchor => 'w');
     }
+    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
+    if ($plotter == 0) { $name_instr = "PGPLOT"; }
+    elsif ($plotter == 1 || $plotter == 2) { $name_instr = "Matlab"; }
+    elsif ($plotter == 3 || $plotter == 4) { $name_instr = "Scilab"; }
+    $opt_frame->Checkbutton(-text => "Plot results ($name_instr)",
+                            -variable => \$si{'Autoplot'},
+                            -relief => 'flat')->pack(-anchor => 'w');
     my $f2 = $opt_frame->Frame;
     $f2->pack(-anchor => 'w');
     $f2->Radiobutton(-text => "Random seed",
@@ -377,7 +382,7 @@ sub backend_dialog {
     # Choice of plotting backend
     # PW 20030314
     my ($win,$binary,$plotter) = @_;
-    my $dlg = $win->DialogBox(-title => "McStas:Plot backend",
+    my $dlg = $win->DialogBox(-title => "McStas: Plot backend",
                               -buttons => ["Close"]);
     my $lf = $dlg->add('Frame');
     my $buttons;
