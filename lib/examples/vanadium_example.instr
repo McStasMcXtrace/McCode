@@ -1,4 +1,5 @@
 DEFINE INSTRUMENT test_v_sample(ROT)
+/* %INSTRUMENT_SITE: Other */
 
 DECLARE
 %{

@@ -8,6 +8,8 @@ DEFINE INSTRUMENT H8_test(Lambda)
  * display  : mcdisplay h8.out Lambda=2.359 
  *
  * Emmanuel FARHI, <farhi@ill.fr>. CS-group (c) ILL. Oct 2000
+ *
+ * %INSTRUMENT_SITE: Brookhaven
  */ 
  
  /* 

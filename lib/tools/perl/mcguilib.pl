@@ -27,6 +27,9 @@ use Tk::Listbox;
 # For calling mcplot properly in the case of Matlab/Scilab backend
 use Cwd;
 use File::Basename;
+# For copying files - 'Site' menu
+use File::Copy;
+
 # For handling backgrounding on unix vs. Win32...
 use Config;
 
@@ -627,6 +630,72 @@ sub comp_select_dialog {
     &$old_focus;
     &$old_grab;
     return $selected_comp;
+}
+
+sub sitemenu_build {
+    my ($w,$menu) = @_;
+    my $sites;
+    my $sitemenu = $menu->Menubutton(-text => 'Neutron site', -underline => 2);
+    $sitemenu->pack(-side=>'left');
+    # Read the 'Sites' file in the examples folder:
+
+    # Scan each .instr file in the examples folder, find out which 
+    # site it belongs to...
+    if (opendir(DIR,"$MCSTAS::sys_dir/examples/")) {
+	my @instruments = readdir(DIR);
+	closedir(DIR);
+	next unless @instruments;
+        @paths = map("$MCSTAS::sys_dir/examples/$_", grep(/\.(instr)$/, @instruments));
+	my $j;
+	my @added; # Names of sites
+	my @handles; # Menu handles	
+	my $index;
+	my $CurrentSub;
+	for ($j=0 ; $j<@paths; $j++) {
+	    # What site is this one from?
+	    my $pid = open(READER,$paths[$j]);
+	    while(<READER>) { 
+		# Look for %INSTRUMENT_SITE:
+		if (/%INSTRUMENT_SITE: (\w*)/) {
+		    # Check if that menu has been added?
+		    my $k;
+		    my $taken = 0;
+		    for ($k=0; $k<@added; $k++) {
+			if ($added[$k] eq $1) {
+			    $taken = 1;
+			    $index = $k;
+			    $CurrentSub = $sites[$k];
+			}
+		    }
+		    if ($taken == 0) {
+		        push @added, $1;
+			$CurrentSub = $sitemenu->cascade(-label => $1);
+		        push @sites, $CurrentSub;
+		        $index = @added;
+		    }
+		    # Add the instrument to the given menu.
+		    my ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
+		    $CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+		}
+	    }
+	}
+    }
+}
+
+sub sitemenu_runsub {
+    my ($path, $w) = @_;
+    # Copy example instrument to current folder...
+    my ($base, $dirname, $suffix) = fileparse($path,".instr");
+    if (! copy("$path","./$base$suffix")) {
+	$w->messageBox(-message => "Could not copy $base$suffix to .",
+		       -title => "Select failed",
+		       -type => 'OK',
+		       -icon => 'error');
+	return 0;
+    }
+    if (-e "./$base$suffix") {
+	new_sim_def_name($w,"./$base$suffix");
+    }
 }
 
 1;

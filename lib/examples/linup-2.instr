@@ -1,6 +1,7 @@
 /* TAS1 linup - simulate line-up of C1 collimator. */
 
 DEFINE INSTRUMENT TAS1(PHM,TTM,C1,OMC1)
+/* %INSTRUMENT_SITE: Risoe */
 
 DECLARE
 %{
