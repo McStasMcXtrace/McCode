@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.21 2000-07-26 07:12:08 kn Exp $
+* 	$Id: cogen.c,v 1.22 2000-07-27 09:05:30 kn Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -150,6 +150,28 @@ coutf(char *format, ...)
   num_next_output_line++;
 }
 
+/*******************************************************************************
+* Output #line directive to handle code coming from a different file.
+* The filename is assumed to be already properly quoted for special chars.
+*******************************************************************************/
+static void
+code_set_source(char *filename, int linenum)
+{
+  if(linenum > 0)
+    coutf("#line %d \"%s\"", linenum, filename);
+}
+
+/*******************************************************************************
+* Output #line directive to reset back to the generated output C file.
+*******************************************************************************/
+static void
+code_reset_source(void)
+{
+  /* Note: the number after #line refers to the line AFTER the directive. */
+  coutf("#line %d \"%s\"", num_next_output_line + 1, quoted_output_file_name);
+}
+
+
 static void
 codeblock_out(struct code_block *code)
 {
@@ -158,9 +180,7 @@ codeblock_out(struct code_block *code)
 
   if(list_len(code->lines) <= 0)
     return;
-  fprintf(output_handle, "#line %d \"%s\"\n",
-	  code->linenum + 1, code->quoted_filename);
-  num_next_output_line++;
+  code_set_source(code->quoted_filename, code->linenum + 1);
   liter = list_iterate(code->lines);
   while(line = list_next(liter))
   {
@@ -168,10 +188,7 @@ codeblock_out(struct code_block *code)
     num_next_output_line++;
   }
   list_iterate_end(liter);
-  /* Note: the number after #line refers to the line AFTER the directive. */
-  num_next_output_line++;
-  fprintf(output_handle, "#line %d \"%s\"\n",
-	  num_next_output_line, quoted_output_file_name);
+  code_reset_source();
 }
 
 static void
@@ -182,11 +199,8 @@ codeblock_out_brace(struct code_block *code)
 
   if(list_len(code->lines) <= 0)
     return;
-  fprintf(output_handle, "#line %d \"%s\"\n",
-	  code->linenum, code->quoted_filename);
-  num_next_output_line++;
-  fprintf(output_handle, "{\n");
-  num_next_output_line++;
+  code_set_source(code->quoted_filename, code->linenum);
+  cout("{");
   liter = list_iterate(code->lines);
   while(line = list_next(liter))
   {
@@ -194,12 +208,8 @@ codeblock_out_brace(struct code_block *code)
     num_next_output_line++;
   }
   list_iterate_end(liter);
-  fprintf(output_handle, "}\n");
-  num_next_output_line++;
-  /* Note: the number after #line refers to the line AFTER the directive. */
-  num_next_output_line++;
-  fprintf(output_handle, "#line %d \"%s\"\n",
-	  num_next_output_line, quoted_output_file_name);
+  cout("}");
+  code_reset_source();
 }
 
 
@@ -238,7 +248,7 @@ embed_file(char *name)
     fatal_error("Could not find file '%s'\n", name);
 
   cout("");
-  coutf("#line %d \"%s\"", 1, name);
+  code_set_source(name, 1);
   /* Now loop, reading lines and outputting them in the code. */
   while(!feof(f))
   {
@@ -254,10 +264,7 @@ embed_file(char *name)
   fclose(f);
   coutf("/* End of file \"%s\". */", name);
   cout("");
-  /* Note: the number after #line refers to the line AFTER the directive. */
-  num_next_output_line++;
-  fprintf(output_handle, "#line %d \"%s\"\n",
-	  num_next_output_line, quoted_output_file_name);
+  code_reset_source();
 }
 
 
@@ -566,8 +573,11 @@ cogen_nxdict(struct instr_def *instr)
   while((entry = list_next(liter)) != NULL)
   {
     char *spec = exp_tostring(entry->spec);
-    coutf("  NXDadd(%snxd_handle, \"%s_%s\", %s);", ID_PRE,
-	  entry->compname, entry->param, spec);
+    coutf("  NXDadd(%snxd_handle, \"%s_%s\",", ID_PRE,
+	  entry->compname, entry->param);
+    code_set_source(instr->quoted_source, exp_getlineno(entry->spec));
+    coutf("    %s);", spec);
+    code_reset_source();
     str_free(spec);
   }
   list_iterate_end(liter);
@@ -624,10 +634,13 @@ cogen_init(struct instr_def *instr)
 
       entry = symtab_lookup(comp->setpar, par->id);
       val = exp_tostring(entry->val);
+      code_set_source(instr->quoted_source, exp_getlineno(entry->val));
       coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par->id, val);
       str_free(val);
     }
     list_iterate_end(setpar);
+    if(list_len(comp->def->set_par) > 0)
+      code_reset_source();
     cout("");
     
     /* Users initializations. */
@@ -665,13 +678,31 @@ cogen_init(struct instr_def *instr)
     relcomp = comp->pos->orientation_rel;
     if(relcomp == NULL)
     {				/* Absolute orientation. */
-      coutf("    rot_set_rotation(%srota%s, (%s)*%s, (%s)*%s, (%s)*%s);",
-	    ID_PRE, comp->name, x, d2r, y, d2r, z, d2r);
+      coutf("    rot_set_rotation(%srota%s,", ID_PRE, comp->name);
+      code_set_source(instr->quoted_source,
+		      exp_getlineno(comp->pos->orientation.x));
+      coutf("      (%s)*%s,", x, d2r);
+      code_set_source(instr->quoted_source,
+		      exp_getlineno(comp->pos->orientation.y));
+      coutf("      (%s)*%s,", y, d2r);
+      code_set_source(instr->quoted_source,
+		      exp_getlineno(comp->pos->orientation.z));
+      coutf("      (%s)*%s);", z, d2r);
+      code_reset_source();
     }
     else
     {
-      coutf("    rot_set_rotation(%str1, (%s)*%s, (%s)*%s, (%s)*%s);",
-	    ID_PRE, x, d2r, y, d2r, z, d2r);
+      coutf("    rot_set_rotation(%str1,", ID_PRE);
+      code_set_source(instr->quoted_source,
+		      exp_getlineno(comp->pos->orientation.x));
+      coutf("      (%s)*%s,", x, d2r);
+      code_set_source(instr->quoted_source,
+		      exp_getlineno(comp->pos->orientation.y));
+      coutf("      (%s)*%s,", y, d2r);
+      code_set_source(instr->quoted_source,
+		      exp_getlineno(comp->pos->orientation.z));
+      coutf("      (%s)*%s);", z, d2r);
+      code_reset_source();
       coutf("    rot_mul(%str1, %srota%s, %srota%s);",
 	    ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
     }
@@ -699,12 +730,25 @@ cogen_init(struct instr_def *instr)
     relcomp = comp->pos->place_rel;
     if(relcomp == NULL)
     {
-      coutf("    %sposa%s = coords_set(%s, %s, %s);",
-	    ID_PRE, comp->name, x, y, z);
+      coutf("    %sposa%s = coords_set(", ID_PRE, comp->name);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
+      coutf("      %s,", x);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
+      coutf("      %s,", y);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
+      coutf("      %s);", z);
+      code_reset_source();
     }
     else
     {
-      coutf("    %stc1 = coords_set(%s, %s, %s);", ID_PRE, x, y, z);
+      coutf("    %stc1 = coords_set(", ID_PRE);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.x));
+      coutf("      %s,", x);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.y));
+      coutf("      %s,", y);
+      code_set_source(instr->quoted_source, exp_getlineno(comp->pos->place.z));
+      coutf("      %s);", z);
+      code_reset_source();
       coutf("    rot_transpose(%srota%s, %str1);",
 	    ID_PRE, relcomp->name, ID_PRE);
       coutf("    %stc2 = rot_apply(%str1, %stc1);",
