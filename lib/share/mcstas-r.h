@@ -17,9 +17,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.59 2004-09-03 14:19:14 farhi Exp $
+* $Id: mcstas-r.h,v 1.60 2004-09-09 13:47:26 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.59  2004/09/03 14:19:14  farhi
+*	Correct invertion in mcformat specs structure
+*	
 *	Revision 1.58  2004/07/30 14:49:15  farhi
 *	MPI update for usage with mcrun.
 *	Still done by Christophe Taton. CC=mpicc and CFLAGS = -DUSE_MPI.
@@ -89,7 +92,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.59 $"
+#define MCSTAS_R_H "$Revision: 1.60 $"
 
 #include <math.h>
 #include <string.h>
@@ -341,13 +344,13 @@ void mt_srandom (unsigned long x);
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with gravitation */
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
   do { \
-    mcnlx  += mcnlvx*dt + Ax*dt*dt/2; \
-    mcnly  += mcnlvy*dt + Ay*dt*dt/2; \
-    mcnlz  += mcnlvz*dt + Az*dt*dt/2; \
-    mcnlvx += Ax*dt; \
-    mcnlvy += Ay*dt; \
-    mcnlvz += Az*dt; \
-    mcnlt  += dt; \
+    mcnlx  += mcnlvx*(dt) + (Ax)*(dt)*(dt)/2; \
+    mcnly  += mcnlvy*(dt) + (Ay)*(dt)*(dt)/2; \
+    mcnlz  += mcnlvz*(dt) + (Az)*(dt)*(dt)/2; \
+    mcnlvx += (Ax)*(dt); \
+    mcnlvy += (Ay)*(dt); \
+    mcnlvz += (Az)*(dt); \
+    mcnlt  += (dt); \
   } while(0)
 
 #define PROP_DT(dt) \
