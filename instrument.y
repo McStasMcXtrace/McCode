@@ -47,7 +47,9 @@ int mc_yyoverflow();
   Coords_exp coords;		/* Coordinates for location or rotation. */
   List formals;			/* List of formal parameters. */
   Symtab actuals;		/* Values for formal parameters. */
-  struct {List def, set, out, state;} parms;	/* Parameter lists. */
+  char **polform;		/* Polarisation state formal parameters */
+  struct {List def, set, out, state;
+	  char **polarisation;} parms;	/* Parameter lists. */
   struct instr_def *instrument;	/* Instrument definition. */
   struct comp_inst *instance;	/* Component instance. */
   struct comp_place place;	/* Component place. */
@@ -70,6 +72,7 @@ int mc_yyoverflow();
 %token TOK_MCDISPLAY	"MCDISPLAY"
 %token TOK_OUTPUT	"OUTPUT"
 %token TOK_PARAMETERS	"PARAMETERS"
+%token TOK_POLARISATION	"POLARISATION"
 %token TOK_RELATIVE	"RELATIVE"
 %token TOK_ROTATED	"ROTATED"
 %token TOK_SETTING	"SETTING"
@@ -94,6 +97,7 @@ int mc_yyoverflow();
 %type <exp> exp
 %type <actuals> actuallist actuals actuals1
 %type <formals> formallist formals formals1 def_par set_par out_par state_par
+%type <polform> polarisation_par
 %type <parms> parameters
 %type <place> place
 %type <ori> orientation
@@ -116,6 +120,7 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace final
 		    c->set_par = $4.set;
 		    c->out_par = $4.out;
 		    c->state_par = $4.state;
+		    c->polarisation_par = $4.polarisation;
 		    c->decl_code = $5;
 		    c->init_code = $6;
 		    c->trace_code = $7;
@@ -127,12 +132,13 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace final
 		  }
 ;
 
-parameters:	  def_par set_par out_par state_par
+parameters:	  def_par set_par out_par state_par polarisation_par
 		  {
 		    $$.def = $1;
 		    $$.set = $2;
 		    $$.out = $3;
 		    $$.state = $4;
+		    $$.polarisation = $5;
 		  }
 ;
 
@@ -162,6 +168,21 @@ out_par:	  /* empty */
 state_par:	  "STATE" "PARAMETERS" formallist
 		  {
 		    $$ = $3;
+		  }
+;
+
+polarisation_par: /* empty */
+		  {
+		    $$ = NULL;
+		  }
+		| "POLARISATION" "PARAMETERS" '(' TOK_ID ',' TOK_ID ',' TOK_ID ')'
+		  {
+		    char **polform;
+		    nalloc(polform, 3);
+		    polform[0] = $4;
+		    polform[1] = $6;
+		    polform[2] = $8;
+		    $$ = polform;
 		  }
 ;
 
@@ -260,6 +281,25 @@ complist:	  /* empty */
 		    {
 		      symtab_add(comp_instances, $2->name, $2);
 		      list_add(comp_instances_list, $2);
+		      if($2->def)
+		      {
+			/* Check if the component handles polarisation. */
+			if($2->def->polarisation_par)
+			{
+			  instrument_definition->polarised = 1;
+			}
+			else
+			{
+			  if(instrument_definition->polarised)
+			  {
+			    print_warn(NULL,
+				       "Component %s does not handle "
+				       "neutron polarisation,\n"
+				       "but the components before it do.\n",
+				       $2->name);
+			  }
+			}
+		      }
 		    }
 		  }
 ;
@@ -560,7 +600,7 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.03 ALPHA, March 1999\n"
+  printf("McStas version 1.04 ALPHA, March 17, 1999\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-1999\n"
 	  "All rights reserved\n");
   exit(0);
@@ -614,6 +654,7 @@ parse_command_line(int argc, char *argv[])
   instrument_definition->use_default_main = 1;
   instrument_definition->include_runtime = 1;
   instrument_definition->enable_trace = 0;
+  instrument_definition->polarised = 0;
   for(i = 1; i < argc; i++)
   {
     if(!strcmp("-o", argv[i]) && (i + 1) < argc)

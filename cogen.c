@@ -6,9 +6,14 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.14 1999-03-16 13:09:36 kn Exp $
+* 	$Id: cogen.c,v 1.15 1999-03-18 07:27:59 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.14  1999/03/16 13:09:36  kn
+* 	Output #line directives in the generated code that refer to the output
+* 	file itself, so that compilers, debuggers etc. refer to correct line
+* 	numbers and file names.
+*
 * 	Revision 1.13  1999/01/28 07:51:17  kn
 * 	Support for MCDISPLAY section in component definitions.
 *
@@ -123,8 +128,9 @@
 * ##nvy
 * ##nvz
 * ##nt
-* ##ns1
-* ##ns2
+* ##nsx
+* ##nsy
+* ##nsz
 * ##np
 * ##absorb
 *******************************************************************************/
@@ -524,8 +530,10 @@ cogen_decls(struct instr_def *instr)
   cout("");
   
   /* Neutron state. */
-  coutf("MCNUM %snx, %sny, %snz, %snvx, %snvy, %snvz, %snt, %sns1, %sns2, %snp;",
-       ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+  coutf("MCNUM %snx, %sny, %snz, %snvx, %snvy, %snvz, %snt, "
+	"%snsx, %snsy, %snsz, %snp;",
+	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   cout("");
 
 }
@@ -702,15 +710,16 @@ cogen_trace(struct instr_def *instr)
   coutf("  MCNUM %snlvy = %snvy;", ID_PRE, ID_PRE);
   coutf("  MCNUM %snlvz = %snvz;", ID_PRE, ID_PRE);
   coutf("  MCNUM %snlt = %snt;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snls1 = %sns1;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snls2 = %sns2;", ID_PRE, ID_PRE);
+  coutf("  MCNUM %snlsx = %snsx;", ID_PRE, ID_PRE);
+  coutf("  MCNUM %snlsy = %snsy;", ID_PRE, ID_PRE);
+  coutf("  MCNUM %snlsz = %snsz;", ID_PRE, ID_PRE);
   coutf("  MCNUM %snlp = %snp;", ID_PRE, ID_PRE);
   cout("");
 
   /* Debugging (initial state). */
   coutf("  %sDEBUG_ENTER()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	"%snlt,%snls1,%snls2, %snlp)",
+	"%snlt,%snlsx,%snlsy, %snlp)",
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   /* Now the trace code for each component. Proper scope is set up for each
@@ -722,7 +731,7 @@ cogen_trace(struct instr_def *instr)
     static char *statepars_names[10] =
       {
 	"nlx", "nly", "nlz", "nlvx", "nlvy", "nlvz",
-	"nlt", "nls1", "nls2", "nlp"
+	"nlt", "nlsx", "nlsy", "nlp"
       };
     int i;
     List_handle statepars_handle;
@@ -734,10 +743,15 @@ cogen_trace(struct instr_def *instr)
 	  ID_PRE, comp->name);
     coutf("    &%snlx, &%snly, &%snlz,", ID_PRE, ID_PRE, ID_PRE);
     coutf("    &%snlvx, &%snlvy, &%snlvz,", ID_PRE, ID_PRE, ID_PRE);
-    coutf("    &%snlt, &%snls1, &%snls2);", ID_PRE, ID_PRE, ID_PRE);
+    coutf("    &%snlt, &%snlsx, &%snlsy);", ID_PRE, ID_PRE, ID_PRE);
+    if(instr->polarised)
+      coutf("  %scoordschange_polarisation("
+	    "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
+	    ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
+    
     /* Debugging (entry into component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	  "%snlt,%snls1,%snls2, %snlp)",
+	  "%snlt,%snlsx,%snlsy, %snlp)",
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     /* Trace code. */
@@ -758,8 +772,20 @@ cogen_trace(struct instr_def *instr)
       else
 	break;
     }
+    if(comp->def->polarisation_par)
+    {
+      coutf("#define %s %s%s", comp->def->polarisation_par[0], ID_PRE, "nlsx");
+      coutf("#define %s %s%s", comp->def->polarisation_par[1], ID_PRE, "nlsy");
+      coutf("#define %s %s%s", comp->def->polarisation_par[2], ID_PRE, "nlsz");
+    }
     cogen_comp_scope(comp, (void (*)(void *))codeblock_out_brace,
 		     comp->def->trace_code);
+    if(comp->def->polarisation_par)
+    {
+      coutf("#undef %s %s%s", comp->def->polarisation_par[2]);
+      coutf("#undef %s %s%s", comp->def->polarisation_par[1]);
+      coutf("#undef %s %s%s", comp->def->polarisation_par[0]);
+    }
     for(i = 9; i >= 0; i--)
     {
       if(statepars[i] != NULL)
@@ -767,7 +793,7 @@ cogen_trace(struct instr_def *instr)
     }
     /* Debugging (exit from component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	  "%snlt,%snls1,%snls2, %snlp)",
+	  "%snlt,%snlsx,%snlsy, %snlp)",
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     cout("");
@@ -781,7 +807,7 @@ cogen_trace(struct instr_def *instr)
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	"%snlt,%snls1,%snls2, %snlp)",
+	"%snlt,%snlsx,%snlsy, %snlp)",
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
@@ -797,8 +823,9 @@ cogen_trace(struct instr_def *instr)
   coutf("  %snvy = %snlvy;", ID_PRE, ID_PRE);
   coutf("  %snvz = %snlvz;", ID_PRE, ID_PRE);
   coutf("  %snt = %snlt;", ID_PRE, ID_PRE);
-  coutf("  %sns1 = %snls1;", ID_PRE, ID_PRE);
-  coutf("  %sns2 = %snls2;", ID_PRE, ID_PRE);
+  coutf("  %snsx = %snlsx;", ID_PRE, ID_PRE);
+  coutf("  %snsy = %snlsy;", ID_PRE, ID_PRE);
+  coutf("  %snsz = %snlsz;", ID_PRE, ID_PRE);
   coutf("  %snp = %snlp;", ID_PRE, ID_PRE);
 
   /* Function end. */

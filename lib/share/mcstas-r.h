@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.24 1999-03-16 13:53:11 kn Exp $
+*	$Id: mcstas-r.h,v 1.25 1999-03-18 07:33:09 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.24  1999/03/16 13:53:11  kn
+*	Give the variable name for the X axis in the detector output.
+*
 *	Revision 1.23  1999/03/16 13:51:52  kn
 *	Standard method for outputting detector data in components.
 *
@@ -128,7 +131,7 @@ void mcfinally(void);
 void mcdisplay(void);
 
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-        mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
+        mcnlt,mcnlsx,mcnlsy, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
 #define MC_GETPAR(comp, par) mcc ## comp ## _ ## par
 #define DETECTOR_OUT(p0,p1,p2) mcdetector_out(mccompcurname,p0,p1,p2)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
@@ -323,6 +326,8 @@ Coords rot_apply(Rotation t, Coords a);
 void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
 	       double *vx, double *vy, double *vz, double *time,
 	       double *s1, double *s2);
+void mccoordschange_polarisation(Rotation t,
+				 double *sx, double *sy, double *sz);
 double mcestimate_error(int N, double p1, double p2);
 void mcsiminfo_out(char *format, ...);
 void mcdetector_out(char *cname, double p0, double p1, double p2);
@@ -335,7 +340,7 @@ void mcdetector_out_2D(char *t, char *xl, char *yl, double x1, double x2,
 void mcreadparams(void);
 
 void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-		double t, double s1, double s2, double p);
+		double t, double sx, double sy, double sz, double p);
 void mcgenstate(void);
 double randnorm(void);
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
