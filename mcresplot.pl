@@ -387,7 +387,7 @@ for (;;) {
         if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
         my $fileout = "$filename.$ext";
         plot_mcstas_res($filename, "$fileout/$dev", $qx,$qy,$qz,$w,$p,$C_t,$res_mat,$size,0,$simulation_info);
-        print "Wrote postscript file '$fileout' ($dev)\n";
+        print "Wrote file '$fileout' ($dev)\n";
       }
   if ($interactive == 0) { $cc = "q"; }
   else {

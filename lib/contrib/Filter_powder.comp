@@ -17,7 +17,7 @@
 * Modified by: EF, Aug. 24th 2001: made it work
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
 *
-* Box-shaped powder filter
+* Box-shaped powder filter (UNSTABLE)
 *
 * %D
 * This is a general box-shaped powder filter which simulates multiple coherent
