@@ -43,7 +43,7 @@ BEGIN {
             $MCSTAS::browser = "start";
         } 
       } else {
-        $MCSTAS::sys_dir = "/home/knoppix/mcstas/lib/mcstas";
+        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
         my $browser = $ENV{'BROWSER'};
         if (!$browser) {
             print STDERR "Your BROWSER variable is not set... Trying 'netscape'\n";
