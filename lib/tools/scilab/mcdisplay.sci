@@ -1,4 +1,14 @@
-// Dummy functions for doing scilab mcdisplay....
+// mcdisplay: Scilab backend for mcstas neutron --trace'ing
+//
+// This function displays a McStas instrument and neutron rays traced
+// through the instrument. Relys on mcdisplay.pl for filtering of 
+// events
+//
+// Written by: P. Willendrup
+// Date: May 13thm 2003
+// Release: McStas 1.7
+// Origin: Risoe
+
 global INSTRUMENT;
 INSTRUMENT=struct();
 INSTRUMENT.name=[];
