@@ -114,8 +114,8 @@ Components:
 + Virtual_input/output may read/write huge files, by fractions.
 + V_sample: may target to any component (compute target_x,y,z) given rel index
 + V_sample: may also be a box
-- Res_monitor: as a cylinder/sphere monitor
-- Progress_bar: flag for intermediate savings
+- Res_monitor: as a cylinder/sphere monitor, stores monitor_nd cell index
++ Progress_bar: flag for intermediate savings
 
 - Check fluxes / absolute fluxes - provide experimental data +
   instrument definition 
