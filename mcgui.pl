@@ -15,13 +15,29 @@ BEGIN {
     else {
       if ($Config{'osname'} eq 'MSWin32') {
 	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
+	my $browser = $ENV{'BROWSER'};
+	if (!$browser) {
+	    print STDERR "Your BROWSER variable is not set... Trying Win32 default\n";
+	    $MCSTAS::browser = "start";
+	} 
       } else {
 	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+	my $browser = $ENV{'BROWSER'};
+	if (!$browser) {
+	    print STDERR "Your BROWSER variable is not set... Trying 'netscape'\n";
+	    $MCSTAS::browser = "netscape";
+	} 
+	
       }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
   }
 use lib $MCSTAS::perl_dir;
+
+# Possibly, set BROWSER environment variable 
+if ($MCSTAS::browser) {
+    $ENV{'BROWSER'} = $MCSTAS::browser;
+}
 
 use strict;
 use FileHandle;
@@ -144,42 +160,62 @@ sub menu_spawn_editor {
     }
 }
 
-sub menu_spawn_netscape {
-    my ($w) = @_;
-    # First try to re-use an already running netscape.
-    my $stat = system("netscape", "-remote",
-		      "openURL(http://neutron.risoe.dk/mcstas/,new-window)");
-    return unless $stat;
-    # Need to start netscape ourselves.
-    my $pid = fork();
-    if(!defined($pid)) {
-	$w->messageBox(-message =>
-		       "Failed to start Netscape.",
-		       -title => "Command failed",
-		       -type => 'OK',
-		       -icon => 'error');
-	return 0;
-    } elsif($pid > 0) {
-	waitpid($pid, 0);
-	return 1;
+sub mcdoc_web {
+    my $suffix='';
+    my $cmd_suffix='';
+    my $prefix='';
+    if ($Config{'osname'} eq 'MSWin32') {
+	$suffix='.pl';
+	$prefix='start ';
     } else {
-	# Double fork to avoid having to wait() for the browser to
-	# finish (or having it become a zombie). See man perlfunc.
-	my $pid2 = fork();
-	if(!defined($pid2)) {	# fork() failed.
-	    print STDERR "Error: spawn of netscape failed!\n";
-	    CORE::exit(1);	# CORE:exit needed to avoid Perl/Tk failure.
-	} elsif(!$pid2) {	# Child.
-	    exec("netscape", "http://neutron.risoe.dk/mcstas/")
-		unless $pid2;	# The "unless" avoids a perl warning.
-	    # If we get here, the exec() failed.
-	    print STDERR "Error: exec() of netscape failed!\n";
-	    CORE::exit(1);	# CORE:exit needed to avoid Perl/Tk failure.
-	} else {		# Parent.
-	    CORE::exit(0);	# CORE:exit needed to avoid Perl/Tk failure.
-	}
+	$cmd_suffix=' &';
     }
+    
+    system("$prefix mcdoc$suffix --web $cmd_suffix");
 }
+
+sub mcdoc_manual {
+    my $suffix='';
+    my $cmd_suffix='';
+    my $prefix='';
+    if ($Config{'osname'} eq 'MSWin32') {
+	$suffix='.pl';
+	$prefix='start ';
+    } else {
+	$cmd_suffix=' &';
+    }
+    
+    system("$prefix mcdoc$suffix --manual $cmd_suffix");
+}
+
+sub mcdoc_components {
+    my $suffix='';
+    my $cmd_suffix='';
+    my $prefix='';
+    if ($Config{'osname'} eq 'MSWin32') {
+	$suffix='.pl';
+	$prefix='start ';
+    } else {
+	$cmd_suffix=' &';
+    }
+    
+    system("$prefix mcdoc$suffix -s $cmd_suffix");
+}
+
+sub mcdoc_generate {
+    my $suffix='';
+    my $cmd_suffix='';
+    my $prefix='';
+    if ($Config{'osname'} eq 'MSWin32') {
+	$suffix='.pl';
+	$prefix='start ';
+    } else {
+	$cmd_suffix=' &';
+    }
+    
+    system("$prefix mcdoc$suffix -f $cmd_suffix");
+}
+
 
 sub new_simulation_results {
     my ($w) = @_;
@@ -960,10 +996,16 @@ sub setup_menu {
     $w->bind('<Alt-c>' => [\&menu_choose_backend, $w]);
     
     $simmenu->pack(-side=>'left');
-    my $helpmenu = $menu->Menubutton(-text => 'Help', -underline => 0);
+    my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
     $helpmenu->command(-label => 'McStas web page',
 		       -underline => 7,
-		       -command => sub {menu_spawn_netscape($w)});
+		       -command => sub {mcdoc_web($w)});
+    $helpmenu->command(-label => 'McStas manual',
+		       -command => sub {mcdoc_manual($w)});
+    $helpmenu->command(-label => 'Component doc index',
+		       -command => sub {mcdoc_components($w)});
+    $helpmenu->command(-label => 'Generate component index',
+		       -command => sub {mcdoc_generate($w)});
     $helpmenu->pack(-side=>'right');
 }
 

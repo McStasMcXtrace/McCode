@@ -1,6 +1,7 @@
 #! /usr/bin/perl -w
 
 use FileHandle;
+use Config;
 
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
@@ -134,7 +135,12 @@ sub html_table_entry {
 # parameters: ($filehandle, $toolbar);
 sub html_main_end {
     my ($f, $toolbar) = @_;
-    my $date = `date +'%b %e %Y'`;
+    my $date;
+    if ($Config{'osname'} eq 'MSWin32') {
+      $date = `date /T`;
+    } else {
+      $date = `date +'%b %e %Y'`;
+    }
     print $f <<END;
 <P>This Component list was updated on $date.
 <HR WIDTH="100%">
@@ -272,7 +278,11 @@ TB_END
       print $f "Generated automatically by McDoc, Peter Willendrup\n";
       print $f "&lt;<A HREF=\"mailto:peter.willendrup\@risoe.dk\">";
       print $f   "peter.willendrup\@risoe.dk</A>&gt; /\n";
-      print $f `date +'%b %e %Y'`;
+      if ($Config{'osname'} eq 'MSWin32') {
+	print $f `date /T`;
+      } else {
+	print $f `date +'%b %e %Y'`;
+      }
       print $f "</ADDRESS>\n";
       print $f "</BODY></HTML>\n";
       close $f;
