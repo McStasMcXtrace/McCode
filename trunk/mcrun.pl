@@ -158,7 +158,7 @@ specified for building the instrument:
   MCSTAS        Location of the McStas and component library 
                 (e.g. /usr/local/lib/mcstas).
   MCSTAS_CC     Name of the C compiler (e.g. cc or gcc)
-  MCSTAS_CFLAGS Options for compilation (e.g. '-O -DALL_FORMATS')
+  MCSTAS_CFLAGS Options for compilation (e.g. '-O')
 SEE ALSO: mcstas, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui
 DOC:      Please visit http://neutron.risoe.dk/mcstas/
 ** No instrument definition name given\n" unless $sim_def;
@@ -372,6 +372,7 @@ parse_args();                        # Parse command line arguments
 my $scan_info = check_input_params(); # Get variables to scan, if any
 $out_file = get_out_file($sim_def, $force_compile, @ccopts);
 exit(1) unless $out_file;
+exit(1) if $ncount==0;
 
 # Make sure that the current directory appears first in the path;
 # contrary to normal use, this is what the user expects here.
