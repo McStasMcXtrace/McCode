@@ -1,0 +1,22 @@
+
+To install Syntax::Highlight::Perl on your system, as root:
+
+    perl Makefile.PL
+    make
+    make install
+
+If you do not have root access, use the PREFIX argument (and,
+optionally, INSTALLMAN3DIR for the man(1) pages) to Makefile.PL:
+
+    perl Makefile.PL PREFIX=[LIBDIR]
+    make
+    make install
+
+
+Syntax::Highlight::Perl is Pure  Perl  and has no dependancies.
+To install this  module  with  only  FTP  access, simply create
+the appropriate subdirectory, Syntax/Highlight/, under whatever
+directory you are using for  Perl  libraries (you will probably
+have to `use lib' that directory in your script) and upload the
+module (Perl.pm) into that directory.
+

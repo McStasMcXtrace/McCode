@@ -1,0 +1,65 @@
+
+                  -=*  Syntax::Highlight::Perl v1.0  *=-
+
+This is a  module  for  marking  up  Perl  code  files  for  presentation,
+printing,  or  publication.  This  markup  can  be  made  up  of any user-
+specified strings  and  can  include  anything  ranging  from  HTML/XML to
+PostScript  formatting  codes  to   ANSI  escape  sequences  to  abstract,
+binary-data markups.
+
+The current version  of  the  module  is  suited  best  to  one-shot, full
+document processing that is  not  exceedingly  time-critical.  No attempts
+have yet  been  made  to  optimize  the  formatting  routines.  It  is not
+inordinately   slow   but  there  is  a  small-but-noticeable  delay  when
+rendering  anything  but  the  most  simple  of  code  files.  You can try
+out  the  included  command-line  viewing  script  (viewperl)  to  see how
+it runs on your  system.  The  delay  is  not  usually  noticeable  in CGI
+scripts, as it is usually overshadowed by the latency of the internet.
+
+The other main  reason  that  the  current  version  of  the module is not
+well  suited  for  time-critical,  repeated  tasks  (an  example  of  such
+a task  might  be  syntax  highlighting  in  an  editor,  where the active
+line  should  be  re-processed    after   every  keystroke,  and  possibly
+following lines as well) is  that  it  has  no  method of "back-tracking,"
+or revising a token that has already  been  formatted without reformatting
+the entire string.  Using  our  example  of  a syntax highlighting editor,
+this means that we would  have  to  re-process  the  entire document every
+time   the  user  presses  a  key.  This  would  introduce  a  prohibitive
+delay in the response  time  of  the  program.  (A  way  around this would
+be to save a  "state-copy"  of  the  document  at  the  point  just before
+the active line  but  this  requires  a  fast  state-copying  routine, and
+the    only   current  method  for  state-copying  --  calling  the  new()
+method on an existing  object  --  uses  string  eval  (a la Data::Dumper)
+to  perform  the  necessary  deep-copy  of  the  data  structure. This may
+be addressed in the next version.)
+
+The  lack  of  a  back-tracking  feature  also  puts  a  limitation on the
+module's ability to  handle  certain  Perl  constructs.  Two good examples
+of this type of construct are the  x  and  e  modifiers to certain Regular
+Expression  operators.  We  cannot  tell  before  we  encounter  them that
+we should be formatting the  Regular  Expression  differently  than usual,
+and yet there may  be  several  lines  of  code  that  should be formatted
+specially before  we  get  to  them!  I  cannot,  as  of  yet,  think of a
+good way  to  accomplish  this,  or  even  if  it's  possible.  If you can
+think of a way to do it, please let me know.
+
+
+                            -=*  VIEWPERL  *=-
+
+A useful utility that  uses  the  module  has  been included. This utility
+allows you to view  Perl  programs  or  modules  quickly  from the command
+line,  fully  syntax  highlighted.  (Note  that  this  utility  uses  ANSI
+color escape sequences, so your terminal must support them.)
+
+To use viewperl,  just  make  it  executable  and  place  it  somewhere on
+your path.  Then  just  type  `viewperl  FILE'  or  `viewperl  -m MODULE',
+where FILE is the name  of  a  file  or  MODULE  is  the  name of a module
+installed on  your  system  (in  the  form  you  would  `use'  it  in your
+script;  eg:  Syntax::Highlight::Perl).  You  can  also  pipe  or redirect
+data  into  viewperl.  Typing  `viewperl'  with  no  file  names causes it
+to  read  from  the  standard  input.  You  can  also  use  the  -c option
+to specify a string of code to format from the command line.
+
+You can turn  on  line  numbering  with  the  -l  option,  or you can hide
+any inline  POD  using  the  -P  option.  Type  `viewperl  --help'  for  a
+list of all the options available, as well as a description of each.
