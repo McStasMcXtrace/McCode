@@ -7,7 +7,7 @@
 * %I
 * Written by: Uwe Filges
 * Date: 22/10/2003
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: McStas 1.6
 *
 *
@@ -566,7 +566,7 @@ TRACE
     if (ii<(seg-1))
     {
         z=z-l_seg;
-        STORE_NEUTRON(mccompcurindex,x,y,z,vx,vy,vz,t,sx,sy,sz,p);         
+        STORE_NEUTRON(INDEX_CURRENT_COMP,x,y,z,vx,vy,vz,t,sx,sy,sz,p);         
     }
   }
   if (seg > 1)
