@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.21 1998-11-09 08:17:57 kn Exp $
+*	$Id: mcstas-r.h,v 1.22 1999-01-28 07:56:35 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.21  1998/11/09 08:17:57  kn
+*	Added some prototypes.
+*
 *	Revision 1.20  1998/10/09 07:53:48  kn
 *	Added some unit conversion constants.
 *
@@ -116,6 +119,7 @@ extern int mctraceenabled, mcdefaultmain;
 void mcinit(void);
 void mcraytrace(void);
 void mcfinally(void);
+void mcdisplay(void);
 
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
@@ -158,6 +162,11 @@ void mcfinally(void);
 #else
 #define test_printf while(0) printf
 #endif
+
+void mcdis_magnify(char *);
+void mcdis_line(double, double, double, double, double, double);
+void mcdis_multiline(int, ...);
+void mcdis_circle(char *, double, double, double, double);
 
 #define MIN2RAD  (PI/(180*60))
 #define DEG2RAD  (PI/180)

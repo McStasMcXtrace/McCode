@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.12 1998-11-13 07:28:36 kn Exp $
+* 	$Id: cogen.c,v 1.13 1999-01-28 07:51:17 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.12  1998/11/13 07:28:36  kn
+* 	Implemented proper quoting of special chars in file names in #line
+* 	directives.
+*
 * 	Revision 1.11  1998/11/09 07:51:18  kn
 * 	Include string.h to get string function prototypes.
 *
@@ -389,6 +393,7 @@ cogen_decls(struct instr_def *instr)
   coutf("void %sinit(void);", ID_PRE);
   coutf("void %sraytrace(void);", ID_PRE);
   coutf("void %sfinally(void);", ID_PRE);
+  coutf("void %sdisplay(void);", ID_PRE);
   cout("");
 
   /* 2. Global variables for instrument parameters. */
@@ -634,6 +639,8 @@ cogen_init(struct instr_def *instr)
     last = comp;
   }
   list_iterate_end(liter);
+  /* Output graphics representation of components. */
+  coutf("    if(mcdotrace) mcdisplay();");
   coutf("    %sDEBUG_INSTR_END()", ID_PRE);
   cout("  }");
   cout("");
@@ -800,6 +807,46 @@ cogen_finally(struct instr_def *instr)
 }
 
 
+static void
+cogen_mcdisplay(struct instr_def *instr)
+{
+  List_handle liter;		/* For list iteration. */
+  struct comp_inst *comp;	/* Component instance. */
+  
+  /* User FINALLY code from component definitions (for each instance). */
+  cout("#define magnify mcdis_magnify");
+  cout("#define line mcdis_line");
+  cout("#define multiline mcdis_multiline");
+  cout("#define circle mcdis_circle");
+  coutf("void %sdisplay(void) {", ID_PRE);
+  cout("  printf(\"MCDISPLAY: start\\n\");");
+  cout("  /* Component MCDISPLAY code. */");
+  cout("");
+  liter = list_iterate(instr->complist);
+  while(comp = list_next(liter))
+  {
+    if(list_len(comp->def->mcdisplay_code->lines) > 0)
+    {
+      char *quoted_name = str_quote(comp->name);
+      coutf("  /* MCDISPLAY code for component '%s'. */", comp->name);
+      coutf("  printf(\"MCDISPLAY: component %%s\\n\", \"%s\");", quoted_name);
+      cogen_comp_scope(comp, (void (*)(void *))codeblock_out_brace,
+		       comp->def->mcdisplay_code);
+      cout("");
+      str_free(quoted_name);
+    }
+  }
+  list_iterate_end(liter);
+
+  cout("  printf(\"MCDISPLAY: end\\n\");");
+  cout("}");
+  cout("#undef magnify");
+  cout("#undef line");
+  cout("#undef multiline");
+  cout("#undef circle");
+}
+
+
 /*******************************************************************************
 * Output code for the mcstas runtime system. Default is to copy the runtime
 * code into the generated executable, to minimize problems with finding the
@@ -853,4 +900,5 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_init(instr);
   cogen_trace(instr);
   cogen_finally(instr);
+  cogen_mcdisplay(instr);
 }

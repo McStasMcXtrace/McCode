@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.17 1998-11-13 07:32:15 kn Exp $
+* 	$Id: mcstas-r.c,v 1.18 1999-01-28 07:56:21 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.17  1998/11/13 07:32:15  kn
+* 	Fix bug on Win32 when allocating memory for zero instrument parameters.
+*
 * 	Revision 1.16  1998/11/09 08:17:34  kn
 * 	Use malloc()'ed array instead of auto array with dynamic size (for
 * 	portability).
@@ -69,6 +72,7 @@
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
+#include <stdarg.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,6 +86,40 @@
 int mctraceenabled = 0;
 int mcdefaultmain = 0;
 #endif
+
+
+/* MCDISPLAY support. */
+
+void mcdis_magnify(char *what){
+  printf("MCDISPLAY: magnify('%s')\n", what);
+}
+
+void mcdis_line(double x1, double y1, double z1,
+		double x2, double y2, double z2){
+  printf("MCDISPLAY: multiline(2,%g,%g,%g,%g,%g,%g)\n",
+	 x1,y1,z1,x2,y2,z2);
+}
+
+void mcdis_multiline(int count, ...){
+  va_list ap;
+  double x,y,z;
+
+  printf("MCDISPLAY: multiline(%d", count);
+  va_start(ap, count);
+  while(count--)
+  {
+    x = va_arg(ap, double);
+    y = va_arg(ap, double);
+    z = va_arg(ap, double);
+    printf(",%g,%g,%g", x, y, z);
+  }
+  va_end(ap);
+  printf(")\n");
+}
+
+void mcdis_circle(char *plane, double x, double y, double z, double r){
+  printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
+}
 
 
 /* Assign coordinates. */

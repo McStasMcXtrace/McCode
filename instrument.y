@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.18 1998-11-26 11:20:49 kn Exp $
+*	$Id: instrument.y,v 1.19 1999-01-28 07:55:32 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.18  1998/11/26 11:20:49  kn
+*	Update version info for v1.01 beta 1.
+*
 *	Revision 1.17  1998/11/26 08:45:52  kn
 *	Use own method for extending parser stack (this avoids using alloca(),
 *	which is not portable).
@@ -130,6 +133,7 @@ int mc_yyoverflow();
 %token TOK_EXTERN	"EXTERN"
 %token TOK_INITIALIZE	"INITIALIZE"
 %token TOK_INSTRUMENT	"INSTRUMENT"
+%token TOK_MCDISPLAY	"MCDISPLAY"
 %token TOK_OUTPUT	"OUTPUT"
 %token TOK_PARAMETERS	"PARAMETERS"
 %token TOK_RELATIVE	"RELATIVE"
@@ -151,7 +155,7 @@ int mc_yyoverflow();
 %token TOK_INVALID
 
 %type <instance> component compref reference
-%type <ccode> code codeblock declare initialize trace finally
+%type <ccode> code codeblock declare initialize trace finally mcdisplay
 %type <coords>  coords
 %type <exp> exp
 %type <actuals> actuallist actuals actuals1
@@ -169,7 +173,7 @@ compdefs:	  /* empty */
 		| compdefs compdef
 ;
 
-compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace finally "END"
+compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace finally mcdisplay "END"
 		  {
 		    struct comp_def *c;
 		    palloc(c);
@@ -182,6 +186,7 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace final
 		    c->init_code = $6;
 		    c->trace_code = $7;
 		    c->finally_code = $8;
+		    c->mcdisplay_code = $9;
 
 		    /* Put component definition in table. */
 		    symtab_add(read_components, c->name, c);
@@ -270,6 +275,16 @@ finally:	  /* empty */
 		    $$ = codeblock_new();
 		  }
 		| "FINALLY" codeblock
+		  {
+		    $$ = $2;
+		  }
+;
+
+mcdisplay:	  /* empty */
+		  {
+		    $$ = codeblock_new();
+		  }
+		| "MCDISPLAY" codeblock
 		  {
 		    $$ = $2;
 		  }
@@ -598,8 +613,8 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.01 BETA, November 26th, 1998\n"
-	  "Copyright (C) Risoe National Laboratory, 1997-1998\n"
+  printf("McStas version 1.02 ALPHA, 1999\n"
+	  "Copyright (C) Risoe National Laboratory, 1997-1999\n"
 	  "All rights reserved\n");
   exit(0);
 }
