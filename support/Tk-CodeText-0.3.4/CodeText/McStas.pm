@@ -43,7 +43,6 @@ sub new { #purple #magenta #orange
 	    'McOther' => [ # McStas placement keywords plus section separators
 			  '%{','%}', 'AT', 'ABSOLUTE','RELATIVE',
 			  ],
-	    
 	});
     bless ($self, $class);
     $self->callbacks({
@@ -134,7 +133,7 @@ sub parseText {
 	$self->stackPush('Comment2');
 	return $text;
     }
-    if ($text =~ s/^(\s+)//) { #spaces
+    if ($text =~ s/^(\s+[0]*)//) { #spaces
 	$self->snippetParse($1);
 	return $text;
     }

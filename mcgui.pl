@@ -1499,12 +1499,32 @@ $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
 
-if(@ARGV) {
+my $open_editor = 0;
+
+if(@ARGV>0 && @ARGV<3) {
+    # Check if one of the input arguments is '--open'
+    # if so, start the editor of choice immediately
+    my $j;
+    my $filenames;
+    for ($j=0; $j<@ARGV; $j++) {
+	if ($ARGV[$j] eq "--open") {
+	    $open_editor = 1;
+#	    menu_edit_current($win);
+	} else {
+	    $filenames = "$ARGV[$j]";
+	}
+    }
+    
     # Most likely, everything on the commandline is a filename... Join using
     # spaces, e.g. mcgui.pl My Documents\My Simulation.instr
-    open_instr_def($win, join(' ',@ARGV));
+    open_instr_def($win, $filenames);
+    if ($open_editor == 1) {
+	menu_edit_current($win);
+    }
 } else {
 #    menu_open($win);
 }
+
+
 
 MainLoop;
