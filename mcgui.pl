@@ -3,8 +3,17 @@
 use strict;
 use Tk;
 
-my $SIM_TYPE;
+require "mcfrontlib.pl";
+require "mcguilib.pl";
+require "mcplotlib.pl";
 
+my $current_sim_file;
+
+sub is_erase_ok {
+    my ($w) = @_;
+    return 1;
+}
+    
 sub menu_quit {
     my ($w) = @_;
     $w->destroy;
@@ -12,6 +21,9 @@ sub menu_quit {
 
 sub menu_open {
     my ($w) = @_;
+    return 0 unless(is_erase_ok($w));
+    my $file = $w->getOpenFile(-defaultextension => "instr",
+			       -title => "Select instrument file");
 }
 
 sub menu_save {
@@ -24,6 +36,33 @@ sub menu_saveas {
 
 sub menu_run {
     my ($w) = @_;
+    my $file = $w->getOpenFile(-defaultextension => "sim",
+			       -title => "Select simulation file");
+    $current_sim_file = $file if $file && -r $file;
+}
+
+sub menu_run_simulation {
+    my ($w) = @_;
+    my ($ii, $si, $di) = read_sim_file($current_sim_file);
+
+    my ($bt, $newsi) = simulation_dialog($w, $ii, $si);
+    print "Pressed: '$bt'\n";
+    for my $k (keys %$newsi) {
+	if($k =~ /^Params$/i) {
+	    for (keys %{$newsi->{$k}}) {
+		print "Param: $_=$newsi->{$k}{$_}\n";
+	    }
+	} else {
+	    print "$k: $newsi->{$k}\n";
+	}
+    }
+}
+
+sub menu_plot_results {
+    my ($w) = @_;
+    my ($ii, $si, $di) = read_sim_file($current_sim_file);
+
+    plot_dialog($w, $ii, $si, $di);
 }
 
 sub menu_usingmcstas {
@@ -63,16 +102,16 @@ sub setup_menu {
 		       -underline => 0,
 		       -command => sub {menu_run($w)});
     $simmenu->separator;
-    $SIM_TYPE = 'sim';
-    $simmenu->radiobutton(-label => 'Simulate',
-			  -underline => 0,
-			  -variable => \$SIM_TYPE,
-			  -value => 'sim',
-			  -state => 'active');
-    $simmenu->radiobutton(-label => 'Trace',
-			  -underline => 0,
-			  -variable => \$SIM_TYPE,
-			  -value => 'trace');
+    $simmenu->command(-label => 'Run simulation ...',
+		      -underline => 0,
+		      -accelerator => 'Alt+U',
+		      -command => sub {menu_run_simulation($w);});
+    $w->bind('<Alt-u>' => [\&menu_run_simulation, $w]);
+    $simmenu->command(-label => 'Plot results ...',
+		      -underline => 0,
+		      -accelerator => 'Alt+P',
+		      -command => sub {menu_plot_results($w);});
+    $w->bind('<Alt-p>' => [\&menu_plot_results, $w]);
     $simmenu->pack(-side=>'left');
     my $helpmenu = $menu->Menubutton(-text => 'Help', -underline => 0);
     $helpmenu->command(-label => 'Using McGui',
@@ -112,7 +151,6 @@ sub check_if_need_recompile {
     return "source is newer" unless $stat1[9] < $stat2[9];
     return "";
 }
-
 
 my $win = new MainWindow;
 setup_menu($win);
