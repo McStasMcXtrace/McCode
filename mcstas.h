@@ -7,7 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.21 2000-02-16 13:23:51 kn Exp $
+* 	$Id: mcstas.h,v 1.22 2000-05-26 06:47:57 kn Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -347,7 +347,7 @@ struct comp_iformal
   {
     char *id;			/* Parameter name */
     int isoptional;		/* True if default value is available */
-    CExp default_value;		/* Default value is isoptional is true */
+    CExp default_value;		/* Default value if isoptional is true */
   };
 
 /* Component definitions. */
