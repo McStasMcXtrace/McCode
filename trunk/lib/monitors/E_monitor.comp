@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: E_monitor.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: E_monitor
 *
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.13 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.14 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Energy-sensitive monitor.
 *
@@ -81,7 +84,7 @@ TRACE
       }
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_1D(
         "Energy monitor",

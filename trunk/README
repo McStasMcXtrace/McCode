@@ -1,4 +1,30 @@
-This is McStas version 1.6.1-beta, released February 18th, 2002.
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Documentation: README
+*
+* %Identification
+* Written by: KN, KL, PEO, EF, PW
+* Date: 1997
+* Origin: Risoe
+* Release: all McStas
+* Version: all
+*
+* This file is part of McStas.
+* It details the installation procedure
+*
+* %Link 
+* <a href="http://neutron.risoe.dk/mcstas">Official site</a>
+* <a href="http://www.ill.fr/tas/mcstas">Mirror site</a>
+*
+* %End
+*******************************************************************************/
+
+This is McStas version 1.6, released <autumn, 2002>
 Copyright (C) Risoe National Laboratory, 1997-2002. All rights reserved.
 See the file LICENSE for conditions on use.
 Since simulations produced with McStas will include code from the files
@@ -45,10 +71,14 @@ available from the McStas WWW home page:
     http://www.ill.fr/tas/mcstas/
 
 Contacts for McStas are:
-  Kristian Nielsen, email <kristian.nielsen@risoe.dk>
-  Kim Lefmann <kim.lefmann@risoe.dk>
-  Per-Olof Åstrand <per-olof.aastrand@risoe.dk>
-  Emmanuel Farhi <farhi@ill.fr>
+  Kim Lefmann <kim.lefmann@risoe.dk> (KL)
+  Emmanuel Farhi <farhi@ill.fr> (EF)
+  Peter Kjear Willendrup <peter.willendrup@risoe.dk> (PW)
+  Mark E. Hagen <mhz@ansto.gov.au> (MH)
+  
+Previous authors are:
+  Kristian Nielsen, email <kristian.nielsen@risoe.dk> (KN)
+  Per-Olof Åstrand <per-olof.aastrand@risoe.dk> (PEO)
   
 Feel free to direct any comments or questions
 to this address. It is an important goal of the McStas project to have

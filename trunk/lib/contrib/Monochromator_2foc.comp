@@ -79,161 +79,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
 %{
-#ifndef Read_Table_Present
-#define Read_Table_Present
-
-  typedef struct struct_table
-  {
-    char    filename[128];
-    char   *header;
-    double *data; /* vector { x[0], y[0], ... x[n-1], y[n-1]... } */
-    double  min_x;
-    double  max_x;
-    double  step_x;
-    int     rows;
-    int     columns;
-  } t_Table;
-
-  t_Table Read_Table(char *File)
-  { /* reads pLength values in 'file' and returns a Table structure  */
-    
-    FILE *hfile;             /* id for data file */
-    char  line[1024];
-    char *Header;
-    long  line_count_in_file  = 0;
-    long  count_in_array      = 0;
-    long  count_in_header     = 0;
-    long  Rows, Columns;
-    long  malloc_size         = 128;
-    long  malloc_size_h       = 1024;
-    char  flag_exit_loop      = 0;
-    char  flag_in_array       = 0;
-    double *Table;
-    double X;
-    t_Table sTable;
-    
-    sTable.data    = NULL;
-    sTable.rows    = 0;
-    sTable.columns = 0;
-    
-    hfile = fopen(File, "r");
-    if(!hfile)
-    {
-       fprintf(stderr, "Error: Read_Table : could not open input file '%s'\n", File);
-       return (sTable);
-    }
-    Header = (char*)  malloc(malloc_size_h*sizeof(char));
-    Table  = (double*)malloc(malloc_size  *sizeof(double));
-    if ((Header == NULL) || (Table == NULL))
-    {
-       fprintf(stderr, "Error: Read_Table : could not alloc Table and Header\n");
-       
-       return (sTable);
-    }
-    strcpy(Header, "");
-    Rows = 0;
-
-    while (!flag_exit_loop)
-    {
-      if (fgets(line, 1024, hfile) != NULL)
-      { /* tries to read some informations */
-        line_count_in_file++;
-        if ((line[0] == '#') || (line[0] == '%') || (line[0] == ';'))
-        { 
-          count_in_header += strlen(line);
-          if (count_in_header+1024 > malloc_size_h)
-          { /* if succeed and in array : add (and realloc if necessary) */
-            malloc_size_h = count_in_header+1024;
-            Header     = (char*)realloc(Header, malloc_size_h*sizeof(char));
-          }
-          strcat(Header, line); 
-        } /* line is a comment */
-        else
-        {
-          /* get the number of columns splitting line with strtok */
-          if (sscanf(line,"%lg ",&X) == 1) /* line begins at least with one num */
-          { 
-            char  *InputTokens, *lexeme, EndFlag;
-            int    carg;
-            
-            InputTokens = line;
-            EndFlag = 0;
-            Columns    = 0;
-            while ((EndFlag == 0) && (Columns < 128))
-            {
-              lexeme = (char *)strtok(InputTokens, " ,;");
-              InputTokens = NULL;
-              if ((lexeme != NULL) && (strlen(lexeme) != 0)) 
-              {
-                if (sscanf(lexeme,"%lg ",&X) == 1)
-                {
-                  Table[count_in_array]     = X;
-                  count_in_array++;
-                  Columns++;
-                }
-                else EndFlag = 1; /* token is not numerical */
-              }
-              else EndFlag = 1;   /* no more tokens in line */
-            }
-            Rows++;               /* this is the number of Rows (1-n) */
-            if (count_in_array+128 > malloc_size)
-            { /* if succeed and in array : add (and realloc if necessary) */
-              malloc_size += 128;
-              Table     = (double*)realloc(Table, malloc_size*sizeof(double));
-            }
-          } /* else if does not succeed : skip line (not in array and not a comment...) */
-        } /* end: if not line comment else numerical */
-      } /* end: if fgets */
-      else flag_exit_loop = 1; /* else fgets : end of file */
-    } /* end while flag_exit_loop */
-    
-    if (Rows * Columns != count_in_array) 
-    {
-      fprintf(stderr, "Warning: Read_Table : file '%s' has %i values that should be %i x %i\n", File, count_in_array, Rows, Columns);
-    }
-    
-    fclose(hfile); 
-    strcpy(sTable.filename,   file);
-    sTable.header       = Header;
-    sTable.data         = Table; 
-    sTable.rows         = Rows;
-    sTable.columns      = Columns;
-    sTable.min_x        = Table[0];
-    sTable.max_x        = Table[(Rows-1)*(Columns-1)];
-    if (Rows != 0) sTable.step_x = (sTable.max_x - sTable.min_x)/Rows;
-    else sTable.step_x = 0;
-      
-    return(sTable);
-  } /* end Read_Table */
-  
-  double Table_Index(t_Table Table, long i, long j)
-  {
-    long AbsIndex;
-    
-    if (i < 0)        i = 0;
-    if (i >= Table.rows)    i = Table.rows-1;
-    if (j < 0)        j = 0;
-    if (j >= Table.columns) j = Table.columns-1;
-    AbsIndex = i*(Table.columns)+j;
-    if (Table.data != NULL)
-      return(Table.data[AbsIndex]);
-    else
-      return(0);
-  }
-  
-  double Table_Value(t_Table Table, double X, long j)
-  {
-    long   Index;
-    double Value;
-    
-    if (Table.step_x != 0)
-      Index = floor((X - Table.min_x)/Table.step_x);
-    else Index=0;
-    Value = Table_Index(Table, Index, j);
-    
-    return(Value);
-  }
-#endif
+%include "read_table-lib.h"
 %}
 DECLARE
   %{
@@ -261,10 +107,11 @@ INITIALIZE
   
   if (file != NULL)
   {
-    rTable = Read_Table(file);
-    fprintf(stdout, "Monochromator_2foc : %s : Reflectivity file '%s' is %i x %i\n", NAME_CURRENT_COMP, file, rTable.rows, rTable.columns);
-    fprintf(stdout, "Monochromator_2foc : %s : k range %f-%f, step=%f\n", NAME_CURRENT_COMP,  rTable.min_x, rTable.max_x, rTable.step_x);
-    r0 = 0.99;
+    fprintf(stdout, "Monochromator_curved : %s : Reflectivity data (k, R)\n", NAME_CURRENT_COMP);
+    Table_Read(&rTable, file, 0); /* read all data from file into rTable */
+    Table_Rebin(&rTable);         /* rebin as evenly, increasing array */
+    if (rTable.rows < 2) Table_Free(&rTable);
+    Table_Info(rTable);
   } else rTable.data = NULL;
   
   if (mono_Q == 0) { fprintf(stderr,"Monochromator_2foc: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
@@ -279,15 +126,12 @@ INITIALIZE
 
 TRACE
 %{
-  double dphi,tmp1,tmp2,tmp3,tmp4,vratio,phi,theta0,theta,v,cs,sn;
-  double zmin,zmax,ymin,ymax,zp,yp,row,col;
-  double tilth,tiltv;         /* used to calculate tilt angle of slab */
-  double sna,snb,csa,csb,vxp,vyp,vzp;
-  double old_x = x, old_y = y, old_z = z, old_t = t;
-  double y1,z1,t1,dt;
+  double dt;
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0)
   {
+    double zmin,zmax, ymin,ymax, zp,yp, y1,z1,t1;
+    
     zmax = ((NH*(SlabWidth+gap))-gap)/2;
     zmin = -1*zmax;
     ymax = ((NV*(SlabHeight+gap))-gap)/2;
@@ -303,6 +147,10 @@ TRACE
 
     if (z1>zmin && z1<zmax && y1>ymin && y1<ymax && zp<SlabWidth && yp< SlabHeight)
     {
+      double row,col, sna,snb,csa,csb,vxp,vyp,vzp;
+      double v, theta0, theta, tmp3;
+      double tilth,tiltv;         /* used to calculate tilt angle of slab */
+      
       col = ceil ( (z1-zmin)/(SlabWidth+gap));  /* which slab hit ? */
       row = ceil ( (y1-ymin)/(SlabHeight+gap));
       if (RH != 0) tilth = asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
@@ -320,7 +168,6 @@ TRACE
       vyp = -vx*csa*snb+vy*csb+vz*sna*snb;
       vzp = vx*sna+vz*csa;  
 
-
       /* First: scattering in plane */
       /* theta0 = atan2(vx,vz);  neutron angle to slab Risoe version */
 
@@ -333,59 +180,60 @@ TRACE
 	    tmp3 = (theta-theta0)/(MIN2RAD*mos_y);
 	    if (tmp3 < DIV_CUTOFF)
 	    {
-              double my_r0, k;
-              
-              k = V2K*v;
+        double my_r0, k;
+        double dphi,tmp1,tmp2,tmp4,vratio,phi,cs,sn;
+        
+        k = V2K*v;
 
-              if (rTable.data != NULL)
-              {
-                my_r0 = Table_Value(rTable, k, 1); /* 2nd column */
-              }
-              else my_r0 = r0;
-              if (my_r0 >= 1) 
-              {
-                fprintf(stdout, "Warning: Monochromator_2foc : lowered reflectivity from %f to 0.99\n", my_r0);
-                my_r0=0.99;
-              }
-              if (my_r0 < 0) 
-              {
-                fprintf(stdout, "Warning: Monochromator_2foc : raised reflectivity from %f to 0\n", my_r0);
-                my_r0=0;
-              }
-              x = 0.0;
-              y = y1;
-              z = z1;
-              t = t1;
+        if (rTable.data != NULL)
+        {
+          my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */
+        }
+        else my_r0 = r0;
+        if (my_r0 >= 1) 
+        {
+          fprintf(stdout, "Warning: Monochromator_2foc : lowered reflectivity from %f to 0.99 (k=%f)\n", my_r0, k);
+          my_r0=0.99;
+        }
+        if (my_r0 < 0) 
+        {
+          fprintf(stdout, "Warning: Monochromator_2foc : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
+          my_r0=0;
+        }
+        x = 0.0;
+        y = y1;
+        z = z1;
+        t = t1;
 
-              p *= my_r0*exp(-tmp3*tmp3*4*log(2)); /* Use mosaics */
-              tmp1 = 2*theta;
-              cs = cos(tmp1);
-              sn = sin(tmp1);
-              tmp2 = cs*vxp - sn*vzp; 
-              vyp = vyp;
-              /* vz = cs*vz + sn*vx; diese Zeile wurde durch die folgende ersetzt */
-              tmp4 = vyp/vzp;  /* korrigiert den schrägen Einfall aufs Plättchen  */
-              vzp = cs*(-vyp*sin(tmp4)+vzp*cos(tmp4)) + sn*vxp;  
-              vxp = tmp2;
+        p *= my_r0*exp(-tmp3*tmp3*4*log(2)); /* Use mosaics */
+        tmp1 = 2*theta;
+        cs = cos(tmp1);
+        sn = sin(tmp1);
+        tmp2 = cs*vxp - sn*vzp; 
+        vyp = vyp;
+        /* vz = cs*vz + sn*vx; diese Zeile wurde durch die folgende ersetzt */
+        tmp4 = vyp/vzp;  /* korrigiert den schrägen Einfall aufs Plättchen  */
+        vzp = cs*(-vyp*sin(tmp4)+vzp*cos(tmp4)) + sn*vxp;  
+        vxp = tmp2;
 
-              /* Second: scatering out of plane. 
-                 Approximation is that Debye-Scherrer cone is a plane */
+        /* Second: scatering out of plane. 
+           Approximation is that Debye-Scherrer cone is a plane */
 
-              phi = atan2(vyp,vzp);  /* out-of plane angle */
-              dphi = (MIN2RAD*mos_z)/(2*sqrt(2*log(2)))*randnorm();  /* MC choice: */
-              /* Vertical angle of the crystallite */
-              vyp = vzp*tan(phi+2*dphi*sin(theta));
-              vratio = v/sqrt(vxp*vxp+vyp*vyp+vzp*vzp);
-              vzp = vzp*vratio;
-              vyp = vyp*vratio;                             /* Renormalize v */
-              vxp = vxp*vratio;
+        phi = atan2(vyp,vzp);  /* out-of plane angle */
+        dphi = (MIN2RAD*mos_z)/(2*sqrt(2*log(2)))*randnorm();  /* MC choice: */
+        /* Vertical angle of the crystallite */
+        vyp = vzp*tan(phi+2*dphi*sin(theta));
+        vratio = v/sqrt(vxp*vxp+vyp*vyp+vzp*vzp);
+        vzp = vzp*vratio;
+        vyp = vyp*vratio;                             /* Renormalize v */
+        vxp = vxp*vratio;
 
-              /* rotate v coords back */
-	            vx = vxp*csb*csa-vyp*snb*csa+vzp*sna;
-	            vy = vxp*snb+vyp*csb;
-	            vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa;    
-	            /* v=sqrt(vx*vx+vy*vy+vz*vz);  */
-              SCATTER;
+        /* rotate v coords back */
+	      vx = vxp*csb*csa-vyp*snb*csa+vzp*sna;
+	      vy = vxp*snb+vyp*csb;
+	      vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa;    
+	      /* v=sqrt(vx*vx+vy*vy+vz*vz);  */
+        SCATTER;
 	    }
     }
   }
@@ -393,15 +241,17 @@ TRACE
 
 MCDISPLAY
 %{
-  double zmin,zmax,ymin,ymax;
-  int ih,iv;
-  double xt, xt1, yt, yt1;
+  int ih;
 
   magnify("xy");
   for(ih = 0; ih < NH; ih++)
   {
+    int iv;
     for(iv = 0; iv < NV; iv++)
     {
+      double zmin,zmax,ymin,ymax;
+      double xt, xt1, yt, yt1;
+      
       zmin = (SlabWidth+gap)*(ih-NH/2.0)+gap/2;
       zmax = zmin+zwidth;
       ymin = (SlabHeight+gap)*(iv-NV/2.0)+gap/2;

@@ -1,16 +1,29 @@
 /* In Emacs, please make this -*-c-*- mode. Thanks. */
 
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: instrument.l
+*
+* %Identification
+* Written by: K.N.
+* Date: Jul  1, 1997
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.22
+*
 * Flex scanner for instrument definition files.
 *
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: instrument.l
-*
-*	Author: K.N.			Jul  1, 1997
-*
-*	$Id: instrument.l,v 1.24 2003-01-21 08:25:08 pkwi Exp $
+*	$Id: instrument.l,v 1.25 2003-01-21 08:29:46 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+* Revision 1.22  2002/08/29 16:39:42 ef
+* enables %include in C code, embeding .h/.c from mcstas/lib
+*
 * Revision 1.21  2001/09/24 10:00:00  ef
 * Added GROUP, EXTEND and SHARE tokens (for McStas 1.6)
 *
@@ -79,8 +92,6 @@
 *	Fixed problem when scanning identifiers: now returns a persistent copy
 *	of the name.
 *
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 
@@ -108,6 +119,7 @@ struct file_state
   {
     YY_BUFFER_STATE buffer;
     char *filename;
+    char *switch_line;
     int line;
     int oldstate;		/* Saved lexer start condition. */
     int visible_eof;		/* If true, tell parser about end-of-file. */
@@ -116,6 +128,7 @@ struct file_state
 #define MAX_INCLUDE 50
 static struct file_state file_stack[MAX_INCLUDE + 1];
 static int file_stack_ptr = 0;
+static char *switch_line = NULL;
 
 static void push_include(char *name);
 
@@ -126,7 +139,8 @@ static void push_include(char *name);
 
 /* The state ccomment is used for scanning c-style comments. The state ccode
    is used when scanning embedded C code blocks. */
-%x ccomment ccode
+%x ccomment 
+%x ccode
 
 /* The state initial_token is only used to output an initial token to
    discriminate between parsing general instrument definitions and autoloaded
@@ -136,6 +150,12 @@ static void push_include(char *name);
 /* Get file name in %include. */
 %x inclname
 
+/* Get full %include line within C code blocks. */
+%x cfullincl
+
+/* Get file name in %include within C code blocks. */
+%x cinclname
+
 
 /* Abbreviations. */
 DIGIT		[0-9]
@@ -144,6 +164,7 @@ ALPHANUM	{ALPHA}|{DIGIT}|"_"
 
 NUMBER		-?({DIGIT}*".")?{DIGIT}+([Ee][+-]?{DIGIT}+)?
 ID		{DIGIT}*{ALPHA}{ALPHANUM}*
+INCLUDE "%include"
 
 %%
 
@@ -168,7 +189,6 @@ FINALLY		    return TOK_FINALLY;
 EXTERN		    return TOK_EXTERN;
 INITIALIZE	  return TOK_INITIALIZE;
 INSTRUMENT	  return TOK_INSTRUMENT;
-NXDICTFILE	  return TOK_NXDICTFILE;
 OUTPUT		    return TOK_OUTPUT;
 PARAMETERS	  return TOK_PARAMETERS;
 POLARISATION	return TOK_POLARISATION;
@@ -180,6 +200,10 @@ TRACE		      return TOK_TRACE;
 SHARE         return TOK_SHARE;       /* ADD: E. Farhi Sep 20th, 2001 */
 EXTEND        return TOK_EXTEND;      /* ADD: E. Farhi Sep 20th, 2001 */
 GROUP         return TOK_GROUP;       /* ADD: E. Farhi Sep 24th, 2001 */
+NEXUS         return TOK_NEXUS;       /* ADD: E. Farhi Aug 6th, 2002 */
+DICTFILE	    return TOK_DICTFILE;    /* ADD: E. Farhi Aug 6th, 2002 */
+HDF           return TOK_HDF;         /* ADD: E. Farhi Aug 6th, 2002 */
+SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
 
 "("|")"|"["|"]"|"{"|"}"|","	return yytext[0]; /* Punctuation. */
 "="|"*"				return yytext[0]; /* Operator. */
@@ -200,7 +224,7 @@ GROUP         return TOK_GROUP;       /* ADD: E. Farhi Sep 24th, 2001 */
 		  return TOK_CTOK;
 		}
 
- /* Scanning embedded C code. */
+  /* Scanning embedded C code. */
 
 "%""{"[\t ]*\n	{
 		  yylval.linenum = instr_current_line;
@@ -210,24 +234,34 @@ GROUP         return TOK_GROUP;       /* ADD: E. Farhi Sep 24th, 2001 */
 		}
 "%""{"[^\n]*\n	{
 		  instr_current_line++;
-		  print_error("%%{ token not on a line by itself.\n");
+		  print_error("%%{ token not on a line by itself "
+                  "on line %d of file '%s': %s.\n",
+				      instr_current_line, instr_current_filename, yytext);
 		  return TOK_INVALID;
 		}
 
 <ccode>{
- [\t ]*"%""}"[\t ]*\n	instr_current_line++; BEGIN(INITIAL); return TOK_CODE_END;
- [^\n]*"%""}"[^\n]*\n	{
+    /* normal %} symbol to end C code block */
+    [\t ]*"%""}"[\t ]*\n	instr_current_line++; BEGIN(INITIAL); return TOK_CODE_END;
+    /* %} symbol surrounded by some unrelevant stuff */
+    [^\n]*"%""}"[^\n]*\n	{
 			  instr_current_line++;
-			  BEGIN(INITIAL);
-			  print_error("%%} terminator not on a line by itself.\n");
-			  return TOK_CODE_END;
+			  print_warn(NULL, "%%} terminator not on a line by itself "
+                    "on line %d of file '%s': %s.\n",
+				      instr_current_line, instr_current_filename, yytext);
 			}
- [^\n]*\n		{
+    /* %include full line -> jump to cfullincl state */
+    [\t ]*{INCLUDE}[^\n]*\n { 
+      yyless(0);  /* re-use the current line, but within cfullincl state */
+      BEGIN(cfullincl); 
+      }
+    /* full line as C code */
+    [^\n]*\n		{
 			  instr_current_line++;
 			  yylval.string = str_dup(yytext);
 			  return TOK_CODE_LINE;
 			}
- }
+    }
 
  /* Quoted strings. Simple version: no escape sequences. */
 \"[^\"\n\\]*\"		{
@@ -237,34 +271,81 @@ GROUP         return TOK_GROUP;       /* ADD: E. Farhi Sep 24th, 2001 */
 			}
 \"[^\"\n]*\\[^\"\n]*\"	{
 			  print_error("Error: Escape sequences in strings "
-				      "not implemented on line %d.\n",
-				      instr_current_line);
+				      "not implemented "
+              "on line %d of file '%s'.\n",
+				      instr_current_line, instr_current_filename);
 			  yylval.string = str_dup("");
 			  return TOK_STRING;
 			}
 \"[^\n\"]*\n		{
 			  print_error("Error: Unterminated string "
-				      "on line %d.\n",
-				      instr_current_line);
+                    "on line %d of file '%s': %s.\n",
+				      instr_current_line, instr_current_filename, yytext);
 			}
 
  /* %-style comments - ignore everything to end of line. */
 "%"\n		instr_current_line++; /* Ignore comment. */
 "% "[^\n]*\n	instr_current_line++; /* Ignore comment. */
 
- /* Include files. */
-"%include"[ \t]+\"	BEGIN(inclname);
-<inclname>[^\"\n]+\"	{
+ /* Include files for McStas comp/instr (INITIAL state). */
+ /* then next token is the file name */
+{INCLUDE}[ \t]+\"	BEGIN(inclname);
+<inclname>{
+  /* name ends with a quote char -> include as INITIAL state */
+  [^\"\n]+\" { 
 			  yytext[yyleng - 1] = '\0';
 			  BEGIN(INITIAL);
 			  push_include(yytext);
 			}
-<inclname>[\"\n].*	{
-			  print_error("Error in %include statement line %d.\n",
-				      instr_current_line);
+  /* name contains char, including quote and \n -> not valid */
+  [\"\n].*	{
+			  print_error("Error in %%include statement "
+                    "on line %d of file '%s': %s.\n",
+				      instr_current_line, instr_current_filename, yytext);
 			  BEGIN(INITIAL);
 			}
-
+  }
+ /* Include files within C code blocks (ccode state)*/
+ /* next token is full line, regenerated by yyless(0) */
+<cfullincl>{INCLUDE}[ \t]+\"	BEGIN(cinclname);
+<cinclname>{
+  /* name ends with a quote char, with extension -> include as ccode state */
+  [^\"\n]+\.+.\"	{
+  	    yytext[yyleng - 1] = '\0';
+			  BEGIN(ccode);
+			  push_include(yytext);
+			}    
+  /* name ends with a quote char, but no ext -> include as ccode state  
+   * this occurs when importing a library .h/.c The .c is only included 
+   * when instr->runtime option is true 
+   */
+  [^\"\n]+\"	{
+        char *tmp0, *tmp1;
+        yytext[yyleng - 1] = '\0';
+        tmp0 = str_dup(yytext);
+        tmp1 = str_cat(tmp0, ".h", NULL);
+        if (instrument_definition->include_runtime) 
+        {
+          switch_line = str_cat(tmp0, ".c", NULL);
+        }
+        else
+          fprintf(stderr,"Dependency: %s.o\n", tmp0);
+          
+        BEGIN(ccode);
+			  push_include(tmp1);
+        
+        str_free(tmp1);
+        str_free(tmp0);
+			}    
+  /* name contains char, including quote and \n -> not valid */
+  [\"\n].*	{
+			  print_error("Error in %%include statement "
+                    "on line %d of file '%s': %s.\n",
+				      instr_current_line, instr_current_filename, yytext);
+			  BEGIN(ccode);
+			}    
+  }
+		
  /* C++ "//"-style comments - ignore everything to end of line. */
 "//"[^\n]*\n	instr_current_line++; /* Ignore comment. */
 
@@ -281,7 +362,7 @@ GROUP         return TOK_GROUP;       /* ADD: E. Farhi Sep 24th, 2001 */
 [ \t]+			/* Ignore whitespace. */
 [ \t]*\n		instr_current_line++; /* Ignore whitespace. */
 
-<INITIAL><<EOF>> {
+<INITIAL,ccode><<EOF>> {
 		  if(file_stack_ptr <= 0)
 		  {
 		    /* EOF on main instrument file. */
@@ -289,20 +370,36 @@ GROUP         return TOK_GROUP;       /* ADD: E. Farhi Sep 24th, 2001 */
 		  }
 		  else
 		  {
-		    --file_stack_ptr;
+        --file_stack_ptr;
 		    yy_delete_buffer(YY_CURRENT_BUFFER);
 		    yy_switch_to_buffer(file_stack[file_stack_ptr].buffer);
 		    instr_current_filename = file_stack[file_stack_ptr].filename;
 		    instr_current_line = file_stack[file_stack_ptr].line;
-		    BEGIN(file_stack[file_stack_ptr].oldstate);
-		    if(file_stack[file_stack_ptr].visible_eof)
-		      yyterminate();
+        switch_line        = file_stack[file_stack_ptr].switch_line;
+        if (switch_line)
+        {
+          char *tmp0;
+          tmp0 = str_dup(switch_line);
+          str_free(switch_line);
+          switch_line = NULL;
+          BEGIN(ccode);
+          push_include(tmp0);
+          str_free(tmp0);
+        } 
+        else
+        {
+          BEGIN(file_stack[file_stack_ptr].oldstate);
+          if(file_stack[file_stack_ptr].visible_eof)
+		        yyterminate();
+        }
+		    
 		  }
 		}
 
 .               {
-		  print_error("Invalid character `%s' in file '%s', line %d.\n",
-			      yytext, instr_current_filename, instr_current_line);
+		  print_error("Invalid character `%s' "
+                  "on line %d of file '%s'.\n",
+			      yytext, instr_current_line, instr_current_filename);
 		  return TOK_INVALID;
 		}
 
@@ -332,29 +429,34 @@ static void
 push_file(FILE *file, int restricted, int visible_eof)
 {
   if(file_stack_ptr >= MAX_INCLUDE)
-    fatal_error("Too deeply nested includes at line %d.\n",
-		instr_current_line);
+    fatal_error("Too deeply nested includes "
+                "on line %d of file '%s'.\n",
+				      instr_current_line, instr_current_filename);
   file_stack[file_stack_ptr].buffer = YY_CURRENT_BUFFER;
   file_stack[file_stack_ptr].filename = instr_current_filename;
   file_stack[file_stack_ptr].line = instr_current_line;
   file_stack[file_stack_ptr].oldstate = YY_START;
   file_stack[file_stack_ptr].visible_eof = visible_eof;
+  file_stack[file_stack_ptr].switch_line = switch_line;
   file_stack_ptr++;
+  
+  instr_current_line = 1;
 
   yy_switch_to_buffer(yy_create_buffer(file, YY_BUF_SIZE));
   parse_restricted = restricted;
 }
 
 /* Handle a new %include file. */
-static void
+void
 push_include(char *name)
 {
   FILE *file;
 
   file = open_file_search(name);
   if(file == NULL)
-    fatal_error("Cannot open include file '%s' at line %d.\n",
-		name, instr_current_line);
+    fatal_error("Cannot open include file '%s' "
+                "on line %d of file '%s'.\n",
+				      name, instr_current_line, instr_current_filename);
   push_file(file, FALSE, FALSE);
   instr_current_filename = name;
   instr_current_line = 1;

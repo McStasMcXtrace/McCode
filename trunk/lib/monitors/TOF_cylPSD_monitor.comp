@@ -1,17 +1,19 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: TOF_cylPSD_monitor
 *
 * %I
 * Written by:  Kim Lefmann
 * Date: October 2000
-* Version: $Revision: 1.3 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.4 $
+* Origin: Risoe
+* Release: McStas 1.6
 * Modified by: Kim Lefmann, October 9, 2001 
-*
 *
 * Cylindrical (2pi) PSD Time-of-flight monitor.
 *
@@ -42,7 +44,7 @@ OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int TOF_N[nt][nphi];
+    double TOF_N[nt][nphi];
     double TOF_p[nt][nphi];
     double TOF_p2[nt][nphi];
     double binphi, tt_0, tt_1;
@@ -92,7 +94,7 @@ TRACE
       TOF_p2[i][j] += p*p;
      }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_2D(
         "Cylindrical Time-of-flight PSD monitor",

@@ -1,14 +1,16 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * %I
 * Written by:  Kim Lefmann
 * Date: May 7, 2001
-* Version: $Revision: 1.4 $
-* Origin: McStas 1.5
-* Modified by: 
+* Version: $Revision: 1.5 $
+ Origin: Risoe
+* Release: McStas 1.6
 *
 * Rectangular 1D PSD, measuring intensity vs. vertical position, x
 *
@@ -41,7 +43,7 @@ OUTPUT PARAMETERS (PSDlin_N, PSDlin_p, PSDlin_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int PSDlin_N[nx];
+    double PSDlin_N[nx];
     double PSDlin_p[nx];
     double PSDlin_p2[nx];
   %}
@@ -74,7 +76,7 @@ TRACE
       PSDlin_p2[i] += p*p;
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_1D(
         "Linear PSD monitor",

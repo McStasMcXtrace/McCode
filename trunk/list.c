@@ -1,11 +1,22 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: list.c
+*
+* %Identification
+* Written by: K.N.
+* Date: Jul  3, 1997
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.4
+*
 * Implementation of lists.
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: list.c
 *
-*	Author: K.N.			Jul  3, 1997
-*
-*	$Id: list.c,v 1.7 2003-01-21 08:25:08 pkwi Exp $
+*	$Id: list.c,v 1.8 2003-01-21 08:29:46 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.4  2001/03/15 15:11:13  peo
@@ -20,8 +31,6 @@
 *	Revision 1.1  1997/08/13 09:15:16  kn
 *	Initial revision
 *
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include "mcstas.h"

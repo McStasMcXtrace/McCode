@@ -1,14 +1,16 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * %I
 * Written by: KL
 * Date: September 28, 2001
-* Version: $Revision: 1.1 $
-* Origin: McStas release
+* Version: $Revision: 1.2 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Time-of-flight/wavelength monitor.
 *
@@ -47,7 +49,7 @@ OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int TOFL_N[nt][nlam];
+    double TOFL_N[nt][nlam];
     double TOFL_p[nt][nlam];
     double TOFL_p2[nt][nlam];
     double tt_0, tt_1;
@@ -88,7 +90,7 @@ TRACE
       }
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_2D(
         "TOF-wavelength monitor",

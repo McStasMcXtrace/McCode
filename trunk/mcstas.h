@@ -1,16 +1,24 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: mcstas.h
+*
+* %Identification
+* Written by: K.N.
+* Date: Jul  1, 1997
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.24
+*
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* 	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-* 	File name: mcstas.h
+* $Id: mcstas.h,v 1.29 2003-01-21 08:29:46 pkwi Exp $
 *
-* 	Author: K.N.			Jul  1, 1997
-*
-* 	$Id: mcstas.h,v 1.28 2003-01-21 08:25:08 pkwi Exp $
-*
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 
@@ -27,7 +35,7 @@
 #define TRUE 1
 #endif
 
-#define MCSTAS_VERSION "1.6.2, Aug 6th, 2002"
+#define MCSTAS_VERSION "1.6.3c, Sep 2nd, 2002"
 
 
 /* Functions defined in memory.c */
@@ -175,7 +183,7 @@ void rot_copy(Rotation dest, Rotation src);
 
 
 /*******************************************************************************
-* Definitions for position.c
+* Definitions for position
 *******************************************************************************/
 
 /*******************************************************************************
@@ -255,8 +263,6 @@ void lex_new_file(FILE *file);
 /* Handle a new autoincluded file (uses recursive parser call). */
 void push_autoload(FILE *file);
 
-
-
 /*******************************************************************************
 * Definitions for file.c
 *******************************************************************************/
@@ -272,6 +278,8 @@ FILE *open_component_search(char *name);
 FILE *open_file_search_sys(char *name);
 /* Add a directory to the search path. */
 void add_search_dir(char *name);
+/* get default system directory (where libraries are) */
+char *get_sys_dir(void);
 
 
 /*******************************************************************************
@@ -365,15 +373,17 @@ struct comp_iformal
 struct comp_def
   {
     char *name;			/* Component name. */
+    char *source;		/*  ADD: E. Farhi Aug 14th, 2002 Name of source file for definition */
     int  comp_inst_number; /* ADD: E. Farhi Sep 20th, 2001 Number of this comp in the instrument  */
     List def_par, set_par, out_par, state_par; /* Formal parameters. */
     char **polarisation_par;	/* Polarisation state formal parameters. */
-    struct code_block *share_code; /* Unique Declaration code (shared). */
-    struct code_block *decl_code; /* Declaration code. */
-    struct code_block *init_code; /* Initializeation code. */
-    struct code_block *trace_code; /* Ray-trace simulation code. */
-    struct code_block *finally_code; /* Code for simulation end. */
-    struct code_block *mcdisplay_code; /* Code for drawing components. */
+    struct code_block *share_code;  /* Unique Declaration code (shared). */
+    struct code_block *decl_code;   /* Declaration code. */
+    struct code_block *init_code;   /* Initializeation code. */
+    struct code_block *trace_code;  /* Ray-trace simulation code. */
+    struct code_block *save_code;   /* Code executed to save data */
+    struct code_block *finally_code;    /* Code for simulation end. */
+    struct code_block *mcdisplay_code;  /* Code for drawing components. */
   };
   
 /* ADD: E. Farhi Sep 24th, 2001 Component group instances */
@@ -415,7 +425,8 @@ struct instr_formal
 struct NXDinfo
   {
     char *nxdfile;		/* NeXus dictionary file, or NULL */
-    int any;			/* True only if any NXDICTFILE decls. */
+    int any;			    /* True only if any NXDICTFILE decls. */
+    int hdfversion;  /* may be 4 (default) or 5 */
   };
   
 /* Instrument definition. */
@@ -426,6 +437,7 @@ struct instr_def
     char *quoted_source;	/* File name quoted for inclusion in C */
     struct code_block *decls;	/* Code for declarations */
     struct code_block *inits;	/* Code for initializations */
+    struct code_block *saves;   /* Code executed to save data */
     struct code_block *finals;	/* Code for simulation end */
     List formals;		/* List of formal parameters */
     Symtab compmap;		/* Map of component names to instances */

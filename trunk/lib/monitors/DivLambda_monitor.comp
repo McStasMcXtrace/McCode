@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: DivLambda_monitor.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: DivLambda_monitor
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.8 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.9 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Divergence/wavelength monitor.
 *
@@ -51,7 +54,7 @@ OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int Div_N[nlam][ndiv];
+    double Div_N[nlam][ndiv];
     double Div_p[nlam][ndiv];
     double Div_p2[nlam][ndiv];
   %}
@@ -90,7 +93,7 @@ TRACE
       }
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_2D(
         "Wavelength-divergence monitor",

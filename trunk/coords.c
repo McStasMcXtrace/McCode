@@ -1,12 +1,22 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: coords.c
+*
+* %Identification
+* Written by: K.N.
+* Date: Aug  8, 1997
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.3
+*
 * Misc. useful routines to handle Cartesian coordinates.
 *
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: coords.c
-*
-*	Author: K.N.			Aug  8, 1997
-*
-*	$Id: coords.c,v 1.6 2003-01-21 08:25:08 pkwi Exp $
+*	$Id: coords.c,v 1.7 2003-01-21 08:29:46 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.3  2000/07/27 09:06:11  kn
@@ -18,8 +28,6 @@
 *	Revision 1.1  1997/08/13 09:13:18  kn
 *	Initial revision
 *
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include "mcstas.h"

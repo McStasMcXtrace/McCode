@@ -293,12 +293,13 @@ my $comp;
 my $indexfile = new FileHandle;
 open($indexfile, ">index.html") ||
     die "Could not open index.html for writing.\n";
-my @sections = ("sources", "optics", "samples", "monitors", "misc");
+my @sections = ("sources", "optics", "samples", "monitors", "misc", "contrib");
 my %section_headers =
     ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
      "optics" => '<B><FONT COLOR="#FF0000">Optics</FONT></B>',
      "samples" => '<B><FONT COLOR="#FF0000">Samples</FONT></B>',
      "monitors" => '<B><FONT COLOR="#FF0000">Detectors</FONT> and monitors</B>',
+     "contrib" => '<B><FONT COLOR="#FF0000">Contributed</FONT> components</B>',
      "misc" => '<B><FONT COLOR="#FF0000">Misc</FONT></B>');
 my @tblist = map "<A href=\"#$_\">$_</A>", @sections;
 my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";

@@ -1,12 +1,23 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: port.h
+*
+* %Identification
+* Written by: K.N.
+* Date: Nov 11, 1998
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.1
+*
 * Header file for portability related stuff.
 *
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: port.h
+* $Id: port.h,v 1.4 2003-01-21 08:29:46 pkwi Exp $
 *
-*	Author: K.N.			Nov 11, 1998
-*
-* Copyright (C) Risoe National Laboratory, 1998, All rights reserved
 *******************************************************************************/
 
 /* Machintosh specific compiler defines. */

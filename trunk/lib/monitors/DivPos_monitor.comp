@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: DivPos_monitor.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: DivPos_monitor
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.8 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.9 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Divergence/position monitor (acceptance diagram).
 *
@@ -49,7 +52,7 @@ OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int Div_N[npos][ndiv];
+    double Div_N[npos][ndiv];
     double Div_p[npos][ndiv];
     double Div_p2[npos][ndiv];
   %}
@@ -85,7 +88,7 @@ TRACE
       }
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_2D(
         "Position-divergence monitor",

@@ -9,7 +9,7 @@
 * Written by: Kristian Nielsen
 * Date: 1998
 * Modified by: EF, KL, October 30, 2001. Illumination corrected
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: McStas 1.5.1
 *
 * Neutron source with flat wavelength spectrum and user-specified flux.

@@ -1,12 +1,23 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: instrument.y
+*
+* %Identification
+* Written by: K.N.
+* Date: Jul  1, 1997
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.3
+*
 * Bison parser for instrument definition files.
 *
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: instrument.y
+*	$Id: instrument.y,v 1.42 2003-01-21 08:29:46 pkwi Exp $
 *
-*	Author: K.N.			Jul  1, 1997
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 
@@ -76,8 +87,6 @@ int mc_yyoverflow();
 %token TOK_INITIALIZE	"INITIALIZE"
 %token TOK_INSTRUMENT	"INSTRUMENT"
 %token TOK_MCDISPLAY	"MCDISPLAY"
-%token TOK_NXDICT	    "NXDICT"
-%token TOK_NXDICTFILE	"NXDICTFILE"
 %token TOK_OUTPUT	    "OUTPUT"
 %token TOK_PARAMETERS	"PARAMETERS"
 %token TOK_POLARISATION	"POLARISATION"
@@ -86,9 +95,13 @@ int mc_yyoverflow();
 %token TOK_SETTING	  "SETTING"
 %token TOK_STATE	    "STATE"
 %token TOK_TRACE	    "TRACE"
-%token TOK_SHARE	    "SHARE" /* ADD: E. Farhi Sep 20th, 2001 shared code (shared declare) */
-%token TOK_EXTEND	    "EXTEND"      /* ADD: E. Farhi Sep 20th, 2001 extend code */
-%token TOK_GROUP	    "GROUP"     /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
+%token TOK_SHARE	    "SHARE"   /* ADD: E. Farhi Sep 20th, 2001 shared code (shared declare) */
+%token TOK_EXTEND	    "EXTEND"  /* ADD: E. Farhi Sep 20th, 2001 extend code */
+%token TOK_GROUP	    "GROUP"   /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
+%token TOK_SAVE       "SAVE"    /* ADD: E. Farhi Aug 25th, 2002 data save code */
+%token TOK_NEXUS     	"NEXUS"   /* ADD: E. Farhi Aug 6th, 2002 will use NeXus files for saving */
+%token TOK_DICTFILE	  "DICTFILE"  /* ADD: E. Farhi Aug 6th, 2002 Name of NeXus dictionary file */
+%token TOK_HDF   	    "HDF"     /* ADD: E. Farhi Aug 6th, 2002 HDF version number (4,5) */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -105,9 +118,9 @@ int mc_yyoverflow();
 
 %type <instance> component compref reference   /* MOD: E. Farhi Sep 24th, 2001 add group */
 %type <groupinst> groupdef groupref   /* ADD: E. Farhi Sep 24th, 2001 add group */
-%type <ccode> code codeblock shared declare initialize trace extend finally mcdisplay /* MOD: E. Farhi Sep 20th, 2001, add 'shared' and 'extend' */
+%type <ccode>   code codeblock share declare initialize trace extend save finally mcdisplay /* MOD: E. Farhi Sep 20th, 2001, add 'shared' and 'extend'+'save' 25/8/02 */
 %type <coords>  coords
-%type <exp> exp topexp topatexp genexp genatexp
+%type <exp>     exp topexp topatexp genexp genatexp
 %type <actuals> actuallist actuals actuals1
 %type <comp_iformals> comp_iformallist comp_iformals comp_iformals1
 %type <cformal> comp_iformal
@@ -115,10 +128,12 @@ int mc_yyoverflow();
 %type <iformals> instrpar_list instr_formals instr_formals1
 %type <iformal> instr_formal
 %type <polform> polarisation_par
-%type <parms> parameters
-%type <place> place
-%type <ori> orientation
-%type <nxdinfo> nxdict
+%type <parms>   parameters
+%type <place>   place
+%type <ori>     orientation
+%type <nxdinfo> nexus
+%type <string>  dictfile
+%type <number>  hdfversion
 %%
 
 main:		  TOK_GENERAL compdefs instrument
@@ -129,11 +144,13 @@ compdefs:	  /* empty */
 		| compdefs compdef
 ;
 
-compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters shared declare initialize trace finally mcdisplay "END"
+compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
 		  {
 		    struct comp_def *c;
 		    palloc(c);
 		    c->name = $3;
+        /* ADD: E. Farhi, Aug 14th, 2002 */
+        c->source = str_quote(instr_current_filename);
 		    c->def_par = $4.def;
 		    c->set_par = $4.set;
 		    c->out_par = $4.out;
@@ -143,8 +160,9 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters shared declare initialize trac
 		    c->decl_code = $6;  /* MOD: E. Farhi Sep 20th, 2001, shifted param numbs */
 		    c->init_code = $7;
 		    c->trace_code = $8;
-		    c->finally_code = $9;
-		    c->mcdisplay_code = $10;
+        c->save_code = $9;  /* ADD: E. Farhi Aug 25th, 2002+shifted indexes */
+		    c->finally_code = $10;
+		    c->mcdisplay_code = $11;
         c->comp_inst_number = 0; /* ADD: E. Farhi Sep 20th, 2001 */
 
 		    /* Check definition and setting params for uniqueness */
@@ -214,7 +232,6 @@ comp_iformallist: '(' comp_iformals ')'
 		  }
 ;
 
-
 comp_iformals:	  /* empty */
 		  {
 		    $$ = list_create();
@@ -259,12 +276,13 @@ comp_iformal:	  TOK_ID
 
 instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
 			{ instrument_definition->formals = $4; instrument_definition->name = $3; }
-		  declare initialize nxdict instr_trace finally "END"
+		  declare initialize nexus instr_trace save finally "END"
 		  {
 		    instrument_definition->decls = $6;
 		    instrument_definition->inits = $7;
 		    instrument_definition->nxdinfo = $8;
-		    instrument_definition->finals = $10;
+        instrument_definition->saves  = $10;
+		    instrument_definition->finals = $11;
 		    instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;  /* ADD: E. Farhi Sep 25th, 2001 */
 		    instrument_definition->complist = comp_instances_list;
@@ -368,7 +386,7 @@ initialize:	  /* empty */
 ;
 
 /* ADD: E. Farhi Sep 20th, 2001 SHARE component block included once */
-shared:	  /* empty */
+share:	  /* empty */
 		  {
 		    $$ = codeblock_new();
 		  }
@@ -379,7 +397,7 @@ shared:	  /* empty */
 ;
 
 
-nxdict:		  /* empty: no NeXus support */
+nexus:		  /* empty: no NeXus support */
 		  {
 		    struct NXDinfo *nxdinfo;
 		    palloc(nxdinfo);
@@ -387,41 +405,54 @@ nxdict:		  /* empty: no NeXus support */
 		    nxdinfo->any = 0;
 		    $$ = nxdinfo;
 		  }
-		| nxdict "NXDICTFILE"
+		| nexus "NEXUS" dictfile hdfversion
 		  { /* ADD: E.Farhi Aug 6th 2002: use default NeXus dictionary file */
 		    struct NXDinfo *nxdinfo = $1;
 		    if(nxdinfo->nxdfile)
 		    {
-		      print_error("Multiple NXDICTFILE declarations found (%s).\n"
-				  "At most one NXDFILE declarations may "
+		      print_error("Multiple NeXus DICTFILE declarations found (%s).\n"
+				  "At most one NeXus DICTFILE declarations may "
 				  "be used in an instrument", nxdinfo->nxdfile);
 		    }
 		    else 
         {
-          nxdinfo->nxdfile = str_cat(instrument_definition->name, ".dic", NULL);
+          nxdinfo->nxdfile     = $3;
+          nxdinfo->hdfversion = atof($4);
         }
 		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
 		    $$ = nxdinfo;
 		  }
-    | nxdict "NXDICTFILE" TOK_STRING
-		  { /* use specified NeXus dictionary file */
-		    struct NXDinfo *nxdinfo = $1;
-		    if(nxdinfo->nxdfile)
-		    {
-		      print_error("Multiple NXDICTFILE declarations found (%s).\n"
-				  "At most one NXDFILE declarations may "
-				  "be used in an instrument", nxdinfo->nxdfile);
-		    }
-		    else
-		    {
-		      nxdinfo->nxdfile = $3;
-		    }
-		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
-		    $$ = nxdinfo;
+;
+dictfile: /* empty: default dictionary */
+		  {
+		    $$ = str_cat(instrument_definition->name, ".dic", NULL);
 		  }
+    | dictfile "DICTFILE" TOK_STRING
+      {
+        $$ = $3
+      }
+;
+hdfversion: /* empty: default HDF version */
+		  {
+		    $$ = "4";
+		  }
+    | hdfversion "HDF" TOK_NUMBER
+      {
+        $$ = $3;
+      }
 ;
 
 trace:		  "TRACE" codeblock
+		  {
+		    $$ = $2;
+		  }
+;
+
+save:	  /* empty */
+		  {
+		    $$ = codeblock_new();
+		  }
+		| "SAVE" codeblock
 		  {
 		    $$ = $2;
 		  }
@@ -842,11 +873,10 @@ code:		  /* empty */
 
 		| code TOK_CODE_LINE
 		  {
-		    list_add($1->lines, $2);
+        list_add($1->lines, $2);
 		    $$ = $1;
 		  }
 ;
-
 
 %%
 
@@ -1097,6 +1127,7 @@ main(int argc, char *argv[])
   }
   else
   {
+
     cogen(output_filename, instrument_definition);
     exit(0);
   }

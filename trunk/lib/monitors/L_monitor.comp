@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: L_monitor.comp
-*         Copyright (C) 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: L_monitor
 *
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.8 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.9 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Wavelength-sensitive monitor.
 *
@@ -48,7 +51,7 @@ OUTPUT PARAMETERS (L_N, L_p, L_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int L_N[nchan];
+    double L_N[nchan];
     double L_p[nchan], L_p2[nchan];
   %}
 INITIALIZE
@@ -81,7 +84,7 @@ TRACE
       }
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_1D(
         "Wavelength monitor",
