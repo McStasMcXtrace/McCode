@@ -199,15 +199,9 @@ function mcplot_menu_action(k, gwin)
   if argn(2) == 1
     gwin = xget('window');
   end
+   
+  item = [ 24, 1, 27, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 26, 22, 18];
   
-  // extract global data
-  ThisFigure = [];
-  execstr('ThisFigure = MCPLOT.Figure_'+string(gwin),'errcatch');
-  filename = '';
-  execstr('filename = ThisFigure.filename','errcatch');
-  
-  if ~length(ThisFigure), return; end
-  fig_names=getfield(1,ThisFigure);
   if argn(2) == 0, k = 1; end
   if MCPLOT.ShiftedItems
     k = k+1;
@@ -219,8 +213,24 @@ function mcplot_menu_action(k, gwin)
     k=1;
   end
   
-  xset('window', gwin); // raise menu activated window 
-  item = [ 24, 1, 27, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 26, 22, 18]
+  if item(k) == 26 // scan step
+    if MCPLOT.ScanWindow < 0 
+      mfprintf('The active window '+string(gwin)+' is not a scan result');
+    else
+      gwin = MCPLOT.ScanWindow;
+    end
+  end
+  
+  xset('window', gwin); // raise menu activated window
+  
+  // extract global data
+  ThisFigure = [];
+  execstr('ThisFigure = MCPLOT.Figure_'+string(gwin),'errcatch');
+  filename = '';
+  execstr('filename = ThisFigure.filename','errcatch');
+  
+  if ~length(ThisFigure), return; end
+  fig_names=getfield(1,ThisFigure);
   
   select item(k)
     case 0 then
@@ -734,6 +744,7 @@ function mcplot_set_global(s, gwin, p_in)
     MCPLOT.MenuInstalled = 0;
     MCPLOT.ShiftedItems = 0;
     MCPLOT.LogScale = 0;
+    MCPLOT.ScanWindow = -1;
   end
   tag_names = getfield(1,s);
   if ~length(ThisFigure)
@@ -774,6 +785,9 @@ function mcplot_set_global(s, gwin, p_in)
   elseif s.class == 'superdata'
     ThisFigure.superdata = 0;
     ThisFigure.superdata = s;
+    if MCPLOT.ScanWindow < 0 
+      MCPLOT.ScanWindow = gwin;
+    end
   end // ignore other classes
   
   if m*n, ThisFigure.overview = [m n p]; end
