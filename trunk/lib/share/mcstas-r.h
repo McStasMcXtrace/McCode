@@ -17,9 +17,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.55 2003-10-21 14:08:12 pkwi Exp $
+* $Id: mcstas-r.h,v 1.56 2004-06-30 12:11:29 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.55  2003/10/21 14:08:12  pkwi
+*	Rectangular focusing improved: Renamed randvec_target_rect to randvec_target_rect_angular. Wrote new randvec_target_rect routine, w/h in metres. Both routines use use component orientation (ROT_A_CURRENT_COMP) as input.
+*	
+*	Modifications to Res_sample and V_sample to match new features of the runtime.
+*	
 *	Revision 1.54  2003/09/05 08:59:18  farhi
 *	added INSTRUMENT parameter default value grammar
 *	mcinputtable now has also default values
@@ -66,7 +71,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.55 $"
+#define MCSTAS_R_H "$Revision: 1.56 $"
 
 #include <math.h>
 #include <string.h>
@@ -157,7 +162,7 @@ void mcdisplay(void);
 */
 #define MC_GETPAR2(comp, par) (mcc ## comp ## _ ## par)
 #define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
-#define DETECTOR_OUT(p0,p1,p2) mcdetector_out(NAME_CURRENT_COMP,p0,p1,p2,NULL)
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP)
 #define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
      mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP)
