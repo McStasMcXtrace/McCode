@@ -12,8 +12,8 @@
 * Flat monochromator which uses a small-mosaicity approximation as well as
 * the approximation vy^2 << vz^2 + vx^2.
 * Second order scattering is neglected.
-* In this component, the z-axis should not be taken as the main neutron 
-* direction!
+* For an unrotated monochromator component, the crystal plane lies in the y-z
+* plane (ie. parallel to the beam).
 *
 * INPUT PARAMETERS:
 *
@@ -34,7 +34,7 @@ SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-#define DIV_CUTOFF 2		/* ~ 10^-5 cutoff. */
+#define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
   %}
 
 TRACE

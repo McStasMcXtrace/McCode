@@ -30,7 +30,7 @@ SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-  double hdiv,vdiv;		      /* ToDo: Should be component local */
+  double hdiv,vdiv;                   /* ToDo: Should be component local */
   double moder_v0, moder_dv;
   double p_in;
 %}
@@ -49,12 +49,12 @@ TRACE
   p=p_in;
   z=0;
 
-  chi = 2*PI*rand01();		/* Choose point on source */
-  r = sqrt(rand01())*radius;	/* with uniform distribution. */
+  chi = 2*PI*rand01();          /* Choose point on source */
+  r = sqrt(rand01())*radius;    /* with uniform distribution. */
   x = r*cos(chi);
   y = r*sin(chi);
 
-  theta0 = -atan(x/dist);	/* Angles to aim at target centre */
+  theta0 = -atan(x/dist);       /* Angles to aim at target centre */
   phi0 = -atan(y/dist);
 
   theta = theta0 + hdiv*randpm1(); /* Small angle approx. */ 
@@ -62,7 +62,7 @@ TRACE
 
   v = moder_v0 + moder_dv*rand01(); /* Assume linear distribution */
 
-  vz = v*cos(phi)*cos(theta);	/* Small angle approx. */
+  vz = v*cos(phi)*cos(theta);   /* Small angle approx. */
   vy = v*sin(phi);
   vx = v*cos(phi)*sin(theta);
 
