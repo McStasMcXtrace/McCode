@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.83 2004-02-26 12:53:27 farhi Exp $
+* $Id: mcstas-r.c,v 1.84 2004-03-03 13:41:23 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.83  2004/02/26 12:53:27  farhi
+* Scilab format now enables more than one monitor file for a single component
+* (e.g. Monitor_nD with multiple detectors).
+*
 * Revision 1.82  2004/02/23 12:48:42  farhi
 * Additional check for default value and unset parameters
 *
@@ -3352,14 +3356,13 @@ mcparseoptions(int argc, char *argv[])
         status = (*mcinputtypes[mcinputtable[j].type].getparm)
                    (buf, mcinputtable[j].par);
         if(!status) fprintf(stderr, "Invalid %s default value %s in instrument definition.\n", mcinputtable[j].name, buf);
-        else {
-          (*mcinputtypes[mcinputtable[j].type].getparm)
-                   (NULL, mcinputtable[j].par); 
-          paramsetarray[j] = 1; 
-	}
+      } else {
+	(*mcinputtypes[mcinputtable[j].type].getparm)
+	  (NULL, mcinputtable[j].par); 
+	paramsetarray[j] = 1; 
       }
     }
-
+  
   for(i = 1; i < argc; i++)
   {
     if(!strcmp("-s", argv[i]) && (i + 1) < argc)
