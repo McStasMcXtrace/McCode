@@ -16,9 +16,18 @@
 *
 * Symbol tables.
 *
-*	$Id: symtab.c,v 1.15 2003-02-11 12:28:45 farhi Exp $
+*	$Id: symtab.c,v 1.16 2003-10-06 15:00:12 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.15  2003/02/11 12:28:45  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*	
 *	Revision 1.4  1999/04/16 07:41:31  kn
 *	Make the value_free argument for the symtab_free function optional.
 *
@@ -201,6 +210,20 @@ symtab_next(Symtab_handle sh)
   {
     sh->index++;
     return &(sh->symtab->entries[i]);
+  }
+}
+
+/*******************************************************************************
+* Get the index-th previous element stored in the symbol table. Returns NULL
+* when error occurs.
+*******************************************************************************/
+struct Symtab_entry *
+symtab_previous(Symtab st, int index)
+{
+  if (index <= 0 || index > st->size) {
+    return NULL;
+  } else { 
+    return &(st->entries[st->size - index]);
   }
 }
 
