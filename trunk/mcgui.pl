@@ -106,9 +106,16 @@ sub menu_saveas {
     my ($w) = @_;
     my $file;
     if($current_sim_def) {
+	my ($inidir, $inifile);
+	if($current_sim_def =~ m!^(.*)/([^/]*)$!) {
+	    ($inidir, $inifile) = ($1, $2);
+	} else {
+	    ($inidir, $inifile) = ("", $current_sim_def);
+	}
 	$file = $w->getSaveFile(-defaultextension => "instr",
 				-title => "Select instrument file name",
-				-initialfile => $current_sim_def);
+				-initialdir => $inidir,
+				-initialfile => $inifile);
     } else {
 	$file = $w->getSaveFile(-defaultextension => "instr",
 				-title => "Select instrument file name");
@@ -452,7 +459,14 @@ sub menu_run_simulation {
     my ($bt, $newsi) = simulation_dialog($w, $out_info, $inf_sim);
     if($bt eq 'Start') {
 	my @command = ();
-	push @command, "mcdisplay" if $newsi->{'Trace'};
+	if($newsi->{'Trace'}) {
+	    push @command, "mcdisplay";
+	    # Make sure the PGPLOT server is already started. If the
+	    # PGPLOT server is not started, mcdisplay will start it,
+	    # and the server will keep the pipe to mcdisplay open
+	    # until the server exits, hanging mcgui.
+	    ensure_pgplot_xserv_started();
+	}
 	push @command, "$out_name";
 	push @command, "--ncount=$newsi->{'Ncount'}";
 	push @command, "--trace" if $newsi->{'Trace'};
