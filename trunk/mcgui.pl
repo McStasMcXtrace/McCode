@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl
 
 # Config module needed for various platform checks.
 # PW, 20030314
@@ -594,6 +594,10 @@ sub menu_run_simulation {
     my ($bt, $newsi) = simulation_dialog($w, $out_info, $inf_sim);
     if($bt eq 'Start') {
 	my @command = ();
+	my @mcplot_cmd = ();
+	my $suffix='';
+	# Check 'Plotter' setting
+	my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 	if($newsi->{'Trace'}) {
             if ($newsi->{'Trace'} eq 2) {
 	      # Special of 'Trace', neutron count set to 1...
@@ -606,17 +610,15 @@ sub menu_run_simulation {
 	    # type plaforms and on lovely Win32... :)
 	    # PW 20030314
 	    #
-	    my $suffix='';
 	    # Check if this is Win32, call perl accordingly...
 	    if ($Config{'osname'} eq 'MSWin32') {
 	      # Win32 'start' command needed to background the process..
 	      push @command, "start";
+	      push @mcplot_cmd, "start";
 	      # Set $suffix to .pl
 	      $suffix='.pl';
 	    }
             push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
-	    # Check 'Plotter' setting
-	    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 	    if ($plotter eq 0) {
 		push @command, "--plotter=PGPLOT";
 		# Be sure to read mcplotlib.pl in this case...
@@ -665,13 +667,15 @@ sub menu_run_simulation {
 	    push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
 	    push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
 	    push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
-	    push @command, "--save" if ($newsi->{'Trace'} eq 2);
+	    push @command, "--save" if ($newsi->{'Trace'} eq 1);
 	}
 	push @command, "$out_name";
 	push @command, "--ncount=$newsi->{'Ncount'}";
 	push @command, "--trace" if $newsi->{'Trace'};
 	push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
 	push @command, "--dir=$newsi->{'Dir'}" if $newsi->{'Dir'};
+	push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
+	push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
 	for (@{$out_info->{'Parameters'}}) {
 	    push @command, "$_=$newsi->{'Params'}{$_}";
 	}
@@ -679,19 +683,28 @@ sub menu_run_simulation {
 	    join(" ", @command) . "\n";
 	my $success = my_system $w, $inittext, @command;
 	return unless $success;
+	my $ext;
+	if ($plotter eq 0) {
+	  $ext="sim";
+	} elsif ($plotter eq 1 || $plotter eq 2) {
+	  $ext="m";
+	} elsif ($plotter eq 3 || $plotter eq 4) {
+	  $ext="sci";
+	}
 	$current_sim_file = $newsi->{'Dir'} ?
-	    "$newsi->{'Dir'}/mcstas.sim" :
-	    "mcstas.sim";
+	    "$newsi->{'Dir'}/mcstas.$ext" :
+	    "mcstas.$ext";
 	new_simulation_results($w);
 	read_sim_data($w);
 	$inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
 	$inf_sim->{'Trace'} = $newsi->{'Trace'};
+	push @mcplot_cmd, "$MCSTAS::mcstas_config{'prefix'}mcplot$suffix";
 	if($newsi->{'Autoplot'} && !$newsi->{'Trace'}) {
-	    plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
-			$current_sim_file);
+	  plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
+		      $current_sim_file);
 	}
-    }
-}
+      }
+  }
 
 sub menu_plot_results {
     my ($w) = @_;

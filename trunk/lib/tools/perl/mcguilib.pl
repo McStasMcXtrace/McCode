@@ -2,6 +2,11 @@ use Tk;
 use Tk::DialogBox;
 use Tk::ROText;
 use Tk::Listbox;
+# For calling mcplot properly in the case of Matlab/Scilab backend
+use Cwd;
+use File::Basename;
+# For handling backgrounding on unix vs. Win32...
+use Config;
 
 sub get_dir_name {
     my ($dlg, $default) = @_;
@@ -146,11 +151,6 @@ sub simulation_dialog {
 		     -variable => \$si{'Trace'},
 		     -relief => 'flat',
 		     -value => 1)->pack(-side => 'left');
-    $f3->Radiobutton(-text => "Visualize",
-		     -variable => \$si{'Trace'},
-		     -relief => 'flat',
-		     -value => 2)->pack(-side => 'left');
-    
     # Gui stuff for selection of 'inspect' parameter
     # PW 20030314
     my $f4 = $opt_frame->Frame;
@@ -238,8 +238,24 @@ sub dialog_hardcopy {
     
 sub plot_dialog {
     my ($win, $ii, $si, $di, $sim_file_name) = @_;
+    # Platform checks. Assumption: Either unix type os / Win32.
+    my $suffix;
+    my $prefix;
+    my $pl_suffix;
+    my @plot_cmd = ();
+    if ($Config{'osname'} eq 'MSWin32') {
+      $suffix = "";
+      $prefix = "start";
+      $pl_suffix = ".pl";
+    } else {
+      $suffix = "&";
+      $prefix = "xterm -e";
+      $pl_suffix = "";
+    }
+    push @plot_cmd, $prefix;
+    push @plot_cmd, "mcplot$pl_suffix";
     # Should only be done if we are using PGPLOT
-    # PW 20030314
+    # PW 20030314 - Matlab / Scilab handling below
     if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
 	# Load PGPLOT dependent stuff...
 	require "mcplotlib.pl";
@@ -304,7 +320,35 @@ END
 	overview_plot("/xserv", $di, 0);
 	my $res = $dlg->Show;
 	return ($res);
-    }
+      } elsif ($MCSTAS::mcstas_config{'PLOTTER'} eq 1 || $MCSTAS::mcstas_config{'PLOTTER'} eq 2) {
+	# Matlab
+	push @plot_cmd, "-pMatlab";
+	# Save current working dir...
+	my $dir=cwd;
+	# Extract dir info from filename
+	my $path = dirname($sim_file_name);
+	my $file = basename($sim_file_name);
+	push @plot_cmd, $file;
+	push @plot_cmd, $suffix;
+	my $cmd=join(' ',@plot_cmd);
+	chdir $path;
+	system $cmd;
+	chdir $dir;
+      } elsif ($MCSTAS::mcstas_config{'PLOTTER'} eq 3 || $MCSTAS::mcstas_config{'PLOTTER'} eq 4) {
+	# Scilab
+	push @plot_cmd, "-pScilab";
+	# Save current working dir...
+	my $dir=cwd;
+	# Extract dir info from filename
+	my $path = dirname($sim_file_name);
+	my $file = basename($sim_file_name);
+	push @plot_cmd, $file;
+	push @plot_cmd, $suffix;
+	my $cmd=join(' ',@plot_cmd);
+	chdir $path;
+	system $cmd;
+	chdir $dir;
+      }
 }
 
 sub backend_dialog {
