@@ -117,7 +117,7 @@ Components:
 + V_sample: may target to any component (compute target_x,y,z) given rel index
 + V_sample: may also be a box
 - Res_monitor: as a cylinder/sphere monitor
-
+- Progress_bar: flag for intermediate savings
 
 - Check fluxes / absolute fluxes - provide experimental data +
   instrument definition 
@@ -129,8 +129,7 @@ Components:
   number of linear guides.
 - Filter_powder.comp, Single_crystal.comp : use Table_Read, extend_list  
 - Source_Optimizer to be tested 
-
-- $Log: not supported by cvs2svn $ - cvs revision no, etc. for both McStas kernel / lib,
+- cvs revision no, etc. for both McStas kernel / lib,
   automated using cvs?. Origin indicates research institution,
   McVersion required McStas Version
 
@@ -145,13 +144,15 @@ Tools: (GUI, plotting, running etc.)
 + mcplot and mcdisplay can output gif
 + mcplot and mcdisplay can output ps/psc/gif and exit (non interactive)
 + mcplot does not work for scans: fixed. ok
++ mcplot works with Matlab, PGPLOT and Scilab plotter
++ mcdisplay works with Matlab, PGPLOT and Scilab plotter
 + mcgui: fixed a few minor problems
 + install now ok with sub dirs
 + mcstas2vitess ok for single components. Must use settings params only.
 - Improve GUI - scilab.
 - Status monitor support (Tool to be written - script) - access pid, daemon.
 - html / png / page generation. (perhaps scilab based?) - mcplot?
-- mcdisplay date checking for recompilation, through mcrun -n 1
+- mcdisplay date checking for recompilation, through mcrun -n0
 - export in several formats, ps, gif (scilab), png (Imagemagick when available)
 + mcdisplay show help info when no arguments (l. 517)
 - mcdoc: changed to show instruments also.

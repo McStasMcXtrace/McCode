@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.56 2003-04-04 18:36:12 farhi Exp $
+* $Id: mcstas-r.c,v 1.57 2003-04-07 11:50:50 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.56  2003/04/04 18:36:12  farhi
+* Corrected $ and % chars for IDL format, conflicting with pfprintf (Dec/SGI)
+*
 * Revision 1.55  2003/04/04 15:11:08  farhi
 * Use MCSTAS_FORMAT env var for default plotter, or use mcstas_config
 * Corrected strlen(NULL pointer) for getenv(MCSTAS_FORMAT)==NULL
@@ -1692,6 +1695,7 @@ mchelp(char *pgmname)
   for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
   fprintf(stderr, "\nFormat modifiers: FORMAT may be followed by 'binary float' or \n");
   fprintf(stderr, "'binary double' to save data blocks as binary. Please use also -a flag then.\n");
+  fprintf(stderr, "The MCSTAS_FORMAT environment variable may set the default FORMAT to use.\n");
 }
 
 static void
@@ -3104,6 +3108,7 @@ mcparseoptions(int argc, char *argv[])
   free(paramsetarray);
 }
 
+#ifndef MC_PORTABLE
 #ifndef MAC
 #ifndef WIN32
 /* This is the signal handler that makes simulation stop, and save results */
@@ -3179,6 +3184,7 @@ void sighandler(int sig)
 }
 #endif /* !MAC */
 #endif /* !WIN32 */
+#endif /* !MC_PORTABLE */
 
 /* McStas main() function. */
 int
@@ -3202,6 +3208,7 @@ mcstas_main(int argc, char *argv[])
   else mcuse_format(MCSTAS_FORMAT);  /* default is to output as McStas format */
   mcparseoptions(argc, argv);
 
+#ifndef MC_PORTABLE
 #ifndef MAC
 #ifndef WIN32
   /* install sig handler, but only once !! after parameters parsing */
@@ -3223,14 +3230,17 @@ mcstas_main(int argc, char *argv[])
   signal( SIGURG ,sighandler);    /* urgent socket condition */
 #endif /* !MAC */
 #endif /* !WIN32 */
+#endif /* !MC_PORTABLE */
   mcsiminfo_init(NULL); mcsiminfo_close();  /* makes sure we can do that */
   strcpy(mcsig_message, "main (Init)");
   mcinit();
+  #ifndef MC_PORTABLE
 #ifndef MAC
 #ifndef WIN32  
   signal( SIGINT ,sighandler);    /* interrupt (rubout) only after INIT */
 #endif /* !MAC */
 #endif /* !WIN32 */
+#endif /* !MC_PORTABLE */
   
   while(mcrun_num < mcncount)
   {

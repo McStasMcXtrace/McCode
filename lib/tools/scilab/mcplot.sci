@@ -142,7 +142,7 @@ function win = mcplot_addmenu()
     else
       global MCPLOT
       
-      if MCPLOT.MenuInstalled == 0
+      if ~MCPLOT.MenuInstalled
         // creating Callback code
         code=[ '#include ""machine.h""'
          'void mcplot_menu_C(char *name,int *win,int *entry)'
@@ -160,7 +160,8 @@ function win = mcplot_addmenu()
         ilib_for_link('mcplot_menu_C','mcplot_menu_C.o',[],'c');
         exec('loader.sce');
         chdir(dir1);
-	MCPLOT.MenuInstalled = 1;
+        MCPLOT.MenuInstalled = 1;
+        MCPLOT.ShiftedItems  = 1; // to be set when with_tk and ~with_gtk, with C callback
       end
       //add menu
       addmenu(win, 'McStas', ...
@@ -180,16 +181,17 @@ function mcplot_menu_action(k, gwin)
   filename = '';
   execstr('filename = ThisFigure.filename','errcatch');
   
+  if argn(2) == 0, k = 1; end
   if MCPLOT.ShiftedItems
     k = k+1;
   end
-  
-  if argn(2) == 0, k = 1; end
   if k <= 0
   	disp('Oops, the Tcl/Tk uses shifted menu item indexes');
 	  disp('This should be corrected now...');
 	  MCPLOT.ShiftedItems = 1;
+    k=1;
   end
+  
   if argn(2) <= 1, gwin = 0; end
   xset('window', gwin); // raise menu activated window 
   item = [ 1, 2, 19, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20,21,22]

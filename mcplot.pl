@@ -46,7 +46,7 @@ $inspect = "";
 $passed_arg_str = "";
 
 $plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
-                $ENV{'MCSTAS_FORMAT'} : $MCSTAS::mcstas_config{'PLOTTER'};
+                $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
                 
 for($i = 0; $i < @ARGV; $i++) {
   $_ = $ARGV[$i];
@@ -82,11 +82,11 @@ for($i = 0; $i < @ARGV; $i++) {
 # Check value of $plotter variable, set 
 # $MCSTAS::mcstas_config{'PLOTTER'}
 # accordingly
-if ($plotter =~ /PGPLOT|McStas/i) {
+if ($plotter =~ /PGPLOT|McStas|0/i) {
   $MCSTAS::mcstas_config{'PLOTTER'}=0;
-} elsif ($plotter =~ /Matlab/i) {
+} elsif ($plotter =~ /Matlab|1/i) {
   $MCSTAS::mcstas_config{'PLOTTER'}=1;
-} elsif ($plotter =~ /Scilab/i) {
+} elsif ($plotter =~ /Scilab|3/i) {
   $MCSTAS::mcstas_config{'PLOTTER'}=3;  
 }
 
@@ -160,9 +160,11 @@ if ($plotter eq 3 || $plotter eq 4) {
     print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
     print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolution:\n\n";
     print STDERR "1) Install pgplot + pgperl packages (Unix/Linux/Cygwin) \n";
-    print STDERR "2) Rerun mcdisplay with -p/--plotter set to Scilab/Matlab \n";
+    print STDERR "2) Rerun mcplot with -p/--plotter set to Scilab/Matlab \n";
     print STDERR "3) Modify $MCSTAS::perl_dir/mcstas_config.perl\n";
-    print STDERR "   to set a different default plotter\n\n";
+    print STDERR "   to set a different default plotter\n";
+    print STDERR "4) Set your env variable MCSTAS_FORMAT to set the default\n";
+    print STDERR "   data format and plotter\n";
     print STDERR "******************************************************\n\n";
     die "PGPLOT problems...\n";
   }
