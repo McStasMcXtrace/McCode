@@ -26,6 +26,7 @@ use File::Copy;
 use File::stat;
 use Cwd;
 require "mcstas_config.perl";
+require "mcfrontlib.pl";
 # Check if MCSTAS_FORMAT env var is set. If so, set 
 # MCSTAS::mcstas_config{'PLOTTER'} accordingly
 my $plotter=$ENV{'MCSTAS_FORMAT'};
