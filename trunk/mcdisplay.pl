@@ -92,7 +92,10 @@ sub read_instrument {
               # Initialize matlab struct...
               write_process("addpath('$MCSTAS::sys_dir/tools/matlab');\n");
               write_process("mcdisplay('Init');\n");
-              write_process("global INSTRUMENT;");
+              write_process("global INSTRUMENT;\n");
+	      if ($Config{'osname'} eq 'MSWin32') {
+		$sim = Win32::GetLongPathName($sim);
+	      }
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
               if ($first) {
@@ -105,6 +108,9 @@ sub read_instrument {
             if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
               # Initialize scilab struct...
               write_process("exec('$MCSTAS::sys_dir/tools/scilab/mcdisplay.sci',-1);\n");
+	      if ($Config{'osname'} eq 'MSWin32') {
+		$sim = Win32::GetLongPathName($sim);
+	      }
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
               if ($first) {
@@ -813,21 +819,21 @@ for($i = 0; $i < @ARGV; $i++) {
             ($ARGV[$i] eq "-psc")) {
         $direct_output = $ARGV[$i];
         $int_mode = 1;
-    } elsif(($ARGV[$i] =~ /^-i([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
-            ($ARGV[$i] =~ /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
+    } elsif(($ARGV[$i] =~ /^-i([a-zA-Z0-9_]+)$/) ||
+            ($ARGV[$i] =~ /^--inspect=([a-zA-Z0-9_]+)$/)) {
         $inspect = $1;
-    } elsif($ARGV[$i] =~ /^--first=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
+    } elsif($ARGV[$i] =~ /^--first=([a-zA-Z0-9_]+)$/) {
         $first = $1;
-    } elsif($ARGV[$i] =~ /^--last=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
+    } elsif($ARGV[$i] =~ /^--last=([a-zA-Z0-9_]+)$/) {
         $last = $1;
     } elsif($ARGV[$i] eq "--save") {
         $save = 1; 
-    } elsif(($ARGV[$i] =~ /^-p([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
-              ($ARGV[$i] =~ /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
-              ($ARGV[$i] =~ /^--format=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
+    } elsif(($ARGV[$i] =~ /^-p([a-zA-Z0-9_]+)$/) ||
+              ($ARGV[$i] =~ /^--plotter=([a-zA-Z0-9_]+)$/) ||
+              ($ARGV[$i] =~ /^--format=([a-zA-Z0-9_]+)$/)) {
         $plotter = $1;        
-   } elsif(($ARGV[$i] =~ /^-f([a-zA-ZæøåÆØÅ0-9_\-\/\.\:]+)$/) ||
-              ($ARGV[$i] =~ /^--file=([a-zA-ZæøåÆØÅ0-9_\-\/\.\:]+)$/)) {
+   } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:]+)$/) ||
+              ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;        
    } else {
         if (defined($sim_cmd)) { push @cmdline, $ARGV[$i]; }
