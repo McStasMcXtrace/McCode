@@ -21,7 +21,7 @@ BEGIN {
 }
 use lib $MCSTAS::perl_dir;
 
-require "mcfrontlib.pl";
+require "mcfrontlib2D.pl";
 
 $PI = 3.14159265358979323846;
 
