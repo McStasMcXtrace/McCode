@@ -8,6 +8,18 @@ use FileHandle;
 
 use Config;
 BEGIN {
+    $pg_avail=0;
+    $temp_avail=0;
+    foreach $inc (@INC) {
+      my $where="$inc/PGPLOT.pm";
+      if (-e $where) { $pg_avail=1; }
+      $where="$inc/Temp.pm";
+      if (-e $where) { $temp_avail=1; }
+      $where="$inc/File/Temp.pm";
+      if (-e $where) { $temp_avail=1; }
+    }
+    if ($temp_avail == 1) { require File::Temp; }
+    
     if($ENV{"MCSTAS"}) {
       $MCSTAS::sys_dir = $ENV{"MCSTAS"};
       if ($Config{'osname'} eq 'MSWin32') {
@@ -24,20 +36,11 @@ BEGIN {
         $MCSTAS::runscilab ="scilab";
         # install atexit-style handler so that when we exit or die,
         # we automatically delete this temporary file
-        END { if ($tmp_file && !$Config{'osname'} eq 'MSWin32') { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
+        END { if (defined $tmp_file) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
       }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
     
-    $pg_avail=0;
-    $temp_avail=0;
-    foreach $inc (@INC) {
-      my $where="$inc/PGPLOT.pm";
-      if (-e $where) { $pg_avail=1; }
-      $where="$inc/Temp.pm";
-      if (-e $where) { $temp_avail=1; }
-    }
-    if ($temp_avail == 1) { require File::Temp; }
 }
 
 use lib $MCSTAS::perl_dir;
@@ -71,9 +74,9 @@ for($i = 0; $i < @ARGV; $i++) {
       $do_overview = 1;
   } elsif(/^-png$/i || /^-ps$/i || /^-psc$/i || /^-ppm$/i) {
       $passed_arg_str_quit .= "$_ ";
-  } elsif(/^-p([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--format=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
+  } elsif(/^-p([a-zA-Z0-9_]+)$/ || /^--plotter=([a-zA-Z0-9_]+)$/ || /^--format=([a-zA-Z0-9_]+)$/) {
         $plotter = $1;	
-  } elsif(/^-i([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
+  } elsif(/^-i([a-zA-Z0-9_]+)$/ || /^--inspect=([a-zA-Z0-9_]+)$/) {
       $inspect = $1;
   } elsif(/^\+nw$/i || /^\+tk$/i || /^\+java$/i) {
       $nowindow = 0;
@@ -95,7 +98,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
       print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
       exit;
-  } elsif(/^-([a-zA-ZæøåÆØÅ0-9_]+)$/) {
+  } elsif(/^-([a-zA-Z0-9_]+)$/) {
       $passed_arg_str_quit .= "-$1 ";
   } else {
       $files[$index] = $ARGV[$i];
@@ -125,6 +128,12 @@ if ($index == 0) {
 } else { $file = $files[0]; }
 $file = "$file/mcstas" if -d $file;
 
+# look if there is only one file type
+if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = 1; }
+if (-e "$file.sci" and not -e "$file.m" and not -e "$file.sim") { $plotter = 3; }
+if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci") { $plotter = 0; }
+
+
 if ($plotter eq 3 || $plotter eq 4) { $default_ext = ".sci"; }
 elsif ($plotter eq 1 || $plotter eq 2) { $default_ext = ".m"; }
 elsif ($plotter eq 0) { $default_ext = ".sim"; }
@@ -143,12 +152,12 @@ if ($nowindow eq -1) {  # was not set in argument list
 # Added E. Farhi, March 2003. Selection of the plotter (pgplot, scilab, matlab)
 if ($plotter eq 3 || $plotter eq 4) {
   # create a temporary scilab execution script
-  if (not $temp_avail) { 
-    $tmp_file="mcplot_tmp000000.sce"; 
-    $fh = new FileHandle "> $tmp_file";
+  if ($temp_avail == 1) { 
+    ($fh, $tmp_file) = File::Temp::tempfile("mcplot_tmpXXXXXX", SUFFIX => '.sce');
     if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
   } else {
-    ($fh, $tmp_file) = tempfile("mcplot_tmpXXXXXX", SUFFIX => '.sce');
+    $tmp_file="mcplot_tmp000000.sce"; 
+    $fh = new FileHandle "> $tmp_file";
     if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
   }
   printf $fh "s = stacksize(); if s(1) < 1e7 then stacksize(1e7); end\n";
@@ -158,8 +167,10 @@ if ($plotter eq 3 || $plotter eq 4) {
   if ($passed_arg_str_quit) {
     printf $fh "quit\n";
   } else {
+    printf $fh "if ~length(lasterror())\n";
     printf $fh "mprintf('mcplot: Simulation data structure from file $file\\n');\n";
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
+    printf $fh "end\n";
   }
   printf $fh "if MSDOS \n  unix_g('del /q /f $tmp_file');\nend\n";
   close($fh);
@@ -175,9 +186,11 @@ if ($plotter eq 3 || $plotter eq 4) {
   if ($passed_arg_str_quit) {
     $tosend .= "exit;\"\n";
   } else {
+      $tosend .= "if ~length(lasterr),";
       $tosend .= "disp('type: help mcplot for this function usage.');";
       $tosend .= "disp('mcplot: Simulation data structure from file $file');";
-      $tosend .= "disp('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !');\"\n";
+      $tosend .= "disp('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !');";
+      $tosend .= "end;\"\n";
     }
   system($tosend);
 } elsif ($plotter eq 0) {
