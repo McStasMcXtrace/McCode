@@ -1,16 +1,19 @@
 /*******************************************************************************
 * Misc. useful routines to handle Cartesian coordinates.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: coords.c
 *
 *	Author: K.N.			Aug  8, 1997
 *
-*	$Id: coords.c,v 1.1 1997-08-13 09:13:18 kn Exp $
+*	$Id: coords.c,v 1.2 1998-10-02 08:36:05 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.1  1997/08/13 09:13:18  kn
+*	Initial revision
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+*
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include "mcstas.h"

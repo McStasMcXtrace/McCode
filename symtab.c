@@ -1,19 +1,22 @@
 /*******************************************************************************
 * Symbol tables.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: symtab.c
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: symtab.c,v 1.2 1997-09-07 17:58:45 kn Exp $
+*	$Id: symtab.c,v 1.3 1998-10-02 08:39:25 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.2  1997/09/07 17:58:45  kn
+*	Snapshot with (untested) code generation complete.
+*
 *	Revision 1.1  1997/08/13 09:16:14  kn
 *	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include <string.h>

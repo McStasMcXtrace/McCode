@@ -1,14 +1,17 @@
 /*******************************************************************************
 * Memory management functions.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: memory.c
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: memory.c,v 1.5 1998-10-01 11:47:38 kn Exp $
+*	$Id: memory.c,v 1.6 1998-10-02 08:39:02 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.5  1998/10/01 11:47:38  kn
+*	Added str_dup_n().
+*
 *	Revision 1.4  1997/09/07 17:58:29  kn
 *	Snapshot with (untested) code generation complete.
 *
@@ -22,7 +25,7 @@
 *	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include <string.h>

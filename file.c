@@ -1,16 +1,19 @@
 /*******************************************************************************
 * Code to handle files and command line arguments.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: file.c
 *
 *	Author: K.N.			Sep 25, 1998
 *
-*	$Id: file.c,v 1.1 1998-10-01 08:13:41 kn Exp $
+*	$Id: file.c,v 1.2 1998-10-02 08:36:21 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.1  1998/10/01 08:13:41  kn
+*	Initial revision
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+*
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include <stdlib.h>

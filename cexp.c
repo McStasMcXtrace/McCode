@@ -1,14 +1,17 @@
 /*******************************************************************************
 * Handle expressions used as arguments to components etc.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: cexp.h
 *
 *	Author: K.N.			Aug  7, 1997
 *
-*	$Id: cexp.c,v 1.3 1998-10-01 11:44:07 kn Exp $
+*	$Id: cexp.c,v 1.4 1998-10-02 08:35:04 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.3  1998/10/01 11:44:07  kn
+*	Added support for string expressions.
+*
 *	Revision 1.2  1997/09/07 17:54:28  kn
 *	Snapshot with (untested) code generation complete.
 *
@@ -16,7 +19,7 @@
 *	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 #include <stdio.h>
 
