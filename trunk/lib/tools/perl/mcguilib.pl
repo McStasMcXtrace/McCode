@@ -405,6 +405,8 @@ sub comp_select_dialog {
     $list->activate(0);
     my $name = $f->Label(-text => "Name: ", -anchor => 'w');
     $name->pack(-fill => 'x');
+    my $loc = $f->Label(-text => "Location: ", -anchor => 'w');
+    $loc->pack(-fill => 'x');
     my $text = $f->Scrolled(qw/ROText -relief sunken -bd 2 -setgrid true
 			    -height 10 -width 80 -scrollbars osoe/);
     $text->pack();
@@ -426,6 +428,7 @@ sub comp_select_dialog {
 	my $cname = $sorted[$list->curselection()];
 	my $info = fetch_comp_info($cname, $cinfo);
 	$name->configure(-text => "Name: $info->{'name'}");
+	$loc->configure(-text => "Location: $cname");
 	$author->configure(-text =>
 			   "Author: $info->{'identification'}{'author'}");
 	$date->configure(-text => "Date: $info->{'identification'}{'date'}");
