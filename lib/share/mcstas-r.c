@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.84 2004-03-03 13:41:23 pkwi Exp $
+* $Id: mcstas-r.c,v 1.85 2004-03-05 17:43:47 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.84  2004/03/03 13:41:23  pkwi
+* Corrected error in relation to instrument default values: 0's were used in all cases.
+*
 * Revision 1.83  2004/02/26 12:53:27  farhi
 * Scilab format now enables more than one monitor file for a single component
 * (e.g. Monitor_nD with multiple detectors).
@@ -1065,6 +1068,7 @@ mcreadparams(void)
   char *p;
   int len;
 
+  printf("Instrument parameters for %s (%s)\n", mcinstrument_name, mcinstrument_source);
   for(i = 0; mcinputtable[i].name != 0; i++)
   {
     do
@@ -3356,6 +3360,7 @@ mcparseoptions(int argc, char *argv[])
         status = (*mcinputtypes[mcinputtable[j].type].getparm)
                    (buf, mcinputtable[j].par);
         if(!status) fprintf(stderr, "Invalid %s default value %s in instrument definition.\n", mcinputtable[j].name, buf);
+        else paramsetarray[j] = 1; 
       } else {
 	(*mcinputtypes[mcinputtable[j].type].getparm)
 	  (NULL, mcinputtable[j].par); 
