@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.3 1997-07-02 07:27:32 kn Exp $
+*	$Id: instrument.l,v 1.4 1997-08-13 09:14:48 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.3  1997/07/02 07:27:32  kn
+*	Misc. cleanup.
+*
 *	Revision 1.2  1997/07/01 08:26:21  kn
 *	Fixed problem when scanning identifiers: now returns a persistent copy
 *	of the name.
@@ -35,6 +38,12 @@
 %}
 
 
+/* Lexer states. The state ccomment is used for scanning c-style comments. The
+   state ccode is used when scanning embedded C code blocks. */
+%x ccomment ccode
+
+
+/* Abbreviations. */
 DIGIT		[0-9]
 ALPHA		[A-ZÆØÅa-zæøå]
 ALPHANUM	{ALPHA}|{DIGIT}|"_"
@@ -47,8 +56,11 @@ NUMBER		{DIGIT}+("."{DIGIT}+)?([Ee][+-]?{DIGIT}+)?
 ABSOLUTE	return TOK_ABSOLUTE;
 AT		return TOK_AT;
 COMPONENT	return TOK_COMPONENT;
+DECLARE		return TOK_DECLARE;
 DEFINE		return TOK_DEFINE;
 END		return TOK_END;
+EXTERN		return TOK_EXTERN;
+INITIALIZE	return TOK_INITIALIZE;
 INSTRUMENT	return TOK_INSTRUMENT;
 RELATIVE	return TOK_RELATIVE;
 ROTATED		return TOK_ROTATED;
@@ -59,7 +71,42 @@ ROTATED		return TOK_ROTATED;
 {ID}		yylval.string = str_dup(yytext); return TOK_ID;
 {NUMBER}	yylval.number = atof(yytext); return TOK_NUMBER;
 
-[ \t\n]		/* Ignore whitespace. */
+ /* Scanning embedded C code. */
+
+"%""{"[\t ]*\n	instr_current_line++; BEGIN(ccode); return TOK_CODE_START;
+"%""{"[^\n]*\n	{
+		  instr_current_line++;
+		  print_error("%%{ token not on a line by itself.\n");
+		  return TOK_INVALID;
+		}
+
+<ccode>{
+ [\t ]*"%""}"[\t ]*\n	instr_current_line++; BEGIN(INITIAL); return TOK_CODE_END;
+ [^\n]*"%""}"[^\n]*\n	{
+			  instr_current_line++;
+			  BEGIN(INITIAL);
+			  print_error("%%} terminator not on a line by itself.\n");
+			  return TOK_CODE_END;
+			}
+ [^\n]*\n		instr_current_line++; yylval = str_dup(yytext); return TOK_CODE_LINE;
+}
+
+ /* %-style comments - ignore everything to end of line. */
+"%"\n		instr_current_line++; /* Ignore comment. */
+"%"[^{}\n][^\n]*\n instr_current_line++; /* Ignore comment. */
+
+ /* C-style comments. */
+"/*"		BEGIN(ccomment);
+<ccomment>{
+ [^*\n]*	/* Ignore comment. */
+ [^*\n]*\n	instr_current_line++; /* Ignore comment. */
+ "*"+[^*/\n]*	/* Ignore comment. */
+ "*"+[^*/\n]*\n	instr_current_line++; /* Ignore comment. */
+ "*"+"/"	BEGIN(INITIAL);	/* End of comment. */
+}
+
+[ \t]+		/* Ignore whitespace. */
+[ \t]*\n	instr_current_line++; /* Ignore whitespace. */
 
 .               print_error("Invalid character `%s'.\n", yytext); return TOK_INVALID;
 

@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: memory.c,v 1.2 1997-07-02 07:28:56 kn Exp $
+*	$Id: memory.c,v 1.3 1997-08-13 09:15:48 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.2  1997/07/02 07:28:56  kn
+*	String functions.
+*
 *	Revision 1.1  1997/07/01 08:24:20  kn
 *	Initial revision
 *
@@ -18,6 +21,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "mcstas.h"
 
@@ -56,6 +60,36 @@ str_dup(char *string)
 
   s = mem(strlen(string) + 1);
   strcpy(s, string);
+  return s;
+}
+
+
+/*******************************************************************************
+* Allocate a new string to hold the concatenation of given strings. Arguments
+* are the strings to concatenate, terminated by NULL.
+*******************************************************************************/
+char *
+str_cat(char *first, ...)
+{
+  char *s;
+  va_list ap;
+  int size;
+  char *arg;
+  
+  size = 1;			/* Count final '\0'. */
+  va_start(ap, first);
+  for(arg = first; arg != NULL; arg = va_arg(ap, char *))
+    size += strlen(arg);	/* Calculate string size. */
+  va_end(ap);
+  s = mem(size);
+  size = 0;
+  va_start(ap, first);
+  for(arg = first; arg != NULL; arg = va_arg(ap, char *))
+  {
+    strcpy(&(s[size]), arg);
+    size += strlen(arg);
+  }
+  va_end(ap);
   return s;
 }
 

@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.2 1997-07-02 07:28:36 kn Exp $
+* 	$Id: mcstas.h,v 1.3 1997-08-13 09:15:28 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.2  1997/07/02 07:28:36  kn
+* 	Added new declarations.
+*
 * 	Revision 1.1  1997/07/01 08:17:52  kn
 * 	Initial revision
 *
@@ -19,6 +22,8 @@
 
 
 #include <stdlib.h>
+#include <stdio.h>
+
 
 
 /* Functions defined in memory.c */
@@ -26,6 +31,7 @@
 void *mem(size_t);		/* Allocate memory. */
 void memfree(void *);		/* Free memory. */
 char *str_dup(char *);		/* Allocate new copy of string. */
+char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
 void str_free(char *);		/* Free memory for string. */
 
 /* Allocate memory to a pointer. If p is a pointer to type t, palloc(p) will
@@ -42,15 +48,159 @@ void str_free(char *);		/* Free memory for string. */
 
 
 /* Functions defined in symtab.c */
-typedef struct Symbol_Table *Symtab;/* Symbol table abstract data type. */
 
-void symtab_create(void);	/* Create symbol table. */
-void *symtab_lookup(Symtab, char *); /* Lookup name in symbol table. */
-void *symtab_add(Symtab, char *, void *); /* Add name to symbol table. */
+/* Structure for symbol table entries, returned by symtab_lookup() and the
+   like.  */
+struct Symtab_entry
+  {
+    char *name;
+    void *val;
+  };
+
+typedef struct Symbol_table *Symtab;/* Symbol table abstract data type. */
+
+Symtab symtab_create(void);	/* Create symbol table. */
+struct Symtab_entry *symtab_lookup(Symtab, char *); /* Lookup name in symbol table. */
+struct Symtab_entry *symtab_add(Symtab, char *, void *); /* Add name to symbol table. */
 void symtab_free(Symtab, void (*)(void *)); /* Free memory for symbol table. */
 
 
-/* functions and variables defined in debug.c */
+/* Definitions for list.c */
+
+/* Abstract data type for lists. */
+typedef struct List_header *List;
+typedef struct List_position *List_handle;
+
+List list_create(void);		/* Create list. */
+void list_add(List, void *);	/* Add element at end. */
+void list_free(List, void (*)(void *));	/* Deallocate a list. */
+List_handle list_iterate(List);	/* Prepare to traverse list. */
+void *list_next(List_handle);	/* Get next element in list. */
+void list_iterate_end(List_handle); /* End list traversal. */
+
+
+/*******************************************************************************
+* Definitions for cexp.c
+*******************************************************************************/
+
+/* Type for expressions. The implementation is private and values of this type
+   must only be accessed through the proper function calls. */
+typedef char *CExp;
+
+/* Extern functions defined in cexp.c */
+CExp exp_id(char *id);		/* Make normal identifier. */
+CExp exp_extern_id(char *id);	/* Make extern identifier. */
+CExp exp_number(double n);	/* Make expression from number. */
+char *exp_tostring(CExp e);	/* Convert expression to string. */
+void exp_fprint(FILE *f, CExp e); /* Output an expression to file. */
+
+
+/*******************************************************************************
+* Definitions in coords.c
+*******************************************************************************/
+
+/* Type for coordinates. Public. */
+struct coords
+  {
+    double x,y,z;
+  };
+typedef struct coords Coords;
+struct coords_exp
+  {
+    CExp x,y,z;
+  };
+typedef struct coords_exp Coords_exp;
+
+/* Get all-zero coordinate. */
+Coords coords_origo(void);
+Coords_exp coords_exp_origo(void);
+/* Add two coordinates. */
+Coords coords_add(Coords a, Coords b);
+
+
+/*******************************************************************************
+* Definitions for rotation.c
+*******************************************************************************/
+
+/* Rotation transformations. */
+typedef double Rotation[3][3];
+
+/* Get the unit rotation (no transformation). */
+void rot_set_unit(Rotation t);
+/* Rotate first around x, then around y, then around z axis. */
+void rot_set_rotation(Rotation t, double phx, double phy, double phz);
+/* Rotate around x axis. */
+void rot_set_rotation_x(Rotation t, double ph);
+/* Rotate around y axis. */
+void rot_set_rotation_y(Rotation t, double ph);
+/* Rotate around z axis. */
+void rot_set_rotation_z(Rotation t, double ph);
+/* Combine rotation (using a matrix multiply). */
+void rot_mul(Rotation t1, Rotation t2, Rotation t3);
+/* Copy rotation transformation. */
+void rot_copy(Rotation dest, Rotation src);
+
+
+/*******************************************************************************
+* Definitions for position.c
+*******************************************************************************/
+
+/*******************************************************************************
+* A component position consists in a place and an orientation. Place is the
+* location in 3D space of the origo of the components local coordinate
+* system, and orientation is the rotation transformation that transforms the
+* global coordinate system into the component local one.
+*
+* At runtime, place is a 3-vector and orientation is a 3-by-3
+* matrix. However, at compile time the actual values are not known. Instead,
+* code is generated to compute the actual values for the position at
+* runtime.
+*******************************************************************************/
+
+struct comp_position
+  {
+    Coords_exp place;		       /* (x,y,z) coordinate. */
+    struct comp_inst *place_rel;       /* Instance relative to, or NULL. */
+    Coords_exp orientation;	       /* X/Y/Z rotation. */
+    struct comp_inst *orientation_rel;
+  };
+
+/* During parsing, individual structures are used for place and orientation. */
+struct comp_place
+  {
+    Coords_exp place;
+    struct comp_inst *place_rel;
+  };
+struct comp_orientation
+  {
+    Coords_exp orientation;
+    struct comp_inst *orientation_rel;
+  };
+
+/*******************************************************************************
+* Definitions in instrument.y
+*******************************************************************************/
+
+/* Line number currently being scanned. */
+extern int instr_current_line;
+/* Result from parsing instrument definition. */
+extern struct instr_def *instrument_definition;
+/* Map from names to component instances. */
+extern Symtab comp_instances;
+
+
+/*******************************************************************************
+* Definitions in component.y
+*******************************************************************************/
+
+extern int comp_current_line;	/* Line number currently being scanned. */
+Symtab read_components;		/* Map of already-read components. */
+
+/* Get component definition, reading from file if necessary. */
+struct comp_def *read_component(char *name);
+
+
+/* Functions and variables defined in debug.c */
 
 void print_error(char *, ...);	/* Normal error messages. */
 void fatal_error(char *, ...);	/* Report a fatal error and exit the program. */
@@ -98,3 +248,36 @@ extern int debug_current_level;
 
 #endif /* !defined(DEBUG) */
 
+
+
+/* Common structure definitions. */
+
+/* Component definitions. */
+struct comp_def
+  {
+    char *name;			/* Component name. */
+    List def_par, set_par, state_par; /* Formal parameters. */
+    List decl_code;		/* Declaration code. */
+    List init_code;		/* Initializeation code. */
+    List trace_code;		/* Ray-trace simulation code. */
+  };
+
+
+/* Component instance. */
+struct comp_inst
+  {
+    char *name;			/* Instance name. */
+    struct comp_def *def;	/* Pointer to definition. */
+    struct comp_position *pos;	/* Component position (place & orientation). */
+    Symtab defpar, setpar;	/* Parameter values. */
+  };
+
+
+/* Instrument definition. */
+struct instr_def
+  {
+    char *name;			/* Instrument name. */
+    List decls, inits;		/* Code for declarations and initializations. */
+    List formals;		/* List of formal parameters. */
+    Symtab components;		/* Map of component names to instances. */
+  };
