@@ -35,8 +35,9 @@ $index   = 0;
 $inspect = "";
 $passed_arg_str = "";
 
-$plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-
+$plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
+                $ENV{'MCSTAS_FORMAT'} : $MCSTAS::mcstas_config{'PLOTTER'};
+                
 for($i = 0; $i < @ARGV; $i++) {
   $_ = $ARGV[$i];
   # Options specific to mcplot.
@@ -71,7 +72,7 @@ for($i = 0; $i < @ARGV; $i++) {
 # Check value of $plotter variable, set 
 # $MCSTAS::mcstas_config{'PLOTTER'}
 # accordingly
-if ($plotter =~ /PGPLOT/i) {
+if ($plotter =~ /PGPLOT|McStas/i) {
   $MCSTAS::mcstas_config{'PLOTTER'}=0;
 } elsif ($plotter =~ /Matlab/i) {
   $MCSTAS::mcstas_config{'PLOTTER'}=1;
