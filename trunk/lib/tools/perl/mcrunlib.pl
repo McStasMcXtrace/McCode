@@ -1,5 +1,78 @@
 require "mcstas_config.perl";
 
+# Strip any single quotes around argument.
+sub strip_quote {
+    my ($str) = @_;
+    $str = $1 if($str =~ /^'(.*)'$/); # Remove quotes if present.
+    return $str;
+}
+
+# Get a yes/no argument.
+sub get_yes_no {
+    my ($str) = @_;
+    return ($str =~ /yes/i) ? 1 : 0;
+}
+
+# Read output from "sim --info" or "begin instrument" section in mcstas.sim
+# from file handle.
+# Reads lines from handle until the "end instrument" line is encountered,
+# skips that line and returns the information read in a hash reference.
+# Also terminates upon end-of-file.
+sub read_instrument_info {
+    my ($h) = @_;
+    my $inf = {};
+    $inf->{'RAW'} = [];		# List of lines from output of sim.out --info
+    while(<$h>) {
+	push @{$inf->{'RAW'}}, $_;
+	if(/^\s*Name:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*$/i) {
+	    $inf->{'Name'} = $1;
+	} elsif(/^\s*Parameters:\s*([a-zA-ZæøåÆØÅ_0-9 \t()]*?)\s*$/i) {
+	    my $full = $1;
+	    my $parms = [ ];
+	    my $parmtypes = { };
+	    my $p;
+	    for $p (split ' ', $full) {
+		if($p =~ /^([a-zA-ZæøåÆØÅ_0-9+]+)\(([a-z]+)\)$/) {
+		    push @$parms, $1;
+		    $parmtypes->{$1} = $2;
+		} elsif($p =~ /^([a-zA-ZæøåÆØÅ_0-9+]+)$/) {
+		    # Backward compatibility: no type specifier.
+		    push @$parms, $1;
+		    $parmtypes->{$1} = 'double'; # Default is double
+		} else {
+		    die "Invalid parameter specification:\n'$p'";
+		}
+	    }
+	    $inf->{'Parameters'} = $parms;
+	    $inf->{'Parameter-types'} = $parmtypes;
+	} elsif(/^\s*Instrument-source:\s*(.*?)\s*$/i) {
+	    $inf->{'Instrument-source'} = strip_quote($1);
+	} elsif(/^\s*Trace-enabled:\s*(no|yes)\s*$/i) {
+	    $inf->{'Trace-enabled'} = get_yes_no($1);
+	} elsif(/^\s*Default-main:\s*(no|yes)\s*$/i) {
+	    $inf->{'Default-main'} = get_yes_no($1);
+	} elsif(/^\s*Embedded-runtime:\s*(no|yes)\s*$/i) {
+	    $inf->{'Embedded-runtime'} = get_yes_no($1);
+	} elsif(/^\s*end\s+instrument\s*$/i) {
+	    last;
+	} else {
+	    die "Invalid line in siminfo file:\n'$_'";
+	}
+    }
+    return $inf;
+}
+
+sub get_sim_info {
+    my ($simprog) = @_;
+    use FileHandle;
+    my $h = new FileHandle;
+    open $h, "$simprog --info |" or die "Could not run simulation.";
+    my $inf = read_instrument_info($h);
+    close $h;
+    return $inf;
+}
+
+
 # Supporting function for get_out_file() below, suitable for use in a
 # call-back style GUI application.
 #
@@ -120,9 +193,11 @@ sub get_out_file_next {
 	   ($force || !defined($out_age) || $out_age > $c_age)) {
 	    &$printer("Compiling C source '$c_name' ...");
 	    # ToDo: splitting CFLAGS should handle shell quoting as well ...
-	    my $cmd = [$MCSTAS::mcstas_config{CC},
-		       split(' ', $MCSTAS::mcstas_config{CFLAGS}),
-		       "-o", $out_name, $c_name, "-lm"];
+	    my $cc = $ENV{'MCSTAS_CC'} || $MCSTAS::mcstas_config{CC};
+	    my $cflags =
+		$ENV{'MCSTAS_CFLAGS'} || $MCSTAS::mcstas_config{CFLAGS};
+	    my $cmd = [$cc, split(' ', $cflags), "-o",
+		       $out_name, $c_name, "-lm"];
 	    &$printer(join(" ", @$cmd));
 	    $v->{'stage'} = POST_CC;
 	    return (RUN_CMD, $cmd);
