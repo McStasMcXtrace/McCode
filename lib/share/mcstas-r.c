@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.77 2003-10-22 15:51:26 farhi Exp $
+* $Id: mcstas-r.c,v 1.78 2003-11-07 15:30:33 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.77  2003/10/22 15:51:26  farhi
+* <instr> -i also displays default parameter values (if any), which may be
+* read by mcgui for init of Run Simulation dialog
+*
 * Revision 1.76  2003/10/22 09:18:00  farhi
 * Solved name conflict problem for Matlab/Scilab by adding 'mc_' prefix
 * to all component/file field names. Works ok for both, and also in binary.
@@ -3206,6 +3210,7 @@ mcparseoptions(int argc, char *argv[])
       } else
         (*mcinputtypes[mcinputtable[j].type].getparm)
                    (NULL, mcinputtable[j].par); 
+        paramsetarray[j] = 1;
     }
 
   for(i = 1; i < argc; i++)
