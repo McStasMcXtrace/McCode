@@ -1,10 +1,15 @@
-This is McStas version 1.1, released March 31, 1999.
-Copyright (C) Risoe National Laboratory, 1997-1999. All rights reserved.
+This is McStas version 1.2, released January 31, 2000.
+Copyright (C) Risoe National Laboratory, 1997-2000. All rights reserved.
 See the file LICENSE for conditions on use.
 Since simulations produced with McStas will include code from the files
 in the lib/ directory, such simulations are derived works of these
 files. For this reason, a less restrictive licence applies to these
 files only, see the file lib/LICENSE.LIB.
+Finally, the random number algorithm used by default in McStas is the
+"Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura (see
+http://www.math.keio.ac.jp/~matumoto/emt.html). This code is included in
+the file lib/mcstas-r.c and is distributed under the terms of the GNU
+Library General Public License, see the file lib/LGPL.
 
 If you wish to use McStas in ways that contradict the conditions,
 contact us and chances are that we will be able to make a suitable
@@ -53,12 +58,17 @@ McStas CD-Rom distribution.
  - The `mcdisplay' front-end requires Perl version 5 or later, the
    PGPLOT graphics library, and the PgPerl interface between Perl and
    PGPLOT.
- - the `mcplot' front-end requires Perl version 5 or later, the
+ - The `mcplot' front-end requires Perl version 5 or later, the
    PGPLOT graphics library, the PgPerl interface between Perl and
    PGPLOT, and the PDL scientific data extension for Perl.
+ - The `mcgui' front-end requires  Perl version 5 or later, the perl/tk
+   perl extension, the PGPLOT graphics library, the PgPerl interface
+   between Perl and PGPLOT, and the PDL scientific data extension for Perl.
 
 Information on Perl may be found on
     http://language.perl.com/index.html
+Information on perl/tk may be found on
+    http://w4.lns.cornell.edu/~pvhp/ptk/ptkFAQ.html
 Information on PGPLOT may be found on
     http://astro.caltech.edu/~tjp/pgplot/index.html
 Information on PgPerl may be found on
