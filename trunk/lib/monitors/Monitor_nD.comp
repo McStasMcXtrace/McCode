@@ -14,7 +14,7 @@
 * Release: McStas 1.6
 * Version: 1.0.0 (includes MONITOR_ND_LIB_H)
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
-* Modified by: EF, 10th Mar 2000 : use struct. 
+* Modified by: EF, 10th Mar 2000 : use struct.
 * Modified by: EF, 25th May 2000 : correct Vars.Mon2D_Buffer alloc bug.
 * Modified by: EF, 17th Oct 2000 : spin detector ok. (0.13.4)
 * Modified by: EF, 19th Jan 2001 : 'auto limits' bug corrected (0.13.5)
@@ -33,12 +33,12 @@
 * Modified by: EF, 27th Aug 2002 : monitor a variable in place of I (0.16.5)
 * Modified by: EF, 25th Oct 2002 : banana, and auto for each variable (0.16.5)
 *
-* This component is a general Monitor that can output 0/1/2D signals 
+* This component is a general Monitor that can output 0/1/2D signals
 * (Intensity or signal vs. [something] and vs. [something] ...)
 *
 * %Description
-* This component is a general Monitor that can output 0/1/2D signals 
-* It can produce many 1D signals (one for any variable specified in 
+* This component is a general Monitor that can output 0/1/2D signals
+* It can produce many 1D signals (one for any variable specified in
 * option list), or a single 2D output (two variables correlation).
 * Also, an additional 'list' of neutron events can be produced.
 * By default, monitor is square (in x/y plane). A disk shape is also possible
@@ -46,20 +46,20 @@
 * The 'sphere' option simulates spherical detector. The 'box' is a box.
 * The cylinder, sphere and banana should be centered on the scattering point.
 * The monitored flux may be per monitor unit area, and weighted by
-* a lambda/lambda(2200m/s) factor to obtain standard capture flux.
-* In normal configuration, the Monitor_nD measures the current parameters 
-* of the neutron that is beeing detected. But a PreMonitor_nD component can 
+* a lambda/lambda(2200m/s) factor to obtain standard integrated capture flux.
+* In normal configuration, the Monitor_nD measures the current parameters
+* of the neutron that is beeing detected. But a PreMonitor_nD component can
 * be used in order to study correlations between a neutron being detected in
-* a Monitor_nD place, and given parameters that are monitored elsewhere 
+* a Monitor_nD place, and given parameters that are monitored elsewhere
 * (at <b>PreMonitor_nD</b>).
-* The monitor can also act as a 3He gas detector, taking into account the 
+* The monitor can also act as a 3He gas detector, taking into account the
 * detection efficiency.
 *
 * The 'bins' and 'limits' modifiers are to be used after each variable,
-* and 'auto','log' and 'abs' come before it. (eg: auto abs log hdiv 
-* limits=[-5 5] bins=10) When placed after all variables,  these two latter 
-* modifiers apply to the signal (e.g. intensity). 
-* 
+* and 'auto','log' and 'abs' come before it. (eg: auto abs log hdiv
+* limits=[-5 5] bins=10) When placed after all variables,  these two latter
+* modifiers apply to the signal (e.g. intensity). Unknown keywords are ignored.
+*
 * <b>Possible options are</b>
 * Variables to record:
 *     kx ky kz k wavevector (Angs-1) [    usually axis are
@@ -100,10 +100,12 @@
 *                                with [counts] or all events
 *     log                       Will monitor the log10 of the following variable
 *                               or of the signal (if used after all variables)
+*     min=[min_value]           Same as limits, but only sets the min or max
+*     max=[max_value]
 *     multiple                  For 1D monitors into multiple independant files
 *     no or not                 Revert next option
 *     outgoing                  Monitor outgoing beam in non flat det (default)
-*     parallel                  Use this option when the next component is at 
+*     parallel                  Use this option when the next component is at
 *                                the same position (parallel components)
 *     per cm2                   Intensity will be per cm^2
 *     premonitor                Will monitor neutron parameters stored
@@ -120,7 +122,7 @@
 *     box                       Box of size xwidth, yheight, zthick
 *     cylinder                  To get a cylindrical monitor
 *                                (diameter is xwidth, height is yheight).
-*     banana                    Same as cylinder, without top/bottom, 
+*     banana                    Same as cylinder, without top/bottom,
 *                                on restricted angular area
 *     disk                      Disk flat xy monitor. radius is xwidth.
 *     sphrere                   To get a spherical monitor (e.g. a 4PI)
@@ -138,21 +140,26 @@
 *                                    and saves into file "MyMon_[Date_ID].th_ph"
 *   options = "angle radius all auto"   is a 2D monitor with automatic limits
 *   options = "list kx ky kz energy" records each neutron contribution in 1 file
-*   options = "multiple kx ky kz auto abs log t and list all neutrons" 
+*   options = "multiple kx ky kz, auto abs log t, and list all neutrons"
 *          makes 4 output 1D files and produces a complete list for all neutrons
 *          and monitor log(abs(tof)) within automatic limits (for t)
 *
-* How to monitor anything in my simulation: with the 'user' option
-* 1) put in your instrument DECLARE: struct MonitornD_Variables *InstrVars;
+* <b>How to monitor any instrument/component variable into a Monitor_nD<b>
+* Suppose the Monitor_nD instance is named 'MyMonitor'.
+* 1) put in your instrument DECLARE: MONND_DECLARE(MyMonitor);
 * 2) put in your instrument INITIALIZE (optionally, to set monitor name):
-*    InstrVars = &(MC_GETPAR(MyMonitor, Vars));
-*    strcpy(InstrVars->UserName1,"log xy+1");
+*      MONND_USER_TITLE(MyMonitor, 1, "Log(age of the Captain)");
+*    This will set 'user1' (because of the '1', could be '2' as well) title.
 * 3) put just after the component where you want to monitor (to set the value)
 *  EXTEND
-*  %{  
-*    InstrVars = &(MC_GETPAR(MyMonitor, Vars));
-*    InstrVars->UserVariable1 = log(fabs(x*y+1));
+*  %{
+*    MONND_USER_VALUE(MyMonitor, 1, log(fabs(x*y+1))
 *  %}
+*    This will set 'user1' (because of the '1', could be '2' as well) value.
+*    The value to store in user1 may be obtained from local component variables
+*    (this requires to look into the component code, to extract a variable name)
+*    neutron coordinates, any instrument variable, and any other component
+*    variable (using MC_GETPAR).
 * 4) put further in the instrument (to monitor the user1 value defined before)
 *  COMPONENT MyMonitor = Monitor_nD(
 *   xwidth = 0.1, yheight = 0.1,
@@ -165,10 +172,10 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth:  (m)  Width/diameter of detector (x)
-* yheight: (m)  Height of detector (y)
+* xwidth:  (m)  Width/diameter of detector (x). Default is 10 cm.
+* yheight: (m)  Height of detector (y). Default is 10 cm.
 * zthick:  (m)  Thichness of detector (z)
-* options: (str)  String that specifies the configuration of the monitor</br>
+* options: (str)  String that specifies the configuration of the monitor
 *                 The general syntax is "[x] options..." (see <b>Descr.</b>)
 *
 * Optional input parameters (override xwidth yheight zthick):
@@ -179,13 +186,19 @@
 * zmin:   (m)    Lower z bound of opening
 * zmax:   (m)    Upper z bound of opening
 * filename(str)  Output file name (overrides file=XX option)
+* bins    (1)    Number of bins to force for all variables.
+*                Use 'bins' keyword in 'options' for heterogeneous bins
+* min     (u)    Minimum range value to force for all variables
+*                Use 'min' or 'limits' keyword in 'options' for other limits
+* max     (u)    Maximum range value to force for all variables
+*                Use 'max' or 'limits' keyword in 'options' for other limits
 *
 * OUTPUT PARAMETERS:
 *
 * DEFS: structure containing Monitor_nD Defines (struct)
 * Vars: structure containing Monitor_nD variables (struct)
 *
-* %Link 
+* %Link
 * <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
 * <a href="PreMonitor_nD.html">PreMonitor_nD</a>
 *
@@ -195,7 +208,7 @@
 
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (options=0, filename=0)
-SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0)
+SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-FLT_MAX, max=FLT_MAX)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -205,7 +218,7 @@ POLARISATION PARAMETERS (sx,sy,sz)
 
 SHARE
 %{
-%include "monitor_nd-lib" 
+%include "monitor_nd-lib"
 %}
 
 DECLARE
@@ -216,39 +229,47 @@ DECLARE
 
 INITIALIZE
 %{
+  char tmp[256];
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
   if (options != NULL)
     strncpy(Vars.option, options, 1024);
-  else
+  else {
     strcpy(Vars.option, "x y");
-  
+    printf("Monitor_nD: %s has no option specified. Setting to PSD ('x y') monitor.\n", NAME_CURRENT_COMP);
+  }
+
   if (strstr(Vars.option, "source"))
     strcat(Vars.option, " list, x y z vx vy vz t sx sy sz ");
 
+  if (bins) { sprintf(tmp, " all bins=%ld ", (long)bins); strcat(Vars.option, tmp); }
+  if (min > -FLT_MAX && max < FLT_MAX) { sprintf(tmp, " all limits=[%g %g]", min, max); strcat(Vars.option, tmp); }
+  else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
+  else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
+
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
-  
+
   if (filename != NULL) strncpy(Vars.Mon_File, filename, 128);
-  
+
   /* check if user given filename with ext will be used more than once */
   if ((Vars.Flag_Multiple || Vars.Flag_List) && (strchr(Vars.Mon_File,'.')))
   { char *XY; XY = strrchr(Vars.Mon_File,'.'); *XY='_'; }
 %}
 
 TRACE
-%{    
+%{
   double  XY=0;
   double  t0 = 0;
   double  t1 = 0;
   double  pp;
   int     intersect   = 0;
-  char    Flag_Restore = 0;  
-  
+  char    Flag_Restore = 0;
+
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
 
   if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
-  { 
+  {
     PROP_Z0;
     intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
   }
@@ -271,7 +292,7 @@ TRACE
   {
     intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
   }
-  
+
   if (intersect)
   {
     if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
@@ -314,9 +335,9 @@ TRACE
 
     if (Vars.Flag_per_cm2 && Vars.area != 0) Vars.cp /= Vars.area;
     if (Vars.Flag_capture)
-    { 
-      XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);  
-      XY *= V2K; 
+    {
+      XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
+      XY *= V2K;
       if (XY != 0) XY = 2*PI/XY; /* lambda. lambda(2200 m/2) = 1.7985 Angs  */
       Vars.cp *= XY/1.7985;
     }
@@ -326,7 +347,7 @@ TRACE
     Vars.psum += pp;
     Vars.p2sum += pp*pp;
     SCATTER;
-    
+
     /* now handles intermediate results saving */
     if ((Vars.Intermediate > 0) && (mcget_run_num() > Vars.IntermediateCnts))
     {
@@ -340,7 +361,7 @@ TRACE
   else {
     if (Vars.Flag_Absorb && !Vars.Flag_parallel) ABSORB;
     else Flag_Restore = 1;  /* no intersection, back to previous state */
-  }  
+  }
 
   if (Flag_Restore)
   {
@@ -353,7 +374,7 @@ SAVE
   /* save results, but do not free pointers */
   Monitor_nD_Save(&DEFS, &Vars);
 %}
- 
+
 FINALLY
 %{
   /* free pointers */
