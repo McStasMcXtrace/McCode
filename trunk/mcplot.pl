@@ -167,7 +167,7 @@ if ($plotter eq 3 || $plotter eq 4) {
   if ($passed_arg_str_quit) {
     printf $fh "quit\n";
   } else {
-    printf $fh "if ~length(lasterror())\n";
+    printf $fh "if length(s)\n";
     printf $fh "mprintf('mcplot: Simulation data structure from file $file\\n');\n";
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
     printf $fh "end\n";
@@ -178,7 +178,7 @@ if ($plotter eq 3 || $plotter eq 4) {
   else { system("$MCSTAS::runscilab -f $tmp_file\n"); }
   
 } elsif ($plotter eq 1 || $plotter eq 2) {
-  if ($nowindow) { $tosend = "matlab -nojvm "; }
+  if ($nowindow) { $tosend = "matlab -nojvm -nosplash "; }
   else { $tosend = "matlab "; }
   $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
   $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')');";
@@ -186,7 +186,7 @@ if ($plotter eq 3 || $plotter eq 4) {
   if ($passed_arg_str_quit) {
     $tosend .= "exit;\"\n";
   } else {
-      $tosend .= "if ~length(lasterr),";
+      $tosend .= "if length(s),";
       $tosend .= "disp('type: help mcplot for this function usage.');";
       $tosend .= "disp('mcplot: Simulation data structure from file $file');";
       $tosend .= "disp('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !');";
