@@ -3,6 +3,8 @@
 # In emacs, please make this -*- perl -*- mode. Thanks.
 
 
+use lib "/users/elu_krni/install/share/perl/5.003/site_pl";
+use lib "/users/elu_krni/install/libexec/perl/5.003/site_pl";
 use PGPLOT;
 
 
