@@ -235,8 +235,10 @@ sub read_instrument {
                 write_process("copyobj(ax,h);\n");
                 write_process("saveas(h,'$sim.fig','fig');\n");
                 write_process("delete(h);\n");
-                write_process("wait(INSTRUMENT.fig);\n");
+                write_process("delete(INSTRUMENT.fig);\n");
+                write_process("exit;\n");
               } else {
+                write_process("set(INSTRUMENT.fig, 'closerequestfcn','exit;');\n");
                 write_process("wait(INSTRUMENT.fig);\n");
               }
             }
@@ -819,7 +821,7 @@ for($i = 0; $i < @ARGV; $i++) {
     } elsif($ARGV[$i] =~ /^--last=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
         $last = $1;
     } elsif($ARGV[$i] eq "--save") {
-        $save = 1;
+        $save = 1; 
     } elsif(($ARGV[$i] =~ /^-p([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
               ($ARGV[$i] =~ /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
               ($ARGV[$i] =~ /^--format=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
