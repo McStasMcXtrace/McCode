@@ -155,7 +155,7 @@ function filename = mcdisplay_output_begin(form, filename)
 // initiate output in the specified format (default is GIF)
 // format may be: gif, ps, psc, fig, scilab
   if argn(2) == 0 then form='GIF'; end
-  if argn(1) <= 1 then filename=''; end
+  if argn(2) <= 1 then filename=''; end
   if length(filename) == 0 then filename='mcstas'; end
   form = convstr(form,"l");
   
@@ -267,7 +267,7 @@ list4=list(lab(4),INSTRUMENT.alpha,INSTRUMENT.angles);
 list5=list(lab(5),INSTRUMENT.theta,INSTRUMENT.angles);
 list6=list(lab(6),1,["no","yes"]);
 list7=list(lab(7),1,["no","yes"]);
-rep=x_choices('PlotInstrument3D',list(list1,list2,list3,list4,list5,list6,list7));
+rep=x_choices('PlotInstrument3D: '+INSTRUMENT.descr,list(list1,list2,list3,list4,list5,list6,list7));
 if not(isempty(rep))
   INSTRUMENT.FirstView=rep(1);
   INSTRUMENT.LastView=rep(2);
@@ -363,7 +363,9 @@ INSTRUMENT.theta=10;
 if INSTRUMENT.save==0
   parmwin();
 end
-mcdisplay_output_begin(INSTRUMENT.save_format, INSTRUMENT.descr);
+if INSTRUMENT.save==1
+  mcdisplay_output_begin(INSTRUMENT.save_format, INSTRUMENT.descr);
+end
 PlotInstrument3D();
 if INSTRUMENT.save==1
   mcdisplay_output_end(INSTRUMENT.save_format, -1, INSTRUMENT.descr);
