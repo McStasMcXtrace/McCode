@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.19 2005-02-17 16:06:32 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.20 2005-02-21 12:38:03 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.19  2005/02/17 16:06:32  farhi
+*	Added 'per bin' to labels if more than 1 bin, and a message for unknow keywords found in options parameter. Requested by R. Cubitt.
+*
 *	Revision 1.18  2004/11/16 13:36:35  farhi
 *	Paging update
 *
@@ -449,7 +452,13 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
           mc_mn_Flag_No  = 0;
         } else {
           /* no variable name could be read from options */
-          if (!mc_mn_iskeyword) printf("Monitor_nD: %s: unknow '%s' keyword in 'options'. Ignoring.\n", mc_mn_Vars->compcurname, mc_mn_token);
+          if (!mc_mn_iskeyword) {
+            if (strcmp(mc_mn_token, "cm2") && strcmp(mc_mn_token, "incoming")
+             && strcmp(mc_mn_token, "outgoing") && strcmp(mc_mn_token, "cm2")
+             && strcmp(mc_mn_token, "cm^2") && strcmp(mc_mn_token, "float")
+             && strcmp(mc_mn_token, "double") && strcmp(mc_mn_token, "binary"))
+              printf("Monitor_nD: %s: unknow '%s' keyword in 'options'. Ignoring.\n", mc_mn_Vars->compcurname, mc_mn_token);
+          }
         }
       mc_mn_carg++;
       } /* end if mc_mn_token */
