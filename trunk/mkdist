@@ -27,11 +27,11 @@ find . -name CVS -exec rm -r \{\} \; 2> /dev/null
 find  . -prune setversion -type f -exec ./setversion \{\} $1 \; 2> /dev/null
 sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
 mv build.bat.new build.bat
-sed 's/mcstas-1.7/'mcstas-$1'/' install/tex/install.tex > install/tex/install.tex.new
-mv install/tex/install.tex.new install/tex/install.tex
+sed 's/mcstas-1.7/'mcstas-$1'/' install_docs/tex/install.tex > install_docs/tex/install.tex.new
+mv install_docs/tex/install.tex.new install_docs/tex/install.tex
 
 # Create ps/pdf/html based install info
-cd install/tex
+cd install_docs/tex
 latex install
 latex install
 dvips -o install.ps install.dvi
