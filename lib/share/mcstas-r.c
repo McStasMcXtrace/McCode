@@ -18,9 +18,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.57 2003-04-07 11:50:50 farhi Exp $
+* $Id: mcstas-r.c,v 1.58 2003-04-08 18:55:56 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.57  2003/04/07 11:50:50  farhi
+* Extended the way mcplot:plotter is assigned. Set --portable ok
+* Handle Scilab:Tk and ~GTk menu (shifted)
+* Updated help in mcrun and mcstas-r.c
+*
 * Revision 1.56  2003/04/04 18:36:12  farhi
 * Corrected $ and % chars for IDL format, conflicting with pfprintf (Dec/SGI)
 *
@@ -371,9 +376,9 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "Creator:%2$s McStas " MCSTAS_VERSION " [neutron.risoe.dk].\n"
       "Date:   Simulation started (%8$li) %5$s\n"
       "File:   %3$s\n-->\n"
-      "<NX%7$s file_name=\"%3$s\" file_time=\"%5$s\""
-        " McStas_version=\"" MCSTAS_VERSION "\">\n",
-    "</NX%7$s>\n<!-- EndDate:%5$s -->\n",
+      "<NX%7$s file_name=\"%3$s\" file_time=\"%5$s\" user=\"%6$s\">\n"
+        "<NXentry name=\"McStas " MCSTAS_VERSION "\"><start_time>%5$s</start_time>\n",
+    "<end_time>%5$s</end_time></NXentry></NX%7$s>\n<!-- EndDate:%5$s -->\n",
     "%1$s<NX%2$s name=\"%3$s\">\n",
     "%1$s</NX%2$s>\n",
     "%1$s<%3$s>%4$s</%3$s>\n",
