@@ -6,15 +6,18 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: memory.c,v 1.1 1997-07-01 08:24:20 kn Exp $
+*	$Id: memory.c,v 1.2 1997-07-02 07:28:56 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.1  1997/07/01 08:24:20  kn
+*	Initial revision
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
 
+#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "mcstas.h"
 
@@ -28,10 +31,7 @@ mem(size_t size)
 {
   void *p = malloc(size);
   if(p == NULL)
-  {
-    fprintf(stderr, "\nFatal error: memory exhausted, or invalid allocation.\n");
-    exit(1);
-  }
+    fatal_error("memory exhausted during allocation of size %d.", size);
   return p;
 }
 
@@ -44,4 +44,26 @@ void memfree(void *p)
     debug(("memfree(): freeing NULL memory.\n"));
   else
     free(p);
+}
+
+/*******************************************************************************
+* Allocate a new copy of a string.
+*******************************************************************************/
+char *
+str_dup(char *string)
+{
+  char *s;
+
+  s = mem(strlen(string) + 1);
+  strcpy(s, string);
+  return s;
+}
+
+/*******************************************************************************
+* Free memory for a string.
+*******************************************************************************/
+void
+str_free(char *string)
+{
+  memfree(string);
 }
