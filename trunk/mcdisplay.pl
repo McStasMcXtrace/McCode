@@ -207,10 +207,11 @@ sub read_neutron {
     my ($in) = @_;
     my (@x, @y, @z, @vx, @vy, @vz, @t, @ph1, @ph2, @ncomp);
     my ($st, $i);
-    my $comp;
+    my ($comp, $numcomp);
 
     $st = 0;
     $i = 0;
+    $numcomp = 0;
     my $dropit = 1;		# Flag to drop uninteresting neutron states.
     while(<$in>) {
 	if($st == 0 && /^ENTER:/) {
@@ -222,8 +223,9 @@ sub read_neutron {
 	} elsif($st == 1 && /^COMP:\s*"([a-zA-Z0-9_æøåÆØÅ]+)"\s*$/) {
 	    # Neutron enters component local coordinate system.
 	    $comp = $1;
+	    $numcomp++;
 	    $dropit = 1;	# Drop the first state (entry point).
-	} elsif($st == 1 && /^STATE:(.*)$/) {
+	} elsif($st == 1 && (/^STATE:(.*)$/ || /^SCATTER:(.*)$/)) {
 	    # Neutron state.
 	    $dropit = 0, next if $dropit; # Skip entry point
 	    ($x[$i], $y[$i], $z[$i],
@@ -253,7 +255,8 @@ sub read_neutron {
 
     my %neutron = ('x' => \@x, 'y' => \@y, z => \@z,
 		   vx => \@vx, vy => \@vy, vz => \@vz,
-		   t => \@t, ph1 => \@ph1, ph2 => \@ph2, comp => \@ncomp);
+		   t => \@t, ph1 => \@ph1, ph2 => \@ph2,
+		   comp => \@ncomp, numcomp => $numcomp);
     return %neutron
 }
     
@@ -290,22 +293,22 @@ sub plot_components {
 
 
 sub plot_neutron {
-    my ($rx, $ry, $rvx, $rvy) = @_;
-    my (@x, @y);
-    my ($i, $col);
+    my ($x, $y, $vx, $vy, $comp) = @_;
+    my ($i, $col, $oldcomp);
 
-    @x = @$rx;
-    @y = @$ry;
     pgsci(3);
-    pgline($#x + 1, \@x, \@y);
+    pgline(scalar(@$x), $x, $y);
     # Show component entry/exit points in same colour as respective component.
     $i = 0;
     $col = 4;
-    while($i <= $#x) {
-	pgsci($col++);
-	$col = 4 if $col > 15;
+    while($i < scalar(@$x)) {
+	if(!defined($oldcomp) || $oldcomp cmp $comp->[$i]) {
+	    $oldcomp = $comp->[$i];
+	    pgsci($col++);
+	    $col = 4 if $col > 15;
+	}
 	# Exit point.
-	pgpt(1, $x[$i], $y[$i], 17);
+	pgpt(1, $x->[$i], $y->[$i], 17);
 	$i++;
     }
 }
@@ -416,7 +419,8 @@ sub plot_instrument {
     pgsch(1.4);
     plot_components($instr{'z'}, $instr{'x'}, $instr{'ori'}, $instr{'dis'},
 		    'Z', 'X');
-    plot_neutron($neutron{'z'}, $neutron{'x'}, $neutron{'vz'}, $neutron{'vx'});
+    plot_neutron($neutron{'z'}, $neutron{'x'},
+		 $neutron{'vz'}, $neutron{'vx'}, $neutron{'comp'});
 
     if($multi_view) {
 	# Remember viewport setup for Z-X view.
@@ -432,7 +436,8 @@ sub plot_instrument {
 	pglab("X Axis [m]", "Y Axis [m]", "X-Y view");
 	plot_components($instr{'x'}, $instr{'y'}, $instr{'ori'}, $instr{'dis'},
 			'X', 'Y');
-	plot_neutron($neutron{'x'}, $neutron{'y'}, $neutron{'vx'}, $neutron{'vy'});
+	plot_neutron($neutron{'x'}, $neutron{'y'},
+		     $neutron{'vx'}, $neutron{'vy'}, $neutron{'comp'});
 	# Remember viewport setup for Z-X view.
 	pgqvp(0, $vpx1, $vpx2, $vpy1, $vpy2);
 	pgqwin($wx1, $wx2, $wy1, $wy2);
@@ -446,7 +451,8 @@ sub plot_instrument {
 	pglab("Z Axis [m]", "Y Axis [m]", "Z-Y view");
 	plot_components($instr{'z'}, $instr{'y'}, $instr{'ori'}, $instr{'dis'},
 			'Z', 'Y');
-	plot_neutron($neutron{'z'}, $neutron{'y'}, $neutron{'vz'}, $neutron{'vy'});
+	plot_neutron($neutron{'z'}, $neutron{'y'},
+		     $neutron{'vz'}, $neutron{'vy'}, $neutron{'comp'});
 	# Remember viewport setup for Z-Y view.
 	pgqvp(0, $vpx1, $vpx2, $vpy1, $vpy2);
 	pgqwin($wx1, $wx2, $wy1, $wy2);
@@ -549,7 +555,7 @@ $inspect_pos = get_inspect_pos($inspect, @components);
 
 while(!eof(IN)) {
     %neutron = read_neutron(IN);
-    next if @{$neutron{'comp'}} <= $inspect_pos;
+    next if $neutron{'numcomp'} <= $inspect_pos;
 
     my $ret;
     do {
