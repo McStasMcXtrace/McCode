@@ -21,8 +21,11 @@ if ($Config{'osname'} eq "MSWin32") {
 	print STDOUT "\n\nScilab found, configuring McStas\n";
 	configure_mcstas("3");
     } else {
-	die "\n\nSorry, neither Matlab or Scilab found, no plotting available.\n";
+	print STDERR "\n\nSorry, neither Matlab or Scilab found, no plotting available.\n";
     }
+    
+    print STDOUT "\nCalling ppm to make sure Tk-CodeText is installed...\n\n";
+    system('ppm install Tk-CodeText');
 } else {
     print STDOUT "This perl script is only ment for use on Win32!\n";
 }
