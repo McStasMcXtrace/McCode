@@ -5,8 +5,8 @@
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 14th Feb 2000.
-* Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Version: 0.15
+* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a>
+* Version: 0.16
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 10th Mar 2000 : use struct. 
 * Modified by: EF, 25th May 2000 : correct Vars.Mon2D_Buffer alloc bug.
@@ -19,6 +19,7 @@
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
 * Modified by: EF, 18th Apr 2001 : passes DETECTOR_OUT to mcdetector_out 0.14.1
 * Modified by: EF, 23th Jul 2001 : log of signal, init arrays to 0, box (0.15)
+* Modified by: EF, 04th Sep 2001 : log/abs of variables (0.16)
 *
 * This component is a general Monitor that can output 0/1/2D signals 
 * (Intensity vs. [something] and vs. [something] ...)
@@ -85,21 +86,22 @@
 *     3He_pressure=[3 in bars]  The 3He gas pressure in detector.
 *                               3He_pressure=0 means perfect detector (default)
 *     intermediate=[5 in %]     Save results every n% steps in simulation
-*     log                       Will monitor the log10 of the signal
+*     log                       Will monitor the log10 of the following variable
+*                               or of the signal (if used after variables)
 *     parallel                  Use this option when the next component is at 
 *                                the same position (parallel components)
-* Detector shape options (specified as xwidth, yheigth, zthick or x/y/z/min/max)
-*     box                       Box of size xwidth, yheigth, zthick
+* Detector shape options (specified as xwidth, yheight, zthick or x/y/z/min/max)
+*     box                       Box of size xwidth, yheight, zthick
 *     cylinder                  To get a cylindrical monitor (e.g. banana)
-*                                (radius is xwidth, height is yheigth).
+*                                (radius is xwidth, height is yheight).
 *     disk                      Disk flat xy monitor. radius is xwidth.
 *     sphrere                   To get a spherical monitor (e.g. a 4PI)
 *                                (radius is xwidth).
-*     square                    Square flat xy monitor (xwidth, yheigth)
+*     square                    Square flat xy monitor (xwidth, yheight)
 *
 * <b>EXAMPLES:</b>
 * MyMon = Monitor_nD(
-*   xwidth = 0.1, yheigth = 0.1, zthick = 0,
+*   xwidth = 0.1, yheight = 0.1, zthick = 0,
 *   options = "intensity per cm2 angle,limits=[-5 5] bins=10,with
 *              borders, file = mon1");
 *                           will monitor neutron angle from [z] axis, between -5
@@ -124,7 +126,7 @@
 *  and in the instrument description:
 *
 *  COMPONENT Guide_Mon = Monitor_nD(
-*   xwidth = 0.1, yheigth = 0.1, zthick = 0,
+*   xwidth = 0.1, yheight = 0.1, zthick = 0,
 *   options="user1, limits=[0 15], bins=15")
 *  AT (0,0,0) RELATIVE GuideEnd
 *
@@ -134,12 +136,12 @@
 * INPUT PARAMETERS:
 *
 * xwidth:  (m)  Width/radius of detector (x)
-* yheigth: (m)  Height of detector (y)
+* yheight: (m)  Height of detector (y)
 * zthick:  (m)  Thichness of detector (z)
 * options: (str)  String that specifies the configuration of the monitor</br>
 *                 The general syntax is "[x] options..." (see <b>Descr.</b>)
 *
-* Optional input parameters (override xwidth yheigth zthick):
+* Optional input parameters (override xwidth yheight zthick):
 * xmin:   (m)    Lower x bound of opening
 * xmax:   (m)    Upper x bound of opening
 * ymin:   (m)    Lower y bound of opening
@@ -161,7 +163,7 @@
 
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (options)
-SETTING PARAMETERS (xwidth=.1, yheigth=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0)
+SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -181,7 +183,7 @@ INITIALIZE
 strcpy(Vars.compcurname, mccompcurname);
 strcpy(Vars.option, options);
 
-Monitor_nD_Init(&DEFS, &Vars, xwidth, yheigth, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
+Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
 
 %}
 TRACE
@@ -384,4 +386,3 @@ MCDISPLAY
 %}
 
 END
-
