@@ -1,0 +1,48 @@
+/*******************************************************************************
+*
+* McStas, version 1.1, released ?
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: V_selector
+*
+* Written by: KL, Nov 9, 1998
+*
+* Very simple velocity selector model.
+* Transmission is gssumed Lorentzian, given in terms of delta E / E
+* Geometry defined by two identical, centered apertures
+*
+* INPUT PARAMETERS:
+*
+* width:     Width of aperture (m)
+* height:    Height of aperture (m)
+* length:    Distance between apertures (m)
+* T0:        Peak transmittance (1)
+* T1:        Leak transmittance (1)
+* E0:        Energy center (meV)
+* ratiodE_E: the ratio dE/E (1)
+*
+*******************************************************************************/
+
+
+DEFINE COMPONENT V_selector
+DEFINITION PARAMETERS (width, height, length, T0, T1, E0, ratiodE_E)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+TRACE
+%{
+    double E;
+    double dt;
+    
+    PROP_Z0;
+    E=VS2E*(vx*vx+vy*vy+vz*vz);
+    if (x<(-width/2.0) || x>(width/2.0) || y<(-height/2.0) || y>(height/2.0))
+      ABSORB;
+    dt = length/vz;
+    PROP_DT(dt);
+    if (x<(-width/2.0) || x>(width/2.0) || y<(-height/2.0) || y>(height/2.0))
+      ABSORB;
+
+    p*= T1+(T0-T1)/(1.0 + (E0-E)*(E0-E)/ratiodE_E*ratioE_dE);
+%}
+END
