@@ -72,7 +72,7 @@ BINOBJS=$(PERLOBJ) mcstas
 .SUFFIXES: .c .o .pl .fixpl
 
 .c.o:
-	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMC_SYS_DIR='"'$(mc_libdir)'"' $(DEFS) $<
+	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(mc_libdir)'"' $(DEFS) $<
 
 .pl.fixpl:
 	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
@@ -157,6 +157,7 @@ cexp.o: mcstas.h
 file.o: mcstas.h
 cogen.o: mcstas.h
 port.o: port.h
+mcformat.o: mcstas.h
 
 instrument.tab.c instrument.tab.h: instrument.y
 	$(BISON) $(BISONFLAGS) instrument.y
