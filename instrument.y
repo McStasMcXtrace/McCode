@@ -593,7 +593,7 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.1, March 31, 1999\n"
+  printf("McStas version 1.13 ALPHA, May 1999\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-1999\n"
 	  "All rights reserved\n");
   exit(0);
