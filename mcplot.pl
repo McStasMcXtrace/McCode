@@ -41,9 +41,11 @@ my ($index);
 my ($passed_arg_str);
 my ($inspect);
 my ($plotter);
+my ($nowindow);
 $index   = 0;
 $inspect = "";
 $passed_arg_str = "";
+$nowindow= 0;
 
 $plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
                 $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
@@ -59,6 +61,8 @@ for($i = 0; $i < @ARGV; $i++) {
         $plotter = $1;	
   } elsif(/^-i([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
       $inspect = $1;
+  } elsif(/^-nw$/i || /^-nojvm$/i) {
+      $nowindow = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "mcplot [-ps|-psc|-gif] <simfile | detector_file>\n";
       print "       [-pPLOTTER] Output graphics using {PGPLOT,Scilab,Matlab}\n";
@@ -66,6 +70,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "       [-overview] Show all plots in a single window\n";
       print "       [-plot]     Show all plots in separate window(s)\n";
       print "       [-iCOMP]    Only show monitors whos name match COMP\n";
+      print "       [-nw]       No-window (no Tcl/Java) mode for {Scilab,Matlab}\n";
       print "  Plots all monitor data from a simulation, or a single data file.\n";
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
@@ -135,10 +140,13 @@ if ($plotter eq 3 || $plotter eq 4) {
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
   }
   close($fh);
-  system("scilab -nw -f $tmp_file\n");
+  if ($nowindow) { system("scilab -nw -f $tmp_file\n"); }
+  else { system("scilab -f $tmp_file\n"); }
   
 } elsif ($plotter eq 1 || $plotter eq 2) {
-  $tosend = "matlab -nojvm -r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str','$inspect');";
+  if ($nowindow) { $tosend = "matlab -nojvm "; }
+  else { $tosend = "matlab "; }
+  $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str','$inspect');";
   if ($passed_arg_str) {
     $tosend .= "exit;\"\n";
   } else {
