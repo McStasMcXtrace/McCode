@@ -623,7 +623,7 @@ if ($plotter =~ /PGPLOT|McStas|0/i) {
 my $scan_info = check_input_params(); # Get variables to scan, if any
 $out_file = get_out_file($sim_def, $force_compile, @ccopts);
 exit(1) unless $out_file;
-exit(1) if not $ncount || $ncount == 0;
+exit(1) if $ncount == 0;
 
 # Make sure that the current directory appears first in the path;
 # contrary to normal use, this is what the user expects here.
