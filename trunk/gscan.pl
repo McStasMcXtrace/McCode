@@ -66,13 +66,14 @@ for($point = 0; $point < $npoints; $point++) {
     $got_error = 0;
     while(<SIM>) {
 	chomp;
-	if(/^Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) *$/) {
+	if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *$/) {
 	    $sim_I = $2;
 	    $sim_err = $4;
-	    $out .= " $sim_I $sim_err";
+	    $sim_N = $6;
+	    $out .= " $sim_I $sim_err $sim_N";
 	    if($firsttime) {
-		$outputs .= " $1 $3";
-		push @youts, "($1,$3)";
+		$outputs .= " $1 $3 $5";
+		push @youts, "($1,$3,$5)";
 	    }
 	} elsif(m'^Error:') {
 	    $got_error = 1;
@@ -80,7 +81,7 @@ for($point = 0; $point < $npoints; $point++) {
 	print "$_\n";
     }
     close(SIM);
-    die "Exit due to error returned by simulation programn" if $got_error;
+    die "Exit due to error returned by simulation program" if $got_error;
     print OUT "$out\n";
     $firsttime = 0;
 }
