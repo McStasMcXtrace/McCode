@@ -113,12 +113,12 @@ void adapt_tree_free(struct adapt_tree *t);
 */
 #define MC_GETPAR2(comp, par) (mcc ## comp ## _ ## par)
 #define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
-#define DETECTOR_OUT(p0,p1,p2) mcdetector_out(mccompcurname,p0,p1,p2,NULL)
-#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,mccompcurname)
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out(NAME_CURRENT_COMP,p0,p1,p2,NULL)
+#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
-     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,mccompcurname)
+     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP)
 #define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
-     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,mccompcurname)
+     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP)
 
 #ifdef MC_TRACE_ENABLED
 #define DEBUG
@@ -500,7 +500,28 @@ int mcstas_main(int argc, char *argv[]);
   double m_xwidth, double m_yheight, double m_zthick, 
   double m_xmin, double m_xmax, double m_ymin, double m_ymax, double m_zmin, double m_zmax);
   void Monitor_nD_Trace(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *aVars);
-/* End of Monitor_nD section */  
+/* End of Monitor_nD section */
+
+/* Retrieve component information from the kernel */
+/* Name, position and orientation (both absolute and relative) 
+/* Any component: For "redundancy", see comment by KN */
+#define tmp_name_comp(comp) #comp
+#define NAME_COMP(comp) tmp_name_comp(comp)
+#define tmp_pos_a_comp(comp) (mcposa ## comp)
+#define POS_A_COMP(comp) tmp_pos_a_comp(comp)
+#define tmp_pos_r_comp(comp) (mcposr ## comp)
+#define POS_R_COMP(comp) tmp_pos_r_comp(comp)
+#define tmp_rot_a_comp(comp) (mcrota ## comp)
+#define ROT_A_COMP(comp) tmp_rot_a_comp(comp)
+#define tmp_rot_r_comp(comp) (mcrotr ## comp)
+#define ROT_R_COMP(comp) tmp_rot_r_comp(comp)
+
+/* Current component */
+#define NAME_CURRENT_COMP  NAME_COMP(mccompcurname)
+#define POS_A_CURRENT_COMP POS_A_COMP(mccompcurname)
+#define POS_R_CURRENT_COMP POS_R_COMP(mccompcurname)
+#define ROT_A_CURRENT_COMP ROT_A_COMP(mccompcurname)
+#define ROT_R_CURRENT_COMP ROT_R_COMP(mccompcurname)
 
 #endif /* MCSTAS_R_H */
 
