@@ -80,22 +80,26 @@ function p=rpink()
   xset('colormap',p);
 endfunction
 
-function win = mcplot_addmenu()
+function win = mcplot_addmenu(use_common_menu)
 // set up a mcplot local menu
+
+  global MCPLOT
+
   win = xget('window');
+  if argn(2) > 1 & MCPLOT.MenuInstalled, return; end
+  
   // remove McStas menu (if any)
   delmenu(win,'McStas')
   // creates a local McStas menu for looking at data files, and direct exporting
   menu_installed = 0;
-  if exists('with_gtk')
-    if with_gtk() // with scilab 2.7 on Linux with GTK+ libs
-      addmenu(win, '_McStas', ...
-      [ 'Open in a separate window', ...      
+  t = [ 'Select a figure', ...
+        'Open in a separate window', ...      
         'Edit/_data file', ... 
         'Edit/_instrument file', ... 
         'Edit/colormap...', ...               
         'Edit/preferences...', ...       
-	'View/_instrument...', ...
+        'View instrument...', ...
+        'Reset Top-View', ...
         'Add/_colorbar', ...  
         'Add/_text...', ...       
         'Save as/_GIF', ...           
@@ -111,64 +115,44 @@ function win = mcplot_addmenu()
         'Colormap/Gray',...
         'Colormap/_Pink',...
         'Colormap/Inv. Pink',...
-        'About McStas...','Exit'], ...              
-        list(2,'mcplot_menu_action'));
+        'About McStas...',...
+        'Exit'];	// exit must be last choice
+  if exists('with_gtk')
+    if with_gtk() // with scilab 2.7 on Linux with GTK+ libs
+      addmenu(win, '_McStas', t, list(2,'mcplot_menu_action'));
       menu_installed = 1;
+      MCPLOT.MenuInstalled = 1;
     end
   end
-  if ~menu_installed
-    t = [ 'Open in a separate window', ...      
-      'Edit data file', ... 
-      'Edit instrument file', ... 
-      'Edit colormap...', ...               
-      'Edit preferences...', ...       
-      'View instrument...', ...
-      'Add colorbar', ...    
-      'Add text...', ...       
-      'Save as GIF', ...           
-      'Save as EPS (b-w)', ...     
-      'Save as EPS (color)', ...   
-      'Save as Fig (Xfig)', ...    
-      'Save as PPM (PPM)', ...    
-      'Save as Scg (Scilab fig)', ...  
-      'Colormap Jet', ...                  
-      'Colormap HSV', ...                  
-      'Colormap Hot (red)', ...            
-      'Colormap Cool (blue)', ...          
-      'Colormap Gray',...
-      'Colormap Pink',...
-      'Colormap Inv. Pink',...
-      'About McStas...','Exit'];
-    if getversion() == 'scilab-2.6'
-      disp('Sorry, I can not install the McStas menu in Scilab <= 2.6');
-    else
-      global MCPLOT
-      
-      if ~MCPLOT.MenuInstalled
-        // creating Callback code
-        code=[ '#include ""machine.h""'
-         'void mcplot_menu_C(char *name,int *win,int *entry)'
-         '{'
-         '  char cmd[256];'
-         '  if (*win!=-1) {'
-         '    sprintf(cmd, ""mcplot_menu_action(%i, %i);"", *entry,*win);'
-         '    mexEvalString(cmd);'
-         '  }'
-         '}'];
-        //creating mcplot_menu_C.c file
-        dir1=getcwd(); chdir(TMPDIR)
-        mputl(code,TMPDIR+'/mcplot_menu_C.c');
-        //reating Makefile
-        ilib_for_link('mcplot_menu_C','mcplot_menu_C.o',[],'c');
-        exec('loader.sce');
-        chdir(dir1);
-        MCPLOT.MenuInstalled = 1;
-        MCPLOT.ShiftedItems  = 1; // to be set when with_tk and ~with_gtk, with C callback
+  if ~menu_installed & ~MCPLOT.MenuInstalled
+    t = strsubst(t, '_', '');
+    t = strsubst(t, '/', ' ');
+    if havewindow() & with_tk()
+      // we may use Tk external menu
+      MCPLOT.MenuInstalled = 1;
+            
+      // build-up the Tcl/Tk string for Tk_EvalStr
+      tcl_script=['set w .foo',...
+                  'catch {destroy .foo}',...
+                  'toplevel .foo',...
+                  'wm title .foo ""McStas/McPlot menu""',...
+                  'frame .foo.menu -relief raised -borderwidth 2',...
+                  'pack .foo.menu -side top -fill x',...
+                  'menubutton .foo.menu.mcplot -text ""McStas/McPlot"" -menu .foo.menu.mcplot.m -underline 0',...
+                  'menu .foo.menu.mcplot.m'];
+      for index=1:size(t,2)
+        tcl_script = [ tcl_script, ...
+          '.foo.menu.mcplot.m add command -label ""'+t(index)+'"" -underline 0  -command {ScilabEval ""mcplot_menu_action('+string(index)+')""}'];
+	  
       end
-      //add menu
-      addmenu(win, 'McStas', ...
-        t, ...              
-        list(1,'mcplot_menu_C'));
+      tcl_script = [ tcl_script, 'pack .foo.menu.mcplot -side left' ];
+      // now send it to Tk
+      TK_EvalStr(tcl_script);
+    elseif argn(2) > 0
+      // we shall use x_choices
+      rep = x_choices(['Fig '+string(win)+': Choose something to do','Select ""Exit"" to delete this dialog'], list(list('Action:', 1, t)));
+      if length(rep), mcplot_menu_action(rep); end
+      if rep == size(t,2), win=0; else win = -1; end
     end
   end
 endfunction // mcplot_addmenu
@@ -177,9 +161,13 @@ function mcplot_menu_action(k, gwin)
 
   global MCPLOT
   
+  if argn(2) == 1
+    gwin = xget('window');
+  end
+  
   // extract global data
   ThisFigure = [];
-  execstr('ThisFigure = MCPLOT.Figure_'+string(gwin));
+  execstr('ThisFigure = MCPLOT.Figure_'+string(gwin),'errcatch');
   filename = '';
   execstr('filename = ThisFigure.filename','errcatch');
   
@@ -188,19 +176,18 @@ function mcplot_menu_action(k, gwin)
     k = k+1;
   end
   if k <= 0
-  	disp('Oops, the Tcl/Tk uses shifted menu item indexes');
-	  disp('This should be corrected now...');
-	  MCPLOT.ShiftedItems = 1;
+    mprintf('Oops, the Tcl/Tk uses shifted menu item indexes\n');
+    mprintf('This should be corrected now...a\n');
+    MCPLOT.ShiftedItems = 1;
     k=1;
   end
   
-  if argn(2) <= 1, gwin = 0; end
   xset('window', gwin); // raise menu activated window 
-  item = [ 1, 2, 19, 3, 4, 23, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20,21,22,18]
+  item = [ 24, 1, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 18]
   
   select item(k)
     case 0 then
-    	disp('Invalid menu item');
+    	mprintf('Invalid menu item\n');
     case 1 then // Open in a separate window
       t='Figure '+string(gwin)+': Click on the plot to duplicate/enlarge.';
       xinfo(t); mprintf('%s\n',t);
@@ -255,12 +242,19 @@ function mcplot_menu_action(k, gwin)
     case 23 then // View/instrument
       execstr('figname = ThisFigure.instrument.name','errcatch');
       if length(figname)
-        [fid,err]=file('open',strcat([figname '.scg']),'old');
+        t=figname+'.scg';
+        [fid,err]=fileinfo(t);
+	if err
+	  t = figname+'.out.scg';
+          [fid,err]=fileinfo(t);
+	end
         if err == 0
-          win=max(winsid())+1;
-          xset("window",win);	  
-          xload(strcat([figname '.scg']));
-          xset("window",win-1);
+          gwin=xget('window');
+          xset("window",max(winsid())+1);	  
+          xload(t);
+          t = 'Viewing instrument '+t;
+          xinfo(t); mprintf('%s\n',t);
+          xset("window",win);
         end
       end
     case 5 then // Add _colorbar
@@ -299,12 +293,13 @@ function mcplot_menu_action(k, gwin)
     case 17 then // Colormap/gray
       gray();
     case 18 then // Close all
+      mprintf('To Exit Scilab, type ""exit"" at the scilab''s prompt\n');
       exit
     case 20 then // Colormap/pink
       pink();
     case 21 then // Colormap/inverted pink
       rpink();
-    case 22 then
+    case 22 then // about
       t = ['McStas McPlot menu',...
         '', ...
         'This is the McStas McPlot tool menu',...
@@ -316,6 +311,30 @@ function mcplot_menu_action(k, gwin)
         'to redistribute it under certain conditions',...
         'as specified in Licence files.'];
       x_message_modeless(t);
+    case 24 then // select a window
+      w_indexes = [];
+      w_titles = '';
+      for index=winsid()
+        ThisFigure = [];
+        execstr('ThisFigure = MCPLOT.Figure_'+string(index),'errcatch');
+        if length(ThisFigure)
+          w_indexes = [ w_indexes, index ];
+          if ~length(w_titles), w_titles  = [ 'Fig '+string(index)+': '+ThisFigure.filename ];
+          else w_titles = [ w_titles, 'Fig '+string(index)+': '+ThisFigure.filename ]; end
+        end
+      end
+      if length(w_indexes) > 1
+        w_raise = x_choose(w_titles, 'Select a McPlot window');
+      elseif length(w_indexes) == 1, w_raise=1;
+      else w_raise=0; end
+      if w_raise > 0, 
+        t='Selecting '+w_titles(w_raise);
+        xinfo(t); mprintf('%s\n',t);
+        xset('window', w_indexes(w_raise));
+      end
+    case 25 then
+      xclear()
+      xtape('replayna', gwin, 90, 0);
     end 
     if item(k)~= 18, xbasr(); end // update plot
 endfunction  
@@ -440,8 +459,9 @@ if ~length(d.data)
   x = mget(3*pS, t, fid);
   d.data  =matrix(x(1:pS), S);
   if length(x) >= 3*pS,
-  d.errors=matrix(x((pS+1):(2*pS)), S);
-  d.events=matrix(x((2*pS+1):(3*pS)), S);end
+   d.errors=matrix(x((pS+1):(2*pS)), S);
+   d.events=matrix(x((2*pS+1):(3*pS)), S);
+  end
   mclose(fid);
   return
  end
@@ -652,7 +672,7 @@ options = convstr(options, 'l');  // to lower case
 // handle file name specification in 'object'
 if typeof(object) == 'string' // if object is a string
 
-  if size(object,2) > 1 then
+  if size(object,2) > 1
     for index=1:size(object,2)
       [object,count] = mcplot(object(index), options, id);
     end
@@ -689,11 +709,11 @@ if typeof(object) == 'string' // if object is a string
       if (index), by_char = '_'; else by_char = 'm'; end
       valid_name = strsubst(valid_name, part(to_replace, index), by_char);
     end
-    disp('mcstas = get_'+valid_name+'();')
+    mprintf('mcstas = get_'+valid_name+'();\n')
     execstr('mcstas = get_'+valid_name+'();','errcatch');
     if ~length(mcstas)
-      disp('mcplot: Could not extract McStas structure from file '+object);
-      disp('mcplot: '+lasterror());
+      mprintf('mcplot: Could not extract McStas structure from file '+object+'\n');
+      mprintf('mcplot: %s\n',lasterror());
       return
     end
   end
@@ -704,7 +724,7 @@ end
 
 // handles structure loading and ploting
 if type(object) ~= 16 & type(object) ~= 17
-  disp('mcplot: Could not extract the McStas simulation structure.')
+  mprintf('mcplot: Could not extract the McStas simulation structure.\n')
   return;
 else  // if 's' is a 'struct'
   ext = ''; dr = '';
@@ -727,7 +747,7 @@ else  // if 's' is a 'struct'
       options = options+' overview';
     end
   end
-  //    send to mcplot_scan(s, options)
+  //  **  send to mcplot_scan(s, options, id)  **
   [count, object] = mcplot_scan(object, options, id);
   //    if output is not empty close xend()
   if length(ext)
@@ -743,6 +763,13 @@ else  // if 's' is a 'struct'
     end
     t='mcplot: McStas plot exported as file '+filename+' ('+options+')';
     xinfo(t); mprintf('%s\n',t);
+  else
+    // installs a common menu for all figures
+    // in case this could not be done with GTk
+    ret = -1;
+    while (ret < 0)	// used whith x_choices, or ignore with Tk/GTk
+      ret = mcplot_addmenu('common');	
+    end
   end
   driver('Rec');  // default output to screen
 end
