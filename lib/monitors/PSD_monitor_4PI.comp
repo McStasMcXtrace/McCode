@@ -1,0 +1,94 @@
+/***********************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: PSD_monitor_4PI
+*
+* Written by: KL and KN, April 17, 1998
+*
+* An (n times m) pixel spherical PSD monitor using a cylindrical projection. 
+* Mostly for test and debugging purposes.
+* INPUT PARAMETERS:
+*
+* radius:   Radius of detector (m)
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+***********************************************************************/
+
+
+DEFINE COMPONENT PSD_monitor_4PI
+DEFINITION PARAMETERS (radius, nx, ny, filename)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  int PSD_N[nx][ny];
+  double PSD_p[nx][ny];
+  double PSD_p2[nx][ny];
+%}
+INITIALIZE
+%{
+  int i,j;
+
+  for (i=0; i<nx; i++)
+    for (j=0; j<ny; j++) 
+    {
+      PSD_N[i][j] = 0;
+      PSD_p[i][j] = 0;
+      PSD_p2[i][j] = 0;
+    }
+%}
+TRACE
+%{
+  double t0, t1, phi;
+  int i,j;
+    
+  if(sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius) && t1 > 0)
+  {
+    if(t0 < 0)
+      t0 = t1;
+    /* t0 is now time of intersection with the sphere. */
+    PROP_DT(t0);
+    phi = atan2(z,x);
+    i = floor(nx*(phi/(2*PI) + 0.5));
+    j = floor(ny*(y/(2*radius) + 0.5));
+    PSD_N[i][j]++;
+    PSD_p[i][j] += p;
+    PSD_p2[i][j] += p*p;
+  }
+%}
+FINALLY
+%{
+  int i,j;
+  FILE *outfile;
+  int Nsum;
+  double Psum, P2sum;
+
+  Nsum = Psum = P2sum 0;
+  outfile=fopen(filename,"w");
+  for (j=0; j<ny; j++)
+  {
+    for (i=0; i<nx; i++)
+    {
+      fprintf(outfile,"%g ", PSD_N[i][j], PSD_p[i][j], PSD_p2[i][j]);
+      Nsum += PSD_N[i][j];
+      Psum += PSD_p[i][j];
+      P2sum += PSD_p2[i][j];
+    }
+    fprintf(outfile,"\n");
+  }
+  fclose(outfile);
+  test_printf("Total neutrons in PSD_monitor_4pi N: %i p: %g p2: %g \n",Nsum, Psum, P2sum);
+%}
+END
