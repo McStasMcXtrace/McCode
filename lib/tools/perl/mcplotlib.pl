@@ -125,7 +125,10 @@ sub overview_plot {
 	my ($i, $j) = (int($cx), int($cy));
 	$i = 0 if $i < 0;
 	$j = 0 if $j < 0;
+	$i = $nx - 1 if $i >= $nx;
+	$j = $ny - 1 if $i >= $ny;
 	my $idx = $i + $nx*$j;
+	$idx = int(@$datalist) - 1 if $idx >= int(@$datalist);
 	pgclos;
 	return ($cc,$idx);
     } else {
