@@ -766,9 +766,11 @@ sub do_scan {
                 }
                 $SIG{'INT'}  = \&sighandler;
                 $SIG{'TERM'} = \&sighandler;
-                $SIG{'USR1'} = \&sighandler; 
-                $SIG{'USR2'} = \&sighandler; 
-                $SIG{'HUP'}  = \&sighandler;
+                if ($Config{'osname'} ne 'MSWin32') {
+                  $SIG{'USR1'} = \&sighandler; 
+                  $SIG{'USR2'} = \&sighandler; 
+                  $SIG{'HUP'}  = \&sighandler;
+                }
                 while(<SIM>) {
                     chomp;
                     if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ") {
@@ -788,9 +790,11 @@ sub do_scan {
                 # remove SIG handler
                 $SIG{'INT'}  = 'DEFAULT';
                 $SIG{'TERM'} = 'DEFAULT'; 
-                $SIG{'USR1'} = 'DEFAULT'; 
-                $SIG{'USR2'} = 'DEFAULT'; 
-                $SIG{'HUP'}  = 'DEFAULT';
+                if ($Config{'osname'} ne 'MSWin32') {
+                  $SIG{'USR1'} = 'DEFAULT'; 
+                  $SIG{'USR2'} = 'DEFAULT'; 
+                  $SIG{'HUP'}  = 'DEFAULT';
+                }
             } else {                # Child
                 open(STDERR, ">&STDOUT") || die "mcrun: Can't dup stdout";
                 exec_sim(@options, $output_opt);
@@ -1045,7 +1049,7 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
   $format_end_value  ="';";
   $format_prefix     ="// ";
   $format_limprefix  ="xy";
-} elsif ($numpoints > 1) {
+} elsif ($numpoints > 1 && $MCSTAS::mcstas_config{'PLOTTER'} !~ /PGPLOT|McStas/i) {
   print STDERR "mcrun: Warning: format $MCSTAS::mcstas_config{'PLOTTER'} does not support parameter scans\n"; 
 }
 
