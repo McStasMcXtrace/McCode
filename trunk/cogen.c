@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.6 1998-08-21 12:07:14 kn Exp $
+* 	$Id: cogen.c,v 1.7 1998-09-24 12:14:46 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.6  1998/08/21 12:07:14  kn
+* 	Output generated C simulation code in file rather than on stdout.
+*
 * 	Revision 1.5  1997/12/03 13:34:24  kn
 * 	Added definition of ABSORB macro.
 *
@@ -430,6 +433,7 @@ cogen_init(struct instr_def *instr)
 {
   List_handle liter;
   struct comp_inst *comp, *last;
+  char *d2r;
   
   coutf("void %sinit(void) {", ID_PRE);
 
@@ -477,6 +481,10 @@ cogen_init(struct instr_def *instr)
   coutf("    Coords %stc1, %stc2;", ID_PRE, ID_PRE);
   coutf("    Rotation %str1, %str2;", ID_PRE, ID_PRE);
   cout("");
+  /* Conversion factor degrees->radians for rotation angles. This may be 1 for
+     backward compatibility with old instrument definitions. */
+  d2r = instr->rotations_in_radians ? "1" : "DEG2RAD";
+
   liter = list_iterate(instr->complist);
   last = NULL;
   coutf("    %sDEBUG_INSTR()", ID_PRE);
@@ -494,12 +502,13 @@ cogen_init(struct instr_def *instr)
     relcomp = comp->pos->orientation_rel;
     if(relcomp == NULL)
     {				/* Absolute orientation. */
-      coutf("    rot_set_rotation(%srota%s, %s, %s, %s);",
-	    ID_PRE, comp->name, x, y, z);
+      coutf("    rot_set_rotation(%srota%s, (%s)*%s, (%s)*%s, (%s)*%s);",
+	    ID_PRE, comp->name, x, d2r, y, d2r, z, d2r);
     }
     else
     {
-      coutf("    rot_set_rotation(%str1, %s, %s, %s);", ID_PRE, x, y, z);
+      coutf("    rot_set_rotation(%str1, (%s)*%s, (%s)*%s, (%s)*%s);",
+	    ID_PRE, x, d2r, y, d2r, z, d2r);
       coutf("    rot_mul(%str1, %srota%s, %srota%s);",
 	    ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
     }
