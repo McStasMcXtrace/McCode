@@ -6,8 +6,8 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: Sept. 14 1998
-* Version: $Revision: 1.9 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.10 $
+* Origin: McStas 1.5
 *
 * A simple neutron filter.
 *
@@ -37,7 +37,6 @@ DEFINE COMPONENT Filter
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, T0, T1, Emin, Emax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 TRACE
 %{
     double E;

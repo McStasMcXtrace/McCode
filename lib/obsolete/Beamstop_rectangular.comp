@@ -9,8 +9,8 @@
 *
 * Written by: Kristian Nielsen
 * Date: January 2000
-* Origin: McStas 1.4.2
-* Version: $Revision: 1.3 $
+* Origin: McStas 1.5
+* Version: $Revision: 1.4 $
 *
 * Rectangular beam stop.
 *
@@ -33,7 +33,6 @@ DEFINE COMPONENT Beamstop_rectangular
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 TRACE
 %{
     PROP_Z0;
