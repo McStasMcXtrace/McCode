@@ -8,9 +8,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.14 1998-10-02 08:36:34 kn Exp $
+*	$Id: instrument.l,v 1.15 1998-11-26 08:45:13 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.14  1998/10/02 08:36:34  kn
+*	Added output parameters for components.
+*	Fixed header comment.
+*
 *	Revision 1.13  1998/10/01 11:44:47  kn
 *	Added support for string expressions.
 *
@@ -271,7 +275,7 @@ TRACE		return TOK_TRACE;
 /* This flag is set when autoloading component definitions to make the lexer
    output the special initial token to switch the parser to restricted
    mode. */
-static int parse_restricted = FALSE;
+int parse_restricted = FALSE;
 
 /* Prepare to run lexical analysis on new file. */
 void
