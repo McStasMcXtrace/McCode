@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.9 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.10 $
+* Origin: McStas 1.5
 *
 * Energy-sensitive monitor.
 *
@@ -40,7 +40,6 @@ DEFINITION PARAMETERS (nchan, filename)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, Emin, Emax)
 OUTPUT PARAMETERS (E_N, E_p, E_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     int E_N[nchan];

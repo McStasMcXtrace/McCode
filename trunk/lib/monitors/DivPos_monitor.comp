@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.4 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.5 $
+* Origin: McStas 1.5
 *
 * Divergence/position monitor (acceptance diagram).
 *
@@ -42,7 +42,6 @@ DEFINITION PARAMETERS (npos, ndiv, filename)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, maxdiv)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     int Div_N[npos][ndiv];

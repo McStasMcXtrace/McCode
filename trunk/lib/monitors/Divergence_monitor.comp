@@ -6,8 +6,8 @@
 * %I
 * Written by: Kim Lefmann
 * Date: Nov. 11, 1998
-* Version: $Revision: 1.8 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.9 $
+* Origin: McStas 1.5
 *
 * Horizontal+vertical divergence monitor.
 *
@@ -43,7 +43,6 @@ DEFINITION PARAMETERS (nh, nv, filename)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, h_maxdiv, v_maxdiv)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     int Div_N[nh][nv];
