@@ -18,9 +18,19 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.94 2004-09-01 14:03:41 farhi Exp $
+* $Id: mcstas-r.c,v 1.95 2004-09-03 13:51:07 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.94  2004/09/01 14:03:41  farhi
+* 1 new VRML format for single data files. requires more work for the 'sim' file
+* 2 add more info in output file name headers about how to view data
+* 3 re-arranged format structure fields in more logical way
+* 4 checked all formats for valid export
+* 5 compute and update y/z min/max for correct values in data block of files
+* 6 correct bug in dynamic format fields alloction when replacing aliases
+* 7 adding more field aliases
+* 8 use more dynamic allocations to avoid local const variables
+*
 * Revision 1.93  2004/08/25 09:45:41  farhi
 * Main change in the format definition specifications. Aliases are now available to ease maintenance and writing of new formats, e.g. %FIL instead of %2$s !!
 *
@@ -273,6 +283,7 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 #endif
 
 mcstatic struct mcformats_struct mcformat;
+mcstatic struct mcformats_struct mcformat_data;
 
 /*******************************************************************************
 * Definition of output formats. structure defined in mcstas-r.h
@@ -562,20 +573,21 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "<META name=\"Creator\" content=\"%PAR (%SRC) McStas " MCSTAS_VERSION " [neutron.risoe.dk] simulation\">\n"
       "<META name=\"Date\" content=\"%DAT\">\n"
       "<TITLE>[McStas %PAR (%SRC)]%FIL</TITLE></HEAD>\n"
-      "<BODY><h1><a name=\"%PAR\">"
-        "McStas simulation %SRC (%SRC): Result file %FIL.html</a></h1><br>\n"
+      "<BODY><center><h1><a name=\"%PAR\">"
+        "McStas simulation %SRC (%SRC): Result file %FIL.html</a></h1></center><br>\n"
         "This simulation report was automatically created by"
         " <a href=\"http://neutron.risoe.dk/\"><i>McStas " MCSTAS_VERSION "</i></a><br>\n"
         "<pre>User:   %USR<br>\n"
         "%PRECreator: <a href=\"%SRC\">%SRC</a> %PAR McStas simulation<br>\n"
         "%PREFormat:  %FMT<br>\n"
-        "%PREDate:    (%DATL) %DAT<br></pre>\n",
+        "%PREDate:    (%DATL) %DAT<br></pre>\n"
+        "VRML viewers may be obtained at <a href=\"http://cic.nist.gov/vrml/vbdetect.html\">http://cic.nist.gov/vrml/vbdetect.html</a>\n",
     "<b>EndDate: </b>(%DATL) %DAT<br></BODY></HTML>\n",
     "%PRE<h%LVL><a name=\"%NAM\">%TYP %NAM</a></h%LVL> "
       "[child of <a href=\"#%PAR\">%PAR</a>]<br>\n",
     "[end of <a href=\"#%NAM\">%TYP %NAM</a>]<br>\n",
     "%PRE<b>%NAM: </b>%VAL<br>\n",
-    "%PRE<b>DATA</b> file <a href=\"%FIL\">%FIL</a><br>\n", "%PREEnd of DATA<br>\n",
+    "%PRE<b>DATA</b><br><center><embed src=\"%FIL\" type=\"model/vrml\" width=\"75%%\" height=\"50%%\"></embed><br>File <a href=\"%FIL\">%FIL VRML file</a></center><br>\n", "%PREEnd of DATA<br>\n",
     "%PRE<b>ERRORS</b><br>\n","%PREEnd of ERRORS<br>\n", 
     "%PRE<b>EVENTS</b><br>\n", "%PREEnd of EVENTS<br>\n"},
   { "OpenGENIE", "gcl",
@@ -2370,7 +2382,7 @@ mcenabletrace(void)
 *             if mode is non 0, then mode is used, else mode is 'w' 
 *******************************************************************************/
 
-FILE *mcnew_file(char *name, char *mode)
+FILE *mcnew_file(char *name, char *ext, char *mode)
 {
   int dirlen;
   char *mem;
@@ -2379,7 +2391,7 @@ FILE *mcnew_file(char *name, char *mode)
   if (!name || strlen(name) == 0) return(NULL);
   
   dirlen = mcdirname ? strlen(mcdirname) : 0;
-  mem = malloc(dirlen + 1 + strlen(name) + 1);
+  mem = malloc(dirlen + strlen(name) + 256);
   if(!mem)
   {
     fprintf(stderr, "Error: Out of memory (mcnew_file)\n");
@@ -2394,6 +2406,11 @@ FILE *mcnew_file(char *name, char *mode)
       strcat(mem, MC_PATHSEP_S);
   }
   strcat(mem, name);
+  if (!strchr(name, '.') && ext) 
+  { /* add extension if not in file name already */
+    strcat(mem, ".");
+    strcat(mem, ext);
+  }
   file = fopen(mem, (mode ? mode : "w"));
   if(!file)
     fprintf(stderr, "Warning: could not open output file '%s' in mode '%s' (mcnew_file)\n", mem, mode);
@@ -2984,18 +3001,15 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
 * mcsiminfo_init: writes simulation structured description file (mcstas.sim)
 *******************************************************************************/
 void mcsiminfo_init(FILE *f)
-{
-  char info_name[256];
-  
+{ 
   if (mcdisable_output_files) return;
   if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return;
-  if (!strchr(mcsiminfo_name,'.')) sprintf(info_name, "%s.%s", mcsiminfo_name, mcformat.Extension); else strcpy(info_name, mcsiminfo_name);
-  if (!f) mcsiminfo_file = mcnew_file(info_name, "w");
+  if (!f) mcsiminfo_file = mcnew_file(mcsiminfo_name, mcformat.Extension, "w");
   else mcsiminfo_file = f;
   if(!mcsiminfo_file)
     fprintf(stderr,
             "Warning: could not open simulation description file '%s' (mcsiminfo_init)\n",
-            info_name);
+            mcsiminfo_name);
   else
   {
     char *pre; /* allocate enough space for indentations */
@@ -3093,6 +3107,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   char sec[256];
   char isdata_present;
   char israw_data=0; /* raw data=(N,p,p2) instead of (N,P,sigma) */
+  struct mcformats_struct dataformat;
   
   if (strstr(part,"data")) 
   { isdata = 1; Begin = format.BeginData; End = format.EndData; }
@@ -3160,12 +3175,15 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   *     call datablock part+header(begin)
   * else data file = f
   */
+  dataformat=mcformat;
   if (!mcsingle_file && just_header == 0)
   {
     /* if data: open new file for data else append for error/ncount */
-    if (filename) datafile = mcnew_file(filename, 
+    if (filename) {
+      if (mcformat_data.Name) dataformat = mcformat_data;
+      datafile = mcnew_file(filename, dataformat.Extension,
       (isdata != 1 || strstr(format.Name, "no header") ? "a" : "w"));
-    else datafile = NULL;
+    } else datafile = NULL;
     /* special case of IDL: can not have empty vectors. Init to 'external' */
     if (strstr(format.Name, "IDL") && f) fprintf(f, "'external'");
     /* if data, start with root header plus tags of parent data */
@@ -3176,22 +3194,22 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       new_pre = (char *)malloc(20);
       mode    = (char *)malloc(20);
       if (!new_pre || !mode) exit(fprintf(stderr, "Error: insufficient memory (mcfile_datablock)\n"));
-      strcpy(new_pre, (strstr(format.Name, "McStas") 
-               || strstr(format.Name, "VRML")
-               || strstr(format.Name, "OpenGENIE") ? "# " : ""));
+      strcpy(new_pre, (strstr(dataformat.Name, "McStas") 
+               || strstr(dataformat.Name, "VRML")
+               || strstr(dataformat.Name, "OpenGENIE") ? "# " : ""));
       
       if (isdata == 1) {
         if(!strstr(format.Name, "no header"))
           {
-            mcfile_header(datafile, format, "header", new_pre, 
+            mcfile_header(datafile, dataformat, "header", new_pre, 
                           filename, valid_parent); 
-            mcinfo_simulation(datafile, format, 
+            mcinfo_simulation(datafile, dataformat, 
                               new_pre, valid_parent); 
           }
       }
       sprintf(mode, "%s begin", part);
       /* write header+data block begin tags into datafile */
-      mcfile_datablock(datafile, format, new_pre, 
+      mcfile_datablock(datafile, dataformat, new_pre, 
           valid_parent, mode,
           p0, p1, p2, m, n, p,
           xlabel,  ylabel, zlabel, title,
@@ -3208,9 +3226,9 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       else if (p==1) sprintf(sec,"array_2d(%d,%d)", m,n);
       else sprintf(sec,"array_3d(%d,%d,%d)", m,n,p);
       fprintf(f,"%sbegin %s\n", pre, sec);
-      datafile = f;
+      datafile = f; dataformat=mcformat;
     }
-    if (mcsingle_file) datafile = f;
+    if (mcsingle_file) { datafile = f; dataformat=mcformat; }
   }
   
   /* if normal: [data] in data file */
@@ -3357,15 +3375,15 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     mode    = (char *)malloc(20);
     if (!new_pre || !mode) exit(fprintf(stderr, "Error: insufficient memory (mcfile_datablock)\n"));
     
-    strcpy(new_pre, (strstr(format.Name, "McStas") 
-               || strstr(format.Name, "VRML")
-               || strstr(format.Name, "OpenGENIE") ? "# " : ""));
+    strcpy(new_pre, (strstr(dataformat.Name, "McStas") 
+               || strstr(dataformat.Name, "VRML")
+               || strstr(dataformat.Name, "OpenGENIE") ? "# " : ""));
 
     if (datafile && datafile != f && !mcascii_only)
     {
       sprintf(mode, "%s end", part);
       /* write header+data block end tags into datafile */
-      mcfile_datablock(datafile, format, new_pre,
+      mcfile_datablock(datafile, dataformat, new_pre,
           valid_parent, mode,
           p0, p1, p2, m, n, p,
           xlabel,  ylabel, zlabel, title,
@@ -3373,7 +3391,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           x1, x2, y1, y2, z1, z2, filename, istransposed);
       if ((isdata == 1 && is1d) || strstr(part,"ncount") || !p0 || !p2) /* either ncount, or 1d */
         if(!strstr(format.Name, "no footer"))
-          mcfile_header(datafile, format, "footer", new_pre,
+          mcfile_header(datafile, dataformat, "footer", new_pre,
                         filename, valid_parent);
     }
     if (datafile) fclose(datafile); 
@@ -3391,7 +3409,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
 
 /*******************************************************************************
 * mcfile_data: output data/errors/ncounts using specified file format.
-*   if McStas 1D then data is stored
+*   if McStas 1D then data is stored. f is the simfile handle or NULL.
 *   as a long 1D array [p0, p1, p2] to reorder -> don't output err/ncount again.
 *   if p1 or p2 is NULL then skip that part.
 *******************************************************************************/
@@ -3456,15 +3474,16 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   char *xlabel, char *ylabel, char *zlabel, 
   char *xvar, char *yvar, char *zvar, 
   double x1, double x2, double y1, double y2, double z1, double z2, 
-  char *filename,
+  char *filename_orig,
   double *p0, double *p1, double *p2)
 {  
   char simname[512];
   int i,j;
   double Nsum=0, Psum=0, P2sum=0;
-  FILE *local_f=NULL;
+  FILE *simfile_f=NULL;
   char istransposed=0;
   char *pre;
+  char filename[1024];
 
 #ifdef USE_MPI
   int mpi_event_list;
@@ -3474,6 +3493,13 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
   strcpy(pre, strstr(format.Name, "VRML")
                || strstr(format.Name, "OpenGENIE") ? "# " : "");
+  strcpy(filename, filename_orig);
+  if (!strchr(filename, '.')) 
+  { /* add extension to file name if it is missing */
+    strcat(filename,"."); 
+    if (mcformat_data.Extension) strcat(filename,mcformat_data.Extension); 
+    else strcat(filename,mcformat.Extension); 
+  }
 
 #ifdef USE_MPI
   mpi_event_list = (strstr(format.Name," list ") != NULL);
@@ -3501,7 +3527,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     i=m; m=abs(n); n=abs(i); p=abs(p); 
   }
 
-  if (!strstr(format.Name," list ")) local_f = mcsiminfo_file; /* use sim file */
+  if (!strstr(format.Name," list ")) simfile_f = mcsiminfo_file; /* use sim file */
   if (mcdirname)
     sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name);
   else
@@ -3511,8 +3537,8 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     {
       MPI_MASTER
         (
-         mcfile_section(local_f, format, "begin", pre, parent, "component", simname, 3);
-         mcfile_section(local_f, format, "begin", pre, filename, "data", parent, 4);
+         mcfile_section(simfile_f, format, "begin", pre, parent, "component", simname, 3);
+         mcfile_section(simfile_f, format, "begin", pre, filename, "data", parent, 4);
          );
     }
 
@@ -3550,7 +3576,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 
           /* save master events list */
           if (!mcdisable_output_files)
-            mcfile_data(local_f, format, 
+            mcfile_data(simfile_f, format, 
                         pre, parent, 
                         p0, p1, p2, m, n, p,
                         xlabel, ylabel, zlabel, title,
@@ -3583,7 +3609,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
                 }
 
               if (!mcdisable_output_files)
-                mcfile_data(local_f, format, 
+                mcfile_data(simfile_f, format, 
                             pre, parent, 
                             p0, p1, p2, m, n, p,
                             xlabel, ylabel, zlabel, title,
@@ -3596,7 +3622,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     {
       if (!mcdisable_output_files)
         {
-          mcfile_data(local_f, format, 
+          mcfile_data(simfile_f, format, 
                       pre, parent, 
                       p0, p1, p2, m, n, p,
                       xlabel, ylabel, zlabel, title,
@@ -3609,7 +3635,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 
   if (!mcdisable_output_files)
     {
-      mcfile_data(local_f, format, 
+      mcfile_data(simfile_f, format, 
                   pre, parent, 
                   p0, p1, p2, m, n, p,
                   xlabel, ylabel, zlabel, title,
@@ -3621,11 +3647,11 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 
   if (!mcdisable_output_files)
     {
-      mcfile_section(local_f, format, "end", pre, filename, "data", parent, 4);
-      mcfile_section(local_f, format, "end", pre, parent, "component", simname, 3);
+      mcfile_section(simfile_f, format, "end", pre, filename, "data", parent, 4);
+      mcfile_section(simfile_f, format, "end", pre, parent, "component", simname, 3);
     }
 
-  if (local_f || mcdisable_output_files)
+  if (simfile_f || mcdisable_output_files)
     {
       for(j = 0; j < n*p; j++)
         {
@@ -3827,6 +3853,7 @@ char *mcuse_format_header(char *format_const)
   str_rep(format, "%PAR", "%7$s"); /* Parent name (root/mcstas) */
   return(format);
 }
+
 char *mcuse_format_tag(char *format_const)
 { /* AssignTag */
   char *format=NULL;
@@ -3893,12 +3920,16 @@ char *mcuse_format_data(char *format_const)
   return(format);
 }
 
-void mcuse_format(char *format)
+/*******************************************************************************
+* mcuse_format: selects an output format for sim and data files
+*******************************************************************************/
+struct mcformats_struct mcuse_format(char *format)
 {
   int i,j;
   int i_format=-1;
   char *tmp;
   char low_format[256];
+  struct mcformats_struct usedformat;
   
   /* get the format to lower case */
   if (!format) return;
@@ -3914,7 +3945,7 @@ void mcuse_format(char *format)
   {
     strcpy(tmp, mcformats[i].Name); 
     for (j=0; j<strlen(tmp); j++) tmp[j] = tolower(tmp[j]);
-    if (strstr(low_format, tmp)) i_format = i;
+    if (strstr(low_format, tmp))  i_format = i;
   }
   if (i_format < 0)
   {
@@ -3922,35 +3953,55 @@ void mcuse_format(char *format)
     fprintf(stderr, "Warning: unknown output format '%s'. Using default (%s, mcuse_format).\n", format, mcformats[i_format].Name);
   }
 
-  mcformat = mcformats[i_format];
-  strcpy(tmp, mcformat.Name); 
-  mcformat.Name = tmp;
-  if (strstr(low_format,"raw")) strcat(mcformat.Name," raw");
+  usedformat = mcformats[i_format];
+  strcpy(tmp, usedformat.Name); 
+  usedformat.Name = tmp;
+  if (strstr(low_format,"raw")) strcat(usedformat.Name," raw");
   if (strstr(low_format,"binary"))
   {
-    if (strstr(low_format,"double")) strcat(mcformat.Name," binary double data");
-    else if (strstr(low_format,"nexus")) strcat(mcformat.Name," binary NeXus data");
-    else strcat(mcformat.Name," binary float data");
+    if (strstr(low_format,"double")) strcat(usedformat.Name," binary double data");
+    else if (strstr(low_format,"nexus")) strcat(usedformat.Name," binary NeXus data");
+    else strcat(usedformat.Name," binary float data");
     mcascii_only = 1;
   }
   
   /* Replaces vfprintf parameter name aliases */
   /* Header Footer */
-  mcformat.Header       = mcuse_format_header(mcformat.Header); 
-  mcformat.Footer       = mcuse_format_header(mcformat.Footer);
+  usedformat.Header       = mcuse_format_header(usedformat.Header); 
+  usedformat.Footer       = mcuse_format_header(usedformat.Footer);
   /* AssignTag */
-  mcformat.AssignTag    = mcuse_format_tag(mcformat.AssignTag);
+  usedformat.AssignTag    = mcuse_format_tag(usedformat.AssignTag);
   /* BeginSection EndSection */
-  mcformat.BeginSection = mcuse_format_section(mcformat.BeginSection);  
-  mcformat.EndSection   = mcuse_format_section(mcformat.EndSection);
+  usedformat.BeginSection = mcuse_format_section(usedformat.BeginSection);  
+  usedformat.EndSection   = mcuse_format_section(usedformat.EndSection);
   /*  BeginData  EndData  BeginErrors  EndErrors  BeginNcount  EndNcount  */
-  mcformat.BeginData    = mcuse_format_data(mcformat.BeginData  ); 
-  mcformat.EndData      = mcuse_format_data(mcformat.EndData    ); 
-  mcformat.BeginErrors  = mcuse_format_data(mcformat.BeginErrors); 
-  mcformat.EndErrors    = mcuse_format_data(mcformat.EndErrors  ); 
-  mcformat.BeginNcount  = mcuse_format_data(mcformat.BeginNcount); 
-  mcformat.EndNcount    = mcuse_format_data(mcformat.EndNcount  ); 
+  usedformat.BeginData    = mcuse_format_data(usedformat.BeginData  ); 
+  usedformat.EndData      = mcuse_format_data(usedformat.EndData    ); 
+  usedformat.BeginErrors  = mcuse_format_data(usedformat.BeginErrors); 
+  usedformat.EndErrors    = mcuse_format_data(usedformat.EndErrors  ); 
+  usedformat.BeginNcount  = mcuse_format_data(usedformat.BeginNcount); 
+  usedformat.EndNcount    = mcuse_format_data(usedformat.EndNcount  ); 
+  
+  return(usedformat);
 } /* mcuse_format */
+
+void mcclear_format(struct mcformats_struct usedformat)
+{
+/* free format specification strings */
+  if (usedformat.Name        ) free(usedformat.Name        );
+  else return;
+  if (usedformat.Header      ) free(usedformat.Header      );  
+  if (usedformat.Footer      ) free(usedformat.Footer      );  
+  if (usedformat.AssignTag   ) free(usedformat.AssignTag   );  
+  if (usedformat.BeginSection) free(usedformat.BeginSection);
+  if (usedformat.EndSection  ) free(usedformat.EndSection  );
+  if (usedformat.BeginData   ) free(usedformat.BeginData   );  
+  if (usedformat.EndData     ) free(usedformat.EndData     );  
+  if (usedformat.BeginErrors ) free(usedformat.BeginErrors );
+  if (usedformat.EndErrors   ) free(usedformat.EndErrors   );  
+  if (usedformat.BeginNcount ) free(usedformat.BeginNcount );
+  if (usedformat.EndNcount   ) free(usedformat.EndNcount   );
+} /* mcclear_format */  
 
 static void
 mcinfo(void)
@@ -4032,7 +4083,7 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--help", argv[i]))
       mcshowhelp(argv[0]);
     else if(!strcmp("-i", argv[i])) {
-      mcuse_format(MCSTAS_FORMAT);
+      mcformat=mcuse_format(MCSTAS_FORMAT);
       mcinfo();
     }
     else if(!strcmp("--info", argv[i]))
@@ -4053,11 +4104,19 @@ mcparseoptions(int argc, char *argv[])
       mcgravitation = 1;
     else if(!strncmp("--format=", argv[i], 9)) {
       mcascii_only = 0;
-      mcuse_format(&argv[i][9]);
+      mcformat=mcuse_format(&argv[i][9]);
     }
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcascii_only = 0;
-      mcuse_format(argv[++i]);
+      mcformat=mcuse_format(argv[++i]);
+    }
+    else if(!strncmp("--format_data=", argv[i], 14)) {
+      mcascii_only = 0;
+      mcformat_data=mcuse_format(&argv[i][14]);
+    }
+    else if(!strcmp("--format_data", argv[i]) && (i + 1) < argc) {
+      mcascii_only = 0;
+      mcformat_data=mcuse_format(argv[++i]);
     }
     else if(!strcmp("--no-output-files", argv[i]))  
       mcdisable_output_files = 1;
@@ -4222,9 +4281,12 @@ mcstas_main(int argc, char *argv[])
   mcstartdate = t;
 
   strcpy(mcsig_message, "main (Start)");
-  if (getenv("MCSTAS_FORMAT")) mcuse_format(getenv("MCSTAS_FORMAT"));
-  else mcuse_format(MCSTAS_FORMAT);  /* default is to output as McStas format */
+  if (getenv("MCSTAS_FORMAT")) mcformat=mcuse_format(getenv("MCSTAS_FORMAT"));
+  else mcformat=mcuse_format(MCSTAS_FORMAT);  /* default is to output as McStas format */
+  mcformat_data.Name=NULL;
   mcparseoptions(argc, argv);
+  if (!mcformat_data.Name && strcmp(mcformat.Name, "HTML"))
+    mcformat_data = mcuse_format("VRML");
 
 #ifndef MC_PORTABLE
 #ifndef MAC
@@ -4281,19 +4343,8 @@ mcstas_main(int argc, char *argv[])
 #endif /* !USE_MPI */
 
   mcfinally();
-  /* free format specification strings */
-  if (mcformat.Name        ) free(mcformat.Name        );
-  if (mcformat.Header      ) free(mcformat.Header      );  
-  if (mcformat.Footer      ) free(mcformat.Footer      );  
-  if (mcformat.AssignTag   ) free(mcformat.AssignTag   );  
-  if (mcformat.BeginSection) free(mcformat.BeginSection);
-  if (mcformat.EndSection  ) free(mcformat.EndSection  );
-  if (mcformat.BeginData   ) free(mcformat.BeginData   );  
-  if (mcformat.EndData     ) free(mcformat.EndData     );  
-  if (mcformat.BeginErrors ) free(mcformat.BeginErrors );
-  if (mcformat.EndErrors   ) free(mcformat.EndErrors   );  
-  if (mcformat.BeginNcount ) free(mcformat.BeginNcount );
-  if (mcformat.EndNcount   ) free(mcformat.EndNcount   );  
+  mcclear_format(mcformat);
+  if (mcformat_data.Name) mcclear_format(mcformat_data);
   
 #ifdef USE_MPI
   MPI_Finalize();
