@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.15 1998-05-19 07:59:45 kn Exp $
+*	$Id: mcstas-r.h,v 1.16 1998-09-23 13:52:08 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.15  1998/05/19 07:59:45  kn
+*	Hack to make random number generation work with HP's CC C compiler.
+*
 *	Revision 1.14  1998/04/17 11:50:31  kn
 *	Added sphere_intersect.
 *
@@ -107,7 +110,8 @@ typedef MCNUM Rotation[3][3];
 
 #define MIN2RAD  (2*PI/(360*60))
 #define DEG2RAD  (2*PI/360)
-#define AA2MS    (2200*1.798/(2*PI))
+#define AA2MS    629.719		/* Convert k[1/AA] to v[m/s] */
+#define MS2AA    1.58801E-3		/* Convert v[m/s] to k[1/AA] */
 #define HBAR     1.05459E-34
 #define MNEUTRON 1.67492E-27
 
@@ -119,11 +123,18 @@ typedef MCNUM Rotation[3][3];
 # endif
 #endif
 
-/* HPUX defines RAND_MAX to 32767 which is wrong for random(). */
-#if(RAND_MAX == 32767)
+typedef int mc_int32_t;
+mc_int32_t mc_random(void);
+void mc_srandom (unsigned int x);
+
+#ifndef USE_SYSTEM_RANDOM
+#ifdef RAND_MAX
 # undef RAND_MAX
-# define RAND_MAX LONG_MAX
 #endif
+#define RAND_MAX 0x7fffffff
+#define random mc_random
+#define srandom mc_srandom
+#endif /* !USE_SYSTEM_RANDOM */
 
 #define rand01() ( ((double)random())/((double)RAND_MAX+1) )
 #define randpm1() ( ((double)random()) / (((double)RAND_MAX+1)/2) - 1 )
