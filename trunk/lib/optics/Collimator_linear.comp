@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Soller.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Soller
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.9 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.10 $
+* Origin: Risoe
+* Release: McStas 1.6
 * Modified by: GA, June 1999, added transmission
 *
 * A simple analytical Soller collimator (with triangular transmission).
