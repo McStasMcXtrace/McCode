@@ -10,7 +10,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: Nov 25, 1998
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -23,7 +23,7 @@
 * position, Origo is at the centre of the selector (input is at -l0/2).
 * Transmission is analytical assuming a continuous source.
 *
-* Example: V_selector(width=0.03, height=0.05, l0=0.30, r0=0.29, phi=42.298,
+* Example: V_selector(width=0.03, height=0.05, l0=0.30, r0=0.12, phi=42.298,
 *            l1=0.25, tb=0.0004, rot=20000, nb=72)
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
 *
@@ -46,7 +46,7 @@
 
 DEFINE COMPONENT V_selector
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (width=0.03, height=0.05, l0=0.30, r0=0.29, phi=48.298, l1=0.25, tb=0.0004, rot=20000, nb=72)
+SETTING PARAMETERS (width=0.03, height=0.05, l0=0.30, r0=0.12, phi=48.298, l1=0.25, tb=0.0004, rot=20000, nb=72)
 OUTPUT PARAMETERS(RPM2OM, omega, phi_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_phi)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
