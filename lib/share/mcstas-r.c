@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.10 1998-04-17 11:50:08 kn Exp $
+* 	$Id: mcstas-r.c,v 1.11 1998-05-11 12:08:49 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.10  1998/04/17 11:50:08  kn
+* 	Added sphere_intersect.
+*
 * 	Revision 1.9  1998/04/17 10:52:27  kn
 * 	Better names in randvec_target_sphere.
 *
@@ -296,7 +299,9 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     y_in = vy*t_in + y;
     y_out =vy*t_out + y;
 
-    if ( !((y_in > h/2 && y_out > h/2) || (y_in < -h/2 && y_out < -h/2)) )
+    if ( (y_in > h/2 && y_out > h/2) || (y_in < -h/2 && y_out < -h/2) )
+      return 0;
+    else
     {
       if (y_in > h/2)
 	t_in = ((h/2)-y)/vy;
