@@ -431,7 +431,8 @@ my $index         = 0;
 my $file;
 my $show_website  = 0;
 my $show_manual   = 0;
-     
+my $show_tutorial = 0;     
+
 for($i = 0; $i < @ARGV; $i++) {
   $_ = $ARGV[$i];
   # Options specific to mcdoc.
@@ -445,7 +446,9 @@ for($i = 0; $i < @ARGV; $i++) {
   } elsif(/^--web$/i || /^-w$/i) {
         $show_website = 1;
   } elsif(/^--manual$/i || /^-m$/i) {
-        $show_manual = 1;
+        $show_manual = 1; 
+  } elsif(/^--tutorial$/i) {
+        $show_tutorial = 1; 
   } elsif(/^--local$/i) {
         $use_local = 1;
   } elsif(/^--force$/i || /^-f$/i) {
@@ -453,13 +456,14 @@ for($i = 0; $i < @ARGV; $i++) {
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "Usage: mcdoc [options] <dir|file>\n";
       print "Generate/show component/instrument documentation\n";
-      print "   -f    --force   Force re-writting of existing HTML doc locally\n";
-      print "   -h    --help    Show this help\n";
-      print "   -l    --tools   Display the McStas tools list\n";
-      print "   -m    --manual  Open the McStas manual\n";
-      print "   -s    --show    Open the generated help file using the BROWSER env. variable\n";
-      print "   -t    --text    For single component, display as text\n";
-      print "   -w    --web     Open the McStas web page http://neutron.risoe.dk/mcstas/\n";
+      print "   -f    --force    Force re-writting of existing HTML doc locally\n";
+      print "   -h    --help     Show this help\n";
+      print "   -l    --tools    Display the McStas tools list\n";
+      print "   -m    --manual   Open the McStas manual\n";
+      print "   -s    --show     Open the generated help file using the BROWSER env. variable\n";
+      print "   -t    --text     For single component, display as text\n";
+      print "   -w    --web      Open the McStas web page http://neutron.risoe.dk/mcstas/\n";
+      print "         --tutorial Open the McStas tutorial from the local McStas library\n";
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
       print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
       exit;
@@ -505,6 +509,19 @@ if ($show_manual) {
     die "mcdoc: manual done.\n";
   }
 }
+
+if ($show_tutorial) {
+  if ($browser =~ "text") {
+    die "mcdoc: Set the BROWSER environment variable first\n";
+  } else {
+    # open the index.html
+    print "mcdoc: Starting $browser $MCSTAS::sys_dir/doc/tutorial/html/index.html";
+    system("$browser $MCSTAS::sys_dir/doc/tutorial/html/index.html\n");
+    die "mcdoc: tutorial done.\n";
+  }
+}
+
+
   
 # if 'file' is given
 if ($index > 0) { 
