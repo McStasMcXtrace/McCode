@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.9 1998-10-02 08:35:49 kn Exp $
+* 	$Id: cogen.c,v 1.10 1998-10-09 07:47:14 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.9  1998/10/02 08:35:49  kn
+* 	Added output parameters for components.
+* 	Fixed header comment.
+*
 * 	Revision 1.8  1998/10/01 08:09:09  kn
 * 	Embed the runtime files mcstas-r.[ch] inside the generated C program.
 * 	Handle the --trace option.
@@ -166,6 +170,8 @@ codeblock_out(struct code_block *code)
   List_handle liter;		/* For list iteration. */
   char *line;			/* Single code line. */
 
+  if(list_len(code->lines) <= 0)
+    return;
   fprintf(output_handle, "#line %d \"%s\"\n",
 	  code->linenum + 1, code->filename);
   liter = list_iterate(code->lines);
@@ -182,6 +188,8 @@ codeblock_out_brace(struct code_block *code)
   List_handle liter;		/* For list iteration. */
   char *line;			/* Single code line. */
 
+  if(list_len(code->lines) <= 0)
+    return;
   fprintf(output_handle, "#line %d \"%s\"\n", code->linenum, code->filename);
   fprintf(output_handle, "{\n");
   liter = list_iterate(code->lines);
