@@ -135,7 +135,7 @@ This section will take you through a (very) simple example instrument
 to learn you the basic instrument language of McStas. (Instrument 
 filename is vanadium\_example.instr, can be loaded using the
 \verb+Neutron Site/Tutorial+ menu item of the \verb+mcgui+, see below)
-Please study the instructive comments,
+Please study \emph{carefully} the instructive comments,
 marked by \verb+/* ... */+ characters
     
 \begin{verbatim}
@@ -296,7 +296,7 @@ instrument might look like, see the sample instrument protrayed in Figure \ref{i
 \end{figure}
 \subsection{Exercise: Source and PSD}
 \begin{enumerate}
-\item{Set up an instrument, consisting only of an Arm, a Source\_Maxwell\_3,
+\item{Start by inserting a template instrument (Insert menu). Set up an instrument, consisting only of an Arm (keep the example 'a1' Arm instance), a Source\_Maxwell\_3,
 a PSD\_monitor and an L\_monitor. Read the documentation for each of
 the components to find the needed input parameters. For the source we
 will help you out, try
@@ -306,7 +306,7 @@ COMPONENT source = Source_Maxwell_3(
     yh = 0.01, T1 = 300, T2=300, T3=300, I1=1e14, I2=0, I3=0)
 \end{verbatim}
 Read the Source\_Maxwell\_3 docs using mcdoc to understand the
-suggested parameters. }
+suggested parameters. The file names for monitors, specified as character strings, should be given \emph{surrounded} by double quotes ("file.dat").}
 \item{Run a simulation and plot the results, looking
 at an image of the source plus the wavelength distribution of the
 source. }
@@ -323,7 +323,7 @@ two new input parameters of your instrument, e.g. OMM (Omega
 Monochromator) and TTM (Two Theta Monochromator)
 for rotation of the monochromator and the remaining part of the 
 instrument so that the orientation of
-monochromator is as portrayed in Figure \ref{mono.eps}
+monochromator is as portrayed in Figure \ref{mono.eps}.
 \begin{figure}[htb!]
 \begin{center}
 \includegraphics[width=6cm]{pics/mono.eps}
@@ -331,12 +331,12 @@ monochromator is as portrayed in Figure \ref{mono.eps}
 \caption{Illustration of the monochromator orientation}
 \label{mono.eps}
 \end{figure}
-Remember to add an Arm()'s at the rotation point. }
+These two instrument input parameters should be added to the DEFINE line of the instrument (start of file). Remember to add an Arm()'s at the rotation point. }
 \item{Given $\lambda$ = 4\AA, and knowing that for the
 monochromator $Q=1.8734$ \AA$^{-1}$ (Pyrolytic Graphite), use Bragg's law to determine the 
 correct Bragg angle (i.e. OMM/TTM) for the monochromator for the $n=1$ reflection. }
 \item{Do a scan of OMM a couple of angles around this value to verify
-    the finding, keeping TTM fixed. Check the position of the peak on
+    the finding, keeping TTM fixed. This will be achieved by setting the OMM value to 'min,max' (replace by relevant numerical values) in the Run Simulation window, and selecting the Scan check button in that same window. Enter the number of steps to compute (e.g. 10). Check the position of the peak on
     the PSD and the wavelength on the L\_monitor. }
 \item{What should $Q$ be set to to get the $n=2$ reflection at exactly
     OMM=45$^\circ$ (TTM=90$^\circ$)?
