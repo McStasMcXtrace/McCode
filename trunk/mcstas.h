@@ -17,10 +17,12 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.40 2003-10-06 15:00:58 farhi Exp $
+* $Id: mcstas.h,v 1.41 2004-09-21 12:21:19 farhi Exp $
 *
 *******************************************************************************/
 
+#ifndef MCSTAS_H
+#define MCSTAS_H "$Revision: 1.41 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,7 +38,7 @@
 #define TRUE 1
 #endif
 
-#define MCSTAS_VERSION "1.6.4d, Jan 17th, 2003"
+#define MCSTAS_VERSION "X.Y.Z, Month Day, Year"
 
 
 /* Functions defined in memory.c */
@@ -437,3 +439,5 @@ struct instr_def
     int portable;		/* If set, emit strictly portable ANSI C */
     int polarised;		/* If set, handle neutron polarisation */
   };
+
+#endif /* MCSTAS_H */
