@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.10 1998-03-24 13:24:40 lefmann Exp $
+*	$Id: mcstas-r.h,v 1.11 1998-03-24 13:59:26 lefmann Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.10  1998/03/24 13:24:40  lefmann
+*	Added HBAR, MNEUTRON.
+*
 *	Revision 1.9  1998/03/24 07:42:35  kn
 *	Added definition for PI.
 *
@@ -103,6 +106,7 @@ typedef MCNUM Rotation[3][3];
 # endif
 #endif
 
+#define RAND_MAX 2147483647
 #define rand01() ( ((double)random())/((double)RAND_MAX+1) )
 #define randpm1() ( ((double)random()) / (((double)RAND_MAX+1)/2) - 1 )
 #define rand0max(max) ( ((double)random()) / (((double)RAND_MAX+1)/(max)) )
