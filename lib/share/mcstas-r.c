@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.52 2003-02-12 12:44:41 farhi Exp $
+* $Id: mcstas-r.c,v 1.53 2003-02-18 09:10:52 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.51  2003/02/11 12:28:46  farhi
@@ -1951,7 +1951,6 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   mcfile_tag(f, format, pre, parent, "type", type);
   if (parent) mcfile_tag(f, format, pre, parent, (strstr(format.Name,"McStas") ? "component" : "parent"), parent);
   if (title) mcfile_tag(f, format, pre, parent, "title", title);
-  mcfile_tag(f, format, pre, parent, "variables", vars);
   mcfile_tag(f, format, pre, parent, "ratio", ratio);
   if (filename) {
     mcfile_tag(f, format, pre, parent, "filename", filename);
@@ -1993,6 +1992,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     }
   } else strcpy(limits, "0 0 0 0 0 0");
   mcfile_tag(f, format, pre, parent, lim_field, limits);
+  mcfile_tag(f, format, pre, parent, "variables", vars);
 } /* mcinfo_data */
 
 /* main output function, works for 0d, 1d, 2d data */
@@ -2764,7 +2764,7 @@ mcparseoptions(int argc, char *argv[])
       mcusage(argv[0]);
   }
   if (!mcascii_only) {
-    if (strstr(mcformat.Name,"binary")) fprintf(stderr, "Warning: %s files will contain text headers. Use -a option to clean up.\n", mcformat.Name);
+    if (strstr(mcformat.Name,"binary")) fprintf(stderr, "Warning: %s files will contain text headers.\n         Use -a option to clean up.\n", mcformat.Name);
     strcat(mcformat.Name, " with text headers");
   }
   if(!paramset)
