@@ -17,9 +17,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.56 2004-06-30 12:11:29 farhi Exp $
+* $Id: mcstas-r.h,v 1.57 2004-07-16 14:59:03 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.56  2004/06/30 12:11:29  farhi
+*	Updated obsolete MCDETECTOR_OUT #define -> mcdetector_out_0d
+*	
 *	Revision 1.55  2003/10/21 14:08:12  pkwi
 *	Rectangular focusing improved: Renamed randvec_target_rect to randvec_target_rect_angular. Wrote new randvec_target_rect routine, w/h in metres. Both routines use use component orientation (ROT_A_CURRENT_COMP) as input.
 *	
@@ -71,7 +74,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.56 $"
+#define MCSTAS_R_H "$Revision: 1.57 $"
 
 #include <math.h>
 #include <string.h>
@@ -113,6 +116,34 @@
 #endif /* !MAC */
 #endif /* !WIN32 */
 #endif /* MC_PORTABLE */
+
+
+#ifdef USE_MPI
+#include "mpi.h"
+
+/*
+ * MPI_MASTER(i):
+ * execution de i uniquement sur le noeud maitre
+ */
+#define MPI_MASTER(instr)\
+{\
+	if(mpi_node_rank == mpi_node_root)\
+	{\
+		instr;\
+	}\
+}
+
+int mc_MPI_Reduce(void* sbuf, void* rbuf,
+		  int count, MPI_Datatype dtype,
+		  MPI_Op op, int root, MPI_Comm comm);
+
+
+#else /* !USE_MPI */
+
+#define MPI_MASTER(instr) instr
+
+#endif /* USE_MPI */
+
 
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
@@ -170,6 +201,7 @@ void mcdisplay(void);
      mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP)
 #define DETECTOR_OUT_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f) \
      mcdetector_out_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f,NAME_CURRENT_COMP)     
+
 /* ADD: E. Farhi, Sep 20th 2001 save neutron state (in local coords) */
 #define STORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p) \
   mcstore_neutron(mccomp_storein,index, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
