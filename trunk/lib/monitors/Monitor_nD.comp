@@ -112,8 +112,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, options)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (options)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 /* these are protected C variables */
 OUTPUT PARAMETERS (Nsum, psum, p2sum, Mon2D_N, Mon2D_p, Mon2D_p2, Mon2D_Buffer, DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: August 1998
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: McStas release
 * Modified by: KL, October 6, 1998
 *
@@ -34,8 +34,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror
-DEFINITION PARAMETERS (xlength, yheight,R0,Qc,alpha,m,W)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xlength, yheight,R0,Qc,alpha,m,W)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
 %{

@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: September 2 1998
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: McStas release
 * Modified by: KL, October 6, 1998
 *
@@ -40,8 +40,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Guide
-DEFINITION PARAMETERS (w1, h1, w2, h2, l, R0, Qc, alpha, m, W)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc, alpha, m, W)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 TRACE

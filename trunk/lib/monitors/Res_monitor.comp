@@ -9,7 +9,7 @@
 * %I
 * Written by: KN
 * Date: 1999
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas release
 *
 * Monitor for resolution calculations
@@ -40,8 +40,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Res_monitor
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, filename, res_sample_comp)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (filename, res_sample_comp)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 OUTPUT PARAMETERS (Nsum, psum, p2sum, file)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE

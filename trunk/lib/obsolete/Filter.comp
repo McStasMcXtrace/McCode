@@ -7,7 +7,7 @@
 * %I
 * Written by: KL, KN
 * Date: Sept. 14 1998
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: McStas release
 *
 * A simple neutron filter.
@@ -35,8 +35,8 @@
 
 
 DEFINE COMPONENT Filter
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, T0, T1, Emin, Emax)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, T0, T1, Emin, Emax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
 %{

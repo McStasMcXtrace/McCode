@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: August 1998
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: McStas release
 *
 * A simple analytical Soller collimator.
@@ -34,8 +34,8 @@
 
 
 DEFINE COMPONENT Soller
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, divergence)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, divergence)
 OUTPUT PARAMETERS (slope)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE

@@ -7,7 +7,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: McStas release
 *
 * Mosaic crystal, possibly off-cut.
@@ -36,8 +36,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Mosaic_simple
-DEFINITION PARAMETERS (zmin, zmax, ymin, ymax, mosaic, R0, Qx, Qy, Qz)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaic, R0, Qx, Qy, Qz)
 OUTPUT PARAMETERS (X,W,Q,mos_rms)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 

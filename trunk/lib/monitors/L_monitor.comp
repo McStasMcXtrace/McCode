@@ -7,7 +7,7 @@
 * %I
 * Written by: KN,KL
 * Date: April 20, 1998
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: McStas release
 * Modified by: KL, October 7, 1998
 *
@@ -39,8 +39,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT L_monitor
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, Lmin, Lmax, nchan, filename)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (nchan, filename)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, Lmin, Lmax)
 OUTPUT PARAMETERS (L_N, L_p, L_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
