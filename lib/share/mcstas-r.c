@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.80 2004-01-23 16:14:12 pkwi Exp $
+* $Id: mcstas-r.c,v 1.81 2004-02-19 14:42:52 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.80  2004/01/23 16:14:12  pkwi
+* Updated version of Mersenne Twister algorithm. make test'ed ok on my machine.
+*
 * Revision 1.79  2003/11/28 18:08:32  farhi
 * Corrected error for IDL import
 *
@@ -181,7 +184,7 @@ mcstatic char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 
 /* Multiple output format support. ========================================== */
 
-#define mcNUMFORMATS 6
+#define mcNUMFORMATS 8
 #ifndef MCSTAS_FORMAT
 #define MCSTAS_FORMAT "McStas"  /* default format */
 #endif
@@ -479,13 +482,97 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%1$s<h%7$d><a name=\"%3$s\">%2$s %3$s</a></h%7$d> "
       "[child of <a href=\"#%5$s\">%5$s</a>]<br>\n"
       "%1$sAssociated <a href=\"%3$s\">data file %3$s</a><br>\n"
-        "%1$sAssociated <a href=\"%3$s.png\">%2$s image %3$s.png<br>\n"
-        "%1$s<img src=\"%3$s.png\" alt=\"%2$s %3$s image (when available)\" width=100></a><br>\n",
+        "%1$sAssociated <a href=\"%3$s.png\">%2$s image %3$s.png<br> (when available)\n"
+        "%1$s<img src=\"%3$s.png\" alt=\"%2$s %3$s image\" width=100></a><br>\n",
     "[end of <a href=\"#%3$s\">%2$s %3$s</a>]<br>\n",
     "%1$s<b>%3$s: </b>%4$s<br>\n",
     "%1$s<b>DATA</b><br>\n",
       "%1$s<b>ERRORS</b><br>\n","%1$s<b>EVENTS</b><br>\n",
-      "%1$sEnd of DATA<br>\n", "%1$sEnd of ERRORS<br>\n", "%1$sEnd of EVENTS<br>\n"}
+      "%1$sEnd of DATA<br>\n", "%1$sEnd of ERRORS<br>\n", "%1$sEnd of EVENTS<br>\n"},
+  { "OpenGENIE", "gcl",
+    "PROCEDURE get_%7$s\n"
+      "RESULT %7$s\n"
+      "# %4$s procedure issued from McStas on %5$s\n"
+      "# McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
+      "# import data using s=get_%7$s();\n"
+      "%7$s = fields();\n"
+      "%7$s.Format =\"%4$s\";\n"
+      "%7$s.URL    =\"http://neutron.risoe.dk\";\n"
+      "%7$s.Editor =\"%6$s\";\n"
+      "%7$s.Creator=\"%2$s McStas " MCSTAS_VERSION " simulation\";\n"
+      "%7$s.Date   =%8$li;\n"
+      "%7$s.File   =\"%3$s\";\n",
+    "%7$s.EndDate=%8$li;\nENDPROCEDURE\n",
+    "# Section %2$s [%3$s] (level %7$d)\n"
+      "%1$s%4$s = fields(); %4$s.class = \"%2$s\";",
+    "%1$s%6$s.%4$s = %4$s; free \"%4$s\";\n",
+    "%1$s%2$s.%3$s = \"%4$s\";\n",
+    "%1$s%2$s.func=\"get_%2$s\";\n%1$s%2$s.data = [ ",
+    "%1$sIF (single_file = 1); %2$s.errors = [ ",
+    "%1$sIF (single_file = 1); %2$s.ncount = [ ",
+    " ] array(%14$d,%15$d); # end of data\nIF (length(%2$s.data) = 0); single_file=0; ELSE single_file=1; ENDIF\n%2$s=mcplot_inline(%2$s,p);\n",
+    " ] array(%14$d,%15$d); # end of errors\nENDIF\n",
+    " ] array(%14$d,%15$d); # end of ncount\nENDIF\n"},
+  { "Octave", "m",
+    "function mc_%7$s = get_%7$s(p)\n"
+      "%% %4$s function issued from McStas on %5$s\n"
+      "%% McStas simulation %2$s: %3$s\n"
+      "%% import data using s=%7$s('plot');\n"
+      "if nargin > 0, p=1; else p=0; end\n"
+      "mc_%7$s.Format ='%4$s';\n"
+      "mc_%7$s.URL    ='http://neutron.risoe.dk';\n"
+      "mc_%7$s.Editor ='%6$s';\n"
+      "mc_%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%7$s.Date   =%8$li; %% for datestr\n"
+      "mc_%7$s.File   ='%3$s';\n",
+    "mc_%7$s.EndDate=%8$li; %% for datestr\nendfunction\n"
+      "if exist('mcload_inline'), return; end\n"
+      "function d=mcload_inline(d)\n"
+      "%% local inline function to load data\n"
+      "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);\n"
+      "if isempty(d.data)\n"
+      " if ~length(findstr(d.format, 'binary'))\n"
+      "  source(d.filename);p=d.parent;\n"
+      "  eval(['d=get_',d.func,';']);d.parent=p;\n"
+      " else\n"
+      "  if length(findstr(d.format, 'float')), t='float';\n"
+      "  elseif length(findstr(d.format, 'double')), t='double';\n"
+      "  else return; end\n"
+      "  if length(S) == 1, S=[S 1]; end\n"
+      "  fid=fopen(d.filename, 'r');\n"
+      "  pS = prod(S);\n"
+      "  x = fread(fid, 3*pS, t);\n"
+      "  d.data  =reshape(x(1:pS), S);\n"
+      "  if prod(size(x)) >= 3*pS,\n"
+      "  d.errors=reshape(x((pS+1):(2*pS)), S);\n"
+      "  d.events=reshape(x((2*pS+1):(3*pS)), S);end\n"
+      "  fclose(fid);\n"
+      "  return\n"
+      " end\n"
+      "end\n"
+      "return;\nendfunction\n\n"
+      "function d=mcplot_inline(d,p)\n"
+      "%% local inline function to plot data\n"
+      "if isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
+      "eval(['l=[',d.xylimits,'];']); S=size(d.data);\n"
+      "t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);\n"
+      "disp(t);\n"
+      "if ~isempty(findstr(d.type,'0d')), return; end\n"
+      "xlabel(d.xlabel); ylabel(d.ylabel); title(t);"
+      "figure; if ~isempty(findstr(d.type,'2d'))\n"
+      "d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1));\n"
+      "mesh(d.x,d.y,d.data);\n"
+      "else\nd.x=linspace(l(1),l(2),max(S));\nplot(d.x,d.data);end\nendfunction\n",
+    "%% Section %2$s [%3$s] (level %7$d)\n"
+      "mc_%4$s.class = '%2$s';",
+    "mc_%6$s.mc_%4$s = mc_%4$s;\n",
+    "%1$smc_%2$s.%3$s = '%4$s';\n",
+    "%1$smc_%2$s.func='%2$s';\n%1$smc_%2$s.data = [ ",
+    "%1$serrors = [ ",
+    "%1$sevents = [ ",
+    " ]; %% end of data\nif length(mc_%2$s.data) == 0, single_file=0; else single_file=1; end\nmc_%2$s=mcplot_inline(mc_%2$s,p);\n",
+    " ]; %% end of errors\nif single_file, mc_%2$s.errors=errors; end\n",
+    " ]; %% end of events\nif single_file, mc_%2$s.events=events; end\n"}
     };
 
 /* MCDISPLAY support. ======================================================= */
