@@ -840,7 +840,7 @@ for($i = 0; $i < @ARGV; $i++) {
         $magnification = ($1 == 0 ? 1 : $1);
     } elsif(($ARGV[$i] eq "-gif") || ($ARGV[$i] eq "-ps") ||
             ($ARGV[$i] eq "-fig") || ($ARGV[$i] eq "-scg") ||
-            ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png")) || ($ARGV[$i] eq "-ppm")) {
+            ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png") || ($ARGV[$i] eq "-ppm")) {
         $direct_output = $ARGV[$i];
 	$save = 1;
         $int_mode = 1;
