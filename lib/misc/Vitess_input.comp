@@ -1,0 +1,146 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: June 6, 2000
+* Version: $Revision: 1.1 $
+* Origin: McStas release
+*
+* Read neutron state parameters from VITESS neutron file.
+*
+* %D
+* Source-like component reading neutron state parameters from a
+* VITESS neutron file. Used to interface McStas components or
+* simulations into VITESS.
+*
+* %P
+* INPUT PARAMETERS
+*
+* input:        Filename of neutron file to read. Default is
+*               standard input [string]
+* bufsize:      Size of neutron input buffer [records]
+* repeat_count: Number of times to repeat each neutron read [1]
+*
+* OUTPUT PARAMETERS
+*
+* finished:     Set to 1 when the last neutron has been read.
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Vitess_input
+DEFINITION PARAMETERS (input = 0, repeat_count = 1)
+SETTING PARAMETERS (bufsize = 10000)
+OUTPUT PARAMETERS (file, buf, size, pos, rep, finished)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+
+#ifndef VITESS_INPUT_COMP
+#define VITESS_INPUT_COMP
+  /* The Neutron structure, taken from VITESS source code "general.h" */
+  typedef struct
+    {
+      double 	Time;
+      double        Wavelength;
+      double        Probability;
+      VectorType    Position;
+      VectorType    Vector;
+    } Neutron;
+#endif /* VITESS_INPUT_COMP */
+
+FILE *file;			/* Neutron input file handle */
+Neutron *buf;			/* Neutron input buffer */
+int size;			/* Number of neutrons currently in buffer */
+int pos;			/* Current position in buffer */
+int rep;			/* Neutron repeat count */
+int finished;			/* Set to 1 when last neutron read */
+%}
+
+INITIALIZE
+%{
+  /* Open neutron input file. */
+  if(input)
+    file = fopen(input, "rb");
+  else
+    file = stdin;
+  if(!file)
+  {
+    fprintf(stderr, "Vitess_input: Error: Cannot open input file.\n");
+    exit(1);
+  }
+  /* Allocate neutron input buffer. */
+  buf = calloc(bufsize, sizeof(Neutron));
+  if(!buf)
+  {
+    fprintf(stderr, "Vitess_input: Error: Cannot allocate neutron buffer.\n");
+    exit(1);
+  }
+  /* Initialize buffer. */
+  size = 0;
+  pos = 0;
+  rep = 0;
+  finished = 0;
+%}
+
+TRACE
+%{
+  double v;			/* Neutron velocity */
+
+  if(pos >= size) {
+    /* Buffer is empty. */
+    size = fread(buf, sizeof(Neutron), bufsize, file);
+    if(size <= 0)
+    {
+      if(ferror(file))
+	fprintf(stderr, "Vitess_input: Error during read of neutron file.\n");
+      if(feof(file) || ferror(file))
+	finished = 1;		/* End of file or error reached */
+    }
+    else
+    {
+      pos = 0;			/* Reposition at start of buffer */
+  }
+  /* When no more neutron records are available in the neutron file,
+     any remaining iterations are skipped by immediately ABSORB'ing
+     the neutron. */
+  if(finished)
+    ABSORB;
+  /* Convert neutron state parameters to McStas. In VITESS, the
+     neutron velocity is represented by a wavelength in AAngstroem and
+     a unit direction vector, time is in msec and positions are in
+     cm. */
+  x = buf[pos].Position[0]*0.01;
+  y = buf[pos].Position[1]*0.01;
+  z = buf[pos].Position[2]*0.01;
+  v = 3956.0346/buf[pos].Wavelength;
+  vx = v*buf[pos].Vector[0];
+  vy = v*buf[pos].Vector[1];
+  vz = v*buf[pos].Vector[2];
+  t = buf[pos].Time*0.001;
+  p = buf[pos].Probability;
+  ++rep;
+  if(rep >= repeat_count)
+  {
+    rep = 0;
+    ++pos;
+  }
+%}
+FINALLY
+%{
+  if(buf)
+    free(buf);
+  if(input && file)
+    fclose(file);
+%}
+MCDISPLAY
+%{
+  /* Invisible component. */
+%}
+
+END
