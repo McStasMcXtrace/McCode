@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.20 1998-10-09 07:53:48 kn Exp $
+*	$Id: mcstas-r.h,v 1.21 1998-11-09 08:17:57 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.20  1998/10/09 07:53:48  kn
+*	Added some unit conversion constants.
+*
 *	Revision 1.19  1998/10/02 08:38:36  kn
 *	Added DETECTOR_OUT support.
 *	Fixed header comment.
@@ -163,7 +166,9 @@ void mcfinally(void);
 #define MS2AA    1.58801E-3		/* Convert v[m/s] to k[1/AA] */
 #define K2V	 AA2MS
 #define V2K	 MS2AA
-#define SE2V	 0.19131e6		/* Convert sqrt(E)[meV] to v[m/s] */
+#define Q2V	 AA2MS
+#define V2Q	 MS2AA
+#define SE2V	 437.3949		/* Convert sqrt(E)[meV] to v[m/s] */
 #define VS2E	 5.227e-6		/* Convert v[m/s] to sqrt(E)[meV] */
 #define HBAR     1.05459E-34
 #define MNEUTRON 1.67492E-27
@@ -297,6 +302,11 @@ void rot_mul(Rotation t1, Rotation t2, Rotation t3);
 void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);
 Coords rot_apply(Rotation t, Coords a);
+void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
+	       double *vx, double *vy, double *vz, double *time,
+	       double *s1, double *s2);
+double mcestimate_error(int N, double p1, double p2);
+void mcreadparams(void);
 
 void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 		double t, double s1, double s2, double p);
