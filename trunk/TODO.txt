@@ -74,12 +74,12 @@ functionality on Win32 using mcc
 * McStas manual updates in general
 * more on inserting arms in the docs
 * Powder2 / Phonon_simple, rectangular focusing + target_index
+* mcplot problem running mcdisplay for instrument view (n exist) - fixed!
+* Final sanity check + make test
+* Changes document / Changes chapter in manual
 
 TODO:
-* mcplot problem running mcdisplay for instrument view (n exist)
-* Final sanity check + make test
 * Build of dist packages + web transfer
-* Changes document / Changes chapter in manual
 
 PENDING:
 * 'Scan evolvement' plot of psd's (Pick PSD data from scan, plot together)
