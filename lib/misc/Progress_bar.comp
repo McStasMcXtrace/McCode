@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -80,13 +80,14 @@ TRACE
       else
         fprintf(stdout, "%g [min] ", difftime(EndTime,StartTime)/60.0);
     } else IntermediateCnts += 1e5;
+    fflush(stdout);
   }
 
   if (EndTime && ncount >= IntermediateCnts)
   {
     double tmp;
     tmp = percent*mcget_ncount()/100;
-    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount()));
+    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount())); fflush(stdout);
     IntermediateCnts = ncount + tmp;
     if (IntermediateCnts+tmp > mcget_ncount())
       fprintf(stdout, "\n");  /* last percent number to be displayed */
@@ -110,6 +111,7 @@ FINALLY
     fprintf(stdout, "%g [h] ", difftime(NowTime,StartTime)/3660.0);
   else
     fprintf(stdout, "%g [min] ", difftime(NowTime,StartTime)/60.0);
+  fprintf(stdout, "\n");
 %}
 
 END
