@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.17 1998-11-26 08:45:52 kn Exp $
+*	$Id: instrument.y,v 1.18 1998-11-26 11:20:49 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.17  1998/11/26 08:45:52  kn
+*	Use own method for extending parser stack (this avoids using alloca(),
+*	which is not portable).
+*
 *	Revision 1.16  1998/11/13 07:31:32  kn
 *	Implemented proper quoting of special chars in file names in #line
 *	directives.
@@ -594,7 +598,7 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.01 ALPHA, October 1998\n"
+  printf("McStas version 1.01 BETA, November 26th, 1998\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-1998\n"
 	  "All rights reserved\n");
   exit(0);
