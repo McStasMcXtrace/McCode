@@ -23,6 +23,7 @@ autoflush STDOUT 1;
 
 # Various parameters determined by the command line.
 my ($sim_def, $force_compile, $data_dir, $data_file);
+my $ncount = 1e6;		# Number of neutron histories in one simulation
 my $numpoints = 1;		# Number of points in scan (if any)
 my @params = ();		# List of input parameters
 my %vals;			# Hash of input parameter values
@@ -57,6 +58,7 @@ sub read_inputpar_from_file {
     my ($filename) = @_;
     open(IN, "<$filename") || die "Failed to open file '$filename'";
     while(<IN>) {
+	my $p;
 	for $p (split) {
 	    set_inputpar_text($p);
 	}
@@ -72,10 +74,20 @@ sub parse_args {
 	# Options specific to mcrun.
 	if(/^--force-compile$/ || /^-c$/) {
 	    $force_compile = 1;
+	} elsif(/^--param\=(.*)$/ || /^-p(.+)$/) {
+	    read_inputpar_from_file($1);
+	} elsif(/^--param$/ || /^-p$/) {
+	    read_inputpar_from_file($ARGV[++$i]);
 	} elsif(/^--numpoints\=(.*)$/ || /^-N(.+)$/) {
 	    $numpoints = $1;
 	} elsif(/^--numpoints$/ || /^-N$/) {
 	    $numpoints = $ARGV[++$i];
+	} elsif(/^--ncount\=(.*)$/ || /^-n(.+)$/) {
+	    $ncount = $1;
+	    push @options, "--ncount=$ncount";
+	} elsif(/^--ncount$/ || /^-n$/) {
+	    $ncount = $ARGV[++$i];
+	    push @options, "--ncount=$ncount";
 	}
 	# Standard McStas options needing special treatment by mcrun.
 	elsif(/^--dir\=(.*)$/ || /^-d(.+)$/) {
@@ -89,13 +101,13 @@ sub parse_args {
 	    $data_file = $ARGV[++$i];
 	}
 	# Standard McStas options passed through unchanged to simulations.
-	elsif(/^--(seed|ncount)\=(.*)$/) {
+	elsif(/^--(seed)\=(.*)$/) {
 	    push @options, "--$1=$2";
-	} elsif(/^-([sn])(.+)$/) {
+	} elsif(/^-([s])(.+)$/) {
 	    push @options, "-$1$2";
-	} elsif(/^--(seed|ncount)$/) {
+	} elsif(/^--(seed)$/) {
 	    push @options, "--$1=$ARGV[++$i]";
-	} elsif(/^-([sn])$/) {
+	} elsif(/^-([s])$/) {
 	    push @options, "-$1$ARGV[++$i]";
 	} elsif(/^--(ascii-only|help|info|trace|no-output-files)$/) {
 	    push @options, "--$1";
@@ -106,7 +118,7 @@ sub parse_args {
 	elsif(/^-/) {		# Unrecognised option
 	    die "Unknown option \"$_\"";
 	} elsif(/^([a-zæøåA-ZÆØÅ0-9_]+)\=(.*)$/) {
-	    push @params, [$1,$2];
+	    set_inputpar($1, $2);
 	} else {			# Name of simulation definition
 	    if($sim_def) {
 		die "Only a single instrument definition may be given";
@@ -128,20 +140,20 @@ sub check_input_params {
     my @maxval = ();
     my $v;
     for $v (@params) {
-	if($v->[1] =~ /^(.+),(.+)$/) {
+	if($vals{$v} =~ /^(.+),(.+)$/) {
 	    # Variable to scan from min to max.
 	    $minval[$j] = $1;
 	    $maxval[$j] = $2;
 	    $scanned[$j] = $i;
 	    if($minval[$j] != $maxval[$j] && $numpoints == 1) {
-		die "Cannot scan variable $v->[0] using only one data point.
+		die "Cannot scan variable $v using only one data point.
 Please use -N to specify the number of points.";
 	    }
 	    $j++;
-	} elsif($v->[1] =~ /^(.+)$/) {
+	} elsif($vals{$v} =~ /^(.+)$/) {
 	    # Constant variable (no action).
 	} else {
-	    die "Invalid parameter specification '$v->[1]' for parameter $v->[0]";
+	    die "Invalid parameter specification '$vals{$v}' for parameter $v";
 	}
 	$i++;
     }
@@ -149,7 +161,8 @@ Please use -N to specify the number of points.";
 }
 
 sub exec_sim {
-    my @cmdlist = ($out_file, @options, map("$_->[0]=$_->[1]", @params));
+    my (@options) = @_;
+    my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params));
     # ToDo: This is broken in that it does not show the proper quoting
     # that would be necessary if the user actually wantet to run the
     # command manually. (Note that the exec() call is correct since it
@@ -164,29 +177,94 @@ sub do_single {
     push @options, "--file=$data_file" if $data_file;
 
     print "Running simulation '$out_file' ...\n";
-    exec_sim() || die "Failed to run simulation";
+    exec_sim(@options) || die "Failed to run simulation";
+}
+
+
+# Handle output of header information for .dat files and .sim information files.
+sub do_instr_header {
+    my ($prefix, $OUT) = @_;
+    print $OUT join("", map("$prefix$_", @{$instr_info->{'RAW'}}));
+}
+
+sub do_sim_header {
+    my ($prefix, $OUT) = @_;
+    my $date = localtime(time());
+    print $OUT "${prefix}Date: $date\n";
+    print $OUT "${prefix}Ncount: $ncount\n";
+    print $OUT "${prefix}Numpoints: $numpoints\n";
+    my $paramtext = join("\n", map("${prefix}Param: $_=$vals{$_}", @params));
+    print $OUT $paramtext, "\n";
+}
+
+sub do_data_header {
+    my ($pr, $OUT, $info, $youts, $variables, $datfile) = @_;
+    my $scannedvars = join ", ", map($params[$_], @{$info->{VARS}});
+    my $xvars = join " ", map($params[$_], @{$info->{VARS}});
+    my $yvars = join " ", @$youts;
+    my $xlabel = $params[$info->{VARS}[0]];
+    print $OUT <<END
+${pr}type: multiarray_1d($numpoints)
+${pr}title: 'Scan of $scannedvars'
+${pr}xvars: $xvars
+${pr}yvars: $yvars
+${pr}xlabel: '$xlabel'
+${pr}ylabel: 'Intensity'
+${pr}xlimits: $info->{MIN}[0] $info->{MAX}[0]
+${pr}filename: $datfile
+${pr}variables: $variables
+END
+}
+
+# Write <NAME>.sim information file, to be read by mcplot.
+sub output_sim_file {
+    my ($filename, $info, $youts, $variables, $datfile) = @_;
+    my $SIM = new FileHandle;
+    open($SIM, ">$filename") ||
+	die "Failed to write info file '$filename'";
+    print $SIM "begin instrument\n";
+    do_instr_header("  ", $SIM);
+    print $SIM "end instrument\n\nbegin simulation\n";
+    do_sim_header("  ", $SIM);
+    print $SIM "end simulation\n\nbegin data\n";
+    do_data_header("  ", $SIM, $info, $youts, $variables, $datfile);
+    print $SIM "end data\n";
+    close($SIM);
+}
+
+# Output header information for mcrun .dat scan file.
+sub output_dat_header {
+    my ($OUT, $info, $youts, $variables, $datfile) = @_;
+    print $OUT "# Instrument-source: '$instr_info->{'Instrument-source'}'\n";
+    do_sim_header("# ", $OUT);
+    do_data_header("# ", $OUT, $info, $youts, $variables, $datfile);
 }
 
 # Do a scan: Run a series of simulations, varying one or more input
 # parameters.
 sub do_scan {
     my ($info) = @_;
-    my $simfile = "";
     # Create the output directory if requested.
+    my $prefix = "";
     if($data_dir) {
 	if(mkdir($data_dir, 0777)) {
-	    $simfile .= "$data_dir/";
+	    $prefix = "$data_dir/";
 	} else {
 	    die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
 	}
     }
-    if($data_file) {
-	die "The -f/--file option is not yet supported by mcrun";
-    }
-    $simfile .= "mcstas.dat";
-    open(OUT, ">$simfile");
+    # Use user-specified output file name, with a default of "mcstas.dat".
+    my $datfile = ($data_file || "mcstas.dat");
+    # Add a default '.dat' extension if no other extension given.
+    $datfile .= ".dat" unless $datfile =~ m'\.[^/]*$'; # Quote hack ';
+    my $simfile = $datfile;
+    $simfile =~ s/\.dat$//;	# Strip any trailing ".dat" extension ...
+    $simfile .= ".sim";	# ... and add ".sim" extension.
+    my $DAT = new FileHandle;
+    open($DAT, ">${prefix}$datfile");
+    autoflush $DAT 1;		# Preserves data even if interrupted.
     my $firsttime = 1;
-    my $outputs = "";
+    my $variables = "";
     my @youts = ();
     my $point;
     for($point = 0; $point < $numpoints; $point++) {
@@ -194,12 +272,15 @@ sub do_scan {
 	my $j;
 	for($j = 0; $j < @{$info->{VARS}}; $j++) {
 	    my $i = $info->{VARS}[$j]; # Index of variable to be scanned
-	    $params[$i]->[1] =
+	    $vals{$params[$i]} =
 		($info->{MAX}[$j] - $info->{MIN}[$j])/($numpoints - 1)*$point +
 		    $info->{MIN}[$j];
-	    $out .= "$params[$i]->[1] ";
-	    $outputs .= "$params[$i]->[0] " if $firsttime
+	    $out .= "$vals{$params[$i]} ";
+	    $variables .= "$params[$i] " if $firsttime
 	    }
+	# Decide how to handle output files.
+	my $output_opt =
+	    $data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
 	my $got_error = 0;
 	my $pid = open(SIM, "-|");
 	die "Failed to spawn simulation command" unless defined($pid);
@@ -210,10 +291,10 @@ sub do_scan {
 		    my $sim_I = $2;
 		    my $sim_err = $4;
 		    my $sim_N = $6;
-		    $out .= " $sim_I $sim_err $sim_N";
+		    $out .= " $sim_I $sim_err";
 		    if($firsttime) {
-			$outputs .= " $1 $3 $5";
-			push @youts, "($1,$3,$5)";
+			$variables .= " $1 $3";
+			push @youts, "($1,$3)";
 		    }
 		} elsif(m'^Error:') {
 		    $got_error = 1;
@@ -222,36 +303,21 @@ sub do_scan {
 	    }
 	} else {		# Child
 	    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
-	    exec_sim();
+	    exec_sim(@options, $output_opt);
 	}
 	my $ret = close(SIM);
 	die "Exit due to error returned by simulation program"
 	    if $got_error || (! $ret && ($? != 0 || $!));
-	print OUT "$out\n";
+	output_dat_header($DAT, $info, \@youts, $variables, $datfile)
+	    if $firsttime;
+	print $DAT "$out\n";
 	$firsttime = 0;
     }
-    close(OUT);
-    print "Output file: '$simfile'\nOutput parameters: $outputs\n";
-
-    # Write gscan.sim information file.
-    my $infofile = "gscan.sim";
-    open(OUT, ">$infofile") || die "Failed to write info file '$infofile'";
-    my $scannedvars = join ", ", map($params[$_][0], @{$info->{VARS}});
-    my $xvars = join " ", map($params[$_][0], @{$info->{VARS}});
-    my $yvars = join " ", @youts;
-    print OUT <<END;
-begin data
-  type: array_1d($numpoints)
-  title: 'Scan of $scannedvars'
-  xvars: $xvars
-  yvars: $yvars
-  xlimits: $info->{MIN}[0] $info->{MAX}[0]
-  filename: $simfile
-  params: $outputs
-end data
-END
-    close(OUT);
+    close($DAT);
+    output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile);
+    print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
 }
+
 
 		    ##########################
 		    # Start of main program. #
@@ -261,12 +327,12 @@ parse_args();			# Parse command line arguments
 my $scan_info = check_input_params(); # Get variables to scan, if any
 $out_file = get_out_file($sim_def, $force_compile);
 exit(1) unless $out_file;
-$instr_info = get_sim_info($out_file);
 
 # Make sure that the current directory appears first in the path;
 # contrary to normal use, this is what the user expects here.
 $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
 
+$instr_info = get_sim_info($out_file);
 if($numpoints == 1) {
     do_single();
 } else {
