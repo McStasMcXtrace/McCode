@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -121,14 +121,7 @@ TRACE
 
 SAVE
 %{
-  int mcsingle_file_saved;
-  /* save results, but do not free pointers */
-  mcsingle_file_saved = mcsingle_file;
-  mcsingle_file = 0;
-  if (strstr(Vars.option, "binary")) mcascii_only  = 1;
-  /* set no header if binary type, and save as external file anyway */
   Monitor_nD_Save(&DEFS, &Vars);
-  mcsingle_file = mcsingle_file_saved;
 %}
 
 FINALLY
