@@ -73,11 +73,13 @@ functionality on Win32 using mcc
 * McStas manual description of new features
 * McStas manual updates in general
 * more on inserting arms in the docs
+* Powder2 / Phonon_simple, rectangular focusing + target_index
 
 TODO:
 * mcplot problem running mcdisplay for instrument view (n exist)
-* Kim's Powder2 (needs a few lines for randvec_target_rect) - PETER
-* Phonon_sample, target_index should be added
+* Final sanity check + make test
+* Build of dist packages + web transfer
+* Changes document / Changes chapter in manual
 
 PENDING:
 * 'Scan evolvement' plot of psd's (Pick PSD data from scan, plot together)
