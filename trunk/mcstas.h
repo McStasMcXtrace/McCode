@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.18 1999-03-18 07:33:24 kn Exp $
+* 	$Id: mcstas.h,v 1.19 1999-04-16 07:39:27 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.18  1999/03/18 07:33:24  kn
+* 	Handle polarised neutrons.
+*
 * 	Revision 1.17  1999/01/28 07:56:48  kn
 * 	Support for MCDISPLAY section in component definitions.
 *
@@ -282,6 +285,10 @@ extern int parse_restricted;
 /* Map of already-read components. */
 extern Symtab read_components;
 
+/* Check that component definition and setting parameters are unique. */
+void check_comp_formals(List deflist, List setlist, char *compname);
+/* Check that instrument parameters are unique. */
+void check_instrument_formals(List formallist, char *instrname);
 /* Handle assignment of actual to formal component parameters. */
 void comp_formals_actuals(struct comp_inst *comp, Symtab actuals);
 
@@ -431,9 +438,9 @@ struct instr_def
     List formals;		/* List of formal parameters. */
     Symtab compmap;		/* Map of component names to instances. */
     List complist;		/* List of components in declaration order. */
-    int rotations_in_radians;	/* If set, rotations are given in radians. */
     int use_default_main;	/* If set, output a main() function. */
     int include_runtime;	/* If set, include runtime in output. */
     int enable_trace;		/* If set, enable output of neutron traces. */
+    int portable;		/* If set, emit strictly portable ANSI C. */
     int polarised;		/* If set, handle neutron polarisation. */
   };
