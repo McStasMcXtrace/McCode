@@ -67,6 +67,7 @@ use Tk;
 use Tk::TextUndo;
 use Tk::ROText;
 use Tk::DialogBox;
+use Tk::widgets qw(TextEdit);
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
@@ -81,7 +82,7 @@ my ($inf_instr, $inf_sim, $inf_data);
 my %inf_param_map;
 my $current_sim_def;
 my $main_window;
-my ($edit_window, $edit_control);
+my ($edit_window, $edit_control, $edit_label);
 
 my $external_editor;
 my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
@@ -1307,57 +1308,19 @@ sub setup_edit {
     # Create the editor window.
     my $w = $mw->Toplevel;
     my $e;
-    # Create the editor menus.
-    my $menu = $w->Frame(-relief => 'raised', -borderwidth => 2);
-    $menu->pack(-fill => 'x');
-    my $filemenu = $menu->Menubutton(-text => 'File', -underline => 0);
-    $filemenu->command(-label => 'New instrument',
-                       -command => [\&menu_new, $w],
-                       -underline => 0);
-    $filemenu->command(-label => 'Save instrument',
-                       -accelerator => 'Alt+S',
-                       -command => [\&menu_save, $w],
-                       -underline => 0);
-    $w->bind('<Alt-s>' => [\&menu_save, $w]);
-    $filemenu->command(-label => 'Save instrument as ...',
-                       -underline => 16,
-                       -command => sub {menu_saveas($w)});
-    $filemenu->separator;
-    $filemenu->command(-label => 'Close',
-                       -underline => 0,
-                       -accelerator => 'Alt+C',
-                       -command => sub { editor_quit($w) } );
-    $w->bind('<Alt-c>' => sub { editor_quit($w) } );
-    $filemenu->pack(-side=>'left');
-    my $editmenu = $menu->Menubutton(-text => 'Edit', -underline => 0);
-    $editmenu->command(-label => 'Undo',
-                       -accelerator => 'Ctrl+Z',
-                       -command => [\&menu_undo, $w], -underline => 0);
-    $w->bind('<Control-z>' => [\&menu_undo, $w]);
-    $editmenu->separator;
-    $editmenu->command(-label => 'Cut',
-                       -accelerator => 'Ctrl+X',
-                       -command => sub { $e->clipboardCut(); },
-                       -underline => 0);
-    $editmenu->command(-label => 'Copy',
-                       -accelerator => 'Ctrl+C',
-                       -command => sub { $e->clipboardCopy(); },
-                       -underline => 1);
-    $editmenu->command(-label => 'Paste',
-                       -accelerator => 'Ctrl+V',
-                       -command => sub { $e->clipboardPaste(); },
-                       -underline => 0);
-    $editmenu->pack(-side=>'left');
-    my $insert_menu = $menu->Menubutton(-text => 'Insert', -underline => 0);
-    make_insert_menu($w, $insert_menu);
-
     # Create the editor text widget.
-    $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
-                      -height => 24);
-    my $s = $w->Scrollbar(-command => [$e, 'yview']);
-    $e->configure(-yscrollcommand =>  [$s, 'set']);
-    $s->pack(-side => 'right', -fill => 'y');
+    $e = $w->Scrolled('TextEdit',-relief => 'sunken', -bd => '2', -setgrid => 'true',
+                      -height => 24, wrap => 'none', -scrollbars =>'se');
+    my $menu = $e->menu;
+    $w->configure(-menu => $menu);
+    my $insert_menu = $menu->Menubutton(-text => 'Insert', -underline => 0);
+    # This is only done for backward compatibility - we want to use Alt+s for saving...
+    my $filemenu = $menu->Menubutton(-text => 'Search', -underline => 1);
+    $w->bind('<Alt-s>' => [\&menu_save, $w]);
+    make_insert_menu($w, $insert_menu);
+    my $label = $w->Label(-bd => '1', -text => 'Current line: 1');
     $e->pack(-expand => 'yes', -fill => 'both');
+    $label->pack(-side => 'left', -expand => 'no', -fill => 'x');
     $e->mark('set', 'insert', '0.0');
     $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def; 
     if ($current_sim_def) {
@@ -1368,7 +1331,19 @@ sub setup_edit {
     $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
     $edit_control = $e;
     $edit_window = $w;
+    $edit_label = $label;
+    $edit_control->SetGUICallbacks([\&update_line]);
 }
+
+# GUI callback function for updating line numbers etc.
+sub update_line {
+    if (defined($edit_control)) {
+	my ($line,$col) = split(/\./,$edit_control->index('insert'));
+	my ($last_line,$last_col) = split(/\./,$edit_control->index('end'));
+	$last_line=$last_line-1;
+	$edit_label->configure(-text => " Line: $line of $last_line total, Column: $col");
+    } 
+}   
 
 # Check if simulation needs recompiling.
 sub check_if_need_recompile {
