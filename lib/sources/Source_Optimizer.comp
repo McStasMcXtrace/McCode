@@ -6,14 +6,15 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 17 Sept 1999
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Version: 0.08
+* Version: 0.09
 * Modified by: (v 0.06) EF, Feb 2000;
 * Modified by: (v.0.07) EF, Mar 10th 2000; (smoothed, parse options). struct
 * Modified by: (v.0.08) EF, Oct 12th 2000; optim divergence for v and s
+* Modified by: (v.0.09) EF, Mar 13th 2001; bug on div s (SIGFPE /0 )
 *
 * A component that optimizes the neutron flux passing through the
 * Source_Optimizer in order to have the maximum flux at the 
-* <b>Monitor_Optimizer</b> position(s).
+* <b>Monitor_Optimizer</b> position.
 *
 * %Description
 *   Principle: The optimizer first (step 1) computes neutron state parameter  
@@ -25,9 +26,9 @@
 * the Monitor_Optimizer. In fact it changes 'bad' neutrons into 'good' ones
 * (that reach the Monitor), acting on their position, spin and divergence or
 * velocity. The overall Monitor flux is kept during process. The energy and 
-* polarisation distributions are kept as far as possible during optimisation.
-* The optimization method considers that all neutron parameters
-*  - (x,y), (vx,vy,vz) or (vx/v2,vy/v2,v2), (sx,sy,sz) or
+* polarisation distributions are kept during optimization as far as possible 
+* during optimisation. The optimization method considers that all neutron
+* parameters - (x,y), (vx,vy,vz) or (vx/v2,vy/v2,v2), (sx,sy,sz) or
 * (sx/s2,sy/s2,s2) - are independent.
 *
 *   Options: The optimized source can be computed regularly ('continuous'
@@ -36,7 +37,7 @@
 * steps 1 and 2 can be smoothed for a better neutron weight distribution
 * ('smooth' option). 
 * 
-* Source_Optimizer can be placed at any position where you want to act on the
+* Source_optimizer can be placed at any position where you want to act on the
 * flux, for instance just after the source.
 * Monitor_Optimizer should be placed at position(s) to optimize.
 * I prefer to put one just before the sample.
@@ -329,7 +330,7 @@ DECLARE
 
 INITIALIZE
 %{
-  int  carg = 1;
+  unsigned char carg = 1;
   char *option_copy, *token;
   char Flag_New_Token = 1;
   char Flag_End       = 1;
@@ -893,7 +894,6 @@ TRACE
     
     if (Vars.Phase == DEFS.PHASE_SET_SOURCE)	/* Define optimized Source (normalized to Reference) */
     {
-      
       if (Vars.Monitor_Counts)  
       {
       	Vars.t1 = (1 - Vars.dkeep) * (double)Vars.Phase_Counts/(double)Vars.Monitor_Counts;
@@ -961,7 +961,6 @@ TRACE
         Vars.New_Source_sz[Vars.index] = 0;
         
       } /* end for */
- 
       Vars.Phase = DEFS.PHASE_OPTIM;
       
     } /* end DEFS.PHASE_SET_SOURCE */
@@ -1198,12 +1197,18 @@ TRACE
         Vars.cur_sz /= (1+Vars.dsx*Vars.dsx+Vars.dsy*Vars.dsy); /* always > 0 */
         /* now try the two z signs for sz */
         Vars.t1 = sqrt(Vars.cur_sz);
-        Vars.i1 = (int)rint(Vars.nbins * (Vars.t1 -Vars.sz_min)/(Vars.sz_max-Vars.sz_min));
+        if (Vars.sy_max-Vars.sy_min)
+          Vars.i1 = (int)rint(Vars.nbins * (Vars.t1 -Vars.sz_min)/(Vars.sz_max-Vars.sz_min));
+        else
+          Vars.i1 = 0;
         if (Vars.i1 < 0)     Vars.i1 = 0;
         if (Vars.i1 >= Vars.nbins) Vars.i1 = Vars.nbins - 1;
         Vars.u1 = Vars.Source_sz[Vars.i1]/(Vars.Reference_sz[Vars.i1]+1);
         Vars.t1 *= -1;
-        Vars.i2 = (int)rint(Vars.nbins * (Vars.t1 -Vars.sz_min)/(Vars.sz_max-Vars.sz_min));
+        if (Vars.sy_max-Vars.sy_min)
+          Vars.i2 = (int)rint(Vars.nbins * (Vars.t1 -Vars.sz_min)/(Vars.sz_max-Vars.sz_min));
+        else
+          Vars.i2 = 0;
         if (Vars.i2 < 0)     Vars.i2 = 0;
         if (Vars.i2 >= Vars.nbins) Vars.i2 = Vars.nbins - 1;
         Vars.u2 = Vars.Source_sz[Vars.i2]/(Vars.Reference_sz[Vars.i2]+1);
@@ -1215,6 +1220,7 @@ TRACE
       }
       else
       {
+        
         if (Vars.Flag_Type & DEFS.DO_S)
         {
           if (Vars.Flag_Recycle & (DEFS.MOD_SX|DEFS.MOD_SY|DEFS.MOD_SZ))
@@ -1467,7 +1473,7 @@ FINALLY
        
        fprintf(hfile,"\n");
  
-       fprintf(hfile,"# Redirected neutrons: %i (%.2f \%)\n",Vars.n_redirect,(double)(100*Vars.n_redirect/mcget_ncount()));
+       fprintf(hfile,"# Redirected neutrons: %i (%.2f %%)\n",Vars.n_redirect,(double)(100*Vars.n_redirect/mcget_ncount()));
        fprintf(hfile,"# data: Optimized Source (%.1f Counts, Flux %.4g)\n", Vars.Monitor_Counts, Vars.Monitor_Flux);
        for (Vars.index = 0; Vars.index < Vars.nbins; Vars.index++)
        {
@@ -1590,5 +1596,7 @@ MCDISPLAY
 %}
 
 END
+
+
 
 
