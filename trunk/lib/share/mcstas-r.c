@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.8 1998-04-16 14:21:49 kn Exp $
+* 	$Id: mcstas-r.c,v 1.9 1998-04-17 10:52:27 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.8  1998/04/16 14:21:49  kn
+* 	Added randvec_target() function.
+*
 * 	Revision 1.7  1998/03/24 07:34:03  kn
 * 	Use rand01() in randnorm(). Fix typos.
 *
@@ -315,18 +318,18 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 /* Choose random direction towards target at (x,y,z) with radius r. */
 /* ToDo: It should be possible to optimize this to avoid computing angles. */
 void
-randvec_target(double *xo, double *yo, double *zo,
+randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
 	       double xi, double yi, double zi, double radius)
 {
-  double v, phi0, phi, theta, nx, ny, nz, xt, yt, zt;
+  double l, theta0, phi, theta, nx, ny, nz, xt, yt, zt;
   
-  v = sqrt(xi*xi + yi*yi + zi*zi); /* Distance to target. */
-  phi0 = atan(radius / v);		/* Target size as seen from origin */
-  /* Now choose point uniformly on sphere surface within angle phi0 */
-  phi = acos (1 - rand0max(1 - cos(phi0)));
-  theta = rand0max(2 * PI);
-  /* Now, to obtain the desirec vector rotate (x,y,z) angle phi around a
-     perpendicular axis (nx,ny,nz) and then angle theta around (x,y,z). */
+  l = sqrt(xi*xi + yi*yi + zi*zi); /* Distance to target. */
+  theta0 = asin(radius / l);	/* Target size as seen from origin */
+  /* Now choose point uniformly on sphere surface within angle theta0 */
+  theta = acos (1 - rand0max(1 - cos(theta0)));
+  phi = rand0max(2 * PI);
+  /* Now, to obtain the desired vector rotate (x,y,z) angle theta around a
+     perpendicular axis (nx,ny,nz) and then angle phi around (x,y,z). */
   if(xi == 0 && yi == 0)
   {
     nx = 1;
@@ -339,6 +342,6 @@ randvec_target(double *xo, double *yo, double *zo,
     ny = xi;
     nz = 0;
   }
-  rotate(xt, yt, zt, xi, yi, zi, phi, nx, ny, nz);
-  rotate(*xo, *yo, *zo, xt, yt, zt, theta, xi, yi, zi);
+  rotate(xt, yt, zt, xi, yi, zi, theta, nx, ny, nz);
+  rotate(*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
 }
