@@ -18,9 +18,17 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.90 2004-07-16 14:59:03 farhi Exp $
+* $Id: mcstas-r.c,v 1.91 2004-07-30 14:49:15 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.90  2004/07/16 14:59:03  farhi
+* MPI support. Requires to have mpi installed, and compile with
+*    CC=mpicc and CFLAGS = -DUSE_MPI.
+* Work done by Christophe Taton from ENSIMAG/Grenoble
+* Execute (using mpich) with:
+*    mpirun -np NumNodes -machinefile <file> instr.out parameters...
+* where <file> is text file that lists the machines to use
+*
 * Revision 1.88  2004/06/30 15:06:06  farhi
 * Solved 'pre' SEGV occuring when indenting/unindenting a Parameter block
 * in a data file. Removed Date field in mcinfo_simulation, as this is now included
@@ -2099,7 +2107,9 @@ mchelp(char *pgmname)
 #ifndef MC_PORTABLE
 #ifndef MAC
 #ifndef WIN32  
+#ifndef USE_MPI
   fprintf(stderr, "Known signals are: USR1 (status) USR2(save) TERM (save and exit)\n");
+#endif /* USE_MPI */
 #endif /* !MAC */
 #endif /* !WIN32 */
 #endif /* !MC_PORTABLE */  
@@ -3468,13 +3478,16 @@ mcuse_dir(char *dir)
           "Directory output cannot be used with portable simulation.\n");
   exit(1);
 #else  /* !MC_PORTABLE */
-  if(mkdir(dir, 0777))
-  {
-    fprintf(stderr, "Error: unable to create directory '%s'.\n", dir);
-    fprintf(stderr, "(Maybe the directory already exists?)\n");
-    exit(1);
-  }
-  mcdirname = dir;
+  MPI_MASTER
+    (
+     if(mkdir(dir, 0777))
+       {
+	 fprintf(stderr, "Error: unable to create directory '%s'.\n", dir);
+	 fprintf(stderr, "(Maybe the directory already exists?)\n");
+	 exit(1);
+       }
+     mcdirname = dir;
+     );
 #endif /* !MC_PORTABLE */
 }
 
@@ -3699,18 +3712,19 @@ void sighandler(int sig)
   }
   switch (sig) {
     case SIGINT : printf(" SIGINT (interrupt from terminal, Ctrl-C)"); break;
-    case SIGQUIT : printf(" SIGQUIT (quit from terminal)"); break;
-    case SIGABRT : printf(" SIGABRT (abort)"); break;
-    case SIGTRAP : printf(" SIGTRAP (trace trap)"); break;
-    case SIGTERM : printf(" SIGTERM (termination)"); break;
-    case SIGPIPE : printf(" SIGPIPE (broken pipe)"); break;
+    case SIGQUIT : printf(" SIGQUIT (Quit from terminal)"); break;
+    case SIGABRT : printf(" SIGABRT (Abort)"); break;
+    case SIGTRAP : printf(" SIGTRAP (Trace trap)"); break;
+    case SIGTERM : printf(" SIGTERM (Termination)"); break;
+    case SIGPIPE : printf(" SIGPIPE (Broken pipe)"); break;
     case SIGUSR1 : printf(" SIGUSR1 (Display info)"); break;
     case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); break;
+    case SIGHUP  : printf(" SIGHUP (Hangup/update)"); break;
     case SIGILL  : printf(" SIGILL (Illegal instruction)"); break;
     case SIGFPE  : printf(" SIGFPE (Math Error)"); break;
-    case SIGBUS  : printf(" SIGBUS (bus error)"); break;
+    case SIGBUS  : printf(" SIGBUS (Bus error)"); break;
     case SIGSEGV : printf(" SIGSEGV (Mem Error)"); break;
-    case SIGURG  : printf(" SIGURG (urgent socket condition)"); break;
+    case SIGURG  : printf(" SIGURG (Urgent socket condition)"); break;
     default : printf(" (look at signal list for signification)"); break;
   }
   printf("\n");
@@ -3734,7 +3748,7 @@ void sighandler(int sig)
     return;
   }
   else
-  if (sig == SIGUSR2)
+  if (sig == SIGUSR2 || sig == SIGHUP)
   {
     printf("# McStas: Saving data and resume simulation (continue)\n");
     mcsave(NULL);
@@ -3742,7 +3756,7 @@ void sighandler(int sig)
     return;
   }
   else
-  if ((sig == SIGTERM) || (sig == SIGINT))
+  if ((sig == SIGTERM) || (sig == SIGINT) || (sig == SIGABRT) || (sig == SIGQUIT))
   {
     printf("# McStas: Finishing simulation (save results and exit)\n");
     mcfinally();
@@ -3805,20 +3819,15 @@ mcstas_main(int argc, char *argv[])
   /* install sig handler, but only once !! after parameters parsing */
   signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
   signal( SIGABRT ,sighandler);   /* used by abort, replace SIGIOT in the future */
-  signal( SIGTRAP ,sighandler);   /* trace trap (not reset when caught) */
   signal( SIGTERM ,sighandler);   /* software termination signal from kill */
-  /* signal( SIGPIPE ,sighandler);*/   /* write on a pipe with no one to read it, used by mcdisplay */
 
-  signal( SIGUSR1 ,sighandler); /* display simulation status */
+  signal( SIGUSR1 ,sighandler);   /* display simulation status */
   signal( SIGUSR2 ,sighandler);
+  signal( SIGHUP ,sighandler);
   signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
   signal( SIGFPE ,sighandler);    /* floating point exception */
   signal( SIGBUS ,sighandler);    /* bus error */
   signal( SIGSEGV ,sighandler);   /* segmentation violation */
-  #ifdef SIGSYS
-  signal( SIGSYS ,sighandler);    /* bad argument to system call */
-  #endif
-  signal( SIGURG ,sighandler);    /* urgent socket condition */
 #endif /* !USE_MPI */
 #endif /* !MAC */
 #endif /* !WIN32 */
@@ -3866,4 +3875,3 @@ mcstas_main(int argc, char *argv[])
   
   return 0;
 }
-
