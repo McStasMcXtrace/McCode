@@ -17,7 +17,7 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.30 2003-01-21 08:33:57 pkwi Exp $
+* $Id: mcstas.h,v 1.31 2003-01-21 08:38:40 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -35,7 +35,7 @@
 #define TRUE 1
 #endif
 
-#define MCSTAS_VERSION "1.6.3c, Sep 2nd, 2002"
+#define MCSTAS_VERSION "1.6.3g, Oct 7th, 2002"
 
 
 /* Functions defined in memory.c */
@@ -153,33 +153,7 @@ struct coords_exp
 typedef struct coords_exp Coords_exp;
 
 /* Get all-zero coordinate. */
-Coords coords_origo(void);
 Coords_exp coords_exp_origo(void);
-/* Add two coordinates. */
-Coords coords_add(Coords a, Coords b);
-
-
-/*******************************************************************************
-* Definitions for rotation.c
-*******************************************************************************/
-
-/* Rotation transformations. */
-typedef double Rotation[3][3];
-
-/* Get the unit rotation (no transformation). */
-void rot_set_unit(Rotation t);
-/* Rotate first around x, then around y, then around z axis. */
-void rot_set_rotation(Rotation t, double phx, double phy, double phz);
-/* Rotate around x axis. */
-void rot_set_rotation_x(Rotation t, double ph);
-/* Rotate around y axis. */
-void rot_set_rotation_y(Rotation t, double ph);
-/* Rotate around z axis. */
-void rot_set_rotation_z(Rotation t, double ph);
-/* Combine rotation (using a matrix multiply). */
-void rot_mul(Rotation t1, Rotation t2, Rotation t3);
-/* Copy rotation transformation. */
-void rot_copy(Rotation dest, Rotation src);
 
 
 /*******************************************************************************
@@ -238,10 +212,14 @@ extern List comp_instances_list;
 extern Symtab group_instances;
 /* List of component group instances in declaration order. */ /* ADD: E. Farhi Sep 24th, 2001 group instances */
 extern List group_instances_list;
+/* Map from names to embedded libraries */
+extern Symtab lib_instances;
 /* Flag set to TRUE when scanning autoloaded component definitions. */
 extern int parse_restricted;
 /* Map of already-read components. */
 extern Symtab read_components;
+/* Verbose parsing/code generation */
+extern char verbose;
 
 /* Check that component definition and setting parameters are unique. */
 void check_comp_formals(List deflist, List setlist, char *compname);
@@ -360,10 +338,17 @@ struct code_block
     List lines;			/* List of lines (strings with \n at end). */
   };
 
+/* Note: the enum instr_formal_types definition MUST be kept
+   synchronized with the one in mcstas-r.h. */
+enum instr_formal_types
+  {
+    instr_type_double, instr_type_int, instr_type_string
+  };
 
 /* Component formal input parameters. */
 struct comp_iformal
   {
+    enum instr_formal_types type; /* Type (string, int, double) */
     char *id;			/* Parameter name */
     int isoptional;		/* True if default value is available */
     CExp default_value;		/* Default value if isoptional is true */
@@ -406,12 +391,6 @@ struct comp_inst
   };
 
 /* Instrument formal parameters. */
-/* Note: the enum instr_formal_types definition MUST be kept
-   synchronized with the one in mcstas-r.h. */
-enum instr_formal_types
-  {
-    instr_type_double, instr_type_int, instr_type_string
-  };
 struct instr_formal
   {
     enum instr_formal_types type; /* Type (string, int, double) */

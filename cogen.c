@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.23
+* Version: 1.24
 *
 * Code generation from instrument definition.
 *
-* $Id: cogen.c,v 1.32 2003-01-21 08:33:57 pkwi Exp $
+*	$Log: not supported by cvs2svn $
+* Revision 1.24 2002/09/17 10:34:45 ef
+*	added comp setting parameter types
+*
+* $Id: cogen.c,v 1.33 2003-01-21 08:38:40 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -252,34 +256,38 @@ embed_file(char *name)
   char buf[4096];
   FILE *f;
   int last;
-
-  /* First look in the system directory. */
-  f = open_file_search_sys(name);
-  /* If not found, look in the full search path. */
-  if(f == NULL)
-    f = open_file_search(name);
-  /* If still not found, abort. */
-  if(f == NULL)
-    fatal_error("Could not find file '%s'\n", name);
-
-  cout("");
-  code_set_source(name, 1);
-  /* Now loop, reading lines and outputting them in the code. */
-  while(!feof(f))
+  
+  if (!symtab_lookup(lib_instances, name))
   {
-    if(fgets(buf, 4096, f) == NULL)
-      break;
-    last = strlen(buf) - 1;
-    if(last >= 0 && (buf[last] == '\n' || buf[last] == '\r'))
-      buf[last--] = '\0';
-    if(last >= 0 && (buf[last] == '\n' || buf[last] == '\r'))
-      buf[last--] = '\0';
-    cout(buf);
-  }
-  fclose(f);
-  coutf("/* End of file \"%s\". */", name);
-  cout("");
-  code_reset_source();
+    /* First look in the system directory. */
+    f = open_file_search_sys(name);
+    /* If not found, look in the full search path. */
+    if(f == NULL)
+      f = open_file_search(name);
+    /* If still not found, abort. */
+    if(f == NULL)
+      fatal_error("Could not find file '%s'\n", name);
+
+    cout("");
+    code_set_source(name, 1);
+    /* Now loop, reading lines and outputting them in the code. */
+    while(!feof(f))
+    {
+      if(fgets(buf, 4096, f) == NULL)
+        break;
+      last = strlen(buf) - 1;
+      if(last >= 0 && (buf[last] == '\n' || buf[last] == '\r'))
+        buf[last--] = '\0';
+      if(last >= 0 && (buf[last] == '\n' || buf[last] == '\r'))
+        buf[last--] = '\0';
+      cout(buf);
+    }
+    fclose(f);
+    coutf("/* End of file \"%s\". */", name);
+    cout("");
+    code_reset_source();
+    symtab_add(lib_instances, name, NULL);
+  } /* else file has already been embedded */
 }
 
 
@@ -563,7 +571,10 @@ cogen_decls(struct instr_def *instr)
       liter2 = list_iterate(comp->def->set_par);
       while(c_formal = list_next(liter2))
       {
-        coutf("MCNUM %sc%s_%s;", ID_PRE, comp->name, c_formal->id);
+        if (c_formal->type != instr_type_string)
+          coutf("%s %sc%s_%s;", instr_formal_type_names_real[c_formal->type], ID_PRE, comp->name, c_formal->id);
+        else
+          coutf("%s %sc%s_%s[1024];", instr_formal_type_names_real[c_formal->type], ID_PRE, comp->name, c_formal->id);
       }
       list_iterate_end(liter2);
     }
@@ -829,7 +840,14 @@ cogen_init(struct instr_def *instr)
       entry = symtab_lookup(comp->setpar, par->id);
       val = exp_tostring(entry->val);
       code_set_source(instr->quoted_source, exp_getlineno(entry->val));
-      coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par->id, val);
+      if (par->type != instr_type_string)
+      {
+        coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par->id, val);
+      }
+      else
+      {
+        coutf("  strncpy(%sc%s_%s,%s, 1024);", ID_PRE, comp->name, par->id, val);
+      }
       str_free(val);
     }
     list_iterate_end(setpar);
@@ -1226,7 +1244,7 @@ cogen_runtime(struct instr_def *instr)
 *******************************************************************************/
 void
 cogen(char *output_name, struct instr_def *instr)
-{
+{ 
   /* Initialize output file. */
   if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
   {
@@ -1241,10 +1259,14 @@ cogen(char *output_name, struct instr_def *instr)
   num_next_output_line = 1;
   if(output_handle == NULL)
     fatal_error("Error opening output file '%s'\n", output_name);
-
-  cout("/* Automatically generated file. Do not edit. */");
-  coutf("/* created by McStas %s from instrument %s */", MCSTAS_VERSION, instr->source);
+  
+  cout("/* Automatically generated file. Do not edit. ");
+  cout(" * Format:  ANSI C source code\n");
+  cout(" * Creator: McStas <http://neutron.risoe.dk>\n");
+  coutf(" * Instrument: %s (%s)\n", instr->source, instr->name);
+  cout(" */\n\n");
   cout("");
+  coutf("#define MCSTAS_VERSION \"%s\"\n", MCSTAS_VERSION);
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);

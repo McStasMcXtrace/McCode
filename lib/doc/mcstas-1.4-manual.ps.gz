@@ -19540,7 +19540,7 @@ b(1997-2000)g(Risoe)g(National)g(Laboratory,)g(Roskilde,)h(Denmark)333
 1225 y(*)333 1316 y(*)e(\045I)333 1408 y(*)g(Written)h(by:)f(KL)333
 1499 y(*)g(Modified)h(by:)f(KL,)g(KN,)g(October)h(5,)e(1998)333
 1590 y(*)h(Date:)g(October)h(30,)f(1997)333 1682 y(*)g(Version:)h
-($Revision: 1.5 $)333 1773 y(*)g(Origin:)h(McStas)f(release)333
+($Revision: 1.6 $)333 1773 y(*)g(Origin:)h(McStas)f(release)333
 1864 y(*)333 1956 y(*)g(Neutron)h(source)f(with)g(flat)h(energy)f
 (spectrum)h(and)f(arbitrary)h(flux)333 2047 y(*)333 2138
 y(*)f(\045D)333 2230 y(*)g(The)g(routine)h(is)e(a)h(circular)h(neutron)
@@ -19608,7 +19608,7 @@ eop
 (and)f(Kim)g(Lefmann,)333 951 y(*)354 b(Copyright)41
 b(1997-2000)g(Risoe)g(National)g(Laboratory,)g(Roskilde,)h(Denmark)333
 1042 y(*)333 1134 y(*)e(\045I)333 1225 y(*)g(Written)h(by:)f(KN)333
-1316 y(*)g(Date:)g(1998)333 1408 y(*)g(Version:)h($Revision: 1.5 $)
+1316 y(*)g(Date:)g(1998)333 1408 y(*)g(Version:)h($Revision: 1.6 $)
 333 1499 y(*)g(Origin:)h(McStas)f(release)333 1590 y(*)g(Modified)h
 (by:)f(KN,)g(1998)g(from)g(Source_flat.comp)333 1682
 y(*)333 1773 y(*)g(Neutron)h(source)f(with)g(flat)h(wavelength)g
@@ -19681,7 +19681,7 @@ b(by)f(Kristian)h(Nielsen)g(and)f(Kim)g(Lefmann,)333
 (Laboratory,)g(Roskilde,)h(Denmark)333 1042 y(*)333 1134
 y(*)e(\045I)333 1225 y(*)g(Written)h(by:)f(KL)333 1316
 y(*)g(Date:)g(November)h(20,)f(1998)333 1408 y(*)g(Version:)h
-($Revision: 1.5 $)333 1499 y(*)g(Origin:)h(McStas)f(release)333
+($Revision: 1.6 $)333 1499 y(*)g(Origin:)h(McStas)f(release)333
 1590 y(*)333 1682 y(*)g(Neutron)h(source)f(with)g(Gaussian)i
 (divergence)333 1773 y(*)333 1864 y(*)e(\045D)333 1956
 y(*)g(The)g(routine)h(is)e(a)h(rectangular)i(neutron)e(source,)h(which)
@@ -19741,7 +19741,7 @@ b(103)p eop
 b(1997-2000)g(Risoe)g(National)g(Laboratory,)g(Roskilde,)h(Denmark)333
 1042 y(*)333 1134 y(*)e(\045I)333 1225 y(*)g(Written)h(by:)f(KN,)g
 (M.Hagen)333 1316 y(*)g(Date:)g(August)h(1998)333 1408
-y(*)f(Version:)h($Revision: 1.5 $)333 1499 y(*)g(Origin:)h(McStas)f
+y(*)f(Version:)h($Revision: 1.6 $)333 1499 y(*)g(Origin:)h(McStas)f
 (release)333 1590 y(*)333 1682 y(*)g(A)f(simple)i(pulsed)g(source)f
 (for)g(time-of-flight.)333 1773 y(*)333 1864 y(*)g(\045D)333
 1956 y(*)g(Produces)h(a)e(simple)i(time-of-flight)h(spectrum,)g(with)e
@@ -20007,7 +20007,7 @@ b(by)f(Kristian)h(Nielsen)g(and)f(Kim)g(Lefmann,)333
 (Laboratory,)g(Roskilde,)h(Denmark)333 1225 y(*)333 1316
 y(*)e(\045I)333 1407 y(*)333 1499 y(*)g(Written)h(by:)f(KL,)g(KN)333
 1590 y(*)g(Date:)g(September)i(1997)333 1681 y(*)e(Version:)h
-($Revision: 1.5 $)333 1773 y(*)g(Origin:)h(McStas)f(release)333
+($Revision: 1.6 $)333 1773 y(*)g(Origin:)h(McStas)f(release)333
 1864 y(*)333 1955 y(*)g(Arm/optical)i(bench)333 2047
 y(*)333 2138 y(*)e(\045D)333 2229 y(*)g(An)g(arm)g(does)g(not)g
 (actually)h(do)e(anything,)j(it)d(is)h(just)g(there)g(to)g(set)333
@@ -20036,7 +20036,7 @@ eop
 b(1997-2000)f(Risoe)f(National)h(Laboratory,)h(Roskilde,)f(Denmark)-90
 1042 y(*)-90 1134 y(*)f(\045I)-90 1225 y(*)g(Written)g(by:)g(KL,)g(HMR)
 -90 1316 y(*)g(Date:)g(June)g(16,)g(1997)-90 1408 y(*)g(Version:)h
-($Revision: 1.5 $)-90 1499 y(*)g(Origin:)g(McStas)h(release)-90
+($Revision: 1.6 $)-90 1499 y(*)g(Origin:)g(McStas)h(release)-90
 1590 y(*)-90 1682 y(*)f(Rectangular)h(slit.)-90 1773
 y(*)-90 1864 y(*)f(\045D)-90 1956 y(*)g(A)f(simple)i(rectangular)g
 (slit.)g(No)e(transmission)j(around)f(the)f(slit)g(is)g(allowed.)-90
@@ -20142,7 +20142,7 @@ Fq(/****************************)q(****)q(*****)q(****)q(****)q(*****)q
 b(1997-2000)f(Risoe)f(National)h(Laboratory,)h(Roskilde,)f(Denmark)-90
 1042 y(*)-90 1134 y(*)f(\045I)-90 1225 y(*)g(Written)g(by:)g(KL,)g(KN)
 -90 1316 y(*)g(Date:)g(Sept.)g(14)g(1998)-90 1408 y(*)g(Version:)h
-($Revision: 1.5 $)-90 1499 y(*)g(Origin:)g(McStas)h(release)-90
+($Revision: 1.6 $)-90 1499 y(*)g(Origin:)g(McStas)h(release)-90
 1590 y(*)-90 1682 y(*)f(A)f(simple)i(neutron)f(filter.)-90
 1773 y(*)-90 1864 y(*)g(\045D)-90 1956 y(*)g(Be-type)g(filter)h
 (defined)g(by)e(two)h(identical)i(rectangular)f(opening)g(apertures.)
@@ -20206,7 +20206,7 @@ y(\(double\)xmax,)g(\(double\)ymax,)g(0.0,)922 2147 y(\(double\)xmin,)g
 b(1997-2000)f(Risoe)f(National)h(Laboratory,)h(Roskilde,)f(Denmark)-90
 1225 y(*)-90 1316 y(*)f(\045I)-90 1408 y(*)g(Written)g(by:)g(KN)-90
 1499 y(*)g(Date:)g(September)h(2)f(1998)-90 1590 y(*)g(Version:)h
-($Revision: 1.5 $)-90 1682 y(*)g(Origin:)g(McStas)h(release)-90
+($Revision: 1.6 $)-90 1682 y(*)g(Origin:)g(McStas)h(release)-90
 1773 y(*)f(Modified)h(by:)e(KL,)h(October)h(6,)f(1998)-90
 1864 y(*)-90 1956 y(*)g(Neutron)g(guide.)-90 2047 y(*)-90
 2138 y(*)g(\045D)-90 2230 y(*)g(Models)g(a)g(rectangular)h(guide)g
@@ -20338,7 +20338,7 @@ b(by)e(Kristian)h(Nielsen)f(and)g(Kim)g(Lefmann,)-90
 951 y(*)353 b(Copyright)42 b(2000)e(Risoe)g(National)h(Laboratory,)h
 (Roskilde,)f(Denmark)-90 1042 y(*)-90 1134 y(*)f(\045I)-90
 1225 y(*)g(Written)g(by:)g(KN)-90 1316 y(*)g(Date:)g(1999)-90
-1408 y(*)g(Version:)h($Revision: 1.5 $)-90 1499 y(*)g(Origin:)g
+1408 y(*)g(Version:)h($Revision: 1.6 $)-90 1499 y(*)g(Origin:)g
 (McStas)h(release)-90 1590 y(*)-90 1682 y(*)f(Neutron)g(guide)h(with)f
 (channels)h(\(bender)g(section\).)-90 1773 y(*)-90 1864
 y(*)f(\045D)-90 1956 y(*)g(Models)g(a)g(rectangular)h(guide)g(tube)f
@@ -20519,7 +20519,7 @@ b(by)f(Kristian)h(Nielsen)g(and)f(Kim)g(Lefmann,)333
 (Laboratory,)g(Roskilde,)h(Denmark)333 1225 y(*)333 1316
 y(*)e(\045I)333 1408 y(*)g(Written)h(by:)79 b(KL)333
 1499 y(*)40 b(Date:)g(Nov)g(25,)g(1998)333 1590 y(*)g(Version:)h
-($Revision: 1.5 $)333 1682 y(*)f(Origin:)h(McStas)f(release)333
+($Revision: 1.6 $)333 1682 y(*)f(Origin:)h(McStas)f(release)333
 1773 y(*)g(Modified)h(by:)f(KL,)g(Jan)g(22,)g(1999)333
 1864 y(*)333 1956 y(*)g(Velocity)h(selector.)333 2047
 y(*)333 2138 y(*)f(\045D)333 2230 y(*)g(Velocity)h(selector)g
@@ -20617,7 +20617,7 @@ y(r*cos\(a)g(+)g(DEG2RAD*phi\),)i(r*sin\(a)f(+)e(DEG2RAD*phi\))j(-)e
 (*****)q(****)q(*****)q(****)q(****)q(*****)q(****)q(***)-90
 677 y(*)40 b(\045I)-90 768 y(*)g(Written)g(by:)g(Philipp)h(Bernhardt)
 -90 860 y(*)f(Date:)g(Januar)g(22)g(1999)-90 951 y(*)g(Version:)h
-($Revision: 1.5 $)-90 1042 y(*)g(Origin:)g(McStas)h(release)-90
+($Revision: 1.6 $)-90 1042 y(*)g(Origin:)g(McStas)h(release)-90
 1134 y(*)-90 1225 y(*)f(Disk)g(chopper.)-90 1316 y(*)-90
 1408 y(*)g(\045D)-90 1499 y(*)g(Models)g(a)g(disc)g(chopper)h(with)f(n)
 f(identical)i(slits,)g(which)f(are)g(symmetrically)i(disposed)f(on)f
@@ -20664,7 +20664,7 @@ eop
 b(1997-2000)f(Risoe)f(National)h(Laboratory,)h(Roskilde,)f(Denmark)-90
 1225 y(*)-90 1316 y(*)f(\045I)-90 1408 y(*)g(Written)g(by:)g(KL)-90
 1499 y(*)g(Date:)g(October)h(4,)e(1997)-90 1590 y(*)h(Version:)h
-($Revision: 1.5 $)-90 1682 y(*)g(Origin:)g(McStas)h(release)-90
+($Revision: 1.6 $)-90 1682 y(*)g(Origin:)g(McStas)h(release)-90
 1773 y(*)-90 1864 y(*)f(Simple)g(single)h(detector/monitor.)-90
 1956 y(*)-90 2047 y(*)f(\045D)-90 2138 y(*)g(Sums)g(neutrons)h(\(0th,)f
 (1st,)g(and)g(2nd)g(moment)h(of)e(p\))h(flying)h(through)-90
@@ -20782,7 +20782,7 @@ b(Ris\034{R{1175\(EN\))p eop
 b(1997-2000)f(Risoe)f(National)h(Laboratory,)h(Roskilde,)f(Denmark)-90
 1042 y(*)-90 1134 y(*)f(\045I)-90 1225 y(*)g(Written)g(by:)g(KL)g(and)g
 (KN)-90 1316 y(*)g(Date:)g(April)g(17,)g(1998)-90 1408
-y(*)g(Version:)h($Revision: 1.5 $)-90 1499 y(*)g(Origin:)g(McStas)h
+y(*)g(Version:)h($Revision: 1.6 $)-90 1499 y(*)g(Origin:)g(McStas)h
 (release)-90 1590 y(*)-90 1682 y(*)f(Spherical)h(position-sensitive)i
 (detector.)-90 1773 y(*)-90 1864 y(*)d(\045D)-90 1956
 y(*)g(An)f(\(n)h(times)g(m\))g(pixel)g(spherical)i(PSD)d(monitor)i
@@ -20859,7 +20859,7 @@ b(by)f(Kristian)h(Nielsen)g(and)f(Kim)g(Lefmann,)333
 (Laboratory,)g(Roskilde,)h(Denmark)333 1042 y(*)333 1134
 y(*)e(\045I)333 1225 y(*)g(Written)h(by:)79 b(KN,)40
 b(M.)f(Hagan)333 1316 y(*)h(Date:)g(August)h(1998)333
-1408 y(*)f(Version:)h($Revision: 1.5 $)333 1499 y(*)g(Origin:)h
+1408 y(*)f(Version:)h($Revision: 1.6 $)333 1499 y(*)g(Origin:)h
 (McStas)f(release)333 1590 y(*)g(Modified)h(by:)f(KL,)g(October)h(7,)e
 (1998)333 1682 y(*)333 1773 y(*)h(Rectangular)i(Time-of-flight)g
 (monitor.)333 1864 y(*)333 1956 y(*)e(\045P)333 2047
@@ -20925,7 +20925,7 @@ b(by)f(Kristian)h(Nielsen)g(and)f(Kim)g(Lefmann,)333
 (Laboratory,)g(Roskilde,)h(Denmark)333 1042 y(*)333 1134
 y(*)e(\045I)333 1225 y(*)g(Written)h(by:)f(KN,KL)333
 1316 y(*)g(Date:)g(April)h(20,)f(1998)333 1408 y(*)g(Version:)h
-($Revision: 1.5 $)333 1499 y(*)g(Origin:)h(McStas)f(release)333
+($Revision: 1.6 $)333 1499 y(*)g(Origin:)h(McStas)f(release)333
 1590 y(*)g(Modified)h(by:)f(KL,)g(Octorber)h(7,)f(1998)333
 1682 y(*)333 1773 y(*)g(Energy-sensitive)j(monitor.)333
 1864 y(*)333 1956 y(*)d(\045D)333 2047 y(*)g(A)f(square)i(single)g
@@ -20993,7 +20993,7 @@ b(by)f(Kristian)h(Nielsen)g(and)f(Kim)g(Lefmann,)333
 (Laboratory,)g(Roskilde,)h(Denmark)333 1042 y(*)333 1134
 y(*)e(Component:)h(Res_monitor)333 1225 y(*)333 1316
 y(*)f(\045I)333 1408 y(*)g(Written)h(by:)f(KN)333 1499
-y(*)g(Date:)g(1999)333 1590 y(*)g(Version:)h($Revision: 1.5 $)333
+y(*)g(Date:)g(1999)333 1590 y(*)g(Version:)h($Revision: 1.6 $)333
 1682 y(*)g(Origin:)h(McStas)f(release)333 1773 y(*)333
 1864 y(*)g(Monitor)h(for)f(resolution)h(calculations)333
 1956 y(*)333 2047 y(*)f(\045D)333 2138 y(*)g(A)f(single)i
@@ -21065,7 +21065,7 @@ b(143)p eop
 860 y(*)e(Copyright\(C\))i(1999,2000)f(Risoe)g(National)g(Laboratory.)
 333 951 y(*)333 1042 y(*)f(\045I)333 1134 y(*)g(Written)h(by:)f
 (Kristian)h(Nielsen)333 1225 y(*)f(Date:)g(1999)333 1316
-y(*)g(Version:)h($Revision: 1.5 $)333 1408 y(*)g(Origin:)h(McStas)f
+y(*)g(Version:)h($Revision: 1.6 $)333 1408 y(*)g(Origin:)h(McStas)f
 (release)333 1499 y(*)333 1590 y(*)g(Optimization)i(specifier)f(for)f
 (the)g(Source_adapt)i(component.)333 1682 y(*)333 1773
 y(*)e(\045D)333 1864 y(*)g(This)g(components)i(works)e(together)h(with)
@@ -21114,7 +21114,7 @@ Fu(B.6.1)113 b(Mosaic)p 1049 618 34 4 v 40 w(simple)333
 b(\(C\))f(Risoe)g(National)h(Laboratory)h(1999)333 1225
 y(*)333 1316 y(*)e(\045I)333 1408 y(*)g(Written)h(by:)f(Kristian)h
 (Nielsen)333 1499 y(*)f(Date:)g(1999)333 1590 y(*)g(Version:)h
-($Revision: 1.5 $)333 1682 y(*)f(Origin:)h(McStas)f(release)333
+($Revision: 1.6 $)333 1682 y(*)f(Origin:)h(McStas)f(release)333
 1773 y(*)333 1864 y(*)g(Mosaic)h(crystal,)g(possibly)g(off-cut.)333
 1956 y(*)333 2047 y(*)f(\045D)333 2138 y(*)g(Flat,)g(infinitely)i(thin)
 e(mosaic)h(crystal,)g(useful)f(as)g(a)f(monochromator)j(or)e(analyzer.)
@@ -22127,7 +22127,7 @@ b(h/2.0,)41 b(0,)f(radius\);)-11 1416 y(circle\("xz",)h(0,)f(-h/2.0,)h
 (and)f(Kim)g(Lefmann,)333 1134 y(*)354 b(Copyright)41
 b(1977-2000)g(Risoe)g(National)g(Laboratory,)g(Roskilde,)h(Denmark)333
 1225 y(*)333 1316 y(*)e(\045I)333 1408 y(*)g(Written)h(by:)f(KN)333
-1499 y(*)g(Date:)g(1999)333 1590 y(*)g(Version:)h($Revision: 1.5 $)
+1499 y(*)g(Date:)g(1999)333 1590 y(*)g(Version:)h($Revision: 1.6 $)
 333 1682 y(*)g(Origin:)h(McStas)f(release)333 1773 y(*)333
 1864 y(*)g(Sample)h(for)e(resolution)j(function)f(calculation.)333
 1956 y(*)333 2047 y(*)f(\045D)333 2138 y(*)g(An)g(inelastic)h(sample)f

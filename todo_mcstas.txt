@@ -1,4 +1,5 @@
 DONE/TODO/FUTURE list for next release of McStas (1.6)
+Oct 1st, 2002 McStas 1.6.3f dev
 
 Compiled by PW/EF from user wishes and different notes.
 
@@ -55,16 +56,49 @@ Kernel:
   think about), done. :) -> component_shares/My_function_name_include 
 + if no .c/.h, embed .h, and then .c if runtime, else display message
   for .o link  
+- JUMP : goto comp label with current coords. May restore neutron before,
+  depending on specific requirements. In cogen, define labels 'StartComp:' for 
+  all comp instances. group will use that to go to next 
+  labels: absorbAll, absorbComp
+  EndComp is easier (in the same component, thus can go there to skip, 
+    without knowing the name of the next one).
+- check max number of components in instrument (500 ?). 
+  No limit -> see repeat comp as JUMP (with or without rotation/translation)
+- when no define params, make mcComp_Declare/Trace functions...
+- look at all defines: can be changed to settings ? NO, optimize function calls (share)
++ enable char parameters  : limited to 1024 char buffer. MC_CHAR_BUF_SIZE ?
++ SAVE section for intermediate savings
   
 Runtime:
 - Gravity (functions defined, only used in gravity guide - merge
-  probagation routines, easy task)
-- save/load monitor data in different formats: 
-    McStas ascii, binary float, NeXus, Vitess
+  propagation routines, easy task)
++ save monitor data in different formats: 
+    McStas ascii, NeXus XML, HTML, Scilab
+    binary float, binary double
+    NeXus,  mcdirname gives internal NeXus path (including entry name), 
+            file gives NeXus file name
+    Vitess, 
+    FITS  
+      http://heasarc.gsfc.nasa.gov/docs/software/fitsio/fitsio.html
+      http://archive.eso.org/saft/ (qfits)
+    enable saving in code after checking existence of libraries or flags
 - Retrieve old monitor data, read from file by Virtual_input ->
   mcstas_r. not so easy -> NeXus -> runtime
+  utility to identify which file is the right one ! read header for all, 
+  look for comp instance name. Check file extension. Find field in header
++ rand_target_rect, modification according to formula.    
+? move extend_list to external lib ? used in Powder_filter.comp, Filter_powder.comp, Single_crystal.comp, the Manual.
+- 3d data files saved linearly (2d), and rearranging as 3d after.
 
 Components:
+- Virtual_output - should be written, macro for calling Monitor_nD? -
+  See ALIAS in kernel section.
++ Virtual_input: use Table_Read, corrected repeat count/set_ncount  ok.
+- Sort components in categories, official, contrib, obsolete
+- unused variable (cc -Wall)
+- verbose mode for complex components
+- reduce number of input parameters (use options string ?)   
+
 - Check fluxes / absolute fluxes - provide experimental data +
   instrument definition 
 - Powder component take input, written, should be tested.
@@ -73,16 +107,11 @@ Components:
   parms, powder to be checked.
 - Bender, to be tested check for absolute fluxes, as compared to a
   number of linear guides.
-- Virtual_Output - should be written, macro for calling Monitor_nD? -
-  See ALIAS in kernel section.
-- rand_target_rect, modification according to formula.
-- Sort components in cathegories, official, contrib, obsolete
+- Filter_powder.comp, Single_crystal.comp : use Table_Read, extend_list  
+
 - $Log: not supported by cvs2svn $ - cvs revision no, etc. for both McStas kernel / lib,
   automated using cvs?. Origin indicates research institution,
   McVersion required McStas Version
-- unused variable (cc -Wall)
-- verbose mode for complex components
-- reduce number of input parameters (use options string ?)  
 
 Instruments:
 - Component test modules
@@ -90,6 +119,7 @@ Instruments:
   test results from "stable version" incl. test-script.
 
 Tools: (GUI, plotting, running etc.)
+- mcplot must rescale to 100 % simulation in case of visualisation of interrupted simulation. Only for intensity monitors.
 - Improve GUI - scilab.
 - Status monitor support (Tool to be written - script) - access pid, daemon.
 - html / png / page generation. (perhaps scilab based?) - mcplot?
@@ -116,7 +146,7 @@ Kernel:
 - Option to trace background events - no, perhaps absorbed neutrons
   instead?
 - Loop/Additive groups - very complex, in principle can be done within each 
-  component
+  component -> see JUMP
 - MPI - pvm?
 - Nexus - function calls (partially written)
 
@@ -165,3 +195,15 @@ Documentation:
 
 Community related:
 
+
+
+MCSTAS=/home/farhi/local/mcstas/mcstas-1.6.3/lib    
+
+deff('p=mcplot(d,p)',['S=size(d.data);','if max(S),','xbasc(p);','if min(S)==1,l=d.xlimits+'' 0 0''; else l=d.xylimits; end','execstr(''l=[''+l+'']''); f=round(log10(max(d.data))); d.data=d.data/10^f;','x=linspace(l(1),l(2),S(1)); y=linspace(l(3),l(4),S(2));','if min(S)==1, plot(x,y,d.data);','else plot3d1(x,y,d.data); end','xtitle([d.title+'' [*10^''+string(f)+'']''],d.xlabel,d.ylabel);','xname(d.filename+'':''+d.title);p=p+1;end']);
+
+c=[linspace(0,1,15), ones(1,15), linspace(1,0,15)];
+c1=[(1:19)*0,c ];
+c2=[(1:8)*0,c,(1:11)*0];
+c3=[c(6:$), (1:24)*0];
+jet=[c1' c2' c3'];
+xset('colormap',jet)

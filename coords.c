@@ -16,7 +16,7 @@
 *
 * Misc. useful routines to handle Cartesian coordinates.
 *
-*	$Id: coords.c,v 1.8 2003-01-21 08:33:57 pkwi Exp $
+*	$Id: coords.c,v 1.9 2003-01-21 08:38:40 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.3  2000/07/27 09:06:11  kn
@@ -50,18 +50,6 @@
 * Coords which contains three double fields.
 *******************************************************************************/
 
-/* Get all-zero coordinate. */
-Coords
-coords_origo(void)
-{
-  Coords c;
-  
-  c.x = 0;
-  c.y = 0;
-  c.z = 0;
-  return c;
-}
-
 Coords_exp
 coords_exp_origo(void)
 {
@@ -70,17 +58,5 @@ coords_exp_origo(void)
   c.x = exp_number("0.0");
   c.y = exp_number("0.0");
   c.z = exp_number("0.0");
-  return c;
-}
-
-/* Add two coordinates. */
-Coords
-coords_add(Coords a, Coords b)
-{
-  Coords c;
-
-  c.x = a.x + b.x;
-  c.y = a.y + b.y;
-  c.z = a.z + b.z;
   return c;
 }

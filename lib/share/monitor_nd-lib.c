@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.2 2003-01-21 08:33:59 pkwi Exp $
+* $Id: monitor_nd-lib.c,v 1.3 2003-01-21 08:38:42 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/28 11:39:00 ef
@@ -415,7 +415,7 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
       } /* end if mc_mn_token */
     } /* end while mc_mn_carg */
     free(mc_mn_option_copy);
-    if (mc_mn_carg == 128) printf("Monitor_nD: %s reached max number of mc_mn_tokens (%i). Skimc_mn_pping.\n", mc_mn_Vars->compcurname, 128);
+    if (mc_mn_carg == 128) printf("Monitor_nD: %s reached max number of mc_mn_tokens (%i). Skipping.\n", mc_mn_Vars->compcurname, 128);
     
     if ((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX) && (fabs(mc_mn_Vars->mzmax - mc_mn_Vars->mzmin) == 0)) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE;
     
@@ -642,7 +642,7 @@ double Monitor_nD_Trace(mc_mn_DEFS, mc_mn_Vars)
   {
     mc_mn_Vars->Mon2D_Buffer  = (double *)realloc(mc_mn_Vars->Mon2D_Buffer, (mc_mn_Vars->Coord_Number+1)*(mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double));
     if (mc_mn_Vars->Mon2D_Buffer == NULL)
-          { printf("Monitor_nD: %s cannot reallocate mc_mn_Vars->Mon2D_Buffer[%li] (%li). Skimc_mn_pping.\n", mc_mn_Vars->compcurname, mc_mn_i, (mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double)); mc_mn_Vars->Flag_List = 1; }
+          { printf("Monitor_nD: %s cannot reallocate mc_mn_Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", mc_mn_Vars->compcurname, mc_mn_i, (mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double)); mc_mn_Vars->Flag_List = 1; }
     else { mc_mn_Vars->Buffer_Counter = 0; mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block; }
   }
 
@@ -850,7 +850,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     
     if (mc_mn_ratio < 99)
     {
-      if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s save intermediate results (%.2f %%).\n", mc_mn_Vars->compcurname, 100*mcget_run_num()/mcget_ncount());
+      if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s save intermediate results (%.2f %%).\n", mc_mn_Vars->compcurname, mc_mn_ratio);
     }
 
     /* check Buffer flush when end of simulation reached */
@@ -970,7 +970,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
         mc_mn_min2d = 0; mc_mn_max2d = mc_mn_Vars->Buffer_Size; 
         mc_mn_bin1d = mc_mn_Vars->Coord_Number+1; mc_mn_bin2d = mc_mn_Vars->Buffer_Size;
         strcpy(mc_mn_Coord_X_Label,"");
-        for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+        for (mc_mn_i= 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
         {
           if (mc_mn_min2d < mc_mn_Vars->Coord_Min[mc_mn_i]) mc_mn_min2d = mc_mn_Vars->Coord_Min[mc_mn_i];
           if (mc_mn_max2d < mc_mn_Vars->Coord_Max[mc_mn_i]) mc_mn_max2d = mc_mn_Vars->Coord_Max[mc_mn_i];
@@ -979,25 +979,19 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
           if (strchr(mc_mn_Vars->Mon_File,'.') == NULL)
                   { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i]); }
         }
-        strcat(mc_mn_Coord_X_Label, "p");
-        if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin1d,mc_mn_bin2d);
+        if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin2d,mc_mn_bin1d);
         if (!mc_mn_Vars->Flag_Binary_List)
         { /* ascii list */
           mc_mn_p1m = (double *)malloc((mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Size*sizeof(double)); 
           if (mc_mn_min2d == mc_mn_max2d) mc_mn_max2d = mc_mn_min2d+1e-6;
           if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
-          if (mc_mn_ratio < 99)
-          {
-            sprintf(mc_mn_label, "%s (%.2f %%)", mc_mn_Vars->Monitor_Label, mc_mn_ratio);
-          }
-          else
-            strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
+          strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
           if (mc_mn_p1m == NULL) /* use Raw Buffer line output */
           {
-            if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for List transpose. Skimc_mn_pping.\n", mc_mn_Vars->compcurname);
+            if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for List transpose. Skipping.\n", mc_mn_Vars->compcurname);
             mcdetector_out_2D(
               mc_mn_label,
-              mc_mn_Vars->Coord_Label[0],
+              "List of neutron events",
               mc_mn_Coord_X_Label,
               mc_mn_min2d, mc_mn_max2d, 
               mc_mn_min1d, mc_mn_max1d, 
@@ -1017,7 +1011,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
             mcdetector_out_2D(
                 mc_mn_label,
                 mc_mn_Coord_X_Label,
-                mc_mn_Vars->Coord_Label[0],
+                "List of neutron events",
                 mc_mn_min1d, mc_mn_max1d, 
                 mc_mn_min2d, mc_mn_max2d, 
                 mc_mn_bin1d,
@@ -1054,7 +1048,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
                   mc_mn_fname,mc_mn_count, mc_mn_bin2d);
               }
               fclose(mc_mn_fnum);
-              if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor float binary file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin1d,mc_mn_bin2d);
+              if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor float binary file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin2d,mc_mn_bin1d);
             }
             free(mc_mn_pfm);
           }
@@ -1069,12 +1063,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
           if (strchr(mc_mn_Vars->Mon_File,'.') == NULL)
                   { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i+1]); }
           sprintf(mc_mn_Coord_X_Label, "%s monitor", mc_mn_Vars->Coord_Label[mc_mn_i+1]);
-          if (mc_mn_ratio < 99)
-          {
-            sprintf(mc_mn_label, "%s (%.2f %%)", mc_mn_Coord_X_Label, 100*mcget_run_num()/mcget_ncount());
-          }
-          else
-            strcpy(mc_mn_label, mc_mn_Coord_X_Label);
+          strcpy(mc_mn_label, mc_mn_Coord_X_Label);
           if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 1D (%li).\n", mc_mn_Vars->compcurname, mc_mn_fname, mc_mn_Vars->Coord_Bin[mc_mn_i+1]);
           mc_mn_min1d = mc_mn_Vars->Coord_Min[mc_mn_i+1];
           mc_mn_max1d = mc_mn_Vars->Coord_Max[mc_mn_i+1];
@@ -1154,7 +1143,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
         mc_mn_p2m = (double *)malloc(mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2]*sizeof(double));
         if (mc_mn_p2m == NULL) 
         {
-          if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%li). Skimc_mn_pping.\n", mc_mn_Vars->compcurname, 3*mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2]*sizeof(double));
+          if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%li). Skipping.\n", mc_mn_Vars->compcurname, 3*mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2]*sizeof(double));
           if (mc_mn_p0m != NULL) free(mc_mn_p0m);
           if (mc_mn_p1m != NULL) free(mc_mn_p1m);
         }
@@ -1210,12 +1199,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
           mc_mn_min2d = mc_mn_Vars->Coord_Min[2];
           mc_mn_max2d = mc_mn_Vars->Coord_Max[2];
           if (mc_mn_min2d == mc_mn_max2d) mc_mn_max2d = mc_mn_min2d+1e-6;
-          if (mc_mn_ratio < 99)
-          {
-            sprintf(mc_mn_label, "%s (%.2f %%)", mc_mn_Vars->Monitor_Label, 100*mcget_run_num()/mcget_ncount());
-          }
-          else
-            strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
+          strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
 
           mcdetector_out_2D(
             mc_mn_label,

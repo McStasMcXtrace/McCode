@@ -11,24 +11,34 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: 1.3
+* Version: 1.6
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.44 2003-01-21 08:33:59 pkwi Exp $
+* $Id: mcstas-r.c,v 1.45 2003-01-21 08:38:42 pkwi Exp $
 *
-*	$Log: not supported by cvs2svn $
+*        $Log: not supported by cvs2svn $
+* Revision 1.6 2002/09/17 12:01:21 ef
+*        changed randvec_target_sphere to circle
+* added randvec_target_rect
+*
+* Revision 1.5 2002/09/03 19:48:01 ef
+*        corrected randvec_target_sphere. created target_rect.
+*
+* Revision 1.4 2002/09/02 18:59:05 ef
+*        moved adapt_tree functions to independent lib. Updated sighandler.
+*
 * Revision 1.3 2002/08/28 11:36:37 ef
-*	Changed to lib/share/c code 
+*        Changed to lib/share/c code
 *
 * Revision 1.2 2001/10/10 11:36:37 ef
-*	added signal handler
+*        added signal handler
 *
 * Revision 1.1 1998/08/29 11:36:37 kn
-*	Initial revision
+*        Initial revision
 *
 *******************************************************************************/
 
@@ -58,19 +68,19 @@ static int mcsingle_file = 0;
 
 static FILE *mcsiminfo_file = NULL;
 static char *mcdirname = NULL;
-static char *mcsiminfo_name = "mcstas.sim";
+static char *mcsiminfo_name = "mcstas";
 static char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 
-/* MCDISPLAY support. */
+/* MCDISPLAY support. ======================================================= */
 
 void mcdis_magnify(char *what){
   printf("MCDISPLAY: magnify('%s')\n", what);
 }
 
 void mcdis_line(double x1, double y1, double z1,
-		double x2, double y2, double z2){
+                double x2, double y2, double z2){
   printf("MCDISPLAY: multiline(2,%g,%g,%g,%g,%g,%g)\n",
-	 x1,y1,z1,x2,y2,z2);
+         x1,y1,z1,x2,y2,z2);
 }
 
 void mcdis_multiline(int count, ...){
@@ -94,6 +104,25 @@ void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
 }
 
+/* coordinates handling ===================================================== */
+
+/*******************************************************************************
+* Since we use a lot of geometric calculations using Cartesian coordinates,
+* we collect some useful routines here. However, it is also permissible to
+* work directly on the underlying struct coords whenever that is most
+* convenient (that is, the type Coords is not abstract).
+*
+* Coordinates are also used to store rotation angles around x/y/z axis.
+*
+* Since coordinates are used much like a basic type (such as double), the
+* structure itself is passed and returned, rather than a pointer.
+*
+* At compile-time, the values of the coordinates may be unknown (for example
+* a motor position). Hence coordinates are general expressions and not simple
+* numbers. For this we used the type Coords_exp which has three CExp
+* fields. For runtime (or calculations possible at compile time), we use
+* Coords which contains three double fields.
+*******************************************************************************/
 
 /* Assign coordinates. */
 Coords
@@ -142,6 +171,29 @@ coords_neg(Coords a)
   b.z = -a.z;
   return b;
 }
+
+/*******************************************************************************
+* The Rotation type implements a rotation transformation of a coordinate
+* system in the form of a double[3][3] matrix.
+*
+* Contrary to the Coords type in coords.c, rotations are passed by
+* reference. Functions that yield new rotations do so by writing to an
+* explicit result parameter; rotations are not returned from functions. The
+* reason for this is that arrays cannot by returned from functions (though
+* structures can; thus an alternative would have been to wrap the
+* double[3][3] array up in a struct). Such are the ways of C programming.
+*
+* A rotation represents the tranformation of the coordinates of a vector when
+* changing between coordinate systems that are rotated with respect to each
+* other. For example, suppose that coordinate system Q is rotated 45 degrees
+* around the Z axis with respect to coordinate system P. Let T be the
+* rotation transformation representing a 45 degree rotation around Z. Then to
+* get the coordinates of a vector r in system Q, apply T to the coordinates
+* of r in P. If r=(1,0,0) in P, it will be (sqrt(1/2),-sqrt(1/2),0) in
+* Q. Thus we should be careful when interpreting the sign of rotation angles:
+* they represent the rotation of the coordinate systems, not of the
+* coordinates (which has opposite sign).
+*******************************************************************************/
 
 /*******************************************************************************
 * Get transformation for rotation first phx around x axis, then phy around y,
@@ -228,8 +280,8 @@ rot_apply(Rotation t, Coords a)
 
 void
 mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-	       double *vx, double *vy, double *vz, double *time,
-	       double *s1, double *s2)
+               double *vx, double *vy, double *vz, double *time,
+               double *s1, double *s2)
 {
   Coords b, c;
 
@@ -269,143 +321,38 @@ mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 
 void
 mcstore_neutron(MCNUM *s, int index, double x, double y, double z,
-	       double vx, double vy, double vz, double t, 
-	       double sx, double sy, double sz, double p)
+               double vx, double vy, double vz, double t, 
+               double sx, double sy, double sz, double p)
 {
-    s[11*index+0]  = x ; 
-    s[11*index+1]  = y ; 
-    s[11*index+2]  = z ; 
-    s[11*index+3]  = vx; 
-    s[11*index+4]  = vy; 
-    s[11*index+5]  = vz; 
-    s[11*index+6]  = t ; 
-    s[11*index+7]  = sx; 
-    s[11*index+8]  = sy; 
-    s[11*index+9]  = sz; 
-    s[11*index+10] = p ; 
+    s[11*index+1]  = x ; 
+    s[11*index+2]  = y ; 
+    s[11*index+3]  = z ; 
+    s[11*index+4]  = vx; 
+    s[11*index+5]  = vy; 
+    s[11*index+6]  = vz; 
+    s[11*index+7]  = t ; 
+    s[11*index+8]  = sx; 
+    s[11*index+9]  = sy; 
+    s[11*index+10]  = sz; 
+    s[11*index+0] = p ; 
 } 
 
 void
 mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
-	       double *vx, double *vy, double *vz, double *t, 
-	       double *sx, double *sy, double *sz, double *p)
+               double *vx, double *vy, double *vz, double *t, 
+               double *sx, double *sy, double *sz, double *p)
 {
-    *x  =  s[11*index+0] ;
-    *y  =  s[11*index+1] ;
-    *z  =  s[11*index+2] ;
-    *vx =  s[11*index+3] ;
-    *vy =  s[11*index+4] ;
-    *vz =  s[11*index+5] ;
-    *t  =  s[11*index+6] ;
-    *sx =  s[11*index+7] ;
-    *sy =  s[11*index+8] ;
-    *sz =  s[11*index+9] ;
-    *p  =  s[11*index+10];
-}
-
-
-/*******************************************************************************
-* Find i in adaptive search tree t s.t. v(i) <= v < v(i+1).
-*******************************************************************************/
-int
-adapt_tree_search(struct adapt_tree *t, adapt_t v)
-{
-  adapt_t F = 0;		/* Current value. */
-  int i = 0;			/* Current candidate. */
-  int step = t->initstep;
-  adapt_t *s = t->s;
-  int j;
-  for(j = t->root; step > 0; step >>= 1)
-  {
-    F += s[j];			/* Cumulative value in current node */
-    if(v < F)
-      j -= step;		/* Value is to the left or above. */
-    else
-      i = j, j += step;		/* Value is current or to the right. */
-  }
-  /* Now j is at the bottom of a tree (a leaf node). */
-  if(v < F + s[j])
-    return i;
-  else
-    return j;
-}
-
-/*******************************************************************************
-* Add v to v[i], updating the cumulative sums appropriately.
-*******************************************************************************/
-void
-adapt_tree_add(struct adapt_tree *t, int i, adapt_t v)
-{
-  int j = t->root;
-  int step = t->initstep;
-  adapt_t *s = t->s;
-  t->total += v;
-  t->v[i++] += v;
-  for(;;)
-  {
-    while(j < i)
-      j += step, step >>= 1;
-    s[j] += v;
-    while(j > i)
-      j -= step, step >>= 1;
-    if(j == i)
-      break;
-    s[j] -= v;
-  }
-  if(step)
-    s[j - step] -= v;
-}
-
-/*******************************************************************************
-* Initialise an adaptive search tree. The tree has N nodes, and all nodes are
-* initialized to zero. Any N > 0 is allowed, but is rounded up to the nearest
-* value of the form N = 2**k - 2.
-*******************************************************************************/
-struct adapt_tree *
-adapt_tree_init(int N)
-{
-  struct adapt_tree *t;
-  int i;
-  int depth;
-
-  /* Round up to nearest 2**k - 2 */
-  for(depth = 0; ((1 << (depth + 1)) - 2) < N; depth++);
-  N = (1 << (depth + 1)) - 2;
-
-  t = malloc(sizeof(*t));
-  if(t)
-  {
-    t->s = malloc((N + 1) * sizeof(*(t->s)));
-    t->v = malloc(N * sizeof(*(t->v)));
-  }
-  if(!(t && t->s && t->v))
-  {
-    fprintf(stderr, "Fatal error: out of memory\n");
-    exit(1);
-  }
-  t->N = N;
-  t->depth = depth;
-  t->root = (1 << t->depth) - 1;
-  t->initstep = (1 << (t->depth - 1));
-  for(i = 0; i < t->N; i++)
-  {
-    t->s[i] = 0.0;
-    t->v[i] = 0.0;
-  }
-  t->s[i] = 0.0;
-  t->total = 0.0;
-  return t;
-}
-
-/*******************************************************************************
-* Free memory allocated to an adaptive search tree.
-*******************************************************************************/
-void
-adapt_tree_free(struct adapt_tree *t)
-{
-  free(t->v);
-  free(t->s);
-  free(t);
+    *x  =  s[11*index+1] ;
+    *y  =  s[11*index+2] ;
+    *z  =  s[11*index+3] ;
+    *vx =  s[11*index+4] ;
+    *vy =  s[11*index+5] ;
+    *vz =  s[11*index+6] ;
+    *t  =  s[11*index+7] ;
+    *sx =  s[11*index+8] ;
+    *sy =  s[11*index+9] ;
+    *sz =  s[11*index+10] ;
+    *p  =  s[11*index+0];
 }
 
 
@@ -422,6 +369,7 @@ mcestimate_error(double N, double p1, double p2)
   return sqrt((N/n1)*fabs(p2 - pmean*pmean));
 }
 
+/* parameters handling ====================================================== */
 
 /* Instrument input parameter type handling. */
 static int
@@ -432,9 +380,9 @@ mcparm_double(char *s, void *vptr)
 
   *v = strtod(s, &p);
   if(*s == '\0' || (p != NULL && *p != '\0') || errno == ERANGE)
-    return 0;			/* Failed */
+    return 0;                        /* Failed */
   else
-    return 1;			/* Success */
+    return 1;                        /* Success */
 }
 
 
@@ -449,15 +397,15 @@ static void
 mcparmerror_double(char *parm, char *val)
 {
   fprintf(stderr, "Error: Invalid value '%s' for floating point parameter %s\n",
-	  val, parm);
+          val, parm);
 }
 
 
 static void
-mcparmprinter_double(FILE *f, void *vptr)
+mcparmprinter_double(char *f, void *vptr)
 {
   double *v = vptr;
-  fprintf(f, "%g", *v);
+  sprintf(f, "%g", *v);
 }
 
 
@@ -471,12 +419,12 @@ mcparm_int(char *s, void *vptr)
   *v = 0;
   x = strtol(s, &p, 10);
   if(x < INT_MIN || x > INT_MAX)
-    return 0;			/* Under/overflow */
+    return 0;                        /* Under/overflow */
   *v = x;
   if(*s == '\0' || (p != NULL && *p != '\0') || errno == ERANGE)
-    return 0;			/* Failed */
+    return 0;                        /* Failed */
   else
-    return 1;			/* Success */
+    return 1;                        /* Success */
 }
 
 
@@ -491,15 +439,15 @@ static void
 mcparmerror_int(char *parm, char *val)
 {
   fprintf(stderr, "Error: Invalid value '%s' for integer parameter %s\n",
-	  val, parm);
+          val, parm);
 }
 
 
 static void
-mcparmprinter_int(FILE *f, void *vptr)
+mcparmprinter_int(char *f, void *vptr)
 {
   int *v = vptr;
-  fprintf(f, "%d", *v);
+  sprintf(f, "%d", *v);
 }
 
 
@@ -510,11 +458,11 @@ mcparm_string(char *s, void *vptr)
   *v = malloc(strlen(s) + 1);
   if(*v == NULL)
   {
-    fprintf(stderr, "mcparm_string: Out of memory.\n");
+    fprintf(stderr, "Error: Out of memory (mcparm_string).\n");
     exit(1);
   }
   strcpy(*v, s);
-  return 1;			/* Success */
+  return 1;                        /* Success */
 }
 
 
@@ -529,37 +477,38 @@ static void
 mcparmerror_string(char *parm, char *val)
 {
   fprintf(stderr, "Error: Invalid value '%s' for string parameter %s\n",
-	  val, parm);
+          val, parm);
 }
 
 
 static void
-mcparmprinter_string(FILE *f, void *vptr)
+mcparmprinter_string(char *f, void *vptr)
 {
   char **v = vptr;
   char *p;
-  fprintf(f, "\"");
+  char *c = " \0";
+  sprintf(f, "\"");
   for(p = *v; *p != '\0'; p++)
   {
     switch(*p)
     {
       case '\n':
-	fprintf(f, "\\n");
-	break;
+        strcat(f, "\\n");
+        break;
       case '\r':
-	fprintf(f, "\\r");
-	break;
+        strcat(f, "\\r");
+        break;
       case '"':
-	fprintf(f, "\\\"");
-	break;
+        strcat(f, "\\\"");
+        break;
       case '\\':
-	fprintf(f, "\\\\");
-	break;
+        strcat(f, "\\\\");
+        break;
       default:
-	fprintf(f, "%c", *p);
+        c[0] = p[0]; strcat(f, c);
     }
   }
-  fprintf(f, "\"");
+  strcat(f, "\"");
 }
 
 
@@ -568,481 +517,18 @@ static struct
     int (*getparm)(char *, void *);
     char * (*parminfo)(char *);
     void (*error)(char *, char *);
-    void (*printer)(FILE *, void *);
+    void (*printer)(char *, void *);
   } mcinputtypes[] =
       {
-	mcparm_double, mcparminfo_double, mcparmerror_double,
-		mcparmprinter_double,
-	mcparm_int, mcparminfo_int, mcparmerror_int,
-		mcparmprinter_int,
-	mcparm_string, mcparminfo_string, mcparmerror_string,
-		mcparmprinter_string
+        mcparm_double, mcparminfo_double, mcparmerror_double,
+                mcparmprinter_double,
+        mcparm_int, mcparminfo_int, mcparmerror_int,
+                mcparmprinter_int,
+        mcparm_string, mcparminfo_string, mcparmerror_string,
+                mcparmprinter_string
       };
 
-
-FILE *
-mcnew_file(char *name)
-{
-  int dirlen;
-  char *mem;
-  FILE *file;
-
-  dirlen = mcdirname ? strlen(mcdirname) : 0;
-  mem = malloc(dirlen + 1 + strlen(name) + 1);
-  if(!mem)
-  {
-    fprintf(stderr, "Error: Out of memory\n");
-    exit(1);
-  }
-  strcpy(mem, "");
-  if(dirlen)
-  {
-    strcat(mem, mcdirname);
-    if(mcdirname[dirlen - 1] != MC_PATHSEP_C &&
-       name[0] != MC_PATHSEP_C)
-      strcat(mem, MC_PATHSEP_S);
-  }
-  strcat(mem, name);
-  file = fopen(mem, "w");
-  if(!file)
-    fprintf(stderr, "Warning: could not open output file '%s'\n", mem);
-  free(mem);
-  return file;
-}
-
-
-static void
-mcinfo_out(char *pre, FILE *f)
-{
-  int i;
-
-  fprintf(f, "%sName: %s\n", pre, mcinstrument_name);
-  fprintf(f, "%sParameters:", pre);
-  for(i = 0; i < mcnumipar; i++)
-    fprintf(f, " %s(%s)", mcinputtable[i].name,
-	    (*mcinputtypes[mcinputtable[i].type].parminfo)
-		(mcinputtable[i].name));
-  fprintf(f, "\n");
-  fprintf(f, "%sInstrument-source: %s\n", pre, mcinstrument_source);
-  fprintf(f, "%sTrace-enabled: %s\n", pre, mctraceenabled ? "yes" : "no");
-  fprintf(f, "%sDefault-main: %s\n", pre, mcdefaultmain ? "yes" : "no");
-  fprintf(f, "%sEmbedded-runtime: %s\n", pre,
-#ifdef MC_EMBEDDED_RUNTIME
-	 "yes"
-#else
-	 "no"
-#endif
-	 );
-}
-
-
-static void
-mcruninfo_out(char *pre, FILE *f)
-{
-  int i;
-  double run_num, ncount;
-  time_t t;
-  
-  run_num = mcget_run_num();
-  ncount  = mcget_ncount();
-  if(!f)
-    return;
-  time(&t);
-  fprintf(f, "%sDate: %s", pre, ctime(&t)); /* Note: ctime adds '\n' ! */
-  if (run_num == 0) 
-    fprintf(f, "%sNcount: %g\n", pre, ncount);
-  else
-    fprintf(f, "%sNcount: %g/%g\n", pre, run_num, ncount);
-  fprintf(f, "%sTrace: %s\n", pre, mcdotrace ? "yes" : "no");
-  if(mcseed)
-    fprintf(f, "%sSeed: %ld\n", pre, mcseed);
-  for(i = 0; i < mcnumipar; i++)
-  {
-    fprintf(f, "%sParam: %s=", pre, mcinputtable[i].name);
-    (*mcinputtypes[mcinputtable[i].type].printer)(f, mcinputtable[i].par);
-    fprintf(f, "\n");
-  }
-}
-
-
-void
-mcsiminfo_init(void)
-{
-  if(mcdisable_output_files)
-    return;
-  mcsiminfo_file = mcnew_file(mcsiminfo_name);
-  if(!mcsiminfo_file)
-    fprintf(stderr,
-	    "Warning: could not open simulation description file '%s'\n",
-	    mcsiminfo_name);
-  else
-  {
-    mcsiminfo_out("begin instrument\n");
-    mcinfo_out("  ", mcsiminfo_file);
-    mcsiminfo_out("end instrument\n");
-    mcsiminfo_out("\nbegin simulation\n");
-    mcruninfo_out("  ", mcsiminfo_file);
-    mcsiminfo_out("end simulation\n");
-  }
-}
-
-
-void
-mcsiminfo_out(char *format, ...)
-{
-  va_list ap;
-  
-  if(mcsiminfo_file)
-  {
-    va_start(ap, format);
-    vfprintf(mcsiminfo_file, format, ap);
-    va_end(ap);
-  }
-}
-
-
-void
-mcsiminfo_close()
-{
-  if(mcsiminfo_file)
-    fclose(mcsiminfo_file);
-}
-
-
-void
-mcdetector_out(char *cname, double p0, double p1, double p2, char *filename)
-{
-  printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
-	 cname, p1, cname, mcestimate_error(p0,p1,p2), cname, p0);
-  if(filename)
-    printf(" \"%s\"", filename);
-  printf("\n");
-}
-
-
-static void
-mcdatainfo_out_0D(char *pre, FILE *f, char *t,
-		  double I, double I_err, double N, char *c)
-{
-  if(!f)
-    return;
-  fprintf(f, "%stype: array_0d\n", pre);
-  fprintf(f, "%scomponent: %s\n", pre, c);
-  fprintf(f, "%stitle: %s\n", pre, t);
-  fprintf(f, "%svariables: I I_err N\n", pre);
-  fprintf(f, "%svalues: %g %g %g\n", pre, I, I_err, N);
-}
-
-static void
-mcdatainfo_out_1D(char *pre, FILE *f, char *t, char *xl, char *yl, char *xvar,
-		  double x1, double x2, int n, char *fname, char *c, int do_errb)
-{
-  if(!f)
-    return;
-  fprintf(f, "%stype: array_1d(%d)\n", pre, n);
-  fprintf(f, "%scomponent: %s\n", pre, c);
-  fprintf(f, "%stitle: %s\n", pre, t);
-  if(fname)
-    fprintf(f, "%sfilename: '%s'\n", pre, fname);
-  fprintf(f, "%svariables: %s I%s\n", pre, xvar, do_errb ? " I_err N" : "");
-  fprintf(f, "%sxvar: %s\n", pre, xvar);
-  fprintf(f, "%syvar: %s\n", pre, do_errb ? "(I,I_err)" : "I");
-  fprintf(f, "%sxlabel: '%s'\n%sylabel: '%s'\n", pre, xl, pre, yl);
-  fprintf(f, "%sxlimits: %g %g\n", pre, x1, x2);
-}
-
-static void
-mcdatainfo_out_2D(char *pre, FILE *f, char *t, char *xl, char *yl,
-		  double x1, double x2, double y1, double y2,
-		  int m, int n, char *fname, char *c)
-{
-  if(!f)
-    return;
-  fprintf(f, "%stype: array_2d(%d,%d)\n", pre, m, n);
-  fprintf(f, "%scomponent: %s\n", pre, c);
-  fprintf(f, "%stitle: %s\n", pre, t);
-  if(fname)
-    fprintf(f, "%sfilename: '%s'\n", pre, fname);
-  fprintf(f, "%sxlabel: '%s'\n%sylabel: '%s'\n", pre, xl, pre, yl);
-  fprintf(f, "%sxylimits: %g %g %g %g\n", pre, x1, x2, y1, y2);
-}  
-
-/*******************************************************************************
-* Output single detector/monitor data (p0, p1, p2).
-* Title is t, component name is c.
-*******************************************************************************/
-void
-mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
-{
-  /* Write data set information to simulation description file. */
-  mcsiminfo_out("\nbegin data\n");
-  mcdatainfo_out_0D("  ", mcsiminfo_file, t,
-		    p1, mcestimate_error(p0, p1, p2), p0, c);
-  mcsiminfo_out("end data\n");
-  /* Finally give 0D detector output. */
-  mcdetector_out(c, p0, p1, p2, NULL);
-}
-
-
-/*******************************************************************************
-* Output 1d detector data (p0, p1, p2) for n bins linearly
-* distributed across the range x1..x2 (x1 is lower limit of first
-* bin, x2 is upper limit of last bin). Title is t, axis labels are xl
-* and yl. File name is f, component name is c.
-*******************************************************************************/
-void
-mcdetector_out_1D(char *t, char *xl, char *yl,
-		  char *xvar, double x1, double x2, int n,
-		  double *p0, double *p1, double *p2, char *f, char *c)
-{
-  int i;
-  FILE *outfile = NULL;
-  double Nsum;
-  double Psum, P2sum;
-  char *pre;
-  int do_errb = p0 && p2;
-  double sum_xy  = 0;
-  double sum_y   = 0;
-  double sum_x   = 0;
-  double sum_x2y = 0;
-  double min_y   = 0;
-  double max_y   = 0;
-  double fmon=0, smon=0, mean_y=0;
-
-  /* Write data set information to simulation description file. */
-  mcsiminfo_out("\nbegin data\n");
-  mcdatainfo_out_1D("  ", mcsiminfo_file, t, xl, yl, xvar, x1, x2,
-		    n, f, c, do_errb);
-  /* ADD: E. Farhi Feb 18th, 2002 compute statistics (min/max/variance/center... */
-  min_y   = p1[0];
-  max_y   = min_y;
-  for(i = 0; i < n; i++)
-  {
-    double x,y; 
-    x = x1 + (i + 0.5)/n*(x2 - x1);
-    y = p1[i];
-    sum_xy += x*y;
-    sum_x += x;
-    sum_y += y;
-    sum_x2y += x*x*y;
-    if (y > max_y) max_y = y;
-    if (y < min_y) min_y = y;
-  }
-  if (sum_y)
-  {
-    fmon = sum_xy/sum_y; 
-    smon = sqrt(sum_x2y/sum_y-fmon*fmon);
-    mean_y = sum_y/n;
-  }
-  if (sum_y)
-  {
-    mcsiminfo_out("  statistics: Sum=%.3g, X0=%.3g, dX=%.3g\n", sum_y, fmon, smon);
-  }
-  else
-    mcsiminfo_out("  statistics: Sum=0\n");      
-  /* Loop over array elements, computing total sums and writing to file. */
-  Nsum = Psum = P2sum = 0;
-  pre = "";
-  if(mcsingle_file)
-  {
-    outfile = mcsiminfo_file;
-    f = NULL;
-    mcsiminfo_out("  begin array2D (%d,%d)\n", do_errb ? 4 : 2, n);
-    pre = "    ";
-  }
-  else if(f && !mcdisable_output_files)	/* Don't write if filename is NULL */
-    outfile = mcnew_file(f);
-  if(outfile && !mcascii_only && !mcsingle_file)
-  {
-    fprintf(outfile, "# Instrument-source: %s\n", mcinstrument_source);
-    mcruninfo_out("# ", outfile);
-    mcdatainfo_out_1D("# ", outfile, t, xl, yl, xvar, x1, x2,
-		      n, f, c, do_errb);
-    if (sum_y)
-    {
-      fprintf(outfile, "# statistics: Min_y=%g, Max_y=%g, Mean_y= %g\n", min_y, max_y, mean_y);
-      fprintf(outfile, "# statistics: Sum_y=%g, X0=%g, dX=%g\n", sum_y, fmon, smon);
-    }
-    else
-      fprintf(outfile, "# statistics: Sum_y=0\n");
-  }
-  
-  for(i = 0; i < n; i++)
-  {
-    if(outfile)
-    {
-      fprintf(outfile, "%s%g %g", pre, x1 + (i + 0.5)/n*(x2 - x1), p1[i]);
-      if(do_errb)
-        fprintf(outfile, " %g %g", mcestimate_error(p0[i],p1[i],p2[i]), p0[i]);
-      fprintf(outfile, "\n");
-    }
-    Nsum += p0 ? p0[i] : 1;
-    Psum += p1[i];
-    P2sum += p2 ? p2[i] : p1[i]*p1[i];
-  }
-  if(mcsingle_file)
-    mcsiminfo_out("  end array2D\n");
-  else if(outfile)
-    fclose(outfile);
-  mcsiminfo_out("end data\n");
-  /* Finally give 0D detector output. */
-  mcdetector_out(c, Nsum, Psum, P2sum, f);
-}
-
-
-void
-mcdetector_out_2D(char *t, char *xl, char *yl,
-		  double x1, double x2, double y1, double y2, int m,
-		  int n, double *p0, double *p1, double *p2, char *f, char *c)
-{
-  int i, j;
-  FILE *outfile = NULL;
-  double Nsum;
-  double Psum, P2sum;
-  char *pre;
-  int do_errb = p0 && p2;
-  double sum_xz  = 0;
-  double sum_yz  = 0;
-  double sum_z   = 0;
-  double sum_y   = 0;
-  double sum_x   = 0;
-  double sum_x2z = 0;
-  double sum_y2z = 0;
-  double min_z   = 0;
-  double max_z   = 0;
-  double fmon_x=0, smon_x=0, fmon_y=0, smon_y=0, mean_z=0;
-
-
-  /* Write data set information to simulation description file. */
-  mcsiminfo_out("\nbegin data\n");
-  mcdatainfo_out_2D("  ", mcsiminfo_file,
-		    t, xl, yl, x1, x2, y1, y2, m, n, f, c);
-  /* ADD: E. Farhi Feb 18th, 2002 compute statistics (min/max/variance/center... */
-  min_z   = p1[0];
-  max_z   = min_z;
-  for(j = 0; j < n; j++)
-  {
-    for(i = 0; i < m; i++)
-    {
-      double x,y,z; 
-      x = x1 + (i + 0.5)/m*(x2 - x1);
-      y = y1 + (j + 0.5)/n*(y2 - y1);
-      z = p1[i*n + j];
-      sum_xz += x*z;
-      sum_yz += y*z;
-      sum_x += x;
-      sum_y += y;
-      sum_z += z;
-      sum_x2z += x*x*z;
-      sum_y2z += y*y*z;
-      if (z > max_z) max_z = z;
-      if (z < min_z) min_z = z;
-    }
-  }
-  if (sum_z)
-  {
-    fmon_x = sum_xz/sum_z; 
-    fmon_y = sum_yz/sum_z;
-    smon_x = sqrt(sum_x2z/sum_z-fmon_x*fmon_x);
-    smon_y = sqrt(sum_y2z/sum_z-fmon_y*fmon_y);
-    mean_z = sum_z/n;
-  }
-  if (sum_z)
-  {
-    mcsiminfo_out("  statistics: X0=%.3g, dX=%.3g, Y0=%.3g, dY=%.3g\n", fmon_x, smon_x, fmon_y, smon_y);
-  }
-  else
-    mcsiminfo_out("  statistics: Sum=0\n");      
-  
-  /* Loop over array elements, computing total sums and writing to file. */
-  Nsum = Psum = P2sum = 0;
-  pre = "";
-  if(mcsingle_file)
-  {
-    outfile = mcsiminfo_file;
-    f = NULL;
-    mcsiminfo_out("  begin array2D (%d,%d)\n", m, n);
-    pre = "    ";
-  }
-  else if(f && !mcdisable_output_files)	/* Don't write if filename is NULL */
-    outfile = mcnew_file(f);
-  if(outfile && !mcascii_only && !mcsingle_file)
-  {
-    fprintf(outfile, "# Instrument-source: %s\n", mcinstrument_source);
-    mcruninfo_out("# ", outfile);
-    mcdatainfo_out_2D("# ", outfile,
-		      t, xl, yl, x1, x2, y1, y2, m, n, f, c);
-    if (sum_z)
-    {
-      fprintf(outfile, "# statistics: Min_z=%g, Max_z=%g, Mean_z= %g, Sum_z=%g\n", min_z, max_z, mean_z, sum_z);
-      fprintf(outfile, "# statistics: X0=%g, dX=%g, Y0=%g, dY=%g\n", fmon_x, smon_x, fmon_y, smon_y);
-    }
-    else
-      fprintf(outfile, "# statistics: Sum_y=0\n");
-
-  }
-  /* data output */
-  for(j = 0; j < n; j++)
-  {
-    if(outfile)
-      fprintf(outfile,"%s", pre);
-    for(i = 0; i < m; i++)
-    {
-      if(outfile)
-        fprintf(outfile, "%g ", p1[i*n + j]);
-      Nsum += p0 ? p0[i*n + j] : 1;
-      Psum += p1[i*n + j];
-      P2sum += p2 ? p2[i*n + j] : p1[i*n + j]*p1[i*n + j];
-    }
-    if(outfile)
-      fprintf(outfile,"\n");
-  }
-  if (do_errb) /* ADD: E. Farhi Sep 26th, 2001 errorbars 2D */
-  {
-    /* errorbars output */
-    if(outfile && !mcascii_only && !mcsingle_file)
-    {
-      fprintf(outfile, "# end I\n# I_err (error bar) for %s from component %s\n", f, c);
-    }
-    for(j = 0; j < n; j++)
-    {
-      if(outfile)
-        fprintf(outfile,"%s", pre);
-      for(i = 0; i < m; i++)
-      {
-        if(outfile)
-          fprintf(outfile, "%g ", mcestimate_error(p0[i*n + j],p1[i*n + j],p2[i*n + j]));
-      }
-      if(outfile)
-        fprintf(outfile,"\n");
-    }
-    /* ncounts output */
-    if(outfile && !mcascii_only && !mcsingle_file)
-    {
-      fprintf(outfile, "# end I_err\n# N (event number) for %s from component %s\n", f, c);
-    }
-    for(j = 0; j < n; j++)
-    {
-      if(outfile)
-        fprintf(outfile,"%s", pre);
-      for(i = 0; i < m; i++)
-      {
-        if(outfile)
-          fprintf(outfile, "%g ", p0[i*n + j]);
-      }
-      if(outfile)
-        fprintf(outfile,"\n");
-    }
-  }
-  if(mcsingle_file)
-    mcsiminfo_out("  end array2D\n");
-  else if(outfile)
-    fclose(outfile);
-  mcsiminfo_out("end data\n");
-  /* Finally give 0D detector output. */
-  mcdetector_out(c, Nsum, Psum, P2sum, f);
-}
-
+/* init/run/rand handling =================================================== */
 
 void
 mcreadparams(void)
@@ -1057,30 +543,30 @@ mcreadparams(void)
     do
     {
       printf("Set value of instrument parameter %s (%s):\n",
-	     mcinputtable[i].name,
-	     (*mcinputtypes[mcinputtable[i].type].parminfo)
-		  (mcinputtable[i].name));
+             mcinputtable[i].name,
+             (*mcinputtypes[mcinputtable[i].type].parminfo)
+                  (mcinputtable[i].name));
       fflush(stdout);
       p = fgets(buf, 1024, stdin);
       if(p == NULL)
       {
-	fprintf(stderr, "Error: empty input\n");
-	exit(1);
+        fprintf(stderr, "Error: empty input\n");
+        exit(1);
       }
       len = strlen(buf);
       for(j = 0; j < 2; j++)
       {
-	if(len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
-	{
-	  len--;
-	  buf[len] = '\0';
-	}
+        if(len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+        {
+          len--;
+          buf[len] = '\0';
+        }
       }
       status = (*mcinputtypes[mcinputtable[i].type].getparm)
-		   (buf, mcinputtable[i].par);
+                   (buf, mcinputtable[i].par);
       if(!status)
       {
-	(*mcinputtypes[mcinputtable[i].type].error)(mcinputtable[i].name, buf);
+        (*mcinputtypes[mcinputtable[i].type].error)(mcinputtable[i].name, buf);
       }
     } while(!status);
   }
@@ -1090,7 +576,7 @@ mcreadparams(void)
 
 void
 mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-	   double t, double sx, double sy, double sz, double p)
+           double t, double sx, double sy, double sz, double p)
 {
   extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
   extern double mcnt, mcnsx, mcnsy, mcnsz, mcnp;
@@ -1135,7 +621,7 @@ mcgenstate(void)
 
 /*
  * This is derived from the Berkeley source:
- *	@(#)random.c	5.5 (Berkeley) 7/6/88
+ *        @(#)random.c        5.5 (Berkeley) 7/6/88
  * It was reworked for the GNU C Library by Roland McGrath.
  * Rewritten to use reentrant functions by Ulrich Drepper, 1995.
  */
@@ -1152,10 +638,10 @@ mcgenstate(void)
 *******************************************************************************/
 
 
-#define	TYPE_3		3
-#define	BREAK_3		128
-#define	DEG_3		31
-#define	SEP_3		3
+#define        TYPE_3                3
+#define        BREAK_3                128
+#define        DEG_3                31
+#define        SEP_3                3
 
 static mc_int32_t randtbl[DEG_3 + 1] =
   {
@@ -1210,8 +696,8 @@ mc_srandom (unsigned int x)
     for (i = 1; i < rand_deg; ++i)
     {
       /* This does:
-	 state[i] = (16807 * state[i - 1]) % 2147483647;
-	 but avoids overflowing 31 bits.  */
+         state[i] = (16807 * state[i - 1]) % 2147483647;
+         but avoids overflowing 31 bits.  */
       long int hi = state[i - 1] / 127773;
       long int lo = state[i - 1] % 127773;
       long int test = 16807 * lo - 2836 * hi;
@@ -1355,6 +841,8 @@ randnorm(void)
   phase = 1 - phase;
   return X;
 }
+
+/* intersect handling ======================================================= */
 
 /* Compute normal vector to (x,y,z). */
 void normal_vec(double *nx, double *ny, double *nz,
@@ -1515,7 +1003,7 @@ int box_intersect(double *dt_in, double *dt_out,
 /* Written by: EM,NB,ABA 4.2.98 */
 int
 cylinder_intersect(double *t0, double *t1, double x, double y, double z,
-		   double vx, double vy, double vz, double r, double h)
+                   double vx, double vy, double vz, double r, double h)
 {
   double v, D, t_in, t_out, y_in, y_out;
 
@@ -1536,13 +1024,13 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     else
     {
       if (y_in > h/2)
-	t_in = ((h/2)-y)/vy;
+        t_in = ((h/2)-y)/vy;
       if (y_in < -h/2)
-	t_in = ((-h/2)-y)/vy;
+        t_in = ((-h/2)-y)/vy;
       if (y_out > h/2)
-	t_out = ((h/2)-y)/vy;
+        t_out = ((h/2)-y)/vy;
       if (y_out < -h/2)
-	t_out = ((-h/2)-y)/vy;
+        t_out = ((-h/2)-y)/vy;
     }
     *t0 = t_in;
     *t1 = t_out;
@@ -1559,7 +1047,7 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 /* Calculate intersection between line and sphere. */
 int
 sphere_intersect(double *t0, double *t1, double x, double y, double z,
-		 double vx, double vy, double vz, double r)
+                 double vx, double vy, double vz, double r)
 {
   double A, B, C, D, v;
 
@@ -1575,6 +1063,7 @@ sphere_intersect(double *t0, double *t1, double x, double y, double z,
   *t1 = (-B + D) / (2*A);
   return 1;
 }
+
 
 /* ADD: E. Farhi, Aug 6th, 2001 plane_intersect_Gfast 
  * intersection of a plane and a trajectory with gravitation */
@@ -1593,61 +1082,60 @@ sphere_intersect(double *t0, double *t1, double x, double y, double z,
    * Without acceleration, t=-n.(r-W)/n.v
    */
   
-  int plane_intersect_Gfast(double *Idt, 
+int plane_intersect_Gfast(double *Idt, 
                   double A,  double B,  double C)
+{
+  /* plane_intersect_Gfast(&dt, A, B, C)
+   * A = 0.5 n.g; B = n.v; C = n.(r-W);
+   * no acceleration when A=0
+   */
+  double D, sD;
+  double dt1, dt2;
+
+  *Idt = -1;
+
+  if (A == 0) /* this plane is parallel to the acceleration */
   {
-    /* plane_intersect_Gfast(&dt, A, B, C)
-     * A = 0.5 n.g; B = n.v; C = n.(r-W);
-     * no cceleration when A=0
-     */
-    double D, sD;
-    double dt1, dt2;
-    
-    *Idt = -1;
-    
-    if (A == 0) /* this plane is parallel to the acceleration */
-    {
-      if (B == 0)  /* the speed is parallel to the plane, no intersection */
-        return (0);
-      else  /* no acceleration case */
-        { *Idt = -C/B; 
-          if (*Idt >= 0) return (2);
-          else return (0); }
-    }
-    else
-    {
-      /* Delta > 0: neutron trajectory hits the mirror */
-      D = B*B - 4*A*C;
-      if (D >= 0)
-      {
-        sD = sqrt(D);
-        dt1 = (-B + sD)/2/A;
-        dt2 = (-B - sD)/2/A;
-        if (dt1 <0 && dt2 >=0) *Idt = dt2;
-        else
-        if (dt2 <0 && dt1 >=0) *Idt = dt1;
-        else
-        if (dt1 <0 && dt2 < 0) return (0);
-        else
-        if (dt1 < dt2) *Idt = dt1;
-        else
-          *Idt = dt2;
-        return (1);
-      }
-      else  /* Delta <0: no intersection */
-        return (0);
-    }     
+    if (B == 0)  /* the speed is parallel to the plane, no intersection */
+      return (0);
+    else  /* no acceleration case */
+      { *Idt = -C/B; 
+        if (*Idt >= 0) return (2);
+        else return (0); }
   }
+  else
+  {
+    /* Delta > 0: neutron trajectory hits the mirror */
+    D = B*B - 4*A*C;
+    if (D >= 0)
+    {
+      sD = sqrt(D);
+      dt1 = (-B + sD)/2/A;
+      dt2 = (-B - sD)/2/A;
+      if (dt1 <0 && dt2 >=0) *Idt = dt2;
+      else
+      if (dt2 <0 && dt1 >=0) *Idt = dt1;
+      else
+      if (dt1 <0 && dt2 < 0) return (0);
+      else
+      if (dt1 < dt2) *Idt = dt1;
+      else
+        *Idt = dt2;
+      return (1);
+    }
+    else  /* Delta <0: no intersection */
+      return (0);
+  }     
+}
 
 
 /* Choose random direction towards target at (x,y,z) with given radius. */
 /* If radius is zero, choose random direction in full 4PI, no target. */
-/* ToDo: It should be possible to optimize this to avoid computing angles. */
 void
-randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
-	       double xi, double yi, double zi, double radius)
+randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
+               double xi, double yi, double zi, double radius)
 {
-  double l, theta0, phi, theta, nx, ny, nz, xt, yt, zt;
+  double l2, phi, theta, nx, ny, nz, xt, yt, zt, xu, yu, zu;
 
   if(radius == 0.0)
   {
@@ -1665,20 +1153,23 @@ randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
   }
   else
   {
-    l = sqrt(xi*xi + yi*yi + zi*zi); /* Distance to target. */
-    theta0 = asin(radius / l);	/* Target size as seen from origin */
+    double costheta0;
+    l2 = xi*xi + yi*yi + zi*zi; /* sqr Distance to target. */
+    costheta0 = sqrt(l2/(radius*radius+l2));
+    if (radius < 0) costheta0 *= -1;
     if(solid_angle)
-    {
-      /* Compute solid angle of target as seen from origin. */
-      *solid_angle = 2*PI*(1 - cos(theta0));
-    }
+      if (*solid_angle == 0)
+      {
+        /* Compute solid angle of target as seen from origin. */
+        *solid_angle = 2*PI*(1 - costheta0);
+      }
 
     /* Now choose point uniformly on sphere surface within angle theta0 */
-    theta = acos (1 - rand0max(1 - cos(theta0)));
-    phi = rand0max(2 * PI);
-    /* Now, to obtain the desired vector rotate (x,y,z) angle theta around a
-       perpendicular axis (nx,ny,nz) and then angle phi around (x,y,z). */
-    if(xi == 0 && yi == 0)
+    theta = acos (1 - rand0max(1 - costheta0)); /* radius on sphere */
+    phi = rand0max(2 * PI); /* rotation on sphere at given radius */
+    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around a
+       perpendicular axis (nx,ny,nz) and then angle phi around (xi,yi,zi). */
+    if(xi == 0 && zi == 0)
     {
       nx = 1;
       ny = 0;
@@ -1686,13 +1177,69 @@ randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
     }
     else
     {
-      nx = -yi;
-      ny = xi;
-      nz = 0;
+      nx = -zi;
+      nz = xi;
+      ny = 0;
     }
   }
-  rotate(xt, yt, zt, xi, yi, zi, theta, nx, ny, nz);
-  rotate(*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
+  
+  /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
+  vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);   
+  /* [xyz]t = [xyz]i rotated theta around [xyz]u */
+  rotate  (xt,  yt,  zt, xi, yi, zi, theta, xu, yu, zu);
+  /* [xyz]o = [xyz]t rotated phi around n[xyz] */
+  rotate (*xo, *yo, *zo, xt, yt, zt, phi, nx, ny, nz);
+}
+
+
+/* Choose random direction towards target at (xi,yi,zi) with given       */
+/* ANGULAR dimension height x width. height=phi_x, width=phi_y */
+/* If height or width is zero, choose random direction in full 4PI, no target. */
+void
+randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
+               double xi, double yi, double zi, double height, double width)
+{
+  double theta, phi, nx, ny, nz, xt, yt, zt, xu, yu, zu;
+
+  if(height == 0.0 || width == 0.0)
+  {
+    randvec_target_circle(xo, yo, zo, solid_angle,
+               0, 0, 0, 0);
+  }
+  else
+  {
+    if(solid_angle)
+      if (*solid_angle == 0)
+      {
+        /* Compute solid angle of target as seen from origin. */
+        *solid_angle = 2*fabs(width*sin(height));
+      }
+
+    /* Now choose point uniformly on quadrant within angle theta0/phi0 */
+    theta = width*randpm1()/2.0;
+    phi   = height*randpm1()/2.0; 
+    /* Now, to obtain the desired vector rotate (x,y,z) angle theta around a
+       perpendicular axis (nx,ny,nz) and then angle phi around (x,y,z) x n. */
+    if(xi == 0 && zi == 0)
+    {
+      nx = 1;
+      ny = 0;
+      nz = 0;
+    }
+    else
+    {
+      nx = -zi;
+      nz = xi;
+      ny = 0;
+    }
+  }
+  
+  /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
+  vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);   
+  /* [xyz]t = [xyz]i rotated theta around [xyz]u */
+  rotate  (xt,  yt,  zt, xi, yi, zi, theta, xu, yu, zu);
+  /* [xyz]o = [xyz]t rotated phi around n[xyz] */
+  rotate (*xo, *yo, *zo, xt, yt, zt, phi, nx, ny, nz);
 }
 
 /* Make sure a list is big enough to hold element COUNT.
@@ -1717,7 +1264,7 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
     *list = malloc(*size*elemsize);
     if(!*list)
     {
-      fprintf(stderr, "\nFatal error: Out of memory.\n");
+      fprintf(stderr, "\nError: Out of memory (extend_list).\n");
       exit(1);
     }
     if(oldlist)
@@ -1764,7 +1311,7 @@ mcsetseed(char *arg)
     srandom(mcseed);
   else
   {
-    fprintf(stderr, "Error seed most not be zero.\n");
+    fprintf(stderr, "Error: seed most not be zero.\n");
     exit(1);
   }
 }
@@ -1786,14 +1333,19 @@ mchelp(char *pgmname)
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show help message.\n"
 "  -i        --info           Detailed instrument information.\n"
+"  --format=FORMAT            Output data files using format FORMAT\n"
 );
   if(mcnumipar > 0)
   {
     fprintf(stderr, "Instrument parameters are:\n");
     for(i = 0; i < mcnumipar; i++)
       fprintf(stderr, "  %-16s(%s)\n", mcinputtable[i].name,
-	(*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
+        (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
   }
+  fprintf(stderr, "Available output formats are:\n");
+  for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
+  fprintf(stderr, "\nFormat modifiers: FORMAT may be followed by 'binary float' or \n");
+  fprintf(stderr, "'binary double' to save data blocks as binary. Please use also -a flag.\n");
 }
 
 static void
@@ -1812,13 +1364,6 @@ mcusage(char *pgmname)
 }
 
 static void
-mcinfo(void)
-{
-  mcinfo_out("", stdout);
-  exit(0);
-}
-
-static void
 mcenabletrace(void)
 {
  if(mctraceenabled)
@@ -1826,20 +1371,909 @@ mcenabletrace(void)
  else
  {
    fprintf(stderr,
-	   "Error: trace not enabled.\n"
-	   "Please re-run the McStas compiler"
-		   "with the --trace option, or rerun the\n"
-	   "C compiler with the MC_TRACE_ENABLED macro defined.\n");
+           "Error: trace not enabled.\n"
+           "Please re-run the McStas compiler"
+                   "with the --trace option, or rerun the\n"
+           "C compiler with the MC_TRACE_ENABLED macro defined.\n");
    exit(1);
  }
 }
+
+/* file i/o handling ======================================================== */
+/* opens a new file within mcdirname if non NULL */
+/* if mode is non 0, then mode is used, else mode is 'w' */
+
+FILE *
+mcnew_file(char *name, char *mode)
+{
+  int dirlen;
+  char *mem;
+  FILE *file;
+
+  if (!name || strlen(name) == 0) return(NULL);
+  
+  dirlen = mcdirname ? strlen(mcdirname) : 0;
+  mem = malloc(dirlen + 1 + strlen(name) + 1);
+  if(!mem)
+  {
+    fprintf(stderr, "Error: Out of memory (mcnew_file)\n");
+    exit(1);
+  }
+  strcpy(mem, "");
+  if(dirlen)
+  {
+    strcat(mem, mcdirname);
+    if(mcdirname[dirlen - 1] != MC_PATHSEP_C &&
+       name[0] != MC_PATHSEP_C)
+      strcat(mem, MC_PATHSEP_S);
+  }
+  strcat(mem, name);
+  if (mode)
+    file = fopen(mem, mode);
+  else
+    file = fopen(mem, "w");
+  if(!file)
+    fprintf(stderr, "Warning: could not open output file '%s'\n", mem);
+  free(mem);
+  return file;
+} /* mcnew_file */
+
+/* mcvalid_name: makes a valid string for variable names.
+ * copy 'original' into 'valid', replacing invalid characters by '_'
+ * char arrays must be pre-allocated. n can be 0, or the maximum number of
+ * chars to be copied/checked
+ */
+static char *mcvalid_name(char *valid, char *original, int n)
+{
+  long i;
+  
+  if (!n) n = strlen(valid);
+  if (original == NULL || strlen(original) == 0) 
+  { strcpy(valid, "noname"); return(valid); }
+  
+  if (n > strlen(original)) n = strlen(original);
+  strncpy(valid, original, n);
+  
+  for (i=0; i < n; i++)
+  { 
+    if ( (valid[i] > 122) 
+      || (valid[i] < 32) 
+      || (strchr("!\"#$%&'()*+,-.:;<=>?@[\\]^`/ ", valid[i]) != NULL) )
+    {
+      if (i) valid[i] = '_'; else valid[i] = 'm';
+    }
+  }
+  valid[i] = '\0';
+  
+  return(valid);
+} /* mcvalid_name */
+
+/* mcfile_header: output header/footer using specific file format.
+ * outputs, in file 'name' having preallocated 'f' handle, the format Header
+ * 'part' may be 'header' or 'footer' depending on part to write
+ * if name == NULL, ignore function (no header/footer output)
+ */
+static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, char *pre, char *name, char *parent)
+{
+  char user[64]   ="";
+  char machine[256]="";
+  char date[64]   ="";
+  char dirname[256]  =".";
+  char HeadFoot[2048]="";
+  long date_l; /* date as a long number */
+  time_t t;
+  char valid_parent[256] = "root\0";
+  
+  if(!f)
+    return (-1);
+  
+  if (part && !strcmp(part,"footer")) strncpy(HeadFoot, format.Footer, 2048);
+  else strncpy(HeadFoot, format.Header, 2048);
+    
+  if (!strlen(HeadFoot) || (!name)) return (-1);
+
+  time(&t);
+  if (mcdirname) strncpy(dirname, mcdirname, 256);
+  strncpy(user,    getenv("USER"), 64);
+  strncpy(machine, getenv("HOST"), 256);
+  strncpy(date, ctime(&t), 64); 
+  if (strlen(date)) date[strlen(date)-1] = '\0';
+  date_l = (long)t;
+  if (parent) strncpy(valid_parent, parent, 256);
+  
+  return(fprintf(f, HeadFoot, 
+    pre,                  /* %1$s */
+    mcinstrument_source,  /* %2$s */
+    dirname,              /* %3$s */
+    name,                 /* %4$s */
+    format.Name,          /* %5$s */
+    date,                 /* %6$s */
+    date_l,               /* %7$li*/
+    user,                 /* %8$s */
+    machine,              /* %9$s */
+    mcinstrument_name,    /* %10$s*/
+    parent));             /* %11$s*/
+} /* mcfile_header */
+
+/* mcfile_tag: output tag/value using specific file format.
+ * outputs, in file with 'f' handle, a tag/value pair.
+ * if name == NULL, ignore function (no section definition)
+ */
+static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *section, char *name, char *value)
+{
+  char valid_section[256]="";
+  
+  if (!strlen(format.AssignTag) || (!name) || (!f)) return(-1);
+  
+  mcvalid_name(valid_section, section, 256);
+  
+  return(fprintf(f, format.AssignTag,
+    pre,          /* %1$s */
+    valid_section,/* %2$s */
+    name,         /* %3$s */
+    value));      /* %4$s */
+} /* mcfile_tag */
+
+/* mcfile_section: output section start/end using specific file format.
+ * outputs, in file 'name' having preallocated 'f' handle, the format Section.
+ * 'part' may be 'begin' or 'end' depending on section part to write
+ * 'type' may be e.g. 'instrument','simulation','component','data'
+ * if name == NULL, ignore function (no section definition)
+ */
+ 
+static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, char *pre, char *name, char *type, char *parent, int level) 
+{
+  char Section[1024]   ="";
+  char valid_name[256] ="";
+  char valid_parent[256]="root\0";
+  int  ret;
+  
+  if(!f)
+    return (-1);
+  
+  if (part && !strcmp(part,"end")) strncpy(Section, format.EndSection, 1024);
+  else strncpy(Section, format.BeginSection, 1024);
+    
+  if (!strlen(Section) || (!name)) return (-1);
+  
+  mcvalid_name(valid_name, name, 256);
+  if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
+  
+  if (!strcmp(part,"end") && pre) 
+  {
+    if (strlen(pre) <= 2) strcpy(pre,"\0");
+    else pre[strlen(pre)-2]='\0'; 
+  }
+  
+  ret = fprintf(f, Section,
+    pre,          /* %1$s */
+    type,         /* %2$s */
+    name,         /* %3$s */
+    valid_name,   /* %4$s */
+    parent,       /* %5$s */
+    valid_parent, /* %6$s */
+    level);       /* %7$li */
+  
+  if (!strcmp(part,"begin")) 
+  {
+    strcat(pre,"  ");
+    if (name && strlen(name)) 
+      mcfile_tag(f, format, pre, name, "name", name);
+    if (parent && strlen(parent)) 
+      mcfile_tag(f, format, pre, name, "parent", parent);
+  }
+  
+  
+  return(ret);
+} /* mcfile_section */
+
+static void mcinfo_instrument(FILE *f, struct mcformats_struct format, 
+  char *pre, char *name)
+{
+  char Value[1300] = "";
+  int  i;
+  
+  if (!f) return;
+
+  for(i = 0; i < mcnumipar; i++)
+  {
+    char ThisParam[256];
+    if (strlen(mcinputtable[i].name) > 200) break;
+    sprintf(ThisParam, " %s(%s)", mcinputtable[i].name,
+            (*mcinputtypes[mcinputtable[i].type].parminfo)
+                (mcinputtable[i].name));
+    strcat(Value, ThisParam);
+    if (strlen(Value) > 1024) break;
+  }
+  mcfile_tag(f, format, pre, name, "Parameters", Value);
+  mcfile_tag(f, format, pre, name, "Source", mcinstrument_source);
+  mcfile_tag(f, format, pre, name, "Trace_enabled", mctraceenabled ? "yes" : "no");
+  mcfile_tag(f, format, pre, name, "Default_main", mcdefaultmain ? "yes" : "no");
+  mcfile_tag(f, format, pre, name, "Embedded_runtime", 
+#ifdef MC_EMBEDDED_RUNTIME
+         "yes"
+#else
+         "no"
+#endif
+         );
+} /* mcinfo_instrument */
+
+static void mcinfo_simulation(FILE *f, struct mcformats_struct format, 
+  char *pre, char *name) 
+{
+  int i;
+  double run_num, ncount;
+  time_t t;
+  char Value[256];
+  
+  if (!f) return;
+    
+  run_num = mcget_run_num();
+  ncount  = mcget_ncount();
+  time(&t);
+  strncpy(Value, ctime(&t), 256); if (strlen(Value)) Value[strlen(Value)-1] = '\0';
+  mcfile_tag(f, format, pre, name, "Date", Value); 
+  if (run_num == 0 || run_num == ncount) sprintf(Value, "%g", ncount);
+  else sprintf(Value, "%g/%g\n", run_num, ncount);
+  mcfile_tag(f, format, pre, name, "Ncount", Value);
+  mcfile_tag(f, format, pre, name, "Trace", mcdotrace ? "yes" : "no");
+  if(mcseed)
+  {
+    sprintf(Value, "%ld", mcseed);
+    mcfile_tag(f, format, pre, name, "Seed", Value);
+  }
+  if (strstr(format.Name, "McStas"))
+  {
+    for(i = 0; i < mcnumipar; i++)
+    {
+      (*mcinputtypes[mcinputtable[i].type].printer)(Value, mcinputtable[i].par);
+      fprintf(f, "%sParam: %s=%s", pre, mcinputtable[i].name, Value);
+      fprintf(f, "\n");
+    }   
+  }
+  else
+  {
+    mcfile_section(f, format, "begin", pre, "parameters", "parameters", name, 3);
+    for(i = 0; i < mcnumipar; i++)
+    {
+      (*mcinputtypes[mcinputtable[i].type].printer)(Value, mcinputtable[i].par);
+      mcfile_tag(f, format, pre, "parameters", mcinputtable[i].name, Value);
+    }  
+    mcfile_section(f, format, "end", pre, "parameters", "parameters", name, 3);
+  }
+} /* mcinfo_simulation */
+
+static void mcinfo_component(FILE *f, struct mcformats_struct format, 
+  char *pre, char *parent, char *comp) 
+{
+} /* mcinfo_component */
+
+static void mcinfo_data(FILE *f, struct mcformats_struct format, 
+  char *pre, char *parent, char *title,
+  int m, int n, 
+  char *xlabel, char *ylabel, char *zlabel, 
+  char *xvar, char *yvar, char *zvar, 
+  double x1, double x2, double y1, double y2, double z1, double z2, 
+  char *filename,
+  double *p0, double *p1, double *p2)
+{
+  char type[256];
+  char stats[256]="\0";
+  char vars[256];
+  char signal[256]="\0";
+  char values[256];
+  char limits[256]="0 0 0 0 0 0\0";
+  char lim_field[10]="xylimits\0";
+  char valid_parent[256];
+  char c[32] = "I\0";
+  
+  double sum_xz  = 0;
+  double sum_yz  = 0;
+  double sum_z   = 0;
+  double sum_y   = 0;
+  double sum_x   = 0;
+  double sum_x2z = 0;
+  double sum_y2z = 0;
+  double min_z   = 0;
+  double max_z   = 0;
+  double fmon_x=0, smon_x=0, fmon_y=0, smon_y=0, mean_z=0;
+  double Nsum=0;
+  double P2sum=0;
+  
+  int    i,j;
+  
+  if (!f || m*n == 0 || !p1) return;
+  
+  min_z   = p1[0];
+  max_z   = min_z;
+  for(j = 0; j < n; j++)
+  {
+    for(i = 0; i < m; i++)
+    {
+      double x,y,z;
+      double N, E;
+      
+      if (p0) N = p0[i*n + j];
+      if (p2) E = p2[i*n + j];
+      
+      if (m) x = x1 + (i + 0.5)/m*(x2 - x1); else x = 0;
+      if (n) y = y1 + (j + 0.5)/n*(y2 - y1); else y = 0;
+      z = p1[i*n + j];
+      sum_xz += x*z;
+      sum_yz += y*z;
+      sum_x += x;
+      sum_y += y;
+      sum_z += z;
+      sum_x2z += x*x*z;
+      sum_y2z += y*y*z;
+      if (z > max_z) max_z = z;
+      if (z < min_z) min_z = z;
+      
+      Nsum += p0 ? N : 1;
+      P2sum += p2 ? E : z*z;
+    }
+  }
+  if (sum_z && n*m)
+  {
+    fmon_x = sum_xz/sum_z; 
+    fmon_y = sum_yz/sum_z;
+    smon_x = sqrt(sum_x2z/sum_z-fmon_x*fmon_x);
+    smon_y = sqrt(sum_y2z/sum_z-fmon_y*fmon_y);
+    mean_z = sum_z/n/m;
+  }
+  
+  if (m*n == 1) 
+  { strcpy(type, "array_0d"); }
+  else if (n == 1 || m == 1) 
+  { if (m == 1) {m = n; n = 1; }
+    sprintf(type, "array_1d(%d)", m); 
+    sprintf(stats, "X0=%g; dX=%g;", fmon_x, smon_x); }
+  else  
+  { sprintf(type, "array_2d(%d, %d)", m, n); 
+    sprintf(stats, "X0=%g; dX=%g; Y0=%g; dY=%g;", fmon_x, smon_x, fmon_y, smon_y); }
+  if (zvar && strlen(zvar)) strncpy(c, zvar,32);
+  else if (yvar && strlen(yvar)) strncpy(c, yvar,32);
+  else if (xvar && strlen(xvar)) strncpy(c, xvar,32);
+  else strncpy(c, xvar,32);
+  if (m == 1 || n == 1) sprintf(vars, "%s %s %s_err N", xvar, c, c);
+  else sprintf(vars, "%s %s_err N", c, c);
+  
+  mcfile_tag(f, format, pre, parent, "type", type);
+  mcfile_tag(f, format, pre, parent, "title", title);
+  mcfile_tag(f, format, pre, parent, "variables", vars);
+  mcfile_tag(f, format, pre, parent, "filename", filename);
+  
+  if (n*m > 1) 
+  {
+    sprintf(signal, "Min=%g; Max=%g; Mean= %g;", min_z, max_z, mean_z); 
+    if (y1 == 0 && y2 == 0) { y1 = min_z; y2 = max_z;}
+    else if (z1 == 0 && z2 == 0) { z1 = min_z; z2 = max_z;}
+  }
+
+  mcfile_tag(f, format, pre, parent, "statistics", stats);
+  mcfile_tag(f, format, pre, parent, "signal", signal);
+    
+  sprintf(values, "%g %g %g", sum_z, mcestimate_error(Nsum, sum_z, P2sum), Nsum);
+  mcfile_tag(f, format, pre, parent, "values", values);
+  if (n*m > 1) 
+  {
+    mcfile_tag(f, format, pre, parent, "xvar", xvar);
+    mcfile_tag(f, format, pre, parent, "yvar", yvar);
+    mcfile_tag(f, format, pre, parent, "xlabel", xlabel);
+    mcfile_tag(f, format, pre, parent, "ylabel", ylabel);
+    if ((n == 1 || m == 1) && strstr(format.Name, "McStas"))
+    {
+      sprintf(limits, "%g %g", x1, x2);
+      strcpy(lim_field, "xlimits");
+    }
+    else
+    {
+      mcfile_tag(f, format, pre, parent, "zvar", zvar);
+      mcfile_tag(f, format, pre, parent, "zlabel", zlabel);
+      sprintf(limits, "%g %g %g %g %g %g", x1, x2, y1, y2, z1, z2);
+    }
+  }
+  mcfile_tag(f, format, pre, parent, lim_field, limits);
+} /* mcinfo_data */
+
+/* main output function, works for 0d, 1d, 2d data */
+
+static void
+mcsiminfo_init(FILE *f)
+{
+  char info_name[256];
+  
+  if (mcdisable_output_files) return;
+  if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return;
+  if (!strchr(mcsiminfo_name,'.')) sprintf(info_name, "%s.%s", mcsiminfo_name, mcformat.Extension); else strcpy(info_name, mcsiminfo_name);
+  if (!f) mcsiminfo_file = mcnew_file(info_name, "w");
+  else mcsiminfo_file = f;
+  if(!mcsiminfo_file)
+    fprintf(stderr,
+            "Warning: could not open simulation description file '%s'\n",
+            info_name);
+  else
+  {
+    char pre[20]="\0";
+    int  ismcstas;
+    char simname[1024];
+    char root[10] = "root\0";
+    
+    ismcstas = (strstr(mcformat.Name, "McStas") != NULL);
+    if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas");
+    if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
+
+    mcfile_header(mcsiminfo_file, mcformat, "header", pre, simname, root);
+    mcfile_section(mcsiminfo_file, mcformat, "begin", pre, mcinstrument_name, "instrument", root, 1);
+    mcinfo_instrument(mcsiminfo_file, mcformat, pre, mcinstrument_name);
+    if (ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
+
+    mcfile_section(mcsiminfo_file, mcformat, "begin", pre, simname, "simulation", mcinstrument_name, 2);
+    mcinfo_simulation(mcsiminfo_file, mcformat, pre, simname);
+    if (ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
+  }
+} /* mcsiminfo_init */
+
+static void
+mcsiminfo_close()
+{
+  if(mcsiminfo_file)
+  {
+    int  ismcstas;
+    char simname[1024];
+    char root[10] = "root\0";
+    char pre[20]  = "  \0";
+    
+    ismcstas = (strstr(mcformat.Name, "McStas") != NULL);
+    if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
+    if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas");
+    
+    if (!ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
+    if (!ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
+    mcfile_header(mcsiminfo_file, mcformat, "footer", pre, simname, root);
+    
+    if (mcsiminfo_file != stdout) fclose(mcsiminfo_file);
+  }
+} /* mcsiminfo_close */
+
+/* mcfile_datablock: output a single data block using specific file format.
+ * 'part' can be 'data','errors','ncount'
+ * if y1 == y2 == 0 and McStas format, then stores as a 1D array with [I,E,N]
+ * return value: 0=0d/2d, 1=1d
+ * when !single_file, create independent data files, with header and data tags
+ */
+
+static int mcfile_datablock(FILE *f, struct mcformats_struct format, 
+  char *pre, char *parent, char *part,
+  double *p0, double *p1, double *p2, int m, int n, 
+  char *xlabel, char *ylabel, char *zlabel, char *title,
+  char *xvar, char *yvar, char *zvar,
+  double x1, double x2, double y1, double y2, double z1, double z2, 
+  char *filename)
+{
+  char Begin[1024] = "\0";
+  char End[1024]   = "\0";
+  char valid_xlabel[64] = "\0";
+  char valid_ylabel[64] = "\0";
+  char valid_zlabel[64] = "\0";
+  char valid_parent[64] = "\0";
+  FILE *datafile= NULL;
+  int  isdata=0;
+  int  just_header=0;
+  int  i,j, is1d;
+  double Nsum=0, Psum=0, P2sum=0;
+  
+  /* return if f NULL */
+  if (!f) return (-1);
+  
+  if (strstr(part,"data")) 
+  { isdata = 1; strncpy(Begin, format.BeginData, 1024); strncpy(End, format.EndData, 1024); }
+  if (strstr(part,"errors")) 
+  { isdata = 2; strncpy(Begin, format.BeginErrors, 1024); strncpy(End, format.EndErrors, 1024); }
+  if (strstr(part,"ncount")) 
+  { isdata = 0; strncpy(Begin, format.BeginNcount, 1024); strncpy(End, format.EndNcount, 1024); }
+  if (strstr(part, "begin")) just_header = 1;
+  if (strstr(part, "end"))   just_header = 2;
+  
+  is1d = (!y1 && y1 == y2 && strstr(format.Name,"McStas"));
+  mcvalid_name(valid_xlabel, xlabel, 64);
+  mcvalid_name(valid_ylabel, ylabel, 64);
+  mcvalid_name(valid_zlabel, zlabel, 64);
+  
+  if (strstr(format.Name, "McStas") || !filename || strlen(filename) == 0) 
+    mcvalid_name(valid_parent, parent, 64);
+  else mcvalid_name(valid_parent, filename, 64);
+  
+  /* if normal or begin and part == data: output info_data */
+  if (isdata == 1 && just_header != 2)
+  {
+    mcinfo_data(f, format, pre, valid_parent, title, m, n,
+          xlabel, ylabel, zlabel, xvar, yvar, zvar, 
+          x1, x2, y1, y2, z1, z2, filename, p0, p1, p2);
+  }
+
+  /* if normal or begin: begin part */
+  if (strlen(Begin) && just_header != 2)
+    fprintf(f, Begin,
+      pre,          /* %1$s */
+      valid_parent, /* %2$s */
+      title,        /* %3$s */
+      m,            /* %4$li */
+      n,            /* %5$li */
+      xlabel,       /* %6$s */
+      valid_xlabel, /* %7$s*/
+      ylabel,       /* %8$s */
+      valid_ylabel, /* %9$s */
+      zlabel,       /* %10$s*/
+      valid_zlabel, /* %11$s*/
+      xvar,         /* %12$s */
+      yvar,         /* %13$s */
+      zvar,         /* %14$s */
+      x1,           /* %15$g */
+      x2,           /* %16$g */
+      y1,           /* %17$g*/
+      y2,           /* %18$g */
+      z1,           /* %19$g */
+      z2,           /* %20$g */
+      filename);    /* %21$s */
+      
+ /* if normal, and !single:
+  *   open datafile, 
+  *   if !ascii_only
+  *     if data: write file header, 
+  *     call datablock part+header(begin)
+  * else data file = f
+  */
+  if (!mcsingle_file && just_header == 0)
+  {
+    char mode[32] = "w\0";
+    /* if data: open new file for data else append for error/ncount */
+    if (isdata != 1) mode[0] = 'a';
+    if (filename) datafile = mcnew_file(filename, mode);
+    else datafile = NULL;
+   
+    /* if data, start with root header plus tags of parent data */
+    if (datafile && !mcascii_only) 
+    {
+      char mypre[10] = "# \0";
+      
+      if (!strstr(format.Name, "McStas")) mypre[0] = '\0'; 
+      
+      if (isdata == 1) mcfile_header(datafile, format, "header", mypre, filename, valid_parent); 
+      sprintf(mode, "%s begin", part);
+      /* write header+data block begin tags into datafile */
+      mcfile_datablock(datafile, format, mypre, valid_parent, mode,
+          p0, p1, p2, m, n,
+          xlabel,  ylabel, zlabel, title,
+          xvar, yvar, zvar,
+          x1, x2, y1, y2, z1, z2, filename);
+    }
+  }
+  else 
+  {
+    if (strstr(format.Name, "McStas") && just_header == 0 && m*n>1) 
+    {
+      char sec[256];
+      if (is1d) sprintf(sec,"array_1d(%d)", m);
+      else sprintf(sec,"array_2d(%d,%d)", m,n);
+      fprintf(f,"%sbegin %s\n", pre, sec);
+    }
+    datafile = f;
+  }
+  
+  /* if normal: [data] in data file */
+  /* do loops: 2 loops on m,n. */
+  if (just_header == 0)
+  {
+    char eol_char[3]="\n\0";
+    int  isIDL;
+    int  isBinary=0;
+    
+    if (strstr(format.Name, "binary float")) isBinary=1;
+    else if (strstr(format.Name, "binary double")) isBinary=2;
+    isIDL = (strstr(format.Name, "IDL") != NULL);
+    if (isIDL) strcpy(eol_char,"$\n\0");
+    for(j = 0; j < n; j++)
+    {
+      if(datafile && !isBinary)
+        fprintf(datafile,"%s", pre);
+      for(i = 0; i < m; i++)
+      {
+        double I=0, E=0, N=0;
+        double value=0;
+
+        if (p0) N = p0[i*n + j];
+        if (p1) I = p1[i*n + j];
+        if (p2) E = p2[i*n + j];
+
+        Nsum += p0 ? N : 1;
+        Psum += I;
+        P2sum += p2 ? E : I*I;
+
+        if (p0 && p1 && p2) E = mcestimate_error(N,I,E);
+        if(datafile && !isBinary)
+        {
+          if (isdata == 1) value = I;
+          else if (isdata == 0) value = N;
+          else if (isdata == 2) value = E;
+          if (is1d) 
+          {
+            double x;
+            
+            x = x1+(x2-x1)*(i*n + j)/(m*n);
+            if (m*n > 1) fprintf(datafile, "%g %g %g %g\n", x, I, E, N);
+          }
+          else 
+          {
+            fprintf(datafile, "%g", value);
+            if (isIDL && ((i+1)*(j+1) < m*n)) fprintf(datafile, ","); 
+            else fprintf(datafile, " ");
+          }
+        }
+      }
+      if (datafile && !isBinary) fprintf(datafile, eol_char);
+      if (datafile &&  isBinary)
+      {
+        double *p;
+        if (isdata==1) p=p1;
+        else if (isdata==2) p=p2;
+        else if (isdata==0) p=p0;
+        
+        if (p && isBinary == 1)  /* float */
+        {
+          float *s;
+          s = (float*)malloc(m*n*sizeof(float));
+          if (s) 
+          {
+            long    i, count;
+            for (i=0; i<m*n; s[i] = (float)p[i++]);
+            count = fwrite(s, sizeof(float), m*n, datafile);
+            if (count != m*n) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li).\n", filename,count, m*n);
+            free(s);
+          } else fprintf(stderr, "McStas: Out of memory for writing float binary file '%s'.\n", filename);
+        }
+        else if (p && isBinary == 2)  /* double */
+        {
+          long count;
+          count = fwrite(p, sizeof(double), m*n, datafile);
+          if (count != m*n) fprintf(stderr, "McStas: error writing double binary file '%s' (%li instead of %li).\n", filename,count, m*n);
+        }
+      }
+    }
+  }
+  
+  /* if normal or end: end_data */
+  if (strlen(End) && just_header != 1)
+  {
+    /* fprintf(f, End,
+      pre, valid_parent, title, m, n,
+      xlabel, valid_xlabel, ylabel, valid_ylabel, zlabel, valid_zlabel,
+      xvar, yvar, zvar,
+      x1, x2, y1, y2, filename); */
+    fprintf(f, End,
+      pre,          /* %1$s */
+      valid_parent, /* %2$s */
+      title,        /* %3$s */
+      m,            /* %4$li */
+      n,            /* %5$li */
+      xlabel,       /* %6$s */
+      valid_xlabel, /* %7$s*/
+      ylabel,       /* %8$s */
+      valid_ylabel, /* %9$s */
+      zlabel,       /* %10$s*/
+      valid_zlabel, /* %11$s*/
+      xvar,         /* %12$s */
+      yvar,         /* %13$s */
+      zvar,         /* %14$s */
+      x1,           /* %15$g */
+      x2,           /* %16$g */
+      y1,           /* %17$g*/
+      y2,           /* %18$g */
+      z1,           /* %19$g */
+      z2,           /* %20$g */
+      filename);    /* %21$s */
+  }
+      
+ /* if normal and !single and datafile: 
+  *   datablock part+footer
+  *   write file footer
+  *   close datafile
+  */
+  if (datafile && datafile != f && !mcsingle_file && just_header == 0)
+  {
+    char mode[32];
+    char mypre[10]= "# \0";
+
+    if (!mcascii_only )
+    {
+      
+      if (!strstr(format.Name, "McStas")) mypre[0] = '\0';
+    
+      sprintf(mode, "%s end", part);
+      /* write header+data block begin tags into datafile */
+      mcfile_datablock(datafile, format, mypre, valid_parent, mode,
+          p0, p1, p2, m, n,
+          xlabel,  ylabel, zlabel, title,
+          xvar, yvar, zvar,
+          x1, x2, y1, y2, z1, z2, filename);
+      if ((isdata == 1 && is1d) || strstr(part,"ncount")) /* either ncount, or 1d */
+        mcfile_header(datafile, format, "footer", mypre, filename, valid_parent);
+    }
+    fclose(datafile); 
+  }
+  else
+  {
+    if (strstr(format.Name, "McStas") && just_header == 0 && m*n > 1) 
+    {
+      char sec[256];
+      if (is1d) sprintf(sec,"array_1d(%d)", m);
+      else sprintf(sec,"array_2d(%d,%d)", m,n);
+      fprintf(f,"%send %s\n", pre, sec);
+    }
+  }
+      
+  /* Finally give 0D detector output. */
+  if (isdata == 1 && just_header == 0)
+    mcdetector_out(parent, Nsum, Psum, P2sum, filename);
+      
+  /* set return value */      
+  return(is1d);
+} /* mcfile_datablock */
+
+/* mcfile_data: output data/errors/ncounts using specific file format.
+ * if McStas 1D then data is stored
+ * as a long 1D array [p0, p1, p2] to reorder -> don't output err/ncount again.
+ * if p1 or p2 is NULL then skip that part.
+ */
+static int mcfile_data(FILE *f, struct mcformats_struct format, 
+  char *pre, char *parent, 
+  double *p0, double *p1, double *p2, int m, int n, 
+  char *xlabel, char *ylabel, char *zlabel, char *title,
+  char *xvar, char *yvar, char *zvar,
+  double x1, double x2, double y1, double y2, double z1, double z2,
+  char *filename)
+{
+  int is1d;
+  
+  /* return if f,n,m,p1 NULL */
+  if ((m*n == 0) || !p1 || !f) return (-1);
+  
+  /* output data block */
+  is1d = mcfile_datablock(f, format, pre, parent, "data",
+    p0, p1, p2, m, n, 
+    xlabel,  ylabel, zlabel, title,
+    xvar, yvar, zvar,
+    x1, x2, y1, y2, z1, z2, filename);
+  /* return if 1D data */
+  if (is1d) return(is1d);
+  /* output error block and p2 non NULL */
+  if (p0 && p2) mcfile_datablock(f, format, pre, parent, "errors",
+    p0, p1, p2, m, n, 
+    xlabel,  ylabel, zlabel, title,
+    xvar, yvar, zvar,
+    x1, x2, y1, y2, z1, z2, filename);
+  /* output ncount block and p0 non NULL */
+  if (p0 && p2) mcfile_datablock(f, format, pre, parent, "ncount",
+    p0, p1, p2, m, n, 
+    xlabel,  ylabel, zlabel, title,
+    xvar, yvar, zvar,
+    x1, x2, y1, y2, z1, z2, filename);
+  
+  return(is1d);
+} /* mcfile_data */
+
+void
+mcdetector_out(char *cname, double p0, double p1, double p2, char *filename)
+{
+  printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
+         cname, p1, cname, mcestimate_error(p0,p1,p2), cname, p0);
+  if(filename && strlen(filename))
+    printf(" \"%s\"", filename);
+  printf("\n");
+}
+
+/* parent is the component name */
+
+static void mcdetector_out_012D(struct mcformats_struct format, 
+  char *pre, char *parent, char *title,
+  int m, int n, 
+  char *xlabel, char *ylabel, char *zlabel, 
+  char *xvar, char *yvar, char *zvar, 
+  double x1, double x2, double y1, double y2, double z1, double z2, 
+  char *filename,
+  double *p0, double *p1, double *p2)
+{  
+  int  ismcstas;
+  char simname[512];
+    
+  ismcstas = (strstr(format.Name, "McStas") != NULL);
+  if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
+  
+  mcfile_section(mcsiminfo_file, format, "begin", pre, parent, "component", simname, 3);
+  mcfile_section(mcsiminfo_file, format, "begin", pre, filename, "data", parent, 4);
+  mcfile_data(mcsiminfo_file, format, 
+    pre, parent, 
+    p0, p1, p2, m, n, 
+    xlabel, ylabel, zlabel, title,
+    xvar, yvar, zvar, 
+    x1, x2, y1, y2, z1, z2, filename);
+  
+  mcfile_section(mcsiminfo_file, format, "end", pre, filename, "data", parent, 4);
+  mcfile_section(mcsiminfo_file, format, "end", pre, parent, "component", simname, 3);
+} /* mcdetector_out_012D */
+
+void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
+{
+  char pre[20]="\0";
+  
+  mcdetector_out_012D(mcformat, 
+    pre, c, t,
+    1, 1,
+    "I", "", "", 
+    "I", "", "", 
+    0, 0, 0, 0, 0, 0, NULL,
+    &p0, &p1, &p2);
+}
+
+void mcdetector_out_1D(char *t, char *xl, char *yl,
+                  char *xvar, double x1, double x2, int n,
+                  double *p0, double *p1, double *p2, char *f, char *c)
+{
+  char pre[20]="\0";
+  mcdetector_out_012D(mcformat, 
+    pre, c, t,
+    n, 1,
+    xl, yl, "Intensity", 
+    xvar, "(I,I_err)", "I", 
+    x1, x2, 0, 0, 0, 0, f,
+    p0, p1, p2);
+}
+
+void mcdetector_out_2D(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2, int m,
+                  int n, double *p0, double *p1, double *p2, char *f, char *c)
+{
+  char xvar[3] = "x \0";
+  char yvar[3] = "y \0";
+  char pre[20]="\0";
+  
+  if (xl && strlen(xl)) strncpy(xvar, xl, 2);
+  if (yl && strlen(yl)) strncpy(yvar, yl, 2);
+  
+  mcdetector_out_012D(mcformat, 
+    pre, c, t,
+    m, n,
+    xl, yl, "Intensity", 
+    xvar, yvar, "I", 
+    x1, x2, y1, y2, 0, 0, f,
+    p0, p1, p2);
+}
+
+void mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
+      char *xvar, char *yvar, char *zvar,
+                  double x1, double x2, double y1, double y2, double z1, double z2, int m,
+                  int n, int p, double *p0, double *p1, double *p2, char *f, char *c)
+{
+  char pre[20]="\0";
+  mcdetector_out_012D(mcformat, 
+    pre, c, t,
+    m, n*p,
+    xl, yl, zl, 
+    xvar, yvar, zvar, 
+    x1, x2, y1, y2, z1, z2, f,
+    p0, p1, p2);
+}
+ 
+/* end of file i/o functions */
+
+
 
 static void
 mcuse_dir(char *dir)
 {
 #ifdef MC_PORTABLE
   fprintf(stderr, "Error: "
-	  "Directory output cannot be used with portable simulation.\n");
+          "Directory output cannot be used with portable simulation.\n");
   exit(1);
 #else  /* !MC_PORTABLE */
   if(mkdir(dir, 0777))
@@ -1859,6 +2293,74 @@ mcuse_file(char *file)
   mcsingle_file = 1;
 }
 
+static void mccheck_format(char *format, int nargs)
+{
+  int i;
+  char arg[10];
+  for (i=1; i<=nargs; i++)
+  {
+    sprintf(arg, "%%%d$", i);
+    if (!strstr(format, arg))
+    {
+      sprintf(arg, "%%%d$.0s", i);
+      strcat(format, arg);
+    }
+  }
+}
+
+void mcuse_format(char *format)
+{
+  int i;
+  int i_format=-1;
+  /* number of available arguments when using each format struct member */
+  int member_args[] = { 0, 0, 11, 11, 7, 7, 4, 21, 21, 21, 21, 21, 21 };
+
+  /* look for a specific format in mcformats.Name table */
+  for (i=0; i < mcNUMFORMATS; i++)
+  {
+    if (strstr(format, mcformats[i].Name)) i_format = i;
+  }
+  if (i_format < 0)
+  {
+    i_format = 0; /* default format is #0 McStas */
+    fprintf(stderr, "Warning: unknown output format %s. Using default (%s).\n", format, mcformats[i_format].Name);
+  }
+  /* now we must check each format specification sp that all of the 
+   * printf values are present. 
+   * For each format structure member (up to member_args
+   *   0:member_args[] we look for "%n$" string and add "%n$.0s" if not found
+   */
+  for (i = 0; i < mcNUMFORMATS; i++)
+  {
+     mccheck_format(mcformats[i_format].Header, member_args[2]);
+     mccheck_format(mcformats[i_format].Footer, member_args[3]);
+     mccheck_format(mcformats[i_format].BeginSection, member_args[4]);
+     mccheck_format(mcformats[i_format].EndSection, member_args[5]);
+     mccheck_format(mcformats[i_format].AssignTag, member_args[6]);
+     mccheck_format(mcformats[i_format].BeginData, member_args[7]);
+     mccheck_format(mcformats[i_format].BeginErrors, member_args[8]);
+     mccheck_format(mcformats[i_format].BeginNcount, member_args[9]);
+     mccheck_format(mcformats[i_format].EndData, member_args[10]);
+     mccheck_format(mcformats[i_format].EndErrors, member_args[11]);
+     mccheck_format(mcformats[i_format].EndNcount, member_args[12]);
+  }
+  mcformat = mcformats[i_format];
+  if (strstr(format,"binary"))
+  {
+    if (strstr(format,"double")) strcat(mcformat.Name," binary double");
+    else if (strstr(format,"NeXus")) strcat(mcformat.Name," binary NeXus");
+    else strcat(mcformat.Name," binary float");
+  }
+} /* mcuse_format */
+
+static void
+mcinfo(void)
+{
+  mcsiminfo_init(stdout);
+  mcsiminfo_close();
+  exit(0);
+}
+
 void
 mcparseoptions(int argc, char *argv[])
 {
@@ -1870,7 +2372,7 @@ mcparseoptions(int argc, char *argv[])
   paramsetarray = malloc((mcnumipar + 1)*sizeof(*paramsetarray));
   if(paramsetarray == NULL)
   {
-    fprintf(stderr, "Error: insufficient memory\n");
+    fprintf(stderr, "Error: insufficient memory (mcparseoptions)\n");
     exit(1);
   }
   for(j = 0; j < mcnumipar; j++)
@@ -1926,46 +2428,52 @@ mcparseoptions(int argc, char *argv[])
       mcascii_only = 1;
     else if(!strcmp("--ascii-only", argv[i]))
       mcascii_only = 1;
-    else if(!strcmp("--no-output-files", argv[i]))
+    else if(!strncmp("--format=", argv[i], 9))
+      mcuse_format(&argv[i][9]);
+    else if(!strcmp("--format", argv[i]) && (i + 1) < argc)
+      mcuse_format(argv[++i]);
+    else if(!strcmp("--no-output-files", argv[i]))  
       mcdisable_output_files = 1;
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
       for(j = 0; j < mcnumipar; j++)
-	if(!strcmp(mcinputtable[j].name, argv[i]))
-	{
-	  int status;
-	  status = (*mcinputtypes[mcinputtable[j].type].getparm)(p,
-			mcinputtable[j].par);
-	  if(!status)
-	  {
-	    (*mcinputtypes[mcinputtable[j].type].error)
-	      (mcinputtable[j].name, p);
-	    exit(1);
-	  }
-	  paramsetarray[j] = 1;
-	  paramset = 1;
-	  break;
-	}
+        if(!strcmp(mcinputtable[j].name, argv[i]))
+        {
+          int status;
+          status = (*mcinputtypes[mcinputtable[j].type].getparm)(p,
+                        mcinputtable[j].par);
+          if(!status)
+          {
+            (*mcinputtypes[mcinputtable[j].type].error)
+              (mcinputtable[j].name, p);
+            exit(1);
+          }
+          paramsetarray[j] = 1;
+          paramset = 1;
+          break;
+        }
       if(j == mcnumipar)
-      {				/* Unrecognized parameter name */
-	fprintf(stderr, "Error: unrecognized parameter %s\n", argv[i]);
-	exit(1);
+      {                                /* Unrecognized parameter name */
+        fprintf(stderr, "Error: unrecognized parameter %s\n", argv[i]);
+        exit(1);
       }
     }
     else
       mcusage(argv[0]);
   }
+  if (strchr(mcformat.Name, "binary") && !mcascii_only)
+    strcat(mcformat.Name, " with text headers");
   if(!paramset)
-    mcreadparams();		/* Prompt for parameters if not specified. */
+    mcreadparams();                /* Prompt for parameters if not specified. */
   else
   {
     for(j = 0; j < mcnumipar; j++)
       if(!paramsetarray[j])
       {
-	fprintf(stderr, "Error: Instrument parameter %s left unset\n",
-		mcinputtable[j].name);
-	exit(1);
+        fprintf(stderr, "Error: Instrument parameter %s left unset\n",
+                mcinputtable[j].name);
+        exit(1);
       }
   }
   free(paramsetarray);
@@ -1979,11 +2487,11 @@ void sighandler(int sig)
   /* MOD: E. Farhi, Sep 20th 2001: give more info */
   time_t t1;
 
-  printf("\n# McStas: [pid %li] Signal %i detected", getpid(), sig);
+  printf("\n# McStas: [pid %i] Signal %i detected", getpid(), sig);
   if (!strcmp(mcsig_message, "sighandler"))
   {
-    printf("\n# Fatal : unrecoverable loop ! Suicide.\n"); 
-    kill(0, SIGKILL);
+    printf("\n# Fatal : unrecoverable loop ! Suicide (naughty boy).\n"); 
+    kill(0, SIGKILL); /* kill myself if error occurs within sighandler: loops */
   }
   switch (sig) {
     case SIGINT : printf(" SIGINT (interrupt from terminal, Ctrl-C)"); break;
@@ -1996,11 +2504,11 @@ void sighandler(int sig)
     case SIGUSR1 : printf(" SIGUSR1 (Display info)"); break;
     case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); break;
     case SIGILL  : printf(" SIGILL (Illegal instruction)"); break;
-    case SIGFPE  : printf(" SIGFPE (Math Error) errno=%i", errno); break;
+    case SIGFPE  : printf(" SIGFPE (Math Error)"); break;
     case SIGBUS  : printf(" SIGBUS (bus error)"); break;
     case SIGSEGV : printf(" SIGSEGV (Mem Error)"); break;
     case SIGURG  : printf(" SIGURG (urgent socket condition)"); break;
-    default : break;
+    default : printf(" (look at signal list for signification)"); break;
   }
   printf("\n");
   printf("# Simulation: %s (%s) \n", mcinstrument_name, mcinstrument_source);
@@ -2039,7 +2547,9 @@ void sighandler(int sig)
   }
   else
   {
-    printf("# McStas: Simulation stop (abort)\n");
+    fflush(stdout);
+    perror("# Last Error"); 
+    printf("# McStas: Simulation stop (abort)\n"); 
     exit(-1);
   }
  
@@ -2059,6 +2569,7 @@ mcstas_main(int argc, char *argv[])
 
   srandom(time(NULL));
   strcpy(mcsig_message, "main (Start)");
+  mcuse_format("McStas");  /* default is to output as McStas format */
   mcparseoptions(argc, argv);
 
 #ifndef MAC
@@ -2085,7 +2596,7 @@ mcstas_main(int argc, char *argv[])
 #endif /* !MAC */
 #endif /* !WIN32 */
 
-  mcsiminfo_init();
+  mcsiminfo_init(NULL);
   strcpy(mcsig_message, "main (Init)");
   mcinit();
 #ifndef MAC

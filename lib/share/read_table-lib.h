@@ -21,7 +21,7 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.2 2003-01-21 08:33:59 pkwi Exp $
+* $Id: read_table-lib.h,v 1.3 2003-01-21 08:38:42 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/29 11:39:00 ef
@@ -48,8 +48,9 @@
 /* ========================================================================= */
 void Table_Init(t_Table *Table);
 void Table_Free(t_Table *Table);
-void Table_Read(t_Table *Table, char *File, long block_number);
-void Table_Rebin(t_Table *Table);
+long Table_Read(t_Table *Table,       char *File, long block_number);
+long Table_Read_Handle(t_Table *Table, FILE *fid, long block_number);
+long Table_Rebin(t_Table *Table);
 double Table_Index(t_Table Table, long i, long j);
 double Table_Value(t_Table Table, double X, long j);  
 void Table_Info(t_Table Table);

@@ -16,7 +16,7 @@
 *
 * Implementation of lists.
 *
-*	$Id: list.c,v 1.9 2003-01-21 08:33:57 pkwi Exp $
+*	$Id: list.c,v 1.10 2003-01-21 08:38:40 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.4  2001/03/15 15:11:13  peo

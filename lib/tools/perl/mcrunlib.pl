@@ -56,7 +56,7 @@ sub read_instrument_info {
 	} elsif(/^\s*end\s+instrument\s*$/i) {
 	    last;
 	} else {
-	    die "Invalid line in siminfo file:\n'$_'";
+	    print "Invalid line in siminfo file (read_instrument_info):\n'$_'";
 	}
     }
     return $inf;

@@ -18,11 +18,12 @@
 *
 * Flex scanner for instrument definition files.
 *
-*	$Id: instrument.l,v 1.26 2003-01-21 08:33:57 pkwi Exp $
+*	$Id: instrument.l,v 1.27 2003-01-21 08:38:40 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.22  2002/08/29 16:39:42 ef
 * enables %include in C code, embeding .h/.c from mcstas/lib
+* embed only once for libraries (.h+.c)
 *
 * Revision 1.21  2001/09/24 10:00:00  ef
 * Added GROUP, EXTEND and SHARE tokens (for McStas 1.6)
@@ -125,7 +126,7 @@ struct file_state
     int visible_eof;		/* If true, tell parser about end-of-file. */
   };
 
-#define MAX_INCLUDE 50
+#define MAX_INCLUDE 256
 static struct file_state file_stack[MAX_INCLUDE + 1];
 static int file_stack_ptr = 0;
 static char *switch_line = NULL;
@@ -295,6 +296,7 @@ SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
   [^\"\n]+\" { 
 			  yytext[yyleng - 1] = '\0';
 			  BEGIN(INITIAL);
+        if (verbose) fprintf(stderr, "Embedding %s\n", yytext);
 			  push_include(yytext);
 			}
   /* name contains char, including quote and \n -> not valid */
@@ -313,6 +315,7 @@ SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
   [^\"\n]+\.+.\"	{
   	    yytext[yyleng - 1] = '\0';
 			  BEGIN(ccode);
+        if (verbose) fprintf(stderr, "Embedding file      %s\n", yytext);
 			  push_include(yytext);
 			}    
   /* name ends with a quote char, but no ext -> include as ccode state  
@@ -323,18 +326,28 @@ SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
         char *tmp0, *tmp1;
         yytext[yyleng - 1] = '\0';
         tmp0 = str_dup(yytext);
-        tmp1 = str_cat(tmp0, ".h", NULL);
-        if (instrument_definition->include_runtime) 
+        if (!symtab_lookup(lib_instances, tmp0))
         {
-          switch_line = str_cat(tmp0, ".c", NULL);
+          tmp1 = str_cat(tmp0, ".h", NULL);
+          if (instrument_definition->include_runtime) 
+          {
+            switch_line = str_cat(tmp0, ".c", NULL);
+          }
+          else
+            fprintf(stderr,"Dependency: %s.o\n", tmp0);
+
+          BEGIN(ccode);
+          if (verbose) fprintf(stderr, "Embedding library   %s\n", tmp1);
+
+			    push_include(tmp1);
+          symtab_add(lib_instances, tmp0, NULL);
+          str_free(tmp1);
+        } 
+        else 
+        {
+          BEGIN(ccode);
+          instr_current_line++;  /* library was previously embedded */
         }
-        else
-          fprintf(stderr,"Dependency: %s.o\n", tmp0);
-          
-        BEGIN(ccode);
-			  push_include(tmp1);
-        
-        str_free(tmp1);
         str_free(tmp0);
 			}    
   /* name contains char, including quote and \n -> not valid */
@@ -383,6 +396,7 @@ SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
           str_free(switch_line);
           switch_line = NULL;
           BEGIN(ccode);
+          if (verbose) fprintf(stderr, "Embedding library   %s\n", tmp0);
           push_include(tmp0);
           str_free(tmp0);
         } 

@@ -22,7 +22,7 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.c,v 1.4 2003-01-21 08:33:59 pkwi Exp $
+* $Id: vitess-lib.c,v 1.5 2003-01-21 08:38:42 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.2 2002/08/28 11:39:00 ef
@@ -55,7 +55,7 @@ Neutron mcstas2vitess(double x, double y, double z,
   v = sqrt(vx*vx + vy*vy + vz*vz);
   if(v == 0.0)
   {
-    fprintf(stderr, "mcstas2vitess: Error: zero velocity!\n");
+    fprintf(stderr, "Error: zero velocity! (mcstas2vitess)\n");
     exit(1);
   }
   neu.Wavelength = 3956.0346/v;	/* Convert speed to wavelength */
@@ -93,7 +93,7 @@ void vitess2mcstas(Neutron neu,
   *z = 0.01*neu.Position[2];
   if(neu.Wavelength == 0.0)
   {
-    fprintf(stderr, "mcstas2vitess: Error: zero wavelength!\n");
+    fprintf(stderr, "Error: zero wavelength! (mcstas2vitess: )\n");
     exit(1);
   }
   v = 3956.0346/neu.Wavelength;	/* Convert wavelength to speed */

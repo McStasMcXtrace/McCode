@@ -121,7 +121,7 @@ sub read_simulation_info {
       } elsif(/^\s*end\s+simulation\s*$/i) {
           last;
       } else {
-          print "Invalid line in siminfo file:\n'$_'";
+          print "Invalid line in siminfo file (read_simulation_info):\n'$_'";
       }
     }
     return $inf;
@@ -138,6 +138,8 @@ sub read_data_info {
       if(/^\s*type:\s*(.*?)\s*$/i) {
           $type = $1;
       } elsif(/^\s*component:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*$/i) {
+          $compname = $1;
+      } elsif(/^\s*Name:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*$/i) {
           $compname = $1;
       } elsif(/^\s*title:\s*(.*?)\s*$/i) {
           $title = strip_quote($1);
@@ -198,7 +200,7 @@ sub read_data_info {
       } elsif(/^\s*end\s+data\s*$/i) {
           last;
       } else {
-          print "Invalid line in siminfo file:\n'$_'";
+          print "Invalid line in siminfo file (read_data_info):\n'$_'";
       }
     }
     die "Missing type for component $compname"
@@ -286,8 +288,7 @@ sub read_sim_info {
       } elsif(/^\s*$/) {
           next;
       } else {
-          $error = "Invalid line in siminfo file (read_sim_info):\n'$_'";
-          return ($instrument_info, $simulation_info, \@datalist, $error);
+          print "Invalid line in siminfo file (read_sim_info):\n'$_'";
       }
     }
     return ($instrument_info, $simulation_info, \@datalist, $error);
