@@ -82,9 +82,9 @@ FINALLY
 
     Nsum = Psum = P2sum = 0;
     outfile=fopen(filename,"w");
-    for (j=0; j<ny; j++)
+    for (j=0; j<nv; j++)
     {
-     for (i=0; i<nx; i++)
+     for (i=0; i<nh; i++)
      {
       fprintf(outfile,"%g ", Div_p[i][j]);
       Nsum += Div_N[i][j];
