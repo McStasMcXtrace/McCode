@@ -1464,9 +1464,10 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
 
 /* Number of neutron histories to simulate. */
 static double mcncount = 1e6;
+double mcrun_num = 0;
 
 void
-mcset_ncount(double count)
+mcset_ncount(double count) 
 {
   mcncount = count;
 }
@@ -1475,6 +1476,12 @@ double
 mcget_ncount(void)
 {
   return mcncount;
+}
+
+double
+mcget_run_num(void)
+{
+  return mcrun_num;
 }
 
 static void
@@ -1698,27 +1705,111 @@ mcparseoptions(int argc, char *argv[])
   free(paramsetarray);
 }
 
+#ifndef MAC
+#ifndef WIN32
+/* This is the signal handler that makes simulation stop, and save results */
+void sighandler(int sig)
+{
+ 
+        char *tmp;
+        char *atfile;
+        FILE *fnum;
+        time_t t1;
+ 
+        t1 = time(NULL);
+ 
+        printf("\n# McStas: Signal %i detected in simulation %s (%s): ", sig,  mcinstrument_name, mcinstrument_source);
+        switch (sig) {
+        case SIGINT : printf(" SIGINT "); break;  /* Ctrl-C */
+        case SIGQUIT : printf(" SIGQUIT "); break;
+        case SIGABRT : printf(" SIGABRT "); break;
+        case SIGTRAP : printf(" SIGTRAP "); break;
+        case SIGTERM : printf(" SIGTERM "); break;
+        case SIGPIPE : printf(" SIGPIPE "); break;
+        case SIGPWR  : printf(" SIGPWR "); break;
+        case SIGUSR1 : printf(" SIGUSR1 "); break;
+        case SIGUSR2 : printf(" SIGUSR2 "); break;
+        case SIGILL  : printf(" SIGILL "); break;
+        case SIGFPE  : printf(" SIGFPE "); break;
+        case SIGBUS  : printf(" SIGBUS "); break;
+        case SIGSEGV : printf(" SIGSEGV "); break;
+        case SIGSYS  : printf(" SIGSYS "); break;
+        case SIGURG  : printf(" SIGURG "); break;
+        default : break;
+        }
+  printf("\n");
+  printf("# Date %s",ctime(&t1));
+
+  if (sig == SIGUSR1)
+  {
+    printf("# McStas: simulation now at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    return;
+  }
+  else
+  if ((sig == SIGUSR2) || (sig == SIGQUIT) || (sig == SIGTERM) || (sig == SIGABRT) || (sig == SIGALRM) || (sig == SIGINT))
+        {
+                printf("# McStas: finishing simulation at at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    mcset_ncount(mcget_run_num());
+                return;
+        }
+  else
+  if ((sig == SIGILL) || (sig == SIGFPE) || (sig == SIGBUS) || (sig == SIGSEGV) || (sig == SIGSYS) || (sig == SIGURG) || (sig == SIGPIPE) || (sig == SIGPWR))
+        {
+                printf("McStas: SYSTEM stop at at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+                exit(-1);
+  }
+  else
+    exit(-1);
+ 
+}
+#endif /* !MAC */
+#endif /* !WIN32 */
+
 /* McStas main() function. */
 int
 mcstas_main(int argc, char *argv[])
 {
-  double run_num = 0;
+/*  double run_num = 0; */
 
 #ifdef MAC
   argc = ccommand(&argv);
 #endif
 
+#ifndef MAC
+#ifndef WIN32
+  /* install sig handler, but only once !! */
+        signal( SIGINT ,sighandler);    /* interrupt (rubout) */
+        signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
+        signal( SIGABRT ,sighandler);   /* used by abort, replace SIGIOT in the future */
+        signal( SIGTRAP ,sighandler);   /* trace trap (not reset when caught) */
+        signal( SIGTERM ,sighandler);   /* software termination signal from kill */
+        signal( SIGPIPE ,sighandler);   /* write on a pipe with no one to read it */
+ 
+        signal( SIGPWR ,sighandler);
+        signal( SIGUSR1 ,sighandler); /* display simulation status */
+        signal( SIGUSR2 ,sighandler);
+        signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
+        signal( SIGFPE ,sighandler);    /* floating point exception */
+        signal( SIGBUS ,sighandler);    /* bus error */
+        signal( SIGSEGV ,sighandler);   /* segmentation violation */
+        signal( SIGSYS ,sighandler);    /* bad argument to system call */
+        signal( SIGURG ,sighandler);    /* urgent socket condition */
+#endif /* !MAC */
+#endif /* !WIN32 */
+
   srandom(time(NULL));
   mcparseoptions(argc, argv);
   mcsiminfo_init();
   mcinit();
-  while(run_num < mcncount)
+  while(mcrun_num < mcncount)
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
     mcraytrace();
-    run_num++;
+    mcrun_num++;
   }
   mcfinally();
   mcsiminfo_close();
   return 0;
 }
+
+
