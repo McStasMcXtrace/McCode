@@ -64,4 +64,13 @@ TRACE
     }
   }
 %}
+
+MCDISPLAY
+%{
+  multiline(5, 0.0, 0.0, 0.0,
+               (double)xlength, 0.0, 0.0,
+               (double)xlength, (double)yheight, 0.0,
+               0.0, (double)yheight, 0.0,
+               0.0, 0.0, 0.0);
+%}
 END
