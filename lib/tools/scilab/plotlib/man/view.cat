@@ -1,0 +1,24 @@
+ VIEW   property for 3D graphs
+ 
+    The 'view',V property/value allows to set the viewpoint at
+    infinity 
+    
+    - in spherical coordinates : in this case V is a 2-vector
+    
+    'view', [az;al]
+ 
+    - in cartesian coordinates : in this case V is a 3-vector
+    
+    'view', [x;y;z]
+ 
+    Example :
+  
+    mesh(u,v,sphere,'view',[30 30]);
+ 
+    When V is a 2 x N matrix, then the graph is being represented
+    successively for the view points V(:,i), i=1:N. To improve
+    the animation realism, the property/value 'axis','vis3d' can
+    be used.
+ 
+ 
+    See also axis, mesh, surf, surfl

@@ -1,0 +1,63 @@
+PCOLOR  Pseudocolor plot.
+
+    pcolor(x,y,C) plots the colored rectangular or non rectangular
+    2D patches defined by three arguments. 
+    
+    The axis labels are determined by the range of X, Y
+    or by a 'axis' property setting. The color of the patch is
+    determined by the matrix C. The entries of
+    C are scaled to correspond to the current colormap entries.
+    
+     - When x,y and C are matrices of the same size, pcolor(x,y,C)
+    plots the colored patches of vertices (x(i,j), y(i,j)) and color
+    C(i,j).
+   
+    - When x,y are vector arguments you must have length(x) = n and
+    length(y) = m where [m,n] = size(C).In this case, the vertices
+    of the (rectangular) patches are the couples (x(j), y(i)).
+    Note that x corresponds to the columns of C and y corresponds to
+    the rows. 
+    
+    Examples :
+    
+    x=linspace(-1,1,20); y=linspace(-2,2,40);
+    Z=cos(y'*x);
+    pcolor(x,y,Z);
+    
+    ///
+    
+    r=linspace(0,1,25);
+    theta=%pi/4+linspace(0,3*%pi/2,25);
+    [R,T]=meshgrid(r,theta);
+    pcolor(R.*cos(T),R.*sin(T),rand(T,'normal'),'shading','interp', ...
+    'colorbar','on','axis','equal')
+ 
+    Note that pcolor(C) uses x = 1:n and y = 1:m. 
+ 
+    - When f is a function/macro and x,y are vectors, pcolor(x,y,f) plots
+    the rectangular or non rectangular patch defined my f : 
+    
+    	-> if f has the syntax z=f(x,y) then pcolor(x,y,f) plots a 
+	rectangular patch.
+	
+	-> if f has the syntax [x,y,c]=f(u,v), then pcolor(u,v,f) plots
+	a non-rectangular surface.
+
+    Examples :
+    
+    x=linspace(-1,1,20); y=linspace(-2,2,40);
+    deff('z=f(x,y)','z=x.^2-y.^2');
+    pcolor(x,y,f,'shading','flat')
+    
+    ///
+    
+    r=linspace(0,1,25);
+    theta=%pi/4+linspace(0,3*%pi/2,25);
+    deff('[x,y,c]=camenbert(r,t)',['x=r.*cos(t)'; ...
+                                 'y=r.*sin(t)'; ...
+				 'c=rand(t)']);    
+    pcolor(r,theta,camenbert,'shading','interp', ...
+    'colorbar','on','axis','equal')
+ 
+ 
+    See also tripcolor, plot, plot3, surf, colormap, shading, caxis

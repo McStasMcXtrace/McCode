@@ -1,0 +1,13 @@
+ LIGHT property for surfaces with lighting
+ 
+    Use the property/value pair 'light',V in the argument
+    list of surfl or trisurfl to define the direction of
+    light. The 3-Vector V=[x,y,z] or the 2-vector V=[az,el]
+    give the normalized coordinates of the light source at
+    infinity.
+    
+    Examples :
+    
+    deff('z=f(x,y)','z=x.^2-y.^2');    
+    surfl(x,y,f,'shading','flat','light',[0 0 1])
+    
