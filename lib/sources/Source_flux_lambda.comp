@@ -6,8 +6,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1998
-* Version: $Revision: 1.6 $
-* Origin: McStas 1.5
+* Modified by: Emmanuel Farhi, October 30, 2001. Illumination corrected
+* Version: $Revision: 1.7 $
+* Origin: McStas 1.5.1
 *
 * Neutron source with flat wavelength spectrum and user-specified flux.
 *
@@ -18,6 +19,9 @@
 * wavelength is uniformly distributed between lambda_0 - d_lambda and
 * lambda_0 + d_lambda. The source flux is specified in neutrons per steradian
 * per square cm per AAngstroem.
+*
+* Example: Source_flux_lambda(radius=0.1, dist=2, xw=.1, yh=.1, 
+*           lambda_0=2.36, d_lambda=.3, flux=1e13)
 *
 * %P
 * radius:   (m)               Radius of circle in (x,y,0) plane where neutrons
@@ -35,50 +39,46 @@
 DEFINE COMPONENT Source_flux_lambda
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, dist, xw, yh, lambda_0, d_lambda, flux)
-OUTPUT PARAMETERS (hdiv, vdiv, p_in)
+OUTPUT PARAMETERS (p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
- double hdiv,vdiv;
  double p_in;
 %}
 INITIALIZE
 %{
   double factor, delta_lambda, source_area;
 
-  hdiv = atan(xw/(2.0*dist));
-  vdiv = atan(yh/(2.0*dist));
-
   delta_lambda = 2*d_lambda;
   source_area = radius*radius*PI*1e4; /* cm^2 */
-  factor = flux/mcget_ncount()*delta_lambda*source_area;
-  p_in = (4*hdiv*vdiv)*factor;  /* Small angle approx. */
+  p_in = flux/mcget_ncount()*delta_lambda*source_area;
 %}
 
 TRACE
 %{
- double theta0,phi0,chi,theta,phi,lambda,v,r;
+ double chi,lambda,v,r;
+ double xf, yf, dx, dy, rf;
 
- p=p_in;
  z=0;
 
  chi=2*PI*rand01();                          /* Choose point on source */
  r=sqrt(rand01())*radius;                    /* with uniform distribution. */
  x=r*cos(chi);
  y=r*sin(chi);
-
- theta0= -atan(x/dist);              /* Angles to aim at target centre */
- phi0= -atan(y/dist);
-
- theta=theta0+hdiv*randpm1();        /* Small angle approx. */ 
- phi=phi0+vdiv*randpm1();
+ 
+ xf = 0.5*xw*randpm1();          /* Choose focusing position uniformly */
+ yf = 0.5*yh*randpm1();
+ dx = xf-x;
+ dy = yf-y;
+ rf = sqrt(dx*dx+dy*dy+dist*dist);
+ p = p_in*xw*yh*dist/(rf*rf*rf);      /* target area * cos(phi)/rf^2 */
 
  lambda = lambda_0+d_lambda*randpm1();
  v = K2V*(2*PI/lambda);
 
- vz=v*cos(phi)*cos(theta);
- vy=v*sin(phi);
- vx=v*cos(phi)*sin(theta); 
+ vz=v*dist/rf;
+ vy=v*dy/rf;
+ vx=v*dx/rf; 
 %}
 
 MCDISPLAY
