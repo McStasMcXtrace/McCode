@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.18 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.19 $
+* Origin: McStas 1.5
 *
 * Mosaic single crystal with multiple scattering vectors.
 *
@@ -114,7 +114,6 @@ SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d, mosaic = -1,
                    p_transmit = -1, absorbtion = 0, incoherent = 0)
 OUTPUT PARAMETERS(hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{

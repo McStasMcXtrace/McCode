@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.8 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.9 $
+* Origin: McStas 1.5
 *
 * Sample for resolution function calculation.
 *
@@ -47,7 +47,6 @@ SETTING PARAMETERS (radius_i,radius_o,h,focus_r,E0,dE,
 		    target_x, target_y, target_z)
 OUTPUT PARAMETERS (res_struct)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   struct Res_sample_struct

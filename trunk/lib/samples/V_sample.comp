@@ -6,8 +6,8 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.6 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.7 $
+* Origin: McStas 1.5
 *
 * Vanadium sample.
 *
@@ -44,7 +44,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_i,radius_o,h,pack,focus_r,
 		    target_x, target_y, target_z)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
 /* ToDo: Should be component local names. */
