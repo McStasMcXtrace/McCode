@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: memory.c,v 1.4 1997-09-07 17:58:29 kn Exp $
+*	$Id: memory.c,v 1.5 1998-10-01 11:47:38 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.4  1997/09/07 17:58:29  kn
+*	Snapshot with (untested) code generation complete.
+*
 *	Revision 1.3  1997/08/13 09:15:48  kn
 *	First version to properly parse instrument definition files.
 *
@@ -63,6 +66,21 @@ str_dup(char *string)
 
   s = mem(strlen(string) + 1);
   strcpy(s, string);
+  return s;
+}
+
+
+/*******************************************************************************
+* Allocate a new copy of initial N chars in a string.
+*******************************************************************************/
+char *
+str_dup_n(char *string, int n)
+{
+  char *s;
+
+  s = mem(n + 1);
+  strncpy(s, string, n);
+  s[n] = '\0';
   return s;
 }
 
