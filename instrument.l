@@ -1,11 +1,29 @@
-/* In Emacs, please make this -*-c-*- mode. Thanks. */
+/*******************************************************************************
+* Flex scanner for instrument definition files.
+*
+*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	File name: instrument.l
+*
+*	Author: K.N.			Jul  1, 1997
+*
+*	$Id: instrument.l,v 1.2 1997-07-01 08:26:21 kn Exp $
+*
+*	$Log: not supported by cvs2svn $
+*
+* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+*******************************************************************************/
 
-/* Flex scanner for instrument definition files. */
+/* In Emacs, please make this -*-c-*- mode. Thanks. */
 
 
 /* Definition section. */
 
+/* Do not use the `yywrap feature' - only scan a single file (see Flex manual). */
+%option noyywrap
+
+
 %{
+#include <string.h>
 #include <math.h>
 
 #include "instrument.tab.h"
@@ -33,7 +51,7 @@ ROTATED		return TOK_ROTATED;
 "("|")"|","	return yytext[0]; /* Punctuation. */
 "="		return yytext[0]; /* Operator. */
 
-{ID}		yylval.string = yytext; return TOK_ID;
+{ID}		yylval.string = strdup(yytext); return TOK_ID;
 {NUMBER}	yylval.number = atof(yytext); return TOK_NUMBER;
 
 [ \t\n]		/* Ignore whitespace. */
