@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.11 2004-09-09 13:48:02 farhi Exp $
+* $Id: read_table-lib.c,v 1.12 2004-09-10 15:12:02 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.11  2004/09/09 13:48:02  farhi
+*	Code clean-up
+*	
 *	Revision 1.10  2004/09/03 13:46:50  farhi
 *	Correct misprint in comment
 *	
@@ -50,7 +53,7 @@
 *******************************************************************************/
 
 #ifndef READ_TABLE_LIB_H
-#error McStas : please import this library with %include "read_table-lib"
+#include "read_table-lib.h"
 #endif
 
 /*******************************************************************************

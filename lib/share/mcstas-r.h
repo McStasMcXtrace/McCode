@@ -15,9 +15,18 @@
 *
 * Runtime system header for McStas. 
 *
+* In order to use this library as an external library, the following variables 
+* and macros must be declared (see details in the code)
+*
+*   struct mcinputtable_struct mcinputtable[];
+*   int mcnumipar;
+*   char mcinstrument_name[], mcinstrument_source[];
+*   int mctraceenabled, mcdefaultmain;
+*   #define MCSTAS_VERSION "the McStas version"
+*
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.60 2004-09-09 13:47:26 farhi Exp $
+* $Id: mcstas-r.h,v 1.61 2004-09-10 15:12:02 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.59  2004/09/03 14:19:14  farhi
@@ -92,12 +101,16 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.60 $"
+#define MCSTAS_R_H "$Revision: 1.61 $"
 
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <limits.h>
+#include <errno.h>
+#include <time.h>
 
 /* If the runtime is embedded in the simulation program, some definitions can
    be made static. */
@@ -114,6 +127,7 @@
 #endif
 #endif
 
+#ifndef MC_PATHSEP_C
 #ifdef WIN32
 #define MC_PATHSEP_C '\\'
 #define MC_PATHSEP_S "\\"
@@ -126,6 +140,11 @@
 #define MC_PATHSEP_S "/"
 #endif /* !MAC */
 #endif /* !WIN32 */
+#endif /* MC_PATHSEP_C */
+
+#ifndef MCSTAS_VERSION
+#define MCSTAS_VERSION "External Run-time"
+#endif
 
 #ifndef MC_PORTABLE
 #ifndef MAC
@@ -344,13 +363,13 @@ void mt_srandom (unsigned long x);
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with gravitation */
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
   do { \
-    mcnlx  += mcnlvx*(dt) + (Ax)*(dt)*(dt)/2; \
-    mcnly  += mcnlvy*(dt) + (Ay)*(dt)*(dt)/2; \
-    mcnlz  += mcnlvz*(dt) + (Az)*(dt)*(dt)/2; \
-    mcnlvx += (Ax)*(dt); \
-    mcnlvy += (Ay)*(dt); \
-    mcnlvz += (Az)*(dt); \
-    mcnlt  += (dt); \
+    mcnlx  += mcnlvx*dt + Ax*dt*dt/2; \
+    mcnly  += mcnlvy*dt + Ay*dt*dt/2; \
+    mcnlz  += mcnlvz*dt + Az*dt*dt/2; \
+    mcnlvx += Ax*dt; \
+    mcnlvy += Ay*dt; \
+    mcnlvz += Az*dt; \
+    mcnlt  += dt; \
   } while(0)
 
 #define PROP_DT(dt) \
@@ -518,10 +537,6 @@ struct mcformats_struct {
  *  no header: omit the format header 
  *  no footer: omit the format footer 
  */
- 
-#ifndef MCSTAS_VERSION
-#define MCSTAS_VERSION "External Run-time"
-#endif
 
 /* function prototypes */
 double mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);

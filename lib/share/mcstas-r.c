@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.97 2004-09-09 13:46:52 farhi Exp $
+* $Id: mcstas-r.c,v 1.98 2004-09-10 15:12:02 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.97  2004/09/09 13:46:52  farhi
+* Code clean-up
+*
 * Revision 1.96  2004/09/07 12:28:21  farhi
 * Correct allocation bug SEGV in multi-format handling
 *
@@ -216,11 +219,6 @@
 *        Initial revision
 *
 *******************************************************************************/
-
-#include <stdarg.h>
-#include <limits.h>
-#include <errno.h>
-#include <time.h>
 
 #ifndef MCSTAS_R_H
 #include "mcstas-r.h"
@@ -3943,8 +3941,9 @@ struct mcformats_struct mcuse_format(char *format)
   char low_format[256];
   struct mcformats_struct usedformat;
   
+  usedformat.Name = NULL;
   /* get the format to lower case */
-  if (!format) return;
+  if (!format) exit(fprintf(stderr, "Error: Invalid NULL format. Exiting (mcuse_format)\n"));
   strcpy(low_format, format);
   for (i=0; i<strlen(low_format); i++) low_format[i]=tolower(format[i]);
   if (!strcmp(low_format, "pgplot")) strcpy(low_format, "mcstas");
