@@ -807,4 +807,8 @@ MCDISPLAY
   circle("xz", 0,0   ,0,rad);
   circle("xz", 0,ymin,0,rad);
   line( 0  ,ymin,-rad, 0  ,ymax,-rad);
-  line( 0  ,ymin
+  line( 0  ,ymin, rad, 0  ,ymax, rad);
+  line(-rad,ymin, 0  ,-rad,ymax, 0  );
+  line( rad,ymin, 0  , rad,ymax, 0  );
+%}
+END
