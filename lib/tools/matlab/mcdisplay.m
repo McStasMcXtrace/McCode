@@ -123,8 +123,25 @@ function Load
 % Set first/last component on the interface
 %
 global INSTRUMENT
-set(findobj('tag','startcomp'),'string',INSTRUMENT.name,'value',1);
-set(findobj('tag','endcomp'),'string',INSTRUMENT.name,'value',length(INSTRUMENT.name));
+firstcomp=1;
+lastcomp=length(INSTRUMENT.name);
+if isfield(INSTRUMENT,'firstcomp')
+  for j=1:length(INSTRUMENT.name)
+    if strmatch(INSTRUMENT.firstcomp,INSTRUMENT.name{j},'exact')
+      firstcomp=j;
+    end
+  end
+end
+if isfield(INSTRUMENT,'lastcomp')
+  for j=1:length(INSTRUMENT.name)
+    if strmatch(INSTRUMENT.lastcomp,INSTRUMENT.name{j},'exact')
+      lastcomp=j;
+    end
+  end
+end
+
+set(findobj('tag','startcomp'),'string',INSTRUMENT.name,'value',firstcomp);
+set(findobj('tag','endcomp'),'string',INSTRUMENT.name,'value',lastcomp);
 
 
 function PlotNeutron(x,y,z)
