@@ -1702,7 +1702,7 @@ mcparseoptions(int argc, char *argv[])
 int
 mcstas_main(int argc, char *argv[])
 {
-  int run_num = 0;
+  double run_num = 0;
 
 #ifdef MAC
   argc = ccommand(&argv);
