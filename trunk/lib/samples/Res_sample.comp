@@ -1,15 +1,19 @@
 DEFINE COMPONENT Res_sample
 DEFINITION PARAMETERS (radius_i,radius_o,h,focus_r,E0,dE)
 SETTING PARAMETERS (target_x, target_y, target_z)
+OUTPUT PARAMETERS (res_struct)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-  double res_ki_x,res_ki_y,res_ki_z,res_kf_x,res_kf_y,res_kf_z;
-  double res_x,res_y,res_z,res_pi;
+  struct Res_sample_struct
+    {
+      double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
+      double rx,ry,rz,pi;
+    } res_struct;
 %}
 INITIALIZE
 %{
-%}                                                                             
+%}
 TRACE
 %{
   double t0, t3;                /* Entry/exit time for outer cylinder */
@@ -20,6 +24,7 @@ TRACE
   double dt0, dt1, dt2, dt;     /* Flight times through sample */
   double solid_angle;           /* Solid angle of target as seen from scattering point */
   double aim_x, aim_y, aim_z;   /* Position of target relative to scattering point */
+  double scat_factor;           /* Simple cross-section model */
 
   if(radius_o < 0.0)
   {                             /* Flat sample */
@@ -29,6 +34,7 @@ TRACE
       ABSORB;
     t0 = 0;
     t1 = t2 = t3 = (-radius_o)/vz;
+    scat_factor = -2*radius_o;
   }
   else
   {                             /* Hollow cylinder sample */
@@ -39,14 +45,15 @@ TRACE
     /* Neutron enters at t=t0. */
     if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
       t1 = t2 = t3;
+    scat_factor = 2*radius_o;
   }
-  dt0 = t1-t0;                /* Time in sample, ingoing */
-  dt1 = t2-t1;                /* Time in hole */
-  dt2 = t3-t2;                /* Time in sample, outgoing */
+  dt0 = t1-t0;                  /* Time in sample, ingoing */
+  dt1 = t2-t1;                  /* Time in hole */
+  dt2 = t3-t2;                  /* Time in sample, outgoing */
   v = sqrt(vx*vx + vy*vy + vz*vz);
-  l_full = v * (dt0 + dt2);   /* Length of full path through sample */
-  p *= l_full/(2*radius_o);     /* Scattering probability */
-  dt = rand01()*(dt0+dt2);    /* Time of scattering (relative to t0) */
+  l_full = v * (dt0 + dt2);     /* Length of full path through sample */
+  p *= l_full/scat_factor;      /* Scattering probability */
+  dt = rand01()*(dt0+dt2);      /* Time of scattering (relative to t0) */
   if (dt > dt0)
     dt += dt1;
 
@@ -54,13 +61,13 @@ TRACE
 
   /* Store initial neutron state. */
   if(p == 0) ABSORB;
-  res_pi = p;
-  res_ki_x = V2K*vx;
-  res_ki_y = V2K*vy;
-  res_ki_z = V2K*vz;
-  res_x = x;
-  res_y = y;
-  res_z = z;
+  res_struct.pi = p;
+  res_struct.ki_x = V2K*vx;
+  res_struct.ki_y = V2K*vy;
+  res_struct.ki_z = V2K*vz;
+  res_struct.rx = x;
+  res_struct.ry = y;
+  res_struct.rz = z;
 
   aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
   aim_y = target_y-y;
@@ -74,11 +81,9 @@ TRACE
   vz *= v;
 
     /* Store final neutron state. */
-  res_kf_x = V2K*vx;
-  res_kf_y = V2K*vy;
-  res_kf_z = V2K*vz;
-
-  p = 1;
+  res_struct.kf_x = V2K*vx;
+  res_struct.kf_y = V2K*vy;
+  res_struct.kf_z = V2K*vz;
 %}
 
 MCDISPLAY
