@@ -11,6 +11,7 @@
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Modified by: KN, 1998 from Source_flat.comp
 * Modified by: EF, 2000 from Convert_FlatE_2_Maxwell by Thomas hansen
+* Modified by: POA, 2001 added POLARISATION PARAMETERS
 *
 * Neutron source with Maxwellian wavelength spectrum and 
 * user-specified flux.
@@ -53,6 +54,8 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (h, w, dist, xw, yh, lambda_0, d_lambda, flux, T)
 OUTPUT PARAMETERS (hdiv, vdiv, p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
 DECLARE
 %{
  double hdiv,vdiv;
