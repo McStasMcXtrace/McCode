@@ -384,7 +384,7 @@ int mcstas_main(int argc, char *argv[]);
 #define FLT_MAX 1E37
 #endif
 
-#define Monitor_nD_Version "0.15"
+#define Monitor_nD_Version "0.16"
 #define MONnD_COORD_NMAX  30  /* max number of variables to record */
 
   typedef struct MonitornD_Defines
@@ -427,6 +427,8 @@ int mcstas_main(int argc, char *argv[]);
     char COORD_EVNT  ; /* next token is a buffer size value */
     char COORD_3HE   ; /* next token is a 3He pressure value */
     char COORD_INTERM; /* next token is an intermediate save value (percent) */
+    char COORD_LOG   ; /* next variable will be in log scale */
+    char COORD_ABS   ; /* next variable will be in abs scale */
 
     char TOKEN_DEL[32]; /* token separators */
 
