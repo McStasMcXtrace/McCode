@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.89 2004-06-30 16:27:27 farhi Exp $
+* $Id: mcstas-r.c,v 1.90 2004-07-16 14:59:03 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.88  2004/06/30 15:06:06  farhi
@@ -205,6 +205,40 @@ mcstatic FILE *mcsiminfo_file = NULL;
 static char *mcdirname = NULL;
 static char *mcsiminfo_name= "mcstas";
 mcstatic char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
+
+#ifdef USE_MPI
+
+/* MPI rank */
+static int mpi_node_count;
+static int mpi_node_rank;
+static int mpi_node_root = 0;
+
+/* mpi_p <- [p0, p1, p2] */
+double mpi_p[3];
+
+int mc_MPI_Reduce(void *sbuf, void *rbuf,
+		  int count, MPI_Datatype dtype,
+		  MPI_Op op, int root, MPI_Comm comm)
+{
+  void *lrbuf;
+  int dsize;
+  int res;
+
+  MPI_Type_size(dtype, &dsize);
+  lrbuf = malloc(count*dsize);
+
+  res = MPI_Reduce(sbuf, lrbuf, count, dtype, op, root, comm);
+  if(res != MPI_SUCCESS)
+    fprintf(stderr, "node %i: MPI_Reduce error!", mpi_node_rank);
+
+  if(mpi_node_rank == root)
+    memcpy(rbuf, lrbuf, count*dsize);
+
+  free(lrbuf);
+  return res;
+}
+
+#endif /* USE_MPI */
 
 /* Multiple output format support. ========================================== */
 
@@ -1075,33 +1109,51 @@ void
 mcreadparams(void)
 {
   int i,j,status;
-  char buf[1024];
+  static char buf[1024];
   char *p;
   int len;
 
-  printf("Instrument parameters for %s (%s)\n", mcinstrument_name, mcinstrument_source);
+  MPI_MASTER(printf("Instrument parameters for %s (%s)\n",
+		    mcinstrument_name, mcinstrument_source));
+
   for(i = 0; mcinputtable[i].name != 0; i++)
   {
     do
     {
-      if (mcinputtable[i].val && strlen(mcinputtable[i].val))
-        printf("Set value of instrument parameter %s (%s) [default='%s']:\n",
-             mcinputtable[i].name,
-             (*mcinputtypes[mcinputtable[i].type].parminfo)
-                  (mcinputtable[i].name), mcinputtable[i].val);
+      MPI_MASTER(
+		 if (mcinputtable[i].val && strlen(mcinputtable[i].val))
+		   printf("Set value of instrument parameter %s (%s) [default='%s']:\n",
+			  mcinputtable[i].name,
+			  (*mcinputtypes[mcinputtable[i].type].parminfo)
+			  (mcinputtable[i].name), mcinputtable[i].val);
+		 else
+		   printf("Set value of instrument parameter %s (%s):\n",
+			  mcinputtable[i].name,
+			  (*mcinputtypes[mcinputtable[i].type].parminfo)
+			  (mcinputtable[i].name));
+		 fflush(stdout);
+		 );
+#ifdef USE_MPI
+      if(mpi_node_rank == mpi_node_root)
+	{
+	  p = fgets(buf, 1024, stdin);
+	  if(p == NULL)
+	    {
+	      fprintf(stderr, "Error: empty input for paramater %s\n", mcinputtable[i].name);
+	      exit(1);
+	    }
+	}
       else
-        printf("Set value of instrument parameter %s (%s):\n",
-             mcinputtable[i].name,
-             (*mcinputtypes[mcinputtable[i].type].parminfo)
-                  (mcinputtable[i].name));
-      
-      fflush(stdout);
+	p = buf;
+      MPI_Bcast(buf, 1024, MPI_CHAR, mpi_node_root, MPI_COMM_WORLD);
+#else /* !USE_MPI */
       p = fgets(buf, 1024, stdin);
       if(p == NULL)
-      {
-        fprintf(stderr, "Error: empty input for paramater %s\n", mcinputtable[i].name);
-        exit(1);
-      }
+	{
+	  fprintf(stderr, "Error: empty input for paramater %s\n", mcinputtable[i].name);
+	  exit(1);
+	}
+#endif /* USE_MPI */
       len = strlen(buf);
       if (!len || (len == 1 && (buf[0] == '\n' || buf[0] == '\r')))
       {
@@ -1967,7 +2019,7 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
 
 /* Number of neutron histories to simulate. */
 static double mcncount = 1e6;
-double mcrun_num = 0;
+static double mcrun_num = 0;
 
 void
 mcset_ncount(double count) 
@@ -2801,9 +2853,10 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   /* if normal or begin and part == data: output info_data (sim/data_file) */
   if (isdata == 1 && just_header != 2 && f)
   {
-    mcinfo_data(f, format, pre, valid_parent, title, m, n, p,
-          xlabel, ylabel, zlabel, xvar, yvar, zvar, 
-          x1, x2, y1, y2, z1, z2, filename, p0, p1, p2, istransposed);
+    if(!strstr(format.Name, "no header"))
+      mcinfo_data(f, format, pre, valid_parent, title, m, n, p,
+		  xlabel, ylabel, zlabel, xvar, yvar, zvar, 
+		  x1, x2, y1, y2, z1, z2, filename, p0, p1, p2, istransposed);
   }
 
   /* if normal or begin: begin part (sim/data file) */
@@ -2845,7 +2898,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     if (filename) datafile = mcnew_file(filename, 
       (isdata != 1 || strstr(format.Name, "no header") ? "a" : "w"));
     else datafile = NULL;
-    /* special case of IDL: can not have empty vectors. Init to 'empty' */
+    /* special case o82.5%f IDL: can not have empty vectors. Init to 'empty' */
     if (strstr(format.Name, "IDL") && f) fprintf(f, "'external'");
     /* if data, start with root header plus tags of parent data */
     if (datafile && !mcascii_only) 
@@ -2853,11 +2906,14 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       char mode[32];
       if (isdata == 1) {
       	strcpy(mode, (strstr(format.Name, "McStas") ? "# " : ""));
-        mcfile_header(datafile, format, "header",
-          mode, 
-          filename, valid_parent); 
-        mcinfo_simulation(datafile, format, 
-          mode, valid_parent); 
+	if(!strstr(format.Name, "no header"))
+	  {
+	    mcfile_header(datafile, format, "header",
+			  mode, 
+			  filename, valid_parent); 
+	    mcinfo_simulation(datafile, format, 
+			      mode, valid_parent); 
+	  }
       }
       sprintf(mode, "%s begin", part);
       /* write header+data block begin tags into datafile */
@@ -3036,9 +3092,10 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           xvar, yvar, zvar,
           x1, x2, y1, y2, z1, z2, filename, istransposed);
       if ((isdata == 1 && is1d) || strstr(part,"ncount") || !p0 || !p2) /* either ncount, or 1d */
+	if(!strstr(format.Name, "no footer"))
           mcfile_header(datafile, format, "footer", 
-          (strstr(format.Name, "McStas") ? "# " : ""),
-          filename, valid_parent);
+			(strstr(format.Name, "McStas") ? "# " : ""),
+			filename, valid_parent);
     }
     if (datafile) fclose(datafile); 
   }
@@ -3121,6 +3178,27 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   double Nsum=0, Psum=0, P2sum=0;
   FILE *local_f=NULL;
   char istransposed=0;
+
+#ifdef USE_MPI
+  int mpi_event_list;
+#endif /* !USE_MPI */
+
+#ifdef USE_MPI
+  mpi_event_list = (strstr(format.Name," list ") != NULL);
+
+  if(!mpi_event_list)
+    {
+      /* we save additive data: reduce everything */
+      mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+      mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+      mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+
+      /* slaves are done */
+      if(mpi_node_rank != mpi_node_root)
+	return 0;
+    }
+
+#endif /* !USE_MPI */
   
   if (m<0 || n<0 || p<0 || strstr(format.Name, "binary"))  /* do the swap once for all */
   { 
@@ -3132,46 +3210,151 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   }
 
   if (!strstr(format.Name," list ")) local_f = mcsiminfo_file; /* use sim file */
-  if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
+  if (mcdirname)
+    sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name);
+  else
+    sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
   
   if (!mcdisable_output_files)
-  {
-  
-    mcfile_section(local_f, format, "begin", pre, parent, "component", simname, 3);
-    mcfile_section(local_f, format, "begin", pre, filename, "data", parent, 4);
-    mcfile_data(local_f, format, 
-      pre, parent, 
-      p0, p1, p2, m, n, p,
-      xlabel, ylabel, zlabel, title,
-      xvar, yvar, zvar, 
-      x1, x2, y1, y2, z1, z2, filename, istransposed);
+    {
+      MPI_MASTER
+	(
+	 mcfile_section(local_f, format, "begin", pre, parent, "component", simname, 3);
+	 mcfile_section(local_f, format, "begin", pre, filename, "data", parent, 4);
+	 );
+    }
 
-    mcfile_section(local_f, format, "end", pre, filename, "data", parent, 4);
-    mcfile_section(local_f, format, "end", pre, parent, "component", simname, 3);
-  }
+#ifdef USE_MPI
+
+  if(mpi_event_list)
+    {
+      if(mpi_node_rank != mpi_node_root)
+	{
+	  /* we save an event list: all slaves send their data to master */
+	  {
+	    /* m, n, p must be sent too, since all slaves do not have the same number of events */
+	    int mnp[3];
+	    mnp[0] = m; mnp[1] = n; mnp[2] = p;
+	    MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD);
+	  }
+	  MPI_Send(p1, abs(m*n*p), MPI_DOUBLE, mpi_node_root, 1, MPI_COMM_WORLD);
+
+	  /* slaves are done */
+	  return 0;
+	}
+      else
+	{
+	  int node_i;
+	  char *no_footer = strstr(format.Name, "no footer");
+
+	  /*
+	   * no_footer is NULL if a footer is requested
+	   */
+	  if(!no_footer)
+	    {
+	      /* we do not write the footer now */
+	      strcat(format.Name, " no footer ");
+	    }
+
+	  /* save master events list */
+	  if (!mcdisable_output_files)
+	    mcfile_data(local_f, format, 
+			pre, parent, 
+			p0, p1, p2, m, n, p,
+			xlabel, ylabel, zlabel, title,
+			xvar, yvar, zvar, 
+			x1, x2, y1, y2, z1, z2, filename, istransposed);
+
+	  /* if a header was requested, it has been written */
+	  if(!strstr(format.Name, "no header"))
+	    strcat(format.Name, " no header ");
+
+	  /* get and save slaves events lists */
+	  for(node_i=1; node_i<mpi_node_count; ++node_i)
+	    {
+	      MPI_Status mpi_status;
+	      {
+		int mnp[3];
+		MPI_Recv(mnp, 3, MPI_INT, node_i, 1, MPI_COMM_WORLD, &mpi_status);
+		m = mnp[0]; n = mnp[1]; p = mnp[2];
+	      }
+	      MPI_Recv(p1, abs(m*n*p), MPI_DOUBLE, node_i, 1, MPI_COMM_WORLD, &mpi_status);
+
+	      if(node_i == mpi_node_count-1)
+		{
+		  /* we write the last data block: request a footer if needed */
+		  if(!no_footer)
+		    {
+		      no_footer = strstr(format.Name, "no footer");
+		      strncpy(no_footer, "         ", 9);
+		    }
+		}
+
+	      if (!mcdisable_output_files)
+		mcfile_data(local_f, format, 
+			    pre, parent, 
+			    p0, p1, p2, m, n, p,
+			    xlabel, ylabel, zlabel, title,
+			    xvar, yvar, zvar, 
+			    x1, x2, y1, y2, z1, z2, filename, istransposed);
+	    }
+	}
+    }
+  else
+    {
+      if (!mcdisable_output_files)
+	{
+	  mcfile_data(local_f, format, 
+		      pre, parent, 
+		      p0, p1, p2, m, n, p,
+		      xlabel, ylabel, zlabel, title,
+		      xvar, yvar, zvar, 
+		      x1, x2, y1, y2, z1, z2, filename, istransposed);
+	}
+    }
+
+#else /* !USE_MPI */
+
+  if (!mcdisable_output_files)
+    {
+      mcfile_data(local_f, format, 
+		  pre, parent, 
+		  p0, p1, p2, m, n, p,
+		  xlabel, ylabel, zlabel, title,
+		  xvar, yvar, zvar, 
+		  x1, x2, y1, y2, z1, z2, filename, istransposed);
+    }
+
+#endif /* !USE_MPI */
+
+  if (!mcdisable_output_files)
+    {
+      mcfile_section(local_f, format, "end", pre, filename, "data", parent, 4);
+      mcfile_section(local_f, format, "end", pre, parent, "component", simname, 3);
+    }
 
   if (local_f || mcdisable_output_files)
-  {
-    for(j = 0; j < n*p; j++)
     {
-      for(i = 0; i < m; i++)
-      {
-        double N,I,E;
-        int index;
-        if (!istransposed) index = i*n*p + j;
-        else index = i+j*m;
-        if (p0) N = p0[index];
-        if (p1) I = p1[index];
-        if (p2) E = p2[index];
+      for(j = 0; j < n*p; j++)
+	{
+	  for(i = 0; i < m; i++)
+	    {
+	      double N,I,E;
+	      int index;
+	      if (!istransposed) index = i*n*p + j;
+	      else index = i+j*m;
+	      if (p0) N = p0[index];
+	      if (p1) I = p1[index];
+	      if (p2) E = p2[index];
 
-        Nsum += p0 ? N : 1;
-        Psum += I;
-        P2sum += p2 ? E : I*I;
-      }
+	      Nsum += p0 ? N : 1;
+	      Psum += I;
+	      P2sum += p2 ? E : I*I;
+	    }
+	}
+      /* give 0D detector output. */
+      mcdetector_out(parent, Nsum, Psum, P2sum, filename);
     }
-    /* give 0D detector output. */
-    mcdetector_out(parent, Nsum, Psum, P2sum, filename);
-  }
   return(Psum);
 } /* mcdetector_out_012D */
 
@@ -3522,7 +3705,6 @@ void sighandler(int sig)
     case SIGTERM : printf(" SIGTERM (termination)"); break;
     case SIGPIPE : printf(" SIGPIPE (broken pipe)"); break;
     case SIGUSR1 : printf(" SIGUSR1 (Display info)"); break;
-    case SIGHUP  : printf(" SIGHUP  (Save simulation)"); break;
     case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); break;
     case SIGILL  : printf(" SIGILL (Illegal instruction)"); break;
     case SIGFPE  : printf(" SIGFPE (Math Error)"); break;
@@ -3552,7 +3734,7 @@ void sighandler(int sig)
     return;
   }
   else
-  if (sig == SIGUSR2 || sig == HUP)
+  if (sig == SIGUSR2)
   {
     printf("# McStas: Saving data and resume simulation (continue)\n");
     mcsave(NULL);
@@ -3585,14 +3767,32 @@ mcstas_main(int argc, char *argv[])
 {
 /*  double run_num = 0; */
   time_t t;
+#ifdef USE_MPI
+  char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
+  int mpi_node_name_len;
+  int mpi_mcncount;
+#endif /* USE_MPI */
   
 #ifdef MAC
   argc = ccommand(&argv);
 #endif
 
+#ifdef USE_MPI
+  MPI_Init(&argc,&argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_node_count);
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_node_rank);
+  MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
+#endif /* USE_MPI */
+
   t = (time_t)mcstartdate;
+#ifdef USE_MPI
+  srandom(time(&t) + mpi_node_rank);
+  t += mpi_node_rank;
+#else /* !USE_MPI */
   srandom(time(&t));
+#endif /* !USE_MPI */
   mcstartdate = t;
+
   strcpy(mcsig_message, "main (Start)");
   if (getenv("MCSTAS_FORMAT")) mcuse_format(getenv("MCSTAS_FORMAT"));
   else mcuse_format(MCSTAS_FORMAT);  /* default is to output as McStas format */
@@ -3601,6 +3801,7 @@ mcstas_main(int argc, char *argv[])
 #ifndef MC_PORTABLE
 #ifndef MAC
 #ifndef WIN32
+#ifndef USE_MPI
   /* install sig handler, but only once !! after parameters parsing */
   signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
   signal( SIGABRT ,sighandler);   /* used by abort, replace SIGIOT in the future */
@@ -3608,8 +3809,7 @@ mcstas_main(int argc, char *argv[])
   signal( SIGTERM ,sighandler);   /* software termination signal from kill */
   /* signal( SIGPIPE ,sighandler);*/   /* write on a pipe with no one to read it, used by mcdisplay */
 
-  signal( SIGHUP  ,sighandler);  /* HUP -> USR2 */
-  signal( SIGUSR1 ,sighandler);  /* display simulation status */
+  signal( SIGUSR1 ,sighandler); /* display simulation status */
   signal( SIGUSR2 ,sighandler);
   signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
   signal( SIGFPE ,sighandler);    /* floating point exception */
@@ -3619,6 +3819,7 @@ mcstas_main(int argc, char *argv[])
   signal( SIGSYS ,sighandler);    /* bad argument to system call */
   #endif
   signal( SIGURG ,sighandler);    /* urgent socket condition */
+#endif /* !USE_MPI */
 #endif /* !MAC */
 #endif /* !WIN32 */
 #endif /* !MC_PORTABLE */
@@ -3632,15 +3833,36 @@ mcstas_main(int argc, char *argv[])
 #endif /* !MAC */
 #endif /* !WIN32 */
 #endif /* !MC_PORTABLE */
+
+#ifdef USE_MPI
+  mpi_mcncount = mcncount / mpi_node_count;
+#endif /* !USE_MPI */
   
+#ifdef USE_MPI
+  while(mcrun_num < mpi_mcncount)
+    {
+      mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
+      mcraytrace();
+      mcrun_num++;
+    }
+
+  mc_MPI_Reduce(&mcrun_num, &mcrun_num, 1, MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+  
+#else /* !USE_MPI */
   while(mcrun_num < mcncount)
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
     mcraytrace();
     mcrun_num++;
   }
+#endif /* !USE_MPI */
+
   mcfinally();
   if (mcformat.Name) free(mcformat.Name);
+  
+#ifdef USE_MPI
+  MPI_Finalize();
+#endif /* USE_MPI */
   
   return 0;
 }
