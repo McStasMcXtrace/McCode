@@ -27,6 +27,9 @@ my ($edit_window, $edit_control);
 my $external_editor;
 my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
 
+my $compinfo;			# Cache of parsed component definitions
+my @compdefs;			# List of available component definitions
+
 sub ask_save_before_simulate {
     my ($w) = @_;
     if($edit_control && $edit_control->numberChanges() > 0) {
@@ -546,6 +549,157 @@ sub menu_about {
     my ($w) = @_;
 }
 
+# Build the text (McStas metalanguage) representation of a component
+# using data fillied in by the user.
+sub make_comp_inst {
+    my ($cdata, $r) = @_;
+    my ($p, $s);
+    $s = "\n";
+    $s .= "COMPONENT $r->{'INSTANCE'} = $r->{'DEFINITION'}(\n";
+    my @ps = ();
+    my $col = "";
+    for $p (@{$cdata->{'inputpar'}}) {
+	my $add;
+	if(defined($r->{'VALUE'}{$p}) && $r->{'VALUE'}{$p} !~ /^\s*$/) {
+	    $add .= "$p = $r->{'VALUE'}{$p}";
+	} elsif(defined($cdata->{'parhelp'}{$p}{'default'})) {
+	    next;		# Omit non-specified default parameter
+	} else {
+	    $add.= "$p = ";
+	}
+	if(length($col) > 0) {
+	    if(length("$col, $add") > 60) {
+		push @ps, $col;
+		$col = $add;
+	    } else {
+		$col = "$col, $add";
+	    }
+	} else {
+	    $col = $add;
+	}
+    }
+    push @ps, $col if length($col) > 0;
+    $s .= "    " . join(",\n    ", @ps) . ")\n";
+    $s .= "  AT (".  $r->{'AT'}{'x'} . ", " . $r->{'AT'}{'y'} . ", " .
+	$r->{'AT'}{'y'} . ") RELATIVE " . $r->{'AT'}{'relative'} . "\n";
+    $s .= "  ROTATED (" . $r->{'ROTATED'}{'x'} . ", " . $r->{'ROTATED'}{'y'} .
+	", " . $r->{'ROTATED'}{'z'} . ") RELATIVE " .
+	    $r->{'ROTATED'}{'relative'} . "\n"
+		if($r->{'ROTATED'}{'x'} || $r->{'ROTATED'}{'y'} ||
+		   $r->{'ROTATED'}{'z'} || $r->{'ROTATED'}{'relative'});
+    return $s;
+}
+
+# The text for the instrument template.
+my $instr_template_start = <<INSTR_FINISH;
+DEFINE INSTRUMENT test()
+DECLARE
+%{
+%}
+INITIALIZE
+%{
+%}
+TRACE
+
+COMPONENT a1 = Arm()
+  AT (0,0,0) ABSOLUTE
+INSTR_FINISH
+my $instr_template_end = <<INSTR_FINISH;
+
+FINALLY
+%{
+%}
+END
+INSTR_FINISH
+
+sub menu_insert_instr_template {
+    if($edit_control) {
+	$edit_control->insert('1.0', $instr_template_start);
+	# Save the current cursor position so that we can move it to
+	# before the last part of the template if necessary.
+	my $currentpos = $edit_control->index('insert');
+	$edit_control->insert('end', $instr_template_end);
+	$edit_control->markSet('insert', $currentpos);
+    }
+}
+
+# Allow the user to populate a given component definition in a dialog
+# window, and produce a corresponding component instance.
+sub menu_insert_x {
+    my ($w, $path) = @_;
+    my $cdata = fetch_comp_info($path, $compinfo);
+
+    my $r = comp_instance_dialog($w, $cdata);
+    return undef unless $r;
+    die "No values given" unless $r;
+
+    $edit_control->insert('insert', make_comp_inst($cdata, $r))
+	if $edit_control;
+    return 1;
+}
+
+# Choose a component definition from a list in a dialog window, and
+# then allow the user to populate it in another dialog.
+sub menu_insert_component {
+    my ($w) = @_;
+
+    my $comp = comp_select_dialog($w, \@compdefs, $compinfo);
+    return undef unless $comp;
+    return menu_insert_x($w, $comp);
+}
+
+# Directories containing component definitions.
+my $sys_dir = $ENV{'MCSTAS'} ? $ENV{'MCSTAS'} : "/usr/local/lib/mcstas";
+my @comp_sources =
+    (["Source", ["$sys_dir/sources"]],
+     ["Optics", ["$sys_dir/optics"]],
+     ["Sample", ["$sys_dir/samples"]],
+     ["Monitor", ["$sys_dir/monitors"]],
+     ["Misc", ["$sys_dir/misc"]],
+     ["Other", ["$sys_dir", "."]]);
+
+# Fill out the menu for building component instances.
+sub make_insert_menu {
+    my ($w, $menu) = @_;
+    @compdefs = ();
+    my @menudefs = ();
+    my ($sec,$dir);
+    for $sec (@comp_sources) {
+	my $sl = [$sec->[0], []];
+	for $dir (@{$sec->[1]}) {
+	    if(opendir(DIR, $dir)) {
+		my @comps = readdir(DIR);
+		closedir DIR;
+		next unless @comps;
+		my @paths = map("$dir/$_", grep(/\.(comp|cmp|com)$/, @comps));
+		push(@compdefs, @paths);
+		push(@{$sl->[1]}, map([compname($_), $_], @paths));
+	    }
+	}
+	push @menudefs, $sl;
+    }
+    $menu->command(-label => "Instrument template",
+		   -command => sub { menu_insert_instr_template($w) },
+		   -underline => 0);
+    $menu->command(-label => "Component ...",
+		   -accelerator => 'Alt+M',
+		   -command => sub { menu_insert_component($w) },
+		   -underline => 0);
+    $w->bind('<Alt-m>' => sub { menu_insert_component($w) });
+    # Now build all the menu entries for direct selection of component
+    # definitions.
+    my $p;
+    for $p (@menudefs) {	# $p holds title and component list
+	my $m2 = $menu->cascade(-label => $p->[0]);
+	my $c;
+	for $c (@{$p->[1]}) {	# $c holds name and path
+	    $m2->command(-label => "$c->[0] ...",
+			 -command => sub { menu_insert_x($w, $c->[1]) });
+	}
+    }
+    $menu->pack(-side=>'left');
+}
+
 sub setup_menu {
     my ($w) = @_;
     my $menu = $w->Frame(-relief => 'raised', -borderwidth => 2);
@@ -704,6 +858,8 @@ sub setup_edit {
 		       -command => sub { $e->clipboardPaste(); },
 		       -underline => 0);
     $editmenu->pack(-side=>'left');
+    my $insert_menu = $menu->Menubutton(-text => 'Insert', -underline => 0);
+    make_insert_menu($w, $insert_menu);
 
     # Create the editor text widget.
     $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
