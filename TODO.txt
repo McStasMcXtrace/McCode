@@ -69,20 +69,21 @@ functionality on Win32 using mcc
 * line number in editor (go to line)
 * Fixed date string, mcplot year 5000 (matlab) (Needs timezone info,
   have asked in comp.soft-sys.matlab for this...)
-
-TODO:
 * Doc update, especially regarding installation
-* McStas manual updates in general
-* McStas manual description of new features
 * Test runs of the tutorial and the package in general
-* mcplot problem running mcdisplay for instrument view (n exist)
-* Online monitor plotting through USR2 signal
-* Kim's Powder2 (needs a few lines for randvec_target_rect) - PETER
-* Scrollbar in editor (too hard? / platform specific) 
-* 'Scan evolvement' plot of psd's (Pick PSD data from scan, plot together)
+* McStas manual description of new features
+* McStas manual updates in general
 * more on inserting arms in the docs
 
+TODO:
+* mcplot problem running mcdisplay for instrument view (n exist)
+* Kim's Powder2 (needs a few lines for randvec_target_rect) - PETER
+* Kim's Phonon_simple / Test_phonon default values to be added
+
 PENDING:
+* 'Scan evolvement' plot of psd's (Pick PSD data from scan, plot together)
+* Scrollbar in editor (too hard? / platform specific) 
+* Online monitor plotting through USR2 signal
 * make test for old releases? 
 * Concentric components
 * 'Jumps'
