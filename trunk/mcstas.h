@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.6 1998-08-21 12:08:38 kn Exp $
+* 	$Id: mcstas.h,v 1.7 1998-08-26 12:44:35 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.6  1998/08/21 12:08:38  kn
+* 	Output generated C simulation code in file rather than on stdout.
+*
 * 	Revision 1.5  1997/09/07 20:16:16  kn
 * 	Added FINALLY construct.
 *
@@ -33,6 +36,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#endif
 
 
 /* Functions defined in memory.c */
@@ -214,22 +225,27 @@ extern struct instr_def *instrument_definition;
 extern Symtab comp_instances;
 /* List of component instances in declaration order. */
 extern List comp_instances_list;
+/* Flag set to TRUE when scanning autoloaded component definitions. */
+extern int parse_restricted;
+/* Map of already-read components. */
+Symtab read_components;
 
 /* Handle assignment of actual to formal component parameters. */
 void comp_formals_actuals(struct comp_inst *comp, Symtab actuals);
 
-
-/*******************************************************************************
-* Definitions in component.y
-*******************************************************************************/
-
-
-extern char *comp_current_filename; /* Name of the file currently being parsed. */
-extern int comp_current_line;	/* Line number currently being scanned. */
-Symtab read_components;		/* Map of already-read components. */
-
 /* Get component definition, reading from file if necessary. */
 struct comp_def *read_component(char *name);
+
+
+/*******************************************************************************
+* Definitions in instrument.l
+*******************************************************************************/
+
+/* Prepare to run lexical analysis on new file. */
+void lex_new_file(FILE *file);
+/* Handle a new autoincluded file (uses recursive parser call). */
+void push_autoload(FILE *file);
+
 
 
 /*******************************************************************************
