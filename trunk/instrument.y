@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.14 1998-10-02 08:36:45 kn Exp $
+*	$Id: instrument.y,v 1.15 1998-11-09 08:14:07 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.14  1998/10/02 08:36:45  kn
+*	Added output parameters for components.
+*	Fixed header comment.
+*
 *	Revision 1.13  1998/10/01 11:46:35  kn
 *	Also abort compilation if there is a non-syntax error during parse.
 *	Added support for string expressions.
@@ -511,11 +515,20 @@ static void
 print_usage(void)
 {
   fprintf(stderr, "Usage:\n"
-	  "  mcstas [-o file] [-I dir1 ...] [-t] "
+	  "  mcstas [-o file] [-I dir1 ...] [-t] [-v] "
 	  "[--no-main] [--no-runtime] file\n");
   exit(1);
 }
 
+/* Print McStas version and copyright. */
+static void
+print_version(void)
+{
+  printf("McStas version 1.0, October 1998\n"
+	  "Copyright (C) Risoe National Laboratory, 1997-1998\n"
+	  "All rights reserved\n");
+  exit(0);
+}
 
 /* Construct default filename for simulation output from instrument file
    name. Strip any leading directory path and trailing .instr, and add .c to
@@ -587,6 +600,10 @@ parse_command_line(int argc, char *argv[])
       instrument_definition->enable_trace = 1;
     else if(!strcmp("--trace", argv[i]))
       instrument_definition->enable_trace = 1;
+    else if(!strcmp("-v", argv[i]))
+      print_version();
+    else if(!strcmp("--version", argv[i]))
+      print_version();
     else if(!strcmp("--no-main", argv[i]))
       instrument_definition->use_default_main = 0;
     else if(!strcmp("--no-runtime", argv[i]))
