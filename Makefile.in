@@ -85,6 +85,7 @@ cexp.o: mcstas.h
 position.o: mcstas.h
 file.o: mcstas.h
 cogen.o: mcstas.h
+port.o: port.h
 
 instrument.tab.c instrument.tab.h: instrument.y
 	$(BISON) $(BISONFLAGS) $<
