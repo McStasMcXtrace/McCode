@@ -10,41 +10,44 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.4 $
+* Version:  $Revision: 1.5 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
+* Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
 *
 * This component uses a file of recorded neutrons from the reactor monte carlo
 * code TRIPOLI4.4 as a source of particles.
 *
 * %D
-* TRIPOLI4 is a monte carlo code for reactors (as MCNP). It is used to
-* calculate flux exiting from hot or cold neutron sources. Storage files from
-* TRIPOLI4.4 contain several batches of particules. Using this McStas
-* component with Virtual_tripoli4_output there is no need for conversion.  As
-* McStas keeps the notion of batch with this component, it's possible to
-* calculate  standard deviations for the flux in differents energy groups. The
-* component Virtual_tripoli4_output.comp is used to record neutrons at the end
-* of the neutron guide.
+* This component generates neutron events from a file created using the
+* TRIPOLI4 Monte Carlo code for nuclear reactors (as MCNP). It is used to
+* calculate flux exiting from hot or cold neutron sources.
+* Neutron position and velocity is set from the file. The neutron time is
+* left at zero.
+* Storage files from TRIPOLI4.4 contain several batches of particules, all
+* of them having the same statictical weight.
 *
-* Format of TRIPOLI4.4 stock files is :
+* Note that axes orientation may be different between TRIPOLI4.4 and McStas.
+* The component has the ability to center and orient the neutron beam to the Z-axis.
+* It also may change the coordinate system from the Tripoli frame to the McStas one.
+* The verbose mode is highly recommanded as it displays lots of useful informations,
+* including the absolute intensity normalisation factor. All neutron fluxes in the
+* instrument should be multiplied by this factor.
+* The source total intensity is 1.054e18 for LLB/Saclay and 4.28e18 for ILL/Grenoble.
+*
+* Format of TRIPOLI4.4 event files is :
 *
 *   NEUTRON energy position_X position_Y position_Z dir_X dir_Y dir_Z weight
 *
 * energy is in Mega eV
 * positions are in cm and the direction vector is normalized to 1.
 *
-* Note that axes orientation may be different between TRIPOLI4.4 and McStas
-*
 *
 * EXAMPLE:
-* To create a 'source' file collecting all neutron states, use:
-* COMPONENT source_file_tripoli = Virtual_tripoli4_input(
-*    file = "ILL_SFH", intensity=4.28e18,
+* To create a 'source' from a Tripoli4 simulation event file for the ILL:
+* COMPONENT source = Virtual_tripoli4_input(
+*    file = "ILL_SFH.dat", intensity=4.28e18,
 *    repeat_count  = 1, verbose = 1, autocenter="translate rotate")
-*  at the position where will be the Virtual_tripoli4_input.
-*
-* The source intensity is 1.054e18 for LLB/Saclay and 4.28e18 for ILL/Grenoble
 *
 * %P
 * INPUT PARAMETERS
@@ -52,7 +55,7 @@
 * repeat_count: (1)   Number of times the source must be generated.
 *                           0 unactivates the component
 * verbose:      (0|1) Displays additional informations if set to 1
-* intensity:    (n/s) Initial Source integrated intensity
+* intensity:    (n/s) Initial total Source integrated intensity
 * autocenter:   (str) String which may contain following keywords.
 *                     "translate" or "center"  to center the beam area AT (0,0,0)
 *                     "rotate"    or "orient"  to center the beam velocity along Z
@@ -63,10 +66,10 @@
 * head:   (char)        header buffer
 * nl:     (long)        nb of lines in header
 * mean_x: (double)      \
-* mean_y: (double)      vector pointing at the beam center
+* mean_y: (double)      source center coordinates
 * mean_z: (double)      /
 * angle2z:(double, rad) rotation angle required to orient beam along Z axis
-* nbatch:(long)         number of read neutron batches
+* nbatch: (long)        number of read neutron batches
 *
 * %L
 * <a href="http://www.nea.fr/html/dbprog/tripoli-abs.html">Tripoli</a>
@@ -158,8 +161,8 @@ int tripoli_create_neutron(FILE *hfile, double *x,double *y,double *z,
     *x=field[1]/100.0;
     *y=field[2]/100.0;
     *z=field[3]/100.0;
-    *vx=field[4]*speed-500;
-    *vy=field[5]*speed+500;
+    *vx=field[4]*speed;
+    *vy=field[5]*speed;
     *vz=field[6]*speed;
     *p=field[7];
     *sx=1.;*sy=*sz=0;
@@ -297,6 +300,7 @@ INITIALIZE
     if (begin_of_batch(word)){/* if key word BEGIN_OF_BATCH is found */
       if (tripoli_read_word(hfile,word) != EOF) {
         begin_batch=strtol(word,NULL,0);
+        nbatch++;
       }
     }
 
@@ -329,11 +333,11 @@ INITIALIZE
       mean_k = V2K*mean_v;
       if (mean_k) mean_L = 2*PI/mean_k;
       mean_w = VS2E*mean_v*mean_v;
-      printf("Tripoli4 file %s\nContains about %g neutrons ", file, n_count_extrapolated);
+      printf("Tripoli4 file %s\nContains about %g neutrons in %d batches\n", file, n_count_extrapolated, nbatch*(filesize-first_batch)/(end_analyse - first_batch));
       if (n_count_extrapolated > mcget_ncount())
-        printf("(will use only %.3g %% of file)\n", 100*mcget_ncount()/n_count_extrapolated);
+        printf("    (will use only %.3g %% of file)\n", 100*mcget_ncount()/n_count_extrapolated);
       else
-        printf("(limiting simulation to %g neutrons)\n", n_count_extrapolated*repeat_count);
+        printf("    (limiting simulation to %g neutrons)\n", n_count_extrapolated*repeat_count);
       printf("  Source size (full width in [m]):      ");
       printf("    dX=%g dY=%g dZ=%g\n", max_x-min_x, max_y-min_y, max_z-min_z);
       printf("  Source center (in [m]):               ");
@@ -382,7 +386,7 @@ INITIALIZE
     fprintf(stderr, "Tripoli4_input: %s: Error: file %s neutrons does not contains any neutron. \n",NAME_CURRENT_COMP, file);
     exit(-1);
   }
-  begin_batch = 0;
+  begin_batch = 0; nbatch=0;
   /* reposition at start of file (batch start) */
   if (fseek(hfile, first_batch,SEEK_SET)) {
     fprintf(stderr, "Tripoli4_input: %s: Error: Can not reset Tripoli4 file (fseek error at analyse). \n",NAME_CURRENT_COMP);
