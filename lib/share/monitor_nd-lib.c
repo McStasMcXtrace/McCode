@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.8 2003-02-11 12:28:46 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.9 2003-02-18 09:11:36 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/28 11:39:00 ef
@@ -974,6 +974,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       {
         int  loc_ascii_only;
         char formatName[64];
+	char *formatName_orig;
         
         if (mc_mn_Vars->Flag_List >= 2) mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter;
         if (mc_mn_Vars->Buffer_Size >= mc_mn_Vars->Neutron_Counter)
@@ -995,27 +996,28 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
                   { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i]); }
         }
         if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin2d,mc_mn_bin1d);
-        if (!mc_mn_Vars->Flag_Binary_List)
 
         /* handle the type of list output */
         loc_ascii_only = mcascii_only;
-        strcpy(formatName, mcformat.Name);
-        if (mc_mn_Vars->Flag_List >= 2)
+        formatName_orig = mcformat.Name;	/* copy the pointer position */
+	strcpy(formatName, mcformat.Name);
+        if (mc_mn_Vars->Flag_List >= 1)
         {
-          strcat(mcformat.Name, " partial ");
+          strcat(formatName, " partial ");
           if (mc_mn_Vars->Flag_List > 2) 
-          { strcat(mcformat.Name, " append "); mcascii_only = 1; }
+          { strcat(formatName, " append "); mcascii_only = 1; }
           if (mc_mn_Vars->Flag_Binary_List) mcascii_only = 1;
           if (mc_mn_Vars->Flag_Binary_List == 1)
-            strcat(mcformat.Name, " binary float ");
+            strcat(formatName, " binary float ");
           else if (mc_mn_Vars->Flag_Binary_List == 2)
-            strcat(mcformat.Name, " binary double ");
+            strcat(formatName, " binary double ");
         }
         if (mc_mn_min2d == mc_mn_max2d) mc_mn_max2d = mc_mn_min2d+1e-6;
         if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
         strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
         if (!mc_mn_Vars->Flag_Binary_List)
         { mc_mn_bin2d=-mc_mn_bin2d; }
+        mcformat.Name = formatName;
         mcdetector_out_2D(
               mc_mn_label,
               "List of neutron events",
@@ -1029,7 +1031,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
 
         /* reset the original type of output */
         mcascii_only = loc_ascii_only;
-        strcpy(mcformat.Name, formatName);
+        mcformat.Name= formatName_orig;
       }
       if (mc_mn_Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
