@@ -32,6 +32,7 @@ my $show_html     = 0;  # true when requesting to display HTML doc
 my $use_local     = 0;  # true when also looking into current path
 my $single_comp_name = 0;  # component single name
 my $browser       = defined($ENV{'BROWSER'}) ? $ENV{'BROWSER'} : "text";
+my $is_forced     = 0; # true when force re-writting of existing HTML
 
 sub show_header {
     my ($d) = @_;
@@ -56,7 +57,8 @@ sub show_header {
         if($d->{'parhelp'}{$i}) {
             print "[$d->{'parhelp'}{$i}{'unit'}] "
                 if $d->{'parhelp'}{$i}{'unit'};
-            print "$d->{'parhelp'}{$i}{'text'}";  # text finishes by \n
+            print "$d->{'parhelp'}{$i}{'text'}"
+                if $d->{'parhelp'}{$i}{'text'};  # text finishes by \n
         } else {
             print("<Undocumented>\n");
         }
@@ -67,7 +69,8 @@ sub show_header {
         if($d->{'parhelp'}{$i}) {
             print "[$d->{'parhelp'}{$i}{'unit'}] "
                 if $d->{'parhelp'}{$i}{'unit'};
-            print "$d->{'parhelp'}{$i}{'text'}";
+            print "$d->{'parhelp'}{$i}{'text'}"
+                if $d->{'parhelp'}{$i}{'text'};  # text finishes by \n
         } else {
             print("<Undocumented>\n");
         }
@@ -200,15 +203,15 @@ sub gen_html_description {
 TB_END
     my $is_opened = 0;
     my $valid_name= "";
-    $n=~ s|.comp||; # remove trailing extension
-    $n=~ s|.cmp||; # remove trailing extension
-    $n=~ s|.com||; # remove trailing extension
-    if (open($f, ">$bn.html")) { 
+    $n=~ s|.comp\Z||; # remove trailing extension
+    $n=~ s|.cmp\Z||; # remove trailing extension
+    $n=~ s|.com\Z||; # remove trailing extension
+    if (open($f, ">$bn.html")) { # use component location
       $is_opened = 1; 
       $valid_name = $bn;
     }
-    if (not $is_opened) {
-      if (open($f, ">$n.html")) { 
+    if (not $is_opened && not $is_forced) {
+      if (open($f, ">$n.html")) { # create locally
         $is_opened = 1; 
         $valid_name = $n;
       }
@@ -272,7 +275,7 @@ TB_END
       print $f "</BODY></HTML>\n";
       close $f;
     } else { 
-      print "mcdoc: Cannot open $d->{'name'}.html";
+      print "mcdoc: Cannot open $valid_name.html. Use -f option to force.";
     }
     return $valid_name;
 }
@@ -296,7 +299,7 @@ sub add_comp_html {
 sub add_comp_section_html {
     my ($lib, $sec, $header, $filehandle) = @_;
     my $sec_orig = $sec;
-    if ($sec =~ "local") { $sec = "."; }  # local components
+    if ($sec =~ "local") { $sec = "."; $is_forced=0; }  # local components
     $sec = "$lib/$sec" unless -d $sec;
     if(opendir(DIR, $sec)) {
         my @comps = readdir(DIR);
@@ -368,14 +371,18 @@ for($i = 0; $i < @ARGV; $i++) {
         $show_website = 1;
   } elsif(/^--local$/i) {
         $use_local = 1;
+  } elsif(/^--force$/i || /^-f$/i) {
+        $is_forced = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "Usage: mcdoc [options] <dir|file>\n";
+      print "   -f    --force   Force re-writting of existing HTML documentation\n";
+      print "   -h    --help    Show this help\n";
+      print "   -l    --tools   Display the McStas tools list\n";
       print "   -s    --show    Open the generated help file using the BROWSER env. variable\n";
       print "   -t    --text    For single component, display as text\n";
-      print "   -h    --help    Show this help\n";
       print "   -w    --web     Open the McStas web page http://neutron.risoe.dk/mcstas/\n";
-      print "   -l    --tools   Display the McStas tools list\n";
-      print "SEE ALSO: mcstas, mcdisplay, mcrun, mcresplot, mcstas2vitess, mcgui\n";
+      print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
+      print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
       exit;
   } elsif(/^--tools$/i || /^-l$/) {
       print "McStas Tools\n";
@@ -467,7 +474,9 @@ if ($filehandle) {
 # and generate comp doc
 my $sec;
 for $sec (@sections) {
+    my $is_forced_orig = $is_forced;
     add_comp_section_html($lib_dir, $sec, $section_headers{$sec}, $filehandle);
+    $is_forced = $is_forced_orig; # may have been changed globally (sec == local)
 }
 if ($filehandle) {
   html_main_end($filehandle, $toolbar);
