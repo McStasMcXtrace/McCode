@@ -34,7 +34,7 @@
 
 DEFINE COMPONENT Divergence_monitor
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, 
-		       nh, nv, h_maxdiv, v_maxdiv, filename)
+                       nh, nv, h_maxdiv, v_maxdiv, filename)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -67,7 +67,7 @@ TRACE
       h_div = RAD2DEG*atan2(vx,vz);
       v_div = RAD2DEG*atan2(vy,vz);
       if (h_div < h_maxdiv && h_div > -h_maxdiv && 
-	  v_div < v_maxdiv && v_div > -v_maxdiv)
+          v_div < v_maxdiv && v_div > -v_maxdiv)
       {
         i = floor((h_div + h_maxdiv)*nh/(2.0*h_maxdiv));
         j = floor((v_div + v_maxdiv)*nv/(2.0*v_maxdiv));
@@ -79,26 +79,24 @@ TRACE
   %}
 FINALLY
   %{
-    int i,j;
-    FILE *outfile;
-    int Nsum;
-    double Psum, P2sum;
-
-    Nsum = Psum = P2sum = 0;
-    outfile=fopen(filename,"w");
-    for (j=0; j<nv; j++)
-    {
-     for (i=0; i<nh; i++)
-     {
-      fprintf(outfile,"%g ", Div_p[i][j]);
-      Nsum += Div_N[i][j];
-      Psum += Div_p[i][j];
-      P2sum += Div_p2[i][j];
-     }
-     fprintf(outfile,"\n");
-    }
-    DETECTOR_OUT(Nsum, Psum, P2sum);
-    fclose(outfile);
+    DETECTOR_OUT_2D(
+        "Divergence monitor",
+        "X divergence [deg]",
+        "Y divergence [deg]",
+        -h_maxdiv, h_maxdiv, -v_maxdiv, v_maxdiv,
+        nh, nv,
+        &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
+        filename);
   %}
+
+MCDISPLAY
+  %{
+    magnify("xy");
+    multiline(5, (double)xmin, (double)ymin, 0.0,
+                 (double)xmax, (double)ymin, 0.0,
+                 (double)xmax, (double)ymax, 0.0,
+                 (double)xmin, (double)ymax, 0.0,
+                 (double)xmin, (double)ymin, 0.0);
+%}
 
 END
