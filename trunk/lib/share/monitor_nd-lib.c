@@ -21,9 +21,14 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.16 2004-06-30 12:13:47 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.17 2004-09-01 13:54:18 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.16  2004/06/30 12:13:47  farhi
+*	For lists (and Res_monitor), uses 'list' 'no header' and 'no footer' options
+*	in mcformat.Name so that catenated file does contain only one instance of
+*	footer and header.
+*	
 *	Revision 1.15  2004/02/26 12:55:41  farhi
 *	Handles 0d monitor outputs for bins=0, and limits are restrictive (i.e. neutron must be within all limits to be stored in monitor)
 *	
@@ -276,7 +281,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_EVNT)
         { 
           if (!strcmp(mc_mn_token, "all") || mc_mn_Flag_All) mc_mn_Vars->Flag_List = 2;
-          else { mc_mn_i = atoi(mc_mn_token); if (mc_mn_i) mc_mn_Vars->Buffer_Block = mc_mn_i; 
+          else { mc_mn_i = (long)round(atof(mc_mn_token)); if (mc_mn_i) mc_mn_Vars->Buffer_Block = mc_mn_i; 
             mc_mn_Vars->Flag_List = 1; }
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
         }
