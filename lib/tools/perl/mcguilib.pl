@@ -42,6 +42,7 @@ sub simulation_dialog {
 	$doseed = 0;
     }
     $si{'Autoplot'} = 0 unless $si{'Autoplot'};
+    $si{'Binary'} = 0 unless $si{'Binary'};
     $si{'Ncount'} = 1e6 unless $si{'Ncount'};
     $si{'Trace'} = 0 unless $si{'Trace'};
     $si{'NScan'} = 0 unless $si{'NScan'};
@@ -343,7 +344,7 @@ END
 sub backend_dialog {
     # Choice of plotting backend
     # PW 20030314
-    my ($win,$plotter) = @_;
+    my ($win,$binary,$plotter) = @_;
     my $dlg = $win->DialogBox(-title => "McStas:Plot backend",
 			      -buttons => ["Close"]);
     my $lf = $dlg->add('Frame');
@@ -359,10 +360,12 @@ sub backend_dialog {
 	       -anchor => 'w','value',3,'variable',\$plotter)->pack(-fill => 'x');
     $buttons[4]=$lf->Radiobutton(-text => "Scilab scriptfile",
 	       -anchor => 'w','value',4,'variable',\$plotter)->pack(-fill => 'x');
+    $buttons[4]=$lf->Checkbutton(-text => "Use binary files (faster)",
+	       -relief => 'flat','variable',\$binary)->pack(-fill => 'x');
     $buttons[$plotter]->select;
     my $res = $dlg->Show;
     
-    return ($res, $plotter);
+    return ($res, $binary, $plotter);
 }
 
 
