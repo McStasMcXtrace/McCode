@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug  7, 1997
 *
-*	$Id: cexp.c,v 1.5 2000-07-05 13:32:10 kn Exp $
+*	$Id: cexp.c,v 1.6 2000-07-27 09:04:59 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.5  2000/07/05 13:32:10  kn
+*	Properly quote constant string expressions.
+*
 *	Revision 1.4  1998/10/02 08:35:04  kn
 *	Fixed header comment.
 *
@@ -24,9 +27,43 @@
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
+#include <stdarg.h>
 #include <stdio.h>
 
 #include "mcstas.h"
+
+/* The internal structure implementing a C expression. */
+struct cexp
+  {
+    char *s;		    /* String representation */
+    int isvalue;	    /* True if identifier or string/number constant */
+    int lineno;		    /* Starting line number, or zero */
+  };
+
+/* Create an expression from a string representing a value (either identifier,
+   constant number, or constant string). */
+static CExp
+mkvalueexp(char *s)
+{
+  CExp e;
+  palloc(e);
+  e->s = s;
+  e->isvalue = 1;
+  e->lineno = 0;		/* Initially no line number set */
+  return e;
+}
+
+/* Create an expression from a string not representing a value. */
+static CExp
+mknonvalueexp(char *s)
+{
+  CExp e;
+  palloc(e);
+  e->s = s;
+  e->isvalue = 0;
+  e->lineno = 0;		/* Initially no line number set */
+  return e;
+}
 
 /*******************************************************************************
 * Handle identifiers used as arguments to components.
@@ -47,21 +84,19 @@
 CExp
 exp_id(char *id)
 {
-  return str_cat(ID_PRE, "ip", id, NULL);
+  return mkvalueexp(str_cat(ID_PRE, "ip", id, NULL));
 }
 
 CExp
 exp_extern_id(char *id)
 {
-  return str_dup(id);
+  return mkvalueexp(str_dup(id));
 }
 
 CExp
-exp_number(double n)
+exp_number(char *n)
 {
-  char buf[100];
-  sprintf(buf, "%g", n);
-  return str_dup(buf);
+  return mkvalueexp(str_dup(n));
 }
 
 CExp
@@ -71,22 +106,75 @@ exp_string(char *s)
   quoted = str_quote(s);
   result =  str_cat("\"", s, "\"", NULL);
   str_free(quoted);
-  return result;
+  return mkvalueexp(result);
+}
+
+CExp
+exp_ctoken(char *s)
+{
+  return mknonvalueexp(str_dup(s));
+}
+
+CExp
+exp_compound(int n, ...)
+{
+  char *result, *new;
+  CExp e;
+  va_list ap;
+  char *separator = "";		/* Token separator, initially empty */
+
+  va_start(ap, n);
+  result = str_dup("");
+  while(n-- > 0)
+  {
+    e = va_arg(ap, CExp);
+    new = str_cat(result, separator, e->s, NULL);
+    str_free(result);
+    result = new;
+    separator = " ";		/* Now use space separator for rest. */
+  }
+  return mknonvalueexp(result);
+}
+
+void
+exp_free(CExp e)
+{
+  str_free(e->s);
+  memfree(e);
 }
 
 char *
 exp_tostring(CExp e)
 {
-  if(e == NULL)
+  char *s = e->s;
+  if(s == NULL)
   {
-    e = "";
+    s = "";
     debugn((DEBUG_HIGH, "exp_tostring(): NULL cexp received.\n"));
   }
-  return str_dup(e);
+  return str_dup(s);
 }
 
 void
 exp_fprint(FILE *f, CExp e)
 {
-  fputs(e, f);
+  fputs(e->s, f);
+}
+
+int
+exp_isvalue(CExp e)
+{
+  return e->isvalue;
+}
+
+void
+exp_setlineno(CExp e, int n)
+{
+  e->lineno = n;
+}
+
+int
+exp_getlineno(CExp e)
+{
+  return e->lineno;
 }
