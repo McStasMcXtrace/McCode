@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.93 2004-08-25 09:45:41 farhi Exp $
+* $Id: mcstas-r.c,v 1.94 2004-09-01 14:03:41 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.93  2004/08/25 09:45:41  farhi
+* Main change in the format definition specifications. Aliases are now available to ease maintenance and writing of new formats, e.g. %FIL instead of %2$s !!
+*
 * Revision 1.92  2004/08/04 10:38:08  farhi
 * Added 'raw' data set support (N,p,sigma) -> (N,p,p2) in data files, so that this is additive (for better grid support)
 *
@@ -264,7 +267,7 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 
 /* Multiple output format support. ========================================== */
 
-#define mcNUMFORMATS 8
+#define mcNUMFORMATS 9
 #ifndef MCSTAS_FORMAT
 #define MCSTAS_FORMAT "McStas"  /* default format */
 #endif
@@ -272,13 +275,13 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 mcstatic struct mcformats_struct mcformat;
 
 /*******************************************************************************
-* Definition of output formats. 
+* Definition of output formats. structure defined in mcstas-r.h
 * Name aliases are defined in mcuse_format_* functions (below)
 *******************************************************************************/
 
 mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
   { "McStas", "sim",
-    "%PREFormat: %FMT file\n"
+    "%PREFormat: %FMT file. Use mcplot/PGPLOT to view.\n"
       "%PREURL:    http://neutron.risoe.dk/\n"
       "%PREEditor: %USR\n"
       "%PRECreator:%SRC simulation (McStas " MCSTAS_VERSION ")\n"
@@ -288,15 +291,14 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREbegin %TYP\n",
     "%PREend %TYP\n",
     "%PRE%NAM: %VAL\n",
-    "", 
-    "%PREErrors [%PAR/%FIL]: \n",
-    "%PREEvents [%PAR/%FIL]: \n",
-    "", "", "" },
+    "", "", 
+    "%PREErrors [%PAR/%FIL]: \n", "",
+    "%PREEvents [%PAR/%FIL]: \n", "" },
   { "Scilab", "sci",
     "function mc_%PAR = get_%PAR(p)\n"
       "// %FMT function issued from McStas on %DAT\n"
       "// McStas simulation %SRC: %FIL %FMT\n"
-      "// import data using exec('%PAR.sci',-1); s=get_%PAR(); and s=get_%PAR('plot'); to plot\n"
+      "// Import data using scilab> exec('%PAR.sci',-1); s=get_%PAR(); and s=get_%PAR('plot'); to plot\n"
       "mode(-1); //silent execution\n"
       "if argn(2) > 0, p=1; else p=0; end\n"
       "mc_%PAR = struct();\n"
@@ -358,16 +360,16 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREmc_%VPA.mc_%VNA = 0; mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
     "%PREmc_%PAR.func='get_%PAR';\n%PREmc_%PAR.data = [ ",
-    "%PREerrors = [ ",
-    "%PREevents = [ ",
     " ]; // end of data\n%PREif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\n%PREmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
+    "%PREerrors = [ ",
     " ]; // end of errors\n%PREif single_file == 1, mc_%PAR.errors=errors; end\n",
+    "%PREevents = [ ",
     " ]; // end of events\n%PREif single_file == 1, mc_%PAR.events=events; end\n"},
   { "Matlab", "m",
     "function mc_%PAR = get_%PAR(p)\n"
       "%% %FMT function issued from McStas on %DAT\n"
       "%% McStas simulation %SRC: %FIL\n"
-      "%% import data using s=%PAR; and s=%PAR('plot'); to plot\n"
+      "%% Import data using matlab> s=%PAR; and s=%PAR('plot'); to plot\n"
       "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
       "mc_%PAR.Format ='%FMT';\n"
       "mc_%PAR.URL    ='http://neutron.risoe.dk';\n"
@@ -419,13 +421,14 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
     "%PREmc_%PAR.func='%PAR';\n%PREmc_%PAR.data = [ ",
-    "%PREerrors = [ ",
-    "%PREevents = [ ",
     " ]; %% end of data\nif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\nmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
+    "%PREerrors = [ ",
     " ]; %% end of errors\nif single_file, mc_%PAR.errors=errors; end\n",
+    "%PREevents = [ ",
     " ]; %% end of events\nif single_file, mc_%PAR.events=events; end\n"},
   { "IDL", "pro",
-    "function mcload_inline,d\n"
+    "; McStas/IDL file. Import using idl> s=%PAR() and s=%PAR(/plot) to plot\n"
+      "function mcload_inline,d\n"
       "; local inline function to load external data\n"
       "S=d.type & a=execute('S=long(['+strmid(S,9,strlen(S)-10)+'])')\n"
       "if strpos(d.format, 'binary') lt 0 then begin\n"
@@ -522,11 +525,11 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREstv,%VPA,'%VNA',%VNA\n",
     "%PREstv,%SEC,'%NAM','%VAL'\n",
     "%PREstv,%PAR,'func','%PAR' & data=[ ",
-    "%PREif single_file ne 0 then begin errors=[ ",
-    "%PREif single_file ne 0 then begin events=[ ",
     " ]\n%PREif size(data,/type) eq 7 then single_file=0 else single_file=1\n"
     "%PREstv,%PAR,'data',data & data=0 & %PAR=mcplot_inline(%PAR,p)\n",
+    "%PREif single_file ne 0 then begin errors=[ ",
     " ]\n%PREstv,%PAR,'errors',reform(errors,%MDIM,%NDIM,/over) & errors=0\n%PREendif\n",
+    "%PREif single_file ne 0 then begin events=[ ",
     " ]\n%PREstv,%PAR,'events',reform(events,%MDIM,%NDIM,/over) & events=0\n%PREendif\n\n"},
   { "XML", "xml",
     "<?xml version=\"1.0\" ?>\n<!--\n"
@@ -534,7 +537,8 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "Editor: %USR\n"
       "Creator:%SRC McStas " MCSTAS_VERSION " [neutron.risoe.dk].\n"
       "Date:   Simulation started (%DATL) %DAT\n"
-      "File:   %FIL\n-->\n"
+      "File:   %FIL\n"
+      "View with Mozilla, InternetExplorer, gxmlviewer, kxmleditor\n-->\n"
       "<NX%PAR file_name=\"%FIL\" file_time=\"%DAT\" user=\"%USR\">\n"
         "<NXentry name=\"McStas " MCSTAS_VERSION "\"><start_time>%DAT</start_time>\n",
     "<end_time>%DAT</end_time></NXentry></NX%PAR>\n<!-- EndDate:%DAT -->\n",
@@ -548,34 +552,32 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "%PRE<%ZVL long_name=\"%ZLA\" axis=\"3\" primary=\"1\" min=\"%ZMIN\""
         " max=\"%ZMAX\" dims=\"%PDIM\" range=\"1\"></%ZVL>\n"
       "%PRE<data long_name=\"%TITL\" signal=\"1\"  axis=\"[%XVL,%YVL,%ZVL]\" file_name=\"%FIL\">",
-    "%PRE<errors>", "%PRE<monitor>",
-    "%PRE</data>\n", "%PRE</errors>\n", "%PRE</monitor>\n"},
+    "%PRE</data>\n",
+    "%PRE<errors>", "%PRE</errors>\n", 
+    "%PRE<monitor>", "%PRE</monitor>\n"},
   { "HTML", "html",
     "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD %DAT//EN\"\n"
       "\"http://www.w3.org/TR/html4/strict.dtd\">\n"
       "<HTML><HEAD><META name=\"Author\" content=\"%PAR\">\n"
-      "<META name=\"Creator\" content=\"%SRC McStas " MCSTAS_VERSION " [neutron.risoe.dk] simulation\">\n"
+      "<META name=\"Creator\" content=\"%PAR (%SRC) McStas " MCSTAS_VERSION " [neutron.risoe.dk] simulation\">\n"
       "<META name=\"Date\" content=\"%DAT\">\n"
-      "<TITLE>[McStas %SRC]%FIL</TITLE></HEAD>\n"
+      "<TITLE>[McStas %PAR (%SRC)]%FIL</TITLE></HEAD>\n"
       "<BODY><h1><a name=\"%PAR\">"
-        "McStas simulation %SRC: file %FIL</a></h1><br>\n"
+        "McStas simulation %SRC (%SRC): Result file %FIL.html</a></h1><br>\n"
         "This simulation report was automatically created by"
         " <a href=\"http://neutron.risoe.dk/\"><i>McStas " MCSTAS_VERSION "</i></a><br>\n"
         "<pre>User:   %USR<br>\n"
-        "%PRECreator: <a href=\"%SRC\">%SRC</a> McStas simulation<br>\n"
+        "%PRECreator: <a href=\"%SRC\">%SRC</a> %PAR McStas simulation<br>\n"
         "%PREFormat:  %FMT<br>\n"
         "%PREDate:    (%DATL) %DAT<br></pre>\n",
     "<b>EndDate: </b>(%DATL) %DAT<br></BODY></HTML>\n",
     "%PRE<h%LVL><a name=\"%NAM\">%TYP %NAM</a></h%LVL> "
-      "[child of <a href=\"#%PAR\">%PAR</a>]<br>\n"
-      "%PREAssociated <a href=\"%FIL\">data file %FIL</a><br>\n"
-        "%PREAssociated <a href=\"%FIL.png\">%PAR image %FIL.png<br> (when available)\n"
-        "%PRE<img src=\"%FIL.png\" alt=\"%PAR %FIL image\" width=100></a><br>\n",
-    "[end of <a href=\"#%FIL\">%PAR %FIL</a>]<br>\n",
+      "[child of <a href=\"#%PAR\">%PAR</a>]<br>\n",
+    "[end of <a href=\"#%NAM\">%TYP %NAM</a>]<br>\n",
     "%PRE<b>%NAM: </b>%VAL<br>\n",
-    "%PRE<b>DATA</b><br>\n",
-      "%PRE<b>ERRORS</b><br>\n","%PRE<b>EVENTS</b><br>\n",
-      "%PREEnd of DATA<br>\n", "%PREEnd of ERRORS<br>\n", "%PREEnd of EVENTS<br>\n"},
+    "%PRE<b>DATA</b> file <a href=\"%FIL\">%FIL</a><br>\n", "%PREEnd of DATA<br>\n",
+    "%PRE<b>ERRORS</b><br>\n","%PREEnd of ERRORS<br>\n", 
+    "%PRE<b>EVENTS</b><br>\n", "%PREEnd of EVENTS<br>\n"},
   { "OpenGENIE", "gcl",
     "PROCEDURE get_%PAR\n"
       "RESULT %PAR\n"
@@ -595,16 +597,16 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PRE%VPA.%VNA = %VNA; free \"%VNA\";\n",
     "%PRE%SEC.%NAM = \"%VAL\";\n",
     "%PRE%PAR.func=\"get_%PAR\";\n%PRE%PAR.data = [ ",
-    "%PREIF (single_file = 1); %PAR.errors = [ ",
-    "%PREIF (single_file = 1); %PAR.ncount = [ ",
     " ] array(%MDIM,%NDIM); # end of data\nIF (length(%PAR.data) = 0); single_file=0; ELSE single_file=1; ENDIF\n%PAR=mcplot_inline(%PAR,p);\n",
+    "%PREIF (single_file = 1); %PAR.errors = [ ",
     " ] array(%MDIM,%NDIM); # end of errors\nENDIF\n",
+    "%PREIF (single_file = 1); %PAR.ncount = [ ",
     " ] array(%MDIM,%NDIM); # end of ncount\nENDIF\n"},
   { "Octave", "m",
     "function mc_%PAR = get_%PAR(p)\n"
       "%% %FMT function issued from McStas on %DAT\n"
       "%% McStas simulation %SRC: %FIL\n"
-      "%% import data using s=%PAR('plot');\n"
+      "%% Import data using octave> s=%PAR(); and plot with s=%PAR('plot');\n"
       "if nargin > 0, p=1; else p=0; end\n"
       "mc_%PAR.Format ='%FMT';\n"
       "mc_%PAR.URL    ='http://neutron.risoe.dk';\n"
@@ -655,12 +657,202 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
     "%PREmc_%PAR.func='%PAR';\n%PREmc_%PAR.data = [ ",
-    "%PREerrors = [ ",
-    "%PREevents = [ ",
     " ]; %% end of data\nif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\nmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
+    "%PREerrors = [ ",
     " ]; %% end of errors\nif single_file, mc_%PAR.errors=errors; end\n",
-    " ]; %% end of events\nif single_file, mc_%PAR.events=events; end\n"}
-    };
+    "%PREevents = [ ",
+    " ]; %% end of events\nif single_file, mc_%PAR.events=events; end\n"},
+  { "VRML", "wrl",
+    "#VRML V2.0 utf8\n%PREFormat: %FMT file\n"
+      "%PREuse freeWRL, openvrml, vrmlview, CosmoPlayer, Cortona... to view file\n"
+      "WorldInfo {\n"
+      "title \"%SRC/%FIL simulation World Data\"\n"
+      "info [ \"URL:    http://neutron.risoe.dk/\"\n"
+      "       \"Editor: %USR\"\n"
+      "       \"Creator:%SRC simulation (McStas)\"\n"
+      "       \"Date:   Simulation started (%DATL) %DAT\"\n"
+      "       \"File:   %FIL\" ]\n}\n"
+      "NavigationInfo { type \"EXAMINE\" headlight TRUE}\n"
+      "Background { skyColor [ 0.0 0.0 0.0 ] }\n",
+    "%PREEndDate:%DAT\n",
+    "%PREbegin %TYP %PAR\n",
+    "%PREend %TYP %PAR\n",
+    "%PRE%SEC.%NAM= '%VAL'\n",
+    "%PREThe Proto that contains data values and objects to plot these\n"
+      "PROTO I_ERR_N_%PAR [\n"
+      "%PREthe PROTO parameters\n"
+      "  field MFFloat Data [ ]\n"
+      "  field MFFloat Errors [ ]\n"
+      "  field MFFloat Ncounts [ ]\n"
+      "] { %PREThe plotting objects/methods in the Proto\n"
+      "  %PREdraw a small sphere at the origin\n"
+      "  DEF Data_%PAR Group {\n"
+      "  children [\n"
+      "    DEF CoordinateOrigin Group {\n"
+      "      children [\n"
+      "        Transform { translation  0 0 0 }\n"
+      "        Shape { \n"
+      "          appearance Appearance { \n"
+      "            material Material {\n"
+      "              diffuseColor 1.0 1.0 0.0\n"
+      "              transparency 0.5 } }\n"
+      "          geometry Sphere { radius .01 } \n"
+      "    } ] }\n"
+      "    %PREdefintion of the arrow allong Y axis\n"
+      "    DEF ARROW Group {\n"
+      "      children [\n"
+      "        Transform {\n"
+      "          translation 0 0.5 0\n"
+      "          children [\n"
+      "            Shape {\n"
+      "              appearance DEF ARROW_APPEARANCE Appearance {\n"
+      "                material Material {\n"
+      "                  diffuseColor .3 .3 1\n"
+      "                  emissiveColor .1 .1 .33\n"
+      "                }\n"
+      "              }\n"
+      "              geometry Cylinder {\n"
+      "                bottom FALSE\n"
+      "                radius .005\n"
+      "                height 1\n"
+      "                top FALSE\n"
+      "        } } ] }\n"
+      "        Transform {\n"
+      "          translation 0 1 0\n"
+      "          children [\n"
+      "            DEF ARROW_POINTER Shape {\n"
+      "              geometry Cone {\n"
+      "                bottomRadius .05\n"
+      "                height .1\n"
+      "              }\n"
+      "              appearance USE ARROW_APPEARANCE\n"
+      "    } ] } ] }\n"
+      "    %PREthe arrow along X axis\n"
+      "    Transform {\n"
+      "      translation 0 0 0\n"
+      "      rotation 1 0 0 1.57\n"
+      "      children [\n"
+      "        Group {\n"
+      "          children [ \n"
+      "            USE ARROW\n"
+      "    ] } ] }\n"
+      "    %PREthe arrow along Z axis\n"
+      "    Transform {\n"
+      "      translation 0 0 0\n"
+      "      rotation 0 0 1 -1.57\n"
+      "      children [\n"
+      "        Group {\n"
+      "          children [ \n"
+      "            USE ARROW\n"
+      "    ] } ] }\n"
+      "    %PREthe Y label (which is vertical)\n"
+      "    DEF Y_Label Group {\n"
+      "      children [\n"
+      "        Transform {\n"
+      "          translation 0 1 0\n"
+      "          children [\n"
+      "            Billboard {\n"
+      "              children [\n"
+      "                Shape {\n"
+      "                  appearance DEF LABEL_APPEARANCE Appearance {\n"
+      "                    material Material {\n"
+      "                      diffuseColor 1 1 .3\n"
+      "                      emissiveColor .33 .33 .1\n"
+      "                    } }\n"
+      "                  geometry Text { \n"
+      "                    string [ \"%ZVAR: %ZLA\", \"%ZMIN:%ZMAX - %PDIM points\" ] \n"
+      "                    fontStyle FontStyle {  size .2 }\n"
+      "    } } ] } ] } ] }\n"
+      "    %PREthe X label\n"
+      "    DEF X_Label Group {\n"
+      "      children [\n"
+      "        Transform {\n"
+      "          translation 1 0 0\n"
+      "          children [\n"
+      "            Billboard {\n"
+      "              children [\n"
+      "                Shape {\n"
+      "                  appearance DEF LABEL_APPEARANCE Appearance {\n"
+      "                    material Material {\n"
+      "                      diffuseColor 1 1 .3\n"
+      "                      emissiveColor .33 .33 .1\n"
+      "                    } }\n"
+      "                  geometry Text { \n"
+      "                    string [ \"%XVAR: %XLA\", \"%XMIN:%XMAX - %MDIM points\" ] \n"
+      "                    fontStyle FontStyle {  size .2 }\n"
+      "    } } ] } ] } ] }\n"
+      "    %PREthe Z label\n"
+      "    DEF Z_Label Group {\n"
+      "      children [\n"
+      "        Transform {\n"
+      "          translation 0 0 1\n"
+      "          children [\n"
+      "            Billboard {\n"
+      "              children [\n"
+      "                Shape {\n"
+      "                  appearance DEF LABEL_APPEARANCE Appearance {\n"
+      "                    material Material {\n"
+      "                      diffuseColor 1 1 .3\n"
+      "                      emissiveColor .33 .33 .1\n"
+      "                    } }\n"
+      "                  geometry Text { \n"
+      "                    string [ \"%YVAR: %YLA\", \"%YMIN:%YMAX - %NDIM points\" ] \n"
+      "                    fontStyle FontStyle {  size .2 }\n"
+      "    } } ] } ] } ] }\n"
+      "    %PREThe text information (header data )\n"
+      "    DEF Header Group {\n"
+      "      children [\n"
+      "        Transform {\n"
+      "          translation 0 2 0\n"
+      "          children [\n"
+      "            Billboard {\n"
+      "              children [\n"
+      "                Shape {\n"
+      "                  appearance Appearance {\n"
+      "                    material Material { \n"
+      "                      diffuseColor .9 0 0\n"
+      "                      emissiveColor .9 0 0 }\n"
+      "                  }\n"
+      "                  geometry Text {\n"
+      "                    string [ \"%PAR/%FIL\",\"%TITL\" ]\n"
+      "                    fontStyle FontStyle {\n"
+      "                        style \"BOLD\"\n"
+      "                        size .2\n"
+      "    } } } ] } ] } ] }\n"
+      "    %PREThe Data plot\n"
+      "    DEF MonitorData Group {\n"
+      "      children [\n"
+      "        DEF TransformData Transform {\n"
+      "          children [\n"
+      "            Shape {\n"
+      "              appearance Appearance {\n"
+      "                material Material { emissiveColor 0 0.2 0 }\n"
+      "              }\n"
+      "              geometry ElevationGrid {\n"
+      "                xDimension  %MDIM\n"
+      "                zDimension  %NDIM\n"
+      "                xSpacing    1\n"
+      "                zSpacing    1\n"
+      "                solid       FALSE\n"
+      "                height IS Data\n"
+      "    } } ] } ] }\n"
+      "    %PREThe VRMLScript that redimension x and z axis within 0:1\n"
+      "    %PREand re-scale data within 0:1\n"
+      "    DEF GetScale Script {\n"
+      "      eventOut SFVec3f scale_vect\n"
+      "      url \"javascript: \n"
+      "        function initialize( ) {\n"
+      "          scale_vect = new SFVec3f(1.0/%MDIM, 1.0/Math.abs(%ZMAX-%ZMIN), 1.0/%NDIM); }\" }\n"
+      "  ] }\n"
+      "ROUTE GetScale.scale_vect TO TransformData.scale\n} # end of PROTO\n"
+      "%PREnow we call the proto with Data values\n"
+      "I_ERR_N_%PAR {\nData [\n",
+    "] # End of Data\n",
+    "Errors [\n",
+    "] # End of Errors\n",
+    "Ncounts [\n",
+    "] # End of Ncounts\n}" }
+};
 
 /* MCDISPLAY support. ======================================================= */
 
@@ -2204,7 +2396,7 @@ FILE *mcnew_file(char *name, char *mode)
   strcat(mem, name);
   file = fopen(mem, (mode ? mode : "w"));
   if(!file)
-    fprintf(stderr, "Warning: could not open output file '%s' (mcnew_file)\n", mem);
+    fprintf(stderr, "Warning: could not open output file '%s' in mode '%s' (mcnew_file)\n", mem, mode);
   free(mem);
   return file;
 } /* mcnew_file */
@@ -2430,7 +2622,7 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
   if (part && !strcmp(part,"footer")) 
   {
     HeadFoot = format.Footer;
-    date_l = (long)t;;
+    date_l = (long)t;
   }
   else 
   {
@@ -2445,12 +2637,18 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
   sprintf(user,"%s on %s", 
         getenv("USER") ? getenv("USER") : "mcstas", 
         getenv("HOST") ? getenv("HOST") : "localhost");
-  sprintf(instrname,"%s (%s)", mcinstrument_name, mcinstrument_source);
+  if (strstr(format.Name, "HTML")) {
+    sprintf(instrname,"%s", mcinstrument_source);
+    mcvalid_name(valid_parent, mcinstrument_name, 256);
+  } else {
+    sprintf(instrname,"%s (%s)", mcinstrument_name, mcinstrument_source);
+    if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
+    else strcpy(valid_parent, "root");
+  }
   strncpy(date, ctime(&t), 64); 
   if (strlen(date)) date[strlen(date)-1] = '\0';
   
-  if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
-  else strcpy(valid_parent, "root");
+  
   
   return(pfprintf(f, HeadFoot, "sssssssl", 
     pre,                  /* %1$s  PRE  */
@@ -2488,6 +2686,7 @@ static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *
     name,         /* %3$s NAM */
     value));      /* %4$s VAL */
 } /* mcfile_tag */
+
 /*******************************************************************************
 * mcfile_section: output section start/end using specific file format.
 *   outputs, in file 'name' having preallocated 'f' handle, the format Section.
@@ -2518,10 +2717,9 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
   if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
   else strcpy(valid_parent, "root");
   
-  if (!strcmp(part,"end") && pre)
+  if (!strcmp(part,"end") && pre)       /* un-indent */
   {
-    if (strlen(pre) <= 2) strcpy(pre,"");
-    else pre[strlen(pre)-2]='\0'; 
+    if (strlen(pre) > 2) pre[strlen(pre)-2]='\0'; 
   }
   
   ret = pfprintf(f, Section, "ssssssi",
@@ -2533,9 +2731,9 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
     valid_parent, /* %6$s  VPA  */
     level);       /* %7$i  LVL */
   
-  if (!strcmp(part,"begin")) 
+  if (!strcmp(part,"begin"))
   {
-    if (pre) strcat(pre,"  ");
+    if (pre) strcat(pre,"  ");  /* indent */
     if (name && strlen(name)) 
       mcfile_tag(f, format, pre, name, "name", name);
     if (parent && strlen(parent)) 
@@ -2635,7 +2833,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   int m, int n, int p,
   char *xlabel, char *ylabel, char *zlabel, 
   char *xvar, char *yvar, char *zvar, 
-  double x1, double x2, double y1, double y2, double z1, double z2, 
+  double *x1, double *x2, double *y1, double *y2, double *z1, double *z2, 
   char *filename,
   double *p0, double *p1, double *p2, char istransposed)
 {
@@ -2684,8 +2882,8 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
         if (p0) N = p0[index];
         if (p2) E = p2[index];
 
-        if (m) x = x1 + (i + 0.5)/m*(x2 - x1); else x = 0;
-        if (n) y = y1 + (j + 0.5)/n/p*(y2 - y1); else y = 0;
+        if (m) x = *x1 + (i + 0.5)/m*(*x2 - *x1); else x = 0;
+        if (n) y = *y1 + (j + 0.5)/n/p*(*y2 - *y1); else y = 0;
         z = p1[index];
         sum_xz += x*z;
         sum_yz += y*z;
@@ -2749,8 +2947,8 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     if (n*m*p > 1) 
     {
       sprintf(signal, "Min=%g; Max=%g; Mean= %g;", min_z, max_z, mean_z); 
-      if (y1 == 0 && y2 == 0) { y1 = min_z; y2 = max_z;}
-      else if (z1 == 0 && z2 == 0) { z1 = min_z; z2 = max_z;}
+      if (m > 1 && n == 1 && p == 1) { *y1 = min_z; *y2 = max_z; *z1=*y1; *z2=*y2; }
+      else if (m > 1 && n > 1) { *z1 = min_z; *z2 = max_z;}
     } else strcpy(signal, "");
 
     mcfile_tag(f, format, pre, parent, "statistics", stats);
@@ -2775,7 +2973,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     {
       mcfile_tag(f, format, pre, parent, "zvar", zvar);
       mcfile_tag(f, format, pre, parent, "zlabel", zlabel);
-      sprintf(limits, "%g %g %g %g %g %g", x1, x2, y1, y2, z1, z2);
+      sprintf(limits, "%g %g %g %g %g %g", *x1, *x2, *y1, *y2, *z1, *z2);
     }
   } else strcpy(limits, "0 0 0 0 0 0");
   mcfile_tag(f, format, pre, parent, lim_field, limits);
@@ -2800,24 +2998,34 @@ void mcsiminfo_init(FILE *f)
             info_name);
   else
   {
-    char pre[20]; /* allocate enough space for indentations */
+    char *pre; /* allocate enough space for indentations */
     int  ismcstas;
     char simname[1024];
     char root[10];
     
-    strcpy(pre, "");
+    pre = (char *)malloc(20);
+    if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcsiminfo_init)\n")); 
+    strcpy(pre, strstr(mcformat.Name, "VRML")
+               || strstr(mcformat.Name, "OpenGENIE") ? "# " : "  ");
+  
+  
     ismcstas = (strstr(mcformat.Name, "McStas") != NULL);
     if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas");
     else strcpy(root, "root");
     if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
     
     mcfile_header(mcsiminfo_file, mcformat, "header", pre, simname, root);
+    /* begin-end instrument */
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, mcinstrument_name, "instrument", root, 1);
     mcinfo_instrument(mcsiminfo_file, mcformat, pre, mcinstrument_name);
     if (ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
+    
+    /* begin-end simulation */
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, simname, "simulation", mcinstrument_name, 2);
     mcinfo_simulation(mcsiminfo_file, mcformat, pre, simname);
     if (ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
+    
+    free(pre);
   }
 } /* mcsiminfo_init */
 
@@ -2829,9 +3037,13 @@ void mcsiminfo_close(void)
     int  ismcstas;
     char simname[1024];
     char root[10];
-    char pre[10];
+    char *pre;
     
-    strcpy(pre, "  ");
+    pre = (char *)malloc(20);
+    if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcsiminfo_close)\n")); 
+    strcpy(pre, strstr(mcformat.Name, "VRML")
+               || strstr(mcformat.Name, "OpenGENIE") ? "# " : "  ");
+    
     ismcstas = (strstr(mcformat.Name, "McStas") != NULL);
     if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
     if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas"); else strcpy(root, "root");
@@ -2845,6 +3057,8 @@ void mcsiminfo_close(void)
     
     if (mcsiminfo_file != stdout) fclose(mcsiminfo_file);
     mcsiminfo_file = NULL;
+    
+    free(pre);
   }
 } /* mcsiminfo_close */
 
@@ -2862,7 +3076,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   double *p0, double *p1, double *p2, int m, int n, int p,
   char *xlabel, char *ylabel, char *zlabel, char *title,
   char *xvar, char *yvar, char *zvar,
-  double x1, double x2, double y1, double y2, double z1, double z2, 
+  double *x1, double *x2, double *y1, double *y2, double *z1, double *z2, 
   char *filename, char istransposed)
 {
   char *Begin;
@@ -2905,10 +3119,12 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   /* if normal or begin and part == data: output info_data (sim/data_file) */
   if (isdata == 1 && just_header != 2 && f)
   {
-    if(!strstr(format.Name, "no header"))
+    if(!strstr(format.Name, "no header")) {
       mcinfo_data(f, format, pre, valid_parent, title, m, n, p,
                   xlabel, ylabel, zlabel, xvar, yvar, zvar, 
-                  x1, x2, y1, y2, z1, z2, filename, p0, p1, p2, istransposed);
+                  x1, x2, y1, y2, z1, z2, filename, p0, p1, p2,
+                  istransposed);
+    }
   }
 
   /* if normal or begin: begin part (sim/data file) */
@@ -2930,12 +3146,12 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       m,            /* %14$i  MDIM */  
       n,            /* %15$i  NDIM */  
       p,            /* %16$i  PDIM */  
-      x1,           /* %17$g  XMIN */  
-      x2,           /* %18$g  XMAX */  
-      y1,           /* %19$g  YMIN */  
-      y2,           /* %20$g  YMAX */  
-      z1,           /* %21$g  ZMIN */  
-      z2);          /* %22$g  ZMAX */  
+      *x1,           /* %17$g  XMIN */  
+      *x2,           /* %18$g  XMAX */  
+      *y1,           /* %19$g  YMIN */  
+      *y2,           /* %20$g  YMAX */  
+      *z1,           /* %21$g  ZMIN */  
+      *z2);          /* %22$g  ZMAX */  
       
  /* if normal, and !single:
   *   open datafile, 
@@ -2950,34 +3166,38 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     if (filename) datafile = mcnew_file(filename, 
       (isdata != 1 || strstr(format.Name, "no header") ? "a" : "w"));
     else datafile = NULL;
-    /* special case o82.5%f IDL: can not have empty vectors. Init to 'empty' */
+    /* special case of IDL: can not have empty vectors. Init to 'external' */
     if (strstr(format.Name, "IDL") && f) fprintf(f, "'external'");
     /* if data, start with root header plus tags of parent data */
     if (datafile && !mcascii_only) 
-    { 
-      char mode[32];
+    {
+      char *new_pre;
+      char *mode;
+      new_pre = (char *)malloc(20);
+      mode    = (char *)malloc(20);
+      if (!new_pre || !mode) exit(fprintf(stderr, "Error: insufficient memory (mcfile_datablock)\n"));
+      strcpy(new_pre, (strstr(format.Name, "McStas") 
+               || strstr(format.Name, "VRML")
+               || strstr(format.Name, "OpenGENIE") ? "# " : ""));
+      
       if (isdata == 1) {
-              strcpy(mode, (strstr(format.Name, "McStas") ? "# " : ""));
         if(!strstr(format.Name, "no header"))
           {
-            mcfile_header(datafile, format, "header",
-                          mode, 
+            mcfile_header(datafile, format, "header", new_pre, 
                           filename, valid_parent); 
             mcinfo_simulation(datafile, format, 
-                              mode, valid_parent); 
+                              new_pre, valid_parent); 
           }
       }
       sprintf(mode, "%s begin", part);
       /* write header+data block begin tags into datafile */
-      mcfile_datablock(datafile, format, 
-          (strstr(format.Name, "McStas") ? "# " : ""), 
+      mcfile_datablock(datafile, format, new_pre, 
           valid_parent, mode,
           p0, p1, p2, m, n, p,
           xlabel,  ylabel, zlabel, title,
           xvar, yvar, zvar,
           x1, x2, y1, y2, z1, z2, filename, istransposed);
-      
-      
+      free(mode); free(new_pre);
     }
   }
   else if (just_header == 0)
@@ -3009,7 +3229,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
          
     for(j = 0; j < n*p; j++)  /* loop on rows(y) */
     {
-      if(datafile && !isBinary)
+      if(datafile && !isBinary && 0)
         fprintf(datafile,"%s", pre);
       for(i = 0; i < m; i++)  /* write all columns (x) */
       {
@@ -3037,7 +3257,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           {
             double x;
             
-            x = x1+(x2-x1)*(index)/(m*n*p);
+            x = *x1+(*x2-*x1)*(index)/(m*n*p);
             if (m*n*p > 1) fprintf(datafile, "%g %g %g %g\n", x, I, E, N);
           }
           else 
@@ -3115,12 +3335,12 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       m,            /* %14$i  MDIM */   
       n,            /* %15$i  NDIM */   
       p,            /* %16$i  PDIM */  
-      x1,           /* %17$g  XMIN */  
-      x2,           /* %18$g  XMAX */  
-      y1,           /* %19$g  YMIN */  
-      y2,           /* %20$g  YMAX */  
-      z1,           /* %21$g  ZMIN */  
-      z2);          /* %22$g  ZMAX */  
+      *x1,           /* %17$g  XMIN */  
+      *x2,           /* %18$g  XMAX */  
+      *y1,           /* %19$g  YMIN */  
+      *y2,           /* %20$g  YMAX */  
+      *z1,           /* %21$g  ZMIN */  
+      *z2);          /* %22$g  ZMAX */  
   }
       
  /* if normal and !single and datafile: 
@@ -3130,14 +3350,22 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   */
   if (!mcsingle_file && just_header == 0)
   {
-    char mode[32];
+    char *mode;
+    char *new_pre;
+
+    new_pre = (char *)malloc(20);
+    mode    = (char *)malloc(20);
+    if (!new_pre || !mode) exit(fprintf(stderr, "Error: insufficient memory (mcfile_datablock)\n"));
+    
+    strcpy(new_pre, (strstr(format.Name, "McStas") 
+               || strstr(format.Name, "VRML")
+               || strstr(format.Name, "OpenGENIE") ? "# " : ""));
 
     if (datafile && datafile != f && !mcascii_only)
     {
       sprintf(mode, "%s end", part);
       /* write header+data block end tags into datafile */
-      mcfile_datablock(datafile, format, 
-          (strstr(format.Name, "McStas") ? "# " : ""),
+      mcfile_datablock(datafile, format, new_pre,
           valid_parent, mode,
           p0, p1, p2, m, n, p,
           xlabel,  ylabel, zlabel, title,
@@ -3145,11 +3373,11 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           x1, x2, y1, y2, z1, z2, filename, istransposed);
       if ((isdata == 1 && is1d) || strstr(part,"ncount") || !p0 || !p2) /* either ncount, or 1d */
         if(!strstr(format.Name, "no footer"))
-          mcfile_header(datafile, format, "footer", 
-                        (strstr(format.Name, "McStas") ? "# " : ""),
+          mcfile_header(datafile, format, "footer", new_pre,
                         filename, valid_parent);
     }
     if (datafile) fclose(datafile); 
+    free(mode); free(new_pre);
   }
   else
   {
@@ -3172,10 +3400,14 @@ static int mcfile_data(FILE *f, struct mcformats_struct format,
   double *p0, double *p1, double *p2, int m, int n, int p,
   char *xlabel, char *ylabel, char *zlabel, char *title,
   char *xvar, char *yvar, char *zvar,
-  double x1, double x2, double y1, double y2, double z1, double z2,
+  double ox1, double ox2, double oy1, double oy2, double oz1, double oz2,
   char *filename, char istransposed)
 {
   int is1d;
+  double x2, x1, y2, y1, z2, z1;
+  
+  x1=ox1; y1=oy1; z1=oz1;
+  x2=ox2; y2=oy2; z2=oz2;
   
   /* return if f,n,m,p1 NULL */
   if ((m*n*p == 0) || !p1) return (-1);
@@ -3185,7 +3417,7 @@ static int mcfile_data(FILE *f, struct mcformats_struct format,
     p0, p1, p2, m, n, p,
     xlabel,  ylabel, zlabel, title,
     xvar, yvar, zvar,
-    x1, x2, y1, y2, z1, z2, filename, istransposed);
+    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed);
   /* return if 1D data */
   if (is1d) return(is1d);
   /* output error block and p2 non NULL */
@@ -3193,13 +3425,13 @@ static int mcfile_data(FILE *f, struct mcformats_struct format,
     p0, p1, p2, m, n, p,
     xlabel,  ylabel, zlabel, title,
     xvar, yvar, zvar,
-    x1, x2, y1, y2, z1, z2, filename, istransposed);
+    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed);
   /* output ncount block and p0 non NULL */
   if (p0 && p2) mcfile_datablock(f, format, pre, parent, "ncount",
     p0, p1, p2, m, n, p,
     xlabel,  ylabel, zlabel, title,
     xvar, yvar, zvar,
-    x1, x2, y1, y2, z1, z2, filename, istransposed);
+    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed);
   
   return(is1d);
 } /* mcfile_data */
@@ -3219,7 +3451,7 @@ double mcdetector_out(char *cname, double p0, double p1, double p2, char *filena
 *   parent is the component name. Handles MPI stuff.
 *******************************************************************************/
 static double mcdetector_out_012D(struct mcformats_struct format, 
-  char *pre, char *parent, char *title,
+  char *parent, char *title,
   int m, int n,  int p,
   char *xlabel, char *ylabel, char *zlabel, 
   char *xvar, char *yvar, char *zvar, 
@@ -3232,10 +3464,16 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   double Nsum=0, Psum=0, P2sum=0;
   FILE *local_f=NULL;
   char istransposed=0;
+  char *pre;
 
 #ifdef USE_MPI
   int mpi_event_list;
 #endif /* !USE_MPI */
+
+  pre = (char *)malloc(20);
+  if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
+  strcpy(pre, strstr(format.Name, "VRML")
+               || strstr(format.Name, "OpenGENIE") ? "# " : "");
 
 #ifdef USE_MPI
   mpi_event_list = (strstr(format.Name," list ") != NULL);
@@ -3409,6 +3647,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       /* give 0D detector output. */
       mcdetector_out(parent, Nsum, Psum, P2sum, filename);
     }
+  free(pre);
   return(Psum);
 } /* mcdetector_out_012D */
 
@@ -3420,11 +3659,17 @@ void mcheader_out(FILE *f,char *parent,
   char *filename)
 {
   int  loc_single_file;
-  char pre[3];
+  char *pre;
   char simname[512];
+  
+  pre = (char *)malloc(20);
+  if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcheader_out)\n"));
+  
   loc_single_file = mcsingle_file; mcsingle_file = 1;
   
-  if (!strstr(mcformat.Name, "McStas")) strcpy(pre,""); else strcpy(pre,"# ");
+  strcpy(pre, strstr(mcformat.Name, "McStas")
+   || strstr(mcformat.Name, "VRML")
+   || strstr(mcformat.Name, "OpenGENIE") ? "# " : "");
   
   mcfile_header(f, mcformat, "header", pre, mcinstrument_name, "mcstas");
   mcinfo_instrument(f, mcformat, pre, mcinstrument_name);
@@ -3434,11 +3679,12 @@ void mcheader_out(FILE *f,char *parent,
     pre, parent, "data",
     NULL,NULL,NULL, m, n, p,
     xlabel, ylabel, zlabel, title,
-    xvar, yvar, zvar, x1,  x2,  y1,  y2,  z1,  z2, 
+    xvar, yvar, zvar, &x1,  &x2,  &y1,  &y2,  &z1,  &z2, 
     filename, 0);
   
   mcsingle_file = loc_single_file;
   mcfile_header(f, mcformat, "footer", pre, mcinstrument_name, "mcstas");
+  free(pre);
 }
 
 /*******************************************************************************
@@ -3446,11 +3692,8 @@ void mcheader_out(FILE *f,char *parent,
 *******************************************************************************/
 double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
 {
-  char pre[20];
-  
-  strcpy(pre, "");
   return(mcdetector_out_012D(mcformat, 
-    pre, c, t,
+    c, t,
     1, 1, 1,
     "I", "", "", 
     "I", "", "", 
@@ -3465,15 +3708,12 @@ double mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *xvar, double x1, double x2, int n,
                   double *p0, double *p1, double *p2, char *f, char *c)
 {
-  char pre[20];
-  
-  strcpy(pre, "");
   return(mcdetector_out_012D(mcformat, 
-    pre, c, t,
+    c, t,
     n, 1, 1,
     xl, yl, "Intensity", 
     xvar, "(I,I_err)", "I", 
-    x1, x2, x1, x2, 0, 0, f,
+    x1, x2, 0, 0, 0, 0, f,
     p0, p1, p2));
 }
 
@@ -3486,14 +3726,13 @@ double mcdetector_out_2D(char *t, char *xl, char *yl,
 {
   char xvar[3];
   char yvar[3];
-  char pre[20];
   
-  strcpy(pre, ""); strcpy(xvar, "x "); strcpy(yvar, "y ");
+  strcpy(xvar, "x "); strcpy(yvar, "y ");
   if (xl && strlen(xl)) strncpy(xvar, xl, 2);
   if (yl && strlen(yl)) strncpy(yvar, yl, 2);
   
   return(mcdetector_out_012D(mcformat, 
-    pre, c, t,
+    c, t,
     m, n, 1,
     xl, yl, "Intensity", 
     xvar, yvar, "I", 
@@ -3510,11 +3749,8 @@ double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
                   double x1, double x2, double y1, double y2, double z1, double z2, int m,
                   int n, int p, double *p0, double *p1, double *p2, char *f, char *c)
 {
-  char pre[20];
-  
-  strcpy(pre, "");
   return(mcdetector_out_012D(mcformat, 
-    pre, c, t,
+    c, t,
     m, n, p,
     xl, yl, zl, 
     xvar, yvar, zvar, 
@@ -3578,7 +3814,7 @@ char *mcuse_format_header(char *format_const)
   char *format=NULL;
   
   if (!format_const) return(NULL);
-  format = (char *)malloc(strlen(format_const));
+  format = (char *)malloc(strlen(format_const)+1);
   if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_header)\n"));
   strcpy(format, format_const);
   str_rep(format, "%PRE", "%1$s"); /* prefix */
@@ -3596,11 +3832,12 @@ char *mcuse_format_tag(char *format_const)
   char *format=NULL;
   
   if (!format_const) return(NULL);
-  format = (char *)malloc(strlen(format_const));
+  format = (char *)malloc(strlen(format_const)+1);
   if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_tag)\n"));
   strcpy(format, format_const);
   str_rep(format, "%PRE", "%1$s"); /* prefix */
   str_rep(format, "%SEC", "%2$s"); /* section/parent name */
+  str_rep(format, "%PAR", "%2$s");
   str_rep(format, "%NAM", "%3$s"); /* name of field */
   str_rep(format, "%VAL", "%4$s"); /* value of field */
   return(format);
@@ -3610,12 +3847,13 @@ char *mcuse_format_section(char *format_const)
   char *format=NULL;
   
   if (!format_const) return(NULL);
-  format = (char *)malloc(strlen(format_const));
+  format = (char *)malloc(strlen(format_const)+1);
   if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_section)\n"));
   strcpy(format, format_const);
   str_rep(format, "%PRE", "%1$s"); /* prefix */
   str_rep(format, "%TYP", "%2$s"); /* type/class of section */
   str_rep(format, "%NAM", "%3$s"); /* name of section */
+  str_rep(format, "%SEC", "%3$s");
   str_rep(format, "%VNA", "%4$s"); /* valid name (letters/digits) of section */
   str_rep(format, "%PAR", "%5$s"); /* parent name (simulation) */
   str_rep(format, "%VPA", "%6$s"); /* valid parent name (letters/digits) */
@@ -3627,7 +3865,7 @@ char *mcuse_format_data(char *format_const)
   char *format=NULL;
   
   if (!format_const) return(NULL);
-  format = (char *)malloc(strlen(format_const));
+  format = (char *)malloc(strlen(format_const)+1);
   if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_data)\n"));
   strcpy(format, format_const);
   str_rep(format, "%PRE", "%1$s"); /* prefix */
@@ -3667,7 +3905,8 @@ void mcuse_format(char *format)
   strcpy(low_format, format);
   for (i=0; i<strlen(low_format); i++) low_format[i]=tolower(format[i]);
   if (!strcmp(low_format, "pgplot")) strcpy(low_format, "mcstas");
-  tmp = malloc(256);
+  
+  tmp = (char *)malloc(256);
   if(!tmp) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format)\n"));
   
   /* look for a specific format in mcformats.Name table */
@@ -4043,7 +4282,7 @@ mcstas_main(int argc, char *argv[])
 
   mcfinally();
   /* free format specification strings */
-  if (mcformat.Name) free(mcformat.Name);
+  if (mcformat.Name        ) free(mcformat.Name        );
   if (mcformat.Header      ) free(mcformat.Header      );  
   if (mcformat.Footer      ) free(mcformat.Footer      );  
   if (mcformat.AssignTag   ) free(mcformat.AssignTag   );  
