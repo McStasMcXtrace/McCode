@@ -8,7 +8,8 @@
 
 require "mcstas-scanlib.pl";
 
-die unless $#ARGV >= 3;
+die "Usage: [perl] gscan.pl numpoint sim-exec file (VAL | VAL,VAL) ..."
+    unless $#ARGV >= 3;
 
 ($npoints, $simprog, $simfile, @VALS) = @ARGV;
 
