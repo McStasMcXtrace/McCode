@@ -12,8 +12,10 @@ use Tk;
 require "mcfrontlib.pl";
 require "mcguilib.pl";
 require "mcplotlib.pl";
+require "mcrunlib.pl";
 
 my $current_sim_file;
+my $current_sim_def = "opt_filter_1";
 
 sub is_erase_ok {
     my ($w) = @_;
@@ -60,6 +62,25 @@ sub menu_run_simulation {
 	    }
 	} else {
 	    print "$k: $newsi->{$k}\n";
+	}
+    }
+    if($bt eq 'Start') {
+	my $out_name = get_out_file($current_sim_def);
+	if($out_name) {
+	    my $command = $newsi->{'Trace'} ? "mcdisplay " : "";
+	    $command .= '"' . $out_name . '" --ncount=' . $newsi->{'Ncount'};
+	    $command .= ' --trace' if $newsi->{'Trace'};
+	    $command .= ' --seed=' . $newsi->{'Seed'} if $newsi->{'Seed'};
+	    for (keys %{$newsi->{'Params'}}) {
+		$command .= ' ' . $_ . '=' . $newsi->{'Params'}{$_};
+	    }
+	    print "Running simulation '$out_name' ...\n";
+	    print "$command\n";
+	    system $command;
+	    if($newsi->{'Autoplot'} && !$newsi->{'Trace'}) {
+		my ($ii, $si, $di) = read_sim_file($current_sim_file);
+		plot_dialog($w, $ii, $si, $di);
+	    }
 	}
     }
 }
