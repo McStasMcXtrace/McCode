@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.4 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.5 $
+* Origin: McStas 1.5
 *
 * Divergence/wavelength monitor.
 *
@@ -43,7 +43,6 @@ DEFINITION PARAMETERS (nlam, ndiv, filename)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, maxdiv, lambda_0, lambda_1)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     int Div_N[nlam][ndiv];
