@@ -1,3 +1,17 @@
+Changes in McStas v1.2, January 31, 2000:
+
+ - New components (Single_crystal, Mosaic_simple, Source_adapt,
+   Res_sample, ...).
+ - New graphical user interface mcgui.
+ - New command-line front-end mcrun with automatic compilation
+   (experimental).
+ - New resolution function front-end mcresplot (experimental).
+ - Better random number generator "Mersenne Twister".
+ - Fix for problem with Digital Unix almost-ANSI compiler.
+ - Misc. minor bug fixes.
+
+
+
 Changes in McStas v1.1, March 31, 1999:
 
  - New components.
