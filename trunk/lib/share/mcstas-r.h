@@ -26,7 +26,7 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.67 2005-02-22 16:11:03 farhi Exp $
+* $Id: mcstas-r.h,v 1.68 2005-02-23 12:29:56 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
 *       Revision 1.66  2005/02/16 12:21:39  farhi
@@ -116,7 +116,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.67 $"
+#define MCSTAS_R_H "$Revision: 1.68 $"
 
 #include <math.h>
 #include <string.h>
@@ -435,7 +435,7 @@ void   mcsiminfo_close(void);
     double mc_dt, mc_gx, mc_gy, mc_gz; \
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
-    mc_ret = plane_intersect_Gfast(&mc_dt, -mc_gz/2, -mcnlvz, -mcnlz); \
+    mc_ret = solve_2nd_order(&mc_dt, -mc_gz/2, -mcnlvz, -mcnlz); \
     if (mc_ret && mc_dt>0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
     else ABSORB; }\
     else mcPROP_Z0; \
@@ -641,12 +641,13 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
                  double vx, double vy, double vz, double r);
-/* ADD: E. Farhi, Aug 6th, 2001 plane_intersect_Gfast */
-int plane_intersect_Gfast(double *Idt,
+/* ADD: E. Farhi, Aug 6th, 2001 solve_2nd_order */
+int solve_2nd_order(double *Idt,
     double A,  double B,  double C);
 void randvec_target_circle(double *xo, double *yo, double *zo,
     double *solid_angle, double xi, double yi, double zi, double radius);
 #define randvec_target_sphere randvec_target_circle
+#define plane_intersect_Gfast solve_2nd_order
 void randvec_target_rect_angular(double *xo, double *yo, double *zo,
     double *solid_angle,
                double xi, double yi, double zi, double height, double width, Rotation A);
