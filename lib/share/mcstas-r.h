@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.23 1999-03-16 13:51:52 kn Exp $
+*	$Id: mcstas-r.h,v 1.24 1999-03-16 13:53:11 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.23  1999/03/16 13:51:52  kn
+*	Standard method for outputting detector data in components.
+*
 *	Revision 1.22  1999/01/28 07:56:35  kn
 *	Support for MCDISPLAY section in component definitions.
 *
@@ -128,8 +131,8 @@ void mcdisplay(void);
         mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
 #define MC_GETPAR(comp, par) mcc ## comp ## _ ## par
 #define DETECTOR_OUT(p0,p1,p2) mcdetector_out(mccompcurname,p0,p1,p2)
-#define DETECTOR_OUT_1D(t,xl,yl,x1,x2,n,p0,p1,p2,f) \
-     mcdetector_out_1D(t,xl,yl,x1,x2,n,p0,p1,p2,f,mccompcurname)
+#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
+     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,mccompcurname)
 #define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
      mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,mccompcurname)
 
@@ -324,7 +327,7 @@ double mcestimate_error(int N, double p1, double p2);
 void mcsiminfo_out(char *format, ...);
 void mcdetector_out(char *cname, double p0, double p1, double p2);
 void mcdetector_out_1D(char *t, char *xl, char *yl,
-		       double x1, double x2, int n,
+		       char *xvar, double x1, double x2, int n,
 		       int *p0, double *p1, double *p2, char *f, char *c);
 void mcdetector_out_2D(char *t, char *xl, char *yl, double x1, double x2,
 		       double y1,double y2,int m, int n,
