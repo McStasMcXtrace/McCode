@@ -216,6 +216,21 @@ sub mcdoc_manual {
     system("$prefix mcdoc$suffix --manual $cmd_suffix");
 }
 
+sub mcdoc_tutorial {
+    my ($w) = @_;
+    my $suffix='';
+    my $cmd_suffix='';
+    my $prefix='';
+    if ($Config{'osname'} eq 'MSWin32') {
+        $suffix='.pl';
+        $prefix='start ';
+    } else {
+        $cmd_suffix=' &';
+    }
+    putmsg($cmdwin, "Opening Tutorial: $prefix mcdoc$suffix --tutorial $cmd_suffix\n", 'msg');
+    system("$prefix mcdoc$suffix --tutorial $cmd_suffix");
+}
+
 sub mcdoc_components {
     my ($w) = @_;
     my $suffix='';
@@ -1118,6 +1133,8 @@ sub setup_menu {
                        -command => sub {mcdoc_components($w)});
     $helpmenu->command(-label => 'Generate component index',
                        -command => sub {mcdoc_generate($w)});
+    $helpmenu->command(-label => 'McStas tutorial',
+                       -command => sub {mcdoc_tutorial($w)});
     $helpmenu->separator;
     $helpmenu->command(-label => 'Test McStas installation',
                        -command => sub {mcdoc_test($w)});
