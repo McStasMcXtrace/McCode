@@ -365,17 +365,17 @@ sub exec_sim {
     if (!$slave == 0) {
 	if ($slave eq "localhost") {
 	    print STDERR "This is a local slave run\n";
-	    $cmd = "echo cd $slavedir && ./@cmdlist";
+	    $cmd = "echo cd $slavedir && @cmdlist";
 	} else {
 	    print STDERR "This is a remote slave run at $slave\n";
-	    $cmd = "ssh $slave \"cd $slavedir && ./@cmdlist\"";
+	    $cmd = "ssh $slave \"cd $slavedir && @cmdlist\"";
 	}
 	exec $cmd;
     } else {
 	if ($mpi >= 1) {
-	    $cmd = "mpirun -np $mpi -machinefile $mpi_machines ./@cmdlist";
+	    $cmd = "mpirun -np $mpi -machinefile $mpi_machines @cmdlist";
 	} else {
-	    $cmd = "./@cmdlist";
+	    $cmd = "@cmdlist";
 	}
 	print "Real command: '$cmd'\n";
 	exec $cmd;
