@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.13 1999-01-28 07:51:17 kn Exp $
+* 	$Id: cogen.c,v 1.14 1999-03-16 13:09:36 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.13  1999/01/28 07:51:17  kn
+* 	Support for MCDISPLAY section in component definitions.
+*
 * 	Revision 1.12  1998/11/13 07:28:36  kn
 * 	Implemented proper quoting of special chars in file names in #line
 * 	directives.
@@ -157,14 +160,26 @@
 /* Functions for outputting code. */
 
 /* Handle for output file. */
-static FILE *output_handle = NULL;
+static FILE *output_handle = NULL;/* Handle for output file. */
+static int num_next_output_line = 1; /* Line number for next output line. */
+static char *quoted_output_file_name = NULL; /* str_quote()'ed name
+						of output file. */
 
+/*******************************************************************************
+* Output a line of code
+* Assumes that the output does not contain newlines.
+*******************************************************************************/
 static void
 cout(char *s)
 {
   fprintf(output_handle, "%s\n", s);
+  num_next_output_line++;
 }
 
+/*******************************************************************************
+* Output a line of code using printf-style format string.
+* Assumes that the output does not contain newlines.
+*******************************************************************************/
 static void
 coutf(char *format, ...)
 {
@@ -174,6 +189,7 @@ coutf(char *format, ...)
   vfprintf(output_handle, format, ap);
   va_end(ap);
   fprintf(output_handle, "\n");
+  num_next_output_line++;
 }
 
 static void
@@ -186,12 +202,18 @@ codeblock_out(struct code_block *code)
     return;
   fprintf(output_handle, "#line %d \"%s\"\n",
 	  code->linenum + 1, code->quoted_filename);
+  num_next_output_line++;
   liter = list_iterate(code->lines);
   while(line = list_next(liter))
   {
     fprintf(output_handle, "%s", line);
+    num_next_output_line++;
   }
   list_iterate_end(liter);
+  /* Note: the number after #line refers to the line AFTER the directive. */
+  num_next_output_line++;
+  fprintf(output_handle, "#line %d \"%s\"\n",
+	  num_next_output_line, quoted_output_file_name);
 }
 
 static void
@@ -202,15 +224,24 @@ codeblock_out_brace(struct code_block *code)
 
   if(list_len(code->lines) <= 0)
     return;
-  fprintf(output_handle, "#line %d \"%s\"\n", code->linenum, code->quoted_filename);
+  fprintf(output_handle, "#line %d \"%s\"\n",
+	  code->linenum, code->quoted_filename);
+  num_next_output_line++;
   fprintf(output_handle, "{\n");
+  num_next_output_line++;
   liter = list_iterate(code->lines);
   while(line = list_next(liter))
   {
     fprintf(output_handle, "%s", line);
+    num_next_output_line++;
   }
   list_iterate_end(liter);
   fprintf(output_handle, "}\n");
+  num_next_output_line++;
+  /* Note: the number after #line refers to the line AFTER the directive. */
+  num_next_output_line++;
+  fprintf(output_handle, "#line %d \"%s\"\n",
+	  num_next_output_line, quoted_output_file_name);
 }
 
 
@@ -265,6 +296,10 @@ embed_file(char *name)
   fclose(f);
   coutf("/* End of file \"%s\". */", name);
   cout("");
+  /* Note: the number after #line refers to the line AFTER the directive. */
+  num_next_output_line++;
+  fprintf(output_handle, "#line %d \"%s\"\n",
+	  num_next_output_line, quoted_output_file_name);
 }
 
 
@@ -887,9 +922,16 @@ cogen(char *output_name, struct instr_def *instr)
 {
   /* Initialize output file. */
   if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
+  {
     output_handle = fdopen(1, "w");
+    quoted_output_file_name = str_quote("<stdout>");
+  }
   else
+  {
     output_handle = fopen(output_name, "w");
+    quoted_output_file_name = str_quote(output_name);
+  }
+  num_next_output_line = 1;
   if(output_handle == NULL)
     fatal_error("Error opening output file '%s'\n", output_name);
 
