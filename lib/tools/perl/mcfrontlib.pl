@@ -7,20 +7,22 @@ use FileHandle;
 require "mcrunlib.pl";
 
 # Read 2D numeric data, skipping comment lines.
+# MOD: E. Farhi, Sep 28th, 2001: to cope with I_err and N in 2D files
 sub read_data_file_2D {
     my ($file) = @_;
     my $h = new FileHandle;
     if(open($h, $file)) {
-	my @list = ();
-	while(<$h>) {
-	    next if /^\s*#/;
-	    push(@list, new PDL (split " "));
-	}
-	close $h;
-	return cat @list;
-    } else {
-	print STDOUT "Warning: failed to read data file \"$file\"\n";
-	return undef;
+      my @list = ();
+      while(<$h>) {
+        last if /^\s*#\s+end\s+I\s*$/i;
+        next if /^\s*#/;
+        push(@list, new PDL (split " ")); 
+        }
+        close $h;
+        return cat @list;
+      } else {
+      print STDOUT "Warning: failed to read data file \"$file\"\n";
+      return undef;
     }
 }
 
@@ -29,12 +31,12 @@ sub read_array2D {
     my ($h,$m,$n) = @_;
     my @list = ();
     while(<$h>) {
-	if(/^[-+0-9eE. \t]+$/) {
-	    push(@list, new PDL (split " "));
-	} else {
-	    last if /^\s*end\s+array2D\s*$/i;
-	    die "Bad embedded numeric data in array2D in file.";
-	}
+      if(/^[-+0-9eE. \t]+$/) {
+	        push(@list, new PDL (split " "));
+      } else {
+	        last if /^\s*end\s+array2D\s*$/i;
+	        die "Bad embedded numeric data in array2D in file.";
+      }
     }
     return cat @list;
 }
@@ -276,7 +278,7 @@ sub read_sim_info {
 	    $instrument_info = read_instrument_info($handle);
 	} elsif(/^\s*begin\s+simulation\s*$/i) {
 	    $simulation_info = read_simulation_info($handle);
-	} elsif(/^\s*$/) {
+  } elsif(/^\s*$/) {
 	    next;
 	} else {
 	    die "Invalid line in siminfo file:\n'$_'";

@@ -3,10 +3,12 @@
 * McStas, the neutron ray-tracing package: PSD_monitor_4PI.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: PSD_monitor_4PI
+*
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: McStas 1.5
 *
 * Spherical position-sensitive detector.
@@ -14,6 +16,9 @@
 * %D
 * An (n times m) pixel spherical PSD monitor using a cylindrical projection. 
 * Mostly for test and debugging purposes.
+*
+* Example: PSD_monitor_4PI(radius=0.1,
+            nx=90, ny=90, filename="Output.psd")
 *
 * %P
 * INPUT PARAMETERS:
@@ -38,10 +43,11 @@
 
 
 DEFINE COMPONENT PSD_monitor_4PI
-DEFINITION PARAMETERS (nx, ny, filename)
+DEFINITION PARAMETERS (nx=90, ny=90, filename)
 SETTING PARAMETERS (radius)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
 %{
   int PSD_N[nx][ny];
@@ -85,6 +91,7 @@ TRACE
     PSD_N[i][j]++;
     PSD_p[i][j] += p;
     PSD_p2[i][j] += p*p;
+    SCATTER;
   }
 %}
 

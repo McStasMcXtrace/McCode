@@ -3,14 +3,15 @@
 * McStas, the neutron ray-tracing package: Monochromator.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Monochromator
+*
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: McStas 1.5
 *
-* Monochromator/analyzer crystal 
-* OBSOLETE: Use rather Mosaic_anisotropic or Mosaic_simple
+* Monochromator/analyzer crystal (OBSOLETE).
 *
 * %D
 * NOTE: This component is obsolete. Use the component Mosaic_anisotropic
@@ -23,6 +24,9 @@
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
 *
+* Example: Monochromator(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*           mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
+*
 * %P
 * INPUT PARAMETERS:
 *
@@ -32,7 +36,7 @@
 * ymax:    Upper y-bound of crystal (m)
 * mosaich: Horisontal mosaic (FWHM) (arc minutes)
 * mosaicv: Vertical mosaic (FWHM) (arc minutes)
-* R0:      Maximum reflectivity (1)
+* r0:      Maximum reflectivity (1)
 * Q:       Scattering vector (AA-1)
 *
 * %E
@@ -40,11 +44,14 @@
 
 DEFINE COMPONENT Monochromator
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaich, mosaicv, r0, Q)
+SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
   %{
+#ifndef DIV_CUTOFF
 #define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
+#endif
   %}
 
 TRACE
@@ -100,6 +107,7 @@ TRACE
           vz = vz*vratio;
           vy = vy*vratio;                             /* Renormalize v */
           vx = vx*vratio;
+          SCATTER;
         }
       }
     }

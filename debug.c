@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: debug.c,v 1.6 1999-03-18 07:29:10 kn Exp $
+*	$Id: debug.c,v 1.7 2003-01-20 16:03:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.6  1999/03/18 07:29:10  kn
+*	Fix bug in print_warn().
+*
 *	Revision 1.5  1998/10/02 08:36:12  kn
 *	Fixed header comment.
 *

@@ -3,19 +3,25 @@
 * McStas, the neutron ray-tracing package: DivLambda_monitor.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: DivLambda_monitor
+*
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: McStas 1.5
 *
 * Divergence/wavelength monitor.
 *
-* %D
+* %Description
 * 2D detector for intensity as a function of both horizontal divergence
 * and wavelength.
 *
-* %P
+* Example: DivLambda_monitor(nlam=20, ndiv=20, filename="Output.div",
+*           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+*           maxdiv=2, lambda_0=2, lambda_1=10)
+*
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xmin:     Lower x bound of detector opening (m)
@@ -35,12 +41,12 @@
 * Div_p:    Array of neutron weight counts
 * Div_p2:   Array of second moments
 *
-* %E
+* %End
 *******************************************************************************/
 
 DEFINE COMPONENT DivLambda_monitor
-DEFINITION PARAMETERS (nlam, ndiv, filename)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, maxdiv, lambda_0, lambda_1)
+DEFINITION PARAMETERS (nlam=20, ndiv=20, filename)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, maxdiv=2, lambda_0, lambda_1)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -80,6 +86,7 @@ TRACE
         Div_N[i][j]++;
         Div_p[i][j] += p;
         Div_p2[i][j] += p*p;
+        SCATTER;
       }
     }
   %}

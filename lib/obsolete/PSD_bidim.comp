@@ -1,0 +1,116 @@
+/*******************************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: PSD_bidim
+*
+* Written by: KL,  Feb 3, 1998 (PSD_monitor.comp)
+* Rewritten by: Thomas Hansen, ILL Grenoble, France, 1999
+*	Output modified
+*
+* An (n times m) pixel PSD monitor. This component may also be used as a beam
+* detector.
+*
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+*******************************************************************************/
+
+
+DEFINE COMPONENT PSD_bidim
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, nx, ny, filename)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2) 
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    int PSD_N[nx][ny];
+    double PSD_p[nx][ny];
+    double PSD_p2[nx][ny];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    for (i=0; i<nx; i++)
+     for (j=0; j<ny; j++) 
+     {
+      PSD_N[i][j] = 0;
+      PSD_p[i][j] = 0;
+      PSD_p2[i][j] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      i = floor((x - xmin)*nx/(xmax - xmin));
+      j = floor((y - ymin)*ny/(ymax - ymin));
+      PSD_N[i][j]++;
+      PSD_p[i][j] += p;
+      PSD_p2[i][j] += p*p;
+    }
+  %}
+FINALLY
+  %{
+	int 	i,j,n=0;
+	double 	flux=0.0,xx,yy,A;
+	char	string[40];
+	
+	for (i=0; i<nx; i++)
+	{
+		xx=xmin+(xmax-xmin)*(double)i/(double)nx;
+		for (j=0; j<ny; j++) 
+		{
+			yy=ymin+(ymax-ymin)*(double)j/(double)ny;
+			if ((yy*yy+xx*xx)<=(0.01*0.01/PI)) 
+			{	n++;
+				flux +=PSD_p[i][j];
+			}
+		}
+	}
+	A=(double)n*(xmax-xmin)/(double)nx*(ymax-ymin)/(double)ny*100.0*100.0; /* cm2 */
+	flux/=A;
+	/* flux/=(double)created_neutrons; */
+	sprintf(string,"BiDimPSD %9.4lgn/s/cm2",flux);
+	DETECTOR_OUT_2D(
+		string,
+		"X position [cm]",
+		"Y position [cm]",
+		xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+		nx, ny,
+		&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+		filename);
+   
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+
+END

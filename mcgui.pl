@@ -716,12 +716,14 @@ sub menu_insert_component {
 }
 
 # Directories containing component definitions.
+# MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir
 my @comp_sources =
     (["Source", ["$MCSTAS::sys_dir/sources"]],
      ["Optics", ["$MCSTAS::sys_dir/optics"]],
      ["Sample", ["$MCSTAS::sys_dir/samples"]],
      ["Monitor", ["$MCSTAS::sys_dir/monitors"]],
      ["Misc", ["$MCSTAS::sys_dir/misc"]],
+     ["Obsolete", ["$MCSTAS::sys_dir/obsolete"]],
      ["Other", ["$MCSTAS::sys_dir", "."]]);
 
 # Fill out the menu for building component instances.

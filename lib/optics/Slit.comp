@@ -6,17 +6,23 @@
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: McStas 1.5
 *
-* Rectangular slit.
+* Rectangular/circular slit.
 *
 * %D
-* A simple rectangular slit. No transmission around the slit is allowed.
+* A simple rectangular or circular slit. You may either 
+* specify the radius (circular shape), or the rectangular bounds.
+* No transmission around the slit is allowed.
+*
+* Example: Slit(xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01)
+*          Slit(radius=0.01)
 *
 * %P
 * INPUT PARAMETERS
 *
+* radius: Radius of slit in the z=0 plane, centered at Origo (m)
 * xmin: Lower x bound (m)
 * xmax: Upper x bound (m)
 * ymin: Lower y bound (m)
@@ -28,13 +34,17 @@
 
 DEFINE COMPONENT Slit
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin, xmax, ymin, ymax)
+SETTING PARAMETERS (xmin=-0.01, xmax=0.01, ymin=-0.01, ymax=0.01, radius=0)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 TRACE
 %{
     PROP_Z0;
-    if (x<xmin || x>xmax || y<ymin || y>ymax)
+    if (((radius == 0) && (x<xmin || x>xmax || y<ymin || y>ymax))
+    || ((radius != 0) && (x*x + y*y > radius*radius)))
       ABSORB;
+    else
+      SCATTER;
 %}
 
 MCDISPLAY

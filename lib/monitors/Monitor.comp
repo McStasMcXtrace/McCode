@@ -3,10 +3,12 @@
 * McStas, the neutron ray-tracing package: Monitor.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Monitor
+*
 * %I
 * Written by: Kim Lefmann
 * Date: October 4, 1997
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: McStas 1.5
 *
 * Simple single detector/monitor.
@@ -14,6 +16,8 @@
 * %D
 * Sums neutrons (0th, 1st, and 2nd moment of p) flying through 
 * the rectangular monitor opening. May also be used as detector.
+*
+* Example: Monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 *
 * %P
 * INPUT PARAMETERS:
@@ -56,6 +60,7 @@ TRACE
       Nsum++;
       psum += p;
       p2sum += p*p;
+      SCATTER;
     }
   %}
 FINALLY

@@ -6,7 +6,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: McStas 1.5
 *
 * Spherical position-sensitive detector with logarithmic scale.
@@ -36,10 +36,11 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_monitor_4PI_log
-DEFINITION PARAMETERS (nx, ny, filename)
-SETTING PARAMETERS (radius)
+DEFINITION PARAMETERS (nx=90, ny=90, filename)
+SETTING PARAMETERS (radius=0.1)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
 %{
   int PSD_N[nx][ny];

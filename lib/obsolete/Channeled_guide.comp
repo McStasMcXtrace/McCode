@@ -3,22 +3,25 @@
 * McStas, the neutron ray-tracing package: Channeled_guide.comp
 *         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Channeled_guide
+*
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: McStas 1.5
 *
 * Neutron guide with channels (bender section).
-* NOT correct when using focusing geometry. The slope of the channels are
-* not calculated correctly.
-* Use instead Gravity_Guide.
 *
 * %D
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
 * in the X-Y plane.
 * The guide may be tapered, and may have vertical subdivisions (used for
 * bender devices).
+*
+* Example: Channeled_guide(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=2.0,
+*  R0=0.99, Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003, k=1,
+* d=0.0005, mx=1, my=1)
 *
 * %P
 * INPUT PARAMETERS:
@@ -51,8 +54,8 @@
 
 DEFINE COMPONENT Channeled_guide
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, w2, h2, d, k, l,
-		    R0, Qcx, Qcy, alphax, alphay, mx, my, W)
+SETTING PARAMETERS (w1, h1, w2, h2, l,
+  R0=0.99, Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003, k=1, d=0.0005, mx=1, my=1)
 OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -67,6 +70,9 @@ DECLARE
 
 INITIALIZE
 %{
+  if (k <= 0 || W <=0) 
+  { fprintf(stderr,"Channeled_guide: %s: k abd W must be positive\n", NAME_CURRENT_COMP);
+    exit(-1); }
   w1c = (w1 + d)/(double)k;
   w2c = (w2 + d)/(double)k;
   ww = .5*(w2c - w1c);
@@ -75,6 +81,14 @@ INITIALIZE
   hhalf = .5*h1;
   lwhalf = l*whalf;
   lhhalf = l*hhalf;
+  
+  if ((k > 1) && (w1 != w2))
+  {
+    fprintf(stderr,"Channeled_guide: This component does not work with\n");
+    fprintf(stderr,"                 multichannel focusing guide\n");
+    fprintf(stderr,"                 Use Gravity_guide for that.\n");
+    exit(-1);
+  }
 %}
 
 TRACE

@@ -59,33 +59,36 @@ int mc_yyoverflow();
   struct comp_place place;	/* Component place */
   struct comp_orientation ori;	/* Component orientation */
   struct NXDinfo *nxdinfo;	/* Info for NeXus dictionary interface */
+  struct group_inst *groupinst;
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
 
-%token TOK_ABSOLUTE	"ABSOLUTE"
-%token TOK_AT		"AT"
+%token TOK_ABSOLUTE	  "ABSOLUTE"
+%token TOK_AT		      "AT"
 %token TOK_COMPONENT	"COMPONENT"
-%token TOK_DECLARE	"DECLARE"
-%token TOK_DEFINE	"DEFINE"
+%token TOK_DECLARE	  "DECLARE"
+%token TOK_DEFINE	    "DEFINE"
 %token TOK_DEFINITION	"DEFINITION"
-%token TOK_END		"END"
-%token TOK_FINALLY	"FINALLY"
-%token TOK_EXTERN	"EXTERN"
+%token TOK_END		    "END"
+%token TOK_FINALLY	  "FINALLY"
+%token TOK_EXTERN	    "EXTERN"
 %token TOK_INITIALIZE	"INITIALIZE"
 %token TOK_INSTRUMENT	"INSTRUMENT"
 %token TOK_MCDISPLAY	"MCDISPLAY"
-%token TOK_NXDICT	"NXDICT"
+%token TOK_NXDICT	    "NXDICT"
 %token TOK_NXDICTFILE	"NXDICTFILE"
-%token TOK_OUTPUT	"OUTPUT"
+%token TOK_OUTPUT	    "OUTPUT"
 %token TOK_PARAMETERS	"PARAMETERS"
 %token TOK_POLARISATION	"POLARISATION"
-%token TOK_RELATIVE	"RELATIVE"
-%token TOK_ROTATED	"ROTATED"
-%token TOK_SETTING	"SETTING"
-%token TOK_SHARE        "SHARE"
-%token TOK_STATE	"STATE"
-%token TOK_TRACE	"TRACE"
+%token TOK_RELATIVE	  "RELATIVE"
+%token TOK_ROTATED	  "ROTATED"
+%token TOK_SETTING	  "SETTING"
+%token TOK_STATE	    "STATE"
+%token TOK_TRACE	    "TRACE"
+%token TOK_DECLARE_UNIQUE	"SHARE" /* ADD: E. Farhi Sep 20th, 2001 shared code (unique declare) */
+%token TOK_POST_CODE	"THEN"      /* ADD: E. Farhi Sep 20th, 2001 post code code */
+%token TOK_GROUP	    "GROUP"     /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -100,8 +103,9 @@ int mc_yyoverflow();
 %token <string> TOK_CODE_LINE
 %token TOK_INVALID
 
-%type <instance> component compref reference
-%type <ccode> code codeblock share declare initialize trace finally mcdisplay
+%type <instance> component compref reference   /* MOD: E. Farhi Sep 24th, 2001 add group */
+%type <groupinst> groupdef groupref   /* ADD: E. Farhi Sep 24th, 2001 add group */
+%type <ccode> code codeblock unique declare initialize trace postcode finally mcdisplay /* MOD: E. Farhi Sep 20th, 2001, add 'unique' and 'postcode' */
 %type <coords>  coords
 %type <exp> exp topexp topatexp genexp genatexp
 %type <actuals> actuallist actuals actuals1
@@ -125,7 +129,7 @@ compdefs:	  /* empty */
 		| compdefs compdef
 ;
 
-compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace finally mcdisplay "END"
+compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters unique declare initialize trace finally mcdisplay "END"
 		  {
 		    struct comp_def *c;
 		    palloc(c);
@@ -135,14 +139,13 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace
 		    c->out_par = $4.out;
 		    c->state_par = $4.state;
 		    c->polarisation_par = $4.polarisation;
-                    c->share_code = $5;
-		    c->decl_code = $6;
+        c->uniq_code = $5;  /* ADD: E. Farhi Sep 20th, 2001 */
+		    c->decl_code = $6;  /* MOD: E. Farhi Sep 20th, 2001, shifted param numbs */
 		    c->init_code = $7;
 		    c->trace_code = $8;
 		    c->finally_code = $9;
 		    c->mcdisplay_code = $10;
-
-                    c->comp_inst_number = 0;
+        c->comp_inst_number = 0; /* ADD: E. Farhi Sep 20th, 2001 */
 
 		    /* Check definition and setting params for uniqueness */
 		    check_comp_formals(c->def_par, c->set_par, c->name);
@@ -264,7 +267,9 @@ instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
 		    instrument_definition->nxdinfo = $8;
 		    instrument_definition->finals = $10;
 		    instrument_definition->compmap = comp_instances;
+        instrument_definition->groupmap = group_instances;  /* ADD: E. Farhi Sep 25th, 2001 */
 		    instrument_definition->complist = comp_instances_list;
+        instrument_definition->grouplist = group_instances_list;  /* ADD: E. Farhi Sep 25th, 2001 */
 
 		    /* Check instrument parameters for uniqueness */
 		    check_instrument_formals(instrument_definition->formals,
@@ -345,15 +350,6 @@ instr_formal:	  TOK_ID TOK_ID
 		    formal->id = $1;
 		    $$ = formal;
 		  }
-share:	  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
-		| "SHARE" codeblock
-		  {
-		    $$ = $2;
-		  }
-;
 
 declare:	  /* empty */
 		  {
@@ -374,6 +370,18 @@ initialize:	  /* empty */
 		    $$ = $2;
 		  }
 ;
+
+/* ADD: E. Farhi Sep 20th, 2001 SHARE component block included once */
+unique:	  /* empty */
+		  {
+		    $$ = codeblock_new();
+		  }
+		| "SHARE" codeblock
+		  {
+		    $$ = $2;
+		  }
+;
+
 
 nxdict:		  /* empty */
 		  {
@@ -444,8 +452,10 @@ instr_trace:	  "TRACE" complist
 
 complist:	  /* empty */
 		  {
-		    comp_instances = symtab_create();
+		    comp_instances      = symtab_create();
 		    comp_instances_list = list_create();
+        group_instances     = symtab_create();
+        group_instances_list= list_create();
 		  }
 		| complist component
 		  {
@@ -465,27 +475,30 @@ complist:	  /* empty */
 		      list_add(comp_instances_list, $2);
 		      if($2->def)
 		      {
-			/* Check if the component handles polarisation. */
-			if($2->def->polarisation_par)
-			{
-			  instrument_definition->polarised = 1;
-			}
+            /* Check if the component handles polarisation. */
+            if($2->def->polarisation_par)
+            {
+	            instrument_definition->polarised = 1;
+            }
 		      }
 		    }
 		  }
 ;
 
-component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation
+component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation groupref postcode
 		  {
 		    struct comp_def *def;
 		    struct comp_inst *comp;
-
-		    def = read_component($4);
-                    def->comp_inst_number--; 
+        
+        def = read_component($4);
+        def->comp_inst_number--;
 		    palloc(comp); /* Allocate new instance. */
 		    comp->name = $2;
 		    comp->def = def;
 		    palloc(comp->pos);
+        comp->group = $8;           /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
+        comp->postcode = $9;  /* ADD: E. Farhi Sep 20th, 2001 THEN block*/
+        comp->index = 0;       /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
 		    comp->pos->place = $6.place;
 		    comp->pos->place_rel = $6.place_rel;
 		    comp->pos->orientation = $7.orientation;
@@ -593,6 +606,36 @@ reference:	  "ABSOLUTE"
 		  }
 ;
 
+/* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
+groupref:  /* empty */
+		  {
+        $$ = NULL;
+		  }
+    | "GROUP" groupdef
+		  {
+        $$ = $2;
+		  }
+;
+
+groupdef:   TOK_ID
+      {
+        struct group_inst *group;
+        struct Symtab_entry *ent;
+        
+        ent = symtab_lookup(group_instances, $1);
+        if(ent == NULL)
+        {
+          palloc(group);    /* create new group instance */
+          group->name = $1;  
+          group->index= 0;
+          symtab_add(group_instances, $1, group);
+		      list_add(group_instances_list, group);
+        }
+        else
+          group = ent->val;  
+        $$ = group;
+      }
+
 
 compref:	  TOK_ID
 		  {
@@ -616,6 +659,17 @@ coords:		  '(' exp ',' exp ',' exp ')'
 		    $$.x = $2;
 		    $$.y = $4;
 		    $$.z = $6;
+		  }
+;
+
+/* ADD: E. Farhi Sep 20th, 2001 THEN block executed after component instance */
+postcode:	  /* empty */
+		  {
+		    $$ = codeblock_new();
+		  }
+		| "THEN" codeblock
+		  {
+		    $$ = $2;
 		  }
 ;
 
@@ -664,9 +718,9 @@ topatexp:	  TOK_ID
 		    {
 		      if(!strcmp($1, formal->id))
 		      {
-			/* It was an instrument parameter */
-			$$ = exp_id($1);
-			goto found;
+			      /* It was an instrument parameter */
+			      $$ = exp_id($1);
+			      goto found;
 		      }
 		    }
 		    /* It was an external id. */
@@ -862,16 +916,22 @@ struct instr_def *instrument_definition;
 /* Map from names to component instances. */
 Symtab comp_instances;
 
+/* ADD: E. Farhi Sep 24th, 2001 Map from names to component group instances. */
+Symtab group_instances;
+
 /* List of components, in the order they where declared in the instrument
    definition. */
 List comp_instances_list;
+
+/* List of component groups, in the order they where declared in the instrument
+   definition. */
+List group_instances_list;
 
 /* Filename for outputting generated simulation program ('-' means stdin). */
 static char *output_filename;
 
 /* Map of already-read components. */
 Symtab read_components = NULL;
-
 
 /* Print a summary of the command usage and exit with error. */
 static void
@@ -886,9 +946,10 @@ print_usage(void)
 /* Print McStas version and copyright. */
 static void
 print_version(void)
-{
-  printf("McStas version 1.5, October 10, 2001\n"
+{ /* MOD: E. Farhi Sep 20th, 2001 version number */
+  printf("McStas version 1.6-ill, Oct 29th, 2001\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-2001\n"
+    "Additions (C) Institut Laue Langevin, 2001\n"
 	  "All rights reserved\n");
   exit(0);
 }
@@ -980,7 +1041,7 @@ parse_command_line(int argc, char *argv[])
     else if(argv[i][0] != '-')
     {
       if(instr_current_filename != NULL)
-	print_usage();		/* Multiple instruments given. */
+        print_usage();		/* Multiple instruments given. */
       instr_current_filename = str_dup(argv[i]);
     }
     else
@@ -1177,12 +1238,12 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
     {
       if(formal->isoptional)
       {
-	/* Use default value for unassigned optional parameter */
-	symtab_add(defpar, formal->id, formal->default_value);
+        /* Use default value for unassigned optional parameter */
+        symtab_add(defpar, formal->id, formal->default_value);
       } else {
-	print_error("Unassigned definition parameter %s for component %s.\n",
-		    formal->id, comp->name);
-	symtab_add(defpar, formal->id, exp_number("0.0"));
+        print_error("Unassigned definition parameter %s for component %s.\n",
+		          formal->id, comp->name);
+        symtab_add(defpar, formal->id, exp_number("0.0"));
       }
     } else {
       symtab_add(defpar, formal->id, entry->val);
@@ -1193,12 +1254,12 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-	static int seenb4 = 0;	/* Only print long error the first time */
-	print_error("Illegal expression for DEFINITION parameter %s of component %s.\n%s",
-		   formal->id, comp->name,
-		   ( seenb4++ ? "" :
-		     "(Only variable names, constant numbers, and constant strings\n"
-		     "are allowed for DEFINITION parameters.)\n") );
+        static int seenb4 = 0;	/* Only print long error the first time */
+        print_error("Illegal expression for DEFINITION parameter %s of component %s.\n%s",
+          formal->id, comp->name,
+          ( seenb4++ ? "" :
+	        "(Only variable names, constant numbers, and constant strings\n"
+	        "are allowed for DEFINITION parameters.)\n") );
       }
     }
   }
@@ -1211,12 +1272,12 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
     {
       if(formal->isoptional)
       {
-	/* Use default value for unassigned optional parameter */
-	symtab_add(setpar, formal->id, formal->default_value);
+        /* Use default value for unassigned optional parameter */
+        symtab_add(setpar, formal->id, formal->default_value);
       } else {
-	print_error("Unassigned setting parameter %s for component %s.\n",
-		    formal->id, comp->name);
-	symtab_add(setpar, formal->id, exp_number("0.0"));
+        print_error("Unassigned setting parameter %s for component %s.\n",
+		          formal->id, comp->name);
+        symtab_add(setpar, formal->id, exp_number("0.0"));
       }
     } else {
       symtab_add(setpar, formal->id, entry->val);
@@ -1273,7 +1334,7 @@ read_component(char *name)
     if(file == NULL)
     {
       print_error(
-	"Cannot find file containing definition of component `%s'.\n", name);
+        "Cannot find file containing definition of component `%s'.\n", name);
       return NULL;
     }
     push_autoload(file);

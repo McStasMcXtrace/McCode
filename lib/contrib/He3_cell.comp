@@ -1,11 +1,14 @@
 /***************************************************************************
 *
+* McStas, the neutron ray-tracing package: He3_cell.comp
+*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+*
 * Component He3_cell
 *
 * %Identification
 * Written by: Trefor Roberts 
 * Date: March 1999
-* Origin: ILL
+* Origin: McStas 1.5/ILL
 * version: 1.0
 *
 * Polarised 3He cell
@@ -13,6 +16,8 @@
 * %Description
 * Simple cylindrical polarised 3He neutron spin filter cell.
 * The glass container for the cell is not included in the model.
+*
+* Example: He3_cell(radius=0.1,length=.2,pressure=3,p3he=0.7,bx=0,by=1e-3,bz=0)
 *
 * %Parameters
 * Input parameters:
@@ -26,24 +31,26 @@
 * bz:        z component of field at the cell (tesla)
 *
 * %Link
-* <a href="http://www.ill.fr/tas/mcstas/ill_lib.html#instruments">The McStas ILL instrument simulations: H3 test</a>
+* <a href="http://www.ill.fr/tas/mcstas/>The McStas ILL page, and the instrument section</a>
 *
 * %End
 ***************************************************************************/
 
 DEFINE COMPONENT He3_cell
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius,length,pressure,p3he,bx,by,bz)
+SETTING PARAMETERS (radius,length,pressure=3,p3he=0.7,bx=0,by=1e-3,bz=0)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
+#ifndef opac_cnv
 #define opac_cnv    7.33     /* opacity conversion factor so that
                                 the opacity can be expressed in 
-					  bar.m.angstroms */
+					                      bar.m.angstroms */
 #define gyro        1.832e8  /* absolute value of the gyromagnetic 
                                 ratio of the neutron (s-1T-1) */
+#endif
 %}
 
 INITIALIZE
@@ -104,6 +111,7 @@ spins are transmitted (depending upon degree of polarisation of gas */
     } else {
       p*=0.5*exp(-opacity*(1.0+p3he));
     }
+    SCATTER;
   }
 %}
 

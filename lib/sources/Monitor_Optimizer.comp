@@ -1,11 +1,14 @@
 /*******************************************************************************
 *
+* McStas, the neutron ray-tracing package: Monitor_Optimizer.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
 * Component: Monitor_Optimizer
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 17 Sept 1999
-* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL (France)</a>
 * Version: 0.08
 * Modified by: EF, (Feb 2000)
 * Modified by: EF, Mar 10th, 2000 : now uses struct
@@ -48,10 +51,11 @@
 
 DEFINE COMPONENT Monitor_Optimizer
 DEFINITION PARAMETERS (optim_comp)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax)
+SETTING PARAMETERS (xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 OUTPUT PARAMETERS (This_Monitor_id)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
+
 DECLARE
 %{
 #ifndef Source_Optimizer_Here
@@ -87,7 +91,7 @@ TRACE
     if (Vars->Flag_Smooth )
     { /* to evaluate correctly the un-optimized flux, we restore original weight in these phases */
       if ((Vars->Phase == DEFS->PHASE_GET_REF) || (Vars->Phase == DEFS->PHASE_GET_LIMITS))
-     	Vars->cur_p /= Vars->dkeep;  
+             Vars->cur_p /= Vars->dkeep;  
     }
     if (This_Monitor_id == 1)  /* only count flux once !!  */
     {
@@ -102,14 +106,14 @@ TRACE
       if (((Vars->Reference_Counts > mcget_ncount()*Vars->dstep) && (Vars->Monitor_Counts >= Vars->nbins*10))
       || (Vars->Monitor_Counts >= Vars->nbins*100) || (Vars->Reference_Counts > 2*mcget_ncount()*Vars->dstep))
       {
-	Vars->Phase_Counts_R = 0;	/* enough counts on monitor */
-	if (Vars->Flag_Verbose)  
-	{
-	  printf(">> AUTO monitor has reached %.1f counts (non optimized",Vars->Monitor_Counts);
-	  if (Vars->Flag_Smooth) printf(", smoothed");
-	  printf(")\n");
-	}
-	Vars->Phase_Counts = (Vars->Reference_Counts+Vars->Limits_Counts); 
+        Vars->Phase_Counts_R = 0;        /* enough counts on monitor */
+        if (Vars->Flag_Verbose)  
+        {
+          printf(">> AUTO monitor has reached %.1f counts (non optimized",Vars->Monitor_Counts);
+          if (Vars->Flag_Smooth) printf(", smoothed");
+          printf(")\n");
+        }
+        Vars->Phase_Counts = (Vars->Reference_Counts+Vars->Limits_Counts); 
         Vars->dstep = (double)Vars->Phase_Counts/(double)mcget_ncount();
         
 /*        Vars->dkeep = Vars->nbins*10/Vars->Monitor_Counts;
@@ -125,7 +129,7 @@ TRACE
     }
 
    if ((Vars->Phase == DEFS->PHASE_GET_REF)
-    || ((Vars->Phase == DEFS->PHASE_OPTIM) && (Vars->Flag_Continuous) ))	/* build the Optimized Source distributions */
+    || ((Vars->Phase == DEFS->PHASE_OPTIM) && (Vars->Flag_Continuous) ))        /* build the Optimized Source distributions */
    {
      if (Vars->vx_max-Vars->vx_min)
        Vars->index = (int)rint(Vars->nbins * (Vars->dvx -Vars->vx_min)/(Vars->vx_max-Vars->vx_min));

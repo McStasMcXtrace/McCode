@@ -3,10 +3,12 @@
 * McStas, the neutron ray-tracing package: V_sample.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: V_sample
+*
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: McStas 1.5
 *
 * Vanadium sample.
@@ -14,6 +16,9 @@
 * %D
 * A Double-cylinder shaped incoherent scatterer (a V-sample)
 * No multiple scattering. Absorbtion included.
+*
+* Example: V_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,pack=1, 
+*           target_x = 0, target_y = 0, target_z = 0.235)
 *
 * %P
 * INPUT PARAMETERS:
@@ -41,9 +46,9 @@
 
 DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius_i,radius_o,h,pack,focus_r,
-		    target_x, target_y, target_z)
+SETTING PARAMETERS (radius_i, radius_o, h, focus_r = 0.035, pack = 1, target_x = 0, target_y = 0, target_z = 0.235)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
 %{
 /* ToDo: Should be component local names. */
@@ -112,6 +117,7 @@ TRACE
     my_a = V_my_a_v/v;
     p *= l_full*V_my_s*exp(-(my_a+V_my_s)*(l_i+l_o));
     p /= 4*PI/solid_angle;     
+    SCATTER;
   }
   else
     ABSORB;

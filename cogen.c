@@ -1,12 +1,12 @@
 /*******************************************************************************
 * Code generation from instrument definition.
 *
-* 	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-* 	File name: cogen.c
+*         Project: Monte Carlo Simulation of Triple Axis Spectrometers
+*         File name: cogen.c
 *
-* 	Author: K.N.			Aug 20, 1997
+*         Author: K.N.                        Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.27 2001-12-19 13:52:04 peo Exp $
+*         $Id: cogen.c,v 1.28 2003-01-20 16:03:33 pkwi Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -21,8 +21,8 @@
 * Some general comments on code generation.
 *
 * Code is output in the form of strings using the following functions:
-*   cout();			(one line at a time)
-*   coutf();			(with printf-style formatting)
+*   cout();                        (one line at a time)
+*   coutf();                        (with printf-style formatting)
 *
 * The type of numbers used in the generated code is given by the macro MCNUM
 * (defined in mcstas-r.h).
@@ -53,22 +53,22 @@
 * appears in the generated code, the second explains the origin of the
 * identifier in the instrument definition source (if any).
 *
-* ##ip<PAR>	From instrument parameter <PAR>.
-* ##init	Function containing initialization code.
-* ##inputtable	Table of instrument parameters.
-* ##NUMIPAR	Macro giving the number of instrument parameters.
-* ##numipar	Global variable with the value of ##NUMIPAR.
-* ##c<C>_<P>	From definition or setting parameter <P> in component
-*		instance <C>.
-* ##posa<COMP>	Absolute position of coordinate system of <COMP>.
-* ##posr<COMP>	Position of <COMP> relative to previous component.
-* ##rota<COMP>	Absolute rotation.
-* ##rotr<COMP>	Relative rotation.
-* ##tc1		Temporary variable used to compute transformations.
+* ##ip<PAR>        From instrument parameter <PAR>.
+* ##init           Function containing initialization code.
+* ##inputtable     Table of instrument parameters.
+* ##NUMIPAR        Macro giving the number of instrument parameters.
+* ##numipar        Global variable with the value of ##NUMIPAR.
+* ##c<C>_<P>       From definition or setting parameter <P> in component
+*                  instance <C>.
+* ##posa<COMP>     Absolute position of coordinate system of <COMP>.
+* ##posr<COMP>     Position of <COMP> relative to previous component.
+* ##rota<COMP>     Absolute rotation.
+* ##rotr<COMP>     Relative rotation.
+* ##tc1            Temporary variable used to compute transformations.
 * ##tc2
 * ##tr1
 * ##tr2
-* ##nx		Neutron state (position, velocity, time, and spin).
+* ##nx             Neutron state (position, velocity, time, and spin).
 * ##ny
 * ##nz
 * ##nvx
@@ -80,6 +80,10 @@
 * ##nsz
 * ##np
 * ##absorb
+* ##Scattered       Incremented each time a SCATTER is done
+* ##comp_storein    Positions of neutron entering each comp (loc. coords)
+* ##Group<GROUP>    Flag true when in an active group
+* ##comp_curname    Message telling where we are in the simulation (comp, status)
 *******************************************************************************/
 
 
@@ -117,7 +121,7 @@
 static FILE *output_handle = NULL;/* Handle for output file. */
 static int num_next_output_line = 1; /* Line number for next output line. */
 static char *quoted_output_file_name = NULL; /* str_quote()'ed name
-						of output file. */
+                                                of output file. */
 
 /* Convert instrument formal parameter type numbers to their enum name. */
 char *instr_formal_type_names[] =
@@ -178,8 +182,8 @@ code_reset_source(void)
 static void
 codeblock_out(struct code_block *code)
 {
-  List_handle liter;		/* For list iteration. */
-  char *line;			/* Single code line. */
+  List_handle liter;                /* For list iteration. */
+  char *line;                        /* Single code line. */
 
   if(list_len(code->lines) <= 0)
     return;
@@ -197,8 +201,8 @@ codeblock_out(struct code_block *code)
 static void
 codeblock_out_brace(struct code_block *code)
 {
-  List_handle liter;		/* For list iteration. */
-  char *line;			/* Single code line. */
+  List_handle liter;                /* For list iteration. */
+  char *line;                        /* Single code line. */
 
   if(list_len(code->lines) <= 0)
     return;
@@ -282,7 +286,7 @@ embed_file(char *name)
 * matching list of #undef's.
 *******************************************************************************/
 static void cogen_instrument_scope_rec(List_handle parlist,
-				       void (*func)(void *), void *data)
+                                       void (*func)(void *), void *data)
 {
   struct instr_formal *par;
 
@@ -301,7 +305,7 @@ static void cogen_instrument_scope_rec(List_handle parlist,
 
 static void
 cogen_instrument_scope(struct instr_def *instr,
-		       void (*func)(void *), void *data)
+                       void (*func)(void *), void *data)
 {
   List_handle parlist;
 
@@ -317,7 +321,7 @@ cogen_instrument_scope(struct instr_def *instr,
 */
 static void
 cogen_comp_scope_setpar(char *compname, List_handle set, int infunc,
-			void (*func)(void *), void *data)
+                        void (*func)(void *), void *data)
 {
   char *par;
   struct comp_iformal *formal;
@@ -337,7 +341,7 @@ cogen_comp_scope_setpar(char *compname, List_handle set, int infunc,
   }
   else
   {
-    (*func)(data);		/* Now do the body. */
+    (*func)(data);                /* Now do the body. */
   }
 }
 
@@ -346,8 +350,8 @@ cogen_comp_scope_setpar(char *compname, List_handle set, int infunc,
 */
 static void
 cogen_comp_scope_rec(char *compname, List_handle def, List set_list,
-		     List_handle out, int infunc,
-		     void (*func)(void *), void *data)
+                     List_handle out, int infunc,
+                     void (*func)(void *), void *data)
 {
   char *par;
   struct comp_iformal *formal;
@@ -357,7 +361,7 @@ cogen_comp_scope_rec(char *compname, List_handle def, List set_list,
   {
     formal = list_next(def);
     if(formal == NULL)
-      def = NULL;		/* Now finished with definition parameters. */
+      def = NULL;                /* Now finished with definition parameters. */
     else
       par = formal->id;
   }
@@ -386,18 +390,20 @@ cogen_comp_scope_rec(char *compname, List_handle def, List set_list,
 
 static void
 cogen_comp_scope(struct comp_inst *comp, int infunc,
-		 void (*func)(void *), void *data)
+                 void (*func)(void *), void *data)
 {
   List_handle def, out;
 
   coutf("#define %scompcurname %s", ID_PRE, comp->name);
+  coutf("#define %scompcurindex %i", ID_PRE, comp->index);
   def = list_iterate(comp->def->def_par);
   out = list_iterate(comp->def->out_par);
   cogen_comp_scope_rec(comp->name, def, comp->def->set_par, out,
-		       infunc, func, data);
+                       infunc, func, data);
   list_iterate_end(out);
   list_iterate_end(def);
   coutf("#undef %scompcurname", ID_PRE, comp->name);
+  coutf("#undef %scompcurindex", ID_PRE);
 }
 
 
@@ -414,14 +420,13 @@ cogen_comp_decls_doit(void *arg)
   if (comp->def->comp_inst_number < 0)
   {
     coutf("/* Shared user declarations for all components '%s'. */", comp->def->name);
-    codeblock_out(comp->def->share_code);
+    codeblock_out(comp->def->uniq_code);
     comp->def->comp_inst_number *= -1;  /* will not be included anymore */
   }
   /* Output the user declaration code block. */
   if (list_len(comp->def->decl_code->lines) > 0)
     codeblock_out(comp->def->decl_code);
 }
-
 
 static void
 cogen_comp_decls(struct comp_inst *comp)
@@ -437,10 +442,12 @@ cogen_comp_decls(struct comp_inst *comp)
 static void
 cogen_decls(struct instr_def *instr)
 {
-  List_handle liter;		/* For list iteration. */
+  List_handle liter;                /* For list iteration. */
   struct comp_iformal *c_formal;/* Name of component formal input parameter */
   struct instr_formal *i_formal;/* Name of instrument formal parameter. */
-  struct comp_inst *comp;	/* Component instance. */
+  struct comp_inst *comp;       /* Component instance. */
+  int    index = 0;        /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
+  struct group_inst *group;     /* ADD: E. Farhi Sep 24th, 2001 group instances */
   
   /* 1. Function prototypes. */
   coutf("void %sinit(void);", ID_PRE);
@@ -458,17 +465,17 @@ cogen_decls(struct instr_def *instr)
   }
   list_iterate_end(liter);
   cout("");
-
+  
   /* 3. Table of instrument parameters. */
   coutf("#define %sNUMIPAR %d", ID_PRE, list_len(instr->formals));
   coutf("int %snumipar = %d;", ID_PRE, list_len(instr->formals));
   coutf("struct %sinputtable_struct %sinputtable[%sNUMIPAR+1] = {",
-	ID_PRE, ID_PRE, ID_PRE);
+        ID_PRE, ID_PRE, ID_PRE);
   liter = list_iterate(instr->formals);
   while(i_formal = list_next(liter))
   {
     coutf("  \"%s\", &%sip%s, %s,", i_formal->id, ID_PRE, i_formal->id,
-	  instr_formal_type_names[i_formal->type]);
+          instr_formal_type_names[i_formal->type]);
   }
   list_iterate_end(liter);
   coutf("  NULL, NULL, instr_type_double");
@@ -479,27 +486,56 @@ cogen_decls(struct instr_def *instr)
   cout("/* User declarations from instrument definition. */");
   cogen_instrument_scope(instr, (void (*)(void *))codeblock_out, instr->decls);
   cout("");
-
+  
   /* 5. Declaration of component definition and setting parameters. */
   cout("/* Declarations of component definition and setting parameters. */");
   cout("");
+  
+  /* ADD: E. Farhi, Sep 20th 2001 */
+  /* 6. Table to store neutron states when entering each component */
+  cout("/* Neutron state table at each component input (local coords) */");
+  cout("/* [x, y, z, vx, vy, vz, t, sx, sy, sz, p] */");
+  coutf("MCNUM *%scomp_storein;", ID_PRE);
 
-  /* 9. Declaration of component definition and setting parameters. */
+  /* ADD: E. Farhi Sep 24th, 2001 group instances */
+  /* 7. Table to store position (abs/rel) for each component */
+  cout("/* Components position table (absolute and relative coords) */");
+  coutf("Coords *%scomp_posa, *%scomp_posr;", ID_PRE, ID_PRE);
+
+  /* 8. Declaration of group flags */
+  cout("/* Flag true when previous component acted on the neutron (SCATTER) */");
+  coutf("char %sScattered=0;", ID_PRE);
+  /* ADD: E. Farhi Sep 25th, 2001 Set group flags */
+  if (list_len(instr->grouplist) > 0)
+  {
+    cout("/* Component group definitions (flags) */");
+    liter = list_iterate(instr->grouplist);
+    while(group = list_next(liter))
+    {
+      coutf("char %sGroup%s=0;", ID_PRE, group->name);
+    }
+    list_iterate_end(liter);
+  }
+  
+  /* 9. Declaration of component definition/setting parameters */
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
     List_handle liter2;
     
+    index++; /* ADD: E. Farhi Sep 20th, 2001 a new comp */
+    comp->index = index; /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
+    
     if(list_len(comp->def->def_par) > 0)
-    {				/* (The if avoids a redundant comment.) */
+    {                                /* (The if avoids a redundant comment.) */
       coutf("/* Definition parameters for component '%s'. */", comp->name);
       liter2 = list_iterate(comp->def->def_par);
       while(c_formal = list_next(liter2))
       {
-	struct Symtab_entry *entry = symtab_lookup(comp->defpar, c_formal->id);
-	char *val = exp_tostring(entry->val);
-	coutf("#define %sc%s_%s %s", ID_PRE, comp->name, c_formal->id, val);
-	str_free(val);
+        struct Symtab_entry *entry = symtab_lookup(comp->defpar, c_formal->id);
+        char *val = exp_tostring(entry->val);
+        coutf("#define %sc%s_%s %s", ID_PRE, comp->name, c_formal->id, val);
+        str_free(val);
       }
       list_iterate_end(liter2);
     }
@@ -509,7 +545,7 @@ cogen_decls(struct instr_def *instr)
       liter2 = list_iterate(comp->def->set_par);
       while(c_formal = list_next(liter2))
       {
-	coutf("MCNUM %sc%s_%s;", ID_PRE, comp->name, c_formal->id);
+        coutf("MCNUM %sc%s_%s;", ID_PRE, comp->name, c_formal->id);
       }
       list_iterate_end(liter2);
     }
@@ -524,8 +560,7 @@ cogen_decls(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
-    if((list_len(comp->def->decl_code->lines) > 0) ||
-(comp->def->comp_inst_number < 0))
+    if((list_len(comp->def->decl_code->lines) > 0) || (comp->def->comp_inst_number < 0))
     {
       coutf("/* User declarations for component '%s'. */", comp->name);
       cogen_comp_decls(comp);
@@ -547,9 +582,9 @@ cogen_decls(struct instr_def *instr)
   
   /* 12. Neutron state. */
   coutf("MCNUM %snx, %sny, %snz, %snvx, %snvy, %snvz, %snt, "
-	"%snsx, %snsy, %snsz, %snp;",
-	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+        "%snsx, %snsy, %snsz, %snp;",
+        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+        ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   cout("");
 
 }
@@ -590,7 +625,7 @@ cogen_nxdict(struct instr_def *instr)
   {
     char *spec = exp_tostring(entry->spec);
     coutf("  NXDadd(%snxd_handle, \"%s_%s\",", ID_PRE,
-	  entry->compname, entry->param);
+          entry->compname, entry->param);
     code_set_source(instr->quoted_source, exp_getlineno(entry->spec));
     coutf("    %s);", spec);
     code_reset_source();
@@ -629,44 +664,18 @@ cogen_init(struct instr_def *instr)
 
   /* User initializations from instrument definition. */
   cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
-			 instr->inits);
-
-  /* Initialization of component setting parameters and user initialization
-     code. */
-  cout("  /* Component initializations. */");
-  liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL)
-  {
-    List_handle setpar;
-    struct comp_iformal *par;
-
-    coutf("  /* Initializations for component %s. */", comp->name);
-    /* Initialization of the component setting parameters. */
-    setpar = list_iterate(comp->def->set_par);
-    while((par = list_next(setpar)) != NULL)
-    {
-      char *val;
-      struct Symtab_entry *entry;
-
-      entry = symtab_lookup(comp->setpar, par->id);
-      val = exp_tostring(entry->val);
-      code_set_source(instr->quoted_source, exp_getlineno(entry->val));
-      coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par->id, val);
-      str_free(val);
-    }
-    list_iterate_end(setpar);
-    if(list_len(comp->def->set_par) > 0)
-      code_reset_source();
-    cout("");
-    
-    /* Users initializations. */
-    if(list_len(comp->def->init_code->lines) > 0)
-      cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
-			    comp->def->init_code);
-    cout("");
-  }
-  list_iterate_end(liter);
-
+                         instr->inits);
+  /* ADD: E. Farhi Sep 20th, 2001 malloc history tables */                       
+  coutf("if ((%scomp_storein = (MCNUM*)malloc(sizeof(MCNUM)*%i*11)) == NULL)", ID_PRE, list_len(instr->complist)+2);
+  cout ("  {fprintf(stderr, \"McStas: fatal: cannot allocate neutron history table\"); exit(-1);}");
+  coutf("if ((%scomp_posa = (Coords*)malloc(sizeof(Coords)*%i)) == NULL)", ID_PRE, list_len(instr->complist)+2);
+  cout ("  {fprintf(stderr, \"McStas: fatal: cannot allocate absolute component position table\"); exit(-1);}");
+  coutf("if ((%scomp_posr = (Coords*)malloc(sizeof(Coords)*%i)) == NULL)", ID_PRE, list_len(instr->complist)+2);
+  cout ("  {fprintf(stderr, \"McStas: fatal: cannot allocate relative component position table\"); exit(-1);}");
+  
+  /* MOD: E. Farhi Sep 20th, 2001 moved transformation block so that */
+  /*                              it can be used in following init block */
+  
   /* Compute the necessary vectors and transformation matrices for coordinate
      system changes between components. */
   cout("  /* Computation of coordinate transformations. */");
@@ -686,6 +695,7 @@ cogen_init(struct instr_def *instr)
     char *x, *y, *z;
 
     coutf("    /* Component %s. */", comp->name);
+    coutf("    strcpy(%scomp_curname, \"%s (Init:Place/Rotate)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     
     /* Absolute rotation. */
     x = exp_tostring(comp->pos->orientation.x);
@@ -693,16 +703,16 @@ cogen_init(struct instr_def *instr)
     z = exp_tostring(comp->pos->orientation.z);
     relcomp = comp->pos->orientation_rel;
     if(relcomp == NULL)
-    {				/* Absolute orientation. */
+    {                                /* Absolute orientation. */
       coutf("    rot_set_rotation(%srota%s,", ID_PRE, comp->name);
       code_set_source(instr->quoted_source,
-		      exp_getlineno(comp->pos->orientation.x));
+                      exp_getlineno(comp->pos->orientation.x));
       coutf("      (%s)*%s,", x, d2r);
       code_set_source(instr->quoted_source,
-		      exp_getlineno(comp->pos->orientation.y));
+                      exp_getlineno(comp->pos->orientation.y));
       coutf("      (%s)*%s,", y, d2r);
       code_set_source(instr->quoted_source,
-		      exp_getlineno(comp->pos->orientation.z));
+                      exp_getlineno(comp->pos->orientation.z));
       coutf("      (%s)*%s);", z, d2r);
       code_reset_source();
     }
@@ -710,17 +720,17 @@ cogen_init(struct instr_def *instr)
     {
       coutf("    rot_set_rotation(%str1,", ID_PRE);
       code_set_source(instr->quoted_source,
-		      exp_getlineno(comp->pos->orientation.x));
+                      exp_getlineno(comp->pos->orientation.x));
       coutf("      (%s)*%s,", x, d2r);
       code_set_source(instr->quoted_source,
-		      exp_getlineno(comp->pos->orientation.y));
+                      exp_getlineno(comp->pos->orientation.y));
       coutf("      (%s)*%s,", y, d2r);
       code_set_source(instr->quoted_source,
-		      exp_getlineno(comp->pos->orientation.z));
+                      exp_getlineno(comp->pos->orientation.z));
       coutf("      (%s)*%s);", z, d2r);
       code_reset_source();
       coutf("    rot_mul(%str1, %srota%s, %srota%s);",
-	    ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
+            ID_PRE, ID_PRE, relcomp->name, ID_PRE, comp->name);
     }
     str_free(z);
     str_free(y);
@@ -728,15 +738,15 @@ cogen_init(struct instr_def *instr)
 
     /* Relative rotation. */
     if(last == NULL)
-    {				/* First component. */
+    {                                /* First component. */
       coutf("    rot_copy(%srotr%s, %srota%s);",
-	    ID_PRE, comp->name, ID_PRE, comp->name);
+            ID_PRE, comp->name, ID_PRE, comp->name);
     }
     else
     {
       coutf("    rot_transpose(%srota%s, %str1);", ID_PRE, last->name, ID_PRE);
       coutf("    rot_mul(%srota%s, %str1, %srotr%s);",
-	    ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
+            ID_PRE, comp->name, ID_PRE, ID_PRE, comp->name);
     }
 
     /* Absolute position. */
@@ -766,12 +776,13 @@ cogen_init(struct instr_def *instr)
       coutf("      %s);", z);
       code_reset_source();
       coutf("    rot_transpose(%srota%s, %str1);",
-	    ID_PRE, relcomp->name, ID_PRE);
+            ID_PRE, relcomp->name, ID_PRE);
       coutf("    %stc2 = rot_apply(%str1, %stc1);",
-	    ID_PRE, ID_PRE, ID_PRE);
+            ID_PRE, ID_PRE, ID_PRE);
       coutf("    %sposa%s = coords_add(%sposa%s, %stc2);",
-	    ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
+            ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
     }
+    
     str_free(z);
     str_free(y);
     str_free(x);
@@ -781,18 +792,59 @@ cogen_init(struct instr_def *instr)
       coutf("    %stc1 = coords_neg(%sposa%s);", ID_PRE, ID_PRE, comp->name);
     else
       coutf("    %stc1 = coords_sub(%sposa%s, %sposa%s);",
-	    ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
+            ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
     coutf("    %sposr%s = rot_apply(%srota%s, %stc1);",
-	  ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
+          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
 
     coutf("    %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
-	  ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
+          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name); 
+          
+    coutf("    %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
+    coutf("    %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
     
     last = comp;
   }
   list_iterate_end(liter);
+
+  /* Initialization of component setting parameters and user initialization
+     code. */
+  cout("  /* Component initializations. */");
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL)
+  {
+    List_handle setpar;
+    struct comp_iformal *par;
+
+    coutf("  /* Initializations for component %s. */", comp->name);
+    coutf("  strcpy(%scomp_curname, \"%s (Init)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+    /* Initialization of the component setting parameters. */
+    setpar = list_iterate(comp->def->set_par);
+    while((par = list_next(setpar)) != NULL)
+    {
+      char *val;
+      struct Symtab_entry *entry;
+
+      entry = symtab_lookup(comp->setpar, par->id);
+      val = exp_tostring(entry->val);
+      code_set_source(instr->quoted_source, exp_getlineno(entry->val));
+      coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par->id, val);
+      str_free(val);
+    }
+    list_iterate_end(setpar);
+    if(list_len(comp->def->set_par) > 0)
+      code_reset_source();
+    cout("");
+    
+    /* Users initializations. */
+    if(list_len(comp->def->init_code->lines) > 0)
+      cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
+                            comp->def->init_code);
+    cout("");
+  }
+  list_iterate_end(liter);
+  
   /* Output graphics representation of components. */
-  coutf("    if(mcdotrace) mcdisplay();");
+  coutf("    if(%sdotrace) mcdisplay();", ID_PRE);
   coutf("    %sDEBUG_INSTR_END()", ID_PRE);
   cout("  }");
   cout("");
@@ -806,6 +858,9 @@ cogen_trace(struct instr_def *instr)
 {
   List_handle liter;
   struct comp_inst *comp;
+  struct group_inst *group;
+  char   is_in_group=0;
+  char  *last_group_name;
   
   /* Output the function header. */
   coutf("void %sraytrace(void) {", ID_PRE);
@@ -828,9 +883,23 @@ cogen_trace(struct instr_def *instr)
   /* Debugging (initial state). */
   coutf("  %sDEBUG_ENTER()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	"%snlt,%snlsx,%snlsy, %snlp)",
-	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+        "%snlt,%snlsx,%snlsy, %snlp)",
+        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+        ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+        
+  /* ADD: E. Farhi Sep 25th, 2001 Set group flags */
+  if (list_len(instr->grouplist) > 0)
+  {
+    cout("/* Set Component group definitions (flags) */");
+    liter = list_iterate(instr->grouplist);
+    while(group = list_next(liter))
+    {
+      coutf("  %sGroup%s=0;", ID_PRE, group->name);
+    }
+    list_iterate_end(liter);
+  }
+  coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
+  
   /* Now the trace code for each component. Proper scope is set up for each
      component using #define/#undef. */
   liter = list_iterate(instr->complist);
@@ -839,30 +908,32 @@ cogen_trace(struct instr_def *instr)
     char *statepars[10];
     static char *statepars_names[10] =
       {
-	"nlx", "nly", "nlz", "nlvx", "nlvy", "nlvz",
-	"nlt", "nlsx", "nlsy", "nlp"
+        "nlx", "nly", "nlz", "nlvx", "nlvy", "nlvz",
+        "nlt", "nlsx", "nlsy", "nlp"
       };
     int i;
     List_handle statepars_handle;
 
     coutf("  /* Component %s. */", comp->name);
+    coutf("  strcpy(%scomp_curname, \"%s (Trace)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
     /* Change of coordinates. */
     coutf("  %scoordschange(%sposr%s, %srotr%s,", ID_PRE, ID_PRE, comp->name,
-	  ID_PRE, comp->name);
+          ID_PRE, comp->name);
     coutf("    &%snlx, &%snly, &%snlz,", ID_PRE, ID_PRE, ID_PRE);
     coutf("    &%snlvx, &%snlvy, &%snlvz,", ID_PRE, ID_PRE, ID_PRE);
     coutf("    &%snlt, &%snlsx, &%snlsy);", ID_PRE, ID_PRE, ID_PRE);
     if(instr->polarised)
       coutf("  %scoordschange_polarisation("
-	    "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
-	    ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
+            "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
+            ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
     
     /* Debugging (entry into component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	  "%snlt,%snlsx,%snlsy, %snlp)",
-	  ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-	  ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+          "%snlt,%snlsx,%snlsy, %snlp)",
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+
     /* Trace code. */
     for(i = 0; i < 10; i++)
       statepars[i] = NULL;
@@ -871,15 +942,15 @@ cogen_trace(struct instr_def *instr)
     {
       statepars[i] = list_next(statepars_handle);
       if(statepars[i] == NULL)
-	break;
+        break;
     }
     list_iterate_end(statepars_handle);
     for(i = 0; i < 10; i++)
     {
       if(statepars[i] != NULL)
-	coutf("#define %s %s%s", statepars[i], ID_PRE, statepars_names[i]);
+        coutf("#define %s %s%s", statepars[i], ID_PRE, statepars_names[i]);
       else
-	break;
+        break;
     }
     if(comp->def->polarisation_par)
     {
@@ -887,8 +958,49 @@ cogen_trace(struct instr_def *instr)
       coutf("#define %s %s%s", comp->def->polarisation_par[1], ID_PRE, "nlsy");
       coutf("#define %s %s%s", comp->def->polarisation_par[2], ID_PRE, "nlsz");
     }
+    /* ADD: E. Farhi Sep 20th, 2001 store neutron state in mccomp_storein */
+    coutf("  STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
+          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
+          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+    coutf("  %sScattered=0;", ID_PRE);
+    if (comp->group != NULL) 
+    {
+      coutf("  if (!%sGroup%s)", ID_PRE, comp->group->name);
+      cout("  {");
+      coutf("#undef %sabsorb", ID_PRE);
+      coutf("#define %sabsorb %sabsorbComp%s", ID_PRE, ID_PRE, comp->name);
+      is_in_group =1;
+      last_group_name = comp->group->name;
+    }
+    else
+    if (is_in_group)
+    { /* this comp is not in a group, but previous was */
+      is_in_group =0;
+      coutf("  /* Leave %s group thus absorb non scattered neutrons */", last_group_name); 
+      coutf("  if (!%sGroup%s) ABSORB;", ID_PRE, last_group_name);
+    }
     cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
-		     comp->def->trace_code);
+                     comp->def->trace_code);
+    if (comp->group != NULL)
+    {
+      coutf("#undef %sabsorb", ID_PRE);
+      coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
+      coutf("  } /* end comp %s in group %s */", comp->name, comp->group->name);
+      coutf("  if (%sScattered) %sGroup%s=%i;", ID_PRE, ID_PRE, comp->group->name, comp->index);
+      cout("  /* Label to skip component instead of absorb */");
+      coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
+      coutf("  if (!%sGroup%s)", ID_PRE, comp->group->name);
+      coutf("    { RESTORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
+          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp); }",
+          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+    }
+    if(list_len(comp->postcode->lines) > 0)
+    {
+      coutf("/* post '%s' component code */",comp->name);
+      codeblock_out(comp->postcode);
+    }
     if(comp->def->polarisation_par)
     {
       coutf("#undef %s", comp->def->polarisation_par[2]);
@@ -898,27 +1010,27 @@ cogen_trace(struct instr_def *instr)
     for(i = 9; i >= 0; i--)
     {
       if(statepars[i] != NULL)
-	coutf("#undef %s", statepars[i]);
+        coutf("#undef %s", statepars[i]);
     }
     /* Debugging (exit from component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	  "%snlt,%snlsx,%snlsy, %snlp)",
-	  ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-	  ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+          "%snlt,%snlsx,%snlsy, %snlp)",
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     cout("");
 
   }
   list_iterate_end(liter);
 
   /* Absorbing neutrons - goto this label to skip remaining components. */
-  coutf(" %sabsorb:", ID_PRE);
+  coutf(" %sabsorbAll:", ID_PRE);
   
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	"%snlt,%snlsx,%snlsy, %snlp)",
-	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+        "%snlt,%snlsx,%snlsy, %snlp)",
+        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+        ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
 
   /* Copy back neutron state to global variables. */
@@ -946,8 +1058,8 @@ cogen_trace(struct instr_def *instr)
 static void
 cogen_finally(struct instr_def *instr)
 {
-  List_handle liter;		/* For list iteration. */
-  struct comp_inst *comp;	/* Component instance. */
+  List_handle liter;                /* For list iteration. */
+  struct comp_inst *comp;        /* Component instance. */
   
   /* User FINALLY code from component definitions (for each instance). */
   coutf("void %sfinally(void) {", ID_PRE);
@@ -959,8 +1071,9 @@ cogen_finally(struct instr_def *instr)
     if(list_len(comp->def->finally_code->lines) > 0)
     {
       coutf("  /* User FINALLY code for component '%s'. */", comp->name);
+      coutf("  strcpy(%scomp_curname, \"%s (Finally)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
-		       comp->def->finally_code);
+                       comp->def->finally_code);
       cout("");
     }
   }
@@ -971,9 +1084,13 @@ cogen_finally(struct instr_def *instr)
   {
     cout("  /* User FINALLY code from instrument definition. */");
     cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
-			   instr->finals);
+                           instr->finals);
     cout("");
   }
+  
+  /* ADD: E. Farhi Sep 20th, 2001 free history tables */
+  coutf("  free(%scomp_storein);", ID_PRE);
+  coutf("  free(%scomp_posa); free(%scomp_posr);", ID_PRE, ID_PRE);
   cout("}");
 }
 
@@ -981,8 +1098,8 @@ cogen_finally(struct instr_def *instr)
 static void
 cogen_mcdisplay(struct instr_def *instr)
 {
-  List_handle liter;		/* For list iteration. */
-  struct comp_inst *comp;	/* Component instance. */
+  List_handle liter;                /* For list iteration. */
+  struct comp_inst *comp;        /* Component instance. */
   
   /* User FINALLY code from component definitions (for each instance). */
   cout("#define magnify mcdis_magnify");
@@ -1000,9 +1117,10 @@ cogen_mcdisplay(struct instr_def *instr)
     {
       char *quoted_name = str_quote(comp->name);
       coutf("  /* MCDISPLAY code for component '%s'. */", comp->name);
+      coutf("  strcpy(%scomp_curname, \"%s (McDisplay)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
       coutf("  printf(\"MCDISPLAY: component %%s\\n\", \"%s\");", quoted_name);
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
-		       comp->def->mcdisplay_code);
+                       comp->def->mcdisplay_code);
       cout("");
       str_free(quoted_name);
     }
@@ -1083,7 +1201,7 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_decls(instr);
   cogen_init(instr);
   if(instr->nxdinfo->any)
-    cogen_nxdict(instr);	/* Only if NXDICT/NXDICTFILE actually used */
+    cogen_nxdict(instr);        /* Only if NXDICT/NXDICTFILE actually used */
   cogen_trace(instr);
   cogen_finally(instr);
   cogen_mcdisplay(instr);

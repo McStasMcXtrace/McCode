@@ -7,7 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.25 2001-12-19 12:51:39 peo Exp $
+* 	$Id: mcstas.h,v 1.26 2003-01-20 16:03:33 pkwi Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -224,6 +224,10 @@ extern struct instr_def *instrument_definition;
 extern Symtab comp_instances;
 /* List of component instances in declaration order. */
 extern List comp_instances_list;
+/* Map from names to component group instances. */ /* ADD: E. Farhi Sep 24th, 2001 group instances */
+extern Symtab group_instances;
+/* List of component group instances in declaration order. */ /* ADD: E. Farhi Sep 24th, 2001 group instances */
+extern List group_instances_list;
 /* Flag set to TRUE when scanning autoloaded component definitions. */
 extern int parse_restricted;
 /* Map of already-read components. */
@@ -361,15 +365,22 @@ struct comp_iformal
 struct comp_def
   {
     char *name;			/* Component name. */
-    int  comp_inst_number;   /* Number of this comp in the instrument  */
+    int  comp_inst_number; /* ADD: E. Farhi Sep 20th, 2001 Number of this comp in the instrument  */
     List def_par, set_par, out_par, state_par; /* Formal parameters. */
     char **polarisation_par;	/* Polarisation state formal parameters. */
-    struct code_block *share_code; /* Share code. */
+    struct code_block *uniq_code; /* Unique Declaration code. */
     struct code_block *decl_code; /* Declaration code. */
     struct code_block *init_code; /* Initializeation code. */
     struct code_block *trace_code; /* Ray-trace simulation code. */
     struct code_block *finally_code; /* Code for simulation end. */
     struct code_block *mcdisplay_code; /* Code for drawing components. */
+  };
+  
+/* ADD: E. Farhi Sep 24th, 2001 Component group instances */
+struct group_inst
+  {
+    char *name;
+    int  index;
   };
 
 /* Component instance. */
@@ -378,6 +389,9 @@ struct comp_inst
     char *name;			/* Instance name. */
     struct comp_def *def;	/* Pointer to definition. */
     struct comp_position *pos;	/* Component position (place & orientation). */
+    struct code_block *postcode; /* ADD: E. Farhi Sep 20th, 2001 code following comp instance */ 
+    int    index;  /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
+    struct group_inst *group;       /* ADD: E. Farhi Sep 24th, 2001 group name in which comp is */
     Symtab defpar, setpar;	/* Parameter values. */
   };
 
@@ -423,7 +437,9 @@ struct instr_def
     struct code_block *finals;	/* Code for simulation end */
     List formals;		/* List of formal parameters */
     Symtab compmap;		/* Map of component names to instances */
+    Symtab groupmap;  /* Map of component group names */
     List complist;		/* List of components in declaration order */
+    List grouplist;		/* List of component groups in declaration order */
     struct NXDinfo *nxdinfo;	/* NeXus dictionary declarations */
     int use_default_main;	/* If set, output a main() function */
     int include_runtime;	/* If set, include runtime in output */

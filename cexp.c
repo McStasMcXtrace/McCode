@@ -6,9 +6,14 @@
 *
 *	Author: K.N.			Aug  7, 1997
 *
-*	$Id: cexp.c,v 1.6 2000-07-27 09:04:59 kn Exp $
+*	$Id: cexp.c,v 1.7 2003-01-20 16:03:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.6  2000/07/27 09:04:59  kn
+*	Support full C expressions. Now stores source line numbers within
+*	expression representation, and distinguishes between values and compound
+*	expressions.
+*
 *	Revision 1.5  2000/07/05 13:32:10  kn
 *	Properly quote constant string expressions.
 *

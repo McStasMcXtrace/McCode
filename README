@@ -1,4 +1,4 @@
-This is McStas version 1.5, released September 18, 2001.
+This is McStas version 1.6-ill, released October 23th, 2001.
 Copyright (C) Risoe National Laboratory, 1997-2001. All rights reserved.
 See the file LICENSE for conditions on use.
 Since simulations produced with McStas will include code from the files
@@ -16,6 +16,8 @@ contact us and chances are that we will be able to make a suitable
 arrangement.
 
 Installation instructions are in the file INSTALL.
+
+Changes from previous versions are in the file CHANGES. Please read that !
 
 To get started, some example instrument definitions have been supplied
 in the examples/ directory. To run a simulation, the command `mcrun' is
@@ -39,9 +41,16 @@ postscript file. The manual, along with much other information, is also
 available from the McStas WWW home page:
 
     http://neutron.risoe.dk/mcstas/
+      and
+    http://www.ill.fr/tas/mcstas/
 
-The contact for McStas is Kristian Nielsen, email
-kristian.nielsen@risoe.dk. Feel free to direct any comments or questions
+Contacts for McStas are:
+  Kristian Nielsen, email <kristian.nielsen@risoe.dk>
+  Kim Lefmann <kim.lefmann@risoe.dk>
+  Per-Olof Åstrand <per-olof.aastrand@risoe.dk>
+  Emmanuel Farhi <farhi@ill.fr>
+  
+Feel free to direct any comments or questions
 to this address. It is an important goal of the McStas project to have
 the program used also outside of Risø, so if you have a reasonable
 request there is a good chance that we will be willing to help you out.
@@ -72,10 +81,6 @@ Information on PgPerl may be found on
     http://www.aao.gov.au/local/www/kgb/pgperl/
 Information on PDL may be found on
     http://www.aao.gov.au/local/www/kgb/perldl/
-
-
-
-
 
 
 
