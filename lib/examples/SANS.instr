@@ -13,24 +13,31 @@
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
 * Release: McStas 1.6
 * Version: 0.1
-* %INSTRUMENT_SITE: PSI
+* %INSTRUMENT_SITE: None
 *
-* The former Risoe SANS machine at PSI
+* Test instrument for the Sans_spheres component. No guide / velocity selector
+* etc. Will be developed further at at later time. 
 *
 * %Description
-* This instrument is a simple model of the former Risoe SANS machine, situated at 
-* the Paul Scherrer Institute, Villigen, CH.
+* Very simple test instrument for the Sans_spheres component
 *
-* Example: mcrun SANS.instr
+* Example: mcrun SANS.instr r=100, PHI=1e-3, Delta_Rho=0.6, Sigma_a=50, Qmax=0.3
 *
 * %Parameters
 * INPUT PARAMETERS:
-* *
+* Lambda  	: Mean wavelength of neutrons      [AA]
+* D_lambda	: Wavelength spread of neutrons    [AA]
+* r		: Radius of scattering hard spheres [AA]
+* PHI		: Particle volume fraction [1]
+* Delta_Rho	: Excess scattering length density (fm/AA^3)
+* Sigma_a	: Absorption cross section density at 2200 m/s [m^-1]
+* Qmax		: Maximum momentum transfer [AA^-1]
+* 
 * %Link 
 * *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Risoe_sans()
+DEFINE INSTRUMENT Risoe_sans(Lambda=6, D_lambda=0.05, r=100, PHI=1e-3, Delta_Rho=0.6, Sigma_a=50, Qmax=0.3)
 DECLARE
 %{
 %}
@@ -48,7 +55,7 @@ COMPONENT arm = Arm(
 
 COMPONENT source = Source_flux_lambda(
     radius = 0.02, dist = 3, xw = 0.01, yh = 0.01,
-    lambda_0 = 6, d_lambda = 0.05, flux = 1e8)
+    lambda_0 = Lambda, d_lambda = D_lambda, flux = 1e8)
   AT (0, 0, 0) RELATIVE arm
 
 COMPONENT coll1 = Slit(
@@ -59,8 +66,7 @@ COMPONENT coll2 = Slit(
     radius = 0.005)
   AT (0, 0, 6) RELATIVE arm
 
-COMPONENT sample = Sans_spheres(
-)
+COMPONENT sample = Sans_spheres(R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_a=Sigma_a, qmax=Qmax)
    AT (0,0,0.2) RELATIVE coll2
 
 COMPONENT detector = PSD_monitor(
