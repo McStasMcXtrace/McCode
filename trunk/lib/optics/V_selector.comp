@@ -6,8 +6,8 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: Nov 25, 1998
-* Version: $Revision: 1.12 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.13 $
+* Origin: McStas 1.5
 *
 * Velocity selector.
 *
@@ -39,7 +39,6 @@ DEFINE COMPONENT V_selector
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (width, height, l0, r0, phi, l1, tb, rot, nb)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   double RPM2OM, omega, phi_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_phi;
