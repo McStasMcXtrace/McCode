@@ -75,7 +75,7 @@ bison -v -d instrument.y
 # Set the INSTALL environment variable to make the src archive
 # default to ./install-sh in the contributed Makefile.
 # Note: the -c is needed to preserve mcdoc.fixpl which is run at make install
-export INSTALL=./install-sh -c
+export INSTALL="./install-sh -c"
 
 # Also, do a ./configure to create Makefile and mcstas_config.perl
 # These will be dependent on this system, ofcourse...
