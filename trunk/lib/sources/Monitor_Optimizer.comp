@@ -1,0 +1,221 @@
+/*******************************************************************************
+*
+* Component: Monitor_Optimizer
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 17 Sept 1999
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Version: 0.07.2
+* Modified by: EF, (Feb 2000)
+* Modified by: EF, Mar 10th, 2000 : now uses struct
+*
+* To be used after the <b>Source_Optimizer</b> component
+*
+* %Description
+* A component that optimizes the neutron flux passing through the
+* <b>Source_Optimizer</b> in order to have the maximum flux at the 
+* Monitor_Optimizer position.
+* <b>Source_optimizer</b> should be placed just after the source.
+* Monitor_Optimizer should be placed at position(s) to optimize. 
+*
+* See <a href="Source_Optimizer.html">Source_Optimizer</a> for
+* usage example and additional informations.
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* optim_comp: name of the Source_Optimizer component in the
+*           instrument definition. Do not use quotes (str)
+*
+* OUTPUT PARAMETERS:
+*
+* none (see <b>Source_Optimizer.comp</b>)
+*
+* %Link 
+* <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
+* %Link
+* <a href="Source_Optimizer.html">Source_Optimizer</a>
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT Monitor_Optimizer
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, optim_comp)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+#ifndef Source_Optimizer_Here
+#error McStas : Source_Optimizer component has to be used before Monitor_Optimizer
+#endif
+
+%}
+
+INITIALIZE
+%{
+%}
+
+TRACE
+%{
+  double This_monitor_weight = 1;
+  struct Optim_Defines *DEFS = &(MC_GETPAR(optim_comp, DEFS));
+  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+  
+  PROP_Z0;
+  if ((Vars->Phase != DEFS->PHASE_UNACTIVATE) 
+&& (x>xmin && x<xmax && y>ymin && y<ymax))
+  {
+     Vars->cur_p = p;
+     
+     Vars->Monitor_Counts += This_monitor_weight; /* initialized to 0 in DEFS->PHASE_SET_REF */
+     if (Vars->Flag_Smooth )
+     {
+       if ((Vars->Phase == DEFS->PHASE_GET_REF) || (Vars->Phase == DEFS->PHASE_GET_LIMITS))
+     	  Vars->cur_p /= Vars->keep;
+       else
+     	  Vars->cur_p *= (1- Vars->keep);
+     }
+     Vars->Monitor_Flux += Vars->cur_p*This_monitor_weight;  
+     
+     Vars->Total_Monitor_Counts++; 
+
+     if (Vars->Flag_Auto 
+     && (Vars->Phase == DEFS->PHASE_GET_REF))
+       {
+       if (((Vars->Reference_Counts > 2*Vars->Phase_Counts*Vars->step) && (Vars->Monitor_Counts >= Vars->bins*3))
+       || (Vars->Monitor_Counts >= Vars->bins*10))
+       {
+	 Vars->Phase_Counts_R = 0;	/* enough counts on monitor */
+	 if (Vars->Flag_Verbose)  
+	 {
+	   printf(">> AUTO monitor has reached %.1f counts (non optimized",Vars->Monitor_Counts);
+	   if (Vars->Flag_Smooth) printf(", smoothed");
+	   printf(")\n");
+	 }
+	 Vars->step = (double)Vars->Reference_Counts/Vars->Phase_Counts;
+	 Vars->Phase_Counts = Vars->Reference_Counts; 
+       }
+     }
+
+    if ((Vars->Phase == DEFS->PHASE_GET_REF)
+     || ((Vars->Phase == DEFS->PHASE_OPTIM) && (Vars->Flag_Continuous) ))	/* build the Optimized Source distributions */
+    {
+      if (Vars->vx_max-Vars->vx_min)
+        Vars->index = (int)rint(Vars->bins * (Vars->cur_vx -Vars->vx_min)/(Vars->vx_max-Vars->vx_min));
+      else
+        Vars->index = 0;
+      if (Vars->index < 0)     Vars->index = 0;
+      if (Vars->index >= Vars->bins) Vars->index = Vars->bins - 1;
+      Vars->New_Source_vx[Vars->index] += This_monitor_weight;
+      
+      if (Vars->vy_max-Vars->vy_min)
+        Vars->index = (int)rint(Vars->bins * (Vars->cur_vy -Vars->vy_min)/(Vars->vy_max-Vars->vy_min));
+      else
+        Vars->index = 0;
+      if (Vars->index < 0)     Vars->index = 0;
+      if (Vars->index >= Vars->bins) Vars->index = Vars->bins - 1;
+      Vars->New_Source_vy[Vars->index] += This_monitor_weight;
+      
+      if (Vars->vz_max-Vars->vz_min)
+        Vars->index = (int)rint(Vars->bins * (Vars->cur_vz -Vars->vz_min)/(Vars->vz_max-Vars->vz_min));
+      else
+        Vars->index = 0;
+      if (Vars->index < 0)     Vars->index = 0;
+      if (Vars->index >= Vars->bins) Vars->index = Vars->bins - 1;
+      Vars->New_Source_vz[Vars->index] += This_monitor_weight;
+      
+      if (Vars->x_max-Vars->x_min)
+        Vars->index = (int)rint(Vars->bins * (Vars->cur_x -Vars->x_min)/(Vars->x_max-Vars->x_min));
+      else
+        Vars->index = 0;
+      if (Vars->index < 0)     Vars->index = 0;
+      if (Vars->index >= Vars->bins) Vars->index = Vars->bins - 1;
+      Vars->New_Source_x[Vars->index] += This_monitor_weight;
+      
+      if (Vars->y_max-Vars->y_min)
+        Vars->index = (int)rint(Vars->bins * (Vars->cur_y -Vars->y_min)/(Vars->y_max-Vars->y_min));
+      else
+        Vars->index = 0;
+      if (Vars->index < 0)     Vars->index = 0;
+      if (Vars->index >= Vars->bins) Vars->index = Vars->bins - 1;
+      Vars->New_Source_y[Vars->index] += This_monitor_weight;
+      
+      if (Vars->s1_max-Vars->s1_min)
+        Vars->index = (int)rint(Vars->bins * (Vars->cur_s1 -Vars->s1_min)/(Vars->s1_max-Vars->s1_min));
+      else
+        Vars->index = 0;
+      if (Vars->index < 0)     Vars->index = 0;
+      if (Vars->index >= Vars->bins) Vars->index = Vars->bins - 1;
+      Vars->New_Source_s1[Vars->index] += This_monitor_weight;
+      
+      if (Vars->s2_max-Vars->s2_min)
+        Vars->index = (int)rint(Vars->bins * (Vars->cur_s2 -Vars->s2_min)/(Vars->s2_max-Vars->s2_min));
+      else
+        Vars->index = 0;
+      if (Vars->index < 0)     Vars->index = 0;
+      if (Vars->index >= Vars->bins) Vars->index = Vars->bins - 1;
+      Vars->New_Source_s2[Vars->index] += This_monitor_weight;
+
+    } /* end if Vars->Phase */
+    
+  } /* end if xy in optimizer */
+/* end trace */
+%} 
+
+FINALLY
+%{
+  struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+  
+/* initial Reference distribution arrays (for weights) */
+  free(Vars->Reference_x);
+  free(Vars->Reference_y);
+  free(Vars->Reference_vx);
+  free(Vars->Reference_vy);
+  free(Vars->Reference_vz);
+  free(Vars->Reference_s1);
+  free(Vars->Reference_s2);
+
+/* optimized Source distribution arrays (to reach) */
+  free(Vars->Source_x);
+  free(Vars->Source_y);
+  free(Vars->Source_vx);
+  free(Vars->Source_vy);
+  free(Vars->Source_vz);
+  free(Vars->Source_s1);
+  free(Vars->Source_s2);
+  
+/* optimized New_Source distribution arrays (to reach in next step, passed to Source) */
+  free(Vars->New_Source_x);
+  free(Vars->New_Source_y);
+  free(Vars->New_Source_vx);
+  free(Vars->New_Source_vy);
+  free(Vars->New_Source_vz);
+  free(Vars->New_Source_s1);
+  free(Vars->New_Source_s2);
+  
+/* Passing distribution arrays (should grow to reach Source) */
+  free(Vars->Passing_x);
+  free(Vars->Passing_y);
+  free(Vars->Passing_vx);
+  free(Vars->Passing_vy);
+  free(Vars->Passing_vz);
+  free(Vars->Passing_s1);
+  free(Vars->Passing_s2);
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END
