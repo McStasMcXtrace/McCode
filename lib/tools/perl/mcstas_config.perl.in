@@ -1,4 +1,4 @@
-%mcstas_config =
+%MCSTAS::mcstas_config =
     (CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
      CC => '@CC@'
