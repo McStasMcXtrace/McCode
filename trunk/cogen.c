@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.7 1998-09-24 12:14:46 kn Exp $
+* 	$Id: cogen.c,v 1.8 1998-10-01 08:09:09 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.7  1998/09/24 12:14:46  kn
+* 	Rotation angles in instrument definitions are now given in degrees, with
+* 	a backward compatibility mode for the old behaviour using radians.
+*
 * 	Revision 1.6  1998/08/21 12:07:14  kn
 * 	Output generated C simulation code in file rather than on stdout.
 *
@@ -114,8 +118,9 @@
 * 3. Declaration of a table ##inputtable containing the list of instrument
 *    parameters. For each parameter, the name and a pointer to the
 *    corresponding global variable is given. The macro ##NUMIPAR gives the
-*    number of entries in the table; in addition, the table is terminated by
-*    two NULLs. This table is used to read the instrument parameters from the
+*    number of entries in the table and is also found as the value of the
+*    variable ##numipar; in addition, the table is terminated by two
+*    NULLs. This table is used to read the instrument parameters from the
 *    user or from another program such as TASCOM.
 * 4. User declarations copied verbatim from the instrument definition file.
 * 5. Declarations for the component parameters. This uses #define for
@@ -195,6 +200,45 @@ codeblock_new(void)
   return cb;
 }
 
+
+/*******************************************************************************
+* Read a file and output it to the generated simulation code. Uses a
+* fixed-size buffer, and will silently and arbitrarily break long lines.
+*******************************************************************************/
+static void
+embed_file(char *name)
+{
+  char buf[4096];
+  FILE *f;
+  int last;
+
+  /* First look in the system directory. */
+  f = open_file_search_sys(name);
+  /* If not found, look in the full search path. */
+  if(f == NULL)
+    f = open_file_search(name);
+  /* If still not found, abort. */
+  if(f == NULL)
+    fatal_error("Could not find file '%s'\n", name);
+
+  cout("");
+  coutf("#line %d \"%s\"", 1, name);
+  /* Now loop, reading lines and outputting them in the code. */
+  while(!feof(f))
+  {
+    if(fgets(buf, 4096, f) == NULL)
+      break;
+    last = strlen(buf) - 1;
+    if(last >= 0 && (buf[last] == '\n' || buf[last] == '\r'))
+      buf[last--] = '\0';
+    if(last >= 0 && (buf[last] == '\n' || buf[last] == '\r'))
+      buf[last--] = '\0';
+    cout(buf);
+  }
+  fclose(f);
+  coutf("/* End of file \"%s\". */", name);
+  cout("");
+}
 
 
 /*******************************************************************************
@@ -308,11 +352,7 @@ cogen_decls(struct instr_def *instr)
   char *formal;			/* Name of formal parameter. */
   struct comp_inst *comp;	/* Component instance. */
   
-  /* 1. Header files. */
-  cout("#include \"mcstas-r.h\"");
-  cout("");
-
-  /* Function prototypes. */
+  /* 1. Function prototypes. */
   coutf("void %sinit(void);", ID_PRE);
   coutf("void %sraytrace(void);", ID_PRE);
   coutf("void %sfinally(void);", ID_PRE);
@@ -330,10 +370,9 @@ cogen_decls(struct instr_def *instr)
 
   /* 3. Table of instrument parameters. */
   coutf("#define %sNUMIPAR %d", ID_PRE, list_len(instr->formals));
-  coutf("struct {");
-  coutf("  char *name;");
-  coutf("  MCNUM *par;");
-  coutf("} %sinputtable[%sNUMIPAR+1] = {", ID_PRE, ID_PRE);
+  coutf("int %snumipar = %d;", ID_PRE, list_len(instr->formals));
+  coutf("struct %sinputtable_struct %sinputtable[%sNUMIPAR+1] = {",
+	ID_PRE, ID_PRE, ID_PRE);
   liter = list_iterate(instr->formals);
   while(formal = list_next(liter))
   {
@@ -735,6 +774,38 @@ cogen_finally(struct instr_def *instr)
 
 
 /*******************************************************************************
+* Output code for the mcstas runtime system. Default is to copy the runtime
+* code into the generated executable, to minimize problems with finding the
+* right files during compilation and linking, but this may be changed using
+* the --no-runtime compiler switch.
+*******************************************************************************/
+static void
+cogen_runtime(struct instr_def *instr)
+{
+  if(instr->use_default_main)
+    cout("#define MC_USE_DEFAULT_MAIN");
+  if(instr->enable_trace)
+    cout("#define MC_TRACE_ENABLED");
+  if(instr->include_runtime)
+  {
+    cout("#define MC_EMBEDDED_RUNTIME"); /* Some stuff will be static. */
+    embed_file("mcstas-r.h");
+    embed_file("mcstas-r.c");
+  }
+  else
+  {
+    cout("#include \"mcstas-r.h\"");
+  }
+  coutf("int %straceenabled = %d;", ID_PRE, instr->enable_trace);
+  coutf("int %sdefaultmain = %d;", ID_PRE, instr->use_default_main);
+  coutf("char %sinstrument_name[] = \"%s\";", ID_PRE, instr->name);
+  coutf("char %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
+  if(instr->use_default_main)
+    cout("int main(int argc, char *argv[]){return mcstas_main(argc, argv);}");
+}
+
+
+/*******************************************************************************
 * Generate the output file (in C).
 *******************************************************************************/
 void
@@ -750,6 +821,7 @@ cogen(char *output_name, struct instr_def *instr)
 
   cout("/* Automatically generated file. Do not edit. */");
   cout("");
+  cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);
   cogen_trace(instr);
