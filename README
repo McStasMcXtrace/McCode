@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright 1997-2003, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -24,8 +24,8 @@
 * %End
 *******************************************************************************/
 
-This is McStas version 1.6, released <autumn, 2002>
-Copyright (C) Risoe National Laboratory, 1997-2002. All rights reserved.
+This is McStas version 1.7, released May 19th, 2003
+Copyright (C) Risoe National Laboratory, 1997-2003. All rights reserved.
 See the file LICENSE for conditions on use.
 Since simulations produced with McStas will include code from the files
 in the lib/ directory, such simulations are derived works of these
@@ -41,7 +41,7 @@ If you wish to use McStas in ways that contradict the conditions,
 contact us and chances are that we will be able to make a suitable
 arrangement.
 
-Installation instructions are in the file INSTALL.
+Installation instructions are in the install_docs directory.
 
 Changes from previous versions are in the file CHANGES. Please read that !
 
@@ -61,9 +61,9 @@ file tas1-scans in the example directory is a script that will run a
 series of simulations that constitute a line-up experiment of the TAS1
 spectrometer at Risø.
 
-To fully utilize McStas, you will need a copy of the McStas manual. If
-you received McStas on CDROM, the manual will be included as a
-postscript file. The manual, along with much other information, is also
+To fully utilize McStas, you will need a copy of the McStas manual. It
+may be found in the lib/doc directory of the distribution.
+The manual, along with much other information, is 
 available from the McStas WWW home page:
 
     http://neutron.risoe.dk/mcstas/
@@ -90,28 +90,54 @@ order to work. The needed software packages are all freely
 distributable, and can be found on the McStas WWW home page or on the
 McStas CD-Rom distribution.
 
- - The `mcrun' and `gscan' front-ends requires Perl version 5 or later.
- - The `mcdisplay' front-end requires Perl version 5 or later, the
-   PGPLOT graphics library, and the PgPerl interface between Perl and
-   PGPLOT.
- - The `mcplot' front-end requires Perl version 5 or later, the
-   PGPLOT graphics library, the PgPerl interface between Perl and
-   PGPLOT, and the PDL scientific data extension for Perl.
+ - The 'mcstas' base program only requires a C compiler, which is usually 
+   provided with most Unix/Linux systems. For Windows, the Dev-C++ compiler
+   from Bloodshed may be installed freely.
+ - The `mcrun' and `gscan' front-ends requires Perl version 5 or later,
+   which is available on most Unix-like systems, and may installed for
+   Windows as well.
+ - The `mcdisplay' front-end requires Perl version 5 or later, and one 
+   of the following:
+   1- the PGPLOT graphics Fortran library, and the PgPerl interface 
+      between Perl and PGPLOT
+   2- Matlab
+   3- Scilab and its Plotlib
+ - The `mcplot' front-end requires Perl version 5 or later, and one 
+   of the following:
+   1- the PGPLOT graphics Fortran library, and the PgPerl interface 
+      between Perl and PGPLOT, and the PDL scientific data extension 
+      for Perl.
+   2- Matlab
+   3- Scilab
  - The `mcgui' front-end requires  Perl version 5 or later, the perl/tk
-   perl extension, the PGPLOT graphics library, the PgPerl interface
-   between Perl and PGPLOT, and the PDL scientific data extension for Perl.
+   perl extension, and one of the following:, 
+   1- the PGPLOT graphics library, the PgPerl interface between Perl 
+      and PGPLOT, and the PDL scientific data extension for Perl.
+   2- Matlab
+   3- Scilab and its Plotlib
 
 Information on Perl may be found on
     http://language.perl.com/index.html
+Information on Tcl/Tk may be found on
+    http://tcl.tk.com/
+  and
+    http://www.activestate.com/
 Information on perl/tk may be found on
     http://w4.lns.cornell.edu/~pvhp/ptk/ptkFAQ.html
+Information on Scilab may be found on    
+    http://www-rocq.inria.fr/scilab/
+  and the Plotlib will be available at
+    http://www.dma.utc.fr/~mottelet/myplot.html
 Information on PGPLOT may be found on
     http://astro.caltech.edu/~tjp/pgplot/index.html
 Information on PgPerl may be found on
     http://www.aao.gov.au/local/www/kgb/pgperl/
 Information on PDL may be found on
     http://www.aao.gov.au/local/www/kgb/perldl/
-
+Information on Dev-C++ for Windows may be found on
+    http://www.bloodshed.net/dev/devcpp.html
+Information on Matlab may be found on (commercial)
+    http://www.mathworks.com
 
 
 
