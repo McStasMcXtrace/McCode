@@ -11,7 +11,7 @@
 *
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -56,10 +56,11 @@ SHARE
 #ifndef GAUSS
   /* Define these arrays only once for all instances. */
   /* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
-     James O Wilkes, "Applied numerical methods", Wiley, 1996, page 103. */
-  double Gauss_X[] = {-0.987992518020485, 0.937273392400706, 0.848206583410427,
-                0.724417731360170, 0.570972172608539, 0.394151347077563,
-                0.201194093997435, 0, 0.201194093997435,
+     James O Wilkes, "Applied numerical methods", Wiley, 1969, page 103. 
+     This reference is available from the Copenhagen UB2 library */
+  double Gauss_X[] = {-0.987992518020485, -0.937273392400706, -0.848206583410427,
+                -0.724417731360170, -0.570972172608539, -0.394151347077563,
+                -0.201194093997435, 0, 0.201194093997435,
                 0.394151347077563, 0.570972172608539, 0.724417731360170,
                 0.848206583410427, 0.937273392400706, 0.987992518020485};
   double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
