@@ -1,0 +1,100 @@
+/*******************************************************************************
+*
+* McStas, version 1.1, released 
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: PSD_monitor
+*
+* Written by: KL,  Nov. 11, 1998
+*
+* A divergence sensitive monitor. The counts are distributed in 
+* (n times m) pixels. 
+*
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* nv:       Number of pixel columns (1)
+* nh:       Number of pixel rows (1)
+* v_maxdiv  Maximal vertical divergence detected (degrees)
+* h_maxdiv  Maximal vertical divergence detected (degrees)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* Div_N:    Array of neutron counts
+* Div_p:    Array of neutron weight counts
+* Div_p2:   Array of second moments
+*
+*******************************************************************************/
+
+
+DEFINE COMPONENT PSD_monitor
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, 
+		       nh, nv, h_maxdiv, v_maxdiv, filename)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    int Div_N[nh][nv];
+    double Div_p[nh][nv];
+    double Div_p2[nh][nv];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    for (i=0; i<nx; i++)
+     for (j=0; j<ny; j++) 
+     {
+      Div_N[i][j] = 0;
+      Div_p[i][j] = 0;
+      Div_p2[i][j] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+    double h_div, v_div;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      h_div = atan2(vx,vz);
+      v_div = atan2(vy,vz);
+      i = floor((h_div + h_divmax)*nh/(2.0*h_divmax));
+      j = floor((v_div + v_divmax)*nv/(2.0*v_divmax));
+      Div_N[i][j]++;
+      Div_p[i][j] += p;
+      Div_p2[i][j] += p*p;
+    }
+  %}
+FINALLY
+  %{
+    int i,j;
+    FILE *outfile;
+    int Nsum;
+    double Psum, P2sum;
+
+    Nsum = Psum = P2sum = 0;
+    outfile=fopen(filename,"w");
+    for (j=0; j<ny; j++)
+    {
+     for (i=0; i<nx; i++)
+     {
+      fprintf(outfile,"%g ", Div_p[i][j]);
+      Nsum += Div_N[i][j];
+      Psum += Div_p[i][j];
+      P2sum += Div_p2[i][j];
+     }
+     fprintf(outfile,"\n");
+    }
+    DETECTOR_OUT(Nsum, Psum, P2sum);
+    fclose(outfile);
+  %}
+
+END
