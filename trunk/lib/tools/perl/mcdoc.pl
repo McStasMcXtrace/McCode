@@ -14,7 +14,7 @@ use lib $MCSTAS::sys_dir;
 
 use FileHandle;
 
-require "mcfrontlib.pl";
+require "mcrunlib.pl";
 
 sub show_header {
     my ($d) = @_;
