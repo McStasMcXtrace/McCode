@@ -1,0 +1,86 @@
+/***********************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: E_monitor
+*
+* Written by:  KN,KL,  April 20, 1998
+* Modified by: KL, Octorber 7, 1998
+*
+* A square single monitor that measures the energy of the incoming neutrons.
+*
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* Emin:     Minimum energy to detect (meV)
+* Emax:     Maximum energy to detect (meV)
+* nchan:    Number of energy channels (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* V_N:      Array of neutron counts
+* V_p:      Array of neutron weight counts
+* V_p2:     Array of second moments
+*
+***********************************************************************/
+
+DEFINE COMPONENT V_monitor
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, Emin, Emax, nchan, filename)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (V_N, V_p, V_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    /* ToDo: should be component local names. */
+    int V_N[n];
+    double V_p[n], V_p2[N];
+  %}
+INITIALIZE
+  %{
+    int i;
+
+    for (i=0; i<n; i++)
+    {
+      V_N[i] = 0;
+      V_p[i] = 0;
+      V_p2[i] = 0;
+    }
+  %}
+TRACE
+  %{
+    int i;
+    double E;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      E = VS2E*(vx*vx + vy*vy + vz*vz);
+
+      i = floor((E-Emin)*nchan/(Emax-Emin));
+      if(i >= 0 && i < nchan)
+      {
+	V_N[i]++;
+	V_p[i] += p;
+	V_p2[i] += p*p;
+      }
+    }
+  %}
+FINALLY
+  %{
+    int i;
+    FILE *outfile;
+
+    outfile=fopen(filename,"w");
+    for (i=0; i<n; i++)
+      fprintf(outfile,"%g %d %g %g\n", 
+	 Emin + (double)i/nchan*(Emax-Emin), V_N[i], V_p[i], V_p2[i]);
+    fclose(outfile);
+  %}
+
+END
