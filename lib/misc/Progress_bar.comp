@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -65,7 +65,7 @@ TRACE
 
 SAVE
 %{
-  fprintf(stderr, "Save ", mcinstrument_name);
+  fprintf(stderr, "Save [%s] ", mcinstrument_name);
 %}
 
 FINALLY
