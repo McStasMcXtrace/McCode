@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: DivLambda_monitor.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KN
+* Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.3 $
-* Origin: McStas release
+* Version: $Revision: 1.4 $
+* Origin: McStas 1.4.2
 *
 * Divergence/wavelength monitor.
 *
@@ -44,6 +43,7 @@ DEFINITION PARAMETERS (nlam, ndiv, filename)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, maxdiv, lambda_0, lambda_1)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     int Div_N[nlam][ndiv];
