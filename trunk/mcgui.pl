@@ -128,7 +128,9 @@ sub is_erase_ok {
                                  -type => 'okcancel',
                                  -icon => 'question',
                                  -default => 'cancel');
-        return $ret eq "ok" ? 1 : 0;
+	# Make response all lowercase:
+	$ret = lc($ret);
+	return $ret eq "ok" ? 1 : 0;
     } else {
         return 1;
     }
@@ -1329,7 +1331,7 @@ sub setup_edit {
     $edit_control = $e;
     $edit_window = $w;
     $edit_label = $label;
-    $edit_control->SetGUICallbacks([\&update_line]);
+    $edit_control->SetGUICallbacks([\&update_line,sub{$edit_control->HighlightAllPairsBracketingCursor}]);
     if ($current_sim_def) {
       $w->title("Edit: $current_sim_def");
       if (-r $current_sim_def) {
