@@ -1,6 +1,18 @@
 use Tk;
 use Tk::DialogBox;
 
+sub get_dir_name {
+    my ($dlg, $default) = @_;
+    my $oldgrab = $dlg->grabStatus;
+    $dlg->grabRelease;
+    my $f = $default ?
+	$dlg->getSaveFile(-title => "Select output file name",
+			  -initialfile => $default) :
+	$dlg->getSaveFile(-title => "Select output file name");
+    $dlg->grab if $oldgrab eq 'local';
+    return $f;
+}
+
 # Query user for instrument parameters and simulation options for a
 # McStas simulation.
 # Input: top-level window for the dialog, instrument info descriptor, and
@@ -10,7 +22,7 @@ use Tk::DialogBox;
 
 sub simulation_dialog {
     my ($win, $ii, $origsi) = @_;
-    my %si = %$origsi;
+    my %si = $origsi ? %$origsi : ();
     my $doseed;
     if($origsi->{'Seed'}) {
 	$si{'Seed'} = $origsi->{'Seed'};
@@ -20,10 +32,16 @@ sub simulation_dialog {
 	$doseed = 0;
     }
     $si{'Autoplot'} = 0 unless $si{'Autoplot'};
+    $si{'Ncount'} = 1e6 unless $si{'Ncount'};
+    $si{'Trace'} = 0 unless $si{'Trace'};
 
     my $dlg = $win->DialogBox(-title => "Run simulation",
 			      -buttons => ["Start", "Cancel"]);
 
+    $dlg->add('Label',
+	      -text => "Instrument source: $ii->{'Instrument-source'}",
+	      -anchor => 'w',
+	      -justify => 'left')->pack(-fill => 'x');
     $dlg->add('Label',
 	      -text => 'Instrument parameters:',
 	      -anchor => 'w',
@@ -58,6 +76,19 @@ sub simulation_dialog {
 
     my $opt_frame = $dlg->add('Frame');
     $opt_frame->pack(-anchor => 'w');
+
+    my $f0 = $opt_frame->Frame;
+    $f0->pack(-anchor => 'w');
+    $f0->Label(-text => "Output to:")->pack(-side => 'left');
+    my $dir_entry = $f0->Entry(-relief => 'sunken',
+			       -width=>30,
+			       -justify => 'left',
+			       -textvariable => \$si{'Dir'});
+    $dir_entry->pack(-side => 'left');
+    $f0->Button(-text => "Browse ...",
+		-command => sub { my $d = get_dir_name($dlg, $si{'Dir'});
+				  $si{'Dir'} = $d if $d; } )->pack;
+
     my $f1 = $opt_frame->Frame;
     $f1->pack(-anchor => 'w');
     $f1->Label(-text => "Neutron count:")->pack(-side => 'left');
@@ -101,9 +132,37 @@ sub simulation_dialog {
     return ($res, \%si);
 }
 
+my $current_plot;
+
+sub dialog_plot_single {
+    my ($cl,$di) = @_;
+    $current_plot = $cl->index('active');
+    single_plot("/xserv", $di->[$current_plot], 0);
+}
+
+sub dialog_hardcopy {
+    my ($dlg, $di, $type) = @_;
+    my $default = $current_plot == -1 ?
+	"mcstas.ps" :
+	($di->[$current_plot]{'Component'} . ".ps");
+    my $oldgrab = $dlg->grabStatus;
+    $dlg->grabRelease;
+    my $f = $dlg->getSaveFile(-defaultextension => "ps",
+			      -title => "Select postscript file name",
+			      -initialfile => $default);
+    $dlg->grab if $oldgrab eq 'local';
+    return 0 unless $f;
+    if($current_plot == -1) {
+	overview_plot("\"$f\"/$type", $di, 0);
+    } else {
+	my $comp = $di->[$current_plot]{'Component'};
+	single_plot("\"$f\"/$type", $di->[$current_plot], 0);
+    }
+}
+    
 sub plot_dialog {
     my ($win, $ii, $si, $di) = @_;
-    my $current_plot = -1;	# Component index, or -1 -> overview.
+    $current_plot = -1;	# Component index, or -1 -> overview.
     my $dlg = $win->DialogBox(-title => "Plot results",
 			      -buttons => ["Close"]);
 
@@ -117,33 +176,33 @@ sub plot_dialog {
 			  -setgrid => 1,
 			  -scrollbars => 'se');
     $cl->pack(-expand => 'yes', -fill => 'y', -anchor => 'w');
+    $cl->bind('<Double-Button-1>' => sub { dialog_plot_single($cl,$di);
+				       $dlg->raise; } );
     $cl->insert(0, map $_->{'Component'}, @$di);
     $cl->activate(0);
     $lf->Button(-text => "Plot",
-		-command => sub {
-		    $current_plot = $cl->index('active');
-		    single_plot("/xserv", $di->[$current_plot], 0); }
-		)->pack;
+		-command => sub { dialog_plot_single($cl,$di);
+			          $dlg->raise; } )->pack;
     $lf->Button(-text => "Overview plot",
 		-command => sub {
 		    overview_plot("/xserv", $di, 0);
+		    $dlg->raise;
 		    $current_plot = -1; }
 		)->pack;
-    $lf->Button(-text => "Hardcopy",
-		-command => sub {
-		    if($current_plot == -1) {
-			overview_plot("mcstas.ps/cps", $di, 0);
-		    } else {
-			my $comp = $di->[$current_plot]{'Component'};
-			single_plot("$comp.ps/cps", $di->[$current_plot], 0);
-		    } }
+    $lf->Button(-text => "B&W postscript",
+		-command => sub { dialog_hardcopy($dlg,
+						  $di, "ps"); }
 		)->pack;
-    $lf->Button(-text => "Select from overview",
-		-command => sub {
-		    my ($c, $idx) = overview_plot("/xserv", $di, 1);
-		    $cl->activate($idx);
-		    $current_plot = -1;}
+    $lf->Button(-text => "Colour postscript",
+		-command => sub { dialog_hardcopy($dlg,
+						  $di, "cps"); }
 		)->pack;
+#     $lf->Button(-text => "Select from overview",
+# 		-command => sub {
+# 		    my ($c, $idx) = overview_plot("/xserv", $di, 1);
+# 		    $cl->activate($idx);
+# 		    $current_plot = -1;}
+# 		)->pack;
     my $rf = $dlg->add('Frame');
     $rf->pack(-side => 'top');
     $rf->Label(-text => <<END,
