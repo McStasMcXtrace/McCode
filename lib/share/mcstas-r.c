@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.110 2005-03-23 14:41:11 farhi Exp $
+* $Id: mcstas-r.c,v 1.111 2005-03-30 21:37:21 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.110  2005/03/23 14:41:11  farhi
+* Added test not to overwrite/delete a temp file by itself
+*
 * Revision 1.109  2005/03/02 10:40:27  farhi
 * Now displays warning for Low Statistics and large matrices in text mode for Matlab/Scilab
 *
@@ -3698,10 +3701,14 @@ int solve_2nd_order(double *Idt,
       sD = sqrt(D);
       dt1 = (-B + sD)/2/A;
       dt2 = (-B - sD)/2/A;
+      /* we identify very small values with zero */
+      if (fabs(dt1) < 1e-10) dt1=0.0;
+      if (fabs(dt2) < 1e-10) dt2=0.0;
+
       /* now we choose the smallest positive solution */
-      if      (dt1<0 && dt2>1e-10) ret=2; /* dt2 positive */
-      else if (dt2<0 && dt1>1e-10) ret=1; /* dt1 positive */
-      else if (dt1>1e-10 && dt2>1e-10)
+      if      (dt1<=0.0 && dt2>0.0) ret=2; /* dt2 positive */
+      else if (dt2<=0.0 && dt1>0.0) ret=1; /* dt1 positive */
+      else if (dt1> 0.0 && dt2>0.0)
       {  if (dt1 < dt2) ret=1; else ret=2; } /* all positive: min(dt1,dt2) */
       /* else two solutions are negative. ret=0 */
       if (ret==1) *Idt = dt1; else if (ret==2) *Idt=dt2;

@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -253,7 +253,7 @@ SHARE
       if (i < 3)
       {      B = aVars->nx[i]*cvx + aVars->nz[i]*cvz; C = aVars->nx[i]*(cx-aVars->wx[i]) + aVars->nz[i]*cz; }
       else { B = aVars->ny[i]*cvy + aVars->nz[i]*cvz; C = aVars->ny[i]*(cy-aVars->wy[i]) + aVars->nz[i]*cz; }
-      ret = solve_2nd_order(&dt0, 0, B, C);
+      ret = solve_2nd_order(&dt0, aVars->A[i], B, C);
       if (ret && dt0>1e-10 && (dt0<dt_min || !dt_min))
       { dt_min = dt0; side=i;
         if (aVars->nzC[i] != 0)
