@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug  7, 1997
 *
-*	$Id: cexp.c,v 1.4 1998-10-02 08:35:04 kn Exp $
+*	$Id: cexp.c,v 1.5 2000-07-05 13:32:10 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.4  1998/10/02 08:35:04  kn
+*	Fixed header comment.
+*
 *	Revision 1.3  1998/10/01 11:44:07  kn
 *	Added support for string expressions.
 *
@@ -64,7 +67,11 @@ exp_number(double n)
 CExp
 exp_string(char *s)
 {
-  return str_cat("\"", s, "\"", NULL);
+  char *quoted, *result;
+  quoted = str_quote(s);
+  result =  str_cat("\"", s, "\"", NULL);
+  str_free(quoted);
+  return result;
 }
 
 char *
