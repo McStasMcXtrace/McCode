@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.1 1997-09-08 10:37:56 kn Exp $
+* 	$Id: cogen.c,v 1.2 1997-09-08 11:15:19 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.1  1997/09/08 10:37:56  kn
+* 	Initial revision
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
@@ -556,6 +559,11 @@ cogen_trace(struct instr_def *instr)
   coutf("  MCNUM %snlp = %snp;", ID_PRE, ID_PRE);
   cout("");
 
+  /* Debugging (initial state). */
+  coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
+	"%snlt,%snls1,%snls2, %snlp);",
+	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   /* Now the trace code for each component. Proper scope is set up for each
      component using #define/#undef. */
   liter = list_iterate(instr->complist);
@@ -577,7 +585,7 @@ cogen_trace(struct instr_def *instr)
     coutf("    &%snlx, &%snly, &%snlz,", ID_PRE, ID_PRE, ID_PRE);
     coutf("    &%snlvx, &%snlvy, &%snlvz,", ID_PRE, ID_PRE, ID_PRE);
     coutf("    &%snlt, &%snls1, &%snls2);", ID_PRE, ID_PRE, ID_PRE);
-    /* Debugging. */
+    /* Debugging (entry into component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
 	  "%snlt,%snls1,%snls2, %snlp);",
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
@@ -607,10 +615,20 @@ cogen_trace(struct instr_def *instr)
       if(statepars[i] != NULL)
 	coutf("#undef %s", statepars[i]);
     }
+    /* Debugging (exit from component). */
+    coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
+	  "%snlt,%snls1,%snls2, %snlp);",
+	  ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+	  ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     cout("");
 
   }
   list_iterate_end(liter);
+  /* Debugging (final state). */
+  coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
+	"%snlt,%snls1,%snls2, %snlp);",
+	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
+	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
 
   /* Copy back neutron state to global variables. */
