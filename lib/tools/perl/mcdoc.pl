@@ -134,7 +134,7 @@ sub get_comp_info {
 	$cname = "<Unknown>";
     }
     @dpar = ();
-    if($s =~ /DEFINITION\s+PARAMETERS\s*\(\s*((([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)(\s*\=\s*([-+.e0-9]+))?\s*,?\s*)*)\s*\)/i) {
+    if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-ZÊ¯Â∆ÿ≈0-9_ \t\n\r=,/*]+)\)!i) {
 	foreach (split(",", $1)) {
 	    if(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
 		push @dpar, $1;
@@ -142,12 +142,12 @@ sub get_comp_info {
 	    } elsif(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*$/) {
 		push @dpar, $1;
 	    } else {
-		die "Internal: get_comp_info/DEFINITION PARAMETER";
+		print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname.\n";
 	    }
 	}
     }
     @spar = ();
-    if($s =~ /SETTING\s+PARAMETERS\s*\(\s*((([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)(\s*\=\s*([-+.e0-9]+))?\s*,?\s*)*)\s*\)/i) {
+    if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-ZÊ¯Â∆ÿ≈0-9_ \t\n\r=,/*]+)\)!i) {
 	foreach (split(",", $1)) {
 	    if(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
 		push @spar, $1;
@@ -155,7 +155,7 @@ sub get_comp_info {
 	    } elsif(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*$/) {
 		push @spar, $1;
 	    } else {
-		die "Internal: get_comp_info/SETTING PARAMETER";
+		print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname.\n";
 	    }
 	}
     }
@@ -224,7 +224,7 @@ sub show_header {
 # Output the start of the main component index HTML table
 #
 sub html_main_start {
-    my ($f) = @_;
+    my ($f, $toolbar) = @_;
     print $f <<END;
 <!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">
 <HTML>
@@ -234,7 +234,11 @@ sub html_main_start {
 </HEAD>
 <BODY>
 
+$toolbar
 <CENTER><H1>Components for <i>McStas</i></H1></CENTER>
+
+<P> Names in <B>Boldface</B> denote components that are properly
+documented with comments in the source code.</P>
 END
 }
 
@@ -267,7 +271,7 @@ sub html_table_entry {
 # Output the end of the main component index HTML table
 #
 sub html_main_end {
-    my ($f) = @_;
+    my ($f, $toolbar) = @_;
     my $date = `date +'%b %e %Y'`;
     print $f <<END;
 <P>This Component list was updated on $date.
@@ -326,16 +330,25 @@ sub gen_param_table {
 sub gen_html_description {
     my ($d, $bn) = @_;
     my $f = new FileHandle;
+    my $toolbar = <<'TB_END';
+<P ALIGN=CENTER>
+ [ <A href="#id">Identification</A>
+ | <A href="#desc">Description</A>
+ | <A href="#ipar">Input parameters</A>
+ | <A href="#opar">Output parameters</A>
+ | <A href="#links">Links</A> ]
+</P>
+TB_END
     open($f, ">$bn.html") || die "Cannot open $d->{'name'}.html";
     print $f "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n";
     print $f "<HTML><HEAD>\n";
     print $f "<TITLE>$d->{'name'}</TITLE>\n";
     print $f "<LINK REV=\"made\" HREF=\"mailto:kristian.nielsen\@risoe.dk\">\n";
     print $f "</HEAD>\n\n";
+    print $f "<BODY>\n\n$toolbar\n";
     print $f "<H1>The <CODE>$d->{'name'}</CODE> component</H1>\n\n";
-    print $f "<BODY>\n\n";
     print $f "$d->{'identification'}{'short'}\n\n";
-    print $f "<H2>Identification</H2>\n";
+    print $f "<H2><A NAME=id></A>Identification</H2>\n";
     print $f "\n<UL>\n";
     print $f "  <LI> <B>Author:</B>$d->{'identification'}{'author'}</B>\n";
     print $f "  <LI> <B>Origin:</B>$d->{'identification'}{'origin'}</B>\n";
@@ -350,19 +363,19 @@ sub gen_html_description {
 	print $f "  </UL>\n";
     }
     print $f "</UL>\n";
-    print $f "\n<H2>Input parameters</H2>\n";
+    if($d->{'description'}) {
+	print $f "<H2><A NAME=desc></A>Description</H2>\n";
+	print $f "\n<PRE>\n$d->{'description'}</PRE>\n";
+    }
+    print $f "\n<H2><A NAME=ipar></A>Input parameters</H2>\n";
     if(@{$d->{'inputpar'}}) {
 	print $f "Parameters in <B>boldface</B> are required;\n";
 	print $f "the others are optional.\n";
     }
     gen_param_table($f, $d->{'inputpar'}, $d->{'parhelp'}); 
-    print $f "\n<H2>Output parameters</H2>\n";
+    print $f "\n<H2><A NAME=opar></A>Output parameters</H2>\n";
     gen_param_table($f, $d->{'outputpar'}, $d->{'parhelp'}); 
-    if($d->{'description'}) {
-	print $f "<H2>Description</H2>\n";
-	print $f "\n<PRE>\n$d->{'description'}</PRE>\n";
-    }
-    print $f "\n<H2>Links</H2>\n\n<UL>\n";
+    print $f "\n<H2><A NAME=links></A>Links</H2>\n\n<UL>\n";
     print $f "  <LI> <A HREF=\"$d->{'name'}.comp\">Source code</A> ";
     print $f "for <CODE>$d->{'name'}.comp</CODE>.\n";
     # Additional links from component comment header go here.
@@ -371,7 +384,7 @@ sub gen_html_description {
 	print $f "  <LI> $link";
     }
     print $f "</UL>\n";
-    print $f "\n<HR><ADDRESS>\n";
+    print $f "<HR>\n$toolbar\n<ADDRESS>\n";
     print $f "Generated automatically by McDoc, Kristian Nielsen\n";
     print $f "&lt;<A HREF=\"mailto:kristian.nielsen\@risoe.dk\">";
     print $f   "kristian.nielsen\@risoe.dk</A>&gt; /\n";
@@ -441,7 +454,6 @@ my $comp;
 my $indexfile = new FileHandle;
 open($indexfile, ">index.html") ||
     die "Could not open index.html for writing.\n";
-html_main_start($indexfile);
 my @sections = ("sources", "optics", "samples", "monitors", "misc");
 my %section_headers =
     ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
@@ -449,9 +461,12 @@ my %section_headers =
      "samples" => '<B><FONT COLOR="#FF0000">Samples</FONT></B>',
      "monitors" => '<B><FONT COLOR="#FF0000">Detectors</FONT> and monitors</B>',
      "misc" => '<B><FONT COLOR="#FF0000">Misc</FONT></B>');
+my @tblist = map "<A href=\"#$_\">$_</A>", @sections;
+my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";
+html_main_start($indexfile, $toolbar);
 my $sec;
 for $sec (@sections) {
     add_comp_section_html($sec, $section_headers{$sec}, $indexfile);
 }
-html_main_end($indexfile);
+html_main_end($indexfile, $toolbar);
 close($indexfile);
