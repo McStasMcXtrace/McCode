@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.10 1998-09-24 11:18:27 kn Exp $
+*	$Id: instrument.y,v 1.11 1998-09-24 12:14:11 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.10  1998/09/24 11:18:27  kn
+*	Make AT modifier required.
+*	More reasonable default when ROTATED modifier is missing.
+*
 *	Revision 1.9  1998/09/23 13:50:47  kn
 *	Allow multiple component definitions in the file (before the instrument
 *	definition).
@@ -175,7 +179,7 @@ state_par:	  "STATE" "PARAMETERS" formallist
 
 instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist
 			{ instrument_definition->formals = $4; }
-		  declare initialize complist finally "END"
+		  declare initialize instr_trace finally "END"
 		  {
 		    instrument_definition->name = $3;
 		    instrument_definition->decls = $6;
@@ -221,6 +225,21 @@ finally:	  /* empty */
 		    $$ = $2;
 		  }
 ;
+
+instr_trace:	  "TRACE" complist
+		  {
+		    instrument_definition->rotations_in_radians = 0;
+		  }
+		| complist
+		  {
+		    /* Backward compatibility mode, rotations in radians. */
+		    static did_warn = 0;
+		    print_warn(&did_warn,
+	"Missing TRACE keyword in instrument definition. This is only\n"
+	"supported for backwards compatibility, and should not be used.\n"
+	"NOTE: All rotation angles will be interpreted as radians!\n");
+		    instrument_definition->rotations_in_radians = 1;
+		  }
 
 complist:	  /* empty */
 		  {
