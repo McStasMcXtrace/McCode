@@ -133,29 +133,29 @@
 *          makes 4 output 1D files and produces a complete list for all neutrons
 *          and monitor log(abs(tof)) within automatic limits (for t)
 *
-* <b>How to monitor any instrument/component variable into a Monitor_nD<b>
+* <b>How to monitor any instrument/component variable into a Monitor_nD</b>
 * Suppose the Monitor_nD instance is named 'MyMonitor'.
 * 1) put in your instrument DECLARE:
-*  %include "monitor_nd-lib"
-*  MONND_DECLARE(MyMonitor);
+*      %include "monitor_nd-lib"
+*      MONND_DECLARE(MyMonitor);
 * 2) put in your instrument INITIALIZE (optionally, to set monitor name):
 *      MONND_USER_TITLE(MyMonitor, 1, "Log(age of the Captain)");
 *    This will set 'user1' (because of the '1', could be '2' as well) title.
 * 3) put just after the component where you want to monitor (to set the value)
-*  EXTEND
-*  %{
-*    MONND_USER_VALUE(MyMonitor, 1, log(fabs(x*y+1))
-*  %}
+*      EXTEND
+*      %{
+*        MONND_USER_VALUE(MyMonitor, 1, log(fabs(x*y+1))
+*      %}
 *    This will set 'user1' (because of the '1', could be '2' as well) value.
 *    The value to store in user1 may be obtained from local component variables
 *    (this requires to look into the component code, to extract a variable name)
 *    neutron coordinates, any instrument variable, and any other component
 *    variable (using MC_GETPAR).
 * 4) put further in the instrument (to monitor the user1 value defined before)
-*  COMPONENT MyMonitor = Monitor_nD(
-*   xwidth = 0.1, yheight = 0.1,
-*   options="user1, auto")
-*  AT ...
+*      COMPONENT MyMonitor = Monitor_nD(
+*       xwidth = 0.1, yheight = 0.1,
+*       options="user1, auto")
+*      AT ...
 *
 * See also the example in <a href="PreMonitor_nD.html">PreMonitor_nD</a> to
 * monitor neutron parameters cross-correlations.
