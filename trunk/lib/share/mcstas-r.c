@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.1 1997-09-08 10:40:03 kn Exp $
+* 	$Id: mcstas-r.c,v 1.2 1997-09-08 11:16:43 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.1  1997/09/08 10:40:03  kn
+* 	Initial revision
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
@@ -167,9 +170,9 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
   b.y = *vy;
   b.z = *vz;
   c = rot_apply(t, b);
-  *vx = b.x;
-  *vy = b.y;
-  *vz = b.z;
+  *vx = c.x;
+  *vy = c.y;
+  *vz = c.z;
   /* ToDo: What to do about the spin? */
 }
 
