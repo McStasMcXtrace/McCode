@@ -498,7 +498,10 @@ sub plot_instrument {
 
 sub get_device {
     my ($what) = @_;
-    my $dev = pgopen($what);
+    my $dev;
+    
+    if (defined(&dev)) { $dev = dev($what); }
+    else { $dev = pgopen($what); }
     return $dev if $dev < 0;
     if($multi_view) {
         # We use a 2x2 display format to view the instrument from three angles.
@@ -520,33 +523,47 @@ $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
 
 undef $inspect;
 undef $direct_output;
+undef $sim_cmd;
 my $int_mode=0; # interactive mode(0), non interactive (1)
 my $i;
+
 for($i = 0; $i < @ARGV; $i++) {
     if(($ARGV[$i] eq "-m") || ($ARGV[$i] eq "--multi")) {
         $multi_view = 1;
-        shift;
     } elsif(($ARGV[$i] =~ /^-z([-0-9+.eE]+)$/) ||
             ($ARGV[$i] =~ /^--zoom=([-0-9+.eE]+)$/)) {
         $magnification = ($1 == 0 ? 1 : $1);
-        shift;
-    } elsif(($ARGV[$i] eq "-gif") || ($ARGV[0] eq "-ps") ||
+    } elsif(($ARGV[$i] eq "-gif") || ($ARGV[$i] eq "-ps") ||
             ($ARGV[$i] eq "-psc")) {
-        $direct_output = $ARGV[0];
+        $direct_output = $ARGV[$i];
         $int_mode = 1;
-        shift;
     } elsif(($ARGV[$i] =~ /^-i([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
             ($ARGV[$i] =~ /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
         $inspect = $1;
-        shift;
     } else {
-        last;
+        if (defined($sim_cmd)) { push @cmdline, $ARGV[$i]; }
+        else { $sim_cmd = $ARGV[$i]; }
     }
 }
-die "Usage: mcdisplay [-mzi][-gif|-ps|-psc] Instr.exe [options] params\n -m      --multi        Show the three instrument side views\n -z ZF   --zoom=ZF      Show zoomed view by factor ZF\n -i COMP --inspect=COMP Show only trajectories reaching component COMP\n -gif|-ps|-psc          Export figure as gif/b&w ps/color ps and exit\n"
- unless @ARGV;
+die "Usage: mcdisplay [-mzi][-gif|-ps|-psc] Instr.out [instr_options] params
+ -m      --multi        Show the three instrument side views
+ -zZF    --zoom=ZF      Show zoomed view by factor ZF
+ -iCOMP  --inspect=COMP Show only trajectories reaching component COMP
+ -gif|-ps|-psc          Export figure as gif/b&w ps/color ps and exit
+ When using -ps -psc -gif, the program writes the hardcopy file
+ and then exits.
+SEE ALSO: mcstas, mcplot, mcrun, mcresplot, mcstas2vitess, mcgui\n"
+ unless $sim_cmd;
 
 my $pg_devname = "/xserv";
+if ($int_mode == 1) 
+{ 
+  my $ext  = "ps";
+  my $type = "ps";
+  if($direct_output eq "-gif") { $ext="gif"; $type="gif"; }
+        elsif($direct_output eq "-psc") { $type="cps"; }
+  $pg_devname = "$sim_cmd.$ext/$type"; 
+}
 my $global_device = get_device($pg_devname);
 if($global_device < 0) {
     print STDERR "Failed to open PGPLOT device $pg_devname\n";
@@ -558,9 +575,7 @@ pgask(0);
 
 my ($numcomp, %neutron, %instr);
 
-
-$sim_cmd = shift;
-$args = join(" ", @ARGV);
+$args = join(" ", @cmdline);
 $cmdline = "$sim_cmd --trace $args";
 printf STDERR "Starting simulation '$cmdline' ...\n";
 open(IN, "$cmdline |") || die "Could not run simulation\n";
@@ -569,7 +584,7 @@ $numcomp = read_instrument(IN);
 $inspect_pos = get_inspect_pos($inspect, @components);
 %instr = make_instrument;
 
-printf STDERR "Press H key for help.\n";
+if ($int_mode == 0)  { printf STDERR "Press H key for help.\n"; }
 
 while(!eof(IN)) {
     %neutron = read_neutron(IN);
@@ -578,16 +593,14 @@ while(!eof(IN)) {
     my $ret;
     do {
         $ret = plot_instrument($int_mode, \%instr, \%neutron);
-        if($int_mode == 1) {
-        if($direct_output eq "-gif") { $ret=5; }
-        elsif($direct_output eq "-ps") { $ret=3; }
-        elsif($direct_output eq "-psc") { $ret=4; } }
+        if ($int_mode == 1) { $ret =2; print STDERR "Wrote \"$pg_devname\"\n"; }
         if($ret == 3 || $ret == 4 || $ret == 5) {
             my $ext="ps";
             my $type = $ret == 3 ? "ps" : "cps";
             if($ret == 5) { $type = "gif"; $ext="gif"; }
-            my $tmp_pg_devname = "mcdisplay$seq.$ext/$type";
-            my $tmpdev = get_device($tmp_pg_devname);
+            my $tmp_pg_devname = "$sim_cmd$seq.$ext/$type";
+            my $tmpdev=0;
+            $tmpdev = get_device($tmp_pg_devname);
             if($tmpdev < 0) {
                 print STDERR "Warning: could not open PGPLOT output \"$tmp_pg_devname\" for hardcopy output\n";
             } else {
@@ -595,9 +608,9 @@ while(!eof(IN)) {
                 print STDERR "Wrote \"$tmp_pg_devname\"\n";
                 ++$seq;
             }
-            pgclos;
+            if (defined(&close_window)) { close_window(); }
+            else { pgclos(); };
             pgslct($global_device);
-            if($int_mode==1) { $ret=2; }
         }
     } while($ret != 0 && $ret != 2);
     last if $ret == 2;
@@ -605,4 +618,5 @@ while(!eof(IN)) {
 
 close(IN);
 
-pgclos;
+if (defined(&close_window)) { close_window(); }
+else { pgclos(); }

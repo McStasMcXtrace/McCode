@@ -10,15 +10,16 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.8 $
+* Version:  $Revision: 1.9 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
 *
-* Source that generates neutron events from an ascii/binary 'source' file.
+* Source-like component that generates neutron events from an ascii/binary 
+* 'virtual source' file.
 *
 * %D
-*   This component reads neutron events stored in a file, and sends them into
+*   This component reads neutron events stored into a file, and sends them into
 * the instrument. It thus replaces a Source component, using a previously
 * computed neutron set. The 'source' file type may be either of text or binary
 * format. The component may recognize its format automatically, but you may 
@@ -32,220 +33,126 @@
 *
 * Possible file formats are:
 * 1-text column formatted with lines containing 11 values in the order:
-*       p x y z vx vy vz t sx sy sz
-*   Such files may be generated for instance by Monitor_nD with 
-*       Monitor_nD(options="list all source", filename="MySource.list")
-* 2-Vitess files (binary files of Neutron structure records of 'double')
-*   Such files may be generated for instance by Vitess_output with 
-*       Vitess_output(outname="MySource.vit", bufsize = 10000)
-* 3-float binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
-*   Such files may be generated for instance by Vitess_output with 
-*       Monitor_nD(options="list all source binary", filename="MySource.bin")
+*       p x y z vx vy vz t sx sy sz stored into about 83 bytes/n.
+* 2-float or double binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
+*       stored into 44 and 88 bytes/n respectively for float/double.
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
-*   COMPONENT MySourceCreator = Monitor_nD(
-*     filename = "MySource.list", options="list all source")
+*   COMPONENT MySourceCreator = Virtual_output(file = "MySource.list")
 * at the position where will be the Virtual_input.
-* The output file is text formatted with:[p x y z vx vy vz t sx sy sz] lines 
-* and is about 83 bytes per neutron. A binary float format (44 byte/n) is 
-* obtained with Monitor_nD(options="list all source binary").
-* A Vitess file may be obtained from the 'Vitess_output' component or from a
-* Vitess simulation (96 bytes per neutron).
-* Then unactivate the component MySourceCreator (add 'unactivate' in options),
-* as well as your real source, and put the new instrument source:
-*   COMPONENT Source = Virtual_input(
-*     input="MySource.list", type="text")
+* Then unactivate the part of the simulation description before (and including)
+* the component MySourceCreator. Put the new instrument source:
+*   COMPONENT Source = Virtual_input(file="MySource.list")
 * at the same position as 'MySourceCreator'. 
+* A Vitess file may be obtained from the 'Vitess_output' component or from a
+* Vitess simulation (104 bytes per neutron) and read with Vitess_input.
 *
 * %P
 * INPUT PARAMETERS
-* input:        (str) name of the neutron input file, or stdin if left to 0. 
+* file:         (str) name of the neutron input file, or stdin if left to 0. 
 * 
 * Optional input parameters:
 * bufsize:      (records)   Size of neutron input buffer. 0 for 'use all'.
 * repeat_count: (1)         Number of times the source must be generated.
 *                           0 unactivates the component
-* type:         (str) may be "text", "Vitess" or "float" to force file type.
-*                     Vitess files are prioritary when input is sdtin, 
-*                     else text files are prioritary.
-*
-* OUTPUT PARAMETERS
-*
-* finished:     Set to 1 when the last neutron has been read [int]  
+* type:         (str) may be "text", "float" or "double" to force file type.
+*                     default is text file.
 *
 * %E
 *
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_input
-DEFINITION PARAMETERS (input=0, type=0)
+DEFINITION PARAMETERS (file=0, type=0)
 SETTING PARAMETERS (repeat_count = 1, bufsize=0)
-OUTPUT PARAMETERS (source, rep, pos, FileType, finished, rTable, length)
+OUTPUT PARAMETERS (rep,pos,nrows,nread,Offset,rTable, Virtual_input_Read_Input)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
 SHARE
 %{
-%include "vitess-lib" 
 %include "read_table-lib"
+
+long Virtual_input_Read_Input(char *aFile, char *aType, t_Table *aTable, long *aOffset)
+  {
+    long max_lines = 50000;
+    long length=0;
+    char bType[32];
+    
+    if (!aFile) return (-1);
+    if (aType) strcpy(bType, aType);
+    else strcpy(bType, "???");
+
+    Table_Free(aTable);
+    
+    /* Try to Open neutron input text file. */
+    if((aFile && aType == NULL) || !strcmp(bType,"text")) {
+      Table_Read_Offset(aTable, aFile, 0, aOffset, max_lines);  /* read data from file into rTable */
+      strcpy(bType, "text");
+    }
+    if (!aTable->data && aType && aType[0] != 't')
+      Table_Read_Offset_Binary(aTable, aFile, aType, aOffset, max_lines, 11);
+
+    return(aTable->rows);
+  }
 %}
 
 DECLARE
 %{
-
-#include <sys/stat.h>
-
-  double *source;   /* Neutron input buffer */
-  double  length, pos;
-  int     rep;      /* Neutron repeat count */
-  char    FileType[32];
-  int     finished; /* Set to 1 when last neutron read */
+  int     rep=0;      /* Neutron repeat count */
+  long    pos=0;
+  long    nrows=0;
+  long    nread=0;
+  long    Offset=0;
   t_Table rTable;
 %}
 
 INITIALIZE
 %{
-  long   filesize;
-  FILE *f;
-  char   FileName[256];
+  Table_Init(&rTable);
+  rep = repeat_count+1;
   
-  length=0;
-  rep   =0;
-  source=NULL;
-  strcpy(FileType,"[stdin]");
-  if (input)
-    strcpy(FileName, input);
-    
-  if (repeat_count != 0)
+  if (!file || !repeat_count)
   {
-    /* Try to Open neutron input text file. */
-    if((input && type == NULL) || (type && !strcmp(type,"text"))) 
-    {
-      Table_Read(&rTable, input, 0); /* read all data from file into rTable */
-      if (rTable.rows < 11) Table_Free(&rTable);
-      source = rTable.data;
-      length = rTable.rows;
-      strcpy(FileType, "text");
-      if (length == 0)
-      {
-        fprintf(stderr,"Virtual_input: error reading %d elements from %s file '%s'. Wrong type ?\n", (long)length, FileType, FileName);
-        exit(-1);
-      }
-    }
-    
-    /* Try to Open neutron input binary file (float/Vitess). */
-    if(length == 0 || source == NULL || (type && !strcmp(type,"Vitess")) || (type && !strcmp(type,"float")) )
-    {
-      long nelements, sizeofelement;
-      
-      if (input)
-      {
-        struct stat stfile;
-        
-        stat(input,&stfile);
-	      filesize = stfile.st_size;
-        f = fopen(input, "r"); /* must exist else exit(-1) from text file */
-      }
-      else
-      {  f = stdin; 
-         if (bufsize ==0) bufsize = 10000;
-         filesize = bufsize*sizeof(Neutron);  }
-      
-      /* try to read Vitess files */
-      if ((fmod(filesize, sizeof(Neutron)) == 0) && (type == NULL || !strcmp(type,"Vitess")))
-      {
-        strcpy(FileType, "Vitess");
-        sizeofelement = sizeof(Neutron);
-      }
-      else
-      {
-        strcpy(FileType, "float");
-        sizeofelement = 11*sizeof(float);
-      }
-      nelements = (long)(filesize/sizeofelement);
-      source    = (double*)malloc(filesize);
-      nelements = fread(source, sizeofelement, nelements, f);
-      
-      if (source==NULL || !nelements)
-      {
-        fprintf(stderr,"Virtual_input: error reading %d elements from %s file '%s'. Wrong type ?\n", nelements, FileType, FileName);
-        exit(-1);
-      }
-      else length = (double)nelements;
-      
-      source = (double*)realloc(source, length*sizeofelement);
-      fclose(f);
-    }
-    
-    if (length == 0)
-    {
-      fprintf(stderr,"Virtual_input: Can not read neutron %i events from %s file '%s'\n", (long)length, FileType, FileName);
-      exit(-1);
-    }
-    else
-      printf("Virtual_input: Read %i neutron events from %s file '%s'. Repeat %g time(s)\n", (long)length, FileType, FileName, repeat_count);
-      
-    pos = 0;
-    if (bufsize != 0 && bufsize <= length) length = bufsize;    
-    mcset_ncount(length*repeat_count);
+    fprintf(stderr,"Virtual_input: %s: please give me a file name (file) to read (repeat_count>0).\n", NAME_CURRENT_COMP);
+    exit(-1);
   }
+  if (type && strstr(type, "Vitess")) 
+  { fprintf(stderr, "Virtual_input: %s: Vitess files may be read using the Vitess_input component\n", NAME_CURRENT_COMP); exit(-1); }
+  
+  if (bufsize) mcset_ncount(bufsize*repeat_count);
+
+  printf("Virtual_input: %s: Reading neutron events from file '%s'. Repeat %g time(s)\n", NAME_CURRENT_COMP, file, repeat_count);
 %}
 
 TRACE
 %{
-  
-  if (repeat_count)
-  {
-    if (pos >= length)
-      { rep++; pos = 0; } /* Reposition at start of buffer */
-
-    if (rep > repeat_count)
-      { finished = 1; ABSORB; }
-    else
-    {
-      long i;
-      i = (long)pos;
-      
-      if (!strcmp(FileType, "Vitess"))
-      {
-        Neutron neu;
-        Neutron *s;
-        double v;
-        
-        s=(Neutron*)source;
-        
-        vitess2mcstas(s[i], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
-      } 
-      else
-      {
-        if (!strcmp(FileType, "text")) 
-        {  /* &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz */
-          mcrestore_neutron(source,i, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz, &p); 
-          
-        }
-        else 
-        { /* &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p */
-          float *s;
-          s = (float*)source;
-          p  = s[11*i+0]  ;
-          x  = s[11*i+1]   ; y  = s[11*i+2] ; z  = s[11*i+3];
-          vx = s[11*i+4]   ; vy = s[11*i+5] ; vz = s[11*i+6];
-          t  = s[11*i+7]   ;
-          sx = s[11*i+8]   ; sy = s[11*i+9] ; sz = s[11*i+10];
-        }
-      }
-      pos++;
-      p /= repeat_count;
+    /* while not eof */
+    /* read file at offset */
+    if (rep >= repeat_count) {
+      nrows = Virtual_input_Read_Input(file, type, &rTable, &Offset);
+      if (nrows) { rep = 0; pos = 0; nread++; }
     }
+    
+    if (!nrows)
+      { mcset_ncount(mcget_run_num()); ABSORB; }
+     /* for each buffer, loop: repeat counts */
+     /* for each repeat count: loop: generate neutrons */
+    if (pos >= nrows)
+      { rep++; pos = 0; } /* Reposition at start of buffer */
+ 
+    /* &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz */
+    mcrestore_neutron(rTable.data,pos, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz, &p); 
+
+    pos++;
+    p /= repeat_count;
     SCATTER;
-  }
 %}
 
 FINALLY
 %{
-  if(source)
-    free(source);
+  Table_Free(&rTable);
 %}
 
 MCDISPLAY

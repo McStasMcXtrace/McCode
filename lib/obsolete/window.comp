@@ -6,6 +6,7 @@
 *
 * Component: Al-Window
 * (S. Roth)
+* OBSOLETE: rather use optics/Al_window.comp
 *
 * INPUT PARAMETERS:
 * win_thick: Window thickness (m)       

@@ -1,5 +1,5 @@
 # quartz (SiO2): rhombohedric
-# a=b=4.9133, c=5.4053, aa=bb=90, cc=120; Sigma_a = 0171;
+# a=b=4.9133, c=5.4053, aa=bb=90, cc=120; Sigma_a = 0.171;
 # h   k   l Mult. d-space 2Theta   F-squared
   1   0   0   6  4.25504  20.8592  268.167
   1  -1   0   6  4.25504  20.8592  268.167

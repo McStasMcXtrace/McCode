@@ -14,7 +14,11 @@ sub read_data_file_2D {
     if(open($h, $file)) {
       my @list = ();
       while(<$h>) {
+        last if /^\s*#\s+Errors\s*(.*)$/i;
+        last if /^\s*#\s+Events\s*(.*)$/i;
+        last if /^\s*#\s+EndDate\s*(.*)$/i;
         last if /^\s*#\s+end\s+I\s*$/i;
+        next if /^\s*\n/;
         next if /^\s*#/;
         push(@list, new PDL (split " ")); 
         }
@@ -34,8 +38,12 @@ sub read_array2D {
       if(/^[-+0-9eE. \t]+$/) {
               push(@list, new PDL (split " "));
       } else {
-              last if /^\s*end\s+array2D\s*$/i;
-              die "Bad embedded numeric data in array2D in file.";
+              last if /^\s*end\s+array2D\s*/i;
+              last if /^\s*end\s+array_2d\.*/i;
+              last if /^\s*end\s+array_1d\.*/i;
+              next if /^\s*\n/;
+              next if /^\s*#\s*/;
+              die "Bad embedded numeric data in array2D in file: $_\n";
       }
     }
     return cat @list;
@@ -46,9 +54,12 @@ sub read_array2D {
 # the first time.
 sub get_detector_data_2D {
     my ($info) = @_;
-    $info->{'Numeric Data'} = read_data_file_2D($info->{'Filename'})
-        unless defined($info->{'Numeric Data'});
-    return $info->{'Numeric Data'};
+    if (defined($info->{'Numeric Data'})) {
+      return $info->{'Numeric Data'};
+    } else {
+      $info->{'Numeric Data'} = read_data_file_2D($info->{'Filename'});
+      return $info->{'Numeric Data'};
+    }
 }
 
 
@@ -56,7 +67,7 @@ sub get_detector_data_2D {
 # the first time.
 sub get_detector_data_1D {
     my ($info) = @_;
-    if($info->{'Numeric Data'}) {
+    if(defined($info->{'Numeric Data'})) {
       return $info->{'Numeric Data'};
     } else {
       my ($file) = @_;
@@ -100,7 +111,7 @@ sub read_simulation_info {
     my ($handle) = @_;
     my $inf = { Params => {} };
     while(<$handle>) {
-      if(/^\s*Date:\s*(.*?)\s*$/i) {
+      if(/^\#*\s*Date:\s*(.*?)\s*$/i) {
           $inf->{'Date'} = $1;
       } elsif(/^\s*Ncount:\s*([-+0-9.eE]+)\s*$/i) {
           $inf->{'Ncount'} = $1;
@@ -110,18 +121,18 @@ sub read_simulation_info {
           $inf->{'Seed'} = $1;
       } elsif(/^\s*Trace:\s*(no|yes)\s*$/i) {
           $inf->{'Trace'} = get_yes_no($1);
-      } elsif(/^\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*([-+0-9.eE]+)\s*$/i){
+      } elsif(/^\#*\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*([-+0-9.eE]+)\s*$/i){
           $inf->{'Params'}{$1} = $2;
-      } elsif(/^\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*"(.*)"\s*$/i){
+      } elsif(/^\#*\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*"(.*)"\s*$/i){
           my ($param, $val) = ($1, $2);
           $inf->{'Params'}{$param} = str_unquote($val);
-      } elsif(/^\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*(.*?)\s*$/i){
+      } elsif(/^\#*\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*(.*?)\s*$/i){
           my ($param, $val) = ($1, $2);
           $inf->{'Params'}{$param} = str_unquote($val);
       } elsif(/^\s*end\s+simulation\s*$/i) {
           last;
       } else {
-          print "Invalid line in siminfo file (read_simulation_info):\n'$_'";
+          # print "\# $_";
       }
     }
     return $inf;
@@ -138,8 +149,6 @@ sub read_data_info {
       if(/^\s*type:\s*(.*?)\s*$/i) {
           $type = $1;
       } elsif(/^\s*component:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*$/i) {
-          $compname = $1;
-      } elsif(/^\s*Name:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*$/i) {
           $compname = $1;
       } elsif(/^\s*title:\s*(.*?)\s*$/i) {
           $title = strip_quote($1);
@@ -189,18 +198,30 @@ sub read_data_info {
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s*$/ix) {
           ($xmin,$xmax,$ymin,$ymax) = ($1,$2,$3,$4);
+      } elsif(/^\s*xylimits:\s*
+            ([-+0-9.eE]+)\s+
+            ([-+0-9.eE]+)\s+
+            ([-+0-9.eE]+)\s+
+            ([-+0-9.eE]+)\s*
+            ([-+0-9.eE]+)\s+
+            ([-+0-9.eE]+)\s*$/ix) {
+          ($xmin,$xmax,$ymin,$ymax) = ($1,$2,$3,$4);
       } elsif(/^\s*xlimits:\s*
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s*$/ix) {
           ($xmin,$xmax) = ($1,$2);
-      } elsif(/^\s*begin array2D \(([0-9]+),([0-9]+)\)\s*/i) {
+      } elsif(/^\s*begin array2D\s*\(([0-9]+),([0-9]+)\)\s*/i) {
           $data = read_array2D($handle,$1,$2);
+      } elsif(/^\s*begin array_2D\s*\(([0-9]+),([0-9]+)\)\s*/i) {
+          $data = read_array2D($handle,$1,$2);
+      } elsif(/^\s*begin array_1D\s*\(([0-9]+)\)\s*/i) {
+          $data = read_array2D($handle,4,$2);
       } elsif(/^\s*statistics:\s*(.*?)\s*$/i) {
           $stats = $1;    
       } elsif(/^\s*end\s+data\s*$/i) {
           last;
       } else {
-          print "Invalid line in siminfo file (read_data_info):\n'$_'";
+          # print "\# $_";
       }
     }
     die "Missing type for component $compname"
@@ -211,7 +232,7 @@ sub read_data_info {
     $yvar = $yvars[0] if @yvars && !$yvar;
     $yerr = $yerrs[0] if @yerrs && !$yvar;
     # Convert 2D array to 1D array hash for 1D detector type.
-    if($data && $type =~ /^\s*array_1d\s*\(\s*([0-9]+)\s*\)\s*$/i) {
+    if(defined($data) && $type =~ /^\s*array_1d\s*\(\s*([0-9]+)\s*\)\s*$/i) {
       my $r = {};
       my ($m,$n) = $data->dims;
       my $i;
@@ -285,10 +306,14 @@ sub read_sim_info {
           $instrument_info = read_instrument_info($handle);
       } elsif(/^\s*begin\s+simulation\s*$/i) {
           $simulation_info = read_simulation_info($handle);
+      } elsif(/^\s*#(.*?)\s*$/i) {
+          $error = "This is a McStas single data file\n";
+          print $error;
+          return ($instrument_info, $simulation_info, \@datalist, $error);
       } elsif(/^\s*$/) {
           next;
-      } else {
-          print "Invalid line in siminfo file (read_sim_info):\n'$_'";
+      } else { 
+          # print "Invalid line in siminfo file (read_sim_info):\n'$_'";
       }
     }
     return ($instrument_info, $simulation_info, \@datalist, $error);

@@ -20,7 +20,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.36 2003-01-21 08:51:10 pkwi Exp $
+* $Id: cogen.c,v 1.37 2003-01-21 08:55:31 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -141,7 +141,7 @@ char *instr_formal_type_names[] =
   { "instr_type_double", "instr_type_int", "instr_type_string" };
 
 char *instr_formal_type_names_real[] =
-  { "MCNUM", "int", "char*" };
+  { "MCNUM", "int", "char*", "char"}; /* the last one is for static char allocation */
 
 /*******************************************************************************
 * Output a line of code
@@ -348,7 +348,7 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
   {
     /* Create local parameter equal to global value. */
     if(infunc)
-      coutf("  MCNUM %s = %sc%s_%s;", formal->id, ID_PRE, comp->name, formal->id);
+      coutf("%s %s = %sc%s_%s;", instr_formal_type_names_real[formal->type], formal->id, ID_PRE, comp->name, formal->id);
     else
       coutf("#define %s %sc%s_%s", formal->id, ID_PRE, comp->name, formal->id);
     cogen_comp_scope_setpar(comp, set, infunc, func, data);
@@ -475,7 +475,7 @@ cogen_decls(struct instr_def *instr)
   /* 1. Function prototypes. */
   coutf("void %sinit(void);", ID_PRE);
   coutf("void %sraytrace(void);", ID_PRE);
-  coutf("void %ssave(void);", ID_PRE);
+  coutf("void %ssave(FILE *);", ID_PRE);
   coutf("void %sfinally(void);", ID_PRE);
   coutf("void %sdisplay(void);", ID_PRE);
   cout("");
@@ -580,8 +580,8 @@ cogen_decls(struct instr_def *instr)
       {
         if (c_formal->type != instr_type_string)
           coutf("%s %sc%s_%s;", instr_formal_type_names_real[c_formal->type], ID_PRE, comp->name, c_formal->id);
-        else
-          coutf("%s %sc%s_%s[1024];", instr_formal_type_names_real[c_formal->type], ID_PRE, comp->name, c_formal->id);
+        else  /* char type for component */
+          coutf("%s %sc%s_%s[1024];", instr_formal_type_names_real[c_formal->type+1], ID_PRE, comp->name, c_formal->id);
       }
       list_iterate_end(liter2);
     }
@@ -641,38 +641,7 @@ cogen_nxdict(struct instr_def *instr)
   struct instr_formal *i_formal;
   char *quoted_name = str_quote(instr->nxdinfo->nxdfile);
   /* now create Instrument parameter list to be sent to NXdict routines */
-  char *NeXus_default_instr_entries[] = {
-    "name",
-    "source",
-    "instr_code",
-    "C_code", 
-    "start_time", 
-    "stop_time"
-  };
-  
-  /* now add instrument parameters from mcinputtable[mcNUMIPAR+1] */
-  /* coutf  for(i = 0; i < mcnumipar; i++)
-    fprintf(f, " name=%s type=%s pointer=%s", mcinputtable[i].name,
-	    (*mcinputtypes[mcinputtable[i].type].parminfo)
-		(mcinputtable[i].name), mcinputtable[i].par); */
- 
-  /* now create Component default parameter list */
-  char *NeXus_default_comp_entries[] = 
-  { "name","index", 
-    "comp_name",  /* comp.comp_def.name */
-    "comp_source",/* comp.comp_def.source name of source file */
-    "comp_code",  /* read source file if available, else put original path */
-    "group_name", /* test comp.group != NULL then comp.group.name */
-    "position.place.x", /* comp.comp_position.place.x */
-    "position.place.y", 
-    "position.place.z",
-    "position.place.relative_to", /* test comp.comp_position.place_rel != NULL then comp.comp_position.place_rel.name */
-    "position.orientation.x", /* comp.comp_position.orientation.x */
-    "position.orientation.y", 
-    "position.orientation.z",
-    "position.orientation.relative_to", /* test comp.comp_position.orientation_rel != NULL then comp.comp_position.orientation_rel.name */
-  };
-  
+
   coutf("  strcpy(%ssig_message, \"%s (NeXus init)\");", ID_PRE, instr->name); /* ADD: E. Farhi Aug 25th, 2002 */
 }
 
@@ -853,7 +822,7 @@ cogen_init(struct instr_def *instr)
       }
       else
       {
-        coutf("  strncpy(%sc%s_%s,%s, 1024);", ID_PRE, comp->name, par->id, val);
+        coutf("  if(%s) strncpy(%sc%s_%s,%s, 1024); else %sc%s_%s[0]='\\0';", val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
       }
       str_free(val);
     }
@@ -1089,14 +1058,14 @@ cogen_save(struct instr_def *instr)
   struct comp_inst *comp;        /* Component instance. */
   
   /* User SAVE code from component definitions (for each instance). */
-  coutf("void %ssave(void) {", ID_PRE);
+  coutf("void %ssave(FILE *handle) {", ID_PRE);
   /* In case the save occurs during simulation (-USR2 not at end), we must close
    * current siminfo and re-open it, not to have redundant monitor entries
    * saved each time for each monitor. The sim_info is then incomplete, but
    * data is saved entirely. It is completed during the last siminfo_close
    * of mcraytrace
    */
-  cout("  mcsiminfo_init(NULL);"); 
+  cout("  if (!handle) mcsiminfo_init(NULL);"); 
   cout("  /* User component SAVE code. */");
   cout("");
   liter = list_iterate(instr->complist);
@@ -1113,16 +1082,25 @@ cogen_save(struct instr_def *instr)
   }
   list_iterate_end(liter);
 
-  /* User's FINALLY code from the instrument definition file. */
-  if(list_len(instr->finals->lines) > 0)
+  /* User's SAVE code from the instrument definition file. */
+  if(list_len(instr->saves->lines) > 0)
   {
     cout("  /* User SAVE code from instrument definition. */");
-    coutf("  strcpy(%ssig_message, \"%s (Save)\");", ID_PRE, instr->name); /* ADD: E. Farhi Aug 25th, 2002 */
+    coutf("  strcpy(%ssig_message, \"%s (Save)\");", ID_PRE, instr->name); 
     cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
                            instr->saves);
     cout("");
   }
-  cout("  mcsiminfo_close(); ");
+  /* User's FINALLY code from the instrument definition file. */
+  if(list_len(instr->finals->lines) > 0)
+  {
+    cout("  /* User FINALLY code from instrument definition. */");
+    coutf("  strcpy(%ssig_message, \"%s (Finally)\");", ID_PRE, instr->name); 
+    cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
+                           instr->finals);
+    cout("");
+  }
+  cout("  if (!handle) mcsiminfo_close(); ");
   cout("}");
 }
 
@@ -1137,7 +1115,8 @@ cogen_finally(struct instr_def *instr)
   coutf("void %sfinally(void) {", ID_PRE);
   cout("  /* User component FINALLY code. */");
   /* first call SAVE code to save any remaining data */
-  coutf("  %ssave(); /* save data when simulation ends */", ID_PRE);
+  cout("  mcsiminfo_init(NULL);"); 
+  coutf("  %ssave(%ssiminfo_file); /* save data when simulation ends */", ID_PRE, ID_PRE);
   cout("");
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
@@ -1162,6 +1141,7 @@ cogen_finally(struct instr_def *instr)
                            instr->finals);
     cout("");
   }
+  cout("  mcsiminfo_close(); ");
   cout("}");
 }
 
@@ -1276,6 +1256,7 @@ cogen(char *output_name, struct instr_def *instr)
   cout(" */\n");
   cout("");
   coutf("#define MCSTAS_VERSION \"%s\"", MCSTAS_VERSION);
+  coutf("#define MC_SYS_DIR \"%s\"", MC_SYS_DIR);
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);

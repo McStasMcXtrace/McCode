@@ -13,6 +13,7 @@
 * %D
 * An (n times m) pixel PSD monitor. This component may also be used as a beam
 * detector.
+* OBSOLETE: rather use monitors/Monitor_nD with options="... cylinder ..."
 *
 * %P
 * INPUT PARAMETERS:
@@ -49,9 +50,6 @@ DECLARE
 INITIALIZE
   %{
     int i,j;
-    
-    fprintf(stderr,"PSD_bidim: this component is OBSOLETE (not maintained)\n");
-    fprintf(stderr,"PSD_bidim: rather use monitors/Monitor_nD\n");
 
     for (i=0; i<nx; i++)
      for (j=0; j<ny; j++) 

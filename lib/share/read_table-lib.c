@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: 1.1
+* Version: 1.2
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.6 2003-01-21 08:51:12 pkwi Exp $
+* $Id: read_table-lib.c,v 1.7 2003-01-21 08:55:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+* Revision 1.2 2002/12/19 12:48:07 ef
+*	Added binary import. Fixed Rebin. Added Stat.
+*
 * Revision 1.1 2002/08/29 11:39:00 ef
 *	Initial revision extracted from lib/optics/Monochromators...
 *******************************************************************************/
@@ -49,6 +52,21 @@
 *******************************************************************************/
   long Table_Read(t_Table *mc_rt_Table, char *mc_rt_File, long mc_rt_block_number)
   { /* reads all/a data block in 'file' and returns a Table structure  */
+    long mc_rt_offset=0;
+    return(Table_Read_Offset(mc_rt_Table, mc_rt_File, mc_rt_block_number, &mc_rt_offset, 0));
+    
+  } /* end Table_Read */
+  
+/*******************************************************************************
+* long Table_Read_Offset(t_Table *Table, char *name, int block_number, long *mc_rt_offset
+*                         long mc_rt_max_lines)
+*   Same as Table_Read(..) except:
+*   input   mc_rt_offset: pointer to an mc_rt_offset (*mc_rt_offset should be 0 at start)
+*           mc_rt_max_lines: max number of data rows to read from file (0 means all)
+*   return  also updated *mc_rt_offset position (where end of reading occured)
+*******************************************************************************/
+  long Table_Read_Offset(t_Table *mc_rt_Table, char *mc_rt_File, long mc_rt_block_number, long *mc_rt_offset, long mc_rt_max_lines)
+  { /* reads all/a data block in 'file' and returns a Table structure  */
     FILE *mc_rt_hfile;
     long  mc_rt_nelements;
     
@@ -57,15 +75,114 @@
     mc_rt_hfile = fopen(mc_rt_File, "r");
     if(!mc_rt_hfile)
     {
-       fprintf(stderr, "Error: Could not open input file '%s' (Table_Read)\n", mc_rt_File);
-       return (-1);
+      char mc_rt_path[256];
+      char mc_rt_dir[256];
+      
+      if (!strchr(mc_rt_File, MC_PATHSEP_C))
+      {
+        if (getenv("MCSTAS")) strcpy(mc_rt_dir, getenv("MCSTAS"));
+        else strcpy(mc_rt_dir, MC_SYS_DIR);
+        sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
+        mc_rt_hfile = fopen(mc_rt_path, "r");
+      }
+      if(!mc_rt_hfile)
+      {
+        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read)\n", mc_rt_File);
+        return (-1);
+      }
     }
-    mc_rt_nelements = Table_Read_Handle(mc_rt_Table, mc_rt_hfile, mc_rt_block_number);
+    if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
+    mc_rt_nelements = Table_Read_Handle(mc_rt_Table, mc_rt_hfile, mc_rt_block_number, mc_rt_max_lines);
     strncpy(mc_rt_Table->filename, mc_rt_File, 128);
+    if (mc_rt_offset) *mc_rt_offset=ftell(mc_rt_hfile);
     fclose(mc_rt_hfile); 
     return(mc_rt_nelements);
     
-  } /* end Table_Read */
+  } /* end Table_Read_Offset */
+  
+/*******************************************************************************
+* long Table_Read_Offset_Binary(t_Table *mc_rt_Table, char *mc_rt_File, char *mc_rt_type,
+*                               long +mc_rt_offset, long mc_rt_max_lines)
+*   Same as Table_Read_Offset(..) except that it handles binary files.
+*   input   mc_rt_type: may be "float" or "double"
+*           mc_rt_offset: pointer to an mc_rt_offset (*mc_rt_offset should be 0 at start)
+*           mc_rt_columns:  number of columns
+*           mc_rt_rows : max number of data rows to read from file (0 means all)
+*   return  also updated *mc_rt_offset position (where end of reading occured)
+*******************************************************************************/
+  long Table_Read_Offset_Binary(t_Table *mc_rt_Table, char *mc_rt_File, char *mc_rt_type, long *mc_rt_offset, long mc_rt_rows, long mc_rt_columns)
+  {
+    long  mc_rt_nelements, mc_rt_sizeofelement;
+    long  mc_rt_filesize;
+    FILE *mc_rt_hfile;
+    struct stat mc_rt_stfile;
+    double *mc_rt_data;
+    long  mc_rt_i;
+
+    Table_Init(mc_rt_Table);
+    
+    stat(mc_rt_File,&mc_rt_stfile);
+	  mc_rt_filesize = mc_rt_stfile.st_size;
+    mc_rt_hfile = fopen(mc_rt_File, "r");
+    if(!mc_rt_hfile)
+    {
+      char mc_rt_path[256];
+      char mc_rt_dir[256];
+      
+      if (!strchr(mc_rt_File, MC_PATHSEP_C))
+      {
+        if (getenv("MCSTAS")) strcpy(mc_rt_dir, getenv("MCSTAS"));
+        else strcpy(mc_rt_dir, MC_SYS_DIR);
+        sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
+        mc_rt_hfile = fopen(mc_rt_path, "r");
+      }
+      if(!mc_rt_hfile)
+      {
+        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Binary)\n", mc_rt_File);
+        return (-1);
+      }
+    }
+    if (mc_rt_type && !strcmp(mc_rt_type,"double")) mc_rt_sizeofelement = sizeof(double);
+    else  mc_rt_sizeofelement = sizeof(float);
+    if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
+    if (mc_rt_rows && mc_rt_filesize > mc_rt_sizeofelement*mc_rt_columns*mc_rt_rows) 
+      mc_rt_nelements = mc_rt_columns*mc_rt_rows;
+    else mc_rt_nelements = (long)(mc_rt_filesize/mc_rt_sizeofelement);
+    if (!mc_rt_nelements || mc_rt_filesize <= *mc_rt_offset) return(0);
+    mc_rt_data    = (double*)malloc(mc_rt_filesize);
+    if (!mc_rt_data) {
+      fprintf(stderr,"Error: allocating %d elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
+      exit(-1);
+    }
+    mc_rt_nelements = fread(mc_rt_data, mc_rt_sizeofelement, mc_rt_nelements, mc_rt_hfile);
+      
+    if (!mc_rt_data || !mc_rt_nelements)
+    {
+      fprintf(stderr,"Error: reading %d elements from %s file '%s' (Table_Read_Offset_Binary)\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
+      exit(-1);
+    }
+    if (mc_rt_offset) *mc_rt_offset=ftell(mc_rt_hfile);
+    fclose(mc_rt_hfile);
+    mc_rt_data = (double*)realloc(mc_rt_data, (double)mc_rt_nelements*mc_rt_sizeofelement);
+    /* copy file data into Table */
+    if (mc_rt_type && !strcmp(mc_rt_type,"double")) mc_rt_Table->data = mc_rt_data;
+    else {
+      float  *mc_rt_s;
+      double *mc_rt_dataf;
+      mc_rt_s     = (float*)mc_rt_data;
+      mc_rt_dataf = (double*)malloc(sizeof(double)*mc_rt_nelements);
+      for (mc_rt_i=0; mc_rt_i<mc_rt_nelements; mc_rt_i++) 
+        mc_rt_dataf[mc_rt_i]=mc_rt_s[mc_rt_i];
+      free(mc_rt_data);
+      mc_rt_Table->data = mc_rt_dataf;
+    }
+    strcpy(mc_rt_Table->filename, mc_rt_File);
+    mc_rt_Table->rows    = mc_rt_nelements/mc_rt_columns;
+    mc_rt_Table->columns = mc_rt_columns;
+    Table_Stat(mc_rt_Table);
+    
+    return(mc_rt_nelements);
+  } /* end Table_Read_Offset_Binary */
   
 /*******************************************************************************
 * long Read_Table_Handle(t_Table *Table, FILE *fid, int block_number)
@@ -74,6 +191,7 @@
 *           block_number: if the file does contain more than one
 *                 data block, then indicates which one to get (from index 1)
 *                 a 0 value means append/catenate all
+*           mc_rt_max_lines: if non 0, only reads that number of lines
 *   return  modified Table t_Table structure containing data, header, ...
 *           number of read elements (-1: error, 0:header only)
 * The routine stores any line starting with '#', '%' and ';' into the header
@@ -81,7 +199,7 @@
 * Data block should be a rectangular matrix or vector.
 * Data block may be rebined with Table_Rebin (also sort in ascending order)
 *******************************************************************************/
-  long Table_Read_Handle(t_Table *mc_rt_Table, FILE *mc_rt_hfile, long mc_rt_block_number)
+  long Table_Read_Handle(t_Table *mc_rt_Table, FILE *mc_rt_hfile, long mc_rt_block_number, long mc_rt_max_lines)
   { /* reads all/a data block in 'file' and returns a Table structure  */
     double *mc_rt_Data;
     char *mc_rt_Header;
@@ -113,7 +231,9 @@
     while (!mc_rt_flag_exit_loop)
     {
       char  mc_rt_line[4096];
+      long  mc_rt_back_pos=0;
 
+      mc_rt_back_pos = ftell(mc_rt_hfile);
       if (fgets(mc_rt_line, 4096, mc_rt_hfile) != NULL)
       { /* tries to read some informations from the file */
         int mc_rt_i=0;
@@ -175,14 +295,24 @@
                       mc_rt_Data     = (double*)realloc(mc_rt_Data, mc_rt_malloc_size*sizeof(double));
                       if (mc_rt_Data == NULL)
                       {
-                        fprintf(stderr, "Error: Can not allocate memory %i (Table_Read_Handle).\n", mc_rt_malloc_size*sizeof(double));
+                        fprintf(stderr, "Error: Can not re-allocate memory %i (Table_Read_Handle).\n", mc_rt_malloc_size*sizeof(double));
        return (-1);
                       }
                     }
-                    mc_rt_Data[mc_rt_count_in_array] = mc_rt_X;
-                    mc_rt_count_in_array++;
-                    mc_rt_This_Line_Columns++;
-                    if (mc_rt_This_Line_Columns == 1) mc_rt_Rows++;
+                    /* test if we've read already the desired number of data lines */
+                    if (mc_rt_This_Line_Columns == 0 
+                      && mc_rt_max_lines && mc_rt_Rows >= mc_rt_max_lines) {
+                      mc_rt_End_Line_Scanning_Flag        = 1; 
+                      mc_rt_flag_exit_loop = 1; 
+                      mc_rt_flag_in_array  = 0;
+                      /* reposition to begining of line */
+                      fseek(mc_rt_hfile, mc_rt_back_pos, SEEK_SET);
+                    } else { /* store into data array */
+                      if (mc_rt_This_Line_Columns == 0) mc_rt_Rows++;
+                      mc_rt_Data[mc_rt_count_in_array] = mc_rt_X;
+                      mc_rt_count_in_array++;
+                      mc_rt_This_Line_Columns++;
+                    }
                   }
                   else 
                   { /* not in a block to store */
@@ -195,7 +325,7 @@
                   }
                 } /* end if sscanf mc_rt_lexeme -> numerical */
                 else 
-                { /* token s not numerical in that line */
+                { /* token is not numerical in that line */
                   mc_rt_End_Line_Scanning_Flag = 1; mc_rt_flag_in_array  = 0; 
                 }
               }
@@ -234,10 +364,7 @@
     mc_rt_Table->data         = mc_rt_Data; 
     mc_rt_Table->rows         = mc_rt_Rows;
     mc_rt_Table->columns      = mc_rt_Columns;
-    mc_rt_Table->min_x        = mc_rt_Data[0];
-    mc_rt_Table->max_x        = mc_rt_Data[(mc_rt_Rows-1)*mc_rt_Columns];
-    if (mc_rt_Rows != 0) mc_rt_Table->step_x = (mc_rt_Table->max_x - mc_rt_Table->min_x)/mc_rt_Rows;
-    else mc_rt_Table->step_x = 0;
+    Table_Stat(mc_rt_Table);
     return (mc_rt_count_in_array);
     
   } /* end Table_Read_Handle */  
@@ -253,17 +380,14 @@
     double mc_rt_new_step=0;
     long   mc_rt_i;
     long   mc_rt_tmp;
-    double mc_rt_max_x, mc_rt_min_x;
     char   mc_rt_monotonic = 1;
     /* performs linear interpolation on X axis (0-th column) */
     
-    if (mc_rt_Table->data == NULL 
-    || mc_rt_Table->rows*mc_rt_Table->columns == 0)
+    if (!mc_rt_Table->data 
+    || mc_rt_Table->rows*mc_rt_Table->columns == 0 || !mc_rt_Table->step_x)
       return(0);
     mc_rt_tmp   = mc_rt_Table->rows;
-    mc_rt_max_x = mc_rt_Table->max_x;
-    mc_rt_min_x = mc_rt_Table->min_x;
-    mc_rt_new_step = (mc_rt_max_x - mc_rt_min_x);
+    mc_rt_new_step = mc_rt_Table->step_x;
     for (mc_rt_i=0; mc_rt_i < mc_rt_Table->rows - 1; mc_rt_i++)
     {
       double mc_rt_current_step;
@@ -278,21 +402,21 @@
       }
       if (mc_rt_current_step > 0 && mc_rt_current_step < mc_rt_new_step) mc_rt_new_step = mc_rt_current_step; 
       else mc_rt_tmp--;
-      if (mc_rt_X < mc_rt_min_x) mc_rt_min_x = mc_rt_X;
-      if (mc_rt_X > mc_rt_max_x) mc_rt_max_x = mc_rt_X;
     } /* for */
-    mc_rt_Table->min_x = mc_rt_min_x;
-    mc_rt_Table->max_x = mc_rt_max_x;
     if (fabs(mc_rt_new_step/mc_rt_Table->step_x) >= 0.98) 
       return (mc_rt_Table->rows*mc_rt_Table->columns);
     if (mc_rt_tmp > 0 && mc_rt_new_step > 0 && mc_rt_Table->columns > 1)  /* table was not already evenly sampled */
     {
       long mc_rt_Length_Table;
       double *mc_rt_New_Table;
-      
+      /* modify step if leads to too many points */
+      if  (mc_rt_Table->rows > 2000) 
+        if (mc_rt_new_step < mc_rt_Table->step_x) 
+          mc_rt_new_step = mc_rt_Table->step_x;
+      if (mc_rt_new_step*10 < mc_rt_Table->step_x)
+        mc_rt_new_step = mc_rt_Table->step_x/10;
       mc_rt_Length_Table = ceil(fabs(mc_rt_Table->max_x - mc_rt_Table->min_x)/mc_rt_new_step);
       mc_rt_New_Table    = (double*)malloc(mc_rt_Length_Table*mc_rt_Table->columns*sizeof(double));
-
 
       for (mc_rt_i=0; mc_rt_i < mc_rt_Length_Table; mc_rt_i++)
       {
@@ -304,7 +428,6 @@
         mc_rt_X = mc_rt_Table->min_x + mc_rt_i*mc_rt_new_step;
         mc_rt_New_Table[mc_rt_i*mc_rt_Table->columns] = mc_rt_X;
         /* look for index surrounding X in the old table -> index old_i, old-1 */
-        
         for (mc_rt_old_i=1; mc_rt_old_i < mc_rt_Table->rows-1; mc_rt_old_i++)
         {
           mc_rt_X2 = Table_Index(*mc_rt_Table,mc_rt_old_i  ,0);
@@ -372,7 +495,7 @@
 * Returns Value from the j-th column of Table corresponding to the 
 * X value for the 1st column (index 0)
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
-* NOTE: data should rather be mc_rt_monotonic, and evenly sampled.
+* NOTE: data should rather be monotonic, and evenly sampled.
 *******************************************************************************/
   double Table_Value(t_Table mc_rt_Table, double X, long j)
   {
@@ -428,5 +551,30 @@
     mc_rt_Table->step_x  = 0;
     mc_rt_Table->block_number = 0;
   }
+  
+/******************************************************************************
+* void Table_Star(t_Table *Table)
+*   computes min/max/mean step of 1st column 
+*******************************************************************************/  
+  static void Table_Stat(t_Table *mc_rt_Table)
+  {
+    long   mc_rt_i;
+    double mc_rt_max_x, mc_rt_min_x;
+    
+    if (!mc_rt_Table->rows || !mc_rt_Table->columns) return;
+    mc_rt_max_x = mc_rt_Table->data[0];
+    mc_rt_min_x = mc_rt_Table->data[(mc_rt_Table->rows-1)*mc_rt_Table->columns];
+    
+    for (mc_rt_i=0; mc_rt_i < mc_rt_Table->rows - 1; mc_rt_i++)
+    {
+      double mc_rt_X;
+      mc_rt_X = Table_Index(*mc_rt_Table,mc_rt_i  ,0);
+      if (mc_rt_X < mc_rt_min_x) mc_rt_min_x = mc_rt_X;
+      if (mc_rt_X > mc_rt_max_x) mc_rt_max_x = mc_rt_X;
+    } /* for */
+    mc_rt_Table->max_x = mc_rt_max_x;
+    mc_rt_Table->min_x = mc_rt_min_x;
+    mc_rt_Table->step_x = (mc_rt_Table->max_x - mc_rt_Table->min_x)/mc_rt_Table->rows;
+  }  
 
 /* end of read_table-lib.c */

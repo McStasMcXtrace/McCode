@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: McStas 1.5.0
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
@@ -17,19 +17,19 @@
 * %D
 * Detector-like component writing neutron state parameters to a
 * VITESS neutron file. Used to interface McStas components or
-* simulations into VITESS.
+* simulations into VITESS. Each neutron is 104 bytes.
 *
 * Note that when standard output is used, as is the default, no
 * monitors or other components that produce terminal output must be
 * used, or the neutron output from this component will become
 * corrupted.
 *
-* Example: Vitess_output(outname="MySource.vit", bufsize = 10000, progress = 1)
+* Example: Vitess_output(file="MySource.vit", bufsize = 10000, progress = 1)
 *
 * %P
 * INPUT PARAMETERS
 *
-* outname:  Filename of neutron file to write. Default is standard
+* file:     Filename of neutron file to write. Default is standard
 *           output [string]
 * bufsize:  Size of neutron output buffer [records]
 * progress: If not zero, output dots as progress indicator [flag]
@@ -39,9 +39,9 @@
 
 
 DEFINE COMPONENT Vitess_output
-DEFINITION PARAMETERS (outname = 0)
+DEFINITION PARAMETERS (file = 0)
 SETTING PARAMETERS (bufsize = 10000, progress = 0)
-OUTPUT PARAMETERS (file, buf, pos)
+OUTPUT PARAMETERS (hfile, buf, pos)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 SHARE
@@ -52,7 +52,7 @@ SHARE
 DECLARE
 %{
 
-FILE *file;			/* Neutron output file handle */
+FILE *hfile;			/* Neutron output file handle */
 Neutron *buf;			/* Neutron output buffer */
 int pos;			/* Current position in buffer */
 %}
@@ -60,15 +60,15 @@ int pos;			/* Current position in buffer */
 INITIALIZE
 %{
   /* Open neutron output file. */
-  if(outname)
+  if(file)
   {
-    file = fopen(outname, "wb");
+    hfile = fopen(file, "wb");
   }
   else
   {
-    file = stdout;
+    hfile = stdout;
   }
-  if(!file)
+  if(!hfile)
   {
     fprintf(stderr, "Vitess_output: Error: Cannot open output file.\n");
     exit(1);
@@ -91,7 +91,7 @@ TRACE
 
   /* Flush output buffer if full. */
   if(pos >= bufsize) {
-    count = fwrite(buf, sizeof(Neutron), bufsize, file);
+    count = fwrite(buf, sizeof(Neutron), bufsize, hfile);
     if(progress)
     {
       fputc('.', stderr);	/* Output progress indicator. */
@@ -116,7 +116,7 @@ FINALLY
 
   /* Flush output buffer if necessary. */
   if(pos > 0) {
-    count = fwrite(buf, sizeof(Neutron), pos, file);
+    count = fwrite(buf, sizeof(Neutron), pos, hfile);
     if(count != pos)
     {
       fprintf(stderr, "Vitess_output: Error during write of neutron file.\n");
@@ -127,8 +127,8 @@ FINALLY
     fprintf(stderr, ".\n");	/* Output final progress indicator. */
   if(buf)
     free(buf);
-  if(outname && file)
-    fclose(file);
+  if(hfile && file)
+    fclose(hfile);
 %}
 MCDISPLAY
 %{

@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: McStas 1.5 (Obsolete)
 *
 * Mosaic crystal, possibly off-cut.
@@ -19,6 +19,7 @@
 * scattering vector.
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
+* OBSOLETE: rather use optics/Mosaic_anisotropic
 *
 * Example: Mosaic_simple(zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1,
 *           mosaic=30, r0=0.7, Qx=1.8734, Qy=0, Qz=0)
@@ -78,9 +79,6 @@ DECLARE
 
 INITIALIZE
 %{
-  
-  fprintf(stderr,"Mosaic_simple: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Mosaic_simple: rather use optics/Mosaic_anisotropic\n");
   
   Q = sqrt(Qx*Qx + Qy*Qy + Qz*Qz);
   q0ux = Qx/Q;

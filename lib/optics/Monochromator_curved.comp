@@ -9,26 +9,26 @@
 *
 * %I
 *
-* Written by: Emmanuel Farhi, Kristian Nielsen, Peter Link
+* Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
 *                                  by Kristian Nielsen and Peter Link
-* Modified by: EF, Feb 13th 2002: Read reflectivity table
+* Modified by: EF, Feb 13th 2002:  Read reflectivity table
+* Modified by: EF, Oct 24th 2002:  Read transmission table
 *
 * Double bent multiple crystal slabs with anisotropic gaussian mosaic.
 * 
 * %Description
 * Double bent infinitely thin mosaic crystal, useful as a monochromator or
-* analyzer. which uses a small-mosaicity approximation as well
-* as the approximation vy^2 << vz^2 + vx^2, and taking into account higher 
-* order scattering. The mosaic is anisotropic gaussian, with different FWHMs
-* in the Y and Z directions. The scattering vector is perpendicular to the
+* analyzer. which uses a small-mosaicity approximation and taking into account
+* higher  order scattering. The mosaic is anisotropic gaussian, with different
+* FWHMs in the Y and Z directions. The scattering vector is perpendicular to the
 * surface. For an unrotated monochromator component, the crystal plane lies in
 * the y-z plane (ie. parallel to the beam). The component also works in
-* transmission.
+* transmission. Reflectivity and transmission files may be used.
 * When curvatures are set to 0, the monochromator is flat. 
 * The curvatures approximation for parallel beam focusing to distance L, with
 * monochromator rotation angle A1 are:
@@ -74,6 +74,8 @@
 * width:   total width of monochromator (m)
 * height:  total height of monochromator (m)
 * verbose: verbosity level (0/1)
+* reflect: reflectivity file name of text file as 2 columns [k, R]
+* transmit:transmission file name of text file as 2 columns [k, T]
 *
 * %Link 
 * <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00031.html">Additional note</a> from Peter Link.
@@ -84,9 +86,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monochromator_curved
-DEFINITION PARAMETERS (file=0)
-SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
-OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable)
+DEFINITION PARAMETERS (reflect=0, transmit=0)
+SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=0.3,Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
+OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable, tTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
@@ -121,7 +123,7 @@ DECLARE
   double mos_rms_max;
   double mono_Q;
   double SlabWidth, SlabHeight;
-  t_Table rTable;
+  t_Table rTable, tTable;
 %}
 
 INITIALIZE
@@ -137,23 +139,51 @@ INITIALIZE
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
   
-  if (file != NULL)
+  if (mono_Q <= 0) { fprintf(stderr,"Monochromator_curved: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
+  if (r0 <= 0) { fprintf(stderr,"Monochromator_curved: %s: Error reflectivity r0 is null\n", NAME_CURRENT_COMP); exit(-1); }
+  if (NH*NV == 0) { fprintf(stderr,"Monochromator_curved: %s: no slabs ??? (NH or NV=0)\n", NAME_CURRENT_COMP); exit(-1); }
+  
+  if (verbose)
   {
-    fprintf(stdout, "Monochromator_curved : %s : Reflectivity data (k, R)\n", NAME_CURRENT_COMP);
-    Table_Read(&rTable, file, 0); /* read all data from file into rTable */
+    printf("Monochromator_curved: component %s Q=%.3g Angs-1 (DM=%.4g Angs)\n", NAME_CURRENT_COMP, mono_Q, 2*PI/mono_Q);
+    if (NH*NV == 1) printf("            flat.\n");
+    else
+    { if (NH > 1)
+      { printf("            horizontal: %i blades", (int)NH);
+        if (RH != 0) printf(" focusing with RH=%.3g [m]", RH);
+        printf("\n");
+      }
+      if (NV > 1)
+      { printf("            vertical:   %i blades", (int)NV);
+        if (RV != 0) printf(" focusing with RV=%.3g [m]", RV);
+        printf("\n");
+      }
+    }
+  }
+  
+  if (reflect != NULL)
+  {
+    if (verbose) fprintf(stdout, "Monochromator_curved : %s : Reflectivity data (k, R)\n", NAME_CURRENT_COMP);
+    Table_Read(&rTable, reflect, 1); /* read 1st block data from file into rTable */
     Table_Rebin(&rTable);         /* rebin as evenly, increasing array */
     if (rTable.rows < 2) Table_Free(&rTable);
     Table_Info(rTable);
   } else rTable.data = NULL;
   
-  if (mono_Q == 0) { fprintf(stderr,"Monochromator_curved: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
-  if (r0 == 0) { fprintf(stderr,"Monochromator_curved: %s: Error reflectivity r0 is null\n", NAME_CURRENT_COMP); exit(-1); }
-  if (NH*NV == 0) { fprintf(stderr,"Monochromator_curved: %s: no slabs ??? (NH or NV=0)\n", NAME_CURRENT_COMP); exit(-1); }
+  if (transmit != NULL)
+  {
+    if (verbose) fprintf(stdout, "Monochromator_curved : %s : Transmission data (k, T)\n", NAME_CURRENT_COMP);
+    Table_Read(&tTable, transmit, 1); /* read 1st block data from file into rTable */
+    Table_Rebin(&tTable);         /* rebin as evenly, increasing array */
+    if (tTable.rows < 2) Table_Free(&tTable);
+    Table_Info(tTable);
+  } else tTable.data = NULL;
   
   if (width == 0) SlabWidth = zwidth;
   else SlabWidth = (width+gap)/NH - gap;
   if (height == 0) SlabHeight = yheight;
   else SlabHeight = (height+gap)/NV - gap;
+  
 %}
 
 TRACE
@@ -183,7 +213,8 @@ TRACE
       double row,col, sna,snb,csa,csb,vxp,vyp,vzp;
       double tilth,tiltv;         /* used to calculate tilt angle of slab */
       double ratio, order, k, kux,kuy,kuz;
-      double kix,kiy,kiz;      
+      double kix,kiy,kiz;     
+      int    do_transmit = 0;
       
       col = ceil ( (z1-zmin)/(SlabWidth+gap));  /* which slab hit ? */
       row = ceil ( (y1-ymin)/(SlabHeight+gap));
@@ -242,12 +273,12 @@ TRACE
         else my_r0 = r0;
         if (my_r0 >= 1) 
         {
-          fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 0.99 (k=%f)\n", my_r0, k);
-          my_r0=0.99;
+          if (verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 1 (k=%f)\n", my_r0, k);
+          my_r0=0.999;
         }
         if (my_r0 < 0) 
         {
-          fprintf(stdout, "Warning: Monochromator_curved : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
+          if (verbose) fprintf(stdout, "Warning: Monochromator_curved : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
           my_r0=0;
         }
         
@@ -327,9 +358,28 @@ TRACE
 	        vy =  vxp*snb    +vyp*csb;
 	        vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa; 
           SCATTER;
-        } /* End MC choice to reflect or transmit neutron (if rand01) */
+        } /* End MC choice to reflect or transmit neutron (if tmp<p_reflect) */
+        else do_transmit = 1;
           /* else transmit neutron */
       } /* End bragg scattering possible (if order) */
+      else do_transmit=1;
+      if (do_transmit)
+      {
+        double my_t0;
+        if (tTable.data != NULL)
+        {
+          my_t0 = t0*Table_Value(tTable, k, 1); /* 2nd column */
+        }
+        else my_t0 = t0;
+        /* do not SCATTER, else GROUP does not work */
+        if (my_t0 >= 1) 
+        {
+          if (verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered transmission from %f to 1 (k=%f)\n", my_t0, k);
+          my_t0=0.999;
+        }
+        if (my_t0 > 0) p*= my_t0;
+        else ABSORB;
+      }
     } /* End intersect the crystal (if z1) */
   } /* End neutron moving towards crystal (if vx)*/
 %}

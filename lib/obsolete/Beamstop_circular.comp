@@ -6,13 +6,14 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: January 2000
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: McStas 1.5 (Obsolete)
 *
 * Circular beam stop.
 *
 * %D
 * A simple circular beam stop. Infinitely thin and infinitely absorbing.
+* OBSOLETE: rather use optics/Beamstop
 *
 * %P
 * INPUT PARAMETERS
@@ -26,12 +27,6 @@ DEFINE COMPONENT Beamstop_circular
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=0.1)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-
-INITIALIZE
-%{
-  fprintf(stderr,"Beamstop_circular: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Beamstop_circular: rather use optics/Beamstop\n");
-%}
 
 TRACE
 %{

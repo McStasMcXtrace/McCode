@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: McStas 1.5.0
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
@@ -17,14 +17,14 @@
 * %D
 * Source-like component reading neutron state parameters from a
 * VITESS neutron file. Used to interface McStas components or
-* simulations into VITESS.
+* simulations into VITESS. Each neutron is 104 bytes.
 *
-* Example: Vitess_input(input="MySource.vit", bufsize = 10000, repeat_count = 2)
+* Example: Vitess_input(file="MySource.vit", bufsize = 10000, repeat_count = 2)
 *
 * %P
 * INPUT PARAMETERS
 *
-* input:        Filename of neutron file to read. Default is
+* file:         Filename of neutron file to read. Default is
 *               standard input [string]
 * bufsize:      Size of neutron input buffer [records]
 * repeat_count: Number of times to repeat each neutron read [1]
@@ -38,9 +38,9 @@
 
 
 DEFINE COMPONENT Vitess_input
-DEFINITION PARAMETERS (input = 0)
+DEFINITION PARAMETERS (file = 0)
 SETTING PARAMETERS (bufsize = 10000, repeat_count = 1)
-OUTPUT PARAMETERS (file, buf, size, pos, rep, finished)
+OUTPUT PARAMETERS (hfile, buf, size, pos, rep, finished)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 SHARE
@@ -51,7 +51,7 @@ SHARE
 DECLARE
 %{
 
-FILE *file;			/* Neutron input file handle */
+FILE *hfile;			/* Neutron input file handle */
 Neutron *buf;			/* Neutron input buffer */
 int size;			/* Number of neutrons currently in buffer */
 int pos;			/* Current position in buffer */
@@ -62,11 +62,11 @@ int finished;			/* Set to 1 when last neutron read */
 INITIALIZE
 %{
   /* Open neutron input file. */
-  if(input)
-    file = fopen(input, "rb");
+  if(file)
+    hfile = fopen(file, "rb");
   else
-    file = stdin;
-  if(!file)
+    hfile = stdin;
+  if(!hfile)
   {
     fprintf(stderr, "Vitess_input: Error: Cannot open input file.\n");
     exit(1);
@@ -91,12 +91,12 @@ TRACE
 
   if(pos >= size) {
     /* Buffer is empty. */
-    size = fread(buf, sizeof(Neutron), bufsize, file);
+    size = fread(buf, sizeof(Neutron), bufsize, hfile);
     if(size <= 0)
     {
-      if(ferror(file))
+      if(ferror(hfile))
 	fprintf(stderr, "Vitess_input: Error during read of neutron file.\n");
-      if(feof(file) || ferror(file))
+      if(feof(hfile) || ferror(hfile))
 	finished = 1;		/* End of file or error reached */
     }
     else
@@ -123,8 +123,8 @@ FINALLY
 %{
   if(buf)
     free(buf);
-  if(input && file)
-    fclose(file);
+  if(hfile && file)
+    fclose(hfile);
 %}
 MCDISPLAY
 %{

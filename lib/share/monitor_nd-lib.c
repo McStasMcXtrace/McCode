@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.6 2003-01-21 08:51:12 pkwi Exp $
+* $Id: monitor_nd-lib.c,v 1.7 2003-01-21 08:55:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/28 11:39:00 ef
@@ -45,16 +45,17 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
   {
     long mc_mn_carg = 1;
     char *mc_mn_option_copy, *mc_mn_token;
-    char mc_mn_Flag_New_mc_mn_token = 1;
+    char mc_mn_Flag_New_token = 1;
     char mc_mn_Flag_End       = 1;
     char mc_mn_Flag_All       = 0;
     char mc_mn_Flag_No        = 0;
     char mc_mn_Flag_abs       = 0;
-    char mc_mn_Set_mc_mn_Vars_Coord_Type;
-    char mc_mn_Set_mc_mn_Vars_Coord_Label[30];
-    char mc_mn_Set_mc_mn_Vars_Coord_Var[30];
+    int  mc_mn_Flag_auto      = 0;  /* -1: all, 1: the current variable */
+    int  mc_mn_Set_Vars_Coord_Type;
+    char mc_mn_Set_Vars_Coord_Label[30];
+    char mc_mn_Set_Vars_Coord_Var[30];
     char mc_mn_Short_Label[MONnD_COORD_NMAX][30];
-    char mc_mn_Set_Coord_Mode;
+    int  mc_mn_Set_Coord_Mode;
     long mc_mn_i=0, mc_mn_j=0;
     double mc_mn_lmin, mc_mn_lmax, mc_mn_XY;
     long mc_mn_t;
@@ -103,6 +104,7 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     mc_mn_DEFS->COORD_LOG    =32;   /* next variable will be in log scale */
     mc_mn_DEFS->COORD_ABS    =64;   /* next variable will be in abs scale */
     mc_mn_DEFS->COORD_SIGNAL =128;  /* next variable will be the signal var */
+    mc_mn_DEFS->COORD_AUTO   =256;  /* set auto limits */
 
     strcpy(mc_mn_DEFS->TOKEN_DEL, " =,;[](){}:");  /* mc_mn_token separators */
 
@@ -110,7 +112,8 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     mc_mn_DEFS->SHAPE_DISK   =1;
     mc_mn_DEFS->SHAPE_SPHERE =2;
     mc_mn_DEFS->SHAPE_CYLIND =3;
-    mc_mn_DEFS->SHAPE_BOX    =4;
+    mc_mn_DEFS->SHAPE_BANANA =4;
+    mc_mn_DEFS->SHAPE_BOX    =5;
 
     mc_mn_Vars->Sphere_Radius     = 0;
     mc_mn_Vars->Cylinder_Height   = 0;
@@ -137,7 +140,7 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     mc_mn_Vars->Flag_capture      = 0;
     mc_mn_Vars->Flag_signal       = mc_mn_DEFS->COORD_P;
     
-    mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE;
+    mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE;
     mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR;
     
     /* handle size parameters */
@@ -169,7 +172,7 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
      
     /* parse option string */ 
     
-    mc_mn_option_copy = (char*)malloc(strlen(mc_mn_Vars->option));
+    mc_mn_option_copy = (char*)malloc(strlen(mc_mn_Vars->option)+1);
     if (mc_mn_option_copy == NULL)
     {
       fprintf(stderr,"Monitor_nD: %s cannot allocate mc_mn_option_copy (%i). Fatal.\n", mc_mn_Vars->compcurname, strlen(mc_mn_Vars->option));
@@ -184,12 +187,14 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     
     if (strstr(mc_mn_Vars->option, "cm2") || strstr(mc_mn_Vars->option, "cm^2")) mc_mn_Vars->Flag_per_cm2 = 1;
     
-    if (strstr(mc_mn_Vars->option, "binary"))
+    if (strstr(mc_mn_Vars->option, "binary") || strstr(mc_mn_Vars->option, "float"))
       mc_mn_Vars->Flag_Binary_List  = 1;
+    if (strstr(mc_mn_Vars->option, "double"))
+      mc_mn_Vars->Flag_Binary_List  = 2;
   
-    if (mc_mn_Vars->Flag_per_cm2) strcpy(mc_mn_Vars->Coord_Label[0],"Intensity [n/cm^2/s]");
-    else strcpy(mc_mn_Vars->Coord_Label[0],"Intensity [n/s]");
-    strcpy(mc_mn_Vars->Coord_Var[0],"p");
+    if (mc_mn_Vars->Flag_per_cm2) strncpy(mc_mn_Vars->Coord_Label[0],"Intensity [n/cm^2/s]",30);
+    else strncpy(mc_mn_Vars->Coord_Label[0],"Intensity [n/s]",30);
+    strncpy(mc_mn_Vars->Coord_Var[0],"p",30);
     mc_mn_Vars->Coord_Type[0] = mc_mn_DEFS->COORD_P;
     mc_mn_Vars->Coord_Bin[0] = 1;
     mc_mn_Vars->Coord_Min[0] = 0;
@@ -201,13 +206,13 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     mc_mn_carg = 1;
     while((mc_mn_Flag_End == 0) && (mc_mn_carg < 128))
     {
-      if (mc_mn_Flag_New_mc_mn_token) /* to get the previous mc_mn_token sometimes */
+      if (mc_mn_Flag_New_token) /* to get the previous mc_mn_token sometimes */
       {
         if (mc_mn_carg == 1) mc_mn_token=(char *)strtok(mc_mn_option_copy,mc_mn_DEFS->TOKEN_DEL);
         else mc_mn_token=(char *)strtok(NULL,mc_mn_DEFS->TOKEN_DEL);
         if (mc_mn_token == NULL) mc_mn_Flag_End=1;
       }
-      mc_mn_Flag_New_mc_mn_token = 1;
+      mc_mn_Flag_New_token = 1;
       if ((mc_mn_token != NULL) && (strlen(mc_mn_token) != 0))
       {
       /* first handle option values from preceeding keyword mc_mn_token detected */
@@ -237,7 +242,7 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
         }
         if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_FIL)
         { 
-          if (!mc_mn_Flag_No) strcpy(mc_mn_Vars->Mon_File,mc_mn_token); 
+          if (!mc_mn_Flag_No) strncpy(mc_mn_Vars->Mon_File,mc_mn_token,128); 
           else { strcpy(mc_mn_Vars->Mon_File,""); mc_mn_Vars->Coord_Number = 0; mc_mn_Flag_End = 1;}
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR;
         }
@@ -260,138 +265,123 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
         }
 
         /* now look for general option keywords */
-        if (!strcmp(mc_mn_token, "borders")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_With_Borders = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_With_Borders = 1; }
-        if (!strcmp(mc_mn_token, "verbose")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_Verbose = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_Verbose      = 1; }
-        if (!strcmp(mc_mn_token, "log")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_log = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_log      = 1; }
-        if (!strcmp(mc_mn_token, "abs")) 
-        { mc_mn_Flag_abs      = 1; }
-        if (!strcmp(mc_mn_token, "multiple")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_Multiple = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_Multiple = 1; }
+        if (!strcmp(mc_mn_token, "borders")) mc_mn_Vars->Flag_With_Borders = 1;
+        if (!strcmp(mc_mn_token, "verbose")) mc_mn_Vars->Flag_Verbose      = 1;
+        if (!strcmp(mc_mn_token, "log"))     mc_mn_Vars->Flag_log      = 1;
+        if (!strcmp(mc_mn_token, "abs"))     mc_mn_Flag_abs      = 1;
+        if (!strcmp(mc_mn_token, "multiple")) mc_mn_Vars->Flag_Multiple = 1;
         if (!strcmp(mc_mn_token, "list")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_List = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_List = 1; 
+        { mc_mn_Vars->Flag_List = 1; 
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_EVNT; }
 
         if (!strcmp(mc_mn_token, "limits") || !strcmp(mc_mn_token, "min")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_MIN;
         if (!strcmp(mc_mn_token, "slit") || !strcmp(mc_mn_token, "absorb")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_Absorb = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_Absorb = 1; }
+        { mc_mn_Vars->Flag_Absorb = 1; }
         if (!strcmp(mc_mn_token, "max")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_MAX;
         if (!strcmp(mc_mn_token, "bins")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_DIM;
         if (!strcmp(mc_mn_token, "file")) 
         { mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_FIL;
           if (mc_mn_Flag_No) { strcpy(mc_mn_Vars->Mon_File,""); mc_mn_Vars->Coord_Number = 0; mc_mn_Flag_End = 1;}}
         if (!strcmp(mc_mn_token, "unactivate")) { mc_mn_Flag_End = 1; mc_mn_Vars->Coord_Number = 0; }
-        if (!strcmp(mc_mn_token, "all")) 
-        { if (mc_mn_Flag_No) { mc_mn_Flag_All = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Flag_All = 1; }
-        if (!strcmp(mc_mn_token, "sphere")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SPHERE; }
-        if (!strcmp(mc_mn_token, "cylinder")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_CYLIND; }
-        if (!strcmp(mc_mn_token, "square")) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE; 
+        if (!strcmp(mc_mn_token, "all")) mc_mn_Flag_All = 1;
+        if (!strcmp(mc_mn_token, "sphere")) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SPHERE;
+        if (!strcmp(mc_mn_token, "cylinder")) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_CYLIND;
+        if (!strcmp(mc_mn_token, "banana")) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_BANANA;
+        if (!strcmp(mc_mn_token, "square")) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE;
         if (!strcmp(mc_mn_token, "disk")) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_DISK; 
         if (!strcmp(mc_mn_token, "box")) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_BOX; 
         if (!strcmp(mc_mn_token, "parallel")) mc_mn_Vars->Flag_parallel = 1; 
         if (!strcmp(mc_mn_token, "capture")) mc_mn_Vars->Flag_capture = 1; 
-        if (!strcmp(mc_mn_token, "auto")) 
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_Auto_Limits = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_Auto_Limits = 1; }
-        if (!strcmp(mc_mn_token, "premonitor"))
-        { if (mc_mn_Flag_No) { mc_mn_Vars->Flag_UsePreMonitor = 0; mc_mn_Flag_No = 0; }
-          else mc_mn_Vars->Flag_UsePreMonitor = 1; } 
+        if (!strcmp(mc_mn_token, "auto") && (mc_mn_Flag_auto != -1)) 
+        { mc_mn_Vars->Flag_Auto_Limits = 1; 
+          if (mc_mn_Flag_All) mc_mn_Flag_auto = -1; 
+          else mc_mn_Flag_auto = 1;
+        }
+        if (!strcmp(mc_mn_token, "premonitor")) 
+          mc_mn_Vars->Flag_UsePreMonitor = 1;
         if (!strcmp(mc_mn_token, "3He_pressure"))
-        { if (!mc_mn_Flag_No)  mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_3HE; 
-          mc_mn_Vars->He3_pressure = 3; }
+          mc_mn_Vars->He3_pressure = 3; 
         if (!strcmp(mc_mn_token, "intermediate"))
-        { if (!mc_mn_Flag_No)  mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_INTERM; 
+        { mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_INTERM; 
           mc_mn_Vars->Intermediate = 5; }
         if (!strcmp(mc_mn_token, "no") || !strcmp(mc_mn_token, "not")) mc_mn_Flag_No = 1;
         if (!strcmp(mc_mn_token, "signal")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_SIGNAL;
   
         /* now look for variable names to monitor */
-        mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE; mc_mn_lmin = 0; mc_mn_lmax = 0;
+        mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE; mc_mn_lmin = 0; mc_mn_lmax = 0;
 
         if (!strcmp(mc_mn_token, "x")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_X; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"x [m]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"x"); mc_mn_lmin = mc_mn_Vars->mxmin; mc_mn_lmax = mc_mn_Vars->mxmax; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_X; strcpy(mc_mn_Set_Vars_Coord_Label,"x [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"x"); mc_mn_lmin = mc_mn_Vars->mxmin; mc_mn_lmax = mc_mn_Vars->mxmax; }
         if (!strcmp(mc_mn_token, "y")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_Y; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"y [m]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"y"); mc_mn_lmin = mc_mn_Vars->mymin; mc_mn_lmax = mc_mn_Vars->mymax; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_Y; strcpy(mc_mn_Set_Vars_Coord_Label,"y [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"y"); mc_mn_lmin = mc_mn_Vars->mymin; mc_mn_lmax = mc_mn_Vars->mymax; }
         if (!strcmp(mc_mn_token, "z")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_Z; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"z [m]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"z"); mc_mn_lmin = mc_mn_Vars->mzmin; mc_mn_lmax = mc_mn_Vars->mzmax; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_Z; strcpy(mc_mn_Set_Vars_Coord_Label,"z [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"z"); mc_mn_lmin = mc_mn_Vars->mzmin; mc_mn_lmax = mc_mn_Vars->mzmax; }
         if (!strcmp(mc_mn_token, "k") || !strcmp(mc_mn_token, "wavevector")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_K; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"|k| [Angs-1]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"k"); mc_mn_lmin = 0; mc_mn_lmax = 10; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_K; strcpy(mc_mn_Set_Vars_Coord_Label,"|k| [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"k"); mc_mn_lmin = 0; mc_mn_lmax = 10; }
         if (!strcmp(mc_mn_token, "v"))
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_V; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Velocity [m/s]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"v"); mc_mn_lmin = 0; mc_mn_lmax = 10000; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_V; strcpy(mc_mn_Set_Vars_Coord_Label,"Velocity [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"v"); mc_mn_lmin = 0; mc_mn_lmax = 10000; }
         if (!strcmp(mc_mn_token, "t") || !strcmp(mc_mn_token, "time")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_T; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"TOF [s]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"t"); mc_mn_lmin = 0; mc_mn_lmax = .1; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_T; strcpy(mc_mn_Set_Vars_Coord_Label,"TOF [s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"t"); mc_mn_lmin = 0; mc_mn_lmax = .1; }
         if ((!strcmp(mc_mn_token, "p") || !strcmp(mc_mn_token, "intensity") || !strcmp(mc_mn_token, "flux")))
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_P;  
-            if (mc_mn_Vars->Flag_per_cm2) strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Intensity [n/cm^2/s]");
-            else strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Intensity [n/s]"); 
-            strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"I"); 
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_P;  
+            if (mc_mn_Vars->Flag_per_cm2) strcpy(mc_mn_Set_Vars_Coord_Label,"Intensity [n/cm^2/s]");
+            else strcpy(mc_mn_Set_Vars_Coord_Label,"Intensity [n/s]"); 
+            strcpy(mc_mn_Set_Vars_Coord_Var,"I"); 
             mc_mn_lmin = 0; mc_mn_lmax = FLT_MAX; }
 
         if (!strcmp(mc_mn_token, "vx")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_VX; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"vx [m/s]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"vx"); mc_mn_lmin = -1000; mc_mn_lmax = 1000; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VX; strcpy(mc_mn_Set_Vars_Coord_Label,"vx [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"vx"); mc_mn_lmin = -1000; mc_mn_lmax = 1000; }
         if (!strcmp(mc_mn_token, "vy")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_VY; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"vy [m/s]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"vy"); mc_mn_lmin = -1000; mc_mn_lmax = 1000; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VY; strcpy(mc_mn_Set_Vars_Coord_Label,"vy [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"vy"); mc_mn_lmin = -1000; mc_mn_lmax = 1000; }
         if (!strcmp(mc_mn_token, "vz")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_VZ; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"vz [m/s]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"vz"); mc_mn_lmin = -10000; mc_mn_lmax = 10000; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VZ; strcpy(mc_mn_Set_Vars_Coord_Label,"vz [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"vz"); mc_mn_lmin = -10000; mc_mn_lmax = 10000; }
         if (!strcmp(mc_mn_token, "kx")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_KX; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"kx [Angs-1]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"kx"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_KX; strcpy(mc_mn_Set_Vars_Coord_Label,"kx [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"kx"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
         if (!strcmp(mc_mn_token, "ky")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_KY; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"ky [Angs-1]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"ky"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_KY; strcpy(mc_mn_Set_Vars_Coord_Label,"ky [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"ky"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
         if (!strcmp(mc_mn_token, "kz")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_KZ; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"kz [Angs-1]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"kz"); mc_mn_lmin = -10; mc_mn_lmax = 10; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_KZ; strcpy(mc_mn_Set_Vars_Coord_Label,"kz [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"kz"); mc_mn_lmin = -10; mc_mn_lmax = 10; }
         if (!strcmp(mc_mn_token, "sx")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_SX; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"sx [1]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"sx"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_SX; strcpy(mc_mn_Set_Vars_Coord_Label,"sx [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"sx"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
         if (!strcmp(mc_mn_token, "sy")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_SY; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"sy [1]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"sy"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_SY; strcpy(mc_mn_Set_Vars_Coord_Label,"sy [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"sy"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
         if (!strcmp(mc_mn_token, "sz")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_SZ; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"sz [1]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"sz"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_SZ; strcpy(mc_mn_Set_Vars_Coord_Label,"sz [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"sz"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
 
         if (!strcmp(mc_mn_token, "energy") || !strcmp(mc_mn_token, "omega")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_ENERGY; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Energy [meV]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"E"); mc_mn_lmin = 0; mc_mn_lmax = 100; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_ENERGY; strcpy(mc_mn_Set_Vars_Coord_Label,"Energy [meV]"); strcpy(mc_mn_Set_Vars_Coord_Var,"E"); mc_mn_lmin = 0; mc_mn_lmax = 100; }
         if (!strcmp(mc_mn_token, "lambda") || !strcmp(mc_mn_token, "wavelength")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_LAMBDA; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Wavelength [Angs]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"L"); mc_mn_lmin = 0; mc_mn_lmax = 100; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_LAMBDA; strcpy(mc_mn_Set_Vars_Coord_Label,"Wavelength [Angs]"); strcpy(mc_mn_Set_Vars_Coord_Var,"L"); mc_mn_lmin = 0; mc_mn_lmax = 100; }
         if (!strcmp(mc_mn_token, "radius")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_RADIUS; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Radius [m]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"R"); mc_mn_lmin = 0; mc_mn_lmax = mc_mn_xmax; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_RADIUS; strcpy(mc_mn_Set_Vars_Coord_Label,"Radius [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"R"); mc_mn_lmin = 0; mc_mn_lmax = mc_mn_xmax; }
         if (!strcmp(mc_mn_token, "angle")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_ANGLE; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Angle [deg]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"A"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_ANGLE; strcpy(mc_mn_Set_Vars_Coord_Label,"Angle [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"A"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
         if (!strcmp(mc_mn_token, "hdiv")|| !strcmp(mc_mn_token, "divergence") || !strcmp(mc_mn_token, "xdiv") || !strcmp(mc_mn_token, "dx")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_HDIV; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"HD"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_HDIV; strcpy(mc_mn_Set_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"HD"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
         if (!strcmp(mc_mn_token, "vdiv") || !strcmp(mc_mn_token, "ydiv") || !strcmp(mc_mn_token, "dy")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_VDIV; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"VD"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VDIV; strcpy(mc_mn_Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"VD"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
         if (!strcmp(mc_mn_token, "theta") || !strcmp(mc_mn_token, "longitude")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_THETA; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Longitude [deg]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"th"); mc_mn_lmin = -180; mc_mn_lmax = 180; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_THETA; strcpy(mc_mn_Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"th"); mc_mn_lmin = -180; mc_mn_lmax = 180; }
         if (!strcmp(mc_mn_token, "phi") || !strcmp(mc_mn_token, "lattitude")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_PHI; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Lattitude [deg]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"ph"); mc_mn_lmin = -180; mc_mn_lmax = 180; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_PHI; strcpy(mc_mn_Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"ph"); mc_mn_lmin = -180; mc_mn_lmax = 180; }
         if (!strcmp(mc_mn_token, "ncounts")) 
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_NCOUNT; strcpy(mc_mn_Set_mc_mn_Vars_Coord_Label,"Neutrons [1]"); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"N"); mc_mn_lmin = 0; mc_mn_lmax = 1e10; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NCOUNT; strcpy(mc_mn_Set_Vars_Coord_Label,"Neutrons [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"N"); mc_mn_lmin = 0; mc_mn_lmax = 1e10; }
         if (!strcmp(mc_mn_token, "user") || !strcmp(mc_mn_token, "user1"))
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_USER1; strncpy(mc_mn_Set_mc_mn_Vars_Coord_Label,mc_mn_Vars->UserName1,32); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"U1"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER1; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName1,32); strcpy(mc_mn_Set_Vars_Coord_Var,"U1"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
         if (!strcmp(mc_mn_token, "user2"))
-          { mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_USER2; strncpy(mc_mn_Set_mc_mn_Vars_Coord_Label,mc_mn_Vars->UserName2,32); strcpy(mc_mn_Set_mc_mn_Vars_Coord_Var,"U2"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
-        if ((mc_mn_Set_mc_mn_Vars_Coord_Type != mc_mn_DEFS->COORD_NONE) && mc_mn_Vars->Flag_log) { mc_mn_Set_mc_mn_Vars_Coord_Type |= mc_mn_DEFS->COORD_LOG; mc_mn_Vars->Flag_log = 0; }
-        if ((mc_mn_Set_mc_mn_Vars_Coord_Type != mc_mn_DEFS->COORD_NONE) && mc_mn_Flag_abs) { mc_mn_Set_mc_mn_Vars_Coord_Type |= mc_mn_DEFS->COORD_ABS; mc_mn_Flag_abs = 0; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER2; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName2,32); strcpy(mc_mn_Set_Vars_Coord_Var,"U2"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
 
         /* now stores variable keywords detected, if any */ 
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type != mc_mn_DEFS->COORD_NONE)
+        if (mc_mn_Set_Vars_Coord_Type != mc_mn_DEFS->COORD_NONE)
         {
           int mc_mn_Coord_Number = mc_mn_Vars->Coord_Number;
+          if (mc_mn_Vars->Flag_log) { mc_mn_Set_Vars_Coord_Type |= mc_mn_DEFS->COORD_LOG; mc_mn_Vars->Flag_log = 0; }
+          if (mc_mn_Flag_abs) { mc_mn_Set_Vars_Coord_Type |= mc_mn_DEFS->COORD_ABS; mc_mn_Flag_abs = 0; }
+          if (mc_mn_Flag_auto != 0) { mc_mn_Set_Vars_Coord_Type |= mc_mn_DEFS->COORD_AUTO; mc_mn_Flag_auto = 0; }
           if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_SIGNAL)
           {
             mc_mn_Coord_Number = 0;
-            mc_mn_Vars->Flag_signal = mc_mn_Set_mc_mn_Vars_Coord_Type;
+            mc_mn_Vars->Flag_signal = mc_mn_Set_Vars_Coord_Type;
           } 
           else 
           {
@@ -400,9 +390,9 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
               mc_mn_Vars->Coord_Number = mc_mn_Coord_Number; }
             else if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", mc_mn_Vars->compcurname, MONnD_COORD_NMAX);
           }
-          mc_mn_Vars->Coord_Type[mc_mn_Coord_Number] = mc_mn_Set_mc_mn_Vars_Coord_Type;
-          strcpy(mc_mn_Vars->Coord_Label[mc_mn_Coord_Number], mc_mn_Set_mc_mn_Vars_Coord_Label); 
-          strcpy(mc_mn_Vars->Coord_Var[mc_mn_Coord_Number], mc_mn_Set_mc_mn_Vars_Coord_Var);
+          mc_mn_Vars->Coord_Type[mc_mn_Coord_Number] = mc_mn_Set_Vars_Coord_Type;
+          strncpy(mc_mn_Vars->Coord_Label[mc_mn_Coord_Number], mc_mn_Set_Vars_Coord_Label,30); 
+          strncpy(mc_mn_Vars->Coord_Var[mc_mn_Coord_Number], mc_mn_Set_Vars_Coord_Var,30);
           if (mc_mn_lmin > mc_mn_lmax) { mc_mn_XY = mc_mn_lmin; mc_mn_lmin=mc_mn_lmax; mc_mn_lmax = mc_mn_XY; }
           mc_mn_Vars->Coord_Min[mc_mn_Coord_Number] = mc_mn_lmin;
           mc_mn_Vars->Coord_Max[mc_mn_Coord_Number] = mc_mn_lmax;
@@ -427,56 +417,57 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     strcpy(mc_mn_Vars->Monitor_Label,"");
     for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
     {
-      mc_mn_Set_mc_mn_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
-      if ((mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_X)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_Y)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_Z)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS))
+      if (mc_mn_Flag_auto != 0) mc_mn_Vars->Coord_Type[mc_mn_i] |= mc_mn_DEFS->COORD_AUTO;
+      mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
+      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_X)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Y)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Z)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS))
        strcpy(mc_mn_Short_Label[mc_mn_i],"Position"); 
       else
-      if ((mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_VX)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_VY)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_VZ)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_V))
+      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VX)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VY)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VZ)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_V))
        strcpy(mc_mn_Short_Label[mc_mn_i],"Velocity"); 
       else
-      if ((mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_KX)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_KY)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_KZ)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_K))
+      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KX)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KY)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KZ)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_K))
        strcpy(mc_mn_Short_Label[mc_mn_i],"Wavevector"); 
       else
-      if ((mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_SX)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_SY)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_SZ))
+      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SX)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SY)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SZ))
        strcpy(mc_mn_Short_Label[mc_mn_i],"Spin");
       else
-      if ((mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV)
-       || (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE))
+      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE))
        strcpy(mc_mn_Short_Label[mc_mn_i],"Divergence");
       else
-      if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_ENERGY)
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ENERGY)
        strcpy(mc_mn_Short_Label[mc_mn_i],"Energy"); 
       else
-      if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_LAMBDA)
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_LAMBDA)
        strcpy(mc_mn_Short_Label[mc_mn_i],"Wavelength"); 
       else
-      if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_NCOUNT)
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_NCOUNT)
        strcpy(mc_mn_Short_Label[mc_mn_i],"Neutron counts");
       else
-      if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_T)
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_T)
           strcpy(mc_mn_Short_Label[mc_mn_i],"Time Of Flight");
       else
-      if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_P)
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_P)
           strcpy(mc_mn_Short_Label[mc_mn_i],"Intensity");
       else
-      if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1)
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1)
           strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName1,32);
       else
-      if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2)
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2)
           strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName2,32);
       else
           strcpy(mc_mn_Short_Label[mc_mn_i],"Unknown"); 
@@ -490,13 +481,15 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
       strcat(mc_mn_Vars->Monitor_Label, " ");
       strcat(mc_mn_Vars->Monitor_Label, mc_mn_Short_Label[mc_mn_i]);
     } /* end for mc_mn_Short_Label */
+
     strcat(mc_mn_Vars->Monitor_Label, " Monitor");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SQUARE) strcat(mc_mn_Vars->Monitor_Label, " (Square)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_DISK)   strcat(mc_mn_Vars->Monitor_Label, " (Disk)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) strcat(mc_mn_Vars->Monitor_Label, " (Sphere)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) strcat(mc_mn_Vars->Monitor_Label, " (Cylinder)");
+    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) strcat(mc_mn_Vars->Monitor_Label, " (Banana)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX)    strcat(mc_mn_Vars->Monitor_Label, " (Box)");
-    if (((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX))
+    if (((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX))
         && strstr(mc_mn_Vars->option, "outgoing"))
     {
       mc_mn_Vars->Flag_Shape *= -1;
@@ -517,7 +510,7 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     { mc_mn_Vars->Flag_Multiple = 1; mc_mn_Vars->Flag_List = 0; } /* default is n1D */
     
    /* list and auto limits case : mc_mn_Vars->Flag_List or mc_mn_Vars->Flag_Auto_Limits 
-    * -> Buffer to flush and sumc_mn_ppress after mc_mn_Vars->Flag_Auto_Limits
+    * -> Buffer to flush and suppress after mc_mn_Vars->Flag_Auto_Limits
     */
     if ((mc_mn_Vars->Flag_Auto_Limits || mc_mn_Vars->Flag_List) && mc_mn_Vars->Coord_Number)
     { /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, dp) */ 
@@ -595,6 +588,12 @@ void Monitor_nD_Init(mc_mn_DEFS, mc_mn_Vars, mc_mn_xwidth, mc_mn_yheight, mc_mn_
     if (mc_mn_Vars->Intermediate < 0) mc_mn_Vars->Intermediate = 0;
     if (mc_mn_Vars->Intermediate > 1) mc_mn_Vars->Intermediate /= 100;
     mc_mn_Vars->IntermediateCnts = mc_mn_Vars->Intermediate*mcget_ncount();
+    
+    if (mc_mn_Vars->Flag_Verbose) 
+    {
+      printf("Monitor_nD: %s is a %s.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Monitor_Label);
+      printf("Monitor_nD: version %s with options=%s\n", MONITOR_ND_LIB_H, mc_mn_Vars->option);
+    }
   } /* end Monitor_nD_Init */
   
 /* ========================================================================= */
@@ -615,7 +614,7 @@ double Monitor_nD_Trace(mc_mn_DEFS, mc_mn_Vars)
   long    mc_mn_Coord_Index[MONnD_COORD_NMAX];
   char    mc_mn_While_End   =0;
   long    mc_mn_While_Buffer=0;
-  char    mc_mn_Set_mc_mn_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE;
+  char    mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE;
   
   /* mc_mn_Vars->Flag_Auto_Limits */
   if ((mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_Auto_Limits == 1) && (mc_mn_Vars->Coord_Number > 0))
@@ -625,25 +624,39 @@ double Monitor_nD_Trace(mc_mn_DEFS, mc_mn_Vars)
     if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Number, mc_mn_Vars->Buffer_Counter);
     for (mc_mn_i = 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
     {
-      mc_mn_Vars->Coord_Min[mc_mn_i] = FLT_MAX;
-      mc_mn_Vars->Coord_Max[mc_mn_i] = -FLT_MAX;
-      for (mc_mn_j = 0; mc_mn_j < mc_mn_Vars->Buffer_Block; mc_mn_j++)
-      { 
-        mc_mn_XY = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_j*(mc_mn_Vars->Coord_Number+1)];  /* scanning variables in Buffer */
-        if (mc_mn_XY < mc_mn_Vars->Coord_Min[mc_mn_i]) mc_mn_Vars->Coord_Min[mc_mn_i] = mc_mn_XY;
-        if (mc_mn_XY > mc_mn_Vars->Coord_Max[mc_mn_i]) mc_mn_Vars->Coord_Max[mc_mn_i] = mc_mn_XY;
+      if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_AUTO)
+      {
+        mc_mn_Vars->Coord_Min[mc_mn_i] = FLT_MAX;
+        mc_mn_Vars->Coord_Max[mc_mn_i] = -FLT_MAX;
+        for (mc_mn_j = 0; mc_mn_j < mc_mn_Vars->Buffer_Block; mc_mn_j++)
+        { 
+          mc_mn_XY = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_j*(mc_mn_Vars->Coord_Number+1)];  /* scanning variables in Buffer */
+          if (mc_mn_XY < mc_mn_Vars->Coord_Min[mc_mn_i]) mc_mn_Vars->Coord_Min[mc_mn_i] = mc_mn_XY;
+          if (mc_mn_XY > mc_mn_Vars->Coord_Max[mc_mn_i]) mc_mn_Vars->Coord_Max[mc_mn_i] = mc_mn_XY;
+        }
       }
     }
     mc_mn_Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
   }
 
   /* manage realloc for list all if Buffer size exceeded */
-  if ((mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_List == 2))
+  if ((mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_List >= 2))
   {
-    mc_mn_Vars->Mon2D_Buffer  = (double *)realloc(mc_mn_Vars->Mon2D_Buffer, (mc_mn_Vars->Coord_Number+1)*(mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double));
-    if (mc_mn_Vars->Mon2D_Buffer == NULL)
-          { printf("Monitor_nD: %s cannot reallocate mc_mn_Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", mc_mn_Vars->compcurname, mc_mn_i, (mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double)); mc_mn_Vars->Flag_List = 1; }
-    else { mc_mn_Vars->Buffer_Counter = 0; mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block; }
+    if (mc_mn_Vars->Buffer_Size >= 20000 || mc_mn_Vars->Flag_List == 3)
+    { /* save current (possibly append) and re-use Buffer */
+      Monitor_nD_Save(mc_mn_DEFS, mc_mn_Vars);
+      mc_mn_Vars->Flag_List = 3;
+      mc_mn_Vars->Buffer_Block = mc_mn_Vars->Buffer_Size;
+      mc_mn_Vars->Buffer_Counter  = 0;
+      mc_mn_Vars->Neutron_Counter = 0;
+    }
+    else
+    {
+      mc_mn_Vars->Mon2D_Buffer  = (double *)realloc(mc_mn_Vars->Mon2D_Buffer, (mc_mn_Vars->Coord_Number+1)*(mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double));
+      if (mc_mn_Vars->Mon2D_Buffer == NULL)
+            { printf("Monitor_nD: %s cannot reallocate mc_mn_Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", mc_mn_Vars->compcurname, mc_mn_i, (mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double)); mc_mn_Vars->Flag_List = 1; }
+      else { mc_mn_Vars->Buffer_Counter = 0; mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block; }
+    }
   }
 
   while (!mc_mn_While_End)
@@ -678,7 +691,7 @@ double Monitor_nD_Trace(mc_mn_DEFS, mc_mn_Vars)
         mc_mn_Vars->Flag_Auto_Limits = 0;
         if (!mc_mn_Vars->Flag_List) /* free Buffer not needed (no list to output) */
         { /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, dp) */ 
-          free(mc_mn_Vars->Mon2D_Buffer);
+          free(mc_mn_Vars->Mon2D_Buffer); mc_mn_Vars->Mon2D_Buffer = NULL;
         }
       }
     }
@@ -688,52 +701,52 @@ double Monitor_nD_Trace(mc_mn_DEFS, mc_mn_Vars)
       { /* handle current neutron : last while */
 
         mc_mn_XY = 0;
-        mc_mn_Set_mc_mn_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_X) mc_mn_XY = mc_mn_Vars->cx; 
+        mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_X) mc_mn_XY = mc_mn_Vars->cx; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_Y) mc_mn_XY = mc_mn_Vars->cy; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Y) mc_mn_XY = mc_mn_Vars->cy; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_Z) mc_mn_XY = mc_mn_Vars->cz; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Z) mc_mn_XY = mc_mn_Vars->cz; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_VX) mc_mn_XY = mc_mn_Vars->cvx; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VX) mc_mn_XY = mc_mn_Vars->cvx; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_VY) mc_mn_XY = mc_mn_Vars->cvy; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VY) mc_mn_XY = mc_mn_Vars->cvy; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_VZ) mc_mn_XY = mc_mn_Vars->cvz; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VZ) mc_mn_XY = mc_mn_Vars->cvz; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_KX) mc_mn_XY = V2K*mc_mn_Vars->cvx; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KX) mc_mn_XY = V2K*mc_mn_Vars->cvx; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_KY) mc_mn_XY = V2K*mc_mn_Vars->cvy; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KY) mc_mn_XY = V2K*mc_mn_Vars->cvy; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_KZ) mc_mn_XY = V2K*mc_mn_Vars->cvz; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KZ) mc_mn_XY = V2K*mc_mn_Vars->cvz; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_SX) mc_mn_XY = mc_mn_Vars->csx; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SX) mc_mn_XY = mc_mn_Vars->csx; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_SY) mc_mn_XY = mc_mn_Vars->csy; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SY) mc_mn_XY = mc_mn_Vars->csy; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_SZ) mc_mn_XY = mc_mn_Vars->csz; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SZ) mc_mn_XY = mc_mn_Vars->csz; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_T) mc_mn_XY = mc_mn_Vars->ct; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_T) mc_mn_XY = mc_mn_Vars->ct; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_P) mc_mn_XY = mc_mn_Vars->cp; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_P) mc_mn_XY = mc_mn_Vars->cp; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cvx,mc_mn_Vars->cvz); 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cvx,mc_mn_Vars->cvz); 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cvy,mc_mn_Vars->cvz); 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cvy,mc_mn_Vars->cvz); 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_V) mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz); 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_V) mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz); 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS) mc_mn_XY = sqrt(mc_mn_Vars->cx*mc_mn_Vars->cx+mc_mn_Vars->cy*mc_mn_Vars->cy); 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS) mc_mn_XY = sqrt(mc_mn_Vars->cx*mc_mn_Vars->cx+mc_mn_Vars->cy*mc_mn_Vars->cy); 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_K) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);  mc_mn_XY *= V2K; }
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_K) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);  mc_mn_XY *= V2K; }
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_ENERGY) { mc_mn_XY = mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz;  mc_mn_XY *= VS2E; }
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ENERGY) { mc_mn_XY = mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz;  mc_mn_XY *= VS2E; }
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_LAMBDA) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);  mc_mn_XY *= V2K; if (mc_mn_XY != 0) mc_mn_XY = 2*PI/mc_mn_XY; }
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_LAMBDA) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);  mc_mn_XY *= V2K; if (mc_mn_XY != 0) mc_mn_XY = 2*PI/mc_mn_XY; }
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_NCOUNT) mc_mn_XY = mc_mn_Coord[mc_mn_i]+1; 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_NCOUNT) mc_mn_XY = mc_mn_Coord[mc_mn_i]+1; 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE) 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE) 
         {  mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);
            if (mc_mn_Vars->cvz != 0) 
            {
@@ -741,13 +754,13 @@ double Monitor_nD_Trace(mc_mn_DEFS, mc_mn_Vars)
            } else mc_mn_XY = 0;
         }
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)  { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cx,mc_mn_Vars->cz); } 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)  { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cx,mc_mn_Vars->cz); } 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI) { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cy,mc_mn_Vars->cz); } 
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI) { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cy,mc_mn_Vars->cz); } 
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1) mc_mn_XY = mc_mn_Vars->UserVariable1;
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1) mc_mn_XY = mc_mn_Vars->UserVariable1;
         else
-        if (mc_mn_Set_mc_mn_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2) mc_mn_XY = mc_mn_Vars->UserVariable2;
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2) mc_mn_XY = mc_mn_Vars->UserVariable2;
         else
         mc_mn_XY = 0;
 
@@ -852,23 +865,25 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     {
       if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s save intermediate results (%.2f %%).\n", mc_mn_Vars->compcurname, mc_mn_ratio);
     }
-
     /* check Buffer flush when end of simulation reached */
-    if ((mc_mn_Vars->Buffer_Counter < mc_mn_Vars->Buffer_Block) && mc_mn_Vars->Flag_Auto_Limits && mc_mn_Vars->Mon2D_Buffer)
+    if ((mc_mn_Vars->Buffer_Counter <= mc_mn_Vars->Buffer_Block) && mc_mn_Vars->Flag_Auto_Limits && mc_mn_Vars->Mon2D_Buffer)
     {
       /* Get Auto Limits */
       if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Number, mc_mn_Vars->Buffer_Counter);
       for (mc_mn_i = 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
       {
-        mc_mn_Vars->Coord_Min[mc_mn_i] = FLT_MAX;
-        mc_mn_Vars->Coord_Max[mc_mn_i] = -FLT_MAX;
+        if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_AUTO)
+        {
+          mc_mn_Vars->Coord_Min[mc_mn_i] = FLT_MAX;
+          mc_mn_Vars->Coord_Max[mc_mn_i] = -FLT_MAX;
 
-        for (mc_mn_j = 0; mc_mn_j < mc_mn_Vars->Buffer_Counter; mc_mn_j++)
-        { 
-          mc_mn_XY = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_j*(mc_mn_Vars->Coord_Number+1)];  /* scanning variables in Buffer */
-          if (mc_mn_XY < mc_mn_Vars->Coord_Min[mc_mn_i]) mc_mn_Vars->Coord_Min[mc_mn_i] = mc_mn_XY;
-          if (mc_mn_XY > mc_mn_Vars->Coord_Max[mc_mn_i]) mc_mn_Vars->Coord_Max[mc_mn_i] = mc_mn_XY;
+          for (mc_mn_j = 0; mc_mn_j < mc_mn_Vars->Buffer_Counter; mc_mn_j++)
+          { 
+            mc_mn_XY = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_j*(mc_mn_Vars->Coord_Number+1)];  /* scanning variables in Buffer */
+            if (mc_mn_XY < mc_mn_Vars->Coord_Min[mc_mn_i]) mc_mn_Vars->Coord_Min[mc_mn_i] = mc_mn_XY;
+            if (mc_mn_XY > mc_mn_Vars->Coord_Max[mc_mn_i]) mc_mn_Vars->Coord_Max[mc_mn_i] = mc_mn_XY;
 
+          }
         }
       }
       mc_mn_Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
@@ -935,12 +950,6 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       } /* end while */
     } /* end Force Get Limits */
 
-    if (mc_mn_Vars->Flag_Verbose) 
-    {
-      printf("Monitor_nD: %s is a %s.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Monitor_Label);
-      printf("Monitor_nD: version %s with options=%s\n", MONITOR_ND_LIB_H, mc_mn_Vars->option);
-    }
-
     /* write output files (sent to file as p[i*n + j] vectors) */
     if (mc_mn_Vars->Coord_Number == 0) 
     {
@@ -960,7 +969,10 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       mc_mn_fname = (char*)malloc(strlen(mc_mn_Vars->Mon_File)+10*mc_mn_Vars->Coord_Number);
       if (mc_mn_Vars->Flag_List && mc_mn_Vars->Mon2D_Buffer) /* List: DETECTOR_OUT_2D */
       {
-        if (mc_mn_Vars->Flag_List == 2) mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter;
+        int  loc_ascii_only;
+        char formatName[64];
+        
+        if (mc_mn_Vars->Flag_List >= 2) mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter;
         if (mc_mn_Vars->Buffer_Size >= mc_mn_Vars->Neutron_Counter)
           mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter;
         strcpy(mc_mn_fname,mc_mn_Vars->Mon_File);
@@ -981,15 +993,27 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
         }
         if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin2d,mc_mn_bin1d);
         if (!mc_mn_Vars->Flag_Binary_List)
-        { /* ascii list */
-          mc_mn_p1m = (double *)malloc((mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Size*sizeof(double)); 
-          if (mc_mn_min2d == mc_mn_max2d) mc_mn_max2d = mc_mn_min2d+1e-6;
-          if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
-          strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
-          if (mc_mn_p1m == NULL) /* use Raw Buffer line output */
-          {
-            if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for List transpose. Skipping.\n", mc_mn_Vars->compcurname);
-            mcdetector_out_2D(
+
+        /* handle the type of list output */
+        loc_ascii_only = mcascii_only;
+        strcpy(formatName, mcformat.Name);
+        if (mc_mn_Vars->Flag_List >= 2)
+        {
+          strcat(mcformat.Name, " partial ");
+          if (mc_mn_Vars->Flag_List > 2) 
+          { strcat(mcformat.Name, " append "); mcascii_only = 1; }
+          if (mc_mn_Vars->Flag_Binary_List) mcascii_only = 1;
+          if (mc_mn_Vars->Flag_Binary_List == 1)
+            strcat(mcformat.Name, " binary float ");
+          else if (mc_mn_Vars->Flag_Binary_List == 2)
+            strcat(mcformat.Name, " binary double ");
+        }
+        if (mc_mn_min2d == mc_mn_max2d) mc_mn_max2d = mc_mn_min2d+1e-6;
+        if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
+        strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
+        if (!mc_mn_Vars->Flag_Binary_List)
+        { mc_mn_bin2d=-mc_mn_bin2d; }
+        mcdetector_out_2D(
               mc_mn_label,
               "List of neutron events",
               mc_mn_Coord_X_Label,
@@ -997,62 +1021,12 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
               mc_mn_min1d, mc_mn_max1d, 
               mc_mn_bin2d,
               mc_mn_bin1d,
-              NULL,mc_mn_Vars->Mon2D_Buffer,NULL,
-              mc_mn_fname, mc_mn_Vars->compcurname); 
-          } 
-          else /* transpose for column output */
-          {
-            for (mc_mn_i=0; mc_mn_i < mc_mn_Vars->Coord_Number+1; mc_mn_i++) 
-              for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Buffer_Size; mc_mn_j++)
-              {
-                mc_mn_p1m[mc_mn_i*mc_mn_Vars->Buffer_Size+mc_mn_j] = mc_mn_Vars->Mon2D_Buffer[mc_mn_j*(mc_mn_Vars->Coord_Number+1) + mc_mn_i];
-              }
+            NULL,mc_mn_Vars->Mon2D_Buffer,NULL,
+            mc_mn_fname, mc_mn_Vars->compcurname); 
 
-            mcdetector_out_2D(
-                mc_mn_label,
-                mc_mn_Coord_X_Label,
-                "List of neutron events",
-                mc_mn_min1d, mc_mn_max1d, 
-                mc_mn_min2d, mc_mn_max2d, 
-                mc_mn_bin1d,
-                mc_mn_bin2d,
-                NULL,mc_mn_p1m,NULL,
-                mc_mn_fname, mc_mn_Vars->compcurname); 
-            free(mc_mn_p1m);
-          }
-        }
-        else
-        { /* Binary list (for source) */
-          FILE *mc_mn_fnum;
-          float *mc_mn_pfm;
-          
-          mc_mn_pfm = (float *)malloc(mc_mn_bin1d*mc_mn_bin2d*sizeof(float)); 
-          if (mc_mn_pfm != NULL)
-          {
-            for (mc_mn_i=0; mc_mn_i < mc_mn_bin1d*mc_mn_bin2d; mc_mn_i++) 
-              mc_mn_pfm[mc_mn_i] = (float) mc_mn_Vars->Mon2D_Buffer[mc_mn_i];
-
-            mc_mn_fnum = fopen(mc_mn_fname, "wb");
-            if (!mc_mn_fnum)
-              fprintf(stderr, "Monitor_nD: can not open binary file '%s'.\n",
-              mc_mn_fname);
-            else
-            {
-              long mc_mn_count;
-
-              mc_mn_count = fwrite(mc_mn_pfm, mc_mn_bin1d*sizeof(float),
-                        mc_mn_bin2d, mc_mn_fnum);
-              if(mc_mn_count != mc_mn_bin2d)
-              {
-                fprintf(stderr, "Monitor_nD: error writing binary file '%s' (%li instead of %li).\n",
-                  mc_mn_fname,mc_mn_count, mc_mn_bin2d);
-              }
-              fclose(mc_mn_fnum);
-              if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor float binary file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin2d,mc_mn_bin1d);
-            }
-            free(mc_mn_pfm);
-          }
-        }
+        /* reset the original type of output */
+        mcascii_only = loc_ascii_only;
+        strcpy(mcformat.Name, formatName);
       }
       if (mc_mn_Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
@@ -1282,6 +1256,9 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     double mc_mn_ymax;
     double mc_mn_zmin;
     double mc_mn_zmax;
+    int    mc_mn_i;
+    double mc_mn_hdiv_min=-180, mc_mn_hdiv_max=180, mc_mn_vdiv_min=-180, mc_mn_vdiv_max=180;
+    char   mc_mn_restricted = 0;
 
     mc_mn_radius = mc_mn_Vars->Sphere_Radius;
     mc_mn_h = mc_mn_Vars->Cylinder_Height;
@@ -1291,13 +1268,86 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     mc_mn_ymax = mc_mn_Vars->mymax;
     mc_mn_zmin = mc_mn_Vars->mzmin;
     mc_mn_zmax = mc_mn_Vars->mzmax;
+    
+    /* determine if there are angular limits set at start (no auto) in coord_types 
+     * cylinder/banana: look for hdiv
+     * sphere: look for angle, radius (->atan2(val,mc_mn_radius)), hdiv, vdiv
+     * this activates a 'restricted' flag, to draw a region as blades on cylinder/sphere 
+     */
+    for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Number; mc_mn_i++)
+    {
+      int mc_mn_Set_Vars_Coord_Type;
+      mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV) 
+      { mc_mn_hdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i]; mc_mn_hdiv_max = mc_mn_Vars->Coord_Max[mc_mn_i]; mc_mn_restricted = 1; }
+      else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV) 
+      { mc_mn_vdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i]; mc_mn_vdiv_max = mc_mn_Vars->Coord_Max[mc_mn_i];mc_mn_restricted = 1;  }
+      else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE) 
+      { mc_mn_hdiv_min = mc_mn_vdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i]; 
+        mc_mn_hdiv_max = mc_mn_vdiv_max = mc_mn_Vars->Coord_Max[mc_mn_i];
+        mc_mn_restricted = 1; }
+      else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS) 
+      { double angle;
+        angle = RAD2DEG*atan2(mc_mn_Vars->Coord_Max[mc_mn_i], mc_mn_radius);
+        mc_mn_hdiv_min = mc_mn_vdiv_min = angle; 
+        mc_mn_hdiv_max = mc_mn_vdiv_max = angle;
+        mc_mn_restricted = 1; }
+    }
 
-    if (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE)
+    if (!mc_mn_restricted && (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE))
     {
       mcdis_magnify("");
       mcdis_circle("xy",0,0,0,mc_mn_radius);
       mcdis_circle("xz",0,0,0,mc_mn_radius);
       mcdis_circle("yz",0,0,0,mc_mn_radius);
+    }
+    else if (mc_mn_restricted && ((abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_CYLIND) || (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_BANANA) || (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE)))
+    {
+      int NH=24, NV=24;
+      int ih, iv;
+      double width, height;
+      int issphere;
+      issphere = (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE);
+      width = (mc_mn_hdiv_max-mc_mn_hdiv_min)/NH;
+      height= (mc_mn_vdiv_max-mc_mn_vdiv_min)/NV;
+      mcdis_magnify("xyz");
+      for(ih = 0; ih < NH; ih++)
+        for(iv = 0; iv < NV; iv++)
+        {
+          double theta0, phi0, theta1, phi1;
+          double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;
+          double ymin, ymax;
+          phi0 = (mc_mn_hdiv_min+ width*ih)*DEG2RAD; /* in xz plane */
+          phi1 = (mc_mn_hdiv_min+ width*(ih+1))*DEG2RAD;
+          if (issphere)
+          {
+            theta0= (90-mc_mn_vdiv_min+height*iv)*DEG2RAD;
+            theta1= (90-mc_mn_vdiv_min+height*(iv+1))*DEG2RAD;
+          } else 
+          {
+            theta0= theta1 = PI/2;
+            ymin  = mc_mn_ymin+(mc_mn_ymax-mc_mn_ymin)*(iv/NV);
+            ymax  = mc_mn_ymin+(mc_mn_ymax-mc_mn_ymin)*((iv+1)/NV);
+          }
+          z0 = mc_mn_radius*sin(theta0)*cos(phi0);
+          x0 = mc_mn_radius*sin(theta0)*sin(phi0);
+          if (issphere) y0 = mc_mn_radius*cos(theta0); else y0 = ymin;
+          z1 = mc_mn_radius*sin(theta1)*cos(phi0);
+          x1 = mc_mn_radius*sin(theta1)*sin(phi0);
+          if (issphere) y1 = mc_mn_radius*cos(theta1); else y1 = ymax;
+          z2 = mc_mn_radius*sin(theta1)*cos(phi1);
+          x2 = mc_mn_radius*sin(theta1)*sin(phi1);
+          y2 = y1;
+          z3 = mc_mn_radius*sin(theta0)*cos(phi1);
+          x3 = mc_mn_radius*sin(theta0)*sin(phi1);
+          y3 = y0;
+          mcdis_multiline(5, 
+            x0,y0,z0,
+            x1,y1,z1,
+            x2,y2,z2,
+            x3,y3,z3,
+            x0,y0,z0);
+        }
     }
     else
     if (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_DISK)
@@ -1316,7 +1366,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
              (double)mc_mn_xmin, (double)mc_mn_ymin, 0.0);
     }
     else
-    if (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_CYLIND)
+    if (!mc_mn_restricted && ((abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_CYLIND) || (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_BANANA)))
     {
       mcdis_magnify("xyz");
       mcdis_circle("xz", 0,  mc_mn_h/2.0, 0, mc_mn_radius);

@@ -30,6 +30,7 @@
 * neutron reach. A long simulation will then only be performed once, to create
 * the 'source' file. Further simulations are much faster if they start from
 * this low flux position with the 'source' file.
+* OBSOLETE: rather use sources/Virtual_input
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
@@ -245,9 +246,6 @@ INITIALIZE
   struct stat stfile;
   long   filesize, i, nelements;
   FILE *f;
-  
-  fprintf(stderr,"Source_file: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Source_file: rather use sources/Virtual_input\n");
   
   length=0;
   rep   =0;

@@ -9,8 +9,9 @@ BEGIN {
     } else {
 	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
 }
-use lib $MCSTAS::sys_dir;
+use lib $MCSTAS::perl_dir;
 
 use strict;
 use FileHandle;
@@ -209,7 +210,7 @@ sub menu_open {
     my ($w) = @_;
     return 0 unless(is_erase_ok($w));
     my $file = $w->getOpenFile(-defaultextension => "instr",
-			       -title => "Select instrument file");
+			       -title => "Select instrument file", -initialdir => "$ENV{'PWD'}");
     return 0 unless $file;
     open_instr_def($w, $file);
     return 1;	
@@ -301,7 +302,7 @@ sub read_sim_data {
 sub load_sim_file {
     my ($w) = @_;
     my $file = $w->getOpenFile(-defaultextension => "sim",
-			       -title => "Select simulation file");
+			       -title => "Select simulation file", -initialdir => "$ENV{'PWD'}");
     if($file && -r $file) {
 	$current_sim_file = $file ;
 	new_simulation_results($w);

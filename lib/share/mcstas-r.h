@@ -17,7 +17,7 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.47 2003-01-21 08:51:12 pkwi Exp $
+* $Id: mcstas-r.h,v 1.48 2003-01-21 08:55:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.5 2002/10/19 22:46:21 ef
@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.47 $"
+#define MCSTAS_R_H "$Revision: 1.48 $"
 
 #include <math.h>
 #include <string.h>
@@ -102,7 +102,7 @@ extern char mcinstrument_name[], mcinstrument_source[];
 extern int mctraceenabled, mcdefaultmain;
 void mcinit(void);
 void mcraytrace(void);
-void mcsave(void);
+void mcsave(FILE *);
 void mcfinally(void);
 void mcdisplay(void);
 
@@ -114,6 +114,8 @@ void mcdisplay(void);
 /* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
 * after #define C sample, MC_GETPAR(C,x) would refer to component C, not to
 * component sample. Such are the joys of ANSI C.
+  
+* Anyway the usage of MCGETPAR requires that we use sometimes bare names...
 */
 #define MC_GETPAR2(comp, par) (mcc ## comp ## _ ## par)
 #define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
@@ -359,15 +361,6 @@ void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
 void mccoordschange_polarisation(Rotation t,
     double *sx, double *sy, double *sz);
 double mcestimate_error(double N, double p1, double p2);
-void mcdetector_out(char *cname, double p0, double p1, double p2,
-    char *filename);
-void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *cname);
-void mcdetector_out_1D(char *t, char *xl, char *yl,
-    char *xvar, double x1, double x2, int n,
-    double *p0, double *p1, double *p2, char *f, char *c);
-void mcdetector_out_2D(char *t, char *xl, char *yl, double x1, double x2,
-    double y1,double y2,int m, int n,
-    double *p0, double *p1, double *p2, char *f, char *c);
 void mcreadparams(void);
 
 void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
@@ -401,22 +394,26 @@ int mcstas_main(int argc, char *argv[]);
 /* file i/o definitions and function prototypes */
 
 struct mcformats_struct {
-  char Name[256];
-  char Extension[32];
-  char Header[2048];
-  char Footer[2048];
-  char BeginSection[1024];
-  char EndSection[1024];
-  char AssignTag[256];
+  char Name[64];  /* may also specify: append, partial(hidden), binary */
+  char Extension[16];
+  char Header[4096];
+  char Footer[4096];
+  char BeginSection[512];
+  char EndSection[256];
+  char AssignTag[64];
   char BeginData[1024];
-  char BeginErrors[1024];
-  char BeginNcount[1024];
-  char EndData[1024];
-  char EndErrors[1024];
-  char EndNcount[1024];
+  char BeginErrors[256];
+  char BeginNcount[256];
+  char EndData[256];
+  char EndErrors[256];
+  char EndNcount[256];
   };
-  
+
+#ifdef ALL_FORMATS
 #define mcNUMFORMATS 6
+#else
+#define mcNUMFORMATS 2
+#endif
 /* in order to be fully portable, the format specifiers must mention each
  * fprintf parameters. In case we do not want to use some of them, we must
  * set the precision to 0.
@@ -426,6 +423,10 @@ struct mcformats_struct {
  * Maximum number of positional arguments is NL_RGMAX, which is 9 on System V
  * machines (Dec/Compaq/HP). Some more enjoyable  stuff !! -> we use pfprintf
  */ 
+/* The mcformat.Name may contain additional keywords:
+ *  partial: will not show the monitor in mcstas.sim, omit the format footer 
+ *          (usually the end data), and not print the monitor sum in stdout
+ */
   
 struct mcformats_struct mcformats[mcNUMFORMATS] = {
   "McStas", "sim",
@@ -441,8 +442,236 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%1$s%3$s: %4$s\n",
     "", 
     "%1$sErrors [%2$s/%4$s]: \n",
-    "%1$sNcount [%2$s/%4$s]: \n",
+    "%1$sEvents [%2$s/%4$s]: \n",
     "", "", "",
+  "Scilab", "sci",
+    "function %7$s = get_%7$s(p)\n"
+      "// %4$s function issued from McStas on %5$s\n"
+      "// McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
+      "// import data using exec('%7$s.sci',-1); s=get_%7$s('plot');\nmode(-1); //silent execution\n"
+      "if argn(2) > 0, p=1; else p=0; end\n"
+      "%7$s = struct();\n"
+      "%7$s.Format ='%4$s';\n"
+      "%7$s.URL    ='http://neutron.risoe.dk';\n"
+      "%7$s.Editor ='%6$s';\n"
+      "%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
+      "%7$s.Date   =%8$li; // for getdate\n"
+      "%7$s.File   ='%3$s';\n",
+    "%7$s.EndDate=%8$li; // for getdate\nendfunction\n"
+    "function d=mcload_inline(d)\n"
+      "// local inline func to load data\n"
+      "execstr(['S=['+part(d.type,10:(length(d.type)-1))+'];']);\n"
+      "if ~length(strindex(d.format, 'binary'))\n"
+      "  exec(d.filename,-1);p=d.parent;\n"
+      "  if ~execstr('d2='+d.func+'();','errcatch'),d=d2; d.parent=p;end\n"
+      "  if sum(S ~= size(d.data)), d.data=d.data'; errcatch(-1,'continue'); d.errors=d.errors'; d.events=d.events'; errcatch(-1); end\n"
+      "else\n"
+      "  if length(strindex(d.format, 'float')), t='f';\n"
+      "  elseif length(strindex(d.format, 'double')), t='d';\n"
+      "  else return; end\n"
+      "  fid=mopen(d.filename, 'rb');\n"
+      "  pS = prod(S);\n"
+      "  x = mget(3*pS, t, fid);\n"
+      "  d.data  =matrix(x(1:pS), S);\n"
+      "  if length(x) >= 3*pS,\n"
+      "  d.errors=matrix(x((pS+1):(2*pS)), S);\n"
+      "  d.events=matrix(x((2*pS+1):(3*pS)), S);end\n"
+      "  mclose(fid);\n"
+      "end\n"
+      "endfunction\n"
+      "function d=mcplot_inline(d,p)\n"
+      "// local inline func to plot data\n"
+      "if ~length(d.data) & ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
+      "execstr(['l=[',d.xylimits,'];']); S=size(d.data);\n"
+      "t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];\n"
+      "mprintf('%%s\\n',t(:));\n"
+      "if length(strindex(d.type,'0d')),return;\n"
+      "else\nw=winsid();if length(w),w=w($)+1; else w=0; end\n"
+      "xbasr(w); xset('window',w);\n"
+      "if length(strindex(d.type,'2d'))\n"
+      "d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2)); z=d.data;\n"
+      "fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));\n"
+      "if fx>0,fx=round(log10(fx)); d.x=d.x/10^fx; d.xlabel=d.xlabel+' [*10^'+string(fx)+']'; end\n"
+      "if fy>0,fy=round(log10(fy)); d.y=d.y/10^fy; d.ylabel=d.ylabel+' [*10^'+string(fy)+']'; end\n"
+      "if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end\n"
+      "xset('colormap',hotcolormap(64));plot3d1(d.x,d.y,z);\n"
+      "else\nd.x=linspace(l(1),l(2),max(S));\nplot2d(d.x,d.data);end\nend\n"
+      "xtitle(t,'X:'+d.xlabel,'Y:'+d.ylabel); xname(t1);endfunction\n"
+    "%7$s=get_%7$s();\n",
+    "// Section %2$s [%3$s] (level %7$d)\n"
+      "%1$s%4$s = struct(); %4$s.class = '%2$s';",
+    "%1$s%6$s.%4$s = 0; %6$s.%4$s = %4$s; clear %4$s;\n",
+    "%1$s%2$s.%3$s = '%4$s';\n",
+    "%1$s%2$s.func='get_%2$s';\n%1$s%2$s.data = [ ",
+    "%1$serrors = [ ",
+    "%1$sevents = [ ",
+    " ]; // end of data\n%1$sif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%1$s%2$s=mcplot_inline(%2$s,p);\n",
+    " ]; // end of errors\n%1$sif single_file == 1, %2$s.errors=errors; end\n",
+    " ]; // end of events\n%1$sif single_file == 1, %2$s.events=events; end\n",
+#ifdef ALL_FORMATS
+  "Matlab", "m",
+    "function %7$s = get_%7$s(p)\n"
+      "%% %4$s function issued from McStas on %5$s\n"
+      "%% McStas simulation %2$s: %3$s\n"
+      "%% import data using s=%7$s('plot');\n"
+      "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
+      "%7$s.Format ='%4$s';\n"
+      "%7$s.URL    ='http://neutron.risoe.dk';\n"
+      "%7$s.Editor ='%6$s';\n"
+      "%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
+      "%7$s.Date   =%8$li; %% for datestr\n"
+      "%7$s.File   ='%3$s';\n",
+    "%7$s.EndDate=%8$li; %% for datestr\n"
+      "function d=mcload_inline(d)\n"
+      "%% local inline function to load data\n"
+      "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' 1 ];']);\n"
+      "if ~length(findstr(d.format, 'binary'))\n"
+      "  copyfile(d.filename,[d.func,'.m']);p=d.parent;\n"
+      "  eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);\n"
+      "  if any(S ~= size(d.data)), d.data=d.data'; if isfield(d,'errors'), d.errors=d.errors'; d.events=d.events'; end; end\n"
+      "else\n"
+      "  if length(findstr(d.format, 'float')), t='single';\n"
+      "  elseif length(findstr(d.format, 'double')), t='double';\n"
+      "  else return; end\n"
+      "  fid=fopen(d.filename, 'r');\n"
+      "  pS = prod(S);\n"
+      "  x = fread(fid, 3*pS, t);\n"
+      "  d.data  =reshape(x(1:pS), S);\n"
+      "  if prod(size(x)) >= 3*pS,\n"
+      "  d.errors=reshape(x((pS+1):(2*pS)), S);\n"
+      "  d.events=reshape(x((2*pS+1):(3*pS)), S);end\n"
+      "  fclose(fid);\n"
+      "end\n"
+      "function d=mcplot_inline(d,p)\n"
+      "%% local inline function to plot data\n"
+      "if isempty(d.data) & isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
+      "eval(['l=[',d.xylimits,'];']); S=size(d.data);\n"
+      "t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);\n"
+      "disp(t);\n"
+      "if ~isempty(findstr(d.type,'0d')), return; end\n"
+      "figure; if ~isempty(findstr(d.type,'2d'))\n"
+      "d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2));\n"
+      "surface(d.x,d.y,d.data');\n"
+      "else\nd.x=linspace(l(1),l(2),max(S));\nplot(d.x,d.data);end\n"
+      "xlabel(d.xlabel); ylabel(d.ylabel); title(t); axis tight;"
+      "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n"
+      "if ~isempty(findstr(d.type,'2d')), colorbar; end\n",
+    "%% Section %2$s [%3$s] (level %7$d)\n"
+      "%4$s.class = '%2$s';",
+    "%6$s.%4$s = %4$s; clear %4$s;\n",
+    "%1$s%2$s.%3$s = '%4$s';\n",
+    "%1$s%2$s.func='%2$s';\n%1$s%2$s.data = [ ",
+    "%1$serrors = [ ",
+    "%1$sevents = [ ",
+    " ]; %% end of data\nif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%2$s=mcplot_inline(%2$s,p);\n",
+    " ]; %% end of errors\nif single_file, %2$s.errors=errors; end\n",
+    " ]; %% end of events\nif single_file, %2$s.events=events; end\n",
+  "IDL", "pro",
+    "function mcload_inline,d\n"
+      "; local inline function to load external data\n"
+      "S=d.type & a=execute('S=long(['+strmid(S,9,strlen(S)-10)+'])')\n"
+      "if strpos(d.format, 'binary') le 0 then begin\n"
+      " p=d.parent\n"
+      " x=read_binary(d.filename)\n"
+      " get_lun, lun\n"
+      " openw,lun,d.func+'.pro'\n"
+      " writeu, lun,x\n"
+      " free_lun,lun\n"
+      " resolve_routine, d.func, /is_func, /no\n"
+      " d=call_function(d.func)\n"
+      " if total(size(S, /dim) ne size(d.data, /dim)) gt 0 then begin\n"
+      "  d.data=transpose(d.data)\n"
+      "  if total(strpos(tag_names(d),'ERRORS')+1) gt 0 then begin\n"
+      "   d.errors=transpose(d.errors)\n   d.events=transpose(d.events)\n  endif\n"
+      " endif\n"
+      "endif else begin\n"
+      " if strpos(d.format, 'float') ge 0 then t=4 $\n"
+      " else if strpos(d.format, 'double') ge 0 then t=5 $\n"
+      " else return,d\n"
+      " x=read_binary(d.filename, data_type=t)\n"
+      " pS=n_elements(S)\nif pS eq 1 then pS=long(S) $\n"
+      " else if pS eq 2 then pS=long(S(0)*S(1)) $\n"
+      " else pS=long(S(0)*S(1)*S(2))\n"
+      " stv,d,'data',reform(x(0:(pS-1)),S)\n"
+      " if n_elements(x) ge long(3*pS) then begin\n"
+      "  stv,d,'errors',reform(x(pS:(2*pS-1)),S)\n"
+      "  stv,d,'events',reform(x((2*pS):(3*pS-1)),S)\n"
+      " endif\n"
+      "endelse\n"
+      "return,d\nend ; FUN load\n"
+    "function mcplot_inline,d,p\n"
+      "; local inline function to plot data\n"
+      "if size(d.data,/typ) eq 7 and strpos(d.type,'0d') lt 0 then d=mcload_inline(d)\n"
+      "if p eq 0 or strpos(d.type,'0d') ge 0 then return, d\n"
+      "S=d.type & a=execute('S=long(['+strmid(S,9,strlen(S)-10)+'])')\n"
+      "stv,d,'data',reform(d.data,S,/over)\n"
+      "if total(strpos(tag_names(d),'ERRORS')+1) gt 0 then begin\n"
+      " stv,d,'errors',reform(d.errors,S,/over)\n"
+      " stv,d,'events',reform(d.events,S,/over)\n"
+      "endif\n"
+      "d.xylimits=strjoin(strsplit(d.xylimits,' ',/extract),',') & a=execute('l=['+d.xylimits+']')\n"
+      "t1='['+d.parent+'] '+d.filename+': '+d.title\n"
+      "t=[t1,'  '+d.variables+'=['+d.values+']','  '+d.signal,'  '+d.statistics]\n"
+      "print,t\n"
+      "if strpos(d.type,'0d') ge 0 then return,d\n"
+      "d.xlabel=strjoin(strsplit(d.xlabel,'/\\;*?$!~<>()[]{}%%&.,',/extract),'_')\n"
+      "d.ylabel=strjoin(strsplit(d.ylabel,'/\\;*?$!~<>()[]{}%%&.,',/extract),'_')\n"
+      "stv,d,'x',l(0)+indgen(S(0))*(l(1)-l(0))/S(0)\n"
+      "if strpos(d.type,'2d') ge 0 then begin\n"
+      "  name={DATA:d.func,IX:d.xlabel,IY:d.ylabel}\n"
+      "  stv,d,'y',l(2)+indgen(S(1))*(l(3)-l(2))/S(1)\n"
+      "  live_surface,d.data,xindependent=d.x,yindependent=d.y,name=name,reference_out=Win\n"
+      "endif else begin\n"
+      "  name={DATA:d.func,I:d.xlabel}\n"
+      "  live_plot,d.data,independent=d.x,name=name,reference_out=Win\n"
+      "endelse\n"
+      "live_text,t,Window_In=Win.Win,location=[0.3,0.9]\n"
+      "return,d\nend ; FUN plot\n"
+    "pro stv,S,T,V\n"
+      "; procedure set-tag-value that does S.T=V\n"
+      "sv=size(V)\n"
+      "T=strupcase(T)\n"
+      "TL=strupcase(tag_names(S))\n"
+      "id=where(TL eq T)\n"
+      "sz=[0,0,0]\n"
+      "vd=n_elements(sv)-2\n"
+      "type=sv[vd]\n"
+      "if id(0) ge 0 then d=execute('sz=SIZE(S.'+T+')')\n"
+      "if (sz(sz(0)+1) ne sv(sv(0)+1)) or (sz(0) ne sv(0)) $\n"
+      "  or (sz(sz(0)+2) ne sv(sv(0)+2)) $\n"
+      "  or type eq 8 then begin\n"
+      " ES = ''\n"
+      " for k=0,n_elements(TL)-1 do begin\n"
+      "  case TL(k) of\n"
+      "   T:\n"
+      "   else: ES=ES+','+TL(k)+':S.'+TL(k)\n"
+      "  endcase\n"
+      " endfor\n"
+      " d=execute('S={'+T+':V'+ES+'}')\n"
+      "endif else d=execute('S.'+T+'=V')\n"
+      "end ; PRO stv\n"
+    "function %7$s,plot=plot\n"
+      "; %4$s function issued from McStas on %5$s\n" 
+      "; McStas simulation %2$s: %3$s\n"
+      "; import using .run %7$s\n"
+      "if keyword_set(plot) then p=1 else p=0\n"
+      "%7$s={Format:'%4$s',URL:'http://neutron.risoe.dk',"
+      "Editor:'%6$s',$\n"
+      "Creator:'%2$s McStas " MCSTAS_VERSION " simulation',$\n"
+      "Date:%8$li,"
+      "File:'%3$s'}\n",
+    "stv,%7$s,'EndDate',%8$li ; for systime\nreturn, %7$s\nend\n",
+    "; Section %2$s [%3$s] (level %7$d)\n"
+      "%1$s%4$s={class:'%2$s'}\n",
+    "%1$sstv,%6$s,'%4$s',%4$s\n",
+    "%1$sstv,%2$s,'%3$s','%4$s'\n",
+    "%1$sstv,%2$s,'func','%2$s' & data=[ ",
+    "%1$sif single_file ne 0 then begin errors=[ ",
+    "%1$sif single_file ne 0 then begin events=[ ",
+    " ]\n%1$sif size(data,/type) eq 7 then single_file=0 else single_file=1\n"
+    "%1$sstv,%2$s,'data',data & data=0 & %2$s=mcplot_inline(%2$s,p)\n",
+    " ]\n%1$sstv,%2$s,'errors',reform(errors,%14$d,%15$d,/over) & errors=0\n%1$sendif\n",
+    " ]\n%1$sstv,%2$s,'events',reform(events,%14$d,%15$d,/over) & events=0\n%1$sendif\n\n",
   "XML", "xml",
     "<?xml version=\"1.0\" ?>\n<!--\n"
       "URL:    http://www.neutron.anl.gov/nexus/xml/NXgroup.xml\n"
@@ -487,176 +716,36 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
         "%1$s<img src=\"%3$s.png\" alt=\"%2$s %3$s image (when available)\" width=100></a><br>\n",
     "[end of <a href=\"#%3$s\">%2$s %3$s</a>]<br>\n",
     "%1$s<b>%3$s: </b>%4$s<br>\n",
-    "<APPLET Codebase=\"V3D\" Code=\"V3D.class\" archive=\"V3D.jar\" Width=\"300\" Height=\"70\">\n"
-      "%1$s<PARAM Name=\"Action\"   Value=\"Exec\">\n"
- 	    "%1$s<PARAM Name=\"File\"     Value=\"%4$s\">\n"
-	    "%1$s<PARAM Name=\"Format\"   Value=\"ascii\">\n"
-	    "%1$s<PARAM Name=\"Type\"     Value=\"4\">\n"
-	    "%1$s<PARAM Name=\"Title\"    Value=\"%3$s\">\n"
-	    "%1$s<PARAM Name=\"TitleX\"   Value=\"%5$s\">\n"
-	    "%1$s<PARAM Name=\"TitleY\"   Value=\"%7$s\">\n"
-	    "%1$s<PARAM Name=\"SubTitle\" Value=\"%11$s %12$s %13$s\">\n"
-	    "%1$s<PARAM Name=\"NbX\"      Value=\"%14$d\">\n"
-	    "%1$s<PARAM Name=\"X0\"       Value=\"%17$g\">\n"
-	    "%1$s<PARAM Name=\"X1\"       Value=\"%17$g\">\n"
-	    "%1$s<PARAM Name=\"Xn\"       Value=\"%18$g\">\n"
-	    "%1$s<PARAM Name=\"NbY\"      Value=\"%15$d\">\n"
-	    "%1$s<PARAM Name=\"Y0\"       Value=\"%19$g\">\n"
-	    "%1$s<PARAM Name=\"Y1\"       Value=\"%19$g\">\n"
-	    "%1$s<PARAM Name=\"Yn\"       Value=\"%20$g\">\n"
-      "%1$s</APPLET>DATA<br>\n",
-      "%1$sERRORS<br>\n","%1$sNCOUNT<br>\n",
-      "%1$sEnd of DATA<br>\n", "%1$sEnd of ERRORS<br>\n", "%1$sEnd of NCOUNT<br>\n", 
-  "Matlab", "m",
-    "function %7$s = get_%7$s(p)\n"
-      "%% %4$s function issued from McStas on %5$s\n"
-      "%% McStas simulation %2$s: %3$s\n"
-      "%% import data using s=%7$s('plot');\n"
-      "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
-      "%7$s.Format ='%4$s';\n"
-      "%7$s.URL    ='http://neutron.risoe.dk';\n"
-      "%7$s.Editor ='%6$s';\n"
-      "%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
-      "%7$s.Date   =%8$li; %% for datestr\n"
-      "%7$s.File   ='%3$s';\n",
-    "%7$s.EndDate=%8$li; %% for datestr\n"
-      "function d=mcload_inline(d)\n"
-      "%% local inline function to load data\n"
-      "copyfile(d.filename,[d.func,'.m']);p=d.parent;"
-      "eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);\n"
-      "function d=mcplot_inline(d,p)\n"
-      "%% local inline function to plot data\n"
-      "if isempty(d.data) & isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
-      "eval(['l=[',d.xylimits,'];']); S=size(d.data);\n"
-      "t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);\n"
-      "disp(t);\n"
-      "if ~isempty(findstr(d.type,'0d')), return;\n"
-      "elseif ~isempty(findstr(d.type,'2d'))\n"
-      "d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2));\n"
-      "figure; surface(d.x,d.y,d.data);colorbar;\n"
-      "else\nfigure; d.x=linspace(l(1),l(2),max(S));\nplot(d.x,d.data);end\n"
-      "xlabel(d.xlabel); ylabel(d.ylabel); title(t);"
-      "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n",
-    "%% Section %2$s [%3$s] (level %7$d)\n"
-      "%4$s.class = '%2$s';",
-    "%6$s.%4$s = %4$s; clear %4$s;\n",
-    "%1$s%2$s.%3$s = '%4$s';\n",
-    "%1$s%2$s.func='%2$s';\n%1$s%2$s.data = [ ",
-    "%1$sif single_file == 1, %2$s.errors = [ ",
-    "%1$sif single_file == 1, %2$s.ncount = [ ",
-    " ]; %% end of data\nif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%2$s=mcplot_inline(%2$s,p);\n",
-    " ]; %% end of errors\nend\n",
-    " ]; %% end of ncount\nend\n",
-  "Scilab", "sci",
-    "function %7$s = get_%7$s(p)\n"
-      "// %4$s function issued from McStas on %5$s\n"
-      "// McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
-      "// import data using exec('%7$s.sci',-1); s=get_%7$s('plot');\nmode(-1); //silent execution\n"
-      "if argn(2) > 0, p=1; else p=0; end\n"
-      "%7$s = struct();\n"
-      "%7$s.Format ='%4$s';\n"
-      "%7$s.URL    ='http://neutron.risoe.dk';\n"
-      "%7$s.Editor ='%6$s';\n"
-      "%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
-      "%7$s.Date   =%8$li; // for getdate\n"
-      "%7$s.File   ='%3$s';\n",
-    "%7$s.EndDate=%8$li; // for getdate\nendfunction\n"
-    "function d=mcload_inline(d)\n"
-      "// local inline func to load data\n"
-      "exec(d.filename,-1);p=d.parent;"
-      "if ~execstr('d2='+d.func+'();','errcatch'),d=d2; d.parent=p;end\nendfunction\n"
-      "function d=mcplot_inline(d,p)\n"
-      "// local inline func to plot data\n"
-      "if ~length(d.data) & ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
-      "execstr(['l=[',d.xylimits,'];']); S=size(d.data);\n"
-      "t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];\n"
-      "mprintf('%%s\\n',t(:));\n"
-      "if length(strindex(d.type,'0d')),return;\n"
-      "else\nw=winsid();if length(w),w=w($)+1; else w=0; end\n"
-      "xbasr(w); xset('window',w);\n"
-      "if length(strindex(d.type,'2d'))\n"
-      "d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2));\n"
-      "z=d.data;f=round(log10(max(abs(z))));fx=max(abs(d.x)); fy = max(abs(d.y));\n"
-      "if fx>0,fx=log10(fx); else fx=[]; end\n"
-      "if fy>0,fy=log10(fy); else fy=[]; end\n"
-      "if length(fx),if length(fy),f=f-round((fx+fy)/2); else f=f-round(fx); end\n"
-      "end\nz=z/10^f;if f,t1=t1+' [*10^'+string(f)+']';end\n"
-      "xset('colormap',hotcolormap(64));plot3d1(d.x,d.y,z);\n"
-      "else\nd.x=linspace(l(1),l(2),max(S));\nplot2d(d.x,d.data);end\nend\n"
-      "xtitle(t,d.xlabel,d.ylabel); xname(t1);endfunction\n"
-    "%7$s=get_%7$s();",
-    "// Section %2$s [%3$s] (level %7$d)\n"
-      "%1$s%4$s = struct(); %4$s.class = '%2$s';",
-    "%1$s%6$s.%4$s = 0; %6$s.%4$s = %4$s; clear %4$s;\n",
-    "%1$s%2$s.%3$s = '%4$s';\n",
-    "%1$s%2$s.func='get_%2$s';\n%1$s%2$s.data = [ ",
-    "%1$sif single_file == 1, %2$s.errors = [ ",
-    "%1$sif single_file == 1, %2$s.ncount = [ ",
-    " ]; // end of data\nif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%2$s=mcplot_inline(%2$s,p);\n",
-    " ]; // end of errors\nend\n",
-    " ]; // end of ncount\nend\n",
-  "IDL", "pro",
-    "pro stv, S, T, V\n"
-      ";** Procedure that operates S.T = V\n"
-      "  sv =size(V)\n"
-      "  T=strupcase(T)\n"
-      "  TL=strupcase(tag_names(S))\n"
-      "  id  =where(TL eq T)\n"
-      "  sz =[0,0,0]\n"
-      "  vd = N_ELEMENTS(sv) - 2\n"
-      "  type = sv[vd]\n"
-      "  if id(0) ge 0 then d=execute('sz=SIZE(S.'+T+')')\n"
-      "  if (sz(sz(0)+1) ne sv(sv(0)+1)) or (sz(0) ne sv(0)) $\n"
-      "      or (sz(sz(0)+2) ne sv(sv(0)+2)) $\n"
-      "      or type eq 8 then begin\n"
-      "    ES = ''\n"
-      "    for k=0,n_elements(TL)-1 do begin\n"
-      "      case TL(k) of\n"
-      "        T:\n"
-      "        else: ES =ES+','+TL(k)+':S.'+TL(k)\n"
-      "      endcase\n"
-      "    endfor\n"
-      "    d=execute('S={'+T+':V'+ ES +'}')\n"
-      "   endif else d=execute('S.' +T+'=V')\n"
-      "end; PRO stv:{s.t=v}\n"
-      "function get_%7$s\n"
-      "; %4$s function issued from McStas on %5$s\n" 
-      "; McStas simulation %2$s: %3$s\n"
-      "; import using .run %7$s\n"
-      "%7$s={Format:'%4$s',URL:'http://neutron.risoe.dk',"
-      "Editor:'%6$s',$\n"
-      "Creator:'%2$s McStas " MCSTAS_VERSION " simulation',$\n"
-      "Date:%8$li,"
-      "File:'%3$s'}\n",
-    "stv,%7$s,'EndDate',%8$li ; for systime\nreturn, %7$s\nend\n",
-    "; Section %2$s [%3$s] (level %7$d)\n"
-      "%1$s%4$s={class:'%2$s'}\n",
-    "%1$sstv,%6$s,'%4$s',%4$s\n",
-    "%1$sstv,%2$s,'%3$s','%4$s'\n",
-    "%1$sdata=[ ",
-    "%1$serrors=[ ",
-    "%1$sncount=[ ",
-    " ]\n%1$sstv,%2$s,'data',reform(data,%14$d,%15$d,/over)\n",
-    " ]\n%1$sstv,%2$s,'errors',reform(errors,%14$d,%15$d,/over)\n",
-    " ]\n%1$sstv,%2$s,'ncount',reform(ncount,%14$d,%15$d,/over)\n\n"
+    "%1$s<b>DATA</b><br>\n",
+      "%1$s<b>ERRORS</b><br>\n","%1$s<b>EVENTS</b><br>\n",
+      "%1$sEnd of DATA<br>\n", "%1$sEnd of ERRORS<br>\n", "%1$sEnd of EVENTS<br>\n"
+#endif
     };
     
 struct mcformats_struct mcformat;
 
 /* function prototypes */
 void mcuse_format(char *format);
-void mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);
-void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c);
-void mcdetector_out_1D(char *t, char *xl, char *yl,
+double mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);
+double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c);
+double mcdetector_out_1D(char *t, char *xl, char *yl,
 		  char *xvar, double x1, double x2, int n,
 		  double *p0, double *p1, double *p2, char *f, char *c);
-void mcdetector_out_2D(char *t, char *xl, char *yl,
+double mcdetector_out_2D(char *t, char *xl, char *yl,
 		  double x1, double x2, double y1, double y2, int m,
 		  int n, double *p0, double *p1, double *p2, char *f, char *c);
-void mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
+double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
       char *xvar, char *yvar, char *zvar, 
 		  double x1, double x2, double y1, double y2, double z1, double z2, int m,
 		  int n, int p, double *p0, double *p1, double *p2, char *f, char *c);  
+void mcheader_out(FILE *f,char *parent,
+  int m, int n, int p,
+  char *xlabel, char *ylabel, char *zlabel, char *title,
+  char *xvar, char *yvar, char *zvar,
+  double x1, double x2, double y1, double y2, double z1, double z2, 
+  char *filename);  /* output header for user data file */
+void mcinfo_simulation(FILE *f, struct mcformats_struct format, 
+  char *pre, char *name); /* used to add sim parameters (e.g. in Res_monitor) */
 
 
 #ifndef FLT_MAX
@@ -679,6 +768,7 @@ void mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 
 /* Current component */
 #define NAME_CURRENT_COMP  NAME_COMP(mccompcurname)
+#define INDEX_CURRENT_COMP mccompcurindex
 #define POS_A_CURRENT_COMP POS_A_COMP(mccompcurname)
 #define POS_R_CURRENT_COMP POS_R_COMP(mccompcurname)
 #define ROT_A_CURRENT_COMP ROT_A_COMP(mccompcurname)

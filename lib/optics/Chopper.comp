@@ -10,7 +10,7 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -37,29 +37,32 @@
 * Optional parameters:
 * IsFirst  (0/1)    Set it to 1 for the first chopper position in a cw source
 *                   (it then spreads the neutron time distribution)
+* n_pulse  (1)      Number of pulses
 *
 * %D
-* Example values: w=0.05 R=0.5 f=2500 n=3 pha=0
+* Example values: w=0.05 R=0.5 f=2500 n=3 pha=0 n_pulse=1
 *
 * %E
 *******************************************************************************/
  
 DEFINE COMPONENT Chopper
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R, w=0.05, f=2500.0, n=3, pha=0, IsFirst=0)
-OUTPUT PARAMETERS (Tg, To, IsFirst)
+SETTING PARAMETERS (R, w=0.05, f=2500.0, n=3, pha=0, IsFirst=0, n_pulse=1)
+OUTPUT PARAMETERS (Tg, T)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, p)
 
 DECLARE
  %{
       double Tg,To;
-      char IsFirst;
  %}
 
 INITIALIZE
  %{
       if (n<=0 || f<=0 || R <=0)
       { fprintf(stderr,"Chopper: %s: n,f and R must be > 0\n", NAME_CURRENT_COMP);
+        exit(-1); }
+      if (IsFirst && n_pulse <=0)
+      { fprintf(stderr,"Chopper: %s: wrong First chopper pulse number (n_pulse)\n", NAME_CURRENT_COMP);
         exit(-1); }
       
       /* time between two pulses */
@@ -77,7 +80,10 @@ TRACE
     PROP_Z0;
     
     if (IsFirst)
-      t=atan2(x,y+R)/f+To*(rand01()-0.5)+pha+floor(a*rand01())*Tg; 
+    {
+      t=atan2(x,y+R)/f+To*(rand01()-0.5)+pha+floor(n_pulse*rand01())*Tg; 
+      p*=n*atan2(w,R)/2/PI;
+    }
     else
     {
       toff=fabs(t-atan2(x,y+R)/f-pha)+To/2.0;

@@ -20,7 +20,7 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.6 2003-01-21 08:51:12 pkwi Exp $
+* $Id: monitor_nd-lib.h,v 1.7 2003-01-21 08:55:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/28 11:39:00 ef
@@ -29,7 +29,7 @@
 
 #ifndef MONITOR_ND_LIB_H
 
-#define MONITOR_ND_LIB_H "1.1.0"
+#define MONITOR_ND_LIB_H "1.1.1"
 #define MONnD_COORD_NMAX  30  /* max number of variables to record */
 
   typedef struct MonitornD_Defines
@@ -75,6 +75,7 @@
     char COORD_LOG   ; /* next variable will be in log scale */
     char COORD_ABS   ; /* next variable will be in abs scale */
     char COORD_SIGNAL; /* next variable will be the signal var */
+    int  COORD_AUTO  ; /* set auto limits */
 
     char TOKEN_DEL[32]; /* token separators */
 
@@ -82,6 +83,7 @@
     char SHAPE_DISK  ; 
     char SHAPE_SPHERE; 
     char SHAPE_CYLIND; 
+    char SHAPE_BANANA; /* cylinder without top/bottom, on restricted angular area */
     char SHAPE_BOX   ; 
     
   } MonitornD_Defines_type;
@@ -92,7 +94,7 @@
     double Sphere_Radius     ;
     double Cylinder_Height   ;
     char   Flag_With_Borders ;   /* 2 means xy borders too */
-    char   Flag_List         ;   /* 1 store 1 buffer, 2 is list all */
+    char   Flag_List         ;   /* 1 store 1 buffer, 2 is list all, 3 list all+append */
     char   Flag_Multiple     ;   /* 1 when n1D, 0 for 2D */
     char   Flag_Verbose      ;
     int    Flag_Shape        ;
@@ -103,14 +105,14 @@
     char   Flag_parallel     ;   /* set neutron state back after detection (parallel components) */
     char   Flag_Binary_List  ;
     char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
-    char   Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
+    int    Flag_signal       ;   /* 0:monitor p, else monitor a mean value */
     
     long   Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
     long   Buffer_Block      ;   /* Buffer size for list or auto limits */
     long   Neutron_Counter   ;   /* event counter, simulation total counts is mcget_ncount() */
     long   Buffer_Counter    ;   /* index in Buffer size (for realloc) */
     long   Buffer_Size       ;
-    char   Coord_Type[MONnD_COORD_NMAX];    /* type of variable */
+    int    Coord_Type[MONnD_COORD_NMAX];    /* type of variable */
     char   Coord_Label[MONnD_COORD_NMAX][30];       /* label of variable */
     char   Coord_Var[MONnD_COORD_NMAX][30]; /* short id of variable */
     long   Coord_Bin[MONnD_COORD_NMAX];             /* bins of variable array */

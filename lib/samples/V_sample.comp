@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -19,6 +19,11 @@
 * %D
 * A Double-cylinder shaped incoherent scatterer (a V-sample)
 * No multiple scattering. Absorbtion included.
+* The area to scatter to is a disk of radius 'focus_r' situated at the target.
+* This area may also be rectangular if specifying focus_xw and focus_yh.
+* The target itself is either situated according to given coordinates, or
+* setting the relative index of the component to focus at (next is +1).
+* The shape of the sample may be box shaped with dimensions xwidth, yheight, zthick.
 *
 * Example: V_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,pack=1, 
 *           target_x = 0, target_y = 0, target_z = 0.235)
@@ -30,10 +35,18 @@
 * radius_o  : Outer radius of sample in (x,z) plane (m)         
 * h         : Height of sample y direction (m)
 * pack      : Packing factor (1)
-* focus_r   : Radius of sphere containing target. (m)
+* focus_r   : Radius of disk containing target. (m)
 * target_x  :
 * target_y  : position of target to focus at (m)
 * target_z  :
+*
+* Optional parameters
+* xwidth    : horiz. dimension of sample, as a width (m)
+* yheight   : vert.. dimension of sample, as a height (m)
+* zthick    : thickness of sample (m)
+* focus_xw  : horiz. dimension of a rectangular area (m)
+* focus_yh  : vert.. dimension of a rectangular area (m)
+* target_index: relative index of component to focus at, e.g. next is +1 (1).
 *
 * Variables calculated in the component
 *
@@ -49,17 +62,53 @@
 
 DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius_i, radius_o, h, focus_r = 0.035, pack = 1, target_x = 0, target_y = 0, target_z = 0.235)
+SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0.035, pack = 1, target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0, xwidth=0, yheight=0, zthick=0, int target_index=0)
+OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
-/* ToDo: Should be component local names. */
-#define V_sigma_a 5.08     /* Absorption cross section per atom (barns) */
-#define V_sigma_i 4.935    /* Incoherent scattering cross section per atom (barns) */
-#define V_rho (2*pack/(3.024*3.024*3.024)) /* Density of atoms (AA-3) */
-#define V_my_s (V_rho * 100 * V_sigma_i)
-#define V_my_a_v (V_rho * 100 * V_sigma_a * 2200)
+  struct StructVarsV
+  {
+    double sigma_a; /* Absorption cross section per atom (barns) */
+    double sigma_i; /* Incoherent scattering cross section per atom (barns) */
+    double rho;     /* Density of atoms (AA-3) */
+    double my_s;
+    double my_a_v;
+    char   isrect;      /* true when sample is a box */
+    double isfocusrect; /* when non zero, gives rect target distance */
+    double tx,ty,tz;    /* target coords */
+  } VarsV;
+%}
+
+INITIALIZE
+%{
+ 
+  if (!radius_o || !h) {
+    if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"V_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    else VarsV.isrect=1; }
+  else VarsV.isrect=0;
+ 
+  VarsV.sigma_a=5.08; 
+  VarsV.sigma_i=4.935;
+  VarsV.rho = (2*pack/(3.024*3.024*3.024));
+  VarsV.my_s=(VarsV.rho * 100 * VarsV.sigma_i);
+  VarsV.my_a_v=(VarsV.rho * 100 * VarsV.sigma_a * 2200);
+  
+  /* now compute target coords if a component index is supplied */
+  if (target_index)
+  {
+    Coords ToTarget; 
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &VarsV.tx, &VarsV.ty, &VarsV.tz);
+  } 
+  else
+  { VarsV.tx = target_x; VarsV.ty = target_y; VarsV.tz = target_z; }
+  
+  if (focus_xw && focus_yh)
+    VarsV.isfocusrect=sqrt(VarsV.tx*VarsV.tx+VarsV.ty*VarsV.ty+VarsV.tz*VarsV.tz);
+  else VarsV.isfocusrect=0;
 %}
                                                                            
 TRACE
@@ -69,17 +118,22 @@ TRACE
   double v;                     /* Neutron velocity */
   double dt0, dt1, dt2, dt;     /* Flight times through sample */
   double l_full;                /* Flight path length for non-scattered neutron */
-  double l_i, l_o;              /* Flight path lenght in/out for scattered neutron */
+  double l_i, l_o=0;            /* Flight path lenght in/out for scattered neutron */
   double my_a;                  /* Velocity-dependent attenuation factor */
   double solid_angle=0;         /* Solid angle of target as seen from scattering point */
   double aim_x, aim_y, aim_z;   /* Position of target relative to scattering point */
+  int    intersect=0;
 
-  if(cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
+  if (VarsV.isrect)
+    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+  else
+    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
+  if(intersect)
   {
-    if(t0 < 0)
-      ABSORB;
+    if(t0 < 0) ABSORB; /* we already passed the sample */
     /* Neutron enters at t=t0. */
-    if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
+    if(VarsV.isrect) t1 = t2 = t3;
+    else if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
       t1 = t2 = t3;
 
     dt0 = t1-t0;                /* Time in sample, ingoing */
@@ -94,51 +148,79 @@ TRACE
 
     PROP_DT(dt+t0);             /* Point of scattering */
     
-    aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
-    aim_y = target_y-y;
-    aim_z = target_z-z;
-    randvec_target_sphere(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+    aim_x = VarsV.tx-x;         /* Vector pointing at target (anal./det.) */
+    aim_y = VarsV.ty-y;
+    aim_z = VarsV.tz-z;
+    if(VarsV.isfocusrect)
+      randvec_target_rect(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, atan2(focus_xw,VarsV.isfocusrect), atan2(focus_yh,VarsV.isfocusrect));
+    else
+      randvec_target_circle(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
     NORM(vx, vy, vz);
     vx *= v;
     vy *= v;
     vz *= v;
 
-    if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
-    {
-      /* ??? did not hit cylinder */
-      printf("FATAL ERROR: Did not hit cylinder from inside.\n");
-      exit(1);
+    if(!VarsV.isrect) {
+      if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
+      {
+        /* ??? did not hit cylinder */
+        printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+        exit(1);
+      }
+      dt = t3;
+      if(cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h) &&
+         t2 > 0)
+        dt -= (t2-t1);            /* Subtract hollow part */
+      l_o = v*dt;
     }
-    dt = t3;
-    if(cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h) &&
-       t2 > 0)
-      dt -= (t2-t1);            /* Subtract hollow part */
-    l_o = v*dt;
 
-    my_a = V_my_a_v/v;
-    p *= l_full*V_my_s*exp(-(my_a+V_my_s)*(l_i+l_o));
+    my_a = VarsV.my_a_v/v;
+    p *= l_full*VarsV.my_s*exp(-(my_a+VarsV.my_s)*(l_i+l_o));
     p /= 4*PI/solid_angle;     
     SCATTER;
   }
-  else
-    ABSORB;
 %}
 
 MCDISPLAY
 %{
   magnify("xyz");
-  circle("xz", 0,  h/2.0, 0, radius_i);
-  circle("xz", 0,  h/2.0, 0, radius_o);
-  circle("xz", 0, -h/2.0, 0, radius_i);
-  circle("xz", 0, -h/2.0, 0, radius_o);
-  line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
-  line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
-  line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
-  line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
-  line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
-  line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
-  line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
-  line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
+  if (!VarsV.isrect) {
+    circle("xz", 0,  h/2.0, 0, radius_i);
+    circle("xz", 0,  h/2.0, 0, radius_o);
+    circle("xz", 0, -h/2.0, 0, radius_i);
+    circle("xz", 0, -h/2.0, 0, radius_o);
+    line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
+    line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
+    line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
+    line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
+    line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
+    line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
+    line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
+    line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
+  }
+  else
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
 %}
 
 END

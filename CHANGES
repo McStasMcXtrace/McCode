@@ -30,16 +30,17 @@
 *******************************************************************************/
 
 
-Changes for official McStas  1.6 release (from non official ILL release)
+Expected Changes for next McStas release (from non official ILL release)
+- see todo_mcstas.txt for current status (+: done, -: not yet)
 - includes all ILL unofficial changes from 1.6-ill and 1.6.1 (see below)
 - Monitor_nD, replace p by other phys. quantity, easy task.
 - Monochromator, reflectivity curve from file. renormalisation by r0, simple.
-- may use fully shared C code, either through SHARE, and using 
-    #include MCSTAS "share/mylib.h"
-  that library.h should have something like
-    #ifdef MC_EMBEDDED_RUNTIME
-    #include "mylib.c "
-    #endif
+- may use fully shared C code, either through SHARE, or using 
+    %include "libraryname"  /* from mcstas_lib/share */
+  the libaries are included only once, for lighter C code.
+- other output formats (default are McStas, and --format=Scilab), using
+    cc ...  -D EXTENDED_OUTPUT_FORMARS  ...
+  will enable other formats like Matlab, IDL, NeXus XML, ...
 
 Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
 

@@ -14,6 +14,7 @@
 *
 * Models a rectangular guide with different vert. and horiz. m mirror values.
 * See <b>Channeled_guide</b> component
+* OBSOLETE: rather use optics/Guide_gravity or Guide_channeled
 *
 * %Description
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
@@ -45,12 +46,6 @@ DEFINE COMPONENT Guide2
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2, h2, l, R0=0.99, Qc=0.021, alpha=6.07, mh=2, mv=2, W=0.003)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-
-INITIALIZE
-%{
-fprintf(stderr,"Guide2: this component is OBSOLETE (not maintained)\n");
-fprintf(stderr,"Guide2: rather use optics/Guide_gravity or Guide_channeled\n");
-%}
 
 TRACE
 %{

@@ -17,7 +17,7 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.34 2003-01-21 08:51:11 pkwi Exp $
+* $Id: mcstas.h,v 1.35 2003-01-21 08:55:32 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -35,7 +35,7 @@
 #define TRUE 1
 #endif
 
-#define MCSTAS_VERSION "1.6.3k, Oct 23th, 2002"
+#define MCSTAS_VERSION "1.6.4c, Jan 13th, 2003"
 
 
 /* Functions defined in memory.c */

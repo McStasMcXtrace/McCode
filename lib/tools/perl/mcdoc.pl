@@ -9,8 +9,9 @@ BEGIN {
     } else {
 	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
 }
-use lib $MCSTAS::sys_dir;
+use lib $MCSTAS::perl_dir;
 
 use FileHandle;
 

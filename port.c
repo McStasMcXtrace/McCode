@@ -16,7 +16,7 @@
 *
 * Code to handle portability issues (mainly Win32 stuff).
 *
-* $Id: port.c,v 1.8 2003-01-21 08:51:11 pkwi Exp $
+* $Id: port.c,v 1.9 2003-01-21 08:55:32 pkwi Exp $
 *
 *******************************************************************************/
 

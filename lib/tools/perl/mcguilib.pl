@@ -154,9 +154,12 @@ sub dialog_hardcopy {
     my ($dlg, $di, $type) = @_;
     my $default = $current_plot == -1 ?
 	"mcstas.ps" :
-	($di->[$current_plot]{'Component'} . ".ps");
+	($di->[$current_plot]{'Filename'} . ".ps");
     my $oldgrab = $dlg->grabStatus;
     $dlg->grabRelease;
+    if ($type =~ "gif") { $default = $current_plot == -1 ?
+	"mcstas.gif" :
+	($di->[$current_plot]{'Filename'} . ".gif"); }
     my $f = $dlg->getSaveFile(-defaultextension => "ps",
 			      -title => "Select postscript file name",
 			      -initialfile => $default);
@@ -165,7 +168,7 @@ sub dialog_hardcopy {
     if($current_plot == -1) {
 	overview_plot("\"$f\"/$type", $di, 0);
     } else {
-	my $comp = $di->[$current_plot]{'Component'};
+	my $comp = $di->[$current_plot]{'Filename'};
 	single_plot("\"$f\"/$type", $di->[$current_plot], 0);
     }
 }
@@ -173,7 +176,7 @@ sub dialog_hardcopy {
 sub plot_dialog {
     my ($win, $ii, $si, $di, $sim_file_name) = @_;
     $current_plot = -1;	# Component index, or -1 -> overview.
-    my $dlg = $win->DialogBox(-title => "Plot results",
+    my $dlg = $win->DialogBox(-title => "McStas: Plot results",
 			      -buttons => ["Close"]);
 
     my $lf = $dlg->add('Frame');
@@ -188,31 +191,9 @@ sub plot_dialog {
     $cl->pack(-expand => 'yes', -fill => 'y', -anchor => 'w');
     $cl->bind('<Double-Button-1>' => sub { dialog_plot_single($cl,$di);
 				       $dlg->raise; } );
-    $cl->insert(0, map $_->{'Component'}, @$di);
+    $cl->insert(0, map "$_->{'Component'}: $_->{'Filename'}", @$di);
     $cl->activate(0);
-    $lf->Button(-text => "Plot",
-		-command => sub { dialog_plot_single($cl,$di);
-			          $dlg->raise; } )->pack;
-    $lf->Button(-text => "Overview plot",
-		-command => sub {
-		    overview_plot("/xserv", $di, 0);
-		    $dlg->raise;
-		    $current_plot = -1; }
-		)->pack;
-    $lf->Button(-text => "B&W postscript",
-		-command => sub { dialog_hardcopy($dlg,
-						  $di, "ps"); }
-		)->pack;
-    $lf->Button(-text => "Colour postscript",
-		-command => sub { dialog_hardcopy($dlg,
-						  $di, "cps"); }
-		)->pack;
-#     $lf->Button(-text => "Select from overview",
-# 		-command => sub {
-# 		    my ($c, $idx) = overview_plot("/xserv", $di, 1);
-# 		    $cl->activate($idx);
-# 		    $current_plot = -1;}
-# 		)->pack;
+ 
     my $rf = $dlg->add('Frame');
     $rf->pack(-side => 'top');
     $rf->Label(-text => <<END,
@@ -224,6 +205,33 @@ Simulation file: $sim_file_name
 END
 	       -anchor => 'w',
 	       -justify => 'left')->pack(-fill => 'x');
+    $rf->Button(-text => "Plot",
+		-command => sub { dialog_plot_single($cl,$di);
+			          $dlg->raise; } )->pack;
+    $rf->Button(-text => "Overview plot",
+		-command => sub {
+		    overview_plot("/xserv", $di, 0);
+		    $dlg->raise;
+		    $current_plot = -1; }
+		)->pack;
+    $rf->Button(-text => "B&W postscript",
+		-command => sub { dialog_hardcopy($dlg,
+						  $di, "ps"); }
+		)->pack;
+    $rf->Button(-text => "Colour postscript",
+		-command => sub { dialog_hardcopy($dlg,
+						  $di, "cps"); }
+		)->pack;
+    $rf->Button(-text => "Colour GIF",
+		-command => sub { dialog_hardcopy($dlg,
+						  $di, "gif"); }
+		)->pack;
+#     $lf->Button(-text => "Select from overview",
+# 		-command => sub {
+# 		    my ($c, $idx) = overview_plot("/xserv", $di, 1);
+# 		    $cl->activate($idx);
+# 		    $current_plot = -1;}
+# 		)->pack;
 
     overview_plot("/xserv", $di, 0);
     my $res = $dlg->Show;

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: McStas 1.5
 *
 * Monochromator/analyzer crystal (OBSOLETE).
@@ -25,6 +25,7 @@
 * Second order scattering is neglected.
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
+* OBSOLETE: rather use optics/Mosaic_anisotropic.comp
 *
 * Example: Monochromator(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
 *           mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
