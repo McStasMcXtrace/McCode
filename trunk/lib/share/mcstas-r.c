@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.82 2004-02-23 12:48:42 farhi Exp $
+* $Id: mcstas-r.c,v 1.83 2004-02-26 12:53:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.82  2004/02/23 12:48:42  farhi
+* Additional check for default value and unset parameters
+*
 * Revision 1.81  2004/02/19 14:42:52  farhi
 * Experimental Octave/OpenGENIE output format (for ISIS)
 *
@@ -271,7 +274,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "xname(t1);\nendfunction\n"
     "mc_%7$s=get_%7$s();\n",
     "// Section %2$s [%3$s] (level %7$d)\n"
-      "%1$smc_%4$s = struct(); mc_%4$s.class = '%2$s';",
+      "%1$st=[]; execstr('t=mc_%4$s.class','errcatch'); if ~length(t), mc_%4$s = struct(); end; mc_%4$s.class = '%2$s';",
     "%1$smc_%6$s.mc_%4$s = 0; mc_%6$s.mc_%4$s = mc_%4$s;\n",
     "%1$smc_%2$s.%3$s = '%4$s';\n",
     "%1$smc_%2$s.func='get_%2$s';\n%1$smc_%2$s.data = [ ",
