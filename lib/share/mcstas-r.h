@@ -148,14 +148,16 @@ void mcdis_circle(char *, double, double, double, double);
 #define MIN2RAD  (PI/(180*60))
 #define DEG2RAD  (PI/180)
 #define RAD2DEG  (180/PI)
-#define AA2MS    629.719		/* Convert k[1/AA] to v[m/s] */
-#define MS2AA    1.58801E-3		/* Convert v[m/s] to k[1/AA] */
+#define AA2MS    629.719	   /* Convert k[1/AA] to v[m/s] */
+#define MS2AA    1.58801E-3	   /* Convert v[m/s] to k[1/AA] */
 #define K2V	 AA2MS
 #define V2K	 MS2AA
 #define Q2V	 AA2MS
 #define V2Q	 MS2AA
-#define SE2V	 437.3949		/* Convert sqrt(E)[meV] to v[m/s] */
-#define VS2E	 5.227e-6		/* Convert v[m/s] to sqrt(E)[meV] */
+#define SE2V	 437.3949	   /* Convert sqrt(E)[meV] to v[m/s] */
+#define VS2E	 5.227e-6	   /* Convert v[m/s] to sqrt(E)[meV] */
+#define FWHM2RMS 0.424660900144    /* Convert between full-width-half-max and */
+#define RMS2FWHM 2.35482004503     /* root-mean-square (standard deviation) */
 #define HBAR     1.05459E-34
 #define MNEUTRON 1.67492E-27
 
