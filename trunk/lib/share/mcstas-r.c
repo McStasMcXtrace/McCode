@@ -241,12 +241,117 @@ mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 }
 
 
+/*******************************************************************************
+* Find i in adaptive search tree t s.t. v(i) <= v < v(i+1).
+*******************************************************************************/
+int
+adapt_tree_search(struct adapt_tree *t, adapt_t v)
+{
+  adapt_t F = 0;		/* Current value. */
+  int i = 0;			/* Current candidate. */
+  int step = t->initstep;
+  adapt_t *s = t->s;
+  int j;
+  for(j = t->root; step > 0; step >>= 1)
+  {
+    F += s[j];			/* Cumulative value in current node */
+    if(v < F)
+      j -= step;		/* Value is to the left or above. */
+    else
+      i = j, j += step;		/* Value is current or to the right. */
+  }
+  /* Now j is at the bottom of a tree (a leaf node). */
+  if(v < F + s[j])
+    return i;
+  else
+    return j;
+}
+
+/*******************************************************************************
+* Add v to v[i], updating the cumulative sums appropriately.
+*******************************************************************************/
+void
+adapt_tree_add(struct adapt_tree *t, int i, adapt_t v)
+{
+  int j = t->root;
+  int step = t->initstep;
+  adapt_t *s = t->s;
+  t->total += v;
+  t->v[i++] += v;
+  for(;;)
+  {
+    while(j < i)
+      j += step, step >>= 1;
+    s[j] += v;
+    while(j > i)
+      j -= step, step >>= 1;
+    if(j == i)
+      break;
+    s[j] -= v;
+  }
+  if(step)
+    s[j - step] -= v;
+}
+
+/*******************************************************************************
+* Initialise an adaptive search tree. The tree has N nodes, and all nodes are
+* initialized to zero. Any N > 0 is allowed, but is rounded up to the nearest
+* value of the form N = 2**k - 2.
+*******************************************************************************/
+struct adapt_tree *
+adapt_tree_init(int N)
+{
+  struct adapt_tree *t;
+  int i;
+  int depth;
+
+  /* Round up to nearest 2**k - 2 */
+  for(depth = 0; ((1 << (depth + 1)) - 2) < N; depth++);
+  N = (1 << (depth + 1)) - 2;
+
+  t = malloc(sizeof(*t));
+  if(t)
+  {
+    t->s = malloc((N + 1) * sizeof(*(t->s)));
+    t->v = malloc(N * sizeof(*(t->v)));
+  }
+  if(!(t && t->s && t->v))
+  {
+    fprintf(stderr, "Fatal error: out of memory\n");
+    exit(1);
+  }
+  t->N = N;
+  t->depth = depth;
+  t->root = (1 << t->depth) - 1;
+  t->initstep = (1 << (t->depth - 1));
+  for(i = 0; i < t->N; i++)
+  {
+    t->s[i] = 0.0;
+    t->v[i] = 0.0;
+  }
+  t->s[i] = 0.0;
+  t->total = 0.0;
+  return t;
+}
+
+/*******************************************************************************
+* Free memory allocated to an adaptive search tree.
+*******************************************************************************/
+void
+adapt_tree_free(struct adapt_tree *t)
+{
+  free(t->v);
+  free(t->s);
+  free(t);
+}
+
+
 double
 mcestimate_error(int N, double p1, double p2)
 {
   double pmean, n1;
   if(N <= 1)
-    return 0;
+    return p1;
   pmean = p1 / N;
   n1 = N - 1;
   return sqrt((N/n1)*(p2 - pmean*pmean));
@@ -392,7 +497,7 @@ mcdatainfo_out_0D(char *pre, FILE *f, char *t,
 
 static void
 mcdatainfo_out_1D(char *pre, FILE *f, char *t, char *xl, char *yl, char *xvar,
-		  double x1, double x2, int n, char *fname, char *c)
+		  double x1, double x2, int n, char *fname, char *c, int do_errb)
 {
   if(!f)
     return;
@@ -401,9 +506,9 @@ mcdatainfo_out_1D(char *pre, FILE *f, char *t, char *xl, char *yl, char *xvar,
   fprintf(f, "%stitle: %s\n", pre, t);
   if(fname)
     fprintf(f, "%sfilename: '%s'\n", pre, fname);
-  fprintf(f, "%svariables: %s I I_err N\n", pre, xvar);
+  fprintf(f, "%svariables: %s I%s\n", pre, xvar, do_errb ? " I_err N" : "");
   fprintf(f, "%sxvar: %s\n", pre, xvar);
-  fprintf(f, "%syvar: (I,I_err)\n", pre);
+  fprintf(f, "%syvar: %s\n", pre, do_errb ? "(I,I_err)" : "I");
   fprintf(f, "%sxlabel: '%s'\n%sylabel: '%s'\n", pre, xl, pre, yl);
   fprintf(f, "%sxlimits: %g %g\n", pre, x1, x2);
 }
@@ -457,10 +562,12 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
   int Nsum;
   double Psum, P2sum;
   char *pre;
+  int do_errb = p0 && p2;
 
   /* Write data set information to simulation description file. */
   mcsiminfo_out("\nbegin data\n");
-  mcdatainfo_out_1D("  ", mcsiminfo_file, t, xl, yl, xvar, x1, x2, n, f, c);
+  mcdatainfo_out_1D("  ", mcsiminfo_file, t, xl, yl, xvar, x1, x2,
+		    n, f, c, do_errb);
   /* Loop over array elements, computing total sums and writing to file. */
   Nsum = Psum = P2sum = 0;
   pre = "";
@@ -468,7 +575,7 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
   {
     outfile = mcsiminfo_file;
     f = NULL;
-    mcsiminfo_out("  begin array2D (4,%d)\n", n);
+    mcsiminfo_out("  begin array2D (%d,%d)\n", do_errb ? 4 : 2, n);
     pre = "    ";
   }
   else if(f)				/* Don't write if filename is NULL */
@@ -477,16 +584,21 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
   {
     fprintf(outfile, "# Instrument-source: %s\n", mcinstrument_source);
     mcruninfo_out("# ", outfile);
-    mcdatainfo_out_1D("# ", outfile, t, xl, yl, xvar, x1, x2, n, f, c);
+    mcdatainfo_out_1D("# ", outfile, t, xl, yl, xvar, x1, x2,
+		      n, f, c, do_errb);
   }
   for(i = 0; i < n; i++)
   {
     if(outfile)
-      fprintf(outfile, "%s%g %g %g %d\n", pre, x1 + (i + 0.5)/n*(x2 - x1),
-	      p1[i], mcestimate_error(p0[i],p1[i],p2[i]), p0[i]);
-    Nsum += p0[i];
+    {
+      fprintf(outfile, "%s%g %g", pre, x1 + (i + 0.5)/n*(x2 - x1), p1[i]);
+      if(do_errb)
+	fprintf(outfile, " %g %d", mcestimate_error(p0[i],p1[i],p2[i]), p0[i]);
+      fprintf(outfile, "\n");
+    }
+    Nsum += p0 ? p0[i] : 1;
     Psum += p1[i];
-    P2sum += p2[i];
+    P2sum += p2 ? p2[i] : p1[i]*p1[i];
   }
   if(mcsingle_file)
     mcsiminfo_out("  end array2D\n");
@@ -540,9 +652,9 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
     {
       if(outfile)
 	fprintf(outfile, "%g ", p1[i*n + j]);
-      Nsum += p0[i*n + j];
+      Nsum += p0 ? p0[i*n + j] : 1;
       Psum += p1[i*n + j];
-      P2sum += p2[i*n + j];
+      P2sum += p2 ? p2[i*n + j] : p1[i*n + j]*p1[i*n + j];
     }
     if(outfile)
       fprintf(outfile,"\n");
@@ -707,6 +819,107 @@ mc_srandom (unsigned int x)
       random ();
   }
 }
+
+/* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
+/* See http://www.math.keio.ac.jp/~matumoto/emt.html for original source. */
+
+/*   Coded by Takuji Nishimura, considering the suggestions by */
+/* Topher Cooper and Marc Rieffel in July-Aug. 1997.           */
+
+/* This library is free software; you can redistribute it and/or   */
+/* modify it under the terms of the GNU Library General Public     */
+/* License as published by the Free Software Foundation; either    */
+/* version 2 of the License, or (at your option) any later         */
+/* version.                                                        */
+/* This library is distributed in the hope that it will be useful, */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of  */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.            */
+/* See the GNU Library General Public License for more details.    */
+/* You should have received a copy of the GNU Library General      */
+/* Public License along with this library; if not, write to the    */
+/* Free Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA   */ 
+/* 02111-1307  USA                                                 */
+
+/* Copyright (C) 1997 Makoto Matsumoto and Takuji Nishimura.       */
+/* When you use this, send an email to: matumoto@math.keio.ac.jp   */
+/* with an appropriate reference to your work.                     */
+
+#define N 624
+#define M 397
+#define MATRIX_A 0x9908b0df   /* constant vector a */
+#define UPPER_MASK 0x80000000 /* most significant w-r bits */
+#define LOWER_MASK 0x7fffffff /* least significant r bits */
+
+#define TEMPERING_MASK_B 0x9d2c5680
+#define TEMPERING_MASK_C 0xefc60000
+#define TEMPERING_SHIFT_U(y)  (y >> 11)
+#define TEMPERING_SHIFT_S(y)  (y << 7)
+#define TEMPERING_SHIFT_T(y)  (y << 15)
+#define TEMPERING_SHIFT_L(y)  (y >> 18)
+
+static unsigned long mt[N]; /* the array for the state vector  */
+static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
+
+/* initializing the array with a NONZERO seed */
+void
+mt_srandom(unsigned long seed)
+{
+    /* setting initial seeds to mt[N] using         */
+    /* the generator Line 25 of Table 1 in          */
+    /* [KNUTH 1981, The Art of Computer Programming */
+    /*    Vol. 2 (2nd Ed.), pp102]                  */
+    mt[0]= seed & 0xffffffff;
+    for (mti=1; mti<N; mti++)
+        mt[mti] = (69069 * mt[mti-1]) & 0xffffffff;
+}
+
+unsigned long
+mt_random(void)
+{
+    unsigned long y;
+    static unsigned long mag01[2]={0x0, MATRIX_A};
+    /* mag01[x] = x * MATRIX_A  for x=0,1 */
+
+    if (mti >= N) { /* generate N words at one time */
+        int kk;
+
+        if (mti == N+1)   /* if sgenrand() has not been called, */
+            mt_srandom(4357); /* a default initial seed is used   */
+
+        for (kk=0;kk<N-M;kk++) {
+            y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
+            mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1];
+        }
+        for (;kk<N-1;kk++) {
+            y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
+            mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1];
+        }
+        y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
+        mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1];
+
+        mti = 0;
+    }
+  
+    y = mt[mti++];
+    y ^= TEMPERING_SHIFT_U(y);
+    y ^= TEMPERING_SHIFT_S(y) & TEMPERING_MASK_B;
+    y ^= TEMPERING_SHIFT_T(y) & TEMPERING_MASK_C;
+    y ^= TEMPERING_SHIFT_L(y);
+
+    return y;
+}
+#undef N
+#undef M
+#undef MATRIX_A
+#undef UPPER_MASK
+#undef LOWER_MASK
+#undef TEMPERING_MASK_B
+#undef TEMPERING_MASK_C
+#undef TEMPERING_SHIFT_U
+#undef TEMPERING_SHIFT_S
+#undef TEMPERING_SHIFT_T
+#undef TEMPERING_SHIFT_L
+/* End of "Mersenne Twister". */
 
 /* End of McStas random number routine. */
 
