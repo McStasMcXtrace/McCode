@@ -1,3 +1,6 @@
+This file is obsolete. See http://neutron.risoe.dk/mcstas
+
+
 Changes in McStas v1.4.1, March 16, 2001
 
  - New components: ESS_moderator_long.comp and ESS_moderator_short.comp
@@ -77,4 +80,4 @@ Changes in McStas v1.1, March 31, 1999:
 
 Changes in McStas v1.0, October 26, 1998:
 
- - Initial release.
+ - Initial release
