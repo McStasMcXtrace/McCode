@@ -1,3 +1,9 @@
+/*******************************************************************************
+* Focusing is only approximate (for simplicity); neutrons are also emitted to
+* pass slightly above and below the focusing rectangle, more so for wider
+* focusing.
+*******************************************************************************/
+
 DEFINE COMPONENT Source_adapt
 DEFINITION PARAMETERS (xmin,xmax,ymin,ymax, dist, xw, yh, E0, dE, flux, N_E, N_xpos, N_xdiv, alpha, beta)
 SETTING PARAMETERS ()
@@ -19,18 +25,14 @@ DECLARE
 INITIALIZE
 %{
   int i;
-  double hdiv, vdiv;
   double a, lambda_min, lambda_max, delta_lambda, source_area;
 
   a_num = N_E*N_xpos*N_xdiv;
-  hdiv = atan(xw/(2.0*dist));
-  vdiv = atan(yh/(2.0*dist));
   lambda_min = sqrt(81.81/(E0+dE)); /* AAngstroem */
   lambda_max = sqrt(81.81/(E0-dE));
   delta_lambda = lambda_max - lambda_min;
   source_area = (xmax - xmin)*(ymax - ymin)*1e4; /* cm^2 */
-  a = flux/mcget_ncount()*delta_lambda*source_area;
-  p_in = (4*hdiv*vdiv)*a;	/* Small angle approx. */
+  p_in = flux/mcget_ncount()*delta_lambda*source_area;
   atree = adapt_tree_init(a_num);
   a_psi = malloc(a_num*sizeof(*a_psi));
   a_n = malloc(a_num*sizeof(*a_n));
@@ -93,7 +95,7 @@ TRACE
   a_factor = y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
   count++;
   p /= atree->v[aindex]/(atree->total/a_num);
-  p *= C*a_factor;
+  p *= C*a_factor*(thmax - thmin)*(sin(phmax) - sin(phmin));
   /* Update distribution, assuming absorbtion. */
   if(a_n[aindex] > 0)
     a_total_psi -= a_psi[aindex]/(a_n[aindex]*(a_n[aindex] + 1));
