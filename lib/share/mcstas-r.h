@@ -6,9 +6,17 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.8 1998-03-24 07:36:20 kn Exp $
+*	$Id: mcstas-r.h,v 1.9 1998-03-24 07:42:35 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.8  1998/03/24 07:36:20  kn
+*	Make ABSORB macro work better in control structures.
+*	Add test_printf().
+*	Add rand01(), randpm1(), rand0max(), and randminmax().
+*	Add PROP_X0, PROP_Y0, PROP_DT, vec_prod(), scalar_prod(), NORM(), and
+*	rotate().
+*	Fix typos.
+*
 *	Revision 1.7  1998/03/20 14:20:10  lefmann
 *	Added a few definitions.
 *
@@ -81,6 +89,14 @@ typedef MCNUM Rotation[3][3];
 #define MIN2RAD 2*PI/(360*60)
 #define DEG2RAD 2*PI/360
 #define AA2MS   2200*1.798/(2*PI)
+
+#ifndef PI
+# ifdef M_PI
+#  define PI M_PI
+# else
+#  define PI 3.14159265358979323846
+# endif
+#endif
 
 #define rand01() ( ((double)random())/((double)RAND_MAX+1) )
 #define randpm1() ( ((double)random()) / (((double)RAND_MAX+1)/2) - 1 )
