@@ -1,0 +1,108 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: L_monitor
+*
+* %I
+* Written by: Kristian Nielsen and Kim Lefmann
+* Date: April 20, 1998
+* Version: $Revision: 1.16 $
+* Origin: Risoe
+* Release: McStas 1.6
+*
+* Wavelength-sensitive monitor.
+*
+* %D
+* A square single monitor that measures the wavelength of the incoming
+* neutrons.
+*
+* Example: L_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+*           nchan=20, filename="Output.L", Lmin=2, Lmax=10)
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* Lmin:     Minimum wavelength to detect (AA)
+* Lmax:     Maximum wavelength to detect (AA)
+* nchan:    Number of energy channels (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* L_N:      Array of neutron counts
+* L_p:      Array of neutron weight counts
+* L_p2:     Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT L_monitor
+DEFINITION PARAMETERS (nchan=20, filename)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, Lmin, Lmax)
+OUTPUT PARAMETERS (L_N, L_p, L_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    double L_N[nchan];
+    double L_p[nchan], L_p2[nchan];
+  %}
+INITIALIZE
+  %{
+    int i;
+
+    for (i=0; i<nchan; i++)
+    {
+      L_N[i] = 0;
+      L_p[i] = 0;
+      L_p2[i] = 0;
+    }
+  %}
+TRACE
+  %{
+    int i;
+    double L;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+      i = floor((L-Lmin)*nchan/(Lmax-Lmin));
+      if(i >= 0 && i < nchan)
+      {
+        L_N[i]++;
+        L_p[i] += p;
+        L_p2[i] += p*p;
+        SCATTER;
+      }
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_1D(
+        "Wavelength monitor",
+        "Wavelength [AA]",
+        "Intensity",
+        "L", Lmin, Lmax, nchan,
+        &L_N[0],&L_p[0],&L_p2[0],
+        filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END

@@ -1,0 +1,318 @@
+/*******************************************************************************
+*
+* McStas, version 1.2 released February 2000
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* %IDENTIFICATION
+*
+* Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
+* Date: 08 March 2000
+* Version: $Revision: 1.11 $
+* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>) (Obsolete)
+*
+* Non-flat monochromator crystal with multiple scattering
+*
+* %DESCRIPTION
+*
+* Non-flat monochromator which uses a small-mosity approximation as well as
+* the approximation vy^2 << vz^2 + vx^2. The crystal may be in transmission 
+* geometry as well as in reflection. Multiple scattering is possible. The
+* individual reflectivity for each neutron is calculated from its velocity
+* vector, the structure factor of the monochromator crystal and its mosaic.
+* For an unrotated monochromator component, the crystal plane lies in the y-z
+* plane (ie. parallel to the beam).
+* OBSOLETE: rather use optics/Mosaic_anisotropic
+*
+* %PARAMETERS
+* 
+* INPUT PARAMETERS:
+*
+* xmin:		(m)		Lower x-bound of crystal 
+* xmax:		(m)		Upper x-bound of crystal 
+* zmin:		(m)		Lower z-bound of crystal 
+* zmax:		(m)		Upper z-bound of crystal 
+* ymin:		(m)		Lower y-bound of crystal 
+* ymax:		(m)		Upper y-bound of crystal 
+* mosh:		(min)		Horizontal mosaic (FWHM)
+* mosv:		(min)		Vertical mosaic (FWHM) 
+* dist:		(m)		Distance from target (sample), not yet used (17.2)
+* xw:		(m)		Width of target (sample), not yet used (0.01)
+* write:	(1)		Flag (1/0) to write debugging information in a file
+* F2:		(fm**2)		Structure factor of monochromator material
+* Vc:		(AA**3)		Unit cell volume of monochromator material
+* omega:	(deg)		Rocking angle difference from Bragg reflection position (0)
+* Q:		(1/AA)		Wavevector of scattering
+* harmonic:	(1)		Order of first higher, contamining harmonic (2 for Cu or HOPG, 3 for Ge)
+* B:		(1)		Debye-Waller factor of monochromator material
+* LIMIT:	(1)		Upper limit of multiple scattering events to avoid infinite loops (1001)
+* blade:	(1)		Number of blade in a focussing monochromator of several blades (0)
+* present:	(1)		Flag (1/0) of presence of the component in focussing monochromators with variable number of elements (1)
+*
+* OUTPUT PARAMETERS:
+*
+* %LINKS
+* <a href="../d20adapt.instr">Source code of d20adapt.instr</a>, where this component is used
+* 
+* %END
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Monochromator0
+DEFINITION PARAMETERS (xmin, xmax, zmin, zmax, ymin, ymax, mosh, mosv, dist, xw, write, F2, Vc, omega, Q, harmonic, B, LIMIT,blade, present)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+    #define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
+    	double d0,my,tmp7,tmp8;
+    	int    z_edge,x_edge;
+    	int    z_edge0,x_edge0;
+    	int    counter;
+%}
+INITIALIZE
+%{	
+	/*
+	double my,r0,l,Mono_d,v;
+	*/
+
+  	tmp7=0;
+	tmp8=0;
+    	z_edge=0;
+    	x_edge=0;
+    	counter=0;
+	fprintf(monofile,"p0,r0, my0, l0, phi0,p1,r1,p2,vx2,vy2\n");
+  	/*
+      	v = sqrt(vx*vx+vy*vy+vz*vz);
+	Mono_d = 2*PI/Q;
+      	my = PI*PI*PI*2.0*F2*exp(-Mono_B/4.0/Mono_d/Mono_d)/(Vc*Vc*V2K*V2K*Q)/v/v*(360*360*60*60/mosh/mosv/PI);
+	l=xmax-xmin;
+	if (l > (zmax-zmin)) l=zmax-zmin;
+   	r0=1.0-exp(-my*l);
+	printf ("Monochromator: my=%lf/cm => R=%lf percent for l=%lfmm and v=%lfm/s\n",my/100,r0*100,l*1000,v);
+	*/
+%}                                                                             
+TRACE
+%{
+    double dphi,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,vratio,phi,theta0,theta,v,cs,sn;
+    double old_x = x, old_y = y, old_z = z, old_t = t, old_vx=vx,old_vz=vz, tmp_vx=vx,tmp_vz=vz;
+    double dt, dtx,dty,dtz,l, r0,q,l_total,tmp_x,tmp_y,tmp_z;
+    double new_x,new_y,new_z,new_t;
+    int j;
+
+  old_x=x; old_y=y;old_z=z;old_t=t;
+  if (present)
+  {
+    if (vx == 0.0) dtx=0.; else if ((xmin-x)/vx > (xmax-x)/vx) dtx = (xmax-x)/vx; else dtx = (xmin-x)/vx;
+    if (vy == 0.0) dty=0.; else if ((ymin-y)/vy > (ymax-y)/vy) dty = (ymax-y)/vy; else dty = (ymin-y)/vy;
+    if (vz == 0.0) dtz=0.; else if ((zmin-z)/vz > (zmax-z)/vz) dtz = (zmax-z)/vz; else dtz = (zmin-z)/vz;
+    if (dtx > dtz) dt=dtx; else dt=dtz;
+    if (dty > dt ) dt=dty;
+    new_x = x+vx*dt; new_y = y+vy*dt; new_z = z+vz*dt; new_t = t+dt;
+    if (new_x>=xmin-0.000001 && new_x<=xmax+0.000001 && new_z>=zmin-0.000001 && new_z<=zmax+0.000001 && new_y>=ymin-0.000001 && new_y<=ymax+0.000001)
+    {   
+        x=new_x;y=new_y;z=new_z;t=new_t;
+      	counter++;
+      	if ((int)write == 1) 
+      	{
+              if (fabs(x-xmin)<.000001) 
+                x_edge++; 
+              if (fabs(z-zmin)<.000001) 
+                z_edge++; 
+      	}
+      	if (vx == 0.0) dtx=0; else if ((xmin-x)/vx < (xmax-x)/vx) dtx = (xmax-x)/vx; else dtx = (xmin-x)/vx;
+      	if (vy == 0.0) dty=0; else if ((ymin-y)/vy < (ymax-y)/vy) dty = (ymax-y)/vy; else dty = (ymin-y)/vy;
+      	if (vz == 0.0) dtz=0; else if ((zmin-z)/vz < (zmax-z)/vz) dtz = (zmax-z)/vz; else dtz = (zmin-z)/vz;
+      	if (dtx < dtz) dt=dtx; else dt=dtz;
+      	if (dty < dt ) dt=dty;
+	if (dt>0)
+	 {
+      		v = sqrt(vx*vx+vy*vy+vz*vz);
+      		/* First: scattering in plane */
+      		theta0 = atan2(vx,vz)-omega*PI/180;           	/* neutron angle to slab */
+      		/* if(theta0 < 0) theta = -theta; - useless statement ... but, careful, why has it been written once? ... */
+      		theta  = asin(Q2V*Q/(2.0*v));                  	/* Bragg's law */
+   		if (counter <0) printf("Theta0=%lf, Theta=%lf (%lf), Omega=%lf, ",theta0*180/PI,theta*180/PI,Q2V*Q/(2.0*v), omega); 
+      		tmp3 = (theta-theta0)/(MIN2RAD*mosh);
+      		theta  = (Q2V*Q*(double)harmonic/(2.0*v));    	/* Bragg's law */
+      		if (theta>1) theta=asin(1); 
+      		else theta  = asin(theta);                  	/* Bragg's law */
+   		if (counter <0) printf("for %d.harmonic: Theta=%lf (%lf)",harmonic,theta*180/PI,Q2V*Q*(double)harmonic/(2.0*v)); 
+      		if (fabs(tmp3)>fabs((theta-theta0)/(MIN2RAD*mosh))) q=Q*(double)harmonic;
+      		else q=Q;
+      		theta  = asin(Q2V*q/(2.0*v));                  	/* Bragg's law */
+      		tmp3 = (theta-theta0)/(MIN2RAD*mosh);
+  		Mono_d = 2*PI/q;
+   		if (counter <0) if (q!=Q) printf(" *"); 
+   		if (counter <0) printf("\n");  
+      		l = v * dt;
+      		l_total=l;
+  		tmp4=exp(-tmp3*tmp3*4*log(2)); /*** the relative orientation goes into the calculation of my !!!(?) ******/
+        	phi  = atan2(vy,vz);           /* ... but not the out-of plane angle! (? - because this will change with multiple scattering) */
+      		my = tmp4*PI*PI*PI*2.0*F2*exp(-B/4.0/Mono_d/Mono_d)/(Vc*Vc*V2K*V2K*q)/v/v*(360*360*60*60/mosh/mosv/PI);
+      		/* 
+			my = tmp4*PI*PI*PI*2.0*F2*exp(-Mono_B/4.0/Mono_d/Mono_d)/(Vc*Vc*V2K*V2K*q)/v/v*(360*60/mosh/PI);
+		*/
+		/* Reflectivity r0 */
+   		r0=1.0-exp(-my*l/**exp(-phi*phi*4*log(2)/(MIN2RAD*mosv)/(MIN2RAD*mosv))*/);
+   		if ((counter <0)||(r0<0)) printf("F2=%lf, Vc=%lf, mosh=%lf, mosv=%lf\n",F2,Vc,mosh,mosv); 
+   		if ((counter <0)||(r0<0)) printf("v=%lfm/s, Q=%lf/AA\nMu=%lf/mm, path=%10.2lgmm, ",v,q,my/1000,l*1000); 
+   	  	if ((counter <0)||(r0<0)) printf("MuR=%lf, Reflectivity=%10.2lg, Transmission=%lg, time= %lf s\n",my*l,100*r0,100*(1-r0),dt); 
+   	  	d0 =1-r0;
+   	  	d0+=rand01()*r0;
+   	  	if ((counter <0)||(r0<0)) printf("Transmission at point of scattering: %lg, ",d0*100); 
+   	  	d0 =-log(d0);
+   	  	d0/=my;
+   	  	dt=d0/v;
+   	  	if (counter <0) printf("\nEnter at x=%lgmm, z=%lgmm",x*1000,z*1000); 
+   	  	tmp_x=x; tmp_y=y; tmp_z=z;
+      		x += vx*dt; y += vy*dt; z += vz*dt; t += dt;
+   	  	l_total = sqrt((x-tmp_x)*(x-tmp_x)+(y-tmp_y)*(y-tmp_y)+(z-tmp_z)*(z-tmp_z));
+		fflush(monofile);
+   	  	if (counter <0) printf("\nScattering at %lgmm, time=%lgs, x=%lgmm, z=%lgmm\n",d0*1000,dt,x*1000,z*1000); 
+       		if ((int)write == 1) if (counter < 1e4) fprintf(monofile,"%lf\n", p); 
+      		/* First: scattering in plane */
+      		if(fabs(tmp3) > DIV_CUTOFF)
+      		{
+        		x = old_x; y = old_y; z = old_z; t = old_t;
+      		}
+      		else
+      		{
+    	  	SCATTER;
+			if (counter < 1e4) fprintf(monofile,"%12lg %12lg %12lg %12lg %12lg ",p,r0, my, l, phi);
+ 			if (r0<0) printf("p_in=%10.2lg, ",p);
+			incident_p+=p;
+        		p *= r0;
+			first_p+=p;
+			if (counter < 1e4) fprintf(monofile,"%12lg ",p);
+        		/* p *= tmp4;  we consider this already in the calculation of my, don't we? */
+        		tmp1 = 2*theta;
+        		tmp6=1;
+        		cs = cos(tmp1);
+        		sn = sin(tmp1);
+        		tmp2 = cs*vx - sn*vz; 
+   	  	 	if (counter <0) printf("vx=%lgm/s, vz=%lgm/s =>",vx,vz); 
+        		old_vz=vz; 					/***** NEW! *****/
+        		old_vx=vx; 					/***** NEW! *****/
+       	 		vy = vy;
+        		vz = cs*vz + sn*vx; 
+        		vx = tmp2;
+   	  	   	if (counter <0) printf("vx=%lgm/s, vz=%lgmm\n",vx,vz); 
+        		/* Second: scattering out of plane. **********************************/
+           		/* Approximation is that Debye-Scherrer cone is a plane **************/
+        		phi = atan2(vy,vz);                            /* out-of plane angle */
+        		dphi = (MIN2RAD*mosv)/(2*sqrt(2*log(2)))*randnorm();  /* MC choice: **/
+        		/* Vertical angle of the crystallite */
+        		vy = vz*tan(phi+2*dphi*sin(theta));
+        		vratio = v/sqrt(vx*vx+vy*vy+vz*vz);
+        		vz = vz*vratio;
+        		vy = vy*vratio;                             /* Renormalize v */
+        		vx = vx*vratio;
+      			/***************** NEW: MULTIPLE SCATTERING ************************************************************************/
+      			j=1;
+      			if (vx == 0.0) dtx=0; else if ((xmin-x)/vx < (xmax-x)/vx) dtx = (xmax-x)/vx; else dtx = (xmin-x)/vx;
+      			if (vy == 0.0) dty=0; else if ((ymin-y)/vy < (ymax-y)/vy) dty = (ymax-y)/vy; else dty = (ymin-y)/vy;
+      			if (vz == 0.0) dtz=0; else if ((zmin-z)/vz < (zmax-z)/vz) dtz = (zmax-z)/vz; else dtz = (zmin-z)/vz;
+      			if (dtx < dtz) dt=dtx; else dt=dtz;
+      			if (dty < dt ) dt=dty;
+      			l = v * dt;
+      			tmp5=rand01();
+   	  		r0=1.0-exp(-my*l/**exp(-phi*phi*4*log(2)/(MIN2RAD*mosv)/(MIN2RAD*mosv))*/);
+      			while (((tmp5<r0)||((j-2*(j/2))==0))&&(j<LIMIT))
+      			{
+      				j+=1;
+   	  			d0 =1-r0;
+     				if ((j-2*(j/2))==0) /* if neutron is about to leave in wrong direction, scatter it in any case and adjust probability ... */
+      				{
+      					p*=r0;
+   	  				d0+=tmp5*r0;
+      				}
+      				else /* ... otherwise make a MC choice, also if limit has been passed */
+      				{
+   	  				d0=tmp5;
+      				}
+   	  			d0 =-log(d0);
+   	  			d0/=my;
+				if (d0 > l) break;
+   	  			dt=d0/v;
+   	  	 		if (counter <0) printf("Scattering at %lgmm, time=%lgs",d0*1000,dt); 
+   	  	 		tmp_x=x; tmp_y=y; tmp_z=z;
+      				x += vx*dt; y += vy*dt; z += vz*dt; t += dt;
+      				SCATTER;
+		   	  	l_total+= sqrt((x-tmp_x)*(x-tmp_x)+(y-tmp_y)*(y-tmp_y)+(z-tmp_z)*(z-tmp_z));
+   	  	 		if (counter <0) printf(", x=%lgmm, z=%lgmm\n",x*1000,z*1000); 
+   	  	 		tmp_vx=vx;
+   	  	 		tmp_vz=vz;
+        			vx=old_vx;
+        			vz=old_vz;
+        			old_vx=tmp_vx;
+        			old_vz=tmp_vz;
+        			phi = atan2(vy,vz);                            		/* out-of plane angle */
+        			dphi = (MIN2RAD*mosv)/(2*sqrt(2*log(2)))*randnorm();	/* MC choice: **/
+        			/* Vertical angle of the crystallite */
+        			vy = vz*tan(phi+2*dphi*sin(theta));
+        			vratio = v/sqrt(vx*vx+vy*vy+vz*vz);
+        			vz = vz*vratio;
+        			vy = vy*vratio;                             		/* Renormalize v */
+        			vx = vx*vratio;
+   	  	 		if (counter <0) printf("vx=%lgm/s, vz=%lgmm\n",vx,vz); 
+      				if (vx == 0.0) dtx=0;  else if ((xmin-x)/vx < (xmax-x)/vx) dtx = (xmax-x)/vx; else dtx = (xmin-x)/vx;
+      				if (vy == 0.0) dty=0;  else if ((ymin-y)/vy < (ymax-y)/vy) dty = (ymax-y)/vy; else dty = (ymin-y)/vy;
+      				if (vz == 0.0) dtz=0;  else if ((zmin-z)/vz < (zmax-z)/vz) dtz = (zmax-z)/vz; else dtz = (zmin-z)/vz;
+      				if (dtx < dtz) dt=dtx; else dt=dtz;
+      				if (dty < dt ) dt=dty;
+      				l = v * dt;
+   			  	r0=1.0-exp(-my*l/**exp(-phi*phi*4*log(2)/(MIN2RAD*mosv)/(MIN2RAD*mosv))*/);
+     				tmp5=rand01();
+      			}
+      			if (((vx*theta)>0)||(vx>0))
+      			{
+				if (counter < 1e4) fprintf(monofile,"%12lg %12lg %12lg %12lg\n",r0,p,vx,vz);
+      				leaving_p+=p;
+				ABSORB;
+      			}
+      			/****************** END OF MULTIPLE SCATTERING ***********************/
+  			if (p<0) printf("r0=%10.2lg, tmp3=%10.2lg, p_out=%10.2lg\n",r0,tmp3,p);
+ 			leaving_p+=p;
+			if (counter < 1e4) fprintf(monofile,"%12lg %12lg %12lg %12lg\n",r0,p,vx,vz);
+			fflush(monofile);
+      		}
+     	}
+      	else
+      	{
+      		/* x = old_x; y = old_y; z = old_z; t = old_t; */
+      	}
+    }
+    else 
+    {
+      	/* x = old_x; y = old_y; z = old_z; t = old_t; */
+    }
+    if (counter<0) counter=0;
+  } /* if present */
+%}
+FINALLY
+%{
+   	if ((int)write == 1) printf("x edge : %d neutrons, z edge : %d neutrons\n",x_edge ,z_edge );
+%}
+MCDISPLAY
+%{
+  magnify("xyz");
+  multiline(16,(double)xmin*present, (double)ymin*present, (double)zmin*present,
+               (double)xmin*present, (double)ymax*present, (double)zmin*present,
+               (double)xmin*present, (double)ymax*present, (double)zmax*present,
+               (double)xmin*present, (double)ymin*present, (double)zmax*present,
+               (double)xmin*present, (double)ymin*present, (double)zmin*present,
+               (double)xmax*present, (double)ymin*present, (double)zmin*present,
+               (double)xmax*present, (double)ymax*present, (double)zmin*present,
+               (double)xmin*present, (double)ymax*present, (double)zmin*present,
+               (double)xmax*present, (double)ymax*present, (double)zmin*present,
+               (double)xmax*present, (double)ymax*present, (double)zmax*present,
+               (double)xmin*present, (double)ymax*present, (double)zmax*present,
+               (double)xmax*present, (double)ymax*present, (double)zmax*present,
+               (double)xmax*present, (double)ymin*present, (double)zmax*present,
+               (double)xmin*present, (double)ymin*present, (double)zmax*present,
+               (double)xmax*present, (double)ymin*present, (double)zmax*present,
+               (double)xmax*present, (double)ymin*present, (double)zmin*present);
+%}
+END
