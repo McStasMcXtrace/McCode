@@ -29,7 +29,7 @@
 @echo Trying to guess your plotter...
 @start mcconfig.pl
 @echo Installing in MCSTAS_SITE=%MCSTAS_SITE%
-@if exist %MCSTAS_SITE% goto bin
+@if exist %MCSTAS_SITE% move %MCSTAS_SITE% "%MCSTAS_SITE%.%DATE%"
 @echo Creating directory %MCSTAS_SITE%
 @mkdir %MCSTAS_SITE%
 :bin
