@@ -39,3 +39,35 @@ else
 fi
 fi
 ])dnl
+
+
+AC_DEFUN([MC_ANSI_MATH_PROTO],
+[
+AC_MSG_CHECKING(for proper ANSI C math prototypes)
+AC_CACHE_VAL(mc_cv_ansi_math_proto,[
+# OSF/1 (Digital/Compaq Unix) cc needs -std1 for full ANSI C math prototypes
+AC_TRY_COMPILE(
+[
+#include <math.h>
+],[
+{ double a = sqrt(&a); }],
+[mc_save_CFLAGS="$CFLAGS"
+CFLAGS="$cf_save_CFLAGS -std1"
+AC_TRY_COMPILE(
+[
+#include <math.h>
+],[
+{ double a = sqrt(&a); }],
+[mc_cv_ansi_math_proto=no],[mc_cv_ansi_math_proto="-std1"])
+CFLAGS="$cf_save_CFLAGS"],[mc_cv_ansi_math_proto=yes])
+])
+AC_MSG_RESULT($mc_cv_ansi_math_proto)
+
+if test "$mc_cv_ansi_math_proto" != "yes"; then
+if test "$mc_cv_ansi_math_proto" != "no"; then
+	CFLAGS="$CFLAGS $mc_cv_ansi_math_proto"
+else
+	AC_MSG_WARN(C compiler seems not to do ANSI math prototypes)
+fi
+fi
+])dnl
