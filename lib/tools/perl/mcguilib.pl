@@ -678,8 +678,7 @@ sub sitemenu_build {
     my $sites;
     my $sitemenu = $menu->Menubutton(-text => 'Neutron site', -underline => 0);
     $sitemenu->pack(-side=>'left');
-    # Read the 'Sites' file in the examples folder:
-
+    
     # Scan each .instr file in the examples folder, find out which 
     # site it belongs to...
     if (opendir(DIR,"$MCSTAS::sys_dir/examples/")) {
@@ -692,12 +691,18 @@ sub sitemenu_build {
         my @handles; # Menu handles        
         my $index;
         my $CurrentSub;
+	# Add subitem for instruments without cathegory
+	push @added, "Undefined site";
+	$CurrentSub = $sitemenu->cascade(-label => "Undefined site");
+	push @sites, $CurrentSub;
+	
         for ($j=0 ; $j<@paths; $j++) {
             # What site is this one from?
             my $pid = open(READER,$paths[$j]);
             my $cname="";  # real name of the instrument (DEFINE)
             my ($base, $dirname, $suffix);
             $base = "";
+	    my $site_tag=0;
             while(<READER>) { 
                 # Look for real instrument name
                 if (m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]+)\s*(.*)!i) {
@@ -705,6 +710,8 @@ sub sitemenu_build {
                 }
                 # Look for %INSTRUMENT_SITE:
                 if (/%INSTRUMENT_SITE:\s*(\w*)/) {
+		    # This one has a site tag
+		    $site_tag = 1;
                     # Check if that menu has been added?
                     my $k;
                     my $taken = 0;
@@ -726,7 +733,12 @@ sub sitemenu_build {
             # Add the instrument to the given menu.
             ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
             if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
-            $CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    if ($site_tag == 1) {
+		$CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    } else {
+		$CurrentSub = $sites[0]; # 'Undefined site' menu
+		$CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+	    }
         }
     }
 }
