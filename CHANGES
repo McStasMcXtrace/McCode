@@ -1,9 +1,11 @@
-Forthcoming changes:
+Changes in McStas v1.4.1, March 16, 2001
 
  - New components: ESS_moderator_long.comp and ESS_moderator_short.comp
-   (by Kim Lefmann)
+   (by Kim Lefmann), Source_Maxwell (by Emmanuel Farhi). Gravity_guide.comp
+   is included in the official version.
  - Some support for the calculation of correlation functions in the 
    components Monitor_nD and PreMonitor_nD (by Emmanuel Farhi)
+ - A signal handling system is included (by Emmanuel Farhi)
  - Misc. minor bug fixes
  - For more information: 
    http://neutron.risoe.dk/mcstas/developments/developments.html
