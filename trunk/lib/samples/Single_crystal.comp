@@ -12,18 +12,18 @@
 
   (2). Every reciprocal lattice point tau of magnitude less than 2*ki
        is considered for scattering. The scattering probability is the
-       area of the intersection of the Ewald sphere (approxiamet by
-       the tangential plane) with the 3-D gaussian mosaic of the point
+       area of the intersection of the Ewald sphere (approximated by
+       the tangential plane) with the 3-D Gaussian mosaic of the point
        tau.
 
   (3). The total coherent scattering cross section is computed as the
-       sum over all tau. Together with the absorbtion and incoherent
+       sum over all tau. Together with the absorption and incoherent
        scattering cross section and known potential flight-length
        l_full through the sample, we can compute the probability of
-       the four events absorbtion, coherent scattering, incoherent
+       the four events absorption, coherent scattering, incoherent
        scattering, and transmission.
 
-  (4). Absorbtion is never simulated explicitly, just incorporated in
+  (4). Absorption is never simulated explicitly, just incorporated in
        the neutron weight.
 
   (5). Transmission in the first event is selected with the Monte
@@ -41,10 +41,10 @@
        statistics in the detector).
 
   (8). The outgoing wave vector direction is picked at random using
-        the intersecting 2-D Gauss computed in (2). The vector is
-        normalized to the length of ki (ellastic scattering) to
-        account for the error caused by the planar approximation of
-        the Ewald sphere.
+       the intersecting 2-D Gauss computed in (2). The vector is
+       normalized to the length of ki (elastic scattering) to account
+       for the error caused by the planar approximation of the Ewald
+       sphere.
 
   (9). The process is repeated from (2) with kf as new initial wave
        vector ki.
@@ -55,7 +55,72 @@ DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS()
 SETTING PARAMETERS(xwidth, yheight, zdepth, mosaic, deld_d,
 		   p_transmit /* = 0 ToDo */)
+OUTPUT PARAMETERS(max_computed_hkl, hkl_table, tau_table)
+DECLARE
+%{
+#ifndef SINGLE_CRYSTAL_DECL
+#define SINGLE_CRYSTAL_DECL
 
+struct hkl_data
+  {
+    int h,k,l;			/* Indices for this reflection */
+    double tau_x, tau_y, tau_z;	/* Coordinates in reciprocal space */
+    double F2;			/* Value of structure factor */
+  };
+struct tau_data
+  {
+    double refl;
+    double F2_contrib;
+    double xsect;
+    double rho_x, rho_y, rho_z;
+    double sigma_1, sigma_2;
+    double b1x, b1y, b1z;
+    double b2x, b2y, b2z;
+  };
+
+void compute_hkl(struct hkl_data_info *info, int max_hkl) {
+  /* Allocate more memory for array if necessary */
+  if(max_hkl <= info->max_computed_hkl)
+  {
+    mem = malloc(sizeof(struct hkl_data *)*(max_hkl + 1));
+    if(!mem)
+    {
+      fprintf(stderr, "Single_crystal: FATAL ERROR: out of memory!\n");
+      exit(1);
+    }
+    memcpy(mem, info->hkl_data,
+	   sizeof(struct hkl_data *)*(max_computed_hkl + 1));
+    free(info->hkl_data);
+    info->hkl_data = mem;
+  }
+  count = info->max_computed_hkl;
+  while(max_hkl > count)
+  {
+    info->max_computed_hkl++;
+    total_entries = (count*2+1)*(count*2+1)*(count*2+1);
+    ptr = malloc(sizeof(struct hkl_data)*total_entries);
+    for(h = -count; h <= count; h++) {
+      for(k = -count; k <= count; k++) {
+	for(l = -count; l <= count; l++) {
+	  
+	}
+      }
+    }
+  }
+}
+      
+#endif /* !SINGLE_CRYSTAL_DECL */
+  int max_computed_hkl;
+  struct hkl_data **hkl_table;
+  struct tau_data *tau_table;
+%}
+
+INITIALIZE
+%{
+  max_computed_hkl = -1;
+  hkl_data = NULL;
+  tau_data = NULL;
+%}
 TRACE
 %{
 
@@ -123,7 +188,7 @@ TRACE
     /* (4). Account for the probability of absorbtion */
     p *= (coh_xlen + inc_xlen)/tot_xlen;
     /* Choose between coherent and incoherent scattering */
-    if(rand0max(coh_xlen + inc_xlen) < inc_xlen) /* incoherent? */
+    if(rand0max(coh_xlen + inc_xlen) < inc_xlen)
     {
       /* (6). Incoherent scattering */
       randvec_target_sphere(kix, kiy, kiz, NULL, 0, 0, 0, 1);
@@ -143,11 +208,22 @@ TRACE
     }
     if(i >= num_refl)
     {
-      fprintf(stderr, "Single_crystal: error: illegal tau search "
+      fprintf(stderr, "Single_crystal: Error: Illegal tau search "
 	      "(r = %g, sum = %g).\n", r, sum);
       i = num_refl - 1;
     }
     p *= tau_table[i].F2_contrib;
-  } /* End of multiple scattering loop */
+    /* (8). Pick scattered wavevector kf */
+    r1 = randnorm()*tau_table[i].sigma_1;
+    r2 = randnorm()*tau_table[i].sigma_2;
+    kix = tau_table[i].rho_x + r1*tau_table[i].b1x + r2*tau_table[i].b2x;
+    kiy = tau_table[i].rho_y + r1*tau_table[i].b1y + r2*tau_table[i].b2y;
+    kiz = tau_table[i].rho_z + r1*tau_table[i].b1z + r2*tau_table[i].b2z;
+    adjust = ki/sqrt(kix*kix + kiy*kiy + kiz*kiz);
+    kix *= adjust;
+    kiy *= adjust;
+    kiz *= adjust;
+    /* Repeat loop for next scattering event. */
+  }
 
 %}
