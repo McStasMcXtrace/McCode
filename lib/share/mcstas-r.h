@@ -17,9 +17,16 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.54 2003-09-05 08:59:18 farhi Exp $
+* $Id: mcstas-r.h,v 1.55 2003-10-21 14:08:12 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.54  2003/09/05 08:59:18  farhi
+*	added INSTRUMENT parameter default value grammar
+*	mcinputtable now has also default values
+*	mcreadpar now uses default values if parameter not given
+*	extended instr_formal parameter struct
+*	extended mcinputtable structure type
+*	
 *	Revision 1.53  2003/04/07 11:50:51  farhi
 *	Extended the way mcplot:plotter is assigned. Set --portable ok
 *	Handle Scilab:Tk and ~GTk menu (shifted)
@@ -59,7 +66,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.54 $"
+#define MCSTAS_R_H "$Revision: 1.55 $"
 
 #include <math.h>
 #include <string.h>
@@ -412,9 +419,12 @@ int plane_intersect_Gfast(double *Idt,
 void randvec_target_circle(double *xo, double *yo, double *zo, 
     double *solid_angle, double xi, double yi, double zi, double radius);
 #define randvec_target_sphere randvec_target_circle
+void randvec_target_rect_angular(double *xo, double *yo, double *zo, 
+    double *solid_angle,
+	       double xi, double yi, double zi, double height, double width, Rotation A);        
 void randvec_target_rect(double *xo, double *yo, double *zo, 
     double *solid_angle,
-	       double xi, double yi, double zi, double height, double width);        
+	       double xi, double yi, double zi, double height, double width, Rotation A); 
 void extend_list(int count, void **list, int *size, size_t elemsize);
 
 void mcset_ncount(double count);

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -81,7 +81,8 @@ DECLARE
       double rx,ry,rz,pi;
       char   isrect;      /* true when sample is a box */
       double distance;    /* when non zero, gives rect target distance */
-      double aw,ah;       /* rectangukar angular dimensions */
+      double aw,ah;       /* rectangular angular dimensions */
+      double xw,yh;       /* rectangular metrical dimensions */
       double tx,ty,tz;    /* target coords */
     } res_struct;
 %}
@@ -104,15 +105,23 @@ INITIALIZE
   } 
   else
   { res_struct.tx = target_x; res_struct.ty = target_y; res_struct.tz = target_z; }
-  
+
   res_struct.distance=sqrt(res_struct.tx*res_struct.tx
       +res_struct.ty*res_struct.ty+res_struct.tz*res_struct.tz);
   /* different ways of setting rectangular area */
   res_struct.aw  = res_struct.ah = 0;
-  if (focus_xw) res_struct.aw = atan2(focus_xw,res_struct.distance);
-  if (focus_yh) res_struct.ah = atan2(focus_yh,res_struct.distance);
-  if (focus_aw) res_struct.aw = DEG2RAD*focus_aw;
-  if (focus_ah) res_struct.ah = DEG2RAD*focus_ah;
+  if (focus_xw) {
+    res_struct.xw = focus_xw;
+  }
+  if (focus_yh) {
+    res_struct.yh = focus_yh;
+  }
+  if (focus_aw) {
+    res_struct.aw = DEG2RAD*focus_aw;
+  }
+  if (focus_ah) {
+    res_struct.ah = DEG2RAD*focus_ah;
+  }
 %}
 
 TRACE
@@ -167,12 +176,16 @@ TRACE
     aim_x = res_struct.tx-x;         /* Vector pointing at target (anal./det.) */
     aim_y = res_struct.ty-y;
     aim_z = res_struct.tz-z;
-    if(res_struct.aw && res_struct.ah)
+    if(res_struct.aw && res_struct.ah) {
+        randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 
+          aim_x, aim_y, aim_z, res_struct.aw, res_struct.ah, ROT_A_CURRENT_COMP);
+    } else if(res_struct.xw && res_struct.yh) {
         randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
-          aim_x, aim_y, aim_z, res_struct.aw, res_struct.ah);
-      else
+          aim_x, aim_y, aim_z, res_struct.xw, res_struct.yh, ROT_A_CURRENT_COMP);
+    } else {
         randvec_target_circle(&vx, &vy, &vz, &solid_angle, 
           aim_x, aim_y, aim_z, focus_r);
+    }
     NORM(vx, vy, vz);
     E=E0+dE*randpm1();
     v=sqrt(E)*SE2V;
