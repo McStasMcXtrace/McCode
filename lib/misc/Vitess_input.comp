@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.4 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.5 $
+* Origin: McStas 1.5
 *
 * Read neutron state parameters from VITESS neutron file.
 *
