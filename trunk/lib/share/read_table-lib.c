@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.10 2004-09-03 13:46:50 farhi Exp $
+* $Id: read_table-lib.c,v 1.11 2004-09-09 13:48:02 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.10  2004/09/03 13:46:50  farhi
+*	Correct misprint in comment
+*	
 *	Revision 1.9  2003/05/20 15:12:33  farhi
 *	malloc size for read table binary now needs less memory
 *	
@@ -95,8 +98,7 @@
       
       if (!strchr(mc_rt_File, MC_PATHSEP_C))
       {
-        if (getenv("MCSTAS")) strcpy(mc_rt_dir, getenv("MCSTAS"));
-        else strcpy(mc_rt_dir, MCSTAS);
+        strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
         mc_rt_hfile = fopen(mc_rt_path, "r");
       }
@@ -146,8 +148,7 @@
       
       if (!strchr(mc_rt_File, MC_PATHSEP_C))
       {
-        if (getenv("MCSTAS")) strcpy(mc_rt_dir, getenv("MCSTAS"));
-        else strcpy(mc_rt_dir, MCSTAS);
+        strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
         mc_rt_hfile = fopen(mc_rt_path, "r");
       }
