@@ -210,7 +210,7 @@ if isfield(INSTRUMENT,'lastcomp')
     end
   end
 end
-INSTRUMENT.DoNeutrons=2;
+INSTRUMENT.DoNeutrons=1; // First from DoNumbers list, e.g. 0
 INSTRUMENT.MaxNeutrons=0;
 INSTRUMENT.DoNumbers=["0","1","10","50","100","500","1000"];
 INSTRUMENT.Timeouts=["100","500","1000","2000","5000","10000"];
