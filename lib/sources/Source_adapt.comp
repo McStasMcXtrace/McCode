@@ -1,13 +1,11 @@
 DEFINE COMPONENT Source_adapt
-DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE, N_E, N_xpos, N_xdiv, alpha, beta)
+DEFINITION PARAMETERS (xmin,xmax,ymin,ymax, dist, xw, yh, E0, dE, flux, N_E, N_xpos, N_xdiv, alpha, beta)
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (hdiv, vdiv, p_in, y_0, C, r_0, NUM)
+OUTPUT PARAMETERS (p_in, y_0, C, r_0)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
 #include "alg.h"
-#define NUM (N_E*N_xpos*N_xdiv)
- double hdiv,vdiv;
  double p_in;
  struct adapt_tree *atree;
  int aindex;
@@ -21,27 +19,34 @@ DECLARE
 INITIALIZE
 %{
   int i;
+  double hdiv, vdiv;
+  double a, lambda_min, lambda_max, delta_lambda, source_area;
 
+  a_num = N_E*N_xpos*N_xdiv;
   hdiv = atan(xw/(2.0*dist));
   vdiv = atan(yh/(2.0*dist));
-  p_in = (4*hdiv*vdiv)/(4*PI); /* Small angle approx. */
-  atree = adapt_tree_init(NUM);
-  a_psi = malloc(NUM*sizeof(*a_psi));
-  a_n = malloc(NUM*sizeof(*a_n));
+  lambda_min = sqrt(81.81/(E0+dE)); /* AAngstroem */
+  lambda_max = sqrt(81.81/(E0-dE));
+  delta_lambda = lambda_max - lambda_min;
+  source_area = (xmax - xmin)*(ymax - ymin)*1e4; /* cm^2 */
+  a = flux/mcget_ncount()*delta_lambda*source_area;
+  p_in = (4*hdiv*vdiv)*a;	/* Small angle approx. */
+  atree = adapt_tree_init(a_num);
+  a_psi = malloc(a_num*sizeof(*a_psi));
+  a_n = malloc(a_num*sizeof(*a_n));
   if(!(a_psi && a_n))
   {
     fprintf(stderr, "Fatal error: out of memory.\n");
     exit(1);
   }
-  for(i = 0; i < NUM; i++)
+  for(i = 0; i < a_num; i++)
   {
-    adapt_tree_add(atree, i, 1.0/(double)NUM);
+    adapt_tree_add(atree, i, 1.0/a_num);
     a_psi[i] = a_n[i] = 0;
   }
   a_total_psi = 0;
-  a_num = NUM;
   count = 0;
-  y_0 = NUM > 8 ? 2.0/(double)NUM : 0.25;
+  y_0 = a_num > 8 ? 2.0/a_num : 0.25;
   r_0 = 1/(double)alpha*log((1 - y_0)/y_0)/(double)mcget_ncount();
   C = 1/(1 + log(y_0 + (1 - y_0)*exp(-r_0*mcget_ncount()))/(r_0*mcget_ncount()));
   printf("Source_adapt: y_0=%8.3g r_0=%8.3g C=%8.3g\n", y_0, r_0, C);
@@ -50,22 +55,22 @@ TRACE
 %{
   double thmin,thmax,phmin,phmax,theta,phi,E,v,r;
   double new_v;
-  int i_E, i_xpos, I_xdiv;
+  int i_E, i_xpos, i_xdiv;
 
   /* Randomly select a bin in the current distribution */
   r = rand01();
   aindex = adapt_tree_search(atree, atree->total*r);
-  if(aindex >= NUM)
+  if(aindex >= a_num)
   {
     fprintf(stderr,
-	    "Hm, aindex is %d, NUM is %d, r is %g, atree->total is %g\n",
-	    aindex, (int)NUM, r, atree->total);
-    aindex = NUM - 1;
+	    "Hm, aindex is %d, a_num is %d, r is %g, atree->total is %g\n",
+	    aindex, (int)a_num, r, atree->total);
+    aindex = a_num - 1;
   }
   /* Now find the bin coordinates. */
-  i_xdiv = aindex % N_xdiv;
-  i_xpos = (aindex / N_xdiv) % N_xpos;
-  i_E = (aindex / N_xdiv) / N_xpos;
+  i_xdiv = aindex % (int)N_xdiv;
+  i_xpos = (aindex / (int)N_xdiv) % (int)N_xpos;
+  i_E = (aindex / (int)N_xdiv) / (int)N_xpos;
   /* Compute the initial neutron parameters, selecting uniformly randomly
      within each bin dimension. */
   x = xmin + (i_xpos + rand01())*((xmax - xmin)/(double)N_xpos);
@@ -87,7 +92,7 @@ TRACE
   p = p_in;
   a_factor = y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
   count++;
-  p /= atree->v[aindex]/(atree->total/(double)NUM);
+  p /= atree->v[aindex]/(atree->total/a_num);
   p *= C*a_factor;
   /* Update distribution, assuming absorbtion. */
   if(a_n[aindex] > 0)
@@ -108,10 +113,10 @@ FINALLY
   int *p0;
   double *p1,*p2;
   int i;
-  p0 = malloc(NUM*sizeof(int));
-  p1 = malloc(NUM*sizeof(double));
-  p2 = malloc(NUM*sizeof(double));
-  for(i = 0; i < NUM; i++)
+  p0 = malloc(a_num*sizeof(int));
+  p1 = malloc(a_num*sizeof(double));
+  p2 = malloc(a_num*sizeof(double));
+  for(i = 0; i < a_num; i++)
   {
     p0[i] = 1;
     p1[i] = atree->v[i]/atree->total;
@@ -122,14 +127,18 @@ FINALLY
 	"Adaptive source energy distribution",
 	"Energy [meV]",
 	"Probability",
-	"E", E0 - dE, E0 + dE, NUM,
+	"E", E0 - dE, E0 + dE, a_num,
 	NULL, p1, NULL, "source_adapt.dist");
   adapt_tree_free(atree);
 %}
 MCDISPLAY
 %{
   magnify("xy");
-  circle("xy",0,0,0,radius);
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
 %}
 
 END
