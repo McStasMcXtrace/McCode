@@ -24,7 +24,7 @@
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
 * alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material
+* m:       (1)    m-value of material. Zero means completely absorbing.
 * W:       (AA-1) Width of supermirror cut-off
 *
 * Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
@@ -123,6 +123,8 @@ TRACE
         break;
     }
     /* Now compute reflectivity. */
+    if(m == 0)
+      ABSORB;
     if(q > Qc)
     {
       double arg = (q-m*Qc)/W;
