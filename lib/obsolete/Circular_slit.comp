@@ -1,0 +1,27 @@
+/**********************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Circular slit
+*
+* Written by: KN, August 1998
+*
+* INPUT PARAMETERS
+*
+* radius: Radius of slit in the z=0 plane, centered at Origo (m)
+*
+***********************************************************************/
+
+DEFINE COMPONENT Circular_slit
+DEFINITION PARAMETERS (radius)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+TRACE
+%{
+  PROP_Z0;
+  if(x*x + y*y > radius*radius)
+    ABSORB;
+%}
+END
