@@ -18,7 +18,7 @@
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
 * nchan:    Number of time bins (1)
-* dt:       Length of eeach time bin (mu-s)
+* dt:       Length of each time bin (mu-s)
 * filename: Name of file in which to store the detector image (text)
 *
 * OUTPUT PARAMETERS:
@@ -36,7 +36,6 @@ OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    /* ToDo: should be component local names. */
     int TOF_N[nchan];
     double TOF_p[nchan];
     double TOF_p2[nchan];
@@ -59,12 +58,12 @@ TRACE
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
-      i = floor(1E6*t/dt);		/* Bin number */
+      i = floor(1E6*t/dt);              /* Bin number */
       if(i >= nchan) i = nchan;
       if(i < 0)
       {
-	printf("FATAL ERROR: negative time-of-flight.\n");
-	exit(1);
+        printf("FATAL ERROR: negative time-of-flight.\n");
+        exit(1);
       }
       TOF_N[i]++;
       TOF_p[i] += p;
@@ -73,14 +72,29 @@ TRACE
   %}
 FINALLY
   %{
-    int i;
+    int i, Nsum;
+    double psum, p2sum;
     FILE *outfile;
 
+    Nsum = psum = p2sum = 0;
     outfile=fopen(filename,"w");
+    if(!outfile)
+    {
+      fprintf(stderr,
+              "FATAL ERROR: could not open output file '%s'\n", filename);
+      exit(1);
+    }
     for (i=0; i<nchan; i++)
+    {
+      Nsum += TOF_N[i];
+      psum += TOF_p[i];
+      p2sum += TOF_p2[i];
       if(TOF_p[i] != 0.0 || TOF_N[i] != 0)
-	fprintf(outfile,"%g %d %g %g\n", i*dt, TOF_N[i], TOF_p[i], TOF_p2[i]);
+        fprintf(outfile,"%g %d %g %g\n",
+                (double)i*dt, TOF_N[i], TOF_p[i], TOF_p2[i]);
+    }
     fclose(outfile);
+    DETECTOR_OUT(Nsum, psum, p2sum);
   %}
 
 END
