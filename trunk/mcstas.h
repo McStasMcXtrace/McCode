@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.13 1998-11-09 08:18:57 kn Exp $
+* 	$Id: mcstas.h,v 1.14 1998-11-11 08:58:01 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.13  1998/11/09 08:18:57  kn
+* 	Use predefined macro MC_SYS_DIR as default library directory if defined.
+*
 * 	Revision 1.12  1998/10/02 08:38:51  kn
 * 	Added output parameters for components.
 * 	Fixed header comment.
@@ -255,7 +258,7 @@ extern List comp_instances_list;
 /* Flag set to TRUE when scanning autoloaded component definitions. */
 extern int parse_restricted;
 /* Map of already-read components. */
-Symtab read_components;
+extern Symtab read_components;
 
 /* Handle assignment of actual to formal component parameters. */
 void comp_formals_actuals(struct comp_inst *comp, Symtab actuals);
