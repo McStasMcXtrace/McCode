@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.9 1998-03-24 07:42:35 kn Exp $
+*	$Id: mcstas-r.h,v 1.10 1998-03-24 13:24:40 lefmann Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.9  1998/03/24 07:42:35  kn
+*	Added definition for PI.
+*
 *	Revision 1.8  1998/03/24 07:36:20  kn
 *	Make ABSORB macro work better in control structures.
 *	Add test_printf().
@@ -86,9 +89,11 @@ typedef MCNUM Rotation[3][3];
 #define test_printf while(0) printf
 #endif
 
-#define MIN2RAD 2*PI/(360*60)
-#define DEG2RAD 2*PI/360
-#define AA2MS   2200*1.798/(2*PI)
+#define MIN2RAD  (2*PI/(360*60))
+#define DEG2RAD  (2*PI/360)
+#define AA2MS    (2200*1.798/(2*PI))
+#define HBAR     1.05459E-34
+#define MNEUTRON 1.67492E-27
 
 #ifndef PI
 # ifdef M_PI
