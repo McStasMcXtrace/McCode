@@ -1,17 +1,38 @@
 /*******************************************************************************
-* Runtime system for McStas.
 *
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: mcstas-r.h
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
-*	Author: K.N.			Aug 29, 1997
+* Runtime: share/mcstas-r.h
 *
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
-* ADD: Version: 1.6
+* %Identification
+* Written by: KN
+* Date:    Aug 29, 1997
+* Release: McStas 1.6
+* Version: 1.3
+*
+* Runtime system header for McStas. 
+*
+* Usage: Automatically embbeded in the c code.
+*
+* $Id: mcstas-r.h,v 1.42 2003-01-21 08:29:48 pkwi Exp $
+*
+*	$Log: not supported by cvs2svn $
+* Revision 1.3 2002/08/28 11:36:37 ef
+*	Changed to lib/share/c code 
+*
+* Revision 1.2 2001/10/10 11:36:37 ef
+*	added signal handler
+*
+* Revision 1.1 1998/08/29 11:36:37 kn
+*	Initial revision
+*
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H
+#define MCSTAS_R_H "$Revision: 1.42 $"
 
 #include <math.h>
 #include <string.h>
@@ -74,6 +95,7 @@ extern char mcinstrument_name[], mcinstrument_source[];
 extern int mctraceenabled, mcdefaultmain;
 void mcinit(void);
 void mcraytrace(void);
+void mcsave(void);
 void mcfinally(void);
 void mcdisplay(void);
 
@@ -354,17 +376,17 @@ void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
 	       double *s1, double *s2);
 void mccoordschange_polarisation(Rotation t,
 				 double *sx, double *sy, double *sz);
-double mcestimate_error(int N, double p1, double p2);
+double mcestimate_error(double N, double p1, double p2);
 void mcsiminfo_out(char *format, ...);
 void mcdetector_out(char *cname, double p0, double p1, double p2,
 		    char *filename);
 void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *cname);
 void mcdetector_out_1D(char *t, char *xl, char *yl,
 		       char *xvar, double x1, double x2, int n,
-		       int *p0, double *p1, double *p2, char *f, char *c);
+		       double *p0, double *p1, double *p2, char *f, char *c);
 void mcdetector_out_2D(char *t, char *xl, char *yl, double x1, double x2,
 		       double y1,double y2,int m, int n,
-		       int *p0, double *p1, double *p2, char *f, char *c);
+		       double *p0, double *p1, double *p2, char *f, char *c);
 void mcreadparams(void);
 
 void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
@@ -387,6 +409,7 @@ void extend_list(int count, void **list, int *size, size_t elemsize);
 
 void mcset_ncount(double count);
 double mcget_ncount(void);
+double mcget_run_num(void);
 int mcstas_main(int argc, char *argv[]);
 
 

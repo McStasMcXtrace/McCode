@@ -1,0 +1,167 @@
+DONE/TODO/FUTURE list for next release of McStas (1.6)
+
+Compiled by PW/EF from user wishes and different notes.
+
+Tasks have been divided into 4 categories:
+
+DONE   - reqd. task, done or very simple
+TODO   - reqd. task, requires substantial work
+FUTURE - needed, wanted, but postponed for later release
+USER   - work for McStas user base more than developers
+
+*******************************************
+DONE: 
+
+Kernel:  OK
+
+Runtime:
++ Ncount is 0/ncount when starting mcsiminfo_init()
+
+Components:
++ Check Origin/Release line/add example: release/geography
++ change all monitors Nnum to double + Finally-> Save...
++ Prepare all for polarisation - done.
++ ESS moderators - done.
++ Monitor_nD, replace p by other phys. quantity, easy task.
++ Renaming of components (optics/samples) (e.g. Guide_*)
++ Monochromator, reflectivity curve from file. renormalisation by r0, simple.
+
+
+Instruments:
+- Intercomparison instruments H8, IRIS, RITA-II, IN12, TAS1, IN14,...
+
+Tools: (GUI, plotting, running etc.)
+- Automated optimization -> Optimisation (LM?) - great complexity... 
+  Manual example?
+
+Documentation:
+- "Switch/Skip" components (Component group ABSORB GROUP COMPONENT - can be
+  done,	example in manual?)
+- "Share" components (done, sharing "shareable" parts - lib style)
+- Logging event support (Can be done, Monitor_nd - example in manual?)
+- "Split" neutrons (see switch/skip + extend feature - example in manual)
+- Framework for table input ?!? (If about parameter input, should be
+  doable, through defines)
+- Compile runtime+shared functions - through example in manual.
+
+Community related:
+
+*******************************************
+TODO:
+
+Kernel:
+
++ %include keyword for "inclusion" of components in components... (To
+  think about), done. :) -> component_shares/My_function_name_include 
++ if no .c/.h, embed .h, and then .c if runtime, else display message
+  for .o link  
+  
+Runtime:
+- Gravity (functions defined, only used in gravity guide - merge
+  probagation routines, easy task)
+- save/load monitor data in different formats: 
+    McStas ascii, binary float, NeXus, Vitess
+- Retrieve old monitor data, read from file by Virtual_input ->
+  mcstas_r. not so easy -> NeXus -> runtime
+
+Components:
+- Check fluxes / absolute fluxes - provide experimental data +
+  instrument definition 
+- Powder component take input, written, should be tested.
+  2 lines, n lines.
+- Sample for SANS - existing components (single xtal ex.), other
+  parms, powder to be checked.
+- Bender, to be tested check for absolute fluxes, as compared to a
+  number of linear guides.
+- Virtual_Output - should be written, macro for calling Monitor_nD? -
+  See ALIAS in kernel section.
+- rand_target_rect, modification according to formula.
+- Sort components in cathegories, official, contrib, obsolete
+- $Log: not supported by cvs2svn $ - cvs revision no, etc. for both McStas kernel / lib,
+  automated using cvs?. Origin indicates research institution,
+  McVersion required McStas Version
+- unused variable (cc -Wall)
+- verbose mode for complex components
+- reduce number of input parameters (use options string ?)  
+
+Instruments:
+- Component test modules
+- Moved to lib/examples/H8,... including instrument files + data +
+  test results from "stable version" incl. test-script.
+
+Tools: (GUI, plotting, running etc.)
+- Improve GUI - scilab.
+- Status monitor support (Tool to be written - script) - access pid, daemon.
+- html / png / page generation. (perhaps scilab based?) - mcplot?
+- mcdisplay date checking for recompilation, through mcrun -n 1
+- export in several formats, ps, gif (scilab), png (Imagemagick when available)
+- mcdisplay show help info when no arguments (l. 517)
+- mcdoc: changed to show instruments also.
+
+Documentation:
+- FAQ list in manual
+- Examples for group, share etc.
+- Component manual info should be included, user auth. for contrib.
+- valid latex2e code. (latex2html, pdftex etc.)
+- doc directory.
+
+Community related:
+- Developers list mcstas-devel@risoe.dk
+- License problems? Inclusion of GPL'ed mersene twister etc, png. etc.
+
+*******************************************
+FUTURE:
+
+Kernel:
+- Option to trace background events - no, perhaps absorbed neutrons
+  instead?
+- Loop/Additive groups - very complex, in principle can be done within each 
+  component
+- MPI - pvm?
+- Nexus - function calls (partially written)
+
+Runtime:
+- Functions for Nexus (to be written)
+
+Components:
+- Inelastic samples, inclusion of already written components for this?
+  Test reqd.
+- Sample for amorphous materials, (inelastic?) structure from asympt. 
+  apx. from powder sample.
+
+Instruments:
+
+Tools: (GUI, plotting, running etc.)
+- Analyzer bank generator (RITA2 type setup), script
+- mcdisplay 3D?
+- BatchMaker? Ask author to contibute
+
+Documentation:
+
+Community related:
+- More user communication on ongoing projects.
+  (Either a web page or a monthly reminder to mailing list)
+- Intercomparison info on web page
+- Add new components (RISØ, Th. Hansen,...)
+(- Instrument archive facility on web page)
+- Contact NIMB for publications - ("recommended journal" on web)
+- Agitate neutron software -> ESS 
+- SCANS extenstion
+- v 2.0 release
+
+*******************************************
+USER:
+
+Components:
+- Monochromator w/ parasitic Bragg channel - not too complicated.
+- Andrew Garret components.
+
+Instruments:
+
+Tools: (GUI, plotting, running etc.)
+- BatchMaker? Ask author to contibute
+
+Documentation:
+
+Community related:
+

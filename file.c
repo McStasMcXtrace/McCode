@@ -1,12 +1,22 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: file.c
+*
+* %Identification
+* Written by: K.N.
+* Date: Sep 25, 1998
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.3
+*
 * Code to handle files and command line arguments.
 *
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: file.c
-*
-*	Author: K.N.			Sep 25, 1998
-*
-*	$Id: file.c,v 1.6 2003-01-21 08:25:08 pkwi Exp $
+*	$Id: file.c,v 1.7 2003-01-21 08:29:46 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.3  2000/02/15 07:40:59  kn
@@ -18,8 +28,6 @@
 *	Revision 1.1  1998/10/01 08:13:41  kn
 *	Initial revision
 *
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include <stdlib.h>
@@ -29,9 +37,9 @@
 
 static List search_list = NULL;
 
-/* MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir */
+/* MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir. Aug 27th, 2002: added share+contrib */
 static char *sys_subdir_table[] =
-  { "samples", "monitors", "sources", "optics", "misc" , "obsolete"};
+  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "share" };
 
 /* Attempt to open FILE in directory DIR (or current directory if DIR is
    NULL). */
@@ -74,7 +82,7 @@ try_open_component(char *dir, char *name)
   return NULL;
 }
 
-static char *
+char *
 get_sys_dir(void)
 {
   static char *sys_dir = NULL;

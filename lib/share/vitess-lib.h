@@ -1,18 +1,39 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Mosaic_anisotropic.comp
-*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
-* Library: vitess-lib.h
+* Library: share/vitess-lib.h
+*
+* %Identification
+* Written by: KN, EF
+* Date:   Aug 28, 2002
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.2
 *
 * This file is to be imported by the mcstas2vitess perl script 
 * It handles the way Vitess parses parameters.
-* Other functions are imported in the Virtual_imput and Virtual_output
-* components. 
+* Functions are used by the Virtual_input and Virtual_output
+* components.
+*
+* Usage: within SHARE
+* %include "vitess-lib"
+*
+* $Id: vitess-lib.h,v 1.3 2003-01-21 08:29:48 pkwi Exp $
+*
+*	$Log: not supported by cvs2svn $
+* Revision 1.2 2002/08/28 11:39:00 ef
+*	Changed to lib/share/c code
+*
+* Revision 1.1 2000/08/28 11:39:00 kn
+*	Initial revision
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
-#define VITESS_LIB_H
+#define VITESS_LIB_H "$Revision: 1.3 $"
 
 #include <math.h>
 #include <stdlib.h>
@@ -36,6 +57,8 @@ extern int vitess_tracepoints;	/* If true, use dots as progress-indicator */
 extern int vitess_repcnt;	/* Number of times to repeat this neutron */
 extern int vitess_bufsize;	/* The buffer size for neutron read/write */
 
+/* vitess-lib function prototypes */
+/* ========================================================================= */
 Neutron mcstas2vitess(double x, double y, double z,
                       double vx, double vy, double vz,
                       double t, 
@@ -53,3 +76,5 @@ int vitess_main(int argc, char *argv[], int **check_finished,
 		double *dptr[], char dchr[], char **sptr[], char schr[]);
 
 #endif
+
+/* end of vitess-lib.h */

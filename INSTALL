@@ -1,3 +1,24 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Documentation: INSTALL
+*
+* %Identification
+* Written by: KN
+* Date: 1997
+* Origin: Risoe
+* Release: all McStas
+* Version: all
+*
+* This file is part of McStas.
+* It details the installation procedure
+*
+*******************************************************************************/
+
 McStas uses autoconf to detect the system configuration and create the
 proper Makefiles needed for compilation. On Unix-like systems, you
 should be able to compile and install McStas using the following steps:
@@ -5,8 +26,8 @@ should be able to compile and install McStas using the following steps:
 1. Unpack the sources to somewhere convenient and change to the source
    directory:
 
-  gunzip -c mcstas-1.6-ill.tar.gz | tar xf -
-  cd mcstas-1.6-ill/
+  gunzip -c mcstas-<release>.tar.gz | tar xf -
+  cd mcstas-<release>/
 
 2. Configure and compile McStas:
 

@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: TOF_monitor.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: TOF_monitor
 *
 * %I
-* Written by:  KN, M. Hagan
+* Written by:  KN, M. Hagen
 * Date: August 1998
-* Version: $Revision: 1.13 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.14 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Rectangular Time-of-flight monitor.
 *
@@ -41,7 +44,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
   %{
-    int TOF_N[nchan];
+    double TOF_N[nchan];
     double TOF_p[nchan];
     double TOF_p2[nchan];
   %}
@@ -76,7 +79,7 @@ TRACE
       SCATTER;
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_1D(
         "Time-of-flight monitor",

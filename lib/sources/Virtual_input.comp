@@ -8,7 +8,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.2 $
+* Version:  $Revision: 1.3 $
 * Origin: McStas release 1.5.1/<a href="http://www.ill.fr">ILL</a>
 *
 * Source that generates neutron events from an ascii/binary 'source' file.

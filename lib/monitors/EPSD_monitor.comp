@@ -1,12 +1,18 @@
 /*******************************************************************************
-*  McStas, the neutron ray-tracing package
-*  Copyright(C) 2000-2001 Risoe National Laboratory.
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: EPSD_monitor.comp
 *
 * %I
 * Written by: Kim Lefmann 
 * Date: 16.4.00
-* Version: $Revision: 1.5 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.6 $
+* Origin: Risoe
+* Release: McStas 1.6
 * 
 * A monitor measuring neutron intensity vs. position, x, and neutron energy, E
 *
@@ -46,7 +52,7 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int PSD_N[nx][nE];
+    double PSD_N[nx][nE];
     double PSD_p[nx][nE];
     double PSD_p2[nx][nE];
   %}
@@ -80,7 +86,7 @@ TRACE
       PSD_p2[i][j] += p*p;
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_2D("EPSD monitor", "Position [m]", "Energy [meV]",
 		    xmin, xmax, Emin, Emax, nx, nE,

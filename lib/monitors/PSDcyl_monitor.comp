@@ -1,13 +1,16 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * %I
 * Written by: Kim Lefmann
 * Date: October 26, 2000
-* Version: $Revision: 1.4 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.5 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * A 2D Position-sensitive monitor. The shape is cylindrical with
 the axis vertical. The monitor covers the whole cylinder (360 degrees).
@@ -45,7 +48,7 @@ OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int PSD_N[nr][ny];
+    double PSD_N[nr][ny];
     double PSD_p[nr][ny];
     double PSD_p2[nr][ny];
   %}
@@ -100,7 +103,7 @@ TRACE
       ABSORB;
      }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_2D(
         "PSD cylindrical monitor",

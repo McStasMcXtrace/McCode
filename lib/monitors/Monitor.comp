@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Monitor.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Monitor
 *
 * %I
 * Written by: Kim Lefmann
 * Date: October 4, 1997
-* Version: $Revision: 1.11 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.12 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Simple single detector/monitor.
 *
@@ -43,7 +46,7 @@ OUTPUT PARAMETERS (Nsum, psum, p2sum)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int Nsum;
+    double Nsum;
     double psum, p2sum;
   %}
 INITIALIZE
@@ -63,7 +66,7 @@ TRACE
       SCATTER;
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_0D("Single monitor", Nsum, psum, p2sum);
   %}

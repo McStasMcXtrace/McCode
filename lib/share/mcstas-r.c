@@ -1,13 +1,35 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Runtime: share/mcstas-r.c
+*
+* %Identification
+* Written by: KN
+* Date:    Aug 29, 1997
+* Release: McStas 1.6
+* Version: 1.3
+*
 * Runtime system for McStas.
+* Embedded within instrument in runtime mode.
 *
-* 	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-* 	File name: mcstas-r.c
+* Usage: Automatically embbeded in the c code whenever required.
 *
-* 	Author: K.N.			Aug 27, 1997
+* $Id: mcstas-r.c,v 1.43 2003-01-21 08:29:47 pkwi Exp $
 *
-* Copyright (C) Risoe National Laboratory, 1997-1999, All rights reserved
-* ADD: Version: 1.6
+*	$Log: not supported by cvs2svn $
+* Revision 1.3 2002/08/28 11:36:37 ef
+*	Changed to lib/share/c code 
+*
+* Revision 1.2 2001/10/10 11:36:37 ef
+*	added signal handler
+*
+* Revision 1.1 1998/08/29 11:36:37 kn
+*	Initial revision
+*
 *******************************************************************************/
 
 #include <stdarg.h>
@@ -388,7 +410,7 @@ adapt_tree_free(struct adapt_tree *t)
 
 
 double
-mcestimate_error(int N, double p1, double p2)
+mcestimate_error(double N, double p1, double p2)
 {
   double pmean, n1;
   if(N <= 1)
@@ -618,12 +640,19 @@ static void
 mcruninfo_out(char *pre, FILE *f)
 {
   int i;
+  double run_num, ncount;
   time_t t;
+  
+  run_num = mcget_run_num();
+  ncount  = mcget_ncount();
   if(!f)
     return;
   time(&t);
   fprintf(f, "%sDate: %s", pre, ctime(&t)); /* Note: ctime adds '\n' ! */
-  fprintf(f, "%sNcount: %g\n", pre, mcget_ncount());
+  if (run_num == 0) 
+    fprintf(f, "%sNcount: %g\n", pre, ncount);
+  else
+    fprintf(f, "%sNcount: %g/%g\n", pre, run_num, ncount);
   fprintf(f, "%sTrace: %s\n", pre, mcdotrace ? "yes" : "no");
   if(mcseed)
     fprintf(f, "%sSeed: %ld\n", pre, mcseed);
@@ -764,11 +793,11 @@ mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
 void
 mcdetector_out_1D(char *t, char *xl, char *yl,
 		  char *xvar, double x1, double x2, int n,
-		  int *p0, double *p1, double *p2, char *f, char *c)
+		  double *p0, double *p1, double *p2, char *f, char *c)
 {
   int i;
   FILE *outfile = NULL;
-  int Nsum;
+  double Nsum;
   double Psum, P2sum;
   char *pre;
   int do_errb = p0 && p2;
@@ -844,7 +873,7 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
     {
       fprintf(outfile, "%s%g %g", pre, x1 + (i + 0.5)/n*(x2 - x1), p1[i]);
       if(do_errb)
-        fprintf(outfile, " %g %d", mcestimate_error(p0[i],p1[i],p2[i]), p0[i]);
+        fprintf(outfile, " %g %g", mcestimate_error(p0[i],p1[i],p2[i]), p0[i]);
       fprintf(outfile, "\n");
     }
     Nsum += p0 ? p0[i] : 1;
@@ -864,11 +893,11 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
 void
 mcdetector_out_2D(char *t, char *xl, char *yl,
 		  double x1, double x2, double y1, double y2, int m,
-		  int n, int *p0, double *p1, double *p2, char *f, char *c)
+		  int n, double *p0, double *p1, double *p2, char *f, char *c)
 {
   int i, j;
   FILE *outfile = NULL;
-  int Nsum;
+  double Nsum;
   double Psum, P2sum;
   char *pre;
   int do_errb = p0 && p2;
@@ -999,7 +1028,7 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
       for(i = 0; i < m; i++)
       {
         if(outfile)
-          fprintf(outfile, "%d ", p0[i*n + j]);
+          fprintf(outfile, "%g ", p0[i*n + j]);
       }
       if(outfile)
         fprintf(outfile,"\n");
@@ -1950,9 +1979,12 @@ void sighandler(int sig)
   /* MOD: E. Farhi, Sep 20th 2001: give more info */
   time_t t1;
 
-  t1 = time(NULL);
-
-  printf("\n# McStas: Signal %i detected", sig);
+  printf("\n# McStas: [pid %li] Signal %i detected", getpid(), sig);
+  if (!strcmp(mcsig_message, "sighandler"))
+  {
+    printf("\n# Fatal : unrecoverable loop ! Suicide.\n"); 
+    kill(0, SIGKILL);
+  }
   switch (sig) {
     case SIGINT : printf(" SIGINT (interrupt from terminal, Ctrl-C)"); break;
     case SIGQUIT : printf(" SIGQUIT (quit from terminal)"); break;
@@ -1962,23 +1994,25 @@ void sighandler(int sig)
     case SIGPIPE : printf(" SIGPIPE (broken pipe)"); break;
     case SIGPWR  : printf(" SIGPWR (power fail)"); break;
     case SIGUSR1 : printf(" SIGUSR1 (Display info)"); break;
-    case SIGUSR2 : printf(" SIGUSR2 (Finish simulation)"); break;
+    case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); break;
     case SIGILL  : printf(" SIGILL (Illegal instruction)"); break;
-    case SIGFPE  : printf(" SIGFPE (Math Error)"); break;
+    case SIGFPE  : printf(" SIGFPE (Math Error) errno=%i", errno); break;
     case SIGBUS  : printf(" SIGBUS (bus error)"); break;
     case SIGSEGV : printf(" SIGSEGV (Mem Error)"); break;
     case SIGURG  : printf(" SIGURG (urgent socket condition)"); break;
     default : break;
   }
   printf("\n");
-  printf("# Simulation: %s (%s)\n", mcinstrument_name, mcinstrument_source);
-  printf("# Breakpoint: %s ", mcsig_message);
+  printf("# Simulation: %s (%s) \n", mcinstrument_name, mcinstrument_source);
+  printf("# Breakpoint: %s ", mcsig_message); 
+  strcpy(mcsig_message, "sighandler");
   if (mcget_ncount() == 0)
     printf("(0 %%)\n" );
   else
   {
     printf("%.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
   }
+  t1 = time(NULL);
   printf("# Date      : %s",ctime(&t1));
 
   if (sig == SIGUSR1)
@@ -1988,11 +2022,20 @@ void sighandler(int sig)
     return;
   }
   else
-  if ((sig == SIGUSR2) || (sig == SIGTERM) || (sig == SIGPWR) || (sig == SIGINT))
+  if (sig == SIGUSR2)
+  {
+    printf("# McStas: Saving data and resume simulation (continue)\n");
+    mcsave();
+    fflush(stdout);
+    return;
+  }
+  else
+  if ((sig == SIGTERM) || (sig == SIGPWR) || (sig == SIGINT))
   {
     printf("# McStas: Finishing simulation (save results and exit)\n");
-    mcset_ncount(mcget_run_num());
-    return;
+    mcfinally();
+    mcsiminfo_close();
+    exit(0);
   }
   else
   {

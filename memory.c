@@ -1,14 +1,23 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Kernel: memory.c
+*
+* %Identification
+* Written by: K.N.
+* Date: Jul  1, 1997
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.9
+*
 * Memory management functions.
 *
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: memory.c
+*	$Id: memory.c,v 1.10 2003-01-21 08:29:46 pkwi Exp $
 *
-*	Author: K.N.			Jul  1, 1997
-*
-*	$Id: memory.c,v 1.9 2000-02-10 11:36:37 kn Exp $
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include <string.h>

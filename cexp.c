@@ -1,12 +1,22 @@
 /*******************************************************************************
-* Handle expressions used as arguments to components etc.
 *
-*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
-*	File name: cexp.h
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
-*	Author: K.N.			Aug  7, 1997
+* Kernel: cexp.c
 *
-*	$Id: cexp.c,v 1.9 2003-01-21 08:25:08 pkwi Exp $
+* %Identification
+* Written by: K.N.
+* Date: Aug  7, 1997
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.6
+*
+* Handle expressions used as arguments to components etc.	
+*
+*	$Id: cexp.c,v 1.10 2003-01-21 08:29:46 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.6  2000/07/27 09:04:59  kn
@@ -29,8 +39,6 @@
 *	Revision 1.1  1997/08/13 09:11:24  kn
 *	Initial revision
 *
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 #include <stdarg.h>
 #include <stdio.h>

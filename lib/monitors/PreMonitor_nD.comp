@@ -1,7 +1,9 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: PreMonitor_nD.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: PreMonitor_nD
 *
@@ -59,10 +61,6 @@ POLARISATION PARAMETERS (sx,sy,sz)
 /* Monitor_nD with premonitor should check that a PreMonitor exists */
 /* if Flag==0 in option parsing -> no pre monitor -> warning, normal monitor */
 
-DECLARE
-%{
-%}
-
 INITIALIZE
 %{
     struct MonitornD_Variables *Vars = &(MC_GETPAR(comp, Vars));
@@ -94,7 +92,6 @@ TRACE
     }
 %}
   
-
 MCDISPLAY
 %{
   /* A bit ugly; hard-coded dimensions. 0.1 m */

@@ -1,13 +1,19 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Hdiv_monitor.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Hdiv_monitor
 *
 *%I
-* Written by: KL,  Nov. 11, 1998
-* Written by: Thomas Hansen,  December, 1999
+* Written by: KL,  
+* Date: Nov. 11, 1998
+* Version: $Revision: 1.2 $
+* Origin: Risoe
+* Release: McStas 1.6
+* Modified by: Thomas Hansen,  December, 1999
 *
 *%D
 * A divergence sensitive monitor. The counts are distributed in 
@@ -45,7 +51,7 @@ OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int Div_N[nh];
+    double Div_N[nh];
     double Div_p[nh];
     double Div_p2[nh];
   %}
@@ -81,7 +87,7 @@ TRACE
       }
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_1D(
         "horizontal divergence monitor",

@@ -1,17 +1,40 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Mosaic_anisotropic.comp
-*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
-* Library: vitess-lib.c
+* Library: share/vitess-lib.c
+*
+* %Identification
+* Written by: KN, EF
+* Date:   Aug 28, 2002
+* Origin: Risoe
+* Release: McStas 1.6
+* Version: 1.2
 *
 * This file is to be imported by the mcstas2vitess perl script 
 * It handles the way Vitess parses parameters. 
-* Other functions are imported in the Virtual_imput and Virtual_output
-* components.
+* Functions are imported in the Virtual_imput and Virtual_output
+* components. Embedded within instrument if MC_EMBEDDED_RUNTIME is defined.
+*
+* Usage: within SHARE
+* %include "vitess-lib"
+*
+* $Id: vitess-lib.c,v 1.3 2003-01-21 08:29:48 pkwi Exp $
+*
+*	$Log: not supported by cvs2svn $
+* Revision 1.2 2002/08/28 11:39:00 ef
+*	Changed to lib/share/c code
+*
+* Revision 1.1 2000/08/28 11:39:00 kn
+*	Initial revision
 *******************************************************************************/
 
-#include "vitess-lib.h"
+#ifndef VITESS_LIB_H
+#error McStas : please import this library with %include "vitess-lib"
+#endif  
 
 /* Convert McStas state parameters to VITESS Neutron structure. In
    VITESS, the neutron velocity is represented by a wavelength in
@@ -192,3 +215,5 @@ int vitess_main(int argc, char *argv[], int **check_finished,
   mcfinally();
   return 0;
 }
+
+/* end of vitess-lib.c */

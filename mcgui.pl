@@ -716,13 +716,14 @@ sub menu_insert_component {
 }
 
 # Directories containing component definitions.
-# MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir
+# MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir. Aug 27th, 2002: contrib
 my @comp_sources =
     (["Source", ["$MCSTAS::sys_dir/sources"]],
      ["Optics", ["$MCSTAS::sys_dir/optics"]],
      ["Sample", ["$MCSTAS::sys_dir/samples"]],
      ["Monitor", ["$MCSTAS::sys_dir/monitors"]],
      ["Misc", ["$MCSTAS::sys_dir/misc"]],
+     ["Contrib", ["$MCSTAS::sys_dir/contrib"]],
      ["Obsolete", ["$MCSTAS::sys_dir/obsolete"]],
      ["Other", ["$MCSTAS::sys_dir", "."]]);
 

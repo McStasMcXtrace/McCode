@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: PSD_monitor.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: PSD_monitor
 *
 * %I
 * Written by: Kim Lefmann
 * Date: Feb 3, 1998
-* Version: $Revision: 1.12 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.13 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Position-sensitive monitor.
 *
@@ -49,7 +52,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
   %{
-    int PSD_N[nx][ny];
+    double PSD_N[nx][ny];
     double PSD_p[nx][ny];
     double PSD_p2[nx][ny];
   %}
@@ -80,7 +83,7 @@ TRACE
       SCATTER;
     }
   %}
-FINALLY
+SAVE
   %{
     DETECTOR_OUT_2D(
         "PSD monitor",

@@ -1,4 +1,45 @@
-This file is part of McStas  version 1.6-ill (alpha), released October 29th, 2001.
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Documentation: CHANGES
+*
+* %Identification
+* Written by: KN, KL, PEO, EF, PW
+* Date: 1997
+* Origin: Risoe, ILL, ANSTO
+* Release: McStas 1.6
+* Version: 1.6
+* Modified by: KN, October 26, 1998 : initial release 1.0
+* Modified by: KN, March 31, 1999   : release 1.1
+* Modified by: KN, January 31, 2000 : release 1.2
+* Modified by: KN, May 18, 2000     : release 1.3
+* Modified by: KN, July 28, 2000    : release 1.4
+* Modified by: KN, PEO, March 16, 2001: release 1.4.1
+* Modified by: PEO, EF, October, 10th, 2001: release 1.5
+* Modified by: EF, October 29th, 2001: unofficial release 1.6-ill (alpha)
+* Modified by: EF, Feb 18th, 2002: unofficial release 1.6.1 (beta)
+* Modified by: PW, KL, EF, autumn 2002 : merged release (1.6)
+*
+* This file is part of McStas  version 1.6, released <today Aug 28th, 2002>.
+* It gives a 'changes' list from the beginning of the project
+*
+*******************************************************************************/
+
+
+Changes for official McStas  1.6 release (from non official ILL release)
+- includes all ILL unofficial changes from 1.6-ill and 1.6.1 (see below)
+- Monitor_nD, replace p by other phys. quantity, easy task.
+- Monochromator, reflectivity curve from file. renormalisation by r0, simple.
+- may use fully shared C code, either through SHARE, and using 
+    #include MCSTAS "share/mylib.h"
+  that library.h should have something like
+    #ifdef MC_EMBEDDED_RUNTIME
+    #include "mylib.c "
+    #endif
 
 Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
 
@@ -22,7 +63,7 @@ Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
    and shown in plots (mcplot).
    
  - The Virtual_input replaces the Source_file component (see below), and can 
-   text, Vitess and binary float files of neutron events.
+   read text, Vitess and binary float files of neutron events.
 
 Changes in McStas v1.6-ill (alpha), October 29th, 2001.
 
