@@ -138,7 +138,7 @@ if ($file =~ m'\.sim$') { $plotter=0; }
 # Added E. Farhi, March 2003. Selection of the plotter (pgplot, scilab, matlab)
 if ($plotter eq 3 || $plotter eq 4) {
   # create a temporary scilab execution script
-  if ($temp_avail eq 0) { 
+  if (not $temp_avail) { 
     $tmp_file="mcplot_tmp000000.sce"; 
     $fh = new FileHandle "> $tmp_file";
     if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
