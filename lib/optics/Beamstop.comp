@@ -13,7 +13,7 @@
 * Date: January 2000
 * Release: McStas 1.6
 * Origin: Risoe
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 *
 * Rectangular/circular beam stop.
 *
@@ -67,11 +67,11 @@ MCDISPLAY
   if (radius != 0)
     circle("xy", 0, 0, 0, radius);
   else
-    multiline(5, (double)xmin, (double)ymin,
-            (double)xmin, (double)ymax,
-            (double)xmax, (double)ymax,
-            (double)xmax, (double)ymin,
-            (double)xmin, (double)ymin);
+    multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
 %}
 
 END
