@@ -1,0 +1,184 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* %I
+* Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
+* Date: 4.2.98
+* Version: $Revision: 1.1 $
+* Origin: McStas release
+* Modified by: KL, KN 20.3.98 (rewrite)
+*              KL, 28.09.01   (two lines)
+*              KL, 22.05.03   (background)
+*
+* General powder sample with two scattering vectors and incoherent backgorund.
+*
+* %P
+*
+* INPUT PARAMETERS
+*       
+* d_phi0    : Focussing angle corresponding to the vertical dimensions
+*             of the detector placed at the right distance (deg)
+* focus_r   : Focussing radius of incoherent (m) 
+* radius    : Radius of sample in (x,z) plane (m)       
+* h         : Height of sample y direction (m)
+* pack      : Packing factor (1)
+* Vc        : Volume of unit cell (AA^3)
+* sigma_a   : Absorption cross section per unit cell at 2200 m/s (fm^2)
+* sigma_inc : Incoherent cross section per unit cell (fm^2)
+* frac      : Fraction of incoherently scattered neutron rays
+*
+* q_1         : Scattering vector of reflection (AA^-1)
+* j_1         : Multiplicity of reflection (1)
+* F2_1        : Structure factor of reflection (fm^2)
+* w_1         : Intrinsic line broadening of reflection (AA^-1)
+* q_2
+* j_2
+* F2_2
+* w_2
+* DW        : Debye-Waller factor of reflection (1)
+* target_x  : 
+* target_y  : position of target to focus at (m)
+* target_z  :
+*
+* Variables calculated in the component
+*
+* my_s      : Attenuation factor due to scattering (m^-1)
+* my_a      : Attenuation factor due to absorbtion (m^-1)
+*
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/Powder1/">Old
+* description</A>, with explanation of focusing.
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/tests/powder/">
+* Test results</A> (not up-to-date).
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Powder2
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (d_phi0, radius, focus_r, h, pack, Vc, sigma_a, sigma_inc, 
+                    frac,
+                    j_1, q_1, F2_1, j_2, q_2, F2_2, w_1, w_2, DW,
+		    target_x, target_y, target_z)
+OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  double my_s_v2_1, my_s_v2_2, my_a_v, my_inc, q_v1, q_v2, w_v1, w_v2, v, solid_angle;
+%}
+INITIALIZE
+%{
+  my_a_v = sigma_a/Vc*2200;           /* Is not yet divided by v */
+  my_inc = sigma_inc/Vc;
+  my_s_v2_1 = PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_1*F2_1/q_1);  
+  my_s_v2_2 = PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_2*F2_2/q_2);  
+                                      /* Is not yet divided by v^2 */
+  q_v1 = q_1*K2V;
+  q_v2 = q_2*K2V;
+  w_v1 = w_1 * K2V;
+  w_v2 = w_2 * K2V;
+%}                                                                             
+TRACE
+%{
+  double t0, t1, v, v1,l_full, l, l_1, dt, d_phi, theta, my_s, my_s_n;
+  double aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, p_in, vout_x, vout_y, vout_z;
+
+  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, h))
+  {
+    if(t0 < 0)
+      ABSORB;
+    /* Neutron enters at t=t0. */
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (t1 - t0);             /* Length of full path through sample */
+    dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
+    PROP_DT(dt);                /* Point of scattering */
+    l = v*dt;                   /* Penetration in sample */
+
+    aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
+    aim_y = target_y-y;
+    aim_z = target_z-z;
+    my_s = (my_s_v2_1+my_s_v2_2)/(v*v)+my_inc; 
+        /* Total attenuation from scattering */
+    
+    if (rand01() >= frac)    
+     {   /* Make coherent scattering event */
+      /* Choose point on Debye-Scherrer cone */
+      d_phi = d_phi0*DEG2RAD/2.0*randpm1();
+      p *= d_phi0/360.0;
+      if (rand01() > 0.5)  /* Select between the two powder lines */
+       {
+        arg = (q_v1+w_v1*randnorm())/(2.0*v);
+        my_s_n = my_s_v2_1/(v*v);
+       }
+      else
+       {
+        arg = (q_v2+w_v2*randnorm())/(2.0*v);
+        my_s_n = my_s_v2_2/(v*v);
+       }
+      if(arg > 1)
+        ABSORB;                   /* No bragg scattering possible*/
+      theta = asin(arg);          /* Bragg scattering law */
+
+      vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, aim_x, aim_y, aim_z);
+      rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
+      rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
+      vx = vout_x;
+      vy = vout_y;
+      vz = vout_z;
+  
+      if(!cylinder_intersect(&t0, &t1, x, y, z, 
+                           vx, vy, vz, radius, h))
+      {
+        /* Strange error: did not hit cylinder */
+        printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+        exit(1);
+      }
+      l_1 = v*t1;
+
+      p *= 2*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-frac);
+/* printf("Powder p: %g \n",p); */
+      }  /* Coherent scattering event */
+    else
+     {  /* Make incoherent scattering event */
+      v = sqrt(vx*vx+vy*vy+vz*vz);
+      randvec_target_sphere(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+      v1 = sqrt(vx*vx+vy*vy+vz*vz);
+      vx *= v/v1;
+      vy *= v/v1;
+      vz *= v/v1;
+      if(!cylinder_intersect(&t0, &t1, x, y, z, 
+                           vx, vy, vz, radius, h))
+      {
+        /* Strange error: did not hit cylinder */
+        printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+        exit(1);
+      }
+      l_1 = v*t1;
+
+      p_in=p;
+      p *= l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(frac);
+      p *= solid_angle/(4*PI);
+/*  printf("Incoherent p_in: %g arg: %g  l_1: %g t0: %g t1: %g p: %g \n",
+          p_in,(my_a_v/v+my_s)*(l+l_1),l_1,t0,t1,p); */
+     }  /* Incoherent scattering event */
+  }
+  else
+    ABSORB;
+%}
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  circle("xz", 0,  h/2.0, 0, radius);
+  circle("xz", 0, -h/2.0, 0, radius);
+  line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+  line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+  line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+  line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+%}
+END
