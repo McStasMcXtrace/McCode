@@ -1532,7 +1532,7 @@ if ($Config{'osname'} eq 'MSWin32') {
       $inf_sim->{'hostfile'} = "$MCSTAS::sys_dir/tools/perl/mcstas-hosts";
       if (! -e $inf_sim->{'hostfile'}) {
         putmsg($cmdwin, "mcrun: No MPI/grid machine list. MPI/grid disabled...
-         Define $HOME/.mcstas-hosts or $hostfile.");
+         Define $HOME/.mcstas-hosts or $inf_sim->{'hostfile'}.");
         $inf_sim->{'ssh'}      = 0;
         $inf_sim->{'mpicc'}    = 0;
       }
