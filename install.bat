@@ -45,8 +45,8 @@
 @pause
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
 @SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%): 
-@echo Trying to guess your plotter...
-@start mcconfig.pl
+@echo Trying to guess your plotter and configuration...
+@mcconfig.pl
 @echo Installing in MCSTAS_SITE=%MCSTAS_SITE%
 @if exist %MCSTAS_SITE% move %MCSTAS_SITE% "%MCSTAS_SITE%.%DATE%"
 @echo Creating directory %MCSTAS_SITE%
@@ -68,9 +68,7 @@
 @echo Doing doc update using mcdoc...
 @set PATH=%PATH%;%MCSTAS_SITE%\bin
 @set MCSTAS=%MCSTAS_SITE%\lib
-@mcdoc.pl 
-@echo Installing Tk-CodeText extension (ppm)
-ppm install Tk-CodeText
+@mcdoc.pl --text
 @echo Placing Mcstas.pm in perl tree....
 @support\win32\perlinst.pl Tk\CodeText\Bash.pm support\Tk-CodeText-0.3.4\CodeText\McStas.pm
 @echo ..............................................................
