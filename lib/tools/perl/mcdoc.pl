@@ -1,178 +1,14 @@
 #! /usr/bin/perl -w
 
+if($ENV{"MCSTAS"}) {
+    use lib $ENV{"MCSTAS"};
+} else {
+    use lib "/usr/local/lib/mcstas";
+}
+
 use FileHandle;
 
-sub parse_header {
-    my ($f) = @_;
-    my $d;
-    my ($i,$where, $thisparm);
-
-    $where = "";
-    $d->{'identification'} = { 'author' => "(Unknown)",
-			       'origin' => "(Unknown)",
-			       'date' => "(Unknown)",
-			       'version' => "(Unknown)",
-			       'history' => [ ],
-			       'short'  => ""
-			   };
-    $d->{'description'} = undef;
-    $d->{'parhelp'} = { };
-    $d->{'links'} = [ ];
-    while(<$f>) {
-	if(/\%I[a-z]*/i) {
-	    $where = "identification";
-	} elsif(/\%D[a-z]*/i) {
-	    $where = "description";
-	} elsif(/\%P[a-z]*/i) {
-	    $where = "parameters";
-	    undef $thisparm;
-	} elsif(/\%L[a-z]*/i) {
-	    $where = "links";
-	    push @{$d->{'links'}}, "";
-	} elsif(/\%E[a-z]*/i) {
-	    last;
-	} else {
-	    s/^[ ]?\*[ ]?//;
-	    if($where eq "identification") {
-		if(/(Written by|Author):(.*)$/i) {
-		    $d->{'identification'}{'author'} = $2;
-		}elsif(/Origin:(.*)$/i) {
-		    $d->{'identification'}{'origin'} = $1;
-		}elsif(/Date:(.*)$/i) {
-		    $d->{'identification'}{'date'} = $1;
-		}elsif(/Version:(.*)$/i) {
-		    my $verstring = $1;
-		    # Special case for RCS style $[R]evision: 1.2 $ tags.
-		    # Note the need for [R] to avoid RCS keyword expansion
-		    # in the mcdoc source code!
-		    if($verstring =~ /^(.*)\$[R]evision: (.*)\$(.*)$/) {
-			$d->{'identification'}{'version'} = "$1$2$3";
-		    } else {
-			$d->{'identification'}{'version'} = $verstring;
-		    }
-		}elsif(/Modified by:(.*)$/i) {
-		    push @{$d->{'identification'}{'history'}}, $1;
-		} else {
-		    $d->{'identification'}{'short'} .= $_
-			unless /^\s*$/;
-		}
-	    } elsif($where eq "description") {
-		$d->{'description'} .= $_;
-	    } elsif($where eq "parameters") {
-		if(/^[ \t]*([a-zA-Z0-9Ê¯Â∆ÿ≈_]+)\s*:(.*)/) {
-		    $thisparm = \$d->{'parhelp'}{$1}{'full'};
-		    $$thisparm = "$2\n";
-		} elsif(/^[ \t]*$/) { # Empty line
-		    undef $thisparm;
-		} elsif($thisparm && /^(  | *\t)[ \t]*(.*)/) {
-		    # Continuation line needs at least two additional
-		    # indentations
-		    $$thisparm .= "$2\n";
-		} else {
-		    # Skip it
-		}
-	    } elsif($where eq "links") {
-		$d->{'links'}[-1] .= $_;
-	    } else {
-		# Skip.
-	    }
-	}
-    }
-    # Now search for unit specifications in the parameter information.
-    # This is a bit tricky due to various formats used in the old
-    # components. The preferred format is a specification of the unit
-    # in square brackets "[..]", either first or last in the short
-    # description. Specification using parenthesis "(..)" is also
-    # supported for backwards compatibility only, but only one set of
-    # nested parenthesis is supported.
-    for $i (keys %{$d->{'parhelp'}}) {
-	my $s = $d->{'parhelp'}{$i}{'full'};
-	my ($unit, $text);
-	if($s =~ /^\s*\(([^()\n]*(\([^()\n]*\))?[^()\n]*)\)\s*((.|\n)*)\s*$/){
-	    $unit = $1;
-	    $text = $3;
-	} elsif($s =~ /^\s*((.|\n)*)\s*\(([^()\n]*(\([^()\n]*\))?[^()\n]*)\)\s*$/){
-	    $unit = $3;
-	    $text = $1;
-	} elsif($s =~ /^\s*\[([^][\n]*)\]\s*((.|\n)*)\s*$/){
-	    $unit = $1;
-	    $text = $2;
-	} elsif($s =~ /^\s*((.|\n)*)\s*\[([^][\n]*)\]\s*$/){
-	    $unit = $3;
-	    $text = $1;
-	} else {
-	    # No unit. Just strip leading and trailing white space.
-	    $unit = "";
-	    if($s =~ /^\s*((.|\n)*\S)\s*$/) {
-		$text = $1;
-	    } else {
-		$s =~ /^\s*$/ || die "Internal: match 1";
-		$text = "";
-	    }
-	}
-	$d->{'parhelp'}{$i}{'unit'} = $unit;
-	$d->{'parhelp'}{$i}{'text'} = $text;
-    }
-    return $d;
-}
-
-# This sub gets component information by parsing the McStas
-# metalanguage. For now this is a regexp hack, later the real mcstas
-# parser will be used.
-sub get_comp_info {
-    my ($name, $d) = @_;
-    my $file = new FileHandle;
-    my ($cname, $decl, $init, $trace, $finally, $disp);
-    my (@dpar, @spar, @ipar, @opar);
-    open($file, $name)  || die "Could not open file $name\n";
-    local $/ = undef;		# Read the whole file in one go.
-    my $s = <$file>;
-    close($file);
-    if($s =~ /DEFINE\s+COMPONENT\s+([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)/i) {
-	$cname = $1;
-    } else {
-	$cname = "<Unknown>";
-    }
-    @dpar = ();
-    if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-ZÊ¯Â∆ÿ≈0-9_ \t\n\r=,/*]+)\)!i) {
-	foreach (split(",", $1)) {
-	    if(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
-		push @dpar, $1;
-		$d->{'parhelp'}{$1}{'default'} = $2;
-	    } elsif(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*$/) {
-		push @dpar, $1;
-	    } else {
-		print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname.\n";
-	    }
-	}
-    }
-    @spar = ();
-    if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-ZÊ¯Â∆ÿ≈0-9_ \t\n\r=,/*]+)\)!i) {
-	foreach (split(",", $1)) {
-	    if(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
-		push @spar, $1;
-		$d->{'parhelp'}{$1}{'default'} = $2;
-	    } elsif(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*$/) {
-		push @spar, $1;
-	    } else {
-		print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname.\n";
-	    }
-	}
-    }
-    @ipar = (@dpar, @spar);
-    if($s =~ /OUTPUT\s+PARAMETERS\s*\(([a-zA-ZÊ¯Â∆ÿ≈0-9_, \t\r\n]+)\)/i) {
-	@opar = split (/\s*,\s*/, $1);
-    } else {
-	@opar = ();
-    }
-    # DECLARE, INITIALIZE, ... blocks will have to wait for the real parser.
-    $d->{'name'} = $cname;
-    $d->{'inputpar'} = \@ipar;
-    $d->{'definitionpar'} = \@dpar;
-    $d->{'settingpar'} = \@spar;
-    $d->{'outputpar'} = \@opar;
-}
-
+require "mcfrontlib.pl";
 
 sub show_header {
     my ($d) = @_;
@@ -432,12 +268,9 @@ END
 	    my $comp = "$sec/$name";
 	    next unless $comp =~ /^(.*)\.(com|comp|cmp)$/;
 	    my $basename = $1;
-	    my $file = new FileHandle;
-	    open($file, $comp)  || die "Could not open file '$comp'\n";
-	    my $data = parse_header($file);
-	    close($file);
-	    die "Parse of file '$comp' failed" unless $data;
-	    get_comp_info($comp, $data);
+	    $data = component_information($comp);
+	    die "Failed to get information for component '$comp'" 
+		unless defined($data);
 print "$comp\n";
 #show_header($data);
 	    add_comp_html($data, $indexfile, $basename);
