@@ -2,9 +2,11 @@ use PDL;
 use PDL::Graphics::PGPLOT;
 use PGPLOT;
 
+require "mcfrontlib.pl";
+
 sub plot_array_2d {
     my ($info,$m,$n) = @_;
-    my $data = transpose(cat rcols $info->{'Filename'});
+    my $data = get_detector_data_2D($info);
     my ($x0,$x1,$y0,$y1) = @{$info->{'Limits'}};
     my ($dx,$dy) = (($x1 - $x0)/$m, ($y1 - $y0)/$n);
     my $tr = pdl [ $x0 + $dx/2, $dx, 0, $y0 + $dy/2, 0, $dy ];
@@ -34,13 +36,17 @@ sub plot_array_2d {
 
 sub plot_array_1d {
     my ($info,$npt) = @_;
-    my ($x,$N,$p1,$p2) = rcols $info->{'Filename'};
+    my $r = get_detector_data_1D($info);
+    my $x = $r->{$info->{'Xvar'}[0]};
+    my $I = $r->{$info->{'Yvar'}[0]};
     my ($x0,$x1) = @{$info->{'Limits'}};
-    my $N1 = $N + ($N == 0);	# N with 0 entries set to 1
-    my $N2 = $N1 + ($N1 == 1);	# N with 0/1 entries set to 2
-    my $pmean = $p1/$N1;
-    my $err = sqrt(abs($N/($N2 - 1)*($p2 - $pmean*$pmean)));
-    my ($min, $max) = (min($p1 - 2*$err), max($p1 + 2*$err));
+    my ($min, $max, $err);
+    if($info->{'Yerr'} && $info->{'Yerr'}[0]) {
+	$err = $r->{$info->{'Yerr'}[0]};
+	($min, $max) = (min($I - 2*$err), max($I + 2*$err));
+    } else {
+	($min, $max) = (min($I), max($I));
+    }
     if($min == $max) {
 	if($min == 0) {
 	    ($min, $max) = (0, 1);
@@ -53,8 +59,8 @@ sub plot_array_1d {
     hold;
     pgvstd;
     pgswin($x0,$x1,$min,$max);
-    line($x, $p1);
-    errb($x, $p1, $err);
+    line($x, $I);
+    errb($x, $I, $err) if $err;
     pgbox("BCNST", 0.0, 0.0, "BCNST", 0.0, 0.0);
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
     pgmtxt("T", 2.5, 0.5, 0.5, "$info->{'Title'}     $info->{'Component'}");
@@ -100,6 +106,7 @@ sub plot_dat_info {
 
 sub overview_plot {
     my ($devspec, $datalist, $interactive) = @_;
+    return unless @$datalist;
     my ($nx, $ny) = calc_panel_size(int(@$datalist));
     my $dev = pgopen("$devspec");
     die "PGOPEN failed!" unless $dev > 0;
