@@ -137,6 +137,7 @@ function win = mcplot_addmenu(use_common_menu)
         'Colormap/_Pink',...
         'Colormap/Inv. Pink',...
         'View Scan step...', ...
+        'Open McStas result file...', ...
         'About McStas...',...
         'Exit'];        // exit must be last choice
   if exists('with_gtk')
@@ -200,7 +201,7 @@ function mcplot_menu_action(k, gwin)
     gwin = xget('window');
   end
    
-  item = [ 24, 1, 27, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 26, 22, 18];
+  item = [ 24, 1, 27, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 26, 28, 22, 18];
   
   if argn(2) == 0, k = 1; end
   if MCPLOT.ShiftedItems
@@ -431,6 +432,8 @@ function mcplot_menu_action(k, gwin)
       end // if length(find(fig_names == 'superdata'))
     case 27 then  // duplicate (log scale)
       0; // NOP
+    case 28 then  // open new mcstas.m file
+      mcplot('open_mcplot_fileselector','overview');
     end 
     if item(k)~= 18, xbasr(); end // update plot
     
