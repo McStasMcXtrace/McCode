@@ -1,0 +1,70 @@
+/***********************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Source_aim
+*
+* Written by: KL, October 30, 1997
+* Modified by: KL, KN, October 5, 1998
+*
+* The routine is a circular neutron source, which aims at a square target
+* centered at the beam (in order to improve MC-acceptance rate).  The angular
+* divergence is then given by the dimensions of the target. The neutron energy is
+* uniformly distrubuted between E0-dE and E0+dE.
+*
+* ToDo: More flexible specification of E distribution.
+*
+* radius : Radius of circle in (x,y,0) plane where neutrons
+* 	   are generated (m).
+* dist   : Distance to target along z axis (m).
+* xw     : Width(x) of target (m)
+* yh     : Height(y) of target (m)
+* E0     : Mean energy of neutrons (meV).
+* dE     : Energy spread of neutrons (meV).
+*
+*/
+
+DEFINE COMPONENT Source_flat
+DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+OUTPUT PARAMETERS (hdiv, vdiv, p_in)
+DECLARE
+%{
+ double hdiv,vdiv;
+ double p_in;
+%}
+INITIALIZE
+%{
+ hdiv = atan(xw/(2.0*dist));
+ vdiv = atan(yh/(2.0*dist));
+ p_in = (4*hdiv*vdiv)/(4*PI); /* Small angle approx. */
+%}
+TRACE
+%{
+ double theta0,phi0,chi,theta,phi,E,v,r;
+
+ p=p_in;
+ z=0;
+
+ chi=2*PI*rand01();                          /* Choose point on source */
+ r=sqrt(rand01())*radius;                    /* with uniform distribution. */
+ x=r*cos(chi);
+ y=r*sin(chi);
+
+ theta0= -atan(x/dist);              /* Angles to aim at target centre */
+ phi0= -atan(y/dist);
+
+ theta=theta0+hdiv*randpm1();        /* Small angle approx. */ 
+ phi=phi0+vdiv*randpm1();
+
+ E=E0+dE*randpm1();                  /* Assume linear distribution */
+ v=sqrt(E)*SE2V;
+
+ vz=v*cos(phi)*cos(theta);
+ vy=v*sin(phi);
+ vx=v*cos(phi)*sin(theta); 
+%}
+END
