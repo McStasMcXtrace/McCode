@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.79 2003-11-28 18:08:32 farhi Exp $
+* $Id: mcstas-r.c,v 1.80 2004-01-23 16:14:12 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.79  2003/11/28 18:08:32  farhi
+* Corrected error for IDL import
+*
 * Revision 1.77  2003/10/22 15:51:26  farhi
 * <instr> -i also displays default parameter values (if any), which may be
 * read by mcgui for init of Run Simulation dialog
@@ -1159,102 +1162,151 @@ mc_srandom (unsigned int x)
 /* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
 /* See http://www.math.keio.ac.jp/~matumoto/emt.html for original source. */
 
-/*   Coded by Takuji Nishimura, considering the suggestions by */
-/* Topher Cooper and Marc Rieffel in July-Aug. 1997.           */
 
-/* This library is free software; you can redistribute it and/or   */
-/* modify it under the terms of the GNU Library General Public     */
-/* License as published by the Free Software Foundation; either    */
-/* version 2 of the License, or (at your option) any later         */
-/* version.                                                        */
-/* This library is distributed in the hope that it will be useful, */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of  */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.            */
-/* See the GNU Library General Public License for more details.    */
-/* You should have received a copy of the GNU Library General      */
-/* Public License along with this library; if not, write to the    */
-/* Free Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA   */ 
-/* 02111-1307  USA                                                 */
+/* 
+   A C-program for MT19937, with initialization improved 2002/1/26.
+   Coded by Takuji Nishimura and Makoto Matsumoto.
 
-/* Copyright (C) 1997 Makoto Matsumoto and Takuji Nishimura.       */
-/* When you use this, send an email to: matumoto@math.keio.ac.jp   */
-/* with an appropriate reference to your work.                     */
+   Before using, initialize the state by using mt_srandom(seed)  
+   or init_by_array(init_key, key_length).
 
+   Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
+   All rights reserved.                          
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+
+     1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+     2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+     3. The names of its contributors may not be used to endorse or promote 
+        products derived from this software without specific prior written 
+        permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+   Any feedback is very welcome.
+   http://www.math.keio.ac.jp/matumoto/emt.html
+   email: matumoto@math.keio.ac.jp
+*/
+
+#include <stdio.h>
+
+/* Period parameters */  
 #define N 624
 #define M 397
-#define MATRIX_A 0x9908b0df   /* constant vector a */
-#define UPPER_MASK 0x80000000 /* most significant w-r bits */
-#define LOWER_MASK 0x7fffffff /* least significant r bits */
-
-#define TEMPERING_MASK_B 0x9d2c5680
-#define TEMPERING_MASK_C 0xefc60000
-#define TEMPERING_SHIFT_U(y)  (y >> 11)
-#define TEMPERING_SHIFT_S(y)  (y << 7)
-#define TEMPERING_SHIFT_T(y)  (y << 15)
-#define TEMPERING_SHIFT_L(y)  (y >> 18)
+#define MATRIX_A 0x9908b0dfUL   /* constant vector a */
+#define UPPER_MASK 0x80000000UL /* most significant w-r bits */
+#define LOWER_MASK 0x7fffffffUL /* least significant r bits */
 
 static unsigned long mt[N]; /* the array for the state vector  */
 static int mti=N+1; /* mti==N+1 means mt[N] is not initialized */
 
-/* initializing the array with a NONZERO seed */
-void
-mt_srandom(unsigned long seed)
+/* initializes mt[N] with a seed */
+void mt_srandom(unsigned long s)
 {
-    /* setting initial seeds to mt[N] using         */
-    /* the generator Line 25 of Table 1 in          */
-    /* [KNUTH 1981, The Art of Computer Programming */
-    /*    Vol. 2 (2nd Ed.), pp102]                  */
-    mt[0]= seed & 0xffffffff;
-    for (mti=1; mti<N; mti++)
-        mt[mti] = (69069 * mt[mti-1]) & 0xffffffff;
+    mt[0]= s & 0xffffffffUL;
+    for (mti=1; mti<N; mti++) {
+        mt[mti] = 
+	    (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti); 
+        /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
+        /* In the previous versions, MSBs of the seed affect   */
+        /* only MSBs of the array mt[].                        */
+        /* 2002/01/09 modified by Makoto Matsumoto             */
+        mt[mti] &= 0xffffffffUL;
+        /* for >32 bit machines */
+    }
 }
 
-unsigned long
-mt_random(void)
+/* initialize by an array with array-length */
+/* init_key is the array for initializing keys */
+/* key_length is its length */
+void init_by_array(init_key, key_length)
+unsigned long init_key[], key_length;
+{
+    int i, j, k;
+    mt_srandom(19650218UL);
+    i=1; j=0;
+    k = (N>key_length ? N : key_length);
+    for (; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525UL))
+          + init_key[j] + j; /* non linear */
+        mt[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
+        i++; j++;
+        if (i>=N) { mt[0] = mt[N-1]; i=1; }
+        if (j>=key_length) j=0;
+    }
+    for (k=N-1; k; k--) {
+        mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941UL))
+          - i; /* non linear */
+        mt[i] &= 0xffffffffUL; /* for WORDSIZE > 32 machines */
+        i++;
+        if (i>=N) { mt[0] = mt[N-1]; i=1; }
+    }
+
+    mt[0] = 0x80000000UL; /* MSB is 1; assuring non-zero initial array */ 
+}
+
+/* generates a random number on [0,0xffffffff]-interval */
+unsigned long mt_random(void)
 {
     unsigned long y;
-    static unsigned long mag01[2]={0x0, MATRIX_A};
+    static unsigned long mag01[2]={0x0UL, MATRIX_A};
     /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
     if (mti >= N) { /* generate N words at one time */
         int kk;
 
-        if (mti == N+1)   /* if sgenrand() has not been called, */
-            mt_srandom(4357); /* a default initial seed is used   */
+        if (mti == N+1)   /* if mt_srandom() has not been called, */
+            mt_srandom(5489UL); /* a default initial seed is used */
 
         for (kk=0;kk<N-M;kk++) {
             y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
-            mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1];
+            mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1UL];
         }
         for (;kk<N-1;kk++) {
             y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
-            mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1];
+            mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1UL];
         }
         y = (mt[N-1]&UPPER_MASK)|(mt[0]&LOWER_MASK);
-        mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1];
+        mt[N-1] = mt[M-1] ^ (y >> 1) ^ mag01[y & 0x1UL];
 
         mti = 0;
     }
   
     y = mt[mti++];
-    y ^= TEMPERING_SHIFT_U(y);
-    y ^= TEMPERING_SHIFT_S(y) & TEMPERING_MASK_B;
-    y ^= TEMPERING_SHIFT_T(y) & TEMPERING_MASK_C;
-    y ^= TEMPERING_SHIFT_L(y);
+
+    /* Tempering */
+    y ^= (y >> 11);
+    y ^= (y << 7) & 0x9d2c5680UL;
+    y ^= (y << 15) & 0xefc60000UL;
+    y ^= (y >> 18);
 
     return y;
 }
-#undef N
-#undef M
-#undef MATRIX_A
-#undef UPPER_MASK
-#undef LOWER_MASK
-#undef TEMPERING_MASK_B
-#undef TEMPERING_MASK_C
-#undef TEMPERING_SHIFT_U
-#undef TEMPERING_SHIFT_S
-#undef TEMPERING_SHIFT_T
-#undef TEMPERING_SHIFT_L
+
+#undef N 
+#undef M 
+#undef MATRIX_A 
+#undef UPPER_MASK 
+#undef LOWER_MASK 
+
 /* End of "Mersenne Twister". */
 
 /* End of McStas random number routine. */
