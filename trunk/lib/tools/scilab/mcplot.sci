@@ -225,6 +225,8 @@ function mcplot_menu_action(k, gwin)
         if length(d), mcplot_set_global(d, nwin, 0); end
         d = []; execstr('d = ThisFigure.instrument;','errcatch');
         if length(d), mcplot_set_global(d, nwin, 0); end
+	xclear();
+      	xtape('replayna', gwin, 90, 0);	// top view
       end
       xinfo(t); mprintf('%s\n',t);
     case 2 then // Edit/_data file
@@ -656,7 +658,7 @@ function [object,count]=mcplot(object, options, id)
 // mcplot: plot a McStas simulation result
 //
 // This function displays a McStas simulation result either as many windows
-// or on a single window with subplots. It also retunrs the McStas simulation 
+// or on a single window with subplots. It also returns the McStas simulation 
 // structure. An 'id' may be specified for filtering within structure
 //
 // input:
@@ -678,6 +680,9 @@ if argn(2) <= 2, id = ''; end
 if typeof(options) ~= 'string', options = ''; end
 if ~length(options), options = '-overview'; end
 options = convstr(options, 'l');  // to lower case
+if ~length(strindex(options,'plot')) &  ~length(strindex(options,'overview')) &  ~length(strindex(options,'action'))
+	options = options+' -overview ';
+end
 
 // handle file name specification in 'object'
 if typeof(object) == 'string' // if object is a string
