@@ -1,14 +1,19 @@
 /*******************************************************************************
 * Code generation from instrument definition.
 *
-* 	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+* 	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 * 	File name: cogen.c
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.8 1998-10-01 08:09:09 kn Exp $
+* 	$Id: cogen.c,v 1.9 1998-10-02 08:35:49 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.8  1998/10/01 08:09:09  kn
+* 	Embed the runtime files mcstas-r.[ch] inside the generated C program.
+* 	Handle the --trace option.
+* 	Include main() in the generated C program.
+*
 * 	Revision 1.7  1998/09/24 12:14:46  kn
 * 	Rotation angles in instrument definitions are now given in degrees, with
 * 	a backward compatibility mode for the old behaviour using radians.
@@ -33,7 +38,7 @@
 * 	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include <stdarg.h>
@@ -81,6 +86,7 @@
 * ##init	Function containing initialization code.
 * ##inputtable	Table of instrument parameters.
 * ##NUMIPAR	Macro giving the number of instrument parameters.
+* ##numipar	Global variable with the value of ##NUMIPAR.
 * ##c<C>_<P>	From definition or setting parameter <P> in component
 *		instance <C>.
 * ##posa<COMP>	Absolute position of coordinate system of <COMP>.
@@ -283,7 +289,7 @@ cogen_instrument_scope(struct instr_def *instr,
 
 static void
 cogen_comp_scope_rec(char *compname, List_handle def, List_handle set,
-		     void (*func)(void *), void *data)
+		     List_handle out, void (*func)(void *), void *data)
 {
   char *par;
 
@@ -294,13 +300,19 @@ cogen_comp_scope_rec(char *compname, List_handle def, List_handle set,
     if(par == NULL)
       def = NULL;		/* Now finished with definition parameters. */
   }
-  if(def == NULL)
+  if(def == NULL && set != NULL)
+  {
     par = list_next(set);
+    if(par == NULL)
+      set = NULL;		/* Now finished with setting parameters. */
+  }
+  if(def == NULL && set == NULL)
+    par = list_next(out);
   if(par != NULL)
   {
     /* Create #define / #undef pair for this parameter around rest of code. */
     coutf("#define %s %sc%s_%s", par, ID_PRE, compname, par);
-    cogen_comp_scope_rec(compname, def, set, func, data);
+    cogen_comp_scope_rec(compname, def, set, out, func, data);
     coutf("#undef %s", par);
   }
   else
@@ -312,13 +324,17 @@ cogen_comp_scope_rec(char *compname, List_handle def, List_handle set,
 static void
 cogen_comp_scope(struct comp_inst *comp, void (*func)(void *), void *data)
 {
-  List_handle def, set;
+  List_handle def, set, out;
 
+  coutf("#define %scompcurname \"%s\"", ID_PRE, comp->name);
   def = list_iterate(comp->def->def_par);
   set = list_iterate(comp->def->set_par);
-  cogen_comp_scope_rec(comp->name, def, set, func, data);
+  out = list_iterate(comp->def->out_par);
+  cogen_comp_scope_rec(comp->name, def, set, out, func, data);
+  list_iterate_end(out);
   list_iterate_end(set);
   list_iterate_end(def);
+  coutf("#undef %scompcurname", ID_PRE, comp->name);
 }
 
 
@@ -335,7 +351,7 @@ cogen_comp_decls_doit(void *arg)
 }
 
 static void
-cogen_comp_decls(struct comp_inst *comp, List_handle def, List_handle set)
+cogen_comp_decls(struct comp_inst *comp)
 {
   cogen_comp_scope(comp, cogen_comp_decls_doit, comp);
 }
@@ -430,16 +446,10 @@ cogen_decls(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
-    List_handle def, set;
-    
     if(list_len(comp->def->decl_code->lines) > 0)
     {
       coutf("/* User declarations for component '%s'. */", comp->name);
-      def = list_iterate(comp->def->def_par);
-      set = list_iterate(comp->def->set_par);
-      cogen_comp_decls(comp, def, set);
-      list_iterate_end(set);
-      list_iterate_end(def);
+      cogen_comp_decls(comp);
       cout("");
     }
   }

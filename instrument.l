@@ -3,14 +3,17 @@
 /*******************************************************************************
 * Flex scanner for instrument definition files.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: instrument.l
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.13 1998-10-01 11:44:47 kn Exp $
+*	$Id: instrument.l,v 1.14 1998-10-02 08:36:34 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.13  1998/10/01 11:44:47  kn
+*	Added support for string expressions.
+*
 *	Revision 1.12  1998/10/01 08:09:49  kn
 *	Use the search path for %include files.
 *
@@ -50,7 +53,7 @@
 *	of the name.
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 
@@ -137,6 +140,7 @@ FINALLY		return TOK_FINALLY;
 EXTERN		return TOK_EXTERN;
 INITIALIZE	return TOK_INITIALIZE;
 INSTRUMENT	return TOK_INSTRUMENT;
+OUTPUT		return TOK_OUTPUT;
 PARAMETERS	return TOK_PARAMETERS;
 RELATIVE	return TOK_RELATIVE;
 ROTATED		return TOK_ROTATED;

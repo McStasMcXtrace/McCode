@@ -2,14 +2,17 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* 	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+* 	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 * 	File name: mcstas.h
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.11 1998-10-01 11:47:24 kn Exp $
+* 	$Id: mcstas.h,v 1.12 1998-10-02 08:38:51 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.11  1998/10/01 11:47:24  kn
+* 	Added str_dup_n(), exp_string(), and error_encountered.
+*
 * 	Revision 1.10  1998/10/01 08:13:26  kn
 * 	Added definitions for file.c
 * 	Added information to struct instr_def
@@ -45,7 +48,7 @@
 * 	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 
@@ -371,7 +374,7 @@ struct code_block
 struct comp_def
   {
     char *name;			/* Component name. */
-    List def_par, set_par, state_par; /* Formal parameters. */
+    List def_par, set_par, out_par, state_par; /* Formal parameters. */
     struct code_block *decl_code; /* Declaration code. */
     struct code_block *init_code; /* Initializeation code. */
     struct code_block *trace_code; /* Ray-trace simulation code. */
