@@ -6,13 +6,14 @@
 *
 * Component: V_selector
 *
-* Written by: KL, Nov 25, 1998
+* Written by:  KL, Nov 25, 1998
+* Last change: KL, Dec 18, 1998
 *
 * Velocity selector consisting of rotating Soller-like blades
 * defining a helically twisted passage.
 * Geometry defined by two identical, centered apertures at 12 o'clock
-* position.
-* Transmission is analytical assuming a continuous source
+* position, Origo is at the centre of the selector.
+* Transmission is analytical assuming a continuous source.
 *
 * INPUT PARAMETERS:
 *
@@ -36,18 +37,19 @@ SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-    double dt0, dt1, r_i, r_f, theta_i, theta_f;
-    double A, psi, phi_rad, omega;
+    double dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f;
+    double A, d_s_phi, phi_rad, omega;
 %}
 INITIALIZE
 %{
-#define RPM2OM 2*PI/60.0;
+#define RPM2OM 2*PI/60.0
     omega=rot*RPM2OM;
-    phi_rad = phi*PI/180.0;
+    phi_rad = phi*DEG2RAD;
 %}
 TRACE
 %{
-    PROP_Z0; /* Propagate to the entry aperture */
+    dt1= (-l0/2.0 - z)/vz;
+    PROP_DT(dt1); /* Propagate to the entry aperture */
     if (x<(-width/2.0) || x>(width/2.0) || y<(-height/2.0) || y>(height/2.0))
       ABSORB;
 
@@ -68,8 +70,9 @@ TRACE
 
     /* Calculate analytical transmission assuming continuous source */
     
-    psi = theta_f-theta_i;
-    A = nb/(2*PI)*( 2.0*tb/(r_i+r_f)+fabs(phi_rad+psi-omega*l1/vz) ); 
+    r_mean = (r_i + r_f)/2.0;          /* Approximation using mean radius */
+    d_s_phi = theta_f-theta_i;
+    A = nb/(2*PI)*( tb/r_mean + fabs(phi_rad+d_s_phi-omega*l1/vz) ); 
     if (A >= 1)
       ABSORB;
     p*= Tl+(1-Tl)*(1-A);
