@@ -67,7 +67,7 @@ use Tk;
 use Tk::TextUndo;
 use Tk::ROText;
 use Tk::DialogBox;
-use Tk::widgets qw(TextEdit);
+use Tk::widgets qw(CodeText);
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
@@ -1313,83 +1313,30 @@ sub editor_quit {
     }
 }    
 
-sub Tk::TextEdit::SetComment
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) {
-     # Sub to redefine the LINE_COMMENT_STRING of the TextEdit widget...
-     # Don't know why, but this has to be done as an extension to the TextEdit 
-     # class... Will update this if something more clever is answered from
-     # comp.lang.perl.tk
-     
-     my ($w,$comment,$endcomment)=@_;
-     my $oldcomment = $w->{'LINE_COMMENT_STRING'};
-     $w->{'LINE_COMMENT_STRING'}=$comment;
-     $w->{'END_COMMENT_STRING'}=$endcomment;
- }
-}
-
-sub Tk::TextUndo::insertStringAtEndOfSelectedLines
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) {
-     my ($w,$insert_string)=@_;
-     $w->addGlobStart;
-     $w->MarkSelectionsSavePositions;
-     foreach my $line ($w->GetMarkedSelectedLineNumbers)
-     {
-         $w->insert($line.'.end', $insert_string);
-     }
-     $w->RestoreSelectionsMarkedSaved;
-     $w->addGlobEnd;
- }
-}
-
-sub Tk::TextUndo::deleteStringAtEndOfSelectedLines
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) {
-     my ($w,$insert_string)=@_;
-     $w->addGlobStart;
-     $w->MarkSelectionsSavePositions;
-     my $length = length($insert_string);
-     foreach my $line ($w->GetMarkedSelectedLineNumbers)
-     {
-         # First, extract full string to determine starting point:
-         my $tmpstart = $line.'.0';
-         my $end   = $line.'.end';
-         my $temp = $w->get($tmpstart, $end);
-         my $len = length($temp);
-         my $realstart = $len - $length;
-         $realstart = ".${realstart}";
-         my $start = $line.$realstart;
-         my $current_text = $w->get($start, $end);
-         next unless ($current_text eq $insert_string);
-         $w->delete($start, $end);
-     }
-     $w->RestoreSelectionsMarkedSaved;
-     $w->addGlobEnd;
- }
-}
-
-sub Tk::TextEdit::CommentSelectedLines
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) {
-     my($w)=@_;
-     $w->insertStringAtStartOfSelectedLines($w->{'LINE_COMMENT_STRING'});
-     $w->insertStringAtEndOfSelectedLines($w->{'END_COMMENT_STRING'});
- }
-}
-
-sub Tk::TextEdit::UncommentSelectedLines
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) { 
-     my($w)=@_;
-     $w->deleteStringAtStartOfSelectedLines($w->{'LINE_COMMENT_STRING'});
-     $w->deleteStringAtEndOfSelectedLines($w->{'END_COMMENT_STRING'});
- }
+sub Tk::CodeText::selectionModify {
+	my ($cw, $char, $mode) = @_;
+	my @ranges = $cw->tagRanges('sel');
+	my $charlength = length($char);
+	if (@ranges >= 2) {
+		my $start = $cw->index($ranges[0]);
+		my $end = $cw->index($ranges[1]);
+		my $firststart = $start;
+		while ($cw->compare($start, "<=", $end)) {
+			if ($mode) {
+			    if ($cw->get("$start linestart", "$start linestart + $charlength chars") eq $char) {
+					$cw->delete("$start linestart", "$start linestart + $charlength chars");
+				}
+			} else {
+			    $cw->insert("$start linestart", $char);
+		    	}
+			$start = $cw->index("$start + 1 lines");
+		    }
+		if (!$mode) {
+		    @ranges = $cw->tagRanges('sel');
+		    @ranges = ($firststart, $ranges[@ranges-1]);
+		}
+		$cw->tagAdd('sel', @ranges);
+	    }
 }
 
 
@@ -1399,20 +1346,15 @@ sub setup_edit {
     my $w = $mw->Toplevel;
     my $e;
     # Create the editor text widget.
-    $e = $w->Scrolled('TextEdit',-relief => 'sunken', -bd => '2', -setgrid => 'true',
-                      -height => 24, wrap => 'none', -scrollbars =>'se');
-    
-    # Put C++ style comment chars in... This will at least work with gcc...
-    # Later, I might work a little harder to get proper /* */ comment chars to 
-    # work, which will not rely on gcc as compiler...
-    # Comment lines in/out using <F7> and <F8>
-    #
-    # Unfortunately, this is not working on Win32...
-    if (!($Config{'osname'} eq 'MSWin32')) {
-        $e->SetComment("/* "," */");
-    }
-    
+#    require Tk::CodeText::McStas;
+    $e = $w->Scrolled('CodeText',-relief => 'sunken', -bd => '2', -setgrid => 'true',
+                      -height => 24, wrap => 'none', -scrollbars =>'se',  
+                      -commentchar => '// ', -indentchar => "  ", -updatecall => \&update_line, -syntax => 'Perl');
     my $menu = $e->menu;
+    $w->bind('<F5>' => [\&Tk::CodeText::selectionIndent]);
+    $w->bind('<F6>' => [\&Tk::CodeText::selectionUnIndent]);
+    $w->bind('<F7>' => [\&Tk::CodeText::selectionComment]);
+    $w->bind('<F8>' => [\&Tk::CodeText::selectionUnComment]);
     $w->configure(-menu => $menu);
     my $insert_menu = $menu->Menubutton(-text => 'Insert',  -underline => 0, -tearoff => 0);
     # This is only done for backward compatibility - we want to use Alt+s for saving...
@@ -1427,14 +1369,13 @@ sub setup_edit {
     $edit_control = $e;
     $edit_window = $w;
     $edit_label = $label;
-    $edit_control->SetGUICallbacks([\&update_line,sub{$edit_control->HighlightAllPairsBracketingCursor}]);
     if ($current_sim_def) {
       $w->title("Edit: $current_sim_def");
       if (-r $current_sim_def) {
           $e->Load($current_sim_def);
       }
     } else {
-      $w->title("Edit: Start with Insert/Instrument template");
+      $w->title("CodeEdit: Start with Insert/Instrument template");
     }
 }
 

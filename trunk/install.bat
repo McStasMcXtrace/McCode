@@ -33,6 +33,8 @@
 @echo       Start/Settings/Control Panel/System/Advanced/Environment Variables
 @echo   * Perl and Tcl/Tk from:
 @echo       http://www.activestate.com/Products/Download
+@echo   IMPORTANT:
+@echo   You must install the ppm option with the Perl package!
 @echo   * Matlab or Scilab from http://www.scilab.org in C:\Scilab
 @echo       With Scilab, add the C:\Program Files\Scilab\bin (or equivalent)
 @echo       directory to your PATH
@@ -67,6 +69,9 @@
 @set PATH=%PATH%;%MCSTAS_SITE%\bin
 @set MCSTAS=%MCSTAS_SITE%\lib
 @mcdoc.pl 
+@echo Calling ppm for installation of CodeText.pm in the Perl tree...
+@echo - This requires an internet connection...
+ppm install Tk-CodeText
 @echo ..............................................................
 @echo Please remember to add %MCSTAS_SITE%\bin to your PATH!
 @echo Also, set the MCSTAS environment variable to %MCSTAS_SITE%\lib
