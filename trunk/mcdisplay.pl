@@ -92,7 +92,7 @@ sub read_instrument {
 	      write_process("addpath('$MCSTAS::sys_dir/tools/matlab');\n");
 	      write_process("mcdisplay('Init');\n");
 	      write_process("global INSTRUMENT;");
-	      write_process("INSTRUMENT.descr='$sim_cmd';\n");
+	      write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
 	      if ($first) {
 		write_process("INSTRUMENT.firstcomp='$first';\n");
@@ -104,7 +104,7 @@ sub read_instrument {
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
 	      # Initialize scilab struct...
 	      write_process("exec('$MCSTAS::sys_dir/tools/scilab/mcdisplay.sci',-1);\n");
-	      write_process("INSTRUMENT.descr='$sim_cmd';\n");
+	      write_process("INSTRUMENT.descr='$sim';\n");
 	      # Possibly, set firstcomp + lastcomp
 	      if ($first) {
 		write_process("INSTRUMENT.firstcomp='$first';\n");
@@ -230,9 +230,9 @@ sub read_instrument {
 	      if ($save) {
 		# Clone the graph to another window...
 		write_process("ax=gca;\n");
-		write_process("h=figure('numbertitle','off','name','$sim_cmd McStas Instrument')\n;");
+		write_process("h=figure('numbertitle','off','name','$sim McStas Instrument')\n;");
 		write_process("copyobj(ax,h);\n");
-		write_process("saveas(h,'$sim_cmd.fig','fig');\n");
+		write_process("saveas(h,'$sim.fig','fig');\n");
 		write_process("delete(h);\n");
 	      } else {
 		write_process("wait(INSTRUMENT.fig);\n");
@@ -770,6 +770,7 @@ undef $last;
 undef $save;
 undef $direct_output;
 undef $sim_cmd;
+undef $sim;
 undef $plotter;
 undef $file_output;
 my $int_mode=0; # interactive mode(0), non interactive (1)
@@ -802,7 +803,13 @@ for($i = 0; $i < @ARGV; $i++) {
         $file_output = $1;	
    } else {
         if (defined($sim_cmd)) { push @cmdline, $ARGV[$i]; }
-        else { $sim_cmd = $ARGV[$i]; }
+        else { 
+	  $sim_cmd = $ARGV[$i]; 
+	  $sim=$sim_cmd;
+	  # Remove trailing .out or .exe extension
+	  $sim=~ s|.out\Z||;
+	  $sim=~ s|.exe\Z||;
+	}
    }
 }
 die "Usage: mcdisplay [-mzipf][-gif|-ps|-psc] Instr.out [instr_options] params
