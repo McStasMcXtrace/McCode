@@ -160,7 +160,7 @@ specified for building the instrument:
   MCSTAS_CC     Name of the C compiler (e.g. cc or gcc)
   MCSTAS_CFLAGS Options for compilation (e.g. '-O')
   MCSTAS_FORMAT Default FORMAT to use for data files
-SEE ALSO: mcstas, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui
+SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://neutron.risoe.dk/mcstas/
 ** No instrument definition name given\n" unless $sim_def;
 die "Number of points must be at least 1" unless $numpoints >= 1;

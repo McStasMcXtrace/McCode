@@ -21,7 +21,7 @@ BEGIN {
         $MCSTAS::runscilab ="runscilab";
       } else {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-	$MCSTAS::runscilab ="scilab";
+        $MCSTAS::runscilab ="scilab";
         # install atexit-style handler so that when we exit or die,
         # we automatically delete this temporary file
         END { if ($tmp_file && !$Config{'osname'} eq 'MSWin32') { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
@@ -88,7 +88,8 @@ for($i = 0; $i < @ARGV; $i++) {
       print "  Plots all monitor data from a simulation, or a single data file.\n";
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
-      print "SEE ALSO: mcstas, mcdisplay, mcrun, mcresplot, mcstas2vitess, mcgui\n";
+      print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
+      print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
       exit;
   } elsif(/^-([a-zA-ZæøåÆØÅ0-9_]+)$/) {
       $passed_arg_str .= "-$1 ";

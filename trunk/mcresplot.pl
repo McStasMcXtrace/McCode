@@ -356,11 +356,14 @@ for($i = 0; $i < @ARGV; $i++) {
         } elsif(/^-gif$/ || /^-g$/) {
             $cc = "g"; $interactive=0;
   } elsif(/^--help$/ || /^-h$/ || /^-v$/) {
-      print "mcresplot [-ps|-psc|-gif|-v] <file name from Res_monitor>\n";
-      print "  Plots the instrument resolution function (projections)\n";
+      print "mcresplot [-ps|-psc|-gif|-v] <FILE from Res_monitor>\n";
+      print "  The FILE to be used by mcresplot is generated when using Res_sample\n";
+      print "  at the sample position, and Res_monitor afterwards.\n";
+      print "  Plots the instrument resolution function (projections).\n";
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
-      print "SEE ALSO: mcstas, mcdisplay, mcrun, mcplot, mcstas2vitess, mcgui\n";
+      print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
+      print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
       exit;
         } else {
       $filename = $ARGV[$i];

@@ -838,7 +838,8 @@ die "Usage: mcdisplay [-mzipf][-gif|-ps|-psc] Instr.out [instr_options] params
  -gif|-ps|-psc               Export figure as gif/b&w ps/color ps and exit
  When using -ps -psc -gif, the program writes the hardcopy file
  and then exits (plotter PGPLOT only).
- SEE ALSO: mcstas, mcplot, mcrun, mcresplot, mcstas2vitess, mcgui\n"
+ SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
+ DOC:      Please visit http://neutron.risoe.dk/mcstas/\n"
  unless $sim_cmd;
 
 if ($sim_cmd =~ m'\.instr$') # recompile .instr if needed
