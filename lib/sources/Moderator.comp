@@ -1,0 +1,81 @@
+/***********************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Moderator
+*
+* Written by: KN, M.Hagan, August 1998
+*
+* Produces a simple time-of-flight spectrum
+*
+* Input parameters:
+*
+* radius: (m)   Radius of source
+* E0:     (meV) Lower edge of energy distribution
+* E1:     (meV) Upper edge of energy distribution
+* dist:   (m)   Distance from source to the focusing rectangle
+* xw:     (m)   Width of focusing rectangle
+* yh:     (m)   Height of focusing rectangle
+* t0:     (mus) decay constant for low-energy neutrons
+* Ec:     (meV) Critical energy, below which the flux decay is constant
+* gam:    (meV) energy dependence of decay time
+*
+***********************************************************************/
+
+DEFINE COMPONENT Moderator
+DEFINITION PARAMETERS (radius, E0, E1, dist, xw, yh, t0, Ec, gam)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  double hdiv,vdiv;		      /* ToDo: Should be component local */
+  double moder_v0, moder_dv;
+  double p_in;
+%}
+INITIALIZE
+%{
+  hdiv = atan(xw/(2.0*dist));
+  vdiv = atan(yh/(2.0*dist));
+  moder_v0 = SE2V*sqrt(E0);
+  moder_dv = SE2V*sqrt(E1) - moder_v0;
+  p_in = (4*hdiv*vdiv)/(4*PI);
+%}
+TRACE
+%{
+  double theta0,phi0,chi,theta,phi,v,r,tauv,E;
+
+  p=p_in;
+  z=0;
+
+  chi = 2*PI*rand01();		/* Choose point on source */
+  r = sqrt(rand01())*radius;	/* with uniform distribution. */
+  x = r*cos(chi);
+  y = r*sin(chi);
+
+  theta0 = -atan(x/dist);	/* Angles to aim at target centre */
+  phi0 = -atan(y/dist);
+
+  theta = theta0 + hdiv*randpm1(); /* Small angle approx. */ 
+  phi = phi0 + vdiv*randpm1();
+
+  v = moder_v0 + moder_dv*rand01(); /* Assume linear distribution */
+
+  vz = v*cos(phi)*cos(theta);	/* Small angle approx. */
+  vy = v*sin(phi);
+  vx = v*cos(phi)*sin(theta);
+
+  E = VS2E*v*v;
+  if(E < Ec)
+  {
+    tauv = t0;
+  }
+  else
+  {
+    double tmp = ((E - Ec) / gam);
+    tauv = t0 / (1 + (tmp*tmp));
+  }
+  t = -tauv*log(rand01())*1E-6;
+%}
+END

@@ -1,0 +1,28 @@
+/***********************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kritian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Arm
+*
+* Written by: KL, KN, September 1997
+*
+* An arm does not actually do anything, it is just there to set
+* up a new coordinate system. 
+*
+* Input parameters:
+*
+* (none)
+*
+***********************************************************************/
+
+DEFINE COMPONENT Arm
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS ()
+STATE PARAMETERS ()
+TRACE
+%{
+%}
+END
+
