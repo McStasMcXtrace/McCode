@@ -1102,7 +1102,7 @@ if typeof(object) == 'string' // if object is a string
   end
   [fid, err] = mopen(object, 'r');
   if err ~= 0 // error occured. Calls fileselector (xgetfile)
-    if ~length(form)
+    if ~length(form) | form == 'Rec'
       object = xgetfile('*.sci', title='Select a McStas/Scilab simulation file to load');
     else
       mprintf('%s\n','mcplot: Could not open file '+string(object)+' for auto export');
