@@ -267,6 +267,18 @@ void mt_srandom (unsigned long x);
     mcnlt += (dt); \
   } while(0)
 
+/* propagation with gravitation */
+#define PROP_GRAV_DT(dt, Ax, Ay, Az) \
+  do { \
+    mcnlx  += mcnlvx*dt + Ax*dt*dt/2; \
+    mcnly  += mcnlvy*dt + Ay*dt*dt/2; \
+    mcnlz  += mcnlvz*dt + Az*dt*dt/2; \
+    mcnlvx += Ax*dt; \
+    mcnlvy += Ay*dt; \
+    mcnlvz += Az*dt; \
+    mcnlt  += dt; \
+  } while(0)
+
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
   do { \
     double mcvp_tmpx, mcvp_tmpy, mcvp_tmpz; \
@@ -355,6 +367,8 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 		       double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
 		 double vx, double vy, double vz, double r);
+int plane_intersect_Gfast(double *Idt, 
+                  double A,  double B,  double C);
 void randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
 			   double xi, double yi, double zi, double radius);
 void extend_list(int count, void **list, int *size, size_t elemsize);
