@@ -108,6 +108,7 @@ export INSTALL="./install-sh -c"
 make scilab
 
 # Clean up
+rm TODO.txt
 rm mkdist
 rm setversion
 rm header
