@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
+* Mcstas, neutron ray-tracing package
 *         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -10,7 +10,7 @@
 * %I
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -131,10 +131,11 @@ TRACE
   x = 0.5*size*randpm1();
   y = 0.5*size*randpm1();         /* Choose initial position */
 
-  xf = 0.5*xw*randpm1();          /* Choose focusing position uniformly */
-  yf = 0.5*yh*randpm1();
-  dx = xf-x;
-  dy = yf-y;
+  randvec_target_rect(&xf, &yf, &rf, &w_focus, 
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
+ 
+  dx = xf;
+  dy = yf;
   r = sqrt(dx*dx+dy*dy+dist*dist);
 
   lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
@@ -145,8 +146,7 @@ TRACE
   vy = v*dy/r;
   vx = v*dx/r;
 
-  w_focus = xw*yh*dist/(r*r*r);         /* target area * cos(phi)/r^2 */
-
+  
 /*  printf("pos0 (%g %g %g), pos1 (%g %g %g), r: %g, v (%g %g %g), v %g\n",
   x,y,z,xf,yf,dist,r,vx,vy,vz, v);
   printf("l %g, w_focus %g \n", lambda, w_focus);  */

@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
+* Mcstas, neutron ray-tracing package
 *         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -10,7 +10,7 @@
 * %I
 * Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -43,7 +43,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
-  double p_in;
+  double p_in,pdir;
 %}
 INITIALIZE
 %{
@@ -60,14 +60,15 @@ TRACE
    r = sqrt(rand01())*radius;    /* with uniform distribution. */
    x = r*cos(chi);
    y = r*sin(chi);
+   
+   randvec_target_rect(&xf, &yf, &rf, &pdir, 
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
 
-   xf = 0.5*xw*randpm1();          /* Choose focusing position uniformly */
-   yf = 0.5*yh*randpm1();
-   dx = xf-x;
-   dy = yf-y;
+   dx = xf;
+   dy = yf;
    rf = sqrt(dx*dx+dy*dy+dist*dist);
 
-   p = p_in*xw*yh*dist/(rf*rf*rf);      /* target area * cos(phi)/rf^2 */
+   p = pdir*p_in;
 
    E = E0+(E1-E0)*rand01();      /* Assume linear distribution */
    v = SE2V*sqrt(E);
