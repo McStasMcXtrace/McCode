@@ -39,7 +39,7 @@ int mc_yyoverflow();
 *******************************************************************************/
 
 %union {
-  double number;
+  char *number;
   char *string;
   struct code_block *ccode;	/* User-supplied C code block */
   CExp exp;			/* Expression datatype (for arguments) */
@@ -93,6 +93,7 @@ int mc_yyoverflow();
 %token <string> TOK_ID		/* Note: returns new str_dup()'ed copy each time. */
 %token <string> TOK_STRING
 %token <number> TOK_NUMBER
+%token <string> TOK_CTOK
 %token <linenum> TOK_CODE_START
 %token TOK_CODE_END
 %token <string> TOK_CODE_LINE
@@ -101,7 +102,7 @@ int mc_yyoverflow();
 %type <instance> component compref reference
 %type <ccode> code codeblock declare initialize trace finally mcdisplay
 %type <coords>  coords
-%type <exp> exp
+%type <exp> exp topexp topatexp genexp genatexp
 %type <actuals> actuallist actuals actuals1
 %type <comp_iformals> comp_iformallist comp_iformals comp_iformals1
 %type <cformal> comp_iformal
@@ -244,6 +245,7 @@ comp_iformal:	  TOK_ID
 		    formal->id = $1;
 		    formal->isoptional = 1; /* Default value available */
 		    formal->default_value = exp_number($3);
+		    str_free($3);
 		    $$ = formal;
 		  }
 ;
@@ -369,9 +371,9 @@ nxdict:		  /* empty */
 		    nxdinfo->any = 0;
 		    $$ = nxdinfo;
 		  }
-		| "NXDICTFILE" TOK_STRING nxdict
+		| nxdict "NXDICTFILE" TOK_STRING
 		  {
-		    struct NXDinfo *nxdinfo = $3;
+		    struct NXDinfo *nxdinfo = $1;
 		    if(nxdinfo->nxdfile)
 		    {
 		      print_error("Multiple NXDICTFILE declarations found.\n"
@@ -380,19 +382,19 @@ nxdict:		  /* empty */
 		    }
 		    else
 		    {
-		      nxdinfo->nxdfile = $2;
+		      nxdinfo->nxdfile = $3;
 		    }
 		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
 		    $$ = nxdinfo;
 		  }
-		| "NXDICT" TOK_ID ',' TOK_ID ',' exp nxdict
+		| nxdict "NXDICT" TOK_ID ',' TOK_ID ',' exp
 		  {
-		    struct NXDinfo *nxdinfo = $7;
+		    struct NXDinfo *nxdinfo = $1;
 		    struct NXDentry *entry;
 		    palloc(entry);
-		    entry->compname = $2;
-		    entry->param = $4;
-		    entry->spec = $6;
+		    entry->compname = $3;
+		    entry->param = $5;
+		    entry->spec = $7;
 		    list_add(nxdinfo->nxdentries, entry);
 		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
 		    $$ = nxdinfo;
@@ -603,7 +605,40 @@ coords:		  '(' exp ',' exp ',' exp ')'
 		  }
 ;
 
-exp:		  TOK_ID
+/* C expressions used to give component actual parameters.
+   Top-level comma (',') operator NOT allowed. */
+exp:		  { $<linenum>$ = instr_current_line; } topexp
+		  {
+		    CExp e = $2;
+		    exp_setlineno(e, $<linenum>1 );
+		    $$ = e;
+		  }
+		| "EXTERN" { $<linenum>$ = instr_current_line; } TOK_ID
+		  {
+		    CExp e;
+		    /* Note: "EXTERN" is now obsolete and redundant. */
+		    e = exp_extern_id($3);
+		    exp_setlineno(e, $<linenum>2 );
+		    str_free($3);
+		    $$ = e;
+		  }
+;
+
+topexp:		  topatexp
+		  {
+		    $$ = $1;
+		  }
+		| topexp topatexp
+		  {
+		    $$ = exp_compound(2, $1, $2);
+		    exp_free($2);
+		    exp_free($1);
+		  }
+;
+
+/* An atomic top-level C expression: either a parenthesized expression, or a
+   single token that is NOT comma (','). */
+topatexp:	  TOK_ID
 		  {
 		    List_handle liter;
 		    struct instr_formal *formal;
@@ -628,17 +663,99 @@ exp:		  TOK_ID
 		| TOK_NUMBER
 		  {
 		    $$ = exp_number($1);
-		  }
-		| "EXTERN" TOK_ID
-		  {
-		    /* Note: "EXTERN" is now obsolete and redundant. */
-		    $$ = exp_extern_id($2);
-		    str_free($2);
+		    str_free($1);
 		  }
 		| TOK_STRING
 		  {
 		    $$ = exp_string($1);
 		    str_free($1);
+		  }
+		| TOK_CTOK
+		  {
+		    $$ = exp_ctoken($1);
+		    str_free($1);
+		  }
+		| '='
+		  {
+		    $$ = exp_ctoken("=");
+		  }
+		| '*'
+		  {
+		    $$ = exp_ctoken("*");
+		  }
+		| '(' genexp ')'
+		  {
+		    CExp p1 = exp_ctoken("(");
+		    CExp p2 = exp_ctoken(")");
+		    $$ = exp_compound(3, p1, $2, p2);
+		    exp_free(p2);
+		    exp_free(p1);
+		    exp_free($2);
+		  }
+		| '(' ')'
+		  {
+		    CExp p1 = exp_ctoken("(");
+		    CExp p2 = exp_ctoken(")");
+		    $$ = exp_compound(2, p1, p2);
+		    exp_free(p2);
+		    exp_free(p1);
+		  }
+		| '[' genexp ']'
+		  {
+		    CExp p1 = exp_ctoken("[");
+		    CExp p2 = exp_ctoken("]");
+		    $$ = exp_compound(3, p1, $2, p2);
+		    exp_free(p2);
+		    exp_free(p1);
+		    exp_free($2);
+		  }
+		| '[' ']'
+		  {
+		    CExp p1 = exp_ctoken("[");
+		    CExp p2 = exp_ctoken("]");
+		    $$ = exp_compound(2, p1, p2);
+		    exp_free(p2);
+		    exp_free(p1);
+		  }
+		| '{' genexp '}'
+		  {
+		    CExp p1 = exp_ctoken("{");
+		    CExp p2 = exp_ctoken("}");
+		    $$ = exp_compound(3, p1, $2, p2);
+		    exp_free(p2);
+		    exp_free(p1);
+		    exp_free($2);
+		  }
+		| '{' '}'
+		  {
+		    CExp p1 = exp_ctoken("{");
+		    CExp p2 = exp_ctoken("}");
+		    $$ = exp_compound(2, p1, p2);
+		    exp_free(p2);
+		    exp_free(p1);
+		  }
+;
+
+/* Any C expression, including a top-level comma (',') operator. */
+genexp:		  genatexp
+		  {
+		    $$ = $1;
+		  }
+		| genexp genatexp
+		  {
+		    $$ = exp_compound(2, $1, $2);
+		    exp_free($2);
+		    exp_free($1);
+		  }
+;
+
+genatexp:	  topatexp
+		  {
+		    $$ = $1;
+		  }
+		| ','
+		  {
+		    $$ = exp_ctoken(",");
 		  }
 ;
 
@@ -892,6 +1009,8 @@ main(int argc, char *argv[])
   if(file == NULL)
     fatal_error("Instrument definition file `%s' not found\n",
 		instr_current_filename);
+  instrument_definition->quoted_source =
+    str_quote(instrument_definition->source);
   instr_current_line = 1;
   lex_new_file(file);
   read_components = symtab_create(); /* Create table of components. */
@@ -1049,10 +1168,24 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       } else {
 	print_error("Unassigned definition parameter %s for component %s.\n",
 		    formal->id, comp->name);
-	symtab_add(defpar, formal->id, exp_number(0));
+	symtab_add(defpar, formal->id, exp_number("0.0"));
       }
     } else {
       symtab_add(defpar, formal->id, entry->val);
+      /* Ensure that the actual DEFINITION parameters are all values
+         (identifiers, constant numbers, and constant strings). This is
+         necessary to avoid duplication of computations or side effects in the
+         expressions for the actual parameters, since DEFINITION parameters
+         are assigned using #define's. */
+      if(!exp_isvalue(entry->val))
+      {
+	static int seenb4 = 0;	/* Only print long error the first time */
+	print_error("Illegal expression for DEFINITION parameter %s of component %s.\n%s",
+		   formal->id, comp->name,
+		   ( seenb4++ ? "" :
+		     "(Only variable names, constant numbers, and constant strings\n"
+		     "are allowed for DEFINITION parameters.)\n") );
+      }
     }
   }
   list_iterate_end(liter);
@@ -1069,7 +1202,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       } else {
 	print_error("Unassigned setting parameter %s for component %s.\n",
 		    formal->id, comp->name);
-	symtab_add(setpar, formal->id, exp_number(0));
+	symtab_add(setpar, formal->id, exp_number("0.0"));
       }
     } else {
       symtab_add(setpar, formal->id, entry->val);
