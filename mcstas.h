@@ -7,7 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.24 2000-07-27 09:07:20 kn Exp $
+* 	$Id: mcstas.h,v 1.25 2001-12-19 12:51:39 peo Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -361,8 +361,10 @@ struct comp_iformal
 struct comp_def
   {
     char *name;			/* Component name. */
+    int  comp_inst_number;   /* Number of this comp in the instrument  */
     List def_par, set_par, out_par, state_par; /* Formal parameters. */
     char **polarisation_par;	/* Polarisation state formal parameters. */
+    struct code_block *share_code; /* Share code. */
     struct code_block *decl_code; /* Declaration code. */
     struct code_block *init_code; /* Initializeation code. */
     struct code_block *trace_code; /* Ray-trace simulation code. */
