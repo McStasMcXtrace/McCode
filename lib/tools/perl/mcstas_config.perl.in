@@ -6,6 +6,7 @@
 # CFLAGS   - compiler flags (should not require changes)
 # LDFLAGS  - linker flags (should not require changes)
 # CC       - c compiler command (should not requrire changes)
+# TERMINAL - (Unix only) Command to launch mcplot with (xterm/konsole/...)
 # PLOTTER  - Choice of default plotting backend, possible values:
 #            0 - PGPLOT (Unix only)
 #            1 - Matlab (Unix / Win32)
@@ -24,6 +25,7 @@
     (CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
      CC => '@CC@',
+     TERMINAL => '@TERM@',
      PLOTTER => 3,
      EDITOR => 1,
      MATLAB_COMMAND => 'matlab -nojvm > /dev/null',

@@ -28,6 +28,12 @@ AC_PATH_PROGS(PERL, [perl5 perl], /usr/local/bin/perl)
 AC_PATH_PROGS(SCILAB, [scilab scilex /usr/local/bin/scilab], no)
 AC_PATH_PROGS(MATLAB, [matlab /usr/local/bin/matlab], no)
 AC_PATH_PROGS(PGPLOT, [pgxwin_server /usr/local/pgplot/pgxwin_server], no)
+# Important here: gnome-terminal is broken:
+#  Any commandline arguments after -e must contain escaped spaces.
+# BUT: If escaped in the perl code, use of xterm/konsole is broken.... 
+# Hence we allow only gnome-terminal.wrapper which is debian only 
+# :(
+AC_PATH_PROGS(TERM,   [xterm konsole gnome-terminal.wrapper], no)
 CF_ANSI_CC_CHECK
 MC_ANSI_MATH_PROTO
 AC_CHECK_FUNCS(strcasecmp fdopen)
