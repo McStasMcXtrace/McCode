@@ -347,6 +347,8 @@ sub parse_header {
                     $d->{'identification'}{'origin'} = $1;
                 }elsif(/Date:(.*)$/i) {
                     $d->{'identification'}{'date'} = $1;
+                }elsif(/Release:(.*)$/i) {
+                    $d->{'identification'}{'release'} = $1;
                 }elsif(/Version:(.*)$/i) {
                     my $verstring = $1;
                     # Special case for RCS style $[R]evision: 1.2 $ tags.
