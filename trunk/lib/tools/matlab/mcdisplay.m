@@ -1,9 +1,24 @@
 function mcdisplay(varargin)
 %
+% mcdisplay.m:
+%
 % Implementation of matlab functions for mcdisplay online plotting.
 %
 % Copyright 2003 Peter Willendrup, RISØ national laboratory
+% 
+% Covers also the scripts
+% PlotInstrument.m 
+% wait.m
+% CheckNeutNumber.m  
+% ReshapeTransform.m  
+% CheckTimeout.m     
+% resume.m
 %
+% Written by: P. Willendrup
+% Date: May 13th, 2003
+% Release: McStas 1.7
+% Origin: Risoe
+
 
 % Check/parse input parameters
 if nargin==0
