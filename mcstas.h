@@ -7,9 +7,13 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.12 1998-10-02 08:38:51 kn Exp $
+* 	$Id: mcstas.h,v 1.13 1998-11-09 08:18:57 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.12  1998/10/02 08:38:51  kn
+* 	Added output parameters for components.
+* 	Fixed header comment.
+*
 * 	Revision 1.11  1998/10/01 11:47:24  kn
 * 	Added str_dup_n(), exp_string(), and error_encountered.
 *
@@ -278,7 +282,9 @@ void push_autoload(FILE *file);
 #define PATHSEP_S "/"
 #define PATHSEP_C '/'
 #define CURRENT_DIR_S "."
+#ifndef MC_SYS_DIR
 #define MC_SYS_DIR "/usr/local/lib/mcstas"
+#endif
 
 extern char *component_pathname;
 
