@@ -1,13 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing Monte-Carlo software.
-* Copyright(C) 1999 Risoe National Laboratory.
+* McStas, the neutron ray-tracing Monte-Carlo software: Source_adapt.com
+* Copyright(C) 1999-2001 Risoe National Laboratory.
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.14 $
-* Origin: McStas release
+* Version: $Revision: 1.15 $
+* Origin: McStas 1.4.2
 *
 * Neutron source with adaptive importance sampling
 *
@@ -76,6 +76,7 @@ DEFINITION PARAMETERS (N_E, N_xpos, N_xdiv, alpha, beta, filename)
 SETTING PARAMETERS (xmin,xmax,ymin,ymax, dist, xw, yh, E0, dE, flux)
 OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   struct source_adapt
