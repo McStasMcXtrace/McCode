@@ -69,6 +69,8 @@
 @set PATH=%PATH%;%MCSTAS_SITE%\bin
 @set MCSTAS=%MCSTAS_SITE%\lib
 @mcdoc.pl 
+@echo Installing Tk-CodeText extension (ppm)
+ppm install Tk-CodeText
 @echo Placing Mcstas.pm in perl tree....
 @support\win32\perlinst.pl Tk\CodeText\Bash.pm support\Tk-CodeText-0.3.4\CodeText\McStas.pm
 @echo ..............................................................
