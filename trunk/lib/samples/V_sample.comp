@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -85,9 +85,10 @@ DECLARE
     double my_a_v;
     char   isrect;      /* true when sample is a box */
     double distance;    /* when non zero, gives rect target distance */
-    double aw,ah;       /* rectangukar angular dimensions */
+    double aw,ah;       /* rectangular angular dimensions */
+    double xw,yh;       /* rectangular metrical dimensions */
     double tx,ty,tz;    /* target coords */
-  } VarsV;
+    } VarsV;
 %}
 
 INITIALIZE
@@ -103,7 +104,7 @@ INITIALIZE
   VarsV.rho = (2*pack/(3.024*3.024*3.024));
   VarsV.my_s=(VarsV.rho * 100 * VarsV.sigma_i);
   VarsV.my_a_v=(VarsV.rho * 100 * VarsV.sigma_a * 2200);
-  
+
   /* now compute target coords if a component index is supplied */
   if (target_index)
   {
@@ -119,10 +120,18 @@ INITIALIZE
   
   /* different ways of setting rectangular area */
   VarsV.aw  = VarsV.ah = 0;
-  if (focus_xw) VarsV.aw = atan2(focus_xw,VarsV.distance);
-  if (focus_yh) VarsV.ah = atan2(focus_yh,VarsV.distance);
-  if (focus_aw) VarsV.aw = DEG2RAD*focus_aw;
-  if (focus_ah) VarsV.ah = DEG2RAD*focus_ah;
+  if (focus_xw) {
+	VarsV.xw = focus_xw;
+  }
+  if (focus_yh) {
+   	VarsV.yh = focus_yh;
+  }
+  if (focus_aw) {
+  	VarsV.aw = DEG2RAD*focus_aw;
+  }	
+  if (focus_ah) {
+  	VarsV.ah = DEG2RAD*focus_ah;
+  }
 %}
                                                                            
 TRACE
@@ -137,7 +146,7 @@ TRACE
   double solid_angle=0;         /* Solid angle of target as seen from scattering point */
   double aim_x, aim_y, aim_z;   /* Position of target relative to scattering point */
   int    intersect=0;
-
+  
   if (VarsV.isrect)
     intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
   else
@@ -165,11 +174,15 @@ TRACE
     aim_x = VarsV.tx-x;         /* Vector pointing at target (anal./det.) */
     aim_y = VarsV.ty-y;
     aim_z = VarsV.tz-z;
-    if(VarsV.aw && VarsV.ah)
+    if(VarsV.aw && VarsV.ah) {
+      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 
+        aim_x, aim_y, aim_z, VarsV.aw, VarsV.ah, ROT_A_CURRENT_COMP);
+    } else if(VarsV.xw && VarsV.yh) {
       randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
-        aim_x, aim_y, aim_z, VarsV.aw, VarsV.ah);
-    else
+        aim_x, aim_y, aim_z, VarsV.xw, VarsV.yh, ROT_A_CURRENT_COMP);
+    } else {
       randvec_target_circle(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+    }
     NORM(vx, vy, vz);
     vx *= v;
     vy *= v;

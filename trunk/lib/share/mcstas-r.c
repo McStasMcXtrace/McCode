@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.74 2003-10-21 11:54:48 farhi Exp $
+* $Id: mcstas-r.c,v 1.75 2003-10-21 14:08:12 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.74  2003/10/21 11:54:48  farhi
+* instrument default parameter value handling now works better
+* either from args or from mcreadparam (prompt)
+*
 * Revision 1.73  2003/09/05 08:59:17  farhi
 * added INSTRUMENT parameter default value grammar
 * mcinputtable now has also default values
@@ -1619,11 +1623,15 @@ randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
 /* ANGULAR dimension height x width. height=phi_x, width=phi_y (radians)*/
 /* If height or width is zero, choose random direction in full 4PI, no target. */
 void
-randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
-               double xi, double yi, double zi, double width, double height)
+randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_angle,
+               double xi, double yi, double zi, double width, double height, Rotation A)
 {
   double theta, phi, nx, ny, nz, xt, yt, zt, xu, yu, zu;
+  Coords tmp;
+  Rotation Ainverse;
 
+  rot_transpose(A, Ainverse);
+  
   if(height == 0.0 || width == 0.0)
   {
     randvec_target_circle(xo, yo, zo, solid_angle,
@@ -1636,6 +1644,12 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
       /* Compute solid angle of target as seen from origin. */
       *solid_angle = 2*fabs(width*sin(height/2));
     }
+    
+    /* Go to global coordinate system */
+    
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(Ainverse, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
 
     /* Now choose point uniformly on quadrant within angle theta0/phi0 */
     theta = width*randpm1()/2.0;
@@ -1662,7 +1676,84 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
   rotate  (xt,  yt,  zt, xi, yi, zi, phi, nx, ny, nz);
   /* [xyz]o = [xyz]t rotated phi around n[xyz] */
   rotate (*xo, *yo, *zo, xt, yt, zt, theta, xu,  yu,  zu);
+  
+  /* Go back to local coordinate system */
+    tmp = coords_set(*xo, *yo, *zo);
+    tmp = rot_apply(A, tmp);
+    coords_get(tmp, &*xo, &*yo, &*zo);
+  
 }
+
+/* Choose random direction towards target at (xi,yi,zi) with given       */
+/* dimension height x width (in meters!).                                */
+/* If height or width is zero, choose random direction in full 4PI, no target. */
+void
+randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
+               double xi, double yi, double zi, double width, double height, Rotation A)
+{
+  double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, xt, yt, zt, xu, yu, zu, theta, phi, n_norm, m_norm;
+  Coords tmp;
+  Rotation Ainverse;
+  
+  rot_transpose(A, Ainverse);
+  
+  if(height == 0.0 || width == 0.0)
+  {
+    randvec_target_circle(xo, yo, zo, solid_angle,
+               xi, yi, zi, 0);
+  }
+  else
+  {
+    
+    /* Now choose point uniformly on quadrant within width x height */
+    dx = width*randpm1()/2.0;
+    dy = height*randpm1()/2.0; 
+    
+    /* Determine distance to target */
+    dist = sqrt(xi*xi + yi*yi + zi*zi);
+    /* Go to global coordinate system */
+    
+    tmp = coords_set(xi, yi, zi);
+    tmp = rot_apply(Ainverse, tmp);
+    coords_get(tmp, &xi, &yi, &zi);
+    
+    /* Determine vector normal to neutron axis (z) and gravity [0 1 0] */
+    vec_prod(nx, ny, nz, xi, yi, zi, 0, 1, 0); 
+   
+    /* This now defines the x-axis, normalize: */
+    n_norm=sqrt(nx*nx + ny*ny + nz*nz);
+    nx = nx/n_norm;
+    ny = ny/n_norm;
+    nz = nz/n_norm;
+    
+    /* Now, determine our y-axis (vertical in many cases...) */
+    vec_prod(mx, my, mz, xi, yi, zi, nx, ny, nz); 
+    m_norm=sqrt(mx*mx + my*my + mz*mz);
+    mx = mx/m_norm;
+    my = my/m_norm;
+    mz = mz/m_norm;
+    
+    /* Our output, random vector can now be defined by linear combination: */
+    
+    *xo = xi + dx * nx + dy * mx;
+    *yo = yi + dx * ny + dy * my;
+    *zo = zi + dx * nz + dy * mz;
+    
+    /* Go back to local coordinate system */
+    tmp = coords_set(*xo, *yo, *zo);
+    tmp = rot_apply(A, tmp);
+    coords_get(tmp, &*xo, &*yo, &*zo);
+    
+    /* Determine distance to random point */
+    dist_p = sqrt(dx*dx + dy*dy + dist*dist);
+    
+    /* Adjust the 'solid angle' (here more thought of as a normalization constant) */
+    /* Works since we are in the relative coordinate system, origin is where we are at */
+    *solid_angle = (width*height*dist)/(dist_p*dist_p*dist_p);
+
+  }
+}
+
 
 /* Make sure a list is big enough to hold element COUNT.
 *
