@@ -6,7 +6,7 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Version: 0.14
+* Version: 0.14.1
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 10th Mar 2000 : use struct. 
 * Modified by: EF, 25th May 2000 : correct Vars.Mon2D_Buffer alloc bug.
@@ -14,9 +14,10 @@
 * Modified by: EF, 19th Jan 2001 : 'auto limits' bug corrected (0.13.5)
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 02nd Feb 2001 : user variable (0.13.7)
-* Modified by: EF, 2tht Feb 2001 : 3He gas absorption handling (0.13.8)
-* Modified by: EF, 5tht Mar 2001 : intermediate savings (0.13.9)
-* Modified by: EF, 5tht Apr 2001 : use global functions (0.14) compile faster
+* Modified by: EF, 2th  Feb 2001 : 3He gas absorption handling (0.13.8)
+* Modified by: EF, 5th  Mar 2001 : intermediate savings (0.13.9)
+* Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
+* Modified by: EF, 18th Apr 2001 : passes DETECTOR_OUT to mcdetector_out
 
 *
 * This component is a general Monitor that can output 0/1/2D signals 
@@ -399,7 +400,8 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
     /* write oputput files (sent to file as p[i*n + j] vectors) */
     if (aVars->Coord_Number == 0) 
     {
-      DETECTOR_OUT_0D(aVars->Monitor_Label, aVars->Nsum, aVars->psum, aVars->p2sum);
+      /* DETECTOR_OUT_0D(aVars->Monitor_Label, aVars->Nsum, aVars->psum, aVars->p2sum); */
+      mcdetector_out_0D(aVars->Monitor_Label, aVars->Nsum, aVars->psum, aVars->p2sum, aVars->compcurname);
     }
     else
     if (strlen(aVars->Mon_File) > 0) 
@@ -440,6 +442,7 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
         {
           if (aVars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for transpose. Skipping.\n", aVars->compcurname);
           if (p0m != NULL) free(p0m);
+          /*
           DETECTOR_OUT_2D(
             label,
             aVars->Coord_Label[0],
@@ -450,6 +453,18 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
             bin1d,
             (int *)aVars->Mon2D_Buffer,aVars->Mon2D_Buffer,aVars->Mon2D_Buffer,
             fname); 
+           */
+           mcdetector_out_2D(
+            label,
+            aVars->Coord_Label[0],
+            Coord_X_Label,
+            min2d, max2d, 
+            min1d, max1d, 
+            bin2d,
+            bin1d,
+            (int *)aVars->Mon2D_Buffer,aVars->Mon2D_Buffer,aVars->Mon2D_Buffer,
+            fname, aVars->compcurname); 
+        
         }
         else /* transpose for column output */
         {
@@ -459,7 +474,7 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
               p1m[i*aVars->Buffer_Size+j] = aVars->Mon2D_Buffer[j*(aVars->Coord_Number+2) + i];
               p0m[i*aVars->Buffer_Size+j] = 1;
             }
-            DETECTOR_OUT_2D(
+            /* DETECTOR_OUT_2D(
               label,
               Coord_X_Label,
               aVars->Coord_Label[0],
@@ -468,7 +483,17 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
               bin1d,
               bin2d,
               p0m,p1m,aVars->Mon2D_Buffer,
-              fname); 
+              fname); */
+          mcdetector_out_2D(
+              label,
+              Coord_X_Label,
+              aVars->Coord_Label[0],
+              min1d, max1d, 
+              min2d, max2d, 
+              bin1d,
+              bin2d,
+              p0m,p1m,aVars->Mon2D_Buffer,
+              fname, aVars->compcurname); 
           free(p0m);
           free(p1m);
         }
@@ -488,9 +513,10 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
           else
             strcpy(label, Coord_X_Label);
           if (aVars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 1D (%i).\n", aVars->compcurname, fname, aVars->Coord_Bin[i+1]);
-                min1d = aVars->Coord_Min[i+1];
-                max1d = aVars->Coord_Max[i+1];
-                if (min1d == max1d) max1d = min1d+1e-6;
+          min1d = aVars->Coord_Min[i+1];
+          max1d = aVars->Coord_Max[i+1];
+          if (min1d == max1d) max1d = min1d+1e-6;
+          /*
           DETECTOR_OUT_1D(
             label,
             aVars->Coord_Label[i+1],
@@ -500,6 +526,16 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
             aVars->Coord_Bin[i+1],
             aVars->Mon2D_N[i],aVars->Mon2D_p[i],aVars->Mon2D_p2[i],
             fname); 
+            */
+            mcdetector_out_1D(
+            label,
+            aVars->Coord_Label[i+1],
+            aVars->Coord_Label[0],
+            aVars->Coord_Var[i+1],
+            min1d, max1d, 
+            aVars->Coord_Bin[i+1],
+            aVars->Mon2D_N[i],aVars->Mon2D_p[i],aVars->Mon2D_p2[i],
+            fname, aVars->compcurname); 
         }
       }
       else
@@ -545,6 +581,7 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
                 }
                 else
                   strcpy(label, aVars->Monitor_Label);
+                  /*
                 DETECTOR_OUT_2D(
                   label,
                   aVars->Coord_Label[1],
@@ -554,7 +591,18 @@ void Monitor_nD_OutPut(aDEFS, aVars, dofree)
                   aVars->Coord_Bin[1],
                   aVars->Coord_Bin[2],
                   p0m,p1m,p2m,
-                  fname); 
+                  fname); */
+                  
+                mcdetector_out_2D(
+                  label,
+                  aVars->Coord_Label[1],
+                  aVars->Coord_Label[2],
+                  min1d, max1d,  
+                  min2d, max2d,  
+                  aVars->Coord_Bin[1],
+                  aVars->Coord_Bin[2],
+                  p0m,p1m,p2m,
+                  fname, aVars->compcurname);
 
                 if (p0m != NULL) free(p0m);
           if (p1m != NULL) free(p1m);
@@ -1452,3 +1500,4 @@ MCDISPLAY
 %}
 
 END
+
