@@ -1,5 +1,7 @@
 # Library of common routines for McStas frontends.
 
+use PDL;
+
 require FileHandle;
 
 sub strip_quote {
@@ -29,6 +31,21 @@ sub read_data_file_2D {
 	print STDOUT "Warning: failed to read data file \"$file\"\n";
 	return undef;
     }
+}
+
+# Read 2D embedded numeric data.
+sub read_array2D {
+    my ($h,$m,$n) = @_;
+    my @list = ();
+    while(<$h>) {
+	if(/^[-+0-9eE. \t]+$/) {
+	    push(@list, new PDL (split " "));
+	} else {
+	    last if /^\s*end\s+array2D\s*$/i;
+	    die "Bad embedded numeric data in array2D in file.";
+	}
+    }
+    return cat @list;
 }
 
 
@@ -131,8 +148,9 @@ sub read_simulation_info {
 
 sub read_data_info {
     my ($handle, $basedir) = @_;
-    my ($type, $fname, $xvar, $yvar, $yerr);
+    my ($type, $fname, $data, $xvar, $yvar, $yerr);
     my @vars = qw/X N I p2/;
+    my @vals = ();
     my ($compname,$title,$xlabel,$ylabel) = ("","","","");
     my ($xmin,$xmax,$ymin,$ymax) = (0,1,0,1);
     while(<$handle>) {
@@ -146,6 +164,8 @@ sub read_data_info {
 	    $fname = strip_quote($1);
 	} elsif(/^\s*variables:\s*([a-zA-ZæøåÆØÅ_0-9 \t]*?)\s*$/i) {
 	    @vars = split(" ", $1);
+	} elsif(/^\s*values:\s*([-+0-9.eE \t]*?)\s*$/i) {
+	    @vals = split(" ", $1);
 	} elsif(/^\s*xvar:\s*([a-zA-ZæøåÆØÅ_0-9]+?)\s*$/i) {
 	    $xvar = $1;
 	} elsif(/^\s*yvar:\s*([a-zA-ZæøåÆØÅ_0-9]+?)\s*$/i) {
@@ -171,27 +191,45 @@ sub read_data_info {
 		([-+0-9.eE]+)\s+
 		([-+0-9.eE]+)\s*$/ix) {
 	    ($xmin,$xmax) = ($1,$2);
+	} elsif(/^\s*begin array2D \(([0-9]+),([0-9]+)\)\s*/i) {
+	    $data = read_array2D($handle,$1,$2);
 	} elsif(/^\s*end\s+data\s*$/i) {
 	    last;
 	} else {
 	    die "Invalid line in siminfo file:\n'$_'";
 	}
     }
-    # Select some reasonable defaults for axis variables if not present.
-    $xvar = $vars[0] ? $vars[0] : "column 0" unless $xvar;
-    $yvar = $vars[1] ? $vars[1] : "column 1" unless $yvar;
     die "Missing type for component $compname"
 	unless $type;
-    die "Missing filename for component $compname"
-	unless $fname;
+    # Convert 2D array to 1D array hash for 1D detector type.
+    if($data && $type =~ /^\s*array_1d\s*\(\s*([0-9]+)\s*\)\s*$/i) {
+	my $r = {};
+	my ($m,$n) = $data->dims;
+	my $i;
+	for $i (0..$m-1) {
+	    my $key = $vars[$i] ? $vars[$i] : "column $i";
+	    $r->{$key} = $data->slice("($i),");
+	}
+	$data = $r;
+    }
+    # Select some reasonable defaults for axis variables if not present.
+    if($type !~ /^\s*array_0d\s*$/i) {
+	$xvar = $vars[0] ? $vars[0] : "column 0" unless $xvar;
+	$yvar = $vars[1] ? $vars[1] : "column 1" unless $yvar;
+	die "Missing filename for component $compname"
+	    unless $fname || $data;
+	$fname = "$basedir/$fname" if($fname && $basedir);
+    }
     return { Type => $type,
 	     Component => $compname,
 	     Title => $title,
 	     Variables => \@vars,
+	     Values => \@vals,
 	     Xvar => [$xvar],
 	     Yvar => [$yvar],
 	     Yerr => [$yerr],
-	     Filename => $basedir ? "$basedir/$fname" : $fname,
+	     Filename => $fname,
+	     "Numeric Data" => $data,
 	     Xlabel => $xlabel,
 	     Ylabel => $ylabel,
 	     Limits => [$xmin,$xmax,$ymin,$ymax]
@@ -205,7 +243,9 @@ sub read_sim_info {
     my $simulation_info;
     while(<$handle>) {
 	if(/^\s*begin\s+data\s*$/i) {
-	    push @datalist, read_data_info($handle, $basedir);
+	    my $info = read_data_info($handle, $basedir);
+	    push @datalist, $info
+		unless $info->{Type} =~ /^\s*array_0d\s*$/i;
 	} elsif(/^\s*begin\s+instrument\s*$/i) {
 	    $instrument_info = read_instrument_info($handle);
 	} elsif(/^\s*begin\s+simulation\s*$/i) {
