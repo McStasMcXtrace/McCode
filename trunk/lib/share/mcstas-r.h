@@ -62,9 +62,41 @@ void mcraytrace(void);
 void mcfinally(void);
 void mcdisplay(void);
 
+/* Adaptive search tree definitions. */
+typedef double adapt_t;
+
+/*******************************************************************************
+* Structure of an adaptive search tree. The v array runs from 0 to N-1 (a
+* total of N elements) and holds the values of each node. The sum of all v
+* values is in total.
+* The s array runs from 0 to N and is used to represents the cumulative sum
+* of v[0] through v[i-1]. The number represented is the sum of s[i] and all
+* its parents up to the root node.
+*******************************************************************************/
+
+struct adapt_tree
+  {
+    adapt_t *s, *v, total;
+    int N;			/* < 1 << (depth+1) */
+    int depth;
+    int root;			/* = (1 << depth) - 1 */
+    int initstep;		/* = 1 << (depth-1) */
+  };
+
+int adapt_tree_search(struct adapt_tree *t, adapt_t v);
+void adapt_tree_add(struct adapt_tree *t, int i, adapt_t v);
+struct adapt_tree * adapt_tree_init(int N);
+void adapt_tree_free(struct adapt_tree *t);
+
+
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnlsx,mcnlsy, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
-#define MC_GETPAR(comp, par) (mcc ## comp ## _ ## par)
+/* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
+* after #define C sample, MC_GETPAR(C,x) would refer to component C, not to
+* component sample. Such are the joys of ANSI C.
+*/
+#define MC_GETPAR2(comp, par) (mcc ## comp ## _ ## par)
+#define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
 #define DETECTOR_OUT(p0,p1,p2) mcdetector_out(mccompcurname,p0,p1,p2)
 #define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,mccompcurname)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
@@ -138,19 +170,33 @@ void mcdis_circle(char *, double, double, double, double);
 typedef int mc_int32_t;
 mc_int32_t mc_random(void);
 void mc_srandom (unsigned int x);
+unsigned long mt_random(void);
+void mt_srandom (unsigned long x);
 
-#ifndef USE_SYSTEM_RANDOM
-#ifdef RAND_MAX
-# undef RAND_MAX
+#ifndef MC_RAND_ALG
+#define MC_RAND_ALG 1
 #endif
-#define RAND_MAX 0x7fffffff
-#define random mc_random
-#define srandom mc_srandom
-#endif /* !USE_SYSTEM_RANDOM */
 
-#define rand01() ( ((double)random())/((double)RAND_MAX+1) )
-#define randpm1() ( ((double)random()) / (((double)RAND_MAX+1)/2) - 1 )
-#define rand0max(max) ( ((double)random()) / (((double)RAND_MAX+1)/(max)) )
+#if MC_RAND_ALG == 0
+   /* Use system random() (not recommended). */
+#  define MC_RAND_MAX RAND_MAX
+#elif MC_RAND_ALG == 1
+   /* "Mersenne Twister", by Makoto Matsumoto and Takuji Nishimura. */
+#  define MC_RAND_MAX ((unsigned long)0xffffffff)
+#  define random mt_random
+#  define srandom mt_srandom
+#elif MC_RAND_ALG == 2
+   /* Algorithm used in McStas 1.1 and earlier (not recommended). */
+#  define MC_RAND_MAX 0x7fffffff
+#  define random mc_random
+#  define srandom mc_srandom
+#else
+#  error "Bad value for random number generator choice."
+#endif
+
+#define rand01() ( ((double)random())/((double)MC_RAND_MAX+1) )
+#define randpm1() ( ((double)random()) / (((double)MC_RAND_MAX+1)/2) - 1 )
+#define rand0max(max) ( ((double)random()) / (((double)MC_RAND_MAX+1)/(max)) )
 #define randminmax(min,max) ( rand0max((max)-(min)) - (min) )
 
 #define PROP_X0 \
