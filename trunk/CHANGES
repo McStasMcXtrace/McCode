@@ -1,3 +1,9 @@
+Forthcoming changes:
+
+ - Some support for the calculation of correlation functions in the 
+   components Monitor_nD and PreMonitor_nD (by Emmanuel Farhi)
+ - Misc. minor bug fixes
+
 Changes in McStas v1.4, July 28, 2000:
 
  - It is now possible to use arbitrary C expressions in the instrument
