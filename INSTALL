@@ -1,0 +1,75 @@
+McStas uses autoconf to detect the system configuration and create the
+proper Makefiles needed for compilation. On Unix-like systems, you
+should be able to compile and install McStas using the following steps:
+
+1. Unpack the sources to somewhere convenient and change to the source
+   directory:
+
+  gunzip -c mcstas.tar.gz | tar xf -
+  cd mcstas/
+
+2. Configure and compile McStas:
+
+  ./configure
+  make
+
+3. Install McStas:
+
+  make install
+
+You should now be able to use McStas. For some examples to try, see the
+examples/ directory.
+
+The installation of McStas in step 3 by default installs in the
+/usr/local/ directory, which on most systems requires superuser (root)
+privileges. To install in another directory, use the --prefix= option to
+configure in step 2. For example,
+
+  ./configure --prefix=/home/joe
+
+will install the McStas programs in /home/joe/bin/ and the library files
+needed by McStas in /home/joe/lib/mcstas/.
+
+McStas has not been tested on Windows at this time. We have tried to
+make the McStas code as portable as possible, so it should compile
+without too much trouble under Windows. If there is a request for it, we
+will make Windows binaries of McStas available.
+
+If you experience any problems, or have some questions or ideas
+concerning McStas, please contact kristian.nielsen@risoe.dk.
+
+
+Troubleshooting
+===============
+
+You should try to make sure that the directory containing the McStas
+binaries (mcstas, gscan, and mcdisplay) is contained in the PATH
+environment variable. The default directory is /usr/local/bin, which is
+usually, but not always, included in PATH. Alternatively, you can
+reference the McStas programs using the full path name, ie.
+
+  /usr/local/bin/mcstas my.instr
+  perl /usr/local/bin/gscan 10 1e5 mysim output ARG=42
+  perl /usr/local/bin/mcdisplay --multi mysim ARG=42
+
+This may also be necessary for the front-end programs if the install
+procedure could not determine the location of the perl interpreter on
+your system.
+
+If McStas is installed properly, it should be able to find the files it
+needs automatically. If not, you should set the MCSTAS environment
+variable to the directory containing the runtime files "mcstas-r.c" and
+"mcstas-r.h" and the standard components (*.comp). Use one of
+
+  MCSTAS=/usr/local/lib/mcstas; export MCSTAS     # sh, bash
+  setenv MCSTAS /usr/local/lib/mcstas             # csh, tcsh
+
+The PGPLOT library, which is used by the mcdisplay frontend, needs the
+PGPLOT_DIR environment variable to be set to the directory containing
+PGPLOT, eg.
+
+  PGPLOT_DIR=/usr/lib/pgplot; export PGPLOT_DIR     # sh, bash
+  setenv PGPLOT_DIR /usr/lib/pgplot             # csh, tcsh
+
+See the PGPLOT documentation for details.
+
