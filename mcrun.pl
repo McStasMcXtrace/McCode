@@ -41,7 +41,7 @@ BEGIN {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
       }
     }
-    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
     $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
 }
 use lib $MCSTAS::perl_dir;
