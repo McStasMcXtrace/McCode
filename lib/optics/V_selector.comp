@@ -1,15 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: V_selector
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by:  KL
+* Written by:  Kim Lefmann
 * Date: Nov 25, 1998
-* Version: $Revision: 1.11 $
-* Origin: McStas release
-* Modified by: KL, Jan 22, 1999
+* Version: $Revision: 1.12 $
+* Origin: McStas 1.4.2
 *
 * Velocity selector.
 *
@@ -41,6 +39,7 @@ DEFINE COMPONENT V_selector
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (width, height, l0, r0, phi, l1, tb, rot, nb)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   double RPM2OM, omega, phi_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_phi;
