@@ -27,6 +27,22 @@ find . -name CVS -exec rm -r \{\} \; 2> /dev/null
 find  . -prune setversion -type f -exec ./setversion \{\} $1 \; 2> /dev/null
 sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
 mv build.bat.new build.bat
+sed 's/mcstas-1.7/'mcstas-$1'/' install/tex/install.tex > install/tex/install.tex.new
+mv install/tex/install.tex.new install/tex/install.tex
+
+# Create ps/pdf/html based install info
+cd install/tex
+latex install
+latex install
+dvips -o install.ps install.dvi
+ps2pdf install.ps install.pdf
+gzip install.ps
+mkdir ../html 
+latex2html -local_icons -rootdir ../html install.tex
+# clean up
+rm install.aux
+rm install.log
+cd ../..
 
 # A bit ugly with seperate date commands..
 MONTH=`date +"%b"`

@@ -19,6 +19,11 @@
 *
 *******************************************************************************/
 
+NOTE: This document is obsolete - please refer to the documents in 
+
+install/tex/install.*
+install/html/install.html
+
 McStas uses autoconf to detect the system configuration and create the
 proper Makefiles needed for compilation. On Unix-like systems, you
 should be able to compile and install McStas using the following steps:
