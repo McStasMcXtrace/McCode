@@ -197,7 +197,14 @@ function mcplot_menu_action(action, object)
       filename = eval('fud.instrument.Source','[]');
       if length(filename), mcplot_edit_file(filename); end
     case 'view_instr'  % Plot existing .fig if available
-      figname = [eval('fud.instrument.name','[]') '.fig'];
+      figname = eval('fud.instrument.Source','[]');
+      % Strip trailing .instr suffix
+      idx=findstr(figname,'.instr');
+      if not(isempty(idx))
+	idx=idx(length(idx));
+	figname=figname(1:idx-1);
+      end
+      figname=[figname '.fig'];
       if exist(figname)==2 openfig(figname,'reuse'); end
     case 'add_colorbar'  % Add _colorbar
       colorbar;
