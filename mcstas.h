@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.3 1997-08-13 09:15:28 kn Exp $
+* 	$Id: mcstas.h,v 1.4 1997-09-07 17:58:19 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.3  1997/08/13 09:15:28  kn
+* 	First version to properly parse instrument definition files.
+*
 * 	Revision 1.2  1997/07/02 07:28:36  kn
 * 	Added new declarations.
 *
@@ -57,12 +60,25 @@ struct Symtab_entry
     void *val;
   };
 
-typedef struct Symbol_table *Symtab;/* Symbol table abstract data type. */
+/* Symbol table abstract data type. */
+typedef struct Symbol_table *Symtab;
+/* Abstract handle for symbol table traversals. */
+typedef struct Symtab_position *Symtab_handle;
 
-Symtab symtab_create(void);	/* Create symbol table. */
-struct Symtab_entry *symtab_lookup(Symtab, char *); /* Lookup name in symbol table. */
-struct Symtab_entry *symtab_add(Symtab, char *, void *); /* Add name to symbol table. */
-void symtab_free(Symtab, void (*)(void *)); /* Free memory for symbol table. */
+/* Create symbol table. */
+Symtab symtab_create(void);
+/* Lookup name in symbol table. */
+struct Symtab_entry *symtab_lookup(Symtab, char *);
+/* Add name to symbol table. */
+struct Symtab_entry *symtab_add(Symtab, char *, void *);
+/* Free memory for symbol table. */
+void symtab_free(Symtab, void (*)(void *));
+/* Prepare to traverse table (in no particular order). */
+Symtab_handle symtab_iterate(Symtab s);
+/* Get next entry in a traversal. */
+struct Symtab_entry *symtab_next(Symtab_handle sh);
+/* End a traversal. */
+void symtab_iterate_end(Symtab_handle sh);
 
 
 /* Definitions for list.c */
@@ -74,6 +90,7 @@ typedef struct List_position *List_handle;
 List list_create(void);		/* Create list. */
 void list_add(List, void *);	/* Add element at end. */
 void list_free(List, void (*)(void *));	/* Deallocate a list. */
+int list_len(List l);		/* Get list length. */
 List_handle list_iterate(List);	/* Prepare to traverse list. */
 void *list_next(List_handle);	/* Get next element in list. */
 void list_iterate_end(List_handle); /* End list traversal. */
@@ -181,18 +198,27 @@ struct comp_orientation
 * Definitions in instrument.y
 *******************************************************************************/
 
+/* Name of the file currently being parsed. */
+extern char *instr_current_filename;
 /* Line number currently being scanned. */
 extern int instr_current_line;
 /* Result from parsing instrument definition. */
 extern struct instr_def *instrument_definition;
 /* Map from names to component instances. */
 extern Symtab comp_instances;
+/* List of component instances in declaration order. */
+extern List comp_instances_list;
+
+/* Handle assignment of actual to formal component parameters. */
+void comp_formals_actuals(struct comp_inst *comp, Symtab actuals);
 
 
 /*******************************************************************************
 * Definitions in component.y
 *******************************************************************************/
 
+
+extern char *comp_current_filename; /* Name of the file currently being parsed. */
 extern int comp_current_line;	/* Line number currently being scanned. */
 Symtab read_components;		/* Map of already-read components. */
 
@@ -200,7 +226,21 @@ Symtab read_components;		/* Map of already-read components. */
 struct comp_def *read_component(char *name);
 
 
-/* Functions and variables defined in debug.c */
+/*******************************************************************************
+* Definitions for cogen.c
+*******************************************************************************/
+
+#define ID_PRE "mc"
+
+/* Allocate a new, empty codeblock. */
+struct code_block *codeblock_new(void);
+/* Generate code for instrument definition. */
+void cogen(struct instr_def *instr);
+
+
+/*******************************************************************************
+* Functions and variables defined in debug.c
+*******************************************************************************/
 
 void print_error(char *, ...);	/* Normal error messages. */
 void fatal_error(char *, ...);	/* Report a fatal error and exit the program. */
@@ -252,14 +292,23 @@ extern int debug_current_level;
 
 /* Common structure definitions. */
 
+/* Code blocks. */
+struct code_block
+  {
+    char *filename;		/* Name of origin source file. */
+    int linenum;		/* Line number of first line. */
+    List lines;			/* List of lines (strings with \n at end). */
+  };
+
+
 /* Component definitions. */
 struct comp_def
   {
     char *name;			/* Component name. */
     List def_par, set_par, state_par; /* Formal parameters. */
-    List decl_code;		/* Declaration code. */
-    List init_code;		/* Initializeation code. */
-    List trace_code;		/* Ray-trace simulation code. */
+    struct code_block *decl_code; /* Declaration code. */
+    struct code_block *init_code; /* Initializeation code. */
+    struct code_block *trace_code; /* Ray-trace simulation code. */
   };
 
 
@@ -277,7 +326,9 @@ struct comp_inst
 struct instr_def
   {
     char *name;			/* Instrument name. */
-    List decls, inits;		/* Code for declarations and initializations. */
+    struct code_block *decls;	/* Code for declarations. */
+    struct code_block *inits;	/* Code for initializations. */
     List formals;		/* List of formal parameters. */
-    Symtab components;		/* Map of component names to instances. */
+    Symtab compmap;		/* Map of component names to instances. */
+    List complist;		/* List of components in declaration order. */
   };

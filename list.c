@@ -5,9 +5,12 @@
 *
 *	Author: K.N.			Jul  3, 1997
 *
-*	$Id: list.c,v 1.1 1997-08-13 09:15:16 kn Exp $
+*	$Id: list.c,v 1.2 1997-09-07 17:58:11 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.1  1997/08/13 09:15:16  kn
+*	Initial revision
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
@@ -88,6 +91,16 @@ list_free(List l, void (*freer)(void *))
   }
   memfree(l->elements);
   memfree(l);
+}
+
+
+/*******************************************************************************
+* Get the length of (number of elements in) a list.
+*******************************************************************************/
+int
+list_len(List l)
+{
+  return l->size;
 }
 
 

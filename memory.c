@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: memory.c,v 1.3 1997-08-13 09:15:48 kn Exp $
+*	$Id: memory.c,v 1.4 1997-09-07 17:58:29 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.3  1997/08/13 09:15:48  kn
+*	First version to properly parse instrument definition files.
+*
 *	Revision 1.2  1997/07/02 07:28:56  kn
 *	String functions.
 *
@@ -33,7 +36,7 @@
 void *
 mem(size_t size)
 {
-  void *p = malloc(size);
+  void *p = calloc(1, size);	/* Allocate and clear memory. */
   if(p == NULL)
     fatal_error("memory exhausted during allocation of size %d.", size);
   return p;
