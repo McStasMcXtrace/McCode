@@ -599,9 +599,7 @@ sub setup_menu {
 
 sub setup_cmdwin {
     my ($w) = @_;
-    my $f1 = $w->Frame(-relief => 'raised', -borderwidth => 2);
-    $f1->pack(-fill => 'x');
-    my $f2 = $f1->Frame();
+    my $f2 = $w->Frame();
     $f2->pack(-fill => 'x');
     my $instr_lab = $f2->Label(-text => "Instrument file: <None>",
 			       -anchor => 'w',
@@ -610,7 +608,7 @@ sub setup_cmdwin {
     my $instr_but = $f2->Button(-text => "Edit",
 				-command => \&menu_edit_current);
     $instr_but->pack(-side => "right", -padx => 1, -pady => 1);
-    my $f3 = $f1->Frame();
+    my $f3 = $w->Frame();
     $f3->pack(-fill => 'x');
     my $res_lab = $f3->Label(-text => "Simulation results: <None>",
 			     -anchor => 'w',
@@ -619,15 +617,15 @@ sub setup_cmdwin {
     my $sim_but = $f3->Button(-text => "Read",
 				-command => sub { menu_read_sim_file($w) });
     $sim_but->pack(-side => "right", -padx => 1, -pady => 1);
-    my $status_lab = $f1->Label(-text => "Status: Ok",
+    my $status_lab = $w->Label(-text => "Status: Ok",
 				-anchor => 'w',
 				-justify => 'left');
     $status_lab->pack(-fill => 'x');
     # Add the main text field, with scroll bar
-    my $rotext = $f1->ROText(-relief => 'sunken', -bd => '2',
-			     -setgrid => 'true',
-			     -height => 24, -width => 80);
-    my $s = $f1->Scrollbar(-command => [$rotext, 'yview']);
+    my $rotext = $w->ROText(-relief => 'sunken', -bd => '2',
+			    -setgrid => 'true',
+			    -height => 24, -width => 80);
+    my $s = $w->Scrollbar(-command => [$rotext, 'yview']);
     $rotext->configure(-yscrollcommand =>  [$s, 'set']);
     $s->pack(-side => 'right', -fill => 'y');
     $rotext->pack(-expand => 'yes', -fill => 'both');
