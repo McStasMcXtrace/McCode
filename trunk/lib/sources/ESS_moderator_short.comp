@@ -1,14 +1,15 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
+* McStas, the neutron ray-tracing package: ESS_moderator_short.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
 * Adapted from Moderator by: KN, M.Hagen, August 1998
-* Written by: KL
-* Version: $Revision: 1.1 $
-* Origin: 
+* Written by: Kim Lefmann
+* Date: 2001
+* Version: $Revision: 1.2 $
+* Origin: McStas 1.4.2
+* Modified by POA, April 2001: Added POLARISATION PARAMETERS
 *
 * A parametrised pulsed source for modelling ESS short pulses.
 *
@@ -52,6 +53,7 @@ SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh,
                     branch1, branch2)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
