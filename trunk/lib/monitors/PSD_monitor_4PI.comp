@@ -75,13 +75,13 @@ FINALLY
   int Nsum;
   double Psum, P2sum;
 
-  Nsum = Psum = P2sum 0;
+  Nsum = Psum = P2sum = 0;
   outfile=fopen(filename,"w");
   for (j=0; j<ny; j++)
   {
     for (i=0; i<nx; i++)
     {
-      fprintf(outfile,"%g ", PSD_N[i][j], PSD_p[i][j], PSD_p2[i][j]);
+      fprintf(outfile,"%g ", PSD_p[i][j]);
       Nsum += PSD_N[i][j];
       Psum += PSD_p[i][j];
       P2sum += PSD_p2[i][j];
@@ -89,6 +89,6 @@ FINALLY
     fprintf(outfile,"\n");
   }
   fclose(outfile);
-  test_printf("Total neutrons in PSD_monitor_4pi N: %i p: %g p2: %g \n",Nsum, Psum, P2sum);
+  DETECTOR_OUT(Nsum, Psum, P2sum);
 %}
 END
