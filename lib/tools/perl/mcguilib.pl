@@ -72,6 +72,7 @@ sub simulation_dialog {
     $si{'Trace'} = 0 unless $si{'Trace'};
     $si{'NScan'} = 0 unless $si{'NScan'};
     $si{'Multi'} = 0 unless $si{'Multi'};
+    $si{'mpi'}   = 0 unless $si{'mpi'};
     # 'Inspect' field for use of mcdisplay's built-in
     # neutron filter, filtering away all neutrons not
     # reaching a given component
@@ -154,9 +155,18 @@ sub simulation_dialog {
                                   -textvariable => \$si{'Ncount'});
     $ncount_entry->pack(-side => 'left');
     if (!($Config{'osname'} eq 'MSWin32')) {
-      $f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
-				-variable => \$si{'Multi'},
-				-relief => 'flat')->pack(-anchor => 'w');
+      if ($si{'ssh'} > 0) {
+        $f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
+				  -variable => \$si{'Multi'},
+				  -relief => 'flat')->pack(-anchor => 'w');
+      }
+      if ($si{'mpicc'} > 0) {
+        $f1->Label(-text => "# MPI nodes: ")->pack(-side => 'left');
+        $f1->Entry(-relief => 'sunken',
+               -width=>10,
+               -textvariable => \$si{'mpi'},
+               -justify => 'right')->pack(-side => 'left');
+      }
     }
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
     if ($plotter == 0) { $name_instr = "PGPLOT"; }
@@ -183,18 +193,14 @@ sub simulation_dialog {
 
     my $f3 = $opt_frame->Frame;
     $f3->pack(-anchor => 'w');
+    $f3->Radiobutton(-text => "Trace (3D View)",
+                     -variable => \$si{'Trace'},
+                     -relief => 'flat',
+                     -value => 1)->pack(-side => 'left');
     $f3->Radiobutton(-text => "Simulate",
                      -variable => \$si{'Trace'},
                      -relief => 'flat',
                      -value => 0)->pack(-side => 'left');
-    $f3->Radiobutton(-text => "Trace",
-                     -variable => \$si{'Trace'},
-                     -relief => 'flat',
-                     -value => 1)->pack(-side => 'left');
-    $f3->Radiobutton(-text => "Scan",
-                     -variable => \$si{'Trace'},
-                     -relief => 'flat',
-                     -value => 2)->pack(-side => 'left');
     $f3->Label(-text => "# Scanpoints: ")->pack(-side => 'left');
     $f3->Entry(-relief => 'sunken',
                -width=>10,
@@ -298,7 +304,7 @@ sub plot_dialog {
       $pl_suffix = ".pl";
     } else {
       $suffix = "&";
-      $prefix = "$MCSTAS::mcstas_config{'TERMINAL'} -e";
+      $prefix = "";
       $pl_suffix = "";
       $sim_file_name =~ s! !\ !g;
     }
@@ -374,6 +380,7 @@ END
         push @plot_cmd, $sim_file_name;
         push @plot_cmd, $suffix;
         my $cmd=join(' ',@plot_cmd);
+        putmsg($cmdwin, "$cmd\n",'msg');
         system $cmd;
       }
 }
