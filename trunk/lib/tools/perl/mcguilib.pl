@@ -297,7 +297,7 @@ sub plot_dialog {
       $pl_suffix = ".pl";
     } else {
       $suffix = "&";
-      $prefix = "xterm -e";
+      $prefix = "$MCSTAS::mcstas_config{'TERMINAL'} -e";
       $pl_suffix = "";
       $sim_file_name =~ s! !\ !g;
     }
