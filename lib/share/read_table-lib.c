@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.9 2003-05-20 15:12:33 farhi Exp $
+* $Id: read_table-lib.c,v 1.10 2004-09-03 13:46:50 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.9  2003/05/20 15:12:33  farhi
+*	malloc size for read table binary now needs less memory
+*	
 *	Revision 1.8  2003/02/11 12:28:46  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
@@ -565,7 +568,7 @@
   }
   
 /******************************************************************************
-* void Table_Star(t_Table *Table)
+* void Table_Stat(t_Table *Table)
 *   computes min/max/mean step of 1st column 
 *******************************************************************************/  
   static void Table_Stat(t_Table *mc_rt_Table)
