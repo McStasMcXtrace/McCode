@@ -59,9 +59,9 @@ fi
 if test "$BROWSER" = "no" ; then
   echo "WARNING: No HTML browser could be found !"
 fi
-if test "SCILAB" = "no" ; then
-  if test "MATLAB" = "no" ; then
-    if test "PGPLOT" = "no" ; then
+if test "$SCILAB" = "no" ; then
+  if test "$MATLAB" = "no" ; then
+    if test "$PGPLOT" = "no" ; then
       echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT) could be found !"
     fi
   fi
