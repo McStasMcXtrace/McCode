@@ -32,8 +32,8 @@ use Tk::DialogBox;
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
-# Requirement for mcplotlib.pl removed, will be loaded only if 
-# if mcdisplay backend is used. 
+# Requirement for mcplotlib.pl removed, will be loaded only 
+# if mcdisplay backend is used.
 # PW, 20030314
 # require "mcplotlib.pl";
 require "mcrunlib.pl";
@@ -595,7 +595,13 @@ sub menu_run_simulation {
     if($bt eq 'Start') {
 	my @command = ();
 	if($newsi->{'Trace'}) {
-	  # Here, a check is done for selected mcdisplay "backend"
+            if ($newsi->{'Trace'} eq 2) {
+	      # Special of 'Trace', neutron count set to 1...
+	      # For outputting figure files in Matlab/Scilab
+	      # backends.
+	      $newsi->{'Ncount'}=1;
+	    }
+	    # Here, a check is done for selected mcdisplay "backend"
 	    # Also, various stuff must be done differently on unix
 	    # type plaforms and on lovely Win32... :)
 	    # PW 20030314
@@ -657,6 +663,9 @@ sub menu_run_simulation {
 		push @command, "-f$output_file";
 	    }
 	    push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
+	    push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
+	    push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
+	    push @command, "--save" if ($newsi->{'Trace'} eq 2);
 	}
 	push @command, "$out_name";
 	push @command, "--ncount=$newsi->{'Ncount'}";
