@@ -128,6 +128,8 @@ sub is_erase_ok {
                                  -type => 'okcancel',
                                  -icon => 'question',
                                  -default => 'cancel');
+        # Make response all lowercase:
+        $ret = lc($ret);
         return $ret eq "ok" ? 1 : 0;
     } else {
         return 1;
@@ -162,38 +164,38 @@ sub menu_spawn_editor {
     my $pid;
     # Must be handled differently on Win32 vs. unix platforms...
     if($Config{'osname'} eq "MSWin32") {
-	if($current_sim_def) {
-	    system("$external_editor $current_sim_def");
-	} else {
-	    system("$external_editor");
-	}
+        if($current_sim_def) {
+            system("$external_editor $current_sim_def");
+        } else {
+            system("$external_editor");
+        }
     } else {
-	$pid = fork();
-	if(!defined($pid)) {
-	    $w->messageBox(-message =>
-			   "Failed to spawn editor \"$external_editor\".",
-			   -title => "Command failed",
-			   -type => 'OK',
-			   -icon => 'error');
-	    return 0;
-	} elsif($pid > 0) {
-	    waitpid($pid, 0);
-	    return 1;
-	} else {
-	    # Double fork to avoid having to wait() for the editor to
-	    # finish (or having it become a zombie). See man perlfunc.
-	    unless(fork()) {
-		if($current_sim_def) {
-		    exec($external_editor, $current_sim_def);
-		} else {
-		    exec($external_editor);
-		}
-		# If we get here, the exec() failed.
-		print STDERR "Error: exec() of $external_editor failed!\n";
-		POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
-	    }
-	    POSIX::_exit(0);                # CORE:exit needed to avoid Perl/Tk failure.
-	}
+        $pid = fork();
+        if(!defined($pid)) {
+            $w->messageBox(-message =>
+                           "Failed to spawn editor \"$external_editor\".",
+                           -title => "Command failed",
+                           -type => 'OK',
+                           -icon => 'error');
+            return 0;
+        } elsif($pid > 0) {
+            waitpid($pid, 0);
+            return 1;
+        } else {
+            # Double fork to avoid having to wait() for the editor to
+            # finish (or having it become a zombie). See man perlfunc.
+            unless(fork()) {
+                if($current_sim_def) {
+                    exec($external_editor, $current_sim_def);
+                } else {
+                    exec($external_editor);
+                }
+                # If we get here, the exec() failed.
+                print STDERR "Error: exec() of $external_editor failed!\n";
+                POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
+            }
+            POSIX::_exit(0);                # CORE:exit needed to avoid Perl/Tk failure.
+        }
     }
 }
 
@@ -732,9 +734,9 @@ sub menu_run_simulation {
     return 0 unless $out_name;
     # Attempt to avoid problem with missing "." in $PATH. Unix only.
     if (!($Config{'osname'} eq 'MSWin32')) {
-	unless($out_name =~ "/") {
-	    $out_name = "./$out_name";
-	}
+        unless($out_name =~ "/") {
+            $out_name = "./$out_name";
+        }
     }
     my $out_info = get_sim_info($out_name);
     unless($out_info) {
@@ -774,7 +776,7 @@ sub menu_run_simulation {
             if ($newsi->{'Trace'} eq 2) { # 'mcrun' mode
               push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix";
               push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'};
-	      push @command, "--multi" if $newsi->{'Multi'};
+              push @command, "--multi" if $newsi->{'Multi'};
             } else { # 'mcrun' mode
               push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
               if ($plotter eq 0) {
@@ -804,23 +806,22 @@ sub menu_run_simulation {
               }
               elsif ($plotter eq 3) {
                 push @command, "-pScilab";
-		# If this is Win32, make a check for # of neutron histories,
-		# should be made small to avoid waiting a long time for 
-		# mcdisplay...
-		if ($Config{'osname'} eq "MSWin32") {
-		    my $num_histories = $newsi->{'Ncount'} - 0;
-		    if ($num_histories >=1e3) {
-			my $break = $w->messageBox(-message => "$num_histories is a very large number of neutron histories when using Scilab on Win32.\nContinue?",
+                # If this is Win32, make a check for # of neutron histories,
+                # should be made small to avoid waiting a long time for 
+                # mcdisplay...
+                if ($Config{'osname'} eq "MSWin32") {
+                    my $num_histories = $newsi->{'Ncount'};
+                    if ($num_histories >=1e3) {
+                        my $break = $w->messageBox(-message => "$num_histories is a very large number of neutron histories when using Scilab on Win32.\nContinue?",
                        -title => "Note",
-                       -type => 'yesnoCancel',
+                       -type => 'YesNoCancel',
                        -icon => 'error',
-		       -default => 'no');
-			$break = lcfirst($break);
-			if (($break eq "no")||($break eq "cancel")) {
-			    return 0;
-			}
-		    }
-		}
+                       -default => 'No');
+                        if (($break eq "No")||($break eq "Cancel")) {
+                            return 0;
+                        }
+                    }
+                }
               }
               elsif ($plotter eq 4) {
                 push @command, "-pScilab";
@@ -838,9 +839,9 @@ sub menu_run_simulation {
               push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
               # push @command, "--save" if ($newsi->{'Trace'} eq 1);
             }
-	}
-	push @command, "$out_name";
-	my ($OutDir,$OutDirBak);
+        }
+        push @command, "$out_name";
+        my ($OutDir,$OutDirBak);
         # In the special case of --dir, we simply replace ' ' with '_'
         # on Win32 (also giving out a warning message). This is done
         # because Win32::GetShortPathName only works on directories that
@@ -872,26 +873,26 @@ sub menu_run_simulation {
     push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
           push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
   }
-	my @unset = ();
+        my @unset = ();
         for (@{$out_info->{'Parameters'}}) {
-	    if (length($newsi->{'Params'}{$_})>0) {
-		push @command, "$_=$newsi->{'Params'}{$_}";
-	    } else {
-		push @unset, $_;
-	    }
+            if (length($newsi->{'Params'}{$_})>0) {
+                push @command, "$_=$newsi->{'Params'}{$_}";
+            } else {
+                push @unset, $_;
+            }
         }
-	if (@unset>0) {	 
-	    $w->messageBox(-message =>	 
-			   "Unset parameter(s):\n\n@unset\n\nPlease fill all fields!",	 
-			   -title => "Unset parameters!",	 
-			   -type => 'OK',	 
-			   -icon => 'error');	 
-	    return;
-	}
+        if (@unset>0) {         
+            $w->messageBox(-message =>         
+                           "Unset parameter(s):\n\n@unset\n\nPlease fill all fields!",         
+                           -title => "Unset parameters!",         
+                           -type => 'OK',         
+                           -icon => 'error');         
+            return;
+        }
         my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;
-	$inf_sim=$newsi;
+        $inf_sim=$newsi;
         return unless $success;
         my $ext;
         if ($plotter eq 0) {
@@ -1307,6 +1308,86 @@ sub editor_quit {
     }
 }    
 
+sub Tk::TextEdit::SetComment
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) {
+     # Sub to redefine the LINE_COMMENT_STRING of the TextEdit widget...
+     # Don't know why, but this has to be done as an extension to the TextEdit 
+     # class... Will update this if something more clever is answered from
+     # comp.lang.perl.tk
+     
+     my ($w,$comment,$endcomment)=@_;
+     my $oldcomment = $w->{'LINE_COMMENT_STRING'};
+     $w->{'LINE_COMMENT_STRING'}=$comment;
+     $w->{'END_COMMENT_STRING'}=$endcomment;
+ }
+}
+
+sub Tk::TextUndo::insertStringAtEndOfSelectedLines
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) {
+     my ($w,$insert_string)=@_;
+     $w->addGlobStart;
+     $w->MarkSelectionsSavePositions;
+     foreach my $line ($w->GetMarkedSelectedLineNumbers)
+     {
+         $w->insert($line.'.end', $insert_string);
+     }
+     $w->RestoreSelectionsMarkedSaved;
+     $w->addGlobEnd;
+ }
+}
+
+sub Tk::TextUndo::deleteStringAtEndOfSelectedLines
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) {
+     my ($w,$insert_string)=@_;
+     $w->addGlobStart;
+     $w->MarkSelectionsSavePositions;
+     my $length = length($insert_string);
+     foreach my $line ($w->GetMarkedSelectedLineNumbers)
+     {
+         # First, extract full string to determine starting point:
+         my $tmpstart = $line.'.0';
+         my $end   = $line.'.end';
+         my $temp = $w->get($tmpstart, $end);
+         my $len = length($temp);
+         my $realstart = $len - $length;
+         $realstart = ".${realstart}";
+         my $start = $line.$realstart;
+         my $current_text = $w->get($start, $end);
+         next unless ($current_text eq $insert_string);
+         $w->delete($start, $end);
+     }
+     $w->RestoreSelectionsMarkedSaved;
+     $w->addGlobEnd;
+ }
+}
+
+sub Tk::TextEdit::CommentSelectedLines
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) {
+     my($w)=@_;
+     $w->insertStringAtStartOfSelectedLines($w->{'LINE_COMMENT_STRING'});
+     $w->insertStringAtEndOfSelectedLines($w->{'END_COMMENT_STRING'});
+ }
+}
+
+sub Tk::TextEdit::UncommentSelectedLines
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) { 
+     my($w)=@_;
+     $w->deleteStringAtStartOfSelectedLines($w->{'LINE_COMMENT_STRING'});
+     $w->deleteStringAtEndOfSelectedLines($w->{'END_COMMENT_STRING'});
+ }
+}
+
+
 sub setup_edit {
     my ($mw) = @_;
     # Create the editor window.
@@ -1315,6 +1396,17 @@ sub setup_edit {
     # Create the editor text widget.
     $e = $w->Scrolled('TextEdit',-relief => 'sunken', -bd => '2', -setgrid => 'true',
                       -height => 24, wrap => 'none', -scrollbars =>'se');
+    
+    # Put C++ style comment chars in... This will at least work with gcc...
+    # Later, I might work a little harder to get proper /* */ comment chars to 
+    # work, which will not rely on gcc as compiler...
+    # Comment lines in/out using <F7> and <F8>
+    #
+    # Unfortunately, this is not working on Win32...
+    if (!($Config{'osname'} eq 'MSWin32')) {
+        $e->SetComment("/* "," */");
+    }
+    
     my $menu = $e->menu;
     $w->configure(-menu => $menu);
     my $insert_menu = $menu->Menubutton(-text => 'Insert',  -underline => 0, -tearoff => 0);
@@ -1330,11 +1422,11 @@ sub setup_edit {
     $edit_control = $e;
     $edit_window = $w;
     $edit_label = $label;
-    $edit_control->SetGUICallbacks([\&update_line]);
+    $edit_control->SetGUICallbacks([\&update_line,sub{$edit_control->HighlightAllPairsBracketingCursor}]);
     if ($current_sim_def) {
       $w->title("Edit: $current_sim_def");
       if (-r $current_sim_def) {
-	  $e->Load($current_sim_def);
+          $e->Load($current_sim_def);
       }
     } else {
       $w->title("Edit: Start with Insert/Instrument template");
@@ -1344,10 +1436,10 @@ sub setup_edit {
 # GUI callback function for updating line numbers etc.
 sub update_line {
     if (defined($edit_control)) {
-	my ($line,$col) = split(/\./,$edit_control->index('insert'));
-	my ($last_line,$last_col) = split(/\./,$edit_control->index('end'));
-	$last_line=$last_line-1;
-	$edit_label->configure(-text => " Line: $line of $last_line total, Column: $col");
+        my ($line,$col) = split(/\./,$edit_control->index('insert'));
+        my ($last_line,$last_col) = split(/\./,$edit_control->index('end'));
+        $last_line=$last_line-1;
+        $edit_label->configure(-text => " Line: $line of $last_line total, Column: $col");
     } 
 }   
 
