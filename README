@@ -1,0 +1,67 @@
+This is McStas version 1.1, released March 31, 1999.
+Copyright (C) Risoe National Laboratory, 1997-1999. All rights reserved.
+See the file LICENSE for conditions on use.
+Since simulations produced with McStas will include code from the files
+in the lib/ directory, such simulations are derived works of these
+files. For this reason, a less restrictive licence applies to these
+files only, see the file lib/LICENSE.LIB.
+
+If you wish to use McStas in ways that contradict the conditions,
+contact us and chances are that we will be able to make a suitable
+arrangement.
+
+Installation instructions are in the file INSTALL.
+
+To get started, some example instrument definitions have been supplied
+in the examples/ directory. To compile an instrument, first run the
+McStas compiler, eg.
+
+    mcstas prisma2.instr
+
+and then run the C compiler on the resulting C file, eg.
+
+    cc -o prisma2 prisma2.c -lm
+
+To run the simulation, type eg.
+
+    ./prisma2 -n2e6 TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44
+
+The output files will be put in the current directory by default. The
+file tas1-scans in the example directory is a script that will run a
+series of simulations that constitute a line-up experiment of the TAS1
+spectrometer at Risø.
+
+To fully utilize McStas, you will need a copy of the McStas manual. If
+you received McStas on CDROM, the manual will be included as a
+postscript file. The manual, along with much other information, is also
+available from the McStas WWW home page:
+
+    http://elu-alf-2.risoe.dk/~elu-krni/mcstas/
+
+The contact for McStas is Kristian Nielsen, email
+kristian.nielsen@risoe.dk. Feel free to direct any comments or questions
+to this address. It is an important goal of the McStas project to have
+the program used also outside of Risø, so if you have a reasonable
+request there is a good chance that we will be willing to help you out.
+
+Some parts of McStas require additional software to be installed in
+order to work. The needed software packages are all freely
+distributable, and can be found on the McStas WWW home page or on the
+McStas CD-Rom distribution.
+
+ - The `gscan' front-end requires Perl version 5 or later.
+ - The `mcdisplay' front-end requires Perl version 5 or later, the
+   PGPLOT graphics library, and the PgPerl interface between Perl and
+   PGPLOT.
+ - the `mcplot' front-end requires Perl version 5 or later, the
+   PGPLOT graphics library, the PgPerl interface between Perl and
+   PGPLOT, and the PDL scientific data extension for Perl.
+
+Information on Perl may be found on
+    http://language.perl.com/index.html
+Information on PGPLOT may be found on
+    http://astro.caltech.edu/~tjp/pgplot/index.html
+Information on PgPerl may be found on
+    http://www.aao.gov.au/local/www/kgb/pgperl/
+Information on PDL may be found on
+    http://www.aao.gov.au/local/www/kgb/perldl/

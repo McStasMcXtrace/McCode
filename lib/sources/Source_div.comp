@@ -1,0 +1,64 @@
+/***********************************************************************
+*
+* McStas, version 1.1, released ??
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Source_div
+*
+* Written by: KL, November 20, 1998
+*
+* The routine is a rectangular neutron source, which has a gaussian
+* divergent output in the forward direction.
+* The neutron energy is uniformly distrubuted between E0-dE and E0+dE.
+*
+* ToDo: More flexible specification of E distribution.
+*
+* width:  (m)    Width of source
+* height  (m)    Height of source
+* hdiv    (deg)  FWHM of horisontal divergence
+* vdiv    (deg)  FWHM of vertical divergence
+* E0:     (meV) Mean energy of neutrons.
+* dE:     (meV) Energy spread of neutrons.
+*
+***********************************************************************/
+
+DEFINE COMPONENT Source_div
+DEFINITION PARAMETERS (width, height, hdiv, vdiv, E0, dE)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  double thetah, thetav, sigmah, sigmav, tan_h, tan_v;
+%}
+INITIALIZE
+%{
+  sigmah = DEG2RAD*hdiv/(2.0*sqrt(2.0*log(2.0)));
+  sigmav = DEG2RAD*vdiv/(2.0*sqrt(2.0*log(2.0)));
+%}
+TRACE
+%{
+ double E,v;
+
+ p=1;
+ z=0;
+ t=0;
+
+ x=randpm1()*width/2.0;
+ y=randpm1()*height/2.0;
+
+ E=E0+dE*randpm1();                  /* Assume linear distribution */
+ v=sqrt(E)*SE2V;
+
+ thetah = randnorm()*sigmah;
+ thetav = randnorm()*sigmav;
+ tan_h = tan(thetah);
+ tan_v = tan(thetav);
+
+ /* Perform the correct treatment - no small angle approx. here! */
+ vz = v / sqrt(1 + tan_v*tan_v + tan_h*tan_h);
+ vy = tan_v * vz;
+ vx = tan_h * vz; 
+%}
+END
