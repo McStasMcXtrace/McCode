@@ -28,7 +28,7 @@ use Cwd;
 require "mcstas_config.perl";
 require "mcfrontlib.pl";
 
-# get MCSTAS::mcstas_config{'PLOTTER'} 
+# get MCSTAS::mcstas_config{'PLOTTER'}
 my $plotter=$MCSTAS::mcstas_config{'PLOTTER'};
 
 # Strip any single quotes around argument.
@@ -317,13 +317,13 @@ sub do_test {
   my ($printer,$force, $plotter) = @_;
   my $j;
   my $pwd=getcwd;
-  
+
   &$printer( "# McStas self-test (mcrun --test)");
   &$printer(`mcstas --version`);
   &$printer("# Installing 'selftest' directory in $pwd");
   if (-d "selftest") # directory already exists
   { if ($force) { eval { rmtree('selftest',0,1); } }
-    else { 
+    else {
       return "mcrun: Directory 'selftest' already exists.\n       Use '-c' or '--force' option to overwrite.\n";
     }
   }
@@ -364,11 +364,11 @@ sub do_test {
   $suffix=$MCSTAS::mcstas_config{'SUFFIX'};
   $prefix=$MCSTAS::mcstas_config{'PREFIX'};
   $ENV{'MCSTAS_FORMAT'} = $plotter;
-  @test_names   = ("ISIS prisma2: in focusing mode", 
-      "ISIS prisma2: in non-focusing mode", 
-      "vanadium_example: vanadium scattering anisotropy", 
+  @test_names   = ("ISIS prisma2: in focusing mode",
+      "ISIS prisma2: in non-focusing mode",
+      "vanadium_example: vanadium scattering anisotropy",
       "Brookhaven H8: Thermal TAS with vanadium sample",
-      "Risoe TAS1: monochromator rocking curve (no collimator)", 
+      "Risoe TAS1: monochromator rocking curve (no collimator)",
       "Risoe TAS1: monochromator rocking curve (with 30 minutes collimator)",
       "Risoe TAS1: collimator C1 tilt",
       "Risoe TAS1: monochromator rotation (PHM aka A1) with C1 tilted by OMC1=-2 deg",
@@ -418,7 +418,7 @@ sub do_test {
       &$printer("[FAILED] $this_name: ($child_error_code): $child_error_text");
       $error_flag = 1;
       last;
-    } else { 
+    } else {
       my $diff = 0;
       my $sim_I= 0;
       my $line;
@@ -427,7 +427,7 @@ sub do_test {
         # split the output in lines
         for $line (split "\n", $res) {
         # search reference monitor in these lines
-          if($line =~ m/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { 
+          if($line =~ m/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) {
             my $sim_I_name = $1;
             if ($test_monitor_names[$j] eq $sim_I_name) {
               $sim_I = $2;
@@ -437,15 +437,15 @@ sub do_test {
           }
         } # end for
         if ($diff) {
-          if ($diff > 0.2) { 
-            $accuracy_flag = 1; 
+          if ($diff > 0.2) {
+            $accuracy_flag = 1;
             $diff = $diff*100;
-            &$printer("[FAILED] $this_name ($sim_I, should be $test_monitor_values[$j])"); 
+            &$printer("[FAILED] $this_name ($sim_I, should be $test_monitor_values[$j])");
           } else { &$printer("[OK] $this_name (accuracy within $diff %)"); }
         }
       } # end if ($test_monitor_values[$j] ne 0)
       if ($diff eq 0) { &$printer("[OK] $this_name (accuracy not checked)"); }
-    } # end else 
+    } # end else
   } # end for
   my $elapsed_sec = time() - $start_sec;
   # now test graphics...
@@ -463,7 +463,7 @@ sub do_test {
     my $child_error_code = $?;
     if ($child_error_code) {
       &$printer("[Warning] $this_name: ($child_error_code): $child_error_text");
-    } 
+    }
     my $this_flag = 1;
     if (opendir(DIR, "$test_monitor_names[$j]")) {
       my @files = readdir(DIR);
@@ -476,7 +476,7 @@ sub do_test {
         $this_flag = 1;
         if (-f "$filename") {
           my $sb = stat($filename);
-          if ($sb->size) { 
+          if ($sb->size) {
             &$printer("[OK] $this_name ($filename)");
             $this_flag = 0;
           }
@@ -485,7 +485,7 @@ sub do_test {
     } # end opendir
     if ($this_flag) { &$printer("[FAILED] $this_name"); $plot_flag=1; }
   } # end for
-  
+
   $now = localtime();
   if ($error_flag) {
     &$printer("# Installation check: FAILED. McStas has not been properly installed.");
@@ -507,7 +507,7 @@ sub do_test {
       &$printer("# Plotter      check: OK.     Using Plotter $plotter.");
     }
   }
-  
+
   &$printer("# End Date: $now");
   chdir($pwd) or return "mcrun: Can not come back to $pwd: $!\n";; # come back to initial directory
   return undef;
@@ -549,7 +549,7 @@ sub parse_header {
     while(<$f>) {
         if(/\%INSTRUMENT_SITE:(.*)$/i) {
             $d->{'site'}=$1;
-        } elsif(/\%I[a-z]*/i) {
+        } elsif(/\%I[a-z]*/i && not /\%include/i) {
             $where = "identification";
         } elsif(/\%D[a-z]*/i) {
             $where = "description";
@@ -672,13 +672,13 @@ sub get_comp_info {
             } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                 push @spar, $1;
             } else {
-                print STDERR "Warning: Unrecognized PARAMETER in instrument $cname.\n";
+                print STDERR "Warning: Unrecognized PARAMETER in instrument $cname: $1\n";
             }
         }
-        if ($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i) 
+        if ($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i)
         { push @opar, "$1"; $d->{'parhelp'}{$1}{'default'} = "This instrument contains embedded components"; }
     } elsif ($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i) {
-        $cname = $1; 
+        $cname = $1;
         if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i && $typ ne "Instrument") {
             foreach (split(",", $1)) {
                 if(/^\s*([a-zA-Z0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
@@ -687,7 +687,7 @@ sub get_comp_info {
                 } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                     push @dpar, $1;
                 } else {
-                    print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname.\n";
+                    print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname: $1\n";
                 }
             }
         }
@@ -699,7 +699,7 @@ sub get_comp_info {
                 } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                     push @spar, $1;
                 } else {
-                    print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname.\n";
+                    print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname: $1.\n";
                 }
             }
         }
@@ -709,13 +709,13 @@ sub get_comp_info {
     } else {
         $cname = "<Unknown>";
     }
-    
+
     @ipar = (@dpar, @spar);
-    
+
     # DECLARE, INITIALIZE, ... blocks will have to wait for the real parser.
     $d->{'name'} = $cname;
     $d->{'type'} = $typ;
-    if ($typ eq "Component") { $d->{'ext'} = "comp"; } 
+    if ($typ eq "Component") { $d->{'ext'} = "comp"; }
     else { $d->{'ext'} = "instr"; }
     $d->{'inputpar'} = \@ipar;
     $d->{'definitionpar'} = \@dpar;
@@ -758,10 +758,10 @@ sub parse_instrument {
         if(/^\s*COMPONENT \s*([a-zA-Z0-9_]+)\s=*/) {
 	    push @d, $1;
         } else  {
-	} 
+	}
     }
     return @d;
-    
+
 }
 
 1;
