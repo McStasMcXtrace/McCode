@@ -29,8 +29,8 @@
 DEFINE COMPONENT Source_flat
 DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE)
 SETTING PARAMETERS ()
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 OUTPUT PARAMETERS (hdiv, vdiv, p_in)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
  double hdiv,vdiv;
