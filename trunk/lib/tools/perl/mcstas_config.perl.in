@@ -12,6 +12,9 @@
 #            2 - Matlab script file (Unix / Win32)
 #            3 - Scilab (Unix only)
 #            4 - Scilab script file (Unix / Win32)
+# EDITOR   - Choice of default built-in editor
+#            0 - McStas 1.7 editor (simple, no extra perl modules req'd)
+#            1 - CodeText editor with highlighting of McStas instrument code
 # MATLAB_COMMAND - command to execute matlab (Unix only)
 # SCILAB_COMMAND - command to execute scilab (Unix only)
 #
@@ -21,6 +24,7 @@
      LDFLAGS => '@LDFLAGS@',
      CC => '@CC@',
      PLOTTER => 3,
+     EDITOR => 1,
      MATLAB_COMMAND => 'matlab -nojvm > /dev/null',
      SCILAB_COMMAND => 'scilab -nw > /dev/null'
      );

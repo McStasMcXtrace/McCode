@@ -380,12 +380,17 @@ END
 sub backend_dialog {
     # Choice of plotting backend
     # PW 20030314
-    my ($win,$binary,$plotter) = @_;
-    my $dlg = $win->DialogBox(-title => "McStas: Plot backend",
+    # Choice of internal editor
+    # PW 20040527
+    my ($win,$binary,$plotter,$editor) = @_;
+    my $dlg = $win->DialogBox(-title => "McStas: Configuration options",
                               -buttons => ["Close"]);
-    my $lf = $dlg->add('Frame');
+    my $lf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
+    my $rf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
     my $buttons;
-    $lf->pack(-side => 'left');
+    my $edit_buttons;
+    $lf->pack(-side => 'left', -fill => 'both');
+    $lf->Label(-text => "Plotting options:", -anchor => 'w')->pack(-fill => 'x');
     $buttons[0]=$lf->Radiobutton(-text => "PGPLOT (standard mcdisplay.pl)",
                -anchor => 'w', -value => 0, -variable => \$plotter)->pack(-fill => 'x');
     $buttons[1]=$lf->Radiobutton(-text => "Matlab (requires Matlab)",
@@ -399,9 +404,16 @@ sub backend_dialog {
     $buttons[5]=$lf->Checkbutton(-text => "Use binary files (faster)",
                -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
     $buttons[$plotter]->select;
+    $rf->pack(-side => 'top', -fill => 'both');
+    $rf->Label(-text => "Editor options:", -anchor => 'w')->pack(-fill => 'x');
+    $edit_buttons[0]=$rf->Radiobutton(-text => "Simple built-in editor (McStas 1.7)",
+               -anchor => 'w', -value => 0, -variable => \$editor)->pack(-fill => 'x');
+    $edit_buttons[1]=$rf->Radiobutton(-text => "Advanced built-in editor",
+               -anchor => 'w', -value => 1, -variable => \$editor)->pack(-fill => 'x');
+    $edit_buttons[$editor]->select;
     my $res = $dlg->Show;
     
-    return ($res, $binary, $plotter);
+    return ($res, $binary, $plotter, $editor);
 }
 
 
