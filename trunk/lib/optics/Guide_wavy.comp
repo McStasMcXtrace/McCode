@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -237,7 +237,7 @@ and the rotated bottom normal vector is { -l d_xy,  l + f_v d_z,  f_v + l d_z }
       {
         R = .5*(1-tanh(arg))*(1-alpha*(q-Qc));
         p *= R;
-        printf("q,Qc,alpha,arg,R: %g %g %g %g %g \n",q,Qc,alpha,arg,R);
+        /* printf("q,Qc,alpha,arg,R: %g %g %g %g %g \n",q,Qc,alpha,arg,R); */
       }
       else
         ABSORB;                               /* Cutoff ~ 1E-10 */
