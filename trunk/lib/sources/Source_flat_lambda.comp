@@ -1,15 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Source_flat_lambda.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KN
+* Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.2 $
-* Origin: McStas release
-* Modified by: KN, 1999 from Source_flat.comp
+* Version: $Revision: 1.3 $
+* Origin: McStas 1.4.2
 *
 * Neutron source with flat wavelength spectrum and arbitrary flux.
 *
@@ -17,7 +15,7 @@
 * The routine is a circular neutron source, which aims at a square target
 * centered at the beam (in order to improve MC-acceptance rate).  The angular
 * divergence is then given by the dimensions of the target. The neutron
-* wavelength is uniformly distrubuted between lambda_0 - d_lambda and
+* wavelength is uniformly distributed between lambda_0 - d_lambda and
 * lambda_0 + d_lambda.
 *
 * %P
@@ -37,6 +35,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, dist, xw, yh, lambda_0, d_lambda)
 OUTPUT PARAMETERS (hdiv, vdiv, p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
  double hdiv,vdiv;
