@@ -1,0 +1,69 @@
+/*******************************************************************************
+* Misc. useful routines to handle Cartesian coordinates.
+*
+*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	File name: coords.c
+*
+*	Author: K.N.			Aug  8, 1997
+*
+*	$Id: coords.c,v 1.1 1997-08-13 09:13:18 kn Exp $
+*
+*	$Log: not supported by cvs2svn $
+*
+* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+*******************************************************************************/
+
+#include "mcstas.h"
+
+/*******************************************************************************
+* Since we use a lot of geometric calculations using Cartesian coordinates,
+* we collect some useful routines here. However, it is also permissible to
+* work directly on the underlying struct coords whenever that is most
+* convenient (that is, the type Coords is not abstract).
+*
+* Coordinates are also used to store rotation angles around x/y/z axis.
+*
+* Since coordinates are used much like a basic type (such as double), the
+* structure itself is passed and returned, rather than a pointer.
+*
+* At compile-time, the values of the coordinates may be unknown (for example
+* a motor position). Hence coordinates are general expressions and not simple
+* numbers. For this we used the type Coords_exp which has three CExp
+* fields. For runtime (or calculations possible at compile time), we use
+* Coords which contains three double fields.
+*******************************************************************************/
+
+/* Get all-zero coordinate. */
+Coords
+coords_origo(void)
+{
+  Coords c;
+  
+  c.x = 0;
+  c.y = 0;
+  c.z = 0;
+  return c;
+}
+
+Coords_exp
+coords_exp_origo(void)
+{
+  Coords_exp c;
+  
+  c.x = exp_number(0);
+  c.y = exp_number(0);
+  c.z = exp_number(0);
+  return c;
+}
+
+/* Add two coordinates. */
+Coords
+coords_add(Coords a, Coords b)
+{
+  Coords c;
+
+  c.x = a.x + b.x;
+  c.y = a.y + b.y;
+  c.z = a.z + b.z;
+  return c;
+}
