@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.67 2003-06-12 10:22:00 farhi Exp $
+* $Id: mcstas-r.c,v 1.68 2003-06-17 14:21:54 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.67  2003/06/12 10:22:00  farhi
+* -i show info as McStas format, --info use MCSTAS_FORMAT or --format setting
+*
 * Revision 1.66  2003/06/10 11:29:58  pkwi
 * Corrected multiple parse errors: Added two missing sets of curly brackets { } in parameter parsing function.
 *
@@ -223,7 +226,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%7$s=get_%7$s();\n",
     "// Section %2$s [%3$s] (level %7$d)\n"
       "%1$s%4$s = struct(); %4$s.class = '%2$s';",
-    "%1$s%6$s.%4$s = 0; %6$s.%4$s = %4$s; clear %4$s;\n",
+    "%1$s%6$s.%4$s = 0; %6$s.%4$s = %4$s;\n",
     "%1$s%2$s.%3$s = '%4$s';\n",
     "%1$s%2$s.func='get_%2$s';\n%1$s%2$s.data = [ ",
     "%1$serrors = [ ",
@@ -284,7 +287,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "if ~isempty(findstr(d.type,'2d')), colorbar; end\n",
     "%% Section %2$s [%3$s] (level %7$d)\n"
       "%4$s.class = '%2$s';",
-    "%6$s.%4$s = %4$s; clear %4$s;\n",
+    "%6$s.%4$s = %4$s;\n",
     "%1$s%2$s.%3$s = '%4$s';\n",
     "%1$s%2$s.func='%2$s';\n%1$s%2$s.data = [ ",
     "%1$serrors = [ ",
