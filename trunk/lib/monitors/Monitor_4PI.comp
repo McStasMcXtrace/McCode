@@ -1,4 +1,4 @@
-/***********************************************************************
+/*******************************************************************************
 *
 * McStas, version 1.0, released October 26, 1998
 *         Maintained by Kristian Nielsen and Kim Lefmann,
@@ -9,12 +9,12 @@
 * Written by:  KL, KN  April 17, 1998
 * Modified by: KL      Sept. 22, 1998
 *
-* Counts ALL neutrons that intersect the circular detector, regardless of
-* origin or direction. Mostly used for test purposes.
+* Counts ALL neutrons that propagate this far in the instrument, regardless
+* of origin or direction. Mostly used for test purposes.
 *
 * INPUT PARAMETERS:
 *
-* radius : radius of the detector (m)
+* (none)
 *
 * OUTPUT PARAMETERS:
 *
@@ -22,12 +22,13 @@
 * psum   : Total weight of neutrons hitting
 * p2sum  : Second moment of neutron weights
 *
-***********************************************************************/
+*******************************************************************************/
 
 
 DEFINE COMPONENT Monitor_4PI
-DEFINITION PARAMETERS (radius, Nsum, psum, p2sum)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
+OUTPUT PARAMETERS(Nsum, psum, p2sum)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -42,19 +43,12 @@ INITIALIZE
   %}
 TRACE
   %{
-    double t0,t1;
-
-    if(sphere_intersect(&t0,&t1,x,y,z,vx,vy,vz,radius) && t1>0)
-    {
-      if(t0<0)
-	t0=t1;   /* t0 is now the time of intersection with the sphere */
-      PROP_DT(t0);
     Nsum++;
     psum += p;
     p2sum += p*p;
   %}
 FINALLY
   %{
-    test_printf("4PI Monitor count: %i, %f, %f.\n", Nsum, psum, p2sum);
+    DETECTOR_OUT(Nsum, psum, p2sum);
   %}
 END
