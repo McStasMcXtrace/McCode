@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -156,7 +156,7 @@ SHARE
     aVars->gz = a_Gz;
 
     if (a_k <= 0 || a_kh <= 0) { fprintf(stderr,"%s: Fatal: no channel in this guide (kh or k=0).\n", aVars->compcurname); exit(-1); }
-    if (a_d < 0) { fprintf(stderr,"%s: Fatal: subdividing walls have negative thicxkness in this guide (d<0).\n", aVars->compcurname); exit(-1); }
+    if (a_d < 0) { fprintf(stderr,"%s: Fatal: subdividing walls have negative thickness in this guide (d<0).\n", aVars->compcurname); exit(-1); }
     aVars->w1c = (a_w1 - (a_k-1) *a_d)/(double)a_k;
     aVars->w2c = (a_w2 - (a_k-1) *a_d)/(double)a_k;
     aVars->h1c = (a_h1 - (a_kh-1)*a_d)/(double)a_kh;
