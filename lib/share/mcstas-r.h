@@ -45,6 +45,12 @@
 #endif /* !MAC */
 #endif /* !WIN32 */
 
+#ifndef MAC
+#ifndef WIN32
+#include <signal.h>
+#endif /* !MAC */
+#endif /* !WIN32 */
+
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
