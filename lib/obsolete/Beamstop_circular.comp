@@ -1,0 +1,36 @@
+/***********************************************************************
+*
+* McStas, the neutron ray-tracing package.
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Beamstop_circular
+*
+* Written by: Kristian Nielsen, January 2000
+*
+* A simple circular beam stop. Infinitely thin and infinitely absorbing.
+*
+* INPUT PARAMETERS
+*
+* radius: radius of the beam stop (m)
+*
+***********************************************************************/
+
+DEFINE COMPONENT Beamstop_circular
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+TRACE
+%{
+    PROP_Z0;
+    if(x*x + y*y <= radius*radius)
+      ABSORB;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy", 0, 0, 0, radius);
+%}
+
+END
