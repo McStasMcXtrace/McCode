@@ -1,16 +1,26 @@
 #! /usr/bin/perl -w
 
+# Config module needed for various platform checks.
+# PW, 20030314
+use Config;
+
+
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
     if($ENV{"MCSTAS"}) {
 	$MCSTAS::sys_dir = $ENV{"MCSTAS"};
-    } else {
+    } 
+    else {
+      if ($Config{'osname'} eq 'MSWin32') {
+	$MCSTAS::sys_dir = "c:\\mcstas\\lib";
+      } else {
 	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
-}
+  }
 use lib $MCSTAS::perl_dir;
 
 use strict;
@@ -22,7 +32,10 @@ use Tk::DialogBox;
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
-require "mcplotlib.pl";
+# Requirement for mcplotlib.pl removed, will be loaded only if 
+# if mcdisplay backend is used. 
+# PW, 20030314
+# require "mcplotlib.pl";
 require "mcrunlib.pl";
 
 my $current_sim_file;
@@ -31,6 +44,7 @@ my %inf_param_map;
 my $current_sim_def;
 my $main_window;
 my ($edit_window, $edit_control);
+
 my $external_editor;
 my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
 
@@ -310,6 +324,15 @@ sub load_sim_file {
     read_sim_data($w);
 }
 
+sub save_disp_file {
+    # Function for saving mcdisplay type output
+    # PW 20030314
+    my ($w,$ext) = @_;
+    my $file = $w->getSaveFile(-defaultextension => $ext,
+			       -title => "Select output filename", -initialdir => "$ENV{'PWD'}", -initialfile => "mcdisplay_output.$ext");
+    return $file;
+}
+
 sub putmsg {
     my ($t, $m, $tag) = @_;
     $cmdwin->insert('end', $m, $tag);
@@ -431,7 +454,14 @@ sub dialog_get_out_file {
 	    } elsif($type eq 'RUN_CMD') {
 		$savefocus = run_dialog_popup($dlg) unless $savefocus;
 		my $fh = new FileHandle;
-		$pid = open($fh, "-|");
+		# Open calls must be handled according to 
+		# platform...
+		# PW 20030314
+		if ($Config{'osname'} eq 'MSWin32') {
+		  $pid = open($fh, "@$val |");
+		} else {
+		  $pid = open($fh, "-|");
+		}
 		unless(defined($pid)) {
 		    &$printer("Could not spawn command.");
 		    last;
@@ -511,7 +541,15 @@ sub menu_compile{
 sub my_system {
     my ($w, $inittext, @sysargs) = @_;
     my $fh = new FileHandle;
-    my $child_pid = open($fh, "-|");
+    my $child_pid;
+    # Open calls must be handled according to 
+    # platform...
+    # PW 20030314
+    if ($Config{'osname'} eq 'MSWin32') {
+      $child_pid = open($fh, "@sysargs |");
+    } else {
+      $child_pid = open($fh, "-|");
+    }
     unless(defined($child_pid)) {
 	$w->messageBox(-message => "Could not run simulation.",
 		       -title => "Run failed",
@@ -557,12 +595,67 @@ sub menu_run_simulation {
     if($bt eq 'Start') {
 	my @command = ();
 	if($newsi->{'Trace'}) {
-	    push @command, "mcdisplay";
-	    # Make sure the PGPLOT server is already started. If the
-	    # PGPLOT server is not started, mcdisplay will start it,
-	    # and the server will keep the pipe to mcdisplay open
-	    # until the server exits, hanging mcgui.
-	    ensure_pgplot_xserv_started();
+	  # Here, a check is done for selected mcdisplay "backend"
+	    # Also, various stuff must be done differently on unix
+	    # type plaforms and on lovely Win32... :)
+	    # PW 20030314
+	    #
+	    my $suffix='';
+	    # Check if this is Win32, call perl accordingly...
+	    if ($Config{'osname'} eq 'MSWin32') {
+	      # Win32 'start' command needed to background the process..
+	      push @command, "start";
+	      # Set $suffix to .pl
+	      $suffix='.pl';
+	    }
+	    # Check 'Plotter' setting
+	    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
+	    if ($plotter eq 0) {
+		push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
+		# Be sure to read mcplotlib.pl in this case...
+		require "mcplotlib.pl";
+		# Standard mcdisplay.pl with PGPLOT bindings
+		# Make sure the PGPLOT server is already started. If the
+		# PGPLOT server is not started, mcdisplay will start it,
+		# and the server will keep the pipe to mcdisplay open
+		# until the server exits, hanging mcgui.
+	        ensure_pgplot_xserv_started();
+	    } 
+	    elsif ($plotter eq 1) {
+	      push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay_matlab$suffix";
+	    }
+	    elsif ($plotter eq 2) {
+		push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay_matlab$suffix";
+		my $output_file = save_disp_file($w,'m');
+		if (!$output_file) {
+		    putmsg($cmdwin, "Trace canclled...\n");
+		    return;
+		}
+		push @command, "--output=$output_file";
+	    }
+	    elsif ($plotter eq 3) {
+		push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay_scilab$suffix";
+		if ($Config{'osname'} eq 'MSWin32') {
+		    # Calling through pipe does not work on Win32 :( - revert to 'scilab script'
+		    putmsg($cmdwin, "Sorry, scilab pipe non-funtional on Win32 systems. Reverting to sciptfile...\n");
+		    my $output_file = save_disp_file($w,'sci');
+		    if (!$output_file) {
+			putmsg($cmdwin, "Trace canclled...\n");
+			return;
+		    }
+		    push @command, "--output=$output_file";
+		}
+	    }
+	    elsif ($plotter eq 4) {
+		push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay_scilab$suffix";
+		my $output_file = save_disp_file($w,'sci');
+		if (!$output_file) {
+		    putmsg($cmdwin, "Trace canclled...\n");
+		    return;
+		}
+		push @command, "--output=$output_file";
+	    }
+	    push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
 	}
 	push @command, "$out_name";
 	push @command, "--ncount=$newsi->{'Ncount'}";
@@ -599,6 +692,19 @@ sub menu_plot_results {
     plot_dialog($w, $inf_instr, $inf_sim, $inf_data, $current_sim_file);
     return 1;
 }
+
+sub menu_choose_backend {
+    # sub for selection of mcdisplay "backend". 
+    # Default read from $MCSTAS::mcstas_config{'PLOTTER'}
+    # PW 20030314
+    my ($w) = @_;
+    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
+    my $ret;
+    my $output_file;
+    ($ret, $plotter) = backend_dialog($w,$plotter);
+    $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
+}
+
 
 sub menu_read_sim_file {
     my ($w) = @_;
@@ -817,6 +923,13 @@ sub setup_menu {
 		      -accelerator => 'Alt+P',
 		      -command => sub {menu_plot_results($w);});
     $w->bind('<Alt-p>' => [\&menu_plot_results, $w]);
+    $simmenu->separator;
+    $simmenu->command(-label => 'Choose backend ...',
+		      -underline => 0,
+		      -accelerator => 'Alt+C',
+		      -command => sub {menu_choose_backend($w);});
+    $w->bind('<Alt-c>' => [\&menu_choose_backend, $w]);
+    
     $simmenu->pack(-side=>'left');
     my $helpmenu = $menu->Menubutton(-text => 'Help', -underline => 0);
     $helpmenu->command(-label => 'McStas web page',
@@ -950,7 +1063,15 @@ sub check_if_need_recompile {
     if($simname =~ /^(.*)\.(instr|ins)$/) {
 	$exename = $1;
     } else {
+      # Once again, needed platform check - 
+      # selection of executable suffix on 
+      # unix vs. Win32
+      # PW 20030314
+      if ($Config{'osname'} eq "MSWin32") {
+	$exename = "$simname.exe";
+      } else {
 	$exename = "$simname.out";
+      }
     }
     return "not found" unless -f $exename;
     return "not executable" unless -x $exename;
