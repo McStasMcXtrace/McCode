@@ -696,7 +696,7 @@ sub menu_run_simulation {
 		  putmsg($cmdwin, "Trace cancelled...\n");
 		  return;
 		}
-		$output_file = Win32::GetShortPathName($output_file);
+		$output_file = "\"$output_file\"";
 		push @command, "-f$output_file";
 		
 	      }
@@ -710,7 +710,7 @@ sub menu_run_simulation {
 		    putmsg($cmdwin, "Trace cancelled...\n");
 		    return;
 		  }
-		  $output_file = Win32::GetShortPathName($output_file);
+		  $output_file = "\"$output_file\"";
 		  push @command, "-f$output_file";
 		}
 	      }
@@ -721,7 +721,7 @@ sub menu_run_simulation {
 		  putmsg($cmdwin, "Trace cancelled...\n");
 		  return;
 		}
-		$output_file = Win32::GetShortPathName($output_file);
+		$output_file = "\"$output_file\"";
 		push @command, "-f$output_file";
 		
 	      }
