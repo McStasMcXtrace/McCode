@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.11 1998-05-11 12:08:49 kn Exp $
+* 	$Id: mcstas-r.c,v 1.12 1998-05-19 07:54:05 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.11  1998/05/11 12:08:49  kn
+* 	Fix bug in cylinder_intersect that caused an infinite cylinder height in
+* 	some cases.
+*
 * 	Revision 1.10  1998/04/17 11:50:08  kn
 * 	Added sphere_intersect.
 *
@@ -345,7 +349,8 @@ sphere_intersect(double *t0, double *t1, double x, double y, double z,
 }
 
 
-/* Choose random direction towards target at (x,y,z) with radius r. */
+/* Choose random direction towards target at (x,y,z) with given radius. */
+/* If radius is zero, choose random direction in full 4PI, no target. */
 /* ToDo: It should be possible to optimize this to avoid computing angles. */
 void
 randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
@@ -353,24 +358,47 @@ randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
 {
   double l, theta0, phi, theta, nx, ny, nz, xt, yt, zt;
   
-  l = sqrt(xi*xi + yi*yi + zi*zi); /* Distance to target. */
-  theta0 = asin(radius / l);	/* Target size as seen from origin */
-  /* Now choose point uniformly on sphere surface within angle theta0 */
-  theta = acos (1 - rand0max(1 - cos(theta0)));
-  phi = rand0max(2 * PI);
-  /* Now, to obtain the desired vector rotate (x,y,z) angle theta around a
-     perpendicular axis (nx,ny,nz) and then angle phi around (x,y,z). */
-  if(xi == 0 && yi == 0)
+  if(radius == 0.0)
   {
+    /* No target, choose uniformly a direction in full 4PI solid angle. */
+    theta = acos (1 - rand0max(2));
+    phi = rand0max(2 * PI);
+    if(solid_angle)
+      *solid_angle = 4*PI;
     nx = 1;
     ny = 0;
     nz = 0;
+    xi = 0;
+    yi = 1;
+    zi = 0;
   }
   else
   {
-    nx = -yi;
-    ny = xi;
-    nz = 0;
+    l = sqrt(xi*xi + yi*yi + zi*zi); /* Distance to target. */
+    theta0 = asin(radius / l);	/* Target size as seen from origin */
+    if(solid_angle)
+    {
+      /* Compute solid angle of target as seen from origin. */
+      *solid_angle = 2*PI*(1 - cos(theta0));
+    }
+  
+    /* Now choose point uniformly on sphere surface within angle theta0 */
+    theta = acos (1 - rand0max(1 - cos(theta0)));
+    phi = rand0max(2 * PI);
+    /* Now, to obtain the desired vector rotate (x,y,z) angle theta around a
+       perpendicular axis (nx,ny,nz) and then angle phi around (x,y,z). */
+    if(xi == 0 && yi == 0)
+    {
+      nx = 1;
+      ny = 0;
+      nz = 0;
+    }
+    else
+    {
+      nx = -yi;
+      ny = xi;
+      nz = 0;
+    }
   }
   rotate(xt, yt, zt, xi, yi, zi, theta, nx, ny, nz);
   rotate(*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
