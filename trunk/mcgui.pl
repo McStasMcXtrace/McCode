@@ -36,6 +36,20 @@ my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
 my $compinfo;			# Cache of parsed component definitions
 my @compdefs;			# List of available component definitions
 
+# Our own Tk:Error function, to trap errors in TextUndo->Save(). See
+# Tk documentation of Tk::Error.
+my $error_override;		# Temporary override Tk::Error.
+sub Tk::Error {
+    my ($w, $err, @loc) = @_;
+    if($error_override) {
+	&$error_override($w, $err, @loc);
+    } else {
+	print STDERR "Tk::Error###: $err ";
+	print STDERR join("\n ", @loc), "\n";
+    }    
+}
+
+
 sub ask_save_before_simulate {
     my ($w) = @_;
     if($edit_control && $edit_control->numberChanges() > 0) {
@@ -206,7 +220,14 @@ sub menu_save {
     if($current_sim_def) {
 	$edit_control->Save($current_sim_def);
     } else {
+	$error_override = sub {	# Temporary Tk::Error override
+	    $w->messageBox(-message => "Could not save file:\n$_[1].",
+			   -title => "Save failed",
+			   -type => 'OK',
+			   -icon => 'error');
+	};
 	menu_saveas($w);
+	$error_override = undef; # Reinstall default Tk::Error handler/
     }
 }
 
