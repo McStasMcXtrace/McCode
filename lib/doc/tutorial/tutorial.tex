@@ -343,18 +343,23 @@ correct Bragg angle (i.e. OMM/TTM) for the monochromator for the $n=1$ reflectio
 Adjust $Q$ for the monochromator and verify the calculation by a
 scan, check the wavelength. }
 \item{Determine the Bragg angle for the $n=1$ reflection in this
-setting of $\Lambda$, and verify by scaning OMM. Set OMM to this value}
+setting of $Q$, and verify by scaning OMM. Set OMM to this value}
 \item{Before you go on, change the minimum and maximum wavelengths of
-    the source to a narrow interval around the wavelength you select. (No need to
+    the source to a narrow interval around the wavelength you select,
+    e.g. 4\AA. (No need to
     produce neutrons that will not be scattered at the monochromator...)}
 \end{enumerate}
 \subsection{Exercise: Insert a sample}
 \begin{enumerate}
 \item{Now, insert a V\_sample() component (Vanadium, scatters in all
-    directions) after the last PSD\_monitor and L\_monitor. At the
-    same position, insert a PSD\_monitor\_4PI\_log component of radius
+    directions) after the last PSD\_monitor and L\_monitor. Insert a Beamstop component after the sample, e.g. AT
+    (0,0,0.5) RELATIVE sample. 
+    At the
+    same position as the sample, insert a PSD\_monitor\_4PI\_log component of radius
     1.0 m., located AT (0,0,0) RELATIVE to your sample.
-    sample. Read the documentation for details on input parameters.
+    Also, insert a Beamstop component after the sample, e.g. AT
+    (0,0,0.5) RELATIVE 
+     Read the documentation for details on input parameters.
     Run a simulation. Notice the number of hits.}
 \item{Restrict the solid angle of scattering from the vanadium sample,
   focus on the PSD\_monitor\_4PI\_log by using \texttt{target\_x=1} and
@@ -374,11 +379,10 @@ COMPONENT sample = Powder2(radius=0.01,h=0.01, q_1=1, q_2=1.3,
 (Adjust placement relative to your component naming etc.). Also insert
   a banana shaped detector,
 \begin{verbatim}
-COMPONENT ND = Monitor_nD(xwidth=1, options="banana, 
-   theta bins=128 limits=[-45 45],auto y, bins=128")
-  AT (0,0,1) RELATIVE a5
+COMPONENT ND = Monitor_nD(xwidth=1, options="banana, theta limits=[-45 45],auto y")
+  AT (0,0,0) RELATIVE a5
 \end{verbatim}
-Run a long simulation (many neutrons) and have coffee.}
+and take away the previously inserted Beamstop. Run a long simulation (many neutrons) and have coffee.}
 \end{enumerate}
 \subsection{Exercise: Insert an analyzer}
 \begin{enumerate}
