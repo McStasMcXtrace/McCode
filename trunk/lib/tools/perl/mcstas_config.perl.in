@@ -1,0 +1,7 @@
+%mcstas_config =
+    (CFLAGS => '@CFLAGS@',
+     LDFLAGS => '@LDFLAGS@',
+     CC => '@CC@'
+     );
+
+1;
