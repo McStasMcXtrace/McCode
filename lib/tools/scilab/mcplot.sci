@@ -153,6 +153,7 @@ function win = mcplot_addmenu(use_common_menu)
       // we shall use x_choices
       rep = x_choices(['Fig '+string(win)+': Choose something to do','Select ""Exit"" to delete this dialog'], list(list('Action:', 1, t)));
       if length(rep), mcplot_menu_action(rep); end
+      if ~length(rep), mcplot_menu_action(size(t,2)); end
       if rep == size(t,2), win=0; else win = -1; end
     end
   end
@@ -267,7 +268,6 @@ function mcplot_menu_action(k, gwin)
                   // scan parameters structure, excluding 'class','parent','name'
                   tmp_parcmd = 'mcdisplay '+figname+'.instr -n 100 -pScilab --save ';
                   tmp_fields = getfield(1,parameters);
-                  save toto
                   for field=1:size(tmp_fields,2)
                     if (tmp_fields(field) ~= 'class' & ...
                       tmp_fields(field) ~= 'parent' & ...
@@ -516,7 +516,7 @@ if ~length(d.data)
  if length(strindex(d.type,'1d'))
   if size(d.data,2) > 1 & size(d.errors,2) ==0
    d.errors = d.data(:,2);
-   d.data = d.data(:,1);
+   d.data   = d.data(:,1);
   end
  end
 end
@@ -620,7 +620,9 @@ function mcplot_set_global(s, gwin, p_in)
     ThisFigure.instrument = 0;
     ThisFigure.instrument = instrument;
   elseif s.class == 'simulation'
-    ThisFigure.simulation            = s.name+'.sci';
+    tmp = s.name;
+    if part(tmp,length(tmp)-3:length(tmp)) ~= '.sci', tmp=tmp+'.sci'; end
+    ThisFigure.simulation            = tmp;
   elseif s.class == 'parameters'
     ThisFigure.parameters = 0;
     ThisFigure.parameters = s;
@@ -800,7 +802,7 @@ if typeof(object) == 'string' // if object is a string
   end
   mclose(fid);
   [Dirname, Basename, Ext]= mcplot_fileparts(object);
-  if length(Dirname), chdir(Dirname); end
+  if length(Dirname), Cur_Dir = pwd(); chdir(Dirname); end
   filename = Basename;
   if length(strindex(object,'.sci')), filename=filename+'.sci';
   else filename=filename+'.sce'; end
@@ -828,6 +830,7 @@ if typeof(object) == 'string' // if object is a string
   if length(mcstas)
     object = mcstas; mcstas = [];
   end
+  if length(Dirname), chdir(Cur_Dir); end
 end
 
 // handles structure loading and ploting

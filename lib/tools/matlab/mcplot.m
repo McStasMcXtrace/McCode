@@ -76,6 +76,7 @@ if ischar(object) % if object is a string
   object = strrep(object,'.m','');
   [pathname, object]=fileparts(object);
   if not(isempty(pathname))
+    cur_dir = pwd;
     cd(pathname);  % go into directory where object is
   end
   m = [];
@@ -87,6 +88,9 @@ if ischar(object) % if object is a string
   end
   if length(m)
     object = m; clear m
+  end
+  if not(isempty(pathname))
+    cd(cur_dir);
   end
 end
 
@@ -211,7 +215,7 @@ function mcplot_menu_action(action, object)
         parameters = eval('fud.parameters',[]);
         if ~isempty(parameters)
           % scan parameters structure, excluding 'class','parent','name'
-          tmp_parcmd = [ '!mcdisplay -n 100 -pMatlab --save ' figname '.instr ' ];
+          tmp_parcmd = [ '!mcdisplay -pMatlab --save ' figname '.instr ' ];
           tmp_fields = fieldnames(parameters);
           for field=1:length(tmp_fields)
             switch tmp_fields{field}
@@ -361,7 +365,12 @@ if isempty(d.data)
   d.errors=reshape(x((pS+1):(2*pS)), S);
   d.events=reshape(x((2*pS+1):(3*pS)), S);end
   fclose(fid);
-  return
+ end
+ if length(strindex(d.type,'1d'))
+  if size(d.data,2) > 1 & size(d.errors,2) ==0
+   d.errors = d.data(:,2);
+   d.data   = d.data(:,1);
+  end
  end
 end
 
@@ -386,7 +395,7 @@ function d=mcplot_plot(d,p)
       shading flat;         
     elseif ~isempty(findstr(d.type,'1d'))
       d.x=linspace(l(1),l(2),S(1));
-      h=errorbar(d.x,d.data(:,1),d.data(:,2));
+      h=errorbar(d.x,d.data,d.errors);
     else
       d.x=linspace(l(1),l(2),max(S));
       h=plot(d.x,d.data);
@@ -439,7 +448,10 @@ function mcplot_set_global(s, gwin, p_in)
     instrument.class = 'instrument';
     ThisFigure.instrument = instrument;
   elseif strcmp(s.class,'simulation')
-    ThisFigure.simulation            = [s.name '.m'];
+    [a,b,ext] = fileparts(s.name);
+    if ~strcmp(ext,'.m')
+        ThisFigure.simulation = [s.name '.m'];
+    else ThisFigure.simulation = s.name; end
   elseif strcmp(s.class,'parameters')
     ThisFigure.parameters = s;
   elseif strcmp(s.class,'data')
