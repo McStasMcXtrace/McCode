@@ -61,6 +61,51 @@ DECLARE
 #ifndef SINGLE_CRYSTAL_DECL
 #define SINGLE_CRYSTAL_DECL
 
+/* Compute normal vector to (x,y,z).
+   ToDo: Move to McStas kernel. */
+void normal_vec(double *nx, double *ny, double *nz,
+		double x, double y, double z)
+{
+  double ax = fabs(x);
+  double ay = fabs(y);
+  double az = fabs(z);
+  double l;
+  if(x == 0 && y == 0 && z == 0)
+  {
+    *nx = 0;
+    *ny = 0;
+    *nz = 0;
+    return;
+  }
+  if(ax < ay)
+  {
+    if(ax < az)
+    {				/* Use X axis */
+      l = sqrt(z*z + y*y);
+      *nx = 0;
+      *ny = z/l;
+      *nz = -y/l;
+      return;
+    }
+  }
+  else
+  {
+    if(ay < az)
+    {				/* Use Y axis */
+      l = sqrt(z*z + x*x);
+      *nx = -z/l;
+      *ny = 0;
+      *nz = -x/l;
+      return;
+    }
+  }
+  /* Use Z axis */
+  l = sqrt(y*y + x*x);
+  *nx = y/l;
+  *ny = -x/l;
+  *nz = 0;
+}
+
 struct hkl_data
   {
     int h,k,l;			/* Indices for this reflection */
