@@ -9,6 +9,18 @@
 // Release: McStas 1.7
 // Origin: Risoe
 
+// Make sure that we are loading the plotlib
+MCSTAS=getenv('MCSTAS','');
+if MCSTAS==''
+  MSDOS = getenv('WIN32','NO')=='OK'
+  if MSDOS
+    MCSTAS='c:/mcstas/lib';
+  else
+    MCSTAS='/usr/local/lib/mcstas';
+  end
+end
+exec(MCSTAS+'/tools/scilab/plotlib018b1/loader.sce');
+
 global INSTRUMENT;
 INSTRUMENT=struct();
 INSTRUMENT.name=[];

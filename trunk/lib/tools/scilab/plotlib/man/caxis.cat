@@ -1,0 +1,13 @@
+ CAXIS  Pseudocolor axis.
+ 
+    caxis(V), where V is the two element vector [cmin cmax], sets manual
+    scaling of pseudocolor for the objects created by
+    commands like pcolor, surf, surfl.  cmin and cmax correspond
+    to the first and last colors in the current RGB colormap. Values
+    outside the range are clamped to the first or last colormap color.
+
+    caxis('manual') fixes axis scaling at the current range.
+    caxis('auto') sets axis scaling back to autoranging.
+    caxis() returns the vector [cmin cmax] currently in effect.
+
+    See also colormap             

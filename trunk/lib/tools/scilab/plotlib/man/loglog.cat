@@ -1,0 +1,6 @@
+ LOGLOG Log-log scale plot.
+    LOGLOG(...) is the same as PLOT(...), except logarithmic
+    scales are used for both the X- and Y- axes.
+
+
+ See also SEMILOGY, SEMILOGX

@@ -1,0 +1,46 @@
+Version 0.18b1 (Thu Mar  6 14:56:27 EST 2003)
+
+Installation
+============
+To Install this library: (Scilab > 2.5)
+
+We Suppose here that <PATH> stands for  the path of the directory
+containing this README file.
+
+- On Unix/Linux systems
+     * Administrator
+        Has to execute, once and for all, the following instruction
+        within Scilab:
+        exec <PATH>/builder.sce
+        This operation requires permission to write in <PATH>/macros
+        to generate *.bin, names and lib files in <PATH>/macros
+        directory.
+     * User
+        Should execute the following instruction within Scilab:
+        exec <PATH>/loader.sce
+        before using the library. To prevent deletion of the library
+	that would occur with the "clear" function, he can also put it
+        in his .scilab startup file for automatic loading.
+
+- On Windows systems
+     * Administrator
+        Has to execute, once and for all, the following instruction
+        within Scilab:
+        exec <PATH>\builder.sce
+        This operation requires permission to write in <PATH>\macros
+        to generate *.bin, names and lib files in <PATH>\macros
+        directory.
+    * User
+        Should execute the following instruction within Scilab:
+        exec <PATH>/loader.sce
+        before using the library. To prevent deletion of the library
+        that would occur with the "clear" function, he can also put it
+        in his .scilab startup file for automatic loading.
+
+
+
+To learn more about the macros in this library,
+see the help section (in the scilab help menu)
+"Matlab-like graphic functions".
+
+Stephane Mottelet
