@@ -1,15 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: PSD_monitor_4PI_log.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KL and KN
+* Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.5 $
-* Origin: McStas release
-* Modified by: KN, December 1999
+* Version: $Revision: 1.6 $
+* Origin: McStas 1.4.2
 *
 * Spherical position-sensitive detector with logarithmic scale.
 *
@@ -42,6 +40,7 @@ DEFINITION PARAMETERS (nx, ny, filename)
 SETTING PARAMETERS (radius)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   int PSD_N[nx][ny];
