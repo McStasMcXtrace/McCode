@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -299,7 +299,7 @@ SHARE
           mos_e1_len = sqrt(mos_e1_x*mos_e1_x + mos_e1_y*mos_e1_y);
           mos_e1_x /= mos_e1_len;
           mos_e1_y /= mos_e1_len;
-          mos_e2_x = -mos_c - mos_l2;
+          mos_e2_x = mos_c - mos_l2;
           mos_e2_y = -mos_b;
           mos_e2_len = sqrt(mos_e2_x*mos_e2_x + mos_e2_y*mos_e2_y);
           mos_e2_x /= mos_e2_len;
