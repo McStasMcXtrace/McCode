@@ -641,10 +641,13 @@ mcsiminfo_close()
 
 
 void
-mcdetector_out(char *cname, double p0, double p1, double p2)
+mcdetector_out(char *cname, double p0, double p1, double p2, char *filename)
 {
-  printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g\n",
+  printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
 	 cname, p1, cname, mcestimate_error(p0,p1,p2), cname, p0);
+  if(filename)
+    printf(" \"%s\"", filename);
+  printf("\n");
 }
 
 
@@ -708,7 +711,7 @@ mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
 		    p1, mcestimate_error(p0, p1, p2), p0, c);
   mcsiminfo_out("end data\n");
   /* Finally give 0D detector output. */
-  mcdetector_out(c, p0, p1, p2);
+  mcdetector_out(c, p0, p1, p2, NULL);
 }
 
 
@@ -772,7 +775,7 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
     fclose(outfile);
   mcsiminfo_out("end data\n");
   /* Finally give 0D detector output. */
-  mcdetector_out(c, Nsum, Psum, P2sum);
+  mcdetector_out(c, Nsum, Psum, P2sum, f);
 }
 
 
@@ -831,7 +834,7 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
     fclose(outfile);
   mcsiminfo_out("end data\n");
   /* Finally give 0D detector output. */
-  mcdetector_out(c, Nsum, Psum, P2sum);
+  mcdetector_out(c, Nsum, Psum, P2sum, f);
 }
 
 
@@ -1337,7 +1340,7 @@ mcshowhelp(char *pgmname)
 static void
 mcusage(char *pgmname)
 {
-  fprintf(stderr, "Error: incorrect commad line arguments\n");
+  fprintf(stderr, "Error: incorrect command line arguments\n");
   mchelp(pgmname);
   exit(1);
 }
