@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.107 2005-02-23 12:29:55 farhi Exp $
+* $Id: mcstas-r.c,v 1.108 2005-02-24 15:57:20 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.107  2005/02/23 12:29:55  farhi
+* FIXED GRAVITATION BUG: was in the choice of the intersection time (2nd order
+* equation result) of trajectory with plane
+*
 * Revision 1.105  2005/02/17 15:54:56  farhi
 * Added 'per bin' in labels if more that 1 bin. Requested by R. Cubitt
 *
@@ -3656,16 +3660,13 @@ int solve_2nd_order(double *Idt,
                   double A,  double B,  double C)
 {
   int ret=0;
-  double dt0;
 
   *Idt = 0;
 
-  if (B) dt0 = -C/B;
   if (fabs(A) < 1E-10) /* this plane is parallel to the acceleration: A ~ 0 */
   {
-    if (B)
-    { *Idt = dt0; ret=3; }
-    /* else the speed is parallel to the plane, no intersection: A=B=0 ret=0 */
+    if (B) {  *Idt = -C/B; ret=3; }
+    /* else the speed is parallel tothe plane, no intersection: A=B=0 ret=0 */
   }
   else
   {
@@ -3678,9 +3679,9 @@ int solve_2nd_order(double *Idt,
       dt1 = (-B + sD)/2/A;
       dt2 = (-B - sD)/2/A;
       /* now we choose the smallest positive solution */
-      if      (dt1<0 && dt2>0) ret=2; /* dt2 positive */
-      else if (dt2<0 && dt1>0) ret=1; /* dt1 positive */
-      else if (dt1>0 && dt2>0)
+      if      (dt1<0 && dt2>1e-10) ret=2; /* dt2 positive */
+      else if (dt2<0 && dt1>1e-10) ret=1; /* dt1 positive */
+      else if (dt1>1e-10 && dt2>1e-10)
       {  if (dt1 < dt2) ret=1; else ret=2; } /* all positive: min(dt1,dt2) */
       /* else two solutions are negative. ret=0 */
       if (ret==1) *Idt = dt1; else if (ret==2) *Idt=dt2;

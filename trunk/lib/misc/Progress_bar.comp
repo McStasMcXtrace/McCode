@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -89,22 +89,20 @@ TRACE
     tmp = percent*mcget_ncount()/100;
     fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount())); fflush(stdout);
     IntermediateCnts = ncount + tmp;
-    if (IntermediateCnts+tmp > mcget_ncount())
-      fprintf(stdout, "\n");  /* last percent number to be displayed */
-    else if (flag_save) mcsave(NULL);
+    if (flag_save) mcsave(NULL);
   }
 %}
 
 SAVE
 %{
-  fprintf(stdout, "Save [%s]\n", mcinstrument_name);
+  fprintf(stdout, "\nSave [%s] ", mcinstrument_name);
 %}
 
 FINALLY
 %{
   time_t NowTime;
   time(&NowTime);
-  fprintf(stdout, "Finally. Time: ");
+  fprintf(stdout, "\nFinally. Time: ");
   if (difftime(NowTime,StartTime) < 60.0)
     fprintf(stdout, "%g [s] ", difftime(NowTime,StartTime));
   else if (difftime(NowTime,StartTime) > 3600.0)
