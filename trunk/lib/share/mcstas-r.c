@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.2 1997-09-08 11:16:43 kn Exp $
+* 	$Id: mcstas-r.c,v 1.3 1997-09-08 11:31:22 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.2  1997/09/08 11:16:43  kn
+* 	Bug fix in mccoordschange().
+*
 * 	Revision 1.1  1997/09/08 10:40:03  kn
 * 	Initial revision
 *
@@ -194,19 +197,28 @@ mcreadparams(void)
 }
 
 
+
+void
+mcsetstate(double x, double y, double z, double vx, double vy, double vz,
+	   double t, double s1, double s2, double p)
+{
+  extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
+  extern double mcnt, mcns1, mcns2, mcnp;
+  
+  mcnx = x;
+  mcny = y;
+  mcnz = z;
+  mcnvx = vx;
+  mcnvy = vy;
+  mcnvz = vz;
+  mcnt = t;
+  mcns1 = s1;
+  mcns2 = s2;
+  mcnp = p;
+}
+
 void
 mcgenstate(void)
 {
-  extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz, mcnt, mcns1, mcns2, mcnp;
-  
-  mcnx = 0;
-  mcny = 0;
-  mcnz = 0;
-  mcnvx = 0;
-  mcnvy = 0;
-  mcnvz = 1;
-  mcnt = 0;
-  mcns1 = 0;
-  mcns2 = 0;
-  mcnp = 1;
+  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 1);
 }

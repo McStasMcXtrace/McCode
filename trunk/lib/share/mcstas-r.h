@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.1 1997-09-08 10:39:44 kn Exp $
+*	$Id: mcstas-r.h,v 1.2 1997-09-08 11:31:27 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.1  1997/09/08 10:39:44  kn
+*	Initial revision
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
@@ -35,3 +38,7 @@ void rot_mul(Rotation t1, Rotation t2, Rotation t3);
 void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);
 Coords rot_apply(Rotation t, Coords a);
+
+void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
+		double t, double s1, double s2, double p);
+void mcgenstate(void);
