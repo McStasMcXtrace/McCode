@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.100 2004-09-30 08:23:41 farhi Exp $
+* $Id: mcstas-r.c,v 1.101 2004-11-16 13:35:47 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.100  2004/09/30 08:23:41  farhi
+* Correct pointer mismatch in 'xlimits' for PGPLOT data files
+*
 * Revision 1.99  2004/09/21 12:25:02  farhi
 * Reorganised code so that I/O functions are includable easely (for mcformat.c)
 *
@@ -794,7 +797,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "[child of <a href=\"#%PAR\">%PAR</a>]<br>\n",
     "[end of <a href=\"#%NAM\">%TYP %NAM</a>]<br>\n",
     "%PRE<b>%NAM: </b>%VAL<br>\n",
-    "%PRE<b>DATA</b><br><center><embed src=\"%FIL\" type=\"model/vrml\" width=\"75%%\" height=\"50%%\"></embed><br>File <a href=\"%FIL\">%FIL VRML file</a></center><br>\n", "%PREEnd of DATA<br>\n",
+    "%PRE<b>DATA</b><br><center><embed src=\"%FIL\" type=\"model/vrml\" width=\"75%%\" height=\"50%%\"></embed><br>File <a href=\"%FIL\">%FIL [VRML format]</a></center><br>\n", "%PREEnd of DATA<br>\n",
     "%PRE<b>ERRORS</b><br>\n","%PREEnd of ERRORS<br>\n", 
     "%PRE<b>EVENTS</b><br>\n", "%PREEnd of EVENTS<br>\n"},
   { "OpenGENIE", "gcl",
@@ -4305,7 +4308,7 @@ mcstas_main(int argc, char *argv[])
   /* default is to output as McStas format */
   mcformat_data.Name=NULL;
   mcparseoptions(argc, argv);
-  if (!mcformat_data.Name && !strcmp(mcformat.Name, "HTML"))
+  if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
 
 #ifndef MC_PORTABLE
