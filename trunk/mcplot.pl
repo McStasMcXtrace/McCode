@@ -13,11 +13,13 @@ BEGIN {
     } else {
       if ($Config{'osname'} eq 'MSWin32') {
         $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+        $MCSTAS::runscilab ="runscilab";
       } else {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+	$MCSTAS::runscilab ="scilab";
         # install atexit-style handler so that when we exit or die,
         # we automatically delete this temporary file
-        END { if ($tmp_file) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
+        END { if ($tmp_file && !$Config{'osname'} eq 'MSWin32') { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
 
       }
     }
@@ -49,8 +51,10 @@ my ($nowindow);
 $index   = 0;
 $inspect = "";
 $passed_arg_str = "";
-$nowindow= 1;
-
+$nowindow = 1;
+if ($Config{'osname'} eq 'MSWin32'){
+  $nowindow = 0;
+}
 $plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
                 $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
                 
@@ -141,10 +145,10 @@ if ($plotter eq 3 || $plotter eq 4) {
     printf $fh "mprintf('mcplot: Simulation data structure from file $file\\n');\n";
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
   }
-  printf $fh "if MSDOS then unix_g('del /q /f $tmp_file');\n";
+  printf $fh "if MSDOS \n  unix_g('del /q /f $tmp_file');\nend\n";
   close($fh);
-  if ($nowindow) { system("scilab -nw -f $tmp_file\n"); }
-  else { system("scilab -f $tmp_file\n"); }
+  if ($nowindow) { system("$MCSTAS::runscilab -nw -f $tmp_file\n"); }
+  else { system("$MCSTAS::runscilab -f $tmp_file\n"); }
   
 } elsif ($plotter eq 1 || $plotter eq 2) {
   if ($nowindow) { $tosend = "matlab -nojvm "; }
