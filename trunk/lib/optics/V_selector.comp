@@ -37,12 +37,12 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
     double dt0, dt1, r_i, r_f, theta_i, theta_f;
-    double A, psi;
+    double A, psi, omega;
 %}
 INITIALIZE
 %{
 #define RPM2OM 2*PI/60;
-    double omega=rot*RPM2OM;
+    omega=rot*RPM2OM;
 %}
 TRACE
 %{
