@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.8 1998-08-26 12:43:49 kn Exp $
+*	$Id: instrument.y,v 1.9 1998-09-23 13:50:47 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.8  1998/08/26 12:43:49  kn
+*	Merged in the functionality from component.y.
+*
 *	Revision 1.7  1998/08/21 12:08:18  kn
 *	Added `-o' command line option.
 *	Output generated C simulation code in file rather than on stdout.
@@ -101,7 +104,7 @@
 %token <string> TOK_CODE_LINE
 %token TOK_INVALID
 
-%type <instance> compdef compref reference
+%type <instance> component compref reference
 %type <ccode> code codeblock declare initialize trace finally
 %type <coords>  coords
 %type <exp> exp
@@ -112,11 +115,15 @@
 %type <ori> orientation
 %%
 
-main:		  TOK_GENERAL instrument
-		| TOK_RESTRICTED component
+main:		  TOK_GENERAL compdefs instrument
+		| TOK_RESTRICTED compdef
 ;
 
-component:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace finally "END"
+compdefs:	  /* empty */
+		| compdefs compdef
+;
+
+compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace finally "END"
 		  {
 		    struct comp_def *c;
 		    palloc(c);
@@ -161,21 +168,16 @@ state_par:	  "STATE" "PARAMETERS" formallist
 		  }
 ;
 
-instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist declare initialize complist finally "END"
+instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist
+			{ instrument_definition->formals = $4; }
+		  declare initialize complist finally "END"
 		  {
-		    struct instr_def *instr;
-
-		    palloc(instr);
-		    instr->name = $3;
-		    instr->formals = $4;
-		    instr->decls = $5;
-		    instr->inits = $6;
-		    instr->finals = $8;
-		    instr->compmap = comp_instances;
-		    instr->complist = comp_instances_list;
-		    /* The result from parsing is stored in a global pointer
-                       instrument_definition. */
-		    instrument_definition = instr;
+		    instrument_definition->name = $3;
+		    instrument_definition->decls = $6;
+		    instrument_definition->inits = $7;
+		    instrument_definition->finals = $9;
+		    instrument_definition->compmap = comp_instances;
+		    instrument_definition->complist = comp_instances_list;
 		  }
 ;
 
@@ -220,14 +222,14 @@ complist:	  /* empty */
 		    comp_instances = symtab_create();
 		    comp_instances_list = list_create();
 		  }
-		| complist compdef
+		| complist component
 		  {
 		    symtab_add(comp_instances, $2->name, $2);
 		    list_add(comp_instances_list, $2);
 		  }
 ;
 
-compdef:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation
+component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation
 		  {
 		    struct comp_def *def;
 		    struct comp_inst *comp;
@@ -375,7 +377,24 @@ coords:		  '(' exp ',' exp ',' exp ')'
 
 exp:		  TOK_ID
 		  {
-		    $$ = exp_id($1);
+		    List_handle liter;
+		    char *formal;
+		    /* Check if this is an instrument parameter or not. */
+		    /* ToDo: This will be inefficient if the number of
+                       instrument parameters is really huge. */
+		    liter = list_iterate(instrument_definition->formals);
+		    while(formal = list_next(liter))
+		    {
+		      if(!strcasecmp($1, formal))
+		      {
+			/* It was an instrument parameter */
+			$$ = exp_id($1);
+			goto found;
+		      }
+		    }
+		    /* It was an external id. */
+		    $$ = exp_extern_id($1);
+		  found:
 		    str_free($1);
 		  }
 		| TOK_NUMBER
@@ -384,6 +403,7 @@ exp:		  TOK_ID
 		  }
 		| "EXTERN" TOK_ID
 		  {
+		    /* Note: "EXTERN" is now obsolete and redundant. */
 		    $$ = exp_extern_id($2);
 		    str_free($2);
 		  }
@@ -535,6 +555,8 @@ main(int argc, char *argv[])
 		instr_current_filename);
   instr_current_line = 1;
   lex_new_file(file);
+  read_components = symtab_create(); /* Create table of components. */
+  palloc(instrument_definition); /* Allocate instrument def. structure. */
   err = yyparse();
   fclose(file);
   if(err != 0)
@@ -638,9 +660,6 @@ read_component(char *name)
 {
   struct Symtab_entry *entry;
   
-  /* Create table of components on first call. */
-  if(read_components == NULL)
-    read_components = symtab_create();
   /* Look for an existing definition for the component. */
   entry = symtab_lookup(read_components, name);
   if(entry != NULL)
@@ -670,7 +689,8 @@ read_component(char *name)
     instr_current_line = 1;
     err = yyparse();		/* Read definition from file. */
     if(err != 0)
-      print_error("Errors encountered during parse.\n");
+      fatal_error("Errors encountered during autoload of component %s.\n",
+		  name);
     fclose(file);
     /* Now check if the file contained the required component definition. */
     entry = symtab_lookup(read_components, name);
