@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.43  2004/09/03 13:43:29  farhi
+*	Removed duplicated Instr:FINALLY code (in SAVE and FINALLY). May cause SEGV.
+*	
 *	Revision 1.42  2003/10/06 14:59:14  farhi
 *	Also insert component index in automatic source comments
 *	
@@ -42,7 +45,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.43 2004-09-03 13:43:29 farhi Exp $
+* $Id: cogen.c,v 1.44 2004-09-10 15:09:56 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1218,7 +1221,7 @@ cogen_runtime(struct instr_def *instr)
   char  pathsep[3];
   int   i,j=0;
   /* handles Windows '\' chararcters for embedding sys_dir into source code */
-  if (PATHSEP_C != '\\') strcpy(pathsep, PATHSEP_S); else strcpy(pathsep, "\\\\");
+  if (MC_PATHSEP_C != '\\') strcpy(pathsep, MC_PATHSEP_S); else strcpy(pathsep, "\\\\");
   sysdir_orig = get_sys_dir();
   sysdir_new  = (char *)mem(2*strlen(sysdir_orig));
   for (i=0; i < strlen(sysdir_orig); i++)
