@@ -24,8 +24,8 @@ cd $DIST
 find . -name CVS -exec rm -r \{\} \; 2> /dev/null
 
 # Put in new version info:
-find . -type f -exec ./setversion \{\} $1 \; 2> /dev/null
-# A bit 
+find  . -prune setversion -type f -exec ./setversion \{\} $1 \; 2> /dev/null
+# A bit ugly with seperate date commands..
 MONTH=`date +"%b"`
 DAY=`date +"%d"`
 YEAR=`date +"%Y"`
