@@ -4,7 +4,8 @@ AC_INIT(mcstas.h)
 
 AC_PROG_CC
 AC_PROG_INSTALL
-AC_PATH_PROG(PERL, perl, /usr/bin/perl)
+AC_PATH_PROGS(PERL, [perl5 perl], /usr/local/bin/perl)
 CF_ANSI_CC_CHECK
+AC_CHECK_FUNCS(strcasecmp)
 
 AC_OUTPUT(Makefile)
