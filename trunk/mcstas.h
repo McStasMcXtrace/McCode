@@ -17,13 +17,14 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.38 2003-09-05 08:59:05 farhi Exp $
+* $Id: mcstas.h,v 1.39 2003-09-22 14:42:20 pkwi Exp $
 *
 *******************************************************************************/
 
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "port.h"
 
