@@ -1308,6 +1308,18 @@ sub editor_quit {
     }
 }    
 
+sub Tk::TextEdit::SetComment
+{
+ # Sub to redefine the LINE_COMMENT_STRING of the TextEdit widget...
+ # Don't know why, but this has to be done as an extension to the TextEdit 
+ # class... Will update this if something more clever is answered from
+ # comp.lang.perl.tk
+ 
+ my ($w,$comment)=@_;
+ my $oldcomment = $w->{'LINE_COMMENT_STRING'};
+ $w->{'LINE_COMMENT_STRING'}=$comment;
+}
+
 sub setup_edit {
     my ($mw) = @_;
     # Create the editor window.
@@ -1316,6 +1328,13 @@ sub setup_edit {
     # Create the editor text widget.
     $e = $w->Scrolled('TextEdit',-relief => 'sunken', -bd => '2', -setgrid => 'true',
                       -height => 24, wrap => 'none', -scrollbars =>'se');
+    
+    # Put C++ style comment chars in... This will at least work with gcc...
+    # Later, I might work a little harder to get proper /* */ comment chars to 
+    # work, which will not rely on gcc as compiler...
+    # Comment lines in/out using <F7> and <F8>
+    $e->SetComment("// ");
+    
     my $menu = $e->menu;
     $w->configure(-menu => $menu);
     my $insert_menu = $menu->Menubutton(-text => 'Insert',  -underline => 0, -tearoff => 0);
