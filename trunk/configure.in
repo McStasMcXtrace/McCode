@@ -1,4 +1,4 @@
-#  
+#
 #   This file is part of the McStas neutron ray-trace simulation package
 #   Copyright (C) 1997-2004, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
@@ -16,7 +16,7 @@
 #
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 dnl Process this file with autoconf to produce a configure script.
 
@@ -36,11 +36,11 @@ AC_PATH_PROGS(SSH,    [ssh /usr/local/bin/ssh], no)
 AC_PATH_PROGS(MPIRUN, [mpirun /usr/local/bin/mpirun], no)
 AC_PATH_PROGS(MPICC,  [mpicc /usr/local/bin/mpicc], no)
 AC_PATH_PROGS(BROWSER,[epiphany konqueror mozilla netscape galeon start msie], no)
-AC_PATH_PROGS(EDITOR, [nedit emacs xedit gedit kate vim vi notepad wordpad], no)
+AC_PATH_PROGS(EDITOR, [nedit kate gedit xemacs xedit vim notepad wordpad], no)
 # Important here: gnome-terminal is broken:
 #  Any commandline arguments after -e must contain escaped spaces.
-# BUT: If escaped in the perl code, use of xterm/konsole is broken.... 
-# Hence we allow only gnome-terminal.wrapper which is debian only 
+# BUT: If escaped in the perl code, use of xterm/konsole is broken....
+# Hence we allow only gnome-terminal.wrapper which is debian only
 # :(
 AC_PATH_PROGS(TERMINAL,   [xterm konsole gnome-terminal.wrapper], no)
 AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl)
@@ -66,7 +66,7 @@ if test "SCILAB" = "no" ; then
     fi
   fi
 fi
-echo "" 
+echo ""
 echo "To setup the plotting environment, execute either"
 echo "  make config (automaticly selects plotter, "
 echo "       prefers Scilab before Matlab before PGPLOT)"
