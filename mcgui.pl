@@ -102,25 +102,6 @@ sub menu_saveas {
     return 1;
 }
 
-sub compile_instrument {
-    my ($w, $force) = @_;
-    return undef unless ask_save_before_simulate($w);
-    my $out_name = get_out_file($current_sim_def, $force);
-    unless($out_name && -x $out_name) {
-	$w->messageBox(-message => "Could not compile simulation.",
-		       -title => "Compile failed",
-		       -type => 'OK',
-		       -icon => 'error');
-	return undef;
-    }
-    return $out_name;
-}
-
-sub menu_compile{
-    my ($w) = @_;
-    compile_instrument($w, 1);	# Force recompilation.
-}
-
 sub menu_undo {
     my ($w) = @_;
     if($edit_control->numberChanges() > 0) {
@@ -190,7 +171,7 @@ sub run_dialog_create {
     $dlg->Label(-text => $instr,
 		-anchor => 'w',
 		-justify => 'left')->pack(-fill => 'x');
-    my $status_lab = $dlg->Label(-text => "Status: running",
+    my $status_lab = $dlg->Label(-text => "Status: initializing",
 				 -anchor => 'w',
 				 -justify => 'left');
     $status_lab->pack(-fill => 'x');
@@ -225,12 +206,33 @@ sub run_dialog_popup {
 
 sub run_dialog_retract {
     my ($dlg, $oldfg) = @_;
-    my $old_focus = $oldfg->[0];
-    my $old_grab = $oldfg->[1];
     $dlg->grabRelease;
     $dlg->destroy;
-    &$old_focus;
-    &$old_grab;
+    &{$oldfg->[0]} if $oldfg;
+    &{$oldfg->[1]} if $oldfg;
+}
+
+sub run_dialog_reader {
+    my ($dlg, $fh, $status_lab, $but, $rotext, $state, $success) = @_;
+    my $s;
+    my $len = sysread($fh, $s, 256, 0);
+    if($len) {
+	putmsg($rotext, $s);
+    } else {
+	$dlg->fileevent($fh,'readable', "");
+	return if $$state & 1;
+	$$state |= 1;
+	if(!defined($len)) {
+	    putmsg($rotext, "Simulation exited abnormally.\n", 'msg');
+	    $$success = undef;
+	} else {
+	    putmsg($rotext, "Simulation finished.\n", 'msg');
+	    $$success = 1;
+	}
+	$status_lab->configure(-text => "Status: done");
+	$but->configure(-text => "Ok",
+			-command => sub { $$state |= 2; } );
+    }
 }
 
 sub run_dialog {
@@ -240,41 +242,152 @@ sub run_dialog {
     # exit when it gets to the value 3.
     my ($state, $success) = (0, 0);
     # Initialize the dialog.
+    my $cancel_cmd = sub {
+	kill 'SIGTERM', $pid unless $state & 1;
+	$state |= 2;
+    };
     my ($dlg, $status_lab, $rotext, $but) =
-	run_dialog_init($w, "Running simulation ...",
-			"Instrument: $current_sim_def",
-			sub { kill 'SIGTERM', $pid unless $state & 1;
-			      $state |= 2; });
+	run_dialog_create($w, "Running simulation ...",
+			  "Instrument: $current_sim_def", $cancel_cmd);
     putmsg($rotext, $inittext, 'msg'); # Must appear before any other output
     # Set up the pipe reader callback
-    $dlg->fileevent($fh,'readable',
-	sub {
-	    my $s;
-	    my $len = sysread($fh, $s, 256, 0);
-	    if($len) {
-		putmsg($rotext, $s);
-	    } else {
-		$dlg->fileevent($fh,'readable', "");
-		return if $state & 1;
-		$state |= 1;
-		if(!defined($len)) {
-		    putmsg($rotext, "Simulation exited abnormally.\n", 'msg');
-		    $success = undef;
-		} else {
-		    putmsg($rotext, "Simulation finished.\n", 'msg');
-		    $success = 1;
-		}
-		$status_lab->configure(-text => "Status: done");
-		$but->configure(-text => "Ok",
-				-command => sub { $state |= 2; } );
-	    }
-	});
-    $savefocus = run_dialog_popup($dlg);
+    my $reader = sub {
+	run_dialog_reader($dlg, $fh, $status_lab, $but, $rotext,
+			  \$state, \$success);
+    };
+    $dlg->fileevent($fh, 'readable', $reader);
+    $status_lab->configure(-text => "Status: simulation running");
+    my $savefocus = run_dialog_popup($dlg);
     do {
         $dlg->waitVariable(\$state);
     } until $state == 3;
     run_dialog_retract($dlg, $savefocus);
     return $success;
+}
+
+sub compile_dialog_reader {
+    my ($dlg, $fh, $status_lab, $but, $rotext, $state, $success) = @_;
+    my $s;
+    my $len = sysread($fh, $s, 256, 0);
+    if($len) {
+	putmsg($rotext, $s);
+    } else {
+	$dlg->fileevent($fh,'readable', "");
+	return if $$state & 1;
+	$$state |= 1;
+	$$success = defined($len) ? 1 : 0;
+    }
+}
+
+sub dialog_get_out_file {
+    my ($w, $file, $force) = @_;
+    # The $state variable gets bit 0 set when the spawned command
+    # finishes and bit 1 set when the cancel/ok button is presssed.
+    my ($state, $cmd_success);
+    my $success = 0;
+    my ($fh, $pid, $out_name);
+    # Initialize the dialog.
+    my $cancel_cmd = sub {
+	kill -15, $pid if $pid && !($state & 1); # signal 15 is SIGTERM
+	$state |= 2;
+    };
+    my ($dlg, $status_lab, $rotext, $but) =
+	run_dialog_create($w, "Compiling simulation ...",
+			  "Instrument: $current_sim_def", $cancel_cmd);
+    my $printer = sub { putmsg($rotext, "$_[0]\n", 'msg'); };
+    # Set up the pipe reader callback
+    $status_lab->configure(-text => "Status: compiling simulation");
+    # The dialog isn't actually popped up unless/until a command is
+    # run or an error occurs.
+    my $savefocus;
+    my ($compile_data, $msg) = get_out_file_init($file, $force);
+    if(!$compile_data) {
+	&$printer("Could not compile simulation:\n$msg");
+    } else {
+	$state = 0;
+	for(;;) {
+	    my ($type, $val) = get_out_file_next($compile_data, $printer);
+	    if($type eq 'FINISHED') {
+		$success = 1;
+		$out_name = $val;
+		last;
+	    } elsif($type eq 'RUN_CMD') {
+		$savefocus = run_dialog_popup($dlg) unless $savefocus;
+		my $fh = new FileHandle;
+		$pid = open($fh, "-|");
+		unless(defined($pid)) {
+		    &$printer("Could not spawn command.");
+		    last;
+		}
+		if($pid) {		# Parent
+		    $state &= ~1; # Clear "command done" flag.
+		    $cmd_success = 0;
+		    my $reader = sub {
+			compile_dialog_reader($dlg, $fh, $status_lab, $but,
+					      $rotext, \$state, \$cmd_success);
+		    };
+		    $dlg->fileevent($fh, 'readable', $reader);
+		    do {
+			$dlg->waitVariable(\$state);
+		    } until $state & 1;
+		    my $ret = close($fh);
+		    undef($pid);
+		    unless($cmd_success && defined($ret) && $? == 0) {
+			&$printer("** Error exit **.");
+			last;
+		    }
+		} else {			# Child
+		    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+		    # Make the child the process group leader, so that
+		    # we can kill off any subprocesses it may have
+		    # spawned when the user selects CANCEL.
+		    setpgrp(0,0);
+		    exec @$val;
+		}
+	    } elsif($type eq 'ERROR') {
+		$savefocus = run_dialog_popup($dlg) unless $savefocus;
+		&$printer("Error: $msg");
+		last;
+	    } elsif($type eq 'CONTINUE') {
+		next;
+	    } else {
+		die "Internal: compile_dialog(): $type, $msg";
+	    }
+	}
+    }
+    if($savefocus) {
+	my $donetype = $success ? "Done" : "Compile failed";
+	$status_lab->configure(-text => "Status: $donetype");
+	&$printer("$donetype.");
+	$state &= ~2;		# Wait for "OK" even if user selected cancel.
+	unless($state & 2) {
+	    $but->configure(-text => "Ok", -command => sub { $state |= 2; } );
+	    do {
+		$dlg->waitVariable(\$state);
+	    } until $state & 2;
+	}
+    }
+    run_dialog_retract($dlg, $savefocus);
+    return $success ? $out_name : undef;
+}
+
+sub compile_instrument {
+    my ($w, $force) = @_;
+    return undef unless ask_save_before_simulate($w);
+    my $out_name = dialog_get_out_file($w, $current_sim_def, $force);
+    unless($out_name && -x $out_name) {
+	$w->messageBox(-message => "Could not compile simulation.",
+		       -title => "Compile failed",
+		       -type => 'OK',
+		       -icon => 'error');
+	return undef;
+    }
+    return $out_name;
+}
+
+sub menu_compile{
+    my ($w) = @_;
+    compile_instrument($w, 1);	# Force recompilation.
 }
 
 sub my_system {
@@ -291,7 +404,7 @@ sub my_system {
     if($child_pid) {		# Parent
 	my $ret1 = run_dialog($w, $fh, $child_pid, $inittext);
 	my $ret2 = close($fh);
-	return $ret1 && $ret2;
+	return $ret1 && defined($ret2) && ($? == 0);
     } else {			# Child
 	open(STDERR, ">&STDOUT") || die "Can't dup stdout";
 	exec @sysargs;
@@ -334,6 +447,8 @@ sub menu_run_simulation {
 	    "$newsi->{'Dir'}/mcstas.sim" :
 	    "mcstas.sim";
 	read_sim_data($w);
+	$inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
+	$inf_sim->{'Trace'} = $newsi->{'Trace'};
 	if($newsi->{'Autoplot'} && !$newsi->{'Trace'}) {
 	    plot_dialog($w, $inf_instr, $inf_sim, $inf_data);
 	}
