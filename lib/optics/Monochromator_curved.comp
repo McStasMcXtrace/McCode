@@ -1,16 +1,19 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Monochromator_curved.comp
-*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Monochromator_curved
 *
 * %I
 *
-* Written by: Emmanuel Farhi
+* Written by: Emmanuel Farhi, Kristian Nielsen, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.6 $
-* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a>
+* Version: $Revision: 1.7 $
+* Origin: <a href="http://www.ill.fr">ILL</a>
+* Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
 *                                  by Kristian Nielsen and Peter Link
 * Modified by: EF, Feb 13th 2002: Read reflectivity table

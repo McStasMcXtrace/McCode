@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.4 2003-01-21 08:42:48 pkwi Exp $
+* $Id: read_table-lib.c,v 1.5 2003-01-21 08:47:03 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/29 11:39:00 ef

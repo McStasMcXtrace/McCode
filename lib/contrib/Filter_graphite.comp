@@ -1,7 +1,9 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Filter_graphite.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Filter_graphite
 *
@@ -9,8 +11,9 @@
 *
 * Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 07 March 2000
-* Version: $Revision: 1.7 $
-* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a>
+* Version: $Revision: 1.8 $
+* Origin: <a href="http://www.ill.fr">ILL</a>
+* Release: McStas 1.6
 *
 * Pyrolytic graphite filter (analytical model)
 *

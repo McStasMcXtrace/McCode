@@ -1,30 +1,14 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Risoe National Laboratory, Roskilde, Denmark
-*         Institut Laue Langevin, Grenoble, France
 *
-* Component: Al_window
+* Component: Al-Window
+* (S. Roth)
 *
-* %I
-* Written by: S. Roth
-* Date:       Jul 31, 2001
-* Origin:     FRM-II
-* Release: McStas 1.6
-* Version: 1.0
-*
-* Aluminium window in the beam
-*
-* %D
-* 
-* Aluminium window in the beam
-*
-* Example: Al_window(win_thick=0.002)
-*
-* %P
 * INPUT PARAMETERS:
-* win_thick: Al Window thickness (m)       
+* win_thick: Window thickness (m)       
 * 
 *
 * Variables calculated in the component
@@ -32,10 +16,12 @@
 * Al_my_s     : Attenuation factor due to scattering (m^-1)
 * Al_my_a     : Attenuation factor due to absorbtion (m^-1)
 * 
-* %E
+*
+*
+*
 *******************************************************************************/
 
-DEFINE COMPONENT Al_window
+DEFINE COMPONENT window
 DEFINITION PARAMETERS (win_thick)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -77,20 +63,29 @@ TRACE
   double Al_s_tot_lambda,Al_my_tot,Al_my_a ; /* total XS (barn), total scattering length (m-1), absorption scat. length */	
   double lambda; /* neutrons wavelength */
 
+  //printf("! win1: x=%lf y%lf z%lf ",x,y,z);
+
   PROP_Z0;
+
+  //printf("! win2: x=%lf y%lf z%lf ",x,y,z);
 
   dt0=win_thick/vz;
   v=sqrt(vx*vx+vy*vy+vz*vz);
   PROP_DT(dt0);
   dist=v*dt0;
 
+  //printf("! win3: x=%lf y%lf z%lf ",x,y,z);
+
+
   lambda=sqrt(81.81/(VS2E*v*v));
-  Al_s_tot_lambda= Al_pf_A+Al_pf_B1*lambda+ Al_pf_B2*lambda*lambda+ Al_pf_B3*lambda*lambda*lambda;
+  Al_s_tot_lambda=Al_pf_A+Al_pf_B1*lambda+Al_pf_B2*lambda*lambda+Al_pf_B3*lambda*lambda*lambda;
   Al_s_tot_lambda+=Al_pf_B4*lambda*lambda*lambda*lambda;
   Al_my_tot=Al_rho / Al_mmol * Al_s_tot_lambda * avogadro * 10;
   Al_my_a = Al_my_a_v/v; 
 
+
   p *=exp(-Al_my_a*dist);/* neutron passes window without any interaction */
+
 
   /* TODO: scatter in Debye-Scherrer cone */
 

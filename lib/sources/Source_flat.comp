@@ -1,7 +1,9 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Source_flat.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Source_flat
 *
@@ -10,8 +12,9 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.16 $
-* Origin: McStas 1.5.1
+* Version: $Revision: 1.17 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * A circular neutron source with flat energy spectrum and arbitrary flux
 *

@@ -1,15 +1,17 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Monochromator_2foc.comp
-*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
-*         Peter Link, IPC University of Göttingen
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Monochromator_2foc
 *
 * %Identification
 * Written by: <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
 * Date: Feb. 12,1999
-* Origin: McStas 1.5/Uni. Gottingen (Germany)
+* Origin: Uni. Gottingen (Germany)
+* Release: McStas 1.6
 * Version: 1.0
 * Modified by: Peter Link Feb. 12,1999, Added double bent feature by: 
 * Modified by: Peter Link Sep. 24. 1999, corrected bug in rotation of v-coords: 

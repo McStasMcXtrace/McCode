@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Source_flat_lambda.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Source_flat_lambda
 *
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: 1999
-* Version: $Revision: 1.12 $
-* Origin: McStas release 1.5.1
+* Version: $Revision: 1.13 $
+* Origin: Risoe
+* Release: McStas 1.6
 * Modified by: KN, 1999 from Source_flat.comp
 * Modified by: KL, October 8, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001

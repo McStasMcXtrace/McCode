@@ -1,7 +1,8 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Guide_gravity.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Guide_gravity
@@ -9,8 +10,9 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.6 $
-* Origin: McStas 1.6/<a href="http://www.ill.fr">ILL (France)</a>.
+* Version: $Revision: 1.7 $
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>.
+* Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
 * Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
 *

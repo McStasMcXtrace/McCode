@@ -11,15 +11,18 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: 1.4
+* Version: 1.5
 *
 * Runtime system header for McStas. 
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.45 2003-01-21 08:42:48 pkwi Exp $
+* $Id: mcstas-r.h,v 1.46 2003-01-21 08:47:03 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+* Revision 1.5 2002/10/19 22:46:21 ef
+*        gravitation for all with -g. Various output formats.
+*
 * Revision 1.4 2002/09/17 12:01:21 ef
 *	removed unused macros (PROP_Y0, X0), changed randvec_target_sphere to circle
 * added randvec_target_rect
@@ -36,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.45 $"
+#define MCSTAS_R_H "$Revision: 1.46 $"
 
 #include <math.h>
 #include <string.h>
@@ -235,29 +238,14 @@ void mt_srandom (unsigned long x);
 #define rand0max(max) ( ((double)random()) / (((double)MC_RAND_MAX+1)/(max)) )
 #define randminmax(min,max) ( rand0max((max)-(min)) + (min) )
 
-#define PROP_DT(dt) \
+#define mcPROP_DT(dt) \
   do { \
-    if(dt < 0) ABSORB; \
     mcnlx += mcnlvx*(dt); \
     mcnly += mcnlvy*(dt); \
     mcnlz += mcnlvz*(dt); \
     mcnlt += (dt); \
   } while(0)
-
-#define PROP_Z0 \
-  do { \
-    double mc_dt; \
-    if(mcnlvz == 0) ABSORB; \
-    mc_dt = -mcnlz/mcnlvz; \
-    if(mc_dt < 0) ABSORB; \
-    mcnlx += mcnlvx*mc_dt; \
-    mcnly += mcnlvy*mc_dt; \
-    mcnlt += mc_dt; \
-    mcnlz = 0; \
-  } while(0)
-
-
-
+  
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with gravitation */
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
   do { \
@@ -268,6 +256,41 @@ void mt_srandom (unsigned long x);
     mcnlvy += Ay*dt; \
     mcnlvz += Az*dt; \
     mcnlt  += dt; \
+  } while(0)
+
+#define PROP_DT(dt) \
+  do { \
+    if(dt < 0) ABSORB; \
+    if (mcgravitation) { Coords mcLocG; double mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    PROP_GRAV_DT(dt, mc_gx, mc_gy, mc_gz); } \
+    else mcPROP_DT(dt); \
+  } while(0)
+ 
+#define PROP_Z0 \
+  do { \
+    if (mcgravitation) { Coords mcLocG; int mc_ret; \
+    double mc_dt, mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    mc_ret = plane_intersect_Gfast(&mc_dt, -mc_gz/2, -mcnlvz, -mcnlz); \
+    if (mc_ret && mc_dt>0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
+    else ABSORB; }\
+    else mcPROP_Z0; \
+  } while(0)
+
+
+#define mcPROP_Z0 \
+  do { \
+    double mc_dt; \
+    if(mcnlvz == 0) ABSORB; \
+    mc_dt = -mcnlz/mcnlvz; \
+    if(mc_dt < 0) ABSORB; \
+    mcnlx += mcnlvx*mc_dt; \
+    mcnly += mcnlvy*mc_dt; \
+    mcnlt += mc_dt; \
+    mcnlz = 0; \
   } while(0)
 
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
@@ -320,6 +343,7 @@ void mt_srandom (unsigned long x);
   } while(0)
 
 Coords coords_set(MCNUM x, MCNUM y, MCNUM z);
+Coords coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z);
 Coords coords_add(Coords a, Coords b);
 Coords coords_sub(Coords a, Coords b);
 Coords coords_neg(Coords a);
@@ -363,6 +387,7 @@ int plane_intersect_Gfast(double *Idt,
     double A,  double B,  double C);
 void randvec_target_circle(double *xo, double *yo, double *zo, 
     double *solid_angle, double xi, double yi, double zi, double radius);
+#define randvec_target_sphere randvec_target_circle
 void randvec_target_rect(double *xo, double *yo, double *zo, 
     double *solid_angle,
 	       double xi, double yi, double zi, double height, double width);        
@@ -399,7 +424,7 @@ struct mcformats_struct {
  * such are the joys of ANSI C99 and Single Unix Specification ! 
  * This 0-precision for unused data is automatically checked in mccheck_format
  * Maximum number of positional arguments is NL_RGMAX, which is 9 on System V
- * machines (Dec/Compaq/HP). Some more enjoyable  stuff !!
+ * machines (Dec/Compaq/HP). Some more enjoyable  stuff !! -> we use pfprintf
  */ 
   
 struct mcformats_struct mcformats[mcNUMFORMATS] = {
@@ -501,15 +526,15 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);\n"
       "function d=mcplot_inline(d,p)\n"
       "%% local inline function to plot data\n"
-      "if ~p, return; end;if isempty(d.data) & isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\n"
+      "if isempty(d.data) & isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
       "eval(['l=[',d.xylimits,'];']); S=size(d.data);\n"
       "t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);\n"
       "disp(t);\n"
       "if ~isempty(findstr(d.type,'0d')), return;\n"
       "elseif ~isempty(findstr(d.type,'2d'))\n"
-      "x=linspace(l(1),l(2),S(1)); y=linspace(l(3),l(4),S(2));\n"
-      "figure; surface(x,y,d.data);\n"
-      "else\nfigure; x=linspace(l(1),l(2),max(S));\nplot(x,d.data);end\n"
+      "d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2));\n"
+      "figure; surface(d.x,d.y,d.data);colorbar;\n"
+      "else\nfigure; d.x=linspace(l(1),l(2),max(S));\nplot(d.x,d.data);end\n"
       "xlabel(d.xlabel); ylabel(d.ylabel); title(t);"
       "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n",
     "%% Section %2$s [%3$s] (level %7$d)\n"
@@ -517,11 +542,11 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%6$s.%4$s = %4$s; clear %4$s;\n",
     "%1$s%2$s.%3$s = '%4$s';\n",
     "%1$s%2$s.func='%2$s';\n%1$s%2$s.data = [ ",
-    "%1$s%2$s.errors = [ ",
-    "%1$s%2$s.ncount = [ ",
-    " ]; %% end of data \nmcplot_inline(%2$s,p);\n",
-    " ]; %% end of errors\n",
-    " ]; %% end of ncount\n",
+    "%1$sif single_file == 1, %2$s.errors = [ ",
+    "%1$sif single_file == 1, %2$s.ncount = [ ",
+    " ]; %% end of data\nif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%2$s=mcplot_inline(%2$s,p);\n",
+    " ]; %% end of errors\nend\n",
+    " ]; %% end of ncount\nend\n",
   "Scilab", "sci",
     "function %7$s = get_%7$s(p)\n"
       "// %4$s function issued from McStas on %5$s\n"
@@ -542,7 +567,7 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "if ~execstr('d2='+d.func+'();','errcatch'),d=d2; d.parent=p;end\nendfunction\n"
       "function d=mcplot_inline(d,p)\n"
       "// local inline func to plot data\n"
-      "if ~p, return; end;if ~length(d.data) & ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\n"
+      "if ~length(d.data) & ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
       "execstr(['l=[',d.xylimits,'];']); S=size(d.data);\n"
       "t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];\n"
       "mprintf('%%s\\n',t(:));\n"
@@ -550,14 +575,14 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "else\nw=winsid();if length(w),w=w($)+1; else w=0; end\n"
       "xbasr(w); xset('window',w);\n"
       "if length(strindex(d.type,'2d'))\n"
-      "x=linspace(l(1),l(2),S(1)); y=linspace(l(3),l(4),S(2));\n"
-      "z=d.data;f=round(log10(max(abs(z))));fx=max(abs(x)); fy = max(abs(y));\n"
+      "d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2));\n"
+      "z=d.data;f=round(log10(max(abs(z))));fx=max(abs(d.x)); fy = max(abs(d.y));\n"
       "if fx>0,fx=log10(fx); else fx=[]; end\n"
       "if fy>0,fy=log10(fy); else fy=[]; end\n"
       "if length(fx),if length(fy),f=f-round((fx+fy)/2); else f=f-round(fx); end\n"
       "end\nz=z/10^f;if f,t1=t1+' [*10^'+string(f)+']';end\n"
-      "xset('colormap',hotcolormap(64));plot3d1(x,y,z);\n"
-      "else\nx=linspace(l(1),l(2),max(S));\nplot2d(x,d.data);end\nend\n"
+      "xset('colormap',hotcolormap(64));plot3d1(d.x,d.y,z);\n"
+      "else\nd.x=linspace(l(1),l(2),max(S));\nplot2d(d.x,d.data);end\nend\n"
       "xtitle(t,d.xlabel,d.ylabel); xname(t1);endfunction\n"
     "%7$s=get_%7$s();",
     "// Section %2$s [%3$s] (level %7$d)\n"
@@ -565,11 +590,11 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%1$s%6$s.%4$s = 0; %6$s.%4$s = %4$s; clear %4$s;\n",
     "%1$s%2$s.%3$s = '%4$s';\n",
     "%1$s%2$s.func='get_%2$s';\n%1$s%2$s.data = [ ",
-    "%1$s%2$s.errors = [ ",
-    "%1$s%2$s.ncount = [ ",
-    " ]; // end of data\nmcplot_inline(%2$s,p);\n",
-    " ]; // end of errors\n",
-    " ]; // end of ncount\n",
+    "%1$sif single_file == 1, %2$s.errors = [ ",
+    "%1$sif single_file == 1, %2$s.ncount = [ ",
+    " ]; // end of data\nif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%2$s=mcplot_inline(%2$s,p);\n",
+    " ]; // end of errors\nend\n",
+    " ]; // end of ncount\nend\n",
   "IDL", "pro",
     "pro stv, S, T, V\n"
       ";** Procedure that operates S.T = V\n"

@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Chopper.comp
-*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Chopper
 *
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.12 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.13 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Disk chopper.
 *
@@ -45,7 +48,7 @@ DEFINE COMPONENT Chopper
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R, w=0.05, f=2500.0, n=3, pha=0, IsFirst=0)
 OUTPUT PARAMETERS (Tg, To, IsFirst)
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
+STATE PARAMETERS (x, y, z, vx, vy, vz, t, p)
 
 DECLARE
  %{

@@ -20,7 +20,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.34 2003-01-21 08:42:46 pkwi Exp $
+* $Id: cogen.c,v 1.35 2003-01-21 08:47:01 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -1090,6 +1090,13 @@ cogen_save(struct instr_def *instr)
   
   /* User SAVE code from component definitions (for each instance). */
   coutf("void %ssave(void) {", ID_PRE);
+  /* In case the save occurs during simulation (-USR2 not at end), we must close
+   * current siminfo and re-open it, not to have redundant monitor entries
+   * saved each time for each monitor. The sim_info is then incomplete, but
+   * data is saved entirely. It is completed during the last siminfo_close
+   * of mcraytrace
+   */
+  cout("  mcsiminfo_init(NULL);"); 
   cout("  /* User component SAVE code. */");
   cout("");
   liter = list_iterate(instr->complist);
@@ -1115,6 +1122,7 @@ cogen_save(struct instr_def *instr)
                            instr->saves);
     cout("");
   }
+  cout("  mcsiminfo_close(); ");
   cout("}");
 }
 
@@ -1262,12 +1270,12 @@ cogen(char *output_name, struct instr_def *instr)
     fatal_error("Error opening output file '%s'\n", output_name);
   
   cout("/* Automatically generated file. Do not edit. ");
-  cout(" * Format:  ANSI C source code\n");
-  cout(" * Creator: McStas <http://neutron.risoe.dk>\n");
-  coutf(" * Instrument: %s (%s)\n", instr->source, instr->name);
-  cout(" */\n\n");
+  cout(" * Format:  ANSI C source code");
+  cout(" * Creator: McStas <http://neutron.risoe.dk>");
+  coutf(" * Instrument: %s (%s)", instr->source, instr->name);
+  cout(" */\n");
   cout("");
-  coutf("#define MCSTAS_VERSION \"%s\"\n", MCSTAS_VERSION);
+  coutf("#define MCSTAS_VERSION \"%s\"", MCSTAS_VERSION);
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);

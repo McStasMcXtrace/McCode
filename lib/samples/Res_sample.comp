@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Res_sample.comp
-*         Copyright 1977-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Res_sample
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.16 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.17 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Sample for resolution function calculation.
 *
@@ -61,9 +64,7 @@ DECLARE
       double rx,ry,rz,pi;
     } res_struct;
 %}
-INITIALIZE
-%{
-%}
+
 TRACE
 %{
   double t0, t3;                /* Entry/exit time for outer cylinder */

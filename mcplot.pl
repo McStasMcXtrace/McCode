@@ -74,7 +74,7 @@ if ($print_color) {
 } 
 
 print "Click on a plot for full-window view.\n" if @$datalist > 1;
-print "Type 'P' (in graphics window) for hardcopy, 'Q' to quit.\n";
+print "Type 'P' 'C' or 'G' (in graphics window) for hardcopy, 'Q' to quit.\n";
 
 for(;;) {
     my ($cc,$cx,$cy,$idx);

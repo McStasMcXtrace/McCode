@@ -1,14 +1,17 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Monitor_Optimizer.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Monitor_Optimizer
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 17 Sept 1999
-* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL (France)</a>
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Release: McStas 1.6
 * Version: 0.08
 * Modified by: EF, (Feb 2000)
 * Modified by: EF, Mar 10th, 2000 : now uses struct

@@ -1,15 +1,18 @@
 /***************************************************************************
 *
-* McStas, the neutron ray-tracing package: He3_cell.comp
-*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
-* Component He3_cell
+* Component: He3_cell
 *
 * %Identification
 * Written by: Trefor Roberts 
 * Date: March 1999
-* Origin: McStas 1.5/ILL
+* Origin: ILL
 * version: 1.0
+* Release: McStas 1.6
 *
 * Polarised 3He cell
 *
