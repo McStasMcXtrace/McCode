@@ -6,15 +6,58 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: debug.c,v 1.1 1997-07-01 08:17:57 kn Exp $
+*	$Id: debug.c,v 1.2 1997-07-02 07:22:53 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.1  1997/07/01 08:17:57  kn
+*	Initial revision
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
 
 #include <stdarg.h>
 #include <stdio.h>
+
+#include "mcstas.h"
+
+/*******************************************************************************
+* Error messages.
+*******************************************************************************/
+void
+print_error(char *format, ...)
+{
+  va_list ap;
+
+  va_start(ap, format);
+  vfprintf(stderr, format, ap);
+  va_end(ap);
+}
+
+
+/*******************************************************************************
+* Fatal errors. These cause the program to terminate immediately. This is not
+* very user friendly, so it should be avoided if possible. However, it is
+* useful for such things as failed memory allocations of small sizes that are
+* a pain to handle correctly and extremely unlikely to occur in modern
+* virtual memory-capable systems. 
+*
+* Outputs a message passed in printf-style to stderr and exits.
+*******************************************************************************/
+void
+fatal_error(char *format, ...)
+{
+  va_list ap;
+
+  va_start(ap, format);
+  fprintf(stderr, "\n\nFatal error: ");
+  vfprintf(stderr, format, ap);
+  fprintf(stderr, "\n\nProgram aborted.\n");
+  va_end(ap);
+
+  exit(1);
+}
+
 
 #ifdef DEBUG
 
