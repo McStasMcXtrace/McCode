@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+# Simple script for setting up a mcstas distribution package. 
+# 
+# To be called with one input parameter - distribution tail filename, e.g.
+# 
+# mkdist 1.7.3c -> ../mcstas-1.7.3c.tar.gz
+#
+# Assumes you have write access to ..
+#
+# PW, risoe, 20030123
+#
+
+# Create temporary workdir:
+TMPDIR=`mktemp -d`
+PW=`pwd`
+DIST=$TMPDIR/mcstas-$1
+
+# Copy current checkout there
+cp -rp $PW $DIST
+
+# Go there, clean up CVS information
+cd $DIST
+find . -name CVS -exec rm -r \{\} \; 2> /dev/null
+
+# Create configure
+autoconf configure.in > configure
+chmod a+x configure
+
+# run lex, yacc (assuming linux - flex -i & bison -v -d)
+flex -i instrument.l
+bison -v -d instrument.y
+
+# Clean up
+rm mkdist
+cd ..
+
+# Create tar archive
+tar cvfz $PW/../mcstas-$1.tar.gz mcstas-$1
+
+# Remove temporary dir
+rm -rf $TMPDIR
+
+
+
+
+
+
+
+
