@@ -39,7 +39,7 @@ INITIALIZE
   a_total_psi = 0;
   a_num = NUM;
   count = 0;
-  y_0 = 2.0/(double)NUM;
+  y_0 = NUM > 8 ? 2.0/(double)NUM : 0.25;
   r_0 = 1/(double)alpha*log((1 - y_0)/y_0)/(double)mcget_ncount();
   C = 1/(1 + log(y_0 + (1 - y_0)*exp(-r_0*mcget_ncount()))/(r_0*mcget_ncount()));
   printf("Source_adapt: y_0=%8.3g r_0=%8.3g C=%8.3g\n", y_0, r_0, C);
