@@ -269,11 +269,11 @@ function mcplot_menu_action(k, gwin)
           execstr('parameters = ThisFigure.parameters','errcatch');
           if length(parameters)
             // scan parameters structure, excluding 'class','parent','name'
-            if ($Config{'osname'} eq 'MSWin32') {
+            if MSDOS
               tmp_parcmd = 'mcdisplay.pl '+figname+'.instr -n 100 -pScilab --save ';
-            } else {
+            else
               tmp_parcmd = 'mcdisplay '+figname+'.instr -n 100 -pScilab --save ';
-            }
+            end
             tmp_fields = getfield(1,parameters);
             for field=1:size(tmp_fields,2)
               if (tmp_fields(field) ~= 'class' & ...
