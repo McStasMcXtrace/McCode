@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.11 2003-04-15 15:45:56 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.12 2003-04-15 16:01:28 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.11  2003/04/15 15:45:56  farhi
+*	outgoing time is default (vs. incoming)
+*	
 *	Revision 1.10  2003/04/09 15:49:25  farhi
 *	corrected bug when no signal and auto limits requested
 *	
@@ -501,9 +504,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) strcat(mc_mn_Vars->Monitor_Label, " (Cylinder)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) strcat(mc_mn_Vars->Monitor_Label, " (Banana)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX)    strcat(mc_mn_Vars->Monitor_Label, " (Box)");
-    if (((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX))
+    if ((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX))
     {
-      if strstr(mc_mn_Vars->option, "incoming"))
+      if (strstr(mc_mn_Vars->option, "incoming"))
       {
         mc_mn_Vars->Flag_Shape = abs(mc_mn_Vars->Flag_Shape);
         strcat(mc_mn_Vars->Monitor_Label, " [in]");
