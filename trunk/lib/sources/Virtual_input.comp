@@ -1,15 +1,19 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Virtual_input.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Virtual_input
 *
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.6 $
-* Origin: McStas release 1.5.1/<a href="http://www.ill.fr">ILL</a>
+* Version:  $Revision: 1.7 $
+* Origin: <a href="http://www.ill.fr">ILL</a>
+* Release: McStas 1.6
+* Modified by: EF, Oct 2002. make use of shared read-table library.
 *
 * Source that generates neutron events from an ascii/binary 'source' file.
 *

@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Guide_channeled.comp
-*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Guide_channeled
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.6 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.7 $
+* Release: McStas 1.6
+* Origin: Risoe
 *
 * Neutron guide with channels (bender section).
 *

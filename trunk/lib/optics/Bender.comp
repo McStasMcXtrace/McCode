@@ -1,13 +1,17 @@
   /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Bender component
-*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
 * Component: Bender
 *
 * %Identification
 * Written by: Philipp Bernhardt
 * Date: Februar 7 1999
-* Origin: McStas 1.5/Uni. Erlangen (Germany)
+* Origin: Uni. Erlangen (Germany)
+* Release: McStas 1.6
 * Version: 1.0
 *
 * Models a curved neutron guide. 
@@ -67,7 +71,7 @@ DEFINITION PARAMETERS
 
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (bk, mWin)
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
+STATE PARAMETERS (x, y, z, vx, vy, vz, t, p)
 
 SHARE
  %{

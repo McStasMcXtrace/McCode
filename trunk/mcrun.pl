@@ -5,9 +5,9 @@
 # afterwards.
 BEGIN {
     if($ENV{"MCSTAS"}) {
-	$MCSTAS::sys_dir = $ENV{"MCSTAS"};
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
 }
 use lib $MCSTAS::sys_dir;
@@ -23,11 +23,11 @@ autoflush STDOUT 1;
 
 # Various parameters determined by the command line.
 my ($sim_def, $force_compile, $data_dir, $data_file);
-my $ncount = 1e6;		# Number of neutron histories in one simulation
-my $numpoints = 1;		# Number of points in scan (if any)
-my @params = ();		# List of input parameters
-my %vals;			# Hash of input parameter values
-my @options = ();		# Additional command line options
+my $ncount = 1e6;                # Number of neutron histories in one simulation
+my $numpoints = 1;                # Number of points in scan (if any)
+my @params = ();                # List of input parameters
+my %vals;                        # Hash of input parameter values
+my @options = ();                # Additional command line options
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -47,9 +47,9 @@ sub set_inputpar {
 sub set_inputpar_text {
     my ($text) = @_;
     if($text =~ /^([a-zæøåA-ZÆØÅ0-9_]+)\=(.*)$/) {
-	set_inputpar($1, $2);
+        set_inputpar($1, $2);
     } else {
-	die "Invalid input parameter specification '$text'";
+        die "Invalid input parameter specification '$text'";
     }
 }
 
@@ -58,10 +58,10 @@ sub read_inputpar_from_file {
     my ($filename) = @_;
     open(IN, "<$filename") || die "Failed to open file '$filename'";
     while(<IN>) {
-	my $p;
-	for $p (split) {
-	    set_inputpar_text($p);
-	}
+        my $p;
+        for $p (split) {
+            set_inputpar_text($p);
+        }
     }
 }    
 
@@ -70,64 +70,66 @@ sub read_inputpar_from_file {
 sub parse_args {
     my $i;
     for($i = 0; $i < @ARGV; $i++) {
-	$_ = $ARGV[$i];
-	# Options specific to mcrun.
-	if(/^--force-compile$/ || /^-c$/) {
-	    $force_compile = 1;
-	} elsif(/^--param\=(.*)$/ || /^-p(.+)$/) {
-	    read_inputpar_from_file($1);
-	} elsif(/^--param$/ || /^-p$/) {
-	    read_inputpar_from_file($ARGV[++$i]);
-	} elsif(/^--numpoints\=(.*)$/ || /^-N(.+)$/) {
-	    $numpoints = $1;
-	} elsif(/^--numpoints$/ || /^-N$/) {
-	    $numpoints = $ARGV[++$i];
-	} elsif(/^--ncount\=(.*)$/ || /^-n(.+)$/) {
-	    $ncount = $1;
-	    push @options, "--ncount=$ncount";
-	} elsif(/^--ncount$/ || /^-n$/) {
-	    $ncount = $ARGV[++$i];
-	    push @options, "--ncount=$ncount";
-	}
-	# Standard McStas options needing special treatment by mcrun.
-	elsif(/^--dir\=(.*)$/ || /^-d(.+)$/) {
-	    $data_dir = $1;
-	} elsif(/^--dir$/ || /^-d$/) {
-	    $data_dir = $ARGV[++$i];
-	}
-	elsif(/^--file\=(.*)$/ || /^-f(.+)$/) {
-	    $data_file = $1;
-	} elsif(/^--file$/ || /^-f$/) {
-	    $data_file = $ARGV[++$i];
-	}
-	# Standard McStas options passed through unchanged to simulations.
-	elsif(/^--(seed)\=(.*)$/) {
-	    push @options, "--$1=$2";
-	} elsif(/^-([s])(.+)$/) {
-	    push @options, "-$1$2";
-	} elsif(/^--(seed)$/) {
-	    push @options, "--$1=$ARGV[++$i]";
-	} elsif(/^-([s])$/) {
-	    push @options, "-$1$ARGV[++$i]";
-	} elsif(/^--(ascii-only|help|info|trace|no-output-files)$/) {
-	    push @options, "--$1";
-	} elsif(/^-([ahit])$/) {
-	    push @options, "-$1";
-	}
-	# Non-option arguments.
-	elsif(/^-/) {		# Unrecognised option
-	    die "Unknown option \"$_\"";
-	} elsif(/^([a-zæøåA-ZÆØÅ0-9_]+)\=(.*)$/) {
-	    set_inputpar($1, $2);
-	} else {			# Name of simulation definition
-	    if($sim_def) {
-		die "Only a single instrument definition may be given";
-	    } else {
-		$sim_def = $_;
-	    }
-	}
+        $_ = $ARGV[$i];
+        # Options specific to mcrun.
+        if(/^--force-compile$/ || /^-c$/) {
+            $force_compile = 1;
+        } elsif(/^--param\=(.*)$/ || /^-p(.+)$/) {
+            read_inputpar_from_file($1);
+        } elsif(/^--param$/ || /^-p$/) {
+            read_inputpar_from_file($ARGV[++$i]);
+        } elsif(/^--numpoints\=(.*)$/ || /^-N(.+)$/) {
+            $numpoints = $1;
+        } elsif(/^--numpoints$/ || /^-N$/) {
+            $numpoints = $ARGV[++$i];
+        } elsif(/^--ncount\=(.*)$/ || /^-n(.+)$/) {
+            $ncount = $1;
+            push @options, "--ncount=$ncount";
+        } elsif(/^--ncount$/ || /^-n$/) {
+            $ncount = $ARGV[++$i];
+            push @options, "--ncount=$ncount";
+        }
+        # Standard McStas options needing special treatment by mcrun.
+        elsif(/^--dir\=(.*)$/ || /^-d(.+)$/) {
+            $data_dir = $1;
+        } elsif(/^--dir$/ || /^-d$/) {
+            $data_dir = $ARGV[++$i];
+        }
+        elsif(/^--file\=(.*)$/ || /^-f(.+)$/) {
+            $data_file = $1;
+        } elsif(/^--file$/ || /^-f$/) {
+            $data_file = $ARGV[++$i];
+        }
+        # Standard McStas options passed through unchanged to simulations.
+        elsif(/^--(seed)\=(.*)$/) {
+            push @options, "--$1=$2";
+        } elsif(/^-([s])(.+)$/) {
+            push @options, "-$1$2";
+        } elsif(/^--(seed)$/) {
+            push @options, "--$1=$ARGV[++$i]";
+        } elsif(/^-([s])$/) {
+            push @options, "-$1$ARGV[++$i]";
+        } elsif(/^--(format)$/) {
+            push @options, "--$1=$ARGV[++$i]";
+        } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
+            push @options, "--$1";
+        } elsif(/^-([ahitg])$/) {
+            push @options, "-$1";
+        }
+        # Non-option arguments.
+        elsif(/^-/) {                # Unrecognised option
+            die "Unknown option \"$_\"";
+        } elsif(/^([a-zæøåA-ZÆØÅ0-9_]+)\=(.*)$/) {
+            set_inputpar($1, $2);
+        } else {                        # Name of simulation definition
+            if($sim_def) {
+                die "Only a single instrument definition may be given";
+            } else {
+                $sim_def = $_;
+            }
+        }
     }
-    die "No instrument definition name given" unless $sim_def;
+    die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max}\nmcrun options:\n -c        --force-compile  Force rebuilding of instrument.\n -p=FILE   --param=FILE     Read parameters from file FILE.\n -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.\n -N NP     --numpoints=NP   Set number of scan points.\nInstr options:\n -s SEED   --seed=SEED      Set random seed (must be != 0)\n -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.\n -d DIR    --dir=DIR        Put all data files in directory DIR.\n -f FILE   --file=FILE      Put all data in a single file.\n -t        --trace          Enable trace of neutron through instrument.\n -g        --gravitation    Enable gravitation for all trajectories.\n -a        --data-only      Do not put any headers in the data files.\n --no-output-files          Do not write any data files.\n -h        --help           Show help message.\n -i        --info           Detailed instrument information.\n --format=FORMAT            Output data files using format FORMAT\nNo instrument definition name given" unless $sim_def;
     die "Number of points must be at least 1" unless $numpoints >= 1;
 }
 
@@ -140,22 +142,22 @@ sub check_input_params {
     my @maxval = ();
     my $v;
     for $v (@params) {
-	if($vals{$v} =~ /^(.+),(.+)$/) {
-	    # Variable to scan from min to max.
-	    $minval[$j] = $1;
-	    $maxval[$j] = $2;
-	    $scanned[$j] = $i;
-	    if($minval[$j] != $maxval[$j] && $numpoints == 1) {
-		die "Cannot scan variable $v using only one data point.
+        if($vals{$v} =~ /^(.+),(.+)$/) {
+            # Variable to scan from min to max.
+            $minval[$j] = $1;
+            $maxval[$j] = $2;
+            $scanned[$j] = $i;
+            if($minval[$j] != $maxval[$j] && $numpoints == 1) {
+                die "Cannot scan variable $v using only one data point.
 Please use -N to specify the number of points.";
-	    }
-	    $j++;
-	} elsif($vals{$v} =~ /^(.+)$/) {
-	    # Constant variable (no action).
-	} else {
-	    die "Invalid parameter specification '$vals{$v}' for parameter $v";
-	}
-	$i++;
+            }
+            $j++;
+        } elsif($vals{$v} =~ /^(.+)$/) {
+            # Constant variable (no action).
+        } else {
+            die "Invalid parameter specification '$vals{$v}' for parameter $v";
+        }
+        $i++;
     }
     return { VARS => \@scanned, MIN => \@minval, MAX => \@maxval };
 }
@@ -221,7 +223,7 @@ sub output_sim_file {
     my ($filename, $info, $youts, $variables, $datfile) = @_;
     my $SIM = new FileHandle;
     open($SIM, ">$filename") ||
-	die "Failed to write info file '$filename'";
+        die "Failed to write info file '$filename'";
     print $SIM "begin instrument\n";
     do_instr_header("  ", $SIM);
     print $SIM "end instrument\n\nbegin simulation\n";
@@ -247,71 +249,71 @@ sub do_scan {
     # Create the output directory if requested.
     my $prefix = "";
     if($data_dir) {
-	if(mkdir($data_dir, 0777)) {
-	    $prefix = "$data_dir/";
-	} else {
-	    die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
-	}
+        if(mkdir($data_dir, 0777)) {
+            $prefix = "$data_dir/";
+        } else {
+            die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
+        }
     }
     # Use user-specified output file name, with a default of "mcstas.dat".
     my $datfile = ($data_file || "mcstas.dat");
     # Add a default '.dat' extension if no other extension given.
     $datfile .= ".dat" unless $datfile =~ m'\.[^/]*$'; # Quote hack ';
     my $simfile = $datfile;
-    $simfile =~ s/\.dat$//;	# Strip any trailing ".dat" extension ...
-    $simfile .= ".sim";	# ... and add ".sim" extension.
+    $simfile =~ s/\.dat$//;        # Strip any trailing ".dat" extension ...
+    $simfile .= ".sim";        # ... and add ".sim" extension.
     my $DAT = new FileHandle;
     open($DAT, ">${prefix}$datfile");
-    autoflush $DAT 1;		# Preserves data even if interrupted.
+    autoflush $DAT 1;                # Preserves data even if interrupted.
     my $firsttime = 1;
     my $variables = "";
     my @youts = ();
     my $point;
     for($point = 0; $point < $numpoints; $point++) {
-	my $out = "";
-	my $j;
-	for($j = 0; $j < @{$info->{VARS}}; $j++) {
-	    my $i = $info->{VARS}[$j]; # Index of variable to be scanned
-	    $vals{$params[$i]} =
-		($info->{MAX}[$j] - $info->{MIN}[$j])/($numpoints - 1)*$point +
-		    $info->{MIN}[$j];
-	    $out .= "$vals{$params[$i]} ";
-	    $variables .= "$params[$i] " if $firsttime
-	    }
-	# Decide how to handle output files.
-	my $output_opt =
-	    $data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
-	my $got_error = 0;
-	my $pid = open(SIM, "-|");
-	die "Failed to spawn simulation command" unless defined($pid);
-	if($pid) {		# Parent
-	    while(<SIM>) {
-		chomp;
-		if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ") {
-		    my $sim_I = $2;
-		    my $sim_err = $4;
-		    my $sim_N = $6;
-		    $out .= " $sim_I $sim_err";
-		    if($firsttime) {
-			$variables .= " $1 $3";
-			push @youts, "($1,$3)";
-		    }
-		} elsif(m'^Error:') {
-		    $got_error = 1;
-		}
-		print "$_\n";
-	    }
-	} else {		# Child
-	    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
-	    exec_sim(@options, $output_opt);
-	}
-	my $ret = close(SIM);
-	die "Exit due to error returned by simulation program"
-	    if $got_error || (! $ret && ($? != 0 || $!));
-	output_dat_header($DAT, $info, \@youts, $variables, $datfile)
-	    if $firsttime;
-	print $DAT "$out\n";
-	$firsttime = 0;
+        my $out = "";
+        my $j;
+        for($j = 0; $j < @{$info->{VARS}}; $j++) {
+            my $i = $info->{VARS}[$j]; # Index of variable to be scanned
+            $vals{$params[$i]} =
+                ($info->{MAX}[$j] - $info->{MIN}[$j])/($numpoints - 1)*$point +
+                    $info->{MIN}[$j];
+            $out .= "$vals{$params[$i]} ";
+            $variables .= "$params[$i] " if $firsttime
+            }
+        # Decide how to handle output files.
+        my $output_opt =
+            $data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
+        my $got_error = 0;
+        my $pid = open(SIM, "-|");
+        die "Failed to spawn simulation command" unless defined($pid);
+        if($pid) {                # Parent
+            while(<SIM>) {
+                chomp;
+                if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ") {
+                    my $sim_I = $2;
+                    my $sim_err = $4;
+                    my $sim_N = $6;
+                    $out .= " $sim_I $sim_err";
+                    if($firsttime) {
+                        $variables .= " $1 $3";
+                        push @youts, "($1,$3)";
+                    }
+                } elsif(m'^Error:') {
+                    $got_error = 1;
+                }
+                print "$_\n";
+            }
+        } else {                # Child
+            open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+            exec_sim(@options, $output_opt);
+        }
+        my $ret = close(SIM);
+        die "Exit due to error returned by simulation program"
+            if $got_error || (! $ret && ($? != 0 || $!));
+        output_dat_header($DAT, $info, \@youts, $variables, $datfile)
+            if $firsttime;
+        print $DAT "$out\n";
+        $firsttime = 0;
     }
     close($DAT);
     output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile);
@@ -319,11 +321,11 @@ sub do_scan {
 }
 
 
-		    ##########################
-		    # Start of main program. #
-		    ##########################
+                    ##########################
+                    # Start of main program. #
+                    ##########################
 
-parse_args();			# Parse command line arguments
+parse_args();                        # Parse command line arguments
 my $scan_info = check_input_params(); # Get variables to scan, if any
 $out_file = get_out_file($sim_def, $force_compile);
 exit(1) unless $out_file;

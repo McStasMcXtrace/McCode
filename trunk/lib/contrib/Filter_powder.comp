@@ -1,8 +1,9 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Filter_powder.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
-*         Institut laue langevin, Grenoble, France
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Filter_powder
 *
@@ -10,7 +11,8 @@
 * Written by: <a href="mailto:benjamin.fortescue@oriel.ox.ac.uk">B. Fortescue</a>
 * Date: August 2000
 * Version: 1.1
-* Origin: Based on Be_filter, written by SN Klausen, December 1999,
+* Release: McStas 1.6
+* Origin: ILL, Based on Be_filter, written by SN Klausen, December 1999,
 * Incorporating code from Single_crystal, written by KN, December 1999
 * Modified by: EF, Aug. 24th 2001: made it work
 *

@@ -1,12 +1,17 @@
 /***********************************************************************
 *
-* McStas, the neutron ray-tracing package: Flux_adapter.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Flux_adapter
 * %I
-* Written by: EF, Oct 14, 1999, Rev Nov 17, 1999
+* Written by: EF
+* Date: Oct 14, 1999, Rev Nov 17, 1999
+* Version: 1.0
+* Origin: ILL
+* Release: McStas 1.6
 *
 *%D
 * The routine changes the neutron flux (weight) in order to match
@@ -46,8 +51,8 @@
 *%E
 ***********************************************************************/
 DEFINE COMPONENT Flux_adapter
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, file, options)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (file, options)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 OUTPUT PARAMETERS (KE_Table,Weight_Table,Type_table,Mode_Table,Length_Table,Step_Table)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE

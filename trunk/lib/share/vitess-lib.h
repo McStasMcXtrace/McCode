@@ -22,34 +22,44 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.h,v 1.6 2003-01-21 08:42:48 pkwi Exp $
+* $Id: vitess-lib.h,v 1.7 2003-01-21 08:47:03 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.2 2002/08/28 11:39:00 ef
-*	Changed to lib/share/c code
+*	Changed to lib/share/c code. Updated to Vitess 2.3 Neutron structure.
 *
 * Revision 1.1 2000/08/28 11:39:00 kn
 *	Initial revision
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
-#define VITESS_LIB_H "$Revision: 1.6 $"
+#define VITESS_LIB_H "$Revision: 1.7 $"
 
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-/* The Neutron structure, taken from VITESS source code "general.h" */
+/* The Neutron structure, taken from VITESS 2.3 source code "general.h" */
 typedef double VectorType[3];
 typedef struct
-  {
-    double        Time;
-    double        Wavelength;
-    double        Probability;
-    VectorType    Position;
-    VectorType    Vector;
-    VectorType    Spin;
-  } Neutron;
+{
+	char           IDGrp[2];
+	unsigned long  IDNo;
+}
+TotalID;
+typedef struct 
+{
+	TotalID        ID;
+	char           Debug;
+	short          Color;
+	double         Time;
+	double         Wavelength;
+	double         Probability;
+	VectorType     Position;
+	VectorType     Vector;
+	VectorType     Spin;
+}
+Neutron;
 
 extern char *vitess_infile;	/* Neutron input file name, or NULL. */
 extern char *vitess_outfile;	/* Neutron output file name, or NULL. */

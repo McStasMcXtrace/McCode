@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Source_Maxwell_3
 *
 * %I
 * Written by: Kim Lefmann 
 * Date: March 2001
-* Version: $Revision: 1.2 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.3 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Source with up to three Maxwellian distributions
 *
@@ -48,7 +51,7 @@ DEFINE COMPONENT Source_Maxwell_3
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh, 
                     T1, T2, T3, I1, I2, I3)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (M)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE

@@ -1,14 +1,17 @@
 /******************************************************************
 *
-* McStas, the neutron ray-tracing package: Fermi_Chopper.comp
-*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
-*  Component: Fermi_Chopper
+* Component:Chopper_Fermi
 *
 * %Identification
 * Written by: Andrew Garrett
 * Date: 26 Nov 1998
-* Origin: McStas 1.5/KEK (Japan)
+* Origin: KEK (Japan)
+* Release: McStas 1.6
 * Version: 1.01
 * Modified by: EF, Mar 08th, 2000 : corrected the 'max' pb
 *
@@ -48,7 +51,7 @@ DEFINE COMPONENT Fermi_Chopper
 DEFINITION PARAMETERS (radius=0.25, nu=5000.0, delta=0, ymin=-0.05, ymax=0.05, w=0.01, n=50, r_slit=100)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (omega, r_blade, x_width, nn, tdr)
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
+STATE PARAMETERS (x, y, z, vx, vy, vz, t, p)
 DECLARE
 %{
   double omega, r_blade, x_width;

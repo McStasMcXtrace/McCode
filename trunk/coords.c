@@ -16,7 +16,7 @@
 *
 * Misc. useful routines to handle Cartesian coordinates.
 *
-*	$Id: coords.c,v 1.10 2003-01-21 08:42:46 pkwi Exp $
+*	$Id: coords.c,v 1.11 2003-01-21 08:47:01 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.3  2000/07/27 09:06:11  kn

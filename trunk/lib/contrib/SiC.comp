@@ -1,14 +1,17 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: SiC.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: SiC
 *
 *%I
 * Written by: <a href="mailto:S.RYCROFT@IRI.TUDELFT.NL">S. Rycroft</a>
 * Date: Jan 2000
-* Origin: McStas 1.5/IRI.
+* Origin: IRI.
+* Release: McStas 1.6
 *
 * %D
 * SiC layer sample

@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: V_sample.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: V_sample
 *
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.14 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.15 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Vanadium sample.
 *
@@ -58,9 +61,7 @@ DECLARE
 #define V_my_s (V_rho * 100 * V_sigma_i)
 #define V_my_a_v (V_rho * 100 * V_sigma_a * 2200)
 %}
-INITIALIZE
-%{
-%}                                                                             
+                                                                           
 TRACE
 %{
   double t0, t3;                /* Entry/exit time for outer cylinder */

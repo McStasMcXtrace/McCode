@@ -1,13 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: V_selector
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: V_selector
 *
 * %I
 * Written by:  Kim Lefmann
 * Date: Nov 25, 1998
-* Version: $Revision: 1.20 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.21 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Velocity selector.
 *

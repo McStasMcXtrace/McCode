@@ -1,16 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Selector
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
-*         Peter Link, IPC University of Göttingen
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Selector
 *
 * %Identification
 * Written by: <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
 * Date: MARCH 1999
-* Origin: McStas 1.5/Uni. Gottingen (Germany)
+* Origin: Uni. Gottingen (Germany)
 * Version: 1.0
+* Release: McStas 1.6
 *
 * velocity selector (helical lamella type) such as <b>V_selector</b> component
 * 

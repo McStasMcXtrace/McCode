@@ -10,7 +10,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: October 2000
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -19,7 +19,7 @@
 * %D
 *
 * A rectangular time-of-flight monitor with logarithmic time binning.
-* (The neutron intensity is NOT give logarithmically) 
+* (The neutron intensity is NOT given logarithmically) 
 *
 * %P
 * INPUT PARAMETERS:

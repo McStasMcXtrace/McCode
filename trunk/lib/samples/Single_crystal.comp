@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Single_crystal.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Single_crystal
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.26 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.27 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Mosaic single crystal with multiple scattering vectors.
 *

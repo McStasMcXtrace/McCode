@@ -1,7 +1,9 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Arm component
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Arm
 *
@@ -9,8 +11,9 @@
 *
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: September 1997
-* Version: $Revision: 1.15 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.16 $
+* Release: McStas 1.6
+* Origin: Risoe
 *
 * Arm/optical bench
 *

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -50,7 +50,7 @@ OUTPUT PARAMETERS (E_N, E_p, E_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int E_N[nchan];
+    double E_N[nchan];
     double E_p[nchan], E_p2[nchan];
   %}
 INITIALIZE

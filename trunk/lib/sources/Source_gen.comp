@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Source_gen.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Source_gen
 *
 * %I
-* Written by: Kristian Nielsen, Kim Lefmann and Emmanuel Farhi
+* Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.8 $
-* Origin: McStas release 1.5.1
+* Version: $Revision: 1.9 $
+* Origin: ILL/Risoe
+* Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
 * Modified by: EF, Sep 18, 2001 ; corrected illumination bug. Add options
 * Modified by: EF, Oct 30, 2001 ; minor changes. mccompcurname replaced

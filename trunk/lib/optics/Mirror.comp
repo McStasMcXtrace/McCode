@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Mirror.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Mirror
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.15 $
-* Origin: McStas release
+* Version: $Revision: 1.16 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Single mirror plate.
 *

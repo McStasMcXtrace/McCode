@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: 1.6
+* Version: 1.7
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.46 2003-01-21 08:42:48 pkwi Exp $
+* $Id: mcstas-r.c,v 1.47 2003-01-21 08:47:03 pkwi Exp $
 *
-*        $Log: not supported by cvs2svn $
+* $Log: not supported by cvs2svn $
+* Revision 1.7 2002/10/19 22:46:21 ef
+*        gravitation for all with -g. Various output formats.
+*
 * Revision 1.6 2002/09/17 12:01:21 ef
 *        changed randvec_target_sphere to circle
 * added randvec_target_rect
@@ -57,14 +60,16 @@
 
 #ifdef MC_ANCIENT_COMPATIBILITY
 int mctraceenabled = 0;
-int mcdefaultmain = 0;
+int mcdefaultmain  = 0;
 #endif
 
-static long mcseed = 0;
-mcstatic int mcdotrace = 0;
+static long mcseed      = 0;
+mcstatic int mcdotrace  = 0;
 static int mcascii_only = 0;
 static int mcdisable_output_files = 0;
-static int mcsingle_file = 0;
+static int mcsingle_file= 0;
+mcstatic int mcgravitation = 0;
+static long mcstartdate = 0;
 
 static FILE *mcsiminfo_file = NULL;
 static char *mcdirname = NULL;
@@ -133,6 +138,15 @@ coords_set(MCNUM x, MCNUM y, MCNUM z)
   a.x = x;
   a.y = y;
   a.z = z;
+  return a;
+}
+
+Coords 
+coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z)
+{
+  *x = a.x;
+  *y = a.y;
+  *z = a.z;
   return a;
 }
 
@@ -378,6 +392,7 @@ mcparm_double(char *s, void *vptr)
   char *p;
   double *v = vptr;
 
+  if (!s) { *v = 0; return(1); }
   *v = strtod(s, &p);
   if(*s == '\0' || (p != NULL && *p != '\0') || errno == ERANGE)
     return 0;                        /* Failed */
@@ -416,6 +431,7 @@ mcparm_int(char *s, void *vptr)
   int *v = vptr;
   long x;
 
+  if (!s) { *v = 0; return(1); }
   *v = 0;
   x = strtol(s, &p, 10);
   if(x < INT_MIN || x > INT_MAX)
@@ -455,6 +471,7 @@ static int
 mcparm_string(char *s, void *vptr)
 {
   char **v = vptr;
+  if (!s) { *v = NULL; return(1); }
   *v = malloc(strlen(s) + 1);
   if(*v == NULL)
   {
@@ -487,7 +504,8 @@ mcparmprinter_string(char *f, void *vptr)
   char **v = vptr;
   char *p;
   char *c = " \0";
-  sprintf(f, "\"");
+  if (!*v) { *f='\0'; return; }
+  sprintf(f, "");
   for(p = *v; *p != '\0'; p++)
   {
     switch(*p)
@@ -508,7 +526,7 @@ mcparmprinter_string(char *f, void *vptr)
         c[0] = p[0]; strcat(f, c);
     }
   }
-  strcat(f, "\"");
+  /* strcat(f, "\""); */
 }
 
 
@@ -1329,7 +1347,8 @@ mchelp(char *pgmname)
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
 "  -f FILE   --file=FILE      Put all data in a single file.\n"
 "  -t        --trace          Enable trace of neutron through instrument.\n"
-"  -a        --ascii-only     Do not put any headers in the data files.\n"
+"  -g        --gravitation    Enable gravitation for all trajectories.\n"
+"  -a        --data-only      Do not put any headers in the data files.\n"
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show help message.\n"
 "  -i        --info           Detailed instrument information.\n"
@@ -1345,7 +1364,7 @@ mchelp(char *pgmname)
   fprintf(stderr, "Available output formats are:\n");
   for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
   fprintf(stderr, "\nFormat modifiers: FORMAT may be followed by 'binary float' or \n");
-  fprintf(stderr, "'binary double' to save data blocks as binary. Please use also -a flag.\n");
+  fprintf(stderr, "'binary double' to save data blocks as binary. Please use also -a flag then.\n");
 }
 
 static void
@@ -1372,7 +1391,7 @@ mcenabletrace(void)
  {
    fprintf(stderr,
            "Error: trace not enabled.\n"
-           "Please re-run the McStas compiler"
+           "Please re-run the McStas compiler "
                    "with the --trace option, or rerun the\n"
            "C compiler with the MC_TRACE_ENABLED macro defined.\n");
    exit(1);
@@ -1448,7 +1467,7 @@ static char *mcvalid_name(char *valid, char *original, int n)
   return(valid);
 } /* mcvalid_name */
 
-#if defined(NL_ARGMAX) || defined(WIN32) || defined(MAC)
+#if defined(NL_ARGMAX) || defined(WIN32)
 static int pfprintf(FILE *f, char *fmt, ...)
 {
 /* this function 
@@ -1629,20 +1648,29 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
   
   if(!f)
     return (-1);
+    
+  time(&t);
   
-  if (part && !strcmp(part,"footer")) strncpy(HeadFoot, format.Footer, 2048);
-  else strncpy(HeadFoot, format.Header, 2048);
+  if (part && !strcmp(part,"footer")) 
+  {
+    strncpy(HeadFoot, format.Footer, 2048);
+    date_l = (long)t;;
+  }
+  else 
+  {
+    strncpy(HeadFoot, format.Header, 2048);
+    date_l = mcstartdate;
+  }
     
   if (!strlen(HeadFoot) || (!name)) return (-1);
 
-  time(&t);
   if (mcdirname) strncpy(dirname, mcdirname, 256);
   sprintf(file,"%s%s%s",dirname, MC_PATHSEP_S, name);
   sprintf(user,"%s on %s", getenv("USER"), getenv("HOST"));
   sprintf(instrname,"%s (%s)", mcinstrument_name, mcinstrument_source);
-  strncpy(date, ctime(&t), 64); 
+  strncpy(date, ctime(&(time_t)date_l), 64); 
   if (strlen(date)) date[strlen(date)-1] = '\0';
-  date_l = (long)t;
+  
   if (parent) strncpy(valid_parent, parent, 256);
   
   return(pfprintf(f, HeadFoot, 
@@ -1775,7 +1803,7 @@ static void mcinfo_simulation(FILE *f, struct mcformats_struct format,
   strncpy(Value, ctime(&t), 256); if (strlen(Value)) Value[strlen(Value)-1] = '\0';
   mcfile_tag(f, format, pre, name, "Date", Value); 
   if (run_num == 0 || run_num == ncount) sprintf(Value, "%g", ncount);
-  else sprintf(Value, "%g/%g\n", run_num, ncount);
+  else sprintf(Value, "%g/%g", run_num, ncount);
   mcfile_tag(f, format, pre, name, "Ncount", Value);
   mcfile_tag(f, format, pre, name, "Trace", mcdotrace ? "yes" : "no");
   if(mcseed)
@@ -1827,6 +1855,8 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   char lim_field[10]="xylimits\0";
   char valid_parent[256];
   char c[32] = "I\0";
+  double run_num, ncount;
+  char ratio[256];
   
   double sum_xz  = 0;
   double sum_yz  = 0;
@@ -1899,10 +1929,15 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   else strncpy(c, xvar,32);
   if (m == 1 || n == 1) sprintf(vars, "%s %s %s_err N", xvar, c, c);
   else sprintf(vars, "%s %s_err N", c, c);
+
+  run_num = mcget_run_num();
+  ncount  = mcget_ncount();
+  sprintf(ratio, "%g/%g", run_num, ncount);
   
   mcfile_tag(f, format, pre, parent, "type", type);
   mcfile_tag(f, format, pre, parent, "title", title);
   mcfile_tag(f, format, pre, parent, "variables", vars);
+  mcfile_tag(f, format, pre, parent, "ratio", ratio);
   mcfile_tag(f, format, pre, parent, "filename", filename);
   
   if (n*m*p > 1) 
@@ -2027,7 +2062,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   char sec[256];
   
   /* return if f NULL */
-  if (!f) return (-1);
+  if (!f)  return (-1);
   
   if (strstr(part,"data")) 
   { isdata = 1; strncpy(Begin, format.BeginData, 1024); strncpy(End, format.EndData, 1024); }
@@ -2273,10 +2308,6 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       fprintf(f,"%send %s\n", pre, sec);
   }
       
-  /* Finally give 0D detector output. */
-  if (isdata == 1 && just_header == 0)
-    mcdetector_out(parent, Nsum, Psum, P2sum, filename);
-      
   /* set return value */      
   return(is1d);
 } /* mcfile_datablock */
@@ -2346,6 +2377,8 @@ static void mcdetector_out_012D(struct mcformats_struct format,
 {  
   int  ismcstas;
   char simname[512];
+  int i,j;
+  double Nsum=0, Psum=0, P2sum=0;
     
   ismcstas = (strstr(format.Name, "McStas") != NULL);
   if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
@@ -2361,6 +2394,23 @@ static void mcdetector_out_012D(struct mcformats_struct format,
   
   mcfile_section(mcsiminfo_file, format, "end", pre, filename, "data", parent, 4);
   mcfile_section(mcsiminfo_file, format, "end", pre, parent, "component", simname, 3);
+  
+  for(j = 0; j < n*p; j++)
+  {
+    for(i = 0; i < m; i++)
+    {
+      double N,I,E;
+      if (p0) N = p0[i*n + j];
+      if (p1) I = p1[i*n + j];
+      if (p2) E = p2[i*n + j];
+
+      Nsum += p0 ? N : 1;
+      Psum += I;
+      P2sum += p2 ? E : I*I;
+    }
+  }
+  /* give 0D detector output. */
+  mcdetector_out(parent, Nsum, Psum, P2sum, filename);
 } /* mcdetector_out_012D */
 
 void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
@@ -2535,7 +2585,9 @@ mcparseoptions(int argc, char *argv[])
     exit(1);
   }
   for(j = 0; j < mcnumipar; j++)
-    paramsetarray[j] = 0;
+    { paramsetarray[j] = 0; 
+      (*mcinputtypes[mcinputtable[j].type].getparm)
+                   (NULL, mcinputtable[j].par); }
 
   for(i = 1; i < argc; i++)
   {
@@ -2585,8 +2637,12 @@ mcparseoptions(int argc, char *argv[])
       mcenabletrace();
     else if(!strcmp("-a", argv[i]))
       mcascii_only = 1;
-    else if(!strcmp("--ascii-only", argv[i]))
+    else if(!strcmp("--data-only", argv[i]))
       mcascii_only = 1;
+    else if(!strcmp("--gravitation", argv[i]))
+      mcgravitation = 1;
+    else if(!strcmp("-g", argv[i]))
+      mcgravitation = 1;
     else if(!strncmp("--format=", argv[i], 9))
       mcuse_format(&argv[i][9]);
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc)
@@ -2721,12 +2777,12 @@ int
 mcstas_main(int argc, char *argv[])
 {
 /*  double run_num = 0; */
-
+  
 #ifdef MAC
   argc = ccommand(&argv);
 #endif
 
-  srandom(time(NULL));
+  srandom(time(&(time_t)mcstartdate));
   strcpy(mcsig_message, "main (Start)");
   mcuse_format("McStas");  /* default is to output as McStas format */
   mcparseoptions(argc, argv);
@@ -2734,28 +2790,27 @@ mcstas_main(int argc, char *argv[])
 #ifndef MAC
 #ifndef WIN32
   /* install sig handler, but only once !! after parameters parsing */
-        
-        signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
-        signal( SIGABRT ,sighandler);   /* used by abort, replace SIGIOT in the future */
-        signal( SIGTRAP ,sighandler);   /* trace trap (not reset when caught) */
-        signal( SIGTERM ,sighandler);   /* software termination signal from kill */
-        signal( SIGPIPE ,sighandler);   /* write on a pipe with no one to read it */
- 
-        signal( SIGPWR ,sighandler);
-        signal( SIGUSR1 ,sighandler); /* display simulation status */
-        signal( SIGUSR2 ,sighandler);
-        signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
-        signal( SIGFPE ,sighandler);    /* floating point exception */
-        signal( SIGBUS ,sighandler);    /* bus error */
-        signal( SIGSEGV ,sighandler);   /* segmentation violation */
-#ifdef SIGSYS
-        signal( SIGSYS ,sighandler);    /* bad argument to system call */
-#endif
-        signal( SIGURG ,sighandler);    /* urgent socket condition */
+  signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
+  signal( SIGABRT ,sighandler);   /* used by abort, replace SIGIOT in the future */
+  signal( SIGTRAP ,sighandler);   /* trace trap (not reset when caught) */
+  signal( SIGTERM ,sighandler);   /* software termination signal from kill */
+  signal( SIGPIPE ,sighandler);   /* write on a pipe with no one to read it */
+
+  signal( SIGPWR ,sighandler);
+  signal( SIGUSR1 ,sighandler); /* display simulation status */
+  signal( SIGUSR2 ,sighandler);
+  signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
+  signal( SIGFPE ,sighandler);    /* floating point exception */
+  signal( SIGBUS ,sighandler);    /* bus error */
+  signal( SIGSEGV ,sighandler);   /* segmentation violation */
+  #ifdef SIGSYS
+  signal( SIGSYS ,sighandler);    /* bad argument to system call */
+  #endif
+  signal( SIGURG ,sighandler);    /* urgent socket condition */
 #endif /* !MAC */
 #endif /* !WIN32 */
 
-  mcsiminfo_init(NULL);
+  mcsiminfo_init(NULL); mcsiminfo_close();  /* makes sure we can do that */
   strcpy(mcsig_message, "main (Init)");
   mcinit();
 #ifndef MAC
@@ -2771,7 +2826,7 @@ mcstas_main(int argc, char *argv[])
     mcrun_num++;
   }
   mcfinally();
-  mcsiminfo_close();
+  
   return 0;
 }
 
