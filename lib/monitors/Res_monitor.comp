@@ -2,17 +2,25 @@
 *
 * McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1977-2000 Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
 * Component: Res_monitor
 *
-* Written by: KN 1999
+* %I
+* Written by: KN
+* Date: 1999
+* Version: $Revision: 1.6 $
+* Origin: McStas release
 *
+* Monitor for resolution calculations
+*
+* %D
 * A single detector/monitor, used together with the Res_sample component to
 * compute instrument resolution functions. Outputs a list of neutron
 * scattering events in the sample along with their intensities in the
 * detector. The output file may be analyzed with the mcresplot front-end.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:            Lower x bound of detector opening (m)
@@ -28,6 +36,7 @@
 * psum:  Sum of neutron weights
 * p2sum: 2nd moment of neutron weights
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Res_monitor
