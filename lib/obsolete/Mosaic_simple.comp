@@ -6,8 +6,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
-#ifndef MOSAIC_SIMPLE_COMP
-#define MOSAIC_SIMPLE_COMP
+  /* ToDo: Define these arrays only once for all instances. */
   /* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
      James O Wilkes, "Applied numerical methods", Wiley, 1996, page 103. */
   double X[] = {-0.987992518020485, 0.937273392400706, 0.848206583410427,
@@ -20,12 +19,11 @@ DECLARE
 		0.198431485327111, 0.202578241925561, 0.198431485327111,
 		0.186161000115562, 0.166269205816994, 0.139570677926154,
 		0.107159220467172, 0.070366047488108, 0.030753241996117};
-#endif
   double Q;			/* Length of scattering vector */
   double q0ux, q0uy, q0uz;	/* Unit vector parrallel to nominal Q */
   double mos_rms;		/* root-mean-square of mosaic, in radians */
 #define GAUSS(x,mean,rms) \
-  (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/sqrt(2*PI*(rms)))
+  (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
 %}
 
 INITIALIZE
@@ -39,7 +37,10 @@ INITIALIZE
 
 TRACE
 %{
-  double y1,z1,t1,dt,kix,kiy,kiz,ratio,order,q0x,q0y,q0z,k,q0,theta,bx,by,bz,kux,kuy,kuz,ax,ay,az,phi,cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z,delta,p_reflect,total,c1x,c1y,c1z,width;
+  double y1,z1,t1,dt,kix,kiy,kiz,ratio,order,q0x,q0y,q0z,k,q0,theta;
+  double bx,by,bz,kux,kuy,kuz,ax,ay,az,phi;
+  double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
+  double delta,p_reflect,total,c1x,c1y,c1z,width;
   int i;
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0)
@@ -61,9 +62,6 @@ TRACE
 	order = ratio < 0 ? -1 : 1;
       /* Order will be negative when the neutron enters from the back, in
          which case the direction of Q0 is flipped. */
-      q0x = order*Qx;
-      q0y = order*Qy;
-      q0z = order*Qz;
       if(order < 0)
 	order = -order;
       /* Make sure the order is small enough to allow Bragg scattering at the
@@ -76,6 +74,13 @@ TRACE
 	order--;
       if(order > 0)		/* Bragg scattering possible? */
       {
+	q0x = order*Qx;
+	q0y = order*Qy;
+	q0z = order*Qz;
+	if(ratio < 0)
+	{
+	  q0x = -q0x; q0y = -q0y; q0z = -q0z;
+	}
 	q0 = order*Q;
 	theta = asin(q0/(2*k));	/* Actual bragg angle */
 	/* Make MC choice: reflect or transmit? */
@@ -112,8 +117,10 @@ TRACE
 	    p_reflect = GAUSS(delta,0,mos_rms);
 	    total += W[i]*p_reflect;
 	  }
-	  /* Choose point on Debye-Scherrer cone. Use simply the crystal mosaic,
-           and correct for any error by adjusting the neutron weight later */
+	  total *= width;
+	  /* Choose point on Debye-Scherrer cone. Use simply the
+	     crystal mosaic, and correct for any error by adjusting
+	     the neutron weight later */
 	  phi = mos_rms*randnorm();
 	  /* Compute final wave vector kf and scattering vector q = ki - kf */
 	  cos_phi = cos(phi);
@@ -140,12 +147,15 @@ TRACE
 
 MCDISPLAY
 %{
+  double len = 0.5*sqrt((ymax-ymin)*(ymax-ymin) + (zmax-zmin)*(zmax-zmin));
   magnify("zy");
   multiline(5, 0.0, (double)ymin, (double)zmin,
                0.0, (double)ymax, (double)zmin,
                0.0, (double)ymax, (double)zmax,
                0.0, (double)ymin, (double)zmax,
                0.0, (double)ymin, (double)zmin);
+  line(0, 0, 0,			/* Draw Q0 vector */
+       (double)Qx/Q*len, (double)Qy/Q*len, (double)Qz/Q*len);
 %}
 
 END
