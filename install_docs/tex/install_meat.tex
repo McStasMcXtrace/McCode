@@ -235,6 +235,14 @@ Variables'\\\
 \end{itemize}
 It is important that Perl is correctly installed to execute all the McStas tools (e.g. mcdoc.pl, mcrun.pl, mcgui.pl, \ldots). Create a shortcut of the \verb+C:\mcstas\bin\mcgui.pl+ on your Desktop (the icon should be a yellow dot). Whenever launched from the Windows Command window (cmd), you must specify the .pl extension to all McStas Perl script commands (e.g. 'mcrun.pl' and 'mcgui.pl', not 'mcrun' or 'mcgui') except for \verb+mcstas+ itself.
 
+Actually, the modifications to your environnement variables should be
+\begin{itemize}
+    \item{\verb+PATH+ Append e.g. 
+    C:$\backslash$mcstas$\backslash$bin;c:$\backslash$Program Files$\backslash$Scilab-2.7.2$\backslash$bin;C:$\backslash$Perl$\backslash$bin$\backslash$;C:$\backslash$Dev-Cpp$\backslash$bin;}
+    \item{\verb+MCSTAS+ Create it as e.g. C:$\backslash$mcstas$\backslash$lib}
+\end{itemize}
+using menu item 'Start/Settings/Control Panel/System/Advanced/Environment Variables'.
+
 \section{Testing the McStas distribution}
 \label{s:testing}
 
