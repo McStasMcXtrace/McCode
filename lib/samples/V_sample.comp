@@ -7,7 +7,7 @@
 * %I
 * Written by: KL, KN
 * Date: 15.4.98
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: McStas release
 *
 * Vanadium sample.
@@ -41,8 +41,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT V_sample
-DEFINITION PARAMETERS (radius_i,radius_o,h,pack,focus_r)
-SETTING PARAMETERS (target_x, target_y, target_z)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius_i,radius_o,h,pack,focus_r,
+		    target_x, target_y, target_z)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{

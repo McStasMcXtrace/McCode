@@ -7,7 +7,7 @@
 * %I
 * Written by:  KL
 * Date: Nov 25, 1998
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: McStas release
 * Modified by: KL, Jan 22, 1999
 *
@@ -38,8 +38,8 @@
 
 
 DEFINE COMPONENT V_selector
-DEFINITION PARAMETERS (width, height, l0, r0, phi, l1, tb, rot, nb)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (width, height, l0, r0, phi, l1, tb, rot, nb)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{

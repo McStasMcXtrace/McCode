@@ -7,7 +7,7 @@
 * %I
 * Written by: KL, HMR
 * Date: June 16, 1997
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: McStas release
 * Modified by: KL  Oct. 16, 1997
 *
@@ -40,8 +40,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monochromator
-DEFINITION PARAMETERS (zmin, zmax, ymin, ymax, mosaich, mosaicv, r0, Q)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaich, mosaicv, r0, Q)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{

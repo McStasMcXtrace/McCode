@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: 1999
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: McStas release
 *
 * Neutron guide with channels (bender section).
@@ -48,9 +48,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Channeled_guide
-DEFINITION PARAMETERS (w1, h1, w2, h2, d, k, l,
-                       R0, Qcx,  Qcy, alphax, alphay, mx, my, W)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w1, h1, w2, h2, d, k, l,
+		    R0, Qcx,  Qcy, alphax, alphay, mx, my, W)
 OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 

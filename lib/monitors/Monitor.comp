@@ -7,7 +7,7 @@
 * %I
 * Written by: KL
 * Date: October 4, 1997
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: McStas release
 *
 * Simple single detector/monitor.
@@ -34,8 +34,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monitor
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 OUTPUT PARAMETERS (Nsum, psum, p2sum)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE

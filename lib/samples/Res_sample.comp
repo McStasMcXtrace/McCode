@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: 1999
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas release
 *
 * Sample for resolution function calculation.
@@ -43,8 +43,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Res_sample
-DEFINITION PARAMETERS (radius_i,radius_o,h,focus_r,E0,dE)
-SETTING PARAMETERS (target_x, target_y, target_z)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius_i,radius_o,h,focus_r,E0,dE,
+		    target_x, target_y, target_z)
 OUTPUT PARAMETERS (res_struct)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE

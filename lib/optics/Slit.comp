@@ -7,7 +7,7 @@
 * %I
 * Written by: KL, HMR 
 * Date: June 16, 1997
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: McStas release
 *
 * Rectangular slit.
@@ -28,8 +28,8 @@
 
 
 DEFINE COMPONENT Slit
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
 %{

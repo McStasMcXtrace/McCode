@@ -7,7 +7,7 @@
 * %I
 * Written by: KL and KN
 * Date: April 17, 1998
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas release
 *
 * Spherical position-sensitive detector.
@@ -39,8 +39,8 @@
 
 
 DEFINE COMPONENT PSD_monitor_4PI
-DEFINITION PARAMETERS (radius, nx, ny, filename)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (nx, ny, filename)
+SETTING PARAMETERS (radius)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE

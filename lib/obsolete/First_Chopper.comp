@@ -2,7 +2,7 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: McStas release
 *
 * First disk chopper after a continuous neutron source.
@@ -27,8 +27,8 @@
 *******************************************************************************/
  
 DEFINE COMPONENT First_Chopper
-DEFINITION PARAMETERS (w, R, f, n, pha, a)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (w, R, f, n, pha, a)
 OUTPUT PARAMETERS (Tg, To)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 

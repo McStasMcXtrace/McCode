@@ -7,7 +7,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 *
@@ -49,8 +49,9 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Powder1
-DEFINITION PARAMETERS (d_phi0, radius, h, pack, Vc, sigma_a, j, q, F2, DW)
-SETTING PARAMETERS (target_x, target_y, target_z)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (d_phi0, radius, h, pack, Vc, sigma_a, j, q, F2, DW,
+		    target_x, target_y, target_z)
 OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE

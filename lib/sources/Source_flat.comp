@@ -8,7 +8,7 @@
 * Written by: KL
 * Modified by: KL, KN, October 5, 1998
 * Date: October 30, 1997
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: McStas release
 *
 * Neutron source with flat energy spectrum and arbitrary flux
@@ -38,8 +38,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_flat
-DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius, dist, xw, yh, E0, dE)
 OUTPUT PARAMETERS (hdiv, vdiv, p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE

@@ -45,8 +45,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monitor_Optimizer
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, optim_comp)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (optim_comp)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{

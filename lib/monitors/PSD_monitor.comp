@@ -7,7 +7,7 @@
 * %I
 * Written by: KL
 * Date: Feb 3, 1998
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas release
 *
 * Position-sensitive monitor.
@@ -38,8 +38,8 @@
 
 
 DEFINE COMPONENT PSD_monitor
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, nx, ny, filename)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (nx, ny, filename)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2) 
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
