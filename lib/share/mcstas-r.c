@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.15 1998-10-02 08:38:27 kn Exp $
+* 	$Id: mcstas-r.c,v 1.16 1998-11-09 08:17:34 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.15  1998/10/02 08:38:27  kn
+* 	Added DETECTOR_OUT support.
+* 	Fixed header comment.
+*
 * 	Revision 1.14  1998/10/01 08:12:26  kn
 * 	Support for embedding the file in the output from McStas.
 * 	Added mcstas_main() function.
@@ -645,8 +649,14 @@ mcparseoptions(int argc, char *argv[])
 {
   int i, j, pos;
   char *p;
-  int paramset = 0, paramsetarray[mcnumipar];
+  int paramset = 0, *paramsetarray;
 
+  paramsetarray = malloc(mcnumipar*sizeof(*paramsetarray));
+  if(paramsetarray == NULL)
+  {
+    fprintf(stderr, "Error: insufficient memory\n");
+    exit(1);
+  }
   for(j = 0; j < mcnumipar; j++)
     paramsetarray[j] = 0;
   
