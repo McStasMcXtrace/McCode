@@ -1,0 +1,46 @@
+DEFINE COMPONENT Adapt_check
+DEFINITION PARAMETERS (alpha, beta)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (n, I)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+  int n;
+  double I;
+%}
+
+INITIALIZE
+%{
+  n = 0;
+  I = 0;
+%}
+
+TRACE
+%{
+  n++;
+  I += p;
+printf("%4d: old=%g", aindex, atree->v[aindex] - adj_dv);
+  if(n <= 10)
+  {
+    adj_dv = alpha*atree->v[aindex] - adj_dv;
+printf(" [n<10] ->");
+  }
+  else
+  {
+    adj_dv = alpha*(atree->v[aindex]*p*n/I - atree->v[aindex]) - adj_dv;
+printf(" p=%g I/n=%g ->", p, I/n);
+  }
+  adapt_tree_add(atree, aindex, adj_dv);
+printf(" new=%g\n", atree->v[aindex]);
+%}
+
+FINALLY
+%{
+%}
+
+MCDISPLAY
+%{
+  magnify("");
+%}
+
+END
