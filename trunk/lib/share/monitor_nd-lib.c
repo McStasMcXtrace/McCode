@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.17 2004-09-01 13:54:18 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.18 2004-11-16 13:36:35 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.17  2004/09/01 13:54:18  farhi
+*	Corrected bug when using list=EVNTS large values written as float, read as int.
+*	E.g. 1e6 gave 1 as number of events to save !
+*	
 *	Revision 1.16  2004/06/30 12:13:47  farhi
 *	For lists (and Res_monitor), uses 'list' 'no header' and 'no footer' options
 *	in mcformat.Name so that catenated file does contain only one instance of
@@ -1035,7 +1039,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
           strcat(mc_mn_Coord_X_Label, mc_mn_Vars->Coord_Var[mc_mn_i]);
           strcat(mc_mn_Coord_X_Label, " ");
           if (strchr(mc_mn_Vars->Mon_File,'.') == NULL)
-                  { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i]); }
+          { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i]); }
         }
         if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin2d,mc_mn_bin1d);
 
@@ -1092,7 +1096,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
           
           strcpy(mc_mn_fname,mc_mn_Vars->Mon_File);
           if (strchr(mc_mn_Vars->Mon_File,'.') == NULL)
-                  { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i+1]); }
+          { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i+1]); }
           sprintf(mc_mn_Coord_X_Label, "%s monitor", mc_mn_Vars->Coord_Label[mc_mn_i+1]);
           strcpy(mc_mn_label, mc_mn_Coord_X_Label);
           if (mc_mn_Vars->Coord_Bin[mc_mn_i+1] > 0) { /* 1D monitor */
@@ -1225,7 +1229,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
             }
           }
           if (strchr(mc_mn_Vars->Mon_File,'.') == NULL)
-                  { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[1]);
+          { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[1]);
               strcat(mc_mn_fname, "_"); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[2]); }
           if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 2D (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname, mc_mn_Vars->Coord_Bin[1], mc_mn_Vars->Coord_Bin[2]);
 
