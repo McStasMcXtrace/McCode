@@ -62,6 +62,8 @@ sub plot_array_1d {
 	    ($min, $max) = (0, $max);
 	}
     }
+    # Include zero point of Y axis if minimum is close to zero.
+    $min = 0 if($min > 0 && $min/$max < 0.2);
     pgpage;
     pgbbuf;
     hold;
@@ -134,7 +136,7 @@ sub overview_plot {
 	$i = 0 if $i < 0;
 	$j = 0 if $j < 0;
 	$i = $nx - 1 if $i >= $nx;
-	$j = $ny - 1 if $i >= $ny;
+	$j = $ny - 1 if $j >= $ny;
 	my $idx = $i + $nx*$j;
 	$idx = int(@$datalist) - 1 if $idx >= int(@$datalist);
 	pgclos;
