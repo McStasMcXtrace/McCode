@@ -30,32 +30,19 @@ use FileHandle;
 
 use Config;
 BEGIN {
-    $pg_avail=0;
-    $temp_avail=0;
-    foreach $inc (@INC) {
-      my $where="$inc/PGPLOT.pm";
-      if (-e $where) { $pg_avail=1; }
-      $where="$inc/Temp.pm";
-      if (-e $where) { $temp_avail=1; }
-      $where="$inc/File/Temp.pm";
-      if (-e $where) { $temp_avail=1; }
-    }
-    if ($temp_avail == 1) { require File::Temp; }
-    
-    if($ENV{"MCSTAS"}) {
-      $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  # default configuration (for all high level perl scripts)
+  if($ENV{"MCSTAS"}) {
+    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  } else {
+    if ($Config{'osname'} eq 'MSWin32') {
+      $MCSTAS::sys_dir = "c:\\mcstas\\lib";
     } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-        $MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-        # install atexit-style handler so that when we exit or die,
-        # we automatically delete this temporary file
-        # does not work as temp files is often removed before Scilab starts...
-        # END { if (defined($tmp_file) && !($Config{'osname'} eq 'MSWin32')) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!"; } }
-      }
+      $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
-    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+  }
+  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+
+  # custom configuration (this script)
 }
 
 use lib $MCSTAS::perl_dir;
@@ -78,10 +65,7 @@ my $wait=10;
 if ($Config{'osname'} eq 'MSWin32'){
   $nowindow = 0;
 }
-$plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
-                $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
-
-$MCSTAS::runscilab = "$MCSTAS::mcstas_config{'SCILAB'}";
+$plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
 for($i = 0; $i < @ARGV; $i++) {
   $_ = $ARGV[$i];
@@ -90,7 +74,7 @@ for($i = 0; $i < @ARGV; $i++) {
       $do_plot = 1;
   } elsif(/^-overview$/i) {
       $do_overview = 1;
-  } elsif(/^-png$/i || /^-ps$/i || /^-psc$/i || /^-ppm$/i || /^-scg$/i || /^-fig$/i) {
+  } elsif(/^-png$/i || /^-ps$/i || /^-cps$/i || /^-psc$/i || /^-ppm$/i || /^-scg$/i || /^-fig$/i) {
       $passed_arg_str_quit .= "$_ ";
   } elsif(/^-p([a-zA-Z0-9_]+)$/ || /^--plotter=([a-zA-Z0-9_]+)$/ || /^--format=([a-zA-Z0-9_]+)$/) {
         $plotter = $1;        
@@ -100,15 +84,15 @@ for($i = 0; $i < @ARGV; $i++) {
       $daemon = $1;
   } elsif(/^-w([0-9\.]+)$/ || /^--wait=([0-9\.]+)$/) {
       $wait = $1;
-  } elsif(/^\+nw$/i || /^\+tk$/i || /^\+java$/i) {
+  } elsif(/^\+nw$/i || /^\+tk$/i || /^\+java$/i || /^--withwindow$/i) {
       $nowindow = 0;
-  } elsif(/^-nw$/i || /^-nojvm$/i) {
+  } elsif(/^-nw$/i || /^-nojvm$/i || /^--nowindow$/i) {
       $nowindow = 1;
   } elsif(/^-swap$/i) {
       $do_swap = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "mcplot [-ps|-psc|-gif] <simfile | detector_file>\n";
-      print "       [-pPLOTTER] Output graphics using {PGPLOT,Scilab,Matlab}\n";
+      print "       [-pPLOTTER] Output graphics using {PGPLOT,Scilab,Matlab,HTML}\n";
       print "                   The file extension will also set the PLOTTER\n";
       print "       [-overview] Show all plots in a single window\n";
       print "       [-plot]     Show all plots in separate window(s)\n";
@@ -129,19 +113,6 @@ for($i = 0; $i < @ARGV; $i++) {
   }
 }
 
-# Check value of $plotter variable, set 
-# $MCSTAS::mcstas_config{'PLOTTER'}
-# accordingly
-if ($plotter =~ /PGPLOT|McStas|0/i) {
-  $MCSTAS::mcstas_config{'PLOTTER'}=0;
-} elsif ($plotter =~ /Matlab|1/i) {
-  $MCSTAS::mcstas_config{'PLOTTER'}=1;
-} elsif ($plotter =~ /Scilab|3/i) {
-  $MCSTAS::mcstas_config{'PLOTTER'}=3;  
-}
-
-$plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-
 if ($do_plot)     { $passed_arg_str .= "-plot "; }
 if ($do_overview) { $passed_arg_str .= "-overview "; }
 if ($do_swap)     { $passed_arg_str .= "-swap "; }
@@ -149,40 +120,54 @@ if ($do_swap)     { $passed_arg_str .= "-swap "; }
 if ($index == 0) { 
   $file = "mcstas"; 
 } else { $file = $files[0]; }
-$file = "$file/mcstas" if -d $file;
+if (-d $file) { # check if dir containing result file
+  my $newfile = "$file/mcstas";
+  if (-e "$newfile.m" || -e "$newfile.sci" || -e "$newfile.sim" || -e "$newfile.html") {
+    $file = $newfile; }
+}
 
-# look if there is only one file type
-if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = 1; }
-if (-e "$file.sci" and not -e "$file.m" and not -e "$file.sim") { $plotter = 3; }
-if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci") { $plotter = 0; }
+# look if there is only one file type and set plotter to use
+if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Matlab"; }
+if (-e "$file.sci" and not -e "$file.m" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Scilab"; }
+if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html") { $plotter = "PGPLOT"; }
+if (-e "$file.html" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = "HTML";   }
 
+# set default extension from plotter
+if    ($plotter =~ /Scilab/i) { $default_ext = ".sci"; }
+elsif ($plotter =~ /Matlab/i) { $default_ext = ".m"; }
+elsif ($plotter =~ /PGPLOT|McStas/i) { $default_ext = ".sim"; }
+elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
 
-if ($plotter eq 3 || $plotter eq 4) { $default_ext = ".sci"; }
-elsif ($plotter eq 1 || $plotter eq 2) { $default_ext = ".m"; }
-elsif ($plotter eq 0) { $default_ext = ".sim"; }
+# if no extension in file name, add default extension.
+if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }  
 
-if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }  # ... and add default extension.
-
-if ($file =~ m'\.sci$' || $file =~ m'\.sce$') { $plotter=3; }
-if ($file =~ m'\.m$')   { $plotter=1; }
-if ($file =~ m'\.sim$') { $plotter=0; }
+# set plotter from extension
+if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
+if ($file =~ m'\.sci$' || $file =~ m'\.sce$') {$plotter = "Scilab"; }
+if ($file =~ m'\.sim$')  { $plotter = "PGPLOT"; }
+if ($file =~ m'\.html$') { $plotter = "HTML"; }
 
 if ($nowindow eq -1) {  # was not set in argument list
-  if ($plotter eq 3) { $nowindow=0; } # Will try Tcl/Tk interface with Scilab
+  if ($plotter =~ /Scilab/i) { $nowindow=0; } # Will try Tcl/Tk interface with Scilab
   else { $nowindow=1; }
 }
 
-# Added E. Farhi, March 2003. Selection of the plotter (pgplot, scilab, matlab)
-if ($plotter eq 3 || $plotter eq 4) {
+# Added E. Farhi, March 2003. plotter (pgplot, scilab, matlab, html) -> $file
+if ($plotter =~ /Scilab/i) {
+  my $fh;
+  my $tmp_file = "";
   # create a temporary scilab execution script
-  if ($temp_avail == 1) { 
+  if ($MCSTAS::mcstas_config{'TEMP'} ne "no") { 
+    require File::Temp;
     ($fh, $tmp_file) = File::Temp::tempfile("mcplot_tmpXXXXXX", SUFFIX => '.sce');
-    if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
-  } else {
+    if (not defined $fh) { $tmp_file=""; }
+  }
+  if ($tmp_file eq "") {
     $tmp_file="mcplot_tmp000000.sce"; 
     $fh = new FileHandle "> $tmp_file";
-    if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
   }
+  if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
+  # write the scilab script
   printf $fh "s = stacksize(); if s(1) < 1e7 then stacksize(1e7); end\n";
   printf $fh "getf('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
   printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
@@ -194,73 +179,45 @@ if ($plotter eq 3 || $plotter eq 4) {
   } else {
     printf $fh "if length(s)\n";
     printf $fh "mprintf('mcplot: Simulation data structure from file $file\\n');\n";
-    printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
+    printf $fh "mprintf('        is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
     printf $fh "end\n";
   }
-  printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
-  printf $fh "global daemon\n;";
-  printf $fh "daemon=0\n;";
-  if (!($daemon eq 0)) {
-      printf $fh "daemon=1\n;";
-      printf $fh "mydate = getdate('s');\n";
-      printf $fh "set('old_style','on');\n";
-      printf $fh "while (1==1)\n";
-      printf $fh "newdate = getdate('s');\n";
-      printf $fh "if (newdate-mydate>$wait)\n";
-      printf $fh "mydate = newdate;\n";
-      printf $fh "xdel(0);\n";
-      printf $fh "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');\n";
-      printf $fh "end\n";
-      printf $fh "end\n";
-  } else {
-      close($fh);
-  }
-  if ($nowindow) { system("$MCSTAS::runscilab -nw -f $tmp_file\n"); }
-  else { system("$MCSTAS::runscilab -f $tmp_file\n"); }
   
-} elsif ($plotter eq 1 || $plotter eq 2) {
-  if ($nowindow) { $tosend = "matlab -nojvm -nosplash "; }
-  else { $tosend = "matlab "; }
+  close($fh);
+  if ($nowindow) { system("$MCSTAS::mcstas_config{'SCILAB'} -nw -f $tmp_file\n"); }
+  else { system("$MCSTAS::mcstas_config{'SCILAB'} -f $tmp_file\n"); }
+  
+} elsif ($plotter =~ /Matlab/i) {
+  my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
+  if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
   $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
   $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')');";
-  
+      
   if ($passed_arg_str_quit) {
     $tosend .= "exit;\"\n";
   } else {
       $tosend .= "if length(s),";
       $tosend .= "disp('type: help mcplot for this function usage.');";
       $tosend .= "disp('mcplot: Simulation data structure from file $file');";
-      $tosend .= "disp('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !');";
-      $tosend .= "end;";
-  }
-  if (!($daemon eq 0)) {
-      $tosend .= "mydate = clock;";
-      $tosend .= "while (1==1);";
-      $tosend .= "drawnow;";
-      $tosend .= "if (etime(clock,mydate)>$wait);";
-      $tosend .= "mydate = clock;";
-      $tosend .= "s=0;clear functions;";
-      $tosend .= "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
-      $tosend .= "u=get(gcf,'userdata');u.Date=s.Date;set(gcf,'userdata',u);";
-      $tosend .= "pause(0.1);drawnow;";
-      $tosend .= "end;";
-      $tosend .= "end;";
-  }
-  $tosend .= "\"\n";
+      $tosend .= "disp('        is stored into variable s. Type in ''s'' at prompt to see it !');";
+      $tosend .= "end;\"\n";
+    }
   system($tosend);
-} elsif ($plotter eq 0) {
+} elsif ($plotter =~ /HTML|VRML/i) {
+  system("$MCSTAS::mcstas_config{'BROWSER'} $file");
+} elsif ($plotter =~ /PGPLOT|McStas/i) {
   # McStas original mcplot using perl/PGPLOT
   
   # Check if the PGPLOT module can be found, otherwise
   # disable traditional PGPLOT support - output error
   # message...
   # PW 20030320
-  if ($pg_avail eq 0) {
+  if ($MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
     print STDERR "\n******************************************************\n";
     print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
-    print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolution:\n\n";
+    print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolutions:\n\n";
     print STDERR "1) Install pgplot + pgperl packages (Unix/Linux/Cygwin) \n";
-    print STDERR "2) Rerun mcplot with -p/--plotter set to Scilab/Matlab \n";
+    print STDERR "2) Rerun mcplot with -p/--plotter set to Scilab/Matlab/VRML \n";
     print STDERR "3) Modify $MCSTAS::perl_dir/mcstas_config.perl\n";
     print STDERR "   to set a different default plotter\n";
     print STDERR "4) Set your env variable MCSTAS_FORMAT to set the default\n";
@@ -268,10 +225,6 @@ if ($plotter eq 3 || $plotter eq 4) {
     print STDERR "******************************************************\n\n";
     die "PGPLOT problems...\n";
   }
-  
-  # Attempt to locate pgplot directory if unset.
-  $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
-  $ENV{'PGPLOT_DEV'} = "/xserv" unless $ENV{'PGPLOT_DEV'};
 
   require "mcfrontlib2D.pl";
   require "mcplotlib.pl";
@@ -289,7 +242,6 @@ if ($plotter eq 3 || $plotter eq 4) {
 }
  
 sub pgplotit { 
-    
   my ($sim_file) = $file;
   my ($instr_inf, $sim_inf, $datalist, $sim_error) = read_sim_file($file);
   if ($sim_error !~ "no error") {
@@ -308,17 +260,28 @@ sub pgplotit {
 
   if ($passed_arg_str_quit =~ /-cps|-psc/i) {
     overview_plot("$file.ps/cps", $datalist, 0);
-          die "Wrote postscript file '$file.ps' (cps)\n";
+          die "Wrote color postscript file '$file.ps' (cps)\n";
   } elsif ($passed_arg_str_quit =~ /-ps/) {
     overview_plot("$file.ps/ps", $datalist, 0);
-          die "Wrote postscript file '$file.ps' (ps)\n";
+          die "Wrote BW postscript file '$file.ps' (ps)\n";
+  } elsif ($passed_arg_str_quit =~ /-ppm/) {
+    overview_plot("$file.ppm/ppm", $datalist, 0);
+          die "Wrote PPM file '$file.ppm' (ppm)\n";
+  } elsif ($passed_arg_str_quit =~ /-png/) {
+    overview_plot("$file.png/png", $datalist, 0);
+          die "Wrote PNG file '$file.png' (png)\n";
   } elsif ($passed_arg_str_quit =~ /-gif/) {
     overview_plot("$file.gif/gif", $datalist, 0);
           die "Wrote GIF file '$file.gif' (gif)\n";
   } 
   if ($daemon eq 0) {
       print "Click on a plot for full-window view.\n" if @$datalist > 1;
-      print "Type 'P' 'C' 'N' or 'G' (in graphics window) for hardcopy, 'Q' to quit.\n";
+      print "Press key for hardcopy (in graphics window), 'Q' to quit
+  'P' BW postscript 
+  'C' color postscript
+  'N' PNG file
+  'M' PPM file
+  'G' GIF file\n";
   } else {
       overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 0); 
   }
@@ -328,11 +291,12 @@ sub pgplotit {
 	  # Do overview plot, letting user select a plot for full-screen zoom.    
 	  ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 1);
 	  last if $cc =~ /[xq]/i;        # Quit?
-	  if($cc =~ /[pcng]/i) {        # Hardcopy?
+	  if($cc =~ /[pcngm]/i) {        # Hardcopy?
 	      my $ext="ps";
 	      my $dev = ($cc =~ /c/i) ? "cps" : "ps";
 	      if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
 	      if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
+	      if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
 	      overview_plot("$file.$ext/$dev", $datalist, 0);
 	      print "Wrote file '$file.$ext' ($dev)\n";
 	      next;
@@ -340,13 +304,15 @@ sub pgplotit {
 	  # now do a full-screen version of the plot selected by the user.
 	  ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], 1);
 	  last if $cc =~ /[xq]/i;        # Quit?
-	  if($cc =~ /[pcg]/i) {        # Hardcopy?
+	  if($cc =~ /[pcngm]/i) {        # Hardcopy?
 	      my $ext="ps";
 	      my $dev = ($cc =~ /c/i) ? "cps" : "ps";
 	      if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
+	      if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
+	      if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
 	      my $filename = "$datalist->[$idx]{'Filename'}.$ext";
 	      single_plot("$filename/$dev", $datalist->[$idx], 0);
-	      print "Wrote postscript file '$filename'\n";
+	      print "Wrote file '$filename' ($dev)\n";
 	  }        
       }
   }
