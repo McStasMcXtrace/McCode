@@ -69,7 +69,7 @@ for($i = 0; $i < @ARGV; $i++) {
         $plotter = $1;	
   } elsif(/^-i([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
       $inspect = $1;
-  } elsif(/^\+nw$/i || /^\+nojvm$/i) {
+  } elsif(/^\+nw$/i || /^\+tk$/i || /^\+java$/i) {
       $nowindow = 0;
   } elsif(/^-nw$/i || /^-nojvm$/i) {
       $nowindow = 1;
