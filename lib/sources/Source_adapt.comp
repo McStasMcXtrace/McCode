@@ -5,53 +5,57 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_adapt
-DEFINITION PARAMETERS (xmin,xmax,ymin,ymax, dist, xw, yh, E0, dE, flux, N_E, N_xpos, N_xdiv, alpha, beta)
+DEFINITION PARAMETERS (xmin,xmax,ymin,ymax, dist, xw, yh, E0, dE, flux,
+		       N_E, N_xpos, N_xdiv, alpha, beta, filename)
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (p_in, y_0, C, r_0)
+OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-#include "alg.h"
- double p_in;
- struct adapt_tree *atree;
- int aindex;
- double *a_psi, *a_n;
- double a_total_psi;
- double a_pi, a_num;
- double count;
- double y_0, C, r_0;
- double a_factor;
+  struct source_adapt
+    {
+      struct adapt_tree *atree;	/* Adaptive search tree */
+      int idx;			/* Index of current bin */
+      double *psi, *n;		/* Arrays of weight sums, neutron counts */
+      double psi_tot;		/* Total weight sum */
+      double pi, num;		/* Initial p, number of bins in tree */
+      double factor;		/* Adaption quality factor */
+      double a_beta;		/* Adaption agression factors */
+    } adpt;
+  double count;			/* Neutron counter */
+  double y_0, C, r_0;
+  double p_in;
 %}
 INITIALIZE
 %{
   int i;
   double a, lambda_min, lambda_max, delta_lambda, source_area;
 
-  a_num = N_E*N_xpos*N_xdiv;
+  adpt.num = N_E*N_xpos*N_xdiv;
+  adpt.a_beta = beta;
   lambda_min = sqrt(81.81/(E0+dE)); /* AAngstroem */
   lambda_max = sqrt(81.81/(E0-dE));
   delta_lambda = lambda_max - lambda_min;
   source_area = (xmax - xmin)*(ymax - ymin)*1e4; /* cm^2 */
   p_in = flux/mcget_ncount()*delta_lambda*source_area;
-  atree = adapt_tree_init(a_num);
-  a_psi = malloc(a_num*sizeof(*a_psi));
-  a_n = malloc(a_num*sizeof(*a_n));
-  if(!(a_psi && a_n))
+  adpt.atree = adapt_tree_init(adpt.num);
+  adpt.psi = malloc(adpt.num*sizeof(*adpt.psi));
+  adpt.n = malloc(adpt.num*sizeof(*adpt.n));
+  if(!(adpt.psi && adpt.n))
   {
     fprintf(stderr, "Fatal error: out of memory.\n");
     exit(1);
   }
-  for(i = 0; i < a_num; i++)
+  for(i = 0; i < adpt.num; i++)
   {
-    adapt_tree_add(atree, i, 1.0/a_num);
-    a_psi[i] = a_n[i] = 0;
+    adapt_tree_add(adpt.atree, i, 1.0/adpt.num);
+    adpt.psi[i] = adpt.n[i] = 0;
   }
-  a_total_psi = 0;
+  adpt.psi_tot = 0;
   count = 0;
-  y_0 = a_num > 8 ? 2.0/a_num : 0.25;
+  y_0 = adpt.num > 8 ? 2.0/adpt.num : 0.25;
   r_0 = 1/(double)alpha*log((1 - y_0)/y_0)/(double)mcget_ncount();
   C = 1/(1 + log(y_0 + (1 - y_0)*exp(-r_0*mcget_ncount()))/(r_0*mcget_ncount()));
-  printf("Source_adapt: y_0=%8.3g r_0=%8.3g C=%8.3g\n", y_0, r_0, C);
 %}
 TRACE
 %{
@@ -61,18 +65,18 @@ TRACE
 
   /* Randomly select a bin in the current distribution */
   r = rand01();
-  aindex = adapt_tree_search(atree, atree->total*r);
-  if(aindex >= a_num)
+  adpt.idx = adapt_tree_search(adpt.atree, adpt.atree->total*r);
+  if(adpt.idx >= adpt.num)
   {
     fprintf(stderr,
-	    "Hm, aindex is %d, a_num is %d, r is %g, atree->total is %g\n",
-	    aindex, (int)a_num, r, atree->total);
-    aindex = a_num - 1;
+	    "Hm, idx is %d, num is %d, r is %g, atree->total is %g\n",
+	    adpt.idx, (int)adpt.num, r, adpt.atree->total);
+    adpt.idx = adpt.num - 1;
   }
   /* Now find the bin coordinates. */
-  i_xdiv = aindex % (int)N_xdiv;
-  i_xpos = (aindex / (int)N_xdiv) % (int)N_xpos;
-  i_E = (aindex / (int)N_xdiv) / (int)N_xpos;
+  i_xdiv = adpt.idx % (int)N_xdiv;
+  i_xpos = (adpt.idx / (int)N_xdiv) % (int)N_xpos;
+  i_E = (adpt.idx / (int)N_xdiv) / (int)N_xpos;
   /* Compute the initial neutron parameters, selecting uniformly randomly
      within each bin dimension. */
   x = xmin + (i_xpos + rand01())*((xmax - xmin)/(double)N_xpos);
@@ -92,46 +96,50 @@ TRACE
   t = 0;
   /* Adjust neutron weight. */
   p = p_in;
-  a_factor = y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
+  adpt.factor = y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
   count++;
-  p /= atree->v[aindex]/(atree->total/a_num);
-  p *= C*a_factor*(thmax - thmin)*(sin(phmax) - sin(phmin));
+  p /= adpt.atree->v[adpt.idx]/(adpt.atree->total/adpt.num);
+  p *= C*adpt.factor*(thmax - thmin)*(sin(phmax) - sin(phmin));
   /* Update distribution, assuming absorbtion. */
-  if(a_n[aindex] > 0)
-    a_total_psi -= a_psi[aindex]/(a_n[aindex]*(a_n[aindex] + 1));
-  a_n[aindex]++;
-  if(a_total_psi != 0)
+  if(adpt.n[adpt.idx] > 0)
+    adpt.psi_tot -= adpt.psi[adpt.idx]/
+      (adpt.n[adpt.idx]*(adpt.n[adpt.idx] + 1));
+  adpt.n[adpt.idx]++;
+  if(adpt.psi_tot != 0)
   {
-    new_v = (1-beta)*a_factor*a_psi[aindex]/(a_n[aindex]*a_total_psi) +
-      beta/a_num;
-    adapt_tree_add(atree, aindex, new_v - atree->v[aindex]);
+    new_v = (1 - adpt.a_beta)*adpt.factor*adpt.psi[adpt.idx]/
+		(adpt.n[adpt.idx]*adpt.psi_tot) +
+	    adpt.a_beta/adpt.num;
+    adapt_tree_add(adpt.atree, adpt.idx, new_v - adpt.atree->v[adpt.idx]);
   }
   /* Remember initial neutron weight. */
-  a_pi = p;
+  adpt.pi = p;
 %}
 
 FINALLY
 %{
-  int *p0;
-  double *p1,*p2;
+  double *p1 = NULL;
   int i;
-  p0 = malloc(a_num*sizeof(int));
-  p1 = malloc(a_num*sizeof(double));
-  p2 = malloc(a_num*sizeof(double));
-  for(i = 0; i < a_num; i++)
+
+  if(filename)
   {
-    p0[i] = 1;
-    p1[i] = atree->v[i]/atree->total;
-    p2[i] = p1[i]*p1[i];
+    p1 = malloc(adpt.num*sizeof(double));
+    if(!p1)
+      fprintf(stderr, "Warning: Source_adapt: "
+	      "not enough memory to write distribution.\n");
   }
-  printf("Source_adapt: Total=%g\n", atree->total);
-  DETECTOR_OUT_1D(
-	"Adaptive source energy distribution",
-	"Energy [meV]",
-	"Probability",
-	"E", E0 - dE, E0 + dE, a_num,
-	NULL, p1, NULL, "source_adapt.dist");
-  adapt_tree_free(atree);
+  if(p1)
+  {
+    for(i = 0; i < adpt.num; i++)
+      p1[i] = adpt.atree->v[i]/adpt.atree->total;
+    DETECTOR_OUT_1D("Adaptive source energy distribution",
+		    "Energy [meV]",
+		    "Probability",
+		    "E", E0 - dE, E0 + dE, adpt.num,
+		    NULL, p1, NULL, filename);
+    free(p1);
+  }
+  adapt_tree_free(adpt.atree);
 %}
 MCDISPLAY
 %{

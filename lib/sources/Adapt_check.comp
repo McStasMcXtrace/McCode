@@ -1,41 +1,22 @@
 DEFINE COMPONENT Adapt_check
-DEFINITION PARAMETERS (alpha, beta)
+DEFINITION PARAMETERS (source_comp)
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (n, I)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-DECLARE
-%{
-  int n;
-  double I;
-%}
-
-INITIALIZE
-%{
-  n = 0;
-  I = 0;
-%}
 
 TRACE
 %{
-  double new_v;
+  double new_v, psi;
+  struct source_adapt *adpt = &(MC_GETPAR(source_comp, adpt));
 
   if(p == 0)
     ABSORB;
-  a_psi[aindex] += p/a_pi;
-  a_total_psi += (p/a_pi)/a_n[aindex];
-/* if(a_n[aindex]<5 || a_psi[aindex] <= 1.001*p/a_pi) */
-/* printf("%7g %4d: old=%8.3g pi=%8.3g psi=%8.3g psi_i=%8.3g psi_tot=%8.3g", */
-/*        count, aindex, */
-/*        atree->v[aindex], a_pi, p/a_pi, a_psi[aindex]/a_n[aindex], a_total_psi); */
-  new_v = (1-beta)*a_factor*a_psi[aindex]/(a_n[aindex]*a_total_psi) +
-    beta/a_num;
-  adapt_tree_add(atree, aindex, new_v - atree->v[aindex]);
-/* if(a_n[aindex]<5 || a_psi[aindex] <= 1.001*p/a_pi) */
-/* printf(" new=%8.3g tot=%8.3g\n", atree->v[aindex], atree->total); */
-%}
-
-FINALLY
-%{
+  psi = p/adpt->pi;
+  adpt->psi[adpt->idx] += psi;
+  adpt->psi_tot += psi/adpt->n[adpt->idx];
+  new_v = (1 - adpt->a_beta)*adpt->factor*adpt->psi[adpt->idx]/
+		(adpt->n[adpt->idx]*adpt->psi_tot) +
+	  adpt->a_beta/adpt->num;
+  adapt_tree_add(adpt->atree, adpt->idx, new_v - adpt->atree->v[adpt->idx]);
 %}
 
 MCDISPLAY
