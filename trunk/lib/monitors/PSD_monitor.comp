@@ -1,0 +1,94 @@
+/***********************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: PSD_monitor
+*
+* Written by: KL,  Feb 3, 1998
+*
+* An (n times m) pixel PSD monitor, which also calculates the first and second
+* moment of the beam. This component may also be used as a beam detector. 
+*
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+***********************************************************************/
+
+
+DEFINE COMPONENT PSD_monitor
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, nx, ny, filename)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2) 
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    int PSD_N[nx][ny];
+    double PSD_p[nx][ny];
+    double PSD_p2[nx][ny];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    for (i=0; i<nx; i++)
+     for (j=0; j<ny; j++) 
+     {
+      PSD_N[i][j] = 0;
+      PSD_p[i][j] = 0;
+      PSD_p2[i][j] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      i = floor((x-xmin)*nx/(xmax-xmin));
+      j = floor((y-ymin)*ny/(ymax-ymin));
+      PSD_N[i][j]++;
+      PSD_p[i][j] += p;
+      PSD_p2[i][j] += p*p;
+    }
+  %}
+FINALLY
+  %{
+    int i,j;
+    FILE *outfile;
+    int Nsum;
+    double Psum, P2sum;
+
+    Nsum = Psum = P2sum = 0;
+    outfile=fopen(filename,"w");
+    for (j=0; j<ny; j++)
+    {
+     for (i=0; i<nx; i++)
+     {
+      fprintf(outfile,"%i %g %g ", PSD_N[i][j], PSD_p[i][j], PSD_p2[i][j]);
+      Nsum += PSD_N[i][j];
+      Psum += PSD_p[i][j];
+      P2sum += PSD_p2[i][j];
+     }
+     fprintf(outfile,"\n");
+    }
+    test_printf("Total neutrons in PSD_monitor N: %i p: %g p2: %g \n",Nsum, Psum, P2sum);
+    fclose(outfile);
+  %}
+
+END
