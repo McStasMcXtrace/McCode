@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.23 2005-02-25 15:26:02 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.24 2005-03-14 10:48:54 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.23  2005/02/25 15:26:02  farhi
+*	Removed usage of round function
+*	made Guide_honeycomb work with gravitation
+*	
 *	Revision 1.22  2005/02/22 16:11:03  farhi
 *	Now saving absolute position of monitors as "position" field in header
 *	Useful for plotting e.g. flux vs distance
@@ -554,7 +558,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     } /* end for mc_mn_Short_Label */
 
     /* update label 'signal per bin' if more than 1 bin */
-    if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number) strncat(mc_mn_Vars->Coord_Label[0], " per bin", 30);
+    if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number) {
+      strncat(mc_mn_Vars->Coord_Label[0], " per bin", 30);
+      if (mc_mn_Vars->Flag_capture) 
+        printf("Monitor_nD: %s: Using capture flux weightening on %d bins.\n"
+               "            Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", mc_mn_Vars->compcurname);
+    }
 
     strcat(mc_mn_Vars->Monitor_Label, " Monitor");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SQUARE) strcat(mc_mn_Vars->Monitor_Label, " (Square)");
