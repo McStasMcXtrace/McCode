@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, the neutron ray-tracing Monte-Carlo software.
-* Copyright(C) 1999 Risoe National Laboratory.
+* Copyright(C) 1999,2000 Risoe National Laboratory.
 *
 * Component: Adapt_check
 *
@@ -18,7 +18,8 @@
 *
 * INPUT PARAMETERS:
 *
-* source_comp:   The name of the Source_adapt component in the instrument.
+* source_comp:   The name of the Source_adapt component in the
+*                instrument definition.
 *
 *******************************************************************************/
 
@@ -38,8 +39,8 @@ TRACE
   adpt->psi[adpt->idx] += psi;
   adpt->psi_tot += psi/adpt->n[adpt->idx];
   new_v = (1 - adpt->a_beta)*adpt->factor*adpt->psi[adpt->idx]/
-		(adpt->n[adpt->idx]*adpt->psi_tot) +
-	  adpt->a_beta/adpt->num;
+                (adpt->n[adpt->idx]*adpt->psi_tot) +
+          adpt->a_beta/adpt->num;
   adapt_tree_add(adpt->atree, adpt->idx, new_v - adpt->atree->v[adpt->idx]);
 %}
 

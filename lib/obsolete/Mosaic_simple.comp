@@ -141,8 +141,8 @@ TRACE
             q_y = c1y + cos_phi*ay + sin_phi*by;
             q_z = c1z + cos_phi*az + sin_phi*bz;
             tmp = (q_x*q0x + q_y*q0y + q_z*q0z)/
-	          (sqrt(q_x*q_x + q_y*q_y + q_z*q_z)*q0);
-	    delta = tmp < 1 ? acos(tmp) : 0; /* Avoid rounding errors */
+                  (sqrt(q_x*q_x + q_y*q_y + q_z*q_z)*q0);
+            delta = tmp < 1 ? acos(tmp) : 0; /* Avoid rounding errors */
             p_reflect = GAUSS(delta,0,mos_rms);
             total += W[i]*p_reflect;
           }
@@ -159,8 +159,8 @@ TRACE
           q_y = c1y + cos_phi*ay + sin_phi*by;
           q_z = c1z + cos_phi*az + sin_phi*bz;
           tmp = (q_x*q0x + q_y*q0y + q_z*q0z)/
-	        (sqrt(q_x*q_x + q_y*q_y + q_z*q_z)*q0);
-	  delta = tmp < 1 ? acos(tmp) : 0; /* Avoid rounding errors */
+                (sqrt(q_x*q_x + q_y*q_y + q_z*q_z)*q0);
+          delta = tmp < 1 ? acos(tmp) : 0; /* Avoid rounding errors */
           p_reflect = GAUSS(delta,0,mos_rms);
           x = 0;
           y = y1;

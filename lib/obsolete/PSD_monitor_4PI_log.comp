@@ -1,3 +1,35 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package.
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: PSD_monitor_4PI_log
+*
+* Written by: KL and KN, April 17, 1998
+* Modified by: KN, December 1999
+*
+* This component is a hack. It is identical to the PSD_monitor_4PI component,
+* except that the values in the output histogram are the logarithms of the
+* intensities rather than the intensities themselves. This is useful in
+* Laue-diffraction patterns (like in the McStas tutorial), but does not work
+* together too well with the current McStas method of handling detectors.
+*
+* INPUT PARAMETERS:
+*
+* radius:   Radius of detector (m)
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+*******************************************************************************/
+
 DEFINE COMPONENT PSD_monitor_4PI_log
 DEFINITION PARAMETERS (radius, nx, ny, filename)
 SETTING PARAMETERS ()
@@ -60,10 +92,10 @@ FINALLY
     for (j=0; j<ny; j++) 
     {
       if((PSD_p[i][j] < minp || minp == 0) && PSD_p[i][j] > 0)
-	minp = PSD_p[i][j];
+        minp = PSD_p[i][j];
     }
   if(minp <= 0)
-    minp = 1;			/* Avoid logarithm of zero */
+    minp = 1;                   /* Avoid logarithm of zero */
   for (i=0; i<nx; i++)
     for (j=0; j<ny; j++) 
     {
