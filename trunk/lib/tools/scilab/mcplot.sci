@@ -127,7 +127,8 @@ function win = mcplot_addmenu(use_common_menu)
   if ~menu_installed & ~MCPLOT.MenuInstalled
     t = strsubst(t, '_', '');
     t = strsubst(t, '/', ' ');
-    if havewindow() & with_tk()
+    if ~exists('with_tk'), tk_on = 0; else tk_on = with_tk(); end
+    if havewindow() & tk_on
       // we may use Tk external menu
       MCPLOT.MenuInstalled = 1;
             
@@ -247,7 +248,7 @@ function mcplot_menu_action(k, gwin)
       if length(figname)
         // Strip off the .instr suffix...
         idx=strindex(figname,'.instr');
-        if ~isempty(idx)
+        if length(idx)
           idx=idx(length(idx));
           t=str2code(figname);
           t=t(1:idx-1);
@@ -336,6 +337,7 @@ function mcplot_menu_action(k, gwin)
     case 18 then // Close all
       mprintf('To Exit Scilab, type ""exit"" at the scilab''s prompt\n');
       exit
+      quit
     case 20 then // Colormap/pink
       pink();
     case 21 then // Colormap/inverted pink
@@ -453,31 +455,8 @@ function mcplot_output(form, win, filename)
     else xsave(filename);
     end
     if ext == '.eps'
-      // Ugly hack for problem with Scilab's BEpsf which 
-      // disallows output filenames with more than one dot...
-       
-      // Last occurance of '/' or '\' - defines Dirname...
-      if MSDOS then
-        idx_slash=strindex(filename,'\');
-      else
-        idx_slash=strindex(filename,'/');
-      end
-      idx_slash=idx_slash(length(idx_slash));
-              
-      filecode=str2code(filename);
-      if ~isempty(idx_slash) then
-        Dirname=code2str(filecode(1:idx_slash));
-      else
-        Dirname="";
-        idx_slash=0;
-      end
-      
-      // First occurance of '.' after idx_slash
-      idx_dot=strindex(filename,'.');
-      idx_dot=idx_dot(idx_dot>idx_slash);
-      idx_dot=idx_dot(1);
-      
-      Basename=code2str(filecode(idx_slash+1:idx_dot-1));
+      [Dirname, Basename, Ext]= mcplot_fileparts(filename);
+
       if MSDOS then
         unix_g('""'+SCI+'\bin\BEpsf"" -landscape '+filename);
         unix_g('move '+Dirname+Basename+'.eps '+filename);
@@ -533,7 +512,12 @@ if ~length(d.data)
    d.events=matrix(x((2*pS+1):(3*pS)), S);
   end
   mclose(fid);
-  return
+ end
+ if length(strindex(d.type,'1d'))
+  if size(d.data,2) > 1 & size(d.errors,2) ==0
+   d.errors = d.data(:,2);
+   d.data = d.data(:,1);
+  end
  end
 end
 endfunction
@@ -567,7 +551,7 @@ function d=mcplot_plot(d,p)
       xtitle(t);       
     elseif length(strindex(d.type,'1d'))
       d.x=linspace(l(1),l(2),S(1));
-      mcplot_errorbar(d.x,d.data(:,1),d.data(:,2));
+      mcplot_errorbar(d.x,d.data,d.errors);
       if p == 2, t = t1; end
       xtitle(t,d.xlabel,d.ylabel);
     else
@@ -730,6 +714,38 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
   end // else class == 'data'
 endfunction // mcplot_scan
 
+function [Dirname, Basename, Ext] = mcplot_fileparts(filename)
+// mcplot_fileparts: separate a full file/path name into bits
+
+  // Last occurance of '/' or '\' - defines Dirname...
+  if MSDOS then filesep = '\'; else filesep = '/'; end
+  
+  idx_slash=strindex(filename,filesep);
+  idx_slash=idx_slash(length(idx_slash));
+
+  filecode=str2code(filename);
+  if length(idx_slash) then
+    Dirname=code2str(filecode(1:idx_slash));
+  else
+    Dirname="";
+    idx_slash=0;
+  end
+
+  // First occurance of '.' after idx_slash
+  idx_dot=strindex(filename,'.');
+  if length(idx_dot)
+    idx_dot=idx_dot(idx_dot>idx_slash);
+    idx_dot=idx_dot(1); 
+    Ext     =code2str(filecode(idx_dot:$));
+  else 
+    idx_dot = length(filename)+1; 
+    Ext="";
+  end
+  
+  Basename=code2str(filecode(idx_slash+1:idx_dot-1));
+  
+endfunction
+
 function [object,count]=mcplot(object, options, id)
 // mcplot: plot a McStas simulation result
 //
@@ -783,8 +799,9 @@ if typeof(object) == 'string' // if object is a string
     end
   end
   mclose(fid);
-  chdir(dirname(object)); // go into directory where object is
-  filename = basename(object);
+  [Dirname, Basename, Ext]= mcplot_fileparts(object);
+  if length(Dirname), chdir(Dirname); end
+  filename = Basename;
   if length(strindex(object,'.sci')), filename=filename+'.sci';
   else filename=filename+'.sce'; end
   object=filename;
@@ -842,7 +859,7 @@ else  // if 's' is a 'struct'
   //    if output is not empty close xend()
   if ~length(form)
     // installs a common menu for all figures
-    // in case this could not be done with GTk
+    // in case this could not be done with GTk/Tk
     ret = -1;
     while (ret < 0)        // used whith x_choices, or ignore with Tk/GTk
       ret = mcplot_addmenu('common');
