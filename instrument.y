@@ -83,6 +83,7 @@ int mc_yyoverflow();
 %token TOK_RELATIVE	"RELATIVE"
 %token TOK_ROTATED	"ROTATED"
 %token TOK_SETTING	"SETTING"
+%token TOK_SHARE        "SHARE"
 %token TOK_STATE	"STATE"
 %token TOK_TRACE	"TRACE"
 
@@ -100,7 +101,7 @@ int mc_yyoverflow();
 %token TOK_INVALID
 
 %type <instance> component compref reference
-%type <ccode> code codeblock declare initialize trace finally mcdisplay
+%type <ccode> code codeblock share declare initialize trace finally mcdisplay
 %type <coords>  coords
 %type <exp> exp topexp topatexp genexp genatexp
 %type <actuals> actuallist actuals actuals1
@@ -124,7 +125,7 @@ compdefs:	  /* empty */
 		| compdefs compdef
 ;
 
-compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace finally mcdisplay "END"
+compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace finally mcdisplay "END"
 		  {
 		    struct comp_def *c;
 		    palloc(c);
@@ -134,11 +135,14 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace final
 		    c->out_par = $4.out;
 		    c->state_par = $4.state;
 		    c->polarisation_par = $4.polarisation;
-		    c->decl_code = $5;
-		    c->init_code = $6;
-		    c->trace_code = $7;
-		    c->finally_code = $8;
-		    c->mcdisplay_code = $9;
+                    c->share_code = $5;
+		    c->decl_code = $6;
+		    c->init_code = $7;
+		    c->trace_code = $8;
+		    c->finally_code = $9;
+		    c->mcdisplay_code = $10;
+
+                    c->comp_inst_number = 0;
 
 		    /* Check definition and setting params for uniqueness */
 		    check_comp_formals(c->def_par, c->set_par, c->name);
@@ -341,6 +345,15 @@ instr_formal:	  TOK_ID TOK_ID
 		    formal->id = $1;
 		    $$ = formal;
 		  }
+share:	  /* empty */
+		  {
+		    $$ = codeblock_new();
+		  }
+		| "SHARE" codeblock
+		  {
+		    $$ = $2;
+		  }
+;
 
 declare:	  /* empty */
 		  {
@@ -468,6 +481,7 @@ component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation
 		    struct comp_inst *comp;
 
 		    def = read_component($4);
+                    def->comp_inst_number--; 
 		    palloc(comp); /* Allocate new instance. */
 		    comp->name = $2;
 		    comp->def = def;
