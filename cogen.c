@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.20 2000-07-06 12:26:57 kn Exp $
+* 	$Id: cogen.c,v 1.21 2000-07-26 07:12:08 kn Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -301,14 +301,48 @@ cogen_instrument_scope(struct instr_def *instr,
   list_iterate_end(parlist);
 }
 
+/* Create the bindings for the SETTING parameter scope. Since the types of
+* setting parameters are known, local declarations can be used, avoiding the
+* problems with #define macro definitions.
+*/
 static void
-cogen_comp_scope_rec(char *compname, List_handle def, List_handle set,
-		     List_handle out, void (*func)(void *), void *data)
+cogen_comp_scope_setpar(char *compname, List_handle set, int infunc,
+			void (*func)(void *), void *data)
 {
   char *par;
   struct comp_iformal *formal;
 
-  /* First get the next definition or setting parameter, if any. */
+  /* Get the next setting parameter. */
+  formal = list_next(set);
+  if(formal != NULL)
+  {
+    /* Create local parameter equal to global value. */
+    if(infunc)
+      coutf("  MCNUM %s = %sc%s_%s;", formal->id, ID_PRE, compname, formal->id);
+    else
+      coutf("#define %s %sc%s_%s", formal->id, ID_PRE, compname, formal->id);
+    cogen_comp_scope_setpar(compname, set, infunc, func, data);
+    if(!infunc)
+      coutf("#undef %s", formal->id);
+  }
+  else
+  {
+    (*func)(data);		/* Now do the body. */
+  }
+}
+
+/* Create the #define statements to set up the scope for DEFINITION and OUTPUT
+* parameters.
+*/
+static void
+cogen_comp_scope_rec(char *compname, List_handle def, List set_list,
+		     List_handle out, int infunc,
+		     void (*func)(void *), void *data)
+{
+  char *par;
+  struct comp_iformal *formal;
+
+  /* First get the next DEFINITION or OUTPUT parameter, if any. */
   if(def != NULL)
   {
     formal = list_next(def);
@@ -317,41 +351,41 @@ cogen_comp_scope_rec(char *compname, List_handle def, List_handle set,
     else
       par = formal->id;
   }
-  if(def == NULL && set != NULL)
-  {
-    formal = list_next(set);
-    if(formal == NULL)
-      set = NULL;		/* Now finished with setting parameters. */
-    else
-      par = formal->id;
-  }
-  if(def == NULL && set == NULL)
+  if(def == NULL)
     par = list_next(out);
   if(par != NULL)
   {
     /* Create #define / #undef pair for this parameter around rest of code. */
     coutf("#define %s %sc%s_%s", par, ID_PRE, compname, par);
-    cogen_comp_scope_rec(compname, def, set, out, func, data);
+    cogen_comp_scope_rec(compname, def, set_list, out, infunc, func, data);
     coutf("#undef %s", par);
   }
   else
-  {
-    (*func)(data);
+  { /* Now do the SETTING parameters. */
+    List_handle set;
+
+    if(infunc && list_len(set_list) > 0)
+      coutf("{   /* Declarations of SETTING parameters. */");
+    set = list_iterate(set_list);
+    cogen_comp_scope_setpar(compname, set, infunc, func, data);
+    list_iterate_end(set);
+    if(infunc && list_len(set_list) > 0)
+      coutf("}   /* End of SETTING parameter declarations. */");
   }
 }
 
 static void
-cogen_comp_scope(struct comp_inst *comp, void (*func)(void *), void *data)
+cogen_comp_scope(struct comp_inst *comp, int infunc,
+		 void (*func)(void *), void *data)
 {
-  List_handle def, set, out;
+  List_handle def, out;
 
   coutf("#define %scompcurname \"%s\"", ID_PRE, comp->name);
   def = list_iterate(comp->def->def_par);
-  set = list_iterate(comp->def->set_par);
   out = list_iterate(comp->def->out_par);
-  cogen_comp_scope_rec(comp->name, def, set, out, func, data);
+  cogen_comp_scope_rec(comp->name, def, comp->def->set_par, out,
+		       infunc, func, data);
   list_iterate_end(out);
-  list_iterate_end(set);
   list_iterate_end(def);
   coutf("#undef %scompcurname", ID_PRE, comp->name);
 }
@@ -372,7 +406,7 @@ cogen_comp_decls_doit(void *arg)
 static void
 cogen_comp_decls(struct comp_inst *comp)
 {
-  cogen_comp_scope(comp, cogen_comp_decls_doit, comp);
+  cogen_comp_scope(comp, 0, cogen_comp_decls_doit, comp);
 }
 
 
@@ -598,7 +632,7 @@ cogen_init(struct instr_def *instr)
     
     /* Users initializations. */
     if(list_len(comp->def->init_code->lines) > 0)
-      cogen_comp_scope(comp, (void (*)(void *))codeblock_out_brace,
+      cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
 			    comp->def->init_code);
     cout("");
   }
@@ -793,7 +827,7 @@ cogen_trace(struct instr_def *instr)
       coutf("#define %s %s%s", comp->def->polarisation_par[1], ID_PRE, "nlsy");
       coutf("#define %s %s%s", comp->def->polarisation_par[2], ID_PRE, "nlsz");
     }
-    cogen_comp_scope(comp, (void (*)(void *))codeblock_out_brace,
+    cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
 		     comp->def->trace_code);
     if(comp->def->polarisation_par)
     {
@@ -865,7 +899,7 @@ cogen_finally(struct instr_def *instr)
     if(list_len(comp->def->finally_code->lines) > 0)
     {
       coutf("  /* User FINALLY code for component '%s'. */", comp->name);
-      cogen_comp_scope(comp, (void (*)(void *))codeblock_out_brace,
+      cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
 		       comp->def->finally_code);
       cout("");
     }
@@ -907,7 +941,7 @@ cogen_mcdisplay(struct instr_def *instr)
       char *quoted_name = str_quote(comp->name);
       coutf("  /* MCDISPLAY code for component '%s'. */", comp->name);
       coutf("  printf(\"MCDISPLAY: component %%s\\n\", \"%s\");", quoted_name);
-      cogen_comp_scope(comp, (void (*)(void *))codeblock_out_brace,
+      cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
 		       comp->def->mcdisplay_code);
       cout("");
       str_free(quoted_name);
