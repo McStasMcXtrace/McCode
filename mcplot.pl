@@ -36,7 +36,7 @@ BEGIN {
         $MCSTAS::runscilab ="scilab";
         # install atexit-style handler so that when we exit or die,
         # we automatically delete this temporary file
-        END { if (defined $tmp_file) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
+        END { if (defined $tmp_file && !$Config{'osname'} eq 'MSWin32') { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
       }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
@@ -172,7 +172,7 @@ if ($plotter eq 3 || $plotter eq 4) {
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
     printf $fh "end\n";
   }
-  printf $fh "if MSDOS \n  unix_g('del /q /f $tmp_file');\nend\n";
+  printf $fh "if MSDOS \n  s.tempfile='$tmp_file';\nend\n";
   close($fh);
   if ($nowindow) { system("$MCSTAS::runscilab -nw -f $tmp_file\n"); }
   else { system("$MCSTAS::runscilab -f $tmp_file\n"); }
