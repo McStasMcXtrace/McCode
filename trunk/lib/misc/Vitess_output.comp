@@ -7,7 +7,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas release
 *
 * Write neutron state parameters to VITESS neutron file.
@@ -25,34 +25,24 @@
 * %P
 * INPUT PARAMETERS
 *
-* output:  Filename of neutron file to write. Default is standard
-*          output [string]
-* bufsize: Size of neutron output buffer [records]
+* outname:  Filename of neutron file to write. Default is standard
+*           output [string]
+* bufsize:  Size of neutron output buffer [records]
+* progress: If not zero, output dots as progress indicator [flag]
 *
 * %E
 *******************************************************************************/
 
 
 DEFINE COMPONENT Vitess_output
-DEFINITION PARAMETERS (output = 0)
-SETTING PARAMETERS (bufsize = 10000)
+DEFINITION PARAMETERS (outname = 0)
+SETTING PARAMETERS (bufsize = 10000, progress = 0)
 OUTPUT PARAMETERS (file, buf, pos)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
 
-#ifndef VITESS_OUTPUT_COMP
-#define VITESS_OUTPUT_COMP
-  /* The Neutron structure, taken from VITESS source code "general.h" */
-  typedef struct
-    {
-      double 	Time;
-      double        Wavelength;
-      double        Probability;
-      VectorType    Position;
-      VectorType    Vector;
-    } Neutron;
-#endif /* VITESS_OUTPUT_COMP */
+#include "vitess-lib.h"
 
 FILE *file;			/* Neutron output file handle */
 Neutron *buf;			/* Neutron output buffer */
@@ -62,9 +52,9 @@ int pos;			/* Current position in buffer */
 INITIALIZE
 %{
   /* Open neutron output file. */
-  if(output)
+  if(outname)
   {
-    file = fopen(output, "wb");
+    file = fopen(outname, "wb");
   }
   else
   {
@@ -94,6 +84,11 @@ TRACE
   /* Flush output buffer if full. */
   if(pos >= bufsize) {
     count = fwrite(buf, sizeof(Neutron), bufsize, file);
+    if(progress)
+    {
+      fputc('.', stderr);	/* Output progress indicator. */
+      fflush(stderr);
+    }
     if(count != bufsize)
     {
       fprintf(stderr, "Vitess_output: Error during write of neutron file.\n");
@@ -104,29 +99,13 @@ TRACE
       pos = 0;			/* Reposition at start of buffer */
     }
   }
-  /* Convert neutron state parameters to VITESS. In VITESS, the
-     neutron velocity is represented by a wavelength in AAngstroem and
-     a unit direction vector, time is in msec and positions are in
-     cm. */
-  buf[pos].Position[0] = x*100;
-  buf[pos].Position[1] = y*100;
-  buf[pos].Position[2] = z*100;
-  v = sqrt(vx*vx + vy*vy + vz*vz);
-  if(v == 0.0)
-  {
-    fprintf(stderr, "Vitess_output: Error: zero velocity!\n");
-    exit(1);
-  }
-  buf[pos].Wavelength = 3956.0346/v;
-  buf[pos].Vector[0] = vx/v;
-  buf[pos].Vector[1] = vy/v;
-  buf[pos].Vector[2] = vz/v;
-  buf[pos].Time = t*1000;
-  buf[pos].Probability = p;
+  buf[pos] = mcstas2vitess(x, y, z, vx, vy, vz, t, p);
   ++pos;
 %}
 FINALLY
 %{
+  int count;
+
   /* Flush output buffer if necessary. */
   if(pos > 0) {
     count = fwrite(buf, sizeof(Neutron), pos, file);
@@ -136,9 +115,11 @@ FINALLY
       exit(1);
     }
   }
+  if(progress)
+    fprintf(stderr, ".\n");	/* Output final progress indicator. */
   if(buf)
     free(buf);
-  if(output && file)
+  if(outname && file)
     fclose(file);
 %}
 MCDISPLAY
