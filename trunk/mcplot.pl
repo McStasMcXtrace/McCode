@@ -47,15 +47,15 @@ require "mcstas_config.perl";
 # print and exit
 my ($default_ext);
 my ($file, $files);
-my ($index);
-my ($passed_arg_str);
-my ($inspect);
+my $index =0;;
+my $passed_arg_str = "";
+my $passed_arg_str_quit = "";
+my $inspect = "";
 my ($plotter);
-my ($nowindow);
-$index   = 0;
-$inspect = "";
-$passed_arg_str = "";
-$nowindow = 1;
+my $nowindow = 1;
+my $do_swap=0;
+
+
 if ($Config{'osname'} eq 'MSWin32'){
   $nowindow = 0;
 }
@@ -69,6 +69,8 @@ for($i = 0; $i < @ARGV; $i++) {
       $do_plot = 1;
   } elsif(/^-overview$/i) {
       $do_overview = 1;
+  } elsif(/^-png$/i || /^-ps$/i || /^-psc$/i || /^-ppm$/i) {
+      $passed_arg_str_quit .= "$_ ";
   } elsif(/^-p([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
         $plotter = $1;	
   } elsif(/^-i([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
@@ -77,6 +79,8 @@ for($i = 0; $i < @ARGV; $i++) {
       $nowindow = 0;
   } elsif(/^-nw$/i || /^-nojvm$/i) {
       $nowindow = 1;
+  } elsif(/^-swap$/i) {
+      $do_swap = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "mcplot [-ps|-psc|-gif] <simfile | detector_file>\n";
       print "       [-pPLOTTER] Output graphics using {PGPLOT,Scilab,Matlab}\n";
@@ -92,7 +96,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
       exit;
   } elsif(/^-([a-zA-ZæøåÆØÅ0-9_]+)$/) {
-      $passed_arg_str .= "-$1 ";
+      $passed_arg_str_quit .= "-$1 ";
   } else {
       $files[$index] = $ARGV[$i];
       $index++;
@@ -114,6 +118,7 @@ $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
 if ($do_plot)     { $passed_arg_str .= "-plot "; }
 if ($do_overview) { $passed_arg_str .= "-overview "; }
+if ($do_swap)     { $passed_arg_str .= "-swap "; }
 
 if ($index == 0) { 
   $file = "mcstas"; 
@@ -143,11 +148,11 @@ if ($plotter eq 3 || $plotter eq 4) {
   }
   printf $fh "s = stacksize(); if s(1) < 1e7 then stacksize(1e7); end\n";
   printf $fh "getf('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
-  printf $fh "s=mcplot('$file','$passed_arg_str','$inspect');\n";
-  if ($passed_arg_str) {
+  printf $fh "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');\n";
+  printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')\\n');\n";
+  if ($passed_arg_str_quit) {
     printf $fh "quit\n";
   } else {
-    printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str'',''$inspect'')\\n');\n";
     printf $fh "mprintf('mcplot: Simulation data structure from file $file\\n');\n";
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
   }
@@ -159,11 +164,12 @@ if ($plotter eq 3 || $plotter eq 4) {
 } elsif ($plotter eq 1 || $plotter eq 2) {
   if ($nowindow) { $tosend = "matlab -nojvm "; }
   else { $tosend = "matlab "; }
-  $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str','$inspect');";
-  if ($passed_arg_str) {
+  $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
+  $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')');";
+      
+  if ($passed_arg_str_quit) {
     $tosend .= "exit;\"\n";
   } else {
-      $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str'',''$inspect'')');";
       $tosend .= "disp('type: help mcplot for this function usage.');";
       $tosend .= "disp('mcplot: Simulation data structure from file $file');";
       $tosend .= "disp('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !');\"\n";
