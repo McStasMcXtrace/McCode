@@ -345,12 +345,10 @@ function d=mcplot_plot(d,p)
     if ~isempty(strfind(d.type,'2d'))
       d.x=linspace(l(1),l(2),S(1)); 
       d.y=linspace(l(3),l(4),S(2));
-      h=surface(d.x,d.y,d.data');   
-      cb = 'view(0,90);'         
+      h=surface(d.x,d.y,d.data');           
     else
       d.x=linspace(l(1),l(2),max(S));
       h=plot(d.x,d.data);
-      cb = 'view(0,90);'   
     end
     set(h, 'UserData', d);
     hm = uicontextmenu;
