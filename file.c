@@ -16,7 +16,7 @@
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.9 2003-01-21 08:38:40 pkwi Exp $
+*	$Id: file.c,v 1.10 2003-01-21 08:42:46 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.3  2000/02/15 07:40:59  kn

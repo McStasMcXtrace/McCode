@@ -20,7 +20,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.33 2003-01-21 08:38:40 pkwi Exp $
+* $Id: cogen.c,v 1.34 2003-01-21 08:42:46 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -336,7 +336,7 @@ cogen_instrument_scope(struct instr_def *instr,
 * problems with #define macro definitions.
 */
 static void
-cogen_comp_scope_setpar(char *compname, List_handle set, int infunc,
+cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
                         void (*func)(void *), void *data)
 {
   char *par;
@@ -348,16 +348,23 @@ cogen_comp_scope_setpar(char *compname, List_handle set, int infunc,
   {
     /* Create local parameter equal to global value. */
     if(infunc)
-      coutf("  MCNUM %s = %sc%s_%s;", formal->id, ID_PRE, compname, formal->id);
+      coutf("  MCNUM %s = %sc%s_%s;", formal->id, ID_PRE, comp->name, formal->id);
     else
-      coutf("#define %s %sc%s_%s", formal->id, ID_PRE, compname, formal->id);
-    cogen_comp_scope_setpar(compname, set, infunc, func, data);
+      coutf("#define %s %sc%s_%s", formal->id, ID_PRE, comp->name, formal->id);
+    cogen_comp_scope_setpar(comp, set, infunc, func, data);
+    
     if(!infunc)
       coutf("#undef %s", formal->id);
   }
   else
   {
     (*func)(data);                /* Now do the body. */
+    if(infunc == 2 && list_len(comp->extend->lines) > 0)
+    {
+      coutf("/* '%s' component extend code */",comp->name);
+      coutf("    strcpy(%ssig_message, \"%s (Trace:Extend)\");", ID_PRE, comp->name); /* ADD: E. Farhi Aug 25th, 2002 */
+      codeblock_out(comp->extend);
+    }
   }
 }
 
@@ -365,7 +372,7 @@ cogen_comp_scope_setpar(char *compname, List_handle set, int infunc,
 * parameters.
 */
 static void
-cogen_comp_scope_rec(char *compname, List_handle def, List set_list,
+cogen_comp_scope_rec(struct comp_inst *comp, List_handle def, List set_list,
                      List_handle out, int infunc,
                      void (*func)(void *), void *data)
 {
@@ -386,8 +393,8 @@ cogen_comp_scope_rec(char *compname, List_handle def, List set_list,
   if(par != NULL)
   {
     /* Create #define / #undef pair for this parameter around rest of code. */
-    coutf("#define %s %sc%s_%s", par, ID_PRE, compname, par);
-    cogen_comp_scope_rec(compname, def, set_list, out, infunc, func, data);
+    coutf("#define %s %sc%s_%s", par, ID_PRE, comp->name, par);
+    cogen_comp_scope_rec(comp, def, set_list, out, infunc, func, data);
     coutf("#undef %s", par);
   }
   else
@@ -397,7 +404,7 @@ cogen_comp_scope_rec(char *compname, List_handle def, List set_list,
     if(infunc && list_len(set_list) > 0)
       coutf("{   /* Declarations of SETTING parameters. */");
     set = list_iterate(set_list);
-    cogen_comp_scope_setpar(compname, set, infunc, func, data);
+    cogen_comp_scope_setpar(comp, set, infunc, func, data);
     list_iterate_end(set);
     if(infunc && list_len(set_list) > 0)
       coutf("}   /* End of SETTING parameter declarations. */");
@@ -414,7 +421,7 @@ cogen_comp_scope(struct comp_inst *comp, int infunc,
   coutf("#define %scompcurindex %i", ID_PRE, comp->index);
   def = list_iterate(comp->def->def_par);
   out = list_iterate(comp->def->out_par);
-  cogen_comp_scope_rec(comp->name, def, comp->def->set_par, out,
+  cogen_comp_scope_rec(comp, def, comp->def->set_par, out,
                        infunc, func, data);
   list_iterate_end(out);
   list_iterate_end(def);
@@ -1006,7 +1013,7 @@ cogen_trace(struct instr_def *instr)
       coutf("  /* Leave %s group thus absorb non scattered neutrons */", last_group_name); 
       coutf("  if (!%sGroup%s) ABSORB;", ID_PRE, last_group_name);
     }
-    cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
+    cogen_comp_scope(comp, 2, (void (*)(void *))codeblock_out_brace,
                      comp->def->trace_code);
     if (comp->group != NULL)
     {
@@ -1021,12 +1028,6 @@ cogen_trace(struct instr_def *instr)
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp); }",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-    }
-    if(list_len(comp->extend->lines) > 0)
-    {
-      coutf("/* '%s' component extend code */",comp->name);
-      coutf("    strcpy(%ssig_message, \"%s (Trace:Extend)\");", ID_PRE, comp->name); /* ADD: E. Farhi Aug 25th, 2002 */
-      codeblock_out(comp->extend);
     }
     if(comp->def->polarisation_par)
     {
