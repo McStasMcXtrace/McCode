@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.10 1998-10-09 07:47:14 kn Exp $
+* 	$Id: cogen.c,v 1.11 1998-11-09 07:51:18 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.10  1998/10/09 07:47:14  kn
+* 	Fixed bug when DECLARE / INITIALIZE / FINALLY is left out from the
+* 	instrument definition.
+*
 * 	Revision 1.9  1998/10/02 08:35:49  kn
 * 	Added output parameters for components.
 * 	Fixed header comment.
@@ -46,6 +50,7 @@
 *******************************************************************************/
 
 #include <stdarg.h>
+#include <string.h>
 #include <stdio.h>
 #include "mcstas.h"
 
