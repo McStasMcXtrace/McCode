@@ -3,10 +3,15 @@
 * McStas, the neutron ray-tracing Monte-Carlo software.
 * Copyright(C) 1999,2000 Risoe National Laboratory.
 *
-* Component: Adapt_check
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 1.8 $
+* Origin: McStas release
 *
-* Written by Kristian Nielsen 1999
+* Optimization specifier for the Source_adapt component.
 *
+* %D
 * This components works together with the Source_adapt component, and
 * is used to define the criteria for selecting which neutrons are
 * considered "good" in the adaptive algorithm. The name of the
@@ -15,12 +20,13 @@
 * does not matter; all neutrons that have not been absorbed prior to
 * the component are considered "good".
 *
-*
+* %P
 * INPUT PARAMETERS:
 *
 * source_comp:   The name of the Source_adapt component in the
 *                instrument definition.
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Adapt_check
