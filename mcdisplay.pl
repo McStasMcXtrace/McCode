@@ -805,6 +805,7 @@ my $plotter;
 undef $file_output;
 my $int_mode=0; # interactive mode(0), non interactive (1)
 my $i;
+my $start_scilab=0;
 
 $plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
                 $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
@@ -897,6 +898,8 @@ if ($plotter =~ /PGPLOT|McStas|0/i) {
       print STDERR "Outputting to file mcdisplay_commands.sci\n";
       print STDERR "******************************************************\n\n";
       $file_output="mcdisplay_commands.sci";
+      print STDERR "When done, I will start a scilab for you to view the file...\n";
+      $start_scilab=1;
       $MCSTAS::mcstas_config{'PLOTTER'}=4;
     }
   }
@@ -977,7 +980,11 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} == 3) { print STDERR "Scilab INSTRUMENT do
 
 while(!eof(IN)) {
     %neutron = read_neutron(IN);
-
+    if ($start_scilab == 1) {
+    # This only happens on Win32 (runscilab.exe), and we know the filename too...
+      system("start runscilab -f mcdisplay_commands.sci\n");
+      $start_scilab = 0;
+    } 
     next if $neutron{'numcomp'} <= $inspect_pos;
 
     my $ret;

@@ -32,6 +32,8 @@ INSTRUMENT.read=0;
 INSTRUMENT.Neutrons=[];
 INSTRUMENT.Neutrons=list();
 INSTRUMENT.Traced=0;
+INSTRUMENT.DoExport=1;
+INSTRUMENT.ExportFormat=1;
 global component;
 global coordinates;
 global listcnt;
@@ -131,16 +133,65 @@ endfunction
 
 function parmwin(varargin)
 global INSTRUMENT
+// Export file formats...
+Formats=["PostScript Color (.eps)","GIF (.gif)","xfig (.fig)","PPM (.ppm)","Scilab (.scg)","Cancel"]
+// Check if we should export on this re-entry?
+if INSTRUMENT.DoExport==2
+  Stop=0;
+  select INSTRUMENT.ExportFormat
+    case 1 then // PostScript Color (.eps)
+      ext='.eps';
+      dr='Pos';
+    case 2 then // GIF (.gif)
+      ext='.gif';
+      dr='GIF';
+    case 3 then // xfig (.fig)
+      ext='.fig';
+      dr='Fig';
+    case 4 then // PPM (.ppm)
+      ext='.ppm';
+      dr='PPM';
+    case 5 then // Scilab (.scg)
+      ext='.scg'
+      dr='';
+    else Stop=1 // Cancel
+  end
+  if Stop==0 
+    filename=strcat([INSTRUMENT.descr,ext]);
+    disp(strcat(['exporting ' filename ' in ' Formats(INSTRUMENT.ExportFormat) ' format']));
+    if ext ~= '.scg'
+      driver(dr);
+      xinit(filename);
+      // Since this is mcdisplay, no other windows are present...
+      xtape('replay',0);
+      xend(); 
+    else
+      xsave(filename,0);
+    end
+    if ext == '.eps'
+      // Clean up by running scilab's EPS encapsulator :(
+      if MSDOS then
+        unix_g('""'+SCI+'\bin\BEpsf"" -landscape '+filename);
+      else
+        unix_g(SCI+'/bin/BEpsf -landscape '+filename);
+      end
+    end
+  end
+  INSTRUMENT.DoExport=1;
+  // Reset to standard Rec driver
+  driver('Rec');
+end
 lab=["First component","Last component",...     
 	"# neutrons to trace",...
-	"alpha","theta","Exit"];
+	"alpha","theta","Export graphics","Exit"];
 list1=list(lab(1),INSTRUMENT.FirstView,INSTRUMENT.name);
 list2=list(lab(2),INSTRUMENT.LastView,INSTRUMENT.name);
 list3=list(lab(3),INSTRUMENT.DoNeutrons,INSTRUMENT.DoNumbers);
 list4=list(lab(4),INSTRUMENT.alpha,INSTRUMENT.angles);
 list5=list(lab(5),INSTRUMENT.theta,INSTRUMENT.angles);
 list6=list(lab(6),1,["no","yes"]);
-rep=x_choices('PlotInstrument3D',list(list1,list2,list3,list4,list5,list6));
+list7=list(lab(7),1,["no","yes"]);
+rep=x_choices('PlotInstrument3D',list(list1,list2,list3,list4,list5,list6,list7));
 if not(isempty(rep))
   INSTRUMENT.FirstView=rep(1);
   INSTRUMENT.LastView=rep(2);
@@ -149,7 +200,14 @@ if not(isempty(rep))
   INSTRUMENT.alpha=rep(4);
   INSTRUMENT.theta=rep(5);
   INSTRUMENT.count=0;
-  if rep(6)==2
+  INSTRUMENT.DoExport=rep(6);
+  if INSTRUMENT.DoExport==2
+    // Choose format from list...
+    lab="Choose export format";
+    formatlist=list(lab,INSTRUMENT.ExportFormat,Formats);
+    INSTRUMENT.ExportFormat=x_choices('Choose Format',list(formatlist));
+  end
+  if rep(7)==2
     exit
     quit
   end
