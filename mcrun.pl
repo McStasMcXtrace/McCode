@@ -153,9 +153,9 @@ sub parse_args {
 	    $slave=$1;
 	} elsif (/^--slavedir\=(.*)$/) {
 	    $slavedir="$1/";
-	} elsif (/^--multi/ || /^-M/) {
+	} elsif (/^--multi/ || /^-M/ || /^--grid/) {
 	    if ($Config{'osname'} eq 'MSWin32') {
-		print STDOUT "Sorry, --multi is not supported on windows!\n";
+		print STDOUT "Sorry, --grid is not supported on windows!\n";
 	    } else {
 		$multi=1;
 	    }
@@ -304,7 +304,7 @@ sub parse_args {
    --format=FORMAT            Output data files using format FORMAT.
                               (format list obtained from <instr>.out -h)
    -M        --multi          Spawn simulations to multiple machine grid.
-                              See the documentation for more info. 
+             --grid           See the documentation for more info. 
                               --multi Not supported on Win32.
    --mpi=NB_CPU               Spread simulation over NB_CPU machines using MPI
    --mpi-machines=MACHINES    Read machine names from file MACHINES
