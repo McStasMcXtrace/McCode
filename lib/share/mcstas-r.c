@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.109 2005-03-02 10:40:27 farhi Exp $
+* $Id: mcstas-r.c,v 1.110 2005-03-23 14:41:11 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.109  2005/03/02 10:40:27  farhi
+* Now displays warning for Low Statistics and large matrices in text mode for Matlab/Scilab
+*
 * Revision 1.108  2005/02/24 15:57:20  farhi
 * FIXED gravity bug (probably OK). Gravity is not handled properly in other Guide elements. Will adapt so that it works better...
 * The n.v was not computed using the actual 'v' values when reaching the guide side, but before propagation. So the velocity was not reflected, but scattered depending on the previous neutron position/velocity, bringing strange divergence effects.
@@ -633,8 +636,10 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);\n"
       "if isempty(d.data)\n"
       " if ~length(findstr(d.format, 'binary'))\n"
-      "  copyfile(d.filename,[d.func,'.m']);p=d.parent;path(path);\n"
-      "  eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);\n"
+      "  if ~strcmp(d.filename,[d.func,'.m']) copyfile(d.filename,[d.func,'.m']); end\n"
+      "  p=d.parent;path(path);\n"
+      "  eval(['d=',d.func,';']);d.parent=p;\n"
+      "  if ~strcmp(d.filename,[d.func,'.m']) delete([d.func,'.m']); end\n"
       " else\n"
       "  if length(findstr(d.format, 'float')), t='single';\n"
       "  elseif length(findstr(d.format, 'double')), t='double';\n"
@@ -723,8 +728,8 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "t=[t1,'  '+d.variables+'=['+d.values+']','  '+d.signal,'  '+d.statistics]\n"
       "print,t\n"
       "if strpos(d.type,'0d') ge 0 then return,d\n"
-      "d.xlabel=strjoin(strsplit(d.xlabel,'`!\"£^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
-      "d.ylabel=strjoin(strsplit(d.ylabel,'`!\"£^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
+      "d.xlabel=strjoin(strsplit(d.xlabel,'`!\"^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
+      "d.ylabel=strjoin(strsplit(d.ylabel,'`!\"^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
       "stv,d,'x',l(0)+indgen(S(0))*(l(1)-l(0))/S(0)\n"
       "if strpos(d.type,'2d') ge 0 then begin\n"
       "  name={DATA:d.func,IX:d.xlabel,IY:d.ylabel}\n"
