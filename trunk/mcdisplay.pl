@@ -396,7 +396,7 @@ sub do_zoom {
 
 
 sub plot_instrument {
-    my ($rinstr, $rneutron) = @_;
+    my ($noninteractive, $rinstr, $rneutron) = @_;
     my %instr = %$rinstr;
     my %neutron = %$rneutron;
     my ($xmin, $xmax, $ymin, $ymax, $zmin, $zmax) =
@@ -460,12 +460,18 @@ sub plot_instrument {
     }
     pgebuf;
 
+    return 0 if $noninteractive;
+
     # Now wait for a keypress in the graphics window.
     my ($cx, $cy, $cc);
     $cx = $cy = 0;
     pgband(0, 0, 0, 0, $cx, $cy, $cc);
     if($cc =~ /[qQ]/) {
-	exit 0;			# Finished.
+	return 2;		# Finished.
+    } elsif($cc =~ /[pP]/) {	# B&W hardcopy.
+	return 3;
+    } elsif($cc =~ /[cC]/) {	# B&W hardcopy.
+	return 4;
     } elsif($cc =~ /[zZdD]/) {	# Zoom.
 	my ($cx1, $cy1, $cc1) = (0, 0, 0);
 	pgband(2,0,$cx,$cy,$cx1,$cy1,$cc1);
@@ -478,6 +484,19 @@ sub plot_instrument {
     return 0;			# Default: do not repeat this neutron.
 }
 
+sub get_device {
+    my ($what) = @_;
+    my $dev = pgopen($what);
+    return $dev if $dev < 0;
+    if($multi_view) {
+	# We use a 2x2 display format to view the instrument from three angles.
+	pgsubp(2, 2);
+    } else {
+	# We use a 1x1 display for detail.
+	pgsubp(1, 1);
+    }
+    return $dev;
+}
 
 
 # Test the code.
@@ -505,13 +524,14 @@ for(;;) {
     }
 }
 
-if($multi_view) {
-    # We use a 2x2 display format to view the instrument from three angles.
-    pgbegin(0, "/xserv", 2, 2);
-} else {
-    # We use a 1x1 display for detail.
-    pgbegin(0, "/xserv", 1, 1);
+my $pg_devname = "/xserv";
+my $global_device = get_device($pg_devname);
+if($global_device < 0) {
+    print STDERR "Failed to open PGPLOT device $pg_devname\n";
+    exit 1;
 }
+my $seq = "";			# Sequence number for multiple hardcopy
+
 pgask(0);
 
 my ($numcomp, %neutron, %instr);
@@ -531,10 +551,27 @@ while(!eof(IN)) {
     %neutron = read_neutron(IN);
     next if @{$neutron{'comp'}} <= $inspect_pos;
 
-    while(plot_instrument(\%instr, \%neutron))
-    { }
+    my $ret;
+    do {
+	$ret = plot_instrument(0, \%instr, \%neutron);
+	if($ret == 3 || $ret == 4) {
+	    my $type = $ret == 3 ? "ps" : "cps";
+	    my $tmp_pg_devname = "mcdisplay$seq.ps/$type";
+	    my $tmpdev = get_device($tmp_pg_devname);
+	    if($tmpdev < 0) {
+		print STDERR "Warning: could not open PGPLOT output \"$tmp_pg_devname\" for hardcopy output\n";
+	    } else {
+		plot_instrument(1, \%instr, \%neutron);
+		print "Wrote \"$tmp_pg_devname\"\n";
+		++$seq;
+	    }
+	    pgclos;
+	    pgslct($global_device);
+	}
+    } while($ret != 0 && $ret != 2);
+    last if $ret == 2;
 }
 
 close(IN);
 
-pgend;
+pgclos;
