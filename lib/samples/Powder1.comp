@@ -6,8 +6,8 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.9 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.10 $
+* Origin: McStas 1.5
 *
 * General powder sample with a single scattering vector.
 *
@@ -52,7 +52,6 @@ SETTING PARAMETERS (d_phi0, radius, h, pack, Vc, sigma_a, j, q, F2, DW,
 		    target_x, target_y, target_z)
 OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   double my_s_v2, my_a_v, q_v;
