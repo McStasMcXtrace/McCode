@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann 
 * Date: March 2001
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -83,7 +83,7 @@ TRACE
   t=0;
   z=0;
  
-  randvec_target_rect(&xf, &yf, &rf, &w_focus, 
+  randvec_target_rect(&xf, &yf, &r, &w_focus, 
         0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
   
   dx = xf;
