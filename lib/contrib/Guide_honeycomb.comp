@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Honeycomb_guide by K. Lefmann (buggy).
@@ -29,7 +29,7 @@
 * For details on the geometry calculation see the description in the McStas
 * reference manual.
 *
-* Example: Guide_honeycomb(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=12, 
+* Example: Guide_honeycomb(w1=0.1, w2=0.1, l=12, 
 *           R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005)
 *
 * %P
@@ -308,85 +308,58 @@ TRACE
   }
   /* check if we are in the box input, else absorb */
   if(dt > 0 && fabs(x) <= w1/2 && fabs(y) <= w1/2)
-  
+  {
+    for(n=0; x>((2*n+1)*(GVars.w1c+d)) ; n++); nv=n;
+    if (n==0) { for(n=0; x<((2*n-1)*(GVars.w1c+d)); n--); nv=n; }
 
-{
+    xhole=2*n*(GVars.w1c+d);
+    if(x-xhole>0)  nup=1;
+    y_min=1.732*(GVars.w1c+d);
 
-
-for(n=0; x>((2*n+1)*(GVars.w1c+d)) ; n++);
-
-nv=n;
-
-if (n==0)
-{for(n=0; x<((2*n-1)*(GVars.w1c+d)); n--);
-nv=n;
-
-}
-
- xhole=2*n*(GVars.w1c+d);
- 
- if(x-xhole>0)  nup=1;
- 
- y_min=1.732*(GVars.w1c+d);
- 
- 
-
-for(m=0;y>((2*m+1)*y_min); m++)
-mv=m;
-
-
-if (m==0)
-{for (m=0; y<((2*m-1)*(y_min)); m--);
-mv=m;
-}
-
- yhole=2*m*1.732*(GVars.w1c+d);
- if(y-yhole>0)  mright=1;
- 
-
-  cn=1.1547*(GVars.w1c+d);
-  inside=(fabs(y-yhole)+0.577351*fabs(x-xhole)-cn);
- 
-if(inside>0)
-{xhole +=nup*(GVars.w1c+d);
- yhole +=mright*(1.732*(GVars.w1c+d));
-}
+    for(m=0;y>((2*m+1)*y_min); m++); mv=m;
+    if (m==0) { for (m=0; y<((2*m-1)*(y_min)); m--); mv=m; }
     
- /*   double w_chnum,h_chnum;*/ /* channel indexes  */
+    yhole=2*m*1.732*(GVars.w1c+d);
+    if(y-yhole>0)  mright=1;
+
+    cn=1.1547*(GVars.w1c+d);
+    inside=(fabs(y-yhole)+0.577351*fabs(x-xhole)-cn);
+    if(inside>0)
+    {
+      xhole +=nup*(GVars.w1c+d);
+      yhole +=mright*(1.732*(GVars.w1c+d));
+    }
+    
+    /*   double w_chnum,h_chnum;*/ /* channel indexes  */
     /* Shift origin to center of channel hit (absorb if hit dividing walls) */
     w_c=xhole/(GVars.w1c+d);
     h_c=yhole/(1.732*(GVars.w1c+d));
     w_chnum=rint(w_c);
     h_chnum=rint(h_c);
 
-   x -=xhole;
-   y -=yhole;
-   w_adj = xhole;
-   h_adj = yhole;
+    x -=xhole;
+    y -=yhole;
+    w_adj = xhole;
+    h_adj = yhole;
     if(fabs(x) > GVars.w1c)
     {
       x += xhole; /* Re-adjust origin */
       y += yhole;
-
       ABSORB;
     }
     if(fabs(x*0.5+y*0.866025) > GVars.w1c)
     {
       x += xhole; /* Re-adjust origin */
       y += yhole;
-
-       ABSORB;
+      ABSORB;
     }
     if(fabs(-x*0.5+y*0.866025) > GVars.w1c)
     {
       x += xhole; /* Re-adjust origin */
       y += yhole;
-
       ABSORB;
     }
 
-
-  
     /* neutron is now in the input window of the guide */
     /* do loops on reflections in the box */
     for(;;)
@@ -462,16 +435,16 @@ MCDISPLAY
 
   for(j = -k/2; j <= k/2; j++)
   {
-    y0 = j*(GVars.w1c+d)*1.732;
-    y01= j*(GVars.w2c+d)*1.732;
-    y1=  y0+(GVars.w1c+d)/1.732;
-    y11= y01+(GVars.w2c+d)/1.732;
-    y2 =y0-(GVars.w1c+d)/1.732; 
-    y21 =y01-(GVars.w2c+d)/1.732; 
-    y3 =y0+(GVars.w1c+d)*1.1547 ;
+    y0 =  j*(GVars.w1c+d)*1.732;
+    y01=  j*(GVars.w2c+d)*1.732;
+    y1 =y0 +(GVars.w1c+d)/1.732;
+    y11=y01+(GVars.w2c+d)/1.732;
+    y2 =y0 -(GVars.w1c+d)/1.732; 
+    y21=y01-(GVars.w2c+d)/1.732; 
+    y3 =y0 +(GVars.w1c+d)*1.1547;
     y31=y01+(GVars.w2c+d)*1.1547;
-    y4 =y0-(GVars.w1c+d)*1.1547 ;
-    y41 =y01-(GVars.w2c+d)*1.1547;
+    y4 =y0 -(GVars.w1c+d)*1.1547;
+    y41=y01-(GVars.w2c+d)*1.1547;
 
      for(i = -k; i <= k; i++)
 
@@ -485,12 +458,12 @@ MCDISPLAY
 
       {
 
-       x0 =i*(GVars.w1c+d); 
-       x01 =i*(GVars.w2c+d);
-       x1=x0+(GVars.w1c+d);
-       x11 = x01+(GVars.w2c+d);
-       x2 = x0-(GVars.w1c+d);
-       x21 = x01-(GVars.w2c+d);
+       x0 =  i*(GVars.w1c+d); 
+       x01=  i*(GVars.w2c+d);
+       x1 =x0 +(GVars.w1c+d);
+       x11=x01+(GVars.w2c+d);
+       x2 =x0 -(GVars.w1c+d);
+       x21=x01-(GVars.w2c+d);
        
 
        multiline(5,
