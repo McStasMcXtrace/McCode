@@ -1,0 +1,139 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: TOF_cylPSD_monitor
+*
+* %I
+* Written by:  Kim Lefmann
+* Date: October 2000
+* Version: $Release: $
+* Origin: McStas 1.5
+* Modified by: 
+*
+* Cylindrical (2pi) 1D PSD/Time-of-flight monitor.
+*
+* %D
+*
+* A 2 pi cylindrical time-of-flight monitor with a vertical axis. 
+* The monitor records intensity vs. position (angle of the cylinder) and time 
+* 
+* %P
+* INPUT PARAMETERS:
+*
+* radius:   Cylinder radius (m)
+* height:   Cylinder height (m)
+* nchan:    Number of time bins (1)
+* bint:     Length of each time bin (mu-s)
+* nphi:     Number of angular bins (deg)     
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* TOF_N:    Array of neutron counts
+* TOF_p:    Array of neutron weight counts
+* TOF_p2:   Array of second moments
+* 
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT TOF_cylPSD_monitor
+DEFINITION PARAMETERS (nchan, filename, nphi) 
+SETTING PARAMETERS (radius, height, bint)
+OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    int TOF_N[nchan][nphi];
+    double TOF_p[nchan][nphi];
+    double TOF_p2[nchan][nphi];
+    double binphi;
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    for (i=0; i<nchan; i++)
+      for (j=0; j<nphi; j++)
+      {
+        TOF_N[i][j] = 0;
+        TOF_p[i][j] = 0;
+        TOF_p2[i][j] = 0;
+      }
+    binphi=360.0/(double)nphi;
+  
+  %}
+TRACE
+  %{
+    int i,j;
+    double t0,t1,dt,phi;
+
+    if(!cylinder_intersect(&t0, &t1, x,y,z,vx,vy,vz, radius, height)) /* No hit */ 
+      ABSORB;
+    if(t0>0)  /* Neutron hits cylinder from the outside */
+      ABSORB;
+    dt=t1-t0;
+    PROP_DT(dt);
+    if(y>=height/2 || y<= -height/2) 
+      ABSORB;  /* Neutron hits cylinder ends */    
+
+    i = floor(1E6*t/bint);              /* Bin number */
+    if(i >= nchan) i = nchan - 1;
+    if(i < 0)
+    {
+      printf("FATAL ERROR: negative time-of-flight.\n");
+      exit(1);
+    }
+    phi = atan2(x,z);
+    j = floor((double)nphi/2.0 + RAD2DEG*phi/(double)binphi);
+    TOF_N[i][j]++;
+    TOF_p[i][j] += p;
+    TOF_p2[i][j] += p*p;
+   /* printf("Detector hit, E= %g, phi= %g, j= %i, t= %g, i= %i \n",
+      VS2E*(vx*vx+vy*vy+vz*vz), RAD2DEG*phi, j, t, i); */
+  %}
+FINALLY
+  %{
+    DETECTOR_OUT_2D(
+        "Cylindrical Time-of-flight PSD monitor",
+        "Time-of-flight [\\gms]",
+        "Angle [deg]",
+        0.0, nchan*(double)bint, -180, 180, 
+        nchan, nphi,
+        &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
+        filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("y");
+  circle("xz", 0,0,0,radius);
+%}
+
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
