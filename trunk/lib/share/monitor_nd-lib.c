@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.10 2003-04-09 15:49:25 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.11 2003-04-15 15:45:56 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.10  2003/04/09 15:49:25  farhi
+*	corrected bug when no signal and auto limits requested
+*	
 *	Revision 1.9  2003/02/18 09:11:36  farhi
 *	Corrected binary format for lists
 *	
@@ -499,10 +502,17 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) strcat(mc_mn_Vars->Monitor_Label, " (Banana)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX)    strcat(mc_mn_Vars->Monitor_Label, " (Box)");
     if (((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX))
-        && strstr(mc_mn_Vars->option, "outgoing"))
     {
-      mc_mn_Vars->Flag_Shape *= -1;
-      strcat(mc_mn_Vars->Monitor_Label, " [out]");
+      if strstr(mc_mn_Vars->option, "incoming"))
+      {
+        mc_mn_Vars->Flag_Shape = abs(mc_mn_Vars->Flag_Shape);
+        strcat(mc_mn_Vars->Monitor_Label, " [in]");
+      }
+      else /* if strstr(mc_mn_Vars->option, "outgoing")) */
+      {
+        mc_mn_Vars->Flag_Shape = -abs(mc_mn_Vars->Flag_Shape);
+        strcat(mc_mn_Vars->Monitor_Label, " [out]");
+      }
     }
     if (mc_mn_Vars->Flag_UsePreMonitor == 1)
     {
