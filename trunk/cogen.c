@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.2 1997-09-08 11:15:19 kn Exp $
+* 	$Id: cogen.c,v 1.3 1997-10-16 14:25:11 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.2  1997/09/08 11:15:19  kn
+* 	Added some more debugging output.
+*
 * 	Revision 1.1  1997/09/08 10:37:56  kn
 * 	Initial revision
 *
@@ -455,6 +458,7 @@ cogen_init(struct instr_def *instr)
   cout("");
   liter = list_iterate(instr->complist);
   last = NULL;
+  coutf("    %sDEBUG_INSTR()", ID_PRE);
   while((comp = list_next(liter)) != NULL)
   {
     struct comp_inst *relcomp; /* Component relative to. */
@@ -525,10 +529,14 @@ cogen_init(struct instr_def *instr)
 	    ID_PRE, ID_PRE, last->name, ID_PRE, comp->name);
     coutf("    %sposr%s = rot_apply(%srota%s, %stc1);",
 	  ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
+
+    coutf("    %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
+	  ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
     
     last = comp;
   }
   list_iterate_end(liter);
+  coutf("    %sDEBUG_INSTR_END()", ID_PRE);
   cout("  }");
   cout("");
   
@@ -560,8 +568,9 @@ cogen_trace(struct instr_def *instr)
   cout("");
 
   /* Debugging (initial state). */
+  coutf("  %sDEBUG_ENTER()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	"%snlt,%snls1,%snls2, %snlp);",
+	"%snlt,%snls1,%snls2, %snlp)",
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   /* Now the trace code for each component. Proper scope is set up for each
@@ -579,6 +588,7 @@ cogen_trace(struct instr_def *instr)
     List_handle statepars_handle;
 
     coutf("  /* Component %s. */", comp->name);
+    coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
     /* Change of coordinates. */
     coutf("  %scoordschange(%sposr%s, %srotr%s,", ID_PRE, ID_PRE, comp->name,
 	  ID_PRE, comp->name);
@@ -587,7 +597,7 @@ cogen_trace(struct instr_def *instr)
     coutf("    &%snlt, &%snls1, &%snls2);", ID_PRE, ID_PRE, ID_PRE);
     /* Debugging (entry into component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	  "%snlt,%snls1,%snls2, %snlp);",
+	  "%snlt,%snls1,%snls2, %snlp)",
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     /* Trace code. */
@@ -617,7 +627,7 @@ cogen_trace(struct instr_def *instr)
     }
     /* Debugging (exit from component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	  "%snlt,%snls1,%snls2, %snlp);",
+	  "%snlt,%snls1,%snls2, %snlp)",
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
 	  ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     cout("");
@@ -625,15 +635,16 @@ cogen_trace(struct instr_def *instr)
   }
   list_iterate_end(liter);
   /* Debugging (final state). */
+  coutf("  %sDEBUG_LEAVE()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-	"%snlt,%snls1,%snls2, %snlp);",
+	"%snlt,%snls1,%snls2, %snlp)",
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
 
   /* Copy back neutron state to global variables. */
   /* ToDo: Currently, this will be in the local coordinate system of the last
-     component - should be transformed back into the glocal system. */
+     component - should be transformed back into the global system. */
   cout("  /* Copy neutron state to global variables. */");
   coutf("  %snx = %snlx;", ID_PRE, ID_PRE);
   coutf("  %sny = %snly;", ID_PRE, ID_PRE);
