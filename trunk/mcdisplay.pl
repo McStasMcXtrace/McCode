@@ -338,7 +338,7 @@ sub plot_instrument {
     pgsci(1);
     pgsch(1.4);
     pgenv($xmin, $xmax, $zmin, $zmax, 1, 0);
-    pglab("X Axis", "Z Axis", "X-Z view");
+    pglab("X Axis [m]", "Z Axis [m]", "X-Z view");
     show_comp_names($rinstr);
     pgsch(1.4);
     plot_components($instr{'x'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'},
@@ -350,7 +350,7 @@ sub plot_instrument {
 	pgsci(1);
 	pgsch(1.4);
 	pgenv($ymin, $ymax, $zmin, $zmax, 1, 0);
-	pglab("Y Axis", "Z Axis", "Y-Z view");
+	pglab("Y Axis [m]", "Z Axis [m]", "Y-Z view");
 	plot_components($instr{'y'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'},
 			'Y', 'Z');
 	plot_neutron($neutron{'y'}, $neutron{'z'}, $neutron{'vy'}, $neutron{'vz'});
@@ -359,7 +359,7 @@ sub plot_instrument {
 	pgsci(1);
 	pgsch(1.4);
 	pgenv($xmin, $xmax, $ymin, $ymax, 1, 0);
-	pglab("X Axis", "Y Axis", "X-Y view");
+	pglab("X Axis [m]", "Y Axis [m]", "X-Y view");
 	plot_components($instr{'x'}, $instr{'y'}, $instr{'ori'}, $instr{'dis'},
 			'X', 'Y');
 	plot_neutron($neutron{'x'}, $neutron{'y'}, $neutron{'vx'}, $neutron{'vy'});
