@@ -1,11 +1,12 @@
 DEFINE COMPONENT Source_adapt
-DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE, NUM, alpha, beta)
+DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE, N_E, N_xpos, N_xdiv, alpha, beta)
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (hdiv, vdiv, p_in, y_0, C, r_0)
+OUTPUT PARAMETERS (hdiv, vdiv, p_in, y_0, C, r_0, NUM)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
 #include "alg.h"
+#define NUM (N_E*N_xpos*N_xdiv)
  double hdiv,vdiv;
  double p_in;
  struct adapt_tree *atree;
@@ -47,54 +48,59 @@ INITIALIZE
 %}
 TRACE
 %{
- double theta0,phi0,chi,theta,phi,E,v,r;
- double new_v;
+  double thmin,thmax,phmin,phmax,theta,phi,E,v,r;
+  double new_v;
+  int i_E, i_xpos, I_xdiv;
 
- p=p_in;
- z=0;
-
- chi=2*PI*rand01();                          /* Choose point on source */
- r=sqrt(rand01())*radius;                    /* with uniform distribution. */
- x=r*cos(chi);
- y=r*sin(chi);
-
- theta0= -atan(x/dist);              /* Angles to aim at target centre */
- phi0= -atan(y/dist);
-
- theta=theta0+hdiv*randpm1();        /* Small angle approx. */
- phi=phi0+vdiv*randpm1();
-
- r = rand01();
- aindex = adapt_tree_search(atree, atree->total*r);
- if(aindex >= NUM)
- {
-   fprintf(stderr, "Hm, aindex is %d, NUM is %d, r is %g, atree->total is %g\n",
-	   aindex, (int)NUM, r, atree->total);
-   aindex = NUM - 1;
- }
- E = E0 - dE + (aindex + rand01())*(2.0*dE/(double)NUM);
- a_factor = y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
- count++;
- p /= atree->v[aindex]/(atree->total/(double)NUM);
- p *= C*a_factor;
-
- if(a_n[aindex] > 0)
-   a_total_psi -= a_psi[aindex]/(a_n[aindex]*(a_n[aindex] + 1));
- a_n[aindex]++;
- /* First adjust assuming absorbtion. */
- if(a_total_psi != 0)
- {
-   new_v = (1-beta)*a_factor*a_psi[aindex]/(a_n[aindex]*a_total_psi) +
-     beta/a_num;
-   adapt_tree_add(atree, aindex, new_v - atree->v[aindex]);
- }
-
- v=sqrt(E)*SE2V;
-
- vz=v*cos(phi)*cos(theta);
- vy=v*sin(phi);
- vx=v*cos(phi)*sin(theta);
- a_pi = p;
+  /* Randomly select a bin in the current distribution */
+  r = rand01();
+  aindex = adapt_tree_search(atree, atree->total*r);
+  if(aindex >= NUM)
+  {
+    fprintf(stderr,
+	    "Hm, aindex is %d, NUM is %d, r is %g, atree->total is %g\n",
+	    aindex, (int)NUM, r, atree->total);
+    aindex = NUM - 1;
+  }
+  /* Now find the bin coordinates. */
+  i_xdiv = aindex % N_xdiv;
+  i_xpos = (aindex / N_xdiv) % N_xpos;
+  i_E = (aindex / N_xdiv) / N_xpos;
+  /* Compute the initial neutron parameters, selecting uniformly randomly
+     within each bin dimension. */
+  x = xmin + (i_xpos + rand01())*((xmax - xmin)/(double)N_xpos);
+  y = ymin + rand01()*(xmax - xmin);
+  z=0;
+  thmin = atan2(-xw/2.0 - x, dist);
+  thmax = atan2( xw/2.0 - x, dist);
+  theta = thmin + (i_xdiv + rand01())*((thmax - thmin)/(double)N_xdiv);
+  phmin = atan2(-yh/2.0 - y, dist);
+  phmax = atan2( yh/2.0 - y, dist);
+  phi = phmin + rand01()*(phmax - phmin);
+  E = E0 - dE + (i_E + rand01())*(2.0*dE/(double)N_E);
+  v = sqrt(E)*SE2V;
+  vy = v*sin(phi);
+  vx = v*cos(phi)*sin(theta);
+  vz = v*cos(phi)*cos(theta);
+  t = 0;
+  /* Adjust neutron weight. */
+  p = p_in;
+  a_factor = y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
+  count++;
+  p /= atree->v[aindex]/(atree->total/(double)NUM);
+  p *= C*a_factor;
+  /* Update distribution, assuming absorbtion. */
+  if(a_n[aindex] > 0)
+    a_total_psi -= a_psi[aindex]/(a_n[aindex]*(a_n[aindex] + 1));
+  a_n[aindex]++;
+  if(a_total_psi != 0)
+  {
+    new_v = (1-beta)*a_factor*a_psi[aindex]/(a_n[aindex]*a_total_psi) +
+      beta/a_num;
+    adapt_tree_add(atree, aindex, new_v - atree->v[aindex]);
+  }
+  /* Remember initial neutron weight. */
+  a_pi = p;
 %}
 
 FINALLY
