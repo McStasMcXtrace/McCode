@@ -11,7 +11,7 @@
 * Written by: Kristian Nielsen
 * Date: 1998
 * Modified by: EF, KL, October 30, 2001. Illumination corrected
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -48,7 +48,7 @@ OUTPUT PARAMETERS (p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
- double p_in;
+ double p_in,pdir;
 %}
 INITIALIZE
 %{
@@ -71,12 +71,12 @@ TRACE
  x=r*cos(chi);
  y=r*sin(chi);
  
- xf = 0.5*xw*randpm1();          /* Choose focusing position uniformly */
- yf = 0.5*yh*randpm1();
- dx = xf-x;
- dy = yf-y;
+ randvec_target_rect(&xf, &yf, &rf, &pdir, 
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
+ dx = xf;
+ dy = yf;
  rf = sqrt(dx*dx+dy*dy+dist*dist);
- p = p_in*xw*yh*dist/(rf*rf*rf);      /* target area * cos(phi)/rf^2 */
+ p = pdir*p_in;
 
  lambda = lambda_0+d_lambda*randpm1();
  v = K2V*(2*PI/lambda);
