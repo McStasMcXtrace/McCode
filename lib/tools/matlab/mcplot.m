@@ -367,7 +367,8 @@ function d=mcplot_plot(d,p)
     if ~isempty(findstr(d.type,'2d'))
       d.x=linspace(l(1),l(2),S(2)); 
       d.y=linspace(l(3),l(4),S(1));
-      h=surface(d.x,d.y,d.data);           
+      h=surface(d.x,d.y,d.data); 
+      shading flat;         
     else
       d.x=linspace(l(1),l(2),max(S));
       h=plot(d.x,d.data);
