@@ -156,7 +156,7 @@ sub html_main_end {
 <HR WIDTH="100%">
 <CENTER>
   [ <A HREF="http://www.ill.fr/tas/mcstas/mcstas_ill.html"><I>McStas</I> at ILL</A>
-  | <A href="http://neutron.risoe.dk/mcstas/"><I>McStas</I> at Ris&oslash;</A> ]
+  | <A href="http://mcstas.risoe.dk/"><I>McStas</I> at Ris&oslash;</A> ]
 </CENTER>
 
 <P><BR>
@@ -462,10 +462,10 @@ for($i = 0; $i < @ARGV; $i++) {
       print "   -m    --manual   Open the McStas manual\n";
       print "   -s    --show     Open the generated help file using the BROWSER env. variable\n";
       print "   -t    --text     For single component, display as text\n";
-      print "   -w    --web      Open the McStas web page http://neutron.risoe.dk/mcstas/\n";
+      print "   -w    --web      Open the McStas web page http://mcstas.risoe.dk/\n";
       print "         --tutorial Open the McStas tutorial from the local McStas library\n";
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-      print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
+      print "DOC:      Please visit http://mcstas.risoe.dk/\n";
       exit;
   } elsif(/^--tools$/i || /^-l$/) {
       print "McStas Tools\n";
@@ -480,7 +480,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "   mcconvert     Matlab <-> Scilab script conversion tool\n";
       print "When used with the -h flag, all tools display a specific help.\n";
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-      print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
+      print "DOC:      Please visit http://mcstas.risoe.dk/\n";
       exit;
   } else {
       $file = $ARGV[$i];
@@ -493,8 +493,8 @@ if ($show_website) {
     die "mcdoc: Set the BROWSER environment variable first\n";
   } else {
     # open the index.html
-    print "mcdoc: Starting $browser http://neutron.risoe.dk/mcstas/\n";
-    system("$browser http://neutron.risoe.dk/mcstas/ \n");
+    print "mcdoc: Starting $browser http://mcstas.risoe.dk/\n";
+    system("$browser http://mcstas.risoe.dk/ \n");
     die "mcdoc: web site done.\n";
   }
 }
@@ -504,8 +504,12 @@ if ($show_manual) {
     die "mcdoc: Set the BROWSER environment variable first\n";
   } else {
     # open the index.html
-    print "mcdoc: Starting $browser $MCSTAS::sys_dir/doc/mcstas-manual.pdf\n";
-    system("$browser $MCSTAS::sys_dir/doc/mcstas-manual.pdf\n");
+    my $manual = "$MCSTAS::sys_dir/doc/mcstas-manual.pdf";
+    if ($Config{'osname'} eq "MSWin32") {
+	$manual =~ s!/!\\!g;
+    }
+    print "mcdoc: Starting $browser $manual\n";
+    system("$browser $manual\n");
     die "mcdoc: manual done.\n";
   }
 }
@@ -515,8 +519,12 @@ if ($show_tutorial) {
     die "mcdoc: Set the BROWSER environment variable first\n";
   } else {
     # open the index.html
-    print "mcdoc: Starting $browser $MCSTAS::sys_dir/doc/tutorial/html/index.html\n";
-    system("$browser $MCSTAS::sys_dir/doc/tutorial/html/index.html\n");
+    my $indexfile = "$MCSTAS::sys_dir/doc/tutorial/html/tutorial.html";
+    if ($Config{'osname'} eq "MSWin32") {
+	$indexfile =~ s!/!\\!g;
+    }
+    print "mcdoc: Starting $browser $indexfile\n";
+    system("$browser $indexfile\n");
     die "mcdoc: tutorial done.\n";
   }
 }
@@ -609,10 +617,10 @@ if ($filehandle) {
 }
 if ($show_website) {
   if ($browser =~ "text") {
-    die "mcdoc: Set the BROWSER environment variable first for <http://neutron.risoe.dk/mcstas/>\n";
+    die "mcdoc: Set the BROWSER environment variable first for <http://mcstas.risoe.dk/>\n";
   } else {
     # open the index.html
-    system("$browser http://neutron.risoe.dk/mcstas/ \n");
+    system("$browser http://mcstas.risoe.dk/ \n");
   }
 }
 
