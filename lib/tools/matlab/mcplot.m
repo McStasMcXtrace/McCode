@@ -205,14 +205,27 @@ function mcplot_menu_action(action, object)
       if length(filename), mcplot_edit_file(filename); end
     case 'view_instr'  % Plot existing .fig if available
       figname = eval('fud.instrument.Source','[]');
-      % Strip trailing .instr suffix
-      idx=findstr(figname,'.instr');
-      if not(isempty(idx))
-	idx=idx(length(idx));
-	figname=figname(1:idx-1);
+      % get the file name without the path and the extension
+      [tmp_path, figname] = fileparts(figname);
+      if ~exist([figname '.fig'],'file')
+        parameters = eval('fud.parameters',[]);
+        if ~isempty(parameters)
+          % scan parameters structure, excluding 'class','parent','name'
+          tmp_parcmd = [ '!mcdisplay -n 100 -pMatlab --save ' figname '.instr ' ];
+          tmp_fields = fieldnames(parameters);
+          for field=1:length(tmp_fields)
+            switch tmp_fields{field}
+            case {'class','parent','name'}
+            otherwise
+              tmp_parcmd = [ tmp_parcmd ' ' tmp_fields{field} '=' num2str(getfield(parameters, tmp_fields{field})) ];
+            end
+          end
+          % launch the mcdisplay process to generate the instr view as a fig file
+          fprintf(1,'Executing:%s\n',tmp_parcmd);
+          eval(tmp_parcmd,'[]');
+        end
       end
-      figname=[figname '.fig'];
-      if exist(figname)==2 openfig(figname,'reuse'); end
+      if exist([figname '.fig'])==2, openfig([figname '.fig'],'reuse'); end
     case 'add_colorbar'  % Add _colorbar
       colorbar;
     case 'del_colorbar'  % Add _colorbar
