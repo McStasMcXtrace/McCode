@@ -22,7 +22,7 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.c,v 1.3 2003-01-21 08:29:48 pkwi Exp $
+* $Id: vitess-lib.c,v 1.4 2003-01-21 08:33:59 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.2 2002/08/28 11:39:00 ef

@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.43 2003-01-21 08:29:47 pkwi Exp $
+* $Id: mcstas-r.c,v 1.44 2003-01-21 08:33:59 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.3 2002/08/28 11:36:37 ef

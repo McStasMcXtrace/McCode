@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen, Kim Lefmann and Emmanuel Farhi
 * Date: Aug 27, 2001
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: McStas release 1.5.1
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
 * Modified by: EF, Sep 18, 2001 ; corrected illumination bug. Add options

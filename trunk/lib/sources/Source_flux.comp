@@ -9,7 +9,7 @@
 * Written by: Kristian Nielsen
 * Date: 1998
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: McStas 1.5.1
 *
 * An old variant of the official <b>Source_flux_lambda</b> component. 
