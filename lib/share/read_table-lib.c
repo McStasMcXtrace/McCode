@@ -21,9 +21,18 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.8 2003-02-11 12:28:46 farhi Exp $
+* $Id: read_table-lib.c,v 1.9 2003-05-20 15:12:33 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.8  2003/02/11 12:28:46  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*	
 *	Revision 1.8  2003/02/06 14:14:41  farhi
 *	Corrected MC_SYS_DIR into MCSTAS definition of default lib location
 *	
@@ -152,7 +161,7 @@
       mc_rt_nelements = mc_rt_columns*mc_rt_rows;
     else mc_rt_nelements = (long)(mc_rt_filesize/mc_rt_sizeofelement);
     if (!mc_rt_nelements || mc_rt_filesize <= *mc_rt_offset) return(0);
-    mc_rt_data    = (double*)malloc(mc_rt_filesize);
+    mc_rt_data    = (double*)malloc(mc_rt_nelements*mc_rt_sizeofelement);
     if (!mc_rt_data) {
       fprintf(stderr,"Error: allocating %d elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
       exit(-1);
