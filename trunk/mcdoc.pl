@@ -5,6 +5,7 @@
 # afterwards.
 
 use Config;
+use Cwd;
 BEGIN {
     if($ENV{"MCSTAS"}) {
       $MCSTAS::sys_dir = $ENV{"MCSTAS"};
@@ -336,7 +337,7 @@ sub add_comp_html {
 sub add_comp_section_html {
     my ($lib, $sec, $header, $filehandle) = @_;
     my $sec_orig = $sec;
-    if ($sec =~ "local") { $sec = "."; $is_forced=1; }  # local components
+    if ($sec =~ "local") { $sec = getcwd(); $is_forced=1; }  # local components
     $sec = "$lib/$sec" unless -d $sec;
     if(opendir(DIR, $sec)) {
         my @comps = readdir(DIR);
