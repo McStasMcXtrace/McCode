@@ -17,29 +17,33 @@
 * Code generation from instrument definition.
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.46  2004/11/30 16:09:56  farhi
+*	Uses SIG_MESSAGE macro defined as strcpy(mcsigmessage...) when signals are used
+*	or ignored when NOSIGNALS
+*
 *	Revision 1.45  2004/11/29 14:30:52  farhi
 *	Defines a component name as instrument name for usage of mcstas-r functions
 *	and macros in FINALLY and SAVE (e.g. DETECTOR_OUT...)
-*	
+*
 *	Revision 1.44  2004/09/10 15:09:56  farhi
 *	Use same macro symbols for mcstas kernel and run-time for code uniformity
-*	
+*
 *	Revision 1.43  2004/09/03 13:43:29  farhi
 *	Removed duplicated Instr:FINALLY code (in SAVE and FINALLY). May cause SEGV.
-*	
+*
 *	Revision 1.42  2003/10/06 14:59:14  farhi
 *	Also insert component index in automatic source comments
-*	
+*
 *	Revision 1.41  2003/09/05 08:59:05  farhi
 *	added INSTRUMENT parameter default value grammar
 *	mcinputtable now has also default values
 *	mcreadpar now uses default values if parameter not given
 *	extended instr_formal parameter struct
 *	extended mcinputtable structure type
-*	
+*
 *	Revision 1.40  2003/08/12 13:32:25  farhi
 *	Add generation date/time in C code header
-*	
+*
 *	Revision 1.39  2003/02/11 12:28:45  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
@@ -48,11 +52,11 @@
 *	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
 *	Progress_bar: precent -> percent parameter
 *	CS: ----------------------------------------------------------------------
-*	
+*
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.46 2004-11-30 16:09:56 farhi Exp $
+* $Id: cogen.c,v 1.47 2005-02-17 15:51:02 farhi Exp $
 *
 *******************************************************************************/
 
@@ -125,6 +129,7 @@
 * ##np
 * ##absorb
 * ##Scattered       Incremented each time a SCATTER is done
+* ##NCounter        Incremented each time a neutron is entering the component
 * ##comp_storein    Positions of neutron entering each comp (loc. coords)
 * ##Group<GROUP>    Flag true when in an active group
 * ##sig_message    Message for the signal handler (debug/trace, sim status)
@@ -287,7 +292,7 @@ embed_file(char *name)
   char buf[4096];
   FILE *f;
   int last;
-  
+
   if (!symtab_lookup(lib_instances, name))
   {
     /* First look in the system directory. */
@@ -384,7 +389,7 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
     else
       coutf("#define %s %sc%s_%s", formal->id, ID_PRE, comp->name, formal->id);
     cogen_comp_scope_setpar(comp, set, infunc, func, data);
-    
+
     if(!infunc)
       coutf("#undef %s", formal->id);
   }
@@ -503,7 +508,7 @@ cogen_decls(struct instr_def *instr)
   struct comp_inst *comp;       /* Component instance. */
   int    index = 0;        /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
   struct group_inst *group;     /* ADD: E. Farhi Sep 24th, 2001 group instances */
-  
+
   /* 1. Function prototypes. */
   coutf("void %sinit(void);", ID_PRE);
   coutf("void %sraytrace(void);", ID_PRE);
@@ -511,7 +516,7 @@ cogen_decls(struct instr_def *instr)
   coutf("void %sfinally(void);", ID_PRE);
   coutf("void %sdisplay(void);", ID_PRE);
   cout("");
-  
+
   if(instr->nxdinfo->any) {
     coutf("/* Init NeXus file support declarations, using the NeXus Dictionary API */");
     cout("#include \"nxdict.h\"");
@@ -525,11 +530,11 @@ cogen_decls(struct instr_def *instr)
   liter = list_iterate(instr->formals);
   while(i_formal = list_next(liter))
   {
-    coutf("%s " ID_PRE "ip%s;", instr_formal_type_names_real[i_formal->type], i_formal->id); 
+    coutf("%s " ID_PRE "ip%s;", instr_formal_type_names_real[i_formal->type], i_formal->id);
   }
   list_iterate_end(liter);
   cout("");
-  
+
   /* 3. Table of instrument parameters. */
   coutf("#define %sNUMIPAR %d", ID_PRE, list_len(instr->formals));
   coutf("int %snumipar = %d;", ID_PRE, list_len(instr->formals));
@@ -542,9 +547,9 @@ cogen_decls(struct instr_def *instr)
       coutf("  \"%s\", &%sip%s, %s, %s, ", i_formal->id, ID_PRE,
           i_formal->id, instr_formal_type_names[i_formal->type],
           exp_tostring(i_formal->default_value));
-    else 
+    else
       coutf("  \"%s\", &%sip%s, %s, \"%s\", ", i_formal->id, ID_PRE, i_formal->id,
-          instr_formal_type_names[i_formal->type],      
+          instr_formal_type_names[i_formal->type],
           i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
   }
   list_iterate_end(liter);
@@ -556,11 +561,11 @@ cogen_decls(struct instr_def *instr)
   cout("/* User declarations from instrument definition. */");
   cogen_instrument_scope(instr, (void (*)(void *))codeblock_out, instr->decls);
   cout("");
-  
+
   /* 5. Declaration of component definition and setting parameters. */
   cout("/* Declarations of component definition and setting parameters. */");
   cout("");
-  
+
   /* ADD: E. Farhi, Sep 20th 2001 */
   /* 6. Table to store neutron states when entering each component */
   cout("/* Neutron state table at each component input (local coords) */");
@@ -572,6 +577,7 @@ cogen_decls(struct instr_def *instr)
   cout("/* Components position table (absolute and relative coords) */");
   coutf("Coords %scomp_posa[%i];", ID_PRE, list_len(instr->complist)+2);
   coutf("Coords %scomp_posr[%i];", ID_PRE, list_len(instr->complist)+2);
+  coutf("MCNUM  %sNCounter[%i];", ID_PRE, list_len(instr->complist)+2);
 
   /* 8. Declaration of group flags */
   cout("/* Flag true when previous component acted on the neutron (SCATTER) */");
@@ -587,16 +593,16 @@ cogen_decls(struct instr_def *instr)
     }
     list_iterate_end(liter);
   }
-  
+
   /* 9. Declaration of component definition/setting parameters */
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
     List_handle liter2;
-    
+
     index++; /* ADD: E. Farhi Sep 20th, 2001 a new comp */
     comp->index = index; /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
-    
+
     if(list_len(comp->def->def_par) > 0)
     {                                /* (The if avoids a redundant comment.) */
       coutf("/* Definition parameters for component '%s' [%i]. */", comp->name, index);
@@ -653,7 +659,7 @@ cogen_decls(struct instr_def *instr)
   }
   list_iterate_end(liter);
   cout("");
-  
+
   /* 12. Neutron state. */
   coutf("MCNUM %snx, %sny, %snz, %snvx, %snvy, %snvz, %snt, "
         "%snsx, %snsy, %snsz, %snp;",
@@ -670,7 +676,7 @@ cogen_decls(struct instr_def *instr)
 
 /* this code generation comes after the 'init' code generation, thus comp
    parameters are known, and can be saved within nxdict_init */
-   
+
 static void
 cogen_nxdict(struct instr_def *instr)
 {
@@ -693,16 +699,16 @@ cogen_init(struct instr_def *instr)
   List_handle liter;
   struct comp_inst *comp, *last;
   char *d2r;
-  
+
   coutf("void %sinit(void) {", ID_PRE);
 
   /* User initializations from instrument definition. */
   cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
                          instr->inits);
-  
+
   /* MOD: E. Farhi Sep 20th, 2001 moved transformation block so that */
   /*                              it can be used in following init block */
-  
+
   /* Compute the necessary vectors and transformation matrices for coordinate
      system changes between components. */
   cout("  /* Computation of coordinate transformations. */");
@@ -723,7 +729,7 @@ cogen_init(struct instr_def *instr)
 
     coutf("    /* Component %s. */", comp->name);
     coutf("    SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
-    
+
     /* Absolute rotation. */
     x = exp_tostring(comp->pos->orientation.x);
     y = exp_tostring(comp->pos->orientation.y);
@@ -809,7 +815,7 @@ cogen_init(struct instr_def *instr)
       coutf("    %sposa%s = coords_add(%sposa%s, %stc2);",
             ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
     }
-    
+
     str_free(z);
     str_free(y);
     str_free(x);
@@ -824,11 +830,12 @@ cogen_init(struct instr_def *instr)
           ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
 
     coutf("    %sDEBUG_COMPONENT(\"%s\", %sposa%s, %srota%s)",
-          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name); 
-          
+          ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE, comp->name);
+
     coutf("    %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
     coutf("    %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-    
+    coutf("    %sNCounter[%i] = 0;", ID_PRE, comp->index);
+
     last = comp;
   }
   list_iterate_end(liter);
@@ -868,7 +875,7 @@ cogen_init(struct instr_def *instr)
     if(list_len(comp->def->set_par) > 0)
       code_reset_source();
     cout("");
-    
+
     /* Users initializations. */
     if(list_len(comp->def->init_code->lines) > 0)
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
@@ -876,19 +883,19 @@ cogen_init(struct instr_def *instr)
     cout("");
   }
   list_iterate_end(liter);
-  
+
   if(instr->nxdinfo->any) {
     coutf("#ifdef NXDICTAPI");
     coutf("  %snxdict_init(); ", ID_PRE);
     coutf("#endif");
   }
-  
+
   /* Output graphics representation of components. */
   coutf("    if(%sdotrace) %sdisplay();", ID_PRE, ID_PRE);
   coutf("    %sDEBUG_INSTR_END()", ID_PRE);
   cout("  }");
   cout("");
-  
+
   cout("}");
   cout("");
 }
@@ -901,7 +908,7 @@ cogen_trace(struct instr_def *instr)
   struct group_inst *group;
   char   is_in_group=0;
   char  *last_group_name;
-  
+
   /* Output the function header. */
   coutf("void %sraytrace(void) {", ID_PRE);
 
@@ -926,7 +933,7 @@ cogen_trace(struct instr_def *instr)
         "%snlt,%snlsx,%snlsy, %snlp)",
         ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
         ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-        
+
   /* ADD: E. Farhi Sep 25th, 2001 Set group flags */
   if (list_len(instr->grouplist) > 0)
   {
@@ -939,7 +946,7 @@ cogen_trace(struct instr_def *instr)
     list_iterate_end(liter);
   }
   coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
-  
+
   /* Now the trace code for each component. Proper scope is set up for each
      component using #define/#undef. */
   liter = list_iterate(instr->complist);
@@ -967,7 +974,7 @@ cogen_trace(struct instr_def *instr)
       coutf("  %scoordschange_polarisation("
             "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
             ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
-    
+
     /* Debugging (entry into component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
           "%snlt,%snlsx,%snlsy, %snlp)",
@@ -1004,7 +1011,8 @@ cogen_trace(struct instr_def *instr)
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     coutf("  %sScattered=0;", ID_PRE);
-    if (comp->group != NULL) 
+    coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
+    if (comp->group != NULL)
     {
       coutf("  if (!%sGroup%s)", ID_PRE, comp->group->name);
       cout("  {");
@@ -1017,7 +1025,7 @@ cogen_trace(struct instr_def *instr)
     if (is_in_group)
     { /* this comp is not in a group, but previous was */
       is_in_group =0;
-      coutf("  /* Leave %s group thus absorb non scattered neutrons */", last_group_name); 
+      coutf("  /* Leave %s group thus absorb non scattered neutrons */", last_group_name);
       coutf("  if (!%sGroup%s) ABSORB;", ID_PRE, last_group_name);
     }
     cogen_comp_scope(comp, 2, (void (*)(void *))codeblock_out_brace,
@@ -1059,7 +1067,7 @@ cogen_trace(struct instr_def *instr)
 
   /* Absorbing neutrons - goto this label to skip remaining components. */
   coutf(" %sabsorbAll:", ID_PRE);
-  
+
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
@@ -1094,7 +1102,7 @@ cogen_save(struct instr_def *instr)
 {
   List_handle liter;             /* For list iteration. */
   struct comp_inst *comp;        /* Component instance. */
-  
+
   /* User SAVE code from component definitions (for each instance). */
   coutf("void %ssave(FILE *handle) {", ID_PRE);
   /* In case the save occurs during simulation (-USR2 not at end), we must close
@@ -1103,7 +1111,7 @@ cogen_save(struct instr_def *instr)
    * data is saved entirely. It is completed during the last siminfo_close
    * of mcraytrace
    */
-  cout("  if (!handle) mcsiminfo_init(NULL);"); 
+  cout("  if (!handle) mcsiminfo_init(NULL);");
   cout("  /* User component SAVE code. */");
   cout("");
   liter = list_iterate(instr->complist);
@@ -1124,7 +1132,7 @@ cogen_save(struct instr_def *instr)
   if(list_len(instr->saves->lines) > 0)
   {
     cout("  /* User SAVE code from instrument definition. */");
-    coutf("  SIG_MESSAGE(\"%s (Save)\");", instr->name); 
+    coutf("  SIG_MESSAGE(\"%s (Save)\");", instr->name);
     cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
                            instr->saves);
     cout("");
@@ -1139,12 +1147,12 @@ cogen_finally(struct instr_def *instr)
 {
   List_handle liter;                /* For list iteration. */
   struct comp_inst *comp;        /* Component instance. */
-  
+
   /* User FINALLY code from component definitions (for each instance). */
   coutf("void %sfinally(void) {", ID_PRE);
   cout("  /* User component FINALLY code. */");
   /* first call SAVE code to save any remaining data */
-  cout("  mcsiminfo_init(NULL);"); 
+  cout("  mcsiminfo_init(NULL);");
   coutf("  %ssave(%ssiminfo_file); /* save data when simulation ends */", ID_PRE, ID_PRE);
   cout("");
   liter = list_iterate(instr->complist);
@@ -1158,6 +1166,7 @@ cogen_finally(struct instr_def *instr)
                        comp->def->finally_code);
       cout("");
     }
+    coutf("    if (!%sNCounter[%i]) fprintf(stderr, \"Warning: No neutron could reach Component[%i] %s\\n\");", ID_PRE, comp->index, comp->index, comp->name);
   }
   list_iterate_end(liter);
 
@@ -1180,7 +1189,7 @@ cogen_mcdisplay(struct instr_def *instr)
 {
   List_handle liter;                /* For list iteration. */
   struct comp_inst *comp;        /* Component instance. */
-  
+
   /* User FINALLY code from component definitions (for each instance). */
   cout("#define magnify mcdis_magnify");
   cout("#define line mcdis_line");
@@ -1235,7 +1244,7 @@ cogen_runtime(struct instr_def *instr)
   sysdir_new  = (char *)mem(2*strlen(sysdir_orig));
   for (i=0; i < strlen(sysdir_orig); i++)
   {
-    if (sysdir_orig[i] == '\\') 
+    if (sysdir_orig[i] == '\\')
     { sysdir_new[j] = '\\'; j++; sysdir_new[j] = '\\'; }
     else sysdir_new[j] = sysdir_orig[i];
     j++;
@@ -1259,7 +1268,7 @@ cogen_runtime(struct instr_def *instr)
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
     fprintf(stderr,"To make instrument %s, compile and link with these libraries\n", instrument_definition->quoted_source);
   }
-  
+
   coutf("#ifdef MC_TRACE_ENABLED");
   coutf("int %straceenabled = 1;", ID_PRE);
   coutf("#else");
@@ -1279,14 +1288,14 @@ cogen_runtime(struct instr_def *instr)
 *******************************************************************************/
 void
 cogen(char *output_name, struct instr_def *instr)
-{ 
+{
   time_t t;
   char date[64];
-  
+
   time(&t);
-  strncpy(date, ctime(&t), 64); 
+  strncpy(date, ctime(&t), 64);
   if (strlen(date)) date[strlen(date)-1] = '\0';
-  
+
   /* Initialize output file. */
   if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
   {
@@ -1301,7 +1310,7 @@ cogen(char *output_name, struct instr_def *instr)
   num_next_output_line = 1;
   if(output_handle == NULL)
     fatal_error("Error opening output file '%s'\n", output_name);
-  
+
   cout("/* Automatically generated file. Do not edit. ");
   cout(" * Format:     ANSI C source code");
   cout(" * Creator:    McStas <http://neutron.risoe.dk>");
