@@ -35,7 +35,7 @@ function [object,count]=mcplot(object, options, id)
 % Origin: ILL
 %
 %   This file is part of the McStas neutron ray-trace simulation package
-%   Copyright (C) 1997-2003, All rights reserved
+%   Copyright (C) 1997-2004, All rights reserved
 %   Risoe National Laborartory, Roskilde, Denmark
 %   Institut Laue Langevin, Grenoble, France
 %

@@ -10,7 +10,7 @@
 # Peter Willendrup, Risoe, 20031205
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2003, All rights reserved
+#   Copyright (C) 1997-2004, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -52,7 +52,7 @@ $quiet = 0;
 # Echo something meaningful to stdout
 print "mcconvert.pl, part of the McStas simulation package\n";
 print "This is free software, licensed under the GPL\n";
-print "Copyright (C) 1997-2003, All rights reserved\n";
+print "Copyright (C) 1997-2004, All rights reserved\n";
 print "Risoe National Laborartory, Roskilde, Denmark\n";
 print "Institut Laue Langevin, Grenoble, France\n\n";
 
