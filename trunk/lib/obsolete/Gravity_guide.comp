@@ -7,10 +7,11 @@
 * %I
 * Written by: KL
 * Date: November 22 2000
-* Version: $Revision: 1.2 $
-* Origin: McStas release
+* Version: $Revision: 1.3 $
+* Origin: McStas 1.4.1
 * Modified by: KL, March 15, 2001
 * Modified by: POA, March 15, 2001; small changes of documentation
+* Modified by: POA, March 16, 2001; protected G
 *
 * Neutron guide with gravity.
 * To do: information about gravity should be included in the kernel.
@@ -46,13 +47,13 @@
 DEFINE COMPONENT Gravity_guide
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc, alpha, m, W)
-OUTPUT PARAMETERS (ww,hh,whalf,hhalf,lwhalf,lhhalf)
+OUTPUT PARAMETERS (ww,hh,whalf,hhalf,lwhalf,lhhalf,G)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE 
 %{
-#define G 9.82
- double ww,hh,whalf,hhalf,lwhalf,lhhalf;
+/* #define G 9.82 */
+ double ww,hh,whalf,hhalf,lwhalf,lhhalf,G;
 %}
 
 INITIALIZE
@@ -60,6 +61,7 @@ INITIALIZE
   ww = .5*(w2 - w1), hh = .5*(h2 - h1);
   whalf = .5*w1, hhalf = .5*h1;
   lwhalf = l*whalf, lhhalf = l*hhalf;
+  G = 9.82;
 %}
 
 TRACE
