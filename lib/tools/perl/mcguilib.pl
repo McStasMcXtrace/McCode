@@ -251,7 +251,7 @@ sub comp_instance_dialog {
 	'ROTATED' => { 'x' => "", 'y' => "", 'z' => "", 'relative' => "" }
     };
     my $dlg = $w->Toplevel(-title => "$comp->{'name'}");
-    $dlg->transient($dlg->Parent->toplevel);
+#    $dlg->transient($dlg->Parent->toplevel);
     $dlg->withdraw;
     # Add labels
     $dlg->Label(-text => "Component definition: $comp->{'name'}",
@@ -277,8 +277,8 @@ sub comp_instance_dialog {
     $entry->pack(-side => 'left');
     $entry->focus;
     my $t = $dlg->Scrolled(qw/ROText -relief sunken -bd 2 -setgrid true
-			   -height 24 -width 80 -scrollbars osoe/);
-    $t->pack;
+			   -height 18 -width 80 -scrollbars osoe/);
+    $t->pack(-expand => 'yes', -fill => 'both');
     $t->tagConfigure('BLUE', -foreground => 'blue');
     $t->tagConfigure('RED', -foreground => 'red');
     $t->insert('end', "PARAMETERS:\n\n", 'RED');
