@@ -2,14 +2,14 @@
 // [object,count]=mcplot(object, options, id)
 //
 // This function displays a McStas simulation result either as many windows
-// or on a single window with subplots. It also returns the McStas simulation 
+// or on a single window with subplots. It also returns the McStas simulation
 // structure. An 'id' may be specified for filtering names within structure.
 //
 // input:
 //  object: one or more simulation name(s) or a single mcstas structure
 //          or a single detector file name
 //          if filename does not exist, a file selector is called.
-//  options may contain keywords 
+//  options may contain keywords
 //    '-overview' to plot all results on the same window
 //    '-plot'   to plot all results in separate windows
 //    '-gif'    to export as a GIF file
@@ -30,7 +30,7 @@
 // Date: 21st, March 2003
 // Release: McStas 1.6
 // Origin: ILL
-// 
+//
 //  This file is part of the McStas neutron ray-trace simulation package
 //  Copyright (C) 1997-2004, All rights reserved
 //  Risoe National Laborartory, Roskilde, Denmark
@@ -48,12 +48,12 @@
 //
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
 // script for definition of colormaps and usefull functions for McStas/McPlot
 
-  
+
 // optional routines required by mcplot ---------------------------------------
 
 function j=jet()
@@ -109,32 +109,32 @@ function win = mcplot_addmenu(use_common_menu)
   if driver() ~= 'Rec' then return; end
   win = xget('window');
   if argn(2) > 1 & MCPLOT.MenuInstalled, return; end
-  
+
   // remove McStas menu (if any)
   delmenu(win,'McStas');
   // creates a local McStas menu for looking at data files, and direct exporting
   menu_installed = 0;
   t = [ 'Select a figure', ...
-        'Open in a separate window', ...      
-        'Open in a separate window (Log scale)', ...      
-        'Edit/_data file', ... 
-        'Edit/_instrument file', ... 
-        'Edit/colormap...', ...               
-        'Edit/preferences...', ...       
+        'Open in a separate window', ...
+        'Open in a separate window (Log scale)', ...
+        'Edit/_data file', ...
+        'Edit/_instrument file', ...
+        'Edit/colormap...', ...
+        'Edit/preferences...', ...
         'View instrument...', ...
         'Reset Top-View', ...
-        'Add/_colorbar', ...  
-        'Add/_text...', ...       
-        'Save as/_GIF', ...           
-        'Save as/EPS (BW)', ...     
-        'Save as/_EPS (Color)', ...   
-        'Save as/Fig (Xfig)', ...    
-        'Save as/PPM', ...    
-        'Save as/Scg (Scilab fig)', ...  
-        'Colormap/_Jet', ...                  
-        'Colormap/_HSV', ...                  
-        'Colormap/Hot (red)', ...            
-        'Colormap/Cool (_blue)', ...          
+        'Add/_colorbar', ...
+        'Add/_text...', ...
+        'Save as/_GIF', ...
+        'Save as/EPS (BW)', ...
+        'Save as/_EPS (Color)', ...
+        'Save as/Fig (Xfig)', ...
+        'Save as/PPM', ...
+        'Save as/Scg (Scilab fig)', ...
+        'Colormap/_Jet', ...
+        'Colormap/_HSV', ...
+        'Colormap/Hot (red)', ...
+        'Colormap/Cool (_blue)', ...
         'Colormap/Gray',...
         'Colormap/_Pink',...
         'Colormap/Inv. Pink',...
@@ -156,7 +156,7 @@ function win = mcplot_addmenu(use_common_menu)
     if havewindow() & tk_on
       // we may use Tk external menu
       MCPLOT.MenuInstalled = 1;
-            
+
       // build-up the Tcl/Tk string for Tk_EvalStr
       tcl_script=['set w .foo',...
                   'catch {destroy .foo}',...
@@ -172,7 +172,7 @@ function win = mcplot_addmenu(use_common_menu)
                   'menu .foo.menu.mcplot.edit',...
                   '.foo.menu.mcplot.m add cascade -label ""Save"" -menu .foo.menu.mcplot.save -underline 0',...
                   'menu .foo.menu.mcplot.save'];
-      
+
       for index=1:size(t,2)
         if length(strindex(t(index),'Colormap')), parent='.foo.menu.mcplot.colorbar';
         elseif length(strindex(t(index),'Save')), parent='.foo.menu.mcplot.save';
@@ -180,7 +180,7 @@ function win = mcplot_addmenu(use_common_menu)
         else parent = '.foo.menu.mcplot.m'; end
         tcl_script = [ tcl_script, ...
           parent+' add command -label ""'+t(index)+'"" -underline 0  -command {ScilabEval ""mcplot_menu_action('+string(index)+')""}'];
-          
+
       end
       tcl_script = [ tcl_script, 'pack .foo.menu.mcplot -side left' ];
       // now send it to Tk
@@ -198,13 +198,13 @@ endfunction // mcplot_addmenu
 function mcplot_menu_action(k, gwin)
 
   global MCPLOT
-  
+
   if argn(2) == 1
     gwin = xget('window');
   end
-   
+
   item = [ 24, 1, 27, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 26, 28, 22, 18];
-  
+
   if argn(2) == 0, k = 1; end
   if MCPLOT.ShiftedItems
     k = k+1;
@@ -215,26 +215,26 @@ function mcplot_menu_action(k, gwin)
     MCPLOT.ShiftedItems = 1;
     k=1;
   end
-  
+
   if item(k) == 26 // scan step
-    if MCPLOT.ScanWindow < 0 
+    if MCPLOT.ScanWindow < 0
       mprintf('The active window '+string(gwin)+' is not a scan result');
     else
       gwin = MCPLOT.ScanWindow;
     end
   end
-  
+
   xset('window', gwin); // raise menu activated window
-  
+
   // extract global data
   ThisFigure = [];
   execstr('ThisFigure = MCPLOT.Figure_'+string(gwin),'errcatch');
   filename = '';
   execstr('filename = ThisFigure.filename','errcatch');
-  
+
   if ~length(ThisFigure), return; end
   fig_names=getfield(1,ThisFigure);
-  
+
   select item(k)
     case 0 then
             mprintf('Invalid menu item\n');
@@ -355,12 +355,12 @@ function mcplot_menu_action(k, gwin)
     case 18 then // Close all
       mprintf('To Exit Scilab, use the ""Exit"" item of the McStas menu.\n');
       if exists('McPlotTempFile')
-        // Because of Win32's way of backgrounding processes, the perl layer 
-        // between McStas and mcplot can not be allowed to remove the 
-        // temporary file (It is gone before Scilab sees it!) Instead, 
-        // McPlotTempFile stores the filename of the temporary 
+        // Because of Win32's way of backgrounding processes, the perl layer
+        // between McStas and mcplot can not be allowed to remove the
+        // temporary file (It is gone before Scilab sees it!) Instead,
+        // McPlotTempFile stores the filename of the temporary
         // scriptfile, which is then removed on Scilab exit.
-        if MSDOS 
+        if MSDOS
           unix_g(strcat(['del /q /f ' McPlotTempFile]));
         else // Probably safe to assume unix here?
           unix_g(strcat(['rm -f ' McPlotTempFile]));
@@ -400,7 +400,7 @@ function mcplot_menu_action(k, gwin)
         w_raise = x_choose(w_titles, 'Select a McPlot window');
       elseif length(w_indexes) == 1, w_raise=1;
       else w_raise=0; end
-      if w_raise > 0, 
+      if w_raise > 0,
         t='Selecting '+w_titles(w_raise);
         xinfo(t); mprintf('%s\n',t);
         xset('window', w_indexes(w_raise));
@@ -429,7 +429,7 @@ function mcplot_menu_action(k, gwin)
           if selection
             disp('mcplot('''+pathname+string(selection-1)+''',''-overview'');');
             mcplot(pathname+string(selection-1),'-overview');
-          end   
+          end
         end
       end // if length(find(fig_names == 'superdata'))
     case 27 then  // duplicate (log scale)
@@ -438,9 +438,9 @@ function mcplot_menu_action(k, gwin)
       // open a new window
       xset('window',max(winsid())+1)
       mcplot('open_mcplot_fileselector','overview');
-    end 
+    end
     if item(k)~= 18, xbasr(); end // update plot
-    
+
     // handle duplicate linear/log cases
     if item(k)==27 | item(k) == 1
       t='Figure '+string(gwin)+' (active): Click on the plot to duplicate/enlarge.';
@@ -458,7 +458,7 @@ function mcplot_menu_action(k, gwin)
       n = (1-n)*(1-arect(3)-arect(4))+arect(3);
       // m=0/1 for left/right of window
       // n=0/1 for bottom/top of window
-      m = m*wrect(3)+wrect(1);  
+      m = m*wrect(3)+wrect(1);
       n = n*wrect(4)+wrect(2);
       // compute m,n of subplot from coordinates
       i = floor(m/wrect(3)); m = round(1/wrect(3));
@@ -485,7 +485,7 @@ function mcplot_menu_action(k, gwin)
         nwin = xget('window'); // new opened window
         // update the MCPLOT global variable
         execstr('MCPLOT.Figure_'+string(nwin)+'.filename = ThisFigure.filename;','errcatch');
-        mcplot_set_global(d, nwin, 0); 
+        mcplot_set_global(d, nwin, 0);
         xclear();
         if MCPLOT.DirectExport ~= 1
           xtape('replayna', nwin, 90, 0);        // top view
@@ -494,7 +494,7 @@ function mcplot_menu_action(k, gwin)
       end
       xinfo(t); mprintf('%s\n',t);
     end
-endfunction  
+endfunction
 
 function mcplot_edit_file(filename)
 // edit a file using either the EDITOR variable, or default editor
@@ -511,13 +511,13 @@ function mcplot_edit_file(filename)
         t = 'McPlot: Editing file '+filename;
         xinfo(t); mprintf('%s\n',t);
         if ~MSDOS, filename=filename+' &'; end
-        unix_g(getenv('EDITOR',def_editor)+' '+filename); 
+        unix_g(getenv('EDITOR',def_editor)+' '+filename);
       end
     end
 endfunction
 
 function mcplot_colorbar(zmin,zmax)
-// adds a colorbar on the current plot left side 
+// adds a colorbar on the current plot left side
 
   if argn(2) == 0 then zmin=0; zmax=10; end
   // get the drawing region size in the active window
@@ -540,7 +540,7 @@ function mcplot_output(form, win, filename)
   if argn(2) <= 1 then win = -1; end
   if argn(2) <= 2 then filename=''; end
   if length(win) == 0 then win = -1; end
-  
+
   filename = mcplot_output_begin(form, filename);
   mcplot_output_end(form, win, filename);
   driver('Rec');  // default output to screen
@@ -553,22 +553,22 @@ function filename = mcplot_output_begin(form, filename)
   if argn(2) <= 1 then filename=''; end
   if length(filename) == 0 then filename='mcstas'; end
   form = convstr(form,"l");
-  
+
   ext = ''; dr = '';
   //    if output is not empty, open driver+xinit(filename)
   if     length(strindex(form,'-ps')),  ext = '.eps';  dr='Pos';
   elseif length(strindex(form,'-psc')), ext = '.eps';  dr='Pos';
   elseif length(strindex(form,'-gif')), ext = '.gif';  dr='GIF';
-  elseif length(strindex(form,'-fig')), ext = '.fig';  dr='Fig'; 
-  elseif length(strindex(form,'-ppm')), ext = '.ppm';  dr='PPM'; 
-  elseif length(strindex(form,'Rec')),  ext = '';      dr='Rec'; 
+  elseif length(strindex(form,'-fig')), ext = '.fig';  dr='Fig';
+  elseif length(strindex(form,'-ppm')), ext = '.ppm';  dr='PPM';
+  elseif length(strindex(form,'Rec')),  ext = '';      dr='Rec';
   elseif length(strindex(form,'-scg')), ext = '.scg';  dr=''; end
   if length(dr), driver(dr); end
-  if length(ext) 
+  if length(ext)
     if ~length(strindex(filename,ext))
       filename=filename+ext;
     end
-    if ext ~= '.scg', 
+    if ext ~= '.scg',
       xinit(filename);
       if dr == 'Pos' & ~length(strindex(form,'psc'))
         gray();
@@ -591,22 +591,22 @@ function mcplot_output_end(form, win, filename)
   execstr('filename = ThisFigure.filename','errcatch');
   if length(filename) == 0 then filename='mcstas'; end
   form = convstr(form,"l");
-  
+
   ext = ''; dr = '';
   //    if output is not empty
-  if     length(strindex(form,'-ps')),  ext = '.eps'; 
-  elseif length(strindex(form,'-psc')), ext = '.eps'; 
-  elseif length(strindex(form,'-gif')), ext = '.gif'; 
-  elseif length(strindex(form,'-fig')), ext = '.fig';  
-  elseif length(strindex(form,'-ppm')), ext = '.ppm';  
+  if     length(strindex(form,'-ps')),  ext = '.eps';
+  elseif length(strindex(form,'-psc')), ext = '.eps';
+  elseif length(strindex(form,'-gif')), ext = '.gif';
+  elseif length(strindex(form,'-fig')), ext = '.fig';
+  elseif length(strindex(form,'-ppm')), ext = '.ppm';
   elseif length(strindex(form,'-scg')), ext = '.scg';  end
-  if length(ext) 
+  if length(ext)
     if ~length(strindex(filename,ext))
       filename=filename+ext;
     end
-    if ext ~= '.scg', 
+    if ext ~= '.scg',
       if MCPLOT.DirectExport ~= 1, xtape('replay',win); end
-      xend(); 
+      xend();
     else xsave(filename);
     end
     if ext == '.eps'
@@ -621,7 +621,7 @@ function mcplot_output_end(form, win, filename)
       end
     end
   end
-  if length(filename) > 0 & length(ext) > 0 then 
+  if length(filename) > 0 & length(ext) > 0 then
     t = 'McPlot: Saved image Fig '+string(win)+' as '+filename+' ('+form+')';
     if ext == '.scg', t = t+'. Load it with scilab> xload(""'+filename+'"")'; end
     xinfo(t); mprintf('%s\n',t);
@@ -679,13 +679,13 @@ endfunction
 function d=mcplot_plot(d,p)
 
   global MCPLOT
-  
+
   // func to plot data
   if ~length(strindex(d.type,'0d')), d=mcplot_load(d); end
   if ~length(d.values), d.values = string(sum(sum(d.data)))+' '+string(sum(sum(d.errors))); end
   if ~length(d.signal), d.signal = 'Min='+string(min(min(d.data)))+';+Max='+string(max(max(d.data)))+';+Mean='+string(mean(mean(d.data))); end
   if ~p, return; end;
-  execstr(['l=[',d.xylimits,'];'],'errcatch'); 
+  execstr(['l=[',d.xylimits,'];'],'errcatch');
   S=size(d.data);
   logscale = 0;
   execstr('logscale=MCPLOT.LogScale','errcatch');
@@ -702,38 +702,38 @@ function d=mcplot_plot(d,p)
       xdel(w); xbasc(w); xset('window',w);
     end
     if length(strindex(d.type,'2d'))
-      d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data; 
-      if logscale == 1 then 
+      d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data;
+      if logscale == 1 then
         minz=1e-10;
         index_p=find(z>0); index_n=find(z<=0);
-        if length(index_p) then 
-          minz=min(z(index_p)); z(index_p) = log10(z(index_p)); 
+        if length(index_p) then
+          minz=min(z(index_p)); z(index_p) = log10(z(index_p));
         end
-        if length(index_n) then 
-          z(index_n) = log10(minz/10); 
+        if length(index_n) then
+          z(index_n) = log10(minz/10);
         end
-      end              
-      fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));                                             
+      end
+      fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));
       xlab=d.xlabel; ylab=d.ylabel; x=d.x; y=d.y;
 
-      if fx>0,fx=round(log10(fx)); x=x/10^fx; xlab=xlab+' [*10^'+string(fx)+']'; end    
-      if fy>0,fy=round(log10(fy)); y=y/10^fy; ylab=ylab+' [*10^'+string(fy)+']'; end    
-      if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end                    
+      if fx>0,fx=round(log10(fx)); x=x/10^fx; xlab=xlab+' [*10^'+string(fx)+']'; end
+      if fy>0,fy=round(log10(fy)); y=y/10^fy; ylab=ylab+' [*10^'+string(fy)+']'; end
+      if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end
       jet();
-      plot3d1(x,y,z',90,0,xlab+'@'+ylab+'@'+d.zlabel);    
+      plot3d1(x,y,z',90,0,xlab+'@'+ylab+'@'+d.zlabel,[-1,2,4]);
       if p == 2, t = t1; end
-      xtitle(t);       
+      xtitle(t);
     elseif length(strindex(d.type,'1d'))
       z = d.data; e = d.errors;
-      if logscale == 1 then 
+      if logscale == 1 then
         minz=0;
         index_p=find(z>0); index_n=find(z<=0);
-        if length(index_p) then 
+        if length(index_p) then
           minz=min(z(index_p)); e(index_p)=e(index_p)./z(index_p);
-          z(index_p) = log10(z(index_p)); 
+          z(index_p) = log10(z(index_p));
         end
-        if length(index_n) then 
-          z(index_n) = log10(minz/10); 
+        if length(index_n) then
+          z(index_n) = log10(minz/10);
           e(index_n) = 0;
         end
       end
@@ -743,14 +743,14 @@ function d=mcplot_plot(d,p)
       xtitle(t,d.xlabel,d.ylabel);
     else
       z = d.data;
-      if logscale == 1 then 
+      if logscale == 1 then
         minz=0;
         index_p=find(z>0); index_n=find(z<=0);
-        if length(index_p) then 
-          minz=min(z(index_p)); z(index_p) = log10(z(index_p)); 
+        if length(index_p) then
+          minz=min(z(index_p)); z(index_p) = log10(z(index_p));
         end
-        if length(index_n) then 
-          z(index_n) = log10(minz/10); 
+        if length(index_n) then
+          z(index_n) = log10(minz/10);
         end
       end
       d.x=linspace(l(1),l(2),max(S));
@@ -760,7 +760,7 @@ function d=mcplot_plot(d,p)
     end
   end
   xname(t1);
-  
+
 endfunction // mcplot_plot
 
 function mcplot_errorbar(x,y,e)
@@ -776,7 +776,7 @@ endfunction // mcplot_errorbar
 
 function mcplot_set_global(s, gwin, p_in)
   global MCPLOT
-  
+
   // each MCPLOT global field is named 'Figure_'+gwin
   // This structure contains as many 'Subplot_'+p fields of class 'data'
   // and fields of class 'instrument' and 'parameters'
@@ -787,11 +787,11 @@ function mcplot_set_global(s, gwin, p_in)
     p_in = p;
   else m=0; n=0; p=p_in; end
   if ~p, p=1; end
-  
+
   if ~length(gwin), gwin = xget('window'); end
   ThisFigure = [];
   // update MCPLOT global variable
-  if (type(MCPLOT) == 16 | type(MCPLOT) == 17) & argn(2) > 1 
+  if (type(MCPLOT) == 16 | type(MCPLOT) == 17) & argn(2) > 1
     tag_names = getfield(1,MCPLOT);
     ThisFigure = 'Figure_'+string(gwin);
     if length(find(tag_names == ThisFigure))
@@ -848,11 +848,11 @@ function mcplot_set_global(s, gwin, p_in)
   elseif s.class == 'superdata'
     ThisFigure.superdata = 0;
     ThisFigure.superdata = s;
-    if MCPLOT.ScanWindow < 0 
+    if MCPLOT.ScanWindow < 0
       MCPLOT.ScanWindow = gwin;
     end
   end // ignore other classes
-  
+
   if m*n, ThisFigure.overview = [m n p]; end
 
   // store Figure McPlot info
@@ -861,28 +861,28 @@ function mcplot_set_global(s, gwin, p_in)
 endfunction // mcplot_set_global
 
 function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
-// scans the structure s recursively and opens a graphic window 
-// for all found 'data' structures having curves/surfaces data. 
+// scans the structure s recursively and opens a graphic window
+// for all found 'data' structures having curves/surfaces data.
 // input: s:      structre where we look for data blocks
 //        action: may be 'count', '-plot' and '-overview'
 //        m,n,p: indexes for subplot windows
 // m may also be used as a string keyword used for searching within McStas
 //  structure fields 'filename','title', 'type'
-  
+
   if argn(2) == 0 then data_count = 0; return; end
   if type(s) ~= 16 & type(s) ~= 17 then data_count = 0; return; end
   tag_names = getfield(1,s);
-  if length(find(tag_names == 'class')) == 0 then 
-    if length(find(tag_names == 'data')), s.class = 'data'; 
-    else 
-      s.class = 'root'; 
-      data_count = 0; 
+  if length(find(tag_names == 'class')) == 0 then
+    if length(find(tag_names == 'data')), s.class = 'data';
+    else
+      s.class = 'root';
+      data_count = 0;
     end
   end
   if argn(2) == 1 then action = ''; end
   if argn(2) == 3 then id = m; end
   if ~length(action), action = '-overview'; end
-  
+
   w=winsid();
   if length(w),w=w($)+1; else w=0; end
   if length(strindex(action,'-overview')) & argn(2) == 3
@@ -892,13 +892,13 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
     m = floor(sqrt(data_count));
     n = ceil(data_count/m);
     if driver() == 'Rec' then xdel(w); end
-    xbasc(w); 
+    xbasc(w);
     if driver() == 'Rec' then xset('window',w); end
     p = 1;
     mcplot_subplot(m,n,p);
     if driver() == 'Rec' then mcplot_addmenu(); end
     data_count = 0;
-  elseif argn(2) == 3 then 
+  elseif argn(2) == 3 then
     m=0; n=0; p=0;
     data_count = p;
   else data_count = p;
@@ -910,7 +910,7 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
     end
     for i=2:max(size(tag_names))   // tag_names(1) is 'struct' (type=17)
       d = getfield(i, s);
-      if type(d) == 16 | type(d) == 17 then 
+      if type(d) == 16 | type(d) == 17 then
         [ndc, d]   = mcplot_scan(d,action,m,n,data_count,id);
         data_count = ndc;
         if length(d) > 0
@@ -926,9 +926,9 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
       end
     end
     if doplot
-      if length(strindex(action,'count')) 
+      if length(strindex(action,'count'))
         s = mcplot_plot(s, 0);
-      elseif length(strindex(action,'-plot')) 
+      elseif length(strindex(action,'-plot'))
         s = mcplot_plot(s, 1);
         mcplot_set_global(s, [], 0);
         mcplot_addmenu();
@@ -937,7 +937,7 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
         s = mcplot_plot(s, 2);
         mcplot_set_global(s, [], [m,n,data_count+1]);
       end
-      data_count = data_count+1; 
+      data_count = data_count+1;
     end
   end // else class == 'data'
 endfunction // mcplot_scan
@@ -947,7 +947,7 @@ function [Dirname, Basename, Ext] = mcplot_fileparts(filename)
 
   // Last occurance of '/' or '\' - defines Dirname...
   if MSDOS then filesep = '\'; else filesep = '/'; end
-  
+
   idx_slash=strindex(filename,filesep);
   idx_slash=idx_slash(length(idx_slash));
 
@@ -960,25 +960,25 @@ function [Dirname, Basename, Ext] = mcplot_fileparts(filename)
   end
 
   // First occurance of '.' after idx_slash
-  idx_dot = length(filecode)+1; 
+  idx_dot = length(filecode)+1;
   Ext="";
   idx_dot=strindex(filename,'.');
   if length(idx_dot)
     idx_dot=idx_dot(find(idx_dot>idx_slash));
     if length(idx_dot)
-      idx_dot=idx_dot(1); 
+      idx_dot=idx_dot(1);
       Ext = part(filename,(idx_dot:length(filecode)));
     end
   end
   Basename=part(filename,((idx_slash+1):(idx_dot-1)));
-  
+
 endfunction // mcplot_fileparts
 
 function mcplot_fig_legend(object,filename, pathname)
 // add legend, update object and global data
   // extract global data
   global MCPLOT
-  
+
   gwin = xget('window');
   fig_names = getfield(1,MCPLOT);
   ThisFigure = 'Figure_'+string(gwin);
@@ -989,13 +989,13 @@ function mcplot_fig_legend(object,filename, pathname)
 
   fig_names=getfield(1,ThisFigure);
   obj_names=getfield(1,object);
-  
+
   source   = ''; execstr('source=ThisFigure.instrument.Source','errcatch');
   if ~length(source), execstr('source=ThisFigure.Source','errcatch'); end
   if ~length(source), source='McStas'; end
   sdate    = ''; execstr('sdate=ThisFigure.Date','errcatch');
-  if ~length(sdate), sdate='unknown'; end 
-  if type(sdate) ~= 10, 
+  if ~length(sdate), sdate='unknown'; end
+  if type(sdate) ~= 10,
     sdate = getdate(sdate);
     sdate = string(sdate(6))+'/'+string(sdate(2))+'/'+string(sdate(1))+' - '+string(sdate(7))+':'+string(sdate(8))+':'+string(sdate(9));
   end
@@ -1047,12 +1047,12 @@ function [object,count]=mcplot(object, options, id)
 // mcplot: plot a McStas simulation result
 //
 // This function displays a McStas simulation result either as many windows
-// or on a single window with subplots. It also returns the McStas simulation 
+// or on a single window with subplots. It also returns the McStas simulation
 // structure. An 'id' may be specified for filtering within structure
 //
 // input:
 //  object: one or more simulation name(s) or a single mcstas structure
-//  options may contain keywords 
+//  options may contain keywords
 //    '-overview' to plot all results on the same window
 //    '-plot'    to plot all results in separate windows
 //    '-gif'     to export as GIF file(s)
@@ -1062,7 +1062,7 @@ function [object,count]=mcplot(object, options, id)
 //    'filename' and 'title'
 
 // parameter check
-global MCPLOT 
+global MCPLOT
 
 if argn(2) == 0, object=''; end
 if argn(2) <= 1, options=''; end
@@ -1083,13 +1083,13 @@ filename = '';
 if MSDOS, filesep = '\';
 else filesep = '/'; end
 
-form = 'Rec'; 
+form = 'Rec';
 //    if output is not empty, open driver+xinit(filename)
 if     length(strindex(options,'-ps')),  form = '-ps' ;
 elseif length(strindex(options,'-psc')), form = '-psc';
-elseif length(strindex(options,'-gif')), form = '-gif'; 
-elseif length(strindex(options,'-fig')), form = '-fig';  
-elseif length(strindex(options,'-ppm')), form = '-ppm'; 
+elseif length(strindex(options,'-gif')), form = '-gif';
+elseif length(strindex(options,'-fig')), form = '-fig';
+elseif length(strindex(options,'-ppm')), form = '-ppm';
 elseif length(strindex(options,'-scg')), form = '-scg'; end
 
 if form ~= 'Rec' then MCPLOT.DirectExport = 1; end
@@ -1110,7 +1110,7 @@ if typeof(object) == 'string' // if object is a string
   object_orig = object;
   is_dir = 1; execstr('is_dir=chdir(object)','errcatch');
   if is_dir == 0  // OK
-    object = object_orig+filesep+'mcstas.sci'; 
+    object = object_orig+filesep+'mcstas.sci';
     chdir(cur_dir);
   else
     object = object_orig;
@@ -1121,7 +1121,7 @@ if typeof(object) == 'string' // if object is a string
       object = xgetfile('*.sci', title='Select a McStas/Scilab simulation file to load');
     else
       mprintf('%s\n','mcplot: Could not open file '+string(object)+' for auto export');
-      return; 
+      return;
     end
     if ~length(object), return; end
     [fid, err] = mopen(object, 'r');
@@ -1137,10 +1137,10 @@ if typeof(object) == 'string' // if object is a string
   [pathname, object, ext]= mcplot_fileparts(object);
   filename = object+ext;
   object = filename;
-  
-  if length(pathname), 
-    cur_dir = pwd(); 
-    chdir(pathname); 
+
+  if length(pathname),
+    cur_dir = pwd();
+    chdir(pathname);
     if part(pathname,length(pathname)) ~= filesep, pathname=pathname+filesep; end
   end
   //    opens filename with exec(filename,-1)
@@ -1191,11 +1191,11 @@ else  // if 's' is a 'struct'
   else
     mcplot_output_begin(form,filename);
   end
-  
+
   //  **  send to mcplot_scan(s, options, id)  *
   [count, object] = mcplot_scan(object, options, id);
   mcplot_fig_legend(object,filename, pathname);
-  
+
   // if output is not empty do not install menu
   if MCPLOT.DirectExport == 0
     // installs a common menu for all figures
