@@ -68,7 +68,10 @@ for j=1:size(INSTRUMENT.name,2)
       eval(['Lines=INSTRUMENT.' component '.K;']);
     else
       Lines=cell(0);
-      eval(['Lines(1)=INSTRUMENT.' component '.K(1);']);
+      eval(['tmp=INSTRUMENT.' component ';']);
+      if isfield(tmp,'K') & not(isempty(tmp.K))
+        eval(['Lines(1)=INSTRUMENT.' component '.K(1);']);
+      end
     end
     % Run through all line pieces of the component
     for k=1:length(Lines)
