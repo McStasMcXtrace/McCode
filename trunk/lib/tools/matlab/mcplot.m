@@ -350,9 +350,9 @@ function d=mcplot_plot(d,p)
       w=figure;
     else w = gcf; end
     if ~isempty(findstr(d.type,'2d'))
-      d.x=linspace(l(1),l(2),S(1)); 
-      d.y=linspace(l(3),l(4),S(2));
-      h=surface(d.x,d.y,d.data');           
+      d.x=linspace(l(1),l(2),S(2)); 
+      d.y=linspace(l(3),l(4),S(1));
+      h=surface(d.x,d.y,d.data);           
     else
       d.x=linspace(l(1),l(2),max(S));
       h=plot(d.x,d.data);
@@ -365,12 +365,13 @@ function d=mcplot_plot(d,p)
       [ 'mcplot(''edit_data'', ''action'', gco);' ]);
     uimenu(hm, 'Label','Select Color', 'Callback', ...
       [ 'mcplot(''set_color'', ''action'', gco);' ]);
-    uimenu(hm, 'Label','Reset Top View', 'Callback', ...
-      [ 'view(0,90);' ]);
+    uimenu(hm, 'Label','Reset View', 'Callback','view(0,90);lighting none;alpha(1);');
+    uimenu(hm, 'Label','Add Light','Callback', 'light;lighting phong;');
+    uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.5);')
     set(h, 'UIContextMenu', hm);
   end
   if p == 2, t = t1; end
-  xlabel(d.xlabel); ylabel(d.ylabel); title(t); 
+  xlabel(d.xlabel); ylabel(d.ylabel); title(t);
   axis tight;
   if p==1, set(gca,'position',[.18,.18,.7,.65]);  end
   set(gcf,'name',t1);grid on;
