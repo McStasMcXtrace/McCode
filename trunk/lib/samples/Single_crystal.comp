@@ -524,7 +524,7 @@ TRACE
     /* Adjust neutron weight (see manual for explanation). */
     p *= l_full*L[i].F2*1e-4*pow(2*PI, 2.5)*
          T[j].det_L*tau_count*exp(-T[j].alpha)/
-         (V0*V0*ki*L[i].sig123);
+         (V0*V0*ki*ki*L[i].sig123);
     vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
     vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
     vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
