@@ -1,8 +1,23 @@
 /*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Prisma2
+*
+* %Identification
+* Written by: Kristian Nielsen and Mark Hagen
+* Date: August 1998.
+* Origin: ISIS/Risoe
+* Release: McStas 1.1
+* Version: 0.1
+* %INSTRUMENT_SITE: ISIS
+*
 * Simple simulation of PRISMA2 with RITA-style analyser backend.
 *
-* Written by Kristian Nielsen and Mark Hagen August 1998.
-*
+* %Description
 * Demonstrates how the standard components from the component library
 * may be easily modified for special purposes; in this case to have
 * the individual analyser blades paint a "color" on the neutrons to
@@ -12,12 +27,26 @@
 * line consists of the time-of-flight in microseconds followed by seven
 * intensities of neutrons from each individual analyser blade.
 *
-* Examples:
+* Example: mcrun prisma2.instr TT=-30
 *
-*   prisma2 --ncount=2e6 TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44
-*   prisma2 --ncount=2e6 TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44
+* %Parameters
+* INPUT PARAMETERS:
+* TT:  (deg) Take-off angle at the sample position, aka A4
+* PHA: (deg) Analyzer group rotation angle, aka A5
+* PHA1:(deg) Analyzer 1 tilt angle
+* PHA2:(deg) Analyzer 2 tilt angle
+* PHA3:(deg) Analyzer 3 tilt angle
+* PHA4:(deg) Analyzer 4 tilt angle
+* PHA5:(deg) Analyzer 5 tilt angle
+* PHA6:(deg) Analyzer 6 tilt angle
+* PHA7:(deg) Analyzer 7 tilt angle
+* TTA: (deg) Take-off angle at the analyzer position, aka A6
 *
-* %INSTRUMENT_SITE: ISIS
+* %Link 
+* The McStas User manual
+* <a href="http://www.isis.rl.ac.uk/excitations/prisma/">PRISMA</a>
+*
+* %End
 *******************************************************************************/
 
 /* Modified from Monochromator.comp to paint a "color" on the neutron
@@ -178,8 +207,8 @@ MCDISPLAY
 END
 
 
-DEFINE INSTRUMENT
-  prisma2(TT,PHA,PHA1,PHA2,PHA3,PHA4,PHA5,PHA6,PHA7,TTA)
+DEFINE INSTRUMENT prisma2(TT=-30,PHA=22,PHA1=-3,PHA2=-2,PHA3=-1,
+                          PHA4=0,PHA5=1,PHA6=2,PHA7=3,TTA=4)
 
 DECLARE
 %{

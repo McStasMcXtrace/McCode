@@ -1,25 +1,44 @@
-DEFINE INSTRUMENT H8_test(Lambda)
-/* The H8 TAS from Brookhaven simulation for McStas. 
- * E. Farhi <farhi@ill.fr> Feb 2001
- * input parameters :
- *     Lambda  : source energy      [Angs]
- * building : mcstas -t h8.instr ; cc -O -o h8.out h8.c -lm
- * execute  : mcrun h8.instr -n 1e6 Lambda=2.359 
- * display  : mcdisplay h8.out Lambda=2.359 
- *
- * Emmanuel FARHI, <farhi@ill.fr>. CS-group (c) ILL. Oct 2000
- *
- * %INSTRUMENT_SITE: Brookhaven
- */ 
- 
- /* 
-    time h8.out -n 1e Lambda=2.359
-    158.267u 0.160s 2:43.84 96.6% 0+23k 50+87io 0pf+0w
-    720 events on final det
-    
-    mcstas -t h8.instr
-    cc -fast -o h8.out h8.c -lm
-    */
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: H8_test
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 1st Feb 2001.
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Release: McStas 1.6
+* Version: 0.1
+* %INSTRUMENT_SITE: Brookhaven
+*
+* The former thermal H8 triple-axis spectrometer from Brookhaven reactor 
+*
+* %Description
+* This instrument is a simple model of the thermal H8 triple-axis spectrometer
+* from former Brookhaven reactor. It is directly illuminated by the moderator, 
+* and has flat monochromator and analyzer. Sample is a vanadium cylinder.
+* Such an instrument was used for the Monte Carlo neutron simulation package
+* cross comparison related in paper "A Model Instrument for Monte Carlo Code
+* Comparisons", Neutron News 13 (No. 4), 24-29 (2002).
+*
+* Example: mcrun h8_test.instr Lambda=2.36
+*
+* %Parameters
+* INPUT PARAMETERS:
+* Lambda  : source energy      [Angs]
+*
+* %Link 
+* Neutron News 13 (No. 4), 24-29 (2002).
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT H8_test(Lambda=2.36)
+
 DECLARE
 %{
   #define VERSION "0.01"

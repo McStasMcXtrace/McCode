@@ -1,25 +1,3 @@
-# Library of McStas runtime perl functions
-#
-#   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2003, All rights reserved
-#   Risoe National Laborartory, Roskilde, Denmark
-#   Institut Laue Langevin, Grenoble, France
-#
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; either version 2 of the License, or
-#   (at your option) any later version.
-#
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-
 use Config;
 require "mcstas_config.perl";
 # Check if MCSTAS_FORMAT env var is set. If so, set 
@@ -132,30 +110,19 @@ sub read_instrument_info {
 }
 
 sub get_sim_info {
-    my @ARGS = @_;
-    my $simprog = $ARGS[0];
-    my $arguments = 0;
-    my $j;
-    if (@ARGS>1) {
-	for ($j=1, $j<@ARGS, $j++) {
-	    $arguments = "$arguments $@ARGS[$j]";
-	}
-    }
+    my ($simprog) = @_;
     # Needs quoting if this is Win32...
     my $cmdstring;
     if ($Config{'osname'} eq 'MSWin32') {
-      $simprog = Win32::GetShortPathName($simprog);
+      $cmdstring="\"$simprog -i\" ";
+    } else {
+      $cmdstring="$simprog -i";
     }
-    $cmdstring="$simprog -i $arguments";
-    
     use FileHandle;
     my $h = new FileHandle;
     open $h, "$cmdstring |" or die "mcrun: Could not run simulation.";
     my $inf = read_instrument_info($h);
-    my $sinf;
-    if (defined(&read_simulation_info)) { $sinf = read_simulation_info($h); }
     close $h;
-    if (defined(&read_simulation_info)) { $inf->{'Params'} = $sinf->{'Params'}; }
     return $inf;
 }
 
@@ -393,8 +360,11 @@ sub parse_header {
     $d->{'description'} = undef;
     $d->{'parhelp'} = { };
     $d->{'links'} = [ ];
+    $d->{'site'}="";
     while(<$f>) {
-        if(/\%I[a-z]*/i) {
+        if(/\%INSTRUMENT_SITE:(.*)$/i) {
+            $d->{'site'}=$1;
+        } elsif(/\%I[a-z]*/i) {
             $where = "identification";
         } elsif(/\%D[a-z]*/i) {
             $where = "description";
@@ -499,51 +469,69 @@ sub parse_header {
 sub get_comp_info {
     my ($name, $d) = @_;
     my $file = new FileHandle;
-    my ($cname, $decl, $init, $trace, $finally, $disp);
+    my ($cname, $decl, $init, $trace, $finally, $disp, $typ);
     my (@dpar, @spar, @ipar, @opar);
     open($file, $name)  || die "mcrun: Could not open file $name\n";
     local $/ = undef;                # Read the whole file in one go.
     my $s = <$file>;
     close($file);
-    if($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i) {
+    $typ = "Component";
+    @opar = (); @dpar = (); @spar = ();
+    if ($s =~ m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]+)\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]*)\)!i) {
         $cname = $1;
-    } else {
-        $cname = "<Unknown>";
-    }
-    @dpar = ();
-    if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i) {
-        foreach (split(",", $1)) {
-            if(/^\s*([a-zA-Z0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
-                push @dpar, $1;
-                $d->{'parhelp'}{$1}{'default'} = $2;
-            } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
-                push @dpar, $1;
-            } else {
-                print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname.\n";
-            }
-        }
-    }
-    @spar = ();
-    if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i) {
-        foreach (split(",", $1)) {
+        $typ   = "Instrument";
+        foreach (split(",", $2)) {
             if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
                 push @spar, $1;
                 $d->{'parhelp'}{$1}{'default'} = $2;
             } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                 push @spar, $1;
             } else {
-                print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname.\n";
+                print STDERR "Warning: Unrecognized PARAMETER in instrument $cname.\n";
             }
         }
-    }
-    @ipar = (@dpar, @spar);
-    if($s =~ /OUTPUT\s+PARAMETERS\s*\(([a-zA-Z0-9_, \t\r\n]+)\)/i) {
-        @opar = split (/\s*,\s*/, $1);
+        if ($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i) 
+        { push @opar, "$1"; $d->{'parhelp'}{$1}{'default'} = "This instrument contains embedded components"; }
+    } elsif ($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i) {
+        $cname = $1; 
+        if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i && $typ ne "Instrument") {
+            foreach (split(",", $1)) {
+                if(/^\s*([a-zA-Z0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
+                    push @dpar, $1;
+                    $d->{'parhelp'}{$1}{'default'} = $2;
+                } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
+                    push @dpar, $1;
+                } else {
+                    print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname.\n";
+                }
+            }
+        }
+        if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i && $typ ne "Instrument") {
+            foreach (split(",", $1)) {
+                if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
+                    push @spar, $1;
+                    $d->{'parhelp'}{$1}{'default'} = $2;
+                } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
+                    push @spar, $1;
+                } else {
+                    print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname.\n";
+                }
+            }
+        }
+        if($s =~ /OUTPUT\s+PARAMETERS\s*\(([a-zA-Z0-9_, \t\r\n]+)\)/i && $typ ne "Instrument") {
+            @opar = split (/\s*,\s*/, $1);
+        }
     } else {
-        @opar = ();
+        $cname = "<Unknown>";
     }
+    
+    @ipar = (@dpar, @spar);
+    
     # DECLARE, INITIALIZE, ... blocks will have to wait for the real parser.
     $d->{'name'} = $cname;
+    $d->{'type'} = $typ;
+    if ($typ eq "Component") { $d->{'ext'} = "comp"; } 
+    else { $d->{'ext'} = "instr"; }
     $d->{'inputpar'} = \@ipar;
     $d->{'definitionpar'} = \@dpar;
     $d->{'settingpar'} = \@spar;

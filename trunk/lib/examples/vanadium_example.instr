@@ -1,5 +1,38 @@
-DEFINE INSTRUMENT test_v_sample(ROT)
-/* %INSTRUMENT_SITE: Other */
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: vanadium_example
+*
+* %Identification
+* Written by: KN and KL
+* Date: 1998
+* Origin: Risoe
+* Release: McStas 1.1
+* Version: 0.1
+* %INSTRUMENT_SITE: Other
+*
+* A test instrument using a vanadium cylinder 
+*
+* %Description
+* This instrument shows the vanadium sample scattering anisotropy.
+* This is an effect of attenuation of the beam in the cylindrical sample.
+*
+* Example: mcrun vanadium_example.instr ROT=0
+*
+* %Parameters
+* INPUT PARAMETERS:
+* ROT: (deg) Rotation angle of the PSD monitor
+*
+* %Link 
+* The McStas User manual
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT vanadium_example(ROT=0)
 
 DECLARE
 %{
