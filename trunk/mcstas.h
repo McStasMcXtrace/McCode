@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.16 1998-11-26 08:46:10 kn Exp $
+* 	$Id: mcstas.h,v 1.17 1999-01-28 07:56:48 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.16  1998/11/26 08:46:10  kn
+* 	Implement simple memory pool functionality.
+*
 * 	Revision 1.15  1998/11/13 07:32:50  kn
 * 	Added str_quote() prototype.
 * 	Win32 port.
@@ -399,6 +402,7 @@ struct comp_def
     struct code_block *init_code; /* Initializeation code. */
     struct code_block *trace_code; /* Ray-trace simulation code. */
     struct code_block *finally_code; /* Code for simulation end. */
+    struct code_block *mcdisplay_code; /* Code for drawing components. */
   };
 
 
