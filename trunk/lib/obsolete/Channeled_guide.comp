@@ -1,6 +1,46 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Channeled_guide.
+*
+* Written by: KN, 1999
+*
+* Models a rectangular guide tube centered on the Z axis. The entrance lies
+* in the X-Y plane.
+* The guide may be tapered, and may have vertical subdivisions (used for
+* bender devices).
+*
+* INPUT PARAMETERS:
+*
+* w1:      (m)    Width at the guide entry
+* h1:      (m)    Height at the guide entry
+* w2:      (m)    Width at the guide exit
+* h2:      (m)    Height at the guide exit
+* l:       (m)    Length of guide
+* d:       (m)    Thickness of subdividing walls
+* k:       (1)    Number of channels in the guide (>= 1)
+* R0:      (1)    Low-angle reflectivity
+* Qcx:     (AA-1) Critical scattering vector for left and right vertical
+*                 mirrors in each channel
+* Qcy:     (AA-1) Critical scattering vector for top and bottom mirrors
+* alphax:  (AA)   Slope of reflectivity for left and right vertical
+*                 mirrors in each channel
+* alphay:  (AA)   Slope of reflectivity for top and bottom mirrors
+* mx:      (1)    m-value of material for left and right vertical mirrors
+*                 in each channel. Zero means completely absorbing.
+* my:      (1)    m-value of material for top and bottom mirrors. Zero
+*                 means completely absorbing.
+* W:       (AA-1) Width of supermirror cut-off for all mirrors
+*
+* Example values: mx=4 my=2 Qcx=Qcy=0.02 W=1/300 alphax=alphay=6.49 R0=1
+*******************************************************************************/
+
 DEFINE COMPONENT Channeled_guide
 DEFINITION PARAMETERS (w1, h1, w2, h2, d, k, l,
-		       R0, Qcx,  Qcy, alphax, alphay, mx, my, W)
+                       R0, Qcx,  Qcy, alphax, alphay, mx, my, W)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -35,7 +75,7 @@ TRACE
   double q;                                     /* Q [1/AA] of reflection */
   double vlen2,nlen2;                           /* Vector lengths squared */
   double edge;
-  double hadj;			                /* Channel displacement */
+  double hadj;                                  /* Channel displacement */
 
   /* Propagate neutron to guide entrance. */
   PROP_Z0;
@@ -134,19 +174,19 @@ TRACE
         if(arg < 10)
           p *= .5*(1-tanh(arg))*(1-alphax*(q-Qcx));
         else
-	{
-	  x += hadj; /* Re-adjust origin */
+        {
+          x += hadj; /* Re-adjust origin */
           ABSORB;                               /* Cutoff ~ 1E-10 */
-	}
+        }
       } else {
         double arg = (q - my*Qcy)/W;
         if(arg < 10)
           p *= .5*(1-tanh(arg))*(1-alphay*(q-Qcy));
         else
-	{
-	  x += hadj; /* Re-adjust origin */
+        {
+          x += hadj; /* Re-adjust origin */
           ABSORB;                               /* Cutoff ~ 1E-10 */
-	}
+        }
       }
     }
     p *= R0;
@@ -164,17 +204,17 @@ MCDISPLAY
   for(i = 0; i < k; i++)
   {
     multiline(5,
-	      i*w1c - w1/2.0, -h1/2.0, 0.0,
-	      i*w2c - w2/2.0, -h2/2.0, (double)l,
-	      i*w2c - w2/2.0,  h2/2.0, (double)l,
-	      i*w1c - w1/2.0,  h1/2.0, 0.0,
-	      i*w1c - w1/2.0, -h1/2.0, 0.0);
+              i*w1c - w1/2.0, -h1/2.0, 0.0,
+              i*w2c - w2/2.0, -h2/2.0, (double)l,
+              i*w2c - w2/2.0,  h2/2.0, (double)l,
+              i*w1c - w1/2.0,  h1/2.0, 0.0,
+              i*w1c - w1/2.0, -h1/2.0, 0.0);
     multiline(5,
-	      (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0,
-	      (i+1)*w2c - d - w2/2.0, -h2/2.0, (double)l,
-	      (i+1)*w2c - d - w2/2.0,  h2/2.0, (double)l,
-	      (i+1)*w1c - d - w1/2.0,  h1/2.0, 0.0,
-	      (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0);
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0,
+              (i+1)*w2c - d - w2/2.0, -h2/2.0, (double)l,
+              (i+1)*w2c - d - w2/2.0,  h2/2.0, (double)l,
+              (i+1)*w1c - d - w1/2.0,  h1/2.0, 0.0,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0);
   }
   line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
   line(-w2/2.0, -h2/2.0, (double)l, w2/2.0, -h2/2.0, (double)l);

@@ -1,3 +1,40 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1977-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Res_sample
+*
+* Written by: KN 1999
+*
+* An inelastic sample with completely uniform scattering in both Q and
+* energy. This sample is used together with the Res_monitor component and
+* (optionally) the mcresplot front-end to compute the resolution function of
+* triple-axis or inverse-geometry time-of-flight instruments.
+*
+* The shape of the sample is either a hollow cylinder or a rectangular box. The
+* hollow cylinder shape is specified with an inner and outer radius. If the
+* outher radius is negative, the shape is instead a box.
+*
+* The scattered neutrons will have directions towards a given sphere and
+* energies betweed E0-dE and E0+dE.
+*
+* INPUT PARAMETERS:
+*       
+* radius_i  : Inner radius of hollow cylinder in (x,z) plane, or width of
+*             box along X (m)
+* radius_o  : Outer radius of hollow cylinder, or negative box depth along Z (m)
+* h         : Height of box or cylinder along Y (m)
+* focus_r   : Radius of sphere containing target. (m)
+* target_x  :
+* target_y  : position of target to focus at (m)
+* target_z  :
+* E0        : Center of scattered energy range
+* dE        : half width of scattered energy range
+*
+*******************************************************************************/
+
 DEFINE COMPONENT Res_sample
 DEFINITION PARAMETERS (radius_i,radius_o,h,focus_r,E0,dE)
 SETTING PARAMETERS (target_x, target_y, target_z)

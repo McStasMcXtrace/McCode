@@ -71,8 +71,8 @@ TRACE
     p *= d_phi0/360.0;
     arg = q_v/(2.0*v);
     if(arg > 1)
-      ABSORB;			/* No bragg scattering possible*/
-    theta = asin(arg);		/* Bragg scattering law */
+      ABSORB;                   /* No bragg scattering possible*/
+    theta = asin(arg);          /* Bragg scattering law */
 
     aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
     aim_y = target_y-y;

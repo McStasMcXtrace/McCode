@@ -85,8 +85,8 @@
 DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS(reflections)
 SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d, mosaic,
-		   ax, ay, az, bx, by, bz, cx, cy, cz
-		   /* , p_transmit /* = 0 ToDo */)
+                   ax, ay, az, bx, by, bz, cx, cy, cz
+                   /* , p_transmit /* = 0 ToDo */)
 OUTPUT PARAMETERS(hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -98,7 +98,7 @@ DECLARE
 /* Compute normal vector to (x,y,z).
    ToDo: Move to McStas kernel. */
 void normal_vec(double *nx, double *ny, double *nz,
-		double x, double y, double z)
+                double x, double y, double z)
 {
   double ax = fabs(x);
   double ay = fabs(y);
@@ -114,7 +114,7 @@ void normal_vec(double *nx, double *ny, double *nz,
   if(ax < ay)
   {
     if(ax < az)
-    {				/* Use X axis */
+    {                           /* Use X axis */
       l = sqrt(z*z + y*y);
       *nx = 0;
       *ny = z/l;
@@ -125,7 +125,7 @@ void normal_vec(double *nx, double *ny, double *nz,
   else
   {
     if(ay < az)
-    {				/* Use Y axis */
+    {                           /* Use Y axis */
       l = sqrt(z*z + x*x);
       *nx = z/l;
       *ny = 0;
@@ -168,9 +168,9 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
 /* If intersection with box dt_in and dt_out is returned */
 /* This function written by Stine Nyborg, 1999. */
 int box_intersect(double *dt_in, double *dt_out,
-		  double x, double y, double z,
-		  double vx, double vy, double vz,
-		  double dx, double dy, double dz)
+                  double x, double y, double z,
+                  double vx, double vy, double vz,
+                  double dx, double dy, double dz)
 {
   double x_in, y_in, z_in, tt, t[6], a, b;
   int i, count, s;
@@ -279,54 +279,54 @@ int box_intersect(double *dt_in, double *dt_out,
 
 struct hkl_info
   {
-    struct hkl_data *list;	/* Reflection array */
-    int count;			/* Number of reflections */
-    struct tau_data *tau_list;	/* Reflections close to Ewald Sphere */
-    double mosaic;		/* Isotropic mosaic (FWHM minutes) */
-    double delta_d_d;		/* Delta-d/d FWHM */
-    double ax,ay,az;		/* First unit cell axis (direct space, AA) */
-    double bx,by,bz;		/* Second unit cell axis */
-    double cx,cy,cz;		/* Third unit cell axis */
-    double asx,asy,asz;		/* First reciprocal lattice axis (1/AA) */
-    double bsx,bsy,bsz;		/* Second reciprocal lattice axis */
-    double csx,csy,csz;		/* Third reciprocal lattice axis */
-    double V0;			/* Unit cell volume (AA**3) */
+    struct hkl_data *list;      /* Reflection array */
+    int count;                  /* Number of reflections */
+    struct tau_data *tau_list;  /* Reflections close to Ewald Sphere */
+    double mosaic;              /* Isotropic mosaic (FWHM minutes) */
+    double delta_d_d;           /* Delta-d/d FWHM */
+    double ax,ay,az;            /* First unit cell axis (direct space, AA) */
+    double bx,by,bz;            /* Second unit cell axis */
+    double cx,cy,cz;            /* Third unit cell axis */
+    double asx,asy,asz;         /* First reciprocal lattice axis (1/AA) */
+    double bsx,bsy,bsz;         /* Second reciprocal lattice axis */
+    double csx,csy,csz;         /* Third reciprocal lattice axis */
+    double V0;                  /* Unit cell volume (AA**3) */
   };
 
 struct hkl_data
   {
-    int h,k,l;			/* Indices for this reflection */
-    double F2;			/* Value of structure factor */
-    double tau_x, tau_y, tau_z;	/* Coordinates in reciprocal space */
-    double tau;			/* Length of (tau_x, tau_y, tau_z) */
-    double u1x, u1y, u1z;	/* First axis of local coordinate system */
-    double u2x, u2y, u2z;	/* Second axis of local coordinate system */
-    double u3x, u3y, u3z;	/* Third axis of local coordinate system */
-    double sig1, sig2, sig3;	/* RMSs of Gauss axis */
-    double sig123;		/* The product sig1*sig2*sig3 */
-    double m1, m2, m3;		/* Diagonal matrix representation of Gauss */
-    double cutoff;		/* Cutoff value for Gaussian tails */
+    int h,k,l;                  /* Indices for this reflection */
+    double F2;                  /* Value of structure factor */
+    double tau_x, tau_y, tau_z; /* Coordinates in reciprocal space */
+    double tau;                 /* Length of (tau_x, tau_y, tau_z) */
+    double u1x, u1y, u1z;       /* First axis of local coordinate system */
+    double u2x, u2y, u2z;       /* Second axis of local coordinate system */
+    double u3x, u3y, u3z;       /* Third axis of local coordinate system */
+    double sig1, sig2, sig3;    /* RMSs of Gauss axis */
+    double sig123;              /* The product sig1*sig2*sig3 */
+    double m1, m2, m3;          /* Diagonal matrix representation of Gauss */
+    double cutoff;              /* Cutoff value for Gaussian tails */
   };
 
 struct tau_data
   {
-    int index;			/* Index into reflection table */
+    int index;                  /* Index into reflection table */
     double refl;
     double F2_contrib;
     double xsect;
     double sigma_1, sigma_2;
     /* The following vectors are in local koordinates. */
-    double kix, kiy, kiz;	/* Initial wave vector */
-    double rho_x, rho_y, rho_z;	/* The vector ki - tau */
-    double rho;			/* Length of rho vector */
-    double ox, oy, oz;		/* Origin of Ewald sphere tangent plane */
-    double nx, ny, nz;		/* Normal vector of Ewald sphere tangent */
-    double b1x, b1y, b1z;	/* Spanning vectors of Ewald sphere tangent */
+    double kix, kiy, kiz;       /* Initial wave vector */
+    double rho_x, rho_y, rho_z; /* The vector ki - tau */
+    double rho;                 /* Length of rho vector */
+    double ox, oy, oz;          /* Origin of Ewald sphere tangent plane */
+    double nx, ny, nz;          /* Normal vector of Ewald sphere tangent */
+    double b1x, b1y, b1z;       /* Spanning vectors of Ewald sphere tangent */
     double b2x, b2y, b2z;
-    double l11, l12, l22;	/* Cholesky decomposition L of 2D Gauss */
-    double det_L;		/* Determinant of L */
-    double y0x, y0y;		/* 2D Gauss center in tangent plane */
-    double alpha;		/* Offset of 2D Gauss center from 3D center */
+    double l11, l12, l22;       /* Cholesky decomposition L of 2D Gauss */
+    double det_L;               /* Determinant of L */
+    double y0x, y0y;            /* 2D Gauss center in tangent plane */
+    double alpha;               /* Offset of 2D Gauss center from 3D center */
   };
 
 struct hkl_data *
@@ -341,7 +341,7 @@ read_hkl_data(char *file, struct hkl_info *info)
   if(!f)
   {
     fprintf(stderr, "Single crystal: Error: file '%s' cannot be opened.\n",
-	    file);
+            file);
     exit(1);
   }
   i = 0;
@@ -350,14 +350,14 @@ read_hkl_data(char *file, struct hkl_info *info)
     double h, k, l, multiplicity, d, ttheta, F2;
     int ret;
     ret = fscanf(f, "%lf %lf %lf %lf %lf %lf %lf\n",
-		 &h, &k, &l, &multiplicity, &d, &ttheta, &F2);
+                 &h, &k, &l, &multiplicity, &d, &ttheta, &F2);
     if(ret == EOF)
       break;
     if(ret != 7)
     {
       fprintf(stderr,
-	      "Single crystal: Error reading from file '%s', line %d\n",
-	      file, i + 1);
+              "Single crystal: Error reading from file '%s', line %d\n",
+              file, i + 1);
       exit(1);
     }
     /* Extend list if not large enough. */
@@ -371,16 +371,16 @@ read_hkl_data(char *file, struct hkl_info *info)
     list[i].tau_y = h*info->asy + k*info->bsy + l*info->csy;
     list[i].tau_z = h*info->asz + k*info->bsz + l*info->csz;
     list[i].tau = sqrt(list[i].tau_x*list[i].tau_x +
-		       list[i].tau_y*list[i].tau_y +
-		       list[i].tau_z*list[i].tau_z);
+                       list[i].tau_y*list[i].tau_y +
+                       list[i].tau_z*list[i].tau_z);
     list[i].u1x = list[i].tau_x/list[i].tau;
     list[i].u1y = list[i].tau_y/list[i].tau;
     list[i].u1z = list[i].tau_z/list[i].tau;
     normal_vec(&list[i].u2x, &list[i].u2y, &list[i].u2z,
-	       list[i].u1x, list[i].u1y, list[i].u1z);
+               list[i].u1x, list[i].u1y, list[i].u1z);
     vec_prod(list[i].u3x, list[i].u3y, list[i].u3z,
-	     list[i].u1x, list[i].u1y, list[i].u1z,
-	     list[i].u2x, list[i].u2y, list[i].u2z);
+             list[i].u1x, list[i].u1y, list[i].u1z,
+             list[i].u2x, list[i].u2y, list[i].u2z);
     list[i].sig1 = FWHM2RMS*info->delta_d_d*list[i].tau;
     list[i].sig2 = FWHM2RMS*list[i].tau*MIN2RAD*info->mosaic;
     list[i].sig3 = FWHM2RMS*list[i].tau*MIN2RAD*info->mosaic;
@@ -391,14 +391,14 @@ read_hkl_data(char *file, struct hkl_info *info)
     /* Set Gauss cutoff to 5 times the maximal sigma. */
     if(list[i].sig1 > list[i].sig2)
       if(list[i].sig1 > list[i].sig3)
-	list[i].cutoff = 5*list[i].sig1;
+        list[i].cutoff = 5*list[i].sig1;
       else
-	list[i].cutoff = 5*list[i].sig3;
+        list[i].cutoff = 5*list[i].sig3;
     else
       if(list[i].sig2 > list[i].sig3)
-	list[i].cutoff = 5*list[i].sig2;
+        list[i].cutoff = 5*list[i].sig2;
       else
-	list[i].cutoff = 5*list[i].sig3;
+        list[i].cutoff = 5*list[i].sig3;
     i++;
   }
   fclose(f);
@@ -452,53 +452,53 @@ INITIALIZE
 %}
 TRACE
 %{
-  double t1, t2;		/* Entry and exit times in sample */
-  double dt;			/* Flight time to next scattering event */
-  struct hkl_data *L;		/* Structure factor list */
-  int i;			/* Index into structure factor list */
-  struct tau_data *T;		/* List of reflections close to Ewald sphere */
-  int j;			/* Index into reflection list */
-  int firstevent;		/* True for the first scattering event only */
-  double kix, kiy, kiz, ki;	/* Initial wave vector [1/AA] */
-  double kfx, kfy, kfz;		/* Final wave vector */
-  double v;			/* Neutron velocity */
-  double tau_max;		/* Max tau allowing reflection at this ki */
-  double rho_x, rho_y, rho_z;	/* the vector ki - tau */
+  double t1, t2;                /* Entry and exit times in sample */
+  double dt;                    /* Flight time to next scattering event */
+  struct hkl_data *L;           /* Structure factor list */
+  int i;                        /* Index into structure factor list */
+  struct tau_data *T;           /* List of reflections close to Ewald sphere */
+  int j;                        /* Index into reflection list */
+  int firstevent;               /* True for the first scattering event only */
+  double kix, kiy, kiz, ki;     /* Initial wave vector [1/AA] */
+  double kfx, kfy, kfz;         /* Final wave vector */
+  double v;                     /* Neutron velocity */
+  double tau_max;               /* Max tau allowing reflection at this ki */
+  double rho_x, rho_y, rho_z;   /* the vector ki - tau */
   double rho;
-  double diff;			/* Deviation from Bragg condition */
-  double ox, oy, oz;		/* Origin of Ewald sphere tangent plane */
-  double b1x, b1y, b1z;		/* First vector spanning tangent plane */
-  double b2x, b2y, b2z;		/* Second vector spanning tangent plane */
-  double n11, n12, n22;		/* 2D Gauss description matrix N */
-  double det_N;			/* Determinant of N */
+  double diff;                  /* Deviation from Bragg condition */
+  double ox, oy, oz;            /* Origin of Ewald sphere tangent plane */
+  double b1x, b1y, b1z;         /* First vector spanning tangent plane */
+  double b2x, b2y, b2z;         /* Second vector spanning tangent plane */
+  double n11, n12, n22;         /* 2D Gauss description matrix N */
+  double det_N;                 /* Determinant of N */
   double inv_n11, inv_n12, inv_n22; /* Inverse of N */
-  double l11, l12, l22;		/* Cholesky decomposition L of 1/2*inv(N) */
-  double det_L;			/* Determinant of L */
-  double Bt_D_O_x, Bt_D_O_y;	/* Temporaries */
-  double y0x, y0y;		/* Center of 2D Gauss in plane coordinates */
-  double d_x, d_y, d_z;		/* Vector deviation from Bragg condition */
-  int tau_count;		/* Number of reflections within cutoff */
-  double V0;			/* Volume of unit cell */
-  double l_full;		/* Neutron path length for transmission */
-  double abs_xsect, abs_xlen;	/* Absorbtion cross section and length */
-  double inc_xsect, inc_xlen;	/* Incoherent cross section and length */
-  double coh_xsect, coh_xlen;	/* Coherent cross section and length */
-  double tot_xsect, tot_xlen;	/* Total cross section and length */
-  double z1, z2, y1, y2;	/* Temporaries to choose kf from 2D Gauss */
-  double adjust,arg, refl;	/* Temporaries */
+  double l11, l12, l22;         /* Cholesky decomposition L of 1/2*inv(N) */
+  double det_L;                 /* Determinant of L */
+  double Bt_D_O_x, Bt_D_O_y;    /* Temporaries */
+  double y0x, y0y;              /* Center of 2D Gauss in plane coordinates */
+  double d_x, d_y, d_z;         /* Vector deviation from Bragg condition */
+  int tau_count;                /* Number of reflections within cutoff */
+  double V0;                    /* Volume of unit cell */
+  double l_full;                /* Neutron path length for transmission */
+  double abs_xsect, abs_xlen;   /* Absorbtion cross section and length */
+  double inc_xsect, inc_xlen;   /* Incoherent cross section and length */
+  double coh_xsect, coh_xlen;   /* Coherent cross section and length */
+  double tot_xsect, tot_xlen;   /* Total cross section and length */
+  double z1, z2, y1, y2;        /* Temporaries to choose kf from 2D Gauss */
+  double adjust,arg, refl;      /* Temporaries */
 
   firstevent = 1;
-  for(;;)			/* Loop over multiple scattering events */
+  for(;;)                       /* Loop over multiple scattering events */
   {
     /* (1). Compute incoming wave vector ki */
     v = sqrt(vx*vx + vy*vy + vz*vz);
     /* Compute intersection between neutron flight path and sample. */
     if(!box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
-		      xwidth, yheight, zthick) || t2 <= 0)
+                      xwidth, yheight, zthick) || t2 <= 0)
       ABSORB;
     if(t1 <= 0)
       fprintf(stderr,
-	      "Single_crystal: Warning: neutron started inside crystal!\n");
+              "Single_crystal: Warning: neutron started inside crystal!\n");
     /* Select a point at which to scatter the neutron. No extinction. */
     dt = randminmax(t1, t2);
     PROP_DT(dt);
@@ -517,7 +517,7 @@ TRACE
     {
       /* Assuming reflections are sorted, stop search when max tau exceeded. */
       if(L[i].tau > tau_max)
-	break;
+        break;
       /* Check if this reciprocal lattice point is close enough to the
          Ewald sphere to make scattering possible. */
       rho_x = kix - L[i].tau_x;
@@ -528,73 +528,73 @@ TRACE
       /* Check if scattering is possible (cutoff of Gaussian tails). */
       if(diff <= L[i].cutoff)
       {
-	/* Store reflection. */
-	T[j].index = i;
-	/* Get ki vector in local coordinates. */
-	T[j].kix = kix*L[i].u1x + kiy*L[i].u1y + kiz*L[i].u1z;
-	T[j].kiy = kix*L[i].u2x + kiy*L[i].u2y + kiz*L[i].u2z;
-	T[j].kiz = kix*L[i].u3x + kiy*L[i].u3y + kiz*L[i].u3z;
-	T[j].rho_x = T[j].kix - L[i].tau;
-	T[j].rho_y = T[j].kiy;
-	T[j].rho_z = T[j].kiz;
-	T[j].rho = rho;
-	/* Compute the tangent plane of the Ewald sphere. */
-	T[j].nx = T[j].rho_x/T[j].rho;
-	T[j].ny = T[j].rho_y/T[j].rho;
-	T[j].nz = T[j].rho_z/T[j].rho;
-	ox = (ki - T[j].rho)*T[j].nx;
-	oy = (ki - T[j].rho)*T[j].ny;
-	oz = (ki - T[j].rho)*T[j].nz;
-	T[j].ox = ox;
-	T[j].oy = oy;
-	T[j].oz = oz;
-	/* Compute unit vectors b1 and b2 that span the tangent plane. */
-	normal_vec(&b1x, &b1y, &b1z, T[j].nx, T[j].ny, T[j].nz);
-	vec_prod(b2x, b2y, b2z, T[j].nx, T[j].ny, T[j].nz, b1x, b1y, b1z);
-	T[j].b1x = b1x;
-	T[j].b1y = b1y;
-	T[j].b1z = b1z;
-	T[j].b2x = b2x;
-	T[j].b2y = b2y;
-	T[j].b2z = b2z;
-	/* Compute the 2D projection of the 3D Gauss of the reflection. */
-	/* The symmetric 2x2 matrix N describing the 2D gauss. */
-	n11 = L[i].m1*b1x*b1x + L[i].m2*b1y*b1y + L[i].m3*b1z*b1z;
-	n12 = L[i].m1*b1x*b2x + L[i].m2*b1y*b2y + L[i].m3*b1z*b2z;
-	n22 = L[i].m1*b2x*b2x + L[i].m2*b2y*b2y + L[i].m3*b2z*b2z;
-	/* The (symmetric) inverse matrix of N. */
-	det_N = n11*n22 - n12*n12;
-	inv_n11 = n22/det_N;
-	inv_n12 = -n12/det_N;
-	inv_n22 = n11/det_N;
-	/* The Cholesky decomposition of 1/2*inv_n (lower triangular L). */
-	l11 = sqrt(inv_n11/2);
-	l12 = inv_n12/(2*l11);
-	l22 = sqrt(inv_n22/2 - l12*l12);
-	T[j].l11 = l11;
-	T[j].l12 = l12;
-	T[j].l22 = l22;
-	det_L = l11*l22;
-	T[j].det_L = det_L;
-	/* The product B^T D o. */
-	Bt_D_O_x = b1x*L[i].m1*ox + b1y*L[i].m2*oy + b1z*L[i].m3*oz;
-	Bt_D_O_y = b2x*L[i].m1*ox + b2y*L[i].m2*oy + b2z*L[i].m3*oz;
-	/* Center of 2D Gauss in plane coordinates. */
-	y0x = -(Bt_D_O_x*inv_n11 + Bt_D_O_y*inv_n12);
-	y0y = -(Bt_D_O_x*inv_n12 + Bt_D_O_y*inv_n22);
-	T[j].y0x = y0x;
-	T[j].y0y = y0y;
-	/* Factor alpha for the distance of the 2D Gauss from the origin. */
-	T[j].alpha = L[i].m1*ox*ox + L[i].m2*oy*oy + L[i].m3*oz*oz -
-	             (y0x*y0x*n11 + y0y*y0y*n22 + 2*y0x*y0y*n12);
-	j++;
+        /* Store reflection. */
+        T[j].index = i;
+        /* Get ki vector in local coordinates. */
+        T[j].kix = kix*L[i].u1x + kiy*L[i].u1y + kiz*L[i].u1z;
+        T[j].kiy = kix*L[i].u2x + kiy*L[i].u2y + kiz*L[i].u2z;
+        T[j].kiz = kix*L[i].u3x + kiy*L[i].u3y + kiz*L[i].u3z;
+        T[j].rho_x = T[j].kix - L[i].tau;
+        T[j].rho_y = T[j].kiy;
+        T[j].rho_z = T[j].kiz;
+        T[j].rho = rho;
+        /* Compute the tangent plane of the Ewald sphere. */
+        T[j].nx = T[j].rho_x/T[j].rho;
+        T[j].ny = T[j].rho_y/T[j].rho;
+        T[j].nz = T[j].rho_z/T[j].rho;
+        ox = (ki - T[j].rho)*T[j].nx;
+        oy = (ki - T[j].rho)*T[j].ny;
+        oz = (ki - T[j].rho)*T[j].nz;
+        T[j].ox = ox;
+        T[j].oy = oy;
+        T[j].oz = oz;
+        /* Compute unit vectors b1 and b2 that span the tangent plane. */
+        normal_vec(&b1x, &b1y, &b1z, T[j].nx, T[j].ny, T[j].nz);
+        vec_prod(b2x, b2y, b2z, T[j].nx, T[j].ny, T[j].nz, b1x, b1y, b1z);
+        T[j].b1x = b1x;
+        T[j].b1y = b1y;
+        T[j].b1z = b1z;
+        T[j].b2x = b2x;
+        T[j].b2y = b2y;
+        T[j].b2z = b2z;
+        /* Compute the 2D projection of the 3D Gauss of the reflection. */
+        /* The symmetric 2x2 matrix N describing the 2D gauss. */
+        n11 = L[i].m1*b1x*b1x + L[i].m2*b1y*b1y + L[i].m3*b1z*b1z;
+        n12 = L[i].m1*b1x*b2x + L[i].m2*b1y*b2y + L[i].m3*b1z*b2z;
+        n22 = L[i].m1*b2x*b2x + L[i].m2*b2y*b2y + L[i].m3*b2z*b2z;
+        /* The (symmetric) inverse matrix of N. */
+        det_N = n11*n22 - n12*n12;
+        inv_n11 = n22/det_N;
+        inv_n12 = -n12/det_N;
+        inv_n22 = n11/det_N;
+        /* The Cholesky decomposition of 1/2*inv_n (lower triangular L). */
+        l11 = sqrt(inv_n11/2);
+        l12 = inv_n12/(2*l11);
+        l22 = sqrt(inv_n22/2 - l12*l12);
+        T[j].l11 = l11;
+        T[j].l12 = l12;
+        T[j].l22 = l22;
+        det_L = l11*l22;
+        T[j].det_L = det_L;
+        /* The product B^T D o. */
+        Bt_D_O_x = b1x*L[i].m1*ox + b1y*L[i].m2*oy + b1z*L[i].m3*oz;
+        Bt_D_O_y = b2x*L[i].m1*ox + b2y*L[i].m2*oy + b2z*L[i].m3*oz;
+        /* Center of 2D Gauss in plane coordinates. */
+        y0x = -(Bt_D_O_x*inv_n11 + Bt_D_O_y*inv_n12);
+        y0y = -(Bt_D_O_x*inv_n12 + Bt_D_O_y*inv_n22);
+        T[j].y0x = y0x;
+        T[j].y0y = y0y;
+        /* Factor alpha for the distance of the 2D Gauss from the origin. */
+        T[j].alpha = L[i].m1*ox*ox + L[i].m2*oy*oy + L[i].m3*oz*oz -
+                     (y0x*y0x*n11 + y0y*y0y*n22 + 2*y0x*y0y*n12);
+        j++;
       }
     }
     tau_count = j;
     if(tau_count == 0)
     {
 /* printf("** No nearby reflections.\n"); */
-      ABSORB;			/* No reflections possible */
+      ABSORB;                   /* No reflections possible */
     } 
     /* (3). Probabilities of the different possible interactions. */
     V0 = hkl_info.V0;
@@ -614,7 +614,7 @@ TRACE
 /*       mc_trans = p_trans; */
 /*     } */
 /*     firstevent = 0; */
-/*     if(rand01() < mc_trans)	/* Transmit */
+/*     if(rand01() < mc_trans)  /* Transmit */
 /*     { */
 /*       p *= p_trans/mc_trans; */
 /*       break; */
@@ -635,7 +635,7 @@ TRACE
 /*       kix *= ki; */
 /*       kiy *= ki; */
 /*       kiz *= ki; */
-/*       continue;			/* Go for next scattering event */
+/*       continue;                      /* Go for next scattering event */
 /*     } */
     /* 7. Coherent scattering. Select reciprocal lattice point. */
 /*     r = rand0max(coh_xsect); */
@@ -644,13 +644,13 @@ TRACE
 /*     { */
 /*       sum += T[j].refl; */
 /*       if(sum > r) */
-/* 	break; */
+/*      break; */
 /*     } */
     j = floor(rand0max(tau_count));
     if(j >= tau_count)
     {
 /*       fprintf(stderr, "Single_crystal: Error: Illegal tau search " */
-/* 	      "(r = %g, sum = %g).\n", r, sum); */
+/*            "(r = %g, sum = %g).\n", r, sum); */
       j = tau_count - 1;
     }
     i = T[j].index;
@@ -692,15 +692,15 @@ MCDISPLAY
   double zmax =  0.5*zthick;
   magnify("xyz");
   multiline(5, xmin, ymin, zmin,
-	       xmax, ymin, zmin,
-	       xmax, ymax, zmin,
-	       xmin, ymax, zmin,
-	       xmin, ymin, zmin);
+               xmax, ymin, zmin,
+               xmax, ymax, zmin,
+               xmin, ymax, zmin,
+               xmin, ymin, zmin);
   multiline(5, xmin, ymin, zmax,
-	       xmax, ymin, zmax,
-	       xmax, ymax, zmax,
-	       xmin, ymax, zmax,
-	       xmin, ymin, zmax);
+               xmax, ymin, zmax,
+               xmax, ymax, zmax,
+               xmin, ymax, zmax,
+               xmin, ymin, zmax);
   line(xmin, ymin, zmin, xmin, ymin, zmax);
   line(xmax, ymin, zmin, xmax, ymin, zmax);
   line(xmin, ymax, zmin, xmin, ymax, zmax);

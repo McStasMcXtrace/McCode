@@ -1,3 +1,35 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1977-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Res_monitor
+*
+* Written by: KN 1999
+*
+* A single detector/monitor, used together with the Res_sample component to
+* compute instrument resolution functions. Outputs a list of neutron
+* scattering events in the sample along with their intensities in the
+* detector. The output file may be analyzed with the mcresplot front-end.
+*
+* INPUT PARAMETERS:
+*
+* xmin:            Lower x bound of detector opening (m)
+* xmax:            Upper x bound of detector opening (m)
+* ymin:            Lower y bound of detector opening (m)
+* ymax:            Upper y bound of detector opening (m)
+* filename:        Name of output file (string)
+* res_sample_comp: Name of Res_sample component in the instrument definition
+*
+* OUTPUT PARAMETERS:
+*
+* Nsum:  Number of neutron hits
+* psum:  Sum of neutron weights
+* p2sum: 2nd moment of neutron weights
+*
+*******************************************************************************/
+
 DEFINE COMPONENT Res_monitor
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, filename, res_sample_comp)
 SETTING PARAMETERS ()
@@ -29,13 +61,13 @@ TRACE
       /* Now fetch data from the Res_sample. */
       if(p != 0 && file)
       {
-	struct Res_sample_struct *s =
-	  &(MC_GETPAR(res_sample_comp, res_struct));
-	if(s->pi != 0)
-	  fprintf(file, "%g %g %g %g %g %g %g %g %g %g %g\n",
-		  s->ki_x, s->ki_y, s->ki_z, s->kf_x, s->kf_y, s->kf_z,
-		  s->rx, s->ry, s->rz, s->pi, p/s->pi);
-	}
+        struct Res_sample_struct *s =
+          &(MC_GETPAR(res_sample_comp, res_struct));
+        if(s->pi != 0)
+          fprintf(file, "%g %g %g %g %g %g %g %g %g %g %g\n",
+                  s->ki_x, s->ki_y, s->ki_z, s->kf_x, s->kf_y, s->kf_z,
+                  s->rx, s->ry, s->rz, s->pi, p/s->pi);
+        }
     }
   %}
 FINALLY
