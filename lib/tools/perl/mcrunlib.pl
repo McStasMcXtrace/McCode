@@ -114,10 +114,10 @@ sub get_sim_info {
     # Needs quoting if this is Win32...
     my $cmdstring;
     if ($Config{'osname'} eq 'MSWin32') {
-      $cmdstring="\"$simprog -i\" ";
-    } else {
-      $cmdstring="$simprog -i";
+      $simprog = Win32::GetShortPathName($simprog);
     }
+    $cmdstring="$simprog -i";
+    
     use FileHandle;
     my $h = new FileHandle;
     open $h, "$cmdstring |" or die "mcrun: Could not run simulation.";

@@ -696,6 +696,7 @@ sub menu_run_simulation {
 		  putmsg($cmdwin, "Trace cancelled...\n");
 		  return;
 		}
+		$output_file = Win32::GetShortPathName($output_file);
 		push @command, "-f$output_file";
 		
 	      }
@@ -709,6 +710,7 @@ sub menu_run_simulation {
 		    putmsg($cmdwin, "Trace cancelled...\n");
 		    return;
 		  }
+		  $output_file = Win32::GetShortPathName($output_file);
 		  push @command, "-f$output_file";
 		}
 	      }
@@ -719,6 +721,7 @@ sub menu_run_simulation {
 		  putmsg($cmdwin, "Trace cancelled...\n");
 		  return;
 		}
+		$output_file = Win32::GetShortPathName($output_file);
 		push @command, "-f$output_file";
 		
 	      }
@@ -731,7 +734,8 @@ sub menu_run_simulation {
 	# On Win32, we need quoting, in case of spaces in filename...
 	# Also needed for Dir if given...
 	if ($Config{'osname'} eq 'MSWin32') {
-	  push @command, "\"$out_name\"";
+	  my $tmp = Win32::GetShortPathName($out_name);
+	  push @command, "$tmp";
         } else {
 	  push @command, "$out_name";
 	}
@@ -740,7 +744,7 @@ sub menu_run_simulation {
 	if ($newsi->{'Dir'}) {
 	  $OutDir=$newsi->{'Dir'};
 	  if ($Config{'osname'} eq 'MSWin32') {
-	    $OutDir="\"$OutDir\"";
+	    $OutDir=Win32::GetShortPathName($OutDir);
 	  } else {
 	    $OutDir =~ s! !\ !g;
 	  }
