@@ -1,0 +1,36 @@
+# Single crystal Sapphire (Al2O3) transmission. T=80 K.
+# Thickness: 0.05 [m]
+# From: Tennant, Rev. Sci. Instrum., 59 (1988) 380
+# [ lambda(Angs) Transmission (0-1) ]
+# wavelenght multiply
+0.20    0.04
+0.69    0.38
+0.74    0.46
+0.81    0.58
+0.91    0.60
+1.02    0.73
+1.23    0.79
+1.32    0.87
+1.42    0.84
+1.51    0.91
+2.02    0.91
+2.52    0.88
+3.02    0.86
+3.51    0.80
+4.20    0.76
+5.18    0.71
+
+
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    

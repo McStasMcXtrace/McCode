@@ -1,5 +1,6 @@
-# BeO transmission, as measured on IN12
+# Be transmission, as measured on IN12. T=80 K.
 # Thickness: 0.05 [m]
+# From: B.Fak (CEA/ILL). See also Tennant, Rev. Sci. Instrum., 59 (1988) 380
 # [ k(Angs-1) Transmission (0-1) ]
 # wavevector multiply
 1.0500  0.74441
