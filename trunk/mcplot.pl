@@ -45,7 +45,7 @@ my ($nowindow);
 $index   = 0;
 $inspect = "";
 $passed_arg_str = "";
-$nowindow= 0;
+$nowindow= 1;
 
 $plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
                 $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
@@ -61,6 +61,8 @@ for($i = 0; $i < @ARGV; $i++) {
         $plotter = $1;	
   } elsif(/^-i([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
       $inspect = $1;
+  } elsif(/^\+nw$/i || /^\+nojvm$/i) {
+      $nowindow = 0;
   } elsif(/^-nw$/i || /^-nojvm$/i) {
       $nowindow = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
@@ -70,7 +72,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "       [-overview] Show all plots in a single window\n";
       print "       [-plot]     Show all plots in separate window(s)\n";
       print "       [-iCOMP]    Only show monitors whos name match COMP\n";
-      print "       [-nw]       No-window (no Tcl/Java) mode for {Scilab,Matlab}\n";
+      print "       [+nw]       Open {Scilab,Matlab} command window (with Tcl/Java)\n";
       print "  Plots all monitor data from a simulation, or a single data file.\n";
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
