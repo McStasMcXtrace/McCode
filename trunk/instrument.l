@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.11 1998-09-23 13:58:47 kn Exp $
+*	$Id: instrument.l,v 1.12 1998-10-01 08:09:49 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.11  1998/09/23 13:58:47  kn
+*	Added C++ style ("//") comments.
+*
 *	Revision 1.10  1998/08/26 12:43:21  kn
 *	Merged in the functionality from component.l.
 *	Added %include facility.
@@ -278,7 +281,7 @@ push_include(char *name)
 {
   FILE *file;
 
-  file = fopen(name, "r");
+  file = open_file_search(name);
   if(file == NULL)
     fatal_error("Cannot open include file '%s' at line %d.\n",
 		name, instr_current_line);
