@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.6 1997-09-07 20:16:08 kn Exp $
+*	$Id: instrument.y,v 1.7 1998-08-21 12:08:18 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.6  1997/09/07 20:16:08  kn
+*	Added FINALLY construct.
+*
 *	Revision 1.5  1997/09/07 17:57:54  kn
 *	Snapshot with (untested) code generation complete.
 *
@@ -29,6 +32,7 @@
 
 %{
 #include <math.h>
+#include <string.h>
 #include <stdio.h>
 
 #include "mcstas.h"
@@ -353,6 +357,92 @@ Symtab comp_instances;
    definition. */
 List comp_instances_list;
 
+/* Filename for outputting generated simulation program ('-' means stdin). */
+static char *output_filename;
+
+
+/* Print a summary of the command usage and exit with error. */
+static void
+print_usage(void)
+{
+  fprintf(stderr, "Usage: mcstas [-o output file] instrument-file\n");
+  exit(1);
+}
+
+
+/* Construct default filename for simulation output from instrument file
+   name. Strip any leading directory path and trailing .instr, and add .c to
+   the end. */
+static char *
+make_output_filename(char *name)
+{
+  char *p;
+  int l;
+
+  /* Find basename */
+  p = strrchr(name, '/');
+  if(p == NULL)
+    p = name;			/* No initial path. */
+  else
+    p++;			/* Point past last '/' character. */
+
+  /* Check for trailing .instr suffix. */
+  l = strlen(p);
+  if(l > 6 && !strcmp(&p[l - 6], ".instr"))
+  {
+    char *tmp = str_dup(p);
+    tmp[l - 6] = '\0';
+    p = str_cat(tmp, ".c", NULL);
+    str_free(tmp);
+  }
+  else
+    p = str_cat(p, ".c", NULL);
+  return p;
+}
+
+
+/* Parse command line options. */
+static void
+parse_command_line(int argc, char *argv[])
+{
+  int i;
+
+  output_filename = NULL;
+  instr_current_filename = NULL;
+  for(i = 1; i < argc; i++)
+  {
+    if(argv[i][0] == '-')
+    {
+      switch(argv[i][1])
+      {
+	case 'o':
+	  if(argv[i][2])
+	    output_filename = str_dup(&argv[i][2]);
+	  else if(i + 1 < argc)
+	    output_filename = str_dup(argv[++i]);
+	  else
+	    print_usage();
+	  break;
+	default:
+	  print_usage();
+      }
+    }
+    else
+    {
+      if(instr_current_filename != NULL)
+	print_usage();		/* Multiple instruments given. */
+      instr_current_filename = str_dup(argv[i]);
+    }
+  }
+
+  /* Instrument filename must be given. */
+  if(instr_current_filename == NULL)
+    print_usage();
+  /* If no '-o' option was given for INSTR.instr, default to INSTR.c  */
+  if(output_filename == NULL)
+    output_filename = make_output_filename(instr_current_filename);
+}
+
 
 int
 main(int argc, char *argv[])
@@ -362,25 +452,22 @@ main(int argc, char *argv[])
   
   yydebug=0;			/* If 1, then bison gives verbose parser debug info. */
 
-  if(argc == 2)
-  {
-    file = fopen(argv[1], "r");
-    if(file == NULL)
-      fatal_error("Instrument definition file `%s' not found.\n", argv[1]);
-    instr_current_filename = str_dup(argv[1]);
-    instr_current_line = 1;
-    yyrestart(file);
-    err = yyparse();
-    fclose(file);
-    if(err != 0)
-      print_error("Errors encountered during parse.\n");
-    else
-      cogen(instrument_definition);
-  }
+  parse_command_line(argc, argv);
+  if(!strcmp(instr_current_filename, "-"))
+    file = fdopen(0, "r");	/* Lone '-' designates stdin. */
   else
-  {
-    print_error("Usage: %s file.\n", argv[0]);
-  }
+    file = fopen(instr_current_filename, "r");
+  if(file == NULL)
+    fatal_error("Instrument definition file `%s' not found\n",
+		instr_current_filename);
+  instr_current_line = 1;
+  yyrestart(file);
+  err = yyparse();
+  fclose(file);
+  if(err != 0)
+    print_error("Errors encountered during parse.\n");
+  else
+    cogen(output_filename, instrument_definition);
 
   exit(0);
 }
