@@ -16,15 +16,15 @@ available in three different distribution packages, from the project
 website at
 \htmladdnormallink{http://mcstas.risoe.dk}{http://mcstas.risoe.dk}, e.g.
 \begin{itemize}
-\item{\texttt{mcstas-1.7-src.tar.gz}\\Source code package for
+\item{\texttt{mcstas-1.8-src.tar.gz}\\Source code package for
     building \htmladdnormallink{McStas}{http://mcstas.risoe.dk} on
     (at least) Linux and Windows 2000. This package should compile on
     most Unix platforms with an \texttt{ANSI-c} compiler. - Refer to section \ref{s:src}}
-\item{\texttt{mcstas-1.7-i686-unknown-Linux.tar.gz}\\Binary package
+\item{\texttt{mcstas-1.8-i686-unknown-Linux.tar.gz}\\Binary package
   for Linux systems, currently built on Debian GNU/Linux 3.0 'woody'. 
   Should work on most Linux setups.
  - Refer to section \ref{s:linbin}}
-\item{\texttt{mcstas-1.7-i686-unknown-Win32.zip}\\Binary package
+\item{\texttt{mcstas-1.8-i686-unknown-Win32.zip}\\Binary package
   for Win32 systems, currently built on Microsoft Windows 2000
   professional, using the \texttt{gcc} 2.95 compiler from 
   \htmladdnormallink{Bloodshed Dev-C++ 5 Beta
@@ -37,12 +37,12 @@ website at
 The \htmladdnormallink{McStas}{http://mcstas.risoe.dk} package is
 beeing co-developed for mainly Linux and Windows systems, however 
 the Linux build instructions below will work on most Unix
-systems. For an updated list of platforms on which McStas has been
+systems Including Mac OS X). For an updated list of platforms on which McStas has been
 built, refer to the \htmladdnormallink{project website}{http://mcstas.risoe.dk/developments/platforms/}.
 
 \subsection{Windows build}
 \begin{itemize}
-\item{Start by unpacking the \texttt{mcstas-1.7-src.tar.gz} package using
+\item{Start by unpacking the \texttt{mcstas-1.8-src.tar.gz} package using
 e.g. \htmladdnormallink{Winzip}{http://www.winzip.com}.}
 \item{Using an \texttt{ansi-c} compiler (we recommend
 \htmladdnormallink{Bloodshed
@@ -50,7 +50,7 @@ e.g. \htmladdnormallink{Winzip}{http://www.winzip.com}.}
 and use (Section \ref{s:instblood})), the
 \htmladdnormallink{McStas}{http://mcstas.risoe.dk} package can be
 compiled using the \texttt{build.bat} script of the
-\texttt{mcstas-1.7} directory you just unpacked. Follow the on screen
+\texttt{mcstas-1.8} directory you just unpacked. Follow the on screen
 instructions.} 
 \item{When the build has been done (e.g. \texttt{mcstas.exe}
 has been produced), proceed to install (Section \ref{s:winbin}).}
@@ -63,8 +63,8 @@ should be able to compile and install McStas using the following steps:
 \begin{enumerate}
 \item{Unpack the sources to somewhere convenient and change to the
     source directory:\\
-  gunzip -c mcstas-1.7-src.tar.gz | tar xf -\\
-  cd mcstas-1.7/}
+  gunzip -c mcstas-1.8-src.tar.gz | tar xf -\\
+  cd mcstas-1.8/}
 \item{Configure and compile McStas:\\
   ./configure\\
   make}
@@ -165,14 +165,18 @@ Should be very easy, simply start from 'make install' in Section \ref{s:src}.
 \section{Binary install, Windows}
 \label{s:winbin}
 \begin{itemize}
-\item{Start by unpacking the \texttt{mcstas-1.7-i686-unknown-Win32.zip} package using
+\item{Start by unpacking the \texttt{mcstas-1.8-i686-unknown-Win32.zip} package using
 e.g. \htmladdnormallink{Winzip}{http://www.winzip.com}.}
 \item{Execute the \texttt{install.bat} installation script. Follow the
   on screen instructions.}
 \item{Set the required (see output of \texttt{install.bat}) environment variables using
 \\\ \\
 \noindent 'Start/Settings/Control Panel/System/Advanced/Environment
-Variables'\\\ \\}
+Variables'\\\ 
+  \begin{itemize}
+    \item{\verb+PATH+ Append e.g. C:$\backslash$mcstas$\backslash$bin}
+    \item{\verb+MCSTAS+ Create it as e.g. C:$\backslash$mcstas$\backslash$lib}
+  \end{itemize}}
 \item{To get a fully working McStas environment, you must also install
     an \texttt{ansi-c} compiler, for instance BloodShed Dev-C++
     (Section \ref{s:instblood})}
@@ -180,7 +184,7 @@ Variables'\\\ \\}
     interface and plotting facilities, you must also install the following
     packages:}
   \begin{itemize}
-    \item{ActivePerl and ActiveTcl for GUI (see Section \ref{s:perltk})}
+    \item{ActivePerl and ActiveTcl for GUI (see Section \ref{s:perltk}). It is important that Perl is correctly installed to execute all the McStas tools (e.g. mcdoc.pl, mcrun.pl, mcgui.pl, \ldots). Create a shortcut of the \verb+C:\mcstas\bin\mcgui.pl+ on your Desktop (the icon should be a yellow dot). Whenever launched from the Windows Command window (cmd), you must specify the .pl extension to all McStas Perl script commands (e.g. 'mcrun.pl' and 'mcgui.pl', not 'mcrun' or 'mcgui') except for \verb+mcstas+ itself.}
     \item{Matlab or Scilab for plotting (see Section \ref{s:plotting})}
   \end{itemize}
 \end{itemize}
@@ -192,7 +196,7 @@ To install Bloodshed Dev-C++, download the installer package from
 \\\
 \\\htmladdnormallink{http://www.bloodshed.net/dev/devcpp.html}{http://www.bloodshed.net/dev/devcpp.html}.\\\
 \\
-When installed, add the \texttt{Dev-Cpp$\backslash$bin} directory to your path
+When installed, add the \texttt{C:$\backslash$Dev-Cpp$\backslash$bin} directory to your PATH
 using\\\ \\
 'Start/Settings/Control Panel/System/Advanced/Environment Variables'.
 \subsection{Gui tools (Perl + Tk) (All platforms)}
@@ -231,19 +235,14 @@ For plotting with McStas, different support packages can be used:
 \item{Matlab (Some Unix/Win32) - refer to
     \htmladdnormallink{http://www.mathworks.com}{http://www.mathworks.com}. Matlab licenses are rather costly, but discount programmes for university and research departments exist.}
 \item{Scilab (Unix/Win32/Mac...) - a free 'Matlab-like' package, available from
-    \htmladdnormallink{http://www-rocq.inria.fr/scilab/}{http://www-rocq.inria.fr/scilab/}. McStas also requires the Plotlib library from \\ \htmladdnormallink{http://www.dma.utc.fr/$\sim$mottelet/myplot.html}{http://www.dma.utc.fr/~mottelet/myplot.html}.}
+    \htmladdnormallink{http://www-rocq.inria.fr/scilab/}{http://www-rocq.inria.fr/scilab/}. McStas also requires the Plotlib library from \\ \htmladdnormallink{http://www.dma.utc.fr/$\sim$mottelet/myplot.html}{http://www.dma.utc.fr/~mottelet/myplot.html}. This package is now included in McStas and needs not be installed by the user.}
 \end{itemize}
 
 \section{Testing the McStas distribution}
 \label{s:testing}
 
-The \verb+examples+ directory of the distribution contains an automatic distribution test procedure, which is executed (under Unix-like systems) with:
+The \verb+examples+ directory of the distribution contains a set of instrument examples. These are used for the McStas self test procedure, which is executed with
 \begin{verbatim}
-    ./examples/selftest
+    mcrun --test
 \end{verbatim}
-This test takes a few minutes to complete, and should essentially display messages saying that some of the components used in the test instruments are obsolete (but still work).
-Additionally, plots from results may be generated automatically from the command
-\begin{verbatim}
-    ./examples/showtest
-\end{verbatim}
-which will use by default the PGPLOT plotting back-end (see below). Other back-ends (see Section~\ref{s:plotting}) may be specified when setting the MCSTAS\_FORMAT environment variable.
+This test takes a few minutes to complete, and ends with a short report on the installation itself, the simulation accuracy and the plotter check. 
