@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.5 1998-03-16 08:03:41 kn Exp $
+* 	$Id: mcstas-r.c,v 1.6 1998-03-20 14:19:52 lefmann Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.5  1998/03/16 08:03:41  kn
+* 	Added normal distributed random number function randnorm().
+*
 * 	Revision 1.4  1997/10/16 14:27:05  kn
 * 	Add missing #include. Change in mcreadparams() to fit better with the
 * 	"display" visualization tool.
@@ -260,4 +263,45 @@ randnorm(void)
 
   phase = 1 - phase;
   return X;
+}
+
+/* Written by: EM,NB,ABA 4.2.98 */
+int
+cylinder_intersect(double *t0, double *t1, double x, double y, double z,
+		   double vx, double vy, double vz, r, h)
+{
+  double v, D, t_in, t_out, y_in, y_out;
+
+  v = sqrt(vx*vx+vy*vy+vz*vz); 
+
+  D = (2*vx*x + 2*vz*z)*(2*vx*x + 2*vz*z) 
+    - 4*(vx*vx + vz*vz)*(x*x + z*z - radius*radius);
+
+  if (D>=0) 
+  {   
+    t_in  = (-(2*vz*z + 2*vx*x) - sqrt(D))/(2*(vz*vz + vx*vx));
+    t_out = (-(2*vz*z + 2*vx*x) + sqrt(D))/(2*(vz*vz + vx*vx));
+    y_in = vy*t_in + y;
+    y_out =vy*t_out + y;
+
+    if ( !((y_in > h/2 && y_out > h/2) || (y_in < -h/2 && y_out < -h/2)) )
+    {
+      if (y_in > h/2)
+	t_in = ((h/2)-y)/vy;
+      if (y_in < -h/2)
+	t_in = ((-h/2)-y)/vy;
+      if (y_out > h/2)
+	t_out = ((h/2)-y)/vy;
+      if (y_out < -h/2)
+	t_out = ((-h/2)-y)/vy;
+    }
+    *t0 = t_in;
+    *t1 = t_out;
+    return 1;
+  }
+  else
+  {
+    *t0 = *t1 = 0;
+    return 0;
+  }
 }
