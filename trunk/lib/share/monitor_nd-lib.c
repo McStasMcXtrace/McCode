@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.14 2004-02-04 18:01:12 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.15 2004-02-26 12:55:41 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.14  2004/02/04 18:01:12  farhi
+*	Use hdiv=theta and vdiv=phi for banana.
+*	
 *	Revision 1.13  2003/08/26 12:33:27  farhi
 *	Corrected computation of angle PHI (was projected on vertical plane)
 *	
@@ -832,6 +835,15 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
     /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
       if (mc_mn_Vars->Flag_Multiple)
       { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors (intensity is not included) */ 
+      	/* check limits: monitors define a phase space to record */
+        char within_limits=1;
+        for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+        {
+          mc_mn_j = mc_mn_Coord_Index[mc_mn_i];
+          if (mc_mn_j < 0 || mc_mn_j >= mc_mn_Vars->Coord_Bin[mc_mn_i])
+          	within_limits=0;
+        }
+        if (within_limits)
         for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
         {
           mc_mn_j = mc_mn_Coord_Index[mc_mn_i];
@@ -996,7 +1008,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       {
         int  loc_ascii_only;
         char formatName[64];
-	char *formatName_orig;
+        char *formatName_orig;
         
         if (mc_mn_Vars->Flag_List >= 2) mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter;
         if (mc_mn_Vars->Buffer_Size >= mc_mn_Vars->Neutron_Counter)
@@ -1065,75 +1077,80 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
                   { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i+1]); }
           sprintf(mc_mn_Coord_X_Label, "%s monitor", mc_mn_Vars->Coord_Label[mc_mn_i+1]);
           strcpy(mc_mn_label, mc_mn_Coord_X_Label);
-          if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 1D (%li).\n", mc_mn_Vars->compcurname, mc_mn_fname, mc_mn_Vars->Coord_Bin[mc_mn_i+1]);
-          mc_mn_min1d = mc_mn_Vars->Coord_Min[mc_mn_i+1];
-          mc_mn_max1d = mc_mn_Vars->Coord_Max[mc_mn_i+1];
-          if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
-          mc_mn_p1m = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i+1]*sizeof(double));
-          mc_mn_p2m = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i+1]*sizeof(double));
-          if (mc_mn_p2m == NULL) /* use Raw Buffer line output */
-          {
-            if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for output. Using raw data.\n", mc_mn_Vars->compcurname);
-            if (mc_mn_p1m != NULL) free(mc_mn_p1m);
-            mcdetector_out_1D(
-            mc_mn_label,
-            mc_mn_Vars->Coord_Label[mc_mn_i+1],
-            mc_mn_Vars->Coord_Label[0],
-            mc_mn_Vars->Coord_Var[mc_mn_i+1],
-            mc_mn_min1d, mc_mn_max1d, 
-            mc_mn_Vars->Coord_Bin[mc_mn_i+1],
-            mc_mn_Vars->Mon2D_N[mc_mn_i],mc_mn_Vars->Mon2D_p[mc_mn_i],mc_mn_Vars->Mon2D_p2[mc_mn_i],
-            mc_mn_fname, mc_mn_Vars->compcurname); 
-          }
-          else
-          {
-            if (mc_mn_Vars->Flag_log != 0)
+          if (mc_mn_Vars->Coord_Bin[mc_mn_i+1] > 0) { /* 1D monitor */
+            if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 1D (%li).\n", mc_mn_Vars->compcurname, mc_mn_fname, mc_mn_Vars->Coord_Bin[mc_mn_i+1]);
+            mc_mn_min1d = mc_mn_Vars->Coord_Min[mc_mn_i+1];
+            mc_mn_max1d = mc_mn_Vars->Coord_Max[mc_mn_i+1];
+            if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
+            mc_mn_p1m = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i+1]*sizeof(double));
+            mc_mn_p2m = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i+1]*sizeof(double));
+            if (mc_mn_p2m == NULL) /* use Raw Buffer line output */
             {
-              mc_mn_XY = FLT_MAX;
-              for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i+1]; mc_mn_j++) /* search min of signal */
-                if ((mc_mn_XY > mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j]) && (mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j] > 0)) mc_mn_XY = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
-              if (mc_mn_XY <= 0) mc_mn_XY = -log(FLT_MAX)/log(10); else mc_mn_XY = log(mc_mn_XY)/log(10)-1;
-            }
-            
-            for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i+1]; mc_mn_j++)
-            {
-              mc_mn_p1m[mc_mn_j] = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
-              mc_mn_p2m[mc_mn_j] = mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j];
-              if (mc_mn_Vars->Flag_signal != mc_mn_DEFS->COORD_P && mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j] > 0)
-              { /* normalize mean signal to the number of events */
-                mc_mn_p1m[mc_mn_j] /= mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
-                mc_mn_p2m[mc_mn_j] /= mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j]*mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
-              }
-              if (mc_mn_Vars->Flag_log != 0)
-              {
-                if ((mc_mn_p1m[mc_mn_j] > 0) && (mc_mn_p2m[mc_mn_j] > 0))
-                {
-                  mc_mn_p2m[mc_mn_j] /= mc_mn_p1m[mc_mn_j]*mc_mn_p1m[mc_mn_j];
-                  mc_mn_p1m[mc_mn_j] = log(mc_mn_p1m[mc_mn_j])/log(10);
-                }
-                else
-                {
-                  mc_mn_p1m[mc_mn_j] = mc_mn_XY;
-                  mc_mn_p2m[mc_mn_j] = 0;
-                }
-              }
-            }
-            mcdetector_out_1D(
+              if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for output. Using raw data.\n", mc_mn_Vars->compcurname);
+              if (mc_mn_p1m != NULL) free(mc_mn_p1m);
+              mcdetector_out_1D(
               mc_mn_label,
               mc_mn_Vars->Coord_Label[mc_mn_i+1],
               mc_mn_Vars->Coord_Label[0],
               mc_mn_Vars->Coord_Var[mc_mn_i+1],
               mc_mn_min1d, mc_mn_max1d, 
               mc_mn_Vars->Coord_Bin[mc_mn_i+1],
-              mc_mn_Vars->Mon2D_N[mc_mn_i],mc_mn_p1m,mc_mn_p2m,
+              mc_mn_Vars->Mon2D_N[mc_mn_i],mc_mn_Vars->Mon2D_p[mc_mn_i],mc_mn_Vars->Mon2D_p2[mc_mn_i],
               mc_mn_fname, mc_mn_Vars->compcurname); 
-            
+            } /* if (mc_mn_p2m == NULL) */
+            else
+            {
+              if (mc_mn_Vars->Flag_log != 0)
+              {
+                mc_mn_XY = FLT_MAX;
+                for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i+1]; mc_mn_j++) /* search min of signal */
+                  if ((mc_mn_XY > mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j]) && (mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j] > 0)) mc_mn_XY = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
+                if (mc_mn_XY <= 0) mc_mn_XY = -log(FLT_MAX)/log(10); else mc_mn_XY = log(mc_mn_XY)/log(10)-1;
+              } /* if */
+
+              for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i+1]; mc_mn_j++)
+              {
+                mc_mn_p1m[mc_mn_j] = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
+                mc_mn_p2m[mc_mn_j] = mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j];
+                if (mc_mn_Vars->Flag_signal != mc_mn_DEFS->COORD_P && mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j] > 0)
+                { /* normalize mean signal to the number of events */
+                  mc_mn_p1m[mc_mn_j] /= mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
+                  mc_mn_p2m[mc_mn_j] /= mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j]*mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
+                }
+                if (mc_mn_Vars->Flag_log != 0)
+                {
+                  if ((mc_mn_p1m[mc_mn_j] > 0) && (mc_mn_p2m[mc_mn_j] > 0))
+                  {
+                    mc_mn_p2m[mc_mn_j] /= mc_mn_p1m[mc_mn_j]*mc_mn_p1m[mc_mn_j];
+                    mc_mn_p1m[mc_mn_j] = log(mc_mn_p1m[mc_mn_j])/log(10);
+                  }
+                  else
+                  {
+                    mc_mn_p1m[mc_mn_j] = mc_mn_XY;
+                    mc_mn_p2m[mc_mn_j] = 0;
+                  }
+                }
+              } /* for */
+              mcdetector_out_1D(
+                mc_mn_label,
+                mc_mn_Vars->Coord_Label[mc_mn_i+1],
+                mc_mn_Vars->Coord_Label[0],
+                mc_mn_Vars->Coord_Var[mc_mn_i+1],
+                mc_mn_min1d, mc_mn_max1d, 
+                mc_mn_Vars->Coord_Bin[mc_mn_i+1],
+                mc_mn_Vars->Mon2D_N[mc_mn_i],mc_mn_p1m,mc_mn_p2m,
+                mc_mn_fname, mc_mn_Vars->compcurname); 
+
+            } /* else */
+            if (mc_mn_p1m != NULL) free(mc_mn_p1m); mc_mn_p1m=NULL;
+            if (mc_mn_p2m != NULL) free(mc_mn_p2m); mc_mn_p2m=NULL;
+          } else { /* 0d monitor */
+            mcdetector_out_0D(mc_mn_label, mc_mn_Vars->Mon2D_p[mc_mn_i][0], mc_mn_Vars->Mon2D_p2[mc_mn_i][0], mc_mn_Vars->Mon2D_N[mc_mn_i][0], mc_mn_Vars->compcurname);
           }
-          if (mc_mn_p1m != NULL) free(mc_mn_p1m);
-          if (mc_mn_p2m != NULL) free(mc_mn_p2m);
+          
             
-        }
-      }
+        } /* for */
+      } /* if 1D */
       else
       if (mc_mn_Vars->Coord_Number == 2)  /* 2D: DETECTOR_OUT_2D */
       {
