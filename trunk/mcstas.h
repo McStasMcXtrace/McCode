@@ -7,9 +7,13 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.15 1998-11-13 07:32:50 kn Exp $
+* 	$Id: mcstas.h,v 1.16 1998-11-26 08:46:10 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.15  1998/11/13 07:32:50  kn
+* 	Added str_quote() prototype.
+* 	Win32 port.
+*
 * 	Revision 1.14  1998/11/11 08:58:01  kn
 * 	Fixed bug with missing extern declaration.
 *
@@ -78,6 +82,8 @@
 
 /* Functions defined in memory.c */
 
+typedef struct Pool_header *Pool;
+
 void *mem(size_t);		/* Allocate memory. */
 void memfree(void *);		/* Free memory. */
 char *str_dup(char *);		/* Allocate new copy of string. */
@@ -85,6 +91,11 @@ char *str_dup_n(char *string, int n); /* Copies only first N chars. */
 char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
 char *str_quote(char *string);	/* Quote string for inclusion in C code */
 void str_free(char *);		/* Free memory for string. */
+
+Pool pool_create(void);		/* Create pool. */
+void pool_free(Pool p);		/* Free pool and associated memory. */
+void *pool_mem(Pool p, size_t size); /* Allocate memory in pool. */
+
 
 /* Allocate memory to a pointer. If p is a pointer to type t, palloc(p) will
    make p point to dynamically allocated memory for one element of type
