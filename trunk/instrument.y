@@ -873,8 +873,8 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.4, July 28, 2000\n"
-	  "Copyright (C) Risoe National Laboratory, 1997-2000\n"
+  printf("McStas version 1.5, October 10, 2001\n"
+	  "Copyright (C) Risoe National Laboratory, 1997-2001\n"
 	  "All rights reserved\n");
   exit(0);
 }
