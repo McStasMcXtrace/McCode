@@ -17,6 +17,10 @@
 * Code generation from instrument definition.
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.45  2004/11/29 14:30:52  farhi
+*	Defines a component name as instrument name for usage of mcstas-r functions
+*	and macros in FINALLY and SAVE (e.g. DETECTOR_OUT...)
+*	
 *	Revision 1.44  2004/09/10 15:09:56  farhi
 *	Use same macro symbols for mcstas kernel and run-time for code uniformity
 *	
@@ -48,7 +52,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.45 2004-11-29 14:30:52 farhi Exp $
+* $Id: cogen.c,v 1.46 2004-11-30 16:09:56 farhi Exp $
 *
 *******************************************************************************/
 
@@ -390,7 +394,7 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
     if(infunc == 2 && list_len(comp->extend->lines) > 0)
     {
       coutf("/* '%s' component extend code */",comp->name);
-      coutf("    strcpy(%ssig_message, \"%s (Trace:Extend)\");", ID_PRE, comp->name); /* ADD: E. Farhi Aug 25th, 2002 */
+      coutf("    SIG_MESSAGE(\"%s (Trace:Extend)\");", comp->name); /* ADD: E. Farhi Aug 25th, 2002 */
       codeblock_out(comp->extend);
     }
   }
@@ -676,7 +680,7 @@ cogen_nxdict(struct instr_def *instr)
   char *quoted_name = str_quote(instr->nxdinfo->nxdfile);
   /* now create Instrument parameter list to be sent to NXdict routines */
 
-  coutf("  strcpy(%ssig_message, \"%s (NeXus init)\");", ID_PRE, instr->name); /* ADD: E. Farhi Aug 25th, 2002 */
+  coutf("  SIG_MESSAGE(\"%s (NeXus init)\");", instr->name); /* ADD: E. Farhi Aug 25th, 2002 */
 }
 
 
@@ -718,7 +722,7 @@ cogen_init(struct instr_def *instr)
     char *x, *y, *z;
 
     coutf("    /* Component %s. */", comp->name);
-    coutf("    strcpy(%ssig_message, \"%s (Init:Place/Rotate)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+    coutf("    SIG_MESSAGE(\"%s (Init:Place/Rotate)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     
     /* Absolute rotation. */
     x = exp_tostring(comp->pos->orientation.x);
@@ -839,7 +843,7 @@ cogen_init(struct instr_def *instr)
     struct comp_iformal *par;
 
     coutf("  /* Initializations for component %s. */", comp->name);
-    coutf("  strcpy(%ssig_message, \"%s (Init)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+    coutf("  SIG_MESSAGE(\"%s (Init)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     /* Initialization of the component setting parameters. */
     setpar = list_iterate(comp->def->set_par);
     while((par = list_next(setpar)) != NULL)
@@ -951,7 +955,7 @@ cogen_trace(struct instr_def *instr)
     List_handle statepars_handle;
 
     coutf("  /* TRACE Component %s. */", comp->name);
-    coutf("  strcpy(%ssig_message, \"%s (Trace)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+    coutf("  SIG_MESSAGE(\"%s (Trace)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
     /* Change of coordinates. */
     coutf("  %scoordschange(%sposr%s, %srotr%s,", ID_PRE, ID_PRE, comp->name,
@@ -1108,7 +1112,7 @@ cogen_save(struct instr_def *instr)
     if(list_len(comp->def->save_code->lines) > 0)
     {
       coutf("  /* User SAVE code for component '%s'. */", comp->name);
-      coutf("  strcpy(%ssig_message, \"%s (Save)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+      coutf("  SIG_MESSAGE(\"%s (Save)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
                        comp->def->save_code);
       cout("");
@@ -1120,7 +1124,7 @@ cogen_save(struct instr_def *instr)
   if(list_len(instr->saves->lines) > 0)
   {
     cout("  /* User SAVE code from instrument definition. */");
-    coutf("  strcpy(%ssig_message, \"%s (Save)\");", ID_PRE, instr->name); 
+    coutf("  SIG_MESSAGE(\"%s (Save)\");", instr->name); 
     cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
                            instr->saves);
     cout("");
@@ -1149,7 +1153,7 @@ cogen_finally(struct instr_def *instr)
     if(list_len(comp->def->finally_code->lines) > 0)
     {
       coutf("  /* User FINALLY code for component '%s'. */", comp->name);
-      coutf("  strcpy(%ssig_message, \"%s (Finally)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+      coutf("  SIG_MESSAGE(\"%s (Finally)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
                        comp->def->finally_code);
       cout("");
@@ -1161,7 +1165,7 @@ cogen_finally(struct instr_def *instr)
   if(list_len(instr->finals->lines) > 0)
   {
     cout("  /* User FINALLY code from instrument definition. */");
-    coutf("  strcpy(%ssig_message, \"%s (Finally)\");", ID_PRE, instr->name); /* ADD: E. Farhi Aug 25th, 2002 */
+    coutf("  SIG_MESSAGE(\"%s (Finally)\");", instr->name); /* ADD: E. Farhi Aug 25th, 2002 */
     cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
                            instr->finals);
     cout("");
@@ -1193,7 +1197,7 @@ cogen_mcdisplay(struct instr_def *instr)
     {
       char *quoted_name = str_quote(comp->name);
       coutf("  /* MCDISPLAY code for component '%s'. */", comp->name);
-      coutf("  strcpy(%ssig_message, \"%s (McDisplay)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+      coutf("  SIG_MESSAGE(\"%s (McDisplay)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
       coutf("  printf(\"MCDISPLAY: component %%s\\n\", \"%s\");", quoted_name);
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
                        comp->def->mcdisplay_code);
