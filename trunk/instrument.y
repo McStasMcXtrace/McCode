@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.7 1998-08-21 12:08:18 kn Exp $
+*	$Id: instrument.y,v 1.8 1998-08-26 12:43:49 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.7  1998/08/21 12:08:18  kn
+*	Added `-o' command line option.
+*	Output generated C simulation code in file rather than on stdout.
+*
 *	Revision 1.6  1997/09/07 20:16:08  kn
 *	Added FINALLY construct.
 *
@@ -42,6 +46,10 @@
 
 %}
 
+/* Need a pure parser to allow for recursive calls when autoloading component
+   definitions. */
+%pure_parser
+
 /*******************************************************************************
 * Type definition for semantic values.
 *******************************************************************************/
@@ -55,25 +63,32 @@
   Coords_exp coords;		/* Coordinates for location or rotation. */
   List formals;			/* List of formal parameters. */
   Symtab actuals;		/* Values for formal parameters. */
+  struct {List def, set, state;} parms;	/* Parameter lists. */
   struct instr_def *instrument;	/* Instrument definition. */
   struct comp_inst *instance;	/* Component instance. */
   struct comp_place place;	/* Component place. */
   struct comp_orientation ori;	/* Component orientation. */
 }
 
+%token TOK_RESTRICTED TOK_GENERAL
 
 %token TOK_ABSOLUTE	"ABSOLUTE"
 %token TOK_AT		"AT"
 %token TOK_COMPONENT	"COMPONENT"
 %token TOK_DECLARE	"DECLARE"
 %token TOK_DEFINE	"DEFINE"
+%token TOK_DEFINITION	"DEFINITION"
 %token TOK_END		"END"
 %token TOK_FINALLY	"FINALLY"
 %token TOK_EXTERN	"EXTERN"
 %token TOK_INITIALIZE	"INITIALIZE"
 %token TOK_INSTRUMENT	"INSTRUMENT"
+%token TOK_PARAMETERS	"PARAMETERS"
 %token TOK_RELATIVE	"RELATIVE"
 %token TOK_ROTATED	"ROTATED"
+%token TOK_SETTING	"SETTING"
+%token TOK_STATE	"STATE"
+%token TOK_TRACE	"TRACE"
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -87,15 +102,64 @@
 %token TOK_INVALID
 
 %type <instance> compdef compref reference
-%type <ccode> code codeblock initialize finally declare
+%type <ccode> code codeblock declare initialize trace finally
 %type <coords>  coords
 %type <exp> exp
 %type <actuals> actuallist actuals actuals1
-%type <formals> formallist, formals, formals1
+%type <formals> formallist formals formals1 def_par set_par state_par
+%type <parms> parameters
 %type <place> place
 %type <ori> orientation
 %%
 
+main:		  TOK_GENERAL instrument
+		| TOK_RESTRICTED component
+;
+
+component:	  "DEFINE" "COMPONENT" TOK_ID parameters declare initialize trace finally "END"
+		  {
+		    struct comp_def *c;
+		    palloc(c);
+		    c->name = $3;
+		    c->def_par = $4.def;
+		    c->set_par = $4.set;
+		    c->state_par = $4.state;
+		    c->decl_code = $5;
+		    c->init_code = $6;
+		    c->trace_code = $7;
+		    c->finally_code = $8;
+
+		    /* Put component definition in table. */
+		    symtab_add(read_components, c->name, c);
+		  }
+;
+
+parameters:	  def_par set_par state_par
+		  {
+		    $$.def = $1;
+		    $$.set = $2;
+		    $$.state = $3;
+		  }
+;
+
+
+def_par:	  "DEFINITION" "PARAMETERS" formallist
+		  {
+		    $$ = $3;
+		  }
+;
+
+set_par:	  "SETTING" "PARAMETERS" formallist
+		  {
+		    $$ = $3;
+		  }
+;
+
+state_par:	  "STATE" "PARAMETERS" formallist
+		  {
+		    $$ = $3;
+		  }
+;
 
 instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist declare initialize complist finally "END"
 		  {
@@ -130,6 +194,12 @@ initialize:	  /* empty */
 		    $$ = codeblock_new();
 		  }
 		| "INITIALIZE" codeblock
+		  {
+		    $$ = $2;
+		  }
+;
+
+trace:		  "TRACE" codeblock
 		  {
 		    $$ = $2;
 		  }
@@ -360,6 +430,9 @@ List comp_instances_list;
 /* Filename for outputting generated simulation program ('-' means stdin). */
 static char *output_filename;
 
+/* Map of already-read components. */
+Symtab read_components = NULL;
+
 
 /* Print a summary of the command usage and exit with error. */
 static void
@@ -450,7 +523,7 @@ main(int argc, char *argv[])
   FILE *file;
   int err;
   
-  yydebug=0;			/* If 1, then bison gives verbose parser debug info. */
+  yydebug = 0;			/* If 1, then bison gives verbose parser debug info. */
 
   parse_command_line(argc, argv);
   if(!strcmp(instr_current_filename, "-"))
@@ -461,7 +534,7 @@ main(int argc, char *argv[])
     fatal_error("Instrument definition file `%s' not found\n",
 		instr_current_filename);
   instr_current_line = 1;
-  yyrestart(file);
+  lex_new_file(file);
   err = yyparse();
   fclose(file);
   if(err != 0)
@@ -545,4 +618,70 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
   }
   comp->defpar = defpar;
   comp->setpar = setpar;
+}
+
+
+/*******************************************************************************
+* This is the main entry point for reading a component. When a component
+* definition is needed, this function is called with the name of the
+* component. A map of previously read components is maintained. If a
+* component definition (struct comp)def) is found, it is returned. Otherwise
+* an attempt is made to read the component definition from a file with the
+* same name as the component with added file extension ".com".
+* If for some reasons the component cannot be read, NULL is returned; else a
+* pointer to a struct comp_def is returned. Since components definitions can
+* be used multiple times, the returned structure is shared and should not be
+* modified.
+*******************************************************************************/
+struct comp_def *
+read_component(char *name)
+{
+  struct Symtab_entry *entry;
+  
+  /* Create table of components on first call. */
+  if(read_components == NULL)
+    read_components = symtab_create();
+  /* Look for an existing definition for the component. */
+  entry = symtab_lookup(read_components, name);
+  if(entry != NULL)
+  {
+    return entry->val;		/* Return it if found. */
+  }
+  else
+  {
+    char *filename;
+    FILE *file;
+    int err;
+    
+    /* Attempt to read definition from file components/<name>.com. */
+    filename = str_cat("components/", name, ".com", NULL);
+    file = fopen(filename, "r");
+    if(file == NULL)
+    {
+      print_error("Cannot find file `%s' "
+		  "while looking for definition of component `%s'.\n",
+		  filename, name);
+      return NULL;
+    }
+    push_autoload(file);
+    /* Note: the str_dup copy of the file name is stored in codeblocks, and
+       must not be freed. */
+    instr_current_filename = str_dup(filename);
+    instr_current_line = 1;
+    err = yyparse();		/* Read definition from file. */
+    if(err != 0)
+      print_error("Errors encountered during parse.\n");
+    fclose(file);
+    /* Now check if the file contained the required component definition. */
+    entry = symtab_lookup(read_components, name);
+    if(entry != NULL)
+    {
+      return entry->val;
+    }
+    else
+    {
+      print_error("Definition of component %s not found.\n", name);
+      return NULL;
+    }
+  }
 }
