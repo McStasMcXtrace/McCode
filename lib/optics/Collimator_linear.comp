@@ -1,0 +1,53 @@
+/*******************************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Soller
+*
+* Written by: KN, August 1998
+*
+* Soller collimator with rectangular opening and specified length. The
+* transmission function is an average and does not utilize knowledge of the
+* actual neutron trajectory.
+* A zero divergence disables collimation (then the component works as a double slit).
+*
+* INPUT PARAMETERS:
+*
+* xmin:       Lower x bound on slits
+* xmax:       Upper x bound on slits
+* ymin:       Lower y bound on slits
+* ymax:       Upper y bound on slits
+* len:        Distance between slits (m)
+* divergence: Divergence angle (calculated as atan(d/len), where d is the blade spacing)
+*
+*******************************************************************************/
+
+
+DEFINE COMPONENT Soller
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, divergence)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+TRACE
+%{
+    double phi, dt;
+    
+    PROP_Z0;
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+    dt = len/vz;
+    PROP_DT(dt);
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+
+    if(divergence != 0.0)
+    {
+      phi = fabs(vx/vz);  
+      if (phi > divergence)   
+	ABSORB;
+      else
+	p *= 1.0 - phi/divergence;
+    }
+%}
+END
