@@ -94,6 +94,7 @@ install: installdirs $(BINOBJS)
 	    $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
 	  fi \
 	done
+	./mcdoc.fixpl
 
 installdirs:
 	$(srcdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir)
