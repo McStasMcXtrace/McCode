@@ -17,9 +17,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.51 2003-04-04 14:27:19 farhi Exp $
+* $Id: mcstas-r.h,v 1.52 2003-04-04 18:20:21 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.51  2003/04/04 14:27:19  farhi
+*	Moved format definitions to mcstas-r.c for --no-runtime to work
+*	
 *	Revision 1.50  2003/02/11 12:28:46  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
@@ -48,7 +51,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.51 $"
+#define MCSTAS_R_H "$Revision: 1.52 $"
 
 #include <math.h>
 #include <string.h>
@@ -109,10 +112,14 @@ extern struct mcinputtable_struct mcinputtable[];
 extern int mcnumipar;
 extern char mcinstrument_name[], mcinstrument_source[];
 extern int mctraceenabled, mcdefaultmain;
+#ifndef MC_EMBEDDED_RUNTIME
 extern FILE *mcsiminfo_file;
 extern char  mcsig_message[];
 extern int mcgravitation;
 extern int mcdotrace;
+extern struct mcformats_struct mcformats[];
+extern struct mcformats_struct mcformat;
+#endif
 void mcinit(void);
 void mcraytrace(void);
 void mcsave(FILE *);
@@ -439,10 +446,6 @@ struct mcformats_struct {
 #ifndef MCSTAS_VERSION
 #define MCSTAS_VERSION "External Run-time"
 #endif
-  
-extern struct mcformats_struct mcformats[];
-    
-extern struct mcformats_struct mcformat;
 
 /* function prototypes */
 void mcuse_format(char *format);
