@@ -545,9 +545,6 @@ sub setup_menu {
     my $menu = $w->Frame(-relief => 'raised', -borderwidth => 2);
     $menu->pack(-fill => 'x');
     my $filemenu = $menu->Menubutton(-text => 'File', -underline => 0);
-    $filemenu->command(-label => 'New instrument',
-		       -command => [\&menu_new, $w],
-		       -underline => 0);
     $filemenu->command(-label => 'Open instrument ...',
 		       -accelerator => 'Alt+O',
 		       -command => [\&menu_open, $w],
