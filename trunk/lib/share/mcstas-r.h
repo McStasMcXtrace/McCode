@@ -155,7 +155,7 @@ void mcdis_circle(char *, double, double, double, double);
 #define Q2V	 AA2MS
 #define V2Q	 MS2AA
 #define SE2V	 437.3949	   /* Convert sqrt(E)[meV] to v[m/s] */
-#define VS2E	 5.227e-6	   /* Convert v[m/s] to sqrt(E)[meV] */
+#define VS2E	 5.227e-6	   /* Convert (v[m/s])**2 to E[meV] */
 #define FWHM2RMS 0.424660900144    /* Convert between full-width-half-max and */
 #define RMS2FWHM 2.35482004503     /* root-mean-square (standard deviation) */
 #define HBAR     1.05459E-34
