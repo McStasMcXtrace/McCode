@@ -265,7 +265,7 @@ sub dialog_hardcopy {
                 "mcstas.gif" :
                     ($di->[$current_plot]{'Filename'} . ".gif"); 
         }
-        my $f = $dlg->getSaveFile(-defaultextension => "ps",
+        my $f = $dlg->getSaveFile(-defaultextension => ".ps",
                                   -title => "Select postscript file name",
                                   -initialfile => $default);
         $dlg->grab if $oldgrab eq 'local';
@@ -392,7 +392,7 @@ sub backend_dialog {
                -anchor => 'w','value',3,'variable',\$plotter)->pack(-fill => 'x');
     $buttons[4]=$lf->Radiobutton(-text => "Scilab scriptfile",
                -anchor => 'w','value',4,'variable',\$plotter)->pack(-fill => 'x');
-    $buttons[4]=$lf->Checkbutton(-text => "Use binary files (faster)",
+    $buttons[5]=$lf->Checkbutton(-text => "Use binary files (faster)",
                -relief => 'flat','variable',\$binary)->pack(-fill => 'x');
     $buttons[$plotter]->select;
     my $res = $dlg->Show;
