@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.3 1997-10-16 14:25:11 kn Exp $
+* 	$Id: cogen.c,v 1.4 1997-10-16 21:19:27 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.3  1997/10/16 14:25:11  kn
+* 	Added debugging output used by the "display" graphical visualization
+* 	tool.
+*
 * 	Revision 1.2  1997/09/08 11:15:19  kn
 * 	Added some more debugging output.
 *
@@ -512,8 +516,10 @@ cogen_init(struct instr_def *instr)
     else
     {
       coutf("    %stc1 = coords_set(%s, %s, %s);", ID_PRE, x, y, z);
-      coutf("    %stc2 = rot_apply(%srota%s, %stc1);",
-	    ID_PRE, ID_PRE, relcomp->name, ID_PRE);
+      coutf("    rot_transpose(%srota%s, %str1);",
+	    ID_PRE, relcomp->name, ID_PRE);
+      coutf("    %stc2 = rot_apply(%str1, %stc1);",
+	    ID_PRE, ID_PRE, ID_PRE);
       coutf("    %sposa%s = coords_add(%sposa%s, %stc2);",
 	    ID_PRE, comp->name, ID_PRE, relcomp->name, ID_PRE);
     }
