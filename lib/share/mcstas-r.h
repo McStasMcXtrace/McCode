@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.7 1998-03-20 14:20:10 lefmann Exp $
+*	$Id: mcstas-r.h,v 1.8 1998-03-24 07:36:20 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.7  1998/03/20 14:20:10  lefmann
+*	Added a few definitions.
+*
 *	Revision 1.6  1998/03/18 13:21:48  elu_krni
 *	Added definition of PROP_Z0 macro.
 *
@@ -33,14 +36,15 @@
 *******************************************************************************/
 
 #include <math.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
 
-#define ABSORB {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-          mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;}
+#define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+        mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
 
 #ifdef DEBUG
 #define mcDEBUG_INSTR() printf("INSTRUMENT:\n");
@@ -68,9 +72,44 @@ typedef MCNUM Rotation[3][3];
 #define mcDEBUG_ABSORB()
 #endif
 
+#ifdef TEST
+#define test_printf printf
+#else
+#define test_printf while(0) printf
+#endif
+
 #define MIN2RAD 2*PI/(360*60)
 #define DEG2RAD 2*PI/360
 #define AA2MS   2200*1.798/(2*PI)
+
+#define rand01() ( ((double)random())/((double)RAND_MAX+1) )
+#define randpm1() ( ((double)random()) / (((double)RAND_MAX+1)/2) - 1 )
+#define rand0max(max) ( ((double)random()) / (((double)RAND_MAX+1)/(max)) )
+#define randminmax(min,max) ( rand0max((max)-(min)) - (min) )
+
+#define PROP_X0 \
+  { \
+    double mc_dt; \
+    if(mcnlvx == 0) ABSORB; \
+    mc_dt = -mcnlx/mcnlvx; \
+    if(mc_dt < 0) ABSORB; \
+    mcnly += mcnlvy*mc_dt; \
+    mcnlz += mcnlvz*mc_dt; \
+    mcnlt += mc_dt; \
+    mcnlx = 0; \
+  }
+
+#define PROP_Y0 \
+  { \
+    double mc_dt; \
+    if(mcnlvy == 0) ABSORB; \
+    mc_dt = -mcnly/mcnlvy; \
+    if(mc_dt < 0) ABSORB; \
+    mcnlx += mcnlvx*mc_dt; \
+    mcnlz += mcnlvz*mc_dt; \
+    mcnlt += mc_dt; \
+    mcnly = 0; \
+  }
 
 #define PROP_Z0 \
   { \
@@ -82,6 +121,63 @@ typedef MCNUM Rotation[3][3];
     mcnly += mcnlvy*mc_dt; \
     mcnlt += mc_dt; \
     mcnlz = 0; \
+  }
+
+#define PROP_DT(dt) \
+  { \
+    mcnlx += mcnlvx*(dt); \
+    mcnly += mcnlvy*(dt); \
+    mcnlz += mcnlvz*(dt); \
+    mcnlt += (dt); \
+  }
+
+#define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
+  { \
+    double mcvp_tmpx, mcvp_tmpy, mcvp_tmpz; \
+    mcvp_tmpx = (y1)*(z2) - (y2)*(z1); \
+    mcvp_tmpy = (z1)*(x2) - (z2)*(x1); \
+    mcvp_tmpz = (x1)*(y2) - (x2)*(y1); \
+    (x) = mcvp_tmpx; (y) = mcvp_tmpy; (z) = mcvp_tmpz; \
+  }
+
+#define scalar_prod(x1, y1, z1, x2, y2, z2) \
+  ((x1)*(x2) + (y1)*(y2) + (z1)*(z2))
+
+#define NORM(x,y,z) \
+  { \
+    double mcnm_tmp = sqrt((x)*(x) + (y)*(y) + (z)*(z)); \
+    if(mcnm_tmp != 0.0) \
+    { \
+      (x) /= mcnm_tmp; \
+      (y) /= mcnm_tmp; \
+      (z) /= mcnm_tmp; \
+    } \
+  }
+
+#define rotate(x, y, z, vx, vy, vz, phi, ax, ay, az) \
+  { \
+    double mcrt_tmpx = (ax), mcrt_tmpy = (ay), mcrt_tmpz = (az); \
+    double mcrt_vp, mcrt_vpx, mcrt_vpy, mcrt_vpz; \
+    double mcrt_vnx, mcrt_vny, mcrt_vnz, mcrt_vn1x, mcrt_vn1y, mcrt_vn1z; \
+    double mcrt_bx, mcrt_by, mcrt_bz, mcrt_v1x, mcrt_v1y, mcrt_v1z; \
+    double mcrt_cos, mcrt_sin; \
+    NORM(mcrt_tmpx, mcrt_tmpy, mcrt_tmpz); \
+    mcrt_vp = scalar_prod((vx), (vy), (vz), mcrt_tmpx, mcrt_tmpy, mcrt_tmpz); \
+    mcrt_vpx = mcrt_vp*mcrt_tmpx; \
+    mcrt_vpy = mcrt_vp*mcrt_tmpy; \
+    mcrt_vpz = mcrt_vp*mcrt_tmpz; \
+    mcrt_vnx = (vx) - mcrt_vpx; \
+    mcrt_vny = (vy) - mcrt_vpy; \
+    mcrt_vnz = (vz) - mcrt_vpz; \
+    vec_prod(mcrt_bx, mcrt_by, mcrt_bz, \
+	     mcrt_tmpx, mcrt_tmpy, mcrt_tmpz, mcrt_vnx, mcrt_vny, mcrt_vnz); \
+    mcrt_cos = cos((phi)); mcrt_sin = sin((phi)); \
+    mcrt_vn1x = mcrt_vnx*mcrt_cos + mcrt_bx*mcrt_sin; \
+    mcrt_vn1y = mcrt_vny*mcrt_cos + mcrt_by*mcrt_sin; \
+    mcrt_vn1z = mcrt_vnz*mcrt_cos + mcrt_bz*mcrt_sin; \
+    (x) = mcrt_vpx + mcrt_vn1x; \
+    (y) = mcrt_vpy + mcrt_vn1y; \
+    (z) = mcrt_vpz + mcrt_vn1z; \
   }
 
 Coords coords_set(MCNUM x, MCNUM y, MCNUM z);
@@ -100,4 +196,4 @@ void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 void mcgenstate(void);
 double randnorm(void);
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
-		       double vx, double vy, double vz, r, h);
+		       double vx, double vy, double vz, double r, double h);
