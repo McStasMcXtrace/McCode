@@ -427,7 +427,7 @@ sub preferences_dialog {
     $buttons[$plotter_id]->select;
     if ($binary == 1) { $buttons[6]->select; }
 
-    $editor = $MCSTAS::mcstas_config{'EDITOR'};
+    $editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
     $rf->pack(-side => 'top', -fill => 'both');
     $rf->Label(-text => "Editor options:", -anchor => 'w')->pack(-fill => 'x');
     $edit_buttons[0]=$rf->Radiobutton(-text => "Simple built-in editor (McStas 1.7)",
@@ -444,7 +444,7 @@ sub preferences_dialog {
     if ($binary == 1 && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
     # finally set the PLOTTER
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
-    $MCSTAS::mcstas_config{'EDITOR'}  = $editor;
+    $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'}  = $editor;
 
     return ($res);
 }
