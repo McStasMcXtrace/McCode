@@ -50,7 +50,7 @@ BINOBJS=$(PERLOBJ) mcstas
 
 .pl.fixpl:
 	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
-	    -e 's+use lib "/usr/local/lib/mcstas"+use lib "'$(mc_libdir)'"+' \
+	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(mc_libdir)'"+' \
 	    < $(srcdir)/$< > $@
 	chmod +x $@
 
@@ -76,6 +76,10 @@ install: installdirs $(BINOBJS)
 	  if [ -d lib/$$file ]; then \
 	    $(srcdir)/mkinstalldirs $(mc_libdir)/$$file; \
 	    for comp in `cd lib/$$file; ls`; do \
+	      if [ -e $(mc_libdir)/$$comp ]; then \
+		echo "Renaming old component version $(mc_libdir)/$$comp to $(mc_libdir)/$$comp.old"; \
+		mv -f $(mc_libdir)/$$comp $(mc_libdir)/$$comp.old; \
+	      fi; \
 	      $(INSTALL_DATA) lib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
 	    done \
 	  else \
