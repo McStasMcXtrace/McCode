@@ -17,7 +17,7 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.48 2003-01-21 08:55:33 pkwi Exp $
+* $Id: mcstas-r.h,v 1.49 2003-01-23 10:57:50 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.5 2002/10/19 22:46:21 ef
@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.48 $"
+#define MCSTAS_R_H "$Revision: 1.49 $"
 
 #include <math.h>
 #include <string.h>
@@ -323,7 +323,7 @@ void mt_srandom (unsigned long x);
     double mcrt_tmpx = (ax), mcrt_tmpy = (ay), mcrt_tmpz = (az); \
     double mcrt_vp, mcrt_vpx, mcrt_vpy, mcrt_vpz; \
     double mcrt_vnx, mcrt_vny, mcrt_vnz, mcrt_vn1x, mcrt_vn1y, mcrt_vn1z; \
-    double mcrt_bx, mcrt_by, mcrt_bz, mcrt_v1x, mcrt_v1y, mcrt_v1z; \
+    double mcrt_bx, mcrt_by, mcrt_bz; \
     double mcrt_cos, mcrt_sin; \
     NORM(mcrt_tmpx, mcrt_tmpy, mcrt_tmpz); \
     mcrt_vp = scalar_prod((vx), (vy), (vz), mcrt_tmpx, mcrt_tmpy, mcrt_tmpz); \
@@ -394,19 +394,19 @@ int mcstas_main(int argc, char *argv[]);
 /* file i/o definitions and function prototypes */
 
 struct mcformats_struct {
-  char Name[64];  /* may also specify: append, partial(hidden), binary */
-  char Extension[16];
-  char Header[4096];
-  char Footer[4096];
-  char BeginSection[512];
-  char EndSection[256];
-  char AssignTag[64];
-  char BeginData[1024];
-  char BeginErrors[256];
-  char BeginNcount[256];
-  char EndData[256];
-  char EndErrors[256];
-  char EndNcount[256];
+  char *Name;  /* may also specify: append, partial(hidden), binary */
+  char *Extension;
+  char *Header;
+  char *Footer;
+  char *BeginSection;
+  char *EndSection;
+  char *AssignTag;
+  char *BeginData;
+  char *BeginErrors;
+  char *BeginNcount;
+  char *EndData;
+  char *EndErrors;
+  char *EndNcount;
   };
 
 #ifdef ALL_FORMATS
@@ -429,7 +429,7 @@ struct mcformats_struct {
  */
   
 struct mcformats_struct mcformats[mcNUMFORMATS] = {
-  "McStas", "sim",
+  { "McStas", "sim",
     "%1$sFormat: %4$s file\n"
       "%1$sURL:    http://neutron.risoe.dk/\n"
       "%1$sEditor: %6$s\n"
@@ -443,8 +443,8 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "", 
     "%1$sErrors [%2$s/%4$s]: \n",
     "%1$sEvents [%2$s/%4$s]: \n",
-    "", "", "",
-  "Scilab", "sci",
+    "", "", "" },
+  { "Scilab", "sci",
     "function %7$s = get_%7$s(p)\n"
       "// %4$s function issued from McStas on %5$s\n"
       "// McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
@@ -461,11 +461,11 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "function d=mcload_inline(d)\n"
       "// local inline func to load data\n"
       "execstr(['S=['+part(d.type,10:(length(d.type)-1))+'];']);\n"
-      "if ~length(strindex(d.format, 'binary'))\n"
+      "if ~length(d.data)\n"
+      " if ~length(strindex(d.format, 'binary'))\n"
       "  exec(d.filename,-1);p=d.parent;\n"
       "  if ~execstr('d2='+d.func+'();','errcatch'),d=d2; d.parent=p;end\n"
-      "  if sum(S ~= size(d.data)), d.data=d.data'; errcatch(-1,'continue'); d.errors=d.errors'; d.events=d.events'; errcatch(-1); end\n"
-      "else\n"
+      " else\n"
       "  if length(strindex(d.format, 'float')), t='f';\n"
       "  elseif length(strindex(d.format, 'double')), t='d';\n"
       "  else return; end\n"
@@ -477,11 +477,18 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "  d.errors=matrix(x((pS+1):(2*pS)), S);\n"
       "  d.events=matrix(x((2*pS+1):(3*pS)), S);end\n"
       "  mclose(fid);\n"
+      "  return\n"
+      " end\n"
+      "end\n"
+      "if sum(S ~= size(d.data))\n"
+      " d.data=d.data'; errcatch(-1,'continue','nomessage');\n"
+      " d.errors=d.errors'; d.events=d.events'; errcatch(-1);\n"
       "end\n"
       "endfunction\n"
       "function d=mcplot_inline(d,p)\n"
       "// local inline func to plot data\n"
-      "if ~length(d.data) & ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
+      "if ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\n"
+      "if ~p, return; end;\n"
       "execstr(['l=[',d.xylimits,'];']); S=size(d.data);\n"
       "t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];\n"
       "mprintf('%%s\\n',t(:));\n"
@@ -489,12 +496,12 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "else\nw=winsid();if length(w),w=w($)+1; else w=0; end\n"
       "xbasr(w); xset('window',w);\n"
       "if length(strindex(d.type,'2d'))\n"
-      "d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2)); z=d.data;\n"
-      "fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));\n"
-      "if fx>0,fx=round(log10(fx)); d.x=d.x/10^fx; d.xlabel=d.xlabel+' [*10^'+string(fx)+']'; end\n"
-      "if fy>0,fy=round(log10(fy)); d.y=d.y/10^fy; d.ylabel=d.ylabel+' [*10^'+string(fy)+']'; end\n"
-      "if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end\n"
-      "xset('colormap',hotcolormap(64));plot3d1(d.x,d.y,z);\n"
+      " d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2)); z=d.data;\n"
+      " fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));\n"
+      " if fx>0,fx=round(log10(fx)); d.x=d.x/10^fx; d.xlabel=d.xlabel+' [*10^'+string(fx)+']'; end\n"
+      " if fy>0,fy=round(log10(fy)); d.y=d.y/10^fy; d.ylabel=d.ylabel+' [*10^'+string(fy)+']'; end\n"
+      " if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end\n"
+      " xset('colormap',hotcolormap(64));plot3d1(d.x,d.y,z);\n"
       "else\nd.x=linspace(l(1),l(2),max(S));\nplot2d(d.x,d.data);end\nend\n"
       "xtitle(t,'X:'+d.xlabel,'Y:'+d.ylabel); xname(t1);endfunction\n"
     "%7$s=get_%7$s();\n",
@@ -507,9 +514,9 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%1$sevents = [ ",
     " ]; // end of data\n%1$sif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%1$s%2$s=mcplot_inline(%2$s,p);\n",
     " ]; // end of errors\n%1$sif single_file == 1, %2$s.errors=errors; end\n",
-    " ]; // end of events\n%1$sif single_file == 1, %2$s.events=events; end\n",
+    " ]; // end of events\n%1$sif single_file == 1, %2$s.events=events; end\n"},
 #ifdef ALL_FORMATS
-  "Matlab", "m",
+  { "Matlab", "m",
     "function %7$s = get_%7$s(p)\n"
       "%% %4$s function issued from McStas on %5$s\n"
       "%% McStas simulation %2$s: %3$s\n"
@@ -524,15 +531,16 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%7$s.EndDate=%8$li; %% for datestr\n"
       "function d=mcload_inline(d)\n"
       "%% local inline function to load data\n"
-      "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' 1 ];']);\n"
-      "if ~length(findstr(d.format, 'binary'))\n"
+      "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);\n"
+      "if isempty(d.data)\n"
+      " if ~length(findstr(d.format, 'binary'))\n"
       "  copyfile(d.filename,[d.func,'.m']);p=d.parent;\n"
       "  eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);\n"
-      "  if any(S ~= size(d.data)), d.data=d.data'; if isfield(d,'errors'), d.errors=d.errors'; d.events=d.events'; end; end\n"
-      "else\n"
+      " else\n"
       "  if length(findstr(d.format, 'float')), t='single';\n"
       "  elseif length(findstr(d.format, 'double')), t='double';\n"
       "  else return; end\n"
+      "  if length(S) == 1, S=[S 1]; end\n"
       "  fid=fopen(d.filename, 'r');\n"
       "  pS = prod(S);\n"
       "  x = fread(fid, 3*pS, t);\n"
@@ -541,10 +549,16 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "  d.errors=reshape(x((pS+1):(2*pS)), S);\n"
       "  d.events=reshape(x((2*pS+1):(3*pS)), S);end\n"
       "  fclose(fid);\n"
+      "  return\n"
+      " end\n"
       "end\n"
+      "if any(S ~= size(d.data))\n"
+      " d.data=d.data';\n"
+      " if isfield(d,'errors'), d.errors=d.errors'; d.events=d.events';end;\n"
+      "end\nreturn;\n"
       "function d=mcplot_inline(d,p)\n"
       "%% local inline function to plot data\n"
-      "if isempty(d.data) & isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
+      "if isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
       "eval(['l=[',d.xylimits,'];']); S=size(d.data);\n"
       "t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);\n"
       "disp(t);\n"
@@ -565,8 +579,8 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%1$sevents = [ ",
     " ]; %% end of data\nif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%2$s=mcplot_inline(%2$s,p);\n",
     " ]; %% end of errors\nif single_file, %2$s.errors=errors; end\n",
-    " ]; %% end of events\nif single_file, %2$s.events=events; end\n",
-  "IDL", "pro",
+    " ]; %% end of events\nif single_file, %2$s.events=events; end\n"},
+  { "IDL", "pro",
     "function mcload_inline,d\n"
       "; local inline function to load external data\n"
       "S=d.type & a=execute('S=long(['+strmid(S,9,strlen(S)-10)+'])')\n"
@@ -653,7 +667,7 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "function %7$s,plot=plot\n"
       "; %4$s function issued from McStas on %5$s\n" 
       "; McStas simulation %2$s: %3$s\n"
-      "; import using .run %7$s\n"
+      "; import using s=%7$s(/plot)\n"
       "if keyword_set(plot) then p=1 else p=0\n"
       "%7$s={Format:'%4$s',URL:'http://neutron.risoe.dk',"
       "Editor:'%6$s',$\n"
@@ -671,8 +685,8 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     " ]\n%1$sif size(data,/type) eq 7 then single_file=0 else single_file=1\n"
     "%1$sstv,%2$s,'data',data & data=0 & %2$s=mcplot_inline(%2$s,p)\n",
     " ]\n%1$sstv,%2$s,'errors',reform(errors,%14$d,%15$d,/over) & errors=0\n%1$sendif\n",
-    " ]\n%1$sstv,%2$s,'events',reform(events,%14$d,%15$d,/over) & events=0\n%1$sendif\n\n",
-  "XML", "xml",
+    " ]\n%1$sstv,%2$s,'events',reform(events,%14$d,%15$d,/over) & events=0\n%1$sendif\n\n"},
+  { "XML", "xml",
     "<?xml version=\"1.0\" ?>\n<!--\n"
       "URL:    http://www.neutron.anl.gov/nexus/xml/NXgroup.xml\n"
       "Editor: %6$s\n"
@@ -693,8 +707,8 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
         " max=\"%22$g\" dims=\"%16$d\" range=\"1\"></%10$s>\n"
       "%1$s<data long_name=\"%3$s\" signal=\"1\"  axis=\"[%6$s,%8$s,%10$s]\" file_name=\"%4$s\">",
     "%1$s<errors>", "%1$s<monitor>",
-    "%1$s</data>\n", "%1$s</errors>\n", "%1$s</monitor>\n",
-  "HTML", "html",
+    "%1$s</data>\n", "%1$s</errors>\n", "%1$s</monitor>\n"},
+  { "HTML", "html",
     "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD %5$s//EN\"\n"
       "\"http://www.w3.org/TR/html4/strict.dtd\">\n"
       "<HTML><HEAD><META name=\"Author\" content=\"%7$s\">\n"
@@ -718,7 +732,7 @@ struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%1$s<b>%3$s: </b>%4$s<br>\n",
     "%1$s<b>DATA</b><br>\n",
       "%1$s<b>ERRORS</b><br>\n","%1$s<b>EVENTS</b><br>\n",
-      "%1$sEnd of DATA<br>\n", "%1$sEnd of ERRORS<br>\n", "%1$sEnd of EVENTS<br>\n"
+      "%1$sEnd of DATA<br>\n", "%1$sEnd of ERRORS<br>\n", "%1$sEnd of EVENTS<br>\n"}
 #endif
     };
     
@@ -749,7 +763,7 @@ void mcinfo_simulation(FILE *f, struct mcformats_struct format,
 
 
 #ifndef FLT_MAX
-#define FLT_MAX 1E37
+#define       FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
 #endif
 
 /* Retrieve component information from the kernel */

@@ -245,3 +245,10 @@ c2=[(1:8)*0,c,(1:11)*0];
 c3=[c(6:$), (1:24)*0];
 jet=[c1' c2' c3'];
 xset('colormap',jet)
+
+
+Windows compile:
+on Unix machine, create lex/bison files (*.tab.c) by ./configure; make
+mcstas-1.6.4 ok if HAVE_STRCASECMP defined
+mcstas.exe works ok
+segv at exec on built instruments when calling output routines (mcfile_*)

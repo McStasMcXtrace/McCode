@@ -20,7 +20,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.37 2003-01-21 08:55:31 pkwi Exp $
+* $Id: cogen.c,v 1.38 2003-01-23 10:57:50 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -80,7 +80,6 @@
 * ##tc1            Temporary variable used to compute transformations.
 * ##tc2
 * ##tr1
-* ##tr2
 * ##nx             Neutron state (position, velocity, time, and spin).
 * ##ny
 * ##nz
@@ -339,7 +338,6 @@ static void
 cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
                         void (*func)(void *), void *data)
 {
-  char *par;
   struct comp_iformal *formal;
 
   /* Get the next setting parameter. */
@@ -670,7 +668,7 @@ cogen_init(struct instr_def *instr)
   cout("  /* Computation of coordinate transformations. */");
   cout("  {");
   coutf("    Coords %stc1, %stc2;", ID_PRE, ID_PRE);
-  coutf("    Rotation %str1, %str2;", ID_PRE, ID_PRE);
+  coutf("    Rotation %str1;", ID_PRE);
   cout("");
   /* Conversion factor degrees->radians for rotation angles. */
   d2r = "DEG2RAD";
@@ -1196,6 +1194,22 @@ cogen_mcdisplay(struct instr_def *instr)
 static void
 cogen_runtime(struct instr_def *instr)
 {
+  char *sysdir_orig;
+  char *sysdir_new;
+  char  pathsep[3];
+  int   i,j=0;
+  /* handles Windows '\' chararcters for embedding sys_dir into source code */
+  if (PATHSEP_C != '\\') strcpy(pathsep, PATHSEP_S); else strcpy(pathsep, "\\\\");
+  sysdir_orig = get_sys_dir();
+  sysdir_new  = (char *)mem(2*strlen(sysdir_orig));
+  for (i=0; i < strlen(sysdir_orig); i++)
+  {
+    if (sysdir_orig[i] == '\\') 
+    { sysdir_new[j] = '\\'; j++; sysdir_new[j] = '\\'; }
+    else sysdir_new[j] = sysdir_orig[i];
+    j++;
+  }
+  sysdir_new[j] = '\0';
   if(instr->use_default_main)
     cout("#define MC_USE_DEFAULT_MAIN");
   if(instr->enable_trace)
@@ -1210,16 +1224,17 @@ cogen_runtime(struct instr_def *instr)
   }
   else
   {
-    coutf("#include \"%s%cshare%cmcstas-r.h\"", get_sys_dir(), PATHSEP_C, PATHSEP_C);
+    coutf("#include \"%s%sshare%smcstas-r.h\"", sysdir_new, pathsep, pathsep);
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
     fprintf(stderr,"To make instrument %s, compile and link with these libraries\n", instrument_definition->quoted_source);
   }
+  
   coutf("#ifdef MC_TRACE_ENABLED");
   coutf("int %straceenabled = 1;", ID_PRE);
   coutf("#else");
   coutf("int %straceenabled = 0;", ID_PRE);
   coutf("#endif");
-  coutf("#define MCSTAS \"%s%c\"", get_sys_dir(), PATHSEP_C);
+  coutf("#define MCSTAS \"%s%s\"", sysdir_new,pathsep);
   coutf("int %sdefaultmain = %d;", ID_PRE, instr->use_default_main);
   coutf("char %sinstrument_name[] = \"%s\";", ID_PRE, instr->name);
   coutf("char %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
@@ -1256,7 +1271,6 @@ cogen(char *output_name, struct instr_def *instr)
   cout(" */\n");
   cout("");
   coutf("#define MCSTAS_VERSION \"%s\"", MCSTAS_VERSION);
-  coutf("#define MC_SYS_DIR \"%s\"", MC_SYS_DIR);
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);

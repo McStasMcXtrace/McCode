@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.49 2003-01-21 08:55:33 pkwi Exp $
+* $Id: mcstas-r.c,v 1.50 2003-01-23 10:57:50 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.7 2002/10/19 22:46:21 ef
@@ -47,10 +47,7 @@
 
 #include <stdarg.h>
 #include <limits.h>
-#include <math.h>
 #include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 
 #ifndef MCSTAS_R_H
@@ -73,7 +70,7 @@ static long mcstartdate = 0;
 
 static FILE *mcsiminfo_file = NULL;
 static char *mcdirname = NULL;
-static char *mcsiminfo_name = "mcstas";
+static char *mcsiminfo_name= "mcstas";
 static char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 
 /* MCDISPLAY support. ======================================================= */
@@ -390,7 +387,7 @@ static int
 mcparm_double(char *s, void *vptr)
 {
   char *p;
-  double *v = vptr;
+  double *v = (double *)vptr;
 
   if (!s) { *v = 0; return(1); }
   *v = strtod(s, &p);
@@ -419,7 +416,7 @@ mcparmerror_double(char *parm, char *val)
 static void
 mcparmprinter_double(char *f, void *vptr)
 {
-  double *v = vptr;
+  double *v = (double *)vptr;
   sprintf(f, "%g", *v);
 }
 
@@ -428,7 +425,7 @@ static int
 mcparm_int(char *s, void *vptr)
 {
   char *p;
-  int *v = vptr;
+  int *v = (int *)vptr;
   long x;
 
   if (!s) { *v = 0; return(1); }
@@ -462,7 +459,7 @@ mcparmerror_int(char *parm, char *val)
 static void
 mcparmprinter_int(char *f, void *vptr)
 {
-  int *v = vptr;
+  int *v = (int *)vptr;
   sprintf(f, "%d", *v);
 }
 
@@ -470,9 +467,9 @@ mcparmprinter_int(char *f, void *vptr)
 static int
 mcparm_string(char *s, void *vptr)
 {
-  char **v = vptr;
+  char **v = (char **)vptr;
   if (!s) { *v = NULL; return(1); }
-  *v = malloc(strlen(s) + 1);
+  *v = (char *)malloc(strlen(s) + 1);
   if(*v == NULL)
   {
     fprintf(stderr, "Error: Out of memory (mcparm_string).\n");
@@ -501,11 +498,11 @@ mcparmerror_string(char *parm, char *val)
 static void
 mcparmprinter_string(char *f, void *vptr)
 {
-  char **v = vptr;
+  char **v = (char **)vptr;
   char *p;
   char *c = " \0";
   if (!*v) { *f='\0'; return; }
-  sprintf(f, "");
+  strcpy(f, "");
   for(p = *v; *p != '\0'; p++)
   {
     switch(*p)
@@ -1023,9 +1020,8 @@ int
 cylinder_intersect(double *t0, double *t1, double x, double y, double z,
                    double vx, double vy, double vz, double r, double h)
 {
-  double v, D, t_in, t_out, y_in, y_out, ret=1;
-
-  v = sqrt(vx*vx+vy*vy+vz*vz);
+  double D, t_in, t_out, y_in, y_out;
+  int ret=1;
 
   D = (2*vx*x + 2*vz*z)*(2*vx*x + 2*vz*z)
     - 4*(vx*vx + vz*vz)*(x*x + z*z - r*r);
@@ -1106,7 +1102,7 @@ int plane_intersect_Gfast(double *Idt,
    * A = 0.5 n.g; B = n.v; C = n.(r-W);
    * no acceleration when A=0
    */
-  double ret=0;
+  int ret=0;
   double dt0;
 
   *Idt = 0;
@@ -1422,10 +1418,7 @@ mcnew_file(char *name, char *mode)
       strcat(mem, MC_PATHSEP_S);
   }
   strcat(mem, name);
-  if (mode)
-    file = fopen(mem, mode);
-  else
-    file = fopen(mem, "w");
+  file = fopen(mem, (mode ? mode : "w"));
   if(!file)
     fprintf(stderr, "Warning: could not open output file '%s'\n", mem);
   free(mem);
@@ -1492,7 +1485,7 @@ usage: just as fprintf, but with (char *)fmt_args being the list of arg type
   va_list ap;
 
   if (!f || !fmt_args || !fmt) return(-1);
-  for (this_arg=0; this_arg<MyNL_ARGMAX;  arg_num[this_arg++] =NULL); this_arg = 0;
+  for (this_arg=0; this_arg<MyNL_ARGMAX;  arg_num[this_arg++] =0); this_arg = 0;
   fmt_pos = fmt;
   while(1)  /* analyse the format string 'fmt' */
   {
@@ -1506,7 +1499,6 @@ usage: just as fprintf, but with (char *)fmt_args being the list of arg type
       if (arg_posE[this_arg] && tmp[1] != '%')
       {
         char  this_arg_chr[10];
-        int   i;
         char  printf_formats[]="dliouxXeEfgGcs\0";
         
         /* extract positional argument index %*$ in fmt */
@@ -1618,10 +1610,12 @@ usage: just as fprintf, but with (char *)fmt_args being the list of arg type
 static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
 { /* wrapper to standard fprintf */
   va_list ap;
+  int tmp;
 
   va_start(ap, fmt_args);
-  vfprintf(f, fmt, ap);
+  tmp=vfprintf(f, fmt, ap);
   va_end(ap);
+  return(tmp);
 }
 #endif
 
@@ -1632,15 +1626,14 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
  */
 static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, char *pre, char *name, char *parent)
 {
-  char user[64]   ="";
-  char date[64]   ="";
-  char dirname[256]  =".";
-  char HeadFoot[4096]="";
+  char user[64];
+  char date[64];
+  char *HeadFoot;
   long date_l; /* date as a long number */
   time_t t;
-  char valid_parent[256] = "root\0";
-  char instrname[256]="";
-  char file[256]="";
+  char valid_parent[256];
+  char instrname[256];
+  char file[256];
   
   if(!f)
     return (-1);
@@ -1649,25 +1642,26 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
   
   if (part && !strcmp(part,"footer")) 
   {
-    strncpy(HeadFoot, format.Footer, 4096);
+    HeadFoot = format.Footer;
     date_l = (long)t;;
   }
   else 
   {
-    strncpy(HeadFoot, format.Header, 4096);
+    HeadFoot = format.Header;
     date_l = mcstartdate;
   }
+  t = (time_t)date_l;
     
   if (!strlen(HeadFoot) || (!name)) return (-1);
 
-  if (mcdirname) strncpy(dirname, mcdirname, 256);
   sprintf(file,"%s",name);
   sprintf(user,"%s on %s", getenv("USER"), getenv("HOST"));
   sprintf(instrname,"%s (%s)", mcinstrument_name, mcinstrument_source);
-  strncpy(date, ctime(&(time_t)date_l), 64); 
+  strncpy(date, ctime(&t), 64); 
   if (strlen(date)) date[strlen(date)-1] = '\0';
   
-  if (parent) mcvalid_name(valid_parent, parent, 256);
+  if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
+  else strcpy(valid_parent, "root");
   
   return(pfprintf(f, HeadFoot, "sssssssl", 
     pre,                  /* %1$s */
@@ -1686,13 +1680,14 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
  */
 static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *section, char *name, char *value)
 {
-  char valid_section[256]="";
+  char valid_section[256];
   int i;
   
   if (!strlen(format.AssignTag) || (!name) || (!f)) return(-1);
   
   mcvalid_name(valid_section, section, 256);
   
+  /* remove quote chars in values */
   if (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab") || strstr(format.Name, "IDL"))
     for(i = 0; i < strlen(value); i++)
       if (value[i] == '"' || value[i] == '\'') value[i] = ' ';
@@ -1709,29 +1704,31 @@ static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *
  * 'part' may be 'begin' or 'end' depending on section part to write
  * 'type' may be e.g. 'instrument','simulation','component','data'
  * if name == NULL, ignore function (no section definition)
+ * the prefix 'pre' is automatically idented/un-indented (pre-allocated !)
  */
  
 static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, char *pre, char *name, char *type, char *parent, int level) 
 {
-  char Section[1024]   ="";
-  char valid_name[256] ="";
-  char valid_parent[256]="root\0";
+  char *Section;
+  char valid_name[256];
+  char valid_parent[256];
   int  ret;
   
   if(!f)
     return (-1);
   
-  if (part && !strcmp(part,"end")) strncpy(Section, format.EndSection, 1024);
-  else strncpy(Section, format.BeginSection, 1024);
+  if (part && !strcmp(part,"end")) Section = format.EndSection;
+  else Section = format.BeginSection;
     
   if (!strlen(Section) || (!name)) return (-1);
   
   mcvalid_name(valid_name, name, 256);
   if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
+  else strcpy(valid_parent, "root");
   
   if (!strcmp(part,"end") && pre) 
   {
-    if (strlen(pre) <= 2) strcpy(pre,"\0");
+    if (strlen(pre) <= 2) strcpy(pre,"");
     else pre[strlen(pre)-2]='\0'; 
   }
   
@@ -1807,6 +1804,7 @@ void mcinfo_simulation(FILE *f, struct mcformats_struct format,
   else sprintf(Value, "%g/%g", run_num, ncount);
   mcfile_tag(f, format, pre, name, "Ncount", Value);
   mcfile_tag(f, format, pre, name, "Trace", mcdotrace ? "yes" : "no");
+  mcfile_tag(f, format, pre, name, "Gravitation", mcgravitation ? "yes" : "no");
   if(mcseed)
   {
     sprintf(Value, "%ld", mcseed);
@@ -1843,14 +1841,13 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   double *p0, double *p1, double *p2, char istransposed)
 {
   char type[256];
-  char stats[256]="\0";
+  char stats[256];
   char vars[256];
-  char signal[256]="\0";
+  char signal[256];
   char values[256];
-  char limits[256]="0 0 0 0 0 0\0";
-  char lim_field[10]="xylimits\0";
-  char valid_parent[256];
-  char c[32] = "I\0";
+  char limits[256];
+  char lim_field[10];
+  char c[32];
   double run_num, ncount;
   char ratio[256];
   
@@ -1916,7 +1913,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   }
   
   if (m*n*p == 1) 
-  { strcpy(type, "array_0d"); }
+  { strcpy(type, "array_0d"); strcpy(stats, ""); }
   else if (n == 1 || m == 1) 
   { if (m == 1) {m = n; n = 1; }
     sprintf(type, "array_1d(%d)", m); 
@@ -1925,6 +1922,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   { if (p == 1) sprintf(type, "array_2d(%d, %d)", m, n); 
     else sprintf(type, "array_3d(%d, %d, %d)", m, n, p); 
     sprintf(stats, "X0=%g; dX=%g; Y0=%g; dY=%g;", fmon_x, smon_x, fmon_y, smon_y); }
+  strcpy(c, "I ");
   if (zvar && strlen(zvar)) strncpy(c, zvar,32);
   else if (yvar && strlen(yvar)) strncpy(c, yvar,32);
   else if (xvar && strlen(xvar)) strncpy(c, xvar,32);
@@ -1953,7 +1951,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
       sprintf(signal, "Min=%g; Max=%g; Mean= %g;", min_z, max_z, mean_z); 
       if (y1 == 0 && y2 == 0) { y1 = min_z; y2 = max_z;}
       else if (z1 == 0 && z2 == 0) { z1 = min_z; z2 = max_z;}
-    }
+    } else strcpy(signal, "");
 
     mcfile_tag(f, format, pre, parent, "statistics", stats);
     mcfile_tag(f, format, pre, parent, "signal", signal);
@@ -1961,6 +1959,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     sprintf(values, "%g %g %g", sum_z, mcestimate_error(Nsum, sum_z, P2sum), Nsum);
     mcfile_tag(f, format, pre, parent, "values", values);
   }
+  strcpy(lim_field, "xylimits");
   if (n*m > 1) 
   {
     mcfile_tag(f, format, pre, parent, "xvar", xvar);
@@ -1978,7 +1977,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
       mcfile_tag(f, format, pre, parent, "zlabel", zlabel);
       sprintf(limits, "%g %g %g %g %g %g", x1, x2, y1, y2, z1, z2);
     }
-  }
+  } else strcpy(limits, "0 0 0 0 0 0");
   mcfile_tag(f, format, pre, parent, lim_field, limits);
 } /* mcinfo_data */
 
@@ -2000,20 +1999,21 @@ mcsiminfo_init(FILE *f)
             info_name);
   else
   {
-    char pre[20]="\0";
+    char pre[20];
     int  ismcstas;
     char simname[1024];
-    char root[10] = "root\0";
+    char root[10];
     
+    strcpy(pre, "");
     ismcstas = (strstr(mcformat.Name, "McStas") != NULL);
     if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas");
+    else strcpy(root, "root");
     if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
-
+    
     mcfile_header(mcsiminfo_file, mcformat, "header", pre, simname, root);
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, mcinstrument_name, "instrument", root, 1);
     mcinfo_instrument(mcsiminfo_file, mcformat, pre, mcinstrument_name);
     if (ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
-
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, simname, "simulation", mcinstrument_name, 2);
     mcinfo_simulation(mcsiminfo_file, mcformat, pre, simname);
     if (ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
@@ -2021,21 +2021,25 @@ mcsiminfo_init(FILE *f)
 } /* mcsiminfo_init */
 
 static void
-mcsiminfo_close()
+mcsiminfo_close(void)
 {
   if(mcsiminfo_file)
   {
     int  ismcstas;
     char simname[1024];
-    char root[10] = "root\0";
-    char pre[20]  = "  \0";
+    char root[10];
+    char pre[10];
     
+    strcpy(pre, "  ");
     ismcstas = (strstr(mcformat.Name, "McStas") != NULL);
     if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
-    if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas");
+    if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas"); else strcpy(root, "root");
     
-    if (!ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
-    if (!ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
+    if (!ismcstas) 
+    {
+      mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
+      mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
+    }
     mcfile_header(mcsiminfo_file, mcformat, "footer", pre, simname, root);
     
     if (mcsiminfo_file != stdout) fclose(mcsiminfo_file);
@@ -2060,12 +2064,12 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   double x1, double x2, double y1, double y2, double z1, double z2, 
   char *filename, char istransposed)
 {
-  char Begin[1024] = "\0";
-  char End[1024]   = "\0";
-  char valid_xlabel[64] = "\0";
-  char valid_ylabel[64] = "\0";
-  char valid_zlabel[64] = "\0";
-  char valid_parent[64] = "\0";
+  char *Begin;
+  char *End;
+  char valid_xlabel[64];
+  char valid_ylabel[64];
+  char valid_zlabel[64];
+  char valid_parent[64];
   FILE *datafile= NULL;
   int  isdata=0;
   int  just_header=0;
@@ -2075,11 +2079,11 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   char isdata_present;
   
   if (strstr(part,"data")) 
-  { isdata = 1; strncpy(Begin, format.BeginData, 1024); strncpy(End, format.EndData, 1024); }
+  { isdata = 1; Begin = format.BeginData; End = format.EndData; }
   if (strstr(part,"errors")) 
-  { isdata = 2; strncpy(Begin, format.BeginErrors, 1024); strncpy(End, format.EndErrors, 1024); }
+  { isdata = 2; Begin = format.BeginErrors; End = format.EndErrors; }
   if (strstr(part,"ncount")) 
-  { isdata = 0; strncpy(Begin, format.BeginNcount, 1024); strncpy(End, format.EndNcount, 1024); }
+  { isdata = 0; Begin = format.BeginNcount; End = format.EndNcount; }
   if (strstr(part, "begin")) just_header = 1;
   if (strstr(part, "end"))   just_header = 2;
   
@@ -2137,24 +2141,24 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   */
   if (!mcsingle_file && just_header == 0)
   {
-    char mode[2] = "w\0";
     /* if data: open new file for data else append for error/ncount */
-    if (isdata != 1 || strstr(format.Name, "append")) mode[0] = 'a';
-    if (filename) datafile = mcnew_file(filename, mode);
+    if (filename) datafile = mcnew_file(filename, 
+      (isdata != 1 || strstr(format.Name, "append") ? "a" : "w"));
     else datafile = NULL;
     /* special case of IDL: can not have empty vectors. Init to 'empty' */
     if (strstr(format.Name, "IDL") && f) fprintf(f, "'external'");
     /* if data, start with root header plus tags of parent data */
     if (datafile && !mcascii_only) 
-    {
-      char mypre[10] = "# \0";
-      
-      if (!strstr(format.Name, "McStas")) mypre[0] = '\0'; 
-      
-      if (isdata == 1) mcfile_header(datafile, format, "header", mypre, filename, valid_parent); 
+    { 
+      char mode[32];
+      if (isdata == 1) mcfile_header(datafile, format, "header",
+          (strstr(format.Name, "McStas") ? "# " : ""), 
+          filename, valid_parent); 
       sprintf(mode, "%s begin", part);
       /* write header+data block begin tags into datafile */
-      mcfile_datablock(datafile, format, mypre, valid_parent, mode,
+      mcfile_datablock(datafile, format, 
+          (strstr(format.Name, "McStas") ? "# " : ""), 
+          valid_parent, mode,
           p0, p1, p2, m, n, p,
           xlabel,  ylabel, zlabel, title,
           xvar, yvar, zvar,
@@ -2169,7 +2173,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     {
       if (is1d) sprintf(sec,"array_1d(%d)", m);
       else if (p==1) sprintf(sec,"array_2d(%d,%d)", m,n);
-      else sprintf(sec,"array_3d(%d,%d)", m,n,p);
+      else sprintf(sec,"array_3d(%d,%d,%d)", m,n,p);
       fprintf(f,"%sbegin %s\n", pre, sec);
       datafile = f;
     }
@@ -2180,7 +2184,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   /* do loops: 2 loops on m,n. */
   if (just_header == 0)
   {
-    char eol_char[3]="\n\0";
+    char eol_char[3];
     int  isIDL, isPython;
     int  isBinary=0;
     
@@ -2188,7 +2192,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     else if (strstr(format.Name, "binary double")) isBinary=2;
     isIDL    = (strstr(format.Name, "IDL") != NULL);
     isPython = (strstr(format.Name, "Python") != NULL);
-    if (isIDL) strcpy(eol_char,"$\n\0");
+    if (isIDL) strcpy(eol_char,"$\n"); else strcpy(eol_char,"\n");
       
     for(j = 0; j < n*p; j++)  /* loop on rows(y) */
     {
@@ -2251,7 +2255,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
             { if (isdata != 2) s[i] = (float)d[i]; 
               else s[i] = (float)mcestimate_error(p0[i],p1[i],p2[i]); }
           count = fwrite(s, sizeof(float), m*n*p, datafile);
-          if (count != m*n*p) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li).\n", filename,count, m*n*p);
+          if (count != m*n*p) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li).\n", filename,count, (long)m*n*p);
           free(s);
         } else fprintf(stderr, "McStas: Out of memory for writing float binary file '%s'.\n", filename);
       }
@@ -2271,7 +2275,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
         }
         count = fwrite(d, sizeof(double), m*n*p, datafile);
         if (isdata == 2 && s) free(s);
-        if (count != m*n*p) fprintf(stderr, "McStas: error writing double binary file '%s' (%li instead of %li).\n", filename,count, m*n*p);
+        if (count != m*n*p) fprintf(stderr, "McStas: error writing double binary file '%s' (%li instead of %li).\n", filename,count, (long)m*n*p);
       }
     } /* end if Binary */
   }
@@ -2314,23 +2318,23 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   if (!mcsingle_file && just_header == 0)
   {
     char mode[32];
-    char mypre[10]= "# \0";
 
     if (datafile && datafile != f && !mcascii_only)
     {
-      
-      if (!strstr(format.Name, "McStas")) mypre[0] = '\0';
-    
       sprintf(mode, "%s end", part);
       /* write header+data block end tags into datafile */
-      mcfile_datablock(datafile, format, mypre, valid_parent, mode,
+      mcfile_datablock(datafile, format, 
+          (strstr(format.Name, "McStas") ? "# " : ""),
+          valid_parent, mode,
           p0, p1, p2, m, n, p,
           xlabel,  ylabel, zlabel, title,
           xvar, yvar, zvar,
           x1, x2, y1, y2, z1, z2, filename, istransposed);
       if ((isdata == 1 && is1d) || strstr(part,"ncount") || !p0 || !p2) /* either ncount, or 1d */
         if (!strstr(format.Name, "partial"))
-          mcfile_header(datafile, format, "footer", mypre, filename, valid_parent);
+          mcfile_header(datafile, format, "footer", 
+          (strstr(format.Name, "McStas") ? "# " : ""),
+          filename, valid_parent);
     }
     if (datafile) fclose(datafile); 
   }
@@ -2474,11 +2478,11 @@ void mcheader_out(FILE *f,char *parent,
   char *filename)
 {
   int  loc_single_file;
-  char pre[3]="# \0";
+  char pre[3];
   char simname[512];
   loc_single_file = mcsingle_file; mcsingle_file = 1;
   
-  if (!strstr(mcformat.Name, "McStas")) pre[0]='\0';
+  if (!strstr(mcformat.Name, "McStas")) strcpy(pre,""); else strcpy(pre,"# ");
   
   mcfile_header(f, mcformat, "header", pre, mcinstrument_name, "mcstas");
   mcinfo_instrument(f, mcformat, pre, mcinstrument_name);
@@ -2498,8 +2502,9 @@ void mcheader_out(FILE *f,char *parent,
 
 double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
 {
-  char pre[20]="\0";
+  char pre[20];
   
+  strcpy(pre, "");
   return(mcdetector_out_012D(mcformat, 
     pre, c, t,
     1, 1, 1,
@@ -2513,7 +2518,9 @@ double mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *xvar, double x1, double x2, int n,
                   double *p0, double *p1, double *p2, char *f, char *c)
 {
-  char pre[20]="\0";
+  char pre[20];
+  
+  strcpy(pre, "");
   return(mcdetector_out_012D(mcformat, 
     pre, c, t,
     n, 1, 1,
@@ -2527,10 +2534,11 @@ double mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2, int m,
                   int n, double *p0, double *p1, double *p2, char *f, char *c)
 {
-  char xvar[3] = "x \0";
-  char yvar[3] = "y \0";
-  char pre[20]="\0";
+  char xvar[3];
+  char yvar[3];
+  char pre[20];
   
+  strcpy(pre, ""); strcpy(xvar, "x "); strcpy(yvar, "y ");
   if (xl && strlen(xl)) strncpy(xvar, xl, 2);
   if (yl && strlen(yl)) strncpy(yvar, yl, 2);
   
@@ -2548,7 +2556,9 @@ double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
                   double x1, double x2, double y1, double y2, double z1, double z2, int m,
                   int n, int p, double *p0, double *p1, double *p2, char *f, char *c)
 {
-  char pre[20]="\0";
+  char pre[20];
+  
+  strcpy(pre, "");
   return(mcdetector_out_012D(mcformat, 
     pre, c, t,
     m, n, p,
@@ -2591,7 +2601,8 @@ void mcuse_format(char *format)
 {
   int i;
   int i_format=-1;
-
+  char *tmp;
+  
   /* look for a specific format in mcformats.Name table */
   for (i=0; i < mcNUMFORMATS; i++)
   {
@@ -2604,6 +2615,10 @@ void mcuse_format(char *format)
   }
 
   mcformat = mcformats[i_format];
+  tmp = malloc(256);
+  if(!tmp) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format)\n"));
+  strcpy(tmp, mcformat.Name); 
+  mcformat.Name = tmp;
   if (strstr(format,"binary"))
   {
     if (strstr(format,"double")) strcat(mcformat.Name," binary double data");
@@ -2767,7 +2782,6 @@ void sighandler(int sig)
     case SIGTRAP : printf(" SIGTRAP (trace trap)"); break;
     case SIGTERM : printf(" SIGTERM (termination)"); break;
     case SIGPIPE : printf(" SIGPIPE (broken pipe)"); break;
-    case SIGPWR  : printf(" SIGPWR (power fail)"); break;
     case SIGUSR1 : printf(" SIGUSR1 (Display info)"); break;
     case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); break;
     case SIGILL  : printf(" SIGILL (Illegal instruction)"); break;
@@ -2805,7 +2819,7 @@ void sighandler(int sig)
     return;
   }
   else
-  if ((sig == SIGTERM) || (sig == SIGPWR) || (sig == SIGINT))
+  if ((sig == SIGTERM) || (sig == SIGINT))
   {
     printf("# McStas: Finishing simulation (save results and exit)\n");
     mcfinally();
@@ -2814,7 +2828,7 @@ void sighandler(int sig)
   else
   {
     fflush(stdout);
-    perror("# Last Error"); 
+    perror("# Last I/O Error"); 
     printf("# McStas: Simulation stop (abort)\n"); 
     exit(-1);
   }
@@ -2828,12 +2842,14 @@ int
 mcstas_main(int argc, char *argv[])
 {
 /*  double run_num = 0; */
+  time_t t;
   
 #ifdef MAC
   argc = ccommand(&argv);
 #endif
 
-  srandom(time(&(time_t)mcstartdate));
+  t = (time_t)mcstartdate;
+  srandom(time(&t));
   strcpy(mcsig_message, "main (Start)");
   mcuse_format("McStas");  /* default is to output as McStas format */
   mcparseoptions(argc, argv);
@@ -2847,7 +2863,6 @@ mcstas_main(int argc, char *argv[])
   signal( SIGTERM ,sighandler);   /* software termination signal from kill */
   /* signal( SIGPIPE ,sighandler);*/   /* write on a pipe with no one to read it, used by mcdisplay */
 
-  signal( SIGPWR ,sighandler);
   signal( SIGUSR1 ,sighandler); /* display simulation status */
   signal( SIGUSR2 ,sighandler);
   signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
@@ -2860,7 +2875,6 @@ mcstas_main(int argc, char *argv[])
   signal( SIGURG ,sighandler);    /* urgent socket condition */
 #endif /* !MAC */
 #endif /* !WIN32 */
-
   mcsiminfo_init(NULL); mcsiminfo_close();  /* makes sure we can do that */
   strcpy(mcsig_message, "main (Init)");
   mcinit();
@@ -2877,6 +2891,7 @@ mcstas_main(int argc, char *argv[])
     mcrun_num++;
   }
   mcfinally();
+  if (mcformat.Name) free(mcformat.Name);
   
   return 0;
 }
