@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.12 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.13 $
+* Origin: McStas 1.5
 *
 * Mosaic crystal, possibly off-cut.
 *
@@ -16,7 +16,7 @@
 * The mosaic is isotropic gaussian, with a given FWHM perpendicular to the
 * scattering vector.
 * For an unrotated monochromator component, the crystal plane lies in the y-z
-* plane (ie. parallel to the beam).
+* plane (i.e. parallel to the beam).
 *
 * %P
 * INPUT PARAMETERS:
@@ -39,7 +39,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaic, R0, Qx, Qy, Qz)
 OUTPUT PARAMETERS (X,W,Q,mos_rms)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
