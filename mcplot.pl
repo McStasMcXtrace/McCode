@@ -5,8 +5,17 @@ use PDL;
 use PDL::Graphics::PGPLOT;
 use PGPLOT;
 
-use lib "/usr/local/lib/mcstas";
-use lib $ENV{"MCSTAS"};
+# Determine the path to the McStas system directory. This must be done
+# in the BEGIN block so that it can be used in a "use lib" statement
+# afterwards.
+BEGIN {
+    if($ENV{"MCSTAS"}) {
+	$MCSTAS::sys_dir = $ENV{"MCSTAS"};
+    } else {
+	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+    }
+}
+use lib $MCSTAS::sys_dir;
 
 require "mcfrontlib.pl";
 require "mcplotlib.pl";
