@@ -59,7 +59,7 @@ TRACE
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
       i = floor(1E6*t/dt);              /* Bin number */
-      if(i >= nchan) i = nchan;
+      if(i >= nchan) i = nchan - 1;
       if(i < 0)
       {
         printf("FATAL ERROR: negative time-of-flight.\n");
