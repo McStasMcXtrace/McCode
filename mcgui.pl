@@ -1,5 +1,11 @@
 #! /usr/bin/perl -w
 
+if($ENV{"MCSTAS"}) {
+    use lib $ENV{"MCSTAS"};
+} else {
+    use lib "/usr/local/lib/mcstas";
+}
+
 use strict;
 use Tk;
 
