@@ -30,20 +30,52 @@ configure in step 2. For example,
 will install the McStas programs in /home/joe/bin/ and the library files
 needed by McStas in /home/joe/lib/mcstas/.
 
-McStas has not been tested on Windows at this time. We have tried to
-make the McStas code as portable as possible, so it should compile
-without too much trouble under Windows. If there is a request for it, we
-will make Windows binaries of McStas available.
-
 If you experience any problems, or have some questions or ideas
 concerning McStas, please contact kristian.nielsen@risoe.dk.
+
+
+Installing on non-Unix systems
+==============================
+
+Windows:
+
+McStas v1.01 Beta 1 has been successfully compiled on Windows using
+Microsoft Visual C++ in 32-bit mode. Define the preprocessor macro
+'WIN32' when compiling to get McStas to use the Windows file system
+semantics. Search the archive of the mailing list
+(http://neutron.risoe.dk/neutron-mc/) for details. As far as we know,
+the front-end programs have not been used on Windows at this point.
+
+At Risø, we do not use McStas in Windows, so we cannot provide direct
+support for this operating system. Try asking on the mailing list if you
+need help. If you experience a specific problem with using McStas on
+Windows, send a description of the problem to the mailing list so that
+we can fix it in the next version.
+
+If you want to volunteer to provide Windows binaries to other users,
+please contact kristian.nielsen@risoe.dk.
+
+Macintosh:
+
+McStas has been successfully compiled on the Macintosh using Code
+Warrior. It is reportedly necessary to increase the default size of
+memory allocated to programs by the compiler to make the simulations
+work. It may also be necessary to edit the default file paths in the
+file port.h, since environment variables are (as far as we know) not
+available on the Macintosh.
+
+At Risø, we do not use McStas on the Macintosh, so we cannot provide
+direct support for this system. Try asking on the mailing list if you
+need help. If you experience a specific problem with using McStas on the
+Macintosh, send a description of the problem to the mailing list so that
+we can fix it in the next version.
 
 
 Troubleshooting
 ===============
 
 You should try to make sure that the directory containing the McStas
-binaries (mcstas, gscan, and mcdisplay) is contained in the PATH
+binaries (mcstas, gscan, mcdisplay, etc.) is contained in the PATH
 environment variable. The default directory is /usr/local/bin, which is
 usually, but not always, included in PATH. Alternatively, you can
 reference the McStas programs using the full path name, ie.
@@ -68,8 +100,8 @@ The PGPLOT library, which is used by the mcdisplay frontend, needs the
 PGPLOT_DIR environment variable to be set to the directory containing
 PGPLOT, eg.
 
-  PGPLOT_DIR=/usr/lib/pgplot; export PGPLOT_DIR     # sh, bash
-  setenv PGPLOT_DIR /usr/lib/pgplot             # csh, tcsh
+  PGPLOT_DIR=/usr/lib/pgplot; export PGPLOT_DIR   # sh, bash
+  setenv PGPLOT_DIR /usr/lib/pgplot               # csh, tcsh
 
 See the PGPLOT documentation for details.
 
