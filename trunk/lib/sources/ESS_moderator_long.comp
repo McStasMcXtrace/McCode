@@ -10,7 +10,7 @@
 * %I
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -134,8 +134,8 @@ TRACE
   randvec_target_rect(&xf, &yf, &r, &w_focus, 
         0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
  
-  dx = xf;
-  dy = yf;
+  dx = xf-x;
+  dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
 
   lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
