@@ -1018,6 +1018,7 @@ if typeof(object) == 'string' // if object is a string
   object_orig = object;
   [pathname, object, ext]= mcplot_fileparts(object);
   filename = object+ext;
+  object = filename;
   
   if length(pathname), 
     cur_dir = pwd(); 
