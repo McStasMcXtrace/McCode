@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.78 2003-11-07 15:30:33 farhi Exp $
+* $Id: mcstas-r.c,v 1.79 2003-11-28 18:08:32 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.77  2003/10/22 15:51:26  farhi
@@ -353,7 +353,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       " pS=n_elements(S)\nif pS eq 1 then pS=long(S) $\n"
       " else if pS eq 2 then pS=long(S(0)*S(1)) $\n"
       " else pS=long(S(0)*S(1)*S(2))\n"
-      " stv,d,'data',reform(x(0:(pS-1)),S)\n"
+      " pS=pS(0)\nstv,d,'data',reform(x(0:(pS-1)),S)\n"
       " d.data=transpose(d.data)\n"
       " if n_elements(x) ge long(3*pS) then begin\n"
       "  stv,d,'errors',reform(x(pS:(2*pS-1)),S)\n"
