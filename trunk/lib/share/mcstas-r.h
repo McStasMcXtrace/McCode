@@ -151,6 +151,7 @@ void mcdis_line(double, double, double, double, double, double);
 void mcdis_multiline(int, ...);
 void mcdis_circle(char *, double, double, double, double);
 
+#define RAD2MIN  ((180*60)/PI)
 #define MIN2RAD  (PI/(180*60))
 #define DEG2RAD  (PI/180)
 #define RAD2DEG  (180/PI)
