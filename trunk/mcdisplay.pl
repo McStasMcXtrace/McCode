@@ -805,7 +805,8 @@ for($i = 0; $i < @ARGV; $i++) {
     } elsif($ARGV[$i] eq "--save") {
         $save = 1;
     } elsif(($ARGV[$i] =~ /^-p([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
-              ($ARGV[$i] =~ /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
+              ($ARGV[$i] =~ /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
+              ($ARGV[$i] =~ /^--format=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
         $plotter = $1;        
    } elsif(($ARGV[$i] =~ /^-f([a-zA-ZæøåÆØÅ0-9_\-\/\.\:]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-ZæøåÆØÅ0-9_\-\/\.\:]+)$/)) {
