@@ -18,7 +18,7 @@
 * zmax:    Upper z-bound of crystal (m)
 * ymin:    Lower y-bound of crystal (m)
 * ymax:    Upper y-bound of crystal (m)
-* mosaic:  Horisontal mosaic (FWHM) (arc minutes)
+* mosaic:  Mosaic (FWHM) (arc minutes)
 * R0:      Maximum reflectivity (1)
 * Qx:      X coordinate of scattering vector (AA-1)
 * Qy:      X coordinate of scattering vector (AA-1)
