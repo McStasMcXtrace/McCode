@@ -258,6 +258,13 @@ function mcplot_menu_action(k, gwin)
           t=t(1:idx-1);
           figname=code2str(t);
         end
+        idx=strindex(figname,'.out');
+        if length(idx)
+          idx=idx(length(idx));
+          t=str2code(figname);
+          t=t(1:idx-1);
+          figname=code2str(t);
+        end
         t=figname+'.scg';
         [fid,err]=fileinfo(t);
         if err
