@@ -4,12 +4,11 @@
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Adapted from Moderator by: KN, M.Hagen, August 1998
 * Written by: Kim Lefmann
 * Date: 2001
-* Version: $Revision: 1.1 $
-* Origin: McStas 1.4.2
-* Modified by POA, April 2001: Adding POLARISATION PARAMETERS
+* Origin: McStas release
+* Version: $Revision: 1.2 $
+* Adapted from Moderator by: KN, M.Hagen, August 1998
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *
@@ -55,7 +54,6 @@ SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh,
                     branch1, branch2, branch_tail)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
