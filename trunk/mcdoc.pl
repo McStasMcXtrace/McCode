@@ -210,7 +210,7 @@ TB_END
     if (open($f, ">$bn.html")) { # use component location
       $is_opened = 1; 
     }
-    if ((not $is_opened) && $is_forced) {
+    if (((not $is_opened) && $is_forced) || (not -f "$valid_name.html")) {
       if (open($f, ">$n.html")) { # create locally
         $is_opened = 1; 
         $valid_name = $n;
@@ -278,7 +278,7 @@ TB_END
       close $f;
     } else { 
       if (not -f "$valid_name.html") {
-        print "mcdoc: Cannot open $valid_name.html. Use -f option to force.";
+        print "mcdoc: Cannot open $valid_name.html. Use -f option to force.\n";
       }
     }
     return $valid_name;
