@@ -17,7 +17,7 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.39 2003-09-22 14:42:20 pkwi Exp $
+* $Id: mcstas.h,v 1.40 2003-10-06 15:00:58 farhi Exp $
 *
 *******************************************************************************/
 
@@ -98,6 +98,8 @@ Symtab_handle symtab_iterate(Symtab s);
 struct Symtab_entry *symtab_next(Symtab_handle sh);
 /* End a traversal. */
 void symtab_iterate_end(Symtab_handle sh);
+/* get previous symtab entry */
+struct Symtab_entry *symtab_previous(Symtab st, int index);
 
 
 /* Definitions for list.c */
@@ -221,6 +223,8 @@ extern int parse_restricted;
 extern Symtab read_components;
 /* Verbose parsing/code generation */
 extern char verbose;
+/* Will store component instance for PREVIOUS reference */
+extern struct comp_inst *previous_comp;
 
 /* Check that component definition and setting parameters are unique. */
 void check_comp_formals(List deflist, List setlist, char *compname);
