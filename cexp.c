@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug  7, 1997
 *
-*	$Id: cexp.c,v 1.2 1997-09-07 17:54:28 kn Exp $
+*	$Id: cexp.c,v 1.3 1998-10-01 11:44:07 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.2  1997/09/07 17:54:28  kn
+*	Snapshot with (untested) code generation complete.
+*
 *	Revision 1.1  1997/08/13 09:11:24  kn
 *	Initial revision
 *
@@ -53,6 +56,12 @@ exp_number(double n)
   char buf[100];
   sprintf(buf, "%g", n);
   return str_dup(buf);
+}
+
+CExp
+exp_string(char *s)
+{
+  return str_cat("\"", s, "\"", NULL);
 }
 
 char *

@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.12 1998-10-01 08:09:49 kn Exp $
+*	$Id: instrument.l,v 1.13 1998-10-01 11:44:47 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.12  1998/10/01 08:09:49  kn
+*	Use the search path for %include files.
+*
 *	Revision 1.11  1998/09/23 13:58:47  kn
 *	Added C++ style ("//") comments.
 *
@@ -177,6 +180,25 @@ TRACE		return TOK_TRACE;
 			  return TOK_CODE_LINE;
 			}
  }
+
+ /* Quoted strings. Simple version: no escape sequences. */
+\"[^\"\n\\]*\"		{
+			  yylval.string =
+			    str_dup_n(&yytext[1], strlen(yytext) - 2);
+			  return TOK_STRING;
+			}
+\"[^\"\n]*\\[^\"\n]*\"	{
+			  print_error("Error: Escape sequences in strings "
+				      "not implemented on line %d.\n",
+				      instr_current_line);
+			  yylval.string = str_dup("");
+			  return TOK_STRING;
+			}
+\"[^\n\"]*\n		{
+			  print_error("Error: Unterminated string "
+				      "on line %d.\n",
+				      instr_current_line);
+			}
 
  /* %-style comments - ignore everything to end of line. */
 "%"\n		instr_current_line++; /* Ignore comment. */
