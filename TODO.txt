@@ -65,6 +65,7 @@ functionality on Win32 using mcc
 * Win32, bug in compilation with unsaved, edited instrument file
 * Installation process, reverse order plotter <-> package
 * TODO list on cvs
+* line number in editor (go to line)
 
 TODO:
 * Doc update, especially regarding installation

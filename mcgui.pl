@@ -1324,7 +1324,7 @@ sub setup_edit {
                       -height => 24, wrap => 'none', -scrollbars =>'se');
     my $menu = $e->menu;
     $w->configure(-menu => $menu);
-    my $insert_menu = $menu->Menubutton(-text => 'Insert', -underline => 0);
+    my $insert_menu = $menu->Menubutton(-text => 'Insert',  -underline => 0, -tearoff => 0);
     # This is only done for backward compatibility - we want to use Alt+s for saving...
     my $filemenu = $menu->Menubutton(-text => 'Search', -underline => 1);
     $w->bind('<Alt-s>' => [\&menu_save, $w]);
@@ -1333,9 +1333,11 @@ sub setup_edit {
     $e->pack(-expand => 'yes', -fill => 'both');
     $label->pack(-side => 'left', -expand => 'no', -fill => 'x');
     $e->mark('set', 'insert', '0.0');
-    $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def; 
     if ($current_sim_def) {
       $w->title("Edit: $current_sim_def");
+      if (-r $current_sim_def) {
+	  $e->Load($current_sim_def);
+      }
     } else {
       $w->title("Edit: Start with Insert/Instrument template");
     }
