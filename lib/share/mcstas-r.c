@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.7 1998-03-24 07:34:03 kn Exp $
+* 	$Id: mcstas-r.c,v 1.8 1998-04-16 14:21:49 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.7  1998/03/24 07:34:03  kn
+* 	Use rand01() in randnorm(). Fix typos.
+*
 * 	Revision 1.6  1998/03/20 14:19:52  lefmann
 * 	Added cylinder_intersect().
 *
@@ -307,4 +310,35 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     *t0 = *t1 = 0;
     return 0;
   }
+}
+
+/* Choose random direction towards target at (x,y,z) with radius r. */
+/* ToDo: It should be possible to optimize this to avoid computing angles. */
+void
+randvec_target(double *xo, double *yo, double *zo,
+	       double xi, double yi, double zi, double radius)
+{
+  double v, phi0, phi, theta, nx, ny, nz, xt, yt, zt;
+  
+  v = sqrt(xi*xi + yi*yi + zi*zi); /* Distance to target. */
+  phi0 = atan(radius / v);		/* Target size as seen from origin */
+  /* Now choose point uniformly on sphere surface within angle phi0 */
+  phi = acos (1 - rand0max(1 - cos(phi0)));
+  theta = rand0max(2 * PI);
+  /* Now, to obtain the desirec vector rotate (x,y,z) angle phi around a
+     perpendicular axis (nx,ny,nz) and then angle theta around (x,y,z). */
+  if(xi == 0 && yi == 0)
+  {
+    nx = 1;
+    ny = 0;
+    nz = 0;
+  }
+  else
+  {
+    nx = -yi;
+    ny = xi;
+    nz = 0;
+  }
+  rotate(xt, yt, zt, xi, yi, zi, phi, nx, ny, nz);
+  rotate(*xo, *yo, *zo, xt, yt, zt, theta, xi, yi, zi);
 }
