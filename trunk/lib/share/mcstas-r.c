@@ -1881,9 +1881,782 @@ mcstas_main(int argc, char *argv[])
   return 0;
 }
 
-/* E.Farhi, Monitor_nD section */
+/* ========================================================================= */
+/* ADD: E.Farhi, Aug 6th, 2001: Monitor_nD section */
 /* this routine is used to save results at end of simulation, but also 
  * during simulation (SIGUSR... intermediate steps) */ 
+/* ========================================================================= */
+  
+void Monitor_nD_Init(aDEFS, aVars, m_xwidth, m_yheight, m_zthick, m_xmin, m_xmax, m_ymin, m_ymax, m_zmin, m_zmax)
+  MonitornD_Defines_type *aDEFS;
+  MonitornD_Variables_type *aVars;
+  double m_xwidth, m_yheight, m_zthick;
+  double m_xmin, m_xmax, m_ymin, m_ymax, m_zmin, m_zmax;
+  {
+    long carg = 1;
+    char *option_copy, *token;
+    char Flag_New_Token = 1;
+    char Flag_End       = 1;
+    char Flag_All       = 0;
+    char Flag_No        = 0;
+    char Flag_abs       = 0;
+    char Set_aVars_Coord_Type;
+    char Set_Coord_Flag = 0;
+    char Set_aVars_Coord_Label[30];
+    char Set_aVars_Coord_Var[30];
+    char Short_Label[MONnD_COORD_NMAX][30];
+    char Set_Coord_Mode;
+    long i=0, j=0;
+    double lmin, lmax, XY;
+    long    t;
+
+    
+    t = (long)time(NULL);
+
+    aDEFS->COORD_NONE   =0;
+    aDEFS->COORD_X      =1;
+    aDEFS->COORD_Y      =2;
+    aDEFS->COORD_Z      =3;
+    aDEFS->COORD_VX     =4;
+    aDEFS->COORD_VY     =5;
+    aDEFS->COORD_VZ     =6;
+    aDEFS->COORD_T      =7;
+    aDEFS->COORD_P      =8;
+    aDEFS->COORD_SX     =9;
+    aDEFS->COORD_SY     =10;
+    aDEFS->COORD_SZ     =11;
+    aDEFS->COORD_KX     =12;
+    aDEFS->COORD_KY     =13;
+    aDEFS->COORD_KZ     =14;
+    aDEFS->COORD_K      =15;
+    aDEFS->COORD_V      =16;
+    aDEFS->COORD_ENERGY =17;
+    aDEFS->COORD_LAMBDA =18;
+    aDEFS->COORD_RADIUS =19;
+    aDEFS->COORD_HDIV   =20;
+    aDEFS->COORD_VDIV   =21;
+    aDEFS->COORD_ANGLE  =22;
+    aDEFS->COORD_NCOUNT =23;
+    aDEFS->COORD_THETA  =24;
+    aDEFS->COORD_PHI    =25;
+    aDEFS->COORD_USER1  =26;
+    aDEFS->COORD_USER2  =27;
+
+/* token modifiers */
+    aDEFS->COORD_VAR    =0;    /* next token should be a variable or normal option */
+    aDEFS->COORD_MIN    =1;    /* next token is a min value */
+    aDEFS->COORD_MAX    =2;    /* next token is a max value */
+    aDEFS->COORD_DIM    =3;    /* next token is a bin value */
+    aDEFS->COORD_FIL    =4;    /* next token is a filename */
+    aDEFS->COORD_EVNT   =5;    /* next token is a buffer size value */
+    aDEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
+    aDEFS->COORD_INTERM =7;    /* next token is an intermediate save value (%) */
+    aDEFS->COORD_LOG    =32;   /* next variable will be in log scale */
+    aDEFS->COORD_ABS    =64;   /* next variable will be in abs scale */
+
+    strcpy(aDEFS->TOKEN_DEL, " =,;[](){}:");  /* token separators */
+
+    aDEFS->SHAPE_SQUARE =0;    /* shape of the monitor */
+    aDEFS->SHAPE_DISK   =1;
+    aDEFS->SHAPE_SPHERE =2;
+    aDEFS->SHAPE_CYLIND =3;
+    aDEFS->SHAPE_BOX    =4;
+
+    aVars->Sphere_Radius     = 0;
+    aVars->Cylinder_Height   = 0;
+    aVars->Flag_With_Borders = 0;   /* 2 means xy borders too */
+    aVars->Flag_List         = 0;   /* 1 store 1 buffer, 2 is list all */
+    aVars->Flag_Multiple     = 0;   /* 1 when n1D, 0 for 2D */
+    aVars->Flag_Verbose      = 0;
+    aVars->Flag_Shape        = aDEFS->SHAPE_SQUARE;
+    aVars->Flag_Auto_Limits  = 0;   /* get limits from first Buffer */
+    aVars->Flag_Absorb       = 0;   /* monitor is also a slit */
+    aVars->Flag_per_cm2      = 0;   /* flux is per cm2 */
+    aVars->Flag_log          = 0;   /* log10 of the flux */
+    aVars->Flag_parallel     = 0;   /* set neutron state back after detection (parallel components) */
+    aVars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
+    aVars->Buffer_Block      = 1000;     /* Buffer size for list or auto limits */
+    aVars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
+    aVars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
+    aVars->Buffer_Size       = 0;
+    aVars->UserVariable1     = 0;
+    aVars->UserVariable2     = 0;
+    aVars->He3_pressure      = 0;
+    aVars->IntermediateCnts  = 0;
+    
+    Set_aVars_Coord_Type = aDEFS->COORD_NONE;
+    Set_Coord_Mode = aDEFS->COORD_VAR;
+    
+    /* handle size parameters */
+    /* normal use is with xwidth, yheight, zthick */
+    /* if xmin,xmax,ymin,ymax,zmin,zmax are non 0, use them */
+    if (fabs(m_xmin-m_xmax) == 0) 
+      { aVars->mxmin = -fabs(m_xwidth)/2; aVars->mxmax = fabs(m_xwidth)/2; }
+    else
+      { if (m_xmin < m_xmax) {aVars->mxmin = m_xmin; aVars->mxmax = m_xmax;}
+        else {aVars->mxmin = m_xmax; aVars->mxmax = m_xmin;}
+      }
+    if (fabs(m_ymin-m_ymax) == 0) 
+      { aVars->mymin = -fabs(m_yheight)/2; aVars->mymax = fabs(m_yheight)/2; }
+    else
+      { if (m_ymin < m_ymax) {aVars->mymin = m_ymin; aVars->mymax = m_ymax;}
+        else {aVars->mymin = m_ymax; aVars->mymax = m_ymin;}
+      }
+    if (fabs(m_zmin-m_zmax) == 0) 
+      { aVars->mzmin = -fabs(m_zthick)/2; aVars->mzmax = fabs(m_zthick)/2; }
+    else
+      { if (m_zmin < m_zmax) {aVars->mzmin = m_zmin; aVars->mzmax = m_zmax; }
+        else {aVars->mzmin = m_zmax; aVars->mzmax = m_zmin; }
+      }
+      
+    if (fabs(aVars->mzmax-aVars->mzmin) == 0)
+      aVars->Flag_Shape        = aDEFS->SHAPE_SQUARE;
+    else
+      aVars->Flag_Shape        = aDEFS->SHAPE_BOX;
+      
+    /* parse option string */ 
+    
+    option_copy = (char*)malloc(strlen(aVars->option));
+    if (option_copy == NULL)
+    {
+      printf("Monitor_nD: %s cannot allocate option_copy (%i). Fatal.\n", aVars->compcurname, strlen(aVars->option));
+      exit(-1);
+    }
+    
+    
+    if (strlen(aVars->option))
+    {
+      Flag_End = 0;
+      strcpy(option_copy, aVars->option);
+    }
+    
+    if (strstr(aVars->option, "cm2") || strstr(aVars->option, "cm^2")) aVars->Flag_per_cm2 = 1;
+  
+    if (aVars->Flag_per_cm2) strcpy(aVars->Coord_Label[0],"Intensity [n/cm^2/s]");
+    else strcpy(aVars->Coord_Label[0],"Intensity [n/s]");
+    strcpy(aVars->Coord_Var[0],"p");
+    aVars->Coord_Type[0] = aDEFS->COORD_P;
+    aVars->Coord_Bin[0] = 1;
+    aVars->Coord_Min[0] = 0;
+    aVars->Coord_Max[0] = FLT_MAX;
+    
+    /* default file name is comp name+dateID */
+    sprintf(aVars->Mon_File, "%s_%i", aVars->compcurname, t); 
+  
+    carg = 1;
+    while((Flag_End == 0) && (carg < 128))
+    {
+      if (Flag_New_Token) /* to get the previous token sometimes */
+      {
+        if (carg == 1) token=(char *)strtok(option_copy,aDEFS->TOKEN_DEL);
+        else token=(char *)strtok(NULL,aDEFS->TOKEN_DEL);
+        if (token == NULL) Flag_End=1;
+      }
+      Flag_New_Token = 1;
+      if ((token != NULL) && (strlen(token) != 0))
+      {
+      /* first handle option values from preceeding keyword token detected */
+        if (Set_Coord_Mode == aDEFS->COORD_MAX)
+        { 
+          if (!Flag_All) 
+            aVars->Coord_Max[aVars->Coord_Number] = atof(token); 
+          else
+            for (i = 0; i <= aVars->Coord_Number; aVars->Coord_Max[i++] = atof(token));
+          Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0;
+        }
+        if (Set_Coord_Mode == aDEFS->COORD_MIN)
+        { 
+          if (!Flag_All) 
+            aVars->Coord_Min[aVars->Coord_Number] = atof(token); 
+          else
+            for (i = 0; i <= aVars->Coord_Number; aVars->Coord_Min[i++] = atof(token));
+          Set_Coord_Mode = aDEFS->COORD_MAX; 
+        }
+        if (Set_Coord_Mode == aDEFS->COORD_DIM)
+        { 
+          if (!Flag_All) 
+            aVars->Coord_Bin[aVars->Coord_Number] = atoi(token); 
+          else
+            for (i = 0; i <= aVars->Coord_Number; aVars->Coord_Bin[i++] = atoi(token));
+          Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0;
+        }
+        if (Set_Coord_Mode == aDEFS->COORD_FIL)
+        { 
+          if (!Flag_No) strcpy(aVars->Mon_File,token); 
+          else { strcpy(aVars->Mon_File,""); aVars->Coord_Number = 0; Flag_End = 1;}
+          Set_Coord_Mode = aDEFS->COORD_VAR;
+        }
+        if (Set_Coord_Mode == aDEFS->COORD_EVNT)
+        { 
+          if (!strcmp(token, "all") || Flag_All) aVars->Flag_List = 2;
+          else { i = atoi(token); if (i) aVars->Buffer_Counter = i; }
+          Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0;
+        }
+        if (Set_Coord_Mode == aDEFS->COORD_3HE)
+        { 
+            aVars->He3_pressure = atof(token); 
+            Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0; 
+        }
+        if (Set_Coord_Mode == aDEFS->COORD_INTERM)
+        { 
+            aVars->Intermediate = atof(token); 
+            Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0; 
+        }
+
+        /* now look for general option keywords */
+        if (!strcmp(token, "borders")) 
+        { if (Flag_No) { aVars->Flag_With_Borders = 0; Flag_No = 0; }
+          else aVars->Flag_With_Borders = 1; }
+        if (!strcmp(token, "verbose")) 
+        { if (Flag_No) { aVars->Flag_Verbose = 0; Flag_No = 0; }
+          else aVars->Flag_Verbose      = 1; }
+        if (!strcmp(token, "log")) 
+        { if (Flag_No) { aVars->Flag_log = 0; Flag_No = 0; }
+          else aVars->Flag_log      = 1; }
+        if (!strcmp(token, "abs")) 
+        { Flag_abs      = 1; }
+        if (!strcmp(token, "multiple")) 
+        { if (Flag_No) { aVars->Flag_Multiple = 0; Flag_No = 0; }
+          else aVars->Flag_Multiple = 1; }
+        if (!strcmp(token, "list")) 
+        { if (Flag_No) { aVars->Flag_List = 0; Flag_No = 0; }
+          else aVars->Flag_List = 1; 
+          Set_Coord_Mode = aDEFS->COORD_EVNT; }
+
+        if (!strcmp(token, "limits") || !strcmp(token, "min")) Set_Coord_Mode = aDEFS->COORD_MIN;
+        if (!strcmp(token, "slit") || !strcmp(token, "absorb")) 
+        { if (Flag_No) { aVars->Flag_Absorb = 0; Flag_No = 0; }
+          else aVars->Flag_Absorb = 1; }
+        if (!strcmp(token, "max")) Set_Coord_Mode = aDEFS->COORD_MAX;
+        if (!strcmp(token, "bins")) Set_Coord_Mode = aDEFS->COORD_DIM;
+        if (!strcmp(token, "file")) 
+        { Set_Coord_Mode = aDEFS->COORD_FIL;
+          if (Flag_No) { strcpy(aVars->Mon_File,""); aVars->Coord_Number = 0; Flag_End = 1;}}
+        if (!strcmp(token, "unactivate")) { Flag_End = 1; aVars->Coord_Number = 0; }
+        if (!strcmp(token, "all")) 
+        { if (Flag_No) { Flag_All = 0; Flag_No = 0; }
+          else Flag_All = 1; }
+        if (!strcmp(token, "sphere")) 
+        { if (Flag_No) { aVars->Flag_Shape = aDEFS->SHAPE_SQUARE; Flag_No = 0; }
+          else aVars->Flag_Shape = aDEFS->SHAPE_SPHERE; }
+        if (!strcmp(token, "cylinder")) 
+        { if (Flag_No) { aVars->Flag_Shape = aDEFS->SHAPE_SQUARE; Flag_No = 0; }
+          else aVars->Flag_Shape = aDEFS->SHAPE_CYLIND; }
+        if (!strcmp(token, "square")) aVars->Flag_Shape = aDEFS->SHAPE_SQUARE; 
+        if (!strcmp(token, "disk")) aVars->Flag_Shape = aDEFS->SHAPE_DISK; 
+        if (!strcmp(token, "box")) aVars->Flag_Shape = aDEFS->SHAPE_BOX; 
+        if (!strcmp(token, "parallel")) aVars->Flag_parallel = 1; 
+        if (!strcmp(token, "auto")) 
+        { if (Flag_No) { aVars->Flag_Auto_Limits = 0; Flag_No = 0; }
+          else aVars->Flag_Auto_Limits = 1; }
+        if (!strcmp(token, "premonitor"))
+        { if (Flag_No) { aVars->Flag_UsePreMonitor = 0; Flag_No = 0; }
+        else aVars->Flag_UsePreMonitor == 1; } 
+        if (!strcmp(token, "3He_pressure"))
+        { if (!Flag_No)  Set_Coord_Mode = aDEFS->COORD_3HE; 
+          aVars->He3_pressure = 3; }
+        if (!strcmp(token, "intermediate"))
+        { if (!Flag_No)  Set_Coord_Mode = aDEFS->COORD_INTERM; 
+          aVars->Intermediate = 5; }
+        if (!strcmp(token, "no") || !strcmp(token, "not")) Flag_No = 1;
+  
+        /* now look for variable names to monitor */
+        Set_aVars_Coord_Type = aDEFS->COORD_NONE; lmin = 0; lmax = 0;
+
+        if (!strcmp(token, "x")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_X; strcpy(Set_aVars_Coord_Label,"x [m]"); strcpy(Set_aVars_Coord_Var,"x"); lmin = aVars->mxmin; lmax = aVars->mxmax; }
+        if (!strcmp(token, "y")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_Y; strcpy(Set_aVars_Coord_Label,"y [m]"); strcpy(Set_aVars_Coord_Var,"y"); lmin = aVars->mymin; lmax = aVars->mymax; }
+        if (!strcmp(token, "z")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_Z; strcpy(Set_aVars_Coord_Label,"z [m]"); strcpy(Set_aVars_Coord_Var,"z"); lmin = aVars->mzmin; lmax = aVars->mzmax; }
+        if (!strcmp(token, "k") || !strcmp(token, "wavevector")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_K; strcpy(Set_aVars_Coord_Label,"|k| [Angs-1]"); strcpy(Set_aVars_Coord_Var,"k"); lmin = 0; lmax = 10; }
+        if (!strcmp(token, "v"))
+          { Set_aVars_Coord_Type = aDEFS->COORD_V; strcpy(Set_aVars_Coord_Label,"Velocity [m/s]"); strcpy(Set_aVars_Coord_Var,"v"); lmin = 0; lmax = 10000; }
+        if (!strcmp(token, "t") || !strcmp(token, "time")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_T; strcpy(Set_aVars_Coord_Label,"TOF [s]"); strcpy(Set_aVars_Coord_Var,"t"); lmin = 0; lmax = .1; }
+        if ((!strcmp(token, "p") || !strcmp(token, "intensity") || !strcmp(token, "flux")))
+          { Set_aVars_Coord_Type = aDEFS->COORD_P;  
+            if (aVars->Flag_per_cm2) strcpy(Set_aVars_Coord_Label,"Intensity [n/cm^2/s]");
+            else strcpy(Set_aVars_Coord_Label,"Intensity [n/s]"); 
+            strcpy(Set_aVars_Coord_Var,"I"); 
+            lmin = 0; lmax = FLT_MAX; }
+
+        if (!strcmp(token, "vx")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_VX; strcpy(Set_aVars_Coord_Label,"vx [m/s]"); strcpy(Set_aVars_Coord_Var,"vx"); lmin = -1000; lmax = 1000; }
+        if (!strcmp(token, "vy")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_VY; strcpy(Set_aVars_Coord_Label,"vy [m/s]"); strcpy(Set_aVars_Coord_Var,"vy"); lmin = -1000; lmax = 1000; }
+        if (!strcmp(token, "vz")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_VZ; strcpy(Set_aVars_Coord_Label,"vz [m/s]"); strcpy(Set_aVars_Coord_Var,"vz"); lmin = -10000; lmax = 10000; }
+        if (!strcmp(token, "kx")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_KX; strcpy(Set_aVars_Coord_Label,"kx [Angs-1]"); strcpy(Set_aVars_Coord_Var,"kx"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "ky")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_KY; strcpy(Set_aVars_Coord_Label,"ky [Angs-1]"); strcpy(Set_aVars_Coord_Var,"ky"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "kz")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_KZ; strcpy(Set_aVars_Coord_Label,"kz [Angs-1]"); strcpy(Set_aVars_Coord_Var,"kz"); lmin = -10; lmax = 10; }
+        if (!strcmp(token, "sx")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_SX; strcpy(Set_aVars_Coord_Label,"sx [1]"); strcpy(Set_aVars_Coord_Var,"sx"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "sy")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_SY; strcpy(Set_aVars_Coord_Label,"sy [1]"); strcpy(Set_aVars_Coord_Var,"sy"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "sz")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_SZ; strcpy(Set_aVars_Coord_Label,"sz [1]"); strcpy(Set_aVars_Coord_Var,"sz"); lmin = -1; lmax = 1; }
+
+        if (!strcmp(token, "energy") || !strcmp(token, "omega")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_ENERGY; strcpy(Set_aVars_Coord_Label,"Energy [meV]"); strcpy(Set_aVars_Coord_Var,"E"); lmin = 0; lmax = 100; }
+        if (!strcmp(token, "lambda") || !strcmp(token, "wavelength")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_LAMBDA; strcpy(Set_aVars_Coord_Label,"Wavelength [Angs]"); strcpy(Set_aVars_Coord_Var,"L"); lmin = 0; lmax = 100; }
+        if (!strcmp(token, "radius")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_RADIUS; strcpy(Set_aVars_Coord_Label,"Radius [m]"); strcpy(Set_aVars_Coord_Var,"R"); lmin = 0; lmax = m_xmax; }
+        if (!strcmp(token, "angle")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_ANGLE; strcpy(Set_aVars_Coord_Label,"Angle [deg]"); strcpy(Set_aVars_Coord_Var,"A"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "hdiv")|| !strcmp(token, "divergence") || !strcmp(token, "xdiv") || !strcmp(token, "dx")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_HDIV; strcpy(Set_aVars_Coord_Label,"Hor. Divergence [deg]"); strcpy(Set_aVars_Coord_Var,"HD"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "vdiv") || !strcmp(token, "ydiv") || !strcmp(token, "dy")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_VDIV; strcpy(Set_aVars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_aVars_Coord_Var,"VD"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "theta") || !strcmp(token, "longitude")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_THETA; strcpy(Set_aVars_Coord_Label,"Longitude [deg]"); strcpy(Set_aVars_Coord_Var,"th"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "phi") || !strcmp(token, "lattitude")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_PHI; strcpy(Set_aVars_Coord_Label,"Lattitude [deg]"); strcpy(Set_aVars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "ncounts")) 
+          { Set_aVars_Coord_Type = aDEFS->COORD_NCOUNT; strcpy(Set_aVars_Coord_Label,"Neutrons [1]"); strcpy(Set_aVars_Coord_Var,"N"); lmin = 0; lmax = 1e10; }
+        if (!strcmp(token, "user") || !strcmp(token, "user1"))
+          { Set_aVars_Coord_Type = aDEFS->COORD_USER1; strncpy(Set_aVars_Coord_Label,aVars->UserName1,32); strcpy(Set_aVars_Coord_Var,"U1"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "user2"))
+          { Set_aVars_Coord_Type = aDEFS->COORD_USER2; strncpy(Set_aVars_Coord_Label,aVars->UserName2,32); strcpy(Set_aVars_Coord_Var,"U2"); lmin = -1e10; lmax = 1e10; }
+        if ((Set_aVars_Coord_Type != aDEFS->COORD_NONE) && aVars->Flag_log) { Set_aVars_Coord_Type |= aDEFS->COORD_LOG; aVars->Flag_log = 0; }
+        if ((Set_aVars_Coord_Type != aDEFS->COORD_NONE) && Flag_abs) { Set_aVars_Coord_Type |= aDEFS->COORD_ABS; Flag_abs = 0; }
+
+        /* now stores variable keywords detected, if any */ 
+        if (Set_aVars_Coord_Type != aDEFS->COORD_NONE)
+        {
+          if (aVars->Coord_Number < MONnD_COORD_NMAX) aVars->Coord_Number++;
+          else if (aVars->Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", aVars->compcurname, MONnD_COORD_NMAX);
+          aVars->Coord_Type[aVars->Coord_Number] = Set_aVars_Coord_Type;
+          strcpy(aVars->Coord_Label[aVars->Coord_Number], Set_aVars_Coord_Label); 
+          strcpy(aVars->Coord_Var[aVars->Coord_Number], Set_aVars_Coord_Var);
+          if (lmin > lmax) { XY = lmin; lmin=lmax; lmax = XY; }
+          aVars->Coord_Min[aVars->Coord_Number] = lmin;
+          aVars->Coord_Max[aVars->Coord_Number] = lmax;
+          aVars->Coord_Bin[aVars->Coord_Number] = 20;
+          Set_Coord_Mode = aDEFS->COORD_VAR;
+          Flag_All = 0;
+          Flag_No = 0;
+        }
+      carg++;
+      } /* end if token */
+    } /* end while carg */
+    free(option_copy);
+    if (carg == 128) printf("Monitor_nD: %s reached max number of tokens (%i). Skipping.\n", aVars->compcurname, 128);
+    
+    if ((aVars->Flag_Shape == aDEFS->SHAPE_BOX) && (fabs(aVars->mzmax - aVars->mzmin) == 0)) aVars->Flag_Shape = aDEFS->SHAPE_SQUARE;
+    
+    if (aVars->Flag_log == 1)
+    {
+        aVars->Coord_Type[0] |= aDEFS->COORD_LOG;
+    }
+
+    /* now setting Monitor Name from variable labels */
+    strcpy(aVars->Monitor_Label,"");
+    for (i = 0; i <= aVars->Coord_Number; i++)
+    {
+      Set_aVars_Coord_Type = (aVars->Coord_Type[i] & 31);
+      if ((Set_aVars_Coord_Type == aDEFS->COORD_THETA)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_PHI)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_X)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_Y)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_Z)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_RADIUS))
+       strcpy(Short_Label[i],"Position"); 
+      else
+      if ((Set_aVars_Coord_Type == aDEFS->COORD_VX)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_VY)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_VZ)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_V))
+       strcpy(Short_Label[i],"Velocity"); 
+      else
+      if ((Set_aVars_Coord_Type == aDEFS->COORD_KX)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_KY)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_KZ)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_K))
+       strcpy(Short_Label[i],"Wavevector"); 
+      else
+      if ((Set_aVars_Coord_Type == aDEFS->COORD_SX)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_SY)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_SZ))
+       strcpy(Short_Label[i],"Spin");
+      else
+      if ((Set_aVars_Coord_Type == aDEFS->COORD_HDIV)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_VDIV)
+       || (Set_aVars_Coord_Type == aDEFS->COORD_ANGLE))
+       strcpy(Short_Label[i],"Divergence");
+      else
+      if (Set_aVars_Coord_Type == aDEFS->COORD_ENERGY)
+       strcpy(Short_Label[i],"Energy"); 
+      else
+      if (Set_aVars_Coord_Type == aDEFS->COORD_LAMBDA)
+       strcpy(Short_Label[i],"Wavelength"); 
+      else
+      if (Set_aVars_Coord_Type == aDEFS->COORD_NCOUNT)
+       strcpy(Short_Label[i],"Neutron counts");
+      else
+      if (Set_aVars_Coord_Type == aDEFS->COORD_T)
+          strcpy(Short_Label[i],"Time Of Flight");
+      else
+      if (Set_aVars_Coord_Type == aDEFS->COORD_P)
+          strcpy(Short_Label[i],"Intensity");
+      else
+      if (Set_aVars_Coord_Type == aDEFS->COORD_USER1)
+          strncpy(Short_Label[i],aVars->UserName1,32);
+      else
+      if (Set_aVars_Coord_Type == aDEFS->COORD_USER2)
+          strncpy(Short_Label[i],aVars->UserName2,32);
+      else
+          strcpy(Short_Label[i],"Unknown"); 
+          
+      if (aVars->Coord_Type[i] & aDEFS->COORD_ABS)
+          strcat(aVars->Coord_Label[i]," (abs)");
+      if (aVars->Coord_Type[i] & aDEFS->COORD_LOG)
+          strcat(aVars->Coord_Label[i]," (log)");
+          
+      strcat(aVars->Monitor_Label, " ");
+      strcat(aVars->Monitor_Label, Short_Label[i]);
+    } /* end for Short_Label */
+    strcat(aVars->Monitor_Label, " Monitor");
+    if (aVars->Flag_Shape == aDEFS->SHAPE_SQUARE) strcat(aVars->Monitor_Label, " (Square)");
+    if (aVars->Flag_Shape == aDEFS->SHAPE_DISK)   strcat(aVars->Monitor_Label, " (Disk)");
+    if (aVars->Flag_Shape == aDEFS->SHAPE_SPHERE) strcat(aVars->Monitor_Label, " (Sphere)");
+    if (aVars->Flag_Shape == aDEFS->SHAPE_CYLIND) strcat(aVars->Monitor_Label, " (Cylinder)");
+    if (aVars->Flag_Shape == aDEFS->SHAPE_BOX)    strcat(aVars->Monitor_Label, " (Box)");
+    if (((aVars->Flag_Shape == aDEFS->SHAPE_CYLIND) || (aVars->Flag_Shape == aDEFS->SHAPE_SPHERE) || (aVars->Flag_Shape == aDEFS->SHAPE_BOX))
+        && strstr(aVars->option, "outgoing"))
+    {
+      aVars->Flag_Shape *= -1;
+      strcat(aVars->Monitor_Label, " [out]");
+    }
+    if (aVars->Flag_UsePreMonitor == 1)
+    {
+        strcat(aVars->Monitor_Label, " at ");
+        strncat(aVars->Monitor_Label, aVars->UserName1,32);
+    }
+    if (aVars->Flag_log == 1)
+    {
+        strcat(aVars->Monitor_Label, " [log] ");
+    }
+    
+    /* aVars->Coord_Number  0   : intensity
+     * aVars->Coord_Number  1:n : detector variables */
+    
+    /* now allocate memory to store variables in TRACE */
+    if ((aVars->Coord_Number != 2) && !aVars->Flag_Multiple && !aVars->Flag_List) 
+    { aVars->Flag_Multiple = 1; aVars->Flag_List = 0; } /* default is n1D */
+    
+   /* list and auto limits case : aVars->Flag_List or aVars->Flag_Auto_Limits 
+    * -> Buffer to flush and suppress after aVars->Flag_Auto_Limits
+    */
+    if ((aVars->Flag_Auto_Limits || aVars->Flag_List) && aVars->Coord_Number)
+    { /* Dim : (aVars->Coord_Number+2)*aVars->Buffer_Block matrix (for p, dp) */ 
+      aVars->Mon2D_Buffer = (double *)malloc((aVars->Coord_Number+2)*aVars->Buffer_Block*sizeof(double));
+      if (aVars->Mon2D_Buffer == NULL)
+      { printf("Monitor_nD: %s cannot allocate aVars->Mon2D_Buffer (%li). No list and auto limits.\n", aVars->compcurname, aVars->Buffer_Block*(aVars->Coord_Number+2)*sizeof(double)); aVars->Flag_List = 0; aVars->Flag_Auto_Limits = 0; }
+      else
+      {
+        for ( i=0; i < (aVars->Coord_Number+2)*aVars->Buffer_Block; aVars->Mon2D_Buffer[i++] = (double)0);
+      }
+      aVars->Buffer_Size = aVars->Buffer_Block;
+    }
+    
+    /* 1D and n1D case : aVars->Flag_Multiple */
+    if (aVars->Flag_Multiple && aVars->Coord_Number)
+    { /* Dim : aVars->Coord_Number*aVars->Coord_Bin[i] vectors */ 
+      aVars->Mon2D_N  = (int    **)malloc((aVars->Coord_Number)*sizeof(int *));
+      aVars->Mon2D_p  = (double **)malloc((aVars->Coord_Number)*sizeof(double *));
+      aVars->Mon2D_p2 = (double **)malloc((aVars->Coord_Number)*sizeof(double *));
+      if ((aVars->Mon2D_N == NULL) || (aVars->Mon2D_p == NULL) || (aVars->Mon2D_p2 == NULL))
+      { printf("Monitor_nD: %s n1D cannot allocate aVars->Mon2D_N/p/2p (%i). Fatal.\n", aVars->compcurname, (aVars->Coord_Number)*sizeof(double *)); exit(-1); }
+      for (i= 1; i <= aVars->Coord_Number; i++)
+      { 
+        aVars->Mon2D_N[i-1]  = (int    *)malloc(aVars->Coord_Bin[i]*sizeof(int));
+        aVars->Mon2D_p[i-1]  = (double *)malloc(aVars->Coord_Bin[i]*sizeof(double));
+        aVars->Mon2D_p2[i-1] = (double *)malloc(aVars->Coord_Bin[i]*sizeof(double));
+        if ((aVars->Mon2D_N == NULL) || (aVars->Mon2D_p == NULL) || (aVars->Mon2D_p2 == NULL))
+        { printf("Monitor_nD: %s n1D cannot allocate %s aVars->Mon2D_N/p/2p[%li] (%i). Fatal.\n", aVars->compcurname, aVars->Coord_Var[i], i, (aVars->Coord_Bin[i])*sizeof(double *)); exit(-1); }
+        else 
+        {
+          for (j=0; j < aVars->Coord_Bin[i]; j++ )
+          { aVars->Mon2D_N[i-1][j] = (int)0; aVars->Mon2D_p[i-1][j] = (double)0; aVars->Mon2D_p2[i-1][j] = (double)0; }
+        }
+      }
+    }
+    else /* 2D case : aVars->Coord_Number==2 and !aVars->Flag_Multiple and !aVars->Flag_List */
+    if ((aVars->Coord_Number == 2) && !aVars->Flag_Multiple)
+    { /* Dim : aVars->Coord_Bin[1]*aVars->Coord_Bin[2] matrix */ 
+      aVars->Mon2D_N  = (int    **)malloc((aVars->Coord_Bin[1])*sizeof(int *));
+      aVars->Mon2D_p  = (double **)malloc((aVars->Coord_Bin[1])*sizeof(double *));
+      aVars->Mon2D_p2 = (double **)malloc((aVars->Coord_Bin[1])*sizeof(double *));
+      if ((aVars->Mon2D_N == NULL) || (aVars->Mon2D_p == NULL) || (aVars->Mon2D_p2 == NULL))
+      { printf("Monitor_nD: %s 2D cannot allocate %s aVars->Mon2D_N/p/2p (%i). Fatal.\n", aVars->compcurname, aVars->Coord_Var[1], (aVars->Coord_Bin[1])*sizeof(double *)); exit(-1); }
+      for (i= 0; i < aVars->Coord_Bin[1]; i++)
+      { 
+        aVars->Mon2D_N[i]  = (int    *)malloc(aVars->Coord_Bin[2]*sizeof(int));
+        aVars->Mon2D_p[i]  = (double *)malloc(aVars->Coord_Bin[2]*sizeof(double));
+        aVars->Mon2D_p2[i] = (double *)malloc(aVars->Coord_Bin[2]*sizeof(double));
+        if ((aVars->Mon2D_N == NULL) || (aVars->Mon2D_p == NULL) || (aVars->Mon2D_p2 == NULL))
+        { printf("Monitor_nD: %s 2D cannot allocate %s aVars->Mon2D_N/p/2p[%li] (%i). Fatal.\n", aVars->compcurname, aVars->Coord_Var[1], i, (aVars->Coord_Bin[2])*sizeof(double *)); exit(-1); }
+        else
+        {
+          for (j=0; j < aVars->Coord_Bin[2]; j++ )
+          { aVars->Mon2D_N[i][j] = (int)0; aVars->Mon2D_p[i][j] = (double)0; aVars->Mon2D_p2[i][j] = (double)0; }
+        }
+      }
+    }      
+      /* no Mon2D allocated for 
+       * (aVars->Coord_Number != 2) && !aVars->Flag_Multiple && aVars->Flag_List */
+    
+    aVars->psum  = 0;
+    aVars->p2sum = 0;
+    aVars->Nsum  = 0;
+    
+    aVars->area  = fabs(aVars->mxmax - aVars->mxmin)*fabs(aVars->mymax - aVars->mymin)*1E4; /* in cm**2 for square and box shapes */
+    aVars->Sphere_Radius = fabs(aVars->mxmax - aVars->mxmin);
+    if ((abs(aVars->Flag_Shape) == aDEFS->SHAPE_DISK) || (abs(aVars->Flag_Shape) == aDEFS->SHAPE_SPHERE))
+    {
+      aVars->area = PI*aVars->Sphere_Radius*aVars->Sphere_Radius; /* disk shapes */
+    }
+    if (aVars->area == 0) aVars->Coord_Number = 0;
+    if (aVars->Coord_Number == 0 && aVars->Flag_Verbose)  printf("Monitor_nD: %s is unactivated (0D)\n", aVars->compcurname);
+    aVars->Cylinder_Height = fabs(aVars->mymax - aVars->mymin);
+    
+    if (aVars->Intermediate < 0) aVars->Intermediate = 0;
+    if (aVars->Intermediate > 1) aVars->Intermediate /= 100;
+    aVars->IntermediateCnts = aVars->Intermediate*mcget_ncount();
+  } /* end Monitor_nD_Init */
+  
+void Monitor_nD_Trace(aDEFS, aVars)
+  MonitornD_Defines_type *aDEFS;
+  MonitornD_Variables_type *aVars;
+{
+
+  double  XY=0;
+  double  t0 = 0;
+  double  t1 = 0;
+  long    i,j;
+  double  pp;
+  double  Coord[MONnD_COORD_NMAX];
+  long    Coord_Index[MONnD_COORD_NMAX];
+  char    While_End   =0;
+  long    While_Buffer=0;
+  int     intersect = 0;
+  char    Set_aVars_Coord_Type = aDEFS->COORD_NONE;
+  
+  
+  pp = aVars->cp;
+  
+  if (aVars->Coord_Number > 0)
+    {
+      /* aVars->Flag_Auto_Limits */
+      if ((aVars->Buffer_Counter >= aVars->Buffer_Block) && (aVars->Flag_Auto_Limits == 1))
+      {
+        /* auto limits case : get limits in Buffer for each variable */ 
+              /* Dim : (aVars->Coord_Number+2)*aVars->Buffer_Block matrix (for p, dp) */ 
+        if (aVars->Flag_Verbose) printf("Monitor_nD: %s getting %i Auto Limits from List (%li).\n", aVars->compcurname, aVars->Coord_Number, aVars->Buffer_Counter);
+        for (i = 1; i <= aVars->Coord_Number; i++)
+        {
+          aVars->Coord_Min[i] = FLT_MAX;
+          aVars->Coord_Max[i] = -FLT_MAX;
+          for (j = 0; j < aVars->Buffer_Block; j++)
+          { 
+            XY = aVars->Mon2D_Buffer[j*(aVars->Coord_Number+2) + (i-1)];  /* scanning variables in Buffer */
+            if (XY < aVars->Coord_Min[i]) aVars->Coord_Min[i] = XY;
+            if (XY > aVars->Coord_Max[i]) aVars->Coord_Max[i] = XY;
+          }
+        }
+        aVars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
+      }
+
+      /* manage realloc for list all if Buffer size exceeded */
+      if ((aVars->Buffer_Counter >= aVars->Buffer_Block) && (aVars->Flag_List == 2))
+      {
+        aVars->Mon2D_Buffer  = (double *)realloc(aVars->Mon2D_Buffer, (aVars->Coord_Number+2)*(aVars->Neutron_Counter+aVars->Buffer_Block)*sizeof(double));
+        if (aVars->Mon2D_Buffer == NULL)
+              { printf("Monitor_nD: %s cannot reallocate aVars->Mon2D_Buffer[%li] (%li). Skipping.\n", aVars->compcurname, i, (aVars->Neutron_Counter+aVars->Buffer_Block)*sizeof(double)); aVars->Flag_List = 1; }
+        else { aVars->Buffer_Counter = 0; aVars->Buffer_Size = aVars->Neutron_Counter+aVars->Buffer_Block; }
+      }
+
+      while (!While_End)
+      { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
+        if (aVars->Flag_Auto_Limits == 2)
+        {
+          if (While_Buffer < aVars->Buffer_Block)
+          {
+            /* first while loops (While_Buffer) */
+            /* auto limits case : scan Buffer within limits and store in Mon2D */ 
+            Coord[0] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+2) + (aVars->Coord_Number)];
+            
+            for (i = 1; i <= aVars->Coord_Number; i++)
+            {
+              /* scanning variables in Buffer */
+              XY = (aVars->Coord_Max[i]-aVars->Coord_Min[i]);
+              Coord[i] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+2) + (i-1)];
+              if (XY > 0) Coord_Index[i] = floor((aVars->Mon2D_Buffer[(i-1) + While_Buffer*(aVars->Coord_Number+2)]-aVars->Coord_Min[i])*aVars->Coord_Bin[i]/XY);
+              else Coord_Index[i] = 0;
+              if (aVars->Flag_With_Borders)
+              {
+                if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+                if (Coord_Index[i] >= aVars->Coord_Bin[i]) Coord_Index[i] = aVars->Coord_Bin[i] - 1;
+              }
+            } /* end for */
+            While_Buffer++;
+          } /* end if in Buffer */
+          else /* (While_Buffer >= aVars->Buffer_Block) && (aVars->Flag_Auto_Limits == 2) */ 
+          {
+            aVars->Flag_Auto_Limits = 0;
+            if (!aVars->Flag_List) /* free Buffer not needed (no list to output) */
+            { /* Dim : (aVars->Coord_Number+2)*aVars->Buffer_Block matrix (for p, dp) */ 
+              free(aVars->Mon2D_Buffer);
+            }
+          }
+        }
+        else /* aVars->Flag_Auto_Limits == 0 or 1 */
+        {
+          for (i = 0; i <= aVars->Coord_Number; i++)
+          { /* handle current neutron : last while */
+
+            XY = 0;
+            Set_aVars_Coord_Type = (aVars->Coord_Type[i] & 31);
+            if (Set_aVars_Coord_Type == aDEFS->COORD_X) XY = aVars->cx; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_Y) XY = aVars->cy; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_Z) XY = aVars->cz; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_VX) XY = aVars->cvx; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_VY) XY = aVars->cvy; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_VZ) XY = aVars->cvz; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_KX) XY = V2K*aVars->cvx; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_KY) XY = V2K*aVars->cvy; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_KZ) XY = V2K*aVars->cvz; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_SX) XY = aVars->csx; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_SY) XY = aVars->csy; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_SZ) XY = aVars->csz; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_T) XY = aVars->ct; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_P) XY = aVars->cp; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_HDIV) XY = RAD2DEG*atan2(aVars->cvx,aVars->cvz); 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_VDIV) XY = RAD2DEG*atan2(aVars->cvy,aVars->cvz); 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_V) XY = sqrt(aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz); 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_RADIUS) XY = sqrt(aVars->cx*aVars->cx+aVars->cy*aVars->cy); 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_K) { XY = sqrt(aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz);  XY *= V2K; }
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_ENERGY) { XY = aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz;  XY *= VS2E; }
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_LAMBDA) { XY = sqrt(aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_NCOUNT) XY = Coord[i]+1; 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_ANGLE) 
+            {  XY = sqrt(aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz);
+               if (aVars->cvz != 0) 
+               {
+                 XY= RAD2DEG*atan2(XY,aVars->cvz);
+               } else XY = 0;
+            }
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_THETA)  { if (aVars->cz != 0) XY = RAD2DEG*atan2(aVars->cx,aVars->cz); } 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_PHI) { if (aVars->cz != 0) XY = RAD2DEG*atan2(aVars->cy,aVars->cz); } 
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_USER1) XY = aVars->UserVariable1;
+                  else
+            if (Set_aVars_Coord_Type == aDEFS->COORD_USER2) XY = aVars->UserVariable2;
+                  else
+            XY = 0;
+            
+            if (aVars->Coord_Type[i] & aDEFS->COORD_ABS) XY=fabs(XY);
+            
+            if (aVars->Coord_Type[i] & aDEFS->COORD_LOG)
+            {  if (XY > 0) XY = log(XY)/log(10);
+               else XY = -100; }
+
+            Coord[i] = XY;
+            if (!aVars->Flag_Auto_Limits)
+            {
+              XY = (aVars->Coord_Max[i]-aVars->Coord_Min[i]);
+              if (XY > 0) Coord_Index[i] = floor((Coord[i]-aVars->Coord_Min[i])*aVars->Coord_Bin[i]/XY);
+              else Coord_Index[i] = 0;
+              if (aVars->Flag_With_Borders)
+              {
+                if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+                if (Coord_Index[i] >= aVars->Coord_Bin[i]) Coord_Index[i] = aVars->Coord_Bin[i] - 1;
+              }
+            } /* else Auto_Limits will get Index later from Buffer */
+          } /* end for i */
+          While_End = 1;
+        } /* end else if aVars->Flag_Auto_Limits == 2 */
+
+        if (aVars->Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
+        { /* now store Coord into Buffer (no index needed) if necessary */
+          if ((aVars->Buffer_Counter < aVars->Buffer_Block) && ((aVars->Flag_List) || (aVars->Flag_Auto_Limits == 1)))
+          {
+            for (i = 0; i < aVars->Coord_Number; i++)
+            {
+              aVars->Mon2D_Buffer[i + aVars->Neutron_Counter*(aVars->Coord_Number+2)] = Coord[i+1];
+            }
+            aVars->Mon2D_Buffer[aVars->Coord_Number + aVars->Neutron_Counter*(aVars->Coord_Number+2)]   = pp;
+            aVars->Mon2D_Buffer[(aVars->Coord_Number+1) + aVars->Neutron_Counter*(aVars->Coord_Number+2)] = pp*pp;
+            aVars->Buffer_Counter++;
+            if (aVars->Flag_Verbose && (aVars->Buffer_Counter >= aVars->Buffer_Block) && (aVars->Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", aVars->compcurname, aVars->Buffer_Counter);
+          }
+          aVars->Neutron_Counter++;
+        } /* end (aVars->Flag_Auto_Limits != 2) */
+
+        /* store n1d/2d section for Buffer or current neutron in while */
+
+        if (aVars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
+        {
+        /* 1D and n1D case : aVars->Flag_Multiple */
+          if (aVars->Flag_Multiple)
+          { /* Dim : aVars->Coord_Number*aVars->Coord_Bin[i] vectors (intensity is not included) */ 
+            for (i= 0; i < aVars->Coord_Number; i++)
+            {
+              j = Coord_Index[i+1];
+              if (j >= 0 && j < aVars->Coord_Bin[i+1])
+              {
+                aVars->Mon2D_N[i][j]++;
+                aVars->Mon2D_p[i][j] += pp;
+                aVars->Mon2D_p2[i][j] += pp*pp;
+              }
+            }
+          }
+          else /* 2D case : aVars->Coord_Number==2 and !aVars->Flag_Multiple and !aVars->Flag_List */
+          if ((aVars->Coord_Number == 2) && !aVars->Flag_Multiple)
+          { /* Dim : aVars->Coord_Bin[1]*aVars->Coord_Bin[2] matrix */
+            i = Coord_Index[1];
+            j = Coord_Index[2];
+            if (i >= 0 && i < aVars->Coord_Bin[1] && j >= 0 && j < aVars->Coord_Bin[2])
+            {
+              aVars->Mon2D_N[i][j]++;
+              aVars->Mon2D_p[i][j] += pp;
+              aVars->Mon2D_p2[i][j] += pp*pp;
+            }
+          }
+        } /* end (aVars->Flag_Auto_Limits != 1) */
+      } /* end while */
+    } /* end if aVars->Coord_Number */
+  } /* end Monitor_nD_Trace */
 
 void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *aVars, char dofree)
   /* dofree = 0 : no free, =1 : free variables (last call) */
@@ -2138,7 +2911,7 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
                 if (aVars->Mon2D_p[i][j] > 0)
                 {
                   p1m[j] = log(aVars->Mon2D_p[i][j])/log(10);
-                  p2m[j] = aVars->Mon2D_p2[i][j]/aVars->Mon2D_p[i][j];
+                  p2m[j] = (aVars->Mon2D_p2[i][j])/(aVars->Mon2D_p[i][j]*aVars->Mon2D_p[i][j]);
                 }
                 else
                 {
@@ -2284,755 +3057,3 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
       free(aVars->Mon2D_p2);
     }
   } /* end Monitor_nD_OutPut */
-  
-void Monitor_nD_Init(aDEFS, aVars, m_xwidth, m_yheight, m_zthick, m_xmin, m_xmax, m_ymin, m_ymax, m_zmin, m_zmax)
-  MonitornD_Defines_type *aDEFS;
-  MonitornD_Variables_type *aVars;
-  double m_xwidth, m_yheight, m_zthick;
-  double m_xmin, m_xmax, m_ymin, m_ymax, m_zmin, m_zmax;
-  {
-    long carg = 1;
-    char *option_copy, *token;
-    char Flag_New_Token = 1;
-    char Flag_End       = 1;
-    char Flag_All       = 0;
-    char Flag_No        = 0;
-    char Set_aVars_Coord_Type;
-    char Set_Coord_Flag = 0;
-    char Set_aVars_Coord_Label[30];
-    char Set_aVars_Coord_Var[30];
-    char Short_Label[MONnD_COORD_NMAX][30];
-    char Set_Coord_Mode;
-    long i=0, j=0;
-    double lmin, lmax, XY;
-    long    t;
-    
-    t = (long)time(NULL);
-
-    aDEFS->COORD_NONE   =0;
-    aDEFS->COORD_X      =1;
-    aDEFS->COORD_Y      =2;
-    aDEFS->COORD_Z      =3;
-    aDEFS->COORD_VX     =4;
-    aDEFS->COORD_VY     =5;
-    aDEFS->COORD_VZ     =6;
-    aDEFS->COORD_T      =7;
-    aDEFS->COORD_P      =8;
-    aDEFS->COORD_SX     =9;
-    aDEFS->COORD_SY     =10;
-    aDEFS->COORD_SZ     =11;
-    aDEFS->COORD_KX     =12;
-    aDEFS->COORD_KY     =13;
-    aDEFS->COORD_KZ     =14;
-    aDEFS->COORD_K      =15;
-    aDEFS->COORD_V      =16;
-    aDEFS->COORD_ENERGY =17;
-    aDEFS->COORD_LAMBDA =18;
-    aDEFS->COORD_RADIUS =19;
-    aDEFS->COORD_HDIV   =20;
-    aDEFS->COORD_VDIV   =21;
-    aDEFS->COORD_ANGLE  =22;
-    aDEFS->COORD_NCOUNT =23;
-    aDEFS->COORD_THETA  =24;
-    aDEFS->COORD_PHI    =25;
-    aDEFS->COORD_USER1  =26;
-    aDEFS->COORD_USER2  =26;
-
-/* token modifiers */
-    aDEFS->COORD_VAR    =0;    /* next token should be a variable or normal option */
-    aDEFS->COORD_MIN    =1;    /* next token is a min value */
-    aDEFS->COORD_MAX    =2;    /* next token is a max value */
-    aDEFS->COORD_DIM    =3;    /* next token is a bin value */
-    aDEFS->COORD_FIL    =4;    /* next token is a filename */
-    aDEFS->COORD_EVNT   =5;    /* next token is a buffer size value */
-    aDEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
-    aDEFS->COORD_INTERM =7;    /* next token is an intermediate save value (%) */
-
-    strcpy(aDEFS->TOKEN_DEL, " =,;[](){}:");  /* token separators */
-
-    aDEFS->SHAPE_SQUARE =0;    /* shape of the monitor */
-    aDEFS->SHAPE_DISK   =1;
-    aDEFS->SHAPE_SPHERE =2;
-    aDEFS->SHAPE_CYLIND =3;
-    aDEFS->SHAPE_BOX    =4;
-
-    aVars->Sphere_Radius     = 0;
-    aVars->Cylinder_Height   = 0;
-    aVars->Flag_With_Borders = 0;   /* 2 means xy borders too */
-    aVars->Flag_List         = 0;   /* 1 store 1 buffer, 2 is list all */
-    aVars->Flag_Multiple     = 0;   /* 1 when n1D, 0 for 2D */
-    aVars->Flag_Verbose      = 0;
-    aVars->Flag_Shape        = aDEFS->SHAPE_SQUARE;
-    aVars->Flag_Auto_Limits  = 0;   /* get limits from first Buffer */
-    aVars->Flag_Absorb       = 0;   /* monitor is also a slit */
-    aVars->Flag_per_cm2      = 0;   /* flux is per cm2 */
-    aVars->Flag_log          = 0;   /* log10 of the flux */
-    aVars->Flag_parallel     = 0;   /* set neutron state back after detection (parallel components) */
-    aVars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
-    aVars->Buffer_Block      = 1000;     /* Buffer size for list or auto limits */
-    aVars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
-    aVars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
-    aVars->Buffer_Size       = 0;
-    aVars->UserVariable1     = 0;
-    aVars->UserVariable2     = 0;
-    aVars->He3_pressure      = 0;
-    aVars->IntermediateCnts  = 0;
-    
-    Set_aVars_Coord_Type = aDEFS->COORD_NONE;
-    Set_Coord_Mode = aDEFS->COORD_VAR;
-    
-    /* handle size parameters */
-    /* normal use is with xwidth, yheight, zthick */
-    /* if xmin,xmax,ymin,ymax,zmin,zmax are non 0, use them */
-    if (fabs(m_xmin-m_xmax) == 0) 
-      { aVars->mxmin = -fabs(m_xwidth)/2; aVars->mxmax = fabs(m_xwidth)/2; }
-    else
-      { if (m_xmin < m_xmax) {aVars->mxmin = m_xmin; aVars->mxmax = m_xmax;}
-        else {aVars->mxmin = m_xmax; aVars->mxmax = m_xmin;}
-      }
-    if (fabs(m_ymin-m_ymax) == 0) 
-      { aVars->mymin = -fabs(m_yheight)/2; aVars->mymax = fabs(m_yheight)/2; }
-    else
-      { if (m_ymin < m_ymax) {aVars->mymin = m_ymin; aVars->mymax = m_ymax;}
-        else {aVars->mymin = m_ymax; aVars->mymax = m_ymin;}
-      }
-    if (fabs(m_zmin-m_zmax) == 0) 
-      { aVars->mzmin = -fabs(m_zthick)/2; aVars->mzmax = fabs(m_zthick)/2; }
-    else
-      { if (m_zmin < m_zmax) {aVars->mzmin = m_zmin; aVars->mzmax = m_zmax; }
-        else {aVars->mzmin = m_zmax; aVars->mzmax = m_zmin; }
-      }
-      
-    if (fabs(aVars->mzmax-aVars->mzmin) == 0)
-      aVars->Flag_Shape        = aDEFS->SHAPE_SQUARE;
-    else
-      aVars->Flag_Shape        = aDEFS->SHAPE_BOX;
-      
-    /* parse option string */ 
-    
-    option_copy = (char*)malloc(strlen(aVars->option));
-    if (option_copy == NULL)
-    {
-      printf("Monitor_nD: %s cannot allocate option_copy (%i). Fatal.\n", aVars->compcurname, strlen(aVars->option));
-      exit(-1);
-    }
-    
-    
-    if (strlen(aVars->option))
-    {
-      Flag_End = 0;
-      strcpy(option_copy, aVars->option);
-    }
-    
-    if (strstr(aVars->option, "cm2") || strstr(aVars->option, "cm^2")) aVars->Flag_per_cm2 = 1;
-  
-    if (aVars->Flag_per_cm2) strcpy(aVars->Coord_Label[0],"Intensity [n/cm^2/s]");
-    else strcpy(aVars->Coord_Label[0],"Intensity [n/s]");
-    strcpy(aVars->Coord_Var[0],"p");
-    aVars->Coord_Type[0] = aDEFS->COORD_P;
-    aVars->Coord_Bin[0] = 1;
-    aVars->Coord_Min[0] = 0;
-    aVars->Coord_Max[0] = FLT_MAX;
-    
-    /* default file name is comp name+dateID */
-    sprintf(aVars->Mon_File, "%s_%i", aVars->compcurname, t); 
-  
-    carg = 1;
-    while((Flag_End == 0) && (carg < 128))
-    {
-      if (Flag_New_Token) /* to get the previous token sometimes */
-      {
-        if (carg == 1) token=(char *)strtok(option_copy,aDEFS->TOKEN_DEL);
-        else token=(char *)strtok(NULL,aDEFS->TOKEN_DEL);
-        if (token == NULL) Flag_End=1;
-      }
-      Flag_New_Token = 1;
-      if ((token != NULL) && (strlen(token) != 0))
-      {
-      /* first handle option values from preceeding keyword token detected */
-        if (Set_Coord_Mode == aDEFS->COORD_MAX)
-        { 
-          if (!Flag_All) 
-            aVars->Coord_Max[aVars->Coord_Number] = atof(token); 
-          else
-            for (i = 0; i <= aVars->Coord_Number; aVars->Coord_Max[i++] = atof(token));
-          Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0;
-        }
-        if (Set_Coord_Mode == aDEFS->COORD_MIN)
-        { 
-          if (!Flag_All) 
-            aVars->Coord_Min[aVars->Coord_Number] = atof(token); 
-          else
-            for (i = 0; i <= aVars->Coord_Number; aVars->Coord_Min[i++] = atof(token));
-          Set_Coord_Mode = aDEFS->COORD_MAX; 
-        }
-        if (Set_Coord_Mode == aDEFS->COORD_DIM)
-        { 
-          if (!Flag_All) 
-            aVars->Coord_Bin[aVars->Coord_Number] = atoi(token); 
-          else
-            for (i = 0; i <= aVars->Coord_Number; aVars->Coord_Bin[i++] = atoi(token));
-          Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0;
-        }
-        if (Set_Coord_Mode == aDEFS->COORD_FIL)
-        { 
-          if (!Flag_No) strcpy(aVars->Mon_File,token); 
-          else { strcpy(aVars->Mon_File,""); aVars->Coord_Number = 0; Flag_End = 1;}
-          Set_Coord_Mode = aDEFS->COORD_VAR;
-        }
-        if (Set_Coord_Mode == aDEFS->COORD_EVNT)
-        { 
-          if (!strcmp(token, "all") || Flag_All) aVars->Flag_List = 2;
-          else { i = atoi(token); if (i) aVars->Buffer_Counter = i; }
-          Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0;
-        }
-        if (Set_Coord_Mode == aDEFS->COORD_3HE)
-        { 
-            aVars->He3_pressure = atof(token); 
-            Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0; 
-        }
-        if (Set_Coord_Mode == aDEFS->COORD_INTERM)
-        { 
-            aVars->Intermediate = atof(token); 
-            Set_Coord_Mode = aDEFS->COORD_VAR; Flag_All = 0; 
-        }
-
-        /* now look for general option keywords */
-        if (!strcmp(token, "borders")) 
-        { if (Flag_No) { aVars->Flag_With_Borders = 0; Flag_No = 0; }
-          else aVars->Flag_With_Borders = 1; }
-        if (!strcmp(token, "verbose")) 
-        { if (Flag_No) { aVars->Flag_Verbose = 0; Flag_No = 0; }
-          else aVars->Flag_Verbose      = 1; }
-        if (!strcmp(token, "log")) 
-        { if (Flag_No) { aVars->Flag_log = 0; Flag_No = 0; }
-          else aVars->Flag_log      = 1; }
-        if (!strcmp(token, "multiple")) 
-        { if (Flag_No) { aVars->Flag_Multiple = 0; Flag_No = 0; }
-          else aVars->Flag_Multiple = 1; }
-        if (!strcmp(token, "list")) 
-        { if (Flag_No) { aVars->Flag_List = 0; Flag_No = 0; }
-          else aVars->Flag_List = 1; 
-          Set_Coord_Mode = aDEFS->COORD_EVNT; }
-
-        if (!strcmp(token, "limits") || !strcmp(token, "min")) Set_Coord_Mode = aDEFS->COORD_MIN;
-        if (!strcmp(token, "slit") || !strcmp(token, "absorb")) 
-        { if (Flag_No) { aVars->Flag_Absorb = 0; Flag_No = 0; }
-          else aVars->Flag_Absorb = 1; }
-        if (!strcmp(token, "max")) Set_Coord_Mode = aDEFS->COORD_MAX;
-        if (!strcmp(token, "bins")) Set_Coord_Mode = aDEFS->COORD_DIM;
-        if (!strcmp(token, "file")) 
-        { Set_Coord_Mode = aDEFS->COORD_FIL;
-          if (Flag_No) { strcpy(aVars->Mon_File,""); aVars->Coord_Number = 0; Flag_End = 1;}}
-        if (!strcmp(token, "unactivate")) { Flag_End = 1; aVars->Coord_Number = 0; }
-        if (!strcmp(token, "all")) 
-        { if (Flag_No) { Flag_All = 0; Flag_No = 0; }
-          else Flag_All = 1; }
-        if (!strcmp(token, "sphere")) 
-        { if (Flag_No) { aVars->Flag_Shape = aDEFS->SHAPE_SQUARE; Flag_No = 0; }
-          else aVars->Flag_Shape = aDEFS->SHAPE_SPHERE; }
-        if (!strcmp(token, "cylinder")) 
-        { if (Flag_No) { aVars->Flag_Shape = aDEFS->SHAPE_SQUARE; Flag_No = 0; }
-          else aVars->Flag_Shape = aDEFS->SHAPE_CYLIND; }
-        if (!strcmp(token, "square")) aVars->Flag_Shape = aDEFS->SHAPE_SQUARE; 
-        if (!strcmp(token, "disk")) aVars->Flag_Shape = aDEFS->SHAPE_DISK; 
-        if (!strcmp(token, "box")) aVars->Flag_Shape = aDEFS->SHAPE_BOX; 
-        if (!strcmp(token, "parallel")) aVars->Flag_parallel = 1; 
-        if (!strcmp(token, "auto")) 
-        { if (Flag_No) { aVars->Flag_Auto_Limits = 0; Flag_No = 0; }
-          else aVars->Flag_Auto_Limits = 1; }
-        if (!strcmp(token, "premonitor"))
-        { if (Flag_No) { aVars->Flag_UsePreMonitor = 0; Flag_No = 0; }
-        else aVars->Flag_UsePreMonitor == 1; } 
-        if (!strcmp(token, "3He_pressure"))
-        { if (!Flag_No)  Set_Coord_Mode = aDEFS->COORD_3HE; 
-          aVars->He3_pressure = 3; }
-        if (!strcmp(token, "intermediate"))
-        { if (!Flag_No)  Set_Coord_Mode = aDEFS->COORD_INTERM; 
-          aVars->Intermediate = 5; }
-        if (!strcmp(token, "no") || !strcmp(token, "not")) Flag_No = 1;
-  
-        /* now look for variable names to monitor */
-        Set_aVars_Coord_Type = aDEFS->COORD_NONE; lmin = 0; lmax = 0;
-
-        if (!strcmp(token, "x")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_X; strcpy(Set_aVars_Coord_Label,"x [m]"); strcpy(Set_aVars_Coord_Var,"x"); lmin = aVars->mxmin; lmax = aVars->mxmax; }
-        if (!strcmp(token, "y")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_Y; strcpy(Set_aVars_Coord_Label,"y [m]"); strcpy(Set_aVars_Coord_Var,"y"); lmin = aVars->mymin; lmax = aVars->mymax; }
-        if (!strcmp(token, "z")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_Z; strcpy(Set_aVars_Coord_Label,"z [m]"); strcpy(Set_aVars_Coord_Var,"z"); lmin = aVars->mzmin; lmax = aVars->mzmax; }
-        if (!strcmp(token, "k") || !strcmp(token, "wavevector")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_K; strcpy(Set_aVars_Coord_Label,"|k| [Angs-1]"); strcpy(Set_aVars_Coord_Var,"k"); lmin = 0; lmax = 10; }
-        if (!strcmp(token, "v"))
-          { Set_aVars_Coord_Type = aDEFS->COORD_V; strcpy(Set_aVars_Coord_Label,"Velocity [m/s]"); strcpy(Set_aVars_Coord_Var,"v"); lmin = 0; lmax = 10000; }
-        if (!strcmp(token, "t") || !strcmp(token, "time")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_T; strcpy(Set_aVars_Coord_Label,"TOF [s]"); strcpy(Set_aVars_Coord_Var,"t"); lmin = 0; lmax = .1; }
-        if ((aVars->Coord_Number > 0) && (!strcmp(token, "p") || !strcmp(token, "intensity") || !strcmp(token, "flux")))
-          { Set_aVars_Coord_Type = aDEFS->COORD_P;  
-            if (aVars->Flag_per_cm2) strcpy(Set_aVars_Coord_Label,"Intensity [n/cm^2/s]");
-            else strcpy(Set_aVars_Coord_Label,"Intensity [n/s]"); 
-            strcpy(Set_aVars_Coord_Var,"I"); 
-            lmin = 0; lmax = FLT_MAX; }
-
-        if (!strcmp(token, "vx")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_VX; strcpy(Set_aVars_Coord_Label,"vx [m/s]"); strcpy(Set_aVars_Coord_Var,"vx"); lmin = -1000; lmax = 1000; }
-        if (!strcmp(token, "vy")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_VY; strcpy(Set_aVars_Coord_Label,"vy [m/s]"); strcpy(Set_aVars_Coord_Var,"vy"); lmin = -1000; lmax = 1000; }
-        if (!strcmp(token, "vz")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_VZ; strcpy(Set_aVars_Coord_Label,"vz [m/s]"); strcpy(Set_aVars_Coord_Var,"vz"); lmin = -10000; lmax = 10000; }
-        if (!strcmp(token, "kx")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_KX; strcpy(Set_aVars_Coord_Label,"kx [Angs-1]"); strcpy(Set_aVars_Coord_Var,"kx"); lmin = -1; lmax = 1; }
-        if (!strcmp(token, "ky")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_KY; strcpy(Set_aVars_Coord_Label,"ky [Angs-1]"); strcpy(Set_aVars_Coord_Var,"ky"); lmin = -1; lmax = 1; }
-        if (!strcmp(token, "kz")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_KZ; strcpy(Set_aVars_Coord_Label,"kz [Angs-1]"); strcpy(Set_aVars_Coord_Var,"kz"); lmin = -10; lmax = 10; }
-        if (!strcmp(token, "sx")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_SX; strcpy(Set_aVars_Coord_Label,"sx [1]"); strcpy(Set_aVars_Coord_Var,"sx"); lmin = -1; lmax = 1; }
-        if (!strcmp(token, "sy")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_SY; strcpy(Set_aVars_Coord_Label,"sy [1]"); strcpy(Set_aVars_Coord_Var,"sy"); lmin = -1; lmax = 1; }
-        if (!strcmp(token, "sz")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_SZ; strcpy(Set_aVars_Coord_Label,"sz [1]"); strcpy(Set_aVars_Coord_Var,"sz"); lmin = -1; lmax = 1; }
-
-        if (!strcmp(token, "energy") || !strcmp(token, "omega")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_ENERGY; strcpy(Set_aVars_Coord_Label,"Energy [meV]"); strcpy(Set_aVars_Coord_Var,"E"); lmin = 0; lmax = 100; }
-        if (!strcmp(token, "lambda") || !strcmp(token, "wavelength")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_LAMBDA; strcpy(Set_aVars_Coord_Label,"Wavelength [Angs]"); strcpy(Set_aVars_Coord_Var,"L"); lmin = 0; lmax = 100; }
-        if (!strcmp(token, "radius")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_RADIUS; strcpy(Set_aVars_Coord_Label,"Radius [m]"); strcpy(Set_aVars_Coord_Var,"R"); lmin = 0; lmax = m_xmax; }
-        if (!strcmp(token, "angle")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_ANGLE; strcpy(Set_aVars_Coord_Label,"Angle [deg]"); strcpy(Set_aVars_Coord_Var,"A"); lmin = -5; lmax = 5; }
-        if (!strcmp(token, "hdiv")|| !strcmp(token, "divergence") || !strcmp(token, "xdiv") || !strcmp(token, "dx")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_HDIV; strcpy(Set_aVars_Coord_Label,"Hor. Divergence [deg]"); strcpy(Set_aVars_Coord_Var,"HD"); lmin = -5; lmax = 5; }
-        if (!strcmp(token, "vdiv") || !strcmp(token, "ydiv") || !strcmp(token, "dy")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_VDIV; strcpy(Set_aVars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_aVars_Coord_Var,"VD"); lmin = -5; lmax = 5; }
-        if (!strcmp(token, "theta") || !strcmp(token, "longitude")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_THETA; strcpy(Set_aVars_Coord_Label,"Longitude [deg]"); strcpy(Set_aVars_Coord_Var,"th"); lmin = -180; lmax = 180; }
-        if (!strcmp(token, "phi") || !strcmp(token, "lattitude")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_PHI; strcpy(Set_aVars_Coord_Label,"Lattitude [deg]"); strcpy(Set_aVars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
-        if (!strcmp(token, "ncounts")) 
-          { Set_aVars_Coord_Type = aDEFS->COORD_NCOUNT; strcpy(Set_aVars_Coord_Label,"Neutrons [1]"); strcpy(Set_aVars_Coord_Var,"N"); lmin = 0; lmax = 1e10; }
-              if (!strcmp(token, "user") || !strcmp(token, "user1"))
-          { Set_aVars_Coord_Type = aDEFS->COORD_USER1; strncpy(Set_aVars_Coord_Label,aVars->UserName1,32); strcpy(Set_aVars_Coord_Var,"U1"); lmin = -1e10; lmax = 1e10; }
-              if (!strcmp(token, "user2"))
-          { Set_aVars_Coord_Type = aDEFS->COORD_USER2; strncpy(Set_aVars_Coord_Label,aVars->UserName2,32); strcpy(Set_aVars_Coord_Var,"U2"); lmin = -1e10; lmax = 1e10; }
-
-        /* now stores variable keywords detected, if any */ 
-        if (Set_aVars_Coord_Type != aDEFS->COORD_NONE)
-        {
-          if (aVars->Coord_Number < MONnD_COORD_NMAX) aVars->Coord_Number++;
-          else if (aVars->Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", aVars->compcurname, MONnD_COORD_NMAX);
-          aVars->Coord_Type[aVars->Coord_Number] = Set_aVars_Coord_Type;
-          strcpy(aVars->Coord_Label[aVars->Coord_Number], Set_aVars_Coord_Label); 
-          strcpy(aVars->Coord_Var[aVars->Coord_Number], Set_aVars_Coord_Var);
-          if (lmin > lmax) { XY = lmin; lmin=lmax; lmax = XY; }
-          aVars->Coord_Min[aVars->Coord_Number] = lmin;
-          aVars->Coord_Max[aVars->Coord_Number] = lmax;
-          aVars->Coord_Bin[aVars->Coord_Number] = 20;
-          Set_Coord_Mode = aDEFS->COORD_VAR;
-          Flag_All = 0;
-          Flag_No = 0;
-        }
-      carg++;
-      } /* end if token */
-    } /* end while carg */
-    free(option_copy);
-    if (carg == 128) printf("Monitor_nD: %s reached max number of tokens (%i). Skipping.\n", aVars->compcurname, 128);
-    
-    if ((aVars->Flag_Shape == aDEFS->SHAPE_BOX) && (fabs(aVars->mzmax - aVars->mzmin) == 0)) aVars->Flag_Shape = aDEFS->SHAPE_SQUARE;
-
-    /* now setting Monitor Name from variable labels */
-    strcpy(aVars->Monitor_Label,"");
-    for (i = 0; i <= aVars->Coord_Number; i++)
-    {
-      Set_aVars_Coord_Type = aVars->Coord_Type[i];
-      if ((Set_aVars_Coord_Type == aDEFS->COORD_THETA)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_PHI)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_X)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_Y)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_Z)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_RADIUS))
-       strcpy(Short_Label[i],"Position"); 
-      else
-      if ((Set_aVars_Coord_Type == aDEFS->COORD_VX)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_VY)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_VZ)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_V))
-       strcpy(Short_Label[i],"Velocity"); 
-      else
-      if ((Set_aVars_Coord_Type == aDEFS->COORD_KX)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_KY)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_KZ)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_K))
-       strcpy(Short_Label[i],"Wavevector"); 
-      else
-      if ((Set_aVars_Coord_Type == aDEFS->COORD_SX)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_SY)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_SZ))
-       strcpy(Short_Label[i],"Spin");
-      else
-      if ((Set_aVars_Coord_Type == aDEFS->COORD_HDIV)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_VDIV)
-       || (Set_aVars_Coord_Type == aDEFS->COORD_ANGLE))
-       strcpy(Short_Label[i],"Divergence");
-      else
-      if (Set_aVars_Coord_Type == aDEFS->COORD_ENERGY)
-       strcpy(Short_Label[i],"Energy"); 
-      else
-      if (Set_aVars_Coord_Type == aDEFS->COORD_LAMBDA)
-       strcpy(Short_Label[i],"Wavelength"); 
-      else
-      if (Set_aVars_Coord_Type == aDEFS->COORD_NCOUNT)
-       strcpy(Short_Label[i],"Neutron counts");
-      else
-      if (Set_aVars_Coord_Type == aDEFS->COORD_T)
-          strcpy(Short_Label[i],"Time Of Flight");
-      else
-      if (Set_aVars_Coord_Type == aDEFS->COORD_P)
-          strcpy(Short_Label[i],"Intensity");
-      else
-      if (Set_aVars_Coord_Type == aDEFS->COORD_USER1)
-          strncpy(Short_Label[i],aVars->UserName1,32);
-      else
-      if (Set_aVars_Coord_Type == aDEFS->COORD_USER2)
-          strncpy(Short_Label[i],aVars->UserName2,32);
-      else
-          strcpy(Short_Label[i],"Unknown"); 
-          
-      strcat(aVars->Monitor_Label, " ");
-      strcat(aVars->Monitor_Label, Short_Label[i]);
-    } /* end for Short_Label */
-    strcat(aVars->Monitor_Label, " Monitor");
-    if (aVars->Flag_Shape == aDEFS->SHAPE_SQUARE) strcat(aVars->Monitor_Label, " (Square)");
-    if (aVars->Flag_Shape == aDEFS->SHAPE_DISK)   strcat(aVars->Monitor_Label, " (Disk)");
-    if (aVars->Flag_Shape == aDEFS->SHAPE_SPHERE) strcat(aVars->Monitor_Label, " (Sphere)");
-    if (aVars->Flag_Shape == aDEFS->SHAPE_CYLIND) strcat(aVars->Monitor_Label, " (Cylinder)");
-    if (aVars->Flag_Shape == aDEFS->SHAPE_BOX)    strcat(aVars->Monitor_Label, " (Box)");
-    if (((aVars->Flag_Shape == aDEFS->SHAPE_CYLIND) || (aVars->Flag_Shape == aDEFS->SHAPE_SPHERE) || (aVars->Flag_Shape == aDEFS->SHAPE_BOX))
-        && strstr(aVars->option, "outgoing"))
-    {
-      aVars->Flag_Shape *= -1;
-      strcat(aVars->Monitor_Label, " [out]");
-    }
-    if (aVars->Flag_UsePreMonitor == 1)
-    {
-        strcat(aVars->Monitor_Label, " at ");
-        strncat(aVars->Monitor_Label, aVars->UserName1,32);
-    }
-    if (aVars->Flag_log == 1)
-    {
-        strcat(aVars->Monitor_Label, " (log) ");
-    }
-    
-    /* aVars->Coord_Number  0   : intensity
-     * aVars->Coord_Number  1:n : detector variables */
-    
-    /* now allocate memory to store variables in TRACE */
-    if ((aVars->Coord_Number != 2) && !aVars->Flag_Multiple && !aVars->Flag_List) 
-    { aVars->Flag_Multiple = 1; aVars->Flag_List = 0; } /* default is n1D */
-    
-   /* list and auto limits case : aVars->Flag_List or aVars->Flag_Auto_Limits 
-    * -> Buffer to flush and suppress after aVars->Flag_Auto_Limits
-    */
-    if ((aVars->Flag_Auto_Limits || aVars->Flag_List) && aVars->Coord_Number)
-    { /* Dim : (aVars->Coord_Number+2)*aVars->Buffer_Block matrix (for p, dp) */ 
-      aVars->Mon2D_Buffer = (double *)malloc((aVars->Coord_Number+2)*aVars->Buffer_Block*sizeof(double));
-      if (aVars->Mon2D_Buffer == NULL)
-      { printf("Monitor_nD: %s cannot allocate aVars->Mon2D_Buffer (%li). No list and auto limits.\n", aVars->compcurname, aVars->Buffer_Block*(aVars->Coord_Number+2)*sizeof(double)); aVars->Flag_List = 0; aVars->Flag_Auto_Limits = 0; }
-      else
-      {
-        for ( i=0; i < (aVars->Coord_Number+2)*aVars->Buffer_Block; aVars->Mon2D_Buffer[i++] = (double)0);
-      }
-      aVars->Buffer_Size = aVars->Buffer_Block;
-    }
-    
-    /* 1D and n1D case : aVars->Flag_Multiple */
-    if (aVars->Flag_Multiple && aVars->Coord_Number)
-    { /* Dim : aVars->Coord_Number*aVars->Coord_Bin[i] vectors */ 
-      aVars->Mon2D_N  = (int    **)malloc((aVars->Coord_Number)*sizeof(int *));
-      aVars->Mon2D_p  = (double **)malloc((aVars->Coord_Number)*sizeof(double *));
-      aVars->Mon2D_p2 = (double **)malloc((aVars->Coord_Number)*sizeof(double *));
-      if ((aVars->Mon2D_N == NULL) || (aVars->Mon2D_p == NULL) || (aVars->Mon2D_p2 == NULL))
-      { printf("Monitor_nD: %s n1D cannot allocate aVars->Mon2D_N/p/2p (%i). Fatal.\n", aVars->compcurname, (aVars->Coord_Number)*sizeof(double *)); exit(-1); }
-      for (i= 1; i <= aVars->Coord_Number; i++)
-      { 
-        aVars->Mon2D_N[i-1]  = (int    *)malloc(aVars->Coord_Bin[i]*sizeof(int));
-        aVars->Mon2D_p[i-1]  = (double *)malloc(aVars->Coord_Bin[i]*sizeof(double));
-        aVars->Mon2D_p2[i-1] = (double *)malloc(aVars->Coord_Bin[i]*sizeof(double));
-        if ((aVars->Mon2D_N == NULL) || (aVars->Mon2D_p == NULL) || (aVars->Mon2D_p2 == NULL))
-        { printf("Monitor_nD: %s n1D cannot allocate %s aVars->Mon2D_N/p/2p[%li] (%i). Fatal.\n", aVars->compcurname, aVars->Coord_Var[i], i, (aVars->Coord_Bin[i])*sizeof(double *)); exit(-1); }
-        else 
-        {
-          for (j=0; j < aVars->Coord_Bin[i]; j++ )
-          { aVars->Mon2D_N[i-1][j] = (int)0; aVars->Mon2D_p[i-1][j] = (double)0; aVars->Mon2D_p2[i-1][j] = (double)0; }
-        }
-      }
-    }
-    else /* 2D case : aVars->Coord_Number==2 and !aVars->Flag_Multiple and !aVars->Flag_List */
-    if ((aVars->Coord_Number == 2) && !aVars->Flag_Multiple)
-    { /* Dim : aVars->Coord_Bin[1]*aVars->Coord_Bin[2] matrix */ 
-      aVars->Mon2D_N  = (int    **)malloc((aVars->Coord_Bin[1])*sizeof(int *));
-      aVars->Mon2D_p  = (double **)malloc((aVars->Coord_Bin[1])*sizeof(double *));
-      aVars->Mon2D_p2 = (double **)malloc((aVars->Coord_Bin[1])*sizeof(double *));
-      if ((aVars->Mon2D_N == NULL) || (aVars->Mon2D_p == NULL) || (aVars->Mon2D_p2 == NULL))
-      { printf("Monitor_nD: %s 2D cannot allocate %s aVars->Mon2D_N/p/2p (%i). Fatal.\n", aVars->compcurname, aVars->Coord_Var[1], (aVars->Coord_Bin[1])*sizeof(double *)); exit(-1); }
-      for (i= 0; i < aVars->Coord_Bin[1]; i++)
-      { 
-        aVars->Mon2D_N[i]  = (int    *)malloc(aVars->Coord_Bin[2]*sizeof(int));
-        aVars->Mon2D_p[i]  = (double *)malloc(aVars->Coord_Bin[2]*sizeof(double));
-        aVars->Mon2D_p2[i] = (double *)malloc(aVars->Coord_Bin[2]*sizeof(double));
-        if ((aVars->Mon2D_N == NULL) || (aVars->Mon2D_p == NULL) || (aVars->Mon2D_p2 == NULL))
-        { printf("Monitor_nD: %s 2D cannot allocate %s aVars->Mon2D_N/p/2p[%li] (%i). Fatal.\n", aVars->compcurname, aVars->Coord_Var[1], i, (aVars->Coord_Bin[2])*sizeof(double *)); exit(-1); }
-        else
-        {
-          for (j=0; j < aVars->Coord_Bin[2]; j++ )
-          { aVars->Mon2D_N[i][j] = (int)0; aVars->Mon2D_p[i][j] = (double)0; aVars->Mon2D_p2[i][j] = (double)0; }
-        }
-      }
-    }      
-      /* no Mon2D allocated for 
-       * (aVars->Coord_Number != 2) && !aVars->Flag_Multiple && aVars->Flag_List */
-    
-    aVars->psum  = 0;
-    aVars->p2sum = 0;
-    aVars->Nsum  = 0;
-    
-    aVars->area  = fabs(aVars->mxmax - aVars->mxmin)*fabs(aVars->mymax - aVars->mymin)*1E4; /* in cm**2 for square and box shapes */
-    aVars->Sphere_Radius = fabs(aVars->mxmax - aVars->mxmin);
-    if ((abs(aVars->Flag_Shape) == aDEFS->SHAPE_DISK) || (abs(aVars->Flag_Shape) == aDEFS->SHAPE_SPHERE))
-    {
-      aVars->area = PI*aVars->Sphere_Radius*aVars->Sphere_Radius; /* disk shapes */
-    }
-    if (aVars->area == 0) aVars->Coord_Number = 0;
-    if (aVars->Coord_Number == 0 && aVars->Flag_Verbose)  printf("Monitor_nD: %s is unactivated (0D)\n", aVars->compcurname);
-    aVars->Cylinder_Height = fabs(aVars->mymax - aVars->mymin);
-    
-    if (aVars->Intermediate < 0) aVars->Intermediate = 0;
-    if (aVars->Intermediate > 1) aVars->Intermediate /= 100;
-    aVars->IntermediateCnts = aVars->Intermediate*mcget_ncount();
-  } /* end Monitor_nD_Init */
-  
-void Monitor_nD_Trace(aDEFS, aVars)
-  MonitornD_Defines_type *aDEFS;
-  MonitornD_Variables_type *aVars;
-{
-
-  double  XY=0;
-  double  t0 = 0;
-  double  t1 = 0;
-  long    i,j;
-  double  pp;
-  double  Coord[MONnD_COORD_NMAX];
-  long    Coord_Index[MONnD_COORD_NMAX];
-  char    While_End   =0;
-  long    While_Buffer=0;
-  int     intersect = 0;
-  char    Set_aVars_Coord_Type = aDEFS->COORD_NONE;
-  
-  
-  pp = aVars->cp;
-  
-  if (aVars->Coord_Number > 0)
-    {
-      /* aVars->Flag_Auto_Limits */
-      if ((aVars->Buffer_Counter >= aVars->Buffer_Block) && (aVars->Flag_Auto_Limits == 1))
-      {
-        /* auto limits case : get limits in Buffer for each variable */ 
-              /* Dim : (aVars->Coord_Number+2)*aVars->Buffer_Block matrix (for p, dp) */ 
-        if (aVars->Flag_Verbose) printf("Monitor_nD: %s getting %i Auto Limits from List (%li).\n", aVars->compcurname, aVars->Coord_Number, aVars->Buffer_Counter);
-        for (i = 1; i <= aVars->Coord_Number; i++)
-        {
-          aVars->Coord_Min[i] = FLT_MAX;
-          aVars->Coord_Max[i] = -FLT_MAX;
-          for (j = 0; j < aVars->Buffer_Block; j++)
-          { 
-            XY = aVars->Mon2D_Buffer[j*(aVars->Coord_Number+2) + (i-1)];  /* scanning variables in Buffer */
-            if (XY < aVars->Coord_Min[i]) aVars->Coord_Min[i] = XY;
-            if (XY > aVars->Coord_Max[i]) aVars->Coord_Max[i] = XY;
-          }
-        }
-        aVars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
-      }
-
-      /* manage realloc for list all if Buffer size exceeded */
-      if ((aVars->Buffer_Counter >= aVars->Buffer_Block) && (aVars->Flag_List == 2))
-      {
-        aVars->Mon2D_Buffer  = (double *)realloc(aVars->Mon2D_Buffer, (aVars->Coord_Number+2)*(aVars->Neutron_Counter+aVars->Buffer_Block)*sizeof(double));
-        if (aVars->Mon2D_Buffer == NULL)
-              { printf("Monitor_nD: %s cannot reallocate aVars->Mon2D_Buffer[%li] (%li). Skipping.\n", aVars->compcurname, i, (aVars->Neutron_Counter+aVars->Buffer_Block)*sizeof(double)); aVars->Flag_List = 1; }
-        else { aVars->Buffer_Counter = 0; aVars->Buffer_Size = aVars->Neutron_Counter+aVars->Buffer_Block; }
-      }
-
-      while (!While_End)
-      { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
-        if (aVars->Flag_Auto_Limits == 2)
-        {
-          if (While_Buffer < aVars->Buffer_Block)
-          {
-            /* first while loops (While_Buffer) */
-            /* auto limits case : scan Buffer within limits and store in Mon2D */ 
-            Coord[0] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+2) + (aVars->Coord_Number)];
-            
-            for (i = 1; i <= aVars->Coord_Number; i++)
-            {
-              /* scanning variables in Buffer */
-              XY = (aVars->Coord_Max[i]-aVars->Coord_Min[i]);
-              Coord[i] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+2) + (i-1)];
-              if (XY > 0) Coord_Index[i] = floor((aVars->Mon2D_Buffer[(i-1) + While_Buffer*(aVars->Coord_Number+2)]-aVars->Coord_Min[i])*aVars->Coord_Bin[i]/XY);
-              else Coord_Index[i] = 0;
-              if (aVars->Flag_With_Borders)
-              {
-                if (Coord_Index[i] < 0) Coord_Index[i] = 0;
-                if (Coord_Index[i] >= aVars->Coord_Bin[i]) Coord_Index[i] = aVars->Coord_Bin[i] - 1;
-              }
-            } /* end for */
-            While_Buffer++;
-          } /* end if in Buffer */
-          else /* (While_Buffer >= aVars->Buffer_Block) && (aVars->Flag_Auto_Limits == 2) */ 
-          {
-            aVars->Flag_Auto_Limits = 0;
-            if (!aVars->Flag_List) /* free Buffer not needed (no list to output) */
-            { /* Dim : (aVars->Coord_Number+2)*aVars->Buffer_Block matrix (for p, dp) */ 
-              free(aVars->Mon2D_Buffer);
-            }
-          }
-        }
-        else /* aVars->Flag_Auto_Limits == 0 or 1 */
-        {
-          for (i = 0; i <= aVars->Coord_Number; i++)
-          { /* handle current neutron : last while */
-
-            XY = 0;
-            Set_aVars_Coord_Type = aVars->Coord_Type[i];
-            if (Set_aVars_Coord_Type == aDEFS->COORD_X) XY = aVars->cx; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_Y) XY = aVars->cy; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_Z) XY = aVars->cz; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_VX) XY = aVars->cvx; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_VY) XY = aVars->cvy; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_VZ) XY = aVars->cvz; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_KX) XY = V2K*aVars->cvx; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_KY) XY = V2K*aVars->cvy; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_KZ) XY = V2K*aVars->cvz; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_SX) XY = aVars->csx; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_SY) XY = aVars->csy; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_SZ) XY = aVars->csz; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_T) XY = aVars->ct; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_P) XY = aVars->cp; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_HDIV) XY = RAD2DEG*atan2(aVars->cvx,aVars->cvz); 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_VDIV) XY = RAD2DEG*atan2(aVars->cvy,aVars->cvz); 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_V) XY = sqrt(aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz); 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_RADIUS) XY = sqrt(aVars->cx*aVars->cx+aVars->cy*aVars->cy); 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_K) { XY = sqrt(aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz);  XY *= V2K; }
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_ENERGY) { XY = aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz;  XY *= VS2E; }
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_LAMBDA) { XY = sqrt(aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_NCOUNT) XY = Coord[i]+1; 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_ANGLE) 
-            {  XY = sqrt(aVars->cvx*aVars->cvx+aVars->cvy*aVars->cvy+aVars->cvz*aVars->cvz);
-               if (aVars->cvz != 0) 
-               {
-                 XY= RAD2DEG*atan2(XY,aVars->cvz);
-               } else XY = 0;
-            }
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_THETA)  { if (aVars->cz != 0) XY = RAD2DEG*atan2(aVars->cx,aVars->cz); } 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_PHI) { if (aVars->cz != 0) XY = RAD2DEG*atan2(aVars->cy,aVars->cz); } 
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_USER1) XY = aVars->UserVariable1;
-                  else
-            if (Set_aVars_Coord_Type == aDEFS->COORD_USER2) XY = aVars->UserVariable2;
-                  else
-            XY = 0;
-
-            Coord[i] = XY;
-            if (!aVars->Flag_Auto_Limits)
-            {
-              XY = (aVars->Coord_Max[i]-aVars->Coord_Min[i]);
-              if (XY > 0) Coord_Index[i] = floor((Coord[i]-aVars->Coord_Min[i])*aVars->Coord_Bin[i]/XY);
-              else Coord_Index[i] = 0;
-              if (aVars->Flag_With_Borders)
-              {
-                if (Coord_Index[i] < 0) Coord_Index[i] = 0;
-                if (Coord_Index[i] >= aVars->Coord_Bin[i]) Coord_Index[i] = aVars->Coord_Bin[i] - 1;
-              }
-            } /* else Auto_Limits will get Index later from Buffer */
-          } /* end for i */
-          While_End = 1;
-        } /* end else if aVars->Flag_Auto_Limits == 2 */
-
-        if (aVars->Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
-        { /* now store Coord into Buffer (no index needed) if necessary */
-          if ((aVars->Buffer_Counter < aVars->Buffer_Block) && ((aVars->Flag_List) || (aVars->Flag_Auto_Limits == 1)))
-          {
-            for (i = 0; i < aVars->Coord_Number; i++)
-            {
-              aVars->Mon2D_Buffer[i + aVars->Neutron_Counter*(aVars->Coord_Number+2)] = Coord[i+1];
-            }
-            aVars->Mon2D_Buffer[aVars->Coord_Number + aVars->Neutron_Counter*(aVars->Coord_Number+2)]   = pp;
-            aVars->Mon2D_Buffer[(aVars->Coord_Number+1) + aVars->Neutron_Counter*(aVars->Coord_Number+2)] = pp*pp;
-            aVars->Buffer_Counter++;
-            if (aVars->Flag_Verbose && (aVars->Buffer_Counter >= aVars->Buffer_Block) && (aVars->Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", aVars->compcurname, aVars->Buffer_Counter);
-          }
-          aVars->Neutron_Counter++;
-        } /* end (aVars->Flag_Auto_Limits != 2) */
-
-        /* store n1d/2d section for Buffer or current neutron in while */
-
-        if (aVars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
-        {
-        /* 1D and n1D case : aVars->Flag_Multiple */
-          if (aVars->Flag_Multiple)
-          { /* Dim : aVars->Coord_Number*aVars->Coord_Bin[i] vectors (intensity is not included) */ 
-            for (i= 0; i < aVars->Coord_Number; i++)
-            {
-              j = Coord_Index[i+1];
-              if (j >= 0 && j < aVars->Coord_Bin[i+1])
-              {
-                aVars->Mon2D_N[i][j]++;
-                aVars->Mon2D_p[i][j] += pp;
-                aVars->Mon2D_p2[i][j] += pp*pp;
-              }
-            }
-          }
-          else /* 2D case : aVars->Coord_Number==2 and !aVars->Flag_Multiple and !aVars->Flag_List */
-          if ((aVars->Coord_Number == 2) && !aVars->Flag_Multiple)
-          { /* Dim : aVars->Coord_Bin[1]*aVars->Coord_Bin[2] matrix */
-            i = Coord_Index[1];
-            j = Coord_Index[2];
-            if (i >= 0 && i < aVars->Coord_Bin[1] && j >= 0 && j < aVars->Coord_Bin[2])
-            {
-              aVars->Mon2D_N[i][j]++;
-              aVars->Mon2D_p[i][j] += pp;
-              aVars->Mon2D_p2[i][j] += pp*pp;
-            }
-          }
-        } /* end (aVars->Flag_Auto_Limits != 1) */
-      } /* end while */
-    } /* end if aVars->Coord_Number */
-  } /* end Monitor_nD_Trace */
-/* end Monitor_nD section */
-
-
-
-
