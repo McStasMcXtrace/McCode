@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -121,7 +121,16 @@ TRACE
 
 SAVE
 %{
+  char formatName[64];
+
+  if (!strstr(Vars.option, "binary"))
+  {
+    strcpy(formatName, mcformat.Name);  /* save current format */
+    mcuse_format("McStas");             /* MCSTAS_FORMAT */
+  }
   Monitor_nD_Save(&DEFS, &Vars);
+  if (!strstr(Vars.option, "binary"))
+    mcuse_format(formatName);           /* restore previous format */
 %}
 
 FINALLY
