@@ -223,7 +223,7 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
        restores the neutron state to the one at the input of the component
        'index'. To ignore a component effect, use
        RESTORE_NEUTRON(mccompcurindex, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
-       at the end of its TRACE section, or in its THEN section.
+       at the end of its TRACE section, or in its EXTEND section.
        These neutron states are in the local component coordinate systems.
      * STORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
        stores the current neutron state in the trace-history table, in local
