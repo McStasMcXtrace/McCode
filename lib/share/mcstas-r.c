@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.106 2005-02-22 16:11:03 farhi Exp $
+* $Id: mcstas-r.c,v 1.107 2005-02-23 12:29:55 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.105  2005/02/17 15:54:56  farhi
@@ -274,6 +274,7 @@ mcstatic double mcrun_num            = 0;
 /* parameters handling ====================================================== */
 
 /* Instrument input parameter type handling. */
+/* mcparm_double: extract double value from 's' into 'vptr' */
 static int
 mcparm_double(char *s, void *vptr)
 {
@@ -288,14 +289,14 @@ mcparm_double(char *s, void *vptr)
     return 1;                        /* Success */
 }
 
-
+/* mcparminfo_double: display parameter type double */
 static char *
 mcparminfo_double(char *parmname)
 {
   return "double";
 }
 
-
+/* mcparmerror_double: display error message when failed extract double */
 static void
 mcparmerror_double(char *parm, char *val)
 {
@@ -303,7 +304,7 @@ mcparmerror_double(char *parm, char *val)
           val, parm);
 }
 
-
+/* mcparmprinter_double: convert double to string */
 static void
 mcparmprinter_double(char *f, void *vptr)
 {
@@ -311,7 +312,7 @@ mcparmprinter_double(char *f, void *vptr)
   sprintf(f, "%g", *v);
 }
 
-
+/* mcparm_int: extract int value from 's' into 'vptr' */
 static int
 mcparm_int(char *s, void *vptr)
 {
@@ -331,14 +332,14 @@ mcparm_int(char *s, void *vptr)
     return 1;                        /* Success */
 }
 
-
+/* mcparminfo_int: display parameter type int */
 static char *
 mcparminfo_int(char *parmname)
 {
   return "int";
 }
 
-
+/* mcparmerror_int: display error message when failed extract int */
 static void
 mcparmerror_int(char *parm, char *val)
 {
@@ -346,7 +347,7 @@ mcparmerror_int(char *parm, char *val)
           val, parm);
 }
 
-
+/* mcparmprinter_int: convert int to string */
 static void
 mcparmprinter_int(char *f, void *vptr)
 {
@@ -354,7 +355,7 @@ mcparmprinter_int(char *f, void *vptr)
   sprintf(f, "%d", *v);
 }
 
-
+/* mcparm_string: extract char* value from 's' into 'vptr' (copy) */
 static int
 mcparm_string(char *s, void *vptr)
 {
@@ -370,14 +371,14 @@ mcparm_string(char *s, void *vptr)
   return 1;                        /* Success */
 }
 
-
+/* mcparminfo_string: display parameter type string */
 static char *
 mcparminfo_string(char *parmname)
 {
   return "string";
 }
 
-
+/* mcparmerror_string: display error message when failed extract string */
 static void
 mcparmerror_string(char *parm, char *val)
 {
@@ -385,7 +386,7 @@ mcparmerror_string(char *parm, char *val)
           val, parm);
 }
 
-
+/* mcparmprinter_string: convert string to string (including esc chars) */
 static void
 mcparmprinter_string(char *f, void *vptr)
 {
@@ -418,7 +419,6 @@ mcparmprinter_string(char *f, void *vptr)
 }
 
 /* now we may define the parameter structure, using previous functions */
-
 static struct
   {
     int (*getparm)(char *, void *);
@@ -435,6 +435,7 @@ static struct
                 mcparmprinter_string
       };
 
+/* mcestimate_error: compute sigma from N,p,p2 in Gaussian large numbers approx */
 double mcestimate_error(double N, double p1, double p2)
 {
   double pmean, n1;
@@ -447,16 +448,19 @@ double mcestimate_error(double N, double p1, double p2)
   return sqrt((N/n1)*fabs(p2 - pmean*pmean));
 }
 
+/* mcset_ncount: set total number of neutrons to generate */
 void mcset_ncount(double count)
 {
   mcncount = count;
 }
 
+/* mcget_ncount: get total number of neutrons to generate */
 double mcget_ncount(void)
 {
   return mcncount;
 }
 
+/* mcget_run_num: get curent number of neutrons in TRACE */
 double mcget_run_num(void)
 {
   return mcrun_num;
@@ -1098,7 +1102,6 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
 * mcnew_file: opens a new file within mcdirname if non NULL
 *             if mode is non 0, then mode is used, else mode is 'w'
 *******************************************************************************/
-
 FILE *mcnew_file(char *name, char *ext, char *mode)
 {
   int dirlen;
@@ -1329,7 +1332,6 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
   return(tmp);
 }
 #endif
-
 
 /*******************************************************************************
 * mcfile_header: output header/footer using specific file format.
@@ -1763,6 +1765,9 @@ void mcsiminfo_init(FILE *f)
   }
 } /* mcsiminfo_init */
 
+/*******************************************************************************
+* mcsiminfo_close: close simulation file (mcstas.sim)
+*******************************************************************************/
 void mcsiminfo_close(void)
 {
   if (mcdisable_output_files) return;
@@ -2501,7 +2506,7 @@ char *str_rep(char *string, char *from, char *to)
   return(string);
 }
 
-/* Replaces aliases names in format fields */
+/* mcuse_format_header: Replaces aliases names in format fields (header part) */
 char *mcuse_format_header(char *format_const)
 { /* Header Footer */
   char *format=NULL;
@@ -2521,6 +2526,7 @@ char *mcuse_format_header(char *format_const)
   return(format);
 }
 
+/* mcuse_format_tag: Replaces aliases names in format fields (tag part) */
 char *mcuse_format_tag(char *format_const)
 { /* AssignTag */
   char *format=NULL;
@@ -2536,6 +2542,8 @@ char *mcuse_format_tag(char *format_const)
   str_rep(format, "%VAL", "%4$s"); /* value of field */
   return(format);
 }
+
+/* mcuse_format_section: Replaces aliases names in format fields (section part) */
 char *mcuse_format_section(char *format_const)
 { /* BeginSection EndSection */
   char *format=NULL;
@@ -2554,6 +2562,8 @@ char *mcuse_format_section(char *format_const)
   str_rep(format, "%LVL", "%7$i"); /* level index */
   return(format);
 }
+
+/* mcuse_format_data: Replaces aliases names in format fields (data part) */
 char *mcuse_format_data(char *format_const)
 { /* BeginData EndData BeginErrors EndErrors BeginNcount EndNcount */
   char *format=NULL;
@@ -2588,7 +2598,7 @@ char *mcuse_format_data(char *format_const)
 }
 
 /*******************************************************************************
-* mcuse_format: selects an output format for sim and data files
+* mcuse_format: selects an output format for sim and data files. returns format
 *******************************************************************************/
 struct mcformats_struct mcuse_format(char *format)
 {
@@ -2653,6 +2663,7 @@ struct mcformats_struct mcuse_format(char *format)
   return(usedformat);
 } /* mcuse_format */
 
+/* mcclear_format: free format structure */
 void mcclear_format(struct mcformats_struct usedformat)
 {
 /* free format specification strings */
@@ -2671,10 +2682,11 @@ void mcclear_format(struct mcformats_struct usedformat)
   if (usedformat.EndNcount   ) free(usedformat.EndNcount   );
 } /* mcclear_format */
 
+/* mcuse_file: will save data/sim files */
 static void mcuse_file(char *file)
 {
   mcsiminfo_name = file;
-  mcsingle_file = 1;
+  mcsingle_file  = 1;
 }
 
 /* Following part is only embedded when not redundent with mcstas.h ========= */
@@ -2738,7 +2750,7 @@ void mcdis_circle(char *plane, double x, double y, double z, double r){
 * Coords which contains three double fields.
 *******************************************************************************/
 
-/* Assign coordinates. */
+/* coords_set: Assign coordinates. */
 Coords
 coords_set(MCNUM x, MCNUM y, MCNUM z)
 {
@@ -2750,6 +2762,7 @@ coords_set(MCNUM x, MCNUM y, MCNUM z)
   return a;
 }
 
+/* coords_get: get coordinates. Required when 'x','y','z' are #defined as neutron pars */
 Coords
 coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z)
 {
@@ -2759,7 +2772,7 @@ coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z)
   return a;
 }
 
-/* Add two coordinates. */
+/* coords_add: Add two coordinates. */
 Coords
 coords_add(Coords a, Coords b)
 {
@@ -2771,7 +2784,7 @@ coords_add(Coords a, Coords b)
   return c;
 }
 
-/* Subtract two coordinates. */
+/* coords_sub: Subtract two coordinates. */
 Coords
 coords_sub(Coords a, Coords b)
 {
@@ -2783,7 +2796,7 @@ coords_sub(Coords a, Coords b)
   return c;
 }
 
-/* Negate coordinates. */
+/* coords_neg: Negate coordinates. */
 Coords
 coords_neg(Coords a)
 {
@@ -2819,8 +2832,8 @@ coords_neg(Coords a)
 *******************************************************************************/
 
 /*******************************************************************************
-* Get transformation for rotation first phx around x axis, then phy around y,
-* then phz around z.
+* rot_set_rotation: Get transformation for rotation first phx around x axis,
+* then phy around y, then phz around z.
 *******************************************************************************/
 void
 rot_set_rotation(Rotation t, double phx, double phy, double phz)
@@ -2844,9 +2857,9 @@ rot_set_rotation(Rotation t, double phx, double phy, double phz)
 }
 
 /*******************************************************************************
-* Matrix multiplication of transformations (this corresponds to combining
-* transformations). After rot_mul(T1, T2, T3), doing T3 is equal to doing
-* first T2, then T1.
+* rot_mul: Matrix multiplication of transformations (this corresponds to
+* combining transformations). After rot_mul(T1, T2, T3), doing T3 is
+* equal to doing first T2, then T1.
 * Note that T3 must not alias (use the same array as) T1 or T2.
 *******************************************************************************/
 void
@@ -2860,7 +2873,7 @@ rot_mul(Rotation t1, Rotation t2, Rotation t3)
 }
 
 /*******************************************************************************
-* Copy a rotation transformation (needed since arrays cannot be assigned in C).
+* rot_copy: Copy a rotation transformation (arrays cannot be assigned in C).
 *******************************************************************************/
 void
 rot_copy(Rotation dest, Rotation src)
@@ -2876,6 +2889,9 @@ rot_copy(Rotation dest, Rotation src)
   dest[2][2] = src[2][2];
 }
 
+/*******************************************************************************
+* rot_transpose: Matrix transposition, which is inversion for Rotation matrices
+*******************************************************************************/
 void
 rot_transpose(Rotation src, Rotation dst)
 {
@@ -2890,6 +2906,9 @@ rot_transpose(Rotation src, Rotation dst)
   dst[2][2] = src[2][2];
 }
 
+/*******************************************************************************
+* rot_apply: returns t*a
+*******************************************************************************/
 Coords
 rot_apply(Rotation t, Coords a)
 {
@@ -2901,6 +2920,9 @@ rot_apply(Rotation t, Coords a)
   return b;
 }
 
+/*******************************************************************************
+* mccoordschange: applies rotation to (x y z) and (vx vy vz). Spin unchanged
+*******************************************************************************/
 void
 mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
                double *vx, double *vy, double *vz, double *time,
@@ -2924,10 +2946,12 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
   *vx = c.x;
   *vy = c.y;
   *vz = c.z;
-  /* ToDo: What to do about the spin? */
+  /* spin handled with mccoordschange_polarisation */
 }
 
-
+/*******************************************************************************
+* mccoordschange_polarisation: applies rotation to (sx sy sz)
+*******************************************************************************/
 void
 mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 {
@@ -2942,6 +2966,9 @@ mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
   *sz = c.z;
 }
 
+/*******************************************************************************
+* mcstore_neutron: stores neutron coodinates into global array (per component)
+*******************************************************************************/
 void
 mcstore_neutron(MCNUM *s, int index, double x, double y, double z,
                double vx, double vy, double vz, double t,
@@ -2960,6 +2987,9 @@ mcstore_neutron(MCNUM *s, int index, double x, double y, double z,
     s[11*index+0]  = p ;
 }
 
+/*******************************************************************************
+* mcrestore_neutron: restores neutron coodinates from global array
+*******************************************************************************/
 void
 mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
                double *vx, double *vy, double *vz, double *t,
@@ -2980,6 +3010,7 @@ mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
 
 /* init/run/rand handling =================================================== */
 
+/* mcreadparams: request parameters from the prompt (or use default) */
 void
 mcreadparams(void)
 {
@@ -3060,8 +3091,7 @@ mcreadparams(void)
   }
 }
 
-
-
+/* mcsetstate: transfert parameters into global McStas variables */
 void
 mcsetstate(double x, double y, double z, double vx, double vy, double vz,
            double t, double sx, double sy, double sz, double p)
@@ -3082,6 +3112,7 @@ mcsetstate(double x, double y, double z, double vx, double vy, double vz,
   mcnp = p;
 }
 
+/* mcgenstate: set default neutron parameters */
 void
 mcgenstate(void)
 {
@@ -3350,6 +3381,7 @@ unsigned long mt_random(void)
 
 /* End of McStas random number routine. */
 
+/* randnorm: generate a random number from normal law */
 double
 randnorm(void)
 {
@@ -3381,7 +3413,7 @@ randnorm(void)
 
 /* intersect handling ======================================================= */
 
-/* Compute normal vector to (x,y,z). */
+/* normal_vec: Compute normal vector to (x,y,z). */
 void normal_vec(double *nx, double *ny, double *nz,
                 double x, double y, double z)
 {
@@ -3425,8 +3457,10 @@ void normal_vec(double *nx, double *ny, double *nz,
   *nz = 0;
 }
 
-/* If intersection with box dt_in and dt_out is returned */
-/* This function written by Stine Nyborg, 1999. */
+/* box_intersect: compute time intersection with a box
+ * returns 0 when no intersection is found
+ *      or 1 in case of intersection with resulting times dt_in and dt_out
+ * This function written by Stine Nyborg, 1999. */
 int box_intersect(double *dt_in, double *dt_out,
                   double x, double y, double z,
                   double vx, double vy, double vz,
@@ -3537,7 +3571,11 @@ int box_intersect(double *dt_in, double *dt_out,
 
 }
 
-/* Written by: EM,NB,ABA 4.2.98 */
+/* cylinder_intersect: compute intersction with a cylinder
+ * returns 0 when no intersection is found
+ *      or 2/4/8/16 bits depending on intersection,
+ *     and resulting times t0 and tdt_out1
+ * Written by: EM,NB,ABA 4.2.98 */
 int
 cylinder_intersect(double *t0, double *t1, double x, double y, double z,
                    double vx, double vy, double vz, double r, double h)
@@ -3580,7 +3618,9 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 }
 
 
-/* Calculate intersection between line and sphere. */
+/* sphere_intersect: Calculate intersection between a line and a sphere.
+ * returns 0 when no intersection is found
+ *      or 1 in case of intersection with resulting times t0 and t1 */
 int
 sphere_intersect(double *t0, double *t1, double x, double y, double z,
                  double vx, double vy, double vz, double r)
@@ -3600,69 +3640,59 @@ sphere_intersect(double *t0, double *t1, double x, double y, double z,
   return 1;
 }
 
-
-/* ADD: E. Farhi, Aug 6th, 2001 plane_intersect_Gfast
- * intersection of a plane and a trajectory with gravitation
- * this function calculates the intersection between a neutron trajectory
- * and a plane with acceleration gx,gy,gz. The neutron starts at point x,y,z
- * with velocity vx, vy, vz. The plane has a normal vector nx,ny,nz and
- * contains the point wx,wy,wz
- * The function returns 0 if no intersection occured after the neutron started
- * and non 0 if there is an intersection. Then *Idt is the time until
- * the neutron hits the roof.
- * Let n=(nx,ny,nz) be the normal plane vector (one of the six sides)
- * Let W=(wx,wy,wz) be Any point on this plane (for instance at z=0)
+/* solve_2nd_order: second order equation solve: A*t^2 + B*t + C = 0
+ * returns 0 if no solution was found, or set 't' to the smallest positive
+ * solution.
+ * EXAMPLE usage for intersection of a trajectory with a plane in gravitation
+ * field (gx,gy,gz):
+ * The neutron starts at point r=(x,y,z) with velocityv=(vx vy vz). The plane
+ * has a normal vector n=(nx,ny,nz) and contains the point W=(wx,wy,wz).
  * The problem consists in solving the 2nd order equation:
- *      1/2.n.g.t^2 + n.v.t + n.(r-W) = 0 (1)
+ *      1/2.n.g.t^2 + n.v.t + n.(r-W) = 0
+ * so that A = 0.5 n.g; B = n.v; C = n.(r-W);
  * Without acceleration, t=-n.(r-W)/n.v
  */
-
-int plane_intersect_Gfast(double *Idt,
+int solve_2nd_order(double *Idt,
                   double A,  double B,  double C)
 {
-  /* plane_intersect_Gfast(&dt, A, B, C)
-   * A = 0.5 n.g; B = n.v; C = n.(r-W);
-   * no acceleration when A=0
-   */
   int ret=0;
   double dt0;
 
   *Idt = 0;
 
   if (B) dt0 = -C/B;
-  if (fabs(A) < 1E-10) /* this plane is parallel to the acceleration */
+  if (fabs(A) < 1E-10) /* this plane is parallel to the acceleration: A ~ 0 */
   {
     if (B)
     { *Idt = dt0; ret=3; }
-    /* else the speed is parallel to the plane, no intersection */
+    /* else the speed is parallel to the plane, no intersection: A=B=0 ret=0 */
   }
   else
   {
-    double D, sD, dt1, dt2;
+    double D;
     D = B*B - 4*A*C;
     if (D >= 0) /* Delta > 0: neutron trajectory hits the mirror */
     {
+      double sD, dt1, dt2;
       sD = sqrt(D);
       dt1 = (-B + sD)/2/A;
       dt2 = (-B - sD)/2/A;
-      if (B)
-      {
-        if (fabs(dt0-dt1) < fabs(dt0-dt2)) ret=1; else ret=2;
-      }
-      else
-      {
-        if (dt1 <= dt2) ret=1; else ret=2;
-      }
-      if (ret==1) *Idt = dt1;
-      else if (ret==2) *Idt = dt2;
-    } /* else Delta <0: no intersection */
+      /* now we choose the smallest positive solution */
+      if      (dt1<0 && dt2>0) ret=2; /* dt2 positive */
+      else if (dt2<0 && dt1>0) ret=1; /* dt1 positive */
+      else if (dt1>0 && dt2>0)
+      {  if (dt1 < dt2) ret=1; else ret=2; } /* all positive: min(dt1,dt2) */
+      /* else two solutions are negative. ret=0 */
+      if (ret==1) *Idt = dt1; else if (ret==2) *Idt=dt2;
+    } /* else Delta <0: no intersection.  ret=0 */
   }
   return(ret);
 }
 
 
-/* Choose random direction towards target at (x,y,z) with given radius. */
-/* If radius is zero, choose random direction in full 4PI, no target. */
+/* randvec_target_circle: Choose random direction towards target at (x,y,z)
+ * with given radius.
+ * If radius is zero, choose random direction in full 4PI, no target. */
 void
 randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
                double xi, double yi, double zi, double radius)
@@ -3695,7 +3725,7 @@ randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
         *solid_angle = 2*PI*(1 - costheta0);
     }
 
-    /* Now choose point uniformly on sphere surface within angle theta0 */
+    /* Now choose point uniformly on circle surface within angle theta0 */
     theta = acos (1 - rand0max(1 - costheta0)); /* radius on circle */
     phi = rand0max(2 * PI); /* rotation on circle at given radius */
     /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around a
@@ -3723,9 +3753,10 @@ randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
 }
 
 
-/* Choose random direction towards target at (xi,yi,zi) with given       */
-/* ANGULAR dimension height x width. height=phi_x, width=phi_y (radians)*/
-/* If height or width is zero, choose random direction in full 4PI, no target. */
+/* randvec_target_rect_angular: Choose random direction towards target at
+ * (xi,yi,zi) with given ANGULAR dimension height x width. height=phi_x,
+ * width=phi_y (radians)
+ * If height or width is zero, choose random direction in full 4PI, no target. */
 void
 randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_angle,
                double xi, double yi, double zi, double width, double height, Rotation A)
@@ -3788,9 +3819,9 @@ randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_an
 
 }
 
-/* Choose random direction towards target at (xi,yi,zi) with given       */
-/* dimension height x width (in meters!).                                */
-/* If height or width is zero, choose random direction in full 4PI, no target. */
+/* randvec_target_rect: Choose random direction towards target at (xi,yi,zi)
+ * with given dimension height x width (in meters !).
+ * If height or width is zero, choose random direction in full 4PI, no target. */
 void
 randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
                double xi, double yi, double zi, double width, double height, Rotation A)
@@ -3859,7 +3890,7 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
 }
 
 
-/* Make sure a list is big enough to hold element COUNT.
+/* extend_list: Make sure a list is big enough to hold element COUNT.
 *
 * The list is an array, and the argument 'list' is a pointer to a pointer to
 * the array start. The argument 'size' is a pointer to the number of elements
@@ -3892,12 +3923,14 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
   }
 }
 
+/* mcsetn_arg: get ncount from a string argument */
 static void
 mcsetn_arg(char *arg)
 {
   mcset_ncount(strtod(arg, NULL));
 }
 
+/* mcsetseed: set the random generator seed from a string argument */
 static void
 mcsetseed(char *arg)
 {
@@ -3911,6 +3944,7 @@ mcsetseed(char *arg)
   }
 }
 
+/* mchelp: displays instrument executable help with possible options */
 static void
 mchelp(char *pgmname)
 {
@@ -3967,6 +4001,7 @@ mchelp(char *pgmname)
 #endif /* !NOSIGNALS */
 }
 
+/* mcshowhelp: show help and exit with 0 */
 static void
 mcshowhelp(char *pgmname)
 {
@@ -3974,6 +4009,7 @@ mcshowhelp(char *pgmname)
   exit(0);
 }
 
+/* mcusage: display usage when error in input arguments and exit with 1 */
 static void
 mcusage(char *pgmname)
 {
@@ -3982,6 +4018,7 @@ mcusage(char *pgmname)
   exit(1);
 }
 
+/* mcenabletrace: enable trace/mcdisplay or error if requires recompile */
 static void
 mcenabletrace(void)
 {
@@ -3998,7 +4035,8 @@ mcenabletrace(void)
  }
 }
 
-
+/* mcuse_dir: set data/sim storage directory and create it,
+ * or exit with error if exists */
 static void
 mcuse_dir(char *dir)
 {
@@ -4020,6 +4058,7 @@ mcuse_dir(char *dir)
 #endif /* !MC_PORTABLE */
 }
 
+/* mcinfo: display instrument simulation info to stdout and exit */
 static void
 mcinfo(void)
 {
@@ -4028,6 +4067,7 @@ mcinfo(void)
   exit(0);
 }
 
+/* mcparseoptions: parse command line arguments (options, parameters) */
 void
 mcparseoptions(int argc, char *argv[])
 {
@@ -4189,7 +4229,7 @@ mcparseoptions(int argc, char *argv[])
 mcstatic char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 
 
-/* This is the signal handler that makes simulation stop, and save results */
+/* sighandler: signal handler that makes simulation stop, and save results */
 void sighandler(int sig)
 {
   /* MOD: E. Farhi, Sep 20th 2001: give more info */
@@ -4306,7 +4346,7 @@ void sighandler(int sig)
 }
 #endif /* !NOSIGNALS */
 
-/* McStas main() function. */
+/* mcstas_main: McStas main() function. */
 int
 mcstas_main(int argc, char *argv[])
 {
@@ -4415,6 +4455,6 @@ mcstas_main(int argc, char *argv[])
 #endif /* USE_MPI */
 
   return 0;
-}
+} /* mcstas_main */
 
 #endif /* !MCSTAS_H */
