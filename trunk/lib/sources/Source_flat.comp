@@ -1,15 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Source_flat.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KL
-* Modified by: KL, KN, October 5, 1998
+* Written by: Kim Lefmann and Kristian Nielsen
 * Date: October 30, 1997
-* Version: $Revision: 1.6 $
-* Origin: McStas release
+* Version: $Revision: 1.7 $
+* Origin: McStas 1.4.2
 *
 * Neutron source with flat energy spectrum and arbitrary flux
 *
@@ -42,6 +40,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, dist, xw, yh, E0, dE)
 OUTPUT PARAMETERS (hdiv, vdiv, p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
  double hdiv,vdiv;
