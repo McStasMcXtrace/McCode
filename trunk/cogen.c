@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.26 2001-12-19 13:45:25 peo Exp $
+* 	$Id: cogen.c,v 1.27 2001-12-19 13:52:04 peo Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -414,7 +414,7 @@ cogen_comp_decls_doit(void *arg)
   if (comp->def->comp_inst_number < 0)
   {
     coutf("/* Shared user declarations for all components '%s'. */", comp->def->name);
-    codeblock_out(comp->def->share);
+    codeblock_out(comp->def->share_code);
     comp->def->comp_inst_number *= -1;  /* will not be included anymore */
   }
   /* Output the user declaration code block. */
