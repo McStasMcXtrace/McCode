@@ -64,7 +64,7 @@ TRACE
 	if(theta0 < 0)
 	  theta = -theta;
 	tmp3 = (theta-theta0)/(MIN2RAD*mosaich);
-	if(tmp3 > DIV_CUTOFF)
+	if(fabs(tmp3) > DIV_CUTOFF)
 	{
 	  x = old_x; y = old_y; z = old_z; t = old_t;
 	}
