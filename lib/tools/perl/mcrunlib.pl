@@ -117,7 +117,7 @@ sub get_sim_info {
     }
     use FileHandle;
     my $h = new FileHandle;
-    open $h, "$simprog --info |" or die "Could not run simulation.";
+    open $h, "$simprog -i |" or die "Could not run simulation.";
     my $inf = read_instrument_info($h);
     close $h;
     return $inf;
