@@ -3,10 +3,15 @@
 * McStas, the neutron ray-tracing Monte-Carlo software.
 * Copyright(C) 1999 Risoe National Laboratory.
 *
-* Component: Source_adapt
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 1.13 $
+* Origin: McStas release
 *
-* Written by Kristian Nielsen 1999
+* Neutron source with adaptive importance sampling
 *
+* %D
 * Rectangular source with flat energy distribution that uses adaptive
 * importance sampling to improve simulation efficiency. Works
 * together with the Adapt_check component.
@@ -34,6 +39,7 @@
 * distribution to the problem at hand. Good general-purpose values
 * for these parameters are alpha = beta = 0.25.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:   (m)          Left edge of rectangular source
@@ -45,7 +51,7 @@
 * yh:     (m)          Height(y) of target
 * E0:     (meV)        Mean energy of neutrons
 * dE:     (meV)        Energy spread (energy range is from E0-dE to E0+dE)
-* flux:   (1/(cm**2*AA**st) Absolute source flux
+* flux:   (1/(cm**2*AA**st)) Absolute source flux
 * N_E:    (1)          Number of bins in energy dimension
 * N_xpos: (1)          Number of bins in horizontal position
 * N_xdiv: (1)          Number of bins in horizontal divergence
@@ -61,6 +67,8 @@
 * r_0:   Internal
 * count: Internal, counts neutrons emitted
 * adpt:  Internal structure shared with the Adapt_check component
+*
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Source_adapt
