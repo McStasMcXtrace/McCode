@@ -55,9 +55,15 @@
 %CC% symtab.o cogen.o coords.o debug.o file.o instrument.tab.o lex.yy.o list.o memory.o port.o cexp.o  -o "mcstas.exe" -L%LIB%  -I%INCLUDE%  
 
 @if %DOPLOTLIB%=="no" goto theend
+@echo .
 @echo running scilab for creating the plotlib library...
+@echo .
 cd lib\tools\scilab\plotlib
 runscilab -nw -f buildme.sci
+@echo .
+@echo PLEASE WAIT FOR Scilab EXECUTION TO FINISH - NEXT, PRESS ENTER
+@echo .
+@pause
 cd ..\..\..\..
 :theend
 
