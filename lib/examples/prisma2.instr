@@ -155,7 +155,7 @@ FINALLY
     
     DETECTOR_OUT_2D(
         "Time-of-flight monitor",
-        "Neutron \"color\"",
+        "Neutron color",
         "Time-of-flight [us]",
         0, maxcolor+1, 0, nchan*10,
         maxcolor+1, nchan,
