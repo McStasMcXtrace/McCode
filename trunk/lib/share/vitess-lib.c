@@ -14,19 +14,28 @@
 * Release: McStas 1.6
 * Version: 1.2
 *
-* This file is to be imported by the mcstas2vitess perl script 
-* It handles the way Vitess parses parameters. 
+* This file is to be imported by the mcstas2vitess perl script
+* It handles the way Vitess parses parameters.
 * Functions are imported in the Virtual_imput and Virtual_output
 * components. Embedded within instrument if MC_EMBEDDED_RUNTIME is defined.
 *
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.c,v 1.10 2003-02-11 12:28:46 farhi Exp $
+* $Id: vitess-lib.c,v 1.11 2005-02-21 09:13:40 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.10  2003/02/11 12:28:46  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*
 * Revision 1.2 2002/08/28 11:39:00 ef
-*	Changed to lib/share/c code. 
+*	Changed to lib/share/c code.
 *
 * Revision 1.1 2000/08/28 11:39:00 kn
 *	Initial revision
@@ -34,24 +43,30 @@
 
 #ifndef VITESS_LIB_H
 #error McStas : please import this library with %include "vitess-lib"
-#endif  
+#endif
 
 /* Convert McStas state parameters to VITESS Neutron structure. In
    VITESS, the neutron velocity is represented by a wavelength in
    AAngstroem and a unit direction vector, time is in msec and
    positions are in cm.*/
+/* Coordinate system change:
+   Vitess McStas
+   x      z
+   y      x
+   z      y
+ */
 Neutron mcstas2vitess(double x, double y, double z,
 		      double vx, double vy, double vz,
-		      double t, 
+		      double t,
           double sx, double sy, double sz,
           double p)
 {
   double v,s;			/* Neutron speed */
   Neutron neu;			/* Vitess Neutron structure */
 
-  neu.Position[0] = x*100;	/* Convert position from m to cm */
-  neu.Position[1] = y*100;
-  neu.Position[2] = z*100;
+  neu.Position[0] = z*100;	/* Convert position from m to cm */
+  neu.Position[1] = x*100;
+  neu.Position[2] = y*100;
   v = sqrt(vx*vx + vy*vy + vz*vz);
   if(v == 0.0)
   {
@@ -59,17 +74,17 @@ Neutron mcstas2vitess(double x, double y, double z,
     exit(1);
   }
   neu.Wavelength = 3956.0346/v;	/* Convert speed to wavelength */
-  neu.Vector[0] = vx/v;		/* Convert velocity to unit direction vector */
-  neu.Vector[1] = vy/v;
-  neu.Vector[2] = vz/v;
+  neu.Vector[0] = vz/v;		/* Convert velocity to unit direction vector */
+  neu.Vector[1] = vx/v;
+  neu.Vector[2] = vy/v;
   s = sqrt(sx*sx+sy*sy+sz*sz);
   if(s != 0.0)
   {
-    neu.Spin[0] = sx/s;
-    neu.Spin[1] = sy/s;
-    neu.Spin[2] = sz/s;
+    neu.Spin[0] = sz/s;
+    neu.Spin[1] = sx/s;
+    neu.Spin[2] = sy/s;
   }
-  
+
   neu.Time = t*1000;		/* Convert time from sec to msec */
   neu.Probability = p;		/* Neutron weight */
   return neu;
@@ -82,27 +97,27 @@ Neutron mcstas2vitess(double x, double y, double z,
 void vitess2mcstas(Neutron neu,
 		   double *x, double *y, double *z,
 		   double *vx, double *vy, double *vz,
-       double *t, 
+       double *t,
        double *sx, double *sy, double *sz,
 		   double *p)
 {
   double v;			/* Neutron speed */
 
-  *x = 0.01*neu.Position[0];	/* Convert position from cm to m */
-  *y = 0.01*neu.Position[1];
-  *z = 0.01*neu.Position[2];
+  *y = 0.01*neu.Position[0];	/* Convert position from cm to m */
+  *z = 0.01*neu.Position[1];
+  *x = 0.01*neu.Position[2];
   if(neu.Wavelength == 0.0)
   {
     fprintf(stderr, "Error: zero wavelength! (mcstas2vitess: )\n");
     exit(1);
   }
   v = 3956.0346/neu.Wavelength;	/* Convert wavelength to speed */
-  *vx = v*neu.Vector[0];	/* Convert unit direction vector to velocity */
-  *vy = v*neu.Vector[1];
-  *vz = v*neu.Vector[2];
-  *sx = neu.Spin[0];
-  *sy = neu.Spin[1];
-  *sz = neu.Spin[2];
+  *vy = v*neu.Vector[0];	/* Convert unit direction vector to velocity */
+  *vz = v*neu.Vector[1];
+  *vx = v*neu.Vector[2];
+  *sy = neu.Spin[0];
+  *sz = neu.Spin[1];
+  *sx = neu.Spin[2];
   *t = 0.001*neu.Time;		/* Convert msec to sec */
   *p = neu.Probability;		/* Neutron weight */
 }
