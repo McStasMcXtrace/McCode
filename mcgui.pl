@@ -42,7 +42,7 @@ BEGIN {
     }
   }
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-  
+
   # custom configuration (this script)
   $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
   }
@@ -59,7 +59,7 @@ use Tk::DialogBox;
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
-# Requirement for mcplotlib.pl removed, will be loaded only 
+# Requirement for mcplotlib.pl removed, will be loaded only
 # if mcdisplay PGPLOT backend is used.
 # PW, 20030314
 # require "mcplotlib.pl";
@@ -91,7 +91,7 @@ sub Tk::Error {
     } else {
         print STDERR "Tk::Error###: $err ";
         print STDERR join("\n ", @loc), "\n";
-    }    
+    }
 }
 
 
@@ -126,7 +126,7 @@ sub is_erase_ok {
         return 1;
     }
 }
-    
+
 sub menu_quit {
     if(is_erase_ok($main_window)) {
         $main_window->destroy;
@@ -256,13 +256,13 @@ sub new_sim_def_name {
     unless($current_sim_def ne "" && $name eq $current_sim_def) {
         undef($current_sim_file);
         new_simulation_results($w);
-    }        
+    }
     $current_sim_def = $name;
     # Strip any repeated "/" charactors (ie. "///" -> "/").
     $current_sim_def =~ s!//!/!g;
     # On NON-Win32 platforms, replace ' ' by '\ ' to ensure correct
-    # handling of spaces in filenames... Unfortunately, this is a 
-    # more complicated matter on Win32 - has to be handled in each 
+    # handling of spaces in filenames... Unfortunately, this is a
+    # more complicated matter on Win32 - has to be handled in each
     # subroutine... :(
     if (!$Config{'osname'} eq 'MSWin32') {
       $current_sim_def =~ s! !\ !g;
@@ -306,7 +306,7 @@ sub menu_open {
                                -title => "Select instrument file", -initialdir => "$ENV{'PWD'}");
     return 0 unless $file;
     open_instr_def($w, $file);
-    return 1;        
+    return 1;
 }
 
 sub menu_save {
@@ -535,7 +535,7 @@ sub dialog_get_out_file {
             } elsif($type eq 'RUN_CMD') {
                 $savefocus = run_dialog_popup($dlg) unless $savefocus;
                 my $fh = new FileHandle;
-                # Open calls must be handled according to 
+                # Open calls must be handled according to
                 # platform...
                 # PW 20030314
                 if ($Config{'osname'} eq 'MSWin32') {
@@ -623,7 +623,7 @@ sub my_system {
     my ($w, $inittext, @sysargs) = @_;
     my $fh = new FileHandle;
     my $child_pid;
-    # Open calls must be handled according to 
+    # Open calls must be handled according to
     # platform...
     # PW 20030314
     if ($Config{'osname'} eq 'MSWin32') {
@@ -733,7 +733,7 @@ sub menu_run_simulation {
             } elsif ($plotter =~ /Scilab/i) {
               push @command, "--plotter=Scilab";
               # If this is Win32, make a check for # of neutron histories,
-              # should be made small to avoid waiting a long time for 
+              # should be made small to avoid waiting a long time for
               # mcdisplay...
               if ($Config{'osname'} eq "MSWin32") {
                   # Subtract 0 to make sure $num_histories is treated as a
@@ -745,7 +745,7 @@ sub menu_run_simulation {
                      -type => 'yesnocancel',
                      -icon => 'error',
                      -default => 'no');
-                      # Make first char lower case - default on 
+                      # Make first char lower case - default on
                       # Win32 upper case default on Unix... (perl 5.8)
                       $break = lcfirst($break);
                       if (($break eq "no")||($break eq "cancel")) {
@@ -801,12 +801,12 @@ sub menu_run_simulation {
                 push @unset, $_;
             }
         }
-        if (@unset>0) {         
-            $w->messageBox(-message =>         
-                           "Unset parameter(s):\n\n@unset\n\nPlease fill all fields!",         
-                           -title => "Unset parameters!",         
-                           -type => 'OK',         
-                           -icon => 'error');         
+        if (@unset>0) {
+            $w->messageBox(-message =>
+                           "Unset parameter(s):\n\n@unset\n\nPlease fill all fields!",
+                           -title => "Unset parameters!",
+                           -type => 'OK',
+                           -icon => 'error');
             return;
         }
         my $inittext = "Running simulation '$out_name' ...\n" .
@@ -815,9 +815,9 @@ sub menu_run_simulation {
         $inf_sim=$newsi;
         return unless $success;
         my $ext;
-        if ($plotter =~ /PGPLOT|McStas/i) { $ext="sim"; } 
-        elsif ($plotter =~ /Matlab/i)     { $ext="m"; } 
-        elsif ($plotter =~ /Scilab/i)     { $ext="sci"; } 
+        if ($plotter =~ /PGPLOT|McStas/i) { $ext="sim"; }
+        elsif ($plotter =~ /Matlab/i)     { $ext="m"; }
+        elsif ($plotter =~ /Scilab/i)     { $ext="sci"; }
         elsif ($plotter =~ /HTML/i)       { $ext="html"; }
         $current_sim_file = $newsi->{'Dir'} ?
             "$newsi->{'Dir'}/mcstas.$ext" :
@@ -826,7 +826,7 @@ sub menu_run_simulation {
         # In case of non-PGPLOT plotter, we can not read the data from disk.
         # Instead, we simply keep $newsi information in $inf_sim
         if ($plotter eq 0) {
-            read_sim_data($w); 
+            read_sim_data($w);
         } else {
             $inf_sim=$newsi;
         }
@@ -851,7 +851,7 @@ sub menu_plot_results {
 }
 
 sub menu_preferences {
-    # sub for selection of mcdisplay "backend". 
+    # sub for selection of mcdisplay "backend".
     # Default read from $MCSTAS::mcstas_config{'PLOTTER'}
     # PW 20030314
     # Added entry for selection of internal editor
@@ -864,7 +864,7 @@ sub menu_preferences {
 
 sub menu_read_sim_file {
     my ($w) = @_;
-    load_sim_file($w); 
+    load_sim_file($w);
     menu_plot_results($w);
 }
 
@@ -938,7 +938,7 @@ my $instr_template_start = <<INSTR_FINISH;
 * %Parameters
 * Par1: (unit) Parameter1 description
 *
-* %Link 
+* %Link
 * A reference/HTML link for more information
 *
 * %End
@@ -1132,30 +1132,32 @@ sub setup_menu {
                       -accelerator => 'Alt+C',
                       -command => sub {menu_preferences($w);});
     $w->bind('<Alt-c>' => [\&menu_preferences, $w]);
-    
+
     $simmenu->pack(-side=>'left');
-    
+
     sitemenu_build($w,$menu);
-    
+
     my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
-    $helpmenu->command(-label => 'McStas web page',
-                       -underline => 7,
-                       -command => sub {mcdoc_web()});
+
     $helpmenu->command(-label => 'McStas User manual',
                        -command => sub {mcdoc_manual()});
-     $helpmenu->command(-label => 'McStas Component manual',
+    $helpmenu->command(-label => 'McStas Component manual',
                        -command => sub {mcdoc_compman()});
-    $helpmenu->command(-label => 'Library doc index',
+    $helpmenu->command(-label => 'Component Library index',
                        -command => sub {mcdoc_components()});
-    $helpmenu->command(-label => 'Generate component index',
-                       -command => sub {mcdoc_generate()});
+    $helpmenu->separator;
+    $helpmenu->command(-label => 'McStas web page (web)',
+                       -underline => 7,
+                       -command => sub {mcdoc_web()});
     $helpmenu->command(-label => 'McStas tutorial',
                        -command => sub {mcdoc_tutorial()});
-    $helpmenu->command(-label => 'Current instrument',
+    $helpmenu->command(-label => 'Current instrument info',
                        -command => sub {mcdoc_current()});
     $helpmenu->separator;
     $helpmenu->command(-label => 'Test McStas installation',
                        -command => sub {mcdoc_test($w)});
+    $helpmenu->command(-label => 'Generate component index',
+                       -command => sub {mcdoc_generate()});
     $helpmenu->command(-label => 'About McStas',
                        -command => sub {mcdoc_about($w)});
     $helpmenu->pack(-side=>'right');
@@ -1224,7 +1226,7 @@ sub setup_cmdwin {
     if ($MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
       $cmdwin->insert('end', "Perl/PGPLOT plotter is NOT available\n");
     }
-      
+
 }
 
 sub editor_quit {
@@ -1234,7 +1236,7 @@ sub editor_quit {
         $edit_window = undef;
         $edit_control = undef;
     }
-}    
+}
 
 sub Tk::CodeText::selectionModify {
         my ($cw, $char, $mode) = @_;
@@ -1263,7 +1265,7 @@ sub Tk::CodeText::selectionModify {
 }
 
 sub setup_edit_1_7 {
-    # BEWARE: The code in this sub is from McStas 1.7, 
+    # BEWARE: The code in this sub is from McStas 1.7,
     # added only for those users unable to use the CodeText
     # based highlighting editor below. Other features are
     # also missing.
@@ -1323,7 +1325,7 @@ sub setup_edit_1_7 {
     $s->pack(-side => 'right', -fill => 'y');
     $e->pack(-expand => 'yes', -fill => 'both');
     $e->mark('set', 'insert', '0.0');
-    $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def; 
+    $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def;
     $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
     $edit_control = $e;
     $edit_window = $w;
@@ -1347,7 +1349,7 @@ sub setup_edit {
     require Tk::CodeText;
     require Tk::CodeText::McStas;
     $e = $w->Scrolled('CodeText',-relief => 'sunken', -bd => '2', -setgrid => 'true',
-                      -height => 24, wrap => 'none', -scrollbars =>'se',  
+                      -height => 24, wrap => 'none', -scrollbars =>'se',
                       -commentchar => '// ', -indentchar => "  ", -updatecall => \&update_line, -syntax => 'McStas', -background => 'white');
     my $menu = $e->menu;
     $w->bind('<F5>' => [\&Tk::CodeText::selectionIndent]);
@@ -1385,8 +1387,8 @@ sub update_line {
         my ($last_line,$last_col) = split(/\./,$edit_control->index('end'));
         $last_line=$last_line-1;
         $edit_label->configure(-text => " Line: $line of $last_line total, Column: $col");
-    } 
-}   
+    }
+}
 
 # Check if simulation needs recompiling.
 sub check_if_need_recompile {
@@ -1428,7 +1430,7 @@ if(@ARGV>0 && @ARGV<3) {
             $filenames = "$ARGV[$j]";
         }
     }
-    
+
     # Most likely, everything on the commandline is a filename... Join using
     # spaces, e.g. mcgui.pl My Documents\My Simulation.instr
     open_instr_def($win, $filenames);
