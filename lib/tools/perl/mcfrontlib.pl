@@ -65,12 +65,12 @@ sub read_simulation_info {
           $inf->{'Seed'} = $1;
       } elsif(/^\s*Trace:\s*(no|yes)\s*$/i) {
           $inf->{'Trace'} = get_yes_no($1);
-      } elsif(/^\#*\s*Param:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*=\s*([-+0-9.eE]+)\s*$/i){
+      } elsif(/^\#*\s*Param:\s*([a-zA-Z_0-9]+)\s*=\s*([-+0-9.eE]+)\s*$/i){
           $inf->{'Params'}{$1} = $2;
-      } elsif(/^\#*\s*Param:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*=\s*"(.*)"\s*$/i){
+      } elsif(/^\#*\s*Param:\s*([a-zA-Z_0-9]+)\s*=\s*"(.*)"\s*$/i){
           my ($param, $val) = ($1, $2);
           $inf->{'Params'}{$param} = str_unquote($val);
-      } elsif(/^\#*\s*Param:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*=\s*(.*?)\s*$/i){
+      } elsif(/^\#*\s*Param:\s*([a-zA-Z_0-9]+)\s*=\s*(.*?)\s*$/i){
           my ($param, $val) = ($1, $2);
           $inf->{'Params'}{$param} = str_unquote($val);
       } elsif(/^\s*end\s+simulation\s*$/i) {
@@ -92,40 +92,40 @@ sub read_data_info {
     while(<$handle>) {
       if(/^\s*type:\s*(.*?)\s*$/i) {
           $type = $1;
-      } elsif(/^\s*component:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*$/i) {
+      } elsif(/^\s*component:\s*([a-zA-Z_0-9]+)\s*$/i) {
           $compname = $1;
       } elsif(/^\s*title:\s*(.*?)\s*$/i) {
           $title = strip_quote($1);
       } elsif(/^\s*filename:\s*(.*?)\s*$/i) {
           $fname = strip_quote($1);
-      } elsif(/^\s*variables:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9 \t]*?)\s*$/i) {
+      } elsif(/^\s*variables:\s*([a-zA-Z_0-9 \t]*?)\s*$/i) {
           @vars = split(" ", $1);
       } elsif(/^\s*values:\s*([-+0-9.eE \t]*?)\s*$/i) {
           @vals = split(" ", $1);
-      } elsif(/^\s*xvar:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+?)\s*$/i) {
+      } elsif(/^\s*xvar:\s*([a-zA-Z_0-9]+?)\s*$/i) {
           $xvar = $1;
-      } elsif(/^\s*yvar:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+?)\s*$/i) {
+      } elsif(/^\s*yvar:\s*([a-zA-Z_0-9]+?)\s*$/i) {
           $yvar = $1;
           $yerr = undef;
       } elsif(/^\s*yvar:\s*
-            \(\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*,
-              \s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*
+            \(\s*([a-zA-Z_0-9]+)\s*,
+              \s*([a-zA-Z_0-9]+)\s*
             \)\s*$/ix) {
           $yvar = $1;
           $yerr = $2;
       } elsif(/^\s*xvars:\s*
-            ([a-zA-ZÊ¯Â∆ÿ≈_0-9]+
-             (\s+[a-zA-ZÊ¯Â∆ÿ≈_0-9]+)*
+            ([a-zA-Z_0-9]+
+             (\s+[a-zA-Z_0-9]+)*
             )\s*$/ix) {
           @xvars = split(" ", $1);
       } elsif(/^\s*yvars:
             ((
-             \s*\([a-zA-ZÊ¯Â∆ÿ≈_0-9]+,[a-zA-ZÊ¯Â∆ÿ≈_0-9]+\)
+             \s*\([a-zA-Z_0-9]+,[a-zA-Z_0-9]+\)
             )+)\s*$/ix) {
           @yvars = ();
           @yerrs = ();
           for (split(" ", $1)) {
-            if(/\(([a-zA-ZÊ¯Â∆ÿ≈_0-9]+),([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\)/) {
+            if(/\(([a-zA-Z_0-9]+),([a-zA-Z_0-9]+)\)/) {
                 push @yvars, $1;
                 push @yerrs, $2;
             } else {
