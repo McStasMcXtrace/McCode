@@ -44,18 +44,11 @@ BEGIN {
     
     if($ENV{"MCSTAS"}) {
       $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-      if ($Config{'osname'} eq 'MSWin32') {
-	$MCSTAS::runscilab ="runscilab";
-      } else {
-	$MCSTAS::runscilab ="scilab";
-      }
     } else {
       if ($Config{'osname'} eq 'MSWin32') {
         $MCSTAS::sys_dir = "c:\\mcstas\\lib";
-        $MCSTAS::runscilab ="runscilab";
       } else {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-        $MCSTAS::runscilab ="scilab";
         # install atexit-style handler so that when we exit or die,
         # we automatically delete this temporary file
         # does not work as temp files is often removed before Scilab starts...
@@ -63,7 +56,6 @@ BEGIN {
       }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-    
 }
 
 use lib $MCSTAS::perl_dir;
@@ -87,7 +79,9 @@ if ($Config{'osname'} eq 'MSWin32'){
 }
 $plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
                 $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
-                
+
+$MCSTAS::runscilab = "$MCSTAS::mcstas_config{'SCILAB'}";
+
 for($i = 0; $i < @ARGV; $i++) {
   $_ = $ARGV[$i];
   # Options specific to mcplot.
@@ -98,7 +92,7 @@ for($i = 0; $i < @ARGV; $i++) {
   } elsif(/^-png$/i || /^-ps$/i || /^-psc$/i || /^-ppm$/i || /^-scg$/i || /^-fig$/i) {
       $passed_arg_str_quit .= "$_ ";
   } elsif(/^-p([a-zA-Z0-9_]+)$/ || /^--plotter=([a-zA-Z0-9_]+)$/ || /^--format=([a-zA-Z0-9_]+)$/) {
-        $plotter = $1;	
+        $plotter = $1;        
   } elsif(/^-i([a-zA-Z0-9_]+)$/ || /^--inspect=([a-zA-Z0-9_]+)$/) {
       $inspect = $1;
   } elsif(/^\+nw$/i || /^\+tk$/i || /^\+java$/i) {
@@ -288,7 +282,7 @@ if ($plotter eq 3 || $plotter eq 4) {
           my $ext="ps";
           my $dev = ($cc =~ /c/i) ? "cps" : "ps";
           if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
-	  if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
+          if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
           overview_plot("$file.$ext/$dev", $datalist, 0);
           print "Wrote file '$file.$ext' ($dev)\n";
           next;
