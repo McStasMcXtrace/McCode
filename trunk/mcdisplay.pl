@@ -98,7 +98,7 @@ sub read_instrument {
               if ($first) {
                 write_process("INSTRUMENT.firstcomp='$first';\n");
               }
-              if ($lasst) {
+              if ($last) {
                 write_process("INSTRUMENT.lastcomp='$last';\n");
               }
             }
@@ -110,7 +110,7 @@ sub read_instrument {
               if ($first) {
                 write_process("INSTRUMENT.firstcomp='$first';\n");
               }
-              if ($lasst) {
+              if ($last) {
                 write_process("INSTRUMENT.lastcomp='$last';\n");
               }
               if ($save) {
@@ -807,8 +807,8 @@ for($i = 0; $i < @ARGV; $i++) {
     } elsif(($ARGV[$i] =~ /^-p([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
               ($ARGV[$i] =~ /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
         $plotter = $1;        
-   } elsif(($ARGV[$i] =~ /^-f([a-zA-ZæøåÆØÅ0-9_\/\.\:]+)$/) ||
-              ($ARGV[$i] =~ /^--file=([a-zA-ZæøåÆØÅ0-9_\/\.\:]+)$/)) {
+   } elsif(($ARGV[$i] =~ /^-f([a-zA-ZæøåÆØÅ0-9_\-\/\.\:]+)$/) ||
+              ($ARGV[$i] =~ /^--file=([a-zA-ZæøåÆØÅ0-9_\-\/\.\:]+)$/)) {
         $file_output = $1;        
    } else {
         if (defined($sim_cmd)) { push @cmdline, $ARGV[$i]; }
