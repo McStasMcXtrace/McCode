@@ -39,7 +39,7 @@ OBJECTS=instrument.tab.o lex.yy.o debug.o \
 	memory.o list.o symtab.o coords.o rotation.o cexp.o position.o \
 	file.o cogen.o
 
-BINOBJS=gscan mcdisplay
+BINOBJS=gscan mcdisplay mcplot
 
 .SUFFIXES: .c .o
 
@@ -67,7 +67,11 @@ mcdisplay: mcdisplay.pl
 	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/mcdisplay.pl >mcdisplay
 	chmod +x mcdisplay
 
-install: installdirs mcstas gscan mcdisplay $(BINOBJS)
+mcplot: mcplot.pl
+	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/mcplot.pl >mcplot
+	chmod +x mcplot
+
+install: installdirs mcstas $(BINOBJS)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
 	for pgm in $(BINOBJS); do $(INSTALL_PROGRAM) $$pgm $(bindir)/$$pgm; done
 	cd lib; for file in *; do $(INSTALL_DATA) $$file $(mc_libdir)/$$file; done
