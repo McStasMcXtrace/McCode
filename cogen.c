@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.23 2001-03-14 09:13:14 peo Exp $
+* 	$Id: cogen.c,v 1.24 2001-08-16 13:50:36 peo Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -390,7 +390,7 @@ cogen_comp_scope(struct comp_inst *comp, int infunc,
 {
   List_handle def, out;
 
-  coutf("#define %scompcurname \"%s\"", ID_PRE, comp->name);
+  coutf("#define %scompcurname %s", ID_PRE, comp->name);
   def = list_iterate(comp->def->def_par);
   out = list_iterate(comp->def->out_par);
   cogen_comp_scope_rec(comp->name, def, comp->def->set_par, out,
