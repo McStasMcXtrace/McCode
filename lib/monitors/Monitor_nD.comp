@@ -40,10 +40,11 @@
 * This component is a general Monitor that can output 0/1/2D signals 
 * It can produce many 1D signals (one for any variable specified in 
 * option list), or a single 2D output (two variables correlation).
-* Also, an additional 'list' of neutrons can be produced.
-* By default, monitor is square (in x/y plane). disk is also possible
-* The 'cylinder' option will change that for banana shaped detector
+* Also, an additional 'list' of neutron events can be produced.
+* By default, monitor is square (in x/y plane). A disk shape is also possible
+* The 'cylinder' and 'banana' option will change that for a banana shape
 * The 'sphere' option simulates spherical detector. The 'box' is a box.
+* The cylinder, sphere and banana should be centered on the scattering point.
 * The monitored flux may be per monitor unit area, and weighted by
 * a lambda/lambda(2200m/s) factor to obtain standard capture flux.
 * In normal configuration, the Monitor_nD measures the current parameters 
@@ -51,17 +52,13 @@
 * be used in order to study correlations between a neutron being detected in
 * a Monitor_nD place, and given parameters that are monitored elsewhere 
 * (at <b>PreMonitor_nD</b>).
-* It is also possible, using the 'intermediate' keyword, to save monitor results
-* every X percent of the simulation. The monitor can also act as a 3He gas
-* detector, taking into account the detection efficiency.
-* To create an intermediate 'source' file collecting all neutron states, use:
-*   COMPONENT MySourceCreator = Monitor_nD(
-*     filename = "MySource.list", options="list all, source")
-* The output file is text formatted with: [x y z vx vy vz t sx sy sz p] lines, 
-* and is about 85 byte per neutron. May be half size with 'binary' option.
+* The monitor can also act as a 3He gas detector, taking into account the 
+* detection efficiency.
 *
-* The 'abs','log' and 'auto' modifiers are to be used before the variable,
-* and 'bins','limits' come after it. (eg: auto abs log hdiv limits=-5 5 bins=10)
+* The 'bins' and 'limits' modifiers are to be used after each variable,
+* and 'auto','log' and 'abs' come before it. (eg: auto abs log hdiv 
+* limits=[-5 5] bins=10) When placed after all variables,  these two latter 
+* modifiers apply to the signal (e.g. intensity). 
 * 
 * <b>Possible options are</b>
 * Variables to record:
