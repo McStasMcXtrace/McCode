@@ -86,7 +86,7 @@ sub plot_array_1d {
     pgvstd;
     pgswin($x0,$x1,$min,$max);
     line($x, $I);
-    errb($x, $I, $err) if $err;
+    errb($x, $I, $err) if defined($err);
     pgbox("BCNST", 0.0, 0.0, "BCNST", 0.0, 0.0);
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
     pgmtxt("T", 2.5, 0.5, 0.5, "$info->{'Title'}     $info->{'Component'}");
