@@ -154,17 +154,17 @@ instrument.tab.c instrument.tab.h: instrument.y
 lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
 
-config: 
 # Prefer Scilab over Matlab over PGPLOT
-ifneq ($(PGPLOT), no)
-	make pgplot	
-endif
-ifneq ($(MATLAB), no)
-	make matlab
-endif
-ifneq ($(SCILAB), no)
-	make scilab
-endif
+config: 
+	if [ $(PGPLOT) != no ]; then \
+		make pgplot; \
+	fi; \
+	if [ $(MATLAB) != no ]; then \
+		make matlab; \
+	fi; \
+	if [ $(SCILAB) != no ]; then \
+		make scilab; \
+	fi; 
 
 scilab:
 	sed 's/PLOTTER => ./PLOTTER => 3/' lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
