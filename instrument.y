@@ -1,7 +1,24 @@
+/*******************************************************************************
+* Bison parser for instrument definition files.
+*
+*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	File name: instrument.y
+*
+*	Author: K.N.			Jul  1, 1997
+*
+*	$Id: instrument.y,v 1.2 1997-07-01 08:27:19 kn Exp $
+*
+*	$Log: not supported by cvs2svn $
+*
+* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+*******************************************************************************/
+
 
 %{
 #include <math.h>
 #include <stdio.h>
+
+#include "mcstas.h"
 %}
 
 
@@ -20,7 +37,7 @@
 %token TOK_RELATIVE	"RELATIVE"
 %token TOK_ROTATED	"ROTATED"
 
-%token <string> TOK_ID
+%token <string> TOK_ID		/* Note: returns new malloc()'ed copy each time. */
 %token <number> TOK_NUMBER
 %token TOK_INVALID
 
@@ -40,7 +57,10 @@ complist:	  /* empty */
 
 
 compdef:	  "COMPONENT" TOK_ID '=' comp
-
+			{
+			  debugn((DEBUG_HIGH, "Component: %s.\n", $2));
+			  free($2);
+			}
 ;
 
 
