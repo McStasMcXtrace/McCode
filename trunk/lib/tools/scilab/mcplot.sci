@@ -116,7 +116,7 @@ function win = mcplot_addmenu(use_common_menu)
         'Colormap/_Pink',...
         'Colormap/Inv. Pink',...
         'About McStas...',...
-        'Exit'];	// exit must be last choice
+        'Exit'];        // exit must be last choice
   if exists('with_gtk')
     if with_gtk() // with scilab 2.7 on Linux with GTK+ libs
       addmenu(win, '_McStas', t, list(2,'mcplot_menu_action'));
@@ -143,7 +143,7 @@ function win = mcplot_addmenu(use_common_menu)
       for index=1:size(t,2)
         tcl_script = [ tcl_script, ...
           '.foo.menu.mcplot.m add command -label ""'+t(index)+'"" -underline 0  -command {ScilabEval ""mcplot_menu_action('+string(index)+')""}'];
-	  
+          
       end
       tcl_script = [ tcl_script, 'pack .foo.menu.mcplot -side left' ];
       // now send it to Tk
@@ -187,7 +187,7 @@ function mcplot_menu_action(k, gwin)
   
   select item(k)
     case 0 then
-    	mprintf('Invalid menu item\n');
+            mprintf('Invalid menu item\n');
     case 1 then // Open in a separate window
       t='Figure '+string(gwin)+': Click on the plot to duplicate/enlarge.';
       xinfo(t); mprintf('%s\n',t);
@@ -225,8 +225,8 @@ function mcplot_menu_action(k, gwin)
         if length(d), mcplot_set_global(d, nwin, 0); end
         d = []; execstr('d = ThisFigure.instrument;','errcatch');
         if length(d), mcplot_set_global(d, nwin, 0); end
-	xclear();
-      	xtape('replayna', nwin, 90, 0);	// top view
+        xclear();
+              xtape('replayna', nwin, 90, 0);        // top view
       end
       xinfo(t); mprintf('%s\n',t);
     case 2 then // Edit/_data file
@@ -242,6 +242,7 @@ function mcplot_menu_action(k, gwin)
     case 4 then // Edit/_preferences
       xsetm();
     case 23 then // View/instrument
+      figname = [];
       execstr('figname = ThisFigure.instrument.Source','errcatch');
       if length(figname)
         // Strip off the .instr suffix...
@@ -249,14 +250,43 @@ function mcplot_menu_action(k, gwin)
         if ~isempty(idx)
           idx=idx(length(idx));
           t=str2code(figname);
-	  t=t(1:idx-1);
+          t=t(1:idx-1);
           figname=code2str(t);
         end
         t=figname+'.scg';
         [fid,err]=fileinfo(t);
         if err
-	        t = figname+'.out.scg';
+                t = figname+'.out.scg';
                 [fid,err]=fileinfo(t);
+        end
+        if err
+                parameters = [];
+                execstr('parameters = ThisFigure.parameters','errcatch');
+                if length(parameters)
+                  // scan parameters structure, excluding 'class','parent','name'
+                  tmp_parcmd = 'mcdisplay '+figname+'.instr -n 100 -pScilab --save ';
+                  tmp_fields = getfield(1,parameters);
+                  save toto
+                  for field=1:size(tmp_fields,2)
+                    if (tmp_fields(field) ~= 'class' & ...
+                      tmp_fields(field) ~= 'parent' & ...
+                      tmp_fields(field) ~= 'name' & ...
+                      tmp_fields(field) ~= 'dims' & ...
+                      tmp_fields(field) ~= 'st' & ...
+                      tmp_fields(field) ~= 'struct')
+                      tmp_parcmd = tmp_parcmd+' '+tmp_fields(field)+'='+string(getfield(tmp_fields(field), parameters));
+                    end
+                  end
+                  t='Executing:'+tmp_parcmd;
+                  xinfo(t); mprintf('%s\n',t);
+                  rep=unix_g(tmp_parcmd);
+                end
+                t=figname+'.scg';
+                [fid,err]=fileinfo(t);
+                if err
+                        t = figname+'.out.scg';
+                        [fid,err]=fileinfo(t);
+                end
         end
         if err == 0
           gwin=xget('window');
@@ -433,12 +463,12 @@ function mcplot_output(form, win, filename)
         idx_slash=strindex(filename,'/');
       end
       idx_slash=idx_slash(length(idx_slash));
-  	    
+              
       filecode=str2code(filename);
       if ~isempty(idx_slash) then
         Dirname=code2str(filecode(1:idx_slash));
       else
-	Dirname="";
+        Dirname="";
         idx_slash=0;
       end
       
@@ -450,10 +480,10 @@ function mcplot_output(form, win, filename)
       Basename=code2str(filecode(idx_slash+1:idx_dot-1));
       if MSDOS then
         unix_g('""'+SCI+'\bin\BEpsf"" -landscape '+filename);
-	unix_g('move '+Dirname+Basename+'.eps '+filename);
+        unix_g('move '+Dirname+Basename+'.eps '+filename);
       else
         unix_g(SCI+'/bin/BEpsf -landscape '+filename);
-	unix_g('mv '+Dirname+Basename+'.eps '+filename);
+        unix_g('mv '+Dirname+Basename+'.eps '+filename);
       end
     end
   end
@@ -631,7 +661,6 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
 // m may also be used as a string keyword used for searching within McStas
 //  structure fields 'filename','title', 'type'
   
-  
   if argn(2) == 0 then data_count = 0; return; end
   if type(s) ~= 16 & type(s) ~= 17 then data_count = 0; return; end
   tag_names = getfield(1,s);
@@ -645,6 +674,7 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
   if argn(2) == 1 then action = ''; end
   if argn(2) == 3 then id = m; end
   if ~length(action), action = '-overview'; end
+  
   w=winsid();
   if length(w),w=w($)+1; else w=0; end
   if length(strindex(action,'-overview')) & argn(2) == 3
@@ -727,7 +757,7 @@ if typeof(options) ~= 'string', options = ''; end
 if ~length(options), options = '-overview'; end
 options = convstr(options, 'l');  // to lower case
 if ~length(strindex(options,'plot')) &  ~length(strindex(options,'overview')) &  ~length(strindex(options,'action'))
-	options = options+' -overview ';
+        options = options+' -overview ';
 end
 
 // handle file name specification in 'object'
@@ -788,22 +818,21 @@ if type(object) ~= 16 & type(object) ~= 17
   mprintf('mcplot: Could not extract the McStas simulation structure.\n')
   return;
 else  // if 's' is a 'struct'
-  ext = ''; dr = '';
+  form = ''; 
   //    if output is not empty, open driver+xinit(filename)
-  if     length(strindex(options,'-ps')),  ext = '.eps';  dr='Pos';
-  elseif length(strindex(options,'-psc')), ext = '.eps';  dr='Pos';
-  elseif length(strindex(options,'-gif')), ext = '.gif'; dr='GIF';
-  elseif length(strindex(options,'-fig')), ext = '.fig'; dr='Fig'; 
-  elseif length(strindex(options,'-ppm')), ext = '.ppm'; dr='PPM'; 
-  elseif length(strindex(options,'-scg')), ext = '.scg'; dr=''; end
-  if length(dr), driver(dr); end
-  if length(ext)
+  if     length(strindex(options,'-ps')),  form = '-ps' ;
+  elseif length(strindex(options,'-psc')), form = '-psc';
+  elseif length(strindex(options,'-gif')), form = '-gif'; 
+  elseif length(strindex(options,'-fig')), form = '-fig';  
+  elseif length(strindex(options,'-ppm')), form = '-ppm'; 
+  elseif length(strindex(options,'-scg')), form = '-scg'; end
+  if length(form)
     filename = '';
     execstr('filename = object.File;','errcatch');
     if length(filename) == 0 then execstr('filename = object.filename;','errcatch'); end
     if length(filename) == 0 then filename='mcstas'; end
-    filename=filename+ext;
-    if ~length(strindex(options,'-scg')), xinit(filename); end
+    // filename=filename+ext;
+    // if ~length(strindex(options,'-scg')), xinit(filename); end
     if ~length(strindex(options,'-plot')) & ~length(strindex(options,'-overview'))
       options = options+' overview';
     end
@@ -811,28 +840,16 @@ else  // if 's' is a 'struct'
   //  **  send to mcplot_scan(s, options, id)  **
   [count, object] = mcplot_scan(object, options, id);
   //    if output is not empty close xend()
-  if length(ext)
-    if ext ~= '.scg', xend(); 
-    else xsave(filename);
-    end
-    if ext == '.eps'
-      if MSDOS then
-        unix_g('""'+SCI+'\bin\BEpsf"" -landscape '+filename);
-      else
-        unix_g(SCI+'/bin/BEpsf -landscape '+filename);
-      end
-    end
-    t='mcplot: McStas plot exported as file '+filename+' ('+options+')';
-    xinfo(t); mprintf('%s\n',t);
-  else
+  if ~length(form)
     // installs a common menu for all figures
     // in case this could not be done with GTk
     ret = -1;
-    while (ret < 0)	// used whith x_choices, or ignore with Tk/GTk
-      ret = mcplot_addmenu('common');	
+    while (ret < 0)        // used whith x_choices, or ignore with Tk/GTk
+      ret = mcplot_addmenu('common');
     end
   end
   driver('Rec');  // default output to screen
+  if length(form), mcplot_output(form, -1, filename); end
 end
 
 endfunction // mcplot
