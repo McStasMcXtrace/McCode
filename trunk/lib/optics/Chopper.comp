@@ -10,7 +10,7 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -58,8 +58,8 @@ DECLARE
 
 INITIALIZE
  %{
-      if (n<=0 || f<=0 || R <=0)
-      { fprintf(stderr,"Chopper: %s: n,f and R must be > 0\n", NAME_CURRENT_COMP);
+      if (n<=0 || w < 0 || R <=0)
+      { fprintf(stderr,"Chopper: %s: n, w and R must be > 0\n", NAME_CURRENT_COMP);
         exit(-1); }
       if (IsFirst && n_pulse <=0)
       { fprintf(stderr,"Chopper: %s: wrong First chopper pulse number (n_pulse)\n", NAME_CURRENT_COMP);
