@@ -63,15 +63,15 @@ MCDISPLAY
 %{
   magnify("xy");
   multiline(5, (double)xmin, (double)ymin, 0.0,
-	       (double)xmax, (double)ymin, 0.0,
-	       (double)xmax, (double)ymax, 0.0,
-	       (double)xmin, (double)ymax, 0.0,
-	       (double)xmin, (double)ymin, 0.0);
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
   multiline(5, (double)xmin, (double)ymin, (double)len,
-	       (double)xmax, (double)ymin, (double)len,
-	       (double)xmax, (double)ymax, (double)len,
-	       (double)xmin, (double)ymax, (double)len,
-	       (double)xmin, (double)ymin, (double)len);
+               (double)xmax, (double)ymin, (double)len,
+               (double)xmax, (double)ymax, (double)len,
+               (double)xmin, (double)ymax, (double)len,
+               (double)xmin, (double)ymin, (double)len);
   line(xmin, ymin, 0.0, xmin, ymin, len);
   line(xmax, ymin, 0.0, xmax, ymin, len);
   line(xmin, ymax, 0.0, xmin, ymax, len);

@@ -58,7 +58,7 @@ TRACE
   theta = theta0 + hdiv*randpm1(); /* Small angle approx. */ 
   phi = phi0 + vdiv*randpm1();
 
-  E = E0+(E1-E0)*rand01();	/* Assume linear distribution */
+  E = E0+(E1-E0)*rand01();      /* Assume linear distribution */
   v = SE2V*sqrt(E);
 
   vz = v*cos(phi)*cos(theta);   /* Small angle approx. */

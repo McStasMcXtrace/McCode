@@ -73,22 +73,22 @@ TRACE
 FINALLY
   %{
     DETECTOR_OUT_1D(
-	"Energy monitor",
-	"Energy [meV]",
-	"Intensity",
-	"E", Emin, Emax, nchan,
-	&E_N[0],&E_p[0],&E_p2[0],
-	filename);
+        "Energy monitor",
+        "Energy [meV]",
+        "Intensity",
+        "E", Emin, Emax, nchan,
+        &E_N[0],&E_p[0],&E_p2[0],
+        filename);
   %}
 
 MCDISPLAY
 %{
   magnify("xy");
   multiline(5, (double)xmin, (double)ymin, 0.0,
-	       (double)xmax, (double)ymin, 0.0,
-	       (double)xmax, (double)ymax, 0.0,
-	       (double)xmin, (double)ymax, 0.0,
-	       (double)xmin, (double)ymin, 0.0);
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
 %}
 
 END

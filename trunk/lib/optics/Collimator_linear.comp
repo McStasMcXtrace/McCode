@@ -69,8 +69,8 @@ MCDISPLAY
   magnify("xy");
   for(x = xmin, i = 0; i <= 3; i++, x += (xmax - xmin)/3.0)
     multiline(5, x, (double)ymin, 0.0, x, (double)ymax, 0.0,
-	      x, (double)ymax, (double)len, x, (double)ymin, (double)len,
-	      x, (double)ymin, 0.0);
+              x, (double)ymax, (double)len, x, (double)ymin, (double)len,
+              x, (double)ymin, 0.0);
   line(xmin, ymin, 0,   xmax, ymin, 0);
   line(xmin, ymax, 0,   xmax, ymax, 0);
   line(xmin, ymin, len, xmax, ymin, len);
