@@ -14,12 +14,15 @@
 * Non-focusing curved neutron guide.
 *
 * %D
-* Models a rectangular curved guide tube with entrance centered on the Z axis. 
+* Models a rectangular curved guide tube with entrance centered on the Z axis.
 * The entrance lies in the X-Y plane.  Unlike Bender.comp, draws a true depiction
 * of the guide, and trajectories.  Guide is not focusing
 *
-* Example: Guide(w1=0.1, h1=0.1, l=2.0, R0=0.99, Qc=0.021, 
+* Example: Guide(w1=0.1, h1=0.1, l=2.0, R0=0.99, Qc=0.021,
 *                alpha=6.07, m=2, W=0.003, r=2700)
+*
+* %BUGS
+* This component does not work with gravitation on. Use component Guide_gravity then.
 *
 * %P
 * INPUT PARAMETERS:
@@ -58,7 +61,7 @@ TRACE
   double vel    = sqrt(vx*vx + vy*vy + vz*vz);	/* neutron velocity */
   double vel_xz = sqrt(vx*vx + vz*vz);    	/* in plane velocity */
   double K      = V2K*vel;				/* neutron wavevector */
-  double lambda = 2.0*PI/K;				/* neutron wavelength */  
+  double lambda = 2.0*PI/K;				/* neutron wavelength */
 
 /* Propagate neutron to guide entrance. */
 
@@ -69,7 +72,7 @@ TRACE
   for(;;)
   {
     /* Find itersection points of neutron with inside and outside guide walls */
-    ii = cylinder_intersect(&t11, &t12 ,x - r, y, z, vx, vy, vz, R1, h); 
+    ii = cylinder_intersect(&t11, &t12 ,x - r, y, z, vx, vy, vz, R1, h);
     ii = cylinder_intersect(&t21, &t22 ,x - r, y, z, vx, vy, vz, R2, h);
 
     /* Choose appropriate reflection time */
@@ -123,8 +126,8 @@ MCDISPLAY
   int n = 100;
   int j = 1;
   double R1 = (r - 0.5*w);		/* radius of inside arc */
-  double R2 = (r + 0.5*w);		/* radius of outside arc */  
- 
+  double R2 = (r + 0.5*w);		/* radius of outside arc */
+
   magnify("xy");
 
 	for(;;) {
@@ -135,23 +138,23 @@ MCDISPLAY
 		x2 = r - sqrt(R2*R2 - z2*z2);
             xplot1[j] = x1;
 		xplot2[j] = x2;
-		zplot1[j] = z1;	
+		zplot1[j] = z1;
 		zplot2[j] = z2;
-		j++; 
-	} 
+		j++;
+	}
 	j = 1;
 	line(xplot1[j], 0.5*h,zplot1[j],xplot2[j], 0.5*h,zplot2[j]);
       line(xplot1[j], 0.5*h,zplot1[j],xplot1[j],-0.5*h,zplot1[j]);
       line(xplot2[j],-0.5*h,zplot2[j],xplot2[j], 0.5*h,zplot2[j]);
       line(xplot1[j],-0.5*h,zplot1[j],xplot2[j],-0.5*h,zplot2[j]);
 	for(;;) {
-		if(j == n) break;	
+		if(j == n) break;
 		line(xplot1[j],  0.5*h, zplot1[j], xplot1[j+1],  0.5*h, zplot1[j+1]);
 		line(xplot2[j],  0.5*h, zplot2[j], xplot2[j+1],  0.5*h, zplot2[j+1]);
 		line(xplot1[j], -0.5*h, zplot1[j], xplot1[j+1], -0.5*h, zplot1[j+1]);
 		line(xplot2[j], -0.5*h, zplot2[j], xplot2[j+1], -0.5*h, zplot2[j+1]);
 		j++;
-	} 
+	}
       line(xplot1[j], 0.5*h,zplot1[j],xplot2[j], 0.5*h,zplot2[j]);
       line(xplot1[j], 0.5*h,zplot1[j],xplot1[j],-0.5*h,zplot1[j]);
       line(xplot2[j],-0.5*h,zplot2[j],xplot2[j], 0.5*h,zplot2[j]);

@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -93,7 +93,7 @@ DEFINE COMPONENT Guide_gravity
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2, h2, l,
   R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005,
-  mleft=-1, mright=-1, mtop=-1, mbottom=-1, kh=1, G=-9.81,
+  mleft=-1, mright=-1, mtop=-1, mbottom=-1, kh=1, G=0,
   wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1)
 OUTPUT PARAMETERS (GVars)
@@ -305,6 +305,7 @@ INITIALIZE
   { fprintf(stderr,"Guide_gravity: %s: W k R0 Qc must be >0.\n", NAME_CURRENT_COMP);
     exit(-1); }
 
+  if (mcgravitation) G=-9.81;
   mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,G,0));
   coords_get(mcLocG, &Gx, &Gy, &Gz);
 
