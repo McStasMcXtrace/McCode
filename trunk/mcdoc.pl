@@ -438,9 +438,12 @@ for($i = 0; $i < @ARGV; $i++) {
   # Options specific to mcdoc.
   if(/^--show$/i || /^-s$/i || /^--html$/i) {
         $show_html = 1;
-        if ($Config{'osname'} eq 'MSWin32') { $browser = "start"; } 
-        else { $browser = "netscape"; }
-        print "Your BROWSER variable is not set... Trying '$browser'\n";
+	# Is the BROWSER variable set to 'text'? Else try platform default
+	if ($browser eq "text") {
+	    if ($Config{'osname'} eq 'MSWin32') { $browser = "start"; } 
+	    else { $browser = "netscape"; }
+	    print "Your BROWSER variable is not set... Trying '$browser'\n";
+	}
   } elsif(/^--text$/i || /^-t$/i) {
         $show_html = 1; $browser = "text";
   } elsif(/^--web$/i || /^-w$/i) {
