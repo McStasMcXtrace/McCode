@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1998
-* Version: $Revision: 1.5 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.6 $
+* Origin: McStas 1.5
 *
 * Neutron source with flat wavelength spectrum and user-specified flux.
 *
@@ -37,7 +37,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, dist, xw, yh, lambda_0, d_lambda, flux)
 OUTPUT PARAMETERS (hdiv, vdiv, p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
  double hdiv,vdiv;
