@@ -1,17 +1,15 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Monochromator.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KL, HMR
+* Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.9 $
-* Origin: McStas release
-* Modified by: KL  Oct. 16, 1997
+* Version: $Revision: 1.10 $
+* Origin: McStas 1.4.2
 *
-* Monochrmator/analyzer crystal (OBSOLETE).
+* Monochromator/analyzer crystal (OBSOLETE).
 *
 * %D
 * NOTE: This component is obsolete. Use the component Mosaic_anisotropic
@@ -43,6 +41,7 @@ DEFINE COMPONENT Monochromator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaich, mosaicv, r0, Q)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
 #define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
