@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -148,9 +148,9 @@ SHARE
     if (a_mbottom >= 0) aVars->M[4] =a_mbottom;
 
     aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] =  0.5*(aVars->w2c-aVars->w1c); /* 1:+X left       */
-    aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] =  aVars->nz[1];  /* 2:-X right      */
+    aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] =  -aVars->nz[1];  /* 2:-X right      */
     aVars->nx[3] =  0;   aVars->ny[3] =  a_l; aVars->nz[3] =  0.5*(aVars->h2c-aVars->h1c);  /* 3:+Y top        */
-    aVars->nx[4] =  0;   aVars->ny[4] = -a_l; aVars->nz[4] =  aVars->nz[3];  /* 4:-Y bottom     */
+    aVars->nx[4] =  0;   aVars->ny[4] = -a_l; aVars->nz[4] =  -aVars->nz[3];  /* 4:-Y bottom     */
     aVars->nx[5] =  0;   aVars->ny[5] =  0;   aVars->nz[5] =  a_l;             /* 5:+Z exit       */
     aVars->nx[0] =  0;   aVars->ny[0] =  0;   aVars->nz[0] = -a_l;             /* 0:Z0 input      */
 
@@ -208,9 +208,9 @@ SHARE
       if (i == 2) { i_slope=1; loc_num = cxnum; loc_k = cxk; }
       
       if (aVars->nzC[i_slope] != 0) {
-        n1 = loc_k - 2*(loc_num);  /* slope of l/r/u/d sides depends on the channel ! */ 
-        loc_num++;
-        aVars->nz[i] = aVars->nzC[i_slope]*n1; 
+      n1 = loc_k - 2*(loc_num);  /* slope of l/r/u/d sides depends on the channel ! */    
+      loc_num++;
+      aVars->nz[i] = aVars->nzC[i]*n1; 
       aVars->A[i] = aVars->Ac[i] + aVars->nz[i]*aVars->gz; }
       if (i < 3)
       {      B = aVars->nx[i]*cvx + aVars->nz[i]*cvz; C = aVars->nx[i]*(cx-aVars->wx[i]) + aVars->nz[i]*cz; }
@@ -221,7 +221,7 @@ SHARE
         if (aVars->nzC[i] != 0) 
         { aVars->norm_n2[i] = aVars->norm_n2c[i] + aVars->nz[i]*aVars->nz[i]; aVars->norm_n[i] = sqrt(aVars->norm_n2[i]); }
       }
-    }
+     }
 
     *dt = dt_min;
     return (side);
