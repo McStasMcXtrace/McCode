@@ -239,6 +239,10 @@ TRACE
   double  pp;
   int     intersect   = 0;
   char    Flag_Restore = 0;  
+  
+  /* this is done automatically
+    STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  */
 
   if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
   { 
@@ -337,7 +341,7 @@ TRACE
 
   if (Flag_Restore)
   {
-    RESTORE_NEUTRON(mccompcurindex, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
 %}
 
