@@ -1334,6 +1334,11 @@ sub setup_edit {
     $e->pack(-expand => 'yes', -fill => 'both');
     $label->pack(-side => 'left', -expand => 'no', -fill => 'x');
     $e->mark('set', 'insert', '0.0');
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
+    $edit_control = $e;
+    $edit_window = $w;
+    $edit_label = $label;
+    $edit_control->SetGUICallbacks([\&update_line]);
     if ($current_sim_def) {
       $w->title("Edit: $current_sim_def");
       if (-r $current_sim_def) {
@@ -1342,11 +1347,6 @@ sub setup_edit {
     } else {
       $w->title("Edit: Start with Insert/Instrument template");
     }
-    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
-    $edit_control = $e;
-    $edit_window = $w;
-    $edit_label = $label;
-    $edit_control->SetGUICallbacks([\&update_line]);
 }
 
 # GUI callback function for updating line numbers etc.
