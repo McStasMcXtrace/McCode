@@ -99,6 +99,9 @@ if (defined($MCSTAS::perl_modules) && -e $MCSTAS::perl_modules) {
   $MCSTAS::mcstas_config{'MODULES'} = "$MCSTAS::perl_modules";
 }
 
+my $textedit=0;
+my $storable=0;
+
 foreach $inc (@INC) {
   my $where="$inc/Tk/CodeText.pm";
   my $temp_avail="";
@@ -118,15 +121,21 @@ foreach $inc (@INC) {
   if ($temp_avail ne "") { 
     $MCSTAS::mcstas_config{'TEMP'} = $temp_avail; 
   }
+  
+  $where="$inc/Tk/TextEdit.pm";
+  if (-e "$where") {
+    $textedit = $where; # we got CodeText+TextEdit
+  }
+  
+  $where="$inc/Storable.pm";
+  if (-e "$where") {
+    $storable = $where; # we got CodeText+TextEdit
+  }
 }
 
 if ($MCSTAS::mcstas_config{'CODETEXT'} ne "no") {
-  $MCSTAS::mcstas_config{'CODETEXT'} = "no";
-  foreach $inc (@INC) { # CodeText requires TextEdit to work
-    my $where="$inc/Tk/TextEdit.pm";
-    if (-e "$where") {
-      $MCSTAS::mcstas_config{'CODETEXT'} = $where; # we got CodeText+TextEdit
-    }
+  if ($textedit eq 0 || $storable eq 0) {
+    $MCSTAS::mcstas_config{'CODETEXT'} = "no";
   }
 }
 
