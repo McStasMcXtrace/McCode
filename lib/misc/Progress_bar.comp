@@ -10,22 +10,23 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: ILL
 * Release: McStas 1.6
 *
 * A simulation progress bar
 *
 * %D
-* An indicator of the progress of the simulation, showing the name of the simulation,
-* the Init, Trace with the achieved percentage, and the Finally section. Intermediate
-* savings (e.g. triggered by USR2 signal) are also shown.
+* An indicator of the progress of the simulation, monitoring
+* the Init, Trace with the achieved percentage, and the Finally section.
+* Intermediate savings (e.g. triggered by USR2 signal) are also shown.
+* This component should be positioned at the very begining of the instrument
 *
-* Example: Progress_bar(percent=10,flag_save=1)
+* Example: Progress_bar(percent=10,flag_save=1) AT (0,0,0)
 *
 * %P
 * INPUT PARAMETERS:
-* percent:  (%)   percentage interval between indications. Default is 5%.
+* percent:  (%)   percentage interval between indications. Default is 10%.
 * flag_save:(0|1) flag to enable intermediate saving for all monitors
 *
 * %E
@@ -34,29 +35,54 @@
 DEFINE COMPONENT Progress_bar
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (percent=10,flag_save=0)
-OUTPUT PARAMETERS (IntermediateCnts)
+OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
+#ifndef PROGRESS_BAR
+#define PROGRESS_BAR
+#endif
+
   double IntermediateCnts=0;
+  time_t StartTime       =0;
+  time_t EndTime         =0;
 %}
 
 INITIALIZE
 %{
   fprintf(stderr, "[%s] Init ", mcinstrument_name);
+  if (percent*mcget_ncount()/100 < 1e5) {
+    percent=1e5*100.0/mcget_ncount();
+  }
 %}
 
 TRACE
 %{
   double ncount;
   ncount = mcget_run_num();
-  if (ncount >= IntermediateCnts && ncount)
+  if (!StartTime) {
+    time(&StartTime); /* compute starting time */
+    IntermediateCnts = 1e5;
+  }
+  if (!EndTime && ncount >= IntermediateCnts) {
+    time_t NowTime;
+    time(&NowTime);
+    if (difftime(NowTime,StartTime) > 10) {
+      EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
+                           *mcget_ncount()/ncount);
+      IntermediateCnts = 0;
+      if (difftime(EndTime,StartTime) > 60) fprintf(stderr, "ETA %g [min] ",
+        difftime(EndTime,StartTime)/60.0);
+    } else IntermediateCnts += 1e5;
+  }
+
+  if (EndTime && ncount >= IntermediateCnts)
   {
     double tmp;
     tmp = percent*mcget_ncount()/100;
-    fprintf(stderr, "%d ", (int)(IntermediateCnts*100/mcget_ncount()));
-    IntermediateCnts += tmp;
+    fprintf(stderr, "%d ", (int)(ncount*100/mcget_ncount()));
+    IntermediateCnts = ncount + tmp;
     if (IntermediateCnts+tmp > mcget_ncount())
       fprintf(stderr, "\n");  /* last percent number to be displayed */
     else if (flag_save) mcsave(NULL);
@@ -70,7 +96,9 @@ SAVE
 
 FINALLY
 %{
-  fprintf(stderr, "Finally.\n");
+  time_t NowTime;
+  time(&NowTime);
+  fprintf(stderr, "Finally. Time: %g [min]\n", difftime(NowTime,StartTime)/60);
 %}
 
 END
