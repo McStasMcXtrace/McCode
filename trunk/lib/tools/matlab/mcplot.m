@@ -72,7 +72,9 @@ if ischar(object) % if object is a string
   %    opens filename and evaluate it
   object = strrep(object,'.m','');
   [pathname, object]=fileparts(object);
-  cd(pathname);  % go into directory where object is
+  if not(isempty(pathname))
+    cd(pathname);  % go into directory where object is
+  end
   m = [];
   m = eval(object,'[]');
   if ~length(m)
