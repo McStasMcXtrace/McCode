@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.18 2000-02-15 07:42:32 kn Exp $
+*	$Id: instrument.l,v 1.19 2000-07-06 12:27:11 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.18  2000/02/15 07:42:32  kn
+*	Handle instrument parameters with different types (double, int, string).
+*
 *	Revision 1.17  1999/03/18 07:31:46  kn
 *	Handle polarised neutrons.
 *
@@ -155,6 +158,8 @@ FINALLY		return TOK_FINALLY;
 EXTERN		return TOK_EXTERN;
 INITIALIZE	return TOK_INITIALIZE;
 INSTRUMENT	return TOK_INSTRUMENT;
+NXDICT		return TOK_NXDICT;
+NXDICTFILE	return TOK_NXDICTFILE;
 OUTPUT		return TOK_OUTPUT;
 PARAMETERS	return TOK_PARAMETERS;
 POLARISATION	return TOK_POLARISATION;

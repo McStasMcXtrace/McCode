@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.19 2000-02-16 13:23:58 kn Exp $
+* 	$Id: cogen.c,v 1.20 2000-07-06 12:26:57 kn Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -499,6 +499,63 @@ cogen_decls(struct instr_def *instr)
 
 
 /*******************************************************************************
+* Code generation for any NXDICT or NXDICTFILE declarations.
+*******************************************************************************/
+static void
+cogen_nxdict(struct instr_def *instr)
+{
+  List_handle liter;
+  struct NXDentry *entry;
+
+  coutf("#ifdef HAVE_NXDICT");
+  coutf("static NXDdict %snxd_handle;", ID_PRE);
+  coutf("static NXhandle %snxd_file;", ID_PRE);
+  coutf("");
+  coutf("void %snxdict_init(void) {", ID_PRE);
+  /* Code to read any specified fictionary file. */
+  if(instr->nxdinfo->nxdfile)
+  {
+    char *quoted_name = str_quote(instr->nxdinfo->nxdfile);
+    coutf("  %snxd_handle = NXDinitfromfile(\"%s\");", ID_PRE, quoted_name);
+    str_free(quoted_name);
+  }
+  else
+  {
+    coutf("  %snxd_handle = NXDinitfromfile(NULL);", ID_PRE);
+  }
+  coutf("  if(%snxd_handle == NULL) {", ID_PRE);
+  coutf("    printf(stderr, \"Error: could not read NeXus dictionary file.\\n\");");
+  coutf("    exit(1);");
+  coutf("  }", ID_PRE);
+  /* Code for additional embedded dictionary entries. */
+  liter = list_iterate(instr->nxdinfo->nxdentries);
+  while((entry = list_next(liter)) != NULL)
+  {
+    char *spec = exp_tostring(entry->spec);
+    coutf("  NXDadd(%snxd_handle, \"%s_%s\", %s);", ID_PRE,
+	  entry->compname, entry->param, spec);
+    str_free(spec);
+  }
+  list_iterate_end(liter);
+  coutf("}");
+  coutf("");
+  coutf("void %snxdict_cleanup(void) {", ID_PRE);
+  coutf("  NXDclose(%snxd_handle, NULL);", ID_PRE);
+  coutf("}");
+  coutf("");
+  coutf("void %snxdict_nxout(void) {", ID_PRE);
+  /* ToDo: automatically generate suitable calls to NXDputalias() here. */
+  coutf("}");
+  coutf("#else  /* HAVE_NXDICT */");
+  coutf("void %snxdict_init(void) { }", ID_PRE);
+  coutf("void %snxdict_cleanup(void) { }", ID_PRE);
+  coutf("void %snxdict_nxout(void) { }", ID_PRE);
+  coutf("#endif  /* HAVE_NXDICT */", ID_PRE);
+  coutf("");
+}
+
+
+/*******************************************************************************
 * Generate the ##init() function.
 *******************************************************************************/
 static void
@@ -931,6 +988,8 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);
+  if(instr->nxdinfo->any)
+    cogen_nxdict(instr);	/* Only if NXDICT/NXDICTFILE actually used */
   cogen_trace(instr);
   cogen_finally(instr);
   cogen_mcdisplay(instr);

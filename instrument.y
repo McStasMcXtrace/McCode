@@ -41,23 +41,24 @@ int mc_yyoverflow();
 %union {
   double number;
   char *string;
-  struct code_block *ccode;	/* User-supplied C code block. */
-  CExp exp;			/* Expression datatype (for arguments). */
-  int linenum;			/* Starting line number for code block. */
-  Coords_exp coords;		/* Coordinates for location or rotation. */
-  List formals;			/* List of formal parameters. */
-  List iformals;		/* List of formal instrument parameters. */
-  List comp_iformals;		/* List of formal comp. input parameters. */
-  struct instr_formal *iformal;	/* Single formal instrument parameter. */
-  struct comp_iformal *cformal;	/* Single formal component input parameter. */
-  Symtab actuals;		/* Values for formal parameters. */
-  char **polform;		/* Polarisation state formal parameters */
+  struct code_block *ccode;	/* User-supplied C code block */
+  CExp exp;			/* Expression datatype (for arguments) */
+  int linenum;			/* Starting line number for code block */
+  Coords_exp coords;		/* Coordinates for location or rotation */
+  List formals;			/* List of formal parameters */
+  List iformals;		/* List of formal instrument parameters */
+  List comp_iformals;		/* List of formal comp. input parameters */
+  struct instr_formal *iformal;	/* Single formal instrument parameter */
+  struct comp_iformal *cformal;	/* Single formal component input parameter */
+  Symtab actuals;		/* Values for formal parameters */
+  char **polform;		/* Polarisation state formal parameter */
   struct {List def, set, out, state;
-	  char **polarisation;} parms;	/* Parameter lists. */
-  struct instr_def *instrument;	/* Instrument definition. */
-  struct comp_inst *instance;	/* Component instance. */
-  struct comp_place place;	/* Component place. */
-  struct comp_orientation ori;	/* Component orientation. */
+	  char **polarisation;} parms;	/* Parameter lists */
+  struct instr_def *instrument;	/* Instrument definition */
+  struct comp_inst *instance;	/* Component instance */
+  struct comp_place place;	/* Component place */
+  struct comp_orientation ori;	/* Component orientation */
+  struct NXDinfo *nxdinfo;	/* Info for NeXus dictionary interface */
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
@@ -74,6 +75,8 @@ int mc_yyoverflow();
 %token TOK_INITIALIZE	"INITIALIZE"
 %token TOK_INSTRUMENT	"INSTRUMENT"
 %token TOK_MCDISPLAY	"MCDISPLAY"
+%token TOK_NXDICT	"NXDICT"
+%token TOK_NXDICTFILE	"NXDICTFILE"
 %token TOK_OUTPUT	"OUTPUT"
 %token TOK_PARAMETERS	"PARAMETERS"
 %token TOK_POLARISATION	"POLARISATION"
@@ -109,6 +112,7 @@ int mc_yyoverflow();
 %type <parms> parameters
 %type <place> place
 %type <ori> orientation
+%type <nxdinfo> nxdict
 %%
 
 main:		  TOK_GENERAL compdefs instrument
@@ -246,18 +250,22 @@ comp_iformal:	  TOK_ID
 
 instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
 			{ instrument_definition->formals = $4; }
-		  declare initialize instr_trace finally "END"
+		  declare initialize nxdict instr_trace finally "END"
 		  {
 		    instrument_definition->name = $3;
 		    instrument_definition->decls = $6;
 		    instrument_definition->inits = $7;
-		    instrument_definition->finals = $9;
+		    instrument_definition->nxdinfo = $8;
+		    instrument_definition->finals = $10;
 		    instrument_definition->compmap = comp_instances;
 		    instrument_definition->complist = comp_instances_list;
 
 		    /* Check instrument parameters for uniqueness */
 		    check_instrument_formals(instrument_definition->formals,
 					     instrument_definition->name);
+		    /* Check NCDICT declarations to ensure that
+                       component names and parameters are valid. */
+		    check_nxdict(instrument_definition);
 		  }
 ;
 
@@ -349,6 +357,45 @@ initialize:	  /* empty */
 		| "INITIALIZE" codeblock
 		  {
 		    $$ = $2;
+		  }
+;
+
+nxdict:		  /* empty */
+		  {
+		    struct NXDinfo *nxdinfo;
+		    palloc(nxdinfo);
+		    nxdinfo->nxdfile = NULL;
+		    nxdinfo->nxdentries = list_create();
+		    nxdinfo->any = 0;
+		    $$ = nxdinfo;
+		  }
+		| "NXDICTFILE" TOK_STRING nxdict
+		  {
+		    struct NXDinfo *nxdinfo = $3;
+		    if(nxdinfo->nxdfile)
+		    {
+		      print_error("Multiple NXDICTFILE declarations found.\n"
+				  "At most one NXDFILE declarations may "
+				  "be used in an instrument");
+		    }
+		    else
+		    {
+		      nxdinfo->nxdfile = $2;
+		    }
+		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
+		    $$ = nxdinfo;
+		  }
+		| "NXDICT" TOK_ID ',' TOK_ID ',' exp nxdict
+		  {
+		    struct NXDinfo *nxdinfo = $7;
+		    struct NXDentry *entry;
+		    palloc(entry);
+		    entry->compname = $2;
+		    entry->param = $4;
+		    entry->spec = $6;
+		    list_add(nxdinfo->nxdentries, entry);
+		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
+		    $$ = nxdinfo;
 		  }
 ;
 
@@ -720,7 +767,7 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.32 ALPHA, June 22, 2000\n"
+  printf("McStas version 1.33A, July 6, 2000\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-2000\n"
 	  "All rights reserved\n");
   exit(0);
@@ -952,6 +999,34 @@ check_instrument_formals(List formallist, char *instrname)
   symtab_free(formals, NULL);
 }
 
+/*******************************************************************************
+* Check that the parameters of NXDICT declarations are valid.
+*******************************************************************************/
+
+void
+check_nxdict(struct instr_def *instr)
+{
+  struct NXDinfo *nxdinfo = instr->nxdinfo;
+  struct Symtab_entry *compentry;
+  struct NXDentry *entry;
+  List_handle liter;
+
+  liter = list_iterate(nxdinfo->nxdentries);
+  while(entry = list_next(liter))
+  {
+    compentry = symtab_lookup(instr->compmap, entry->compname);
+    if(compentry == NULL)
+    {
+      print_error("Reference to undefined component instance %s "
+		  "in NXDICT declaration.\n", entry->compname);
+    } else {
+      struct comp_inst *comp = compentry->val;
+      /* ToDo: Check that entry->param is a definition, setting, or
+         output parameter of component entry->compname. */
+    }
+  }
+  list_iterate_end(liter);
+}
 
 /*******************************************************************************
 * Check the actual parameters to a component against the formal parameters.

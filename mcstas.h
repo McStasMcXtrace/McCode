@@ -7,7 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.22 2000-05-26 06:47:57 kn Exp $
+* 	$Id: mcstas.h,v 1.23 2000-07-06 12:26:50 kn Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -228,6 +228,8 @@ extern Symtab read_components;
 void check_comp_formals(List deflist, List setlist, char *compname);
 /* Check that instrument parameters are unique. */
 void check_instrument_formals(List formallist, char *instrname);
+/* Check that the parameters of NXDICT declarations are valid. */
+void check_nxdict(struct instr_def *instr);
 /* Handle assignment of actual to formal component parameters. */
 void comp_formals_actuals(struct comp_inst *comp, Symtab actuals);
 
@@ -385,20 +387,39 @@ struct instr_formal
     char *id;			  /* Parameter name */
   };
 
+/* NeXus dictionary information. NeXus is supported through the NXDICT
+* API, and only if at least one NXDICT or NXDICTFILE declaration is
+* present in the instrument. 
+*/
+struct NXDinfo
+  {
+    char *nxdfile;		/* NeXus dictionary file, or NULL */
+    List nxdentries;		/* struct NXDentry list NXDICT declarations */
+    int any;			/* True only if any NXDICT/NXDICTFILE decls. */
+  };
+/* Information from a NXDICT declaration. */
+struct NXDentry
+  {
+    char *compname;		/* Component name (1st part of NXD alias) */
+    char *param;		/* Parameter name (2nd part of NXD alias) */
+    CExp spec;			/* NXDict specification string */
+  };
+
 /* Instrument definition. */
 struct instr_def
   {
-    char *name;			/* Instrument name. */
-    char *source;		/* Name of source file for definition. */
-    struct code_block *decls;	/* Code for declarations. */
-    struct code_block *inits;	/* Code for initializations. */
-    struct code_block *finals;	/* Code for simulation end. */
-    List formals;		/* List of formal parameters. */
-    Symtab compmap;		/* Map of component names to instances. */
-    List complist;		/* List of components in declaration order. */
-    int use_default_main;	/* If set, output a main() function. */
-    int include_runtime;	/* If set, include runtime in output. */
-    int enable_trace;		/* If set, enable output of neutron traces. */
-    int portable;		/* If set, emit strictly portable ANSI C. */
-    int polarised;		/* If set, handle neutron polarisation. */
+    char *name;			/* Instrument name */
+    char *source;		/* Name of source file for definition */
+    struct code_block *decls;	/* Code for declarations */
+    struct code_block *inits;	/* Code for initializations */
+    struct code_block *finals;	/* Code for simulation end */
+    List formals;		/* List of formal parameters */
+    Symtab compmap;		/* Map of component names to instances */
+    List complist;		/* List of components in declaration order */
+    struct NXDinfo *nxdinfo;	/* NeXus dictionary declarations */
+    int use_default_main;	/* If set, output a main() function */
+    int include_runtime;	/* If set, include runtime in output */
+    int enable_trace;		/* If set, enable output of neutron traces */
+    int portable;		/* If set, emit strictly portable ANSI C */
+    int polarised;		/* If set, handle neutron polarisation */
   };
