@@ -35,7 +35,16 @@ if ($Config{'osname'} eq "MSWin32") {
     if ($failed) { 
       $failed=system('which.exe scilab.exe'); 
       $scilab = (not $failed) ? "scilab.exe" : "no";
-    } else { $scilab = "runscilab.exe"; }
+    }
+    if ($failed) { 
+      $failed=system('which.exe wscilex.exe'); 
+      $scilab = (not $failed) ? "wscilex.exe" : "no";
+    }
+    if ($failed) { 
+      $failed=system('which.exe scilab.bat'); 
+      $scilab = (not $failed) ? "scilab.bat" : "no";
+    }
+    if ($failed) { $scilab = "runscilab.exe"; }
     print STDOUT "$scilab\n";
     
     print STDOUT "Checking for Terminal: ";
