@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.18 2000-02-16 10:41:31 kn Exp $
+* 	$Id: cogen.c,v 1.19 2000-02-16 13:23:58 kn Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -306,19 +306,24 @@ cogen_comp_scope_rec(char *compname, List_handle def, List_handle set,
 		     List_handle out, void (*func)(void *), void *data)
 {
   char *par;
+  struct comp_iformal *formal;
 
   /* First get the next definition or setting parameter, if any. */
   if(def != NULL)
   {
-    par = list_next(def);
-    if(par == NULL)
+    formal = list_next(def);
+    if(formal == NULL)
       def = NULL;		/* Now finished with definition parameters. */
+    else
+      par = formal->id;
   }
   if(def == NULL && set != NULL)
   {
-    par = list_next(set);
-    if(par == NULL)
+    formal = list_next(set);
+    if(formal == NULL)
       set = NULL;		/* Now finished with setting parameters. */
+    else
+      par = formal->id;
   }
   if(def == NULL && set == NULL)
     par = list_next(out);
@@ -379,8 +384,8 @@ static void
 cogen_decls(struct instr_def *instr)
 {
   List_handle liter;		/* For list iteration. */
-  char *formal;			/* Name of formal parameter. */
-  struct instr_formal *i_formal;/* Name of formal parameter. */
+  struct comp_iformal *c_formal;/* Name of component formal input parameter */
+  struct instr_formal *i_formal;/* Name of instrument formal parameter. */
   struct comp_inst *comp;	/* Component instance. */
   
   /* 1. Function prototypes. */
@@ -433,11 +438,11 @@ cogen_decls(struct instr_def *instr)
     {				/* (The if avoids a redundant comment.) */
       coutf("/* Definition parameters for component '%s'. */", comp->name);
       liter2 = list_iterate(comp->def->def_par);
-      while(formal = list_next(liter2))
+      while(c_formal = list_next(liter2))
       {
-	struct Symtab_entry *entry = symtab_lookup(comp->defpar, formal);
+	struct Symtab_entry *entry = symtab_lookup(comp->defpar, c_formal->id);
 	char *val = exp_tostring(entry->val);
-	coutf("#define %sc%s_%s %s", ID_PRE, comp->name, formal, val);
+	coutf("#define %sc%s_%s %s", ID_PRE, comp->name, c_formal->id, val);
 	str_free(val);
       }
       list_iterate_end(liter2);
@@ -446,9 +451,9 @@ cogen_decls(struct instr_def *instr)
     {
       coutf("/* Setting parameters for component '%s'. */", comp->name);
       liter2 = list_iterate(comp->def->set_par);
-      while(formal = list_next(liter2))
+      while(c_formal = list_next(liter2))
       {
-	coutf("MCNUM %sc%s_%s;", ID_PRE, comp->name, formal);
+	coutf("MCNUM %sc%s_%s;", ID_PRE, comp->name, c_formal->id);
       }
       list_iterate_end(liter2);
     }
@@ -516,7 +521,7 @@ cogen_init(struct instr_def *instr)
   while((comp = list_next(liter)) != NULL)
   {
     List_handle setpar;
-    char *par;
+    struct comp_iformal *par;
 
     coutf("  /* Initializations for component %s. */", comp->name);
     /* Initialization of the component setting parameters. */
@@ -526,9 +531,9 @@ cogen_init(struct instr_def *instr)
       char *val;
       struct Symtab_entry *entry;
 
-      entry = symtab_lookup(comp->setpar, par);
+      entry = symtab_lookup(comp->setpar, par->id);
       val = exp_tostring(entry->val);
-      coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par, val);
+      coutf("  %sc%s_%s = %s;", ID_PRE, comp->name, par->id, val);
       str_free(val);
     }
     list_iterate_end(setpar);

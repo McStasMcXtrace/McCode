@@ -7,7 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.20 2000-02-15 07:56:42 kn Exp $
+* 	$Id: mcstas.h,v 1.21 2000-02-16 13:23:51 kn Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -342,6 +342,14 @@ struct code_block
   };
 
 
+/* Component formal input parameters. */
+struct comp_iformal
+  {
+    char *id;			/* Parameter name */
+    int isoptional;		/* True if default value is available */
+    CExp default_value;		/* Default value is isoptional is true */
+  };
+
 /* Component definitions. */
 struct comp_def
   {
@@ -354,7 +362,6 @@ struct comp_def
     struct code_block *finally_code; /* Code for simulation end. */
     struct code_block *mcdisplay_code; /* Code for drawing components. */
   };
-
 
 /* Component instance. */
 struct comp_inst
