@@ -12,7 +12,7 @@
 #
 
 # Create temporary workdir:
-TMPDIR=`mktemp -d`
+TMPDIR='..'
 PW=`pwd`
 DIST=$TMPDIR/mcstas-$1
 
@@ -50,7 +50,7 @@ cd ..
 tar cfz $PW/../mcstas-$1.tar.gz mcstas-$1
 
 # Remove temporary dir
-rm -rf $TMPDIR
+# rm -rf $TMPDIR
 
 echo Your mcstas dist package is placed in ../mcstas-$1.tar.gz
 
