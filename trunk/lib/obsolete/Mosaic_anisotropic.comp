@@ -11,7 +11,7 @@
 *
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -217,7 +217,7 @@ TRACE
           vx = K2V*(kix+q_x);
           vy = K2V*(kiy+q_y);
           vz = K2V*(kiz+q_z);
-          p *= p_reflect/(total*GAUSS(phi,0,ds_factor*mos_rms_max));
+          p *= p_reflect/(total*GAUSS(phi,0,mos_sample));
           SCATTER;
         } /* End MC choice to reflect or transmit neutron */
       } /* End bragg scattering possible */
