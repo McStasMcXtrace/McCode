@@ -6,8 +6,8 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.8 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.9 $
+* Origin: McStas 1.5 (Obsolete)
 *
 * Spherical position-sensitive detector with logarithmic scale.
 *
@@ -50,6 +50,9 @@ DECLARE
 INITIALIZE
 %{
   int i,j;
+  
+  fprintf(stderr,"PSD_monitor_4PI_log: this component is OBSOLETE (not maintained)\n");
+  fprintf(stderr,"PSD_monitor_4PI_log: rather use monitors/Monitor_nD\n");
 
   for (i=0; i<nx; i++)
     for (j=0; j<ny; j++) 

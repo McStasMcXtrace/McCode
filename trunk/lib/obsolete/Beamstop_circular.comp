@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: January 2000
-* Version: $Revision: 1.5 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.6 $
+* Origin: McStas 1.5 (Obsolete)
 *
 * Circular beam stop.
 *
@@ -26,6 +26,12 @@ DEFINE COMPONENT Beamstop_circular
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=0.1)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+INITIALIZE
+%{
+  fprintf(stderr,"Beamstop_circular: this component is OBSOLETE (not maintained)\n");
+  fprintf(stderr,"Beamstop_circular: rather use optics/Beamstop\n");
+%}
 
 TRACE
 %{

@@ -1,18 +1,19 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Curved_Monochromator.comp
+* McStas, the neutron ray-tracing package: Monochromator_curved.comp
 *         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Curved_Monochromator
+* Component: Monochromator_curved
 *
 * %I
 *
 * Written by: Emmanuel Farhi
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.1 $
 * Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a>
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
 *                                  by Kristian Nielsen and Peter Link
+* Modified by: EF, Feb 13th 2002: Read reflectivity table
 *
 * Double bent multiple crystal slabs with anisotropic gaussian mosaic.
 * 
@@ -26,15 +27,15 @@
 * the y-z plane (ie. parallel to the beam). The component also works in
 * transmission.
 * When curvatures are set to 0, the monochromator is flat. 
-* The curvatures approximation for focusing to distance L, with
+* The curvatures approximation for parallel beam focusing to distance L, with
 * monochromator rotation angle A1 are:
-*   RM = fabs(yheight/NV*RAD2DEG/(2*L*sin(DEG2RAD*A1)));
-*   RH = fabs(zwidth/NH*RAD2DEG*sin(DEG2RAD*A1)/(2*L));
+*   RV = 2*L*sin(DEG2RAD*A1);
+*   RH = 2*L/sin(DEG2RAD*A1);
 *
 * When you rotate the component by A1 = asin(Q/2/Ki)*RAD2DEG, do not forget to 
 * rotate the following components by A2=2*A1 (for 1st order) !
 *
-* Example: Curved_Monochromator(zwidth=0.01, yheight=0.01, gap=0.0005, 
+* Example: Monochromator_curved(zwidth=0.01, yheight=0.01, gap=0.0005, 
 *           NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
 *
 * Example values for lattice parameters
@@ -69,6 +70,7 @@
 * mosaic:  sets mosaich=mosaicv (arc minutes)
 * width:   total width of monochromator (m)
 * height:  total height of monochromator (m)
+* verbose: verbosity level (0/1)
 *
 * %Link 
 * <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00031.html">Additional note</a> from Peter Link.
@@ -78,10 +80,10 @@
 * %End
 *******************************************************************************/
 
-DEFINE COMPONENT Curved_Monochromator
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0,ywidth=0)
-OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight)
+DEFINE COMPONENT Monochromator_curved
+DEFINITION PARAMETERS (file=0)
+SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
+OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
@@ -105,6 +107,162 @@ SHARE
 #define GAUSS(x,mean,rms) \
   (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
 #endif
+
+#ifndef Read_Table_Present
+#define Read_Table_Present
+
+  typedef struct struct_table
+  {
+    char    filename[128];
+    char   *header;
+    double *data; /* vector { x[0], y[0], ... x[n-1], y[n-1]... } */
+    double  min_x;
+    double  max_x;
+    double  step_x;
+    int     rows;
+    int     columns;
+  } t_Table;
+
+  t_Table Read_Table(char *File)
+  { /* reads pLength values in 'file' and returns a Table structure  */
+    
+    FILE *hfile;             /* id for data file */
+    char  line[1024];
+    char *Header;
+    long  line_count_in_file  = 0;
+    long  count_in_array      = 0;
+    long  count_in_header     = 0;
+    long  Rows, Columns;
+    long  malloc_size         = 128;
+    long  malloc_size_h       = 1024;
+    char  flag_exit_loop      = 0;
+    char  flag_in_array       = 0;
+    double *Table;
+    double X;
+    t_Table sTable;
+    
+    sTable.data    = NULL;
+    sTable.rows    = 0;
+    sTable.columns = 0;
+    
+    hfile = fopen(File, "r");
+    if(!hfile)
+    {
+       fprintf(stderr, "Error: Read_Table : could not open input file '%s'\n", File);
+       return (sTable);
+    }
+    Header = (char*)  malloc(malloc_size_h*sizeof(char));
+    Table  = (double*)malloc(malloc_size  *sizeof(double));
+    if ((Header == NULL) || (Table == NULL))
+    {
+       fprintf(stderr, "Error: Read_Table : could not alloc Table and Header\n");
+       
+       return (sTable);
+    }
+    strcpy(Header, "");
+    Rows = 0;
+
+    while (!flag_exit_loop)
+    {
+      if (fgets(line, 1024, hfile) != NULL)
+      { /* tries to read some informations */
+        line_count_in_file++;
+        if ((line[0] == '#') || (line[0] == '%') || (line[0] == ';'))
+        { 
+          count_in_header += strlen(line);
+          if (count_in_header+1024 > malloc_size_h)
+          { /* if succeed and in array : add (and realloc if necessary) */
+            malloc_size_h = count_in_header+1024;
+            Header     = (char*)realloc(Header, malloc_size_h*sizeof(char));
+          }
+          strcat(Header, line); 
+        } /* line is a comment */
+        else
+        {
+          /* get the number of columns splitting line with strtok */
+          if (sscanf(line,"%lg ",&X) == 1) /* line begins at least with one num */
+          { 
+            char  *InputTokens, *lexeme, EndFlag;
+            int    carg;
+            
+            InputTokens = line;
+            EndFlag = 0;
+            Columns    = 0;
+            while ((EndFlag == 0) && (Columns < 128))
+            {
+              lexeme = (char *)strtok(InputTokens, " ,;");
+              InputTokens = NULL;
+              if ((lexeme != NULL) && (strlen(lexeme) != 0)) 
+              {
+                if (sscanf(lexeme,"%lg ",&X) == 1)
+                {
+                  Table[count_in_array]     = X;
+                  count_in_array++;
+                  Columns++;
+                }
+                else EndFlag = 1; /* token is not numerical */
+              }
+              else EndFlag = 1;   /* no more tokens in line */
+            }
+            Rows++;               /* this is the number of Rows (1-n) */
+            if (count_in_array+128 > malloc_size)
+            { /* if succeed and in array : add (and realloc if necessary) */
+              malloc_size += 128;
+              Table     = (double*)realloc(Table, malloc_size*sizeof(double));
+            }
+          } /* else if does not succeed : skip line (not in array and not a comment...) */
+        } /* end: if not line comment else numerical */
+      } /* end: if fgets */
+      else flag_exit_loop = 1; /* else fgets : end of file */
+    } /* end while flag_exit_loop */
+    
+    if (Rows * Columns != count_in_array) 
+    {
+      fprintf(stderr, "Warning: Read_Table : file '%s' has %i values that should be %i x %i\n", File, count_in_array, Rows, Columns);
+    }
+    
+    fclose(hfile); 
+    strcpy(sTable.filename,   file);
+    sTable.header       = Header;
+    sTable.data         = Table; 
+    sTable.rows         = Rows;
+    sTable.columns      = Columns;
+    sTable.min_x        = Table[0];
+    sTable.max_x        = Table[(Rows-1)*(Columns-1)];
+    if (Rows != 0) sTable.step_x = (sTable.max_x - sTable.min_x)/Rows;
+    else sTable.step_x = 0;
+      
+    return(sTable);
+  } /* end Read_Table */
+  
+  double Table_Index(t_Table Table, long i, long j)
+  {
+    long AbsIndex;
+    
+    if (i < 0)        i = 0;
+    if (i >= Table.rows)    i = Table.rows-1;
+    if (j < 0)        j = 0;
+    if (j >= Table.columns) j = Table.columns-1;
+    AbsIndex = i*(Table.columns)+j;
+    if (Table.data != NULL)
+      return(Table.data[AbsIndex]);
+    else
+      return(0);
+  }
+  
+  double Table_Value(t_Table Table, double X, long j)
+  {
+    long   Index;
+    double Value;
+    
+    if (Table.step_x != 0)
+      Index = floor((X - Table.min_x)/Table.step_x);
+    else Index=0;
+    Value = Table_Index(Table, Index, j);
+    
+    return(Value);
+  }
+#endif
 %}
 
 DECLARE
@@ -114,13 +272,11 @@ DECLARE
   double mos_rms_max;
   double mono_Q;
   double SlabWidth, SlabHeight;
+  t_Table rTable;
 %}
 
 INITIALIZE
 %{
-  fprintf(stderr,"Curved_Monochromator: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Curved_Monochromator: rather use optics/Monochromator_curved\n");
-  
   if (mosaic != 0) {
     mos_rms_y = MIN2RAD*mosaic/sqrt(8*log(2));
     mos_rms_z = mos_rms_y; }
@@ -132,10 +288,17 @@ INITIALIZE
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
   
-  if (mono_Q == 0) { fprintf(stderr,"Curved_Monochromator: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
-  if (r0 == 0) { fprintf(stderr,"Curved_Monochromator: %s: Error reflectivity r0 is null\n", NAME_CURRENT_COMP); exit(-1); }
+  if (file != NULL)
+  {
+    rTable = Read_Table(file);
+    fprintf(stdout, "Monochromator_curved : %s : Reflectivity file '%s' is %i x %i\n", NAME_CURRENT_COMP, file, rTable.rows, rTable.columns);
+    fprintf(stdout, "Monochromator_curved : %s : k range %f-%f, step=%f\n", NAME_CURRENT_COMP,  rTable.min_x, rTable.max_x, rTable.step_x);
+    r0 = 0.99;
+  } else rTable.data = NULL;
   
-  if (ywidth != 0) yheight = ywidth;  /* compatibility with Mon_2foc */
+  if (mono_Q == 0) { fprintf(stderr,"Monochromator_curved: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
+  if (r0 == 0) { fprintf(stderr,"Monochromator_curved: %s: Error reflectivity r0 is null\n", NAME_CURRENT_COMP); exit(-1); }
+  if (NH*NV == 0) { fprintf(stderr,"Monochromator_curved: %s: no slabs ??? (NH or NV=0)\n", NAME_CURRENT_COMP); exit(-1); }
   
   if (width == 0) SlabWidth = zwidth;
   else SlabWidth = (width+gap)/NH - gap;
@@ -154,6 +317,7 @@ TRACE
   double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
   double delta,p_reflect,total,c1x,c1y,c1z,width,ds_factor, tmp;
   int i;
+  double my_r0;
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0)
   {                             /* Moving towards crystal? */
@@ -220,11 +384,28 @@ TRACE
         theta = asin(q0/(2*k)); /* Actual bragg angle */
         /* Make MC choice: reflect or transmit? */
         delta = asin(fabs(kux)) - theta;
-        p_reflect = fabs(r0)*exp(-kiz*kiz/(kiy*kiy + kiz*kiz)*(delta*delta)/
+        
+        if (rTable.data != NULL)
+        {
+          my_r0 = Table_Value(rTable, k, 1); /* 2nd column */
+        }
+        else my_r0 = r0;
+        if (my_r0 >= 1) 
+        {
+          fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 0.99\n", my_r0);
+          my_r0=0.99;
+        }
+        if (my_r0 < 0) 
+        {
+          fprintf(stdout, "Warning: Monochromator_curved : raised reflectivity from %f to 0\n", my_r0);
+          my_r0=0;
+        }
+        
+        p_reflect = fabs(my_r0)*exp(-kiz*kiz/(kiy*kiy + kiz*kiz)*(delta*delta)/
                            (2*mos_rms_y*mos_rms_y))*
                        exp(-kiy*kiy/(kiy*kiy + kiz*kiz)*(delta*delta)/
                            (2*mos_rms_z*mos_rms_z));
-
+        
         tmp = rand01();
         if(tmp <= p_reflect)
         {                       /* Reflect */
@@ -280,7 +461,7 @@ TRACE
           y = y1;
           z = z1;
           t = t1;
-          SCATTER;
+
           vxp = K2V*(kix+q_x);
           vyp = K2V*(kiy+q_y);
           vzp = K2V*(kiz+q_z);
@@ -296,6 +477,15 @@ TRACE
       } /* End bragg scattering possible (if order) */
     } /* End intersect the crystal (if z1) */
   } /* End neutron moving towards crystal (if vx)*/
+%}
+
+FINALLY
+%{
+  if (rTable.data != NULL)
+  {
+    free(rTable.header);
+    free(rTable.data);
+  }
 %}
 
 MCDISPLAY

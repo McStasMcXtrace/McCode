@@ -772,11 +772,45 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
   double Psum, P2sum;
   char *pre;
   int do_errb = p0 && p2;
+  double sum_xy  = 0;
+  double sum_y   = 0;
+  double sum_x   = 0;
+  double sum_x2y = 0;
+  double min_y   = 0;
+  double max_y   = 0;
+  double fmon=0, smon=0, mean_y=0;
 
   /* Write data set information to simulation description file. */
   mcsiminfo_out("\nbegin data\n");
   mcdatainfo_out_1D("  ", mcsiminfo_file, t, xl, yl, xvar, x1, x2,
 		    n, f, c, do_errb);
+  /* ADD: E. Farhi Feb 18th, 2002 compute statistics (min/max/variance/center... */
+  min_y   = p1[0];
+  max_y   = min_y;
+  for(i = 0; i < n; i++)
+  {
+    double x,y; 
+    x = x1 + (i + 0.5)/n*(x2 - x1);
+    y = p1[i];
+    sum_xy += x*y;
+    sum_x += x;
+    sum_y += y;
+    sum_x2y += x*x*y;
+    if (y > max_y) max_y = y;
+    if (y < min_y) min_y = y;
+  }
+  if (sum_y)
+  {
+    fmon = sum_xy/sum_y; 
+    smon = sqrt(sum_x2y/sum_y-fmon*fmon);
+    mean_y = sum_y/n;
+  }
+  if (sum_y)
+  {
+    mcsiminfo_out("  statistics: Sum=%.3g, X0=%.3g, dX=%.3g\n", sum_y, fmon, smon);
+  }
+  else
+    mcsiminfo_out("  statistics: Sum=0\n");      
   /* Loop over array elements, computing total sums and writing to file. */
   Nsum = Psum = P2sum = 0;
   pre = "";
@@ -795,7 +829,15 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
     mcruninfo_out("# ", outfile);
     mcdatainfo_out_1D("# ", outfile, t, xl, yl, xvar, x1, x2,
 		      n, f, c, do_errb);
+    if (sum_y)
+    {
+      fprintf(outfile, "# statistics: Min_y=%g, Max_y=%g, Mean_y= %g\n", min_y, max_y, mean_y);
+      fprintf(outfile, "# statistics: Sum_y=%g, X0=%g, dX=%g\n", sum_y, fmon, smon);
+    }
+    else
+      fprintf(outfile, "# statistics: Sum_y=0\n");
   }
+  
   for(i = 0; i < n; i++)
   {
     if(outfile)
@@ -830,11 +872,59 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
   double Psum, P2sum;
   char *pre;
   int do_errb = p0 && p2;
+  double sum_xz  = 0;
+  double sum_yz  = 0;
+  double sum_z   = 0;
+  double sum_y   = 0;
+  double sum_x   = 0;
+  double sum_x2z = 0;
+  double sum_y2z = 0;
+  double min_z   = 0;
+  double max_z   = 0;
+  double fmon_x=0, smon_x=0, fmon_y=0, smon_y=0, mean_z=0;
+
 
   /* Write data set information to simulation description file. */
   mcsiminfo_out("\nbegin data\n");
   mcdatainfo_out_2D("  ", mcsiminfo_file,
 		    t, xl, yl, x1, x2, y1, y2, m, n, f, c);
+  /* ADD: E. Farhi Feb 18th, 2002 compute statistics (min/max/variance/center... */
+  min_z   = p1[0];
+  max_z   = min_z;
+  for(j = 0; j < n; j++)
+  {
+    for(i = 0; i < m; i++)
+    {
+      double x,y,z; 
+      x = x1 + (i + 0.5)/m*(x2 - x1);
+      y = y1 + (j + 0.5)/n*(y2 - y1);
+      z = p1[i*n + j];
+      sum_xz += x*z;
+      sum_yz += y*z;
+      sum_x += x;
+      sum_y += y;
+      sum_z += z;
+      sum_x2z += x*x*z;
+      sum_y2z += y*y*z;
+      if (z > max_z) max_z = z;
+      if (z < min_z) min_z = z;
+    }
+  }
+  if (sum_z)
+  {
+    fmon_x = sum_xz/sum_z; 
+    fmon_y = sum_yz/sum_z;
+    smon_x = sqrt(sum_x2z/sum_z-fmon_x*fmon_x);
+    smon_y = sqrt(sum_y2z/sum_z-fmon_y*fmon_y);
+    mean_z = sum_z/n;
+  }
+  if (sum_z)
+  {
+    mcsiminfo_out("  statistics: X0=%.3g, dX=%.3g, Y0=%.3g, dY=%.3g\n", fmon_x, smon_x, fmon_y, smon_y);
+  }
+  else
+    mcsiminfo_out("  statistics: Sum=0\n");      
+  
   /* Loop over array elements, computing total sums and writing to file. */
   Nsum = Psum = P2sum = 0;
   pre = "";
@@ -853,6 +943,14 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
     mcruninfo_out("# ", outfile);
     mcdatainfo_out_2D("# ", outfile,
 		      t, xl, yl, x1, x2, y1, y2, m, n, f, c);
+    if (sum_z)
+    {
+      fprintf(outfile, "# statistics: Min_z=%g, Max_z=%g, Mean_z= %g, Sum_z=%g\n", min_z, max_z, mean_z, sum_z);
+      fprintf(outfile, "# statistics: X0=%g, dX=%g, Y0=%g, dY=%g\n", fmon_x, smon_x, fmon_y, smon_y);
+    }
+    else
+      fprintf(outfile, "# statistics: Sum_y=0\n");
+
   }
   /* data output */
   for(j = 0; j < n; j++)
@@ -1872,7 +1970,7 @@ void sighandler(int sig)
     case SIGURG  : printf(" SIGURG (urgent socket condition)"); break;
     default : break;
   }
-  printf("\n");
+  printf(". Errno=%i\n", errno);
   printf("# Simulation: %s (%s)\n", mcinstrument_name, mcinstrument_source);
   printf("# Breakpoint: %s ", mccomp_curname);
   if (mcget_ncount() == 0)

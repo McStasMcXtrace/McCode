@@ -1,9 +1,10 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Powder_filter.comp
+* McStas, the neutron ray-tracing package: Filter_powder.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*         Institut laue langevin, Grenoble, France
 *
-* Component: Powder_filter
+* Component: Filter_powder
 *
 * %I
 * Written by: <a href="mailto:benjamin.fortescue@oriel.ox.ac.uk">B. Fortescue</a>
@@ -29,7 +30,7 @@
 *
 * EXAMPLE:
 * You may use something like:
-*     Powder_filter(
+*     Filter_powder(
 *      ax=2.714, by=2.714, cz=4.405, cc=120,
 *      sigma_a = 0.0156,
 *      reflections="BeO.dat")
@@ -67,7 +68,7 @@
 *
 *******************************************************************************/
 
-DEFINE COMPONENT Powder_filter
+DEFINE COMPONENT Filter_powder
 DEFINITION PARAMETERS (reflections)
 SETTING PARAMETERS (xmin =-0.05 , xmax = 0.05, ymin = -0.05, ymax = 0.05,
      zmin = -0.05, zmax = 0.05,
@@ -140,7 +141,7 @@ DECLARE
     f = fopen(file, "r");
     if(!f)
     {
-      fprintf(stderr, "Powder_filter: Error: file '%s' cannot be opened.\n",
+      fprintf(stderr, "Filter_powder: Error: file '%s' cannot be opened.\n",
               file);
       exit(1);
     }
@@ -160,7 +161,7 @@ DECLARE
         fgets(Buffer, 1024, f);
         /* 
         fprintf(stderr,
-                "Powder_filter: Ignore line %d in file '%s'\n",
+                "Filter_powder: Ignore line %d in file '%s'\n",
                 i+1, file);
         fprintf(stderr,
                 "              : %s\n", Buffer); */
@@ -185,13 +186,13 @@ DECLARE
       }
     }
     fclose(f);
-    printf("Powder_filter: Read %d reflections from file '%s'\n", i, file);
+    printf("Filter_powder: Read %d reflections from file '%s'\n", i, file);
     info->list = list;
     info->count = i;
     info->tau_list = malloc(i*sizeof(*info->tau_list));
     if(!info->tau_list)
     {
-      fprintf(stderr, "Powder_filter: Error: Out of memory!\n");
+      fprintf(stderr, "Filter_powder: Error: Out of memory!\n");
       exit(1);
     }
   }
@@ -288,9 +289,6 @@ INITIALIZE
   double tmp_x, tmp_y, tmp_z;
   int i;
   double as, bs, cs;
-  
-  fprintf(stderr,"Powder_filter: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Powder_filter: rather use optics/Filter_powder\n");
   
   if (aa*bb*cc != 0)
   {

@@ -8,7 +8,7 @@
 *
 * Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 07 March 2000
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
 *
 * Curved linear 1D MSGC PSD
@@ -72,6 +72,10 @@ DECLARE
 INITIALIZE
 %{
   int i;
+  
+  fprintf(stderr,"PSD_curved: this component is OBSOLETE (not maintained)\n");
+fprintf(stderr,"PSD_curved: rather use monitors/Monitor_nD\n");
+
   alpha=period*pitch/360.0*PI;
   R1=radius/cos(alpha);	
   for (i=0; i<nd; i++)
@@ -201,7 +205,7 @@ TRACE
 	/*
 	printf("Trajectory in gap %lfmm (%lf microsecs), ",l_full*1000,t3*1000000);
     	*/
-    	eff=1.0-exp(-0.07417*pdet*l_full*100.0*VL/v);
+    	eff=1.0-exp(-0.07417*pdet*l_full*100.0*VL/v); /*  VL  = 1e10*HBAR*2*PI/MNEUTRON; */
     	dt = (t3) * -log(rand01()*(eff)+1.0-eff);/* + t0*/
 	/*
 	printf("efficiency %lf percent, capture after %lfmm\n",eff*100,dt*v*1000);

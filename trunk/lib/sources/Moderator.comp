@@ -8,7 +8,7 @@
 * %I
 * Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: McStas 1.5
 *
 * A simple pulsed source for time-of-flight.

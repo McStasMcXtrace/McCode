@@ -6,7 +6,7 @@
 *
 *	Author: K.N.			Aug  7, 1997
 *
-*	$Id: cexp.c,v 1.7 2003-01-20 16:03:33 pkwi Exp $
+*	$Id: cexp.c,v 1.8 2003-01-21 07:50:44 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.6  2000/07/27 09:04:59  kn

@@ -8,8 +8,8 @@
 *
 * Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 07 March 2000
-* Version: $Revision: 1.1 $
-* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
+* Version: $Revision: 1.2 $
+* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>) (Obsolete)
 *
 * Entry window of a curved linear gaschamber PSD
 *
@@ -70,6 +70,9 @@ INITIALIZE
   my_a_v = sigma_a/Vc*2200;           /* Is not yet divided by v */
   my_s_v2 = PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q);  
   q_v = q*K2V;
+  
+  fprintf(stderr,"PSD_bidim: this component is OBSOLETE (not maintained)\n");
+
 %}
 TRACE
 %{

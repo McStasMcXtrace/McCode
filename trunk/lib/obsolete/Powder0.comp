@@ -8,8 +8,8 @@
 *
 * Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 08 March 2000
-* Version: $Revision: 1.1 $
-* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
+* Version: $Revision: 1.2 $
+* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>) (Obsolete)
 *
 * General powder sample in incoherent scattering cylindrical can
 *
@@ -97,6 +97,10 @@ DECLARE
 %}
 INITIALIZE
 %{
+
+  fprintf(stderr,"Powder0: this component is OBSOLETE (not maintained)\n");
+  fprintf(stderr,"Powder0: rather use samples/Powder1\n");
+    
 	V_rho    =(2.0 * V_pack/(3.024*3.024*3.024)); /* Density of atoms (AA-3) */
 	V_my_s   =(V_rho * 100.0 * V_sigma_i);
 	V_my_a_v =(V_rho * 100.0 * V_sigma_a * 2200.0);

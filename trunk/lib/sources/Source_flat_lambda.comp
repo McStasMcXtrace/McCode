@@ -3,12 +3,15 @@
 * McStas, the neutron ray-tracing package: Source_flat_lambda.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Source_flat_lambda
+*
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: 1999
-* Version: $Revision: 1.6 $
-* Origin: McStas 1.5.1
-* Modified by: Kim Lefmann, October 8, 2001
+* Version: $Revision: 1.7 $
+* Origin: McStas release 1.5.1
+* Modified by: KN, 1999 from Source_flat.comp
+* Modified by: KL, October 8, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001
 *
 * Neutron source with flat wavelength spectrum and arbitrary flux.
@@ -83,43 +86,3 @@ MCDISPLAY
 %}
 
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

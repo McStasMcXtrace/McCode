@@ -1,3 +1,16 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Mosaic_anisotropic.comp
+*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Library: vitess-lib.c
+*
+* This file is to be imported by the mcstas2vitess perl script 
+* It handles the way Vitess parses parameters. 
+* Other functions are imported in the Virtual_imput and Virtual_output
+* components.
+*******************************************************************************/
+
 #include "vitess-lib.h"
 
 /* Convert McStas state parameters to VITESS Neutron structure. In

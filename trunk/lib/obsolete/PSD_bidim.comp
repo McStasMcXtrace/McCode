@@ -6,13 +6,15 @@
 *
 * Component: PSD_bidim
 *
+* %I
 * Written by: KL,  Feb 3, 1998 (PSD_monitor.comp)
-* Rewritten by: Thomas Hansen, ILL Grenoble, France, 1999
-*	Output modified
+* Modified by: Thomas Hansen, ILL Grenoble, France, 1999: 	Output modified
 *
+* %D
 * An (n times m) pixel PSD monitor. This component may also be used as a beam
 * detector.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:     Lower x bound of detector opening (m)
@@ -29,6 +31,7 @@
 * PSD_p:    Array of neutron weight counts
 * PSD_p2:   Array of second moments
 *
+* %E
 *******************************************************************************/
 
 
@@ -46,6 +49,9 @@ DECLARE
 INITIALIZE
   %{
     int i,j;
+    
+    fprintf(stderr,"PSD_bidim: this component is OBSOLETE (not maintained)\n");
+    fprintf(stderr,"PSD_bidim: rather use monitors/Monitor_nD\n");
 
     for (i=0; i<nx; i++)
      for (j=0; j<ny; j++) 

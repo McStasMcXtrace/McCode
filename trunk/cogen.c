@@ -6,7 +6,7 @@
 *
 *         Author: K.N.                        Aug 20, 1997
 *
-*         $Id: cogen.c,v 1.28 2003-01-20 16:03:33 pkwi Exp $
+*         $Id: cogen.c,v 1.29 2003-01-21 07:50:44 pkwi Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -420,7 +420,7 @@ cogen_comp_decls_doit(void *arg)
   if (comp->def->comp_inst_number < 0)
   {
     coutf("/* Shared user declarations for all components '%s'. */", comp->def->name);
-    codeblock_out(comp->def->uniq_code);
+    codeblock_out(comp->def->share_code);
     comp->def->comp_inst_number *= -1;  /* will not be included anymore */
   }
   /* Output the user declaration code block. */
@@ -996,10 +996,10 @@ cogen_trace(struct instr_def *instr)
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     }
-    if(list_len(comp->postcode->lines) > 0)
+    if(list_len(comp->extend->lines) > 0)
     {
       coutf("/* post '%s' component code */",comp->name);
-      codeblock_out(comp->postcode);
+      codeblock_out(comp->extend);
     }
     if(comp->def->polarisation_par)
     {

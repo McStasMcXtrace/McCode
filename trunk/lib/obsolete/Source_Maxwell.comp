@@ -8,7 +8,7 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a> and KL.
 * Date: 22 Jan 2001
 * Version: 0.1
-* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL (France)</a>
+* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL (France)</a> (Obsolete)
 * Modified by: KN, 1998 from Source_flat.comp
 * Modified by: EF, 2000 from Convert_FlatE_2_Maxwell by Thomas hansen
 * Modified by: EF, KL, 2001 correct focusing pb with KL method
@@ -63,6 +63,9 @@ DECLARE
 INITIALIZE
 %{
   double factor, delta_lambda, source_area, k;
+  
+  fprintf(stderr,"Source_Maxwell: this component is OBSOLETE and produces wrong results\n");
+  fprintf(stderr,"Source_Maxwell: rather use sources/Source_Maxwell_3 or Source_gen\n");
 
   source_area = h*w*1e4; /* cm^2 */
   p_in = flux/mcget_ncount()*source_area;

@@ -8,7 +8,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: McStas 1.5
 *
 * Monitor that detects ALL non-absorbed neutrons.
