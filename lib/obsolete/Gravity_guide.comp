@@ -1,17 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Per-Olof Astrand and Kim Lefmann,
+* McStas, the neutron ray-tracing package: Gravity_guide.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KL
+* Written by: Kim Lefmann
 * Date: November 22 2000
-* Version: $Revision: 1.3 $
-* Origin: McStas 1.4.1
-* Modified by: KL, March 15, 2001
-* Modified by: POA, March 15, 2001; small changes of documentation
-* Modified by: POA, March 16, 2001; protected G
+* Version: $Revision: 1.4 $
+* Origin: McStas 1.4.2
 *
 * Neutron guide with gravity.
 * To do: information about gravity should be included in the kernel.
@@ -49,6 +45,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc, alpha, m, W)
 OUTPUT PARAMETERS (ww,hh,whalf,hhalf,lwhalf,lhhalf,G)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE 
 %{
