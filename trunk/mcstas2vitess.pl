@@ -67,7 +67,7 @@ sub make_instr_file {
     }
 
     print $F <<INSTR_END;
-DEFINE INSTRUMENT V_sample()
+DEFINE INSTRUMENT $comp_name()
 DECLARE
 %{
 /* Component parameters. */
