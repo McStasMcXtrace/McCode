@@ -1,27 +1,7 @@
 #! /usr/bin/perl -w
-#
-# Generates HTML documentation from McStas component/instrument files
-#
-#   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2003, All rights reserved
-#   Risoe National Laborartory, Roskilde, Denmark
-#   Institut Laue Langevin, Grenoble, France
-#
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; either version 2 of the License, or
-#   (at your option) any later version.
-#
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 use FileHandle;
+use File::Basename;
 use Config;
 
 # Determine the path to the McStas system directory. This must be done
@@ -59,13 +39,16 @@ my $is_forced     = 0; # true when force re-writting of existing HTML
 sub show_header {
     my ($d) = @_;
     my ($i);
-    print "######## Component: $d->{'name'} #####################\n";
+    print "######## $d->{'type'}: $d->{'name'} #####################\n";
+    if ($d->{'type'} eq "Instrument") {
+      print "[Site]:   $d->{'site'}\n";
+    }
     print "[Author]: $d->{'identification'}{'author'}\n";
     print "[Origin]: $d->{'identification'}{'origin'}\n";
-    print "[Date]: $d->{'identification'}{'date'}\n";
-    print "[Version]: $d->{'identification'}{'version'}\n";
+    print "[Date]:   $d->{'identification'}{'date'}\n";
+    print "[Version]:$d->{'identification'}{'version'}\n";
     for $i (@{$d->{'identification'}{'history'}}) {
-        print "[Modified by]: $i\n";
+       print "[Modified by]: $i\n";
     }
     print "\n";
     print $d->{'identification'}{'short'};
@@ -86,18 +69,20 @@ sub show_header {
             print("<Undocumented>\n");
         }
     }
-    print "\n######## Output parameters: #############################\n";
-    for $i (@{$d->{'outputpar'}}) {
-        print "<$i>: ";
-        if($d->{'parhelp'}{$i}) {
-            print "[$d->{'parhelp'}{$i}{'unit'}] "
-                if $d->{'parhelp'}{$i}{'unit'};
-            print "$d->{'parhelp'}{$i}{'text'}"
-                if $d->{'parhelp'}{$i}{'text'};  # text finishes by \n
-            print("\n");
-        } else {
-            print("<Undocumented>\n");
-        }
+    if (@{$d->{'outputpar'}}) {
+      print "\n######## Output parameters: #############################\n";
+      for $i (@{$d->{'outputpar'}}) {
+          print "<$i>: ";
+          if($d->{'parhelp'}{$i}) {
+              print "[$d->{'parhelp'}{$i}{'unit'}] "
+                  if $d->{'parhelp'}{$i}{'unit'};
+              print "$d->{'parhelp'}{$i}{'text'}"
+                  if $d->{'parhelp'}{$i}{'text'};  # text finishes by \n
+              print("\n");
+          } else {
+              print("<Undocumented>\n");
+          }
+      }
     }
     if($d->{'description'}) {
         print "\n######## Description: ###################################\n";
@@ -116,12 +101,12 @@ sub html_main_start {
 <HTML>
 <HEAD>
    <META NAME="GENERATOR" CONTENT="McDoc">
-   <TITLE>McStas : Library components</TITLE>
+   <TITLE>McStas : Library Components/Instrument</TITLE>
 </HEAD>
 <BODY>
 
 $toolbar
-<CENTER><H1>Components for <i>McStas</i></H1></CENTER>
+<CENTER><H1>Components and Instruments from the Library for <i>McStas</i></H1></CENTER>
 
 <P> Names in <B>Boldface</B> denote components that are properly
 documented with comments in the source code.</P>
@@ -137,7 +122,11 @@ sub html_table_entry {
     print $f "<TR>\n";
     print $f "<TD> ";
     print $f "<B>" if %{$d->{'parhelp'}};
-    print $f "<A HREF=\"$bn.comp\">$d->{'name'}</A>";
+    if ($d->{'type'} eq "Instrument") {
+      print $f "$d->{'site'} <A HREF=\"$bn.$d->{'ext'}\">$d->{'name'}</A> ($d->{'path'})";
+    } else {
+      print $f "<A HREF=\"$bn.$d->{'ext'}\">$d->{'name'}</A>";
+    }
     print $f "</B>" if %{$d->{'parhelp'}};
     print $f "</TD>\n";
 
@@ -235,6 +224,7 @@ TB_END
     $n=~ s|.comp\Z||; # remove trailing extension
     $n=~ s|.cmp\Z||; # remove trailing extension
     $n=~ s|.com\Z||; # remove trailing extension
+    $n=~ s|.instr\Z||; # remove trailing extension
     $valid_name = $bn;
     if (open($f, ">$bn.html")) { # use component location
       $is_opened = 1; 
@@ -245,20 +235,30 @@ TB_END
         $valid_name = $n;
       }
     }
+    
     if ($is_single_file) { 
       $out_file = "$valid_name.html"; 
     }
+    
     if ($is_opened) {
+      
       print $f "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n";
       print $f "<HTML><HEAD>\n";
-      print $f "<TITLE>$d->{'name'}</TITLE>\n";
+      if ($d->{'type'} eq "Instrument") {
+        print $f "<TITLE>McStas: $d->{'name'} $d->{'type'} at $d->{'site'}</TITLE>\n";
+      } else {
+        print $f "<TITLE>McStas: $d->{'name'} $d->{'type'}</TITLE>\n";
+      }
       print $f "<LINK REV=\"made\" HREF=\"mailto:peter.willendrup\@risoe.dk\">\n";
       print $f "</HEAD>\n\n";
       print $f "<BODY>\n\n$toolbar\n";
-      print $f "<H1>The <CODE>$d->{'name'}</CODE> component</H1>\n\n";
+      print $f "<H1>The <CODE>$d->{'name'}</CODE> $d->{'type'}</H1>\n\n";
       print $f "$d->{'identification'}{'short'}\n\n";
       print $f "<H2><A NAME=id></A>Identification</H2>\n";
       print $f "\n<UL>\n";
+      if ($d->{'type'} eq "Instrument") {
+        print $f "  <LI> <B>Site:   $d->{'site'}</B>\n";
+      }
       print $f "  <LI> <B>Author:</B>$d->{'identification'}{'author'}</B>\n";
       print $f "  <LI> <B>Origin:</B>$d->{'identification'}{'origin'}</B>\n";
       print $f "  <LI> <B>Date:</B>$d->{'identification'}{'date'}</B>\n";
@@ -276,7 +276,7 @@ TB_END
           print $f "<H2><A NAME=desc></A>Description</H2>\n";
           print $f "\n<PRE>\n$d->{'description'}</PRE>\n";
           if ($bn =~ m/obsolete/i || $n =~ m/obsolete/i) {
-            print $f "WARNING: <B>This is an obsolete component.";
+            print $f "WARNING: <B>This is an obsolete $d->{'type'}.";
             print $f "Please avoid usage whenever possible.</B>\n";
           }
       }
@@ -286,11 +286,14 @@ TB_END
           print $f "the others are optional.\n";
       }
       gen_param_table($f, $d->{'inputpar'}, $d->{'parhelp'}); 
-      print $f "\n<H2><A NAME=opar></A>Output parameters</H2>\n";
-      gen_param_table($f, $d->{'outputpar'}, $d->{'parhelp'}); 
+      if (@{$d->{'outputpar'}}) {
+        print $f "\n<H2><A NAME=opar></A>Output parameters</H2>\n";
+        gen_param_table($f, $d->{'outputpar'}, $d->{'parhelp'}); 
+      }
       print $f "\n<H2><A NAME=links></A>Links</H2>\n\n<UL>\n";
-      print $f "  <LI> <A HREF=\"$d->{'name'}.comp\">Source code</A> ";
-      print $f "for <CODE>$d->{'name'}.comp</CODE>.\n";
+      
+      print $f "  <LI> <A HREF=\"$d->{'path'}\">Source code</A> ";
+      print $f "for <CODE>$d->{'name'}.$d->{'ext'}</CODE>.\n";
       # Additional links from component comment header go here.
       my $link;
       for $link (@{$d->{'links'}}) {
@@ -327,7 +330,6 @@ sub add_comp_html {
     my $vn;
     $vn = gen_html_description($d, $bn, $n);
     if ($f) { html_table_entry($d, $f, $bn, $vn); }
-    
 }
 
 #
@@ -341,6 +343,12 @@ sub add_comp_section_html {
     if(opendir(DIR, $sec)) {
         my @comps = readdir(DIR);
         closedir DIR;
+        if ($is_forced) {
+          # test if the given comp/instr name is an actual file name
+          if (-f "$single_comp_name") {
+            push @comps, $single_comp_name;
+          }
+        }
         return unless @comps;
         if ($filehandle) {
           print $filehandle <<END;
@@ -358,33 +366,57 @@ $header
 END
         } # end if filehandle
         my ($comp, $name);
+        my $single_comp_name_base;
+        # extract the requested comp/instr name to look for, removing possible path
+        $single_comp_name_base= basename($single_comp_name);
+        
         for $name (sort(@comps)) {
             my $comp = "$sec/$name";
-            next unless $comp =~ /^(.*)\.(com|comp|cmp)$/;
             my $does_match = 0;
-            my $basename = $1;
-            if ($single_comp_name =~ /^(.*)\.(com|comp|cmp)$/) {
-              if($name eq $single_comp_name) { $does_match = 2; }
-            } elsif ($name =~ $single_comp_name) { $does_match = 1; }
+            my $name_base;
+            my $basename;
+            next if (-d "$name"); # skip directories
+            # extract the scanned comp/instr name from lib, removing possible path
+            $name_base = basename($name);  # with extension
+            if ($single_comp_name_base =~ /^(.*)\.(com|comp|cmp|instr)$/) {
+              # requested doc name includes extension: search exact match
+              if($name_base =~ $single_comp_name_base) {
+                $does_match = 2; 
+              }
+            } elsif ($name_base =~ $single_comp_name_base) {
+              # requested doc name does not contain an extension: search all matches
+              $does_match = 1; 
+            }
+            # skip non comp/instr
+            if ($comp !~ /^(.*)\.(com|comp|cmp|instr)$/)
+            { 
+              if ($comp !~ /^(.*)\.(htm|html)$/ && $does_match) {
+                print STDOUT "mcdoc: $comp (not a component/instrument)\n";
+              }
+              next 
+            } else { $basename = $1; } # without extension 
             if (($is_single_file && $does_match) 
               || (not $is_single_file)) {
               $data = component_information($comp);
               if (not defined($data)) {
-                print STDERR "mcdoc: Failed to get information for component '$comp'";
+                print STDERR "mcdoc: Failed to get information for component/instrument '$comp'";
               } else {
                 print STDOUT "mcdoc: $comp\n";
+                if ($is_single_file) { $data->{'path'} = $comp; }
+                else { $data->{'path'} = $name; }
                 if ($is_single_file && $show_html && $browser =~ "text") {
                   show_header($data); # display single comp as text
                   if ($sec =~ m/obsolete/i) {
-                    print "WARNING: This is an obsolete component. \n";
+                    print "WARNING: This is an obsolete $data->{'type'}. \n";
                     print "         Please avoid usage whenever possible.\n";
                   }
                 } else {
                   add_comp_html($data, $filehandle, $basename, $name);
                 }
               }
-              last if $does_match == 2;
+      
             }
+            last if $does_match == 2;
         } # end for
         if ($filehandle) {
           print $filehandle <<END;
@@ -407,6 +439,9 @@ for($i = 0; $i < @ARGV; $i++) {
   # Options specific to mcdoc.
   if(/^--show$/i || /^-s$/i || /^--html$/i) {
         $show_html = 1;
+        if ($Config{'osname'} eq 'MSWin32') { $browser = "start"; } 
+        else { $browser = "netscape"; }
+        print "Your BROWSER variable is not set... Trying '$browser'\n";
   } elsif(/^--text$/i || /^-t$/i) {
         $show_html = 1; $browser = "text";
   } elsif(/^--web$/i || /^-w$/i) {
@@ -419,6 +454,7 @@ for($i = 0; $i < @ARGV; $i++) {
         $is_forced = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "Usage: mcdoc [options] <dir|file>\n";
+      print "Generate/show component/instrument documentation\n";
       print "   -f    --force   Force re-writting of existing HTML doc locally\n";
       print "   -h    --help    Show this help\n";
       print "   -l    --tools   Display the McStas tools list\n";
@@ -499,7 +535,9 @@ if (not $is_single_file) {
     $out_file = "$lib_dir/$out_file";
   }
   if (not $filehandle) {
-    if (-f "$lib_dir/$out_file") { $out_file = "$lib_dir/$out_file"; }
+    if (-f "$lib_dir/$out_file") { 
+      $out_file = "$lib_dir/$out_file";  
+    }
     elsif (not -f $out_file) {
       print STDERR "mcdoc: Could not find the $out_file library catalog.\n";
     }
@@ -509,7 +547,7 @@ if (not $is_single_file) {
 if ($use_local) {
   # define local and lib sections
   @sections = ("sources", "optics", "samples", "monitors", 
-               "misc", "contrib", "obsolete","local","data","share");
+               "misc", "contrib", "obsolete","examples","local","data","share");
   %section_headers =
     ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
      "optics" => '<B><FONT COLOR="#FF0000">Optics</FONT></B>',
@@ -518,12 +556,13 @@ if ($use_local) {
      "contrib" => '<B><FONT COLOR="#FF0000">Contributed</FONT> components</B>',
      "misc" => '<B><FONT COLOR="#FF0000">Misc</FONT></B>',
      "obsolete" => '<B><FONT COLOR="#FF0000">Obsolete</FONT> (avoid usage whenever possible)</B>',
+     "examples" => '<B><FONT COLOR="#FF0000">Instrument Examples</FONT></B>',
      "local" => '<B><FONT COLOR="#FF0000">Local components</FONT></B>',
      "data" => '<B><FONT COLOR="#FF0000">Data files</FONT></B>',
      "share" => '<B><FONT COLOR="#FF0000">Shared libraries</FONT></B>');
 } else {
   # define lib sections
-  @sections = ("sources", "optics", "samples", "monitors", "misc", "contrib");
+  @sections = ("sources", "optics", "samples", "monitors", "misc", "contrib","examples");
   %section_headers =
     ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
      "optics" => '<B><FONT COLOR="#FF0000">Optics</FONT></B>',
@@ -531,7 +570,8 @@ if ($use_local) {
      "monitors" => '<B><FONT COLOR="#FF0000">Detectors</FONT> and monitors</B>',
      "contrib" => '<B><FONT COLOR="#FF0000">Contributed</FONT> components</B>',
      "misc" => '<B><FONT COLOR="#FF0000">Misc</FONT></B>',
-     "obsolete" => '<B><FONT COLOR="#FF0000">Obsolete</FONT> (avoid usage whenever possible)</B>');
+     "obsolete" => '<B><FONT COLOR="#FF0000">Obsolete</FONT> (avoid usage whenever possible)</B>',
+     "examples" => '<B><FONT COLOR="#FF0000">Instrument Examples</FONT></B>',);
 }
 my @tblist = map "<A href=\"#$_\">$_</A>", @sections;
 my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";
@@ -553,7 +593,7 @@ if ($filehandle) {
 }
 if ($show_website) {
   if ($browser =~ "text") {
-    die "mcdoc: Set the BROWSER environment variable first\n";
+    die "mcdoc: Set the BROWSER environment variable first for <http://neutron.risoe.dk/mcstas/>\n";
   } else {
     # open the index.html
     system("$browser http://neutron.risoe.dk/mcstas/ \n");
@@ -566,8 +606,8 @@ if ($show_html && -f $out_file) {
     print "mcdoc: Starting $browser $out_file\n";
     system("$browser $out_file \n");
   } else {
-    if (not $is_single_file) { 
-      die "mcdoc: Set the BROWSER environment variable to view $out_file\n"; 
-    }
+    if ($Config{'osname'} eq 'MSWin32') { $browser = "start"; } 
+    else { $browser = "netscape"; }
+    print "Your BROWSER variable is not set... May be '$browser' ?\n";
   }
 }

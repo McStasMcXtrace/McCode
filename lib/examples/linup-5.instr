@@ -1,5 +1,51 @@
-DEFINE INSTRUMENT TAS1(PHM,TTM,TT,TTA,C1,OMC1,C2,C3)
-/* %INSTRUMENT_SITE: Risoe */
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: TAS1_Diff_Powder
+*
+* %Identification
+* Written by: A. Abrahamsen, N. B. Christensen, and E. Lauridsen
+* Date: 1998
+* Origin: Risoe
+* Release: McStas 1.1
+* Version: 0.1
+* %INSTRUMENT_SITE: Risoe
+*
+* The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
+* Laboratory used as a diffractometer for an alignment study with a
+* powder sample.
+*
+* %Description
+* This instrument is the conventional cold-source triple-axis spectrometer TAS1
+* at Risoe National Laboratory. It does not exist anymore, but was used as the
+* first detailed work performed with the McStas package.
+* Here it is used as a diffractometer for an alignment study. The 
+* sample is a powder and there is no analyzer.
+*
+* Example: mcrun linup-5.instr C1=30 
+*
+* %Parameters
+* INPUT PARAMETERS:
+* PHM: (deg) Monochromator arm angle, aka A1
+* TTM: (deg) Monochromator take-off angle, aka A2
+* TT:  (deg) Take-off angle at the sample position, aka A4
+* TTA: (deg) Take-off angle at the analyzer position, aka A6
+* C1:  (min) Collimator 1 aperture (mono-sample arm)
+* OMC1:(deg) Tilt angle of the Collimator 1
+* C2:  (min) Collimator 2 aperture (sample-ana arm)
+* C3:  (min) Collimator 3 aperture (ana-detector arm)
+*
+* %Link 
+* The McStas User manual
+* A. Abrahamsen, N. B. Christensen, and E. Lauridsen. McStas simulations of the TAS1 spectrometer. Student's report, Niels Bohr Institute, University of Copenhagen, 1998.
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT TAS1_Diff_Powder(PHM=37.077,TTM=-74,TT=33.52,TTA=0,C1=30,OMC1=5.5,C2=28,C3=67)
 
 DECLARE
 %{
