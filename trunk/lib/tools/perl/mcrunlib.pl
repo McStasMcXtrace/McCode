@@ -1,3 +1,4 @@
+use Config;
 require "mcstas_config.perl";
 # If this is Win32, locate mcstas.exe -> $prefix for running 
 # mcdisplay* perl scripts. Sort of a hack for lack of 'which'
