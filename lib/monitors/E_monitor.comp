@@ -1,16 +1,22 @@
-/***********************************************************************
+/*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: E_monitor
-*
-* Written by:  KN,KL,  April 20, 1998
+* %I
+* Written by: KN,KL
+* Date: April 20, 1998
+* Version: $Revision: 1.7 $
+* Origin: McStas release
 * Modified by: KL, Octorber 7, 1998
 *
+* Energy-sensitive monitor.
+*
+* %D
 * A square single monitor that measures the energy of the incoming neutrons.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:     Lower x bound of detector opening (m)
@@ -28,7 +34,8 @@
 * E_p:      Array of neutron weight counts
 * E_p2:     Array of second moments
 *
-***********************************************************************/
+* %E
+*******************************************************************************/
 
 DEFINE COMPONENT E_monitor
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, Emin, Emax, nchan, filename)

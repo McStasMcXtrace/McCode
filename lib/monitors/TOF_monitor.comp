@@ -1,16 +1,19 @@
-/***********************************************************************
+/*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: TOF-monitor 
-*
-* Written by:  KN, M. Hagan, August 1998
+* %I
+* Written by:  KN, M. Hagan
+* Date: August 1998
+* Version: $Revision: 1.7 $
+* Origin: McStas release
 * Modified by: KL, October 7, 1998
 *
 * Rectangular Time-of-flight monitor.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:     Lower x bound of detector opening (m)
@@ -27,7 +30,8 @@
 * TOF_p:    Array of neutron weight counts
 * TOF_p2:   Array of second moments
 *
-***********************************************************************/
+* %E
+*******************************************************************************/
 
 DEFINE COMPONENT TOF_monitor
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, nchan, dt, filename) 

@@ -4,14 +4,20 @@
 *         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: DivPos_monitor
+* %I
+* Written by: KN
+* Date: 1999
+* Version: $Revision: 1.2 $
+* Origin: McStas release
 *
-* Written by: KN, 1999
+* Divergence/position monitor (acceptance diagram).
 *
+* %D
 * 2D detector for intensity as a function of both horizontal position
 * and wavelength. This gives information similar to an aceptance diagram used
 * eg. to investigate beam profiles in neutron guides.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:     Lower x bound of detector opening (m)
@@ -29,6 +35,7 @@
 * Div_p:    Array of neutron weight counts
 * Div_p2:   Array of second moments
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT DivPos_monitor
