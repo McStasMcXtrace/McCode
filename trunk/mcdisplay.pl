@@ -1007,7 +1007,8 @@ while(!eof(IN)) {
     %neutron = read_neutron(IN);
     if ($start_scilab == 1) {
     # This only happens on Win32 (runscilab.exe), and we know the filename too...
-        my $pid = open(SCILAB,"runscilab -nw -f mcdisplay_commands.sci|");
+        my $runscilab = "$MCSTAS::mcstas_config{'SCILAB'}";
+        my $pid = open(SCILAB,"$runscilab -nw -f mcdisplay_commands.sci|");
         while(!eof(SCILAB)) {
             # Do nothing...
         }
