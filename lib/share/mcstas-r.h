@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.63 2004-11-30 16:14:47 farhi Exp $
+* $Id: mcstas-r.h,v 1.64 2005-01-18 10:32:28 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.63  2004/11/30 16:14:47  farhi
+*	Uses NOSIGNALS and put back PROP_X0 and Y0 for some contrib comps
+*	
 *	Revision 1.62  2004/09/21 12:25:03  farhi
 *	Reorganised code so that I/O functions are includable easely (for mcformat.c)
 *	
@@ -104,7 +107,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.63 $"
+#define MCSTAS_R_H "$Revision: 1.64 $"
 
 #include <math.h>
 #include <string.h>
@@ -235,13 +238,13 @@ extern struct mcformats_struct mcformat;
 
 /*
  * MPI_MASTER(i):
- * execution de i uniquement sur le noeud maitre
+ * execution of i only on master node
  */
-#define MPI_MASTER(instr)\
+#define MPI_MASTER(statement)\
 {\
 	if(mpi_node_rank == mpi_node_root)\
 	{\
-		instr;\
+		statement;\
 	}\
 }
 
