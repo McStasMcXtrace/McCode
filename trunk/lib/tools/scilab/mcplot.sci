@@ -276,10 +276,11 @@ function mcplot_menu_action(k, gwin)
           execstr('parameters = ThisFigure.parameters','errcatch');
           if length(parameters)
             // scan parameters structure, excluding 'class','parent','name'
+	    // The following assumes that the instrument is in current dir...
             if MSDOS
-              tmp_parcmd = 'mcdisplay.pl '+figname+'.instr -n 100 -pScilab --save ';
+              tmp_parcmd = 'mcdisplay.pl '+figname+'.exe -n 100 -pScilab --save ';
             else
-              tmp_parcmd = 'mcdisplay '+figname+'.instr -n 100 -pScilab --save ';
+              tmp_parcmd = 'mcdisplay ./'+figname+'.out -n 100 -pScilab --save ';
             end
             tmp_fields = getfield(1,parameters);
             for field=1:size(tmp_fields,2)

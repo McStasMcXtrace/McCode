@@ -351,7 +351,11 @@ function mcplot_menu_action(action, object)
         parameters = eval('fud.parameters','[]');
         if ~isempty(parameters)
           % scan parameters structure, excluding 'class','parent','name'
-          tmp_parcmd = [ '!mcdisplay -pMatlab --save ' figname '.instr ' ];
+	  if ispc
+	    tmp_parcmd = [ '!mcdisplay.pl -pMatlab --save ' figname '.exe ' ];
+	  else
+            tmp_parcmd = [ '!mcdisplay -pMatlab --save ./' figname '.out ' ];
+	  end
           tmp_fields = fieldnames(parameters);
           for field=1:length(tmp_fields)
             switch tmp_fields{field}
