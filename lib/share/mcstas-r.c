@@ -1733,7 +1733,6 @@ void sighandler(int sig)
         case SIGFPE  : printf(" SIGFPE "); break;
         case SIGBUS  : printf(" SIGBUS "); break;
         case SIGSEGV : printf(" SIGSEGV "); break;
-/*        case SIGSYS  : printf(" SIGSYS "); break; */
         case SIGURG  : printf(" SIGURG "); break;
         default : break;
         }
@@ -1747,15 +1746,15 @@ void sighandler(int sig)
     return;
   }
   else
+  if ((sig == SIGUSR2) || (sig == SIGQUIT) || (sig == SIGTERM) || (sig == SIGABRT) || (sig == SIGALRM) || (sig == SIGINT))
         {
                 printf("# McStas: finishing simulation at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
     mcset_ncount(mcget_run_num());
                 return;
         }
   else
-  if ((sig == SIGILL) || (sig == SIGFPE) || (sig == SIGBUS) || (sig == SIGSEGV) || (sig == SIGSYS) || (sig == SIGURG) || (sig == SIGPIPE) || (sig == SIGPWR))
         {
-                printf("McStas: SYSTEM stop at at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+                printf("McStas: SYSTEM stop at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
                 exit(-1);
   }
  
