@@ -255,6 +255,10 @@ sub new_sim_def_name {
     my $text = "Instrument file: " .
 	($current_sim_def ? $current_sim_def : "<None>");
     $current_instr_label->configure(-text => $text);
+    # On Win32, doing a chdir is probably better at this point...
+    if ($Config{'osname'} eq 'MSWin32') {
+	chdir(dirname($current_sim_def));
+    }
 }
 
 sub open_instr_def {
@@ -713,15 +717,27 @@ sub menu_run_simulation {
 	    push @command, "--save" if ($newsi->{'Trace'} eq 1);
 	}
 	# On Win32, we need quoting, in case of spaces in filename...
+	# Also needed for Dir if given...
 	if ($Config{'osname'} eq 'MSWin32') {
 	  push @command, "\"$out_name\"";
-	} else {
+        } else {
 	  push @command, "$out_name";
 	}
+	my $OutDir;
+	# Also needed for Dir if given...
+	if ($newsi->{'Dir'}) {
+	  $OutDir=$newsi->{'Dir'};
+	  if ($Config{'osname'} eq 'MSWin32') {
+	    $OutDir="\"$OutDir\"";
+	  } else {
+	    $OutDir =~ s! !\ !g;
+	  }
+	}
+	
 	push @command, "--ncount=$newsi->{'Ncount'}";
 	push @command, "--trace" if $newsi->{'Trace'};
 	push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
-	push @command, "--dir=$newsi->{'Dir'}" if $newsi->{'Dir'};
+	push @command, "--dir=$OutDir" if $newsi->{'Dir'};
 	push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
 	push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
 	for (@{$out_info->{'Parameters'}}) {

@@ -247,10 +247,12 @@ sub plot_dialog {
       $suffix = "";
       $prefix = "start";
       $pl_suffix = ".pl";
+      $sim_file_name = "\"$sim_file_name\"";
     } else {
       $suffix = "&";
       $prefix = "xterm -e";
       $pl_suffix = "";
+      $sim_file_name =~ s! !\ !g;
     }
     push @plot_cmd, $prefix;
     push @plot_cmd, "mcplot$pl_suffix";
