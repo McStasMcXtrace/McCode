@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.17 1999-03-18 07:31:46 kn Exp $
+*	$Id: instrument.l,v 1.18 2000-02-15 07:42:32 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.17  1999/03/18 07:31:46  kn
+*	Handle polarised neutrons.
+*
 *	Revision 1.16  1999/01/28 07:54:44  kn
 *	Added MCDISPLAY keyword.
 *
@@ -162,7 +165,7 @@ STATE		return TOK_STATE;
 TRACE		return TOK_TRACE;
 
 "("|")"|","	return yytext[0]; /* Punctuation. */
-"="		return yytext[0]; /* Operator. */
+"="|"*"		return yytext[0]; /* Operator. */
 
 {NUMBER}	yylval.number = atof(yytext); return TOK_NUMBER;
  /* Note: Since ID overlaps with NUMBER (eg. "2E3"), ID must come

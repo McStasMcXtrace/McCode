@@ -20,6 +20,9 @@ sub get_dir_name {
 # Output: user action ("Start" or "Cancel") and new simulation info
 #         descriptor.
 
+my %typeabbrev = ('double' => "D", 'int' => "I", 'string' => "S");
+my $typehelp = "(D=floating point, I=integer, S=string)";
+
 sub simulation_dialog {
     my ($win, $ii, $origsi) = @_;
     my %si = $origsi ? %$origsi : ();
@@ -42,22 +45,27 @@ sub simulation_dialog {
 	      -text => "Instrument source: $ii->{'Instrument-source'}",
 	      -anchor => 'w',
 	      -justify => 'left')->pack(-fill => 'x');
-    $dlg->add('Label',
-	      -text => 'Instrument parameters:',
-	      -anchor => 'w',
-	      -justify => 'left')->pack(-fill => 'x');
 
     # Set up the parameter input fields.
-    my $parm_frame = $dlg->add('Frame');
-    $parm_frame->pack;
     my @parms = @{$ii->{'Parameters'}};
     my $numrows = int ((@parms + 2)/3);
     if($numrows > 0) {
+	$dlg->add('Label',
+		  -text => "Instrument parameters $typehelp:",
+		  -anchor => 'w',
+		  -justify => 'left')->pack(-fill => 'x');
+	my $parm_frame = $dlg->add('Frame');
+	$parm_frame->pack;
 	my $row = 0;
 	my $col = 0;
 	my $p;
 	for $p (@parms) {
-	    my $w = $parm_frame->Label(-text => "$p:", -justify => 'right');
+	    # Give parameter type as abbrevation.
+	    my ($type, $u);
+	    $type = $ii->{'Parameter-types'}{$p};
+	    $u = " ($typeabbrev{$type})" if $type;
+	    $u = "" unless $u;
+	    my $w = $parm_frame->Label(-text => "$p$u:", -justify => 'right');
 	    $w->grid(-row => $row, -column => $col, -sticky => 'e');
 	    $col++;
 	    $si{'Params'}{$p} = "" unless defined($si{'Params'}{$p});

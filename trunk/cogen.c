@@ -6,63 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.16 1999-04-16 07:15:09 kn Exp $
-*
-* 	$Log: not supported by cvs2svn $
-* 	Revision 1.15  1999/03/18 07:27:59  kn
-* 	Handle polarised neutrons.
-*
-* 	Revision 1.14  1999/03/16 13:09:36  kn
-* 	Output #line directives in the generated code that refer to the output
-* 	file itself, so that compilers, debuggers etc. refer to correct line
-* 	numbers and file names.
-*
-* 	Revision 1.13  1999/01/28 07:51:17  kn
-* 	Support for MCDISPLAY section in component definitions.
-*
-* 	Revision 1.12  1998/11/13 07:28:36  kn
-* 	Implemented proper quoting of special chars in file names in #line
-* 	directives.
-*
-* 	Revision 1.11  1998/11/09 07:51:18  kn
-* 	Include string.h to get string function prototypes.
-*
-* 	Revision 1.10  1998/10/09 07:47:14  kn
-* 	Fixed bug when DECLARE / INITIALIZE / FINALLY is left out from the
-* 	instrument definition.
-*
-* 	Revision 1.9  1998/10/02 08:35:49  kn
-* 	Added output parameters for components.
-* 	Fixed header comment.
-*
-* 	Revision 1.8  1998/10/01 08:09:09  kn
-* 	Embed the runtime files mcstas-r.[ch] inside the generated C program.
-* 	Handle the --trace option.
-* 	Include main() in the generated C program.
-*
-* 	Revision 1.7  1998/09/24 12:14:46  kn
-* 	Rotation angles in instrument definitions are now given in degrees, with
-* 	a backward compatibility mode for the old behaviour using radians.
-*
-* 	Revision 1.6  1998/08/21 12:07:14  kn
-* 	Output generated C simulation code in file rather than on stdout.
-*
-* 	Revision 1.5  1997/12/03 13:34:24  kn
-* 	Added definition of ABSORB macro.
-*
-* 	Revision 1.4  1997/10/16 21:19:27  kn
-* 	Fixed bug when computing component absolute positions.
-*
-* 	Revision 1.3  1997/10/16 14:25:11  kn
-* 	Added debugging output used by the "display" graphical visualization
-* 	tool.
-*
-* 	Revision 1.2  1997/09/08 11:15:19  kn
-* 	Added some more debugging output.
-*
-* 	Revision 1.1  1997/09/08 10:37:56  kn
-* 	Initial revision
-*
+* 	$Id: cogen.c,v 1.17 2000-02-15 07:40:30 kn Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -150,12 +94,13 @@
 *    parameters. For example, for an instrument parameter OMM, the
 *    declaration "MCNUM ##ipOMM;" is generated.
 * 3. Declaration of a table ##inputtable containing the list of instrument
-*    parameters. For each parameter, the name and a pointer to the
-*    corresponding global variable is given. The macro ##NUMIPAR gives the
-*    number of entries in the table and is also found as the value of the
+*    parameters. For each parameter, the name, a pointer to the
+*    corresponding global variable, and the type (double, int,
+*    string) is given. The macro ##NUMIPAR gives the number of
+*    entries in the table and is also found as the value of the
 *    variable ##numipar; in addition, the table is terminated by two
-*    NULLs. This table is used to read the instrument parameters from the
-*    user or from another program such as TASCOM.
+*    NULLs. This table is used to read the instrument parameters from
+*    the user or from another program such as TASCOM.
 * 4. User declarations copied verbatim from the instrument definition file.
 * 5. Declarations for the component parameters. This uses #define for
 *    definition parameters and global variables for setting parameters.
@@ -173,6 +118,10 @@ static FILE *output_handle = NULL;/* Handle for output file. */
 static int num_next_output_line = 1; /* Line number for next output line. */
 static char *quoted_output_file_name = NULL; /* str_quote()'ed name
 						of output file. */
+
+/* Convert instrument formal parameter type numbers to their enum name. */
+char *instr_formal_type_names[] =
+  { "instr_type_double", "instr_type_int", "instr_type_string" };
 
 /*******************************************************************************
 * Output a line of code
@@ -325,14 +274,14 @@ embed_file(char *name)
 static void cogen_instrument_scope_rec(List_handle parlist,
 				       void (*func)(void *), void *data)
 {
-  char *par;
+  struct instr_formal *par;
 
   par = list_next(parlist);
   if(par != NULL)
   {
-    coutf("#define %s %sip%s", par, ID_PRE, par);
+    coutf("#define %s %sip%s", par->id, ID_PRE, par->id);
     cogen_instrument_scope_rec(parlist, func, data);
-    coutf("#undef %s", par);
+    coutf("#undef %s", par->id);
   }
   else
   {
@@ -431,6 +380,7 @@ cogen_decls(struct instr_def *instr)
 {
   List_handle liter;		/* For list iteration. */
   char *formal;			/* Name of formal parameter. */
+  struct instr_formal *i_formal;/* Name of formal parameter. */
   struct comp_inst *comp;	/* Component instance. */
   
   /* 1. Function prototypes. */
@@ -443,9 +393,9 @@ cogen_decls(struct instr_def *instr)
   /* 2. Global variables for instrument parameters. */
   cout("/* Instrument parameters. */");
   liter = list_iterate(instr->formals);
-  while(formal = list_next(liter))
+  while(i_formal = list_next(liter))
   {
-    coutf("MCNUM " ID_PRE "ip%s;", formal);
+    coutf("MCNUM " ID_PRE "ip%s;", i_formal->id);
   }
   list_iterate_end(liter);
   cout("");
@@ -456,12 +406,13 @@ cogen_decls(struct instr_def *instr)
   coutf("struct %sinputtable_struct %sinputtable[%sNUMIPAR+1] = {",
 	ID_PRE, ID_PRE, ID_PRE);
   liter = list_iterate(instr->formals);
-  while(formal = list_next(liter))
+  while(i_formal = list_next(liter))
   {
-    coutf("  \"%s\", &%sip%s,", formal, ID_PRE, formal);
+    coutf("  \"%s\", &%sip%s, %s,", i_formal->id, ID_PRE, i_formal->id,
+	  instr_formal_type_names[i_formal->type]);
   }
   list_iterate_end(liter);
-  coutf("  NULL, NULL");
+  coutf("  NULL, NULL, instr_type_double");
   coutf("};");
   cout("");
 
