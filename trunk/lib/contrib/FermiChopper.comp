@@ -1,39 +1,45 @@
 /*******************************************************************************
 *
-* McStas, version 1.6-ILL
-*         Maintained by Kristian Nielsen and Kim Lefmann,
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: FermiChopper.
 *
 * %Identification
 *
 * Written by: 	Markus Poehlmann     <Markus.Poehlmann@ph.tum.de>
-*		Christian Carbogno   <carbogno@ph.tum.de>
+*		            Christian Carbogno   <carbogno@ph.tum.de>
 *             	and Helmut Schober   <schober@ill.fr> 
-*              
+* Date: May 2002    
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    2.0 (May 2002)  
+* Version:    2.0
 *
+* Fermi Chopper with rotating frame.
+*
+* %D
 * Models a fermi chopper with optional supermirror coated blades
 * supermirror facilities may be disabled by setting m = 0, R0=0
+*
+* Example:
+* FermiChopper(dist=58, rad=0.04, nu=100,
+*   ymin=-0.04, ymax=0.04, w=0.00022475, Nslit=200.0, R0=0.0,
+*   Qc=0.02176, alpham=2.33, m=0.0, Wi=2e-3, Vi=Vi,  slit=0.012)
 *  
 * %Parameters
 * INPUT PARAMETERS:
 *
 * Geometrical chopper constants:
-*
 * rad:     (m)    	chopper cylinder radius
 * ymin     (m)    	lower y bound of cylinder
 * ymax     (m)    	upper y bound of cylinder
 * Nslit    (1)    	number of chopper slits  
 * slit:    (m)    	Length of the short blades
 * w        (m)    	width of one chopper slit
-*
 * nu:      (Hz)   	chopper frequency
 *
 * Supermirror constants:
-*
 * m:       (1)    	m-value of material. Zero means completely absorbing.
 * alpham:  (AA)   	Slope of reflectivity
 * Qc:      (AA-1) 	Critical scattering vector
@@ -43,8 +49,6 @@
 * Constants to reset time of flight:
 * Vi:      (m/s)  	velocity of prototype neutron
 * dist:    (m)    	Distance(chopper-source)
-*
-* Example values: m=4 Qc=0.02 W=300^-1 alpha=6.49 R0=1
 *
 * %End
 *******************************************************************************/
@@ -369,8 +373,8 @@ TRACE
 	
 /***Checks to see if neutron enters or leaves from top or bottom of cylinder.***/
 
-	if ( ((x*x + z*z) < (rad*rad)) ||
-	   ((((x+vx*dt)*(x+vx*dt) + (z+vz*dt)*(z+vz*dt))) < (rad*rad)) )
+	if ( ((x*x + z*z) < 0.999*(rad*rad)) ||
+	   ((((x+vx*dt)*(x+vx*dt) + (z+vz*dt)*(z+vz*dt))) < 0.999*(rad*rad)) )
    		ABSORB;
 
    	cylinder++;             //adjusting interaction counter
@@ -671,7 +675,7 @@ TRACE
 	PROP_DT(t2);
 
 	/*****Checking if the neutron left the cylinder by his top or bottom******/
-	if  ((x*x + z*z) < (rad*rad) ){
+	if  ((x*x + z*z) < 0.999*(rad*rad) ){
 		topbot++;	//adjusting interaction counter
 		ABSORB;
 		}
