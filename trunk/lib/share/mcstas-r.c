@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.59 2003-04-09 15:51:33 farhi Exp $
+* $Id: mcstas-r.c,v 1.60 2003-04-16 14:55:47 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.59  2003/04/09 15:51:33  farhi
+* Moved MCSTAS_FORMAT define
+*
 * Revision 1.58  2003/04/08 18:55:56  farhi
 * Made XML format more NeXus compliant
 *
@@ -170,10 +173,6 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "  return\n"
       " end\n"
       "end\n"
-      "if sum(S ~= size(d.data))\n"
-      " d.data=d.data'; errcatch(-1,'continue','nomessage');\n"
-      " d.errors=d.errors'; d.events=d.events'; errcatch(-1);\n"
-      "end\n"
       "endfunction\n"
       "function d=mcplot_inline(d,p)\n"
       "// local inline func to plot data\n"
@@ -186,14 +185,17 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "else\nw=winsid();if length(w),w=w($)+1; else w=0; end\n"
       "xbasr(w); xset('window',w);\n"
       "if length(strindex(d.type,'2d'))\n"
-      " d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2)); z=d.data;\n"
+      " d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data;\n"
+      " xlab=d.xlabel; ylab=d.ylabel; x=d.x; y=d.y;\n"
       " fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));\n"
-      " if fx>0,fx=round(log10(fx)); d.x=d.x/10^fx; d.xlabel=d.xlabel+' [*10^'+string(fx)+']'; end\n"
-      " if fy>0,fy=round(log10(fy)); d.y=d.y/10^fy; d.ylabel=d.ylabel+' [*10^'+string(fy)+']'; end\n"
+      " if fx>0,fx=round(log10(fx)); x=x/10^fx; xlab=xlab+' [*10^'+string(fx)+']'; end\n"
+      " if fy>0,fy=round(log10(fy)); y=y/10^fy; ylab=ylab+' [*10^'+string(fy)+']'; end\n"
       " if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end\n"
-      " xset('colormap',hotcolormap(64));plot3d1(d.x,d.y,z);\n"
-      "else\nd.x=linspace(l(1),l(2),max(S));\nplot2d(d.x,d.data);end\nend\n"
-      "xtitle(t,'X:'+d.xlabel,'Y:'+d.ylabel); xname(t1);\nendfunction\n"
+      " xset('colormap',hotcolormap(64));\n"
+      " plot3d1(x,y,z',90,0,xlab+'@'+ylab+'@'+d.zlabel); xtitle(t);\n"
+      "else\nd.x=linspace(l(1),l(2),max(S));\n"
+      " plot2d(d.x,d.data);xtitle(t,d.xlabel,d.ylabel);end\nend\n"
+      "xname(t1);\nendfunction\n"
     "%7$s=get_%7$s();\n",
     "// Section %2$s [%3$s] (level %7$d)\n"
       "%1$s%4$s = struct(); %4$s.class = '%2$s';",
@@ -241,10 +243,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "  return\n"
       " end\n"
       "end\n"
-      "if any(S ~= size(d.data))\n"
-      " d.data=d.data';\n"
-      " if isfield(d,'errors'), d.errors=d.errors'; d.events=d.events';end;\n"
-      "end\nreturn;\n"
+      "return;\n"
       "function d=mcplot_inline(d,p)\n"
       "%% local inline function to plot data\n"
       "if isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\nif ~p, return; end;\n"
@@ -253,8 +252,8 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "disp(t);\n"
       "if ~isempty(findstr(d.type,'0d')), return; end\n"
       "figure; if ~isempty(findstr(d.type,'2d'))\n"
-      "d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2));\n"
-      "surface(d.x,d.y,d.data');\n"
+      "d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1));\n"
+      "surface(d.x,d.y,d.data);\n"
       "else\nd.x=linspace(l(1),l(2),max(S));\nplot(d.x,d.data);end\n"
       "xlabel(d.xlabel); ylabel(d.ylabel); title(t); axis tight;"
       "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n"
@@ -273,7 +272,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "function mcload_inline,d\n"
       "; local inline function to load external data\n"
       "S=d.type & a=execute('S=long(['+strmid(S,9,strlen(S)-10)+'])')\n"
-      "if strpos(d.format, 'binary') le 0 then begin\n"
+      "if strpos(d.format, 'binary') lt 0 then begin\n"
       " p=d.parent\n"
       " x=read_binary(d.filename)\n"
       " get_lun, lun\n"
@@ -282,11 +281,6 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       " free_lun,lun\n"
       " resolve_routine, d.func, /is_func, /no\n"
       " d=call_function(d.func)\n"
-      " if total(size(S, /dim) ne size(d.data, /dim)) gt 0 then begin\n"
-      "  d.data=transpose(d.data)\n"
-      "  if total(strpos(tag_names(d),'ERRORS')+1) gt 0 then begin\n"
-      "   d.errors=transpose(d.errors)\n   d.events=transpose(d.events)\n  endif\n"
-      " endif\n"
       "endif else begin\n"
       " if strpos(d.format, 'float') ge 0 then t=4 $\n"
       " else if strpos(d.format, 'double') ge 0 then t=5 $\n"
@@ -296,9 +290,12 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       " else if pS eq 2 then pS=long(S(0)*S(1)) $\n"
       " else pS=long(S(0)*S(1)*S(2))\n"
       " stv,d,'data',reform(x(0:(pS-1)),S)\n"
+      " d.data=transpose(d.data)\n"
       " if n_elements(x) ge long(3*pS) then begin\n"
       "  stv,d,'errors',reform(x(pS:(2*pS-1)),S)\n"
       "  stv,d,'events',reform(x((2*pS):(3*pS-1)),S)\n"
+      "  d.errors=transpose(d.errors)\n"
+      "  d.events=transpose(d.events)\n"
       " endif\n"
       "endelse\n"
       "return,d\nend ; FUN load\n"
@@ -1694,6 +1691,7 @@ mchelp(char *pgmname)
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
 "  --format=FORMAT            Output data files using format FORMAT\n"
+"                             (use option +a to include text header in files\n"
 );
   if(mcnumipar > 0)
   {
@@ -1705,7 +1703,7 @@ mchelp(char *pgmname)
   fprintf(stderr, "Available output formats are (default is %s):\n", mcformat.Name);
   for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
   fprintf(stderr, "\nFormat modifiers: FORMAT may be followed by 'binary float' or \n");
-  fprintf(stderr, "'binary double' to save data blocks as binary. Please use also -a flag then.\n");
+  fprintf(stderr, "'binary double' to save data blocks as binary. This removes text headers.\n");
   fprintf(stderr, "The MCSTAS_FORMAT environment variable may set the default FORMAT to use.\n");
 }
 
@@ -2775,12 +2773,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     double tmp1, tmp2;
     char   *lab;
     istransposed = 1; 
-    tmp1=x1; tmp2=x2;
-    x1=y1; x2=y2; y1=tmp1; y2=tmp2;
-    if (x1 != y1 || x2 != y2) { /* do not swap for 1D */
-      lab = xlabel; xlabel=ylabel; ylabel=lab;
-      lab = xvar; xvar=yvar; yvar=lab;
-    }
+    
     i=m; m=abs(n); n=abs(i); p=abs(p); 
   }
 
@@ -2957,24 +2950,33 @@ mcuse_file(char *file)
 
 void mcuse_format(char *format)
 {
-  int i;
+  int i,j;
   int i_format=-1;
   char *tmp;
+  char low_format[256];
+  
+  /* get the format to lower case */
+  if (!format) return;
+  strcpy(low_format, format);
+  for (i=0; i<strlen(low_format); i++) low_format[i]=tolower(format[i]);
+  if (!strcmp(low_format, "pgplot")) strcpy(low_format, "mcstas");
+  tmp = malloc(256);
+  if(!tmp) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format)\n"));
   
   /* look for a specific format in mcformats.Name table */
   for (i=0; i < mcNUMFORMATS; i++)
   {
-    if (strstr(format, mcformats[i].Name)) i_format = i;
+    strcpy(tmp, mcformats[i].Name); 
+    for (j=0; j<strlen(tmp); j++) tmp[j] = tolower(tmp[j]);
+    if (strstr(low_format, tmp)) i_format = i;
   }
   if (i_format < 0)
   {
     i_format = 0; /* default format is #0 McStas */
-    fprintf(stderr, "Warning: unknown output format %s. Using default (%s).\n", format, mcformats[i_format].Name);
+    fprintf(stderr, "Warning: unknown output format '%s'. Using default (%s).\n", format, mcformats[i_format].Name);
   }
 
   mcformat = mcformats[i_format];
-  tmp = malloc(256);
-  if(!tmp) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format)\n"));
   strcpy(tmp, mcformat.Name); 
   mcformat.Name = tmp;
   if (strstr(format,"binary"))
@@ -2982,6 +2984,7 @@ void mcuse_format(char *format)
     if (strstr(format,"double")) strcat(mcformat.Name," binary double data");
     else if (strstr(format,"NeXus")) strcat(mcformat.Name," binary NeXus data");
     else strcat(mcformat.Name," binary float data");
+    mcascii_only = 1;
   }
 } /* mcuse_format */
 
@@ -3061,6 +3064,8 @@ mcparseoptions(int argc, char *argv[])
       mcenabletrace();
     else if(!strcmp("-a", argv[i]))
       mcascii_only = 1;
+    else if(!strcmp("+a", argv[i]))
+      mcascii_only = 0;
     else if(!strcmp("--data-only", argv[i]))
       mcascii_only = 1;
     else if(!strcmp("--gravitation", argv[i]))
