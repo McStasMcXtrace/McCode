@@ -10,36 +10,43 @@
 * %I
 * Written by: <a href="mailto:benjamin.fortescue@oriel.ox.ac.uk">B. Fortescue</a>
 * Date: August 2000
-* Version: 1.1
-* Release: McStas 1.6
+* Version: 1.2
+* Release: McStas 1.7
 * Origin: ILL, Based on Be_filter, written by SN Klausen, December 1999,
 * Incorporating code from Single_crystal, written by KN, December 1999
 * Modified by: EF, Aug. 24th 2001: made it work
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
+* Modified by: EF, 22nd May 2003 : Corrected velocity dir change bug.
 *
-* Box-shaped powder filter (UNSTABLE)
+* Box-shaped powder filter or sample
 *
 * %D
-* This is a general box-shaped powder filter which simulates multiple coherent
-* scattering vectors and absorption (incoherent scattering is modelled as
-* absorption).  Crystal structure is specified with an ascii data file. Each
-* line contains seven numbers, separated by white space. The first three
-* numbers are the (h,k,l) indices of the reciprocal lattice point, and the
-* last number is the value of the structure factor |F|**2, in barns.  (The rest
+* This is a general box-shaped powder filter/sample which simulates
+* multiple coherent scattering vectors and absorption (incoherent
+* scattering is modelled as absorption).  
+* Crystal structure is specified with an ascii data file. Each line
+* contains seven numbers, separated by white space. The first three numbers
+* are the (h,k,l) indices of the reciprocal lattice point, and the last
+* number is the value of the structure factor |F|**2, in barns.  (The rest
 * of the numbers are not used; the file is in the format output by the
-* Crystallographica program).  Optionally, a number of absorbing blades may be
-* incorporated into the filter - these are X-Z or Y-Z planes evenly spaced
-* along the X or Y axis of the filter which absorb any neutron encountering them.
+* Crystallographica program).  
+* Optionally, a number of absorbing blades may be incorporated into the
+* filter - these are X-Z or Y-Z planes evenly spaced along the X or Y axis
+* of the filter which absorb any neutron encountering them.
 *
 * EXAMPLE:
-* You may use something like:
+* You may use, as a filter, something like (5x5x5 cm cube):
 *     Filter_powder(
 *      ax=2.714, by=2.714, cz=4.405, cc=120,
 *      sigma_a = 0.0156,
 *      reflections="BeO.lau")
-* with file <a href="http://www.ill.fr/tas/mcstas/doc/BeO.dat">BeO.dat</a>.
-* See also <a href="http://www.ill.fr/tas/mcstas/doc/filter.ps">filter.ps</a> (PS doc).
 *
+* and as a sample (1x1x1 cm cube):
+*     Filter_powder(
+*      ax=3.8186, by=3.8186, cz=11.6777,
+*      xmin =-0.005 , xmax = 0.005, ymin = -0.005, ymax = 0.005,  
+*      zmin = -0.005, zmax = 0.005, XBlades=0, YBlades=0,
+*      sigma_a = 0, reflections="YBaCuO.lau")                                  
 * %P
 * INPUT PARAMETERS
 * 
@@ -67,6 +74,9 @@
 * 
 * mu_s    	: Attenuation factor due to scattering [m^-1]
 * mu_a    	: Attenuation factor due to absorbtion [m^-1]
+*
+* %Link
+* See also <a href="http://www.ill.fr/tas/mcstas/doc/filter.ps">filter.ps</a> (PS doc).
 * %E
 *
 *******************************************************************************/
@@ -257,19 +267,21 @@ SHARE
   {
     double phi;
     double v1x, v1y, v1z, v2x, v2y, v2z;
-
+    
     phi = rand01()*2.0*PI;
 
-    /* vxx = *vx;  vyy = *vy;  vzz=*vz; */
     vec_prod_norm(v1x, v1y, v1z, 1, 0, 0, vxx, vyy, vzz);
-    vec_prod_norm(v2x, v2y, v2z, v1x, v1y, v1z,  vxx, vyy, vzz);
+    vec_prod_norm(v2x, v2y, v2z,  vxx, vyy, vzz, v1x, v1y, v1z);
     *vx = cos(2*theta)*vxx + v*sin(2*theta)*(sin(phi)*v1x + cos(phi)*v2x);
     *vy = cos(2*theta)*vyy + v*sin(2*theta)*(sin(phi)*v1y + cos(phi)*v2y);
     *vz = cos(2*theta)*vzz + v*sin(2*theta)*(sin(phi)*v1z + cos(phi)*v2z);
     return 1;
   }
 #endif /* BE_FILTER_DECL */
+%}
 
+DECLARE
+%{
   struct pf_hkl_info_struct pf_hkl_info;
   double *XBlade_pos,*YBlade_pos;
   double xb,xt,yb,yt;
@@ -367,7 +379,7 @@ TRACE
 
   	      /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
        	      in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
-       	      scattering pf_lengths to m**-1 */
+       	      scattering lengths to m**-1 */
 
         mu_s += 100*PI*PI*PI*pack*4*T[size].F2
           /(pf_hkl_info.V0*pf_hkl_info.V0*k*k*T[size].tau);
@@ -402,7 +414,7 @@ TRACE
     if(XBlades>1) pf_bladelims(&xb,&xt,x-(xmax+xmin)/2,0, XBlades, XBlade_pos, YBlades, YBlade_pos);
     if(YBlades>1) pf_bladelims(&yb,&yt,y-(ymax+ymin)/2,1, XBlades, XBlade_pos, YBlades, YBlade_pos);
 
-    while(pf_length(&l, dt_in, dt_out, v, mu_tot)) /* While inside box do...*/
+    while(pf_length(&l, dt_in, dt_out, v, mu_tot/100)) /* While inside box do...*/
     {
       if (rand01()<(mu_a/mu_tot)) ABSORB;
       dt = l/v;
@@ -411,6 +423,7 @@ TRACE
       if(pf_hitblade(x-(xmax+xmin)/2,y-(ymax+ymin)/2, xb, xt, yb, yt, XBlades, YBlades)) ABSORB;	
       i = pf_cones(p_cone, size);
       theta=asin(T[i].tau/(2*k));
+      
       pf_velocity(&vx, &vy, &vz, v, theta, vxx, vyy, vzz);
       SCATTER;
       box_intersect(&dt_in, &dt_out, x-(xmax+xmin)/2 , y-(ymax+ymin)/2,
