@@ -18,9 +18,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.60 2003-04-16 14:55:47 farhi Exp $
+* $Id: mcstas-r.c,v 1.61 2003-04-25 16:24:44 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.60  2003/04/16 14:55:47  farhi
+* Major change in saving data so that it's shown just like PGPLOT
+* and axes+labels should follow data orientation (if transposed)
+* when in binary mode, sets -a as default. Use +a to force text header
+*
 * Revision 1.59  2003/04/09 15:51:33  farhi
 * Moved MCSTAS_FORMAT define
 *
@@ -1561,7 +1566,7 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
   if(height == 0.0 || width == 0.0)
   {
     randvec_target_circle(xo, yo, zo, solid_angle,
-               0, 0, 0, 0);
+               xi, yi, zi, 0);
   }
   else
   {
