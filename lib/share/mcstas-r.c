@@ -30,6 +30,7 @@ int mcdefaultmain = 0;
 static long mcseed = 0;
 mcstatic int mcdotrace = 0;
 static int mcascii_only = 0;
+static int mcdisable_output_files = 0;
 static int mcsingle_file = 0;
 
 static FILE *mcsiminfo_file = NULL;
@@ -600,6 +601,8 @@ mcruninfo_out(char *pre, FILE *f)
 void
 mcsiminfo_init(void)
 {
+  if(mcdisable_output_files)
+    return;
   mcsiminfo_file = mcnew_file(mcsiminfo_name);
   if(!mcsiminfo_file)
     fprintf(stderr,
@@ -747,7 +750,7 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
     mcsiminfo_out("  begin array2D (%d,%d)\n", do_errb ? 4 : 2, n);
     pre = "    ";
   }
-  else if(f)				/* Don't write if filename is NULL */
+  else if(f && !mcdisable_output_files)	/* Don't write if filename is NULL */
     outfile = mcnew_file(f);
   if(outfile && !mcascii_only && !mcsingle_file)
   {
@@ -804,7 +807,7 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
     mcsiminfo_out("  begin array2D (%d,%d)\n", m, n);
     pre = "    ";
   }
-  else if(f)				/* Don't write if filename is NULL */
+  else if(f && !mcdisable_output_files)	/* Don't write if filename is NULL */
     outfile = mcnew_file(f);
   if(outfile && !mcascii_only && !mcsingle_file)
   {
@@ -1507,6 +1510,7 @@ mchelp(char *pgmname)
 "  -f FILE   --file=FILE      Put all data in a single file.\n"
 "  -t        --trace          Enable trace of neutron through instrument.\n"
 "  -a        --ascii-only     Do not put any headers in the data files.\n"
+"  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show help message.\n"
 "  -i        --info           Detailed instrument information.\n"
 );
@@ -1649,6 +1653,8 @@ mcparseoptions(int argc, char *argv[])
       mcascii_only = 1;
     else if(!strcmp("--ascii-only", argv[i]))
       mcascii_only = 1;
+    else if(!strcmp("--no-output-files", argv[i]))
+      mcdisable_output_files = 1;
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
