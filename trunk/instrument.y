@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.52 2003-08-12 13:34:22 farhi Exp $
+*	$Id: instrument.y,v 1.53 2003-09-05 08:59:05 farhi Exp $
 *
 *******************************************************************************/
 
@@ -349,7 +349,7 @@ comp_iformal:	 TOK_ID TOK_ID
 		      formal->type = instr_type_double;
 		    }
 		    $$ = formal;
-      }        
+      }
 ;
 
 instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
@@ -414,8 +414,8 @@ instr_formal:	  TOK_ID TOK_ID
 		    } else if(!strcmp($1, "string")) {
 		      formal->type = instr_type_string;
 		    } else {
-		      print_error("Illegal type for instrument "
-				  "parameter %s.\n", $2);
+		      print_error("Illegal type %s for instrument "
+				  "parameter %s.\n", $1, $2);
 		      formal->type = instr_type_double;
 		    }
 		    formal->id = $2;
@@ -428,8 +428,8 @@ instr_formal:	  TOK_ID TOK_ID
 		    if(!strcmp($1, "char")) {
 		      formal->type = instr_type_string;
 		    } else {
-		      print_error("Illegal type for instrument "
-				  "parameter %s.\n", $3);
+		      print_error("Illegal type $s* for instrument "
+				  "parameter %s.\n", $1, $3);
 		      formal->type = instr_type_double;
 		    }
 		    formal->id = $3;
@@ -441,8 +441,55 @@ instr_formal:	  TOK_ID TOK_ID
 		    palloc(formal);
 		    formal->type = instr_type_double;
 		    formal->id = $1;
+        formal->isoptional = 0; /* No default value */
 		    $$ = formal;
 		  }
+    | TOK_ID '=' exp
+		  {
+		    struct instr_formal *formal;
+		    palloc(formal);
+		    formal->id = $1;
+		    formal->isoptional = 1; /* Default value available */
+		    formal->default_value = $3;
+        formal->type = instr_type_double;
+		    $$ = formal;
+		  }
+    | TOK_ID TOK_ID '=' exp
+      {
+		    struct instr_formal *formal;
+		    palloc(formal);
+        if(!strcmp($1, "double")) {
+		      formal->type = instr_type_double;
+		    } else if(!strcmp($1, "int")) {
+		      formal->type = instr_type_int;
+		    } else if(!strcmp($1, "string")) {
+		      formal->type = instr_type_string;
+		    } else {
+		      print_error("Illegal type %s for instrument "
+				  "parameter %s.\n", $1, $2);
+		      formal->type = instr_type_double;
+		    }
+        formal->id = $2;
+		    formal->isoptional = 1; /* Default value available */
+		    formal->default_value = $4;
+		    $$ = formal;
+		  }
+    | TOK_ID '*' TOK_ID '=' exp
+      {
+		    struct instr_formal *formal;
+		    palloc(formal);
+		    formal->id = $3;
+		    formal->isoptional = 1; /* Default value available */
+		    formal->default_value = $5;
+        if(!strcmp($1, "char")) {
+		      formal->type = instr_type_string;
+		    } else {
+		      print_error("Illegal type %s* for instrument "
+				  "parameter %s.\n", $1, $3);
+		      formal->type = instr_type_double;
+		    }
+		    $$ = formal;
+      }
 ;
 declare:	  /* empty */
 		  {

@@ -17,9 +17,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.53 2003-04-07 11:50:51 farhi Exp $
+* $Id: mcstas-r.h,v 1.54 2003-09-05 08:59:18 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.53  2003/04/07 11:50:51  farhi
+*	Extended the way mcplot:plotter is assigned. Set --portable ok
+*	Handle Scilab:Tk and ~GTk menu (shifted)
+*	Updated help in mcrun and mcstas-r.c
+*	
 *	Revision 1.52  2003/04/04 18:20:21  farhi
 *	remove some warnings (duplicated decl) for --no-runtime on Dec OSF
 *	
@@ -54,7 +59,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.53 $"
+#define MCSTAS_R_H "$Revision: 1.54 $"
 
 #include <math.h>
 #include <string.h>
@@ -112,6 +117,7 @@ struct mcinputtable_struct {
   char *name;
   void *par;
   enum instr_formal_types type;
+  char *val;
 };
 extern struct mcinputtable_struct mcinputtable[];
 extern int mcnumipar;
