@@ -1,0 +1,294 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Virtual_tripoli4_input.comp
+
+* %I
+* Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
+* Date: Sep 28th, 2001
+* Version:  $Revision: 1.1 $
+* Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
+* Release: McStas 1.8
+*
+* This component uses a file of recorded neutrons from the reactor monte carlo
+* code TRIPOLI4.4 as a source of particles.
+*
+* %D
+* TRIPOLI4 is a monte carlo code for reactors (as MCNP). It is used to
+* calculate flux exiting from hot or cold neutron sources. Stock files from
+* TRIPOLI4.4 contains several batches of particules. Using this McStas 
+* component with Virtual_tripoli4_output there is no need of conversion.  As
+* McStas keeps the notion of batch with this component, it's possible to
+* calculate  standard deviations for the flux in differents energy groups. The
+* component Virtual_tripoli4_output.comp is used to record neutrons at the end 
+* of the neutron guide.
+*
+* Format of TRIPOLI4.4 stock files is :
+*
+*   NEUTRON energy position_X position_Y position_Z dir_X dir_Y dir_Z weight
+*
+* energy is in Mega eV
+* positions are in cm and the direction vector is normalized to 1.
+*
+* Note that axes orientation may be different between TRIPOLI4.4 and McStas
+*
+*
+* EXAMPLE:
+* To create a 'source' file collecting all neutron states, use:
+* COMPONENT source_file_tripoli = Virtual_tripoli4_input(
+*    file = "/home/count_durant/Mcstas/tripoli_file.stock", 
+*    repeat_count  = 1, verbose = 0)
+*  at the position where will be the Virtual_tripoli4_input.
+*
+*
+* %P
+* INPUT PARAMETERS
+* file:         (str) name of the Tripoli4.4 neutron input file, 
+*                     or stdin if left to 0. 
+* repeat_count: (1)         Number of times the source must be generated.
+*                           0 unactivates the component
+* verbose:      (0|1)       displays additional informations
+*
+* OUTPUT PATAMETERS
+* head: (char) header buffer
+* nl:   (long) nb of lines in header
+
+* %L
+* <a href="http://www.nea.fr/html/dbprog/tripoli-abs.html">Tripoli</a>
+* Virtual_tripoli4_output
+*
+* %E
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Virtual_tripoli4_input
+DEFINITION PARAMETERS (file=0)
+SETTING PARAMETERS (repeat_count=1, verbose=0)
+OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,num_batch)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx, sy, sz)
+
+SHARE
+%{
+#ifndef TRIPOLI4_INPUT_DEFS
+#define TRIPOLI4_INPUT_DEFS
+/* define Tripoli File parsing functions */
+#define WORDSIZE 256
+/* functions to identify Tripoli keywords */
+int begin_of_batch(const char * word )
+{
+  return strcmp(word,"BEGIN_OF_BATCH")==0?1:0;
+}
+int end_of_batch(const char * word)
+{
+  return strcmp(word,"END_OF_BATCH")==0?1:0;
+}
+int is_neutron(const char * word)
+{
+  return strcmp(word,"NEUTRON")==0?1:0;
+}
+
+/* tripoli_read_word: 
+   function that reads iteratively words in the file
+   returns  EOF or last character 
+   word[0..l-1] 
+ */
+int tripoli_read_word(FILE *hfile,char *word){
+  char c;
+  int  i=0;	
+
+  while((c=fgetc(hfile))!=EOF && isspace(c)){}	
+
+  if(c!=EOF){
+    word[i++]=c;
+    while((c=fgetc(hfile))!=EOF && i < WORDSIZE){
+    if(isspace(c))break;
+      word[i++]=c;}
+    }
+    word[i]='\0';
+  return c;
+}
+
+/* tripoli_create_neutron:
+   function that reads values following the NEUTRON keyword
+   and assigns neutron parameters 
+ */
+int tripoli_create_neutron(FILE *hfile, double *x,double *y,double *z,
+                                 double *vx, double *vy, double *vz,
+                                 double *t, 
+                                 double *sx, double *sy, double *sz,
+                                 double *p)
+{
+  double Mev2Joule=1.602e-13;
+  double speed;
+  int    exit_flag=0, ifield=0;
+  char   word[WORDSIZE];
+  double field[8];
+ 
+  while(ifield<8){  
+    if(tripoli_read_word(hfile,word)==EOF) { exit_flag=1; goto abnormal; };
+    field[ifield++]=strtod(word,NULL);
+  }
+  if(field[0]<0){ exit_flag=1; goto abnormal;}  
+  speed=sqrt(2.* field[0]*Mev2Joule/MNEUTRON);
+  *x=field[1]/100.;
+  *y=field[2]/100.;
+  *z=field[3]/100.;
+  *vx=field[4]*speed;
+  *vy=field[5]*speed;
+  *vz=field[6]*speed;
+  *p=field[7];
+  *sx=1.;*sy=*sz=0;
+  *t=0;
+ abnormal: 
+  return (exit_flag);  
+}
+/* tripoli_get_header:
+   function that gets header lines until the Tripoli start of a batch
+ */
+char **tripoli_get_header(FILE *hfile,long *nl){
+  int i;
+  char **head;
+  char   word[WORDSIZE];
+
+  *nl=0;
+  fgets(word,WORDSIZE,hfile);
+  while(strncmp(word,"BEGIN_OF_BATCH",14)!=0){
+    fgets(word,WORDSIZE,hfile);
+    (*nl)++;
+  }
+  rewind(hfile);
+  head=(char **)calloc(*nl,sizeof(char *));
+  for(i=0;i<*nl;++i){
+    fgets(word,WORDSIZE,hfile);
+    head[i]=(char *)malloc(WORDSIZE);
+    strcpy(head[i],word);
+  } 
+  rewind(hfile);
+  return head;
+}
+
+//#undef WORDSIZE
+#endif
+
+%}
+
+DECLARE
+%{
+  
+  int   rep=1;                        /* Neutron repeat count */
+  FILE *hfile;                    /* Neutron input file handle */
+  char **head;                   /*Tripol4 header*/
+  long  nl;                       /* Number of lines in header*/
+  long  begin_file=0;
+  long  num_batch, nbatch;
+%}
+
+INITIALIZE
+%{
+  char  word[WORDSIZE];
+  
+ /* Open neutron input file. */
+  if(file)
+    hfile = fopen(file, "r");
+  else
+    hfile = stdin;
+  if(!hfile)
+  {
+    fprintf(stderr, "Virtual_tripoli4_input: %s: Error: Cannot open input file.\n", NAME_CURRENT_COMP);
+    exit(1);
+  } else if (file && verbose)
+    printf("Virtual_tripoli4_input: %s: opening Tripoli4 file '%s'.\n",NAME_CURRENT_COMP,file);
+  
+    head = tripoli_get_header(hfile, &nl);
+
+  while (tripoli_read_word(hfile,word) != EOF) {
+    /* store position of first batch in file for repeat */
+    begin_file=ftell(hfile);  
+    if (begin_of_batch(word)) {
+      if (tripoli_read_word(hfile,word)!=EOF) { 
+        num_batch=strtol(word,NULL,0);		
+		break;
+      }
+    }
+  }    
+
+%}
+
+TRACE
+%{
+  char exit_flag=0;  /* set to 1 if end of simulation */
+  int result_read;
+  char  word[WORDSIZE];
+
+  while(1) {
+
+  result_read=tripoli_read_word(hfile,word);
+
+  if (is_neutron(word)) {  /* if key word NEUTRON is found */
+    if (tripoli_create_neutron(hfile,&x,&y,&z,&vx,&vy,&vz,&t,&sx,&sy,&sz,&p)) {
+      fprintf(stderr, "Virtual_tripoli4_input: %s: Error: Cannot create neutron in batch %d.\n",NAME_CURRENT_COMP,num_batch);
+      fprintf(stderr,"  Finishing simulation\n");
+      exit_flag = 1;
+    }
+//    printf("NEUTRON %f  %f  %f  %f  %f  %f  %f  %f  %f  %f  %f \n",x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+    break;
+  }
+ 
+  if (end_of_batch(word)) {  /* if key word END_OF_BATCH is found */  
+    if (tripoli_read_word(hfile,word) != EOF) {
+    /* this is the number of finisshing batch */
+      nbatch=strtol(word,NULL,0); 
+      if (nbatch!=num_batch) { 
+      /* finishing batch does not match the one we were reading ! */
+        fprintf(stderr, "Virtual_tripoli4_input: %s: Warning: inconsistent batch numbers between END(%d) and BEGIN(%d).\n",NAME_CURRENT_COMP,nbatch,num_batch);
+      }
+      if (verbose) printf("Virtual_tripoli4_input: %s: End Batch Number %d \n",NAME_CURRENT_COMP,nbatch);
+    } 
+    else exit_flag = 1; 
+  } 
+ 
+  if (begin_of_batch(word)){/* if key word BEGIN_OF_BATCH is found */
+    if (tripoli_read_word(hfile,word) != EOF) { 
+      num_batch=strtol(word,NULL,0);
+      if (verbose) printf("Virtual_tripoli4_input: %s: Start Batch Number %d\n",NAME_CURRENT_COMP,num_batch);
+    }
+    else exit_flag = 1;
+  }
+
+  if (result_read==EOF) {  /* normal end of file */
+    rep++;
+    if (rep < repeat_count) {
+      /* reposition at start of file (batch start) */
+     int ret = fseek(hfile, begin_file,SEEK_SET);  
+      if (ret) {
+        fprintf(stderr, "Virtual_tripoli4_input: %s: Error: Can not repeat Tripoli4 file (fseek error at repeat %d). \n",NAME_CURRENT_COMP, rep);
+        exit_flag = 1; 
+      }     
+      result_read = tripoli_read_word(hfile,word); /* should be batch start */
+      num_batch=strtol(word,NULL,0);
+      if (verbose) printf("Virtual_tripoli4_input: %s: Start Batch Number %d (iteration %d)\n",NAME_CURRENT_COMP,num_batch, rep);
+    } 
+    else exit_flag=1;
+  }
+
+  if (exit_flag) { mcset_ncount(mcget_run_num()); ABSORB; }
+
+
+} /* end while */
+
+
+%}
+
+FINALLY
+%{
+  if (head)  free(head);
+  if (hfile) fclose(hfile);
+%}
+
+END
+
