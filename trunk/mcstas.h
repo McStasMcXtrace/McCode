@@ -7,68 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.19 1999-04-16 07:39:27 kn Exp $
-*
-* 	$Log: not supported by cvs2svn $
-* 	Revision 1.18  1999/03/18 07:33:24  kn
-* 	Handle polarised neutrons.
-*
-* 	Revision 1.17  1999/01/28 07:56:48  kn
-* 	Support for MCDISPLAY section in component definitions.
-*
-* 	Revision 1.16  1998/11/26 08:46:10  kn
-* 	Implement simple memory pool functionality.
-*
-* 	Revision 1.15  1998/11/13 07:32:50  kn
-* 	Added str_quote() prototype.
-* 	Win32 port.
-*
-* 	Revision 1.14  1998/11/11 08:58:01  kn
-* 	Fixed bug with missing extern declaration.
-*
-* 	Revision 1.13  1998/11/09 08:18:57  kn
-* 	Use predefined macro MC_SYS_DIR as default library directory if defined.
-*
-* 	Revision 1.12  1998/10/02 08:38:51  kn
-* 	Added output parameters for components.
-* 	Fixed header comment.
-*
-* 	Revision 1.11  1998/10/01 11:47:24  kn
-* 	Added str_dup_n(), exp_string(), and error_encountered.
-*
-* 	Revision 1.10  1998/10/01 08:13:26  kn
-* 	Added definitions for file.c
-* 	Added information to struct instr_def
-*
-* 	Revision 1.9  1998/09/24 12:15:52  kn
-* 	Added print_warn() function.
-* 	Rotation angles in instrument definitions are now given in degrees, with
-* 	a backward compatibility mode for the old behaviour using radians.
-*
-* 	Revision 1.8  1998/09/24 11:18:05  kn
-* 	Make AT modifier required.
-* 	More reasonable default when ROTATED modifier is missing.
-*
-* 	Revision 1.7  1998/08/26 12:44:35  kn
-* 	Updated prototypes and global variables declarations.
-*
-* 	Revision 1.6  1998/08/21 12:08:38  kn
-* 	Output generated C simulation code in file rather than on stdout.
-*
-* 	Revision 1.5  1997/09/07 20:16:16  kn
-* 	Added FINALLY construct.
-*
-* 	Revision 1.4  1997/09/07 17:58:19  kn
-* 	Snapshot with (untested) code generation complete.
-*
-* 	Revision 1.3  1997/08/13 09:15:28  kn
-* 	First version to properly parse instrument definition files.
-*
-* 	Revision 1.2  1997/07/02 07:28:36  kn
-* 	Added new declarations.
-*
-* 	Revision 1.1  1997/07/01 08:17:52  kn
-* 	Initial revision
+* 	$Id: mcstas.h,v 1.20 2000-02-15 07:56:42 kn Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -426,6 +365,18 @@ struct comp_inst
     Symtab defpar, setpar;	/* Parameter values. */
   };
 
+/* Instrument formal parameters. */
+/* Note: the enum instr_formal_types definition MUST be kept
+   synchronized with the one in mcstas-r.h. */
+enum instr_formal_types
+  {
+    instr_type_double, instr_type_int, instr_type_string
+  };
+struct instr_formal
+  {
+    enum instr_formal_types type; /* Type (string, int, double) */
+    char *id;			  /* Parameter name */
+  };
 
 /* Instrument definition. */
 struct instr_def

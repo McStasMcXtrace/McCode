@@ -10,7 +10,9 @@
 *******************************************************************************/
 
 #include <stdarg.h>
+#include <limits.h>
 #include <math.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -360,6 +362,163 @@ mcestimate_error(int N, double p1, double p2)
 }
 
 
+/* Instrument input parameter type handling. */
+static int
+mcparm_double(char *s, void *vptr)
+{
+  char *p;
+  double *v = vptr;
+
+  *v = strtod(s, &p);
+  if(*s == '\0' || (p != NULL && *p != '\0') || errno == ERANGE)
+    return 0;			/* Failed */
+  else
+    return 1;			/* Success */
+}
+
+
+static char *
+mcparminfo_double(char *parmname)
+{
+  return "double";
+}
+
+
+static void
+mcparmerror_double(char *parm, char *val)
+{
+  fprintf(stderr, "Error: Invalid value '%s' for floating point parameter %s\n",
+	  val, parm);
+}
+
+
+static void
+mcparmprinter_double(FILE *f, void *vptr)
+{
+  double *v = vptr;
+  fprintf(f, "%g", *v);
+}
+
+
+static int
+mcparm_int(char *s, void *vptr)
+{
+  char *p;
+  int *v = vptr;
+  long x;
+
+  *v = 0;
+  x = strtol(s, &p, 10);
+  if(x < INT_MIN || x > INT_MAX)
+    return 0;			/* Under/overflow */
+  *v = x;
+  if(*s == '\0' || (p != NULL && *p != '\0') || errno == ERANGE)
+    return 0;			/* Failed */
+  else
+    return 1;			/* Success */
+}
+
+
+static char *
+mcparminfo_int(char *parmname)
+{
+  return "int";
+}
+
+
+static void
+mcparmerror_int(char *parm, char *val)
+{
+  fprintf(stderr, "Error: Invalid value '%s' for integer parameter %s\n",
+	  val, parm);
+}
+
+
+static void
+mcparmprinter_int(FILE *f, void *vptr)
+{
+  int *v = vptr;
+  fprintf(f, "%d", *v);
+}
+
+
+static int
+mcparm_string(char *s, void *vptr)
+{
+  char **v = vptr;
+  *v = malloc(strlen(s) + 1);
+  if(*v == NULL)
+  {
+    fprintf(stderr, "mcparm_string: Out of memory.\n");
+    exit(1);
+  }
+  strcpy(*v, s);
+  return 1;			/* Success */
+}
+
+
+static char *
+mcparminfo_string(char *parmname)
+{
+  return "string";
+}
+
+
+static void
+mcparmerror_string(char *parm, char *val)
+{
+  fprintf(stderr, "Error: Invalid value '%s' for string parameter %s\n",
+	  val, parm);
+}
+
+
+static void
+mcparmprinter_string(FILE *f, void *vptr)
+{
+  char **v = vptr;
+  char *p;
+  fprintf(f, "\"");
+  for(p = *v; *p != '\0'; p++)
+  {
+    switch(*p)
+    {
+      case '\n':
+	fprintf(f, "\\n");
+	break;
+      case '\r':
+	fprintf(f, "\\r");
+	break;
+      case '"':
+	fprintf(f, "\\\"");
+	break;
+      case '\\':
+	fprintf(f, "\\\\");
+	break;
+      default:
+	fprintf(f, "%c", *p);
+    }
+  }
+  fprintf(f, "\"");
+}
+
+
+static struct
+  {
+    int (*getparm)(char *, void *);
+    char * (*parminfo)(char *);
+    void (*error)(char *, char *);
+    void (*printer)(FILE *, void *);
+  } mcinputtypes[] =
+      {
+	mcparm_double, mcparminfo_double, mcparmerror_double,
+		mcparmprinter_double,
+	mcparm_int, mcparminfo_int, mcparmerror_int,
+		mcparmprinter_int,
+	mcparm_string, mcparminfo_string, mcparmerror_string,
+		mcparmprinter_string
+      };
+
+
 FILE *
 mcnew_file(char *name)
 {
@@ -399,7 +558,9 @@ mcinfo_out(char *pre, FILE *f)
   fprintf(f, "%sName: %s\n", pre, mcinstrument_name);
   fprintf(f, "%sParameters:", pre);
   for(i = 0; i < mcnumipar; i++)
-    fprintf(f, " %s", mcinputtable[i].name);
+    fprintf(f, " %s(%s)", mcinputtable[i].name,
+	    (*mcinputtypes[mcinputtable[i].type].parminfo)
+		(mcinputtable[i].name));
   fprintf(f, "\n");
   fprintf(f, "%sInstrument-source: %s\n", pre, mcinstrument_source);
   fprintf(f, "%sTrace-enabled: %s\n", pre, mctraceenabled ? "yes" : "no");
@@ -428,8 +589,11 @@ mcruninfo_out(char *pre, FILE *f)
   if(mcseed)
     fprintf(f, "%sSeed: %ld\n", pre, mcseed);
   for(i = 0; i < mcnumipar; i++)
-    fprintf(f, "%sParam: %s=%g\n",
-	    pre, mcinputtable[i].name, *mcinputtable[i].par);
+  {
+    fprintf(f, "%sParam: %s=", pre, mcinputtable[i].name);
+    (*mcinputtypes[mcinputtable[i].type].printer)(f, mcinputtable[i].par);
+    fprintf(f, "\n");
+  }
 }
 
 
@@ -674,13 +838,42 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
 void
 mcreadparams(void)
 {
-  int i;
+  int i,j,status;
+  char buf[1024];
+  char *p;
+  int len;
 
   for(i = 0; mcinputtable[i].name != 0; i++)
   {
-    printf("Set value of instrument parameter %s:\n", mcinputtable[i].name);
-    fflush(stdout);
-    scanf("%lf", mcinputtable[i].par);
+    do
+    {
+      printf("Set value of instrument parameter %s (%s):\n",
+	     mcinputtable[i].name,
+	     (*mcinputtypes[mcinputtable[i].type].parminfo)
+		  (mcinputtable[i].name));
+      fflush(stdout);
+      p = fgets(buf, 1024, stdin);
+      if(p == NULL)
+      {
+	fprintf(stderr, "Error: empty input\n");
+	exit(1);
+      }
+      len = strlen(buf);
+      for(j = 0; j < 2; j++)
+      {
+	if(len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+	{
+	  len--;
+	  buf[len] = '\0';
+	}
+      }
+      status = (*mcinputtypes[mcinputtable[i].type].getparm)
+		   (buf, mcinputtable[i].par);
+      if(!status)
+      {
+	(*mcinputtypes[mcinputtable[i].type].error)(mcinputtable[i].name, buf);
+      }
+    } while(!status);
   }
 }
 
@@ -1129,7 +1322,8 @@ mchelp(char *pgmname)
   {
     fprintf(stderr, "Instrument parameters are:\n");
     for(i = 0; i < mcnumipar; i++)
-      fprintf(stderr, "  %s\n", mcinputtable[i].name);
+      fprintf(stderr, "  %-16s(%s)\n", mcinputtable[i].name,
+	(*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
   }
 }
 
@@ -1269,7 +1463,15 @@ mcparseoptions(int argc, char *argv[])
       for(j = 0; j < mcnumipar; j++)
 	if(!strcmp(mcinputtable[j].name, argv[i]))
 	{
-	  *(mcinputtable[j].par) = strtod(p, NULL);
+	  int status;
+	  status = (*mcinputtypes[mcinputtable[j].type].getparm)(p,
+			mcinputtable[j].par);
+	  if(!status)
+	  {
+	    (*mcinputtypes[mcinputtable[j].type].error)
+	      (mcinputtable[j].name, p);
+	    exit(1);
+	  }
 	  paramsetarray[j] = 1;
 	  paramset = 1;
 	  break;
