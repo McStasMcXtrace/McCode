@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -42,14 +42,15 @@
 *   Source_gen(h=0.1,w=0.1,Emin=1,Emax=3, I1=1e13, verbose=1, gaussian=1)
 *
 * Some sources parameters:
-* PSI cold source T1=150.42 I1=3.67e11 T2=38.74 I2=3.64e11
-*                 T3=14.84 I3=0.95e11
-* ILL VCS cold source T1=216.8 I1=1.24e+13 T2=33.9 I2=1.02e+13 
-*        (H1)         T3=16.7  I3=3.0423e+12
-* ILL HCS cold source T1=213.4 I1=1.47e+13 T2=83.1 I2=3.26e+12 
-*        (H5)         T3=26.5  I3=1.21e13
-* ILL Thermal tube    T1=683.7 I1=1.7278e+13 T2=257.7 I2=7.3823e+13
-*        (H12)        T3=6.71  I3=6.7125e+09
+* PSI cold source T1=150.42,I1=3.67e11 T2=38.74,I2=3.64e11
+*                 T3=14.84,I3=0.95e11
+* ILL VCS cold source T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13 
+*        (H1)         T3=16.7 ,I3=3.0423e+12
+* ILL HCS cold source T1=213.4,I1=1.47e+13,T2=83.1,I2=3.26e+12 
+*        (H5)         T3=26.5 ,I3=1.21e13
+* ILL Thermal tube    T1=683.7,I1=1.7278e+13,T2=257.7,I2=7.3823e+13
+*        (H12)        T3=6.71 ,I3=6.7125e+09
+* ILL Hot source      T1=1695,I1=1.74e13,T2=708,I2=3.9e12
 *     
 *
 * %P
