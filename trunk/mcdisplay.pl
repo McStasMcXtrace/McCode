@@ -645,17 +645,15 @@ sub plot_instrument {
       my %vps;                        # Viewport/window setup.
       my ($vpx1,$vpx2,$vpy1,$vpy2,$wx1,$wx2,$wy1,$wy2);
       
-      PGPLOT::pgperas;
-      PGPLOT::pgpanl(2,2);
-      PGPLOT::pgbbuf;
+      # PGPLOT::pgpage;        # start new page/panel
+      PGPLOT::pgbbuf;        # begin buffer batch output
       
       # First show instrument from "above" (view in direction of y axis).
-      
       
       PGPLOT::pgsci(1);
       PGPLOT::pgsch(1.4);
       PGPLOT::pgenv($zmin, $zmax, $xmin, $xmax, ($zooming ? 0 : 1), 0);
-      PGPLOT::pglab("Z Axis [m]", "X Axis [m]", "Z-X view");
+      PGPLOT::pglab("Z Axis [m]", "X Axis [m]", ($multi_view ? "Z-X view" : "Z-X view: $sim_cmd"));
       show_comp_names($rinstr);
       PGPLOT::pgsch(1.4);
       plot_components($instr{'z'}, $instr{'x'}, $instr{'ori'}, $instr{'dis'},
@@ -701,11 +699,19 @@ sub plot_instrument {
                        W => [$wx1,$wx2,$wy1,$wy2]};
         
         # Set up viewport & window for mouse zoom.
-        PGPLOT::pgpage;
-        PGPLOT::pgsvp(0,1,0,1);
+        if ($multi_view) { 
+                PGPLOT::pgpanl(2,2); 
+                PGPLOT::pgsci(1);
+                my $time=gmtime; 
+                PGPLOT::pgmtxt("t",0-1*1.2,0.0,0.0,"Date: $time");
+                PGPLOT::pgmtxt("t",-2-1*1.2,0,0.0,"Simulation: ");
+                PGPLOT::pgmtxt("t",-3-1*1.2,0.05,0.0,"$sim_cmd");
+        }        # go to last panel
+        else { PGPLOT::pgpanl(1,1); }                    # to activate full page
+        PGPLOT::pgsvp(0,1,0,1);        # zoom for full page
         PGPLOT::pgswin(0,1,0,1);
       }
-      PGPLOT::pgebuf;
+      PGPLOT::pgebuf;        # end buffer batch output
       
       return 0 if $noninteractive;
       
@@ -731,6 +737,16 @@ sub plot_instrument {
         do_zoom($rinstr, \%vps, $cx, $cy, $cx1, $cy1);
         return 1;
       } elsif($cc =~ /[xX]/) {        # Reset zoom.
+              PGPLOT::pgpanl(1,1);
+        PGPLOT::pgperas;
+        if ($multi_view) {
+                PGPLOT::pgpanl(1,2);
+                PGPLOT::pgperas;
+                PGPLOT::pgpanl(2,1);
+                PGPLOT::pgperas;
+                PGPLOT::pgpanl(2,2);
+                PGPLOT::pgperas;
+        }
         reset_zoom($rinstr, \%vps);
         return 1;
       }
