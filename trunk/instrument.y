@@ -47,7 +47,9 @@ int mc_yyoverflow();
   Coords_exp coords;		/* Coordinates for location or rotation. */
   List formals;			/* List of formal parameters. */
   List iformals;		/* List of formal instrument parameters. */
+  List comp_iformals;		/* List of formal comp. input parameters. */
   struct instr_formal *iformal;	/* Single formal instrument parameter. */
+  struct comp_iformal *cformal;	/* Single formal component input parameter. */
   Symtab actuals;		/* Values for formal parameters. */
   char **polform;		/* Polarisation state formal parameters */
   struct {List def, set, out, state;
@@ -98,6 +100,8 @@ int mc_yyoverflow();
 %type <coords>  coords
 %type <exp> exp
 %type <actuals> actuallist actuals actuals1
+%type <comp_iformals> comp_iformallist comp_iformals comp_iformals1
+%type <cformal> comp_iformal
 %type <formals> formallist formals formals1 def_par set_par out_par state_par
 %type <iformals> instrpar_list instr_formals instr_formals1
 %type <iformal> instr_formal
@@ -149,13 +153,13 @@ parameters:	  def_par set_par out_par state_par polarisation_par
 ;
 
 
-def_par:	  "DEFINITION" "PARAMETERS" formallist
+def_par:	  "DEFINITION" "PARAMETERS" comp_iformallist
 		  {
 		    $$ = $3;
 		  }
 ;
 
-set_par:	  "SETTING" "PARAMETERS" formallist
+set_par:	  "SETTING" "PARAMETERS" comp_iformallist
 		  {
 		    $$ = $3;
 		  }
@@ -189,6 +193,54 @@ polarisation_par: /* empty */
 		    polform[1] = $6;
 		    polform[2] = $8;
 		    $$ = polform;
+		  }
+;
+
+comp_iformallist: '(' comp_iformals ')'
+		  {
+		    $$ = $2;
+		  }
+;
+
+
+comp_iformals:	  /* empty */
+		  {
+		    $$ = list_create();
+		  }
+		| comp_iformals1
+		  {
+		    $$ = $1;
+		  }
+;
+
+comp_iformals1:	  comp_iformal
+		  {
+		    $$ = list_create();
+		    list_add($$, $1);
+		  }
+		| comp_iformals1 ',' comp_iformal
+		  {
+		    list_add($1, $3);
+		    $$ = $1;
+		  }
+;
+
+comp_iformal:	  TOK_ID
+		  {
+		    struct comp_iformal *formal;
+		    palloc(formal);
+		    formal->id = str_dup($1);
+		    formal->isoptional = 0; /* No default value */
+		    $$ = formal;
+		  }
+		| TOK_ID '=' TOK_NUMBER
+		  {
+		    struct comp_iformal *formal;
+		    palloc(formal);
+		    formal->id = $1;
+		    formal->isoptional = 1; /* Default value available */
+		    formal->default_value = exp_number($3);
+		    $$ = formal;
 		  }
 ;
 
@@ -836,7 +888,7 @@ void
 check_comp_formals(List deflist, List setlist, char *compname)
 {
   Symtab formals;
-  char *formal;
+  struct comp_iformal *formal;
   struct Symtab_entry *entry;
   List_handle liter;
 
@@ -847,23 +899,23 @@ check_comp_formals(List deflist, List setlist, char *compname)
   liter = list_iterate(deflist);
   while(formal = list_next(liter))
   {
-    entry = symtab_lookup(formals, formal);
+    entry = symtab_lookup(formals, formal->id);
     if(entry != NULL)
       print_error("Definition parameter name %s is used multiple times "
-		  "in component %s\n", formal, compname);
+		  "in component %s\n", formal->id, compname);
     else
-      symtab_add(formals, formal, NULL);
+      symtab_add(formals, formal->id, NULL);
   }
   list_iterate_end(liter);
   liter = list_iterate(setlist);
   while(formal = list_next(liter))
   {
-    entry = symtab_lookup(formals, formal);
+    entry = symtab_lookup(formals, formal->id);
     if(entry != NULL)
       print_error("Setting parameter name %s is used multiple times "
-		  "in component %s\n", formal, compname);
+		  "in component %s\n", formal->id, compname);
     else
-      symtab_add(formals, formal, NULL);
+      symtab_add(formals, formal->id, NULL);
   }
   list_iterate_end(liter);
   symtab_free(formals, NULL);
@@ -907,7 +959,7 @@ void
 comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
 {
   List_handle liter;
-  char *formal;
+  struct comp_iformal *formal;
   struct Symtab_entry *entry;
   Symtab defpar, setpar;
   Symtab_handle siter;
@@ -922,28 +974,40 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
   liter = list_iterate(comp->def->def_par);
   while(formal = list_next(liter))
   {
-    entry = symtab_lookup(actuals, formal);
+    entry = symtab_lookup(actuals, formal->id);
     if(entry == NULL)
     {
-      print_error("Unassigned definition parameter %s for component %s.\n",
-		  formal, comp->name);
-      symtab_add(defpar, formal, exp_number(0));
+      if(formal->isoptional)
+      {
+	/* Use default value for unassigned optional parameter */
+	symtab_add(defpar, formal->id, formal->default_value);
+      } else {
+	print_error("Unassigned definition parameter %s for component %s.\n",
+		    formal->id, comp->name);
+	symtab_add(defpar, formal->id, exp_number(0));
+      }
     } else {
-      symtab_add(defpar, formal, entry->val);
+      symtab_add(defpar, formal->id, entry->val);
     }
   }
   list_iterate_end(liter);
   liter = list_iterate(comp->def->set_par);
   while(formal = list_next(liter))
   {
-    entry = symtab_lookup(actuals, formal);
+    entry = symtab_lookup(actuals, formal->id);
     if(entry == NULL)
     {
-      print_error("Unassigned setting parameter %s for component %s.\n",
-		  formal, comp->name);
-      symtab_add(setpar, formal, exp_number(0));
+      if(formal->isoptional)
+      {
+	/* Use default value for unassigned optional parameter */
+	symtab_add(setpar, formal->id, formal->default_value);
+      } else {
+	print_error("Unassigned setting parameter %s for component %s.\n",
+		    formal->id, comp->name);
+	symtab_add(setpar, formal->id, exp_number(0));
+      }
     } else {
-      symtab_add(setpar, formal, entry->val);
+      symtab_add(setpar, formal->id, entry->val);
     }
   }
   list_iterate_end(liter);
