@@ -127,6 +127,10 @@ sub menu_edit_current {
 
 sub check_external_editor {
     $external_editor = $ENV{'VISUAL'} || $ENV{'EDITOR'};
+    if ($external_editor eq "") {
+      if ($Config{'osname'} eq 'MSWin32') { $external_editor = "notepad"; }
+      else { $external_editor = "nedit"; }
+    }
 }
 
 sub menu_spawn_editor {
