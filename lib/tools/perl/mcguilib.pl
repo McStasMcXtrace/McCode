@@ -382,7 +382,7 @@ sub backend_dialog {
     # PW 20030314
     # Choice of internal editor
     # PW 20040527
-    my ($win,$binary,$plotter,$editor) = @_;
+    my ($win,$binary,$plotter,$editor,$external_editor) = @_;
     my $dlg = $win->DialogBox(-title => "McStas: Configuration options",
                               -buttons => ["Close"]);
     my $lf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
@@ -410,6 +410,8 @@ sub backend_dialog {
                -anchor => 'w', -value => 0, -variable => \$editor)->pack(-fill => 'x');
     $edit_buttons[1]=$rf->Radiobutton(-text => "Advanced built-in editor",
                -anchor => 'w', -value => 1, -variable => \$editor)->pack(-fill => 'x');
+    $edit_buttons[2]=$rf->Radiobutton(-text => "External editor ($external_editor)",
+               -anchor => 'w', -value => 2, -variable => \$editor)->pack(-fill => 'x');
     $edit_buttons[$editor]->select;
     my $res = $dlg->Show;
     
