@@ -16,7 +16,7 @@
 *
 * Memory management functions.
 *
-*	$Id: memory.c,v 1.17 2003-02-11 12:28:45 farhi Exp $
+*	$Id: memory.c,v 1.18 2004-09-21 12:23:50 farhi Exp $
 *
 *******************************************************************************/
 
@@ -166,6 +166,7 @@ str_free(char *string)
   memfree(string);
 }
 
+#ifdef MCSTAS_H
 
 struct Pool_header
   {
@@ -215,3 +216,5 @@ pool_mem(Pool p, size_t size)
   list_add(p->list, m);
   return m;
 }
+
+#endif /* MCSTAS_H */
