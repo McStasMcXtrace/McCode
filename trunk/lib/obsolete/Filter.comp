@@ -20,6 +20,7 @@
 * ymax: Upper y bound (m)
 * len:  Distance between apertures (m)
 * T0:   Tranmittance of low energy neutrons (1)
+* T0:   Tranmittance of high energy neutrons (1)
 * Emin: Lower cut-off energy (meV)
 * Emax: Upper cut-off energy (meV)
 *
@@ -27,7 +28,7 @@
 
 
 DEFINE COMPONENT Filter
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, T0, Emin, Emax)
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, T0, T1, Emin, Emax)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
@@ -48,13 +49,14 @@ TRACE
       ABSORB;
 
     if(E>=Emax)
-      ABSORB;
+      if(T1==0)
+        ABSORB;
+      else
+	p*=T1;
     else
       if(E<=Emin)
 	p*= T0;
       else
-        {
-        p*= T0*(Emax-E)/(Emax-Emin);
-        }
+        p*= T1+(T0-T1)*(Emax-E)/(Emax-Emin);
 %}
 END
