@@ -645,28 +645,32 @@ sub menu_run_simulation {
 	my $suffix='';
 	# Check 'Plotter' setting
 	my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-	if($newsi->{'Trace'}) {
-            if ($newsi->{'Trace'} eq 2) {
-	      # Special of 'Trace', neutron count set to 1...
-	      # For outputting figure files in Matlab/Scilab
-	      # backends.
-	      $newsi->{'Ncount'}=1;
-	    }
-	    # Here, a check is done for selected mcdisplay "backend"
+	# Check 'Trace' setting if a scan or trace is
+	# requested
+	if ($newsi->{'Trace'}) {
+  	    # Here, a check is done for selected mcdisplay "backend"
 	    # Also, various stuff must be done differently on unix
 	    # type plaforms and on lovely Win32... :)
 	    # PW 20030314
 	    #
 	    # Check if this is Win32, call perl accordingly...
 	    if ($Config{'osname'} eq 'MSWin32') {
-	      # Win32 'start' command needed to background the process..
-	      push @command, "start";
+	      if ($newsi->{'Trace'} eq 1 ) {
+		# Win32 'start' command needed to background the process..
+		push @command, "start";
+		# Also, disable plotting of results after mcdisplay run...
+		$newsi->{'Autoplot'}=0;
+	      }
 	      push @mcplot_cmd, "start";
 	      # Set $suffix to .pl
 	      $suffix='.pl';
 	    }
-            push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
-	    if ($plotter eq 0) {
+	    if ($newsi->{'Trace'} eq 2) { # 'mcrun' mode
+	      push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix";
+	      push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'};
+	    } else { # 'mcrun' mode
+	      push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
+	      if ($plotter eq 0) {
 		push @command, "--plotter=PGPLOT";
 		# Be sure to read mcplotlib.pl in this case...
 		require "mcplotlib.pl";
@@ -676,46 +680,49 @@ sub menu_run_simulation {
 		# and the server will keep the pipe to mcdisplay open
 		# until the server exits, hanging mcgui.
 	        ensure_pgplot_xserv_started();
-	    } 
-	    elsif ($plotter eq 1) {
-	      push @command, "-pMatlab";
-	    }
-	    elsif ($plotter eq 2) {
+	      }
+	      elsif ($plotter eq 1) {
+		push @command, "-pMatlab";
+	      }
+	      elsif ($plotter eq 2) {
 		push @command, "-pMatlab";
 		my $output_file = save_disp_file($w,'m');
 		if (!$output_file) {
-		    putmsg($cmdwin, "Trace canclled...\n");
-		    return;
+		  putmsg($cmdwin, "Trace canclled...\n");
+		  return;
 		}
 		push @command, "-f$output_file";
-	    }
-	    elsif ($plotter eq 3) {
+		
+	      }
+	      elsif ($plotter eq 3) {
 		push @command, "-pScilab";
 		if ($Config{'osname'} eq 'MSWin32') {
-		    # Calling through pipe does not work on Win32 :( - revert to 'scilab script'
-		    putmsg($cmdwin, "Sorry, scilab pipe non-funtional on Win32 systems. Reverting to sciptfile...\n");
-		    my $output_file = save_disp_file($w,'sci');
-		    if (!$output_file) {
-			putmsg($cmdwin, "Trace canclled...\n");
-			return;
-		    }
-		    push @command, "-f$output_file";
+		  # Calling through pipe does not work on Win32 :( - revert to 'scilab script'
+		  putmsg($cmdwin, "Sorry, scilab pipe non-funtional on Win32 systems. Reverting to sciptfile...\n");
+		  my $output_file = save_disp_file($w,'sci');
+		  if (!$output_file) {
+		    putmsg($cmdwin, "Trace canclled...\n");
+		    return;
+		  }
+		  push @command, "-f$output_file";
 		}
-	    }
-	    elsif ($plotter eq 4) {
+	      }
+	      elsif ($plotter eq 4) {
 		push @command, "-pScilab";
 		my $output_file = save_disp_file($w,'sci');
 		if (!$output_file) {
-		    putmsg($cmdwin, "Trace canclled...\n");
-		    return;
+		  putmsg($cmdwin, "Trace canclled...\n");
+		  return;
 		}
 		push @command, "-f$output_file";
+		
+	      }
+	      push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
+	      push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
+	      push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
+	      push @command, "--save" if ($newsi->{'Trace'} eq 1);
 	    }
-	    push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
-	    push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
-	    push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
-	    push @command, "--save" if ($newsi->{'Trace'} eq 1);
-	}
+	  }
 	# On Win32, we need quoting, in case of spaces in filename...
 	# Also needed for Dir if given...
 	if ($Config{'osname'} eq 'MSWin32') {
@@ -735,7 +742,7 @@ sub menu_run_simulation {
 	}
 	
 	push @command, "--ncount=$newsi->{'Ncount'}";
-	push @command, "--trace" if $newsi->{'Trace'};
+	push @command, "--trace" if ($newsi->{'Trace'} eq 1);
 	push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
 	push @command, "--dir=$OutDir" if $newsi->{'Dir'};
 	push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
@@ -769,7 +776,7 @@ sub menu_run_simulation {
 	$inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
 	$inf_sim->{'Trace'} = $newsi->{'Trace'};
 	push @mcplot_cmd, "$MCSTAS::mcstas_config{'prefix'}mcplot$suffix";
-	if($newsi->{'Autoplot'} && !$newsi->{'Trace'}) {
+	if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
 	  plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
 		      $current_sim_file);
 	}
