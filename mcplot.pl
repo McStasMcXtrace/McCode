@@ -141,6 +141,7 @@ if ($plotter eq 3 || $plotter eq 4) {
     ($fh, $tmp_file) = tempfile("mcplot_tmpXXXXXX", SUFFIX => '.sce');
     if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
   }
+  printf $fh "s = stacksize(); if s(1) < 1e7 then stacksize(1e7); end\n";
   printf $fh "getf('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
   printf $fh "s=mcplot('$file','$passed_arg_str','$inspect');\n";
   if ($passed_arg_str) {
