@@ -15,16 +15,12 @@
 *
 * xlenght: length of mirror plate (m)
 * yheight: height of mirror plate (m)
-* R0:      Low-angle reflectivity (1)
-* Qc:      Critical scattering vector (AA-1)
-* alpha:   Slope of reflectivity (AA)
 * m:       m-value of material (1)
-* W:       Width of supermirror cut-off (AA-1)
 *
 *******************************************************************************/
 
 DEFINE COMPONENT Mirror
-DEFINITION PARAMETERS (xlength, yheight,R0,Qc,alpha,m,W)
+DEFINITION PARAMETERS (xlength, yheight,m)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
@@ -42,14 +38,14 @@ TRACE
     {
       z = 0;
       t += dt;
-      q = fabs(2*vz*V2Q);
+      q = fabs(2*vz*MS2AA);
       vz = -vz;
       /* Reflectivity (see component Guide). */
-      if(q > Qc)
+      if(q > 0.02)
       {
-        double arg = (q-m*Qc)/W;
+        double arg = 300*(q-0.0219*m);
         if(arg < 10)
-	  p *= .5*(1-tanh(arg))*(1-alpha*(q-Qc));
+          p *= .5*(1-tanh(arg))*(1-6.49*(q-0.02));
         else
           ABSORB;                               /* Cutoff ~ 1E-10 */
       }
