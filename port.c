@@ -16,7 +16,7 @@
 *
 * Code to handle portability issues (mainly Win32 stuff).
 *
-* $Id: port.c,v 1.10 2003-02-11 12:28:45 farhi Exp $
+* $Id: port.c,v 1.11 2003-04-15 15:45:27 farhi Exp $
 *
 *******************************************************************************/
 
@@ -41,5 +41,6 @@ FILE *fdopen(int descr, const char *mode)
 {
   fatal_error("The '-' argument for standard input and output is not supported"
 	      " on this system.");
+  return(NULL);
 }
 #endif /* HAVE_FDOPEN */
