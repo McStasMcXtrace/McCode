@@ -26,6 +26,8 @@
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
 @SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%): 
 @echo McStas install.bat for Win32...
+@echo Trying to guess your plotter...
+@start mcconfig.pl
 @echo Installing in MCSTAS_SITE=%MCSTAS_SITE%
 @if exist %MCSTAS_SITE% goto bin
 @echo Creating directory %MCSTAS_SITE%
