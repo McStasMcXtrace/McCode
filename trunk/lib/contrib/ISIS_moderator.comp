@@ -10,8 +10,8 @@
  *
  * %I
  * Written by: S. Ansell and D. Champion
- * Date: February 2004
- * Version: $Revision: 1.1 $
+ * Date: August 2004
+ * Version: $Revision: 1.2 $
  * Origin: ISIS
  * Release: McStas 1.8
  *
@@ -32,8 +32,8 @@
  * INPUT PARAMETERS:
  *
  * Face:   (word) Name of the face - TS2:groove,hydrogen,narrow,broad -
- *                                 - TS1:Water,ch4,h2,merlin 
- *                                 - TS2: Face name W1-9 E1-9
+ *                                 - TS1:Water,ch4,h2,merlin or instrument name eg maps, crisp etc. 
+ *                                 - TS2: W1-9 E1-9
  * E0:     (meV) Lower edge of energy distribution
  * E1:     (meV) Upper edge of energy distribution
  * dist:   (m)   Distance from source to the focusing rectangle
@@ -62,6 +62,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
+
 #include <ctype.h>
   /* New functions */
   double Epass();
@@ -82,6 +83,7 @@ DECLARE
   FILE* openFile(char*);
   double strArea();
 
+
   double p_in;            /* Polorization term (from McSTAS) */ 
   int Tnpts;              /* Number of points in parameteriation */
   int Einc;               /* Number of points in energy seperated total (E0-E1) */
@@ -100,6 +102,7 @@ DECLARE
 
   double rtE0,rtE1;       /* runtime Energy minima and maxima so we can use angstroms as negative input */
   double rtmodX,rtmodY;    /* runtime moderator sizes, so that a negative argument may give a default size */
+
 
   int
     cmdnumberD(char *mc,double* num,const int len)
@@ -787,20 +790,90 @@ DECLARE
 INITIALIZE
 %{
   /* READ IN THE ENERGY FILE */
+
   int table;         /* Variables */
   char fname[256];
   FILE* Tfile;
   double tmp;
-  char *fileParam[8] ={ "Etable.groove","Etable.hydrogen","Etable.narrow","Etable.broad",
-			"Etable.water","Etable.merlin","Etable.ch4","Etable.h2" };
+  char lowerFace[255];
+  int Bcnt;
+  int i;
+  struct BeamLine
+    {
+      char Name[50];
+      double Xsize;
+      double Ysize;
+    } Olist[50];
+
+  Bcnt=0;
+  // CH4 face 1 (north)
+  strcpy(Olist[Bcnt].Name,"mari"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"gem"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"hrpd"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"pearl"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  // CH4 face 2 (south)
+  strcpy(Olist[Bcnt].Name,"sandals"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"prisma"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+
+  // H2 face
+  strcpy(Olist[Bcnt].Name,"surf"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"crisp"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"iris"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+
+  // Water face 1 
+  strcpy(Olist[Bcnt].Name,"polaris"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"het"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"tosca"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+
+  // Water face 2
+  strcpy(Olist[Bcnt].Name,"maps"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"evs"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"sxd"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+
+  // TS1 Generics
+  strcpy(Olist[Bcnt].Name,"ch4"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"h2"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"water"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
+
+  // TS2 Generics
+  strcpy(Olist[Bcnt].Name,"groove"); Olist[Bcnt].Xsize=0.08333; Olist[Bcnt].Ysize=0.03; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"hydrogen"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"narrow"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"broad"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+
+  // TS2 groove
+  strcpy(Olist[Bcnt].Name,"e1"); Olist[Bcnt].Xsize=0.08333; Olist[Bcnt].Ysize=0.03; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"e2"); Olist[Bcnt].Xsize=0.08333; Olist[Bcnt].Ysize=0.03; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"e3"); Olist[Bcnt].Xsize=0.08333; Olist[Bcnt].Ysize=0.03; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"e4"); Olist[Bcnt].Xsize=0.08333; Olist[Bcnt].Ysize=0.03; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"e5"); Olist[Bcnt].Xsize=0.08333; Olist[Bcnt].Ysize=0.03; Bcnt++;
+
+  //Broad face
+  strcpy(Olist[Bcnt].Name,"e6"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"e7"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"e8"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"e9"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+  // Narrow face
+
+  strcpy(Olist[Bcnt].Name,"w1"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"w2"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"w3"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"w4"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.12; Bcnt++;
+
+  //Hydrogen face
+  strcpy(Olist[Bcnt].Name,"w5"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"w6"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"w7"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"w8"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+  strcpy(Olist[Bcnt].Name,"w9"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
+
 
   /* write out version number */
   fprintf(stderr,"**********************************************************************\n");
-  fprintf(stderr,"****   This is ISIS_moderator.comp version 0.8                    ****\n");
+  fprintf(stderr,"****   This is ISIS_moderator.comp version 0.9 (22/5/04)          ****\n");
   fprintf(stderr,"****   Please check to see if your files are up-to-date           ****\n");
   fprintf(stderr,"****   http://www.isis.rl.ac.uk/Computing/Software/MC/index.htm   ****\n");
   fprintf(stderr,"**********************************************************************\n\n");
-
 
 
   /* convert arguments to runtime variables so that they may be altered */
@@ -808,7 +881,7 @@ INITIALIZE
   rtE1=E1;
   rtmodX=modXsize;
   rtmodY=modYsize;
-
+  
 
   /* Convert NEGATIVE energy (denoting angstroms) into meV */
   if ( (rtE0<0 && E1>0) | (rtE0>0 && E1<0))
@@ -818,8 +891,6 @@ INITIALIZE
     }
 
  
-
-
   if (rtE0<0 && E1<0)
     {
       fprintf (stderr,"converting Angstroms to meV\n");
@@ -834,185 +905,50 @@ INITIALIZE
       fprintf (stderr,"%g A -> %g A =>  %g meV -> %g meV\n",-E0,-E1,rtE0,rtE1);
     }
 
-
-
   Tnpts=0;
   Ncount=0;
   fprintf(stderr,"Face == %s \n",Face);
+  
+  for(i=0;Face[i] && Face[i]!=' ';i++)
+    lowerFace[i]=tolower(Face[i]);
+  lowerFace[i]=0;
 
-  switch (toupper(Face[0]))
-    {
-    case 'G':
-      if (rtmodX<=0.0)
-	{
-	rtmodX=0.083;
-	fprintf(stderr,"default modXsize used %g m\n",rtmodX);
-	}
-      if (rtmodY<=0.0)
-	{
-	rtmodY=0.030;
-	fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	}
-      scaleSize=rtmodX*rtmodY/0.0025;
-      table=0;
-      break;
-    case 'H':
-      if (rtmodX<=0.0)
-	{
-	rtmodX=0.12;
-	fprintf(stderr,"default modXsize used %g m\n",rtmodX);
-	}
-      if (rtmodY<=0.0)
-	{
-	rtmodY=0.11;
-	fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	}
-      scaleSize=rtmodX*rtmodY/0.0132;
-      fprintf(stderr,"Scale == %f\n",scaleSize);
-      table= (Face[1]=='2') ? 7 : 1;
-      break;
-    case 'N':
-      if (rtmodX<=0.0)
-	{
-	rtmodX=0.12;
-	fprintf(stderr,"default modXsize used %g m\n",rtmodX);
-	}
-      if (rtmodY<=0.0)
-	{
-	rtmodY=0.12;
-	fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	}
-      scaleSize=rtmodX*rtmodY/0.0144;
-      table=2;
-      break;
-    case 'B':                          /* Broad */
-      if (rtmodX<=0.0)
-	{
-	rtmodX=0.12;
-	fprintf(stderr,"default modXsize used %g m\n",rtmodX);
-	}
-      if (rtmodY<=0.0)
-	{
-	rtmodY=0.12;
-	fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	}
-      scaleSize=rtmodX*rtmodY/0.0144;
-      table=3;
-      break;
-
-    case 'M':                         /* Merlin */
-      if (rtmodX<=0.0)
-	{
-	rtmodX=0.12;
-	fprintf(stderr,"default modXsize used %g m\n",rtmodX);
-	}
-      if (rtmodY<=0.0)
-	{
-	rtmodY=0.12;
-	fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	}
-      scaleSize=rtmodX*rtmodY/0.0144;
-      table=5;
-      break;
-    case 'C':                         /* Methane (CH4) */
-      if (rtmodX<=0.0)
-	{
-	rtmodX=0.12;
-	fprintf(stderr,"default modXsize used %g m\n",rtmodX);
-	}
-      if (rtmodY<=0.0)
-	{
-	rtmodY=0.115; 
-	fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	}
-      scaleSize=rtmodX*rtmodY/0.0138;
-      table=6;
-      break;
-    case 'W':                         /* West moderators or Water*
-					 /* first check if it is water */
-      if (!isdigit(Face[1]))
-        {
-	  if (rtmodX<=0.0)
-	    {
-	    rtmodX=0.12;
+  for(i=0;i<Bcnt;i++)
+    if (strcmp(lowerFace,Olist[i].Name)==0)
+      {
+	if (rtmodX<=0.0)
+	  {
+	    rtmodX=Olist[i].Xsize;
 	    fprintf(stderr,"default modXsize used %g m\n",rtmodX);
-	    }
-	  if (rtmodY<=0.0)
-	    {
-	    rtmodY=0.115;
+	  }
+	if (rtmodY<=0.0)
+	  {
+	    rtmodY=Olist[i].Ysize;
 	    fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	    }
-	  scaleSize=rtmodX*rtmodY/0.0138;
-	  table=4;
-	  break;
-	}
+	  }
+	sprintf(fname,"Etable.%s",Olist[i].Name);
+	scaleSize=(SAC) ? 1.0 : rtmodY*rtmodX*10000.0;
+	break;
+      }
 
-
-      table=10+(int)(Face[1]-'0');  
-	
-      if (rtmodX<=0.0)
+  if(i==Bcnt)
+    {
+      fprintf(stderr,"Unknown moderator type ::%s::\n",lowerFace);
+      fprintf(stderr,"Valid options == > \n");
+      for(i=0;i<Bcnt;i++)
 	{
-	rtmodX=0.12;
-	fprintf(stderr,"default modXsize used %g m\n",rtmodX);
+	  fprintf(stderr," %s ",Olist[i].Name);
+	  if (!((i+1) % 4))
+	    fprintf(stderr,"\n");
 	}
-      if (rtmodY<=0.0)
-	{
-	rtmodY=(table>14) ? 0.11 : 0.12;
-	fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	}
-
-      if (table>14)
-	scaleSize=rtmodX*rtmodY/0.0132;
-      else
-	scaleSize=rtmodX*rtmodY/0.0144;
-      break;
-
-    case 'E':                         /* East moderators */
-      if (!isdigit(Face[1]))
-        {
-	  fprintf(stderr,"Mod type not understood\n");
-	  exit(1);
-	}
-
-
-      table=20+(int)(Face[1]-'0');
-      if (rtmodX<=0.0)
-	{
-	rtmodX=(table>25) ? 0.12 : 0.083;
-	fprintf(stderr,"default modXsize used %g m\n",rtmodX);
-	}
-      if (rtmodY<=0.0)
-	{
-	rtmodY=(table>25) ? 0.12 : 0.03;
-	fprintf(stderr,"default modYsize used %g m\n",rtmodY);
-	}
-      if (table>25) 
-	scaleSize=rtmodX*rtmodY/0.0144;
-      else
-	scaleSize=rtmodX*rtmodY/0.0025;  
-      break;
-
-
-    default:
-      fprintf(stderr,"Table == %c\n",Face[0]);
-      table=8;
+      scaleSize=modXsize*modYsize/0.0025;
+      exit(1);
     }
 
   rtmodY*=cos(CAngle);
   fprintf(stderr,"Table == %d\n",table);
 
- 
-
-
   /* READ PARAMETER FILE */
-
-  if (table<10)
-    strcpy(fname,fileParam[table]);
-  else if (table<20)
-    sprintf(fname,"Etable.W%d",table-10);
-  else
-    sprintf(fname,"Etable.E%d",table-20);
-  
     
   Tfile=openFile(fname);
 
@@ -1029,7 +965,7 @@ INITIALIZE
   /* Do solid angle correction if required */
   // if SAC=0/1 solid angle is determined
   if(dist)
-  angleArea=(SAC) ? strArea() : 1.0;
+    angleArea=(SAC) ? strArea() : 1.0;
   else
     angleArea=1.0;
 
@@ -1114,8 +1050,7 @@ TRACE
   fprintf(stderr,"%g %g %g : E %g %g %g %g\n",vx,vy,vz,E,t,p_in,p);
 #endif
   p=w_focus*angleArea;
-
-
+  
 
 %}
 
