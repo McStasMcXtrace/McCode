@@ -55,8 +55,8 @@ autoflush STDOUT 1;
 
 # Various parameters determined by the command line.
 my ($sim_def, $force_compile, $data_dir, $data_file);
-my $ncount = 1e6;                # Number of neutron histories in one simulation
-my $numpoints = 1;                # Number of points in scan (if any)
+my $ncount = 1e6;               # Number of neutron histories in one simulation
+my $numpoints = 1;              # Number of points in scan (if any)
 my @params = ();                # List of input parameters
 my %vals;                       # Hash of input parameter values
 my @options = ();               # Additional command line options (mcstas)
@@ -68,12 +68,12 @@ my $format_start_value;         # symbol before field value
 my $format_end_value;           # symbol after field value
 my $format_prefix;              # symbol for line prefix
 my $format_limprefix;           # symbol for 'x' / 'xy' limits definition
+my $exec_test=0;                # flag for McStas package test execution
 
 # Name of compiled simulation executable.
 my $out_file;
 # Instrument information data structure.
 my $instr_info;
-
 
 # Add an input parameter assignment to the current set, overriding any
 # previously assigned value.
@@ -112,7 +112,7 @@ sub parse_args {
     for($i = 0; $i < @ARGV; $i++) {
         $_ = $ARGV[$i];
         # Options specific to mcrun.
-        if(/^--force-compile$/ || /^-c$/) {
+        if(/^--force-compile$/ || /^-c$/ || /^--force$/) {
             $force_compile = 1;
         } elsif(/^--param\=(.*)$/ || /^-p(.+)$/) {
             read_inputpar_from_file($1);
@@ -150,11 +150,13 @@ sub parse_args {
         } elsif(/^-([s])$/) {
             push @options, "-$1$ARGV[++$i]";
         } elsif(/^--(format)$/ || /^--(plotter)$/) {
-            push @options, "--$1='$ARGV[++$i]'";
             $plotter = $ARGV[$i];
         } elsif(/^--(format)\=(.*)$/ || /^--(plotter)\=(.*)$/) {
-            push @options, "--$1='$2'";
             $plotter = $2;
+        } elsif(/^--test$/) {
+            $exec_test="compatible";
+        } elsif(/^--(test)\=(.*)$/) {
+            $exec_test="$1";
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
@@ -204,6 +206,7 @@ sub parse_args {
    --no-output-files          Do not write any data files.
    -h        --help           Show help message.
    -i        --info           Detailed instrument information.
+   --test={compatible|full}   Execute McStas selftest and generate report
    --format=FORMAT            Output data files using format FORMAT.
                               (format list obtained from <instr>.out -h)
 This program both runs mcstas with Instr and the C compiler to build an
@@ -216,7 +219,7 @@ specified for building the instrument:
   MCSTAS_FORMAT Default FORMAT to use for data files ($mcstas_format)
 SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://neutron.risoe.dk/mcstas/
-** No instrument definition name given\n" unless $sim_def;
+** No instrument definition name given\n" unless $sim_def || $exec_test;
 die "Number of points must be at least 1" unless $numpoints >= 1;
 }
 
@@ -671,23 +674,34 @@ $plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
                 $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
 
 parse_args();                         # Parse command line arguments
+
 # Check value of $plotter variable
-if ($plotter =~ /PGPLOT|McStas|0/i) {
-  $plotter="McStas"; $format_ext = ".sim";
+if ($plotter =~ /0/i) { 
+  if ($plotter =~ /binary|float|double/i) {
+    $plotter =~ s/binary//; # PGPLOT binary format is invalid. solving.
+    $plotter =~ s/float//;
+    $plotter =~ s/double//;
+  }
+  $plotter="McStas"; }
+elsif ($plotter =~ /1|2/i) { $plotter="Matlab"; }
+elsif ($plotter =~ /3|4/i) { $plotter="Scilab"; }
+# assign output format for scans
+if ($plotter =~ /PGPLOT|McStas/i) {
+  $format_ext        = ".sim";
   $format_assign     =":";    
   $format_start_value="";
   $format_end_value  =""; 
   $format_prefix     ="# ";  
   $format_limprefix  ="x";
-} elsif ($plotter =~ /Matlab|1|2/i) {
-  $plotter="Matlab"; $format_ext = ".m";
+} elsif ($plotter =~ /Matlab/i) {
+  $format_ext        = ".m";
   $format_assign     ="=";    
   $format_start_value="'";
   $format_end_value  ="';"; 
   $format_prefix     ="% ";  
   $format_limprefix  ="xy";
-} elsif ($plotter =~ /Scilab|3|4/i) {
-  $plotter="Scilab"; $format_ext = ".sci";
+} elsif ($plotter =~ /Scilab/i) {
+  $format_ext        = ".sci";
   $format_assign     ="=";
   $format_start_value="'";
   $format_end_value  ="';";
@@ -695,14 +709,24 @@ if ($plotter =~ /PGPLOT|McStas|0/i) {
   $format_limprefix  ="xy";
 }
 
-my $scan_info = check_input_params(); # Get variables to scan, if any
-$out_file = get_out_file($sim_def, $force_compile, @ccopts);
-exit(1) unless $out_file;
-exit(1) if $ncount == 0;
+# add format option to cmd stack
+push @options, "--format='$plotter'";
 
 # Make sure that the current directory appears first in the path;
 # contrary to normal use, this is what the user expects here.
 $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
+
+if ($exec_test) {
+  my $status;
+  $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $plotter);
+  if (defined $status) { print STDERR "$status"; }
+  exit(1);
+}
+
+my $scan_info = check_input_params(); # Get variables to scan, if any
+$out_file = get_out_file($sim_def, $force_compile, @ccopts);
+exit(1) unless $out_file;
+exit(1) if $ncount == 0;
 
 $instr_info = get_sim_info("$out_file","--format='$plotter'");
 

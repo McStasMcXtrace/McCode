@@ -1,9 +1,5 @@
 #! /usr/bin/perl -w
 
-use FileHandle;
-use File::Basename;
-use Config;
-
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
@@ -22,6 +18,8 @@ BEGIN {
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
 }
 
+use FileHandle;
+use File::Basename;
 use lib $MCSTAS::perl_dir;
 require "mcstas_config.perl";
 require "mcrunlib.pl";
@@ -475,6 +473,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "   mcdisplay     Instrument geometry viewer\n";
       print "   mcresplot     Instrument resolution function viewer\n";
       print "   mcstas2vitess McStas to Vitess component translation utility\n";
+      print "   mcconvert     Matlab <-> Scilab script conversion tool\n";
       print "When used with the -h flag, all tools display a specific help.\n";
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
       print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
