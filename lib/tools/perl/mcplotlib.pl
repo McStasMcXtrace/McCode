@@ -180,4 +180,13 @@ sub single_plot {
     }
 }
 
+# Make sure that the PGPLOT X11 window server is started, by opening
+# and immediately closing a window.
+sub ensure_pgplot_xserv_started {
+    my $olddev;
+    pgqid($olddev);
+    my $newdev = pgopen("/xserv");
+    pgclos();
+    pgslct($olddev);
+}
 1;
