@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.6 1998-03-18 13:21:48 elu_krni Exp $
+*	$Id: mcstas-r.h,v 1.7 1998-03-20 14:20:10 lefmann Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.6  1998/03/18 13:21:48  elu_krni
+*	Added definition of PROP_Z0 macro.
+*
 *	Revision 1.5  1998/03/16 08:04:16  kn
 *	Added normal distributed random number function randnorm().
 *
@@ -65,6 +68,10 @@ typedef MCNUM Rotation[3][3];
 #define mcDEBUG_ABSORB()
 #endif
 
+#define MIN2RAD 2*PI/(360*60)
+#define DEG2RAD 2*PI/360
+#define AA2MS   2200*1.798/(2*PI)
+
 #define PROP_Z0 \
   { \
     double mc_dt; \
@@ -92,3 +99,5 @@ void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 		double t, double s1, double s2, double p);
 void mcgenstate(void);
 double randnorm(void);
+int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
+		       double vx, double vy, double vz, r, h);
