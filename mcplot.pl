@@ -5,6 +5,12 @@ use PDL;
 use PDL::Graphics::PGPLOT;
 use PGPLOT;
 
+if($ENV{"MCSTAS"}) {
+    use lib $ENV{"MCSTAS"};
+} else {
+    use lib "/usr/local/lib/mcstas";
+}
+
 require "mcfrontlib.pl";
 require "mcplotlib.pl";
 
@@ -20,13 +26,15 @@ for(;;) {
     last if $cc =~ /[xq]/i;	# Quit?
     if($cc =~ /p/i) {		# Hardcopy?
 	overview_plot("mcstas.ps/cps", $datalist, 0);
+	print "Wrote postscript file 'mcstas.ps'\n";
 	next;
     }
     # now do a full-screen version of the plot selected by the user.
     ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], 1);
     last if $cc =~ /[xq]/i;	# Quit?
     if($cc =~ /p/i) {		# Hardcopy?
-	single_plot("$datalist->[$idx]{'Component'}.ps/cps",
-		    $datalist->[$idx], 0);
+	my $filename = "$datalist->[$idx]{'Component'}.ps";
+	single_plot("$filename/cps", $datalist->[$idx], 0);
+	print "Wrote postscript file '$filename'\n";
     }	
 }
