@@ -750,12 +750,22 @@ sub menu_run_simulation {
         } else {
 	  push @command, "$out_name";
 	}
-	my $OutDir;
-	# Also needed for Dir if given...
+	my ($OutDir,$OutDirBak);
+	# In the special case of --dir, we simply replace ' ' with '_'
+	# on Win32 (also giving out a warning message). This is done
+	# because Win32::GetShortPathName only works on directories that
+	# actually exist... :(
 	if ($newsi->{'Dir'}) {
 	  $OutDir=$newsi->{'Dir'};
 	  if ($Config{'osname'} eq 'MSWin32') {
-	    $OutDir=Win32::GetShortPathName($OutDir);
+	    $OutDirBak = $OutDir;
+	    $OutDir =~ s! !_!g;
+	    if (! "$OutDir" == "$OutDirBak") {
+	      putmsg($cmdwin, "You have requested output directory \"$OutDirBak\"\n");
+	      putmsg($cmdwin, "For compatibility reasons, spaces are replaced by underscores.\n");
+	      putmsg($cmdwin, "Your output files will go to \"$OutDir\"\n");
+	      $newsi->{'Dir'} = $OutDir;
+	    }
 	  } else {
 	    $OutDir =~ s! !\ !g;
 	  }
