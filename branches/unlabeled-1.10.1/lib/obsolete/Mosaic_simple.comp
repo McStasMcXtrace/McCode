@@ -7,7 +7,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.10.1.1 $
 * Origin: McStas release
 *
 * Mosaic crystal, possibly off-cut.
@@ -138,11 +138,11 @@ TRACE
           /* Compute the total scattering probability at this ki */
           total = 0;
           /* Choose integration limits, using Gaussian tail cut-off at 5 times
-	   * sigma. The radius of the Debye-Scherrer cone is smaller by a
-	   * factor 1/cos(theta) than the radius of the (partial) sphere
-	   * describing the possible orientations of Q due to mosaicity, so we
-	   * must use an integration width 1/cos(theta) greater than 5 times
-	   * the mosaic. */
+           * sigma. The radius of the Debye-Scherrer cone is smaller by a
+           * factor 1/cos(theta) than the radius of the (partial) sphere
+           * describing the possible orientations of Q due to mosaicity, so we
+           * must use an integration width 1/cos(theta) greater than 5 times
+           * the mosaic. */
           ds_factor = 1/cos(theta);
           width = 5*mos_rms*ds_factor;
           c1x = kix*(cos_2theta-1);
@@ -164,8 +164,8 @@ TRACE
           }
           total *= width;
           /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
-	   * width 1/cos(theta) greater than the mosaic and correct for any
-	   * error by adjusting the neutron weight later. */
+           * width 1/cos(theta) greater than the mosaic and correct for any
+           * error by adjusting the neutron weight later. */
           phi = ds_factor*mos_rms*randnorm();
           /* Compute final wave vector kf and scattering vector q = ki - kf */
           cos_phi = cos(phi);
