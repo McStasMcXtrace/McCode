@@ -1071,6 +1071,9 @@ sub setup_menu {
     $w->bind('<Alt-c>' => [\&menu_choose_backend, $w]);
     
     $simmenu->pack(-side=>'left');
+    
+    sitemenu_build($w,$menu);
+    
     my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
     $helpmenu->command(-label => 'McStas web page',
 		       -underline => 7,

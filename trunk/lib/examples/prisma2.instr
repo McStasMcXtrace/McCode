@@ -16,6 +16,8 @@
 *
 *   prisma2 --ncount=2e6 TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44
 *   prisma2 --ncount=2e6 TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44
+*
+* %INSTRUMENT_SITE: ISIS
 *******************************************************************************/
 
 /* Modified from Monochromator.comp to paint a "color" on the neutron
