@@ -107,7 +107,7 @@ void adapt_tree_free(struct adapt_tree *t);
 */
 #define MC_GETPAR2(comp, par) (mcc ## comp ## _ ## par)
 #define MC_GETPAR(comp, par) MC_GETPAR2(comp,par)
-#define DETECTOR_OUT(p0,p1,p2) mcdetector_out(mccompcurname,p0,p1,p2)
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out(mccompcurname,p0,p1,p2,NULL)
 #define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,mccompcurname)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
      mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,mccompcurname)
@@ -327,7 +327,8 @@ void mccoordschange_polarisation(Rotation t,
 				 double *sx, double *sy, double *sz);
 double mcestimate_error(int N, double p1, double p2);
 void mcsiminfo_out(char *format, ...);
-void mcdetector_out(char *cname, double p0, double p1, double p2);
+void mcdetector_out(char *cname, double p0, double p1, double p2,
+		    char *filename);
 void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *cname);
 void mcdetector_out_1D(char *t, char *xl, char *yl,
 		       char *xvar, double x1, double x2, int n,
