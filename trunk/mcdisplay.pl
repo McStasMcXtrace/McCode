@@ -138,6 +138,8 @@ sub read_instrument {
                 write_process("INSTRUMENT.lastcomp='$last';\n");
               }
               if ($save) {
+	      	if ($direct_output) { write_process("INSTRUMENT.save_format='$direct_output';\n"); }
+		else  { write_process("INSTRUMENT.save_format='-scg';\n"); }
                 write_process("INSTRUMENT.save=1;\n");
               } else {
                 write_process("INSTRUMENT.save=0;\n");
@@ -837,8 +839,10 @@ for($i = 0; $i < @ARGV; $i++) {
             ($ARGV[$i] =~ /^--zoom=([-0-9+.eE]+)$/)) {
         $magnification = ($1 == 0 ? 1 : $1);
     } elsif(($ARGV[$i] eq "-gif") || ($ARGV[$i] eq "-ps") ||
-            ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png")) {
+            ($ARGV[$i] eq "-fig") || ($ARGV[$i] eq "-scg") ||
+            ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png")) || ($ARGV[$i] eq "-ppm")) {
         $direct_output = $ARGV[$i];
+	$save = 1;
         $int_mode = 1;
     } elsif(($ARGV[$i] =~ /^-i([a-zA-Z0-9_]+)$/) ||
             ($ARGV[$i] =~ /^--inspect=([a-zA-Z0-9_]+)$/)) {
