@@ -4,10 +4,15 @@
 *         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Copyright 1977-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Res_sample
+* %I
+* Written by: KN
+* Date: 1999
+* Version: $Revision: 1.6 $
+* Origin: McStas release
 *
-* Written by: KN 1999
+* Sample for resolution function calculation.
 *
+* %D
 * An inelastic sample with completely uniform scattering in both Q and
 * energy. This sample is used together with the Res_monitor component and
 * (optionally) the mcresplot front-end to compute the resolution function of
@@ -20,6 +25,7 @@
 * The scattered neutrons will have directions towards a given sphere and
 * energies betweed E0-dE and E0+dE.
 *
+* %P
 * INPUT PARAMETERS:
 *       
 * radius_i  : Inner radius of hollow cylinder in (x,z) plane, or width of
@@ -30,9 +36,10 @@
 * target_x  :
 * target_y  : position of target to focus at (m)
 * target_z  :
-* E0        : Center of scattered energy range
-* dE        : half width of scattered energy range
+* E0        : Center of scattered energy range [meV]
+* dE        : half width of scattered energy range [meV]
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Res_sample
