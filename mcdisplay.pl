@@ -138,8 +138,8 @@ sub read_instrument {
                 write_process("INSTRUMENT.lastcomp='$last';\n");
               }
               if ($save) {
-	      	if ($direct_output) { write_process("INSTRUMENT.save_format='$direct_output';\n"); }
-		else  { write_process("INSTRUMENT.save_format='-scg';\n"); }
+                      if ($direct_output) { write_process("INSTRUMENT.save_format='$direct_output';\n"); }
+                else  { write_process("INSTRUMENT.save_format='-scg';\n"); }
                 write_process("INSTRUMENT.save=1;\n");
               } else {
                 write_process("INSTRUMENT.save=0;\n");
@@ -842,7 +842,7 @@ for($i = 0; $i < @ARGV; $i++) {
             ($ARGV[$i] eq "-fig") || ($ARGV[$i] eq "-scg") ||
             ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png") || ($ARGV[$i] eq "-ppm")) {
         $direct_output = $ARGV[$i];
-	$save = 1;
+        $save = 1;
         $int_mode = 1;
     } elsif(($ARGV[$i] =~ /^-i([a-zA-Z0-9_]+)$/) ||
             ($ARGV[$i] =~ /^--inspect=([a-zA-Z0-9_]+)$/)) {
@@ -942,11 +942,11 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0 && $pg_avail eq 0) {
   print STDERR "******************************************************\n\n";
   die "PGPLOT problems...\n";
 }
-
+my $pg_devname = "/xserv";
 # Only set up PGPLOT stuff if needed
 if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
   # PGPLOT is plotter!
-  my $pg_devname = "/xserv";
+  
   if ($int_mode == 1) 
     { 
       my $ext  = "ps";
@@ -1007,11 +1007,11 @@ while(!eof(IN)) {
     %neutron = read_neutron(IN);
     if ($start_scilab == 1) {
     # This only happens on Win32 (runscilab.exe), and we know the filename too...
-	my $pid = open(SCILAB,"runscilab -nw -f mcdisplay_commands.sci|");
-	while(!eof(SCILAB)) {
-	    # Do nothing...
-	}
-	$start_scilab = 0;
+        my $pid = open(SCILAB,"runscilab -nw -f mcdisplay_commands.sci|");
+        while(!eof(SCILAB)) {
+            # Do nothing...
+        }
+        $start_scilab = 0;
     } 
     next if $neutron{'numcomp'} <= $inspect_pos;
 
@@ -1024,7 +1024,7 @@ while(!eof(IN)) {
             my $ext="ps";
             my $type = $ret == 3 ? "ps" : "cps";
             if($ret == 5) { $type = "gif"; $ext="gif"; }
-	    if($ret == 6) { $type = "png"; $ext="png"; }
+            if($ret == 6) { $type = "png"; $ext="png"; }
             my $tmp_pg_devname = "$sim_cmd$seq.$ext/$type";
             my $tmpdev=0;
             $tmpdev = get_device($tmp_pg_devname);
