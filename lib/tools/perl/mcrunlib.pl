@@ -405,6 +405,8 @@ sub do_test {
   my @test_commands;
   my @test_monitor_names;
   my @test_monitor_values;
+  my $suffix='';
+  if ($Config{'osname'} eq 'MSWin32') { $suffix='.pl'; }
   $ENV{'MCSTAS_FORMAT'} = $plotter;
   @test_names   = ("ISIS prisma2: in focusing mode", 
       "ISIS prisma2: in non-focusing mode", 
@@ -425,23 +427,23 @@ sub do_test {
       "Risoe TAS1: Triple axis mode. Analyzer rocking curve (OMA aka A5). Vanadium sample",
       "Risoe TAS1: Triple axis mode. Sample take-off (TT aka A4). Powder sample",);
   @test_commands= ("mcrun --dir=prisma2a prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44",
-      "mcrun --dir=prisma2b prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44",
-      "mcrun --dir=V_test vanadium_example.instr --ncount=$n_single ROT=0",
-      "mcrun -n $n_single --dir=h8_test  h8_test.instr Lambda=2.359",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_1_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=0",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_2_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=30",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_3_45 linup-2.instr PHM=-37.077 TTM=-74 C1=30 OMC1=-50,50",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_4_45 linup-2.instr PHM=-39,-35 TTM=-74 C1=30 OMC1=-1.81715",
-      "mcrun --numpoints=31 -n $n_scan --dir=linup_5_m5 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-5",
-      "mcrun --numpoints=31 -n $n_scan --dir=linup_5_m6 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-6",
-      "mcrun --numpoints=31 -n $n_scan --dir=linup_5_m10 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-10",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_6_0 linup-3.instr PHM=-37.077 TTM=-74 TT=-1.5,1.5 C1=30 OMC1=-5.5 C2=0 C3=0",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_7 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=0",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_8 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_9 linup-5.instr PHM=-37.077 TTM=-74 TT=32,35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun --numpoints=41 -n $n_scan --dir=linup_10 linup-5.instr PHM=-37.077 TTM=-74 TT=-32,-35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun --numpoints=21 -n $n_scan --dir=linup_11 linup-6.instr PHM=-37.077 TTM=-74 TT=33.57 OMA=-16.44,-18.44 TTA=-34.883 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
+      "mcrun$suffix --dir=prisma2b prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44",
+      "mcrun$suffix --dir=V_test vanadium_example.instr --ncount=$n_single ROT=0",
+      "mcrun$suffix -n $n_single --dir=h8_test  h8_test.instr Lambda=2.359",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_1_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=0",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_2_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=30",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_3_45 linup-2.instr PHM=-37.077 TTM=-74 C1=30 OMC1=-50,50",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_4_45 linup-2.instr PHM=-39,-35 TTM=-74 C1=30 OMC1=-1.81715",
+      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m5 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-5",
+      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m6 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-6",
+      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m10 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-10",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_6_0 linup-3.instr PHM=-37.077 TTM=-74 TT=-1.5,1.5 C1=30 OMC1=-5.5 C2=0 C3=0",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_7 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=0",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_8 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_9 linup-5.instr PHM=-37.077 TTM=-74 TT=32,35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_10 linup-5.instr PHM=-37.077 TTM=-74 TT=-32,-35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_11 linup-6.instr PHM=-37.077 TTM=-74 TT=33.57 OMA=-16.44,-18.44 TTA=-34.883 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
   @test_monitor_names =("mon9_I","mon9_I","PSD_4pi_I","D7_SC3_In_I","","","","","","","","","","","","","","");
   @test_monitor_values=(4.61739e-08,3.39694e-08,1.90823e-06,2.89923e-11,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
   # now execute each simulation and look for errors
@@ -493,8 +495,8 @@ sub do_test {
   # now test graphics...
   @test_names   = ("Plot of Scan of parameters with Risoe TAS1 monochromator rocking curve (no collimator)",
     "Plot of Single simulation with Brookhaven H8 Termal TAS with vanadium sample");
-  @test_commands= ("mcplot -gif linup_1_45",
-    "mcplot -gif h8_test");
+  @test_commands= ("mcplot$suffix -gif linup_1_45",
+    "mcplot$suffix -gif h8_test");
   @test_monitor_names =("linup_1_45","h8_test");
   for ($j=0 ; $j<@test_commands ; $j++) {
     my $this_cmd =$test_commands[$j];
@@ -809,6 +811,16 @@ sub parse_instrument {
     
 }
 
+# Check for the availability of a command or file
+sub check_command {
+  my ($cmd) = @_;
+  my $this_cmd;
+  my $res; 
+  $this_cmd = "which $cmd";
+  $res      = `$this_cmd 2>&1`; # get stdout and stderr
+  chomp($res);
+	if (-e $res) { return 1; } else { return 0; }
+}
 
 1;
 
