@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.53 2003-09-05 08:59:05 farhi Exp $
+*	$Id: instrument.y,v 1.54 2003-09-15 10:25:52 farhi Exp $
 *
 *******************************************************************************/
 
@@ -555,7 +555,7 @@ dictfile: /* empty: default dictionary */
 		  }
     | dictfile "DICTFILE" TOK_STRING
       {
-        $$ = $3
+        $$ = $3;
       }
 ;
 hdfversion: /* empty: default HDF version */
