@@ -308,15 +308,17 @@ function mcplot_menu_action(k, gwin)
     case 17 then // Colormap/gray
       gray();
     case 18 then // Close all
-      mprintf('To Exit Scilab, type ""exit"" at the scilab''s prompt\n');
-      if length(s.tempfile)
-        // This only happens on Win32: Because of Win32's way of backgrounding
-        // processes, the perl layer between McStas and mcplot can not be 
-        // allowed to remove the temporary file (It is gone before Scilab
-	// sees it! Instead, s.tempfile stores the filename of the temporary 
+      mprintf('To Exit Scilab, use the ""exit"" entry of the McStas menu.\n');
+      if exists('McPlotTempFile')
+        // Because of Win32's way of backgrounding processes, the perl layer 
+	// between McStas and mcplot can not be allowed to remove the 
+	// temporary file (It is gone before Scilab sees it!) Instead, 
+	// McPlotTempFile stores the filename of the temporary 
 	// scriptfile, which is then removed on Scilab exit.
 	if MSDOS 
-          unix_g(strcat(['del /q /f ' s.tempfile]));
+          unix_g(strcat(['del /q /f ' McPlotTempFile]));
+	else // Probably safe to assume unix here?
+	  unix_g(strcat(['rm -f ' McPlotTempFile]));
 	end
       end
       exit
