@@ -11,6 +11,14 @@ sub plot_array_2d {
     my ($dx,$dy) = (($x1 - $x0)/$m, ($y1 - $y0)/$n);
     my $tr = pdl [ $x0 + $dx/2, $dx, 0, $y0 + $dy/2, 0, $dy ];
     my ($min, $max) = (min($data), max($data));
+    if ($min == $max) {
+	if($min == 0) {
+	    $max = 1;
+	} else {
+	    $min = 0.9*$min;
+	    $max = 0.9*$max;
+	}
+    }
     my $numcol = 64;
     my $ramp = pdl [[ 0,  1/8,  3/8,  5/8,  7/8,  8/8],
 		    [ 0,    0,    0,    1,    1,   .5],
