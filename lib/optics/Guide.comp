@@ -1,0 +1,136 @@
+/*******************************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Guide.
+*
+* Written by: KN, September 2 1998 
+* Modified by: KL, October 6, 1998
+*
+* Models a rectangular guide tube centered on the Z axis. The entrance lies
+* in the X-Y plane.
+* For details on the geometry calculation see the description in the McStas
+* reference manual.
+*
+* INPUT PARAMETERS:
+*
+* w1:      Width at the guide entry (m)
+* h1:      Height at the guide entry (m)
+* w2:      Width at the guide exit (m)
+* h2:      Height at the guide exit (m)
+* l:       length of guide (m)
+* R0:      Low-angle reflectivity (1)
+* Qc:      Critical scattering vector (AA-1)
+* alpha:   Slope of reflectivity (AA)
+* m:       m-value of material (1)
+* W:       Width of supermirror cut-off (AA-1)
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Guide
+DEFINITION PARAMETERS (w1, h1, w2, h2, l, R0, Qc, alpha, m, W)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+TRACE
+%{
+  double t1,t2;                                 /* Intersection times. */
+  double av,ah,bv,bh,cv1,cv2,ch1,ch2,d;         /* Intermediate values */
+  double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
+  int i;                                        /* Which mirror hit? */
+  double q;                                     /* Q [1/AA] of reflection */
+  double vlen2,nlen2;                           /* Vector lengths squared */
+
+  /* ToDo: These could be precalculated. */
+  double ww = .5*(w2 - w1), hh = .5*(h2 - h1);
+  double whalf = .5*w1, hhalf = .5*h1;
+  double lwhalf = l*whalf, lhhalf = l*hhalf;
+
+  /* Propagate neutron to guide entrance. */
+  PROP_Z0;
+  if(x <= -whalf || x >= whalf || y <= -hhalf || y >= hhalf)
+    ABSORB;
+  for(;;)
+  {
+    /* Compute the dot products of v and n for the four mirrors. */
+    av = l*vx; bv = ww*vz;
+    ah = l*vy; bh = hh*vz;
+    vdotn_v1 = bv + av;		/* Left vertical */
+    vdotn_v2 = bv - av;		/* Right vertical */
+    vdotn_h1 = bh + ah;		/* Lower horizontal */
+    vdotn_h2 = bh - ah;		/* Upper horizontal */
+    /* Compute the dot products of (O - r) and n as c1+c2 and c1-c2 */
+    cv1 = -whalf*l - z*ww; cv2 = x*l;
+    ch1 = -hhalf*l - z*hh; ch2 = y*l;
+    /* Compute intersection times. */
+    t1 = (l - z)/vz;
+    i = 0;
+    if(vdotn_v1 < 0 && (t2 = (cv1 - cv2)/vdotn_v1) < t1)
+    {
+      t1 = t2;
+      i = 1;
+    }
+    if(vdotn_v2 < 0 && (t2 = (cv1 + cv2)/vdotn_v2) < t1)
+    {
+      t1 = t2;
+      i = 2;
+    }
+    if(vdotn_h1 < 0 && (t2 = (ch1 - ch2)/vdotn_h1) < t1)
+    {
+      t1 = t2;
+      i = 3;
+    }
+    if(vdotn_h2 < 0 && (t2 = (ch1 + ch2)/vdotn_h2) < t1)
+    {
+      t1 = t2;
+      i = 4;
+    }
+    if(i == 0)
+      break;			/* Neutron left guide. */
+    PROP_DT(t1);
+    switch(i)
+    {
+      case 1:			/* Left vertical mirror */
+	nlen2 = l*l + ww*ww;
+	q = V2Q*(-2)*vdotn_v1/sqrt(nlen2);
+	d = 2*vdotn_v1/nlen2;
+	vx = vx - d*l;
+	vz = vz - d*ww;
+	break;
+      case 2:			/* Right vertical mirror */
+	nlen2 = l*l + ww*ww;
+	q = V2Q*(-2)*vdotn_v2/sqrt(nlen2);
+	d = 2*vdotn_v2/nlen2;
+	vx = vx + d*l;
+	vz = vz - d*ww;
+	break;
+      case 3:			/* Lower horizontal mirror */
+	nlen2 = l*l + hh*hh;
+	q = V2Q*(-2)*vdotn_h1/sqrt(nlen2);
+	d = 2*vdotn_h1/nlen2;
+	vy = vy - d*l;
+	vz = vz - d*hh;
+	break;
+      case 4:			/* Upper horizontal mirror */
+	nlen2 = l*l + hh*hh;
+	q = V2Q*(-2)*vdotn_h2/sqrt(nlen2);
+	d = 2*vdotn_h2/nlen2;
+	vy = vy + d*l;
+	vz = vz - d*hh;
+	break;
+    }
+    /* Now compute reflectivity. */
+    if(q > Qc)
+    {
+      double arg = (q-m*Qc)/W;
+      if(arg < 10)
+        p *= .5*(1-tanh(arg))*(1-alpha*(q-Qc));
+      else
+        ABSORB;                               /* Cutoff ~ 1E-10 */
+    }
+  }
+%}
+
+END
