@@ -89,7 +89,7 @@ clean:
 TAGS:
 	etags *.[chly]
 
-install: installdirs $(BINOBJS) plotlib
+install: installdirs $(BINOBJS)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
 	for pgm in $(PERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
@@ -152,8 +152,6 @@ instrument.tab.c instrument.tab.h: instrument.y
 lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
 
-plotlib: lib/tools/scilab/plotlib/builder.sce
-	  cd lib/tools/scilab/plotlib/ && ./build_unix.sh $(SCILAB)
 
 
 

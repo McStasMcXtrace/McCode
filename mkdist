@@ -120,7 +120,6 @@ export INSTALL=
 ./configure
 
 make
-make plotlib
 UNAME=`uname`
 MACH=`uname -m`
 # Up to now, this is always done on intel...
@@ -137,13 +136,10 @@ tar cfz $PW/../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz mcstas-$1
 cd $PW
 cd $DIST
 make clean
-find lib/tools/scilab/plotlib/macros -name \*.bin -exec rm \{\} \;
 flex -i instrument.l
 bison -v -d instrument.y
 ./configure
 sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
-mv build.bat.new build.bat
-sed 's/DOPLOTLIB="no"/DOPLOTLIB="yes"/' build.bat > build.bat.new
 mv build.bat.new build.bat
 cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1

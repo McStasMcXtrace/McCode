@@ -25,7 +25,6 @@ AC_INIT(mcstas.h)
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PATH_PROGS(PERL, [perl5 perl], /usr/local/bin/perl)
-AC_PATH_PROGS(SCILAB, [scilab scilex], none)
 CF_ANSI_CC_CHECK
 MC_ANSI_MATH_PROTO
 AC_CHECK_FUNCS(strcasecmp fdopen)
