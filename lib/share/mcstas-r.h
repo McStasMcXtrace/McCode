@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.5 1998-03-16 08:04:16 kn Exp $
+*	$Id: mcstas-r.h,v 1.6 1998-03-18 13:21:48 elu_krni Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.5  1998/03/16 08:04:16  kn
+*	Added normal distributed random number function randnorm().
+*
 *	Revision 1.4  1997/12/03 13:34:19  kn
 *	Added definition of ABSORB macro.
 *
@@ -61,6 +64,18 @@ typedef MCNUM Rotation[3][3];
 #define mcDEBUG_LEAVE()
 #define mcDEBUG_ABSORB()
 #endif
+
+#define PROP_Z0 \
+  { \
+    double mc_dt; \
+    if(mcnlvz == 0) ABSORB; \
+    mc_dt = -mcnlz/mcnlvz; \
+    if(mc_dt < 0) ABSORB; \
+    mcnlx += mcnlvx*mc_dt; \
+    mcnly += mcnlvy*mc_dt; \
+    mcnlt += mc_dt; \
+    mcnlz = 0; \
+  }
 
 Coords coords_set(MCNUM x, MCNUM y, MCNUM z);
 Coords coords_add(Coords a, Coords b);
