@@ -115,6 +115,7 @@ function win = mcplot_addmenu(use_common_menu)
         'Colormap/Gray',...
         'Colormap/_Pink',...
         'Colormap/Inv. Pink',...
+        'View Scan step...', ...
         'About McStas...',...
         'Exit'];        // exit must be last choice
   if exists('with_gtk')
@@ -140,10 +141,21 @@ function win = mcplot_addmenu(use_common_menu)
                   'frame .foo.menu -relief raised -borderwidth 2',...
                   'pack .foo.menu -side top -fill x',...
                   'menubutton .foo.menu.mcplot -text ""McStas/McPlot"" -menu .foo.menu.mcplot.m -underline 0',...
-                  'menu .foo.menu.mcplot.m'];
+                  'menu .foo.menu.mcplot.m', ...
+                  '.foo.menu.mcplot.m add cascade -label ""Colorbar"" -menu .foo.menu.mcplot.colorbar -underline 0', ...
+                  'menu .foo.menu.mcplot.colorbar',...
+                  '.foo.menu.mcplot.m add cascade -label ""Edit"" -menu .foo.menu.mcplot.edit -underline 0', ...
+                  'menu .foo.menu.mcplot.edit',...
+                  '.foo.menu.mcplot.m add cascade -label ""Save"" -menu .foo.menu.mcplot.save -underline 0',...
+                  'menu .foo.menu.mcplot.save'];
+      
       for index=1:size(t,2)
+        if length(strindex(t(index),'Colormap')), parent='.foo.menu.mcplot.colorbar';
+        elseif length(strindex(t(index),'Save')), parent='.foo.menu.mcplot.save';
+        elseif length(strindex(t(index),'Edit')), parent='.foo.menu.mcplot.edit';
+        else parent = '.foo.menu.mcplot.m'; end
         tcl_script = [ tcl_script, ...
-          '.foo.menu.mcplot.m add command -label ""'+t(index)+'"" -underline 0  -command {ScilabEval ""mcplot_menu_action('+string(index)+')""}'];
+          parent+' add command -label ""'+t(index)+'"" -underline 0  -command {ScilabEval ""mcplot_menu_action('+string(index)+')""}'];
           
       end
       tcl_script = [ tcl_script, 'pack .foo.menu.mcplot -side left' ];
@@ -173,24 +185,26 @@ function mcplot_menu_action(k, gwin)
   filename = '';
   execstr('filename = ThisFigure.filename','errcatch');
   
+  if ~length(ThisFigure), return; end
+  fig_names=getfield(1,ThisFigure);
   if argn(2) == 0, k = 1; end
   if MCPLOT.ShiftedItems
     k = k+1;
   end
   if k <= 0
     mprintf('Oops, the Tcl/Tk uses shifted menu item indexes\n');
-    mprintf('This should be corrected now...a\n');
+    mprintf('This should be corrected now...Retry.\n');
     MCPLOT.ShiftedItems = 1;
     k=1;
   end
   
   xset('window', gwin); // raise menu activated window 
-  item = [ 24, 1, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 18]
+  item = [ 24, 1, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 26, 22, 18]
   
   select item(k)
     case 0 then
             mprintf('Invalid menu item\n');
-    case 1 then // Open in a separate window
+    case 1 then // Open in a separate window (duplicate)
       t='Figure '+string(gwin)+': Click on the plot to duplicate/enlarge.';
       xinfo(t); mprintf('%s\n',t);
       [c_i, c_x, c_y] = xclick();
@@ -219,25 +233,25 @@ function mcplot_menu_action(k, gwin)
       d = [];
       execstr('d = ThisFigure.Subplot_'+string(p),'errcatch');
       if length(d)
+        dat_names = getfield(1,d);
+        if ~length(find(dat_names == 'Source')) & length(find(fig_names == 'Source')), d.Source = ThisFigure.Source; end
+        if ~length(find(dat_names == 'Ncount')) & length(find(fig_names == 'Ncount')), d.Ncount = ThisFigure.Ncount; end
+        if ~length(find(dat_names == 'parameters')) & length(find(fig_names == 'parameters')), d.parameters=0; d.parameters = ThisFigure.parameters; end
+        if ~length(find(dat_names == 'pathname')) & length(find(fig_names == 'pathname')), d.pathname = ThisFigure.pathname; end
         mcplot_scan(d,'-plot',''); 
         nwin = xget('window'); // new opened window
         // update the MCPLOT global variable
-        execstr('MCPLOT.Figure_'+string(nwin)+'.simulation = ThisFigure.simulation;','errcatch');
-        d = []; execstr('d = ThisFigure.parameters;','errcatch');
-        if length(d), mcplot_set_global(d, nwin, 0); end
-        d = []; execstr('d = ThisFigure.instrument;','errcatch');
-        if length(d), mcplot_set_global(d, nwin, 0); end
+        execstr('MCPLOT.Figure_'+string(nwin)+'.filename = ThisFigure.filename;','errcatch');
+        mcplot_set_global(d, nwin, 0); 
         xclear();
-              xtape('replayna', nwin, 90, 0);        // top view
+        xtape('replayna', nwin, 90, 0);        // top view
+        mcplot_fig_legend(d,'','');
       end
       xinfo(t); mprintf('%s\n',t);
     case 2 then // Edit/_data file
-      if ~length(filename)
-        execstr('filename = ThisFigure.simulation','errcatch');
-      end
       if length(filename), mcplot_edit_file(filename); end
     case 19 then // Edit/instrument file
-      execstr('filename = ThisFigure.instrument.Source','errcatch');
+      execstr('filename = ThisFigure.Source','errcatch');
       if length(filename), mcplot_edit_file(filename); end
     case 3 then // Edit/colormap
       getcolor('Select color within colormap');
@@ -245,7 +259,7 @@ function mcplot_menu_action(k, gwin)
       xsetm();
     case 23 then // View/instrument
       figname = [];
-      execstr('figname = ThisFigure.instrument.Source','errcatch');
+      execstr('figname = ThisFigure.Source','errcatch');
       if length(figname)
         // Strip off the .instr suffix...
         idx=strindex(figname,'.instr');
@@ -258,36 +272,36 @@ function mcplot_menu_action(k, gwin)
         t=figname+'.scg';
         [fid,err]=fileinfo(t);
         if err
-                t = figname+'.out.scg';
-                [fid,err]=fileinfo(t);
+          t = figname+'.out.scg';
+          [fid,err]=fileinfo(t);
         end
         if err
-                parameters = [];
-                execstr('parameters = ThisFigure.parameters','errcatch');
-                if length(parameters)
-                  // scan parameters structure, excluding 'class','parent','name'
-                  tmp_parcmd = 'mcdisplay '+figname+'.instr -n 100 -pScilab --save ';
-                  tmp_fields = getfield(1,parameters);
-                  for field=1:size(tmp_fields,2)
-                    if (tmp_fields(field) ~= 'class' & ...
-                      tmp_fields(field) ~= 'parent' & ...
-                      tmp_fields(field) ~= 'name' & ...
-                      tmp_fields(field) ~= 'dims' & ...
-                      tmp_fields(field) ~= 'st' & ...
-                      tmp_fields(field) ~= 'struct')
-                      tmp_parcmd = tmp_parcmd+' '+tmp_fields(field)+'='+string(getfield(tmp_fields(field), parameters));
-                    end
-                  end
-                  t='Executing:'+tmp_parcmd;
-                  xinfo(t); mprintf('%s\n',t);
-                  rep=unix_g(tmp_parcmd);
-                end
-                t=figname+'.scg';
-                [fid,err]=fileinfo(t);
-                if err
-                        t = figname+'.out.scg';
-                        [fid,err]=fileinfo(t);
-                end
+          parameters = [];
+          execstr('parameters = ThisFigure.parameters','errcatch');
+          if length(parameters)
+            // scan parameters structure, excluding 'class','parent','name'
+            tmp_parcmd = 'mcdisplay '+figname+'.instr -n 100 -pScilab --save ';
+            tmp_fields = getfield(1,parameters);
+            for field=1:size(tmp_fields,2)
+              if (tmp_fields(field) ~= 'class' & ...
+                tmp_fields(field) ~= 'parent' & ...
+                tmp_fields(field) ~= 'name' & ...
+                tmp_fields(field) ~= 'dims' & ...
+                tmp_fields(field) ~= 'st' & ...
+                tmp_fields(field) ~= 'struct')
+                tmp_parcmd = tmp_parcmd+' '+tmp_fields(field)+'='+string(getfield(tmp_fields(field), parameters));
+              end
+            end
+            t='Executing:'+tmp_parcmd;
+            xinfo(t); mprintf('%s\n',t);
+            rep=unix_g(tmp_parcmd);
+          end
+          t=figname+'.scg';
+          [fid,err]=fileinfo(t);
+          if err
+            t = figname+'.out.scg';
+            [fid,err]=fileinfo(t);
+          end
         end
         if err == 0
           gwin=xget('window');
@@ -375,9 +389,33 @@ function mcplot_menu_action(k, gwin)
         xinfo(t); mprintf('%s\n',t);
         xset('window', w_indexes(w_raise));
       end
-    case 25 then
+    case 25 then  // reset view
       xclear()
       xtape('replayna', gwin, 90, 0);
+    case 26 then  // select scan step
+      pathname = ''; execstr('pathname =ThisFigure.pathname','errcatch');
+      filename = ''; execstr('filename =ThisFigure.filename','errcatch');
+      source   = ''; execstr('source   =ThisFigure.Source','errcatch');
+      ncount   = '?';execstr('ncount   =ThisFigure.Ncount','''errcatch''');
+      if length(find(fig_names == 'superdata'))
+        scannedvar = ''; execstr('scannedvar=ThisFigure.superdata.scannedvar;','errcatch')
+        if length(scannedvar)
+          // make a list of scan step items
+          index = 0:(ThisFigure.superdata.numpoints-1); index=string(index');
+          scannedvar = linspace(ThisFigure.superdata.minvar, ThisFigure.superdata.maxvar, ThisFigure.superdata.numpoints);
+          scannedvar = string(scannedvar');
+          scannedvar = '[#'+index+'] '+ThisFigure.superdata.scannedvar+'='+scannedvar;
+          prompt = [ 'Select a Scan Step to open',...
+            '['+source+'] '+pathname+filename, ...
+            'Scan of '+ThisFigure.superdata.scannedvar+'='+string(ThisFigure.superdata.minvar)+':'+...
+            string(ThisFigure.superdata.maxvar)+' in '+string(ThisFigure.superdata.numpoints)+' points.'];
+          selection = x_choose(scannedvar, prompt);
+          if selection
+            disp('mcplot('''+pathname+string(selection-1)+''',''-overview'');');
+            mcplot(pathname+string(selection-1),'-overview');
+          end   
+        end
+      end
     end 
     if item(k)~= 18, xbasr(); end // update plot
 endfunction  
@@ -487,7 +525,7 @@ function mcplot_subplot(m,n,p)
   j=int((p-1)/n)
   i=p-1-n*j
 
-  xsetech([i/n,j/m,1/n,1/m])
+  xsetech([i/n,j/m*0.95,1/n,1/m*0.95])
 endfunction // mcplot_subplot
 
 function d=mcplot_load(d)
@@ -525,6 +563,8 @@ endfunction
 function d=mcplot_plot(d,p)
   // func to plot data
   if ~length(strindex(d.type,'0d')), d=mcplot_load(d); end
+  if ~length(d.values), d.values = string(sum(sum(d.data)))+' '+string(sum(sum(d.errors))); end
+  if ~length(d.signal), d.signal = 'Min='+string(min(min(d.data)))+';+Max='+string(max(max(d.data)))+';+Mean='+string(mean(mean(d.data))); end
   if ~p, return; end;
   execstr(['l=[',d.xylimits,'];'],'errcatch'); 
   S=size(d.data);
@@ -550,7 +590,7 @@ function d=mcplot_plot(d,p)
       if p == 2, t = t1; end
       xtitle(t);       
     elseif length(strindex(d.type,'1d'))
-      d.x=linspace(l(1),l(2),S(1));
+      d.x=linspace(l(1),l(2),max(S));
       mcplot_errorbar(d.x,d.data,d.errors);
       if p == 2, t = t1; end
       xtitle(t,d.xlabel,d.ylabel);
@@ -583,7 +623,12 @@ function mcplot_set_global(s, gwin, p_in)
   // each MCPLOT global field is named 'Figure_'+gwin
   // This structure contains as many 'Subplot_'+p fields of class 'data'
   // and fields of class 'instrument' and 'parameters'
-  p = p_in;
+  if length(p_in) == 3
+    m = p_in(1);
+    n = p_in(2);
+    p = p_in(3);
+    p_in = p;
+  else m=0; n=0; p=p_in; end
   if ~p, p=1; end
   
   if ~length(gwin), gwin = xget('window'); end
@@ -602,15 +647,20 @@ function mcplot_set_global(s, gwin, p_in)
     MCPLOT.MenuInstalled = 0;
     MCPLOT.ShiftedItems = 0;
   end
+  tag_names = getfield(1,s);
   if ~length(ThisFigure)
     ThisFigure = struct();
-    tag_names = getfield(1,s);
     if length(find(tag_names == 'filename')), t=s.filename;
     elseif length(find(tag_names == 'Source')),t=s.Source;
     elseif length(find(tag_names == 'File')), t=s.File;
     else t='unknown'; end
-    ThisFigure.simulation = t;
+    ThisFigure.filename = t;
+    ThisFigure.overview = [];
   end
+  if length(find(tag_names == 'Source')), ThisFigure.Source=s.Source; end
+  if length(find(tag_names == 'Date')), ThisFigure.Date=s.Date; end
+  if length(find(tag_names == 'Ncount')), ThisFigure.Ncount=s.Ncount; end
+  if length(find(tag_names == 'parameters')), ThisFigure.parameters=s.parameters; end
   if s.class == 'instrument'
     instrument            = struct();
     instrument.Source     = s.Source;
@@ -620,18 +670,25 @@ function mcplot_set_global(s, gwin, p_in)
     ThisFigure.instrument = 0;
     ThisFigure.instrument = instrument;
   elseif s.class == 'simulation'
-    tmp = s.name;
-    if part(tmp,length(tmp)-3:length(tmp)) ~= '.sci', tmp=tmp+'.sci'; end
-    ThisFigure.simulation            = tmp;
+    [a,b,ext] = mcplot_fileparts(s.name);
+    if ext == '.m', ThisFigure.filename = s.name+'.m';
+    else ThisFigure.filename = s.name; end
   elseif s.class == 'parameters'
     ThisFigure.parameters = 0;
     ThisFigure.parameters = s;
   elseif s.class == 'data'
-    if ~p_in, ThisFigure.filename = s.filename; 
-    else ThisFigure.filename = ThisFigure.simulation; end
+    fig_names = getfield(1,ThisFigure);
+    if ~p_in, ThisFigure.filename = s.filename; end
+    if length(find(tag_names == 'ratio')) & ~length(find(tag_names == 'Ncount'))
+      ThisFigure.Ncount = s.ratio; end
     execstr('ThisFigure.Subplot_'+string(p)+' = 0;');
     execstr('ThisFigure.Subplot_'+string(p)+' = s;');
+  elseif s.class == 'superdata'
+    ThisFigure.superdata = 0;
+    ThisFigure.superdata = s;
   end // ignore other classes
+  
+  if m*n, ThisFigure.overview = [m n p]; end
 
   // store Figure McPlot info
   execstr('MCPLOT.Figure_'+string(gwin)+'= 0;');
@@ -677,9 +734,11 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
   elseif argn(2) == 3 then 
     m=0; n=0; p=0;
     data_count = p;
+  else data_count = p;
   end
   if s.class ~= 'data'
-    if s.class == 'parameters' | s.class == 'simulation' | s.class == 'instrument'
+    if s.class == 'parameters' | s.class == 'simulation' | ...
+       s.class == 'instrument' | s.class == 'superdata'
       mcplot_set_global(s, w, 0);
     end
     for i=2:max(size(tag_names))   // tag_names(1) is 'struct' (type=17)
@@ -709,7 +768,7 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
       elseif length(strindex(action,'-overview'))
         mcplot_subplot(m,n,data_count+1);
         s = mcplot_plot(s, 2);
-        mcplot_set_global(s, [], data_count+1);
+        mcplot_set_global(s, [], [m,n,data_count+1]);
       end
       data_count = data_count+1; 
     end
@@ -746,7 +805,76 @@ function [Dirname, Basename, Ext] = mcplot_fileparts(filename)
   
   Basename=code2str(filecode(idx_slash+1:idx_dot-1));
   
-endfunction
+endfunction // mcplot_fileparts
+
+function mcplot_fig_legend(object,filename, pathname)
+// add legend, update object and global data
+  // extract global data
+  global MCPLOT
+  
+  gwin = xget('window');
+  fig_names = getfield(1,MCPLOT);
+  ThisFigure = 'Figure_'+string(gwin);
+  if length(find(fig_names == ThisFigure))
+    ThisFigure = getfield(ThisFigure,MCPLOT);
+  else ThisFigure = '';
+  end
+
+  fig_names=getfield(1,ThisFigure);
+  obj_names=getfield(1,object);
+  
+  source   = ''; execstr('source=ThisFigure.instrument.Source','errcatch');
+  if ~length(source), execstr('source=ThisFigure.Source','errcatch'); end
+  if ~length(source), source='McStas'; end
+  sdate    = ''; execstr('sdate=ThisFigure.Date','errcatch');
+  if ~length(sdate), sdate='unknown'; end 
+  if type(sdate) ~= 10, 
+    sdate = getdate(sdate);
+    sdate = string(sdate(6))+'/'+string(sdate(2))+'/'+string(sdate(1))+' - '+string(sdate(7))+':'+string(sdate(8))+':'+string(sdate(9));
+  end
+  ncount   = ''; execstr('ncount   =ThisFigure.Ncount','errcatch');
+  overview = ''; execstr('overview =ThisFigure.overview','errcatch');
+  if ~length(filename) & length(find(obj_names=='filename')), filename=object.filename; end
+  if ~length(filename) & length(find(fig_names=='filename')),  filename=ThisFigure.filename; end
+  if ~length(pathname) & length(find(obj_names=='pathname')), pathname=object.pathname; end
+  ThisFigure.pathname = pathname;
+  execstr('MCPLOT.Figure_'+string(gwin)+'= ThisFigure;');
+  // setup the overview title
+  t1 = '['+source+'] '+pathname+filename;
+  if length(overview), xname(t1); end
+  t2='Ncount:'+ncount+'; Date: '+sdate;
+  scannedvar=''; execstr('scannedvar=ThisFigure.superdata.scannedvar','errcatch');
+  if length(scannedvar)
+    t2 = t2+'. Scan of '+ThisFigure.superdata.scannedvar+'='+string(ThisFigure.superdata.minvar)+':'+ ...
+      string(ThisFigure.superdata.maxvar)+' in '+string(ThisFigure.superdata.numpoints)+' points.';
+  end
+  parameters = ''; execstr('parameters =ThisFigure.parameters','errcatch');
+  if length(parameters)
+    // scan parameters structure, excluding 'class','parent','name'
+    t3 = '';
+    tmp_fields = getfield(1,parameters);
+    for field=1:size(tmp_fields,2)
+      if (tmp_fields(field) ~= 'class' & ...
+        tmp_fields(field) ~= 'parent' & ...
+        tmp_fields(field) ~= 'name' & ...
+        tmp_fields(field) ~= 'dims' & ...
+        tmp_fields(field) ~= 'st' & ...
+        tmp_fields(field) ~= 'struct')
+        t3 = t3+' '+tmp_fields(field)+'='+string(getfield(tmp_fields(field), parameters));
+      end
+    end
+  else
+    t3 = 'unknown parameters';
+  end
+
+  [wrect, frect, logflag, arect] = xgetech();
+  xsetech([0,0,1,1],[0,0,1,1]);
+  xsetech(arect=[0.05,0.05,0.05,0.05]);
+  xstring(0,0,[t1;t2;t3],0,1);
+  xsetech(wrect, frect);
+  xsetech(arect=arect);
+
+endfunction // mcplot_fig_legend
 
 function [object,count]=mcplot(object, options, id)
 // mcplot: plot a McStas simulation result
@@ -767,6 +895,8 @@ function [object,count]=mcplot(object, options, id)
 //    'filename' and 'title'
 
 // parameter check
+global MCPLOT
+
 if argn(2) == 0, object=''; end
 if argn(2) <= 1, options=''; end
 if argn(2) <= 2, id = ''; end
@@ -778,6 +908,12 @@ if ~length(strindex(options,'plot')) &  ~length(strindex(options,'overview')) & 
         options = options+' -overview ';
 end
 
+pathname = '';
+filename = '';
+
+if MSDOS, filesep = '\';
+else filesep = '/'; end
+
 // handle file name specification in 'object'
 if typeof(object) == 'string' // if object is a string
 
@@ -788,7 +924,17 @@ if typeof(object) == 'string' // if object is a string
     return
   end
   // if object is a '' string, s = 'mcstas'.
-  if length(object) == 0, object = 'mcstas.sci'; end
+  if ~length(object), object = 'mcstas.sci'; end
+  // checks for directories
+  cur_dir = pwd();
+  object_orig = object;
+  is_dir = 1; execstr('is_dir=chdir(object)','errcatch');
+  if is_dir == 0  // OK
+    object = object_orig+filesep+'mcstas.sci'; 
+    chdir(cur_dir);
+  else
+    object = object_orig;
+  end
   [fid, err] = mopen(object, 'r');
   if err ~= 0 // error occured. Calls fileselector (xgetfile)
     object = xgetfile('*.sci', title='Select a McStas simulation file to load');
@@ -801,14 +947,17 @@ if typeof(object) == 'string' // if object is a string
     end
   end
   mclose(fid);
-  [Dirname, Basename, Ext]= mcplot_fileparts(object);
-  if length(Dirname), Cur_Dir = pwd(); chdir(Dirname); end
-  filename = Basename;
-  if length(strindex(object,'.sci')), filename=filename+'.sci';
-  else filename=filename+'.sce'; end
-  object=filename;
+  object_orig = object;
+  [pathname, object, ext]= mcplot_fileparts(object);
+  filename = object+ext;
+  
+  if length(pathname), 
+    cur_dir = pwd(); 
+    chdir(pathname); 
+    if part(pathname,length(pathname)) ~= filesep, pathname=pathname+filesep; end
+  end
   //    opens filename with exec(filename,-1)
-  exec(object, -1); // compile the file
+  exec(filename, -1); // compile the file
   mcstas = [];
   execstr('mcstas = get_mcstas();','errcatch');
   if ~length(mcstas)
@@ -823,14 +972,16 @@ if typeof(object) == 'string' // if object is a string
     execstr('mcstas = get_'+valid_name+'();','errcatch');
     if ~length(mcstas)
       mprintf('mcplot: Could not extract McStas structure from file '+object+'\n');
+      mprintf('        This is not a Scilab script (other format or binary ?)');
       mprintf('mcplot: %s\n',lasterror());
+      if length(pathname), chdir(cur_dir); end
       return
     end
   end
   if length(mcstas)
     object = mcstas; mcstas = [];
   end
-  if length(Dirname), chdir(Cur_Dir); end
+  if length(pathname), chdir(cur_dir); end
 end
 
 // handles structure loading and ploting
@@ -859,7 +1010,9 @@ else  // if 's' is a 'struct'
   end
   //  **  send to mcplot_scan(s, options, id)  **
   [count, object] = mcplot_scan(object, options, id);
-  //    if output is not empty close xend()
+  mcplot_fig_legend(object,filename, pathname);
+  
+  // if output is not empty do not install menu
   if ~length(form)
     // installs a common menu for all figures
     // in case this could not be done with GTk/Tk
