@@ -226,7 +226,8 @@ PlotInstrument3D();
 if INSTRUMENT.save==1
   xsave(strcat([INSTRUMENT.descr '.scg']));
   INSTRUMENT.save=0;
-  parmwin();
+  // parmwin();
+  quit;
 end
 endfunction
 
