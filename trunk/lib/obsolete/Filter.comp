@@ -1,0 +1,60 @@
+/*******************************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Filter
+*
+* Written by: KL, KN, Sept. 14 1998
+*
+* Be-type filter defined by two identical rectangular opening apertures.
+* The transmission is zero above upper cut-off and interpolated liniearly 
+* between the upper and lower cut-off energies.
+*
+* INPUT PARAMETERS:
+*
+* xmin: Lower x bound (m)
+* xmax: Upper x bound (m)
+* ymin: Lower y bound (m)
+* ymax: Upper y bound (m)
+* len:  Distance between apertures (m)
+* T0:   Tranmittance of low energy neutrons (1)
+* Emin: Lower cut-off energy (meV)
+* Emax: Upper cut-off energy (meV)
+*
+*******************************************************************************/
+
+
+DEFINE COMPONENT Filter
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, Emin, Emax, T0)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+TRACE
+%{
+    double E;
+    double dt;
+    
+    PROP_Z0;
+    E=VS2E*(vx*vx+vy*vy+vz*vz);
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+    dt = len/vz;
+    x += vx*dt;
+    y += vy*dt;
+    t += dt;
+    z = len; 
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+
+    if(E>=Emax)
+      ABSORB;
+    else
+      if(E<=Emin)
+	p*= T0;
+      else
+        {
+        p*= T0*(Emax-E)/(Emax-Emin);
+        }
+%}
+END
