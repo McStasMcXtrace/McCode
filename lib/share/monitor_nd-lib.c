@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.15 2004-02-26 12:55:41 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.16 2004-06-30 12:13:47 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.15  2004/02/26 12:55:41  farhi
+*	Handles 0d monitor outputs for bins=0, and limits are restrictive (i.e. neutron must be within all limits to be stored in monitor)
+*	
 *	Revision 1.14  2004/02/04 18:01:12  farhi
 *	Use hdiv=theta and vdiv=phi for banana.
 *	
@@ -142,7 +145,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_Vars->Sphere_Radius     = 0;
     mc_mn_Vars->Cylinder_Height   = 0;
     mc_mn_Vars->Flag_With_Borders = 0;   /* 2 means xy borders too */
-    mc_mn_Vars->Flag_List         = 0;   /* 1 store 1 buffer, 2 is list all */
+    mc_mn_Vars->Flag_List         = 0;   /* 1=store 1 buffer, 2=list all, 3=re-use buffer */
     mc_mn_Vars->Flag_Multiple     = 0;   /* 1 when n1D, 0 for 2D */
     mc_mn_Vars->Flag_Verbose      = 0;
     mc_mn_Vars->Flag_Shape        = mc_mn_DEFS->SHAPE_SQUARE;
@@ -1006,7 +1009,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       mc_mn_fname = (char*)malloc(strlen(mc_mn_Vars->Mon_File)+10*mc_mn_Vars->Coord_Number);
       if (mc_mn_Vars->Flag_List && mc_mn_Vars->Mon2D_Buffer) /* List: DETECTOR_OUT_2D */
       {
-        int  loc_ascii_only;
+        int  ascii_only_orig;
         char formatName[64];
         char *formatName_orig;
         
@@ -1032,14 +1035,24 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
         if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin2d,mc_mn_bin1d);
 
         /* handle the type of list output */
-        loc_ascii_only = mcascii_only;
+        ascii_only_orig = mcascii_only;
         formatName_orig = mcformat.Name;	/* copy the pointer position */
-	strcpy(formatName, mcformat.Name);
+        strcpy(formatName, mcformat.Name);
         if (mc_mn_Vars->Flag_List >= 1)
-        {
-          strcat(formatName, " partial ");
-          if (mc_mn_Vars->Flag_List > 2) 
-          { strcat(formatName, " append "); mcascii_only = 1; }
+        { /* Flag_List mode:
+               1=store 1 buffer
+               2=list all, triggers 3 when 1st buffer reallocated
+               3=re-used buffer (file already opened)
+             Format modifiers for Flag_List
+               1= normal monitor file (no modifier, export in one go)
+               2= write data+header, and footer if buffer not full (mc_mn_Vars->Buffer_Counter < mc_mn_Vars->Buffer_Block)
+               3= write data, and footer if buffer not full (final)
+           */
+          strcat(formatName, " list ");
+          if (mc_mn_Vars->Flag_List == 3) strcat(formatName, " no header ");
+          if (mc_mn_Vars->Flag_List >= 2 && mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block)
+            strcat(formatName, " no footer ");
+          
           if (mc_mn_Vars->Flag_Binary_List) mcascii_only = 1;
           if (mc_mn_Vars->Flag_Binary_List == 1)
             strcat(formatName, " binary float ");
@@ -1064,7 +1077,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
             mc_mn_fname, mc_mn_Vars->compcurname); 
 
         /* reset the original type of output */
-        mcascii_only = loc_ascii_only;
+        mcascii_only = ascii_only_orig;
         mcformat.Name= formatName_orig;
       }
       if (mc_mn_Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
