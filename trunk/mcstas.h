@@ -7,9 +7,14 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.9 1998-09-24 12:15:52 kn Exp $
+* 	$Id: mcstas.h,v 1.10 1998-10-01 08:13:26 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.9  1998/09/24 12:15:52  kn
+* 	Added print_warn() function.
+* 	Rotation angles in instrument definitions are now given in degrees, with
+* 	a backward compatibility mode for the old behaviour using radians.
+*
 * 	Revision 1.8  1998/09/24 11:18:05  kn
 * 	Make AT modifier required.
 * 	More reasonable default when ROTATED modifier is missing.
@@ -258,6 +263,27 @@ void push_autoload(FILE *file);
 
 
 /*******************************************************************************
+* Definitions for file.c
+*******************************************************************************/
+
+#define PATHSEP_S "/"
+#define PATHSEP_C '/'
+#define CURRENT_DIR_S "."
+#define MC_SYS_DIR "/usr/local/lib/mcstas"
+
+extern char *component_pathname;
+
+/* Open file, searching the full search path. */
+FILE *open_file_search(char *name);
+/* Open component definition, searching the full search path. */
+FILE *open_component_search(char *name);
+/* Open file, searching only the system directory. */
+FILE *open_file_search_sys(char *name);
+/* Add a directory to the search path. */
+void add_search_dir(char *name);
+
+
+/*******************************************************************************
 * Definitions for cogen.c
 *******************************************************************************/
 
@@ -359,6 +385,7 @@ struct comp_inst
 struct instr_def
   {
     char *name;			/* Instrument name. */
+    char *source;		/* Name of source file for definition. */
     struct code_block *decls;	/* Code for declarations. */
     struct code_block *inits;	/* Code for initializations. */
     struct code_block *finals;	/* Code for simulation end. */
@@ -366,4 +393,7 @@ struct instr_def
     Symtab compmap;		/* Map of component names to instances. */
     List complist;		/* List of components in declaration order. */
     int rotations_in_radians;	/* If set, rotations are given in radians. */
+    int use_default_main;	/* If set, output a main() function. */
+    int include_runtime;	/* If set, include runtime in output. */
+    int enable_trace;		/* If set, enable output of neutron traces. */
   };
