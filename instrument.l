@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.7 1998-03-16 08:35:31 kn Exp $
+*	$Id: instrument.l,v 1.8 1998-05-04 08:14:32 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.7  1998/03/16 08:35:31  kn
+*	Fixed missing yylval type qualifications.
+*
 *	Revision 1.6  1997/09/07 20:16:03  kn
 *	Added FINALLY construct.
 *
@@ -57,8 +60,10 @@ DIGIT		[0-9]
 ALPHA		[A-ZÆØÅa-zæøå]
 ALPHANUM	{ALPHA}|{DIGIT}|"_"
 
+NUMBER		-?({DIGIT}*".")?{DIGIT}+([Ee][+-]?{DIGIT}+)?
+/* Note: Since ID overlaps with NUMBER (eg. "2E3"), ID must come
+   after NUMBER */
 ID		{DIGIT}*{ALPHA}{ALPHANUM}*
-NUMBER		-?{DIGIT}+("."{DIGIT}+)?([Ee][+-]?{DIGIT}+)?
 
 %%
 
