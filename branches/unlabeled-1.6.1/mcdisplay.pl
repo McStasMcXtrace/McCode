@@ -436,6 +436,8 @@ if($multi_view) {
     pgbegin(0, "/xserv", 1, 1);
 }
 pgask(0);
+pgscr(0,1,1,1);
+pgscr(1,0,0,0);
 
 my ($numcomp, %neutron, %instr);
 
