@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.16 1998-11-13 07:31:32 kn Exp $
+*	$Id: instrument.y,v 1.17 1998-11-26 08:45:52 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.16  1998/11/13 07:31:32  kn
+*	Implemented proper quoting of special chars in file names in #line
+*	directives.
+*
 *	Revision 1.15  1998/11/09 08:14:07  kn
 *	Added version (-v) option.
 *
@@ -75,6 +79,14 @@
 #define YYERROR_VERBOSE 1
 #define YYDEBUG 1
 
+/* When a bison parser needs to extend the parser stack, by default it uses
+* the alloca() function. This causes portability problems (eg. for Win32 and
+* HPUX). To avoid that, we use our own method for extending the stack. This
+* is a bit tricky and reliant on bison internals, but important for portability. 
+*/
+
+#define yyoverflow mc_yyoverflow
+int mc_yyoverflow();
 %}
 
 /* Need a pure parser to allow for recursive calls when autoloading component
@@ -492,6 +504,60 @@ code:		  /* empty */
 
 %%
 
+/* Use own method for extending the parser stack, to remove bisons references
+* to alloca(). This must appear in the .y file to pick up the right #defines.
+*/
+static Pool parser_pool = NULL;	/* Pool of parser allocations. */
+
+int
+mc_yyoverflow(char *msg,
+	   short **ssp, int sssz,
+	   YYSTYPE **vsp, int vssz,
+#ifdef YYLSP_NEEDED
+	   YYLTYPE **lsp, int lssz,
+#endif
+	   int *yystacksize
+	   )
+{
+  short *nssp;
+  YYSTYPE *nvsp;
+#ifdef YYLSP_NEEDED
+  YYLTYPE *nlsp;
+#endif
+
+  if(*yystacksize >= YYMAXDEPTH)
+    fatal_error("%s\n", msg);
+  *yystacksize *= 2;
+  if(*yystacksize >= YYMAXDEPTH)
+    *yystacksize = YYMAXDEPTH;
+
+  nssp = pool_mem(parser_pool, *yystacksize*sizeof(*nssp));
+  memcpy(nssp, *ssp, sssz);
+  *ssp = nssp;
+  nvsp = pool_mem(parser_pool, *yystacksize*sizeof(*nvsp));
+  memcpy(nvsp, *vsp, vssz);
+  *vsp = nvsp;
+#ifdef YYLSP_NEEDED
+  nlsp = pool_mem(parser_pool, *yystacksize*sizeof(*nlsp));
+  memcpy(nlsp, *lsp, lssz);
+  *lsp = nlsp;
+#endif
+  return 0;
+}
+
+static int mc_yyparse(void)
+{
+  int ret;
+  Pool oldpool;
+
+  oldpool = parser_pool;
+  parser_pool = pool_create();
+  ret = yyparse();
+  pool_free(parser_pool);
+  parser_pool = oldpool;
+  return ret;
+}
+    
 /* Name of the file currently being parsed. */
 char *instr_current_filename = NULL;
 /* Number of the line currently being parsed. */
@@ -657,7 +723,7 @@ main(int argc, char *argv[])
   instr_current_line = 1;
   lex_new_file(file);
   read_components = symtab_create(); /* Create table of components. */
-  err = yyparse();
+  err = mc_yyparse();
   fclose(file);
   if(err != 0 || error_encountered != 0)
     print_error("Errors encountered during parse.\n");
@@ -784,7 +850,7 @@ read_component(char *name)
        must not be freed. */
     instr_current_filename = component_pathname;
     instr_current_line = 1;
-    err = yyparse();		/* Read definition from file. */
+    err = mc_yyparse();		/* Read definition from file. */
     if(err != 0)
       fatal_error("Errors encountered during autoload of component %s.\n",
 		  name);
