@@ -784,26 +784,26 @@ function [Dirname, Basename, Ext] = mcplot_fileparts(filename)
   idx_slash=strindex(filename,filesep);
   idx_slash=idx_slash(length(idx_slash));
 
-  filecode=str2code(filename);
+  filecode=str2code(filename(1));
   if length(idx_slash) then
-    Dirname=code2str(filecode(1:idx_slash));
+    Dirname=part(filename,(1:idx_slash));
   else
     Dirname="";
     idx_slash=0;
   end
 
   // First occurance of '.' after idx_slash
+  idx_dot = length(filecode)+1; 
+  Ext="";
   idx_dot=strindex(filename,'.');
   if length(idx_dot)
-    idx_dot=idx_dot(idx_dot>idx_slash);
-    idx_dot=idx_dot(1); 
-    Ext     =code2str(filecode(idx_dot:$));
-  else 
-    idx_dot = length(filename)+1; 
-    Ext="";
+    idx_dot=idx_dot(find(idx_dot>idx_slash));
+    if length(idx_dot)
+      idx_dot=idx_dot(1); 
+      Ext = part(filename,(idx_dot:length(filecode)));
+    end
   end
-  
-  Basename=code2str(filecode(idx_slash+1:idx_dot-1));
+  Basename=part(filename,((idx_slash+1):(idx_dot-1)));
   
 endfunction // mcplot_fileparts
 
