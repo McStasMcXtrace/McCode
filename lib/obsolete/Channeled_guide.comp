@@ -148,6 +148,7 @@ TRACE
       }
     }
     p *= R0;
+    SCATTER;
   }
   x += edge + (w1c - d)/2.0 - w1/2.0; /* Readjust origin */
 %}
