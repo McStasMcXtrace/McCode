@@ -10,22 +10,19 @@
 * Date: October 2000
 * Version: $Release: $
 * Origin: McStas 1.5
-* Modified by: 
+* Modified by: Kim Lefmann, October 9, 2001 
 *
-* Cylindrical (2pi) 1D PSD/Time-of-flight monitor.
 *
-* %D
+* Cylindrical (2pi) PSD Time-of-flight monitor.
 *
-* A 2 pi cylindrical time-of-flight monitor with a vertical axis. 
-* The monitor records intensity vs. position (angle of the cylinder) and time 
-* 
 * %P
 * INPUT PARAMETERS:
 *
 * radius:   Cylinder radius (m)
 * height:   Cylinder height (m)
-* nchan:    Number of time bins (1)
-* bint:     Length of each time bin (mu-s)
+* nt:    Number of time bins (1)
+* t_0:      Beginning of time window (mu-s)
+* t_1:      End of time window (mu-s)
 * nphi:     Number of angular bins (deg)     
 * filename: Name of file in which to store the detector image (text)
 *
@@ -39,22 +36,24 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_cylPSD_monitor
-DEFINITION PARAMETERS (nchan, filename, nphi) 
-SETTING PARAMETERS (radius, height, bint)
+DEFINITION PARAMETERS (nt, filename, nphi) 
+SETTING PARAMETERS (radius, height, t_0, t_1)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int TOF_N[nchan][nphi];
-    double TOF_p[nchan][nphi];
-    double TOF_p2[nchan][nphi];
-    double binphi;
+    int TOF_N[nt][nphi];
+    double TOF_p[nt][nphi];
+    double TOF_p2[nt][nphi];
+    double binphi, tt_0, tt_1;
   %}
 INITIALIZE
   %{
     int i,j;
 
-    for (i=0; i<nchan; i++)
+    tt_0=t_0*1e-6;
+    tt_1=t_1*1e-6;
+    for (i=0; i<nt; i++)
       for (j=0; j<nphi; j++)
       {
         TOF_N[i][j] = 0;
@@ -67,31 +66,31 @@ INITIALIZE
 TRACE
   %{
     int i,j;
-    double t0,t1,dt,phi;
+    double cyl_t0,cyl_t1,dt,phi;
 
-    if(!cylinder_intersect(&t0, &t1, x,y,z,vx,vy,vz, radius, height)) /* No hit */ 
+    if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, height)) 
+     /* No hit */ 
       ABSORB;
-    if(t0>0)  /* Neutron hits cylinder from the outside */
+    if(cyl_t0>0)  /* Neutron hits cylinder from the outside */
       ABSORB;
-    dt=t1-t0;
+    dt=cyl_t1-cyl_t0;
     PROP_DT(dt);
     if(y>=height/2 || y<= -height/2) 
-      ABSORB;  /* Neutron hits cylinder ends */    
+      ABSORB;  /* Neutron hits cylinder ends; no detectors here */    
 
-    i = floor(1E6*t/bint);              /* Bin number */
-    if(i >= nchan) i = nchan - 1;
-    if(i < 0)
+    i = floor(t*nt/(tt_1-tt_0));              /* Bin number */
+
+    if (i < 0 || i >= nt)        /* Do not detect */
     {
-      printf("FATAL ERROR: negative time-of-flight.\n");
-      exit(1);
     }
-    phi = atan2(x,z);
-    j = floor((double)nphi/2.0 + RAD2DEG*phi/(double)binphi);
-    TOF_N[i][j]++;
-    TOF_p[i][j] += p;
-    TOF_p2[i][j] += p*p;
-   /* printf("Detector hit, E= %g, phi= %g, j= %i, t= %g, i= %i \n",
-      VS2E*(vx*vx+vy*vy+vz*vz), RAD2DEG*phi, j, t, i); */
+    else
+     {
+      phi = atan2(x,z);
+      j = floor((double)nphi/2.0 + RAD2DEG*phi/(double)binphi);
+      TOF_N[i][j]++;
+      TOF_p[i][j] += p;
+      TOF_p2[i][j] += p*p;
+     }
   %}
 FINALLY
   %{
@@ -99,8 +98,8 @@ FINALLY
         "Cylindrical Time-of-flight PSD monitor",
         "Time-of-flight [\\gms]",
         "Angle [deg]",
-        0.0, nchan*(double)bint, -180, 180, 
-        nchan, nphi,
+        t_0, t_1, -180, 180, 
+        nt, nphi,
         &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
         filename);
   %}
@@ -112,6 +111,32 @@ MCDISPLAY
 %}
 
 END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
