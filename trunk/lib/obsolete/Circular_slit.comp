@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.5 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.6 $
+* Origin: McStas 1.5
 *
 * Circular slit.
 *
@@ -23,7 +23,7 @@ DEFINE COMPONENT Circular_slit
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
+
 TRACE
 %{
   PROP_Z0;
