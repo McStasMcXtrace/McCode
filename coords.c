@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug  8, 1997
 *
-*	$Id: coords.c,v 1.2 1998-10-02 08:36:05 kn Exp $
+*	$Id: coords.c,v 1.3 2000-07-27 09:06:11 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.2  1998/10/02 08:36:05  kn
+*	Fixed header comment.
+*
 *	Revision 1.1  1997/08/13 09:13:18  kn
 *	Initial revision
 *
@@ -53,9 +56,9 @@ coords_exp_origo(void)
 {
   Coords_exp c;
   
-  c.x = exp_number(0);
-  c.y = exp_number(0);
-  c.z = exp_number(0);
+  c.x = exp_number("0.0");
+  c.y = exp_number("0.0");
+  c.z = exp_number("0.0");
   return c;
 }
 
