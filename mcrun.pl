@@ -151,7 +151,7 @@ sub parse_args {
    -h        --help           Show help message.
    -i        --info           Detailed instrument information.
    --format=FORMAT            Output data files using format FORMAT.
-                              (use -DALL_FORMATS in MCSTAS_CFLAGS for more)
+                              (format list obtained from <instr>.out -h)
 This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be 
 specified for building the instrument:
