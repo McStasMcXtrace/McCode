@@ -233,7 +233,8 @@ if not(isempty(rep))
     quit
   end
 else
-  INSTRUMENT.count=0;
+  exit
+  quit
 end
 // Check if a replot should be done (e.g. MaxNeutrons is 0)
 if INSTRUMENT.MaxNeutrons==0
