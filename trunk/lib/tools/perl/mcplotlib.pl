@@ -2,7 +2,7 @@ use PDL;
 use PDL::Graphics::PGPLOT;
 use PGPLOT;
 
-require "mcfrontlib.pl";
+require "mcfrontlib2D.pl";
 
 sub plot_array_2d {
     my ($info,$m,$n) = @_;

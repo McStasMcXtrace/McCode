@@ -183,7 +183,7 @@ if ($plotter eq 3 || $plotter eq 4) {
   # Attempt to locate pgplot directory if unset.
   $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
 
-  require "mcfrontlib.pl";
+  require "mcfrontlib2D.pl";
   require "mcplotlib.pl";
   
   # ADD/MOD: E. Farhi/V. Hugouvieux Feb 18th, 2002 : handle detector files
