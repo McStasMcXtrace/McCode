@@ -219,8 +219,8 @@ TRACE
         {
           /* reflection coefficent at the top and bottom side */
           Q=2.0*V2K*fabs(vy);
-          if (Q<=Qcs) 
-             ref=R0s;
+          if (Q<=Qcs) {
+             ref=R0s; arg=0; }
           else {
              arg=(Q-ms*Qcs)/Ws;
              ref=0.5*R0s*(1.0-tanh(arg))*(1.0-alphas*(Q-Qcs)); }          
