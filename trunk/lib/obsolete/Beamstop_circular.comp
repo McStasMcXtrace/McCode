@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package.
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Beamstop_circular component
+*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: January 2000
-* Version: $Revision: 1.2 $
-* Origin: McStas release
+* Version: $Revision: 1.3 $
+* Origin: McStas 1.4.2
 *
 * Circular beam stop.
 *
@@ -27,6 +26,7 @@ DEFINE COMPONENT Beamstop_circular
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 TRACE
 %{
     PROP_Z0;
