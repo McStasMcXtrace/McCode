@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.3 1997-09-08 11:31:22 kn Exp $
+* 	$Id: mcstas-r.c,v 1.4 1997-10-16 14:27:05 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.3  1997/09/08 11:31:22  kn
+* 	Added mcsetstate() function.
+*
 * 	Revision 1.2  1997/09/08 11:16:43  kn
 * 	Bug fix in mccoordschange().
 *
@@ -20,6 +23,7 @@
 *******************************************************************************/
 
 #include <math.h>
+#include <stdio.h>
 #include "mcstas-r.h"
 
 /* Assign coordinates. */
@@ -191,7 +195,8 @@ mcreadparams(void)
 
   for(i = 0; mcinputtable[i].name != 0; i++)
   {
-    printf("Set value of instrument parameter %s: ", mcinputtable[i].name);
+    printf("Set value of instrument parameter %s:\n", mcinputtable[i].name);
+    fflush(stdout);
     scanf("%lf", mcinputtable[i].par);
   }
 }
