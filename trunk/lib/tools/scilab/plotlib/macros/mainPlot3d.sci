@@ -164,23 +164,23 @@ while length(argList)
 					axisVect=[minX maxX minY maxY minZ maxZ];
 				end
 
-				color=0; lineStyle=1; marker=[];
+				_color=0; lineStyle=1; marker=[];
 
 				if length(argList) & typeOfPlot=='plot3' // If there is a next argument
 					if type(argList(1))==10 // If this argument is a string
 	    			 						// and this is a plot3() call
-						[color,marker,markersize,lineStyle,fail]=getColorNumber(argList(1)); // get the color number
+						[_color,marker,markersize,lineStyle,fail]=getColorNumber(argList(1)); // get the color number
 						if ~fail // the string seems to be a maker/color combination
 							argList(1)=null(); // Delete the top argument in the argument list
 							argNumber=argNumber+1;
 						else
-							color=0; lineStyle=1; marker=[];
+							_color=0; lineStyle=1; marker=[];
 						end  
 					end
 				end
 
 				if typeOfPlot=='plot3'
-					[currentColor,listOut]=addPlot3(X,Y,Z,color,marker,markersize,lineStyle,win);
+					[currentColor,listOut]=addPlot3(X,Y,Z,_color,marker,markersize,lineStyle,win);
 					listOfTriples(0)=listOut;
 				elseif dejavu==0
 					dejavu=1;

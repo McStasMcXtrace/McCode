@@ -95,20 +95,20 @@ while length(argList)
          argList(1)=null(); // in the argument list
          argNumber=argNumber+2;
 
-         color=0; lineStyle=1; marker=[];
+         _color=0; lineStyle=1; marker=[];
 
          if length(argList) // If there is a next argument
 
             if (type(argList(1))==10) // If this argument is a string
 
-               [color,marker,markerSize,lineStyle,fail]=getColorNumber(argList(1)); 
+               [_color,marker,markerSize,lineStyle,fail]=getColorNumber(argList(1)); 
 
                if ~fail // the string seems to be a maker/color combination
                  
                  argList(1)=null(); // Delete the top argument in the argument list
                  argNumber=argNumber+1;
                else
-                  color=0; lineStyle=1; marker=[];
+                  _color=0; lineStyle=1; marker=[];
                end
 
             end
@@ -117,11 +117,11 @@ while length(argList)
 
          if size(X,2)==1 // If the abscissa is a vector
             for j=1:size(Y,2) // all ordina share this abscissa
-               [currentColor,liste]=addPlot(X,Y(:,j),color,marker,markerSize,lineStyle,win);
+               [currentColor,liste]=addPlot(X,Y(:,j),_color,marker,markerSize,lineStyle,win);
            end
          else // Abscissa and ordina are both matrices
             for j=1:size(X,2) // Add each couple
-               [currentColor,liste]=addPlot(X(:,j),Y(:,j),color,marker,makersize,lineStyle,win);
+               [currentColor,liste]=addPlot(X(:,j),Y(:,j),_color,marker,makersize,lineStyle,win);
             end
          end
 
