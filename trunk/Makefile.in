@@ -1,0 +1,94 @@
+# Makefile for McStas.
+
+SHELL = /bin/sh
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+srcdir = @srcdir@
+libdir = @libdir@
+
+
+DEBUG = -DDEBUG=0
+mc_libdir = $(libdir)/mcstas
+#DEBUG=
+
+CC = @CC@
+CFLAGS = @CFLAGS@
+LDFLAGS= @LDFLAGS@
+DEFS = @DEFS@ $(DEBUG)
+
+PERL = @PERL@
+
+FLEX = flex
+FLEXFLAGS=-i
+
+BISON = bison
+BISONFLAGS = -v -d
+
+INSTALL=@INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_DATA = @INSTALL_DATA@
+
+
+#
+# End of configuration section.
+#
+
+OBJECTS=instrument.tab.o lex.yy.o debug.o \
+	memory.o list.o symtab.o coords.o rotation.o cexp.o position.o \
+	file.o cogen.o
+
+BINOBJS=gscan mcdisplay
+
+.SUFFIXES: .c .o
+
+.c.o:
+	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMC_SYS_DIR='"'$(mc_libdir)'"' $(DEFS) $<
+
+
+all: mcstas $(BINOBJS)
+
+mcstas: $(OBJECTS)
+	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(OBJECTS) -lm
+
+clean:
+	rm -f mcstas $(OBJECTS) \
+	instrument.tab.c instrument.tab.h instrument.output lex.yy.c
+
+TAGS:
+	etags `find . -name '*.[chly]'`
+
+gscan: gscan.pl
+	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/gscan.pl >gscan
+
+mcdisplay: mcdisplay.pl
+	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/mcdisplay.pl >mcdisplay
+
+install: installdirs mcstas gscan mcdisplay $(BINOBJS)
+	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
+	for pgm in $(BINOBJS); do $(INSTALL_PROGRAM) $$pgm $(bindir)/$$pgm; done
+	cd lib; for file in *; do $(INSTALL_DATA) $$file $(mc_libdir)/$$file; done
+
+installdirs:
+	$(srcdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir)
+
+instrument.tab.o: mcstas.h
+lex.yy.o: mcstas.h instrument.tab.h
+debug.o: mcstas.h
+memory.o: mcstas.h
+symtab.o: mcstas.h
+list.o: mcstas.h
+coords.o: mcstas.h
+rotation.o: mcstas.h
+cexp.o: mcstas.h
+position.o: mcstas.h
+file.o: mcstas.h
+cogen.o: mcstas.h
+
+instrument.tab.c instrument.tab.h: instrument.y
+	$(BISON) $(BISONFLAGS) $<
+
+lex.yy.c: instrument.l
+	$(FLEX) $(FLEXFLAGS) $<
+
