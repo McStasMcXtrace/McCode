@@ -54,7 +54,7 @@ sub read_array2D {
 sub get_detector_data_2D {
     my ($info) = @_;
     $info->{'Numeric Data'} = read_data_file_2D($info->{'Filename'})
-        unless $info->{'Numeric Data'};
+        unless defined($info->{'Numeric Data'});
     return $info->{'Numeric Data'};
 }
 
@@ -68,7 +68,7 @@ sub get_detector_data_1D {
     } else {
 	my ($file) = @_;
 	my $a = read_data_file_2D($info->{'Filename'});
-	return undef unless $a;
+	return undef unless defined($a);
 	my ($m,$n) = $a->dims;
 	my $vars = $info->{'Variables'};
 	my $i;
