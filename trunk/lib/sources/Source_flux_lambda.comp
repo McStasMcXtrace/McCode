@@ -1,0 +1,84 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Source_flux_lambda
+*
+* Modified by: KN, 1998 from Source_flat.comp
+*
+* The routine is a circular neutron source, which aims at a square target
+* centered at the beam (in order to improve MC-acceptance rate).  The angular
+* divergence is then given by the dimensions of the target. The neutron
+* wavelength is uniformly distrubuted between lambda_0 - d_lambda and
+* lambda_0 + d_lambda. The source flux is specified in neutrons per steradian
+* per square cm per AAngstroem.
+*
+* radius:   (m)              Radius of circle in (x,y,0) plane where neutrons
+*                            are generated.
+* dist:     (m)              Distance to target along z axis.
+* xw:       (m)              Width(x) of target
+* yh:       (m)              Height(y) of target
+* lambda_0: (AA)             Mean wavelength of neutrons.
+* d_lambda: (AA)             Wavelength spread of neutrons.
+* flux:     (1/(cm**2*st*AA) Source flux
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Source_flux_lambda
+DEFINITION PARAMETERS (radius, dist, xw, yh, lambda_0, d_lambda, flux)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (hdiv, vdiv, p_in)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+ double hdiv,vdiv;
+ double p_in;
+%}
+INITIALIZE
+%{
+  double factor, delta_lambda, source_area;
+
+  hdiv = atan(xw/(2.0*dist));
+  vdiv = atan(yh/(2.0*dist));
+
+  delta_lambda = 2*d_lambda;
+  source_area = radius*radius*PI*1e4; /* cm^2 */
+  factor = flux/mcget_ncount()*delta_lambda*source_area;
+  p_in = (4*hdiv*vdiv)*factor;  /* Small angle approx. */
+%}
+
+TRACE
+%{
+ double theta0,phi0,chi,theta,phi,lambda,v,r;
+
+ p=p_in;
+ z=0;
+
+ chi=2*PI*rand01();                          /* Choose point on source */
+ r=sqrt(rand01())*radius;                    /* with uniform distribution. */
+ x=r*cos(chi);
+ y=r*sin(chi);
+
+ theta0= -atan(x/dist);              /* Angles to aim at target centre */
+ phi0= -atan(y/dist);
+
+ theta=theta0+hdiv*randpm1();        /* Small angle approx. */ 
+ phi=phi0+vdiv*randpm1();
+
+ lambda = lambda_0+d_lambda*randpm1();
+ v = K2V*(2*PI/lambda);
+
+ vz=v*cos(phi)*cos(theta);
+ vy=v*sin(phi);
+ vx=v*cos(phi)*sin(theta); 
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy",0,0,0,radius);
+%}
+
+END
