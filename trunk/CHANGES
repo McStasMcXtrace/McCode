@@ -1,3 +1,22 @@
+Changes in McStas v1.3, May 18, 2000:
+
+ - New facility `McDoc' for documentation of components, with
+   automatic extraction of documentation from comment headers in the
+   source code.
+ - The possibility in the graphical user interface `mcgui' to build
+   instrument definitions using "point-and-click", based on McDoc.
+ - Much improved `mcrun' front-end, which now replaces the old `gscan'
+   front-end and interfaces with `mcplot'.
+ - Optional component input parameters.
+ - Instrument parameters may now also be of string type.
+ - Improved Single_crystal component, now supports anisotropic mosaic,
+   multiple scattering, extinction, absorbtion, and incoherent
+   scattering.
+ - New components Source_Optimizer and Monitor-nD, by Emmanuel Farhi.
+ - Misc. minor bug fixes.
+
+
+
 Changes in McStas v1.2, January 31, 2000:
 
  - New components (Single_crystal, Mosaic_simple, Source_adapt,
