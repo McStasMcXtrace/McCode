@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.47 2003-01-21 08:51:11 pkwi Exp $
+*	$Id: instrument.y,v 1.48 2003-01-21 08:55:32 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -436,7 +436,7 @@ instr_formal:	  TOK_ID TOK_ID
 		    formal->id = $1;
 		    $$ = formal;
 		  }
-
+;
 declare:	  /* empty */
 		  {
 		    $$ = codeblock_new();
@@ -551,7 +551,7 @@ mcdisplay:	  /* empty */
 ;
 
 instr_trace:	  "TRACE" complist
-
+;
 complist:	  /* empty */
 		  {
 		    comp_instances      = symtab_create();
@@ -738,7 +738,7 @@ groupdef:   TOK_ID
         $$ = group;
       }
 
-
+;
 compref:	  TOK_ID
 		  {
 		    struct comp_inst *comp;
@@ -1046,7 +1046,21 @@ print_usage(void)
 {
   fprintf(stderr, "Usage:\n"
 	  "  mcstas [-o file] [-I dir1 ...] [-t] [-p] [-v] "
-	  "[--no-main] [--no-runtime] file\n");
+	  "[--no-main] [--no-runtime] [--verbose] file\n");
+  fprintf(stderr, "      -o FILE --output-file=FILE Place C output in file FILE.\n");
+  fprintf(stderr, "      -I DIR  --search-dir=DIR   Append DIR to the component search list. \n");
+  fprintf(stderr, "      -t      --trace            Enable 'trace' mode for instrument display.\n");
+  fprintf(stderr, "      -v      --version          Prints McStas version.\n");
+  fprintf(stderr, "      --no-main                  Do not create main(), for external embedding.\n");
+  fprintf(stderr, "      --no-runtime               Do not embed run-time libraries.\n");
+  fprintf(stderr, "      --verbose                  Display compilation process steps.\n");
+  fprintf(stderr, "  The file will be processed and translated into a C code program.\n");
+  fprintf(stderr, "  The default component search list is usually defined by the 'MCSTAS'\n");
+  fprintf(stderr, "  environment variable. Use 'mcrun' to both run mcstas and the C compiler.\n");
+  fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
+  fprintf(stderr, "  them (.c -> .o) before assembling the program.\n");
+  fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui\n");
+  fprintf(stderr, "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n");
   exit(1);
 }
 
@@ -1055,8 +1069,8 @@ static void
 print_version(void)
 { /* MOD: E. Farhi Sep 20th, 2001 version number */
   printf("McStas version " MCSTAS_VERSION "\n"
-	  "Copyright (C) Risoe National Laboratory, 1997-2002\n"
-    "Additions (C) Institut Laue Langevin, 2002\n"
+	  "Copyright (C) Risoe National Laboratory, 1997-2003\n"
+    "Additions (C) Institut Laue Langevin, 2003\n"
 	  "All rights reserved\n");
   exit(0);
 }

@@ -11,7 +11,7 @@
 * Adapted from Moderator by: KN, M.Hagen, August 1998
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -110,6 +110,13 @@ DECLARE
 
 INITIALIZE
 %{
+  if (n == 1 || n2 == 1 || l_low<=0 || l_high <=0 || dist == 0 
+    || branch1 == 0 || branch2 == 0 || branchtail == 0 || tau == 0)
+  {
+    printf("ESS_moderator_long: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {l_low l_high dist d tau branch1/2/tail} and 1 value for {n n2 branch1/2/tail}\n", NAME_CURRENT_COMP);
+    exit(-1);
+  }
+  
   l_range = l_high-l_low;
   w_mult = size*size*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -34,6 +34,7 @@
 * ymax:            Upper y bound of detector opening (m)
 * filename:        Name of output file (string)
 * res_sample_comp: Name of Res_sample component in the instrument definition
+* bufsize:         Number of events to store. Use 0 to store all.
 *
 * OUTPUT PARAMETERS:
 *
@@ -45,25 +46,29 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Res_monitor
-DEFINITION PARAMETERS (filename, res_sample_comp)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax)
-OUTPUT PARAMETERS (Nsum, psum, p2sum, file)
+DEFINITION PARAMETERS (filename=0, res_sample_comp)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, bufsize=10000)
+OUTPUT PARAMETERS (Nsum, psum, p2sum, buffer, buffer_size, buffer_index, buffer_block, buffer_block_index)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
   %{
-    double Nsum;
-    double psum, p2sum;
-    FILE *file;
+    double Nsum=0;
+    double psum=0, p2sum=0;
+    double *buffer;
+    long   buffer_size=0;
+    long   buffer_index=0;
+    long   buffer_block=1000;
+    long   buffer_block_index=0;
   %}
 INITIALIZE
   %{
-    psum = 0;
-    p2sum = 0;
-    Nsum = 0;
-    file = filename ? fopen(filename, "w") : 0;
-    if(!file && filename)
-      fprintf(stderr, "Warning: could not open output file '%s'\n", filename);
+    long i;
+    if (!filename) exit(fprintf(stderr, "Res_monitor: %s: Error: please give me a filename to save data.\n", NAME_CURRENT_COMP, filename));
+    buffer_size = buffer_block;
+    buffer = (double*)malloc(buffer_size*11*sizeof(double));
+    if (!buffer) exit(fprintf(stderr, "Res_monitor: %s: Error: Not enough memory to allocate %d events.\n", NAME_CURRENT_COMP, buffer_size));
+    
   %}
 TRACE
 %{
@@ -74,27 +79,69 @@ TRACE
       psum += p;
       p2sum += p*p;
       /* Now fetch data from the Res_sample. */
-      if(p != 0 && file)
+      if(p && (!bufsize || buffer_index<bufsize))
       {
         struct Res_sample_struct *s =
           &(MC_GETPAR(res_sample_comp, res_struct));
         if(s->pi != 0)
-          fprintf(file, "%g %g %g %g %g %g %g %g %g %g %g\n",
-                  s->ki_x, s->ki_y, s->ki_z, s->kf_x, s->kf_y, s->kf_z,
-                  s->rx, s->ry, s->rz, s->pi, p/s->pi);
-       }
-       SCATTER;
+        {
+          /* reallocate buffer if not enough room */
+          if (buffer_index >= buffer_size)
+          {
+            buffer_size += buffer_block;
+            buffer = (double*)realloc(buffer, buffer_size*11*sizeof(double));
+            if (!buffer) exit(fprintf(stderr, "Res_monitor: %s: Error: Not enough memory to re-allocate %d events. Specify a smaller bufsize value.\n", NAME_CURRENT_COMP, buffer_size));
+            buffer_block_index=0;
+          }
+          
+          buffer[ 0+11*buffer_index] = s->ki_x;
+          buffer[ 1+11*buffer_index] = s->ki_y;
+          buffer[ 2+11*buffer_index] = s->ki_z;
+          buffer[ 3+11*buffer_index] = s->kf_x;
+          buffer[ 4+11*buffer_index] = s->kf_y;
+          buffer[ 5+11*buffer_index] = s->kf_z;
+          buffer[ 6+11*buffer_index] = s->rx;
+          buffer[ 7+11*buffer_index] = s->ry;
+          buffer[ 9+11*buffer_index] = s->rz;
+          buffer[ 9+11*buffer_index] = s->pi;
+          buffer[10+11*buffer_index] = p/s->pi;
+          buffer_index++;
+          buffer_block_index++;
+          SCATTER;
+        }
+      }
     }
 %}
 SAVE
-  %{
-    DETECTOR_OUT_0D("Single monitor", Nsum, psum, p2sum);
-  %}
+%{
+  /* reallocate to exact required size */
+  buffer_size = buffer_index;
+  buffer = (double*)realloc(buffer, buffer_size*11*sizeof(double));
+  /* data is an horizontal matrix with 11 rows to write with transposition (- sign)*/
+  DETECTOR_OUT_2D("Resolution monitor", 
+      "Events", "ki_x ki_y ki_z kf_x kf_y kf_z x y z p_i p_f",
+		  1, buffer_index, 1, 11, -buffer_size, 11,
+		  NULL, buffer, NULL,
+		  filename);
+%}
 FINALLY
-  %{
-    if(file)
-      fclose(file);
-  %}
+%{
+  FILE *f;
+  char mypre[10] = "# \0";
+      
+  if (!strstr(mcformat.Name, "McStas")) mypre[0] = '\0'; 
+  if (buffer) free(buffer); 
+  /* adding simulation parameters after data: re-open filename in append mode */
+  f = mcnew_file(filename, "a");
+  if (f)
+  {
+    /* then call mcinfo_simulation(FILE *f, struct mcformats_struct format, char *pre, char *name) */
+    /* this makes call to run-time functions (undocumented) */
+    mcinfo_simulation(f, mcformat, mypre, filename);
+    /* close the file Resolution */
+    close(f);
+  }
+%}
 MCDISPLAY
 %{
   magnify("xy");

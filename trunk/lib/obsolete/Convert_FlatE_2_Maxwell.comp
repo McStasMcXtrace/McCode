@@ -9,7 +9,7 @@
 *
 * Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 07 March 2000
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a> (Obsolete)
 *
 * Conversion from flat energy distribution to Maxwellian neutron spectra
@@ -21,6 +21,7 @@
 * distribution, as it is approximatively the case for thermal neutrons in a
 * reactor's moderator. So, this  component is only a virtual one, not
 * corresponding to a real element in a neutron beam.
+* OBSOLETE: rather use sources/Source_Maxwell_3 or Source_gen
 *
 * Example: Convert_FlatE_2_Maxwell(T=315,E0=14.68,dE=2)
 *
@@ -61,9 +62,6 @@ INITIALIZE
   L2P=2*l0*l0*l0*l0; 
   Lmin = sqrt(81.81/(E0+dE)); /* AAngstroem */
   Lmax = sqrt(81.81/(E0-dE));
-  
-  fprintf(stderr,"Convert_FlatE_2_Maxwell: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Convert_FlatE_2_Maxwell: rather use sources/Source_Maxwell_3 or Source_gen\n");
 %}
 TRACE
 %{

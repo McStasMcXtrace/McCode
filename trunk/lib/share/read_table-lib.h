@@ -21,7 +21,7 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.6 2003-01-21 08:51:12 pkwi Exp $
+* $Id: read_table-lib.h,v 1.7 2003-01-21 08:55:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/29 11:39:00 ef
@@ -30,6 +30,8 @@
 
 #ifndef READ_TABLE_LIB_H
 #define READ_TABLE_LIB_H "1.1.0"
+
+#include <sys/stat.h>
 
   typedef struct struct_table
   {
@@ -49,11 +51,14 @@
 void Table_Init(t_Table *Table);
 void Table_Free(t_Table *Table);
 long Table_Read(t_Table *Table,       char *File, long block_number);
-long Table_Read_Handle(t_Table *Table, FILE *fid, long block_number);
+long Table_Read_Offset(t_Table *mc_rt_Table, char *mc_rt_File, long mc_rt_block_number, long *offset, long max_lines);
+long Table_Read_Offset_Binary(t_Table *mc_rt_Table, char *mc_rt_File, char *mc_rt_type, long *mc_rt_offset, long mc_rt_rows, long mc_rt_columns);
+long Table_Read_Handle(t_Table *Table, FILE *fid, long block_number, long max_lines);
 long Table_Rebin(t_Table *Table);
 double Table_Index(t_Table Table, long i, long j);
 double Table_Value(t_Table Table, double X, long j);  
 void Table_Info(t_Table Table);
+static void Table_Stat(t_Table *mc_rt_Table);
 
 #endif  
 

@@ -1,0 +1,67 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Progress_bar
+*
+* %I
+* Written by: Emmanuel Farhi
+* Date: 2002
+* Version: $Revision: 1.1 $
+* Origin: ILL
+* Release: McStas 1.6
+*
+* A simulation progress bar
+*
+* %D
+* An indicator of the progress of the simulation, showing the name of the simulation,
+* the Init, Trace with the achieved percentage, and the Finally section. Intermediate
+* savings (e.g. triggered by USR2 signal) are also shown.
+*
+* Example: Progress_bar()
+*
+* %P
+* precent: percentage interval between indications. Default is 5%.
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Progress_bar
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (precent=10)
+OUTPUT PARAMETERS (IntermediateCnts)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double IntermediateCnts=0;
+%}
+
+INITIALIZE
+%{
+  fprintf(stderr, "[%s] Init ", mcinstrument_name);
+%}
+
+TRACE
+%{
+  if (mcget_run_num() >= IntermediateCnts)
+  {
+    IntermediateCnts += precent*mcget_ncount()/100;
+    fprintf(stderr, "%d ", (int)(IntermediateCnts*100/mcget_ncount()));
+  }
+%}
+
+SAVE
+%{
+  fprintf(stderr, "Save ", mcinstrument_name);
+%}
+
+FINALLY
+%{
+  fprintf(stderr, "Finally.\n", mcinstrument_name);
+%}
+
+END

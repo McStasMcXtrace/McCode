@@ -9,7 +9,7 @@
 *
 * Written by: Emmanuel Farhi
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a>
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
 *                                  by Kristian Nielsen and Peter Link
@@ -26,13 +26,14 @@
 * the y-z plane (ie. parallel to the beam). The component also works in
 * transmission.
 * When curvatures are set to 0, the monochromator is flat. 
-* The curvatures approximation for focusing to distance L, with
+* The curvatures approximation for parallel beam focusing to distance L, with
 * monochromator rotation angle A1 are:
-*   RM = fabs(yheight/NV*RAD2DEG/(2*L*sin(DEG2RAD*A1)));
-*   RH = fabs(zwidth/NH*RAD2DEG*sin(DEG2RAD*A1)/(2*L));
+*   RV = 2*L*sin(DEG2RAD*A1);
+*   RH = 2*L/sin(DEG2RAD*A1);
 *
 * When you rotate the component by A1 = asin(Q/2/Ki)*RAD2DEG, do not forget to 
 * rotate the following components by A2=2*A1 (for 1st order) !
+* OBSOLETE: rather use optics/Monochromator_curved
 *
 * Example: Curved_Monochromator(zwidth=0.01, yheight=0.01, gap=0.0005, 
 *           NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
@@ -118,8 +119,6 @@ DECLARE
 
 INITIALIZE
 %{
-  fprintf(stderr,"Curved_Monochromator: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Curved_Monochromator: rather use optics/Monochromator_curved\n");
   
   if (mosaic != 0) {
     mos_rms_y = MIN2RAD*mosaic/sqrt(8*log(2));

@@ -6,7 +6,8 @@ require "mcfrontlib.pl";
 
 sub plot_array_2d {
     my ($info,$m,$n) = @_;
-    my $data = get_detector_data_2D($info);
+    my $data;
+    $data= get_detector_data_2D($info);
     my ($x0,$x1,$y0,$y1) = @{$info->{'Limits'}};
     my ($dx,$dy) = (($x1 - $x0)/$m, ($y1 - $y0)/$n);
     my $tr = pdl [ $x0 + $dx/2, $dx, 0, $y0 + $dy/2, 0, $dy ];
@@ -60,9 +61,12 @@ sub plot_array_2d {
 
 sub plot_array_1d {
     my ($info,$npt) = @_;
-    my $r = get_detector_data_1D($info);
-    my $x = $r->{$info->{'Xvar'}[0]};
-    my $I = $r->{$info->{'Yvar'}[0]};
+    my $r;
+    $r= get_detector_data_1D($info);
+    my $nx = $info->{'Xvar'}[0];
+    my $ny = $info->{'Yvar'}[0];
+    my $x = $r->{$nx};
+    my $I = $r->{$ny};
     my ($x0,$x1) = @{$info->{'Limits'}};
     my ($min, $max, $err);
     if($info->{'Yerr'} && $info->{'Yerr'}[0]) {
@@ -126,7 +130,7 @@ sub plot_dat_info {
     }elsif($type =~ /^\s*array_1d\s*\(\s*([0-9]+)\s*\)\s*$/i) {
       plot_array_1d($info, $1);
     } else {
-      die "Unimplemented plot type '$type'";
+      print "Warning: Unimplemented plot type '$type' (plot_dat_info)";
     }
 }
 
@@ -134,9 +138,12 @@ sub overview_plot {
     my ($devspec, $datalist, $interactive) = @_;
     return unless @$datalist;
     my ($nx, $ny) = calc_panel_size(int(@$datalist));
-    my $dev = pgopen("$devspec");
-    die "PGOPEN failed!" unless $dev > 0;
+    my $dev;
+    if (defined(&dev)) { $dev = dev("$devspec"); }
+    else { $dev = pgopen("$devspec"); }
+    die "DEV/PGOPEN $devspec failed!" unless $dev > 0;
     pgsubp ($nx,$ny);
+
     my $info;
     for $info (@$datalist) {
       plot_dat_info($info);
@@ -155,27 +162,33 @@ sub overview_plot {
       $j = $ny - 1 if $j >= $ny;
       my $idx = $i + $nx*$j;
       $idx = int(@$datalist) - 1 if $idx >= int(@$datalist);
-      pgclos;
+      if (defined(&close_window)) { close_window(); }
+      else { pgclos(); }
       return ($cc,$idx);
     } else {
-      pgclos;
+      if (defined(&close_window)) { close_window(); }
+      else { pgclos(); }
       return ();
     }
 }
 
 sub single_plot {
     my ($devspec, $info, $interactive) = @_;
-    my $dev = pgopen("$devspec");
-    die "PGOPEN failed!" unless $dev > 0;
+    my $dev;
+    if (defined(&dev)) { $dev = dev("$devspec"); }
+    else { $dev = pgopen("$devspec"); }
+    die "DEV/PGOPEN $devspec failed!" unless $dev > 0;
     plot_dat_info($info);
     if($interactive) {
       # Wait for user to press a key.
       my ($ax,$ay,$cx,$cy,$cc) = (0,0,0,0,"");
       pgband(0, 0, $ax, $ay, $cx, $cy, $cc);
-      pgclos;
+      if (defined(&close_window)) { close_window(); }
+      else { pgclos(); }
       return ($cc, $cx, $cy);
     } else {
-      pgclos;
+      if (defined(&close_window)) { close_window(); }
+      else { pgclos(); }
       return ();
     }
 }
@@ -185,8 +198,12 @@ sub single_plot {
 sub ensure_pgplot_xserv_started {
     my $olddev;
     pgqid($olddev);
-    my $newdev = pgopen("/xserv");
-    pgclos();
+    my $newdev;
+    if (defined(&dev)) { $newdev = dev("/xserv"); }
+    else { $newdev = pgopen("/xserv"); }
+    die "DEV/PGOPEN /xserv failed!" unless $newdev > 0;
+    if (defined(&close_window)) { close_window(); }
+    else { pgclos(); }
     pgslct($olddev);
 }
 1;

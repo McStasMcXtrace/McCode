@@ -26,6 +26,7 @@
 * Crystallographica program).  Optionally, a number of absorbing blades may be
 * incorporated into the filter - these are X-Z or Y-Z planes evenly spaced
 * along the X or Y axis of the filter which absorb any neutron encountering them.
+* OBSOLETE: rather use optics/Filter_powder
 *
 * EXAMPLE:
 * You may use something like:
@@ -288,9 +289,6 @@ INITIALIZE
   double tmp_x, tmp_y, tmp_z;
   int i;
   double as, bs, cs;
-  
-  fprintf(stderr,"Powder_filter: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Powder_filter: rather use optics/Filter_powder\n");
   
   if (aa*bb*cc != 0)
   {

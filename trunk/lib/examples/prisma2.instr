@@ -105,7 +105,11 @@ OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-    int TOF_N[maxcolor+1][nchan];
+#ifdef MCSTAS_VERSION    
+    double TOF_N[maxcolor+1][nchan];
+#else
+    int    TOF_N[maxcolor+1][nchan];
+#endif    
     double TOF_p[maxcolor+1][nchan];
     double TOF_p2[maxcolor+1][nchan];
   %}
@@ -147,6 +151,8 @@ TRACE
   %}
 FINALLY
   %{
+    printf("writing TOF color\n");
+    
     DETECTOR_OUT_2D(
         "Time-of-flight monitor",
         "Neutron \"color\"",
@@ -155,6 +161,7 @@ FINALLY
         maxcolor+1, nchan,
         &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
         filename);
+        
   %}
 
 MCDISPLAY

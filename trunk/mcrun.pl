@@ -9,8 +9,9 @@ BEGIN {
     } else {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
 }
-use lib $MCSTAS::sys_dir;
+use lib $MCSTAS::perl_dir;
 
 use FileHandle;
 use strict;
@@ -26,8 +27,9 @@ my ($sim_def, $force_compile, $data_dir, $data_file);
 my $ncount = 1e6;                # Number of neutron histories in one simulation
 my $numpoints = 1;                # Number of points in scan (if any)
 my @params = ();                # List of input parameters
-my %vals;                        # Hash of input parameter values
-my @options = ();                # Additional command line options
+my %vals;                       # Hash of input parameter values
+my @options = ();               # Additional command line options (mcstas)
+my @ccopts = ();                # Additional command line options (cc)
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -109,8 +111,10 @@ sub parse_args {
             push @options, "--$1=$ARGV[++$i]";
         } elsif(/^-([s])$/) {
             push @options, "-$1$ARGV[++$i]";
-  } elsif(/^--(format)$/) {
+        } elsif(/^--(format)$/) {
             push @options, "--$1=$ARGV[++$i]";
+        } elsif(/^--(format)\=(.*)$/) {
+            push @options, "--$1=$2";
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
@@ -118,7 +122,7 @@ sub parse_args {
         }
         # Non-option arguments.
         elsif(/^-/) {                # Unrecognised option
-            die "Unknown option \"$_\"";
+            push @ccopts, "$_";
         } elsif(/^([a-zæøåA-ZÆØÅ0-9_]+)\=(.*)$/) {
             set_inputpar($1, $2);
         } else {                        # Name of simulation definition
@@ -129,8 +133,36 @@ sub parse_args {
             }
         }
     }
-    die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max}\nmcrun options:\n -c        --force-compile  Force rebuilding of instrument.\n -p=FILE   --param=FILE     Read parameters from file FILE.\n -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.\n -N NP     --numpoints=NP   Set number of scan points.\nInstr options:\n -s SEED   --seed=SEED      Set random seed (must be != 0)\n -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.\n -d DIR    --dir=DIR        Put all data files in directory DIR.\n -f FILE   --file=FILE      Put all data in a single file.\n -t        --trace          Enable trace of neutron through instrument.\n -g        --gravitation    Enable gravitation for all trajectories.\n -a        --data-only      Do not put any headers in the data files.\n --no-output-files          Do not write any data files.\n -h        --help           Show help message.\n -i        --info           Detailed instrument information.\n --format=FORMAT            Output data files using format FORMAT\nNo instrument definition name given" unless $sim_def;
-    die "Number of points must be at least 1" unless $numpoints >= 1;
+    die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max}
+  mcrun options:
+   -c        --force-compile  Force rebuilding of instrument.
+   -p=FILE   --param=FILE     Read parameters from file FILE.
+   -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
+   -N NP     --numpoints=NP   Set number of scan points.
+  Instr options:
+   -s SEED   --seed=SEED      Set random seed (must be != 0)
+   -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
+   -d DIR    --dir=DIR        Put all data files in directory DIR.
+   -f FILE   --file=FILE      Put all data in a single file.
+   -t        --trace          Enable trace of neutron through instrument.
+   -g        --gravitation    Enable gravitation for all trajectories.
+   -a        --data-only      Do not put any headers in the data files.
+   --no-output-files          Do not write any data files.
+   -h        --help           Show help message.
+   -i        --info           Detailed instrument information.
+   --format=FORMAT            Output data files using format FORMAT.
+                              (use -DALL_FORMATS in MCSTAS_CFLAGS for more)
+This program both runs mcstas with Instr and the C compiler to build an
+independent simulation program. The following environment variables may be 
+specified for building the instrument:
+  MCSTAS        Location of the McStas and component library 
+                (e.g. /usr/local/lib/mcstas).
+  MCSTAS_CC     Name of the C compiler (e.g. cc or gcc)
+  MCSTAS_CFLAGS Options for compilation (e.g. '-O -DALL_FORMATS')
+SEE ALSO: mcstas, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui
+DOC:      Please visit http://neutron.risoe.dk/mcstas/
+** No instrument definition name given\n" unless $sim_def;
+die "Number of points must be at least 1" unless $numpoints >= 1;
 }
 
 # Check the input parameter specifications for variables to scan.
@@ -201,10 +233,19 @@ sub do_sim_header {
 
 sub do_data_header {
     my ($pr, $OUT, $info, $youts, $variables, $datfile) = @_;
-    my $scannedvars = join ", ", map($params[$_], @{$info->{VARS}});
-    my $xvars = join " ", map($params[$_], @{$info->{VARS}});
+    my $scannedvars;
+    my $xvars;
     my $yvars = join " ", @$youts;
-    my $xlabel = $params[$info->{VARS}[0]];
+    my $xlabel;
+    my $min;
+    my $max;
+    if (@{$info->{VARS}} == 0) { $xlabel = "Point number"; $scannedvars="Point"; $xvars="Point"; $min=1; $max=$numpoints; }
+    else { 
+      $xlabel = $params[$info->{VARS}[0]]; 
+      $scannedvars = join ", ", map($params[$_], @{$info->{VARS}}); 
+      $xvars = join " ", map($params[$_], @{$info->{VARS}}); 
+      $min = $info->{MIN}[0]; $max = $info->{MAX}[0];
+    }
     print $OUT <<END
 ${pr}type: multiarray_1d($numpoints)
 ${pr}title: 'Scan of $scannedvars'
@@ -212,7 +253,7 @@ ${pr}xvars: $xvars
 ${pr}yvars: $yvars
 ${pr}xlabel: '$xlabel'
 ${pr}ylabel: 'Intensity'
-${pr}xlimits: $info->{MIN}[0] $info->{MAX}[0]
+${pr}xlimits: $min $max
 ${pr}filename: $datfile
 ${pr}variables: $variables
 END
@@ -224,9 +265,10 @@ sub output_sim_file {
     my $SIM = new FileHandle;
     open($SIM, ">$filename") ||
         die "Failed to write info file '$filename'";
-    print $SIM "begin instrument\n";
-    do_instr_header("  ", $SIM);
-    print $SIM "end instrument\n\nbegin simulation\n";
+    # print $SIM "begin instrument\n";
+    do_instr_header("", $SIM);
+    # print $SIM "end instrument\n\n";
+    print $SIM "\nbegin simulation\n";
     do_sim_header("  ", $SIM);
     print $SIM "end simulation\n\nbegin data\n";
     do_data_header("  ", $SIM, $info, $youts, $variables, $datfile);
@@ -280,6 +322,7 @@ sub do_scan {
             $out .= "$vals{$params[$i]} ";
             $variables .= "$params[$i] " if $firsttime
             }
+        if (@{$info->{VARS}} == 0) { $out .= "$point "; $variables .= "Point " if $firsttime; }
         # Decide how to handle output files.
         my $output_opt =
             $data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
@@ -327,7 +370,7 @@ sub do_scan {
 
 parse_args();                        # Parse command line arguments
 my $scan_info = check_input_params(); # Get variables to scan, if any
-$out_file = get_out_file($sim_def, $force_compile);
+$out_file = get_out_file($sim_def, $force_compile, @ccopts);
 exit(1) unless $out_file;
 
 # Make sure that the current directory appears first in the path;

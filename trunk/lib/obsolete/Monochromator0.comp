@@ -8,7 +8,7 @@
 *
 * Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 08 March 2000
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>) (Obsolete)
 *
 * Non-flat monochromator crystal with multiple scattering
@@ -22,6 +22,7 @@
 * vector, the structure factor of the monochromator crystal and its mosaic.
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
+* OBSOLETE: rather use optics/Mosaic_anisotropic
 *
 * %PARAMETERS
 * 
@@ -75,9 +76,6 @@ INITIALIZE
 	/*
 	double my,r0,l,Mono_d,v;
 	*/
-  
-  fprintf(stderr,"Monochromator0: this component is OBSOLETE (not maintained)\n");
-fprintf(stderr,"Monochromator0: rather use optics/Mosaic_anisotropic\n");
 
   	tmp7=0;
 	tmp8=0;

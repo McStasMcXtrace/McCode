@@ -21,10 +21,14 @@
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
 * When curvatures are set to 0, the monochromator is flat. 
-* The curvatures approximation for focusing to distance L, with
+* The curvatures approximation for parallel beam focusing to distance L, with
 * monochromator rotation angle A1 are:
-*   RM = fabs(yheight/NV*RAD2DEG/(2*L*sin(DEG2RAD*A1)));
-*   RH = fabs(zwidth/NH*RAD2DEG*sin(DEG2RAD*A1)/(2*L));
+*   RV = 2*L*sin(DEG2RAD*A1);
+*   RH = 2*L/sin(DEG2RAD*A1);
+*
+* When you rotate the component by A1 = asin(Q/2/Ki)*RAD2DEG, do not forget to 
+* rotate the following components by A2=2*A1 (for 1st order) !
+* OBSOLETE: rather use optics/Monochromator_2foc
 *
 * Example: Mon_2foc(zwidth=0.02, yheight=0.02, gap=0.0005, NH=11, NV=11,
 *           mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
@@ -72,9 +76,6 @@ DECLARE
   
 INITIALIZE
 %{
-  fprintf(stderr,"Mon_2foc: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Mon_2foc: rather use optics/Monochromator_2foc\n");
-  
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
   if (ywidth != 0) yheight = ywidth;  /* compatibility with old Mon_2foc */

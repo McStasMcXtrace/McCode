@@ -31,6 +31,7 @@
 * Modified by: EF, 24th Oct 2001 : capture flux  [p*lambda/1.7985] (0.16.3)
 * Modified by: EF, 15th Feb 2002 : corrected bug in auto regeneration (0.16.4)
 * Modified by: EF, 27th Aug 2002 : monitor a variable in place of I (0.16.5)
+* Modified by: EF, 25th Oct 2002 : banana, and auto for each variable (0.16.5)
 *
 * This component is a general Monitor that can output 0/1/2D signals 
 * (Intensity or signal vs. [something] and vs. [something] ...)
@@ -58,6 +59,9 @@
 *     filename = "MySource.list", options="list all, source")
 * The output file is text formatted with: [x y z vx vy vz t sx sy sz p] lines, 
 * and is about 85 byte per neutron. May be half size with 'binary' option.
+*
+* The 'abs','log' and 'auto' modifiers are to be used before the variable,
+* and 'bins','limits' come after it. (eg: auto abs log hdiv limits=-5 5 bins=10)
 * 
 * <b>Possible options are</b>
 * Variables to record:
@@ -81,10 +85,10 @@
 *
 * <b>Other options are:</b>
 *     abs                       Will monitor the abs of the following variable
-*                               or of the signal (if used after variables)
-*     auto                      Automatically set detector limits
-*     all  {limits or bins}     To set all limits or bins values
-*     binary                    with 'source' option, saves in compact files
+*                               or of the signal (if used after all variables)
+*     auto                      Automatically set detector limits for one or all
+*     all  {limits|bins|auto}   To set all limits or bins values or auto mode
+*     binary {float|double}     with 'source' option, saves in compact files
 *     bins=[bins=20]            Number of bins in the detector along dimension
 *     borders                   To also count off-limits neutrons
 *                                (X < min or X > max)
@@ -97,7 +101,7 @@
 *     list=[counts=1000] or all For a long file of neutron characteristics
 *                                with [counts] or all events
 *     log                       Will monitor the log10 of the following variable
-*                               or of the signal (if used after variables)
+*                               or of the signal (if used after all variables)
 *     multiple                  For 1D monitors into multiple independant files
 *     no or not                 Revert next option
 *     outgoing                  Monitor outgoing beam in non flat (sph/cyl) det
@@ -107,7 +111,7 @@
 *     per cm2                   Intensity will be per cm^2
 *     premonitor                Will monitor neutron parameters stored
 *                                previously with <b>PreMonitor_nD</b>.
-*     signal=<var>              Will monitor <var> instead of usual intensity
+*     signal=[var]              Will monitor [var] instead of usual intensity
 *     slit or absorb            Absorb neutrons that are out detector
 *     source                    The monitor will save neutron states
 *     unactivate                To unactivate detector (0D detector)
@@ -117,11 +121,13 @@
 *
 * Detector shape options (specified as xwidth, yheight, zthick or x/y/z/min/max)
 *     box                       Box of size xwidth, yheight, zthick
-*     cylinder                  To get a cylindrical monitor (e.g. banana)
-*                                (radius is xwidth, height is yheight).
+*     cylinder                  To get a cylindrical monitor
+*                                (diameter is xwidth, height is yheight).
+*     banana                    Same as cylinder, without top/bottom, 
+*                                on restricted angular area
 *     disk                      Disk flat xy monitor. radius is xwidth.
 *     sphrere                   To get a spherical monitor (e.g. a 4PI)
-*                                (radius is xwidth).
+*                                (diameter is xwidth).
 *     square                    Square flat xy monitor (xwidth, yheight)
 *
 * <b>EXAMPLES:</b>
@@ -133,10 +139,11 @@
 *                        and 5 degrees, in 10 bins, into "mon1.A" output 1D file
 *   options = "sphere theta phi outgoing"   for a sphere PSD detector (out beam)
 *                                    and saves into file "MyMon_[Date_ID].th_ph"
-*   options = "angle radius auto"   is a 2D monitor with automatic limits
+*   options = "angle radius all auto"   is a 2D monitor with automatic limits
 *   options = "list kx ky kz energy" records each neutron contribution in 1 file
-*   options = "multiple kx ky kz energy and list all neutrons" 
+*   options = "multiple kx ky kz auto abs log t and list all neutrons" 
 *          makes 4 output 1D files and produces a complete list for all neutrons
+*          and monitor log(abs(tof)) within automatic limits (for t)
 *
 * How to monitor anything in my simulation: with the 'user' option
 * 1) put in your instrument DECLARE: struct MonitornD_Variables *InstrVars;
@@ -214,7 +221,7 @@ INITIALIZE
 %{
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
   if (options != NULL)
-    strcpy(Vars.option, options);
+    strncpy(Vars.option, options, 1024);
   else
     strcpy(Vars.option, "x y");
   
@@ -224,7 +231,7 @@ INITIALIZE
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
   
   if (filename != NULL)
-    strcpy(Vars.Mon_File, filename);
+    strncpy(Vars.Mon_File, filename, 128);
 %}
 
 TRACE
@@ -251,9 +258,10 @@ TRACE
     intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius);
   /*      intersect = (intersect && t0 > 0); */
   }
-  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) /* cylinder */
+  else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
   {
     intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height);
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) intersect = 0; /* remove top/bottom for banana */
   }
   else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
   {
@@ -262,7 +270,7 @@ TRACE
   
   if (intersect)
   {
-    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX))
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
     {
       if (t0 < 0 && t1 > 0)
         t0 = t;  /* neutron was already inside ! */
@@ -275,7 +283,7 @@ TRACE
         PROP_DT(t0); /* t0 incoming beam */
     }
 
-    /* Now get the data to monitor: curent or keep from PreMonitor */
+    /* Now get the data to monitor: current or keep from PreMonitor */
     if (Vars.Flag_UsePreMonitor != 1)
     {
       Vars.cp = p;
@@ -320,7 +328,7 @@ TRACE
     {
       Vars.IntermediateCnts += Vars.Intermediate*mcget_ncount();
       /* save results for all monitors in the simulation */
-      mcsave();
+      mcsave(NULL);
     }
     if (Vars.Flag_parallel) /* back to neutron state before detection */
       Flag_Restore = 1;

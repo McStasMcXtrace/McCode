@@ -11,7 +11,7 @@
 * Adapted from Moderator by: KN, M.Hagen, August 1998
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001 
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -118,6 +118,13 @@ DECLARE
 
 INITIALIZE
 %{
+  if (n == 1 || n2 == 1 || l_low<=0 || l_high <=0 || dist == 0 
+    || branch1 == 1 || branch2 == 1 || branchframe == 1 || tau == 0)
+  {
+    printf("ESS_moderator_short: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {l_low l_high dist tau} and 1 value for {n n2 branch1/2/frame}\n", NAME_CURRENT_COMP);
+    exit(-1);
+  }
+  
   Delta_t = 1.0/(double)freq;
   l_range = l_high-l_low;
   w_mult = size*size*1.0e4;     /* source area correction */

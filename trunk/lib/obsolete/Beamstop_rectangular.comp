@@ -10,12 +10,13 @@
 * Written by: Kristian Nielsen
 * Date: January 2000
 * Origin: McStas 1.5 (Obsolete)
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 *
 * Rectangular beam stop.
 *
 * %D
 * A simple rectangular beam stop. Infinitely thin and infinitely absorbing.
+* OBSOLETE:rather use optics/Beamstop
 *
 * %PAR
 *
@@ -34,12 +35,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
-
-INITIALIZE
-%{
-fprintf(stderr,"Beamstop_rectangular: this component is OBSOLETE (not maintained)\n");
-fprintf(stderr,"Beamstop_rectangular: rather use optics/Beamstop\n");
-%}
 TRACE
 %{
     PROP_Z0;

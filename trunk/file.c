@@ -16,7 +16,7 @@
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.12 2003-01-21 08:51:11 pkwi Exp $
+*	$Id: file.c,v 1.13 2003-01-21 08:55:31 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.3  2000/02/15 07:40:59  kn
@@ -129,7 +129,10 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
     f = (*try_open)(dir, name);
     str_free(dir);
     if(f != NULL)
-      return f;
+      {
+        if (!strcmp(sys_subdir_table[i], "obsolete")) fprintf(stderr, "Warning: '%s' is an obsolete component (not maintained).\n", name);
+        return f;
+      }
   }
   /* Not found. */
   return NULL;

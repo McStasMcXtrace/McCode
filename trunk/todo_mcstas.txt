@@ -1,5 +1,5 @@
 DONE/TODO/FUTURE list for next release of McStas (1.6)
-Oct 1st, 2002 McStas 1.6.3f dev
+Nov 27st, 2002 McStas 1.6.3k dev
 
 Compiled by PW/EF from user wishes and different notes.
 
@@ -9,6 +9,10 @@ DONE   - reqd. task, done or very simple
 TODO   - reqd. task, requires substantial work
 FUTURE - needed, wanted, but postponed for later release
 USER   - work for McStas user base more than developers
+
++ already implemented
+- not yet implemented
+? still to decide
 
 *******************************************
 DONE: 
@@ -30,6 +34,7 @@ Components:
 
 Instruments:
 - Intercomparison instruments H8, IRIS, RITA-II, IN12, TAS1, IN14,...
++ selftest ok
 
 Tools: (GUI, plotting, running etc.)
 - Automated optimization -> Optimisation (LM?) - great complexity... 
@@ -80,17 +85,38 @@ Runtime:
 + rand_target_rect, modification according to formula.    
 ? move extend_list to external lib ? used in Powder_filter.comp, Filter_powder.comp, Single_crystal.comp, the Manual.
 + 3d data files saved linearly (2d), and rearranging as 3d after.
-- mcsave=simifo_init(NULL)/save/siminfo_close() (to get only latest save
++ mcsave=simifo_init(NULL)/save/siminfo_close() (to get only latest save
     with right sim ratio)
++ binary export: ok (Virtual_input/output use that).
++ scilab export: rescale x,y,z to have cubic 2d plots
++ use extended output formats. Default should be mcstas+scilab. cc -D ALL_FORMATS ...
++ read_table-lib can read text files, binary files, starting at given offset, for a given number of lines
++ mcstas-r.c: handle binary file export ok, also for 'hidden/partial' files (not listed in .sim, as e.g. virtual sources = big files)
+  
 
 Components:
-- Virtual_output - should be written, macro for calling Monitor_nD? -
-  See ALIAS in kernel section.
++ Monochromator_curved: add 'reflect/transmit' param info in header. 
+  Add verbosity level and transmission efficiency if not scattered. Add spin ?
++ Monochromator_2foc: reflectivity ok
++ Monitor_nD: enable auto all, or auto for specified variables only.
+    add FLAG_AUTO | COORD_TYPE
++ Monitor_nD plot banana and quadrant monitors (instead of whole circles)
+  Intermediate saving trigger all saves
++ cylinder_intersect: return 0 no intersect, 1 on cylinder, 
+  2/4/8/16 for in top/in bottom/out top/out bottom
++ Virtual_output - ok, macro for calling Monitor_nD? -
+  Based on Vitess_output/Virtual_input
 + Virtual_input: use Table_Read, corrected repeat count/set_ncount  ok.
 + Sort components in categories, official, contrib, obsolete
-- unused variable (cc -Wall)
-- verbose mode for complex components
-- reduce number of input parameters (use options string ?)   
++ verbose mode for complex components
++ Virtual_input crashes when filename does not exist. Pb with repeat nb. ok
++ Guide_gravity with general gravitation orientation ? set it at first neutron in ntrace
++ New Filter_gen, that may use any text data file
++ Virtual_input/output may read/write huge files, by fractions.
++ V_sample: may target to any component (compute target_x,y,z) given rel index
++ V_sample: may also be a box
+- Res_monitor: as a cylinder/sphere monitor
+
 
 - Check fluxes / absolute fluxes - provide experimental data +
   instrument definition 
@@ -101,6 +127,8 @@ Components:
 - Bender, to be tested check for absolute fluxes, as compared to a
   number of linear guides.
 - Filter_powder.comp, Single_crystal.comp : use Table_Read, extend_list  
+- Source_Optimizer to be tested 
+- Use Read_Table-lib for Single_crystal
 
 - $Log: not supported by cvs2svn $ - cvs revision no, etc. for both McStas kernel / lib,
   automated using cvs?. Origin indicates research institution,
@@ -116,13 +144,18 @@ Tools: (GUI, plotting, running etc.)
 + mcplot can monitor single data file (not sim)
 + mcplot and mcdisplay can output gif
 + mcplot and mcdisplay can output ps/psc/gif and exit (non interactive)
++ mcplot does not work for scans: fixed. ok
++ mcgui: fixed a few minor problems
++ install now ok with sub dirs
++ mcstas2vitess ok for single components. Must use settings params only.
 - Improve GUI - scilab.
 - Status monitor support (Tool to be written - script) - access pid, daemon.
 - html / png / page generation. (perhaps scilab based?) - mcplot?
 - mcdisplay date checking for recompilation, through mcrun -n 1
 - export in several formats, ps, gif (scilab), png (Imagemagick when available)
-- mcdisplay show help info when no arguments (l. 517)
++ mcdisplay show help info when no arguments (l. 517)
 - mcdoc: changed to show instruments also.
++ mcresplot works ok, even without 3D OpenGL/Mesa install
 
 Documentation:
 - FAQ list in manual
@@ -167,8 +200,9 @@ Instruments:
 
 Tools: (GUI, plotting, running etc.)
 - Analyzer bank generator (RITA2 type setup), script
-- mcdisplay 3D?
+- mcdisplay 3D? ongoing...
 - BatchMaker? Ask author to contibute
+- improve Matlab and IDL export (binary, plot...)
 
 Documentation:
 

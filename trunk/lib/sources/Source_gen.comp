@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -101,7 +101,7 @@ INITIALIZE
 %{
   double factor, delta_lambda, source_area, k;
   
-  if (radius == 0 && h == 0 & w == 0)
+  if (radius == 0 && h == 0 && w == 0)
   {
     fprintf(stderr,"Source_gen: Error: Please precise source geometry (radius, h, w)\n");
     exit(-1);
@@ -155,11 +155,13 @@ INITIALIZE
       source_area = radius*radius*PI*1e4; /* circular cm^2 */
     else
       source_area = h*w*1e4; /* square cm^2 */
-    factor = I1*source_area*delta_lambda/mcget_ncount();
+    factor = I1*source_area*delta_lambda;
     p_in = factor;  /* p_in = (4*hdiv*vdiv)*factor; */
   }
   else
-    p_in = 1/PI; /* Small angle approx. */
+    p_in = 1.0/4/PI; /* Small angle approx. */
+  p_in /= mcget_ncount();
+  
     
   k  = 1.38066e-23;	/* k_B */
   if (T1 > 0)
@@ -194,16 +196,16 @@ INITIALIZE
   {
     printf("Source_gen: component %s ", NAME_CURRENT_COMP);
     if ((h == 0) || (w == 0))
-      printf("(square)");
-    else
       printf("(disk)");
-    printf("\n             spectra ");
+    else
+      printf("(square)");
+    printf("\n            spectra ");
     printf("%.2f to %.2f AA (%.2f to %.2f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
     if (gaussian)
       printf(", gaussian beam");
     printf("\n");
     if (T1 != 0)
-      printf("             T1=%.1f K (%.2f AA)", T1, lambda0);
+      printf("            T1=%.1f K (%.2f AA)", T1, lambda0);
     if (T2*I2 != 0)
       printf(", T2=%.1f K (%.2f AA)", T2, lambda0b);
     if (T3*I3 != 0)

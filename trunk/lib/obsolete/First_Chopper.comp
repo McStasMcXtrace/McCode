@@ -2,13 +2,14 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: McStas release (Obsolete)
 *
 * First disk chopper after a continuous neutron source.
 *
 * %D
 * Models a disc chopper at the first place.  
+* OBSOLETE: rather use optics/Chopper with IsFirst=1
 *
 * %P
 * INPUT PARAMETERS:
@@ -39,8 +40,6 @@ DECLARE
 
 INITIALIZE
  %{
-   fprintf(stderr,"First_Chopper: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"First_Chopper: rather use optics/Chopper with IsFirst=1\n");
   
       /* time between two pulses */
       Tg=2.0*PI/fabs(f)/n;

@@ -308,6 +308,8 @@ INITIALIZE
  
 /************************* INITIALIZE COUNTERS ********************************/
 
+  int i;
+  
   ntrans   	= 0;
   cylinder 	= 0;
   cylinder2	= 0;
@@ -721,6 +723,7 @@ FINALLY
 /*Initialize Files*/
 
 FILE *header;
+int i;
 
 header = fopen("Header.dat","w");
 

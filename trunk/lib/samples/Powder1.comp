@@ -10,11 +10,15 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
 * General powder sample with a single scattering vector.
+* The area to scatter to is a disk of angular radius 'd_phi0' situated at the target.
+* The shape of the sample may be box shaped with dimensions xwidth, yheight, zthick.
+* The target itself is either situated according to given coordinates, or
+* setting the relative index of the component to focus at (next is +1).
 *
 * Example: Powder1(radius=0.015,h=0.05,q =1.8049,d_phi0 =0.07,pack=1,j=6,DW=1, 
 *       F2=56.8,Vc=85.0054,sigma_a=0.463,target_x=0,target_y=0, target_z=1000)
@@ -39,6 +43,12 @@
 * target_y  : position of target to focus at (m)
 * target_z  :
 *
+* Optional parameters:
+* xwidth    : horiz. dimension of sample, as a width (m)
+* yheight   : vert.. dimension of sample, as a height (m)
+* zthick    : thickness of sample (m)
+* target_index: relative index of component to focus at, e.g. next is +1 (1).
+*
 * Variables calculated in the component
 *
 * my_s      : Attenuation factor due to scattering (m^-1)
@@ -56,28 +66,50 @@
 
 DEFINE COMPONENT Powder1
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius, h, q = 1.8049, d_phi0 = 0.07, pack = 1, j = 6, DW = 1, F2 = 56.8, Vc = 85.0054, sigma_a = 0.463, target_x = 0,  target_y = 0, target_z = 1000)
-OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
+SETTING PARAMETERS (radius=0.01, h=0.05, q = 1.8049, d_phi0 = 10, pack = 1, j = 6, DW = 1, F2 = 56.8, Vc = 85.0054, sigma_a = 0.463, target_x = 0,  target_y = 0, target_z = 1, xwidth=0, yheight=0, zthick=0, int target_index=0)
+OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v, Pow_tx, Pow_ty, Pow_tz, isrect)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
   double my_s_v2, my_a_v, q_v;
+  double Pow_tx, Pow_ty, Pow_tz;  /* target coords */
+  char   isrect=0;
 %}
 INITIALIZE
 %{
+  if (!radius || !h) {
+    if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"Powder1: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    else isrect=1; }
+  
   my_a_v = sigma_a/Vc*2200;           /* Is not yet divided by v */
   my_s_v2 = PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q);  
                                       /* Is not yet divided by v^2 */
   q_v = q*K2V;
+  
+  /* now compute target coords if a component index is supplied */
+  if (target_index)
+  {
+    Coords ToTarget; 
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &Pow_tx, &Pow_ty, &Pow_tz);
+  } 
+  else
+  { Pow_tx = target_x; Pow_ty = target_y; Pow_tz = target_z; }
 %}                                                                             
 TRACE
 %{
   double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
   double aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  char   intersect=0;
 
-  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, h))
+  if (isrect)
+    intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+  else
+    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, h);
+  if(intersect)
   {
     if(t0 < 0)
       ABSORB;
@@ -96,9 +128,9 @@ TRACE
       ABSORB;                   /* No bragg scattering possible*/
     theta = asin(arg);          /* Bragg scattering law */
 
-    aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
-    aim_y = target_y-y;
-    aim_z = target_z-z;
+    aim_x = Pow_tx-x;         /* Vector pointing at target (anal./det.) */
+    aim_y = Pow_ty-y;
+    aim_z = Pow_tz-z;
     vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, aim_x, aim_y, aim_z);
     rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
     rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
@@ -106,7 +138,7 @@ TRACE
     vy = vout_y;
     vz = vout_z;
 
-    if(!cylinder_intersect(&t0, &t1, x, y, z, 
+    if(!isrect && !cylinder_intersect(&t0, &t1, x, y, z, 
                            vout_x, vout_y, vout_z, radius, h))
     {
       /* Strange error: did not hit cylinder */
@@ -119,18 +151,39 @@ TRACE
     p *= l_full*my_s*exp(-(my_a_v/v+my_s)*(l+l_1));
     SCATTER;
   }
-  else
-    ABSORB;
 %}
 
 MCDISPLAY
 %{
   magnify("xyz");
-  circle("xz", 0,  h/2.0, 0, radius);
-  circle("xz", 0, -h/2.0, 0, radius);
-  line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
-  line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
-  line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
-  line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+  if (!isrect) {
+    circle("xz", 0,  h/2.0, 0, radius);
+    circle("xz", 0, -h/2.0, 0, radius);
+    line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+    line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+    line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+    line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+  } else {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
 %}
 END

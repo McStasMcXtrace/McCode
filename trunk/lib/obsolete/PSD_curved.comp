@@ -8,7 +8,7 @@
 *
 * Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 07 March 2000
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
 *
 * Curved linear 1D MSGC PSD
@@ -21,6 +21,7 @@
 * realisation (D20) of such a PSD, as done on D20 at ILL. So some kind of 'polygonality' effect 
 * resulting from the polygonal arrangement of MSGC plates will be considered in the near future
 * by an approximation of the electron avalanche trace in the electrical field.
+* OBSOLETE: rather use monitors/Monitor_nD with options="... cylinder ..."
 * 
 * %PARAMETERS
 *
@@ -72,9 +73,6 @@ DECLARE
 INITIALIZE
 %{
   int i;
-  
-  fprintf(stderr,"PSD_curved: this component is OBSOLETE (not maintained)\n");
-fprintf(stderr,"PSD_curved: rather use monitors/Monitor_nD\n");
 
   alpha=period*pitch/360.0*PI;
   R1=radius/cos(alpha);	

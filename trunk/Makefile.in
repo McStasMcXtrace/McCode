@@ -63,8 +63,8 @@ mcstas: $(OBJECTS)
 
 clean:
 	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \
-	instrument.tab.c instrument.tab.h instrument.output lex.yy.c
-
+	instrument.tab.c instrument.tab.h instrument.output lex.yy.c \
+  config.cache Makefile
 TAGS:
 	etags *.[chly]
 
@@ -77,11 +77,18 @@ install: installdirs $(BINOBJS)
 	  if [ -d lib/$$file ]; then \
 	    $(srcdir)/mkinstalldirs $(mc_libdir)/$$file; \
 	    for comp in `cd lib/$$file; ls`; do \
-	      if [ -e $(mc_libdir)/$$comp ]; then \
-		echo "Renaming old component version $(mc_libdir)/$$comp to $(mc_libdir)/$$comp.old"; \
-		mv -f $(mc_libdir)/$$comp $(mc_libdir)/$$comp.old; \
-	      fi; \
-	      $(INSTALL_DATA) lib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
+        if [ -e $(mc_libdir)/$$file/$$comp ]; then \
+          echo "Renaming old library element version $(mc_libdir)/$$file/$$comp to $(mc_libdir)/$$file/$$comp.old"; \
+          mv -f $(mc_libdir)/$$file/$$comp $(mc_libdir)/$$file/$$comp.old; \
+        fi; \
+	      if [ -d lib/$$file/$$comp ]; then \
+          $(srcdir)/mkinstalldirs $(mc_libdir)/$$file/$$comp; \
+          for tool in `cd lib/$$file/$$comp; ls`; do \
+            $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(mc_libdir)/$$file/$$comp/$$tool; \
+          done \
+        else \
+	        $(INSTALL_DATA) lib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
+        fi; \
 	    done \
 	  else \
 	    $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
