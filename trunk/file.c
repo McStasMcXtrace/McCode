@@ -16,9 +16,12 @@
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.16 2004-09-10 15:09:56 farhi Exp $
+*	$Id: file.c,v 1.17 2005-03-02 10:07:23 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.16  2004/09/10 15:09:56  farhi
+*	Use same macro symbols for mcstas kernel and run-time for code uniformity
+*
 *	Revision 1.15  2003/02/11 12:28:45  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
@@ -27,7 +30,7 @@
 *	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
 *	Progress_bar: precent -> percent parameter
 *	CS: ----------------------------------------------------------------------
-*	
+*
 *	Revision 1.3  2000/02/15 07:40:59  kn
 *	Also search for components in a fixed list of system dir subdirectories.
 *
@@ -140,6 +143,7 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
     if(f != NULL)
       {
         if (!strcmp(sys_subdir_table[i], "obsolete")) fprintf(stderr, "Warning: '%s' is an obsolete component (not maintained).\n", name);
+        if (!strcmp(sys_subdir_table[i], "contrib"))  fprintf(stderr, "Info   : '%s' is a contributed component.\n", name);
         return f;
       }
   }
