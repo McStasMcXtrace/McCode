@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.6 1998-03-20 14:19:52 lefmann Exp $
+* 	$Id: mcstas-r.c,v 1.7 1998-03-24 07:34:03 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.6  1998/03/20 14:19:52  lefmann
+* 	Added cylinder_intersect().
+*
 * 	Revision 1.5  1998/03/16 08:03:41  kn
 * 	Added normal distributed random number function randnorm().
 *
@@ -247,8 +250,8 @@ randnorm(void)
   {
     do
     {
-      u1 = (double)rand() / RAND_MAX;
-      u2 = (double)rand() / RAND_MAX;
+      u1 = rand01();
+      u2 = rand01();
       v1 = 2*u1 - 1;
       v2 = 2*u2 - 1;
       s = v1*v1 + v2*v2;
@@ -268,14 +271,14 @@ randnorm(void)
 /* Written by: EM,NB,ABA 4.2.98 */
 int
 cylinder_intersect(double *t0, double *t1, double x, double y, double z,
-		   double vx, double vy, double vz, r, h)
+		   double vx, double vy, double vz, double r, double h)
 {
   double v, D, t_in, t_out, y_in, y_out;
 
   v = sqrt(vx*vx+vy*vy+vz*vz); 
 
   D = (2*vx*x + 2*vz*z)*(2*vx*x + 2*vz*z) 
-    - 4*(vx*vx + vz*vz)*(x*x + z*z - radius*radius);
+    - 4*(vx*vx + vz*vz)*(x*x + z*z - r*r);
 
   if (D>=0) 
   {   
