@@ -76,7 +76,7 @@ FINALLY
 	"Energy monitor",
 	"Energy [meV]",
 	"Intensity",
-	Emin, Emax, nchan,
+	"E", Emin, Emax, nchan,
 	&E_N[0],&E_p[0],&E_p2[0],
 	filename);
   %}
