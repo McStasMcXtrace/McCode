@@ -9,7 +9,6 @@
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen 4.2.98
 * Rewritten by: KL, KN 20.3.98
 *
-*
 * INPUT PARAMETERS
 *       
 * d_phi0    : Focussing angle corresponding to the vertical dimensions
@@ -32,7 +31,6 @@
 *
 * my_s      : Attenuation factor due to scattering (m^-1)
 * my_a      : Attenuation factor due to absorbtion (m^-1)
-*
 *******************************************************************************/
 
 DEFINE COMPONENT Powder1
@@ -109,5 +107,4 @@ MCDISPLAY
   line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
   line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
 %}
-
 END
