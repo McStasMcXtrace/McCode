@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 #
-# Generic scan of variables.
+# Generic scan of variables (obsolete). Rather use mcrun.
 #
 # Usage:
 #  [perl] gscan.pl numpoint sim-exec file (VAL | VAL,VAL) ...
