@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.87 2004-06-30 12:16:07 farhi Exp $
+* $Id: mcstas-r.c,v 1.88 2004-06-30 15:06:06 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.86  2004/06/16 14:03:07  farhi
@@ -2395,7 +2395,7 @@ static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *
  * 'part' may be 'begin' or 'end' depending on section part to write
  * 'type' may be e.g. 'instrument','simulation','component','data'
  * if name == NULL, ignore function (no section definition)
- * the prefix 'pre' is automatically idented/un-indented (pre-allocated !)
+ * the prefix 'pre' is automatically indented/un-indented (pre-allocated !)
  */
  
 static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, char *pre, char *name, char *type, char *parent, int level) 
@@ -2420,7 +2420,7 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
   if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
   else strcpy(valid_parent, "root");
   
-  if (!strcmp(part,"end") && pre) 
+  if (!strcmp(part,"end") && pre)
   {
     if (strlen(pre) <= 2) strcpy(pre,"");
     else pre[strlen(pre)-2]='\0'; 
@@ -2437,13 +2437,12 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
   
   if (!strcmp(part,"begin")) 
   {
-    strcat(pre,"  ");
+    if (pre) strcat(pre,"  ");
     if (name && strlen(name)) 
       mcfile_tag(f, format, pre, name, "name", name);
     if (parent && strlen(parent)) 
       mcfile_tag(f, format, pre, name, "parent", parent);
   }
-  
   
   return(ret);
 } /* mcfile_section */
@@ -2484,16 +2483,13 @@ void mcinfo_simulation(FILE *f, struct mcformats_struct format,
 {
   int i;
   double run_num, ncount;
-  time_t t;
   char Value[256];
   
   if (!f) return;
     
   run_num = mcget_run_num();
   ncount  = mcget_ncount();
-  time(&t);
-  strncpy(Value, ctime(&t), 256); if (strlen(Value)) Value[strlen(Value)-1] = '\0';
-  mcfile_tag(f, format, pre, name, "Date", Value); 
+  
   if (run_num == 0 || run_num == ncount) sprintf(Value, "%g", ncount);
   else sprintf(Value, "%g/%g", run_num, ncount);
   mcfile_tag(f, format, pre, name, "Ncount", Value);
@@ -2633,6 +2629,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   mcfile_tag(f, format, pre, parent, "type", type);
   mcfile_tag(f, format, pre, parent, "Source", mcinstrument_source);
   if (parent) mcfile_tag(f, format, pre, parent, (strstr(format.Name,"McStas") ? "component" : "parent"), parent);
+	
   if (title) mcfile_tag(f, format, pre, parent, "title", title);
   mcfile_tag(f, format, pre, parent, "ratio", ratio);
   if (filename) {
@@ -2696,7 +2693,7 @@ mcsiminfo_init(FILE *f)
             info_name);
   else
   {
-    char pre[20];
+    char pre[20]; /* allocate enough space for indentations */
     int  ismcstas;
     char simname[1024];
     char root[10];
@@ -2849,10 +2846,14 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     if (datafile && !mcascii_only) 
     { 
       char mode[32];
-      if (isdata == 1)
+      if (isdata == 1) {
+      	strcpy(mode, (strstr(format.Name, "McStas") ? "# " : ""));
         mcfile_header(datafile, format, "header",
-          (strstr(format.Name, "McStas") ? "# " : ""), 
+          mode, 
           filename, valid_parent); 
+        mcinfo_simulation(datafile, format, 
+          mode, valid_parent); 
+      }
       sprintf(mode, "%s begin", part);
       /* write header+data block begin tags into datafile */
       mcfile_datablock(datafile, format, 
@@ -3125,8 +3126,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     i=m; m=abs(n); n=abs(i); p=abs(p); 
   }
 
-  /* use sim file if not a list (catenated event list) or only mcfile_data */
-  if (!strstr(format.Name," list ")) local_f = mcsiminfo_file; 
+  if (!strstr(format.Name," list ")) local_f = mcsiminfo_file; /* use sim file */
   if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
   
   if (!mcdisable_output_files)
