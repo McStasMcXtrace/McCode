@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.42  2003/10/06 14:59:14  farhi
+*	Also insert component index in automatic source comments
+*	
 *	Revision 1.41  2003/09/05 08:59:05  farhi
 *	added INSTRUMENT parameter default value grammar
 *	mcinputtable now has also default values
@@ -39,7 +42,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.42 2003-10-06 14:59:14 farhi Exp $
+* $Id: cogen.c,v 1.43 2004-09-03 13:43:29 farhi Exp $
 *
 *******************************************************************************/
 
@@ -939,7 +942,7 @@ cogen_trace(struct instr_def *instr)
     int i;
     List_handle statepars_handle;
 
-    coutf("  /* Component %s. */", comp->name);
+    coutf("  /* TRACE Component %s. */", comp->name);
     coutf("  strcpy(%ssig_message, \"%s (Trace)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
     /* Change of coordinates. */
@@ -1112,15 +1115,6 @@ cogen_save(struct instr_def *instr)
     coutf("  strcpy(%ssig_message, \"%s (Save)\");", ID_PRE, instr->name); 
     cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
                            instr->saves);
-    cout("");
-  }
-  /* User's FINALLY code from the instrument definition file. */
-  if(list_len(instr->finals->lines) > 0)
-  {
-    cout("  /* User FINALLY code from instrument definition. */");
-    coutf("  strcpy(%ssig_message, \"%s (Finally)\");", ID_PRE, instr->name); 
-    cogen_instrument_scope(instr, (void (*)(void *))codeblock_out_brace,
-                           instr->finals);
     cout("");
   }
   cout("  if (!handle) mcsiminfo_close(); ");
