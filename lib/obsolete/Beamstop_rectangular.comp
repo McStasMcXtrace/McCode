@@ -1,4 +1,4 @@
-/***********************************************************************
+/*******************************************************************************
 *
 * McStas, the neutron ray-tracing package.
 *         Maintained by Kristian Nielsen and Kim Lefmann,
@@ -6,9 +6,19 @@
 *
 * Component: Beamstop_rectangular
 *
-* Written by: Kristian Nielsen, January 2000
+* %ID
 *
+* Written by: Kristian Nielsen
+* Date: January 2000
+* Origin: McStas release
+* Version: $Revision: 1.2 $
+*
+* Rectangular beam stop.
+*
+* %D
 * A simple rectangular beam stop. Infinitely thin and infinitely absorbing.
+*
+* %PAR
 *
 * INPUT PARAMETERS
 *
@@ -17,7 +27,8 @@
 * ymin: Lower y bound (m)
 * ymax: Upper y bound (m)
 *
-***********************************************************************/
+* %END
+*******************************************************************************/
 
 DEFINE COMPONENT Beamstop_rectangular
 DEFINITION PARAMETERS ()

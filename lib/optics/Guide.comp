@@ -1,19 +1,25 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Guide.
-*
-* Written by: KN, September 2 1998 
+* %I
+* Written by: KN
+* Date: September 2 1998
+* Version: $Revision: 1.6 $
+* Origin: McStas release
 * Modified by: KL, October 6, 1998
 *
+* Neutron guide.
+*
+* %D
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
 * in the X-Y plane.
 * For details on the geometry calculation see the description in the McStas
 * reference manual.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * w1:      (m)    Width at the guide entry
@@ -27,7 +33,10 @@
 * m:       (1)    m-value of material. Zero means completely absorbing.
 * W:       (AA-1) Width of supermirror cut-off
 *
+* %D
 * Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
+*
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Guide

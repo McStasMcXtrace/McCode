@@ -1,17 +1,23 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Filter
+* %I
+* Written by: KL, KN
+* Date: Sept. 14 1998
+* Version: $Revision: 1.7 $
+* Origin: McStas release
 *
-* Written by: KL, KN, Sept. 14 1998
+* A simple neutron filter.
 *
+* %D
 * Be-type filter defined by two identical rectangular opening apertures.
 * The transmission is interpolated liniearly between the high- and low-energy
 * transmissions beyond the upper and lower cut-off energies.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin: Lower x bound (m)
@@ -24,6 +30,7 @@
 * Emin: Lower cut-off energy (meV)
 * Emax: Upper cut-off energy (meV)
 *
+* %E
 *******************************************************************************/
 
 

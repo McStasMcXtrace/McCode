@@ -1,20 +1,26 @@
 /*******************************************************************************
 *
-* McStas, version 1.1, released ?
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: V_selector
+* %I
+* Written by:  KL
+* Date: Nov 25, 1998
+* Version: $Revision: 1.10 $
+* Origin: McStas release
+* Modified by: KL, Jan 22, 1999
 *
-* Written by:  KL, Nov 25, 1998
-* Last change: KL, Jan 22, 1999
+* Velocity selector.
 *
+* %D
 * Velocity selector consisting of rotating Soller-like blades
 * defining a helically twisted passage.
 * Geometry defined by two identical, centered apertures at 12 o'clock
 * position, Origo is at the centre of the selector.
 * Transmission is analytical assuming a continuous source.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * width:     (m)   Width of aperture
@@ -27,6 +33,7 @@
 * rot:       (rpm) Cylinder rotation speed, counter-clockwise
 * nb:        (1)   Number of Soller blades
 *
+* %E
 *******************************************************************************/
 
 

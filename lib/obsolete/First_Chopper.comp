@@ -1,11 +1,16 @@
-/**********************************************************************************************
+/*******************************************************************************
+* %I
+* Written by: Philipp Bernhardt
+* Date: Januar 22 1999
+* Version: $Revision: 1.2 $
+* Origin: McStas release
 *
-* Component: First_Chopper
+* First disk chopper after a continuous neutron source.
 *
-* Written by: Philipp Bernhardt, Januar 22 1999
-*
+* %D
 * Models a disc chopper at the first place.  
 *
+* %P
 * INPUT PARAMETERS:
 *
 * w:       (m)      Width of the slits
@@ -15,8 +20,11 @@
 * pha:     (s)      Phase
 * a:       (1)      Number of pulses
 *
+* %D
 * Example values: w=0.05 R=0.5 f=2500 n=3 pha=0 a=2
-************************************************************************************************/
+*
+* %E
+*******************************************************************************/
  
 DEFINE COMPONENT First_Chopper
 DEFINITION PARAMETERS (w, R, f, n, pha, a)

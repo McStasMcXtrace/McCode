@@ -1,18 +1,24 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Soller
+* %I
+* Written by: KN
+* Date: August 1998
+* Version: $Revision: 1.5 $
+* Origin: McStas release
 *
-* Written by: KN, August 1998
+* A simple analytical Soller collimator.
 *
+* %D
 * Soller collimator with rectangular opening and specified length. The
 * transmission function is an average and does not utilize knowledge of the
 * actual neutron trajectory.
 * A zero divergence disables collimation (then the component works as a double slit).
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:       (m)              Lower x bound on slits
@@ -23,6 +29,7 @@
 * divergence: (minutes of arc) Divergence angle (calculated as atan(d/len),
 *                              where d is the blade spacing) 
 *
+* %E
 *******************************************************************************/
 
 
