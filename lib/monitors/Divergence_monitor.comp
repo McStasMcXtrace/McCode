@@ -4,7 +4,7 @@
 *         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: PSD_monitor
+* Component: Divergence_monitor
 *
 * Written by: KL,  Nov. 11, 1998
 *
@@ -32,7 +32,7 @@
 *******************************************************************************/
 
 
-DEFINE COMPONENT PSD_monitor
+DEFINE COMPONENT Divergence_monitor
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, 
 		       nh, nv, h_maxdiv, v_maxdiv, filename)
 SETTING PARAMETERS ()
@@ -48,8 +48,8 @@ INITIALIZE
   %{
     int i,j;
 
-    for (i=0; i<nx; i++)
-     for (j=0; j<ny; j++) 
+    for (i=0; i<nh; i++)
+     for (j=0; j<nv; j++) 
      {
       Div_N[i][j] = 0;
       Div_p[i][j] = 0;
@@ -64,10 +64,10 @@ TRACE
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
-      h_div = atan2(vx,vz);
-      v_div = atan2(vy,vz);
-      i = floor((h_div + h_divmax)*nh/(2.0*h_divmax));
-      j = floor((v_div + v_divmax)*nv/(2.0*v_divmax));
+      h_div = RAD2DEG*atan2(vx,vz);
+      v_div = RAD2DEG*atan2(vy,vz);
+      i = floor((h_div + h_maxdiv)*nh/(2.0*h_maxdiv));
+      j = floor((v_div + v_maxdiv)*nv/(2.0*v_maxdiv));
       Div_N[i][j]++;
       Div_p[i][j] += p;
       Div_p2[i][j] += p*p;
