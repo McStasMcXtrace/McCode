@@ -1,10 +1,8 @@
-#!/usr/bin/perl -w
+#! /usr/bin/perl -w
 
 # In emacs, please make this -*- perl -*- mode. Thanks.
 
 
-use lib "/users/elu_krni/install/share/perl/5.003/site_pl";
-use lib "/users/elu_krni/install/libexec/perl/5.003/site_pl";
 use PGPLOT;
 
 
@@ -255,7 +253,10 @@ sub plot_instrument {
 # Attempt to locate pgplot directory if unset.
 $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
 
-$multi_view = 1 if $ARGV[0];
+if(!($ARGV[0] cmp "-m") || !($ARGV[0] cmp "--multi")) {
+    $multi_view = 1;
+    shift;
+}
 
 if($multi_view) {
     # We use a 2x2 display format to view the instrument from three angles.
@@ -268,16 +269,25 @@ pgask(0);
 
 my ($numcomp, %neutron, %instr);
 
-$numcomp = read_instrument(STDIN);
+
+$sim_cmd = shift;
+$args = join(" ", @ARGV);
+$cmdline = "$sim_cmd --trace $args";
+printf STDERR "Starting simulation '$cmdline' ...\n";
+open(IN, "$cmdline |") || die "Could not run simulation\n";
+
+$numcomp = read_instrument(IN);
 print "Number of components: $numcomp\n";
 %instr = make_instrument;
 
-while(!eof(STDIN)) {
-    %neutron = read_neutron(STDIN);
+while(!eof(IN)) {
+    %neutron = read_neutron(IN);
 
     plot_instrument($instr{'xmin'},$instr{'xmax'},$instr{'ymin'},
 		    $instr{'ymax'},$instr{'zmin'},$instr{'zmax'},
 		    \%instr, \%neutron);
 }
+
+close(IN);
 
 pgend;
