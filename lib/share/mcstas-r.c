@@ -18,9 +18,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.75 2003-10-21 14:08:12 pkwi Exp $
+* $Id: mcstas-r.c,v 1.76 2003-10-22 09:18:00 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.75  2003/10/21 14:08:12  pkwi
+* Rectangular focusing improved: Renamed randvec_target_rect to randvec_target_rect_angular. Wrote new randvec_target_rect routine, w/h in metres. Both routines use use component orientation (ROT_A_CURRENT_COMP) as input.
+*
+* Modifications to Res_sample and V_sample to match new features of the runtime.
+*
 * Revision 1.74  2003/10/21 11:54:48  farhi
 * instrument default parameter value handling now works better
 * either from args or from mcreadparam (prompt)
@@ -189,19 +194,19 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%1$sEvents [%2$s/%4$s]: \n",
     "", "", "" },
   { "Scilab", "sci",
-    "function %7$s = get_%7$s(p)\n"
+    "function mc_%7$s = get_%7$s(p)\n"
       "// %4$s function issued from McStas on %5$s\n"
       "// McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
       "// import data using exec('%7$s.sci',-1); s=get_%7$s('plot');\nmode(-1); //silent execution\n"
       "if argn(2) > 0, p=1; else p=0; end\n"
-      "%7$s = struct();\n"
-      "%7$s.Format ='%4$s';\n"
-      "%7$s.URL    ='http://neutron.risoe.dk';\n"
-      "%7$s.Editor ='%6$s';\n"
-      "%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
-      "%7$s.Date   =%8$li; // for getdate\n"
-      "%7$s.File   ='%3$s';\n",
-    "%7$s.EndDate=%8$li; // for getdate\nendfunction\n"
+      "mc_%7$s = struct();\n"
+      "mc_%7$s.Format ='%4$s';\n"
+      "mc_%7$s.URL    ='http://neutron.risoe.dk';\n"
+      "mc_%7$s.Editor ='%6$s';\n"
+      "mc_%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%7$s.Date   =%8$li; // for getdate\n"
+      "mc_%7$s.File   ='%3$s';\n",
+    "mc_%7$s.EndDate=%8$li; // for getdate\nendfunction\n"
     "function d=mcload_inline(d)\n"
       "// local inline func to load data\n"
       "execstr(['S=['+part(d.type,10:(length(d.type)-1))+'];']);\n"
@@ -247,30 +252,30 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "else\nd.x=linspace(l(1),l(2),max(S));\n"
       " plot2d(d.x,d.data);xtitle(t,d.xlabel,d.ylabel);end\nend\n"
       "xname(t1);\nendfunction\n"
-    "%7$s=get_%7$s();\n",
+    "mc_%7$s=get_%7$s();\n",
     "// Section %2$s [%3$s] (level %7$d)\n"
-      "%1$s%4$s = struct(); %4$s.class = '%2$s';",
-    "%1$s%6$s.%4$s = 0; %6$s.%4$s = %4$s;\n",
-    "%1$s%2$s.%3$s = '%4$s';\n",
-    "%1$s%2$s.func='get_%2$s';\n%1$s%2$s.data = [ ",
+      "%1$smc_%4$s = struct(); mc_%4$s.class = '%2$s';",
+    "%1$smc_%6$s.mc_%4$s = 0; mc_%6$s.mc_%4$s = mc_%4$s;\n",
+    "%1$smc_%2$s.%3$s = '%4$s';\n",
+    "%1$smc_%2$s.func='get_%2$s';\n%1$smc_%2$s.data = [ ",
     "%1$serrors = [ ",
     "%1$sevents = [ ",
-    " ]; // end of data\n%1$sif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%1$s%2$s=mcplot_inline(%2$s,p);\n",
-    " ]; // end of errors\n%1$sif single_file == 1, %2$s.errors=errors; end\n",
-    " ]; // end of events\n%1$sif single_file == 1, %2$s.events=events; end\n"},
+    " ]; // end of data\n%1$sif length(mc_%2$s.data) == 0, single_file=0; else single_file=1; end\n%1$smc_%2$s=mcplot_inline(mc_%2$s,p);\n",
+    " ]; // end of errors\n%1$sif single_file == 1, mc_%2$s.errors=errors; end\n",
+    " ]; // end of events\n%1$sif single_file == 1, mc_%2$s.events=events; end\n"},
   { "Matlab", "m",
-    "function %7$s = get_%7$s(p)\n"
+    "function mc_%7$s = get_%7$s(p)\n"
       "%% %4$s function issued from McStas on %5$s\n"
       "%% McStas simulation %2$s: %3$s\n"
       "%% import data using s=%7$s('plot');\n"
       "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
-      "%7$s.Format ='%4$s';\n"
-      "%7$s.URL    ='http://neutron.risoe.dk';\n"
-      "%7$s.Editor ='%6$s';\n"
-      "%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
-      "%7$s.Date   =%8$li; %% for datestr\n"
-      "%7$s.File   ='%3$s';\n",
-    "%7$s.EndDate=%8$li; %% for datestr\n"
+      "mc_%7$s.Format ='%4$s';\n"
+      "mc_%7$s.URL    ='http://neutron.risoe.dk';\n"
+      "mc_%7$s.Editor ='%6$s';\n"
+      "mc_%7$s.Creator='%2$s McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%7$s.Date   =%8$li; %% for datestr\n"
+      "mc_%7$s.File   ='%3$s';\n",
+    "mc_%7$s.EndDate=%8$li; %% for datestr\n"
       "function d=mcload_inline(d)\n"
       "%% local inline function to load data\n"
       "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);\n"
@@ -310,15 +315,15 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n"
       "if ~isempty(findstr(d.type,'2d')), colorbar; end\n",
     "%% Section %2$s [%3$s] (level %7$d)\n"
-      "%4$s.class = '%2$s';",
-    "%6$s.%4$s = %4$s;\n",
-    "%1$s%2$s.%3$s = '%4$s';\n",
-    "%1$s%2$s.func='%2$s';\n%1$s%2$s.data = [ ",
+      "mc_%4$s.class = '%2$s';",
+    "mc_%6$s.mc_%4$s = mc_%4$s;\n",
+    "%1$smc_%2$s.%3$s = '%4$s';\n",
+    "%1$smc_%2$s.func='%2$s';\n%1$smc_%2$s.data = [ ",
     "%1$serrors = [ ",
     "%1$sevents = [ ",
-    " ]; %% end of data\nif length(%2$s.data) == 0, single_file=0; else single_file=1; end\n%2$s=mcplot_inline(%2$s,p);\n",
-    " ]; %% end of errors\nif single_file, %2$s.errors=errors; end\n",
-    " ]; %% end of events\nif single_file, %2$s.events=events; end\n"},
+    " ]; %% end of data\nif length(mc_%2$s.data) == 0, single_file=0; else single_file=1; end\nmc_%2$s=mcplot_inline(mc_%2$s,p);\n",
+    " ]; %% end of errors\nif single_file, mc_%2$s.errors=errors; end\n",
+    " ]; %% end of events\nif single_file, mc_%2$s.events=events; end\n"},
   { "IDL", "pro",
     "function mcload_inline,d\n"
       "; local inline function to load external data\n"
@@ -1947,9 +1952,10 @@ static char *mcvalid_name(char *valid, char *original, int n)
 {
   long i;
   
-  if (!n) n = strlen(valid);
+  
   if (original == NULL || strlen(original) == 0) 
   { strcpy(valid, "noname"); return(valid); }
+  if (n <= 0) n = strlen(valid);
   
   if (n > strlen(original)) n = strlen(original);
   strncpy(valid, original, n);
@@ -3262,7 +3268,6 @@ mcparseoptions(int argc, char *argv[])
           if(!status) fprintf(stderr, "Invalid %s default value %s in instrument definition.\n", mcinputtable[j].name, buf);
           else {
             paramsetarray[j] = 1;
-            fprintf(stderr,"Using %s=%s (default value)\n", mcinputtable[j].name, buf);
           }
         }
 
