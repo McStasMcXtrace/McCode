@@ -1,0 +1,94 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing Monte Carlo simulation software
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright (C) 1999 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: L_monitor
+*
+* Written by:  KN,KL,  April 20, 1998
+* Modified by: KL, Octorber 7, 1998
+*
+* A square single monitor that measures the wavelength of the incoming
+* neutrons.
+*
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* Lmin:     Minimum wavelength to detect (AA)
+* Lmax:     Maximum wavelength to detect (AA)
+* nchan:    Number of energy channels (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* L_N:      Array of neutron counts
+* L_p:      Array of neutron weight counts
+* L_p2:     Array of second moments
+*
+*******************************************************************************/
+
+DEFINE COMPONENT L_monitor
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, Lmin, Lmax, nchan, filename)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (L_N, L_p, L_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    int L_N[nchan];
+    double L_p[nchan], L_p2[nchan];
+  %}
+INITIALIZE
+  %{
+    int i;
+
+    for (i=0; i<nchan; i++)
+    {
+      L_N[i] = 0;
+      L_p[i] = 0;
+      L_p2[i] = 0;
+    }
+  %}
+TRACE
+  %{
+    int i;
+    double L;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      L = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
+      i = floor((L-Lmin)*nchan/(Lmax-Lmin));
+      if(i >= 0 && i < nchan)
+      {
+        L_N[i]++;
+        L_p[i] += p;
+        L_p2[i] += p*p;
+      }
+    }
+  %}
+FINALLY
+  %{
+    DETECTOR_OUT_1D(
+        "Wavelength monitor",
+        "Wavelength [AA]",
+        "Intensity",
+        "L", Lmin, Lmax, nchan,
+        &L_N[0],&L_p[0],&L_p2[0],
+        filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
+%}
+
+END
