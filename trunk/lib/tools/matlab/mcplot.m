@@ -67,13 +67,14 @@ if ischar(object) % if object is a string
       fprintf(2,'mcplot: %s', err);
       return
     end
-    cd(pathname);  % go into directory where object is
   end
   fclose(fid);
   %    opens filename and evaluate it
   object = strrep(object,'.m','');
+  [pathname, object]=fileparts(object);
+  cd(pathname);  % go into directory where object is
   m = [];
-  m = eval(object,'');
+  m = eval(object,'[]');
   if ~length(m)
     disp(['mcplot: Could not extract McStas structure from file ' object]);
     disp(['mcplot: ' lasterr]);
@@ -92,14 +93,14 @@ else  % if 's' is a 'struct'
   %    send to mcplot_scan(s, options)
   [count, object] = mcplot_scan(object, options, id);
   %    if output is not empty, setup output file
-  if length(strfind(options,'-ps')) ...  
-  | length(strfind(options,'-psc')) ... 
-  | length(strfind(options,'-eps')) ... 
-  | length(strfind(options,'-epsc')) ...
-  | length(strfind(options,'-jpg')) ... 
-  | length(strfind(options,'-tif')) ... 
-  | length(strfind(options,'-png')) ... 
-  | length(strfind(options,'-fig')), 
+  if length(findstr(options,'-ps')) ...  
+  | length(findstr(options,'-psc')) ... 
+  | length(findstr(options,'-eps')) ... 
+  | length(findstr(options,'-epsc')) ...
+  | length(findstr(options,'-jpg')) ... 
+  | length(findstr(options,'-tif')) ... 
+  | length(findstr(options,'-png')) ... 
+  | length(findstr(options,'-fig')), 
     filename = '';
     filename = eval('object.File','[]');
     if length(filename) == 0, filename = eval('object.filename','[]'); end
@@ -282,19 +283,19 @@ function mcplot_output(form, win, filename)
   form = lower(form);
   
   ext = ''; dr = '';
-  if length(strfind(form,'-gif'))
+  if length(findstr(form,'-gif'))
     disp('McPlot: GIF output not available, substituting with PNG.')
     form = strrep(form, '-gif','-png');
   end
   %    if output is not empty, open driver+xinit(filename)
-  if     length(strfind(form,'-ps')),  ext = '.ps';  dr='-dps'; colormap(gray);
-  elseif length(strfind(form,'-psc')), ext = '.ps';  dr='-dpsc';
-  elseif length(strfind(form,'-eps')), ext = '.eps'; dr='-deps'; colormap(gray);
-  elseif length(strfind(form,'-epsc')),ext = '.eps'; dr='-depsc';
-  elseif length(strfind(form,'-jpg')), ext = '.jpg'; dr='-djpeg';
-  elseif length(strfind(form,'-tif')), ext = '.tif'; dr='-dtiff'; 
-  elseif length(strfind(form,'-png')), ext = '.png'; dr='-dpng'; 
-  elseif length(strfind(form,'-fig')), ext = '.fig'; dr=''; end
+  if     length(findstr(form,'-ps')),  ext = '.ps';  dr='-dps'; colormap(gray);
+  elseif length(findstr(form,'-psc')), ext = '.ps';  dr='-dpsc';
+  elseif length(findstr(form,'-eps')), ext = '.eps'; dr='-deps'; colormap(gray);
+  elseif length(findstr(form,'-epsc')),ext = '.eps'; dr='-depsc';
+  elseif length(findstr(form,'-jpg')), ext = '.jpg'; dr='-djpeg';
+  elseif length(findstr(form,'-tif')), ext = '.tif'; dr='-dtiff'; 
+  elseif length(findstr(form,'-png')), ext = '.png'; dr='-dpng'; 
+  elseif length(findstr(form,'-fig')), ext = '.fig'; dr=''; end
   if length(ext)
     filename = [ filename ext ];
     if ~strcmp(ext,'.fig')
@@ -312,12 +313,12 @@ function d=mcplot_load(d)
 % local inline function to load data
 S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);
 if isempty(d.data)
- if ~length(strfind(d.format, 'binary'))
+ if ~length(findstr(d.format, 'binary'))
   copyfile(d.filename,[d.func,'.m']);p=d.parent;
   eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);
  else
-  if length(strfind(d.format, 'float')), t='single';
-  elseif length(strfind(d.format, 'double')), t='double';
+  if length(findstr(d.format, 'float')), t='single';
+  elseif length(findstr(d.format, 'double')), t='double';
   else return; end
   if length(S) == 1, S=[S 1]; end
   fid=fopen(d.filename, 'r');
@@ -334,19 +335,19 @@ end
 
 function d=mcplot_plot(d,p)
   % func to plot data
-  if isempty(strfind(d.type,'0d')), d=mcplot_load(d); end
+  if isempty(findstr(d.type,'0d')), d=mcplot_load(d); end
   if ~p, return; end;
   eval(['l=[',d.xylimits,'];']);
   S=size(d.data);
   t1=['[',d.parent,'] ',d.filename,': ',d.title];
   t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);
   disp(t);
-  if ~isempty(strfind(d.type,'0d')),return;
+  if ~isempty(findstr(d.type,'0d')),return;
   else
     if p==1 & ~isempty(findobj(gcf, 'Type','axes'))
       w=figure;
     else w = gcf; end
-    if ~isempty(strfind(d.type,'2d'))
+    if ~isempty(findstr(d.type,'2d'))
       d.x=linspace(l(1),l(2),S(1)); 
       d.y=linspace(l(3),l(4),S(2));
       h=surface(d.x,d.y,d.data');           
@@ -371,7 +372,7 @@ function d=mcplot_plot(d,p)
   axis tight;
   if p==1, set(gca,'position',[.18,.18,.7,.65]);  end
   set(gcf,'name',t1);grid on;
-  % if ~isempty(strfind(d.type,'2d')), colorbar; end
+  % if ~isempty(findstr(d.type,'2d')), colorbar; end
 % end mcplot_plot
 
 function mcplot_set_global(s, gwin, p_in)
@@ -428,7 +429,7 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
   if nargin == 1, action = ''; end
   if nargin == 3, id = m; end
   if ~length(action), action = '-overview'; end
-  if length(strfind(action,'-overview')) & nargin == 3
+  if length(findstr(action,'-overview')) & nargin == 3
     % first count the number of data blocks
     data_count = mcplot_scan(s,'count',id);
     if ~data_count, return; end
@@ -460,18 +461,18 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
   else
     doplot = 1;
     if length(id)
-      if ~length(strfind(s.filename,id)) & ~length(strfind(s.title,id)) & ~length(strfind(s.type,id))
+      if ~length(findstr(s.filename,id)) & ~length(findstr(s.title,id)) & ~length(findstr(s.type,id))
         doplot = 0;
       end
     end
     if doplot
-      if length(strfind(action,'count')) 
+      if length(findstr(action,'count')) 
         s = mcplot_plot(s, 0);
-      elseif length(strfind(action,'-plot')) 
+      elseif length(findstr(action,'-plot')) 
         s = mcplot_plot(s, 1);
         mcplot_set_global(s, [], 0);
         mcplot_addmenu;
-      elseif length(strfind(action,'-overview'))
+      elseif length(findstr(action,'-overview'))
         subplot(m,n,data_count+1);
         s = mcplot_plot(s, 2);
         mcplot_set_global(s, [], data_count+1);
