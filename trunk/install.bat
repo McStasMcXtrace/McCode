@@ -32,9 +32,8 @@
 @echo       Select from the Windows menu:
 @echo       Start/Settings/Control Panel/System/Advanced/Environment Variables
 @echo   * Perl and Tcl/Tk from:
-@echo     http://www.activestate.com/Products/Download/Register.plex?id=ActivePerl
-@echo     http://www.activestate.com/Products/Download/Register.plex?id=ActiveTcl
-@echo   * Matlab or Scilab >=2.7 from http://www.scilab.org in C:\Scilab
+@echo       http://www.activestate.com/Products/Download
+@echo   * Matlab or Scilab from http://www.scilab.org in C:\Scilab
 @echo       With Scilab, add the C:\Scilab\bin directory to your PATH
 @echo       Select from the Windows menu:
 @echo       Start/Settings/Control Panel/System/Advanced/Environment Variables
@@ -70,13 +69,13 @@
 @echo ..............................................................
 @echo Please remember to add %MCSTAS_SITE%\bin to your PATH!
 @echo Also, set the MCSTAS environment variable to %MCSTAS_SITE%\lib
-@echo ...
+@echo .
 @echo To do that, access from the Windows Start manu:
-@echo ...
+@echo .
 @echo   Start/Settings/Control Panel/System/Advanced/Environment Variables
 @echo ..............................................................
 @echo Start McStas with the command mcgui.pl. You may create a shortcut to
 @echo this program situated in %MCSTAS_SITE%\bin. Put it on your Desktop.
-@echo ...
+@echo .
 @echo Thanks for using McStas. End of the installation.
 @pause
