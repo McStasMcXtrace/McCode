@@ -42,8 +42,10 @@ sub parse_header {
 		    $d->{'identification'}{'date'} = $1;
 		}elsif(/Version:(.*)$/i) {
 		    my $verstring = $1;
-		    # Special case for RCS style $Revision: 1.2 $ tags.
-		    if($verstring =~ /^(.*)\$Revision: 1.2 $(.*)$/) {
+		    # Special case for RCS style $[R]evision: 1.2 $ tags.
+		    # Note the need for [R] to avoid RCS keyword expansion
+		    # in the mcdoc source code!
+		    if($verstring =~ /^(.*)\$[R]evision: (.*)\$(.*)$/) {
 			$d->{'identification'}{'version'} = "$1$2$3";
 		    } else {
 			$d->{'identification'}{'version'} = $verstring;
@@ -131,18 +133,34 @@ sub get_comp_info {
     } else {
 	$cname = "<Unknown>";
     }
-    if($s =~ /DEFINITION\sPARAMETERS\s*\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
-	@dpar = split (/\s*,\s*/, $1);
-    } else {
-	@dpar = ();
+    @dpar = ();
+    if($s =~ /DEFINITION\s+PARAMETERS\s*\(\s*((([a-zA-ZæøåÆØÅ0-9_]+)(\s*\=\s*([-+.e0-9]+))?\s*,?\s*)*)\s*\)/i) {
+	foreach (split(",", $1)) {
+	    if(/^\s*([a-zA-ZæøåÆØÅ0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
+		push @dpar, $1;
+		$d->{'parhelp'}{$1}{'default'} = $2;
+	    } elsif(/^\s*([a-zA-ZæøåÆØÅ0-9_]+)\s*$/) {
+		push @dpar, $1;
+	    } else {
+		die "Internal: get_comp_info/DEFINITION PARAMETER";
+	    }
+	}
     }
-    if($s =~ /SETTING\sPARAMETERS\s*\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
-	@spar = split (/\s*,\s*/, $1);
-    } else {
-	@spar = ();
+    @spar = ();
+    if($s =~ /SETTING\s+PARAMETERS\s*\(\s*((([a-zA-ZæøåÆØÅ0-9_]+)(\s*\=\s*([-+.e0-9]+))?\s*,?\s*)*)\s*\)/i) {
+	foreach (split(",", $1)) {
+	    if(/^\s*([a-zA-ZæøåÆØÅ0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
+		push @spar, $1;
+		$d->{'parhelp'}{$1}{'default'} = $2;
+	    } elsif(/^\s*([a-zA-ZæøåÆØÅ0-9_]+)\s*$/) {
+		push @spar, $1;
+	    } else {
+		die "Internal: get_comp_info/SETTING PARAMETER";
+	    }
+	}
     }
     @ipar = (@dpar, @spar);
-    if($s =~ /OUTPUT\sPARAMETERS\s*\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
+    if($s =~ /OUTPUT\s+PARAMETERS\s*\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
 	@opar = split (/\s*,\s*/, $1);
     } else {
 	@opar = ();
@@ -171,7 +189,11 @@ sub show_header {
     print $d->{'identification'}{'short'};
     print "######## Input parameters: ##############################\n";
     for $i (@{$d->{'inputpar'}}) {
-	print "<$i>: ";
+	if(defined($d->{'parhelp'}{$i}{'default'})) {
+	    print "<$i=$d->{'parhelp'}{$i}{'default'}>: ";
+	} else {
+	    print "<$i>: ";
+	}
 	if($d->{'parhelp'}{$i}) {
 	    print "[$d->{'parhelp'}{$i}{'unit'}] "
 		if $d->{'parhelp'}{$i}{'unit'};
@@ -278,15 +300,22 @@ sub gen_param_table {
 	return;
     }
     print $f "<TABLE BORDER=1>\n";
-    print $f "<TR><TH>Name</TH>  <TH>Unit</TH>  <TH>Description</TH></TR>\n";
+    print $f "<TR><TH>Name</TH>  <TH>Unit</TH>  <TH>Description</TH> <TH>Default</TH></TR>\n";
     for $i (@$ps) {
-	print $f "<TR> <TD>$i</TD>\n";
-	if($qs->{$i}) {
+	my $default = $qs->{$i}{'default'};
+	print $f "<TR> <TD>";
+	print $f "<B>" unless defined($default);
+	print $f "$i";
+	print $f "</B>" unless defined($default);
+	print $f "</TD>\n";
+	if($qs->{$i}{'unit'} && $qs->{$i}{'text'}) {
 	    print $f "     <TD>$qs->{$i}{'unit'}</TD>\n";
-	    print $f "     <TD>$qs->{$i}{'text'}</TD> </TR>\n";
+	    print $f "     <TD>$qs->{$i}{'text'}</TD>\n";
 	} else {
-	    print $f "     <TD></TD> <TD></TD> </TR>\n";
+	    print $f "     <TD></TD> <TD></TD>\n";
 	}
+	print $f "<TD ALIGN=RIGHT>", defined($default) ?
+	    $default : "&nbsp;", "</TD> </TR>\n";
     }
     print $f "</TABLE>\n\n";
 }
@@ -322,6 +351,10 @@ sub gen_html_description {
     }
     print $f "</UL>\n";
     print $f "\n<H2>Input parameters</H2>\n";
+    if(@{$d->{'inputpar'}}) {
+	print $f "Parameters in <B>boldface</B> are required;\n";
+	print $f "the others are optional.\n";
+    }
     gen_param_table($f, $d->{'inputpar'}, $d->{'parhelp'}); 
     print $f "\n<H2>Output parameters</H2>\n";
     gen_param_table($f, $d->{'outputpar'}, $d->{'parhelp'}); 
@@ -392,6 +425,7 @@ END
 	    close($file);
 	    die "Parse of file '$comp' failed" unless $data;
 	    get_comp_info($comp, $data);
+print "$comp\n";
 #show_header($data);
 	    add_comp_html($data, $indexfile, $basename);
 	}
