@@ -11,16 +11,16 @@
 *
 *
 * INPUT PARAMETERS
-* 	
+*       
 * d_phi0    : Focussing angle corresponding to the vertical dimensions
-*             of the detector placed at the right distance (rad) 
-* radius    : Radius of sample in (x,z) plane (m) 	
+*             of the detector placed at the right distance (deg) 
+* radius    : Radius of sample in (x,z) plane (m)       
 * h         : Height of sample y direction (m)
 * pack      : Packing factor (1)
 * Vc        : Volume of unit cell (AA^3)
-* sigma_a   : Absorption cross section per unit cell (fm^2)
+* sigma_a   : Absorption cross section per unit cell at 2200 m/s (fm^2)
 *
-* q	    : Scattering vector of reflection (AA^-1)
+* q         : Scattering vector of reflection (AA^-1)
 * j         : Multiplicity of reflection (1)
 * F2        : Structure factor of reflection (fm^2)
 * DW        : Debye-Waller factor of reflection (1)
@@ -35,19 +35,18 @@
 *
 *******************************************************************************/
 
-
 DEFINE COMPONENT Powder1
 DEFINITION PARAMETERS (d_phi0, radius, h, pack, Vc, sigma_a, j, q, F2, DW)
 SETTING PARAMETERS (target_x, target_y, target_z)
+OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-  double my_s_v2, my_a, q_v;     /* ToDo: Should be component local names. */
+  double my_s_v2, my_a_v, q_v;
 %}
 INITIALIZE
 %{
-  MC_correction *= 2*PI/d_phi0;
-  my_a = sigma_a / Vc;
+  my_a_v = sigma_a/Vc*2200;           /* Is not yet divided by v */
   my_s_v2 = PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q);  
                                       /* Is not yet divided by v^2 */
   q_v = q*K2V;
@@ -64,13 +63,15 @@ TRACE
       ABSORB;
     /* Neutron enters at t=t0. */
     v = sqrt(vx*vx + vy*vy + vz*vz);
-    l_full = v * (t1 - t0);		/* Length of full path through sample */
+    l_full = v * (t1 - t0);             /* Length of full path through sample */
     dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
-    PROP_DT(dt);		/* Point of scattering */
-    l = v*dt;			/* Penetration in sample */
-    
-    d_phi = d_phi0/2*randpm1();	/* Choose point on Debye-Scherrer cone */
-    theta = asin(q_v/(2.0*v));	/* Bragg scattering law */
+    PROP_DT(dt);                /* Point of scattering */
+    l = v*dt;                   /* Penetration in sample */
+
+    /* Choose point on Debye-Scherrer cone */
+    d_phi = d_phi0*DEG2RAD/2.0*randpm1();
+    p *= d_phi0/360.0;
+    theta = asin(q_v/(2.0*v));  /* Bragg scattering law */
 
     aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
     aim_y = target_y-y;
@@ -83,7 +84,7 @@ TRACE
     vz = vout_z;
 
     if(!cylinder_intersect(&t0, &t1, x, y, z, 
-			   vout_x, vout_y, vout_z, radius, h))
+                           vout_x, vout_y, vout_z, radius, h))
     {
       /* Strange error: did not hit cylinder */
       printf("FATAL ERROR: Did not hit cylinder from inside.\n");
@@ -92,7 +93,7 @@ TRACE
     l_1 = v*t1;
 
     my_s = my_s_v2/(v*v);
-    p *= l_full*my_s*exp(-(my_a+my_s)*(l+l_1));
+    p *= l_full*my_s*exp(-(my_a_v/v+my_s)*(l+l_1));
   }
   else
     ABSORB;
