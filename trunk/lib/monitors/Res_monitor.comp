@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
@@ -211,24 +211,10 @@ SAVE
  
 FINALLY
 %{
-  FILE *f;
-  char mypre[10] = "# \0";
 
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
-  
-  /* this makes call to run-time functions (undocumented) */
-  /* mcformat is a format structure defined in mcstas-r.h */
-  if (!strstr(mcformat.Name, "McStas")) mypre[0] = '\0';  
-  /* adding simulation parameters after data: re-open filename in append mode */
-  f = mcnew_file(filename, "a");
-  if (f)
-  {
-    /* use mcinfo_simulation function from mcstas-r.c to write simulation info */
-    mcinfo_simulation(f, mcformat, mypre, filename);
-    /* close the file Resolution */
-    close(f);
-  }
+
 %}
 
 MCDISPLAY
