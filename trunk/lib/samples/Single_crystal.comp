@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Single_crystal.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KN
+* Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.17 $
-* Origin: McStas release
+* Version: $Revision: 1.18 $
+* Origin: McStas 1.4.2
 *
 * Mosaic single crystal with multiple scattering vectors.
 *
@@ -115,6 +114,7 @@ SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d, mosaic = -1,
                    p_transmit = -1, absorbtion = 0, incoherent = 0)
 OUTPUT PARAMETERS(hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
