@@ -25,6 +25,9 @@ find . -name CVS -exec rm -r \{\} \; 2> /dev/null
 
 # Put in new version info:
 find  . -prune setversion -type f -exec ./setversion \{\} $1 \; 2> /dev/null
+sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
+mv build.bat.new build.bat
+
 # A bit ugly with seperate date commands..
 MONTH=`date +"%b"`
 DAY=`date +"%d"`
@@ -51,12 +54,44 @@ rm setversion
 cd ..
 
 # Create tar archive
-tar cfz $PW/../mcstas-$1.tar.gz mcstas-$1
+tar cfz $PW/../mcstas-$1-src.tar.gz mcstas-$1
+
+# Do a 'make' for creation of binary version (should apply to 'any' Unix)
+cd $PW
+cd $DIST
+make
+UNAME=`uname`
+MACH=`uname -m`
+PROC=`uname -p`
+cd ..
+
+# Create tar archive
+tar cfz $PW/../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz mcstas-$1
 
 # Remove temporary dir
 # rm -rf $TMPDIR
 
-echo Your mcstas dist package is placed in ../mcstas-$1.tar.gz
+# Create .tar.gz archive for building a binary Windows version
+cd $PW
+cd $DIST
+make clean
+flex -i instrument.l
+bison -v -d instrument.y
+./configure
+sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
+mv build.bat.new build.bat
+cd ..
+tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
+
+echo
+echo
+echo Your mcstas dist packages are placed in 
+echo ../mcstas-$1-src.tar.gz
+echo ../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz
+echo ../mcstas-$1-Win32-src.tar.gz
+echo
+echo NOTE: Win32 version must be built using \'build.bat\' of the Win32-src package
+echo
 
 
 
