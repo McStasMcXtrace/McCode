@@ -60,6 +60,7 @@ sub show_header {
                 if $d->{'parhelp'}{$i}{'unit'};
             print "$d->{'parhelp'}{$i}{'text'}"
                 if $d->{'parhelp'}{$i}{'text'};  # text finishes by \n
+            print("\n");
         } else {
             print("<Undocumented>\n");
         }
@@ -72,6 +73,7 @@ sub show_header {
                 if $d->{'parhelp'}{$i}{'unit'};
             print "$d->{'parhelp'}{$i}{'text'}"
                 if $d->{'parhelp'}{$i}{'text'};  # text finishes by \n
+            print("\n");
         } else {
             print("<Undocumented>\n");
         }
@@ -338,8 +340,12 @@ END
         for $name (sort(@comps)) {
             my $comp = "$sec/$name";
             next unless $comp =~ /^(.*)\.(com|comp|cmp)$/;
+            my $does_match = 0;
             my $basename = $1;
-            if (($is_single_file && $name =~ $single_comp_name) 
+            if ($single_comp_name =~ /^(.*)\.(com|comp|cmp)$/) {
+              if($name eq $single_comp_name) { $does_match = 1; }
+            } elsif ($name =~ $single_comp_name) { $does_match = 1; }
+            if (($is_single_file && $does_match) 
               || (not $is_single_file)) {
               $data = component_information($comp);
               if (not defined($data)) {
@@ -480,17 +486,19 @@ if (not $is_single_file) {
 
 if ($use_local) {
   # define local and lib sections
-  @sections = ("local","sources", "optics", "samples", "monitors", 
-               "misc", "contrib", "obsolete");
+  @sections = ("sources", "optics", "samples", "monitors", 
+               "misc", "contrib", "obsolete","local","data","share");
   %section_headers =
-    ("local" => '<B><FONT COLOR="#FF0000">Local components</FONT></B>',
-     "sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
+    ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
      "optics" => '<B><FONT COLOR="#FF0000">Optics</FONT></B>',
      "samples" => '<B><FONT COLOR="#FF0000">Samples</FONT></B>',
      "monitors" => '<B><FONT COLOR="#FF0000">Detectors</FONT> and monitors</B>',
      "contrib" => '<B><FONT COLOR="#FF0000">Contributed</FONT> components</B>',
      "misc" => '<B><FONT COLOR="#FF0000">Misc</FONT></B>',
-     "obsolete" => '<B><FONT COLOR="#FF0000">Obsolete</FONT> (avoid usage whenever possible)</B>');
+     "obsolete" => '<B><FONT COLOR="#FF0000">Obsolete</FONT> (avoid usage whenever possible)</B>',
+     "local" => '<B><FONT COLOR="#FF0000">Local components</FONT></B>',
+     "data" => '<B><FONT COLOR="#FF0000">Data files</FONT></B>',
+     "share" => '<B><FONT COLOR="#FF0000">Shared libraries</FONT></B>');
 } else {
   # define lib sections
   @sections = ("sources", "optics", "samples", "monitors", "misc", "contrib");
