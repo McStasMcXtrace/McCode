@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.51 2003-04-15 15:43:55 farhi Exp $
+*	$Id: instrument.y,v 1.52 2003-08-12 13:34:22 farhi Exp $
 *
 *******************************************************************************/
 
@@ -184,13 +184,21 @@ parameters:	  def_par set_par out_par state_par polarisation_par
 ;
 
 
-def_par:	  "DEFINITION" "PARAMETERS" comp_iformallist
+def_par: 	  /* empty */
+		  {
+		    $$ = list_create();
+		  }
+		| "DEFINITION" "PARAMETERS" comp_iformallist
 		  {
 		    $$ = $3;
 		  }
 ;
 
-set_par:	  "SETTING" "PARAMETERS" comp_iformallist
+set_par: 	  /* empty */
+		  {
+		    $$ = list_create();
+		  }
+		| "SETTING" "PARAMETERS" comp_iformallist
 		  {
 		    $$ = $3;
 		  }
@@ -296,15 +304,14 @@ comp_iformal:	 TOK_ID TOK_ID
         formal->type = instr_type_double;
 		    $$ = formal;
 		  }
-		| TOK_ID '=' TOK_NUMBER
+		| TOK_ID '=' exp
 		  {
 		    struct comp_iformal *formal;
 		    palloc(formal);
 		    formal->id = $1;
 		    formal->isoptional = 1; /* Default value available */
-		    formal->default_value = exp_number($3);
+		    formal->default_value = $3;
         formal->type = instr_type_double;
-		    str_free($3);
 		    $$ = formal;
 		  }
     | TOK_ID TOK_ID '=' exp
