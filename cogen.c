@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.5 1997-12-03 13:34:24 kn Exp $
+* 	$Id: cogen.c,v 1.6 1998-08-21 12:07:14 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.5  1997/12/03 13:34:24  kn
+* 	Added definition of ABSORB macro.
+*
 * 	Revision 1.4  1997/10/16 21:19:27  kn
 * 	Fixed bug when computing component absolute positions.
 *
@@ -26,6 +29,8 @@
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
 
+#include <stdarg.h>
+#include <stdio.h>
 #include "mcstas.h"
 
 
@@ -119,49 +124,59 @@
 *******************************************************************************/
 
 
-/* Temporary definitions for test purposes. */
-#include <stdio.h>
-#define cout puts
-#include <stdarg.h>
+/* Functions for outputting code. */
+
+/* Handle for output file. */
+static FILE *output_handle = NULL;
+
+static void
+cout(char *s)
+{
+  fprintf(output_handle, "%s\n", s);
+}
+
 static void
 coutf(char *format, ...)
 {
   va_list ap;
 
   va_start(ap, format);
-  vprintf(format, ap);
+  vfprintf(output_handle, format, ap);
   va_end(ap);
-  printf("\n");
+  fprintf(output_handle, "\n");
 }
+
 static void
 codeblock_out(struct code_block *code)
 {
   List_handle liter;		/* For list iteration. */
   char *line;			/* Single code line. */
 
-  printf("#line %d \"%s\"\n", code->linenum + 1, code->filename);
+  fprintf(output_handle, "#line %d \"%s\"\n",
+	  code->linenum + 1, code->filename);
   liter = list_iterate(code->lines);
   while(line = list_next(liter))
   {
-    printf("%s", line);
+    fprintf(output_handle, "%s", line);
   }
   list_iterate_end(liter);
 }
+
 static void
 codeblock_out_brace(struct code_block *code)
 {
   List_handle liter;		/* For list iteration. */
   char *line;			/* Single code line. */
 
-  printf("#line %d \"%s\"\n", code->linenum, code->filename);
-  printf("{\n");
+  fprintf(output_handle, "#line %d \"%s\"\n", code->linenum, code->filename);
+  fprintf(output_handle, "{\n");
   liter = list_iterate(code->lines);
   while(line = list_next(liter))
   {
-    printf("%s", line);
+    fprintf(output_handle, "%s", line);
   }
   list_iterate_end(liter);
-  printf("}\n");
+  fprintf(output_handle, "}\n");
 }
 
 
@@ -714,8 +729,16 @@ cogen_finally(struct instr_def *instr)
 * Generate the output file (in C).
 *******************************************************************************/
 void
-cogen(struct instr_def *instr)
+cogen(char *output_name, struct instr_def *instr)
 {
+  /* Initialize output file. */
+  if(!output_name || !output_name[0] || !strcmp(output_name, "-"))
+    output_handle = fdopen(1, "w");
+  else
+    output_handle = fopen(output_name, "w");
+  if(output_handle == NULL)
+    fatal_error("Error opening output file '%s'\n", output_name);
+
   cout("/* Automatically generated file. Do not edit. */");
   cout("");
   cogen_decls(instr);
