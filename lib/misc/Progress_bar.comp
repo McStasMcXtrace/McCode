@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -21,17 +21,19 @@
 * the Init, Trace with the achieved percentage, and the Finally section. Intermediate
 * savings (e.g. triggered by USR2 signal) are also shown.
 *
-* Example: Progress_bar()
+* Example: Progress_bar(percent=10,flag_save=1)
 *
 * %P
-* percent: percentage interval between indications. Default is 5%.
+* INPUT PARAMETERS:
+* percent:  (%)   percentage interval between indications. Default is 5%.
+* flag_save:(0|1) flag to enable intermediate saving for all monitors
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Progress_bar
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (percent=10)
+SETTING PARAMETERS (percent=10,flag_save=0)
 OUTPUT PARAMETERS (IntermediateCnts)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -47,12 +49,15 @@ INITIALIZE
 
 TRACE
 %{
-  if (mcget_run_num() >= IntermediateCnts)
+  double ncount;
+  ncount = mcget_run_num();
+  if (ncount >= IntermediateCnts && ncount)
   {
     double tmp;
     tmp = percent*mcget_ncount()/100;
     IntermediateCnts += tmp;
     fprintf(stderr, "%d ", (int)(IntermediateCnts*100/mcget_ncount()));
+    if (flag_save) mcsave(NULL);
     if (IntermediateCnts+tmp > mcget_ncount())
       fprintf(stderr, "\n");  /* last percent number to be displayed */
   }
