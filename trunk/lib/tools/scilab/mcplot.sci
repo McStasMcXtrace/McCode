@@ -94,6 +94,7 @@ function win = mcplot_addmenu(use_common_menu)
   menu_installed = 0;
   t = [ 'Select a figure', ...
         'Open in a separate window', ...      
+        'Open in a separate window (Log scale)', ...      
         'Edit/_data file', ... 
         'Edit/_instrument file', ... 
         'Edit/colormap...', ...               
@@ -199,55 +200,13 @@ function mcplot_menu_action(k, gwin)
   end
   
   xset('window', gwin); // raise menu activated window 
-  item = [ 24, 1, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 26, 22, 18]
+  item = [ 24, 1, 27, 2, 19, 3, 4, 23, 25, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 26, 22, 18]
   
   select item(k)
     case 0 then
             mprintf('Invalid menu item\n');
     case 1 then // Open in a separate window (duplicate)
-      t='Figure '+string(gwin)+': Click on the plot to duplicate/enlarge.';
-      xinfo(t); mprintf('%s\n',t);
-      [c_i, c_x, c_y] = xclick();
-      [wrect,frect,logflag,arect] = xgetech();
-      if ~length(find(arect~=0)), arect=[1,1,1,1]/8; end
-      // compute the mouse click coordinates in subplot units (m,n)
-      // m/n=0 on lower left, 1 on upper right of current axis (in frame)
-      m = (c_x-frect(1))/(frect(3)-frect(1));
-      n = (c_y-frect(2))/(frect(4)-frect(2));
-      // invert n to 1-n, for wrect usage
-      // convert to coords of current whole frame
-      m = m*(1-arect(1)-arect(2))+arect(1);
-      n = (1-n)*(1-arect(3)-arect(4))+arect(3);
-      // m=0/1 for left/right of window
-      // n=0/1 for bottom/top of window
-      m = m*wrect(3)+wrect(1);  
-      n = n*wrect(4)+wrect(2);
-      // compute m,n of subplot from coordinates
-      i = floor(m/wrect(3)); m = round(1/wrect(3));
-      j = floor(n/wrect(4)); n = round(1/wrect(4));
-      i = min(i,m-1); j=min(j,n-1);
-      i = max(i,0);   j=max(j,0);
-      p = i+j*m+1;  // single subplot index
-      t = msprintf('Duplicating Figure %d:subplot %d', gwin, p);
-      // extract global data
-      d = [];
-      execstr('d = ThisFigure.Subplot_'+string(p),'errcatch');
-      if length(d)
-        dat_names = getfield(1,d);
-        if ~length(find(dat_names == 'Source')) & length(find(fig_names == 'Source')), d.Source = ThisFigure.Source; end
-        if ~length(find(dat_names == 'Ncount')) & length(find(fig_names == 'Ncount')), d.Ncount = ThisFigure.Ncount; end
-        if ~length(find(dat_names == 'parameters')) & length(find(fig_names == 'parameters')), d.parameters=0; d.parameters = ThisFigure.parameters; end
-        if ~length(find(dat_names == 'pathname')) & length(find(fig_names == 'pathname')), d.pathname = ThisFigure.pathname; end
-        mcplot_scan(d,'-plot',''); 
-        nwin = xget('window'); // new opened window
-        // update the MCPLOT global variable
-        execstr('MCPLOT.Figure_'+string(nwin)+'.filename = ThisFigure.filename;','errcatch');
-        mcplot_set_global(d, nwin, 0); 
-        xclear();
-        xtape('replayna', nwin, 90, 0);        // top view
-        mcplot_fig_legend(d,'','');
-      end
-      xinfo(t); mprintf('%s\n',t);
+      0;  // NOP
     case 2 then // Edit/_data file
       if length(filename), mcplot_edit_file(filename); end
     case 19 then // Edit/instrument file
@@ -415,9 +374,63 @@ function mcplot_menu_action(k, gwin)
             mcplot(pathname+string(selection-1),'-overview');
           end   
         end
-      end
+      end // if length(find(fig_names == 'superdata'))
+    case 27 then  // duplicate (log scale)
+      0; // NOP
     end 
     if item(k)~= 18, xbasr(); end // update plot
+    
+    // handle duplicate linear/log cases
+    if item(k)==27 | item(k) == 1
+      t='Figure '+string(gwin)+': Click on the plot to duplicate/enlarge.';
+      xinfo(t); mprintf('%s\n',t);
+      [c_i, c_x, c_y] = xclick();
+      [wrect,frect,logflag,arect] = xgetech();
+      if ~length(find(arect~=0)), arect=[1,1,1,1]/8; end
+      // compute the mouse click coordinates in subplot units (m,n)
+      // m/n=0 on lower left, 1 on upper right of current axis (in frame)
+      m = (c_x-frect(1))/(frect(3)-frect(1));
+      n = (c_y-frect(2))/(frect(4)-frect(2));
+      // invert n to 1-n, for wrect usage
+      // convert to coords of current whole frame
+      m = m*(1-arect(1)-arect(2))+arect(1);
+      n = (1-n)*(1-arect(3)-arect(4))+arect(3);
+      // m=0/1 for left/right of window
+      // n=0/1 for bottom/top of window
+      m = m*wrect(3)+wrect(1);  
+      n = n*wrect(4)+wrect(2);
+      // compute m,n of subplot from coordinates
+      i = floor(m/wrect(3)); m = round(1/wrect(3));
+      j = floor(n/wrect(4)); n = round(1/wrect(4));
+      i = min(i,m-1); j=min(j,n-1);
+      i = max(i,0);   j=max(j,0);
+      p = i+j*m+1;  // single subplot index
+      t = msprintf('Duplicating Figure %d:subplot %d', gwin, p);
+      if item(k)==27 then t = t+' (Log scale)'; end
+      // extract global data
+      d = [];
+      execstr('d = ThisFigure.Subplot_'+string(p),'errcatch');
+      if length(d)
+        dat_names = getfield(1,d);
+        if ~length(find(dat_names == 'Source')) & length(find(fig_names == 'Source')), d.Source = ThisFigure.Source; end
+        if ~length(find(dat_names == 'Ncount')) & length(find(fig_names == 'Ncount')), d.Ncount = ThisFigure.Ncount; end
+        if ~length(find(dat_names == 'parameters')) & length(find(fig_names == 'parameters')), d.parameters=0; d.parameters = ThisFigure.parameters; end
+        if ~length(find(dat_names == 'pathname')) & length(find(fig_names == 'pathname')), d.pathname = ThisFigure.pathname; end
+        // set Log scale if required
+        if item(k)==27 then execstr('MCPLOT.LogScale = 1;','errcatch'); end
+        mcplot_scan(d,'-plot','');
+        // unset Log scale if required
+        if item(k)==27 then execstr('MCPLOT.LogScale = 0;','errcatch'); end
+        nwin = xget('window'); // new opened window
+        // update the MCPLOT global variable
+        execstr('MCPLOT.Figure_'+string(nwin)+'.filename = ThisFigure.filename;','errcatch');
+        mcplot_set_global(d, nwin, 0); 
+        xclear();
+        xtape('replayna', nwin, 90, 0);        // top view
+        mcplot_fig_legend(d,'','');
+      end
+      xinfo(t); mprintf('%s\n',t);
+    end
 endfunction  
 
 function mcplot_edit_file(filename)
@@ -561,6 +574,9 @@ end
 endfunction
 
 function d=mcplot_plot(d,p)
+
+  global MCPLOT
+  
   // func to plot data
   if ~length(strindex(d.type,'0d')), d=mcplot_load(d); end
   if ~length(d.values), d.values = string(sum(sum(d.data)))+' '+string(sum(sum(d.errors))); end
@@ -568,8 +584,12 @@ function d=mcplot_plot(d,p)
   if ~p, return; end;
   execstr(['l=[',d.xylimits,'];'],'errcatch'); 
   S=size(d.data);
-  t1=['['+d.parent+'] '+d.filename+': '+d.title];
-  t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];
+  logscale = 0;
+  execstr('logscale=MCPLOT.LogScale','errcatch');
+  t1=['['+d.parent+'] '+d.filename];
+  if logscale then t1=t1+' (Log)'; end
+  t2 = t1+': '+d.title;
+  t = [t2;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];
   mprintf('%s\n',t(:));
   if length(strindex(d.type,'0d')),return;
   else
@@ -579,9 +599,20 @@ function d=mcplot_plot(d,p)
       xdel(w); xbasc(w); xset('window',w);
     else w = xget('window'); end
     if length(strindex(d.type,'2d'))
-      d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data;               
+      d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data; 
+      if logscale == 1 then 
+        minz=1e-10;
+        index_p=find(z>0); index_n=find(z<=0);
+        if length(index_p) then 
+          minz=min(z(index_p)); z(index_p) = log10(z(index_p)); 
+        end
+        if length(index_n) then 
+          z(index_n) = log10(minz/10); 
+        end
+      end              
       fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));                                             
       xlab=d.xlabel; ylab=d.ylabel; x=d.x; y=d.y;
+
       if fx>0,fx=round(log10(fx)); x=x/10^fx; xlab=xlab+' [*10^'+string(fx)+']'; end    
       if fy>0,fy=round(log10(fy)); y=y/10^fy; ylab=ylab+' [*10^'+string(fy)+']'; end    
       if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end                    
@@ -590,13 +621,37 @@ function d=mcplot_plot(d,p)
       if p == 2, t = t1; end
       xtitle(t);       
     elseif length(strindex(d.type,'1d'))
+      z = d.data; e = d.errors;
+      if logscale == 1 then 
+        minz=0;
+        index_p=find(z>0); index_n=find(z<=0);
+        if length(index_p) then 
+          minz=min(z(index_p)); e(index_p)=e(index_p)./z(index_p);
+          z(index_p) = log10(z(index_p)); 
+        end
+        if length(index_n) then 
+          z(index_n) = log10(minz/10); 
+          e(index_n) = 0;
+        end
+      end
       d.x=linspace(l(1),l(2),max(S));
-      mcplot_errorbar(d.x,d.data,d.errors);
+      mcplot_errorbar(d.x,z,e);
       if p == 2, t = t1; end
       xtitle(t,d.xlabel,d.ylabel);
     else
+      z = d.data;
+      if logscale == 1 then 
+        minz=0;
+        index_p=find(z>0); index_n=find(z<=0);
+        if length(index_p) then 
+          minz=min(z(index_p)); z(index_p) = log10(z(index_p)); 
+        end
+        if length(index_n) then 
+          z(index_n) = log10(minz/10); 
+        end
+      end
       d.x=linspace(l(1),l(2),max(S));
-      plot2d(d.x,d.data);
+      plot2d(d.x,z);
       if p == 2, t = t1; end
       xtitle(t,d.xlabel,d.ylabel);
     end
@@ -646,6 +701,7 @@ function mcplot_set_global(s, gwin, p_in)
     MCPLOT.Figure_0 = 0;
     MCPLOT.MenuInstalled = 0;
     MCPLOT.ShiftedItems = 0;
+    MCPLOT.LogScale = 0;
   end
   tag_names = getfield(1,s);
   if ~length(ThisFigure)
