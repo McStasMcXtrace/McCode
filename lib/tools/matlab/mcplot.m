@@ -616,7 +616,8 @@ function d=mcplot_plot(d,p)
         uimenu(hm, 'Label','Add Light','Callback', 'light;lighting phong;');
         uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.5);');
     end
-    uimenu(hm, 'Label',['Export into ' d.filename ],'Callback', [ 'evalin(''base'',''' d.filename ' = get(gco,''''userdata''''); disp([''''Exported data into variable ' d.filename ''''']);'');'])
+    uimenu(hm, 'Label',['Export into mc_' d.filename ],'Callback', [ 'evalin(''base'',''mc_' d.filename ' =
+    get(gco,''''userdata''''); disp([''''Exported data into variable mc_' d.filename ''''']);'');'])
     fud = get(gcf,'UserData');
     if isfield(fud,'superdata')
         uimenu(hm,'Separator','on','Label','View scan step...','callback',['mcplot(''scanstep'',''action'', gcf);']);
