@@ -138,14 +138,8 @@ if not(isempty(rep))
   INSTRUMENT.theta=rep(5);
   INSTRUMENT.count=0;
   if rep(6)==2
-    l=list('Exit Scilab?',1,['yes','no']);
-    Stop=x_choices('Exit?',list(l));
-    if not(isempty(Stop))
-      if Stop(1)==1
-        disp('Stopping here!');
-  	quit
-      end
-    end
+    exit
+    quit
   end
 else
   INSTRUMENT.count=0;
