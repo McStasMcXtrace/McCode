@@ -386,6 +386,18 @@ sub plot_instrument {
 	$rinstr->{'zoom_zmin'} = $cy;
 	$rinstr->{'zoom_zmax'} = $cy1;
 	return 1;
+    } elsif($cc =~ /[pP]/) {	# Output current plot to .ps and exit
+	# Major hack; need to clean up for proper hardcopy support.
+	pgbegin(0, "instr_color.ps/cps", $multi_view ? (2, 2) : (1,1));
+	pgask(0);
+	plot_instrument($rinstr, $rneutron);
+	pgend;
+	pgbegin(0, "instr_bw.ps/ps", $multi_view ? (2, 2) : (1,1));
+	pgask(0);
+	plot_instrument($rinstr, $rneutron);
+	pgend;
+	print STDERR "Output sent to instr_{color,bw}.ps -> exit.\n";
+	exit;
     } elsif($cc =~ /[xX]/) {	# Reset zoom.
 	$rinstr->{'zoom_xmin'} = $instr{'xmin'};
 	$rinstr->{'zoom_xmax'} = $instr{'xmax'};
