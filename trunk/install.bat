@@ -25,5 +25,11 @@
 @copy *.pl %MCSTAS_SITE%\bin
 @xcopy /e /y /q /i lib %MCSTAS_SITE%\lib
 @echo Done
+@echo Doing doc update using mcdoc...
+@set PATH=%PATH%;%MCSTAS_SITE%\bin
+@set MCSTAS=%MCSTAS_SITE%\lib
+@mcdoc.pl 
+@echo ..............................................................
 @echo Please remember to add %MCSTAS_SITE%\bin to your path!
 @echo Also, set the MCSTAS environment variable to %MCSTAS_SITE%\lib
+@echo ..............................................................
