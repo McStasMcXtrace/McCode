@@ -20,9 +20,18 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.8 2003-02-11 12:28:46 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.9 2004-11-30 16:11:37 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.8  2003/02/11 12:28:46  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*	
 * Revision 1.1 2002/08/28 11:39:00 ef
 *	Initial revision extracted from lib/monitors/Monitor_nD.comp
 *******************************************************************************/
@@ -157,6 +166,15 @@ void Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_Finally(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_McDisplay(MonitornD_Defines_type *,
  MonitornD_Variables_type *);
+ 
+#define MONND_DECLARE(monname) \
+  struct MonitornD_Variables *mcmonnd ## monname;
+#define MONND_USER_TITLE(monname, num, title) \
+  mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
+  strcpy(mcmonnd ## monname->UserName ## num, title);
+#define MONND_USER_VALUE(monname, num, value) \
+  mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
+  mcmonnd ## monname->UserName ## num = (value);
 
 #endif
 
