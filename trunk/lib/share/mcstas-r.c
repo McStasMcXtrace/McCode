@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.99 2004-09-21 12:25:02 farhi Exp $
+* $Id: mcstas-r.c,v 1.100 2004-09-30 08:23:41 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.99  2004/09/21 12:25:02  farhi
+* Reorganised code so that I/O functions are includable easely (for mcformat.c)
+*
 * Revision 1.97  2004/09/09 13:46:52  farhi
 * Code clean-up
 *
@@ -1678,7 +1681,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     mcfile_tag(f, format, pre, parent, "ylabel", ylabel);
     if ((n == 1 || m == 1) && strstr(format.Name, "McStas"))
     {
-      sprintf(limits, "%g %g", x1, x2);
+      sprintf(limits, "%g %g", *x1, *x2);
       strcpy(lim_field, "xlimits");
     }
     else
