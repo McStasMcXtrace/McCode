@@ -72,29 +72,13 @@ TRACE
   %}
 FINALLY
   %{
-    int i, Nsum;
-    double psum, p2sum;
-    FILE *outfile;
-
-    Nsum = psum = p2sum = 0;
-    outfile=fopen(filename,"w");
-    if(!outfile)
-    {
-      fprintf(stderr,
-              "FATAL ERROR: could not open output file '%s'\n", filename);
-      exit(1);
-    }
-    for (i=0; i<nchan; i++)
-    {
-      Nsum += TOF_N[i];
-      psum += TOF_p[i];
-      p2sum += TOF_p2[i];
-      if(TOF_p[i] != 0.0 || TOF_N[i] != 0)
-        fprintf(outfile,"%g %d %g %g\n",
-                (double)i*dt, TOF_N[i], TOF_p[i], TOF_p2[i]);
-    }
-    fclose(outfile);
-    DETECTOR_OUT(Nsum, psum, p2sum);
+    DETECTOR_OUT_1D(
+	"Time-of-flight monitor",
+	"Time-of-flight [\\gms]",
+	"Intensity",
+	0.0, nchan*(double)dt, nchan,
+	&TOF_N[0],&TOF_p[0],&TOF_p2[0],
+	filename);
   %}
 
 END
