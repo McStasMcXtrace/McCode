@@ -1,0 +1,99 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: DivPos_monitor
+*
+* Written by: KN, 1999
+*
+* 2D detector for intensity as a function of both horizontal position
+* and wavelength. This gives information similar to an aceptance diagram used
+* eg. to investigate beam profiles in neutron guides.
+*
+* INPUT PARAMETERS:
+*
+* xmin:     Lower x bound of detector opening (m)
+* xmax:     Upper x bound of detector opening (m)
+* ymin:     Lower y bound of detector opening (m)
+* ymax:     Upper y bound of detector opening (m)
+* npos:     Number of bins in position (1)
+* ndiv:     Number of bins in divergence (1)
+* maxdiv:   Maximal horizontal divergence detected (degrees)
+* filename: Name of file in which to store the detector image (string)
+*
+* OUTPUT PARAMETERS:
+*
+* Div_N:    Array of neutron counts
+* Div_p:    Array of neutron weight counts
+* Div_p2:   Array of second moments
+*
+*******************************************************************************/
+
+DEFINE COMPONENT DivPos_monitor
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, 
+                       npos, ndiv, maxdiv, filename)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+    int Div_N[npos][ndiv];
+    double Div_p[npos][ndiv];
+    double Div_p2[npos][ndiv];
+  %}
+INITIALIZE
+  %{
+    int i,j;
+
+    for (i=0; i<npos; i++)
+     for (j=0; j<ndiv; j++) 
+     {
+      Div_N[i][j] = 0;
+      Div_p[i][j] = 0;
+      Div_p2[i][j] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i,j;
+    double div;
+
+    PROP_Z0;
+    if (x>xmin && x<xmax && y>ymin && y<ymax)
+    {
+      div = RAD2DEG*atan2(vx,vz);
+      if (div < maxdiv && div > -maxdiv)
+      {
+        i = floor((x - xmin)*npos/(xmax - xmin));
+        j = floor((div + maxdiv)*ndiv/(2.0*maxdiv));
+        Div_N[i][j]++;
+        Div_p[i][j] += p;
+        Div_p2[i][j] += p*p;
+      }
+    }
+  %}
+FINALLY
+  %{
+    DETECTOR_OUT_2D(
+        "Position-divergence monitor",
+        "pos [m]",
+        "divergence [deg]",
+        xmin, xmax, -maxdiv, maxdiv,
+        npos, ndiv,
+        &Div_N[0][0],&Div_p[0][0],&Div_p2[0][0],
+        filename);
+  %}
+
+MCDISPLAY
+  %{
+    magnify("xy");
+    multiline(5, (double)xmin, (double)ymin, 0.0,
+                 (double)xmax, (double)ymin, 0.0,
+                 (double)xmax, (double)ymax, 0.0,
+                 (double)xmin, (double)ymax, 0.0,
+                 (double)xmin, (double)ymin, 0.0);
+%}
+
+END
