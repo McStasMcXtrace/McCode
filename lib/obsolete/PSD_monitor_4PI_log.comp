@@ -6,7 +6,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: McStas 1.5 (Obsolete)
 *
 * Spherical position-sensitive detector with logarithmic scale.
@@ -44,7 +44,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
-  int PSD_N[nx][ny];
+  double PSD_N[nx][ny];
   double PSD_p[nx][ny];
   double PSD_p2[nx][ny];
 %}
