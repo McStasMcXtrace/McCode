@@ -6,8 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.7 $
-* Origin: McStas release
+* Version: $Revision: 1.8 $
+* Origin: McStas 1.5
 *
 * Single mirror plate.
 *
@@ -35,7 +35,6 @@ DEFINE COMPONENT Mirror
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xlength, yheight,R0,Qc,alpha,m,W)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 TRACE
 %{
   double dt, q;

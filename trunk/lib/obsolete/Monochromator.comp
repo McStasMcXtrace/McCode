@@ -6,10 +6,11 @@
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.10 $
-* Origin: McStas 1.4.2
+* Version: $Revision: 1.11 $
+* Origin: McStas 1.5
 *
-* Monochromator/analyzer crystal (OBSOLETE).
+* Monochromator/analyzer crystal 
+* OBSOLETE: Use rather Mosaic_anisotropic or Mosaic_simple
 *
 * %D
 * NOTE: This component is obsolete. Use the component Mosaic_anisotropic
@@ -41,7 +42,6 @@ DEFINE COMPONENT Monochromator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaich, mosaicv, r0, Q)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
 #define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
