@@ -5,11 +5,8 @@ use PDL;
 use PDL::Graphics::PGPLOT;
 use PGPLOT;
 
-if($ENV{"MCSTAS"}) {
-    use lib $ENV{"MCSTAS"};
-} else {
-    use lib "/usr/local/lib/mcstas";
-}
+use lib "/usr/local/lib/mcstas";
+use lib $ENV{"MCSTAS"};
 
 require "mcfrontlib.pl";
 require "mcplotlib.pl";
@@ -17,7 +14,15 @@ require "mcplotlib.pl";
 
 my ($file) = @ARGV;
 $file = "mcstas.sim" unless $file;
+$file = "$file/mcstas.sim" if -d $file;
 my ($instr_inf, $sim_inf, $datalist) = read_sim_file($file);
+die "No data in simulation file '$file'"
+    unless @$datalist;
+
+print <<END;
+Click plot for full-screen view.
+Type 'P' (in graphics window) for hardcopy, 'Q' to quit.
+END
 
 for(;;) {
     my ($cc,$cx,$cy,$idx);
