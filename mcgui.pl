@@ -564,7 +564,7 @@ sub dialog_get_out_file {
                 # platform...
                 # PW 20030314
                 if ($Config{'osname'} eq 'MSWin32') {
-                  $pid = open($fh, "@$val |");
+                  $pid = open($fh, "@$val 2>&1 |");
                 } else {
                   $pid = open($fh, "-|");
                 }
@@ -652,7 +652,7 @@ sub my_system {
     # platform...
     # PW 20030314
     if ($Config{'osname'} eq 'MSWin32') {
-      $child_pid = open($fh, "@sysargs |");
+      $child_pid = open($fh, "@sysargs 2>&1 |");
     } else {
       $child_pid = open($fh, "-|");
     }
