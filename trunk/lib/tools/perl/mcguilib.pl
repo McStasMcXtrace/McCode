@@ -86,12 +86,13 @@ sub simulation_dialog {
     my $name_instr = $ii->{'Instrument-source'};
     my $dlg = $win->DialogBox(-title => "Run simulation $name_instr",
                               -buttons => ["Start", "Cancel"]);
-
-    $dlg->add('Label',
-              -text => "Instrument source: $ii->{'Instrument-source'}",
-              -anchor => 'w',
-              -justify => 'left')->pack(-fill => 'x');
-
+    my $top_frame = $dlg->Frame(-relief => 'raised', -border => 1);
+    $top_frame->pack(-fill => 'x');
+    $top_frame->Label(-text => "Instrument source: $ii->{'Instrument-source'}",
+		      -anchor => 'w',
+		      -justify => 'left')->pack(-side => 'left');
+    $top_frame->Button(-text => "HTML docs", -width => 11,
+                -command => sub {mcdoc_current($win)} )->pack(-side => 'right');
     # Set up the parameter input fields.
     my @parms = @{$ii->{'Parameters'}};
     my $numrows = int ((@parms + 2)/3);
@@ -100,8 +101,8 @@ sub simulation_dialog {
                   -text => "Instrument parameters $typehelp:",
                   -anchor => 'w',
                   -justify => 'left')->pack(-fill => 'x');
-        my $parm_frame = $dlg->add('Frame');
-        $parm_frame->pack;
+        my $parm_frame = $dlg->Frame;
+        $parm_frame->pack(-fill => 'both');
         my $row = 0;
         my $col = 0;
         my $p;
@@ -129,20 +130,20 @@ sub simulation_dialog {
         }
     }
 
-    my $opt_frame = $dlg->add('Frame');
-    $opt_frame->pack(-anchor => 'w');
+    my $opt_frame = $dlg->Frame;
+    $opt_frame->pack(-anchor => 'w', -fill => 'x');
 
     my $f0 = $opt_frame->Frame;
-    $f0->pack(-anchor => 'w');
+    $f0->pack(-anchor => 'w', -fill => 'x');
     $f0->Label(-text => "Output to (dir):")->pack(-side => 'left');
     my $dir_entry = $f0->Entry(-relief => 'sunken',
                                -width=>30,
                                -justify => 'left',
                                -textvariable => \$si{'Dir'});
     $dir_entry->pack(-side => 'left');
-    $f0->Button(-text => "Browse ...",
+    $f0->Button(-text => "Browse ...", -width => 11,
                 -command => sub { my $d = get_dir_name($dlg, $si{'Dir'});
-                                  $si{'Dir'} = $d if $d; } )->pack;
+                                  $si{'Dir'} = $d if $d; } )->pack(-side => 'right');
 
     my $f1 = $opt_frame->Frame;
     $f1->pack(-anchor => 'w');
