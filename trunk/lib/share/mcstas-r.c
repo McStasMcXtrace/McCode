@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.12 1998-05-19 07:54:05 kn Exp $
+* 	$Id: mcstas-r.c,v 1.13 1998-09-23 13:51:35 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.12  1998/05/19 07:54:05  kn
+* 	In randvec_target_sphere, accept radius=0 to mean that no focusing is to
+* 	be done (choose direction uniformly in full 4PI solid angle).
+*
 * 	Revision 1.11  1998/05/11 12:08:49  kn
 * 	Fix bug in cylinder_intersect that caused an infinite cylinder height in
 * 	some cases.
@@ -254,6 +258,118 @@ mcgenstate(void)
 {
   mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 1);
 }
+
+/* McStas random number routine. */
+
+/*
+ * Copyright (c) 1983 Regents of the University of California.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms are permitted
+ * provided that the above copyright notice and this paragraph are
+ * duplicated in all such forms and that any documentation,
+ * advertising materials, and other materials related to such
+ * distribution and use acknowledge that the software was developed
+ * by the University of California, Berkeley.  The name of the
+ * University may not be used to endorse or promote products derived
+ * from this software without specific prior written permission.
+ * THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+ * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
+/*
+ * This is derived from the Berkeley source:
+ *	@(#)random.c	5.5 (Berkeley) 7/6/88
+ * It was reworked for the GNU C Library by Roland McGrath.
+ * Rewritten to use reentrant functions by Ulrich Drepper, 1995.
+ */
+
+/*******************************************************************************
+* Modified for McStas from glibc 2.0.7pre1 stdlib/random.c and
+* stdlib/random_r.c.
+*
+* This way random() is more than four times faster compared to calling
+* standard glibc random() on ix86 Linux, probably due to multithread support,
+* ELF shared library overhead, etc. It also makes McStas generated
+* simulations more portable (more likely to behave identically across
+* platforms, important for parrallel computations).
+*******************************************************************************/
+
+
+#define	TYPE_3		3
+#define	BREAK_3		128
+#define	DEG_3		31
+#define	SEP_3		3
+
+static mc_int32_t randtbl[DEG_3 + 1] =
+  {
+    TYPE_3,
+
+    -1726662223, 379960547, 1735697613, 1040273694, 1313901226,
+    1627687941, -179304937, -2073333483, 1780058412, -1989503057,
+    -615974602, 344556628, 939512070, -1249116260, 1507946756,
+    -812545463, 154635395, 1388815473, -1926676823, 525320961,
+    -1009028674, 968117788, -123449607, 1284210865, 435012392,
+    -2017506339, -911064859, -370259173, 1132637927, 1398500161,
+    -205601318,
+  };
+
+static mc_int32_t *fptr = &randtbl[SEP_3 + 1];
+static mc_int32_t *rptr = &randtbl[1];
+static mc_int32_t *state = &randtbl[1];
+#define rand_deg DEG_3
+#define rand_sep SEP_3
+static mc_int32_t *end_ptr = &randtbl[sizeof (randtbl) / sizeof (randtbl[0])];
+
+mc_int32_t
+mc_random (void)
+{
+  mc_int32_t result;
+
+  *fptr += *rptr;
+  /* Chucking least random bit.  */
+  result = (*fptr >> 1) & 0x7fffffff;
+  ++fptr;
+  if (fptr >= end_ptr)
+  {
+    fptr = state;
+    ++rptr;
+  }
+  else
+  {
+    ++rptr;
+    if (rptr >= end_ptr)
+      rptr = state;
+  }
+  return result;
+}
+
+void
+mc_srandom (unsigned int x)
+{
+  /* We must make sure the seed is not 0.  Take arbitrarily 1 in this case.  */
+  state[0] = x ? x : 1;
+  {
+    long int i;
+    for (i = 1; i < rand_deg; ++i)
+    {
+      /* This does:
+	 state[i] = (16807 * state[i - 1]) % 2147483647;
+	 but avoids overflowing 31 bits.  */
+      long int hi = state[i - 1] / 127773;
+      long int lo = state[i - 1] % 127773;
+      long int test = 16807 * lo - 2836 * hi;
+      state[i] = test + (test < 0 ? 2147483647 : 0);
+    }
+    fptr = &state[rand_sep];
+    rptr = &state[0];
+    for (i = 0; i < 10 * rand_deg; ++i)
+      random ();
+  }
+}
+
+/* End of McStas random number routine. */
 
 double
 randnorm(void)
