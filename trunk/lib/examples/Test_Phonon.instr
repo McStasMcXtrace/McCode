@@ -1,4 +1,4 @@
-DEFINE INSTRUMENT TEST_PHONON(E, DE, HDIV, VDIV, TT, OM, C)
+DEFINE INSTRUMENT TEST_PHONON(E=10, DE=0, HDIV=0, VDIV=0, TT=72.69, OM=-43.3, C=8)
 /* 
 * %Identification
 * Written by: <a href="mailto:kim.lefmann@risoe.dk">Kim Lefmann</a>
