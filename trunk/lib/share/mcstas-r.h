@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.14 1998-04-17 11:50:31 kn Exp $
+*	$Id: mcstas-r.h,v 1.15 1998-05-19 07:59:45 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.14  1998/04/17 11:50:31  kn
+*	Added sphere_intersect.
+*
 *	Revision 1.13  1998/04/17 10:53:08  kn
 *	Added randvec_target_sphere.
 *
@@ -117,7 +120,7 @@ typedef MCNUM Rotation[3][3];
 #endif
 
 /* HPUX defines RAND_MAX to 32767 which is wrong for random(). */
-#if defined(__hpux__) && defined(RAND_MAX)
+#if(RAND_MAX == 32767)
 # undef RAND_MAX
 # define RAND_MAX LONG_MAX
 #endif
