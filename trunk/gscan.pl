@@ -42,6 +42,7 @@ $numvars = $i;
 open(OUT, ">$simfile");
 $firsttime = 1;
 $outputs = "";
+@youts = ();
 for($point = 0; $point < $npoints; $point++) {
     $out = "";
     for($j = 0; $j <= $#scanned; $j++) {
@@ -59,11 +60,14 @@ for($point = 0; $point < $npoints; $point++) {
     $got_error = 0;
     while(<SIM>) {
 	chomp;
-	if(m'^Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) *$') {
+	if(/^Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) *$/) {
 	    $sim_I = $2;
 	    $sim_err = $4;
 	    $out .= " $sim_I $sim_err";
-	    $outputs .= " $1 $3" if $firsttime;
+	    if($firsttime) {
+		$outputs .= " $1 $3";
+		push @youts, "($1,$3)";
+	    }
 	} elsif(m'^Error:') {
 	    $got_error = 1;
 	}
@@ -76,3 +80,22 @@ for($point = 0; $point < $npoints; $point++) {
 }
 close(OUT);
 print "Output file: '$simfile'\nOutput parameters: $outputs\n";
+
+# Write gscan.sim information file.
+$infofile = "gscan.sim";
+open(SIM, ">$infofile") || die "Failed to write info file '$infofile'";
+$scannedvars = join ", ", (map { $parmname[$scanned[$_]]; } (0..$#scanned));
+$xvars = join " ", (map { $parmname[$scanned[$_]]; } (0..$#scanned));
+$yvars = join " ", @youts;
+print SIM <<END;
+begin data
+  type: array_1d($npoints)
+  title: 'Scan of $scannedvars'
+  xvars: $xvars
+  yvars: $yvars
+  xlimits: $minval[0] $maxval[0]
+  filename: $simfile
+  params: $outputs
+end data
+END
+close SIM;
