@@ -31,7 +31,7 @@ if ($Config{'osname'} eq 'MSWin32') {
     }
   }
   if ($located eq 0) {
-    die "mcstas.exe not found on NT command PATH!";
+    die "mcrun: mcstas.exe not found on NT command PATH!";
   }
 } else {
   $MCSTAS::mcstas_config{'prefix'}='';
@@ -63,23 +63,23 @@ sub read_instrument_info {
     $inf->{'RAW'} = [];                # List of lines from output of sim.out --info
     while(<$h>) {
         push @{$inf->{'RAW'}}, $_;
-        if(/^\s*Name:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9]+)\s*$/i) {
+        if(/^\s*Name:\s*([a-zA-Z_0-9]+)\s*$/i) {
             $inf->{'Name'} = $1;
-        } elsif(/^\s*Parameters:\s*([a-zA-ZÊ¯Â∆ÿ≈_0-9 \t()]*?)\s*$/i) {
+        } elsif(/^\s*Parameters:\s*([a-zA-Z_0-9 \t()]*?)\s*$/i) {
             my $full = $1;
             my $parms = [ ];
             my $parmtypes = { };
             my $p;
             for $p (split ' ', $full) {
-                if($p =~ /^([a-zA-ZÊ¯Â∆ÿ≈_0-9+]+)\(([a-z]+)\)$/) {
+                if($p =~ /^([a-zA-Z_0-9+]+)\(([a-z]+)\)$/) {
                     push @$parms, $1;
                     $parmtypes->{$1} = $2;
-                } elsif($p =~ /^([a-zA-ZÊ¯Â∆ÿ≈_0-9+]+)$/) {
+                } elsif($p =~ /^([a-zA-Z_0-9+]+)$/) {
                     # Backward compatibility: no type specifier.
                     push @$parms, $1;
                     $parmtypes->{$1} = 'double'; # Default is double
                 } else {
-                    die "Invalid parameter specification:\n'$p'";
+                    die "mcrun: Invalid parameter specification:\n'$p'";
                 }
             }
             $inf->{'Parameters'} = $parms;
@@ -120,7 +120,7 @@ sub get_sim_info {
     }
     use FileHandle;
     my $h = new FileHandle;
-    open $h, "$cmdstring |" or die "Could not run simulation.";
+    open $h, "$cmdstring |" or die "mcrun: Could not run simulation.";
     my $inf = read_instrument_info($h);
     close $h;
     return $inf;
@@ -136,7 +136,7 @@ sub get_sim_info {
 #
 sub get_out_file_init {
     my ($inname, $force) = @_;
-    return (undef, "No simulation filename given") unless $inname;
+    return (undef, "mcrun: No simulation filename given") unless $inname;
     # Add a default extension of ".instr" if given name does not exist
     # as file.
     my $sim_def = $inname;
@@ -290,7 +290,7 @@ sub get_out_file_next {
         $v->{'stage'} = FINISHED;
         return (FINISHED, $out_name);
     } else {
-        die "Internal: get_out_file_next: $stage";
+        die "mcrun: Internal: get_out_file_next: $stage";
     }
 }
 
@@ -323,7 +323,7 @@ sub get_out_file {
             print STDERR "$value\n";
             return undef;
         } elsif(!($status eq CONTINUE)) {
-            die "Internal: get_out_file";
+            die "mcrun: Internal: get_out_file";
         }
     }
 }
@@ -403,7 +403,7 @@ sub parse_header {
             } elsif($where eq "description") {
                 $d->{'description'} .= $_;
             } elsif($where eq "parameters") {
-                if(/^[ \t]*([a-zA-Z0-9Ê¯Â∆ÿ≈_]+)\s*:(.*)/) {
+                if(/^[ \t]*([a-zA-Z0-9_]+)\s*:(.*)/) {
                     $thisparm = \$d->{'parhelp'}{$1}{'full'};
                     $$thisparm = "$2\n";
                 } elsif(/^[ \t]*$/) { # Empty line
@@ -450,7 +450,7 @@ sub parse_header {
             if($s =~ /^\s*((.|\n)*\S)\s*$/) {
                 $text = $1;
             } else {
-                $s =~ /^\s*$/ || die "Internal: match 1";
+                $s =~ /^\s*$/ || die "mcrun: Internal: parse_header match 1";
                 $text = "";
             }
         }
@@ -468,22 +468,22 @@ sub get_comp_info {
     my $file = new FileHandle;
     my ($cname, $decl, $init, $trace, $finally, $disp);
     my (@dpar, @spar, @ipar, @opar);
-    open($file, $name)  || die "Could not open file $name\n";
+    open($file, $name)  || die "mcrun: Could not open file $name\n";
     local $/ = undef;                # Read the whole file in one go.
     my $s = <$file>;
     close($file);
-    if($s =~ /DEFINE\s+COMPONENT\s+([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)/i) {
+    if($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i) {
         $cname = $1;
     } else {
         $cname = "<Unknown>";
     }
     @dpar = ();
-    if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-ZÊ¯Â∆ÿ≈0-9_ \t\n\r=,/*]+)\)!i) {
+    if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i) {
         foreach (split(",", $1)) {
-            if(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
+            if(/^\s*([a-zA-Z0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
                 push @dpar, $1;
                 $d->{'parhelp'}{$1}{'default'} = $2;
-            } elsif(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*$/) {
+            } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                 push @dpar, $1;
             } else {
                 print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname.\n";
@@ -491,12 +491,12 @@ sub get_comp_info {
         }
     }
     @spar = ();
-    if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-ZÊ¯Â∆ÿ≈0-9_ \t\n\r=,/*]+)\)!i) {
+    if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i) {
         foreach (split(",", $1)) {
-            if(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
+            if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
                 push @spar, $1;
                 $d->{'parhelp'}{$1}{'default'} = $2;
-            } elsif(/^\s*([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)\s*$/) {
+            } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                 push @spar, $1;
             } else {
                 print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname.\n";
@@ -504,7 +504,7 @@ sub get_comp_info {
         }
     }
     @ipar = (@dpar, @spar);
-    if($s =~ /OUTPUT\s+PARAMETERS\s*\(([a-zA-ZÊ¯Â∆ÿ≈0-9_, \t\r\n]+)\)/i) {
+    if($s =~ /OUTPUT\s+PARAMETERS\s*\(([a-zA-Z0-9_, \t\r\n]+)\)/i) {
         @opar = split (/\s*,\s*/, $1);
     } else {
         @opar = ();
@@ -549,7 +549,7 @@ sub parse_instrument {
     my @d;
     my ($i,$where, $thisparm);
     while(<$f>) {
-        if(/^\s*COMPONENT \s*([a-zA-Z0-9_Ê¯Â∆ÿ≈]+)\s=*/) {
+        if(/^\s*COMPONENT \s*([a-zA-Z0-9_]+)\s=*/) {
 	    push @d, $1;
         } else  {
 	} 
