@@ -1,0 +1,103 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: PSD_monitor_rad
+*
+* %Identification
+* Written by: Henrich Frielinghaus
+* Date:       Sept 2004
+* Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
+* Version:    0.1
+* Release:    McStas 1.9
+*
+* Position-sensitive monitor with radially averaging.
+*
+* %D
+* Monitor that allows for radial averaging.
+* Disadvantage: the intensity carries the unit per area (of the detector segment).
+* Thus the pure unit of flux is somehow lost.
+*
+* This monitor may be replaced by the Monitor_nD(options="auto radius") component
+*
+* Example: PSD_monitor_rad(rmax=0.2, nr=100, filename="Output.psd")
+*
+* %P
+* INPUT PARAMETERS:
+*
+* rmax:     Outer radius of detector (m)
+* nr:       Number of concentric circles (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSDr_N:   Array of neutron counts
+* PSDr_p:   Array of neutron weight counts
+* PSDr_p2:  Array of second moments
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT PSD_monitor_rad
+DEFINITION PARAMETERS (nr=100, filename)
+SETTING PARAMETERS (rmax)
+OUTPUT PARAMETERS (PSDr_N, PSDr_p, PSDr_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+  %{
+    double PSDr_N[nr];
+    double PSDr_p[nr];
+    double PSDr_p2[nr];
+  %}
+INITIALIZE
+  %{
+    int i;
+
+    for (i=0; i<nr; i++)
+     {
+      PSDr_N[i]  = 0;
+      PSDr_p[i]  = 0;
+      PSDr_p2[i] = 0;
+     }
+  %}
+TRACE
+  %{
+    int i;
+    double radpos;
+
+    PROP_Z0;
+
+    radpos = sqrt(x*x+y*y);
+
+    if (radpos < rmax)
+    {
+      i = floor(nr*radpos/rmax);
+      PSDr_N[i]++;
+      PSDr_p[i] += p  / (2e4*PI*rmax*rmax/(nr*nr)*(i+1.0));
+      PSDr_p2[i]+= p*p/ (2e4*PI*rmax*rmax/(nr*nr)*(i+1.0));
+      SCATTER;
+    }
+  %}
+SAVE
+  %{
+    DETECTOR_OUT_1D(
+        "PSD monitor rad",
+        "Radius [cm]",
+        "Intensity/Area",
+        "r", 0, rmax*100.0, nr,
+        &PSDr_N[0],&PSDr_p[0],&PSDr_p2[0],
+        filename);
+  %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy",0,0,0,rmax);
+%}
+
+END
