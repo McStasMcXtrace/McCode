@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.104 2005-02-16 12:20:36 farhi Exp $
+* $Id: mcstas-r.c,v 1.105 2005-02-17 15:54:56 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.104  2005/02/16 12:20:36  farhi
+* Removed left space chars at end of lines
+*
 * Revision 1.103  2004/11/30 16:13:22  farhi
 * Put back PROP_X0 and Y0 that are used in some contrib components
 * Uses NOSIGNALS and set signal handling from that
@@ -2453,7 +2456,7 @@ double mcdetector_out_1D(char *t, char *xl, char *yl,
   return(mcdetector_out_012D(mcformat,
     c, t,
     n, 1, 1,
-    xl, yl, "Intensity",
+    xl, yl, (n > 1 ? "Signal per bin" : " Signal"),
     xvar, "(I,I_err)", "I",
     x1, x2, 0, 0, 0, 0, f,
     p0, p1, p2));
@@ -2476,7 +2479,7 @@ double mcdetector_out_2D(char *t, char *xl, char *yl,
   return(mcdetector_out_012D(mcformat,
     c, t,
     m, n, 1,
-    xl, yl, "Intensity",
+    xl, yl, (n*m > 1 ? "Signal per bin" : " Signal"),
     xvar, yvar, "I",
     x1, x2, y1, y2, 0, 0, f,
     p0, p1, p2));
