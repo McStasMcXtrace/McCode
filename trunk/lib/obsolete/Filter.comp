@@ -8,7 +8,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: Sept. 14 1998
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: McStas 1.5
 *
 * A simple cut-off neutron filter.

@@ -36,7 +36,7 @@ INSTALL_DATA = @INSTALL_DATA@
 #
 
 OBJECTS=instrument.tab.o lex.yy.o debug.o \
-	memory.o list.o symtab.o coords.o rotation.o cexp.o \
+	memory.o list.o symtab.o coords.o cexp.o \
 	file.o cogen.o port.o
 
 PERLOBJ=gscan.fixpl mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
@@ -98,7 +98,6 @@ memory.o: mcstas.h
 symtab.o: mcstas.h
 list.o: mcstas.h
 coords.o: mcstas.h
-rotation.o: mcstas.h
 cexp.o: mcstas.h
 file.o: mcstas.h
 cogen.o: mcstas.h

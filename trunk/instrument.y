@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.43 2003-01-21 08:33:57 pkwi Exp $
+*	$Id: instrument.y,v 1.44 2003-01-21 08:38:40 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -169,6 +169,7 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace
 		    check_comp_formals(c->def_par, c->set_par, c->name);
 		    /* Put component definition in table. */
 		    symtab_add(read_components, c->name, c);
+        if (verbose) fprintf(stderr, "Embedding component %s\n", c->name);
 		  }
 ;
 
@@ -254,12 +255,45 @@ comp_iformals1:	  comp_iformal
 		  }
 ;
 
-comp_iformal:	  TOK_ID
+comp_iformal:	 TOK_ID TOK_ID
+		  {
+		    struct comp_iformal *formal;
+		    palloc(formal);
+		    if(!strcmp($1, "double")) {
+		      formal->type = instr_type_double;
+		    } else if(!strcmp($1, "int")) {
+		      formal->type = instr_type_int;
+		    } else if(!strcmp($1, "string")) {
+		      formal->type = instr_type_string;
+		    } else {
+		      print_error("Illegal type %s for component "
+				  "parameter %s.\n", $1, $2);
+		      formal->type = instr_type_double;
+		    }
+		    formal->id = $2;
+		    $$ = formal;
+		  }
+		| TOK_ID '*' TOK_ID
+		  {
+		    struct comp_iformal *formal;
+		    palloc(formal);
+		    if(!strcmp($1, "char")) {
+		      formal->type = instr_type_string;
+		    } else {
+		      print_error("Illegal type %s* for component "
+				  "parameter %s.\n", $1, $3);
+		      formal->type = instr_type_double;
+		    }
+		    formal->id = $3;
+		    $$ = formal;
+		  }
+    | TOK_ID
 		  {
 		    struct comp_iformal *formal;
 		    palloc(formal);
 		    formal->id = str_dup($1);
 		    formal->isoptional = 0; /* No default value */
+        formal->type = instr_type_double;
 		    $$ = formal;
 		  }
 		| TOK_ID '=' TOK_NUMBER
@@ -269,9 +303,46 @@ comp_iformal:	  TOK_ID
 		    formal->id = $1;
 		    formal->isoptional = 1; /* Default value available */
 		    formal->default_value = exp_number($3);
+        formal->type = instr_type_double;
 		    str_free($3);
 		    $$ = formal;
 		  }
+    | TOK_ID TOK_ID '=' exp
+      {
+		    struct comp_iformal *formal;
+		    palloc(formal);
+        if(!strcmp($1, "double")) {
+		      formal->type = instr_type_double;
+		    } else if(!strcmp($1, "int")) {
+		      formal->type = instr_type_int;
+		    } else if(!strcmp($1, "string")) {
+		      formal->type = instr_type_string;
+		    } else {
+		      print_error("Illegal type %s for component "
+				  "parameter %s.\n", $1, $2);
+		      formal->type = instr_type_double;
+		    }
+        formal->id = $2;
+		    formal->isoptional = 1; /* Default value available */
+		    formal->default_value = $4;
+		    $$ = formal;
+		  }
+    | TOK_ID '*' TOK_ID '=' exp
+      {
+		    struct comp_iformal *formal;
+		    palloc(formal);
+		    formal->id = $3;
+		    formal->isoptional = 1; /* Default value available */
+		    formal->default_value = $5;
+        if(!strcmp($1, "char")) {
+		      formal->type = instr_type_string;
+		    } else {
+		      print_error("Illegal type %s* for component "
+				  "parameter %s.\n", $1, $3);
+		      formal->type = instr_type_double;
+		    }
+		    $$ = formal;
+      }        
 ;
 
 instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
@@ -291,6 +362,7 @@ instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
 		    /* Check instrument parameters for uniqueness */
 		    check_instrument_formals(instrument_definition->formals,
 					     instrument_definition->name);
+        if (verbose) fprintf(stderr, "Creating instrument %s\n", instrument_definition->name);
 		  }
 ;
 
@@ -948,6 +1020,9 @@ Symtab comp_instances;
 /* ADD: E. Farhi Sep 24th, 2001 Map from names to component group instances. */
 Symtab group_instances;
 
+/* Map from names to embedded libraries */
+Symtab lib_instances;
+
 /* List of components, in the order they where declared in the instrument
    definition. */
 List comp_instances_list;
@@ -958,6 +1033,9 @@ List group_instances_list;
 
 /* Filename for outputting generated simulation program ('-' means stdin). */
 static char *output_filename;
+
+/* Verbose parsing/code generation */
+char verbose;
 
 /* Map of already-read components. */
 Symtab read_components = NULL;
@@ -1027,6 +1105,7 @@ parse_command_line(int argc, char *argv[])
   int i;
 
   output_filename = NULL;
+  verbose = 0;
   instr_current_filename = NULL;
   instrument_definition->use_default_main = 1;
   instrument_definition->include_runtime = 1;
@@ -1063,6 +1142,8 @@ parse_command_line(int argc, char *argv[])
       print_version();
     else if(!strcmp("--version", argv[i]))
       print_version();
+    else if(!strcmp("--verbose", argv[i]))
+      verbose = 1;
     else if(!strcmp("--no-main", argv[i]))
       instrument_definition->use_default_main = 0;
     else if(!strcmp("--no-runtime", argv[i]))
@@ -1118,6 +1199,7 @@ main(int argc, char *argv[])
   instr_current_line = 1;
   lex_new_file(file);
   read_components = symtab_create(); /* Create table of components. */
+  lib_instances   = symtab_create(); /* Create table of libraries. */
   err = mc_yyparse();
   fclose(file);
   if(err != 0 || error_encountered != 0)
@@ -1129,6 +1211,7 @@ main(int argc, char *argv[])
   {
 
     cogen(output_filename, instrument_definition);
+    if (verbose) fprintf(stderr, "Generating code     %s\n", output_filename);
     exit(0);
   }
 }

@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Source_adapt.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Source_adapt.comp
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.21 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.22 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Neutron source with adaptive importance sampling
 *
@@ -78,6 +81,11 @@ DEFINITION PARAMETERS (N_E=20, N_xpos=20, N_xdiv=20, alpha=0.25, beta=0.25,filen
 SETTING PARAMETERS (xmin,xmax,ymin,ymax, dist=2.33, xw=0.05, yh=0.1, E0=14.68, dE=2, flux=1e13)
 OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+SHARE
+%{
+%include "adapt_tree-lib"
+%}
 
 DECLARE
 %{

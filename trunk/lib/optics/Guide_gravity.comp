@@ -9,7 +9,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: McStas 1.6/<a href="http://www.ill.fr">ILL (France)</a>.
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
 * Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
@@ -133,7 +133,7 @@ SHARE
     aVars->w1c = (a_w1 + a_d)/(double)a_k;
     aVars->w2c = (a_w2 + a_d)/(double)a_k;
 
-    for (i=0; i <= 4; aVars->M[i++]=m);
+    for (i=0; i <= 4; aVars->M[i++]=a_m);
     if (a_mx >= 0) { aVars->M[1] =a_mx; aVars->M[2] =a_mx; }
     if (a_mv >= 0) { aVars->M[1] =a_mv; aVars->M[2] =a_mv; }
     if (a_my >= 0) { aVars->M[3] =a_my; aVars->M[4] =a_my; }

@@ -1,15 +1,18 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Adapt_check.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
 *
 * Component: Adapt_check
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.15 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.16 $
+* Origin: Risoe
+* Release: McStas 1.6
 *
 * Optimization specifier for the Source_adapt component.
 *
@@ -37,6 +40,13 @@ DEFINE COMPONENT Adapt_check
 DEFINITION PARAMETERS (source_comp)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+#ifndef ADAPT_TREE_LIB_H
+#error Adapt_check : needs Source_adapt component and %include "adapt_tree-lib" 
+#endif  
+%}
 
 TRACE
 %{

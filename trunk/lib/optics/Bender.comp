@@ -90,7 +90,7 @@ INITIALIZE
  %{
       if (r <0) 
       { fprintf(stderr,"Bender: error: %s: to bend in the other direction\n", NAME_CURRENT_COMP);
-        fprintf(stderr,"        rotate comp on z-axis by 180 deg.\n", NAME_CURRENT_COMP); exit(-1); }
+        fprintf(stderr,"        rotate comp on z-axis by 180 deg.\n"); exit(-1); }
       
       if (k*d > w)
       { fprintf(stderr,"Bender: error: %s has (k*d > w).\n", NAME_CURRENT_COMP);
@@ -100,7 +100,7 @@ INITIALIZE
         exit(-1); }
       /* width of one channel + thickness d of partition */
       mWin = Win;
-      if (l!= 0 & r != 0) mWin = (double)l/(double)r;
+      if (l!= 0 && r != 0) mWin = (double)l/(double)r;
       bk=(w+d)/k; 
  %}
 
@@ -253,7 +253,6 @@ TRACE
 
 MCDISPLAY
 %{
-  double x;
   int i;
   double w1c, w2c, h1, h2, L, w1, w2;
 

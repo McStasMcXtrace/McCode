@@ -16,7 +16,7 @@
 *
 * Support for conditional output of debugging information.
 *
-*	$Id: debug.c,v 1.11 2003-01-21 08:33:57 pkwi Exp $
+*	$Id: debug.c,v 1.12 2003-01-21 08:38:40 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.6  1999/03/18 07:29:10  kn

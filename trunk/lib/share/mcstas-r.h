@@ -11,15 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: 1.3
+* Version: 1.4
 *
 * Runtime system header for McStas. 
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.43 2003-01-21 08:33:59 pkwi Exp $
+* $Id: mcstas-r.h,v 1.44 2003-01-21 08:38:42 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+* Revision 1.4 2002/09/17 12:01:21 ef
+*	removed unused macros (PROP_Y0, X0), changed randvec_target_sphere to circle
+* added randvec_target_rect
+*
 * Revision 1.3 2002/08/28 11:36:37 ef
 *	Changed to lib/share/c code 
 *
@@ -32,7 +36,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.43 $"
+#define MCSTAS_R_H "$Revision: 1.44 $"
 
 #include <math.h>
 #include <string.h>
@@ -98,32 +102,6 @@ void mcraytrace(void);
 void mcsave(void);
 void mcfinally(void);
 void mcdisplay(void);
-
-/* Adaptive search tree definitions. */
-typedef double adapt_t;
-
-/*******************************************************************************
-* Structure of an adaptive search tree. The v array runs from 0 to N-1 (a
-* total of N elements) and holds the values of each node. The sum of all v
-* values is in total.
-* The s array runs from 0 to N and is used to represents the cumulative sum
-* of v[0] through v[i-1]. The number represented is the sum of s[i] and all
-* its parents up to the root node.
-*******************************************************************************/
-
-struct adapt_tree
-  {
-    adapt_t *s, *v, total;
-    int N;			/* < 1 << (depth+1) */
-    int depth;
-    int root;			/* = (1 << depth) - 1 */
-    int initstep;		/* = 1 << (depth-1) */
-  };
-
-int adapt_tree_search(struct adapt_tree *t, adapt_t v);
-void adapt_tree_add(struct adapt_tree *t, int i, adapt_t v);
-struct adapt_tree * adapt_tree_init(int N);
-void adapt_tree_free(struct adapt_tree *t);
 
 /* MOD: E. Farhi, Sep 25th 2001 set Scattered flag (for groups) */
 #define SCATTER do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
@@ -255,30 +233,6 @@ void mt_srandom (unsigned long x);
 #define rand0max(max) ( ((double)random()) / (((double)MC_RAND_MAX+1)/(max)) )
 #define randminmax(min,max) ( rand0max((max)-(min)) + (min) )
 
-#define PROP_X0 \
-  do { \
-    double mc_dt; \
-    if(mcnlvx == 0) ABSORB; \
-    mc_dt = -mcnlx/mcnlvx; \
-    if(mc_dt < 0) ABSORB; \
-    mcnly += mcnlvy*mc_dt; \
-    mcnlz += mcnlvz*mc_dt; \
-    mcnlt += mc_dt; \
-    mcnlx = 0; \
-  } while(0)
-
-#define PROP_Y0 \
-  do { \
-    double mc_dt; \
-    if(mcnlvy == 0) ABSORB; \
-    mc_dt = -mcnly/mcnlvy; \
-    if(mc_dt < 0) ABSORB; \
-    mcnlx += mcnlvx*mc_dt; \
-    mcnlz += mcnlvz*mc_dt; \
-    mcnlt += mc_dt; \
-    mcnly = 0; \
-  } while(0)
-
 #define PROP_Z0 \
   do { \
     double mc_dt; \
@@ -372,45 +326,305 @@ void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);
 Coords rot_apply(Rotation t, Coords a);
 void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-	       double *vx, double *vy, double *vz, double *time,
-	       double *s1, double *s2);
+    double *vx, double *vy, double *vz, double *time,
+    double *s1, double *s2);
 void mccoordschange_polarisation(Rotation t,
-				 double *sx, double *sy, double *sz);
+    double *sx, double *sy, double *sz);
 double mcestimate_error(double N, double p1, double p2);
-void mcsiminfo_out(char *format, ...);
 void mcdetector_out(char *cname, double p0, double p1, double p2,
-		    char *filename);
+    char *filename);
 void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *cname);
 void mcdetector_out_1D(char *t, char *xl, char *yl,
-		       char *xvar, double x1, double x2, int n,
-		       double *p0, double *p1, double *p2, char *f, char *c);
+    char *xvar, double x1, double x2, int n,
+    double *p0, double *p1, double *p2, char *f, char *c);
 void mcdetector_out_2D(char *t, char *xl, char *yl, double x1, double x2,
-		       double y1,double y2,int m, int n,
-		       double *p0, double *p1, double *p2, char *f, char *c);
+    double y1,double y2,int m, int n,
+    double *p0, double *p1, double *p2, char *f, char *c);
 void mcreadparams(void);
 
 void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 		double t, double sx, double sy, double sz, double p);
 void mcgenstate(void);
 double randnorm(void);
-void normal_vec(double *nx, double *ny, double *nz, double x, double y, double z);
+void normal_vec(double *nx, double *ny, double *nz, 
+    double x, double y, double z);
 int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
-		  double vx, double vy, double vz, double dx, double dy, double dz);
+    double vx, double vy, double vz, double dx, double dy, double dz);
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
-		       double vx, double vy, double vz, double r, double h);
+    double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
 		 double vx, double vy, double vz, double r);
 /* ADD: E. Farhi, Aug 6th, 2001 plane_intersect_Gfast */   
 int plane_intersect_Gfast(double *Idt, 
-                  double A,  double B,  double C);
-void randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
-			   double xi, double yi, double zi, double radius);
+    double A,  double B,  double C);
+void randvec_target_circle(double *xo, double *yo, double *zo, 
+    double *solid_angle, double xi, double yi, double zi, double radius);
+void randvec_target_rect(double *xo, double *yo, double *zo, 
+    double *solid_angle,
+	       double xi, double yi, double zi, double height, double width);        
 void extend_list(int count, void **list, int *size, size_t elemsize);
 
 void mcset_ncount(double count);
 double mcget_ncount(void);
 double mcget_run_num(void);
 int mcstas_main(int argc, char *argv[]);
+
+/* file i/o definitions and function prototypes */
+
+struct mcformats_struct {
+  char Name[256];
+  char Extension[32];
+  char Header[2048];
+  char Footer[2048];
+  char BeginSection[1024];
+  char EndSection[1024];
+  char AssignTag[256];
+  char BeginData[1024];
+  char BeginErrors[1024];
+  char BeginNcount[1024];
+  char EndData[1024];
+  char EndErrors[1024];
+  char EndNcount[1024];
+  };
+  
+#define mcNUMFORMATS 6
+/* in order to be fully portable, the format specifiers must mention each
+ * fprintf parameters. In case we do not want to use some of them, we must
+ * set the precision to 0.
+ * ex: fprintf(f, "printed:%1$s %3$s not printed: %2$.0s\n", "1", "2", "3");
+ * such are the joys of ANSI C99 and Single Unix Specification ! 
+ * This 0-precision for unused data is automatically checked in mccheck_format
+ */ 
+  
+struct mcformats_struct mcformats[mcNUMFORMATS] = {
+  "McStas", "sim",
+    "%1$sFormat: %5$s file\n"
+      "%1$sURL:    http://neutron.risoe.dk/\n"
+      "%1$sEditor: %8$s on %9$s\n"
+      "%1$sCreator:%10$s (%2$s) simulation (McStas " MCSTAS_VERSION ")\n"
+      "%1$sDate:   Simulation started (%7$li) %6$s\n"
+      "%1$sFile:   %3$s" MC_PATHSEP_S "%4$s\n",
+    "%1$sEndDate:%6$s\n",
+    "%1$sbegin %2$s\n",
+    "%1$send %2$s\n",
+    "%1$s%3$s: %4$s\n",
+    "", 
+    "%1$sErrors [%2$s/%3$s]: \n",
+    "%1$sNcount [%2$s/%3$s]: \n",
+    "", "", "",
+  "XML", "xml",
+    "<?xml version=\"1.0\" ?>\n<!--\n"
+      "URL:    http://www.neutron.anl.gov/nexus/xml/NXgroup.xml\n"
+      "Editor: %8$s on %9$s\n"
+      "Creator:%10$s (%2$s) McStas " MCSTAS_VERSION " [neutron.risoe.dk].\n"
+      "Date:   Simulation started (%7$li) %6$s\n"
+      "File:   %3$s" MC_PATHSEP_S "%4$s\n-->\n"
+      "<NX%11$s file_name=\"%3$s" MC_PATHSEP_S "%4$s\" file_time=\"%6$s\""
+        " McStas_version=\"" MCSTAS_VERSION "\">\n",
+    "</NX%11$s>\n<!-- EndDate:%6$s -->\n",
+    "%1$s<NX%2$s name=\"%3$s\">\n",
+    "%1$s</NX%2$s>\n",
+    "%1$s<%3$s>%4$s</%3$s>\n",
+    "%1$s<%7$s long_name=\"%6$s\" axis=\"1\" primary=\"1\" min=\"%15$g\""
+        " max=\"%16$g\" dims=\"%4$li\" range=\"1\"></%7$s>\n"
+      "%1$s<%9$s long_name=\"%8$s\" axis=\"2\" primary=\"1\" min=\"%17$g\""
+        " max=\"%18$g\" dims=\"%5$li\" range=\"1\"></%9$s>\n"
+      "%1$s<%11$s long_name=\"%10$s\" axis=\"3\" primary=\"1\" min=\"%19$g\""
+        " max=\"%20$g\" dims=\"1\" range=\"1\"></%11$s>\n"
+      "%1$s<data long_name=\"%3$s\" signal=\"1\"  axis=\"[%7$s,%9$s]\" file_name=\"%21$s\">",
+    "%1$s<errors>", "%1$s<monitor>",
+    "%1$s</data>\n", "%1$s</errors>\n", "%1$s</monitor>\n",
+  "HTML", "html",
+    "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD %5$s//EN\"\n"
+      "\"http://www.w3.org/TR/html4/strict.dtd\">\n"
+      "<HTML><HEAD><META name=\"Author\" content=\"%8$s on %9$s\">\n"
+      "<META name=\"Creator\" content=\"%2$s McStas " MCSTAS_VERSION " [neutron.risoe.dk] simulation\">\n"
+      "<META name=\"Date\" content=\"%6$s\">\n"
+      "<TITLE>[McStas %2$s]%3$s" MC_PATHSEP_S "%4$s</TITLE></HEAD>\n"
+      "<BODY><h1><a name=\"%11$s\">"
+        "McStas simulation %10$s (%2$s): %3$s" MC_PATHSEP_S "%4$s</a></h1><br>\n"
+        "This simulation report was automatically created by"
+        " <a href=\"http://neutron.risoe.dk/\"><i>McStas " MCSTAS_VERSION "</i></a><br>\n"
+        "<pre>User:    %8$s on %9$s<br>\n"
+        "%1$sCreator: %10$s (<a href=\"%2$s\">%2$s</a>) McStas simulation<br>\n"
+        "%1$sDate:    (%7$li) %6$s<br></pre>\n",
+    "<b>EndDate: </b>(%7$li) %6$s<br></BODY></HTML>\n",
+    "%1$s<h%7$li><a name=\"%3$s\">%2$s %3$s</a></h%7$li> "
+      "[child of <a href=\"#%5$s\">%5$s</a>]<br>\n"
+      "%1$sAssociated <a href=\"%3$s\">data file %3$s</a><br>\n"
+        "%1$sAssociated <a href=\"%3$s.png\">%2$s image %3$s.png<br>\n"
+        "%1$s<img src=\"%3$s.png\" alt=\"%2$s %3$s image (when available)\" width=100></a><br>\n",
+    "[end of <a href=\"#%3$s\">%2$s %3$s</a>]<br>\n",
+    "%1$s<b>%3$s: </b>%4$s<br>\n",
+    "<APPLET Codebase=\"V3D\" Code=\"V3D.class\" archive=\"V3D.jar\" Width=\"300\" Height=\"70\">\n"
+      "%1$s<PARAM Name=\"Action\"   Value=\"Exec\">\n"
+ 	    "%1$s<PARAM Name=\"File\"     Value=\"%21$s\">\n"
+	    "%1$s<PARAM Name=\"Format\"   Value=\"ascii\">\n"
+	    "%1$s<PARAM Name=\"Type\"     Value=\"4\">\n"
+	    "%1$s<PARAM Name=\"Title\"    Value=\"%3$s\">\n"
+	    "%1$s<PARAM Name=\"TitleX\"   Value=\"%6$s\">\n"
+	    "%1$s<PARAM Name=\"TitleY\"   Value=\"%8$s\">\n"
+	    "%1$s<PARAM Name=\"SubTitle\" Value=\"%12$s %13$s %14$s\">\n"
+	    "%1$s<PARAM Name=\"NbX\"      Value=\"%4$li\">\n"
+	    "%1$s<PARAM Name=\"X0\"       Value=\"%15$g\">\n"
+	    "%1$s<PARAM Name=\"X1\"       Value=\"%15$g\">\n"
+	    "%1$s<PARAM Name=\"Xn\"       Value=\"%16$g\">\n"
+	    "%1$s<PARAM Name=\"NbY\"      Value=\"%5$li\">\n"
+	    "%1$s<PARAM Name=\"Y0\"       Value=\"%17$g\">\n"
+	    "%1$s<PARAM Name=\"Y1\"       Value=\"%17$g\">\n"
+	    "%1$s<PARAM Name=\"Yn\"       Value=\"%18$g\">\n"
+      "%1$s</APPLET>DATA<--%19$.0g%20$.0g--><br>\n",
+      "%1$sERRORS<br>\n","%1$sNCOUNT<br>\n",
+      "%1$sEnd of DATA<br>\n", "%1$sEnd of ERRORS<br>\n", "%1$sEnd of NCOUNT<br>\n", 
+  "Matlab", "m",
+    "function %11$s = get_%11$s(p)\n"
+      "%% %5$s function issued from McStas on %6$s\n"
+      "%% McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
+      "%% import data using s=get_%11$s;\n"
+      "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
+      "%11$s.Format ='%5$s';\n"
+      "%11$s.URL    ='http://neutron.risoe.dk';\n"
+      "%11$s.Editor ='%8$s on %9$s';\n"
+      "%11$s.Creator='%10$s (%2$s) McStas " MCSTAS_VERSION " simulation';\n"
+      "%11$s.Date   =%7$li; %% for datestr\n"
+      "%11$s.File   ='%3$s" MC_PATHSEP_S "%4$s';\n",
+    "%11$s.EndDate=%7$li; %% for datestr\n"
+      "function d=mcload_inline(d)\n"
+      "%% local inline function to load data\n"
+      "copyfile(d.filename,[d.func,'.m']);p=d.parent;"
+      "eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);\n"
+      "function d=mcplot_inline(d,p)\n"
+      "%% local inline function to plot data\n"
+      "if ~p, return; end;if isempty(d.data) & isempty(findstr(d.type,'0d')), d=mcload_inline(d); end\n"
+      "eval(['l=[',d.xylimits,'];']); S=size(d.data);\n"
+      "t1=['[',d.parent,'] ',d.filename,': ',d.title];t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);\n"
+      "disp(t);\n"
+      "if ~isempty(findstr(d.type,'0d')), return;\n"
+      "elseif ~isempty(findstr(d.type,'2d'))\n"
+      "x=linspace(l(1),l(2),S(1)); y=linspace(l(3),l(4),S(2));\n"
+      "figure; surface(x,y,d.data);\n"
+      "else\nfigure; x=linspace(l(1),l(2),max(S));\nplot(x,d.data);end\n"
+      "xlabel(d.xlabel); ylabel(d.ylabel); title(t);"
+      "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n",
+    "%% Section %2$s [%3$s] (level %7$li)\n"
+      "%4$s.class = '%2$s';",
+    "%6$s.%4$s = %4$s; clear %4$s;\n",
+    "%1$s%2$s.%3$s = '%4$s';\n",
+    "%1$s%2$s.func='%2$s';\n%1$s%2$s.data = [ ",
+    "%1$s%2$s.errors = [ ",
+    "%1$s%2$s.ncount = [ ",
+    " ]; %% end of data\nmcplot_inline(%2$s,p);\n",
+    " ]; %% end of errors\n",
+    " ]; %% end of ncount\n",
+  "Scilab", "sci",
+    "function %11$s = get_%11$s(p)\n"
+      "// %5$s function issued from McStas on %6$s\n"
+      "// McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
+      "// import data using s=get_%11$s();\nmode(-1); //silent execution\n"
+      "if argn(2) > 0, p=1; else p=0; end\n"
+      "%11$s = struct();\n"
+      "%11$s.Format ='%5$s';\n"
+      "%11$s.URL    ='http://neutron.risoe.dk';\n"
+      "%11$s.Editor ='%8$s on %9$s';\n"
+      "%11$s.Creator='%10$s (%2$s) McStas " MCSTAS_VERSION " simulation';\n"
+      "%11$s.Date   =%7$li; // for getdate\n"
+      "%11$s.filename   ='%3$s" MC_PATHSEP_S "%4$s';\n",
+    "%11$s.EndDate=%7$li; // for getdate\nendfunction\n"
+    "function d=mcload_inline(d)\n"
+      "// local inline func to load data\n"
+      "exec(d.filename,-1);p=d.parent;"
+      "if ~execstr('d2='+d.func+'();','errcatch'),d2=d; d.parent=p;end\nendfunction\n"
+      "function d=mcplot_inline(d,p)\n"
+      "// local inline func to plot data\n"
+      "if ~p, return; end;if ~length(d.data) & ~length(strindex(d.type,'0d')), d=mcload_inline(d); end\n"
+      "execstr(['l=[',d.xylimits,'];']); S=size(d.data);\n"
+      "t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];\n"
+      "mprintf('%%s\\n',t(:));\n"
+      "if length(strindex(d.type,'0d')),return;\n"
+      "else\nw=winsid();if length(w),w=w($)+1; else w=0; end\n"
+      "xbasr(w); xset('window',w);\n"
+      "if length(strindex(d.type,'2d'))\n"
+      "x=linspace(l(1),l(2),S(1)); y=linspace(l(3),l(4),S(2));\n"
+      "z=d.data;f=round(log10(max(abs(z))));fx=max(abs(x)); fy = max(abs(y));\n"
+      "if fx>0,fx=log10(fx); else fx=[]; end\n"
+      "if fy>0,fy=log10(fy); else fy=[]; end\n"
+      "if length(fx),if length(fy),f=f-round((fx+fy)/2); else f=f-round(fx); end\n"
+      "end\nz=z/10^f;if f,t1=t1+' [*10^'+string(f)+']';end\n"
+      "xset('colormap',hotcolormap(64));plot3d1(x,y,z);\n"
+      "else\nx=linspace(l(1),l(2),max(S));\nplot2d(x,d.data);end\nend\n"
+      "xtitle(t,d.xlabel,d.ylabel); xname(t1);endfunction\n"
+    "%11$s=get_%11$s();",
+    "// Section %2$s [%3$s] (level %7$li)\n"
+      "%1$s%4$s = struct(); %4$s.class = '%2$s';",
+    "%1$s%6$s.%4$s = 0; %6$s.%4$s = %4$s; clear %4$s;\n",
+    "%1$s%2$s.%3$s = '%4$s';\n",
+    "%1$s%2$s.func='get_%2$s';\n%1$s%2$s.data = [ ",
+    "%1$s%2$s.errors = [ ",
+    "%1$s%2$s.ncount = [ ",
+    " ]; // end of data\nmcplot_inline(%2$s,p);\n",
+    " ]; // end of errors\n",
+    " ]; // end of ncount\n",
+  "IDL", "pro",
+    "pro stv, S, T, V\n"
+      ";** Procedure that operates S.T = V\n"
+      "  sv =size(V)\n"
+      "  T=strupcase(T)\n"
+      "  TL=strupcase(tag_names(S))\n"
+      "  id  =where(TL eq T)\n"
+      "  sz =[0,0,0]\n"
+      "  vd = N_ELEMENTS(sv) - 2\n"
+      "  type = sv[vd]\n"
+      "  if id(0) ge 0 then d=execute('sz=SIZE(S.'+T+')')\n"
+      "  if (sz(sz(0)+1) ne sv(sv(0)+1)) or (sz(0) ne sv(0)) $\n"
+      "      or (sz(sz(0)+2) ne sv(sv(0)+2)) $\n"
+      "      or type eq 8 then begin\n"
+      "    ES = ''\n"
+      "    for k=0,n_elements(TL)-1 do begin\n"
+      "      case TL(k) of\n"
+      "        T:\n"
+      "        else: ES =ES+','+TL(k)+':S.'+TL(k)\n"
+      "      endcase\n"
+      "    endfor\n"
+      "    d=execute('S={'+T+':V'+ ES +'}')\n"
+      "   endif else d=execute('S.' +T+'=V')\n"
+      "end; PRO stv:{s.t=v}\n"
+      "function get_%11$s\n"
+      "; %5$s function issued from McStas on %6$s\n"
+      "; McStas simulation %2$s: %3$s" MC_PATHSEP_S "%4$s\n"
+      "%11$s={Format:'%5$s',URL:'http://neutron.risoe.dk',"
+      "Editor:'%8$s on %9$s',$\n"
+      "Creator:'%10$s (%2$s) McStas " MCSTAS_VERSION " simulation',$\n"
+      "Date:%7$li,"
+      "File:'%3$s" MC_PATHSEP_S "%4$s'}\n",
+    "stv,%11$s,'EndDate',%7$li ; for systime\nreturn, %11$s\nend\n",
+    "; Section %2$s [%3$s] (level %7$li)\n"
+      "%1$s%4$s={class:'%2$s'}\n",
+    "%1$sstv,%6$s,'%4$s',%4$s\n",
+    "%1$sstv,%2$s,'%3$s','%4$s'\n",
+    "%1$sdata=[ ",
+    "%1$serrors=[ ",
+    "%1$sncount=[ ",
+    " ]\n%1$sstv,%2$s,'data',reform(data,%4$li,%5$li,/over)\n",
+    " ]\n%1$sstv,%2$s,'errors',reform(errors,%4$li,%5$li,/over)\n",
+    " ]\n%1$sstv,%2$s,'ncount',reform(ncount,%4$li,%5$li,/over)\n\n"
+    };
+    
+struct mcformats_struct mcformat;
+
+/* function prototypes */
+void mcuse_format(char *format);
+void mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);
+void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c);
+void mcdetector_out_1D(char *t, char *xl, char *yl,
+		  char *xvar, double x1, double x2, int n,
+		  double *p0, double *p1, double *p2, char *f, char *c);
+void mcdetector_out_2D(char *t, char *xl, char *yl,
+		  double x1, double x2, double y1, double y2, int m,
+		  int n, double *p0, double *p1, double *p2, char *f, char *c);
+void mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
+      char *xvar, char *yvar, char *zvar, 
+		  double x1, double x2, double y1, double y2, double z1, double z2, int m,
+		  int n, int p, double *p0, double *p1, double *p2, char *f, char *c);  
 
 
 #ifndef FLT_MAX

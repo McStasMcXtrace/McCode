@@ -22,7 +22,7 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.h,v 1.4 2003-01-21 08:33:59 pkwi Exp $
+* $Id: vitess-lib.h,v 1.5 2003-01-21 08:38:42 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.2 2002/08/28 11:39:00 ef
@@ -33,7 +33,7 @@
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
-#define VITESS_LIB_H "$Revision: 1.4 $"
+#define VITESS_LIB_H "$Revision: 1.5 $"
 
 #include <math.h>
 #include <stdlib.h>
