@@ -21,56 +21,64 @@ TRACE
   double solid_angle;           /* Solid angle of target as seen from scattering point */
   double aim_x, aim_y, aim_z;   /* Position of target relative to scattering point */
 
-  if(cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
-  {
+  if(radius_o < 0.0)
+  {				/* Flat sample */
+    PROP_Z0;
+    if(x <= -0.5*radius_i || x >= 0.5*radius_i ||
+       y <= -0.5*h || y >= 0.5*h)
+      ABSORB;
+    t0 = 0;
+    t1 = t2 = t3 = (-radius_o)/vz;
+  }
+  else
+  {				/* Hollow cylinder sample */
+    if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
+      ABSORB;
     if(t0 < 0)
       ABSORB;
     /* Neutron enters at t=t0. */
     if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
       t1 = t2 = t3;
+  }
+  dt0 = t1-t0;                /* Time in sample, ingoing */
+  dt1 = t2-t1;                /* Time in hole */
+  dt2 = t3-t2;                /* Time in sample, outgoing */
+  v = sqrt(vx*vx + vy*vy + vz*vz);
+  l_full = v * (dt0 + dt2);   /* Length of full path through sample */
+  p *= l_full/(2*radius_o);	/* Scattering probability */
+  dt = rand01()*(dt0+dt2);    /* Time of scattering (relative to t0) */
+  if (dt > dt0)
+    dt += dt1;
 
-    dt0 = t1-t0;                /* Time in sample, ingoing */
-    dt1 = t2-t1;                /* Time in hole */
-    dt2 = t3-t2;                /* Time in sample, outgoing */
-    v = sqrt(vx*vx + vy*vy + vz*vz);
-    l_full = v * (dt0 + dt2);   /* Length of full path through sample */
-    p *= l_full/(2*radius_o);	/* Scattering probability */
-    dt = rand01()*(dt0+dt2);    /* Time of scattering (relative to t0) */
-    if (dt > dt0)
-      dt += dt1;
+  PROP_DT(dt+t0);             /* Point of scattering */
 
-    PROP_DT(dt+t0);             /* Point of scattering */
+  /* Store initial neutron state. */
+  if(p == 0) ABSORB;
+  res_pi = p;
+  res_ki_x = V2K*vx;
+  res_ki_y = V2K*vy;
+  res_ki_z = V2K*vz;
+  res_x = x;
+  res_y = y;
+  res_z = z;
 
-    /* Store initial neutron state. */
-    if(p == 0) ABSORB;
-    res_pi = p;
-    res_ki_x = V2K*vx;
-    res_ki_y = V2K*vy;
-    res_ki_z = V2K*vz;
-    res_x = x;
-    res_y = y;
-    res_z = z;
-
-    aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
-    aim_y = target_y-y;
-    aim_z = target_z-z;
-    randvec_target_sphere(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
-    NORM(vx, vy, vz);
-    E=E0+dE*randpm1();
-    v=sqrt(E)*SE2V;
-    vx *= v;
-    vy *= v;
-    vz *= v;
+  aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
+  aim_y = target_y-y;
+  aim_z = target_z-z;
+  randvec_target_sphere(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+  NORM(vx, vy, vz);
+  E=E0+dE*randpm1();
+  v=sqrt(E)*SE2V;
+  vx *= v;
+  vy *= v;
+  vz *= v;
 
     /* Store final neutron state. */
-    res_kf_x = V2K*vx;
-    res_kf_y = V2K*vy;
-    res_kf_z = V2K*vz;
+  res_kf_x = V2K*vx;
+  res_kf_y = V2K*vy;
+  res_kf_z = V2K*vz;
 
-    p = 1;
-  }
-  else
-    ABSORB;
+  p = 1;
 %}
 
 END
