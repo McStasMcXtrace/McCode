@@ -88,6 +88,7 @@ sub simulation_dialog {
 	    $w->grid(-row => $row, -column => $col, -sticky => 'e');
 	    $col++;
 	    $si{'Params'}{$p} = "" unless defined($si{'Params'}{$p});
+      if ($si{'Params'}{$p} eq "" && defined($ii->{'Params'}{$p})) { $si{'Params'}{$p} = $ii->{'Params'}{$p}; }
 	    $w = $parm_frame->Entry(-relief => 'sunken',
 				    -width=>10,
 				    -textvariable => \$si{'Params'}{$p},

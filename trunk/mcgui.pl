@@ -762,9 +762,7 @@ sub menu_run_simulation {
 	  push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
   }
 	for (@{$out_info->{'Parameters'}}) {
-      if ($newsi->{'Params'}{$_} ne '') {
-	      push @command, "$_=$newsi->{'Params'}{$_}";
-      }
+      push @command, "$_=$newsi->{'Params'}{$_}";
 	}
 	my $inittext = "Running simulation '$out_name' ...\n" .
 	    join(" ", @command) . "\n";
