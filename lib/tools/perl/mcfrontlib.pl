@@ -94,8 +94,25 @@ sub read_instrument_info {
     while(<$h>) {
 	if(/^\s*Name:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*$/i) {
 	    $inf->{'Name'} = $1;
-	} elsif(/^\s*Parameters:\s*([a-zA-ZæøåÆØÅ_0-9 \t]*?)\s*$/i) {
-	    $inf->{'Parameters'} = [split ' ',$1];
+	} elsif(/^\s*Parameters:\s*([a-zA-ZæøåÆØÅ_0-9 \t()]*?)\s*$/i) {
+	    my $full = $1;
+	    my $parms = [ ];
+	    my $parmtypes = { };
+	    my $p;
+	    for $p (split ' ', $full) {
+		if($p =~ /^([a-zA-ZæøåÆØÅ_0-9+]+)\(([a-z]+)\)$/) {
+		    push @$parms, $1;
+		    $parmtypes->{$1} = $2;
+		} elsif($p =~ /^([a-zA-ZæøåÆØÅ_0-9+]+)$/) {
+		    # Backward compatibility: no type specifier.
+		    push @$parms, $1;
+		    $parmtypes->{$1} = 'double'; # Default is double
+		} else {
+		    die "Invalid parameter specification:\n'$p'";
+		}
+	    }
+	    $inf->{'Parameters'} = $parms;
+	    $inf->{'Parameter-types'} = $parmtypes;
 	} elsif(/^\s*Instrument-source:\s*(.*?)\s*$/i) {
 	    $inf->{'Instrument-source'} = strip_quote($1);
 	} elsif(/^\s*Trace-enabled:\s*(no|yes)\s*$/i) {
@@ -123,6 +140,26 @@ sub get_sim_info {
     return $inf;
 }
 
+# Unquote a C-style quoted string. Limited to the four quote
+# combinations '\n', '\r', '\"', and '\\'.
+# The basic technique is to do a simple substitution, but it is
+# complicated by the possibility of having multiple backslashes in a
+# row (ie '\\\n'). To solve this problem, we first change all '\\'
+# sequences to '\!'.
+sub str_unquote {
+    my ($val) = @_;
+    # First replace any initial '\\' with '\!'.
+    $val =~ s/^\\\\/\\!/;
+    # Now replace any other '\\' with '\!'.
+    while($val =~ s/([^\\])\\\\/$1\\!/g) {}
+    # Finally replace all quote-combinations with their intended character.
+    $val =~ s/\\n/\n/g;
+    $val =~ s/\\r/\r/g;
+    $val =~ s/\\"/"/g;
+    $val =~ s/\\!/\\/g;
+    return $val;
+}
+
 sub read_simulation_info {
     my ($handle) = @_;
     my $inf = { Params => {} };
@@ -137,6 +174,9 @@ sub read_simulation_info {
 	    $inf->{'Trace'} = get_yes_no($1);
 	} elsif(/^\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*([-+0-9.eE]+)\s*$/i){
 	    $inf->{'Params'}{$1} = $2;
+	} elsif(/^\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*"(.*)"\s*$/i){
+	    my ($param, $val) = ($1, $2);
+	    $inf->{'Params'}{$param} = str_unquote($val);
 	} elsif(/^\s*end\s+simulation\s*$/i) {
 	    last;
 	} else {

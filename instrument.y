@@ -46,6 +46,8 @@ int mc_yyoverflow();
   int linenum;			/* Starting line number for code block. */
   Coords_exp coords;		/* Coordinates for location or rotation. */
   List formals;			/* List of formal parameters. */
+  List iformals;		/* List of formal instrument parameters. */
+  struct instr_formal *iformal;	/* Single formal instrument parameter. */
   Symtab actuals;		/* Values for formal parameters. */
   char **polform;		/* Polarisation state formal parameters */
   struct {List def, set, out, state;
@@ -97,6 +99,8 @@ int mc_yyoverflow();
 %type <exp> exp
 %type <actuals> actuallist actuals actuals1
 %type <formals> formallist formals formals1 def_par set_par out_par state_par
+%type <iformals> instrpar_list instr_formals instr_formals1
+%type <iformal> instr_formal
 %type <polform> polarisation_par
 %type <parms> parameters
 %type <place> place
@@ -188,7 +192,7 @@ polarisation_par: /* empty */
 		  }
 ;
 
-instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist
+instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
 			{ instrument_definition->formals = $4; }
 		  declare initialize instr_trace finally "END"
 		  {
@@ -199,11 +203,82 @@ instrument:	  "DEFINE" "INSTRUMENT" TOK_ID formallist
 		    instrument_definition->compmap = comp_instances;
 		    instrument_definition->complist = comp_instances_list;
 
-		    /* Check instrument parameterss for uniqueness */
+		    /* Check instrument parameters for uniqueness */
 		    check_instrument_formals(instrument_definition->formals,
 					     instrument_definition->name);
 		  }
 ;
+
+/* The instrument parameters may be either double (for numeric input),
+   int (for integer-only), or char * (for strings). */
+instrpar_list:	  '(' instr_formals ')'
+		  {
+		    $$ = $2;
+		  }
+;
+
+instr_formals:	  /* empty */
+		  {
+		    $$ = list_create();
+		  }
+		| instr_formals1
+		  {
+		    $$ = $1;
+		  }
+;
+
+instr_formals1:	  instr_formal
+		  {
+		    $$ = list_create();
+		    list_add($$, $1);
+		  }
+		| instr_formals1 ',' instr_formal
+		  {
+		    list_add($1, $3);
+		    $$ = $1;
+		  }
+;
+
+instr_formal:	  TOK_ID TOK_ID
+		  {
+		    struct instr_formal *formal;
+		    palloc(formal);
+		    if(!strcmp($1, "double")) {
+		      formal->type = instr_type_double;
+		    } else if(!strcmp($1, "int")) {
+		      formal->type = instr_type_int;
+		    } else if(!strcmp($1, "string")) {
+		      formal->type = instr_type_string;
+		    } else {
+		      print_error("Illegal type for instrument "
+				  "parameter %s.\n", $2);
+		      formal->type = instr_type_double;
+		    }
+		    formal->id = $2;
+		    $$ = formal;
+		  }
+		| TOK_ID '*' TOK_ID
+		  {
+		    struct instr_formal *formal;
+		    palloc(formal);
+		    if(!strcmp($1, "char")) {
+		      formal->type = instr_type_string;
+		    } else {
+		      print_error("Illegal type for instrument "
+				  "parameter %s.\n", $3);
+		      formal->type = instr_type_double;
+		    }
+		    formal->id = $3;
+		    $$ = formal;
+		  }
+		| TOK_ID	/* Default type is "double" */
+		  {
+		    struct instr_formal *formal;
+		    palloc(formal);
+		    formal->type = instr_type_double;
+		    formal->id = $1;
+		    $$ = formal;
+		  }
 
 declare:	  /* empty */
 		  {
@@ -443,14 +518,14 @@ coords:		  '(' exp ',' exp ',' exp ')'
 exp:		  TOK_ID
 		  {
 		    List_handle liter;
-		    char *formal;
+		    struct instr_formal *formal;
 		    /* Check if this is an instrument parameter or not. */
 		    /* ToDo: This will be inefficient if the number of
                        instrument parameters is really huge. */
 		    liter = list_iterate(instrument_definition->formals);
 		    while(formal = list_next(liter))
 		    {
-		      if(!strcasecmp($1, formal))
+		      if(!strcmp($1, formal->id))
 		      {
 			/* It was an instrument parameter */
 			$$ = exp_id($1);
@@ -802,7 +877,7 @@ void
 check_instrument_formals(List formallist, char *instrname)
 {
   Symtab formals;
-  char *formal;
+  struct instr_formal *formal;
   struct Symtab_entry *entry;
   List_handle liter;
 
@@ -813,12 +888,12 @@ check_instrument_formals(List formallist, char *instrname)
   liter = list_iterate(formallist);
   while(formal = list_next(liter))
   {
-    entry = symtab_lookup(formals, formal);
+    entry = symtab_lookup(formals, formal->id);
     if(entry != NULL)
       print_error("Instrument parameter name %s is used multiple times "
-		  "in instrument %s\n", formal, instrname);
+		  "in instrument %s\n", formal->id, instrname);
     else
-      symtab_add(formals, formal, NULL);
+      symtab_add(formals, formal->id, NULL);
   }
   list_iterate_end(liter);
   symtab_free(formals, NULL);
