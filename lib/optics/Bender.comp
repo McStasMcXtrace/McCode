@@ -14,13 +14,13 @@
 * Release: McStas 1.6
 * Version: 1.0
 *
-* Models a curved neutron guide. 
+* Models a curved neutron guide.
 *
 * %Description
-* Models a curved neutron guide.The entrance lies in the X-Y plane, centered 
-* on the Z axis. The neutrons will also leave the bender in the X-Y plane at 
-* the z-value l=r*Win, so you don't have to calculate the real exit coordinates 
-* and you do not need a new arm. The bender is bent to the negative X axis; 
+* Models a curved neutron guide.The entrance lies in the X-Y plane, centered
+* on the Z axis. The neutrons will also leave the bender in the X-Y plane at
+* the z-value l=r*Win, so you don't have to calculate the real exit coordinates
+* and you do not need a new arm. The bender is bent to the negative X axis;
 * it behaves like a parallel guide in the Y axis.
 * You may either enter the deviation angle 'Win' or the length 'l'.
 * The bender is shown straight, even if the implemented model is curved.
@@ -32,7 +32,10 @@
 *   R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003)
 *
 * See also <a href="http://neutron.risoe.dk/mcstas/support/misc/Bender.html">Additional note</a> from <a href="mailto:philipp.bernhardt@krist.uni-erlangen.de">Philipp Bernhardt</a>.
-* 
+*
+* %BUGS
+* Some users have reported strange behaviours with this component.
+* This component does not work with gravitation on.
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -41,7 +44,7 @@
 * h:       (m)          Height at the bender entry and exit
 * r:       (m)          Radius of the bender
 * d:       (m)          Thickness of the partition, which separates the channels
-* Win:     (rad)        Angle of the deflection of the whole bender 
+* Win:     (rad)        Angle of the deflection of the whole bender
 * k:       (1)          Number of channels inside the bender
 * R0a:     (1)          Low-angle reflectivity at the bender <b>concave</b> side
 * Qca:     (AA-1)       Critical scattering vector
@@ -64,9 +67,9 @@
 *
 * %End
 *******************************************************************************/
- 
+
 DEFINE COMPONENT Bender
-DEFINITION PARAMETERS 
+DEFINITION PARAMETERS
 (w,h,r,d=0.001,Win=0.04,k=1,R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003,l=0)
 
 SETTING PARAMETERS ()
@@ -81,21 +84,21 @@ SHARE
       if (x>=0)
          return 1.0;
       else
-         return -1.0; } 
+         return -1.0; }
 #endif
  %}
 
 DECLARE
  %{
-      double bk, mWin;  
+      double bk, mWin;
  %}
 
 INITIALIZE
  %{
-      if (r <0) 
+      if (r <0)
       { fprintf(stderr,"Bender: error: %s: to bend in the other direction\n", NAME_CURRENT_COMP);
         fprintf(stderr,"        rotate comp on z-axis by 180 deg.\n"); exit(-1); }
-      
+
       if (k*d > w)
       { fprintf(stderr,"Bender: error: %s has (k*d > w).\n", NAME_CURRENT_COMP);
         exit(-1); }
@@ -105,7 +108,7 @@ INITIALIZE
       /* width of one channel + thickness d of partition */
       mWin = Win;
       if (l!= 0 && r != 0) mWin = (double)l/(double)r;
-      bk=(w+d)/k; 
+      bk=(w+d)/k;
  %}
 
 TRACE
@@ -117,56 +120,56 @@ TRACE
 
     /* does the neutron hit the bender at the entrance? */
     PROP_Z0;
-    if ((fabs(x)<w/2) && (fabs(y)<h/2))    
+    if ((fabs(x)<w/2) && (fabs(y)<h/2))
     {
       /*** reflections in the XZ-plane ***/
 
-      /* distance between neutron and concave side of the channel at the entrance */ 
-      dru=floor((w/2-x)/bk)*bk;          
-      ab=w/2.0-x-dru;                        
+      /* distance between neutron and concave side of the channel at the entrance */
+      dru=floor((w/2-x)/bk)*bk;
+      ab=w/2.0-x-dru;
 
       /* radius of the channel */
-      R=r-dru;                            
+      R=r-dru;
 
       /* does the neutron hit the partition at the entrance? */
-      if (ab<bk-d)  
+      if (ab<bk-d)
       {
         /* velocity in the XZ-plane */
         vpl=sqrt(vx*vx+vz*vz);
 
         /* divergence of the neutron at the entrance */
-        einmWin=atan(vx/vz); 	
+        einmWin=atan(vx/vz);
 
         /* maximal distance between neutron and concave side of the channel */
-        dab=R-cos(einmWin)*(R-ab);       
+        dab=R-cos(einmWin)*(R-ab);
 
-        /* reflection angle at the concave side */ 
-        aeumWin=acos((R-dab)/R); 
+        /* reflection angle at the concave side */
+        aeumWin=acos((R-dab)/R);
 
         /* reflection coefficient at the concave side */
         arga=0.0;
-        Q=2.0*V2K*vpl*sin(aeumWin); 
-        if (Q<=Qca) 
+        Q=2.0*V2K*vpl*sin(aeumWin);
+        if (Q<=Qca)
            aeuref=R0a;
         else {
            arga=(Q-ma*Qca)/Wa;
-           aeuref=0.5*R0a*(1.0-tanh(arga))*(1.0-alphaa*(Q-Qca)); }  
+           aeuref=0.5*R0a*(1.0-tanh(arga))*(1.0-alphaa*(Q-Qca)); }
 
         /* does the neutron hit the convex side of the channel? */
         innmWin=0.0;
         innref=1.0;
         argi=0.0;
-        if (dab>bk-d) 
-        {              
-           /* reflection coefficient at the convex side */ 
-           innmWin=acos((R-dab)/(R-bk+d));        
+        if (dab>bk-d)
+        {
+           /* reflection coefficient at the convex side */
+           innmWin=acos((R-dab)/(R-bk+d));
            Q=2.0*V2K*vpl*sin(innmWin);
-           if (Q<=Qci) 
+           if (Q<=Qci)
               innref=R0i;
            else {
               argi=(Q-mi*Qci)/Wi;
               innref=0.5*R0i*(1.0-tanh(argi))*(1.0-alphai*(Q-Qci)); }
-        }    
+        }
 
         /* divergence of the neutron at the exit */
         zykmWin=2.0*(aeumWin-innmWin);
@@ -177,14 +180,14 @@ TRACE
         /* number of reflections at the concave side */
         numa=(mWin+einmWin+aeumWin-innmWin*(1.0+bd_sgn(einmWin)))/zykmWin;
 
-        /* number of reflections at the convex side */ 
+        /* number of reflections at the convex side */
         numi=numa;
-        if (ausmWin*einmWin<0) 
+        if (ausmWin*einmWin<0)
         {
-           if (ausmWin-einmWin>0) 
-              numi++;            
+           if (ausmWin-einmWin>0)
+              numi++;
            else
-              numi--; 
+              numi--;
         }
 
         /* is the reflection coefficient too small? */
@@ -205,7 +208,7 @@ TRACE
         t+=Ta;
 
         /* distance between neutron and concave side of channel at the exit */
-        ab=R-(R-dab)/cos(ausmWin);      
+        ab=R-(R-dab)/cos(ausmWin);
 
         /* calculation of the exit coordinates in the XZ-plane */
         x=w/2.0-ab-dru;
@@ -213,9 +216,9 @@ TRACE
         vx=sin(ausmWin)*vpl;
         vz=cos(ausmWin)*vpl;
 
-        /*** reflections at top and bottom side (Y axis) ***/ 
+        /*** reflections at top and bottom side (Y axis) ***/
 
-        if (vy!=0.0) 
+        if (vy!=0.0)
         {
           /* reflection coefficent at the top and bottom side */
           Q=2.0*V2K*fabs(vy);
@@ -223,27 +226,27 @@ TRACE
              ref=R0s; arg=0; }
           else {
              arg=(Q-ms*Qcs)/Ws;
-             ref=0.5*R0s*(1.0-tanh(arg))*(1.0-alphas*(Q-Qcs)); }          
+             ref=0.5*R0s*(1.0-tanh(arg))*(1.0-alphas*(Q-Qcs)); }
 
           /* number of reflections at top and bottom */
-          einzei=h/2.0/fabs(vy)+y/vy; 
+          einzei=h/2.0/fabs(vy)+y/vy;
           zykzei=h/fabs(vy);
           num=(Ta+einzei)/zykzei;
 
           /* time between the last reflection and the exit */
           auszei=fmod(Ta+einzei,zykzei);
 
-          /* is the reflection coefficient too small? */ 
+          /* is the reflection coefficient too small? */
           if ((num>0) && (arg>10.0))
              ABSORB;
 
           /* calculation of the probability weight p */
-          for (i=1;i<=num;i++) {             
+          for (i=1;i<=num;i++) {
                p*=ref;
                vy*=-1.0; }
 
           /* calculation of the exit coordinate */
-          y=auszei*vy-vy*h/fabs(vy)/2.0; 
+          y=auszei*vy-vy*h/fabs(vy)/2.0;
         } /* if (vy!=0.0) */
         SCATTER;
       } /* if (dab>bk-d)  */
