@@ -49,7 +49,7 @@ if state('nextPlot')=='erase'
 	state('cbech')=cbech;
 	state('xlech')=xlech;
 	state('ylech')=ylech;
-   	state('titech')=titech;
+   state('titech')=titech;
 
 else
 	L=length(state('listOfPlots'));

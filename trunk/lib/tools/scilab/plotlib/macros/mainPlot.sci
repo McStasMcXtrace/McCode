@@ -51,6 +51,11 @@ while length(argList)
    end
    
    if type(argList(1))==1 // If the first argument is a matrix
+	
+	 if argList(1)==[]
+	 	return;
+	end
+	
 
       if length(argList)==1 // If only one argument
 
@@ -214,7 +219,6 @@ for k=1:length(liste)
 
    xset('thickness',markerSize);
    xset('line style',lineStyle);
-
    if markerId ~=[]
       xset('dashes',col);
       xset('mark',markerId,markerSize);

@@ -10,6 +10,6 @@ if find(%helps(:,2)==Title)==[] then
   %helps=[%helps;path+'man',Title]
 end
 PLOTLIB=path+'macros/';
-disp('loading plotlib version 0.18b1')
+disp('loading plotlib version 0.18')
 clear path Title
 

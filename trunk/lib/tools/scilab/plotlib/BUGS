@@ -76,3 +76,15 @@ under Windows)
 
 Installation bugs have disappeared since the adoption
 of the builder.sce/loader.sce system.
+
+10/11/2003 v0.18
+------------------
+
+-Problems with b/w export, the background was black (fixed)
+-Problem with superposition of previous and current tick
+marks and such, when a window got an "expose" event (under unix),
+and at anytime (under windows) -> fixed also
+
+There are still redrawing problems (background painting) under
+windows for suplot plots under windows, but they are not due
+to the Plotlib !

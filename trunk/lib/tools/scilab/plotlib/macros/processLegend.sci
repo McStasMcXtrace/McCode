@@ -78,7 +78,8 @@ case 5
 end
 
 xsetech(wrect=rect,frect=[0 0 wf 1],arect=[0 0 0 0]);
-xset('color',addcolor(state('background')));
+
+xset('color',17);
 
 xfrect(0,1,wf,1);
 xset('color',addcolor(state('foreground')))

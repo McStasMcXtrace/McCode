@@ -3,18 +3,20 @@ function clearWindow(win,typeOfPlot,cmap)
 	[lhs,rhs]=argn(0);
 
 	if rhs==1
-		xtape('clear',win);
-		xset('wwpc');
-		if xget('pixmap')==0
-			xclear(win)
-		end
+//		xtape('clear',win);
+//		xset('wwpc');
+//		if xget('pixmap')==0
+//			xclear(win)
+//		end
+		xbasc();
 		return		
 	end
 
 	state=loadGraphicState(win);
 
-	xtape('clear',win)
-
+//	xtape('clear',win)
+	xbasc()
+	
 	if rhs==2
 		if 	typeOfPlot=="pcolor" | ...
 			typeOfPlot=="surf" | ...
@@ -46,9 +48,8 @@ function clearWindow(win,typeOfPlot,cmap)
 		end
 	end
 	
-	xset('background',addcolor(state('frameColor')));
 	xset('foreground',addcolor(state('foreground')));
-
-	xset('wwpc');
+	xset('background',addcolor(state('frameColor')));
+//	xset('wwpc');
 
 endfunction

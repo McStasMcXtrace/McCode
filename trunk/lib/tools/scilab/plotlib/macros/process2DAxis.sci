@@ -4,7 +4,14 @@ function process2DAxis(state,nTicksX,nTicksY,foreground,background,modeStart,mod
 	
 		// Prepare the axis and all the stuff
 
-		back=addcolor(background);
+		cmap=xget('colormap')
+		if and(cmap(17,:)==background)
+			back=17;
+		else
+			cmap(16,:)=background;
+			back=16;
+			xset('colormap',cmap);
+		end
 		fram=addcolor(state('frameColor'));
 		xset('foreground',addcolor(foreground));
 
@@ -33,7 +40,6 @@ function process2DAxis(state,nTicksX,nTicksY,foreground,background,modeStart,mod
 			xfpolys([minXX maxXX maxXX minXX]',[minYY minYY maxYY maxYY]',back);
 			xclip();
 		end
-
 	end
 
 endfunction
