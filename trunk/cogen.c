@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.44  2004/09/10 15:09:56  farhi
+*	Use same macro symbols for mcstas kernel and run-time for code uniformity
+*	
 *	Revision 1.43  2004/09/03 13:43:29  farhi
 *	Removed duplicated Instr:FINALLY code (in SAVE and FINALLY). May cause SEGV.
 *	
@@ -45,7 +48,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.44 2004-09-10 15:09:56 farhi Exp $
+* $Id: cogen.c,v 1.45 2004-11-29 14:30:52 farhi Exp $
 *
 *******************************************************************************/
 
@@ -349,10 +352,12 @@ cogen_instrument_scope(struct instr_def *instr,
 {
   List_handle parlist;
 
-  /* This simply starts up the recursion. */
+  coutf("#define %scompcurname %s", ID_PRE, instr->name);
+  /* This simply starts up the recursion on parameters. */
   parlist = list_iterate(instr->formals);
   cogen_instrument_scope_rec(parlist, func, data);
   list_iterate_end(parlist);
+  coutf("#undef %scompcurname", ID_PRE);
 }
 
 /* Create the bindings for the SETTING parameter scope. Since the types of
@@ -448,7 +453,7 @@ cogen_comp_scope(struct comp_inst *comp, int infunc,
                        infunc, func, data);
   list_iterate_end(out);
   list_iterate_end(def);
-  coutf("#undef %scompcurname", ID_PRE, comp->name);
+  coutf("#undef %scompcurname", ID_PRE);
   coutf("#undef %scompcurindex", ID_PRE);
 }
 
