@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.55 2003-04-04 15:11:08 farhi Exp $
+* $Id: mcstas-r.c,v 1.56 2003-04-04 18:36:12 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.55  2003/04/04 15:11:08  farhi
+* Use MCSTAS_FORMAT env var for default plotter, or use mcstas_config
+* Corrected strlen(NULL pointer) for getenv(MCSTAS_FORMAT)==NULL
+*
 * Revision 1.54  2003/04/04 14:26:25  farhi
 * Managed --no-runtime to work. Use MCSTAS_FORMAT env/define for default format
 * Make --no-output-files still print out the integrated counts
@@ -299,8 +303,8 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "t=[t1,'  '+d.variables+'=['+d.values+']','  '+d.signal,'  '+d.statistics]\n"
       "print,t\n"
       "if strpos(d.type,'0d') ge 0 then return,d\n"
-      "d.xlabel=strjoin(strsplit(d.xlabel,'`!\"£$%^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
-      "d.ylabel=strjoin(strsplit(d.ylabel,'`!\"£$%^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
+      "d.xlabel=strjoin(strsplit(d.xlabel,'`!\"£^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
+      "d.ylabel=strjoin(strsplit(d.ylabel,'`!\"£^&*()-+=|\\,.<>/?@''~#{[}]',/extract),'_')\n"
       "stv,d,'x',l(0)+indgen(S(0))*(l(1)-l(0))/S(0)\n"
       "if strpos(d.type,'2d') ge 0 then begin\n"
       "  name={DATA:d.func,IX:d.xlabel,IY:d.ylabel}\n"
