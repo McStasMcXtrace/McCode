@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.11 1998-09-24 12:14:11 kn Exp $
+*	$Id: instrument.y,v 1.12 1998-10-01 08:11:07 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.11  1998/09/24 12:14:11  kn
+*	Rotation angles in instrument definitions are now given in degrees, with
+*	a backward compatibility mode for the old behaviour using radians.
+*
 *	Revision 1.10  1998/09/24 11:18:27  kn
 *	Make AT modifier required.
 *	More reasonable default when ROTATED modifier is missing.
@@ -479,7 +483,9 @@ Symtab read_components = NULL;
 static void
 print_usage(void)
 {
-  fprintf(stderr, "Usage: mcstas [-o output file] instrument-file\n");
+  fprintf(stderr, "Usage:\n"
+	  "  mcstas [-o file] [-I dir1 ...] [-t] "
+	  "[--no-main] [--no-runtime] file\n");
   exit(1);
 }
 
@@ -515,6 +521,12 @@ make_output_filename(char *name)
 }
 
 
+static void
+set_output_filename(char *name)
+{
+  output_filename = str_dup(name);
+}
+
 /* Parse command line options. */
 static void
 parse_command_line(int argc, char *argv[])
@@ -523,30 +535,43 @@ parse_command_line(int argc, char *argv[])
 
   output_filename = NULL;
   instr_current_filename = NULL;
+  instrument_definition->use_default_main = 1;
+  instrument_definition->include_runtime = 1;
+  instrument_definition->enable_trace = 0;
   for(i = 1; i < argc; i++)
   {
-    if(argv[i][0] == '-')
-    {
-      switch(argv[i][1])
-      {
-	case 'o':
-	  if(argv[i][2])
-	    output_filename = str_dup(&argv[i][2]);
-	  else if(i + 1 < argc)
-	    output_filename = str_dup(argv[++i]);
-	  else
-	    print_usage();
-	  break;
-	default:
-	  print_usage();
-      }
-    }
-    else
+    if(!strcmp("-o", argv[i]) && (i + 1) < argc)
+      set_output_filename(argv[++i]);
+    else if(!strncmp("-o", argv[i], 2))
+      set_output_filename(&argv[i][2]);
+    else if(!strcmp("--output-file", argv[i]) && (i + 1) < argc)
+      set_output_filename(argv[++i]);
+    else if(!strncmp("--output-file=", argv[i], 14))
+      set_output_filename(&argv[i][14]);
+    else if(!strcmp("-I", argv[i]) && (i + 1) < argc)
+      add_search_dir(argv[++i]);
+    else if(!strncmp("-I", argv[i], 2))
+      add_search_dir(&argv[i][2]);
+    else if(!strcmp("--search-dir", argv[i]) && (i + 1) < argc)
+      add_search_dir(argv[++i]);
+    else if(!strncmp("--search-dir=", argv[i], 13))
+      add_search_dir(&argv[i][13]);
+    else if(!strcmp("-t", argv[i]))
+      instrument_definition->enable_trace = 1;
+    else if(!strcmp("--trace", argv[i]))
+      instrument_definition->enable_trace = 1;
+    else if(!strcmp("--no-main", argv[i]))
+      instrument_definition->use_default_main = 0;
+    else if(!strcmp("--no-runtime", argv[i]))
+      instrument_definition->include_runtime = 0;
+    else if(argv[i][0] != '-')
     {
       if(instr_current_filename != NULL)
 	print_usage();		/* Multiple instruments given. */
       instr_current_filename = str_dup(argv[i]);
     }
+    else
+      print_usage();
   }
 
   /* Instrument filename must be given. */
@@ -566,18 +591,24 @@ main(int argc, char *argv[])
   
   yydebug = 0;			/* If 1, then bison gives verbose parser debug info. */
 
+  palloc(instrument_definition); /* Allocate instrument def. structure. */
   parse_command_line(argc, argv);
   if(!strcmp(instr_current_filename, "-"))
+  {
+    instrument_definition->source = str_dup("<stdin>");
     file = fdopen(0, "r");	/* Lone '-' designates stdin. */
+  }
   else
+  {
+    instrument_definition->source = str_dup(instr_current_filename);
     file = fopen(instr_current_filename, "r");
+  }
   if(file == NULL)
     fatal_error("Instrument definition file `%s' not found\n",
 		instr_current_filename);
   instr_current_line = 1;
   lex_new_file(file);
   read_components = symtab_create(); /* Create table of components. */
-  palloc(instrument_definition); /* Allocate instrument def. structure. */
   err = yyparse();
   fclose(file);
   if(err != 0)
@@ -689,24 +720,21 @@ read_component(char *name)
   }
   else
   {
-    char *filename;
     FILE *file;
     int err;
     
     /* Attempt to read definition from file components/<name>.com. */
-    filename = str_cat("components/", name, ".com", NULL);
-    file = fopen(filename, "r");
+    file = open_component_search(name);
     if(file == NULL)
     {
-      print_error("Cannot find file `%s' "
-		  "while looking for definition of component `%s'.\n",
-		  filename, name);
+      print_error(
+	"Cannot find file containing definition of component `%s'.\n", name);
       return NULL;
     }
     push_autoload(file);
     /* Note: the str_dup copy of the file name is stored in codeblocks, and
        must not be freed. */
-    instr_current_filename = str_dup(filename);
+    instr_current_filename = component_pathname;
     instr_current_line = 1;
     err = yyparse();		/* Read definition from file. */
     if(err != 0)
