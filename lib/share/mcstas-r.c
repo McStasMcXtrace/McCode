@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.70 2003-08-12 13:35:52 farhi Exp $
+* $Id: mcstas-r.c,v 1.71 2003-08-20 09:25:00 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.70  2003/08/12 13:35:52  farhi
+* displays known signals list in instrument help (-h)
+*
 * Revision 1.68  2003/06/17 14:21:54  farhi
 * removed 'clear %4$s' in Scilab/Matlab 'end of section' format which
 * caused pb when comp_name == file_name
@@ -2322,6 +2325,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   sprintf(ratio, "%g/%g", run_num, ncount);
   
   mcfile_tag(f, format, pre, parent, "type", type);
+  mcfile_tag(f, format, pre, parent, "Source", mcinstrument_source);
   if (parent) mcfile_tag(f, format, pre, parent, (strstr(format.Name,"McStas") ? "component" : "parent"), parent);
   if (title) mcfile_tag(f, format, pre, parent, "title", title);
   mcfile_tag(f, format, pre, parent, "ratio", ratio);
