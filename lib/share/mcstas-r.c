@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.81 2004-02-19 14:42:52 farhi Exp $
+* $Id: mcstas-r.c,v 1.82 2004-02-23 12:48:42 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.81  2004/02/19 14:42:52  farhi
+* Experimental Octave/OpenGENIE output format (for ISIS)
+*
 * Revision 1.80  2004/01/23 16:14:12  pkwi
 * Updated version of Mersenne Twister algorithm. make test'ed ok on my machine.
 *
@@ -3337,7 +3340,7 @@ mcparseoptions(int argc, char *argv[])
   }
   for(j = 0; j < mcnumipar; j++)
     { 
-      paramsetarray[j] = 0; 
+      paramsetarray[j] = 0;
       if (mcinputtable[j].val && strlen(mcinputtable[j].val))
       {
         int  status;
@@ -3346,10 +3349,12 @@ mcparseoptions(int argc, char *argv[])
         status = (*mcinputtypes[mcinputtable[j].type].getparm)
                    (buf, mcinputtable[j].par);
         if(!status) fprintf(stderr, "Invalid %s default value %s in instrument definition.\n", mcinputtable[j].name, buf);
-      } else
-        (*mcinputtypes[mcinputtable[j].type].getparm)
+        else {
+          (*mcinputtypes[mcinputtable[j].type].getparm)
                    (NULL, mcinputtable[j].par); 
-        paramsetarray[j] = 1;
+          paramsetarray[j] = 1; 
+	}
+      }
     }
 
   for(i = 1; i < argc; i++)
@@ -3430,7 +3435,7 @@ mcparseoptions(int argc, char *argv[])
           int status;
           status = (*mcinputtypes[mcinputtable[j].type].getparm)(p,
                         mcinputtable[j].par);
-          if(!status)
+          if(!status || !strlen(p))
           {
             (*mcinputtypes[mcinputtable[j].type].error)
               (mcinputtable[j].name, p);
