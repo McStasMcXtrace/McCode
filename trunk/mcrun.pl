@@ -216,7 +216,7 @@ sub parse_args {
       if ($hostfile eq "") { $hostfile = "$HOME/.mcstas-hosts"; }
       if (!-e $hostfile) {
         $hostfile = "$MCSTAS::sys_dir/tools/perl/mcstas-hosts";
-        if (! -e $inf_sim->{'hostfile'}) {
+        if (! -e $hostfile) {
           print STDERR "mcrun: No MPI/grid machine list. MPI/grid disabled...
          Define $HOME/.mcstas-hosts or $hostfile or use --machines=<file>!\n";
           $multi = 0;

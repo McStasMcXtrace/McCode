@@ -506,31 +506,28 @@ sub do_test {
     my $child_error_text = $!;
     my $child_error_code = $?;
     if ($child_error_code) {
-      &$printer("[FAILED] $this_name: ($child_error_code): $child_error_text");
-      $error_flag = 1;
-      last;
-    } else { 
-      my $this_flag = 1;
-      if (opendir(DIR, "$test_monitor_names[$j]")) {
-        my @files = readdir(DIR);
-        closedir(DIR);
-        my $k;
-        my $filename;
-        my @paths = map("$test_monitor_names[$j]/$_", grep(/\.(gif|png|ps|eps|jpg)$/i, @files));
-        for ($k=0 ; $k<@paths; $k++) {
-          $filename = $paths[$k];
-          $this_flag = 1;
-          if (-f "$filename") {
-            my $sb = stat($filename);
-            if ($sb->size) { 
-              &$printer("[OK] $this_name ($filename)");
-              $this_flag = 0;
-            }
-          } # end if (-f "$filename")
-        } # end for
-      } # end opendir
-      if ($this_flag) { &$printer("[FAILED] $this_name"); $plot_flag=1; }
-    } # end else 
+      &$printer("[Warning] $this_name: ($child_error_code): $child_error_text");
+    } 
+    my $this_flag = 1;
+    if (opendir(DIR, "$test_monitor_names[$j]")) {
+      my @files = readdir(DIR);
+      closedir(DIR);
+      my $k;
+      my $filename;
+      my @paths = map("$test_monitor_names[$j]/$_", grep(/\.(gif|png|ps|eps|jpg)$/i, @files));
+      for ($k=0 ; $k<@paths; $k++) {
+        $filename = $paths[$k];
+        $this_flag = 1;
+        if (-f "$filename") {
+          my $sb = stat($filename);
+          if ($sb->size) { 
+            &$printer("[OK] $this_name ($filename)");
+            $this_flag = 0;
+          }
+        } # end if (-f "$filename")
+      } # end for
+    } # end opendir
+    if ($this_flag) { &$printer("[FAILED] $this_name"); $plot_flag=1; }
   } # end for
   
   $now = localtime();
