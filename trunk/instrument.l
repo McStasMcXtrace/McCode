@@ -18,9 +18,18 @@
 *
 * Flex scanner for instrument definition files.
 *
-*	$Id: instrument.l,v 1.33 2003-02-11 12:28:45 farhi Exp $
+*	$Id: instrument.l,v 1.34 2003-10-06 15:02:43 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.33  2003/02/11 12:28:45  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*	
 * Revision 1.22  2002/08/29 16:39:42 ef
 * enables %include in C code, embeding .h/.c from mcstas/lib
 * embed only once for libraries (.h+.c)
@@ -195,6 +204,7 @@ PARAMETERS	  return TOK_PARAMETERS;
 POLARISATION	return TOK_POLARISATION;
 RELATIVE	    return TOK_RELATIVE;
 ROTATED		    return TOK_ROTATED;
+PREVIOUS      return TOK_PREVIOUS;
 SETTING		    return TOK_SETTING;
 STATE		      return TOK_STATE;
 TRACE		      return TOK_TRACE;

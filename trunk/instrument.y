@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.54 2003-09-15 10:25:52 farhi Exp $
+*	$Id: instrument.y,v 1.55 2003-10-06 15:02:43 farhi Exp $
 *
 *******************************************************************************/
 
@@ -92,6 +92,7 @@ int mc_yyoverflow();
 %token TOK_POLARISATION	"POLARISATION"
 %token TOK_RELATIVE	  "RELATIVE"
 %token TOK_ROTATED	  "ROTATED"
+%token TOK_PREVIOUS   "PREVIOUS"
 %token TOK_SETTING	  "SETTING"
 %token TOK_STATE	    "STATE"
 %token TOK_TRACE	    "TRACE"
@@ -275,7 +276,7 @@ comp_iformal:	 TOK_ID TOK_ID
 		      formal->type = instr_type_string;
 		    } else {
 		      print_error("Illegal type %s for component "
-				  "parameter %s.\n", $1, $2);
+				  "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
 		      formal->type = instr_type_double;
 		    }
 		    formal->id = $2;
@@ -289,7 +290,7 @@ comp_iformal:	 TOK_ID TOK_ID
 		      formal->type = instr_type_string;
 		    } else {
 		      print_error("Illegal type %s* for component "
-				  "parameter %s.\n", $1, $3);
+				  "parameter %s at line $s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
 		      formal->type = instr_type_double;
 		    }
 		    formal->id = $3;
@@ -326,7 +327,7 @@ comp_iformal:	 TOK_ID TOK_ID
 		      formal->type = instr_type_string;
 		    } else {
 		      print_error("Illegal type %s for component "
-				  "parameter %s.\n", $1, $2);
+				  "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
 		      formal->type = instr_type_double;
 		    }
         formal->id = $2;
@@ -345,7 +346,7 @@ comp_iformal:	 TOK_ID TOK_ID
 		      formal->type = instr_type_string;
 		    } else {
 		      print_error("Illegal type %s* for component "
-				  "parameter %s.\n", $1, $3);
+				  "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
 		      formal->type = instr_type_double;
 		    }
 		    $$ = formal;
@@ -415,7 +416,7 @@ instr_formal:	  TOK_ID TOK_ID
 		      formal->type = instr_type_string;
 		    } else {
 		      print_error("Illegal type %s for instrument "
-				  "parameter %s.\n", $1, $2);
+				  "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
 		      formal->type = instr_type_double;
 		    }
 		    formal->id = $2;
@@ -429,7 +430,7 @@ instr_formal:	  TOK_ID TOK_ID
 		      formal->type = instr_type_string;
 		    } else {
 		      print_error("Illegal type $s* for instrument "
-				  "parameter %s.\n", $1, $3);
+				  "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
 		      formal->type = instr_type_double;
 		    }
 		    formal->id = $3;
@@ -466,7 +467,7 @@ instr_formal:	  TOK_ID TOK_ID
 		      formal->type = instr_type_string;
 		    } else {
 		      print_error("Illegal type %s for instrument "
-				  "parameter %s.\n", $1, $2);
+				  "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
 		      formal->type = instr_type_double;
 		    }
         formal->id = $2;
@@ -485,7 +486,7 @@ instr_formal:	  TOK_ID TOK_ID
 		      formal->type = instr_type_string;
 		    } else {
 		      print_error("Illegal type %s* for instrument "
-				  "parameter %s.\n", $1, $3);
+				  "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
 		      formal->type = instr_type_double;
 		    }
 		    $$ = formal;
@@ -620,7 +621,7 @@ complist:	  /* empty */
 		    if(symtab_lookup(comp_instances, $2->name))
 		    {
 		      print_error("Multiple use of component instance name "
-				  "'%s'.\n", $2->name);
+				  "'%s' at line %s:%d.\n", $2->name, instr_current_filename, instr_current_line);
 		      /* Since this is an error condition, we do not
 		         worry about freeing the memory allocated for
 			 the component instance. */
@@ -668,6 +669,7 @@ component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation groupref
 		    }
 		    str_free($4);
 		    debugn((DEBUG_HIGH, "Component: %s.\n", $2));
+        previous_comp = comp; /* this comp will be 'previous' for the next */
 		    $$ = comp;
 		  }
 ;
@@ -756,6 +758,29 @@ reference:	  "ABSOLUTE"
 		  {
 		    $$ = NULL;
 		  }
+    | "RELATIVE" "PREVIOUS"
+      {
+        if (previous_comp) {
+          $$ = previous_comp; 
+        } else {
+          print_warn(NULL, "Found invalid PREVIOUS reference at line %s:%d. Using ABSOLUTE.\n", instr_current_filename, instr_current_line);
+          $$ = NULL;
+        }
+      } 
+    | "RELATIVE" "PREVIOUS" '(' TOK_NUMBER ')'
+      {
+        /* get the $4 previous item in comp_instances */
+        struct Symtab_entry *entry;
+        int index;
+        index = atoi($4);
+        entry = symtab_previous(comp_instances, index);
+        if (!index) { /* invalid index reference */
+          print_warn(NULL, "Found invalid PREVIOUS(%i) reference at line %s:%d. Using ABSOLUTE.\n", index, instr_current_filename, instr_current_line);
+          $$ = NULL;
+        } else {  
+          $$ = entry->val;
+        }
+      } 
 		| "RELATIVE" compref
 		  {
 		    $$ = $2;
@@ -801,8 +826,8 @@ compref:	  TOK_ID
 		    ent = symtab_lookup(comp_instances, $1);
 		    comp = NULL;
 		    if(ent == NULL)
-		      print_error("Reference to undefined component %s at line %d.\n",
-				  $1, instr_current_line);
+		      print_error("Reference to undefined component %s at line %s:%d.\n",
+				  $1, instr_current_filename, instr_current_line);
 		    else
 		      comp = ent->val;
 		    str_free($1);
@@ -1070,6 +1095,9 @@ struct instr_def *instrument_definition;
 
 /* Map from names to component instances. */
 Symtab comp_instances;
+
+/* Will store component instance for PREVIOUS reference */
+struct comp_inst *previous_comp=NULL;
 
 /* ADD: E. Farhi Sep 24th, 2001 Map from names to component group instances. */
 Symtab group_instances;
@@ -1497,7 +1525,7 @@ read_component(char *name)
     err = mc_yyparse();		/* Read definition from file. */
     if(err != 0)
       fatal_error("Errors encountered during autoload of component %s.\n",
-		  name);
+        name);
     fclose(file);
     /* Now check if the file contained the required component definition. */
     entry = symtab_lookup(read_components, name);
