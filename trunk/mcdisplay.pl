@@ -47,18 +47,29 @@ BEGIN {
       $pg_place=$inc;
     }
   }
-  if ($pg_avail eq 1) {
-    require "PGPLOT.pm";
+  # Check if the Tk module can be found and load/import it.
+  # Otherwise, disable use of Tk "end process" boxes for 
+  # Matlab/Scilab backends
+  # PW 20030404
+  $tk_avail=0;
+  my $tk_place;
+  foreach $inc (@INC) {
+    my $where="$inc/Tk.pm";
+    if (-e $where) {
+      $tk_avail=1;
+      $tk_place=$inc;
+      require Tk;
+      import Tk;
+    }
   }
 }
 
 use lib $MCSTAS::perl_dir;
 require "mcstas_config.perl";
-use Tk;
-use Tk::DialogBox;
+# IPC can probably be used safely, exists on sysv type systems,
+# linux, Win32. Will investigate further regarding portability.
+# PW 20030404
 use IPC::Open2;
-
-#use PGPLOT;
 
 $magnification = 1;
 $zooming = 0;
@@ -406,7 +417,8 @@ sub read_neutron {
 	} elsif (/^Detector:/){
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 3) {
 	    # Should only be done if finished, and not called with --save flag...
-	    if ($EndFlag == 0 && !$save) {
+	    # Also, can only be done if tk_avail == 1
+	    if ($tk_avail == 1 && $EndFlag == 0 && !$save) {
 	      my $main = new MainWindow;
 	      $main->Label(-text => 'Simulation ended.'
 			  )->pack;
@@ -817,6 +829,9 @@ SEE ALSO: mcstas, mcplot, mcrun, mcresplot, mcstas2vitess, mcgui\n"
 # accordingly
 if ($plotter eq "PGPLOT") {
   $MCSTAS::mcstas_config{'PLOTTER'}=0;
+  if ($pg_avail eq 1) {
+    require "PGPLOT.pm";
+  }
 } elsif ($plotter eq "Matlab") {
   $MCSTAS::mcstas_config{'PLOTTER'}=1;
   if ($file_output) {
