@@ -5,8 +5,8 @@ should be able to compile and install McStas using the following steps:
 1. Unpack the sources to somewhere convenient and change to the source
    directory:
 
-  gunzip -c mcstas-1.4.tar.gz | tar xf -
-  cd mcstas-1.4/
+  gunzip -c mcstas-1.4.1.tar.gz | tar xf -
+  cd mcstas-1.4.1/
 
 2. Configure and compile McStas:
 
