@@ -291,7 +291,7 @@ COMPONENT sample = Single_crystal( /* rotate sample in omega */
     ax = DS, ay = 0, az = 0,
     bx = 0, by = DS, bz = 0,
     cx = 0, cy = 0, cz = DS,
-    reflections = "quartz.xtal")
+    reflections = "quartz.lau")
   AT (0, 0, 0) RELATIVE sample_cradle
   ROTATED (0, A3, 0) RELATIVE sample_cradle
 
