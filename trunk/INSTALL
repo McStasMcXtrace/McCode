@@ -30,6 +30,25 @@ configure in step 2. For example,
 will install the McStas programs in /home/joe/bin/ and the library files
 needed by McStas in /home/joe/lib/mcstas/.
 
+In case ./configure makes an incorrect guess, some environment variables
+can be set to override the defaults:
+
+ - The CC environment variable may be set to the name of the C compiler
+   to use (this must be an ANSI C compiler). This will also be used for
+   the automatic compilation of McStas simulations in mcgui and mcrun.
+ - CFLAGS may be set to any options needed by the compiler (eg. for
+   optimization or ANSI C conformance). Also used by mcgui/mcrun.
+ - PERL may be set to the path of the Perl interpreter to use.
+
+To use these options, set the variables before running ./configure. Eg.
+
+    setenv PERL /pub/bin/perl5
+    ./configure
+
+It may be necessary to remove configure's cache of old choices first:
+
+    rm -f config.cache
+
 If you experience any problems, or have some questions or ideas
 concerning McStas, please contact kristian.nielsen@risoe.dk.
 
@@ -75,6 +94,9 @@ we can fix it in the next version.
 Troubleshooting
 ===============
 
+[Also see the FAQ at http://neutron.risoe.dk/mcstas/FAQ.html for
+up-to-date help on common problems in McStas.]
+
 You should try to make sure that the directory containing the McStas
 binaries (mcstas, gscan, mcdisplay, etc.) is contained in the PATH
 environment variable. The default directory is /usr/local/bin, which is
@@ -105,4 +127,3 @@ PGPLOT, eg.
   setenv PGPLOT_DIR /usr/lib/pgplot               # csh, tcsh
 
 See the PGPLOT documentation for details.
-
