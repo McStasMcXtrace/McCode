@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: December 1999
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: McStas release
 *
 * Mosaic single crystal with multiple scattering vectors.
@@ -34,6 +34,13 @@
 * bx,by,bz    : Coordinates of second unit cell vector (AA)
 * cx,cy,cz    : Coordinates of third unit cell vector (AA)
 * reflections : File name containing structure factors of reflections (string)
+*
+* Optional input parameters:
+*
+* p_transmit  : Monte Carlo probability for neutrons to be
+*               transmitted without any scattering [1]
+* absorbtion  : Absorbtion cross-section per unit cell at 2200 m/s [barns]
+* incoherent  : Incoherent scattering cross-section per unit cell [barns]
 *
 * OUTPUT PARAMETERS:
 *
@@ -93,8 +100,8 @@
 DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS(reflections)
 SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d, mosaic,
-                   ax, ay, az, bx, by, bz, cx, cy, cz
-                   /* , p_transmit /* = 0 ToDo */)
+                   ax, ay, az, bx, by, bz, cx, cy, cz,
+                   p_transmit = 0, absorbtion = 0, incoherent = 0)
 OUTPUT PARAMETERS(hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -461,7 +468,6 @@ INITIALIZE
 TRACE
 %{
   double t1, t2;                /* Entry and exit times in sample */
-  double dt;                    /* Flight time to next scattering event */
   struct hkl_data *L;           /* Structure factor list */
   int i;                        /* Index into structure factor list */
   struct tau_data *T;           /* List of reflections close to Ewald sphere */
@@ -488,6 +494,7 @@ TRACE
   int tau_count;                /* Number of reflections within cutoff */
   double V0;                    /* Volume of unit cell */
   double l_full;                /* Neutron path length for transmission */
+  double l;			/* Path length to scattering event */
   double abs_xsect, abs_xlen;   /* Absorbtion cross section and length */
   double inc_xsect, inc_xlen;   /* Incoherent cross section and length */
   double coh_xsect, coh_xlen;   /* Coherent cross section and length */
@@ -495,32 +502,39 @@ TRACE
   double z1, z2, y1, y2;        /* Temporaries to choose kf from 2D Gauss */
   double adjust,arg, refl;      /* Temporaries */
 
+  if(box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
+		   xwidth, yheight, zthick) && t2 > 0)
+  {				/* Neutron intersects crystal */
+  if(t1 > 0)
+    PROP_DT(t1);		/* Move to crystal surface if not inside */
+  v = sqrt(vx*vx + vy*vy + vz*vz);
+  ki = V2K*v;
   firstevent = 1;
   for(;;)                       /* Loop over multiple scattering events */
   {
-    /* (1). Compute incoming wave vector ki */
-    v = sqrt(vx*vx + vy*vy + vz*vz);
     /* Compute intersection between neutron flight path and sample. */
     if(!box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
-                      xwidth, yheight, zthick) || t2 <= 0)
-      ABSORB;
-    if(t1 <= 0)
+                      xwidth, yheight, zthick) || t2*v < -1e-9 || t1*v > 1e-9)
+    {
       fprintf(stderr,
-              "Single_crystal: Warning: neutron started inside crystal!\n");
-    /* Select a point at which to scatter the neutron. No extinction. */
-    dt = randminmax(t1, t2);
-    PROP_DT(dt);
-    l_full = (t2 - t1)*v;
+              "Single_crystal: Warning: neutron was outside crystal!\n");
+      break;
+    }
+    l_full = t2*v;
+
+    /* (1). Compute incoming wave vector ki */
     kix = V2K*vx;
     kiy = V2K*vy;
     kiz = V2K*vz;
-    ki = V2K*v;
 
     /* (2). Intersection of Ewald sphere with recipprocal lattice points */
     L = hkl_info.list;
     T = hkl_info.tau_list;
     /* Max possible tau with 5*sigma delta-d/d cutoff. */
     tau_max = 2*ki/(1 - 5*delta_d_d);
+    abs_xsect = absorbtion*2200/v;
+    inc_xsect = incoherent;
+    coh_xsect = 0;
     for(i = j = 0; i < hkl_info.count; i++)
     {
       /* Assuming reflections are sorted, stop search when max tau exceeded. */
@@ -599,66 +613,63 @@ TRACE
       }
     }
     tau_count = j;
-    if(tau_count == 0)
-    {
-/* printf("** No nearby reflections.\n"); */
-      ABSORB;                   /* No reflections possible */
-    } 
+
     /* (3). Probabilities of the different possible interactions. */
     V0 = hkl_info.V0;
-    abs_xsect = (0 /* ToDo: absorbtion at 2200m/s */) / v;
-    abs_xlen = abs_xsect/V0;
-    inc_xsect = 0 /* ToDo: Incoherent cross section */;
-    inc_xlen = inc_xsect/V0;
-    coh_xsect = 0 /* ToDo: Coherent cross section */;
-    coh_xlen = coh_xsect/V0;
     tot_xsect = abs_xsect + inc_xsect + coh_xsect;
+    abs_xlen = abs_xsect/V0;
+    inc_xlen = inc_xsect/V0;
+    coh_xlen = coh_xsect/V0;
     tot_xlen = tot_xsect/V0;
+
     /* (5). Transmission */
-/*     p_trans = exp(-tot_xlen*l_full); */
-/*     if(firstevent) { */
-/*       mc_trans = p_transmit; */
-/*     } else { */
-/*       mc_trans = p_trans; */
-/*     } */
-/*     firstevent = 0; */
-/*     if(rand01() < mc_trans)  /* Transmit */
-/*     { */
-/*       p *= p_trans/mc_trans; */
-/*       break; */
-/*     } */
+    p_trans = exp(-tot_xlen*l_full);
+    if(firstevent) {
+      mc_trans = p_transmit;
+    } else {
+      mc_trans = p_trans;
+    }
+    firstevent = 0;
+    if(rand01() < mc_trans)  /* Transmit */
+    {
+      p *= p_trans/mc_trans;
+      break;
+    }
+    /* Select a point at which to scatter the neutron, taking
+       secondary extinction into account. */
     /* dP(l) = exp(-tot_xlen*l)dl
        P(l<l_0) = [-1/tot_xlen*exp(-tot_xlen*l)]_0^l_0
                 = (1 - exp(-tot_xlen*l0))/tot_xlen
        l = -log(1 - tot_xlen*rand0max(P(l<l_full)))/tot_xlen
      */
-/*     l = -log(1 - rand0max((1 - exp(-tot_xlen*l0))))/tot_xlen; */
+    l = -log(1 - rand0max((1 - exp(-tot_xlen*l_full))))/tot_xlen;
+    PROP_DT(l/v);
+    
     /* (4). Account for the probability of absorbtion */
-/*     p *= (coh_xlen + inc_xlen)/tot_xlen; */
+    p *= (coh_xlen + inc_xlen)/tot_xlen;
     /* Choose between coherent and incoherent scattering */
-/*     if(rand0max(coh_xlen + inc_xlen) < inc_xlen) */
-/*     { */
-/*       /* (6). Incoherent scattering */
-/*       randvec_target_sphere(kix, kiy, kiz, NULL, 0, 0, 0, 1); */
-/*       kix *= ki; */
-/*       kiy *= ki; */
-/*       kiz *= ki; */
-/*       continue;                      /* Go for next scattering event */
-/*     } */
+    if(rand0max(coh_xlen + inc_xlen) < inc_xlen)
+    {
+      /* (6). Incoherent scattering */
+      randvec_target_sphere(kix, kiy, kiz, NULL, 0, 0, 0, 1);
+      kix *= ki;
+      kiy *= ki;
+      kiz *= ki;
+      continue;                      /* Go for next scattering event */
+    }
     /* 7. Coherent scattering. Select reciprocal lattice point. */
-/*     r = rand0max(coh_xsect); */
-/*     sum = 0; */
-/*     for(j = 0; j < tau_count; j++) */
-/*     { */
-/*       sum += T[j].refl; */
-/*       if(sum > r) */
-/*      break; */
-/*     } */
-    j = floor(rand0max(tau_count));
+    r = rand0max(coh_xsect);
+    sum = 0;
+    for(j = 0; j < tau_count; j++)
+    {
+      sum += T[j].refl;
+      if(sum > r)
+     break;
+    }
     if(j >= tau_count)
     {
-/*       fprintf(stderr, "Single_crystal: Error: Illegal tau search " */
-/*            "(r = %g, sum = %g).\n", r, sum); */
+      fprintf(stderr, "Single_crystal: Error: Illegal tau search "
+           "(r = %g, sum = %g).\n", r, sum);
       j = tau_count - 1;
     }
     i = T[j].index;
@@ -684,10 +695,9 @@ TRACE
     vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
     vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
     vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
-    break;
     /* Repeat loop for next scattering event. */
   }
-
+  }
 %}
 
 MCDISPLAY
