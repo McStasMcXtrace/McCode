@@ -4,16 +4,23 @@
 *         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Source_flat_lambda
-*
+* %I
+* Written by: KN
+* Date: 1999
+* Version: $Revision: 1.2 $
+* Origin: McStas release
 * Modified by: KN, 1999 from Source_flat.comp
 *
+* Neutron source with flat wavelength spectrum and arbitrary flux.
+*
+* %D
 * The routine is a circular neutron source, which aims at a square target
 * centered at the beam (in order to improve MC-acceptance rate).  The angular
 * divergence is then given by the dimensions of the target. The neutron
 * wavelength is uniformly distrubuted between lambda_0 - d_lambda and
 * lambda_0 + d_lambda.
 *
+* %P
 * radius:   (m)  Radius of circle in (x,y,0) plane where neutrons
 *                are generated.
 * dist:     (m)  Distance to target along z axis.
@@ -22,6 +29,7 @@
 * lambda_0: (AA) Mean wavelength of neutrons.
 * d_lambda: (AA) Wavelength spread of neutrons.
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Source_flat_lambda

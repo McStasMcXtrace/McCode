@@ -1,14 +1,19 @@
-/***********************************************************************
+/*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Source_flat
-*
-* Written by: KL, October 30, 1997
+* %I
+* Written by: KL
 * Modified by: KL, KN, October 5, 1998
+* Date: October 30, 1997
+* Version: $Revision: 1.5 $
+* Origin: McStas release
 *
+* Neutron source with flat energy spectrum and arbitrary flux
+*
+* %D
 * The routine is a circular neutron source, which aims at a square target
 * centered at the beam (in order to improve MC-acceptance rate).  The angular
 * divergence is then given by the dimensions of the target. The neutron energy is
@@ -16,6 +21,7 @@
 *
 * ToDo: More flexible specification of E distribution.
 *
+* %P
 * radius: (m)   Radius of circle in (x,y,0) plane where neutrons
 *               are generated.
 * dist:   (m)   Distance to target along z axis.
@@ -24,7 +30,12 @@
 * E0:     (meV) Mean energy of neutrons.
 * dE:     (meV) Energy spread of neutrons.
 *
-***********************************************************************/
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/tests/source/">
+* Test results</A> (not up-to-date).
+*
+* %E
+*******************************************************************************/
 
 DEFINE COMPONENT Source_flat
 DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE)
