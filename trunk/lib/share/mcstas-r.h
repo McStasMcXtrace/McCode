@@ -26,7 +26,7 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.68 2005-02-23 12:29:56 farhi Exp $
+* $Id: mcstas-r.h,v 1.69 2005-02-23 12:36:53 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
 *       Revision 1.66  2005/02/16 12:21:39  farhi
@@ -116,7 +116,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.68 $"
+#define MCSTAS_R_H "$Revision: 1.69 $"
 
 #include <math.h>
 #include <string.h>
@@ -456,6 +456,18 @@ void   mcsiminfo_close(void);
 
 #define PROP_X0 \
   do { \
+    if (mcgravitation) { Coords mcLocG; int mc_ret; \
+    double mc_dt, mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    mc_ret = solve_2nd_order(&mc_dt, -mc_gx/2, -mcnlvx, -mcnlx); \
+    if (mc_ret && mc_dt>0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
+    else ABSORB; }\
+    else mcPROP_X0; \
+  } while(0)
+
+#define mcPROP_X0 \
+  do { \
     double mc_dt; \
     if(mcnlvx == 0) ABSORB; \
     mc_dt = -mcnlx/mcnlvx; \
@@ -467,6 +479,19 @@ void   mcsiminfo_close(void);
   } while(0)
 
 #define PROP_Y0 \
+  do { \
+    if (mcgravitation) { Coords mcLocG; int mc_ret; \
+    double mc_dt, mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    mc_ret = solve_2nd_order(&mc_dt, -mc_gy/2, -mcnlvy, -mcnly); \
+    if (mc_ret && mc_dt>0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
+    else ABSORB; }\
+    else mcPROP_Y0; \
+  } while(0)
+
+
+#define mcPROP_Y0 \
   do { \
     double mc_dt; \
     if(mcnlvy == 0) ABSORB; \
