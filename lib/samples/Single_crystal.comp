@@ -57,6 +57,8 @@ SETTING PARAMETERS(radius, height, delta_d_d, mosaic,
 		   ax, ay, az, bx, by, bz, cx, cy, cz,
 		   p_transmit /* = 0 ToDo */)
 OUTPUT PARAMETERS(hkl_info)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
 %{
 #ifndef SINGLE_CRYSTAL_DECL
@@ -109,7 +111,7 @@ void normal_vec(double *nx, double *ny, double *nz,
 
 /* Make sure a list is big enough to hold element COUNT.
    ToDo: Move to McStas kernel. */
-void extend_list(int count, void **list, int *size, size_t *elemsize)
+void extend_list(int count, void **list, int *size, size_t elemsize)
 {
   if(count >= *size)
   {
@@ -213,7 +215,7 @@ read_hkl_data(char *file, struct hkl_info *info)
       exit(1);
     }
     /* Extend list if not large enough. */
-    extend_list(i, &list, &size, sizeof(*list));
+    extend_list(i, (void **)&list, &size, sizeof(*list));
     list[i].h = h;
     list[i].k = k;
     list[i].l = l;
@@ -230,24 +232,34 @@ read_hkl_data(char *file, struct hkl_info *info)
     list[i].u1z = list[i].tau_z/list[i].tau;
     normal_vec(&list[i].u2x, &list[i].u2y, &list[i].u2z,
 	       list[i].u1x, list[i].u1y, list[i].u1z);
-    vec_product(&list[i].u3x, &list[i].u3y, &list[i].u3z,
-		list[i].u1x, list[i].u1y, list[i].u1z,
-		list[i].u2x, list[i].u2y, list[i].u2z);
+    vec_prod(list[i].u3x, list[i].u3y, list[i].u3z,
+	     list[i].u1x, list[i].u1y, list[i].u1z,
+	     list[i].u2x, list[i].u2y, list[i].u2z);
     list[i].sig1 = FWHM2RMS*info->delta_d_d*list[i].tau;
     list[i].sig2 = FWHM2RMS*list[i].tau*MIN2RAD*info->mosaic;
     list[i].sig3 = FWHM2RMS*list[i].tau*MIN2RAD*info->mosaic;
     list[i].m1 = 1/(2*list[i].sig1*list[i].sig1);
     list[i].m2 = 1/(2*list[i].sig2*list[i].sig2);
     list[i].m3 = 1/(2*list[i].sig3*list[i].sig3);
-    list[i].cutoff = 5*max(max(list[i].m1, list[i].m2), list[i].m3);
+    /* Set Gauss cutoff to 5 times the maximal sigma. */
+    if(list[i].sig1 > list[i].sig2)
+      if(list[i].sig1 > list[i].sig3)
+	list[i].cutoff = 5*list[i].sig1;
+      else
+	list[i].cutoff = 5*list[i].sig3;
+    else
+      if(list[i].sig2 > list[i].sig3)
+	list[i].cutoff = 5*list[i].sig2;
+      else
+	list[i].cutoff = 5*list[i].sig3;
     list[i].norm = 1/(pow(2*PI, 1.5)*list[i].sig1*list[i].sig2*list[i].sig3);
     i++;
   }
   fclose(f);
   printf("Single_crystal: Read %d reflections from file '%s'\n", i, file);
   info->list = list;
-  info->count = count;
-  info->tau_list = malloc(count*sizeof(*info->tau_list));
+  info->count = i;
+  info->tau_list = malloc(i*sizeof(*info->tau_list));
   if(!info->tau_list)
   {
     fprintf(stderr, "Single_crystal: Error: Out of memory!\n");
@@ -262,6 +274,8 @@ read_hkl_data(char *file, struct hkl_info *info)
 
 INITIALIZE
 %{
+  double tmp_x, tmp_y, tmp_z;
+
   hkl_info.mosaic = mosaic;
   hkl_info.delta_d_d = delta_d_d;
   hkl_info.ax = ax;
@@ -284,18 +298,42 @@ INITIALIZE
   hkl_info.bsy = 2*PI/hkl_info.V0*tmp_y;
   hkl_info.bsz = 2*PI/hkl_info.V0*tmp_z;
   vec_prod(tmp_x, tmp_y, tmp_z, ax, ay, az, bx, by, bz);
-  hkl_info.bsx = 2*PI/hkl_info.V0*tmp_x;
-  hkl_info.bsy = 2*PI/hkl_info.V0*tmp_y;
-  hkl_info.bsz = 2*PI/hkl_info.V0*tmp_z;
+  hkl_info.csx = 2*PI/hkl_info.V0*tmp_x;
+  hkl_info.csy = 2*PI/hkl_info.V0*tmp_y;
+  hkl_info.csz = 2*PI/hkl_info.V0*tmp_z;
   /* Read in structure factors, and do some pre-calculations. */
   read_hkl_data(reflections, &hkl_info);
 %}
 TRACE
 %{
+  struct hkl_data *L;		/* Structure factor list */
+  int i;			/* Index into structure factor list */
+  struct tau_data *T;		/* List of reflections close to Ewald sphere */
+  int j;			/* Index into reflection list */
+  int firstevent;		/* True for the first scattering event only */
+  double kix, kiy, kiz, ki;	/* Initial wave vector [1/AA] */
+  double kfx, kfy, kfz;		/* Final wave vector */
+  double v;			/* Neutron velocity */
+  double rho_x, rho_y, rho_z;	/* the vector ki - tau */
+  double rho;
+  double diff;			/* Deviation from Bragg condition */
+  double d_x, d_y, d_z;		/* Vector deviation from Bragg condition */
+  int tau_count;		/* Number of reflections within cutoff */
+  double V0;			/* Volume of unit cell */
+  double l_full;		/* Neutron path length for transmission */
+  double abs_xsect, abs_xlen;	/* Absorbtion cross section and length */
+  double inc_xsect, inc_xlen;	/* Incoherent cross section and length */
+  double coh_xsect, coh_xlen;	/* Coherent cross section and length */
+  double tot_xsect, tot_xlen;	/* Total cross section and length */
+  double solid_angle;		/* Solid angle from which kf is sampled */
+  double arg, refl;		/* Temporaries */
 
   PROP_Z0;			/* ToDo: cylinder geometry */
   if(x < -radius || x > radius || y < -height/2 || y > height/2)
-    ABSORB;
+    {
+/* printf("## MISS\n"); */
+      ABSORB;
+    }
   firstevent = 1;
   for(;;)			/* Loop over multiple scattering events */
   {
@@ -335,18 +373,23 @@ TRACE
 	T[j].ny = T[j].rho_y/T[j].rho;
 	T[j].nz = T[j].rho_z/T[j].rho;
 	T[j].ox = (ki - T[j].rho)*T[j].nx;
-	T[j].ox = (ki - T[j].rho)*T[j].ny;
-	T[j].ox = (ki - T[j].rho)*T[j].nz;
-	normal_vec(&[j].b1x, &T[j].b1y, &T[j].b1z, T[j].nx, T[j].ny, T[j].nz);
-	vec_product(T[j].b2x, T[j].b2y, T[j].b2z,
-		    T[j].nx, T[j].ny, T[j].nz,
-		    T[j].b1x, T[j].b1y, T[j].b1z);
+	T[j].oy = (ki - T[j].rho)*T[j].ny;
+	T[j].oz = (ki - T[j].rho)*T[j].nz;
+	normal_vec(&T[j].b1x, &T[j].b1y, &T[j].b1z, T[j].nx, T[j].ny, T[j].nz);
+	vec_prod(T[j].b2x, T[j].b2y, T[j].b2z,
+		 T[j].nx, T[j].ny, T[j].nz,
+		 T[j].b1x, T[j].b1y, T[j].b1z);
 	j++;
       }
     }
     tau_count = j;
-
+    if(tau_count == 0)
+    {
+/* printf("** No nearby reflections.\n"); */
+      ABSORB;			/* No reflections possible */
+    } 
     /* (3). Probabilities of the different possible interactions. */
+    V0 = hkl_info.V0;
     l_full = 0 /* ToDo: Potential path length in sample */;
     abs_xsect = (0 /* ToDo: absorbtion at 2200m/s */) / v;
     abs_xlen = abs_xsect/V0;
@@ -364,7 +407,7 @@ TRACE
 /*       mc_trans = p_trans; */
 /*     } */
 /*     firstevent = 0; */
-/*     if(rand01() < mc_trans)	/* Transmit */ */
+/*     if(rand01() < mc_trans)	/* Transmit */
 /*     { */
 /*       p *= p_trans/mc_trans; */
 /*       break; */
@@ -380,12 +423,12 @@ TRACE
     /* Choose between coherent and incoherent scattering */
 /*     if(rand0max(coh_xlen + inc_xlen) < inc_xlen) */
 /*     { */
-/*       /* (6). Incoherent scattering */ */
+/*       /* (6). Incoherent scattering */
 /*       randvec_target_sphere(kix, kiy, kiz, NULL, 0, 0, 0, 1); */
 /*       kix *= ki; */
 /*       kiy *= ki; */
 /*       kiz *= ki; */
-/*       continue;			/* Go for next scattering event */ */
+/*       continue;			/* Go for next scattering event */
 /*     } */
     /* 7. Coherent scattering. Select reciprocal lattice point. */
 /*     r = rand0max(coh_xsect); */
@@ -416,15 +459,18 @@ TRACE
 /*     kiy *= adjust; */
 /*     kiz *= adjust; */
     randvec_target_sphere(&kfx, &kfy, &kfz, &solid_angle,
-			  ki*T[j].nx, ki*T[j].ny. ki*T[j].nz, L[i].cutoff);
+			  ki*T[j].nx, ki*T[j].ny, ki*T[j].nz, L[i].cutoff);
     d_x = kfx - T[j].rho_x;
     d_y = kfy - T[j].rho_y;
     d_z = kfz - T[j].rho_z;
     arg = L[i].m1*d_x*d_x + L[i].m2*d_y*d_y + L[i].m3*d_z*d_z;
     if(arg > 80)
+    {
+/* printf("## arg=%g\n", arg); */
       ABSORB;			/* Avoid underflow */
+    }
     refl = L[i].norm*exp(-arg);
-    p *= 2*radius*10e-10*(2*PI)*(2*PI)*(2*PI)/(V0*V0)*L[i].F2*refl;
+    p *= 2*radius*10e10*(2*PI)*(2*PI)*(2*PI)/(V0*V0)*L[i].F2*refl;
     p *= tau_count*(solid_angle/(4*PI));
     vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
     vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
@@ -434,3 +480,15 @@ TRACE
   }
 
 %}
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  circle("xz", 0,  height/2.0, 0, radius);
+  circle("xz", 0, -height/2.0, 0, radius);
+  line(-radius, -height/2.0, 0, -radius, +height/2.0, 0);
+  line(+radius, -height/2.0, 0, +radius, +height/2.0, 0);
+  line(0, -height/2.0, -radius, 0, +height/2.0, -radius);
+  line(0, -height/2.0, +radius, 0, +height/2.0, +radius);
+%}
+END
