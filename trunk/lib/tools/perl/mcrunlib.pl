@@ -120,8 +120,8 @@ sub get_out_file_next {
 	   ($force || !defined($out_age) || $out_age > $c_age)) {
 	    &$printer("Compiling C source '$c_name' ...");
 	    # ToDo: splitting CFLAGS should handle shell quoting as well ...
-	    my $cmd = [$mcstas_config{CC},
-		       split(' ', $mcstas_config{CFLAGS}),
+	    my $cmd = [$MCSTAS::mcstas_config{CC},
+		       split(' ', $MCSTAS::mcstas_config{CFLAGS}),
 		       "-o", $out_name, $c_name, "-lm"];
 	    &$printer(join(" ", @$cmd));
 	    $v->{'stage'} = POST_CC;
