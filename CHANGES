@@ -1,3 +1,18 @@
+Changes in McStas v1.4, July 28, 2000:
+
+ - It is now possible to use arbitrary C expressions in the instrument
+   definition, ie. to set rotations, component parameters, etc. Only
+   works for SETTING parameters though, not DEFINITION parameters.
+ - Experimental mcstas2vitess conversion program to automatically
+   translate a McStas component into a VITESS module.
+ - Option to clear the simulation output in mcgui.
+ - Partial solution to the problem with name conflicts on component
+   parameters.
+ - Partial NeXus support implemented, but not yet functional.
+ - Misc. minor bug fixes.
+
+
+
 Changes in McStas v1.3, May 18, 2000:
 
  - New facility `McDoc' for documentation of components, with
