@@ -1,6 +1,6 @@
 # Highly oriented Pyrolithic Graphite PG (002) transmission.
 # with 3rd order correction
-# Unknown thickness
+# thickness: 0.05 [m]
 # Data taken from 'La diffusion inelastique des neutrons' 
 # JDN5, 20 mai 1996 by B. Hennion (LLB) and ILL/IN20. farhi@ill.fr, March 2000
 # [ k (Angs-1) , Transmission (%) ]
