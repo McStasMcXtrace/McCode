@@ -20,9 +20,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.9 2004-11-30 16:11:37 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.10 2005-01-18 10:35:56 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.9  2004/11/30 16:11:37  farhi
+*	defined some macros for an easier User variable handling. Should be updated in the header and Comp doc
+*	
 *	Revision 1.8  2003/02/11 12:28:46  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
@@ -170,11 +173,11 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *,
 #define MONND_DECLARE(monname) \
   struct MonitornD_Variables *mcmonnd ## monname;
 #define MONND_USER_TITLE(monname, num, title) \
-  mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
-  strcpy(mcmonnd ## monname->UserName ## num, title);
+  { mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
+    strcpy(mcmonnd ## monname->UserName ## num, title); }
 #define MONND_USER_VALUE(monname, num, value) \
-  mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
-  mcmonnd ## monname->UserName ## num = (value);
+  { mcmonnd ## monname = &(MC_GETPAR(monname, Vars)); \
+    mcmonnd ## monname->UserVariable ## num = (value); }
 
 #endif
 
