@@ -34,30 +34,30 @@ Changes in McStas v1.6.4d (beta dev. release), Jan 17, 2003
 This version is a development version, highly improved from the 1.5 and 1.6*-ill
 versions, built by the Risoe and ILL teams.
 
-  Kernel (i.e. mcstas program)
+  Kernel (i.e. the 'mcstas' program)
   - components may have a SHARE section, which is imported only once per type
     of component. It has the same role as DECLARE, but only once.
   - the component files may have some %include inside '%{ }%' C DECLARE or SHARE
-    blocks. 
+    blocks. The files to include are searched locally, and then in the library.
     If an extension is found, just the specified file is included, else both 
     .h and .c are embedded if the --no-runtime has not been specified.
     The instrument files can also embed external files, both in C blocks 
-    and in the instrument parts (DECLARE, etc...)
+    and in the instrument parts (DECLARE, etc...) as in previous releases.
   - The instrument and components may have char* setting parameters. For
     instruments, their length is limited to 1024 chars.
   - The FINALLY section, that was executed at the end, has been split into 
-    still the FINALLY, and a new SAVE section. This one is still executed
+    still the FINALLY, and a new SAVE section. This latter is executed
     at simulation end (just before the FINALLY), but also each time an
     intermediate save is required (e.g. a 'kill -USR2 <pid>' is used).
   - An instrument source file may contain EXTEND %{ }% C blocks just after  
     the usual AT...ROTATED.. keywords, to extend the behaviour of existing
     components, without touching their code. All local component variables are 
-    available. This may e.g. be used to add a new 'color' to neutrons, i.e.
-    assign a new characteristic variable to the neutron. 
+    available. This may for instance be used to add a new 'color' to neutrons, 
+    i.e. assign a new characteristic variable to the neutron.
   - component instances in an instrument source file may be GROUPed into 
-    exclusive assembly, i.e. only one component of th group will intercept
+    exclusive assembly, i.e. only one component of the group will intercept
     neutron, the rest will be skipped. This is usefull for multi monochromators
-    multi detectors, multiple collimators, ...
+    multi detectors, multiple collimators, ... This is a kind if splitting.
   - McStas can now compile for Windows without troubles (if lex/yacc files
     were generated elsewere, or using the flex/yacc for Windows)
 
@@ -71,56 +71,56 @@ versions, built by the Risoe and ILL teams.
     will create a mcstas.m file. Launch Matlab and execute
       s=mcstas('plot')  % will import data into s, and plot all detectors.
     Binary formats are handled by IDL, Matlab, Scilab.
-    Extended format list is given when setting the MCSTAS_CFLAGS env. variable 
-    to '-DALL_FORMATS', e.g.
-      setenv MCSTAS_CFLAGS '-DALL_FORMATS'
-    The full format list is
+    The present available format list is
       "McStas" "Scilab" "Matlab" "IDL" "XML" "HTML" 
-  - It is possible to save 3D data arrays, bu calling the DETECTOR_OUT_3D macro.
+    The default format is McStas/PGPLOT, but may be specified globally using
+    the MCSTAS_FORMAT environment variable
+  - It is possible to save 3D data arrays, by calling the DETECTOR_OUT_3D macro.
     (handled as 2D by mcplot)
-  - The type of the number of events array in monitors was changed from int to
+  - The type of the 'number of events' array in monitors was changed from int to
     double, to avoid overflow. Please update your home-made monitors.
   - many dedicated libraries are now available as shared code for reading
     tables, handling data trees and monitors. These are C functions to be
-    %included into components (see e.g. monitors/Monitor_nD.comp)
+    %included into components (see e.g. lib/monitors/Monitor_nD.comp)
   - The USR2 signal generates an intermediate save for all monitors, during
-    the simulation. The USR1 still give informations.
+    the simulation (execute the SAVE section). The USR1 still give informations.
   - a new randvec_target_rect function now focuses on a rectangle
-    (more efficient than former randvec_target_sphere)
+    (more efficient than former randvec_target_sphere=randvec_target_circle)
 
-  Components
-  - lib/data this new directory contains neutron data tables
+  Components (in the lib directory)
+  - a new data directory contains neutron data tables
   - obsolete directory contains components that were renamed or old.
-  - misc/Progress_bar component now exists.
+  - misc/Progress_bar component now exists, and may save data regularly.
   - optics/Monochromator_curved can read reflectivity and transmission tables
   - monitors/Monitor_nD can have automatic limits mode for either all or 
     selected monitored variables. It may also plot banana monitors for mcdisplay
-    Also, may trigger intermediate savings for all monitors (same as USR2 sig.)
+    and trigger intermediate savings for all monitors (same as USR2 sig.)
     Also, it may monitor something else than the intensity, e.g. the mean
     energy on a XY psd.
   - sources/Virtual_output can save all neutron events into a file
-    (beware the size of the generated files !)
+    (beware the size of the generated files !). Format may be text and binary
   - sources/Virtual_input can read the files generated by Virtual_output
   - optics/Guide_gravity can handle a 2D array of channels
   - optics/Filter_gen can read a table from a file and affect the neutron beam
-    (replaces the old 'Flux_adapter'). It may act as a filter or a source
+    (replaces the obsolete 'Flux_adapter'). It may act as a filter or a source
   - samples: they now can all target towards any component, giving its index 
-    (no need to compute target_x/y/z vector)
+    (no need to compute target_x/y/z vector, use e.g. target_index=+1)
   - samples/Res_monitor, Powder1 and V_sample may now have a sphere or box
-    shape, and may focus to a rectangular area (instead of circle)
+    shape, and may focus to a circular or rectangular area
 
   Tools
   - Matlab, Scilab and IDL may read directly McStas results if the simulation
     was executed with the --format="..." option (see 'Run-time' changes)
   - mcplot, mcdisplay, mcgui are now less dependent on the perl/pgplot installed
     versions.
-  - mcplot can plot a single McStas data file
+  - mcplot can plot a single simulation data file
   - mcplot, mcresplot, mcdisplay can output gif, ps and ps color. They also
     have integrated help (-h options), and may generate output files in a
     non interactive mode (read file, create output file, exit)
+  - mcplot and mcdisplay work with Matlab, PGPLOT and Scilab plotters (set with
+    the MCSTAS_FORMAT default setting, or -pPLOTTER, or PGPLOT if not set)
   - mcrun can not currently generate scan results in other formats than McStas
-  - mcsats2vitess works now ok for converting a McStas component to a Vitess one
-  
+  - mcsats2vitess works now ok for converting a McStas component to a Vitess one  
 
 
 Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
