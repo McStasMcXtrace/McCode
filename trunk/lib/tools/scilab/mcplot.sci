@@ -406,7 +406,7 @@ function mcplot_menu_action(k, gwin)
       end
     case 25 then  // reset view
       xclear()
-      xtape('replayna', gwin, 90, 0);
+      if MCPLOT.DirectExport ~= 1 then xtape('replayna', gwin, 90, 0); end
     case 26 then  // select scan step
       pathname = ''; execstr('pathname =ThisFigure.pathname','errcatch');
       filename = ''; execstr('filename =ThisFigure.filename','errcatch');
@@ -484,7 +484,9 @@ function mcplot_menu_action(k, gwin)
         execstr('MCPLOT.Figure_'+string(nwin)+'.filename = ThisFigure.filename;','errcatch');
         mcplot_set_global(d, nwin, 0); 
         xclear();
-        xtape('replayna', nwin, 90, 0);        // top view
+	if MCPLOT.DirectExport ~= 1
+          xtape('replayna', nwin, 90, 0);        // top view
+	end
         mcplot_fig_legend(d,'','');
       end
       xinfo(t); mprintf('%s\n',t);
@@ -565,6 +567,7 @@ function filename = mcplot_output_begin(form, filename)
     end
     if ext ~= '.scg', 
       xinit(filename);
+      mprintf('mcplot_output_begin: xinit '+filename);
       if dr == 'Pos' & ~length(strindex(form,'psc'))
         gray();
       end
@@ -596,7 +599,9 @@ function mcplot_output_end(form, win, filename)
       filename=filename+ext;
     end
     if ext ~= '.scg', 
-      xtape('replay',win);
+      if MCPLOT.DirectExport ~= 1
+        xtape('replay',win);
+      end
       xend(); 
     else xsave(filename);
     end
@@ -783,21 +788,23 @@ function mcplot_set_global(s, gwin, p_in)
   if ~length(gwin), gwin = xget('window'); end
   ThisFigure = [];
   // update MCPLOT global variable
-  if (type(MCPLOT) == 16 | type(MCPLOT) == 17) & argn(2) > 1
+  if (type(MCPLOT) == 16 | type(MCPLOT) == 17) & argn(2) > 1 
     tag_names = getfield(1,MCPLOT);
     ThisFigure = 'Figure_'+string(gwin);
     if length(find(tag_names == ThisFigure))
       ThisFigure = getfield(ThisFigure,MCPLOT);
     else ThisFigure = '';
     end
-  else
-    MCPLOT = struct();
-    MCPLOT.Figure_0 = 0;
-    MCPLOT.MenuInstalled = 0;
-    MCPLOT.ShiftedItems = 0;
-    MCPLOT.LogScale = 0;
-    MCPLOT.ScanWindow = -1;
+  elseif gwin >= 0
+      MCPLOT = struct();
+      MCPLOT.Figure_0 = 0;
+      MCPLOT.MenuInstalled = 0;
+      MCPLOT.DirectExport  = 0;
+      MCPLOT.ShiftedItems = 0;
+      MCPLOT.LogScale = 0;
+      MCPLOT.ScanWindow = -1;
   end
+  if gwin == -1 then return; end
   tag_names = getfield(1,s);
   if ~length(ThisFigure)
     ThisFigure = struct();
@@ -1057,6 +1064,8 @@ if argn(2) == 0, object=''; end
 if argn(2) <= 1, options=''; end
 if argn(2) <= 2, id = ''; end
 
+mcplot_set_global([], -1, []); // set up global MCPLOT
+
 if typeof(options) ~= 'string', options = ''; end
 if ~length(options), options = '-overview'; end
 options = convstr(options, 'l');  // to lower case
@@ -1078,6 +1087,8 @@ elseif length(strindex(options,'-gif')), form = '-gif';
 elseif length(strindex(options,'-fig')), form = '-fig';  
 elseif length(strindex(options,'-ppm')), form = '-ppm'; 
 elseif length(strindex(options,'-scg')), form = '-scg'; end
+
+if form ~= 'Rec' then MCPLOT.DirectExport = 1; end
 
 // handle file name specification in 'object'
 if typeof(object) == 'string' // if object is a string
