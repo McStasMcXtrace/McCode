@@ -25,7 +25,7 @@
 # Config module needed for various platform checks.
 # PW, 20030314
 use Config;
-
+use POSIX;
 
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
@@ -158,31 +158,41 @@ sub check_external_editor {
 sub menu_spawn_editor {
     my ($w) = @_;
     my $cmd = $external_editor ? $external_editor : "vi";
-    my $pid = fork();
-    if(!defined($pid)) {
-        $w->messageBox(-message =>
-                       "Failed to spawn editor \"$external_editor\".",
-                       -title => "Command failed",
-                       -type => 'OK',
-                       -icon => 'error');
-        return 0;
-    } elsif($pid > 0) {
-        waitpid($pid, 0);
-        return 1;
+    my $pid;
+    # Must be handled differently on Win32 vs. unix platforms...
+    if($Config{'osname'} eq "MSWin32") {
+	if($current_sim_def) {
+	    system("$external_editor $current_sim_def");
+	} else {
+	    system("$external_editor");
+	}
     } else {
-        # Double fork to avoid having to wait() for the editor to
-        # finish (or having it become a zombie). See man perlfunc.
-        unless(fork()) {
-            if($current_sim_def) {
-                exec($external_editor, $current_sim_def);
-            } else {
-                exec($external_editor);
-            }
-            # If we get here, the exec() failed.
-            print STDERR "Error: exec() of $external_editor failed!\n";
-            CORE::exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
-        }
-        CORE::exit(0);                # CORE:exit needed to avoid Perl/Tk failure.
+	$pid = fork();
+	if(!defined($pid)) {
+	    $w->messageBox(-message =>
+			   "Failed to spawn editor \"$external_editor\".",
+			   -title => "Command failed",
+			   -type => 'OK',
+			   -icon => 'error');
+	    return 0;
+	} elsif($pid > 0) {
+	    waitpid($pid, 0);
+	    return 1;
+	} else {
+	    # Double fork to avoid having to wait() for the editor to
+	    # finish (or having it become a zombie). See man perlfunc.
+	    unless(fork()) {
+		if($current_sim_def) {
+		    exec($external_editor, $current_sim_def);
+		} else {
+		    exec($external_editor);
+		}
+		# If we get here, the exec() failed.
+		print STDERR "Error: exec() of $external_editor failed!\n";
+		POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
+	    }
+	    POSIX::_exit(0);                # CORE:exit needed to avoid Perl/Tk failure.
+	}
     }
 }
 
@@ -632,7 +642,7 @@ sub dialog_get_out_file {
                     exec @$val if @$val; # The "if @$val" avoids a Perl warning.
                     # If we get here, the exec() failed.
                     print STDERR "Error: exec() of $val->[0] failed!\n";
-                    CORE::exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
+                    POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
                 }
             } elsif($type eq 'ERROR') {
                 &$printer("Error: $msg");
@@ -708,7 +718,7 @@ sub my_system {
         exec @sysargs if @sysargs; # The "if @sysargs" avoids a Perl warning.
         # If we get here, the exec() failed.
         print STDERR "Error: exec() of $sysargs[0] failed!\n";
-        CORE::exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
+        POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
     }
 }
 
