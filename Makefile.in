@@ -138,7 +138,6 @@ install: installdirs $(BINOBJS)
 	./mcdoc.fixpl
 	mkdir $(mc_libdir)/tools/perl/modules
 	cd support/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install 
-	cd support/Syntax-Highlight-Perl-1.0 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install 
 	cd support/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install 
 
 

@@ -1348,10 +1348,10 @@ sub setup_edit {
     my $w = $mw->Toplevel;
     my $e;
     # Create the editor text widget.
-#    require Tk::CodeText::McStas;
+    require Tk::CodeText::McStas;
     $e = $w->Scrolled('CodeText',-relief => 'sunken', -bd => '2', -setgrid => 'true',
                       -height => 24, wrap => 'none', -scrollbars =>'se',  
-                      -commentchar => '// ', -indentchar => "  ", -updatecall => \&update_line, -syntax => 'Perl');
+                      -commentchar => '// ', -indentchar => "  ", -updatecall => \&update_line, -syntax => 'McStas', -background => 'white');
     my $menu = $e->menu;
     $w->bind('<F5>' => [\&Tk::CodeText::selectionIndent]);
     $w->bind('<F6>' => [\&Tk::CodeText::selectionUnIndent]);
