@@ -38,7 +38,7 @@ dvips -o install.ps install.dvi
 ps2pdf install.ps install.pdf
 gzip install.ps
 mkdir ../html 
-latex2html -local_icons -rootdir ../html install.tex
+latex2html -local_icons -dir ../html install.tex
 # clean up
 rm install.aux
 rm install.log
