@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: symtab.c,v 1.3 1998-10-02 08:39:25 kn Exp $
+*	$Id: symtab.c,v 1.4 1999-04-16 07:41:31 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.3  1998/10/02 08:39:25  kn
+*	Fixed header comment.
+*
 *	Revision 1.2  1997/09/07 17:58:45  kn
 *	Snapshot with (untested) code generation complete.
 *
@@ -132,8 +135,9 @@ symtab_add(Symtab st, char *name, void *value)
 
 
 /*******************************************************************************
-* Free up memory allocated to a symbol table. The caller must supply a
+* Free up memory allocated to a symbol table. The caller can supply a
 * function value_free that will free the memory for each table entry.
+* Pass NULL for value_free if no freeing is necessary.
 *******************************************************************************/
 void
 symtab_free(Symtab st, void (*value_free)(void *))
@@ -143,7 +147,8 @@ symtab_free(Symtab st, void (*value_free)(void *))
   for(i = 0; i < st->size; i++)
   {
     str_free(st->entries[i].name);
-    (*value_free)(st->entries[i].val);
+    if(value_free)
+      (*value_free)(st->entries[i].val);
   }
   memfree(st->entries);
   memfree(st);
