@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.61 2003-04-25 16:24:44 farhi Exp $
+* $Id: mcstas-r.c,v 1.62 2003-05-16 12:13:03 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.61  2003/04/25 16:24:44  farhi
+* corrected 4PI scattering from randvec_* functions causing mcdisplay to crash
+* when using (0,0,0) vector for coordinate transformations
+*
 * Revision 1.60  2003/04/16 14:55:47  farhi
 * Major change in saving data so that it's shown just like PGPLOT
 * and axes+labels should follow data orientation (if transposed)
@@ -230,7 +234,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);\n"
       "if isempty(d.data)\n"
       " if ~length(findstr(d.format, 'binary'))\n"
-      "  copyfile(d.filename,[d.func,'.m']);p=d.parent;\n"
+      "  copyfile(d.filename,[d.func,'.m']);p=d.parent;path(path);\n"
       "  eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);\n"
       " else\n"
       "  if length(findstr(d.format, 'float')), t='single';\n"
