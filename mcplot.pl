@@ -71,7 +71,7 @@ for($i = 0; $i < @ARGV; $i++) {
       $do_overview = 1;
   } elsif(/^-png$/i || /^-ps$/i || /^-psc$/i || /^-ppm$/i) {
       $passed_arg_str_quit .= "$_ ";
-  } elsif(/^-p([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
+  } elsif(/^-p([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--format=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
         $plotter = $1;	
   } elsif(/^-i([a-zA-ZæøåÆØÅ0-9_]+)$/ || /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
       $inspect = $1;
