@@ -157,7 +157,11 @@ else  % if 's' is a 'struct'
   source   = eval('fud.instrument.Source','[]');
   if ~length(source), source   = eval('fud.Source','''McStas'''); end
   sdate    = eval('fud.Date','now');
-  if ~ischar(sdate), sdate = datestr(sdate); end
+  % The datestr call below is partly broken:
+  % If sdate comes from the data file, we will not take offset
+  % from GMT into account... Have made a query to comp.soft-sys.matlab
+  % to ask for a solution...
+  if ~ischar(sdate), sdate = datestr(sdate/60/60/24 + 719529); end
   ncount   = eval('fud.Ncount','''unknown''');
   overview = eval('fud.overview','[]');
   if ~length(filename) & isfield(object,'filename'), filename=object.filename; end

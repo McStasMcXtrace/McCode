@@ -67,13 +67,14 @@ functionality on Win32 using mcc
 * Installation process, reverse order plotter <-> package
 * TODO list on cvs
 * line number in editor (go to line)
+* Fixed date string, mcplot year 5000 (matlab) (Needs timezone info,
+  have asked in comp.soft-sys.matlab for this...)
 
 TODO:
 * Doc update, especially regarding installation
 * McStas manual updates in general
 * Test runs of the tutorial and the package in general
 * mcplot problem running mcdisplay for instrument view (n exist)
-* date string, mcplot year 5000 (At least matlab)
 * Online monitor plotting through USR2 signal
 * Kim's Powder2 (needs a few lines for randvec_target_rect) - PETER
 * Scrollbar in editor (too hard? / platform specific) 
