@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Soller.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KN
+* Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.6 $
-* Origin: McStas release
+* Version: $Revision: 1.7 $
+* Origin: McStas 1.4.2
 *
 * A simple analytical Soller collimator.
 *
@@ -38,6 +37,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, divergence)
 OUTPUT PARAMETERS (slope)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   double slope;
