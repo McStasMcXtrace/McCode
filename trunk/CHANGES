@@ -1,0 +1,19 @@
+Changes in McStas v1.1, March 31, 1999:
+
+ - New components.
+ - Much improved output file format, with new mcplot front-end to
+   automatically plot the results of a simulation.
+ - New MCDISPLAY sections in component definitions, and much improved
+   mcdisplay front-end.
+ - New kernel calls DETECTOR_OUT_[012]D(), mcget_ncount().
+ - Improved error messages.
+ - New --portable compiler option.
+ - Various minor bug and compatibility fixes.
+ - Preliminary support for polarised neutrons.
+ - Quote special characters in strings in the generated C code.
+
+
+
+Changes in McStas v1.0, October 26, 1998:
+
+ - Initial release.
