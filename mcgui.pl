@@ -959,24 +959,71 @@ sub make_comp_inst {
 
 # The text for the instrument template.
 my $instr_template_start = <<INSTR_FINISH;
-DEFINE INSTRUMENT test()
+/*******************************************************************************
+*         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: test (rename also the example and DEFINE lines below)
+*
+* %Identification
+* Written by: Your name (email)
+* Date: Current Date
+* Origin: Your institution
+* Release: McStas 1.8
+* Version: 0.1
+* %INSTRUMENT_SITE: Institution_name_as_a_single word
+*
+* Instrument short description
+*
+* %Description
+* Instrument longer description (type, elements, usage...)
+*
+* Example: mcrun test.instr <parameters=values>
+*
+* %Parameters
+* Par1: (unit) Parameter1 description
+*
+* %Link 
+* A reference/HTML link for more information
+*
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT test(Par1=Default_Value1)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
 %}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
 %}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
 TRACE
 
-/* This Arm may serve as the absolute origin for further RELATIVE reference */
-COMPONENT a1 = Arm()
+/* The Arm() class component defines reference points and orientations  */
+/* in 3D space. Every component instance must have a unique name. Here, */
+/* Origin is used. This Arm() component is set to define the origin of  */
+/* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
+/* for further RELATIVE reference, and even replaced by a Progress_bar  */
+/* component. Other useful keywords are : ROTATED EXTEND GROUP PREVIOUS */
+/* Also think about adding a neutron source !                           */
+COMPONENT Origin = Arm()
   AT (0,0,0) ABSOLUTE
 INSTR_FINISH
 my $instr_template_end = <<INSTR_FINISH;
 
+/* This section is executed when the simulation ends (C code). Other    */
+/* optional sections are : SAVE                                         */
 FINALLY
 %{
 %}
+/* The END token marks the instrument definition end */
 END
 INSTR_FINISH
 
@@ -989,7 +1036,7 @@ sub menu_insert_instr_template {
         $edit_control->insert('end', $instr_template_end);
         $edit_control->markSet('insert', $currentpos);
         if (not $current_sim_def) {
-          $edit_window->title("Edit: insert components in TRACE and save your instrument");
+          $edit_window->title("Edit: Insert components in TRACE and save your instrument");
         }
     }
 }
