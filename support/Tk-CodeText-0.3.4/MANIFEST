@@ -5,12 +5,8 @@ README
 CHANGES
 CodeText.pm
 CodeText.pod
-CodeText/Bash.pm
-CodeText/Perl.pm
 CodeText/None.pm
-CodeText/HTML.pm
 CodeText/Template.pm
-CodeText/Pod.pm
 CodeText/Xresources.pm
 RulesEditor.pm
 samples/Bash.test
