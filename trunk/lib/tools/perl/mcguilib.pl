@@ -67,7 +67,6 @@ sub simulation_dialog {
         $doseed = 0;
     }
     $si{'Autoplot'} = 0 unless $si{'Autoplot'};
-    $si{'Binary'} = 0 unless $si{'Binary'};
     $si{'Ncount'} = 1e6 unless $si{'Ncount'};
     $si{'Trace'} = 0 unless $si{'Trace'};
     $si{'NScan'} = 0 unless $si{'NScan'};
@@ -154,24 +153,25 @@ sub simulation_dialog {
                                   -justify => 'right',
                                   -textvariable => \$si{'Ncount'});
     $ncount_entry->pack(-side => 'left');
-    if (!($Config{'osname'} eq 'MSWin32')) {
-      if ($si{'ssh'} > 0) {
-        $f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
-				  -variable => \$si{'Multi'},
-				  -relief => 'flat')->pack(-anchor => 'w');
-      }
-      if ($si{'mpicc'} > 0) {
+    if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
+      if ($si{'mpi'} > 0) {
         $f1->Label(-text => "# MPI nodes: ")->pack(-side => 'left');
         $f1->Entry(-relief => 'sunken',
                -width=>10,
                -textvariable => \$si{'mpi'},
                -justify => 'right')->pack(-side => 'left');
       }
+      if ($si{'ssh'} > 0) {
+        $f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
+				  -variable => \$si{'Multi'},
+				  -relief => 'flat')->pack(-anchor => 'w');
+      }
     }
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-    if ($plotter == 0) { $name_instr = "PGPLOT"; }
-    elsif ($plotter == 1 || $plotter == 2) { $name_instr = "Matlab"; }
-    elsif ($plotter == 3 || $plotter == 4) { $name_instr = "Scilab"; }
+    if ($plotter =~ /PGPLOT|McStas/i) { $name_instr = "PGPLOT"; }
+    elsif ($plotter =~ /Matlab/i)     { $name_instr = "Matlab"; }
+    elsif ($plotter =~ /Scilab/i)     { $name_instr = "Scilab"; }
+    elsif ($plotter =~ /HTML/i)       { $name_instr = "HTML/VRML"; }
     $opt_frame->Checkbutton(-text => "Plot results ($name_instr)",
                             -variable => \$si{'Autoplot'},
                             -relief => 'flat')->pack(-anchor => 'w');
@@ -256,7 +256,7 @@ sub dialog_plot_single {
     # Should only do something if we are using PGPLOT
     # PW 20030314
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-    if ($plotter eq 0) {
+    if ($plotter =~ /PGPLOT|McStas/i) {
         $current_plot = $cl->index('active');
         single_plot("/xserv", $di->[$current_plot], 0);
     }
@@ -266,19 +266,16 @@ sub dialog_hardcopy {
     my ($dlg, $di, $type) = @_;
     # Should only be done if we are using PGPLOT
     # PW 20030314
-    if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
         my $default = $current_plot == -1 ?
-            "mcstas.ps" :
-                ($di->[$current_plot]{'Filename'} . ".ps");
+            "mcstas" : ($di->[$current_plot]{'Filename'});
+        my $ext = $type eq "cps" ? "ps" : $type;
+        $default .= ".$ext";
         my $oldgrab = $dlg->grabStatus;
         $dlg->grabRelease;
-        if ($type =~ "gif") { 
-            $default = $current_plot == -1 ?
-                "mcstas.gif" :
-                    ($di->[$current_plot]{'Filename'} . ".gif"); 
-        }
-        my $f = $dlg->getSaveFile(-defaultextension => ".ps",
-                                  -title => "Select postscript file name",
+        
+        my $f = $dlg->getSaveFile(-defaultextension => ".$ext",
+                                  -title => "Select $ext output file name",
                                   -initialfile => $default);
         $dlg->grab if $oldgrab eq 'local';
         return 0 unless $f;
@@ -294,22 +291,16 @@ sub dialog_hardcopy {
 sub plot_dialog {
     my ($win, $ii, $si, $di, $sim_file_name) = @_;
     # Platform checks. Assumption: Either unix type os / Win32.
-    my $suffix;
-    my $prefix;
-    my $pl_suffix;
+    my $prefix          = $MCSTAS::mcstas_config{'PREFIX'};
+    my $suffix          = $MCSTAS::mcstas_config{'SUFFIX'};
+    my $background      = $MCSTAS::mcstas_config{'BACKGROUND'};
+
     my @plot_cmd = ();
-    if ($Config{'osname'} eq 'MSWin32') {
-      $suffix = "";
-      $prefix = "start";
-      $pl_suffix = ".pl";
-    } else {
-      $suffix = "&";
-      $prefix = "";
-      $pl_suffix = "";
+    if ($Config{'osname'} ne 'MSWin32') { # change spaces into \spaces
       $sim_file_name =~ s! !\ !g;
     }
     push @plot_cmd, $prefix;
-    push @plot_cmd, "mcplot$pl_suffix";
+    push @plot_cmd, "mcplot$suffix";
     # Should only be done if we are using PGPLOT
     # PW 20030314 - Matlab / Scilab handling below
     if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
@@ -366,6 +357,10 @@ END
                     -command => sub { dialog_hardcopy($dlg,
                                                       $di, "gif"); }
                     )->pack;
+        $rf->Button(-text => "Colour PPM",
+                    -command => sub { dialog_hardcopy($dlg,
+                                                      $di, "ppm"); }
+                    )->pack;
 #     $lf->Button(-text => "Select from overview",
 #                 -command => sub {
 #                     my ($c, $idx) = overview_plot("/xserv", $di, 1);
@@ -379,51 +374,78 @@ END
       } else {
         push @plot_cmd, $sim_file_name;
         push @plot_cmd, $suffix;
+        push @plot_cmd, $background;
         my $cmd=join(' ',@plot_cmd);
         putmsg($cmdwin, "$cmd\n",'msg');
         system $cmd;
       }
 }
 
-sub backend_dialog {
+sub preferences_dialog {
     # Choice of plotting backend
     # PW 20030314
     # Choice of internal editor
     # PW 20040527
-    my ($win,$binary,$plotter,$editor,$external_editor) = @_;
+    my ($win) = @_;
     my $dlg = $win->DialogBox(-title => "McStas: Configuration options",
-                              -buttons => ["Close"]);
+                              -buttons => ["OK"]);
     my $lf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
     my $rf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
-    my $buttons;
-    my $edit_buttons;
+    my $buttons, $edit_buttons;
+    my $plotter_id=0;
+
     $lf->pack(-side => 'left', -fill => 'both');
     $lf->Label(-text => "Plotting options:", -anchor => 'w')->pack(-fill => 'x');
-    $buttons[0]=$lf->Radiobutton(-text => "PGPLOT (standard mcdisplay.pl)",
-               -anchor => 'w', -value => 0, -variable => \$plotter)->pack(-fill => 'x');
+    $buttons[0]=$lf->Radiobutton(-text => "PGPLOT (original mcdisplay)",
+               -anchor => 'w', -value => "PGPLOT", -variable => \$plotter)->pack(-fill => 'x');
     $buttons[1]=$lf->Radiobutton(-text => "Matlab (requires Matlab)",
-               -anchor => 'w', -value => 1, -variable => \$plotter)->pack(-fill => 'x');
+               -anchor => 'w', -value => "Matlab", -variable => \$plotter)->pack(-fill => 'x');
     $buttons[2]=$lf->Radiobutton(-text => "Matlab scriptfile",
-               -anchor => 'w', -value => 2, -variable => \$plotter)->pack(-fill => 'x');
+               -anchor => 'w', -value => "Matlab_scriptfile", -variable => \$plotter)->pack(-fill => 'x');
     $buttons[3]=$lf->Radiobutton(-text => "Scilab (requires Scilab)",
-               -anchor => 'w', -value => 3, -variable => \$plotter)->pack(-fill => 'x');
+               -anchor => 'w', -value => "Scilab", -variable => \$plotter)->pack(-fill => 'x');
     $buttons[4]=$lf->Radiobutton(-text => "Scilab scriptfile",
-               -anchor => 'w', -value => 4, -variable => \$plotter)->pack(-fill => 'x');
-    $buttons[5]=$lf->Checkbutton(-text => "Use binary files (faster)",
+               -anchor => 'w', -value => "Scilab_scriptfile", -variable => \$plotter)->pack(-fill => 'x');
+    $buttons[5]=$lf->Radiobutton(-text => "HTML/VRML document",
+               -anchor => 'w', -value => "HTML", -variable => \$plotter)->pack(-fill => 'x');
+    $buttons[6]=$lf->Checkbutton(-text => "Use binary files (faster)",
                -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
-    $buttons[$plotter]->select;
+    if ($plotter=~ /PGPLOT|McStas/i) {
+      $plotter_id=0;
+    } elsif ($plotter =~ /Matlab/i && $plotter =~ /scriptfile/i) {
+      $plotter_id=2;
+    } elsif ($plotter =~ /Matlab/i) {
+      $plotter_id=1;
+    } elsif ($plotter =~ /Scilab/i && $plotter =~ /scriptfile/i) {
+      $plotter_id=4;  
+    } elsif ($plotter =~ /Scilab/i) {
+      $plotter_id=3;  
+    } elsif ($plotter =~ /HTML/i || $plotter =~ /VRML/i) {
+      $plotter_id=5;  
+    }
+    $buttons[$plotter_id]->select;
+    if ($binary == 1) { $buttons[6]->select; }
+    
+    $editor = $MCSTAS::mcstas_config{'EDITOR'};
     $rf->pack(-side => 'top', -fill => 'both');
     $rf->Label(-text => "Editor options:", -anchor => 'w')->pack(-fill => 'x');
     $edit_buttons[0]=$rf->Radiobutton(-text => "Simple built-in editor (McStas 1.7)",
                -anchor => 'w', -value => 0, -variable => \$editor)->pack(-fill => 'x');
     $edit_buttons[1]=$rf->Radiobutton(-text => "Advanced built-in editor",
-               -anchor => 'w', -value => 1, -variable => \$editor)->pack(-fill => 'x');
-    $edit_buttons[2]=$rf->Radiobutton(-text => "External editor ($external_editor)",
+               -anchor => 'w', -value => 1, -variable => \$editor,
+               -state => ($MCSTAS::mcstas_config{'CODETEXT'} ne "no" ? 'normal' : 'disabled'))->pack(-fill => 'x');
+    $edit_buttons[2]=$rf->Radiobutton(-text => "External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})",
                -anchor => 'w', -value => 2, -variable => \$editor)->pack(-fill => 'x');
     $edit_buttons[$editor]->select;
-    my $res = $dlg->Show;
     
-    return ($res, $binary, $plotter, $editor);
+    my $res = $dlg->Show;
+    # add binary flag to plotter
+    if ($binary == 1 && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
+    # finally set the PLOTTER
+    $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
+    $MCSTAS::mcstas_config{'EDITOR'}  = $editor;
+    
+    return ($res);
 }
 
 
@@ -565,7 +587,7 @@ sub comp_instance_dialog {
                        -icon => 'error');
             $selected = undef;
         } elsif ($r_at->{'relative'} eq "") { # relative not defined !
-            $dlg->messageBox(-message => "RELATIVE reference is not defined for component $r->{'INSTANCE'} of type $comp->{'name'}. Please set it to a component instance name, PREVIOUS or PREVIOUS(n).",
+            $dlg->messageBox(-message => "RELATIVE reference is not defined for component $r->{'INSTANCE'} of type $comp->{'name'}. Please set it to a component instance name (e.g. Origin, PREVIOUS or PREVIOUS(n).",
                        -title => "$r->{'INSTANCE'}: No Relative Reference",
                        -type => 'OK',
                        -icon => 'error');

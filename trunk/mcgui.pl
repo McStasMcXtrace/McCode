@@ -31,37 +31,24 @@ use POSIX;
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
-    if($ENV{"MCSTAS"}) {
-        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
-    } 
-    else {
-      if ($Config{'osname'} eq 'MSWin32') {
-        $MCSTAS::sys_dir = "c:\\mcstas\\lib";
-        my $browser = $ENV{'BROWSER'};
-        if (!$browser) {
-            print STDERR "Your BROWSER variable is not set... Trying Win32 default\n";
-            $MCSTAS::browser = "start";
-        } 
-      } else {
-        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-        my $browser = $ENV{'BROWSER'};
-        if (!$browser) {
-            print STDERR "Your BROWSER variable is not set... Trying 'netscape'\n";
-            $MCSTAS::browser = "netscape";
-        } 
-        
-      }
+    # default configuration (for all high level perl scripts)
+  if($ENV{"MCSTAS"}) {
+    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  } else {
+    if ($Config{'osname'} eq 'MSWin32') {
+      $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+    } else {
+      $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
-    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+  }
+  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+  
+  # custom configuration (this script)
+  $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
   }
 use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
-
-# Possibly, set BROWSER environment variable 
-if ($MCSTAS::browser) {
-    $ENV{'BROWSER'} = $MCSTAS::browser;
-}
+require "mcstas_config.perl";
 
 use strict;
 use FileHandle;
@@ -69,25 +56,27 @@ use Tk;
 use Tk::TextUndo;
 use Tk::ROText;
 use Tk::DialogBox;
-use Tk::widgets qw(CodeText);
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
 # Requirement for mcplotlib.pl removed, will be loaded only 
-# if mcdisplay backend is used.
+# if mcdisplay PGPLOT backend is used.
 # PW, 20030314
 # require "mcplotlib.pl";
 require "mcrunlib.pl";
 
 my $current_sim_file;
+my $current_sim_def = "";
 my ($inf_instr, $inf_sim, $inf_data);
 my %inf_param_map;
-my $current_sim_def;
-my $main_window;
-my ($edit_window, $edit_control, $edit_label);
 
-my $external_editor;
+my ($main_window,$edit_window, $edit_control, $edit_label);
 my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
+
+my $prefix          = $MCSTAS::mcstas_config{'PREFIX'};
+my $suffix          = $MCSTAS::mcstas_config{'SUFFIX'};
+my $background      = $MCSTAS::mcstas_config{'BACKGROUND'};
+my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 
 my $compinfo;                        # Cache of parsed component definitions
 my @compdefs;                        # List of available component definitions
@@ -150,7 +139,7 @@ sub menu_edit_current {
     } else {
         if ($MCSTAS::mcstas_config{'EDITOR'} eq 0) {
             setup_edit_1_7($main_window);
-        } elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1) {
+        } elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1 && $MCSTAS::mcstas_config{'CODETEXT'}) {
             setup_edit($main_window);
         } else {
             menu_spawn_editor($main_window);
@@ -158,30 +147,18 @@ sub menu_edit_current {
     }
 }
 
-sub check_external_editor {
-    $external_editor = $ENV{'VISUAL'} || $ENV{'EDITOR'};
-    if ($external_editor eq "") {
-      if ($Config{'osname'} eq 'MSWin32') { $external_editor = "notepad"; }
-      else { $external_editor = "nedit"; }
-    }
-}
-
 sub menu_spawn_editor {
     my ($w) = @_;
-    my $cmd = $external_editor ? $external_editor : "vi";
     my $pid;
+    if ($external_editor eq "no") { return 0; }
     # Must be handled differently on Win32 vs. unix platforms...
     if($Config{'osname'} eq "MSWin32") {
-        if($current_sim_def) {
-            system("$external_editor $current_sim_def");
-        } else {
-            system("$external_editor");
-        }
+        system("$external_editor $current_sim_def");
     } else {
         $pid = fork();
         if(!defined($pid)) {
             $w->messageBox(-message =>
-                           "Failed to spawn editor \"$external_editor\".",
+                           "Failed to spawn editor \"$external_editor $current_sim_def\".",
                            -title => "Command failed",
                            -type => 'OK',
                            -icon => 'error');
@@ -193,11 +170,7 @@ sub menu_spawn_editor {
             # Double fork to avoid having to wait() for the editor to
             # finish (or having it become a zombie). See man perlfunc.
             unless(fork()) {
-                if($current_sim_def) {
-                    exec($external_editor, $current_sim_def);
-                } else {
-                    exec($external_editor);
-                }
+                exec($external_editor, $current_sim_def);
                 # If we get here, the exec() failed.
                 print STDERR "Error: exec() of $external_editor failed!\n";
                 POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
@@ -208,122 +181,52 @@ sub menu_spawn_editor {
 }
 
 sub mcdoc_current {
-    my ($w) = @_;
-    my $suffix='';
-    my $cmd_suffix='';
-    my $prefix='';
-    if ($Config{'osname'} eq 'MSWin32') {
-        $suffix='.pl';
-        $prefix='start ';
-    } else {
-        $cmd_suffix=' &';
-    }
+    my $cmd = "$prefix mcdoc$suffix $current_sim_def $background";
     if (-e $current_sim_def) {
-        putmsg($cmdwin, "Opening instrument docs: $prefix mcdoc$suffix $current_sim_def $cmd_suffix\n", 'msg');
-        system("$prefix mcdoc$suffix $current_sim_def $cmd_suffix");
+        putmsg($cmdwin, "Opening instrument docs: $cmd\n", 'msg');
+        system("$cmd");
     }
 }
 sub mcdoc_web {
-    my ($w) = @_;
-    my $suffix='';
-    my $cmd_suffix='';
-    my $prefix='';
-    if ($Config{'osname'} eq 'MSWin32') {
-        $suffix='.pl';
-        $prefix='start ';
-    } else {
-        $cmd_suffix=' &';
-    }
-    putmsg($cmdwin, "Opening Web Page: $prefix mcdoc$suffix --web $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix -s --web $cmd_suffix");
+    my $cmd = "$prefix mcdoc$suffix --web $background";
+    putmsg($cmdwin, "Opening Web Page: $cmd\n", 'msg');
+    system("$cmd");
 }
 
 sub mcdoc_manual {
-    my ($w) = @_;
-    my $suffix='';
-    my $cmd_suffix='';
-    my $prefix='';
-    if ($Config{'osname'} eq 'MSWin32') {
-        $suffix='.pl';
-        $prefix='start ';
-    } else {
-        $cmd_suffix=' &';
-    }
-    putmsg($cmdwin, "Opening User Manual: $prefix mcdoc$suffix --manual $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix -s --manual $cmd_suffix");
+    my $cmd = "$prefix mcdoc$suffix --manual $background";
+    putmsg($cmdwin, "Opening User Manual: $cmd\n", 'msg');
+    system("$cmd");
 }
 
 sub mcdoc_compman {
-    my ($w) = @_;
-    my $suffix='';
-    my $cmd_suffix='';
-    my $prefix='';
-    if ($Config{'osname'} eq 'MSWin32') {
-        $suffix='.pl';
-        $prefix='start ';
-    } else {
-        $cmd_suffix=' &';
-    }
-    putmsg($cmdwin, "Opening Component Manual: $prefix mcdoc$suffix --manual $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix -s --comp $cmd_suffix");
+    my $cmd = "$prefix mcdoc$suffix --manual $background";
+    putmsg($cmdwin, "Opening Component Manual: $cmd\n", 'msg');
+    system("$cmd");
 }
 
 sub mcdoc_tutorial {
-    my ($w) = @_;
-    my $suffix='';
-    my $cmd_suffix='';
-    my $prefix='';
-    if ($Config{'osname'} eq 'MSWin32') {
-        $suffix='.pl';
-        $prefix='start ';
-    } else {
-        $cmd_suffix=' &';
-    }
-    putmsg($cmdwin, "Opening Tutorial: $prefix mcdoc$suffix --tutorial $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix -s --tutorial $cmd_suffix");
+    my $cmd = "$prefix mcdoc$suffix --tutorial $background";
+    putmsg($cmdwin, "Opening Tutorial: $cmd\n", 'msg');
+    system("$cmd");
 }
 
 sub mcdoc_components {
-    my ($w) = @_;
-    my $suffix='';
-    my $cmd_suffix='';
-    my $prefix='';
-    if ($Config{'osname'} eq 'MSWin32') {
-        $suffix='.pl';
-        $prefix='start ';
-    } else {
-        $cmd_suffix=' &';
-    }
-    putmsg($cmdwin, "Opening Library help: $prefix mcdoc$suffix --show $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix --show $cmd_suffix");
+    my $cmd = "$prefix mcdoc$suffix --lib $background";
+    putmsg($cmdwin, "Opening Library help: $cmd\n", 'msg');
+    system("$cmd");
 }
 
 sub mcdoc_generate {
-    my ($w) = @_;
-    my $suffix='';
-    my $cmd_suffix='';
-    my $prefix='';
-    if ($Config{'osname'} eq 'MSWin32') {
-        $suffix='.pl';
-        $prefix='start ';
-    } else {
-        $cmd_suffix=' &';
-    }
-    putmsg($cmdwin, "Generating Library help (local): $prefix mcdoc$suffix --force $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix --force $cmd_suffix");
+    my $cmd = "$prefix mcdoc$suffix --force $background";
+    putmsg($cmdwin, "Generating Library help (local): $cmd\n", 'msg');
+    system("$cmd");
 }
 
 sub mcdoc_test {
-    my ($w) = @_;
     my $status;
-    my $plotter_name;
-    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-    if ($plotter eq 1 || $plotter eq 2) { $plotter_name = "Matlab"; }
-    elsif ($plotter eq 3 || $plotter eq 4) { $plotter_name = "Scilab"; }
-    elsif ($plotter eq 0) { $plotter_name = "PGPLOT"; }
-    if ($inf_sim->{'Binary'} == 1) { $plotter_name .= "_binary"; }
     my $printer = sub { putmsg($cmdwin, "$_[0]\n", 'msg'); $main_window->update;};
-    $status = do_test($printer, 1, $plotter_name);
+    $status = do_test($printer, 1, $MCSTAS::mcstas_config{'PLOTTER'});
     if (defined $status) { putmsg($cmdwin, "$status", 'msg'); }
 }
 
@@ -335,7 +238,7 @@ sub mcdoc_about {
   It provides a complete set of tools, components, and example instruments\n
   $version\n
   Please visit <http://neutron.risoe.dk/mcstas/>",
-                                 -title => "About McStas:McGUI",
+                                 -title => "McGUI: About McStas",
                                  -type => 'OK',
                                  -icon => 'info',
                                  -default => 'cancel');
@@ -350,7 +253,7 @@ sub new_simulation_results {
 
 sub new_sim_def_name {
     my ($w, $name) = @_;
-    unless($current_sim_def && $name eq $current_sim_def) {
+    unless($current_sim_def ne "" && $name eq $current_sim_def) {
         undef($current_sim_file);
         new_simulation_results($w);
     }        
@@ -378,8 +281,8 @@ sub new_sim_def_name {
 #     }
     $main_window->title("McStas: $current_sim_def");
     my $text = "Instrument file: " .
-        ($current_sim_def ? $current_sim_def : "<None>");
-    if ($current_sim_def && $edit_window) {
+        ($current_sim_def ne "" ? $current_sim_def : "<None>");
+    if ($current_sim_def ne "" && $edit_window) {
       $edit_window->title("Edit: $current_sim_def");
     }
     $current_instr_label->configure(-text => $text);
@@ -408,9 +311,10 @@ sub menu_open {
 
 sub menu_save {
     my ($w) = @_;
-    if($current_sim_def) {
+    if($current_sim_def ne "") {
         $edit_control->Save($current_sim_def);
         $edit_window->title("Edit: $current_sim_def");
+        open_instr_def($w, $current_sim_def);
     } else {
         $error_override = sub {        # Temporary Tk::Error override
             $w->messageBox(-message => "Could not save file:\n$_[1].",
@@ -479,7 +383,6 @@ sub read_sim_data {
     return 0 unless $ii && $si && $di;
     # Save old settings of "plot results".
     $si->{'Autoplot'} = $inf_sim->{'Autoplot'};
-    $si->{'Binary'} = $inf_sim->{'Binary'};
     $inf_instr = $ii;
     $inf_sim = $si;
     $inf_data = $di;
@@ -774,7 +677,6 @@ sub menu_run_simulation {
     my ($bt, $newsi) = simulation_dialog($w, $out_info, $inf_sim);
     if($bt eq 'Start') {
         my @command = ();
-        my $suffix='';
         # Check 'Plotter' setting
         my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
         # Check 'Trace' setting if a scan or trace is
@@ -789,16 +691,14 @@ sub menu_run_simulation {
             if ($Config{'osname'} eq 'MSWin32') {
               if ($newsi->{'Trace'} eq 1 ) {
                 # Win32 'start' command needed to background the process..
-                push @command, "start";
+                push @command, "$MCSTAS::mcstas_config{'PREFFIX'}";
                 # Also, disable plotting of results after mcdisplay run...
                 $newsi->{'Autoplot'}=0;
               }
-              # Set $suffix to .pl
-              $suffix='.pl';
             }
             # 'mcdisplay' trace mode
-            push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
-            if ($plotter eq 0) {
+            push @command, "${prefix}mcdisplay$suffix";
+            if ($plotter =~ /PGPLOT|McStas/i) {
               push @command, "--plotter=PGPLOT";
               # Be sure to read mcplotlib.pl in this case...
               require "mcplotlib.pl";
@@ -808,12 +708,8 @@ sub menu_run_simulation {
               # and the server will keep the pipe to mcdisplay open
               # until the server exits, hanging mcgui.
               ensure_pgplot_xserv_started();
-            }
-            elsif ($plotter eq 1) {
-              push @command, "-pMatlab";
-            }
-            elsif ($plotter eq 2) {
-              push @command, "-pMatlab";
+            } elsif ($plotter =~ /Matlab/i && $plotter =~ /scriptfile/i) {
+              push @command, "--plotter=Matlab";
               my $output_file = save_disp_file($w,'m');
               if (!$output_file) {
                 putmsg($cmdwin, "Trace cancelled...\n");
@@ -822,9 +718,20 @@ sub menu_run_simulation {
               $output_file = "\"$output_file\"";
               push @command, "-f$output_file";
 
-            }
-            elsif ($plotter eq 3) {
-              push @command, "-pScilab";
+            } elsif ($plotter =~ /Matlab/i) {
+              push @command, "--plotter=Matlab";
+            } elsif ($plotter =~ /Scilab/i && $plotter =~ /scriptfile/i) {
+              push @command, "--plotter=Scilab";
+              my $output_file = save_disp_file($w,'sci');
+              if (!$output_file) {
+                putmsg($cmdwin, "Trace cancelled...\n");
+                return;
+              }
+              $output_file =~ s! !\ !g;
+              push @command, "-f$output_file";
+
+            } elsif ($plotter =~ /Scilab/i) {
+              push @command, "--plotter=Scilab";
               # If this is Win32, make a check for # of neutron histories,
               # should be made small to avoid waiting a long time for 
               # mcdisplay...
@@ -833,8 +740,8 @@ sub menu_run_simulation {
                   # number...
                   my $num_histories = $newsi->{'Ncount'} - 0;
                   if ($num_histories >=1e3) {
-                      my $break = $w->messageBox(-message => "$num_histories is a very large number of neutron histories when using Scilab on Win32.\nContinue?",
-                     -title => "note",
+                      my $break = $w->messageBox(-message => "$num_histories is a very large number\nof neutron histories when using\nScilab on Win32.\nContinue ?",
+                     -title => "Warning: large number",
                      -type => 'yesnocancel',
                      -icon => 'error',
                      -default => 'no');
@@ -846,17 +753,6 @@ sub menu_run_simulation {
                       }
                   }
               }
-            }
-            elsif ($plotter eq 4) {
-              push @command, "-pScilab";
-              my $output_file = save_disp_file($w,'sci');
-              if (!$output_file) {
-                putmsg($cmdwin, "Trace cancelled...\n");
-                return;
-              }
-              $output_file =~ s! !\ !g;
-              push @command, "-f$output_file";
-
             }
             push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
             push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
@@ -885,7 +781,7 @@ sub menu_run_simulation {
             $OutDir =~ s! !\ !g;
           }
         }
-        if ($newsi->{'mpi'} > 0) {
+        if ($newsi->{'mpi'} > 1) {
           push @command, "--mpi=$newsi->{'mpi'}";
         } elsif ($newsi->{'Multi'} > 0) {
           push @command, "--multi";
@@ -895,13 +791,8 @@ sub menu_run_simulation {
         push @command, "--trace" if ($newsi->{'Trace'} eq 1);
         push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
         push @command, "--dir=$OutDir" if $newsi->{'Dir'};
-        if ($inf_sim->{'Binary'} == 1) {
-          push @command, "--format='Matlab_binary'" if ($plotter eq 1 || $plotter eq 2);
-          push @command, "--format='Scilab_binary'" if ($plotter eq 3 || $plotter eq 4);
-        } else {
-          push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
-          push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
-        }
+        push @command, "--format='$plotter'";
+
         my @unset = ();
         for (@{$out_info->{'Parameters'}}) {
             if (length($newsi->{'Params'}{$_})>0) {
@@ -924,13 +815,10 @@ sub menu_run_simulation {
         $inf_sim=$newsi;
         return unless $success;
         my $ext;
-        if ($plotter eq 0) {
-          $ext="sim";
-        } elsif ($plotter eq 1 || $plotter eq 2) {
-          $ext="m";
-        } elsif ($plotter eq 3 || $plotter eq 4) {
-          $ext="sci";
-        }
+        if ($plotter =~ /PGPLOT|McStas/i) { $ext="sim"; } 
+        elsif ($plotter =~ /Matlab/i)     { $ext="m"; } 
+        elsif ($plotter =~ /Scilab/i)     { $ext="sci"; } 
+        elsif ($plotter =~ /HTML/i)       { $ext="html"; }
         $current_sim_file = $newsi->{'Dir'} ?
             "$newsi->{'Dir'}/mcstas.$ext" :
             "mcstas.$ext";
@@ -943,7 +831,6 @@ sub menu_run_simulation {
             $inf_sim=$newsi;
         }
         $inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
-        $inf_sim->{'Binary'} = $newsi->{'Binary'};
         $inf_sim->{'Trace'} = $newsi->{'Trace'};
 
         if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
@@ -963,22 +850,15 @@ sub menu_plot_results {
     return 1;
 }
 
-sub menu_choose_backend {
+sub menu_preferences {
     # sub for selection of mcdisplay "backend". 
     # Default read from $MCSTAS::mcstas_config{'PLOTTER'}
     # PW 20030314
     # Added entry for selection of internal editor
     # PW 20040527
     my ($w) = @_;
-    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-    my $editor = $MCSTAS::mcstas_config{'EDITOR'};
     my $ret;
-    my $binary;
-    my $output_file;
-    ($ret, $binary, $plotter,$editor) = backend_dialog($w, $inf_sim->{'Binary'},$plotter,$editor,$external_editor);
-    $inf_sim->{'Binary'} = $binary;
-    $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
-    $MCSTAS::mcstas_config{'EDITOR'} = $editor;
+    ($ret) = preferences_dialog($w);
 }
 
 
@@ -988,13 +868,6 @@ sub menu_read_sim_file {
     menu_plot_results($w);
 }
 
-sub menu_usingmcstas {
-    my ($w) = @_;
-}
-
-sub menu_about {
-    my ($w) = @_;
-}
 
 # Build the text (McStas metalanguage) representation of a component
 # using data fillied in by the user.
@@ -1257,8 +1130,8 @@ sub setup_menu {
     $simmenu->command(-label => 'Configuration options',
                       -underline => 0,
                       -accelerator => 'Alt+C',
-                      -command => sub {menu_choose_backend($w);});
-    $w->bind('<Alt-c>' => [\&menu_choose_backend, $w]);
+                      -command => sub {menu_preferences($w);});
+    $w->bind('<Alt-c>' => [\&menu_preferences, $w]);
     
     $simmenu->pack(-side=>'left');
     
@@ -1267,19 +1140,19 @@ sub setup_menu {
     my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
     $helpmenu->command(-label => 'McStas web page',
                        -underline => 7,
-                       -command => sub {mcdoc_web($w)});
+                       -command => sub {mcdoc_web()});
     $helpmenu->command(-label => 'McStas User manual',
-                       -command => sub {mcdoc_manual($w)});
+                       -command => sub {mcdoc_manual()});
      $helpmenu->command(-label => 'McStas Component manual',
-                       -command => sub {mcdoc_compman($w)});
+                       -command => sub {mcdoc_compman()});
     $helpmenu->command(-label => 'Library doc index',
-                       -command => sub {mcdoc_components($w)});
+                       -command => sub {mcdoc_components()});
     $helpmenu->command(-label => 'Generate component index',
-                       -command => sub {mcdoc_generate($w)});
+                       -command => sub {mcdoc_generate()});
     $helpmenu->command(-label => 'McStas tutorial',
-                       -command => sub {mcdoc_tutorial($w)});
+                       -command => sub {mcdoc_tutorial()});
     $helpmenu->command(-label => 'Current instrument',
-                       -command => sub {mcdoc_current($w)});
+                       -command => sub {mcdoc_current()});
     $helpmenu->separator;
     $helpmenu->command(-label => 'Test McStas installation',
                        -command => sub {mcdoc_test($w)});
@@ -1322,16 +1195,36 @@ sub setup_cmdwin {
     $rotext->pack(-expand => 'yes', -fill => 'both');
     $rotext->mark('set', 'insert', '0.0');
     $rotext->tagConfigure('msg', -foreground => 'blue');
-    $current_instr_label = $instr_lab;
+    $current_instr_label   = $instr_lab;
     $current_results_label = $res_lab;
     $status_label = $status_lab;
-    $cmdwin = $rotext;
+    $cmdwin       = $rotext;
     # Insert "mcstas --version" message in window. Do it a line at the
     # time, since otherwise the tags mechanism seems to get confused.
     my $l;
     for $l (split "\n", `mcstas --version`) {
         $cmdwin->insert('end', "$l\n", 'msg');
     }
+    if ($MCSTAS::mcstas_config{'HOSTFILE'} eq "") {
+          $cmdwin->insert('end',  "No MPI/grid machine list. MPI/grid disabled...
+  Define $ENV{'HOME'}/.mcstas-hosts\n");
+    } else {
+      if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
+        $cmdwin->insert('end', "MPI parallelisation is available\n");
+      } elsif ($MCSTAS::mcstas_config{'SSH'} ne "no") {
+        $cmdwin->insert('end', "Distributed scans (grid) computing is available\n");
+      }
+    }
+    if ($MCSTAS::mcstas_config{'SCILAB'} eq "no") {
+      $cmdwin->insert('end', "Scilab plotter is NOT available\n");
+    }
+    if ($MCSTAS::mcstas_config{'MATLAB'} eq "no") {
+      $cmdwin->insert('end', "Matlab plotter is NOT available\n");
+    }
+    if ($MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
+      $cmdwin->insert('end', "Perl/PGPLOT plotter is NOT available\n");
+    }
+      
 }
 
 sub editor_quit {
@@ -1434,6 +1327,14 @@ sub setup_edit_1_7 {
     $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
     $edit_control = $e;
     $edit_window = $w;
+    if ($current_sim_def) {
+      $w->title("Edit: $current_sim_def");
+      if (-r $current_sim_def) {
+          $e->Load($current_sim_def);
+      }
+    } else {
+      $w->title("Edit: Start with Insert/Instrument template");
+    }
 }
 
 
@@ -1443,6 +1344,7 @@ sub setup_edit {
     my $w = $mw->Toplevel;
     my $e;
     # Create the editor text widget.
+    require Tk::CodeText;
     require Tk::CodeText::McStas;
     $e = $w->Scrolled('CodeText',-relief => 'sunken', -bd => '2', -setgrid => 'true',
                       -height => 24, wrap => 'none', -scrollbars =>'se',  
@@ -1472,7 +1374,7 @@ sub setup_edit {
           $e->Load($current_sim_def);
       }
     } else {
-      $w->title("CodeEdit: Start with Insert/Instrument template");
+      $w->title("Edit: Start with Insert/Instrument template");
     }
 }
 
@@ -1493,15 +1395,7 @@ sub check_if_need_recompile {
     if($simname =~ /^(.*)\.(instr|ins)$/) {
         $exename = $1;
     } else {
-      # Once again, needed platform check - 
-      # selection of executable suffix on 
-      # unix vs. Win32
-      # PW 20030314
-      if ($Config{'osname'} eq "MSWin32") {
-        $exename = "$simname.exe";
-      } else {
-        $exename = "$simname.out";
-      }
+      $exename = "$simname.$MCSTAS::mcstas_config{'EXE'}";
     }
     return "not found" unless -f $exename;
     return "not executable" unless -x $exename;
@@ -1512,34 +1406,12 @@ sub check_if_need_recompile {
 }
 
 my $win = new MainWindow;
-check_external_editor();
 $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
 
-if ($Config{'osname'} eq 'MSWin32') {
-  $inf_sim->{'ssh'}      = 0;
-  $inf_sim->{'mpicc'}    = 0;
-  $inf_sim->{'hostfile'} = "";
-} else {
-  # checks for MPI, ssh, and machine-file availability
-  my $HOME=$ENV{'HOME'};
-  if (!$HOME || $HOME eq "") { $HOME="."; }
-  $inf_sim->{'ssh'}      = check_command("ssh");
-  $inf_sim->{'mpicc'}    = check_command("mpicc") && check_command("mpirun");
-  $inf_sim->{'hostfile'} = "$HOME/.mcstas-hosts";
-  if ($inf_sim->{'ssh'} ne 0 || $inf_sim->{'mpicc'} ne 0) {
-    if (! -e $inf_sim->{'hostfile'}) {
-      $inf_sim->{'hostfile'} = "$MCSTAS::sys_dir/tools/perl/mcstas-hosts";
-      if (! -e $inf_sim->{'hostfile'}) {
-        putmsg($cmdwin, "mcrun: No MPI/grid machine list. MPI/grid disabled...
-         Define $HOME/.mcstas-hosts or $inf_sim->{'hostfile'}.");
-        $inf_sim->{'ssh'}      = 0;
-        $inf_sim->{'mpicc'}    = 0;
-      }
-    }
-  }
-}
+$inf_sim->{'ssh'}    = ($MCSTAS::mcstas_config{'SSH'} ne "no" ? 1 : 0);
+$inf_sim->{'mpi'}    = ($MCSTAS::mcstas_config{'MPIRUN'} ne "no" ? 1 : 0);
 
 my $open_editor = 0;
 
@@ -1570,3 +1442,4 @@ if(@ARGV>0 && @ARGV<3) {
 
 
 MainLoop;
+
