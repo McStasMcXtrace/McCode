@@ -232,6 +232,7 @@ sub run_dialog_reader {
 	$status_lab->configure(-text => "Status: done");
 	$but->configure(-text => "Ok",
 			-command => sub { $$state |= 2; } );
+	$dlg->bind('<Return>' => sub { $but->flash; $$state |= 2; } );
     }
 }
 
@@ -362,6 +363,7 @@ sub dialog_get_out_file {
 	$state &= ~2;		# Wait for "OK" even if user selected cancel.
 	unless($state & 2) {
 	    $but->configure(-text => "Ok", -command => sub { $state |= 2; } );
+	    $dlg->bind('<Return>' => sub { $but->flash; $state |= 2; } );
 	    do {
 		$dlg->waitVariable(\$state);
 	    } until $state & 2;
