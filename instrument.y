@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.15 1998-11-09 08:14:07 kn Exp $
+*	$Id: instrument.y,v 1.16 1998-11-13 07:31:32 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.15  1998/11/09 08:14:07  kn
+*	Added version (-v) option.
+*
 *	Revision 1.14  1998/10/02 08:36:45  kn
 *	Added output parameters for components.
 *	Fixed header comment.
@@ -468,6 +471,7 @@ exp:		  TOK_ID
 codeblock:	  TOK_CODE_START code TOK_CODE_END
 		  {
 		    $2->filename = instr_current_filename;
+		    $2->quoted_filename = str_quote(instr_current_filename);
 		    $2->linenum = $1;
 		    $$ = $2;
 		  }
@@ -524,7 +528,7 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.0, October 1998\n"
+  printf("McStas version 1.01 ALPHA, October 1998\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-1998\n"
 	  "All rights reserved\n");
   exit(0);
