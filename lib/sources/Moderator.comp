@@ -1,15 +1,21 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Moderator
+* %I
+* Written by: KN, M.Hagen
+* Date: August 1998
+* Version: $Revision: 1.6 $
+* Origin: McStas release
 *
-* Written by: KN, M.Hagan, August 1998
+* A simple pulsed source for time-of-flight.
 *
-* Produces a simple time-of-flight spectrum, with a flat energy disstribution
+* %D
+* Produces a simple time-of-flight spectrum, with a flat energy distribution
 *
+* %P
 * Input parameters:
 *
 * radius: (m)   Radius of source
@@ -22,6 +28,7 @@
 * Ec:     (meV) Critical energy, below which the flux decay is constant
 * gam:    (meV) energy dependence of decay time
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Moderator
