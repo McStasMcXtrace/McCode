@@ -7,9 +7,13 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.8 1998-09-24 11:18:05 kn Exp $
+* 	$Id: mcstas.h,v 1.9 1998-09-24 12:15:52 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.8  1998/09/24 11:18:05  kn
+* 	Make AT modifier required.
+* 	More reasonable default when ROTATED modifier is missing.
+*
 * 	Revision 1.7  1998/08/26 12:44:35  kn
 * 	Updated prototypes and global variables declarations.
 *
@@ -270,6 +274,7 @@ void cogen(char *output_name, struct instr_def *instr);
 *******************************************************************************/
 
 void print_error(char *, ...);	/* Normal error messages. */
+void print_warn(int *flag, char *format, ...); /* Warning. */
 void fatal_error(char *, ...);	/* Report a fatal error and exit the program. */
 
 #ifdef DEBUG
@@ -360,4 +365,5 @@ struct instr_def
     List formals;		/* List of formal parameters. */
     Symtab compmap;		/* Map of component names to instances. */
     List complist;		/* List of components in declaration order. */
+    int rotations_in_radians;	/* If set, rotations are given in radians. */
   };
