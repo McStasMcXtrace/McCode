@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.96 2004-09-07 12:28:21 farhi Exp $
+* $Id: mcstas-r.c,v 1.97 2004-09-09 13:46:52 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.96  2004/09/07 12:28:21  farhi
+* Correct allocation bug SEGV in multi-format handling
+*
 * Revision 1.95  2004/09/03 13:51:07  farhi
 * add extension automatically in data/sim files
 * may use a format for sim files, and an oher for data, e.g. HTML/VRML.
@@ -4290,8 +4293,8 @@ mcstas_main(int argc, char *argv[])
   mcstartdate = t;
 
   strcpy(mcsig_message, "main (Start)");
-  if (getenv("MCSTAS_FORMAT")) mcformat=mcuse_format(getenv("MCSTAS_FORMAT"));
-  else mcformat=mcuse_format(MCSTAS_FORMAT);  /* default is to output as McStas format */
+  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
+  /* default is to output as McStas format */
   mcformat_data.Name=NULL;
   mcparseoptions(argc, argv);
   if (!mcformat_data.Name && !strcmp(mcformat.Name, "HTML"))
