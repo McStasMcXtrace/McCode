@@ -8,9 +8,15 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.8 1998-05-04 08:14:32 kn Exp $
+*	$Id: instrument.l,v 1.9 1998-05-13 13:03:29 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.9  1998/05/13 13:02:35  kn
+*	Now really fix the number syntax problem.
+*
+*	Revision 1.8  1998/05/04 08:14:32  kn
+*	Fix problem in number syntax.
+*
 *	Revision 1.7  1998/03/16 08:35:31  kn
 *	Fixed missing yylval type qualifications.
 *
@@ -61,8 +67,6 @@ ALPHA		[A-ZÆØÅa-zæøå]
 ALPHANUM	{ALPHA}|{DIGIT}|"_"
 
 NUMBER		-?({DIGIT}*".")?{DIGIT}+([Ee][+-]?{DIGIT}+)?
-/* Note: Since ID overlaps with NUMBER (eg. "2E3"), ID must come
-   after NUMBER */
 ID		{DIGIT}*{ALPHA}{ALPHANUM}*
 
 %%
@@ -83,8 +87,10 @@ ROTATED		return TOK_ROTATED;
 "("|")"|","	return yytext[0]; /* Punctuation. */
 "="		return yytext[0]; /* Operator. */
 
-{ID}		yylval.string = str_dup(yytext); return TOK_ID;
 {NUMBER}	yylval.number = atof(yytext); return TOK_NUMBER;
+ /* Note: Since ID overlaps with NUMBER (eg. "2E3"), ID must come
+    after NUMBER */
+{ID}		yylval.string = str_dup(yytext); return TOK_ID;
 
  /* Scanning embedded C code. */
 
