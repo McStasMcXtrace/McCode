@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.9 2003-02-18 09:11:36 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.10 2003-04-09 15:49:25 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.9  2003/02/18 09:11:36  farhi
+*	Corrected binary format for lists
+*	
 * Revision 1.1 2002/08/28 11:39:00 ef
 *	Initial revision extracted from lib/monitors/Monitor_nD.comp
 *******************************************************************************/
@@ -869,7 +872,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s save intermediate results (%.2f %%).\n", mc_mn_Vars->compcurname, mc_mn_ratio);
     }
     /* check Buffer flush when end of simulation reached */
-    if ((mc_mn_Vars->Buffer_Counter <= mc_mn_Vars->Buffer_Block) && mc_mn_Vars->Flag_Auto_Limits && mc_mn_Vars->Mon2D_Buffer)
+    if ((mc_mn_Vars->Buffer_Counter <= mc_mn_Vars->Buffer_Block) && mc_mn_Vars->Flag_Auto_Limits && mc_mn_Vars->Mon2D_Buffer && mc_mn_Vars->Buffer_Counter)
     {
       /* Get Auto Limits */
       if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Number, mc_mn_Vars->Buffer_Counter);
