@@ -101,6 +101,7 @@ if ischar(object) % if object is a string
       [object, pathname] = uigetfile('*.m', 'Select a McStas/Matlab simulation file to load');
     end
     if ~ischar(object), return; end
+    object = [ pathname filesep object];
     [fid, err] = fopen(object, 'r');
     if fid == -1
       fprintf(2,'mcplot: Could not open file %s\n',object);
