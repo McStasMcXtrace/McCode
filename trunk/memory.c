@@ -6,30 +6,7 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: memory.c,v 1.8 1998-11-26 08:46:17 kn Exp $
-*
-*	$Log: not supported by cvs2svn $
-*	Revision 1.7  1998/11/13 07:33:09  kn
-*	Added str_quote() function.
-*
-*	Revision 1.6  1998/10/02 08:39:02  kn
-*	Fixed header comment.
-*
-*	Revision 1.5  1998/10/01 11:47:38  kn
-*	Added str_dup_n().
-*
-*	Revision 1.4  1997/09/07 17:58:29  kn
-*	Snapshot with (untested) code generation complete.
-*
-*	Revision 1.3  1997/08/13 09:15:48  kn
-*	First version to properly parse instrument definition files.
-*
-*	Revision 1.2  1997/07/02 07:28:56  kn
-*	String functions.
-*
-*	Revision 1.1  1997/07/01 08:24:20  kn
-*	Initial revision
-*
+*	$Id: memory.c,v 1.9 2000-02-10 11:36:37 kn Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -132,24 +109,26 @@ str_cat(char *first, ...)
 char *
 str_quote(char *string)
 {
-  unsigned char *badchars = "\\\"\r\n\t";
-  unsigned char *quotechars = "\\\"rnt";
-  unsigned char *q, *res, *ptr;
+  char *badchars = "\\\"\r\n\t";
+  char *quotechars = "\\\"rnt";
+  char *q, *res, *ptr;
   int len, pass;
   int c;
-  unsigned char new[5];
+  char new[5];
 
   /* Loop over the string twice, first counting chars and afterwards copying
      them into an allocated buffer. */
   for(pass = 0; pass < 2; pass++)
   {
-    unsigned char *p = (unsigned char *)string;
+    char *p = string;
 
     if(pass == 0)
       len = 0;			/* Prepare to compute length */
     else
       q = res = mem(len + 1);	/* Allocate buffer */
-    while((c = *p++))
+    /* Notice the cast to unsigned char; without it, the isprint(c) below will
+       fail for characters with negative plain char values. */
+    while((c = (unsigned char)(*p++)))
     {
       ptr = strchr(badchars, c);
       if(ptr != NULL)
