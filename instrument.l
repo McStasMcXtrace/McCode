@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.6 1997-09-07 20:16:03 kn Exp $
+*	$Id: instrument.l,v 1.7 1998-03-16 08:35:31 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.6  1997/09/07 20:16:03  kn
+*	Added FINALLY construct.
+*
 *	Revision 1.5  1997/09/07 17:57:40  kn
 *	Snapshot with (untested) code generation complete.
 *
@@ -81,7 +84,7 @@ ROTATED		return TOK_ROTATED;
  /* Scanning embedded C code. */
 
 "%""{"[\t ]*\n	{
-		  yylval = instr_current_line;
+		  yylval.linenum = instr_current_line;
 		  instr_current_line++;
 		  BEGIN(ccode);
 		  return TOK_CODE_START;
@@ -100,7 +103,7 @@ ROTATED		return TOK_ROTATED;
 			  print_error("%%} terminator not on a line by itself.\n");
 			  return TOK_CODE_END;
 			}
- [^\n]*\n		instr_current_line++; yylval = str_dup(yytext); return TOK_CODE_LINE;
+ [^\n]*\n		instr_current_line++; yylval.string = str_dup(yytext); return TOK_CODE_LINE;
 }
 
  /* %-style comments - ignore everything to end of line. */
