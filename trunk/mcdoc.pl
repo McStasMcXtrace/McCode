@@ -343,7 +343,7 @@ END
             my $does_match = 0;
             my $basename = $1;
             if ($single_comp_name =~ /^(.*)\.(com|comp|cmp)$/) {
-              if($name eq $single_comp_name) { $does_match = 1; }
+              if($name eq $single_comp_name) { $does_match = 2; }
             } elsif ($name =~ $single_comp_name) { $does_match = 1; }
             if (($is_single_file && $does_match) 
               || (not $is_single_file)) {
@@ -362,6 +362,7 @@ END
                   add_comp_html($data, $filehandle, $basename, $name);
                 }
               }
+              last if $does_match == 2;
             }
         } # end for
         if ($filehandle) {
