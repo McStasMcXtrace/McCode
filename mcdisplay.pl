@@ -645,9 +645,13 @@ sub plot_instrument {
       my %vps;                        # Viewport/window setup.
       my ($vpx1,$vpx2,$vpy1,$vpy2,$wx1,$wx2,$wy1,$wy2);
       
+      PGPLOT::pgperas;
+      PGPLOT::pgpanl(2,2);
       PGPLOT::pgbbuf;
       
       # First show instrument from "above" (view in direction of y axis).
+      
+      
       PGPLOT::pgsci(1);
       PGPLOT::pgsch(1.4);
       PGPLOT::pgenv($zmin, $zmax, $xmin, $xmax, ($zooming ? 0 : 1), 0);
