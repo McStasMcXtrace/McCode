@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.2 1997-07-01 08:27:19 kn Exp $
+*	$Id: instrument.y,v 1.3 1997-07-02 07:28:19 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.2  1997/07/01 08:27:19  kn
+*	Fixed problem when scanning identifiers: lexer now returns a persistent
+*	copy of the name.
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
@@ -59,7 +63,7 @@ complist:	  /* empty */
 compdef:	  "COMPONENT" TOK_ID '=' comp
 			{
 			  debugn((DEBUG_HIGH, "Component: %s.\n", $2));
-			  free($2);
+			  str_free($2);
 			}
 ;
 
@@ -174,7 +178,7 @@ main(int argc, char *argv[])
   }
   else
   {
-    fprintf(stderr, "Usage: %s file.\n", argv[0]);
+    print_error("Usage: %s file.\n", argv[0]);
   }
 
   exit(0);
@@ -184,5 +188,5 @@ main(int argc, char *argv[])
 int
 yyerror(char *s)
 {
-  fprintf(stderr, "%s\n", s);
+  print_error("%s\n", s);
 }
