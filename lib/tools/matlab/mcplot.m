@@ -3,14 +3,14 @@ function [object,count]=mcplot(object, options, id)
 % [object,count]=mcplot(object, options, id)
 %
 % This function displays a McStas simulation result either as many windows
-% or on a single window with subplots. It also returns the McStas simulation 
+% or on a single window with subplots. It also returns the McStas simulation
 % structure. An 'id' may be specified for filtering names within structure.
 %
 % input:
 %  object: one or more simulation name(s) or a single mcstas structure
 %          or a single detector file name
 %          if filename does not exist, a file selector is called.
-%  options may contain keywords 
+%  options may contain keywords
 %    '-overview' to plot all results on the same window
 %    '-plot'   to plot all results in separate windows
 %    '-png'    to export as a PNG file
@@ -63,7 +63,7 @@ if ~ischar(options),  options = ''; end
 if ~length(options), options = '-overview'; end
 options = lower(options);  % to lower case
 if ~length(findstr(options,'plot')) &  ~length(findstr(options,'overview')) &  ~length(findstr(options,'action'))
-	options = [ options '-overview ' ];
+  options = [ options '-overview ' ];
 end
 if strcmp(options,'action')
   mcplot_menu_action(object, id);
@@ -87,16 +87,16 @@ if ischar(object) % if object is a string
   if exist(object,'dir'), object = [ object filesep 'mcstas.m']; end
   [fid, err] = fopen(object, 'r');
   if fid == -1 % error occured. Calls fileselector (uigetfile)
-    if length(findstr(options,'-ps')) ...  
-    | length(findstr(options,'-psc')) ... 
-    | length(findstr(options,'-eps')) ... 
+    if length(findstr(options,'-ps')) ...
+    | length(findstr(options,'-psc')) ...
+    | length(findstr(options,'-eps')) ...
     | length(findstr(options,'-epsc')) ...
-    | length(findstr(options,'-jpg')) ... 
-    | length(findstr(options,'-tif')) ... 
-    | length(findstr(options,'-png')) ... 
+    | length(findstr(options,'-jpg')) ...
+    | length(findstr(options,'-tif')) ...
+    | length(findstr(options,'-png')) ...
     | length(findstr(options,'-fig'))
       fprintf(2,'mcplot: Could not open file %s for auto export\n',object);
-      return; 
+      return;
     else
       [object, pathname] = uigetfile('*.m', 'Select a McStas/Matlab simulation file to load');
     end
@@ -152,7 +152,7 @@ if ~isstruct(object)
 else  % if 's' is a 'struct'
   %    send to mcplot_scan(s, options)
   [count, object] = mcplot_scan(object, options, id);
-  
+
   % set title to instrument+dirname+filename+parameters
   fud = get(gcf,'UserData');
   source   = eval('fud.instrument.Source','[]');
@@ -180,7 +180,7 @@ else  % if 's' is a 'struct'
         end
   end
   parameters = eval('fud.parameters','[]');
-  if ~isempty(parameters) 
+  if ~isempty(parameters)
     t3 = '';
     % scan parameters structure, excluding 'class','parent','name'
     tmp_fields = fieldnames(parameters);
@@ -194,7 +194,7 @@ else  % if 's' is a 'struct'
   else
     t3 = 'unknown parameters';
   end
-  
+
   % redimension all subplot axes in figure to make room for legend
   set(gcf,'unit','characters');
   posf  = get(gcf,'position');
@@ -206,7 +206,7 @@ else  % if 's' is a 'struct'
     pos(find(pos < 0)) = 0;
     set(h(index),'position',pos);
   end
-  
+
   % create legend uicontrol
   pos = [ 1 posf(end)-4 posf(3) 4 ];
   NL = sprintf('\n');
@@ -214,27 +214,27 @@ else  % if 's' is a 'struct'
         'position',pos,'string',{t1;t2;t3},...
         'ToolTipString',[ 'Simulation: ' t1 NL '  with ' t2 NL 'Parameters: ' t3]);
   set(h,'unit','normalized');
-  
+
   % if it is a scan overview, add a menu item to call scan step selection
   if length(fud.overview) & isfield(fud,'superdata')
         h = findobj(gcf,'Tag','McStasMenu');
         uimenu(h,'Separator','on','Label','View scan step...','callback',['mcplot(''scanstep'',''action'', gcf);']);
   end
   set(gcf,'Toolbar','figure');  % make sure the tool bar is there
-  
+
   %    if output is not empty, setup output file
   if length(findstr(options,'-gif'))
     disp('McPlot: GIF output not available, substituting with PNG.')
     options = strrep(options, '-gif','-png');
   end
-  if length(findstr(options,'-ps')) ...  
-  | length(findstr(options,'-psc')) ... 
-  | length(findstr(options,'-eps')) ... 
+  if length(findstr(options,'-ps')) ...
+  | length(findstr(options,'-psc')) ...
+  | length(findstr(options,'-eps')) ...
   | length(findstr(options,'-epsc')) ...
-  | length(findstr(options,'-jpg')) ... 
-  | length(findstr(options,'-tif')) ... 
-  | length(findstr(options,'-png')) ... 
-  | length(findstr(options,'-fig')), 
+  | length(findstr(options,'-jpg')) ...
+  | length(findstr(options,'-tif')) ...
+  | length(findstr(options,'-png')) ...
+  | length(findstr(options,'-fig')),
     filename = eval('object.File','[]');
     if length(filename) == 0, filename = eval('object.filename','[]'); end
     if length(filename) == 0, filename='mcstas'; end
@@ -258,24 +258,24 @@ function win = mcplot_addmenu()
   hcolor = uimenu(h, 'Label', '&Colors');
   hsave  = uimenu(h, 'Label', '&Save');
   hedit  = uimenu(h, 'Label', '&Edit');
-  t = {'Save as &PNG', 'save_png', ...           
-    'Save as EPS (BW)', 'save_eps', ...     
-    'Save as &EPS (Color)', 'save_epsc', ...   
-    'Save as JPEG', 'save_jpg', ...    
-    'Save as TIFF', 'save_tif', ...    
-    'Save as Fig (Matlab)', 'save_fig', ...  
-    'Colormap &Jet', 'cmap_jet', ...                  
-    'Colormap &HSV', 'cmap_hsv', ...                  
-    'Colormap Hot (red)', 'cmap_hot', ...            
-    'Colormap Cool (&blue)', 'cmap_cool', ...          
+  t = {'Save as &PNG', 'save_png', ...
+    'Save as EPS (BW)', 'save_eps', ...
+    'Save as &EPS (Color)', 'save_epsc', ...
+    'Save as JPEG', 'save_jpg', ...
+    'Save as TIFF', 'save_tif', ...
+    'Save as Fig (Matlab)', 'save_fig', ...
+    'Colormap &Jet', 'cmap_jet', ...
+    'Colormap &HSV', 'cmap_hsv', ...
+    'Colormap Hot (red)', 'cmap_hot', ...
+    'Colormap Cool (&blue)', 'cmap_cool', ...
     'Colormap Gray', 'cmap_gray', ...
     'Colormap Pink', 'cmap_pink', ...
     'Colormap Inv. Pink', 'cmap_rpink', ...
     'Colormap : others...','set_color', ...
-    'Edit &data file', 'edit_data', ... 
-    'Edit &instrument file', 'edit_instr', ...                
+    'Edit &data file', 'edit_data', ...
+    'Edit &instrument file', 'edit_instr', ...
     'View &the instrument','view_instr', ...
-    'Add colorbar', 'add_colorbar', ...  
+    'Add colorbar', 'add_colorbar', ...
     'Intensity: Linear scale', 'log_linear',...
     'Open McStas result file...', 'open_mcplot', ...
     'Exit...', 'exit', ...
@@ -297,11 +297,11 @@ function mcplot_menu_action(action, object)
   if nargin == 1, object = ''; end
   if isempty(object), object = gco; end
   if isempty(object), object = gcf; end
-  
+
   % extract global data
   filename = '';
   filename = eval('fud.filename','[]');
-  
+
   switch action
     case 'set_color'  % Sets a colormap
       if any([strcmp(get(object,'Type'), 'surface') strcmp(get(object,'Type'), 'figure')])
@@ -329,14 +329,14 @@ function mcplot_menu_action(action, object)
           C =  uisetcolor(object, 'Set Plot Color');
           set(object, 'Color', C);
         end
-      end 
+      end
     case 'edit_data'  % Edit/_data file
       if ~length(filename)
         filename = eval('fud.filename','[]');
       end
       if length(filename), mcplot_edit_file(filename); end
     case 'duplicate'  % duplicate graph
-      d=get(object,'UserData'); 
+      d=get(object,'UserData');
       fud0 = get(gcf, 'UserData');
       if ~isfield(d,'Source') & isfield(fud0,'Source'), d.Source = fud0.Source; end
       if ~isfield(d,'Ncount') & isfield(fud0,'Ncount'), d.Ncount = fud0.Ncount; end
@@ -354,11 +354,11 @@ function mcplot_menu_action(action, object)
         parameters = eval('fud.parameters','[]');
         if ~isempty(parameters)
           % scan parameters structure, excluding 'class','parent','name'
-	  if ispc
-	    tmp_parcmd = [ '!mcdisplay.pl -pMatlab --save ' figname '.exe ' ];
-	  else
+    if ispc
+      tmp_parcmd = [ '!mcdisplay.pl -pMatlab --save ' figname '.exe ' ];
+    else
             tmp_parcmd = [ '!mcdisplay -pMatlab --save ./' figname '.out ' ];
-	  end
+    end
           tmp_fields = fieldnames(parameters);
           for field=1:length(tmp_fields)
             switch tmp_fields{field}
@@ -436,7 +436,7 @@ function mcplot_menu_action(action, object)
               figure;
               mcplot(deblank([ pathname num2str(selection(index)-1) ]),'-overview');
             end
-          end   
+          end
         end
       end
     case 'log_linear' % toggle linear/log scale
@@ -456,8 +456,8 @@ function mcplot_menu_action(action, object)
             set(all_axes(index_a), 'YScale', scale);
           elseif strcmp(get(this_child, 'Type'), 'surface')
             set(all_axes(index_a), 'ZScale', scale);
-	    if strcmp(scale,'log')
-	      zdat=get(this_child,'zdata');
+      if strcmp(scale,'log')
+        zdat=get(this_child,'zdata');
               cdat=log(zdat);
               set(this_child,'cdata',cdat)
             else
@@ -470,9 +470,9 @@ function mcplot_menu_action(action, object)
     case 'exit'  % Close all
       Stop=questdlg('Exit Matlab/McPlot ?','McPlot: Exit ?','Yes','No','Yes');
       if strcmp(Stop,'Yes')
-  	    exit
+        exit
       end
-    case 'about' 
+    case 'about'
       t = {'McStas McPlot menu',...
         '', ...
         'This is the McStas McPlot tool menu',...
@@ -485,12 +485,12 @@ function mcplot_menu_action(action, object)
         'This is free software, and you are welcome',...
         'to redistribute it under certain conditions',...
         'as specified in Licence files.'};
-      msgbox(t, 'McPlot: About','help','non-modal');     
+      msgbox(t, 'McPlot: About','help','non-modal');
     case 'open_mcplot'
       figure;
       mcplot('open_mcplot_fileselector','overview');
-    end 
-% end mcplot_menu_action  
+    end
+% end mcplot_menu_action
 
 function mcplot_edit_file(filename)
 % edit a file using either the EDITOR variable, or default editor
@@ -501,7 +501,7 @@ function mcplot_edit_file(filename)
       if exist(filename, 'file')
         t = ['McPlot: Editing file ' filename];
         setstatus(t); fprintf(1,'%s\n',t);
-        edit(filename); 
+        edit(filename);
       end
     end
 % end mcplot_edit_file
@@ -516,7 +516,7 @@ function mcplot_output(form, win, filename)
   if win < 0,         win = gcf; end
   if length(filename) == 0, filename='mcstas'; end
   form = lower(form);
-  
+
   ext = ''; dr = '';
   if length(findstr(form,'-gif'))
     disp('McPlot: GIF output not available, substituting with PNG.')
@@ -528,14 +528,14 @@ function mcplot_output(form, win, filename)
   elseif length(findstr(form,'-eps')), ext = '.eps'; dr='-deps'; colormap(gray);
   elseif length(findstr(form,'-epsc')),ext = '.eps'; dr='-depsc';
   elseif length(findstr(form,'-jpg')), ext = '.jpg'; dr='-djpeg';
-  elseif length(findstr(form,'-tif')), ext = '.tif'; dr='-dtiff'; 
-  elseif length(findstr(form,'-png')), ext = '.png'; dr='-dpng'; 
+  elseif length(findstr(form,'-tif')), ext = '.tif'; dr='-dtiff';
+  elseif length(findstr(form,'-png')), ext = '.png'; dr='-dpng';
   elseif length(findstr(form,'-fig')), ext = '.fig'; dr=''; end
   if length(ext)
     filename = [ filename ext ];
     if ~strcmp(ext,'.fig')
       print(gcf, dr, filename);
-    else saveas(gcf, filename, 'fig'); 
+    else saveas(gcf, filename, 'fig');
     end
     t=['mcplot: McStas plot exported as file ' filename ' (' form ')'];
     setstatus(t); fprintf(1,'%s\n',t);
@@ -546,14 +546,15 @@ function mcplot_output(form, win, filename)
 
 function d=mcplot_load(d)
 % local inline function to load data
-S=d.type; 
+S=d.type;
 StartIdx=findstr('(',S)+1;
 eval(['S=[ ' S(StartIdx:(length(S)-1)) ' ];']);
 if isempty(d.data)
  if ~length(findstr(d.format, 'binary'))
-  copyfile(d.filename,[d.func,'.m']);p=d.parent;
-  path(path);
-  eval(['d=',d.func,';']);d.parent=p;delete([d.func,'.m']);
+  if ~strcmp(d.filename,[d.func,'.m']) copyfile(d.filename,[d.func,'.m']); end
+  p=d.parent;path(path);
+  eval(['d=',d.func,';']);d.parent=p;
+  if ~strcmp(d.filename,[d.func,'.m']) delete([d.func,'.m']); end
  else
   if length(findstr(d.format, 'float')), t='single';
   elseif length(findstr(d.format, 'double')), t='double';
@@ -593,10 +594,10 @@ function d=mcplot_plot(d,p)
       w=figure;
     else w = gcf; end
     if ~isempty(findstr(d.type,'2d'))
-      d.x=linspace(l(1),l(2),S(2)); 
+      d.x=linspace(l(1),l(2),S(2));
       d.y=linspace(l(3),l(4),S(1));
-      h=surface(d.x,d.y,d.data); 
-      shading flat;         
+      h=surface(d.x,d.y,d.data);
+      shading flat;
     elseif ~isempty(findstr(d.type,'1d'))
       d.x=linspace(l(1),l(2),max(S));
       h=errorbar(d.x,d.data,d.errors);
@@ -647,7 +648,7 @@ function mcplot_set_global(s, gwin, p_in)
     p_in = p;
   else m=0; n=0; p=p_in; end
   if ~p, p=1; end
-  
+
   if ~length(gwin), gwin = gcf; end
   ThisFigure = get(gcf,'UserData');
 
@@ -681,7 +682,7 @@ function mcplot_set_global(s, gwin, p_in)
   elseif strcmp(s.class,'superdata')
     ThisFigure.superdata = s;
   end % ignore other classes
-  
+
   if m*n, ThisFigure.overview = [m n p]; end
 
   % store Figure McPlot info
@@ -689,22 +690,22 @@ function mcplot_set_global(s, gwin, p_in)
 % end mcplot_set_global
 
 function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
-% scans the structure s recursively and opens a graphic window 
-% for all found 'data' structures having curves/surfaces data. 
+% scans the structure s recursively and opens a graphic window
+% for all found 'data' structures having curves/surfaces data.
 % input: s:      structre where we look for data blocks
 %        action: may be 'count', '-plot' and '-overview'
 %        m,n,p: indexes for subplot windows
 % m may also be used as a string keyword used for searching within McStas
 %  structure fields 'filename','title', 'type'
-  
+
   if nargin == 0, data_count = 0; return; end
   if ~isstruct(s), data_count = 0; return; end
   tag_names = fieldnames(s);
-  if length(strmatch('class', tag_names)) == 0
-    if length(strmatch('data', tag_names)), s.class = 'data'; 
-    else 
-      s.class = 'root'; 
-      data_count = 0; 
+  if length(strmatch('class', char(tag_names))) == 0
+    if length(strmatch('data', char(tag_names))), s.class = 'data';
+    else
+      s.class = 'root';
+      data_count = 0;
     end
   end
   if nargin == 1, action = ''; end
@@ -727,12 +728,12 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
   end
   if ~strcmp(s.class,'data')
     if strcmp(s.class,'parameters') | strcmp(s.class,'simulation') | ...
-       strcmp(s.class,'instrument') | strcmp(s.class,'superdata') 
+       strcmp(s.class,'instrument') | strcmp(s.class,'superdata')
       mcplot_set_global(s, [], 0);
     end
     for i=1:max(size(tag_names))
       d = getfield(s,tag_names{i});
-      if isstruct(d) 
+      if isstruct(d)
         [ndc, d]   = mcplot_scan(d,action,m,n,data_count,id);
         data_count = ndc;
         if length(d) > 0
@@ -748,9 +749,9 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
       end
     end
     if doplot
-      if length(findstr(action,'count')) 
+      if length(findstr(action,'count'))
         s = mcplot_plot(s, 0);
-      elseif length(findstr(action,'-plot')) 
+      elseif length(findstr(action,'-plot'))
         s = mcplot_plot(s, 1);
         mcplot_set_global(s, [], 0);
         mcplot_addmenu;
@@ -759,7 +760,7 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
         s = mcplot_plot(s, 2);
         mcplot_set_global(s, [], [m,n,data_count+1]);
       end
-      data_count = data_count+1; 
+      data_count = data_count+1;
     end
   end % else class == 'data'
 % end mcplot_scan
