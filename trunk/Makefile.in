@@ -65,8 +65,8 @@ OBJECTS=instrument.tab.o lex.yy.o debug.o \
 	file.o cogen.o port.o
 
 PERLOBJ=gscan.fixpl mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
-        mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl
-PERLBIN=gscan mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert
+        mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl
+PERLBIN=gscan mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon
 BINOBJS=$(PERLOBJ) mcstas
 
 .SUFFIXES: .c .o .pl .fixpl
