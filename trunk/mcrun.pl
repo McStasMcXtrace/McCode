@@ -53,8 +53,8 @@ require "mcrunlib.pl";
 require "mcstas_config.perl";
 if (!($Config{'osname'} eq "MSWin32")) {
     if (-e $MCSTAS::perl_modules) {
-	# Load extra unix-only dependencies
-	require "mcstas_unix.pl";
+        # Load extra unix-only dependencies
+        require "mcstas_unix.pl";
     }
 }
 
@@ -84,8 +84,8 @@ my $start=-1;                   # first scan number to run in slave mode
 my $end=-1;                     # last scan number to run in slave mode
 my $multi=0;                    # multi machine mode
 my @hostlist = ();              # list of remote machines to run on...
-my $mpi = 0;			# how many node used with MPI? 0 implies no MPI.
-my $mpi_machines = "";		# name of a file describing which machine to use with MPI
+my $mpi = 0;                    # how many nodes used with MPI? 0 implies no MPI.
+my $hostfile = "";              # name of a file describing which machine to use (mpi/grid)
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -113,7 +113,7 @@ sub set_inputpar_text {
 # Read input parameters from parameter file.
 sub read_inputpar_from_file {
     my ($filename) = @_;
-    open(IN, "<$filename") || die "Failed to open file '$filename'";
+    open(IN, "<$filename") || die "mcrun: Failed to open parameter file '$filename'";
     while(<IN>) {
         my $p;
         for $p (split) {
@@ -146,25 +146,24 @@ sub parse_args {
             $ncount = $ARGV[++$i];
             push @options, "--ncount=$ncount";
         } elsif (/^--start\=(.*)$/) {
-	    $start=$1;
+            $start=$1;
         } elsif (/^--end\=(.*)$/) {
-	    $end=$1;
+            $end=$1;
         } elsif (/^--slave\=(.*)$/) {
-	    $slave=$1;
-	} elsif (/^--slavedir\=(.*)$/) {
-	    $slavedir="$1/";
-	} elsif (/^--multi/ || /^-M/ || /^--grid/) {
-	    if ($Config{'osname'} eq 'MSWin32') {
-		print STDOUT "Sorry, --grid is not supported on windows!\n";
-	    } else {
-		$multi=1;
-	    }
-	} elsif (/^--mpi\=(.*)$/) {
-	    print "Using MPI\n";
-	    $mpi = $1;
-	} elsif (/^--mpi-machines=(.*)$/) {
-	    $mpi_machines = $1;
-	}
+            $slave=$1;
+        } elsif (/^--slavedir\=(.*)$/) {
+            $slavedir="$1/";
+        } elsif (/^--multi/ || /^-M/ || /^--grid/) {
+            if ($Config{'osname'} eq 'MSWin32') {
+                print STDOUT "mcrun: Sorry, --grid is not supported on windows!\n";
+            } else { $multi=1; }
+        } elsif (/^--mpi\=(.*)$/) {
+          if ($Config{'osname'} eq 'MSWin32') {
+            print STDOUT "mcrun: Sorry, MPI is not supported on windows!\n";
+          } else { $mpi = $1; }
+        } elsif (/^--machines\=(.*)$/) {
+            $hostfile = $1;
+        }
         # Standard McStas options needing special treatment by mcrun.
         elsif(/^--dir\=(.*)$/ || /^-d(.+)$/) {
             $data_dir = $1;
@@ -212,22 +211,31 @@ sub parse_args {
         }
     }
 
-    # Adapt parameters to MPI (if used)
-    if ($mpi >= 1) {
-	$multi = 0;
-	$MCSTAS::mcstas_config{CC} = "mpicc";
-	$MCSTAS::mcstas_config{CFLAGS} = $MCSTAS::mcstas_config{CFLAGS} . " -DUSE_MPI ";
-	if ($mpi_machines eq "") {
-	    my $HOME = $ENV{'HOME'};
-	    $mpi_machines = "$HOME/.mcstas-hosts";
-	    if (!-e $mpi_machines) {
-		die "mcrun: No MPI hosts list! Define $HOME/.mcstas-hosts or --mpi-machines=<file>!";
-	    }
-	}
+    if ($mpi >= 1 || $multi == 1) {
+      my $HOME = $ENV{'HOME'};
+      if ($hostfile eq "") { $hostfile = "$HOME/.mcstas-hosts"; }
+      if (!-e $hostfile) {
+        $hostfile = "$MCSTAS::sys_dir/tools/perl/mcstas-hosts";
+        if (! -e $inf_sim->{'hostfile'}) {
+          print STDERR "mcrun: No MPI/grid machine list. MPI/grid disabled...
+         Define $HOME/.mcstas-hosts or $hostfile or use --machines=<file>!\n";
+          $multi = 0;
+          $mpi   = 0;
+        }
+      }
     }
 
+    # Adapt parameters to MPI (if used)
+    if ($mpi >= 1) {
+      if (check_command("mpicc") == 1) {
+        $multi = 0;
+        $MCSTAS::mcstas_config{CC} = "mpicc";
+        $MCSTAS::mcstas_config{CFLAGS} = $MCSTAS::mcstas_config{CFLAGS} . " -DUSE_MPI ";
+       }
+    }
+    
     if ($data_dir && $slavedir) {
-	$data_dir="$slavedir$data_dir";
+        $data_dir="$slavedir$data_dir";
     }
     my $cc = defined($ENV{'MCSTAS_CC'}) ?
         $ENV{'MCSTAS_CC'} : $MCSTAS::mcstas_config{CC};
@@ -240,46 +248,34 @@ sub parse_args {
 
     # Check if this is a multi-machine run
     if ($multi == 1) {
-	# Assume that this is unix...
-	# Check for ssh 
-	my $ssh_path;
-	my $pid = open(READ, "which ssh|");
-	while (<READ>) {
-	    $ssh_path=$_;
-	    chomp $ssh_path;
-	}
-	if (!-e $ssh_path) {
-	    print STDERR "You have no ssh, --multi disabled...\n";
-	    $multi = 0;
-	}
-	# Check that something is available in the .mcstas-hosts
-	my $HOME = $ENV{'HOME'};
-	my $hostfile = "$HOME/.mcstas-hosts";
-	if (! -e $hostfile) {
-	    print STDERR "You have no .mcstas-hosts in your homedir!--multi disabled...\n\n";
-	    $multi = 0;
-	}
-	else {
-	    print STDERR "Pinging mcstas-hosts 1 per sec. since you requested --multi...\n";
-	    # Read the host file...
-	    $pid = open(HOSTFILE,$hostfile);
-	    my $host;
-	    while ($host = <HOSTFILE>) {
-		chomp $host;
-		# Remove spaces if any...
-		$host =~ s! !!g;
-		if (! $host eq '') {
-		    my $p = Net::Ping->new();
-		    my $response = 0;
-		    $response= $p->ping($host, 1);
-		    if ($response == 1) {
-			push @hostlist, $host;
-		    } else {
-			print STDERR "Not spawning to host $host: not responding\n";
-		    }
-		}
-	    }
-	}
+        # Assume that this is unix...
+        # Check for ssh 
+       if (check_command("ssh") == 0 || check_command("scp") == 0) {
+            print STDERR "mcrun: You have no ssh/scp available, --multi disabled...\n";
+            $multi = 0;
+       }
+    }
+    if ($multi == 1 && -e $hostfile) {
+        # Check that something is available in the .mcstas-hosts
+        print STDERR "Pinging $hostfile 1 per sec. since you requested --multi...\n";
+        # Read the host file...
+        my $pid = open(HOSTFILE,$hostfile);
+        my $host;
+        while ($host = <HOSTFILE>) {
+            chomp $host;
+            # Remove spaces if any...
+            $host =~ s! !!g;
+            if (! $host eq '') {
+                my $p = Net::Ping->new();
+                my $response = 0;
+                $response= $p->ping($host, 1);
+                if ($response == 1) {
+                    push @hostlist, $host;
+                } else {
+                    print STDERR "Not spawning to host $host: not responding\n";
+                }
+            }
+        }
     }
     
     
@@ -307,7 +303,7 @@ sub parse_args {
              --grid           See the documentation for more info. 
                               --multi Not supported on Win32.
    --mpi=NB_CPU               Spread simulation over NB_CPU machines using MPI
-   --mpi-machines=MACHINES    Read machine names from file MACHINES
+   --machines=MACHINES        Read machine names from file MACHINES (MPI/grid)
 
 This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be 
@@ -317,7 +313,7 @@ specified for building the instrument:
   MCSTAS_CC     Name of the C compiler               ($cc)
   MCSTAS_CFLAGS Options for compilation              ($cflags)
   MCSTAS_FORMAT Default FORMAT to use for data files ($mcstas_format)
-SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
+SEE ALSO: mcstas, mcdoc, mcplot, mcdisplay, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://neutron.risoe.dk/mcstas/
 ** No instrument definition name given\n" unless $sim_def || $exec_test;
 die "Number of points must be at least 1" unless $numpoints >= 1;
@@ -363,22 +359,22 @@ sub exec_sim {
     # does not need any quoting).
     print join(" ", @cmdlist), "\n";
     if (!$slave == 0) {
-	if ($slave eq "localhost") {
-	    print STDERR "This is a local slave run\n";
-	    $cmd = "echo cd $slavedir && @cmdlist";
-	} else {
-	    print STDERR "This is a remote slave run at $slave\n";
-	    $cmd = "ssh $slave \"cd $slavedir && @cmdlist\"";
-	}
-	exec $cmd;
+        if ($slave eq "localhost") {
+            print STDERR "This is a local slave run\n";
+            $cmd = "echo cd $slavedir && @cmdlist";
+        } else {
+            print STDERR "This is a remote slave run at $slave\n";
+            $cmd = "ssh $slave \"cd $slavedir && @cmdlist\"";
+        }
+        exec $cmd;
     } else {
-	if ($mpi >= 1) {
-	    $cmd = "mpirun -np $mpi -machinefile $mpi_machines @cmdlist";
-	} else {
-	    $cmd = "@cmdlist";
-	}
-	exec $cmd;
-#	exec @cmdlist;
+        if ($mpi >= 1) {
+            $cmd = "mpirun -np $mpi -machinefile $hostfile @cmdlist";
+        } else {
+            $cmd = "@cmdlist";
+        }
+        exec $cmd;
+#        exec @cmdlist;
     }
 }
 
@@ -547,12 +543,12 @@ ${pr}variables$format_assign ${format_start_value}$variables$format_end_value
 END
       }
     } elsif ($plotter =~ /Matlab|Scilab|1|2|3|4/i) {
-	if (($slave eq 0) || ($slave eq 'localhost')) {
+        if (($slave eq 0) || ($slave eq 'localhost')) {
           if (! $datablock eq "") {
-	      print $OUT "DataBlock=[$datablock];\n";
-	      if ($slave eq 'localhost') {
-		print $OUT "$format_prefix\nInsert blocks here!\n";
-	      }
+              print $OUT "DataBlock=[$datablock];\n";
+              if ($slave eq 'localhost') {
+                print $OUT "$format_prefix\nInsert blocks here!\n";
+              }
               # Now loop across all the youts...
               my $idx = scalar(@$xvar_list) + 1;
               foreach my $y_pair (@$youts) {
@@ -593,7 +589,7 @@ ENDCODE
         print $OUT "clear Datablock;\n";
         }
       } else { # slave run, simply dump the datablock...
-	  print $OUT "DataBlock=[DataBlock;$datablock];\n";      
+          print $OUT "DataBlock=[DataBlock;$datablock];\n";      
       }
     }
 }
@@ -698,19 +694,19 @@ sub do_scan {
     my $prefix = "";
     if($data_dir) {
         if ($slave eq 0) {
-	    if(mkdir($data_dir, 0777)) {
-		$prefix = "$data_dir/";
-	    } else {
-		die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
-		print $MCSTAS::mcstas_config{'PLOTTER'}; # unreachable code, avoids warning for mcstas_config
-	    }
+            if(mkdir($data_dir, 0777)) {
+                $prefix = "$data_dir/";
+            } else {
+                die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
+                print $MCSTAS::mcstas_config{'PLOTTER'}; # unreachable code, avoids warning for mcstas_config
+            }
         } else {
-	    $prefix = "$data_dir/";
-	    if (!($slave eq "localhost")) {
-		system("ssh $slave mkdir $prefix") || print STDOUT "dir there already...";
-	    }
-	    system("mkdir $prefix") || print STDOUT "dir there already..." ;
-	}
+            $prefix = "$data_dir/";
+            if (!($slave eq "localhost")) {
+                system("ssh $slave mkdir $prefix") || print STDOUT "dir there already...";
+            }
+            system("mkdir $prefix") || print STDOUT "dir there already..." ;
+        }
     }
     # Use user-specified output file name, with a default of "mcstas.dat".
     my $datfile = ($data_file || "mcstas.dat");
@@ -737,66 +733,66 @@ sub do_scan {
     my $datablock = "";              # 'sim' file.
     # Initialize the @lab_datablock according to 'format'
     if ($start == -1) {
-	$start = 0;
+        $start = 0;
     }
     if ($end == -1) {
-	$end = $numpoints;
+        $end = $numpoints;
     }
     for($point = 0; $point < $numpoints; $point++) {
-	if (($point >= $start) && ($point <= $end)) {
-	    my $out = "";
-	    my $j;
-	    for($j = 0; $j < @{$info->{VARS}}; $j++) {
-		my $i = $info->{VARS}[$j]; # Index of variable to be scanned
-		$vals{$params[$i]} =
-		    ($info->{MAX}[$j] - $info->{MIN}[$j])/($numpoints - 1)*$point +
+        if (($point >= $start) && ($point <= $end)) {
+            my $out = "";
+            my $j;
+            for($j = 0; $j < @{$info->{VARS}}; $j++) {
+                my $i = $info->{VARS}[$j]; # Index of variable to be scanned
+                $vals{$params[$i]} =
+                    ($info->{MAX}[$j] - $info->{MIN}[$j])/($numpoints - 1)*$point +
                     $info->{MIN}[$j];
-		$out .= "$vals{$params[$i]} ";
-		$variables .= "$params[$i] " if $firsttime
-		}
-	    if (@{$info->{VARS}} == 0) { $out .= "$point "; $variables .= "Point " if $firsttime; }
-	    # Decide how to handle output files.
-	    my $output_opt =
-		$data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
-	    my $got_error = 0;
-	    my $pid;
-	    if ($Config{'osname'} eq 'MSWin32') {
+                $out .= "$vals{$params[$i]} ";
+                $variables .= "$params[$i] " if $firsttime
+                }
+            if (@{$info->{VARS}} == 0) { $out .= "$point "; $variables .= "Point " if $firsttime; }
+            # Decide how to handle output files.
+            my $output_opt =
+                $data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
+            my $got_error = 0;
+            my $pid;
+            if ($Config{'osname'} eq 'MSWin32') {
                 # Win32 needs all possible parameters here, since we can not open(SIM,"-|");
                 my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params), $output_opt, "--format=$plotter");
                 $pid = open(SIM, "@cmdlist |");
-	    } else {
+            } else {
                 $pid = open(SIM, "-|");
-	    }
-	    die "Failed to spawn simulation command" unless defined($pid);
-	    if($pid) {                # Parent
-		while(<SIM>) {
-		    chomp;
-		    if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ") {
-			my $sim_I = $2;
-			my $sim_err = $4;
-			my $sim_N = $6;
-			$out .= " $sim_I $sim_err";
-			if($firsttime) {
-			    $variables .= " $1 $3";
-			    push @youts, "($1,$3)";
-			}
-		    } elsif(m'^Error:') {
-			$got_error = 1;
-		    }
-		    print "$_\n";
-		}
-	    } else {                # Child
-		open(STDERR, ">&STDOUT") || die "Can't dup stdout";
-		exec_sim(@options, $output_opt);
-	    }
-	    
+            }
+            die "Failed to spawn simulation command" unless defined($pid);
+            if($pid) {                # Parent
+                while(<SIM>) {
+                    chomp;
+                    if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ") {
+                        my $sim_I = $2;
+                        my $sim_err = $4;
+                        my $sim_N = $6;
+                        $out .= " $sim_I $sim_err";
+                        if($firsttime) {
+                            $variables .= " $1 $3";
+                            push @youts, "($1,$3)";
+                        }
+                    } elsif(m'^Error:') {
+                        $got_error = 1;
+                    }
+                    print "$_\n";
+                }
+            } else {                # Child
+                open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+                exec_sim(@options, $output_opt);
+            }
+            
         my $ret = close(SIM);
         die "mcrun: Exit due to error returned by simulation program" if $got_error || (! $ret && ($? != 0 || $!));
               if ($firsttime eq 1) {
                 if ($plotter =~ /PGPLOT|McStas|0/i) {
-		    if (($slave eq 0) || ($slave eq 'localhost')) {
-			output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
-		    }
+                    if (($slave eq 0) || ($slave eq 'localhost')) {
+                        output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
+                    }
                 }
               } else {
                 push @lab_datablock, "\n";
@@ -806,7 +802,7 @@ sub do_scan {
               }
         push @lab_datablock, "$out";
         $firsttime = 0;
-	}
+        }
     }
     if ($plotter =~ /PGPLOT|McStas|0/i) {
       close($DAT);
@@ -826,21 +822,21 @@ sub do_scan_multi {
         if(mkdir($data_dir, 0777)) {
             $prefix = "$data_dir/";
         } else {
-	    if ($slave eq 0) {
-		die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
-		print $MCSTAS::mcstas_config{'PLOTTER'}; # unreachable code, avoids warning for mcstas_config
-	    }
+            if ($slave eq 0) {
+                die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
+                print $MCSTAS::mcstas_config{'PLOTTER'}; # unreachable code, avoids warning for mcstas_config
+            }
         }
     }
     my ($tmpdir,$j,$k,$output);
     open(READ,"mktemp |");
     while (<READ>) {
-	$tmpdir = $_;
-	chomp $tmpdir;
+        $tmpdir = $_;
+        chomp $tmpdir;
     }
     # On some systems, we will have to remove the $tmpdir, since it is a file...
     if (-e $tmpdir) {
-	my_system("rm -f $tmpdir","Problem removing $tmpdir");
+        my_system("rm -f $tmpdir","Problem removing $tmpdir");
     }
     # Add local machine as a slave...
     @hostlist = ("localhost", @hostlist);
@@ -855,28 +851,28 @@ sub do_scan_multi {
     my $taken = 0;
     my $Max= 0 ;
     for ($j=0; $j<@hostlist; $j++) {
-	if ($j < $numpoints) {
-	    $scanmin[$j]=$taken;
-	    if ($j<$extra) {
-		$scanmax[$j]=$taken+$perslave;
-	    } else {
-		$scanmax[$j]=$taken+$perslave-1; 
-	    }
-	    $taken=$scanmax[$j]+1;
-	    $pids[$j]=Proc::Simple->new();
-	} else {
-	    if ($Max == 0) { 
-		print STDOUT "Removing host $hostlist[$j] and beyond, no more scan points\n";
-		$Max = $j;
-	    }
-	}
+        if ($j < $numpoints) {
+            $scanmin[$j]=$taken;
+            if ($j<$extra) {
+                $scanmax[$j]=$taken+$perslave;
+            } else {
+                $scanmax[$j]=$taken+$perslave-1; 
+            }
+            $taken=$scanmax[$j]+1;
+            $pids[$j]=Proc::Simple->new();
+        } else {
+            if ($Max == 0) { 
+                print STDOUT "Removing host $hostlist[$j] and beyond, no more scan points\n";
+                $Max = $j;
+            }
+        }
     }
     if (!($Max == 0)) {
-	my @tmp = @hostlist;
-	@hostlist = ();
-	for ($j=0; $j<$Max; $j++) {
-	    $hostlist[$j] = $tmp[$j];
-	}
+        my @tmp = @hostlist;
+        @hostlist = ();
+        for ($j=0; $j<$Max; $j++) {
+            $hostlist[$j] = $tmp[$j];
+        }
     }
     $hosts = @hostlist;
     my $stop = 0;
@@ -887,81 +883,81 @@ sub do_scan_multi {
     my_system("mkdir $tmpdir/","dir there already?");
     print STDOUT "Spawning child mcrun's...\n";
     for ($j=0; $j<@hostlist; $j++) {
-	# Create local folders too...
-	my_system("mkdir $tmpdir/$hostlist[$j]","dir there already...");
-	if ($j == 0) { # localhost...
-	    my_system("cp $out_file $tmpdir/$hostlist[$j]","");
-	    my_system("cp $sim_def $tmpdir/$hostlist[$j]",""); 
-	} else {
-	    my_system("ssh $hostlist[$j] mkdir $tmpdir && ssh $hostlist[$j] mkdir $tmpdir/$hostlist[$j]","");
-	    my_system("scp $out_file $hostlist[$j]:$tmpdir/$hostlist[$j] ","");
-	    my_system("scp $sim_def $hostlist[$j]:$tmpdir/$hostlist[$j] ","");
-	}
-	$pids[$j]->start("mcrun -f $hostlist[$j].dat -N$numpoints --slave=$hostlist[$j] --slavedir=$tmpdir/$hostlist[$j]  $out_file --start=$scanmin[$j] --end=$scanmax[$j] @extras > $tmpdir/log.$hostlist[$j]");
+        # Create local folders too...
+        my_system("mkdir $tmpdir/$hostlist[$j]","dir there already...");
+        if ($j == 0) { # localhost...
+            my_system("cp $out_file $tmpdir/$hostlist[$j]","");
+            my_system("cp $sim_def $tmpdir/$hostlist[$j]",""); 
+        } else {
+            my_system("ssh $hostlist[$j] mkdir $tmpdir && ssh $hostlist[$j] mkdir $tmpdir/$hostlist[$j]","");
+            my_system("scp $out_file $hostlist[$j]:$tmpdir/$hostlist[$j] ","");
+            my_system("scp $sim_def $hostlist[$j]:$tmpdir/$hostlist[$j] ","");
+        }
+        $pids[$j]->start("mcrun -f $hostlist[$j].dat -N$numpoints --slave=$hostlist[$j] --slavedir=$tmpdir/$hostlist[$j]  $out_file --start=$scanmin[$j] --end=$scanmax[$j] @extras > $tmpdir/log.$hostlist[$j]");
     }
     print STDOUT "Waiting for child processes to end...\n";
     my $running;
     while ($stop < $hosts) {
-	for ($j=0; $j<$hosts; $j++) {
-	    if (!$pids[$j] == 0) {
-		$running = $pids[$j]->poll(); 
-		if ($running == 0) {
-		    print STDERR "Process at $hostlist[$j] terminated, copying back relevant data...\n";
-		    if ($hostlist[$j] eq "localhost") {
-			if ($data_dir) {
-			    my_system("cp -rp $tmpdir/localhost $prefix/ ","");
-			}
-		    } else {
-			if ($data_dir) {
-			    my_system("scp -rp $hostlist[$j]:$tmpdir/$hostlist[$j]/ $prefix/ ","");
-			}
-		    }
-		    if ($data_dir) {
-			my $PW = getcwd();
-			my_system("find $PW/$prefix$hostlist[$j]/$prefix -type d -not -name $prefix -exec cp -rp \\{\\} $prefix \\;","Problem copying slave dirs..");
-			my_system("cp $tmpdir/$hostlist[$j]/$prefix/$hostlist[$j].* $prefix/","Problem copying slave files");
-		    }
-		    $stop++;
-		    $pids[$j]=0;
-		}
-	    }
-	}
+        for ($j=0; $j<$hosts; $j++) {
+            if (!$pids[$j] == 0) {
+                $running = $pids[$j]->poll(); 
+                if ($running == 0) {
+                    print STDERR "Process at $hostlist[$j] terminated, copying back relevant data...\n";
+                    if ($hostlist[$j] eq "localhost") {
+                        if ($data_dir) {
+                            my_system("cp -rp $tmpdir/localhost $prefix/ ","");
+                        }
+                    } else {
+                        if ($data_dir) {
+                            my_system("scp -rp $hostlist[$j]:$tmpdir/$hostlist[$j]/ $prefix/ ","");
+                        }
+                    }
+                    if ($data_dir) {
+                        my $PW = getcwd();
+                        my_system("find $PW/$prefix$hostlist[$j]/$prefix -type d -not -name $prefix -exec cp -rp \\{\\} $prefix \\;","Problem copying slave dirs..");
+                        my_system("cp $tmpdir/$hostlist[$j]/$prefix/$hostlist[$j].* $prefix/","Problem copying slave files");
+                    }
+                    $stop++;
+                    $pids[$j]=0;
+                }
+            }
+        }
     }
     open(MCSTAS,">${prefix}mcstas${format_ext}") || die ("could not open file ${prefix}mcstas${format_ext}");
     open(LOCAL,"<${prefix}localhost${format_ext}") || die ("could not open file ${prefix}mcstas${format_ext}");
 
     # Now, create a mcstas.sim/sci/m to pick up the pieces...
     if ($plotter =~ /McStas|PGPLOT/i) {
-	# Use the localhost.sim as sim file (has all needed info - but must have 
+        # Use the localhost.sim as sim file (has all needed info - but must have 
         # filename: localhost.dat replaced by mcstas.dat
-	while(<LOCAL>) {
-	    s/\bfilename: localhost.dat\b/filename: mcstas.dat/;
-	    print MCSTAS;
-	}
-	# Dat's are simply to be catted together. 
-	my_system("touch ${prefix}mcstas.dat","problem creating mcstas.dat");
-	for ($j=0; $j<$hosts; $j++) {
-	    my_system("cat $prefix$hostlist[$j].dat >> ${prefix}mcstas.dat","Problem adding host data");
-	    my_system("rm $prefix$hostlist[$j].dat","Problem removing host data");
-	}
+        while(<LOCAL>) {
+            s/\bfilename: localhost.dat\b/filename: mcstas.dat/;
+            print MCSTAS;
+        }
+        # Dat's are simply to be catted together. 
+        my_system("touch ${prefix}mcstas.dat","problem creating mcstas.dat");
+        for ($j=0; $j<$hosts; $j++) {
+            my_system("cat $prefix$hostlist[$j].dat >> ${prefix}mcstas.dat","Problem adding host data");
+            my_system("rm $prefix$hostlist[$j].dat","Problem removing host data");
+        }
     } else {
-	# With Matlab / Scilab, a special "Insert blocks here!" line marks where to
-	# enlarge the DataBlock section with Matlab/Scilab syntax and data from the
-	# host files...
-	while(<LOCAL>) { # Self closing
-	    if (/^\w*Insert blocks here!/) {
-		print STDERR "Inserting files...\n";
-		for ($j=1; $j<@hostlist; $j++) { # The 1 important here, localhost data there already from localhost$format_ext
-		    print MCSTAS "\n\n$format_prefix Insertion from ${prefix}$hostlist[$j]${format_ext}\n\n";
-		    open(HOST,"<${prefix}$hostlist[$j]${format_ext}") || print STDERR "could not open file ${prefix}$hostlist[$j]${format_ext}";
-		    while(<HOST>) { # Self closing
-			print MCSTAS;
-		    }
-		}
-	    } else { #everything else printed directly to mcstas.${format_ext}
-		print MCSTAS;
-	    }
-	}
+        # With Matlab / Scilab, a special "Insert blocks here!" line marks where to
+        # enlarge the DataBlock section with Matlab/Scilab syntax and data from the
+        # host files...
+        while(<LOCAL>) { # Self closing
+            if (/^\w*Insert blocks here!/) {
+                print STDERR "Inserting files...\n";
+                for ($j=1; $j<@hostlist; $j++) { # The 1 important here, localhost data there already from localhost$format_ext
+                    print MCSTAS "\n\n$format_prefix Insertion from ${prefix}$hostlist[$j]${format_ext}\n\n";
+                    open(HOST,"<${prefix}$hostlist[$j]${format_ext}") || print STDERR "could not open file ${prefix}$hostlist[$j]${format_ext}";
+                    while(<HOST>) { # Self closing
+                        print MCSTAS;
+                    }
+                }
+            } else { #everything else printed directly to mcstas.${format_ext}
+                print MCSTAS;
+            }
+        }
     }
     close(MCSTAS);
     
@@ -971,22 +967,22 @@ sub do_scan_multi {
     # Clean up time, remve everything with relation to the hostnames...
     # Also collect the logfiles
     for ($j=0; $j<@hostlist; $j++) {
-	open(READ,"rm -rf ${prefix}$hostlist[$j]* |");
-	while (<READ>) {
-	    $output = $_;
-	    print STDERR "$output\n";
-	}
-	my_system("echo \"###########################\" >> ${prefix}mcstas_multi.log");
-	my_system("echo logfile from $hostlist[$j]: >> ${prefix}mcstas_multi.log");
-	my_system("cat $tmpdir/log.$hostlist[$j] >> ${prefix}mcstas_multi.log");
-	my_system("rm $tmpdir/log.$hostlist[$j]");
-	if ($j>0) { # Other than localhost
-	    open(READ,"ssh $hostlist[$j] rm -rf $tmpdir |");
-	    while (<READ>) {
-		$output = $_;
-		print STDERR "$output\n";
-	    }
-	}
+        open(READ,"rm -rf ${prefix}$hostlist[$j]* |");
+        while (<READ>) {
+            $output = $_;
+            print STDERR "$output\n";
+        }
+        my_system("echo \"###########################\" >> ${prefix}mcstas_multi.log");
+        my_system("echo logfile from $hostlist[$j]: >> ${prefix}mcstas_multi.log");
+        my_system("cat $tmpdir/log.$hostlist[$j] >> ${prefix}mcstas_multi.log");
+        my_system("rm $tmpdir/log.$hostlist[$j]");
+        if ($j>0) { # Other than localhost
+            open(READ,"ssh $hostlist[$j] rm -rf $tmpdir |");
+            while (<READ>) {
+                $output = $_;
+                print STDERR "$output\n";
+            }
+        }
     }
     my_system("rm -rf $tmpdir","problem removing temporary dir");
     print STDOUT "Terminating --multi run, data in ${prefix}mcstas${format_ext}\n";
@@ -1001,11 +997,11 @@ sub my_system {
     my $ERR = new FileHandle;
     open3($WRITE,$READ,$ERR,"$cmd ") || die "$cmd: $err\n";
     while (<$READ>) {
-	$output = $_;
-	print STDERR "$output\n";
+        $output = $_;
+        print STDERR "$output\n";
     } 
     if (<$ERR>) {
-	die "$cmd: $err\n";
+        die "$cmd: $err\n";
     }
 }
 
@@ -1082,9 +1078,9 @@ if($numpoints == 1) {
     do_single();
 } else {
     if ($multi == 1) {
-	print STDERR "Doing multi...\n";
-	do_scan_multi($scan_info);
+        print STDERR "Doing multi...\n";
+        do_scan_multi($scan_info);
     } else {
-	do_scan($scan_info);
+        do_scan($scan_info);
     }
 }
