@@ -226,13 +226,13 @@ if ($plotter eq 3 || $plotter eq 4) {
   die "No data in simulation file '$file'"
       unless @$datalist;
 
-  if ($passed_arg_str =~ /-cps|-psc/i) {
+  if ($passed_arg_str_quit =~ /-cps|-psc/i) {
     overview_plot("$file.ps/cps", $datalist, 0);
           die "Wrote postscript file '$file.ps' (cps)\n";
-  } elsif ($passed_arg_str =~ /-ps/) {
+  } elsif ($passed_arg_str_quit =~ /-ps/) {
     overview_plot("$file.ps/ps", $datalist, 0);
           die "Wrote postscript file '$file.ps' (ps)\n";
-  } elsif ($passed_arg_str =~ /-gif/) {
+  } elsif ($passed_arg_str_quit =~ /-gif/) {
     overview_plot("$file.gif/gif", $datalist, 0);
           die "Wrote GIF file '$file.gif' (gif)\n";
   } 
@@ -250,7 +250,7 @@ if ($plotter eq 3 || $plotter eq 4) {
           my $dev = ($cc =~ /c/i) ? "cps" : "ps";
           if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
           overview_plot("$file.$ext/$dev", $datalist, 0);
-          print "Wrote postscript file '$file.$ext' ($dev)\n";
+          print "Wrote file '$file.$ext' ($dev)\n";
           next;
       }
       # now do a full-screen version of the plot selected by the user.
