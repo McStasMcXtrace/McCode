@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.12 1998-10-01 08:11:07 kn Exp $
+*	$Id: instrument.y,v 1.13 1998-10-01 11:46:35 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.12  1998/10/01 08:11:07  kn
+*	Changed handling of command line options.
+*	Use search path for component definitions.
+*
 *	Revision 1.11  1998/09/24 12:14:11  kn
 *	Rotation angles in instrument definitions are now given in degrees, with
 *	a backward compatibility mode for the old behaviour using radians.
@@ -111,6 +115,7 @@
 *******************************************************************************/
 
 %token <string> TOK_ID		/* Note: returns new str_dup()'ed copy each time. */
+%token <string> TOK_STRING
 %token <number> TOK_NUMBER
 %token <linenum> TOK_CODE_START
 %token TOK_CODE_END
@@ -432,6 +437,11 @@ exp:		  TOK_ID
 		    $$ = exp_extern_id($2);
 		    str_free($2);
 		  }
+		| TOK_STRING
+		  {
+		    $$ = exp_string($1);
+		    str_free($1);
+		  }
 ;
 
 codeblock:	  TOK_CODE_START code TOK_CODE_END
@@ -611,7 +621,7 @@ main(int argc, char *argv[])
   read_components = symtab_create(); /* Create table of components. */
   err = yyparse();
   fclose(file);
-  if(err != 0)
+  if(err != 0 || error_encountered != 0)
     print_error("Errors encountered during parse.\n");
   else
     cogen(output_filename, instrument_definition);
