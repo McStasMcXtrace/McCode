@@ -28,8 +28,8 @@
 
 DEFINE COMPONENT Monitor
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax)
-OUTPUT PARAMETERS (Nsum, psum, p2sum)
 SETTING PARAMETERS ()
+OUTPUT PARAMETERS (Nsum, psum, p2sum)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -54,6 +54,6 @@ TRACE
   %}
 FINALLY
   %{
-    test_printf("Monitor count: %i %g %g.\n", Nsum, psum, p2sum);
+    DETECTOR_OUT(Nsum, psum, p2sum);
   %}
 END
