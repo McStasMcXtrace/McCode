@@ -43,12 +43,21 @@ BEGIN {
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
 
   # custom configuration (this script)
+  END {
+    if (-f $tmp_file) {
+          print "mcplot: Removing temporary $tmp_file (5 sec)\n";
+          sleep 5;
+          unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!";
+    }
+  }
 }
+
+
 
 use lib $MCSTAS::perl_dir;
 require "mcstas_config.perl";
 
-# ADD/MOD: E. Farhi Sep 21th, 2001 : handle -ps and -psc for automatic 
+# ADD/MOD: E. Farhi Sep 21th, 2001 : handle -ps and -psc for automatic
 # print and exit
 my ($default_ext);
 my ($file, $files);
@@ -61,6 +70,7 @@ my $nowindow = -1;
 my $do_swap=0;
 my $daemon=0;
 my $wait=10;
+our $tmp_file = "";
 
 if ($Config{'osname'} eq 'MSWin32'){
   $nowindow = 0;
@@ -77,7 +87,7 @@ for($i = 0; $i < @ARGV; $i++) {
   } elsif(/^-png$/i || /^-ps$/i || /^-cps$/i || /^-psc$/i || /^-ppm$/i || /^-scg$/i || /^-fig$/i) {
       $passed_arg_str_quit .= "$_ ";
   } elsif(/^-p([a-zA-Z0-9_]+)$/ || /^--plotter=([a-zA-Z0-9_]+)$/ || /^--format=([a-zA-Z0-9_]+)$/) {
-        $plotter = $1;        
+        $plotter = $1;
   } elsif(/^-i([a-zA-Z0-9_]+)$/ || /^--inspect=([a-zA-Z0-9_]+)$/) {
       $inspect = $1;
   } elsif(/^-d([0-9]+)$/ || /^--daemon=([0-9]+)$/) {
@@ -117,8 +127,8 @@ if ($do_plot)     { $passed_arg_str .= "-plot "; }
 if ($do_overview) { $passed_arg_str .= "-overview "; }
 if ($do_swap)     { $passed_arg_str .= "-swap "; }
 
-if ($index == 0) { 
-  $file = "mcstas"; 
+if ($index == 0) {
+  $file = "mcstas";
 } else { $file = $files[0]; }
 if (-d $file) { # check if dir containing result file
   my $newfile = "$file/mcstas";
@@ -139,7 +149,7 @@ elsif ($plotter =~ /PGPLOT|McStas/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
 
 # if no extension in file name, add default extension.
-if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }  
+if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }
 
 # set plotter from extension
 if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
@@ -155,15 +165,14 @@ if ($nowindow eq -1) {  # was not set in argument list
 # Added E. Farhi, March 2003. plotter (pgplot, scilab, matlab, html) -> $file
 if ($plotter =~ /Scilab/i) {
   my $fh;
-  my $tmp_file = "";
   # create a temporary scilab execution script
-  if ($MCSTAS::mcstas_config{'TEMP'} ne "no") { 
+  if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
     require File::Temp;
     ($fh, $tmp_file) = File::Temp::tempfile("mcplot_tmpXXXXXX", SUFFIX => '.sce');
     if (not defined $fh) { $tmp_file=""; }
   }
   if ($tmp_file eq "") {
-    $tmp_file="mcplot_tmp000000.sce"; 
+    $tmp_file="mcplot_tmp000000.sce";
     $fh = new FileHandle "> $tmp_file";
   }
   if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
@@ -183,17 +192,17 @@ if ($plotter =~ /Scilab/i) {
     printf $fh "mprintf('        is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
     printf $fh "end\n";
   }
-  
+
   close($fh);
   if ($nowindow) { system("$MCSTAS::mcstas_config{'SCILAB'} -nw -f $tmp_file\n"); }
   else { system("$MCSTAS::mcstas_config{'SCILAB'} -f $tmp_file\n"); }
-  
+
 } elsif ($plotter =~ /Matlab/i) {
   my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
   if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
   $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
   $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')');";
-      
+
   if ($passed_arg_str_quit) {
     $tosend .= "exit;\"\n";
   } else {
@@ -208,7 +217,7 @@ if ($plotter =~ /Scilab/i) {
   system("$MCSTAS::mcstas_config{'BROWSER'} $file");
 } elsif ($plotter =~ /PGPLOT|McStas/i) {
   # McStas original mcplot using perl/PGPLOT
-  
+
   # Check if the PGPLOT module can be found, otherwise
   # disable traditional PGPLOT support - output error
   # message...
@@ -229,20 +238,20 @@ if ($plotter =~ /Scilab/i) {
 
   require "mcfrontlib2D.pl";
   require "mcplotlib.pl";
-  
+
   # ADD/MOD: E. Farhi/V. Hugouvieux Feb 18th, 2002 : handle detector files
   if (!($daemon eq 0)) {
       while ( 1==1 ) {
-	  pgplotit();
-	  sleep $wait;
+          pgplotit();
+          sleep $wait;
       }
   }  else {
       pgplotit();
   }
-  
+
 }
- 
-sub pgplotit { 
+
+sub pgplotit {
   my ($sim_file) = $file;
   my ($instr_inf, $sim_inf, $datalist, $sim_error) = read_sim_file($file);
   if ($sim_error !~ "no error") {
@@ -250,7 +259,7 @@ sub pgplotit {
     $tmp_file = $file;
     ($instr_inf, $sim_inf, $datalist, $det_error) = read_sim_file($file);
     $file = $files[0];
-    
+
     if ($det_error !~ "no error") {
       print "'$sim_file':'$sim_error'";
       die   "'$tmp_file':'$det_error'";
@@ -274,47 +283,47 @@ sub pgplotit {
   } elsif ($passed_arg_str_quit =~ /-gif/) {
     overview_plot("$file.gif/gif", $datalist, 0);
           die "Wrote GIF file '$file.gif' (gif)\n";
-  } 
+  }
   if ($daemon eq 0) {
       print "Click on a plot for full-window view.\n" if @$datalist > 1;
       print "Press key for hardcopy (in graphics window), 'Q' to quit
-  'P' BW postscript 
+  'P' BW postscript
   'C' color postscript
   'N' PNG file
   'M' PPM file
   'G' GIF file\n";
   } else {
-      overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 0); 
+      overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 0);
   }
   if ($daemon eq 0) {
       for(;;) {
-	  my ($cc,$cx,$cy,$idx);
-	  # Do overview plot, letting user select a plot for full-screen zoom.    
-	  ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 1);
-	  last if $cc =~ /[xq]/i;        # Quit?
-	  if($cc =~ /[pcngm]/i) {        # Hardcopy?
-	      my $ext="ps";
-	      my $dev = ($cc =~ /c/i) ? "cps" : "ps";
-	      if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
-	      if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
-	      if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
-	      overview_plot("$file.$ext/$dev", $datalist, 0);
-	      print "Wrote file '$file.$ext' ($dev)\n";
-	      next;
-	  }
-	  # now do a full-screen version of the plot selected by the user.
-	  ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], 1);
-	  last if $cc =~ /[xq]/i;        # Quit?
-	  if($cc =~ /[pcngm]/i) {        # Hardcopy?
-	      my $ext="ps";
-	      my $dev = ($cc =~ /c/i) ? "cps" : "ps";
-	      if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
-	      if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
-	      if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
-	      my $filename = "$datalist->[$idx]{'Filename'}.$ext";
-	      single_plot("$filename/$dev", $datalist->[$idx], 0);
-	      print "Wrote file '$filename' ($dev)\n";
-	  }        
+          my ($cc,$cx,$cy,$idx);
+          # Do overview plot, letting user select a plot for full-screen zoom.
+          ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 1);
+          last if $cc =~ /[xq]/i;        # Quit?
+          if($cc =~ /[pcngm]/i) {        # Hardcopy?
+              my $ext="ps";
+              my $dev = ($cc =~ /c/i) ? "cps" : "ps";
+              if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
+              if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
+              if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
+              overview_plot("$file.$ext/$dev", $datalist, 0);
+              print "Wrote file '$file.$ext' ($dev)\n";
+              next;
+          }
+          # now do a full-screen version of the plot selected by the user.
+          ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], 1);
+          last if $cc =~ /[xq]/i;        # Quit?
+          if($cc =~ /[pcngm]/i) {        # Hardcopy?
+              my $ext="ps";
+              my $dev = ($cc =~ /c/i) ? "cps" : "ps";
+              if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
+              if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
+              if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
+              my $filename = "$datalist->[$idx]{'Filename'}.$ext";
+              single_plot("$filename/$dev", $datalist->[$idx], 0);
+              print "Wrote file '$filename' ($dev)\n";
+          }
       }
   }
 }
