@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.86 2004-06-16 14:03:07 farhi Exp $
+* $Id: mcstas-r.c,v 1.87 2004-06-30 12:16:07 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.86  2004/06/16 14:03:07  farhi
+* Corrected misprint
+*
 * Revision 1.85  2004/03/05 17:43:47  farhi
 * Default instr parameters are now correctly handled in all instrument usage cases.
 *
@@ -2410,6 +2413,9 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
     
   if (!strlen(Section) || (!name)) return (-1);
   
+  if (strcmp(part,"header") && strstr(format.Name, "no header")) return (-1);
+  if (strcmp(part,"footer") && strstr(format.Name, "no footer")) return (-1);
+  
   mcvalid_name(valid_name, name, 256);
   if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
   else strcpy(valid_parent, "root");
@@ -2835,7 +2841,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   {
     /* if data: open new file for data else append for error/ncount */
     if (filename) datafile = mcnew_file(filename, 
-      (isdata != 1 || strstr(format.Name, "append") ? "a" : "w"));
+      (isdata != 1 || strstr(format.Name, "no header") ? "a" : "w"));
     else datafile = NULL;
     /* special case of IDL: can not have empty vectors. Init to 'empty' */
     if (strstr(format.Name, "IDL") && f) fprintf(f, "'external'");
@@ -2843,7 +2849,8 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     if (datafile && !mcascii_only) 
     { 
       char mode[32];
-      if (isdata == 1) mcfile_header(datafile, format, "header",
+      if (isdata == 1)
+        mcfile_header(datafile, format, "header",
           (strstr(format.Name, "McStas") ? "# " : ""), 
           filename, valid_parent); 
       sprintf(mode, "%s begin", part);
@@ -3023,7 +3030,6 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           xvar, yvar, zvar,
           x1, x2, y1, y2, z1, z2, filename, istransposed);
       if ((isdata == 1 && is1d) || strstr(part,"ncount") || !p0 || !p2) /* either ncount, or 1d */
-        if (!strstr(format.Name, "partial"))
           mcfile_header(datafile, format, "footer", 
           (strstr(format.Name, "McStas") ? "# " : ""),
           filename, valid_parent);
@@ -3119,7 +3125,8 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     i=m; m=abs(n); n=abs(i); p=abs(p); 
   }
 
-  if (!strstr(format.Name,"partial")) local_f = mcsiminfo_file;
+  /* use sim file if not a list (catenated event list) or only mcfile_data */
+  if (!strstr(format.Name," list ")) local_f = mcsiminfo_file; 
   if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
   
   if (!mcdisable_output_files)
