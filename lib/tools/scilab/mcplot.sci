@@ -467,10 +467,6 @@ if ~length(d.data)
   return
  end
 end
-if sum(S ~= size(d.data))
- d.data=d.data'; errcatch(-1,'continue','nomessage');
- d.errors=d.errors'; d.events=d.events'; errcatch(-1);
-end
 endfunction
 
 function d=mcplot_plot(d,p)
@@ -490,14 +486,14 @@ function d=mcplot_plot(d,p)
       xdel(w); xbasc(w); xset('window',w);
     else w = xget('window'); end
     if length(strindex(d.type,'2d'))
-      d.x=linspace(l(1),l(2),S(1)); d.y=linspace(l(3),l(4),S(2)); z=d.data;                         
+      d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data;               
       fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));                                             
-      if fx>0,fx=round(log10(fx)); d.x=d.x/10^fx; d.xlabel=d.xlabel+' [*10^'+string(fx)+']'; end    
-      if fy>0,fy=round(log10(fy)); d.y=d.y/10^fy; d.ylabel=d.ylabel+' [*10^'+string(fy)+']'; end    
+      xlab=d.xlabel; ylab=d.ylabel; x=d.x; y=d.y;
+      if fx>0,fx=round(log10(fx)); x=x/10^fx; xlab=xlab+' [*10^'+string(fx)+']'; end    
+      if fy>0,fy=round(log10(fy)); y=y/10^fy; ylab=ylab+' [*10^'+string(fy)+']'; end    
       if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end                    
       jet();
-      leg = d.xlabel+'@'+d.ylabel+'@'+d.zlabel
-      plot3d1(d.x,d.y,z,90,0,leg);    
+      plot3d1(x,y,z',90,0,xlab+'@'+ylab+'@'+d.zlabel);    
       if p == 2, t = t1; end
       xtitle(t);       
     else
