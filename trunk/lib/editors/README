@@ -11,5 +11,6 @@ testing system)
 (X)EMACS:
 McStas is not C only, but quite close. The contents of the provided emacs
 file should be entered in your .emacs file, setting font-lock-mode by
-default and using the standard c-mode for McStas .instr files
+default and using the standard c-mode for McStas .instr files.
+Note: Works also on Win32, copy the .emacs file to c:\ :-)
 
