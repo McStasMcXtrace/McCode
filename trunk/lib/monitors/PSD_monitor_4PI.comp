@@ -62,7 +62,15 @@ TRACE
     PROP_DT(t0);
     phi = atan2(z,x);
     i = floor(nx*(phi/(2*PI) + 0.5));
+    if(i == nx)
+      i--;			/* Special case for phi = PI. */
+    else if(i < 0)
+      y = 0;
     j = floor(ny*(y/(2*radius) + 0.5));
+    if(j == ny)
+      j--;			/* Special case for y = radius. */
+    else if(j < 0)
+      j = 0;
     PSD_N[i][j]++;
     PSD_p[i][j] += p;
     PSD_p2[i][j] += p*p;
