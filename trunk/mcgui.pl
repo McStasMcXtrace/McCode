@@ -803,6 +803,22 @@ sub menu_run_simulation {
               }
               elsif ($plotter eq 3) {
                 push @command, "-pScilab";
+		# If this is Win32, make a check for # of neutron histories,
+		# should be made small to avoid waiting a long time for 
+		# mcdisplay...
+		if ($Config{'osname'} eq "MSWin32") {
+		    my $num_histories = $newsi->{'Ncount'};
+		    if ($num_histories >=1e3) {
+			my $break = $w->messageBox(-message => "$num_histories is a very large number of neutron histories when using Scilab on Win32.\nContinue?",
+                       -title => "Note",
+                       -type => 'YesNoCancel',
+                       -icon => 'error',
+		       -default => 'No');
+			if (($break eq "No")||($break eq "Cancel")) {
+			    return 0;
+			}
+		    }
+		}
               }
               elsif ($plotter eq 4) {
                 push @command, "-pScilab";
