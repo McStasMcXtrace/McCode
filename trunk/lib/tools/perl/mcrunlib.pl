@@ -122,9 +122,10 @@ sub get_sim_info {
     my $h = new FileHandle;
     open $h, "$cmdstring |" or die "mcrun: Could not run simulation.";
     my $inf = read_instrument_info($h);
-    my $sinf= read_simulation_info($h);
+    my $sinf;
+    if (defined(&read_simulation_info)) { $sinf = read_simulation_info($h); }
     close $h;
-    $inf->{'Params'} = $sinf->{'Params'};
+    if (defined(&read_simulation_info)) { $inf->{'Params'} = $sinf->{'Params'}; }
     return $inf;
 }
 
