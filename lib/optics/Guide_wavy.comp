@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -20,6 +20,9 @@
 * in the X-Y plane.
 * For details on the geometry calculation see the description in the McStas
 * reference manual.
+*
+* %BUGS
+* This component does not work with gravitation on. Use component Guide_gravity then.
 *
 * %P
 * INPUT PARAMETERS:
@@ -55,11 +58,11 @@
 
 DEFINE COMPONENT Guide_wavy
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc, 
-alpha1, m1, W1, 
-alpha2, m2, W2, 
-alpha3, m3, W3, 
-alpha4, m4, W4, 
+SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc,
+alpha1, m1, W1,
+alpha2, m2, W2,
+alpha3, m3, W3,
+alpha4, m4, W4,
 wavy_z, wavy_xy)
 OUTPUT PARAMETERS (whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -87,7 +90,7 @@ TRACE
   double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
   double vdotn;
   double d_xy, d_z;                             /* Random angles */
-  double m, alpha, W;  
+  double m, alpha, W;
   int i;                                        /* Which mirror hit? */
   double q;                                     /* Q [1/AA] of reflection */
   double dvx, dvy, dvz;                         /* Velocity change */
@@ -150,7 +153,7 @@ TRACE
     d_xy=DEG2RAD*eta_xy*randnorm();
 
 /* Now the normal vector is rotated. To 1st order in waviness and 2nd order
-  in f=(w2-w1)/l and (f times waviness) the rotation matrix for 
+  in f=(w2-w1)/l and (f times waviness) the rotation matrix for
   the left vertical mirror is:
 
   {  1     d_xy      d_z      }
@@ -166,7 +169,7 @@ for the right vertical mirror the normal vector is { l,  0,  f_h }
 and the rotated right normal vector is { l + f_h d_z,  -l d_xy,  f_h + l d_z }
 
 
-The top horizontal mirror must be (something like) 
+The top horizontal mirror must be (something like)
 
   {  1        -d_xy  d_xy f_h }
   {  d_xy      1     d_z      }   (for the bottom horizontal mirror the )
