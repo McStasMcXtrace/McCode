@@ -1,4 +1,4 @@
-This is McStas version 1.2, released January 31, 2000.
+This is McStas version 1.3, released May 18, 2000.
 Copyright (C) Risoe National Laboratory, 1997-2000. All rights reserved.
 See the file LICENSE for conditions on use.
 Since simulations produced with McStas will include code from the files
@@ -18,18 +18,15 @@ arrangement.
 Installation instructions are in the file INSTALL.
 
 To get started, some example instrument definitions have been supplied
-in the examples/ directory. To compile an instrument, first run the
-McStas compiler, eg.
+in the examples/ directory. To run a simulation, the command `mcrun' is
+used. For example:
 
-    mcstas prisma2.instr
+    mcrun prisma2 -n2e6 TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44
 
-and then run the C compiler on the resulting C file, eg.
-
-    cc -o prisma2 prisma2.c -lm
-
-To run the simulation, type eg.
-
-    ./prisma2 -n2e6 TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44
+This will first compile the instrument definition (if necessary) and
+subsequently run it. It is also possible to run simulations from the
+graphical user interface `mcgui', or to compile and run simulations
+manually.
 
 The output files will be put in the current directory by default. The
 file tas1-scans in the example directory is a script that will run a
@@ -54,7 +51,7 @@ order to work. The needed software packages are all freely
 distributable, and can be found on the McStas WWW home page or on the
 McStas CD-Rom distribution.
 
- - The `gscan' front-end requires Perl version 5 or later.
+ - The `mcrun' and `gscan' front-ends requires Perl version 5 or later.
  - The `mcdisplay' front-end requires Perl version 5 or later, the
    PGPLOT graphics library, and the PgPerl interface between Perl and
    PGPLOT.
