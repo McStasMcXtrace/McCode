@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -80,7 +80,7 @@ TRACE
       t0 = t1;
     /* t0 is now time of intersection with the sphere. */
     PROP_DT(t0);
-    phi = atan2(z,x);
+    phi = atan2(x,z);
     i = floor(nx*(phi/(2*PI) + 0.5));
     if(i == nx)
       i--;                      /* Special case for phi = PI. */
