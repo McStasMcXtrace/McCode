@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.17 1998-09-24 13:01:39 kn Exp $
+*	$Id: mcstas-r.h,v 1.18 1998-10-01 08:12:42 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.17  1998/09/24 13:01:39  kn
+*	Minor conversion factor additions.
+*
 *	Revision 1.16  1998/09/23 13:52:08  kn
 *	Added conversion factors.
 *	McStas now uses its own random() implementation (unless
@@ -69,33 +72,61 @@
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
 
+#ifndef MCSTAS_R_H
+#define MCSTAS_R_H
+
 #include <math.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <limits.h>
+
+/* If the runtime is embedded in the simulation program, some definitions can
+   be made static. */
+
+#ifdef MC_EMBEDDED_RUNTIME
+#define mcstatic static
+#else
+#define mcstatic
+#endif
 
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
 
+struct mcinputtable_struct {
+  char *name;
+  MCNUM *par;
+};
+extern struct mcinputtable_struct mcinputtable[];
+extern int mcnumipar;
+extern char mcinstrument_name[], mcinstrument_source[];
+extern int mctraceenabled, mcdefaultmain;
+void mcinit(void);
+void mcraytrace(void);
+void mcfinally(void);
+
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
 
+#ifdef MC_TRACE_ENABLED
+#define DEBUG
+#endif
+
 #ifdef DEBUG
-#define mcDEBUG_INSTR() printf("INSTRUMENT:\n");
-#define mcDEBUG_COMPONENT(name,c,t) \
+#define mcDEBUG_INSTR() if(!mcdotrace); else printf("INSTRUMENT:\n");
+#define mcDEBUG_COMPONENT(name,c,t) if(!mcdotrace); else \
   printf("COMPONENT: \"%s\"\n" \
 	 "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
 	 name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
 	 t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]);
-#define mcDEBUG_INSTR_END() printf("INSTRUMENT END:\n");
-#define mcDEBUG_ENTER() printf("ENTER:\n");
-#define mcDEBUG_COMP(c) printf("COMP: \"%s\"\n", c);
-#define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p) \
+#define mcDEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
+#define mcDEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
+#define mcDEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
+#define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
 	 x,y,z,vx,vy,vz,t,s1,s2,p);
-#define mcDEBUG_LEAVE() printf("LEAVE:\n");
-#define mcDEBUG_ABSORB() printf("ABSORB:\n");
+#define mcDEBUG_LEAVE() if(!mcdotrace); else printf("LEAVE:\n");
+#define mcDEBUG_ABSORB() if(!mcdotrace); else printf("ABSORB:\n");
 #else
 #define mcDEBUG_INSTR()
 #define mcDEBUG_COMPONENT(name,c,t)
@@ -261,3 +292,8 @@ int sphere_intersect(double *t0, double *t1, double x, double y, double z,
 		 double vx, double vy, double vz, double r);
 void randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
 			   double xi, double yi, double zi, double radius);
+
+void mcset_ncount(double count);
+int mcstas_main(int argc, char *argv[]);
+
+#endif /* MCSTAS_R_H */

@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.13 1998-09-23 13:51:35 kn Exp $
+* 	$Id: mcstas-r.c,v 1.14 1998-10-01 08:12:26 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.13  1998/09/23 13:51:35  kn
+* 	McStas now uses its own random() implementation (unless
+* 	USE_SYSTEM_RANDOM is defined).
+*
 * 	Revision 1.12  1998/05/19 07:54:05  kn
 * 	In randvec_target_sphere, accept radius=0 to mean that no focusing is to
 * 	be done (choose direction uniformly in full 4PI solid angle).
@@ -55,7 +59,17 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifndef MCSTAS_R_H
 #include "mcstas-r.h"
+#endif
+
+
+#ifdef MC_ANCIENT_COMPATIBILITY
+int mctraceenabled = 0;
+int mcdefaultmain = 0;
+#endif
+
 
 /* Assign coordinates. */
 Coords
@@ -218,10 +232,7 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
 void
 mcreadparams(void)
 {
-  extern struct {
-    char *name;
-    MCNUM *par;
-  } mcinputtable[];
+  extern struct mcinputtable_struct mcinputtable[];
   int i;
 
   for(i = 0; mcinputtable[i].name != 0; i++)
@@ -518,4 +529,190 @@ randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
   }
   rotate(xt, yt, zt, xi, yi, zi, theta, nx, ny, nz);
   rotate(*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
+}
+
+/* Number of neutron histories to simulate. */
+static double mcncount = 1e6;
+
+void
+mcset_ncount(double count)
+{
+  mcncount = count;
+}
+
+mcstatic int mcdotrace = 0;
+
+static void
+mcsetn_arg(char *arg)
+{
+  mcset_ncount(strtod(arg, NULL));
+}
+
+static void
+mcsetseed(char *arg)
+{
+  srandom(atol(arg));
+}
+
+static void
+mchelp(char *pgmname)
+{
+  int i;
+  
+  fprintf(stderr, "Usage: %s [options] [parm=value ...]\n", pgmname);
+  fprintf(stderr,
+"Options are:\n"
+"  -s seed   --seed=seed      Set random seed\n"
+"  -n count  --ncount=count   Set number of neutrons to simulate.\n"
+"  -t        --trace          Enable trace of neutron through instrument\n"
+"  -h        --help           Show help message\n"
+"  -i        --info           Detailed instrument information\n"
+"Instrument parameters are:\n");
+  for(i = 0; i < mcnumipar; i++)
+    fprintf(stderr, "  %s\n", mcinputtable[i].name);
+}
+
+static void
+mcshowhelp(char *pgmname)
+{
+  mchelp(pgmname);
+  exit(0);
+}
+
+static void
+mcusage(char *pgmname)
+{
+  fprintf(stderr, "Error: incorrect commad line arguments\n");
+  mchelp(pgmname);
+  exit(1);
+}
+
+static void
+mcinfo(void)
+{
+  int i;
+  
+  printf("Name: %s\n", mcinstrument_name);
+  printf("Parameters:");
+  for(i = 0; i < mcnumipar; i++)
+    printf(" %s", mcinputtable[i].name);
+  printf("\n");
+  printf("Instrument-source: %s\n", mcinstrument_source);
+  printf("Trace-enabled: %s\n", mctraceenabled ? "yes" : "no");
+  printf("Default-main: %s\n", mcdefaultmain ? "yes" : "no");
+  printf("Embedded-runtime: %s\n",
+#ifdef MC_EMBEDDED_RUNTIME
+	 "yes"
+#else
+	 "no"
+#endif
+	 );
+  exit(0);
+}
+
+static void
+mcenabletrace(void)
+{
+ if(mctraceenabled)
+  mcdotrace = 1;
+ else
+ {
+   fprintf(stderr,
+	   "Error: trace not enabled.\n"
+	   "Please re-run the McStas compiler with the --trace option\n");
+   exit(1);
+ }
+}
+
+void
+mcparseoptions(int argc, char *argv[])
+{
+  int i, j, pos;
+  char *p;
+  int paramset = 0, paramsetarray[mcnumipar];
+
+  for(j = 0; j < mcnumipar; j++)
+    paramsetarray[j] = 0;
+  
+  for(i = 1; i < argc; i++)
+  {
+    if(!strcmp("-s", argv[i]) && (i + 1) < argc)
+      mcsetseed(argv[++i]);
+    else if(!strncmp("-s", argv[i], 2))
+      mcsetseed(&argv[i][2]);
+    else if(!strcmp("--seed", argv[i]) && (i + 1) < argc)
+      mcsetseed(argv[++i]);
+    else if(!strncmp("--seed=", argv[i], 7))
+      mcsetseed(&argv[i][7]);
+    else if(!strcmp("-n", argv[i]) && (i + 1) < argc)
+      mcsetn_arg(argv[++i]);
+    else if(!strncmp("-n", argv[i], 2))
+      mcsetn_arg(&argv[i][2]);
+    else if(!strcmp("--ncount", argv[i]) && (i + 1) < argc)
+      mcsetn_arg(argv[++i]);
+    else if(!strncmp("--ncount=", argv[i], 9))
+      mcsetn_arg(&argv[i][9]);
+    else if(!strcmp("-h", argv[i]))
+      mcshowhelp(argv[0]);
+    else if(!strcmp("--help", argv[i]))
+      mcshowhelp(argv[0]);
+    else if(!strcmp("-i", argv[i]))
+      mcinfo();
+    else if(!strcmp("--info", argv[i]))
+      mcinfo();
+    else if(!strcmp("-t", argv[i]))
+      mcenabletrace();
+    else if(!strcmp("--trace", argv[i]))
+      mcenabletrace();
+    else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
+    {
+      *p++ = '\0';
+      for(j = 0; j < mcnumipar; j++)
+	if(!strcmp(mcinputtable[j].name, argv[i]))
+	{
+	  *(mcinputtable[j].par) = strtod(p, NULL);
+	  paramsetarray[j] = 1;
+	  paramset = 1;
+	  break;
+	}
+      if(j == mcnumipar)
+      {				/* Unrecognized parameter name */
+	fprintf(stderr, "Error: unrecognized parameter %s\n", argv[i]);
+	exit(1);
+      }
+    }
+    else
+      mcusage(argv[0]);
+  }
+  if(!paramset)
+    mcreadparams();		/* Prompt for parameters if not specified. */
+  else
+  {
+    for(j = 0; j < mcnumipar; j++)
+      if(!paramsetarray[j])
+      {
+	fprintf(stderr, "Error: Instrument parameter %s left unset\n",
+		mcinputtable[j].name);
+	exit(1);
+      }
+  }    
+}
+
+/* McStas main() function. */
+int
+mcstas_main(int argc, char *argv[])
+{
+  int run_num = 0;
+
+  srandom(time(NULL));
+  mcparseoptions(argc, argv);
+  mcinit();
+  while(run_num < mcncount)
+  {
+    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 1);
+    mcraytrace();
+    run_num++;
+  }
+  mcfinally();
+  return 0;
 }
