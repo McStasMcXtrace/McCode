@@ -4,19 +4,20 @@
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: Kim Lefmann
-* Date: November 22 2000
-* Version: $Revision: 1.4 $
-* Origin: McStas 1.4.2
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: Aug 03 2001
+* Version: $Revision: 1.5 $
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>. Aug 03 2001.
+* Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
 *
 * Neutron guide with gravity.
-* To do: information about gravity should be included in the kernel.
 *
 * %D
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
-* in the X-Y plane.
-* A constant gravity is applied in the Y direction of the LOCAL coordinate
-* system. No gravity is applied for the flight path before the guide. 
+* in the X-Y plane. Gravitation applies also when reaching the guide input
+* window. The guide can be channeled (k,d parameters). The guide coating
+* specifications may be entered via different ways (global, opposite side 
+* pars, each wall m-value).
 * For details on the geometry calculation see the description in the McStas
 * reference manual.
 *
@@ -33,6 +34,24 @@
 * alpha:   (AA)   Slope of reflectivity
 * m:       (1)    m-value of material. Zero means completely absorbing.
 * W:       (AA-1) Width of supermirror cut-off
+* d:       (m)    Thickness of subdividing walls [0]
+* k:       (1)    Number of channels in the guide (>= 1) [1]
+*
+* Optional input parameters: (different ways for m-specifications)
+*
+* G:       (m/s2) Gravitation acceleration along y axis [-9.81]
+* Gx:      (m/s2) Gravitation acceleration along x axis [0]
+* Gy:      (m/s2) Gravitation acceleration along y axis [-9.81]
+* Gz:      (m/s2) Gravitation acceleration along z axis [0]
+* mh:      (1)    m-value of material for left/right vert. mirrors
+* mv:      (1)    m-value of material for top/bottom horz. mirrors
+* mx:      (1)    m-value of material for left/right vert. mirrors
+* my:      (1)    m-value of material for top/bottom horz. mirrors
+* mleft:   (1)    m-value of material for left.   vert. mirror
+* mright:  (1)    m-value of material for right.  vert. mirror
+* mtop:    (1)    m-value of material for top.    horz. mirror
+* mbottom: (1)    m-value of material for bottom. horz. mirror
+* 
 *
 * %D
 * Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
@@ -42,157 +61,214 @@
 
 DEFINE COMPONENT Gravity_guide
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc, alpha, m, W)
-OUTPUT PARAMETERS (ww,hh,whalf,hhalf,lwhalf,lhhalf,G)
+SETTING PARAMETERS (w1, h1, w2, h2, l, 
+  R0=0.99, Qc=0.021, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005,
+  Gx=0,Gy=-9.81,Gz=0, G=0,
+  mh=-1,mv=-1,mx=-1, my=-1, 
+  mleft=-1, mright=-1, mtop=-1, mbottom=-1)
+OUTPUT PARAMETERS (gx,gy,gz,nx,ny,nz,wx,wy,wz,A,norm_n,norm_n2,N_reflection,w1c,w2c,M)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE 
 %{
-/* #define G 9.82 */
- double ww,hh,whalf,hhalf,lwhalf,lhhalf,G;
+    
+  double gx;
+  double gy;
+  double gz;
+  double nx[6], ny[6], nz[6];
+  double wx[6], wy[6], wz[6];
+  double A[6], norm_n2[6], norm_n[6];
+  long   N_reflection[7]={0,0,0,0,0,0,0};
+  double w1c;
+  double w2c;
+  double M[5]={0,0,0,0,0};
 %}
 
 INITIALIZE
 %{
-  ww = .5*(w2 - w1), hh = .5*(h2 - h1);
-  whalf = .5*w1, hhalf = .5*h1;
-  lwhalf = l*whalf, lhhalf = l*hhalf;
-  G = 9.82;
+  int i;
+  
+  gx = Gx; /* The gravitation vector in the current component axis system */
+  if (G) gy = G; else gy = Gy;
+  gz = Gz;
+  
+  if (k == 0) { fprintf(stderr,"%s: Fatal: no channel in this guide (k=0).\n", mccompcurname); exit(-1); }
+  if (d < 0) { fprintf(stderr,"%s: Fatal: subdividing walls have negative thickness in this guide (d<0).\n", mccompcurname); exit(-1); }
+  w1c = (w1 + d)/(double)k;
+  w2c = (w2 + d)/(double)k;
+  
+  for (i=0; i <= 4; M[i++]=m);
+  if (mx >= 0) { M[1] = mx; M[2] = mx; }
+  if (mh >= 0) { M[1] = mh; M[2] = mh; }
+  if (my >= 0) { M[1] = my; M[2] = my; }
+  if (mv >= 0) { M[1] = mv; M[2] = mv; }
+  if (mleft   >= 0) M[1] = mleft  ;
+  if (mright  >= 0) M[2] = mright ;
+  if (mtop    >= 0) M[3] = mtop   ;
+  if (mbottom >= 0) M[4] = mbottom;
+  
+  /* This is now the downward gravitation vector */
+                                                     
+  nx[1] =  l; ny[1] =  0; nz[1] = -0.5*(w2c-w1c); /* 1:+X left       */
+  nx[2] = -l; ny[2] =  0; nz[2] =  nz[1];         /* 2:-X right      */
+  nx[3] =  0; ny[3] =  l; nz[3] = -0.5*(h2-h1);   /* 3:+Y top        */
+  nx[4] =  0; ny[4] = -l; nz[4] =  nz[3];         /* 4:-Y bottom     */
+  nx[5] =  0; ny[5] =  0; nz[5] =  1;             /* 5:+Z exit       */
+  nx[0] =  0; ny[0] =  0; nz[0] = -1;             /* 0:Z0 input      */
+  
+  wx[1] = +(w1c-d)/2; wy[1] =  0;    wz[1] = 0;   /* 1:+X left       */
+  wx[2] = -(w1c-d)/2; wy[2] =  0;    wz[2] = 0;   /* 2:-X right      */
+  wx[3] =  0;         wy[3] = +h1/2; wz[3] = 0;   /* 3:+Y top        */
+  wx[4] =  0;         wy[4] = -h1/2; wz[4] = 0;   /* 4:-Y bottom     */
+  wx[5] =  0;         wy[5] =  0;    wz[5] = l;   /* 5:+Z exit       */
+  wx[0] =  0;         wy[0] =  0;    wz[0] = 0;   /* 0:Z0 input      */
+  
+  for (i=0; i <= 5; i++)
+  {
+    A[i] = scalar_prod(nx[i], ny[i], nz[i], gx, gy, gz)/2;
+    norm_n2[i] = nx[i]*nx[i] + ny[i]*ny[i] + nz[i]*nz[i];
+    if (norm_n2[i] <= 0)
+      { fprintf(stderr,"%s: Fatal: normal vector norm %i is null/negative ! Check guide dimensions.\n", mccompcurname, i); exit(-1); } /* should never occur */
+    else
+      norm_n[i] = sqrt(norm_n2[i]);
+  }
+  
+  
 %}
 
 TRACE
 %{
-  double t1,tv1,tv2,th1,th2;                                 /* Intersection times. */
-  double av,ah,bv,bh,cv1,cv2,ch1,ch2,d;         /* Intermediate values */
-  double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
-  double D_1,b_1,D_2,b_2;        /* coeefficients for 2nd order equations */
-  int i;                                        /* Which mirror hit? */
-  double q;                                     /* Q [1/AA] of reflection */
-  double vlen2,nlen2;                           /* Vector lengths squared */
- 
+  double n_dot_v[6];
+  double B, C, dt0, dt;
+  double q;
+  int    ret, side;
+  double edge;
+  double hadj;                                  /* Channel displacement */
 
-  /* Propagate neutron to guide entrance. */
-  /* NO GRAVITY HERE! */
-  PROP_Z0;
-  if(x <= -whalf || x >= whalf || y <= -hhalf || y >= hhalf)
+  
+  dt = -1; dt0 = -1;
+  /* propagate to box input (with gravitation) in comp local coords */
+  /* 0=Z0 side: n=(0, 0, 1) ; W = (0, 0, 0) (at z=0, guide input)*/
+  B = -vz; C = -z;
+  ret = plane_intersect_Gfast(&dt0, A[0], B, C);
+  if (ret && dt0>0)
+  { 
+    dt = dt0; 
+    PROP_GRAV_DT(dt, gx, gy, gz);
+    N_reflection[6]++;
+  }
+  /* check if we are in the box input, else absorb */
+  if(dt < 0 || x <= -w1/2 || x >= w1/2 || y <= -h1/2 || y >= h2/2)
+    { ABSORB; }
+    
+  /* Shift origin to center of channel hit (absorb if hit dividing walls) */
+  x += w1/2.0;
+  edge = floor(x/w1c)*w1c;
+  if(x - edge > w1c - d)
+  {
+    x -= w1/2.0; /* Re-adjust origin */
     ABSORB;
+  }
+  x -= (edge + (w1c - d)/2.0);
+  hadj = edge + (w1c - d)/2.0 - w1/2.0;
+
+  /* neutron is now in the input window of the guide */
+  
+  /* do loops on reflections in the box */
   for(;;)
   {
-    /* Compute the dot products of v and n for the two vertical mirrors. */
-    av = l*vx; bv = ww*vz;
-    vdotn_v1 = bv + av;         /* Left vertical */
-    vdotn_v2 = bv - av;         /* Right vertical */
-   /* Compute the dot products of (O - r) and n as c1+c2 and c1-c2 */
-    cv1 = -whalf*l - z*ww; cv2 = x*l;
-    /* Compute intersection times. WARNING, there may be division by zero */
-    t1 = (l - z)/vz;
-    tv1= (cv1 - cv2)/vdotn_v1;
-    tv2 = (cv1 + cv2)/vdotn_v2;
-    /* Now: solve the 2nd order equation for the "horizontal" surfaces*/
-    b_1 = -vy+hh*vz/l;
-    D_1 = b_1*b_1+2*G*(y-hhalf);
-    if(D_1 < 0)
-      th1= -1;
-    else   /* Choose first intersection with upper surface */
-      th1= (-b_1-sqrt(D_1))/G;
-
-    b_2 = -vy-hh*vz/l;
-    D_2 = b_2*b_2+2*G*(y+hhalf);
-    if(D_2 < 0)
-     {
-      printf("Fatal error, neutron cannot intersect lower guide surface \n");
-      exit(1);
-     }
-    else   /* Choose second intersection with lower surface */
-      th2= (-b_2+sqrt(D_2))/G;
-
-    i = 0;
-    if(vdotn_v1 < 0 && tv1 < t1)
-    {
-      t1 = tv1;
-      i = 1;
-    }
-    if(vdotn_v2 < 0 && tv2 < t1)
-    {
-      t1 = tv2;
-      i = 2;
-    }
-    if(th1>0 && th1 < t1)
-    {
-      t1 = th1;
-      i = 3;
-    }
-    if(th2>0 && th2 < t1)
-    {
-      t1 = th2;
-      i = 4;
-    }
-    if(i == 0)
-      break;                    /* Neutron left guide. */
-
-    ah = l*vy; bh = hh*vz;
-    vdotn_h1 = bh + ah;         /* Lower "horizontal" */
-    vdotn_h2 = bh - ah;         /* Upper "horizontal" */
-    ch1 = -hhalf*l - z*hh; ch2 = y*l;
-      x+=vx*t1;
-      z+=vz*t1;
-      y+=vy*t1-G*t1*t1/2;
-      vy-= G*t1;  /* TO BE REPLACED BY A MACRO: PROP_GRAV(dt) */
-      t+=t1;
-
-
-    switch(i)
-    {
-      case 1:                   /* Left vertical mirror */
-        nlen2 = l*l + ww*ww;
-        q = V2Q*(-2)*vdotn_v1/sqrt(nlen2);
-        d = 2*vdotn_v1/nlen2;
-        vx = vx - d*l;
-        vz = vz - d*ww;
-        break;
-      case 2:                   /* Right vertical mirror */
-        nlen2 = l*l + ww*ww;
-        q = V2Q*(-2)*vdotn_v2/sqrt(nlen2);
-        d = 2*vdotn_v2/nlen2;
-        vx = vx + d*l;
-        vz = vz - d*ww;
-        break;
-      case 3:                   /* Lower horizontal mirror */
-        nlen2 = l*l + hh*hh;
-        q = V2Q*(-2)*vdotn_h1/sqrt(nlen2);
-        d = 2*vdotn_h1/nlen2;
-        vy = vy - d*l;
-        vz = vz - d*hh;
-        break;
-      case 4:                   /* Upper horizontal mirror */
-        nlen2 = l*l + hh*hh;
-        q = V2Q*(-2)*vdotn_h2/sqrt(nlen2);
-        d = 2*vdotn_h2/nlen2;
-        vy = vy + d*l;
-        vz = vz - d*hh;
-        break;
-    }
-    /* Now compute reflectivity. */
-    if(m == 0)
-      ABSORB;
+    /* get intersections for all box sides */
+    /* A = 0.5 n.g; B = n.v; C = n.(r-W); 
+    
+       A = scalar_prod(nx,ny,nz,gx,gy,gz)/2;
+       B = scalar_prod(nx,ny,nz,vx,vy,vz);
+       C = scalar_prod(nx,ny,nz,x-wx,y-wy,z-wz);
+    */
+    side = 0;
+    /* starts with the exit side intersection (the last one !)*/
+    
+   /* 5=+Z side: n=(0, 0, 1) ; W = (0, 0, l) (at z=l, guide exit)*/
+    B = vz; C = z - wz[5];
+    ret = plane_intersect_Gfast(&dt0, A[5], B, C);
+    if (ret && dt0>0)     
+    { dt = dt0; side=5;  
+      n_dot_v[5] = B; }
+    else
+    { fprintf(stderr,"%s: warning: neutron trajectory is parallel to guide exit, and thus can not exit\n", mccompcurname); x += hadj; ABSORB; }
+      
+    /* now look if there is a previous intersection with guide sides */
+    
+    /* 1=+X side: n=(l, 0, -0.5*(w2-w1)) ; W = (+w1/2, 0, 0) (left)*/ 
+    B = nx[1]*vx + nz[1]*vz; C = nx[1]*(x-wx[1]) + nz[1]*z; /* ny=wz=0 */
+    ret = plane_intersect_Gfast(&dt0, A[1], B, C);
+    if (ret && dt0>10e-10 && dt0<dt)
+    { dt = dt0; side=1; n_dot_v[1] = B; }
+    
+    /* 2=-X side: n=(l, 0, +0.5*(w2-w1)) ; W = (-w1/2, 0, 0) (right) */
+    B = nx[2]*vx + nz[2]*vz; C = nx[2]*(x-wx[2]) + nz[2]*z; /* ny=wz=0 */
+    ret = plane_intersect_Gfast(&dt0, A[2], B, C);
+    if (ret && dt0>10e-10 && dt0<dt)
+    { dt = dt0; side=2; n_dot_v[2] = B; }
+    
+    /* 3=+Y side: n=(0, l, -0.5*(h2-h1)) ; W = (0, +h1/2, 0) (up) */
+    B = ny[3]*vy + nz[3]*vz; C = ny[3]*(y-wy[3]) + nz[3]*z; /* nx=wz=0 */
+    ret = plane_intersect_Gfast(&dt0, A[3], B, C);
+    if (ret && dt0>10e-10 && dt0<dt)
+    { dt = dt0; side=3; n_dot_v[3] = B; }
+    
+    /* 4=-Y side: n=(0, l, +0.5*(h2-h1)) ; W = (0, -h1/2, 0) (down) */
+    B = ny[4]*vy + nz[4]*vz; C = ny[4]*(y-wy[4]) + nz[4]*z; /* nx=wz=0 */
+    ret = plane_intersect_Gfast(&dt0, A[4], B, C);
+    if (ret && dt0>10e-10 && dt0<dt)
+    { dt = dt0; side=4; n_dot_v[4] = B; }
+    
+    /* only positive dt are valid */
+    /* exit reflection loops if no intersection (neutron is after box) */
+    if (side == 0 || dt < 0)
+      { fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", mccompcurname); ABSORB; } /* should never occur */   
+     /* 
+    if (side < 5 && (x < -w1 || x > w1 || y < -h1 || y > h2 ))  
+      ABSORB;  */ /* neutron has left guide through wall */
+      
+    /* propagate to dt */
+    PROP_GRAV_DT(dt, gx, gy, gz);
+    
+    /* do reflection on speed for l/r/u/d sides */
+    if (side == 5) /* neutron reaches end of guide: end loop and exit comp */
+      { N_reflection[side]++; break; }
+    /* else reflection on a guide wall */
+    if(M[side] == 0 || Qc == 0)  /* walls are absorbing */
+      { x += hadj; ABSORB; }
+    /* change/mirror velocity: v_f = v - n.2*n.v/|n|^2 */  
+    N_reflection[side]++; /* norm_n2 > 0 was checked at INIT */
+    dt0 = 2*n_dot_v[side]/norm_n2[side]; /* 2*n.v/|n|^2 */
+    vx -= nx[side]*dt0;
+    vy -= ny[side]*dt0;
+    vz -= nz[side]*dt0;
+    
+    /* compute q and modify neutron weight */
+    /* scattering q=|k_i-k_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
+    q = 2*V2Q*fabs(n_dot_v[side])/norm_n[side];
     if(q > Qc)
     {
-      double arg = (q-m*Qc)/W;
+      double arg;
+      if (W>0)
+        arg = (q-M[side]*Qc)/W;
+      else
+        arg = (q-M[side]*Qc)*10000; /* W = 0.00001 */
+
       if(arg < 10)
         p *= .5*(1-tanh(arg))*(1-alpha*(q-Qc));
       else
-        ABSORB;                               /* Cutoff ~ 1E-10 */
-    }
-    p *= R0;
-    SCATTER;
-
-  }
-  x+=vx*t1;
-  z+=vz*t1;
-  y+=vy*t1-G*t1*t1/2;
-  vy-= G*t1;   /* TO BE REPLACED WITH A MACRO: PROP_GRAV(dt) */
-  t+=t1;
+        { x += hadj; ABSORB; };                               /* Cutoff ~ 1E-10 */
+     }
+     p *= R0;
+     x += hadj; SCATTER; x -= hadj;
+     N_reflection[0]++;
+     /* go to the next reflection */
+   }
+    x += hadj; /* Re-adjust origin after SCATTER */
 %}
 
 MCDISPLAY
@@ -201,22 +277,23 @@ MCDISPLAY
   int i;
 
   magnify("xy");
-  multiline(5,
-            -w1/2.0, -h1/2.0, 0.0,
-             w1/2.0, -h1/2.0, 0.0,
-             w1/2.0,  h1/2.0, 0.0,
-            -w1/2.0,  h1/2.0, 0.0,
-            -w1/2.0, -h1/2.0, 0.0);
-  multiline(5,
-            -w2/2.0, -h2/2.0, (double)l,
-             w2/2.0, -h2/2.0, (double)l,
-             w2/2.0,  h2/2.0, (double)l,
-            -w2/2.0,  h2/2.0, (double)l,
-            -w2/2.0, -h2/2.0, (double)l);
-  line(-w1/2.0, -h1/2.0, 0, -w2/2.0, -h2/2.0, (double)l);
-  line( w1/2.0, -h1/2.0, 0,  w2/2.0, -h2/2.0, (double)l);
-  line( w1/2.0,  h1/2.0, 0,  w2/2.0,  h2/2.0, (double)l);
-  line(-w1/2.0,  h1/2.0, 0, -w2/2.0,  h2/2.0, (double)l);
+  for(i = 0; i < k; i++)
+  {
+    multiline(5,
+              i*w1c - w1/2.0, -h1/2.0, 0.0,
+              i*w2c - w2/2.0, -h2/2.0, (double)l,
+              i*w2c - w2/2.0,  h2/2.0, (double)l,
+              i*w1c - w1/2.0,  h1/2.0, 0.0,
+              i*w1c - w1/2.0, -h1/2.0, 0.0);
+    multiline(5,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0,
+              (i+1)*w2c - d - w2/2.0, -h2/2.0, (double)l,
+              (i+1)*w2c - d - w2/2.0,  h2/2.0, (double)l,
+              (i+1)*w1c - d - w1/2.0,  h1/2.0, 0.0,
+              (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0);
+  }
+  line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
+  line(-w2/2.0, -h2/2.0, (double)l, w2/2.0, -h2/2.0, (double)l);
 %}
 
 END
