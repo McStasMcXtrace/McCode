@@ -1,0 +1,124 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Source_Maxwell_3
+*
+* %I
+* Written by: Kim Lefmann 
+* Date: March 2001
+* Version: $Revision: 1.1 $
+* Origin: McStas 1.5
+*
+*
+* %D
+* A parametrised continuous source for modelling a (cubic) source
+* with (up to) 3 Maxwellian distributions.
+* The source produces a continuous spectrum.
+* The sampling of the neutrons is uniform in lambda.
+*
+* Units of flux: neutrons/cm^2/second/ster  
+* (McStas units are in general neutrons/second)
+*
+* %P
+* Input parameters:
+*
+* size:   (m)    Edge of cube shaped source
+* l_low:  (AA)   Lower edge of lambda distribution
+* l_high: (AA)   Upper edge of lambda distribution
+* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
+* xw:     (m)    Width of focusing rectangle
+* yh:     (m)    Height of focusing rectangle
+* T1:     (K)    1st temperature of thermal distribution
+* T2:     (K)    2nd temperature of  - - -
+* T3:     (K)    3nd temperature of  - - -
+* I1:     (*)    l-integrated flux, 1 (in flux units, see above)
+* I2:     (*)    l-integrated flux, 2  - - -
+* I3:     (*)    l-integrated flux, 3  - - -
+*
+* Example:  PSI cold source T1=150.42 K / 2.51 AA     I1 = 3.67 E11
+*                           T2=38.74 K / 4.95 AA      I2 = 3.64 E11
+*                           T3=14.84 K / 9.5 AA       I3 = 0.95 E11
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Source_Maxwell_3
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh, 
+                    T1, T2, T3, I1, I2, I3)
+OUTPUT PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double l_range, w_mult;
+
+  double M(double l, double temp)
+/* A normalised Maxwellian distribution : Integral over all l = 1 */
+/* TODO: Should go into the kernel */
+    {
+      double a=949.0/temp;
+      return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
+    }
+  
+%}
+
+INITIALIZE
+%{
+  l_range = l_high-l_low;
+  w_mult = size*size*1.0e4;     /* source area correction */
+  w_mult *= l_range;            /* wavelength range correction */
+  w_mult *= 1/mcget_ncount();   /* correct for # neutron rays */
+%}
+
+TRACE
+%{
+  double v,tau_l,E,lambda,k,r,xf,yf,dx,dy,w_focus;
+
+  t=0;
+  z=0;
+
+  x = 0.5*size*randpm1();
+  y = 0.5*size*randpm1();         /* Choose initial position */
+
+  xf = 0.5*xw*randpm1();          /* Choose focusing position uniformly */
+  yf = 0.5*yh*randpm1();
+  dx = xf-x;
+  dy = yf-y;
+  r = sqrt(dx*dx+dy*dy+dist*dist);
+
+  lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
+  k = 2*PI/lambda;
+  v = K2V*k;
+
+  vz = v*dist/r;
+  vy = v*dy/r;
+  vx = v*dx/r;
+
+  w_focus = xw*yh*dist/(r*r*r);         /* target area * cos(phi)/r^2 */
+
+/*  printf("pos0 (%g %g %g), pos1 (%g %g %g), r: %g, v (%g %g %g), v %g\n",
+  x,y,z,xf,yf,dist,r,vx,vy,vz, v);
+  printf("l %g, w_focus %g \n", lambda, w_focus);  */
+
+    p *= w_mult*w_focus;                /* Correct for target focusing etc */
+    p *= I1*M(lambda,T1)+I2*M(lambda,T2)+I3*M(lambda,T3); 
+                                        /* Calculate true intensity */
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, -(double)dist/2.0, -(double)dist/2.0, 0.0,
+                (double)dist/2.0, -(double)dist/2.0, 0.0,
+                (double)dist/2.0,  (double)dist/2.0, 0.0,
+               -(double)dist/2.0,  (double)dist/2.0, 0.0,
+               -(double)dist/2.0, -(double)dist/2.0, 0.0); 
+%}
+
+END
+
+
+
+
