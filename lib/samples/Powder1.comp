@@ -1,13 +1,19 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: General powder sample (powder1)
+* %I
+* Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
+* Date: 4.2.98
+* Version: $Revision: 1.7 $
+* Origin: McStas release
+* Modified by: KL, KN 20.3.98 (rewrite)
 *
-* Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen 4.2.98
-* Rewritten by: KL, KN 20.3.98
+* General powder sample with a single scattering vector.
+*
+* %P
 *
 * INPUT PARAMETERS
 *       
@@ -31,6 +37,15 @@
 *
 * my_s      : Attenuation factor due to scattering (m^-1)
 * my_a      : Attenuation factor due to absorbtion (m^-1)
+*
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/Powder1/">Old
+* description</A>, with explanation of focusing.
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/tests/powder/">
+* Test results</A> (not up-to-date).
+*
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Powder1
