@@ -990,9 +990,9 @@ function [object,count]=mcplot(object, options, id)
 //  options may contain keywords 
 //    '-overview' to plot all results on the same window
 //    '-plot'    to plot all results in separate windows
-//    'gif'     to export as GIF file(s)
-//    'ps'      to export as PostScript file(s)
-//    'psc'     to export as color PostScript file(s)
+//    '-gif'     to export as GIF file(s)
+//    '-ps'      to export as PostScript file(s)
+//    '-psc'     to export as color PostScript file(s)
 // id is a keyword used for searching within McStas structure fields
 //    'filename' and 'title'
 
@@ -1015,6 +1015,15 @@ filename = '';
 
 if MSDOS, filesep = '\';
 else filesep = '/'; end
+
+form = ''; 
+//    if output is not empty, open driver+xinit(filename)
+if     length(strindex(options,'-ps')),  form = '-ps' ;
+elseif length(strindex(options,'-psc')), form = '-psc';
+elseif length(strindex(options,'-gif')), form = '-gif'; 
+elseif length(strindex(options,'-fig')), form = '-fig';  
+elseif length(strindex(options,'-ppm')), form = '-ppm'; 
+elseif length(strindex(options,'-scg')), form = '-scg'; end
 
 // handle file name specification in 'object'
 if typeof(object) == 'string' // if object is a string
@@ -1039,7 +1048,12 @@ if typeof(object) == 'string' // if object is a string
   end
   [fid, err] = mopen(object, 'r');
   if err ~= 0 // error occured. Calls fileselector (xgetfile)
-    object = xgetfile('*.sci', title='Select a McStas simulation file to load');
+    if ~length(form)
+      object = xgetfile('*.sci', title='Select a McStas/Scilab simulation file to load');
+    else
+      mprintf('%s\n','mcplot: Could not open file '+string(object)+' for auto export');
+      return; 
+    end
     if ~length(object), return; end
     [fid, err] = mopen(object, 'r');
     if err ~= 0
@@ -1092,14 +1106,6 @@ if type(object) ~= 16 & type(object) ~= 17
   mprintf('mcplot: Could not extract the McStas simulation structure.\n')
   return;
 else  // if 's' is a 'struct'
-  form = ''; 
-  //    if output is not empty, open driver+xinit(filename)
-  if     length(strindex(options,'-ps')),  form = '-ps' ;
-  elseif length(strindex(options,'-psc')), form = '-psc';
-  elseif length(strindex(options,'-gif')), form = '-gif'; 
-  elseif length(strindex(options,'-fig')), form = '-fig';  
-  elseif length(strindex(options,'-ppm')), form = '-ppm'; 
-  elseif length(strindex(options,'-scg')), form = '-scg'; end
   if length(form)
     filename = '';
     execstr('filename = object.File;','errcatch');
