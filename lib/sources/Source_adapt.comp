@@ -10,25 +10,37 @@ DECLARE
  double p_in;
  struct adapt_tree *atree;
  int aindex;
- double adj_dv;
+ double *a_psi, *a_n;
+ double a_total_psi, a_total_n;
+ double a_pi, a_num;
 %}
 INITIALIZE
 %{
- hdiv = atan(xw/(2.0*dist));
- vdiv = atan(yh/(2.0*dist));
- p_in = (4*hdiv*vdiv)/(4*PI); /* Small angle approx. */
- atree = adapt_tree_init(NUM);
- {
-   int i;
-   for(i = 0; i < NUM; i++)
-   {
-     adapt_tree_add(atree, i, 1);
-   }
- }
+  int i;
+
+  hdiv = atan(xw/(2.0*dist));
+  vdiv = atan(yh/(2.0*dist));
+  p_in = (4*hdiv*vdiv)/(4*PI); /* Small angle approx. */
+  atree = adapt_tree_init(NUM);
+  a_psi = malloc(NUM*sizeof(*a_psi));
+  a_n = malloc(NUM*sizeof(*a_n));
+  if(!(a_psi && a_n))
+  {
+    fprintf(stderr, "Fatal error: out of memory.\n");
+    exit(1);
+  }
+  for(i = 0; i < NUM; i++)
+  {
+    adapt_tree_add(atree, i, 1.0/(double)NUM);
+    a_psi[i] = a_n[i] = 0;
+  }
+  a_total_psi = a_total_n = 0;
+  a_num = NUM;
 %}
 TRACE
 %{
  double theta0,phi0,chi,theta,phi,E,v,r;
+ double adj_dv;
 
  p=p_in;
  z=0;
@@ -41,7 +53,7 @@ TRACE
  theta0= -atan(x/dist);              /* Angles to aim at target centre */
  phi0= -atan(y/dist);
 
- theta=theta0+hdiv*randpm1();        /* Small angle approx. */ 
+ theta=theta0+hdiv*randpm1();        /* Small angle approx. */
  phi=phi0+vdiv*randpm1();
 
  r = rand01();
@@ -56,14 +68,22 @@ TRACE
  p /= atree->v[aindex]/(atree->total/(double)NUM);
 
  /* First adjust assuming absorbtion. */
- adj_dv = alpha*(beta*atree->total/(double)NUM - atree->v[aindex]);
- adapt_tree_add(atree, aindex, adj_dv);
+ if(a_n[aindex] && a_total_psi && a_total_n)
+ {
+   adj_dv = ((1-beta)*(a_psi[aindex]/a_n[aindex])/(a_total_psi/a_total_n) + beta)/
+     a_num - atree->v[aindex];
+   adapt_tree_add(atree, aindex, adj_dv);
+ }
+/*  adj_dv = beta*atree->total/(double)NUM - atree->v[aindex]; */
+/*  adapt_tree_add(atree, aindex, adj_dv); */
+ a_n[aindex]++, a_total_n++;
 
  v=sqrt(E)*SE2V;
 
  vz=v*cos(phi)*cos(theta);
  vy=v*sin(phi);
- vx=v*cos(phi)*sin(theta); 
+ vx=v*cos(phi)*sin(theta);
+ a_pi = p;
 %}
 
 FINALLY
@@ -80,6 +100,7 @@ FINALLY
     p1[i] = atree->v[i]/atree->total;
     p2[i] = p1[i]*p1[i];
   }
+  printf("Source_adapt: Total=%g\n", atree->total);
   DETECTOR_OUT_1D(
 	"Adaptive source energy distribution",
 	"Energy [meV]",
