@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.63 2003-05-20 11:54:38 farhi Exp $
+* $Id: mcstas-r.c,v 1.64 2003-05-26 10:21:00 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.63  2003/05/20 11:54:38  farhi
+* make sighandler not restart SAVE when already saving (USR2)
+*
 * Revision 1.62  2003/05/16 12:13:03  farhi
 * added path rehash for Matlab mcload_inline
 *
@@ -860,7 +863,7 @@ mcparmprinter_string(char *f, void *vptr)
 {
   char **v = (char **)vptr;
   char *p;
-  char *c = " \0";
+
   if (!*v) { *f='\0'; return; }
   strcpy(f, "");
   for(p = *v; *p != '\0'; p++)
@@ -880,7 +883,7 @@ mcparmprinter_string(char *f, void *vptr)
         strcat(f, "\\\\");
         break;
       default:
-        c[0] = p[0]; strcat(f, c);
+        strncat(f, p, 1);
     }
   }
   /* strcat(f, "\""); */
