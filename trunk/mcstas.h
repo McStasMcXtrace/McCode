@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.17 1999-01-28 07:56:48 kn Exp $
+* 	$Id: mcstas.h,v 1.18 1999-03-18 07:33:24 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.17  1999/01/28 07:56:48  kn
+* 	Support for MCDISPLAY section in component definitions.
+*
 * 	Revision 1.16  1998/11/26 08:46:10  kn
 * 	Implement simple memory pool functionality.
 *
@@ -398,6 +401,7 @@ struct comp_def
   {
     char *name;			/* Component name. */
     List def_par, set_par, out_par, state_par; /* Formal parameters. */
+    char **polarisation_par;	/* Polarisation state formal parameters. */
     struct code_block *decl_code; /* Declaration code. */
     struct code_block *init_code; /* Initializeation code. */
     struct code_block *trace_code; /* Ray-trace simulation code. */
@@ -431,4 +435,5 @@ struct instr_def
     int use_default_main;	/* If set, output a main() function. */
     int include_runtime;	/* If set, include runtime in output. */
     int enable_trace;		/* If set, enable output of neutron traces. */
+    int polarised;		/* If set, handle neutron polarisation. */
   };

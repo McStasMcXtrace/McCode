@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.16 1999-01-28 07:54:44 kn Exp $
+*	$Id: instrument.l,v 1.17 1999-03-18 07:31:46 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.16  1999/01/28 07:54:44  kn
+*	Added MCDISPLAY keyword.
+*
 *	Revision 1.15  1998/11/26 08:45:13  kn
 *	Fix bug with parse_restricted being defined static in this file, but
 *	declared extern in header file.
@@ -151,6 +154,7 @@ INITIALIZE	return TOK_INITIALIZE;
 INSTRUMENT	return TOK_INSTRUMENT;
 OUTPUT		return TOK_OUTPUT;
 PARAMETERS	return TOK_PARAMETERS;
+POLARISATION	return TOK_POLARISATION;
 RELATIVE	return TOK_RELATIVE;
 ROTATED		return TOK_ROTATED;
 SETTING		return TOK_SETTING;
