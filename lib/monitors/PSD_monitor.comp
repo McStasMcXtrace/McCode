@@ -69,26 +69,14 @@ TRACE
   %}
 FINALLY
   %{
-    int i,j;
-    FILE *outfile;
-    int Nsum;
-    double Psum, P2sum;
-
-    Nsum = Psum = P2sum = 0;
-    outfile=fopen(filename,"w");
-    for (j=0; j<ny; j++)
-    {
-     for (i=0; i<nx; i++)
-     {
-      fprintf(outfile,"%g ", PSD_p[i][j]);
-      Nsum += PSD_N[i][j];
-      Psum += PSD_p[i][j];
-      P2sum += PSD_p2[i][j];
-     }
-     fprintf(outfile,"\n");
-    }
-    DETECTOR_OUT(Nsum, Psum, P2sum);
-    fclose(outfile);
+    DETECTOR_OUT_2D(
+	"PSD monitor",
+	"X position [cm]",
+	"Y position [cm]",
+	xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+	nx, ny,
+	&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+	filename);
   %}
 
 MCDISPLAY
