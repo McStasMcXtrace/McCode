@@ -39,9 +39,9 @@ Installing on non-Unix systems
 
 Windows:
 
-McStas v1.01 Beta 1 has been successfully compiled on Windows using
-Microsoft Visual C++ in 32-bit mode. Define the preprocessor macro
-'WIN32' when compiling to get McStas to use the Windows file system
+McStas has been successfully compiled on Windows using Microsoft
+Visual C++ in 32-bit mode. Define the preprocessor macro 'WIN32' when
+compiling to get McStas to use the Windows file system
 semantics. Search the archive of the mailing list
 (http://neutron.risoe.dk/neutron-mc/) for details. As far as we know,
 the front-end programs have not been used on Windows at this point.
@@ -58,11 +58,12 @@ please contact kristian.nielsen@risoe.dk.
 Macintosh:
 
 McStas has been successfully compiled on the Macintosh using Code
-Warrior. It is reportedly necessary to increase the default size of
-memory allocated to programs by the compiler to make the simulations
-work. It may also be necessary to edit the default file paths in the
-file port.h, since environment variables are (as far as we know) not
-available on the Macintosh.
+Warrior. Define the preprocessor macro 'MAC' when compiling to get
+McStas to use the Macintosh file system semantics. It is reportedly
+necessary to increase the default size of memory allocated to programs
+by the compiler to make the simulations work. It may also be necessary
+to edit the default file paths in the file port.h, since environment
+variables are (as far as we know) not available on the Macintosh.
 
 At Risø, we do not use McStas on the Macintosh, so we cannot provide
 direct support for this system. Try asking on the mailing list if you
