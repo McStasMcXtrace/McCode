@@ -161,7 +161,7 @@ sub dialog_hardcopy {
 }
     
 sub plot_dialog {
-    my ($win, $ii, $si, $di) = @_;
+    my ($win, $ii, $si, $di, $sim_file_name) = @_;
     $current_plot = -1;	# Component index, or -1 -> overview.
     my $dlg = $win->DialogBox(-title => "Plot results",
 			      -buttons => ["Close"]);
@@ -210,7 +210,7 @@ Date: $si->{'Date'}
 Instrument name: $ii->{'Name'}
 Source: $ii->{'Instrument-source'}
 Neutron count: $si->{'Ncount'}
-Simulation file: <unimplemented>
+Simulation file: $sim_file_name
 END
 	       -anchor => 'w',
 	       -justify => 'left')->pack(-fill => 'x');
