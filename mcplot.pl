@@ -72,7 +72,8 @@ my $inspect = "";
 my ($plotter);
 my $nowindow = -1;
 my $do_swap=0;
-
+my $daemon=0;
+my $wait=10;
 
 if ($Config{'osname'} eq 'MSWin32'){
   $nowindow = 0;
@@ -95,6 +96,10 @@ for($i = 0; $i < @ARGV; $i++) {
         $plotter = $1;        
   } elsif(/^-i([a-zA-Z0-9_]+)$/ || /^--inspect=([a-zA-Z0-9_]+)$/) {
       $inspect = $1;
+  } elsif(/^-d([0-9]+)$/ || /^--daemon=([0-9]+)$/) {
+      $daemon = $1;
+  } elsif(/^-w([0-9\.]+)$/ || /^--wait=([0-9\.]+)$/) {
+      $wait = $1;
   } elsif(/^\+nw$/i || /^\+tk$/i || /^\+java$/i) {
       $nowindow = 0;
   } elsif(/^-nw$/i || /^-nojvm$/i) {
@@ -192,8 +197,24 @@ if ($plotter eq 3 || $plotter eq 4) {
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
     printf $fh "end\n";
   }
-  
-  close($fh);
+  printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
+  printf $fh "global daemon\n;";
+  printf $fh "daemon=0\n;";
+  if (!($daemon eq 0)) {
+      printf $fh "daemon=1\n;";
+      printf $fh "mydate = getdate('s');\n";
+      printf $fh "set('old_style','on');\n";
+      printf $fh "while (1==1)\n";
+      printf $fh "newdate = getdate('s');\n";
+      printf $fh "if (newdate-mydate>$wait)\n";
+      printf $fh "mydate = newdate;\n";
+      printf $fh "xdel(0);\n";
+      printf $fh "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');\n";
+      printf $fh "end\n";
+      printf $fh "end\n";
+  } else {
+      close($fh);
+  }
   if ($nowindow) { system("$MCSTAS::runscilab -nw -f $tmp_file\n"); }
   else { system("$MCSTAS::runscilab -f $tmp_file\n"); }
   
@@ -202,7 +223,7 @@ if ($plotter eq 3 || $plotter eq 4) {
   else { $tosend = "matlab "; }
   $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
   $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')');";
-      
+  
   if ($passed_arg_str_quit) {
     $tosend .= "exit;\"\n";
   } else {
@@ -210,8 +231,22 @@ if ($plotter eq 3 || $plotter eq 4) {
       $tosend .= "disp('type: help mcplot for this function usage.');";
       $tosend .= "disp('mcplot: Simulation data structure from file $file');";
       $tosend .= "disp('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !');";
-      $tosend .= "end;\"\n";
-    }
+      $tosend .= "end;";
+  }
+  if (!($daemon eq 0)) {
+      $tosend .= "mydate = clock;";
+      $tosend .= "while (1==1);";
+      $tosend .= "drawnow;";
+      $tosend .= "if (etime(clock,mydate)>$wait);";
+      $tosend .= "mydate = clock;";
+      $tosend .= "s=0;clear functions;";
+      $tosend .= "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
+      $tosend .= "u=get(gcf,'userdata');u.Date=s.Date;set(gcf,'userdata',u);";
+      $tosend .= "pause(0.1);drawnow;";
+      $tosend .= "end;";
+      $tosend .= "end;";
+  }
+  $tosend .= "\"\n";
   system($tosend);
 } elsif ($plotter eq 0) {
   # McStas original mcplot using perl/PGPLOT
@@ -242,7 +277,19 @@ if ($plotter eq 3 || $plotter eq 4) {
   require "mcplotlib.pl";
   
   # ADD/MOD: E. Farhi/V. Hugouvieux Feb 18th, 2002 : handle detector files
-
+  if (!($daemon eq 0)) {
+      while ( 1==1 ) {
+	  pgplotit();
+	  sleep $wait;
+      }
+  }  else {
+      pgplotit();
+  }
+  
+}
+ 
+sub pgplotit { 
+    
   my ($sim_file) = $file;
   my ($instr_inf, $sim_inf, $datalist, $sim_error) = read_sim_file($file);
   if ($sim_error !~ "no error") {
@@ -269,34 +316,38 @@ if ($plotter eq 3 || $plotter eq 4) {
     overview_plot("$file.gif/gif", $datalist, 0);
           die "Wrote GIF file '$file.gif' (gif)\n";
   } 
-
-  print "Click on a plot for full-window view.\n" if @$datalist > 1;
-  print "Type 'P' 'C' 'N' or 'G' (in graphics window) for hardcopy, 'Q' to quit.\n";
-
-  for(;;) {
-      my ($cc,$cx,$cy,$idx);
-      # Do overview plot, letting user select a plot for full-screen zoom.    
-      ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 1);
-      last if $cc =~ /[xq]/i;        # Quit?
-      if($cc =~ /[pcng]/i) {        # Hardcopy?
-          my $ext="ps";
-          my $dev = ($cc =~ /c/i) ? "cps" : "ps";
-          if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
-          if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
-          overview_plot("$file.$ext/$dev", $datalist, 0);
-          print "Wrote file '$file.$ext' ($dev)\n";
-          next;
+  if ($daemon eq 0) {
+      print "Click on a plot for full-window view.\n" if @$datalist > 1;
+      print "Type 'P' 'C' 'N' or 'G' (in graphics window) for hardcopy, 'Q' to quit.\n";
+  } else {
+      overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 0); 
+  }
+  if ($daemon eq 0) {
+      for(;;) {
+	  my ($cc,$cx,$cy,$idx);
+	  # Do overview plot, letting user select a plot for full-screen zoom.    
+	  ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 1);
+	  last if $cc =~ /[xq]/i;        # Quit?
+	  if($cc =~ /[pcng]/i) {        # Hardcopy?
+	      my $ext="ps";
+	      my $dev = ($cc =~ /c/i) ? "cps" : "ps";
+	      if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
+	      if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
+	      overview_plot("$file.$ext/$dev", $datalist, 0);
+	      print "Wrote file '$file.$ext' ($dev)\n";
+	      next;
+	  }
+	  # now do a full-screen version of the plot selected by the user.
+	  ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], 1);
+	  last if $cc =~ /[xq]/i;        # Quit?
+	  if($cc =~ /[pcg]/i) {        # Hardcopy?
+	      my $ext="ps";
+	      my $dev = ($cc =~ /c/i) ? "cps" : "ps";
+	      if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
+	      my $filename = "$datalist->[$idx]{'Filename'}.$ext";
+	      single_plot("$filename/$dev", $datalist->[$idx], 0);
+	      print "Wrote postscript file '$filename'\n";
+	  }        
       }
-      # now do a full-screen version of the plot selected by the user.
-      ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], 1);
-      last if $cc =~ /[xq]/i;        # Quit?
-      if($cc =~ /[pcg]/i) {        # Hardcopy?
-          my $ext="ps";
-          my $dev = ($cc =~ /c/i) ? "cps" : "ps";
-          if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
-          my $filename = "$datalist->[$idx]{'Filename'}.$ext";
-          single_plot("$filename/$dev", $datalist->[$idx], 0);
-          print "Wrote postscript file '$filename'\n";
-      }        
   }
 }
