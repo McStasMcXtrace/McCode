@@ -6,7 +6,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas 1.5
 *
 * Circular slit.
@@ -21,7 +21,7 @@
 
 DEFINE COMPONENT Circular_slit
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius)
+SETTING PARAMETERS (radius=0.01)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 TRACE

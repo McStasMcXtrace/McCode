@@ -3,17 +3,19 @@
 * McStas, the neutron ray-tracing package: ESS_moderator_short.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: ESS_moderator_short
+*
 * %I
+* Adapted from Moderator by: KN, M.Hagen, August 1998
 * Written by: Kim Lefmann
 * Date: 2001
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: McStas 1.5
 *
 * A parametrised pulsed source for modelling ESS short pulses.
 *
 * %D
 * Produces a time-of-flight spectrum, from the ESS parameters
-* Adapted from Moderator by: KN, M.Hagen, August 1998
 * Chooses evenly in lambda, exponentially decaying in time 
 *
 * Units of flux: n/cm^2/s/AA/ster  
@@ -50,7 +52,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh, 
                     T, tau, tau1, tau2, n, n2, chi2, I0, I2, 
                     branch1, branch2)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (l_range, w_mult)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
@@ -134,6 +136,7 @@ TRACE
     p *= I2*w_mult/(1+exp(chi2*lambda-2.2))/lambda;           
                                           /* Calculate true intensity */
   }
+  SCATTER;
 %}
 
 MCDISPLAY

@@ -3,18 +3,23 @@
 * McStas, the neutron ray-tracing package: Filter.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Filter
+*
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: Sept. 14 1998
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: McStas 1.5
 *
-* A simple neutron filter.
+* A simple cut-off neutron filter.
 *
 * %D
 * Be-type filter defined by two identical rectangular opening apertures.
 * The transmission is interpolated liniearly between the high- and low-energy
 * transmissions beyond the upper and lower cut-off energies.
+*
+* Example: Filter(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
+*           len=0.05, T0=0.9, T1=0.1, Emin=4.64, Emax=5)
 *
 * %P
 * INPUT PARAMETERS:
@@ -35,7 +40,7 @@
 
 DEFINE COMPONENT Filter
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, T0, T1, Emin, Emax)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, T0=0.9, T1=0.1, Emin=4.64, Emax=5)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
 %{
@@ -63,6 +68,7 @@ TRACE
         p*=T0;
     else
       p*= T1+(T0-T1)*(Emax-E)/(Emax-Emin);
+    SCATTER;
 %}
 
 MCDISPLAY

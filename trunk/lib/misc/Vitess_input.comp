@@ -3,11 +3,14 @@
 * McStas, the neutron ray-tracing package: Vitess_input.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Vitess_input
+*
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.5 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.6 $
+* Origin: McStas 1.5.0
+* Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
 * Read neutron state parameters from VITESS neutron file.
 *
@@ -15,6 +18,8 @@
 * Source-like component reading neutron state parameters from a
 * VITESS neutron file. Used to interface McStas components or
 * simulations into VITESS.
+*
+* Example: Vitess_input(input="MySource.vit", bufsize = 10000, repeat_count = 2)
 *
 * %P
 * INPUT PARAMETERS
@@ -38,10 +43,97 @@ SETTING PARAMETERS (bufsize = 10000, repeat_count = 1)
 OUTPUT PARAMETERS (file, buf, size, pos, rep, finished)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
+SHARE
+%{
+#ifndef VITESS_LIB_H
+#define VITESS_LIB_H
+/* The Neutron structure, taken from VITESS source code "general.h" */
+typedef double VectorType[3];
+typedef struct
+  {
+    double        Time;
+    double        Wavelength;
+    double        Probability;
+    VectorType    Position;
+    VectorType    Vector;
+    VectorType    Spin;
+  } Neutron;
+  
+  /* Convert McStas state parameters to VITESS Neutron structure. In
+   VITESS, the neutron velocity is represented by a wavelength in
+   AAngstroem and a unit direction vector, time is in msec and
+   positions are in cm.*/
+Neutron mcstas2vitess(double x, double y, double z,
+		      double vx, double vy, double vz,
+		      double t, 
+          double sx, double sy, double sz,
+          double p)
+{
+  double v,s;			/* Neutron speed */
+  Neutron neu;			/* Vitess Neutron structure */
+
+  neu.Position[0] = x*100;	/* Convert position from m to cm */
+  neu.Position[1] = y*100;
+  neu.Position[2] = z*100;
+  v = sqrt(vx*vx + vy*vy + vz*vz);
+  if(v == 0.0)
+  {
+    fprintf(stderr, "mcstas2vitess: Error: zero velocity!\n");
+    exit(1);
+  }
+  neu.Wavelength = 3956.0346/v;	/* Convert speed to wavelength */
+  neu.Vector[0] = vx/v;		/* Convert velocity to unit direction vector */
+  neu.Vector[1] = vy/v;
+  neu.Vector[2] = vz/v;
+  s = sqrt(sx*sx+sy*sy+sz*sz);
+  if(s != 0.0)
+  {
+    neu.Spin[0] = sx/s;
+    neu.Spin[1] = sy/s;
+    neu.Spin[2] = sz/s;
+  }
+  
+  neu.Time = t*1000;		/* Convert time from sec to msec */
+  neu.Probability = p;		/* Neutron weight */
+  return neu;
+}
+
+/* Convert VITESS neutron structure to McStas state parameters. In
+   VITESS, the neutron velocity is represented by a wavelength in
+   AAngstroem and a unit direction vector, time is in msec and
+   positions are in cm. */
+void vitess2mcstas(Neutron neu,
+		   double *x, double *y, double *z,
+		   double *vx, double *vy, double *vz,
+       double *t, 
+       double *sx, double *sy, double *sz,
+		   double *p)
+{
+  double v;			/* Neutron speed */
+
+  *x = 0.01*neu.Position[0];	/* Convert position from cm to m */
+  *y = 0.01*neu.Position[1];
+  *z = 0.01*neu.Position[2];
+  if(neu.Wavelength == 0.0)
+  {
+    fprintf(stderr, "mcstas2vitess: Error: zero wavelength!\n");
+    exit(1);
+  }
+  v = 3956.0346/neu.Wavelength;	/* Convert wavelength to speed */
+  *vx = v*neu.Vector[0];	/* Convert unit direction vector to velocity */
+  *vy = v*neu.Vector[1];
+  *vz = v*neu.Vector[2];
+  *sx = neu.Spin[0];
+  *sy = neu.Spin[1];
+  *sz = neu.Spin[2];
+  *t = 0.001*neu.Time;		/* Convert msec to sec */
+  *p = neu.Probability;		/* Neutron weight */
+}
+#endif
+%}
+
 DECLARE
 %{
-
-#include "vitess-lib.h"
 
 FILE *file;			/* Neutron input file handle */
 Neutron *buf;			/* Neutron input buffer */
@@ -101,7 +193,7 @@ TRACE
      the neutron. */
   if(finished)
     ABSORB;
-  vitess2mcstas(buf[pos], &x, &y, &z, &vx, &vy, &vz, &t, &p);
+  vitess2mcstas(buf[pos], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
   /* Repeat the same neutron state parameters the required number of
      times. */
   ++rep;

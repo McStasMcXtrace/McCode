@@ -3,16 +3,20 @@
 * McStas, the neutron ray-tracing package: Mirror.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Mirror
+*
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.8 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.9 $
+* Origin: McStas release
 *
 * Single mirror plate.
 *
 * %D
 * Single mirror plate (used to build guides in compound components).
+*
+* Example: Mirror(xlength=.1, yheight=.1,R0=0.99,Qc=0.021,alpha=6.1,m=2,W=0.003)
 *
 * %P
 * INPUT PARAMETERS:
@@ -33,8 +37,9 @@
 
 DEFINE COMPONENT Mirror
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xlength, yheight,R0,Qc,alpha,m,W)
+SETTING PARAMETERS (xlength, yheight,R0=0.99,Qc=0.021,alpha=6.07,m=2,W=0.003)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 TRACE
 %{
   double dt, q;
@@ -64,6 +69,7 @@ TRACE
           ABSORB;                               /* Cutoff ~ 1E-10 */
       }
       p *= R0;
+      SCATTER;
     }
     else
     {

@@ -3,10 +3,13 @@
 * McStas, the neutron ray-tracing package: Arm component
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Arm
+*
 * %I
+*
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: September 1997
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: McStas 1.5
 *
 * Arm/optical bench
@@ -27,6 +30,7 @@ DEFINE COMPONENT Arm
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
 STATE PARAMETERS ()
+
 TRACE
 %{
 %}

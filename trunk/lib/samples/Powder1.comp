@@ -3,13 +3,18 @@
 * McStas, the neutron ray-tracing package: Powder1.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Powder1
+*
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: McStas 1.5
 *
 * General powder sample with a single scattering vector.
+*
+* Example: Powder1(radius=0.015,h=0.05,q =1.8049,d_phi0 =0.07,pack=1,j=6,DW=1, 
+*       F2=56.8,Vc=85.0054,sigma_a=0.463,target_x=0,target_y=0, target_z=1000)
 *
 * %P
 *
@@ -48,10 +53,10 @@
 
 DEFINE COMPONENT Powder1
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (d_phi0, radius, h, pack, Vc, sigma_a, j, q, F2, DW,
-		    target_x, target_y, target_z)
+SETTING PARAMETERS (radius, h, q = 1.8049, d_phi0 = 0.07, pack = 1, j = 6, DW = 1, F2 = 56.8, Vc = 85.0054, sigma_a = 0.463, target_x = 0,  target_y = 0, target_z = 1000)
 OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
 %{
   double my_s_v2, my_a_v, q_v;
@@ -102,13 +107,14 @@ TRACE
                            vout_x, vout_y, vout_z, radius, h))
     {
       /* Strange error: did not hit cylinder */
-      printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+      fprintf(stderr, "Powder1: FATAL ERROR: Did not hit cylinder from inside.\n");
       exit(1);
     }
     l_1 = v*t1;
 
     my_s = my_s_v2/(v*v);
     p *= l_full*my_s*exp(-(my_a_v/v+my_s)*(l+l_1));
+    SCATTER;
   }
   else
     ABSORB;

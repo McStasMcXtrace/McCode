@@ -1,5 +1,225 @@
-This file is obsolete. See http://neutron.risoe.dk/mcstas
+This file is part of McStas  version 1.6-ill (alpha), released October 29th, 2001.
 
+Changes in McStas v1.6-ill (alpha), October 29th, 2001.
+
+ - In component definitions, a SHARE keyword followed by a C code block  
+   %{...}% acts the same as a DECLARE block, but is only included once in an
+   instrument. This is very useful when using many identical components
+   (guides, monitors, monochromators) to speed-up compiling and perfomrnaces.
+     SHARE 
+     %{ /* included only once for all identical components */
+     %}
+     DECLARE
+     %{ /* included for all components */
+     %}
+   Then all component programmers may add C functions to the 'kernel'. This is
+   only worth when you plan to use a given component many times in a simulation
+   (e.g. not for sources or samples). To downgrade a McStas 1.5 component, just
+   move the SHARE block C code into the DECLARE block. 
+ - In an instrument definition, within the TRACE section, each COMPONENT 
+   instance may include a C code block:
+     COMPONENT Comp1 = Guide(...)
+     AT (...) ROTATED (...)
+     THEN 
+     %{ /* some C code to execute after component Comp1 */
+        /* in current coordinate system. You may use Comp1 and global */
+        /* instrument variables */
+     %}
+   For instance, you can here give a 'color' (additional neutron    
+   characteristic) and modify next components behaviours.
+   This block is always executed in groups, but you can test if the componnet
+   intercepted the neutron with the SCATTERED variable (if (SCATTERED) { ... }).
+ - In an instrument TRACE section, it is possible to put a set of component
+   in an exclusive group. Only one of the elements of the group can act on
+   the neutron. If no element acts on the neutron, it is absorbed.
+   This is specially useful for multi-detectors, multi-monochromators in 
+   parallel, multiple collimators/guides (e.g. radial).
+     COMPONENT Comp1 = Guide(...)
+     AT (...) ROTATED (...) GROUP MyGroupName
+     
+     COMPONENT Comp2 = Guide(...)
+     AT (...) ROTATED (...) GROUP MyGroupName
+   Comp1 and Comp2 may even be at the same place. 
+   For programmers: it is important that the component TRACE section contains a
+   SCATTER keyword when it successfully intercepts it, to tell McStas that a
+   component in a group acts on a neutron, and can skip other comp in the group.
+ - In 'mcplot', it is possible to use the -ps, -psc and -gif options to
+   generate a PS, color PS, and GIF file, and exit mcplot (no display).
+ - The Monitor_nD was upgraded to correct bugs when reaching the component
+   (the propagation was not performed correctly in some cases), and the disk/
+   sphere radius (monitor remained then squared). This component now uses
+   the SHARE block. A bug was corrected for lists. It can output log and abs of
+   signals, and source files (see Source_file).
+ - The Gravity_guide now handles correctly the focusing multichannel guides.
+   Gravitation is included (on y axis). This component now uses the SHARE block.
+   The Channeled_guide does not handle properly the focusing multichannels.
+ - The Source_gen component focuses uniformly on the target, and can model
+   rectangular, disk, gaussian, and Maxwellian (up to 3 distributions) sources. 
+   Previous source components did not focus correctly on the target. They were 
+   also corrected, execpt the 'Source_Maxwell'. Source_gen can replace all thee
+   previous sources.
+ - A new Source_file component can take as input a text file containing an
+   array with columns ' x y z vx vy vz t sx sy sz p', such as the data files
+   generated from Monitor_nD with options="list all source". The source may
+   be re-generated more than once, which is useful to improve accuracy,
+   specially when further components do MC choices. Vitess files and float
+   binary files are also ok (auto-recognition of format).
+ - The signal handler now gives more info about where a signal was caught.
+   For instance it tells in which component part an error occured, to make
+   debuging easier.
+   Usefull Signals: kill -Signal <pid>
+      -USR1: display info and continue simulation
+      -USR2: finish simulation and save results
+      -QUIT: end simulation immediately
+ - The 2D detectors now also output the errors/counts on signal as 1D detectors.
+   Set p2=NULL in DETECTOR_OUT_2D to unactivate error saving in components.
+ - We tried to lower the number of components by merging similar ones. 
+ - There are now new MACROS for the component programmer.
+     * mccompcurindex is the number (index) of the current component 
+       (1 is first component of instrument)
+     * RESTORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
+       restores the neutron state to the one at the input of the component
+       'index'. To ignore a component effect, use
+       RESTORE_NEUTRON(mccompcurindex, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
+       at the end of its TRACE section, or in its THEN section.
+       These neutron states are in the local component coordinate systems.
+     * STORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
+       stores the current neutron state in the trace-history table, in local
+       coordinate system. This is automatically done when entering each
+       component of an instrument.
+     * POS_A_COMP_INDEX(index) is the absolute position of component
+       'index'. POS_A_COMP_INDEX(mccompcurindex) is the same as
+       POS_A_CURRENT_COMP. You may use POS_A_COMP_INDEX(mccompcurindex+1) to
+       make, for instance, your component access the position of the next
+       component (this is usefull for automatic targeting).
+     * SCATTERED is non zero when previous component acted on neutron (let pass
+       or scatter)
+       
+   Warning: programmers, do not use anymore the 'mccompcurname' when writing
+   your components. rather use the 'NAME_CURRENT_COMP'.
+       
+   Other minor modifications    
+   #cleaned up non used variables in mcstas-r.c/h
+   #tested and corrected components
+        misc: Vitess_input/output: included Spin from Vitess. (vitess-lib.c/h)
+          but can not be used as mcstas can not find vitess-lib.c/h. I included
+          what was needed in SHARE sections. now works OK.
+        samples:
+            Single_crystal (now can take lattice angles, forgot a %} at SHARE
+              end) 
+            provide *.dat diffraction samples from Crystallographica
+        optics:
+            Beamstop now is a merging of Beamstop_circular and 
+              Beamstop_rectangular (using default  values to select shape)
+            Channeled_guide: now output an error in multichannel focusing mode.
+            Chopper: determined default values to have lambda~4 AA. Can handle
+              First_Chopper (parameter IsFirst)
+            Fermi_Chopper : default values for transmission every ~2 AA
+            Gravity_guide: limit loops to max of 1000 bounces for each 
+              components (to avoid endless loops)
+            Mosaic_anisotropic: can take DM (d-spacing). default for graphite.
+            Powder_filter (did not work at all, now can take lattice angles, 
+              also works as a sample, can take samples/*.dat diffraction files)
+            Selector: default values for transmission at ~4 AA
+            Slit: now is a merging of Slit and Circular_slit (using default
+              values to select shape)
+            Soller: can take transmission
+            V_selector: default values for transmission at ~4 AA
+        sources
+            Source_gen: can handle all previous sources in one component (up to
+              3 Maxwellians). Corrected homogeneity bug for illumination.
+            Source_file: can read 'source' files from Vitess, text files (both 
+              90 bytes/neutron) and float binary  files (e.g, from Monitor_nD 
+              with options="list all, source binary" which is more compact in  
+              size, 48  bytes/neutron). Autorecognition of the format. The MCNP 
+              output is not fixed. Just tell MCNP  guys to output the float 
+              binary or text file.
+   #other tested components:
+        monitors: all
+        optics: Bender, Curved_Monochromator, Filter, Filter_Graphite,
+          Gravity_guide, Mon_2foc, 
+        Curved_Monochromator, Monochromator
+   #not tested: Guide, He3_cell, Mirror, (should be ok ??!!)
+   #moved to obsolete components:
+        monitors: PSD_monitor_4PI_log.comp, PSD_bidim.comp, PSD_curved.comp,
+          PSD_entry.comp,
+        samples: Powder0.comp
+        optics:
+            Beamstop_circular Beamstop_rectangular (gathered into Beamstop)
+            First_Chopper (included in Chopper)
+            Circular_slit (included in Slit)
+            Guide2
+            Monochromator0
+            Circular_slit
+            Soller_trans.comp
+   #perl scripts: mcplot (direct output -ps, -psc, -gif)
+   
+Changes in McStas v1.5, October, 10th, 2001
+
+Modified components 
+      A corrected version of Arm.comp. For further information, see the emails by Ulrich
+      Wildgruber and Stuart Rycroft. (Apr. 26, 2001) 
+      A corrected version of  Monitor_nD.comp. For further information, see the email by
+      Emmanuel Farhi. (Apr. 26, 2001) 
+      A rewritten version of Gravity_guide.comp has been contributed by Emmanuel Farhi
+      (see email). The component provided in the email works with McStas 1.4.2, but the official
+      version of the component is not working with McStas 1.4.2 because support for this
+      component has been added to the kernel. (Aug. 7, 2001) 
+      An updated version of Monitor_nD.comp has been contributed by Emmanuel Farhi (see
+      first and second email). The new version of the component is not working with McStas
+      1.4.2 because support for the component has been added to the kernel. (Aug. 8, 2001) 
+      Andrew Wildes and Emmanuel Farhi have detected an error when using focusing
+      geometry in Channeled_guide. The slope of the channels is not computed corrected
+      correctly, because the same left and right slopes are used in all channels. This has now
+      been included properly in Gravity_guide, and it is recommended that this component is
+      used. (Sep. 18, 2001) 
+      The handling of illumination in Source_flat, Source_div and Source_flat_lambda have
+      been corrected. (Oct. 9, 2001) 
+  New components 
+      The He3_cell.comp has been contributed by Trefor Roberts. It models a cylindrical 3He
+      spin filter cell. (Aug. 8, 2001) 
+      The Mon_2foc.comp has been contributed by Peter Link. It models a double bent
+      monochromator with multiple slabs. (Aug. 9, 2001) 
+      The Bender.comp has been contributed by Philipp Bernhardt. It models a curved neutron
+      guide. (Aug. 10, 2001) 
+      The Powder_filter.comp has been contributed by Ben Fortescue. It models a general
+      box-shaped powder filter. (Aug. 16, 2001) 
+      The Source_Maxwell_3 component describes a source with three Maxwellian
+      distributions. (Sep. 17, 2001) 
+      Various monitors have been added: EPSD_monitor, PSDcyl_monitor, PSDlin_monitor,
+      TOF_cylPSD_monitor, TOFlog_mon. (Sep. 18, 2001) 
+          A minor error in TOF_cylPSD_monitor has been corrected. (Oct. 9, 2001) 
+      A new monitor TOFLambda_monitor has been added. (Oct. 9, 2001) 
+      A guide modeling waviness, Guide_wavy, has been added. (Oct. 9, 2001) 
+      A generic source, Source_gen, has been added. (Oct. 10, 2001) 
+  The signal handling system has been updated to handle a special case. The signal handling
+  system will be documented in the manual of version 1.5. (Aug. 7, 2001) 
+  The representation of polarisation in McStas components and instruments is supposed to work
+  as follows. Only components actually modifying the spin explicitly require the "POLARISATION
+  PARAMETERS (sx,sy,sz)" line. An instrument handling polarisation may consist of  components
+  both with and without this line; it will transform the spin vector correctly anyway. The 
+  "POLARISATION PARAMETERS (sx,sy,sz)" line is therefore removed from all official
+  components not dealing with polarisation. The reason is that for instruments without polarisation
+  some simulation time is gained by excluding the transformations of the spin vector. (Aug. 9,
+  2001) 
+  Some definitions have been added that can be used in coding components: 
+      NAME_CURRENT_COMP gives the name of the current component as a string. (Aug.
+      16, 2001) 
+      POS_A_CURRENT_COMP gives the absolute position of the current component. A
+      component of the vector is referred to as POS_A_CURRENT_COMP.i where i is x, y or z.
+      (Aug. 16, 2001) 
+      ROT_A_CURRENT_COMP and  ROT_R_CURRENT_COMP give the orientation of the
+      current component as rotation matrices (absolute orientation and the orientation relative to
+      the previous component, respectively). A component of  a rotation matrice is referred to
+      as  ROT_A_CURRENT_COMP[m][n], where m and n are 0, 1, or 2. (Aug. 16, 2001) 
+      POS_A_COMP(comp) gives the absolute position of the component with the name
+      comp. Note that comp is not given as a string. A component of the vector is referred to as
+      POS_A_COMP(comp).i where i is x, y or z. (Aug. 16, 2001) 
+      ROT_A_COMP(comp) and ROT_R_COMP(comp)  give the orientation of the
+      component comp as rotation matrices (absolute orientation and the orientation relative to
+      its previous component, respectively). Note that comp is not given as a string. A
+      component of  a rotation matrice is referred to as  ROT_A_COMP(comp)[m][n], where
+      m and n are 0, 1, or 2. (Aug. 16, 2001) 
 
 Changes in McStas v1.4.1, March 16, 2001
 
@@ -80,4 +300,4 @@ Changes in McStas v1.1, March 31, 1999:
 
 Changes in McStas v1.0, October 26, 1998:
 
- - Initial release
+ - Initial release.

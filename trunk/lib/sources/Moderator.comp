@@ -3,10 +3,12 @@
 * McStas, the neutron ray-tracing package: Moderator.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Moderator
+*
 * %I
-* Written by: Kristian Nielsen and Mark Hagen
+* Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: McStas 1.5
 *
 * A simple pulsed source for time-of-flight.
@@ -33,54 +35,55 @@
 DEFINE COMPONENT Moderator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, E0, E1, dist, xw, yh, t0, Ec, gam)
-OUTPUT PARAMETERS (hdiv,vdiv,p_in)
+OUTPUT PARAMETERS (p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
 %{
-  double hdiv,vdiv;
   double p_in;
 %}
 INITIALIZE
 %{
-  hdiv = atan(xw/(2.0*dist));
-  vdiv = atan(yh/(2.0*dist));
-  p_in = (4*hdiv*vdiv)/(4*PI);
+  p_in = 1.0/(4*PI);
 %}
 TRACE
 %{
-  double theta0,phi0,chi,theta,phi,v,r,tauv,E;
+   double chi,v,r,tauv,E, xf, yf, rf, dx, dy;
 
-  p=p_in;
-  z=0;
+   p=p_in;
+   z=0;
 
-  chi = 2*PI*rand01();          /* Choose point on source */
-  r = sqrt(rand01())*radius;    /* with uniform distribution. */
-  x = r*cos(chi);
-  y = r*sin(chi);
+   chi = 2*PI*rand01();          /* Choose point on source */
+   r = sqrt(rand01())*radius;    /* with uniform distribution. */
+   x = r*cos(chi);
+   y = r*sin(chi);
 
-  theta0 = -atan(x/dist);       /* Angles to aim at target centre */
-  phi0 = -atan(y/dist);
+   xf = 0.5*xw*randpm1();          /* Choose focusing position uniformly */
+   yf = 0.5*yh*randpm1();
+   dx = xf-x;
+   dy = yf-y;
+   rf = sqrt(dx*dx+dy*dy+dist*dist);
 
-  theta = theta0 + hdiv*randpm1(); /* Small angle approx. */ 
-  phi = phi0 + vdiv*randpm1();
+   p = p_in*xw*yh*dist/(rf*rf*rf);      /* target area * cos(phi)/rf^2 */
 
-  E = E0+(E1-E0)*rand01();      /* Assume linear distribution */
-  v = SE2V*sqrt(E);
+   E = E0+(E1-E0)*rand01();      /* Assume linear distribution */
+   v = SE2V*sqrt(E);
 
-  vz = v*cos(phi)*cos(theta);   /* Small angle approx. */
-  vy = v*sin(phi);
-  vx = v*cos(phi)*sin(theta);
+   vz=v*dist/rf;
+   vy=v*dy/rf;
+   vx=v*dx/rf; 
 
-  if(E < Ec)
-  {
-    tauv = t0;
-  }
-  else
-  {
-    double tmp = ((E - Ec) / gam);
-    tauv = t0 / (1 + (tmp*tmp));
-  }
-  t = -tauv*log(rand01())*1E-6;
+   if(E < Ec)
+   {
+     tauv = t0;
+   }
+   else
+   {
+     double tmp = ((E - Ec) / gam);
+     tauv = t0 / (1 + (tmp*tmp));
+   }
+   t = -tauv*log(rand01())*1E-6;
+   SCATTER;
 %}
 
 MCDISPLAY

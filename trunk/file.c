@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Sep 25, 1998
 *
-*	$Id: file.c,v 1.3 2000-02-15 07:40:59 kn Exp $
+*	$Id: file.c,v 1.4 2003-01-20 16:03:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.3  2000/02/15 07:40:59  kn
+*	Also search for components in a fixed list of system dir subdirectories.
+*
 *	Revision 1.2  1998/10/02 08:36:21  kn
 *	Fixed header comment.
 *
@@ -26,8 +29,9 @@
 
 static List search_list = NULL;
 
+/* MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir */
 static char *sys_subdir_table[] =
-  { "samples", "monitors", "sources", "optics", "misc" };
+  { "samples", "monitors", "sources", "optics", "misc" , "obsolete"};
 
 /* Attempt to open FILE in directory DIR (or current directory if DIR is
    NULL). */

@@ -6,8 +6,8 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: Nov 25, 1998
-* Version: $Revision: 1.13 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.14 $
+* Origin: McStas 1.4.2
 *
 * Velocity selector.
 *
@@ -15,17 +15,20 @@
 * Velocity selector consisting of rotating Soller-like blades
 * defining a helically twisted passage.
 * Geometry defined by two identical, centered apertures at 12 o'clock
-* position, Origo is at the centre of the selector.
+* position, Origo is at the centre of the selector (input is at -l0/2).
 * Transmission is analytical assuming a continuous source.
+*
+* Example: V_selector(width=0.03, height=0.05, l0=0.30, r0=0.29, phi=42.298,
+*            l1=0.25, tb=0.0004, rot=20000, nb=72)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* width:     (m)   Width of aperture
-* height:    (m)   Height of aperture
+* width:     (m)   Width of entry aperture
+* height:    (m)   Height of entry aperture
 * l0:        (m)   Distance between apertures
 * r0:        (m)   Height from aperture centre to rotation axis
-* phi:       (rad) Twist angle along the cylinder
+* phi:       (deg) Twist angle along the cylinder
 * l1:        (m)   Length of cylinder (less than l0)
 * tb:        (m)   Thickness of blades
 * rot:       (rpm) Cylinder rotation speed, counter-clockwise
@@ -37,8 +40,10 @@
 
 DEFINE COMPONENT V_selector
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (width, height, l0, r0, phi, l1, tb, rot, nb)
+SETTING PARAMETERS (width=0.03, height=0.05, l0=0.30, r0=0.29, phi=42.298, l1=0.25, tb=0.0004, rot=20000, nb=72)
+OUTPUT PARAMETERS(RPM2OM, omega, phi_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_phi)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
 %{
   double RPM2OM, omega, phi_rad, dt0, dt1, r_i, r_f, r_mean, theta_i, theta_f, A, d_s_phi;
@@ -81,6 +86,7 @@ TRACE
     if (A >= 1)
       ABSORB;
     p*= (1-A);
+    SCATTER;
 %}
 
 MCDISPLAY
@@ -121,7 +127,7 @@ MCDISPLAY
       a = z3;
   }
 
-  /* Draw cyulinder. */
+  /* Draw cylinder. */
   circle("xy", 0, -r0, z1, r);
   circle("xy", 0, -r0, z2, r);
   line(0, -r0, z1, 0, -r0, z2);

@@ -3,10 +3,12 @@
 * McStas, the neutron ray-tracing package: L_monitor.comp
 *         Copyright (C) 1999-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: L_monitor
+*
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: McStas 1.5
 *
 * Wavelength-sensitive monitor.
@@ -14,6 +16,9 @@
 * %D
 * A square single monitor that measures the wavelength of the incoming
 * neutrons.
+*
+* Example: L_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+*           nchan=20, filename="Output.L", Lmin=2, Lmax=10)
 *
 * %P
 * INPUT PARAMETERS:
@@ -37,7 +42,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT L_monitor
-DEFINITION PARAMETERS (nchan, filename)
+DEFINITION PARAMETERS (nchan=20, filename)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, Lmin, Lmax)
 OUTPUT PARAMETERS (L_N, L_p, L_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -72,6 +77,7 @@ TRACE
         L_N[i]++;
         L_p[i] += p;
         L_p2[i] += p*p;
+        SCATTER;
       }
     }
   %}

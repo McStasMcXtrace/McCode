@@ -3,13 +3,17 @@
 * McStas, the neutron ray-tracing package: Monitor_4PI.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Monitor_4PI
+*
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas 1.5
 *
 * Monitor that detects ALL non-absorbed neutrons.
+*
+* Example: Monitor_4PI()
 *
 * %D
 * Counts ALL neutrons that propagate this far in the instrument, regardless
@@ -51,6 +55,7 @@ TRACE
     Nsum++;
     psum += p;
     p2sum += p*p;
+    SCATTER;
   %}
 FINALLY
   %{

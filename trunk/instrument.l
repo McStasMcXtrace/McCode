@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.21 2001-12-19 12:36:36 peo Exp $
+*	$Id: instrument.l,v 1.22 2003-01-20 16:03:33 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
+* Revision 1.21  2001/09/24 10:00:00  ef
+* Added GROUP, THEN and SHARE tokens (for McStas 1.6)
+*
 *	Revision 1.20  2000/07/27 09:06:42  kn
 *	Added the extra tokens necessary to support full C expressions in
 *	component actual parameters.
@@ -153,29 +156,31 @@ ID		{DIGIT}*{ALPHA}{ALPHANUM}*
 		  return parse_restricted ? TOK_RESTRICTED : TOK_GENERAL;
 		}
 
-ABSOLUTE	return TOK_ABSOLUTE;
-AT		return TOK_AT;
-COMPONENT	return TOK_COMPONENT;
-DECLARE		return TOK_DECLARE;
-DEFINE		return TOK_DEFINE;
-DEFINITION	return TOK_DEFINITION;
-END		return TOK_END;
-MCDISPLAY	return TOK_MCDISPLAY;
-FINALLY		return TOK_FINALLY;
-EXTERN		return TOK_EXTERN;
-INITIALIZE	return TOK_INITIALIZE;
-INSTRUMENT	return TOK_INSTRUMENT;
-NXDICT		return TOK_NXDICT;
-NXDICTFILE	return TOK_NXDICTFILE;
-OUTPUT		return TOK_OUTPUT;
-PARAMETERS	return TOK_PARAMETERS;
+ABSOLUTE	    return TOK_ABSOLUTE;
+AT		        return TOK_AT;
+COMPONENT	    return TOK_COMPONENT;
+DECLARE		    return TOK_DECLARE;
+DEFINE		    return TOK_DEFINE;
+DEFINITION	  return TOK_DEFINITION;
+END		        return TOK_END;
+MCDISPLAY	    return TOK_MCDISPLAY;
+FINALLY		    return TOK_FINALLY;
+EXTERN		    return TOK_EXTERN;
+INITIALIZE	  return TOK_INITIALIZE;
+INSTRUMENT	  return TOK_INSTRUMENT;
+NXDICT		    return TOK_NXDICT;
+NXDICTFILE	  return TOK_NXDICTFILE;
+OUTPUT		    return TOK_OUTPUT;
+PARAMETERS	  return TOK_PARAMETERS;
 POLARISATION	return TOK_POLARISATION;
-RELATIVE	return TOK_RELATIVE;
-ROTATED		return TOK_ROTATED;
-SETTING		return TOK_SETTING;
-STATE		return TOK_STATE;
-TRACE		return TOK_TRACE;
-SHARE           return TOK_SHARE;
+RELATIVE	    return TOK_RELATIVE;
+ROTATED		    return TOK_ROTATED;
+SETTING		    return TOK_SETTING;
+STATE		      return TOK_STATE;
+TRACE		      return TOK_TRACE;
+SHARE         return TOK_DECLARE_UNIQUE; /* ADD: E. Farhi Sep 20th, 2001 */
+THEN          return TOK_POST_CODE;      /* ADD: E. Farhi Sep 20th, 2001 */
+GROUP         return TOK_GROUP;          /* ADD: E. Farhi Sep 24th, 2001 */
 
 "("|")"|"["|"]"|"{"|"}"|","	return yytext[0]; /* Punctuation. */
 "="|"*"				return yytext[0]; /* Operator. */

@@ -3,10 +3,12 @@
 * McStas, the neutron ray-tracing package: Res_monitor.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Res_monitor
+*
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: McStas 1.5
 *
 * Monitor for resolution calculations
@@ -16,6 +18,9 @@
 * compute instrument resolution functions. Outputs a list of neutron
 * scattering events in the sample along with their intensities in the
 * detector. The output file may be analyzed with the mcresplot front-end.
+*
+* Example: Res_monitor(filename="Output.res", res_sample_comp=RSample,
+*           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 *
 * %P
 * INPUT PARAMETERS:
@@ -41,6 +46,7 @@ DEFINITION PARAMETERS (filename, res_sample_comp)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 OUTPUT PARAMETERS (Nsum, psum, p2sum, file)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
   %{
     int Nsum;
@@ -57,7 +63,7 @@ INITIALIZE
       fprintf(stderr, "Warning: could not open output file '%s'\n", filename);
   %}
 TRACE
-  %{
+%{
     PROP_Z0;
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
@@ -73,9 +79,11 @@ TRACE
           fprintf(file, "%g %g %g %g %g %g %g %g %g %g %g\n",
                   s->ki_x, s->ki_y, s->ki_z, s->kf_x, s->kf_y, s->kf_z,
                   s->rx, s->ry, s->rz, s->pi, p/s->pi);
-        }
+       }
+       SCATTER;
     }
-  %}
+%}
+
 FINALLY
   %{
     if(file)

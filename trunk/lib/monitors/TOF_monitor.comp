@@ -3,10 +3,12 @@
 * McStas, the neutron ray-tracing package: TOF_monitor.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: TOF_monitor
+*
 * %I
-* Written by:  Kristian Nielsen and Mark Hagen
+* Written by:  KN, M. Hagan
 * Date: August 1998
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: McStas 1.5
 *
 * Rectangular Time-of-flight monitor.
@@ -32,10 +34,11 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_monitor
-DEFINITION PARAMETERS (nchan, filename) 
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, dt)
+DEFINITION PARAMETERS (nchan=20, filename) 
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, dt=1.0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
   %{
     int TOF_N[nchan];
@@ -64,12 +67,13 @@ TRACE
       if(i >= nchan) i = nchan - 1;
       if(i < 0)
       {
-        printf("FATAL ERROR: negative time-of-flight.\n");
-        exit(1);
+        /* fprintf(stderr,"TOF_monitor: warning: negative time-of-flight.\n"); */
+        i=0;
       }
       TOF_N[i]++;
       TOF_p[i] += p;
       TOF_p2[i] += p*p;
+      SCATTER;
     }
   %}
 FINALLY

@@ -3,10 +3,12 @@
 * McStas, the neutron ray-tracing package: Res_sample.comp
 *         Copyright 1977-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Res_sample
+*
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: McStas 1.5
 *
 * Sample for resolution function calculation.
@@ -23,6 +25,9 @@
 *
 * The scattered neutrons will have directions towards a given sphere and
 * energies betweed E0-dE and E0+dE.
+*
+* Example: Res_sample(radius_i=0.001,radius_o=0.02,h=0.4,focus_r=0.05,
+*     E0=14.6,dE=2, target_x=0, target_y=0, target_z=1000)
 *
 * %P
 * INPUT PARAMETERS:
@@ -43,10 +48,11 @@
 
 DEFINE COMPONENT Res_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius_i,radius_o,h,focus_r,E0,dE,
-		    target_x, target_y, target_z)
+SETTING PARAMETERS (radius_i,radius_o,h,focus_r=0.05,E0=14,dE=2,
+		    target_x=0, target_y=0, target_z=1000)
 OUTPUT PARAMETERS (res_struct)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
 DECLARE
 %{
   struct Res_sample_struct
@@ -123,6 +129,7 @@ TRACE
   vx *= v;
   vy *= v;
   vz *= v;
+  SCATTER;
 
     /* Store final neutron state. */
   res_struct.kf_x = V2K*vx;
