@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.11 1998-03-24 13:59:26 lefmann Exp $
+*	$Id: mcstas-r.h,v 1.12 1998-03-25 07:23:24 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.11  1998/03/24 13:59:26  lefmann
+*	Added #define for RAND_MAX, needed on HPUX.
+*
 *	Revision 1.10  1998/03/24 13:24:40  lefmann
 *	Added HBAR, MNEUTRON.
 *
@@ -52,6 +55,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
 
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
@@ -106,7 +110,12 @@ typedef MCNUM Rotation[3][3];
 # endif
 #endif
 
-#define RAND_MAX 2147483647
+/* HPUX defines RAND_MAX to 32767 which is wrong for random(). */
+#if defined(__hpux__) && defined(RAND_MAX)
+# undef RAND_MAX
+# define RAND_MAX LONG_MAX
+#endif
+
 #define rand01() ( ((double)random())/((double)RAND_MAX+1) )
 #define randpm1() ( ((double)random()) / (((double)RAND_MAX+1)/2) - 1 )
 #define rand0max(max) ( ((double)random()) / (((double)RAND_MAX+1)/(max)) )
