@@ -137,7 +137,7 @@ install: installdirs $(BINOBJS)
 	    $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
 	  fi \
 	done
-	./mcdoc.fixpl
+	./mcdoc.fixpl --text
 	mkdir $(mc_libdir)/tools/perl/modules
 	cd support/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install 
 	cd support/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install 
