@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.17 2000-02-15 07:40:30 kn Exp $
+* 	$Id: cogen.c,v 1.18 2000-02-16 10:41:31 kn Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -735,9 +735,9 @@ cogen_trace(struct instr_def *instr)
 		     comp->def->trace_code);
     if(comp->def->polarisation_par)
     {
-      coutf("#undef %s %s%s", comp->def->polarisation_par[2]);
-      coutf("#undef %s %s%s", comp->def->polarisation_par[1]);
-      coutf("#undef %s %s%s", comp->def->polarisation_par[0]);
+      coutf("#undef %s", comp->def->polarisation_par[2]);
+      coutf("#undef %s", comp->def->polarisation_par[1]);
+      coutf("#undef %s", comp->def->polarisation_par[0]);
     }
     for(i = 9; i >= 0; i--)
     {
