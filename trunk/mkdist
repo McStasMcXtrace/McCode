@@ -41,6 +41,10 @@ chmod a+x configure
 flex -i instrument.l
 bison -v -d instrument.y
 
+# Also, do a ./configure to create Makefile and mcstas_config.perl
+# These will be dependent on this system, ofcourse...
+./configure
+
 # Clean up
 rm mkdist
 rm setversion
