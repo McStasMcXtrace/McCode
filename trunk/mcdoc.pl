@@ -206,18 +206,20 @@ TB_END
     $n=~ s|.comp\Z||; # remove trailing extension
     $n=~ s|.cmp\Z||; # remove trailing extension
     $n=~ s|.com\Z||; # remove trailing extension
+    $valid_name = $bn;
     if (open($f, ">$bn.html")) { # use component location
       $is_opened = 1; 
-      $valid_name = $bn;
     }
-    if (not $is_opened && not $is_forced) {
+    if ((not $is_opened) && $is_forced) {
       if (open($f, ">$n.html")) { # create locally
         $is_opened = 1; 
         $valid_name = $n;
       }
     }
+    if ($is_single_file) { 
+      $out_file = "$valid_name.html"; 
+    }
     if ($is_opened) {
-      if ($is_single_file) { $out_file = "$valid_name.html"; }
       print $f "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2//EN\">\n";
       print $f "<HTML><HEAD>\n";
       print $f "<TITLE>$d->{'name'}</TITLE>\n";
@@ -275,7 +277,9 @@ TB_END
       print $f "</BODY></HTML>\n";
       close $f;
     } else { 
-      print "mcdoc: Cannot open $valid_name.html. Use -f option to force.";
+      if (not -f "$valid_name.html") {
+        print "mcdoc: Cannot open $valid_name.html. Use -f option to force.";
+      }
     }
     return $valid_name;
 }
@@ -299,7 +303,7 @@ sub add_comp_html {
 sub add_comp_section_html {
     my ($lib, $sec, $header, $filehandle) = @_;
     my $sec_orig = $sec;
-    if ($sec =~ "local") { $sec = "."; $is_forced=0; }  # local components
+    if ($sec =~ "local") { $sec = "."; $is_forced=1; }  # local components
     $sec = "$lib/$sec" unless -d $sec;
     if(opendir(DIR, $sec)) {
         my @comps = readdir(DIR);
@@ -327,7 +331,6 @@ END
             my $basename = $1;
             if (($is_single_file && $name =~ $single_comp_name) 
               || (not $is_single_file)) {
-              if ($is_single_file) { $out_file = $basename; }
               $data = component_information($comp);
               if (not defined($data)) {
                 print STDERR "mcdoc: Failed to get information for component '$comp'";
@@ -473,8 +476,8 @@ if ($filehandle) {
 # open each section, look for comps, add entry in index.html, 
 # and generate comp doc
 my $sec;
+my $is_forced_orig = $is_forced;
 for $sec (@sections) {
-    my $is_forced_orig = $is_forced;
     add_comp_section_html($lib_dir, $sec, $section_headers{$sec}, $filehandle);
     $is_forced = $is_forced_orig; # may have been changed globally (sec == local)
 }
