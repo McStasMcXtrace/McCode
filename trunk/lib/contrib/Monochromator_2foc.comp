@@ -275,9 +275,9 @@ MCDISPLAY
       double xt, xt1, yt, yt1;
       
       zmin = (SlabWidth+gap)*(ih-NH/2.0)+gap/2;
-      zmax = zmin+zwidth;
+      zmax = zmin+SlabWidth;
       ymin = (SlabHeight+gap)*(iv-NV/2.0)+gap/2;
-      ymax = ymin+yheight;
+      ymax = ymin+SlabHeight;
 
       if (RH) 
       { xt = zmin*zmin/RH;
