@@ -227,8 +227,11 @@ INITIALIZE
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
   
-  if (filename != NULL)
-    strncpy(Vars.Mon_File, filename, 128);
+  if (filename != NULL) strncpy(Vars.Mon_File, filename, 128);
+  
+  /* check if user given filename with ext will be used more than once */
+  if ((Vars.Flag_Multiple || Vars.Flag_List) && (strchr(Vars.Mon_File,'.')))
+  { char *XY; XY = strrchr(Vars.Mon_File,'.'); *XY='_'; }
 %}
 
 TRACE
