@@ -109,6 +109,9 @@ INITIALIZE
       mWin = Win;
       if (l!= 0 && r != 0) mWin = (double)l/(double)r;
       bk=(w+d)/k;
+      if (mcgravitation) fprintf(stderr,"WARNING: Bender: %s: "
+        "This component produces wrong results with gravitation !\n",
+        NAME_CURRENT_COMP);
  %}
 
 TRACE
