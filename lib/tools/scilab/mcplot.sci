@@ -226,7 +226,7 @@ function mcplot_menu_action(k, gwin)
         d = []; execstr('d = ThisFigure.instrument;','errcatch');
         if length(d), mcplot_set_global(d, nwin, 0); end
 	xclear();
-      	xtape('replayna', gwin, 90, 0);	// top view
+      	xtape('replayna', nwin, 90, 0);	// top view
       end
       xinfo(t); mprintf('%s\n',t);
     case 2 then // Edit/_data file
