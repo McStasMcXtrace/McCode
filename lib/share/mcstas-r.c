@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.72 2003-08-26 12:32:43 farhi Exp $
+* $Id: mcstas-r.c,v 1.73 2003-09-05 08:59:17 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.72  2003/08/26 12:32:43  farhi
+* Corrected 4PI random vector generation to retain initial vector length
+*
 * Revision 1.71  2003/08/20 09:25:00  farhi
 * Add the instrument Source tag in scan files (origin of data !)
 *
@@ -942,31 +945,40 @@ mcreadparams(void)
   {
     do
     {
-      printf("Set value of instrument parameter %s (%s):\n",
-             mcinputtable[i].name,
-             (*mcinputtypes[mcinputtable[i].type].parminfo)
-                  (mcinputtable[i].name));
-      fflush(stdout);
-      p = fgets(buf, 1024, stdin);
-      if(p == NULL)
-      {
-        fprintf(stderr, "Error: empty input\n");
-        exit(1);
-      }
-      len = strlen(buf);
-      for(j = 0; j < 2; j++)
-      {
-        if(len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+      if (mcinputtable[i].val && !strlen(mcinputtable[i].val)) {
+        printf("Set value of instrument parameter %s (%s):\n",
+               mcinputtable[i].name,
+               (*mcinputtypes[mcinputtable[i].type].parminfo)
+                    (mcinputtable[i].name));
+        fflush(stdout);
+        p = fgets(buf, 1024, stdin);
+        if(p == NULL)
         {
-          len--;
-          buf[len] = '\0';
+          fprintf(stderr, "Error: empty input\n");
+          exit(1);
         }
+        len = strlen(buf);
+        for(j = 0; j < 2; j++)
+        {
+          if(len > 0 && (buf[len - 1] == '\n' || buf[len - 1] == '\r'))
+          {
+            len--;
+            buf[len] = '\0';
+          }
+        }
+      } else {
+        strncpy(buf, mcinputtable[i].val, 1024);
+        fprintf(stderr, "Using %s=%s (default value).\n", mcinputtable[i].name, mcinputtable[i].val);
       }
       status = (*mcinputtypes[mcinputtable[i].type].getparm)
                    (buf, mcinputtable[i].par);
       if(!status)
       {
         (*mcinputtypes[mcinputtable[i].type].error)(mcinputtable[i].name, buf);
+        if (!mcinputtable[i].val || strlen(mcinputtable[i].val)) {
+          fprintf(stderr, "       Change %s default value in instrument definition.\n", mcinputtable[i].name);
+          exit(1);
+        }
       }
     } while(!status);
   }

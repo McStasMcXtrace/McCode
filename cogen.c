@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.40  2003/08/12 13:32:25  farhi
+*	Add generation date/time in C code header
+*	
 *	Revision 1.39  2003/02/11 12:28:45  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
@@ -29,7 +32,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.40 2003-08-12 13:32:25 farhi Exp $
+* $Id: cogen.c,v 1.41 2003-09-05 08:59:05 farhi Exp $
 *
 *******************************************************************************/
 
@@ -513,11 +516,17 @@ cogen_decls(struct instr_def *instr)
   liter = list_iterate(instr->formals);
   while(i_formal = list_next(liter))
   {
-    coutf("  \"%s\", &%sip%s, %s,", i_formal->id, ID_PRE, i_formal->id,
-          instr_formal_type_names[i_formal->type]);
+    if (i_formal->isoptional && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
+      coutf("  \"%s\", &%sip%s, %s, %s, ", i_formal->id, ID_PRE,
+          i_formal->id, instr_formal_type_names[i_formal->type],
+          exp_tostring(i_formal->default_value));
+    else 
+      coutf("  \"%s\", &%sip%s, %s, \"%s\", ", i_formal->id, ID_PRE, i_formal->id,
+          instr_formal_type_names[i_formal->type],      
+          i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
   }
   list_iterate_end(liter);
-  coutf("  NULL, NULL, instr_type_double");
+  coutf("  NULL, NULL, instr_type_double, \"\"");
   coutf("};");
   cout("");
 

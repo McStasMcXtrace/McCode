@@ -17,7 +17,7 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.37 2003-02-11 12:28:45 farhi Exp $
+* $Id: mcstas.h,v 1.38 2003-09-05 08:59:05 farhi Exp $
 *
 *******************************************************************************/
 
@@ -395,6 +395,8 @@ struct instr_formal
   {
     enum instr_formal_types type; /* Type (string, int, double) */
     char *id;			  /* Parameter name */
+    int isoptional;		/* True if default value is available */
+    CExp default_value;		/* Default value if isoptional is true */
   };
 
 /* NeXus dictionary information. NeXus is supported through the NXDICT
