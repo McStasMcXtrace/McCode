@@ -609,8 +609,9 @@ sub do_scan {
         my $got_error = 0;
         my $pid;
         if ($Config{'osname'} eq 'MSWin32') {
-	        my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params));
-	        $pid = open(SIM, "@cmdlist |");
+	        # Win32 needs all possible parameters here, since we can not open(SIM,"-|");
+	        my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params), $output_opt, "--format=$plotter");
+		$pid = open(SIM, "@cmdlist |");
         } else {
 	        $pid = open(SIM, "-|");
         }
