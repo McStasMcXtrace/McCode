@@ -39,7 +39,7 @@ if MCSTAS==''
     MCSTAS='/usr/local/lib/mcstas';
   end
 end
-exec(MCSTAS+'/tools/scilab/plotlib/loader.sce');
+getd(MCSTAS+'/tools/scilab/plotlib/macros');
 
 global INSTRUMENT;
 INSTRUMENT=struct();
