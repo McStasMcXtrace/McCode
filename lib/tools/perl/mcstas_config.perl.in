@@ -39,8 +39,8 @@
 
 use Config;
 
-%MCSTAS::mcstas_config =
-    (CFLAGS => '@CFLAGS@',
+%MCSTAS::mcstas_config = (
+     CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
      CC => '@CC@',
      TERMINAL => '@TERMINAL@',
@@ -54,7 +54,6 @@ use Config;
      BACKGROUND => ' &',
      PREFIX => '',
      SUFFIX => '',
-     DATE => "date +'%b %e %Y",
      PLOTTER => 'Scilab',
      EDITOR => 1,
      MATLAB => 'matlab',
