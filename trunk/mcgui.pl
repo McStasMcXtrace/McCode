@@ -43,7 +43,7 @@ BEGIN {
             $MCSTAS::browser = "start";
         } 
       } else {
-        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        $MCSTAS::sys_dir = "/home/knoppix/mcstas/lib/mcstas";
         my $browser = $ENV{'BROWSER'};
         if (!$browser) {
             print STDERR "Your BROWSER variable is not set... Trying 'netscape'\n";
@@ -843,7 +843,7 @@ sub menu_run_simulation {
                   putmsg($cmdwin, "Trace cancelled...\n");
                   return;
                 }
-                $output_file = "\"$output_file\"";
+                $output_file =~ s! !\ !g;
                 push @command, "-f$output_file";
                 
               }
