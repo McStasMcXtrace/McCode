@@ -238,6 +238,7 @@ function win = mcplot_addmenu()
     'Edit &instrument file', 'edit_instr', ...                
     'View &the instrument','view_instr', ...
     'Add colorbar', 'add_colorbar', ...  
+    'Intensity: Linear scale', 'log_linear',...
     'Exit...', 'exit', ...
     'About McStas...', 'about'};
   for index = 1:2:length(t) % setup the callbacks
@@ -393,6 +394,26 @@ function mcplot_menu_action(action, object)
               mcplot(deblank([ pathname num2str(selection(index)-1) ]),'-overview');
             end
           end   
+        end
+      end
+    case 'log_linear' % toggle linear/log scale
+      if length(findstr(get(gcbo,'Label'),'Log'))
+        set(gcbo,'Label', 'Intensity: Linear scale');
+        scale = 'linear';
+      else
+        set(gcbo,'Label', 'Intensity: Log scale');
+        scale = 'log';
+      end
+      all_axes = findobj(gcf, 'Type','axes');
+      for index_a = 1:length(all_axes)
+        all_plots = get(all_axes(index_a), 'Children');
+        for index_p = 1:length(all_plots)
+          this_child = all_plots(index_p);
+          if strcmp(get(this_child, 'Type'), 'line')
+            set(all_axes(index_a), 'YScale', scale);
+          elseif strcmp(get(this_child, 'Type'), 'surface')
+            set(all_axes(index_a), 'ZScale', scale);
+          end
         end
       end
     case 'exit'  % Close all
