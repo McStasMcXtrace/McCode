@@ -6,9 +6,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.9 $
-* Origin: McStas 1.4.2
-* Modified by POA, April 2001: Adding POLARISATION PARAMETER
+* Version: $Revision: 1.10 $
+* Origin: McStas 1.5
 *
 * Optimization specifier for the Source_adapt component.
 *
@@ -34,7 +33,6 @@ DEFINE COMPONENT Adapt_check
 DEFINITION PARAMETERS (source_comp)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 TRACE
 %{
