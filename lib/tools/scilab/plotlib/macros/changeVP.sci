@@ -11,7 +11,7 @@ w=vp(3);h=vp(4);
 dy=h*fact;
 dx=w*fact;
 dxl=dx*1.2;
-dyl=dy*1.2;
+dyl=dy*1.6;
 
 X=x+dxl;
 Y=y+dy;
@@ -43,5 +43,5 @@ elseif cb=="bot"
 end
 
 ech=[X Y LX LY];
-xlech=[X Y+LY LX dyl];
+xlech=[X Y+LY+dyl/4 LX dyl];
 titech=[X Y-dy LX dy];

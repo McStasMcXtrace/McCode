@@ -1,3 +1,11 @@
+changeVP
+process2DPrelim
+processLegend
+process2DAxis
+mainPlot
+processSFB
+clearWindow
+dir
 plotlibver
 trimesh
 tripcolor
@@ -16,12 +24,10 @@ blackbg
 bluecolormap
 bonecolormap
 caxis
-changeVP
 check2dFun
 check3dFun
 checkXYPair
 checkXYZQuadruple
-clearWindow
 clf
 colormap
 computeLight
@@ -49,7 +55,6 @@ loadDefaultGraphicState
 loadGlobalGraphicState
 loadGraphicState
 loglog
-mainPlot
 mainPlot3d
 mesh
 meshgrid
@@ -76,13 +81,9 @@ parseView
 pcolor
 plot
 plot3
-process2DAxis
-process2DPrelim
 process3DPrelim
 processColorBar
-processLegend
 processLegendOld
-processSFB
 redcolormap
 saveGraphicState
 semilogx
