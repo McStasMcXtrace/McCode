@@ -23,9 +23,26 @@
 @rem 
 @rem Please modify the path below for installing mcstas in non-standard 
 @rem location
+@echo ** McStas install.bat for Win32...
+@echo ...
+@echo To have a fully functional McStas installation, you should have
+@echo   * Dec-Cpp from http://www.bloodshed.net/dev/devcpp.html
+@echo       Have it installed e.g. in C:\Dev-Cpp
+@echo       When installed, add the C:\Dev-Cpp\bin directory to your PATH
+@echo       Select from the Windows menu:
+@echo       Start/Settings/Control Panel/System/Advanced/Environment Variables
+@echo   * Perl and Tcl/Tk from:
+@echo     http://www.activestate.com/Products/Download/Register.plex?id=ActivePerl
+@echo     http://www.activestate.com/Products/Download/Register.plex?id=ActiveTcl
+@echo   * Matlab or Scilab >=2.7 from http://www.scilab.org in C:\Scilab
+@echo       With Scilab, add the C:\Scilab\bin directory to your PATH
+@echo       Select from the Windows menu:
+@echo       Start/Settings/Control Panel/System/Advanced/Environment Variables
+@echo ...
+@echo Use Ctrl-C if you want to install these packages or
+@pause
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
 @SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%): 
-@echo McStas install.bat for Win32...
 @echo Trying to guess your plotter...
 @start mcconfig.pl
 @echo Installing in MCSTAS_SITE=%MCSTAS_SITE%
@@ -51,7 +68,15 @@
 @set MCSTAS=%MCSTAS_SITE%\lib
 @mcdoc.pl 
 @echo ..............................................................
-@echo Please remember to add %MCSTAS_SITE%\bin to your path!
+@echo Please remember to add %MCSTAS_SITE%\bin to your PATH!
 @echo Also, set the MCSTAS environment variable to %MCSTAS_SITE%\lib
+@echo ...
+@echo To do that, access from the Windows Start manu:
+@echo ...
+@echo   Start/Settings/Control Panel/System/Advanced/Environment Variables
 @echo ..............................................................
+@echo Start McStas with the command mcgui.pl. You may create a shortcut to
+@echo this program situated in %MCSTAS_SITE%\bin. Put it on your Desktop.
+@echo ...
+@echo Thanks for using McStas. End of the installation.
 @pause

@@ -19,13 +19,13 @@
 @rem   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @rem
 @echo off
-@rem Simple batch script for building McStas on Win32 systems,
-@rem after build using Bloodshed Dev-Cpp. 
-@rem Requires 
-@rem   c compiler (defaults to gcc)
-@rem   includes (defaults to Dev-Cpp standard location
-@rem
-@rem *** Start of User configuration ***
+@echo Simple batch script for building McStas on Win32 systems,
+@echo after build using Bloodshed Dev-Cpp. 
+@echo Requires 
+@echo   c compiler (defaults to gcc)
+@echo   includes (defaults to Dev-Cpp standard location
+@echo ...
+@echo *** Start of User configuration ***
 @set CC=c:\Dev-Cpp\bin\gcc.exe
 @set /P CC=Set CC compiler variable (default is %CC%): 
 @set INCLUDE="C:/Dev-Cpp/include"
@@ -71,7 +71,7 @@
 %CC% symtab.o cogen.o coords.o debug.o file.o instrument.tab.o lex.yy.o list.o memory.o port.o cexp.o  -o "mcstas.exe" -L%LIB%  -I%INCLUDE%  
 
 @if %DOZIP%=="0" goto end
-@echo creating zipfile...
+@echo creating zipfile for Win Distribution (requires zip)...
 cd ..
 zip -r mcstas-%VERSION%-i686-Intel-Win32 .\mcstas-%VERSION%
 cd mcstas-%VERSION%
