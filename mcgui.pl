@@ -212,7 +212,7 @@ sub mcdoc_tutorial {
 }
 
 sub mcdoc_components {
-    my $cmd = "$prefix mcdoc$suffix --lib $background";
+    my $cmd = "$prefix mcdoc$suffix $background";
     putmsg($cmdwin, "Opening Library help: $cmd\n", 'msg');
     system("$cmd");
 }
