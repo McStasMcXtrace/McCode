@@ -829,16 +829,16 @@ for($i = 0; $i < @ARGV; $i++) {
     } elsif($ARGV[$i] eq "--save") {
         $save = 1; 
     } elsif(($ARGV[$i] =~ /^-p([a-zA-Z0-9_]+)$/) ||
-              ($ARGV[$i] =~ /^--plotter=([a-zA-Z0-9_]+)$/) ||
-              ($ARGV[$i] =~ /^--format=([a-zA-Z0-9_]+)$/)) {
+              ($ARGV[$i] =~ /^--plotter=([a-zA-Z0-9_\"]+)$/) ||
+              ($ARGV[$i] =~ /^--format=([a-zA-Z0-9_\"]+)$/)) {
         $plotter = $1;        
-   } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:]+)$/) ||
+   } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;        
    } else {
         if (defined($sim_cmd)) { push @cmdline, $ARGV[$i]; }
         else { 
-          $sim_cmd = $ARGV[$i]; 
+          $sim_cmd = $ARGV[$i];
           $sim=$sim_cmd;
           # Remove trailing .out or .exe extension
           $sim=~ s|.out\Z||;
