@@ -1,0 +1,180 @@
+DEFINE COMPONENT Channeled_guide
+DEFINITION PARAMETERS (w1, h1, w2, h2, d, k, l,
+		       R0, Qcx,  Qcy, alphax, alphay, mx, my, W)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double w1c;
+  double w2c;
+  double ww, hh;
+  double whalf, hhalf;
+  double lwhalf, lhhalf;
+%}
+
+INITIALIZE
+%{
+  w1c = (w1 + d)/(double)k;
+  w2c = (w2 + d)/(double)k;
+  ww = .5*(w2c - w1c);
+  hh = .5*(h2 - h1);
+  whalf = .5*(w1c - d);
+  hhalf = .5*h1;
+  lwhalf = l*whalf;
+  lhhalf = l*hhalf;
+%}
+
+TRACE
+%{
+  double t1,t2;                                 /* Intersection times. */
+  double av,ah,bv,bh,cv1,cv2,ch1,ch2,dd;        /* Intermediate values */
+  double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
+  int i;                                        /* Which mirror hit? */
+  double q;                                     /* Q [1/AA] of reflection */
+  double vlen2,nlen2;                           /* Vector lengths squared */
+  double edge;
+
+  /* Propagate neutron to guide entrance. */
+  PROP_Z0;
+  if(x <= w1/-2.0 || x >= w1/2.0 || y <= -hhalf || y >= hhalf)
+    ABSORB;
+  /* Shift origin to center of channel hit (absorb if hit dividing walls) */
+  x += w1/2.0;
+  edge = floor(x/w1c)*w1c;
+  if(x - edge > w1c - d)
+  {
+    x -= w1/2.0; /* Readjust origin */
+    ABSORB;
+  }
+  x -= (edge + (w1c - d)/2.0);
+  for(;;)
+  {
+    /* Compute the dot products of v and n for the four mirrors. */
+    av = l*vx; bv = ww*vz;
+    ah = l*vy; bh = hh*vz;
+    vdotn_v1 = bv + av;         /* Left vertical */
+    vdotn_v2 = bv - av;         /* Right vertical */
+    vdotn_h1 = bh + ah;         /* Lower horizontal */
+    vdotn_h2 = bh - ah;         /* Upper horizontal */
+    /* Compute the dot products of (O - r) and n as c1+c2 and c1-c2 */
+    cv1 = -whalf*l - z*ww; cv2 = x*l;
+    ch1 = -hhalf*l - z*hh; ch2 = y*l;
+    /* Compute intersection times. */
+    t1 = (l - z)/vz;
+    i = 0;
+    if(vdotn_v1 < 0 && (t2 = (cv1 - cv2)/vdotn_v1) < t1)
+    {
+      t1 = t2;
+      i = 1;
+    }
+    if(vdotn_v2 < 0 && (t2 = (cv1 + cv2)/vdotn_v2) < t1)
+    {
+      t1 = t2;
+      i = 2;
+    }
+    if(vdotn_h1 < 0 && (t2 = (ch1 - ch2)/vdotn_h1) < t1)
+    {
+      t1 = t2;
+      i = 3;
+    }
+    if(vdotn_h2 < 0 && (t2 = (ch1 + ch2)/vdotn_h2) < t1)
+    {
+      t1 = t2;
+      i = 4;
+    }
+    if(i == 0)
+      break;                    /* Neutron left guide. */
+    PROP_DT(t1);
+    switch(i)
+    {
+      case 1:                   /* Left vertical mirror */
+        nlen2 = l*l + ww*ww;
+        q = V2Q*(-2)*vdotn_v1/sqrt(nlen2);
+        dd = 2*vdotn_v1/nlen2;
+        vx = vx - dd*l;
+        vz = vz - dd*ww;
+        break;
+      case 2:                   /* Right vertical mirror */
+        nlen2 = l*l + ww*ww;
+        q = V2Q*(-2)*vdotn_v2/sqrt(nlen2);
+        dd = 2*vdotn_v2/nlen2;
+        vx = vx + dd*l;
+        vz = vz - dd*ww;
+        break;
+      case 3:                   /* Lower horizontal mirror */
+        nlen2 = l*l + hh*hh;
+        q = V2Q*(-2)*vdotn_h1/sqrt(nlen2);
+        dd = 2*vdotn_h1/nlen2;
+        vy = vy - dd*l;
+        vz = vz - dd*hh;
+        break;
+      case 4:                   /* Upper horizontal mirror */
+        nlen2 = l*l + hh*hh;
+        q = V2Q*(-2)*vdotn_h2/sqrt(nlen2);
+        dd = 2*vdotn_h2/nlen2;
+        vy = vy + dd*l;
+        vz = vz - dd*hh;
+        break;
+    }
+    /* Now compute reflectivity. */
+    if((i <= 2 && mx == 0) || (i > 2 && my == 0))
+    {
+      x += edge + (w1c - d)/2.0 - w1/2.0; /* Readjust origin */
+      ABSORB;
+    }
+    if((i <= 2 && q > Qcx) || (i > 2 && q > Qcy))
+    {
+      if (i <= 2) 
+      {
+        double arg = (q - mx*Qcx)/W;
+        if(arg < 10)
+          p *= .5*(1-tanh(arg))*(1-alphax*(q-Qcx));
+        else
+	{
+	  x += edge + (w1c - d)/2.0 - w1/2.0; /* Readjust origin */
+          ABSORB;                               /* Cutoff ~ 1E-10 */
+	}
+      } else {
+        double arg = (q - my*Qcy)/W;
+        if(arg < 10)
+          p *= .5*(1-tanh(arg))*(1-alphay*(q-Qcy));
+        else
+	{
+	  x += edge + (w1c - d)/2.0 - w1/2.0; /* Readjust origin */
+          ABSORB;                               /* Cutoff ~ 1E-10 */
+	}
+      }
+    }
+    p *= R0;
+  }
+  x += edge + (w1c - d)/2.0 - w1/2.0; /* Readjust origin */
+%}
+
+MCDISPLAY
+%{
+  double x;
+  int i;
+
+  magnify("xy");
+  for(i = 0; i < k; i++)
+  {
+    multiline(5,
+	      i*w1c - w1/2.0, -h1/2.0, 0.0,
+	      i*w2c - w2/2.0, -h2/2.0, (double)l,
+	      i*w2c - w2/2.0,  h2/2.0, (double)l,
+	      i*w1c - w1/2.0,  h1/2.0, 0.0,
+	      i*w1c - w1/2.0, -h1/2.0, 0.0);
+    multiline(5,
+	      (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0,
+	      (i+1)*w2c - d - w2/2.0, -h2/2.0, (double)l,
+	      (i+1)*w2c - d - w2/2.0,  h2/2.0, (double)l,
+	      (i+1)*w1c - d - w1/2.0,  h1/2.0, 0.0,
+	      (i+1)*w1c - d - w1/2.0, -h1/2.0, 0.0);
+  }
+  line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
+  line(-w2/2.0, -h2/2.0, (double)l, w2/2.0, -h2/2.0, (double)l);
+%}
+
+END
