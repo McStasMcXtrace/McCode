@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.3 1997-10-16 14:27:28 kn Exp $
+*	$Id: mcstas-r.h,v 1.4 1997-12-03 13:34:19 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.3  1997/10/16 14:27:28  kn
+*	Added debugging output used by the "display" graphical visualization
+*	tool.
+*
 *	Revision 1.2  1997/09/08 11:31:27  kn
 *	Added mcsetstate() function.
 *
@@ -19,9 +23,15 @@
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
 
+#include <math.h>
+#include <stdio.h>
+
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
+
+#define ABSORB {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+          mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;}
 
 #ifdef DEBUG
 #define mcDEBUG_INSTR() printf("INSTRUMENT:\n");
@@ -37,6 +47,7 @@ typedef MCNUM Rotation[3][3];
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
 	 x,y,z,vx,vy,vz,t,s1,s2,p);
 #define mcDEBUG_LEAVE() printf("LEAVE:\n");
+#define mcDEBUG_ABSORB() printf("ABSORB:\n");
 #else
 #define mcDEBUG_INSTR()
 #define mcDEBUG_COMPONENT(name,c,t)
@@ -45,6 +56,7 @@ typedef MCNUM Rotation[3][3];
 #define mcDEBUG_COMP(c)
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p)
 #define mcDEBUG_LEAVE()
+#define mcDEBUG_ABSORB()
 #endif
 
 Coords coords_set(MCNUM x, MCNUM y, MCNUM z);

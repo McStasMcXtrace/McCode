@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.4 1997-10-16 21:19:27 kn Exp $
+* 	$Id: cogen.c,v 1.5 1997-12-03 13:34:24 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.4  1997/10/16 21:19:27  kn
+* 	Fixed bug when computing component absolute positions.
+*
 * 	Revision 1.3  1997/10/16 14:25:11  kn
 * 	Added debugging output used by the "display" graphical visualization
 * 	tool.
@@ -86,6 +89,7 @@
 * ##ns1
 * ##ns2
 * ##np
+* ##absorb
 *******************************************************************************/
 
 
@@ -94,8 +98,8 @@
 * Generation of declarations.
 *
 * The following declarations are generated (## denotes the value ID_PRE):
-* 1. Header file #include - <math.h> for mathematics functions and
-*    "mcstas-r.h" for declarations for the mcstas runtime.
+* 1. Header file #include - "mcstas-r.h" for declarations for the
+*    mcstas runtime.
 * 2. Declarations of global variables to hold the values of the instrument
 *    parameters. For example, for an instrument parameter OMM, the
 *    declaration "MCNUM ##ipOMM;" is generated.
@@ -287,8 +291,6 @@ cogen_decls(struct instr_def *instr)
   struct comp_inst *comp;	/* Component instance. */
   
   /* 1. Header files. */
-  cout("#include <math.h>");
-  cout("#include <stdio.h>");
   cout("#include \"mcstas-r.h\"");
   cout("");
 
@@ -640,6 +642,10 @@ cogen_trace(struct instr_def *instr)
 
   }
   list_iterate_end(liter);
+
+  /* Absorbing neutrons - goto this label to skip remaining components. */
+  coutf(" %sabsorb:", ID_PRE);
+  
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
