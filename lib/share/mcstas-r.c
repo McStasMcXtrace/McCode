@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.71 2003-08-20 09:25:00 farhi Exp $
+* $Id: mcstas-r.c,v 1.72 2003-08-26 12:32:43 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.71  2003/08/20 09:25:00  farhi
+* Add the instrument Source tag in scan files (origin of data !)
+*
 * Revision 1.70  2003/08/12 13:35:52  farhi
 * displays known signals list in instrument help (-h)
 *
@@ -1539,9 +1542,9 @@ randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
     nx = 1;
     ny = 0;
     nz = 0;
-    xi = 0;
-    yi = 1;
+    yi = sqrt(xi*xi+yi*yi+zi*zi);
     zi = 0;
+    xi = 0;
   }
   else
   {
