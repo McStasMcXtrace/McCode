@@ -13,7 +13,7 @@
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
 * Release: McStas 1.6
 * Version: 0.1
-* %INSTRUMENT_SITE: None
+* %INSTRUMENT_SITE: tests
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
 * etc. Will be developed further at at later time. 
