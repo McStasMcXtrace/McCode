@@ -39,15 +39,23 @@ OBJECTS=instrument.tab.o lex.yy.o debug.o \
 	memory.o list.o symtab.o coords.o rotation.o cexp.o position.o \
 	file.o cogen.o
 
-BINOBJS=gscan mcdisplay mcplot
+PERLOBJ=gscan.fixpl mcdisplay.fixpl mcplot.fixpl
+PERLBIN=gscan mcdisplay mcplot
+BINOBJS=$(PERLOBJ) mcstas
 
-.SUFFIXES: .c .o
+.SUFFIXES: .c .o .pl .fixpl
 
 .c.o:
 	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMC_SYS_DIR='"'$(mc_libdir)'"' $(DEFS) $<
 
+.pl.fixpl:
+	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
+	    -e 's+use lib "/usr/local/lib/mcstas"+use lib "'$(mc_libdir)'"+' \
+	    < $(srcdir)/$< > $@
+	chmod +x $@
 
-all: mcstas $(BINOBJS)
+
+all: $(BINOBJS)
 
 mcstas: $(OBJECTS)
 	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(OBJECTS) -lm
@@ -59,22 +67,14 @@ clean:
 TAGS:
 	etags `find . -name '*.[chly]'`
 
-gscan: gscan.pl
-	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/gscan.pl >gscan
-	chmod +x gscan
-
-mcdisplay: mcdisplay.pl
-	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/mcdisplay.pl >mcdisplay
-	chmod +x mcdisplay
-
-mcplot: mcplot.pl
-	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/mcplot.pl >mcplot
-	chmod +x mcplot
-
-install: installdirs mcstas $(BINOBJS)
+install: installdirs $(BINOBJS)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
-	for pgm in $(BINOBJS); do $(INSTALL_PROGRAM) $$pgm $(bindir)/$$pgm; done
-	cd lib; for file in *; do $(INSTALL_DATA) $$file $(mc_libdir)/$$file; done
+	for pgm in $(PERLBIN); do \
+	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
+	done
+	for file in `cd lib; ls *`; do \
+	  $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
+	done
 
 installdirs:
 	$(srcdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir)
