@@ -35,6 +35,7 @@
 use File::Basename;
 use File::Find;
 use Cwd;
+use Config;
 
 # Declaration of the global scope vars,
 my ($i,$j);
@@ -130,11 +131,25 @@ if (! -e $outdir) {
     open(TMP,">$outdir/.stop");
     close(TMP);
 }
-if (!($outdir =~ /^\//)) {
-    $outdir = "$cwd/$outdir";
+if ($Config{'osname'} eq 'MSWin32') {
+    if (!($outdir =~ /^.:/)) {
+	$outdir = "$cwd/$outdir";	
+    }
+} else {
+    if (!($outdir =~ /^\//)) {
+	$outdir = "$cwd/$outdir";
+    }
 }
 if ($randdir == 1) {
   print "\nYour files, converted to $format format will be placed in $outdir\n\n";
+}
+
+# If this is Win32, let us simply make any \ in the filenames a /
+if ($Config{'osname'} eq 'MSWin32') {
+    @junk = split(/\\/,$outdir);
+    $outdir = join('/',@junk);
+    @junk = split(/\\/,$indir);
+    $indir = join('/',@junk);
 }
 
 # We are now ready to do the work:
