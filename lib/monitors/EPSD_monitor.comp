@@ -1,17 +1,19 @@
 /*******************************************************************************
-**  McStas, the neutron ray-tracing package
-*  Copyright(C) 2000 Risoe National Laboratory.
+*  McStas, the neutron ray-tracing package
+*  Copyright(C) 2000-2001 Risoe National Laboratory.
 *
+* %I
 * Written by: Kim Lefmann 
 * Date: 16.4.00
-* Version: $Revision: 1.1 $
-* Origin: McStas release
-* Component: EPSD_monitor
+* Version: $Revision: 1.2 $
+* Origin: McStas 1.5
+* 
+* A monitor measuring neutron intensity vs. position, x, and neutron energy, E
 *
 * %D
-
+*
 * A monitor measuring neutron intensity vs. position, x, and neutron energy, E
-
+*
 * %P
 * INPUT PARAMETERS:
 *
