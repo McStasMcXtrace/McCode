@@ -66,11 +66,15 @@ TRACE
     {
       h_div = RAD2DEG*atan2(vx,vz);
       v_div = RAD2DEG*atan2(vy,vz);
-      i = floor((h_div + h_maxdiv)*nh/(2.0*h_maxdiv));
-      j = floor((v_div + v_maxdiv)*nv/(2.0*v_maxdiv));
-      Div_N[i][j]++;
-      Div_p[i][j] += p;
-      Div_p2[i][j] += p*p;
+      if (h_div < h_maxdiv && h_div > -h_maxdiv && 
+	  v_div < v_maxdiv && v_div > -v_maxdiv)
+      {
+        i = floor((h_div + h_maxdiv)*nh/(2.0*h_maxdiv));
+        j = floor((v_div + v_maxdiv)*nv/(2.0*v_maxdiv));
+        Div_N[i][j]++;
+        Div_p[i][j] += p;
+        Div_p2[i][j] += p*p;
+      }
     }
   %}
 FINALLY
