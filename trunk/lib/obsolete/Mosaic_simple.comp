@@ -1,17 +1,25 @@
 /*******************************************************************************
 *
-* McStas, version 1.2
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Copyright (C) Risoe National Laboratory 1999
 *
-* Component: Mosaic_simple
+* %I
+* Written by: Kristian Nielsen
+* Date: 1999
+* Version: $Revision: 1.9 $
+* Origin: McStas release
 *
+* Mosaic crystal, possibly off-cut.
+*
+* %D
 * Flat, infinitely thin mosaic crystal, useful as a monochromator or analyzer.
 * The mosaic is isotropic gaussian, with a given FWHM perpendicular to the
 * scattering vector.
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
 *
+* %P
 * INPUT PARAMETERS:
 *
 * zmin:    Lower z-bound of crystal (m)
@@ -24,6 +32,7 @@
 * Qy:      X coordinate of scattering vector (AA-1)
 * Qz:      X coordinate of scattering vector (AA-1)
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Mosaic_simple

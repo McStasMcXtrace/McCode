@@ -1,14 +1,19 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Monochromator
+* %I
+* Written by: KL, HMR
+* Date: June 16, 1997
+* Version: $Revision: 1.8 $
+* Origin: McStas release
+* Modified by: KL  Oct. 16, 1997
 *
-* Written by: KL, HMR  June 16, 1997
-* Rewritten by: KL  Oct. 16, 1997
+* Monochrmator/analyzer crystal (OBSOLETE).
 *
+* %D
 * NOTE: This component is obsolete. Use the component Mosaic_anisotropic
 * instead, which has the same parameters. For a more detailed monochromator
 * simulation, use the component Single_crystal.
@@ -19,6 +24,7 @@
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
 *
+* %P
 * INPUT PARAMETERS:
 *
 * zmin:    Lower z-bound of crystal (m)
@@ -30,6 +36,7 @@
 * R0:      Maximum reflectivity (1)
 * Q:       Scattering vector (AA-1)
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT Monochromator

@@ -1,11 +1,16 @@
-/**********************************************************************************************
+/*******************************************************************************
+* %I
+* Written by: Philipp Bernhardt
+* Date: Januar 22 1999
+* Version: $Revision: 1.2 $
+* Origin: McStas release
 *
-* Component: Chopper
+* Disk chopper.
 *
-* Written by: Philipp Bernhardt, Januar 22 1999
-*
+* %D
 * Models a disc chopper with n identical slits, which are symmetrically disposed on the disc.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * w:       (m)      Width of the slits at the bottom side
@@ -15,8 +20,11 @@
 * n:       (1)     Number of slits
 * pha:     (s)      Phase
 *
+* %D
 * Example values: w=0.05 R=0.5 f=2500 n=3 pha=0
-************************************************************************************************/
+*
+* %E
+*******************************************************************************/
  
 DEFINE COMPONENT Chopper
 DEFINITION PARAMETERS (w, R, f, n, pha)

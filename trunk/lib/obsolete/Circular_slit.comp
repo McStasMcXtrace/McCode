@@ -1,18 +1,24 @@
-/**********************************************************************
+/*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Circular slit
+* %I
+* Written by: KN
+* Date: August 1998
+* Version: $Revision: 1.3 $
+* Origin: McStas release
 *
-* Written by: KN, August 1998
+* Circular slit.
 *
+* %P
 * INPUT PARAMETERS
 *
 * radius: Radius of slit in the z=0 plane, centered at Origo (m)
 *
-***********************************************************************/
+* %E
+*******************************************************************************/
 
 DEFINE COMPONENT Circular_slit
 DEFINITION PARAMETERS (radius)
