@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.58 2003-04-08 18:55:56 farhi Exp $
+* $Id: mcstas-r.c,v 1.59 2003-04-09 15:51:33 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.58  2003/04/08 18:55:56  farhi
+* Made XML format more NeXus compliant
+*
 * Revision 1.57  2003/04/07 11:50:50  farhi
 * Extended the way mcplot:plotter is assigned. Set --portable ok
 * Handle Scilab:Tk and ~GTk menu (shifted)
@@ -109,6 +112,9 @@ mcstatic char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 /* Multiple output format support. ========================================== */
 
 #define mcNUMFORMATS 6
+#ifndef MCSTAS_FORMAT
+#define MCSTAS_FORMAT "McStas"  /* default format */
+#endif
 
 mcstatic struct mcformats_struct mcformat;
 
@@ -187,7 +193,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       " if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end\n"
       " xset('colormap',hotcolormap(64));plot3d1(d.x,d.y,z);\n"
       "else\nd.x=linspace(l(1),l(2),max(S));\nplot2d(d.x,d.data);end\nend\n"
-      "xtitle(t,'X:'+d.xlabel,'Y:'+d.ylabel); xname(t1);endfunction\n"
+      "xtitle(t,'X:'+d.xlabel,'Y:'+d.ylabel); xname(t1);\nendfunction\n"
     "%7$s=get_%7$s();\n",
     "// Section %2$s [%3$s] (level %7$d)\n"
       "%1$s%4$s = struct(); %4$s.class = '%2$s';",
@@ -2982,6 +2988,7 @@ void mcuse_format(char *format)
 static void
 mcinfo(void)
 {
+  mcuse_format(MCSTAS_FORMAT);
   mcsiminfo_init(stdout);
   mcsiminfo_close();
   exit(0);
@@ -3200,9 +3207,6 @@ mcstas_main(int argc, char *argv[])
   
 #ifdef MAC
   argc = ccommand(&argv);
-#endif
-#ifndef MCSTAS_FORMAT
-#define MCSTAS_FORMAT "McStas"  /* default format */
 #endif
 
   t = (time_t)mcstartdate;
