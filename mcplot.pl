@@ -186,8 +186,10 @@ if ($plotter eq 3 || $plotter eq 4) {
   }
   printf $fh "s = stacksize(); if s(1) < 1e7 then stacksize(1e7); end\n";
   printf $fh "getf('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
+  printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
   printf $fh "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');\n";
   printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')\\n');\n";
+  printf $fh "mdelete('$tmp_file');\n";
   if ($passed_arg_str_quit) {
     printf $fh "quit\n";
   } else {
@@ -196,7 +198,7 @@ if ($plotter eq 3 || $plotter eq 4) {
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
     printf $fh "end\n";
   }
-  printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
+  
   close($fh);
   if ($nowindow) { system("$MCSTAS::runscilab -nw -f $tmp_file\n"); }
   else { system("$MCSTAS::runscilab -f $tmp_file\n"); }
