@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.5 1997-09-07 20:16:16 kn Exp $
+* 	$Id: mcstas.h,v 1.6 1998-08-21 12:08:38 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.5  1997/09/07 20:16:16  kn
+* 	Added FINALLY construct.
+*
 * 	Revision 1.4  1997/09/07 17:58:19  kn
 * 	Snapshot with (untested) code generation complete.
 *
@@ -238,7 +241,7 @@ struct comp_def *read_component(char *name);
 /* Allocate a new, empty codeblock. */
 struct code_block *codeblock_new(void);
 /* Generate code for instrument definition. */
-void cogen(struct instr_def *instr);
+void cogen(char *output_name, struct instr_def *instr);
 
 
 /*******************************************************************************
