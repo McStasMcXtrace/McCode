@@ -68,27 +68,25 @@ TRACE
     PSD_p2[i][j] += p*p;
   }
 %}
+
 FINALLY
 %{
-  int i,j;
-  FILE *outfile;
-  int Nsum;
-  double Psum, P2sum;
-
-  Nsum = Psum = P2sum = 0;
-  outfile=fopen(filename,"w");
-  for (j=0; j<ny; j++)
-  {
-    for (i=0; i<nx; i++)
-    {
-      fprintf(outfile,"%g ", PSD_p[i][j]);
-      Nsum += PSD_N[i][j];
-      Psum += PSD_p[i][j];
-      P2sum += PSD_p2[i][j];
-    }
-    fprintf(outfile,"\n");
-  }
-  fclose(outfile);
-  DETECTOR_OUT(Nsum, Psum, P2sum);
+  DETECTOR_OUT_2D(
+    "4PI PSD monitor",
+    "Longitude [deg]",
+    "Lattitude [deg]",
+    -180, 180, -90, 90,
+    nx, ny,
+    &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+    filename);
 %}
+
+MCDISPLAY
+%{
+  magnify("");
+  circle("xy",0,0,0,radius);
+  circle("xz",0,0,0,radius);
+  circle("yz",0,0,0,radius);
+%}
+
 END
