@@ -719,8 +719,12 @@ $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
 if ($exec_test) {
   my $status;
   $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $plotter);
-  if (defined $status) { print STDERR "$status"; }
-  exit(1);
+  if (defined $status) { 
+    print STDERR "$status"; 
+    exit(1);
+  } else {
+    exit(0);
+  }
 }
 
 my $scan_info = check_input_params(); # Get variables to scan, if any
