@@ -354,7 +354,9 @@ mcestimate_error(int N, double p1, double p2)
     return p1;
   pmean = p1 / N;
   n1 = N - 1;
-  return sqrt((N/n1)*(p2 - pmean*pmean));
+  /* Note: underflow may cause p2 to become zero; the fabs() below guards
+     against this. */
+  return sqrt((N/n1)*fabs(p2 - pmean*pmean));
 }
 
 
