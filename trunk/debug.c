@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: debug.c,v 1.5 1998-10-02 08:36:12 kn Exp $
+*	$Id: debug.c,v 1.6 1999-03-18 07:29:10 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.5  1998/10/02 08:36:12  kn
+*	Fixed header comment.
+*
 *	Revision 1.4  1998/10/01 11:44:33  kn
 *	Set a flag when print_error is called.
 *
@@ -62,7 +65,8 @@ print_warn(int *flag, char *format, ...)
   {
     fprintf(stderr, "Warning: ");
     vfprintf(stderr, format, ap);
-    *flag = 1;
+    if(flag)
+      *flag = 1;
   }
   va_end(ap);
 }
