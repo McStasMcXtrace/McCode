@@ -60,7 +60,7 @@ functionality on Win32 using mcc
 * Keeping values when performing scans in mcgui
 * Trace scilab win32, suggest a low number of neutron histories...
 * Phonon_sample + test instrument (Kim Lefmann) - NEEDS ONLY DEFAULT
-  PARMS + COMMIT
+  PARMS
 * Path incorrect, scilab install 
 * Problem with Select backend
 * Win32, bug in compilation with unsaved, edited instrument file
@@ -73,6 +73,7 @@ functionality on Win32 using mcc
 TODO:
 * Doc update, especially regarding installation
 * McStas manual updates in general
+* McStas manual description of new features
 * Test runs of the tutorial and the package in general
 * mcplot problem running mcdisplay for instrument view (n exist)
 * Online monitor plotting through USR2 signal
