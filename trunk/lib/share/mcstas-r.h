@@ -342,12 +342,16 @@ void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 		double t, double sx, double sy, double sz, double p);
 void mcgenstate(void);
 double randnorm(void);
+void normal_vec(double *nx, double *ny, double *nz, double x, double y, double z);
+int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
+		  double vx, double vy, double vz, double dx, double dy, double dz);
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 		       double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
 		 double vx, double vy, double vz, double r);
 void randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
 			   double xi, double yi, double zi, double radius);
+void extend_list(int count, void **list, int *size, size_t elemsize);
 
 void mcset_ncount(double count);
 double mcget_ncount(void);
