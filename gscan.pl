@@ -52,14 +52,14 @@ while(@VALS) {
 	$maxval[$j] = $3;
 	$scanned[$j] = $i;
 	if($minval[j] != $maxval[j] && $npoints < 2) {
-	    die "Cannot scan variable $parmname[$i] using only one data point";
+	    die "gscan: Cannot scan variable $parmname[$i] using only one data point";
 	}
 	$j++;
     } elsif($v =~ /^([a-zA-Z0-9_]+)=(.+)$/) {
 	$parmname[$i] = $1;
 	$values[$i] = $2;
     } else {
-	die "Invalid parameter specification '$v'";
+	die "gscan: Invalid parameter specification '$v'";
     }
     $i++;
 }
@@ -82,8 +82,8 @@ for($point = 0; $point < $npoints; $point++) {
     for($i = 0; $i < $numvars; $i++) {
 	$cmd .= " $parmname[$i]=$values[$i]";
     }
-    print "running '$cmd'\n";
-    open (SIM, "$cmd |") || die "Could not run mcstas simulation";
+    print "Running '$cmd'\n";
+    open (SIM, "$cmd |") || die "gscan: Could not run mcstas simulation";
     $got_error = 0;
     while(<SIM>) {
 	chomp;
@@ -102,7 +102,7 @@ for($point = 0; $point < $npoints; $point++) {
 	print "$_\n";
     }
     close(SIM);
-    die "Exit due to error returned by simulation program" if $got_error;
+    die "gscan: Exit due to error returned by simulation program" if $got_error;
     print OUT "$out\n";
     $firsttime = 0;
 }
@@ -111,7 +111,7 @@ print "Output file: '$simfile'\nOutput parameters: $outputs\n";
 
 # Write gscan.sim information file.
 $infofile = "gscan.sim";
-open(SIM, ">$infofile") || die "Failed to write info file '$infofile'";
+open(SIM, ">$infofile") || die "gscan: Failed to write info file '$infofile'";
 $scannedvars = join ", ", (map { $parmname[$scanned[$_]]; } (0..$#scanned));
 $xvars = join " ", (map { $parmname[$scanned[$_]]; } (0..$#scanned));
 $yvars = join " ", @youts;

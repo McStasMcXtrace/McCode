@@ -7,35 +7,36 @@
 use Config;
 use Cwd;
 BEGIN {
-    if($ENV{"MCSTAS"}) {
-      $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  # default configuration (for all high level perl scripts)
+  if($ENV{"MCSTAS"}) {
+    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  } else {
+    if ($Config{'osname'} eq 'MSWin32') {
+      $MCSTAS::sys_dir = "c:\\mcstas\\lib";
     } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-        $MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      }
+      $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
-    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+  }
+  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
 }
+
+use lib $MCSTAS::perl_dir;
+require "mcstas_config.perl";
 
 use FileHandle;
 use File::Basename;
-use lib $MCSTAS::perl_dir;
-require "mcstas_config.perl";
 require "mcrunlib.pl";
 
 my $is_single_file= 0;  # true when doc requested for a single component
 my $is_user_lib   = 0;  # true when doc requested for a directory
 my $lib_dir       = $MCSTAS::sys_dir; 
 my $out_file      = "index.html"; # default name for output of catalog
-my $show_html     = 0;  # true when requesting to display HTML doc
 my $use_local     = 0;  # true when also looking into current path
 my $single_comp_name = 0;  # component single name
-my $browser       = defined($ENV{'BROWSER'}) ? $ENV{'BROWSER'} : "text";
+my $browser       = $MCSTAS::mcstas_config{'BROWSER'};
 my $is_forced     = 0; # true when force re-writting of existing HTML
 
-sub show_header {
+sub show_header { # output in text mode
     my ($d) = @_;
     my ($i);
     print "######## $d->{'type'}: $d->{'name'} #####################\n";
@@ -146,12 +147,8 @@ sub html_table_entry {
 # parameters: ($filehandle, $toolbar);
 sub html_main_end {
     my ($f, $toolbar) = @_;
-    my $date;
-    if ($Config{'osname'} eq 'MSWin32') {
-      $date = `date /T`;
-    } else {
-      $date = `date +'%b %e %Y'`;
-    }
+    my $date = gmtime;
+
     print $f <<END;
 <P>This Component list was updated on $date.
 <HR WIDTH="100%">
@@ -303,11 +300,8 @@ TB_END
       print $f "Generated automatically by McDoc, Peter Willendrup\n";
       print $f "&lt;<A HREF=\"mailto:peter.willendrup\@risoe.dk\">";
       print $f   "peter.willendrup\@risoe.dk</A>&gt; /\n";
-      if ($Config{'osname'} eq 'MSWin32') {
-	print $f `date /T`;
-      } else {
-	print $f `date +'%b %e %Y'`;
-      }
+      my $date = gmtime;
+      print $f "$date";
       print $f "</ADDRESS>\n";
       print $f "</BODY></HTML>\n";
       close $f;
@@ -403,7 +397,7 @@ END
                 print STDOUT "mcdoc: $comp\n";
                 if ($is_single_file) { $data->{'path'} = $comp; }
                 else { $data->{'path'} = $name; }
-                if ($is_single_file && $show_html && $browser =~ "text") {
+                if ($is_single_file && $browser =~ "text") {
                   show_header($data); # display single comp as text
                   if ($sec =~ m/obsolete/i) {
                     print "WARNING: This is an obsolete $data->{'type'}. \n";
@@ -439,15 +433,9 @@ for($i = 0; $i < @ARGV; $i++) {
   $_ = $ARGV[$i];
   # Options specific to mcdoc.
   if(/^--show$/i || /^-s$/i || /^--html$/i) {
-        $show_html = 1;
-	# Is the BROWSER variable set to 'text'? Else try platform default
-	if ($browser eq "text") {
-	    if ($Config{'osname'} eq 'MSWin32') { $browser = "start"; } 
-	    else { $browser = "netscape"; }
-	    print "Your BROWSER variable is not set... Trying '$browser'\n";
-	}
+        $browser = $MCSTAS::mcstas_config{'BROWSER'};
   } elsif(/^--text$/i || /^-t$/i) {
-        $show_html = 1; $browser = "text";
+        $browser = "text";
   } elsif(/^--web$/i || /^-w$/i) {
         $show_website = 1;
   } elsif(/^--manual$/i || /^-m$/i) {
@@ -462,13 +450,12 @@ for($i = 0; $i < @ARGV; $i++) {
         $is_forced = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "Usage: mcdoc [options] <dir|file>\n";
-      print "Generate/show component/instrument documentation\n";
+      print "Generate/show component/instrument documentation using $browser\n";
       print "   -f    --force    Force re-writting of existing HTML doc locally\n";
       print "   -h    --help     Show this help\n";
       print "   -l    --tools    Display the McStas tools list\n";
       print "   -m    --manual   Open the McStas User manual\n";
       print "   -c    --comp     Open the McStas Component manual\n";
-      print "   -s    --show     Open the generated help file using the BROWSER env. variable\n";
       print "   -t    --text     For single component, display as text\n";
       print "   -w    --web      Open the McStas web page http://mcstas.risoe.dk/\n";
       print "         --tutorial Open the McStas tutorial from the local McStas library\n";
@@ -497,67 +484,37 @@ for($i = 0; $i < @ARGV; $i++) {
 } # end for
 
 if ($show_website) {
-  if ($browser =~ "text") {
-    die "mcdoc: Set the BROWSER environment variable first\n";
-  } else {
-    # open the index.html
-    print "mcdoc: Starting $browser http://mcstas.risoe.dk/\n";
-    system("$browser http://mcstas.risoe.dk/ \n");
-    die "mcdoc: web site done.\n";
-  }
+  # open the index.html
+  my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} http://mcstas.risoe.dk/ ";
+  print "mcdoc: Starting $cmd\n"; system("$cmd\n");
+  die "mcdoc: web site done.\n";
 }
 
 if ($show_manual) {
-  if ($browser =~ "text") {
-    die "mcdoc: Set the BROWSER environment variable first\n";
-  } else {
-    # open the index.html
-    my $manual = "$MCSTAS::sys_dir/doc/mcstas-manual.pdf";
-    if ($Config{'osname'} eq "MSWin32") {
-	$manual =~ s!/!\\!g;
-    }
-    print "mcdoc: Starting $browser $manual\n";
-    system("$browser $manual\n");
-    die "mcdoc: User manual done.\n";
-  }
+  # open the manual using embedded acroread plugin
+  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $MCSTAS::sys_dir/doc/mcstas-manual.pdf";
+  print "mcdoc: Starting $cmd\n"; system("$cmd\n");
+  die "mcdoc: User manual done.\n";
 }
 
 if ($show_compman) {
-  if ($browser =~ "text") {
-    die "mcdoc: Set the BROWSER environment variable first\n";
-  } else {
-    # open the index.html
-    my $manual = "$MCSTAS::sys_dir/doc/mcstas-components.pdf";
-    if ($Config{'osname'} eq "MSWin32") {
-	$manual =~ s!/!\\!g;
-    }
-    print "mcdoc: Starting $browser $manual\n";
-    system("$browser $manual\n");
-    die "mcdoc: Component manual done.\n";
-  }
+  # open the component manual
+  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $MCSTAS::sys_dir/doc/mcstas-components.pdf";
+  print "mcdoc: Starting $cmd\n"; system("$cmd\n");
+  die "mcdoc: Component manual done.\n";
 }
 
 if ($show_tutorial) {
-  if ($browser =~ "text") {
-    die "mcdoc: Set the BROWSER environment variable first\n";
-  } else {
-    # open the index.html
-    my $indexfile = "$MCSTAS::sys_dir/doc/tutorial/html/tutorial.html";
-    if ($Config{'osname'} eq "MSWin32") {
-	$indexfile =~ s!/!\\!g;
-    }
-    print "mcdoc: Starting $browser $indexfile\n";
-    system("$browser $indexfile\n");
-    die "mcdoc: tutorial done.\n";
-  }
+  # open the index.html
+  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $MCSTAS::sys_dir/doc/tutorial/html/tutorial.html";
+  print "mcdoc: Starting $cmd\n"; system("$cmd\n");
+  die "mcdoc: Tutorial done.\n";
 }
 
-
-  
 # if 'file' is given
 if ($index > 0) { 
   if (-d $file) { $lib_dir = $file; } # get doc of the given dir
-  else { $is_single_file=1; $single_comp_name = $file; $show_html = 1; }  # search locally and in lib
+  else { $is_single_file=1; $single_comp_name = $file; }  # search locally and in lib
   $use_local=1; # will also search locally
 }
 
@@ -639,23 +596,11 @@ if ($filehandle) {
   html_main_end($filehandle, $toolbar);
   close($filehandle);
 }
-if ($show_website) {
-  if ($browser =~ "text") {
-    die "mcdoc: Set the BROWSER environment variable first for <http://mcstas.risoe.dk/>\n";
-  } else {
-    # open the index.html
-    system("$browser http://mcstas.risoe.dk/ \n");
-  }
-}
 
-if ($show_html && -f $out_file) {
+if (-f $out_file) {
   if ($browser ne "text") {
     # open the index.html
-    print "mcdoc: Starting $browser $out_file\n";
-    system("$browser $out_file \n");
-  } else {
-    if ($Config{'osname'} eq 'MSWin32') { $browser = "start"; } 
-    else { $browser = "netscape"; }
-    print "Your BROWSER variable is not set... May be '$browser' ?\n";
+    my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $out_file";
+    print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   }
 }

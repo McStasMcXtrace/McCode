@@ -41,6 +41,7 @@
 use Config;
 
 BEGIN {
+  # default configuration (for all high level perl scripts)
   if($ENV{"MCSTAS"}) {
     $MCSTAS::sys_dir = $ENV{"MCSTAS"};
   } else {
@@ -51,6 +52,9 @@ BEGIN {
     }
   }
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+
+  # custom configuration (this script)
+  
   # If this is Win32, load OLE related modules -
   # we can not talk to Matlab using pipe on Win32 :(
   # PW 20030314
@@ -58,38 +62,11 @@ BEGIN {
     require Win32::OLE;
     require Win32::OLE::Variant;
   }
-  # Check if the PGPLOT module can be found, otherwise
-  # disable traditional PGPLOT support - output error
-  # message...
-  # PW 20030320
-  $pg_avail=0;
-  my $pg_place;
-  foreach $inc (@INC) {
-    my $where="$inc/PGPLOT.pm";
-    if (-e $where) {
-      $pg_avail=1;
-      $pg_place=$inc;
-    }
-  }
-  # Check if the Tk module can be found and load/import it.
-  # Otherwise, disable use of Tk "end process" boxes for 
-  # Matlab/Scilab backends
-  # PW 20030404
-  $tk_avail=0;
-  my $tk_place;
-  foreach $inc (@INC) {
-    my $where="$inc/Tk.pm";
-    if (-e $where) {
-      $tk_avail=1;
-      $tk_place=$inc;
-      require Tk;
-      import Tk;
-    }
-  }
 }
 
 use lib $MCSTAS::perl_dir;
 require "mcstas_config.perl";
+
 require "mcrunlib.pl";
 # IPC can probably be used safely, exists on sysv type systems,
 # linux, Win32. Will investigate further regarding portability.
@@ -112,47 +89,37 @@ sub read_instrument {
         if($st == 0 && /^INSTRUMENT:/) {
             # Start of instrument description.
             $st = 1;
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 2) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Initialize matlab struct...
               write_process("addpath('$MCSTAS::sys_dir/tools/matlab');\n");
               write_process("mcdisplay('Init');\n");
               write_process("global INSTRUMENT;\n");
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
-              if ($first) {
-                write_process("INSTRUMENT.firstcomp='$first';\n");
-              }
-              if ($last) {
-                write_process("INSTRUMENT.lastcomp='$last';\n");
-              }
+              if ($first) { write_process("INSTRUMENT.firstcomp='$first';\n"); }
+              if ($last)  { write_process("INSTRUMENT.lastcomp ='$last';\n");  }
             }
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Initialize scilab struct...
               write_process("exec('$MCSTAS::sys_dir/tools/scilab/mcdisplay.sci',-1);\n");
               write_process("INSTRUMENT.descr='$sim';\n");
               # Possibly, set firstcomp + lastcomp
-              if ($first) {
-                write_process("INSTRUMENT.firstcomp='$first';\n");
-              }
-              if ($last) {
-                write_process("INSTRUMENT.lastcomp='$last';\n");
-              }
+              if ($first) { write_process("INSTRUMENT.firstcomp='$first';\n"); }
+              if ($last)  { write_process("INSTRUMENT.lastcomp ='$last';\n");  }
               if ($save) {
-                      if ($direct_output) { write_process("INSTRUMENT.save_format='$direct_output';\n"); }
+                if ($direct_output) { write_process("INSTRUMENT.save_format='$direct_output';\n"); }
                 else  { write_process("INSTRUMENT.save_format='-scg';\n"); }
                 write_process("INSTRUMENT.save=1;\n");
-              } else {
-                write_process("INSTRUMENT.save=0;\n");
-              }
+              } else { write_process("INSTRUMENT.save=0;\n"); }
             }
-        } elsif($st == 1 && /^COMPONENT:\s*"([a-zA-Z0-9_æøåÆØÅ]+)"\s*/) {
+        } elsif($st == 1 && /^COMPONENT:\s*"([a-zA-Z0-9_]+)"\s*/) {
             $comp = $1;
             @components = (@components, $comp);
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 2) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Initialize components in matlab struct:
               write_process("INSTRUMENT.name{length(INSTRUMENT.name)+1}='$comp';\n");
             }
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Initialize components in scilab struct:
               write_process("setcomponent('$comp');\n");
             }
@@ -161,23 +128,23 @@ sub read_instrument {
             @T = split ",", $1;
             $transformations{$comp} = \@T;
             $compcnt=scalar(@components);
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 2) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Component position for matlab struct:
               write_process("INSTRUMENT.$comp.T=ReshapeTransform([@T]);\n");
               write_process("INSTRUMENT.$comp.j=$compcnt;\n");
               write_process("INSTRUMENT.$comp.K=cell(0);\n");
             }
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Component position for scilab struct:
               write_process("setposition([@T]);\n");
             }
         } elsif($st == 1 && /^MCDISPLAY: start$/) {
             $st = 2;                # Start of component graphics representation
-        } elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_æøåÆØÅ]+)/) {
+        } elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_]+)/) {
             $comp = $1;
             $compdraw{$comp} = {};
             $compdraw{$comp}{'elems'} = [];
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Initialize component variable etc. in scilab
               write_process("trace_component('$comp');\n");
             }
@@ -193,7 +160,7 @@ sub read_instrument {
                 {type => 'multiline',
                  count => $count,
                  coords => \@coords};
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 2) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Line elements for Matlab struct
               write_process("coords=[@coords];\n");
               write_process("x=coords(1:3:length(coords));\n");
@@ -202,7 +169,7 @@ sub read_instrument {
               write_process("coords=[x;y;z;1+0*z];\n");
               write_process("INSTRUMENT.$comp.K{size(INSTRUMENT.$comp.K,2)+1}=coords;\n");
             }
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Line elements for Scilab struct
               write_process("multiline([$1 @coords]);\n");
             }
@@ -226,7 +193,7 @@ sub read_instrument {
                     $y1 += $a;
                     $z1 += $b;
                 } else {
-                    die "Bad plane specifier in circle: '$plane'";
+                    die "mcdisplay: Bad plane specifier in circle: '$plane'";
                 }
                 push @coords, $x1, $y1, $z1;
             }
@@ -234,7 +201,7 @@ sub read_instrument {
                 {type => 'multiline',
                  count => 25,
                  coords => \@coords};
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 2) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Line elements for Matlab struct, circle representation
               write_process("coords=[@coords];\n");
               write_process("x=coords(1:3:length(coords));\n");
@@ -243,13 +210,13 @@ sub read_instrument {
               write_process("coords=[x;y;z;1+0*z];\n");
               write_process("INSTRUMENT.$comp.K{size(INSTRUMENT.$comp.K,2)+1}=coords;\n");
             }
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Line elements for Scilab struct, circle representation
               write_process("circle('$plane',$x,$y,$z,$r);\n");
             }
         } elsif($st == 2 && /^MCDISPLAY: end$/) {
             $st = 1;  # End of component graphics representation
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 2) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Matlab 'End of instrument'
               write_process("mcdisplay('Load');\n");
               write_process("PlotInstrument('init');\n");
@@ -268,7 +235,7 @@ sub read_instrument {
                 write_process("wait(INSTRUMENT.fig);\n");
               }
             }
-            if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Scilab 'End of instrument'
               write_process("endtrace();\n");
             }
@@ -395,7 +362,7 @@ sub get_inspect_pos {
     for($i = 0; $i < @comps; $i++) {
         return $i if $comps[$i] eq $inspect;
     }
-    die "Error: Inspected component $inspect not part of instrument?";
+    die "Error: Inspected component $inspect not part of instrument $sim ?";
 }
 
 
@@ -418,7 +385,7 @@ sub read_neutron {
         } elsif($st == 0 && /^STATE:/) {
             # State after leaving - should probably be removed in McStas.
             next;
-        } elsif($st == 1 && /^COMP:\s*"([a-zA-Z0-9_æøåÆØÅ]+)"\s*$/) {
+        } elsif($st == 1 && /^COMP:\s*"([a-zA-Z0-9_]+)"\s*$/) {
             # Neutron enters component local coordinate system.
             $comp = $1;
             $numcomp++;
@@ -445,12 +412,12 @@ sub read_neutron {
             $st = 2;
             last;
         } elsif (/^Detector:/){
-          if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 3) {
+          if (! $MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i) {
             # Should only be done if finished, and not called with --save flag...
-            # Also, can only be done if tk_avail == 1
-            if ($tk_avail == 1 && $EndFlag == 0) {
+            # Also, can only be done if tcl/tl available
+            if ($MCSTAS::mcstas_config{'TCLTK'} ne "no" && $EndFlag == 0) {
               my $main = new MainWindow;
-              $main->Label(-text => 'Simulation ended.'
+              $main->Label(-text => "Simulation $sim ended."
                           )->pack;
               $main->Label(-text => 'Press Ok to terminate backend'
                           )->pack;
@@ -477,7 +444,7 @@ sub read_neutron {
 }
     
 
-sub plot_components {
+sub plot_components { # PGPLOT stuff only
     my ($rx, $ry, $rori, $rdis, $axis1, $axis2) = @_;
     my (@x, @y, @ori);
     my ($i, $col);
@@ -511,7 +478,7 @@ sub plot_components {
 sub plot_neutron {
     my ($x, $y, $z, $vx, $vy, $vz, $comp) = @_;
     my ($i, $col, $oldcomp, $retval);
-    if ($MCSTAS::mcstas_config{'PLOTTER'} == 0) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
       # PGPLOT only
       PGPLOT::pgsci(3);
       PGPLOT::pgline(scalar(@$x), $x, $y);
@@ -529,12 +496,12 @@ sub plot_neutron {
         PGPLOT::pgpt(1, $x->[$i], $y->[$i], 17);
         $i++;
       }
-    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 2) {
+    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
       # Matlab
       $retval=write_process("mcdisplay('Timeout');\n");
       $retval=write_process("mcdisplay('PlotNeutron',[@$x],[@$y],[@$z]);\n");
       return $retval;
-    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
+    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
       # Scilab
       $retval=write_process("x=[];\n");
       $retval=write_process("y=[];\n");
@@ -555,7 +522,7 @@ sub plot_neutron {
 }
 
 
-sub show_comp_names {
+sub show_comp_names { # PGPLOT stuff only
     my ($rinstr) = @_;
     my %instr = %$rinstr;
     my @comps = @{$instr{'comp'}};
@@ -645,7 +612,7 @@ sub write_process {
     (kill 0, $pid) || print STDERR "$plotter process terminated - ending...\n";
     return 2;
   }
-  if ($Config{'osname'} eq 'MSWin32' && $MCSTAS::mcstas_config{'PLOTTER'} eq 1) {
+  if ($Config{'osname'} eq 'MSWin32' && $MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
     $ML->Execute($command);
     my $err = Win32::OLE::LastError();
     if ($err) {
@@ -666,7 +633,7 @@ sub plot_instrument {
     my %neutron = %$rneutron;
     my $retval;
     # The following only relevant in PGPLOT mode
-    if ($MCSTAS::mcstas_config{'PLOTTER'} == 0) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
       my ($xmin, $xmax, $ymin, $ymax, $zmin, $zmax) =
         ($instr{'zoom_xmin'}, $instr{'zoom_xmax'}, $instr{'zoom_ymin'},
          $instr{'zoom_ymax'}, $instr{'zoom_zmin'}, $instr{'zoom_zmax'});
@@ -759,7 +726,7 @@ sub plot_instrument {
         return 6;
      } elsif($cc =~ /[hH]/) {        # Help
         print STDERR "McDisplay: q=quit, h=help\n";
-        print STDERR "    output p=ps,   c=color ps, g=gif\n";
+        print STDERR "    output p=ps,   c=color ps, g=gif n=png\n";
         print STDERR "      zoom x=reset,z or d=zoom\n";
       } elsif($cc =~ /[zZdD]/) {        # Zoom.
         my ($cx1, $cy1, $cc1) = (0, 0, 0);
@@ -791,7 +758,7 @@ sub plot_instrument {
     return 0;                        # Default: do not repeat this neutron.
 }
 
-sub get_device {
+sub get_device { # PGPLOT stuff only
     my ($what) = @_;
     my $dev;
     
@@ -811,9 +778,6 @@ sub get_device {
 
 # Test the code.
 
-# Attempt to locate pgplot directory if unset.
-$ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
-
 # Check command line arguments.
 
 undef $inspect;
@@ -828,13 +792,15 @@ undef $file_output;
 my $int_mode=0; # interactive mode(0), non interactive (1)
 my $i;
 my $start_scilab=0;
+my $show_help=0;
 
-$plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
-                $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
+$plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
 for($i = 0; $i < @ARGV; $i++) {
     if(($ARGV[$i] eq "-m") || ($ARGV[$i] eq "--multi")) {
         $multi_view = 1;
+    } elsif($ARGV[$i] =~ /--help|-h$/) {
+        $show_help=1;
     } elsif(($ARGV[$i] =~ /^-z([-0-9+.eE]+)$/) ||
             ($ARGV[$i] =~ /^--zoom=([-0-9+.eE]+)$/)) {
         $magnification = ($1 == 0 ? 1 : $1);
@@ -872,7 +838,9 @@ for($i = 0; $i < @ARGV; $i++) {
         }
    }
 }
-die "Usage: mcdisplay [-mzipf][-gif|-ps|-psc] Instr.out [instr_options] params
+if ($show_help) { undef $sim_cmd; }
+die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
+ -h        --help            Show this help
  -m        --multi           Show the three instrument side views
  -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
@@ -886,8 +854,7 @@ die "Usage: mcdisplay [-mzipf][-gif|-ps|-psc] Instr.out [instr_options] params
                              files are used by mcgui.pl for visualising the
                              instrument. With PGPLOT, --save is nonfunctional.
  -gif|-ps|-psc               Export figure as gif/b&w ps/color ps and exit
- When using -ps -psc -gif, the program writes the hardcopy file
- and then exits (plotter PGPLOT only).
+ When using -ps -psc -gif, the program writes the hardcopy file and exits.
  SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
  DOC:      Please visit http://neutron.risoe.dk/mcstas/\n"
  unless $sim_cmd;
@@ -898,40 +865,33 @@ if ($sim_cmd =~ m'\.instr$') # recompile .instr if needed
  
 
 # Check value of $plotter and $file_output variables, set 
-# $MCSTAS::mcstas_config{'PLOTTER'}
-# accordingly
-if ($plotter =~ /PGPLOT|McStas|0/i) {
-  $MCSTAS::mcstas_config{'PLOTTER'}=0;
-  if ($pg_avail eq 1) {
-    require "PGPLOT.pm";
+# $MCSTAS::mcstas_config{'PLOTTER'} with scriptfile keyword
+if ($file_output) { $plotter .= "_scriptfile"; }
+
+if ($plotter =~ /Scilab/i && not $plotter =~ /scriptfile/i) {
+  # Check for Win32, only file_output possible :(
+  if ($Config{'osname'} eq MSWin32) {
+    $file_output="mcdisplay_commands.sci";
+    print STDERR "\n******************************************************\n";
+    print STDERR "Sorry, Scilab only possible using file output on Win32\n\n";
+    print STDERR "Outputting to file $file_output\n";
+    print STDERR "******************************************************\n\n";
+    print STDERR "When done, I will start a scilab for you to view the file...\n";
+    $start_scilab=1;
+    $plotter="Scilab_scriptfile";
   }
-} elsif ($plotter =~ /Matlab|1|2/i) {
-  $MCSTAS::mcstas_config{'PLOTTER'}=1;
-  if ($file_output) {
-    $MCSTAS::mcstas_config{'PLOTTER'}=2;
-  }
-} elsif ($plotter =~ /Scilab|3|4/i) {
-  $MCSTAS::mcstas_config{'PLOTTER'}=3;  
-  if ($file_output) {
-    $MCSTAS::mcstas_config{'PLOTTER'}=4;
-  } else {
-    # Check for Win32, only file_output possible :(
-    if ($Config{'osname'} eq MSWin32) {
-      print STDERR "\n******************************************************\n";
-      print STDERR "Sorry, Scilab only possible using file output on Win32\n\n";
-      print STDERR "Outputting to file mcdisplay_commands.sci\n";
-      print STDERR "******************************************************\n\n";
-      $file_output="mcdisplay_commands.sci";
-      print STDERR "When done, I will start a scilab for you to view the file...\n";
-      $start_scilab=1;
-      $MCSTAS::mcstas_config{'PLOTTER'}=4;
-    }
-  }
+}
+
+if ($plotter =~ /scriptfile/i && not $file_output) {
+  $file_output="mcdisplay_commands";
+  if ($plotter =~ /Matlab/i) { $file_output .=".m"; }
+  elsif ($plotter =~ /Scilab/i) { $file_output .=".sci"; }
+  print STDERR "Outputting to file $file_output\n";
 }
 
 # Final PLOTTER check, is PGPLOT wanted but not possible?
 # - Ask user to rerun / set other default
-if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0 && $pg_avail eq 0) {
+if ($plotter =~ /McStas|PGPLOT/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
   print STDERR "\n******************************************************\n";
   print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
   print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolution:\n\n";
@@ -940,13 +900,14 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0 && $pg_avail eq 0) {
   print STDERR "3) Modify $MCSTAS::perl_dir/mcstas_config.perl\n";
   print STDERR "   to set a different default plotter\n\n";
   print STDERR "******************************************************\n\n";
-  die "PGPLOT problems...\n";
+  die "mcdisplay: PGPLOT problems...\n";
 }
+
+$MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
+
 my $pg_devname = "/xserv";
 # Only set up PGPLOT stuff if needed
-if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
-  # PGPLOT is plotter!
-  
+if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
   if ($int_mode == 1) 
     { 
       my $ext  = "ps";
@@ -958,34 +919,36 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
     }
   my $global_device = get_device($pg_devname);
   if($global_device < 0) {
-    print STDERR "Failed to open PGPLOT device $pg_devname\n";
+    print STDERR "mcdisplay: Failed to open PGPLOT device $pg_devname\n";
     exit 1;
   }
   my $seq = "";                        # Sequence number for multiple hardcopy
   PGPLOT::pgask(0);
-} elsif ($MCSTAS::mcstas_config{'PLOTTER'} eq 1) {
-  # Matlab is plotter - open a pipe / OLE connection
-  if ($Config{'osname'} eq 'MSWin32') {
-    $pid=0;
-    $ML = Win32::OLE->new('Matlab.Application') || die "Could not start Matlab\n";
-  } else {
-    $pid=open2(READER,WRITER, $MCSTAS::mcstas_config{'MATLAB_COMMAND'}) || die "Could not start Matlab\n";
-  }
-  print STDERR "Opened up pipe to matlab - pid is $pid\n";
-  print STDERR "Building Matlab INSTRUMENT struct, please have patience...\n";
-} elsif ($MCSTAS::mcstas_config{'PLOTTER'} eq 2) {
+} elsif ($plotter =~ /Matlab/i && $plotter =~ /scriptfile/i) {
   # Matlab w/FILE is plotter - open a file handle
   open(WRITER, "> $file_output");
   $pid=0;
-} elsif ($MCSTAS::mcstas_config{'PLOTTER'} eq 3) {
-  # Scilab is plotter - open a pipe
-  $pid=open2(READER,WRITER, $MCSTAS::mcstas_config{'SCILAB_COMMAND'}) || die "Could not start Scilab\n";
-  print STDERR "Opened up pipe to scilab - pid is $pid\n";
-  print STDERR "Building Scilab INSTRUMENT struct, please have patience...\n";
-} elsif ($MCSTAS::mcstas_config{'PLOTTER'} eq 4) {
+} elsif ($plotter =~ /Matlab/i) {
+  # Matlab is plotter - open a pipe / OLE connection
+  if ($Config{'osname'} eq 'MSWin32') {
+    $pid=0;
+    $ML = Win32::OLE->new('Matlab.Application') || die "mcdisplay: Could not start Matlab\n";
+  } else {
+    my $cmd = "$MCSTAS::mcstas_config{'MATLAB'} $MCSTAS::mcstas_config{'MATLAB_COMMAND'} > /dev/null";
+    $pid=open2(READER,WRITER, $cmd) || die "mcdisplay: Could not start Matlab\n$cmd\n";
+  }
+  print STDERR "Opened up pipe to matlab - pid is $pid\n";
+  print STDERR "Building Matlab INSTRUMENT struct, please have patience...\n";
+} elsif ($plotter =~ /Scilab/i && $plotter =~ /scriptfile/i) {
   # Scilab w/FILE is plotter - open a file handle
   open(WRITER, "> $file_output");
   $pid=0;
+} elsif ($plotter =~ /Scilab/i) {
+  # Scilab is plotter - open a pipe
+  my $cmd = "$MCSTAS::mcstas_config{'SCILAB'} $MCSTAS::mcstas_config{'SCILAB_COMMAND'} > /dev/null";
+  $pid=open2(READER,WRITER, $cmd) || die "Could not start Scilab\n$cmd\n";
+  print STDERR "Opened up pipe to scilab - pid is $pid\n";
+  print STDERR "Building Scilab INSTRUMENT struct, please have patience...\n";
 }
 
 my ($numcomp, %neutron, %instr);
@@ -993,15 +956,15 @@ my ($numcomp, %neutron, %instr);
 $args = join(" ", @cmdline);
 $cmdline = "$sim_cmd --trace --no-output-files $args";
 printf STDERR "Starting simulation '$cmdline' ...\n";
-open(IN, "$cmdline |") || die "Could not run simulation\n";
+open(IN, "$cmdline |") || die "mcdisplay: Could not run simulation\n";
 
 $numcomp = read_instrument(IN);
 $inspect_pos = get_inspect_pos($inspect, @components);
 %instr = make_instrument;
 
-if ($int_mode == 0 && $MCSTAS::mcstas_config{'PLOTTER'} == 0)  { printf STDERR "Press H key for help.\n"; }
-if ($MCSTAS::mcstas_config{'PLOTTER'} == 1) { print STDERR "Matlab INSTRUMENT done, starting gui....\n"; }
-if ($MCSTAS::mcstas_config{'PLOTTER'} == 3) { print STDERR "Scilab INSTRUMENT done, starting gui....\n"; }
+if ($int_mode == 0 && $plotter =~ /McStas|PGPLOT/i)  { printf STDERR "McDisplay/PGPLOT: Press H key for help.\n"; }
+if ($plotter =~ /Matlab/i && not $plotter =~ /scriptfile/i) { print STDERR "Matlab INSTRUMENT done, starting gui....\n"; }
+if ($plotter =~ /Scilab/i && not $plotter =~ /scriptfile/i) { print STDERR "Scilab INSTRUMENT done, starting gui....\n"; }
 
 while(!eof(IN)) {
     %neutron = read_neutron(IN);
@@ -1019,7 +982,7 @@ while(!eof(IN)) {
     my $ret;
     do {
         $ret = plot_instrument($int_mode, \%instr, \%neutron);
-        if ($MCSTAS::mcstas_config{'PLOTTER'} == 0) {
+        if ($plotter =~ /McStas|PGPLOT/i) {
           if ($int_mode == 1) { $ret =2; print STDERR "Wrote \"$pg_devname\"\n"; }
           if($ret == 3 || $ret == 4 || $ret == 5 || $ret == 6) {
             my $ext="ps";
@@ -1030,7 +993,7 @@ while(!eof(IN)) {
             my $tmpdev=0;
             $tmpdev = get_device($tmp_pg_devname);
             if($tmpdev < 0) {
-              print STDERR "Warning: could not open PGPLOT output \"$tmp_pg_devname\" for hardcopy output\n";
+              print STDERR "mcdisplay: Warning: could not open PGPLOT output \"$tmp_pg_devname\" for hardcopy output\n";
             } else {
               plot_instrument(1, \%instr, \%neutron);
               print STDERR "Wrote \"$tmp_pg_devname\"\n";
@@ -1047,13 +1010,9 @@ while(!eof(IN)) {
 close(IN);
 
 # Properly close any open files etc.
-if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
-  if (defined(&close_window)) { 
-    close_window(); 
-  }
-  else { 
-    PGPLOT::pgclos(); 
-  }
+if ($plotter =~ /McStas|PGPLOT/i) {
+  if (defined(&close_window)) { close_window(); }
+  else {  PGPLOT::pgclos(); }
 } else {
   close(WRITER);
 }

@@ -27,44 +27,9 @@ use File::stat;
 use Cwd;
 require "mcstas_config.perl";
 require "mcfrontlib.pl";
-# Check if MCSTAS_FORMAT env var is set. If so, set 
-# MCSTAS::mcstas_config{'PLOTTER'} accordingly
-my $plotter=$ENV{'MCSTAS_FORMAT'};
-if ($plotter) {
-    if ($plotter =~ /PGPLOT|McStas|0/i) {
-	$MCSTAS::mcstas_config{'PLOTTER'}=0;
-    } elsif ($plotter =~ /Matlab|1/i) {
-	$MCSTAS::mcstas_config{'PLOTTER'}=1;
-    } elsif ($plotter =~ /Scilab|3/i) {
-	$MCSTAS::mcstas_config{'PLOTTER'}=3;  
-    }
-}
 
-# If this is Win32, locate mcstas.exe -> $prefix for running 
-# mcdisplay* perl scripts. Sort of a hack for lack of 'which'
-# command on Win32.
-# PW 20030314
-if ($Config{'osname'} eq 'MSWin32') {
-  my @PATH = split(';',$ENV{PATH});
-  my $located=0;
-  my $mcstas_exe;
-  foreach my $path (@PATH) {
-    if ($located eq 0) {
-      $mcstas_exe="$path\\mcstas.exe";
-      if (-e $mcstas_exe) {
-	$located=1;
-	$MCSTAS::mcstas_config{'prefix'}="$path\\";
-      }
-    }
-  }
-  if ($located eq 0) {
-    die "mcrun: mcstas.exe not found on NT command PATH!";
-  }
-} else {
-  $MCSTAS::mcstas_config{'prefix'}='';
-}
-
-
+# get MCSTAS::mcstas_config{'PLOTTER'} 
+my $plotter=$MCSTAS::mcstas_config{'PLOTTER'};
 
 # Strip any single quotes around argument.
 sub strip_quote {
@@ -139,11 +104,9 @@ sub read_instrument_info {
 sub get_sim_info {
     my ($simprog) = @_;
     # Needs quoting if this is Win32...
-    my $cmdstring;
+    my $cmdstring="$simprog -i";
     if ($Config{'osname'} eq 'MSWin32') {
-      $cmdstring="\"$simprog -i\" ";
-    } else {
-      $cmdstring="$simprog -i";
+      $cmdstring="\"$cmdstring\" ";
     }
     use FileHandle;
     my $h = new FileHandle;
@@ -170,17 +133,14 @@ sub get_out_file_init {
     # as file.
     my $sim_def = $inname;
     $sim_def .= ".instr" if(! (-e $sim_def) && (-e "$sim_def.instr"));
-    return(undef, "Simulation '$sim_def' not found") unless -e $sim_def;
+    return(undef, "mcrun: Simulation '$sim_def' not found") unless -e $sim_def;
     my $file_type = MCSTAS;
     my $base_name = $sim_def;
     # Different executable suffixes on Win32 vs. unix
     # PW 20030314
     my $ext;
-    if ($Config{'osname'} eq 'MSWin32') {
-      $ext="exe";
-    } else {
-      $ext="out";
-    }
+    $ext=$MCSTAS::mcstas_config{'EXE'};
+
     if($sim_def =~ /(.*)\.instr$/) {
         $base_name = $1;
     } elsif($sim_def =~ /(.*)\.c$/) {
@@ -231,96 +191,91 @@ sub get_out_file_init {
 # either ERROR or FINISHED is returned.
 #
 sub get_out_file_next {
-    my ($v, $printer) = @_;
-    my ($cmd, $exit_val);
-    my $force = $v->{'force'};
-    my $file_type = $v->{'file_type'};
-    my $sim_def = $v->{'sim_def'};
-    my $c_name = $v->{'c_name'};
-    my $out_name = $v->{'out_name'};
-    my $sim_age = $v->{'sim_age'};
-    my $c_age = $v->{'c_age'};
-    my $out_age = $v->{'out_age'};
-    my $stage = $v->{'stage'};
-    if($stage eq PRE_MCSTAS) {
-        # Translate simulation definition into C if newer than existing C
-        # version.
-        if($file_type eq C && (defined($sim_age) && $sim_age < $c_age)) {
-            &$printer("Warning: simulation definition '$sim_def'" .
-                      " is newer than '$c_name'");
-        }
-        if($file_type eq OUT && (defined($sim_age) && $sim_age < $out_age)) {
-            &$printer("Warning: simulation definition '$sim_def'" .
-                      " is newer than '$out_name'");
-        }
-        if($file_type eq OUT && (defined($c_age) && $c_age < $out_age)) {
-            &$printer("Warning: C source '$c_name'" .
-                      " is newer than '$out_name'");
-        }
-        if($file_type eq MCSTAS &&
-           ($force || !defined($c_age) || $c_age > $sim_age)) {
-            &$printer("Translating instrument definition '$sim_def'" .
-                      " into C ...");
-	    # On Win32, quote the filenames...
-	    my $dir;
-	    if ($Config{'osname'} eq 'MSWin32') {
+  my ($v, $printer) = @_;
+  my ($cmd, $exit_val);
+  my $force = $v->{'force'};
+  my $file_type = $v->{'file_type'};
+  my $sim_def = $v->{'sim_def'};
+  my $c_name = $v->{'c_name'};
+  my $out_name = $v->{'out_name'};
+  my $sim_age = $v->{'sim_age'};
+  my $c_age = $v->{'c_age'};
+  my $out_age = $v->{'out_age'};
+  my $stage = $v->{'stage'};
+  if($stage eq PRE_MCSTAS) {
+    # Translate simulation definition into C if newer than existing C
+    # version.
+    if($file_type eq C && (defined($sim_age) && $sim_age < $c_age)) {
+        &$printer("Warning: simulation definition '$sim_def'" .
+                  " is newer than '$c_name'");
+    }
+    if($file_type eq OUT && (defined($sim_age) && $sim_age < $out_age)) {
+        &$printer("Warning: simulation definition '$sim_def'" .
+                  " is newer than '$out_name'");
+    }
+    if($file_type eq OUT && (defined($c_age) && $c_age < $out_age)) {
+        &$printer("Warning: C source '$c_name'" .
+                  " is newer than '$out_name'");
+    }
+    if($file_type eq MCSTAS &&
+       ($force || !defined($c_age) || $c_age > $sim_age)) {
+        &$printer("Translating instrument definition '$sim_def'" .
+                  " into C ...");
+      # On Win32, quote the filenames...
+      my $dir=$v->{'dir'};;
+      if ($Config{'osname'} eq 'MSWin32') {
 	      $c_name="\"$c_name\"";
 	      $sim_def="\"$sim_def\"";
-	      $dir="\"$v->{'dir'}\"";
-	    } else { 
-	      # On other platforms, simply set $dir...
-	      $dir=$v->{'dir'};
-	    }
-            my @inc = $v->{'dir'} ? ("-I", $dir) : ();
-            my $cmd = ["mcstas", @inc, "-t", "-o", $c_name, $sim_def];
-            &$printer(join(" ", @$cmd));
-            $v->{'stage'} = POST_MCSTAS;
-            return (RUN_CMD, $cmd);
-        } else {
-            $v->{'stage'} = PRE_CC;
-            return (CONTINUE, undef);
-        }
-    } elsif($stage eq POST_MCSTAS) {
-        $v->{'c_age'} = -M $c_name;
-        $v->{'out_age'} = undef; # Force recompilation.
-        $v->{'stage'} = PRE_CC;
-        return (CONTINUE, undef);
-    } elsif($stage eq PRE_CC) {
-        unless(-e $c_name) {
-            return (ERROR, "Could not translate simulation '$sim_def' into C");
-        }
-        # Compile C source if newer than existing out file.
-        if(($file_type eq MCSTAS || $file_type eq C) &&
-           ($force || !defined($out_age) || $out_age > $c_age)) {
-            &$printer("Compiling C source '$c_name' ...");
-            # ToDo: splitting CFLAGS should handle shell quoting as well ...
-            my $cc = defined($ENV{'MCSTAS_CC'}) ?
-                $ENV{'MCSTAS_CC'} : $MCSTAS::mcstas_config{CC};
-            my $cflags = defined($ENV{'MCSTAS_CFLAGS'}) ?
-                $ENV{'MCSTAS_CFLAGS'} : $MCSTAS::mcstas_config{CFLAGS};
+	      $dir="\"$dir\"";
+      }
+      my @inc = $v->{'dir'} ? ("-I", $dir) : ();
+      my $cmd = ["mcstas", @inc, "-t", "-o", $c_name, $sim_def];
+      &$printer(join(" ", @$cmd));
+      $v->{'stage'} = POST_MCSTAS;
+      return (RUN_CMD, $cmd);
+    } else {
+      $v->{'stage'} = PRE_CC;
+      return (CONTINUE, undef);
+    }
+  } elsif($stage eq POST_MCSTAS) {
+    $v->{'c_age'} = -M $c_name;
+    $v->{'out_age'} = undef; # Force recompilation.
+    $v->{'stage'} = PRE_CC;
+    return (CONTINUE, undef);
+  } elsif($stage eq PRE_CC) {
+    unless(-e $c_name) {
+        return (ERROR, "Could not translate simulation '$sim_def' into C");
+    }
+    # Compile C source if newer than existing out file.
+    if(($file_type eq MCSTAS || $file_type eq C) &&
+       ($force || !defined($out_age) || $out_age > $c_age)) {
+      &$printer("Compiling C source '$c_name' ...");
+      # ToDo: splitting CFLAGS should handle shell quoting as well ...
+      my $cc     = $MCSTAS::mcstas_config{CC};
+      my $cflags = $MCSTAS::mcstas_config{CFLAGS};
 	    # Needs quoting on MSWin32:
 	    if ($Config{'osname'} eq 'MSWin32') {
 	      $out_name="\"$out_name\"";
 	      $c_name="\"$c_name\"";
 	    }
-            my $cmd = [$cc, split(' ', $cflags), "-o",
-                       $out_name, $c_name, "-lm"];
-            &$printer(join(" ", @$cmd));
-            $v->{'stage'} = POST_CC;
-            return (RUN_CMD, $cmd);
-        } else {
-            $v->{'stage'} = FINISHED;
-            return (FINISHED, $out_name);
-        }
-    } elsif($stage eq POST_CC) {
-        unless(-e $out_name) {
-            return (ERROR, "Could not compile C source file '$c_name'");
-        }
-        $v->{'stage'} = FINISHED;
-        return (FINISHED, $out_name);
+      my $cmd = [$cc, split(' ', $cflags), "-o",
+                 $out_name, $c_name, "-lm"];
+      &$printer(join(" ", @$cmd));
+      $v->{'stage'} = POST_CC;
+      return (RUN_CMD, $cmd);
     } else {
-        die "mcrun: Internal: get_out_file_next: $stage";
+      $v->{'stage'} = FINISHED;
+      return (FINISHED, $out_name);
     }
+  } elsif($stage eq POST_CC) {
+    unless(-e $out_name) {
+        return (ERROR, "Could not compile C source file '$c_name'");
+    }
+    $v->{'stage'} = FINISHED;
+    return (FINISHED, $out_name);
+  } else {
+    die "mcrun: Internal: get_out_file_next: $stage";
+  }
 }
 
 #
@@ -393,7 +348,7 @@ sub do_test {
   } else { return "mcrun: no test instruments found. Aborting.\n"; }
   # go into the selftest directory
   chdir("selftest") or return "mcrun: Can get into selftest: $!\n";
-  # Initialize compat/full test
+  # Initialize test
   my $n_single=1e5;
   my $n_scan=1e4;
   my $now = localtime;
@@ -406,7 +361,8 @@ sub do_test {
   my @test_monitor_names;
   my @test_monitor_values;
   my $suffix='';
-  if ($Config{'osname'} eq 'MSWin32') { $suffix='.pl'; }
+  $suffix=$MCSTAS::mcstas_config{'SUFFIX'};
+  $prefix=$MCSTAS::mcstas_config{'PREFIX'};
   $ENV{'MCSTAS_FORMAT'} = $plotter;
   @test_names   = ("ISIS prisma2: in focusing mode", 
       "ISIS prisma2: in non-focusing mode", 
@@ -426,24 +382,24 @@ sub do_test {
       "Risoe TAS1: sample two-theta (TT aka A4). negative side . Powder sample",
       "Risoe TAS1: Triple axis mode. Analyzer rocking curve (OMA aka A5). Vanadium sample",
       "Risoe TAS1: Triple axis mode. Sample take-off (TT aka A4). Powder sample",);
-  @test_commands= ("mcrun --dir=prisma2a prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44",
-      "mcrun$suffix --dir=prisma2b prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44",
-      "mcrun$suffix --dir=V_test vanadium_example.instr --ncount=$n_single ROT=0",
-      "mcrun$suffix -n $n_single --dir=h8_test  h8_test.instr Lambda=2.359",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_1_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=0",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_2_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=30",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_3_45 linup-2.instr PHM=-37.077 TTM=-74 C1=30 OMC1=-50,50",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_4_45 linup-2.instr PHM=-39,-35 TTM=-74 C1=30 OMC1=-1.81715",
-      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m5 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-5",
-      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m6 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-6",
-      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m10 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-10",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_6_0 linup-3.instr PHM=-37.077 TTM=-74 TT=-1.5,1.5 C1=30 OMC1=-5.5 C2=0 C3=0",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_7 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=0",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_8 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_9 linup-5.instr PHM=-37.077 TTM=-74 TT=32,35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_10 linup-5.instr PHM=-37.077 TTM=-74 TT=-32,-35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_11 linup-6.instr PHM=-37.077 TTM=-74 TT=33.57 OMA=-16.44,-18.44 TTA=-34.883 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
+  @test_commands= ("${prefix}mcrun --dir=prisma2a prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44",
+      "${prefix}mcrun$suffix --dir=prisma2b prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44",
+      "${prefix}mcrun$suffix --dir=V_test vanadium_example.instr --ncount=$n_single ROT=0",
+      "${prefix}mcrun$suffix -n $n_single --dir=h8_test  h8_test.instr Lambda=2.359",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_1_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=0",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_2_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=30",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_3_45 linup-2.instr PHM=-37.077 TTM=-74 C1=30 OMC1=-50,50",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_4_45 linup-2.instr PHM=-39,-35 TTM=-74 C1=30 OMC1=-1.81715",
+      "${prefix}mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m5 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-5",
+      "${prefix}mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m6 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-6",
+      "${prefix}mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m10 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-10",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_6_0 linup-3.instr PHM=-37.077 TTM=-74 TT=-1.5,1.5 C1=30 OMC1=-5.5 C2=0 C3=0",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_7 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=0",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_8 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_9 linup-5.instr PHM=-37.077 TTM=-74 TT=32,35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "${prefix}mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_10 linup-5.instr PHM=-37.077 TTM=-74 TT=-32,-35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "${prefix}mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_11 linup-6.instr PHM=-37.077 TTM=-74 TT=33.57 OMA=-16.44,-18.44 TTA=-34.883 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "${prefix}mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
   @test_monitor_names =("mon9_I","mon9_I","PSD_4pi_I","D7_SC3_In_I","","","","","","","","","","","","","","");
   @test_monitor_values=(4.61739e-08,3.39694e-08,1.90823e-06,2.89923e-11,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
   # now execute each simulation and look for errors
@@ -495,8 +451,8 @@ sub do_test {
   # now test graphics...
   @test_names   = ("Plot of Scan of parameters with Risoe TAS1 monochromator rocking curve (no collimator)",
     "Plot of Single simulation with Brookhaven H8 Termal TAS with vanadium sample");
-  @test_commands= ("mcplot$suffix -gif linup_1_45",
-    "mcplot$suffix -gif h8_test");
+  @test_commands= ("${prefix}mcplot$suffix -gif linup_1_45",
+    "${prefix}mcplot$suffix -gif h8_test");
   @test_monitor_names =("linup_1_45","h8_test");
   for ($j=0 ; $j<@test_commands ; $j++) {
     my $this_cmd =$test_commands[$j];
@@ -806,17 +762,6 @@ sub parse_instrument {
     }
     return @d;
     
-}
-
-# Check for the availability of a command or file
-sub check_command {
-  my ($cmd) = @_;
-  my $this_cmd;
-  my $res; 
-  $this_cmd = "which $cmd";
-  $res      = `$this_cmd 2>&1`; # get stdout and stderr
-  chomp($res);
-	if (-e $res) { return 1; } else { return 0; }
 }
 
 1;

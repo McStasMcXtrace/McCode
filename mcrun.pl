@@ -32,31 +32,30 @@ use Net::Ping;
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
 BEGIN {
-    if($ENV{"MCSTAS"}) {
-        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  # default configuration (for all high level perl scripts)
+  if($ENV{"MCSTAS"}) {
+    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  } else {
+    if ($Config{'osname'} eq 'MSWin32') {
+      $MCSTAS::sys_dir = "c:\\mcstas\\lib";
     } else {
-      if ($Config{'osname'} eq 'MSWin32') {
-        $MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      } else {
-        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      }
+      $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
-    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
-    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
+  }
+  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+
+  # custom configuration (this script)
+  $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
 }
+
 use lib $MCSTAS::perl_dir;
+use lib $MCSTAS::perl_modules;
+require "mcstas_config.perl";
 
 use FileHandle;
 use strict;
 
 require "mcrunlib.pl";
-require "mcstas_config.perl";
-if (!($Config{'osname'} eq "MSWin32")) {
-    if (-e $MCSTAS::perl_modules) {
-        # Load extra unix-only dependencies
-        require "mcstas_unix.pl";
-    }
-}
 
 # Turn off buffering on stdout. This improves the use with the Unix
 # "tee" program to create log files of scans.
@@ -70,7 +69,6 @@ my @params = ();                # List of input parameters
 my %vals;                       # Hash of input parameter values
 my @options = ();               # Additional command line options (mcstas)
 my @ccopts = ();                # Additional command line options (cc)
-my ($plotter);                  # sim/data file format
 my $format_ext;                 # sim file extension
 my $format_assign;              # assignation symbol ':', '='
 my $format_start_value;         # symbol before field value
@@ -85,7 +83,6 @@ my $end=-1;                     # last scan number to run in slave mode
 my $multi=0;                    # multi machine mode
 my @hostlist = ();              # list of remote machines to run on...
 my $mpi = 0;                    # how many nodes used with MPI? 0 implies no MPI.
-my $hostfile = "";              # name of a file describing which machine to use (mpi/grid)
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -158,11 +155,9 @@ sub parse_args {
                 print STDOUT "mcrun: Sorry, --grid is not supported on windows!\n";
             } else { $multi=1; }
         } elsif (/^--mpi\=(.*)$/) {
-          if ($Config{'osname'} eq 'MSWin32') {
-            print STDOUT "mcrun: Sorry, MPI is not supported on windows!\n";
-          } else { $mpi = $1; }
+            $mpi = $1;
         } elsif (/^--machines\=(.*)$/) {
-            $hostfile = $1;
+            $MCSTAS::mcstas_config{'HOSTFILE'} = $1;
         }
         # Standard McStas options needing special treatment by mcrun.
         elsif(/^--dir\=(.*)$/ || /^-d(.+)$/) {
@@ -185,9 +180,9 @@ sub parse_args {
         } elsif(/^-([s])$/) {
             push @options, "-$1$ARGV[++$i]";
         } elsif(/^--(format)$/ || /^--(plotter)$/) {
-            $plotter = $ARGV[$i];
+            $MCSTAS::mcstas_config{'PLOTTER'} = $ARGV[$i];
         } elsif(/^--(format)\=(.*)$/ || /^--(plotter)\=(.*)$/) {
-            $plotter = $2;
+            $MCSTAS::mcstas_config{'PLOTTER'} = $2;
         } elsif(/^--test$/) {
             $exec_test="compatible";
         } elsif(/^--(test)\=(.*)$/) {
@@ -211,55 +206,45 @@ sub parse_args {
         }
     }
 
+    # tests for grid/mpi support
     if ($mpi >= 1 || $multi == 1) {
-      my $HOME = $ENV{'HOME'};
-      if ($hostfile eq "") { $hostfile = "$HOME/.mcstas-hosts"; }
-      if (!-e $hostfile) {
-        $hostfile = "$MCSTAS::sys_dir/tools/perl/mcstas-hosts";
-        if (! -e $hostfile) {
-          print STDERR "mcrun: No MPI/grid machine list. MPI/grid disabled...
-         Define $HOME/.mcstas-hosts or $hostfile or use --machines=<file>!\n";
-          $multi = 0;
-          $mpi   = 0;
-        }
+      if (! -e $MCSTAS::mcstas_config{'HOSTFILE'}) {
+        print STDERR "mcrun: No MPI/grid machine list. MPI/grid disabled...
+     Define $ENV{'HOME'}/.mcstas-hosts
+     or $MCSTAS::mcstas_config{'HOSTFILE'}
+     or use option --machines=<file>!\n";
+        $multi = 0;
+        $mpi   = 0;
+        $MCSTAS::mcstas_config{'HOSTFILE'} = "";
+      }
+      if ($multi == 1 && $MCSTAS::mcstas_config{'SSH'} eq "no") {
+        print STDERR "mcrun: You have no ssh/scp available, --multi disabled...\n";
+        $multi = 0;
+      }
+      if ($mpi >= 1 && ($MCSTAS::mcstas_config{'MPICC'}  eq "no" 
+                     || $MCSTAS::mcstas_config{'MPIRUN'} eq "no")) {
+        print STDERR "mcrun: You have no mpicc/mpirun available, --mpi disabled...\n";
+        $mpi   = 0;
       }
     }
 
-    # Adapt parameters to MPI (if used)
-    if ($mpi >= 1) {
-      if (check_command("mpicc") == 1) {
-        $multi = 0;
-        $MCSTAS::mcstas_config{CC} = "mpicc";
-        $MCSTAS::mcstas_config{CFLAGS} = $MCSTAS::mcstas_config{CFLAGS} . " -DUSE_MPI ";
-       }
-    }
-    
+    # Adapt parameters to MPI (if used) which overrides grid.
+    if ($mpi >= 1 && $MCSTAS::mcstas_config{MPICC} ne "no") {
+      $multi = 0;
+      $MCSTAS::mcstas_config{CC}     = $MCSTAS::mcstas_config{MPICC};
+      $MCSTAS::mcstas_config{CFLAGS} = $MCSTAS::mcstas_config{CFLAGS} . " -DUSE_MPI ";
+    } 
+       
     if ($data_dir && $slavedir) {
         $data_dir="$slavedir$data_dir";
     }
-    my $cc = defined($ENV{'MCSTAS_CC'}) ?
-        $ENV{'MCSTAS_CC'} : $MCSTAS::mcstas_config{CC};
-    my $cflags = defined($ENV{'MCSTAS_CFLAGS'}) ?
-        $ENV{'MCSTAS_CFLAGS'} : $MCSTAS::mcstas_config{CFLAGS};
-    my $mcstas_format = $plotter;
-    if ($mcstas_format =~ /0/) { $mcstas_format = "McStas PGPLOT"; }
-    elsif ($mcstas_format =~ /1/ || $mcstas_format =~ /2/) { $mcstas_format = "Matlab"; }
-    elsif ($mcstas_format =~ /3/ || $mcstas_format =~ /4/) { $mcstas_format = "Scilab"; }
+    
 
-    # Check if this is a multi-machine run
     if ($multi == 1) {
-        # Assume that this is unix...
-        # Check for ssh 
-       if (check_command("ssh") == 0 || check_command("scp") == 0) {
-            print STDERR "mcrun: You have no ssh/scp available, --multi disabled...\n";
-            $multi = 0;
-       }
-    }
-    if ($multi == 1 && -e $hostfile) {
         # Check that something is available in the .mcstas-hosts
-        print STDERR "Pinging $hostfile 1 per sec. since you requested --multi...\n";
+        print STDERR "Pinging $MCSTAS::mcstas_config{'HOSTFILE'} 1 per sec. since you requested --multi...\n";
         # Read the host file...
-        my $pid = open(HOSTFILE,$hostfile);
+        my $pid = open(HOSTFILE,$MCSTAS::mcstas_config{'HOSTFILE'});
         my $host;
         while ($host = <HOSTFILE>) {
             chomp $host;
@@ -272,12 +257,15 @@ sub parse_args {
                 if ($response == 1) {
                     push @hostlist, $host;
                 } else {
-                    print STDERR "Not spawning to host $host: not responding\n";
+                    print STDERR "mcrun: Not spawning to host $host: not responding\n";
                 }
             }
         }
+        close(HOSTFILE);
     }
     
+    my $cc     = $MCSTAS::mcstas_config{CC};
+    my $cflags = $MCSTAS::mcstas_config{CFLAGS};
     
     die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max}
   mcrun options:
@@ -296,7 +284,7 @@ sub parse_args {
    --no-output-files          Do not write any data files.
    -h        --help           Show help message.
    -i        --info           Detailed instrument information.
-   --test={compatible|full}   Execute McStas selftest and generate report
+   --test                     Execute McStas selftest and generate report
    --format=FORMAT            Output data files using format FORMAT.
                               (format list obtained from <instr>.out -h)
    -M        --multi          Spawn simulations to multiple machine grid.
@@ -312,7 +300,7 @@ specified for building the instrument:
                   ($MCSTAS::sys_dir).
   MCSTAS_CC     Name of the C compiler               ($cc)
   MCSTAS_CFLAGS Options for compilation              ($cflags)
-  MCSTAS_FORMAT Default FORMAT to use for data files ($mcstas_format)
+  MCSTAS_FORMAT Default FORMAT to use for data files ($MCSTAS::mcstas_config{'PLOTTER'})
 SEE ALSO: mcstas, mcdoc, mcplot, mcdisplay, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://neutron.risoe.dk/mcstas/
 ** No instrument definition name given\n" unless $sim_def || $exec_test;
@@ -369,7 +357,7 @@ sub exec_sim {
         exec $cmd;
     } else {
         if ($mpi >= 1) {
-            $cmd = "mpirun -np $mpi -machinefile $hostfile @cmdlist";
+            $cmd = "$MCSTAS::mcstas_config{'MPIRUN'} -np $mpi -machinefile $MCSTAS::mcstas_config{'HOSTFILE'} @cmdlist";
         } else {
             $cmd = "@cmdlist";
         }
@@ -379,6 +367,7 @@ sub exec_sim {
 }
 
 # Handle the case of a single run of the simulation (no -N option).
+# SIGNALS are forwarded to child process
 sub do_single {
     push @options, "--dir=$data_dir" if $data_dir;
     push @options, "--file=$data_file" if $data_file;
@@ -397,7 +386,7 @@ sub do_instr_header {
 # Write Matlab/Scilab function header to datafile
 sub do_instr_init {
     my ($OUT) = @_;
-    if ($plotter =~ /Matlab/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
         print $OUT <<ENDCODE
 function mcstas = get_mcstas(p)
 % Embedded function for building 'mcplot' compatible structure
@@ -406,7 +395,7 @@ function mcstas = get_mcstas(p)
 % import data using s=mcstas('plot');
 if nargout == 0 | nargin > 0, p=1; else p=0; end
 ENDCODE
-    } else {
+    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
         print $OUT <<ENDCODE
 function mcstas = get_mcstas(p)
 // Embedded function for building 'mcplot' compatible structure
@@ -424,7 +413,7 @@ ENDCODE
 # Write Matlab/Scilab embedded plotting functions to datafile
 sub do_sim_tail{
     my ($OUT) = @_;
-    if ($plotter =~ /Matlab/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
         print $OUT <<ENDCODE
 
 function d=mcplot_inline(d,p)
@@ -444,7 +433,7 @@ if ~isempty(findstr(d.type,'2d')), colorbar; end
 
 % end of datafile...
 ENDCODE
-    } else {
+    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
         print $OUT <<ENDCODE
 
 endfunction
@@ -490,16 +479,16 @@ sub do_sim_header {
     my $date = localtime(time());
     my $format_member=".";
     my $param_field  ="Param";
-    if ($plotter =~ /McStas|PGPLOT/i) { $format_member=": "; }
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) { $format_member=": "; }
     print $OUT "${prefix}Date$format_assign $format_start_value$date$format_end_value\n";
     print $OUT "${prefix}Ncount$format_assign $format_start_value$ncount$format_end_value\n";
     print $OUT "${prefix}Numpoints$format_assign $format_start_value$numpoints$format_end_value\n";
-    if ($plotter =~ /Scilab|3|4|Matlab|1|2/i) { $param_field = "parameters"; }
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab|Matlab/i) { $param_field = "parameters"; }
     # Scilab needs initalisation of Param here...
-    if ($plotter =~ /Scilab|3|4/i) { 
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) { 
       print $OUT "${prefix}$param_field=0; ${prefix}$param_field=struct(); \n";
     }
-    if ($plotter =~ /Scilab|3|4|Matlab|1|2/i) { 
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab|Matlab/i) { 
       print $OUT "${prefix}${param_field}${format_member}class = 'parameters';\n";
       print $OUT "${prefix}${param_field}${format_member}name  = 'parameters';\n";
       print $OUT "${prefix}${param_field}${format_member}parent= '$sim_def';\n";
@@ -528,7 +517,7 @@ sub do_data_header {
     # Here, we need special handling of the Matlab/Scilab output cases, since 
     # each monitor dataset must be defined in its own class 'data' structure for mcplot
     # But - only to be done if this is not a 'slave' run
-    if ($plotter =~ /McStas|PGPLOT|0/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
       if (($slave eq 0) || ($slave eq 'localhost')) {
         print $OUT <<END
 ${pr}type$format_assign ${format_start_value}multiarray_1d($numpoints)$format_end_value
@@ -542,7 +531,7 @@ ${pr}filename$format_assign ${format_start_value}$datfile$format_end_value
 ${pr}variables$format_assign ${format_start_value}$variables$format_end_value
 END
       }
-    } elsif ($plotter =~ /Matlab|Scilab|1|2|3|4/i) {
+    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab|Scilab/i) {
         if (($slave eq 0) || ($slave eq 'localhost')) {
           if (! $datablock eq "") {
               print $OUT "DataBlock=[$datablock];\n";
@@ -556,16 +545,16 @@ END
                   my $start_char = index($y_pair, "(") + 1;
                   my $end_char = index($y_pair, ",") - $start_char;
                   my $y_label = substr($y_pair, $start_char, $end_char);
-                  if ($plotter =~ /Scilab/i) {
+                  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
                       print $OUT "$pr$y_label=0; $pr$y_label=struct();\n";
                   }
                   print $OUT "$pr$y_label.class='data';\n";
                   print $OUT "$pr$y_label.data  =[DataBlock(:,$idx)];\n";
-      print $OUT "$pr$y_label.errors=[DataBlock(:,$idx+1)];\n";
+                  print $OUT "$pr$y_label.errors=[DataBlock(:,$idx+1)];\n";
                   $idx = $idx+2;
                   print $OUT "$pr$y_label.parent='$y_label';\n";
-      print $OUT "$pr$y_label.Source='$sim_def';\n";
-      print $OUT "$pr$y_label.ratio ='$ncount';\n";
+                  print $OUT "$pr$y_label.Source='$sim_def';\n";
+                  print $OUT "$pr$y_label.ratio ='$ncount';\n";
                   print $OUT "$pr$y_label.values='';\n";
                   print $OUT "$pr$y_label.signal='';\n";
                   print $OUT "$pr$y_label.statistics='';\n";
@@ -608,12 +597,13 @@ sub output_sim_file {
     $instr_name =~ s/\.instr$//;        # Strip any trailing ".instr" extension ...
     open($SIM, ">$filename") ||
         die "mcrun: Failed to write info file '$filename'";
+    autoflush $SIM 1;                # Preserves data even if interrupted.
     if (($slave eq 0) || ($slave eq 'localhost')) {
-      if ($plotter =~ /McStas|PGPLOT/i) {
+      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
         do_instr_header("", $SIM);
         print $SIM "\nbegin simulation\n";
         $loc_prefix = "";
-      } elsif ($plotter =~ /Matlab/i) {   
+      } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {   
         do_instr_init($SIM);
         do_instr_header("% ", $SIM);
         print $SIM "\nsim.class='simulation';\n";
@@ -627,9 +617,9 @@ sub output_sim_file {
         $loc_prefix = "sim.";
       }
       do_sim_header($loc_prefix, $SIM);
-      if ($plotter =~ /McStas|PGPLOT/i) {
+      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
         print $SIM "end simulation\n\nbegin data\n";
-      } elsif ($plotter =~ /Matlab/i) {
+      } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
         print $SIM "\nmcstas.sim = sim; clear sim;\n";
         print $SIM "mcstas.File= '$filename';\n";
         print $SIM "mcstas.instrument.Source= '$sim_def';\n";
@@ -665,9 +655,9 @@ sub output_sim_file {
     }
     do_data_header($loc_prefix, $SIM, $info, $youts, $variables, $datfile, $datablock);
     if (($slave eq 0) || ($slave eq 'localhost')) {
-      if ($plotter =~ /McStas|PGPLOT/i) {
+      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
         print $SIM "end data\n";
-      } elsif ($plotter =~ /Matlab/i) {
+      } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
         print $SIM "\nmcstas.sim.data = data; clear data;\n";
         do_sim_tail($SIM);
       } else {
@@ -703,9 +693,9 @@ sub do_scan {
         } else {
             $prefix = "$data_dir/";
             if (!($slave eq "localhost")) {
-                system("ssh $slave mkdir $prefix") || print STDOUT "dir there already...";
+                system("ssh $slave mkdir $prefix") || print STDOUT "dir $slave:$prefix there already...";
             }
-            system("mkdir $prefix") || print STDOUT "dir there already..." ;
+            system("mkdir $prefix") || print STDOUT "dir $prefix there already..." ;
         }
     }
     # Use user-specified output file name, with a default of "mcstas.dat".
@@ -713,11 +703,11 @@ sub do_scan {
     # Add a default '.dat' extension if no other extension given.
     $datfile .= ".dat" unless $datfile =~ m'\.[^/]*$'; # Quote hack ';
     my $simfile = $datfile;
-    $simfile =~ s/\.dat$//;        # Strip any trailing ".dat" extension ...
+    $simfile =~ s/\.dat$//;         # Strip any trailing ".dat" extension ...
     $simfile .= $format_ext;        # ... and add ".sim|m|sci" extension.
     my $DAT;
     # Only initialize / use $DAT datafile if format is PGPLOT
-    if ($plotter =~ /PGPLOT|McStas|0/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
       $DAT = new FileHandle;
       open($DAT, ">${prefix}$datfile");
       autoflush $DAT 1;                # Preserves data even if interrupted.
@@ -727,7 +717,7 @@ sub do_scan {
     my $firsttime = 1;
     my $variables = "";
     my @youts = ();
-    my $point;
+    our $point;
     my @lab_datablock = ();          # Storing of scan data in variable
                                      # for saving datablock in matlab/scilab
     my $datablock = "";              # 'sim' file.
@@ -755,16 +745,30 @@ sub do_scan {
             my $output_opt =
                 $data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
             my $got_error = 0;
-            my $pid;
+            our $pid;
             if ($Config{'osname'} eq 'MSWin32') {
                 # Win32 needs all possible parameters here, since we can not open(SIM,"-|");
-                my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params), $output_opt, "--format=$plotter");
+                my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params), $output_opt, "--format=$MCSTAS::mcstas_config{'PLOTTER'}");
                 $pid = open(SIM, "@cmdlist |");
             } else {
                 $pid = open(SIM, "-|");
             }
-            die "Failed to spawn simulation command" unless defined($pid);
+            die "mcrun: Failed to spawn simulation command" unless defined($pid);
             if($pid) {                # Parent
+                # install SIG handler
+                sub sighandler {
+                  my $signame = shift;
+                  kill $signame, $pid;
+                  if ($signame eq "INT" || $signame eq "TERM") {
+                    print STDERR "mcrun: Recieved signal $signame during scan ($point of $numpoints). Finishing.\n";
+                    $point = $numpoints;
+                  }
+                }
+                $SIG{'INT'}  = \&sighandler;
+                $SIG{'TERM'} = \&sighandler;
+                $SIG{'USR1'} = \&sighandler; 
+                $SIG{'USR2'} = \&sighandler; 
+                $SIG{'HUP'}  = \&sighandler;
                 while(<SIM>) {
                     chomp;
                     if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ") {
@@ -776,20 +780,26 @@ sub do_scan {
                             $variables .= " $1 $3";
                             push @youts, "($1,$3)";
                         }
-                    } elsif(m'^Error:') {
+                    } elsif(m'^Error:') { # quote hack '
                         $got_error = 1;
                     }
                     print "$_\n";
                 }
+                # remove SIG handler
+                $SIG{'INT'}  = 'DEFAULT';
+                $SIG{'TERM'} = 'DEFAULT'; 
+                $SIG{'USR1'} = 'DEFAULT'; 
+                $SIG{'USR2'} = 'DEFAULT'; 
+                $SIG{'HUP'}  = 'DEFAULT';
             } else {                # Child
-                open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+                open(STDERR, ">&STDOUT") || die "mcrun: Can't dup stdout";
                 exec_sim(@options, $output_opt);
             }
             
         my $ret = close(SIM);
         die "mcrun: Exit due to error returned by simulation program" if $got_error || (! $ret && ($? != 0 || $!));
               if ($firsttime eq 1) {
-                if ($plotter =~ /PGPLOT|McStas|0/i) {
+                if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
                     if (($slave eq 0) || ($slave eq 'localhost')) {
                         output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
                     }
@@ -797,14 +807,14 @@ sub do_scan {
               } else {
                 push @lab_datablock, "\n";
               }
-        if ($plotter =~ /PGPLOT|McStas|0/i) {
+        if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
                 print $DAT "$out\n";
               }
         push @lab_datablock, "$out";
         $firsttime = 0;
         }
     }
-    if ($plotter =~ /PGPLOT|McStas|0/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
       close($DAT);
     }
     $datablock = join(" ", @lab_datablock);
@@ -877,14 +887,14 @@ sub do_scan_multi {
     $hosts = @hostlist;
     my $stop = 0;
     my $output_opt = $data_dir ? "--dir=$data_dir" : "--no-output-files";
-    my @extras = (@options, map("$_=$vals{$_}", @params), $output_opt, "--format=$plotter");
+    my @extras = (@options, map("$_=$vals{$_}", @params), $output_opt, "--format=$MCSTAS::mcstas_config{'PLOTTER'}");
     $out_file = get_out_file($sim_def, $force_compile, @ccopts); 
     # Create local tmpdir...
-    my_system("mkdir $tmpdir/","dir there already?");
+    my_system("mkdir $tmpdir/","mcrun: dir there already?");
     print STDOUT "Spawning child mcrun's...\n";
     for ($j=0; $j<@hostlist; $j++) {
         # Create local folders too...
-        my_system("mkdir $tmpdir/$hostlist[$j]","dir there already...");
+        my_system("mkdir $tmpdir/$hostlist[$j]","mcrun: dir there already...");
         if ($j == 0) { # localhost...
             my_system("cp $out_file $tmpdir/$hostlist[$j]","");
             my_system("cp $sim_def $tmpdir/$hostlist[$j]",""); 
@@ -915,7 +925,7 @@ sub do_scan_multi {
                     if ($data_dir) {
                         my $PW = getcwd();
                         my_system("find $PW/$prefix$hostlist[$j]/$prefix -type d -not -name $prefix -exec cp -rp \\{\\} $prefix \\;","Problem copying slave dirs..");
-                        my_system("cp $tmpdir/$hostlist[$j]/$prefix/$hostlist[$j].* $prefix/","Problem copying slave files");
+                        my_system("cp $tmpdir/$hostlist[$j]/$prefix/$hostlist[$j].* $prefix/","mcrun: Problem copying slave files for $hostlist[$j]");
                     }
                     $stop++;
                     $pids[$j]=0;
@@ -923,11 +933,11 @@ sub do_scan_multi {
             }
         }
     }
-    open(MCSTAS,">${prefix}mcstas${format_ext}") || die ("could not open file ${prefix}mcstas${format_ext}");
-    open(LOCAL,"<${prefix}localhost${format_ext}") || die ("could not open file ${prefix}mcstas${format_ext}");
+    open(MCSTAS,">${prefix}mcstas${format_ext}") || die ("mcrun: could not open file ${prefix}mcstas${format_ext}");
+    open(LOCAL,"<${prefix}localhost${format_ext}") || die ("mcrun: could not open file ${prefix}localhost${format_ext}");
 
     # Now, create a mcstas.sim/sci/m to pick up the pieces...
-    if ($plotter =~ /McStas|PGPLOT/i) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
         # Use the localhost.sim as sim file (has all needed info - but must have 
         # filename: localhost.dat replaced by mcstas.dat
         while(<LOCAL>) {
@@ -935,10 +945,10 @@ sub do_scan_multi {
             print MCSTAS;
         }
         # Dat's are simply to be catted together. 
-        my_system("touch ${prefix}mcstas.dat","problem creating mcstas.dat");
+        my_system("touch ${prefix}mcstas.dat","mcrun: Problem creating mcstas.dat");
         for ($j=0; $j<$hosts; $j++) {
-            my_system("cat $prefix$hostlist[$j].dat >> ${prefix}mcstas.dat","Problem adding host data");
-            my_system("rm $prefix$hostlist[$j].dat","Problem removing host data");
+            my_system("cat $prefix$hostlist[$j].dat >> ${prefix}mcstas.dat","mcrun: Problem adding host data");
+            my_system("rm $prefix$hostlist[$j].dat","mcrun: Problem removing host data");
         }
     } else {
         # With Matlab / Scilab, a special "Insert blocks here!" line marks where to
@@ -949,7 +959,7 @@ sub do_scan_multi {
                 print STDERR "Inserting files...\n";
                 for ($j=1; $j<@hostlist; $j++) { # The 1 important here, localhost data there already from localhost$format_ext
                     print MCSTAS "\n\n$format_prefix Insertion from ${prefix}$hostlist[$j]${format_ext}\n\n";
-                    open(HOST,"<${prefix}$hostlist[$j]${format_ext}") || print STDERR "could not open file ${prefix}$hostlist[$j]${format_ext}";
+                    open(HOST,"<${prefix}$hostlist[$j]${format_ext}") || print STDERR "mcrun: could not open file ${prefix}$hostlist[$j]${format_ext}";
                     while(<HOST>) { # Self closing
                         print MCSTAS;
                     }
@@ -962,7 +972,7 @@ sub do_scan_multi {
     close(MCSTAS);
     
     # Create global logfile
-    my_system("touch ${prefix}mcstas_multi.log","Error creating multi logfile\n");
+    my_system("touch ${prefix}mcstas_multi.log","mcrun: Error creating multi logfile\n");
     print STDOUT "Done creating the files...\n";
     # Clean up time, remve everything with relation to the hostnames...
     # Also collect the logfiles
@@ -970,8 +980,9 @@ sub do_scan_multi {
         open(READ,"rm -rf ${prefix}$hostlist[$j]* |");
         while (<READ>) {
             $output = $_;
-            print STDERR "$output\n";
+            print STDERR "mcrun: $output\n";
         }
+        close(READ);
         my_system("echo \"###########################\" >> ${prefix}mcstas_multi.log");
         my_system("echo logfile from $hostlist[$j]: >> ${prefix}mcstas_multi.log");
         my_system("cat $tmpdir/log.$hostlist[$j] >> ${prefix}mcstas_multi.log");
@@ -980,8 +991,9 @@ sub do_scan_multi {
             open(READ,"ssh $hostlist[$j] rm -rf $tmpdir |");
             while (<READ>) {
                 $output = $_;
-                print STDERR "$output\n";
+                print STDERR "mcrun: $output\n";
             }
+            close(READ);
         }
     }
     my_system("rm -rf $tmpdir","problem removing temporary dir");
@@ -1009,58 +1021,42 @@ sub my_system {
                     # Start of main program. #
                     ##########################
 
-# set default plotter
-$plotter = defined($ENV{'MCSTAS_FORMAT'}) ?
-                $ENV{'MCSTAS_FORMAT'} : "$MCSTAS::mcstas_config{'PLOTTER'}";
-
 parse_args();                         # Parse command line arguments
 
-# Check value of $plotter variable
-if ($plotter =~ /0/i) { 
-  if ($plotter =~ /binary|float|double/i) {
-    $plotter =~ s/binary//; # PGPLOT binary format is invalid. solving.
-    $plotter =~ s/float//;
-    $plotter =~ s/double//;
-  }
-  $plotter="McStas"; }
-elsif ($plotter =~ /1|2/i) { $plotter="Matlab"; }
-elsif ($plotter =~ /3|4/i) { $plotter="Scilab"; }
-# assign output format for scans
-if ($plotter =~ /PGPLOT|McStas/i) {
-  $format_ext        = ".sim";
-  $format_assign     =":";    
-  $format_start_value="";
-  $format_end_value  =""; 
-  $format_prefix     ="# ";  
-  $format_limprefix  ="x";
-} elsif ($plotter =~ /Matlab/i) {
+# assign output format for scans. Default is PGPLOT
+
+$format_ext        = ".sim";
+$format_assign     =":";    
+$format_start_value="";
+$format_end_value  =""; 
+$format_prefix     ="# ";  
+$format_limprefix  ="x";
+if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
   $format_ext        = ".m";
   $format_assign     ="=";    
   $format_start_value="'";
   $format_end_value  ="';"; 
   $format_prefix     ="% ";  
   $format_limprefix  ="xy";
-} elsif ($plotter =~ /Scilab/i) {
+} elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
   $format_ext        = ".sci";
   $format_assign     ="=";
   $format_start_value="'";
   $format_end_value  ="';";
   $format_prefix     ="// ";
   $format_limprefix  ="xy";
+} elsif ($numpoints > 1) {
+  print STDERR "mcrun: Warning: format $MCSTAS::mcstas_config{'PLOTTER'} does not support parameter scans\n"; 
 }
 
 # add format option to cmd stack
-push @options, "--format='$plotter'";
-
-# Make sure that the current directory appears first in the path;
-# contrary to normal use, this is what the user expects here.
-$ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
+push @options, "--format='$MCSTAS::mcstas_config{'PLOTTER'}'";
 
 if ($exec_test) {
   my $status;
-  $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $plotter);
+  $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $MCSTAS::mcstas_config{'PLOTTER'});
   if (defined $status) { 
-    print STDERR "$status"; 
+    print STDERR "mcrun: $status"; 
     exit(1);
   } else {
     exit(0);
@@ -1072,7 +1068,7 @@ $out_file = get_out_file($sim_def, $force_compile, @ccopts);
 exit(1) unless $out_file;
 exit(1) if $ncount == 0;
 
-$instr_info = get_sim_info("$out_file","--format='$plotter'");
+$instr_info = get_sim_info("$out_file","--format='$MCSTAS::mcstas_config{'PLOTTER'}'");
 
 if($numpoints == 1) {
     do_single();
