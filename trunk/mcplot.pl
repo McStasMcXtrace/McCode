@@ -253,7 +253,7 @@ if ($plotter eq 3 || $plotter eq 4) {
     $file = mcpreplot($files);
     $tmp_file = $file;
     ($instr_inf, $sim_inf, $datalist, $det_error) = read_sim_file($file);
-    $file = $files;
+    $file = $files[0];
     
     if ($det_error !~ "no error") {
       print "'$sim_file':'$sim_error'";
