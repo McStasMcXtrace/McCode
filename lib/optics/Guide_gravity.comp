@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -131,8 +131,7 @@ SHARE
     double w1c, h1c;
     double w2c, h2c;
     double M[5];
-    double nzC[5], norm_n2c[5], Ac[5];
-    double n_dot_v[6];
+    double nzC[5], norm_n2xy[5], Axy[5];
     double wav_lr, wav_tb, wav_z;
     double chamfer_z, chamfer_lr, chamfer_tb;
     char   compcurname[256];
@@ -169,18 +168,18 @@ SHARE
     if (a_mbottom >= 0) aVars->M[4] =a_mbottom;
 
     aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] = -0.5*(aVars->w2c-aVars->w1c);  /* 1:+X left       */
-    aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] =  aVars->nz[1];    /* 2:-X right      */
+    aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] =  aVars->nz[1];             /* 2:-X right      */
     aVars->nx[3] =  0;   aVars->ny[3] =  a_l; aVars->nz[3] = -0.5*(aVars->h2c-aVars->h1c);  /* 3:+Y top        */
-    aVars->nx[4] =  0;   aVars->ny[4] = -a_l; aVars->nz[4] =  aVars->nz[3];    /* 4:-Y bottom     */
-    aVars->nx[5] =  0;   aVars->ny[5] =  0;   aVars->nz[5] =  a_l;             /* 5:+Z exit       */
-    aVars->nx[0] =  0;   aVars->ny[0] =  0;   aVars->nz[0] = -a_l;             /* 0:Z0 input      */
+    aVars->nx[4] =  0;   aVars->ny[4] = -a_l; aVars->nz[4] =  aVars->nz[3];             /* 4:-Y bottom     */
+    aVars->nx[5] =  0;   aVars->ny[5] =  0;   aVars->nz[5] =  a_l;                      /* 5:+Z exit       */
+    aVars->nx[0] =  0;   aVars->ny[0] =  0;   aVars->nz[0] = -a_l;                      /* 0:Z0 input      */
 
-    aVars->wx[1] = +(aVars->w1c)/2; aVars->wy[1] =  0;      aVars->wz[1] = 0;   /* 1:+X left       */
-    aVars->wx[2] = -(aVars->w1c)/2; aVars->wy[2] =  0;      aVars->wz[2] = 0;   /* 2:-X right      */
-    aVars->wx[3] =  0;                  aVars->wy[3] = +(aVars->h1c)/2; aVars->wz[3] = 0;   /* 3:+Y top        */
-    aVars->wx[4] =  0;                  aVars->wy[4] = -(aVars->h1c)/2; aVars->wz[4] = 0;   /* 4:-Y bottom     */
-    aVars->wx[5] =  0;                  aVars->wy[5] =  0;      aVars->wz[5] = a_l; /* 5:+Z exit       */
-    aVars->wx[0] =  0;                  aVars->wy[0] =  0;      aVars->wz[0] = 0;   /* 0:Z0 input      */
+    aVars->wx[1] = +(aVars->w1c)/2; aVars->wy[1] =  0;              aVars->wz[1] = 0;   /* 1:+X left       */
+    aVars->wx[2] = -(aVars->w1c)/2; aVars->wy[2] =  0;              aVars->wz[2] = 0;   /* 2:-X right      */
+    aVars->wx[3] =  0;              aVars->wy[3] = +(aVars->h1c)/2; aVars->wz[3] = 0;   /* 3:+Y top        */
+    aVars->wx[4] =  0;              aVars->wy[4] = -(aVars->h1c)/2; aVars->wz[4] = 0;   /* 4:-Y bottom     */
+    aVars->wx[5] =  0;              aVars->wy[5] =  0;              aVars->wz[5] = a_l; /* 5:+Z exit       */
+    aVars->wx[0] =  0;              aVars->wy[0] =  0;              aVars->wz[0] = 0;   /* 0:Z0 input      */
 
     for (i=0; i <= 5; i++)
     {
@@ -191,12 +190,12 @@ SHARE
       else
         aVars->norm_n[i] = sqrt(aVars->norm_n2[i]);
     }
-    /* partial computations for l/r sides, to save computing time */
+    /* partial computations for l/r/t/b sides, to save computing time */
     for (i=1; i <= 4; i++)
-    {
-      aVars->nzC[i]      = aVars->nz[i];
-      aVars->norm_n2c[i] = aVars->nx[i]*aVars->nx[i] + aVars->ny[i]*aVars->ny[i];
-      aVars->Ac[i]       = aVars->nx[i]*aVars->gx    + aVars->ny[i]*aVars->gy;
+    { /* stores nz that changes in case non box element (focus/defocus) */
+      aVars->nzC[i]      =  aVars->nz[i]; /* partial xy terms */
+      aVars->norm_n2xy[i]=  aVars->nx[i]*aVars->nx[i] + aVars->ny[i]*aVars->ny[i];
+      aVars->Axy[i]      = (aVars->nx[i]*aVars->gx    + aVars->ny[i]*aVars->gy)/2;
     }
     /* handle waviness init */
     if (a_wavy && (!a_wavy_tb && !a_wavy_lr && !a_wavy_z))
@@ -229,7 +228,7 @@ SHARE
     int    side=0;
     double n1;
     double dt0, dt_min=0;
-    int i;
+    int    i;
     double loc_num, loc_k;
     int    i_slope=3;
 
@@ -238,8 +237,7 @@ SHARE
     /* 5=+Z side: n=(0, 0, -l) ; W = (0, 0, l) (at z=l, guide exit)*/
     B = aVars->nz[5]*cvz; C = aVars->nz[5]*(cz - aVars->wz[5]);
     ret = solve_2nd_order(&dt0, aVars->A[5], B, C);
-    if (ret && dt0>10e-10)
-    { dt_min = dt0; side=5; aVars->n_dot_v[5] = B; }
+    if (ret && dt0>1e-10) { dt_min = dt0; side=5; }
 
     loc_num = cynum; loc_k = cyk;
     for (i=4; i>0; i--)
@@ -248,22 +246,23 @@ SHARE
 
       if (aVars->nzC[i_slope] != 0) {
       n1 = loc_k - 2*(loc_num);  /* slope of l/r/u/d sides depends on the channel ! */
-      loc_num++;
-      aVars->nz[i] = aVars->nzC[i]*n1;
-      aVars->A[i] = aVars->Ac[i] + aVars->nz[i]*aVars->gz; }
+      loc_num++; /* use partial computations to alter nz and A */
+      aVars->nz[i]= aVars->nzC[i]*n1;
+      aVars->A[i] = aVars->Axy[i] + aVars->nz[i]*aVars->gz/2; }
       if (i < 3)
       {      B = aVars->nx[i]*cvx + aVars->nz[i]*cvz; C = aVars->nx[i]*(cx-aVars->wx[i]) + aVars->nz[i]*cz; }
       else { B = aVars->ny[i]*cvy + aVars->nz[i]*cvz; C = aVars->ny[i]*(cy-aVars->wy[i]) + aVars->nz[i]*cz; }
-      ret = solve_2nd_order(&dt0, aVars->A[i], B, C);
-      if (ret && dt0>10e-10 && (dt0<dt_min || !dt_min))
-      { dt_min = dt0; side=i; aVars->n_dot_v[i] = B;
+      ret = solve_2nd_order(&dt0, 0, B, C);
+      if (ret && dt0>1e-10 && (dt0<dt_min || !dt_min))
+      { dt_min = dt0; side=i;
         if (aVars->nzC[i] != 0)
-        { aVars->norm_n2[i] = aVars->norm_n2c[i] + aVars->nz[i]*aVars->nz[i]; aVars->norm_n[i] = sqrt(aVars->norm_n2[i]); }
+        { aVars->norm_n2[i] = aVars->norm_n2xy[i] + aVars->nz[i]*aVars->nz[i];
+          aVars->norm_n[i]  = sqrt(aVars->norm_n2[i]); }
       }
      }
 
     *dt = dt_min;
-    /* handles waviness: rotate n vector and adapt n_dot_v */
+    /* handles waviness: rotate n vector */
     if (side > 0 && side < 5 && (aVars->wav_z || aVars->wav_lr || aVars->wav_tb))
     {
       double nt_x, nt_y, nt_z;  /* transverse vector */
@@ -282,12 +281,11 @@ SHARE
         rotate(nt_x,nt_y,nt_z, nn_x,nn_y,nn_z, phi*randnorm(), 0,0,1);
       } else { nt_x=nn_x; nt_y=nn_y; nt_z=nn_z; }
       *cnx=nt_x; *cny=nt_y; *cnz=nt_z;
-      /* re-compute n_dot_v */
-      aVars->n_dot_v[side] = nt_x*cvx + nt_y*cvy + nt_z*cvz;
     } else
     { *cnx=aVars->nx[side]; *cny=aVars->ny[side]; *cnz=aVars->nz[side]; }
     return (side);
   }
+
 #endif
 %}
 
@@ -298,7 +296,7 @@ DECLARE
 
 INITIALIZE
 %{
-  double Gx=0, Gy=9.81, Gz=0;
+  double Gx=0, Gy=-9.81, Gz=0;
   Coords mcLocG;
   int i;
 
@@ -306,7 +304,7 @@ INITIALIZE
   { fprintf(stderr,"Guide_gravity: %s: W k R0 Qc must be >0.\n", NAME_CURRENT_COMP);
     exit(-1); }
 
-  mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(Gx,G,Gz));
+  mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,G,0));
   coords_get(mcLocG, &Gx, &Gy, &Gz);
 
   strcpy(GVars.compcurname, NAME_CURRENT_COMP);
@@ -331,7 +329,8 @@ TRACE
     double this_width, this_height;
 
     /* propagate to box input (with gravitation) in comp local coords */
-    /* 0=Z0 side: n=(0, 0, l) ; W = (0, 0, 0) (at z=0, guide input)*/
+    /* A = 0.5 n.g; B = n.v; C = n.(r-W); */
+    /* 0=Z0 side: n=(0, 0, -l) ; W = (0, 0, 0) (at z=0, guide input)*/
     B = -l*vz; C = -l*z;
 
     ret = solve_2nd_order(&dt, GVars.A[0], B, C);
@@ -352,6 +351,7 @@ TRACE
       double w_edge, w_adj; /* Channel displacement on X */
       double h_edge, h_adj; /* Channel displacement on Y */
       double w_chnum,h_chnum; /* channel indexes */
+
       /* X: Shift origin to center of channel hit (absorb if hit dividing walls) */
       x += w1/2.0;
       w_chnum = floor(x/(GVars.w1c+d));  /* 0= right side, k+1=left side  */
@@ -375,6 +375,7 @@ TRACE
       }
       h_adj = h_edge + (GVars.h1c)/2.0;
       y -= h_adj; h_adj -=  h1/2.0;
+
 
       /* neutron is now in the input window of the guide */
       /* do loops on reflections in the box */
@@ -420,14 +421,16 @@ TRACE
         { x += w_adj; y += h_adj; ABSORB; }
         /* change/mirror velocity: h_f = v - n.2*n.v/|n|^2 */
         GVars.N_reflection[side]++; /* GVars.norm_n2 > 0 was checked at INIT */
-        dt = 2*GVars.n_dot_v[side]/GVars.norm_n2[side]; /* 2*n.v/|n|^2 */
+        /* compute n.v using current values */
+        B = scalar_prod(vx,vy,vz,nx,ny,nz);
+        dt = 2*B/GVars.norm_n2[side]; /* 2*n.v/|n|^2 */
         vx -= nx*dt;
         vy -= ny*dt;
         vz -= nz*dt;
 
         /* compute q and modify neutron weight */
         /* scattering q=|k_i-k_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
-        q = 2*V2Q*fabs(GVars.n_dot_v[side])/GVars.norm_n[side];
+        q = 2*V2Q*fabs(B)/GVars.norm_n[side];
         B = R0;
         if(q > Qc)
         {

@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.69 2005-02-23 12:36:53 farhi Exp $
+* $Id: mcstas-r.h,v 1.70 2005-02-24 15:57:20 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.69  2005/02/23 12:36:53  farhi
+*       Added gravitation support in PROP_X0 and PROP_Y0
+*
 *       Revision 1.66  2005/02/16 12:21:39  farhi
 *       Removed left spaces at end of lines
 *
@@ -116,7 +119,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.69 $"
+#define MCSTAS_R_H "$Revision: 1.70 $"
 
 #include <math.h>
 #include <string.h>
@@ -407,16 +410,17 @@ void   mcsiminfo_close(void);
     mcnlt += (dt); \
   } while(0)
 
-/* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with gravitation */
+/* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with acceleration */
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
   do { \
-    mcnlx  += mcnlvx*dt + Ax*dt*dt/2; \
-    mcnly  += mcnlvy*dt + Ay*dt*dt/2; \
-    mcnlz  += mcnlvz*dt + Az*dt*dt/2; \
-    mcnlvx += Ax*dt; \
-    mcnlvy += Ay*dt; \
-    mcnlvz += Az*dt; \
-    mcnlt  += dt; \
+    if(dt < 0) ABSORB; \
+    mcnlx  += mcnlvx*(dt) + (Ax)*(dt)*(dt)/2; \
+    mcnly  += mcnlvy*(dt) + (Ay)*(dt)*(dt)/2; \
+    mcnlz  += mcnlvz*(dt) + (Az)*(dt)*(dt)/2; \
+    mcnlvx += (Ax)*(dt); \
+    mcnlvy += (Ay)*(dt); \
+    mcnlvz += (Az)*(dt); \
+    mcnlt  += (dt); \
   } while(0)
 
 #define PROP_DT(dt) \
