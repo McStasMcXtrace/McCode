@@ -212,8 +212,23 @@ sub mcdoc_manual {
     } else {
         $cmd_suffix=' &';
     }
-    putmsg($cmdwin, "Opening Manual: $prefix mcdoc$suffix --manual $cmd_suffix\n", 'msg');
+    putmsg($cmdwin, "Opening User Manual: $prefix mcdoc$suffix --manual $cmd_suffix\n", 'msg');
     system("$prefix mcdoc$suffix -s --manual $cmd_suffix");
+}
+
+sub mcdoc_compman {
+    my ($w) = @_;
+    my $suffix='';
+    my $cmd_suffix='';
+    my $prefix='';
+    if ($Config{'osname'} eq 'MSWin32') {
+        $suffix='.pl';
+        $prefix='start ';
+    } else {
+        $cmd_suffix=' &';
+    }
+    putmsg($cmdwin, "Opening Component Manual: $prefix mcdoc$suffix --manual $cmd_suffix\n", 'msg');
+    system("$prefix mcdoc$suffix -s --comp $cmd_suffix");
 }
 
 sub mcdoc_tutorial {
@@ -1185,8 +1200,10 @@ sub setup_menu {
     $helpmenu->command(-label => 'McStas web page',
                        -underline => 7,
                        -command => sub {mcdoc_web($w)});
-    $helpmenu->command(-label => 'McStas manual',
+    $helpmenu->command(-label => 'McStas User manual',
                        -command => sub {mcdoc_manual($w)});
+     $helpmenu->command(-label => 'McStas Component manual',
+                       -command => sub {mcdoc_compman($w)});
     $helpmenu->command(-label => 'Library doc index',
                        -command => sub {mcdoc_components($w)});
     $helpmenu->command(-label => 'Generate component index',
