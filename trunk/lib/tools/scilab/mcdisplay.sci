@@ -115,7 +115,6 @@ lab=["First component","Last component",...
 list1=list(lab(1),INSTRUMENT.FirstView,INSTRUMENT.name);
 list2=list(lab(2),INSTRUMENT.LastView,INSTRUMENT.name);
 list3=list(lab(3),INSTRUMENT.DoNeutrons,INSTRUMENT.DoNumbers);
-disp(strcat(['Input neutrons: ' string(INSTRUMENT.DoNeutrons)]));
 list4=list(lab(4),INSTRUMENT.alpha,INSTRUMENT.angles);
 list5=list(lab(5),INSTRUMENT.theta,INSTRUMENT.angles);
 list6=list(lab(6),1,["no","yes"]);
@@ -140,6 +139,10 @@ if not(isempty(rep))
   end
 else
   INSTRUMENT.count=0;
+end
+// Check if a replot should be done (e.g. MaxNeutrons is 0)
+if INSTRUMENT.MaxNeutrons==0
+  PlotInstrument3D();
 end
 endfunction
 
@@ -182,16 +185,38 @@ function  endtrace()
 global INSTRUMENT
 INSTRUMENT.FirstView=1;
 INSTRUMENT.LastView=size(INSTRUMENT.name,2);
+// Possibly first and last component names have been given...
+if isfield(INSTRUMENT,'firstcomp')
+  for j=1:size(INSTRUMENT.name,2)
+    if strsame(INSTRUMENT.firstcomp,INSTRUMENT.name(j))
+      INSTRUMENT.FirstView=j;
+    end
+  end
+end
+if isfield(INSTRUMENT,'lastcomp')
+  for j=1:size(INSTRUMENT.name,2)
+    if strsame(INSTRUMENT.lastcomp,INSTRUMENT.name(j))
+      INSTRUMENT.LastView=j
+    end
+  end
+end
 INSTRUMENT.DoNeutrons=1;
-INSTRUMENT.MaxNeutrons=1;
-INSTRUMENT.DoNumbers=["1","10","50","100","500","1000"];
+INSTRUMENT.MaxNeutrons=0;
+INSTRUMENT.DoNumbers=["0","1","10","50","100","500","1000"];
 INSTRUMENT.Timeouts=["100","500","1000","2000","5000","10000"];
 INSTRUMENT.Traced=0;
 INSTRUMENT.angles=string([-180:10:180]);
 INSTRUMENT.alpha=19;
 INSTRUMENT.theta=10;
-parmwin()
+// Check if mcdisplay.pl was called with --save parameter:
+if INSTRUMENT.save==0
+  parmwin()
+end
 PlotInstrument3D();
+if INSTRUMENT.save==1
+  xsave(strcat([INSTRUMENT.descr '.scf']));
+  INSTRUMENT.save=0;
+end
 endfunction
 
 function neutron_scatter(varargin)         
@@ -314,7 +339,10 @@ function PlotInstrument3D()
   xtitle(INSTRUMENT.descr);
   unsetmenu(gcw(),'Zoom')
   unsetmenu(gcw(),'UnZoom')
-//parmwin();
+  // Check if we are currently doing simple 'replots' - but not if save is 1...
+  if (INSTRUMENT.MaxNeutrons==0 & INSTRUMENT.save==0)
+    parmwin();
+  end
 
 endfunction
 

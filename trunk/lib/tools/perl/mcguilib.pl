@@ -45,7 +45,11 @@ sub simulation_dialog {
     # PW 20030314
     $si{'Inspect'} = '' unless $si{'Inspect'};
     $si{'InsNum'} = 0 unless $si{'InsNum'};
-    
+    # Similarly, First and Last fields for selection of
+    # component range to visualize..
+    $si{'First'} = '' unless $si{'First'};
+    $si{'Last'} = '' unless $si{'Last'};
+
     my $dlg = $win->DialogBox(-title => "Run simulation",
 			      -buttons => ["Start", "Cancel"]);
 
@@ -142,27 +146,50 @@ sub simulation_dialog {
 		     -variable => \$si{'Trace'},
 		     -relief => 'flat',
 		     -value => 1)->pack(-side => 'left');
+    $f3->Radiobutton(-text => "Visualize",
+		     -variable => \$si{'Trace'},
+		     -relief => 'flat',
+		     -value => 2)->pack(-side => 'left');
     
     # Gui stuff for selection of 'inspect' parameter
     # PW 20030314
     my $f4 = $opt_frame->Frame;
-    $f4->pack(-anchor => 'w', -side => 'bottom', -fill => 'x');
+    $f4->pack(-anchor => 'w', -side => 'top', -fill => 'x');
     $f4->Label(-text => "Inspect component: ", -height => '2')->pack(-side => 'left');
-    my($ListBox)=$f4->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe')->pack(-side => 'right');
-    
+    my($ListBox)=$f4->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
+    # Selection of 'First' and 'Last' components to visualize
+    my $f5 = $opt_frame->Frame;
+    $f5->pack(-anchor => 'w', -side => 'top', -fill => 'x');
+    $f5->Label(-text => "First component: ", -height => '2')->pack(-side => 'left');
+    my($ListBoxFirst)=$f5->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
+    my $f6 = $opt_frame->Frame;
+    $f6->pack(-anchor => 'w', -side => 'top', -fill => 'x');
+    $f6->Label(-text => "Last component: ", -height => '2')->pack(-side => 'left');
+    my($ListBoxLast)=$f6->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
     my @data;
     @data=instrument_information($ii->{'Instrument-source'});
     foreach my $dat (@data) {
 	$ListBox->insert('end', $dat);
+	$ListBoxFirst->insert('end', $dat);
+	$ListBoxLast->insert('end', $dat);
     }
     $ListBox->activate(0);
+    $ListBoxFirst->activate(0);
     my $res = $dlg->Show;
     $si{'Seed'} = 0 unless $doseed;
-    # Check value of ListBox - 
+    # Check value of ListBoxes - 
     my ($index) = $ListBox->curselection();
     if ($index) {
 	$si{'Inspect'} = $ListBox->get($index);
 	$si{'InsNum'} = $index;
+    }
+    my ($indexFirst) = $ListBoxFirst->curselection();
+    if ($indexFirst) {
+	$si{'First'} = $ListBoxFirst->get($indexFirst);
+    }
+    my ($indexLast) = $ListBoxLast->curselection();
+    if ($indexLast) {
+        $si{'Last'} = $ListBoxLast->get($indexLast);
     }
     return ($res, \%si);
 }
