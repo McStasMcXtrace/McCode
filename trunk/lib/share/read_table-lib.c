@@ -21,7 +21,7 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.5 2003-01-21 08:47:03 pkwi Exp $
+* $Id: read_table-lib.c,v 1.6 2003-01-21 08:51:12 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/29 11:39:00 ef
@@ -175,7 +175,7 @@
                       mc_rt_Data     = (double*)realloc(mc_rt_Data, mc_rt_malloc_size*sizeof(double));
                       if (mc_rt_Data == NULL)
                       {
-                        fprintf(stderr, "Error: Can not allocate memory %i (Table_Read_Handle).\n");
+                        fprintf(stderr, "Error: Can not allocate memory %i (Table_Read_Handle).\n", mc_rt_malloc_size*sizeof(double));
        return (-1);
                       }
                     }

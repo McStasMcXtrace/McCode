@@ -10,9 +10,9 @@ use PGPLOT;
 # afterwards.
 BEGIN {
     if($ENV{"MCSTAS"}) {
-	$MCSTAS::sys_dir = $ENV{"MCSTAS"};
+        $MCSTAS::sys_dir = $ENV{"MCSTAS"};
     } else {
-	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
 }
 use lib $MCSTAS::sys_dir;
@@ -27,18 +27,18 @@ my ($file, $files);
 my ($index);
 $index = 0;
 for($i = 0; $i < @ARGV; $i++) {
-	$_ = $ARGV[$i];
+        $_ = $ARGV[$i];
   # Options specific to mcplot.
-	if(/^-psc$/ || /^-c$/) {
-	    $print_color = 1;
-	} elsif(/^-ps$/ || /^-p$/) {
-	    $print_bw = 1;
-	} elsif(/^-gif$/ || /^-g$/) {
-	    $print_gif = 1;
+        if(/^-psc$/ || /^-c$/) {
+            $print_color = 1;
+        } elsif(/^-ps$/ || /^-p$/) {
+            $print_bw = 1;
+        } elsif(/^-gif$/ || /^-g$/) {
+            $print_gif = 1;
   } elsif(/^--help$/ || /^-h$/ || /^-v$/) {
       print "mcplot [-ps|-psc|-gif|-v] <single simfile | detector_files>";
       exit;
-	} else {
+        } else {
       $files[$index] = $ARGV[$i];
       $index++;
   }
@@ -64,13 +64,13 @@ die "No data in simulation file '$file'"
     
 if ($print_color) {
   overview_plot("mcstas.ps/cps", $datalist, 0);
-	die "Wrote postscript file 'mcstas.ps' (cps)\n";
+        die "Wrote postscript file 'mcstas.ps' (cps)\n";
 } elsif ($print_bw) {
   overview_plot("mcstas.ps/ps", $datalist, 0);
-	die "Wrote postscript file 'mcstas.ps' (ps)\n";
+        die "Wrote postscript file 'mcstas.ps' (ps)\n";
 } elsif ($print_gif) {
   overview_plot("mcstas.gif/gif", $datalist, 0);
-	die "Wrote postscript file 'mcstas.gif' (gif)\n";
+        die "Wrote postscript file 'mcstas.gif' (gif)\n";
 } 
 
 print "Click on a plot for full-window view.\n" if @$datalist > 1;
@@ -80,20 +80,24 @@ for(;;) {
     my ($cc,$cx,$cy,$idx);
     # Do overview plot, letting user select a plot for full-screen zoom.    
     ($cc,$idx) = overview_plot("/xserv", $datalist, 1);
-    last if $cc =~ /[xq]/i;	# Quit?
-    if($cc =~ /[pc]/i) {	# Hardcopy?
-	my $dev = ($cc =~ /c/i) ? "cps" : "ps";
-	overview_plot("mcstas.ps/$dev", $datalist, 0);
-	print "Wrote postscript file 'mcstas.ps' ($dev)\n";
-	next;
+    last if $cc =~ /[xq]/i;        # Quit?
+    if($cc =~ /[pcg]/i) {        # Hardcopy?
+        my $ext="ps";
+        my $dev = ($cc =~ /c/i) ? "cps" : "ps";
+        if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
+        overview_plot("mcstas.$ext/$dev", $datalist, 0);
+        print "Wrote postscript file 'mcstas.$ext' ($dev)\n";
+        next;
     }
     # now do a full-screen version of the plot selected by the user.
     ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], 1);
-    last if $cc =~ /[xq]/i;	# Quit?
-    if($cc =~ /[pc]/i) {	# Hardcopy?
-	my $dev = ($cc =~ /c/i) ? "cps" : "ps";
-	my $filename = "$datalist->[$idx]{'Component'}.ps";
-	single_plot("$filename/$dev", $datalist->[$idx], 0);
-	print "Wrote postscript file '$filename'\n";
-    }	
+    last if $cc =~ /[xq]/i;        # Quit?
+    if($cc =~ /[pcg]/i) {        # Hardcopy?
+        my $ext="ps";
+        my $dev = ($cc =~ /c/i) ? "cps" : "ps";
+        if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
+        my $filename = "$datalist->[$idx]{'Component'}.$ext";
+        single_plot("$filename/$dev", $datalist->[$idx], 0);
+        print "Wrote postscript file '$filename'\n";
+    }        
 }

@@ -20,7 +20,7 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.5 2003-01-21 08:47:03 pkwi Exp $
+* $Id: monitor_nd-lib.h,v 1.6 2003-01-21 08:51:12 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.1 2002/08/28 11:39:00 ef
