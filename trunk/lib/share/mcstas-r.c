@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.69 2003-08-11 17:10:06 farhi Exp $
+* $Id: mcstas-r.c,v 1.70 2003-08-12 13:35:52 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.68  2003/06/17 14:21:54  farhi
@@ -1731,11 +1731,18 @@ mchelp(char *pgmname)
       fprintf(stderr, "  %-16s(%s)\n", mcinputtable[i].name,
         (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
   }
-  fprintf(stderr, "Available output formats are (default is %s):\n", mcformat.Name);
+  fprintf(stderr, "Available output formats are (default is %s):\n  ", mcformat.Name);
   for (i=0; i < mcNUMFORMATS; fprintf(stderr,"\"%s\" " , mcformats[i++].Name) );
-  fprintf(stderr, "\nFormat modifiers: FORMAT may be followed by 'binary float' or \n");
-  fprintf(stderr, "'binary double' to save data blocks as binary. This removes text headers.\n");
-  fprintf(stderr, "The MCSTAS_FORMAT environment variable may set the default FORMAT to use.\n");
+  fprintf(stderr, "\n  Format modifiers: FORMAT may be followed by 'binary float' or \n");
+  fprintf(stderr, "  'binary double' to save data blocks as binary. This removes text headers.\n");
+  fprintf(stderr, "  The MCSTAS_FORMAT environment variable may set the default FORMAT to use.\n");
+#ifndef MC_PORTABLE
+#ifndef MAC
+#ifndef WIN32  
+  fprintf(stderr, "Known signals are: USR1 (status) USR2(save) TERM (save and exit)\n");
+#endif /* !MAC */
+#endif /* !WIN32 */
+#endif /* !MC_PORTABLE */  
 }
 
 static void
@@ -3108,15 +3115,7 @@ mcparseoptions(int argc, char *argv[])
       mcascii_only = 0;
       mcuse_format(&argv[i][9]);
     }
-    else if(!strncmp("--plotter=", argv[i], 10)) {
-      mcascii_only = 0;
-      mcuse_format(&argv[i][10]);
-    }
-    else if(!strncmp("-p", argv[i], 2)) {
-      mcascii_only = 0;
-      mcuse_format(&argv[i][2]);
-    }
-    else if((!strcmp("--format", argv[i]) || !strcmp("--plotter", argv[i]) || !strcmp("-p", argv[i])) && (i + 1) < argc) {
+    else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcascii_only = 0;
       mcuse_format(argv[++i]);
     }
