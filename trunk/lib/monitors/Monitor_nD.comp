@@ -6,14 +6,16 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Version: 0.13.7
+* Version: 0.13.9
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 10th Mar 2000 : use struct. 
 * Modified by: EF, 25th May 2000 : correct Mon2D_Buffer alloc bug.
 * Modified by: EF, 17th Oct 2000 : spin detector ok. (0.13.4)
 * Modified by: EF, 19th Jan 2001 : 'auto limits' bug corrected (0.13.5)
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
-* Modified by: EF, 02st Feb 2001 : user variable (0.13.7)
+* Modified by: EF, 02nd Feb 2001 : user variable (0.13.7)
+* Modified by: EF, 2tht Feb 2001 : 3He gas absorption handling (0.13.8)
+* Modified by: EF, 5tht Mar 2001 : intermediate savings (0.13.9)
 *
 * This component is a general Monitor that can output 0/1/2D signals 
 * (Intensity vs. [something] and vs. [something] ...)
@@ -31,11 +33,14 @@
 * be used in order to study correlations between a neutron being detected in
 * a Monitor_nD place, and given parameters that are monitored elsewhere 
 * (at <b>PreMonitor_nD</b>).
+* It is also possible, using the 'intermediate' keyword, to save monitor results
+* every X percent of the simulation. The monitor can also act as a 3He gas
+* detector, taking into account the detection efficiency.
 * 
 * <b>Possible options are</b>
 * Variables to record:
-*     kx ky kz k wavevector (Angs-1) [usually
-*     vx vy vz v            (m/s)     x=horz., y=vert., z=on axis]
+*     kx ky kz k wavevector (Angs-1) [    usually axis are
+*     vx vy vz v            (m/s)         x=horz., y=vert., z=on axis]
 *     x y z radius          (m)      Distance, Position
 *     t time                (s)      Time of Flight
 *     energy omega          (meV)
@@ -49,7 +54,7 @@
 *     theta longitude       (deg)    longitude (x/z) [for sphere and cylinder]
 *     phi   lattitude       (deg)    lattitude (y/z) [for sphere and cylinder]
 *
-*     user user1            will monitor the <Mon_Name>_Vars.UserVariable{1|2}
+*     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
 *     user2                 to be assigned in an other component (see below)
 *
 * <b>Other options are:</b>
@@ -68,7 +73,7 @@
 *     limits=[min max]          Lower/Upper limits for axes
 *                               (see below for the variable unit)
 *     list=[counts=1000] or all For a long file of neutron characteristics
-*                               with [counts] events
+*                               with [counts] or all events
 *     multiple                  For 1D monitors into multiple independant files
 *     no or not                 Revert next option
 *     outgoing                  Monitor outgoing beam in non flat (sph/cyl) det
@@ -81,9 +86,12 @@
 *     premonitor                Will monitor neutron parameters stored
 *                               previously with <b>PreMonitor_nD</b>.
 *     verbose                   To display additional informations
+*     3He_pressure=[3 in bars]  The 3He gas pressure in detector.
+*                               3He_pressure=0 means perfect detector (default)
+*     intermediate=[5 in %]     Save results every n% steps in simulation
 *
 * <b>EXAMPLES:</b>
-* Monitor_nD(
+* MyMon = Monitor_nD(
 *   xmin = -0.1, xmax = 0.1,
 *   ymin = -0.1, ymax = 0.1,
 *   options = "intensity per cm2 angle,limits=[-5 5] bins=10,with
@@ -91,6 +99,7 @@
 *                           will monitor neutron angle from [z] axis, between -5
 *                        and 5 degrees, in 10 bins, into "mon1.A" output 1D file
 *   options = "sphere theta phi outgoing"   for a sphere PSD detector (out beam)
+*                                    and saves into file "MyMon_[Date_ID].th_ph"
 *   options = "angle radius auto limits"   is a 2D monitor with automatic limits
 *   options = "list kx ky kz energy" records each neutron contribution in 1 file
 *   options = "multiple kx ky kz energy and list all neutrons" 
@@ -123,7 +132,7 @@
 * xmax:   (m)    Upper x bound of opening
 * ymin:   (m)    Lower y bound of opening
 * ymax:   (m)    Upper y bound of opening
-* options:(str)  String that specify the configuration of the monitor</br>
+* options:(str)  String that specifies the configuration of the monitor</br>
 *                 The general syntax is "[x] options..." (see <b>Descr.</b>)
 *
 * OUTPUT PARAMETERS:
@@ -202,6 +211,8 @@ DECLARE
     char COORD_DIM   ; /* next token is a bin value */
     char COORD_FIL   ; /* next token is a filename */
     char COORD_EVNT  ; /* next token is a buffer size value */
+    char COORD_3HE   ; /* next token is a 3He pressure value */
+    char COORD_INTERM; /* next token is an intermediate save value (percent) */
 
     char TOKEN_DEL[32]; /* token separators */
 
@@ -243,13 +254,358 @@ DECLARE
     double cvx, cvy, cvz;
     double csx, csy, csz;
     double cs1, cs2, ct, cp;
+    double He3_pressure;
     char   Flag_UsePreMonitor    ;   /* use a previously stored neutron parameter set */
     char   UserName1[128];
     char   UserName2[128];
     double UserVariable1;
     double UserVariable2;
+    double Intermediate;
+    double IntermediateCnts;
+    char   option[1024];
 
   } MonitornD_Variables_type;
+  
+/* this routine is used to save results at end of simulation, but also 
+ * during simulation (SIGUSR... intermediate steps) */ 
+void Monitor_nD_OutPut(aNsum, apsum, ap2sum, aMon2D_N, aMon2D_p, aMon2D_p2, aMon2D_Buffer, aDEFS, aVars, dofree, amccompcurname)
+  int    aNsum;
+  double apsum, ap2sum;
+  int    **aMon2D_N;
+  double **aMon2D_p;
+  double **aMon2D_p2;
+  double *aMon2D_Buffer;
+  MonitornD_Defines_type aDEFS;
+  MonitornD_Variables_type aVars;
+  int dofree;
+  char *amccompcurname;
+  /* dofree = 0 : no free, =1 : free variables (last call) */
+#ifdef mccompcurname
+#define mccompcurname_sav mccompcurname
+#undef mccompcurname
+#define mccompcurname amccompcurname
+#endif
+  {
+    char   *fname;
+    long    i,j;
+    int    *p0m = NULL;
+    double *p1m = NULL;
+    double *p2m = NULL;
+    char    Coord_X_Label[1024];
+    double  min1d, max1d; 
+    double  min2d, max2d;
+    int     bin1d, bin2d;
+    char    While_End = 0;
+    long    While_Buffer = 0;
+    double  XY, pp;
+    double  Coord[MONnD_COORD_NMAX];
+    long    Coord_Index[MONnD_COORD_NMAX];
+    char    label[1024];
+    
+    if (dofree == 0)
+    {
+      if (aVars.Flag_Verbose) printf("Monitor_nD: %s save intermediate results (%.2f %%).\n", amccompcurname, 100*mcget_run_num()/mcget_ncount());
+    }
+
+    /* check Buffer flush when end of simulation reached */
+    if ((aVars.Buffer_Counter < aVars.Buffer_Block) && aVars.Flag_Auto_Limits)
+    {
+      /* Get Auto Limits */
+      if (aVars.Flag_Verbose) printf("Monitor_nD: %s getting %i Auto Limits from List (%li).\n", amccompcurname, aVars.Coord_Number, aVars.Buffer_Counter);
+      for (i = 1; i <= aVars.Coord_Number; i++)
+      {
+        aVars.Coord_Min[i] = FLT_MAX;
+        aVars.Coord_Max[i] = -FLT_MAX;
+
+        for (j = 0; j < aVars.Buffer_Counter; j++)
+        { 
+                XY = aMon2D_Buffer[j*(aVars.Coord_Number+2) + (i-1)];  /* scanning variables in Buffer */
+          if (XY < aVars.Coord_Min[i]) aVars.Coord_Min[i] = XY;
+          if (XY > aVars.Coord_Max[i]) aVars.Coord_Max[i] = XY;
+
+        }
+      }
+      aVars.Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
+      aVars.Buffer_Block = aVars.Buffer_Counter;
+    
+      while (!While_End)
+      { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
+        if (While_Buffer < aVars.Buffer_Block)
+        {
+          /* first while loops (While_Buffer) */
+          /* auto limits case : scan Buffer within limits and store in Mon2D */ 
+          for (i = 1; i <= aVars.Coord_Number; i++)
+          {
+            /* scanning variables in Buffer */
+            XY = (aVars.Coord_Max[i]-aVars.Coord_Min[i]);
+            Coord[i] = aMon2D_Buffer[While_Buffer*(aVars.Coord_Number+2) + (i-1)];
+            Coord[0] = aMon2D_Buffer[While_Buffer*(aVars.Coord_Number+2) + (aVars.Coord_Number)];
+            pp = Coord[0];
+            if (XY > 0) Coord_Index[i] = floor((aMon2D_Buffer[(i-1) + While_Buffer*(aVars.Coord_Number+2)]-aVars.Coord_Min[i])*aVars.Coord_Bin[i]/XY);
+            else Coord_Index[i] = 0;
+            if (aVars.Flag_With_Borders)
+            {
+              if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+              if (Coord_Index[i] >= aVars.Coord_Bin[i]) Coord_Index[i] = aVars.Coord_Bin[i] - 1;
+            }
+          } /* end for */
+          While_Buffer++;
+        } /* end if in Buffer */
+        else /* (While_Buffer >= aVars.Buffer_Block) && (aVars.Flag_Auto_Limits == 2) */ 
+        {
+          aVars.Flag_Auto_Limits = 0;
+          While_End = 1;
+          if (!aVars.Flag_List && dofree) /* free Buffer not needed (no list to output) */
+          { /* Dim : (aVars.Coord_Number+2)*aVars.Buffer_Block matrix (for p, dp) */ 
+            free(aMon2D_Buffer);
+          }
+        }
+
+        /* store n1d/2d section from Buffer */
+
+        /* 1D and n1D case : aVars.Flag_Multiple */
+        if (aVars.Flag_Multiple)
+        { /* Dim : aVars.Coord_Number*aVars.Coord_Bin[i] vectors (intensity is not included) */ 
+          for (i= 0; i < aVars.Coord_Number; i++)
+          {
+            j = Coord_Index[i+1];
+            if (j >= 0 && j < aVars.Coord_Bin[i+1])
+            {
+              aMon2D_N[i][j]++;
+              aMon2D_p[i][j] += pp;
+              aMon2D_p2[i][j] += pp*pp;
+            }
+          }
+        }
+        else /* 2D case : aVars.Coord_Number==2 and !aVars.Flag_Multiple and !aVars.Flag_List */
+        if ((aVars.Coord_Number == 2) && !aVars.Flag_Multiple)
+        { /* Dim : aVars.Coord_Bin[1]*aVars.Coord_Bin[2] matrix */
+          i = Coord_Index[1];
+          j = Coord_Index[2];
+          if (i >= 0 && i < aVars.Coord_Bin[1] && j >= 0 && j < aVars.Coord_Bin[2])
+          {
+            aMon2D_N[i][j]++;
+            aMon2D_p[i][j] += pp;
+            aMon2D_p2[i][j] += pp*pp;
+          }
+        } /* end store 2D/1D */
+      } /* end while */
+    } /* end Force Get Limits */
+
+    if (aVars.Flag_Verbose) 
+    {
+      printf("Monitor_nD: %s is a %s.\n", amccompcurname, aVars.Monitor_Label);
+      printf("Monitor_nD: with options=%s\n", aVars.option);
+    }
+
+    /* write oputput files (sent to file as p[i*n + j] vectors) */
+    if (aVars.Coord_Number == 0) 
+    {
+      DETECTOR_OUT_0D(aVars.Monitor_Label, aNsum, apsum, ap2sum);
+    }
+    else
+    if (strlen(aVars.Mon_File) > 0) 
+    { 
+      fname = (char*)malloc(strlen(aVars.Mon_File)+10*aVars.Coord_Number);
+      if (aVars.Flag_List) /* List */
+      {
+        if (aVars.Flag_List == 2) aVars.Buffer_Size = aVars.Neutron_Counter;
+        strcpy(fname,aVars.Mon_File);
+        if (strchr(aVars.Mon_File,'.') == NULL) strcat(fname, "_list");
+
+        min1d = 1; max1d = aVars.Coord_Number+2;
+        min2d = 0; max2d = aVars.Buffer_Size; 
+        bin1d = aVars.Coord_Number+2; bin2d = aVars.Buffer_Size;
+        strcpy(Coord_X_Label,"");
+        for (i= 1; i <= aVars.Coord_Number; i++)
+        {
+          if (min2d < aVars.Coord_Min[i]) min2d = aVars.Coord_Min[i];
+          if (max2d < aVars.Coord_Max[i]) max2d = aVars.Coord_Max[i];
+          strcat(Coord_X_Label, aVars.Coord_Var[i]);
+          strcat(Coord_X_Label, " ");
+          if (strchr(aVars.Mon_File,'.') == NULL)
+                  { strcat(fname, "."); strcat(fname, aVars.Coord_Var[i]); }
+        }
+        strcat(Coord_X_Label, "I I_err");
+        if (aVars.Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%ix%li).\n", amccompcurname, fname,(aVars.Coord_Number+2),aVars.Buffer_Size);
+        p0m = (int *)malloc((aVars.Coord_Number+2)*aVars.Buffer_Size*sizeof(int));
+        p1m = (double *)malloc((aVars.Coord_Number+2)*aVars.Buffer_Size*sizeof(double));
+        if (min2d == max2d) max2d = min2d+1e-6;
+        if (min1d == max1d) max1d = min1d+1e-6;
+        if (dofree == 0)
+        {
+          sprintf(label, "%s (%.2f %%)", aVars.Monitor_Label, 100*mcget_run_num()/mcget_ncount());
+        }
+        else
+          strcpy(label, aVars.Monitor_Label);
+        if (p1m == NULL) /* use Raw Buffer line output */
+        {
+          if (aVars.Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for transpose. Skipping.\n", amccompcurname);
+          if (p0m != NULL) free(p0m);
+          DETECTOR_OUT_2D(
+            label,
+            aVars.Coord_Label[0],
+            Coord_X_Label,
+            min2d, max2d, 
+            min1d, max1d, 
+            bin2d,
+            bin1d,
+            (int *)aMon2D_Buffer,aMon2D_Buffer,aMon2D_Buffer,
+            fname); 
+        }
+        else /* transpose for column output */
+        {
+          for (i=0; i < aVars.Coord_Number+2; i++) 
+            for (j=0; j < aVars.Buffer_Size; j++)
+            {
+              p1m[i*aVars.Buffer_Size+j] = aMon2D_Buffer[j*(aVars.Coord_Number+2) + i];
+              p0m[i*aVars.Buffer_Size+j] = 1;
+            }
+            DETECTOR_OUT_2D(
+              label,
+              Coord_X_Label,
+              aVars.Coord_Label[0],
+              min1d, max1d, 
+              min2d, max2d, 
+              bin1d,
+              bin2d,
+              p0m,p1m,aMon2D_Buffer,
+              fname); 
+          free(p0m);
+          free(p1m);
+        }
+      }
+      if (aVars.Flag_Multiple) /* n1D */
+      {
+        for (i= 0; i < aVars.Coord_Number; i++)
+        {
+          strcpy(fname,aVars.Mon_File);
+          if (strchr(aVars.Mon_File,'.') == NULL)
+                  { strcat(fname, "."); strcat(fname, aVars.Coord_Var[i+1]); }
+          sprintf(Coord_X_Label, "%s monitor", aVars.Coord_Label[i+1]);
+          if (dofree == 0)
+          {
+            sprintf(label, "%s (%.2f %%)", Coord_X_Label, 100*mcget_run_num()/mcget_ncount());
+          }
+          else
+            strcpy(label, Coord_X_Label);
+          if (aVars.Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 1D (%i).\n", amccompcurname, fname, aVars.Coord_Bin[i+1]);
+                min1d = aVars.Coord_Min[i+1];
+                max1d = aVars.Coord_Max[i+1];
+                if (min1d == max1d) max1d = min1d+1e-6;
+          DETECTOR_OUT_1D(
+            label,
+            aVars.Coord_Label[i+1],
+            aVars.Coord_Label[0],
+            aVars.Coord_Var[i+1],
+            min1d, max1d, 
+            aVars.Coord_Bin[i+1],
+            aMon2D_N[i],aMon2D_p[i],aMon2D_p2[i],
+            fname); 
+        }
+      }
+      else
+      if (aVars.Coord_Number == 2)  /* 2D */
+      {
+        strcpy(fname,aVars.Mon_File);
+
+        p0m = (int *)malloc(aVars.Coord_Bin[1]*aVars.Coord_Bin[2]*sizeof(int));
+        p1m = (double *)malloc(aVars.Coord_Bin[1]*aVars.Coord_Bin[2]*sizeof(double));
+        p2m = (double *)malloc(aVars.Coord_Bin[1]*aVars.Coord_Bin[2]*sizeof(double));
+
+        if (p2m == NULL) 
+        {
+          if (aVars.Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%i). Skipping.\n", amccompcurname, 3*aVars.Coord_Bin[1]*aVars.Coord_Bin[2]*sizeof(double));
+          if (p0m != NULL) free(p0m);
+          if (p1m != NULL) free(p1m);
+        }
+        else
+        {
+          for (i= 0; i < aVars.Coord_Bin[1]; i++)
+          {
+            for (j= 0; j < aVars.Coord_Bin[2]; j++)
+            {
+              p0m[j + i*aVars.Coord_Bin[2]] = aMon2D_N[i][j];
+              p1m[j + i*aVars.Coord_Bin[2]] = aMon2D_p[i][j];
+              p2m[j + i*aVars.Coord_Bin[2]] = aMon2D_p2[i][j];
+            }
+          }
+          if (strchr(aVars.Mon_File,'.') == NULL)
+                  { strcat(fname, "."); strcat(fname, aVars.Coord_Var[1]);
+              strcat(fname, "_"); strcat(fname, aVars.Coord_Var[2]); }
+          if (aVars.Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 2D (%ix%i).\n", amccompcurname, fname, aVars.Coord_Bin[1], aVars.Coord_Bin[2]);
+
+          min1d = aVars.Coord_Min[1];
+                max1d = aVars.Coord_Max[1];
+                if (min1d == max1d) max1d = min1d+1e-6;
+                min2d = aVars.Coord_Min[2];
+                max2d = aVars.Coord_Max[2];
+                if (min2d == max2d) max2d = min2d+1e-6;
+                if (dofree == 0)
+                {
+                  sprintf(label, "%s (%.2f %%)", aVars.Monitor_Label, 100*mcget_run_num()/mcget_ncount());
+                }
+                else
+                  strcpy(label, aVars.Monitor_Label);
+                DETECTOR_OUT_2D(
+                  label,
+                  aVars.Coord_Label[1],
+                  aVars.Coord_Label[2],
+                  min1d, max1d,  
+                  min2d, max2d,  
+                  aVars.Coord_Bin[1],
+                  aVars.Coord_Bin[2],
+                  p0m,p1m,p2m,
+                  fname); 
+
+                if (p0m != NULL) free(p0m);
+          if (p1m != NULL) free(p1m);
+          if (p2m != NULL) free(p2m); 
+        }
+      }
+      free(fname);
+    }
+
+    /* Now Free memory Mon2D.. */
+    if ((aVars.Flag_Auto_Limits || aVars.Flag_List) && aVars.Coord_Number)
+    { /* Dim : (aVars.Coord_Number+2)*aVars.Buffer_Block matrix (for p, dp) */ 
+      if (aMon2D_Buffer != NULL && dofree) free(aMon2D_Buffer);
+    }
+       
+    /* 1D and n1D case : aVars.Flag_Multiple */
+    if (aVars.Flag_Multiple && aVars.Coord_Number && dofree)
+    { /* Dim : aVars.Coord_Number*aVars.Coord_Bin[i] vectors */ 
+      for (i= 0; i < aVars.Coord_Number; i++)
+      { 
+        free(aMon2D_N[i]);
+        free(aMon2D_p[i]);
+        free(aMon2D_p2[i]);
+      }
+      free(aMon2D_N);
+      free(aMon2D_p);
+      free(aMon2D_p2);
+    }
+    
+
+    /* 2D case : aVars.Coord_Number==2 and !aVars.Flag_Multiple and !aVars.Flag_List */
+    if ((aVars.Coord_Number == 2) && !aVars.Flag_Multiple && dofree)
+    { /* Dim : aVars.Coord_Bin[1]*aVars.Coord_Bin[2] matrix */
+      for (i= 0; i < aVars.Coord_Bin[1]; i++)
+      { 
+        free(aMon2D_N[i]);
+        free(aMon2D_p[i]);
+        free(aMon2D_p2[i]);
+      }
+      free(aMon2D_N); 
+      free(aMon2D_p);
+      free(aMon2D_p2);
+    }
+  }
+#ifdef mccompcurname_sav
+#undef mccompcurname
+#define mccompcurname mccompcurname_sav
+#undef mccompcurname_sav 
+#endif
 
   #define Monitor_nD_Here 
 #endif
@@ -322,8 +678,10 @@ INITIALIZE
     DEFS.COORD_DIM    =3;    /* next token is a bin value */
     DEFS.COORD_FIL    =4;    /* next token is a filename */
     DEFS.COORD_EVNT   =5;    /* next token is a buffer size value */
+    DEFS.COORD_3HE    =6;    /* next token is a 3He pressure value */
+    DEFS.COORD_INTERM =7;    /* next token is an intermediate save value (%) */
 
-    strcpy(DEFS.TOKEN_DEL, " =,;[](){}:");	/* token separators */
+    strcpy(DEFS.TOKEN_DEL, " =,;[](){}:");  /* token separators */
 
     DEFS.SHAPE_SQUARE =0;    /* shape of the monitor */
     DEFS.SHAPE_DISK   =1;
@@ -347,12 +705,15 @@ INITIALIZE
     Vars.Buffer_Size       = 0;
     Vars.UserVariable1     = 0;
     Vars.UserVariable2     = 0;
+    Vars.He3_pressure      = 0;
+    Vars.IntermediateCnts = 0;
     
     Set_Vars_Coord_Type = DEFS.COORD_NONE;
     Set_Coord_Mode = DEFS.COORD_VAR;
 
     /* parse option string */ 
     
+    strcpy(Vars.option, options);
     option_copy = (char*)malloc(strlen(options));
     if (option_copy == NULL)
     {
@@ -370,7 +731,7 @@ INITIALIZE
     if (strstr(options, "cm2") || strstr(options, "cm^2")) Vars.Flag_per_cm2 = 1;
   
     if (Vars.Flag_per_cm2) strcpy(Vars.Coord_Label[0],"Intensity [n/cm^2/s]");
-	 else strcpy(Vars.Coord_Label[0],"Intensity [n/s]");
+    else strcpy(Vars.Coord_Label[0],"Intensity [n/s]");
     strcpy(Vars.Coord_Var[0],"p");
     Vars.Coord_Type[0] = DEFS.COORD_P;
     Vars.Coord_Bin[0] = 1;
@@ -385,176 +746,191 @@ INITIALIZE
     {
       if (Flag_New_Token) /* to get the previous token sometimes */
       {
-	if (carg == 1) token=(char *)strtok(option_copy,DEFS.TOKEN_DEL);
-	else token=(char *)strtok(NULL,DEFS.TOKEN_DEL);
-	if (token == NULL) Flag_End=1;
+        if (carg == 1) token=(char *)strtok(option_copy,DEFS.TOKEN_DEL);
+        else token=(char *)strtok(NULL,DEFS.TOKEN_DEL);
+        if (token == NULL) Flag_End=1;
       }
       Flag_New_Token = 1;
       if ((token != NULL) && (strlen(token) != 0))
       {
       /* first handle option values from preceeding keyword token detected */
-	if (Set_Coord_Mode == DEFS.COORD_MAX)
-	{ 
-	  if (!Flag_All) 
-	    Vars.Coord_Max[Vars.Coord_Number] = atof(token); 
-	  else
-	    for (i = 0; i <= Vars.Coord_Number; Vars.Coord_Max[i++] = atof(token));
-	  Set_Coord_Mode = DEFS.COORD_VAR; Flag_All = 0;
-	}
-	if (Set_Coord_Mode == DEFS.COORD_MIN)
-	{ 
-	  if (!Flag_All) 
-	    Vars.Coord_Min[Vars.Coord_Number] = atof(token); 
-	  else
-	    for (i = 0; i <= Vars.Coord_Number; Vars.Coord_Min[i++] = atof(token));
-	  Set_Coord_Mode = DEFS.COORD_MAX; 
-	}
-	if (Set_Coord_Mode == DEFS.COORD_DIM)
-	{ 
-	  if (!Flag_All) 
-	    Vars.Coord_Bin[Vars.Coord_Number] = atoi(token); 
-	  else
-	    for (i = 0; i <= Vars.Coord_Number; Vars.Coord_Bin[i++] = atoi(token));
-	  Set_Coord_Mode = DEFS.COORD_VAR; Flag_All = 0;
-	}
-	if (Set_Coord_Mode == DEFS.COORD_FIL)
-	  { 
-	    if (!Flag_No) strcpy(Vars.Mon_File,token); 
-	    else { strcpy(Vars.Mon_File,""); Vars.Coord_Number = 0; Flag_End = 1;}
-	    Set_Coord_Mode = DEFS.COORD_VAR;
-	  }
-	if (Set_Coord_Mode == DEFS.COORD_EVNT)
-	{ 
-	  if (!strcmp(token, "all") || Flag_All) Vars.Flag_List = 2;
-	  else { i = atoi(token); if (i) Vars.Buffer_Counter = i; }
-	  Set_Coord_Mode = DEFS.COORD_VAR; Flag_All = 0;
-	}
-	
-	/* now look for general option keywords */
-	if (!strcmp(token, "borders")) 
-	{ if (Flag_No) { Vars.Flag_With_Borders = 0; Flag_No = 0; }
-	  else Vars.Flag_With_Borders = 1; }
-	if (!strcmp(token, "verbose")) 
-	{ if (Flag_No) { Vars.Flag_Verbose = 0; Flag_No = 0; }
-	  else Vars.Flag_Verbose      = 1; }
-	if (!strcmp(token, "multiple")) 
-	{ if (Flag_No) { Vars.Flag_Multiple = 0; Flag_No = 0; }
-	  else Vars.Flag_Multiple = 1; }
-	if (!strcmp(token, "list")) 
-	{ if (Flag_No) { Vars.Flag_List = 0; Flag_No = 0; }
-	  else Vars.Flag_List = 1; 
-	  Set_Coord_Mode = DEFS.COORD_EVNT; }
-	
-	if (!strcmp(token, "limits") || !strcmp(token, "min")) Set_Coord_Mode = DEFS.COORD_MIN;
-	if (!strcmp(token, "slit") || !strcmp(token, "absorb")) 
-	{ if (Flag_No) { Vars.Flag_Absorb = 0; Flag_No = 0; }
-	  else Vars.Flag_Absorb = 1; }
-	if (!strcmp(token, "max")) Set_Coord_Mode = DEFS.COORD_MAX;
-	if (!strcmp(token, "bins")) Set_Coord_Mode = DEFS.COORD_DIM;
-	if (!strcmp(token, "file")) 
-	{ Set_Coord_Mode = DEFS.COORD_FIL;
-	  if (Flag_No) { strcpy(Vars.Mon_File,""); Vars.Coord_Number = 0; Flag_End = 1;}}
-	if (!strcmp(token, "unactivate")) { Flag_End = 1; Vars.Coord_Number = 0; }
-	if (!strcmp(token, "all")) 
-	{ if (Flag_No) { Flag_All = 0; Flag_No = 0; }
-	  else Flag_All = 1; }
-	if (!strcmp(token, "sphere")) 
-	{ if (Flag_No) { Vars.Flag_Shape = DEFS.SHAPE_SQUARE; Flag_No = 0; }
-	  else Vars.Flag_Shape = DEFS.SHAPE_SPHERE; }
-	if (!strcmp(token, "cylinder")) 
-	{ if (Flag_No) { Vars.Flag_Shape = DEFS.SHAPE_SQUARE; Flag_No = 0; }
-	  else Vars.Flag_Shape = DEFS.SHAPE_CYLIND; }
-	if (!strcmp(token, "square")) Vars.Flag_Shape = DEFS.SHAPE_SQUARE; 
-	if (!strcmp(token, "disk")) Vars.Flag_Shape = DEFS.SHAPE_DISK; 
-	if (!strcmp(token, "auto")) 
-	{ if (Flag_No) { Vars.Flag_Auto_Limits = 0; Flag_No = 0; }
-	  else Vars.Flag_Auto_Limits = 1; }
-	if (!strcmp(token, "premonitor"))
-        { if (Flag_No) { Vars.Flag_UsePreMonitor = 0; Flag_No = 0; }
-	  else Vars.Flag_UsePreMonitor == 1; } 
-        if (!strcmp(token, "no") || !strcmp(token, "not")) Flag_No = 1;
-	
-	/* now look for variable names to monitor */
-	Set_Vars_Coord_Type = DEFS.COORD_NONE; lmin = 0; lmax = 0;
-	
-	if (!strcmp(token, "x")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_X; strcpy(Set_Vars_Coord_Label,"x [m]"); strcpy(Set_Vars_Coord_Var,"x"); lmin = xmin; lmax = xmax; }
-	if (!strcmp(token, "y")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_Y; strcpy(Set_Vars_Coord_Label,"y [m]"); strcpy(Set_Vars_Coord_Var,"y"); lmin = ymin; lmax = ymax; }
-	if (!strcmp(token, "z")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_Z; strcpy(Set_Vars_Coord_Label,"z [m]"); strcpy(Set_Vars_Coord_Var,"z"); lmin = 0; lmax = 100; }
-	if (!strcmp(token, "k") || !strcmp(token, "wavevector")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_K; strcpy(Set_Vars_Coord_Label,"|k| [Angs-1]"); strcpy(Set_Vars_Coord_Var,"k"); lmin = 0; lmax = 10; }
-	if (!strcmp(token, "v"))
-	  { Set_Vars_Coord_Type = DEFS.COORD_V; strcpy(Set_Vars_Coord_Label,"Velocity [m/s]"); strcpy(Set_Vars_Coord_Var,"v"); lmin = 0; lmax = 10000; }
-	if (!strcmp(token, "t") || !strcmp(token, "time")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_T; strcpy(Set_Vars_Coord_Label,"TOF [s]"); strcpy(Set_Vars_Coord_Var,"t"); lmin = 0; lmax = .1; }
-	if ((Vars.Coord_Number > 0) && (!strcmp(token, "p") || !strcmp(token, "intensity") || !strcmp(token, "flux")))
-	  { Set_Vars_Coord_Type = DEFS.COORD_P;  
-	    if (Vars.Flag_per_cm2) strcpy(Set_Vars_Coord_Label,"Intensity [n/cm^2/s]");
-	    else strcpy(Set_Vars_Coord_Label,"Intensity [n/s]"); 
-	    strcpy(Set_Vars_Coord_Var,"I"); 
-	    lmin = 0; lmax = FLT_MAX; }
+        if (Set_Coord_Mode == DEFS.COORD_MAX)
+        { 
+          if (!Flag_All) 
+            Vars.Coord_Max[Vars.Coord_Number] = atof(token); 
+          else
+            for (i = 0; i <= Vars.Coord_Number; Vars.Coord_Max[i++] = atof(token));
+          Set_Coord_Mode = DEFS.COORD_VAR; Flag_All = 0;
+        }
+        if (Set_Coord_Mode == DEFS.COORD_MIN)
+        { 
+          if (!Flag_All) 
+            Vars.Coord_Min[Vars.Coord_Number] = atof(token); 
+          else
+            for (i = 0; i <= Vars.Coord_Number; Vars.Coord_Min[i++] = atof(token));
+          Set_Coord_Mode = DEFS.COORD_MAX; 
+        }
+        if (Set_Coord_Mode == DEFS.COORD_DIM)
+        { 
+          if (!Flag_All) 
+            Vars.Coord_Bin[Vars.Coord_Number] = atoi(token); 
+          else
+            for (i = 0; i <= Vars.Coord_Number; Vars.Coord_Bin[i++] = atoi(token));
+          Set_Coord_Mode = DEFS.COORD_VAR; Flag_All = 0;
+        }
+        if (Set_Coord_Mode == DEFS.COORD_FIL)
+        { 
+          if (!Flag_No) strcpy(Vars.Mon_File,token); 
+          else { strcpy(Vars.Mon_File,""); Vars.Coord_Number = 0; Flag_End = 1;}
+          Set_Coord_Mode = DEFS.COORD_VAR;
+        }
+        if (Set_Coord_Mode == DEFS.COORD_EVNT)
+        { 
+          if (!strcmp(token, "all") || Flag_All) Vars.Flag_List = 2;
+          else { i = atoi(token); if (i) Vars.Buffer_Counter = i; }
+          Set_Coord_Mode = DEFS.COORD_VAR; Flag_All = 0;
+        }
+        if (Set_Coord_Mode == DEFS.COORD_3HE)
+        { 
+            Vars.He3_pressure = atof(token); 
+            Set_Coord_Mode = DEFS.COORD_VAR; Flag_All = 0; 
+        }
+        if (Set_Coord_Mode == DEFS.COORD_INTERM)
+        { 
+            Vars.Intermediate = atof(token); 
+            Set_Coord_Mode = DEFS.COORD_VAR; Flag_All = 0; 
+        }
 
-	if (!strcmp(token, "vx")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_VX; strcpy(Set_Vars_Coord_Label,"vx [m/s]"); strcpy(Set_Vars_Coord_Var,"vx"); lmin = -1000; lmax = 1000; }
-	if (!strcmp(token, "vy")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_VY; strcpy(Set_Vars_Coord_Label,"vy [m/s]"); strcpy(Set_Vars_Coord_Var,"vy"); lmin = -1000; lmax = 1000; }
-	if (!strcmp(token, "vz")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_VZ; strcpy(Set_Vars_Coord_Label,"vz [m/s]"); strcpy(Set_Vars_Coord_Var,"vz"); lmin = -10000; lmax = 10000; }
-	if (!strcmp(token, "kx")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_KX; strcpy(Set_Vars_Coord_Label,"kx [Angs-1]"); strcpy(Set_Vars_Coord_Var,"kx"); lmin = -1; lmax = 1; }
-	if (!strcmp(token, "ky")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_KY; strcpy(Set_Vars_Coord_Label,"ky [Angs-1]"); strcpy(Set_Vars_Coord_Var,"ky"); lmin = -1; lmax = 1; }
-	if (!strcmp(token, "kz")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_KZ; strcpy(Set_Vars_Coord_Label,"kz [Angs-1]"); strcpy(Set_Vars_Coord_Var,"kz"); lmin = -10; lmax = 10; }
-	if (!strcmp(token, "sx")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_SX; strcpy(Set_Vars_Coord_Label,"sx [1]"); strcpy(Set_Vars_Coord_Var,"sx"); lmin = -1; lmax = 1; }
-	if (!strcmp(token, "sy")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_SY; strcpy(Set_Vars_Coord_Label,"sy [1]"); strcpy(Set_Vars_Coord_Var,"sy"); lmin = -1; lmax = 1; }
-	if (!strcmp(token, "sz")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_SZ; strcpy(Set_Vars_Coord_Label,"sz [1]"); strcpy(Set_Vars_Coord_Var,"sz"); lmin = -1; lmax = 1; }
-	
-	if (!strcmp(token, "energy") || !strcmp(token, "omega")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_ENERGY; strcpy(Set_Vars_Coord_Label,"Energy [meV]"); strcpy(Set_Vars_Coord_Var,"E"); lmin = 0; lmax = 100; }
-	if (!strcmp(token, "lambda") || !strcmp(token, "wavelength")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_LAMBDA; strcpy(Set_Vars_Coord_Label,"Wavelength [Angs]"); strcpy(Set_Vars_Coord_Var,"L"); lmin = 0; lmax = 100; }
-	if (!strcmp(token, "radius")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_RADIUS; strcpy(Set_Vars_Coord_Label,"Radius [m]"); strcpy(Set_Vars_Coord_Var,"R"); lmin = 0; lmax = xmax; }
-	if (!strcmp(token, "angle")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_ANGLE; strcpy(Set_Vars_Coord_Label,"Angle [deg]"); strcpy(Set_Vars_Coord_Var,"A"); lmin = -5; lmax = 5; }
-	if (!strcmp(token, "hdiv")|| !strcmp(token, "divergence")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_HDIV; strcpy(Set_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"HD"); lmin = -5; lmax = 5; }
-	if (!strcmp(token, "vdiv")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_VDIV; strcpy(Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"VD"); lmin = -5; lmax = 5; }
-	if (!strcmp(token, "theta") || !strcmp(token, "longitude")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; }
-	if (!strcmp(token, "phi") || !strcmp(token, "lattitude")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_PHI; strcpy(Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
-	if (!strcmp(token, "ncounts")) 
-	  { Set_Vars_Coord_Type = DEFS.COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutrons [1]"); strcpy(Set_Vars_Coord_Var,"N"); lmin = 0; lmax = 1e10; }
-        if (!strcmp(token, "user") || !strcmp(token, "user1"))
-	  { Set_Vars_Coord_Type = DEFS.COORD_USER1; strncpy(Set_Vars_Coord_Label,Vars.UserName1,32); strcpy(Set_Vars_Coord_Var,"U1"); lmin = -1e10; lmax = 1e10; }
-        if (!strcmp(token, "user2"))
-	  { Set_Vars_Coord_Type = DEFS.COORD_USER2; strncpy(Set_Vars_Coord_Label,Vars.UserName2,32); strcpy(Set_Vars_Coord_Var,"U2"); lmin = -1e10; lmax = 1e10; }
-	
-	/* now stores variable keywords detected, if any */ 
-	if (Set_Vars_Coord_Type != DEFS.COORD_NONE)
-	{
-	  if (Vars.Coord_Number < MONnD_COORD_NMAX) Vars.Coord_Number++;
-	  else if (Vars.Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", mccompcurname, MONnD_COORD_NMAX);
-	  Vars.Coord_Type[Vars.Coord_Number] = Set_Vars_Coord_Type;
-	  strcpy(Vars.Coord_Label[Vars.Coord_Number], Set_Vars_Coord_Label); 
-	  strcpy(Vars.Coord_Var[Vars.Coord_Number], Set_Vars_Coord_Var);
-	  Vars.Coord_Min[Vars.Coord_Number] = lmin;
-	  Vars.Coord_Max[Vars.Coord_Number] = lmax;
-	  Vars.Coord_Bin[Vars.Coord_Number] = 20;
-	  Set_Coord_Mode = DEFS.COORD_VAR;
-	  Flag_All = 0;
-	  Flag_No = 0;
-	}
-	
-	carg++;
+        /* now look for general option keywords */
+        if (!strcmp(token, "borders")) 
+        { if (Flag_No) { Vars.Flag_With_Borders = 0; Flag_No = 0; }
+          else Vars.Flag_With_Borders = 1; }
+        if (!strcmp(token, "verbose")) 
+        { if (Flag_No) { Vars.Flag_Verbose = 0; Flag_No = 0; }
+          else Vars.Flag_Verbose      = 1; }
+        if (!strcmp(token, "multiple")) 
+        { if (Flag_No) { Vars.Flag_Multiple = 0; Flag_No = 0; }
+          else Vars.Flag_Multiple = 1; }
+        if (!strcmp(token, "list")) 
+        { if (Flag_No) { Vars.Flag_List = 0; Flag_No = 0; }
+          else Vars.Flag_List = 1; 
+          Set_Coord_Mode = DEFS.COORD_EVNT; }
+
+        if (!strcmp(token, "limits") || !strcmp(token, "min")) Set_Coord_Mode = DEFS.COORD_MIN;
+        if (!strcmp(token, "slit") || !strcmp(token, "absorb")) 
+        { if (Flag_No) { Vars.Flag_Absorb = 0; Flag_No = 0; }
+          else Vars.Flag_Absorb = 1; }
+        if (!strcmp(token, "max")) Set_Coord_Mode = DEFS.COORD_MAX;
+        if (!strcmp(token, "bins")) Set_Coord_Mode = DEFS.COORD_DIM;
+        if (!strcmp(token, "file")) 
+        { Set_Coord_Mode = DEFS.COORD_FIL;
+          if (Flag_No) { strcpy(Vars.Mon_File,""); Vars.Coord_Number = 0; Flag_End = 1;}}
+        if (!strcmp(token, "unactivate")) { Flag_End = 1; Vars.Coord_Number = 0; }
+        if (!strcmp(token, "all")) 
+        { if (Flag_No) { Flag_All = 0; Flag_No = 0; }
+          else Flag_All = 1; }
+        if (!strcmp(token, "sphere")) 
+        { if (Flag_No) { Vars.Flag_Shape = DEFS.SHAPE_SQUARE; Flag_No = 0; }
+          else Vars.Flag_Shape = DEFS.SHAPE_SPHERE; }
+        if (!strcmp(token, "cylinder")) 
+        { if (Flag_No) { Vars.Flag_Shape = DEFS.SHAPE_SQUARE; Flag_No = 0; }
+          else Vars.Flag_Shape = DEFS.SHAPE_CYLIND; }
+        if (!strcmp(token, "square")) Vars.Flag_Shape = DEFS.SHAPE_SQUARE; 
+        if (!strcmp(token, "disk")) Vars.Flag_Shape = DEFS.SHAPE_DISK; 
+        if (!strcmp(token, "auto")) 
+        { if (Flag_No) { Vars.Flag_Auto_Limits = 0; Flag_No = 0; }
+          else Vars.Flag_Auto_Limits = 1; }
+        if (!strcmp(token, "premonitor"))
+        { if (Flag_No) { Vars.Flag_UsePreMonitor = 0; Flag_No = 0; }
+        else Vars.Flag_UsePreMonitor == 1; } 
+        if (!strcmp(token, "3He_pressure"))
+        { if (!Flag_No)  Set_Coord_Mode = DEFS.COORD_3HE; 
+          Vars.He3_pressure = 3; }
+        if (!strcmp(token, "intermediate"))
+        { if (!Flag_No)  Set_Coord_Mode = DEFS.COORD_INTERM; 
+          Vars.Intermediate = 5; }
+        if (!strcmp(token, "no") || !strcmp(token, "not")) Flag_No = 1;
+  
+        /* now look for variable names to monitor */
+        Set_Vars_Coord_Type = DEFS.COORD_NONE; lmin = 0; lmax = 0;
+
+        if (!strcmp(token, "x")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_X; strcpy(Set_Vars_Coord_Label,"x [m]"); strcpy(Set_Vars_Coord_Var,"x"); lmin = xmin; lmax = xmax; }
+        if (!strcmp(token, "y")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_Y; strcpy(Set_Vars_Coord_Label,"y [m]"); strcpy(Set_Vars_Coord_Var,"y"); lmin = ymin; lmax = ymax; }
+        if (!strcmp(token, "z")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_Z; strcpy(Set_Vars_Coord_Label,"z [m]"); strcpy(Set_Vars_Coord_Var,"z"); lmin = 0; lmax = 100; }
+        if (!strcmp(token, "k") || !strcmp(token, "wavevector")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_K; strcpy(Set_Vars_Coord_Label,"|k| [Angs-1]"); strcpy(Set_Vars_Coord_Var,"k"); lmin = 0; lmax = 10; }
+        if (!strcmp(token, "v"))
+          { Set_Vars_Coord_Type = DEFS.COORD_V; strcpy(Set_Vars_Coord_Label,"Velocity [m/s]"); strcpy(Set_Vars_Coord_Var,"v"); lmin = 0; lmax = 10000; }
+        if (!strcmp(token, "t") || !strcmp(token, "time")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_T; strcpy(Set_Vars_Coord_Label,"TOF [s]"); strcpy(Set_Vars_Coord_Var,"t"); lmin = 0; lmax = .1; }
+        if ((Vars.Coord_Number > 0) && (!strcmp(token, "p") || !strcmp(token, "intensity") || !strcmp(token, "flux")))
+          { Set_Vars_Coord_Type = DEFS.COORD_P;  
+            if (Vars.Flag_per_cm2) strcpy(Set_Vars_Coord_Label,"Intensity [n/cm^2/s]");
+            else strcpy(Set_Vars_Coord_Label,"Intensity [n/s]"); 
+            strcpy(Set_Vars_Coord_Var,"I"); 
+            lmin = 0; lmax = FLT_MAX; }
+
+        if (!strcmp(token, "vx")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_VX; strcpy(Set_Vars_Coord_Label,"vx [m/s]"); strcpy(Set_Vars_Coord_Var,"vx"); lmin = -1000; lmax = 1000; }
+        if (!strcmp(token, "vy")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_VY; strcpy(Set_Vars_Coord_Label,"vy [m/s]"); strcpy(Set_Vars_Coord_Var,"vy"); lmin = -1000; lmax = 1000; }
+        if (!strcmp(token, "vz")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_VZ; strcpy(Set_Vars_Coord_Label,"vz [m/s]"); strcpy(Set_Vars_Coord_Var,"vz"); lmin = -10000; lmax = 10000; }
+        if (!strcmp(token, "kx")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_KX; strcpy(Set_Vars_Coord_Label,"kx [Angs-1]"); strcpy(Set_Vars_Coord_Var,"kx"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "ky")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_KY; strcpy(Set_Vars_Coord_Label,"ky [Angs-1]"); strcpy(Set_Vars_Coord_Var,"ky"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "kz")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_KZ; strcpy(Set_Vars_Coord_Label,"kz [Angs-1]"); strcpy(Set_Vars_Coord_Var,"kz"); lmin = -10; lmax = 10; }
+        if (!strcmp(token, "sx")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_SX; strcpy(Set_Vars_Coord_Label,"sx [1]"); strcpy(Set_Vars_Coord_Var,"sx"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "sy")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_SY; strcpy(Set_Vars_Coord_Label,"sy [1]"); strcpy(Set_Vars_Coord_Var,"sy"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "sz")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_SZ; strcpy(Set_Vars_Coord_Label,"sz [1]"); strcpy(Set_Vars_Coord_Var,"sz"); lmin = -1; lmax = 1; }
+
+        if (!strcmp(token, "energy") || !strcmp(token, "omega")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_ENERGY; strcpy(Set_Vars_Coord_Label,"Energy [meV]"); strcpy(Set_Vars_Coord_Var,"E"); lmin = 0; lmax = 100; }
+        if (!strcmp(token, "lambda") || !strcmp(token, "wavelength")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_LAMBDA; strcpy(Set_Vars_Coord_Label,"Wavelength [Angs]"); strcpy(Set_Vars_Coord_Var,"L"); lmin = 0; lmax = 100; }
+        if (!strcmp(token, "radius")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_RADIUS; strcpy(Set_Vars_Coord_Label,"Radius [m]"); strcpy(Set_Vars_Coord_Var,"R"); lmin = 0; lmax = xmax; }
+        if (!strcmp(token, "angle")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_ANGLE; strcpy(Set_Vars_Coord_Label,"Angle [deg]"); strcpy(Set_Vars_Coord_Var,"A"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "hdiv")|| !strcmp(token, "divergence")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_HDIV; strcpy(Set_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"HD"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "vdiv")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_VDIV; strcpy(Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"VD"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "theta") || !strcmp(token, "longitude")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "phi") || !strcmp(token, "lattitude")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_PHI; strcpy(Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "ncounts")) 
+          { Set_Vars_Coord_Type = DEFS.COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutrons [1]"); strcpy(Set_Vars_Coord_Var,"N"); lmin = 0; lmax = 1e10; }
+              if (!strcmp(token, "user") || !strcmp(token, "user1"))
+          { Set_Vars_Coord_Type = DEFS.COORD_USER1; strncpy(Set_Vars_Coord_Label,Vars.UserName1,32); strcpy(Set_Vars_Coord_Var,"U1"); lmin = -1e10; lmax = 1e10; }
+              if (!strcmp(token, "user2"))
+          { Set_Vars_Coord_Type = DEFS.COORD_USER2; strncpy(Set_Vars_Coord_Label,Vars.UserName2,32); strcpy(Set_Vars_Coord_Var,"U2"); lmin = -1e10; lmax = 1e10; }
+
+        /* now stores variable keywords detected, if any */ 
+        if (Set_Vars_Coord_Type != DEFS.COORD_NONE)
+        {
+          if (Vars.Coord_Number < MONnD_COORD_NMAX) Vars.Coord_Number++;
+          else if (Vars.Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", mccompcurname, MONnD_COORD_NMAX);
+          Vars.Coord_Type[Vars.Coord_Number] = Set_Vars_Coord_Type;
+          strcpy(Vars.Coord_Label[Vars.Coord_Number], Set_Vars_Coord_Label); 
+          strcpy(Vars.Coord_Var[Vars.Coord_Number], Set_Vars_Coord_Var);
+          Vars.Coord_Min[Vars.Coord_Number] = lmin;
+          Vars.Coord_Max[Vars.Coord_Number] = lmax;
+          Vars.Coord_Bin[Vars.Coord_Number] = 20;
+          Set_Coord_Mode = DEFS.COORD_VAR;
+          Flag_All = 0;
+          Flag_No = 0;
+        }
+      carg++;
       } /* end if token */
     } /* end while carg */
     free(option_copy);
@@ -647,16 +1023,16 @@ INITIALIZE
     if ((Vars.Coord_Number != 2) && !Vars.Flag_Multiple && !Vars.Flag_List) 
     { Vars.Flag_Multiple = 1; Vars.Flag_List = 0; } /* default is n1D */
     
-    /* list and auto limits case : Vars.Flag_List or Vars.Flag_Auto_Limits 
-     * -> Buffer to flush and suppress after Vars.Flag_Auto_Limits
-     */
-     if ((Vars.Flag_Auto_Limits || Vars.Flag_List) && Vars.Coord_Number)
-     { /* Dim : (Vars.Coord_Number+2)*Vars.Buffer_Block matrix (for p, dp) */ 
-       Mon2D_Buffer = (double *)malloc((Vars.Coord_Number+2)*Vars.Buffer_Block*sizeof(double));
-       if (Mon2D_Buffer == NULL)
-       { printf("Monitor_nD: %s cannot allocate Mon2D_Buffer (%li). No list and auto limits.\n", mccompcurname, Vars.Buffer_Block*(Vars.Coord_Number+2)*sizeof(double)); Vars.Flag_List = 0; Vars.Flag_Auto_Limits = 0; }
-       Vars.Buffer_Size = Vars.Buffer_Block;
-     }
+   /* list and auto limits case : Vars.Flag_List or Vars.Flag_Auto_Limits 
+    * -> Buffer to flush and suppress after Vars.Flag_Auto_Limits
+    */
+    if ((Vars.Flag_Auto_Limits || Vars.Flag_List) && Vars.Coord_Number)
+    { /* Dim : (Vars.Coord_Number+2)*Vars.Buffer_Block matrix (for p, dp) */ 
+      Mon2D_Buffer = (double *)malloc((Vars.Coord_Number+2)*Vars.Buffer_Block*sizeof(double));
+      if (Mon2D_Buffer == NULL)
+      { printf("Monitor_nD: %s cannot allocate Mon2D_Buffer (%li). No list and auto limits.\n", mccompcurname, Vars.Buffer_Block*(Vars.Coord_Number+2)*sizeof(double)); Vars.Flag_List = 0; Vars.Flag_Auto_Limits = 0; }
+      Vars.Buffer_Size = Vars.Buffer_Block;
+    }
     
     /* 1D and n1D case : Vars.Flag_Multiple */
     if (Vars.Flag_Multiple && Vars.Coord_Number)
@@ -671,7 +1047,7 @@ INITIALIZE
         Mon2D_N[i-1]  = (int *)malloc(Vars.Coord_Bin[i]*sizeof(int));
         Mon2D_p[i-1]  = (double *)malloc(Vars.Coord_Bin[i]*sizeof(double));
         Mon2D_p2[i-1] = (double *)malloc(Vars.Coord_Bin[i]*sizeof(double));
-	if ((Mon2D_N == NULL) || (Mon2D_p == NULL) || (Mon2D_p2 == NULL))
+        if ((Mon2D_N == NULL) || (Mon2D_p == NULL) || (Mon2D_p2 == NULL))
         { printf("Monitor_nD: %s n1D cannot allocate %s Mon2D_N/p/2p[%li] (%i). Fatal.\n", mccompcurname, Vars.Coord_Var[i], i, (Vars.Coord_Bin[i])*sizeof(double *)); exit(-1); }
       }
     }
@@ -685,11 +1061,11 @@ INITIALIZE
       { printf("Monitor_nD: %s 2D cannot allocate %s Mon2D_N/p/2p (%i). Fatal.\n", mccompcurname, Vars.Coord_Var[1], (Vars.Coord_Bin[1])*sizeof(double *)); exit(-1); }
       for (i= 0; i < Vars.Coord_Bin[1]; i++)
       { 
-	Mon2D_N[i]  = (int *)malloc(Vars.Coord_Bin[2]*sizeof(int));
-	Mon2D_p[i]  = (double *)malloc(Vars.Coord_Bin[2]*sizeof(double));
-	Mon2D_p2[i] = (double *)malloc(Vars.Coord_Bin[2]*sizeof(double));
-	if ((Mon2D_N == NULL) || (Mon2D_p == NULL) || (Mon2D_p2 == NULL))
-	{ printf("Monitor_nD: %s 2D cannot allocate %s Mon2D_N/p/2p[%li] (%i). Fatal.\n", mccompcurname, Vars.Coord_Var[1], i, (Vars.Coord_Bin[2])*sizeof(double *)); exit(-1); }
+        Mon2D_N[i]  = (int *)malloc(Vars.Coord_Bin[2]*sizeof(int));
+        Mon2D_p[i]  = (double *)malloc(Vars.Coord_Bin[2]*sizeof(double));
+        Mon2D_p2[i] = (double *)malloc(Vars.Coord_Bin[2]*sizeof(double));
+        if ((Mon2D_N == NULL) || (Mon2D_p == NULL) || (Mon2D_p2 == NULL))
+        { printf("Monitor_nD: %s 2D cannot allocate %s Mon2D_N/p/2p[%li] (%i). Fatal.\n", mccompcurname, Vars.Coord_Var[1], i, (Vars.Coord_Bin[2])*sizeof(double *)); exit(-1); }
       }
     }      
       /* no Mon2D allocated for 
@@ -710,571 +1086,309 @@ INITIALIZE
       Vars.area = PI*Vars.Sphere_Radius*Vars.Sphere_Radius; /* disk shapes */
     }
     Vars.Cylinder_Height = fabs(ymax-ymin);
+    
+    if (Vars.Intermediate < 0) Vars.Intermediate = 0;
+    if (Vars.Intermediate > 1) Vars.Intermediate /= 100;
+    Vars.IntermediateCnts = Vars.Intermediate*mcget_ncount();
+    
   %}
 TRACE
-  %{    
-    double  XY=0;
-    double  t0 = 0;
-    double  t1 = 0;
-    long    i,j;
-    double  pp;
-    double  Coord[MONnD_COORD_NMAX];
-    long    Coord_Index[MONnD_COORD_NMAX];
-    char    While_End   =0;
-    long    While_Buffer=0;
-    int     intersect = 0;
-    char    Set_Vars_Coord_Type = DEFS.COORD_NONE;
-    
-    if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
-      intersect = (x>=xmin && x<=xmax && y>=ymin && y<=ymax);
-    if (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK)   /* disk xy */
-      intersect = ((x*x + y*y) <= Vars.Sphere_Radius*Vars.Sphere_Radius);
-    if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
-      intersect = (sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius) && t1 > 0);
-    if (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) /* cylinder */
-      intersect = (cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height) && t1 > 0);
+%{    
+  double  XY=0;
+  double  t0 = 0;
+  double  t1 = 0;
+  long    i,j;
+  double  pp;
+  double  Coord[MONnD_COORD_NMAX];
+  long    Coord_Index[MONnD_COORD_NMAX];
+  char    While_End   =0;
+  long    While_Buffer=0;
+  int     intersect = 0;
+  char    Set_Vars_Coord_Type = DEFS.COORD_NONE;
 
-    if (intersect)
+  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
+    intersect = (x>=xmin && x<=xmax && y>=ymin && y<=ymax);
+  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK)   /* disk xy */
+    intersect = ((x*x + y*y) <= Vars.Sphere_Radius*Vars.Sphere_Radius);
+  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
+  {
+    intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius);
+  /*      intersect = (intersect && t0 > 0); */
+  }
+  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) /* cylinder */
+  {
+    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height);
+  }
+
+  if (intersect)
+  {
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND))
     {
-      if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND))
-      {
-	if(t0 < 0)
-          t0 = t1;
-	/* t0 is now time of intersection with the sphere. */
-	if (Vars.Flag_Shape < 0)
-      	  PROP_DT(t1); /* t1 outgoing beam */
-	else
-	  PROP_DT(t0); /* t0 incoming beam */
-      }
+      if (t0 < 0 && t1 > 0)
+        t0 = 0;  /* neutron was already inside ! */
+      if (t1 < 0 && t0 > 0)
+        t1 = 0;
+      /* t0 is now time of incoming intersection with the sphere. */
+      if ((Vars.Flag_Shape < 0) && (t1 > 0))
+        PROP_DT(t1); /* t1 outgoing beam */
       else
-        PROP_Z0; 
-      
-      /* Now get the data to monitor: curent or keep from PreMonitor */
-      if (Vars.Flag_UsePreMonitor != 1)
+        PROP_DT(t0); /* t0 incoming beam */
+    }
+    else
+      PROP_Z0; 
+
+    /* Now get the data to monitor: curent or keep from PreMonitor */
+    if (Vars.Flag_UsePreMonitor != 1)
+    {
+      Vars.cp = p;
+      Vars.cx = x;
+      Vars.cvx = vx;
+      Vars.csx = sx;
+      Vars.cy = y;
+      Vars.cvy = vy;
+      Vars.csy = sy;
+      Vars.cz = z;
+      Vars.cvz = vz;
+      Vars.csz = sz;
+      Vars.ct = t;
+    }
+
+    if ((Vars.He3_pressure > 0) && (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND))
+    {
+      XY = exp(-7.417*Vars.He3_pressure*fabs(t1-t0)*2*PI/V2K);
+      /* will monitor the absorbed part */
+      Vars.cp *= 1-XY;
+      /* and modify the neutron weight after monitor, only remains 1-p_detect */
+      p *= XY;
+    }
+
+    pp = Vars.cp;
+
+    if (Vars.Flag_per_cm2 && Vars.area != 0) pp /= Vars.area;
+    Nsum++;
+    psum += pp;
+    p2sum += pp*pp;
+
+    if (Vars.Coord_Number > 0)
+    {
+      /* Vars.Flag_Auto_Limits */
+      if ((Vars.Buffer_Counter >= Vars.Buffer_Block) && (Vars.Flag_Auto_Limits == 1))
       {
-        Vars.cp = p;
-        Vars.cx = x;
-        Vars.cvx = vx;
-        Vars.csx = sx;
-        Vars.cy = y;
-        Vars.cvy = vy;
-        Vars.csy = sy;
-        Vars.cz = z;
-        Vars.cvz = vz;
-        Vars.csz = sz;
-        Vars.ct = t;
+        /* auto limits case : get limits in Buffer for each variable */ 
+              /* Dim : (Vars.Coord_Number+2)*Vars.Buffer_Block matrix (for p, dp) */ 
+        if (Vars.Flag_Verbose) printf("Monitor_nD: %s getting %i Auto Limits from List (%li).\n", mccompcurname, Vars.Coord_Number, Vars.Buffer_Counter);
+        for (i = 1; i <= Vars.Coord_Number; i++)
+        {
+          Vars.Coord_Min[i] = FLT_MAX;
+          Vars.Coord_Max[i] = -FLT_MAX;
+          for (j = 0; j < Vars.Buffer_Block; j++)
+          { 
+                  XY = Mon2D_Buffer[j*(Vars.Coord_Number+2) + (i-1)];  /* scanning variables in Buffer */
+            if (XY < Vars.Coord_Min[i]) Vars.Coord_Min[i] = XY;
+            if (XY > Vars.Coord_Max[i]) Vars.Coord_Max[i] = XY;
+          }
+        }
+        Vars.Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
       }
-      
-      pp = Vars.cp;
-      
-      if (Vars.Flag_per_cm2 && Vars.area != 0) pp /= Vars.area;
-      Nsum++;
-      psum += pp;
-      p2sum += pp*pp;
-      
-      if (Vars.Coord_Number > 0)
+
+
+      /* manage realloc for list all if Buffer size exceeded */
+      if ((Vars.Buffer_Counter >= Vars.Buffer_Block) && (Vars.Flag_List == 2))
       {
-	
-	/* Vars.Flag_Auto_Limits */
-	if ((Vars.Buffer_Counter >= Vars.Buffer_Block) && (Vars.Flag_Auto_Limits == 1))
-	{
-	  /* auto limits case : get limits in Buffer for each variable */ 
-          /* Dim : (Vars.Coord_Number+2)*Vars.Buffer_Block matrix (for p, dp) */ 
-	  if (Vars.Flag_Verbose) printf("Monitor_nD: %s getting %i Auto Limits from List (%li).\n", mccompcurname, Vars.Coord_Number, Vars.Buffer_Counter);
-	  for (i = 1; i <= Vars.Coord_Number; i++)
-	  {
-	    Vars.Coord_Min[i] = FLT_MAX;
-	    Vars.Coord_Max[i] = -FLT_MAX;
-	    for (j = 0; j < Vars.Buffer_Block; j++)
-	    { 
-              XY = Mon2D_Buffer[j*(Vars.Coord_Number+2) + (i-1)];	/* scanning variables in Buffer */
-	      if (XY < Vars.Coord_Min[i]) Vars.Coord_Min[i] = XY;
-	      if (XY > Vars.Coord_Max[i]) Vars.Coord_Max[i] = XY;
-	    }
-	  }
-	  Vars.Flag_Auto_Limits = 2;	/* pass to 2nd auto limits step */
-	}
-	
-	
-	/* manage realloc for list all if Buffer size exceeded */
-	if ((Vars.Buffer_Counter >= Vars.Buffer_Block) && (Vars.Flag_List == 2))
-	{
-	  Mon2D_Buffer  = (double *)realloc(Mon2D_Buffer, (Vars.Coord_Number+2)*(Vars.Neutron_Counter+Vars.Buffer_Block)*sizeof(double));
-	  if (Mon2D_Buffer == NULL)
-          { printf("Monitor_nD: %s cannot reallocate Mon2D_Buffer[%li] (%li). Skipping.\n", mccompcurname, i, (Vars.Neutron_Counter+Vars.Buffer_Block)*sizeof(double)); Vars.Flag_List = 1; }
-	  else { Vars.Buffer_Counter = 0; Vars.Buffer_Size = Vars.Neutron_Counter+Vars.Buffer_Block; }
-	  
-	}
-	  
-	while (!While_End)
-	{ /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
-	  if (Vars.Flag_Auto_Limits == 2)
-	  {
-	    if (While_Buffer < Vars.Buffer_Block)
-	    {
-	      /* first while loops (While_Buffer) */
-	      /* auto limits case : scan Buffer within limits and store in Mon2D */ 
-	      for (i = 1; i <= Vars.Coord_Number; i++)
-	      {
-		/* scanning variables in Buffer */
-		XY = (Vars.Coord_Max[i]-Vars.Coord_Min[i]);
-		Coord[i] = Mon2D_Buffer[While_Buffer*(Vars.Coord_Number+2) + (i-1)];
-		Coord[0] = Mon2D_Buffer[While_Buffer*(Vars.Coord_Number+2) + (Vars.Coord_Number)];
-		pp = Coord[0];
-		if (XY > 0) Coord_Index[i] = floor((Mon2D_Buffer[(i-1) + While_Buffer*(Vars.Coord_Number+2)]-Vars.Coord_Min[i])*Vars.Coord_Bin[i]/XY);
-		else Coord_Index[i] = 0;
-		if (Vars.Flag_With_Borders)
-		{
-		  if (Coord_Index[i] < 0) Coord_Index[i] = 0;
-		  if (Coord_Index[i] >= Vars.Coord_Bin[i]) Coord_Index[i] = Vars.Coord_Bin[i] - 1;
-		}
-	      } /* end for */
-	      While_Buffer++;
-	    } /* end if in Buffer */
-	    else /* (While_Buffer >= Vars.Buffer_Block) && (Vars.Flag_Auto_Limits == 2) */ 
-	    {
-	      Vars.Flag_Auto_Limits = 0;
-	      if (!Vars.Flag_List) /* free Buffer not needed (no list to output) */
-	      { /* Dim : (Vars.Coord_Number+2)*Vars.Buffer_Block matrix (for p, dp) */ 
-		free(Mon2D_Buffer);
-	      }
-	    }
-	  }
-	  else /* Vars.Flag_Auto_Limits == 0 or 1 */
-	  {
-	    for (i = 0; i <= Vars.Coord_Number; i++)
-	    { /* handle current neutron : last while */
+        Mon2D_Buffer  = (double *)realloc(Mon2D_Buffer, (Vars.Coord_Number+2)*(Vars.Neutron_Counter+Vars.Buffer_Block)*sizeof(double));
+        if (Mon2D_Buffer == NULL)
+              { printf("Monitor_nD: %s cannot reallocate Mon2D_Buffer[%li] (%li). Skipping.\n", mccompcurname, i, (Vars.Neutron_Counter+Vars.Buffer_Block)*sizeof(double)); Vars.Flag_List = 1; }
+        else { Vars.Buffer_Counter = 0; Vars.Buffer_Size = Vars.Neutron_Counter+Vars.Buffer_Block; }
+      }
 
-	      pp = Vars.cp;
+      while (!While_End)
+      { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
+        if (Vars.Flag_Auto_Limits == 2)
+        {
+          if (While_Buffer < Vars.Buffer_Block)
+          {
+            /* first while loops (While_Buffer) */
+            /* auto limits case : scan Buffer within limits and store in Mon2D */ 
+            for (i = 1; i <= Vars.Coord_Number; i++)
+            {
+              /* scanning variables in Buffer */
+              XY = (Vars.Coord_Max[i]-Vars.Coord_Min[i]);
+              Coord[i] = Mon2D_Buffer[While_Buffer*(Vars.Coord_Number+2) + (i-1)];
+              Coord[0] = Mon2D_Buffer[While_Buffer*(Vars.Coord_Number+2) + (Vars.Coord_Number)];
+              pp = Coord[0];
+              if (XY > 0) Coord_Index[i] = floor((Mon2D_Buffer[(i-1) + While_Buffer*(Vars.Coord_Number+2)]-Vars.Coord_Min[i])*Vars.Coord_Bin[i]/XY);
+              else Coord_Index[i] = 0;
+              if (Vars.Flag_With_Borders)
+              {
+                if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+                if (Coord_Index[i] >= Vars.Coord_Bin[i]) Coord_Index[i] = Vars.Coord_Bin[i] - 1;
+              }
+            } /* end for */
+            While_Buffer++;
+          } /* end if in Buffer */
+          else /* (While_Buffer >= Vars.Buffer_Block) && (Vars.Flag_Auto_Limits == 2) */ 
+          {
+            Vars.Flag_Auto_Limits = 0;
+            if (!Vars.Flag_List) /* free Buffer not needed (no list to output) */
+            { /* Dim : (Vars.Coord_Number+2)*Vars.Buffer_Block matrix (for p, dp) */ 
+              free(Mon2D_Buffer);
+            }
+          }
+        }
+        else /* Vars.Flag_Auto_Limits == 0 or 1 */
+        {
+          for (i = 0; i <= Vars.Coord_Number; i++)
+          { /* handle current neutron : last while */
 
-	      XY = 0;
-              Set_Vars_Coord_Type = Vars.Coord_Type[i];
-              if (Set_Vars_Coord_Type == DEFS.COORD_X) XY = Vars.cx; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_Y) XY = Vars.cy; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_Z) XY = Vars.cz; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_VX) XY = Vars.cvx; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_VY) XY = Vars.cvy; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_VZ) XY = Vars.cvz; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_KX) XY = V2K*Vars.cvx; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_KY) XY = V2K*Vars.cvy; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_KZ) XY = V2K*Vars.cvz; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_SX) XY = Vars.csx; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_SY) XY = Vars.csy; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_SZ) XY = Vars.csz; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_T) XY = Vars.ct; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_P) XY = pp; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_HDIV) XY = RAD2DEG*atan2(Vars.cvx,Vars.cvz); 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_VDIV) XY = RAD2DEG*atan2(Vars.cvy,Vars.cvz); 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_V) XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz); 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_RADIUS) XY = sqrt(Vars.cx*Vars.cx+Vars.cy*Vars.cy); 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_K) { XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);  XY *= V2K; }
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_ENERGY) { XY = Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz;  XY *= VS2E; }
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_LAMBDA) { XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_NCOUNT) XY = Coord[i]+1; 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_ANGLE) 
-	      {  XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
-		if (Vars.cvz != 0) 
-		{
-		  XY= RAD2DEG*atan2(XY,Vars.cvz);
-		} else XY = 0;
-	      }
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_THETA)  { if (Vars.cz != 0) XY = RAD2DEG*atan2(Vars.cx,Vars.cz); } 
-              else
-	      if (Set_Vars_Coord_Type == DEFS.COORD_PHI) { if (Vars.cz != 0) XY = RAD2DEG*atan2(Vars.cy,Vars.cz); } 
-              else
-              if (Set_Vars_Coord_Type == DEFS.COORD_USER1) XY = Vars.UserVariable1;
-              else
-              if (Set_Vars_Coord_Type == DEFS.COORD_USER2) XY = Vars.UserVariable2;
-              else
-		XY = 0;
-                  
-	      Coord[i] = XY;
-	      if (!Vars.Flag_Auto_Limits)
-              
-	      {
-		XY = (Vars.Coord_Max[i]-Vars.Coord_Min[i]);
-		if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars.Coord_Min[i])*Vars.Coord_Bin[i]/XY);
-		else Coord_Index[i] = 0;
-		if (Vars.Flag_With_Borders)
-		{
-		  if (Coord_Index[i] < 0) Coord_Index[i] = 0;
-		  if (Coord_Index[i] >= Vars.Coord_Bin[i]) Coord_Index[i] = Vars.Coord_Bin[i] - 1;
-		}
-	      } /* else Auto_Limits will get Index later from Buffer */
-	    } /* end for i */
-	    While_End = 1;
+            pp = Vars.cp;
 
-	  } /* end else if Vars.Flag_Auto_Limits == 2 */
-	   
+            XY = 0;
+            Set_Vars_Coord_Type = Vars.Coord_Type[i];
+            if (Set_Vars_Coord_Type == DEFS.COORD_X) XY = Vars.cx; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_Y) XY = Vars.cy; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_Z) XY = Vars.cz; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_VX) XY = Vars.cvx; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_VY) XY = Vars.cvy; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_VZ) XY = Vars.cvz; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_KX) XY = V2K*Vars.cvx; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_KY) XY = V2K*Vars.cvy; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_KZ) XY = V2K*Vars.cvz; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_SX) XY = Vars.csx; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_SY) XY = Vars.csy; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_SZ) XY = Vars.csz; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_T) XY = Vars.ct; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_P) XY = pp; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_HDIV) XY = RAD2DEG*atan2(Vars.cvx,Vars.cvz); 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_VDIV) XY = RAD2DEG*atan2(Vars.cvy,Vars.cvz); 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_V) XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz); 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_RADIUS) XY = sqrt(Vars.cx*Vars.cx+Vars.cy*Vars.cy); 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_K) { XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);  XY *= V2K; }
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_ENERGY) { XY = Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz;  XY *= VS2E; }
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_LAMBDA) { XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_NCOUNT) XY = Coord[i]+1; 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_ANGLE) 
+            {  XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);
+               if (Vars.cvz != 0) 
+               {
+                 XY= RAD2DEG*atan2(XY,Vars.cvz);
+               } else XY = 0;
+            }
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_THETA)  { if (Vars.cz != 0) XY = RAD2DEG*atan2(Vars.cx,Vars.cz); } 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_PHI) { if (Vars.cz != 0) XY = RAD2DEG*atan2(Vars.cy,Vars.cz); } 
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_USER1) XY = Vars.UserVariable1;
+                  else
+            if (Set_Vars_Coord_Type == DEFS.COORD_USER2) XY = Vars.UserVariable2;
+                  else
+            XY = 0;
 
-	  if (Vars.Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
-	  { /* now store Coord into Buffer (no index needed) if necessary */
-	    if ((Vars.Buffer_Counter < Vars.Buffer_Block) && ((Vars.Flag_List) || (Vars.Flag_Auto_Limits == 1)))
-	    {
-	      for (i = 0; i < Vars.Coord_Number; i++)
-	      {
-        	Mon2D_Buffer[i + Vars.Neutron_Counter*(Vars.Coord_Number+2)] = Coord[i+1];
-	      }
-	      Mon2D_Buffer[Vars.Coord_Number + Vars.Neutron_Counter*(Vars.Coord_Number+2)]   = pp;
-	      Mon2D_Buffer[(Vars.Coord_Number+1) + Vars.Neutron_Counter*(Vars.Coord_Number+2)] = pp*pp;
-	      Vars.Buffer_Counter++;
-	      if (Vars.Flag_Verbose && (Vars.Buffer_Counter >= Vars.Buffer_Block) && (Vars.Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", mccompcurname, Vars.Buffer_Counter);
-	    }
-	    Vars.Neutron_Counter++;
-	  } /* end (Vars.Flag_Auto_Limits != 2) */
+            Coord[i] = XY;
+            if (!Vars.Flag_Auto_Limits)
+            {
+              XY = (Vars.Coord_Max[i]-Vars.Coord_Min[i]);
+              if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars.Coord_Min[i])*Vars.Coord_Bin[i]/XY);
+              else Coord_Index[i] = 0;
+              if (Vars.Flag_With_Borders)
+              {
+                if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+                if (Coord_Index[i] >= Vars.Coord_Bin[i]) Coord_Index[i] = Vars.Coord_Bin[i] - 1;
+              }
+            } /* else Auto_Limits will get Index later from Buffer */
+          } /* end for i */
+          While_End = 1;
+        } /* end else if Vars.Flag_Auto_Limits == 2 */
 
-	  /* store n1d/2d section for Buffer or current neutron in while */
-	  
-	  if (Vars.Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
-	  {
-	  /* 1D and n1D case : Vars.Flag_Multiple */
-	    if (Vars.Flag_Multiple)
-	    { /* Dim : Vars.Coord_Number*Vars.Coord_Bin[i] vectors (intensity is not included) */ 
-	      for (i= 0; i < Vars.Coord_Number; i++)
-	      {
-		j = Coord_Index[i+1];
-		if (j >= 0 && j < Vars.Coord_Bin[i+1])
-		{
-		  Mon2D_N[i][j]++;
-        	  Mon2D_p[i][j] += pp;
-        	  Mon2D_p2[i][j] += pp*pp;
-		}
-	      }
-	    }
-	    else /* 2D case : Vars.Coord_Number==2 and !Vars.Flag_Multiple and !Vars.Flag_List */
-            if ((Vars.Coord_Number == 2) && !Vars.Flag_Multiple)
-            { /* Dim : Vars.Coord_Bin[1]*Vars.Coord_Bin[2] matrix */
-	      i = Coord_Index[1];
-	      j = Coord_Index[2];
-	      if (i >= 0 && i < Vars.Coord_Bin[1] && j >= 0 && j < Vars.Coord_Bin[2])
-	      {
-		Mon2D_N[i][j]++;
-        	Mon2D_p[i][j] += pp;
-        	Mon2D_p2[i][j] += pp*pp;
-	      }
-	    }
-	  } /* end (Vars.Flag_Auto_Limits != 1) */
-	} /* end while */
-      } /* end if Vars.Coord_Number */
-    } /* end if intersection */
-    else if (Vars.Flag_Absorb) ABSORB;
+        if (Vars.Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
+        { /* now store Coord into Buffer (no index needed) if necessary */
+          if ((Vars.Buffer_Counter < Vars.Buffer_Block) && ((Vars.Flag_List) || (Vars.Flag_Auto_Limits == 1)))
+          {
+            for (i = 0; i < Vars.Coord_Number; i++)
+            {
+              Mon2D_Buffer[i + Vars.Neutron_Counter*(Vars.Coord_Number+2)] = Coord[i+1];
+            }
+            Mon2D_Buffer[Vars.Coord_Number + Vars.Neutron_Counter*(Vars.Coord_Number+2)]   = pp;
+            Mon2D_Buffer[(Vars.Coord_Number+1) + Vars.Neutron_Counter*(Vars.Coord_Number+2)] = pp*pp;
+            Vars.Buffer_Counter++;
+            if (Vars.Flag_Verbose && (Vars.Buffer_Counter >= Vars.Buffer_Block) && (Vars.Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", mccompcurname, Vars.Buffer_Counter);
+          }
+          Vars.Neutron_Counter++;
+        } /* end (Vars.Flag_Auto_Limits != 2) */
+
+        /* store n1d/2d section for Buffer or current neutron in while */
+
+        if (Vars.Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
+        {
+        /* 1D and n1D case : Vars.Flag_Multiple */
+          if (Vars.Flag_Multiple)
+          { /* Dim : Vars.Coord_Number*Vars.Coord_Bin[i] vectors (intensity is not included) */ 
+            for (i= 0; i < Vars.Coord_Number; i++)
+            {
+              j = Coord_Index[i+1];
+              if (j >= 0 && j < Vars.Coord_Bin[i+1])
+              {
+                Mon2D_N[i][j]++;
+                      Mon2D_p[i][j] += pp;
+                      Mon2D_p2[i][j] += pp*pp;
+              }
+            }
+          }
+          else /* 2D case : Vars.Coord_Number==2 and !Vars.Flag_Multiple and !Vars.Flag_List */
+          if ((Vars.Coord_Number == 2) && !Vars.Flag_Multiple)
+          { /* Dim : Vars.Coord_Bin[1]*Vars.Coord_Bin[2] matrix */
+            i = Coord_Index[1];
+            j = Coord_Index[2];
+            if (i >= 0 && i < Vars.Coord_Bin[1] && j >= 0 && j < Vars.Coord_Bin[2])
+            {
+        Mon2D_N[i][j]++;
+              Mon2D_p[i][j] += pp;
+              Mon2D_p2[i][j] += pp*pp;
+            }
+          }
+        } /* end (Vars.Flag_Auto_Limits != 1) */
+      } /* end while */
+    } /* end if Vars.Coord_Number */
+    
+    /* now handles intermediate results saving */
+    if ((Vars.Intermediate > 0) && (mcget_run_num() > Vars.IntermediateCnts))
+    {
+      Vars.IntermediateCnts += Vars.Intermediate*mcget_ncount();
+      /* save results, but do not free pointers */
+      Monitor_nD_OutPut(Nsum, psum, p2sum, Mon2D_N, Mon2D_p, Mon2D_p2, Mon2D_Buffer, DEFS, Vars, 0, mccompcurname);
+      
+    }
+    
+  } /* end if intersection */
+  else if (Vars.Flag_Absorb) ABSORB;
  %}
  
 FINALLY
  %{
-    char   *fname;
-    long     i,j;
-    int    *p0m = NULL;
-    double *p1m = NULL;
-    double *p2m = NULL;
-    char    Coord_X_Label[1024];
-    double  min1d, max1d; 
-    double  min2d, max2d;
-    int     bin1d, bin2d;
-    char    While_End = 0;
-    long    While_Buffer = 0;
-    double  XY, pp;
-    double  Coord[MONnD_COORD_NMAX];
-    long    Coord_Index[MONnD_COORD_NMAX];
-
-    /* check Buffer flush when end of simulation reached */
-    if ((Vars.Buffer_Counter < Vars.Buffer_Block) && Vars.Flag_Auto_Limits)
-    {
-      /* Get Auto Limits */
-      if (Vars.Flag_Verbose) printf("Monitor_nD: %s getting %i Auto Limits from List (%li).\n", mccompcurname, Vars.Coord_Number, Vars.Buffer_Counter);
-      for (i = 1; i <= Vars.Coord_Number; i++)
-      {
-        Vars.Coord_Min[i] = FLT_MAX;
-	Vars.Coord_Max[i] = -FLT_MAX;
-        
-	for (j = 0; j < Vars.Buffer_Counter; j++)
-	{ 
-          XY = Mon2D_Buffer[j*(Vars.Coord_Number+2) + (i-1)];	/* scanning variables in Buffer */
-	  if (XY < Vars.Coord_Min[i]) Vars.Coord_Min[i] = XY;
-	  if (XY > Vars.Coord_Max[i]) Vars.Coord_Max[i] = XY;
-          
-	}
-      }
-      Vars.Flag_Auto_Limits = 2;	/* pass to 2nd auto limits step */
-      Vars.Buffer_Block = Vars.Buffer_Counter;
-	  
-      while (!While_End)
-      { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
-	if (While_Buffer < Vars.Buffer_Block)
-	{
-	  /* first while loops (While_Buffer) */
-	  /* auto limits case : scan Buffer within limits and store in Mon2D */ 
-	  for (i = 1; i <= Vars.Coord_Number; i++)
-	  {
-	    /* scanning variables in Buffer */
-	    XY = (Vars.Coord_Max[i]-Vars.Coord_Min[i]);
-	    Coord[i] = Mon2D_Buffer[While_Buffer*(Vars.Coord_Number+2) + (i-1)];
-	    Coord[0] = Mon2D_Buffer[While_Buffer*(Vars.Coord_Number+2) + (Vars.Coord_Number)];
-	    pp = Coord[0];
-	    if (XY > 0) Coord_Index[i] = floor((Mon2D_Buffer[(i-1) + While_Buffer*(Vars.Coord_Number+2)]-Vars.Coord_Min[i])*Vars.Coord_Bin[i]/XY);
-	    else Coord_Index[i] = 0;
-	    if (Vars.Flag_With_Borders)
-	    {
-	      if (Coord_Index[i] < 0) Coord_Index[i] = 0;
-	      if (Coord_Index[i] >= Vars.Coord_Bin[i]) Coord_Index[i] = Vars.Coord_Bin[i] - 1;
-	    }
-	  } /* end for */
-	  While_Buffer++;
-	} /* end if in Buffer */
-	else /* (While_Buffer >= Vars.Buffer_Block) && (Vars.Flag_Auto_Limits == 2) */ 
-	{
-	  Vars.Flag_Auto_Limits = 0;
-	  While_End = 1;
-	  if (!Vars.Flag_List) /* free Buffer not needed (no list to output) */
-	  { /* Dim : (Vars.Coord_Number+2)*Vars.Buffer_Block matrix (for p, dp) */ 
-	    free(Mon2D_Buffer);
-	  }
-	}
-
-	/* store n1d/2d section from Buffer */
-
-	/* 1D and n1D case : Vars.Flag_Multiple */
-	if (Vars.Flag_Multiple)
-	{ /* Dim : Vars.Coord_Number*Vars.Coord_Bin[i] vectors (intensity is not included) */ 
-	  for (i= 0; i < Vars.Coord_Number; i++)
-	  {
-	    j = Coord_Index[i+1];
-	    if (j >= 0 && j < Vars.Coord_Bin[i+1])
-	    {
-	      Mon2D_N[i][j]++;
-              Mon2D_p[i][j] += pp;
-              Mon2D_p2[i][j] += pp*pp;
-	    }
-	  }
-	}
-	else /* 2D case : Vars.Coord_Number==2 and !Vars.Flag_Multiple and !Vars.Flag_List */
-        if ((Vars.Coord_Number == 2) && !Vars.Flag_Multiple)
-        { /* Dim : Vars.Coord_Bin[1]*Vars.Coord_Bin[2] matrix */
-	  i = Coord_Index[1];
-	  j = Coord_Index[2];
-	  if (i >= 0 && i < Vars.Coord_Bin[1] && j >= 0 && j < Vars.Coord_Bin[2])
-	  {
-	    Mon2D_N[i][j]++;
-            Mon2D_p[i][j] += pp;
-            Mon2D_p2[i][j] += pp*pp;
-	  }
-	} /* end store 2D/1D */
-      } /* end while */
-    } /* end Force Get Limits */
-
-    if (Vars.Flag_Verbose) 
-    {
-      printf("Monitor_nD: %s is a %s.\n", mccompcurname, Vars.Monitor_Label);
-      printf("Monitor_nD: with options=%s\n", options);
-    }
-
-    /* write oputput files (sent to file as p[i*n + j] vectors) */
-    if (Vars.Coord_Number == 0) 
-    {
-      DETECTOR_OUT_0D(Vars.Monitor_Label, Nsum, psum, p2sum);
-    }
-    else
-    if (strlen(Vars.Mon_File) > 0) 
-    { 
-      fname = (char*)malloc(strlen(Vars.Mon_File)+10*Vars.Coord_Number);
-      if (Vars.Flag_List) /* List */
-      {
-	if (Vars.Flag_List == 2) Vars.Buffer_Size = Vars.Neutron_Counter;
-	strcpy(fname,Vars.Mon_File);
-	if (strchr(Vars.Mon_File,'.') == NULL) strcat(fname, "_list");
-
-	min1d = 1; max1d = Vars.Coord_Number+2;
-	min2d = 0; max2d = Vars.Buffer_Size; 
-	bin1d = Vars.Coord_Number+2; bin2d = Vars.Buffer_Size;
-	strcpy(Coord_X_Label,"");
-	for (i= 1; i <= Vars.Coord_Number; i++)
-	{
-	  if (min2d < Vars.Coord_Min[i]) min2d = Vars.Coord_Min[i];
-	  if (max2d < Vars.Coord_Max[i]) max2d = Vars.Coord_Max[i];
-	  strcat(Coord_X_Label, Vars.Coord_Var[i]);
-	  strcat(Coord_X_Label, " ");
-	  if (strchr(Vars.Mon_File,'.') == NULL)
-            { strcat(fname, "."); strcat(fname, Vars.Coord_Var[i]); }
-	}
-	strcat(Coord_X_Label, "I I_err");
-	if (Vars.Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%ix%li).\n", mccompcurname, fname,(Vars.Coord_Number+2),Vars.Buffer_Size);
-	p0m = (int *)malloc((Vars.Coord_Number+2)*Vars.Buffer_Size*sizeof(int));
-	p1m = (double *)malloc((Vars.Coord_Number+2)*Vars.Buffer_Size*sizeof(double));
-        if (min2d == max2d) max2d = min2d+1e-6;
-        if (min1d == max1d) max1d = min1d+1e-6;
-	if (p1m == NULL) /* use Raw Buffer line output */
-	{
-	  if (Vars.Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for transpose. Skipping.\n", mccompcurname);
-	  if (p0m != NULL) free(p0m);
-	  DETECTOR_OUT_2D(
-            Vars.Monitor_Label,
-            Vars.Coord_Label[0],
-	    Coord_X_Label,
-            min2d, max2d, 
-	    min1d, max1d, 
-	    bin2d,
-	    bin1d,
-            (int *)Mon2D_Buffer,Mon2D_Buffer,Mon2D_Buffer,
-            fname); 
-	}
-	else /* transpose for column output */
-	{
-	  for (i=0; i < Vars.Coord_Number+2; i++) 
-	    for (j=0; j < Vars.Buffer_Size; j++)
-	    {
-	      p1m[i*Vars.Buffer_Size+j] = Mon2D_Buffer[j*(Vars.Coord_Number+2) + i];
-	      p0m[i*Vars.Buffer_Size+j] = 1;
-	    }
-	    DETECTOR_OUT_2D(
-              Vars.Monitor_Label,
-	      Coord_X_Label,
-	      Vars.Coord_Label[0],
-              min1d, max1d, 
-	      min2d, max2d, 
-	      bin1d,
-	      bin2d,
-              p0m,p1m,Mon2D_Buffer,
-              fname); 
-	  free(p0m);
-	  free(p1m);
-	}
-      }
-      if (Vars.Flag_Multiple) /* n1D */
-      {
-	for (i= 0; i < Vars.Coord_Number; i++)
-	{
-	  strcpy(fname,Vars.Mon_File);
-	  if (strchr(Vars.Mon_File,'.') == NULL)
-            { strcat(fname, "."); strcat(fname, Vars.Coord_Var[i+1]); }
-	  sprintf(Coord_X_Label, "%s monitor", Vars.Coord_Label[i+1]);
-	  if (Vars.Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 1D (%i).\n", mccompcurname, fname, Vars.Coord_Bin[i+1]);
-          min1d = Vars.Coord_Min[i+1];
-          max1d = Vars.Coord_Max[i+1];
-          if (min1d == max1d) max1d = min1d+1e-6;
-	  DETECTOR_OUT_1D(
-            Coord_X_Label,
-            Vars.Coord_Label[i+1],
-            Vars.Coord_Label[0],
-	    Vars.Coord_Var[i+1],
-            min1d, max1d, 
-	    Vars.Coord_Bin[i+1],
-            Mon2D_N[i],Mon2D_p[i],Mon2D_p2[i],
-            fname); 
-	}
-      }
-      else
-      if (Vars.Coord_Number == 2)	/* 2D */
-      {
-        strcpy(fname,Vars.Mon_File);
-
-	p0m = (int *)malloc(Vars.Coord_Bin[1]*Vars.Coord_Bin[2]*sizeof(int));
-	p1m = (double *)malloc(Vars.Coord_Bin[1]*Vars.Coord_Bin[2]*sizeof(double));
-	p2m = (double *)malloc(Vars.Coord_Bin[1]*Vars.Coord_Bin[2]*sizeof(double));
-
-	if (p2m == NULL) 
-	{
-	  if (Vars.Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%i). Skipping.\n", mccompcurname, 3*Vars.Coord_Bin[1]*Vars.Coord_Bin[2]*sizeof(double));
-	  if (p0m != NULL) free(p0m);
-	  if (p1m != NULL) free(p1m);
-	}
-	else
-	{
-	  for (i= 0; i < Vars.Coord_Bin[1]; i++)
-	  {
-	    for (j= 0; j < Vars.Coord_Bin[2]; j++)
-	    {
-	      p0m[j + i*Vars.Coord_Bin[2]] = Mon2D_N[i][j];
-	      p1m[j + i*Vars.Coord_Bin[2]] = Mon2D_p[i][j];
-	      p2m[j + i*Vars.Coord_Bin[2]] = Mon2D_p2[i][j];
-	    }
-	  }
-	  if (strchr(Vars.Mon_File,'.') == NULL)
-            { strcat(fname, "."); strcat(fname, Vars.Coord_Var[1]);
-	      strcat(fname, "_"); strcat(fname, Vars.Coord_Var[2]); }
-	  if (Vars.Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 2D (%ix%i).\n", mccompcurname, fname, Vars.Coord_Bin[1], Vars.Coord_Bin[2]);
-	  
-	  min1d = Vars.Coord_Min[1];
-          max1d = Vars.Coord_Max[1];
-          if (min1d == max1d) max1d = min1d+1e-6;
-          min2d = Vars.Coord_Min[2];
-          max2d = Vars.Coord_Max[2];
-          if (min2d == max2d) max2d = min2d+1e-6;
-          DETECTOR_OUT_2D(
-              Vars.Monitor_Label,
-	      Vars.Coord_Label[1],
-	      Vars.Coord_Label[2],
-              min1d, max1d,  
-	      min2d, max2d,  
-	      Vars.Coord_Bin[1],
-	      Vars.Coord_Bin[2],
-              p0m,p1m,p2m,
-              fname); 
-
-          if (p0m != NULL) free(p0m);
-	  if (p1m != NULL) free(p1m);
-	  if (p2m != NULL) free(p2m); 
-	}
-      }
-      free(fname);
-    }
-
-    /* Now Free memory Mon2D.. */
-    if ((Vars.Flag_Auto_Limits || Vars.Flag_List) && Vars.Coord_Number)
-    { /* Dim : (Vars.Coord_Number+2)*Vars.Buffer_Block matrix (for p, dp) */ 
-      if (Mon2D_Buffer != NULL) free(Mon2D_Buffer);
-    }
-       
-    /* 1D and n1D case : Vars.Flag_Multiple */
-    if (Vars.Flag_Multiple && Vars.Coord_Number)
-    { /* Dim : Vars.Coord_Number*Vars.Coord_Bin[i] vectors */ 
-      for (i= 0; i < Vars.Coord_Number; i++)
-      { 
-        free(Mon2D_N[i]);
-        free(Mon2D_p[i]);
-        free(Mon2D_p2[i]);
-      }
-      free(Mon2D_N);
-      free(Mon2D_p);
-      free(Mon2D_p2);
-    }
-    
-
-    /* 2D case : Vars.Coord_Number==2 and !Vars.Flag_Multiple and !Vars.Flag_List */
-    if ((Vars.Coord_Number == 2) && !Vars.Flag_Multiple)
-    { /* Dim : Vars.Coord_Bin[1]*Vars.Coord_Bin[2] matrix */
-      for (i= 0; i < Vars.Coord_Bin[1]; i++)
-      { 
-        free(Mon2D_N[i]);
-        free(Mon2D_p[i]);
-        free(Mon2D_p2[i]);
-      }
-      free(Mon2D_N); 
-      free(Mon2D_p);
-      free(Mon2D_p2);
-    }
+    /* save results, and free pointers */
+    Monitor_nD_OutPut(Nsum, psum, p2sum, Mon2D_N, Mon2D_p, Mon2D_p2, Mon2D_Buffer, DEFS, Vars, 1, mccompcurname);
 %}
 
 MCDISPLAY
@@ -1302,10 +1416,10 @@ MCDISPLAY
   {
     magnify("xy");
     multiline(5, (double)xmin, (double)ymin, 0.0,
-        	 (double)xmax, (double)ymin, 0.0,
-        	 (double)xmax, (double)ymax, 0.0,
-        	 (double)xmin, (double)ymax, 0.0,
-        	 (double)xmin, (double)ymin, 0.0);
+           (double)xmax, (double)ymin, 0.0,
+           (double)xmax, (double)ymax, 0.0,
+           (double)xmin, (double)ymax, 0.0,
+           (double)xmin, (double)ymin, 0.0);
   }
   else
   if (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND)
