@@ -49,6 +49,6 @@ TRACE
   %}
 FINALLY
   %{
-    DETECTOR_OUT(Nsum, psum, p2sum);
+    DETECTOR_OUT_0D("4PI monitor", Nsum, psum, p2sum);
   %}
 END
