@@ -112,12 +112,15 @@ sub read_instrument_info {
 sub get_sim_info {
     my ($simprog) = @_;
     # Needs quoting if this is Win32...
+    my $cmdstring;
     if ($Config{'osname'} eq 'MSWin32') {
-      $simprog="\"$simprog\"";
+      $cmdstring="\"$simprog -i\" ";
+    } else {
+      $cmdstring="$simprog -i";
     }
     use FileHandle;
     my $h = new FileHandle;
-    open $h, "$simprog -i |" or die "Could not run simulation.";
+    open $h, "$cmdstring |" or die "Could not run simulation.";
     my $inf = read_instrument_info($h);
     close $h;
     return $inf;
