@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Moderator.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
 * Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision: 1.7 $
-* Origin: McStas release
+* Version: $Revision: 1.8 $
+* Origin: McStas 1.4.2
 *
 * A simple pulsed source for time-of-flight.
 *
@@ -36,6 +35,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, E0, E1, dist, xw, yh, t0, Ec, gam)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
 %{
   double hdiv,vdiv;
