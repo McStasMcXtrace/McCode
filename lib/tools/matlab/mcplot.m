@@ -445,6 +445,14 @@ function mcplot_menu_action(action, object)
             set(all_axes(index_a), 'YScale', scale);
           elseif strcmp(get(this_child, 'Type'), 'surface')
             set(all_axes(index_a), 'ZScale', scale);
+	    if strcmp(scale,'log')
+	      zdat=get(this_child,'zdata');
+              cdat=log(zdat);
+              set(this_child,'cdata',cdat)
+            else
+              zdat=get(this_child,'zdata');
+              set(this_child,'cdata',zdat)
+            end
           end
         end
       end
