@@ -1,16 +1,22 @@
 /*******************************************************************************
 *
-* McStas, version 1.1, released 
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Divergence_monitor
+* %I
+* Written by: KL
+* Date: Nov. 11, 1998
+* Version: $Revision: 1.6 $
+* Origin: McStas release
 *
-* Written by: KL,  Nov. 11, 1998
+* Horizontal+vertical divergence monitor.
 *
+* %D
 * A divergence sensitive monitor. The counts are distributed in 
 * (n times m) pixels. 
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:     Lower x bound of detector opening (m)
@@ -19,8 +25,8 @@
 * ymax:     Upper y bound of detector opening (m)
 * nv:       Number of pixel columns (1)
 * nh:       Number of pixel rows (1)
-* v_maxdiv  Maximal vertical divergence detected (degrees)
-* h_maxdiv  Maximal vertical divergence detected (degrees)
+* v_maxdiv: Maximal vertical divergence detected (degrees)
+* h_maxdiv: Maximal vertical divergence detected (degrees)
 * filename: Name of file in which to store the detector image (text)
 *
 * OUTPUT PARAMETERS:
@@ -29,6 +35,7 @@
 * Div_p:    Array of neutron weight counts
 * Div_p2:   Array of second moments
 *
+* %E
 *******************************************************************************/
 
 

@@ -1,15 +1,22 @@
-/***********************************************************************
+/*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: PSD_monitor_4PI
+* %I
+* Written by: KL and KN
+* Date: April 17, 1998
+* Version: $Revision: 1.6 $
+* Origin: McStas release
 *
-* Written by: KL and KN, April 17, 1998
+* Spherical position-sensitive detector.
 *
+* %D
 * An (n times m) pixel spherical PSD monitor using a cylindrical projection. 
 * Mostly for test and debugging purposes.
+*
+* %P
 * INPUT PARAMETERS:
 *
 * radius:   Radius of detector (m)
@@ -23,7 +30,12 @@
 * PSD_p:    Array of neutron weight counts
 * PSD_p2:   Array of second moments
 *
-***********************************************************************/
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/tests/powder/">Test
+* results</A> (not up-to-date).
+*
+* %E
+*******************************************************************************/
 
 
 DEFINE COMPONENT PSD_monitor_4PI

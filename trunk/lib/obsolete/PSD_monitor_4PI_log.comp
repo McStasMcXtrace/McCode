@@ -1,20 +1,26 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package.
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: PSD_monitor_4PI_log
-*
-* Written by: KL and KN, April 17, 1998
+* %I
+* Written by: KL and KN
+* Date: April 17, 1998
+* Version: $Revision: 1.4 $
+* Origin: McStas release
 * Modified by: KN, December 1999
 *
+* Spherical position-sensitive detector with logarithmic scale.
+*
+* %D
 * This component is a hack. It is identical to the PSD_monitor_4PI component,
 * except that the values in the output histogram are the logarithms of the
 * intensities rather than the intensities themselves. This is useful in
 * Laue-diffraction patterns (like in the McStas tutorial), but does not work
 * together too well with the current McStas method of handling detectors.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * radius:   Radius of detector (m)
@@ -28,6 +34,7 @@
 * PSD_p:    Array of neutron weight counts
 * PSD_p2:   Array of second moments
 *
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_monitor_4PI_log

@@ -1,16 +1,22 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: PSD_monitor
+* %I
+* Written by: KL
+* Date: Feb 3, 1998
+* Version: $Revision: 1.6 $
+* Origin: McStas release
 *
-* Written by: KL,  Feb 3, 1998
+* Position-sensitive monitor.
 *
+* %D
 * An (n times m) pixel PSD monitor. This component may also be used as a beam
 * detector.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xmin:     Lower x bound of detector opening (m)
@@ -27,6 +33,7 @@
 * PSD_p:    Array of neutron weight counts
 * PSD_p2:   Array of second moments
 *
+* %E
 *******************************************************************************/
 
 

@@ -1,17 +1,23 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: 4PI monitor.
+* %I
+* Written by: KL, KN
+* Date: April 17, 1998
+* Version: $Revision: 1.4 $
+* Origin: McStas release
+* Modified by: KL Sept. 22, 1998
 *
-* Written by:  KL, KN  April 17, 1998
-* Modified by: KL      Sept. 22, 1998
+* Monitor that detects ALL non-absorbed neutrons.
 *
+* %D
 * Counts ALL neutrons that propagate this far in the instrument, regardless
 * of origin or direction. Mostly used for test purposes.
 *
+* %P
 * INPUT PARAMETERS:
 *
 * (none)
@@ -22,6 +28,7 @@
 * psum   : Total weight of neutrons hitting
 * p2sum  : Second moment of neutron weights
 *
+* %E
 *******************************************************************************/
 
 

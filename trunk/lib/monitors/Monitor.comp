@@ -1,22 +1,28 @@
-/***********************************************************************
+/*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Monitor 
+* %I
+* Written by: KL
+* Date: October 4, 1997
+* Version: $Revision: 1.5 $
+* Origin: McStas release
 *
-* Written by: KL, October 4, 1997
+* Simple single detector/monitor.
 *
+* %D
 * Sums neutrons (0th, 1st, and 2nd moment of p) flying through 
 * the rectangular monitor opening. May also be used as detector.
 *
+* %P
 * INPUT PARAMETERS:
 *
-* xmin: Lower x bound of opening
-* xmax: Upper x bound of opening
-* ymin: Lower y bound of opening
-* ymax: Upper y bound of opening
+* xmin: Lower x bound of opening [m]
+* xmax: Upper x bound of opening [m]
+* ymin: Lower y bound of opening [m]
+* ymax: Upper y bound of opening [m]
 *
 * OUTPUT PARAMETERS:
 *
@@ -24,7 +30,8 @@
 * psum:  Sum of neutron weights
 * p2sum: 2nd moment of neutron weights
 *
-***********************************************************************/
+* %E
+*******************************************************************************/
 
 DEFINE COMPONENT Monitor
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax)
