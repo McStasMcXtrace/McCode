@@ -1,4 +1,4 @@
-#! /usr/bin/perl -w
+#! /usr/bin/perl
 #
 # Implements perl interface for plotting McStas data output using PGPLOT,
 # Matlab or Scilab
