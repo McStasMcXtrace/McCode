@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -111,8 +111,9 @@ INITIALIZE
   res_struct.aw  = res_struct.ah = 0;
   if (focus_xw) res_struct.aw = atan2(focus_xw,res_struct.distance);
   if (focus_yh) res_struct.ah = atan2(focus_yh,res_struct.distance);
-  if (focus_aw) VarsV.aw = DEG2RAD*focus_aw;
-  if (focus_ah) VarsV.ah = DEG2RAD*focus_ah;%}
+  if (focus_aw) res_struct.aw = DEG2RAD*focus_aw;
+  if (focus_ah) res_struct.ah = DEG2RAD*focus_ah;
+%}
 
 TRACE
 %{
