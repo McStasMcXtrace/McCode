@@ -312,7 +312,6 @@ function PlotInstrument3D()
   hold on
   plot3(centres(3,:),centres(1,:),centres(2,:),'r','view',view,'xlabel','z/[m]','ylabel','x/[m]','zlabel','y/[m]');
   xtitle(INSTRUMENT.descr);
-  unsetmenu(gcw(),'3D Rot.')
   unsetmenu(gcw(),'Zoom')
   unsetmenu(gcw(),'UnZoom')
 //parmwin();
@@ -324,7 +323,6 @@ global INSTRUMENT
 INSTRUMENT.count=INSTRUMENT.count+1;
 plot3(x,y,z,'k-','view',INSTRUMENT.view,'axis',INSTRUMENT.axis,'xlabel','z/[m]','ylabel','x/[m]','zlabel','y/[m]');
 if INSTRUMENT.count==INSTRUMENT.MaxNeutrons
-  setmenu(gcw(),'3D Rot.');
   parmwin();
   PlotInstrument3D();
 end
