@@ -15,6 +15,10 @@ BEGIN {
         $MCSTAS::sys_dir = "c:\\mcstas\\lib";
       } else {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+        # install atexit-style handler so that when we exit or die,
+        # we automatically delete this temporary file
+        END { if ($tmp_file) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
+
       }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
@@ -117,10 +121,6 @@ if ($file =~ m'\.sci$' || $file =~ m'\.sce$') { $plotter=3; }
 if ($file =~ m'\.m$')   { $plotter=1; }
 if ($file =~ m'\.sim$') { $plotter=0; }
 
-# install atexit-style handler so that when we exit or die,
-# we automatically delete this temporary file
-END { if ($tmp_file) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!" } }
-
 # Added E. Farhi, March 2003. Selection of the plotter (pgplot, scilab, matlab)
 if ($plotter eq 3 || $plotter eq 4) {
   # create a temporary scilab execution script
@@ -141,6 +141,7 @@ if ($plotter eq 3 || $plotter eq 4) {
     printf $fh "mprintf('mcplot: Simulation data structure from file $file\\n');\n";
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
   }
+  printf $fh "if MSDOS then unix_g('del /q /f $tmp_file');\n";
   close($fh);
   if ($nowindow) { system("scilab -nw -f $tmp_file\n"); }
   else { system("scilab -f $tmp_file\n"); }
