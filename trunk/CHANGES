@@ -27,7 +27,7 @@
 *
 *******************************************************************************/
 
-Changes in McStas v1.8, XXX YY, ZZZZ
+Changes in McStas v1.8, Mar 4, 2004
 
   License
   - McStas is now GPL software. Note that generated code, output data and papers
@@ -36,20 +36,62 @@ Changes in McStas v1.8, XXX YY, ZZZZ
   - The McStas software package now includes a re-distribution of the plotlib
     package for Scilab, (http://www.dma.utc.fr/~mottelet/myplot.html), courtesy of 
     Stephane Mottelet (stephane.mottelet@dma.utc.fr). Plotlib is beeing distributed
-    using a BSD like license.
+    using a BSD like license. Plotlib needs not be precompiled anymore.
+  - McStas now uses the Perl CPAN module Proc::Simple on unix platforms. Proc::Simple
+    is distributed using the Perl artistic license.
+  
+  General
+  - Nightly CVS builds of McStas are now available to the public from
+    http://mcstas.risoe.dk/cvs (optionally use the mcsync script to get these)
+    NOTE: The CVS builds are not considered 100% stable, you can count on errors
+    in there, but you also get the newest stuff.
+
+  Installation
+  - Improved installation and build scripts. NOTE: The new version is INCOMPATIBLE
+    with Win32 releases older than Windows 2000
+  - Automatic detection of plotting backend, (make config)
+  - Test procedure (make test)
   
   Kernel (i.e. the 'mcstas' program)
   - a PREVIOUS keyword has been implemented, for referencing e.g. position placement
     to upsteam components.
+  - improvements to runtime randvec_target_rect functions
+  - Updated Mersenne Twister random number generator
 
   Tools
-  - Various bugfixes, especially on the Win32 platform.
+  - Various bugfixes, especially on the Win32 platform and RedHat 9 specific stuff
   - mcgui now includes an option to 'scan' instrument parameters (previously only
     possible using mcrun.pl.
   - mcconvert.pl script has been added to the distribution, converts between 
     Matlab and Scilab type output. Cyclic conversion, e.g. Matlab->Scilab->Matlab
     is not supported.
-  
+  - mcplot opens scan steps with Matlab/Scilab backends
+  - mcrun now has support for Matlab/Scilab backends, built in test procedure
+    (mcrun --test), poor man's grid computing - see the manual for information on 
+    how to use this.
+  - mcdoc support for instrument headers, support for the built in tutorial
+  - Improved tutorial built into the gui tools  
+  - editor, various improvements (line numbers etc.)
+
+  Instruments
+  - mcgui now has a special Neutron Site menu (auto generated) to allow distribution 
+    of instruments
+  - instruments can now have default input values
+  - several contributed / new instruments, have a look in your examples/ folder
+    
+  Components
+  - New components:
+    $ Official components
+      - Sans_spheres, a sample for small angle neutron scattering
+      - Powder2, a two ring powder sample
+      - Phonon_simple, a phonon scattering sample
+      - Guide_gravity improved
+    $ Contributed components
+      - Guide_tapering, guide with elliptical/parabolic/general tapering 
+        (Uwe Filges)
+      - ISIS_moderator, (Stuart Ansell and Dickon Champion)
+      - Guide_curved (Ross Stewart)
+
 Changes in McStas v1.7, Jan 17, 2003
 
   Kernel (i.e. the 'mcstas' program)
