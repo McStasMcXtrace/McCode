@@ -6,8 +6,8 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.5 $
-* Origin: McStas release
+* Version: $Revision: 1.6 $
+* Origin: McStas 1.5
 *
 * Monitor that detects ALL non-absorbed neutrons.
 *
@@ -35,7 +35,6 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS(Nsum, psum, p2sum)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     int Nsum;
