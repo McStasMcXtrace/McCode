@@ -42,6 +42,9 @@ if nargin <= 2, id = ''; end
 if ~ischar(options),  options = ''; end
 if ~length(options), options = '-overview'; end
 options = lower(options);  % to lower case
+if ~length(findstr(options,'plot')) &  ~length(findstr(options,'overview')) &  ~length(findstr(options,'action'))
+	options = [ options '-overview ' ];
+end
 if strcmp(options,'action')
   mcplot_menu_action(object, id);
   return
@@ -95,6 +98,10 @@ else  % if 's' is a 'struct'
   %    send to mcplot_scan(s, options)
   [count, object] = mcplot_scan(object, options, id);
   %    if output is not empty, setup output file
+  if length(findstr(options,'-gif'))
+    disp('McPlot: GIF output not available, substituting with PNG.')
+    options = strrep(options, '-gif','-png');
+  end
   if length(findstr(options,'-ps')) ...  
   | length(findstr(options,'-psc')) ... 
   | length(findstr(options,'-eps')) ... 
