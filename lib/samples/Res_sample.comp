@@ -22,7 +22,7 @@ TRACE
   double aim_x, aim_y, aim_z;   /* Position of target relative to scattering point */
 
   if(radius_o < 0.0)
-  {				/* Flat sample */
+  {                             /* Flat sample */
     PROP_Z0;
     if(x <= -0.5*radius_i || x >= 0.5*radius_i ||
        y <= -0.5*h || y >= 0.5*h)
@@ -31,7 +31,7 @@ TRACE
     t1 = t2 = t3 = (-radius_o)/vz;
   }
   else
-  {				/* Hollow cylinder sample */
+  {                             /* Hollow cylinder sample */
     if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
       ABSORB;
     if(t0 < 0)
@@ -45,7 +45,7 @@ TRACE
   dt2 = t3-t2;                /* Time in sample, outgoing */
   v = sqrt(vx*vx + vy*vy + vz*vz);
   l_full = v * (dt0 + dt2);   /* Length of full path through sample */
-  p *= l_full/(2*radius_o);	/* Scattering probability */
+  p *= l_full/(2*radius_o);     /* Scattering probability */
   dt = rand01()*(dt0+dt2);    /* Time of scattering (relative to t0) */
   if (dt > dt0)
     dt += dt1;
@@ -79,6 +79,48 @@ TRACE
   res_kf_z = V2K*vz;
 
   p = 1;
+%}
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  if(radius_o < 0.0)
+  {                             /* Flat sample. */
+    double xmin = -0.5*radius_i;
+    double xmax =  0.5*radius_i;
+    double ymin = -0.5*h;
+    double ymax =  0.5*h;
+    double len = -radius_o;
+    multiline(5, xmin, ymin, 0.0,
+                 xmax, ymin, 0.0,
+                 xmax, ymax, 0.0,
+                 xmin, ymax, 0.0,
+                 xmin, ymin, 0.0);
+    multiline(5, xmin, ymin, len,
+                 xmax, ymin, len,
+                 xmax, ymax, len,
+                 xmin, ymax, len,
+                 xmin, ymin, len);
+    line(xmin, ymin, 0.0, xmin, ymin, len);
+    line(xmax, ymin, 0.0, xmax, ymin, len);
+    line(xmin, ymax, 0.0, xmin, ymax, len);
+    line(xmax, ymax, 0.0, xmax, ymax, len);
+  }
+  else
+  {
+    circle("xz", 0,  h/2.0, 0, radius_i);
+    circle("xz", 0,  h/2.0, 0, radius_o);
+    circle("xz", 0, -h/2.0, 0, radius_i);
+    circle("xz", 0, -h/2.0, 0, radius_o);
+    line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
+    line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
+    line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
+    line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
+    line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
+    line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
+    line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
+    line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
+  }
 %}
 
 END

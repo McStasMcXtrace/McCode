@@ -40,4 +40,15 @@ FINALLY
     if(file)
       fclose(file);
   %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+	       (double)xmax, (double)ymin, 0.0,
+	       (double)xmax, (double)ymax, 0.0,
+	       (double)xmin, (double)ymax, 0.0,
+	       (double)xmin, (double)ymin, 0.0);
+%}
+
 END

@@ -76,4 +76,11 @@ TRACE
   }
   t = -tauv*log(rand01())*1E-6;
 %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy",0,0,0,radius);
+%}
+
 END

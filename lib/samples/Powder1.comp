@@ -99,4 +99,15 @@ TRACE
     ABSORB;
 %}
 
+MCDISPLAY
+%{
+  magnify("xyz");
+  circle("xz", 0,  h/2.0, 0, radius);
+  circle("xz", 0, -h/2.0, 0, radius);
+  line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+  line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+  line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+  line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+%}
+
 END
