@@ -110,13 +110,21 @@ sub read_instrument_info {
 }
 
 sub get_sim_info {
-    my ($simprog) = @_;
+    my @ARGS = @_;
+    my $simprog = $ARGS[0];
+    my $arguments = 0;
+    my $j;
+    if (@ARGS>1) {
+	for ($j=1, $j<@ARGS, $j++) {
+	    $arguments = "$arguments $@ARGS[$j]";
+	}
+    }
     # Needs quoting if this is Win32...
     my $cmdstring;
     if ($Config{'osname'} eq 'MSWin32') {
       $simprog = Win32::GetShortPathName($simprog);
     }
-    $cmdstring="$simprog -i";
+    $cmdstring="$simprog -i $arguments";
     
     use FileHandle;
     my $h = new FileHandle;

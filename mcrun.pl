@@ -681,7 +681,7 @@ exit(1) if $ncount == 0;
 # contrary to normal use, this is what the user expects here.
 $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
 
-$instr_info = get_sim_info("$out_file --format='$plotter'");
+$instr_info = get_sim_info("$out_file","--format='$plotter'");
 
 if($numpoints == 1) {
     do_single();
