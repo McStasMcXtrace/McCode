@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.7 1998-08-26 12:44:35 kn Exp $
+* 	$Id: mcstas.h,v 1.8 1998-09-24 11:18:05 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.7  1998/08/26 12:44:35  kn
+* 	Updated prototypes and global variables declarations.
+*
 * 	Revision 1.6  1998/08/21 12:08:38  kn
 * 	Output generated C simulation code in file rather than on stdout.
 *
@@ -209,6 +212,8 @@ struct comp_orientation
   {
     Coords_exp orientation;
     struct comp_inst *orientation_rel;
+    int isdefault;	/* True if this is a default orientation, generated
+			   when no ROTATED modifier is given. */
   };
 
 /*******************************************************************************

@@ -6,9 +6,14 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.9 1998-09-23 13:50:47 kn Exp $
+*	$Id: instrument.y,v 1.10 1998-09-24 11:18:27 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.9  1998/09/23 13:50:47  kn
+*	Allow multiple component definitions in the file (before the instrument
+*	definition).
+*	Make the use of EXTERN optional.
+*
 *	Revision 1.8  1998/08/26 12:43:49  kn
 *	Merged in the functionality from component.y.
 *
@@ -242,7 +247,8 @@ component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation
 		    comp->pos->place = $6.place;
 		    comp->pos->place_rel = $6.place_rel;
 		    comp->pos->orientation = $7.orientation;
-		    comp->pos->orientation_rel = $7.orientation_rel;
+		    comp->pos->orientation_rel =
+		      $7.isdefault ? $6.place_rel : $7.orientation_rel;
 		    if(def != NULL)
 		    {
 		      /* Check actual parameters against definition and
@@ -314,12 +320,7 @@ actuals1:	  TOK_ID '=' exp
 		  }
 ;
 
-place:		  /* empty */
-		  {
-		    $$.place = coords_exp_origo(); /* Default to (0,0,0). */
-		    $$.place_rel = NULL;	   /* Not relative to instance. */
-		  }
-		| "AT" coords reference
+place:		  "AT" coords reference
 		  {
 		    $$.place = $2;
 		    $$.place_rel = $3;
@@ -329,12 +330,13 @@ place:		  /* empty */
 orientation:	  /* empty */
 		  {
 		    $$.orientation = coords_exp_origo(); /* Default to (0,0,0). */
-		    $$.orientation_rel = NULL;		 /* Not relative. */
+		    $$.isdefault = 1; /* No ROTATED modifier was present */
 		  }
 		| "ROTATED" coords reference
 		  {
 		    $$.orientation = $2;
 		    $$.orientation_rel = $3;
+		    $$.isdefault = 0;
 		  }
 ;
 
