@@ -258,7 +258,7 @@ sub plot_dialog {
       $suffix = "";
       $prefix = "start";
       $pl_suffix = ".pl";
-      $sim_file_name = "\"$sim_file_name\"";
+      $sim_file_name = Win32::GetShortPathName($sim_file_name);
     } else {
       $suffix = "&";
       $prefix = "xterm -e";
