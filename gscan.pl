@@ -67,7 +67,7 @@ for($point = 0; $point < $npoints; $point++) {
     $got_error = 0;
     while(<SIM>) {
 	chomp;
-	if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *$/) {
+	if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) {
 	    $sim_I = $2;
 	    $sim_err = $4;
 	    $sim_N = $6;
