@@ -10,9 +10,10 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
+* Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
 *
 * Monitor for resolution calculations
 *
@@ -25,6 +26,19 @@
 * Example: Res_monitor(filename="Output.res", res_sample_comp=RSample,
 *           xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
 *
+* Setting the monitor geometry. 
+*   The optional parameter 'options' may be set as a string with the 
+*   following keywords. Default is rectangular ('square'):
+*     box                       Box of size xwidth, yheight, zthick
+*     cylinder                  To get a cylindrical monitor
+*                                (diameter is xwidth, height is yheight).
+*     banana                    Same as cylinder, without top/bottom, 
+*                                on restricted angular area
+*     disk                      Disk flat xy monitor. radius is xwidth.
+*     sphrere                   To get a spherical monitor (e.g. a 4PI)
+*                                (diameter is xwidth).
+*     square                    Square flat xy monitor (xwidth, yheight)
+*
 * %P
 * INPUT PARAMETERS:
 *
@@ -32,123 +46,194 @@
 * xmax:            Upper x bound of detector opening (m)
 * ymin:            Lower y bound of detector opening (m)
 * ymax:            Upper y bound of detector opening (m)
-* filename:        Name of output file (string)
+* filename:        Name of output file (string). If unset, use automatic name.
 * res_sample_comp: Name of Res_sample component in the instrument definition
-* bufsize:         Number of events to store. Use 0 to store all.
+* bufsize:         Number of events to store. Use 0 to store all. Default 10000
+*
+* OPTIONAL PARAMETERS (derived from Monitor_nD)
+*
+* xwidth:  (m)  Width/diameter of detector (x)
+* yheight: (m)  Height of detector (y)
+* zthick:  (m)  Thichness of detector (z)
+* options: (str)  String that specifies the geometry of the monitor</br>
 *
 * OUTPUT PARAMETERS:
 *
-* Nsum:  Number of neutron hits
-* psum:  Sum of neutron weights
-* p2sum: 2nd moment of neutron weights
+* DEFS: structure containing Monitor_nD Defines (struct)
+* Vars: structure containing Monitor_nD variables (struct)
+* buffer_index: number of recorded events (long)
 *
 * %E
 *******************************************************************************/
 
+
 DEFINE COMPONENT Res_monitor
-DEFINITION PARAMETERS (filename=0, res_sample_comp)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, bufsize=10000)
-OUTPUT PARAMETERS (Nsum, psum, p2sum, buffer, buffer_size, buffer_index, buffer_block, buffer_block_index)
+DEFINITION PARAMETERS (filename=0, options=0, res_sample_comp)
+SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
+/* these are protected C variables */
+OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+%include "monitor_nd-lib" 
+%}
 
 DECLARE
-  %{
-    double Nsum=0;
-    double psum=0, p2sum=0;
-    double *buffer;
-    long   buffer_size=0;
-    long   buffer_index=0;
-    long   buffer_block=1000;
-    long   buffer_block_index=0;
-  %}
-INITIALIZE
-  %{
-    if (!filename) exit(fprintf(stderr, "Res_monitor: %s: Error: please give me a filename to save data.\n", NAME_CURRENT_COMP));
-    buffer_size = buffer_block;
-    buffer = (double*)malloc(buffer_size*11*sizeof(double));
-    if (!buffer) exit(fprintf(stderr, "Res_monitor: %s: Error: Not enough memory to allocate %li events.\n", NAME_CURRENT_COMP, buffer_size));
-    
-  %}
-TRACE
 %{
-    PROP_Z0;
-    if (x>xmin && x<xmax && y>ymin && y<ymax)
-    {
-      Nsum++;
-      psum += p;
-      p2sum += p*p;
-      /* Now fetch data from the Res_sample. */
-      if(p && (!bufsize || buffer_index<bufsize))
-      {
-        struct Res_sample_struct *s =
-          &(MC_GETPAR(res_sample_comp, res_struct));
-        if(s->pi != 0)
-        {
-          /* reallocate buffer if not enough room */
-          if (buffer_index >= buffer_size)
-          {
-            buffer_size += buffer_block;
-            buffer = (double*)realloc(buffer, buffer_size*11*sizeof(double));
-            if (!buffer) exit(fprintf(stderr, "Res_monitor: %s: Error: Not enough memory to re-allocate %li events. Specify a smaller bufsize value.\n", NAME_CURRENT_COMP, buffer_size));
-            buffer_block_index=0;
-          }
-          
-          buffer[ 0+11*buffer_index] = s->ki_x;
-          buffer[ 1+11*buffer_index] = s->ki_y;
-          buffer[ 2+11*buffer_index] = s->ki_z;
-          buffer[ 3+11*buffer_index] = s->kf_x;
-          buffer[ 4+11*buffer_index] = s->kf_y;
-          buffer[ 5+11*buffer_index] = s->kf_z;
-          buffer[ 6+11*buffer_index] = s->rx;
-          buffer[ 7+11*buffer_index] = s->ry;
-          buffer[ 9+11*buffer_index] = s->rz;
-          buffer[ 9+11*buffer_index] = s->pi;
-          buffer[10+11*buffer_index] = p/s->pi;
-          buffer_index++;
-          buffer_block_index++;
-          SCATTER;
-        }
-      }
-    }
+  MonitornD_Defines_type DEFS;
+  MonitornD_Variables_type Vars;
+  long   buffer_index=0;
 %}
+
+INITIALIZE
+%{
+  int i;
+  char tmp[1024];
+  strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+  
+  if (options != NULL)
+    strncpy(tmp, options, 1024);
+  else
+    strcpy(tmp, "");
+    
+  if (strstr(tmp, "list"))
+    exit(fprintf(stderr, "Res_monitor: %s: Error: Only use geometry keywords (remove list from 'option').\n", NAME_CURRENT_COMP));
+  if (!bufsize) 
+    sprintf(Vars.option, "%s list all, x vx sx y vy sy z vz sz t ", tmp);
+  else
+    sprintf(Vars.option, "%s list=%f, x vx sx y vy sy z vz sz t ", tmp, bufsize);
+
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
+  
+  if (Vars.Coord_Number != 10) exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%d).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
+  /* set the labels */
+  /* we have to record ki_x ki_y ki_z kf_x kf_y kf_z x y z p_i p_f */
+  strcpy(tmp,"ki_x"); strcpy(Vars.Coord_Label[0],tmp);strcpy(Vars.Coord_Var[0],tmp);
+  strcpy(tmp,"ki_y"); strcpy(Vars.Coord_Label[1],tmp);strcpy(Vars.Coord_Var[1],tmp);
+  strcpy(tmp,"ki_z"); strcpy(Vars.Coord_Label[2],tmp);strcpy(Vars.Coord_Var[2],tmp);
+  strcpy(tmp,"kf_x"); strcpy(Vars.Coord_Label[3],tmp);strcpy(Vars.Coord_Var[3],tmp);
+  strcpy(tmp,"kf_y"); strcpy(Vars.Coord_Label[4],tmp);strcpy(Vars.Coord_Var[4],tmp);
+  strcpy(tmp,"kf_z"); strcpy(Vars.Coord_Label[5],tmp);strcpy(Vars.Coord_Var[5],tmp);
+  strcpy(tmp,"x");    strcpy(Vars.Coord_Label[6],tmp);strcpy(Vars.Coord_Var[6],tmp);
+  strcpy(tmp,"y");    strcpy(Vars.Coord_Label[7],tmp);strcpy(Vars.Coord_Var[7],tmp);
+  strcpy(tmp,"z");    strcpy(Vars.Coord_Label[8],tmp);strcpy(Vars.Coord_Var[8],tmp);
+  strcpy(tmp,"p_i");  strcpy(Vars.Coord_Label[9],tmp);strcpy(Vars.Coord_Var[9],tmp);
+  strcpy(tmp,"p_f");  strcpy(Vars.Coord_Label[10],tmp);strcpy(Vars.Coord_Var[10],tmp);
+
+  if (filename != NULL)
+    strncpy(Vars.Mon_File, filename, 128);
+%}
+
+TRACE
+%{    
+  double  t0 = 0;
+  double  t1 = 0;
+  int     intersect   = 0;
+
+  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
+  { 
+    PROP_Z0;
+    intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_DISK)   /* disk xy */
+  {
+    PROP_Z0;
+    intersect = ((x*x + y*y) <= Vars.Sphere_Radius*Vars.Sphere_Radius);
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) /* sphere */
+  {
+    intersect = sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius);
+  /*      intersect = (intersect && t0 > 0); */
+  }
+  else if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)) /* cylinder */
+  {
+    intersect = cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, Vars.Sphere_Radius, Vars.Cylinder_Height);
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA) && (intersect != 1)) intersect = 0; /* remove top/bottom for banana */
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) /* box */
+  {
+    intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
+  }
+  
+  if (intersect)
+  {
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
+    {
+      if (t0 < 0 && t1 > 0)
+        t0 = t;  /* neutron was already inside ! */
+      if (t1 < 0 && t0 > 0) /* neutron exit before entering !! */
+        t1 = t;
+      /* t0 is now time of incoming intersection with the sphere. */
+      if ((Vars.Flag_Shape < 0) && (t1 > 0))
+        PROP_DT(t1); /* t1 outgoing beam */
+      else
+        PROP_DT(t0); /* t0 incoming beam */
+    }
+
+    /* total intensity received */
+    Vars.Nsum++;
+    Vars.psum += p;
+    Vars.p2sum += p*p;
+    /* Now fetch data from the Res_sample. */
+    if(p && (!bufsize || buffer_index<bufsize))
+    {
+      struct Res_sample_struct *s =
+        &(MC_GETPAR(res_sample_comp, res_struct));
+      if(s->pi != 0)
+      {
+        Vars.cp  = s->ki_x;
+        Vars.cx  = s->ki_y;
+        Vars.cvx = s->ki_z;
+        Vars.csx = s->kf_x;
+        Vars.cy  = s->kf_y;
+        Vars.cvy = s->kf_z;
+        Vars.csy = s->rx;
+        Vars.cz  = s->ry;
+        Vars.cvz = s->rz;
+        Vars.csz = s->pi;
+        Vars.ct  = p/s->pi;
+        Monitor_nD_Trace(&DEFS, &Vars);
+      } /* if s->pi */
+      SCATTER;
+    } /* if p */
+    
+  } /* end if intersection */
+
+%}
+
 SAVE
 %{
-  /* reallocate to exact required size */
-  buffer_size = buffer_index;
-  buffer = (double*)realloc(buffer, buffer_size*11*sizeof(double));
-  /* data is an horizontal matrix with 11 rows to write with transposition (- sign)*/
-  DETECTOR_OUT_2D("Resolution monitor", 
-      "Events", "ki_x ki_y ki_z kf_x kf_y kf_z x y z p_i p_f",
-		  1, buffer_index, 1, 11, -buffer_size, 11,
-		  NULL, buffer, NULL,
-		  filename);
+  /* save results, but do not free pointers */
+  Monitor_nD_Save(&DEFS, &Vars);
 %}
+ 
 FINALLY
 %{
   FILE *f;
   char mypre[10] = "# \0";
-      
-  if (!strstr(mcformat.Name, "McStas")) mypre[0] = '\0'; 
-  if (buffer) free(buffer); 
+
+  /* free pointers */
+  Monitor_nD_Finally(&DEFS, &Vars);
+  
+  /* this makes call to run-time functions (undocumented) */
+  /* mcformat is a format structure defined in mcstas-r.h */
+  if (!strstr(mcformat.Name, "McStas")) mypre[0] = '\0';  
   /* adding simulation parameters after data: re-open filename in append mode */
   f = mcnew_file(filename, "a");
   if (f)
   {
-    /* then call mcinfo_simulation(FILE *f, struct mcformats_struct format, char *pre, char *name) */
-    /* this makes call to run-time functions (undocumented) */
+    /* use mcinfo_simulation function from mcstas-r.c to write simulation info */
     mcinfo_simulation(f, mcformat, mypre, filename);
     /* close the file Resolution */
     close(f);
   }
 %}
+
 MCDISPLAY
 %{
-  magnify("xy");
-  multiline(5, (double)xmin, (double)ymin, 0.0,
-               (double)xmax, (double)ymin, 0.0,
-               (double)xmax, (double)ymax, 0.0,
-               (double)xmin, (double)ymax, 0.0,
-               (double)xmin, (double)ymin, 0.0);
+  Monitor_nD_McDisplay(&DEFS, &Vars);
 %}
 
 END
