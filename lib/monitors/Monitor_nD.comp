@@ -4,11 +4,12 @@
 *
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
-* Date: 14th Febrary 2000.
+* Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Version: 0.13.2
+* Version: 0.13.3
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
-* Modified by: EF, 10th Mar 2000 : use struct
+* Modified by: EF, 10th Mar 2000 : use struct. 
+* Modified by: EF, 25th May 2000 : correct Mon2D_Buffer alloc bug.
 *
 * This component is a general Monitor that can output 0/1/2D signals 
 * (Intensity vs. [something] and vs. [something] ...)
@@ -100,6 +101,7 @@
 * Mon2D_N: output array containing detected signals counts (counts)
 * Mon2D_p: (flux)
 * Mon2D_p2: (error)
+* Mon2D_Buffer: used for long lists and auto limits
 * DEFS: structure containing Monitor_nD Defines (struct)
 * Vars: structure containing Monitor_nD variables (struct)
 *
@@ -113,16 +115,20 @@ DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, options)
 SETTING PARAMETERS ()
 /* these are protected C variables */
-OUTPUT PARAMETERS (Nsum, psum, p2sum, Mon2D_N, Mon2D_p, Mon2D_p2, DEFS, Vars)
+OUTPUT PARAMETERS (Nsum, psum, p2sum, Mon2D_N, Mon2D_p, Mon2D_p2, Mon2D_Buffer, DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 /* POLARISATION PARAMETERS (sx,sy,sz) */
 
 DECLARE
 %{
+
+
+#ifndef Monitor_nD_Here
+
 #define MONnD_COORD_NMAX  25  /* max number of variables to record */
   
   /* here we define some DEFINE constants */
-  struct MonitornD_Defines
+  typedef struct MonitornD_Defines
   {
     char COORD_NONE  ;
     char COORD_X     ;
@@ -165,18 +171,9 @@ DECLARE
     char SHAPE_DISK  ; 
     char SHAPE_SPHERE; 
     char SHAPE_CYLIND; 
-  } DEFS;
-
-
-
-  int    Nsum;
-  double psum, p2sum;
-  int    **Mon2D_N;
-  double **Mon2D_p;
-  double **Mon2D_p2;
-  double *Mon2D_Buffer;
-
-  struct MonitornD_Variables
+  } MonitornD_Defines_type;
+  
+  typedef struct MonitornD_Variables
   {
     double area;
     double Sphere_Radius     ;
@@ -202,7 +199,21 @@ DECLARE
     double Coord_Max[MONnD_COORD_NMAX];
     char   Monitor_Label[MONnD_COORD_NMAX*30];      /* Label for monitor */
     char   Mon_File[64];    /* output file name */
-  } Vars;
+  } MonitornD_Variables_type;
+
+  #define Monitor_nD_Here 
+#endif
+
+  int    Nsum;
+  double psum, p2sum;
+  int    **Mon2D_N;
+  double **Mon2D_p;
+  double **Mon2D_p2;
+  double *Mon2D_Buffer;
+  
+  MonitornD_Defines_type DEFS;
+  MonitornD_Variables_type Vars;
+
 %}
 
 INITIALIZE
@@ -874,9 +885,9 @@ FINALLY
  %{
     char   *fname;
     long     i,j;
-    int    *p0m;
-    double *p1m;
-    double *p2m;
+    int    *p0m = NULL;
+    double *p1m = NULL;
+    double *p2m = NULL;
     char    Coord_X_Label[1024];
     double  min1d, max1d; 
     double  min2d, max2d;
@@ -1107,9 +1118,9 @@ FINALLY
               p0m,p1m,p2m,
               fname); 
 
-	  if (p0m != NULL) free(p0m);
+          if (p0m != NULL) free(p0m);
 	  if (p1m != NULL) free(p1m);
-	  if (p2m != NULL) free(p2m);
+	  if (p2m != NULL) free(p2m); 
 	}
       }
       free(fname);
@@ -1134,21 +1145,22 @@ FINALLY
       free(Mon2D_p);
       free(Mon2D_p2);
     }
- 
+    
+
     /* 2D case : Vars.Coord_Number==2 and !Vars.Flag_Multiple and !Vars.Flag_List */
     if ((Vars.Coord_Number == 2) && !Vars.Flag_Multiple)
     { /* Dim : Vars.Coord_Bin[1]*Vars.Coord_Bin[2] matrix */
       for (i= 0; i < Vars.Coord_Bin[1]; i++)
       { 
-	free(Mon2D_N[i]);
+        free(Mon2D_N[i]);
         free(Mon2D_p[i]);
         free(Mon2D_p2[i]);
       }
-      free(Mon2D_N);
+      free(Mon2D_N); 
       free(Mon2D_p);
       free(Mon2D_p2);
     }
-  %}
+%}
 
 MCDISPLAY
 %{
