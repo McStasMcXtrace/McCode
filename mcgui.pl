@@ -148,13 +148,13 @@ sub menu_edit_current {
     if($edit_control) {
         $edit_window->raise();
     } else {
-	if ($MCSTAS::mcstas_config{'EDITOR'} eq 0) {
-	    setup_edit_1_7($main_window);
-	} elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1) {
-	    setup_edit($main_window);
-	} else {
-	    menu_spawn_editor($main_window);
-	}
+        if ($MCSTAS::mcstas_config{'EDITOR'} eq 0) {
+            setup_edit_1_7($main_window);
+        } elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1) {
+            setup_edit($main_window);
+        } else {
+            menu_spawn_editor($main_window);
+        }
     }
 }
 
@@ -219,8 +219,8 @@ sub mcdoc_current {
         $cmd_suffix=' &';
     }
     if (-e $current_sim_def) {
-	putmsg($cmdwin, "Opening instrument docs: $prefix mcdoc$suffix $current_sim_def $cmd_suffix\n", 'msg');
-	system("$prefix mcdoc$suffix $current_sim_def $cmd_suffix");
+        putmsg($cmdwin, "Opening instrument docs: $prefix mcdoc$suffix $current_sim_def $cmd_suffix\n", 'msg');
+        system("$prefix mcdoc$suffix $current_sim_def $cmd_suffix");
     }
 }
 sub mcdoc_web {
@@ -387,7 +387,7 @@ sub new_sim_def_name {
     if ($Config{'osname'} eq 'MSWin32') {
         chdir(dirname($current_sim_def));
     }
-    putmsg($cmdwin, "$text", 'msg');
+    putmsg($cmdwin, "$text\n", 'msg');
 }
 
 sub open_instr_def {
@@ -592,7 +592,7 @@ sub run_dialog {
     my $status = close($fh);
     $status_label->configure(-text => "Status: Done");
     if(!$success || (! $status && ($? != 0 || $!))) {
-        putmsg($cmdwin, "Simulation exited abnormally.\n", 'msg');
+        putmsg($cmdwin, "Simulation exited abnormally.\n");
         return undef;
     } else {
         putmsg($cmdwin, "Simulation finished.\n", 'msg');
@@ -774,7 +774,6 @@ sub menu_run_simulation {
     my ($bt, $newsi) = simulation_dialog($w, $out_info, $inf_sim);
     if($bt eq 'Start') {
         my @command = ();
-        my @mcplot_cmd = ();
         my $suffix='';
         # Check 'Plotter' setting
         my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
@@ -794,81 +793,75 @@ sub menu_run_simulation {
                 # Also, disable plotting of results after mcdisplay run...
                 $newsi->{'Autoplot'}=0;
               }
-              push @mcplot_cmd, "start";
               # Set $suffix to .pl
               $suffix='.pl';
             }
-            if ($newsi->{'Trace'} eq 2) { # 'mcrun' mode
-              push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix";
-              push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'};
-              push @command, "--multi" if $newsi->{'Multi'};
-            } else { # 'mcrun' mode
-              push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
-              if ($plotter eq 0) {
-                push @command, "--plotter=PGPLOT";
-                # Be sure to read mcplotlib.pl in this case...
-                require "mcplotlib.pl";
-                # Standard mcdisplay.pl with PGPLOT bindings
-                # Make sure the PGPLOT server is already started. If the
-                # PGPLOT server is not started, mcdisplay will start it,
-                # and the server will keep the pipe to mcdisplay open
-                # until the server exits, hanging mcgui.
-                ensure_pgplot_xserv_started();
-              }
-              elsif ($plotter eq 1) {
-                push @command, "-pMatlab";
-              }
-              elsif ($plotter eq 2) {
-                push @command, "-pMatlab";
-                my $output_file = save_disp_file($w,'m');
-                if (!$output_file) {
-                  putmsg($cmdwin, "Trace cancelled...\n");
-                  return;
-                }
-                $output_file = "\"$output_file\"";
-                push @command, "-f$output_file";
-                
-              }
-              elsif ($plotter eq 3) {
-                push @command, "-pScilab";
-                # If this is Win32, make a check for # of neutron histories,
-                # should be made small to avoid waiting a long time for 
-                # mcdisplay...
-                if ($Config{'osname'} eq "MSWin32") {
-		    # Subtract 0 to make sure $num_histories is treated as a
-		    # number...
-                    my $num_histories = $newsi->{'Ncount'} - 0;
-                    if ($num_histories >=1e3) {
-                        my $break = $w->messageBox(-message => "$num_histories is a very large number of neutron histories when using Scilab on Win32.\nContinue?",
-                       -title => "note",
-                       -type => 'yesnocancel',
-                       -icon => 'error',
-                       -default => 'no');
-			# Make first char lower case - default on 
-			# Win32 upper case default on Unix... (perl 5.8)
-			$break = lcfirst($break);
-                        if (($break eq "no")||($break eq "cancel")) {
-                            return 0;
-                        }
-                    }
-                }
-              }
-              elsif ($plotter eq 4) {
-                push @command, "-pScilab";
-                my $output_file = save_disp_file($w,'sci');
-                if (!$output_file) {
-                  putmsg($cmdwin, "Trace cancelled...\n");
-                  return;
-                }
-                $output_file =~ s! !\ !g;
-                push @command, "-f$output_file";
-                
-              }
-              push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
-              push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
-              push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
-              # push @command, "--save" if ($newsi->{'Trace'} eq 1);
+            # 'mcdisplay' trace mode
+            push @command, "$MCSTAS::mcstas_config{'prefix'}mcdisplay$suffix";
+            if ($plotter eq 0) {
+              push @command, "--plotter=PGPLOT";
+              # Be sure to read mcplotlib.pl in this case...
+              require "mcplotlib.pl";
+              # Standard mcdisplay.pl with PGPLOT bindings
+              # Make sure the PGPLOT server is already started. If the
+              # PGPLOT server is not started, mcdisplay will start it,
+              # and the server will keep the pipe to mcdisplay open
+              # until the server exits, hanging mcgui.
+              ensure_pgplot_xserv_started();
             }
+            elsif ($plotter eq 1) {
+              push @command, "-pMatlab";
+            }
+            elsif ($plotter eq 2) {
+              push @command, "-pMatlab";
+              my $output_file = save_disp_file($w,'m');
+              if (!$output_file) {
+                putmsg($cmdwin, "Trace cancelled...\n");
+                return;
+              }
+              $output_file = "\"$output_file\"";
+              push @command, "-f$output_file";
+
+            }
+            elsif ($plotter eq 3) {
+              push @command, "-pScilab";
+              # If this is Win32, make a check for # of neutron histories,
+              # should be made small to avoid waiting a long time for 
+              # mcdisplay...
+              if ($Config{'osname'} eq "MSWin32") {
+                  # Subtract 0 to make sure $num_histories is treated as a
+                  # number...
+                  my $num_histories = $newsi->{'Ncount'} - 0;
+                  if ($num_histories >=1e3) {
+                      my $break = $w->messageBox(-message => "$num_histories is a very large number of neutron histories when using Scilab on Win32.\nContinue?",
+                     -title => "note",
+                     -type => 'yesnocancel',
+                     -icon => 'error',
+                     -default => 'no');
+                      # Make first char lower case - default on 
+                      # Win32 upper case default on Unix... (perl 5.8)
+                      $break = lcfirst($break);
+                      if (($break eq "no")||($break eq "cancel")) {
+                          return 0;
+                      }
+                  }
+              }
+            }
+            elsif ($plotter eq 4) {
+              push @command, "-pScilab";
+              my $output_file = save_disp_file($w,'sci');
+              if (!$output_file) {
+                putmsg($cmdwin, "Trace cancelled...\n");
+                return;
+              }
+              $output_file =~ s! !\ !g;
+              push @command, "-f$output_file";
+
+            }
+            push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
+            push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
+            push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
+            # push @command, "--save" if ($newsi->{'Trace'} eq 1);
         }
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);
@@ -891,18 +884,23 @@ sub menu_run_simulation {
             $OutDir =~ s! !\ !g;
           }
         }
-        
+        if ($newsi->{'mpi'} > 0) {
+          push @command, "--mpi=$newsi->{'mpi'}";
+        } elsif ($newsi->{'Multi'} > 0) {
+          push @command, "--multi";
+        }
         push @command, "--ncount=$newsi->{'Ncount'}";
+        push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
         push @command, "--trace" if ($newsi->{'Trace'} eq 1);
         push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
         push @command, "--dir=$OutDir" if $newsi->{'Dir'};
-  if ($inf_sim->{'Binary'} == 1) {
+        if ($inf_sim->{'Binary'} == 1) {
           push @command, "--format='Matlab_binary'" if ($plotter eq 1 || $plotter eq 2);
           push @command, "--format='Scilab_binary'" if ($plotter eq 3 || $plotter eq 4);
-  } else {
-    push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
+        } else {
+          push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
           push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
-  }
+        }
         my @unset = ();
         for (@{$out_info->{'Parameters'}}) {
             if (length($newsi->{'Params'}{$_})>0) {
@@ -944,9 +942,9 @@ sub menu_run_simulation {
             $inf_sim=$newsi;
         }
         $inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
-  $inf_sim->{'Binary'} = $newsi->{'Binary'};
+        $inf_sim->{'Binary'} = $newsi->{'Binary'};
         $inf_sim->{'Trace'} = $newsi->{'Trace'};
-        push @mcplot_cmd, "$MCSTAS::mcstas_config{'prefix'}mcplot$suffix";
+
         if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
           plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
                       $current_sim_file);
@@ -958,7 +956,7 @@ sub menu_plot_results {
     my ($w) = @_;
     unless($current_sim_file) {
         my $ret = load_sim_file($w);
-        return 0 unless $ret && $current_sim_file;
+        return 0 unless $ret && -e $current_sim_file;
     }
     plot_dialog($w, $inf_instr, $inf_sim, $inf_data, $current_sim_file);
     return 1;
@@ -1345,29 +1343,29 @@ sub editor_quit {
 }    
 
 sub Tk::CodeText::selectionModify {
-	my ($cw, $char, $mode) = @_;
-	my @ranges = $cw->tagRanges('sel');
-	my $charlength = length($char);
-	if (@ranges >= 2) {
-		my $start = $cw->index($ranges[0]);
-		my $end = $cw->index($ranges[1]);
-		my $firststart = $start;
-		while ($cw->compare($start, "<=", $end)) {
-			if ($mode) {
-			    if ($cw->get("$start linestart", "$start linestart + $charlength chars") eq $char) {
-					$cw->delete("$start linestart", "$start linestart + $charlength chars");
-				}
-			} else {
-			    $cw->insert("$start linestart", $char);
-		    	}
-			$start = $cw->index("$start + 1 lines");
-		    }
-		if (!$mode) {
-		    @ranges = $cw->tagRanges('sel');
-		    @ranges = ($firststart, $ranges[@ranges-1]);
-		}
-		$cw->tagAdd('sel', @ranges);
-	    }
+        my ($cw, $char, $mode) = @_;
+        my @ranges = $cw->tagRanges('sel');
+        my $charlength = length($char);
+        if (@ranges >= 2) {
+                my $start = $cw->index($ranges[0]);
+                my $end = $cw->index($ranges[1]);
+                my $firststart = $start;
+                while ($cw->compare($start, "<=", $end)) {
+                        if ($mode) {
+                            if ($cw->get("$start linestart", "$start linestart + $charlength chars") eq $char) {
+                                        $cw->delete("$start linestart", "$start linestart + $charlength chars");
+                                }
+                        } else {
+                            $cw->insert("$start linestart", $char);
+                            }
+                        $start = $cw->index("$start + 1 lines");
+                    }
+                if (!$mode) {
+                    @ranges = $cw->tagRanges('sel');
+                    @ranges = ($firststart, $ranges[@ranges-1]);
+                }
+                $cw->tagAdd('sel', @ranges);
+            }
 }
 
 sub setup_edit_1_7 {
@@ -1384,48 +1382,48 @@ sub setup_edit_1_7 {
     $menu->pack(-fill => 'x');
     my $filemenu = $menu->Menubutton(-text => 'File', -underline => 0);
     $filemenu->command(-label => 'New instrument',
-		       -command => [\&menu_new, $w],
-		       -underline => 0);
+                       -command => [\&menu_new, $w],
+                       -underline => 0);
     $filemenu->command(-label => 'Save instrument',
-		       -accelerator => 'Alt+S',
-		       -command => [\&menu_save, $w],
-		       -underline => 0);
+                       -accelerator => 'Alt+S',
+                       -command => [\&menu_save, $w],
+                       -underline => 0);
     $w->bind('<Alt-s>' => [\&menu_save, $w]);
     $filemenu->command(-label => 'Save instrument as ...',
-		       -underline => 16,
-		       -command => sub {menu_saveas($w)});
+                       -underline => 16,
+                       -command => sub {menu_saveas($w)});
     $filemenu->separator;
     $filemenu->command(-label => 'Close',
-		       -underline => 0,
-		       -accelerator => 'Alt+C',
-		       -command => sub { editor_quit($w) } );
+                       -underline => 0,
+                       -accelerator => 'Alt+C',
+                       -command => sub { editor_quit($w) } );
     $w->bind('<Alt-c>' => sub { editor_quit($w) } );
     $filemenu->pack(-side=>'left');
     my $editmenu = $menu->Menubutton(-text => 'Edit', -underline => 0);
     $editmenu->command(-label => 'Undo',
-		       -accelerator => 'Ctrl+Z',
-		       -command => [\&menu_undo, $w], -underline => 0);
+                       -accelerator => 'Ctrl+Z',
+                       -command => [\&menu_undo, $w], -underline => 0);
     $w->bind('<Control-z>' => [\&menu_undo, $w]);
     $editmenu->separator;
     $editmenu->command(-label => 'Cut',
-		       -accelerator => 'Ctrl+X',
-		       -command => sub { $e->clipboardCut(); },
-		       -underline => 0);
+                       -accelerator => 'Ctrl+X',
+                       -command => sub { $e->clipboardCut(); },
+                       -underline => 0);
     $editmenu->command(-label => 'Copy',
-		       -accelerator => 'Ctrl+C',
-		       -command => sub { $e->clipboardCopy(); },
-		       -underline => 1);
+                       -accelerator => 'Ctrl+C',
+                       -command => sub { $e->clipboardCopy(); },
+                       -underline => 1);
     $editmenu->command(-label => 'Paste',
-		       -accelerator => 'Ctrl+V',
-		       -command => sub { $e->clipboardPaste(); },
-		       -underline => 0);
+                       -accelerator => 'Ctrl+V',
+                       -command => sub { $e->clipboardPaste(); },
+                       -underline => 0);
     $editmenu->pack(-side=>'left');
     my $insert_menu = $menu->Menubutton(-text => 'Insert', -underline => 0);
     make_insert_menu($w, $insert_menu);
 
     # Create the editor text widget.
     $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
-		      -height => 24);
+                      -height => 24);
     my $s = $w->Scrollbar(-command => [$e, 'yview']);
     $e->configure(-yscrollcommand =>  [$s, 'set']);
     $s->pack(-side => 'right', -fill => 'y');
@@ -1518,6 +1516,30 @@ $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
 
+if ($Config{'osname'} eq 'MSWin32') {
+  $inf_sim->{'ssh'}      = 0;
+  $inf_sim->{'mpicc'}    = 0;
+  $inf_sim->{'hostfile'} = "";
+} else {
+  # checks for MPI, ssh, and machine-file availability
+  my $HOME=$ENV{'HOME'};
+  if (!$HOME || $HOME eq "") { $HOME="."; }
+  $inf_sim->{'ssh'}      = check_command("ssh");
+  $inf_sim->{'mpicc'}    = check_command("mpicc") && check_command("mpirun");
+  $inf_sim->{'hostfile'} = "$HOME/.mcstas-hosts";
+  if ($inf_sim->{'ssh'} ne 0 || $inf_sim->{'mpicc'} ne 0) {
+    if (! -e $inf_sim->{'hostfile'}) {
+      $inf_sim->{'hostfile'} = "$MCSTAS::sys_dir/tools/perl/mcstas-hosts";
+      if (! -e $inf_sim->{'hostfile'}) {
+        putmsg($cmdwin, "mcrun: No MPI/grid machine list. MPI/grid disabled...
+         Define $HOME/.mcstas-hosts or $hostfile.");
+        $inf_sim->{'ssh'}      = 0;
+        $inf_sim->{'mpicc'}    = 0;
+      }
+    }
+  }
+}
+
 my $open_editor = 0;
 
 if(@ARGV>0 && @ARGV<3) {
@@ -1526,19 +1548,19 @@ if(@ARGV>0 && @ARGV<3) {
     my $j;
     my $filenames;
     for ($j=0; $j<@ARGV; $j++) {
-	if ($ARGV[$j] eq "--open") {
-	    $open_editor = 1;
-#	    menu_edit_current($win);
-	} else {
-	    $filenames = "$ARGV[$j]";
-	}
+        if ($ARGV[$j] eq "--open") {
+            $open_editor = 1;
+#            menu_edit_current($win);
+        } else {
+            $filenames = "$ARGV[$j]";
+        }
     }
     
     # Most likely, everything on the commandline is a filename... Join using
     # spaces, e.g. mcgui.pl My Documents\My Simulation.instr
     open_instr_def($win, $filenames);
     if ($open_editor == 1) {
-	menu_edit_current($win);
+        menu_edit_current($win);
     }
 } else {
 #    menu_open($win);
