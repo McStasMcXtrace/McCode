@@ -686,7 +686,7 @@ sub menu_run_simulation {
     my $out_name = compile_instrument($w);
     return 0 unless $out_name;
     # Attempt to avoid problem with missing "." in $PATH. Unix only.
-    if (!$Config{'osname'} eq 'MSWin32') {
+    if (!($Config{'osname'} eq 'MSWin32')) {
 	unless($out_name =~ "/") {
 	    $out_name = "./$out_name";
 	}
