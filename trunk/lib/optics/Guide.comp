@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: September 2 1998
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas release
 * Modified by: KL, October 6, 1998
 *
@@ -143,6 +143,7 @@ TRACE
         ABSORB;                               /* Cutoff ~ 1E-10 */
     }
     p *= R0;
+    SCATTER;
   }
 %}
 
