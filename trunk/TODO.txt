@@ -22,7 +22,8 @@ DONE:
   # New Guide_curved by Ross Stewart
 * Instrument default parameters
 * Rectangular focusing improved, also used for the sources
-* CVS builds on weekdays (nights)
+* CVS builds on weekdays (nights) - now on official McStas page
+* Tool for automatic get+build of McStas CVS versions
 * new script mcconvert, to convert between Matlab and Scilab data output
 * Kernel PREVIOUS keyword, works together with RELATIVE keyword
 * Grammar for INSTRUMENT default values
