@@ -6,84 +6,7 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.22 1999-03-18 07:32:55 kn Exp $
-*
-* 	$Log: not supported by cvs2svn $
-* 	Revision 1.21  1999/03/16 13:50:49  kn
-* 	New file format for 1D detector outputs.
-*
-* 	Revision 1.20  1999/03/16 13:46:07  kn
-* 	mcsiminfo_init()/mcsiminfo_close() functions.
-* 	More info in the mcstas.sim file.
-*
-* 	Revision 1.19  1999/02/22 12:40:28  kn
-* 	Implemented mcstas.sim simulation information file to describe a
-* 	simulation run, used by the mcplot front-end.
-*
-* 	Revision 1.18  1999/01/28 07:56:21  kn
-* 	Support for MCDISPLAY section in component definitions.
-*
-* 	Revision 1.17  1998/11/13 07:32:15  kn
-* 	Fix bug on Win32 when allocating memory for zero instrument parameters.
-*
-* 	Revision 1.16  1998/11/09 08:17:34  kn
-* 	Use malloc()'ed array instead of auto array with dynamic size (for
-* 	portability).
-*
-* 	Revision 1.15  1998/10/02 08:38:27  kn
-* 	Added DETECTOR_OUT support.
-* 	Fixed header comment.
-*
-* 	Revision 1.14  1998/10/01 08:12:26  kn
-* 	Support for embedding the file in the output from McStas.
-* 	Added mcstas_main() function.
-* 	Added support for command line arguments.
-*
-* 	Revision 1.13  1998/09/23 13:51:35  kn
-* 	McStas now uses its own random() implementation (unless
-* 	USE_SYSTEM_RANDOM is defined).
-*
-* 	Revision 1.12  1998/05/19 07:54:05  kn
-* 	In randvec_target_sphere, accept radius=0 to mean that no focusing is to
-* 	be done (choose direction uniformly in full 4PI solid angle).
-*
-* 	Revision 1.11  1998/05/11 12:08:49  kn
-* 	Fix bug in cylinder_intersect that caused an infinite cylinder height in
-* 	some cases.
-*
-* 	Revision 1.10  1998/04/17 11:50:08  kn
-* 	Added sphere_intersect.
-*
-* 	Revision 1.9  1998/04/17 10:52:27  kn
-* 	Better names in randvec_target_sphere.
-*
-* 	Revision 1.8  1998/04/16 14:21:49  kn
-* 	Added randvec_target() function.
-*
-* 	Revision 1.7  1998/03/24 07:34:03  kn
-* 	Use rand01() in randnorm(). Fix typos.
-*
-* 	Revision 1.6  1998/03/20 14:19:52  lefmann
-* 	Added cylinder_intersect().
-*
-* 	Revision 1.5  1998/03/16 08:03:41  kn
-* 	Added normal distributed random number function randnorm().
-*
-* 	Revision 1.4  1997/10/16 14:27:05  kn
-* 	Add missing #include. Change in mcreadparams() to fit better with the
-* 	"display" visualization tool.
-*
-* 	Revision 1.3  1997/09/08 11:31:22  kn
-* 	Added mcsetstate() function.
-*
-* 	Revision 1.2  1997/09/08 11:16:43  kn
-* 	Bug fix in mccoordschange().
-*
-* 	Revision 1.1  1997/09/08 10:40:03  kn
-* 	Initial revision
-*
-*
-* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1999, All rights reserved
 *******************************************************************************/
 
 #include <stdarg.h>
@@ -102,6 +25,14 @@ int mctraceenabled = 0;
 int mcdefaultmain = 0;
 #endif
 
+static long mcseed = 0;
+mcstatic int mcdotrace = 0;
+static int mcascii_only = 0;
+static int mcsingle_file = 0;
+
+static FILE *mcsiminfo_file = NULL;
+static char *mcdirname = NULL;
+static char *mcsiminfo_name = "mcstas.sim";
 
 /* MCDISPLAY support. */
 
@@ -322,24 +253,51 @@ mcestimate_error(int N, double p1, double p2)
 }
 
 
-static long mcseed = 0;
-mcstatic int mcdotrace = 0;
+FILE *
+mcnew_file(char *name)
+{
+  int dirlen;
+  char *mem;
+  FILE *file;
+
+  dirlen = mcdirname ? strlen(mcdirname) : 0;
+  mem = malloc(dirlen + 1 + strlen(name) + 1);
+  if(!mem)
+  {
+    fprintf(stderr, "Error: Out of memory\n");
+    exit(1);
+  }
+  strcpy(mem, "");
+  if(dirlen)
+  {
+    strcat(mem, mcdirname);
+    if(mcdirname[dirlen - 1] != MC_PATHSEP_C &&
+       name[0] != MC_PATHSEP_C)
+      strcat(mem, MC_PATHSEP_S);
+  }
+  strcat(mem, name);
+  file = fopen(mem, "w");
+  if(!file)
+    fprintf(stderr, "Warning: could not open output file '%s'\n", mem);
+  free(mem);
+  return file;
+}
 
 
 static void
-mcinfo_out(FILE *f)
+mcinfo_out(char *pre, FILE *f)
 {
   int i;
-  
-  fprintf(f, "Name: %s\n", mcinstrument_name);
-  fprintf(f, "Parameters:");
+
+  fprintf(f, "%sName: %s\n", pre, mcinstrument_name);
+  fprintf(f, "%sParameters:", pre);
   for(i = 0; i < mcnumipar; i++)
     fprintf(f, " %s", mcinputtable[i].name);
   fprintf(f, "\n");
-  fprintf(f, "Instrument-source: %s\n", mcinstrument_source);
-  fprintf(f, "Trace-enabled: %s\n", mctraceenabled ? "yes" : "no");
-  fprintf(f, "Default-main: %s\n", mcdefaultmain ? "yes" : "no");
-  fprintf(f, "Embedded-runtime: %s\n",
+  fprintf(f, "%sInstrument-source: %s\n", pre, mcinstrument_source);
+  fprintf(f, "%sTrace-enabled: %s\n", pre, mctraceenabled ? "yes" : "no");
+  fprintf(f, "%sDefault-main: %s\n", pre, mcdefaultmain ? "yes" : "no");
+  fprintf(f, "%sEmbedded-runtime: %s\n", pre,
 #ifdef MC_EMBEDDED_RUNTIME
 	 "yes"
 #else
@@ -349,36 +307,40 @@ mcinfo_out(FILE *f)
 }
 
 
-#define MCSIMINFO_NAME "mcstas.sim"
+static void
+mcruninfo_out(char *pre, FILE *f)
+{
+  int i;
+  time_t t;
+  if(!f)
+    return;
+  time(&t);
+  fprintf(f, "%sDate: %s", pre, ctime(&t)); /* Note: ctime adds '\n' ! */
+  fprintf(f, "%sNcount: %g\n", pre, mcget_ncount());
+  fprintf(f, "%sTrace: %s\n", pre, mcdotrace ? "yes" : "no");
+  if(mcseed)
+    fprintf(f, "%sSeed: %ld\n", pre, mcseed);
+  for(i = 0; i < mcnumipar; i++)
+    fprintf(f, "%sParam: %s=%g\n",
+	    pre, mcinputtable[i].name, *mcinputtable[i].par);
+}
 
-static FILE *mcsiminfo_file = NULL;
 
 void
 mcsiminfo_init(void)
 {
-  mcsiminfo_file = fopen(MCSIMINFO_NAME, "w");
+  mcsiminfo_file = mcnew_file(mcsiminfo_name);
   if(!mcsiminfo_file)
     fprintf(stderr,
 	    "Warning: could not open simulation description file '%s'\n",
-	    MCSIMINFO_NAME);
+	    mcsiminfo_name);
   else
   {
-    int i;
-    time_t t;
-
     mcsiminfo_out("begin instrument\n");
-    mcinfo_out(mcsiminfo_file);
+    mcinfo_out("  ", mcsiminfo_file);
     mcsiminfo_out("end instrument\n");
     mcsiminfo_out("\nbegin simulation\n");
-    time(&t);
-    mcsiminfo_out("  Date: %s", ctime(&t)); /* Note: ctime adds '\n' ! */
-    mcsiminfo_out("  Ncount: %g\n", mcget_ncount());
-    mcsiminfo_out("  Trace: %s\n", mcdotrace ? "yes" : "no");
-    if(mcseed)
-      mcsiminfo_out("  Seed: %ld\n", mcseed);
-    for(i = 0; i < mcnumipar; i++)
-      fprintf(mcsiminfo_file, "  Param: %s=%g\n",
-	      mcinputtable[i].name, *mcinputtable[i].par);
+    mcruninfo_out("  ", mcsiminfo_file);
     mcsiminfo_out("end simulation\n");
   }
 }
@@ -415,6 +377,70 @@ mcdetector_out(char *cname, double p0, double p1, double p2)
 }
 
 
+static void
+mcdatainfo_out_0D(char *pre, FILE *f, char *t,
+		  double I, double I_err, double N, char *c)
+{
+  if(!f)
+    return;
+  fprintf(f, "%stype: array_0d\n", pre);
+  fprintf(f, "%scomponent: %s\n", pre, c);
+  fprintf(f, "%stitle: %s\n", pre, t);
+  fprintf(f, "%svariables: I I_err N\n", pre);
+  fprintf(f, "%svalues: %g %g %g\n", pre, I, I_err, N);
+}
+
+static void
+mcdatainfo_out_1D(char *pre, FILE *f, char *t, char *xl, char *yl, char *xvar,
+		  double x1, double x2, int n, char *fname, char *c)
+{
+  if(!f)
+    return;
+  fprintf(f, "%stype: array_1d(%d)\n", pre, n);
+  fprintf(f, "%scomponent: %s\n", pre, c);
+  fprintf(f, "%stitle: %s\n", pre, t);
+  if(fname)
+    fprintf(f, "%sfilename: '%s'\n", pre, fname);
+  fprintf(f, "%svariables: %s I I_err N\n", pre, xvar);
+  fprintf(f, "%sxvar: %s\n", pre, xvar);
+  fprintf(f, "%syvar: (I,I_err)\n", pre);
+  fprintf(f, "%sxlabel: '%s'\n%sylabel: '%s'\n", pre, xl, pre, yl);
+  fprintf(f, "%sxlimits: %g %g\n", pre, x1, x2);
+}
+
+static void
+mcdatainfo_out_2D(char *pre, FILE *f, char *t, char *xl, char *yl,
+		  double x1, double x2, double y1, double y2,
+		  int m, int n, char *fname, char *c)
+{
+  if(!f)
+    return;
+  fprintf(f, "%stype: array_2d(%d,%d)\n", pre, m, n);
+  fprintf(f, "%scomponent: %s\n", pre, c);
+  fprintf(f, "%stitle: %s\n", pre, t);
+  if(fname)
+    fprintf(f, "%sfilename: '%s'\n", pre, fname);
+  fprintf(f, "%sxlabel: '%s'\n%sylabel: '%s'\n", pre, xl, pre, yl);
+  fprintf(f, "%sxylimits: %g %g %g %g\n", pre, x1, x2, y1, y2);
+}  
+
+/*******************************************************************************
+* Output single detector/monitor data (p0, p1, p2).
+* Title is t, component name is c.
+*******************************************************************************/
+void
+mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
+{
+  /* Write data set information to simulation description file. */
+  mcsiminfo_out("\nbegin data\n");
+  mcdatainfo_out_0D("  ", mcsiminfo_file, t,
+		    p1, mcestimate_error(p0, p1, p2), p0, c);
+  mcsiminfo_out("end data\n");
+  /* Finally give 0D detector output. */
+  mcdetector_out(c, p0, p1, p2);
+}
+
+
 /*******************************************************************************
 * Output 1d detector data (p0, p1, p2) for n bins linearly
 * distributed across the range x1..x2 (x1 is lower limit of first
@@ -430,37 +456,42 @@ mcdetector_out_1D(char *t, char *xl, char *yl,
   FILE *outfile = NULL;
   int Nsum;
   double Psum, P2sum;
+  char *pre;
 
+  /* Write data set information to simulation description file. */
+  mcsiminfo_out("\nbegin data\n");
+  mcdatainfo_out_1D("  ", mcsiminfo_file, t, xl, yl, xvar, x1, x2, n, f, c);
   /* Loop over array elements, computing total sums and writing to file. */
   Nsum = Psum = P2sum = 0;
-  if(f)				/* Don't write if filename is NULL */
+  pre = "";
+  if(mcsingle_file)
   {
-    outfile = fopen(f,"w");
-    if(!outfile)
-      fprintf(stderr, "Warning: could not open output file '%s'.\n", f);
+    outfile = mcsiminfo_file;
+    f = NULL;
+    mcsiminfo_out("  begin array2D (4,%d)\n", n);
+    pre = "    ";
+  }
+  else if(f)				/* Don't write if filename is NULL */
+    outfile = mcnew_file(f);
+  if(outfile && !mcascii_only && !mcsingle_file)
+  {
+    fprintf(outfile, "# Instrument-source: %s\n", mcinstrument_source);
+    mcruninfo_out("# ", outfile);
+    mcdatainfo_out_1D("# ", outfile, t, xl, yl, xvar, x1, x2, n, f, c);
   }
   for(i = 0; i < n; i++)
   {
     if(outfile)
-      fprintf(outfile, "%g %g %g %d\n", x1 + (i + 0.5)/n*(x2 - x1),
+      fprintf(outfile, "%s%g %g %g %d\n", pre, x1 + (i + 0.5)/n*(x2 - x1),
 	      p1[i], mcestimate_error(p0[i],p1[i],p2[i]), p0[i]);
     Nsum += p0[i];
     Psum += p1[i];
     P2sum += p2[i];
   }
-  if(outfile)
+  if(mcsingle_file)
+    mcsiminfo_out("  end array2D\n");
+  else if(outfile)
     fclose(outfile);
-  /* Write data set information to simulation description file. */
-  mcsiminfo_out("\nbegin data\n  type: array_1d(%d)\n", n);
-  mcsiminfo_out("  component: %s\n", c);
-  mcsiminfo_out("  title: %s\n", t);
-  if(f)
-    mcsiminfo_out("  filename: '%s'\n", f);
-  mcsiminfo_out("  variables: %s I I_err N\n", xvar, xl, yl);
-  mcsiminfo_out("  xvar: %s\n", xvar);
-  mcsiminfo_out("  yvar: (I,I_err)\n");
-  mcsiminfo_out("  xlabel: '%s'\n  ylabel: '%s'\n", xl, yl);
-  mcsiminfo_out("  xlimits: %g %g\n", x1, x2);
   mcsiminfo_out("end data\n");
   /* Finally give 0D detector output. */
   mcdetector_out(c, Nsum, Psum, P2sum);
@@ -476,17 +507,35 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
   FILE *outfile = NULL;
   int Nsum;
   double Psum, P2sum;
+  char *pre;
 
+  /* Write data set information to simulation description file. */
+  mcsiminfo_out("\nbegin data\n");
+  mcdatainfo_out_2D("  ", mcsiminfo_file,
+		    t, xl, yl, x1, x2, y1, y2, m, n, f, c);
   /* Loop over array elements, computing total sums and writing to file. */
   Nsum = Psum = P2sum = 0;
-  if(f)				/* Don't write if filename is NULL */
+  pre = "";
+  if(mcsingle_file)
   {
-    outfile = fopen(f,"w");
-    if(!outfile)
-      fprintf(stderr, "Warning: could not open output file '%s'.\n", f);
+    outfile = mcsiminfo_file;
+    f = NULL;
+    mcsiminfo_out("  begin array2D (%d,%d)\n", m, n);
+    pre = "    ";
+  }
+  else if(f)				/* Don't write if filename is NULL */
+    outfile = mcnew_file(f);
+  if(outfile && !mcascii_only && !mcsingle_file)
+  {
+    fprintf(outfile, "# Instrument-source: %s\n", mcinstrument_source);
+    mcruninfo_out("# ", outfile);
+    mcdatainfo_out_2D("# ", outfile,
+		      t, xl, yl, x1, x2, y1, y2, m, n, f, c);
   }
   for(j = 0; j < n; j++)
   {
+    if(outfile)
+      fprintf(outfile,"%s", pre);
     for(i = 0; i < m; i++)
     {
       if(outfile)
@@ -498,16 +547,10 @@ mcdetector_out_2D(char *t, char *xl, char *yl,
     if(outfile)
       fprintf(outfile,"\n");
   }
-  if(outfile)
+  if(mcsingle_file)
+    mcsiminfo_out("  end array2D\n");
+  else if(outfile)
     fclose(outfile);
-  /* Write data set information to simulation description file. */
-  mcsiminfo_out("\nbegin data\n  type: array_2d(%d,%d)\n", m, n);
-  mcsiminfo_out("  component: %s\n", c);
-  mcsiminfo_out("  title: %s\n", t);
-  if(f)
-    mcsiminfo_out("  filename: '%s'\n", f);
-  mcsiminfo_out("  xlabel: '%s'\n  ylabel: '%s'\n", xl, yl);
-  mcsiminfo_out("  xylimits: %g %g %g %g\n", x1, x2, y1, y2);
   mcsiminfo_out("end data\n");
   /* Finally give 0D detector output. */
   mcdetector_out(c, Nsum, Psum, P2sum);
@@ -535,7 +578,7 @@ mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 {
   extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
   extern double mcnt, mcnsx, mcnsy, mcnsz, mcnp;
-  
+
   mcnx = x;
   mcny = y;
   mcnz = z;
@@ -703,13 +746,13 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 {
   double v, D, t_in, t_out, y_in, y_out;
 
-  v = sqrt(vx*vx+vy*vy+vz*vz); 
+  v = sqrt(vx*vx+vy*vy+vz*vz);
 
-  D = (2*vx*x + 2*vz*z)*(2*vx*x + 2*vz*z) 
+  D = (2*vx*x + 2*vz*z)*(2*vx*x + 2*vz*z)
     - 4*(vx*vx + vz*vz)*(x*x + z*z - r*r);
 
-  if (D>=0) 
-  {   
+  if (D>=0)
+  {
     t_in  = (-(2*vz*z + 2*vx*x) - sqrt(D))/(2*(vz*vz + vx*vx));
     t_out = (-(2*vz*z + 2*vx*x) + sqrt(D))/(2*(vz*vz + vx*vx));
     y_in = vy*t_in + y;
@@ -769,7 +812,7 @@ randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
 	       double xi, double yi, double zi, double radius)
 {
   double l, theta0, phi, theta, nx, ny, nz, xt, yt, zt;
-  
+
   if(radius == 0.0)
   {
     /* No target, choose uniformly a direction in full 4PI solid angle. */
@@ -793,7 +836,7 @@ randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
       /* Compute solid angle of target as seen from origin. */
       *solid_angle = 2*PI*(1 - cos(theta0));
     }
-  
+
     /* Now choose point uniformly on sphere surface within angle theta0 */
     theta = acos (1 - rand0max(1 - cos(theta0)));
     phi = rand0max(2 * PI);
@@ -854,18 +897,25 @@ static void
 mchelp(char *pgmname)
 {
   int i;
-  
+
   fprintf(stderr, "Usage: %s [options] [parm=value ...]\n", pgmname);
   fprintf(stderr,
 "Options are:\n"
-"  -s seed   --seed=seed      Set random seed (must be != 0)\n"
-"  -n count  --ncount=count   Set number of neutrons to simulate.\n"
-"  -t        --trace          Enable trace of neutron through instrument\n"
-"  -h        --help           Show help message\n"
-"  -i        --info           Detailed instrument information\n"
-"Instrument parameters are:\n");
-  for(i = 0; i < mcnumipar; i++)
-    fprintf(stderr, "  %s\n", mcinputtable[i].name);
+"  -s SEED   --seed=SEED      Set random seed (must be != 0)\n"
+"  -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.\n"
+"  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
+"  -f FILE   --file=FILE      Put all data in a single file.\n"
+"  -t        --trace          Enable trace of neutron through instrument.\n"
+"  -a        --ascii-only     Do not put any headers in the data files.\n"
+"  -h        --help           Show help message.\n"
+"  -i        --info           Detailed instrument information.\n"
+);
+  if(mcnumipar > 0)
+  {
+    fprintf(stderr, "Instrument parameters are:\n");
+    for(i = 0; i < mcnumipar; i++)
+      fprintf(stderr, "  %s\n", mcinputtable[i].name);
+  }
 }
 
 static void
@@ -884,10 +934,11 @@ mcusage(char *pgmname)
 }
 
 static void
-mcinfo(void){
-  mcinfo_out(stdout);
+mcinfo(void)
+{
+  mcinfo_out("", stdout);
   exit(0);
-} 
+}
 
 static void
 mcenabletrace(void)
@@ -898,9 +949,36 @@ mcenabletrace(void)
  {
    fprintf(stderr,
 	   "Error: trace not enabled.\n"
-	   "Please re-run the McStas compiler with the --trace option\n");
+	   "Please re-run the McStas compiler"
+		   "with the --trace option, or rerun the\n"
+	   "C compiler with the MC_TRACE_ENABLED macro defined.\n");
    exit(1);
  }
+}
+
+static void
+mcuse_dir(char *dir)
+{
+#ifdef MC_PORTABLE
+  fprintf(stderr, "Error: "
+	  "Directory output cannot be used with portable simulation.\n");
+  exit(1);
+#else  /* !MC_PORTABLE */
+  if(mkdir(dir, 0777))
+  {
+    fprintf(stderr, "Error: unable to create directory '%s'.\n", dir);
+    fprintf(stderr, "(Maybe the directory already exists?)\n");
+    exit(1);
+  }
+  mcdirname = dir;
+#endif /* !MC_PORTABLE */
+}
+
+static void
+mcuse_file(char *file)
+{
+  mcsiminfo_name = file;
+  mcsingle_file = 1;
 }
 
 void
@@ -919,7 +997,7 @@ mcparseoptions(int argc, char *argv[])
   }
   for(j = 0; j < mcnumipar; j++)
     paramsetarray[j] = 0;
-  
+
   for(i = 1; i < argc; i++)
   {
     if(!strcmp("-s", argv[i]) && (i + 1) < argc)
@@ -938,6 +1016,22 @@ mcparseoptions(int argc, char *argv[])
       mcsetn_arg(argv[++i]);
     else if(!strncmp("--ncount=", argv[i], 9))
       mcsetn_arg(&argv[i][9]);
+    else if(!strcmp("-d", argv[i]) && (i + 1) < argc)
+      mcuse_dir(argv[++i]);
+    else if(!strncmp("-d", argv[i], 2))
+      mcuse_dir(&argv[i][2]);
+    else if(!strcmp("--dir", argv[i]) && (i + 1) < argc)
+      mcuse_dir(argv[++i]);
+    else if(!strncmp("--dir=", argv[i], 6))
+      mcuse_dir(&argv[i][6]);
+    else if(!strcmp("-f", argv[i]) && (i + 1) < argc)
+      mcuse_file(argv[++i]);
+    else if(!strncmp("-f", argv[i], 2))
+      mcuse_file(&argv[i][2]);
+    else if(!strcmp("--file", argv[i]) && (i + 1) < argc)
+      mcuse_file(argv[++i]);
+    else if(!strncmp("--file=", argv[i], 7))
+      mcuse_file(&argv[i][7]);
     else if(!strcmp("-h", argv[i]))
       mcshowhelp(argv[0]);
     else if(!strcmp("--help", argv[i]))
@@ -950,6 +1044,10 @@ mcparseoptions(int argc, char *argv[])
       mcenabletrace();
     else if(!strcmp("--trace", argv[i]))
       mcenabletrace();
+    else if(!strcmp("-a", argv[i]))
+      mcascii_only = 1;
+    else if(!strcmp("--ascii-only", argv[i]))
+      mcascii_only = 1;
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
@@ -990,6 +1088,10 @@ int
 mcstas_main(int argc, char *argv[])
 {
   int run_num = 0;
+
+#ifdef MAC
+  argc = ccommand(&argv);
+#endif
 
   srandom(time(NULL));
   mcparseoptions(argc, argv);
