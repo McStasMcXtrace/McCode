@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.76 2003-10-22 09:18:00 farhi Exp $
+* $Id: mcstas-r.c,v 1.77 2003-10-22 15:51:26 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.76  2003/10/22 09:18:00  farhi
+* Solved name conflict problem for Matlab/Scilab by adding 'mc_' prefix
+* to all component/file field names. Works ok for both, and also in binary.
+*
 * Revision 1.75  2003/10/21 14:08:12  pkwi
 * Rectangular focusing improved: Renamed randvec_target_rect to randvec_target_rect_angular. Wrote new randvec_target_rect routine, w/h in metres. Both routines use use component orientation (ROT_A_CURRENT_COMP) as input.
 *
@@ -1859,7 +1863,12 @@ mchelp(char *pgmname)
   {
     fprintf(stderr, "Instrument parameters are:\n");
     for(i = 0; i < mcnumipar; i++)
-      fprintf(stderr, "  %-16s(%s)\n", mcinputtable[i].name,
+      if (mcinputtable[i].val && strlen(mcinputtable[i].val))
+        fprintf(stderr, "  %-16s(%s) [default='%s']\n", mcinputtable[i].name,
+        (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name),
+        mcinputtable[i].val);
+      else
+        fprintf(stderr, "  %-16s(%s)\n", mcinputtable[i].name,
         (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
   }
   fprintf(stderr, "Available output formats are (default is %s):\n  ", mcformat.Name);
@@ -2333,9 +2342,11 @@ void mcinfo_simulation(FILE *f, struct mcformats_struct format,
   {
     for(i = 0; i < mcnumipar; i++)
     {
-      (*mcinputtypes[mcinputtable[i].type].printer)(Value, mcinputtable[i].par);
-      fprintf(f, "%sParam: %s=%s", pre, mcinputtable[i].name, Value);
-      fprintf(f, "\n");
+      if (mcrun_num || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
+        (*mcinputtypes[mcinputtable[i].type].printer)(Value, mcinputtable[i].par);
+        fprintf(f, "%sParam: %s=%s", pre, mcinputtable[i].name, Value);
+        fprintf(f, "\n");
+      }
     }   
   }
   else
@@ -3174,7 +3185,7 @@ mcparseoptions(int argc, char *argv[])
   char *p;
   int paramset = 0, *paramsetarray;
 
-  /* Add one to mcnumipar to aviod allocating zero size memory block. */
+  /* Add one to mcnumipar to avoid allocating zero size memory block. */
   paramsetarray = malloc((mcnumipar + 1)*sizeof(*paramsetarray));
   if(paramsetarray == NULL)
   {
@@ -3182,9 +3193,20 @@ mcparseoptions(int argc, char *argv[])
     exit(1);
   }
   for(j = 0; j < mcnumipar; j++)
-    { paramsetarray[j] = 0; 
-      (*mcinputtypes[mcinputtable[j].type].getparm)
-                   (NULL, mcinputtable[j].par); }
+    { 
+      paramsetarray[j] = 0; 
+      if (mcinputtable[j].val && strlen(mcinputtable[j].val))
+      {
+        int  status;
+        char buf[1024];
+        strncpy(buf, mcinputtable[j].val, 1024);
+        status = (*mcinputtypes[mcinputtable[j].type].getparm)
+                   (buf, mcinputtable[j].par);
+        if(!status) fprintf(stderr, "Invalid %s default value %s in instrument definition.\n", mcinputtable[j].name, buf);
+      } else
+        (*mcinputtypes[mcinputtable[j].type].getparm)
+                   (NULL, mcinputtable[j].par); 
+    }
 
   for(i = 1; i < argc; i++)
   {
@@ -3257,19 +3279,6 @@ mcparseoptions(int argc, char *argv[])
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
-      for(j = 0; j < mcnumipar; j++)
-        if (!paramset && mcinputtable[j].val && strlen(mcinputtable[j].val))
-        {
-          char buf[1024];
-          int  status;
-          strncpy(buf, mcinputtable[j].val, 1024);
-          status = (*mcinputtypes[mcinputtable[j].type].getparm)
-                   (buf, mcinputtable[j].par);
-          if(!status) fprintf(stderr, "Invalid %s default value %s in instrument definition.\n", mcinputtable[j].name, buf);
-          else {
-            paramsetarray[j] = 1;
-          }
-        }
 
       for(j = 0; j < mcnumipar; j++)
         if(!strcmp(mcinputtable[j].name, argv[i]))
