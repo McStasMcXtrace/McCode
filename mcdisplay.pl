@@ -328,6 +328,73 @@ sub show_comp_names {
 }
 
 
+sub reset_zoom {
+    my ($rinstr, $vps) = @_;
+    $rinstr->{'zoom_xmin'} = $rinstr->{'xmin'};
+    $rinstr->{'zoom_xmax'} = $rinstr->{'xmax'};
+    $rinstr->{'zoom_ymin'} = $rinstr->{'ymin'};
+    $rinstr->{'zoom_ymax'} = $rinstr->{'ymax'};
+    $rinstr->{'zoom_zmin'} = $rinstr->{'zmin'};
+    $rinstr->{'zoom_zmax'} = $rinstr->{'zmax'};
+    $zooming = 0;
+}
+
+
+sub do_zoom {
+    my ($rinstr, $vps, $cx, $cy, $cx1, $cy1) = @_;
+    my ($tmp, $a1, $a2);
+    $tmp = $cx, $cx = $cx1, $cx1 = $tmp if $cx > $cx1;
+    $tmp = $cy, $cy = $cy1, $cy1 = $tmp if $cy > $cy1;
+
+    if($cx == $cx1 || $cy == $cy1) {
+	print STDERR "Warning: bad zoom area.\n";
+	return;
+    }
+    if($multi_view) {
+	# Convert from screen coordinates to world coordinates.
+	# First find which of the three views was choosen.
+	if($cx < 0 && $cy < 1) {
+	    $cx = $cx + 1;
+	    $cx1 = $cx1 + 1;
+	    ($a1,$a2) = ("z", "y");
+	} elsif($cx < 0 && $cy >= 1) {
+	    $cx = $cx + 1;
+	    $cx1 = $cx1 + 1;
+	    $cy = $cy - 1;
+	    $cy1 = $cy1 - 1;
+	    ($a1,$a2) = ("z", "x");
+	} elsif($cx >= 0 && $cy >= 1) {
+	    $cy = $cy - 1;
+	    $cy1 = $cy1 - 1;
+	    ($a1,$a2) = ("x", "y");
+	} else {
+	    print STDERR "Warning: bad zoom area.\n";
+	    return;
+	}
+	my $idx = "$a1-$a2";
+	my $vpx0 = $vps->{$idx}{'VP'}[0];
+	my $vpdx = $vps->{$idx}{'VP'}[1] - $vpx0;
+	my $wx0 = $vps->{$idx}{'W'}[0];
+	my $wdx = $vps->{$idx}{'W'}[1] - $wx0;
+	my $vpy0 = $vps->{$idx}{'VP'}[2];
+	my $vpdy = $vps->{$idx}{'VP'}[3] - $vpy0;
+	my $wy0 = $vps->{$idx}{'W'}[2];
+	my $wdy = $vps->{$idx}{'W'}[3] - $wy0;
+	$cx = ($cx-$vpx0)/$vpdx*$wdx+$wx0;
+	$cx1 = ($cx1-$vpx0)/$vpdx*$wdx+$wx0;
+	$cy = ($cy-$vpy0)/$vpdy*$wdy+$wy0;
+	$cy1 = ($cy1-$vpy0)/$vpdy*$wdy+$wy0;
+    } else {
+	($a1, $a2) = ("z","x");
+    }
+    $rinstr->{"zoom_${a1}min"} = $cx;
+    $rinstr->{"zoom_${a1}max"} = $cx1;
+    $rinstr->{"zoom_${a2}min"} = $cy;
+    $rinstr->{"zoom_${a2}max"} = $cy1;
+    $zooming = 1;
+}
+
+
 sub plot_instrument {
     my ($rinstr, $rneutron) = @_;
     my %instr = %$rinstr;
@@ -335,29 +402,28 @@ sub plot_instrument {
     my ($xmin, $xmax, $ymin, $ymax, $zmin, $zmax) =
 	($instr{'zoom_xmin'}, $instr{'zoom_xmax'}, $instr{'zoom_ymin'},
 	 $instr{'zoom_ymax'}, $instr{'zoom_zmin'}, $instr{'zoom_zmax'});
+    my %vps;			# Viewport/window setup.
+    my ($vpx1,$vpx2,$vpy1,$vpy2,$wx1,$wx2,$wy1,$wy2);
 
     pgbbuf;
 
     # First show instrument from "above" (view in direction of y axis).
     pgsci(1);
     pgsch(1.4);
-    pgenv($xmin, $xmax, $zmin, $zmax, ($zooming ? 0 : 1), 0);
-    pglab("X Axis [m]", "Z Axis [m]", "X-Z view");
+    pgenv($zmin, $zmax, $xmin, $xmax, ($zooming ? 0 : 1), 0);
+    pglab("Z Axis [m]", "X Axis [m]", "Z-X view");
     show_comp_names($rinstr);
     pgsch(1.4);
-    plot_components($instr{'x'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'},
-		    'X', 'Z');
-    plot_neutron($neutron{'x'}, $neutron{'z'}, $neutron{'vx'}, $neutron{'vz'});
+    plot_components($instr{'z'}, $instr{'x'}, $instr{'ori'}, $instr{'dis'},
+		    'Z', 'X');
+    plot_neutron($neutron{'z'}, $neutron{'x'}, $neutron{'vz'}, $neutron{'vx'});
 
     if($multi_view) {
-	# Now show instrument viewed in direction of x axis.
-	pgsci(1);
-	pgsch(1.4);
-	pgenv($ymin, $ymax, $zmin, $zmax, ($zooming ? 0 : 1), 0);
-	pglab("Y Axis [m]", "Z Axis [m]", "Y-Z view");
-	plot_components($instr{'y'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'},
-			'Y', 'Z');
-	plot_neutron($neutron{'y'}, $neutron{'z'}, $neutron{'vy'}, $neutron{'vz'});
+	# Remember viewport setup for Z-X view.
+	pgqvp(0, $vpx1, $vpx2, $vpy1, $vpy2);
+	pgqwin($wx1, $wx2, $wy1, $wy2);
+	$vps{'z-x'} = {VP => [$vpx1,$vpx2,$vpy1,$vpy2],
+		       W => [$wx1,$wx2,$wy1,$wy2]};
 
 	# Now show instrument viewed in direction of z axis.
 	pgsci(1);
@@ -367,8 +433,30 @@ sub plot_instrument {
 	plot_components($instr{'x'}, $instr{'y'}, $instr{'ori'}, $instr{'dis'},
 			'X', 'Y');
 	plot_neutron($neutron{'x'}, $neutron{'y'}, $neutron{'vx'}, $neutron{'vy'});
+	# Remember viewport setup for Z-X view.
+	pgqvp(0, $vpx1, $vpx2, $vpy1, $vpy2);
+	pgqwin($wx1, $wx2, $wy1, $wy2);
+	$vps{'x-y'} = {VP => [$vpx1,$vpx2,$vpy1,$vpy2],
+		       W => [$wx1,$wx2,$wy1,$wy2]};
 
+	# Now show instrument viewed in direction of x axis.
+	pgsci(1);
+	pgsch(1.4);
+	pgenv($zmin, $zmax, $ymin, $ymax, ($zooming ? 0 : 1), 0);
+	pglab("Z Axis [m]", "Y Axis [m]", "Z-Y view");
+	plot_components($instr{'z'}, $instr{'y'}, $instr{'ori'}, $instr{'dis'},
+			'Z', 'Y');
+	plot_neutron($neutron{'z'}, $neutron{'y'}, $neutron{'vz'}, $neutron{'vy'});
+	# Remember viewport setup for Z-Y view.
+	pgqvp(0, $vpx1, $vpx2, $vpy1, $vpy2);
+	pgqwin($wx1, $wx2, $wy1, $wy2);
+	$vps{'z-y'} = {VP => [$vpx1,$vpx2,$vpy1,$vpy2],
+		       W => [$wx1,$wx2,$wy1,$wy2]};
+
+	# Set up viewport & window for mouse zoom.
 	pgpage;
+	pgsvp(0,1,0,1);
+	pgswin(0,1,0,1);
     }
     pgebuf;
 
@@ -381,27 +469,10 @@ sub plot_instrument {
     } elsif($cc =~ /[zZdD]/) {	# Zoom.
 	my ($cx1, $cy1, $cc1) = (0, 0, 0);
 	pgband(2,0,$cx,$cy,$cx1,$cy1,$cc1);
-	if($cx == $cx1 || $cy == $cy1) {
-	    print STDERR "Warning: bad zoom area.\n";
-	    return 0;
-	}
-	my $tmp;
-	$tmp = $cx, $cx = $cx1, $cx1 = $tmp if $cx > $cx1;
-	$tmp = $cy, $cy = $cy1, $cy1 = $tmp if $cy > $cy1;
-	$rinstr->{'zoom_xmin'} = $cx;
-	$rinstr->{'zoom_xmax'} = $cx1;
-	$rinstr->{'zoom_zmin'} = $cy;
-	$rinstr->{'zoom_zmax'} = $cy1;
-	$zooming = 1;
+	do_zoom($rinstr, \%vps, $cx, $cy, $cx1, $cy1);
 	return 1;
     } elsif($cc =~ /[xX]/) {	# Reset zoom.
-	$rinstr->{'zoom_xmin'} = $instr{'xmin'};
-	$rinstr->{'zoom_xmax'} = $instr{'xmax'};
-	$rinstr->{'zoom_ymin'} = $instr{'ymin'};
-	$rinstr->{'zoom_ymax'} = $instr{'ymax'};
-	$rinstr->{'zoom_zmin'} = $instr{'zmin'};
-	$rinstr->{'zoom_zmax'} = $instr{'zmax'};
-	$zooming = 0;
+	reset_zoom($rinstr, \%vps);
 	return 1;
     }
     return 0;			# Default: do not repeat this neutron.
