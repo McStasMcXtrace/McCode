@@ -150,8 +150,10 @@ sub menu_edit_current {
     } else {
 	if ($MCSTAS::mcstas_config{'EDITOR'} eq 0) {
 	    setup_edit_1_7($main_window);
-	} else {
+	} elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1) {
 	    setup_edit($main_window);
+	} else {
+	    menu_spawn_editor($main_window);
 	}
     }
 }
@@ -957,7 +959,7 @@ sub menu_choose_backend {
     my $ret;
     my $binary;
     my $output_file;
-    ($ret, $binary, $plotter,$editor) = backend_dialog($w, $inf_sim->{'Binary'},$plotter,$editor);
+    ($ret, $binary, $plotter,$editor) = backend_dialog($w, $inf_sim->{'Binary'},$plotter,$editor,$external_editor);
     $inf_sim->{'Binary'} = $binary;
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
     $MCSTAS::mcstas_config{'EDITOR'} = $editor;

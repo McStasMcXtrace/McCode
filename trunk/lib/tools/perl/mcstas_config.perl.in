@@ -15,6 +15,7 @@
 # EDITOR   - Choice of default built-in editor
 #            0 - McStas 1.7 editor (simple, no extra perl modules req'd)
 #            1 - CodeText editor with highlighting of McStas instrument code
+#	     2 - Default to external editor, as defined by VISUAL or EDITOR variables
 # MATLAB_COMMAND - command to execute matlab (Unix only)
 # SCILAB_COMMAND - command to execute scilab (Unix only)
 #
