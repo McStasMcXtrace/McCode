@@ -18,7 +18,7 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.47 2003-01-21 08:47:03 pkwi Exp $
+* $Id: mcstas-r.c,v 1.48 2003-01-21 08:51:12 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.7 2002/10/19 22:46:21 ef
@@ -1176,17 +1176,16 @@ randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
     costheta0 = sqrt(l2/(radius*radius+l2));
     if (radius < 0) costheta0 *= -1;
     if(solid_angle)
-      if (*solid_angle == 0)
-      {
-        /* Compute solid angle of target as seen from origin. */
+    {
+      /* Compute solid angle of target as seen from origin. */
         *solid_angle = 2*PI*(1 - costheta0);
-      }
+    }
 
     /* Now choose point uniformly on sphere surface within angle theta0 */
-    theta = acos (1 - rand0max(1 - costheta0)); /* radius on sphere */
-    phi = rand0max(2 * PI); /* rotation on sphere at given radius */
+    theta = acos (1 - rand0max(1 - costheta0)); /* radius on circle */
+    phi = rand0max(2 * PI); /* rotation on circle at given radius */
     /* Now, to obtain the desired vector rotate (xi,yi,zi) angle theta around a
-       perpendicular axis (nx,ny,nz) and then angle phi around (xi,yi,zi). */
+       perpendicular axis u=i x n and then angle phi around i. */
     if(xi == 0 && zi == 0)
     {
       nx = 1;
@@ -1206,16 +1205,16 @@ randvec_target_circle(double *xo, double *yo, double *zo, double *solid_angle,
   /* [xyz]t = [xyz]i rotated theta around [xyz]u */
   rotate  (xt,  yt,  zt, xi, yi, zi, theta, xu, yu, zu);
   /* [xyz]o = [xyz]t rotated phi around n[xyz] */
-  rotate (*xo, *yo, *zo, xt, yt, zt, phi, nx, ny, nz);
+  rotate (*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
 }
 
 
 /* Choose random direction towards target at (xi,yi,zi) with given       */
-/* ANGULAR dimension height x width. height=phi_x, width=phi_y */
+/* ANGULAR dimension height x width. height=phi_x, width=phi_y (radians)*/
 /* If height or width is zero, choose random direction in full 4PI, no target. */
 void
 randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
-               double xi, double yi, double zi, double height, double width)
+               double xi, double yi, double zi, double width, double height)
 {
   double theta, phi, nx, ny, nz, xt, yt, zt, xu, yu, zu;
 
@@ -1227,17 +1226,16 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
   else
   {
     if(solid_angle)
-      if (*solid_angle == 0)
-      {
-        /* Compute solid angle of target as seen from origin. */
-        *solid_angle = 2*fabs(width*sin(height));
-      }
+    {
+      /* Compute solid angle of target as seen from origin. */
+      *solid_angle = 2*fabs(width*sin(height/2));
+    }
 
     /* Now choose point uniformly on quadrant within angle theta0/phi0 */
     theta = width*randpm1()/2.0;
     phi   = height*randpm1()/2.0; 
-    /* Now, to obtain the desired vector rotate (x,y,z) angle theta around a
-       perpendicular axis (nx,ny,nz) and then angle phi around (x,y,z) x n. */
+    /* Now, to obtain the desired vector rotate (xi,yi,zi) angle phi around 
+       n, and then theta around u. */
     if(xi == 0 && zi == 0)
     {
       nx = 1;
@@ -1255,9 +1253,9 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
   /* [xyz]u = [xyz]i x n[xyz] (usually vertical) */
   vec_prod(xu,  yu,  zu, xi, yi, zi,        nx, ny, nz);   
   /* [xyz]t = [xyz]i rotated theta around [xyz]u */
-  rotate  (xt,  yt,  zt, xi, yi, zi, theta, xu, yu, zu);
+  rotate  (xt,  yt,  zt, xi, yi, zi, phi, nx, ny, nz);
   /* [xyz]o = [xyz]t rotated phi around n[xyz] */
-  rotate (*xo, *yo, *zo, xt, yt, zt, phi, nx, ny, nz);
+  rotate (*xo, *yo, *zo, xt, yt, zt, theta, xu,  yu,  zu);
 }
 
 /* Make sure a list is big enough to hold element COUNT.

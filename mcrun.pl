@@ -109,7 +109,7 @@ sub parse_args {
             push @options, "--$1=$ARGV[++$i]";
         } elsif(/^-([s])$/) {
             push @options, "-$1$ARGV[++$i]";
-        } elsif(/^--(format)$/) {
+  } elsif(/^--(format)$/) {
             push @options, "--$1=$ARGV[++$i]";
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";

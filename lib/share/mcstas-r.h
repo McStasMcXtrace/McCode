@@ -17,7 +17,7 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.46 2003-01-21 08:47:03 pkwi Exp $
+* $Id: mcstas-r.h,v 1.47 2003-01-21 08:51:12 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.5 2002/10/19 22:46:21 ef
@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.46 $"
+#define MCSTAS_R_H "$Revision: 1.47 $"
 
 #include <math.h>
 #include <string.h>

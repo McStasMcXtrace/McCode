@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.46 2003-01-21 08:47:01 pkwi Exp $
+*	$Id: instrument.y,v 1.47 2003-01-21 08:51:11 pkwi Exp $
 *
 *******************************************************************************/
 

@@ -16,7 +16,7 @@
 *
 * Symbol tables.
 *
-*	$Id: symtab.c,v 1.12 2003-01-21 08:47:01 pkwi Exp $
+*	$Id: symtab.c,v 1.13 2003-01-21 08:51:11 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.4  1999/04/16 07:41:31  kn
