@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -24,14 +24,14 @@
 * Example: Progress_bar()
 *
 * %P
-* precent: percentage interval between indications. Default is 5%.
+* percent: percentage interval between indications. Default is 5%.
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Progress_bar
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (precent=10)
+SETTING PARAMETERS (percent=10)
 OUTPUT PARAMETERS (IntermediateCnts)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -50,7 +50,7 @@ TRACE
   if (mcget_run_num() >= IntermediateCnts)
   {
     double tmp;
-    tmp = precent*mcget_ncount()/100;
+    tmp = percent*mcget_ncount()/100;
     IntermediateCnts += tmp;
     fprintf(stderr, "%d ", (int)(IntermediateCnts*100/mcget_ncount()));
     if (IntermediateCnts+tmp > mcget_ncount())
