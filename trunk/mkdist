@@ -72,6 +72,11 @@ chmod a+x configure
 flex -i instrument.l
 bison -v -d instrument.y
 
+# Set the INSTALL environment variable to make the src archive
+# default to ./install-sh in the contributed Makefile.
+# Note: the -c is needed to preserve mcdoc.fixpl which is run at make install
+export INSTALL=./install-sh -c
+
 # Also, do a ./configure to create Makefile and mcstas_config.perl
 # These will be dependent on this system, ofcourse...
 ./configure
@@ -79,6 +84,8 @@ bison -v -d instrument.y
 # Clean up
 rm mkdist
 rm setversion
+# Make new runs of configure not dependent of this system...
+rm config.*
 cd ..
 
 # Create tar archive
@@ -87,6 +94,11 @@ tar cfz $PW/../mcstas-$1-src.tar.gz mcstas-$1
 # Do a 'make' for creation of binary version (should apply to 'any' Unix)
 cd $PW
 cd $DIST
+
+# Default again to Linux' /usr/bin/install -c (or whatever ./configure finds)
+export INSTALL=
+./configure
+
 make
 make plotlib
 UNAME=`uname`
