@@ -1,0 +1,132 @@
+#!/bin/sh
+#
+# Simple script for setting up a mcstas distribution package. 
+# 
+# To be called with one input parameter - distribution tail filename, e.g.
+# 
+# ./mkdist 1.7.3c -> ../mcstas-1.7.3c.tar.gz
+#
+# Assumes you have write access to ..
+#
+# PW, risoe, 20030123
+#
+
+# Create temporary workdir:
+TMPDIR='..'
+PW=`pwd`
+DIST=$TMPDIR/mcstas-$1
+
+# Copy current checkout there
+cp -rp $PW $DIST
+
+# Go there, clean up CVS information
+cd $DIST
+find . -name CVS -exec rm -r \{\} \; 2> /dev/null
+
+# Put in new version info:
+find  . -prune setversion -type f -exec ./setversion \{\} $1 \; 2> /dev/null
+sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
+mv build.bat.new build.bat
+sed 's/mcstas-1.7/'mcstas-$1'/' install/tex/install.tex > install/tex/install.tex.new
+mv install/tex/install.tex.new install/tex/install.tex
+
+# Create ps/pdf/html based install info
+cd install/tex
+latex install
+latex install
+dvips -o install.ps install.dvi
+ps2pdf install.ps install.pdf
+gzip install.ps
+mkdir ../html 
+latex2html -local_icons -rootdir ../html install.tex
+# clean up
+rm install.aux
+rm install.log
+cd ../..
+
+# A bit ugly with seperate date commands..
+MONTH=`date +"%b"`
+DAY=`date +"%d"`
+YEAR=`date +"%Y"`
+sed 's/1.6.4d, Jan 17th, 2003/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.h > mcstas.h.tmp
+cat mcstas.h.tmp > mcstas.h
+rm -f mcstas.h.tmp
+
+# Create configure
+autoconf configure.in > configure
+chmod a+x configure
+
+# run lex, yacc (assuming linux - flex -i & bison -v -d)
+flex -i instrument.l
+bison -v -d instrument.y
+
+# Also, do a ./configure to create Makefile and mcstas_config.perl
+# These will be dependent on this system, ofcourse...
+./configure
+
+# Clean up
+rm mkdist
+rm setversion
+cd ..
+
+# Create tar archive
+tar cfz $PW/../mcstas-$1-src.tar.gz mcstas-$1
+
+# Do a 'make' for creation of binary version (should apply to 'any' Unix)
+cd $PW
+cd $DIST
+make
+UNAME=`uname`
+MACH=`uname -m`
+PROC=`uname -p`
+cd ..
+
+# Create tar archive
+tar cfz $PW/../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz mcstas-$1
+
+# Remove temporary dir
+# rm -rf $TMPDIR
+
+# Create .tar.gz archive for building a binary Windows version
+cd $PW
+cd $DIST
+make clean
+flex -i instrument.l
+bison -v -d instrument.y
+./configure
+sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
+mv build.bat.new build.bat
+cd ..
+tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
+
+# Create the doc's 
+cd $PW/../tex
+./build $1
+mv *.ps.gz $PW/..
+mv *.pdf $PW/..
+cd ..
+
+echo
+echo
+echo Your mcstas dist packages are placed in 
+echo ../mcstas-$1-src.tar.gz
+echo ../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz
+echo ../mcstas-$1-Win32-src.tar.gz
+echo
+echo NOTE: Win32 version must be built using \'build.bat\' of the Win32-src package
+echo 
+echo Your mcstas doc packages are placed in
+echo ../mcstas-$1-manual.ps.gz
+echo ../mcstas-$1-manual.pdf
+echo ../mcstas-$1-components.ps.gz
+echo ../mcstas-$1-components.pdf
+echo
+
+
+
+
+
+
+
+
+

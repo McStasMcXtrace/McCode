@@ -1,0 +1,29 @@
+# McStas configuration options 
+#
+# In this file, you can set up configuration options
+# used by the McStas perl tools. 
+#
+# CFLAGS   - compiler flags (should not require changes)
+# LDFLAGS  - linker flags (should not require changes)
+# CC       - c compiler command (should not requrire changes)
+# PLOTTER  - Choice of default plotting backend, possible values:
+#            0 - PGPLOT (Unix only)
+#            1 - Matlab (Unix / Win32)
+#            2 - Matlab script file (Unix / Win32)
+#            3 - Scilab (Unix only)
+#            4 - Scilab script file (Unix / Win32)
+# MATLAB_COMMAND - command to execute matlab (Unix only)
+# SCILAB_COMMAND - command to execute scilab (Unix only)
+#
+
+%MCSTAS::mcstas_config =
+    (CFLAGS => '@CFLAGS@',
+     LDFLAGS => '@LDFLAGS@',
+     CC => '@CC@',
+     PLOTTER => 0,
+     MATLAB_COMMAND => 'matlab -nojvm > /dev/null',
+     SCILAB_COMMAND => 'scilab -nw > /dev/null'
+     );
+
+1;
+
