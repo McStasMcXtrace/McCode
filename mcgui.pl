@@ -128,9 +128,7 @@ sub is_erase_ok {
                                  -type => 'okcancel',
                                  -icon => 'question',
                                  -default => 'cancel');
-	# Make response all lowercase:
-	$ret = lc($ret);
-	return $ret eq "ok" ? 1 : 0;
+        return $ret eq "ok" ? 1 : 0;
     } else {
         return 1;
     }
@@ -810,14 +808,15 @@ sub menu_run_simulation {
 		# should be made small to avoid waiting a long time for 
 		# mcdisplay...
 		if ($Config{'osname'} eq "MSWin32") {
-		    my $num_histories = $newsi->{'Ncount'};
+		    my $num_histories = $newsi->{'Ncount'} - 0;
 		    if ($num_histories >=1e3) {
 			my $break = $w->messageBox(-message => "$num_histories is a very large number of neutron histories when using Scilab on Win32.\nContinue?",
                        -title => "Note",
-                       -type => 'YesNoCancel',
+                       -type => 'yesnoCancel',
                        -icon => 'error',
-		       -default => 'No');
-			if (($break eq "No")||($break eq "Cancel")) {
+		       -default => 'no');
+			$break = lcfirst($break);
+			if (($break eq "no")||($break eq "cancel")) {
 			    return 0;
 			}
 		    }
@@ -1308,86 +1307,6 @@ sub editor_quit {
     }
 }    
 
-sub Tk::TextEdit::SetComment
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) {
-     # Sub to redefine the LINE_COMMENT_STRING of the TextEdit widget...
-     # Don't know why, but this has to be done as an extension to the TextEdit 
-     # class... Will update this if something more clever is answered from
-     # comp.lang.perl.tk
-     
-     my ($w,$comment,$endcomment)=@_;
-     my $oldcomment = $w->{'LINE_COMMENT_STRING'};
-     $w->{'LINE_COMMENT_STRING'}=$comment;
-     $w->{'END_COMMENT_STRING'}=$endcomment;
- }
-}
-
-sub Tk::TextUndo::insertStringAtEndOfSelectedLines
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) {
-     my ($w,$insert_string)=@_;
-     $w->addGlobStart;
-     $w->MarkSelectionsSavePositions;
-     foreach my $line ($w->GetMarkedSelectedLineNumbers)
-     {
-	 $w->insert($line.'.end', $insert_string);
-     }
-     $w->RestoreSelectionsMarkedSaved;
-     $w->addGlobEnd;
- }
-}
-
-sub Tk::TextUndo::deleteStringAtEndOfSelectedLines
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) {
-     my ($w,$insert_string)=@_;
-     $w->addGlobStart;
-     $w->MarkSelectionsSavePositions;
-     my $length = length($insert_string);
-     foreach my $line ($w->GetMarkedSelectedLineNumbers)
-     {
-	 # First, extract full string to determine starting point:
-	 my $tmpstart = $line.'.0';
-	 my $end   = $line.'.end';
-	 my $temp = $w->get($tmpstart, $end);
-	 my $len = length($temp);
-	 my $realstart = $len - $length;
-	 $realstart = ".${realstart}";
-	 my $start = $line.$realstart;
-	 my $current_text = $w->get($start, $end);
-	 next unless ($current_text eq $insert_string);
-	 $w->delete($start, $end);
-     }
-     $w->RestoreSelectionsMarkedSaved;
-     $w->addGlobEnd;
- }
-}
-
-sub Tk::TextEdit::CommentSelectedLines
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) {
-     my($w)=@_;
-     $w->insertStringAtStartOfSelectedLines($w->{'LINE_COMMENT_STRING'});
-     $w->insertStringAtEndOfSelectedLines($w->{'END_COMMENT_STRING'});
- }
-}
-
-sub Tk::TextEdit::UncommentSelectedLines
-{
- # Only unix...
- if (!($Config{'osname'} eq 'MSWin32')) { 
-     my($w)=@_;
-     $w->deleteStringAtStartOfSelectedLines($w->{'LINE_COMMENT_STRING'});
-     $w->deleteStringAtEndOfSelectedLines($w->{'END_COMMENT_STRING'});
- }
-}
-
-
 sub setup_edit {
     my ($mw) = @_;
     # Create the editor window.
@@ -1396,17 +1315,6 @@ sub setup_edit {
     # Create the editor text widget.
     $e = $w->Scrolled('TextEdit',-relief => 'sunken', -bd => '2', -setgrid => 'true',
                       -height => 24, wrap => 'none', -scrollbars =>'se');
-    
-    # Put C++ style comment chars in... This will at least work with gcc...
-    # Later, I might work a little harder to get proper /* */ comment chars to 
-    # work, which will not rely on gcc as compiler...
-    # Comment lines in/out using <F7> and <F8>
-    #
-    # Unfortunately, this is not working on Win32...
-    if (!($Config{'osname'} eq 'MSWin32')) {
-	$e->SetComment("/* "," */");
-    }
-    
     my $menu = $e->menu;
     $w->configure(-menu => $menu);
     my $insert_menu = $menu->Menubutton(-text => 'Insert',  -underline => 0, -tearoff => 0);
@@ -1422,7 +1330,7 @@ sub setup_edit {
     $edit_control = $e;
     $edit_window = $w;
     $edit_label = $label;
-    $edit_control->SetGUICallbacks([\&update_line,sub{$edit_control->HighlightAllPairsBracketingCursor}]);
+    $edit_control->SetGUICallbacks([\&update_line]);
     if ($current_sim_def) {
       $w->title("Edit: $current_sim_def");
       if (-r $current_sim_def) {
