@@ -59,8 +59,7 @@ functionality on Win32 using mcc
 * Fixed spawning of external editor (Win32)
 * Keeping values when performing scans in mcgui
 * Trace scilab win32, suggest a low number of neutron histories...
-* Phonon_sample + test instrument (Kim Lefmann) - NEEDS ONLY DEFAULT
-  PARMS
+* Phonon_sample + test instrument (Kim Lefmann)
 * Path incorrect, scilab install 
 * Problem with Select backend
 * Win32, bug in compilation with unsaved, edited instrument file
@@ -78,7 +77,7 @@ functionality on Win32 using mcc
 TODO:
 * mcplot problem running mcdisplay for instrument view (n exist)
 * Kim's Powder2 (needs a few lines for randvec_target_rect) - PETER
-* Kim's Phonon_simple / Test_phonon default values to be added
+* Phonon_sample, target_index should be added
 
 PENDING:
 * 'Scan evolvement' plot of psd's (Pick PSD data from scan, plot together)
