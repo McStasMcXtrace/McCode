@@ -76,9 +76,19 @@ FINALLY
 	"Time-of-flight monitor",
 	"Time-of-flight [\\gms]",
 	"Intensity",
-	0.0, nchan*(double)dt, nchan,
+	"t", 0.0, nchan*(double)dt, nchan,
 	&TOF_N[0],&TOF_p[0],&TOF_p2[0],
 	filename);
   %}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+	       (double)xmax, (double)ymin, 0.0,
+	       (double)xmax, (double)ymax, 0.0,
+	       (double)xmin, (double)ymax, 0.0,
+	       (double)xmin, (double)ymin, 0.0);
+%}
 
 END
