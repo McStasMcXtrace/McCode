@@ -10,23 +10,23 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
 *
-* Detector-like component that writes neutron state parameters into a 'virtual 
+* Detector-like component that writes neutron state parameters into a 'virtual
 * source' neutron file.
 *
 * %D
 * Detector-like component writing neutron state parameters to a
 * virtual source neutron file. The component geometry is the full
-* plane, and saves the neutron state as it exits from the previous 
+* plane, and saves the neutron state as it exits from the previous
 * component.
 *
 *   It is particularly useful to generate a virtual source at a point that few
 * neutron reach. A long simulation will then only be performed once, to create
-* the upstream 'source' file. Further simulations are much faster if they start 
+* the upstream 'source' file. Further simulations are much faster if they start
 * from this low flux position with the 'source' file.
 *
 * Possible file formats are:
@@ -37,7 +37,7 @@
 *
 * Beware the size of generated files ! When saving all events (bufsize=0) the
 * required memory has been optimized and remains very small. On the other hand
-* using large bufsize values requires huge storage memory. 
+* using large bufsize values requires huge storage memory.
 * Both will generate huge files.
 *
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
@@ -69,7 +69,7 @@ POLARISATION PARAMETERS (sx,sy,sz)
 
 SHARE
 %{
-%include "monitor_nd-lib" 
+%include "monitor_nd-lib"
 %}
 
 DECLARE
@@ -81,18 +81,18 @@ DECLARE
 INITIALIZE
 %{
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
-  
+
   if (bufsize) sprintf(Vars.option, "list=%g", bufsize);
   else strcat(Vars.option, "list all");
-  
+
   if (type)
   {
-    if (strstr(type, "Vitess")) 
+    if (strstr(type, "Vitess"))
     { fprintf(stderr, "Virtual_output: %s: Vitess files may be generated using the Vitess_output component\n", NAME_CURRENT_COMP); exit(-1); }
     if (strstr(type, "binary") || strstr(type, "float")) strcat(Vars.option, ", binary float");
     if (strstr(type, "double")) strcat(Vars.option, ", binary double");
   }
-  
+
   strcat(Vars.option,", x y z vx vy vz t sx sy sz");
   Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
   if (file != NULL)
@@ -102,7 +102,7 @@ INITIALIZE
 TRACE
 %{
   double pp;
-  
+
   PROP_Z0;
   /* transfert current neutron to Monitor_nD vars */
   Vars.cp  = p;
@@ -116,7 +116,7 @@ TRACE
   Vars.cvz = vz;
   Vars.csz = sz;
   Vars.ct  = t;
-  
+
   pp = Monitor_nD_Trace(&DEFS, &Vars);
   Vars.Nsum++;
   Vars.psum += pp;
@@ -126,16 +126,17 @@ TRACE
 
 SAVE
 %{
-  char formatName[64];
+  struct mcformats_struct mcformat_cpy;
 
-  if (!strstr(Vars.option, "binary"))
-  {
-    strcpy(formatName, mcformat.Name);  /* save current format */
-    mcuse_format("McStas");             /* MCSTAS_FORMAT */
+  if (!strstr(Vars.option, "binary")) {
+    mcformat_cpy = mcformat;                  /* save current format */
+    mcformat     = mcuse_format("McStas");    /* MCSTAS_FORMAT */
   }
   Monitor_nD_Save(&DEFS, &Vars);
-  if (!strstr(Vars.option, "binary"))
-    mcuse_format(formatName);           /* restore previous format */
+  if (!strstr(Vars.option, "binary")) {
+    mcclear_format(mcformat);
+    mcformat = mcformat_cpy;                  /* restore previous format */
+  }
 %}
 
 FINALLY
