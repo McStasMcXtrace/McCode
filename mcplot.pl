@@ -17,7 +17,17 @@ BEGIN {
         $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
       }
     }
-    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+    
+    $pg_avail=0;
+    $temp_avail=0;
+    foreach $inc (@INC) {
+      my $where="$inc/PGPLOT.pm";
+      if (-e $where) { $pg_avail=1; }
+      $where="$inc/Temp.pm";
+      if (-e $where) { $temp_avail=1; }
+    }
+    if ($temp_avail == 1) { require File::Temp; }
 }
 
 use lib $MCSTAS::perl_dir;
@@ -106,24 +116,34 @@ END { if ($tmp_file) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_fi
 
 # Added E. Farhi, March 2003. Selection of the plotter (pgplot, scilab, matlab)
 if ($plotter eq 3 || $plotter eq 4) {
-  use File::Temp qw/ tempfile tempdir /;
   # create a temporary scilab execution script
-  ($fh, $tmp_file) = tempfile("mcplot_tmpXXXXXX", SUFFIX => '.sce');
+  if ($temp_avail eq 0) { 
+    $tmp_file="mcplot_tmp000000.sce"; 
+    $fh = new FileHandle "> $tmp_file";
+    if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
+  } else {
+    ($fh, $tmp_file) = tempfile("mcplot_tmpXXXXXX", SUFFIX => '.sce');
+    if (not defined $fh) { die "Could not open temporary Scilab script $tmp_file\n"; }
+  }
   printf $fh "getf('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
   printf $fh "s=mcplot('$file','$passed_arg_str','$inspect');\n";
   if ($passed_arg_str) {
     printf $fh "quit\n";
   } else {
+    printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str'',''$inspect'')\\n');\n";
     printf $fh "mprintf('mcplot: Simulation data structure from file $file\\n');\n";
     printf $fh "mprintf('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !\\n');\n";
   }
-  system("scilab -nw -f $tmp_file\n");
   close($fh);
+  system("scilab -nw -f $tmp_file\n");
+  
 } elsif ($plotter eq 1 || $plotter eq 2) {
   $tosend = "matlab -nojvm -r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str','$inspect');";
   if ($passed_arg_str) {
     $tosend .= "exit;\"\n";
   } else {
+      $tosend .= "disp('s=mcplot(''$file'',''$passed_arg_str'',''$inspect'')');";
+      $tosend .= "disp('type: help mcplot for this function usage.');";
       $tosend .= "disp('mcplot: Simulation data structure from file $file');";
       $tosend .= "disp('mcplot: is stored into variable s. Type in ''s'' at prompt to see it !');\"\n";
     }
@@ -135,13 +155,6 @@ if ($plotter eq 3 || $plotter eq 4) {
   # disable traditional PGPLOT support - output error
   # message...
   # PW 20030320
-  $pg_avail=0;
-  foreach $inc (@INC) {
-    my $where="$inc/PGPLOT.pm";
-    if (-e $where) {
-      $pg_avail=1;
-    }
-  }
   if ($pg_avail eq 0) {
     print STDERR "\n******************************************************\n";
     print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
