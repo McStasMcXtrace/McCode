@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.22 2000-07-27 09:05:30 kn Exp $
+* 	$Id: cogen.c,v 1.23 2001-03-14 09:13:14 peo Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -122,6 +122,9 @@ static char *quoted_output_file_name = NULL; /* str_quote()'ed name
 /* Convert instrument formal parameter type numbers to their enum name. */
 char *instr_formal_type_names[] =
   { "instr_type_double", "instr_type_int", "instr_type_string" };
+
+char *instr_formal_type_names_real[] =
+  { "MCNUM", "int", "char*" };
 
 /*******************************************************************************
 * Output a line of code
@@ -441,7 +444,7 @@ cogen_decls(struct instr_def *instr)
   liter = list_iterate(instr->formals);
   while(i_formal = list_next(liter))
   {
-    coutf("MCNUM " ID_PRE "ip%s;", i_formal->id);
+    coutf("%s " ID_PRE "ip%s;", instr_formal_type_names_real[i_formal->type], i_formal->id); 
   }
   list_iterate_end(liter);
   cout("");
