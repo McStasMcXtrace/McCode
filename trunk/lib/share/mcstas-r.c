@@ -1741,21 +1741,30 @@ void sighandler(int sig)
 
   if (sig == SIGUSR1)
   {
-    printf("# McStas: simulation now at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    if (mcget_ncount())
+      printf("# McStas: simulation now at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    else
+      printf("# McStas: simulation now at Init (%10.1f/%10.1f)\n",  mcget_run_num(), mcget_ncount());
     fflush(stdout);
     return;
   }
   else
   if ((sig == SIGUSR2) || (sig == SIGQUIT) || (sig == SIGTERM) || (sig == SIGABRT) || (sig == SIGALRM) || (sig == SIGINT))
         {
-                printf("# McStas: finishing simulation at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    if (mcget_ncount())
+       printf("# McStas: finishing simulation at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    else 
+       printf("# McStas: finishing simulation at Init (%10.1f/%10.1f)\n", mcget_run_num(), mcget_ncount());  
     mcset_ncount(mcget_run_num());
-                return;
+    return;
         }
   else
         {
-                printf("McStas: SYSTEM stop at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
-                exit(-1);
+    if (mcget_ncount())
+      printf("McStas: SYSTEM stop at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    else 
+      printf("McStas: SYSTEM stop at Init (%10.1f/%10.1f)\n", mcget_run_num(), mcget_ncount());  
+    exit(-1);
   }
  
 }
