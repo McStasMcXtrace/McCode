@@ -6,72 +6,6 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.y,v 1.19 1999-01-28 07:55:32 kn Exp $
-*
-*	$Log: not supported by cvs2svn $
-*	Revision 1.18  1998/11/26 11:20:49  kn
-*	Update version info for v1.01 beta 1.
-*
-*	Revision 1.17  1998/11/26 08:45:52  kn
-*	Use own method for extending parser stack (this avoids using alloca(),
-*	which is not portable).
-*
-*	Revision 1.16  1998/11/13 07:31:32  kn
-*	Implemented proper quoting of special chars in file names in #line
-*	directives.
-*
-*	Revision 1.15  1998/11/09 08:14:07  kn
-*	Added version (-v) option.
-*
-*	Revision 1.14  1998/10/02 08:36:45  kn
-*	Added output parameters for components.
-*	Fixed header comment.
-*
-*	Revision 1.13  1998/10/01 11:46:35  kn
-*	Also abort compilation if there is a non-syntax error during parse.
-*	Added support for string expressions.
-*
-*	Revision 1.12  1998/10/01 08:11:07  kn
-*	Changed handling of command line options.
-*	Use search path for component definitions.
-*
-*	Revision 1.11  1998/09/24 12:14:11  kn
-*	Rotation angles in instrument definitions are now given in degrees, with
-*	a backward compatibility mode for the old behaviour using radians.
-*
-*	Revision 1.10  1998/09/24 11:18:27  kn
-*	Make AT modifier required.
-*	More reasonable default when ROTATED modifier is missing.
-*
-*	Revision 1.9  1998/09/23 13:50:47  kn
-*	Allow multiple component definitions in the file (before the instrument
-*	definition).
-*	Make the use of EXTERN optional.
-*
-*	Revision 1.8  1998/08/26 12:43:49  kn
-*	Merged in the functionality from component.y.
-*
-*	Revision 1.7  1998/08/21 12:08:18  kn
-*	Added `-o' command line option.
-*	Output generated C simulation code in file rather than on stdout.
-*
-*	Revision 1.6  1997/09/07 20:16:08  kn
-*	Added FINALLY construct.
-*
-*	Revision 1.5  1997/09/07 17:57:54  kn
-*	Snapshot with (untested) code generation complete.
-*
-*	Revision 1.4  1997/08/13 09:14:59  kn
-*	First version to properly parse instrument definition files.
-*
-*	Revision 1.3  1997/07/02 07:28:19  kn
-*	Misc. cleanup.
-*
-*	Revision 1.2  1997/07/01 08:27:19  kn
-*	Fixed problem when scanning identifiers: lexer now returns a persistent
-*	copy of the name.
-*
-*
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
@@ -312,8 +246,21 @@ complist:	  /* empty */
 		  }
 		| complist component
 		  {
-		    symtab_add(comp_instances, $2->name, $2);
-		    list_add(comp_instances_list, $2);
+		    /* Check that the component instance name has not
+                       been used before. */
+		    if(symtab_lookup(comp_instances, $2->name))
+		    {
+		      print_error("Multiple use of component instance name "
+				  "'%s'.\n", $2->name);
+		      /* Since this is an error condition, we do not
+		         worry about freeing the memory allocated for
+			 the component instance. */
+		    }
+		    else
+		    {
+		      symtab_add(comp_instances, $2->name, $2);
+		      list_add(comp_instances_list, $2);
+		    }
 		  }
 ;
 
@@ -613,7 +560,7 @@ print_usage(void)
 static void
 print_version(void)
 {
-  printf("McStas version 1.02 ALPHA, 1999\n"
+  printf("McStas version 1.03 ALPHA, March 1999\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-1999\n"
 	  "All rights reserved\n");
   exit(0);
