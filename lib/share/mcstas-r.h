@@ -26,88 +26,91 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.64 2005-01-18 10:32:28 farhi Exp $
+* $Id: mcstas-r.h,v 1.65 2005-01-26 14:41:16 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
-*	Revision 1.63  2004/11/30 16:14:47  farhi
-*	Uses NOSIGNALS and put back PROP_X0 and Y0 for some contrib comps
-*	
-*	Revision 1.62  2004/09/21 12:25:03  farhi
-*	Reorganised code so that I/O functions are includable easely (for mcformat.c)
-*	
-*	Revision 1.59  2004/09/03 14:19:14  farhi
-*	Correct invertion in mcformat specs structure
-*	
-*	Revision 1.58  2004/07/30 14:49:15  farhi
-*	MPI update for usage with mcrun.
-*	Still done by Christophe Taton. CC=mpicc and CFLAGS = -DUSE_MPI.
-*	Execute (using mpich) with:
-*	          mpirun -np NumNodes -machinefile <file> instr.out parameters...
-*	     where <file> is text file that lists the machines to use
-*	
-*	Revision 1.57  2004/07/16 14:59:03  farhi
-*	MPI support. Requires to have mpi installed, and compile with
-*	   CC=mpicc and CFLAGS = -DUSE_MPI.
+*       $Log: not supported by cvs2svn $
+*       Revision 1.64  2005/01/18 10:32:28  farhi
+*       Clarify a macro for MPI
+*       
+*       Revision 1.63  2004/11/30 16:14:47  farhi
+*       Uses NOSIGNALS and put back PROP_X0 and Y0 for some contrib comps
+*       
+*       Revision 1.62  2004/09/21 12:25:03  farhi
+*       Reorganised code so that I/O functions are includable easely (for mcformat.c)
+*       
+*       Revision 1.59  2004/09/03 14:19:14  farhi
+*       Correct invertion in mcformat specs structure
+*       
+*       Revision 1.58  2004/07/30 14:49:15  farhi
+*       MPI update for usage with mcrun.
+*       Still done by Christophe Taton. CC=mpicc and CFLAGS = -DUSE_MPI.
+*       Execute (using mpich) with:
+*                 mpirun -np NumNodes -machinefile <file> instr.out parameters...
+*            where <file> is text file that lists the machines to use
+*       
+*       Revision 1.57  2004/07/16 14:59:03  farhi
+*       MPI support. Requires to have mpi installed, and compile with
+*          CC=mpicc and CFLAGS = -DUSE_MPI.
 *       Work done by Christophe Taton from ENSIMAG/Grenoble
-*	Execute (using mpich) with: 
+*       Execute (using mpich) with: 
 *          mpirun -np NumNodes -machinefile <file> instr.out parameters...
-*	where <file> is text file that lists the machines to use
-*	
-*	Revision 1.56  2004/06/30 12:11:29  farhi
-*	Updated obsolete MCDETECTOR_OUT #define -> mcdetector_out_0d
-*	
-*	Revision 1.55  2003/10/21 14:08:12  pkwi
-*	Rectangular focusing improved: Renamed randvec_target_rect to randvec_target_rect_angular. Wrote new randvec_target_rect routine, w/h in metres. Both routines use use component orientation (ROT_A_CURRENT_COMP) as input.
-*	
-*	Modifications to Res_sample and V_sample to match new features of the runtime.
-*	
-*	Revision 1.54  2003/09/05 08:59:18  farhi
-*	added INSTRUMENT parameter default value grammar
-*	mcinputtable now has also default values
-*	mcreadpar now uses default values if parameter not given
-*	extended instr_formal parameter struct
-*	extended mcinputtable structure type
-*	
-*	Revision 1.53  2003/04/07 11:50:51  farhi
-*	Extended the way mcplot:plotter is assigned. Set --portable ok
-*	Handle Scilab:Tk and ~GTk menu (shifted)
-*	Updated help in mcrun and mcstas-r.c
-*	
-*	Revision 1.52  2003/04/04 18:20:21  farhi
-*	remove some warnings (duplicated decl) for --no-runtime on Dec OSF
-*	
-*	Revision 1.51  2003/04/04 14:27:19  farhi
-*	Moved format definitions to mcstas-r.c for --no-runtime to work
-*	
-*	Revision 1.50  2003/02/11 12:28:46  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
-*	
+*       where <file> is text file that lists the machines to use
+*       
+*       Revision 1.56  2004/06/30 12:11:29  farhi
+*       Updated obsolete MCDETECTOR_OUT #define -> mcdetector_out_0d
+*       
+*       Revision 1.55  2003/10/21 14:08:12  pkwi
+*       Rectangular focusing improved: Renamed randvec_target_rect to randvec_target_rect_angular. Wrote new randvec_target_rect routine, w/h in metres. Both routines use use component orientation (ROT_A_CURRENT_COMP) as input.
+*       
+*       Modifications to Res_sample and V_sample to match new features of the runtime.
+*       
+*       Revision 1.54  2003/09/05 08:59:18  farhi
+*       added INSTRUMENT parameter default value grammar
+*       mcinputtable now has also default values
+*       mcreadpar now uses default values if parameter not given
+*       extended instr_formal parameter struct
+*       extended mcinputtable structure type
+*       
+*       Revision 1.53  2003/04/07 11:50:51  farhi
+*       Extended the way mcplot:plotter is assigned. Set --portable ok
+*       Handle Scilab:Tk and ~GTk menu (shifted)
+*       Updated help in mcrun and mcstas-r.c
+*       
+*       Revision 1.52  2003/04/04 18:20:21  farhi
+*       remove some warnings (duplicated decl) for --no-runtime on Dec OSF
+*       
+*       Revision 1.51  2003/04/04 14:27:19  farhi
+*       Moved format definitions to mcstas-r.c for --no-runtime to work
+*       
+*       Revision 1.50  2003/02/11 12:28:46  farhi
+*       Variouxs bug fixes after tests in the lib directory
+*       mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*       read_table:corrected MC_SYS_DIR -> MCSTAS define
+*       monitor_nd-lib: fix Log(signal) log(coord)
+*       HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*       Progress_bar: precent -> percent parameter
+*       CS: ----------------------------------------------------------------------
+*       
 * Revision 1.5 2002/10/19 22:46:21 ef
 *        gravitation for all with -g. Various output formats.
 *
 * Revision 1.4 2002/09/17 12:01:21 ef
-*	removed unused macros (PROP_Y0, X0), changed randvec_target_sphere to circle
+*       removed unused macros (PROP_Y0, X0), changed randvec_target_sphere to circle
 * added randvec_target_rect
 *
 * Revision 1.3 2002/08/28 11:36:37 ef
-*	Changed to lib/share/c code 
+*       Changed to lib/share/c code 
 *
 * Revision 1.2 2001/10/10 11:36:37 ef
-*	added signal handler
+*       added signal handler
 *
 * Revision 1.1 1998/08/29 11:36:37 kn
-*	Initial revision
+*       Initial revision
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.64 $"
+#define MCSTAS_R_H "$Revision: 1.65 $"
 
 #include <math.h>
 #include <string.h>
@@ -242,15 +245,15 @@ extern struct mcformats_struct mcformat;
  */
 #define MPI_MASTER(statement)\
 {\
-	if(mpi_node_rank == mpi_node_root)\
-	{\
-		statement;\
-	}\
+        if(mpi_node_rank == mpi_node_root)\
+        {\
+                statement;\
+        }\
 }
 
 int mc_MPI_Reduce(void* sbuf, void* rbuf,
-		  int count, MPI_Datatype dtype,
-		  MPI_Op op, int root, MPI_Comm comm);
+                  int count, MPI_Datatype dtype,
+                  MPI_Op op, int root, MPI_Comm comm);
 
 
 #else /* !USE_MPI */
@@ -272,15 +275,15 @@ double mcget_run_num(void);
 double mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);
 double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c);
 double mcdetector_out_1D(char *t, char *xl, char *yl,
-		  char *xvar, double x1, double x2, int n,
-		  double *p0, double *p1, double *p2, char *f, char *c);
+                  char *xvar, double x1, double x2, int n,
+                  double *p0, double *p1, double *p2, char *f, char *c);
 double mcdetector_out_2D(char *t, char *xl, char *yl,
-		  double x1, double x2, double y1, double y2, int m,
-		  int n, double *p0, double *p1, double *p2, char *f, char *c);
+                  double x1, double x2, double y1, double y2, int m,
+                  int n, double *p0, double *p1, double *p2, char *f, char *c);
 double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
       char *xvar, char *yvar, char *zvar, 
-		  double x1, double x2, double y1, double y2, double z1, double z2, int m,
-		  int n, int p, double *p0, double *p1, double *p2, char *f, char *c);  
+                  double x1, double x2, double y1, double y2, double z1, double z2, int m,
+                  int n, int p, double *p0, double *p1, double *p2, char *f, char *c);  
 void   mcheader_out(FILE *f,char *parent,
   int m, int n, int p,
   char *xlabel, char *ylabel, char *zlabel, char *title,
@@ -311,18 +314,18 @@ void   mcsiminfo_close(void);
 #define MIN2RAD  (PI/(180*60))
 #define DEG2RAD  (PI/180)
 #define RAD2DEG  (180/PI)
-#define AA2MS    629.719	   /* Convert k[1/AA] to v[m/s] */
-#define MS2AA    1.58801E-3	   /* Convert v[m/s] to k[1/AA] */
-#define K2V	 AA2MS
-#define V2K	 MS2AA
-#define Q2V	 AA2MS
-#define V2Q	 MS2AA
-#define SE2V	 437.3949	   /* Convert sqrt(E)[meV] to v[m/s] */
-#define VS2E	 5.227e-6	   /* Convert (v[m/s])**2 to E[meV] */
+#define AA2MS    629.622368        /* Convert k[1/AA] to v[m/s] */
+#define MS2AA    1.58825361e-3     /* Convert v[m/s] to k[1/AA] */
+#define K2V      AA2MS
+#define V2K      MS2AA
+#define Q2V      AA2MS
+#define V2Q      MS2AA
+#define SE2V     437.393377        /* Convert sqrt(E)[meV] to v[m/s] */
+#define VS2E     5.22703725e-6     /* Convert (v[m/s])**2 to E[meV] */
 #define FWHM2RMS 0.424660900144    /* Convert between full-width-half-max and */
 #define RMS2FWHM 2.35482004503     /* root-mean-square (standard deviation) */
-#define HBAR     1.05459E-34
-#define MNEUTRON 1.67492E-27
+#define HBAR     1.05457168e-34    /* [Js] h bar Planck constant CODATA 2002 */
+#define MNEUTRON 1.67492728e-27    /* [kg] mass of neutron CODATA 2002 */
 
 #ifndef PI
 # ifdef M_PI
@@ -505,7 +508,7 @@ void   mcsiminfo_close(void);
     mcrt_vny = (vy) - mcrt_vpy; \
     mcrt_vnz = (vz) - mcrt_vpz; \
     vec_prod(mcrt_bx, mcrt_by, mcrt_bz, \
-	     mcrt_tmpx, mcrt_tmpy, mcrt_tmpz, mcrt_vnx, mcrt_vny, mcrt_vnz); \
+             mcrt_tmpx, mcrt_tmpy, mcrt_tmpz, mcrt_vnx, mcrt_vny, mcrt_vnz); \
     mcrt_cos = cos((phi)); mcrt_sin = sin((phi)); \
     mcrt_vn1x = mcrt_vnx*mcrt_cos + mcrt_bx*mcrt_sin; \
     mcrt_vn1y = mcrt_vny*mcrt_cos + mcrt_by*mcrt_sin; \
@@ -523,18 +526,18 @@ void   mcsiminfo_close(void);
 #define mcDEBUG_INSTR() if(!mcdotrace); else printf("INSTRUMENT:\n");
 #define mcDEBUG_COMPONENT(name,c,t) if(!mcdotrace); else \
   printf("COMPONENT: \"%s\"\n" \
-	 "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-	 name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
-	 t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]);
+         "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+         name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
+         t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]);
 #define mcDEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
 #define mcDEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
 #define mcDEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-	 x,y,z,vx,vy,vz,t,s1,s2,p);
+         x,y,z,vx,vy,vz,t,s1,s2,p);
 #define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
   printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-	 x,y,z,vx,vy,vz,t,s1,s2,p);
+         x,y,z,vx,vy,vz,t,s1,s2,p);
 #define mcDEBUG_LEAVE() if(!mcdotrace); else printf("LEAVE:\n");
 #define mcDEBUG_ABSORB() if(!mcdotrace); else printf("ABSORB:\n");
 #else
@@ -622,7 +625,7 @@ double mcestimate_error(double N, double p1, double p2);
 void mcreadparams(void);
 
 void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-		double t, double sx, double sy, double sz, double p);
+                double t, double sx, double sy, double sz, double p);
 void mcgenstate(void);
 double randnorm(void);
 void normal_vec(double *nx, double *ny, double *nz, 
@@ -632,7 +635,7 @@ int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
-		 double vx, double vy, double vz, double r);
+                 double vx, double vy, double vz, double r);
 /* ADD: E. Farhi, Aug 6th, 2001 plane_intersect_Gfast */   
 int plane_intersect_Gfast(double *Idt, 
     double A,  double B,  double C);
@@ -641,10 +644,10 @@ void randvec_target_circle(double *xo, double *yo, double *zo,
 #define randvec_target_sphere randvec_target_circle
 void randvec_target_rect_angular(double *xo, double *yo, double *zo, 
     double *solid_angle,
-	       double xi, double yi, double zi, double height, double width, Rotation A);        
+               double xi, double yi, double zi, double height, double width, Rotation A);        
 void randvec_target_rect(double *xo, double *yo, double *zo, 
     double *solid_angle,
-	       double xi, double yi, double zi, double height, double width, Rotation A); 
+               double xi, double yi, double zi, double height, double width, Rotation A); 
 void extend_list(int count, void **list, int *size, size_t elemsize);
 
 int mcstas_main(int argc, char *argv[]);
