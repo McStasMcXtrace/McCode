@@ -6,9 +6,13 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.16 1998-11-09 08:17:34 kn Exp $
+* 	$Id: mcstas-r.c,v 1.17 1998-11-13 07:32:15 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.16  1998/11/09 08:17:34  kn
+* 	Use malloc()'ed array instead of auto array with dynamic size (for
+* 	portability).
+*
 * 	Revision 1.15  1998/10/02 08:38:27  kn
 * 	Added DETECTOR_OUT support.
 * 	Fixed header comment.
@@ -651,7 +655,8 @@ mcparseoptions(int argc, char *argv[])
   char *p;
   int paramset = 0, *paramsetarray;
 
-  paramsetarray = malloc(mcnumipar*sizeof(*paramsetarray));
+  /* Add one to mcnumipar to aviod allocating zero size memory block. */
+  paramsetarray = malloc((mcnumipar + 1)*sizeof(*paramsetarray));
   if(paramsetarray == NULL)
   {
     fprintf(stderr, "Error: insufficient memory\n");
@@ -721,7 +726,8 @@ mcparseoptions(int argc, char *argv[])
 		mcinputtable[j].name);
 	exit(1);
       }
-  }    
+  }
+  free(paramsetarray);
 }
 
 /* McStas main() function. */
