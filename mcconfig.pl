@@ -20,21 +20,21 @@ if ($Config{'osname'} eq "MSWin32") {
     $failed=system('which.exe cc.exe');
     if ($failed) { 
       $failed=system('which.exe gcc.exe'); 
-      $cc = not $failed ? "gcc.exe" : "no";
+      $cc = (not $failed) ? "gcc.exe" : "no";
     } else { $cc = "cc.exe"; }
     print STDOUT "$cc\n";
     
     print STDOUT "Checking for Matlab: ";
 
     $failed=system('which.exe matlab.exe');
-    $matlab = not $failed ? "matlab.exe" : "no";
+    $matlab = (not $failed) ? "matlab.exe" : "no";
     print STDOUT "$matlab\n";
 
     print STDOUT "Checking for Scilab: ";
     $failed=system('which.exe runscilab.exe');
     if ($failed) { 
       $failed=system('which.exe scilab.exe'); 
-      $scilab = not $failed ? "scilab.exe" : "no";
+      $scilab = (not $failed) ? "scilab.exe" : "no";
     } else { $scilab = "runscilab.exe"; }
     print STDOUT "$scilab\n";
     
@@ -42,23 +42,23 @@ if ($Config{'osname'} eq "MSWin32") {
     $failed=system('which.exe cmd.exe');
     if ($failed) { 
       $failed=system('which.exe command.com'); 
-      $terminal = not $failed ? "command.com" : "no";
+      $terminal = (not $failed) ? "command.com" : "no";
     } else { $terminal = "cmd.exe"; }
     print STDOUT "$terminal\n";
     
     print STDOUT "Checking for Tcl/Tk: ";
     $failed=system('which.exe wish.exe');
-    $tcltk = not $failed ? "wish.exe" : "no";
+    $tcltk = (not $failed) ? "wish.exe" : "no";
     print STDOUT "$tcltk\n";
     
     print STDOUT "Checking for MPI compiler: ";
     $failed=system('which.exe mpicc.exe');
-    $mpicc = not $failed ? "mpicc.exe" : "no";
+    $mpicc = (not $failed) ? "mpicc.exe" : "no";
     print STDOUT "$mpicc\n";
     
     print STDOUT "Checking for MPI run: ";
     $failed=system('which.exe mpirun.exe');
-    $mpirun = not $failed ? "mpirun.exe" : "no";
+    $mpirun = (not $failed) ? "mpirun.exe" : "no";
     print STDOUT "$mpi\n";
     
     # On Win32, matlab is preferred before scilab, which
@@ -96,6 +96,8 @@ while (<READ>) {
         print WRITE "     BROWSER => 'start',\n";
     } elsif (/\w*TERMINAL \=\w*/) {
         print WRITE "     TERMINAL => '$terminal',\n";
+    } elsif (/\w*MPICC \=\w*/) {
+        print WRITE "     MPICC => '$mpicc',\n";
     } elsif (/\w*PGPLOT \=\w*/) {
         print WRITE "     PGPLOT => 'no',\n";
     } elsif (/\w*CC \=\w*/) {
@@ -104,8 +106,6 @@ while (<READ>) {
         print WRITE "     CFLAGS => '-O2',\n";
     } elsif (/\w*MPIRUN \=\w*/) {
         print WRITE "     MPIRUN => '$mpirun',\n";
-    } elsif (/\w*MPICC \=\w*/) {
-        print WRITE "     MPICC => '$mpicc',\n";
     } elsif (/\w*PREFIX \=\w*/) {
         print WRITE "     PREFFIX => 'start ',\n";
     } elsif (/\w*SUFFIX \=\w*/) {
