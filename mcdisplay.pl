@@ -753,7 +753,9 @@ sub plot_instrument {
         return 4;
       } elsif($cc =~ /[gG]/) {        # GIF hardcopy.
         return 5;
-      } elsif($cc =~ /[hH]/) {        # Help
+      } elsif($cc =~ /[nN]/) {        # PNG hardcopy.
+        return 6;
+     } elsif($cc =~ /[hH]/) {        # Help
         print STDERR "McDisplay: q=quit, h=help\n";
         print STDERR "    output p=ps,   c=color ps, g=gif\n";
         print STDERR "      zoom x=reset,z or d=zoom\n";
@@ -835,7 +837,7 @@ for($i = 0; $i < @ARGV; $i++) {
             ($ARGV[$i] =~ /^--zoom=([-0-9+.eE]+)$/)) {
         $magnification = ($1 == 0 ? 1 : $1);
     } elsif(($ARGV[$i] eq "-gif") || ($ARGV[$i] eq "-ps") ||
-            ($ARGV[$i] eq "-psc")) {
+            ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png")) {
         $direct_output = $ARGV[$i];
         $int_mode = 1;
     } elsif(($ARGV[$i] =~ /^-i([a-zA-Z0-9_]+)$/) ||
@@ -946,6 +948,7 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
       my $ext  = "ps";
       my $type = "ps";
       if($direct_output eq "-gif") { $ext="gif"; $type="gif"; }
+      elsif($direct_output eq "-png") { $ext="png"; $type="png"; }
       elsif($direct_output eq "-psc") { $type="cps"; }
       $pg_devname = "$sim_cmd.$ext/$type"; 
     }
@@ -1013,10 +1016,11 @@ while(!eof(IN)) {
         $ret = plot_instrument($int_mode, \%instr, \%neutron);
         if ($MCSTAS::mcstas_config{'PLOTTER'} == 0) {
           if ($int_mode == 1) { $ret =2; print STDERR "Wrote \"$pg_devname\"\n"; }
-          if($ret == 3 || $ret == 4 || $ret == 5) {
+          if($ret == 3 || $ret == 4 || $ret == 5 || $ret == 6) {
             my $ext="ps";
             my $type = $ret == 3 ? "ps" : "cps";
             if($ret == 5) { $type = "gif"; $ext="gif"; }
+	    if($ret == 6) { $type = "png"; $ext="png"; }
             my $tmp_pg_devname = "$sim_cmd$seq.$ext/$type";
             my $tmpdev=0;
             $tmpdev = get_device($tmp_pg_devname);

@@ -273,17 +273,18 @@ if ($plotter eq 3 || $plotter eq 4) {
   } 
 
   print "Click on a plot for full-window view.\n" if @$datalist > 1;
-  print "Type 'P' 'C' or 'G' (in graphics window) for hardcopy, 'Q' to quit.\n";
+  print "Type 'P' 'C' 'N' or 'G' (in graphics window) for hardcopy, 'Q' to quit.\n";
 
   for(;;) {
       my ($cc,$cx,$cy,$idx);
       # Do overview plot, letting user select a plot for full-screen zoom.    
       ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 1);
       last if $cc =~ /[xq]/i;        # Quit?
-      if($cc =~ /[pcg]/i) {        # Hardcopy?
+      if($cc =~ /[pcng]/i) {        # Hardcopy?
           my $ext="ps";
           my $dev = ($cc =~ /c/i) ? "cps" : "ps";
           if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
+	  if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
           overview_plot("$file.$ext/$dev", $datalist, 0);
           print "Wrote file '$file.$ext' ($dev)\n";
           next;
