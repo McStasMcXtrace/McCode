@@ -36,6 +36,7 @@ my $Datafile = "mcstas.sim";
 my $Format = "McStas";
 my $working = 0;
 my $child = 0;
+my $McPlot = 0;
 
 # Check if we have any input parms:
 if (@ARGV==0) {
@@ -51,7 +52,6 @@ if (@ARGV==0) {
     # Split in pieces
     my $DataFile = basename($Datafile);
     my $DataDir = dirname($Datafile);
-    my $McPlot = 0;
     print "Monitoring PID $PID in intervals of $Timeout seconds\n";
     my $stop = 0;
     while ($stop == 0) {
@@ -63,7 +63,6 @@ if (@ARGV==0) {
 	if ($McPlot == 0) {
 	    chdir $DataDir || (die "Could not chdir to $DataDir\n");
 	    $McPlot=open2(READER,WRITER,"mcplot -p$Format --daemon=$PID --wait=$Timeout $DataFile") || (die "Could not spawn mcplot!\n");
-	    $McPlot = 1;
 	}
     }
 } else {
@@ -140,10 +139,19 @@ sub setup_window {
 
 sub get_pid{
     my $USER=$ENV{'USER'};
-    my $PIDdata=`ps -u $USER | grep $Instrument | grep -v grep | cut -b 1-5 `;
-    $PIDdata =~ s/ //g;
-        
-    return split('\n',$PIDdata);
+    my $PIDdata=`ps -u $USER | grep $Instrument | grep -v grep `;
+    #$PIDdata =~ s/ //g;
+    my @List = split('\n',$PIDdata);
+    # Go through the list to get the first numeric element...
+    my ($j, $k);
+    my @sublist;
+    my @final_list;
+    for ($j=0; $j<@List; $j++) {
+	@sublist = split(' ',$List[$j]);
+	$final_list[$j] = $sublist[0];
+	print "first element is $sublist[0]\n";
+    }
+    return @final_list;
 }
 
 sub start_it{
@@ -168,6 +176,9 @@ sub stop_it{
 	print "Terminating $child\n";
 	(kill 9, $child);
 	$working = 0;
+	print "Terminating $McPlot\n";
+	(kill 'TERM', $McPlot);
+	$McPlot=0;
     }
 }
 
