@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.62 2003-05-16 12:13:03 farhi Exp $
+* $Id: mcstas-r.c,v 1.63 2003-05-20 11:54:38 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.62  2003/05/16 12:13:03  farhi
+* added path rehash for Matlab mcload_inline
+*
 * Revision 1.61  2003/04/25 16:24:44  farhi
 * corrected 4PI scattering from randvec_* functions causing mcdisplay to crash
 * when using (0,0,0) vector for coordinate transformations
@@ -3168,6 +3171,7 @@ void sighandler(int sig)
   printf("\n");
   printf("# Simulation: %s (%s) \n", mcinstrument_name, mcinstrument_source);
   printf("# Breakpoint: %s ", mcsig_message); 
+  if (!strcmp(mcsig_message, "Save") && (sig == SIGUSR2)) sig = SIGUSR1;
   strcpy(mcsig_message, "sighandler");
   if (mcget_ncount() == 0)
     printf("(0 %%)\n" );
@@ -3177,7 +3181,7 @@ void sighandler(int sig)
   }
   t1 = time(NULL);
   printf("# Date      : %s",ctime(&t1));
-
+  
   if (sig == SIGUSR1)
   {
     printf("# McStas: Resuming simulation (continue)\n");
