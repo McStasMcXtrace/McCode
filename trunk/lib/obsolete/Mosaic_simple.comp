@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright (C) Risoe National Laboratory 1999
+* McStas, the neutron ray-tracing package: Mosaic_simple.comp
+*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.11 $
-* Origin: McStas release
+* Version: $Revision: 1.12 $
+* Origin: McStas 1.4.2
 *
 * Mosaic crystal, possibly off-cut.
 *
@@ -40,6 +39,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaic, R0, Qx, Qy, Qz)
 OUTPUT PARAMETERS (X,W,Q,mos_rms)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
