@@ -95,6 +95,7 @@
 *     capture                   weight by lambda/lambda(2200m/s) capture flux
 *     file=string               Detector image file name. default is component
 *                                name, plus date and variable extension.
+*     incoming                  Monitor incoming beam in non flat (box/sph/cyl) det
 *     intermediate=[5 in %]     Save ALL results every n% steps in simulation
 *     limits=[min max]          Lower/Upper limits for axes
 *                                (see up for the variable unit)
@@ -104,8 +105,7 @@
 *                               or of the signal (if used after all variables)
 *     multiple                  For 1D monitors into multiple independant files
 *     no or not                 Revert next option
-*     outgoing                  Monitor outgoing beam in non flat (sph/cyl) det
-*                                (default is incoming beam)
+*     outgoing                  Monitor outgoing beam in non flat det (default)
 *     parallel                  Use this option when the next component is at 
 *                                the same position (parallel components)
 *     per cm2                   Intensity will be per cm^2
