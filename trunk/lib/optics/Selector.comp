@@ -20,7 +20,8 @@
 * velocity selector (helical lamella type)
 *
 * Example: Selector(xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25,
-*            num=72,width=0.004,radius=0.29,alfa=48.298,feq=500)
+*            num=72,width=0.004,radius=0.12,alfa=48.298,feq=500)
+* These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
 * 
 * %Parameters
 * INPUT PARAMETERS:
@@ -45,7 +46,7 @@
 
 DEFINE COMPONENT Selector
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25, num=72,width=0.004,radius=0.29,alfa=48.298,feq=500)
+SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25, num=72,width=0.004,radius=0.12,alfa=48.298,feq=500)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
 %{
