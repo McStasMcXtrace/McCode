@@ -12,10 +12,12 @@ sub parse_header {
 			       'origin' => "(Unknown)",
 			       'date' => "(Unknown)",
 			       'version' => "(Unknown)",
+			       'history' => [ ],
 			       'short'  => ""
 			   };
     $d->{'description'} = undef;
     $d->{'parhelp'} = { };
+    $d->{'links'} = [ ];
     while(<$f>) {
 	if(/\%I[a-z]*/i) {
 	    $where = "identification";
@@ -24,6 +26,9 @@ sub parse_header {
 	} elsif(/\%P[a-z]*/i) {
 	    $where = "parameters";
 	    undef $thisparm;
+	} elsif(/\%L[a-z]*/i) {
+	    $where = "links";
+	    push @{$d->{'links'}}, "";
 	} elsif(/\%E[a-z]*/i) {
 	    last;
 	} else {
@@ -36,7 +41,15 @@ sub parse_header {
 		}elsif(/Date:(.*)$/i) {
 		    $d->{'identification'}{'date'} = $1;
 		}elsif(/Version:(.*)$/i) {
-		    $d->{'identification'}{'version'} = $1;
+		    my $verstring = $1;
+		    # Special case for RCS style $Revision: 1.2 $ tags.
+		    if($verstring =~ /^(.*)\$Revision: 1.2 $(.*)$/) {
+			$d->{'identification'}{'version'} = "$1$2$3";
+		    } else {
+			$d->{'identification'}{'version'} = $verstring;
+		    }
+		}elsif(/Modified by:(.*)$/i) {
+		    push @{$d->{'identification'}{'history'}}, $1;
 		} else {
 		    $d->{'identification'}{'short'} .= $_
 			unless /^\s*$/;
@@ -44,7 +57,7 @@ sub parse_header {
 	    } elsif($where eq "description") {
 		$d->{'description'} .= $_;
 	    } elsif($where eq "parameters") {
-		if(/^[ \t]*([a-zA-Z0-9æøåÆØÅ_]+):(.*)/) {
+		if(/^[ \t]*([a-zA-Z0-9æøåÆØÅ_]+)\s*:(.*)/) {
 		    $thisparm = \$d->{'parhelp'}{$1}{'full'};
 		    $$thisparm = "$2\n";
 		} elsif(/^[ \t]*$/) { # Empty line
@@ -56,6 +69,8 @@ sub parse_header {
 		} else {
 		    # Skip it
 		}
+	    } elsif($where eq "links") {
+		$d->{'links'}[-1] .= $_;
 	    } else {
 		# Skip.
 	    }
@@ -75,6 +90,12 @@ sub parse_header {
 	    $unit = $1;
 	    $text = $3;
 	} elsif($s =~ /^\s*((.|\n)*)\s*\(([^()\n]*(\([^()\n]*\))?[^()\n]*)\)\s*$/){
+	    $unit = $3;
+	    $text = $1;
+	} elsif($s =~ /^\s*\[([^][\n]*)\]\s*((.|\n)*)\s*$/){
+	    $unit = $1;
+	    $text = $2;
+	} elsif($s =~ /^\s*((.|\n)*)\s*\[([^][\n]*)\]\s*$/){
 	    $unit = $3;
 	    $text = $1;
 	} else {
@@ -110,18 +131,18 @@ sub get_comp_info {
     } else {
 	$cname = "<Unknown>";
     }
-    if($s =~ /DEFINITION\sPARAMETERS\s+\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
+    if($s =~ /DEFINITION\sPARAMETERS\s*\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
 	@dpar = split (/\s*,\s*/, $1);
     } else {
 	@dpar = ();
     }
-    if($s =~ /SETTING\sPARAMETERS\s+\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
+    if($s =~ /SETTING\sPARAMETERS\s*\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
 	@spar = split (/\s*,\s*/, $1);
     } else {
 	@spar = ();
     }
     @ipar = (@dpar, @spar);
-    if($s =~ /OUTPUT\sPARAMETERS\s+\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
+    if($s =~ /OUTPUT\sPARAMETERS\s*\(([a-zA-ZæøåÆØÅ0-9_, \t\r\n]+)\)/i) {
 	@opar = split (/\s*,\s*/, $1);
     } else {
 	@opar = ();
@@ -143,6 +164,9 @@ sub show_header {
     print "[Origin]: $d->{'identification'}{'origin'}\n";
     print "[Date]: $d->{'identification'}{'date'}\n";
     print "[Version]: $d->{'identification'}{'version'}\n";
+    for $i (@{$d->{'identification'}{'history'}}) {
+	print "[Modified by]: $i\n";
+    }
     print "\n";
     print $d->{'identification'}{'short'};
     print "######## Input parameters: ##############################\n";
@@ -189,15 +213,6 @@ sub html_main_start {
 <BODY>
 
 <CENTER><H1>Components for <i>McStas</i></H1></CENTER>
-
-<TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
-<TR>
-<TD><B>Name</B></TD>
-<TD WIDTH="10%"><B>Origin</B></TD>
-<TD WIDTH="10%"><B>Author(s)</B></TD>
-<TD WIDTH="10%"><B>Help</B></TD>
-<TD><B>Description</B></TD>
-</TR>
 END
 }
 
@@ -219,8 +234,7 @@ sub html_table_entry {
     print $f "<TD>$d->{'identification'}{'author'}</TD>\n";
 
     print $f "<TD>";
-    print $f "<A HREF=\"$bn.html\">More...</A>"
-	if %{$d->{'parhelp'}} || $d->{'description'};
+    print $f "<A HREF=\"$bn.html\">More...</A>";
     print $f "</TD>\n";
 
     print $f "<TD>$d->{'identification'}{'short'}</TD>\n";
@@ -234,8 +248,6 @@ sub html_main_end {
     my ($f) = @_;
     my $date = `date +'%b %e %Y'`;
     print $f <<END;
-</TABLE>
-
 <P>This Component list was updated on $date.
 <HR WIDTH="100%">
 <CENTER>
@@ -296,10 +308,18 @@ sub gen_html_description {
     print $f "$d->{'identification'}{'short'}\n\n";
     print $f "<H2>Identification</H2>\n";
     print $f "\n<UL>\n";
-    print $f "<LI> <B>Author:</B>$d->{'identification'}{'author'}</B>\n";
-    print $f "<LI> <B>Origin:</B>$d->{'identification'}{'origin'}</B>\n";
-    print $f "<LI> <B>Date:</B>$d->{'identification'}{'date'}</B>\n";
-    print $f "<LI> <B>Version:</B>$d->{'identification'}{'version'}</B>\n";
+    print $f "  <LI> <B>Author:</B>$d->{'identification'}{'author'}</B>\n";
+    print $f "  <LI> <B>Origin:</B>$d->{'identification'}{'origin'}</B>\n";
+    print $f "  <LI> <B>Date:</B>$d->{'identification'}{'date'}</B>\n";
+    print $f "  <LI> <B>Version:</B>$d->{'identification'}{'version'}</B>\n";
+    if(@{$d->{'identification'}{'history'}}) {
+	my $entry;
+	print $f "  <LI> <B>Modification history:</B> <UL>\n";
+	for $entry (@{$d->{'identification'}{'history'}}) {
+	    print $f "    <LI> $entry\n";
+	}
+	print $f "  </UL>\n";
+    }
     print $f "</UL>\n";
     print $f "\n<H2>Input parameters</H2>\n";
     gen_param_table($f, $d->{'inputpar'}, $d->{'parhelp'}); 
@@ -307,12 +327,16 @@ sub gen_html_description {
     gen_param_table($f, $d->{'outputpar'}, $d->{'parhelp'}); 
     if($d->{'description'}) {
 	print $f "<H2>Description</H2>\n";
-	print $f "\n<PRE>\n$d->{'description'}\n</PRE>\n";
+	print $f "\n<PRE>\n$d->{'description'}</PRE>\n";
     }
     print $f "\n<H2>Links</H2>\n\n<UL>\n";
     print $f "  <LI> <A HREF=\"$d->{'name'}.comp\">Source code</A> ";
-    print $f "for <CODE>$d->{'name'}.comp</CODE>\n";
+    print $f "for <CODE>$d->{'name'}.comp</CODE>.\n";
     # Additional links from component comment header go here.
+    my $link;
+    for $link (@{$d->{'links'}}) {
+	print $f "  <LI> $link";
+    }
     print $f "</UL>\n";
     print $f "\n<HR><ADDRESS>\n";
     print $f "Generated automatically by McDoc, Kristian Nielsen\n";
@@ -335,6 +359,48 @@ sub add_comp_html {
     gen_html_description($d, $bn);
 }
 
+#
+# Add a whole section of components, given the section directory name.
+#
+sub add_comp_section_html {
+    my ($sec, $header, $indexfile) = @_;
+    if(opendir(DIR, $sec)) {
+	my @comps = readdir(DIR);
+	closedir DIR;
+	return unless @comps;
+	print $indexfile <<END;
+
+<P><A NAME="$sec"></A>
+$header
+<TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
+<TR>
+<TD><B><I>Name</I></B></TD>
+<TD WIDTH="10%"><B><I>Origin</I></B></TD>
+<TD WIDTH="10%"><B><I>Author(s)</I></B></TD>
+<TD WIDTH="10%"><B><I>Help</I></B></TD>
+<TD><B><I>Description</I></B></TD>
+</TR>
+END
+	my ($comp, $name);
+	for $name (sort(@comps)) {
+	    my $comp = "$sec/$name";
+	    next unless $comp =~ /^(.*)\.(com|comp|cmp)$/;
+	    my $basename = $1;
+	    my $file = new FileHandle;
+	    open($file, $comp)  || die "Could not open file '$comp'\n";
+	    my $data = parse_header($file);
+	    close($file);
+	    die "Parse of file '$comp' failed" unless $data;
+	    get_comp_info($comp, $data);
+#show_header($data);
+	    add_comp_html($data, $indexfile, $basename);
+	}
+	print $indexfile <<END;
+</TABLE>
+
+END
+    }
+}
 
 my $comp;
 
@@ -342,20 +408,16 @@ my $indexfile = new FileHandle;
 open($indexfile, ">index.html") ||
     die "Could not open index.html for writing.\n";
 html_main_start($indexfile);
-for $comp (@ARGV) {
-    if($comp =~ /^(.*)\.(com|comp|cmp)$/) {
-	my $basename = $1;
-	my $file = new FileHandle;
-	open($file, $comp)  || die "Could not open file '$comp'\n";
-	my $data = parse_header($file);
-	close($file);
-	die "Parse of file '$comp' failed" unless $data;
-	get_comp_info($comp, $data);
-#	show_header($data);
-	add_comp_html($data, $indexfile, $basename);
-    } else {
-	print STDERR "Warning: skipping bad name '$comp'\n";
-    }
+my @sections = ("sources", "optics", "samples", "monitors", "misc");
+my %section_headers =
+    ("sources" => '<B><FONT COLOR="#FF0000">Sources</FONT></B>',
+     "optics" => '<B><FONT COLOR="#FF0000">Optics</FONT></B>',
+     "samples" => '<B><FONT COLOR="#FF0000">Samples</FONT></B>',
+     "monitors" => '<B><FONT COLOR="#FF0000">Detectors</FONT> and monitors</B>',
+     "misc" => '<B><FONT COLOR="#FF0000">Misc</FONT></B>');
+my $sec;
+for $sec (@sections) {
+    add_comp_section_html($sec, $section_headers{$sec}, $indexfile);
 }
 html_main_end($indexfile);
 close($indexfile);
