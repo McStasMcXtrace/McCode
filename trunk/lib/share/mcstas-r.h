@@ -6,96 +6,6 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.26 1999-03-23 09:45:30 kn Exp $
-*
-*	$Log: not supported by cvs2svn $
-*	Revision 1.25  1999/03/18 07:33:09  kn
-*	Handle polarised neutrons.
-*
-*	Revision 1.24  1999/03/16 13:53:11  kn
-*	Give the variable name for the X axis in the detector output.
-*
-*	Revision 1.23  1999/03/16 13:51:52  kn
-*	Standard method for outputting detector data in components.
-*
-*	Revision 1.22  1999/01/28 07:56:35  kn
-*	Support for MCDISPLAY section in component definitions.
-*
-*	Revision 1.21  1998/11/09 08:17:57  kn
-*	Added some prototypes.
-*
-*	Revision 1.20  1998/10/09 07:53:48  kn
-*	Added some unit conversion constants.
-*
-*	Revision 1.19  1998/10/02 08:38:36  kn
-*	Added DETECTOR_OUT support.
-*	Fixed header comment.
-*
-*	Revision 1.18  1998/10/01 08:12:42  kn
-*	Support for embedding the file in the output from McStas.
-*	Added mcstas_main() function.
-*	Added support for command line arguments.
-*
-*	Revision 1.17  1998/09/24 13:01:39  kn
-*	Minor conversion factor additions.
-*
-*	Revision 1.16  1998/09/23 13:52:08  kn
-*	Added conversion factors.
-*	McStas now uses its own random() implementation (unless
-*	USE_SYSTEM_RANDOM is defined).
-*
-*	Revision 1.15  1998/05/19 07:59:45  kn
-*	Hack to make random number generation work with HP's CC C compiler.
-*
-*	Revision 1.14  1998/04/17 11:50:31  kn
-*	Added sphere_intersect.
-*
-*	Revision 1.13  1998/04/17 10:53:08  kn
-*	Added randvec_target_sphere.
-*
-*	Revision 1.12  1998/03/25 07:23:24  kn
-*	Fixed RAND_MAX #define for HPUX.
-*
-*	Revision 1.11  1998/03/24 13:59:26  lefmann
-*	Added #define for RAND_MAX, needed on HPUX.
-*
-*	Revision 1.10  1998/03/24 13:24:40  lefmann
-*	Added HBAR, MNEUTRON.
-*
-*	Revision 1.9  1998/03/24 07:42:35  kn
-*	Added definition for PI.
-*
-*	Revision 1.8  1998/03/24 07:36:20  kn
-*	Make ABSORB macro work better in control structures.
-*	Add test_printf().
-*	Add rand01(), randpm1(), rand0max(), and randminmax().
-*	Add PROP_X0, PROP_Y0, PROP_DT, vec_prod(), scalar_prod(), NORM(), and
-*	rotate().
-*	Fix typos.
-*
-*	Revision 1.7  1998/03/20 14:20:10  lefmann
-*	Added a few definitions.
-*
-*	Revision 1.6  1998/03/18 13:21:48  elu_krni
-*	Added definition of PROP_Z0 macro.
-*
-*	Revision 1.5  1998/03/16 08:04:16  kn
-*	Added normal distributed random number function randnorm().
-*
-*	Revision 1.4  1997/12/03 13:34:19  kn
-*	Added definition of ABSORB macro.
-*
-*	Revision 1.3  1997/10/16 14:27:28  kn
-*	Added debugging output used by the "display" graphical visualization
-*	tool.
-*
-*	Revision 1.2  1997/09/08 11:31:27  kn
-*	Added mcsetstate() function.
-*
-*	Revision 1.1  1997/09/08 10:39:44  kn
-*	Initial revision
-*
-*
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
@@ -116,6 +26,25 @@
 #define mcstatic
 #endif
 
+#ifdef __dest_os
+#if (__dest_os == __mac_os)
+#define MAC
+#endif
+#endif
+
+#ifdef WIN32
+#define MC_PATHSEP_C '\\'
+#define MC_PATHSEP_S "\\"
+#else  /* !WIN32 */
+#ifdef MAC
+#define MC_PATHSEP_C ':'
+#define MC_PATHSEP_S ":"
+#else  /* !MAC */
+#define MC_PATHSEP_C '/'
+#define MC_PATHSEP_S "/"
+#endif /* !MAC */
+#endif /* !WIN32 */
+
 typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
@@ -135,8 +64,9 @@ void mcdisplay(void);
 
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnlsx,mcnlsy, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
-#define MC_GETPAR(comp, par) mcc ## comp ## _ ## par
+#define MC_GETPAR(comp, par) (mcc ## comp ## _ ## par)
 #define DETECTOR_OUT(p0,p1,p2) mcdetector_out(mccompcurname,p0,p1,p2)
+#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,mccompcurname)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
      mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,mccompcurname)
 #define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
@@ -261,6 +191,7 @@ void mc_srandom (unsigned int x);
 
 #define PROP_DT(dt) \
   do { \
+    if(dt < 0) ABSORB; \
     mcnlx += mcnlvx*(dt); \
     mcnly += mcnlvy*(dt); \
     mcnlz += mcnlvz*(dt); \
@@ -334,6 +265,7 @@ void mccoordschange_polarisation(Rotation t,
 double mcestimate_error(int N, double p1, double p2);
 void mcsiminfo_out(char *format, ...);
 void mcdetector_out(char *cname, double p0, double p1, double p2);
+void mcdetector_out_0D(char *t, double p0, double p1, double p2, char *cname);
 void mcdetector_out_1D(char *t, char *xl, char *yl,
 		       char *xvar, double x1, double x2, int n,
 		       int *p0, double *p1, double *p2, char *f, char *c);
