@@ -1,12 +1,18 @@
 /*******************************************************************************
 *
-* McStas, Maintained by Kristian Nielsen and Kim Lefmann,
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
 *         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Single_crystal
+* %I
+* Written by: KN
+* Date: December 1999
+* Version: $Revision: 1.11 $
+* Origin: McStas release
 *
-* Written by: KN December 1999
+* Mosaic single crystal with multiple scattering vectors.
 *
+* %D
 * Single crystal with mosaic. Delta-D/D option for finite-size effects.
 * Rectangular geometry.
 * Crystal structure is specified with an ascii data file. Each line
@@ -16,6 +22,7 @@
 * the numbers are not used; the file is in the format output by the
 * Crystallographica program).
 *
+* %P
 * INPUT PARAMETERS:
 *
 * xwidth      : Width of crystal (m)
@@ -35,7 +42,7 @@
 *******************************************************************************/
 
 /*
-
+  %D
   Overview of algorithm:
 
   (1). The neutron intersects the crystal at (x,y,z) with given
@@ -80,6 +87,7 @@
   (9). The process is repeated from (2) with kf as new initial wave
        vector ki.
 
+  %E
  */
 
 DEFINE COMPONENT Single_crystal

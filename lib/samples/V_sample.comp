@@ -1,16 +1,22 @@
 /*******************************************************************************
 *
-* McStas, version 1.0, released October 26, 1998
+* McStas, the neutron ray-tracing package
 *         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Risoe National Laboratory, Roskilde, Denmark
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: V-sample
+* %I
+* Written by: KL, KN
+* Date: 15.4.98
+* Version: $Revision: 1.4 $
+* Origin: McStas release
 *
-* Written by: KL, KN 15.4.98
+* Vanadium sample.
 *
+* %D
 * A Double-cylinder shaped incoherent scatterer (a V-sample)
 * No multiple scattering. Absorbtion included.
 *
+* %P
 * INPUT PARAMETERS:
 *       
 * radius_i  : Inner radius of sample in (x,z) plane (m)         
@@ -27,6 +33,11 @@
 * V_my_s      : Attenuation factor due to scattering (m^-1)
 * V_my_a      : Attenuation factor due to absorbtion (m^-1)
 *
+* %L
+* <A HREF="http://neutron.risoe.dk/mcstas/components/tests/v_sample/">Test
+* results</A> (not up-to-date).
+*
+* %E
 *******************************************************************************/
 
 DEFINE COMPONENT V_sample
