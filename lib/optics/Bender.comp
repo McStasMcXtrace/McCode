@@ -71,7 +71,7 @@ DEFINITION PARAMETERS
 
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (bk, mWin)
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, p)
+STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 SHARE
  %{

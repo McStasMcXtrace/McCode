@@ -10,7 +10,7 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -49,7 +49,7 @@ DEFINE COMPONENT Chopper
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R, w=0.05, f=2500.0, n=3, pha=0, IsFirst=0, n_pulse=1)
 OUTPUT PARAMETERS (Tg, T)
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, p)
+STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 DECLARE
  %{
