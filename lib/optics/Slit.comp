@@ -1,0 +1,33 @@
+/***********************************************************************
+*
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Slit
+*
+* Written by: KL, HMR  June 16, 1997
+*
+* A simple rectangular slit. No transmission around the slit is allowed.
+*
+* INPUT PARAMETERS
+*
+* xmin: Lower x bound (m)
+* xmax: Upper x bound (m)
+* ymin: Lower y bound (m)
+* ymax: Upper y bound (m)
+*
+***********************************************************************/
+
+
+DEFINE COMPONENT Slit
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+TRACE
+%{
+    PROP_Z0;
+    if (x<xmin || x>xmax || y<ymin || y>ymax)
+      ABSORB;
+%}
+END
