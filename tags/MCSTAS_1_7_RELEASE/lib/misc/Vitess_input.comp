@@ -1,0 +1,135 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Vitess_input.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Vitess_input
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: June 6, 2000
+* Version: $Revision: 1.17 $
+* Origin: McStas 1.5.0
+* Release: McStas 1.6
+* Modified by: E. Farhi, Sep 28th, 2001: added spin
+*
+* Read neutron state parameters from VITESS neutron file.
+*
+* %D
+* Source-like component reading neutron state parameters from a
+* VITESS neutron file. Used to interface McStas components or
+* simulations into VITESS. Each neutron is 104 bytes.
+*
+* Example: Vitess_input(file="MySource.vit", bufsize = 10000, repeat_count = 2)
+*
+* %P
+* INPUT PARAMETERS
+*
+* file:         Filename of neutron file to read. Default is
+*               standard input [string]
+* bufsize:      Size of neutron input buffer [records]
+* repeat_count: Number of times to repeat each neutron read [1]
+*
+* OUTPUT PARAMETERS
+*
+* finished:     Set to 1 when the last neutron has been read [int]
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Vitess_input
+DEFINITION PARAMETERS (file = 0)
+SETTING PARAMETERS (bufsize = 10000, repeat_count = 1)
+OUTPUT PARAMETERS (hfile, buf, size, pos, rep, finished)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+SHARE
+%{
+%include "vitess-lib" 
+%}
+
+DECLARE
+%{
+
+FILE *hfile;			/* Neutron input file handle */
+Neutron *buf;			/* Neutron input buffer */
+int size;			/* Number of neutrons currently in buffer */
+int pos;			/* Current position in buffer */
+int rep;			/* Neutron repeat count */
+int finished;			/* Set to 1 when last neutron read */
+%}
+
+INITIALIZE
+%{
+  /* Open neutron input file. */
+  if(file)
+    hfile = fopen(file, "rb");
+  else
+    hfile = stdin;
+  if(!hfile)
+  {
+    fprintf(stderr, "Vitess_input: Error: Cannot open input file.\n");
+    exit(1);
+  }
+  /* Allocate neutron input buffer. */
+  buf = calloc(bufsize, sizeof(Neutron));
+  if(!buf)
+  {
+    fprintf(stderr, "Vitess_input: Error: Cannot allocate neutron buffer.\n");
+    exit(1);
+  }
+  /* Initialize buffer. */
+  size = 0;
+  pos = 0;
+  rep = 0;
+  finished = 0;
+%}
+
+TRACE
+%{
+  double v;			/* Neutron velocity */
+
+  if(pos >= size) {
+    /* Buffer is empty. */
+    size = fread(buf, sizeof(Neutron), bufsize, hfile);
+    if(size <= 0)
+    {
+      if(ferror(hfile))
+	fprintf(stderr, "Vitess_input: Error during read of neutron file.\n");
+      if(feof(hfile) || ferror(hfile))
+	finished = 1;		/* End of file or error reached */
+    }
+    else
+    {
+      pos = 0;			/* Reposition at start of buffer */
+    }
+  }
+  /* When no more neutron records are available in the neutron file,
+     any remaining iterations are skipped by immediately ABSORB'ing
+     the neutron. */
+  if(finished)
+    ABSORB;
+  vitess2mcstas(buf[pos], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
+  /* Repeat the same neutron state parameters the required number of
+     times. */
+  ++rep;
+  if(rep >= repeat_count)
+  {
+    rep = 0;
+    ++pos;
+  }
+%}
+FINALLY
+%{
+  if(buf)
+    free(buf);
+  if(hfile && file)
+    fclose(hfile);
+%}
+MCDISPLAY
+%{
+  /* Invisible component. */
+%}
+
+END

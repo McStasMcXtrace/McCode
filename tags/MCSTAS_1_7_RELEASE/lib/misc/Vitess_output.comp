@@ -1,0 +1,139 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Vitess_output.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Vitess_output
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: June 6, 2000
+* Version: $Revision: 1.16 $
+* Origin: McStas 1.5.0
+* Release: McStas 1.6
+* Modified by: E. Farhi, Sep 28th, 2001: added spin
+*
+* Write neutron state parameters to VITESS neutron file.
+*
+* %D
+* Detector-like component writing neutron state parameters to a
+* VITESS neutron file. Used to interface McStas components or
+* simulations into VITESS. Each neutron is 104 bytes.
+*
+* Note that when standard output is used, as is the default, no
+* monitors or other components that produce terminal output must be
+* used, or the neutron output from this component will become
+* corrupted.
+*
+* Example: Vitess_output(file="MySource.vit", bufsize = 10000, progress = 1)
+*
+* %P
+* INPUT PARAMETERS
+*
+* file:     Filename of neutron file to write. Default is standard
+*           output [string]
+* bufsize:  Size of neutron output buffer [records]
+* progress: If not zero, output dots as progress indicator [flag]
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Vitess_output
+DEFINITION PARAMETERS (file = 0)
+SETTING PARAMETERS (bufsize = 10000, progress = 0)
+OUTPUT PARAMETERS (hfile, buf, pos)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+SHARE
+%{
+%include "vitess-lib" 
+%}
+
+DECLARE
+%{
+
+FILE *hfile;			/* Neutron output file handle */
+Neutron *buf;			/* Neutron output buffer */
+int pos;			/* Current position in buffer */
+%}
+
+INITIALIZE
+%{
+  /* Open neutron output file. */
+  if(file)
+  {
+    hfile = fopen(file, "wb");
+  }
+  else
+  {
+    hfile = stdout;
+  }
+  if(!hfile)
+  {
+    fprintf(stderr, "Vitess_output: Error: Cannot open output file.\n");
+    exit(1);
+  }
+  /* Allocate neutron output buffer. */
+  buf = calloc(bufsize, sizeof(Neutron));
+  if(!buf)
+  {
+    fprintf(stderr, "Vitess_output: Error: Cannot allocate neutron buffer.\n");
+    exit(1);
+  }
+  /* Initialize buffer. */
+  pos = 0;  
+%}
+
+TRACE
+%{
+  int count;
+  double v;			/* Neutron velocity */
+
+  /* Flush output buffer if full. */
+  if(pos >= bufsize) {
+    count = fwrite(buf, sizeof(Neutron), bufsize, hfile);
+    if(progress)
+    {
+      fputc('.', stderr);	/* Output progress indicator. */
+      fflush(stderr);
+    }
+    if(count != bufsize)
+    {
+      fprintf(stderr, "Vitess_output: Error during write of neutron file.\n");
+      exit(1);
+    }
+    else
+    {
+      pos = 0;			/* Reposition at start of buffer */
+    }
+  }
+  buf[pos] = mcstas2vitess(x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  ++pos;
+%}
+FINALLY
+%{
+  int count;
+
+  /* Flush output buffer if necessary. */
+  if(pos > 0) {
+    count = fwrite(buf, sizeof(Neutron), pos, hfile);
+    if(count != pos)
+    {
+      fprintf(stderr, "Vitess_output: Error during write of neutron file.\n");
+      exit(1);
+    }
+  }
+  if(progress)
+    fprintf(stderr, ".\n");	/* Output final progress indicator. */
+  if(buf)
+    free(buf);
+  if(hfile && file)
+    fclose(hfile);
+%}
+MCDISPLAY
+%{
+  /* Invisible component. */
+%}
+
+END

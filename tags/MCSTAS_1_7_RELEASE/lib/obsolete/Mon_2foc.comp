@@ -1,0 +1,217 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Mon_2foc.comp
+*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+*         Peter Link, IPC University of Göttingen
+*
+* Component: Mon_2foc
+*
+* %Identification
+* Written by: <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
+* Date: Feb. 12,1999
+* Origin: McStas 1.5/Uni. Gottingen (Germany)
+* version: 1.0
+*
+* Double bent monochromator with multiple slabs
+* 
+* %Description
+* Double bent monochromator which uses a small-mosaicity approximation as well
+* as the approximation vy^2 << vz^2 + vx^2.
+* Second order scattering is neglected.
+* For an unrotated monochromator component, the crystal plane lies in the y-z
+* plane (ie. parallel to the beam).
+* When curvatures are set to 0, the monochromator is flat. 
+* The curvatures approximation for parallel beam focusing to distance L, with
+* monochromator rotation angle A1 are:
+*   RV = 2*L*sin(DEG2RAD*A1);
+*   RH = 2*L/sin(DEG2RAD*A1);
+*
+* When you rotate the component by A1 = asin(Q/2/Ki)*RAD2DEG, do not forget to 
+* rotate the following components by A2=2*A1 (for 1st order) !
+* OBSOLETE: rather use optics/Monochromator_2foc
+*
+* Example: Mon_2foc(zwidth=0.02, yheight=0.02, gap=0.0005, NH=11, NV=11,
+*           mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
+*
+* Added double bent feature by: Peter Link Feb. 12,1999
+* corrected bug in rotation of v-coords: Peter Link Sep. 24. 1999 
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* zwidth:  horizontal width of an individual slab (m)
+* yheight: vertical height of an individual slab (m)
+* gap:     typical gap  between adjacent slabs (m)
+* NH:      number of slabs horizontal (columns)
+* NV:      number of slabs vertical   (rows)
+* mosaich: Horisontal mosaic FWHM (arc minutes)
+* mosaicv: Vertical mosaic FWHM (arc minutes)
+* r0:      Maximum reflectivity (1)
+* Q:       Scattering vector (AA-1)
+* RV:      radius of vertical focussing (m). flat for 0.
+* RH:      radius of horizontal focussing (m). flat for 0.
+*
+* optional parameters
+* DM:      monochromator d-spacing instead of Q=2*pi/DM (Angstrom) 
+* ywidth:  compatibility parameter with older Mon_2foc (m)
+*
+* %Link 
+* <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00031.html">Additional note</a> from <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT Mon_2foc
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (zwidth, yheight=0.02, gap=0.0005, NH=11, NV=11, mosaich=30, mosaicv=30, r0=0.7, Q=1.8734, RV=0, RH=0, DM=0, ywidth=0)
+OUTPUT PARAMETERS (mono_Q)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+  %{
+#ifndef DIV_CUTOFF
+#define DIV_CUTOFF 2            /* ~ 10^-5 cutoff. */
+#endif
+  double mono_Q;
+  %}
+  
+INITIALIZE
+%{
+  mono_Q = Q;
+  if (DM != 0) mono_Q = 2*PI/DM;
+  if (ywidth != 0) yheight = ywidth;  /* compatibility with old Mon_2foc */
+%}
+
+TRACE
+  %{
+    double dphi,tmp1,tmp2,tmp3,tmp4,vratio,phi,theta0,theta,v,cs,sn;
+    double zmin,zmax,ymin,ymax,zp,yp,row,col;
+    double tilth,tiltv;         /* used to calculate tilt angle of slab */
+    double sna,snb,csa,csb,vxp,vyp,vzp;
+    double old_x = x, old_y = y, old_z = z, old_t = t;
+    double dt;
+    
+    if(vx != 0.0 && (dt = -x/vx) >= 0.0)
+    {
+      zmax = ((NH*(zwidth+gap))-gap)/2;
+      zmin = -1*zmax;
+      ymax = ((NV*(yheight+gap))-gap)/2;
+      ymin = -1*ymax;
+      y += vy*dt; z += vz*dt; t += dt; x = 0.0;
+      zp = fmod ( (z-zmin),(zwidth+gap) );
+      yp = fmod ( (y-ymin),(yheight+gap) );
+
+      /* hit a slab or a gap ? */
+
+      if (z>zmin && z<zmax && y>ymin && y<ymax && zp<zwidth && yp< yheight)
+      {
+      
+        col = ceil ( (z-zmin)/(zwidth+gap));
+        row = ceil ( (y-ymin)/(yheight+gap));
+        if (RH != 0) tilth = asin((col-(NH+1)/2)*(zwidth+gap)/RH);
+        else tilth=0;
+        if (RV != 0) tiltv = -asin((row-(NV+1)/2)*(yheight+gap)/RV);
+        else tiltv=0;
+
+        /* rotate with tilth and tiltv */
+
+        sna = sin(tilth);
+        snb = sin(tiltv);
+        csa = cos(tilth);
+        csb = cos(tiltv);
+        vxp = vx*csa*csb+vy*snb-vz*sna*csb;
+        vyp = -vx*csa*snb+vy*csb+vz*sna*snb;
+        vzp = vx*sna+vz*csa;  
+
+          
+        /* First: scattering in plane */
+        /* theta0 = atan2(vx,vz);  neutron angle to slab Risoe version */
+      
+	      v = sqrt(vxp*vxp+vyp*vyp+vzp*vzp);
+	      theta0 = asin(vxp/v);                /* correct neutron angle to slab */
+
+        theta = asin(Q2V*mono_Q/(2.0*v));               /* Bragg's law */
+	      if (theta0 < 0)
+                theta = -theta;
+	      tmp3 = (theta-theta0)/(MIN2RAD*mosaich);
+	      if (tmp3 > DIV_CUTOFF)
+	      {
+                x = old_x; y = old_y; z = old_z; t = old_t;
+	      }
+	      else
+	      {
+                p *= r0*exp(-tmp3*tmp3*4*log(2)); /* Use mosaics */
+                tmp1 = 2*theta;
+                cs = cos(tmp1);
+                sn = sin(tmp1);
+                tmp2 = cs*vxp - sn*vzp; 
+                vyp = vyp;
+                /* vz = cs*vz + sn*vx; diese Zeile wurde durch die folgende ersetzt */
+                tmp4 = vyp/vzp;  /* korrigiert den schrägen Einfall aufs Plättchen  */
+                vzp = cs*(-vyp*sin(tmp4)+vzp*cos(tmp4)) + sn*vxp;  
+                vxp = tmp2;
+
+                /* Second: scatering out of plane. 
+                   Approximation is that Debye-Scherrer cone is a plane */
+
+                phi = atan2(vyp,vzp);  /* out-of plane angle */
+                dphi = (MIN2RAD*mosaicv)/(2*sqrt(2*log(2)))*randnorm();  /* MC choice: */
+                /* Vertical angle of the crystallite */
+                vyp = vzp*tan(phi+2*dphi*sin(theta));
+                vratio = v/sqrt(vxp*vxp+vyp*vyp+vzp*vzp);
+                vzp = vzp*vratio;
+                vyp = vyp*vratio;                             /* Renormalize v */
+                vxp = vxp*vratio;
+                
+                /* rotate v coords back */
+	              vx = vxp*csb*csa-vyp*snb*csa+vzp*sna;
+	              vy = vxp*snb+vyp*csb;
+	              vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa;    
+	              /* v=sqrt(vx*vx+vy*vy+vz*vz);  */
+                SCATTER;
+	      }
+      }
+      else
+      {
+        x = old_x; y = old_y; z = old_z; t = old_t;
+      }
+    }
+  %}
+
+MCDISPLAY
+%{
+  double zmin,zmax,ymin,ymax;
+  int ih,iv;
+  double xt, xt1, yt, yt1;
+
+  magnify("xy");
+  for(ih = 0; ih < NH; ih++)
+  {
+    for(iv = 0; iv < NV; iv++)
+    {
+      zmin = (zwidth+gap)*(ih-NH/2.0)+gap/2;
+      zmax = zmin+zwidth;
+      ymin = (yheight+gap)*(iv-NV/2.0)+gap/2;
+      ymax = ymin+yheight;
+
+      if (RH) 
+      { xt = zmin*zmin/RH;
+        xt1 = zmax*zmax/RH; }
+      else { xt = 0; xt1 = 0; }
+      
+      if (RV) 
+      { yt = ymin*ymin/RV;
+        yt1 = ymax*ymax/RV; }
+      else { yt = 0; yt1 = 0; }
+      multiline(5, xt+yt, (double)ymin, (double)zmin,
+                   xt+yt1, (double)ymax, (double)zmin,
+                   xt1+yt1, (double)ymax, (double)zmax,
+                   xt1+yt, (double)ymin, (double)zmax,
+                   xt+yt, (double)ymin, (double)zmin);
+     }
+   }
+%}
+
+END
+
+
+

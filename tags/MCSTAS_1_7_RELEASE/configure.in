@@ -1,0 +1,12 @@
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(mcstas.h)
+
+AC_PROG_CC
+AC_PROG_INSTALL
+AC_PATH_PROGS(PERL, [perl5 perl], /usr/local/bin/perl)
+CF_ANSI_CC_CHECK
+MC_ANSI_MATH_PROTO
+AC_CHECK_FUNCS(strcasecmp fdopen)
+
+AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl)
