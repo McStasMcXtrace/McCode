@@ -198,7 +198,7 @@ sub mcdoc_web {
         $cmd_suffix=' &';
     }
     putmsg($cmdwin, "Opening Web Page: $prefix mcdoc$suffix --web $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix --web $cmd_suffix");
+    system("$prefix mcdoc$suffix -s --web $cmd_suffix");
 }
 
 sub mcdoc_manual {
@@ -213,7 +213,7 @@ sub mcdoc_manual {
         $cmd_suffix=' &';
     }
     putmsg($cmdwin, "Opening Manual: $prefix mcdoc$suffix --manual $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix --manual $cmd_suffix");
+    system("$prefix mcdoc$suffix -s --manual $cmd_suffix");
 }
 
 sub mcdoc_tutorial {
@@ -228,7 +228,7 @@ sub mcdoc_tutorial {
         $cmd_suffix=' &';
     }
     putmsg($cmdwin, "Opening Tutorial: $prefix mcdoc$suffix --tutorial $cmd_suffix\n", 'msg');
-    system("$prefix mcdoc$suffix --tutorial $cmd_suffix");
+    system("$prefix mcdoc$suffix -s --tutorial $cmd_suffix");
 }
 
 sub mcdoc_components {
