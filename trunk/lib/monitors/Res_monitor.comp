@@ -1,5 +1,5 @@
 DEFINE COMPONENT Res_monitor
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, filename)
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, filename, res_sample_comp)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (Nsum, psum, p2sum, file)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -14,9 +14,9 @@ INITIALIZE
     psum = 0;
     p2sum = 0;
     Nsum = 0;
-    file = fopen(filename, "w");
-    if(!file)
-      fprintf(stderr, "Error: could not open output file '%s'\n", filename);
+    file = filename ? fopen(filename, "w") : 0;
+    if(!file && filename)
+      fprintf(stderr, "Warning: could not open output file '%s'\n", filename);
   %}
 TRACE
   %{
@@ -27,18 +27,22 @@ TRACE
       psum += p;
       p2sum += p*p;
       /* Now fetch data from the Res_sample. */
-      if(p != 0 && res_pi != 0 && file)
-        fprintf(file, "%g %g %g %g %g %g %g %g %g %g %g\n",
-                res_ki_x, res_ki_y, res_ki_z,
-                res_kf_x, res_kf_y, res_kf_z,
-                res_x, res_y, res_z, res_pi, p);
+      if(p != 0 && file)
+      {
+	struct Res_sample_struct *s =
+	  &(MC_GETPAR(res_sample_comp, res_struct));
+	if(s->pi != 0)
+	  fprintf(file, "%g %g %g %g %g %g %g %g %g %g %g\n",
+		  s->ki_x, s->ki_y, s->ki_z, s->kf_x, s->kf_y, s->kf_z,
+		  s->rx, s->ry, s->rz, s->pi, p/s->pi);
+	}
     }
   %}
 FINALLY
   %{
-    DETECTOR_OUT(Nsum, psum, p2sum);
     if(file)
       fclose(file);
+    DETECTOR_OUT_0D("Single monitor", Nsum, psum, p2sum);
   %}
 
 MCDISPLAY
