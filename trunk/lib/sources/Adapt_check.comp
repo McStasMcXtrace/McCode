@@ -17,21 +17,17 @@ INITIALIZE
 
 TRACE
 %{
-  n++;
-  I += p;
-printf("%4d: old=%g", aindex, atree->v[aindex] - adj_dv);
-  if(n <= 10)
-  {
-    adj_dv = alpha*atree->v[aindex] - adj_dv;
-printf(" [n<10] ->");
-  }
-  else
-  {
-    adj_dv = alpha*(atree->v[aindex]*p*n/I - atree->v[aindex]) - adj_dv;
-printf(" p=%g I/n=%g ->", p, I/n);
-  }
+  double adj_dv;
+
+  a_total_psi += p/a_pi;
+  a_psi[aindex] += p/a_pi;
+/* printf("%4d: old=%g psi=%g psi_i=%g psi_tot=%g", aindex, atree->v[aindex], */
+/*        p/a_pi, a_psi[aindex]/a_n[aindex], */
+/*        a_total_psi/a_total_n); */
+  adj_dv = ((1-beta)*(a_psi[aindex]/a_n[aindex])/(a_total_psi/a_total_n) + beta)/
+    a_num - atree->v[aindex];
   adapt_tree_add(atree, aindex, adj_dv);
-printf(" new=%g\n", atree->v[aindex]);
+/* printf(" new=%g\n", atree->v[aindex]); */
 %}
 
 FINALLY
