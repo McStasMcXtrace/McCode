@@ -188,7 +188,7 @@ double xsecant(double x, double z, double vx, double vz, double t, double dt, do
 		}
 	
 	return(t1);
-	};
+	}
 
 
 /****************************...Z-component********************************************/
@@ -217,7 +217,7 @@ double zsecant(double x, double z, double vx, double vz, double t, double dt, do
 		}
 	
 	return(t1);
-	};
+	}
 
 	
 /****************************INTERPOLATION METHOD FOR...**************************************/
@@ -260,7 +260,7 @@ double xinterpolation(double x, double z, double vx, double vz, double t, double
 		}
 	
 	return(t3);
-	};
+	}
 
 
 /****************************...Z-component***************************************************/
@@ -292,7 +292,7 @@ double zinterpolation(double x, double z, double vx, double vz, double t, double
 		}
 
 	return(t3);
-	};
+	}
 %}
 
 INITIALIZE
