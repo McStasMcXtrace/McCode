@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: December 1999
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.11.1.1 $
 * Origin: McStas release
 *
 * Mosaic single crystal with multiple scattering vectors.
@@ -93,8 +93,8 @@
 DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS(reflections)
 SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d, mosaic,
-                   ax, ay, az, bx, by, bz, cx, cy, cz
-                   /* , p_transmit /* = 0 ToDo */)
+                   ax, ay, az, bx, by, bz, cx, cy, cz)
+                   /* , p_transmit /* = 0 ToDo */
 OUTPUT PARAMETERS(hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
