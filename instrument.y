@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.50 2003-02-11 12:28:45 farhi Exp $
+*	$Id: instrument.y,v 1.51 2003-04-15 15:43:55 farhi Exp $
 *
 *******************************************************************************/
 
@@ -169,7 +169,7 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace
 		    check_comp_formals(c->def_par, c->set_par, c->name);
 		    /* Put component definition in table. */
 		    symtab_add(read_components, c->name, c);
-        if (verbose) fprintf(stderr, "Embedding component %s\n", c->name);
+        if (verbose) fprintf(stderr, "Embedding component %s\n", c->source);
 		  }
 ;
 
