@@ -6,7 +6,7 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.24 2001-08-16 13:50:36 peo Exp $
+* 	$Id: cogen.c,v 1.25 2001-12-19 13:32:04 peo Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -409,9 +409,19 @@ cogen_comp_decls_doit(void *arg)
 {
   struct comp_inst *comp = arg;
 
+  /* Output the 'share' declaration code block
+    (once for all same components)*/
+  if (comp->def->comp_inst_number < 0)
+  {
+    coutf("/* Shared user declarations for all components '%s'. */", comp->def->name);
+    codeblock_out(comp->def->uniq_code);
+    comp->def->comp_inst_number *= -1;  /* will not be included anymore */
+  }
   /* Output the user declaration code block. */
-  codeblock_out(comp->def->decl_code);
+  if (list_len(comp->def->decl_code->lines) > 0)
+    codeblock_out(comp->def->decl_code);
 }
+
 
 static void
 cogen_comp_decls(struct comp_inst *comp)
@@ -465,14 +475,16 @@ cogen_decls(struct instr_def *instr)
   coutf("};");
   cout("");
 
-  /* User's declarations from the instrument definition file. */
+  /* 4. User's declarations from the instrument definition file. */
   cout("/* User declarations from instrument definition. */");
   cogen_instrument_scope(instr, (void (*)(void *))codeblock_out, instr->decls);
   cout("");
 
-  /* Declaration of component definition and setting parameters. */
+  /* 5. Declaration of component definition and setting parameters. */
   cout("/* Declarations of component definition and setting parameters. */");
   cout("");
+
+  /* 9. Declaration of component definition and setting parameters. */
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
@@ -506,13 +518,14 @@ cogen_decls(struct instr_def *instr)
   }
   list_iterate_end(liter);
 
-  /* User declarations from component definitions (for each instance). */
+  /* 10. User declarations from component definitions (for each instance). */
   cout("/* User component declarations. */");
   cout("");
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
-    if(list_len(comp->def->decl_code->lines) > 0)
+    if((list_len(comp->def->decl_code->lines) > 0) ||
+(comp->def->comp_inst_number < 0))
     {
       coutf("/* User declarations for component '%s'. */", comp->name);
       cogen_comp_decls(comp);
@@ -521,7 +534,7 @@ cogen_decls(struct instr_def *instr)
   }
   list_iterate_end(liter);
 
-  /* Declarations for the position and rotation transformations between
+  /* 11. Declarations for the position and rotation transformations between
      coordinate systems of components. */
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
@@ -532,7 +545,7 @@ cogen_decls(struct instr_def *instr)
   list_iterate_end(liter);
   cout("");
   
-  /* Neutron state. */
+  /* 12. Neutron state. */
   coutf("MCNUM %snx, %sny, %snz, %snvx, %snvy, %snvz, %snt, "
 	"%snsx, %snsy, %snsz, %snp;",
 	ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
