@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.2 1997-09-08 11:31:27 kn Exp $
+*	$Id: mcstas-r.h,v 1.3 1997-10-16 14:27:28 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.2  1997/09/08 11:31:27  kn
+*	Added mcsetstate() function.
+*
 *	Revision 1.1  1997/09/08 10:39:44  kn
 *	Initial revision
 *
@@ -21,11 +24,27 @@ typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
 
 #ifdef DEBUG
+#define mcDEBUG_INSTR() printf("INSTRUMENT:\n");
+#define mcDEBUG_COMPONENT(name,c,t) \
+  printf("COMPONENT: \"%s\"\n" \
+	 "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+	 name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
+	 t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]);
+#define mcDEBUG_INSTR_END() printf("INSTRUMENT END:\n");
+#define mcDEBUG_ENTER() printf("ENTER:\n");
+#define mcDEBUG_COMP(c) printf("COMP: \"%s\"\n", c);
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p) \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-	 x,y,z,vx,vy,vz,t,s1,s2,p)
+	 x,y,z,vx,vy,vz,t,s1,s2,p);
+#define mcDEBUG_LEAVE() printf("LEAVE:\n");
 #else
+#define mcDEBUG_INSTR()
+#define mcDEBUG_COMPONENT(name,c,t)
+#define mcDEBUG_INSTR_END()
+#define mcDEBUG_ENTER()
+#define mcDEBUG_COMP(c)
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p)
+#define mcDEBUG_LEAVE()
 #endif
 
 Coords coords_set(MCNUM x, MCNUM y, MCNUM z);
