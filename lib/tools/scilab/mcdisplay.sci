@@ -41,6 +41,8 @@ if MCSTAS==''
 end
 getd(MCSTAS+'/tools/scilab/plotlib/macros');
 
+// For compatibility reasons we need the old graphics style
+set old_style on
 global INSTRUMENT;
 INSTRUMENT=struct();
 INSTRUMENT.name=[];
@@ -92,9 +94,9 @@ function multiline(coords)
   global coordinates
   global listcnt
   listcnt=listcnt+1;  
-  x=coords(2:3:length(coords));
-  y=coords(3:3:length(coords));
-  z=coords(4:3:length(coords));
+  x=coords(1:3:length(coords));
+  y=coords(2:3:length(coords));
+  z=coords(3:3:length(coords));
   coords=[x;y;z;1+0*z];
   coordinates(listcnt)=coords;
   tmp=['INSTRUMENT.' component '.K=[]'];
