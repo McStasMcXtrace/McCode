@@ -8,9 +8,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.20 2000-07-27 09:06:42 kn Exp $
+*	$Id: instrument.l,v 1.21 2001-12-19 12:36:36 peo Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.20  2000/07/27 09:06:42  kn
+*	Added the extra tokens necessary to support full C expressions in
+*	component actual parameters.
+*
 *	Revision 1.19  2000/07/06 12:27:11  kn
 *	Implement first NXDICT code (still incomplete).
 *
@@ -171,6 +175,7 @@ ROTATED		return TOK_ROTATED;
 SETTING		return TOK_SETTING;
 STATE		return TOK_STATE;
 TRACE		return TOK_TRACE;
+SHARE           return TOK_SHARE;
 
 "("|")"|"["|"]"|"{"|"}"|","	return yytext[0]; /* Punctuation. */
 "="|"*"				return yytext[0]; /* Operator. */
