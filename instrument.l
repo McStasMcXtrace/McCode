@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.19 2000-07-06 12:27:11 kn Exp $
+*	$Id: instrument.l,v 1.20 2000-07-27 09:06:42 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.19  2000/07/06 12:27:11  kn
+*	Implement first NXDICT code (still incomplete).
+*
 *	Revision 1.18  2000/02/15 07:42:32  kn
 *	Handle instrument parameters with different types (double, int, string).
 *
@@ -169,13 +172,24 @@ SETTING		return TOK_SETTING;
 STATE		return TOK_STATE;
 TRACE		return TOK_TRACE;
 
-"("|")"|","	return yytext[0]; /* Punctuation. */
-"="|"*"		return yytext[0]; /* Operator. */
+"("|")"|"["|"]"|"{"|"}"|","	return yytext[0]; /* Punctuation. */
+"="|"*"				return yytext[0]; /* Operator. */
 
-{NUMBER}	yylval.number = atof(yytext); return TOK_NUMBER;
+{NUMBER}	yylval.number = str_dup(yytext); return TOK_NUMBER;
  /* Note: Since ID overlaps with NUMBER (eg. "2E3"), ID must come
     after NUMBER */
 {ID}		yylval.string = str_dup(yytext); return TOK_ID;
+
+ /* Scanning all other C tokens used in expressions for component
+ * actual parameters.
+ * IMPORTANT!: Whenever a token is removed from here to make an independent
+ * separate token, the new token must be added to the parser rules for
+ * genatexp/topatexp.
+ */
+"->"|"."|"!"|"~"|"++"|"--"|"+"|"-"|"&"|"sizeof"|"*"|"/"|"%"|"+"|"-"|"<<"|">>"|"<"|"<="|">"|">="|"=="|"!="|"^"|"|"|"&&"|"||"|"?"|":"|"+="|"-="|"*="|"/="|"%="|"&="|"^="|"|="|"<<="|">>=" {
+		  yylval.string = str_dup(yytext);
+		  return TOK_CTOK;
+		}
 
  /* Scanning embedded C code. */
 
