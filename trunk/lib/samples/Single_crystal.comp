@@ -96,7 +96,7 @@ void normal_vec(double *nx, double *ny, double *nz,
     if(ay < az)
     {				/* Use Y axis */
       l = sqrt(z*z + x*x);
-      *nx = -z/l;
+      *nx = z/l;
       *ny = 0;
       *nz = -x/l;
       return;
