@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Monitor.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KL
+* Written by: Kim Lefmann
 * Date: October 4, 1997
-* Version: $Revision: 1.6 $
-* Origin: McStas release
+* Version: $Revision: 1.7 $
+* Origin: McStas 1.4.2
 *
 * Simple single detector/monitor.
 *
@@ -38,6 +37,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin, xmax, ymin, ymax)
 OUTPUT PARAMETERS (Nsum, psum, p2sum)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     int Nsum;
