@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: symtab.c,v 1.1 1997-08-13 09:16:14 kn Exp $
+*	$Id: symtab.c,v 1.2 1997-09-07 17:58:45 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.1  1997/08/13 09:16:14  kn
+*	Initial revision
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
@@ -37,6 +40,13 @@ struct Symbol_table
   };
 
 #define MAXSIZE 1000		/* Max. table size. */
+
+/* Position in a symbol table for doing traversals. */
+struct Symtab_position
+  {
+    struct Symbol_table *symtab; /* The symbol table we are traversing. */
+    int index;			 /* Next entry to return. */
+  };
 
 
 /*******************************************************************************
@@ -134,4 +144,53 @@ symtab_free(Symtab st, void (*value_free)(void *))
   }
   memfree(st->entries);
   memfree(st);
+}
+
+
+/*******************************************************************************
+* Prepare to start traversing a symbol table. Note that an improved
+* implementation is free to change the order in which a traversal returns the
+* elements (for example if using a hash table).
+*******************************************************************************/
+Symtab_handle
+symtab_iterate(Symtab s)
+{
+  Symtab_handle sh;
+
+  palloc(sh);
+  sh->symtab = s;
+  sh->index = 0;
+  return sh;
+}
+
+
+/*******************************************************************************
+* Get the next element during a traversal of a symbol table. Returns NULL
+* when no more elements exist.
+*******************************************************************************/
+struct Symtab_entry *
+symtab_next(Symtab_handle sh)
+{
+  int i = sh->index;
+
+  /* Check if there are any more entries. */
+  if(i >= sh->symtab->size)
+  {
+    return NULL;
+  }
+  else
+  {
+    sh->index++;
+    return &(sh->symtab->entries[i]);
+  }
+}
+
+
+/*******************************************************************************
+* End a symbol table traversal, freeing the memory allocated to the handle.
+*******************************************************************************/
+void
+symtab_iterate_end(Symtab_handle sh)
+{
+  memfree(sh);
 }

@@ -8,9 +8,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.4 1997-08-13 09:14:48 kn Exp $
+*	$Id: instrument.l,v 1.5 1997-09-07 17:57:40 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.4  1997/08/13 09:14:48  kn
+*	First version to properly parse instrument definition files.
+*
 *	Revision 1.3  1997/07/02 07:27:32  kn
 *	Misc. cleanup.
 *
@@ -49,7 +52,7 @@ ALPHA		[A-ZÆØÅa-zæøå]
 ALPHANUM	{ALPHA}|{DIGIT}|"_"
 
 ID		{DIGIT}*{ALPHA}{ALPHANUM}*
-NUMBER		{DIGIT}+("."{DIGIT}+)?([Ee][+-]?{DIGIT}+)?
+NUMBER		-?{DIGIT}+("."{DIGIT}+)?([Ee][+-]?{DIGIT}+)?
 
 %%
 
@@ -73,7 +76,12 @@ ROTATED		return TOK_ROTATED;
 
  /* Scanning embedded C code. */
 
-"%""{"[\t ]*\n	instr_current_line++; BEGIN(ccode); return TOK_CODE_START;
+"%""{"[\t ]*\n	{
+		  yylval = instr_current_line;
+		  instr_current_line++;
+		  BEGIN(ccode);
+		  return TOK_CODE_START;
+		}
 "%""{"[^\n]*\n	{
 		  instr_current_line++;
 		  print_error("%%{ token not on a line by itself.\n");

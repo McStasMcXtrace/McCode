@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug  7, 1997
 *
-*	$Id: cexp.c,v 1.1 1997-08-13 09:11:24 kn Exp $
+*	$Id: cexp.c,v 1.2 1997-09-07 17:54:28 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.1  1997/08/13 09:11:24  kn
+*	Initial revision
+*
 *
 * Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
 *******************************************************************************/
@@ -28,14 +31,14 @@
 * and will maintain a mapping from formal parameters of the instrument to
 * generated names in the generated simulation (the extern names must be
 * copied unchanged). But in this first version a simpler scheme is used: all
-* identifier expressions are simply strings, and all normal identifiers have
-* the name supplied by the user with "mc" prepended.
+* identifier expressions are simply strings, and all normal identifiers refer
+* to instrument parameters (which have ID_PRE and "ip" prepended).
 *******************************************************************************/
 
 CExp
 exp_id(char *id)
 {
-  return str_cat("mc", id, NULL);
+  return str_cat(ID_PRE, "ip", id, NULL);
 }
 
 CExp
@@ -55,6 +58,11 @@ exp_number(double n)
 char *
 exp_tostring(CExp e)
 {
+  if(e == NULL)
+  {
+    e = "";
+    debugn((DEBUG_HIGH, "exp_tostring(): NULL cexp received.\n"));
+  }
   return str_dup(e);
 }
 
