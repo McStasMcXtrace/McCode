@@ -18,9 +18,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.95 2004-09-03 13:51:07 farhi Exp $
+* $Id: mcstas-r.c,v 1.96 2004-09-07 12:28:21 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.95  2004/09/03 13:51:07  farhi
+* add extension automatically in data/sim files
+* may use a format for sim files, and an oher for data, e.g. HTML/VRML.
+* added --data_format option to handle 2nd file format.
+*
 * Revision 1.94  2004/09/01 14:03:41  farhi
 * 1 new VRML format for single data files. requires more work for the 'sim' file
 * 2 add more info in output file name headers about how to view data
@@ -3175,7 +3180,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   *     call datablock part+header(begin)
   * else data file = f
   */
-  dataformat=mcformat;
+  dataformat=format;
   if (!mcsingle_file && just_header == 0)
   {
     /* if data: open new file for data else append for error/ncount */
@@ -3226,9 +3231,9 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       else if (p==1) sprintf(sec,"array_2d(%d,%d)", m,n);
       else sprintf(sec,"array_3d(%d,%d,%d)", m,n,p);
       fprintf(f,"%sbegin %s\n", pre, sec);
-      datafile = f; dataformat=mcformat;
+      datafile = f; dataformat=format;
     }
-    if (mcsingle_file) { datafile = f; dataformat=mcformat; }
+    if (mcsingle_file) { datafile = f; dataformat=format; }
   }
   
   /* if normal: [data] in data file */
@@ -3483,7 +3488,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   FILE *simfile_f=NULL;
   char istransposed=0;
   char *pre;
-  char filename[1024];
+  char *filename=NULL;
 
 #ifdef USE_MPI
   int mpi_event_list;
@@ -3492,13 +3497,17 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   pre = (char *)malloc(20);
   if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
   strcpy(pre, strstr(format.Name, "VRML")
-               || strstr(format.Name, "OpenGENIE") ? "# " : "");
-  strcpy(filename, filename_orig);
-  if (!strchr(filename, '.')) 
-  { /* add extension to file name if it is missing */
-    strcat(filename,"."); 
-    if (mcformat_data.Extension) strcat(filename,mcformat_data.Extension); 
-    else strcat(filename,mcformat.Extension); 
+           || strstr(format.Name, "OpenGENIE") ? "# " : "");
+  if (filename_orig) {
+    filename = (char *)malloc(1024);
+    if (!filename) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
+    strcpy(filename, filename_orig);
+    if (!strchr(filename, '.')) 
+    { /* add extension to file name if it is missing */
+      strcat(filename,"."); 
+      if (mcformat_data.Extension) strcat(filename,mcformat_data.Extension); 
+      else strcat(filename,mcformat.Extension); 
+    }
   }
 
 #ifdef USE_MPI
@@ -4285,7 +4294,7 @@ mcstas_main(int argc, char *argv[])
   else mcformat=mcuse_format(MCSTAS_FORMAT);  /* default is to output as McStas format */
   mcformat_data.Name=NULL;
   mcparseoptions(argc, argv);
-  if (!mcformat_data.Name && strcmp(mcformat.Name, "HTML"))
+  if (!mcformat_data.Name && !strcmp(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
 
 #ifndef MC_PORTABLE
