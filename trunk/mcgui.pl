@@ -702,17 +702,6 @@ sub menu_run_simulation {
 	      }
 	      elsif ($plotter eq 3) {
 		push @command, "-pScilab";
-		if ($Config{'osname'} eq 'MSWin32') {
-		  # Calling through pipe does not work on Win32 :( - revert to 'scilab script'
-		  putmsg($cmdwin, "Sorry, scilab pipe non-funtional on Win32 systems. Reverting to scriptfile...\n");
-		  my $output_file = save_disp_file($w,'sci');
-		  if (!$output_file) {
-		    putmsg($cmdwin, "Trace cancelled...\n");
-		    return;
-		  }
-		  $output_file = "\"$output_file\"";
-		  push @command, "-f$output_file";
-		}
 	      }
 	      elsif ($plotter eq 4) {
 		push @command, "-pScilab";
