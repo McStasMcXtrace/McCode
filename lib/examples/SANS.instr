@@ -1,0 +1,87 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2002, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: SANS
+*
+* %Identification
+* Written by: <a href="mailto:kim.lefmann@risoe.dk">Kim Lefmann</a> 
+* Date: 19th Dec 2003.
+* Origin: <a href="http://www.risoe.dk">Risoe</a>
+* Release: McStas 1.6
+* Version: 0.1
+* %INSTRUMENT_SITE: PSI
+*
+* The former Risoe SANS machine at PSI
+*
+* %Description
+* This instrument is a simple model of the former Risoe SANS machine, situated at 
+* the Paul Scherrer Institute, Villigen, CH.
+*
+* Example: mcrun SANS.instr
+*
+* %Parameters
+* INPUT PARAMETERS:
+* *
+* %Link 
+* *
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT Risoe_sans()
+DECLARE
+%{
+%}
+INITIALIZE
+%{
+%}
+TRACE
+
+COMPONENT a1 = Arm()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT arm = Arm(
+    )
+  AT (0, 0, 0) ABSOLUTE
+
+COMPONENT source = Source_flux_lambda(
+    radius = 0.02, dist = 3, xw = 0.01, yh = 0.01,
+    lambda_0 = 6, d_lambda = 0.05, flux = 1e8)
+  AT (0, 0, 0) RELATIVE arm
+
+COMPONENT coll1 = Slit(
+    radius = 0.005)
+  AT (0, 0, 3) RELATIVE arm
+
+COMPONENT coll2 = Slit(
+    radius = 0.005)
+  AT (0, 0, 6) RELATIVE arm
+
+COMPONENT sample = Sans_spheres(
+)
+   AT (0,0,0.2) RELATIVE coll2
+
+COMPONENT detector = PSD_monitor(
+    nx = 128, ny = 128, filename = "PSD.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3)
+  AT (0, 0, 3) RELATIVE sample
+
+COMPONENT Ldetector = L_monitor(
+    nchan = 1000, filename = "Edet.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3, Lmin = 5.5,
+    Lmax = 6.5)
+  AT (0, 0, 3.01) RELATIVE sample
+
+
+
+
+
+FINALLY
+%{
+%}
+END
+
+
+

@@ -1,0 +1,151 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Sans_spheres
+*
+* %I
+* Written by: P. Willendrup, K. Lefmann, L. Arleth
+* Date: 19.12.2003
+* Version: $Revision: 1.1 $
+* Origin: Risoe
+* Release: McStas 1.6
+*
+* Sample for Small Angle Neutron Scattering - hard spheres in thin solution, mono disperse.
+*
+* %D
+* Sample for use in a SANS instrument, models hard, mono disperse spheres in thin solution.
+* The shape of the sample may be a cylinder of given radius or a box with dimensions 
+* xwidth, yheight, zthick. qmax defines a cutoff in q.
+* 
+* Example: Sans_spheres(R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_a = 50, qmax = 0.3 ,xwidth=0.01, yheight=0.01, zthick=0.005)
+*
+* %P
+*
+* INPUT PARAMETERS
+*       
+* R	    : Radius of scattering hard spheres (AA)
+* Phi       : Particle volume fraction (1)
+* Delta_rho : Excess scattering length density (fm/AA^3)
+* sigma_a   : Absorption cross section density at 2200 m/s (m^-1)
+* qmax	    : Maximum momentum transfer (AA^-1)
+*
+* xwidth    : horiz. dimension of sample, as a width (m)
+* yheight   : vert.. dimension of sample, as a height (m)
+* zthick    : thickness of sample (m)
+*
+* Variables calculated in the component
+*
+* my_s      : Attenuation factor due to scattering (m^-1)
+* my_a      : Attenuation factor due to absorbtion (m^-1)
+*
+* %L
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Sans_spheres
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_a = 50, qmax = 0.3 ,xwidth=0.01, yheight=0.01, zthick=0.005)
+OUTPUT PARAMETERS (my_s_v2, my_a_v, Pow_tx, Pow_ty, Pow_tz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double my_s_pre, my_a_v, q_v, q;
+  double Pow_tx, Pow_ty, Pow_tz;  /* target coords */
+%}
+INITIALIZE
+%{
+    if (!xwidth || !yheight || !zthick) {
+	exit(fprintf(stderr,"Sans_spheres: %s:	 sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    }	
+  
+  my_a_v = sigma_a*2200;           /* Is not yet divided by v */
+  
+  my_s_pre = Phi * 4*PI*R*R*R/3 * Delta_rho*Delta_rho;
+
+%}                                                                             
+TRACE
+%{
+  double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
+  double aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double f;
+  char   intersect=0;
+
+  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+  if(intersect)
+  {
+    if(t0 < 0)
+      ABSORB;
+    /* Neutron enters at t=t0. */
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (t1 - t0);             /* Length of full path through sample */
+    dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
+    PROP_DT(dt);                /* Point of scattering */
+    l = v*dt;                   /* Penetration in sample */
+
+    q = qmax * rand01();    
+
+    f = 3 * (sin(q*R) - q*R*cos(q*R))/(q*R*q*R*q*R);
+
+    q_v = q*K2V;
+    /* Choose point on ... */
+    d_phi = 2*PI*rand01();
+    arg = q_v/(2.0*v);
+    if(arg > 1)
+      ABSORB;                   /* No bragg scattering possible*/
+    theta = asin(arg);          /* Bragg scattering law */
+
+     
+    vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
+    rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
+
+    rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
+    vx = vout_x;
+    vy = vout_y;
+    vz = vout_z;
+
+    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) 		fprintf(stderr, "Sans_spheres: FATAL ERROR: Did not hit box from inside.\n");
+    		
+
+    l_1 = v*t1;
+/*    fprintf(stderr, "l_full: %g, qmax: %g p: %g my_s_pre: %g, f: %g, my_a_v/v: %g\n",l_full,qmax,p,my_s_pre,f,my_a_v/v);*/
+    p *= l_full*qmax*my_s_pre*f*f*exp(-my_a_v*(l+l_1)*0/v);
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+  double radius = 0;
+  double h = 0;
+  magnify("xyz");
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+
+%}
+END
