@@ -34,11 +34,12 @@
 @echo   * Perl and Tcl/Tk from:
 @echo       http://www.activestate.com/Products/Download
 @echo   * Matlab or Scilab from http://www.scilab.org in C:\Scilab
-@echo       With Scilab, add the C:\Scilab\bin directory to your PATH
+@echo       With Scilab, add the C:\Program Files\Scilab\bin (or equivalent)
+@echo       directory to your PATH
 @echo       Select from the Windows menu:
 @echo       Start/Settings/Control Panel/System/Advanced/Environment Variables
 @echo ...
-@echo Use Ctrl-C if you want to install these packages or
+@echo Use Ctrl-C if you want to break this script to install these packages or
 @pause
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
 @SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%): 
