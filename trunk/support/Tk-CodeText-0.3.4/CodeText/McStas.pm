@@ -41,7 +41,8 @@ sub new { #purple #magenta #orange
 			     'FINALLY', 'END',
 			     ],
 	    'McOther' => [ # McStas placement keywords plus section separators
-			  '%{','%}', 'AT', 'ABSOLUTE','RELATIVE',
+			   '%{','%}', 'AT', 'ABSOLUTE','RELATIVE','EXTEND',
+			   'ROTATED','GROUP','PREVIOUS',
 			  ],
 	});
     bless ($self, $class);
