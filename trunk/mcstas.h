@@ -7,7 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.23 2000-07-06 12:26:50 kn Exp $
+* 	$Id: mcstas.h,v 1.24 2000-07-27 09:07:20 kn Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -110,16 +110,21 @@ void list_iterate_end(List_handle); /* End list traversal. */
 
 /* Type for expressions. The implementation is private and values of this type
    must only be accessed through the proper function calls. */
-typedef char *CExp;
+typedef struct cexp *CExp;
 
 /* Extern functions defined in cexp.c */
 CExp exp_id(char *id);		/* Make normal identifier. */
 CExp exp_extern_id(char *id);	/* Make extern identifier. */
-CExp exp_number(double n);	/* Make expression from number. */
+CExp exp_number(char *n);	/* Make expression from number. */
 CExp exp_string(char *s);	/* Make expression from string. */
+CExp exp_ctoken(char *s);	/* Make expression from generic C token */
+CExp exp_compound(int n, ...);	/* Make compound expression */
+void exp_free(CExp e);		/* Free memory for expression */
 char *exp_tostring(CExp e);	/* Convert expression to string. */
 void exp_fprint(FILE *f, CExp e); /* Output an expression to file. */
-
+int exp_isvalue(CExp e);	/* Ask if expression is a value. */
+void exp_setlineno(CExp e, int n); /* Set line number of expression */
+int exp_getlineno(CExp e);	/* Get line number of expression, or zero */
 
 /*******************************************************************************
 * Definitions in coords.c
@@ -410,6 +415,7 @@ struct instr_def
   {
     char *name;			/* Instrument name */
     char *source;		/* Name of source file for definition */
+    char *quoted_source;	/* File name quoted for inclusion in C */
     struct code_block *decls;	/* Code for declarations */
     struct code_block *inits;	/* Code for initializations */
     struct code_block *finals;	/* Code for simulation end */
