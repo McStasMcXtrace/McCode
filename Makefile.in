@@ -72,8 +72,15 @@ install: installdirs $(BINOBJS)
 	for pgm in $(PERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
 	done
-	for file in `cd lib; ls *`; do \
-	  $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
+	for file in `cd lib; ls`; do \
+	  if [ -d lib/$$file ]; then \
+	    $(srcdir)/mkinstalldirs $(mc_libdir)/$$file; \
+	    for comp in `cd lib/$$file; ls`; do \
+	      $(INSTALL_DATA) lib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
+	    done \
+	  else \
+	    $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
+	  fi \
 	done
 
 installdirs:
