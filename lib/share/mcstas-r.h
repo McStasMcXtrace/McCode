@@ -17,9 +17,16 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.58 2004-07-30 14:49:15 farhi Exp $
+* $Id: mcstas-r.h,v 1.59 2004-09-03 14:19:14 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.58  2004/07/30 14:49:15  farhi
+*	MPI update for usage with mcrun.
+*	Still done by Christophe Taton. CC=mpicc and CFLAGS = -DUSE_MPI.
+*	Execute (using mpich) with:
+*	          mpirun -np NumNodes -machinefile <file> instr.out parameters...
+*	     where <file> is text file that lists the machines to use
+*	
 *	Revision 1.57  2004/07/16 14:59:03  farhi
 *	MPI support. Requires to have mpi installed, and compile with
 *	   CC=mpicc and CFLAGS = -DUSE_MPI.
@@ -82,7 +89,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.58 $"
+#define MCSTAS_R_H "$Revision: 1.59 $"
 
 #include <math.h>
 #include <string.h>
@@ -488,10 +495,10 @@ struct mcformats_struct {
   char *EndSection;
   char *AssignTag;
   char *BeginData;
-  char *BeginErrors;
-  char *BeginNcount;
   char *EndData;
+  char *BeginErrors;
   char *EndErrors;
+  char *BeginNcount;
   char *EndNcount;
   };
 
@@ -505,8 +512,8 @@ struct mcformats_struct {
  * machines (Dec/Compaq/HP). Some more enjoyable  stuff !! -> we use pfprintf
  */ 
 /* The mcformat.Name may contain additional keywords:
- *  partial: will not show the monitor in mcstas.sim, omit the format footer 
- *          (usually the end data), and not print the monitor sum in stdout
+ *  no header: omit the format header 
+ *  no footer: omit the format footer 
  */
  
 #ifndef MCSTAS_VERSION
@@ -514,7 +521,6 @@ struct mcformats_struct {
 #endif
 
 /* function prototypes */
-void mcuse_format(char *format);
 double mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);
 double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c);
 double mcdetector_out_1D(char *t, char *xl, char *yl,
