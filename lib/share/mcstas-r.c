@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.85 2004-03-05 17:43:47 farhi Exp $
+* $Id: mcstas-r.c,v 1.86 2004-06-16 14:03:07 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.85  2004/03/05 17:43:47  farhi
+* Default instr parameters are now correctly handled in all instrument usage cases.
+*
 * Revision 1.84  2004/03/03 13:41:23  pkwi
 * Corrected error in relation to instrument default values: 0's were used in all cases.
 *
@@ -1990,7 +1993,7 @@ mcsetseed(char *arg)
     srandom(mcseed);
   else
   {
-    fprintf(stderr, "Error: seed most not be zero.\n");
+    fprintf(stderr, "Error: seed must not be zero.\n");
     exit(1);
   }
 }
