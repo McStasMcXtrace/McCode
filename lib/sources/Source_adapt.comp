@@ -80,7 +80,7 @@ TRACE
   /* Compute the initial neutron parameters, selecting uniformly randomly
      within each bin dimension. */
   x = xmin + (i_xpos + rand01())*((xmax - xmin)/(double)N_xpos);
-  y = ymin + rand01()*(xmax - xmin);
+  y = ymin + rand01()*(ymax - ymin);
   z=0;
   thmin = atan2(-xw/2.0 - x, dist);
   thmax = atan2( xw/2.0 - x, dist);
