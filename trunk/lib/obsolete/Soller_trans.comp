@@ -1,29 +1,30 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Soller.comp
-*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+* McStas, version 1.0, released October 26, 1998
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Soller
+* Component: Soller_trans
 *
-* %I
-* Written by: Kristian Nielsen
+* %Identification
+* Written by: KN
 * Date: August 1998
-* Version: $Revision: 1.9 $
-* Origin: McStas 1.5
-* Modified by: GA, June 1999, added transmission
+* Origin: McStas 1.0 (1998) (Obsolete)
+* Version: 1.0
+* Modified by: GA, June 1999
 *
-* A simple analytical Soller collimator (with triangular transmission).
+* Soller collimator with rectangular opening and specified length. 
 *
-* %D
-* Soller collimator with rectangular opening and specified length. The
-* transmission function is an average and does not utilize knowledge of the
-* actual neutron trajectory. A zero divergence disables collimation (then the
-* component works as a double slit).
+* %Description
+* Soller collimator with rectangular opening and specified length. 
+* The transmission function is an average and does not utilize knowledge of the
+* actual neutron trajectory.
+* A zero divergence disables collimation (then the component works as a double slit).
+* Added is an additional parameter ´transmission´ to take into account the
+* transmission probability. See <b>Soller</b> component.
+* OBSOLETE: rather use optics/Soller with transmission
 *
-* Example: Soller(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
-*           len=0.25, divergence=40,transmission=0.7)
-*
-* %P
+* %Parameters
 * INPUT PARAMETERS:
 *
 * xmin:       (m)              Lower x bound on slits
@@ -33,20 +34,17 @@
 * len:        (m)              Distance between slits
 * divergence: (minutes of arc) Divergence angle (calculated as atan(d/len),
 *                              where d is the blade spacing) 
+* transmission: (1)            0<=transmission<=1)
 *
-* Optional parameters
-* transmission:(1)             transmission of Soller (0<=t<=1)
-*
-* %E
+* %End
 *******************************************************************************/
 
 
-DEFINE COMPONENT Soller
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, divergence=40,transmission=1)
+DEFINE COMPONENT Soller_trans
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, divergence, transmission)
+SETTING PARAMETERS ()
 OUTPUT PARAMETERS (slope)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-
 DECLARE
 %{
   double slope;
@@ -74,7 +72,6 @@ TRACE
         ABSORB;
       else
         p *= transmission*(1.0 - phi/slope);
-      SCATTER;
     }
 %}
 
@@ -95,3 +92,4 @@ MCDISPLAY
 %}
 
 END
+
