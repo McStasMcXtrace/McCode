@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.68 2003-06-17 14:21:54 farhi Exp $
+* $Id: mcstas-r.c,v 1.69 2003-08-11 17:10:06 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.68  2003/06/17 14:21:54  farhi
+* removed 'clear %4$s' in Scilab/Matlab 'end of section' format which
+* caused pb when comp_name == file_name
+*
 * Revision 1.67  2003/06/12 10:22:00  farhi
 * -i show info as McStas format, --info use MCSTAS_FORMAT or --format setting
 *
@@ -3104,7 +3108,15 @@ mcparseoptions(int argc, char *argv[])
       mcascii_only = 0;
       mcuse_format(&argv[i][9]);
     }
-    else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
+    else if(!strncmp("--plotter=", argv[i], 10)) {
+      mcascii_only = 0;
+      mcuse_format(&argv[i][10]);
+    }
+    else if(!strncmp("-p", argv[i], 2)) {
+      mcascii_only = 0;
+      mcuse_format(&argv[i][2]);
+    }
+    else if((!strcmp("--format", argv[i]) || !strcmp("--plotter", argv[i]) || !strcmp("-p", argv[i])) && (i + 1) < argc) {
       mcascii_only = 0;
       mcuse_format(argv[++i]);
     }
