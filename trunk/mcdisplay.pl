@@ -50,7 +50,8 @@ sub read_instrument {
 	    my ($plane,$x,$y,$z,$r) = ($1,$2,$3,$4,$5);
 	    # Make a circle using a 25-order multiline.
 	    my @coords = ();
-	    for(my $i = 0; $i <= 24; $i++) {
+	    my $i;
+	    for($i = 0; $i <= 24; $i++) {
 		my $a = $r*cos(2*3.1415927/24*$i);
 		my $b = $r*sin(2*3.1415927/24*$i);
 		my ($x1,$y1,$z1) = ($x,$y,$z);
@@ -193,7 +194,8 @@ sub transform {
 sub get_inspect_pos {
     my ($inspect, @comps) = @_;
     return 0 unless $inspect;
-    for(my $i = 0; $i < @comps; $i++) {
+    my $i;
+    for($i = 0; $i < @comps; $i++) {
 	return $i if $comps[$i] eq $inspect;
     }
     die "Error: Inspected component $inspect not part of instrument?";
@@ -288,7 +290,7 @@ sub plot_components {
 
 sub plot_neutron {
     my ($rx, $ry, $rvx, $rvy) = @_;
-    my(@x, @y);
+    my (@x, @y);
     my ($i, $col);
 
     @x = @$rx;
@@ -316,7 +318,8 @@ sub show_comp_names {
     $count = 8 if $count < 8;
     my $col = 4;
     pgsch(25/$count);
-    for(my $i = 0; $i < @comps; $i++) {
+    my $i;
+    for($i = 0; $i < @comps; $i++) {
 	pgsci($col++);
 	$col = 4 if $col > 15;
 	pgmtxt('RV', 0.2, 1 - ($i+0.5)/$count, 0.0, $comps[$i]);
