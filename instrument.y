@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.55 2003-10-06 15:02:43 farhi Exp $
+*	$Id: instrument.y,v 1.56 2003-10-29 12:13:41 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -31,14 +31,6 @@
 #define YYERROR_VERBOSE 1
 #define YYDEBUG 1
 
-/* When a bison parser needs to extend the parser stack, by default it uses
-* the alloca() function. This causes portability problems (eg. for Win32 and
-* HPUX). To avoid that, we use our own method for extending the stack. This
-* is a bit tricky and reliant on bison internals, but important for portability. 
-*/
-
-#define yyoverflow mc_yyoverflow
-int mc_yyoverflow();
 %}
 
 /* Need a pure parser to allow for recursive calls when autoloading component
@@ -1031,46 +1023,7 @@ code:		  /* empty */
 
 %%
 
-/* Use own method for extending the parser stack, to remove bisons references
-* to alloca(). This must appear in the .y file to pick up the right #defines.
-*/
 static Pool parser_pool = NULL;	/* Pool of parser allocations. */
-
-int
-mc_yyoverflow(char *msg,
-	   short **ssp, int sssz,
-	   YYSTYPE **vsp, int vssz,
-#ifdef YYLSP_NEEDED
-	   YYLTYPE **lsp, int lssz,
-#endif
-	   int *yystacksize
-	   )
-{
-  short *nssp;
-  YYSTYPE *nvsp;
-#ifdef YYLSP_NEEDED
-  YYLTYPE *nlsp;
-#endif
-
-  if(*yystacksize >= YYMAXDEPTH)
-    fatal_error("%s\n", msg);
-  *yystacksize *= 2;
-  if(*yystacksize >= YYMAXDEPTH)
-    *yystacksize = YYMAXDEPTH;
-
-  nssp = pool_mem(parser_pool, *yystacksize*sizeof(*nssp));
-  memcpy(nssp, *ssp, sssz);
-  *ssp = nssp;
-  nvsp = pool_mem(parser_pool, *yystacksize*sizeof(*nvsp));
-  memcpy(nvsp, *vsp, vssz);
-  *vsp = nvsp;
-#ifdef YYLSP_NEEDED
-  nlsp = pool_mem(parser_pool, *yystacksize*sizeof(*nlsp));
-  memcpy(nlsp, *lsp, lssz);
-  *lsp = nlsp;
-#endif
-  return 0;
-}
 
 static int mc_yyparse(void)
 {
