@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.66 2005-02-16 12:21:39 farhi Exp $
+* $Id: mcstas-r.h,v 1.67 2005-02-22 16:11:03 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.66  2005/02/16 12:21:39  farhi
+*       Removed left spaces at end of lines
+*
 *       Revision 1.65  2005/01/26 14:41:16  farhi
 *       Updated constant values from CODATA 2002
 *
@@ -113,7 +116,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.66 $"
+#define MCSTAS_R_H "$Revision: 1.67 $"
 
 #include <math.h>
 #include <string.h>
@@ -193,6 +196,8 @@ struct mcinputtable_struct {
 };
 
 typedef double MCNUM;
+typedef struct {MCNUM x, y, z;} Coords;
+typedef MCNUM Rotation[3][3];
 
 /* the following variables are defined in the McStas generated C code
    but should be defined externally in case of independent library usage */
@@ -233,14 +238,14 @@ extern struct mcformats_struct mcformat_data;
 
 /* Useful macros ============================================================ */
 
-#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP)
-#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP)
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
 #define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
-     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP)
+     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
 #define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
-     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP)
+     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
 #define DETECTOR_OUT_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f) \
-     mcdetector_out_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f,NAME_CURRENT_COMP)
+     mcdetector_out_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
 
 /* MPI stuff ================================================================ */
 
@@ -281,23 +286,19 @@ void   mcset_ncount(double count);
 double mcget_ncount(void);
 double mcget_run_num(void);
 double mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);
-double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c);
+double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
 double mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *xvar, double x1, double x2, int n,
-                  double *p0, double *p1, double *p2, char *f, char *c);
+                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos);
 double mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2, int m,
-                  int n, double *p0, double *p1, double *p2, char *f, char *c);
+                  int n, double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords pos);
 double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
       char *xvar, char *yvar, char *zvar,
                   double x1, double x2, double y1, double y2, double z1, double z2, int m,
-                  int n, int p, double *p0, double *p1, double *p2, char *f, char *c);
-void   mcheader_out(FILE *f,char *parent,
-  int m, int n, int p,
-  char *xlabel, char *ylabel, char *zlabel, char *title,
-  char *xvar, char *yvar, char *zvar,
-  double x1, double x2, double y1, double y2, double z1, double z2,
-  char *filename);  /* output header for user data file */
+                  int n, int p, double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords pos);
 void   mcinfo_simulation(FILE *f, struct mcformats_struct format,
   char *pre, char *name); /* used to add sim parameters (e.g. in Res_monitor) */
 void   mcsiminfo_init(FILE *f);
@@ -591,9 +592,6 @@ void   mcsiminfo_close(void);
 #define randpm1() ( ((double)random()) / (((double)MC_RAND_MAX+1)/2) - 1 )
 #define rand0max(max) ( ((double)random()) / (((double)MC_RAND_MAX+1)/(max)) )
 #define randminmax(min,max) ( rand0max((max)-(min)) + (min) )
-
-typedef struct {MCNUM x, y, z;} Coords;
-typedef MCNUM Rotation[3][3];
 
 void mcinit(void);
 void mcraytrace(void);

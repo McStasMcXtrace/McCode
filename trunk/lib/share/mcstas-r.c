@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.105 2005-02-17 15:54:56 farhi Exp $
+* $Id: mcstas-r.c,v 1.106 2005-02-22 16:11:03 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.105  2005/02/17 15:54:56  farhi
+* Added 'per bin' in labels if more that 1 bin. Requested by R. Cubitt
+*
 * Revision 1.104  2005/02/16 12:20:36  farhi
 * Removed left space chars at end of lines
 *
@@ -1566,7 +1569,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   char *xvar, char *yvar, char *zvar,
   double *x1, double *x2, double *y1, double *y2, double *z1, double *z2,
   char *filename,
-  double *p0, double *p1, double *p2, char istransposed)
+  double *p0, double *p1, double *p2, char istransposed, Coords posa)
 {
   char type[256];
   char stats[256];
@@ -1578,6 +1581,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   char c[32];
   double run_num, ncount;
   char ratio[256];
+  char pos[256];
 
   double sum_xz  = 0;
   double sum_yz  = 0;
@@ -1665,6 +1669,8 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   mcfile_tag(f, format, pre, parent, "type", type);
   mcfile_tag(f, format, pre, parent, "Source", mcinstrument_source);
   if (parent) mcfile_tag(f, format, pre, parent, (strstr(format.Name,"McStas") ? "component" : "parent"), parent);
+  sprintf(pos, "%g %g %g", posa.x, posa.y, posa.z);
+  mcfile_tag(f, format, pre, parent, "position", pos);
 
   if (title) mcfile_tag(f, format, pre, parent, "title", title);
   mcfile_tag(f, format, pre, parent, "ratio", ratio);
@@ -1805,7 +1811,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   char *xlabel, char *ylabel, char *zlabel, char *title,
   char *xvar, char *yvar, char *zvar,
   double *x1, double *x2, double *y1, double *y2, double *z1, double *z2,
-  char *filename, char istransposed)
+  char *filename, char istransposed, Coords posa)
 {
   char *Begin;
   char *End;
@@ -1852,7 +1858,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       mcinfo_data(f, format, pre, valid_parent, title, m, n, p,
                   xlabel, ylabel, zlabel, xvar, yvar, zvar,
                   x1, x2, y1, y2, z1, z2, filename, p0, p1, p2,
-                  istransposed);
+                  istransposed, posa);
     }
   }
 
@@ -1928,7 +1934,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           p0, p1, p2, m, n, p,
           xlabel,  ylabel, zlabel, title,
           xvar, yvar, zvar,
-          x1, x2, y1, y2, z1, z2, filename, istransposed);
+          x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
       free(mode); free(new_pre);
     }
   }
@@ -2102,7 +2108,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           p0, p1, p2, m, n, p,
           xlabel,  ylabel, zlabel, title,
           xvar, yvar, zvar,
-          x1, x2, y1, y2, z1, z2, filename, istransposed);
+          x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
       if ((isdata == 1 && is1d) || strstr(part,"ncount") || !p0 || !p2) /* either ncount, or 1d */
         if(!strstr(format.Name, "no footer"))
           mcfile_header(datafile, dataformat, "footer", new_pre,
@@ -2133,7 +2139,7 @@ static int mcfile_data(FILE *f, struct mcformats_struct format,
   char *xlabel, char *ylabel, char *zlabel, char *title,
   char *xvar, char *yvar, char *zvar,
   double ox1, double ox2, double oy1, double oy2, double oz1, double oz2,
-  char *filename, char istransposed)
+  char *filename, char istransposed, Coords posa)
 {
   int is1d;
   double x2, x1, y2, y1, z2, z1;
@@ -2149,7 +2155,7 @@ static int mcfile_data(FILE *f, struct mcformats_struct format,
     p0, p1, p2, m, n, p,
     xlabel,  ylabel, zlabel, title,
     xvar, yvar, zvar,
-    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed);
+    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed, posa);
   /* return if 1D data */
   if (is1d) return(is1d);
   /* output error block and p2 non NULL */
@@ -2157,13 +2163,13 @@ static int mcfile_data(FILE *f, struct mcformats_struct format,
     p0, p1, p2, m, n, p,
     xlabel,  ylabel, zlabel, title,
     xvar, yvar, zvar,
-    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed);
+    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed, posa);
   /* output ncount block and p0 non NULL */
   if (p0 && p2) mcfile_datablock(f, format, pre, parent, "ncount",
     p0, p1, p2, m, n, p,
     xlabel,  ylabel, zlabel, title,
     xvar, yvar, zvar,
-    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed);
+    &x1, &x2, &y1, &y2, &z1, &z2, filename, istransposed, posa);
 
   return(is1d);
 } /* mcfile_data */
@@ -2189,7 +2195,8 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   char *xvar, char *yvar, char *zvar,
   double x1, double x2, double y1, double y2, double z1, double z2,
   char *filename_orig,
-  double *p0, double *p1, double *p2)
+  double *p0, double *p1, double *p2,
+  Coords posa)
 {
   char simname[512];
   int i,j;
@@ -2299,7 +2306,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
                         p0, p1, p2, m, n, p,
                         xlabel, ylabel, zlabel, title,
                         xvar, yvar, zvar,
-                        x1, x2, y1, y2, z1, z2, filename, istransposed);
+                        x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
 
           /* if a header was requested, it has been written */
           if(!strstr(format.Name, "no header"))
@@ -2332,7 +2339,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
                             p0, p1, p2, m, n, p,
                             xlabel, ylabel, zlabel, title,
                             xvar, yvar, zvar,
-                            x1, x2, y1, y2, z1, z2, filename, istransposed);
+                            x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
             }
         }
     }
@@ -2345,7 +2352,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
                       p0, p1, p2, m, n, p,
                       xlabel, ylabel, zlabel, title,
                       xvar, yvar, zvar,
-                      x1, x2, y1, y2, z1, z2, filename, istransposed);
+                      x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
         }
     }
 
@@ -2358,7 +2365,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
                   p0, p1, p2, m, n, p,
                   xlabel, ylabel, zlabel, title,
                   xvar, yvar, zvar,
-                  x1, x2, y1, y2, z1, z2, filename, istransposed);
+                  x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
     }
 
 #endif /* !USE_MPI */
@@ -2396,46 +2403,11 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   return(Psum);
 } /* mcdetector_out_012D */
 
-void mcheader_out(FILE *f,char *parent,
-  int m, int n, int p,
-  char *xlabel, char *ylabel, char *zlabel, char *title,
-  char *xvar, char *yvar, char *zvar,
-  double x1, double x2, double y1, double y2, double z1, double z2,
-  char *filename)
-{
-  int  loc_single_file;
-  char *pre;
-  char simname[512];
-
-  pre = (char *)malloc(20);
-  if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcheader_out)\n"));
-
-  loc_single_file = mcsingle_file; mcsingle_file = 1;
-
-  strcpy(pre, strstr(mcformat.Name, "McStas")
-   || strstr(mcformat.Name, "VRML")
-   || strstr(mcformat.Name, "OpenGENIE") ? "# " : "");
-
-  mcfile_header(f, mcformat, "header", pre, mcinstrument_name, "mcstas");
-  mcinfo_instrument(f, mcformat, pre, mcinstrument_name);
-  if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
-
-  mcfile_datablock(f, mcformat,
-    pre, parent, "data",
-    NULL,NULL,NULL, m, n, p,
-    xlabel, ylabel, zlabel, title,
-    xvar, yvar, zvar, &x1,  &x2,  &y1,  &y2,  &z1,  &z2,
-    filename, 0);
-
-  mcsingle_file = loc_single_file;
-  mcfile_header(f, mcformat, "footer", pre, mcinstrument_name, "mcstas");
-  free(pre);
-}
-
 /*******************************************************************************
 * mcdetector_out_0D: wrapper to mcdetector_out_012D for 0D (single value).
 *******************************************************************************/
-double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
+double mcdetector_out_0D(char *t, double p0, double p1, double p2,
+                         char *c, Coords posa)
 {
   return(mcdetector_out_012D(mcformat,
     c, t,
@@ -2443,7 +2415,7 @@ double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
     "I", "", "",
     "I", "", "",
     0, 0, 0, 0, 0, 0, NULL,
-    &p0, &p1, &p2));
+    &p0, &p1, &p2, posa));
 }
 
 /*******************************************************************************
@@ -2451,7 +2423,8 @@ double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c)
 *******************************************************************************/
 double mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *xvar, double x1, double x2, int n,
-                  double *p0, double *p1, double *p2, char *f, char *c)
+                  double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords posa)
 {
   return(mcdetector_out_012D(mcformat,
     c, t,
@@ -2459,7 +2432,7 @@ double mcdetector_out_1D(char *t, char *xl, char *yl,
     xl, yl, (n > 1 ? "Signal per bin" : " Signal"),
     xvar, "(I,I_err)", "I",
     x1, x2, 0, 0, 0, 0, f,
-    p0, p1, p2));
+    p0, p1, p2, posa));
 }
 
 /*******************************************************************************
@@ -2467,7 +2440,8 @@ double mcdetector_out_1D(char *t, char *xl, char *yl,
 *******************************************************************************/
 double mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2, int m,
-                  int n, double *p0, double *p1, double *p2, char *f, char *c)
+                  int n, double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords posa)
 {
   char xvar[3];
   char yvar[3];
@@ -2482,7 +2456,7 @@ double mcdetector_out_2D(char *t, char *xl, char *yl,
     xl, yl, (n*m > 1 ? "Signal per bin" : " Signal"),
     xvar, yvar, "I",
     x1, x2, y1, y2, 0, 0, f,
-    p0, p1, p2));
+    p0, p1, p2, posa));
 }
 
 /*******************************************************************************
@@ -2492,7 +2466,8 @@ double mcdetector_out_2D(char *t, char *xl, char *yl,
 double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
       char *xvar, char *yvar, char *zvar,
                   double x1, double x2, double y1, double y2, double z1, double z2, int m,
-                  int n, int p, double *p0, double *p1, double *p2, char *f, char *c)
+                  int n, int p, double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords posa)
 {
   return(mcdetector_out_012D(mcformat,
     c, t,
@@ -2500,7 +2475,7 @@ double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
     xl, yl, zl,
     xvar, yvar, zvar,
     x1, x2, y1, y2, z1, z2, f,
-    p0, p1, p2));
+    p0, p1, p2, posa));
 }
 
 /* end of file i/o functions ================================================ */

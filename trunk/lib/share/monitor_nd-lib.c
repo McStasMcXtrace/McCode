@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.21 2005-02-21 16:05:13 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.22 2005-02-22 16:11:03 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.21  2005/02/21 16:05:13  farhi
+*	Misprint correction
+*
 *	Revision 1.20  2005/02/21 12:38:03  farhi
 *	Removed warning in Monitor_nD for global scope keywords in options
 *
@@ -1041,7 +1044,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       if (mc_mn_Vars->Flag_signal != mc_mn_DEFS->COORD_P && mc_mn_Nsum > 0)
       { mc_mn_psum /=mc_mn_Nsum; mc_mn_p2sum /= mc_mn_Nsum*mc_mn_Nsum; }
       /* DETECTOR_OUT_0D(mc_mn_Vars->Monitor_Label, mc_mn_Vars->Nsum, mc_mn_Vars->psum, mc_mn_Vars->p2sum); */
-      mcdetector_out_0D(mc_mn_Vars->Monitor_Label, mc_mn_Nsum, mc_mn_psum, mc_mn_p2sum, mc_mn_Vars->compcurname);
+      mcdetector_out_0D(mc_mn_Vars->Monitor_Label, mc_mn_Nsum, mc_mn_psum, mc_mn_p2sum, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
     }
     else
     if (strlen(mc_mn_Vars->Mon_File) > 0)
@@ -1114,7 +1117,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
               mc_mn_bin2d,
               mc_mn_bin1d,
             NULL,mc_mn_Vars->Mon2D_Buffer,NULL,
-            mc_mn_fname, mc_mn_Vars->compcurname);
+            mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
 
         /* reset the original type of output */
         mcascii_only = ascii_only_orig;
@@ -1149,7 +1152,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
               mc_mn_min1d, mc_mn_max1d,
               mc_mn_Vars->Coord_Bin[mc_mn_i+1],
               mc_mn_Vars->Mon2D_N[mc_mn_i],mc_mn_Vars->Mon2D_p[mc_mn_i],mc_mn_Vars->Mon2D_p2[mc_mn_i],
-              mc_mn_fname, mc_mn_Vars->compcurname);
+              mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
             } /* if (mc_mn_p2m == NULL) */
             else
             {
@@ -1192,13 +1195,13 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
                 mc_mn_min1d, mc_mn_max1d,
                 mc_mn_Vars->Coord_Bin[mc_mn_i+1],
                 mc_mn_Vars->Mon2D_N[mc_mn_i],mc_mn_p1m,mc_mn_p2m,
-                mc_mn_fname, mc_mn_Vars->compcurname);
+                mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
 
             } /* else */
             if (mc_mn_p1m != NULL) free(mc_mn_p1m); mc_mn_p1m=NULL;
             if (mc_mn_p2m != NULL) free(mc_mn_p2m); mc_mn_p2m=NULL;
           } else { /* 0d monitor */
-            mcdetector_out_0D(mc_mn_label, mc_mn_Vars->Mon2D_p[mc_mn_i][0], mc_mn_Vars->Mon2D_p2[mc_mn_i][0], mc_mn_Vars->Mon2D_N[mc_mn_i][0], mc_mn_Vars->compcurname);
+            mcdetector_out_0D(mc_mn_label, mc_mn_Vars->Mon2D_p[mc_mn_i][0], mc_mn_Vars->Mon2D_p2[mc_mn_i][0], mc_mn_Vars->Mon2D_N[mc_mn_i][0], mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
           }
 
 
@@ -1284,7 +1287,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
             mc_mn_Vars->Coord_Bin[1],
             mc_mn_Vars->Coord_Bin[2],
             mc_mn_p0m,mc_mn_p1m,mc_mn_p2m,
-            mc_mn_fname, mc_mn_Vars->compcurname);
+            mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
 
           if (mc_mn_p0m != NULL) free(mc_mn_p0m);
           if (mc_mn_p1m != NULL) free(mc_mn_p1m);

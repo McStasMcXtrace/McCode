@@ -226,6 +226,7 @@ INITIALIZE
     strcpy(Vars.option, "x y");
     printf("Monitor_nD: %s has no option specified. Setting to PSD ('x y') monitor.\n", NAME_CURRENT_COMP);
   }
+  Vars.compcurpos = POS_A_CURRENT_COMP;
 
   if (strstr(Vars.option, "source"))
     strcat(Vars.option, " list, x y z vx vy vz t sx sy sz ");
@@ -240,7 +241,7 @@ INITIALIZE
   if (filename != NULL) strncpy(Vars.Mon_File, filename, 128);
 
   /* check if user given filename with ext will be used more than once */
-  if ((Vars.Flag_Multiple || Vars.Flag_List) && (strchr(Vars.Mon_File,'.')))
+  if ( ((Vars.Flag_Multiple && Vars.Coord_Number > 1) || Vars.Flag_List) && strchr(Vars.Mon_File,'.') )
   { char *XY; XY = strrchr(Vars.Mon_File,'.'); *XY='_'; }
 %}
 
