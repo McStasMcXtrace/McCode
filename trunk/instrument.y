@@ -87,7 +87,7 @@ int mc_yyoverflow();
 %token TOK_STATE	    "STATE"
 %token TOK_TRACE	    "TRACE"
 %token TOK_SHARE	    "SHARE" /* ADD: E. Farhi Sep 20th, 2001 shared code (shared declare) */
-%token TOK_EXTEND	"EXTEND"      /* ADD: E. Farhi Sep 20th, 2001 extend code */
+%token TOK_EXTEND	    "EXTEND"      /* ADD: E. Farhi Sep 20th, 2001 extend code */
 %token TOK_GROUP	    "GROUP"     /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
 
 /*******************************************************************************
@@ -258,10 +258,9 @@ comp_iformal:	  TOK_ID
 ;
 
 instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
-			{ instrument_definition->formals = $4; }
+			{ instrument_definition->formals = $4; instrument_definition->name = $3; }
 		  declare initialize nxdict instr_trace finally "END"
 		  {
-		    instrument_definition->name = $3;
 		    instrument_definition->decls = $6;
 		    instrument_definition->inits = $7;
 		    instrument_definition->nxdinfo = $8;
@@ -274,9 +273,6 @@ instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
 		    /* Check instrument parameters for uniqueness */
 		    check_instrument_formals(instrument_definition->formals,
 					     instrument_definition->name);
-		    /* Check NCDICT declarations to ensure that
-                       component names and parameters are valid. */
-		    check_nxdict(instrument_definition);
 		  }
 ;
 
@@ -383,40 +379,43 @@ shared:	  /* empty */
 ;
 
 
-nxdict:		  /* empty */
+nxdict:		  /* empty: no NeXus support */
 		  {
 		    struct NXDinfo *nxdinfo;
 		    palloc(nxdinfo);
 		    nxdinfo->nxdfile = NULL;
-		    nxdinfo->nxdentries = list_create();
 		    nxdinfo->any = 0;
 		    $$ = nxdinfo;
 		  }
-		| nxdict "NXDICTFILE" TOK_STRING
-		  {
+		| nxdict "NXDICTFILE"
+		  { /* ADD: E.Farhi Aug 6th 2002: use default NeXus dictionary file */
 		    struct NXDinfo *nxdinfo = $1;
 		    if(nxdinfo->nxdfile)
 		    {
-		      print_error("Multiple NXDICTFILE declarations found.\n"
+		      print_error("Multiple NXDICTFILE declarations found (%s).\n"
 				  "At most one NXDFILE declarations may "
-				  "be used in an instrument");
+				  "be used in an instrument", nxdinfo->nxdfile);
+		    }
+		    else 
+        {
+          nxdinfo->nxdfile = str_cat(instrument_definition->name, ".dic", NULL);
+        }
+		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
+		    $$ = nxdinfo;
+		  }
+    | nxdict "NXDICTFILE" TOK_STRING
+		  { /* use specified NeXus dictionary file */
+		    struct NXDinfo *nxdinfo = $1;
+		    if(nxdinfo->nxdfile)
+		    {
+		      print_error("Multiple NXDICTFILE declarations found (%s).\n"
+				  "At most one NXDFILE declarations may "
+				  "be used in an instrument", nxdinfo->nxdfile);
 		    }
 		    else
 		    {
 		      nxdinfo->nxdfile = $3;
 		    }
-		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
-		    $$ = nxdinfo;
-		  }
-		| nxdict "NXDICT" TOK_ID ',' TOK_ID ',' exp
-		  {
-		    struct NXDinfo *nxdinfo = $1;
-		    struct NXDentry *entry;
-		    palloc(entry);
-		    entry->compname = $3;
-		    entry->param = $5;
-		    entry->spec = $7;
-		    list_add(nxdinfo->nxdentries, entry);
 		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
 		    $$ = nxdinfo;
 		  }
@@ -947,7 +946,7 @@ print_usage(void)
 static void
 print_version(void)
 { /* MOD: E. Farhi Sep 20th, 2001 version number */
-  printf("McStas version 1.6.1, Feb 18th, 2002\n"
+  printf("McStas version " MCSTAS_VERSION "\n"
 	  "Copyright (C) Risoe National Laboratory, 1997-2002\n"
     "Additions (C) Institut Laue Langevin, 2002\n"
 	  "All rights reserved\n");
@@ -1180,35 +1179,6 @@ check_instrument_formals(List formallist, char *instrname)
   }
   list_iterate_end(liter);
   symtab_free(formals, NULL);
-}
-
-/*******************************************************************************
-* Check that the parameters of NXDICT declarations are valid.
-*******************************************************************************/
-
-void
-check_nxdict(struct instr_def *instr)
-{
-  struct NXDinfo *nxdinfo = instr->nxdinfo;
-  struct Symtab_entry *compentry;
-  struct NXDentry *entry;
-  List_handle liter;
-
-  liter = list_iterate(nxdinfo->nxdentries);
-  while(entry = list_next(liter))
-  {
-    compentry = symtab_lookup(instr->compmap, entry->compname);
-    if(compentry == NULL)
-    {
-      print_error("Reference to undefined component instance %s "
-		  "in NXDICT declaration.\n", entry->compname);
-    } else {
-      struct comp_inst *comp = compentry->val;
-      /* ToDo: Check that entry->param is a definition, setting, or
-         output parameter of component entry->compname. */
-    }
-  }
-  list_iterate_end(liter);
 }
 
 /*******************************************************************************

@@ -9,7 +9,7 @@
 * Adapted from Moderator by: KN, M.Hagen, August 1998
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001 
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas release 1.5.1
 *
 * A parametrised pulsed source for modelling ESS short pulses.

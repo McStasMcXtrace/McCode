@@ -1,14 +1,13 @@
-This file is part of McStas  version 1.6.1 (beta), pre-released Feb 18th, 2002.
+This file is part of McStas  version 1.6-ill (alpha), released October 29th, 2001.
 
 Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
 
  - a bug was corrected for very small signal statistics automatic limits
-   search in Monitor_nD (0.16.4), that could cause parasitic peaks and
+   search in Monitor_nD (0.16.4), that could cause parasitc peaks and
    fluctuations in detector.
    
  - 'optics' components were renamed by categories, starting with Guide_...,
-   Monochromator_..., Filter_... etc so that sorting is easier. Previous
-   components still work, but display a warning message.
+   Monochromator_..., Filter_... etc so that sorting is easier.
    
  - Monochromator_2foc and Monochromator_curved can now read a reflectivity table
    file (eg. PG) with rows [k, R]. Both components give the same results, and
@@ -16,15 +15,14 @@ Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
    
  - mcplot can now read a list of detector files, without a '.sim' file. This 
    enables to visualise a set of selected monitors, or may be used when the 
-   mcstas.sim file was deleted.
+   mcstas.sim file was deleted. Detector files must be in current directory.
    
  - the 1D and 2D detectors now compute simple signal statistics (min, max, mean,
    center and width of distributions) which are stored in the detector file
    and shown in plots (mcplot).
    
  - The Virtual_input replaces the Source_file component (see below), and can 
-   read text, Vitess and binary float files of neutron events. File format
-   may be specified, or guessed by the component if omitted.
+   text, Vitess and binary float files of neutron events.
 
 Changes in McStas v1.6-ill (alpha), October 29th, 2001.
 
@@ -42,6 +40,19 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
    only worth when you plan to use a given component many times in a simulation
    (e.g. not for sources or samples). To downgrade a McStas 1.5 component, just
    move the SHARE block C code into the DECLARE block. 
+ - In an instrument definition, within the TRACE section, each COMPONENT 
+   instance may include a C code block:
+     COMPONENT Comp1 = Guide(...)
+     AT (...) ROTATED (...)
+     EXTEND 
+     %{ /* some C code to execute after component Comp1 */
+        /* in current coordinate system. You may use Comp1 and global */
+        /* instrument variables */
+     %}
+   For instance, you can here give a 'color' (additional neutron    
+   characteristic) and modify next components behaviours.
+   This block is always executed in groups, but you can test if the componnet
+   intercepted the neutron with the SCATTERED variable (if (SCATTERED) { ... }).
  - In an instrument TRACE section, it is possible to put a set of component
    in an exclusive group. Only one of the elements of the group can act on
    the neutron. If no element acts on the neutron, it is absorbed.
@@ -56,19 +67,6 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
    For programmers: it is important that the component TRACE section contains a
    SCATTER keyword when it successfully intercepts it, to tell McStas that a
    component in a group acts on a neutron, and can skip other comp in the group.
- - In an instrument definition, within the TRACE section, each COMPONENT 
-   instance may include a C code block:
-     COMPONENT Comp1 = Guide(...)
-     AT (...) ROTATED (...)
-     EXTEND 
-     %{ /* some C code to execute after component Comp1 */
-        /* in current coordinate system. You may use Comp1 and global */
-        /* instrument variables */
-     %}
-   For instance, you can here give a 'color' (additional neutron    
-   characteristic) and modify next components behaviours.
-   This block is always executed in groups, but you can test if the componnet
-   intercepted the neutron with the SCATTERED variable (if (SCATTERED) { ... }).
  - In 'mcplot', it is possible to use the -ps, -psc and -gif options to
    generate a PS, color PS, and GIF file, and exit mcplot (no display).
  - The Monitor_nD was upgraded to correct bugs when reaching the component
@@ -82,7 +80,7 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
  - The Source_gen component focuses uniformly on the target, and can model
    rectangular, disk, gaussian, and Maxwellian (up to 3 distributions) sources. 
    Previous source components did not focus correctly on the target. They were 
-   also corrected, except the 'Source_Maxwell'. Source_gen can replace all these
+   also corrected, execpt the 'Source_Maxwell'. Source_gen can replace all thee
    previous sources.
  - A new Source_file component can take as input a text file containing an
    array with columns ' x y z vx vy vz t sx sy sz p', such as the data files

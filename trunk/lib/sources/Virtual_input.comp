@@ -8,7 +8,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.1 $
+* Version:  $Revision: 1.2 $
 * Origin: McStas release 1.5.1/<a href="http://www.ill.fr">ILL</a>
 *
 * Source that generates neutron events from an ascii/binary 'source' file.
@@ -28,13 +28,13 @@
 *
 * Possible file formats are:
 * 1-text column formatted with lines containing at least 11 values in the order:
-*       p x y z vx vy vz t sx sy sz
+*       x y z vx vy vz t sx sy sz p
 *   Such files may be generated for instance by Monitor_nD with 
 *       Monitor_nD(options="list all source", filename="MySource.list")
 * 2-Vitess files (binary files of Neutron structure records of 'double')
 *   Such files may be generated for instance by Vitess_output with 
 *       Vitess_output(outname="MySource.vit", bufsize = 10000)
-* 3-float binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
+* 3-float binary files (with the 11 values 'x y z vx vy vz t sx sy sz p')
 *   Such files may be generated for instance by Vitess_output with 
 *       Monitor_nD(options="list all source binary", filename="MySource.bin")
 *
@@ -210,7 +210,7 @@ DECLARE
       char   Buffer[1024];
 
       ret = fscanf(f, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
-        &fp, &fx, &fy, &fz, &fvx, &fvy, &fvz, &ft, &fsx, &fsy, &fsz);
+        &fx, &fy, &fz, &fvx, &fvy, &fvz, &ft, &fsx, &fsy, &fsz, &fp);
       if(ret == EOF)
         break;
       if(ret < 11)
@@ -233,11 +233,11 @@ DECLARE
               exit(1);
             }  
         }
-        s[11*j+1]  = fx;  s[11*j+2] = fy;  s[11*j+3] = fz; 
-        s[11*j+4]  = fvx; s[11*j+5] = fvy; s[11*j+6] = fvz; 
-        s[11*j+7]  = ft;
-        s[11*j+8]  = fsx; s[11*j+9] = fsy; s[11*j+10] = fsz; 
-        s[11*j+0]  = fp;
+        s[11*j+0]  = fx;  s[11*j+1] = fy;  s[11*j+2] = fz; 
+        s[11*j+3]  = fvx; s[11*j+4] = fvy; s[11*j+5] = fvz; 
+        s[11*j+6]  = ft;
+        s[11*j+7]  = fsx; s[11*j+8] = fsy; s[11*j+9] = fsz; 
+        s[11*j+10] = fp;
         i++;  s_block++;
       }
     } /* end while */
@@ -343,7 +343,7 @@ INITIALIZE
       
     pos = 0;
     if (bufsize != 0 && bufsize <= length) length = bufsize;    
-    if (mcget_ncount() > length*repeat_count) mcset_ncount(length*repeat_count);
+    mcset_ncount(length*repeat_count);
   }
 %}
 
@@ -378,21 +378,21 @@ TRACE
         {  /* &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p (&dummy was not stored) */
           double *s;
           s = (double*)source;
-          x  = s[11*i+1]   ; y  = s[11*i+2] ; z  = s[11*i+3];
-          vx = s[11*i+4]   ; vy = s[11*i+5] ; vz = s[11*i+6];
-          t  = s[11*i+7]   ;
-          sx = s[11*i+8]   ; sy = s[11*i+9] ; sz = s[11*i+10];
-          p  = s[11*i+0]  ;
+          x  = s[11*i+0]   ; y  = s[11*i+1] ; z  = s[11*i+2];
+          vx = s[11*i+3]   ; vy = s[11*i+4] ; vz = s[11*i+5];
+          t  = s[11*i+6]   ;
+          sx = s[11*i+7]   ; sy = s[11*i+8] ; sz = s[11*i+9];
+          p  = s[11*i+10]  ;
         }
         else 
         { /* &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p, &p2 */
           float *s;
           s = (float*)source;
-          x  = s[11*i+1]   ; y  = s[11*i+2] ; z  = s[11*i+3];
-          vx = s[11*i+4]   ; vy = s[11*i+5] ; vz = s[11*i+6];
-          t  = s[11*i+7]   ;
-          sx = s[11*i+8]   ; sy = s[11*i+9] ; sz = s[11*i+10];
-          p  = s[11*i+0]  ;
+          x  = s[11*i+0]   ; y  = s[11*i+1] ; z  = s[11*i+2];
+          vx = s[11*i+3]   ; vy = s[11*i+4] ; vz = s[11*i+5];
+          t  = s[11*i+6]   ;
+          sx = s[11*i+7]   ; sy = s[11*i+8] ; sz = s[11*i+9];
+          p  = s[11*i+10]  ;
         }
       }
       pos++;

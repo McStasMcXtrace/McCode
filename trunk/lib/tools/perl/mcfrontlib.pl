@@ -343,27 +343,25 @@ sub mcpreplot {
 
     while($mcfile)
     {
-      # data
-      open(MCOUTFILE,$mcfile);
-      $line = <MCOUTFILE>;
+         # data
+         open(MCOUTFILE,$mcfile);
+         $line = <MCOUTFILE>;
+         
+         print MCSIM ("begin data\n");
+         while($line =~ "# ")
+         {
+           @words = split(/\# /,$line);
+           my $this_word = $words[1];
+           if (!($this_word =~ /^\s*[A-Z]\s*/)) {
+            print MCSIM ("  ",$words[1]); }
+           $line = <MCOUTFILE>;
+         }
+         print MCSIM ("end data \n");
+         print MCSIM ("\n");
+         close(MCOUTFILE);
 
-      print MCSIM ("begin data\n");
-      while($line =~ "# ")
-      {
-       @words = split(/\# /,$line);
-       my $this_word = $words[1];
-       if ($this_word =~ /^filename\s*/) {
-        print MCSIM ("  filename: '$mcfile'\n"); }
-       elsif (!($this_word =~ /^\s*[A-Z]\s*/)) {
-        print MCSIM ("  ",$words[1]); }
-       $line = <MCOUTFILE>;
-      }
-      print MCSIM ("end data \n");
-      print MCSIM ("\n");
-      close(MCOUTFILE);
-
-      $f = $f + 1;
-      $mcfile = $files[$f];
+         $f = $f + 1;
+         $mcfile = $files[$f];
     }
 
      close(MCOUTFILE);

@@ -8,7 +8,7 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.23 2003-01-21 07:50:44 pkwi Exp $
+*	$Id: instrument.l,v 1.24 2003-01-21 08:25:08 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.21  2001/09/24 10:00:00  ef
@@ -168,7 +168,6 @@ FINALLY		    return TOK_FINALLY;
 EXTERN		    return TOK_EXTERN;
 INITIALIZE	  return TOK_INITIALIZE;
 INSTRUMENT	  return TOK_INSTRUMENT;
-NXDICT		    return TOK_NXDICT;
 NXDICTFILE	  return TOK_NXDICTFILE;
 OUTPUT		    return TOK_OUTPUT;
 PARAMETERS	  return TOK_PARAMETERS;
@@ -178,9 +177,9 @@ ROTATED		    return TOK_ROTATED;
 SETTING		    return TOK_SETTING;
 STATE		      return TOK_STATE;
 TRACE		      return TOK_TRACE;
-SHARE         return TOK_SHARE;          /* ADD: E. Farhi Sep 20th, 2001 */
+SHARE         return TOK_SHARE;       /* ADD: E. Farhi Sep 20th, 2001 */
 EXTEND        return TOK_EXTEND;      /* ADD: E. Farhi Sep 20th, 2001 */
-GROUP         return TOK_GROUP;          /* ADD: E. Farhi Sep 24th, 2001 */
+GROUP         return TOK_GROUP;       /* ADD: E. Farhi Sep 24th, 2001 */
 
 "("|")"|"["|"]"|"{"|"}"|","	return yytext[0]; /* Punctuation. */
 "="|"*"				return yytext[0]; /* Operator. */

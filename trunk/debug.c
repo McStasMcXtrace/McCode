@@ -6,7 +6,7 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: debug.c,v 1.8 2003-01-21 07:50:44 pkwi Exp $
+*	$Id: debug.c,v 1.9 2003-01-21 08:25:08 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.6  1999/03/18 07:29:10  kn

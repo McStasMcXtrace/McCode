@@ -10,7 +10,7 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 14th Feb 2000.
 * Origin: McStas 1.6/<a href="http://www.ill.fr">ILL</a>
-* Version: 0.16.5
+* Version: 0.16.4
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 10th Mar 2000 : use struct. 
 * Modified by: EF, 25th May 2000 : correct Vars.Mon2D_Buffer alloc bug.
@@ -28,7 +28,6 @@
 * Modified by: EF, 28th Sep 2001 : intermediate 'source' option. bug for list ok
 * Modified by: EF, 24th Oct 2001 : capture flux  [p*lambda/1.7985] (0.16.3)
 * Modified by: EF, 15th Feb 2002 : corrected bug in auto regeneration (0.16.4)
-* Modified by: EF, 23rd May 2002 : monitor any signal (0.16.5)
 *
 * This component is a general Monitor that can output 0/1/2D signals 
 * (Intensity vs. [something] and vs. [something] ...)
@@ -54,7 +53,7 @@
 * To create an intermediate 'source' file collecting all neutron states, use:
 *   COMPONENT MySourceCreator = Monitor_nD(
 *     filename = "MySource.list", options="list all, source")
-* The output file is text formatted with: [p x y z vx vy vz t sx sy sz] lines, 
+* The output file is text formatted with: [x y z vx vy vz t sx sy sz p] lines, 
 * and is about 85 byte per neutron. May be half size with 'binary' option.
 * 
 * <b>Possible options are</b>
@@ -105,7 +104,6 @@
 *     per cm2                   Intensity will be per cm^2
 *     premonitor                Will monitor neutron parameters stored
 *                                previously with <b>PreMonitor_nD</b>.
-*     signal <var>              will monitor <var> instead of p as intensity
 *     slit or absorb            Absorb neutrons that are out detector
 *     source                    The monitor will save neutron states
 *     unactivate                To unactivate detector (0D detector)
@@ -135,8 +133,6 @@
 *   options = "list kx ky kz energy" records each neutron contribution in 1 file
 *   options = "multiple kx ky kz energy and list all neutrons" 
 *          makes 4 output 1D files and produces a complete list for all neutrons
-*   options = "signal energy, x y" is PSD recording energy (not p)
-*   options = "lit all, source binary" save neutron events as a binary log file
 *
 * How to monitor anything in my simulation: with the 'user' option
 * 1) put in your instrument DECLARE: struct MonitornD_Variables *InstrVars;
@@ -200,7 +196,7 @@ POLARISATION PARAMETERS (sx,sy,sz)
 SHARE
 %{
 #ifndef Monitor_nD_Version
-#define Monitor_nD_Version "0.16.5"
+#define Monitor_nD_Version "0.16.3"
 #define MONnD_COORD_NMAX  30  /* max number of variables to record */
 
   typedef struct MonitornD_Defines
@@ -274,7 +270,7 @@ SHARE
     char   Flag_Binary_List  ;
     char   Flag_capture      ;   /* lambda monitor with lambda/lambda(2200m/s = 1.7985 Angs) weightening */
     
-    int    Coord_Number      ;   /* total number of variables to monitor, plus intensity (index 0) */
+    int    Coord_Number      ;   /* total number of variables to monitor, plus intensity (0) */
     long   Buffer_Block      ;   /* Buffer size for list or auto limits */
     long   Neutron_Counter   ;   /* event counter, simulation total counts is mcget_ncount() */
     long   Buffer_Counter    ;   /* index in Buffer size (for realloc) */
@@ -339,7 +335,6 @@ void Monitor_nD_Init(aDEFS, aVars, m_xwidth, m_yheight, m_zthick, m_xmin, m_xmax
     char Set_aVars_Coord_Var[30];
     char Short_Label[MONnD_COORD_NMAX][30];
     char Set_Coord_Mode;
-    char Flag_signal    = 0;
     long i=0, j=0;
     double lmin, lmax, XY;
     long    t;
@@ -410,7 +405,7 @@ void Monitor_nD_Init(aDEFS, aVars, m_xwidth, m_yheight, m_zthick, m_xmin, m_xmax
     aVars->Flag_parallel     = 0;   /* set neutron state back after detection (parallel components) */
     aVars->Flag_Binary_List  = 0;   /* save list as a binary file (smaller) */
     aVars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
-    aVars->Buffer_Block      = 10000;     /* Buffer size for list or auto limits */
+    aVars->Buffer_Block      = 1000;     /* Buffer size for list or auto limits */
     aVars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
     aVars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
     aVars->Buffer_Size       = 0;
@@ -471,7 +466,6 @@ void Monitor_nD_Init(aDEFS, aVars, m_xwidth, m_yheight, m_zthick, m_xmin, m_xmax
     if (strstr(aVars->option, "binary"))
       aVars->Flag_Binary_List  = 1;
   
-    /* we may also monitor something else than intensity... but this is default as index 0 */
     if (aVars->Flag_per_cm2) strcpy(aVars->Coord_Label[0],"Intensity [n/cm^2/s]");
     else strcpy(aVars->Coord_Label[0],"Intensity [n/s]");
     strcpy(aVars->Coord_Var[0],"p");
@@ -588,7 +582,6 @@ void Monitor_nD_Init(aDEFS, aVars, m_xwidth, m_yheight, m_zthick, m_xmin, m_xmax
         if (!strcmp(token, "box")) aVars->Flag_Shape = aDEFS->SHAPE_BOX; 
         if (!strcmp(token, "parallel")) aVars->Flag_parallel = 1; 
         if (!strcmp(token, "capture")) aVars->Flag_capture = 1; 
-        if (!strcmp(token, "signal")) Flag_signal = 1; 
         if (!strcmp(token, "auto")) 
         { if (Flag_No) { aVars->Flag_Auto_Limits = 0; Flag_No = 0; }
           else aVars->Flag_Auto_Limits = 1; }
@@ -672,30 +665,18 @@ void Monitor_nD_Init(aDEFS, aVars, m_xwidth, m_yheight, m_zthick, m_xmin, m_xmax
         /* now stores variable keywords detected, if any */ 
         if (Set_aVars_Coord_Type != aDEFS->COORD_NONE)
         {
-          int Coord_Index;
-          
-          if (Flag_signal != 0) Coord_Index = 0;
-          else
-          {
-            if (aVars->Coord_Number < MONnD_COORD_NMAX) aVars->Coord_Number++;
-            else if (aVars->Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", aVars->compcurname, MONnD_COORD_NMAX);
-            Coord_Index = aVars->Coord_Number;
-          }
-          aVars->Coord_Type[Coord_Index] = Set_aVars_Coord_Type;
-          strcpy(aVars->Coord_Label[Coord_Index], Set_aVars_Coord_Label); 
-          strcpy(aVars->Coord_Var[Coord_Index], Set_aVars_Coord_Var);
-          
-          if (Coord_Index != 0)
-          { 
-            aVars->Coord_Bin[Coord_Index] = 20;
-            if (lmin > lmax) { XY = lmin; lmin=lmax; lmax = XY; }
-            aVars->Coord_Min[Coord_Index] = lmin;
-            aVars->Coord_Max[Coord_Index] = lmax;
-          }
+          if (aVars->Coord_Number < MONnD_COORD_NMAX) aVars->Coord_Number++;
+          else if (aVars->Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", aVars->compcurname, MONnD_COORD_NMAX);
+          aVars->Coord_Type[aVars->Coord_Number] = Set_aVars_Coord_Type;
+          strcpy(aVars->Coord_Label[aVars->Coord_Number], Set_aVars_Coord_Label); 
+          strcpy(aVars->Coord_Var[aVars->Coord_Number], Set_aVars_Coord_Var);
+          if (lmin > lmax) { XY = lmin; lmin=lmax; lmax = XY; }
+          aVars->Coord_Min[aVars->Coord_Number] = lmin;
+          aVars->Coord_Max[aVars->Coord_Number] = lmax;
+          aVars->Coord_Bin[aVars->Coord_Number] = 20;
           Set_Coord_Mode = aDEFS->COORD_VAR;
           Flag_All = 0;
           Flag_No = 0;
-          Flag_signal = 0;
         }
       carg++;
       } /* end if token */
@@ -803,7 +784,7 @@ void Monitor_nD_Init(aDEFS, aVars, m_xwidth, m_yheight, m_zthick, m_xmin, m_xmax
         strcat(aVars->Monitor_Label, " [log] ");
     }
     
-    /* aVars->Coord_Number  0   : intensity (or signal to monitor as intensity)
+    /* aVars->Coord_Number  0   : intensity
      * aVars->Coord_Number  1:n : detector variables */
     
     /* now allocate memory to store variables in TRACE */
@@ -905,6 +886,9 @@ void Monitor_nD_Trace(aDEFS, aVars)
   long    While_Buffer=0;
   char    Set_aVars_Coord_Type = aDEFS->COORD_NONE;
   
+  
+  pp = aVars->cp;
+  
   if (aVars->Coord_Number > 0)
   {
     /* aVars->Flag_Auto_Limits */
@@ -919,7 +903,7 @@ void Monitor_nD_Trace(aDEFS, aVars)
         aVars->Coord_Max[i] = -FLT_MAX;
         for (j = 0; j < aVars->Buffer_Block; j++)
         { 
-          XY = aVars->Mon2D_Buffer[i+j*(aVars->Coord_Number+1)];  /* scanning variables in Buffer */
+          XY = aVars->Mon2D_Buffer[j*(aVars->Coord_Number+1) + (i-1)];  /* scanning variables in Buffer */
           if (XY < aVars->Coord_Min[i]) aVars->Coord_Min[i] = XY;
           if (XY > aVars->Coord_Max[i]) aVars->Coord_Max[i] = XY;
         }
@@ -932,7 +916,7 @@ void Monitor_nD_Trace(aDEFS, aVars)
     {
       aVars->Mon2D_Buffer  = (double *)realloc(aVars->Mon2D_Buffer, (aVars->Coord_Number+1)*(aVars->Neutron_Counter+aVars->Buffer_Block)*sizeof(double));
       if (aVars->Mon2D_Buffer == NULL)
-          { printf("Monitor_nD: %s cannot reallocate aVars->Mon2D_Buffer[%li] (%li bytes). errno=%i (see sys/errno.h). Unactivating.\n", aVars->compcurname, i, (aVars->Coord_Number+1)*(aVars->Neutron_Counter+aVars->Buffer_Block)*sizeof(double), errno); aVars->Flag_List = 1; }
+            { printf("Monitor_nD: %s cannot reallocate aVars->Mon2D_Buffer[%li] (%li). Skipping.\n", aVars->compcurname, i, (aVars->Neutron_Counter+aVars->Buffer_Block)*sizeof(double)); aVars->Flag_List = 1; }
       else { aVars->Buffer_Counter = 0; aVars->Buffer_Size = aVars->Neutron_Counter+aVars->Buffer_Block; }
     }
 
@@ -944,15 +928,17 @@ void Monitor_nD_Trace(aDEFS, aVars)
         {
           /* first while loops (While_Buffer) */
           /* auto limits case : scan Buffer within limits and store in Mon2D */ 
-          Coord[0] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+1)]; /* the signal (p)*/
+          pp = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+1) + (aVars->Coord_Number)];
+          Coord[0] = pp;
+          Coord[aVars->Coord_Number] = pp;
 
           for (i = 1; i <= aVars->Coord_Number; i++)
           {
             /* scanning variables in Buffer */
             XY = (aVars->Coord_Max[i]-aVars->Coord_Min[i]);
             
-            Coord[i] = aVars->Mon2D_Buffer[i+While_Buffer*(aVars->Coord_Number+1)];
-            if (XY > 0) Coord_Index[i] = floor((Coord[i]-aVars->Coord_Min[i])*aVars->Coord_Bin[i]/XY);
+            Coord[i] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+1) + (i-1)];
+            if (XY > 0) Coord_Index[i] = floor((aVars->Mon2D_Buffer[(i-1) + While_Buffer*(aVars->Coord_Number+1)]-aVars->Coord_Min[i])*aVars->Coord_Bin[i]/XY);
             else Coord_Index[i] = 0;
             if (aVars->Flag_With_Borders)
             {
@@ -965,6 +951,7 @@ void Monitor_nD_Trace(aDEFS, aVars)
         else /* (While_Buffer >= aVars->Buffer_Block) && (aVars->Flag_Auto_Limits == 2) */ 
         {
           aVars->Flag_Auto_Limits = 0;
+          pp = aVars->cp;
           if (!aVars->Flag_List) /* free Buffer not needed (no list to output) */
           { /* Dim : (aVars->Coord_Number+1)*aVars->Buffer_Block matrix (for p, dp) */ 
             free(aVars->Mon2D_Buffer);
@@ -1042,13 +1029,11 @@ void Monitor_nD_Trace(aDEFS, aVars)
 
           if (aVars->Coord_Type[i] & aDEFS->COORD_ABS) XY=fabs(XY);
 
-          if (aVars->Coord_Type[i] & aDEFS->COORD_LOG & i)
+          if (aVars->Coord_Type[i] & aDEFS->COORD_LOG)
           {  if (XY > 0) XY = log(XY)/log(10);
              else XY = -100; }
 
           Coord[i] = XY;
-          if (i == 0) { Coord_Index[0] = 0; }
-          else
           if (!aVars->Flag_Auto_Limits)
           {
             XY = (aVars->Coord_Max[i]-aVars->Coord_Min[i]);
@@ -1068,10 +1053,12 @@ void Monitor_nD_Trace(aDEFS, aVars)
       { /* now store Coord into Buffer (no index needed) if necessary */
         if ((aVars->Buffer_Counter < aVars->Buffer_Block) && ((aVars->Flag_List) || (aVars->Flag_Auto_Limits == 1)))
         {
-          for (i = 0; i <= aVars->Coord_Number; i++)
+          for (i = 0; i < aVars->Coord_Number; i++)
           {
-            aVars->Mon2D_Buffer[i + aVars->Neutron_Counter*(aVars->Coord_Number+1)] = Coord[i];
+            aVars->Mon2D_Buffer[i + aVars->Neutron_Counter*(aVars->Coord_Number+1)] = Coord[i+1];
           }
+          aVars->Mon2D_Buffer[aVars->Coord_Number + aVars->Neutron_Counter*(aVars->Coord_Number+1)]   = pp;
+          /* aVars->Mon2D_Buffer[(aVars->Coord_Number+1) + aVars->Neutron_Counter*(aVars->Coord_Number+1)] = pp*pp; */
           aVars->Buffer_Counter++;
           if (aVars->Flag_Verbose && (aVars->Buffer_Counter >= aVars->Buffer_Block) && (aVars->Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", aVars->compcurname, aVars->Buffer_Counter);
         }
@@ -1081,18 +1068,17 @@ void Monitor_nD_Trace(aDEFS, aVars)
       /* store n1d/2d section for Buffer or current neutron in while */
       if (aVars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
       {
-        pp = Coord[0];
-        /* 1D and n1D case : aVars->Flag_Multiple */
+      /* 1D and n1D case : aVars->Flag_Multiple */
         if (aVars->Flag_Multiple)
         { /* Dim : aVars->Coord_Number*aVars->Coord_Bin[i] vectors (intensity is not included) */ 
-          for (i=1; i <= aVars->Coord_Number; i++)
+          for (i= 0; i < aVars->Coord_Number; i++)
           {
-            j = Coord_Index[i];
-            if (j >= 0 && j < aVars->Coord_Bin[i])
+            j = Coord_Index[i+1];
+            if (j >= 0 && j < aVars->Coord_Bin[i+1])
             {
-              aVars->Mon2D_N[i-1][j]++;
-              aVars->Mon2D_p[i-1][j] += pp;
-              aVars->Mon2D_p2[i-1][j] += pp*pp;
+              aVars->Mon2D_N[i][j]++;
+              aVars->Mon2D_p[i][j] += pp;
+              aVars->Mon2D_p2[i][j] += pp*pp;
             }
           }
         }
@@ -1138,7 +1124,7 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
     }
 
     /* check Buffer flush when end of simulation reached */
-    if ((aVars->Buffer_Counter < aVars->Buffer_Block) && aVars->Flag_Auto_Limits && aVars->Mon2D_Buffer)
+    if ((aVars->Buffer_Counter < aVars->Buffer_Block) && aVars->Flag_Auto_Limits)
     {
       /* Get Auto Limits */
       if (aVars->Flag_Verbose) printf("Monitor_nD: %s getting %i Auto Limits from List (%li).\n", aVars->compcurname, aVars->Coord_Number, aVars->Buffer_Counter);
@@ -1149,7 +1135,7 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
 
         for (j = 0; j < aVars->Buffer_Counter; j++)
         { 
-          XY = aVars->Mon2D_Buffer[i+j*(aVars->Coord_Number+1)];  /* scanning variables in Buffer */
+                XY = aVars->Mon2D_Buffer[j*(aVars->Coord_Number+1) + (i-1)];  /* scanning variables in Buffer */
           if (XY < aVars->Coord_Min[i]) aVars->Coord_Min[i] = XY;
           if (XY > aVars->Coord_Max[i]) aVars->Coord_Max[i] = XY;
 
@@ -1163,15 +1149,16 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
         if (While_Buffer < aVars->Buffer_Block)
         {
           /* first while loops (While_Buffer) */
-          Coord[0] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+1)]; /* the signal (p) */
+          Coord[0] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+1) + (aVars->Coord_Number)];
+          pp = Coord[0];
             
           /* auto limits case : scan Buffer within limits and store in Mon2D */ 
           for (i = 1; i <= aVars->Coord_Number; i++)
           {
             /* scanning variables in Buffer */
             XY = (aVars->Coord_Max[i]-aVars->Coord_Min[i]);
-            Coord[i] = aVars->Mon2D_Buffer[i+While_Buffer*(aVars->Coord_Number+1)];
-            if (XY > 0) Coord_Index[i] = floor((Coord[i]-aVars->Coord_Min[i])*aVars->Coord_Bin[i]/XY);
+            Coord[i] = aVars->Mon2D_Buffer[While_Buffer*(aVars->Coord_Number+1) + (i-1)];
+            if (XY > 0) Coord_Index[i] = floor((aVars->Mon2D_Buffer[(i-1) + While_Buffer*(aVars->Coord_Number+1)]-aVars->Coord_Min[i])*aVars->Coord_Bin[i]/XY);
             else Coord_Index[i] = 0;
             if (aVars->Flag_With_Borders)
             {
@@ -1180,46 +1167,45 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
             }
           } /* end for */
           While_Buffer++;
-          /* store n1d/2d section from Buffer */
-
-          pp = Coord[0];
-          /* 1D and n1D case : aVars->Flag_Multiple */
-          if (aVars->Flag_Multiple)
-          { /* Dim : aVars->Coord_Number*aVars->Coord_Bin[i] vectors (intensity is not included) */ 
-            /* variable Coord[i] is stored in Mon2D_x[i-1] (Coord[0] is not saved in Mon2D_x) */
-            for (i= 0; i < aVars->Coord_Number; i++)
-            {
-              j = Coord_Index[i+1];
-              if (j >= 0 && j < aVars->Coord_Bin[i+1])
-              {
-                aVars->Mon2D_N[i][j]++;
-                aVars->Mon2D_p[i][j] += pp;
-                aVars->Mon2D_p2[i][j] += pp*pp;
-              }
-            }
-          }
-          else /* 2D case : aVars->Coord_Number==2 and !aVars->Flag_Multiple and !aVars->Flag_List */
-          if ((aVars->Coord_Number == 2) && !aVars->Flag_Multiple)
-          { /* Dim : aVars->Coord_Bin[1]*aVars->Coord_Bin[2] matrix */
-            i = Coord_Index[1];
-            j = Coord_Index[2];
-            if (i >= 0 && i < aVars->Coord_Bin[1] && j >= 0 && j < aVars->Coord_Bin[2])
-            {
-              aVars->Mon2D_N[i][j]++;
-              aVars->Mon2D_p[i][j] += pp;
-              aVars->Mon2D_p2[i][j] += pp*pp;
-            }
-          } /* end store 2D/1D */
         } /* end if in Buffer */
         else /* (While_Buffer >= aVars->Buffer_Block) && (aVars->Flag_Auto_Limits == 2) */ 
         {
           aVars->Flag_Auto_Limits = 0;
           While_End = 1;
           if (!aVars->Flag_List && dofree) /* free Buffer not needed (no list to output) */
-          { /* Dim : (aVars->Coord_Number+1)*aVars->Buffer_Block matrix (for p and vars) */ 
+          { /* Dim : (aVars->Coord_Number+1)*aVars->Buffer_Block matrix (for p, dp) */ 
             free(aVars->Mon2D_Buffer);
           }
         }
+
+        /* store n1d/2d section from Buffer */
+
+        /* 1D and n1D case : aVars->Flag_Multiple */
+        if (aVars->Flag_Multiple)
+        { /* Dim : aVars->Coord_Number*aVars->Coord_Bin[i] vectors (intensity is not included) */ 
+          for (i= 0; i < aVars->Coord_Number; i++)
+          {
+            j = Coord_Index[i+1];
+            if (j >= 0 && j < aVars->Coord_Bin[i+1])
+            {
+              aVars->Mon2D_N[i][j]++;
+              aVars->Mon2D_p[i][j] += pp;
+              aVars->Mon2D_p2[i][j] += pp*pp;
+            }
+          }
+        }
+        else /* 2D case : aVars->Coord_Number==2 and !aVars->Flag_Multiple and !aVars->Flag_List */
+        if ((aVars->Coord_Number == 2) && !aVars->Flag_Multiple)
+        { /* Dim : aVars->Coord_Bin[1]*aVars->Coord_Bin[2] matrix */
+          i = Coord_Index[1];
+          j = Coord_Index[2];
+          if (i >= 0 && i < aVars->Coord_Bin[1] && j >= 0 && j < aVars->Coord_Bin[2])
+          {
+            aVars->Mon2D_N[i][j]++;
+            aVars->Mon2D_p[i][j] += pp;
+            aVars->Mon2D_p2[i][j] += pp*pp;
+          }
+        } /* end store 2D/1D */
       } /* end while */
     } /* end Force Get Limits */
 
@@ -1239,7 +1225,7 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
     if (strlen(aVars->Mon_File) > 0) 
     { 
       fname = (char*)malloc(strlen(aVars->Mon_File)+10*aVars->Coord_Number);
-      if (aVars->Flag_List && aVars->Mon2D_Buffer) /* List: DETECTOR_OUT_2D */
+      if (aVars->Flag_List) /* List: DETECTOR_OUT_2D */
       {
         if (aVars->Flag_List == 2) aVars->Buffer_Size = aVars->Neutron_Counter;
         if (aVars->Buffer_Size >= aVars->Neutron_Counter)
@@ -1250,16 +1236,17 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
         min1d = 1; max1d = aVars->Coord_Number+1;
         min2d = 0; max2d = aVars->Buffer_Size; 
         bin1d = aVars->Coord_Number+1; bin2d = aVars->Buffer_Size;
-        strcpy(Coord_X_Label,"p");
+        strcpy(Coord_X_Label,"");
         for (i= 1; i <= aVars->Coord_Number; i++)
         {
           if (min2d < aVars->Coord_Min[i]) min2d = aVars->Coord_Min[i];
           if (max2d < aVars->Coord_Max[i]) max2d = aVars->Coord_Max[i];
-          strcat(Coord_X_Label, " ");
           strcat(Coord_X_Label, aVars->Coord_Var[i]);
+          strcat(Coord_X_Label, " ");
           if (strchr(aVars->Mon_File,'.') == NULL)
                   { strcat(fname, "."); strcat(fname, aVars->Coord_Var[i]); }
         }
+        strcat(Coord_X_Label, "p");
         if (aVars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%ix%li).\n", aVars->compcurname, fname,bin1d,bin2d);
         if (!aVars->Flag_Binary_List)
         { /* ascii list */
@@ -1347,6 +1334,7 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
       {
         for (i= 0; i < aVars->Coord_Number; i++)
         {
+          
           strcpy(fname,aVars->Mon_File);
           if (strchr(aVars->Mon_File,'.') == NULL)
                   { strcat(fname, "."); strcat(fname, aVars->Coord_Var[i+1]); }
@@ -1379,17 +1367,6 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
           }
           else
           {
-            char Set_aVars_Coord_Type;
-            
-            /* handle the case when we monitor something else than the intensity */
-            Set_aVars_Coord_Type = (aVars->Coord_Type[0] & 31);
-            if (Set_aVars_Coord_Type != aDEFS->COORD_P)
-            {
-               for (j=0; j<aVars->Coord_Bin[i+1]; j++) 
-                  if ( aVars->Mon2D_N[i][j]!=0 )
-                     aVars->Mon2D_p[i][j] /= aVars->Mon2D_N[i][j];
-            }
-            
             if (aVars->Flag_log != 0)
             {
               XY = FLT_MAX;
@@ -1439,18 +1416,6 @@ void Monitor_nD_OutPut(MonitornD_Defines_type *aDEFS, MonitornD_Variables_type *
       else
       if (aVars->Coord_Number == 2)  /* 2D: DETECTOR_OUT_2D */
       {
-        char Set_aVars_Coord_Type;
-            
-        /* handle the case when we monitor something else than the intensity */
-        Set_aVars_Coord_Type = (aVars->Coord_Type[0] & 31);
-        if (Set_aVars_Coord_Type != aDEFS->COORD_P)
-        {
-          for (i= 0; i < aVars->Coord_Bin[1]; i++)
-            for (j= 0; j < aVars->Coord_Bin[2]; j++)
-              if ( aVars->Mon2D_N[i][j]!=0 )
-                 aVars->Mon2D_p[i][j] /= aVars->Mon2D_N[i][j];
-        }
-        
         strcpy(fname,aVars->Mon_File);
 
         p0m = (int    *)malloc(aVars->Coord_Bin[1]*aVars->Coord_Bin[2]*sizeof(int));
@@ -1676,7 +1641,14 @@ TRACE
   double  XY=0;
   double  t0 = 0;
   double  t1 = 0;
+  long    i,j;
+  double  pp;
+  double  Coord[MONnD_COORD_NMAX];
+  long    Coord_Index[MONnD_COORD_NMAX];
+  char    While_End   = 0;
+  long    While_Buffer= 0;
   int     intersect   = 0;
+  char    Set_Vars_Coord_Type = DEFS.COORD_NONE; 
   char    Flag_Restore = 0;  
 
   if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */

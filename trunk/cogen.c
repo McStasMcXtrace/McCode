@@ -6,7 +6,7 @@
 *
 *         Author: K.N.                        Aug 20, 1997
 *
-*         $Id: cogen.c,v 1.29 2003-01-21 07:50:44 pkwi Exp $
+*         $Id: cogen.c,v 1.30 2003-01-21 08:25:08 pkwi Exp $
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
@@ -83,7 +83,7 @@
 * ##Scattered       Incremented each time a SCATTER is done
 * ##comp_storein    Positions of neutron entering each comp (loc. coords)
 * ##Group<GROUP>    Flag true when in an active group
-* ##comp_curname    Message telling where we are in the simulation (comp, status)
+* ##sig_message    Message for the signal handler (debug/trace, sim status)
 *******************************************************************************/
 
 
@@ -455,6 +455,14 @@ cogen_decls(struct instr_def *instr)
   coutf("void %sfinally(void);", ID_PRE);
   coutf("void %sdisplay(void);", ID_PRE);
   cout("");
+  
+  if(instr->nxdinfo->any) {
+    coutf("/* Init NeXus file support declarations, using the NeXus Dictionary API */");
+    cout("#include \"nxdict.h\"");
+    coutf("void %snxdict_init(void); ", ID_PRE);
+    coutf("void %snxdict_cleanup(void); ", ID_PRE);
+    coutf("void %snxdict_nxout(void); ", ID_PRE);
+  }
 
   /* 2. Global variables for instrument parameters. */
   cout("/* Instrument parameters. */");
@@ -591,61 +599,138 @@ cogen_decls(struct instr_def *instr)
 
 
 /*******************************************************************************
-* Code generation for any NXDICT or NXDICTFILE declarations.
+* Code generation for any NXDICTFILE declarations.
 *******************************************************************************/
+
+/* this code generation comes after the 'init' code generation, thus comp
+   parameters are known, and can be saved within nxdict_init */
 static void
 cogen_nxdict(struct instr_def *instr)
 {
   List_handle liter;
-  struct NXDentry *entry;
-
-  coutf("#ifdef HAVE_NXDICT");
-  coutf("static NXDdict %snxd_handle;", ID_PRE);
-  coutf("static NXhandle %snxd_file;", ID_PRE);
+  struct comp_inst *comp;
+  struct instr_formal *i_formal;
+  char *quoted_name = str_quote(instr->nxdinfo->nxdfile);
+  /* instr->formal->type */
+  /*
+  char *NeXus_formal_type_names[] =
+  { "DFNT_FLOAT64", "DFNT_INT32", "DFNT_CHAR" };   
+  char *NeXus_default_comp_entries[] = 
+  { "name","index",
+    "comp_def.name", "comp_def.comp_inst_number",
+    "source_code",
+    "position.place.x", "position.place.y", "position.place.z",
+    "position.orientation.x", "position.orientation.y", "position.orientation.z"
+  };
+  char *NeXus_default_instr_entries[] = {
+    "name","source","instr_code","C_code" };
+  */
+  
+  coutf("#ifdef NXDICTAPI");
+  coutf("NXdict   %snxd_handle=NULL;", ID_PRE);
+  coutf("NXhandle %snx_handle =NULL;", ID_PRE);
+  coutf("static char *%snxd_name=\"%s\";", ID_PRE, quoted_name);
+  str_free(quoted_name);
+  coutf("char %snx_name[1024];", ID_PRE);
   coutf("");
   coutf("void %snxdict_init(void) {", ID_PRE);
-  /* Code to read any specified fictionary file. */
-  if(instr->nxdinfo->nxdfile)
-  {
-    char *quoted_name = str_quote(instr->nxdinfo->nxdfile);
-    coutf("  %snxd_handle = NXDinitfromfile(\"%s\");", ID_PRE, quoted_name);
-    str_free(quoted_name);
-  }
-  else
-  {
-    coutf("  %snxd_handle = NXDinitfromfile(NULL);", ID_PRE);
-  }
-  coutf("  if(%snxd_handle == NULL) {", ID_PRE);
-  coutf("    printf(stderr, \"Error: could not read NeXus dictionary file.\\n\");");
+  coutf("  int  %s_permission = NXACC_RDWR;", ID_PRE);
+  coutf("  char *%s_buffer, *%s_pData;", ID_PRE, ID_PRE);
+  /* Code to read any specified dictionary file. */
+
+  /* NXDinitfromfile function opens the dictionary file. If it does not
+     exist, a valid NXhandle to an empty dictionary is anyway created, 
+     as with a NULL file name. A NeXus error message is reported
+   */
+  
+  coutf("    strcpy(%ssig_message, \"%s (Init:NeXus)\");", ID_PRE, "Main");
+  coutf("  if (NXDinitfromfile(%snxd_name, &%snxd_handle) == NX_ERROR)", ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+  coutf("    fprintf(stderr, \"Warning: could not read/create NeXus dictionary file (%%s). Creating it.\\n\", %snxd_name);", ID_PRE);
+  /* now build the NeXus file name */
+  coutf("  if ((%sdirname == NULL) || (strlen(%sdirname) == 0))", ID_PRE, ID_PRE);
+  coutf("    strcpy(%snx_name, \"%s.nx\");", ID_PRE, instr->name);
+  coutf("  else  {");
+  coutf("    strcpy(%snx_name, %sdirname);", ID_PRE, ID_PRE);
+  coutf("    strcat(%snx_name, \".nx\");", ID_PRE);
+  coutf("  }");
+  coutf("  { FILE *fid=fopen(%snx_name, \"r\");", ID_PRE);
+  coutf("    if (fid == NULL) %s_permission = NXACC_CREATE;", ID_PRE);
+  coutf("    else fclose(fid); }");
+  coutf("  if (NXopen(%snx_name, %s_permission, &%snx_handle) == NX_ERROR) {", ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+  coutf("    fprintf(stderr, \"Error: could not open/create NeXus file (%%s).\\n\", %snx_name);", ID_PRE);
   coutf("    exit(1);");
-  coutf("  }", ID_PRE);
-  /* Code for additional embedded dictionary entries. */
-  liter = list_iterate(instr->nxdinfo->nxdentries);
-  while((entry = list_next(liter)) != NULL)
-  {
-    char *spec = exp_tostring(entry->spec);
-    coutf("  NXDadd(%snxd_handle, \"%s_%s\",", ID_PRE,
-          entry->compname, entry->param);
-    code_set_source(instr->quoted_source, exp_getlineno(entry->spec));
-    coutf("    %s);", spec);
-    code_reset_source();
-    str_free(spec);
+  coutf("  }");
+  /* now we check that dictionary contains aliases for all comp parameters */
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL)
+  { /* now in comp->name */
+    List_handle liter2;
+    struct comp_iformal *c_formal;
+    coutf("    strcpy(%ssig_message, \"%s (Init:NeXus DefPar)\");", ID_PRE, comp->name);
+    liter2 = list_iterate(comp->def->def_par);  
+    while((c_formal = list_next(liter2)) != NULL)
+    { 
+      struct Symtab_entry *entry = symtab_lookup(comp->defpar, c_formal->id);
+      char *val   = exp_tostring(entry->val);
+      char *alias = str_cat(ID_PRE, comp->name, "_", c_formal->id, NULL);
+      char *NeXus_path = str_cat("/", ID_PRE, "nx_entry,NXentry",
+        "/", ID_PRE, "instrument_name,NXinstrument", 
+        "/", comp->name, ",NXcomponent",
+        "/SDS", NULL);
+      /* should check NXD entry 'comp->name'_'par->id' = val */
+      coutf("  if (NXDget(%snxd_handle, \"%s\", %s_buffer, 1) == NX_ERROR)", ID_PRE, alias, ID_PRE);
+      coutf("    NXDadd(%snxd_handle, \"%s\", \"%s %s -type NX_CHAR -rank 1 -dim {%d}\");", ID_PRE, alias, NeXus_path, c_formal->id, strlen(val));
+      coutf("  %s_pData = malloc(%d);", ID_PRE, strlen(val));
+      coutf("  strcpy(%s_pData, \"%s\");", ID_PRE, val);
+      coutf("  NXDputalias(%snx_handle, %snxd_handle, \"%s\", %s_pData);", ID_PRE, ID_PRE, alias, ID_PRE);
+      coutf("  free(%s_pData);", ID_PRE);
+      str_free(val);
+      str_free(alias);
+      str_free(NeXus_path);
+    }
+    list_iterate_end(liter2);
+    coutf("    strcpy(%ssig_message, \"%s (Init:NeXus SetPar)\");", ID_PRE, comp->name);
+    liter2 = list_iterate(comp->def->set_par); 
+    while((c_formal = list_next(liter2)) != NULL)
+    { 
+      struct Symtab_entry *entry = symtab_lookup(comp->setpar, c_formal->id);
+      char *val   = exp_tostring(entry->val);
+      char *alias = str_cat(ID_PRE, comp->name, "_", c_formal->id, NULL);
+      char *NeXus_path = str_cat("/", ID_PRE, "nx_entry,NXentry",
+        "/", ID_PRE, "instrument_name,NXinstrument", 
+        "/", comp->name, ",NXcomponent",
+        "/SDS", NULL);
+      /* should check NXD entry 'comp->name'_'par->id' = val */
+      coutf("  if (NXDget(%snxd_handle, \"%s\", %s_buffer, 1) == NX_ERROR)", ID_PRE, alias, ID_PRE);
+      coutf("    NXDadd(%snxd_handle, \"%s\", \"%s %s -type NX_CHAR -rank 1 -dim {%d}\");", ID_PRE, alias, NeXus_path, c_formal->id, strlen(val));
+      coutf("  %s_pData = malloc(%d);", ID_PRE, strlen(val));
+      coutf("  strcpy(%s_pData, \"%s\");", ID_PRE, val);
+      coutf("  NXDputalias(%snx_handle, %snxd_handle, \"%s\", %s_pData);", ID_PRE, ID_PRE, alias, ID_PRE);
+      coutf("  free(%s_pData);", ID_PRE);
+      str_free(val);
+      str_free(alias);
+      str_free(NeXus_path);
+    }
+    list_iterate_end(liter2);
   }
   list_iterate_end(liter);
+  coutf("  /* NXflush(%snx_handle); */", ID_PRE);
+  coutf("  %snxdict_cleanup();", ID_PRE);
   coutf("}");
   coutf("");
   coutf("void %snxdict_cleanup(void) {", ID_PRE);
-  coutf("  NXDclose(%snxd_handle, NULL);", ID_PRE);
+  coutf("  NXDclose(%snxd_handle, %snxd_name);", ID_PRE, ID_PRE);
+  coutf("  NXclose(&%snx_handle);", ID_PRE);
   coutf("}");
   coutf("");
   coutf("void %snxdict_nxout(void) {", ID_PRE);
   /* ToDo: automatically generate suitable calls to NXDputalias() here. */
   coutf("}");
-  coutf("#else  /* HAVE_NXDICT */");
+  coutf("#else  /* have no NXDICTAPI */");
   coutf("void %snxdict_init(void) { }", ID_PRE);
   coutf("void %snxdict_cleanup(void) { }", ID_PRE);
   coutf("void %snxdict_nxout(void) { }", ID_PRE);
-  coutf("#endif  /* HAVE_NXDICT */", ID_PRE);
+  coutf("#endif  /* end NXDICTAPI */", ID_PRE);
   coutf("");
 }
 
@@ -695,7 +780,7 @@ cogen_init(struct instr_def *instr)
     char *x, *y, *z;
 
     coutf("    /* Component %s. */", comp->name);
-    coutf("    strcpy(%scomp_curname, \"%s (Init:Place/Rotate)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+    coutf("    strcpy(%ssig_message, \"%s (Init:Place/Rotate)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     
     /* Absolute rotation. */
     x = exp_tostring(comp->pos->orientation.x);
@@ -816,7 +901,7 @@ cogen_init(struct instr_def *instr)
     struct comp_iformal *par;
 
     coutf("  /* Initializations for component %s. */", comp->name);
-    coutf("  strcpy(%scomp_curname, \"%s (Init)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+    coutf("  strcpy(%ssig_message, \"%s (Init)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     /* Initialization of the component setting parameters. */
     setpar = list_iterate(comp->def->set_par);
     while((par = list_next(setpar)) != NULL)
@@ -843,6 +928,12 @@ cogen_init(struct instr_def *instr)
   }
   list_iterate_end(liter);
   
+  if(instr->nxdinfo->any) {
+    coutf("#ifdef NXDICTAPI");
+    coutf("  %snxdict_init(); ", ID_PRE);
+    coutf("#endif");
+  }
+  
   /* Output graphics representation of components. */
   coutf("    if(%sdotrace) mcdisplay();", ID_PRE);
   coutf("    %sDEBUG_INSTR_END()", ID_PRE);
@@ -850,7 +941,7 @@ cogen_init(struct instr_def *instr)
   cout("");
   
   cout("}");
-  cout("");  
+  cout("");
 }
 
 static void
@@ -915,7 +1006,7 @@ cogen_trace(struct instr_def *instr)
     List_handle statepars_handle;
 
     coutf("  /* Component %s. */", comp->name);
-    coutf("  strcpy(%scomp_curname, \"%s (Trace)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+    coutf("  strcpy(%ssig_message, \"%s (Trace)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
     coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
     /* Change of coordinates. */
     coutf("  %scoordschange(%sposr%s, %srotr%s,", ID_PRE, ID_PRE, comp->name,
@@ -1071,7 +1162,7 @@ cogen_finally(struct instr_def *instr)
     if(list_len(comp->def->finally_code->lines) > 0)
     {
       coutf("  /* User FINALLY code for component '%s'. */", comp->name);
-      coutf("  strcpy(%scomp_curname, \"%s (Finally)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+      coutf("  strcpy(%ssig_message, \"%s (Finally)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
                        comp->def->finally_code);
       cout("");
@@ -1117,7 +1208,7 @@ cogen_mcdisplay(struct instr_def *instr)
     {
       char *quoted_name = str_quote(comp->name);
       coutf("  /* MCDISPLAY code for component '%s'. */", comp->name);
-      coutf("  strcpy(%scomp_curname, \"%s (McDisplay)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+      coutf("  strcpy(%ssig_message, \"%s (McDisplay)\");", ID_PRE, comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
       coutf("  printf(\"MCDISPLAY: component %%s\\n\", \"%s\");", quoted_name);
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
                        comp->def->mcdisplay_code);
@@ -1201,7 +1292,7 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_decls(instr);
   cogen_init(instr);
   if(instr->nxdinfo->any)
-    cogen_nxdict(instr);        /* Only if NXDICT/NXDICTFILE actually used */
+    cogen_nxdict(instr);        /* Only if NXDICTFILE actually used */
   cogen_trace(instr);
   cogen_finally(instr);
   cogen_mcdisplay(instr);
