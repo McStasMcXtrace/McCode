@@ -176,6 +176,6 @@ pgplot:
 	sed 's/PLOTTER => ./PLOTTER => 0/' lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
 
-
-
+test:
+	./mcrun.fixpl --test
 
