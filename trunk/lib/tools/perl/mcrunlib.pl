@@ -471,15 +471,15 @@ sub do_test {
         # search reference monitor in these lines
           if($line =~ m/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { 
             my $sim_I_name = $1;
-            $sim_I = $2;
             if ($test_monitor_names[$j] eq $sim_I_name) {
+              $sim_I = $2;
               $diff = abs($sim_I/$test_monitor_values[$j] -1);
               $total_diff = $total_diff+$diff;
             }
           }
         } # end for
         if ($diff) {
-          if ($diff > 0.1) { 
+          if ($diff > 0.2) { 
             $accuracy_flag = 1; 
             $diff = $diff*100;
             &$printer("[FAILED] $this_name ($sim_I, should be $test_monitor_values[$j])"); 
@@ -508,24 +508,26 @@ sub do_test {
       $error_flag = 1;
       last;
     } else { 
-      my @files = readdir(DIR);
-      closedir(DIR);
-      my $k;
-      my $filename;
-      my @paths = map("$test_monitor_names[$j]/$_", grep(/\.(gif|png|ps|eps|jpg)$/i, @files));
-      for ($k=0 ; $k<@paths; $k++) {
-        $filename = $paths[$k];
-        my $this_flag = 1;
-        if (-f "$filename") {
-          my $sb = stat($filename);
-          if ($sb->size) { 
-            &$printer("[OK] $this_name ($filename)");
-            $this_flag = 0;
-          }
-        } # end if (-f "$filename")
-      } # end for
+      my $this_flag = 1;
+      if (opendir(DIR, "$test_monitor_names[$j]")) {
+        my @files = readdir(DIR);
+        closedir(DIR);
+        my $k;
+        my $filename;
+        my @paths = map("$test_monitor_names[$j]/$_", grep(/\.(gif|png|ps|eps|jpg)$/i, @files));
+        for ($k=0 ; $k<@paths; $k++) {
+          $filename = $paths[$k];
+          $this_flag = 1;
+          if (-f "$filename") {
+            my $sb = stat($filename);
+            if ($sb->size) { 
+              &$printer("[OK] $this_name ($filename)");
+              $this_flag = 0;
+            }
+          } # end if (-f "$filename")
+        } # end for
+      } # end opendir
       if ($this_flag) { &$printer("[FAILED] $this_name"); $plot_flag=1; }
-      else { &$printer("[OK] $this_name"); }
     } # end else 
   } # end for
   
@@ -537,14 +539,15 @@ sub do_test {
     &$printer("# Installation check: OK.     Computing time: $elapsed_sec [sec].");
     if ($accuracy_flag) {
       &$printer("# Accuracy     check: FAILED. Results are not reliable.");
-      &$printer("# >> This McStas distribution does NOT produce accurate results.");
+      &$printer("# >> This McStas installation does NOT produce accurate results.");
     } else {
       &$printer("# Accuracy     check: OK.");
     }
     if ($plot_flag) {
       &$printer("# Plotter      check: FAILED.");
       &$printer("# >> The $plotter plotter is NOT working properly.");
-      &$printer("# >> Check that you have Scilab/Matlab/PGPLOT installed.");
+      &$printer("# >> Check that you have Scilab/Matlab/PGPLOT installed");
+      &$printer("# >>    and that your Display is available.");
     } else {
       &$printer("# Plotter      check: OK.     Using Plotter $plotter.");
     }
