@@ -28,10 +28,10 @@ TRACE
       p2sum += p*p;
       /* Now fetch data from the Res_sample. */
       if(p != 0 && res_pi != 0 && file)
-	fprintf(file, "%g %g %g %g %g %g %g %g %g %g %g\n",
-		res_ki_x, res_ki_y, res_ki_z,
-		res_kf_x, res_kf_y, res_kf_z,
-		res_x, res_y, res_z, res_pi, p);
+        fprintf(file, "%g %g %g %g %g %g %g %g %g %g %g\n",
+                res_ki_x, res_ki_y, res_ki_z,
+                res_kf_x, res_kf_y, res_kf_z,
+                res_x, res_y, res_z, res_pi, p);
     }
   %}
 FINALLY
@@ -45,10 +45,10 @@ MCDISPLAY
 %{
   magnify("xy");
   multiline(5, (double)xmin, (double)ymin, 0.0,
-	       (double)xmax, (double)ymin, 0.0,
-	       (double)xmax, (double)ymax, 0.0,
-	       (double)xmin, (double)ymax, 0.0,
-	       (double)xmin, (double)ymin, 0.0);
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
 %}
 
 END
