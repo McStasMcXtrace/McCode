@@ -695,7 +695,13 @@ sub menu_run_simulation {
 	    "$newsi->{'Dir'}/mcstas.$ext" :
 	    "mcstas.$ext";
 	new_simulation_results($w);
-	read_sim_data($w);
+	# In case of non-PGPLOT plotter, we can not read the data from disk.
+	# Instead, we simply keep $newsi information in $inf_sim
+	if ($plotter eq 0) {
+	    read_sim_data($w); 
+	} else {
+	    $inf_sim=$newsi;
+	}
 	$inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
 	$inf_sim->{'Trace'} = $newsi->{'Trace'};
 	push @mcplot_cmd, "$MCSTAS::mcstas_config{'prefix'}mcplot$suffix";
