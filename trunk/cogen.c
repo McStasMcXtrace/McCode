@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 20, 1997
 *
-* 	$Id: cogen.c,v 1.11 1998-11-09 07:51:18 kn Exp $
+* 	$Id: cogen.c,v 1.12 1998-11-13 07:28:36 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.11  1998/11/09 07:51:18  kn
+* 	Include string.h to get string function prototypes.
+*
 * 	Revision 1.10  1998/10/09 07:47:14  kn
 * 	Fixed bug when DECLARE / INITIALIZE / FINALLY is left out from the
 * 	instrument definition.
@@ -178,7 +181,7 @@ codeblock_out(struct code_block *code)
   if(list_len(code->lines) <= 0)
     return;
   fprintf(output_handle, "#line %d \"%s\"\n",
-	  code->linenum + 1, code->filename);
+	  code->linenum + 1, code->quoted_filename);
   liter = list_iterate(code->lines);
   while(line = list_next(liter))
   {
@@ -195,7 +198,7 @@ codeblock_out_brace(struct code_block *code)
 
   if(list_len(code->lines) <= 0)
     return;
-  fprintf(output_handle, "#line %d \"%s\"\n", code->linenum, code->filename);
+  fprintf(output_handle, "#line %d \"%s\"\n", code->linenum, code->quoted_filename);
   fprintf(output_handle, "{\n");
   liter = list_iterate(code->lines);
   while(line = list_next(liter))
@@ -214,6 +217,7 @@ codeblock_new(void)
 
   palloc(cb);
   cb->filename = NULL;
+  cb->quoted_filename = NULL;
   cb->linenum = -1;
   cb->lines = list_create();
   return cb;
