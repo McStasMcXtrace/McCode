@@ -187,7 +187,7 @@ function win = mcplot_addmenu(use_common_menu)
       TK_EvalStr(tcl_script);
     elseif argn(2) > 0
       // we shall use x_choices
-      rep = x_choices(['Fig '+string(win)+': Choose something to do','Select ""Exit"" or ""Cancel"" to delete this dialog'], list(list('Action:', 1, t)));
+      rep = x_choices(['Fig '+string(win)+': Choose something to do','Select ""Exit"" or ""Cancel"" to exit McPlot/Scilab'], list(list('Action:', 1, t)));
       if length(rep), mcplot_menu_action(rep); end
       if ~length(rep), mcplot_menu_action(size(t,2)); end
       if rep == size(t,2), win=0; else win = -1; end
