@@ -12,6 +12,10 @@ die "Usage:
 
 ($npoints, $numneutrons, $simprog, $simfile, @VALS) = @ARGV;
 
+# Turn off buffering on stdout. This improves the use with the Unix
+# "tee" program to create log files of scans.
+$| = 1;
+
 $i = 0;
 $j = 0;
 @parmname = ();
@@ -27,6 +31,9 @@ while(@VALS) {
 	$minval[$j] = $2;
 	$maxval[$j] = $3;
 	$scanned[$j] = $i;
+	if($minval[j] != $maxval[j] && $npoints < 2) {
+	    die "Cannot scan variable $parmname[$i] using only one data point";
+	}
 	$j++;
     } elsif($v =~ /^([a-zA-Z0-9_]+)=(.+)$/) {
 	$parmname[$i] = $1;
