@@ -7,5 +7,5 @@
 # Peter Willendrup, Risoe, 20030922
 
 if [ ! "$1" = "none" ] ; then
-  echo exit | $1 -nw -f builder.sce 
+  $1 -nw -f buildme.sci
 fi;
