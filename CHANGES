@@ -27,6 +27,29 @@
 *
 *******************************************************************************/
 
+Changes in McStas v1.8, XXX YY, ZZZZ
+
+  License
+  - McStas is now GPL software. Note that generated code, output data and papers
+    based on these is not considered "derived work" but merely normal usage of the
+    software package.
+  - The McStas software package now includes a re-distribution of the plotlib
+    package for Scilab, (http://www.dma.utc.fr/~mottelet/myplot.html), courtesy of 
+    Stephane Mottelet (stephane.mottelet@dma.utc.fr). Plotlib is beeing distributed
+    using a BSD like license.
+  
+  Kernel (i.e. the 'mcstas' program)
+  - a PREVIOUS keyword has been implemented, for referencing e.g. position placement
+    to upsteam components.
+
+  Tools
+  - Various bugfixes, especially on the Win32 platform.
+  - mcgui now includes an option to 'scan' instrument parameters (previously only
+    possible using mcrun.pl.
+  - mcconvert.pl script has been added to the distribution, converts between 
+    Matlab and Scilab type output. Cyclic conversion, e.g. Matlab->Scilab->Matlab
+    is not supported.
+  
 Changes in McStas v1.7, Jan 17, 2003
 
   Kernel (i.e. the 'mcstas' program)
