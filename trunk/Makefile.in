@@ -61,9 +61,11 @@ TAGS:
 
 gscan: gscan.pl
 	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/gscan.pl >gscan
+	chmod +x gscan
 
 mcdisplay: mcdisplay.pl
 	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' <$(srcdir)/mcdisplay.pl >mcdisplay
+	chmod +x mcdisplay
 
 install: installdirs mcstas gscan mcdisplay $(BINOBJS)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
