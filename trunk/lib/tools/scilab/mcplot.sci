@@ -240,8 +240,16 @@ function mcplot_menu_action(k, gwin)
     case 4 then // Edit/_preferences
       xsetm();
     case 23 then // View/instrument
-      execstr('figname = ThisFigure.instrument.name','errcatch');
+      execstr('figname = ThisFigure.instrument.Source','errcatch');
       if length(figname)
+        // Strip off the .instr suffix...
+        idx=strindex(figname,'.instr');
+        if ~isempty(idx)
+          idx=idx(length(idx));
+          t=str2code(figname);
+	  t=t(1:idx-1);
+          figname=code2str(t);
+        end
         t=figname+'.scg';
         [fid,err]=fileinfo(t);
         if err
