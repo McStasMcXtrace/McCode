@@ -52,7 +52,7 @@ my $passed_arg_str = "";
 my $passed_arg_str_quit = "";
 my $inspect = "";
 my ($plotter);
-my $nowindow = 1;
+my $nowindow = -1;
 my $do_swap=0;
 
 
@@ -134,6 +134,11 @@ if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }  # ... and 
 if ($file =~ m'\.sci$' || $file =~ m'\.sce$') { $plotter=3; }
 if ($file =~ m'\.m$')   { $plotter=1; }
 if ($file =~ m'\.sim$') { $plotter=0; }
+
+if ($nowindow eq -1) {  # was not set in argument list
+  if ($plotter eq 3) { $nowindow=0; } # Will try Tcl/Tk interface with Scilab
+  else { $nowindow=1; }
+}
 
 # Added E. Farhi, March 2003. Selection of the plotter (pgplot, scilab, matlab)
 if ($plotter eq 3 || $plotter eq 4) {
