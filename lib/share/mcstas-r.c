@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.18 1999-01-28 07:56:21 kn Exp $
+* 	$Id: mcstas-r.c,v 1.19 1999-02-22 12:40:28 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.18  1999/01/28 07:56:21  kn
+* 	Support for MCDISPLAY section in component definitions.
+*
 * 	Revision 1.17  1998/11/13 07:32:15  kn
 * 	Fix bug on Win32 when allocating memory for zero instrument parameters.
 *
@@ -280,7 +283,8 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
 }
 
 
-double mcestimate_error(int N, double p1, double p2)
+double
+mcestimate_error(int N, double p1, double p2)
 {
   double pmean, n1;
   if(N <= 1)
@@ -288,6 +292,134 @@ double mcestimate_error(int N, double p1, double p2)
   pmean = p1 / N;
   n1 = N - 1;
   return sqrt((N/n1)*(p2 - pmean*pmean));
+}
+
+
+#define MCSIMINFO_NAME "mcstas.sim"
+
+void
+mcsiminfo_out(char *format, ...)
+{
+  static FILE *mcsiminfo_file;
+  static int mcinfo_file_opened = 0;
+  
+  va_list ap;
+  double x,y,z;
+
+  if(!mcinfo_file_opened)
+  {
+    mcsiminfo_file = fopen(MCSIMINFO_NAME, "w");
+    if(!mcsiminfo_file)
+      fprintf(stderr,
+	      "Warning: could not open simulation description file '%s'\n",
+	      MCSIMINFO_NAME);
+    mcinfo_file_opened = 1;
+  }
+  if(mcsiminfo_file)
+  {
+    va_start(ap, format);
+    vfprintf(mcsiminfo_file, format, ap);
+    va_end(ap);
+  }
+}
+
+
+
+void
+mcdetector_out(char *cname, double p0, double p1, double p2)
+{
+  printf("Detector: %s_I=%g %s_ERR=%g\n",
+	 cname, p1, cname, mcestimate_error(p0,p1,p2));
+}
+
+
+void
+mcdetector_out_1D(char *t, char *xl, char *yl,
+		  double x1, double x2, int n,
+		  int *p0, double *p1, double *p2, char *f, char *c)
+{
+  int i;
+  FILE *outfile = NULL;
+  int Nsum;
+  double Psum, P2sum;
+
+  /* Loop over array elements, computing total sums and writing to file. */
+  Nsum = Psum = P2sum = 0;
+  if(f)				/* Don't write if filename is NULL */
+  {
+    outfile = fopen(f,"w");
+    if(!outfile)
+      fprintf(stderr, "Warning: could not open output file '%s'.\n", f);
+  }
+  for(i = 0; i < n; i++)
+  {
+    if(outfile)
+      fprintf(outfile, "%g %d %g %g\n", x1 + (i + 0.5)/n*(x2 - x1),
+	      p0[i], p1[i], p2[i]);
+    Nsum += p0[i];
+    Psum += p1[i];
+    P2sum += p2[i];
+  }
+  if(outfile)
+    fclose(outfile);
+  /* Write data set information to simulation description file. */
+  mcsiminfo_out("\nbegin data\n  type: array_1d(%d)\n", n);
+  mcsiminfo_out("  component: %s\n", c);
+  mcsiminfo_out("  title: %s\n", t);
+  if(f)
+    mcsiminfo_out("  filename: '%s'\n", f);
+  mcsiminfo_out("  xlabel: '%s'\n  ylabel: '%s'\n", xl, yl);
+  mcsiminfo_out("  xlimits: %g %g\n", x1, x2);
+  mcsiminfo_out("end data\n");
+  /* Finally give 0D detector output. */
+  mcdetector_out(c, Nsum, Psum, P2sum);
+}
+
+
+void
+mcdetector_out_2D(char *t, char *xl, char *yl,
+		  double x1, double x2, double y1, double y2, int m,
+		  int n, int *p0, double *p1, double *p2, char *f, char *c)
+{
+  int i, j;
+  FILE *outfile = NULL;
+  int Nsum;
+  double Psum, P2sum;
+
+  /* Loop over array elements, computing total sums and writing to file. */
+  Nsum = Psum = P2sum = 0;
+  if(f)				/* Don't write if filename is NULL */
+  {
+    outfile = fopen(f,"w");
+    if(!outfile)
+      fprintf(stderr, "Warning: could not open output file '%s'.\n", f);
+  }
+  for(j = 0; j < n; j++)
+  {
+    for(i = 0; i < m; i++)
+    {
+      if(outfile)
+	fprintf(outfile, "%g ", p1[i*n + j]);
+      Nsum += p0[i*n + j];
+      Psum += p1[i*n + j];
+      P2sum += p2[i*n + j];
+    }
+    if(outfile)
+      fprintf(outfile,"\n");
+  }
+  if(outfile)
+    fclose(outfile);
+  /* Write data set information to simulation description file. */
+  mcsiminfo_out("\nbegin data\n  type: array_2d(%d,%d)\n", m, n);
+  mcsiminfo_out("  component: %s\n", c);
+  mcsiminfo_out("  title: %s\n", t);
+  if(f)
+    mcsiminfo_out("  filename: '%s'\n", f);
+  mcsiminfo_out("  xlabel: '%s'\n  ylabel: '%s'\n", xl, yl);
+  mcsiminfo_out("  xylimits: %g %g %g %g\n", x1, x2, y1, y2);
+  mcsiminfo_out("end data\n");
+  /* Finally give 0D detector output. */
+  mcdetector_out(c, Nsum, Psum, P2sum);
 }
 
 
