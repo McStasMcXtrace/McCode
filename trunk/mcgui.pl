@@ -1,10 +1,16 @@
 #! /usr/bin/perl -w
 
-if($ENV{"MCSTAS"}) {
-    use lib $ENV{"MCSTAS"};
-} else {
-    use lib "/usr/local/lib/mcstas";
+# Determine the path to the McStas system directory. This must be done
+# in the BEGIN block so that it can be used in a "use lib" statement
+# afterwards.
+BEGIN {
+    if($ENV{"MCSTAS"}) {
+	$MCSTAS::sys_dir = $ENV{"MCSTAS"};
+    } else {
+	$MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+    }
 }
+use lib $MCSTAS::sys_dir;
 
 use strict;
 use FileHandle;
@@ -649,14 +655,13 @@ sub menu_insert_component {
 }
 
 # Directories containing component definitions.
-my $sys_dir = $ENV{'MCSTAS'} ? $ENV{'MCSTAS'} : "/usr/local/lib/mcstas";
 my @comp_sources =
-    (["Source", ["$sys_dir/sources"]],
-     ["Optics", ["$sys_dir/optics"]],
-     ["Sample", ["$sys_dir/samples"]],
-     ["Monitor", ["$sys_dir/monitors"]],
-     ["Misc", ["$sys_dir/misc"]],
-     ["Other", ["$sys_dir", "."]]);
+    (["Source", ["$MCSTAS::sys_dir/sources"]],
+     ["Optics", ["$MCSTAS::sys_dir/optics"]],
+     ["Sample", ["$MCSTAS::sys_dir/samples"]],
+     ["Monitor", ["$MCSTAS::sys_dir/monitors"]],
+     ["Misc", ["$MCSTAS::sys_dir/misc"]],
+     ["Other", ["$MCSTAS::sys_dir", "."]]);
 
 # Fill out the menu for building component instances.
 sub make_insert_menu {
