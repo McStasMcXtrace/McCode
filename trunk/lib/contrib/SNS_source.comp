@@ -8,8 +8,8 @@
 *
 * %I
 * Written by: G. Granroth
-* Date: March 2004
-* Version: $Revision: 1.1 $
+* Date: July 2004
+* Version: $Revision: 1.2 $
 * Origin: SNS Project Oak Ridge National Laboratory
 *
 * A source that produces a time and energy distribution from the SNS moderator files  
@@ -27,11 +27,6 @@
 * (2) This component works purely by interpolation. Therefore be sure that Emin and 
 * Emax are within the limits of the moderator file
 *  
-* Example:
-*	SNS_source(S_filename="source_sct091_tu_02_1.dat",
-*       	   width=0.1, height=0.12, dist=1,
-*       	   xw=0.10, yh=0.24,
-*		   Emin=1.0,Emax=10.0)
 *
 * %P
 * Input parameters:
@@ -43,9 +38,6 @@
 * yh:     (m)   Height of focusing rectangle
 * Emin: (meV)   minimum energy of neutron to generate
 * Emax: (meV)   maximum energy of neutron to generate
-*
-* %L
-* <A href="http://www.sns.gov/users/instrument_systems/components/moderator/">SNS website </A>
 * %E
 *******************************************************************************/
 
@@ -78,9 +70,9 @@ DECLARE
 
   void sns_source_load(char filename[], double *xvec, double *yvec, int xcol, int ycol, int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
   {
-    FILE *fp=NULL;
+    FILE *fp;
     int idx1,idx2,idx3; /* counter for number of x, y values */
-    int jk;
+    int jk,idx3max;
     int numtvals;
     int totalvals;
     float indat[6];
@@ -92,23 +84,25 @@ DECLARE
     Ecoltmp=malloc(100000*sizeof(double));
     line=malloc(200*sizeof(char));
     /* open file */
-    
-    if (filename) fp=fopen(filename,"r");
+    printf("%s\n",filename);
+    fp=fopen(filename,"r");
     if (fp==NULL){
-      printf("SNS_source: Error opening moderator file %s.", filename);
+      printf("Error opening file");
       }
-    printf("SNS_source: open %s moderator file.\n",filename);
     /* skip header lines any line that begin with # */
     while((fgets(line,Maxlength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){      
     }
-    /* need code to back up one line */
     idx1=0;  
     /* read all lines that fit the format for the time integrated data*/
-    while(fscanf(fp," %f %f %f %f %f %f",&indat[0],&indat[1],&indat[2],&indat[3],&indat[4],&indat[5])>0){;
-      xvec[idx1]=indat[xcol];
-      yvec[idx1]=indat[ycol];
-       idx1++;
+    while(sscanf(line," %f %f %f %f %f %f",&indat[0], &indat[1], &indat[2], &indat[3],&indat[4],&indat[5])>0){
+        xvec[idx1]=indat[xcol];
+        yvec[idx1]=indat[ycol];
+        //printf("idx1 %i xvec %g yvec %g\n",idx1,xvec[idx1],yvec[idx1]);
+        idx1++;
+        fgets(line,Maxlength,fp);
     }
+    idx1--;   // correct index since it counts one line past useful data
+   // printf("idx1 %i\n",idx1);
     idx2=floor(idx1/2);
     while((idx2<idx1)&&(yvec[idx2]>0)){
       idx2++;
@@ -124,25 +118,27 @@ DECLARE
     while(strrchr(line,'#')==NULL){
       fgets(line,Maxlength,fp);
     }
-  /*find end of E data header */
+  /*find end of t data header */
     while((fgets(line,Maxlength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){      
     }
   /* read in t data */
- /*printf("Edataread\n");*/
+ /*printf("t data read start\n");*/
     idx2=0;
-    while(fgets(line,Maxlength,fp)!=NULL){    
-      jk=sscanf(line," %f %f %f %f",&indat[0], &indat[1], &indat[2], &indat[3]);
-      if ((line!=NULL)&&(jk>3)){
-        tcoltmp[idx2]=indat[0];
-        Ecoltmp[idx2]=indat[1];
-        Icoltmp[idx2]=indat[2];
-       /* printf("%d %d %g %g %g %g\n",idx2,jk,tcoltmp[idx2],Ecoltmp[idx2],Icoltmp[idx2],indat[3]);*/
-        idx2++;
-        }
-     }    
+   // while(fgets(line,Maxlength,fp)!=NULL){ 
+   do {   
+        jk=sscanf(line," %f %f %f %f",&indat[0], &indat[1], &indat[2], &indat[3]);
+          if ((line!=NULL)&&(jk>3)){
+            tcoltmp[idx2]=indat[0];
+            Ecoltmp[idx2]=indat[1];
+            Icoltmp[idx2]=indat[2];
+           // printf("%d %d %g %g %g %g\n",idx2,jk,tcoltmp[idx2],Ecoltmp[idx2],Icoltmp[idx2],indat[3]);
+            idx2++;
+          }
+    }
+    while(fgets(line,Maxlength,fp)!=NULL);    
     fclose(fp);
     totalvals=idx2+1;
-    printf("SNS_source: total vals: %d\n",totalvals);
+    printf("total vals: %d\n",totalvals);
     /* reformat data into an Ecol, a tcol, and an I matrix*/
     idx1=0;idx2=0;idx3=0;
     Ecol[idx2]=Ecoltmp[idx1];  
@@ -157,6 +153,7 @@ DECLARE
          idx1++;idx3++; 
       }    
       else{
+        idx3max=idx3;
         idx2++;idx3=0;
         Ecol[idx2]=Ecoltmp[idx1];
         tcol[idx3]=tcoltmp[idx1];
@@ -164,7 +161,8 @@ DECLARE
         idx1++;
       }
     }
-   *ntvals=idx3;*nEvals=idx2;
+   *ntvals=idx3max+1;*nEvals=idx2;
+   printf("ntvals: %i idx: %i\n",*ntvals, idx3);
    free(Icoltmp);free(tcoltmp);free(Ecoltmp);free(line);
   }
 /*-------------------------------------------------------------
@@ -190,7 +188,7 @@ double linfuncint(double xdes, double xylen, double *vecx, double *vecy)
      idx++;
     }
   if (idx>xylen){
-      printf("SNS_source: error exceeded vector length");
+      printf("error exceeded vector length");
     }
   if (vecx[idx]==xdes){
       return vecy[idx];
@@ -224,7 +222,7 @@ double quadfuncint(double xdes, double xylen, double *vecx, double *vecy)
      idx++;
     }
   if (idx>xylen){
-      printf("SNS_source: error exceeded vector length");
+      printf("error exceeded vector length");
     }
 
    if (vecx[idx]==xdes){
@@ -320,7 +318,7 @@ void Pcalc(double (*func)(double),double llim, double hlim, double *xvec, double
      
   }
   if (idx1<1){
-   printf("SNS_source: Error: lower energy limit is out of bounds\n");
+   printf("Error: lower energy limit is out of bounds\n");
    exit(0);
   }
   *idxstart=idx1;  
@@ -431,8 +429,6 @@ INITIALIZE
   ltlim=0.1;
   htlim=1.8e3;
  /* read file */
-  if (!S_filename) exit(fprintf(stderr,"SNS_source: null moderator file.
-  Exiting.\n"));
   printf("%s%s\n","Loading moderator file ",S_filename);
    sns_source_load(S_filename,inxvec,inyvec,0,2,&xylength,tcol,Ecol,Imat,&ntvals,&nEvals);
  /* calculate probabilty distribution function points for use in interpolation routine */
@@ -443,11 +439,12 @@ INITIALIZE
  INorm2=integ1(xonly,Emin/1000.0,Emax/1000.0,0.001);
   Pcalc(xonly,llim,hlim,inxvec,Pvec,xylength,&idxstart,&idxstop);
   /*calculate probability distribution as a function of t for each energy value */
-  tyval[0]=Imat[0][0];  
-  printf("%g \n",tyval[0]); 
+  tyval[0]=Imat[0][0]; 
+  //printf("outntvals %i\n",ntvals); 
+  //printf("%g \n",tyval[0]); 
   for(idx1=0;idx1<nEvals;idx1++){
       for(idx2=0;idx2<ntvals;idx2++){
-        printf("idx2 %d idx1 %d tyval: %g\n",idx2,idx1,Imat[idx2][idx1]);
+        //printf("idx2 %d idx1 %d tyval: %g\n",idx2,idx1,Imat[idx2][idx1]);
         tyval[idx2]=Imat[idx2][idx1];
         txval[idx2]=tcol[idx2];        
       }
@@ -466,7 +463,7 @@ INITIALIZE
     free(Imat[idx1]);
   }
   free(Imat);
-  printf("SNS_source: Finished calculating probability distribution\n");
+printf("Finished calculating probability distribution\n");
 
 %}
 TRACE
