@@ -82,11 +82,30 @@ sub read_instrument {
 	      write_process("mcdisplay('Init');\n");
 	      write_process("global INSTRUMENT;");
 	      write_process("INSTRUMENT.descr='$sim_cmd';\n");
+              # Possibly, set firstcomp + lastcomp
+	      if ($first) {
+		write_process("INSTRUMENT.firstcomp='$first';\n");
+	      }
+	      if ($lasst) {
+		write_process("INSTRUMENT.lastcomp='$last';\n");
+	      }
 	    }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
 	      # Initialize scilab struct...
 	      write_process("exec('$MCSTAS::sys_dir/tools/scilab/mcdisplay.sci',-1);\n");
 	      write_process("INSTRUMENT.descr='$sim_cmd';\n");
+	      # Possibly, set firstcomp + lastcomp
+	      if ($first) {
+		write_process("INSTRUMENT.firstcomp='$first';\n");
+	      }
+	      if ($lasst) {
+		write_process("INSTRUMENT.lastcomp='$last';\n");
+	      }
+              if ($save) {
+		write_process("INSTRUMENT.save=1;\n");
+	      } else {
+		write_process("INSTRUMENT.save=0;\n");
+	      }
 	    }
 	} elsif($st == 1 && /^COMPONENT:\s*"([a-zA-Z0-9_æøåÆØÅ]+)"\s*/) {
             $comp = $1;
@@ -196,7 +215,17 @@ sub read_instrument {
 	      # Matlab 'End of instrument'
 	      write_process("mcdisplay('Load');\n");
 	      write_process("PlotInstrument('init');\n");
-	      write_process("wait(INSTRUMENT.fig);\n");
+	      # Check if we were called with --save option, output matlab figure if so...
+	      if ($save) {
+		# Clone the graph to another window...
+		write_process("ax=gca;\n");
+		write_process("h=figure('numbertitle','off','name','$sim_cmd McStas Instrument')\n;");
+		write_process("copyobj(ax,h);\n");
+		write_process("saveas(h,'$sim_cmd.fig','fig');\n");
+		write_process("delete(h);\n");
+	      } else {
+		write_process("wait(INSTRUMENT.fig);\n");
+	      }
 	    }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} == 3 || $MCSTAS::mcstas_config{'PLOTTER'} == 4) {
 	      # Scilab 'End of instrument'
@@ -376,7 +405,8 @@ sub read_neutron {
             last;
 	} elsif (/^Detector:/){
 	  if ($MCSTAS::mcstas_config{'PLOTTER'} == 1 || $MCSTAS::mcstas_config{'PLOTTER'} == 3) {
-	    if ($EndFlag == 0) {
+	    # Should only be done if finished, and not called with --save flag...
+	    if ($EndFlag == 0 && !$save) {
 	      my $main = new MainWindow;
 	      $main->Label(-text => 'Simulation ended.'
 			  )->pack;
@@ -723,6 +753,9 @@ $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
 # Check command line arguments.
 
 undef $inspect;
+undef $first;
+undef $last;
+undef $save;
 undef $direct_output;
 undef $sim_cmd;
 undef $plotter;
@@ -743,6 +776,12 @@ for($i = 0; $i < @ARGV; $i++) {
     } elsif(($ARGV[$i] =~ /^-i([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
             ($ARGV[$i] =~ /^--inspect=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
         $inspect = $1;
+    } elsif($ARGV[$i] =~ /^--first=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
+        $first = $1;
+    } elsif($ARGV[$i] =~ /^--last=([a-zA-ZæøåÆØÅ0-9_]+)$/) {
+        $last = $1;
+    } elsif($ARGV[$i] eq "--save") {
+        $save = 1;
     } elsif(($ARGV[$i] =~ /^-p([a-zA-ZæøåÆØÅ0-9_]+)$/) ||
 	      ($ARGV[$i] =~ /^--plotter=([a-zA-ZæøåÆØÅ0-9_]+)$/)) {
         $plotter = $1;	
@@ -761,6 +800,12 @@ die "Usage: mcdisplay [-mzipf][-gif|-ps|-psc] Instr.out [instr_options] params
  -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,Scilab,Matlab}
  -fFNAME   --file=FNAME      Outout graphcis commands to file FNAME
                              (Only used when PLOTTER = {Scilab, Matlab})
+           --first=COMP      First component to visualize {Scilab, Matlab}
+           --last=COMP       Last component to visualize {Scilab, Matlab}
+           --save            Output a Scilab/Matlab figure file and exit
+                             (Filename is Instr.scf / Instr.fig). Figure
+                             files are used by mcgui.pl for visualising the
+                             instrument. With PGPLOT, --save is nonfunctional.
  -gif|-ps|-psc               Export figure as gif/b&w ps/color ps and exit
  When using -ps -psc -gif, the program writes the hardcopy file
  and then exits (plotter PGPLOT only).
@@ -874,9 +919,6 @@ while(!eof(IN)) {
     my $ret;
     do {
         $ret = plot_instrument($int_mode, \%instr, \%neutron);
-	if ($neutron{'EndFlag'} == 1) {
-	  system("touch myfile");
-	}
 	if ($MCSTAS::mcstas_config{'PLOTTER'} == 0) {
 	  if ($int_mode == 1) { $ret =2; print STDERR "Wrote \"$pg_devname\"\n"; }
 	  if($ret == 3 || $ret == 4 || $ret == 5) {
