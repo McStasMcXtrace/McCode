@@ -84,6 +84,8 @@ my $start=-1;                   # first scan number to run in slave mode
 my $end=-1;                     # last scan number to run in slave mode
 my $multi=0;                    # multi machine mode
 my @hostlist = ();              # list of remote machines to run on...
+my $mpi = 0;			# how many node used with MPI? 0 implies no MPI.
+my $mpi_machines = "";		# name of a file describing which machine to use with MPI
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -157,6 +159,11 @@ sub parse_args {
 	    } else {
 		$multi=1;
 	    }
+	} elsif (/^--mpi\=(.*)$/) {
+	    print "Using MPI\n";
+	    $mpi = $1;
+	} elsif (/^--mpi-machines=(.*)$/) {
+	    $mpi_machines = $1;
 	}
         # Standard McStas options needing special treatment by mcrun.
         elsif(/^--dir\=(.*)$/ || /^-d(.+)$/) {
@@ -204,6 +211,21 @@ sub parse_args {
             }
         }
     }
+
+    # Adapt parameters to MPI (if used)
+    if ($mpi >= 1) {
+	$multi = 0;
+	$MCSTAS::mcstas_config{CC} = "mpicc";
+	$MCSTAS::mcstas_config{CFLAGS} = $MCSTAS::mcstas_config{CFLAGS} . " -DUSE_MPI ";
+	if ($mpi_machines eq "") {
+	    my $HOME = $ENV{'HOME'};
+	    $mpi_machines = "$HOME/.mcstas-hosts";
+	    if (!-e $mpi_machines) {
+		die "mcrun: No MPI hosts list! Define $HOME/.mcstas-hosts or --mpi-machines=<file>!";
+	    }
+	}
+    }
+
     if ($data_dir && $slavedir) {
 	$data_dir="$slavedir$data_dir";
     }
@@ -215,11 +237,7 @@ sub parse_args {
     if ($mcstas_format =~ /0/) { $mcstas_format = "McStas PGPLOT"; }
     elsif ($mcstas_format =~ /1/ || $mcstas_format =~ /2/) { $mcstas_format = "Matlab"; }
     elsif ($mcstas_format =~ /3/ || $mcstas_format =~ /4/) { $mcstas_format = "Scilab"; }
-      
-    if ($cflags eq "") { $cflags = "default, e.g. -O"; }
-    if ($cc eq "") { $cc = "default, e.g. gcc"; }
-    if ($mcstas_format eq "") { $mcstas_format = "default, e.g. Scilab"; }
-    
+
     # Check if this is a multi-machine run
     if ($multi == 1) {
 	# Assume that this is unix...
@@ -288,6 +306,8 @@ sub parse_args {
    -M        --multi          Spawn simulations to multiple machine grid.
                               See the documentation for more info. 
                               --multi Not supported on Win32.
+   --mpi=NB_CPU               Spread simulation over NB_CPU machines using MPI
+   --mpi-machines=MACHINES    Read machine names from file MACHINES
 
 This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be 
@@ -336,6 +356,7 @@ sub exec_sim {
     my (@options) = @_;
     my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params));
     my $cmd;
+
     # ToDo: This is broken in that it does not show the proper quoting
     # that would be necessary if the user actually wanted to run the
     # command manually. (Note that the exec() call is correct since it
@@ -351,7 +372,14 @@ sub exec_sim {
 	}
 	exec $cmd;
     } else {
-	exec @cmdlist;
+	if ($mpi >= 1) {
+	    $cmd = "mpirun -np $mpi -machinefile $mpi_machines ./@cmdlist";
+	} else {
+	    $cmd = "./@cmdlist";
+	}
+	print "Real command: '$cmd'\n";
+	exec $cmd;
+#	exec @cmdlist;
     }
 }
 
@@ -1061,4 +1089,3 @@ if($numpoints == 1) {
 	do_scan($scan_info);
     }
 }
-

@@ -17,9 +17,17 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.57 2004-07-16 14:59:03 farhi Exp $
+* $Id: mcstas-r.h,v 1.58 2004-07-30 14:49:15 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.57  2004/07/16 14:59:03  farhi
+*	MPI support. Requires to have mpi installed, and compile with
+*	   CC=mpicc and CFLAGS = -DUSE_MPI.
+*       Work done by Christophe Taton from ENSIMAG/Grenoble
+*	Execute (using mpich) with: 
+*          mpirun -np NumNodes -machinefile <file> instr.out parameters...
+*	where <file> is text file that lists the machines to use
+*	
 *	Revision 1.56  2004/06/30 12:11:29  farhi
 *	Updated obsolete MCDETECTOR_OUT #define -> mcdetector_out_0d
 *	
@@ -74,7 +82,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.57 $"
+#define MCSTAS_R_H "$Revision: 1.58 $"
 
 #include <math.h>
 #include <string.h>
