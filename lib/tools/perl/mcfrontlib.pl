@@ -113,6 +113,9 @@ sub read_simulation_info {
 	} elsif(/^\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*"(.*)"\s*$/i){
 	    my ($param, $val) = ($1, $2);
 	    $inf->{'Params'}{$param} = str_unquote($val);
+	} elsif(/^\s*Param:\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*=\s*(.*?)\s*$/i){
+	    my ($param, $val) = ($1, $2);
+	    $inf->{'Params'}{$param} = str_unquote($val);
 	} elsif(/^\s*end\s+simulation\s*$/i) {
 	    last;
 	} else {
