@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.101 2004-11-16 13:35:47 farhi Exp $
+* $Id: mcstas-r.c,v 1.102 2004-11-29 14:29:02 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.101  2004/11/16 13:35:47  farhi
+* Correct HTML -> VRML data format pre selection. May be overridden when using the --format_data option (currently undocumented)
+*
 * Revision 1.100  2004/09/30 08:23:41  farhi
 * Correct pointer mismatch in 'xlimits' for PGPLOT data files
 *
@@ -2376,6 +2379,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
             }
         }
       /* give 0D detector output. */
+      if ((!filename || !strlen(filename)) && title && strlen(title)) filename = title;
       mcdetector_out(parent, Nsum, Psum, P2sum, filename);
     }
   free(pre);
