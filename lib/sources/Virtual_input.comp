@@ -1,70 +1,83 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package: Source_file.comp
+* McStas, the neutron ray-tracing package: Virtual_input.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
-* Component: Source_file
+* Component: Virtual_input
 *
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version: 0.1
-* Origin: McStas 1.5//<a href="http://www.ill.fr">ILL</a>
+* Version:  $Revision: 1.1 $
+* Origin: McStas release 1.5.1/<a href="http://www.ill.fr">ILL</a>
 *
 * Source that generates neutron events from an ascii/binary 'source' file.
 *
 * %D
-* This component reads neutron events store in a file, and send them into
+*   This component reads neutron events stored in a file, and sends them into
 * the instrument. It thus replaces a Source component, using a previously
-* computed neutron set. 
-* The input file may be 
-* 1-text column formatted with lines containing at least 11 values in the order:
-*       x y z vx vy vz t sx sy sz p
-*   or
-*       x y z vx vy vz t sx sy sz p p2
-*   Such files may be generated for instance by Monitor_nD with 
-*       Monitor_nD(options="list=10000 source")
-* 2-Vitess files (binary files of Neutron structure records of 'double')
-* 3-float binary files (with the 12 values 'x y z vx vy vz t sx sy sz p p2')
-* It is specially useful to generate a virtual source at a point that few
+* computed neutron set. The 'source' file type may be either of text or binary
+* format. The component may recognize its format automatically, but you may 
+* force the file type ('type' parameter). The number of neutron events for the
+* simulation is set to the length of the 'source' file times the
+* repetition parameter 'repeat_count' (1 by default).
+*   It is particularly useful to generate a virtual source at a point that few
 * neutron reach. A long simulation will then only be performed once, to create
 * the 'source' file. Further simulations are much faster if they start from
 * this low flux position with the 'source' file.
+*
+* Possible file formats are:
+* 1-text column formatted with lines containing at least 11 values in the order:
+*       p x y z vx vy vz t sx sy sz
+*   Such files may be generated for instance by Monitor_nD with 
+*       Monitor_nD(options="list all source", filename="MySource.list")
+* 2-Vitess files (binary files of Neutron structure records of 'double')
+*   Such files may be generated for instance by Vitess_output with 
+*       Vitess_output(outname="MySource.vit", bufsize = 10000)
+* 3-float binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
+*   Such files may be generated for instance by Vitess_output with 
+*       Monitor_nD(options="list all source binary", filename="MySource.bin")
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
 *   COMPONENT MySourceCreator = Monitor_nD(
 *     filename = "MySource.list", options="list all source")
-* at the position where will be the Source_file.
+* at the position where will be the Virtual_input.
 * The output file is text formatted with:[x y z vx vy vz t sx sy sz p p2] lines 
-* and is about 90 bytes per neutron. A binary float format (half size) is 
+* and is about 83 bytes per neutron. A binary float format (44 byte/n) is 
 * obtained with Monitor_nD(options="list all source binary").
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
-* Vitess simulation.
+* Vitess simulation (96 bytes per neutron).
 * Then unactivate the component MySourceCreator (add 'unactivate' in options),
 * as well as your real source, and put the new instrument source:
 *   COMPONENT Source = Source_file(
 *     input="MySource.list")
-* at the relevant position 
+* at the same position as 'MySourceCreator'. 
 *
 * %P
 * INPUT PARAMETERS
-* input:        (str)
+* input:        (str) name of the neutron input file, or stdin if left to 0. 
 * 
 * Optional input parameters:
-* repeat_count: (1) Number of times the source must be generated.
-*                   0 unactivates the component
+* bufsize:      (records)   Size of neutron input buffer. 0 for 'use all'.
+* repeat_count: (1)         Number of times the source must be generated.
+*                           0 unactivates the component
+* type:         (str) may be "text", "Vitess" or "float" to force file type.
+*                     Vitess files are prioritary when input is sdtin, 
+*                     else text files are prioritary.
 *
 * OUTPUT PARAMETERS
-* 
+*
+* finished:     Set to 1 when the last neutron has been read [int]  
+*
 * %E
 *
 *******************************************************************************/
 
-DEFINE COMPONENT Source_file
-DEFINITION PARAMETERS (input=0)
-SETTING PARAMETERS (repeat_count = 1)
-OUTPUT PARAMETERS (file, source, rep, pos, FileType)
+DEFINE COMPONENT Virtual_input
+DEFINITION PARAMETERS (input=0, type=0)
+SETTING PARAMETERS (repeat_count = 1, bufsize=0)
+OUTPUT PARAMETERS (file, source, rep, pos, FileType, read_s_file, finished)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
@@ -163,24 +176,32 @@ DECLARE
   #include <sys/stat.h>
   
   double*
-  read_s_file(char *file, double *size)
+  read_s_file(char *file, double *size, double buffer_size)
   {
     FILE   *f;
     double  i=0;
     int     s_block=0;
-    int     block_size=100000;
     double *s;
     
+    if (buffer_size == 0) buffer_size = 10000;    
     *size=0;
 
-    f = fopen(file, "r");
+    if (file)
+      f = fopen(file, "r");
+    else
+      f = stdin;
+      
     if(!f)
     {
-      fprintf(stderr, "Source_file: Error: file '%s' cannot be opened/found.\n",
-              file);
+      fprintf(stderr, "Virtual_input: Error: file '%s' cannot be opened/found.\n", file);
       exit(1);
     }
-    s = (double*)malloc((block_size)*11*sizeof(double));
+    s = (double*)malloc((buffer_size)*11*sizeof(double));
+    if(!s)
+    {
+      fprintf(stderr, "Virtual_input: Error: Cannot allocate neutron buffer\n");
+      exit(1);
+    }  
     while(!feof(f))
     {
       double fx, fy, fz, fvx, fvy, fvz, ft, fsx, fsy, fsz, fp;
@@ -188,9 +209,8 @@ DECLARE
       int    ret;
       char   Buffer[1024];
 
-      ret = fscanf(f, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
-        &fx, &fy, &fz, &fvx, &fvy, &fvz, &ft, &fsx, &fsy, &fsz, &fp, &dummy);
- 
+      ret = fscanf(f, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
+        &fp, &fx, &fy, &fz, &fvx, &fvy, &fvz, &ft, &fsx, &fsy, &fsz);
       if(ret == EOF)
         break;
       if(ret < 11)
@@ -203,21 +223,21 @@ DECLARE
         long j;
         
         j = (long)i;
-        if (s_block>=block_size)
+        if (s_block>=buffer_size)
         {
            s_block = 0;
-           s = (double*)realloc(s, (long)(i+block_size)*11*sizeof(double));
+           s = (double*)realloc(s, (long)(i+buffer_size)*11*sizeof(double));
            if(!s)
             {
-              fprintf(stderr, "Source_file: Error: Out of memory!\n");
+              fprintf(stderr, "Virtual_input: Error: Cannot re-allocate neutron buffer\n");
               exit(1);
             }  
         }
-        s[11*j+0]  = fx;  s[11*j+1] = fy;  s[11*j+2] = fz; 
-        s[11*j+3]  = fvx; s[11*j+4] = fvy; s[11*j+5] = fvz; 
-        s[11*j+6]  = ft;
-        s[11*j+7]  = fsx; s[11*j+8] = fsy; s[11*j+9] = fsz; 
-        s[11*j+10] = fp;
+        s[11*j+1]  = fx;  s[11*j+2] = fy;  s[11*j+3] = fz; 
+        s[11*j+4]  = fvx; s[11*j+5] = fvy; s[11*j+6] = fvz; 
+        s[11*j+7]  = ft;
+        s[11*j+8]  = fsx; s[11*j+9] = fsy; s[11*j+10] = fsz; 
+        s[11*j+0]  = fp;
         i++;  s_block++;
       }
     } /* end while */
@@ -227,17 +247,17 @@ DECLARE
     s = (double*)realloc(s, (long)(i+1)*11*sizeof(double) );
     if(!s)
     {
-      fprintf(stderr, "Source_file: Error: Out of memory!\n");
+      fprintf(stderr, "Virtual_input: Error: Cannot re-allocate neutron buffer (final)\n");
       exit(1);
     }
     return (s);
   }
   
-  double *source;
+  double *source;   /* Neutron input buffer */
   double  length, pos;
-  int     rep;
+  int     rep;      /* Neutron repeat count */
   char    FileType[32];
-  
+  int finished;			/* Set to 1 when last neutron read */
 %}
 
 INITIALIZE
@@ -245,39 +265,51 @@ INITIALIZE
   struct stat stfile;
   long   filesize, i, nelements;
   FILE *f;
-  
-  fprintf(stderr,"Source_file: this component is OBSOLETE (not maintained)\n");
-  fprintf(stderr,"Source_file: rather use sources/Virtual_input\n");
+  char   FileName[256];
   
   length=0;
   rep   =0;
   source=NULL;
   strcpy(FileType,"");
-
+  if (input)
+    strcpy(FileName, input);
+  else 
+    strcpy(FileName, "[stdin]"); 
+    
   if (repeat_count != 0)
   {
-    /* Open neutron input text file. */
-    if(input)
-      source = read_s_file(input, &length);
+    /* Try to Open neutron input text file. */
+    if((input && type == NULL) || (type && !strcmp(type,"text"))) 
+      source = read_s_file(input, &length, bufsize);
 
-    if(length == 0 || source == NULL)
+    /* Try to Open neutron input binary file. */
+    if(length == 0 || source == NULL || (type && !strcmp(type,"Vitess")) || (type && !strcmp(type,"float")) )
     {
-      stat(input,&stfile);
-	    filesize = stfile.st_size;
-      f = fopen(input, "r"); /* must exist else exit(-1) in read_s_file */
+      if (input)
+      {
+        stat(input,&stfile);
+	      filesize = stfile.st_size;
+        f = fopen(input, "r"); /* must exist else exit(-1) in read_s_file */
+      }
+      else
+      {  f = stdin; 
+         if (bufsize ==0) bufsize = 10000;
+         filesize = bufsize*sizeof(Neutron);  }
       
       /* try to read Vitess files */
-      if (fmod(filesize, sizeof(Neutron)) == 0)
+      if ((fmod(filesize, sizeof(Neutron)) == 0) && (type == NULL || !strcmp(type,"Vitess")))
       {
         strcpy(FileType, "Vitess");
         nelements = (long)(filesize/sizeof(Neutron));
         source = (double*)malloc(filesize);
-        if (source==NULL || !fread(source, sizeof(Neutron), nelements, f))
+        nelements = fread(source, sizeof(Neutron), nelements, f);
+        if (source==NULL || !nelements)
         {
-          fprintf(stderr,"Source_file: error reading %i elements in Vitess file '%s'\n", nelements, input);
+          fprintf(stderr,"Virtual_input: error reading %i elements in Vitess file '%s'\n", nelements, FileName);
           exit(-1);
         }
         length = (double)nelements;
+        source = (double*)realloc(source, length*sizeof(Neutron));
       }
       else
       { /* try to read float bin files */
@@ -286,12 +318,14 @@ INITIALIZE
           strcpy(FileType, "float");
           nelements = (long)(filesize/sizeof(float));
           source = (double*)malloc(filesize);
-          if (source==NULL || !fread(source, sizeof(float), nelements, f))
+          nelements = fread(source, sizeof(float), nelements, f);
+          if (source==NULL || !nelements)
           {
-            fprintf(stderr,"Source_file: error reading %i elements in float file '%s'\n", nelements, input);
+            fprintf(stderr,"Virtual_input: error reading %i elements in float file '%s'\n", nelements, FileName);
             exit(-1);
           }
-          length = (double)nelements/12;
+          length = (double)floor(nelements/11);
+          source = (double*)realloc(source, length*sizeof(float)*11);
         }
       }
       fclose(f);
@@ -301,15 +335,15 @@ INITIALIZE
     
     if (length == 0)
     {
-      fprintf(stderr,"Source_file: Can not read neutron events from %s file '%s'\n", FileType, (long)length, input);
+      fprintf(stderr,"Virtual_input: Can not read neutron %i events from %s file '%s'\n", (long)length, FileType, FileName);
       exit(-1);
     }
     
-      printf("Source_file: Read %i neutron events from %s file '%s'\n", (long)length, FileType, input);
+      printf("Virtual_input: Read %i neutron events from %s file '%s'\n", (long)length, FileType, FileName);
       
     pos = 0;
-    
-    mcset_ncount(length*repeat_count);
+    if (bufsize != 0 && bufsize <= length) length = bufsize;    
+    if (mcget_ncount() > length*repeat_count) mcset_ncount(length*repeat_count);
   }
 %}
 
@@ -319,10 +353,10 @@ TRACE
   if (repeat_count)
   {
     if (pos >= length)
-      { rep++; pos = 0; }
+      { rep++; pos = 0; } /* Reposition at start of buffer */
 
     if (rep > repeat_count)
-      ABSORB;
+      { finished = 1; ABSORB; }
     else
     {
       long i;
@@ -341,27 +375,28 @@ TRACE
       else
       {
         if (!strcmp(FileType, "text")) 
-        {  /* &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p */
+        {  /* &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p (&dummy was not stored) */
           double *s;
           s = (double*)source;
-          x  = s[11*i+0]   ; y  = s[11*i+1] ; z  = s[11*i+2];
-          vx = s[11*i+3]   ; vy = s[11*i+4] ; vz = s[11*i+5];
-          t  = s[11*i+6]   ;
-          sx = s[11*i+7]   ; sy = s[11*i+8] ; sz = s[11*i+9];
-          p  = s[11*i+10]  ;
+          x  = s[11*i+1]   ; y  = s[11*i+2] ; z  = s[11*i+3];
+          vx = s[11*i+4]   ; vy = s[11*i+5] ; vz = s[11*i+6];
+          t  = s[11*i+7]   ;
+          sx = s[11*i+8]   ; sy = s[11*i+9] ; sz = s[11*i+10];
+          p  = s[11*i+0]  ;
         }
         else 
         { /* &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p, &p2 */
           float *s;
           s = (float*)source;
-          x  = s[12*i+0]   ; y  = s[12*i+1] ; z  = s[12*i+2];
-          vx = s[12*i+3]   ; vy = s[12*i+4] ; vz = s[12*i+5];
-          t  = s[12*i+6]   ;
-          sx = s[12*i+7]   ; sy = s[12*i+8] ; sz = s[12*i+9];
-          p  = s[12*i+10]  ;
+          x  = s[11*i+1]   ; y  = s[11*i+2] ; z  = s[11*i+3];
+          vx = s[11*i+4]   ; vy = s[11*i+5] ; vz = s[11*i+6];
+          t  = s[11*i+7]   ;
+          sx = s[11*i+8]   ; sy = s[11*i+9] ; sz = s[11*i+10];
+          p  = s[11*i+0]  ;
         }
       }
       pos++;
+      p /= repeat_count;
     }
     SCATTER;
   }
@@ -377,9 +412,9 @@ MCDISPLAY
 %{
   /* A bit ugly; hard-coded dimensions. */
   magnify("");
-  line(0,0,0,0.2,0,0);
-  line(0,0,0,0,0.2,0);
-  line(0,0,0,0,0,0.2);
+  line(0,0,0,0.1,0,0);
+  line(0,0,0,0,0.1,0);
+  line(0,0,0,0,0,0.1);
 %}
 
 END

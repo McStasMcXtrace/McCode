@@ -7,7 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.26 2003-01-20 16:03:33 pkwi Exp $
+* 	$Id: mcstas.h,v 1.27 2003-01-21 07:50:44 pkwi Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -368,7 +368,7 @@ struct comp_def
     int  comp_inst_number; /* ADD: E. Farhi Sep 20th, 2001 Number of this comp in the instrument  */
     List def_par, set_par, out_par, state_par; /* Formal parameters. */
     char **polarisation_par;	/* Polarisation state formal parameters. */
-    struct code_block *uniq_code; /* Unique Declaration code. */
+    struct code_block *share_code; /* Unique Declaration code (shared). */
     struct code_block *decl_code; /* Declaration code. */
     struct code_block *init_code; /* Initializeation code. */
     struct code_block *trace_code; /* Ray-trace simulation code. */
@@ -389,7 +389,7 @@ struct comp_inst
     char *name;			/* Instance name. */
     struct comp_def *def;	/* Pointer to definition. */
     struct comp_position *pos;	/* Component position (place & orientation). */
-    struct code_block *postcode; /* ADD: E. Farhi Sep 20th, 2001 code following comp instance */ 
+    struct code_block *extend; /* ADD: E. Farhi Sep 20th, 2001 code following comp instance */ 
     int    index;  /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
     struct group_inst *group;       /* ADD: E. Farhi Sep 24th, 2001 group name in which comp is */
     Symtab defpar, setpar;	/* Parameter values. */

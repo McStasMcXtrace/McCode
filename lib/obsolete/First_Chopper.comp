@@ -2,8 +2,8 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.5 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.6 $
+* Origin: McStas release (Obsolete)
 *
 * First disk chopper after a continuous neutron source.
 *
@@ -39,6 +39,9 @@ DECLARE
 
 INITIALIZE
  %{
+   fprintf(stderr,"First_Chopper: this component is OBSOLETE (not maintained)\n");
+  fprintf(stderr,"First_Chopper: rather use optics/Chopper with IsFirst=1\n");
+  
       /* time between two pulses */
       Tg=2.0*PI/fabs(f)/n;
       /* how long can neutrons pass the Chopper at a single position? */

@@ -8,8 +8,8 @@
 *
 * Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 08 March 2000
-* Version: $Revision: 1.1 $
-* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
+* Version: $Revision: 1.2 $
+* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>) (Obsolete)
 *
 * Non-flat monochromator crystal with multiple scattering
 *
@@ -75,6 +75,10 @@ INITIALIZE
 	/*
 	double my,r0,l,Mono_d,v;
 	*/
+  
+  fprintf(stderr,"Monochromator0: this component is OBSOLETE (not maintained)\n");
+fprintf(stderr,"Monochromator0: rather use optics/Mosaic_anisotropic\n");
+
   	tmp7=0;
 	tmp8=0;
     	z_edge=0;

@@ -72,6 +72,9 @@ DECLARE
   
 INITIALIZE
 %{
+  fprintf(stderr,"Mon_2foc: this component is OBSOLETE (not maintained)\n");
+  fprintf(stderr,"Mon_2foc: rather use optics/Monochromator_2foc\n");
+  
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
   if (ywidth != 0) yheight = ywidth;  /* compatibility with old Mon_2foc */

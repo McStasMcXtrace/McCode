@@ -6,7 +6,7 @@
 *
 *	Author: K.N.			Aug  8, 1997
 *
-*	$Id: coords.c,v 1.4 2003-01-20 16:03:33 pkwi Exp $
+*	$Id: coords.c,v 1.5 2003-01-21 07:50:44 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.3  2000/07/27 09:06:11  kn

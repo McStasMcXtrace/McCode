@@ -10,7 +10,7 @@
 * Written by: Kristian Nielsen
 * Date: January 2000
 * Origin: McStas 1.5
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 *
 * Rectangular/circular beam stop.
 *
@@ -38,8 +38,15 @@
 
 DEFINE COMPONENT Beamstop
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05,radius=0)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0,radius=0)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+INITIALIZE
+%{
+  if (xmin == 0 && xmax == 0 && ymin == 0 & ymax == 0 && radius == 0)
+    { fprintf(stderr,"Beamstop: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
+  
+%}
 
 TRACE
 %{

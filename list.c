@@ -5,7 +5,7 @@
 *
 *	Author: K.N.			Jul  3, 1997
 *
-*	$Id: list.c,v 1.5 2003-01-20 16:03:33 pkwi Exp $
+*	$Id: list.c,v 1.6 2003-01-21 07:50:44 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.4  2001/03/15 15:11:13  peo

@@ -1,0 +1,227 @@
+/******************************************************************
+*
+* McStas, the neutron ray-tracing package: Fermi_Chopper.comp
+*         Copyright 1999-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+*  Component: Fermi_Chopper
+*
+* %Identification
+* Written by: Andrew Garrett
+* Date: 26 Nov 1998
+* Origin: McStas 1.5/KEK (Japan)
+* Version: 1.01
+* Modified by: EF, Mar 08th, 2000 : corrected the 'max' pb
+*
+*  Fermi Chopper with curved slits. 
+*
+* %Description
+*  Fermi Chopper with curved slits.  All slits have the same radius
+*  of curvature.
+*
+*  Note:  w and r_slit should have opposite signs.  This routine 
+*   checks for this, and ensures the signs are opposite.  Nu is
+*   assumed to have the correct sign, and r_slit may be changed.
+* This component was previously called <i>Curve_fe.comp</i>.
+*
+* Example: Fermi_Chopper(radius=0.25, nu=5000.0, delta=0, 
+*           ymin=-0.05, ymax=0.05, w=0.01, n=50, r_slit=100)
+*
+* %Parameters
+*  Input Parameters:
+*  
+*  radius:    Radius of the chopper (m)
+*  nu:     frequency (Hz)
+*  delta:  Phase angle (sec)
+*  ymin:   Lower y bound (m)
+*  ymax:   Upper y bound (m)
+*  w:      Width of an individual slit (m)
+*  n:      Number of slits (1)
+*  r_slit: Radius of curvature of the slits (m)
+*
+* %L
+* See also <a href="http://neutron.risoe.dk/neutron-mc/arch/9811/msg00032.html">Additional note </a> from Andrew Garrett [agarrett@ccbsf0.kek.jp].
+*
+* %End
+*******************************************************************/
+
+DEFINE COMPONENT Fermi_Chopper
+DEFINITION PARAMETERS (radius=0.25, nu=5000.0, delta=0, ymin=-0.05, ymax=0.05, w=0.01, n=50, r_slit=100)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (omega, r_blade, x_width, nn, tdr)
+STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
+DECLARE
+%{
+  double omega, r_blade, x_width;
+  int nn; /* number of neutrons that have passed */
+  double tdr; /* their average deviation as a fraction of the slit width */
+%}
+INITIALIZE
+%{
+  if (w <= 0) 
+  { fprintf(stderr,"Fermi_Chopper: %s: w should be >0\n", NAME_CURRENT_COMP);
+    exit(-1); }
+  omega = 2*PI*nu;
+  if (r_slit == 0) r_blade = 10000;
+  if (r_blade*omega > 0)
+    r_blade = -r_slit;
+  else
+    r_blade = r_slit;
+  x_width = n*w;
+  nn = 0;
+  tdr = 0;
+%}
+TRACE
+%{
+  double t0, t1, dt;
+  double rcmid;			/* length from chopper center in chopper frame */
+  double xcin, xcout, xcmid;	/* x-coordinate of entry, exit, and  */
+				/* middle points, in chopper frame */
+  double rin, rout, rmid;	/* length from center of curvature */
+				/* in chopper frame */
+				/* Note: for r's, will actually calculate r^2 - r_slit^2 */
+  double vrin, vrout, vrmid;	/* velocities are radial velocity */
+				/* from the center of curvature, */
+				/* in the chopper frame */
+  double dr, ttrans;
+  double d1, d2;                 /* tempo vars for calculating max */
+
+  if (cylinder_intersect (&t0, &t1, x, y, z, vx, vy, vz, radius, ymax-ymin))
+  {
+    if (t0 < 0)			/*Neutron started inside cylinder */
+      ABSORB;
+    dt = t1 - t0;		/*total time of flight inside cylinder */
+
+    PROP_DT (t0);		/*Brings neutron to entrance of cylinder */
+
+    /* Checks to see if neutron enters or leaves from top or bottom of */
+    /* cylinder.  Check against 0.999rad^2 to avoid minor  */
+    /* round-off error common to floating point arithmetic. */
+    if (x*x + z*z < 0.999*radius*radius || 
+      (x+vx*dt)*(x+vx*dt) + (z+vz*dt)*(z+vz*dt) < 0.999*radius*radius)
+      ABSORB;
+
+    t0 = t - delta;
+    t1 = t0 + dt;		/* Adjust t0 and t1 for offset,  */
+				/* used in trig functions below */
+
+    xcin = x*cos(omega*t0) - z*sin(omega*t0);
+    rin = radius*radius - 2.0*r_blade*xcin;
+		
+    /* Checks to see if the neutron entered the slit area */
+    if ( fabs(rin - x_width*x_width/4.0) > fabs(r_blade*x_width) )
+      ABSORB;
+
+    xcout = (x+vx*dt)*cos(omega*t1) - (z+vz*dt)*sin(omega*t1);
+    rout = radius*radius - 2.0*r_blade*xcout;
+
+    /* Checks to see if the neutron exited the slit area */
+    if ( fabs(rout - x_width*x_width/4.0) > fabs(r_blade*x_width) )
+      ABSORB;
+
+    dr = fabs( sqrt(r_blade*r_blade + rin) - 
+	       sqrt(r_blade*r_blade + rout) );
+
+    /* If the neutron has changed its radius by more than a slit */
+    /* width, absorb it. */
+    if (dr > w)
+      ABSORB;
+
+    /* Calculates radial velocity on entrance and exit.  Note:  vr */
+    /* is off by a factor of rin (or rout), but only the sign is  */
+    /* used, so this is not important. */
+    vrin = x*vx + z*vz - r_blade *
+      ( (vx-omega*z)*cos(omega*t0) - (vz+omega*x)*sin(omega*t0) );
+    vrout = (x+vx*dt)*vx + (z+vz*dt)*vz - r_blade * 
+      ( ( vx-omega*(z+vz*dt) )*cos(omega*t1) - 
+      ( vz+omega*(x+vx*dt) )*sin(omega*t1) );
+
+    /* Check if there is a local extreme in r, in which case dr is  */
+    /* greater than calculated above, and the new value must be found */
+    if (vrin * vrout < 0)
+    {
+      /* Will look for local extreme by adjusting t0 and t1.   */
+      /* Note that t is the entry time, so t0+dt-t+delta will  */
+      /* indicate the time in the cylinder, while t0+dt is  */
+      /* the time the chopper has been rotating. */
+      int counter=0;
+      double last_vrmid=0;
+      do
+      {
+        dt = (t1-t0)/2;
+        ttrans = t0 + dt - t + delta;
+        vrmid = (x + vx*ttrans)*vx +
+	        (z + vz*ttrans)*vz - r_blade *
+	        ( (vx - omega*(z+vz*ttrans)) * cos(omega*(t0+dt)) -
+	          (vz + omega*(x+vx*ttrans)) * sin(omega*(t0+dt)) );
+        if (vrmid * vrin < 0)
+        {
+	        t1 = t0 + dt;
+        }
+        else
+        {
+	        t0 = t0 + dt;
+	        vrin = vrmid;
+        }
+        counter++;
+      }
+      while (fabs(vrmid) > 1e-12 && (last_vrmid != vrmid) && (counter<100));
+
+      /*  Now calculate dr */
+      xcmid = ( x + vx*ttrans )*cos(omega*(t0+dt)) -
+              ( z + vz*ttrans )*sin(omega*(t0+dt));
+      rcmid = (x + vx*ttrans)*(x + vx*ttrans) +
+              (z + vz*ttrans)*(z + vz*ttrans);
+      rmid = rcmid - 2*r_blade*xcmid;
+      
+      d1 = fabs (sqrt(r_blade*r_blade + rin) - sqrt(r_blade*r_blade + rmid));
+
+      d2 = fabs (sqrt(r_blade*r_blade + rout) - sqrt(r_blade*r_blade + rmid));
+		       
+      if (d1 > d2) dr = d1; else dr = d2;
+    }
+
+    /* Check if the neutron has moved more than 1 slit width. */
+    /* If so, absorb it, otherwise change its probability */
+    if (dr > w)
+    {
+      ABSORB;
+    }
+    else
+    {
+      nn ++;
+      tdr += dr/w;
+      p *= (1.0 - dr/w);
+      SCATTER;
+    }
+  }
+  else				/* The neutron failed to even hit the chopper */
+    ABSORB;
+%}
+
+FINALLY
+%{
+  /* This is just to avoid a division by 0 error if no neutrons get */
+  /* through */
+  if (nn == 0)
+    nn = 1;
+
+  /* Prints out the number of neutrons that have passed through the */
+  /* chopper, and their average deviation as a fraction of the slit */
+  /* width */
+   /* printf ("%s: Neutrons: %d, Deviation: %g\n", NAME_CURRENT_COMP, nn, 100.0*tdr/nn); */
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xz", 0, ymax, 0, radius);
+  circle("xz", 0, ymin, 0, radius);
+  circle("xz", 0, 0, 0, radius);
+  line(0, ymax, -radius, 0, ymin, -radius);
+  line(0, ymax, radius, 0, ymin, radius);
+  line(-radius, ymax, 0, -radius, ymin, 0);
+  line(radius, ymax, 0, radius, ymin, 0);
+%}
+
+
+END

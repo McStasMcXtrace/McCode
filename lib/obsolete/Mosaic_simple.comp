@@ -8,8 +8,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.14 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.15 $
+* Origin: McStas 1.5 (Obsolete)
 *
 * Mosaic crystal, possibly off-cut.
 *
@@ -78,6 +78,10 @@ DECLARE
 
 INITIALIZE
 %{
+  
+  fprintf(stderr,"Mosaic_simple: this component is OBSOLETE (not maintained)\n");
+  fprintf(stderr,"Mosaic_simple: rather use optics/Mosaic_anisotropic\n");
+  
   Q = sqrt(Qx*Qx + Qy*Qy + Qz*Qz);
   q0ux = Qx/Q;
   q0uy = Qy/Q;

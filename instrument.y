@@ -86,8 +86,8 @@ int mc_yyoverflow();
 %token TOK_SETTING	  "SETTING"
 %token TOK_STATE	    "STATE"
 %token TOK_TRACE	    "TRACE"
-%token TOK_DECLARE_UNIQUE	"SHARE" /* ADD: E. Farhi Sep 20th, 2001 shared code (unique declare) */
-%token TOK_POST_CODE	"THEN"      /* ADD: E. Farhi Sep 20th, 2001 post code code */
+%token TOK_SHARE	    "SHARE" /* ADD: E. Farhi Sep 20th, 2001 shared code (shared declare) */
+%token TOK_EXTEND	"EXTEND"      /* ADD: E. Farhi Sep 20th, 2001 extend code */
 %token TOK_GROUP	    "GROUP"     /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
 
 /*******************************************************************************
@@ -105,7 +105,7 @@ int mc_yyoverflow();
 
 %type <instance> component compref reference   /* MOD: E. Farhi Sep 24th, 2001 add group */
 %type <groupinst> groupdef groupref   /* ADD: E. Farhi Sep 24th, 2001 add group */
-%type <ccode> code codeblock unique declare initialize trace postcode finally mcdisplay /* MOD: E. Farhi Sep 20th, 2001, add 'unique' and 'postcode' */
+%type <ccode> code codeblock shared declare initialize trace extend finally mcdisplay /* MOD: E. Farhi Sep 20th, 2001, add 'shared' and 'extend' */
 %type <coords>  coords
 %type <exp> exp topexp topatexp genexp genatexp
 %type <actuals> actuallist actuals actuals1
@@ -129,7 +129,7 @@ compdefs:	  /* empty */
 		| compdefs compdef
 ;
 
-compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters unique declare initialize trace finally mcdisplay "END"
+compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters shared declare initialize trace finally mcdisplay "END"
 		  {
 		    struct comp_def *c;
 		    palloc(c);
@@ -139,7 +139,7 @@ compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters unique declare initialize trac
 		    c->out_par = $4.out;
 		    c->state_par = $4.state;
 		    c->polarisation_par = $4.polarisation;
-        c->uniq_code = $5;  /* ADD: E. Farhi Sep 20th, 2001 */
+        c->share_code = $5;  /* ADD: E. Farhi Sep 20th, 2001 */
 		    c->decl_code = $6;  /* MOD: E. Farhi Sep 20th, 2001, shifted param numbs */
 		    c->init_code = $7;
 		    c->trace_code = $8;
@@ -372,7 +372,7 @@ initialize:	  /* empty */
 ;
 
 /* ADD: E. Farhi Sep 20th, 2001 SHARE component block included once */
-unique:	  /* empty */
+shared:	  /* empty */
 		  {
 		    $$ = codeblock_new();
 		  }
@@ -485,19 +485,19 @@ complist:	  /* empty */
 		  }
 ;
 
-component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation groupref postcode
+component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation groupref extend
 		  {
 		    struct comp_def *def;
 		    struct comp_inst *comp;
         
         def = read_component($4);
-        def->comp_inst_number--;
+        if (def != NULL) def->comp_inst_number--;
 		    palloc(comp); /* Allocate new instance. */
 		    comp->name = $2;
 		    comp->def = def;
 		    palloc(comp->pos);
         comp->group = $8;           /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
-        comp->postcode = $9;  /* ADD: E. Farhi Sep 20th, 2001 THEN block*/
+        comp->extend = $9;  /* ADD: E. Farhi Sep 20th, 2001 EXTEND block*/
         comp->index = 0;       /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
 		    comp->pos->place = $6.place;
 		    comp->pos->place_rel = $6.place_rel;
@@ -662,12 +662,12 @@ coords:		  '(' exp ',' exp ',' exp ')'
 		  }
 ;
 
-/* ADD: E. Farhi Sep 20th, 2001 THEN block executed after component instance */
-postcode:	  /* empty */
+/* ADD: E. Farhi Sep 20th, 2001 EXTEND block executed after component instance */
+extend:	  /* empty */
 		  {
 		    $$ = codeblock_new();
 		  }
-		| "THEN" codeblock
+		| "EXTEND" codeblock
 		  {
 		    $$ = $2;
 		  }
@@ -947,9 +947,9 @@ print_usage(void)
 static void
 print_version(void)
 { /* MOD: E. Farhi Sep 20th, 2001 version number */
-  printf("McStas version 1.6-ill, Oct 29th, 2001\n"
-	  "Copyright (C) Risoe National Laboratory, 1997-2001\n"
-    "Additions (C) Institut Laue Langevin, 2001\n"
+  printf("McStas version 1.6.1, Feb 18th, 2002\n"
+	  "Copyright (C) Risoe National Laboratory, 1997-2002\n"
+    "Additions (C) Institut Laue Langevin, 2002\n"
 	  "All rights reserved\n");
   exit(0);
 }

@@ -7,10 +7,10 @@
 *
 * %I
 * Adapted from Moderator by: KN, M.Hagen, August 1998
-* Written by: Kim Lefmann
-* Date: 2001
-* Version: $Revision: 1.5 $
-* Origin: McStas 1.5
+* Written by: KL, February 2001
+* Modified by: KL, 18 November 2001 
+* Version: $Revision: 1.6 $
+* Origin: McStas release 1.5.1
 *
 * A parametrised pulsed source for modelling ESS short pulses.
 *
@@ -24,40 +24,82 @@
 * %P
 * Input parameters:
 *
-* size:   (m)    Edge of cube shaped source
+* size:   (m)    Edge of cube shaped source 
 * l_low:  (AA)   Lower edge of lambda distribution
 * l_high: (AA)   Upper edge of energy distribution
 * dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
 * xw:     (m)    Width of focusing rectangle
 * yh:     (m)    Height of focusing rectangle
-* T:      (K)    Temperature of source
-* tau:    (s)    long time decay constant for pulse, 1a
-* tau1:   (s)    long time decay constant for pulse, 1b (coupled water)  
-* tau2:   (s/AA) long time decay constant for pulse, 2
-* n:      (1)    pulse shape parameter, 1
-* n2:     (1)    pulse shape parameter, 2
+* freq:   (Hz)   Frequency of pulses 
+* T:      (K)    Temperature of source 
+* tau:    (s)    long time decay constant for pulse, 1a 
+* tau1:   (s)    long time decay constant for pulse, 1b 
+*                  (only for coupled water, else 0)  
+* tau2:   (s/AA) long time decay constant for pulse, 2 
+* n:      (1)    pulse shape parameter 1 
+* n2:     (1)    pulse shape parameter 2 
 * chi2:   (1/AA) lambda-distribution parameter in pulse 2
-* I0:     (flux) integrated flux, 1 (in flux units, see above)
-* I2:     (flux*AA) integrated flux, 2
-* branch1: (1)   limit for switching between two time structures in
-                 distribution 1 (only for coupled water, else = 1)
+* I0:     (flux) integrated flux 1 (in flux units, see above) (default 9e10)
+* I2:     (flux*AA) integrated flux 2 (default 4.6e10)
+* branch1: (1)   limit for switching between distribution 1 and 2. 
+*                (has effect only for coupled water, tau1>0)
 * branch2: (1)   limit for switching between distribution 1 and 2. 
 *                (default value 0.5)
+* branchframe: (1) limit for switching between 1st and 2nd pulse
+*                  (if only one pulse wanted: 1)
 *
+* Example general parameters (general):
+*          size=0.12 l_low=0.1 l_high=10 dist=2 xw=0.06 yh=0.12 freq=50
+*          branchframe=0.5
+*
+* Example moderator specific parameters
+* (From F. Mezei, "ESS reference moderator characteristics for ...", 4/12/00: 
+*  Defining the normalised Maxwelian
+*     M(lam,T) = 2 a^2 lam^-5 exp(-a/lam^2); a=949/T; lam in AA; T in K,
+*   and the normalised pulse shape function
+*     F(t,tau,n) = ( exp(-t/tau) - exp(-nt/tau) ) n/(n-1)/tau,
+*   the flux distribution is given as
+*     Phi(t,lam) =  I0 M(lam,T) F(t,tau,n) 
+*                 + I2/(1+exp(chi2 lam-2.2))/lam*F(t,tau2*lam,n2)  )
+*
+*   a1: Ambient H20, short pulse, decoupled poisoned
+*          T=325 tau=22e-6 tau1=0 tau2=7e-6 n=5 n2=5 chi2=2.5 
+*          I0=9e10 I2=4.6e10    branch1=0 branch2=0.5 
+*
+*   a2: Ambient H20, short pulse, decoupled un-poisoned
+*          T=325 tau=35e-6 tau1=0 tau2=12e-6 n=5 n2=5 chi2=2.5 
+*          I0=1.8e11 I2=9.2e10    branch1=0 branch2=0.5 
+*
+*   a3: Ambient H20, short pulse, coupled
+*          T=325 tau=80e-6 tau1=400e-6 tau2=12e-6 n=20 n2=5 chi2=2.5 
+*          I0=4.5e11 I2=9.2e10    branch1=0.5 branch2=0.5 
+*
+*   b1: Liquid H2, short pulse, decoupled poisoned
+*          T=50 tau=49e-6 tau1=0 tau2=7e-6 n=5 n2=5 chi2=0.9 
+*          I0=2.7e10 I2=4.6e10    branch1=0 branch2=0.5 
+*
+*   b2: Liquid H2, short pulse, decoupled un-poisoned
+*          T=50 tau=78e-6 tau1=0 tau2=12e-6 n=5 n2=5 chi2=0.9 
+*          I0=5.4e10 I2=9.2e10    branch1=0 branch2=0.5 
+*
+*   b3: Liquid H2, short pulse, coupled 
+*          T=50 tau=287e-6 tau1=0 tau2=12e-6 n=20 n2=5 chi2=0.9 
+*          I0=2.3e11 I2=9.2e10    branch1=0 branch2=0.5
+* 
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT ESS_moderator_short
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh, 
-                    T, tau, tau1, tau2, n, n2, chi2, I0, I2, 
-                    branch1, branch2)
-OUTPUT PARAMETERS (l_range, w_mult)
+                    freq, T, tau, tau1, tau2, n, n2, chi2, I0, I2, 
+                    branch1, branch2, branchframe)
+OUTPUT PARAMETERS (M, F, l_range, w_mult)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
-  double l_range, w_mult;
+  double l_range, w_mult, Delta_t ;
 
   double M(double l, double temp)
     {
@@ -73,6 +115,7 @@ DECLARE
 
 INITIALIZE
 %{
+  Delta_t = 1.0/(double)freq;
   l_range = l_high-l_low;
   w_mult = size*size*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
@@ -110,16 +153,22 @@ TRACE
 
   if (rand01() < branch2)
   {
-    if (rand01() < branch1)     /* Quick and dirty non-general solution */
-    {  /* FIRST CASE a */
-      tau_l = tau;
-      p = 1/(branch1*branch2);            /* Correct for switching prob. */
-    }
-    else
-    {  /* FIRST CASE b */
-      tau_l = tau1;
-      p = 1/((1-branch1)*branch2);        /* Correct for switching prob. */
-    }
+    if (tau1>0)  /* coupled water */
+      if (rand01() < branch1)    
+      {  /* FIRST CASE a */
+        tau_l = tau;
+        p = 1/(branch1*branch2);            /* Correct for switching prob. */
+      }
+      else
+      {  /* FIRST CASE b */
+        tau_l = tau1;
+        p = 1/((1-branch1)*branch2);        /* Correct for switching prob. */
+      }
+    else /* all other moderators */
+      {
+        tau_l = tau;
+        p = 1/branch2;            /* Correct for switching prob. */
+      }
     t = -tau_l*log(1e-12+rand01());       /* Sample from long-time tail a */
     p *= n/(n-1)*(1-exp(-(n-1)*t/tau_l)); /* Correct for true pulse shape */
     p *= w_focus;                         /* Correct for target focusing */
@@ -136,7 +185,19 @@ TRACE
     p *= I2*w_mult/(1+exp(chi2*lambda-2.2))/lambda;           
                                           /* Calculate true intensity */
   }
-  SCATTER;
+
+ if (rand01() < branchframe)
+  {
+   p /= branchframe;
+  }
+ else
+  {
+   if (rand01() < 0.5)
+     t += Delta_t;
+   else
+     t -= Delta_t;
+   p *= 2.0/(1-branchframe);
+  }
 %}
 
 MCDISPLAY
@@ -150,3 +211,8 @@ MCDISPLAY
 %}
 
 END
+
+
+
+
+

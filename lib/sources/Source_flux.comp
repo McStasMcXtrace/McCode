@@ -8,8 +8,9 @@
 * %Identification
 * Written by: Kristian Nielsen
 * Date: 1998
-* Version: $Revision: 1.1 $
-* Origin: McStas 1.5
+* Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
+* Version: $Revision: 1.2 $
+* Origin: McStas 1.5.1
 *
 * An old variant of the official <b>Source_flux_lambda</b> component. 
 * 
@@ -44,7 +45,6 @@ OUTPUT PARAMETERS (p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
- double hdiv,vdiv;
  double p_in;
 %}
 INITIALIZE

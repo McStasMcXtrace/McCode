@@ -3,11 +3,13 @@
 * McStas, the neutron ray-tracing package: Source_flux_lambda.comp
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
+* Component: Source_flux_lambda
+*
 * %I
 * Written by: Kristian Nielsen
 * Date: 1998
-* Modified by: Emmanuel Farhi, October 30, 2001. Illumination corrected
-* Version: $Revision: 1.7 $
+* Modified by: EF, KL, October 30, 2001. Illumination corrected
+* Version: $Revision: 1.8 $
 * Origin: McStas 1.5.1
 *
 * Neutron source with flat wavelength spectrum and user-specified flux.
