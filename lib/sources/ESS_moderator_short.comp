@@ -4,17 +4,16 @@
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Adapted from Moderator by: KN, M.Hagen, August 1998
 * Written by: Kim Lefmann
 * Date: 2001
-* Version: $Revision: 1.2 $
-* Origin: McStas 1.4.2
-* Modified by POA, April 2001: Added POLARISATION PARAMETERS
+* Version: $Revision: 1.3 $
+* Origin: McStas release
 *
 * A parametrised pulsed source for modelling ESS short pulses.
 *
 * %D
 * Produces a time-of-flight spectrum, from the ESS parameters
+* Adapted from Moderator by: KN, M.Hagen, August 1998
 * Chooses evenly in lambda, exponentially decaying in time 
 *
 * Units of flux: n/cm^2/s/AA/ster  
@@ -53,7 +52,6 @@ SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh,
                     branch1, branch2)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
