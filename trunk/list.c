@@ -5,9 +5,12 @@
 *
 *	Author: K.N.			Jul  3, 1997
 *
-*	$Id: list.c,v 1.3 1998-10-02 08:37:44 kn Exp $
+*	$Id: list.c,v 1.4 2001-03-15 15:11:13 peo Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.3  1998/10/02 08:37:44  kn
+*	Fixed header comment.
+*
 *	Revision 1.2  1997/09/07 17:58:11  kn
 *	Snapshot with (untested) code generation complete.
 *
@@ -34,7 +37,7 @@ struct List_header
     void **elements;
   };
 
-#define MAX_ELEMENTS 1000
+#define MAX_ELEMENTS 5000
 
 /* Position in a list for doing list traversals. */
 struct List_position
