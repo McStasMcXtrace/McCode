@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: memory.c,v 1.6 1998-10-02 08:39:02 kn Exp $
+*	$Id: memory.c,v 1.7 1998-11-13 07:33:09 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.6  1998/10/02 08:39:02  kn
+*	Fixed header comment.
+*
 *	Revision 1.5  1998/10/01 11:47:38  kn
 *	Added str_dup_n().
 *
@@ -31,6 +34,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <ctype.h>
+#include <stdio.h>
 
 #include "mcstas.h"
 
@@ -116,6 +121,50 @@ str_cat(char *first, ...)
   va_end(ap);
   return s;
 }
+
+/*******************************************************************************
+* Allocate a new string holding the result of quoting the input string. The
+* result is suitable for inclusion in C source code.
+*******************************************************************************/
+char *
+str_quote(char *string)
+{
+  unsigned char *badchars = "\\\"\r\n\t";
+  unsigned char *quotechars = "\\\"rnt";
+  unsigned char *q, *res, *ptr;
+  int len, pass;
+  int c;
+  unsigned char new[5];
+
+  /* Loop over the string twice, first counting chars and afterwards copying
+     them into an allocated buffer. */
+  for(pass = 0; pass < 2; pass++)
+  {
+    unsigned char *p = (unsigned char *)string;
+
+    if(pass == 0)
+      len = 0;			/* Prepare to compute length */
+    else
+      q = res = mem(len + 1);	/* Allocate buffer */
+    while((c = *p++))
+    {
+      ptr = strchr(badchars, c);
+      if(ptr != NULL)
+	sprintf(new, "\\%c", quotechars[ptr - badchars]);
+      else if(isprint(c))
+	sprintf(new, "%c", c);
+      else
+	sprintf(new, "\\%03o", c);
+      if(pass == 0)
+	len += strlen(new);	/* Count in length */
+      else
+	for(ptr = new; (*q = *ptr) != 0; ptr++)
+	  q++;			/* Copy over chars */
+    }
+  }
+  return res;
+}
+
 
 /*******************************************************************************
 * Free memory for a string.
