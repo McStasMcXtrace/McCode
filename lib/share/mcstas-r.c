@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.21 1999-03-16 13:50:49 kn Exp $
+* 	$Id: mcstas-r.c,v 1.22 1999-03-18 07:32:55 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.21  1999/03/16 13:50:49  kn
+* 	New file format for 1D detector outputs.
+*
 * 	Revision 1.20  1999/03/16 13:46:07  kn
 * 	mcsiminfo_init()/mcsiminfo_close() functions.
 * 	More info in the mcstas.sim file.
@@ -292,6 +295,21 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
 }
 
 
+void
+mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
+{
+  Coords b, c;
+
+  b.x = *sx;
+  b.y = *sy;
+  b.z = *sz;
+  c = rot_apply(t, b);
+  *sx = c.x;
+  *sy = c.y;
+  *sz = c.z;
+}
+
+
 double
 mcestimate_error(int N, double p1, double p2)
 {
@@ -392,8 +410,8 @@ mcsiminfo_close()
 void
 mcdetector_out(char *cname, double p0, double p1, double p2)
 {
-  printf("Detector: %s_I=%g %s_ERR=%g\n",
-	 cname, p1, cname, mcestimate_error(p0,p1,p2));
+  printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g\n",
+	 cname, p1, cname, mcestimate_error(p0,p1,p2), cname, p0);
 }
 
 
@@ -513,10 +531,10 @@ mcreadparams(void)
 
 void
 mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-	   double t, double s1, double s2, double p)
+	   double t, double sx, double sy, double sz, double p)
 {
   extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
-  extern double mcnt, mcns1, mcns2, mcnp;
+  extern double mcnt, mcnsx, mcnsy, mcnsz, mcnp;
   
   mcnx = x;
   mcny = y;
@@ -525,15 +543,16 @@ mcsetstate(double x, double y, double z, double vx, double vy, double vz,
   mcnvy = vy;
   mcnvz = vz;
   mcnt = t;
-  mcns1 = s1;
-  mcns2 = s2;
+  mcnsx = sx;
+  mcnsy = sy;
+  mcnsz = sz;
   mcnp = p;
 }
 
 void
 mcgenstate(void)
 {
-  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 1);
+  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
 }
 
 /* McStas random number routine. */
@@ -978,7 +997,7 @@ mcstas_main(int argc, char *argv[])
   mcinit();
   while(run_num < mcncount)
   {
-    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 1);
+    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
     mcraytrace();
     run_num++;
   }
