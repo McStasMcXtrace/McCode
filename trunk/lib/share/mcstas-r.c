@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.64 2003-05-26 10:21:00 farhi Exp $
+* $Id: mcstas-r.c,v 1.65 2003-06-05 09:25:59 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.64  2003/05/26 10:21:00  farhi
+* Correct core dump for instrument STRING parameters in 'string printer'
+*
 * Revision 1.63  2003/05/20 11:54:38  farhi
 * make sighandler not restart SAVE when already saving (USR2)
 *
@@ -3088,8 +3091,10 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("-g", argv[i]))
       mcgravitation = 1;
     else if(!strncmp("--format=", argv[i], 9))
+      mcascii_only = 0;
       mcuse_format(&argv[i][9]);
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc)
+      mcascii_only = 0;
       mcuse_format(argv[++i]);
     else if(!strcmp("--no-output-files", argv[i]))  
       mcdisable_output_files = 1;
