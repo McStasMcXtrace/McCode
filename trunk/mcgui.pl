@@ -61,10 +61,30 @@ sub menu_quit {
     }
 }
 
+sub new_sim_def_name {
+    my ($w, $name) = @_;
+    undef($current_sim_file)
+	unless $current_sim_def && $name eq $current_sim_def;
+    $current_sim_def = $name;
+    # Strip any redundant leading "./".
+    while($current_sim_def =~ m!^\./(.*)$!) {
+	$current_sim_def = $1;
+    }
+    # Strip any redundant "dir/../".
+    # Problem: Needs to handle "/../../" correctly to work ...
+#     while($current_sim_def =~ m!^[^/]+/\.\./(.*)$!) {
+# 	$current_sim_def = $1;
+#     }
+#     while($current_sim_def =~ m!^(.*)/[^/]+/\.\./(.*)$!) {
+# 	$current_sim_def = "$1/$2";
+#     }
+    $w->title("Mcgui: $current_sim_def");
+}
+
 sub open_instr_def {
     my ($w, $file) = @_;
     $edit_control->Load($file);
-    $current_sim_def = $file;
+    new_sim_def_name($w, $file);
 }
 
 sub menu_open {
@@ -74,7 +94,6 @@ sub menu_open {
 			       -title => "Select instrument file");
     return 0 unless $file;
     open_instr_def($w, $file);
-    undef($current_sim_file);
     return 1;	
 }
 
@@ -96,15 +115,14 @@ sub menu_saveas {
     }
     return 0 unless $file;
     $edit_control->FileName($file);
-    undef($current_sim_file) unless $file eq $current_sim_def;
-    $current_sim_def = $file;
+    new_sim_def_name($w, $file);
     menu_save($w);
     return 1;
 }
 
 sub menu_undo {
     my ($w) = @_;
-    if($edit_control->numberChanges() > 0) {
+    if($edit_control->numberChanges() <= 0) {
 	$w->messageBox(-message => "There is no further undo information.",
 		       -title => "Undo not possible",
 		       -type => 'OK',
@@ -119,6 +137,8 @@ sub read_sim_data {
     return 0 unless $current_sim_file && -r $current_sim_file;
     my ($ii, $si, $di) = read_sim_file($current_sim_file);
     return 0 unless $ii && $si && $di;
+    # Save old settings of "plot results".
+    $si->{'Autoplot'} = $inf_sim->{'Autoplot'};
     $inf_instr = $ii;
     $inf_sim = $si;
     $inf_data = $di;
@@ -438,7 +458,7 @@ sub menu_run_simulation {
 	push @command, "--trace" if $newsi->{'Trace'};
 	push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
 	push @command, "--dir=$newsi->{'Dir'}" if $newsi->{'Dir'};
-	for (keys %{$newsi->{'Params'}}) {
+	for (@{$out_info->{'Parameters'}}) {
 	    push @command, "$_=$newsi->{'Params'}{$_}";
 	}
 	my $inittext = "Running simulation '$out_name' ...\n" .
@@ -508,6 +528,7 @@ sub setup_menu {
     $editmenu->command(-label => 'Undo',
 		       -accelerator => 'Ctrl+Z',
 		       -command => [\&menu_undo, $w], -underline => 0);
+    $w->bind('<Control-z>' => [\&menu_undo, $w]);
     $editmenu->pack(-side=>'left');
     my $simmenu = $menu->Menubutton(-text => 'Run', -underline => 0);
     $simmenu->command(-label => 'Read old simulation ...',
