@@ -207,6 +207,22 @@ sub menu_spawn_editor {
     }
 }
 
+sub mcdoc_current {
+    my ($w) = @_;
+    my $suffix='';
+    my $cmd_suffix='';
+    my $prefix='';
+    if ($Config{'osname'} eq 'MSWin32') {
+        $suffix='.pl';
+        $prefix='start ';
+    } else {
+        $cmd_suffix=' &';
+    }
+    if (-e $current_sim_def) {
+	putmsg($cmdwin, "Opening instrument docs: $prefix mcdoc$suffix $current_sim_def $cmd_suffix\n", 'msg');
+	system("$prefix mcdoc$suffix $current_sim_def $cmd_suffix");
+    }
+}
 sub mcdoc_web {
     my ($w) = @_;
     my $suffix='';
@@ -1262,6 +1278,8 @@ sub setup_menu {
                        -command => sub {mcdoc_generate($w)});
     $helpmenu->command(-label => 'McStas tutorial',
                        -command => sub {mcdoc_tutorial($w)});
+    $helpmenu->command(-label => 'Current instrument',
+                       -command => sub {mcdoc_current($w)});
     $helpmenu->separator;
     $helpmenu->command(-label => 'Test McStas installation',
                        -command => sub {mcdoc_test($w)});
