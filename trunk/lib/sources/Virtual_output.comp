@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -32,8 +32,13 @@
 * Possible file formats are:
 * 1-text column formatted with lines containing 11 values in the order:
 *       p x y z vx vy vz t sx sy sz stored into about 83 bytes/n.
-* 2-float or double binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
+* 2-float/double binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
 *       stored into 44 and 88 bytes/n respectively for float/double.
+*
+* Beware the size of generated files ! When saving all events (bufsize=0) the
+* required memory has been optimized and remains very small. On the other hand
+* using large bufsize values requires huge storage memory. 
+* Both will generate huge files.
 *
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
 * Vitess simulation (104 bytes per neutron) and read with Vitess_input.
@@ -137,7 +142,8 @@ FINALLY
 %{
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
-  print("Virtual_output: %s: Saved %d events in file %s\n", Vars.Nsum, Vars.Mon_File); exit(-1); }
+  if (bufsize) printf("Virtual_output: %s: Saved %li events in file %s\n", NAME_CURRENT_COMP, Vars.Buffer_Block, Vars.Mon_File);
+  else printf("Virtual_output: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
 %}
 
 MCDISPLAY
