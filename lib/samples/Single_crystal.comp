@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: December 1999
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: McStas release
 *
 * Mosaic single crystal with multiple scattering vectors.
@@ -327,7 +327,6 @@ struct tau_data
   {
     int index;                  /* Index into reflection table */
     double refl;
-    double F2_contrib;
     double xsect;
     double sigma_1, sigma_2;
     /* The following vectors are in local koordinates. */
@@ -341,7 +340,6 @@ struct tau_data
     double l11, l12, l22;       /* Cholesky decomposition L of 2D Gauss */
     double det_L;               /* Determinant of L */
     double y0x, y0y;            /* 2D Gauss center in tangent plane */
-    double alpha;               /* Offset of 2D Gauss center from 3D center */
   };
 
 struct hkl_data *
@@ -490,6 +488,7 @@ TRACE
   double det_L;                 /* Determinant of L */
   double Bt_D_O_x, Bt_D_O_y;    /* Temporaries */
   double y0x, y0y;              /* Center of 2D Gauss in plane coordinates */
+  double alpha;			/* Offset of 2D Gauss center from 3D center */
   double d_x, d_y, d_z;         /* Vector deviation from Bragg condition */
   int tau_count;                /* Number of reflections within cutoff */
   double V0;                    /* Volume of unit cell */
@@ -500,7 +499,11 @@ TRACE
   double coh_xsect, coh_xlen;   /* Coherent cross section and length */
   double tot_xsect, tot_xlen;   /* Total cross section and length */
   double z1, z2, y1, y2;        /* Temporaries to choose kf from 2D Gauss */
-  double adjust,arg, refl;      /* Temporaries */
+  double adjust,arg, coh_refl;  /* Temporaries */
+  double r, sum;		/* Temporaries */
+  double xsect_factor;		/* Common factor in coherent cross-section */
+  double p_trans;		/* Transmission probability */
+  double mc_trans, mc_interact;	/* Transmission, interaction MC choices */
 
   if(box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
 		   xwidth, yheight, zthick) && t2 > 0)
@@ -535,6 +538,9 @@ TRACE
     abs_xsect = absorbtion*2200/v;
     inc_xsect = incoherent;
     coh_xsect = 0;
+    coh_refl = 0;
+    V0 = hkl_info.V0;
+    xsect_factor = (4*PI*PI)/(V0*ki*ki);
     for(i = j = 0; i < hkl_info.count; i++)
     {
       /* Assuming reflections are sorted, stop search when max tau exceeded. */
@@ -607,20 +613,26 @@ TRACE
         T[j].y0x = y0x;
         T[j].y0y = y0y;
         /* Factor alpha for the distance of the 2D Gauss from the origin. */
-        T[j].alpha = L[i].m1*ox*ox + L[i].m2*oy*oy + L[i].m3*oz*oz -
+        alpha = L[i].m1*ox*ox + L[i].m2*oy*oy + L[i].m3*oz*oz -
                      (y0x*y0x*n11 + y0y*y0y*n22 + 2*y0x*y0y*n12);
+	T[j].refl = xsect_factor*det_L*exp(-alpha)/L[i].sig123;
+	coh_refl += T[j].refl;
+	T[j].xsect = T[j].refl*L[i].F2;
+	coh_xsect += T[j].xsect;
         j++;
       }
     }
     tau_count = j;
 
     /* (3). Probabilities of the different possible interactions. */
-    V0 = hkl_info.V0;
     tot_xsect = abs_xsect + inc_xsect + coh_xsect;
-    abs_xlen = abs_xsect/V0;
-    inc_xlen = inc_xsect/V0;
-    coh_xlen = coh_xsect/V0;
-    tot_xlen = tot_xsect/V0;
+    /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
+       in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
+       scattering lengths to m**-1 */
+    abs_xlen = 1e2*abs_xsect/V0;
+    inc_xlen = 1e2*inc_xsect/V0;
+    coh_xlen = 1e2*coh_xsect/V0;
+    tot_xlen = 1e2*tot_xsect/V0;
 
     /* (5). Transmission */
     p_trans = exp(-tot_xlen*l_full);
@@ -635,6 +647,12 @@ TRACE
       p *= p_trans/mc_trans;
       break;
     }
+    if(tot_xlen <= 0)
+      ABSORB;
+    mc_interact = 1 - mc_trans;
+    if(mc_interact <= 0)	/* Protect against rounding errors */
+      break;
+    p *= fabs(1 - p_trans)/mc_interact;
     /* Select a point at which to scatter the neutron, taking
        secondary extinction into account. */
     /* dP(l) = exp(-tot_xlen*l)dl
@@ -648,17 +666,18 @@ TRACE
     /* (4). Account for the probability of absorbtion */
     p *= (coh_xlen + inc_xlen)/tot_xlen;
     /* Choose between coherent and incoherent scattering */
-    if(rand0max(coh_xlen + inc_xlen) < inc_xlen)
+    if(rand0max(coh_xlen + inc_xlen) <= inc_xlen)
     {
       /* (6). Incoherent scattering */
-      randvec_target_sphere(kix, kiy, kiz, NULL, 0, 0, 0, 1);
+      randvec_target_sphere(&kix, &kiy, &kiz, NULL, 0, 0, 0, 0);
       kix *= ki;
       kiy *= ki;
       kiz *= ki;
       continue;                      /* Go for next scattering event */
     }
     /* 7. Coherent scattering. Select reciprocal lattice point. */
-    r = rand0max(coh_xsect);
+if(coh_refl <= 0) ABSORB;
+    r = rand0max(coh_refl);
     sum = 0;
     for(j = 0; j < tau_count; j++)
     {
@@ -673,7 +692,6 @@ TRACE
       j = tau_count - 1;
     }
     i = T[j].index;
-/*     p *= T[i].F2_contrib; */
     /* (8). Pick scattered wavevector kf from 2D Gauss distribution. */
     z1 = randnorm();
     z2 = randnorm();
@@ -689,9 +707,8 @@ TRACE
     kfy *= adjust;
     kfz *= adjust;
     /* Adjust neutron weight (see manual for explanation). */
-    p *= l_full*1e10*L[i].F2*1e-4*pow(2*PI, 2.5)*
-         T[j].det_L*tau_count*exp(-T[j].alpha)/
-         (V0*V0*ki*ki*L[i].sig123);
+    p *= T[j].xsect*coh_refl/(coh_xsect*T[j].refl);
+    SCATTER;
     vx = K2V*(L[i].u1x*kfx + L[i].u2x*kfy + L[i].u3x*kfz);
     vy = K2V*(L[i].u1y*kfx + L[i].u2y*kfy + L[i].u3y*kfz);
     vz = K2V*(L[i].u1z*kfx + L[i].u2z*kfy + L[i].u3z*kfz);
