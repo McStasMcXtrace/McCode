@@ -517,11 +517,36 @@ sub comp_instance_dialog {
     $dlg->bind('<Return>' => $ok_cmd);
 
     my $old_focus = $dlg->focusSave;
-    my $old_grab = $dlg->grabSave;
+    my $old_grab  = $dlg->grabSave;
+    my $noexit    = 1;
     $dlg->Popup;
     $dlg->grab;
-    $dlg->waitVariable(\$selected);
-    $dlg->grabRelease;
+    while ($noexit) {
+      $dlg->waitVariable(\$selected);
+      $dlg->grabRelease;
+      if ($selected eq 'OK') {
+        my $r_at = $r->{'AT'};
+        if ($r->{'INSTANCE'} eq "") { # instance not defined !
+            $dlg->messageBox(-message => "Instance name is not defined for component $comp->{'name'}. Please set it to a name of your own (e.g. My_Comp).",
+                       -title => "$comp->{'name'}: No Instance Name",
+                       -type => 'OK',
+                       -icon => 'error');
+            $selected = undef;
+        } elsif ($r_at->{'x'} eq "" || $r_at->{'y'} eq "" || $r_at->{'z'} eq "" ) { # position not defined !
+            $dlg->messageBox(-message => "Position AT is not defined for component $r->{'INSTANCE'} of type $comp->{'name'}. Please set the AT(x,y,z) values.",
+                       -title => "$r->{'INSTANCE'}: No AT Position",
+                       -type => 'OK',
+                       -icon => 'error');
+            $selected = undef;
+        } elsif ($r_at->{'relative'} eq "") { # relative not defined !
+            $dlg->messageBox(-message => "RELATIVE reference is not defined for component $r->{'INSTANCE'} of type $comp->{'name'}. Please set it to a component instance name, PREVIOUS or PREVIOUS(n).",
+                       -title => "$r->{'INSTANCE'}: No Relative Reference",
+                       -type => 'OK',
+                       -icon => 'error');
+            $selected = undef;
+        } else { $noexit = 0; }
+      } else { $noexit = 0; }
+    }
     $dlg->destroy;
     &$old_focus;
     &$old_grab;
