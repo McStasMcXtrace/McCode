@@ -22,7 +22,9 @@ my $current_sim_file;
 my ($inf_instr, $inf_sim, $inf_data);
 my %inf_param_map;
 my $current_sim_def;
+my $main_window;
 my $edit_control;
+my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
 
 sub ask_save_before_simulate {
     my ($w) = @_;
@@ -55,16 +57,23 @@ sub is_erase_ok {
 }
     
 sub menu_quit {
-    my ($w) = @_;
-    if(is_erase_ok($w)) {
-	$w->destroy;
+    if(is_erase_ok($main_window)) {
+	$main_window->destroy;
     }
+}
+
+sub new_simulation_results {
+    my ($w) = @_;
+    my $text = $current_sim_file ? $current_sim_file : "<None>";
+    $current_results_label->configure(-text => "Simulation results: $text");
 }
 
 sub new_sim_def_name {
     my ($w, $name) = @_;
-    undef($current_sim_file)
-	unless $current_sim_def && $name eq $current_sim_def;
+    unless($current_sim_def && $name eq $current_sim_def) {
+	undef($current_sim_file);
+	new_simulation_results($w);
+    }	
     $current_sim_def = $name;
     # Strip any redundant leading "./".
     while($current_sim_def =~ m!^\./(.*)$!) {
@@ -78,7 +87,10 @@ sub new_sim_def_name {
 #     while($current_sim_def =~ m!^(.*)/[^/]+/\.\./(.*)$!) {
 # 	$current_sim_def = "$1/$2";
 #     }
-    $w->title("Mcgui: $current_sim_def");
+    $w->title("McStas: $current_sim_def");
+    my $text = "Instrument file: " .
+	($current_sim_def ? $current_sim_def : "<None>");
+    $current_instr_label->configure(-text => $text);
 }
 
 sub open_instr_def {
@@ -161,64 +173,35 @@ sub load_sim_file {
     my ($w) = @_;
     my $file = $w->getOpenFile(-defaultextension => "sim",
 			       -title => "Select simulation file");
-    $current_sim_file = $file if $file && -r $file;
-    read_sim_data($w);
-}
-
-sub myreader {
-    my ($dlg, $rotext, $fh) = @_;
-    my $s;
-    my $len = sysread($fh, $s, 256, 0);
-    if(defined($len)) {
-	if($len) {
-	    $rotext->insert('end', $s);
-	} else {
-	    $dlg->fileevent($fh,'readable', "");
-	    $rotext->insert('end', "\nEOF\n");
-	}
-    } else {
-	$dlg->fileevent($fh,'readable', "");
-	$rotext->insert('end', "\nERROR: $!\n");
+    if($file && -r $file) {
+	$current_sim_file = $file ;
+	new_simulation_results($w);
     }
+    read_sim_data($w);
 }
 
 sub putmsg {
     my ($t, $m, $tag) = @_;
-    $t->insert('end', $m, $tag);
-    $t->see('end');
+    $cmdwin->insert('end', $m, $tag);
+    $cmdwin->see('end');
 }
 
 sub run_dialog_create {
-    my ($w, $title, $instr, $cancel_cmd) = @_;
+    my ($w, $title, $text, $cancel_cmd) = @_;
     my $dlg = $w->Toplevel(-title => $title);
     $dlg->transient($dlg->Parent->toplevel);
     $dlg->withdraw;
     $dlg->protocol("WM_DELETE_WINDOW" => sub { } );
     # Add labels
-    $dlg->Label(-text => $instr,
+    $dlg->Label(-text => $text,
 		-anchor => 'w',
 		-justify => 'left')->pack(-fill => 'x');
-    my $status_lab = $dlg->Label(-text => "Status: initializing",
-				 -anchor => 'w',
-				 -justify => 'left');
-    $status_lab->pack(-fill => 'x');
-    # Add the main text field, with scroll bar
-    my $rotext = $dlg->ROText(-relief => 'sunken', -bd => '2',
-			      -setgrid => 'true',
-			      -height => 30, -width => 80);
-    my $s = $dlg->Scrollbar(-command => [$rotext, 'yview']);
-    $rotext->configure(-yscrollcommand =>  [$s, 'set']);
-    $s->pack(-side => 'right', -fill => 'y');
-    $rotext->pack(-expand => 'yes', -fill => 'both');
-    $rotext->mark('set', 'insert', '0.0');
-    $rotext->tagConfigure('msg', -foreground => 'blue');
-    # Add buttons, in a frame at the bottom
     my $bot_frame = $dlg->Frame(-relief => "raised", -bd => 1);
     $bot_frame->pack(-side => "top", -fill => "both",
 		     -ipady => 3, -ipadx => 3);
     my $but = $bot_frame->Button(-text => "Cancel", -command => $cancel_cmd);
     $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
-    return ($dlg, $status_lab,  $rotext, $but);
+    return $dlg;
 }
 
 sub run_dialog_popup {
@@ -240,91 +223,67 @@ sub run_dialog_retract {
 }
 
 sub run_dialog_reader {
-    my ($dlg, $fh, $status_lab, $but, $rotext, $state, $success) = @_;
+    my ($w, $fh, $rotext, $state, $success) = @_;
     my $s;
     my $len = sysread($fh, $s, 256, 0);
     if($len) {
 	putmsg($rotext, $s);
     } else {
-	$dlg->fileevent($fh,'readable', "");
-	return if $$state & 1;
-	$$state |= 1;
-	if(!defined($len)) {
-	    putmsg($rotext, "Simulation exited abnormally.\n", 'msg');
-	    $$success = undef;
-	} else {
-	    putmsg($rotext, "Simulation finished.\n", 'msg');
-	    $$success = 1;
-	}
-	$status_lab->configure(-text => "Status: done");
-	$but->configure(-text => "Ok",
-			-command => sub { $$state |= 2; } );
-	$dlg->bind('<Return>' => sub { $but->flash; $$state |= 2; } );
+	$w->fileevent($fh,'readable', "");
+	return if $$state;
+	$$state = 1;
+	$$success = defined($len);
     }
 }
 
 sub run_dialog {
     my ($w, $fh, $pid, $inittext) = @_;
-    # The $state variable gets bit 0 set when the simulation finishes
-    # and bit 1 set when the cancel/ok button is presssed. Thus we
-    # exit when it gets to the value 3.
+    # The $state variable is set when the simulation finishes.
     my ($state, $success) = (0, 0);
     # Initialize the dialog.
     my $cancel_cmd = sub {
-	kill 'SIGTERM', $pid unless $state & 1;
-	$state |= 2;
+	kill -15, $pid unless $state; # signal 15 is SIGTERM
     };
-    my ($dlg, $status_lab, $rotext, $but) =
-	run_dialog_create($w, "Running simulation ...",
-			  "Instrument: $current_sim_def", $cancel_cmd);
-    putmsg($rotext, $inittext, 'msg'); # Must appear before any other output
+    my $dlg = run_dialog_create($w, "Running simulation",
+				"Simulation running ...", $cancel_cmd);
+    putmsg($cmdwin, $inittext, 'msg'); # Must appear before any other output
     # Set up the pipe reader callback
     my $reader = sub {
-	run_dialog_reader($dlg, $fh, $status_lab, $but, $rotext,
-			  \$state, \$success);
+	run_dialog_reader($w, $fh, $cmdwin, \$state, \$success);
     };
-    $dlg->fileevent($fh, 'readable', $reader);
-    $status_lab->configure(-text => "Status: simulation running");
+    $w->fileevent($fh, 'readable', $reader);
+    $status_label->configure(-text => "Status: Running simulation");
     my $savefocus = run_dialog_popup($dlg);
     do {
-        $dlg->waitVariable(\$state);
-    } until $state == 3;
+        $w->waitVariable(\$state);
+    } until $state;
     run_dialog_retract($dlg, $savefocus);
-    return $success;
-}
-
-sub compile_dialog_reader {
-    my ($dlg, $fh, $status_lab, $but, $rotext, $state, $success) = @_;
-    my $s;
-    my $len = sysread($fh, $s, 256, 0);
-    if($len) {
-	putmsg($rotext, $s);
+    my $status = close($fh);
+    $status_label->configure(-text => "Status: Done");
+    if(!$success || !defined($status) || ($? != 0)) {
+	putmsg($cmdwin, "Simulation exited abnormally.\n", 'msg');
+	return undef;
     } else {
-	$dlg->fileevent($fh,'readable', "");
-	return if $$state & 1;
-	$$state |= 1;
-	$$success = defined($len) ? 1 : 0;
+	putmsg($cmdwin, "Simulation finished.\n", 'msg');
+	return 1;
     }
 }
 
 sub dialog_get_out_file {
     my ($w, $file, $force) = @_;
-    # The $state variable gets bit 0 set when the spawned command
-    # finishes and bit 1 set when the cancel/ok button is presssed.
+    # The $state variable is set when the spawned command finishes.
     my ($state, $cmd_success);
     my $success = 0;
     my ($fh, $pid, $out_name);
     # Initialize the dialog.
     my $cancel_cmd = sub {
-	kill -15, $pid if $pid && !($state & 1); # signal 15 is SIGTERM
-	$state |= 2;
+	kill -15, $pid if $pid && !$state; # signal 15 is SIGTERM
     };
-    my ($dlg, $status_lab, $rotext, $but) =
-	run_dialog_create($w, "Compiling simulation ...",
-			  "Instrument: $current_sim_def", $cancel_cmd);
-    my $printer = sub { putmsg($rotext, "$_[0]\n", 'msg'); };
+    my $dlg = run_dialog_create($w, "Compiling simulation ...",
+				"Compiling simulation", $cancel_cmd);
+    my $printer = sub { putmsg($cmdwin, "$_[0]\n", 'msg'); };
     # Set up the pipe reader callback
-    $status_lab->configure(-text => "Status: compiling simulation");
+    $status_label->configure(-text => "Status: Compiling simulation");
     # The dialog isn't actually popped up unless/until a command is
     # run or an error occurs.
     my $savefocus;
@@ -348,16 +307,16 @@ sub dialog_get_out_file {
 		    last;
 		}
 		if($pid) {		# Parent
-		    $state &= ~1; # Clear "command done" flag.
+		    $state = 0; # Clear "command done" flag.
 		    $cmd_success = 0;
 		    my $reader = sub {
-			compile_dialog_reader($dlg, $fh, $status_lab, $but,
-					      $rotext, \$state, \$cmd_success);
+			run_dialog_reader($w, $fh,
+					  $cmdwin, \$state, \$cmd_success);
 		    };
 		    $dlg->fileevent($fh, 'readable', $reader);
 		    do {
 			$dlg->waitVariable(\$state);
-		    } until $state & 1;
+		    } until $state;
 		    my $ret = close($fh);
 		    undef($pid);
 		    unless($cmd_success && defined($ret) && $? == 0) {
@@ -373,7 +332,6 @@ sub dialog_get_out_file {
 		    exec @$val;
 		}
 	    } elsif($type eq 'ERROR') {
-		$savefocus = run_dialog_popup($dlg) unless $savefocus;
 		&$printer("Error: $msg");
 		last;
 	    } elsif($type eq 'CONTINUE') {
@@ -383,20 +341,10 @@ sub dialog_get_out_file {
 	    }
 	}
     }
-    if($savefocus) {
-	my $donetype = $success ? "Done" : "Compile failed";
-	$status_lab->configure(-text => "Status: $donetype");
-	&$printer("$donetype.");
-	$state &= ~2;		# Wait for "OK" even if user selected cancel.
-	unless($state & 2) {
-	    $but->configure(-text => "Ok", -command => sub { $state |= 2; } );
-	    $dlg->bind('<Return>' => sub { $but->flash; $state |= 2; } );
-	    do {
-		$dlg->waitVariable(\$state);
-	    } until $state & 2;
-	}
-    }
     run_dialog_retract($dlg, $savefocus);
+    my $donetype = $success ? "Done" : "Compile failed";
+    $status_label->configure(-text => "Status: $donetype");
+    &$printer("$donetype.") unless $success && !$savefocus;
     return $success ? $out_name : undef;
 }
 
@@ -431,11 +379,13 @@ sub my_system {
 	return undef;
     }
     if($child_pid) {		# Parent
-	my $ret1 = run_dialog($w, $fh, $child_pid, $inittext);
-	my $ret2 = close($fh);
-	return $ret1 && defined($ret2) && ($? == 0);
+	return run_dialog($w, $fh, $child_pid, $inittext);
     } else {			# Child
 	open(STDERR, ">&STDOUT") || die "Can't dup stdout";
+	# Make the child the process group leader, so that
+	# we can kill off any subprocesses it may have
+	# spawned when the user selects CANCEL.
+	setpgrp(0,0);
 	exec @sysargs;
     }
 }
@@ -482,11 +432,13 @@ sub menu_run_simulation {
 	$current_sim_file = $newsi->{'Dir'} ?
 	    "$newsi->{'Dir'}/mcstas.sim" :
 	    "mcstas.sim";
+	new_simulation_results($w);
 	read_sim_data($w);
 	$inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
 	$inf_sim->{'Trace'} = $newsi->{'Trace'};
 	if($newsi->{'Autoplot'} && !$newsi->{'Trace'}) {
-	    plot_dialog($w, $inf_instr, $inf_sim, $inf_data);
+	    plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
+			$current_sim_file);
 	}
     }
 }
@@ -497,7 +449,7 @@ sub menu_plot_results {
 	my $ret = load_sim_file($w);
 	return 0 unless $ret && $current_sim_file;
     }
-    plot_dialog($w, $inf_instr, $inf_sim, $inf_data);
+    plot_dialog($w, $inf_instr, $inf_sim, $inf_data, $current_sim_file);
     return 1;
 }
 
@@ -535,8 +487,8 @@ sub setup_menu {
     $filemenu->command(-label => 'Quit',
 		       -underline => 0,
 		       -accelerator => 'Alt+Q',
-		       -command => [\&menu_quit, $w]);
-    $w->bind('<Alt-q>' => [\&menu_quit, $w]);
+		       -command => \&menu_quit);
+    $w->bind('<Alt-q>' => \&menu_quit);
     $filemenu->pack(-side=>'left');
     my $editmenu = $menu->Menubutton(-text => 'Edit', -underline => 0);
     $editmenu->command(-label => 'Undo',
@@ -571,6 +523,38 @@ sub setup_menu {
     $helpmenu->pack(-side=>'right');
 }
 
+sub setup_cmdwin {
+    my ($w) = @_;
+    my $f = $w->Frame(-relief => 'raised', -borderwidth => 2);
+    $f->pack(-fill => 'x');
+    my $instr_lab = $f->Label(-text => "Instrument file: <None>",
+			      -anchor => 'w',
+			      -justify => 'left');
+    $instr_lab->pack(-fill => 'x');
+    my $res_lab = $f->Label(-text => "Simulation results: <None>",
+			    -anchor => 'w',
+			    -justify => 'left');
+    $res_lab->pack(-fill => 'x');
+    my $status_lab = $f->Label(-text => "Status: Ok",
+			       -anchor => 'w',
+			       -justify => 'left');
+    $status_lab->pack(-fill => 'x');
+    # Add the main text field, with scroll bar
+    my $rotext = $f->ROText(-relief => 'sunken', -bd => '2',
+			    -setgrid => 'true',
+			    -height => 15, -width => 80);
+    my $s = $f->Scrollbar(-command => [$rotext, 'yview']);
+    $rotext->configure(-yscrollcommand =>  [$s, 'set']);
+    $s->pack(-side => 'right', -fill => 'y');
+    $rotext->pack(-expand => 'yes', -fill => 'both');
+    $rotext->mark('set', 'insert', '0.0');
+    $rotext->tagConfigure('msg', -foreground => 'blue');
+    $current_instr_label = $instr_lab;
+    $current_results_label = $res_lab;
+    $status_label = $status_lab;
+    $cmdwin = $rotext;
+}
+
 sub setup_edit {
     my ($w) = @_;
     my $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
@@ -579,7 +563,6 @@ sub setup_edit {
     $e->configure(-yscrollcommand =>  [$s, 'set']);
     $s->pack(-side => 'right', -fill => 'y');
     $e->pack(-expand => 'yes', -fill => 'both');
-#    $e->insert('0.0', "");
     $e->mark('set', 'insert', '0.0');
     $edit_control = $e;
 }
@@ -602,7 +585,11 @@ sub check_if_need_recompile {
 }
 
 my $win = new MainWindow;
+$main_window = $win;
 setup_menu($win);
+setup_cmdwin($win);
 setup_edit($win);
+
+open_instr_def($win, $ARGV[0]) if @ARGV;
 
 MainLoop;
