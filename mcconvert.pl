@@ -7,7 +7,7 @@
 #
 # Cyclic conversion, e.g. Matlab->Scilab->Matlab is NOT supported!
 #
-# PW, Risoe, 20031125
+# Peter Willendrup, Risoe, 20031205
 #
 #   This file is part of the McStas neutron ray-trace simulation package
 #   Copyright (C) 1997-2003, All rights reserved
@@ -27,110 +27,188 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
+#
+#   Based on / inspired from m2sci.pl:
+#     (m2sci.pl by Torbjorn Pettersen <Torbjorn.Pettersen@broadpark.no>
+#      available from http://home.broadpark.no/~tpette-4/)
+#
 use File::Basename;
+use File::Find;
+use Cwd;
 
 # Declaration of the global scope vars,
-my ($i,$j,$outdir,$indir,$format,$dirname,$file,$infile,$outfile,$base,$suffix,$randstr,$NEXTFUNC);
-my @filelist;
+my ($i,$j);
+my ($outdir,$indir);
+my ($format,$randstr,$randdir,$quiet);
+my $cwd = getcwd();
+my @junk;
+
+# Assume no random output dir...
+$randdir = 0;
+# Assume we want status written to output
+$quiet = 0;
+
+# Echo something meaningful to stdout
+print "mcconvert.pl, part of the McStas simulation package\n";
+print "This is free software, licensed under the GPL\n";
+print "Copyright (C) 1997-2003, All rights reserved\n";
+print "Risoe National Laborartory, Roskilde, Denmark\n";
+print "Institut Laue Langevin, Grenoble, France\n\n";
 
 # Parse the commandline args
 for ($i = 0; $i< @ARGV; $i++) {
-    if ($ARGV[$i] =~ /^--format=([a-zA-Z0-9_\"]+)$/) {
-	$format = $1;
-    } elsif ($ARGV[$i] =~ /^--outdir=([a-zA-Z0-9_\\\/\"\:~]+)$/) {
-	$outdir = $1;
-    } elsif ($ARGV[$i] eq "--help") {
-	# Print some help info, next exit
-	print STDERR "\nmcconvert.pl script from McStas\n";
-	print STDERR "\nConverts between Matlab and Scilab version of\nMcStas output data.\n";
-	print STDERR "\nusage:\n";
-	print STDERR "\nNo arguments:\n\tWill try to guess wanted output format\n\tWill place files in random subdir\n";
-	print STDERR "\tWill try to convert all files in current dir\n";
-	print STDERR "\n--format=FORMAT\n\tSpecifies wanted output format, i.e. Matlab or Scilab\n";
-	print STDERR "\n--outdir=DIR\n\tSpecifies wanted output directory\n";
-	print STDERR "\nOther input is interpreted as files to convert. If none \n";
-	print STDERR "are specified, the current directory is searched, non-recursively.\n\n";
-	exit();
-    } else {
-	push @filelist, $ARGV[$i];
-    }
+  if ($ARGV[$i] =~ /^--format=([a-zA-Z0-9_\"]+)$/) {
+    $format = $1;
+  } elsif ($ARGV[$i] =~ /^--outdir=([a-zA-Z0-9_\\\/\"\:\.~]+)$/) {
+    $outdir = $1;
+  } elsif ($ARGV[$i] =~ /^--indir=([a-zA-Z0-9_\\\/\"\:\.~]+)$/) {
+    $indir = $1;
+  } elsif ($ARGV[$i] eq "--quiet") {
+    $quiet = 1;
+  } elsif ($ARGV[$i] eq "--help") {
+    # Print some help info, next exit
+    print "\nmcconvert.pl script from McStas\n";
+    print "\nConverts between Matlab and Scilab version of\nMcStas output data.\n";
+    print "\nusage:\n";
+    print "\nNo arguments:\n\tWill try to guess wanted output format\n\tWill place files in random subdir\n";
+    print "\tWill try to convert files in current dir\n";
+    print "\n--format=FORMAT\n\tSpecifies wanted output format, i.e. Matlab or Scilab\n";
+    print "\n--outdir=DIR\n\tSpecifies wanted output directory\n";
+    print "\n--indir=DIR\n\tSpecifies wanted input directory\n";
+    print "\n--quiet\n\tSuppress status info (e.g. mcstas.m -> mcstas.sci)\n";
+    print "\nIf no --indir  is specified, --indir=\".\" is assumed\n";
+    print "\nWarning: mcconvert.pl searches the --indir RECURSIVELY\n\n";
+    exit();
+  } else {
+    push @junk, $ARGV[$i];
+  }
 }
 
-if (!@filelist) {
-    print STDERR "You did not give me any files to convert, assuming that you ment everything in .\n";
-    opendir(DOT,".") or die "Could not open indir .\n";
-    while (defined($file = readdir(DOT))) {
-	if (! -d $file) {
-	    push @filelist, $file;
-	}
-    }
-    closedir(DIR);
+if (@junk>0) {
+  print "Warning: Options @junk on commandline not understood...\n\n";
+}
+
+# Handle the indir first...
+if (!$indir) {
+    print "You did not give me any files to convert, assuming that you ment everything in .\n";
+    $indir = ".";
+}
+
+if (! -e $indir) {
+    die "mcconvert.pl: Input directory $indir does not exist...\n\n";
+}
+
+if (-e "$indir/.converted") {
+    print STDERR "\nmcconvert.pl:You are seeminly trying to convert a set of converted data!";
+    die "\nCyclic conversion not supported!\n\n";
 }
 
 if (!$format) {
-    print STDERR "You did not specify a conversion format (Scilab/Matlab)\n";
-    print STDERR "Trying to guess one...\n";
-    if ((-e "mcstas.sci") && (! -e "mcstas.m")) {
+    print "You did not specify a conversion format (Scilab/Matlab)\n";
+    print "Trying to guess one... ";
+    if ((-e "$indir/mcstas.sci") && (! -e "$indir/mcstas.m")) {
 	$format = "Matlab";
-    } elsif ((! -e "mcstas.sci") && (-e "mcstas.m")) {
+    } elsif ((! -e "$indir/mcstas.sci") && (-e "$indir/mcstas.m")) {
 	$format = "Scilab";
-    } elsif ((-e "mcstas.sci") && (-e "mcstas.m")) {
-	die "You have mcstas.sci AND mcstas.m - don't know what to do then...\n";
+    } elsif ((-e "$indir/mcstas.sci") && (-e "$indir/mcstas.m")) {
+	die "mcconvert.pl: You have mcstas.sci AND mcstas.m - don't know what to do then...\n\n";
     } else {
-	die "Could not find a Matlab/Scilab mcstas.* to convert from...\n";
+	die "mcconvert.pl: Could not find a Matlab/Scilab mcstas.* to convert from...\n\n";
     }
+    print "Converting to $format format...\n";
 }
+
 
 if (!$outdir) {
     # Create a random directory for the converted data
     $randstr = generate_random_string(5);
-    $outdir = "./converted_${format}_${randstr}";
-} 
+    $outdir = "converted_${format}_${randstr}";
+    $randdir = 1;
+}
 if (! -e $outdir) {
-    mkdir($outdir) or die "Could not create $outdir\n";
+    mkdir($outdir) or die "mcconvert.pl: Could not create $outdir\n\n";
+    open(TMP,">$outdir/.stop");
+    close(TMP);
+}
+if (!($outdir =~ /^\//)) {
+    $outdir = "$cwd/$outdir";
+}
+if ($randdir == 1) {
+  print "\nYour files, converted to $format format will be placed in $outdir\n\n";
 }
 
-print STDERR "Placing your converted $format data in $outdir...\n";
+# We are now ready to do the work:
+chdir($indir);
+find(\&findit,".");
 
-for ($j = 0; $j< @filelist; $j++) {
-    $infile = @filelist[$j];
-    # Split the filename in pieces:
-    ($base, $dirname, $suffix) = fileparse($infile,".m",".sci");
-    if ($suffix eq ".m") {
-	$outfile = "$outdir/$base.sci";
-    } elsif ($suffix eq ".sci") {
-	$outfile = "$outdir/$base.m";
+open(TMP,">$outdir/.converted");
+close(TMP);
+chdir($cwd);
+print "\n\nmcconvert.pl done...\n\n";
+
+sub findit {
+    my $object = $File::Find::name;
+    $object =~ s!^\.!$outdir!g;
+    if (-e ".stop") {
+	$File::Find::prune = 1;
     } else {
-	$outfile = "$outdir/$base";
+	if (-d $_) {
+	    if (!($object eq $outdir)) {
+		if ((! -e $object) && (! -e "$_/.stop")) {
+		    mkdir($object) || die "mcconvert.pl: Could not create $object!\n\n";
+		}
+	    }
+	} else {
+	    convert($_,$object);
+	}
     }
+}
 
+
+sub convert {
+    my ($infile,$outfile) = @_;
+    my ($tmp, $base, $dirname, $suffix, $NEXTFUNC);
+    $tmp = $File::Find::dir;
+    $tmp =~ s!^\.\/!$indir/!;
+
+    # Split the filename in pieces:
+    ($base, $dirname, $suffix) = fileparse($outfile,".m",".sci");
+    if ($suffix eq ".m") {
+	$outfile = "$dirname$base.sci";
+    } elsif ($suffix eq ".sci") {
+	$outfile = "$dirname$base.m";
+    } else {
+	$outfile = "$dirname$base";
+    }
 
     # Adjust the $base, remove .'s
     $base =~ s!\.!_!g;
 
-    print "Reading from $infile\n";
+    if ($quiet == 0) {
+      print "Reading from $tmp/$infile -> ";
+    }
     open(IN,"<$infile");
-    open(OUT,">$outfile") || die "m2sci.pl: Unable to create $outfile: $!\n";
-    print "\t Writing script to $outfile\n";
-    
+    open(OUT,">$outfile") || die "mcconvert.pl: Unable to create $outfile: $!\n\n";
+    if ($quiet == 0) {
+      print "\t $outfile\n";
+    }
     $NEXTFUNC = 0;
     while (<IN>) {
 	if ($format eq "Scilab") {
 	    if ((/^\w*function/) & $NEXTFUNC) {
 		print OUT "endfunction\n"; # add endfunction 
 	    } else { $NEXTFUNC = 1;};
-	    
+	
 	    unless (/\w*fprintf\w*/) {
 		s/%/\/\//g;			# Comments are replaced
 	    }
-	    
+	
 	    s/nargout/argn(1)/g;	# Outputarguments to function
 	    s/nargin/argn(2)/g;		# Inputarguments to function
-	    
+	
 	    s/isempty\((\w*)\)/($1==[])/g;
 	    s/\r$//g;
-	    
+	
 	    # Replacing matlab functions with corresponding scilab commands.
 	    s/\bchar\b/ascii/;
 	    s/\bcompan\b/companion/g;
@@ -144,17 +222,17 @@ for ($j = 0; $j< @filelist; $j++) {
 	} elsif ($format eq "Matlab") {
 	    if (/^\w*endfunction/) {
 		print OUT "%" ; # comment out endfunction 
-	    } 	
+	    }
 	    unless (/\w*fprintf\w*/) {
 		s/\/\//%/g;			# Comments are replaced
 	    }
-	    
+	
 	    s/argn\(1\)/nargout/g;	# Outputarguments to function
 	    s/argn\(2\)/nargin/g;		# Inputarguments to function
-	    
+	
 	    s/(\w*)==\[\]/isempty\(($1)\)/g;
 	    s/struct\(\)/\[\]/g;
-	    
+	
 	    # Replacing matlab functions with corresponding scilab commands.
 	    s/\bascii\b/char/;
 	    s/\bcompanion\b/compan/g;
@@ -176,14 +254,14 @@ for ($j = 0; $j< @filelist; $j++) {
 	}
 	print OUT;
     }
-    close(OUT);		   
+    close(OUT);
 }
 
 # Function for replacing the inline_ Matlab/Scilab functions
 sub inline_replace {
     my ($OUTFILE,$format,$base) = @_;
     if ($format eq "Scilab") {
-	print $OUTFILE 
+	print $OUTFILE
 "function d=mcload_inline(d)
 // local inline func to load data
 execstr(['S=['+part(d.type,10:(length(d.type)-1))+'];']);
@@ -235,7 +313,7 @@ xname(t1);
 endfunction
 mc_$base=get_$base();\n"
 } elsif ($format eq "Matlab") {
-    print $OUTFILE 
+    print $OUTFILE
 "function d=mcload_inline(d)
 %% local inline function to load data
 S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);
@@ -291,9 +369,4 @@ sub generate_random_string
 	}
 	return $random_string;
 }
-
-
-
-
-
 
