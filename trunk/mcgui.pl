@@ -1310,15 +1310,83 @@ sub editor_quit {
 
 sub Tk::TextEdit::SetComment
 {
- # Sub to redefine the LINE_COMMENT_STRING of the TextEdit widget...
- # Don't know why, but this has to be done as an extension to the TextEdit 
- # class... Will update this if something more clever is answered from
- # comp.lang.perl.tk
- 
- my ($w,$comment)=@_;
- my $oldcomment = $w->{'LINE_COMMENT_STRING'};
- $w->{'LINE_COMMENT_STRING'}=$comment;
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) {
+     # Sub to redefine the LINE_COMMENT_STRING of the TextEdit widget...
+     # Don't know why, but this has to be done as an extension to the TextEdit 
+     # class... Will update this if something more clever is answered from
+     # comp.lang.perl.tk
+     
+     my ($w,$comment,$endcomment)=@_;
+     my $oldcomment = $w->{'LINE_COMMENT_STRING'};
+     $w->{'LINE_COMMENT_STRING'}=$comment;
+     $w->{'END_COMMENT_STRING'}=$endcomment;
+ }
 }
+
+sub Tk::TextUndo::insertStringAtEndOfSelectedLines
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) {
+     my ($w,$insert_string)=@_;
+     $w->addGlobStart;
+     $w->MarkSelectionsSavePositions;
+     foreach my $line ($w->GetMarkedSelectedLineNumbers)
+     {
+	 $w->insert($line.'.end', $insert_string);
+     }
+     $w->RestoreSelectionsMarkedSaved;
+     $w->addGlobEnd;
+ }
+}
+
+sub Tk::TextUndo::deleteStringAtEndOfSelectedLines
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) {
+     my ($w,$insert_string)=@_;
+     $w->addGlobStart;
+     $w->MarkSelectionsSavePositions;
+     my $length = length($insert_string);
+     foreach my $line ($w->GetMarkedSelectedLineNumbers)
+     {
+	 # First, extract full string to determine starting point:
+	 my $tmpstart = $line.'.0';
+	 my $end   = $line.'.end';
+	 my $temp = $w->get($tmpstart, $end);
+	 my $len = length($temp);
+	 my $realstart = $len - $length;
+	 $realstart = ".${realstart}";
+	 my $start = $line.$realstart;
+	 my $current_text = $w->get($start, $end);
+	 next unless ($current_text eq $insert_string);
+	 $w->delete($start, $end);
+     }
+     $w->RestoreSelectionsMarkedSaved;
+     $w->addGlobEnd;
+ }
+}
+
+sub Tk::TextEdit::CommentSelectedLines
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) {
+     my($w)=@_;
+     $w->insertStringAtStartOfSelectedLines($w->{'LINE_COMMENT_STRING'});
+     $w->insertStringAtEndOfSelectedLines($w->{'END_COMMENT_STRING'});
+ }
+}
+
+sub Tk::TextEdit::UncommentSelectedLines
+{
+ # Only unix...
+ if (!($Config{'osname'} eq 'MSWin32')) { 
+     my($w)=@_;
+     $w->deleteStringAtStartOfSelectedLines($w->{'LINE_COMMENT_STRING'});
+     $w->deleteStringAtEndOfSelectedLines($w->{'END_COMMENT_STRING'});
+ }
+}
+
 
 sub setup_edit {
     my ($mw) = @_;
@@ -1333,7 +1401,11 @@ sub setup_edit {
     # Later, I might work a little harder to get proper /* */ comment chars to 
     # work, which will not rely on gcc as compiler...
     # Comment lines in/out using <F7> and <F8>
-    $e->SetComment("// ");
+    #
+    # Unfortunately, this is not working on Win32...
+    if (!($Config{'osname'} eq 'MSWin32')) {
+	$e->SetComment("/* "," */");
+    }
     
     my $menu = $e->menu;
     $w->configure(-menu => $menu);
