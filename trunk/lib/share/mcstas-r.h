@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.13 1998-04-17 10:53:08 kn Exp $
+*	$Id: mcstas-r.h,v 1.14 1998-04-17 11:50:31 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.13  1998/04/17 10:53:08  kn
+*	Added randvec_target_sphere.
+*
 *	Revision 1.12  1998/03/25 07:23:24  kn
 *	Fixed RAND_MAX #define for HPUX.
 *
@@ -234,5 +237,7 @@ void mcgenstate(void);
 double randnorm(void);
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 		       double vx, double vy, double vz, double r, double h);
+int sphere_intersect(double *t0, double *t1, double x, double y, double z,
+		 double vx, double vy, double vz, double r);
 void randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
 			   double xi, double yi, double zi, double radius);

@@ -6,9 +6,12 @@
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.9 1998-04-17 10:52:27 kn Exp $
+* 	$Id: mcstas-r.c,v 1.10 1998-04-17 11:50:08 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.9  1998/04/17 10:52:27  kn
+* 	Better names in randvec_target_sphere.
+*
 * 	Revision 1.8  1998/04/16 14:21:49  kn
 * 	Added randvec_target() function.
 *
@@ -314,6 +317,28 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     return 0;
   }
 }
+
+
+/* Calculate intersection between line and sphere. */
+int
+sphere_intersect(double *t0, double *t1, double x, double y, double z,
+		 double vx, double vy, double vz, double r)
+{
+  double A, B, C, D, v;
+
+  v = sqrt(vx*vx + vy*vy + vz*vz);
+  A = v*v;
+  B = 2*(x*vx + y*vy + z*vz);
+  C = x*x + y*y + z*z - r*r;
+  D = B*B - 4*A*C;
+  if(D < 0)
+    return 0;
+  D = sqrt(D);
+  *t0 = (-B - D) / (2*A);
+  *t1 = (-B + D) / (2*A);
+  return 1;
+}
+
 
 /* Choose random direction towards target at (x,y,z) with radius r. */
 /* ToDo: It should be possible to optimize this to avoid computing angles. */
