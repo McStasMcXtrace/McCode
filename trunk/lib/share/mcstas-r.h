@@ -89,6 +89,8 @@ struct adapt_tree * adapt_tree_init(int N);
 void adapt_tree_free(struct adapt_tree *t);
 
 
+#define SCATTER do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
+        mcnlt,mcnlsx,mcnlsy, mcnlp);} while(0)
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnlsx,mcnlsy, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
 /* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
@@ -121,6 +123,9 @@ void adapt_tree_free(struct adapt_tree *t);
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
 	 x,y,z,vx,vy,vz,t,s1,s2,p);
+#define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
+  printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+	 x,y,z,vx,vy,vz,t,s1,s2,p);
 #define mcDEBUG_LEAVE() if(!mcdotrace); else printf("LEAVE:\n");
 #define mcDEBUG_ABSORB() if(!mcdotrace); else printf("ABSORB:\n");
 #else
@@ -130,6 +135,7 @@ void adapt_tree_free(struct adapt_tree *t);
 #define mcDEBUG_ENTER()
 #define mcDEBUG_COMP(c)
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p)
+#define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,s1,s2,p)
 #define mcDEBUG_LEAVE()
 #define mcDEBUG_ABSORB()
 #endif
@@ -199,7 +205,7 @@ void mt_srandom (unsigned long x);
 #define rand01() ( ((double)random())/((double)MC_RAND_MAX+1) )
 #define randpm1() ( ((double)random()) / (((double)MC_RAND_MAX+1)/2) - 1 )
 #define rand0max(max) ( ((double)random()) / (((double)MC_RAND_MAX+1)/(max)) )
-#define randminmax(min,max) ( rand0max((max)-(min)) - (min) )
+#define randminmax(min,max) ( rand0max((max)-(min)) + (min) )
 
 #define PROP_X0 \
   do { \
