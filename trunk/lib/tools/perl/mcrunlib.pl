@@ -544,7 +544,7 @@ sub do_test {
     }
     if ($plot_flag) {
       &$printer("# Plotter      check: FAILED.");
-      &$printer("# >> The $plotter plotter is NOT working properly.");
+      &$printer("# >> The $plotter plotter may NOT be working properly.");
       &$printer("# >> Check that you have Scilab/Matlab/PGPLOT installed");
       &$printer("# >>    and that your Display is available.");
     } else {
