@@ -27,7 +27,7 @@
 
 
 DEFINE COMPONENT Filter
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, Emin, Emax, T0)
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, len, T0, Emin, Emax)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
