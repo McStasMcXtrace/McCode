@@ -515,7 +515,7 @@ if ($show_tutorial) {
     die "mcdoc: Set the BROWSER environment variable first\n";
   } else {
     # open the index.html
-    print "mcdoc: Starting $browser $MCSTAS::sys_dir/doc/tutorial/html/index.html";
+    print "mcdoc: Starting $browser $MCSTAS::sys_dir/doc/tutorial/html/index.html\n";
     system("$browser $MCSTAS::sys_dir/doc/tutorial/html/index.html\n");
     die "mcdoc: tutorial done.\n";
   }
