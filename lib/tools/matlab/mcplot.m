@@ -203,6 +203,7 @@ else  % if 's' is a 'struct'
   for index=1:length(h)
     pos = get(h(index),'position');
     pos = pos.*[1 ratio 1 ratio];
+    pos(find(pos < 0)) = 0;
     set(h(index),'position',pos);
   end
   
