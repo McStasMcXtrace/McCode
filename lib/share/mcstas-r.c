@@ -1733,7 +1733,7 @@ void sighandler(int sig)
         case SIGFPE  : printf(" SIGFPE "); break;
         case SIGBUS  : printf(" SIGBUS "); break;
         case SIGSEGV : printf(" SIGSEGV "); break;
-        case SIGSYS  : printf(" SIGSYS "); break;
+/*        case SIGSYS  : printf(" SIGSYS "); break; */
         case SIGURG  : printf(" SIGURG "); break;
         default : break;
         }
@@ -1743,12 +1743,12 @@ void sighandler(int sig)
   if (sig == SIGUSR1)
   {
     printf("# McStas: simulation now at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+    fflush(stdout);
     return;
   }
   else
-  if ((sig == SIGUSR2) || (sig == SIGQUIT) || (sig == SIGTERM) || (sig == SIGABRT) || (sig == SIGALRM) || (sig == SIGINT))
         {
-                printf("# McStas: finishing simulation at at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
+                printf("# McStas: finishing simulation at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
     mcset_ncount(mcget_run_num());
                 return;
         }
@@ -1758,8 +1758,6 @@ void sighandler(int sig)
                 printf("McStas: SYSTEM stop at at %.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
                 exit(-1);
   }
-  else
-    exit(-1);
  
 }
 #endif /* !MAC */
@@ -1792,7 +1790,9 @@ mcstas_main(int argc, char *argv[])
         signal( SIGFPE ,sighandler);    /* floating point exception */
         signal( SIGBUS ,sighandler);    /* bus error */
         signal( SIGSEGV ,sighandler);   /* segmentation violation */
+#ifdef SIGSYS
         signal( SIGSYS ,sighandler);    /* bad argument to system call */
+#endif
         signal( SIGURG ,sighandler);    /* urgent socket condition */
 #endif /* !MAC */
 #endif /* !WIN32 */
