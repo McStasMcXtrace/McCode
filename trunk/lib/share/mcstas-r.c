@@ -18,9 +18,18 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.51 2003-02-11 12:28:46 farhi Exp $
+* $Id: mcstas-r.c,v 1.52 2003-02-12 12:44:41 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.51  2003/02/11 12:28:46  farhi
+* Variouxs bug fixes after tests in the lib directory
+* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+* read_table:corrected MC_SYS_DIR -> MCSTAS define
+* monitor_nd-lib: fix Log(signal) log(coord)
+* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+* Progress_bar: precent -> percent parameter
+* CS: ----------------------------------------------------------------------
+*
 * Revision 1.50  2003/02/06 14:25:05  farhi
 * Made --no-output-files work again and 1D McStas data 4 columns again
 *
@@ -2095,7 +2104,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   
   isdata_present=((isdata==1 && p1) || (isdata==2 && p2) || (isdata==0 && p0));
   
-  is1d = (y1 == x1 && y2 == x2 && strstr(format.Name,"McStas"));
+  is1d = ((m==1 || n==1) && strstr(format.Name,"McStas"));
   mcvalid_name(valid_xlabel, xlabel, 64);
   mcvalid_name(valid_ylabel, ylabel, 64);
   mcvalid_name(valid_zlabel, zlabel, 64);
