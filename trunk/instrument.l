@@ -8,9 +8,13 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: instrument.l,v 1.15 1998-11-26 08:45:13 kn Exp $
+*	$Id: instrument.l,v 1.16 1999-01-28 07:54:44 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.15  1998/11/26 08:45:13  kn
+*	Fix bug with parse_restricted being defined static in this file, but
+*	declared extern in header file.
+*
 *	Revision 1.14  1998/10/02 08:36:34  kn
 *	Added output parameters for components.
 *	Fixed header comment.
@@ -140,6 +144,7 @@ DECLARE		return TOK_DECLARE;
 DEFINE		return TOK_DEFINE;
 DEFINITION	return TOK_DEFINITION;
 END		return TOK_END;
+MCDISPLAY	return TOK_MCDISPLAY;
 FINALLY		return TOK_FINALLY;
 EXTERN		return TOK_EXTERN;
 INITIALIZE	return TOK_INITIALIZE;
