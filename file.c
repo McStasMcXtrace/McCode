@@ -6,7 +6,7 @@
 *
 *	Author: K.N.			Sep 25, 1998
 *
-*	$Id: file.c,v 1.5 2003-01-21 07:50:44 pkwi Exp $
+*	$Id: file.c,v 1.6 2003-01-21 08:25:08 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.3  2000/02/15 07:40:59  kn

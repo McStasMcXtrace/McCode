@@ -18,7 +18,7 @@
 * the z-value l=r*Win, so you don't have to calculate the real exit coordinates 
 * and you do not need a new arm. The bender is bent to the negative X axis; 
 * it behaves like a parallel guide in the Y axis.
-* You may either enter either the deviation angle 'Win' or the length 'l'.
+* You may either enter the deviation angle 'Win' or the length 'l'.
 * The bender is shown straight, even if the implemented model is curved.
 * Thus, you don't have to shift the following component by the curved deviation.
 *
@@ -62,12 +62,10 @@
 *******************************************************************************/
  
 DEFINE COMPONENT Bender
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w,h,r,d=0.001,Win=0.04,k=1,
-R0a=0,Qca=0,alphaa=0,ma=0,Wa=0,
-R0i=0,Qci=0,alphai=0,mi=0,Wi=0,
-R0s=0,Qcs=0,alphas=0,ms=0,Ws=0,
-l=0)
+DEFINITION PARAMETERS 
+(w,h,r,d=0.001,Win=0.04,k=1,R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003,l=0)
+
+SETTING PARAMETERS ()
 OUTPUT PARAMETERS (bk, mWin)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
@@ -92,16 +90,13 @@ INITIALIZE
  %{
       if (r <0) 
       { fprintf(stderr,"Bender: error: %s: to bend in the other direction\n", NAME_CURRENT_COMP);
-        fprintf(stderr,"        rotate comp on z-axis by 180 deg.\n"); exit(-1); }
+        fprintf(stderr,"        rotate comp on z-axis by 180 deg.\n", NAME_CURRENT_COMP); exit(-1); }
       
       if (k*d > w)
       { fprintf(stderr,"Bender: error: %s has (k*d > w).\n", NAME_CURRENT_COMP);
         exit(-1); }
       if (w*h*r*Win*k == 0)
       { fprintf(stderr,"Bender: error: %s has one of w,h,r,Win,k null.\n", NAME_CURRENT_COMP);
-        exit(-1); }
-      if (Wa*Wi*Ws ==0)
-      { fprintf(stderr,"Bender: error: %s has one Wi, Wa, Ws null.\n", NAME_CURRENT_COMP);
         exit(-1); }
       /* width of one channel + thickness d of partition */
       mWin = Win;
@@ -115,7 +110,7 @@ TRACE
     double dru,ab,dab,R,Q,arg,arga,argi,Ta,vpl;
     double einmWin,ausmWin,zykmWin,aeumWin,innmWin,ref,innref,aeuref;
     double einzei,auszei,zykzei;
-    
+
     /* does the neutron hit the bender at the entrance? */
     PROP_Z0;
     if ((fabs(x)<w/2) && (fabs(y)<h/2))    

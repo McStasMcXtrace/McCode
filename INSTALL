@@ -1,15 +1,3 @@
-This is McStas INSTALL file. 
-
-You may get additional help about installation at
-  <http://neutron.risoe.dk/mcstas>
-and
-  <http://www.ill.fr/tas/mcstas>
-
-Of particular interest are the pages 
-  <http://neutron.risoe.dk/mcstas/FAQ.html>
-  <http://www.ill.fr/tas/mcstas/FAQ.html>
-  <http://www.ill.fr/tas/mcstas/package/CHANGES>
-
 McStas uses autoconf to detect the system configuration and create the
 proper Makefiles needed for compilation. On Unix-like systems, you
 should be able to compile and install McStas using the following steps:
@@ -17,8 +5,8 @@ should be able to compile and install McStas using the following steps:
 1. Unpack the sources to somewhere convenient and change to the source
    directory:
 
-  gunzip -c mcstas-1.6.1.tar.gz | tar xf -
-  cd mcstas-1.6.1/
+  gunzip -c mcstas-1.6-ill.tar.gz | tar xf -
+  cd mcstas-1.6-ill/
 
 2. Configure and compile McStas:
 
@@ -62,7 +50,7 @@ It may be necessary to remove configure's cache of old choices first:
     rm -f config.cache
 
 If you experience any problems, or have some questions or ideas
-concerning McStas, please contact <kim.lefmann@risoe.dk>
+concerning McStas, please contact kristian.nielsen@risoe.dk.
 
 
 Installing on non-Unix systems

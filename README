@@ -15,14 +15,6 @@ If you wish to use McStas in ways that contradict the conditions,
 contact us and chances are that we will be able to make a suitable
 arrangement.
 
-McStas is a computer program (written in C) that enables to modelize very
-precisely a neutron instrument described as a serie of various components. A
-source component shots each neutron randomly (Monte-Carlo), and the particule
-is then propagated through the different instrument components. Those latter
-act on the neutron characteristics (position, speed, direction, spin, etc...).
-Usually, one installs some detectors along the neutron path, to monitor it's
-characteristics and flux. 
-
 Installation instructions are in the file INSTALL.
 
 Changes from previous versions are in the file CHANGES. Please read that !
@@ -53,10 +45,10 @@ available from the McStas WWW home page:
     http://www.ill.fr/tas/mcstas/
 
 Contacts for McStas are:
+  Kristian Nielsen, email <kristian.nielsen@risoe.dk>
   Kim Lefmann <kim.lefmann@risoe.dk>
   Per-Olof Åstrand <per-olof.aastrand@risoe.dk>
   Emmanuel Farhi <farhi@ill.fr>
-  Kristian Nielsen, email <kristian.nielsen@risoe.dk>
   
 Feel free to direct any comments or questions
 to this address. It is an important goal of the McStas project to have
@@ -68,7 +60,7 @@ order to work. The needed software packages are all freely
 distributable, and can be found on the McStas WWW home page or on the
 McStas CD-Rom distribution.
 
- - The `mcrun' and 'gscan' front-ends require Perl version 5 or later.
+ - The `mcrun' and `gscan' front-ends requires Perl version 5 or later.
  - The `mcdisplay' front-end requires Perl version 5 or later, the
    PGPLOT graphics library, and the PgPerl interface between Perl and
    PGPLOT.

@@ -37,7 +37,7 @@ static int mcsingle_file = 0;
 static FILE *mcsiminfo_file = NULL;
 static char *mcdirname = NULL;
 static char *mcsiminfo_name = "mcstas.sim";
-static char  mccomp_curname[256];  /* ADD: E. Farhi, Sep 20th 2001 */
+static char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 
 /* MCDISPLAY support. */
 
@@ -1970,9 +1970,9 @@ void sighandler(int sig)
     case SIGURG  : printf(" SIGURG (urgent socket condition)"); break;
     default : break;
   }
-  printf(". Errno=%i\n", errno);
+  printf("\n");
   printf("# Simulation: %s (%s)\n", mcinstrument_name, mcinstrument_source);
-  printf("# Breakpoint: %s ", mccomp_curname);
+  printf("# Breakpoint: %s ", mcsig_message);
   if (mcget_ncount() == 0)
     printf("(0 %%)\n" );
   else
@@ -2015,7 +2015,7 @@ mcstas_main(int argc, char *argv[])
 #endif
 
   srandom(time(NULL));
-  strcpy(mccomp_curname, "main (Start)");
+  strcpy(mcsig_message, "main (Start)");
   mcparseoptions(argc, argv);
 
 #ifndef MAC
@@ -2043,7 +2043,7 @@ mcstas_main(int argc, char *argv[])
 #endif /* !WIN32 */
 
   mcsiminfo_init();
-  strcpy(mccomp_curname, "main (Init)");
+  strcpy(mcsig_message, "main (Init)");
   mcinit();
 #ifndef MAC
 #ifndef WIN32  

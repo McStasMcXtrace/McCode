@@ -51,9 +51,9 @@ sub plot_array_2d {
       pgscr(0, $r0, $g0, $b0);
       pgscr(1, $r1, $g1, $b1);
     }
-    pglab("$info->{'Xlabel'} $info->{'Stats'}", $info->{'Ylabel'}, "");
+    pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
     pgmtxt("T", 2.5, 0.5, 0.5, "$info->{'Title'}     $info->{'Component'}");
-    pgmtxt("T", 1.0, 0.5, 0.5, "[$info->{'Filename'}] ");
+    pgmtxt("T", 1.0, 0.5, 0.5, "[$info->{'Filename'}] $info->{'Stats'}");
     pgebuf;
     release;
 }

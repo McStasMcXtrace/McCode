@@ -7,7 +7,7 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.27 2003-01-21 07:50:44 pkwi Exp $
+* 	$Id: mcstas.h,v 1.28 2003-01-21 08:25:08 pkwi Exp $
 *
 *
 * Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
@@ -26,6 +26,8 @@
 #ifndef TRUE
 #define TRUE 1
 #endif
+
+#define MCSTAS_VERSION "1.6.2, Aug 6th, 2002"
 
 
 /* Functions defined in memory.c */
@@ -237,8 +239,6 @@ extern Symtab read_components;
 void check_comp_formals(List deflist, List setlist, char *compname);
 /* Check that instrument parameters are unique. */
 void check_instrument_formals(List formallist, char *instrname);
-/* Check that the parameters of NXDICT declarations are valid. */
-void check_nxdict(struct instr_def *instr);
 /* Handle assignment of actual to formal component parameters. */
 void comp_formals_actuals(struct comp_inst *comp, Symtab actuals);
 
@@ -409,23 +409,15 @@ struct instr_formal
   };
 
 /* NeXus dictionary information. NeXus is supported through the NXDICT
-* API, and only if at least one NXDICT or NXDICTFILE declaration is
+* API, and only if one NXDICTFILE declaration is
 * present in the instrument. 
 */
 struct NXDinfo
   {
     char *nxdfile;		/* NeXus dictionary file, or NULL */
-    List nxdentries;		/* struct NXDentry list NXDICT declarations */
-    int any;			/* True only if any NXDICT/NXDICTFILE decls. */
+    int any;			/* True only if any NXDICTFILE decls. */
   };
-/* Information from a NXDICT declaration. */
-struct NXDentry
-  {
-    char *compname;		/* Component name (1st part of NXD alias) */
-    char *param;		/* Parameter name (2nd part of NXD alias) */
-    CExp spec;			/* NXDict specification string */
-  };
-
+  
 /* Instrument definition. */
 struct instr_def
   {

@@ -6,7 +6,7 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: symtab.c,v 1.6 2003-01-21 07:50:44 pkwi Exp $
+*	$Id: symtab.c,v 1.7 2003-01-21 08:25:08 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.4  1999/04/16 07:41:31  kn
