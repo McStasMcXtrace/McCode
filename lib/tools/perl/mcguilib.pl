@@ -44,6 +44,7 @@ sub simulation_dialog {
     $si{'Autoplot'} = 0 unless $si{'Autoplot'};
     $si{'Ncount'} = 1e6 unless $si{'Ncount'};
     $si{'Trace'} = 0 unless $si{'Trace'};
+    $si{'NScan'} = 0 unless $si{'NScan'};
     # 'Inspect' field for use of mcdisplay's built-in
     # neutron filter, filtering away all neutrons not
     # reaching a given component
@@ -151,6 +152,15 @@ sub simulation_dialog {
 		     -variable => \$si{'Trace'},
 		     -relief => 'flat',
 		     -value => 1)->pack(-side => 'left');
+    $f3->Radiobutton(-text => "Scan",
+		     -variable => \$si{'Trace'},
+		     -relief => 'flat',
+		     -value => 2)->pack(-side => 'left');
+    $f3->Label(-text => "# Scanpoints: ")->pack(-side => 'left');
+    $f3->Entry(-relief => 'sunken',
+	       -width=>10,
+	       -textvariable => \$si{'NScan'},
+	       -justify => 'right')->pack(-side => 'left');
     # Gui stuff for selection of 'inspect' parameter
     # PW 20030314
     my $f4 = $opt_frame->Frame;
