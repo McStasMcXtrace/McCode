@@ -20,7 +20,7 @@
     (CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
      CC => '@CC@',
-     PLOTTER => 1,
+     PLOTTER => 0,
      MATLAB_COMMAND => 'matlab -nojvm > /dev/null',
      SCILAB_COMMAND => 'scilab -nw > /dev/null'
      );
