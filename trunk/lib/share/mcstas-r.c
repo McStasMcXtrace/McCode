@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.54 2003-04-04 14:26:25 farhi Exp $
+* $Id: mcstas-r.c,v 1.55 2003-04-04 15:11:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.54  2003/04/04 14:26:25  farhi
+* Managed --no-runtime to work. Use MCSTAS_FORMAT env/define for default format
+* Make --no-output-files still print out the integrated counts
+*
 * Revision 1.53  2003/02/18 09:10:52  farhi
 * Just changed a message (warning for -a flag binary)
 *
@@ -3190,7 +3194,7 @@ mcstas_main(int argc, char *argv[])
   srandom(time(&t));
   mcstartdate = t;
   strcpy(mcsig_message, "main (Start)");
-  if (strlen(getenv("MCSTAS_FORMAT"))) mcuse_format(getenv("MCSTAS_FORMAT"));
+  if (getenv("MCSTAS_FORMAT")) mcuse_format(getenv("MCSTAS_FORMAT"));
   else mcuse_format(MCSTAS_FORMAT);  /* default is to output as McStas format */
   mcparseoptions(argc, argv);
 
