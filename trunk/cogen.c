@@ -17,6 +17,13 @@
 * Code generation from instrument definition.
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.41  2003/09/05 08:59:05  farhi
+*	added INSTRUMENT parameter default value grammar
+*	mcinputtable now has also default values
+*	mcreadpar now uses default values if parameter not given
+*	extended instr_formal parameter struct
+*	extended mcinputtable structure type
+*	
 *	Revision 1.40  2003/08/12 13:32:25  farhi
 *	Add generation date/time in C code header
 *	
@@ -32,7 +39,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 *	added comp setting parameter types
 *
-* $Id: cogen.c,v 1.41 2003-09-05 08:59:05 farhi Exp $
+* $Id: cogen.c,v 1.42 2003-10-06 14:59:14 farhi Exp $
 *
 *******************************************************************************/
 
@@ -577,7 +584,7 @@ cogen_decls(struct instr_def *instr)
     
     if(list_len(comp->def->def_par) > 0)
     {                                /* (The if avoids a redundant comment.) */
-      coutf("/* Definition parameters for component '%s'. */", comp->name);
+      coutf("/* Definition parameters for component '%s' [%i]. */", comp->name, index);
       liter2 = list_iterate(comp->def->def_par);
       while(c_formal = list_next(liter2))
       {
@@ -590,7 +597,7 @@ cogen_decls(struct instr_def *instr)
     }
     if(list_len(comp->def->set_par) > 0)
     {
-      coutf("/* Setting parameters for component '%s'. */", comp->name);
+      coutf("/* Setting parameters for component '%s' [%i]. */", comp->name, index);
       liter2 = list_iterate(comp->def->set_par);
       while(c_formal = list_next(liter2))
       {
@@ -614,7 +621,7 @@ cogen_decls(struct instr_def *instr)
   {
     if((list_len(comp->def->decl_code->lines) > 0) || (comp->def->comp_inst_number < 0))
     {
-      coutf("/* User declarations for component '%s'. */", comp->name);
+      coutf("/* User declarations for component '%s' [%i]. */", comp->name, index);
       cogen_comp_decls(comp);
       cout("");
     }
