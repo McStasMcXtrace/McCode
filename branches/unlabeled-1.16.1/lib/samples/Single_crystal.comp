@@ -7,7 +7,7 @@
 * %I
 * Written by: KN
 * Date: December 1999
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.16.1.1 $
 * Origin: McStas release
 *
 * Mosaic single crystal with multiple scattering vectors.
@@ -110,7 +110,7 @@
 DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS(reflections)
 SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d, mosaic = -1,
-		   mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
+                   mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
                    ax, ay, az, bx, by, bz, cx, cy, cz,
                    p_transmit = -1, absorbtion = 0, incoherent = 0)
 OUTPUT PARAMETERS(hkl_info)
@@ -260,36 +260,36 @@ read_hkl_data(char *file, struct hkl_info *info)
          (B^T D B) is 2x2 symmetric and positive definite.*/
       mos_a = mos_b = mos_c = 0;
       for(j1 = 0; j1 < 3; j1++) {
-	for(j2 = 0; j2 < 3; j2++) {
-	  mos_a += b1[j1]*b1[j2]*mos_D[j1][j2];
-	  mos_b += b1[j1]*b2[j2]*mos_D[j1][j2];
-	  mos_c += b2[j1]*b2[j2]*mos_D[j1][j2];
-	}
+        for(j2 = 0; j2 < 3; j2++) {
+          mos_a += b1[j1]*b1[j2]*mos_D[j1][j2];
+          mos_b += b1[j1]*b2[j2]*mos_D[j1][j2];
+          mos_c += b2[j1]*b2[j2]*mos_D[j1][j2];
+        }
       }
       /* Compute the eigenvalues of the 2D Gaussian. */
       if(mos_b*mos_b < 1e-20*(mos_a*mos_a + mos_c*mos_c)) {
-	/* Matrix is diagonal. */
-	mos_l1 = mos_a;
-	mos_e1_x = 1;
-	mos_e1_y = 0;
-	mos_l2 = mos_c;
-	mos_e2_x = 0;
-	mos_e2_y = 1;
-      } else {			/* Not diagonal */
-	mos_det = (mos_a - mos_c)*(mos_a - mos_c) + 4*mos_b*mos_b;
-	mos_l1 = 0.5*(mos_a + mos_c - sqrt(mos_det));
-	mos_l2 = 0.5*(mos_a + mos_c + sqrt(mos_det));
-	/* Compute the eigenvectors. */
-	mos_e1_x = -mos_b;
-	mos_e1_y = mos_a - mos_l1;
-	mos_e1_len = sqrt(mos_e1_x*mos_e1_x + mos_e1_y*mos_e1_y);
-	mos_e1_x /= mos_e1_len;
-	mos_e1_y /= mos_e1_len;
-	mos_e2_x = -mos_c - mos_l2;
-	mos_e2_y = -mos_b;
-	mos_e2_len = sqrt(mos_e2_x*mos_e2_x + mos_e2_y*mos_e2_y);
-	mos_e2_x /= mos_e2_len;
-	mos_e2_y /= mos_e2_len;
+        /* Matrix is diagonal. */
+        mos_l1 = mos_a;
+        mos_e1_x = 1;
+        mos_e1_y = 0;
+        mos_l2 = mos_c;
+        mos_e2_x = 0;
+        mos_e2_y = 1;
+      } else {                  /* Not diagonal */
+        mos_det = (mos_a - mos_c)*(mos_a - mos_c) + 4*mos_b*mos_b;
+        mos_l1 = 0.5*(mos_a + mos_c - sqrt(mos_det));
+        mos_l2 = 0.5*(mos_a + mos_c + sqrt(mos_det));
+        /* Compute the eigenvectors. */
+        mos_e1_x = -mos_b;
+        mos_e1_y = mos_a - mos_l1;
+        mos_e1_len = sqrt(mos_e1_x*mos_e1_x + mos_e1_y*mos_e1_y);
+        mos_e1_x /= mos_e1_len;
+        mos_e1_y /= mos_e1_len;
+        mos_e2_x = -mos_c - mos_l2;
+        mos_e2_y = -mos_b;
+        mos_e2_len = sqrt(mos_e2_x*mos_e2_x + mos_e2_y*mos_e2_y);
+        mos_e2_x /= mos_e2_len;
+        mos_e2_y /= mos_e2_len;
       }
       /* Now finally compute the axes (in reciprocal space) and RMSs of the
          reciprocal lattice point Gaussian that are perpendicular to tau. */
@@ -303,8 +303,8 @@ read_hkl_data(char *file, struct hkl_info *info)
       list[i].sig3 = list[i].tau/sqrt(mos_l2);
     } else {
       fprintf(stderr,
-	      "Single_crystal: Error: EITHER mosaic OR (mosaic_h, mosaic_v, mosaic_n)\n"
-	      "must be given and be >0.\n");
+              "Single_crystal: Error: EITHER mosaic OR (mosaic_h, mosaic_v, mosaic_n)\n"
+              "must be given and be >0.\n");
       exit(1);
     }
     list[i].sig123 = list[i].sig1*list[i].sig2*list[i].sig3;
@@ -397,27 +397,27 @@ TRACE
   double det_L;                 /* Determinant of L */
   double Bt_D_O_x, Bt_D_O_y;    /* Temporaries */
   double y0x, y0y;              /* Center of 2D Gauss in plane coordinates */
-  double alpha;			/* Offset of 2D Gauss center from 3D center */
+  double alpha;                 /* Offset of 2D Gauss center from 3D center */
   int tau_count;                /* Number of reflections within cutoff */
   double V0;                    /* Volume of unit cell */
   double l_full;                /* Neutron path length for transmission */
-  double l;			/* Path length to scattering event */
+  double l;                     /* Path length to scattering event */
   double abs_xsect, abs_xlen;   /* Absorbtion cross section and length */
   double inc_xsect, inc_xlen;   /* Incoherent cross section and length */
   double coh_xsect, coh_xlen;   /* Coherent cross section and length */
   double tot_xsect, tot_xlen;   /* Total cross section and length */
   double z1, z2, y1, y2;        /* Temporaries to choose kf from 2D Gauss */
-  double adjust, coh_refl;	/* Temporaries */
-  double r, sum;		/* Temporaries */
-  double xsect_factor;		/* Common factor in coherent cross-section */
-  double p_trans;		/* Transmission probability */
-  double mc_trans, mc_interact;	/* Transmission, interaction MC choices */
+  double adjust, coh_refl;      /* Temporaries */
+  double r, sum;                /* Temporaries */
+  double xsect_factor;          /* Common factor in coherent cross-section */
+  double p_trans;               /* Transmission probability */
+  double mc_trans, mc_interact; /* Transmission, interaction MC choices */
 
   if(box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
-		   xwidth, yheight, zthick) && t2 > 0)
-  {				/* Neutron intersects crystal */
+                   xwidth, yheight, zthick) && t2 > 0)
+  {                             /* Neutron intersects crystal */
   if(t1 > 0)
-    PROP_DT(t1);		/* Move to crystal surface if not inside */
+    PROP_DT(t1);                /* Move to crystal surface if not inside */
   v = sqrt(vx*vx + vy*vy + vz*vz);
   ki = V2K*v;
   firstevent = 1;
@@ -523,10 +523,10 @@ TRACE
         /* Factor alpha for the distance of the 2D Gauss from the origin. */
         alpha = L[i].m1*ox*ox + L[i].m2*oy*oy + L[i].m3*oz*oz -
                      (y0x*y0x*n11 + y0y*y0y*n22 + 2*y0x*y0y*n12);
-	T[j].refl = xsect_factor*det_L*exp(-alpha)/L[i].sig123;
-	coh_refl += T[j].refl;
-	T[j].xsect = T[j].refl*L[i].F2;
-	coh_xsect += T[j].xsect;
+        T[j].refl = xsect_factor*det_L*exp(-alpha)/L[i].sig123;
+        coh_refl += T[j].refl;
+        T[j].xsect = T[j].refl*L[i].F2;
+        coh_xsect += T[j].xsect;
         j++;
       }
     }
@@ -558,7 +558,7 @@ TRACE
     if(tot_xlen <= 0)
       ABSORB;
     mc_interact = 1 - mc_trans;
-    if(mc_interact <= 0)	/* Protect against rounding errors */
+    if(mc_interact <= 0)        /* Protect against rounding errors */
       break;
     p *= fabs(1 - p_trans)/mc_interact;
     /* Select a point at which to scatter the neutron, taking
@@ -570,7 +570,7 @@ TRACE
      */
     if(tot_xlen*l_full < 1e-6)
       /* For very weak scattering, use simple uniform sampling of scattering
-	 point to avoid rounding errors. */
+         point to avoid rounding errors. */
       l = rand0max(l_full);
     else
       l = -log(1 - rand0max((1 - exp(-tot_xlen*l_full))))/tot_xlen;
