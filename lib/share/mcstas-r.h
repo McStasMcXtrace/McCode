@@ -6,9 +6,13 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.19 1998-10-02 08:38:36 kn Exp $
+*	$Id: mcstas-r.h,v 1.20 1998-10-09 07:53:48 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.19  1998/10/02 08:38:36  kn
+*	Added DETECTOR_OUT support.
+*	Fixed header comment.
+*
 *	Revision 1.18  1998/10/01 08:12:42  kn
 *	Support for embedding the file in the output from McStas.
 *	Added mcstas_main() function.
@@ -157,6 +161,10 @@ void mcfinally(void);
 #define RAD2DEG  (180/PI)
 #define AA2MS    629.719		/* Convert k[1/AA] to v[m/s] */
 #define MS2AA    1.58801E-3		/* Convert v[m/s] to k[1/AA] */
+#define K2V	 AA2MS
+#define V2K	 MS2AA
+#define SE2V	 0.19131e6		/* Convert sqrt(E)[meV] to v[m/s] */
+#define VS2E	 5.227e-6		/* Convert v[m/s] to sqrt(E)[meV] */
 #define HBAR     1.05459E-34
 #define MNEUTRON 1.67492E-27
 
