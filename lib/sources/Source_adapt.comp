@@ -1,7 +1,7 @@
 DEFINE COMPONENT Source_adapt
 DEFINITION PARAMETERS (radius, dist, xw, yh, E0, dE, NUM, alpha, beta)
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (hdiv, vdiv, p_in, count, y_0, C, r_0)
+OUTPUT PARAMETERS (hdiv, vdiv, p_in, y_0, C, r_0)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
@@ -15,6 +15,7 @@ DECLARE
  double a_pi, a_num;
  double count;
  double y_0, C, r_0;
+ double a_factor;
 %}
 INITIALIZE
 %{
@@ -47,7 +48,7 @@ INITIALIZE
 TRACE
 %{
  double theta0,phi0,chi,theta,phi,E,v,r;
- double adj_dv;
+ double new_v;
 
  p=p_in;
  z=0;
@@ -72,26 +73,27 @@ TRACE
    aindex = NUM - 1;
  }
  E = E0 - dE + (aindex + rand01())*(2.0*dE/(double)NUM);
+ a_factor = y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
+ count++;
  p /= atree->v[aindex]/(atree->total/(double)NUM);
+ p *= C*a_factor;
 
- /* First adjust assuming absorbtion. */
- if(a_n[aindex] > 0 && a_total_psi != 0)
- {
-   adj_dv = (1-beta)*a_psi[aindex]/(a_n[aindex]*a_total_psi) + beta/a_num -
-	      atree->v[aindex];
-   adapt_tree_add(atree, aindex, adj_dv);
- }
  if(a_n[aindex] > 0)
    a_total_psi -= a_psi[aindex]/(a_n[aindex]*(a_n[aindex] + 1));
  a_n[aindex]++;
+ /* First adjust assuming absorbtion. */
+ if(a_total_psi != 0)
+ {
+   new_v = (1-beta)*a_factor*a_psi[aindex]/(a_n[aindex]*a_total_psi) +
+     beta/a_num;
+   adapt_tree_add(atree, aindex, new_v - atree->v[aindex]);
+ }
 
  v=sqrt(E)*SE2V;
 
  vz=v*cos(phi)*cos(theta);
  vy=v*sin(phi);
  vx=v*cos(phi)*sin(theta);
- p *= C*y_0/(y_0 + (1 - y_0)*exp(-r_0*count));
- count++;
  a_pi = p;
 %}
 
