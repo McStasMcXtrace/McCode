@@ -53,6 +53,7 @@
 
 // script for definition of colormaps and usefull functions for McStas/McPlot
 
+  
 // optional routines required by mcplot ---------------------------------------
 
 function j=jet()
@@ -110,7 +111,7 @@ function win = mcplot_addmenu(use_common_menu)
   if argn(2) > 1 & MCPLOT.MenuInstalled, return; end
   
   // remove McStas menu (if any)
-  delmenu(win,'McStas')
+  delmenu(win,'McStas');
   // creates a local McStas menu for looking at data files, and direct exporting
   menu_installed = 0;
   t = [ 'Select a figure', ...
@@ -186,7 +187,7 @@ function win = mcplot_addmenu(use_common_menu)
       TK_EvalStr(tcl_script);
     elseif argn(2) > 0
       // we shall use x_choices
-      rep = x_choices(['Fig '+string(win)+': Choose something to do','Select ""Exit"" to delete this dialog'], list(list('Action:', 1, t)));
+      rep = x_choices(['Fig '+string(win)+': Choose something to do','Select ""Exit"" or ""Cancel"" to delete this dialog'], list(list('Action:', 1, t)));
       if length(rep), mcplot_menu_action(rep); end
       if ~length(rep), mcplot_menu_action(size(t,2)); end
       if rep == size(t,2), win=0; else win = -1; end
@@ -217,7 +218,7 @@ function mcplot_menu_action(k, gwin)
   
   if item(k) == 26 // scan step
     if MCPLOT.ScanWindow < 0 
-      mfprintf('The active window '+string(gwin)+' is not a scan result');
+      mprintf('The active window '+string(gwin)+' is not a scan result');
     else
       gwin = MCPLOT.ScanWindow;
     end
@@ -278,7 +279,7 @@ function mcplot_menu_action(k, gwin)
           execstr('parameters = ThisFigure.parameters','errcatch');
           if length(parameters)
             // scan parameters structure, excluding 'class','parent','name'
-	    // The following assumes that the instrument is in current dir...
+            // The following assumes that the instrument is in current dir...
             if MSDOS
               tmp_parcmd = 'mcdisplay.pl '+figname+'.exe -n 100 -pScilab --save ';
             else
@@ -330,17 +331,17 @@ function mcplot_menu_action(k, gwin)
         xinfo('');
       end
     case 7 then // Save as/_GIF
-      mcplot_output('-gif',[],filename+'.gif');
+      mcplot_output('-gif',gwin,filename+'.gif');
     case 8 then // Save as/EPS (b-w)
-      mcplot_output('-ps' ,[],filename+'.eps');
+      mcplot_output('-ps' ,gwin,filename+'.eps');
     case 9 then // Save as/EPS (color)
-      mcplot_output('-psc',[],filename+'.eps');
+      mcplot_output('-psc',gwin,filename+'.eps');
     case 10 then // Save as/_Fig (Xfig)
-      mcplot_output('-fig',[],filename+'.fig');
+      mcplot_output('-fig',gwin,filename+'.fig');
     case 11 then // Save as/PPM
-      mcplot_output('-ppm',[],filename+'.ppm');
+      mcplot_output('-ppm',gwin,filename+'.ppm');
     case 12 then // Save as/Scilab
-      mcplot_output('-scg',[],filename+'.scg');
+      mcplot_output('-scg',gwin,filename+'.scg');
     case 13 then // Colormap/_Jet
       jet();
     case 14 then // Colormap/HSV
@@ -352,18 +353,18 @@ function mcplot_menu_action(k, gwin)
     case 17 then // Colormap/gray
       gray();
     case 18 then // Close all
-      mprintf('To Exit Scilab, use the ""exit"" entry of the McStas menu.\n');
+      mprintf('To Exit Scilab, use the ""Exit"" item of the McStas menu.\n');
       if exists('McPlotTempFile')
         // Because of Win32's way of backgrounding processes, the perl layer 
-	// between McStas and mcplot can not be allowed to remove the 
-	// temporary file (It is gone before Scilab sees it!) Instead, 
-	// McPlotTempFile stores the filename of the temporary 
-	// scriptfile, which is then removed on Scilab exit.
-	if MSDOS 
+        // between McStas and mcplot can not be allowed to remove the 
+        // temporary file (It is gone before Scilab sees it!) Instead, 
+        // McPlotTempFile stores the filename of the temporary 
+        // scriptfile, which is then removed on Scilab exit.
+        if MSDOS 
           unix_g(strcat(['del /q /f ' McPlotTempFile]));
-	else // Probably safe to assume unix here?
-	  unix_g(strcat(['rm -f ' McPlotTempFile]));
-	end
+        else // Probably safe to assume unix here?
+          unix_g(strcat(['rm -f ' McPlotTempFile]));
+        end
       end
       exit
       quit
@@ -434,13 +435,15 @@ function mcplot_menu_action(k, gwin)
     case 27 then  // duplicate (log scale)
       0; // NOP
     case 28 then  // open new mcstas.m file
+      // open a new window
+      xset('window',max(winsid())+1)
       mcplot('open_mcplot_fileselector','overview');
     end 
     if item(k)~= 18, xbasr(); end // update plot
     
     // handle duplicate linear/log cases
     if item(k)==27 | item(k) == 1
-      t='Figure '+string(gwin)+': Click on the plot to duplicate/enlarge.';
+      t='Figure '+string(gwin)+' (active): Click on the plot to duplicate/enlarge.';
       xinfo(t); mprintf('%s\n',t);
       [c_i, c_x, c_y] = xclick();
       [wrect,frect,logflag,arect] = xgetech();
@@ -484,9 +487,9 @@ function mcplot_menu_action(k, gwin)
         execstr('MCPLOT.Figure_'+string(nwin)+'.filename = ThisFigure.filename;','errcatch');
         mcplot_set_global(d, nwin, 0); 
         xclear();
-	if MCPLOT.DirectExport ~= 1
+        if MCPLOT.DirectExport ~= 1
           xtape('replayna', nwin, 90, 0);        // top view
-	end
+        end
         mcplot_fig_legend(d,'','');
       end
       xinfo(t); mprintf('%s\n',t);
@@ -567,7 +570,6 @@ function filename = mcplot_output_begin(form, filename)
     end
     if ext ~= '.scg', 
       xinit(filename);
-      mprintf('mcplot_output_begin: xinit '+filename);
       if dr == 'Pos' & ~length(strindex(form,'psc'))
         gray();
       end
@@ -583,6 +585,10 @@ function mcplot_output_end(form, win, filename)
   if argn(2) <= 2 then filename=''; end
   if length(win) == 0 then win = -1; end
   if win < 0      then win = xget('window'); end
+  ThisFigure = [];
+  execstr('ThisFigure = MCPLOT.Figure_'+string(win),'errcatch');
+  filename = '';
+  execstr('filename = ThisFigure.filename','errcatch');
   if length(filename) == 0 then filename='mcstas'; end
   form = convstr(form,"l");
   
@@ -599,9 +605,7 @@ function mcplot_output_end(form, win, filename)
       filename=filename+ext;
     end
     if ext ~= '.scg', 
-      if MCPLOT.DirectExport ~= 1
-        xtape('replay',win);
-      end
+      if MCPLOT.DirectExport ~= 1, xtape('replay',win); end
       xend(); 
     else xsave(filename);
     end
@@ -618,7 +622,7 @@ function mcplot_output_end(form, win, filename)
     end
   end
   if length(filename) > 0 & length(ext) > 0 then 
-    t = 'McPlot: Saved image as '+filename+' ('+form+')';
+    t = 'McPlot: Saved image Fig '+string(win)+' as '+filename+' ('+form+')';
     if ext == '.scg', t = t+'. Load it with scilab> xload(""'+filename+'"")'; end
     xinfo(t); mprintf('%s\n',t);
   end
@@ -696,7 +700,7 @@ function d=mcplot_plot(d,p)
       w=winsid();
       if length(w),w=w($)+1; else w=0; end
       xdel(w); xbasc(w); xset('window',w);
-    else w = xget('window'); end
+    end
     if length(strindex(d.type,'2d'))
       d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data; 
       if logscale == 1 then 
@@ -766,7 +770,6 @@ function mcplot_errorbar(x,y,e)
   xmax=max(x);
   ymin=min(y-e);
   ymax=max(y+e);
-//  rect=[xmin xmax ymin ymax];
   plot2d(x,y,rect=[xmin ymin xmax ymax]);
   errbar(x,y,e,e);
 endfunction // mcplot_errorbar
@@ -795,7 +798,7 @@ function mcplot_set_global(s, gwin, p_in)
       ThisFigure = getfield(ThisFigure,MCPLOT);
     else ThisFigure = '';
     end
-  elseif gwin >= 0
+  elseif ~length(s)
       MCPLOT = struct();
       MCPLOT.Figure_0 = 0;
       MCPLOT.MenuInstalled = 0;
@@ -803,6 +806,7 @@ function mcplot_set_global(s, gwin, p_in)
       MCPLOT.ShiftedItems = 0;
       MCPLOT.LogScale = 0;
       MCPLOT.ScanWindow = -1;
+      return
   end
   if gwin == -1 then return; end
   tag_names = getfield(1,s);
@@ -854,7 +858,7 @@ function mcplot_set_global(s, gwin, p_in)
   // store Figure McPlot info
   execstr('MCPLOT.Figure_'+string(gwin)+'= 0;');
   execstr('MCPLOT.Figure_'+string(gwin)+'= ThisFigure;');
-endfunction
+endfunction // mcplot_set_global
 
 function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
 // scans the structure s recursively and opens a graphic window 
@@ -1058,7 +1062,7 @@ function [object,count]=mcplot(object, options, id)
 //    'filename' and 'title'
 
 // parameter check
-global MCPLOT
+global MCPLOT 
 
 if argn(2) == 0, object=''; end
 if argn(2) <= 1, options=''; end
@@ -1129,6 +1133,7 @@ if typeof(object) == 'string' // if object is a string
   end
   mclose(fid);
   object_orig = object;
+  mprintf('Opening file '+string(object)+'\n');
   [pathname, object, ext]= mcplot_fileparts(object);
   filename = object+ext;
   object = filename;
@@ -1168,10 +1173,13 @@ end
 
 // handles structure loading and ploting
 if type(object) ~= 16 & type(object) ~= 17
-  mprintf('mcplot: Could not extract the McStas simulation structure.\n')
+  mprintf('mcplot: Could not extract the McStas simulation structure.\n');
   return;
 else  // if 's' is a 'struct'
-  if length(form)
+  if ~length(strindex(getversion(),'2.6')) & ~length(strindex(getversion(),'2.7'))
+    set("old_style","on");
+  end
+  if MCPLOT.DirectExport == 1
     filename = '';
     execstr('filename = object.File;','errcatch');
     if length(filename) == 0 then execstr('filename = object.filename;','errcatch'); end
@@ -1181,14 +1189,15 @@ else  // if 's' is a 'struct'
       options = options+' overview';
     end
   else
-	mcplot_output_begin(form,'');
+    mcplot_output_begin(form,filename);
   end
+  
   //  **  send to mcplot_scan(s, options, id)  *
   [count, object] = mcplot_scan(object, options, id);
   mcplot_fig_legend(object,filename, pathname);
   
   // if output is not empty do not install menu
-  if ~length(form)
+  if MCPLOT.DirectExport == 0
     // installs a common menu for all figures
     // in case this could not be done with GTk/Tk
     ret = -1;
