@@ -5,12 +5,12 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Soller
+* Component: Collimator_linear
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: GA, June 1999, added transmission
@@ -44,7 +44,7 @@
 *******************************************************************************/
 
 
-DEFINE COMPONENT Soller
+DEFINE COMPONENT Collimator_linear
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, divergence=40,transmission=1)
 OUTPUT PARAMETERS (slope)
