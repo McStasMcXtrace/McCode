@@ -6,10 +6,6 @@
 *
 *	Author: K.N.			Nov 11, 1998
 *
-*	$Id: port.h,v 1.1 1998-11-13 07:34:00 kn Exp $
-*
-*	$Log: not supported by cvs2svn $
-*
 * Copyright (C) Risoe National Laboratory, 1998, All rights reserved
 *******************************************************************************/
 
@@ -35,3 +31,8 @@
 #ifndef HAVE_STRCASECMP
 int strcasecmp(char *, char *);
 #endif
+
+#ifndef HAVE_FDOPEN
+#include <stdio.h>
+FILE *fdopen(int descr, const char *mode);
+#endif /* HAVE_FDOPEN */

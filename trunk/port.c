@@ -6,17 +6,12 @@
 *
 *	Author: K.N.			Nov 11, 1998
 *
-*	$Id: port.c,v 1.1 1998-11-13 07:33:49 kn Exp $
-*
-*	$Log: not supported by cvs2svn $
-*
 * Copyright (C) Risoe National Laboratory, 1998, All rights reserved
 *******************************************************************************/
 
 #include "port.h"
 
 #ifndef HAVE_STRCASECMP
-#include <ctype.h>
 #include <ctype.h>
 int strcasecmp(char *s1, char *s2)
 {
@@ -29,3 +24,11 @@ int strcasecmp(char *s1, char *s2)
   return c;
 }
 #endif /* HAVE_STRCASECMP */
+
+#ifndef HAVE_FDOPEN
+FILE *fdopen(int descr, const char *mode)
+{
+  fatal_error("The '-' argument for standard input and output is not supported"
+	      " on this system.");
+}
+#endif /* HAVE_FDOPEN */
