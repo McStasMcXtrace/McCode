@@ -70,7 +70,7 @@ cd ..\..\..\..
 @if %DOZIP%=="0" goto end
 @echo creating zipfile...
 cd ..
-zip -r mcstas-%VERSION%-i686-unknown-Win32 .\mcstas-%VERSION%
+zip -r mcstas-%VERSION%-i686-Intel-Win32 .\mcstas-%VERSION%
 cd mcstas-%VERSION%
 :end
 
