@@ -5,12 +5,12 @@
 // events
 //
 // Written by: P. Willendrup
-// Date: May 13thm 2003
+// Date: May 13th 2003
 // Release: McStas 1.7
 // Origin: Risoe
 // 
 //  This file is part of the McStas neutron ray-trace simulation package
-//  Copyright (C) 1997-2003, All rights reserved
+//  Copyright (C) 1997-2004, All rights reserved
 //  Risoe National Laborartory, Roskilde, Denmark
 //  Institut Laue Langevin, Grenoble, France
 //

@@ -1,6 +1,6 @@
 @rem  
 @rem   This file is part of the McStas neutron ray-trace simulation package
-@rem   Copyright (C) 1997-2003, All rights reserved
+@rem   Copyright (C) 1997-2004, All rights reserved
 @rem   Risoe National Laborartory, Roskilde, Denmark
 @rem   Institut Laue Langevin, Grenoble, France
 @rem
