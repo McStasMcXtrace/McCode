@@ -244,17 +244,18 @@ function mcplot_menu_action(k, gwin)
       if length(figname)
         t=figname+'.scg';
         [fid,err]=fileinfo(t);
-	if err
-	  t = figname+'.out.scg';
-          [fid,err]=fileinfo(t);
-	end
+        if err
+	        t = figname+'.out.scg';
+                [fid,err]=fileinfo(t);
+        end
         if err == 0
           gwin=xget('window');
-          xset("window",max(winsid())+1);	  
+          nwin = max(winsid())+1;
+          xdel(nwin); xbasc(nwin); xset('window',nwin);
           xload(t);
           t = 'Viewing instrument '+t;
           xinfo(t); mprintf('%s\n',t);
-          xset("window",win);
+          xset("window",gwin);
         end
       end
     case 5 then // Add _colorbar
@@ -495,14 +496,19 @@ function d=mcplot_plot(d,p)
       if fy>0,fy=round(log10(fy)); d.y=d.y/10^fy; d.ylabel=d.ylabel+' [*10^'+string(fy)+']'; end    
       if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end                    
       jet();
-      plot3d1(d.x,d.y,z,90,0);            
+      leg = d.xlabel+'@'+d.ylabel+'@'+d.zlabel
+      plot3d1(d.x,d.y,z,90,0,leg);    
+      if p == 2, t = t1; end
+      xtitle(t);       
     else
       d.x=linspace(l(1),l(2),max(S));
       plot2d(d.x,d.data);
+      if p == 2, t = t1; end
+      xtitle(t,d.xlabel,d.ylabel);
     end
   end
-  if p == 2, t = t1; end
-  xtitle(t,'X:'+d.xlabel,'Y:'+d.ylabel); xname(t1);
+  xname(t1);
+  
 endfunction // mcplot_plot
 
 function mcplot_set_global(s, gwin, p_in)
