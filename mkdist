@@ -108,6 +108,8 @@ bison -v -d instrument.y
 ./configure
 sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
 mv build.bat.new build.bat
+sed 's/DOPLOTLIB="no"/DOPLOTLIB="yes"/' build.bat > build.bat.new
+mv build.bat.new build.bat
 cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
 

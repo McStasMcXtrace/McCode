@@ -26,6 +26,8 @@ FLEXFLAGS=-i
 BISON = bison
 BISONFLAGS = -v -d
 
+SCILAB = @SCILAB@
+
 INSTALL=@INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
@@ -68,7 +70,7 @@ clean:
 TAGS:
 	etags *.[chly]
 
-install: installdirs $(BINOBJS)
+install: installdirs $(BINOBJS) plotlib
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
 	for pgm in $(PERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
@@ -84,7 +86,21 @@ install: installdirs $(BINOBJS)
 	      if [ -d lib/$$file/$$comp ]; then \
           $(srcdir)/mkinstalldirs $(mc_libdir)/$$file/$$comp; \
           for tool in `cd lib/$$file/$$comp; ls`; do \
-            $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(mc_libdir)/$$file/$$comp/$$tool; \
+	      if [ -d lib/$$file/$$comp/$$tool ]; then \
+          $(srcdir)/mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool ; \
+	        for subtool in `cd lib/$$file/$$comp/$$tool; ls`; do \
+		  if [ -d lib/$$file/$$comp/$$tool/$$subtool ]; then \
+		     $(srcdir)/mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool/$$subtool ; \
+	             for subsubtool in `cd lib/$$file/$$comp/$$tool/$$subtool; ls`; do \
+                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
+                     done \
+		  else \
+                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool; \
+		  fi; \
+                done \
+              else \
+                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(mc_libdir)/$$file/$$comp/$$tool; \
+	      fi; \
           done \
         else \
 	        $(INSTALL_DATA) lib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
@@ -116,3 +132,14 @@ instrument.tab.c instrument.tab.h: instrument.y
 
 lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
+
+plotlib: lib/tools/scilab/plotlib/builder.sce
+	  cd lib/tools/scilab/plotlib/ && ./build_unix.sh $(SCILAB)
+
+
+
+
+
+
+
+
