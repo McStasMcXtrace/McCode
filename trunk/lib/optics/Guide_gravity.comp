@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -166,14 +166,14 @@ SHARE
     if (a_mright  >= 0) aVars->M[2] =a_mright ;
     if (a_mtop    >= 0) aVars->M[3] =a_mtop   ;
     if (a_mbottom >= 0) aVars->M[4] =a_mbottom;
-
+    /* n: normal vectors to surfaces */
     aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] = -0.5*(aVars->w2c-aVars->w1c);  /* 1:+X left       */
     aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] =  aVars->nz[1];             /* 2:-X right      */
     aVars->nx[3] =  0;   aVars->ny[3] =  a_l; aVars->nz[3] = -0.5*(aVars->h2c-aVars->h1c);  /* 3:+Y top        */
     aVars->nx[4] =  0;   aVars->ny[4] = -a_l; aVars->nz[4] =  aVars->nz[3];             /* 4:-Y bottom     */
     aVars->nx[5] =  0;   aVars->ny[5] =  0;   aVars->nz[5] =  a_l;                      /* 5:+Z exit       */
     aVars->nx[0] =  0;   aVars->ny[0] =  0;   aVars->nz[0] = -a_l;                      /* 0:Z0 input      */
-
+    /* w: a point on these surfaces */
     aVars->wx[1] = +(aVars->w1c)/2; aVars->wy[1] =  0;              aVars->wz[1] = 0;   /* 1:+X left       */
     aVars->wx[2] = -(aVars->w1c)/2; aVars->wy[2] =  0;              aVars->wz[2] = 0;   /* 2:-X right      */
     aVars->wx[3] =  0;              aVars->wy[3] = +(aVars->h1c)/2; aVars->wz[3] = 0;   /* 3:+Y top        */
@@ -245,10 +245,11 @@ SHARE
       if (i == 2) { i_slope=1; loc_num = cxnum; loc_k = cxk; }
 
       if (aVars->nzC[i_slope] != 0) {
-      n1 = loc_k - 2*(loc_num);  /* slope of l/r/u/d sides depends on the channel ! */
-      loc_num++; /* use partial computations to alter nz and A */
-      aVars->nz[i]= aVars->nzC[i]*n1;
-      aVars->A[i] = aVars->Axy[i] + aVars->nz[i]*aVars->gz/2; }
+        n1 = loc_k - 2*(loc_num);  /* slope of l/r/u/d sides depends on the channel ! */
+        loc_num++; /* use partial computations to alter nz and A */
+        aVars->nz[i]= aVars->nzC[i]*n1;
+        aVars->A[i] = aVars->Axy[i] + aVars->nz[i]*aVars->gz/2;
+      }
       if (i < 3)
       {      B = aVars->nx[i]*cvx + aVars->nz[i]*cvz; C = aVars->nx[i]*(cx-aVars->wx[i]) + aVars->nz[i]*cz; }
       else { B = aVars->ny[i]*cvy + aVars->nz[i]*cvz; C = aVars->ny[i]*(cy-aVars->wy[i]) + aVars->nz[i]*cz; }
