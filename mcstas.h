@@ -7,9 +7,12 @@
 *
 * 	Author: K.N.			Jul  1, 1997
 *
-* 	$Id: mcstas.h,v 1.14 1998-11-11 08:58:01 kn Exp $
+* 	$Id: mcstas.h,v 1.15 1998-11-13 07:32:50 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.14  1998/11/11 08:58:01  kn
+* 	Fixed bug with missing extern declaration.
+*
 * 	Revision 1.13  1998/11/09 08:18:57  kn
 * 	Use predefined macro MC_SYS_DIR as default library directory if defined.
 *
@@ -62,6 +65,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "port.h"
 
 #ifndef FALSE
 #define FALSE 0
@@ -79,6 +83,7 @@ void memfree(void *);		/* Free memory. */
 char *str_dup(char *);		/* Allocate new copy of string. */
 char *str_dup_n(char *string, int n); /* Copies only first N chars. */
 char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
+char *str_quote(char *string);	/* Quote string for inclusion in C code */
 void str_free(char *);		/* Free memory for string. */
 
 /* Allocate memory to a pointer. If p is a pointer to type t, palloc(p) will
@@ -282,12 +287,6 @@ void push_autoload(FILE *file);
 * Definitions for file.c
 *******************************************************************************/
 
-#define PATHSEP_S "/"
-#define PATHSEP_C '/'
-#define CURRENT_DIR_S "."
-#ifndef MC_SYS_DIR
-#define MC_SYS_DIR "/usr/local/lib/mcstas"
-#endif
 
 extern char *component_pathname;
 
@@ -374,6 +373,7 @@ extern int debug_current_level;
 struct code_block
   {
     char *filename;		/* Name of origin source file. */
+    char *quoted_filename;	/* Same, quoted for inclusion in C code. */
     int linenum;		/* Line number of first line. */
     List lines;			/* List of lines (strings with \n at end). */
   };
