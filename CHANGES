@@ -1,8 +1,13 @@
 Forthcoming changes:
 
+ - New components: ESS_moderator_long.comp and ESS_moderator_short.comp
+   (by Kim Lefmann)
  - Some support for the calculation of correlation functions in the 
    components Monitor_nD and PreMonitor_nD (by Emmanuel Farhi)
  - Misc. minor bug fixes
+ - For more information: 
+   http://neutron.risoe.dk/mcstas/developments/developments.html
+
 
 Changes in McStas v1.4, July 28, 2000:
 
