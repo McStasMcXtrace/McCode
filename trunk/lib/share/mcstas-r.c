@@ -18,9 +18,16 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.91 2004-07-30 14:49:15 farhi Exp $
+* $Id: mcstas-r.c,v 1.92 2004-08-04 10:38:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.91  2004/07/30 14:49:15  farhi
+* MPI update for usage with mcrun.
+* Still done by Christophe Taton. CC=mpicc and CFLAGS = -DUSE_MPI.
+* Execute (using mpich) with:
+*           mpirun -np NumNodes -machinefile <file> instr.out parameters...
+*      where <file> is text file that lists the machines to use
+*
 * Revision 1.90  2004/07/16 14:59:03  farhi
 * MPI support. Requires to have mpi installed, and compile with
 *    CC=mpicc and CFLAGS = -DUSE_MPI.
@@ -2839,6 +2846,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   double Nsum=0, Psum=0, P2sum=0;
   char sec[256];
   char isdata_present;
+  char israw_data=0; /* raw data=(N,p,p2) instead of (N,P,sigma) */
   
   if (strstr(part,"data")) 
   { isdata = 1; Begin = format.BeginData; End = format.EndData; }
@@ -2859,6 +2867,8 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   if (strstr(format.Name, "McStas") || !filename || strlen(filename) == 0) 
     mcvalid_name(valid_parent, parent, 64);
   else mcvalid_name(valid_parent, filename, 64);
+  
+  if (strstr(format.Name, " raw")) israw_data = 1;
   
   /* if normal or begin and part == data: output info_data (sim/data_file) */
   if (isdata == 1 && just_header != 2 && f)
@@ -2985,7 +2995,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
         Psum += I;
         P2sum += p2 ? E : I*I;
 
-        if (p0 && p1 && p2) E = mcestimate_error(N,I,E);
+        if (p0 && p1 && p2 && !israw_data) E = mcestimate_error(N,I,E);
         if(datafile && !isBinary && isdata_present)
         {
           if (isdata == 1) value = I;
@@ -3023,7 +3033,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
         {
           long    i, count;
           for (i=0; i<m*n*p; i++)
-            { if (isdata != 2) s[i] = (float)d[i]; 
+            { if (isdata != 2 || israw_data) s[i] = (float)d[i]; 
               else s[i] = (float)mcestimate_error(p0[i],p1[i],p2[i]); }
           count = fwrite(s, sizeof(float), m*n*p, datafile);
           if (count != m*n*p) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li).\n", filename,count, (long)m*n*p);
@@ -3034,7 +3044,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       {
         long count;
         double *s=NULL;
-        if (isdata == 2) 
+        if (isdata == 2 && !israw_data) 
         { 
           s = (double*)malloc(m*n*p*sizeof(double));
           if (s) { long i;
@@ -3529,13 +3539,15 @@ void mcuse_format(char *format)
   mcformat = mcformats[i_format];
   strcpy(tmp, mcformat.Name); 
   mcformat.Name = tmp;
-  if (strstr(format,"binary"))
+  if (strstr(low_format,"raw")) strcat(mcformat.Name," raw");
+  if (strstr(low_format,"binary"))
   {
-    if (strstr(format,"double")) strcat(mcformat.Name," binary double data");
-    else if (strstr(format,"NeXus")) strcat(mcformat.Name," binary NeXus data");
+    if (strstr(low_format,"double")) strcat(mcformat.Name," binary double data");
+    else if (strstr(low_format,"nexus")) strcat(mcformat.Name," binary NeXus data");
     else strcat(mcformat.Name," binary float data");
     mcascii_only = 1;
   }
+
 } /* mcuse_format */
 
 static void
