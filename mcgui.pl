@@ -52,9 +52,11 @@ BEGIN {
         
       }
     }
-    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl"
+    $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+    $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
   }
 use lib $MCSTAS::perl_dir;
+use lib $MCSTAS::perl_modules;
 
 # Possibly, set BROWSER environment variable 
 if ($MCSTAS::browser) {
