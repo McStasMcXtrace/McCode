@@ -101,4 +101,64 @@ sub simulation_dialog {
     return ($res, \%si);
 }
 
+sub plot_dialog {
+    my ($win, $ii, $si, $di) = @_;
+    my $current_plot = -1;	# Component index, or -1 -> overview.
+    my $dlg = $win->DialogBox(-title => "Plot results",
+			      -buttons => ["Close"]);
+
+    my $lf = $dlg->add('Frame');
+    $lf->pack(-side => 'left');
+    $lf->Label(-text => "Monitors and detectors",
+	       -anchor => 'w')->pack(-fill => 'x');
+    my $cl = $lf->Scrolled('Listbox',
+			  -width => 25,
+			  -height => 10,
+			  -setgrid => 1,
+			  -scrollbars => 'se');
+    $cl->pack(-expand => 'yes', -fill => 'y', -anchor => 'w');
+    $cl->insert(0, map $_->{'Component'}, @$di);
+    $cl->activate(0);
+    $lf->Button(-text => "Plot",
+		-command => sub {
+		    $current_plot = $cl->index('active');
+		    single_plot("/xserv", $di->[$current_plot], 0); }
+		)->pack;
+    $lf->Button(-text => "Overview plot",
+		-command => sub {
+		    overview_plot("/xserv", $di, 0);
+		    $current_plot = -1; }
+		)->pack;
+    $lf->Button(-text => "Hardcopy",
+		-command => sub {
+		    if($current_plot == -1) {
+			overview_plot("mcstas.ps/cps", $di, 0);
+		    } else {
+			my $comp = $di->[$current_plot]{'Component'};
+			single_plot("$comp.ps/cps", $di->[$current_plot], 0);
+		    } }
+		)->pack;
+    $lf->Button(-text => "Select from overview",
+		-command => sub {
+		    my ($c, $idx) = overview_plot("/xserv", $di, 1);
+		    $cl->activate($idx);
+		    $current_plot = -1;}
+		)->pack;
+    my $rf = $dlg->add('Frame');
+    $rf->pack(-side => 'top');
+    $rf->Label(-text => <<END,
+Date: $si->{'Date'}
+Instrument name: $ii->{'Name'}
+Source: $ii->{'Instrument-source'}
+Neutron count: $si->{'Ncount'}
+Simulation file: <unimplemented>
+END
+	       -anchor => 'w',
+	       -justify => 'left')->pack(-fill => 'x');
+
+    overview_plot("/xserv", $di, 0);
+    my $res = $dlg->Show;
+    return ($res);
+}
+
 1;
