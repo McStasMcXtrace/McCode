@@ -58,7 +58,8 @@ BEGIN {
         $MCSTAS::runscilab ="scilab";
         # install atexit-style handler so that when we exit or die,
         # we automatically delete this temporary file
-        END { if (defined($tmp_file) && !($Config{'osname'} eq 'MSWin32')) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!"; } }
+        # does not work as temp files is often removed before Scilab starts...
+        # END { if (defined($tmp_file) && !($Config{'osname'} eq 'MSWin32')) { unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!"; } }
       }
     }
     $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
@@ -72,7 +73,7 @@ require "mcstas_config.perl";
 # print and exit
 my ($default_ext);
 my ($file, $files);
-my $index =0;;
+my $index =0;
 my $passed_arg_str = "";
 my $passed_arg_str_quit = "";
 my $inspect = "";
@@ -114,6 +115,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "       [-plot]     Show all plots in separate window(s)\n";
       print "       [-iCOMP]    Only show monitors whos name match COMP\n";
       print "       [+nw]       Open {Scilab,Matlab} command window (with Tcl/Java)\n";
+      print "       [-nw]       Open {Scilab,Matlab} command window (without Tcl/Java)\n";
       print "  Plots all monitor data from a simulation, or a single data file.\n";
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
