@@ -49,9 +49,17 @@ typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
 
+/* Note: the enum instr_formal_types definition MUST be kept
+   synchronized with the one in mcstas.h and with the
+   instr_formal_type_names array in cogen.c. */
+enum instr_formal_types
+  {
+    instr_type_double, instr_type_int, instr_type_string
+  };
 struct mcinputtable_struct {
   char *name;
-  MCNUM *par;
+  void *par;
+  enum instr_formal_types type;
 };
 extern struct mcinputtable_struct mcinputtable[];
 extern int mcnumipar;
