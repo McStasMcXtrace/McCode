@@ -8,9 +8,10 @@
 * %I
 * Written by: Kim Lefmann 
 * Date: March 2001
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: McStas 1.5
 *
+* Source with up to three Maxwellian distributions
 *
 * %D
 * A parametrised continuous source for modelling a (cubic) source
