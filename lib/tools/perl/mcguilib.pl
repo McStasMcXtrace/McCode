@@ -320,34 +320,11 @@ END
 	overview_plot("/xserv", $di, 0);
 	my $res = $dlg->Show;
 	return ($res);
-      } elsif ($MCSTAS::mcstas_config{'PLOTTER'} eq 1 || $MCSTAS::mcstas_config{'PLOTTER'} eq 2) {
-	# Matlab
-	push @plot_cmd, "-pMatlab";
-	# Save current working dir...
-	my $dir=cwd;
-	# Extract dir info from filename
-	my $path = dirname($sim_file_name);
-	my $file = basename($sim_file_name);
-	push @plot_cmd, $file;
+      } else {
+	push @plot_cmd, $sim_file_name;
 	push @plot_cmd, $suffix;
 	my $cmd=join(' ',@plot_cmd);
-	chdir $path;
 	system $cmd;
-	chdir $dir;
-      } elsif ($MCSTAS::mcstas_config{'PLOTTER'} eq 3 || $MCSTAS::mcstas_config{'PLOTTER'} eq 4) {
-	# Scilab
-	push @plot_cmd, "-pScilab";
-	# Save current working dir...
-	my $dir=cwd;
-	# Extract dir info from filename
-	my $path = dirname($sim_file_name);
-	my $file = basename($sim_file_name);
-	push @plot_cmd, $file;
-	push @plot_cmd, $suffix;
-	my $cmd=join(' ',@plot_cmd);
-	chdir $path;
-	system $cmd;
-	chdir $dir;
       }
 }
 
