@@ -64,13 +64,19 @@ DECLARE
 
 INITIALIZE
 %{
-    
+    struct MonitornD_Variables *Vars = &(MC_GETPAR(comp, Vars));
+    Vars->Flag_UsePreMonitor = 1;
+    strncpy(Vars->UserName1, mccompcurname, 64);
 %}
 
 TRACE
 %{ 
     struct MonitornD_Variables *Vars = &(MC_GETPAR(comp, Vars));
+    struct MonitornD_Variables *Vars2 = &(MC_GETPAR(CurvedGuide_Mon4, Vars));
+    /* directly act on MonitornD_Variables pointer, do not need to update */
     
+    Vars2->UserVariable1 = 0;
+    Vars2->UserVariable2 = 0;
     
     PROP_Z0; 
     
@@ -101,3 +107,4 @@ MCDISPLAY
 %}
 
 END
+
