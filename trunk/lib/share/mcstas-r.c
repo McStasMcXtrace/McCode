@@ -18,9 +18,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.88 2004-06-30 15:06:06 farhi Exp $
+* $Id: mcstas-r.c,v 1.89 2004-06-30 16:27:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.88  2004/06/30 15:06:06  farhi
+* Solved 'pre' SEGV occuring when indenting/unindenting a Parameter block
+* in a data file. Removed Date field in mcinfo_simulation, as this is now included
+* in all data files.
+*
 * Revision 1.86  2004/06/16 14:03:07  farhi
 * Corrected misprint
 *
@@ -3517,6 +3522,7 @@ void sighandler(int sig)
     case SIGTERM : printf(" SIGTERM (termination)"); break;
     case SIGPIPE : printf(" SIGPIPE (broken pipe)"); break;
     case SIGUSR1 : printf(" SIGUSR1 (Display info)"); break;
+    case SIGHUP  : printf(" SIGHUP  (Save simulation)"); break;
     case SIGUSR2 : printf(" SIGUSR2 (Save simulation)"); break;
     case SIGILL  : printf(" SIGILL (Illegal instruction)"); break;
     case SIGFPE  : printf(" SIGFPE (Math Error)"); break;
@@ -3546,7 +3552,7 @@ void sighandler(int sig)
     return;
   }
   else
-  if (sig == SIGUSR2)
+  if (sig == SIGUSR2 || sig == HUP)
   {
     printf("# McStas: Saving data and resume simulation (continue)\n");
     mcsave(NULL);
@@ -3602,7 +3608,8 @@ mcstas_main(int argc, char *argv[])
   signal( SIGTERM ,sighandler);   /* software termination signal from kill */
   /* signal( SIGPIPE ,sighandler);*/   /* write on a pipe with no one to read it, used by mcdisplay */
 
-  signal( SIGUSR1 ,sighandler); /* display simulation status */
+  signal( SIGHUP  ,sighandler);  /* HUP -> USR2 */
+  signal( SIGUSR1 ,sighandler);  /* display simulation status */
   signal( SIGUSR2 ,sighandler);
   signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
   signal( SIGFPE ,sighandler);    /* floating point exception */
