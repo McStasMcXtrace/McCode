@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.1 $
+* Version:  $Revision: 1.2 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 *
@@ -249,7 +249,10 @@ TRACE
       }
       if (verbose) printf("Virtual_tripoli4_input: %s: End Batch Number %d \n",NAME_CURRENT_COMP,nbatch);
     } 
-    else exit_flag = 1; 
+    else {
+      if (verbose) printf("Virtual_tripoli4_input: %s: Expect 'END_OF_BATCH', found '%s'. Finishing.", word);
+      exit_flag = 1; 
+    }
   } 
  
   if (begin_of_batch(word)){/* if key word BEGIN_OF_BATCH is found */
@@ -257,7 +260,10 @@ TRACE
       num_batch=strtol(word,NULL,0);
       if (verbose) printf("Virtual_tripoli4_input: %s: Start Batch Number %d\n",NAME_CURRENT_COMP,num_batch);
     }
-    else exit_flag = 1;
+    else {
+      if (verbose) printf("Virtual_tripoli4_input: %s: Expect 'BEGIN_OF_BATCH', found '%s'. Finishing.", word);
+      exit_flag = 1; 
+    }
   }
 
   if (result_read==EOF) {  /* normal end of file */
