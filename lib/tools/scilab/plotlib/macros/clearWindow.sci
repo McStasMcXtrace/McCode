@@ -3,19 +3,17 @@ function clearWindow(win,typeOfPlot,cmap)
 	[lhs,rhs]=argn(0);
 
 	if rhs==1
-//		xtape('clear',win);
-//		xset('wwpc');
-//		if xget('pixmap')==0
-//			xclear(win)
-//		end
-		xbasc();
+		xtape('clear',win);
+		xset('wwpc');
+		if xget('pixmap')==0
+			xclear(win)
+		end
 		return		
 	end
 
 	state=loadGraphicState(win);
 
-//	xtape('clear',win)
-	xbasc()
+	xtape('clear',win)
 	
 	if rhs==2
 		if 	typeOfPlot=="pcolor" | ...
