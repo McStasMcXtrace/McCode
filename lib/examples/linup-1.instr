@@ -40,7 +40,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT TAS1_C1(PHM=37.077,TTM=-74,C1=30)
+DEFINE INSTRUMENT TAS1_C1(PHM=-37.077,TTM=-74,C1=30)
 
 DECLARE
 %{

@@ -44,7 +44,7 @@
 *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT TAS1_Diff_Slit(PHM=37.077,TTM=-74,TT=33.52,C1=30,OMC1=5.5,C2=28,C3=67)
+DEFINE INSTRUMENT TAS1_Diff_Slit(PHM=-37.077,TTM=-74,TT=33.52,C1=30,OMC1=5.5,C2=28,C3=67)
 
 DECLARE
 %{

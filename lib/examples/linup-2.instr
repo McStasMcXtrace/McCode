@@ -41,7 +41,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT TAS1_C1_Tilt(PHM=37.077,TTM=-74,C1=30,OMC1=5.5)
+DEFINE INSTRUMENT TAS1_C1_Tilt(PHM=-37.077,TTM=-74,C1=30,OMC1=5.5)
 
 DECLARE
 %{
