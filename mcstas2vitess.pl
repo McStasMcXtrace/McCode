@@ -175,7 +175,8 @@ if(@ARGV != 1) {
     print STDERR "       This tool enables to convert a single McStas component into\n";
     print STDERR "       a Vitess module. Component string parameters should be declared\n";
     print STDERR "       as 'char*' setting parameters. Default values are allowed.\n";
-    print STDERR "SEE ALSO: mcstas, mcdisplay, mcrun, mcplot, mcresplot, mcgui\n";
+    print STDERR "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
+    print STDERR "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
     exit 1;
 }
 
