@@ -186,6 +186,7 @@ if ($plotter eq 3 || $plotter eq 4) {
   
   # Attempt to locate pgplot directory if unset.
   $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
+  $ENV{'PGPLOT_DEV'} = "/xserv" unless $ENV{'PGPLOT_DEV'};
 
   require "mcfrontlib2D.pl";
   require "mcplotlib.pl";
@@ -225,7 +226,7 @@ if ($plotter eq 3 || $plotter eq 4) {
   for(;;) {
       my ($cc,$cx,$cy,$idx);
       # Do overview plot, letting user select a plot for full-screen zoom.    
-      ($cc,$idx) = overview_plot("/xserv", $datalist, 1);
+      ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 1);
       last if $cc =~ /[xq]/i;        # Quit?
       if($cc =~ /[pcg]/i) {        # Hardcopy?
           my $ext="ps";
