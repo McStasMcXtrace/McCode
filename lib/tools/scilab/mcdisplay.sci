@@ -151,43 +151,64 @@ function bool=strsame(string1,string2)
   end
 endfunction
 
-function parmwin(varargin)
-global INSTRUMENT
-// Export file formats...
-Formats=["PostScript Color (.eps)","GIF (.gif)","xfig (.fig)","PPM (.ppm)","Scilab (.scg)","Cancel"]
-// Check if we should export on this re-entry?
-if INSTRUMENT.DoExport==2
-  Stop=0;
-  select INSTRUMENT.ExportFormat
-    case 1 then // PostScript Color (.eps)
-      ext='.eps';
-      dr='Pos';
-    case 2 then // GIF (.gif)
-      ext='.gif';
-      dr='GIF';
-    case 3 then // xfig (.fig)
-      ext='.fig';
-      dr='Fig';
-    case 4 then // PPM (.ppm)
-      ext='.ppm';
-      dr='PPM';
-    case 5 then // Scilab (.scg)
-      ext='.scg'
-      dr='';
-    else Stop=1 // Cancel
-  end
-  if Stop==0 
-    if ~length(INSTRUMENT.descr), INSTRUMENT.descr = 'mcstas'; end
-    filename=strcat([INSTRUMENT.descr,ext]);
-    disp(strcat(['exporting ' filename ' in ' Formats(INSTRUMENT.ExportFormat) ' format']));
-    if ext ~= '.scg'
-      driver(dr);
+function filename = mcdisplay_output_begin(form, filename)
+// initiate output in the specified format (default is GIF)
+// format may be: gif, ps, psc, fig, scilab
+  if argn(2) == 0 then form='GIF'; end
+  if argn(1) <= 1 then filename=''; end
+  if length(filename) == 0 then filename='mcstas'; end
+  form = convstr(form,"l");
+  
+  ext = ''; dr = '';
+  //    if output is not empty, open driver+xinit(filename)
+  if     length(strindex(form,'-ps')),  ext = '.eps';  dr='Pos';
+  elseif length(strindex(form,'-psc')), ext = '.eps';  dr='Pos';
+  elseif length(strindex(form,'-gif')), ext = '.gif';  dr='GIF';
+  elseif length(strindex(form,'-fig')), ext = '.fig';  dr='Fig'; 
+  elseif length(strindex(form,'-ppm')), ext = '.ppm';  dr='PPM'; 
+  elseif length(strindex(form,'Rec')),  ext = '';      dr='Rec'; 
+  elseif length(strindex(form,'-scg')), ext = '.scg';  dr=''; end
+  if length(dr), driver(dr); end
+  if length(ext) 
+    if ~length(strindex(filename,ext))
+      filename=filename+ext;
+    end
+    if ext ~= '.scg', 
       xinit(filename);
-      // Since this is mcdisplay, no other windows are present...
-      xtape('replay',0);
+      if dr == 'Pos' & ~length(strindex(form,'psc'))
+        gray();
+      end
+    end
+  end
+endfunction // mcdisplay_output_begin
+
+function mcdisplay_output_end(form, win, filename)
+// output the current graphic window in the specified format (default is GIF)
+// format may be: gif, ps, psc, fig, scilab
+  if argn(2) == 0 then form='GIF'; end
+  if argn(2) <= 1 then win = -1; end
+  if argn(2) <= 2 then filename=''; end
+  if length(win) == 0 then win = -1; end
+  if win < 0      then win = xget('window'); end
+  if length(filename) == 0 then filename='mcstas'; end
+  form = convstr(form,"l");
+  
+  ext = ''; dr = '';
+  //    if output is not empty
+  if     length(strindex(form,'-ps')),  ext = '.eps'; 
+  elseif length(strindex(form,'-psc')), ext = '.eps'; 
+  elseif length(strindex(form,'-gif')), ext = '.gif'; 
+  elseif length(strindex(form,'-fig')), ext = '.fig';  
+  elseif length(strindex(form,'-ppm')), ext = '.ppm';  
+  elseif length(strindex(form,'-scg')), ext = '.scg';  end
+  if length(ext) 
+    if ~length(strindex(filename,ext))
+      filename=filename+ext;
+    end
+    if ext ~= '.scg', 
+      xtape('replay',win);
       xend(); 
-    else
-      xsave(filename,0);
+    else xsave(filename);
     end
     if ext == '.eps'
       // Clean up by running scilab's EPS encapsulator :(
@@ -197,6 +218,40 @@ if INSTRUMENT.DoExport==2
         unix_g(SCI+'/bin/BEpsf -landscape '+filename);
       end
     end
+  end
+  if length(filename) > 0 & length(ext) > 0 then 
+    t = 'McDisplay: Saved image as '+filename+' ('+form+')';
+    if ext == '.scg', t = t+'. Load it with scilab> xload(""'+filename+'"")'; end
+    xinfo(t); mprintf('%s\n',t);
+  end
+endfunction // mcdisplay_output_end
+
+function parmwin(varargin)
+global INSTRUMENT
+// Export file formats...
+Formats=["PostScript Color (.eps)","GIF (.gif)","xfig (.fig)","PPM (.ppm)","Scilab (.scg)","Cancel"]
+// Check if we should export on this re-entry?
+if INSTRUMENT.DoExport==2
+  Stop=0;
+  select INSTRUMENT.ExportFormat
+    case 1 then // PostScript Color (.eps)
+      form='-psc';
+    case 2 then // GIF (.gif)
+      form='-gif';
+    case 3 then // xfig (.fig)
+      form='-fig';
+    case 4 then // PPM (.ppm)
+      form='-ppm';
+    case 5 then // Scilab (.scg)
+      form='-scg'
+    else Stop=1 // Cancel
+  end
+  if Stop==0 
+    if ~length(INSTRUMENT.descr), INSTRUMENT.descr = 'mcstas'; end
+    filename=INSTRUMENT.descr;
+    disp(strcat(['exporting ' filename ' in ' Formats(INSTRUMENT.ExportFormat) ' format']));
+    mcdisplay_output_begin(form, filename);
+    mcdisplay_output_end(form, -1, filename);
   end
   INSTRUMENT.DoExport=1;
   // Reset to standard Rec driver
@@ -308,9 +363,10 @@ INSTRUMENT.theta=10;
 if INSTRUMENT.save==0
   parmwin();
 end
+mcdisplay_output_begin(INSTRUMENT.save_format, INSTRUMENT.descr);
 PlotInstrument3D();
 if INSTRUMENT.save==1
-  xsave(strcat([INSTRUMENT.descr '.scg']));
+  mcdisplay_output_end(INSTRUMENT.save_format, -1, INSTRUMENT.descr);
   INSTRUMENT.save=0;
   // parmwin();
   quit;

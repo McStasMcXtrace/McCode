@@ -105,6 +105,7 @@ function win = mcplot_addmenu(use_common_menu)
 
   global MCPLOT
 
+  if driver() ~= 'Rec' then return; end
   win = xget('window');
   if argn(2) > 1 & MCPLOT.MenuInstalled, return; end
   
@@ -530,6 +531,48 @@ function mcplot_colorbar(zmin,zmax)
 endfunction // mcplot_colorbar
 
 function mcplot_output(form, win, filename)
+  if argn(2) == 0 then form='GIF'; end
+  if argn(2) <= 1 then win = -1; end
+  if argn(2) <= 2 then filename=''; end
+  if length(win) == 0 then win = -1; end
+  
+  filename = mcplot_output_begin(form, filename);
+  mcplot_output_end(form, win, filename);
+  driver('Rec');  // default output to screen
+endfunction // mcplot_output
+
+function filename = mcplot_output_begin(form, filename)
+// initiate output in the specified format (default is GIF)
+// format may be: gif, ps, psc, fig, scilab
+  if argn(2) == 0 then form='GIF'; end
+  if argn(1) <= 1 then filename=''; end
+  if length(filename) == 0 then filename='mcstas'; end
+  form = convstr(form,"l");
+  
+  ext = ''; dr = '';
+  //    if output is not empty, open driver+xinit(filename)
+  if     length(strindex(form,'-ps')),  ext = '.eps';  dr='Pos';
+  elseif length(strindex(form,'-psc')), ext = '.eps';  dr='Pos';
+  elseif length(strindex(form,'-gif')), ext = '.gif';  dr='GIF';
+  elseif length(strindex(form,'-fig')), ext = '.fig';  dr='Fig'; 
+  elseif length(strindex(form,'-ppm')), ext = '.ppm';  dr='PPM'; 
+  elseif length(strindex(form,'Rec')),  ext = '';      dr='Rec'; 
+  elseif length(strindex(form,'-scg')), ext = '.scg';  dr=''; end
+  if length(dr), driver(dr); end
+  if length(ext) 
+    if ~length(strindex(filename,ext))
+      filename=filename+ext;
+    end
+    if ext ~= '.scg', 
+      xinit(filename);
+      if dr == 'Pos' & ~length(strindex(form,'psc'))
+        gray();
+      end
+    end
+  end
+endfunction // mcplot_output_begin
+
+function mcplot_output_end(form, win, filename)
 // output the current graphic window in the specified format (default is GIF)
 // format may be: gif, ps, psc, fig, scilab
   if argn(2) == 0 then form='GIF'; end
@@ -541,23 +584,18 @@ function mcplot_output(form, win, filename)
   form = convstr(form,"l");
   
   ext = ''; dr = '';
-  //    if output is not empty, open driver+xinit(filename)
-  if     length(strindex(form,'-ps')),  ext = '.eps';  dr='Pos';
-  elseif length(strindex(form,'-psc')), ext = '.eps';  dr='Pos';
-  elseif length(strindex(form,'-gif')), ext = '.gif'; dr='GIF';
-  elseif length(strindex(form,'-fig')), ext = '.fig'; dr='Fig'; 
-  elseif length(strindex(form,'-ppm')), ext = '.ppm'; dr='PPM'; 
-  elseif length(strindex(form,'-scg')), ext = '.scg'; dr=''; end
-  if length(dr), driver(dr); end
+  //    if output is not empty
+  if     length(strindex(form,'-ps')),  ext = '.eps'; 
+  elseif length(strindex(form,'-psc')), ext = '.eps'; 
+  elseif length(strindex(form,'-gif')), ext = '.gif'; 
+  elseif length(strindex(form,'-fig')), ext = '.fig';  
+  elseif length(strindex(form,'-ppm')), ext = '.ppm';  
+  elseif length(strindex(form,'-scg')), ext = '.scg';  end
   if length(ext) 
     if ~length(strindex(filename,ext))
       filename=filename+ext;
     end
     if ext ~= '.scg', 
-      xinit(filename);
-      if dr == 'Pos' & ~length(strindex(form,'psc'))
-        gray();
-      end
       xtape('replay',win);
       xend(); 
     else xsave(filename);
@@ -574,13 +612,12 @@ function mcplot_output(form, win, filename)
       end
     end
   end
-  driver('Rec');  // default output to screen
-  if length(filename) > 0 then 
+  if length(filename) > 0 & length(ext) > 0 then 
     t = 'McPlot: Saved image as '+filename+' ('+form+')';
-    if ext == '.scg', t = t+'. Load it with xload(...)'; end
+    if ext == '.scg', t = t+'. Load it with scilab> xload(""'+filename+'"")'; end
     xinfo(t); mprintf('%s\n',t);
   end
-endfunction // mcplot_output
+endfunction // mcplot_output_end
 
 // basic routines required by mcplot ------------------------------------------
 
@@ -843,10 +880,12 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
     if ~data_count then return; end
     m = floor(sqrt(data_count));
     n = ceil(data_count/m);
-    xdel(w); xbasc(w); xset('window',w);
+    if driver() == 'Rec' then xdel(w); end
+    xbasc(w); 
+    if driver() == 'Rec' then xset('window',w); end
     p = 1;
     mcplot_subplot(m,n,p);
-    mcplot_addmenu();
+    if driver() == 'Rec' then mcplot_addmenu(); end
     data_count = 0;
   elseif argn(2) == 3 then 
     m=0; n=0; p=0;
@@ -1031,7 +1070,7 @@ filename = '';
 if MSDOS, filesep = '\';
 else filesep = '/'; end
 
-form = ''; 
+form = 'Rec'; 
 //    if output is not empty, open driver+xinit(filename)
 if     length(strindex(options,'-ps')),  form = '-ps' ;
 elseif length(strindex(options,'-psc')), form = '-psc';
@@ -1126,13 +1165,14 @@ else  // if 's' is a 'struct'
     execstr('filename = object.File;','errcatch');
     if length(filename) == 0 then execstr('filename = object.filename;','errcatch'); end
     if length(filename) == 0 then filename='mcstas'; end
-    // filename=filename+ext;
-    // if ~length(strindex(options,'-scg')), xinit(filename); end
+    mcplot_output_begin(form,filename);
     if ~length(strindex(options,'-plot')) & ~length(strindex(options,'-overview'))
       options = options+' overview';
     end
+  else
+	mcplot_output_begin(form,'');
   end
-  //  **  send to mcplot_scan(s, options, id)  **
+  //  **  send to mcplot_scan(s, options, id)  *
   [count, object] = mcplot_scan(object, options, id);
   mcplot_fig_legend(object,filename, pathname);
   
@@ -1145,8 +1185,7 @@ else  // if 's' is a 'struct'
       ret = mcplot_addmenu('common');
     end
   end
-  driver('Rec');  // default output to screen
-  if length(form), mcplot_output(form, -1, filename); end
+  mcplot_output_end(form, -1, filename);
 end
 
 endfunction // mcplot

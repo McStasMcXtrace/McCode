@@ -94,7 +94,7 @@ for($i = 0; $i < @ARGV; $i++) {
       $do_plot = 1;
   } elsif(/^-overview$/i) {
       $do_overview = 1;
-  } elsif(/^-png$/i || /^-ps$/i || /^-psc$/i || /^-ppm$/i) {
+  } elsif(/^-png$/i || /^-ps$/i || /^-psc$/i || /^-ppm$/i || /^-scg$/i || /^-fig$/i) {
       $passed_arg_str_quit .= "$_ ";
   } elsif(/^-p([a-zA-Z0-9_]+)$/ || /^--plotter=([a-zA-Z0-9_]+)$/ || /^--format=([a-zA-Z0-9_]+)$/) {
         $plotter = $1;	
