@@ -880,22 +880,11 @@ sub menu_run_simulation {
     push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
           push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
   }
-	my @unset = ();
         for (@{$out_info->{'Parameters'}}) {
-	    if (length($newsi->{'Params'}{$_})>0) {
+	    if (defined($newsi->{'Params'}{$_})) {
 		push @command, "$_=$newsi->{'Params'}{$_}";
-	    } else {
-		push @unset, $_;
 	    }
         }
-	if (@unset>0) {
-	    $w->messageBox(-message =>
-			   "One or more required parameters left unset:\n\n@unset",
-			   -title => "Unset parameters!",
-			   -type => 'OK',
-			   -icon => 'error');
-	    return;
-	}
         my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;
@@ -982,7 +971,8 @@ sub make_comp_inst {
     for $p (@{$cdata->{'inputpar'}}) {
         my $add;
         my @p_splitted = split(" ", $p);
-        my $p_last_word = $p_splitted[length(@p_splitted)];
+        my $length = scalar @p_splitted;
+        my $p_last_word = $p_splitted[$length-1];
         if(defined($r->{'VALUE'}{$p}) && $r->{'VALUE'}{$p} !~ /^\s*$/) {
             $add .= "$p_last_word = $r->{'VALUE'}{$p}";
         } elsif(defined($cdata->{'parhelp'}{$p}{'default'})) {
