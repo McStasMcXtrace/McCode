@@ -10,16 +10,16 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
 * Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
 * Modified by: E. Farhi, 2D channel array. Correct focus bug (Dec 14th 2002)
-* Modified by: E. Farhi, Wavyness+chamfers+nelements (Aug 19th 2003)
+* Modified by: E. Farhi, Waviness+chamfers+nelements (Aug 19th 2003)
 *
 * Neutron guide with gravity. Can be channeled and focusing.
-* Wavyness may be specified, as well as side chamfers (on substrate).
+* Waviness may be specified, as well as side chamfers (on substrate).
 *
 * %D
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
@@ -27,7 +27,7 @@
 * window. The guide can be channeled (k,d parameters). The guide coating
 * specifications may be entered via different ways (global, or for
 * each wall m-value).
-* Wavyness (random) may be specified either globally or for each mirror type.
+* Waviness (random) may be specified either globally or for each mirror type.
 * Side chamfers (due to substrate processing) may be specified the same way.
 * The guide section may be splitted into nelements equivalent parts of length
 * l/nelements. Chamfers do apply in between these parts.
@@ -64,10 +64,10 @@
 *                 (kh-1 horizontal dividing walls)
 *                 this enables to have k*kh rectangular channels
 * G        (m/s2) Gravitation norm. 0 value disables G effects.
-* wavy     (deg)  Global guide wavyness
-* wavy_z   (deg)  Partial wavyness along propagation axis
-* wavy_tb  (deg)  Partial wavyness in transverse direction for top/bottom mirrors
-* wavy_lr  (deg)  Partial wavyness in transverse direction for left/right mirrors
+* wavy     (deg)  Global guide waviness
+* wavy_z   (deg)  Partial waviness along propagation axis
+* wavy_tb  (deg)  Partial waviness in transverse direction for top/bottom mirrors
+* wavy_lr  (deg)  Partial waviness in transverse direction for left/right mirrors
 * chamfers (m)    Global chamfers specifications (in/out/mirror sides)
 * chamfers_z  (m) Input and output chamfers
 * chamfers_lr (m) Chamfers on left/right mirror sides
@@ -198,7 +198,7 @@ SHARE
       aVars->norm_n2c[i] = aVars->nx[i]*aVars->nx[i] + aVars->ny[i]*aVars->ny[i];
       aVars->Ac[i]       = aVars->nx[i]*aVars->gx    + aVars->ny[i]*aVars->gy;
     }
-    /* handle wavyness init */
+    /* handle waviness init */
     if (a_wavy && (!a_wavy_tb && !a_wavy_lr && !a_wavy_z))
     { aVars->wav_tb=aVars->wav_lr=aVars->wav_z=a_wavy; } 
     else
@@ -263,7 +263,7 @@ SHARE
      }
     
     *dt = dt_min;
-    /* handles wavyness: rotate n vector and adapt n_dot_v */
+    /* handles waviness: rotate n vector and adapt n_dot_v */
     if (side > 0 && side < 5 && (aVars->wav_z || aVars->wav_lr || aVars->wav_tb))
     {
       double nt_x, nt_y, nt_z;  /* transverse vector */
