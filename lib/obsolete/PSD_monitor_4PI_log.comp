@@ -62,6 +62,8 @@ FINALLY
       if((PSD_p[i][j] < minp || minp == 0) && PSD_p[i][j] > 0)
 	minp = PSD_p[i][j];
     }
+  if(minp <= 0)
+    minp = 1;			/* Avoid logarithm of zero */
   for (i=0; i<nx; i++)
     for (j=0; j<ny; j++) 
     {
