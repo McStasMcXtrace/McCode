@@ -880,11 +880,22 @@ sub menu_run_simulation {
     push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
           push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
   }
+	my @unset = ();
         for (@{$out_info->{'Parameters'}}) {
-	    if (defined($newsi->{'Params'}{$_})) {
+	    if (length($newsi->{'Params'}{$_})>0) {
 		push @command, "$_=$newsi->{'Params'}{$_}";
+	    } else {
+		push @unset, $_;
 	    }
         }
+	if (@unset>0) {	 
+	    $w->messageBox(-message =>	 
+			   "Unset parameter(s):\n\n@unset\n\nPlease fill all fields!",	 
+			   -title => "Unset parameters!",	 
+			   -type => 'OK',	 
+			   -icon => 'error');	 
+	    return;
+	}
         my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;

@@ -78,7 +78,6 @@ TODO:
 * Kim's Powder2 (needs a few lines for randvec_target_rect) - PETER
 * Scrollbar in editor (too hard? / platform specific) 
 * 'Scan evolvement' plot of psd's (Pick PSD data from scan, plot together)
-* line number in editor (go to line) - PETER
 * more on inserting arms in the docs
 
 PENDING:
