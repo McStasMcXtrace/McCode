@@ -6,9 +6,14 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.16 1998-09-23 13:52:08 kn Exp $
+*	$Id: mcstas-r.h,v 1.17 1998-09-24 13:01:39 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.16  1998/09/23 13:52:08  kn
+*	Added conversion factors.
+*	McStas now uses its own random() implementation (unless
+*	USE_SYSTEM_RANDOM is defined).
+*
 *	Revision 1.15  1998/05/19 07:59:45  kn
 *	Hack to make random number generation work with HP's CC C compiler.
 *
@@ -108,8 +113,9 @@ typedef MCNUM Rotation[3][3];
 #define test_printf while(0) printf
 #endif
 
-#define MIN2RAD  (2*PI/(360*60))
-#define DEG2RAD  (2*PI/360)
+#define MIN2RAD  (PI/(180*60))
+#define DEG2RAD  (PI/180)
+#define RAD2DEG  (180/PI)
 #define AA2MS    629.719		/* Convert k[1/AA] to v[m/s] */
 #define MS2AA    1.58801E-3		/* Convert v[m/s] to k[1/AA] */
 #define HBAR     1.05459E-34
