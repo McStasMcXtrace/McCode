@@ -88,6 +88,7 @@ tar cfz $PW/../mcstas-$1-src.tar.gz mcstas-$1
 cd $PW
 cd $DIST
 make
+make plotlib
 UNAME=`uname`
 MACH=`uname -m`
 PROC=`uname -p`
@@ -103,6 +104,7 @@ tar cfz $PW/../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz mcstas-$1
 cd $PW
 cd $DIST
 make clean
+find lib/tools/scilab/plotlib/macros -name \*.bin -exec rm \{\} \;
 flex -i instrument.l
 bison -v -d instrument.y
 ./configure
