@@ -10,10 +10,12 @@
 *%I
 * Written by: KL,  
 * Date: Nov. 11, 1998
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Thomas Hansen,  December, 1999
+*
+* A divergence sensitive monitor.
 *
 *%D
 * A divergence sensitive monitor. The counts are distributed in 

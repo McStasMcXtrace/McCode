@@ -8,10 +8,9 @@
 * Component: ESS_moderator_short
 *
 * %I
-* Adapted from Moderator by: KN, M.Hagen, August 1998
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001 
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -19,7 +18,8 @@
 *
 * %D
 * Produces a time-of-flight spectrum, from the ESS parameters
-* Chooses evenly in lambda, exponentially decaying in time 
+* Chooses evenly in lambda, exponentially decaying in time .
+* Adapted from Moderator by: KN, M.Hagen, August 1998
 *
 * Units of flux: n/cm^2/s/AA/ster  
 * (McStas units are in general neutrons/second)

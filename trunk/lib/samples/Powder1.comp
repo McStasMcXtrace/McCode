@@ -10,10 +10,13 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
+* General powder sample with a single scattering vector.
+*
+* %D
 * General powder sample with a single scattering vector.
 * The shape of the sample may be a cylinder of given radius or a box with dimensions 
 * xwidth, yheight, zthick.

@@ -10,7 +10,8 @@
 * %Identification
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 01st Feb 2001.
-* Origin: McStas 1.5/<a href="http://www.ill.fr">ILL (France)</a>
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Release: McStas 1.6
 * Version: 0.1
 *
 * This component is a PreMonitor that is to be used with one Monitor_nD, in
