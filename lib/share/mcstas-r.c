@@ -1150,6 +1150,162 @@ randnorm(void)
   return X;
 }
 
+/* Compute normal vector to (x,y,z). */
+void normal_vec(double *nx, double *ny, double *nz,
+                double x, double y, double z)
+{
+  double ax = fabs(x);
+  double ay = fabs(y);
+  double az = fabs(z);
+  double l;
+  if(x == 0 && y == 0 && z == 0)
+  {
+    *nx = 0;
+    *ny = 0;
+    *nz = 0;
+    return;
+  }
+  if(ax < ay)
+  {
+    if(ax < az)
+    {                           /* Use X axis */
+      l = sqrt(z*z + y*y);
+      *nx = 0;
+      *ny = z/l;
+      *nz = -y/l;
+      return;
+    }
+  }
+  else
+  {
+    if(ay < az)
+    {                           /* Use Y axis */
+      l = sqrt(z*z + x*x);
+      *nx = z/l;
+      *ny = 0;
+      *nz = -x/l;
+      return;
+    }
+  }
+  /* Use Z axis */
+  l = sqrt(y*y + x*x);
+  *nx = y/l;
+  *ny = -x/l;
+  *nz = 0;
+}
+
+/* If intersection with box dt_in and dt_out is returned */
+/* This function written by Stine Nyborg, 1999. */
+int box_intersect(double *dt_in, double *dt_out,
+                  double x, double y, double z,
+                  double vx, double vy, double vz,
+                  double dx, double dy, double dz)
+{
+  double x_in, y_in, z_in, tt, t[6], a, b;
+  int i, count, s;
+
+      /* Calculate intersection time for each of the six box surface planes
+       *  If the box surface plane is not hit, the result is zero.*/
+  
+  if(vx != 0)
+   {
+    tt = -(dx/2 + x)/vx;
+    y_in = y + tt*vy;
+    z_in = z + tt*vz;
+    if( y_in > -dy/2 && y_in < dy/2 && z_in > -dz/2 && z_in < dz/2)
+      t[0] = tt;
+    else
+      t[0] = 0;
+
+    tt = (dx/2 - x)/vx;
+    y_in = y + tt*vy;
+    z_in = z + tt*vz;
+    if( y_in > -dy/2 && y_in < dy/2 && z_in > -dz/2 && z_in < dz/2)
+      t[1] = tt;
+    else
+      t[1] = 0;
+   }
+  else
+    t[0] = t[1] = 0;
+
+  if(vy != 0)
+   {
+    tt = -(dy/2 + y)/vy;
+    x_in = x + tt*vx;
+    z_in = z + tt*vz;
+    if( x_in > -dx/2 && x_in < dx/2 && z_in > -dz/2 && z_in < dz/2)
+      t[2] = tt;
+    else
+      t[2] = 0;
+
+    tt = (dy/2 - y)/vy;
+    x_in = x + tt*vx;
+    z_in = z + tt*vz;
+    if( x_in > -dx/2 && x_in < dx/2 && z_in > -dz/2 && z_in < dz/2)
+      t[3] = tt;
+    else
+      t[3] = 0;
+   }
+  else
+    t[2] = t[3] = 0;
+
+  if(vz != 0)
+   {
+    tt = -(dz/2 + z)/vz;
+    x_in = x + tt*vx;
+    y_in = y + tt*vy;
+    if( x_in > -dx/2 && x_in < dx/2 && y_in > -dy/2 && y_in < dy/2)
+      t[4] = tt;
+    else
+      t[4] = 0;
+
+    tt = (dz/2 - z)/vz;
+    x_in = x + tt*vx;
+    y_in = y + tt*vy;
+    if( x_in > -dx/2 && x_in < dx/2 && y_in > -dy/2 && y_in < dy/2)
+      t[5] = tt;
+    else
+      t[5] = 0;
+   }
+  else
+    t[4] = t[5] = 0;
+
+  /* The intersection is evaluated and *dt_in and *dt_out are assigned */
+
+  a = b = s = 0;
+  count = 0;
+
+  for( i = 0; i < 6; i = i + 1 )
+    if( t[i] == 0 )
+      s = s+1;
+    else if( count == 0 )
+    {
+      a = t[i];
+      count = 1;
+    }
+    else
+    {
+      b = t[i];
+      count = 2;
+    }
+
+  if ( a == 0 && b == 0 )
+    return 0;
+  else if( a < b )
+  {
+    *dt_in = a;
+    *dt_out = b;
+    return 1;
+  }
+  else
+  {
+    *dt_in = b;
+    *dt_out = a;
+    return 1;
+  }
+
+}
+
 /* Written by: EM,NB,ABA 4.2.98 */
 int
 cylinder_intersect(double *t0, double *t1, double x, double y, double z,
@@ -1268,6 +1424,39 @@ randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_angle,
   }
   rotate(xt, yt, zt, xi, yi, zi, theta, nx, ny, nz);
   rotate(*xo, *yo, *zo, xt, yt, zt, phi, xi, yi, zi);
+}
+
+/* Make sure a list is big enough to hold element COUNT.
+*
+* The list is an array, and the argument 'list' is a pointer to a pointer to
+* the array start. The argument 'size' is a pointer to the number of elements
+* in the array. The argument 'elemsize' is the sizeof() an element. The
+* argument 'count' is the minimum number of elements needed in the list.
+*
+* If the old array is to small (or if *list is NULL or *size is 0), a
+* sufficuently big new array is allocated, and *list and *size are updated.
+*/
+void extend_list(int count, void **list, int *size, size_t elemsize)
+{
+  if(count >= *size)
+  {
+    void *oldlist = *list;
+    if(*size > 0)
+      *size *= 2;
+    else
+      *size = 32;
+    *list = malloc(*size*elemsize);
+    if(!*list)
+    {
+      fprintf(stderr, "\nFatal error: Out of memory.\n");
+      exit(1);
+    }
+    if(oldlist)
+    {
+      memcpy(*list, oldlist, count*elemsize);
+      free(oldlist);
+    }
+  }
 }
 
 /* Number of neutron histories to simulate. */
