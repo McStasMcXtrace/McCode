@@ -1,18 +1,21 @@
 /*******************************************************************************
 * Implementation of lists.
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: list.c
 *
 *	Author: K.N.			Jul  3, 1997
 *
-*	$Id: list.c,v 1.2 1997-09-07 17:58:11 kn Exp $
+*	$Id: list.c,v 1.3 1998-10-02 08:37:44 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.2  1997/09/07 17:58:11  kn
+*	Snapshot with (untested) code generation complete.
+*
 *	Revision 1.1  1997/08/13 09:15:16  kn
 *	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include "mcstas.h"

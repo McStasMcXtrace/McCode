@@ -1,14 +1,17 @@
 /*******************************************************************************
 * Support for conditional output of debugging information.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: debug.c
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: debug.c,v 1.4 1998-10-01 11:44:33 kn Exp $
+*	$Id: debug.c,v 1.5 1998-10-02 08:36:12 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.4  1998/10/01 11:44:33  kn
+*	Set a flag when print_error is called.
+*
 *	Revision 1.3  1998/09/24 12:15:30  kn
 *	Added print_warn() function.
 *
@@ -19,7 +22,7 @@
 *	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include <stdarg.h>
