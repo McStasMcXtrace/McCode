@@ -388,17 +388,17 @@ sub backend_dialog {
     my $buttons;
     $lf->pack(-side => 'left');
     $buttons[0]=$lf->Radiobutton(-text => "PGPLOT (standard mcdisplay.pl)",
-               -anchor => 'w','value',0,'variable',\$plotter)->pack(-fill => 'x');
+               -anchor => 'w', -value => 0, -variable => \$plotter)->pack(-fill => 'x');
     $buttons[1]=$lf->Radiobutton(-text => "Matlab (requires Matlab)",
-               -anchor => 'w','value',1,'variable',\$plotter)->pack(-fill => 'x');
+               -anchor => 'w', -value => 1, -variable => \$plotter)->pack(-fill => 'x');
     $buttons[2]=$lf->Radiobutton(-text => "Matlab scriptfile",
-               -anchor => 'w','value',2,'variable',\$plotter)->pack(-fill => 'x');
+               -anchor => 'w', -value => 2, -variable => \$plotter)->pack(-fill => 'x');
     $buttons[3]=$lf->Radiobutton(-text => "Scilab (requires Scilab)",
-               -anchor => 'w','value',3,'variable',\$plotter)->pack(-fill => 'x');
+               -anchor => 'w', -value => 3, -variable => \$plotter)->pack(-fill => 'x');
     $buttons[4]=$lf->Radiobutton(-text => "Scilab scriptfile",
-               -anchor => 'w','value',4,'variable',\$plotter)->pack(-fill => 'x');
+               -anchor => 'w', -value => 4, -variable => \$plotter)->pack(-fill => 'x');
     $buttons[5]=$lf->Checkbutton(-text => "Use binary files (faster)",
-               -relief => 'flat','variable',\$binary)->pack(-fill => 'x');
+               -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
     $buttons[$plotter]->select;
     my $res = $dlg->Show;
     
