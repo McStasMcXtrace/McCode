@@ -1,13 +1,14 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing Monte-Carlo software.
-* Copyright(C) 1999,2000 Risoe National Laboratory.
+* McStas, the neutron ray-tracing Monte-Carlo software: Adapt_check.comp
+* Copyright(C) 1999-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.8 $
-* Origin: McStas release
+* Version: $Revision: 1.9 $
+* Origin: McStas 1.4.2
+* Modified by POA, April 2001: Adding POLARISATION PARAMETER
 *
 * Optimization specifier for the Source_adapt component.
 *
@@ -33,6 +34,7 @@ DEFINE COMPONENT Adapt_check
 DEFINITION PARAMETERS (source_comp)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 
 TRACE
 %{
