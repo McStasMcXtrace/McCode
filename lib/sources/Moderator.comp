@@ -1,4 +1,4 @@
-/***********************************************************************
+/*******************************************************************************
 *
 * McStas, version 1.0, released October 26, 1998
 *         Maintained by Kristian Nielsen and Kim Lefmann,
@@ -8,7 +8,7 @@
 *
 * Written by: KN, M.Hagan, August 1998
 *
-* Produces a simple time-of-flight spectrum
+* Produces a simple time-of-flight spectrum, with a flat energy disstribution
 *
 * Input parameters:
 *
@@ -22,24 +22,22 @@
 * Ec:     (meV) Critical energy, below which the flux decay is constant
 * gam:    (meV) energy dependence of decay time
 *
-***********************************************************************/
+*******************************************************************************/
 
 DEFINE COMPONENT Moderator
 DEFINITION PARAMETERS (radius, E0, E1, dist, xw, yh, t0, Ec, gam)
 SETTING PARAMETERS ()
+OUTPUT PARAMETERS (hdiv,vdiv,p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-  double hdiv,vdiv;                   /* ToDo: Should be component local */
-  double moder_v0, moder_dv;
+  double hdiv,vdiv;
   double p_in;
 %}
 INITIALIZE
 %{
   hdiv = atan(xw/(2.0*dist));
   vdiv = atan(yh/(2.0*dist));
-  moder_v0 = SE2V*sqrt(E0);
-  moder_dv = SE2V*sqrt(E1) - moder_v0;
   p_in = (4*hdiv*vdiv)/(4*PI);
 %}
 TRACE
@@ -60,13 +58,13 @@ TRACE
   theta = theta0 + hdiv*randpm1(); /* Small angle approx. */ 
   phi = phi0 + vdiv*randpm1();
 
-  v = moder_v0 + moder_dv*rand01(); /* Assume linear distribution */
+  E = E0+(E1-E0)*rand01();	/* Assume linear distribution */
+  v = SE2V*sqrt(E);
 
   vz = v*cos(phi)*cos(theta);   /* Small angle approx. */
   vy = v*sin(phi);
   vx = v*cos(phi)*sin(theta);
 
-  E = VS2E*v*v;
   if(E < Ec)
   {
     tauv = t0;
