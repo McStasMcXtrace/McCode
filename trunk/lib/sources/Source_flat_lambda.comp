@@ -4,10 +4,11 @@
 *         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: Kristian Nielsen
+* Written by: Kristian Nielsen and Kim Lefmann
 * Date: 1999
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: McStas 1.5
+* Modified by: Kim Lefmann, October 8, 2001
 *
 * Neutron source with flat wavelength spectrum and arbitrary flux.
 *
@@ -33,24 +34,21 @@
 DEFINE COMPONENT Source_flat_lambda
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, dist, xw, yh, lambda_0, d_lambda)
-OUTPUT PARAMETERS (hdiv, vdiv, p_in)
+OUTPUT PARAMETERS (pmul)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
- double hdiv,vdiv;
- double p_in;
+ double pmul;
 %}
 INITIALIZE
 %{
- hdiv = atan(xw/(2.0*dist));
- vdiv = atan(yh/(2.0*dist));
- p_in = (4*hdiv*vdiv)/(4*PI); /* Small angle approx. */
+  pmul=1.0/(mcget_ncount()*4*PI); 
 %}
 TRACE
 %{
- double theta0,phi0,chi,theta,phi,lambda,v,r;
+ double chi,lambda,v,r,xf,yf,rf,dx,dy;
 
- p=p_in;
+ t=0;
  z=0;
 
  chi=2*PI*rand01();                          /* Choose point on source */
@@ -58,18 +56,20 @@ TRACE
  x=r*cos(chi);
  y=r*sin(chi);
 
- theta0= -atan(x/dist);              /* Angles to aim at target centre */
- phi0= -atan(y/dist);
-
- theta=theta0+hdiv*randpm1();        /* Small angle approx. */ 
- phi=phi0+vdiv*randpm1();
+ xf = 0.5*xw*randpm1();          /* Choose focusing position uniformly */
+ yf = 0.5*yh*randpm1();
+ dx = xf-x;
+ dy = yf-y;
+ rf = sqrt(dx*dx+dy*dy+dist*dist);
+  
+ p = pmul*xw*yh*dist/(rf*rf*rf);      /* target area * cos(phi)/rf^2 */
 
  lambda = lambda_0+d_lambda*randpm1();
  v = K2V*(2*PI/lambda);
 
- vz=v*cos(phi)*cos(theta);
- vy=v*sin(phi);
- vx=v*cos(phi)*sin(theta); 
+ vz=v*dist/v;
+ vy=v*dy/v;
+ vx=v*dx/v; 
 %}
 
 MCDISPLAY
