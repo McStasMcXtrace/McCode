@@ -6,43 +6,68 @@
 *
 * Component: V_selector
 *
-* Written by: KL, Nov 9, 1998
+* Written by: KL, Nov 25, 1998
 *
-* Very simple velocity selector model.
-* Transmission is gssumed Lorentzian, given in terms of delta E / E
-* Geometry defined by two identical, centered apertures
+* Velocity selector consisting of rotating Soller-like blades
+* defining a helically twisted passage.
+* Geometry defined by two identical, centered apertures at 12 o'clock
+* position.
+* Transmission is analytical assuming a continuous source
 *
 * INPUT PARAMETERS:
 *
-* width:     Width of aperture (m)
-* height:    Height of aperture (m)
-* length:    Distance between apertures (m)
-* T0:        Peak transmittance (1)
-* T1:        Leak transmittance (1)
-* E0:        Energy center (meV)
-* ratiodE_E: the ratio dE/E (1)
+* width:     (m)   Width of aperture
+* height:    (m)   Height of aperture
+* l0:        (m)   Distance between apertures
+* r0:        (m)   Height from aperture centre to rotation axis
+* phi:       (rad) Twist angle along the cylinder
+* l1:        (m)   Length of cylinder (less than l0)
+* tb:        (m)   Thickness of blades
+* Tl:        (1)   Mean leak transmittance
+* rot:       (rpm) Cylinder rotation speed, counter-clockwise
+* nb:        (1)   Number of Soller blades
 *
 *******************************************************************************/
 
 
 DEFINE COMPONENT V_selector
-DEFINITION PARAMETERS (width, height, length, T0, T1, E0, ratiodE_E)
+DEFINITION PARAMETERS (width, height, l0, r0, phi, l1, tb, Tl, rot, nb)
 SETTING PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+#define RPM2OM 2*PI/60;
+    double dt0, dt1, r_i, r_f, theta_i, theta_f;
+    double A, psi;
+    double omega=rot*RPM2OM;
+%}
 TRACE
 %{
-    double E;
-    double dt;
-    
-    PROP_Z0;
-    E=VS2E*(vx*vx+vy*vy+vz*vz);
-    if (x<(-width/2.0) || x>(width/2.0) || y<(-height/2.0) || y>(height/2.0))
-      ABSORB;
-    dt = length/vz;
-    PROP_DT(dt);
+    PROP_Z0; /* Propagate to the entry aperture */
     if (x<(-width/2.0) || x>(width/2.0) || y<(-height/2.0) || y>(height/2.0))
       ABSORB;
 
-    p*= T1+(T0-T1)/(1.0 + (E0-E)*(E0-E)/ratiodE_E*ratioE_dE);
+    dt0 = (l0-l1)/(2.0*vz); /* Propagate to the cylinder start */ 
+    PROP_DT(dt0);
+    r_i = sqrt(x*x+(y+r0)*(y+r0));
+    theta_i = atan2(x,y+r0);
+
+    dt1 = l1/vz; /* Propagate along the cylinder length */
+    PROP_DT(dt1);
+    r_f = sqrt(x*x+(y+r0)*(y+r0));
+    theta_f = atan2(x,y+r0);
+
+    dt0 = (l0-l1)/(2.0*vz); /* Propagate to the exit aperture */ 
+    PROP_DT(dt0);
+    if (x<(-width/2.0) || x>(width/2.0) || y<(-height/2.0) || y>(height/2.0))
+      ABSORB;
+
+    /* Calculate analytical transmission assuming continuous source */
+    
+    psi = theta_f-theta_i;
+    A = Nb/(2*PI)*( 2.0*tb/(r_i+r_f)+abs(phi+psi-omega*l1/vz) ); 
+    if (A >= 1)
+      ABSORB;
+    p*= Tl+(1-Tl)*(1-A);
 %}
 END
