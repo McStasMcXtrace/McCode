@@ -1,0 +1,153 @@
+/*
+
+  Single crystal with mosaic.
+  Rectangular size.
+  Secondary extinction and multiple scattering.
+  Delta-D/D option for finite-size effects.
+
+  Overview of algorithm:
+
+  (1). The neutron intersects the crystal at (x,y,z) with given
+       incoming wavevector ki=(kix,kiy,kiz).
+
+  (2). Every reciprocal lattice point tau of magnitude less than 2*ki
+       is considered for scattering. The scattering probability is the
+       area of the intersection of the Ewald sphere (approxiamet by
+       the tangential plane) with the 3-D gaussian mosaic of the point
+       tau.
+
+  (3). The total coherent scattering cross section is computed as the
+       sum over all tau. Together with the absorbtion and incoherent
+       scattering cross section and known potential flight-length
+       l_full through the sample, we can compute the probability of
+       the four events absorbtion, coherent scattering, incoherent
+       scattering, and transmission.
+
+  (4). Absorbtion is never simulated explicitly, just incorporated in
+       the neutron weight.
+
+  (5). Transmission in the first event is selected with the Monte
+       Carlo probability p_transmit, which will usually be set to
+       0. After the first event, transmission is selected with the
+       correct Monte Carlo probability.
+
+  (6). Incoherent scattering is done simply by selecting a random
+       direction for the outgoing wave vector kf.
+
+  (7). For coherent scattering, a reciprocal lattice point is selected
+       using the relative probabilities computed in (2), and the
+       weight is adjusted with the contribution from the structure
+       factors (this way all reflections will get equally good
+       statistics in the detector).
+
+  (8). The outgoing wave vector direction is picked at random using
+        the intersecting 2-D Gauss computed in (2). The vector is
+        normalized to the length of ki (ellastic scattering) to
+        account for the error caused by the planar approximation of
+        the Ewald sphere.
+
+  (9). The process is repeated from (2) with kf as new initial wave
+       vector ki.
+
+ */
+
+DEFINE COMPONENT Single_crystal
+DEFINITION PARAMETERS()
+SETTING PARAMETERS(xwidth, yheight, zdepth, mosaic, deld_d,
+		   p_transmit /* = 0 ToDo */)
+
+TRACE
+%{
+
+  firstevent = 1;
+  for(;;)			/* Loop over multiple scattering events */
+  {
+    /* (1). Compute incoming wave vector ki */
+    kix = V2K*vx;
+    kiy = V2K*vy;
+    kiz = V2K*vz;
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    ki = V2K*v;
+
+    /* (2). Intersection of Ewald sphere with recipprocal lattice points */
+    maxhkl = ...;
+    if(maxhkl > max_computed_hkl)
+      compute_hkl(maxhkl);
+    ptr = hkl_table[maxhkl];
+    ptr2 = &tau_table[0];
+    num_refl = 0;
+    for(h = -maxhkl; h <= maxhkl; h++) {
+      for(k = -maxhkl; k <= maxhkl; k++) {
+	for(l = -maxhkl; l <= maxhkl; l++) {
+	  if( /* Non-zero scattering probability */) {
+	    num_refl++;
+	    ptr2->refl = p_refl;
+	    ptr2->F2_contrib = ptr->F2* /*ToDo*/;
+	    ptr2->xsect = ptr2->refl*ptr2->F2_contrib;
+	    coh_xsect += ptr2->xsect;
+	    ptr2++;
+	  }
+	  ptr++;
+	}
+      }
+    }
+
+    /* (3). Probabilities of the different possible interactions. */
+    l_full = /* Potential path length in sample */;
+    abs_xsect = (/* absorbtion at 2200m/s */) / v;
+    abs_xlen = abs_xsect/V0;
+    inc_xsect = /* Incoherent cross section */;
+    inc_xlen = inc_xsect/V0;
+    coh_xlen = coh_xsect/V0;
+    tot_xsect = abs_xsect + inc_xsect + coh_xsect;
+    tot_xlen = tot_xsect/V0;
+    /* (5). Transmission */
+    p_trans = exp(-tot_xlen*l_full);
+    if(firstevent) {
+      mc_trans = p_transmit;
+    } else {
+      mc_trans = p_trans;
+    }
+    firstevent = 0;
+    if(rand01() < mc_trans)	/* Transmit */
+    {
+      p *= p_trans/mc_trans;
+      break;
+    }
+    /* dP(l) = exp(-tot_xlen*l)dl
+       P(l<l_0) = [-1/tot_xlen*exp(-tot_xlen*l)]_0^l_0
+                = (1 - exp(-tot_xlen*l0))/tot_xlen
+       l = -log(1 - tot_xlen*rand0max(P(l<l_full)))/tot_xlen
+     */
+    l = -log(1 - rand0max((1 - exp(-tot_xlen*l0))))/tot_xlen;
+    /* (4). Account for the probability of absorbtion */
+    p *= (coh_xlen + inc_xlen)/tot_xlen;
+    /* Choose between coherent and incoherent scattering */
+    if(rand0max(coh_xlen + inc_xlen) < inc_xlen) /* incoherent? */
+    {
+      /* (6). Incoherent scattering */
+      randvec_target_sphere(kix, kiy, kiz, NULL, 0, 0, 0, 1);
+      kix *= ki;
+      kiy *= ki;
+      kiz *= ki;
+      continue;			/* Go for next scattering event */
+    }
+    /* 7. Coherent scattering. Select reciprocal lattice point. */
+    r = rand0max(coh_xsect);
+    sum = 0;
+    for(i = 0; i < num_refl; i++)
+    {
+      sum += tau_table[i].refl;
+      if(sum > r)
+	break;
+    }
+    if(i >= num_refl)
+    {
+      fprintf(stderr, "Single_crystal: error: illegal tau search "
+	      "(r = %g, sum = %g).\n", r, sum);
+      i = num_refl - 1;
+    }
+    p *= tau_table[i].F2_contrib;
+  } /* End of multiple scattering loop */
+
+%}
