@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.22 1999-01-28 07:56:35 kn Exp $
+*	$Id: mcstas-r.h,v 1.23 1999-03-16 13:51:52 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.22  1999/01/28 07:56:35  kn
+*	Support for MCDISPLAY section in component definitions.
+*
 *	Revision 1.21  1998/11/09 08:17:57  kn
 *	Added some prototypes.
 *
@@ -124,8 +127,11 @@ void mcdisplay(void);
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
 #define MC_GETPAR(comp, par) mcc ## comp ## _ ## par
-#define DETECTOR_OUT(p0,p1,p2) printf("Detector: %s_I=%g %s_ERR=%g\n", \
-	  mccompcurname, p1, mccompcurname, mcestimate_error(p0,p1,p2))
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out(mccompcurname,p0,p1,p2)
+#define DETECTOR_OUT_1D(t,xl,yl,x1,x2,n,p0,p1,p2,f) \
+     mcdetector_out_1D(t,xl,yl,x1,x2,n,p0,p1,p2,f,mccompcurname)
+#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
+     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,mccompcurname)
 
 #ifdef MC_TRACE_ENABLED
 #define DEBUG
@@ -315,6 +321,14 @@ void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
 	       double *vx, double *vy, double *vz, double *time,
 	       double *s1, double *s2);
 double mcestimate_error(int N, double p1, double p2);
+void mcsiminfo_out(char *format, ...);
+void mcdetector_out(char *cname, double p0, double p1, double p2);
+void mcdetector_out_1D(char *t, char *xl, char *yl,
+		       double x1, double x2, int n,
+		       int *p0, double *p1, double *p2, char *f, char *c);
+void mcdetector_out_2D(char *t, char *xl, char *yl, double x1, double x2,
+		       double y1,double y2,int m, int n,
+		       int *p0, double *p1, double *p2, char *f, char *c);
 void mcreadparams(void);
 
 void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
@@ -329,6 +343,7 @@ void randvec_target_sphere(double *xo, double *yo, double *zo, double *solid_ang
 			   double xi, double yi, double zi, double radius);
 
 void mcset_ncount(double count);
+double mcget_ncount(void);
 int mcstas_main(int argc, char *argv[]);
 
 #endif /* MCSTAS_R_H */
