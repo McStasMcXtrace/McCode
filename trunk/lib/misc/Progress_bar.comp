@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -49,19 +49,23 @@ TRACE
 %{
   if (mcget_run_num() >= IntermediateCnts)
   {
-    IntermediateCnts += precent*mcget_ncount()/100;
+    double tmp;
+    tmp = precent*mcget_ncount()/100;
+    IntermediateCnts += tmp;
     fprintf(stderr, "%d ", (int)(IntermediateCnts*100/mcget_ncount()));
+    if (IntermediateCnts+tmp > mcget_ncount())
+      fprintf(stderr, "\n");  /* last percent number to be displayed */
   }
 %}
 
 SAVE
 %{
-  fprintf(stderr, "Save ", mcinstrument_name);
+  fprintf(stderr, "[%s] Save ", mcinstrument_name);
 %}
 
 FINALLY
 %{
-  fprintf(stderr, "Finally.\n", mcinstrument_name);
+  fprintf(stderr, "Finally.\n");
 %}
 
 END

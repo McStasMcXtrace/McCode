@@ -18,7 +18,7 @@
 *
 * Flex scanner for instrument definition files.
 *
-*	$Id: instrument.l,v 1.31 2003-01-21 08:55:31 pkwi Exp $
+*	$Id: instrument.l,v 1.32 2003-01-23 10:57:50 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 * Revision 1.22  2002/08/29 16:39:42 ef

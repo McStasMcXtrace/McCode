@@ -16,7 +16,7 @@
 *
 * Header file for portability related stuff.
 *
-* $Id: port.h,v 1.10 2003-01-21 08:55:32 pkwi Exp $
+* $Id: port.h,v 1.11 2003-01-23 10:57:50 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -56,6 +56,9 @@
 #endif /* !WIN32 */
 #endif /* MC_SYS_DIR */
 
+#ifdef WIN32
+#define HAVE_STRCASECMP
+#endif
 #ifndef HAVE_STRCASECMP
 int strcasecmp(char *, char *);
 #endif

@@ -16,7 +16,7 @@
 *
 * Handle expressions used as arguments to components etc.	
 *
-*	$Id: cexp.c,v 1.16 2003-01-21 08:55:31 pkwi Exp $
+*	$Id: cexp.c,v 1.17 2003-01-23 10:57:50 pkwi Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.6  2000/07/27 09:04:59  kn

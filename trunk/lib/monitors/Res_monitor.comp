@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -63,11 +63,10 @@ DECLARE
   %}
 INITIALIZE
   %{
-    long i;
-    if (!filename) exit(fprintf(stderr, "Res_monitor: %s: Error: please give me a filename to save data.\n", NAME_CURRENT_COMP, filename));
+    if (!filename) exit(fprintf(stderr, "Res_monitor: %s: Error: please give me a filename to save data.\n", NAME_CURRENT_COMP));
     buffer_size = buffer_block;
     buffer = (double*)malloc(buffer_size*11*sizeof(double));
-    if (!buffer) exit(fprintf(stderr, "Res_monitor: %s: Error: Not enough memory to allocate %d events.\n", NAME_CURRENT_COMP, buffer_size));
+    if (!buffer) exit(fprintf(stderr, "Res_monitor: %s: Error: Not enough memory to allocate %li events.\n", NAME_CURRENT_COMP, buffer_size));
     
   %}
 TRACE
@@ -90,7 +89,7 @@ TRACE
           {
             buffer_size += buffer_block;
             buffer = (double*)realloc(buffer, buffer_size*11*sizeof(double));
-            if (!buffer) exit(fprintf(stderr, "Res_monitor: %s: Error: Not enough memory to re-allocate %d events. Specify a smaller bufsize value.\n", NAME_CURRENT_COMP, buffer_size));
+            if (!buffer) exit(fprintf(stderr, "Res_monitor: %s: Error: Not enough memory to re-allocate %li events. Specify a smaller bufsize value.\n", NAME_CURRENT_COMP, buffer_size));
             buffer_block_index=0;
           }
           
