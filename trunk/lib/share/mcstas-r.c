@@ -18,9 +18,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.108 2005-02-24 15:57:20 farhi Exp $
+* $Id: mcstas-r.c,v 1.109 2005-03-02 10:40:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.108  2005/02/24 15:57:20  farhi
+* FIXED gravity bug (probably OK). Gravity is not handled properly in other Guide elements. Will adapt so that it works better...
+* The n.v was not computed using the actual 'v' values when reaching the guide side, but before propagation. So the velocity was not reflected, but scattered depending on the previous neutron position/velocity, bringing strange divergence effects.
+* On other guide elements, should update the n.v term just before reflection, not computing it before propagation... This probably holds for some other components (monochromators ???) to be checked !
+*
 * Revision 1.107  2005/02/23 12:29:55  farhi
 * FIXED GRAVITATION BUG: was in the choice of the intersection time (2nd order
 * equation result) of trajectory with plane
@@ -1721,6 +1726,16 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   } else strcpy(limits, "0 0 0 0 0 0");
   mcfile_tag(f, format, pre, parent, lim_field, limits);
   mcfile_tag(f, format, pre, parent, "variables", vars);
+  /* add warning in case of low statistics or large number of bins in text format mode */
+  if (n*m*p > 1000 && Nsum < n*m*p && Nsum) fprintf(stderr,
+    "Warning: %s: file '%s': Low Statistics (%g events in %dx%dx%d bins) (mcinfo_data)\n",
+    parent, filename, Nsum, m,n,p);
+  if ( !strstr(format.Name, "binary")
+    && (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab"))
+    && (n*m*p > 10000) ) fprintf(stderr,
+      "Warning: %s: file '%s' (%s format): Large matrices (%dx%dx%d) in text mode may be slow"
+      " or fail at import (mcinfo_data)\n",
+      parent, filename, format.Name, m,n,p);
 } /* mcinfo_data */
 
 /*******************************************************************************
