@@ -115,6 +115,43 @@ sub menu_spawn_editor {
     }
 }
 
+sub menu_spawn_netscape {
+    my ($w) = @_;
+    # First try to re-use an already running netscape.
+    my $stat = system("netscape", "-remote",
+		      "openURL(http://neutron.risoe.dk/mcstas/,new-window)");
+    return unless $stat;
+    # Need to start netscape ourselves.
+    my $pid = fork();
+    if(!defined($pid)) {
+	$w->messageBox(-message =>
+		       "Failed to start Netscape.",
+		       -title => "Command failed",
+		       -type => 'OK',
+		       -icon => 'error');
+	return 0;
+    } elsif($pid > 0) {
+	waitpid($pid, 0);
+	return 1;
+    } else {
+	# Double fork to avoid having to wait() for the browser to
+	# finish (or having it become a zombie). See man perlfunc.
+	my $pid2 = fork();
+	if(!defined($pid2)) {	# fork() failed.
+	    print STDERR "Error: spawn of netscape failed!\n";
+	    CORE::exit(1);	# CORE:exit needed to avoid Perl/Tk failure.
+	} elsif(!$pid2) {	# Child.
+	    exec("netscape", "http://neutron.risoe.dk/mcstas/")
+		unless $pid2;	# The "unless" avoids a perl warning.
+	    # If we get here, the exec() failed.
+	    print STDERR "Error: exec() of netscape failed!\n";
+	    CORE::exit(1);	# CORE:exit needed to avoid Perl/Tk failure.
+	} else {		# Parent.
+	    CORE::exit(0);	# CORE:exit needed to avoid Perl/Tk failure.
+	}
+    }
+}
+
 sub new_simulation_results {
     my ($w) = @_;
     my $text = $current_sim_file ? $current_sim_file : "<None>";
@@ -587,7 +624,7 @@ sub make_comp_inst {
     push @ps, $col if length($col) > 0;
     $s .= "    " . join(",\n    ", @ps) . ")\n";
     $s .= "  AT (".  $r->{'AT'}{'x'} . ", " . $r->{'AT'}{'y'} . ", " .
-	$r->{'AT'}{'y'} . ") RELATIVE " . $r->{'AT'}{'relative'} . "\n";
+	$r->{'AT'}{'z'} . ") RELATIVE " . $r->{'AT'}{'relative'} . "\n";
     $s .= "  ROTATED (" . $r->{'ROTATED'}{'x'} . ", " . $r->{'ROTATED'}{'y'} .
 	", " . $r->{'ROTATED'}{'z'} . ") RELATIVE " .
 	    $r->{'ROTATED'}{'relative'} . "\n"
@@ -639,8 +676,11 @@ sub menu_insert_x {
     return undef unless $r;
     die "No values given" unless $r;
 
-    $edit_control->insert('insert', make_comp_inst($cdata, $r))
-	if $edit_control;
+    if($edit_control) {
+	$edit_control->see('insert');
+	$edit_control->insert('insert', make_comp_inst($cdata, $r));
+	$edit_control->see('insert');
+    }
     return 1;
 }
 
@@ -750,16 +790,11 @@ sub setup_menu {
 		      -command => sub {menu_plot_results($w);});
     $w->bind('<Alt-p>' => [\&menu_plot_results, $w]);
     $simmenu->pack(-side=>'left');
-    if(0) {			# No help menu implemented yet.
-	my $helpmenu = $menu->Menubutton(-text => 'Help', -underline => 0);
-	$helpmenu->command(-label => 'Using McGui',
-			   -underline => 6,
-			   -command => sub {menu_usingmcstas($w)});
-	$helpmenu->command(-label => 'About',
-			   -underline => 0,
-			   -command => sub {menu_about($w)});
-	$helpmenu->pack(-side=>'right');
-    }
+    my $helpmenu = $menu->Menubutton(-text => 'Help', -underline => 0);
+    $helpmenu->command(-label => 'McStas web page',
+		       -underline => 7,
+		       -command => sub {menu_spawn_netscape($w)});
+    $helpmenu->pack(-side=>'right');
 }
 
 sub setup_cmdwin {
