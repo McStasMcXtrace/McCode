@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Jul  1, 1997
 *
-*	$Id: debug.c,v 1.3 1998-09-24 12:15:30 kn Exp $
+*	$Id: debug.c,v 1.4 1998-10-01 11:44:33 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.3  1998/09/24 12:15:30  kn
+*	Added print_warn() function.
+*
 *	Revision 1.2  1997/07/02 07:22:53  kn
 *	Error reporting functions.
 *
@@ -27,6 +30,8 @@
 /*******************************************************************************
 * Error messages.
 *******************************************************************************/
+int error_encountered = 0;
+
 void
 print_error(char *format, ...)
 {
@@ -35,6 +40,7 @@ print_error(char *format, ...)
   va_start(ap, format);
   vfprintf(stderr, format, ap);
   va_end(ap);
+  error_encountered = 1;
 }
 
 
