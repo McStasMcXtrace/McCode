@@ -744,10 +744,12 @@ sub menu_run_simulation {
 	  }
 	# On Win32, we need quoting, in case of spaces in filename...
 	# Also needed for Dir if given...
-	if ($Config{'osname'} eq 'MSWin32') {
+	# Should only be done when we are not scanning / does not
+	# work properly with mcrun...
+	if ($Config{'osname'} eq 'MSWin32' && (! $newsi->{'Trace'} eq 2)) {
 	  my $tmp = Win32::GetShortPathName($out_name);
 	  push @command, "$tmp";
-        } else {
+	} else {
 	  push @command, "$out_name";
 	}
 	my ($OutDir,$OutDirBak);
