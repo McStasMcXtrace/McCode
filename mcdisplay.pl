@@ -5,13 +5,8 @@
 
 use PGPLOT;
 
-if($ENV{"MCSTAS"}) {
-    use lib $ENV{"MCSTAS"};
-} else {
-    use lib "/usr/local/lib/mcstas";
-}
-
 $magnification = 1;
+$zooming = 0;
 
 my (%transformations, @components);
 
@@ -346,7 +341,7 @@ sub plot_instrument {
     # First show instrument from "above" (view in direction of y axis).
     pgsci(1);
     pgsch(1.4);
-    pgenv($xmin, $xmax, $zmin, $zmax, 1, 0);
+    pgenv($xmin, $xmax, $zmin, $zmax, ($zooming ? 0 : 1), 0);
     pglab("X Axis [m]", "Z Axis [m]", "X-Z view");
     show_comp_names($rinstr);
     pgsch(1.4);
@@ -358,7 +353,7 @@ sub plot_instrument {
 	# Now show instrument viewed in direction of x axis.
 	pgsci(1);
 	pgsch(1.4);
-	pgenv($ymin, $ymax, $zmin, $zmax, 1, 0);
+	pgenv($ymin, $ymax, $zmin, $zmax, ($zooming ? 0 : 1), 0);
 	pglab("Y Axis [m]", "Z Axis [m]", "Y-Z view");
 	plot_components($instr{'y'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'},
 			'Y', 'Z');
@@ -367,7 +362,7 @@ sub plot_instrument {
 	# Now show instrument viewed in direction of z axis.
 	pgsci(1);
 	pgsch(1.4);
-	pgenv($xmin, $xmax, $ymin, $ymax, 1, 0);
+	pgenv($xmin, $xmax, $ymin, $ymax, ($zooming ? 0 : 1), 0);
 	pglab("X Axis [m]", "Y Axis [m]", "X-Y view");
 	plot_components($instr{'x'}, $instr{'y'}, $instr{'ori'}, $instr{'dis'},
 			'X', 'Y');
@@ -383,10 +378,13 @@ sub plot_instrument {
     pgband(0, 0, 0, 0, $cx, $cy, $cc);
     if($cc =~ /[qQ]/) {
 	exit 0;			# Finished.
-    } elsif($cc =~ /[zZ]/) {	# Zoom.
+    } elsif($cc =~ /[zZdD]/) {	# Zoom.
 	my ($cx1, $cy1, $cc1) = (0, 0, 0);
-	pgband(0, 0, 0, 0, $cx, $cy, $cc);
 	pgband(2,0,$cx,$cy,$cx1,$cy1,$cc1);
+	if($cx == $cx1 || $cy == $cy1) {
+	    print STDERR "Warning: bad zoom area.\n";
+	    return 0;
+	}
 	my $tmp;
 	$tmp = $cx, $cx = $cx1, $cx1 = $tmp if $cx > $cx1;
 	$tmp = $cy, $cy = $cy1, $cy1 = $tmp if $cy > $cy1;
@@ -394,6 +392,7 @@ sub plot_instrument {
 	$rinstr->{'zoom_xmax'} = $cx1;
 	$rinstr->{'zoom_zmin'} = $cy;
 	$rinstr->{'zoom_zmax'} = $cy1;
+	$zooming = 1;
 	return 1;
     } elsif($cc =~ /[xX]/) {	# Reset zoom.
 	$rinstr->{'zoom_xmin'} = $instr{'xmin'};
@@ -402,6 +401,7 @@ sub plot_instrument {
 	$rinstr->{'zoom_ymax'} = $instr{'ymax'};
 	$rinstr->{'zoom_zmin'} = $instr{'zmin'};
 	$rinstr->{'zoom_zmax'} = $instr{'zmax'};
+	$zooming = 0;
 	return 1;
     }
     return 0;			# Default: do not repeat this neutron.
