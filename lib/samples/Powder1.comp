@@ -53,7 +53,7 @@ TRACE
 %{
   double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
   double aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
-  double tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
 
   if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, h))
   {
@@ -69,7 +69,10 @@ TRACE
     /* Choose point on Debye-Scherrer cone */
     d_phi = d_phi0*DEG2RAD/2.0*randpm1();
     p *= d_phi0/360.0;
-    theta = asin(q_v/(2.0*v));  /* Bragg scattering law */
+    arg = q_v/(2.0*v);
+    if(arg > 1)
+      ABSORB;			/* No bragg scattering possible*/
+    theta = asin(arg);		/* Bragg scattering law */
 
     aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
     aim_y = target_y-y;
