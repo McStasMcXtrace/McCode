@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -81,6 +81,11 @@ INITIALIZE
   norm_nh = sqrt(l*l+f_h*f_h);
   eta_z = wavy_z/(sqrt(8*log(2)));   /* Convert from FWHM to Gaussian sigma */
   eta_xy = wavy_xy/(sqrt(8*log(2)));
+
+  if (mcgravitation) fprintf(stderr,"WARNING: Guide_wavy: %s: "
+    "This component produces wrong results with gravitation !\n"
+    "Use Guide_gravity.\n",
+    NAME_CURRENT_COMP);
 %}
 
 TRACE

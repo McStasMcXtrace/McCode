@@ -7,7 +7,7 @@
 * %I
 * Written by: Uwe Filges
 * Date: 22/10/2003
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: McStas 1.6
 *
 *
@@ -136,6 +136,10 @@ INITIALIZE
     fprintf(stderr,"           is <= ZERO ! \n");
     exit(-1);
   }
+  if (mcgravitation) fprintf(stderr,"WARNING: Guide_tapering: %s: "
+    "This component produces wrong results with gravitation !\n"
+    "Use Guide_gravity.\n",
+    NAME_CURRENT_COMP);
   seg=segno;
   l_seg=l/seg;
   h12 = h1/2;

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Release: McStas 1.6
 * Origin: Risoe
 *
@@ -90,11 +90,16 @@ INITIALIZE
 
   if ((k > 1) && (w1 != w2))
   {
-    fprintf(stderr,"Guide_channeled: This component does not work with\n");
-    fprintf(stderr,"                 multichannel focusing guide\n");
-    fprintf(stderr,"                 Use Guide_gravity for that.\n");
+    fprintf(stderr,"WARNING: Guide_channeled: %s:"
+    "This component does not work with multichannel focusing guide\n");
+    "Use Guide_gravity for that.\n", NAME_CURRENT_COMP);
     exit(-1);
   }
+
+  if (mcgravitation) fprintf(stderr,"WARNING: Guide_channeled: %s: "
+    "This component produces wrong results with gravitation !\n"
+    "Use Guide_gravity.\n",
+    NAME_CURRENT_COMP);
 %}
 
 TRACE
