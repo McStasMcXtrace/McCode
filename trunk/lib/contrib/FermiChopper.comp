@@ -67,51 +67,51 @@ DECLARE
 
 /**************************COUNTER VARIABLES***********************************/
 
-  int cylinder;           	//neutrons interacting with the cylinder 
-  int cylinder2;          	//neutrons interacting with the cylinder and entering the megaslit
+  int cylinder;           	/* neutrons interacting with the cylinder  */
+  int cylinder2;          	/* neutrons interacting with the cylinder and entering the megaslit */
 
-  int Treffer; 	       	//neutrons hitting the slits
-  int n1[200];	  	//how many neutrons entering each slit
-  int n_2[200];	  	//how many neutrons leaving each slit
+  int Treffer; 	       	/* neutrons hitting the slits */
+  int n1[200];	  	/* how many neutrons entering each slit */
+  int n_2[200];	  	/* how many neutrons leaving each slit */
 
   int *interactio;
-  int interactiol,interactior; 	//interactions with left/right blades
+  int interactiol,interactior; 	/* interactions with left/right blades */
 
-  int reflect;	       		//reflections (overall)
+  int reflect;	       		/* reflections (overall) */
 
   int *nnref[3];
-  int nnrefl[3], nnrefr[3];     	//reflections: left blade, right blade 
+  int nnrefl[3], nnrefr[3];     	/* reflections: left blade, right blade  */
 
   int *nnabs[3];
-  int nnabsl[3], nnabsr[3];     	//absorptions: left blade, right blade   
+  int nnabsl[3], nnabsr[3];     	/* absorptions: left blade, right blade   */
 
   int *seccount, *intpolcount, *errcount;
-  int seccountl,seccountr;	 		//Secant method used
-  int intpolcountl,intpolcountr; 		//IntPol method used
-  int errcountl, errcountr; 		//errors by numerical methode	
+  int seccountl,seccountr;	 		/* Secant method used */
+  int intpolcountl,intpolcountr; 		/* IntPol method used */
+  int errcountl, errcountr; 		/* errors by numerical methode	 */
 
-  int loops[3];		//how often happen how many reflections
-  int infinite;		//infinite loops breaked up
+  int loops[3];		/* how often happen how many reflections */
+  int infinite;		/* infinite loops breaked up */
 
   int *breaked;
-  int breakedl,breakedr;  //neutrons leaving because they're hitting the wall outside the packet
-  int nout;	       	//neutrons absorbed, because of hitting the wall between slits and exit
-  int topbot;		//leaving the chopper from his top or bottom		
+  int breakedl,breakedr;  /* neutrons leaving because they're hitting the wall outside the packet */
+  int nout;	       	/* neutrons absorbed, because of hitting the wall between slits and exit */
+  int topbot;		/* leaving the chopper from his top or bottom		 */
  
-  int nn;                 //total transmitted neutrons
-  int ntrans;             //transmitted neutrons, not reflected
+  int nn;                 /* total transmitted neutrons */
+  int ntrans;             /* transmitted neutrons, not reflected */
 
 
 
 /********************CALCULATION VARIABLES**************************************/ 
 
 /*****************Interaction with slitpacket***************************/
-  double slitl; 	//length of the slits
-  double f1,f2;		//distance to slitpacket entrance/exit
+  double slitl; 	/* length of the slits */
+  double f1,f2;		/* distance to slitpacket entrance/exit */
 
 /*********Variables for calculating interaction with blades*******************/
-  double m1,m2;		//slope of the tangents
-  double b1,b2;		//y-intersection of tangent
+  double m1,m2;		/* slope of the tangents */
+  double b1,b2;		/* y-intersection of tangent */
   		       
 /*************Reflections***********************************************/
   double tref, W;		
@@ -123,19 +123,19 @@ DECLARE
   double arg;
 
 /**********Multiple Reflections************************************************/
-  int loopcounter; 	//How many reflections happen?
-  int reflcounter; 	//loopcounter mod 3
+  int loopcounter; 	/* How many reflections happen? */
+  int reflcounter; 	/* loopcounter mod 3 */
 
 /******************************Time variables**********************************/
-  double t3;		//interaction time
-  double dt,dt1;	//interaction interval
-  double t1,t2; 	//cylinderintersect
+  double t3;		/* interaction time */
+  double dt,dt1;	/* interaction interval */
+  double t1,t2; 	/* cylinderintersect */
 
 /**************************** Variables for finally section*********************/
   int grenze;
 
 /***************************** other variables ********************************/
-  double omega, t0;	//chopper rotation
+  double omega, t0;	/* chopper rotation */
 
 
 /*****************DECLARING FUNCTIONS******************************************/
@@ -362,10 +362,10 @@ TRACE
 
   if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, rad, ymax-ymin)){
    		
-	if (t1 <= 0) ABSORB;     //Neutron started inside the cylinder
+	if (t1 <= 0) ABSORB;     /* Neutron started inside the cylinder */
     	
-	dt=t2-t1;               //total time of flight inside the cylinder 
- 	PROP_DT (t1);           //Popagates neutron to entrance of the cylinder
+	dt=t2-t1;               /* total time of flight inside the cylinder  */
+ 	PROP_DT (t1);           /* Popagates neutron to entrance of the cylinder */
 
 	
   	if(dt > fabs((0.5/omega*2*PI)))
@@ -380,7 +380,7 @@ TRACE
 	   ((((x+vx*dt)*(x+vx*dt) + (z+vz*dt)*(z+vz*dt))) < 0.999*(rad*rad)) )
    		ABSORB;
 
-   	cylinder++;             //adjusting interaction counter
+   	cylinder++;             /* adjusting interaction counter */
   	
 	
 /************* checking wether the neutron can enter the chopper *************/
@@ -388,12 +388,12 @@ TRACE
 		ABSORB;
 		}
 
-	cylinder2++;		//adjusting interaction counter
+	cylinder2++;		/* adjusting interaction counter */
 
 /*************************PROPAGATE TO SLIT PACKET*****************************/	
 
 			
-	/*Checking on which side of the Chopper the Neutron enters******/
+	/* Checking on which side of the Chopper the Neutron enters******/
 
 	if(zstrich(x,z,t)<0){
 		slitl = -0.5*slit;
@@ -435,7 +435,7 @@ TRACE
 	f2  =	zstrich(x+vx*dt,z+vz*dt,t+dt)+slitl;
 
 	if (f1*f2>0){
-		dt=2*(sqrt((2*slitl)*(2*slitl)+w*w))/Vi; // 2 *ideal time set
+		dt=2*(sqrt((2*slitl)*(2*slitl)+w*w))/Vi; /* 2 *ideal time set */
 		}
 	else{	
 		dt1 = zsecant(x,z,vx,vz,t,dt,-slitl);
@@ -453,8 +453,8 @@ TRACE
 		
 	/***********Which slit was hit?******************/
 	n = Nslit - (int) ((Nslit/2) - xstrich(x,z,t)/w);
-	n1[n-1]++;	//adjusting interaction counter
-	Treffer++;	//adjusting interaction counter
+	n1[n-1]++;	/* adjusting interaction counter */
+	Treffer++;	/* adjusting interaction counter */
 
 
 /*********************BEGIN LOOP FOR MULTIPLE REFLECTIONS***********************************/
@@ -463,9 +463,9 @@ TRACE
 	reflcounter=0;
 	for(;;){
 		
-		//Infinite loops shall be stopped and an error message be displayed
+		/* Infinite loops shall be stopped and an error message be displayed */
 		if (loopcounter>=100){
-			infinite++;//adjusting interaction counter
+			infinite++; /* adjusting interaction counter */
 			printf("Infinite loop, neutron absorbed!\n");
 			ABSORB;
 			}
@@ -486,10 +486,10 @@ TRACE
 
 		/**Calculate different positions for the neutron to determine interaction.**/
 
-		//...at the end of the slit:
+		/*...at the end of the slit: */
 		n2 = Nslit - (int) ((Nslit/2) - xstrich(x+(vx*dt),z+(vz*dt),t+dt)/w); 
 
-		//...at the before calculated t3:
+		/*...at the before calculated t3: */
 		n3 = Nslit - (int) ((Nslit/2) - xstrich(x+(vx*t3),z+(vz*t3),t+t3)/w);
 		
 
@@ -502,7 +502,7 @@ TRACE
 				dt = t3;
 				}
 
-		     	loopcounter++;	//adjusting interaction counter
+		     	loopcounter++;	/* adjusting interaction counter */
 
 		/*More than 3 reflections shall be counted as 3 or more reflections*/
 		     	if(loopcounter>3){
@@ -512,10 +512,10 @@ TRACE
 				reflcounter=loopcounter;
 				}
   
-		/*******Will there be hit the right or the left blade?*******************/
+ 		/*******Will there be hit the right or the left blade?*******************/
 		/************Setting distances and pointer to counters*******************/
 
-			if(n2 > n){		//right
+			if(n2 > n){		/* right */
 				interactio 	= &interactior;
 				nnref[0]	= &(nnrefr[0]);
 				nnref[1]	= &(nnrefr[1]);
@@ -531,7 +531,7 @@ TRACE
 				W = (n-0.5*Nslit)*w;
 
 				}
-		     	else{			//left
+		     	else{			/* left */
 				interactio 	= &interactiol;
 				nnref[0]	= &(nnrefl[0]);
 				nnref[1]	= &(nnrefl[1]);
@@ -548,11 +548,11 @@ TRACE
 
 				}	
 			
-			(*interactio)++;	//adjusting interaction counter
+			(*interactio)++;	/* adjusting interaction counter */
 
 		/************ABSORB to save calculation time********************/
 			if(m==0){
-				(*(nnabs[reflcounter-1]))++;	//adjusting interaction counter
+				(*(nnabs[reflcounter-1]))++;	/* adjusting interaction counter */
 				ABSORB;
 				}
 
@@ -561,21 +561,21 @@ TRACE
 
 			/************SECANT METHOD**********************************/
 
-			(*seccount)++;			//adjusting interaction counter
+			(*seccount)++;			/* adjusting interaction counter */
 
 			tref = xsecant(x,z,vx,vz,t,dt,W);
 
 			/*******INTERPOLATION USED WHEN SECANT METHOD FAILS*********/
 
 			if ((tref <= 0.0000001) || (tref > dt)){
-				(*intpolcount)++;	//adjusting interaction counter
+				(*intpolcount)++;	/* adjusting interaction counter */
 
 				tref = xinterpolation(x,z,vx,vz,t,dt,W);
 				}
 
 			/*Check for errors in calculation*******/
 			if ((tref < 0) || (tref > dt)){
-				(*errcount)++;		//adjusting interaction counter
+				(*errcount)++;		/* adjusting interaction counter */
 				printf("Reflecting IP Problem!\n");
 				ABSORB;
 				}
@@ -595,17 +595,17 @@ TRACE
 		/*********Check if this point is inside the slit packet************/
 			if(fabs(zstrich(x,z,t)) > fabs(slitl)){
 
-				loopcounter--;		//adjusting interaction counter
+				loopcounter--;		/* adjusting interaction counter */
 				reflcounter--;
-	              		(*interactio)--;	//adjusting interaction counter
-				(*breaked)++;		//adjusting interaction counter
+	              		(*interactio)--;	/* adjusting interaction counter */
+				(*breaked)++;		/* adjusting interaction counter */
 				
 				break;
 				}
 
 /*******************************REFLECTION ALGORHYTHM***************************************/							
-			vper    = xstrich(vx,vz,t); 	//perpendicular velocity (to blade)
-			vpar    = zstrich(vx,vz,t);	//parallel velocity (to blade)
+			vper    = xstrich(vx,vz,t); 	/* perpendicular velocity (to blade) */
+			vpar    = zstrich(vx,vz,t);	/* parallel velocity (to blade) */
 			q       = MS2AA*(fabs(vper));
       		
 			if (q > Qc){
@@ -621,10 +621,10 @@ TRACE
 							
 			if (R0 != 0.0){
        				p *= R0;
-				reflect++;			//adjusting interaction counter
-				(*nnref[reflcounter-1])++;	//adjusting interaction counter
+				reflect++;			/* adjusting interaction counter */
+				(*nnref[reflcounter-1])++;	/* adjusting interaction counter */
 
-				vper *= (-1);	 //Mirroring perpendicular velocity
+				vper *= (-1);	 /* Mirroring perpendicular velocity */
 
 				/**************SET NEW VELOCITIES***********/
 				mcnlvx = vper*cos(omega*(t-t0)) -  vpar*sin(omega*(t-t0));
@@ -633,7 +633,7 @@ TRACE
 				SCATTER;
 				}
       			else{
-			     	(*nnabs[reflcounter-1])++;	//adjusting interaction counter
+			     	(*nnabs[reflcounter-1])++;	/* adjusting interaction counter */
 				ABSORB;
       				}
 			
@@ -643,7 +643,7 @@ TRACE
 			f2  =	zstrich(x+vx*dt,z+vz*dt,t+dt)+slitl;
 
 			if (f1*f2>0){
-				dt = 2*(sqrt((2*slitl)*(2*slitl)+w*w))/Vi;// 2 *ideal time set
+				dt = 2*(sqrt((2*slitl)*(2*slitl)+w*w))/Vi;/* 2 *ideal time set  */
 				}
 			else{	
 				dt1 = zsecant(x,z,vx,vz,t,dt,-slitl);
@@ -807,8 +807,4 @@ MCDISPLAY
   circle("xz", 0,0   ,0,rad);
   circle("xz", 0,ymin,0,rad);
   line( 0  ,ymin,-rad, 0  ,ymax,-rad);
-  line( 0  ,ymin, rad, 0  ,ymax, rad);
-  line(-rad,ymin, 0  ,-rad,ymax, 0  );
-  line( rad,ymin, 0  , rad,ymax, 0  );
-%}
-END
+  line( 0  ,ymin
