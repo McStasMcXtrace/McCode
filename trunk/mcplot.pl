@@ -158,7 +158,7 @@ sub calc_panel_size {
     $nx++ if $nx*$ny < $num;
     $fit = $nx*$ny - $num;
     for $panel (@panels) {
-	my $d = $num - $panel->[0]*$panel->[1];
+	my $d = $panel->[0]*$panel->[1] - $num;
 	($fit,$nx,$ny) = ($d, $panel->[0], $panel->[1])
 	    if($d >=0 && $d <= $fit);
     }
