@@ -103,6 +103,7 @@ export INSTALL="./install-sh -c"
 # Clean up
 rm mkdist
 rm setversion
+rm header
 # Make new runs of configure not dependent of this system...
 rm config.*
 cd ..
