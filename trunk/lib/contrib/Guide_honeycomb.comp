@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Venturi
 * Date: Aug 03 2001
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Honeycomb_guide by K. Lefmann (buggy).
@@ -77,7 +77,7 @@ DEFINE COMPONENT Guide_honeycomb
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, w2, l,
   R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005,
-  mleftup=-1, mrightup=-1, mleftdown=-1, mrightdown=-1,mleft=-1, mright=-1, G=-9.81)
+  mleftup=-1, mrightup=-1, mleftdown=-1, mrightdown=-1,mleft=-1, mright=-1, G=0)
 OUTPUT PARAMETERS (GVars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -251,6 +251,7 @@ INITIALIZE
   { fprintf(stderr,"%s:Guide_gravity: W k R0 Qc must be >0.\n", NAME_CURRENT_COMP);
     exit(-1); }
 
+  if (mcgravitation) G=-9.81;
   mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(Gx,G,Gz));
   coords_get(mcLocG, &Gx, &Gy, &Gz);
 
