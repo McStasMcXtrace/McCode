@@ -635,7 +635,7 @@ sub comp_select_dialog {
 sub sitemenu_build {
     my ($w,$menu) = @_;
     my $sites;
-    my $sitemenu = $menu->Menubutton(-text => 'Neutron site', -underline => 2);
+    my $sitemenu = $menu->Menubutton(-text => 'Neutron site', -underline => 0);
     $sitemenu->pack(-side=>'left');
     # Read the 'Sites' file in the examples folder:
 
