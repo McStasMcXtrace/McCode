@@ -96,6 +96,10 @@ install: installdirs $(BINOBJS)
 	for pgm in $(PERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
 	done
+	if [ -e $(mc_libdir) ]; then \
+	  echo "Moving your old library dir $(mc_libdir) to $(mc_libdir).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(mc_libdir) $(mc_libdir).`date +%Y%m%d_%H.%M`;\
+        fi;
 	for file in `cd lib; ls`; do \
 	  if [ -d lib/$$file ]; then \
 	    $(srcdir)/mkinstalldirs $(mc_libdir)/$$file; \
@@ -132,6 +136,8 @@ install: installdirs $(BINOBJS)
 	  fi \
 	done
 	./mcdoc.fixpl
+	mkdir $(mc_libdir)/tools/perl/modules
+	cd support/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install 
 
 installdirs:
 	$(srcdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir)
