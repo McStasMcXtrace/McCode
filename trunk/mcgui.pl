@@ -391,7 +391,10 @@ sub dialog_get_out_file {
 		    # we can kill off any subprocesses it may have
 		    # spawned when the user selects CANCEL.
 		    setpgrp(0,0);
-		    exec @$val;
+		    exec @$val if @$val; # The "if @$val" avoids a Perl warning.
+		    # If we get here, the exec() failed.
+		    print STDERR "Error: exec() of $val->[0] failed!\n";
+		    CORE::exit(1);	# CORE:exit needed to avoid Perl/Tk failure.
 		}
 	    } elsif($type eq 'ERROR') {
 		&$printer("Error: $msg");
