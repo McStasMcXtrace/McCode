@@ -810,14 +810,19 @@ sub menu_run_simulation {
                 # should be made small to avoid waiting a long time for 
                 # mcdisplay...
                 if ($Config{'osname'} eq "MSWin32") {
-                    my $num_histories = $newsi->{'Ncount'};
+		    # Subtract 0 to make sure $num_histories is treated as a
+		    # number...
+                    my $num_histories = $newsi->{'Ncount'} - 0;
                     if ($num_histories >=1e3) {
                         my $break = $w->messageBox(-message => "$num_histories is a very large number of neutron histories when using Scilab on Win32.\nContinue?",
-                       -title => "Note",
-                       -type => 'YesNoCancel',
+                       -title => "note",
+                       -type => 'yesnocancel',
                        -icon => 'error',
-                       -default => 'No');
-                        if (($break eq "No")||($break eq "Cancel")) {
+                       -default => 'no');
+			# Make first char lower case - default on 
+			# Win32 upper case default on Unix... (perl 5.8)
+			$break = lcfirst($break);
+                        if (($break eq "no")||($break eq "cancel")) {
                             return 0;
                         }
                     }
