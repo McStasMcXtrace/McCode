@@ -111,7 +111,7 @@ function win = mcplot_addmenu()
         'Colormap/Gray',...
         'Colormap/_Pink',...
         'Colormap/Inv. Pink',...
-        'About McStas...'], ...              
+        'About McStas...','Exit'], ...              
         list(2,'mcplot_menu_action'));
       menu_installed = 1;
     end
@@ -138,7 +138,7 @@ function win = mcplot_addmenu()
       'Colormap Gray',...
       'Colormap Pink',...
       'Colormap Inv. Pink',...
-      'About McStas...'];
+      'About McStas...','Exit'];
     if getversion() == 'scilab-2.6'
       disp('Sorry, I can not install the McStas menu in Scilab <= 2.6');
     else
@@ -196,7 +196,7 @@ function mcplot_menu_action(k, gwin)
   
   if argn(2) <= 1, gwin = 0; end
   xset('window', gwin); // raise menu activated window 
-  item = [ 1, 2, 19, 3, 4, 23, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20,21,22]
+  item = [ 1, 2, 19, 3, 4, 23, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20,21,22,18]
   
   select item(k)
     case 0 then
@@ -670,9 +670,13 @@ if typeof(object) == 'string' // if object is a string
       mprintf('%s\n','mcplot: '+lasterror());
       return
     end
-    chdir(dirname(object)); // go into directory where object is
   end
   mclose(fid);
+  chdir(dirname(object)); // go into directory where object is
+  filename = basename(object);
+  if length(strindex(object,'.sci')), filename=filename+'.sci';
+  else filename=filename+'.sce'; end
+  object=filename;
   //    opens filename with exec(filename,-1)
   exec(object, -1); // compile the file
   mcstas = [];
