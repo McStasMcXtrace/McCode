@@ -14,22 +14,11 @@
 * Release: McStas 1.6
 * Version: 1.0.0 (includes MONITOR_ND_LIB_H)
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
-* Modified by: EF, 10th Mar 2000 : use struct.
-* Modified by: EF, 25th May 2000 : correct Vars.Mon2D_Buffer alloc bug.
-* Modified by: EF, 17th Oct 2000 : spin detector ok. (0.13.4)
-* Modified by: EF, 19th Jan 2001 : 'auto limits' bug corrected (0.13.5)
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
-* Modified by: EF, 02nd Feb 2001 : user variable (0.13.7)
-* Modified by: EF, 2th  Feb 2001 : 3He gas absorption handling (0.13.8)
-* Modified by: EF, 5th  Mar 2001 : intermediate savings (0.13.9)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
-* Modified by: EF, 18th Apr 2001 : passes DETECTOR_OUT to mcdetector_out 0.14.1
 * Modified by: EF, 23th Jul 2001 : log of signal, init arrays to 0, box (0.15)
 * Modified by: EF, 04th Sep 2001 : log/abs of variables (0.16)
-* Modified by: EF, 19th Sep 2001 : correct PROP_ZO and disk bug. McStas 1.6.
-* Modified by: EF, 28th Sep 2001 : intermediate 'source' option. bug for list ok
 * Modified by: EF, 24th Oct 2001 : capture flux  [p*lambda/1.7985] (0.16.3)
-* Modified by: EF, 15th Feb 2002 : corrected bug in auto regeneration (0.16.4)
 * Modified by: EF, 27th Aug 2002 : monitor a variable in place of I (0.16.5)
 * Modified by: EF, 25th Oct 2002 : banana, and auto for each variable (0.16.5)
 *
@@ -146,7 +135,9 @@
 *
 * <b>How to monitor any instrument/component variable into a Monitor_nD<b>
 * Suppose the Monitor_nD instance is named 'MyMonitor'.
-* 1) put in your instrument DECLARE: MONND_DECLARE(MyMonitor);
+* 1) put in your instrument DECLARE:
+*  %include "monitor_nd-lib"
+*  MONND_DECLARE(MyMonitor);
 * 2) put in your instrument INITIALIZE (optionally, to set monitor name):
 *      MONND_USER_TITLE(MyMonitor, 1, "Log(age of the Captain)");
 *    This will set 'user1' (because of the '1', could be '2' as well) title.
@@ -213,8 +204,6 @@ SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, yma
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
-
-
 
 SHARE
 %{
