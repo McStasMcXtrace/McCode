@@ -1,4 +1,9 @@
 use Config;
+use File::Path;
+use File::Basename;
+use File::Copy;
+use File::stat;
+use Cwd;
 require "mcstas_config.perl";
 # Check if MCSTAS_FORMAT env var is set. If so, set 
 # MCSTAS::mcstas_config{'PLOTTER'} accordingly
@@ -326,6 +331,204 @@ sub get_out_file {
             die "mcrun: Internal: get_out_file";
         }
     }
+}
+
+# McStas selftest procedure: copy LIB/examples and execute
+sub do_test {
+  my ($printer,$force, $plotter) = @_;
+  my $j;
+  my $pwd=getcwd;
+  
+  &$printer( "# McStas self-test (mcrun --test)");
+  &$printer(`mcstas --version`);
+  &$printer("# Installing 'selftest' directory in $pwd");
+  if (-d "selftest") # directory already exists
+  { if ($force) { eval { rmtree('selftest',0,1); } }
+    else { 
+      return "mcrun: Directory 'selftest' already exists.\n       Use '-c' or '--force' option to overwrite.\n";
+    }
+  }
+  # create selftest direcory
+  eval { mkpath('selftest') };
+  if ($@) {
+    return "mcrun: Couldn't create 'selftest': $@\n";
+  }
+  # copy all instruments
+  &$printer("# Copying instruments from $MCSTAS::sys_dir/examples/");
+  if (opendir(DIR,"$MCSTAS::sys_dir/examples/")) {
+    my @instruments = readdir(DIR);
+    closedir(DIR);
+    next unless @instruments;
+    my @paths = map("$MCSTAS::sys_dir/examples/$_", grep(/\.(instr)$/, @instruments));
+    for ($j=0 ; $j<@paths; $j++) {
+      my ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
+      if (! copy("$paths[$j]","./selftest/$base$suffix")) {
+        return "Could not copy $paths[$j] to 'selftest' directory: $!\n";
+      }
+    }
+  } else { return "mcrun: no test instruments found. Aborting.\n"; }
+  # go into the selftest directory
+  chdir("selftest") or return "mcrun: Can get into selftest: $!\n";
+  # Initialize compat/full test
+  my $n_single=1e5;
+  my $n_scan=1e4;
+  my $now = localtime;
+  my $start_sec = time();
+  &$printer("# Counts: single=$n_single, scans=$n_scan");
+  &$printer("# Output format: $plotter");
+  &$printer("# Start Date: $now");
+  my @test_names;
+  my @test_commands;
+  my @test_monitor_names;
+  my @test_monitor_values;
+  $ENV{'MCSTAS_FORMAT'} = $plotter;
+  @test_names   = ("ISIS prisma2: in focusing mode", 
+      "ISIS prisma2: in non-focusing mode", 
+      "vanadium_example: vanadium scattering anisotropy", 
+      "Brookhaven H8: Thermal TAS with vanadium sample",
+      "Risoe TAS1: monochromator rocking curve (no collimator)", 
+      "Risoe TAS1: monochromator rocking curve (with 30 minutes collimator)",
+      "Risoe TAS1: collimator C1 tilt",
+      "Risoe TAS1: monochromator rotation (PHM aka A1) with C1 tilted by OMC1=-2 deg",
+      "Risoe TAS1: monochromator rotation (PHM aka A1) with C1 tilted by OMC1=-5 deg",
+      "Risoe TAS1: monochromator rotation (PHM aka A1) with C1 tilted by OMC1=-6 deg",
+      "Risoe TAS1: monochromator rotation (PHM aka A1) with C1 tilted by OMC1=-10 deg",
+      "Risoe TAS1: sample take-off angle (TT aka A4) scan with 3 collimators. Slit sample",
+      "Risoe TAS1: analyzer arm alignment (TTA aka A6). No detector collimation C3. Vanadium sample",
+      "Risoe TAS1: analyzer arm alignment (TTA aka A6). 30 minutes detector collimation C3. Vanadium sample",
+      "Risoe TAS1: sample two-theta (TT aka A4). positive side . Powder sample",
+      "Risoe TAS1: sample two-theta (TT aka A4). negative side . Powder sample",
+      "Risoe TAS1: Triple axis mode. Analyzer rocking curve (OMA aka A5). Vanadium sample",
+      "Risoe TAS1: Triple axis mode. Sample take-off (TT aka A4). Powder sample",);
+  @test_commands= ("mcrun --dir=prisma2a prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44",
+      "mcrun --dir=prisma2b prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44",
+      "mcrun --dir=V_test vanadium_example.instr --ncount=$n_single ROT=0",
+      "mcrun -n $n_single --dir=h8_test  h8_test.instr Lambda=2.359",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_1_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=0",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_2_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=30",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_3_45 linup-2.instr PHM=-37.077 TTM=-74 C1=30 OMC1=-50,50",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_4_45 linup-2.instr PHM=-39,-35 TTM=-74 C1=30 OMC1=-1.81715",
+      "mcrun --numpoints=31 -n $n_scan --dir=linup_5_m5 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-5",
+      "mcrun --numpoints=31 -n $n_scan --dir=linup_5_m6 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-6",
+      "mcrun --numpoints=31 -n $n_scan --dir=linup_5_m10 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-10",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_6_0 linup-3.instr PHM=-37.077 TTM=-74 TT=-1.5,1.5 C1=30 OMC1=-5.5 C2=0 C3=0",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_7 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=0",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_8 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_9 linup-5.instr PHM=-37.077 TTM=-74 TT=32,35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun --numpoints=41 -n $n_scan --dir=linup_10 linup-5.instr PHM=-37.077 TTM=-74 TT=-32,-35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun --numpoints=21 -n $n_scan --dir=linup_11 linup-6.instr PHM=-37.077 TTM=-74 TT=33.57 OMA=-16.44,-18.44 TTA=-34.883 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
+  @test_monitor_names =("mon9_I","mon9_I","PSD_4pi_I","D7_SC3_In_I","","","","","","","","","","","","","","");
+  @test_monitor_values=(4.61739e-08,3.39694e-08,1.90823e-06,2.89923e-11,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+  # now execute each simulation and look for errors
+  my $error_flag    = 0;
+  my $accuracy_flag = 0;
+  my $plot_flag     = 0;
+  my $total_diff    = 0;
+  for ($j=0 ; $j<@test_commands ; $j++) {
+    my $this_cmd =$test_commands[$j];
+    my $this_name=$test_names[$j];
+    &$printer("Executing: $this_cmd");
+    my $res = qx/$this_cmd/;
+    my $child_error_text = $!;
+    my $child_error_code = $?;
+    if ($child_error_code) {
+      &$printer("[FAILED] $this_name: ($child_error_code): $child_error_text");
+      $error_flag = 1;
+      last;
+    } else { 
+      my $diff = 0;
+      my $sim_I= 0;
+      my $line;
+      #Analyse test output if reference value is available
+      if ($test_monitor_values[$j] ne 0) { # there is a reference value...
+        # split the output in lines
+        for $line (split "\n", $res) {
+        # search reference monitor in these lines
+          if($line =~ m/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { 
+            my $sim_I_name = $1;
+            $sim_I = $2;
+            if ($test_monitor_names[$j] eq $sim_I_name) {
+              $diff = abs($sim_I/$test_monitor_values[$j] -1);
+              $total_diff = $total_diff+$diff;
+            }
+          }
+        } # end for
+        if ($diff) {
+          if ($diff > 0.1) { 
+            $accuracy_flag = 1; 
+            $diff = $diff*100;
+            &$printer("[FAILED] $this_name ($sim_I, should be $test_monitor_values[$j])"); 
+          } else { &$printer("[OK] $this_name (accuracy within $diff %)"); }
+        }
+      } # end if ($test_monitor_values[$j] ne 0)
+      if ($diff eq 0) { &$printer("[OK] $this_name (accuracy not checked)"); }
+    } # end else 
+  } # end for
+  my $elapsed_sec = time() - $start_sec;
+  # now test graphics...
+  @test_names   = ("Plot of Scan of parameters with Risoe TAS1 monochromator rocking curve (no collimator)",
+    "Plot of Single simulation with Brookhaven H8 Termal TAS with vanadium sample");
+  @test_commands= ("mcplot -gif linup_1_45",
+    "mcplot -gif h8_test");
+  @test_monitor_names =("linup_1_45","h8_test");
+  for ($j=0 ; $j<@test_commands ; $j++) {
+    my $this_cmd =$test_commands[$j];
+    my $this_name=$test_names[$j];
+    &$printer("Executing: $this_cmd");
+    my $res = qx/$this_cmd/;
+    my $child_error_text = $!;
+    my $child_error_code = $?;
+    if ($child_error_code) {
+      &$printer("[FAILED] $this_name: ($child_error_code): $child_error_text");
+      $error_flag = 1;
+      last;
+    } else { 
+      my @files = readdir(DIR);
+      closedir(DIR);
+      my $k;
+      my $filename;
+      my @paths = map("$test_monitor_names[$j]/$_", grep(/\.(gif|png|ps|eps|jpg)$/i, @files));
+      for ($k=0 ; $k<@paths; $k++) {
+        $filename = $paths[$k];
+        my $this_flag = 1;
+        if (-f "$filename") {
+          my $sb = stat($filename);
+          if ($sb->size) { 
+            &$printer("[OK] $this_name ($filename)");
+            $this_flag = 0;
+          }
+        } # end if (-f "$filename")
+      } # end for
+      if ($this_flag) { &$printer("[FAILED] $this_name"); $plot_flag=1; }
+      else { &$printer("[OK] $this_name"); }
+    } # end else 
+  } # end for
+  
+  $now = localtime();
+  if ($error_flag) {
+    &$printer("# Installation check: FAILED. McStas has not been properly installed.");
+    &$printer("# >> Check that you have a C compiler, perl, and perl-Tk installed.");
+  } else {
+    &$printer("# Installation check: OK.     Computing time: $elapsed_sec [sec].");
+    if ($accuracy_flag) {
+      &$printer("# Accuracy     check: FAILED. Results are not reliable.");
+      &$printer("# >> This McStas distribution does NOT produce accurate results.");
+    } else {
+      &$printer("# Accuracy     check: OK.");
+    }
+    if ($plot_flag) {
+      &$printer("# Plotter      check: FAILED.");
+      &$printer("# >> The $plotter plotter is NOT working properly.");
+      &$printer("# >> Check that you have Scilab/Matlab/PGPLOT installed.");
+    } else {
+      &$printer("# Plotter      check: OK.     Using Plotter $plotter.");
+    }
+  }
+  
+  &$printer("# End Date: $now");
+  chdir($pwd) or return "mcrun: Can not come back to $pwd: $!\n";; # come back to initial directory
+  return undef;
 }
 
 # return the component name given the file name for the definition.
