@@ -11,7 +11,7 @@
 *
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: September 1997
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Release: McStas 1.6
 * Origin: Risoe
 *
@@ -19,7 +19,7 @@
 *
 * %D
 * An arm does not actually do anything, it is just there to set
-* up a new coordinate system. 
+* up a new coordinate system.
 *
 * %P
 * Input parameters:
@@ -32,7 +32,7 @@
 DEFINE COMPONENT Arm
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
-STATE PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 TRACE
 %{
