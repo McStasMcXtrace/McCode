@@ -6,7 +6,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: McStas 1.5
 *
 * Neutron guide with channels (bender section).
@@ -16,6 +16,8 @@
 * in the X-Y plane.
 * The guide may be tapered, and may have vertical subdivisions (used for
 * bender devices).
+* Not correct when using focusing geometry. The slope of the channels are
+* not calculated correctly
 *
 * %P
 * INPUT PARAMETERS:
