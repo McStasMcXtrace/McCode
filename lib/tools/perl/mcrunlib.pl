@@ -63,7 +63,6 @@ sub get_out_file {
 	    return undef;
 	}
 	$c_age = -M $c_name;
-	$file_type = C;
 	$out_age = undef;		# Force recompilation.
     }
     unless(-e $c_name) {
@@ -73,7 +72,8 @@ sub get_out_file {
     }
 
     # Compile C source if newer than existing out file.
-    if($file_type eq C && (!defined($out_age) || $out_age > $c_age)) {
+    if(($file_type eq C || $file_type eq MCSTAS) &&
+       (!defined($out_age) || $out_age > $c_age)) {
 	print "Compiling C source '$c_name' ...\n";
 	$cmd = "$mcstas_config{CC} $mcstas_config{CFLAGS} " .
 	    "-o \"$out_name\" \"$c_name\" -lm";
