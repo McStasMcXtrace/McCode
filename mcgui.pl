@@ -767,6 +767,9 @@ sub setup_menu {
     $filemenu->command(-label => 'Compile instrument',
 		       -underline => 0,
 		       -command => sub {menu_compile($w)});
+    $filemenu->command(-label => 'Clear output',
+		       -underline => 1,
+		       -command => sub { $cmdwin->delete("1.0", "end") });
     $filemenu->separator;
     $filemenu->command(-label => 'Quit',
 		       -underline => 0,
