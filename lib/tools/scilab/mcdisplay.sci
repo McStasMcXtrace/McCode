@@ -200,7 +200,7 @@ if isfield(INSTRUMENT,'lastcomp')
     end
   end
 end
-INSTRUMENT.DoNeutrons=1;
+INSTRUMENT.DoNeutrons=2;
 INSTRUMENT.MaxNeutrons=0;
 INSTRUMENT.DoNumbers=["0","1","10","50","100","500","1000"];
 INSTRUMENT.Timeouts=["100","500","1000","2000","5000","10000"];
@@ -210,12 +210,13 @@ INSTRUMENT.alpha=19;
 INSTRUMENT.theta=10;
 // Check if mcdisplay.pl was called with --save parameter:
 if INSTRUMENT.save==0
-  parmwin()
+  parmwin();
 end
 PlotInstrument3D();
 if INSTRUMENT.save==1
   xsave(strcat([INSTRUMENT.descr '.scg']));
   INSTRUMENT.save=0;
+  parmwin();
 end
 endfunction
 
@@ -345,7 +346,7 @@ function PlotInstrument3D()
   xtitle(INSTRUMENT.descr);
   unsetmenu(gcw(),'Zoom')
   unsetmenu(gcw(),'UnZoom')
-  // Check if we are currently doing simple 'replots' - but not if save is 1...
+  // Check if we are currently doing simple 'replots'
   if (INSTRUMENT.MaxNeutrons==0 & INSTRUMENT.save==0)
     parmwin();
   end
