@@ -1,5 +1,7 @@
 # Library of common routines for McStas frontends.
 
+require FileHandle;
+
 sub strip_quote {
     my ($str) = @_;
     $str = $1 if($str =~ /^'(.*)'$/); # Remove quotes if present.
@@ -10,6 +12,59 @@ sub get_yes_no {
     my ($str) = @_;
     return ($str =~ /yes/i) ? 1 : 0;
 }
+
+# Read 2D numeric data, skipping comment lines.
+sub read_data_file_2D {
+    my ($file) = @_;
+    my $h = new FileHandle;
+    if(open($h, $file)) {
+	my @list = ();
+	while(<$h>) {
+	    next if /^\s*#/;
+	    push(@list, new PDL (split " "));
+	}
+	close $h;
+	return cat @list;
+    } else {
+	print STDOUT "Warning: failed to read data file \"$file\"\n";
+	return undef;
+    }
+}
+
+
+# Get numerical data for 2D detector, reading it from file if necessary
+# the first time.
+sub get_detector_data_2D {
+    my ($info) = @_;
+    $info->{'Numeric Data'} = read_data_file_2D($info->{'Filename'})
+        unless $info->{'Numeric Data'};
+    return $info->{'Numeric Data'};
+}
+
+
+# Get numerical data for 1D detector, reading it from file if necessary
+# the first time.
+sub get_detector_data_1D {
+    my ($info) = @_;
+    if($info->{'Numeric Data'}) {
+	return $info->{'Numeric Data'};
+    } else {
+	my ($file) = @_;
+	my $a = read_data_file_2D($info->{'Filename'});
+	return undef unless $a;
+	my ($m,$n) = $a->dims;
+	my $vars = $info->{'Variables'};
+	my $i;
+	my $r = {};
+	for $i (0..$m-1) {
+	    my $key = $vars->[$i] ? $vars->[$i] : "column $i";
+	    $r->{$key} = $a->slice("($i),");
+	}
+	$info->{'Numeric Data'} = $r;
+	return $r;
+    }
+}
+
 
 # Read output from "sim --info" or "begin instrument" section in mcstas.sim
 # from file handle.
@@ -76,7 +131,8 @@ sub read_simulation_info {
 
 sub read_data_info {
     my ($handle, $basedir) = @_;
-    my ($type,$fname);
+    my ($type, $fname, $xvar, $yvar, $yerr);
+    my @vars = qw/X N I p2/;
     my ($compname,$title,$xlabel,$ylabel) = ("","","","");
     my ($xmin,$xmax,$ymin,$ymax) = (0,1,0,1);
     while(<$handle>) {
@@ -88,6 +144,19 @@ sub read_data_info {
 	    $title = strip_quote($1);
 	} elsif(/^\s*filename:\s*(.*?)\s*$/i) {
 	    $fname = strip_quote($1);
+	} elsif(/^\s*variables:\s*([a-zA-ZæøåÆØÅ_0-9 \t]*?)\s*$/i) {
+	    @vars = split(" ", $1);
+	} elsif(/^\s*xvar:\s*([a-zA-ZæøåÆØÅ_0-9]+?)\s*$/i) {
+	    $xvar = $1;
+	} elsif(/^\s*yvar:\s*([a-zA-ZæøåÆØÅ_0-9]+?)\s*$/i) {
+	    $yvar = $1;
+	    $yerr = undef;
+	} elsif(/^\s*yvar:\s*
+		\(\s*([a-zA-ZæøåÆØÅ_0-9]+)\s*,
+		  \s*([a-zA-ZæøåÆØÅ_0-9]+)\s*
+		\)\s*$/ix) {
+	    $yvar = $1;
+	    $yerr = $2;
 	} elsif(/^\s*xlabel:\s*(.*?)\s*$/i) {
 	    $xlabel = strip_quote($1);
 	} elsif(/^\s*ylabel:\s*(.*?)\s*$/i) {
@@ -108,6 +177,9 @@ sub read_data_info {
 	    die "Invalid line in siminfo file:\n'$_'";
 	}
     }
+    # Select some reasonable defaults for axis variables if not present.
+    $xvar = $vars[0] ? $vars[0] : "column 0" unless $xvar;
+    $yvar = $vars[1] ? $vars[1] : "column 1" unless $yvar;
     die "Missing type for component $compname"
 	unless $type;
     die "Missing filename for component $compname"
@@ -115,6 +187,10 @@ sub read_data_info {
     return { Type => $type,
 	     Component => $compname,
 	     Title => $title,
+	     Variables => \@vars,
+	     Xvar => [$xvar],
+	     Yvar => [$yvar],
+	     Yerr => [$yerr],
 	     Filename => $basedir ? "$basedir/$fname" : $fname,
 	     Xlabel => $xlabel,
 	     Ylabel => $ylabel,
@@ -146,7 +222,7 @@ sub read_sim_info {
 sub read_sim_file {
     my ($file) = @_;
     my $basedir;
-    $basedir = $1 if $file =~ m|^(.*)/[^/]*$|;
+    $basedir = $1 if $file && $file =~ m|^(.*)/[^/]*$|;
     my $handle = new FileHandle;
     open $handle, $file or die "Could not open file '$file'";
     read_sim_info($handle, $basedir);
