@@ -377,7 +377,6 @@ sub exec_sim {
 	} else {
 	    $cmd = "@cmdlist";
 	}
-	print "Real command: '$cmd'\n";
 	exec $cmd;
 #	exec @cmdlist;
     }
