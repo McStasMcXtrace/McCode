@@ -1,14 +1,13 @@
 /*******************************************************************************
 *
-* McStas, the neutron ray-tracing package
-*         Maintained by Kristian Nielsen and Kim Lefmann,
-*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+* McStas, the neutron ray-tracing package: Circular_slit.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
 *
 * %I
-* Written by: KN
+* Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.4 $
-* Origin: McStas release
+* Version: $Revision: 1.5 $
+* Origin: McStas 1.4.2
 *
 * Circular slit.
 *
@@ -24,6 +23,7 @@ DEFINE COMPONENT Circular_slit
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 TRACE
 %{
   PROP_Z0;
