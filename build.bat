@@ -28,12 +28,12 @@
 @echo *** Start of User configuration ***
 @set CC=c:\Dev-Cpp\bin\gcc.exe
 @set /P CC=Set CC compiler variable (default is %CC%): 
-@set INCLUDE="C:/Dev-Cpp/include"
+@set INCLUDE="C:\Dev-Cpp\include"
 @echo ...
 @echo NOTE: Set the include and lib paths using / or \\ - NOT single \
 @echo ...
 @set /P INCLUDE=Set INCLUDE variable (default is %INCLUDE%): 
-@set LIB="C:/Dev-Cpp/lib"
+@set LIB="C:\Dev-Cpp\lib"
 @set /P LIB=Set LIB variable (default is %LIB%): 
 @echo ...
 @echo ...
