@@ -15,14 +15,14 @@
 * Release: McStas 1.6
 *
 * velocity selector (helical lamella type) such as <b>V_selector</b> component
-* 
+*
 * %Description
 * velocity selector (helical lamella type)
 *
 * Example: Selector(xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25,
 *            num=72,width=0.004,radius=0.12,alfa=48.298,feq=500)
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
-* 
+*
 * %Parameters
 * INPUT PARAMETERS:
 *
@@ -39,14 +39,14 @@
 *
 * %Links
 * See also Additional notes <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00032.html">March 1999</a> and <a href="http://neutron.risoe.dk/neutron-mc/arch/9904/msg00000.html">Jan 2000</a>.
-* 
+*
 * %End
 *******************************************************************************/
 
 
 DEFINE COMPONENT Selector
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25, num=72,width=0.004,radius=0.12,alfa=48.298,feq=500)
+SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25, num=72,width=0.0004,radius=0.12,alfa=48.298,feq=500)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
 %{
@@ -60,7 +60,7 @@ TRACE
   if (x<xmin || x>xmax || y<ymin || y>ymax)
     ABSORB;                                  /* because outside frame */
   dt = len/vz;
-  /* get phase angle of selector rotor as MonteCarlo choice 
+  /* get phase angle of selector rotor as MonteCarlo choice
    only the free space between two neighboring spokes is taken
    p is adjusted to transmission for parallel beam
   */
@@ -69,22 +69,22 @@ TRACE
 	open_angle = 360/num-closed_angle;
 	sel_phase = open_angle*rand01();
 	p *= (open_angle/(closed_angle+open_angle));
-	
+
 	PROP_DT(dt);
 
   if (x<xmin || x>xmax || y<ymin || y>ymax)
     ABSORB;                                  /* because outside frame */
   /* now let's look whether the neutron is still
  between the same two spokes or absorbed meanwhile */
-    
+
 	n_angle_out = atan2(x,y+radius)*RAD2DEG;  /* neutron beam might be divergent */
-    
-	sel_phase = sel_phase + feq*dt*360 - alfa;  /* rotor turned, but spokes are torsaded */ 
+
+	sel_phase = sel_phase + feq*dt*360 - alfa;  /* rotor turned, but spokes are torsaded */
 
 	if (n_angle_out<(n_angle_in-sel_phase) || n_angle_out>(n_angle_in-sel_phase+open_angle) )
 	  ABSORB;              /* because must have passed absorber */
   else
-    SCATTER; 
+    SCATTER;
 %}
 
 MCDISPLAY
@@ -101,15 +101,15 @@ MCDISPLAY
   double z3;
   double a;
   double xw, yh;
-  
+
   phi = alfa;
-  Width  = (xmax-xmin)/2; 
+  Width  = (xmax-xmin)/2;
   height = (ymax-ymin)/2;
   x0 = xmin; x1 = xmax;
   y0 = ymin; y1 = ymax;
   l0 = len; l1 = l0;
   r0 = radius;
-  
+
   r = r0 + height;
   x0 = -Width/2.0;
   x1 =  Width/2.0;
@@ -119,7 +119,7 @@ MCDISPLAY
   z1 = -l1/2.0;
   z2 =  l1/2.0;
   z3 =  l0/2.0;
-  
+
   magnify("xy");
   xw = Width/2.0;
   yh = height/2.0;
