@@ -550,7 +550,7 @@ function filename = mcplot_output_begin(form, filename)
 // initiate output in the specified format (default is GIF)
 // format may be: gif, ps, psc, fig, scilab
   if argn(2) == 0 then form='GIF'; end
-  if argn(1) <= 1 then filename=''; end
+  if argn(2) <= 1 then filename=''; end
   if length(filename) == 0 then filename='mcstas'; end
   form = convstr(form,"l");
   
