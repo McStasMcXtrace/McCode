@@ -15,6 +15,7 @@
 * Origin: ILL, Based on Be_filter, written by SN Klausen, December 1999,
 * Incorporating code from Single_crystal, written by KN, December 1999
 * Modified by: EF, Aug. 24th 2001: made it work
+* Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
 *
 * Box-shaped powder filter
 *
@@ -35,7 +36,7 @@
 *     Filter_powder(
 *      ax=2.714, by=2.714, cz=4.405, cc=120,
 *      sigma_a = 0.0156,
-*      reflections="BeO.dat")
+*      reflections="BeO.lau")
 * with file <a href="http://www.ill.fr/tas/mcstas/doc/BeO.dat">BeO.dat</a>.
 * See also <a href="http://www.ill.fr/tas/mcstas/doc/filter.ps">filter.ps</a> (PS doc).
 *
@@ -83,8 +84,10 @@ SETTING PARAMETERS (xmin =-0.05 , xmax = 0.05, ymin = -0.05, ymax = 0.05,
 OUTPUT PARAMETERS (XBlade_pos, YBlade_pos, xb,xt,yb,yt , pf_hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
-DECLARE
+SHARE
 %{
+  /* used for reading data table from file */
+  %include "read_table-lib"
 
 #ifndef BE_FILTER_DECL
 #define BE_FILTER_DECL
@@ -103,19 +106,6 @@ DECLARE
     (zout) = ztmp/pf_length; \
   }
 
-  struct pf_hkl_info_struct 
-  {
-    struct pf_hkl_data *list;      /* Reflection array */
-    int count;                  /* Number of reflections */
-    struct pf_hkl_data *tau_list;  /* Reflections close to Ewald Sphere */
-    double m_ax,m_ay,m_az;      /* First unit cell axis (direct space, AA) */
-    double m_bx,m_by,m_bz;      /* Second unit cell axis */
-    double m_cx,m_cy,m_cz;      /* Third unit cell axis */
-    double asx,asy,asz;         /* First reciprocal lattice axis (1/AA) */
-    double bsx,bsy,bsz;         /* Second reciprocal lattice axis */
-    double csx,csy,csz;         /* Third reciprocal lattice axis */
-    double V0;                  /* Unit cell volume (AA**3) */
-  };
   struct pf_hkl_data
   {
     int h,k,l;                  /* Indices for this reflection */
@@ -130,65 +120,65 @@ DECLARE
     double m1, m2, m3;          /* Diagonal matrix representation of Gauss */
     double cutoff;              /* Cutoff value for Gaussian tails */
   };
+  
+  struct pf_hkl_info_struct 
+  {
+    struct pf_hkl_data *list;      /* Reflection array */
+    int count;                  /* Number of reflections */
+    struct pf_hkl_data *tau_list;  /* Reflections close to Ewald Sphere */
+    double m_ax,m_ay,m_az;      /* First unit cell axis (direct space, AA) */
+    double m_bx,m_by,m_bz;      /* Second unit cell axis */
+    double m_cx,m_cy,m_cz;      /* Third unit cell axis */
+    double asx,asy,asz;         /* First reciprocal lattice axis (1/AA) */
+    double bsx,bsy,bsz;         /* Second reciprocal lattice axis */
+    double csx,csy,csz;         /* Third reciprocal lattice axis */
+    double V0;                  /* Unit cell volume (AA**3) */
+  };
 
 
   void
-  read_pf_hkl_data(char *file, struct pf_hkl_info_struct *info)
+  read_pf_hkl_data(char *PF_file, struct pf_hkl_info_struct *info)
   {
     struct pf_hkl_data *list = NULL;
     int size = 0;
-    FILE *f;
+    t_Table sTable; /* sample data table structure from PF_file */
     int i;
 
-    f = fopen(file, "r");
-    if(!f)
+    Table_Read(&sTable, PF_file, 1); /* read 1st block data from PF_file into sTable*/
+    if (sTable.columns < 4)
+      exit(fprintf(stderr, "Filter_powder: Error: The number of columns in %s should be at least %d for [h,k,l,F2]\n", PF_file, 4));
+    if (!sTable.rows)
+      exit(fprintf(stderr, "Filter_powder: Error: The number of rows in %s should be at least %d\n", PF_file, 1));
+    else size = sTable.rows;
+    
+    /* allocate hkl_data array */
+    list = (struct pf_hkl_data*)malloc(size*sizeof(struct pf_hkl_data));
+
+    for (i=0; i<size; i++)
     {
-      fprintf(stderr, "Filter_powder: Error: file '%s' cannot be opened.\n",
-              file);
-      exit(1);
-    }
-    i = 0;
-    while(!feof(f))
-    {
-      double h, k, l, multiplicity, d, ttheta, F2;
+      double h, k, l, F2;
       int ret;
       char Buffer[1024];
 
-      ret = fscanf(f, "%lf %lf %lf %lf %lf %lf %lf\n",
-                   &h, &k, &l, &multiplicity, &d, &ttheta, &F2);
-      if(ret == EOF)
-        break;
-      if(ret != 7)
-      {
-        fgets(Buffer, 1024, f);
-        /* 
-        fprintf(stderr,
-                "Filter_powder: Ignore line %d in file '%s'\n",
-                i+1, file);
-        fprintf(stderr,
-                "              : %s\n", Buffer); */
-        continue;
-      } 
-      else
-      {
-        /* Extend list if not large enough. */
-        extend_list(i, (void **)&list, &size, sizeof(*list));
-        list[i].h = h;
-        list[i].k = k;
-        list[i].l = l;
-        list[i].F2 = F2;
-        /* Precompute some values */
-        list[i].tau_x = h*info->asx + k*info->bsx + l*info->csx;
-        list[i].tau_y = h*info->asy + k*info->bsy + l*info->csy;
-        list[i].tau_z = h*info->asz + k*info->bsz + l*info->csz;
-        list[i].tau = sqrt(list[i].tau_x*list[i].tau_x +
-                           list[i].tau_y*list[i].tau_y +
-                           list[i].tau_z*list[i].tau_z);
-        i++;  
-      }
+      /* get data from table */
+      h = Table_Index(sTable, i, 0);
+      k = Table_Index(sTable, i, 1);
+      l = Table_Index(sTable, i, 2);
+      F2= Table_Index(sTable, i, sTable.columns-1); /* last column */
+    
+      list[i].h = h;
+      list[i].k = k;
+      list[i].l = l;
+      list[i].F2 = F2;
+      /* Precompute some values */
+      list[i].tau_x = h*info->asx + k*info->bsx + l*info->csx;
+      list[i].tau_y = h*info->asy + k*info->bsy + l*info->csy;
+      list[i].tau_z = h*info->asz + k*info->bsz + l*info->csz;
+      list[i].tau = sqrt(list[i].tau_x*list[i].tau_x +
+                         list[i].tau_y*list[i].tau_y +
+                         list[i].tau_z*list[i].tau_z);
     }
-    fclose(f);
-    printf("Filter_powder: Read %d reflections from file '%s'\n", i, file);
+    Table_Free(&sTable);
     info->list = list;
     info->count = i;
     info->tau_list = malloc(i*sizeof(*info->tau_list));
@@ -202,15 +192,15 @@ DECLARE
   /* Calculate a pf_length l with exponential decaying destribution */
   int pf_length(double *l, double dt_in, double dt_out, double v, double mu_tot)
   {
-    double l_full, random;
+    double l_full, my_random;
 
     if(dt_in > 0)
       l_full = v*(dt_out-dt_in);
     else
       l_full = v*dt_out;
-    random = 1.0*rand()/RAND_MAX;
-    if (random <= 0) return(0);
-    *l = -log(random)/mu_tot;
+    my_random = rand01();
+    if (my_random <= 0) return(0);
+    *l = -log(my_random)/mu_tot;
     if(*l < l_full) return 1;
     else return 0;
   }
@@ -254,10 +244,10 @@ DECLARE
   /* Calculate which Debye-Scherre cone to use */
   int pf_cones(double p_cone[PF_PLANES], int size)
   {
-	  double random;
+	  double my_random;
 	  int i=0;
-	  random = 1.0*rand()/RAND_MAX;
-	  while(i<size && random>p_cone[i]) i++;
+	  my_random = rand01();
+	  while(i<size && my_random>p_cone[i]) i++;
 	  return i;
   }
 
@@ -331,6 +321,7 @@ INITIALIZE
   pf_hkl_info.csz = 2*PI/pf_hkl_info.V0*tmp_z;
   /* Read in structure factors, and do some pre-calculations. */
   read_pf_hkl_data(reflections, &pf_hkl_info);
+  printf("Filter_powder: %s: Read %d reflections from file '%s'\n", NAME_CURRENT_COMP, pf_hkl_info.count, reflections);
 
 /* Evenly space blades along the x-axis */
   if(XBlades>1) {
@@ -410,7 +401,7 @@ TRACE
 
     while(pf_length(&l, dt_in, dt_out, v, mu_tot)) /* While inside box do...*/
     {
-      if ((1.0*rand()/RAND_MAX)<(mu_a/mu_tot)) ABSORB;
+      if (rand01()<(mu_a/mu_tot)) ABSORB;
       dt = l/v;
       PROP_DT(dt);
       /* See if the neutron hit a blade */
