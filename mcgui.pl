@@ -751,14 +751,16 @@ sub menu_run_simulation {
 	push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
 	push @command, "--dir=$OutDir" if $newsi->{'Dir'};
   if ($inf_sim->{'Binary'} == 1) {
-	  push @command, "--format='Matlab binary'" if ($plotter eq 1 || $plotter eq 2);
-	  push @command, "--format='Scilab binary'" if ($plotter eq 3 || $plotter eq 4);
+	  push @command, "--format='Matlab_binary'" if ($plotter eq 1 || $plotter eq 2);
+	  push @command, "--format='Scilab_binary'" if ($plotter eq 3 || $plotter eq 4);
   } else {
     push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
 	  push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
   }
 	for (@{$out_info->{'Parameters'}}) {
-	    push @command, "$_=$newsi->{'Params'}{$_}";
+      if ($newsi->{'Params'}{$_} ne '') {
+	      push @command, "$_=$newsi->{'Params'}{$_}";
+      }
 	}
 	my $inittext = "Running simulation '$out_name' ...\n" .
 	    join(" ", @command) . "\n";
