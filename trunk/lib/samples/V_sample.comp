@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -26,7 +26,8 @@
 * The target itself is either situated according to given coordinates (x,y,z), or
 * setting the relative target_index of the component to focus at (next is +1).
 * This target position will be set to its AT position. When targeting to centered
-* components, such as spheres or cylinders, define an Arm component where to focus at.
+* components, such as spheres or cylinders, define an Arm component where to
+* focus at.
 *
 * Example: V_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,pack=1, 
 *           target_x = 0, target_y = 0, target_z = 0.235)
