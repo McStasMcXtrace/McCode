@@ -349,6 +349,7 @@ sub read_sim_data {
     return 0 unless $ii && $si && $di;
     # Save old settings of "plot results".
     $si->{'Autoplot'} = $inf_sim->{'Autoplot'};
+    $si->{'Binary'} = $inf_sim->{'Binary'};
     $inf_instr = $ii;
     $inf_sim = $si;
     $inf_data = $di;
@@ -688,7 +689,7 @@ sub menu_run_simulation {
 		push @command, "-pMatlab";
 		my $output_file = save_disp_file($w,'m');
 		if (!$output_file) {
-		  putmsg($cmdwin, "Trace canclled...\n");
+		  putmsg($cmdwin, "Trace cancelled...\n");
 		  return;
 		}
 		push @command, "-f$output_file";
@@ -698,10 +699,10 @@ sub menu_run_simulation {
 		push @command, "-pScilab";
 		if ($Config{'osname'} eq 'MSWin32') {
 		  # Calling through pipe does not work on Win32 :( - revert to 'scilab script'
-		  putmsg($cmdwin, "Sorry, scilab pipe non-funtional on Win32 systems. Reverting to sciptfile...\n");
+		  putmsg($cmdwin, "Sorry, scilab pipe non-funtional on Win32 systems. Reverting to scriptfile...\n");
 		  my $output_file = save_disp_file($w,'sci');
 		  if (!$output_file) {
-		    putmsg($cmdwin, "Trace canclled...\n");
+		    putmsg($cmdwin, "Trace cancelled...\n");
 		    return;
 		  }
 		  push @command, "-f$output_file";
@@ -711,7 +712,7 @@ sub menu_run_simulation {
 		push @command, "-pScilab";
 		my $output_file = save_disp_file($w,'sci');
 		if (!$output_file) {
-		  putmsg($cmdwin, "Trace canclled...\n");
+		  putmsg($cmdwin, "Trace cancelled...\n");
 		  return;
 		}
 		push @command, "-f$output_file";
@@ -720,7 +721,7 @@ sub menu_run_simulation {
 	      push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
 	      push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
 	      push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
-	      push @command, "--save" if ($newsi->{'Trace'} eq 1);
+	      # push @command, "--save" if ($newsi->{'Trace'} eq 1);
 	    }
 	  }
 	# On Win32, we need quoting, in case of spaces in filename...
@@ -745,8 +746,13 @@ sub menu_run_simulation {
 	push @command, "--trace" if ($newsi->{'Trace'} eq 1);
 	push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
 	push @command, "--dir=$OutDir" if $newsi->{'Dir'};
-	push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
-	push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
+  if ($inf_sim->{'Binary'} == 1) {
+	  push @command, "--format='Matlab binary'" if ($plotter eq 1 || $plotter eq 2);
+	  push @command, "--format='Scilab binary'" if ($plotter eq 3 || $plotter eq 4);
+  } else {
+    push @command, "--format=Matlab" if ($plotter eq 1 || $plotter eq 2);
+	  push @command, "--format=Scilab" if ($plotter eq 3 || $plotter eq 4);
+  }
 	for (@{$out_info->{'Parameters'}}) {
 	    push @command, "$_=$newsi->{'Params'}{$_}";
 	}
@@ -774,6 +780,7 @@ sub menu_run_simulation {
 	    $inf_sim=$newsi;
 	}
 	$inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
+  $inf_sim->{'Binary'} = $newsi->{'Binary'};
 	$inf_sim->{'Trace'} = $newsi->{'Trace'};
 	push @mcplot_cmd, "$MCSTAS::mcstas_config{'prefix'}mcplot$suffix";
 	if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
@@ -800,8 +807,10 @@ sub menu_choose_backend {
     my ($w) = @_;
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
     my $ret;
+    my $binary;
     my $output_file;
-    ($ret, $plotter) = backend_dialog($w,$plotter);
+    ($ret, $binary, $plotter) = backend_dialog($w, $inf_sim->{'Binary'},$plotter);
+    $inf_sim->{'Binary'} = $binary;
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
 }
 
