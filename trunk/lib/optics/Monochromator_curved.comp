@@ -11,7 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
@@ -63,7 +63,7 @@
 * NV:      number of slabs vertical   (rows)
 * mosaich: Horisontal mosaic FWHM (arc minutes)
 * mosaicv: Vertical mosaic FWHM (arc minutes)
-* r0:      Maximum reflectivity (1)
+* r0:      Maximum reflectivity (1). O unactivates component.
 * Q:       Scattering vector (AA-1)
 * RV:      radius of vertical focussing (m). flat for 0.
 * RH:      radius of horizontal focussing (m). flat for 0.
@@ -141,10 +141,12 @@ INITIALIZE
   if (DM != 0) mono_Q = 2*PI/DM;
   
   if (mono_Q <= 0) { fprintf(stderr,"Monochromator_curved: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
-  if (r0 <= 0) { fprintf(stderr,"Monochromator_curved: %s: Error reflectivity r0 is null\n", NAME_CURRENT_COMP); exit(-1); }
+  if (r0 <  0) { fprintf(stderr,"Monochromator_curved: %s: Error reflectivity r0 is negative\n", NAME_CURRENT_COMP); exit(-1); }
+  if (r0 == 0) { fprintf(stderr,"Monochromator_curved: %s: Reflectivity r0 is null. Ingnoring component.\n", NAME_CURRENT_COMP); }
   if (NH*NV == 0) { fprintf(stderr,"Monochromator_curved: %s: no slabs ??? (NH or NV=0)\n", NAME_CURRENT_COMP); exit(-1); }
   
-  if (verbose)
+  
+  if (verbose && r0)
   {
     printf("Monochromator_curved: component %s Q=%.3g Angs-1 (DM=%.4g Angs)\n", NAME_CURRENT_COMP, mono_Q, 2*PI/mono_Q);
     if (NH*NV == 1) printf("            flat.\n");
@@ -162,7 +164,7 @@ INITIALIZE
     }
   }
   
-  if (reflect != NULL)
+  if (reflect != NULL && r0)
   {
     if (verbose) fprintf(stdout, "Monochromator_curved : %s : Reflectivity data (k, R)\n", NAME_CURRENT_COMP);
     Table_Read(&rTable, reflect, 1); /* read 1st block data from file into rTable */
@@ -191,7 +193,7 @@ TRACE
 %{
   double dt;
 
-  if(vx != 0.0 && (dt = -x/vx) >= 0.0)
+  if(vx != 0.0 && (dt = -x/vx) >= 0.0 && r0)
   {                             /* Moving towards crystal? */
     double zmin,zmax, ymin,ymax, zp,yp, y1,z1,t1;
     
