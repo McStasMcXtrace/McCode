@@ -5,6 +5,7 @@
 
 use PGPLOT;
 
+$magnification = 1;
 
 my (%transformations, @components);
 
@@ -19,21 +20,68 @@ sub read_instrument {
 	if($st == 0 && /^INSTRUMENT:/) {
 	    # Start of instrument description.
 	    $st = 1;
-	} elsif($st == 1 && /^COMPONENT:\s*"([a-zA-Z0-9_]+)"\s*/) {
+	} elsif($st == 1 && /^COMPONENT:\s*"([a-zA-Z0-9_Ê¯Â∆ÿ≈]+)"\s*/) {
 	    $comp = $1;
 	    @components = (@components, $comp);
 	} elsif($st == 1 && /^POS:(.*)$/) {
 	    my @T;
 	    @T = split ",", $1;
 	    $transformations{$comp} = \@T;
+	} elsif($st == 1 && /^MCDISPLAY: start$/) {
+	    $st = 2;		# Start of component graphics representation
+	} elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_Ê¯Â∆ÿ≈]+)/) {
+	    $comp = $1;
+	    $compdraw{$comp} = {};
+	    $compdraw{$comp}{'elems'} = [];
+	} elsif($st == 2 && /^MCDISPLAY: magnify\('([xyz]*)'\)$/) {
+	    my $mag = $1;
+	    $compdraw{$comp}{'magX'} = 1 if $mag =~ /x/i;
+	    $compdraw{$comp}{'magY'} = 1 if $mag =~ /y/i;
+	    $compdraw{$comp}{'magZ'} = 1 if $mag =~ /z/i;
+	} elsif($st == 2 && /^MCDISPLAY: multiline\(([0-9]+),([^()\n]+)\)$/) {
+	    my $count = $1;
+	    my @coords = split ',', $2;
+	    push @{$compdraw{$comp}{'elems'}},
+		{type => 'multiline',
+		 count => $count,
+		 coords => \@coords};
+	} elsif($st == 2 &&
+		/^MCDISPLAY: circle\('([xyzXYZ]{2})',([-+0-9.eE]+),([-+0-9.eE]+),([-+0-9.eE]+),([-+0-9.eE]+)\)$/) {
+	    my ($plane,$x,$y,$z,$r) = ($1,$2,$3,$4,$5);
+	    # Make a circle using a 25-order multiline.
+	    my @coords = ();
+	    for(my $i = 0; $i <= 24; $i++) {
+		my $a = $r*cos(2*3.1415927/24*$i);
+		my $b = $r*sin(2*3.1415927/24*$i);
+		my ($x1,$y1,$z1) = ($x,$y,$z);
+		if($plane =~ /xy|yx/i) {
+		    $x1 += $a;
+		    $y1 += $b;
+		} elsif($plane =~ /xz|zx/i) {
+		    $x1 += $a;
+		    $z1 += $b;
+		} elsif($plane =~ /yz|zy/i) {
+		    $y1 += $a;
+		    $z1 += $b;
+		} else {
+		    die "Bad plane specifier in circle: '$plane'";
+		}
+		push @coords, $x1, $y1, $z1;
+	    }
+	    push @{$compdraw{$comp}{'elems'}},
+		{type => 'multiline',
+		 count => 25,
+		 coords => \@coords};
+	} elsif($st == 2 && /^MCDISPLAY: end$/) {
+	    $st = 1;		# End of component graphics representation
 	} elsif($st == 1 && /^INSTRUMENT END:/) {
-	    $st = 2;
+	    $st = 100;
 	    last;
 	} else {
 	    print;
 	}
     }
-    exit if($st != 2);		# Stop when EOF seen before instrument end.
+    exit if($st != 100);	# Stop when EOF seen before instrument end.
     return $#components + 1;
 }
 
@@ -59,6 +107,35 @@ sub make_instrument {
 	@U = ($T[3], $T[4], $T[5], $T[6], $T[7], $T[8], $T[9], $T[10], $T[11]);
 	$ori[$i] = \@U;
 	$comp[$i] = $c;
+	# Now transform coordinates for component graphics representations.
+	if($compdraw{$c}) {
+	    my $magX = $compdraw{$c}{'magX'};
+	    my $magY = $compdraw{$c}{'magY'};
+	    my $magZ = $compdraw{$c}{'magZ'};
+	    foreach $elem (@{$compdraw{$c}{'elems'}}) {
+		if($elem->{'type'} eq 'multiline') {
+		    my @coords = @{$elem->{'coords'}};
+		    my @xs = ();
+		    my @ys = ();
+		    my @zs = ();
+		    my ($xv,$yv,$zv);
+		    while(@coords) {
+			$xv = shift(@coords);
+			$yv = shift(@coords);
+			$zv = shift(@coords);
+			$xv *= $magnification if $magX;
+			$yv *= $magnification if $magY;
+			$zv *= $magnification if $magZ;
+			push @xs, ($xv*$T[3] + $yv*$T[6] + $zv*$T[9]  + $T[0]);
+			push @ys, ($xv*$T[4] + $yv*$T[7] + $zv*$T[10] + $T[1]);
+			push @zs, ($xv*$T[5] + $yv*$T[8] + $zv*$T[11] + $T[2]);
+		    }
+		    $elem->{'X'} = \@xs;
+		    $elem->{'Y'} = \@ys;
+		    $elem->{'Z'} = \@zs;
+		}
+	    }
+	}
 	$i++;
     }
     %instr = ('x' => \@x, 'y' => \@y, z => \@z,
@@ -77,6 +154,9 @@ sub transform {
     } else {
 	my ($nx, $ny, $nz, $nvx, $nvy, $nvz, $nt, $nph1, $nph2);
 	my @T = @{$transformations{$comp}};
+	$x *= $magnification if $compdraw{$comp} && $compdraw{$comp}{'magX'};
+	$y *= $magnification if $compdraw{$comp} && $compdraw{$comp}{'magY'};
+	$z *= $magnification if $compdraw{$comp} && $compdraw{$comp}{'magZ'};
 	$nx = $x*$T[3] + $y*$T[6] + $z*$T[9] + $T[0];
 	$ny = $x*$T[4] + $y*$T[7] + $z*$T[10] + $T[1];
 	$nz = $x*$T[5] + $y*$T[8] + $z*$T[11] + $T[2];
@@ -88,6 +168,16 @@ sub transform {
 }
 
 
+sub get_inspect_pos {
+    my ($inspect, @comps) = @_;
+    return 0 unless $inspect;
+    for(my $i = 0; $i < @comps; $i++) {
+	return $i if $comps[$i] eq $inspect;
+    }
+    die "Error: Inspected component $inspect not part of instrument?";
+}
+
+
 sub read_neutron {
     my ($in) = @_;
     my (@x, @y, @z, @vx, @vy, @vz, @t, @ph1, @ph2, @ncomp);
@@ -96,15 +186,21 @@ sub read_neutron {
 
     $st = 0;
     $i = 0;
+    my $dropit = 1;		# Flag to drop uninteresting neutron states.
     while(<$in>) {
 	if($st == 0 && /^ENTER:/) {
 	    # Neutron enters instrument.
 	    $st = 1;
-	} elsif($st == 1 && /^COMP:\s*"([a-zA-Z0-9_]+)"\s*$/) {
+	} elsif($st == 0 && /^STATE:/) {
+	    # State after leaving - should probably be removed in McStas.
+	    next;
+	} elsif($st == 1 && /^COMP:\s*"([a-zA-Z0-9_Ê¯Â∆ÿ≈]+)"\s*$/) {
 	    # Neutron enters component local coordinate system.
 	    $comp = $1;
+	    $dropit = 1;	# Drop the first state (entry point).
 	} elsif($st == 1 && /^STATE:(.*)$/) {
 	    # Neutron state.
+	    $dropit = 0, next if $dropit; # Skip entry point
 	    ($x[$i], $y[$i], $z[$i],
 	     $vx[$i], $vy[$i], $vz[$i],
 	     $t[$i], $ph1[$i], $ph2[$i]) = split ",", $1;
@@ -116,6 +212,9 @@ sub read_neutron {
 			   $t[$i], $ph1[$i], $ph2[$i]);
 	    $ncomp[$i] = $comp;
 	    $i++;
+	} elsif($st == 1 && /^ABSORB:/) {
+	    # Neutron was absorbed.
+	    next;		# No special action needed.
 	} elsif($st == 1 && /^LEAVE:/) {
 	    # Neutron leaves instrument.
 	    $st = 2;
@@ -135,7 +234,7 @@ sub read_neutron {
     
 
 sub plot_components {
-    my ($rx, $ry, $rori, $rdis) = @_;
+    my ($rx, $ry, $rori, $rdis, $axis1, $axis2) = @_;
     my (@x, @y, @ori);
     my ($i, $col);
 
@@ -145,13 +244,22 @@ sub plot_components {
 
     pgsci(2);
     pgline($#x + 1, \@x, \@y);
-    pgpt($#x + 1, \@x, \@y, 2);
+    pgpt($#x + 1, \@x, \@y, 20);
     $col = 4;
     for($i = 0; $i <= $#components; $i++) {
+	my $comp = $components[$i];
 	pgsci($col++);
 	$col = 4 if $col > 15;
-	pgsch(1.4);
-	pgpt(1, $x[$i], $y[$i], 26);
+	if($compdraw{$comp}) {
+	    foreach $elem (@{$compdraw{$comp}{'elems'}}) {
+		if($elem->{'type'} eq 'multiline') {
+		    pgline($elem->{'count'}, $elem->{$axis1}, $elem->{$axis2});
+		}
+	    }
+	} else {
+	    pgsch(1.4);
+	    pgpt(1, $x[$i], $y[$i], 26);
+	}
 #	pgsch(1.1);
 #	pgtext($x[$i], $y[$i], $components[$i]);
     }
@@ -169,18 +277,29 @@ sub plot_neutron {
     pgline($#x + 1, \@x, \@y);
     # Show component entry/exit points in same colour as respective component.
     $i = 0;
-    pgsci(2);
-    pgpt(1, $x[$i], $y[$i], 17); # First point.
-    $i++;
     $col = 4;
     while($i <= $#x) {
 	pgsci($col++);
 	$col = 4 if $col > 15;
-	# Entry point. Don't plot, since it usually coincides with last exit point.
-	$i++;
 	# Exit point.
 	pgpt(1, $x[$i], $y[$i], 17);
 	$i++;
+    }
+}
+
+
+sub show_comp_names {
+    my ($rinstr) = @_;
+    my %instr = %$rinstr;
+    my @comps = @{$instr{'comp'}};
+    my $count = @comps;
+    $count = 8 if $count < 8;
+    my $col = 4;
+    pgsch(25/$count);
+    for(my $i = 0; $i < @comps; $i++) {
+	pgsci($col++);
+	$col = 4 if $col > 15;
+	pgmtxt('RV', 0.2, 1 - ($i+0.5)/$count, 0.0, $comps[$i]);
     }
 }
 
@@ -216,7 +335,10 @@ sub plot_instrument {
     pgsch(1.4);
     pgenv($xmin, $xmax, $zmin, $zmax, 1, 0);
     pglab("X Axis", "Z Axis", "X-Z view");
-    plot_components($instr{'x'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'});
+    show_comp_names($rinstr);
+    pgsch(1.4);
+    plot_components($instr{'x'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'},
+		    'X', 'Z');
     plot_neutron($neutron{'x'}, $neutron{'z'}, $neutron{'vx'}, $neutron{'vz'});
 
     if($multi_view) {
@@ -225,7 +347,8 @@ sub plot_instrument {
 	pgsch(1.4);
 	pgenv($ymin, $ymax, $zmin, $zmax, 1, 0);
 	pglab("Y Axis", "Z Axis", "Y-Z view");
-	plot_components($instr{'y'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'});
+	plot_components($instr{'y'}, $instr{'z'}, $instr{'ori'}, $instr{'dis'},
+			'Y', 'Z');
 	plot_neutron($neutron{'y'}, $neutron{'z'}, $neutron{'vy'}, $neutron{'vz'});
 
 	# Now show instrument viewed in direction of z axis.
@@ -233,7 +356,8 @@ sub plot_instrument {
 	pgsch(1.4);
 	pgenv($xmin, $xmax, $ymin, $ymax, 1, 0);
 	pglab("X Axis", "Y Axis", "X-Y view");
-	plot_components($instr{'x'}, $instr{'y'}, $instr{'ori'}, $instr{'dis'});
+	plot_components($instr{'x'}, $instr{'y'}, $instr{'ori'}, $instr{'dis'},
+			'X', 'Y');
 	plot_neutron($neutron{'x'}, $neutron{'y'}, $neutron{'vx'}, $neutron{'vy'});
 
 	pgpage;
@@ -253,9 +377,24 @@ sub plot_instrument {
 # Attempt to locate pgplot directory if unset.
 $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
 
-if(!($ARGV[0] cmp "-m") || !($ARGV[0] cmp "--multi")) {
-    $multi_view = 1;
-    shift;
+# Check command line arguments.
+
+undef $inspect;
+for(;;) {
+    if(($ARGV[0] eq "-m") || ($ARGV[0] eq "--multi")) {
+	$multi_view = 1;
+	shift;
+    } elsif(($ARGV[0] =~ /^-z([-0-9+.eE]+)$/) ||
+	    ($ARGV[0] =~ /^--zoom=([-0-9+.eE]+)$/)) {
+	$magnification = ($1 == 0 ? 1 : $1);
+	shift;
+    } elsif(($ARGV[0] =~ /^-i([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)$/) ||
+	    ($ARGV[0] =~ /^--inspect=([a-zA-ZÊ¯Â∆ÿ≈0-9_]+)$/)) {
+	$inspect = $1;
+	shift;
+    } else {
+	last;
+    }
 }
 
 if($multi_view) {
@@ -277,15 +416,15 @@ printf STDERR "Starting simulation '$cmdline' ...\n";
 open(IN, "$cmdline |") || die "Could not run simulation\n";
 
 $numcomp = read_instrument(IN);
-print "Number of components: $numcomp\n";
+$inspect_pos = get_inspect_pos($inspect, @components);
 %instr = make_instrument;
 
 while(!eof(IN)) {
     %neutron = read_neutron(IN);
-
     plot_instrument($instr{'xmin'},$instr{'xmax'},$instr{'ymin'},
 		    $instr{'ymax'},$instr{'zmin'},$instr{'zmax'},
-		    \%instr, \%neutron);
+		    \%instr, \%neutron)
+	if @{$neutron{'comp'}} > $inspect_pos;
 }
 
 close(IN);
