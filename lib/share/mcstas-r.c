@@ -1,14 +1,19 @@
 /*******************************************************************************
 * Runtime system for McStas.
 *
-* 	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+* 	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 * 	File name: mcstas-r.c
 *
 * 	Author: K.N.			Aug 27, 1997
 *
-* 	$Id: mcstas-r.c,v 1.14 1998-10-01 08:12:26 kn Exp $
+* 	$Id: mcstas-r.c,v 1.15 1998-10-02 08:38:27 kn Exp $
 *
 * 	$Log: not supported by cvs2svn $
+* 	Revision 1.14  1998/10/01 08:12:26  kn
+* 	Support for embedding the file in the output from McStas.
+* 	Added mcstas_main() function.
+* 	Added support for command line arguments.
+*
 * 	Revision 1.13  1998/09/23 13:51:35  kn
 * 	McStas now uses its own random() implementation (unless
 * 	USE_SYSTEM_RANDOM is defined).
@@ -53,7 +58,7 @@
 * 	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #include <math.h>
@@ -226,6 +231,17 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
   *vy = c.y;
   *vz = c.z;
   /* ToDo: What to do about the spin? */
+}
+
+
+double mcestimate_error(int N, double p1, double p2)
+{
+  double pmean, n1;
+  if(N <= 1)
+    return 0;
+  pmean = p1 / N;
+  n1 = N - 1;
+  return sqrt((N/n1)*(p2 - pmean*pmean));
 }
 
 

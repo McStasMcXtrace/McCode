@@ -1,14 +1,19 @@
 /*******************************************************************************
 * Runtime system for McStas.
 *
-*	Project: Monte Carlo Simulation of Tripple Axis Spectrometers
+*	Project: Monte Carlo Simulation of Triple Axis Spectrometers
 *	File name: mcstas-r.h
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.18 1998-10-01 08:12:42 kn Exp $
+*	$Id: mcstas-r.h,v 1.19 1998-10-02 08:38:36 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.18  1998/10/01 08:12:42  kn
+*	Support for embedding the file in the output from McStas.
+*	Added mcstas_main() function.
+*	Added support for command line arguments.
+*
 *	Revision 1.17  1998/09/24 13:01:39  kn
 *	Minor conversion factor additions.
 *
@@ -69,7 +74,7 @@
 *	Initial revision
 *
 *
-* Copyright (C) Risoe National Laboratory, 1991-1997, All rights reserved
+* Copyright (C) Risoe National Laboratory, 1997-1998, All rights reserved
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
@@ -107,6 +112,9 @@ void mcfinally(void);
 
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnls1,mcnls2, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
+#define MC_GETPAR(comp, par) mcc ## comp ## _ ## par
+#define DETECTOR_OUT(p0,p1,p2) printf("Detector: %s_I=%g %s_ERR=%g\n", \
+	  mccompcurname, p1, mccompcurname, mcestimate_error(p0,p1,p2))
 
 #ifdef MC_TRACE_ENABLED
 #define DEBUG
