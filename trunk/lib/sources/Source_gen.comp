@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -215,6 +215,8 @@ INITIALIZE
     if (T3*I3 != 0)
       printf(", T3=%.1f K (%.2f AA)", T3, lambda0c);
     if (T1) printf("\n");
+    if (T1 && I1) printf("  Flux is dPhi/dLambda in [n/s/AA].\n");
+    else          printf("  Flux is Phi in [n/s].\n");
   }
   else
     if (verbose == -1)
