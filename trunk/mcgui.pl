@@ -232,6 +232,13 @@ sub new_sim_def_name {
     $current_sim_def = $name;
     # Strip any repeated "/" charactors (ie. "///" -> "/").
     $current_sim_def =~ s!//!/!g;
+    # On NON-Win32 platforms, replace ' ' by '\ ' to ensure correct
+    # handling of spaces in filenames... Unfortunately, this is a 
+    # more complicated matter on Win32 - has to be handled in each 
+    # subroutine... :(
+    if (!$Config{'osname'} eq 'MSWin32') {
+      $current_sim_def =~ s! !\ !g;
+    }
     # Strip any redundant leading "./".
     while($current_sim_def =~ m!^\./(.*)$!) {
 	$current_sim_def = $1;
@@ -705,7 +712,12 @@ sub menu_run_simulation {
 	    push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
 	    push @command, "--save" if ($newsi->{'Trace'} eq 1);
 	}
-	push @command, "$out_name";
+	# On Win32, we need quoting, in case of spaces in filename...
+	if ($Config{'osname'} eq 'MSWin32') {
+	  push @command, "\"$out_name\"";
+	} else {
+	  push @command, "$out_name";
+	}
 	push @command, "--ncount=$newsi->{'Ncount'}";
 	push @command, "--trace" if $newsi->{'Trace'};
 	push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
@@ -1159,7 +1171,9 @@ setup_menu($win);
 setup_cmdwin($win);
 
 if(@ARGV) {
-    open_instr_def($win, $ARGV[0]);
+    # Most likely, everything on the commandline is a filename... Join using
+    # spaces, e.g. mcgui.pl My Documents\My Simulation.instr
+    open_instr_def($win, join(' ',@ARGV));
 } else {
 #    menu_open($win);
 }
