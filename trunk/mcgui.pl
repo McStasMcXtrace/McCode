@@ -7,6 +7,7 @@ if($ENV{"MCSTAS"}) {
 }
 
 use strict;
+use FileHandle;
 use Tk;
 
 require "mcfrontlib.pl";
@@ -15,7 +16,8 @@ require "mcplotlib.pl";
 require "mcrunlib.pl";
 
 my $current_sim_file;
-my $current_sim_def = "opt_filter_1";
+my $current_sim_def;
+my $edit_control;
 
 sub is_erase_ok {
     my ($w) = @_;
@@ -27,11 +29,37 @@ sub menu_quit {
     $w->destroy;
 }
 
+sub read_file {
+    my ($f) = @_;
+    return undef unless $f && -r $f;
+    my $H = new FileHandle;
+    open($H, $f) || return undef;
+    local $/ = undef;		# Read whole file in one go
+    my $content = <$H>;
+    close($H);
+    return $content;
+}
+
 sub menu_open {
     my ($w) = @_;
     return 0 unless(is_erase_ok($w));
     my $file = $w->getOpenFile(-defaultextension => "instr",
 			       -title => "Select instrument file");
+    my $content = read_file($file);
+    if(!defined($content)) {
+	$w->messageBox(-message => "Failed to open file '$file'.",
+		       -title => "Open failed",
+		       -type => 'OK',
+		       -icon => 'error');
+	return 0;
+    }
+    
+    $edit_control->delete('0.0','end');
+    $edit_control->insert('0.0',$content);
+    $current_sim_def = $file;
+    $edit_control->see('0.0');
+    undef($current_sim_file);
+    return 1;	
 }
 
 sub menu_save {
@@ -152,7 +180,7 @@ sub setup_menu {
 
 sub setup_edit {
     my ($w) = @_;
-    my $e = $w->Text(-relief => 'sunken', -bd => '2', -setgrid => 'true',
+    my $e = $w->TextUndo(-relief => 'sunken', -bd => '2', -setgrid => 'true',
 		      -height => 30);
     my $s = $w->Scrollbar(-command => [$e, 'yview']);
     $e->configure(-yscrollcommand =>  [$s, 'set']);
@@ -160,6 +188,7 @@ sub setup_edit {
     $e->pack(-expand => 'yes', -fill => 'both');
     $e->insert('0.0', "");
     $e->mark('set', 'insert', '0.0');
+    $edit_control = $e;
 }
 
 # Check if simulation needs recompiling.
