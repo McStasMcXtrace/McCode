@@ -111,6 +111,10 @@ sub read_instrument_info {
 
 sub get_sim_info {
     my ($simprog) = @_;
+    # Needs quoting if this is Win32...
+    if ($Config{'osname'} eq 'MSWin32') {
+      $simprog="\"$simprog\"";
+    }
     use FileHandle;
     my $h = new FileHandle;
     open $h, "$simprog --info |" or die "Could not run simulation.";
@@ -225,7 +229,17 @@ sub get_out_file_next {
            ($force || !defined($c_age) || $c_age > $sim_age)) {
             &$printer("Translating instrument definition '$sim_def'" .
                       " into C ...");
-            my @inc = $v->{'dir'} ? ("-I", $v->{'dir'}) : ();
+	    # On Win32, quote the filenames...
+	    my $dir;
+	    if ($Config{'osname'} eq 'MSWin32') {
+	      $c_name="\"$c_name\"";
+	      $sim_def="\"$sim_def\"";
+	      $dir="\"$v->{'dir'}\"";
+	    } else { 
+	      # On other platforms, simply set $dir...
+	      $dir=$v->{'dir'};
+	    }
+            my @inc = $v->{'dir'} ? ("-I", $dir) : ();
             my $cmd = ["mcstas", @inc, "-t", "-o", $c_name, $sim_def];
             &$printer(join(" ", @$cmd));
             $v->{'stage'} = POST_MCSTAS;
@@ -252,6 +266,11 @@ sub get_out_file_next {
                 $ENV{'MCSTAS_CC'} : $MCSTAS::mcstas_config{CC};
             my $cflags = defined($ENV{'MCSTAS_CFLAGS'}) ?
                 $ENV{'MCSTAS_CFLAGS'} : $MCSTAS::mcstas_config{CFLAGS};
+	    # Needs quoting on MSWin32:
+	    if ($Config{'osname'} eq 'MSWin32') {
+	      $out_name="\"$out_name\"";
+	      $c_name="\"$c_name\"";
+	    }
             my $cmd = [$cc, split(' ', $cflags), "-o",
                        $out_name, $c_name, "-lm"];
             &$printer(join(" ", @$cmd));
