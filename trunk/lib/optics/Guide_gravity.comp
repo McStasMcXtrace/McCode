@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing pacxkage
+* McStas, neutron ray-tracing package
 *         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -27,7 +27,7 @@
 * window. The guide can be channeled (k,d parameters). The guide coating
 * specifications may be entered via different ways (global, or for
 * each wall m-value).
-* Wavyness may be specified either globally or for each mirror type.
+* Wavyness (random) may be specified either globally or for each mirror type.
 * Side chamfers (due to substrate processing) may be specified the same way.
 * The guide section may be splitted into nelements equivalent parts of length
 * l/nelements. Chamfers do apply in between these parts.
