@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.62 2004-09-21 12:25:03 farhi Exp $
+* $Id: mcstas-r.h,v 1.63 2004-11-30 16:14:47 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.62  2004/09/21 12:25:03  farhi
+*	Reorganised code so that I/O functions are includable easely (for mcformat.c)
+*	
 *	Revision 1.59  2004/09/03 14:19:14  farhi
 *	Correct invertion in mcformat specs structure
 *	
@@ -101,7 +104,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.62 $"
+#define MCSTAS_R_H "$Revision: 1.63 $"
 
 #include <math.h>
 #include <string.h>
@@ -144,6 +147,24 @@
 
 #ifndef MCSTAS_VERSION
 #define MCSTAS_VERSION "External Run-time"
+#endif
+
+#ifdef MC_PORTABLE
+#ifndef NOSIGNALS
+#define NOSIGNALS
+#endif
+#endif
+
+#ifdef MAC
+#ifndef NOSIGNALS
+#define NOSIGNALS
+#endif
+#endif
+
+#ifdef USE_MPI
+#ifndef NOSIGNALS
+#define NOSIGNALS
+#endif
 #endif
 
 /* I/O section part ========================================================= */
@@ -272,13 +293,12 @@ void   mcsiminfo_close(void);
 
 #ifndef MCSTAS_H
 
-#ifndef MC_PORTABLE
-#ifndef MAC
-#ifndef WIN32
+#ifndef NOSIGNALS
 #include <signal.h>
-#endif /* !MAC */
-#endif /* !WIN32 */
-#endif /* MC_PORTABLE */
+#define SIG_MESSAGE(msg) strcpy(mcsig_message, msg);
+#else
+#define SIG_MESSAGE(msg)
+#endif /* !NOSIGNALS */
 
 
 
@@ -362,6 +382,7 @@ void   mcsiminfo_close(void);
   mcstore_neutron(mccomp_storein,index, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
 #define RESTORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p) \
   mcrestore_neutron(mccomp_storein,index, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
+  
 
 #define mcPROP_DT(dt) \
   do { \
@@ -416,6 +437,30 @@ void   mcsiminfo_close(void);
     mcnly += mcnlvy*mc_dt; \
     mcnlt += mc_dt; \
     mcnlz = 0; \
+  } while(0)
+  
+#define PROP_X0 \
+  do { \
+    double mc_dt; \
+    if(mcnlvx == 0) ABSORB; \
+    mc_dt = -mcnlx/mcnlvx; \
+    if(mc_dt < 0) ABSORB; \
+    mcnly += mcnlvy*mc_dt; \
+    mcnlz += mcnlvz*mc_dt; \
+    mcnlt += mc_dt; \
+    mcnlx = 0; \
+  } while(0)
+
+#define PROP_Y0 \
+  do { \
+    double mc_dt; \
+    if(mcnlvy == 0) ABSORB; \
+    mc_dt = -mcnly/mcnlvy; \
+    if(mc_dt < 0) ABSORB; \
+    mcnlx += mcnlvx*mc_dt; \
+    mcnlz += mcnlvz*mc_dt; \
+    mcnlt += mc_dt; \
+    mcnly = 0; \
   } while(0)
 
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
