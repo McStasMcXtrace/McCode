@@ -2,6 +2,7 @@
 latex tutorial
 latex tutorial
 latex2html -local_icons tutorial
+mv tutorial html
 dvips tutorial.dvi -o tutorial.ps
 rm tutorial.aux
 rm tutorial.log
