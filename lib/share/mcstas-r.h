@@ -6,9 +6,12 @@
 *
 *	Author: K.N.			Aug 29, 1997
 *
-*	$Id: mcstas-r.h,v 1.25 1999-03-18 07:33:09 kn Exp $
+*	$Id: mcstas-r.h,v 1.26 1999-03-23 09:45:30 kn Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.25  1999/03/18 07:33:09  kn
+*	Handle polarised neutrons.
+*
 *	Revision 1.24  1999/03/16 13:53:11  kn
 *	Give the variable name for the X axis in the detector output.
 *
@@ -221,7 +224,7 @@ void mc_srandom (unsigned int x);
 #define randminmax(min,max) ( rand0max((max)-(min)) - (min) )
 
 #define PROP_X0 \
-  { \
+  do { \
     double mc_dt; \
     if(mcnlvx == 0) ABSORB; \
     mc_dt = -mcnlx/mcnlvx; \
@@ -230,10 +233,10 @@ void mc_srandom (unsigned int x);
     mcnlz += mcnlvz*mc_dt; \
     mcnlt += mc_dt; \
     mcnlx = 0; \
-  }
+  } while(0)
 
 #define PROP_Y0 \
-  { \
+  do { \
     double mc_dt; \
     if(mcnlvy == 0) ABSORB; \
     mc_dt = -mcnly/mcnlvy; \
@@ -242,10 +245,10 @@ void mc_srandom (unsigned int x);
     mcnlz += mcnlvz*mc_dt; \
     mcnlt += mc_dt; \
     mcnly = 0; \
-  }
+  } while(0)
 
 #define PROP_Z0 \
-  { \
+  do { \
     double mc_dt; \
     if(mcnlvz == 0) ABSORB; \
     mc_dt = -mcnlz/mcnlvz; \
@@ -254,30 +257,30 @@ void mc_srandom (unsigned int x);
     mcnly += mcnlvy*mc_dt; \
     mcnlt += mc_dt; \
     mcnlz = 0; \
-  }
+  } while(0)
 
 #define PROP_DT(dt) \
-  { \
+  do { \
     mcnlx += mcnlvx*(dt); \
     mcnly += mcnlvy*(dt); \
     mcnlz += mcnlvz*(dt); \
     mcnlt += (dt); \
-  }
+  } while(0)
 
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
-  { \
+  do { \
     double mcvp_tmpx, mcvp_tmpy, mcvp_tmpz; \
     mcvp_tmpx = (y1)*(z2) - (y2)*(z1); \
     mcvp_tmpy = (z1)*(x2) - (z2)*(x1); \
     mcvp_tmpz = (x1)*(y2) - (x2)*(y1); \
     (x) = mcvp_tmpx; (y) = mcvp_tmpy; (z) = mcvp_tmpz; \
-  }
+  } while(0)
 
 #define scalar_prod(x1, y1, z1, x2, y2, z2) \
   ((x1)*(x2) + (y1)*(y2) + (z1)*(z2))
 
 #define NORM(x,y,z) \
-  { \
+  do { \
     double mcnm_tmp = sqrt((x)*(x) + (y)*(y) + (z)*(z)); \
     if(mcnm_tmp != 0.0) \
     { \
@@ -285,10 +288,10 @@ void mc_srandom (unsigned int x);
       (y) /= mcnm_tmp; \
       (z) /= mcnm_tmp; \
     } \
-  }
+  } while(0)
 
 #define rotate(x, y, z, vx, vy, vz, phi, ax, ay, az) \
-  { \
+  do { \
     double mcrt_tmpx = (ax), mcrt_tmpy = (ay), mcrt_tmpz = (az); \
     double mcrt_vp, mcrt_vpx, mcrt_vpy, mcrt_vpz; \
     double mcrt_vnx, mcrt_vny, mcrt_vnz, mcrt_vn1x, mcrt_vn1y, mcrt_vn1z; \
@@ -311,7 +314,7 @@ void mc_srandom (unsigned int x);
     (x) = mcrt_vpx + mcrt_vn1x; \
     (y) = mcrt_vpy + mcrt_vn1y; \
     (z) = mcrt_vpz + mcrt_vn1z; \
-  }
+  } while(0)
 
 Coords coords_set(MCNUM x, MCNUM y, MCNUM z);
 Coords coords_add(Coords a, Coords b);
