@@ -4,6 +4,7 @@
 @rem Requires 
 @rem   c compiler (defaults to gcc)
 @rem   includes (defaults to Dev-Cpp standard location
+@rem   runscilab on path (for building plotlib)
 @rem
 @rem *** Start of User configuration ***
 @set CC=c:\Dev-Cpp\bin\gcc.exe
@@ -15,6 +16,11 @@
 @set /P INCLUDE=Set INCLUDE variable (default is %INCLUDE%): 
 @set LIB="C:/Dev-Cpp/lib"
 @set /P LIB=Set LIB variable (default is %LIB%): 
+@echo ...
+@echo ...
+@set DOPLOTLIB="no"
+@echo NOTE: Building plotlib requires installed scilab on windows path!
+@set /P DOPLOTLIB=Build plotlib binaries? (yes/no - default is %DOPLOTLIB%) 
 @set DOZIP="0"
 @rem *** End of User configuration ***
 @rem
@@ -48,6 +54,12 @@
 
 %CC% symtab.o cogen.o coords.o debug.o file.o instrument.tab.o lex.yy.o list.o memory.o port.o cexp.o  -o "mcstas.exe" -L%LIB%  -I%INCLUDE%  
 
+@if %DOPLOTLIB%=="no" goto theend
+@echo running scilab for creating the plotlib library...
+cd lib\tools\scilab\plotlib
+runscilab -nw -f buildme.sci
+cd ..\..\..\..
+:theend
 
 @if %DOZIP%=="0" goto end
 @echo creating zipfile...
