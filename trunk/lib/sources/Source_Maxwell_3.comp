@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann 
 * Date: March 2001
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -28,18 +28,22 @@
 * %P
 * Input parameters:
 *
-* size:   (m)    Edge of cube shaped source
+* height: (m)    Width of rectangular source
+* width:  (m)    Height of rectangular source
 * l_low:  (AA)   Lower edge of lambda distribution
 * l_high: (AA)   Upper edge of lambda distribution
 * dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
 * xw:     (m)    Width of focusing rectangle
 * yh:     (m)    Height of focusing rectangle
 * T1:     (K)    1st temperature of thermal distribution
-* T2:     (K)    2nd temperature of  - - -
-* T3:     (K)    3nd temperature of  - - -
 * I1:     (*)    l-integrated flux, 1 (in flux units, see above)
-* I2:     (*)    l-integrated flux, 2  - - -
+*
+* Optional parameters:
+* T2:     (K)    2nd temperature of thermal distribution
+* T3:     (K)    3nd temperature of  - - -
+* I2:     (*)    l-integrated flux, 2 (in flux units, see above)
 * I3:     (*)    l-integrated flux, 3  - - -
+* size:   (m)    Edge of cube shaped source (for backward compatibility)
 *
 * Example:  PSI cold source T1=150.42 K / 2.51 AA     I1 = 3.67 E11
 *                           T2=38.74 K / 4.95 AA      I2 = 3.64 E11
@@ -49,8 +53,8 @@
 
 DEFINE COMPONENT Source_Maxwell_3
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh, 
-                    T1, T2, T3, I1, I2, I3)
+SETTING PARAMETERS (size=0, height=0, width=0, l_low, l_high, dist, xw, yh, 
+                    T1, T2=300, T3=300, I1, I2=0, I3=0)
 OUTPUT PARAMETERS (M)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -70,8 +74,11 @@ DECLARE
 
 INITIALIZE
 %{
+  if (!size==0) {
+    width = height = size;
+  }
   l_range = l_high-l_low;
-  w_mult = size*size*1.0e4;     /* source area correction */
+  w_mult = width*height*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1/mcget_ncount();   /* correct for # neutron rays */
 %}
@@ -82,6 +89,8 @@ TRACE
 
   t=0;
   z=0;
+  x = 0.5*width*randpm1();
+  y = 0.5*height*randpm1();         /* Choose initial position */
  
   randvec_target_rect(&xf, &yf, &r, &w_focus, 
         0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
