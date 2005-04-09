@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann 
 * Date: March 2001
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -111,11 +111,11 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
-  multiline(5, -(double)dist/2.0, -(double)dist/2.0, 0.0,
-                (double)dist/2.0, -(double)dist/2.0, 0.0,
-                (double)dist/2.0,  (double)dist/2.0, 0.0,
-               -(double)dist/2.0,  (double)dist/2.0, 0.0,
-               -(double)dist/2.0, -(double)dist/2.0, 0.0); 
+  multiline(5, -(double)xw/2.0, -(double)yh/2.0, 0.0,
+                (double)xw/2.0, -(double)yh/2.0, 0.0,
+                (double)xw/2.0,  (double)yh/2.0, 0.0,
+               -(double)xw/2.0,  (double)yh/2.0, 0.0,
+               -(double)xw/2.0, -(double)yh/2.0, 0.0); 
 %}
 
 END
