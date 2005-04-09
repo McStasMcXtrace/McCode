@@ -8,7 +8,7 @@
 * %I
 * Written by: KL
 * Date: September 28, 2001
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -82,8 +82,8 @@ TRACE
       if (t < tt_1 && t > tt_0)
       {
         i = floor((lambda - lambda_0)*nlam/(lambda_1 - lambda_0));
-        j = floor(t*nt/(tt_1-tt_0));
-/*  printf("tt_1, tt_0, nt %g %g %i t j %g %i",tt_0,tt_1,nt,t,j);
+        j = floor((t-tt_0)*nt/(tt_1-tt_0));
+/*  printf("tt_0, tt_1, nt %g %g %i t j %g %i \n",tt_0,tt_1,nt,t,j);
 */        TOFL_N[j][i]++;
         TOFL_p[j][i] += p;
         TOFL_p2[j][i] += p*p;
