@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 
-DEFINE COMPONENT Slit_insignificance
+DEFINE COMPONENT Slit
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, radius=0, cut=0)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
