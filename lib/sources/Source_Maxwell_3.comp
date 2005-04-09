@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann 
 * Date: March 2001
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -61,6 +61,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
   double l_range, w_mult;
+  double w_source, h_source;
 
   double M(double l, double temp)
 /* A normalised Maxwellian distribution : Integral over all l = 1 */
@@ -75,10 +76,13 @@ DECLARE
 INITIALIZE
 %{
   if (!size==0) {
-    width = height = size;
+    w_source = h_source = size;
+  } else {
+    w_source = width;
+    h_source = height;
   }
   l_range = l_high-l_low;
-  w_mult = width*height*1.0e4;     /* source area correction */
+  w_mult = w_source*h_source*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1/mcget_ncount();   /* correct for # neutron rays */
 %}
@@ -89,8 +93,8 @@ TRACE
 
   t=0;
   z=0;
-  x = 0.5*width*randpm1();
-  y = 0.5*height*randpm1();         /* Choose initial position */
+  x = 0.5*w_source*randpm1();
+  y = 0.5*h_source*randpm1();         /* Choose initial position */
  
   randvec_target_rect(&xf, &yf, &r, &w_focus, 
         0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
