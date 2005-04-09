@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -50,13 +50,12 @@
 DEFINE COMPONENT Sans_spheres
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_a = 50, qmax = 0.3 ,xwidth=0.01, yheight=0.01, zthick=0.005)
-OUTPUT PARAMETERS (my_s_v2, my_a_v, Pow_tx, Pow_ty, Pow_tz)
+OUTPUT PARAMETERS (my_s_v2, my_a_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
   double my_s_pre, my_a_v, q_v, q;
-  double Pow_tx, Pow_ty, Pow_tz;  /* target coords */
 %}
 INITIALIZE
 %{
