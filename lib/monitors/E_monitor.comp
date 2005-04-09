@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -39,6 +39,9 @@
 * E_N:      Array of neutron counts
 * E_p:      Array of neutron weight counts
 * E_p2:     Array of second moments
+* S_p:      Sum of neutron weight counts
+* S_pE:     Sum of weighted energies
+* S_pE2:    Sum of weighted energy squared
 *
 * %E
 *******************************************************************************/
@@ -46,12 +49,13 @@
 DEFINE COMPONENT E_monitor
 DEFINITION PARAMETERS (nchan=20, filename)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, Emin, Emax)
-OUTPUT PARAMETERS (E_N, E_p, E_p2)
+OUTPUT PARAMETERS (E_N, E_p, E_p2, S_p, S_pE, S_pE2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
     double E_N[nchan];
     double E_p[nchan], E_p2[nchan];
+    double S_p, S_pE, S_pE2;
   %}
 INITIALIZE
   %{
@@ -63,6 +67,7 @@ INITIALIZE
       E_p[i] = 0;
       E_p2[i] = 0;
     }
+    S_p = S_pE = S_pE2 = 0;
   %}
 TRACE
   %{
@@ -73,6 +78,10 @@ TRACE
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
       E = VS2E*(vx*vx + vy*vy + vz*vz);
+
+      S_p += p;
+      S_pE += p*E;
+      S_pE2 += p*E*E;
 
       i = floor((E-Emin)*nchan/(Emax-Emin));
       if(i >= 0 && i < nchan)
@@ -93,6 +102,8 @@ SAVE
         "E", Emin, Emax, nchan,
         &E_N[0],&E_p[0],&E_p2[0],
         filename);
+    printf("<E> : %g meV , E-width : %g meV \n",
+     S_pE/S_p,sqrt(S_pE2/S_p - S_pE*S_pE/(S_p*S_p)) );
   %}
 
 MCDISPLAY
