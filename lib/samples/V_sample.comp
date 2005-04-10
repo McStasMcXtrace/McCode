@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -38,7 +38,6 @@
 * radius_i  : Inner radius of sample in (x,z) plane (m)         
 * radius_o  : Outer radius of sample in (x,z) plane (m)         
 * h         : Height of sample y direction (m)
-* pack      : Packing factor (1)
 * focus_r   : Radius of disk containing target. (m)
 * target_x  :
 * target_y  : position of target to focus at (m)
@@ -52,6 +51,10 @@
 * focus_yh  : vert.. dimension of a rectangular area (m)
 * focus_aw  : horiz. angular dimension of a rectangular area (deg)
 * focus_ah  : vert.. angular dimension of a rectangular area (deg)
+* sig_a     : Absorbtion cross section pr. unit cell (barns)
+* sig_i     : Incoherent scattering cross section pr. unit cell (barns)
+* V0        : Unit cell volume (AA^3)
+* pack      : Packing factor (1)
 * target_index: relative index of component to focus at, e.g. next is +1 (1).
 *
 * Variables calculated in the component
@@ -70,7 +73,7 @@ DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0.035, pack = 1, 
   target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0, 
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, int target_index=0)
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=(3.024*3.024*3.024)/2, int target_index=0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -99,11 +102,11 @@ INITIALIZE
     else VarsV.isrect=1; }
   else VarsV.isrect=0;
  
-  VarsV.sigma_a=5.08; /* in barns */
-  VarsV.sigma_i=4.935;
-  VarsV.rho = (2*pack/(3.024*3.024*3.024));
+  VarsV.sigma_a=sig_a;
+  VarsV.sigma_i=sig_i;
+  VarsV.rho = (pack/V0);
   VarsV.my_s=(VarsV.rho * 100 * VarsV.sigma_i);
-  VarsV.my_a_v=(VarsV.rho * 100 * VarsV.sigma_a * 2200);
+  VarsV.my_a_v=(VarsV.rho * 100 * VarsV.sigma_a);
 
   /* now compute target coords if a component index is supplied */
   if (target_index)
@@ -202,7 +205,7 @@ TRACE
       l_o = v*dt;
     }
 
-    my_a = VarsV.my_a_v/v;
+    my_a = VarsV.my_a_v*(2200/v);
     p *= l_full*VarsV.my_s*exp(-(my_a+VarsV.my_s)*(l_i+l_o));
     p /= 4*PI/solid_angle;     
     SCATTER;
