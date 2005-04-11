@@ -21,61 +21,65 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.24 2005-03-14 10:48:54 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.25 2005-04-11 11:40:44 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
-*	Revision 1.23  2005/02/25 15:26:02  farhi
-*	Removed usage of round function
-*	made Guide_honeycomb work with gravitation
-*	
-*	Revision 1.22  2005/02/22 16:11:03  farhi
-*	Now saving absolute position of monitors as "position" field in header
-*	Useful for plotting e.g. flux vs distance
+* $Log: not supported by cvs2svn $
+* Revision 1.24  2005/03/14 10:48:54  farhi
+* Added warning when setting capture flux (meaningful with integral flux) for
+* more than 1 bin.
 *
-*	Revision 1.21  2005/02/21 16:05:13  farhi
-*	Misprint correction
+* Revision 1.23  2005/02/25 15:26:02  farhi
+* Removed usage of round function
+* made Guide_honeycomb work with gravitation
 *
-*	Revision 1.20  2005/02/21 12:38:03  farhi
-*	Removed warning in Monitor_nD for global scope keywords in options
+* Revision 1.22  2005/02/22 16:11:03  farhi
+* Now saving absolute position of monitors as "position" field in header
+* Useful for plotting e.g. flux vs distance
 *
-*	Revision 1.19  2005/02/17 16:06:32  farhi
-*	Added 'per bin' to labels if more than 1 bin, and a message for unknow keywords found in options parameter. Requested by R. Cubitt.
+* Revision 1.21  2005/02/21 16:05:13  farhi
+* Misprint correction
 *
-*	Revision 1.18  2004/11/16 13:36:35  farhi
-*	Paging update
+* Revision 1.20  2005/02/21 12:38:03  farhi
+* Removed warning in Monitor_nD for global scope keywords in options
 *
-*	Revision 1.17  2004/09/01 13:54:18  farhi
-*	Corrected bug when using list=EVNTS large values written as float, read as int.
-*	E.g. 1e6 gave 1 as number of events to save !
+* Revision 1.19  2005/02/17 16:06:32  farhi
+* Added 'per bin' to labels if more than 1 bin, and a message for unknow keywords found in options parameter. Requested by R. Cubitt.
 *
-*	Revision 1.16  2004/06/30 12:13:47  farhi
-*	For lists (and Res_monitor), uses 'list' 'no header' and 'no footer' options
-*	in mcformat.Name so that catenated file does contain only one instance of
-*	footer and header.
+* Revision 1.18  2004/11/16 13:36:35  farhi
+* Paging update
 *
-*	Revision 1.15  2004/02/26 12:55:41  farhi
-*	Handles 0d monitor outputs for bins=0, and limits are restrictive (i.e. neutron must be within all limits to be stored in monitor)
+* Revision 1.17  2004/09/01 13:54:18  farhi
+* Corrected bug when using list=EVNTS large values written as float, read as int.
+* E.g. 1e6 gave 1 as number of events to save !
 *
-*	Revision 1.14  2004/02/04 18:01:12  farhi
-*	Use hdiv=theta and vdiv=phi for banana.
+* Revision 1.16  2004/06/30 12:13:47  farhi
+* For lists (and Res_monitor), uses 'list' 'no header' and 'no footer' options
+* in mcformat.Name so that catenated file does contain only one instance of
+* footer and header.
 *
-*	Revision 1.13  2003/08/26 12:33:27  farhi
-*	Corrected computation of angle PHI (was projected on vertical plane)
+* Revision 1.15  2004/02/26 12:55:41  farhi
+* Handles 0d monitor outputs for bins=0, and limits are restrictive (i.e. neutron must be within all limits to be stored in monitor)
 *
-*	Revision 1.12  2003/04/15 16:01:28  farhi
-*	incoming/outgoing syntax mismatch correction
+* Revision 1.14  2004/02/04 18:01:12  farhi
+* Use hdiv=theta and vdiv=phi for banana.
 *
-*	Revision 1.11  2003/04/15 15:45:56  farhi
-*	outgoing time is default (vs. incoming)
+* Revision 1.13  2003/08/26 12:33:27  farhi
+* Corrected computation of angle PHI (was projected on vertical plane)
 *
-*	Revision 1.10  2003/04/09 15:49:25  farhi
-*	corrected bug when no signal and auto limits requested
+* Revision 1.12  2003/04/15 16:01:28  farhi
+* incoming/outgoing syntax mismatch correction
 *
-*	Revision 1.9  2003/02/18 09:11:36  farhi
-*	Corrected binary format for lists
+* Revision 1.11  2003/04/15 15:45:56  farhi
+* outgoing time is default (vs. incoming)
+*
+* Revision 1.10  2003/04/09 15:49:25  farhi
+* corrected bug when no signal and auto limits requested
+*
+* Revision 1.9  2003/02/18 09:11:36  farhi
+* Corrected binary format for lists
 *
 * Revision 1.1 2002/08/28 11:39:00 ef
-*	Initial revision extracted from lib/monitors/Monitor_nD.comp
+* Initial revision extracted from lib/monitors/Monitor_nD.comp
 *******************************************************************************/
 
 #ifndef MONITOR_ND_LIB_H
@@ -560,9 +564,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     /* update label 'signal per bin' if more than 1 bin */
     if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number) {
       strncat(mc_mn_Vars->Coord_Label[0], " per bin", 30);
-      if (mc_mn_Vars->Flag_capture) 
-        printf("Monitor_nD: %s: Using capture flux weightening on %d bins.\n"
-               "            Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", mc_mn_Vars->compcurname);
+      if (mc_mn_Vars->Flag_capture)
+        printf("Monitor_nD: %s: Using capture flux weightening on %ld bins.\n"
+               "            Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", mc_mn_Vars->compcurname, (long)mc_mn_XY);
     }
 
     strcat(mc_mn_Vars->Monitor_Label, " Monitor");
@@ -894,13 +898,13 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
     /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
       if (mc_mn_Vars->Flag_Multiple)
       { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors (intensity is not included) */
-      	/* check limits: monitors define a phase space to record */
+        /* check limits: monitors define a phase space to record */
         char within_limits=1;
         for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
         {
           mc_mn_j = mc_mn_Coord_Index[mc_mn_i];
           if (mc_mn_j < 0 || mc_mn_j >= mc_mn_Vars->Coord_Bin[mc_mn_i])
-          	within_limits=0;
+            within_limits=0;
         }
         if (within_limits)
         for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
@@ -1092,7 +1096,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
 
         /* handle the type of list output */
         ascii_only_orig = mcascii_only;
-        formatName_orig = mcformat.Name;	/* copy the pointer position */
+        formatName_orig = mcformat.Name;  /* copy the pointer position */
         strcpy(formatName, mcformat.Name);
         if (mc_mn_Vars->Flag_List >= 1)
         { /* Flag_List mode:
