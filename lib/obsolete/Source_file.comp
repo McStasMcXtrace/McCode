@@ -10,19 +10,20 @@
 * Date: Sep 28th, 2001
 * Version: 0.1
 * Origin: McStas 1.5//<a href="http://www.ill.fr">ILL</a>
+* Modified by: EF, 2004. Upgraded into Virtual_input
 *
 * Source that generates neutron events from an ascii/binary 'source' file.
 *
 * %D
 * This component reads neutron events store in a file, and send them into
 * the instrument. It thus replaces a Source component, using a previously
-* computed neutron set. 
-* The input file may be 
+* computed neutron set.
+* The input file may be
 * 1-text column formatted with lines containing at least 11 values in the order:
 *       x y z vx vy vz t sx sy sz p
 *   or
 *       x y z vx vy vz t sx sy sz p p2
-*   Such files may be generated for instance by Monitor_nD with 
+*   Such files may be generated for instance by Monitor_nD with
 *       Monitor_nD(options="list=10000 source")
 * 2-Vitess files (binary files of Neutron structure records of 'double')
 * 3-float binary files (with the 12 values 'x y z vx vy vz t sx sy sz p p2')
@@ -37,8 +38,8 @@
 *   COMPONENT MySourceCreator = Monitor_nD(
 *     filename = "MySource.list", options="list all source")
 * at the position where will be the Source_file.
-* The output file is text formatted with:[x y z vx vy vz t sx sy sz p p2] lines 
-* and is about 90 bytes per neutron. A binary float format (half size) is 
+* The output file is text formatted with:[x y z vx vy vz t sx sy sz p p2] lines
+* and is about 90 bytes per neutron. A binary float format (half size) is
 * obtained with Monitor_nD(options="list all source binary").
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
 * Vitess simulation.
@@ -46,18 +47,18 @@
 * as well as your real source, and put the new instrument source:
 *   COMPONENT Source = Source_file(
 *     input="MySource.list")
-* at the relevant position 
+* at the relevant position
 *
 * %P
 * INPUT PARAMETERS
 * input:        (str)
-* 
+*
 * Optional input parameters:
 * repeat_count: (1) Number of times the source must be generated.
 *                   0 unactivates the component
 *
 * OUTPUT PARAMETERS
-* 
+*
 * %E
 *
 *******************************************************************************/
@@ -84,21 +85,21 @@ typedef struct
     VectorType    Vector;
     VectorType    Spin;
   } Neutron;
-  
+
   /* Convert McStas state parameters to VITESS Neutron structure. In
    VITESS, the neutron velocity is represented by a wavelength in
    AAngstroem and a unit direction vector, time is in msec and
    positions are in cm.*/
 Neutron mcstas2vitess(double x, double y, double z,
-		      double vx, double vy, double vz,
-		      double t, 
+          double vx, double vy, double vz,
+          double t,
           double sx, double sy, double sz,
           double p)
 {
-  double v,s;			/* Neutron speed */
-  Neutron neu;			/* Vitess Neutron structure */
+  double v,s;     /* Neutron speed */
+  Neutron neu;      /* Vitess Neutron structure */
 
-  neu.Position[0] = x*100;	/* Convert position from m to cm */
+  neu.Position[0] = x*100;  /* Convert position from m to cm */
   neu.Position[1] = y*100;
   neu.Position[2] = z*100;
   v = sqrt(vx*vx + vy*vy + vz*vz);
@@ -107,8 +108,8 @@ Neutron mcstas2vitess(double x, double y, double z,
     fprintf(stderr, "mcstas2vitess: Error: zero velocity!\n");
     exit(1);
   }
-  neu.Wavelength = 3956.0346/v;	/* Convert speed to wavelength */
-  neu.Vector[0] = vx/v;		/* Convert velocity to unit direction vector */
+  neu.Wavelength = 3956.0346/v; /* Convert speed to wavelength */
+  neu.Vector[0] = vx/v;   /* Convert velocity to unit direction vector */
   neu.Vector[1] = vy/v;
   neu.Vector[2] = vz/v;
   s = sqrt(sx*sx+sy*sy+sz*sz);
@@ -118,9 +119,9 @@ Neutron mcstas2vitess(double x, double y, double z,
     neu.Spin[1] = sy/s;
     neu.Spin[2] = sz/s;
   }
-  
-  neu.Time = t*1000;		/* Convert time from sec to msec */
-  neu.Probability = p;		/* Neutron weight */
+
+  neu.Time = t*1000;    /* Convert time from sec to msec */
+  neu.Probability = p;    /* Neutron weight */
   return neu;
 }
 
@@ -129,15 +130,15 @@ Neutron mcstas2vitess(double x, double y, double z,
    AAngstroem and a unit direction vector, time is in msec and
    positions are in cm. */
 void vitess2mcstas(Neutron neu,
-		   double *x, double *y, double *z,
-		   double *vx, double *vy, double *vz,
-       double *t, 
+       double *x, double *y, double *z,
+       double *vx, double *vy, double *vz,
+       double *t,
        double *sx, double *sy, double *sz,
-		   double *p)
+       double *p)
 {
-  double v;			/* Neutron speed */
+  double v;     /* Neutron speed */
 
-  *x = 0.01*neu.Position[0];	/* Convert position from cm to m */
+  *x = 0.01*neu.Position[0];  /* Convert position from cm to m */
   *y = 0.01*neu.Position[1];
   *z = 0.01*neu.Position[2];
   if(neu.Wavelength == 0.0)
@@ -145,15 +146,15 @@ void vitess2mcstas(Neutron neu,
     fprintf(stderr, "mcstas2vitess: Error: zero wavelength!\n");
     exit(1);
   }
-  v = 3956.0346/neu.Wavelength;	/* Convert wavelength to speed */
-  *vx = v*neu.Vector[0];	/* Convert unit direction vector to velocity */
+  v = 3956.0346/neu.Wavelength; /* Convert wavelength to speed */
+  *vx = v*neu.Vector[0];  /* Convert unit direction vector to velocity */
   *vy = v*neu.Vector[1];
   *vz = v*neu.Vector[2];
   *sx = neu.Spin[0];
   *sy = neu.Spin[1];
   *sz = neu.Spin[2];
-  *t = 0.001*neu.Time;		/* Convert msec to sec */
-  *p = neu.Probability;		/* Neutron weight */
+  *t = 0.001*neu.Time;    /* Convert msec to sec */
+  *p = neu.Probability;   /* Neutron weight */
 }
 #endif
 %}
@@ -162,7 +163,7 @@ DECLARE
 %{
 
   #include <sys/stat.h>
-  
+
   double*
   read_s_file(char *file, double *size)
   {
@@ -171,7 +172,7 @@ DECLARE
     int     s_block=0;
     int     block_size=100000;
     double *s;
-    
+
     *size=0;
 
     f = fopen(file, "r");
@@ -191,18 +192,18 @@ DECLARE
 
       ret = fscanf(f, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
         &fx, &fy, &fz, &fvx, &fvy, &fvz, &ft, &fsx, &fsy, &fsz, &fp, &dummy);
- 
+
       if(ret == EOF)
         break;
       if(ret < 11)
       {
         fgets(Buffer, 1024, f);
         continue;
-      } 
+      }
       else
       {
         long j;
-        
+
         j = (long)i;
         if (s_block>=block_size)
         {
@@ -212,12 +213,12 @@ DECLARE
             {
               fprintf(stderr, "Source_file: Error: Out of memory!\n");
               exit(1);
-            }  
+            }
         }
-        s[11*j+0]  = fx;  s[11*j+1] = fy;  s[11*j+2] = fz; 
-        s[11*j+3]  = fvx; s[11*j+4] = fvy; s[11*j+5] = fvz; 
+        s[11*j+0]  = fx;  s[11*j+1] = fy;  s[11*j+2] = fz;
+        s[11*j+3]  = fvx; s[11*j+4] = fvy; s[11*j+5] = fvz;
         s[11*j+6]  = ft;
-        s[11*j+7]  = fsx; s[11*j+8] = fsy; s[11*j+9] = fsz; 
+        s[11*j+7]  = fsx; s[11*j+8] = fsy; s[11*j+9] = fsz;
         s[11*j+10] = fp;
         i++;  s_block++;
       }
@@ -233,12 +234,12 @@ DECLARE
     }
     return (s);
   }
-  
+
   double *source;
   double  length, pos;
   int     rep;
   char    FileType[32];
-  
+
 %}
 
 INITIALIZE
@@ -246,7 +247,7 @@ INITIALIZE
   struct stat stfile;
   long   filesize, i, nelements;
   FILE *f;
-  
+
   length=0;
   rep   =0;
   source=NULL;
@@ -261,9 +262,9 @@ INITIALIZE
     if(length == 0 || source == NULL)
     {
       stat(input,&stfile);
-	    filesize = stfile.st_size;
+      filesize = stfile.st_size;
       f = fopen(input, "r"); /* must exist else exit(-1) in read_s_file */
-      
+
       /* try to read Vitess files */
       if (fmod(filesize, sizeof(Neutron)) == 0)
       {
@@ -296,24 +297,24 @@ INITIALIZE
     }
     else
       strcpy(FileType, "text");
-    
+
     if (length == 0)
     {
       fprintf(stderr,"Source_file: Can not read neutron events from %s file '%s'\n", FileType, (long)length, input);
       exit(-1);
     }
-    
+
       printf("Source_file: Read %i neutron events from %s file '%s'\n", (long)length, FileType, input);
-      
+
     pos = 0;
-    
+
     mcset_ncount(length*repeat_count);
   }
 %}
 
 TRACE
 %{
-  
+
   if (repeat_count)
   {
     if (pos >= length)
@@ -325,20 +326,20 @@ TRACE
     {
       long i;
       i = (long)pos;
-      
+
       if (!strcmp(FileType, "Vitess"))
       {
         Neutron neu;
         Neutron *s;
         double v;
-        
+
         s=(Neutron*)source;
-        
+
         vitess2mcstas(s[i], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
-      } 
+      }
       else
       {
-        if (!strcmp(FileType, "text")) 
+        if (!strcmp(FileType, "text"))
         {  /* &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p */
           double *s;
           s = (double*)source;
@@ -348,7 +349,7 @@ TRACE
           sx = s[11*i+7]   ; sy = s[11*i+8] ; sz = s[11*i+9];
           p  = s[11*i+10]  ;
         }
-        else 
+        else
         { /* &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p, &p2 */
           float *s;
           s = (float*)source;

@@ -11,6 +11,7 @@
 * Date: September 2 1998, Modified by: KL, October 6, 1998
 * Origin: McStas 1.0 (1998)
 * Version: 1.0 (Obsolete)
+* Modified by: EF, 2004. Obsoleted as other comps do the same task
 *
 * Models a rectangular guide with different vert. and horiz. m mirror values.
 * See <b>Channeled_guide</b> component

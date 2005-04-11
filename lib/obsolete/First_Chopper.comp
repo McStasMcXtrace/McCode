@@ -2,13 +2,14 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: McStas release (Obsolete)
+* Modified by: EF, 2004. Merged with Chopper
 *
 * First disk chopper after a continuous neutron source.
 *
 * %D
-* Models a disc chopper at the first place.  
+* Models a disc chopper at the first place.
 * OBSOLETE: rather use optics/Chopper with IsFirst=1
 *
 * %P
@@ -16,7 +17,7 @@
 *
 * w:       (m)      Width of the slits
 * R:       (m)      Radius of the Chopper
-* f:       (rad/s)  angular frequency of the Chopper  
+* f:       (rad/s)  angular frequency of the Chopper
 * n:       (1)      Number of slits
 * pha:     (s)      Phase
 * a:       (1)      Number of pulses
@@ -26,7 +27,7 @@
 *
 * %E
 *******************************************************************************/
- 
+
 DEFINE COMPONENT First_Chopper
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w, R, f, n, pha, a)
@@ -40,7 +41,7 @@ DECLARE
 
 INITIALIZE
  %{
-  
+
       /* time between two pulses */
       Tg=2.0*PI/fabs(f)/n;
       /* how long can neutrons pass the Chopper at a single position? */
@@ -51,7 +52,7 @@ TRACE
  %{
         PROP_Z0;
 
-        t=atan2(x,y+R)/f+To*(rand01()-0.5)+pha+floor(a*rand01())*Tg; 
+        t=atan2(x,y+R)/f+To*(rand01()-0.5)+pha+floor(a*rand01())*Tg;
  %}
- 
+
 END

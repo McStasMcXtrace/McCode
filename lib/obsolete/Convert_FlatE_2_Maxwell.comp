@@ -9,8 +9,9 @@
 *
 * Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 07 March 2000
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a> (Obsolete)
+* Modified by: EF, 2004. Moved to obsolete as better similar comps exist.
 *
 * Conversion from flat energy distribution to Maxwellian neutron spectra
 *
@@ -29,16 +30,16 @@
 *
 * INPUT PARAMETERS:
 *
-* T:  	(K)	  Temperature of the source, 25 and 315 K for cold/thermal neutrons
-* E0:	  (meV) Mean energy of neutrons 
+* T:    (K)   Temperature of the source, 25 and 315 K for cold/thermal neutrons
+* E0:   (meV) Mean energy of neutrons
 * dE:   (meV) Energy spread (energy range is from E0-dE to E0+dE)
 *
 * OUTPUT PARAMETERS:
 *
-* Lmin:	(AA)	  Minimum wavelength in energy range
-* Lmax:	(AA)	  Maxium wavelength in energy range
-* l0:	  (AA)	  Mean wavelength of neutron spectra, about 1.8 AA for thermal neutrons
-* L2P:	(AA**4)	Normalisation constant for Maxwell distribution
+* Lmin: (AA)    Minimum wavelength in energy range
+* Lmax: (AA)    Maxium wavelength in energy range
+* l0:   (AA)    Mean wavelength of neutron spectra, about 1.8 AA for thermal neutrons
+* L2P:  (AA**4) Normalisation constant for Maxwell distribution
 *
 * %END
 *
@@ -52,14 +53,14 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
   double l0, L2P, Lmin,Lmax;
-	
+
 %}
 INITIALIZE
 %{
   double k;
   k  = 1.38066e-23;
-  l0=1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T);	   
-  L2P=2*l0*l0*l0*l0; 
+  l0=1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T);
+  L2P=2*l0*l0*l0*l0;
   Lmin = sqrt(81.81/(E0+dE)); /* AAngstroem */
   Lmax = sqrt(81.81/(E0-dE));
 %}
@@ -69,8 +70,8 @@ TRACE
   l= (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
   E=(VS2E*4.0*(PI*PI)/(V2K*V2K))/l/l;
   dE_dl=E/l*2.0;
-  p*=2.0*dE/(Lmax - Lmin)/dE_dl; 
-  Maxwell=L2P/l/l/l/l/l*exp(-l0*l0/l/l); 
+  p*=2.0*dE/(Lmax - Lmin)/dE_dl;
+  Maxwell=L2P/l/l/l/l/l*exp(-l0*l0/l/l);
   p*= Maxwell;
   SCATTER;
 %}

@@ -10,9 +10,10 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: Sept. 14 1998
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin:Risoe
 * Release: McStas 1.6
+* Modified by: EF, 2004. Obsoleted as better comps exist
 *
 * A simple cut-off neutron filter.
 *
@@ -20,6 +21,7 @@
 * Be-type filter defined by two identical rectangular opening apertures.
 * The transmission is interpolated liniearly between the high- and low-energy
 * transmissions beyond the upper and lower cut-off energies.
+* OBSOLETE: rather use optics/Filter_gen with file Be.trm
 *
 * Example: Filter(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
 *           len=0.05, T0=0.9, T1=0.1, Emin=4.64, Emax=5)
@@ -49,7 +51,7 @@ TRACE
 %{
     double E;
     double dt;
-    
+
     PROP_Z0;
     E=VS2E*(vx*vx+vy*vy+vz*vz);
     if (x<xmin || x>xmax || y<ymin || y>ymax)

@@ -11,9 +11,10 @@
 *
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: Risoe
 * Release: McStas 1.6
+* Modified by: EF, 2004. Renamed as Monochromator_flat
 *
 * Flat Mosaic crystal with anisotropic mosaic.
 *
@@ -23,8 +24,9 @@
 * plane (ie. parallel to the beam).
 * The mosaic is anisotropic gaussian, with different FWHMs in the Y and Z
 * directions. The scattering vector is perpendicular to the surface.
+* OBSOLETE: rather use optics/Monochromator_flat
 *
-* Example: Mosaic_anisotropic(zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1, 
+* Example: Mosaic_anisotropic(zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1,
 *           mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
 *
 * %P
@@ -67,7 +69,7 @@ SHARE
                 0.198431485327111, 0.202578241925561, 0.198431485327111,
                 0.186161000115562, 0.166269205816994, 0.139570677926154,
                 0.107159220467172, 0.070366047488108, 0.030753241996117};
-  
+
 
 #define GAUSS(x,mean,rms) \
   (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
@@ -87,7 +89,7 @@ INITIALIZE
   mos_rms_y = MIN2RAD*mosaich/sqrt(8*log(2));
   mos_rms_z = MIN2RAD*mosaicv/sqrt(8*log(2));
   mos_rms_max = mos_rms_y > mos_rms_z ? mos_rms_y : mos_rms_z;
-  
+
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
 %}
@@ -199,8 +201,8 @@ TRACE
           }
           total *= width;
           /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
-	         * width 1/cos(theta) greater than the mosaic and correct for any
-	         * error by adjusting the neutron weight later. */
+           * width 1/cos(theta) greater than the mosaic and correct for any
+           * error by adjusting the neutron weight later. */
           phi = mos_sample*randnorm();
           /* Compute final wave vector kf and scattering vector q = ki - kf */
           cos_phi = cos(phi);

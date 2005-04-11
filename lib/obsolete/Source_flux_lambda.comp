@@ -11,7 +11,8 @@
 * Written by: Kristian Nielsen
 * Date: 1998
 * Modified by: EF, KL, October 30, 2001. Illumination corrected
-* Version: $Revision: 1.1 $
+* Modified by: KL, April, 10, 2005. Upgraded to Source_simple
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -24,8 +25,9 @@
 * wavelength is uniformly distributed between lambda_0 - d_lambda and
 * lambda_0 + d_lambda. The source flux is specified in neutrons per steradian
 * per square cm per AAngstroem.
+* OBSOLETE: rather use sources/Source_simple
 *
-* Example: Source_flux_lambda(radius=0.1, dist=2, xw=.1, yh=.1, 
+* Example: Source_flux_lambda(radius=0.1, dist=2, xw=.1, yh=.1,
 *           lambda_0=2.36, d_lambda=.3, flux=1e13)
 *
 * %P
@@ -70,9 +72,9 @@ TRACE
  r=sqrt(rand01())*radius;                    /* with uniform distribution. */
  x=r*cos(chi);
  y=r*sin(chi);
- 
- randvec_target_rect(&xf, &yf, &rf, &pdir, 
-        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
+
+ randvec_target_rect(&xf, &yf, &rf, &pdir,
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
  dx = xf-x;
  dy = yf-y;
  rf = sqrt(dx*dx+dy*dy+dist*dist);
@@ -83,7 +85,7 @@ TRACE
 
  vz=v*dist/rf;
  vy=v*dy/rf;
- vx=v*dx/rf; 
+ vx=v*dx/rf;
 %}
 
 MCDISPLAY

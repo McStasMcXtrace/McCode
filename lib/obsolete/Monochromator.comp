@@ -10,8 +10,9 @@
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: McStas 1.5
+* Modified by: EF, 2004. Upgraded to Monochromator_flat
 *
 * Monochromator/analyzer crystal (OBSOLETE).
 *
@@ -25,7 +26,7 @@
 * Second order scattering is neglected.
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
-* OBSOLETE: rather use optics/Mosaic_anisotropic.comp
+* OBSOLETE: rather use optics/Monochromator_flat
 *
 * Example: Monochromator(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
 *           mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
@@ -94,12 +95,12 @@ TRACE
           tmp1 = 2*theta;
           cs = cos(tmp1);
           sn = sin(tmp1);
-          tmp2 = cs*vx - sn*vz; 
+          tmp2 = cs*vx - sn*vz;
           vy = vy;
-          vz = cs*vz + sn*vx; 
+          vz = cs*vz + sn*vx;
           vx = tmp2;
 
-          /* Second: scatering out of plane. 
+          /* Second: scatering out of plane.
              Approximation is that Debye-Scherrer cone is a plane */
 
           phi = atan2(vy,vz);                            /* out-of plane angle */
