@@ -10,10 +10,11 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: GA, June 1999, added transmission
+* Modified by: EF, 2004. Obsoleted as other comps do the same task
 *
 * A simple analytical Soller collimator (with triangular transmission).
 *
@@ -22,8 +23,9 @@
 * transmission function is an average and does not utilize knowledge of the
 * actual neutron trajectory. A zero divergence disables collimation (then the
 * component works as a double slit).
+* OBSOLETE: rather use optics/Guide_gravity or Guide_channeled with channels
 *
-* Example: Soller(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+* Example: Soller(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
 *           len=0.25, divergence=40,transmission=0.7)
 *
 * %P
@@ -35,7 +37,7 @@
 * ymax:       (m)              Upper y bound on slits
 * len:        (m)              Distance between slits
 * divergence: (minutes of arc) Divergence angle (calculated as atan(d/len),
-*                              where d is the blade spacing) 
+*                              where d is the blade spacing)
 *
 * Optional parameters
 * transmission:(1)             transmission of Soller (0<=t<=1)
@@ -61,7 +63,7 @@ INITIALIZE
 TRACE
 %{
     double phi, dt;
-    
+
     PROP_Z0;
     if (x<xmin || x>xmax || y<ymin || y>ymax)
       ABSORB;
@@ -72,8 +74,8 @@ TRACE
 
     if(slope > 0.0)
     {
-      phi = fabs(vx/vz);  
-      if (phi > slope)   
+      phi = fabs(vx/vz);
+      if (phi > slope)
         ABSORB;
       else
         p *= transmission*(1.0 - phi/slope);

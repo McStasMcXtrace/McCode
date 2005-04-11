@@ -8,12 +8,13 @@
 *
 * %I
 * Written by: KL,  Feb 3, 1998 (PSD_monitor.comp)
-* Modified by: Thomas Hansen, ILL Grenoble, France, 1999: 	Output modified
+* Modified by: Thomas Hansen, ILL Grenoble, France, 1999: Output modified
+* Modified by: EF, 2004. Obsoleted as it is not stable/working
 *
 * %D
 * An (n times m) pixel PSD monitor. This component may also be used as a beam
 * detector.
-* OBSOLETE: rather use monitors/Monitor_nD with options="... cylinder ..."
+* OBSOLETE: rather use monitors/Monitor_nD with options="... banana ..."
 *
 * %P
 * INPUT PARAMETERS:
@@ -39,7 +40,7 @@
 DEFINE COMPONENT PSD_bidim
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, nx, ny, filename)
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2) 
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -52,7 +53,7 @@ INITIALIZE
     int i,j;
 
     for (i=0; i<nx; i++)
-     for (j=0; j<ny; j++) 
+     for (j=0; j<ny; j++)
      {
       PSD_N[i][j] = 0;
       PSD_p[i][j] = 0;
@@ -75,35 +76,35 @@ TRACE
   %}
 FINALLY
   %{
-	int 	i,j,n=0;
-	double 	flux=0.0,xx,yy,A;
-	char	string[40];
-	
-	for (i=0; i<nx; i++)
-	{
-		xx=xmin+(xmax-xmin)*(double)i/(double)nx;
-		for (j=0; j<ny; j++) 
-		{
-			yy=ymin+(ymax-ymin)*(double)j/(double)ny;
-			if ((yy*yy+xx*xx)<=(0.01*0.01/PI)) 
-			{	n++;
-				flux +=PSD_p[i][j];
-			}
-		}
-	}
-	A=(double)n*(xmax-xmin)/(double)nx*(ymax-ymin)/(double)ny*100.0*100.0; /* cm2 */
-	flux/=A;
-	/* flux/=(double)created_neutrons; */
-	sprintf(string,"BiDimPSD %9.4lgn/s/cm2",flux);
-	DETECTOR_OUT_2D(
-		string,
-		"X position [cm]",
-		"Y position [cm]",
-		xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
-		nx, ny,
-		&PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
-		filename);
-   
+  int   i,j,n=0;
+  double  flux=0.0,xx,yy,A;
+  char  string[40];
+
+  for (i=0; i<nx; i++)
+  {
+    xx=xmin+(xmax-xmin)*(double)i/(double)nx;
+    for (j=0; j<ny; j++)
+    {
+      yy=ymin+(ymax-ymin)*(double)j/(double)ny;
+      if ((yy*yy+xx*xx)<=(0.01*0.01/PI))
+      { n++;
+        flux +=PSD_p[i][j];
+      }
+    }
+  }
+  A=(double)n*(xmax-xmin)/(double)nx*(ymax-ymin)/(double)ny*100.0*100.0; /* cm2 */
+  flux/=A;
+  /* flux/=(double)created_neutrons; */
+  sprintf(string,"BiDimPSD %9.4lgn/s/cm2",flux);
+  DETECTOR_OUT_2D(
+    string,
+    "X position [cm]",
+    "Y position [cm]",
+    xmin*100.0, xmax*100.0, ymin*100.0, ymax*100.0,
+    nx, ny,
+    &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
+    filename);
+
   %}
 
 MCDISPLAY

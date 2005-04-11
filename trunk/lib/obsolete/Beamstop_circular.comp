@@ -6,14 +6,15 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: January 2000
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: McStas 1.5 (Obsolete)
+* Modified by: EF, 2004. Renamed to optics/Beamstop with rect/circle shapes
 *
 * Circular beam stop.
 *
 * %D
 * A simple circular beam stop. Infinitely thin and infinitely absorbing.
-* OBSOLETE: rather use optics/Beamstop
+* OBSOLETE: rather use optics/Beamstop supporting both rect/circle shapes
 *
 * %P
 * INPUT PARAMETERS

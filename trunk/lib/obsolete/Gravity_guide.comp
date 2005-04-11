@@ -8,10 +8,11 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: McStas 1.6/<a href="http://www.ill.fr">ILL (France)</a>.
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
 * Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
+* Modified by: EF, 2004. Renamed as Guide_gravity
 *
 * Neutron guide with gravity. Can be channeled and focusing.
 *
@@ -24,9 +25,9 @@
 * The gravitation vector is downward in the local component coordinates.
 * For details on the geometry calculation see the description in the McStas
 * reference manual.
-* OBSOLETE: rather use optics/Guide_gravity or simulation with --gravitation flag
+* OBSOLETE: rather use optics/Guide_gravity
 *
-* Example: Gravity_guide(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=12, 
+* Example: Gravity_guide(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=12,
 *           R0=0.99, Qc=0.021, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005)
 *
 * %P
@@ -51,11 +52,11 @@
 * mright:  (1)    m-value of material for right.  vert. mirror
 * mtop:    (1)    m-value of material for top.    horz. mirror
 * mbottom: (1)    m-value of material for bottom. horz. mirror
-* 
+*
 * OUTPUT PARAMETERS
 *
 * Vars:             (1) internal variables
-* Vars.N_reflection: (1) Array of the cumulated Number of reflections 
+* Vars.N_reflection: (1) Array of the cumulated Number of reflections
 *                   N_reflection[0] total nb of reflections
 *                   N_reflection[1,2,3,4] l/r/t/b reflections
 *                   N_reflection[5] total nb neutrons exiting guide
@@ -69,7 +70,7 @@
 
 DEFINE COMPONENT Gravity_guide
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, w2, h2, l, 
+SETTING PARAMETERS (w1, h1, w2, h2, l,
   R0=0.99, Qc=0.021, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005,
   mleft=-1, mright=-1, mtop=-1, mbottom=-1)
 OUTPUT PARAMETERS (Vars)
@@ -84,7 +85,7 @@ SHARE
 #error McStas : You need McStas >= 1.4.3 to run this component
 #endif
 
-/* 
+/*
 * G:       (m/sgn2) Gravitation acceleration along y axis [-9.81]
 * Gx:      (m/sgn2) Gravitation acceleration along x axis [0]
 * Gy:      (m/sgn2) Gravitation acceleration along y axis [-9.81]
@@ -112,11 +113,11 @@ SHARE
     char   compcurname[256];
   } Gravity_guide_Vars_type;
 
-  void Gravity_guide_Init(Gravity_guide_Vars_type *aVars, 
+  void Gravity_guide_Init(Gravity_guide_Vars_type *aVars,
     MCNUM a_w1, MCNUM a_h1, MCNUM a_w2, MCNUM a_h2, MCNUM a_l, MCNUM a_R0,
     MCNUM a_Qc, MCNUM a_alpha, MCNUM a_m, MCNUM a_W, MCNUM a_k, MCNUM a_d,
-    MCNUM a_Gx, MCNUM a_Gy, MCNUM a_Gz, MCNUM a_G, MCNUM a_mh, MCNUM a_mv, 
-    MCNUM a_mx, MCNUM a_my, MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, 
+    MCNUM a_Gx, MCNUM a_Gy, MCNUM a_Gz, MCNUM a_G, MCNUM a_mh, MCNUM a_mv,
+    MCNUM a_mx, MCNUM a_my, MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop,
     MCNUM a_mbottom)
   {
     int i;
@@ -168,7 +169,7 @@ SHARE
       else
         aVars->norm_n[i] = sqrt(aVars->norm_n2[i]);
     }
-    /* partial computations for l/r sides, to save computing time */  
+    /* partial computations for l/r sides, to save computing time */
     aVars->nzC[1]      = aVars->nz[1];
     aVars->norm_n2c[1] = aVars->nx[1]*aVars->nx[1] + aVars->ny[1]*aVars->ny[1];
     aVars->Ac[1]       = aVars->nx[1]*aVars->gx    + aVars->ny[1]*aVars->gy;
@@ -178,15 +179,15 @@ SHARE
   }
 
   int Gravity_guide_Trace(double *dt, double *dt0,
-        Gravity_guide_Vars_type *aVars, 
+        Gravity_guide_Vars_type *aVars,
         double cx, double cy, double cz,
-	      double cvx, double cvy, double cvz,
+        double cvx, double cvy, double cvz,
         double cnum, double ck)
   {
     double B, C, ret;
     int    side=0;
     double n1,n2;
-      
+
     /* look if there is a previous intersection with guide sides */
 
     /* 3=+Y side: n=(0, l, -0.5*(h2-h1)) ; W = (0, +h1/2, 0) (up) */
@@ -194,45 +195,45 @@ SHARE
     ret = plane_intersect_Gfast(dt0, aVars->A[3], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
     { *dt = *dt0; side=3; aVars->n_dot_v[3] = B; }
-    
+
     /* 4=-Y side: n=(0, l, +0.5*(h2-h1)) ; W = (0, -h1/2, 0) (down) */
     B = aVars->ny[4]*cvy + aVars->nz[4]*cvz; C = aVars->ny[4]*(cy-aVars->wy[4]) + aVars->nz[4]*cz; /* aVars->nx=aVars->wz=0 */
     ret = plane_intersect_Gfast(dt0, aVars->A[4], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
     { *dt = *dt0; side=4; aVars->n_dot_v[4] = B; }
-    
-    /* 1=+X side: n=(l, 0, -0.5*(w2-w1)) ; W = (+w1/2, 0, 0) (left)*/ 
+
+    /* 1=+X side: n=(l, 0, -0.5*(w2-w1)) ; W = (+w1/2, 0, 0) (left)*/
     if (aVars->nzC[1] != 0) {
-      n1 = 2*(cnum+1) - ck;  /* slope of l/r sides depends on the channel ! */ 
+      n1 = 2*(cnum+1) - ck;  /* slope of l/r sides depends on the channel ! */
       aVars->nz[1] = aVars->nzC[1]*n1;
       aVars->A[1] = aVars->Ac[1] + aVars->nz[1]*aVars->gz; }
     B = aVars->nx[1]*cvx + aVars->nz[1]*cvz; C = aVars->nx[1]*(cx-aVars->wx[1]) + aVars->nz[1]*cz; /* aVars->ny=aVars->wz=0 */
     ret = plane_intersect_Gfast(dt0, aVars->A[1], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
-    { *dt = *dt0; side=1; aVars->n_dot_v[1] = B; 
-      if (aVars->nzC[1] != 0) 
+    { *dt = *dt0; side=1; aVars->n_dot_v[1] = B;
+      if (aVars->nzC[1] != 0)
       { aVars->norm_n2[1] = aVars->norm_n2c[1] + aVars->nz[1]*aVars->nz[1]; aVars->norm_n[1] = sqrt(aVars->norm_n2[1]);}
     }
-    
+
     /* 2=-X side: n=(l, 0, +0.5*(w2-w1)) ; W = (-w1/2, 0, 0) (right) */
     if (aVars->nzC[1] != 0) {
-      n2 = 2*(cnum) - ck;  /* slope of l/r sides depends on the channel ! */ 
+      n2 = 2*(cnum) - ck;  /* slope of l/r sides depends on the channel ! */
       aVars->nz[2] = aVars->nzC[1]*n2; }
     aVars->A[2] = aVars->Ac[2] + aVars->nz[2]*aVars->gz;
     B = aVars->nx[2]*cvx + aVars->nz[2]*cvz; C = aVars->nx[2]*(cx-aVars->wx[2]) + aVars->nz[2]*cz; /* aVars->ny=aVars->wz=0 */
     ret = plane_intersect_Gfast(dt0, aVars->A[2], B, C);
     if (ret && *dt0>10e-10 && *dt0<*dt)
-    { *dt = *dt0; side=2; aVars->n_dot_v[2] = B; 
-      if (aVars->nzC[1] != 0) 
+    { *dt = *dt0; side=2; aVars->n_dot_v[2] = B;
+      if (aVars->nzC[1] != 0)
       { aVars->norm_n2[2] = aVars->norm_n2c[2] + aVars->nz[2]*aVars->nz[2]; aVars->norm_n[2] = sqrt(aVars->norm_n2[2]); }
     }
-    
+
     return (side);
   }
 #endif
 %}
 
-DECLARE 
+DECLARE
 %{
   Gravity_guide_Vars_type Vars;
 %}
@@ -241,17 +242,17 @@ INITIALIZE
 %{
   double Gx=0, Gy=-9.81, Gz=0, G=-9.81;
   double mh=-1,mv=-1,mx=-1, my=-1;
-  
+
   if (W < 0 || k <= 0 || R0 < 0 || Qc < 0)
   { fprintf(stderr,"Gravity_guide: %s W k R0 Qc must be >0.\n", NAME_CURRENT_COMP);
     exit(-1); }
-  
+
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
-  Gravity_guide_Init(&Vars, 
+  Gravity_guide_Init(&Vars,
   w1, h1, w2, h2, l, R0,
   Qc, alpha, m, W, k, d,
-  Gx, Gy, Gz, G, mh, mv, 
-  mx, my, mleft, mright, mtop, 
+  Gx, Gy, Gz, G, mh, mv,
+  mx, my, mleft, mright, mtop,
   mbottom);
 
 %}
@@ -266,7 +267,7 @@ TRACE
   double n1, n2, Ch_num;
   int    bounces = 0;
 
-  
+
   dt = -1; dt0 = -1;
   /* propagate to box input (with gravitation) in comp local coords */
   /* 0=Z0 side: n=(0, 0, 1) ; W = (0, 0, 0) (at z=0, guide input)*/
@@ -274,8 +275,8 @@ TRACE
 
   ret = plane_intersect_Gfast(&dt0, Vars.A[0], B, C);
   if (ret && dt0>0)
-  { 
-    dt = dt0; 
+  {
+    dt = dt0;
     PROP_GRAV_DT(dt, Vars.gx, Vars.gy, Vars.gz);
     Vars.N_reflection[6]++;
   }
@@ -285,7 +286,7 @@ TRACE
     /* Shift origin to center of channel hit (absorb if hit dividing walls) */
     x += w1/2.0;
     Ch_num = floor(x/Vars.w1c);  /* 0= right side, k+1=left side  */
-    edge = Ch_num*Vars.w1c; 
+    edge = Ch_num*Vars.w1c;
     if(x - edge > Vars.w1c - d)
     {
       x -= w1/2.0; /* Re-adjust origin */
@@ -301,7 +302,7 @@ TRACE
     {
       /* get intersections for all box sides */
       /* A = 0.5 n.g; B = n.v; C = n.(r-W); */
-      
+
       bounces++;
 
       side = 0;
@@ -309,23 +310,23 @@ TRACE
       /* 5=+Z side: n=(0, 0, 1) ; W = (0, 0, l) (at z=l, guide exit)*/
       B = vz; C = z - Vars.wz[5];
       ret = plane_intersect_Gfast(&dt0, Vars.A[5], B, C);
-      if (ret && dt0>0)     
-      { dt = dt0; side=5;  
+      if (ret && dt0>0)
+      { dt = dt0; side=5;
         Vars.n_dot_v[5] = B; }
       else
       { fprintf(stderr,"%s: warning: neutron trajectory is parallel to guide exit, and thus can not exit\n", Vars.compcurname); x += hadj; ABSORB; }
 
       /* now look if there is a previous intersection with guide sides */
       side0 = Gravity_guide_Trace(&dt, &dt0, &Vars, x, y, z,
-	        vx, vy, vz, Ch_num, k);
+          vx, vy, vz, Ch_num, k);
       if (side0) side= side0;
 
       /* only positive dt are valid */
       /* exit reflection loops if no intersection (neutron is after box) */
       if (side == 0 || dt < 0)
-        { fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", Vars.compcurname); x += hadj; ABSORB; } /* should never occur */   
-       /* 
-      if (side < 5 && (x < -w1 || x > w1 || y < -h1 || y > h2 ))  
+        { fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", Vars.compcurname); x += hadj; ABSORB; } /* should never occur */
+       /*
+      if (side < 5 && (x < -w1 || x > w1 || y < -h1 || y > h2 ))
         ABSORB;  */ /* neutron has left guide through wall */
 
       /* propagate to dt */
@@ -337,7 +338,7 @@ TRACE
       /* else reflection on a guide wall */
       if(Vars.M[side] == 0 || Qc == 0)  /* walls are absorbing */
         { x += hadj; ABSORB; }
-      /* change/mirror velocity: v_f = v - n.2*n.v/|n|^2 */  
+      /* change/mirror velocity: v_f = v - n.2*n.v/|n|^2 */
       Vars.N_reflection[side]++; /* Vars.norm_n2 > 0 was checked at INIT */
       dt0 = 2*Vars.n_dot_v[side]/Vars.norm_n2[side]; /* 2*n.v/|n|^2 */
       vx -= Vars.nx[side]*dt0;

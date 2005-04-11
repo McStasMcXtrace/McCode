@@ -9,33 +9,34 @@
 *
 * Written by: Emmanuel Farhi
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a>
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
 *                                  by Kristian Nielsen and Peter Link
+* Modified by: EF, 2004. Renamed to Monochromator_curved
 *
 * Double bent multiple crystal slabs with anisotropic gaussian mosaic.
-* 
+*
 * %Description
 * Double bent infinitely thin mosaic crystal, useful as a monochromator or
 * analyzer. which uses a small-mosaicity approximation as well
-* as the approximation vy^2 << vz^2 + vx^2, and taking into account higher 
+* as the approximation vy^2 << vz^2 + vx^2, and taking into account higher
 * order scattering. The mosaic is anisotropic gaussian, with different FWHMs
 * in the Y and Z directions. The scattering vector is perpendicular to the
 * surface. For an unrotated monochromator component, the crystal plane lies in
 * the y-z plane (ie. parallel to the beam). The component also works in
 * transmission.
-* When curvatures are set to 0, the monochromator is flat. 
+* When curvatures are set to 0, the monochromator is flat.
 * The curvatures approximation for parallel beam focusing to distance L, with
 * monochromator rotation angle A1 are:
 *   RV = 2*L*sin(DEG2RAD*A1);
 *   RH = 2*L/sin(DEG2RAD*A1);
 *
-* When you rotate the component by A1 = asin(Q/2/Ki)*RAD2DEG, do not forget to 
+* When you rotate the component by A1 = asin(Q/2/Ki)*RAD2DEG, do not forget to
 * rotate the following components by A2=2*A1 (for 1st order) !
 * OBSOLETE: rather use optics/Monochromator_curved
 *
-* Example: Curved_Monochromator(zwidth=0.01, yheight=0.01, gap=0.0005, 
+* Example: Curved_Monochromator(zwidth=0.01, yheight=0.01, gap=0.0005,
 *           NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
 *
 * Example values for lattice parameters
@@ -49,7 +50,7 @@
 * Cu       002 DM=1.807 AA
 * Cu       220 DM=1.278 AA
 * Cu       111 DM=2.095 AA
-* 
+*
 * %Parameters
 * INPUT PARAMETERS:
 *
@@ -66,12 +67,12 @@
 * RH:      radius of horizontal focussing (m). flat for 0.
 *
 * optional parameters
-* DM:      monochromator d-spacing (Angstrom) instead of Q=2*pi/DM 
+* DM:      monochromator d-spacing (Angstrom) instead of Q=2*pi/DM
 * mosaic:  sets mosaich=mosaicv (arc minutes)
 * width:   total width of monochromator (m)
 * height:  total height of monochromator (m)
 *
-* %Link 
+* %Link
 * <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00031.html">Additional note</a> from Peter Link.
 * <a href="Mosaic_anisotropic.html">Mosaic_anisotropic</a> by Kristian Nielsen
 * <a href="Mon_2foc.html">Mon_2foc</a> by Peter Link
@@ -101,7 +102,7 @@ SHARE
                 0.198431485327111, 0.202578241925561, 0.198431485327111,
                 0.186161000115562, 0.166269205816994, 0.139570677926154,
                 0.107159220467172, 0.070366047488108, 0.030753241996117};
-  
+
 
 #define GAUSS(x,mean,rms) \
   (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
@@ -119,7 +120,7 @@ DECLARE
 
 INITIALIZE
 %{
-  
+
   if (mosaic != 0) {
     mos_rms_y = MIN2RAD*mosaic/sqrt(8*log(2));
     mos_rms_z = mos_rms_y; }
@@ -127,15 +128,15 @@ INITIALIZE
     mos_rms_y = MIN2RAD*mosaich/sqrt(8*log(2));
     mos_rms_z = MIN2RAD*mosaicv/sqrt(8*log(2)); }
   mos_rms_max = mos_rms_y > mos_rms_z ? mos_rms_y : mos_rms_z;
-  
+
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
-  
+
   if (mono_Q == 0) { fprintf(stderr,"Curved_Monochromator: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
   if (r0 == 0) { fprintf(stderr,"Curved_Monochromator: %s: Error reflectivity r0 is null\n", NAME_CURRENT_COMP); exit(-1); }
-  
+
   if (ywidth != 0) yheight = ywidth;  /* compatibility with Mon_2foc */
-  
+
   if (width == 0) SlabWidth = zwidth;
   else SlabWidth = (width+gap)/NH - gap;
   if (height == 0) SlabHeight = yheight;
@@ -147,7 +148,7 @@ TRACE
   double zmin,zmax,ymin,ymax,zp,yp,row,col;
   double tilth,tiltv;         /* used to calculate tilt angle of slab */
   double sna,snb,csa,csb,vxp,vyp,vzp;
-    
+
   double y1,z1,t1,dt,kix,kiy,kiz,ratio,order,q0x,k,q0,theta;
   double bx,by,bz,kux,kuy,kuz,ax,ay,az,phi;
   double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
@@ -159,12 +160,12 @@ TRACE
     y1 = y + vy*dt;             /* Propagate to crystal plane */
     z1 = z + vz*dt;
     t1 = t + dt;
-    
+
     zmax = ((NH*(SlabWidth+gap))-gap)/2;
     zmin = -zmax;
     ymax = ((NV*(SlabHeight+gap))-gap)/2;
     ymin = -ymax;
-    
+
     zp = fmod ( (z1-zmin),(SlabWidth+gap) );
     yp = fmod ( (y1-ymin),(SlabHeight+gap) );
 
@@ -187,7 +188,7 @@ TRACE
       csb = cos(tiltv);
       vxp =  vx*csa*csb+vy*snb-vz*sna*csb;
       vyp = -vx*csa*snb+vy*csb+vz*sna*snb;
-      vzp =  vx*sna           +vz*csa; 
+      vzp =  vx*sna           +vz*csa;
 
       kix = V2K*vxp;             /* Initial wave vector */
       kiy = V2K*vyp;
@@ -196,7 +197,7 @@ TRACE
          of correct length and direction. Only the order with the closest
          scattering vector is considered */
 
-	    ratio = -2*kix/mono_Q;
+      ratio = -2*kix/mono_Q;
       order = floor(ratio + .5);
       if(order == 0.0)
         order = ratio < 0 ? -1 : 1;
@@ -240,11 +241,11 @@ TRACE
           /* Compute the total scattering probability at this ki */
           total = 0;
           /* Choose integration limits, using Gaussian tail cut-off at 5 times
-	   * sigma. The radius of the Debye-Scherrer cone is smaller by a
-	   * factor 1/cos(theta) than the radius of the (partial) sphere
-	   * describing the possible orientations of Q due to mosaicity, so we
-	   * must use an integration width 1/cos(theta) greater than 5 times
-	   * the mosaic. */
+     * sigma. The radius of the Debye-Scherrer cone is smaller by a
+     * factor 1/cos(theta) than the radius of the (partial) sphere
+     * describing the possible orientations of Q due to mosaicity, so we
+     * must use an integration width 1/cos(theta) greater than 5 times
+     * the mosaic. */
           ds_factor = 1/cos(theta);
           width = 5*mos_rms_max*ds_factor;
           c1x = kix*(cos_2theta-1);
@@ -264,8 +265,8 @@ TRACE
           }
           total *= width;
           /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
-	   * width 1/cos(theta) greater than the mosaic and correct for any
-	   * error by adjusting the neutron weight later. */
+     * width 1/cos(theta) greater than the mosaic and correct for any
+     * error by adjusting the neutron weight later. */
           phi = ds_factor*mos_rms_max*randnorm();
           /* Compute final wave vector kf and scattering vector q = ki - kf */
           cos_phi = cos(phi);
@@ -284,11 +285,11 @@ TRACE
           vyp = K2V*(kiy+q_y);
           vzp = K2V*(kiz+q_z);
           p *= p_reflect/(total*GAUSS(phi,0,ds_factor*mos_rms_max));
-                
+
           /* rotate v coords back */
           vx =  vxp*csb*csa-vyp*snb*csa+vzp*sna;
-	        vy =  vxp*snb    +vyp*csb;
-	        vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa; 
+          vy =  vxp*snb    +vyp*csb;
+          vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa;
           SCATTER;
         } /* End MC choice to reflect or transmit neutron (if rand01) */
           /* else transmit neutron */
@@ -313,12 +314,12 @@ MCDISPLAY
       ymin = (SlabHeight+gap)*(iv-NV/2.0)+gap/2;
       ymax = ymin+SlabHeight;
 
-      if (RH) 
+      if (RH)
       { xt = zmin*zmin/RH;
         xt1 = zmax*zmax/RH; }
       else { xt = 0; xt1 = 0; }
-      
-      if (RV) 
+
+      if (RV)
       { yt = ymin*ymin/RV;
         yt1 = ymax*ymax/RV; }
       else { yt = 0; yt1 = 0; }

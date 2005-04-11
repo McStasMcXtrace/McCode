@@ -8,8 +8,9 @@
 *
 * Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 08 March 2000
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>) (Obsolete)
+* Modified by: EF, 2004. Obsoleted as it is not stable/working
 *
 * General powder sample in incoherent scattering cylindrical can
 *
@@ -19,10 +20,10 @@
 * It creates elastic coherent scattering from a table of structure factors and incoherent
 * background scattering from the sample itself and its container. To be efficient, the
 * component is focussing on a given target, normally corresponding to a PSD or a multi-
-* detector bank. Absorption is considered, as well attenuation of the beam, so the 
+* detector bank. Absorption is considered, as well attenuation of the beam, so the
 * probability of scattering is higher closer to the incoming beam. Multiple scattering
 * (and so secondary extinction) is not considered yet, nor diffuse scattering, or elastic
-* coherent scattering from a sample can, nor any inelastic scattering or elastic scattering 
+* coherent scattering from a sample can, nor any inelastic scattering or elastic scattering
 * from amorphous materials. It is planned to implement multiple scattering and elastic
 * coherent scattering from the sample can in the near future. Transmitted neutrons are
 * normally not created, but only scattered neutrons leaving towards the detector target.
@@ -31,34 +32,34 @@
 * %PARAMETERS
 *
 * INPUT PARAMETERS
-*       
-* radius:	(m)		Radius of sample in (x,z) plane 									(0.005)    
-* h: 		(m)		Height of sample y direction 										(0.05)
-* pack:		(1)		Packing factor 												(1)
-* Vc:		(AA**3) 	Volume of unit cell
-* sigma_a:	(fm**2)		Absorption cross section per unit cell at 2200 m/s
-* j:		(*1)		Array of multiplicities
-* q:		(*1/AA)		Array of wavevectors
-* F2:		(*fm**2)	Array of structure factors
-* DW:		(*1/AA**2)	Array of Debye-Waller factors
-* write:	(1)		Output flag for writing in file sample.dat 								(0)
-* transmission:	(1)		Ratio of transmitted neutron histories 									(0)
-* nbInt:	(1)		Number of Bragg relections (size of the arrays)
-* sigma_i:	(fm**2)		Incoherent scattering cross section of the sample per unit cell
-* d_V:		(m) 		Thickness of the Vanadium sample can 									(0.0001) 
-* broadening:	(1)		FWHM of the lattice constant variations for strain broadening 						(0)
-* ttmin:	(deg)		Minimum 2theta angle of target <a href="../monitors/PSD_curved.html">PSD_curved.comp</a>		(0)
-* ttmax:	(deg)		Maximum 2theta angle of target <a href="../monitors/PSD_curved.html">PSD_curved.comp</a>		(156.36)
-* PSD_r:	(m)		Radius of curved linar PSD target <a href="../monitors/PSD_curved.html">PSD_curved.comp</a>		(1.471)
-* PSD_h:	(m)		Height of curved linear PSD target <a href="../monitors/PSD_curved.html">PSD_curved.comp</a>		(0.15)
-* sign:		(1)		Chirality of 1st diffractometer axis=sign[takeoff of <a href="../d20adapt.instr">d20adapt.instr]</a>	(-1)
-*		
+*
+* radius: (m)   Radius of sample in (x,z) plane                   (0.005)
+* h:    (m)   Height of sample y direction                    (0.05)
+* pack:   (1)   Packing factor                        (1)
+* Vc:   (AA**3)   Volume of unit cell
+* sigma_a:  (fm**2)   Absorption cross section per unit cell at 2200 m/s
+* j:    (*1)    Array of multiplicities
+* q:    (*1/AA)   Array of wavevectors
+* F2:   (*fm**2)  Array of structure factors
+* DW:   (*1/AA**2)  Array of Debye-Waller factors
+* write:  (1)   Output flag for writing in file sample.dat                (0)
+* transmission: (1)   Ratio of transmitted neutron histories                  (0)
+* nbInt:  (1)   Number of Bragg relections (size of the arrays)
+* sigma_i:  (fm**2)   Incoherent scattering cross section of the sample per unit cell
+* d_V:    (m)     Thickness of the Vanadium sample can                  (0.0001)
+* broadening: (1)   FWHM of the lattice constant variations for strain broadening             (0)
+* ttmin:  (deg)   Minimum 2theta angle of target <a href="../monitors/PSD_curved.html">PSD_curved.comp</a>    (0)
+* ttmax:  (deg)   Maximum 2theta angle of target <a href="../monitors/PSD_curved.html">PSD_curved.comp</a>    (156.36)
+* PSD_r:  (m)   Radius of curved linar PSD target <a href="../monitors/PSD_curved.html">PSD_curved.comp</a>   (1.471)
+* PSD_h:  (m)   Height of curved linear PSD target <a href="../monitors/PSD_curved.html">PSD_curved.comp</a>    (0.15)
+* sign:   (1)   Chirality of 1st diffractometer axis=sign[takeoff of <a href="../d20adapt.instr">d20adapt.instr]</a>  (-1)
+*
 * OUTPUT PARAMETERS
 *
-* my_s_v2:	(m/s**2)	Attenuation factor due to elastic coherent scattering, multiplied by neutron velocity**2
-* my_a_v:	(1/s)		Attenuation factor due to absorption, multiplied by neutron velocity
-* q_v:		(m/s)		Corresponding velocity of wavevector Q
-* my_i: 	(1/m)		Attenuation factor due to elastic incoherent scattering
+* my_s_v2:  (m/s**2)  Attenuation factor due to elastic coherent scattering, multiplied by neutron velocity**2
+* my_a_v: (1/s)   Attenuation factor due to absorption, multiplied by neutron velocity
+* q_v:    (m/s)   Corresponding velocity of wavevector Q
+* my_i:   (1/m)   Attenuation factor due to elastic incoherent scattering
 *
 * %LINKS
 * <a href="../d20adapt.instr">Source code of d20adapt.instr</a>, where this component is used
@@ -81,40 +82,40 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
 #if __dest_os == __mac_os
-	/* void Event_loop(); */
+  /* void Event_loop(); */
 #endif
-	double my_i;
- 	unsigned long end_counter=0;  
-  	double my_s_v2,my_s_v2_total, my_a_v, q_v;
-  	double d_phi0,d_Scherrer,total_F2;
-  	int    total,sign2,i;
-  	FILE   *outfile;
-	double V_pack=1.0;		/* Vanadium sample can */
-	double V_sigma_a = 5.08;    	/* Absorption cross section per atom (barns) */
-	double V_sigma_i = 4.935 ;  	/* Incoherent scattering cross section per atom (barns) */
-	double V_rho   ; 		/* Density of atoms (AA-3) */
-	double V_my_s ;
-	double V_my_a_v,s ;
+  double my_i;
+  unsigned long end_counter=0;
+    double my_s_v2,my_s_v2_total, my_a_v, q_v;
+    double d_phi0,d_Scherrer,total_F2;
+    int    total,sign2,i;
+    FILE   *outfile;
+  double V_pack=1.0;    /* Vanadium sample can */
+  double V_sigma_a = 5.08;      /* Absorption cross section per atom (barns) */
+  double V_sigma_i = 4.935 ;    /* Incoherent scattering cross section per atom (barns) */
+  double V_rho   ;    /* Density of atoms (AA-3) */
+  double V_my_s ;
+  double V_my_a_v,s ;
 %}
 INITIALIZE
 %{
-    
-	V_rho    =(2.0 * V_pack/(3.024*3.024*3.024)); /* Density of atoms (AA-3) */
-	V_my_s   =(V_rho * 100.0 * V_sigma_i);
-	V_my_a_v =(V_rho * 100.0 * V_sigma_a * 2200.0);
-	my_i=    sigma_i * pack/Vc *  100.0 ;
-  	outfile=fopen("sample.dat","w");
-  	my_a_v = sigma_a * pack/Vc * 2200.0;           /* Is not yet divided by v (which changes) */
-  	my_s_v2_total=0.0;
-  	for (i=1,my_s_v2=0.0, total_F2 = 0.0;(i<=nbInt);i++) 
-  	{
-	  if ((i<2)||(i>(nbInt-1))) printf("i=%4d Q=%9.2f j=%4d F2=%14.2f DW=%9.2f %9.5f\n",i,q[i],j[i],F2[i],DW[i],my_a_v);
-  	}
-  	d_phi0 = RAD2DEG*atan(0.5*(h+ PSD_h)/PSD_r);
-  	total = 0;
-  	printf("Vertical divergence (sample-PSD): %lfdeg, ",d_phi0);
-  	printf("my(incoh.=)%lg/m, sigma(incoh.)=%lgbarn\n",my_i,sigma_i);
-%}                                                                             
+
+  V_rho    =(2.0 * V_pack/(3.024*3.024*3.024)); /* Density of atoms (AA-3) */
+  V_my_s   =(V_rho * 100.0 * V_sigma_i);
+  V_my_a_v =(V_rho * 100.0 * V_sigma_a * 2200.0);
+  my_i=    sigma_i * pack/Vc *  100.0 ;
+    outfile=fopen("sample.dat","w");
+    my_a_v = sigma_a * pack/Vc * 2200.0;           /* Is not yet divided by v (which changes) */
+    my_s_v2_total=0.0;
+    for (i=1,my_s_v2=0.0, total_F2 = 0.0;(i<=nbInt);i++)
+    {
+    if ((i<2)||(i>(nbInt-1))) printf("i=%4d Q=%9.2f j=%4d F2=%14.2f DW=%9.2f %9.5f\n",i,q[i],j[i],F2[i],DW[i],my_a_v);
+    }
+    d_phi0 = RAD2DEG*atan(0.5*(h+ PSD_h)/PSD_r);
+    total = 0;
+    printf("Vertical divergence (sample-PSD): %lfdeg, ",d_phi0);
+    printf("my(incoh.=)%lg/m, sigma(incoh.)=%lgbarn\n",my_i,sigma_i);
+%}
 TRACE
 %{
   double t20, t21,t2i0,t2i1,t0, t1,ti0,ti1, v, l_full,l_powder,l_can, l, l_1,l_2,l_p,l_c, dt, d_phi, theta, my_s, my,muR,muV;
@@ -124,236 +125,236 @@ TRACE
 
   if (vz<0) ABSORB;
   my_s_v2_total=0.0;
-  v = sqrt(vx*vx + vy*vy + vz*vz);	 	/* Very first, we should provide the neutron velocity ... */
-  for (i=1,my_s_v2=0.0, total_F2 = 0.0;i<=nbInt;i++)  if (q[i]*K2V<(2.0*v))  
+  v = sqrt(vx*vx + vy*vy + vz*vz);    /* Very first, we should provide the neutron velocity ... */
+  for (i=1,my_s_v2=0.0, total_F2 = 0.0;i<=nbInt;i++)  if (q[i]*K2V<(2.0*v))
   {
-  	my_s_v2_total += PI*PI*PI*pack*j[i]*F2[i]*DW[i]/(Vc*Vc*V2K*V2K*q[i]);	/* all 0 < 2theta < 180 deg */
-      	if ((fabs(q[i]*K2V) < (sin(fabs(ttmax)/2*PI/180)*2.0*v))  &&  (fabs(q[i]*K2V) > (sin(fabs(ttmin)/2*PI/180)*2.0*v))) 
-      	total_F2 += j[i]*F2[i]*DW[i]/q[i];	/* only ttmin < 2theta < ttmax */
+    my_s_v2_total += PI*PI*PI*pack*j[i]*F2[i]*DW[i]/(Vc*Vc*V2K*V2K*q[i]); /* all 0 < 2theta < 180 deg */
+        if ((fabs(q[i]*K2V) < (sin(fabs(ttmax)/2*PI/180)*2.0*v))  &&  (fabs(q[i]*K2V) > (sin(fabs(ttmin)/2*PI/180)*2.0*v)))
+        total_F2 += j[i]*F2[i]*DW[i]/q[i];  /* only ttmin < 2theta < ttmax */
   }
   total_F2_1=total_F2;
   total++;
   if (cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius+d_V, h))
   {
-   	if (t0 < 0) ABSORB; 			/* Neutron enters at t=t0. */
-   	l_full = v * (t1 - t0);            	/* Length of full path through sample AND can - if there won't be any scattering */
-   	if (rand01() < (double)transmission)  /* Transmission (IF any ...) */
-   	{ 
- 		my=my_i+my_a_v/v+my_s_v2_total/v/v; /* not exactly correct yet: considering can as sample ... */ 	
-   		dt = l_full/v + t0;
-     		PROP_DT(dt);
-     		p*=exp(-my*l_full)/(double)transmission;
-   	}
-   	else 
-   	{
-   		/* Diffraction (elastic coherent AND incoherent scattering) */
-   		/* it is sufficient to look here for choosing kind of scattering ... */
-   		/* First, we must choose between scattering from sample or from container */
-  		/* Therefore, we need (mu_i+mu_c)*R and mu_i(V)*d(V) and a random choice as done for coherent/incoherent */
-  		/* To do it properly, we need the path of an unscattered neutron in Vanadium and in sample */
-  		/* To do it even better, we may even consider 'multiple scattering', but that's valid for the sample itself beforehand ... */
-  		if (cylinder_intersect(&ti0, &ti1, x, y, z, vx, vy, vz, radius, h))
-  		{	
-  			if (ti0 < 0) ABSORB; 
-  			if (ti0 < t0) printf("\n%lg / %lg - %lg / %lg\n",t0,ti0,ti1,t1); 
-  			l_powder = v * (ti1 - ti0);                      /* Length of full path through sample AND can */
- 		} 
- 		else 
- 		{
- 			ti0=(t0+t1)/2.0;
- 			ti1=ti0;
- 			l_powder=0.0;
- 		}
- 		if (ti0 < t0) printf("\n---> %12.6lg / %12.6lg - %12.6lg - %12.6lg / %12.6lg ---> %8.6lg %8.6lg %8.6lg - %8.6lg\n",t0,ti0,dt,ti1,t1,x,y,z,l_powder); 
- 		l_can=l_full-l_powder;
-  		muR=(my_s_v2_total/v/v+my_i)*l_powder;
-  		muV=(V_my_s)*l_can;
-  		Choice = fabs((muR+muV)*randpm1());
-  		if (muR>=Choice) /****************** Scattering in Powder Sample ******************/
-  		{
-  			powder=1;
-  			p*= (muR+muV)/muR ;
-	  		/*** Now, we must choose between coherent or incoherent scattering ***/
-  			Choice = fabs((my_s_v2_total/v/v+my_i)*randpm1());
-  			if ((my_s_v2_total/(v*v))>=Choice) /****************** Coherent Scattering in Powder Sample ******************/
-  			{	coherent=1;
-  				if (ti0 < t0) printf("\n>>>> %lg / %lg - %lg / %lg\n",t0,ti0,ti1,t1); 
-  				/**** In case of coherent scattering, choose a Bragg reflection ****/
-  				total_F2=total_F2_1;
-  				Choice = fabs(total_F2 * randpm1());
-  				for (i=1,total_F2 = 0.0; i<=nbInt; i++)
-  				{
-  					if ((fabs(q[i]*K2V) < (sin(fabs(ttmax)/2*PI/180)*2.0*v))  &&  (fabs(q[i]*K2V) > (sin(fabs(ttmin)/2*PI/180)*2.0*v))) 
-  					{
-    	  					total_F2 += j[i]*F2[i]*DW[i]/q[i];
-    	  					if (total_F2 >= Choice) 
-    	  					{
-    	    						break;
-    	  					}
-  					} 
-  				}
-  				/*printf("i=%3d, F2=%10.1lf, Q=%4.1lf, p=%10.2lg, ",i,F2[i],q[i],p);*/
-  				if (i==0) i=1;
-  				if (i>nbInt) i=nbInt;
-  				p*=total_F2_1/(j[i]*F2[i]*DW[i]/q[i])*(my_s_v2_total/(v*v)+my_i)/(my_s_v2_total/(v*v)); 
-   				/*printf("p=%10.2lg, ",p);*/
- 				q_v = q[i]*K2V;
-  				/* NEW: quick and dirty strain peak broadening (TH 22/10/99, mod 25/10/99) */
-  				do
-    				{
-      					s = rand01();
-      					s = 2*s - 1;
-    				} while(s == 0);
-  				X =sqrt(1.0/fabs(s)-1.0)/3.1415*s/fabs(s); /* Lorentzian distributuion */
-  				q_v=1.0/(1.0/q_v*(1.0+broadening*X));
-  				if ((2.0*v)<q_v) 
-   				{
-   					ABSORB; 
-   				}
-  				my_s_v2= PI*PI*PI*pack*j[i]*F2[i]*DW[i]/(Vc*Vc*V2K*V2K*q[i]); 
-  				my=my_s_v2/v/v+my_a_v/v; 	/* my_s_v2 only known for coherent case */
-  			}
-  			else /****************** Incoherent Scattering in Powder Sample ******************/
-  			{  	coherent=0;
-  				my=my_i+my_a_v/v; 	
-  				if (ti0 < t0) printf("\n===> %lg / %lg - %lg / %lg\n",t0,ti0,ti1,t1); 
-  				/* in case of incoherent scattering choose random a scattering angle */
-  				/* if ever possible choose it from the target solid angle ... but this will be difficult */
-    				theta = (ttmin/2*+rand01()*(ttmax-ttmin)/2)*DEG2RAD;	/* Bragg scattering law */
-    				q_v = sin(theta)*2.0*v; 		        /* Bragg scattering law */
-  				/*printf("Incoherent in powder p=%10.2lg, ",p);*/
-  				p*=(my_s_v2_total/(v*v)+my_i)/(my_i)*sin(2.0*theta);
-  				/*printf("p=%10.2lg, ",p);*/
-  				p*=PI/2*(-cos(fabs(ttmax/2)/180*PI)+cos(fabs(ttmin/2)/180*PI));
-     				if (q[0]<0)
-   		 		{	
-   		 			theta = -theta;
-    					q_v = -q_v;
-    				}
-  			}
-   	 		dt = 1.0/my/v * -log(rand01()*(1-exp(-my*l_powder))+exp(-my*l_powder)) + ti0;
-   	 		/* dt is NOT a difference, but the absolute time of scattering */
-     			PROP_DT(dt);                		        /* Point of scattering */
-			SCATTER;
-     			l   = v*(dt -t0 );                   		/* Penetration in sample AND can */
-    			l_c = v*(ti0-t0 );                   		/* Penetration in can */  			
-			l_p = v*(dt -ti0);                   		/* Penetration in sample */
-		}
-		else /****************** Incoherent Scattering in Vanadium Sample Can ******************/
-		{
-			powder=0;
-			p*= (muR+muV)/muV ;
-			coherent=0; /* assume no Bragg scattering by Vanadium can - may be changed later! */
-  			my=my_i+my_a_v/v; 	
-  			/* in case of incoherent scattering choose random a scattering angle */
-    			theta = (ttmin/2+rand01()*(ttmax-ttmin)/2)*DEG2RAD;	/* Bragg scattering law */
-    			q_v = sin(theta)*2.0*v; 		        	/* Bragg scattering law */
-  			/* printf("Incoherent in sample can: 2theta=%lf p=%10.2lg, ",2*theta/DEG2RAD,p); */
-  			p*=sin(2.0*theta);
-   			/* printf("p=%10.2lg, ",p); */
- 			p*=PI/2*(-cos(fabs(ttmax/2)/180*PI)+cos(fabs(ttmin/2)/180*PI));
-   			/* printf("p=%10.2lg, ",p); */
-    			/* p is correct only if there is no elastic scattering */
-    			if (q[0]<0)
-   		 	{	
-   		 		theta = -theta;
-    				q_v = -q_v;
-    			}
-			/* simple choice, but modify p depending on scattering in entering or outgoing wall */
-   	 		dt = rand01()*((t1-t0)-(ti1-ti0))+t0;
-   	 		if (dt>ti0) dt+=(ti1-ti0);
-     			PROP_DT(dt);                		/* Point of scattering */
-			SCATTER;
-     			l   = v*(dt -t0 );                   	/* Penetration in sample AND can */
-     			if (dt>ti1) 
-     			{
-     				l_c = v*(dt - t0 - (ti1-ti0) );	/* Penetration in can */
-     				l_p = v*(ti1-ti0); 
-     			}
-     			else 
-     			{
-     				l_c = v*(ti0-t0 );             	/* Penetration in can */
-     				l_p = v*(dt -ti0);             	/* Penetration in sample */
-			}
-		}
-	}
-     	if (write>=1) fprintf(outfile,"%lf %lf %lf\n ", x,y,z);
-     	theta = asin(q_v/(2.0*v)); 		        	/* Bragg scattering law */
-     	d_Scherrer=2.0*PSD_r*sin(2.0*theta);
-     	if (d_Scherrer<PSD_h) d_phi0 = 180.0;           	/* in this case take full cone! */
-     	else d_phi0 = 2.0*RAD2DEG*asin(PSD_h/d_Scherrer); 	/* otherwise take only less than half of the cone */
-     	d_phi  = d_phi0*DEG2RAD/2.0*randpm1();            	/* for very small scattering angles d_phi0 is variable ! */
-     	p *= d_phi0/360.0; 
-     	if (coherent == 0) i=0; 				/* not important, but must be an existing index ... */
-     	if (q[i]<0) sign2=sign; 				/* we only consider an one-sided detector (in the higher resolution part) */
-     	else 		sign2=-sign;
-     	aim_x = (double)sign2*PSD_r*sin(2*theta)-x;       	/* Vector pointing at target (anal./det.) */
-     	aim_y = -y ;
-     	/* aim_z = fabs(PSD_r*cos(2*theta)-z); <- may be obsolete now */
-     	aim_z = PSD_r*cos(2*theta)-z; /* the new way ... */
-     	vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, aim_x, aim_y, aim_z);
-     	rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
-     	rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
-     	vx = vout_x;
-     	vy = vout_y;
-     	vz = vout_z;
-     	if(!cylinder_intersect(&t2i0, &t2i1, x, y, z,vout_x, vout_y, vout_z, radius, h)) /* a modifier ... */
-     	{    
-        	/* Do not exit here, the neutron may have hit only the wall of the sample can (TH 09/10/99) */ 
-        	l_1=0.0; /* Only the sample can is hit by the neutron, there is not trace through the powder sample AFTER scattering */
-    		l_2=0.0;
-    		t2i0=0.0;
-    		t2i1=0.0;
-     	} 
-     	else 
-		{
-	   		l_1 = v*t2i1; 		/* l_1 is the length of trace in the powder sample itself AFTER scattering */
-	     	if (t2i0>0) 
-	     	{
-	     		l_2 = v*t2i0; 	/* l_3 is the length or trace in the entering wall of the sample can, after scattering */
-	     		l_1-= v*t2i0;  	/* l_1 should not contain the part of the trace in the sample can if scattering happens in the entering wall */
-	     	}
-    	 	else l_2=0.0; 		/* l_3 should be zero if the powder itself scatters, or the exiting wall of the sample can */
-	 	}
-     	if(!cylinder_intersect(&t20, &t21, x, y, z,vout_x, vout_y, vout_z, radius+d_V, h)) /* a modifier ... */
-     	{	 	
- 			if (ti0 < t0) printf("\n---> %12.6lg / %12.6lg - %12.6lg - %12.6lg / %12.6lg ---> %8.6lg %8.6lg %8.6lg - %8.6lg\n",t0,ti0,dt,ti1,t1,x,y,z,l_powder); 
-     		printf("\nCoherent: %d, powder: %d\n",coherent,powder);
-			printf("%lg %lg %lg (%lg %lg) %lg %lg\n",t0,ti0,dt,ti1,t1,t21,t2i1);
-     		printf("%6.1lf deg scattering angle (%lg, %d)\n", asin(q_v/(2.0*v))*2.0*RAD2DEG,q[i]*K2V,i);
-     		printf("FATAL ERROR: Did not hit outer cylinder from inside.\n");
-       		exit(1); /* This can really not happen ... at least, theoretically ... (TH 10/10/99) */
-     	}
-     	l_2 += v*(t21-t2i1);
-	if (powder==0) 
-	{
-	 	my_s = V_my_s;
-	 	l_full=l_can;
-	}
-	else
-	{
-	 	l_full=l_powder; 		
-	    if (coherent==1) my_s = my_s_v2/(v*v);	/* my_s_v2 only known for coherent case */
-    	 else my_s=my_i; 				/* of course ... even if it does not sound logic at the first glimpse */
-	}	 
-	/* l_full is now the full path without scattering through the finally scattering material, powder or can (TH 10/10/99) */
-	my_total_powder=my_i+my_a_v/v+my_s_v2_total/(v*v);
-	my_total_can   =V_my_s+V_my_a_v/v;
-    	p *= fabs(l_full*my_s*exp(-my_total_powder*(l_p+l_1)-my_total_can*(l_c+l_2)))/(1.-(double)transmission); 
-  	/*printf("%10.2lg, %10.2lg, p=%10.2lg\n",my_total_powder,my_s_v2_total,p);*/
-	end_counter++;
-    	/* if (p>1) exit(1); causes trouble with new source and weight>1*/
+    if (t0 < 0) ABSORB;       /* Neutron enters at t=t0. */
+    l_full = v * (t1 - t0);             /* Length of full path through sample AND can - if there won't be any scattering */
+    if (rand01() < (double)transmission)  /* Transmission (IF any ...) */
+    {
+    my=my_i+my_a_v/v+my_s_v2_total/v/v; /* not exactly correct yet: considering can as sample ... */
+      dt = l_full/v + t0;
+        PROP_DT(dt);
+        p*=exp(-my*l_full)/(double)transmission;
+    }
+    else
+    {
+      /* Diffraction (elastic coherent AND incoherent scattering) */
+      /* it is sufficient to look here for choosing kind of scattering ... */
+      /* First, we must choose between scattering from sample or from container */
+      /* Therefore, we need (mu_i+mu_c)*R and mu_i(V)*d(V) and a random choice as done for coherent/incoherent */
+      /* To do it properly, we need the path of an unscattered neutron in Vanadium and in sample */
+      /* To do it even better, we may even consider 'multiple scattering', but that's valid for the sample itself beforehand ... */
+      if (cylinder_intersect(&ti0, &ti1, x, y, z, vx, vy, vz, radius, h))
+      {
+        if (ti0 < 0) ABSORB;
+        if (ti0 < t0) printf("\n%lg / %lg - %lg / %lg\n",t0,ti0,ti1,t1);
+        l_powder = v * (ti1 - ti0);                      /* Length of full path through sample AND can */
+    }
+    else
+    {
+      ti0=(t0+t1)/2.0;
+      ti1=ti0;
+      l_powder=0.0;
+    }
+    if (ti0 < t0) printf("\n---> %12.6lg / %12.6lg - %12.6lg - %12.6lg / %12.6lg ---> %8.6lg %8.6lg %8.6lg - %8.6lg\n",t0,ti0,dt,ti1,t1,x,y,z,l_powder);
+    l_can=l_full-l_powder;
+      muR=(my_s_v2_total/v/v+my_i)*l_powder;
+      muV=(V_my_s)*l_can;
+      Choice = fabs((muR+muV)*randpm1());
+      if (muR>=Choice) /****************** Scattering in Powder Sample ******************/
+      {
+        powder=1;
+        p*= (muR+muV)/muR ;
+        /*** Now, we must choose between coherent or incoherent scattering ***/
+        Choice = fabs((my_s_v2_total/v/v+my_i)*randpm1());
+        if ((my_s_v2_total/(v*v))>=Choice) /****************** Coherent Scattering in Powder Sample ******************/
+        { coherent=1;
+          if (ti0 < t0) printf("\n>>>> %lg / %lg - %lg / %lg\n",t0,ti0,ti1,t1);
+          /**** In case of coherent scattering, choose a Bragg reflection ****/
+          total_F2=total_F2_1;
+          Choice = fabs(total_F2 * randpm1());
+          for (i=1,total_F2 = 0.0; i<=nbInt; i++)
+          {
+            if ((fabs(q[i]*K2V) < (sin(fabs(ttmax)/2*PI/180)*2.0*v))  &&  (fabs(q[i]*K2V) > (sin(fabs(ttmin)/2*PI/180)*2.0*v)))
+            {
+                  total_F2 += j[i]*F2[i]*DW[i]/q[i];
+                  if (total_F2 >= Choice)
+                  {
+                      break;
+                  }
+            }
+          }
+          /*printf("i=%3d, F2=%10.1lf, Q=%4.1lf, p=%10.2lg, ",i,F2[i],q[i],p);*/
+          if (i==0) i=1;
+          if (i>nbInt) i=nbInt;
+          p*=total_F2_1/(j[i]*F2[i]*DW[i]/q[i])*(my_s_v2_total/(v*v)+my_i)/(my_s_v2_total/(v*v));
+          /*printf("p=%10.2lg, ",p);*/
+        q_v = q[i]*K2V;
+          /* NEW: quick and dirty strain peak broadening (TH 22/10/99, mod 25/10/99) */
+          do
+            {
+                s = rand01();
+                s = 2*s - 1;
+            } while(s == 0);
+          X =sqrt(1.0/fabs(s)-1.0)/3.1415*s/fabs(s); /* Lorentzian distributuion */
+          q_v=1.0/(1.0/q_v*(1.0+broadening*X));
+          if ((2.0*v)<q_v)
+          {
+            ABSORB;
+          }
+          my_s_v2= PI*PI*PI*pack*j[i]*F2[i]*DW[i]/(Vc*Vc*V2K*V2K*q[i]);
+          my=my_s_v2/v/v+my_a_v/v;  /* my_s_v2 only known for coherent case */
+        }
+        else /****************** Incoherent Scattering in Powder Sample ******************/
+        {   coherent=0;
+          my=my_i+my_a_v/v;
+          if (ti0 < t0) printf("\n===> %lg / %lg - %lg / %lg\n",t0,ti0,ti1,t1);
+          /* in case of incoherent scattering choose random a scattering angle */
+          /* if ever possible choose it from the target solid angle ... but this will be difficult */
+            theta = (ttmin/2*+rand01()*(ttmax-ttmin)/2)*DEG2RAD;  /* Bragg scattering law */
+            q_v = sin(theta)*2.0*v;             /* Bragg scattering law */
+          /*printf("Incoherent in powder p=%10.2lg, ",p);*/
+          p*=(my_s_v2_total/(v*v)+my_i)/(my_i)*sin(2.0*theta);
+          /*printf("p=%10.2lg, ",p);*/
+          p*=PI/2*(-cos(fabs(ttmax/2)/180*PI)+cos(fabs(ttmin/2)/180*PI));
+            if (q[0]<0)
+          {
+            theta = -theta;
+              q_v = -q_v;
+            }
+        }
+        dt = 1.0/my/v * -log(rand01()*(1-exp(-my*l_powder))+exp(-my*l_powder)) + ti0;
+        /* dt is NOT a difference, but the absolute time of scattering */
+          PROP_DT(dt);                            /* Point of scattering */
+      SCATTER;
+          l   = v*(dt -t0 );                      /* Penetration in sample AND can */
+          l_c = v*(ti0-t0 );                      /* Penetration in can */
+      l_p = v*(dt -ti0);                      /* Penetration in sample */
+    }
+    else /****************** Incoherent Scattering in Vanadium Sample Can ******************/
+    {
+      powder=0;
+      p*= (muR+muV)/muV ;
+      coherent=0; /* assume no Bragg scattering by Vanadium can - may be changed later! */
+        my=my_i+my_a_v/v;
+        /* in case of incoherent scattering choose random a scattering angle */
+          theta = (ttmin/2+rand01()*(ttmax-ttmin)/2)*DEG2RAD; /* Bragg scattering law */
+          q_v = sin(theta)*2.0*v;               /* Bragg scattering law */
+        /* printf("Incoherent in sample can: 2theta=%lf p=%10.2lg, ",2*theta/DEG2RAD,p); */
+        p*=sin(2.0*theta);
+        /* printf("p=%10.2lg, ",p); */
+      p*=PI/2*(-cos(fabs(ttmax/2)/180*PI)+cos(fabs(ttmin/2)/180*PI));
+        /* printf("p=%10.2lg, ",p); */
+          /* p is correct only if there is no elastic scattering */
+          if (q[0]<0)
+        {
+          theta = -theta;
+            q_v = -q_v;
+          }
+      /* simple choice, but modify p depending on scattering in entering or outgoing wall */
+        dt = rand01()*((t1-t0)-(ti1-ti0))+t0;
+        if (dt>ti0) dt+=(ti1-ti0);
+          PROP_DT(dt);                    /* Point of scattering */
+      SCATTER;
+          l   = v*(dt -t0 );                    /* Penetration in sample AND can */
+          if (dt>ti1)
+          {
+            l_c = v*(dt - t0 - (ti1-ti0) ); /* Penetration in can */
+            l_p = v*(ti1-ti0);
+          }
+          else
+          {
+            l_c = v*(ti0-t0 );              /* Penetration in can */
+            l_p = v*(dt -ti0);              /* Penetration in sample */
+      }
+    }
+  }
+      if (write>=1) fprintf(outfile,"%lf %lf %lf\n ", x,y,z);
+      theta = asin(q_v/(2.0*v));              /* Bragg scattering law */
+      d_Scherrer=2.0*PSD_r*sin(2.0*theta);
+      if (d_Scherrer<PSD_h) d_phi0 = 180.0;             /* in this case take full cone! */
+      else d_phi0 = 2.0*RAD2DEG*asin(PSD_h/d_Scherrer);   /* otherwise take only less than half of the cone */
+      d_phi  = d_phi0*DEG2RAD/2.0*randpm1();              /* for very small scattering angles d_phi0 is variable ! */
+      p *= d_phi0/360.0;
+      if (coherent == 0) i=0;         /* not important, but must be an existing index ... */
+      if (q[i]<0) sign2=sign;         /* we only consider an one-sided detector (in the higher resolution part) */
+      else    sign2=-sign;
+      aim_x = (double)sign2*PSD_r*sin(2*theta)-x;         /* Vector pointing at target (anal./det.) */
+      aim_y = -y ;
+      /* aim_z = fabs(PSD_r*cos(2*theta)-z); <- may be obsolete now */
+      aim_z = PSD_r*cos(2*theta)-z; /* the new way ... */
+      vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, aim_x, aim_y, aim_z);
+      rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
+      rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
+      vx = vout_x;
+      vy = vout_y;
+      vz = vout_z;
+      if(!cylinder_intersect(&t2i0, &t2i1, x, y, z,vout_x, vout_y, vout_z, radius, h)) /* a modifier ... */
+      {
+          /* Do not exit here, the neutron may have hit only the wall of the sample can (TH 09/10/99) */
+          l_1=0.0; /* Only the sample can is hit by the neutron, there is not trace through the powder sample AFTER scattering */
+        l_2=0.0;
+        t2i0=0.0;
+        t2i1=0.0;
+      }
+      else
+    {
+        l_1 = v*t2i1;     /* l_1 is the length of trace in the powder sample itself AFTER scattering */
+        if (t2i0>0)
+        {
+          l_2 = v*t2i0;   /* l_3 is the length or trace in the entering wall of the sample can, after scattering */
+          l_1-= v*t2i0;   /* l_1 should not contain the part of the trace in the sample can if scattering happens in the entering wall */
+        }
+        else l_2=0.0;     /* l_3 should be zero if the powder itself scatters, or the exiting wall of the sample can */
+    }
+      if(!cylinder_intersect(&t20, &t21, x, y, z,vout_x, vout_y, vout_z, radius+d_V, h)) /* a modifier ... */
+      {
+      if (ti0 < t0) printf("\n---> %12.6lg / %12.6lg - %12.6lg - %12.6lg / %12.6lg ---> %8.6lg %8.6lg %8.6lg - %8.6lg\n",t0,ti0,dt,ti1,t1,x,y,z,l_powder);
+        printf("\nCoherent: %d, powder: %d\n",coherent,powder);
+      printf("%lg %lg %lg (%lg %lg) %lg %lg\n",t0,ti0,dt,ti1,t1,t21,t2i1);
+        printf("%6.1lf deg scattering angle (%lg, %d)\n", asin(q_v/(2.0*v))*2.0*RAD2DEG,q[i]*K2V,i);
+        printf("FATAL ERROR: Did not hit outer cylinder from inside.\n");
+          exit(1); /* This can really not happen ... at least, theoretically ... (TH 10/10/99) */
+      }
+      l_2 += v*(t21-t2i1);
+  if (powder==0)
+  {
+    my_s = V_my_s;
+    l_full=l_can;
+  }
+  else
+  {
+    l_full=l_powder;
+      if (coherent==1) my_s = my_s_v2/(v*v);  /* my_s_v2 only known for coherent case */
+       else my_s=my_i;        /* of course ... even if it does not sound logic at the first glimpse */
+  }
+  /* l_full is now the full path without scattering through the finally scattering material, powder or can (TH 10/10/99) */
+  my_total_powder=my_i+my_a_v/v+my_s_v2_total/(v*v);
+  my_total_can   =V_my_s+V_my_a_v/v;
+      p *= fabs(l_full*my_s*exp(-my_total_powder*(l_p+l_1)-my_total_can*(l_c+l_2)))/(1.-(double)transmission);
+    /*printf("%10.2lg, %10.2lg, p=%10.2lg\n",my_total_powder,my_s_v2_total,p);*/
+  end_counter++;
+      /* if (p>1) exit(1); causes trouble with new source and weight>1*/
 /*
-	if ((unsigned long)fmod(end_counter,50) == 0)
-    	{	
-     		if (powder==0) printf("-"); 		
-     		if (coherent==1) printf("*");		
-     		else if (powder==1) printf("+");	
-		fflush(stdout); 
+  if ((unsigned long)fmod(end_counter,50) == 0)
+      {
+        if (powder==0) printf("-");
+        if (coherent==1) printf("*");
+        else if (powder==1) printf("+");
+    fflush(stdout);
 #if __dest_os == __mac_os
-	 Event_loop(); 
+   Event_loop();
 #endif
-	}
+  }
 */
   }
   else ABSORB; /* ... if the neutron does not hit the sample ... */
@@ -365,7 +366,7 @@ FINALLY
   printf("\n");
   for (i=1;i<=nbInt;i++)
   {
-	  printf("i=%4d N=%8d <P>=%18.15f \n",i,Nsum[i],Psum[i]/Nsum[i]);
+    printf("i=%4d N=%8d <P>=%18.15f \n",i,Nsum[i],Psum[i]/Nsum[i]);
   }
   */
 %}

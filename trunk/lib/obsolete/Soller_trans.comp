@@ -12,17 +12,18 @@
 * Origin: McStas 1.0 (1998) (Obsolete)
 * Version: 1.0
 * Modified by: GA, June 1999
+* Modified by: EF, 2004. Merged with Soller
 *
-* Soller collimator with rectangular opening and specified length. 
+* Soller collimator with rectangular opening and specified length.
 *
 * %Description
-* Soller collimator with rectangular opening and specified length. 
+* Soller collimator with rectangular opening and specified length.
 * The transmission function is an average and does not utilize knowledge of the
 * actual neutron trajectory.
 * A zero divergence disables collimation (then the component works as a double slit).
-* Added is an additional parameter ´transmission´ to take into account the
+* Added is an additional parameter transmission to take into account the
 * transmission probability. See <b>Soller</b> component.
-* OBSOLETE: rather use optics/Soller with transmission
+* OBSOLETE: rather use Soller or Guide_gravity/Guide_channeled
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -33,7 +34,7 @@
 * ymax:       (m)              Upper y bound on slits
 * len:        (m)              Distance between slits
 * divergence: (minutes of arc) Divergence angle (calculated as atan(d/len),
-*                              where d is the blade spacing) 
+*                              where d is the blade spacing)
 * transmission: (1)            0<=transmission<=1)
 *
 * %End
@@ -56,7 +57,7 @@ INITIALIZE
 TRACE
 %{
     double phi, dt;
-    
+
     PROP_Z0;
     if (x<xmin || x>xmax || y<ymin || y>ymax)
       ABSORB;
@@ -67,8 +68,8 @@ TRACE
 
     if(slope > 0.0)
     {
-      phi = fabs(vx/vz);  
-      if (phi > slope)   
+      phi = fabs(vx/vz);
+      if (phi > slope)
         ABSORB;
       else
         p *= transmission*(1.0 - phi/slope);

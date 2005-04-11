@@ -8,8 +8,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: McStas 1.5
+* Modified by: EF, 2004. Renamed to optics/Guide_channeled
 *
 * Neutron guide with channels (bender section).
 *
@@ -71,8 +72,8 @@ DECLARE
 
 INITIALIZE
 %{
-  
-  if (k <= 0 || W <=0) 
+
+  if (k <= 0 || W <=0)
   { fprintf(stderr,"Channeled_guide: %s: k abd W must be positive\n", NAME_CURRENT_COMP);
     exit(-1); }
   w1c = (w1 + d)/(double)k;
@@ -83,7 +84,7 @@ INITIALIZE
   hhalf = .5*h1;
   lwhalf = l*whalf;
   lhhalf = l*hhalf;
-  
+
   if ((k > 1) && (w1 != w2))
   {
     fprintf(stderr,"Channeled_guide: This component does not work with\n");
@@ -195,7 +196,7 @@ TRACE
     }
     if((i <= 2 && q > Qcx) || (i > 2 && q > Qcy))
     {
-      if (i <= 2) 
+      if (i <= 2)
       {
         double arg = (q - mx*Qcx)/W;
         if(arg < 10)

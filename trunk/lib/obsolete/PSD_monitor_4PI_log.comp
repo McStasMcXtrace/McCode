@@ -6,8 +6,9 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: McStas 1.5 (Obsolete)
+* Modified by: EF, 2004. Obsoleted as other comps do the same task
 *
 * Spherical position-sensitive detector with logarithmic scale.
 *
@@ -17,7 +18,7 @@
 * intensities rather than the intensities themselves. This is useful in
 * Laue-diffraction patterns (like in the McStas tutorial), but does not work
 * together too well with the current McStas method of handling detectors.
-* OBSOLETE: rather use monitors/Monitor_nD with options="... sphere log ..."
+* OBSOLETE: rather use monitors/Monitor_nD with options="sphere log x y ..."
 *
 * %P
 * INPUT PARAMETERS:
@@ -53,7 +54,7 @@ INITIALIZE
   int i,j;
 
   for (i=0; i<nx; i++)
-    for (j=0; j<ny; j++) 
+    for (j=0; j<ny; j++)
     {
       PSD_N[i][j] = 0;
       PSD_p[i][j] = 0;
@@ -64,7 +65,7 @@ TRACE
 %{
   double t0, t1, phi;
   int i,j;
-    
+
   if(sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius) && t1 > 0)
   {
     if(t0 < 0)
@@ -96,7 +97,7 @@ FINALLY
 
   minp = 0;
   for (i=0; i<nx; i++)
-    for (j=0; j<ny; j++) 
+    for (j=0; j<ny; j++)
     {
       if((PSD_p[i][j] < minp || minp == 0) && PSD_p[i][j] > 0)
         minp = PSD_p[i][j];
@@ -104,7 +105,7 @@ FINALLY
   if(minp <= 0)
     minp = 1;                   /* Avoid logarithm of zero */
   for (i=0; i<nx; i++)
-    for (j=0; j<ny; j++) 
+    for (j=0; j<ny; j++)
     {
       l_p[i][j] = log(PSD_p[i][j] > 0 ? PSD_p[i][j] : minp*0.1)/log(10);
     }

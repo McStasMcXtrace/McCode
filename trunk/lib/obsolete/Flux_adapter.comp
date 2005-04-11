@@ -12,18 +12,19 @@
 * Version: 1.0
 * Origin: ILL
 * Release: McStas 1.6
+* Modified by: EF, 2004. Renamed as Filter_gen
 *
 *%D
 * The routine changes the neutron flux (weight) in order to match
 * a reference source table on disk. This file can be on format
 * (k[Angs-1],p), (omega[meV],p), (lambda[Angs],p) where p is the weight
 * A linear interpolation is performed during simulation.
-* This component should be placed after a source, in order to 
+* This component should be placed after a source, in order to
 * simulate a real source.
 *
 * This component is OBSOLETE, please rather use the Filter_gen.
 *
-* EXAMPLE : 
+* EXAMPLE :
 *      (xmin = -0.1, xmax = 0.1,
 *       ymin = -0.1, ymax = 0.1,
 *       file="source.flux",
@@ -41,8 +42,8 @@
 *           data should be sorted (ascending order) and monotonic
 *           file can contain options (see below) as comment
 * options: string that can contain (str)
-*          "[ k p ]"      or "wavector" for file type 
-*          "[ omega p]"   or "energy" 
+*          "[ k p ]"      or "wavector" for file type
+*          "[ omega p]"   or "energy"
 *          "[ lambda p ]" or "wavelength"
 *          "set"          to set the weight according to the table
 *          "multiply"     to multiply (instead of set) the weight by factor
@@ -90,7 +91,7 @@ DECLARE
     double v2,K,L,E,new_p,slope;
     double X1,X2,Y1,Y2,step;
     /* end of declare */
-%} 
+%}
 
 INITIALIZE
 %{
@@ -104,16 +105,16 @@ INITIALIZE
     else /* now look for the data */
     {
       /* initialize data array */
-      if (strstr(options," k") 
-       || strstr(options," K ") 
+      if (strstr(options," k")
+       || strstr(options," K ")
        || strstr(options,"wavevector"))
               Type_Table = WAVEVECTOR_TABLE;
-      if (strstr(options,"omega") 
-       || strstr(options," e ") 
-       || strstr(options," E ") 
+      if (strstr(options,"omega")
+       || strstr(options," e ")
+       || strstr(options," E ")
        || strstr(options,"energy"))
               Type_Table = ENERGY_TABLE;
-      if (strstr(options,"lambda") 
+      if (strstr(options,"lambda")
        || strstr(options,"wavelength")
        || strstr(options," L "))
               Type_Table = WAVELENGTH_TABLE;
@@ -132,14 +133,14 @@ INITIALIZE
         { /* tries to read some informations */
           line_count_in_file++;
           for (i=0; (i < strlen(line)) && (i < LINE_MAX_LENGTH); i++) { line[i] = tolower(line[i]); }
-          if (strstr(line," k ") 
+          if (strstr(line," k ")
            || strstr(line,"wavevector"))        /* overrides options */
             Type_Table = WAVEVECTOR_TABLE;
-          if (strstr(line," e ") 
-           || strstr(line,"omega") 
+          if (strstr(line," e ")
+           || strstr(line,"omega")
            || strstr(line,"energy"))
                 Type_Table = ENERGY_TABLE;
-          if (strstr(line,"lambda") 
+          if (strstr(line,"lambda")
            || strstr(line," l ")
            || strstr(line,"wavelength"))
                 Type_Table = WAVELENGTH_TABLE;
@@ -150,7 +151,7 @@ INITIALIZE
           if (strstr(line,"add"))
             Mode_Table  = FLUX_ADAPT_ADD;
           if (strstr(line,"unactivate"))
-            Type_Table  = UNKNOWN_TABLE;;           
+            Type_Table  = UNKNOWN_TABLE;;
           if (strstr(line,"verbose"))
         verbose = 1;
           /* tries to read 2 numbers */
@@ -183,11 +184,11 @@ INITIALIZE
         else
           flag_exit_loop = 1;
         /* else : end of file */
-        
+
       }
       Length_Table = line_count_in_array;
       if (Length_Table < 2) Type_Table = UNKNOWN_TABLE;        /* not enough points */
-      if (verbose) 
+      if (verbose)
       {
         printf("Flux : %i points in %s\n",Length_Table, file);
         printf("Flux : data is [ ");
@@ -207,7 +208,7 @@ INITIALIZE
       for (i=0; i < tmp_length - 1; i++)
       {
         X2 = fabs(tmp_ke[i+1] - tmp_ke[i]);
-        if (X2 < step)  step = X2; 
+        if (X2 < step)  step = X2;
         else tmp--;
       } /* for */
       Step_Table = step;
@@ -228,7 +229,7 @@ INITIALIZE
           Y2 = tmp_weight[line_count_in_array];
           Y1 = tmp_weight[line_count_in_array-1];
           if (X2-X1)
-          {    
+          {
           /* linear interpolation */
             slope = (Y2-Y1)/(X2-X1);
             new_p = Y1+slope*(X-X1);
@@ -237,7 +238,7 @@ INITIALIZE
           else
             Weight_Table[i] = tmp_weight[line_count_in_array];
         } /* for */
-        if (verbose) 
+        if (verbose)
         {
           printf("Flux : resampled as %i points\n",Length_Table);
         }
@@ -254,7 +255,7 @@ INITIALIZE
         }
       }
     } /* if hfile */
-            
+
     free(tmp_ke);
     free(tmp_weight);
 %}
@@ -272,7 +273,7 @@ TRACE
     if (Type_Table == WAVEVECTOR_TABLE) X=K;
     if (Type_Table == WAVELENGTH_TABLE) X=L;
     /* table look up */
-    
+
     /* look for number just after X in table */
     line_count_in_array = (X - KE_Table[0])/Step_Table;
     if (line_count_in_array < 1) line_count_in_array = 1;
@@ -282,7 +283,7 @@ TRACE
     Y2 = Weight_Table[line_count_in_array];
     Y1 = Weight_Table[line_count_in_array-1];
     if (X2-X1)
-    {    
+    {
     /* linear interpolation */
       slope = (Y2-Y1)/(X2-X1);
       new_p = Y1+slope*(X-X1);

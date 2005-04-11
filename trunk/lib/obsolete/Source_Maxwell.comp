@@ -12,8 +12,9 @@
 * Modified by: KN, 1998 from Source_flat.comp
 * Modified by: EF, 2000 from Convert_FlatE_2_Maxwell by Thomas hansen
 * Modified by: EF, KL, 2001 correct focusing pb with KL method
+* Modified by: EF, 2004. Obsoleted as it is not working
 *
-* Neutron source with Maxwellian wavelength spectrum and 
+* Neutron source with Maxwellian wavelength spectrum and
 * user-specified flux.
 *
 * %D
@@ -21,11 +22,14 @@
 * centered at the beam (in order to improve MC-acceptance rate).  The angular
 * divergence is then given by the dimensions of the target. The neutron
 * wavelength is distributed between lambda_0 - d_lambda and
-* lambda_0 + d_lambda with a Maxwellian profile. 
+* lambda_0 + d_lambda with a Maxwellian profile.
 * The source flux is specified in neutrons per steradian per square cm for the
 * Maxwellian distribution. Source output is in [n/s/cm^2/Angs]
 * The flux profile is flat for T=0.
 * OBSOLETE: wrong results ! rather use sources/Source_Maxwell_3 or Source_gen
+*
+* %BUGS
+* Produces wrong results
 *
 * <b>Example:</b>
 * COMPONENT Source = Source_Maxwell(
@@ -34,9 +38,9 @@
 *   lambda_0 = 2,    d_lambda = 1.5,
 *   flux     = 1e13, T        = 315)
 * AT (0,0,0) ABSOLUTE
-* 
+*
 * %P
-* h:        (m)               Height of rectangle in (x,y,0) plane where 
+* h:        (m)               Height of rectangle in (x,y,0) plane where
 *                             neutrons are generated.
 * w:        (m)               Width of rectangle
 * dist:     (m)               Distance to target along z axis.
@@ -45,7 +49,7 @@
 * lambda_0: (AA)              Mean wavelength of neutrons.
 * d_lambda: (AA)              Wavelength spread of neutrons.
 * flux:     (1/(cm**2*st))    Source flux
-* T:  	    (K)               The temperature of the source (293 K)
+* T:        (K)               The temperature of the source (293 K)
 *
 * %E
 *******************************************************************************/
@@ -68,13 +72,13 @@ INITIALIZE
   source_area = h*w*1e4; /* cm^2 */
   p_in = flux/mcget_ncount()*source_area;
 
-  k  = 1.38066e-23;	/* k_B */
+  k  = 1.38066e-23; /* k_B */
   if (T > 0)
         lambda0  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T);
   else
         lambda0 = 0;
-  lambda02 = lambda0*lambda0;	   
-  L2P      = 2*lambda02*lambda02; 
+  lambda02 = lambda0*lambda0;
+  L2P      = 2*lambda02*lambda02;
   Lmin = lambda_0 - d_lambda; /* AAngstroem */
   Lmax = lambda_0 + d_lambda;
 %}
@@ -111,7 +115,7 @@ TRACE
   vz = v*dist/rf;
   vy = v*dy/rf;
   vx = v*dx/rf;
-  
+
   if (lambda0 != 0)
   {
           E  = VS2E * v*v;
@@ -122,8 +126,8 @@ TRACE
           dE = fabs(dE1-dE2);
 
           dE_dl  = E/lambda*2.0;
-          Maxwell= L2P/lambda5*exp(-lambda02/lambda2);  
-          p     *= Maxwell*dE/d_lambda/dE_dl; 
+          Maxwell= L2P/lambda5*exp(-lambda02/lambda2);
+          p     *= Maxwell*dE/d_lambda/dE_dl;
   }
   SCATTER;
 %}
