@@ -767,3 +767,14 @@ function [data_count, s] = mcplot_scan(s,action, m,n,p, id)
 
 
 
+function [success, OSMessage]=copyfile(src,dest)
+% Overload of Matlab's internal copyfile function, which
+% is buggy in the 6.5 release. Since usage of the function
+% is limited, we simply use our own in all cases.
+  if ispc
+    [Status, OSMessage] = dos(['copy ' src ' '  dest]);
+  elseif isunix
+    [Status, OSMessage] = unix(['cp -r ' src ' ' dest]);
+  end
+  success = ~Status;
+% end copyfile
