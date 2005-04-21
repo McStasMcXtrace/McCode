@@ -170,7 +170,7 @@ sub menu_spawn_editor {
             # Double fork to avoid having to wait() for the editor to
             # finish (or having it become a zombie). See man perlfunc.
             unless(fork()) {
-                exec($external_editor, $current_sim_def);
+                exec("$external_editor $current_sim_def");
                 # If we get here, the exec() failed.
                 print STDERR "Error: exec() of $external_editor failed!\n";
                 POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
