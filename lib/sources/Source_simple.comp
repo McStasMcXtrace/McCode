@@ -5,14 +5,14 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Source_flat
+* Component: Source_simple
 *
 * %I
 * Written by: Kim Lefmann 
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
