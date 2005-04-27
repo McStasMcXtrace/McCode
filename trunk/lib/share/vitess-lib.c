@@ -14,15 +14,15 @@
 * Release: McStas 1.6
 * Version: 1.2
 *
-* This file is to be imported by the mcstas2vitess perl script
-* It handles the way Vitess parses parameters.
+* This file is to be imported by the mcstas2vitess perl script 
+* It handles the way Vitess parses parameters. 
 * Functions are imported in the Virtual_imput and Virtual_output
 * components. Embedded within instrument if MC_EMBEDDED_RUNTIME is defined.
 *
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.c,v 1.11 2005-02-21 09:13:40 farhi Exp $
+* $Id: vitess-lib.c,v 1.12 2005-04-27 14:46:10 lieutenant Exp $
 *
 *	$Log: not supported by cvs2svn $
 *	Revision 1.10  2003/02/11 12:28:46  farhi
@@ -33,9 +33,9 @@
 *	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
 *	Progress_bar: precent -> percent parameter
 *	CS: ----------------------------------------------------------------------
-*
+*	
 * Revision 1.2 2002/08/28 11:39:00 ef
-*	Changed to lib/share/c code.
+*	Changed to lib/share/c code. 
 *
 * Revision 1.1 2000/08/28 11:39:00 kn
 *	Initial revision
@@ -43,24 +43,19 @@
 
 #ifndef VITESS_LIB_H
 #error McStas : please import this library with %include "vitess-lib"
-#endif
+#endif  
 
 /* Convert McStas state parameters to VITESS Neutron structure. In
    VITESS, the neutron velocity is represented by a wavelength in
    AAngstroem and a unit direction vector, time is in msec and
    positions are in cm.*/
-/* Coordinate system change:
-   Vitess McStas
-   x      z
-   y      x
-   z      y
- */
 Neutron mcstas2vitess(double x, double y, double z,
 		      double vx, double vy, double vz,
-		      double t,
+		      double t, 
           double sx, double sy, double sz,
           double p)
 {
+  static unsigned long  i=0;
   double v,s;			/* Neutron speed */
   Neutron neu;			/* Vitess Neutron structure */
 
@@ -84,9 +79,14 @@ Neutron mcstas2vitess(double x, double y, double z,
     neu.Spin[1] = sx/s;
     neu.Spin[2] = sy/s;
   }
-
+  
   neu.Time = t*1000;		/* Convert time from sec to msec */
   neu.Probability = p;		/* Neutron weight */
+  neu.Color = 0;
+  neu.Debug = 'N';
+  neu.ID.IDGrp[0] = 'A';
+  neu.ID.IDGrp[1] = 'A';
+  neu.ID.IDNo     = i++;
   return neu;
 }
 
@@ -97,27 +97,27 @@ Neutron mcstas2vitess(double x, double y, double z,
 void vitess2mcstas(Neutron neu,
 		   double *x, double *y, double *z,
 		   double *vx, double *vy, double *vz,
-       double *t,
+       double *t, 
        double *sx, double *sy, double *sz,
 		   double *p)
 {
   double v;			/* Neutron speed */
 
-  *y = 0.01*neu.Position[0];	/* Convert position from cm to m */
-  *z = 0.01*neu.Position[1];
-  *x = 0.01*neu.Position[2];
+  *x = 0.01*neu.Position[1];	/* Convert position from cm to m */
+  *y = 0.01*neu.Position[2];
+  *z = 0.01*neu.Position[0];
   if(neu.Wavelength == 0.0)
   {
     fprintf(stderr, "Error: zero wavelength! (mcstas2vitess: )\n");
     exit(1);
   }
   v = 3956.0346/neu.Wavelength;	/* Convert wavelength to speed */
-  *vy = v*neu.Vector[0];	/* Convert unit direction vector to velocity */
-  *vz = v*neu.Vector[1];
-  *vx = v*neu.Vector[2];
-  *sy = neu.Spin[0];
-  *sz = neu.Spin[1];
-  *sx = neu.Spin[2];
+  *vx = v*neu.Vector[1];	/* Convert unit direction vector to velocity */
+  *vy = v*neu.Vector[2];
+  *vz = v*neu.Vector[0];	
+  *sx = neu.Spin[1];
+  *sy = neu.Spin[2];
+  *sz = neu.Spin[0];
   *t = 0.001*neu.Time;		/* Convert msec to sec */
   *p = neu.Probability;		/* Neutron weight */
 }
@@ -229,6 +229,129 @@ int vitess_main(int argc, char *argv[], int **check_finished,
   } while(!**check_finished);
   mcfinally();
   return 0;
+}
+
+/********************************************************************************************/
+
+#ifdef _MSC_VER
+# include <fcntl.h>
+# include <io.h>
+# define cSlash '\\'
+#else
+# define cSlash '/'
+#endif
+
+double dTimeMeas   =  0.0,  /* time of measurement           [s]   */
+       dLmbdWant   =  0.0,  /* desired wavelength            [Ang] */
+       dFreq       =  0.0;  /* frequency of the soure        [Hz]  */ 
+
+long     BufferSize;      /* size of the neutron input and output buffer */
+Neutron* InputNeutrons;   /* input neutron Buffer */
+Neutron* OutputNeutrons;  /* output neutron buffer */
+
+double   wei_min=0.0;     /* Minimal weight for tracing neutron */
+long     keygrav=1;
+short    bTrace=TRUE,     /* criterion: write trace files */
+         bNewFrame=TRUE,  /* criterion: new co-ordinate system set for current module */
+         bSepRate=TRUE;   /* criterion: write separate count rates */
+char*    ParDirectory;    /* parameter directory */
+int      ParDirectoryLength;
+
+void setParDirectory (char *a); 
+
+/**************************************************************/
+/* Init does a general program initialization, which is ok    */
+/* for all modules of the VITESS program package.             */
+/**************************************************************/
+
+void McInitVt()
+{
+  /* Set some default values */
+  BufferSize  = 2;
+  LogFilePtr  = stdout;
+
+  if (mcdirname==NULL)
+	  setParDirectory(getenv("PWD") ? getenv("PWD") : ".");
+  else
+    setParDirectory(mcdirname);
+  idum    = -mcseed;
+  keygrav = (long) mcgravitation;      /* key for gravity 1 -yes (default), 0 - no  */
+
+  /* allocte memory for the neutron buffers */
+  if((InputNeutrons=(Neutron *)calloc(BufferSize, sizeof(Neutron)))==NULL) {
+    fprintf(LogFilePtr, "Couldn't allocate memory for input buffer\n");
+    exit(-1);
+  }
+  if((OutputNeutrons=(Neutron *)calloc(BufferSize, sizeof(Neutron)))==NULL) {
+    fprintf(LogFilePtr, "Couldn't allocate memory for output buffer\n");
+    exit(-1);
+  }
+
+  /* initalize the random number generator */
+  ran3(&idum);
+}
+
+
+/*****************************************************************/
+/* Cleanup() does last things before the VITESS module is closed */
+/* e.g. buffers are flushed and files are closed etc.            */
+/* you should also write your OwnCleanup() for your module       */
+/*****************************************************************/
+void McCleanupVt()
+{
+  /* release the buffer memory */
+  free(InputNeutrons);
+  free(OutputNeutrons);
+}
+
+
+void setParDirectory (char *a) {
+  int len;
+  if ((len = strlen(a))) {
+    /* last character should be a slash */
+    if (a[len-1] == cSlash) {
+      memcpy ((ParDirectory = (char *) malloc(len+1)), a, len);
+    } else {
+      memcpy ((ParDirectory = (char *) malloc(len+2)), a, len);
+      ParDirectory[len++] = cSlash;
+      ParDirectory[len] = 0;
+    }
+    ParDirectoryLength = len;
+  }
+}
+
+/* Adding path of parameter directory to file name */
+char* FullParName(char* filename)
+{
+  int sel=0;
+  char *res, *a=NULL;
+  int alen, blen;
+
+  if (filename == 0)
+     return 0;
+
+  /* Do not change an absolute path. */
+ #ifdef _MSC_VER
+  /* we consider a filename with : as absolute */
+  if (strstr(filename, ":")) sel = -1;
+ #else
+  if (filename[0] == '/') sel = -1;
+ #endif
+  if (sel == -1) {
+    alen = 0;
+  } else if (sel == 0) {
+    a = ParDirectory;
+    alen = ParDirectoryLength;
+  } 
+  blen = strlen(filename);
+  if ((res = (char *) malloc(alen+blen+1)))
+  { if (alen)
+      strcpy(res, a);
+    else
+      strcpy(res,"");
+    strcat(res, filename);
+  }
+  return res;
 }
 
 /* end of vitess-lib.c */
