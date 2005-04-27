@@ -22,9 +22,18 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.h,v 1.11 2003-02-11 12:28:46 farhi Exp $
+* $Id: vitess-lib.h,v 1.12 2005-04-27 14:42:07 lieutenant Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.11  2003/02/11 12:28:46  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*	
 * Revision 1.2 2002/08/28 11:39:00 ef
 *	Changed to lib/share/c code. Updated to Vitess 2.3 Neutron structure.
 *
@@ -33,22 +42,23 @@
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
-#define VITESS_LIB_H "$Revision: 1.11 $"
+#define VITESS_LIB_H "$Revision: 1.12 $"
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
+#ifndef GENERAL_H
+ #include <math.h>
+ #include <stdlib.h>
+ #include <stdio.h>
 
-/* The Neutron structure, taken from VITESS 2.3 source code "general.h" */
-typedef double VectorType[3];
-typedef struct
-{
+ /* The Neutron structure, taken from VITESS 2.3 source code "general.h" */
+ typedef double VectorType[3];
+ typedef struct
+ { 
 	char           IDGrp[2];
-	unsigned long  IDNo;
-}
-TotalID;
-typedef struct 
-{
+	unsigned long  IDNo; 
+ }
+ TotalID;
+ typedef struct 
+ {
 	TotalID        ID;
 	char           Debug;
 	short          Color;
@@ -58,8 +68,9 @@ typedef struct
 	VectorType     Position;
 	VectorType     Vector;
 	VectorType     Spin;
-}
-Neutron;
+ }
+ Neutron;
+#endif
 
 extern char *vitess_infile;	/* Neutron input file name, or NULL. */
 extern char *vitess_outfile;	/* Neutron output file name, or NULL. */
