@@ -293,7 +293,6 @@ sub plot_dialog {
     # Platform checks. Assumption: Either unix type os / Win32.
     my $prefix          = $MCSTAS::mcstas_config{'PREFIX'};
     my $suffix          = $MCSTAS::mcstas_config{'SUFFIX'};
-    my $background      = $MCSTAS::mcstas_config{'BACKGROUND'};
 
     my @plot_cmd = ();
     if ($Config{'osname'} ne 'MSWin32') { # change spaces into \spaces
@@ -374,11 +373,35 @@ END
       } else {
         push @plot_cmd, $sim_file_name;
         push @plot_cmd, $suffix;
-        push @plot_cmd, $background;
         my $cmd=join(' ',@plot_cmd);
         putmsg($cmdwin, "$cmd\n",'msg');
-        system $cmd;
-      }
+	if($Config{'osname'} eq "MSWin32") {
+	    system($cmd);
+	} else {
+	    my $pid = fork();
+	    if(!defined($pid)) {
+		$w->messageBox(-message =>
+			       "Failed to spawn plotter \"$cmd.",
+			       -title => "Plotter failed",
+			       -type => 'OK',
+			       -icon => 'error');
+		return 0;
+	    } elsif ($pid > 0) {
+		waitpid($pid, 0);
+		return 1;
+	    } else {
+		# Double fork to avoid having to wait() for the editor to
+		# finish (or having it become a zombie). See man perlfunc.
+		unless(fork()) {
+		    exec($cmd);
+		    # If we get here, the exec() failed.
+		    print STDERR "Error: exec() of $external_editor failed!\n";
+		    POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
+		}
+		POSIX::_exit(0);                # CORE:exit needed to avoid Perl/Tk failure.
+	    }
+	}
+    }
 }
 
 sub preferences_dialog {

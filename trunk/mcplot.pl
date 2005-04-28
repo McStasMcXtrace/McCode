@@ -66,15 +66,12 @@ my $passed_arg_str = "";
 my $passed_arg_str_quit = "";
 my $inspect = "";
 my ($plotter);
-my $nowindow = -1;
+my $nowindow = 0;
 my $do_swap=0;
 my $daemon=0;
 my $wait=10;
 our $tmp_file = "";
 
-if ($Config{'osname'} eq 'MSWin32'){
-  $nowindow = 0;
-}
 $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
 for($i = 0; $i < @ARGV; $i++) {
@@ -156,11 +153,6 @@ if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
 if ($file =~ m'\.sci$' || $file =~ m'\.sce$') {$plotter = "Scilab"; }
 if ($file =~ m'\.sim$')  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
-
-if ($nowindow eq -1) {  # was not set in argument list
-  if ($plotter =~ /Scilab/i) { $nowindow=0; } # Will try Tcl/Tk interface with Scilab
-  else { $nowindow=1; }
-}
 
 # Added E. Farhi, March 2003. plotter (pgplot, scilab, matlab, html) -> $file
 if ($plotter =~ /Scilab/i) {
