@@ -200,7 +200,7 @@ sub mcdoc_manual {
 }
 
 sub mcdoc_compman {
-    my $cmd = "$prefix mcdoc$suffix --manual $background";
+    my $cmd = "$prefix mcdoc$suffix --comp $background";
     putmsg($cmdwin, "Opening Component Manual: $cmd\n", 'msg');
     system("$cmd");
 }
