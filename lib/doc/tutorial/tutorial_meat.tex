@@ -1,7 +1,7 @@
 \section{Introduction}
 This paper has been written to help out novel users of McStas and neutron
 scattering instruments. McStas is a software package for simulating
-neutron scattering experiments using a ray-trace technique. This paper 
+neutron scattering experiments using a ray-tracing technique. This paper 
 aims at helping the user to gain insight into basic neutron scattering 
 as well as neutron raytracing using the McStas software package
 \cite{McStas0},\cite{Manual},\cite{Websites}.
@@ -10,7 +10,7 @@ Needed knowledge and equipment work through the tutorial is
 \begin{itemize}
 \item{Undergraduate knowledge of mathematics and physics}
 \item{A computer with McStas installed (refer to the McStas
-    \htmladdnormallink{homepage}{http://mcstas.risoe.dk} \cite{Websites} for details)}
+    \htmladdnormallink{homepage}{http://mcstas.risoe.dk} \cite{Websites} for details) or a bootable McKnoppix cdrom (no installation required)}
 \item{This paper}
 \end{itemize}
 \subsection{Goals and tasks}
@@ -21,8 +21,7 @@ The goals and tasks of this paper are
     neutron scattering instrument}
 \item{To teach you basic usage of the McStas neutron simulation
     package}
-\item{To let you create your first McStas instrument, a triple axis
-    diffractometer}
+\item{To let you create your first McStas instruments, a two axis diffractometer and a triple axis spectrometer}
 \item{To teach you how to modify your instrument for a specific task}
 \item{To help you learn to debug instruments}
 \item{To help you aquire and analyze data from McStas simulations}
@@ -35,13 +34,13 @@ a wave of wavelength $\lambda$ against a series of
 lattice planes with lattice spacing $d$, rotated the angle $\theta$
 off the lattice plane normal. $n$ is an integer giving the spectral
 order of the scattered wave. In neutron science one often refers to
-the \emph{scattering vector}, $\vec{Q}$ of a given reflection, where
-\[Q=|\vec{Q}|=\frac{2\pi}{d}.\]
+the \emph{scattering vector}, $\vec{\kappa}$ of a given reflection, where
+\[\kappa=|\vec{\kappa}|=\frac{2\pi}{d}.\]
 This gives us the scattering vector formulation of the Bragg law
-\[Q=2k\sin(\theta),\]
+\[\kappa=2k\sin(\theta),\]
 where $k=\frac{2\pi}{n\lambda}$.
 %such that
-%\[n\lambda=4\pi Q^{-1}\sin(\theta)\]
+%\[n\lambda=4\pi \kappa^{-1}\sin(\theta)\]
 The Bragg law / scattering condition is illustrated in Figure \ref{bragg.eps}.
 \begin{figure}[htb!]
 \begin{center}
@@ -54,13 +53,13 @@ Most of the neutron processes we will study in this paper are elastic,
 meaning that the wavelength of the neutron is unaltered by the process.
 \section{Basic understanding of instrument components}
 In the McStas formulation of a neutron scattering instrument, all
-objects apart from the neutron are referred to as components. This
+objects apart from the neutron ray are referred to as components. This
 includes for instance
 \begin{itemize}
 \item{{\bf Source} The exit of a neutron production facility, where
-    neutrons of certain velocities are emitted into some
+    neutron rays of certain velocities are emitted into some
     portion of space}
-\item{{\bf Monochromator/Analyzer} (Idealized) crystals used to select a
+\item{{\bf Monochromator} (Idealized) crystals used to select a
     neutrons of a single wavelength $\lambda_0$ \footnote{In reality,
     the monochromator selects a normal distribution of wavelegths
     around $\lambda_0$} to probe the sample with (monochromator) or to 
@@ -68,28 +67,28 @@ includes for instance
 \item{{\bf Sample} An object altering the neutron physical properties
     in some sense, examples used here are}
   \begin{itemize}
-    \item{Vanadium. Scatters incoming neutrons incoherently}
+    \item{Vanadium. Scatters incoming neutron rays incoherently}
     \item{Powder2. Can be thought of as a large number of crystals,
-        each scattering neutrons according to the Bragg law, thereby
+        each scattering neutron rays according to the Bragg law, thereby
         producing two concentric Debye Sherrer cones. This sample also
         has the posibility of adding inchoherent, eleasticly scattered
-        neutrons.}
+        neutron rays.}
     \end{itemize}
-\item{{\bf Monitors} Objects \emph{monitoring} or registering neutron
+\item{{\bf Monitors} Objects \emph{monitoring} or registering neutron ray
     characteristics. In the exercises below are used different types
     of detectors or monitors:}
   \begin{itemize}
     \item{Monitor. Single monitor, detecting the number of flying
         through a plane. (User defined opening size)}
     \item{PSD\_monitor. Square monitor, detecting the number of
-        neutrons passing through a plane, divided into
+        neutron rays passing through a plane, divided into
         pixels. square regions of a plane. (User defined resolution 
         and opening siz)}
     \item{PSD\_monitor\_4PI. As PSD\_monitor but shaped like a sphere.}
     \item{L\_monitor. Wavelength monitor, measuring the different
-        wavelengths of the passing neutrons. (L is for $\lambda$)}
+        wavelengths of the passing neutron rays. (L is for $\lambda$)}
     \item{Monitor\_nD. General monitor for detecting all sorts of
-        physical properties of the neutron. In our cases used with
+        physical properties of the neutron ray. In our cases used with
         options }
       \begin{itemize}
       \item{'single' - as PSD\_monitor but only one small square}
@@ -112,6 +111,7 @@ to your webbrowser of choice):
 \item{\verb+mcdoc -s+ , Shows a html list of all the components}
 \item{\verb+mcdoc Monitor.comp+ , Shows the documentation for a given component}
 \item{\verb+mcdoc -M+ , brings up the McStas manual in PDF format}
+\item{\verb+mcdoc -c+ , brings up the McStas component manual in PDF format}
 \end{itemize}
 
 \section{Basic McStas}
@@ -121,8 +121,8 @@ a single piece of \texttt{ansi-c} code. Using a compiler, e.g.
 \texttt{gcc}, the c code is compiled into an executable program 
 which can be run on your computer. Optionally, the program takes 
 input arguments to tune the setup of your instrument/simulation. 
-This section will take you through a (very) simple example instrument 
-to learn you the basic instrument language of McStas. (Instrument 
+This section will take you through a simple example instrument 
+to teach you the basic instrument language of McStas. (Instrument 
 filename is vanadium\_example.instr, can be loaded using the
 \verb+Neutron Site/Tutorial+ menu item of the \verb+mcgui+, see below)
 Please study \emph{carefully} the instructive comments,
@@ -135,7 +135,7 @@ DEFINE INSTRUMENT vanadium_example(ROT=0)
 
 /* The DECLARE section allows us to declare variables  */
 /* in c syntax. Here, coll_div (collimator divergence) */
-/* is set to 60 degrees...                             */
+/* is set to 60 arc minutes...                         */
 DECLARE
 %{
   double coll_div = 60;
@@ -146,10 +146,10 @@ DECLARE
 TRACE
 
 /* The Arm() class component defines reference points  */
-/* in 3D space. Every component instance must have a   */
-/* unique name. Here, arm is used. This Arm() component*/
-/* is set to define the origin of our global coordinate*/
-/* system (AT (0,0,0) ABSOLUTE)                        */
+/* and directions in 3D space. Every component instance*/
+/* must have a unique name. Here, arm is used. This    */
+/* Arm() component is set to define the origin of our  */
+/* global coordinate system (AT (0,0,0) ABSOLUTE)      */
 COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
 
 /* Next, we need some neutrons. Let's place a neutron  */
@@ -159,14 +159,13 @@ COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
 /* component, meaning that modifying the position or   */
 /* orientation of the arm will also affect the source  */
 /* component (and other components after that one...   */
-COMPONENT source = Source_flat(radius = 0.015, dist = 1,
+COMPONENT source = Source_simple(radius = 0.015, dist = 1,
   xw=0.024, yh=0.015, E0=5, dE=0.2)
  AT (0,0,0) RELATIVE arm
 
-/* Here we have a collimator - or Soller - placed to   */
-/* improve beam divergence.                            */
-/* The component is placed at a distance RELATIVE to   */
-/* a previous component...                             */
+/* Here we have a collimator - placed to improve beam  */
+/* divergence. The component is placed at a distance   */
+/* RELATIVE to a previous component...                 */
 COMPONENT collimator = Collimator_linear(len = 0.2, 
   divergence = coll_div, xmin = -0.02, xmax = 0.02, 
   ymin = -0.03, ymax = 0.03)
@@ -207,6 +206,17 @@ END
 Enlightened by the above example, you are probably now ready to learn
 a few more important details and tips about McStas.
 \begin{itemize}
+\item{{\bf Neutron representation:} A neutron 'history' or package is
+  an entity representing a large number of neutrons. It has the
+  following physical properties:
+  \begin{itemize}
+    \item{Spatial coordinates, $\vec{x}$ or $x,y,z$}
+    \item{Velocity components, $\vec{v}$ or $v_x,v_y,v_z$}
+    \item{Spin components, $\vec{s}$ or $s_x,s_y,s_z$}
+    \item{Time, $t$}
+    \item{Neutron weight factor, $p$}
+  \end{itemize}
+  initial \emph{neutron weight} $p_0$. }
 \item{{\bf Neutron histories/Intensities:} McStas simulates neutron
     histories rather than direct neutron counts, i.e. when a
     Monte Carlo choice is made in a given component (e.g. a random
@@ -225,7 +235,7 @@ a few more important details and tips about McStas.
 \item{{\bf 3D space:} The 3D space in which the instrument is defined,
   usually has a single component which is
   placed ABSOLUTEly  in space, e.g. at (0,0,0). All other components
-  can be placed relative to this component.}
+  can be placed RELATIVE to this component.}
 \item{{\bf Changing coordinate system:} Each component has its own
     local coordinate system. As the neutron travels from one component
     to the other, the local component coordinate system changes. The
@@ -274,9 +284,9 @@ Here are a few hints on using the tools:
 \end{itemize}
 \section{Exercises}
 Throughout the rest of this paper, you will have to do the work!
-Through a series of small exersices, you will set up and use a simple
-neutron scattering instrument: a triple axis spectrometer. To get an idea of what your final
-instrument might look like, see the sample instrument protrayed in Figure \ref{instr.eps}
+Through a series of small exersices, you will set up and use two simple
+neutron scattering instruments: a two axis diffractometer and a triple axis spectrometer. To get an idea of what your final
+instrument might look like, see the sample instrument protrayed in Figure \ref{instr.eps}.
 \begin{figure}[htb!]
 \begin{center}
 \includegraphics[width=12cm]{pics/instr.eps}
@@ -303,11 +313,15 @@ source. }
 \item{Narrow down the interval of wavelengths emitted from the
 source to e.g. l\_low=0.999 and l\_high=1.001. Rerun your simulation to
 check the effect. Reset the wavelength interval to [0.1 10] \AA.}
+\item{Estimate the solid angle covered by your PSD. Try if you can
+  understand I, the neutron intensity in the PSD, in the two previous
+  runs. Try running the simulation with half or double the number of
+  neutron rays. Try also to vary the source focus area. Explain what you observe.}
 \end{enumerate}
 \subsection{Exercise: Insert a monochromator}
 \begin{enumerate}
 \item{Keeping your current components, insert a Monochromator\_flat
-component (use mcdoc to get the needed parameters) and a
+component (use mcdoc or the component manual to get the needed parameters) and a
 new set of PSD and L\_monitor after the monochromator. You should now add
 two new input parameters of your instrument, e.g. OMM (Omega
 Monochromator) and TTM (Two Theta Monochromator)
@@ -323,21 +337,23 @@ monochromator is as portrayed in Figure \ref{mono.eps}.
 \end{figure}
 These two instrument input parameters should be added to the DEFINE line of the instrument (start of file). Remember to add an Arm()'s at the rotation point. }
 \item{Given $\lambda$ = 4\AA, and knowing that for the
-monochromator $Q=1.8734$ \AA$^{-1}$ (Pyrolytic Graphite), use Bragg's law to determine the 
+monochromator $\kappa=1.8734$ \AA$^{-1}$ (Pyrolytic Graphite), use Bragg's law to determine the 
 correct Bragg angle (i.e. OMM/TTM) for the monochromator for the $n=1$ reflection. }
 \item{Do a scan of OMM a couple of angles around this value to verify
     the finding, keeping TTM fixed. This will be achieved by setting the OMM value to 'min,max' (replace by relevant numerical values) in the Run Simulation window, and selecting the Scan check button in that same window. Enter the number of steps to compute (e.g. 10). Check the position of the peak on
     the PSD and the wavelength on the L\_monitor. }
-\item{What should $Q$ be set to to get the $n=2$ reflection at exactly
+\item{What should $\kappa$ be set to to get the $n=2$ reflection at exactly
     OMM=45$^\circ$ (TTM=90$^\circ$)?
-Adjust $Q$ for the monochromator and verify the calculation by a
+Adjust $\kappa$ for the monochromator and verify the calculation by a
 scan, check the wavelength. }
 \item{Determine the Bragg angle for the $n=1$ reflection in this
-setting of $Q$, and verify by scaning OMM. Set OMM to this value}
+setting of $\kappa$, and verify by scaning OMM. Set OMM to this
+value. Perform the simulation and check the wavelength distribution.
+Comment.}
 \item{Before you go on, change the minimum and maximum wavelengths of
     the source to a narrow interval around the wavelength you select,
     e.g. 4\AA. (No need to
-    produce neutrons that will not be scattered at the monochromator...)}
+    produce neutron rays that will not be scattered at the monochromator...)}
 \end{enumerate}
 \subsection{Exercise: Insert a sample}
 \begin{enumerate}
@@ -347,14 +363,15 @@ setting of $Q$, and verify by scaning OMM. Set OMM to this value}
     At the
     same position as the sample, insert a PSD\_monitor\_4PI\_log component of radius
     1.0 m., located AT (0,0,0) RELATIVE to your sample.
-    Also, insert a Beamstop component after the sample, e.g. AT
-    (0,0,0.5) RELATIVE 
-     Read the documentation for details on input parameters.
+    Read the documentation for details on input parameters.
     Run a simulation. Notice the number of hits.}
 \item{Restrict the solid angle of scattering from the vanadium sample,
   focus on the PSD\_monitor\_4PI\_log by using \texttt{target\_x=1} and
   e.g. \texttt{focus\_r=0.2} as input parameter to the sample. Run a
   simulation. Notice the number of hits. Improvement?}
+\end{enumerate}
+\subsection{Exercise: Insert a different sample}
+\begin{enumerate}
 \item{Next, let us insert something more interesting. Remove the
     V\_sample and  PSD\_monitor\_4PI\_log. Insert a Powder2 component
     with the following parameters:
@@ -372,7 +389,7 @@ COMPONENT sample = Powder2(radius=0.01,h=0.01, q_1=1, q_2=1.3,
 COMPONENT ND = Monitor_nD(xwidth=1, options="banana, theta limits=[-45 45],auto y")
   AT (0,0,0) RELATIVE a5
 \end{verbatim}
-and take away the previously inserted Beamstop. Run a long simulation (many neutrons) and have coffee.}
+and take away the previously inserted Beamstop. Run a long simulation (many neutron rays) and have coffee.}
 \end{enumerate}
 \subsection{Exercise: Insert an analyzer}
 \begin{enumerate}
@@ -380,9 +397,9 @@ and take away the previously inserted Beamstop. Run a long simulation (many neut
     Monitor\_nD component to ``single''. Also, add an angle to rotate
     the part of the instrument located after the sample, e.g. TT (Two
     $\Theta$) and decide a more relevant size of the now rectangular detector. Look at your results from the last simulation to
-    determine an approximate scan range for the OM angle. Also,
+    determine an approximate scan range for the TT angle. Also,
     set a small focus\_r on the sample component to minimize
-    calculation time on non-detected neutrons. Scan OM across the
+    calculation time on non-detected neutron rays. Scan TT across the
     powder lines.}
 \item{Between sample and detector, set up an analyser crystal by
     copying and modifying your monochromator component. (Add new arms
@@ -406,8 +423,13 @@ K. Lefmann and K. Nielsen: \emph{McStas, a general software package
   for neutron ray-tracing simulations}, Neutron News, {\bf 10} pp. 20-23, 1999
 
 \bibitem{Manual}
-P. Willendrup, E. Farhi K. Lefmann et. al.: \emph{User and Programmers Guide to the Neutron Ray-Tracing Package McStas, Version 1.8},Ris\o\ National Laboratory, Roskilde, Denmark, January 2004\\
-\newblock (\url{http://mcstas.risoe.dk/documentation/manual/mcstas-1.8-manual.pdf})
+P. Willendrup, E. Farhi K. Lefmann et. al.: \emph{User and Programmers
+  Guide to the Neutron Ray-Tracing Package McStas, Version 1.9},Ris\o\
+National Laboratory, Roskilde, Denmark, January 2005\\
+\bibitem{Component Manual}
+P. Willendrup, E. Farhi K. Lefmann et. al.: \emph{Component Manual for
+ the Neutron Ray-Tracing Package McStas, Version 1.9},Ris\o\
+National Laboratory, Roskilde, Denmark, January 2005\\
 
 \bibitem{Websites}
 McStas homepages:\\
