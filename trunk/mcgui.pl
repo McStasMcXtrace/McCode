@@ -56,6 +56,7 @@ use Tk;
 use Tk::TextUndo;
 use Tk::ROText;
 use Tk::DialogBox;
+use File::Path;
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
@@ -801,6 +802,11 @@ sub menu_run_simulation {
         push @command, "--trace" if ($newsi->{'Trace'} eq 1);
         push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
         push @command, "--dir=$OutDir" if $newsi->{'Dir'};
+	if ($newsi->{'Force'} eq 1) {
+	    if (-e $OutDir) {
+		rmtree($OutDir,0,1);
+	    }
+	}
         push @command, "--format='$plotter'";
 
         my @unset = ();

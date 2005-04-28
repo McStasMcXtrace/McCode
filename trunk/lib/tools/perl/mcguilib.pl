@@ -71,6 +71,7 @@ sub simulation_dialog {
     $si{'Trace'} = 0 unless $si{'Trace'};
     $si{'NScan'} = 0 unless $si{'NScan'};
     $si{'Multi'} = 0 unless $si{'Multi'};
+    $si{'Force'} = 0 unless $si{'Force'};
     $si{'mpi'}   = 0 unless $si{'mpi'};
     # 'Inspect' field for use of mcdisplay's built-in
     # neutron filter, filtering away all neutrons not
@@ -144,11 +145,13 @@ sub simulation_dialog {
     my $f0 = $opt_frame->Frame;
     $f0->pack(-anchor => 'w', -fill => 'x');
     $f0->Label(-text => "Output to (dir):")->pack(-side => 'left');
+    
     my $dir_entry = $f0->Entry(-relief => 'sunken',
                                -width=>30,
                                -justify => 'left',
                                -textvariable => \$si{'Dir'});
     $dir_entry->pack(-side => 'left');
+    $f0->Checkbutton(-text => "force",-variable => \$si{'Force'})->pack(-side => 'left');
     $f0->Button(-text => "Browse ...", -width => 11,
                 -command => sub { my $d = get_dir_name($dlg, $si{'Dir'});
                                   $si{'Dir'} = $d if $d; } )->pack(-side => 'right');
