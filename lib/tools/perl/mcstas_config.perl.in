@@ -21,7 +21,6 @@
 #            2 - Default to external editor
 # EXTERNAL_EDITOR - default external editor, overriden by VISUAL or EDITOR variables
 # BROWSER  - Default BROWSER, overriden by BROWSER variable
-# BACKGROUND     - process backgrounding character
 # PREFIX   - Prefix for commands (e.g. start or empty)
 # SUFFIX   - Suffix for perl scripts (.pl)
 # DATE     - date format
@@ -51,7 +50,6 @@ use Config;
      SSH => '@SSH@',
      MPIRUN => '@MPIRUN@',
      MPICC => '@MPICC@',
-     BACKGROUND => ' &',
      PREFIX => '',
      SUFFIX => '',
      PLOTTER => 'Scilab',
