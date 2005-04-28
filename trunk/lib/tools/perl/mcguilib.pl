@@ -82,7 +82,15 @@ sub simulation_dialog {
     # component range to visualize..
     $si{'First'} = '' unless $si{'First'};
     $si{'Last'} = '' unless $si{'Last'};
-
+    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
+    my $Format;
+    if (!$si{'Format'}) {
+	if ($plotter =~ /PGPLOT|McStas/i) { $si{'Format'} = 0; }
+	elsif ($plotter =~ /Matlab/i)     { $si{'Format'} = 1; }
+	elsif ($plotter =~ /Scilab/i)     { $si{'Format'} = 2; }
+	elsif ($plotter =~ /HTML/i)       { $si{'Format'} = 3; }
+    }
+    
     my $name_instr = $ii->{'Instrument-source'};
     my $dlg = $win->DialogBox(-title => "Run simulation $name_instr",
                               -buttons => ["Start", "Cancel"]);
@@ -167,14 +175,32 @@ sub simulation_dialog {
 				  -relief => 'flat')->pack(-anchor => 'w');
       }
     }
-    my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-    if ($plotter =~ /PGPLOT|McStas/i) { $name_instr = "PGPLOT"; }
-    elsif ($plotter =~ /Matlab/i)     { $name_instr = "Matlab"; }
-    elsif ($plotter =~ /Scilab/i)     { $name_instr = "Scilab"; }
-    elsif ($plotter =~ /HTML/i)       { $name_instr = "HTML/VRML"; }
-    $opt_frame->Checkbutton(-text => "Plot results ($name_instr)",
+    my $ff1 = $opt_frame->Frame;
+    $ff1->pack(-anchor => 'w');
+    $ff1->Checkbutton(-text => "Plot results, Format: ",
                             -variable => \$si{'Autoplot'},
-                            -relief => 'flat')->pack(-anchor => 'w');
+                            -relief => 'flat')->pack(-side => 'left');
+    #my($ListBoxFormat)=$ff1->Scrolled('Listbox',-height => '2', -width => '20', -scrollbars => 'oe', -exportselection => 'false')->pack(-side => 'right');
+    #my @Formats = ('PGPLOT','Matlab','Scilab','HTML/VRML');
+    #foreach my $format (@Formats) {
+#        $ListBoxFormat->insert('end', $format);
+    #}
+    $ff1->Radiobutton(-text => "PGPLOT",
+                     -variable => \$si{'Format'},
+                     -relief => 'flat',
+                     -value => 0)->pack(-side => 'left');
+    $ff1->Radiobutton(-text => "Matlab",
+                     -variable => \$si{'Format'},
+                     -relief => 'flat',
+                     -value => 1)->pack(-side => 'left');
+    $ff1->Radiobutton(-text => "Scilab",
+                     -variable => \$si{'Format'},
+                     -relief => 'flat',
+                     -value => 2)->pack(-side => 'left');
+    $ff1->Radiobutton(-text => "HTML/VRML",
+                     -variable => \$si{'Format'},
+                     -relief => 'flat',
+                     -value => 3)->pack(-side => 'left');    
     my $f2 = $opt_frame->Frame;
     $f2->pack(-anchor => 'w');
     $f2->Radiobutton(-text => "Random seed",
