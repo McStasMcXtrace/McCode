@@ -57,6 +57,7 @@ use Tk::TextUndo;
 use Tk::ROText;
 use Tk::DialogBox;
 use File::Path;
+use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
@@ -798,7 +799,6 @@ sub menu_run_simulation {
           push @command, "--multi";
         }
         push @command, "--ncount=$newsi->{'Ncount'}";
-        push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
         push @command, "--trace" if ($newsi->{'Trace'} eq 1);
         push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
         push @command, "--dir=$OutDir" if $newsi->{'Dir'};
@@ -810,10 +810,26 @@ sub menu_run_simulation {
         push @command, "--format='$plotter'";
 
         my @unset = ();
+	my @multiple = ();
         for (@{$out_info->{'Parameters'}}) {
             if (length($newsi->{'Params'}{$_})>0) {
-                push @command, "$_=$newsi->{'Params'}{$_}";
-            } else {
+		# Check for comma separated values 
+		my @values = split(',',$newsi->{'Params'}{$_});
+		my $value = $newsi->{'Params'}{$_};
+		if (@values > 1) {
+		    @multiple = (@multiple, $_);
+		    if ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq ''){
+			my $j;
+			my $meanvalue=0;
+			for ($j=0; $j<@values; $j++) {
+			    $meanvalue = $values[$j];
+			}
+			$meanvalue = $meanvalue / @values;
+			$value = $meanvalue;
+		    }
+		} 
+		push @command, "$_=$value";
+	    } else {
                 push @unset, $_;
             }
         }
@@ -825,7 +841,25 @@ sub menu_run_simulation {
                            -icon => 'error');
             return;
         }
-        my $inittext = "Running simulation '$out_name' ...\n" .
+	if (@multiple > 0 && ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq '')) {
+	    $w->messageBox(-message =>
+                           "Scan range(s) not applicable. Mean value subsituted for parameter(s):\n\n@multiple",
+                           -title => "No scan here!",
+                           -type => 'OK',
+                           -icon => 'info');
+	}
+	if (@multiple eq 0 && $newsi->{'NScan'} > 1) {
+	    if (!$newsi->{'Trace'}) {
+		$w->messageBox(-message =>
+			       "No scan range(s) given! Performing single simulation",
+			       -title => "No scan here!",
+			       -type => 'OK',
+			       -icon => 'info');
+		$newsi->{'NScan'} = 0;
+	    }
+	}
+	push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
+	my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;
         $inf_sim=$newsi;
