@@ -106,7 +106,7 @@ sub ask_save_before_simulate {
           -type => 'YesNoCancel',
           -icon => 'question',
           -default => 'yes');
-        menu_save($w) if $ret eq "yes";
+        menu_save($w) if lc($ret) eq "yes";
         return $ret eq "Cancel" ? 0 : 1;
     } else {
         return 1;
@@ -760,7 +760,7 @@ sub menu_run_simulation {
                       # Make first char lower case - default on
                       # Win32 upper case default on Unix... (perl 5.8)
                       $break = lcfirst($break);
-                      if (($break eq "no")||($break eq "cancel")) {
+                      if ((lc($break) eq "no")||(lc($break) eq "cancel")) {
                           return 0;
                       }
                   }
