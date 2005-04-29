@@ -629,6 +629,8 @@ sub comp_instance_dialog {
       $dlg->grabRelease;
       if ($selected eq 'OK') {
         my $r_at = $r->{'AT'};
+	# Replace spaces in component instance name by underscores
+	$r->{'INSTANCE'} =~ s!\ !_!g;
         if ($r->{'INSTANCE'} eq "") { # instance not defined !
             $dlg->messageBox(-message => "Instance name is not defined for component $comp->{'name'}. Please set it to a name of your own (e.g. My_Comp).",
                        -title => "$comp->{'name'}: No Instance Name",
