@@ -934,6 +934,14 @@ sub make_comp_inst {
         my $length = scalar @p_splitted;
         my $p_last_word = $p_splitted[$length-1];
         if(defined($r->{'VALUE'}{$p}) && $r->{'VALUE'}{$p} !~ /^\s*$/) {
+	    # Take care of the special case where the parameter is 'filename'
+	    if (lc($p) eq 'filename') {
+		# Firstly, remove existing quotes :)
+		$r->{'VALUE'}{$p} =~ s!\"!!g;
+		$r->{'VALUE'}{$p} =~ s!\'!!g;
+		# Next, add quotes...
+		$r->{'VALUE'}{$p} = "\"$r->{'VALUE'}{$p}\"";
+	    }
             $add .= "$p_last_word = $r->{'VALUE'}{$p}";
         } elsif(defined($cdata->{'parhelp'}{$p}{'default'})) {
             next;                # Omit non-specified default parameter
