@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -73,7 +73,7 @@ DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0.035, pack = 1, 
   target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0, 
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=(3.024*3.024*3.024)/2, int target_index=0)
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=13.827, int target_index=0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
