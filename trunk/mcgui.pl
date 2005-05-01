@@ -139,9 +139,9 @@ sub menu_edit_current {
     if($edit_control) {
         $edit_window->raise();
     } else {
-        if ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'} eq 0) {
+        if ($MCSTAS::mcstas_config{'EDITOR'} eq 0) {
             setup_edit_1_7($main_window);
-        } elsif ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'} eq 1 && $MCSTAS::mcstas_config{'CODETEXT'}) {
+        } elsif ($MCSTAS::mcstas_config{'EDITOR'} eq 1 && $MCSTAS::mcstas_config{'CODETEXT'}) {
             setup_edit($main_window);
         } else {
             menu_spawn_editor($main_window);

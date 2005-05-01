@@ -149,6 +149,8 @@ if ($ENV{'BROWSER'}) {
 
 if ($ENV{'VISUAL'} || $ENV{'EDITOR'}) {
   $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'} = $ENV{'VISUAL'} || $ENV{'EDITOR'};
+  # If external editor defined, default to this...
+  $MCSTAS::mcstas_config{'EDITOR'} = 2;
 }
 
 if ($ENV{'MCSTAS_FORMAT'}) {
