@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -55,6 +55,7 @@
 * sig_i     : Incoherent scattering cross section pr. unit cell (barns)
 * V0        : Unit cell volume (AA^3)
 * pack      : Packing factor (1)
+* frac      : MC Probability for scattering the ray; otherwise penetrate (1) 
 * target_index: relative index of component to focus at, e.g. next is +1 (1).
 *
 * Variables calculated in the component
@@ -71,7 +72,8 @@
 
 DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0.035, pack = 1, 
+SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0.035, 
+  pack = 1, frac=1, 
   target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0, 
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=13.827, int target_index=0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
@@ -97,11 +99,16 @@ DECLARE
 INITIALIZE
 %{
  
-  if (!radius_o || !h) {
-    if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"V_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    else VarsV.isrect=1; }
-  else VarsV.isrect=0;
- 
+  if (!xwidth || !yheight || !zthick) /* Cannot define a rectangle */
+    if (!radius_o || !h)              /* Cannot define a cylinder either */ 
+      exit(fprintf(stderr,"V_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    else                              /* It is a cylinder */
+      VarsV.isrect=0; 
+  else                                /* It is a rectangle */ 
+    VarsV.isrect=1;
+
+/*  if(VarsV.isrect) printf("isrect"); else printf("not isrect"); */ 
+
   VarsV.sigma_a=sig_a;
   VarsV.sigma_i=sig_i;
   VarsV.rho = (pack/V0);
@@ -156,59 +163,81 @@ TRACE
     intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
   if(intersect)
   {
-    if(t0 < 0) ABSORB; /* we already passed the sample */
+    if(t0 < 0) ABSORB; /* we already passed the sample; this is illegal */
     /* Neutron enters at t=t0. */
-    if(VarsV.isrect) t1 = t2 = t3;
-    else if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
+    if(VarsV.isrect) 
       t1 = t2 = t3;
+    else 
+      if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
+        t1 = t2 = t3;
 
     dt0 = t1-t0;                /* Time in sample, ingoing */
     dt1 = t2-t1;                /* Time in hole */
     dt2 = t3-t2;                /* Time in sample, outgoing */
     v = sqrt(vx*vx + vy*vy + vz*vz);
     l_full = v * (dt0 + dt2);   /* Length of full path through sample */
-    dt = rand01()*(dt0+dt2);    /* Time of scattering (relative to t0) */
-    l_i = v*dt;                 /* Penetration in sample */
-    if (dt > dt0)
-      dt += dt1;
-
-    PROP_DT(dt+t0);             /* Point of scattering */
-    
-    aim_x = VarsV.tx-x;         /* Vector pointing at target (anal./det.) */
-    aim_y = VarsV.ty-y;
-    aim_z = VarsV.tz-z;
-    if(VarsV.aw && VarsV.ah) {
-      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 
-        aim_x, aim_y, aim_z, VarsV.aw, VarsV.ah, ROT_A_CURRENT_COMP);
-    } else if(VarsV.xw && VarsV.yh) {
-      randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
-        aim_x, aim_y, aim_z, VarsV.xw, VarsV.yh, ROT_A_CURRENT_COMP);
-    } else {
-      randvec_target_circle(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
-    }
-    NORM(vx, vy, vz);
-    vx *= v;
-    vy *= v;
-    vz *= v;
-
-    if(!VarsV.isrect) {
-      if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
-      {
-        /* ??? did not hit cylinder */
-        printf("FATAL ERROR: Did not hit cylinder from inside.\n");
-        exit(1);
-      }
-      dt = t3;
-      if(cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h) &&
-         t2 > 0)
-        dt -= (t2-t1);            /* Subtract hollow part */
-      l_o = v*dt;
-    }
-
     my_a = VarsV.my_a_v*(2200/v);
-    p *= l_full*VarsV.my_s*exp(-(my_a+VarsV.my_s)*(l_i+l_o));
-    p /= 4*PI/solid_angle;     
-    SCATTER;
+    
+    if (rand01()<frac)          /* Scattering */
+    {
+      dt = rand01()*(dt0+dt2);    /* Time of scattering (relative to t0) */
+      l_i = v*dt;                 /* Penetration in sample */
+      if (dt > dt0)
+        dt += dt1;
+
+      PROP_DT(dt+t0);             /* Point of scattering */
+    
+      aim_x = VarsV.tx-x;         /* Vector pointing at target (anal./det.) */
+      aim_y = VarsV.ty-y;
+      aim_z = VarsV.tz-z;
+      if(VarsV.aw && VarsV.ah) {
+        randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 
+          aim_x, aim_y, aim_z, VarsV.aw, VarsV.ah, ROT_A_CURRENT_COMP);
+      } else if(VarsV.xw && VarsV.yh) {
+        randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
+          aim_x, aim_y, aim_z, VarsV.xw, VarsV.yh, ROT_A_CURRENT_COMP);
+      } else {
+        randvec_target_circle(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+      }
+      NORM(vx, vy, vz);
+      vx *= v;
+      vy *= v;
+      vz *= v;
+
+      if(!VarsV.isrect) {
+        if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
+        {
+          /* ??? did not hit cylinder */
+          printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+          exit(1);
+        }
+        dt = t3;
+        if(cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h) &&
+           t2 > 0)
+          dt -= (t2-t1);            /* Subtract hollow part */      
+      }
+      else
+      {
+      if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick))
+        {
+          /* ??? did not hit box */
+          printf("FATAL ERROR: Did not hit box from inside.\n");
+          exit(1);
+        }
+        dt = t3;
+      }
+      l_o = v*dt;
+      p *= l_full*VarsV.my_s*exp(-my_a*(l_i+l_o)-VarsV.my_s*l_i);
+  /* We do not consider attenuation from 2nd time scattering */
+      p /= 4*PI/solid_angle;
+      p /= frac;     
+      SCATTER;
+    }
+  else /* Transmitting */
+    {
+      p *= exp(-(my_a+VarsV.my_s)*l_full);
+      p /= (1-frac);
+    }
   }
 %}
 
