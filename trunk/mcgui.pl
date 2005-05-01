@@ -57,7 +57,6 @@ use Tk::TextUndo;
 use Tk::ROText;
 use Tk::DialogBox;
 use File::Path;
-use List::Util qw(first max maxstr min minstr reduce shuffle sum);
 
 require "mcfrontlib.pl";
 require "mcguilib.pl";
