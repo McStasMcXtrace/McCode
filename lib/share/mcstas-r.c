@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.111 2005-03-30 21:37:21 farhi Exp $
+* $Id: mcstas-r.c,v 1.112 2005-05-07 14:29:01 lieutenant Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.111  2005/03/30 21:37:21  farhi
+* Corrected gravity bug at last after left test modification (A was replaced by 0 for comp testing, and not put back). Thanks Klaus ! Small time values replaced by 0 in 2nd order solve (Klaus).
+*
 * Revision 1.110  2005/03/23 14:41:11  farhi
 * Added test not to overwrite/delete a temp file by itself
 *
@@ -2808,6 +2811,7 @@ coords_add(Coords a, Coords b)
   c.x = a.x + b.x;
   c.y = a.y + b.y;
   c.z = a.z + b.z;
+  if (fabs(c.z) < 1e-14) c.z=0.0;
   return c;
 }
 
