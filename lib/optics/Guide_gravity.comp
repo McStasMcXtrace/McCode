@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -167,10 +167,10 @@ SHARE
     if (a_mtop    >= 0) aVars->M[3] =a_mtop   ;
     if (a_mbottom >= 0) aVars->M[4] =a_mbottom;
     /* n: normal vectors to surfaces */
-    aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] = -0.5*(aVars->w2c-aVars->w1c);  /* 1:+X left       */
-    aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] =  aVars->nz[1];             /* 2:-X right      */
-    aVars->nx[3] =  0;   aVars->ny[3] =  a_l; aVars->nz[3] = -0.5*(aVars->h2c-aVars->h1c);  /* 3:+Y top        */
-    aVars->nx[4] =  0;   aVars->ny[4] = -a_l; aVars->nz[4] =  aVars->nz[3];             /* 4:-Y bottom     */
+    aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] =  0.5*(aVars->w2c-aVars->w1c);  /* 1:+X left       */
+    aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] = -aVars->nz[1];             /* 2:-X right      */
+    aVars->nx[3] =  0;   aVars->ny[3] =  a_l; aVars->nz[3] =  0.5*(aVars->h2c-aVars->h1c);  /* 3:+Y top        */
+    aVars->nx[4] =  0;   aVars->ny[4] = -a_l; aVars->nz[4] = -aVars->nz[3];             /* 4:-Y bottom     */
     aVars->nx[5] =  0;   aVars->ny[5] =  0;   aVars->nz[5] =  a_l;                      /* 5:+Z exit       */
     aVars->nx[0] =  0;   aVars->ny[0] =  0;   aVars->nz[0] = -a_l;                      /* 0:Z0 input      */
     /* w: a point on these surfaces */
@@ -336,19 +336,17 @@ TRACE
     B = -l*vz; C = -l*z;
 
     ret = solve_2nd_order(&dt, GVars.A[0], B, C);
-    if (ret && dt>0)
-    {
-      PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz);
-      GVars.N_reflection[6]++;
-      this_width = w1; this_height=h1;
-    } else
-    {
-      this_width = w1+(w2-w1)*z/l;  /* already inside !! */
-      this_height= h1+(h2-h1)*z/l;
-    }
-    /* check if we are in the box input, else absorb */
-    if (z>= 0 && z<=l && (fabs(x) > this_width/2 || fabs(y) > this_height/2)) ABSORB;
-    else if(dt > 0)
+    if (ret==0) ABSORB;
+
+    if (dt!=0.0) PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz);
+    if (dt>0.0)  GVars.N_reflection[6]++;
+    this_width  = w1; 
+    this_height = h1;
+
+	/* check if we are in the box input, else absorb */
+    if (fabs(x) > this_width/2 || fabs(y) > this_height/2)
+      ABSORB;
+    else
     {
       double w_edge, w_adj; /* Channel displacement on X */
       double h_edge, h_adj; /* Channel displacement on Y */
