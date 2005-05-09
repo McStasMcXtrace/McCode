@@ -1,0 +1,281 @@
+/******************************************************************************
+*
+*
+* McStas, the neutron ray-tracing package
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
+*
+* %I
+* Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
+* Date: 4.2.98
+* Version: $Revision: 1.1 $
+* Origin: McStas release
+* Modified by: KL, KN 20.3.98 (rewrite)
+*              KL, 28.09.01   (two lines)
+*              KL, 22.05.03   (background)
+*              KL, 01.05.05   (N lines)
+*
+* General powder sample with 
+*         many scattering vectors 
+*         possibility for intrinsic line broadening
+*         incoherent backgorund.
+*
+* Based on Powder1/Powder2/Single_crystal
+*
+* %P
+*
+* INPUT PARAMETERS
+*       
+* d_phi0    : Focussing angle corresponding to the vertical dimensions
+*             of the detector placed at the right distance (deg)
+* focus_r   : Focussing radius of incoherent (m) 
+* focus_xw  : horiz. dimension of a rectangular area (m)
+* focus_yh  : vert.. dimension of a rectangular area (m)
+* focus_aw  : horiz. angular dimension of a rectangular area (deg)
+* focus_ah  : vert.. angular dimension of a rectangular area (deg)
+* radius    : Radius of sample in (x,z) plane (m)       
+* h         : Height of sample y direction (m)
+* pack      : Packing factor (1)
+* Vc        : Volume of unit cell (AA^3)
+* sigma_a   : Absorption cross section per unit cell at 2200 m/s (fm^2)
+* sigma_inc : Incoherent cross section per unit cell (fm^2)
+* frac      : Fraction of incoherently scattered neutron rays
+*
+* reflections : Input file for reflections
+* target_x  : 
+* target_y  : position of target to focus at (m)
+* target_z  :
+* target_index : component to focus at (integer) 
+*
+* Variables calculated in the component
+*
+* my_s      : Attenuation factor due to scattering (m^-1)
+* my_a      : Attenuation factor due to absorbtion (m^-1)
+*
+* %L
+* %E
+******************************************************************************/
+
+DEFINE COMPONENT PowderN
+DEFINITION PARAMETERS (reflections)
+SETTING PARAMETERS (d_phi0, radius, focus_r=0, h, 
+        pack=1, Vc, sigma_a=0, sigma_inc=0,
+        frac=0, focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0,
+        target_x=0, target_y=0, target_z=0, int target_index=0)
+OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+SHARE
+%{
+  /* used for reading data table from file */
+  %include "read_table-lib"
+/* Declare structures and functions only once in each instrument. */
+#ifndef POWDERN_DECL
+#define POWDERN_DECL
+
+    struct line_data
+    {
+      double F2;                  /* Value of structure factor */
+      double q;                   /* Qvector */
+      int j;                      /* Multiplicity */
+      double DW;                  /* Debye-Waller factor */
+      double w;                   /* Intrinsic line width */
+    };
+  
+  struct line_info_struct
+    {
+      struct line_data *list;     /* Reflection array */
+      int count;                  /* Number of reflections */
+    };
+
+  void
+    read_line_data(char *SC_file, struct line_info_struct *info)
+  {
+    struct line_data *list = NULL;
+    int size = 0;
+    t_Table sTable; /* sample data table structure from SC_file */
+    int i=0;
+
+    Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
+    if (sTable.columns < 5)
+      exit(fprintf(stderr, "PowderN: Error: The number of columns in %s should be at least %d for [j,q,F2,DW,w]\n", SC_file, 5));
+    if (!sTable.rows)
+      exit(fprintf(stderr, "PowderN: Error: The number of rows in %s should be at least %d\n", SC_file, 1));
+    else size = sTable.rows;
+    printf("PowderN: Reading in %d rows from %s... ",size, SC_file);
+    /* allocate line_data array */
+    list = (struct line_data*)malloc(size*sizeof(struct line_data));
+    for (i=0; i<size; i++)
+    {
+      /*      printf("Reading in line %i\n",i);*/
+      double h, k, l, j, q, w, DW, F2;
+      double b1[3], b2[3];
+      
+      /* get data from table */
+      j = Table_Index(sTable, i, sTable.columns-5);
+      q = Table_Index(sTable, i, sTable.columns-4);
+      F2= Table_Index(sTable, i, sTable.columns-3); 
+      DW = Table_Index(sTable, i, sTable.columns-2);
+      w = Table_Index(sTable, i, sTable.columns-1); /* last column */
+      if (size<11) {
+	printf("\nReflection %d: j=%g, q=%g, F2=%g, DW=%g, w=%g",i,j,q,F2,DW,w);
+      }
+      list[i].j = j;
+      list[i].q = q;
+      list[i].DW = DW;
+      list[i].w = w;
+      list[i].F2 = F2;
+    }
+    printf("\ndone!\n");
+    Table_Free(&sTable);
+    info->list = list;
+    info->count = i;
+  }
+#endif /* !POWDERN_DECL */
+
+%}
+
+DECLARE
+%{
+  struct line_info_struct line_info;
+  int Nq;
+  double *my_s_v2, my_s_v2_sum;
+  double my_a_v, my_inc, *q_v;
+  double *w_v, v, solid_angle;  
+%}
+INITIALIZE
+%{
+  struct line_data *L;
+  read_line_data(reflections, &line_info);
+  L = line_info.list;  
+    
+  Nq = line_info.count;
+  my_s_v2 = malloc(Nq*sizeof(double));
+  q_v = malloc(Nq*sizeof(double));
+  w_v = malloc(Nq*sizeof(double));
+  int i;
+  my_a_v = sigma_a/Vc*2200;           /* Is not yet divided by v */
+  my_inc = sigma_inc/Vc;
+  my_s_v2_sum=0;
+  
+  for(i=0; i<Nq; i++)
+  {
+    my_s_v2[i] = PI*PI*PI*pack*L[i].DW /(Vc*Vc*V2K*V2K)*(L[i].j * L[i].F2 / L[i].q); 
+                                      /* Is not yet divided by v^2 */
+    my_s_v2_sum+=my_s_v2[i];
+    q_v[i] = L[i].q*K2V;
+    w_v[i] = L[i].w*K2V; 
+  }
+%}                                                                             
+TRACE
+%{
+  double t0, t1, v, v1,l_full, l, l_1, dt, d_phi, theta, my_s, my_s_n;
+  double aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, p_in, vout_x, vout_y, vout_z;
+  int line;
+
+  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, h))
+  {
+    if(t0 < 0)
+      ABSORB;
+    /* Neutron enters at t=t0. */
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (t1 - t0);             /* Length of full path through sample */
+    dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
+    PROP_DT(dt);                /* Point of scattering */
+    l = v*dt;                   /* Penetration in sample */
+    if (target_index){
+      Coords ToTarget; 
+      ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+      ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+      coords_get(ToTarget, &target_x, &target_y, &target_z);
+    }
+    aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
+    aim_y = target_y-y;
+    aim_z = target_z-z;
+    my_s = my_s_v2_sum/(v*v)+my_inc; 
+        /* Total attenuation from scattering */
+    
+    if (rand01() >= frac)    
+     {   /* Make coherent scattering event */
+      /* Choose point on Debye-Scherrer cone */
+      if (d_phi>0)
+      {
+        d_phi = d_phi0*DEG2RAD/2.0*randpm1();
+        p *= d_phi0/360.0;
+      }
+      else
+        d_phi = 180*DEG2RAD*randpm1();
+      line=floor(Nq*rand01());  /* Select between Nq powder lines */
+      arg = (q_v[line]+w_v[line]*randnorm())/(2.0*v);
+      my_s_n = my_s_v2[line]/(v*v);
+      if(arg > 1)
+        ABSORB;                   /* No bragg scattering possible*/
+      theta = asin(arg);          /* Bragg scattering law */
+
+      vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, aim_x, aim_y, aim_z);
+      rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
+      rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
+      vx = vout_x;
+      vy = vout_y;
+      vz = vout_z;
+  
+      if(!cylinder_intersect(&t0, &t1, x, y, z, 
+                           vx, vy, vz, radius, h))
+      {
+        /* Strange error: did not hit cylinder */
+        printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+        exit(1);
+      }
+      l_1 = v*t1;
+      
+      p *= Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-frac);
+      /*      printf("Powder p: %g , exp: %g\n",p,exp(-(my_a_v/v+my_s)*(l+l_1)));*/
+      }  /* Coherent scattering event */
+    else
+     {  /* Make incoherent scattering event */
+      v = sqrt(vx*vx+vy*vy+vz*vz);
+      if(focus_aw && focus_ah) {
+	randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 
+				    aim_x, aim_y, aim_z, focus_aw, focus_ah, ROT_A_CURRENT_COMP);
+      } else if(focus_xw && focus_yh) {
+	randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
+			    aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+      } else {
+	randvec_target_sphere(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+      }
+      v1 = sqrt(vx*vx+vy*vy+vz*vz);
+      vx *= v/v1;
+      vy *= v/v1;
+      vz *= v/v1;
+      if(!cylinder_intersect(&t0, &t1, x, y, z, 
+                           vx, vy, vz, radius, h))
+      {
+        /* Strange error: did not hit cylinder */
+        printf("FATAL ERROR: Did not hit cylinder from inside.\n");
+        exit(1);
+      }
+      l_1 = v*t1;
+
+      p_in=p;
+      p *= l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(frac);
+      p *= solid_angle/(4*PI);
+      /*      printf("Incoherent p_in: %g arg: %g  l_1: %g t0: %g t1: %g p: %g \n",
+	      p_in,(my_a_v/v+my_s)*(l+l_1),l_1,t0,t1,p); */
+     }  /* Incoherent scattering event */
+  }
+  else
+    ABSORB;
+%}
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  circle("xz", 0,  h/2.0, 0, radius);
+  circle("xz", 0, -h/2.0, 0, radius);
+  line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+  line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+  line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+  line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+%}
+END
