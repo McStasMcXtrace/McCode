@@ -10,7 +10,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -88,7 +88,7 @@ INITIALIZE
     if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"Powder1: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     else isrect=1; }
   
-  my_a_v = sigma_a/Vc*2200;           /* Is not yet divided by v */
+  my_a_v = pack*sigma_a/Vc*2200;           /* Is not yet divided by v */
   my_s_v2 = PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q);  
                                       /* Is not yet divided by v^2 */
   q_v = q*K2V;
@@ -121,10 +121,10 @@ TRACE
       ABSORB;
     /* Neutron enters at t=t0. */
     v = sqrt(vx*vx + vy*vy + vz*vz);
-    l_full = v * (t1 - t0);             /* Length of full path through sample */
-    dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
-    PROP_DT(dt);                /* Point of scattering */
-    l = v*dt;                   /* Penetration in sample */
+    l_full = v * (t1 - t0);        /* Length of full path through sample */
+    dt = rand01()*(t1 - t0);       /* Time of scattering */
+    PROP_DT(dt+t0);                /* Point of scattering */
+    l = v*dt;                      /* Penetration in sample */
 
     /* Choose point on Debye-Scherrer cone */
     d_phi = d_phi0*DEG2RAD/2.0*randpm1();
