@@ -720,11 +720,8 @@ TRACE
   else ABSORB;
 
 /************************TIME OF FLIGHT RESET************************/
-  if (zero_time==2)
-    mcnlt = mcnlt - (((int)(mcnlt/(1/(2*nu))))*(1/(2*nu)));
   if (zero_time==1)
-    mcnlt = mcnlt - (((int)(mcnlt/(1/(nu))))*(1/(nu)));
-
+    mcnlt = mcnlt - (((int)((mcnlt+1/(4*nu))/(1/(2*nu))))*(1/(2*nu)));
 %}
 
 FINALLY
