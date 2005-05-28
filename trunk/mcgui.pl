@@ -1438,6 +1438,18 @@ sub setup_edit {
     }
 }
 
+sub Tk::TextUndo::FileSaveAsPopup
+{
+ my ($w)=@_;
+ menu_saveas($w);
+# my $name = $w->CreateFileSelect('getSaveFile',-title => 'File Save As');
+# if (defined($name) and length($name)) {
+#
+# }
+# return $w->Save($name) if defined($name) and length($name);
+# return 0;
+}
+
 # GUI callback function for updating line numbers etc.
 sub update_line {
     if (defined($edit_control)) {
