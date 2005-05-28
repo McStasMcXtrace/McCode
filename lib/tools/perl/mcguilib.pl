@@ -68,6 +68,8 @@ sub simulation_dialog {
     }
     $si{'Autoplot'} = 0 unless $si{'Autoplot'};
     $si{'Ncount'} = 1e6 unless $si{'Ncount'};
+    $si{'gravity'}   = 0 unless $si{'gravity'};
+    $si{'GravityWarn'}   = 0 unless $si{'GravityWarn'};
     $si{'Trace'} = 0 unless $si{'Trace'};
     $si{'NScan'} = 0 unless $si{'NScan'};
     $si{'Multi'} = 0 unless $si{'Multi'};
@@ -164,6 +166,7 @@ sub simulation_dialog {
                                   -justify => 'right',
                                   -textvariable => \$si{'Ncount'});
     $ncount_entry->pack(-side => 'left');
+    my $gravity = $f1->Checkbutton(-text => "gravity (BEWARE)", -variable => \$si{'gravity'})->pack(-side => 'left');
     if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
       if ($si{'mpi'} > 0) {
         $f1->Label(-text => "# MPI nodes: ")->pack(-side => 'left');

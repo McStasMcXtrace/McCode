@@ -809,7 +809,7 @@ sub menu_run_simulation {
 	}
         push @command, "--format='$plotter'";
 
-        my @unset = ();
+	my @unset = ();
 	my @multiple = ();
         for (@{$out_info->{'Parameters'}}) {
             if (length($newsi->{'Params'}{$_})>0) {
@@ -857,6 +857,17 @@ sub menu_run_simulation {
 			       -icon => 'info');
 		$newsi->{'NScan'} = 0;
 	    }
+	}
+	if ($newsi->{'gravity'} eq 1 && !$newsi->{'Trace'}) {
+	    if ($newsi->{'GravityWarn'} eq 0) {
+		$w->messageBox(-message =>
+			       "Only use --gravitation with components that support this!",
+			       -title => "BEWARE!",
+			       -type => 'OK',
+			       -icon => 'warning');
+		$newsi->{'GravityWarn'} = 1;
+	    }
+	    push @command, "--gravitation";
 	}
 	push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
 	my $inittext = "Running simulation '$out_name' ...\n" .
