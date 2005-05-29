@@ -26,9 +26,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.70 2005-02-24 15:57:20 farhi Exp $
+* $Id: mcstas-r.h,v 1.71 2005-05-29 09:50:32 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.70  2005/02/24 15:57:20  farhi
+*       FIXED gravity bug (probably OK). Gravity is not handled properly in other Guide elements. Will adapt so that it works better...
+*       The n.v was not computed using the actual 'v' values when reaching the guide side, but before propagation. So the velocity was not reflected, but scattered depending on the previous neutron position/velocity, bringing strange divergence effects.
+*       On other guide elements, should update the n.v term just before reflection, not computing it before propagation... This probably holds for some other components (monochromators ???) to be checked !
+*
 *       Revision 1.69  2005/02/23 12:36:53  farhi
 *       Added gravitation support in PROP_X0 and PROP_Y0
 *
@@ -119,7 +124,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.70 $"
+#define MCSTAS_R_H "$Revision: 1.71 $"
 
 #include <math.h>
 #include <string.h>
@@ -440,7 +445,7 @@ void   mcsiminfo_close(void);
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gz/2, -mcnlvz, -mcnlz); \
-    if (mc_ret && mc_dt>0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
+    if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
     else ABSORB; }\
     else mcPROP_Z0; \
   } while(0)
@@ -465,7 +470,7 @@ void   mcsiminfo_close(void);
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gx/2, -mcnlvx, -mcnlx); \
-    if (mc_ret && mc_dt>0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
+    if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
     else ABSORB; }\
     else mcPROP_X0; \
   } while(0)
@@ -489,7 +494,7 @@ void   mcsiminfo_close(void);
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gy/2, -mcnlvy, -mcnly); \
-    if (mc_ret && mc_dt>0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
+    if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
     else ABSORB; }\
     else mcPROP_Y0; \
   } while(0)
