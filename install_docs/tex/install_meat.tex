@@ -2,9 +2,9 @@
 \section{Licensing}
 The conditions on the use of McStas can be read in the files
 \verb+LICENSE+ and \verb+LICENSE.LIB+ in the distribution. Essentially,
-McStas may be used and modified freely, and copies of the McStas source code 
-may be distributed to others. 
-New or modified component and instrument files may be shared by 
+McStas may be used and modified freely, and copies of the McStas source code
+may be distributed to others.
+New or modified component and instrument files may be shared by
 the user community, and we shall be glad to include user contributions in the package.
 
 \section{Installing support Apps}
@@ -30,7 +30,7 @@ The C compiler is used for building the instrument simulation executable, which 
   'Start/Settings/Control Panel/System/Advanced/Environment Variables'.
 }
 \item{Unix/Linux: standard C compiler.
-  Most Unix/Linux systems come with a system C compiler, usually named 'cc' or 'gcc'. In case this would not be the case, install such a compiler from Linux packages (RedHat, SuSe or Debian), or compile it from scratch. 
+  Most Unix/Linux systems come with a system C compiler, usually named 'cc' or 'gcc'. In case this would not be the case, install such a compiler from Linux packages (RedHat, SuSe or Debian), or compile it from scratch.
 }
 \end{itemize}
 
@@ -62,7 +62,7 @@ The McStas tools are written using the Perl language, with calls to the perl-Tk 
     \item{Consult the McStas webpage at \htmladdnormallink{http://mcstas.risoe.dk}{http://mcstas.risoe.dk} for updated links to the source code distributions.}
     \end{itemize}
   \end{itemize}
-  
+
 \subsection{Plotting backends (All platforms)}
 \label{s:plotting}
 For plotting with McStas, different support packages can be used:
@@ -70,10 +70,10 @@ For plotting with McStas, different support packages can be used:
 \item{\htmladdnormallink{PGPLOT}{http://www.astro.caltech.edu/~tjp/pgplot/}/\htmladdnormallink{PDL (perl-PDL)}{http://pdl.perl.org}/\htmladdnormallink{pgperl (perl-PGPLOT)}{http://www.ast.cam.ac.uk/AAO/local/www/kgb/pgperl/} (Unix only) - Binary builds of the packages
     exist for various Linux distributions (for instance
     \htmladdnormallink{Debian}{http://www.debian.org} comes with
-    prebuilt versions). Prebuilt versions also exist for some commercial Unix'es. 
+    prebuilt versions). Prebuilt versions also exist for some commercial Unix'es.
     Refer to distributor/vendor for documentation. The packages can also be
     built from source using some (in many cases much) effort.  See the
-    PGPLOT documentation for further details. 
+    PGPLOT documentation for further details.
     You may need to define the \verb+PGPLOT_DIR+ variable to the location of the Pgplot library. }
 \item{Matlab (Some Unix/Win32) - refer to
     \htmladdnormallink{http://www.mathworks.com}{http://www.mathworks.com}. Matlab licenses are rather costly, but discount programmes for university and research departments exist.}
@@ -96,12 +96,12 @@ website at
     (at least) Linux and Windows 2000. This package should compile on
     most Unix platforms with an \texttt{ANSI-c} compiler. - Refer to section \ref{s:src}}
 \item{\texttt{mcstas-1.8-i686-unknown-Linux.tar.gz}\\Binary package
-  for Linux systems, currently built on Debian GNU/Linux 3.0 'woody'. 
+  for Linux systems, currently built on Debian GNU/Linux 3.0 'woody'.
   Should work on most Linux setups.
  - Refer to section \ref{s:linbin}}
 \item{\texttt{mcstas-1.8-i686-unknown-Win32.zip}\\Binary package
   for Win32 systems, currently built on Microsoft Windows 2000
-  professional, using the \texttt{gcc} 2.95 compiler from 
+  professional, using the \texttt{gcc} 2.95 compiler from
   \htmladdnormallink{Bloodshed Dev-C++ 5 Beta
     7}{http://www.bloodshed.net/dev/devcpp.html}
    - Refer to section \ref{s:winbin}}
@@ -110,7 +110,7 @@ website at
 \section{Source code build}
 \label{s:src}
 The \htmladdnormallink{McStas}{http://mcstas.risoe.dk} package is
-beeing co-developed for mainly Linux and Windows systems, however 
+beeing co-developed for mainly Linux and Windows systems, however
 the Linux build instructions below will work on most Unix
 systems, including Mac OS X). For an updated list of platforms on which McStas has been
 built, refer to the \htmladdnormallink{project website}{http://mcstas.risoe.dk/developments/platforms/}.
@@ -121,7 +121,7 @@ built, refer to the \htmladdnormallink{project website}{http://mcstas.risoe.dk/d
 e.g. \htmladdnormallink{Winzip}{http://www.winzip.com}.}
 \item{Compile the \htmladdnormallink{McStas}{http://mcstas.risoe.dk} package using the \texttt{build.bat} script of the
 \texttt{mcstas-1.8} directory you just unpacked. Follow the on screen
-instructions.} 
+instructions.}
 \item{When the build has been done (e.g. \texttt{mcstas.exe}
 has been produced), proceed to install (Section \ref{s:winbin}).}
 \end{itemize}
@@ -231,7 +231,7 @@ e.g. \htmladdnormallink{Winzip}{http://www.winzip.com}.}
 \item{Set the required (see output of \texttt{install.bat}) environment variables using
 \\\ \\
 \noindent 'Start/Settings/Control Panel/System/Advanced/Environment
-Variables'\\\ 
+Variables'\\\
   \begin{itemize}
     \item{\verb+PATH+ Append e.g. \verb+C:\mcstas\bin+}
     \item{\verb+MCSTAS+ Create it as e.g. \verb+C:\mcstas\lib+}
@@ -250,11 +250,18 @@ using menu item 'Start/Settings/Control Panel/System/Advanced/Environment Variab
 \section{Finishing and Testing the McStas distribution}
 \label{s:testing}
 
+Once installed, you may check and tune the guessed configuration stored within file
+\begin{itemize}
+\item{\verb+MCSTAS\tools\perl\mcstas_config.perl+ on Windows systems}
+\item{\verb+MCSTAS/tools/perl/mcstas_config.perl+ on Unix/Linux systems}
+\end{itemize}
+where \verb+MCSTAS+ is the location for the McStas library.
+
 The \verb+examples+ directory of the distribution contains a set of instrument examples. These are used for the McStas self test procedure, which is executed with
 \begin{verbatim}
-    mcrun --test
+    mcrun --test # mcrun.pl on Windows
 \end{verbatim}
-This test takes a few minutes to complete, and ends with a short report on the installation itself, the simulation accuracy and the plotter check. 
+This test takes a few minutes to complete, and ends with a short report on the installation itself, the simulation accuracy and the plotter check.
 
 You should now be able to use McStas. For some examples to try, see the
 examples/ directory. Start 'mcgui' (mcgui.pl on Windows), and select one of the examples in the 'Neutron Sites' menu.
