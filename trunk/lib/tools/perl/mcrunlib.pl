@@ -224,9 +224,9 @@ sub get_out_file_next {
       # On Win32, quote the filenames...
       my $dir=$v->{'dir'};
       if ($Config{'osname'} eq 'MSWin32') {
-	      $c_name="\"$c_name\"";
-	      $sim_def="\"$sim_def\"";
-	      if (defined($dir)) { $dir="\"$dir\""; }
+        $c_name="\"$c_name\"";
+        $sim_def="\"$sim_def\"";
+        if (defined($dir)) { $dir="\"$dir\""; }
       }
       my @inc = $v->{'dir'} ? ("-I", $dir) : ();
       my $cmd = ["mcstas", @inc, "-t", "-o", $c_name, $sim_def];
@@ -253,11 +253,11 @@ sub get_out_file_next {
       # ToDo: splitting CFLAGS should handle shell quoting as well ...
       my $cc     = $MCSTAS::mcstas_config{CC};
       my $cflags = $MCSTAS::mcstas_config{CFLAGS};
-	    # Needs quoting on MSWin32:
-	    if ($Config{'osname'} eq 'MSWin32') {
-	      $out_name="\"$out_name\"";
-	      $c_name="\"$c_name\"";
-	    }
+      # Needs quoting on MSWin32:
+      if ($Config{'osname'} eq 'MSWin32') {
+        $out_name="\"$out_name\"";
+        $c_name="\"$c_name\"";
+      }
       my $cmd = [$cc, split(' ', $cflags), "-o",
                  $out_name, $c_name, "-lm"];
       &$printer(join(" ", @$cmd));
@@ -314,11 +314,11 @@ sub get_out_file {
 
 # McStas selftest procedure: copy LIB/examples and execute
 sub do_test {
-  my ($printer,$force, $plotter) = @_;
+  my ($printer,$force, $plotter, $exec_test) = @_;
   my $j;
   my $pwd=getcwd;
 
-  &$printer( "# McStas self-test (mcrun --test)");
+  &$printer( "# McStas self-test (mcrun --test='$exec_test')");
   &$printer(`mcstas --version`);
   &$printer("# Installing 'selftest' directory in $pwd");
   if (-d "selftest") # directory already exists
@@ -364,6 +364,9 @@ sub do_test {
   $suffix=$MCSTAS::mcstas_config{'SUFFIX'};
   $prefix=$MCSTAS::mcstas_config{'PREFIX'};
   $ENV{'MCSTAS_FORMAT'} = $plotter;
+
+  # compatible test definition
+  if ($exec_test =~ /compatible/i) {
   @test_names   = ("ISIS prisma2: in focusing mode",
       "ISIS prisma2: in non-focusing mode",
       "vanadium_example: vanadium scattering anisotropy",
@@ -402,6 +405,7 @@ sub do_test {
       "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
   @test_monitor_names =("mon9_I","mon9_I","PSD_4pi_I","D7_SC3_In_I","","","","","","","","","","","","","","");
   @test_monitor_values=(4.61739e-08,3.39694e-08,1.90823e-06,2.89923e-11,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+  } # end of compatible test definition
   # now execute each simulation and look for errors
   my $error_flag    = 0;
   my $accuracy_flag = 0;
@@ -448,43 +452,46 @@ sub do_test {
     } # end else
   } # end for
   my $elapsed_sec = time() - $start_sec;
+
   # now test graphics...
-  @test_names   = ("Plot of Scan of parameters with Risoe TAS1 monochromator rocking curve (no collimator)",
-    "Plot of Single simulation with Brookhaven H8 Termal TAS with vanadium sample");
-  @test_commands= ("mcplot$suffix -gif linup_1_45",
-    "mcplot$suffix -gif h8_test");
-  @test_monitor_names =("linup_1_45","h8_test");
-  for ($j=0 ; $j<@test_commands ; $j++) {
-    my $this_cmd =$test_commands[$j];
-    my $this_name=$test_names[$j];
-    &$printer("Executing: $this_cmd");
-    my $res = qx/$this_cmd/;
-    my $child_error_text = $!;
-    my $child_error_code = $?;
-    if ($child_error_code) {
-      &$printer("[Warning] $this_name: ($child_error_code): $child_error_text");
-    }
-    my $this_flag = 1;
-    if (opendir(DIR, "$test_monitor_names[$j]")) {
-      my @files = readdir(DIR);
-      closedir(DIR);
-      my $k;
-      my $filename;
-      my @paths = map("$test_monitor_names[$j]/$_", grep(/\.(gif|png|ps|eps|jpg)$/i, @files));
-      for ($k=0 ; $k<@paths; $k++) {
-        $filename = $paths[$k];
-        $this_flag = 1;
-        if (-f "$filename") {
-          my $sb = stat($filename);
-          if ($sb->size) {
-            &$printer("[OK] $this_name ($filename)");
-            $this_flag = 0;
-          }
-        } # end if (-f "$filename")
-      } # end for
-    } # end opendir
-    if ($this_flag) { &$printer("[FAILED] $this_name"); $plot_flag=1; }
-  } # end for
+  if ($exec_test =~ /graphics/i) {
+    @test_names   = ("Plot of Scan of parameters with Risoe TAS1 monochromator rocking curve (no collimator)",
+      "Plot of Single simulation with Brookhaven H8 Termal TAS with vanadium sample");
+    @test_commands= ("mcplot$suffix -gif linup_1_45",
+      "mcplot$suffix -gif h8_test");
+    @test_monitor_names =("linup_1_45","h8_test");
+    for ($j=0 ; $j<@test_commands ; $j++) {
+      my $this_cmd =$test_commands[$j];
+      my $this_name=$test_names[$j];
+      &$printer("Executing: $this_cmd");
+      my $res = qx/$this_cmd/;
+      my $child_error_text = $!;
+      my $child_error_code = $?;
+      if ($child_error_code) {
+        &$printer("[Warning] $this_name: ($child_error_code): $child_error_text");
+      }
+      my $this_flag = 1;
+      if (opendir(DIR, "$test_monitor_names[$j]")) {
+        my @files = readdir(DIR);
+        closedir(DIR);
+        my $k;
+        my $filename;
+        my @paths = map("$test_monitor_names[$j]/$_", grep(/\.(gif|png|ps|eps|jpg)$/i, @files));
+        for ($k=0 ; $k<@paths; $k++) {
+          $filename = $paths[$k];
+          $this_flag = 1;
+          if (-f "$filename") {
+            my $sb = stat($filename);
+            if ($sb->size) {
+              &$printer("[OK] $this_name ($filename)");
+              $this_flag = 0;
+            }
+          } # end if (-f "$filename")
+        } # end for
+      } # end opendir
+      if ($this_flag) { &$printer("[FAILED] $this_name"); $plot_flag=1; }
+    } # end for
+  } # end of graphics test
 
   $now = localtime();
   if ($error_flag) {
@@ -498,13 +505,17 @@ sub do_test {
     } else {
       &$printer("# Accuracy     check: OK.");
     }
-    if ($plot_flag) {
-      &$printer("# Plotter      check: FAILED.");
-      &$printer("# >> The $plotter plotter may NOT be working properly.");
-      &$printer("# >> Check that you have Scilab/Matlab/PGPLOT installed");
-      &$printer("# >>    and that your Display is available.");
+    if ($exec_test =~ /graphics/i) {
+      if ($plot_flag) {
+        &$printer("# Plotter      check: FAILED.");
+        &$printer("# >> The $plotter plotter may NOT be working properly.");
+        &$printer("# >> Check that you have Scilab/Matlab/PGPLOT installed");
+        &$printer("# >>    and that your Display is available.");
+      } else {
+        &$printer("# Plotter      check: OK.     Using Plotter $plotter.");
+      }
     } else {
-      &$printer("# Plotter      check: OK.     Using Plotter $plotter.");
+      &$printer("# Plotter NOT  check: OK.     Using Plotter $plotter.");
     }
   }
 
@@ -756,9 +767,9 @@ sub parse_instrument {
     my ($i,$where, $thisparm);
     while(<$f>) {
         if(/^\s*COMPONENT \s*([a-zA-Z0-9_]+)\s=*/) {
-	    push @d, $1;
+      push @d, $1;
         } else  {
-	}
+  }
     }
     return @d;
 
