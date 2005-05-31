@@ -16,47 +16,51 @@
 *
 * Code generation from instrument definition.
 *
-*	$Log: not supported by cvs2svn $
-*	Revision 1.46  2004/11/30 16:09:56  farhi
-*	Uses SIG_MESSAGE macro defined as strcpy(mcsigmessage...) when signals are used
-*	or ignored when NOSIGNALS
+* $Log: not supported by cvs2svn $
+* Revision 1.47  2005/02/17 15:51:02  farhi
+* Added a neutron event per component, so that amessage is displayed when
+* no neutron reaches the COMP in FINALLY. Requested by R. Cubitt
 *
-*	Revision 1.45  2004/11/29 14:30:52  farhi
-*	Defines a component name as instrument name for usage of mcstas-r functions
-*	and macros in FINALLY and SAVE (e.g. DETECTOR_OUT...)
+* Revision 1.46  2004/11/30 16:09:56  farhi
+* Uses SIG_MESSAGE macro defined as strcpy(mcsigmessage...) when signals are used
+* or ignored when NOSIGNALS
 *
-*	Revision 1.44  2004/09/10 15:09:56  farhi
-*	Use same macro symbols for mcstas kernel and run-time for code uniformity
+* Revision 1.45  2004/11/29 14:30:52  farhi
+* Defines a component name as instrument name for usage of mcstas-r functions
+* and macros in FINALLY and SAVE (e.g. DETECTOR_OUT...)
 *
-*	Revision 1.43  2004/09/03 13:43:29  farhi
-*	Removed duplicated Instr:FINALLY code (in SAVE and FINALLY). May cause SEGV.
+* Revision 1.44  2004/09/10 15:09:56  farhi
+* Use same macro symbols for mcstas kernel and run-time for code uniformity
 *
-*	Revision 1.42  2003/10/06 14:59:14  farhi
-*	Also insert component index in automatic source comments
+* Revision 1.43  2004/09/03 13:43:29  farhi
+* Removed duplicated Instr:FINALLY code (in SAVE and FINALLY). May cause SEGV.
 *
-*	Revision 1.41  2003/09/05 08:59:05  farhi
-*	added INSTRUMENT parameter default value grammar
-*	mcinputtable now has also default values
-*	mcreadpar now uses default values if parameter not given
-*	extended instr_formal parameter struct
-*	extended mcinputtable structure type
+* Revision 1.42  2003/10/06 14:59:14  farhi
+* Also insert component index in automatic source comments
 *
-*	Revision 1.40  2003/08/12 13:32:25  farhi
-*	Add generation date/time in C code header
+* Revision 1.41  2003/09/05 08:59:05  farhi
+* added INSTRUMENT parameter default value grammar
+* mcinputtable now has also default values
+* mcreadpar now uses default values if parameter not given
+* extended instr_formal parameter struct
+* extended mcinputtable structure type
 *
-*	Revision 1.39  2003/02/11 12:28:45  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
+* Revision 1.40  2003/08/12 13:32:25  farhi
+* Add generation date/time in C code header
+*
+* Revision 1.39  2003/02/11 12:28:45  farhi
+* Variouxs bug fixes after tests in the lib directory
+* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+* read_table:corrected MC_SYS_DIR -> MCSTAS define
+* monitor_nd-lib: fix Log(signal) log(coord)
+* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+* Progress_bar: precent -> percent parameter
+* CS: ----------------------------------------------------------------------
 *
 * Revision 1.24 2002/09/17 10:34:45 ef
-*	added comp setting parameter types
+* added comp setting parameter types
 *
-* $Id: cogen.c,v 1.47 2005-02-17 15:51:02 farhi Exp $
+* $Id: cogen.c,v 1.48 2005-05-31 13:26:16 farhi Exp $
 *
 *******************************************************************************/
 
@@ -878,7 +882,7 @@ cogen_init(struct instr_def *instr)
 
     /* Users initializations. */
     if(list_len(comp->def->init_code->lines) > 0)
-      cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
+      cogen_comp_scope(comp, 0, (void (*)(void *))codeblock_out_brace,
                             comp->def->init_code);
     cout("");
   }
