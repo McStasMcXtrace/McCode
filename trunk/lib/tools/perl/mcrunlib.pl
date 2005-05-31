@@ -515,7 +515,7 @@ sub do_test {
         &$printer("# Plotter      check: OK.     Using Plotter $plotter.");
       }
     } else {
-      &$printer("# Plotter NOT  check: OK.     Using Plotter $plotter.");
+      &$printer("# Plotter NOT  checked ($plotter).");
     }
   }
 
