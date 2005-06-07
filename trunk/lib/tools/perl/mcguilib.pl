@@ -88,20 +88,20 @@ sub simulation_dialog {
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
     my $Format;
     if (!$si{'Format'}) {
-	if ($plotter =~ /PGPLOT|McStas/i) { $si{'Format'} = 0; }
-	elsif ($plotter =~ /Matlab/i)     { $si{'Format'} = 1; }
-	elsif ($plotter =~ /Scilab/i)     { $si{'Format'} = 2; }
-	elsif ($plotter =~ /HTML/i)       { $si{'Format'} = 3; }
+  if ($plotter =~ /PGPLOT|McStas/i) { $si{'Format'} = 0; }
+  elsif ($plotter =~ /Matlab/i)     { $si{'Format'} = 1; }
+  elsif ($plotter =~ /Scilab/i)     { $si{'Format'} = 2; }
+  elsif ($plotter =~ /HTML/i)       { $si{'Format'} = 3; }
     }
-    
+
     my $name_instr = $ii->{'Instrument-source'};
     my $dlg = $win->DialogBox(-title => "Run simulation $name_instr",
                               -buttons => ["Start", "Cancel"]);
     my $top_frame = $dlg->Frame(-relief => 'raised', -border => 1);
     $top_frame->pack(-fill => 'x');
     $top_frame->Label(-text => "Instrument source: $ii->{'Instrument-source'}",
-		      -anchor => 'w',
-		      -justify => 'left')->pack(-side => 'left');
+          -anchor => 'w',
+          -justify => 'left')->pack(-side => 'left');
     $top_frame->Button(-text => "HTML docs", -width => 11,
                 -command => sub {mcdoc_current($win)} )->pack(-side => 'right');
     # Set up the parameter input fields.
@@ -147,7 +147,7 @@ sub simulation_dialog {
     my $f0 = $opt_frame->Frame;
     $f0->pack(-anchor => 'w', -fill => 'x');
     $f0->Label(-text => "Output to (dir):")->pack(-side => 'left');
-    
+
     my $dir_entry = $f0->Entry(-relief => 'sunken',
                                -width=>30,
                                -justify => 'left',
@@ -177,8 +177,8 @@ sub simulation_dialog {
       }
       if ($si{'ssh'} > 0) {
         $f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
-				  -variable => \$si{'Multi'},
-				  -relief => 'flat')->pack(-anchor => 'w');
+          -variable => \$si{'Multi'},
+          -relief => 'flat')->pack(-anchor => 'w');
       }
     }
     my $ff1 = $opt_frame->Frame;
@@ -206,7 +206,7 @@ sub simulation_dialog {
     $ff1->Radiobutton(-text => "HTML/VRML",
                      -variable => \$si{'Format'},
                      -relief => 'flat',
-                     -value => 3)->pack(-side => 'left');    
+                     -value => 3)->pack(-side => 'left');
     my $f2 = $opt_frame->Frame;
     $f2->pack(-anchor => 'w');
     $f2->Radiobutton(-text => "Random seed",
@@ -407,32 +407,32 @@ END
         push @plot_cmd, $suffix;
         my $cmd=join(' ',@plot_cmd);
         putmsg($cmdwin, "$cmd\n",'msg');
-	if($Config{'osname'} eq "MSWin32") {
-	    system($cmd);
-	} else {
-	    my $pid = fork();
-	    if(!defined($pid)) {
-		$w->messageBox(-message =>
-			       "Failed to spawn plotter \"$cmd.",
-			       -title => "Plotter failed",
-			       -type => 'OK',
-			       -icon => 'error');
-		return 0;
-	    } elsif ($pid > 0) {
-		waitpid($pid, 0);
-		return 1;
-	    } else {
-		# Double fork to avoid having to wait() for the editor to
-		# finish (or having it become a zombie). See man perlfunc.
-		unless(fork()) {
-		    exec($cmd);
-		    # If we get here, the exec() failed.
-		    print STDERR "Error: exec() of $external_editor failed!\n";
-		    POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
-		}
-		POSIX::_exit(0);                # CORE:exit needed to avoid Perl/Tk failure.
-	    }
-	}
+  if($Config{'osname'} eq "MSWin32") {
+      system($cmd);
+  } else {
+      my $pid = fork();
+      if(!defined($pid)) {
+    $w->messageBox(-message =>
+             "Failed to spawn plotter \"$cmd.",
+             -title => "Plotter failed",
+             -type => 'OK',
+             -icon => 'error');
+    return 0;
+      } elsif ($pid > 0) {
+    waitpid($pid, 0);
+    return 1;
+      } else {
+    # Double fork to avoid having to wait() for the editor to
+    # finish (or having it become a zombie). See man perlfunc.
+    unless(fork()) {
+        exec($cmd);
+        # If we get here, the exec() failed.
+        print STDERR "Error: exec() of $external_editor failed!\n";
+        POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
+    }
+    POSIX::_exit(0);                # CORE:exit needed to avoid Perl/Tk failure.
+      }
+  }
     }
 }
 
@@ -499,7 +499,7 @@ sub preferences_dialog {
     if ($binary == 1 && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
     # finally set the PLOTTER
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
-    $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'}  = $editor;
+    $MCSTAS::mcstas_config{'EDITOR'}  = $editor;
 
     return ($res);
 }
@@ -632,8 +632,8 @@ sub comp_instance_dialog {
       $dlg->grabRelease;
       if ($selected eq 'OK') {
         my $r_at = $r->{'AT'};
-	# Replace spaces in component instance name by underscores
-	$r->{'INSTANCE'} =~ s!\ !_!g;
+  # Replace spaces in component instance name by underscores
+  $r->{'INSTANCE'} =~ s!\ !_!g;
         if ($r->{'INSTANCE'} eq "") { # instance not defined !
             $dlg->messageBox(-message => "Instance name is not defined for component $comp->{'name'}. Please set it to a name of your own (e.g. My_Comp).",
                        -title => "$comp->{'name'}: No Instance Name",
@@ -730,11 +730,11 @@ sub comp_select_dialog {
     my $selected;
     my $chosen_cmp;
     my $select_cmd = sub {
-	# On some platforms, e.g. RedHat 9,
-	# $list->curselection is not a scalar!
-	my @sel = $list->curselection();
+  # On some platforms, e.g. RedHat 9,
+  # $list->curselection is not a scalar!
+  my @sel = $list->curselection();
         my $cname = $sorted[$sel[0]];
-	$chosen_cmp = $cname;
+  $chosen_cmp = $cname;
         my $info = fetch_comp_info($cname, $cinfo);
         $name->configure(-text => "Name: $info->{'name'}");
         $loc->configure(-text => "Location: $cname");
@@ -794,10 +794,10 @@ sub sitemenu_build {
         my @handles; # Menu handles
         my $index;
         my $CurrentSub;
-	# Add subitem for instruments without cathegory
-	push @added, "Undefined site";
-	$CurrentSub = $sitemenu->cascade(-label => "Undefined site");
-	push @sites, $CurrentSub;
+  # Add subitem for instruments without cathegory
+  push @added, "Undefined site";
+  $CurrentSub = $sitemenu->cascade(-label => "Undefined site");
+  push @sites, $CurrentSub;
 
         for ($j=0 ; $j<@paths; $j++) {
             # What site is this one from?
@@ -805,7 +805,7 @@ sub sitemenu_build {
             my $cname="";  # real name of the instrument (DEFINE)
             my ($base, $dirname, $suffix);
             $base = "";
-	    my $site_tag=0;
+      my $site_tag=0;
             while(<READER>) {
                 # Look for real instrument name
                 if (m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]+)\s*(.*)!i) {
@@ -813,8 +813,8 @@ sub sitemenu_build {
                 }
                 # Look for %INSTRUMENT_SITE:
                 if (/%INSTRUMENT_SITE:\s*(\w*)/) {
-		    # This one has a site tag
-		    $site_tag = 1;
+        # This one has a site tag
+        $site_tag = 1;
                     # Check if that menu has been added?
                     my $k;
                     my $taken = 0;
@@ -836,12 +836,12 @@ sub sitemenu_build {
             # Add the instrument to the given menu.
             ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
             if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
-	    if ($site_tag == 1) {
-		$CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
-	    } else {
-		$CurrentSub = $sites[0]; # 'Undefined site' menu
-		$CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
-	    }
+      if ($site_tag == 1) {
+    $CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+      } else {
+    $CurrentSub = $sites[0]; # 'Undefined site' menu
+    $CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
+      }
         }
     }
 }
@@ -858,7 +858,7 @@ sub sitemenu_runsub {
         return 0;
     }
     if (-e "./$base$suffix") {
-	open_instr_def($w,"./$base$suffix");
+  open_instr_def($w,"./$base$suffix");
     }
 }
 
