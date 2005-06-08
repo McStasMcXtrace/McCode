@@ -10,9 +10,10 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: Risoe
 * Release: McStas 1.6
+* Modified by: KL, 7 June 2005
 *
 * Sample for Small Angle Neutron Scattering - hard spheres in thin solution, mono disperse.
 *
@@ -49,7 +50,7 @@
 
 DEFINE COMPONENT Sans_spheres
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_a = 50, qmax = 0.3 ,xwidth=0.01, yheight=0.01, zthick=0.005)
+SETTING PARAMETERS (R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_a = 50, dist=6, Rdet=0.5 ,xwidth=0.01, yheight=0.01, zthick=0.005)
 OUTPUT PARAMETERS (my_s_v2, my_a_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -73,7 +74,7 @@ TRACE
   double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
   double aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
-  double f;
+  double f, solid_angle, vx_i, vy_i, vz_i, qx, qy, qz;
   char   intersect=0;
 
   intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
@@ -87,34 +88,30 @@ TRACE
     dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
     PROP_DT(dt);                /* Point of scattering */
     l = v*dt;                   /* Penetration in sample */
-
-    q = qmax * rand01();    
+    
+    vx_i=vx;
+    vy_i=vy;
+    vz_i=vz;
+    randvec_target_circle(&vx, &vy, &vz, &solid_angle, 0, 0, dist, Rdet);
+/*    printf("solid angle %g \n",solid_angle); */
+    NORM(vx, vy, vz);
+    vx *= v;
+    vy *= v;
+    vz *= v;
+    qx = V2K*(vx_i-vx);
+    qy = V2K*(vy_i-vy);
+    qz = V2K*(vz_i-vz);
+    q = sqrt(qx*qx+qy*qy+qz*qz);
 
     f = 3 * (sin(q*R) - q*R*cos(q*R))/(q*R*q*R*q*R);
 
-    q_v = q*K2V;
-    /* Choose point on ... */
-    d_phi = 2*PI*rand01();
-    arg = q_v/(2.0*v);
-    if(arg > 1)
-      ABSORB;                   /* No bragg scattering possible*/
-    theta = asin(arg);          /* Bragg scattering law */
-
-     
-    vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
-    rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
-
-    rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
-    vx = vout_x;
-    vy = vout_y;
-    vz = vout_z;
 
     if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) 		fprintf(stderr, "Sans_spheres: FATAL ERROR: Did not hit box from inside.\n");
     		
 
     l_1 = v*t1;
 /*    fprintf(stderr, "l_full: %g, qmax: %g p: %g my_s_pre: %g, f: %g, my_a_v/v: %g\n",l_full,qmax,p,my_s_pre,f,my_a_v/v);*/
-    p *= l_full*qmax*my_s_pre*f*f*exp(-my_a_v*(l+l_1)*0/v);
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*f*f*exp(-my_a_v*(l+l_1)*0/v);
     SCATTER;
   }
 %}
