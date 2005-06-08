@@ -17,60 +17,60 @@ if ($Config{'osname'} eq "MSWin32") {
     print STDOUT "\nConfiguring McStas on Win32\n\n";
     
     print STDOUT "Checking for C compiler: ";
-    $failed=system('which.exe cc.exe');
+    $failed=system('support\Win32\which.exe cc.exe');
     if ($failed) { 
-      $failed=system('which.exe gcc.exe'); 
+      $failed=system('support\Win32\which.exe gcc.exe'); 
       $cc = (not $failed) ? "gcc.exe" : "no";
     } else { $cc = "cc.exe"; }
     print STDOUT "$cc\n";
     
     print STDOUT "Checking for Matlab: ";
 
-    $failed=system('which.exe matlab.exe');
+    $failed=system('support\Win32\which.exe matlab.exe');
     $matlab = (not $failed) ? "matlab.exe" : "no";
     print STDOUT "$matlab\n";
 
     print STDOUT "Checking for Scilab: ";
-    $failed=system('which.exe runscilab.exe');
+    $failed=system('support\Win32\which.exe runscilab.exe');
     if ($failed) { 
-      $failed=system('which.exe scilab.exe'); 
+      $failed=system('support\Win32\which.exe scilab.exe'); 
       $scilab = (not $failed) ? "scilab.exe" : "no";
     }
     if ($failed) { 
-      $failed=system('which.exe wscilex.exe'); 
+      $failed=system('support\Win32\which.exe wscilex.exe'); 
       $scilab = (not $failed) ? "wscilex.exe" : "no";
     }
     if ($failed) { 
-      $failed=system('which.exe scilab.bat'); 
+      $failed=system('support\Win32\which.exe scilab.bat'); 
       $scilab = (not $failed) ? "scilab.bat" : "no";
     }
     if ($failed) { $scilab = "runscilab.exe"; }
     print STDOUT "$scilab\n";
     
     print STDOUT "Checking for Terminal: ";
-    $failed=system('which.exe cmd.exe');
+    $failed=system('support\Win32\which.exe cmd.exe');
     if ($failed) { 
-      $failed=system('which.exe command.com'); 
+      $failed=system('support\Win32\which.exe command.com'); 
       $terminal = (not $failed) ? "command.com" : "no";
     } else { $terminal = "cmd.exe"; }
     print STDOUT "$terminal\n";
     
     print STDOUT "Checking for Tcl/Tk: ";
-    $failed=system('which.exe wperl.exe');
+    $failed=system('support\Win32\which.exe wperl.exe');
     $tcltk = (not $failed) ? "wperl.exe" : "no";
     if ($failed) { 
-      $failed=system('which.exe wish.exe'); 
+      $failed=system('support\Win32\which.exe wish.exe'); 
       $tcltk = (not $failed) ? "wish.exe" : "no";
     }
     print STDOUT "$tcltk\n";
     
     print STDOUT "Checking for MPI compiler: ";
-    $failed=system('which.exe mpicc.exe');
+    $failed=system('support\Win32\which.exe mpicc.exe');
     $mpicc = (not $failed) ? "mpicc.exe" : "no";
     print STDOUT "$mpicc\n";
     
     print STDOUT "Checking for MPI run: ";
-    $failed=system('which.exe mpirun.exe');
+    $failed=system('support\Win32\which.exe mpirun.exe');
     $mpirun = (not $failed) ? "mpirun.exe" : "no";
     print STDOUT "$mpi\n";
     
@@ -80,7 +80,7 @@ if ($Config{'osname'} eq "MSWin32") {
         print STDOUT "\n\nMatlab found, configuring McStas\n";
         $plotter = "Matlab";
     } elsif ($scilab ne "no") {
-        print STDOUT "\n\nScilab found ($runscilab), configuring McStas\n";
+        print STDOUT "\n\nScilab found ($scilab), configuring McStas\n";
         $plotter = "Scilab";
     } else {
         print STDERR "\n\nSorry, neither Matlab or Scilab found, setting HTML/VRML.\n";
