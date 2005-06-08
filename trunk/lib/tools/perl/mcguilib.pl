@@ -482,7 +482,7 @@ sub preferences_dialog {
     $buttons[$plotter_id]->select;
     if ($binary == 1) { $buttons[6]->select; }
 
-    $editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
+    $editor = $MCSTAS::mcstas_config{'EDITOR'};
     $rf->pack(-side => 'top', -fill => 'both');
     $rf->Label(-text => "Editor options:", -anchor => 'w')->pack(-fill => 'x');
     $edit_buttons[0]=$rf->Radiobutton(-text => "Simple built-in editor (McStas 1.7)",
