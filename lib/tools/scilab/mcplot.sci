@@ -437,7 +437,7 @@ function mcplot_menu_action(k, gwin)
     case 28 then  // open new mcstas.m file
       // open a new window
       xset('window',max(winsid())+1)
-      mcplot('open_mcplot_fileselector','overview');
+      eval('mcplot('','')');
     end
     if item(k)~= 18, xbasr(); end // update plot
 
