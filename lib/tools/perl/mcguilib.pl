@@ -404,7 +404,6 @@ END
         return ($res);
       } else {
         push @plot_cmd, $sim_file_name;
-        push @plot_cmd, $suffix;
         my $cmd=join(' ',@plot_cmd);
         putmsg($cmdwin, "$cmd\n",'msg');
   if($Config{'osname'} eq "MSWin32") {
