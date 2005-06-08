@@ -138,5 +138,7 @@ close(WRITE);
 system("copy lib\\tools\\perl\\mcstas_config.perl.new lib\\tools\\perl\\mcstas_config.perl");
 print STDOUT "Updating lib\\tools\\perl\\mcstas_config.perl\n";
 print STDOUT "Installing Tk-CodeText extension (ppm)\n";
-system("ppm install Tk-CodeText");
+system("ppm install support\\ppds\\Syntax-Highlight-Perl.ppd");
+system("ppm install support\\ppds\\Tk-CodeText.ppd");
+
 
