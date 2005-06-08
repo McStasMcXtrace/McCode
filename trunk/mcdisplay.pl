@@ -971,7 +971,7 @@ while(!eof(IN)) {
     if ($start_scilab == 1) {
     # This only happens on Win32 (runscilab.exe), and we know the filename too...
         my $runscilab = "$MCSTAS::mcstas_config{'SCILAB'}";
-        my $pid = open(SCILAB,"$runscilab -nw -f mcdisplay_commands.sci|");
+        my $pid = open(SCILAB,"$runscilab -f mcdisplay_commands.sci|");
         while(!eof(SCILAB)) {
             # Do nothing...
         }
