@@ -329,6 +329,7 @@ sub plot_dialog {
     my @plot_cmd = ();
     if ($Config{'osname'} ne 'MSWin32') { # change spaces into \spaces
       $sim_file_name =~ s! !\ !g;
+      $prefix = $MCSTAS::mcstas_config{'TERMINAL'};
     }
     push @plot_cmd, $prefix;
     push @plot_cmd, "mcplot$suffix";
@@ -424,7 +425,7 @@ END
     # Double fork to avoid having to wait() for the editor to
     # finish (or having it become a zombie). See man perlfunc.
     unless(fork()) {
-        exec($cmd);
+        exec("$cmd &");
         # If we get here, the exec() failed.
         print STDERR "Error: exec() of $external_editor failed!\n";
         POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
