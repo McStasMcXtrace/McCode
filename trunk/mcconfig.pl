@@ -120,7 +120,7 @@ while (<READ>) {
     } elsif (/\w*MPIRUN \=\w*/) {
         print WRITE "     MPIRUN => '$mpirun',\n";
     } elsif (/\w*PREFIX \=\w*/) {
-        print WRITE "     PREFFIX => 'start ',\n";
+        print WRITE "     PREFIX => 'start ',\n";
     } elsif (/\w*SUFFIX \=\w*/) {
         print WRITE "     SUFFIX => '.pl',\n";
     } elsif (/\w*BACKGROUND \=\w*/) {
