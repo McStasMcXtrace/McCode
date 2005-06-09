@@ -76,7 +76,10 @@ my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
 
 my $prefix          = $MCSTAS::mcstas_config{'PREFIX'};
 my $suffix          = $MCSTAS::mcstas_config{'SUFFIX'};
-my $background      = $MCSTAS::mcstas_config{'BACKGROUND'};
+my $background; # Only really makes sense on Unix systems...
+if ($Config{'osname'} ne 'MSWin32') {
+    $background = '&';
+}
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 
 my $compinfo;                        # Cache of parsed component definitions
