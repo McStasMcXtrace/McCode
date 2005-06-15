@@ -230,7 +230,7 @@ sub mcdoc_generate {
 sub mcdoc_test {
     my $status;
     my $printer = sub { putmsg($cmdwin, "$_[0]\n", 'msg'); $main_window->update;};
-    $status = do_test($printer, 1, $MCSTAS::mcstas_config{'PLOTTER'});
+    $status = do_test($printer, 1, $MCSTAS::mcstas_config{'PLOTTER'}, 'comnpatible graphics');
     if (defined $status) { putmsg($cmdwin, "$status", 'msg'); }
 }
 
@@ -679,20 +679,20 @@ sub menu_run_simulation {
         return 0;
     }
     my ($bt, $newsi) = simulation_dialog($w, $out_info, $inf_sim);
-    
+
     if($bt eq 'Start') {
         my @command = ();
         # Check 'Plotter' setting
         my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-	if ($newsi->{'Format'} eq 0) {
-	    $plotter = 'PGPLOT';
-	} elsif ($newsi->{'Format'} eq 1) {
-	    $plotter = 'Matlab';
-	} elsif ($newsi->{'Format'} eq 2) {
-	    $plotter = 'Scilab';
-	} elsif ($newsi->{'Format'} eq 3) {
-	    $plotter = 'HTML';
-	} 
+  if ($newsi->{'Format'} eq 0) {
+      $plotter = 'PGPLOT';
+  } elsif ($newsi->{'Format'} eq 1) {
+      $plotter = 'Matlab';
+  } elsif ($newsi->{'Format'} eq 2) {
+      $plotter = 'Scilab';
+  } elsif ($newsi->{'Format'} eq 3) {
+      $plotter = 'HTML';
+  }
         # Check 'Trace' setting if a scan or trace is
         # requested
         if ($newsi->{'Trace'}) {
@@ -714,7 +714,7 @@ sub menu_run_simulation {
             push @command, "${prefix}mcdisplay$suffix";
             if ($plotter =~ /PGPLOT|McStas/i) {
               push @command, "--plotter=PGPLOT";
-	      push @command, "--multi";
+        push @command, "--multi";
               # Be sure to read mcplotlib.pl in this case...
               require "mcplotlib.pl";
               # Standard mcdisplay.pl with PGPLOT bindings
@@ -774,7 +774,7 @@ sub menu_run_simulation {
             push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
             # push @command, "--save" if ($newsi->{'Trace'} eq 1);
         }
-	push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'};
+  push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'};
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);
         # In the special case of --dir, we simply replace ' ' with '_'
@@ -805,34 +805,34 @@ sub menu_run_simulation {
         push @command, "--trace" if ($newsi->{'Trace'} eq 1);
         push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
         push @command, "--dir=$OutDir" if $newsi->{'Dir'};
-	if ($newsi->{'Force'} eq 1) {
-	    if (-e $OutDir) {
-		rmtree($OutDir,0,1);
-	    }
-	}
+  if ($newsi->{'Force'} eq 1) {
+      if (-e $OutDir) {
+    rmtree($OutDir,0,1);
+      }
+  }
         push @command, "--format='$plotter'";
 
-	my @unset = ();
-	my @multiple = ();
+  my @unset = ();
+  my @multiple = ();
         for (@{$out_info->{'Parameters'}}) {
             if (length($newsi->{'Params'}{$_})>0) {
-		# Check for comma separated values 
-		my @values = split(',',$newsi->{'Params'}{$_});
-		my $value = $newsi->{'Params'}{$_};
-		if (@values > 1) {
-		    @multiple = (@multiple, $_);
-		    if ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq ''){
-			my $j;
-			my $meanvalue=0;
-			for ($j=0; $j<@values; $j++) {
-			    $meanvalue = $values[$j];
-			}
-			$meanvalue = $meanvalue / @values;
-			$value = $meanvalue;
-		    }
-		} 
-		push @command, "$_=$value";
-	    } else {
+    # Check for comma separated values
+    my @values = split(',',$newsi->{'Params'}{$_});
+    my $value = $newsi->{'Params'}{$_};
+    if (@values > 1) {
+        @multiple = (@multiple, $_);
+        if ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq ''){
+      my $j;
+      my $meanvalue=0;
+      for ($j=0; $j<@values; $j++) {
+          $meanvalue = $values[$j];
+      }
+      $meanvalue = $meanvalue / @values;
+      $value = $meanvalue;
+        }
+    }
+    push @command, "$_=$value";
+      } else {
                 push @unset, $_;
             }
         }
@@ -844,36 +844,36 @@ sub menu_run_simulation {
                            -icon => 'error');
             return;
         }
-	if (@multiple > 0 && ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq '')) {
-	    $w->messageBox(-message =>
+  if (@multiple > 0 && ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq '')) {
+      $w->messageBox(-message =>
                            "Scan range(s) not applicable. Mean value subsituted for parameter(s):\n\n@multiple",
                            -title => "No scan here!",
                            -type => 'OK',
                            -icon => 'info');
-	}
-	if (@multiple eq 0 && $newsi->{'NScan'} > 1) {
-	    if (!$newsi->{'Trace'}) {
-		$w->messageBox(-message =>
-			       "No scan range(s) given! Performing single simulation",
-			       -title => "No scan here!",
-			       -type => 'OK',
-			       -icon => 'info');
-		$newsi->{'NScan'} = 0;
-	    }
-	}
-	if ($newsi->{'gravity'} eq 1 && !$newsi->{'Trace'}) {
-	    if ($newsi->{'GravityWarn'} eq 0) {
-		$w->messageBox(-message =>
-			       "Only use --gravitation with components that support this!",
-			       -title => "BEWARE!",
-			       -type => 'OK',
-			       -icon => 'warning');
-		$newsi->{'GravityWarn'} = 1;
-	    }
-	    push @command, "--gravitation";
-	}
-	push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
-	my $inittext = "Running simulation '$out_name' ...\n" .
+  }
+  if (@multiple eq 0 && $newsi->{'NScan'} > 1) {
+      if (!$newsi->{'Trace'}) {
+    $w->messageBox(-message =>
+             "No scan range(s) given! Performing single simulation",
+             -title => "No scan here!",
+             -type => 'OK',
+             -icon => 'info');
+    $newsi->{'NScan'} = 0;
+      }
+  }
+  if ($newsi->{'gravity'} eq 1 && !$newsi->{'Trace'}) {
+      if ($newsi->{'GravityWarn'} eq 0) {
+    $w->messageBox(-message =>
+             "Only use --gravitation with components that support this!",
+             -title => "BEWARE!",
+             -type => 'OK',
+             -icon => 'warning');
+    $newsi->{'GravityWarn'} = 1;
+      }
+      push @command, "--gravitation";
+  }
+  push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
+  my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;
         $inf_sim=$newsi;
@@ -948,14 +948,14 @@ sub make_comp_inst {
         my $length = scalar @p_splitted;
         my $p_last_word = $p_splitted[$length-1];
         if(defined($r->{'VALUE'}{$p}) && $r->{'VALUE'}{$p} !~ /^\s*$/) {
-	    # Take care of the special case where the parameter is 'filename'
-	    if (lc($p) eq 'filename') {
-		# Firstly, remove existing quotes :)
-		$r->{'VALUE'}{$p} =~ s!\"!!g;
-		$r->{'VALUE'}{$p} =~ s!\'!!g;
-		# Next, add quotes...
-		$r->{'VALUE'}{$p} = "\"$r->{'VALUE'}{$p}\"";
-	    }
+      # Take care of the special case where the parameter is 'filename'
+      if (lc($p) eq 'filename') {
+    # Firstly, remove existing quotes :)
+    $r->{'VALUE'}{$p} =~ s!\"!!g;
+    $r->{'VALUE'}{$p} =~ s!\'!!g;
+    # Next, add quotes...
+    $r->{'VALUE'}{$p} = "\"$r->{'VALUE'}{$p}\"";
+      }
             $add .= "$p_last_word = $r->{'VALUE'}{$p}";
         } elsif(defined($cdata->{'parhelp'}{$p}{'default'})) {
             next;                # Omit non-specified default parameter
@@ -1016,7 +1016,8 @@ my $instr_template_start = <<INSTR_FINISH;
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT test(Par1=Default_Value1)
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT test(Par1=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
