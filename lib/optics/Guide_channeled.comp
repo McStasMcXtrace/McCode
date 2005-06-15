@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Release: McStas 1.6
 * Origin: Risoe
 *
@@ -27,7 +27,8 @@
 * d=0.0005, mx=1, my=1)
 *
 * %BUGS
-* This component does not work with gravitation on. Use component Guide_gravity then.
+* This component does not work with gravitation on. Use Guide_gravity.
+* This component does not work in multichannel focusing geometry.
 *
 * %P
 * INPUT PARAMETERS:
