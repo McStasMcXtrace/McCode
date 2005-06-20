@@ -444,8 +444,8 @@ sub do_test {
           if ($diff > 0.2) {
             $accuracy_flag = 1;
             $diff = $diff*100;
-            &$printer("[FAILED] $this_name ($sim_I, should be $test_monitor_values[$j])");
-          } else { &$printer("[OK] $this_name (accuracy within $diff %)"); }
+            &$printer("[FAILED] $this_name ($test_monitor_names[$j] = $sim_I, should be $test_monitor_values[$j])");
+          } else { &$printer("[OK] $this_name ($test_monitor_names[$j] accuracy within $diff %)"); }
         }
       } # end if ($test_monitor_values[$j] ne 0)
       if ($diff eq 0) { &$printer("[OK] $this_name (accuracy not checked)"); }
