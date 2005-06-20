@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Release: McStas 1.6
 * Origin: Risoe
 *
@@ -92,7 +92,7 @@ INITIALIZE
   if ((k > 1) && (w1 != w2))
   {
     fprintf(stderr,"WARNING: Guide_channeled: %s:"
-    "This component does not work with multichannel focusing guide\n");
+    "This component does not work with multichannel focusing guide\n"
     "Use Guide_gravity for that.\n", NAME_CURRENT_COMP);
     exit(-1);
   }
