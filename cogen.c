@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.50  2005/06/20 09:02:10  farhi
+* Some more info in mcstas --verbose mode.
+*
 * Revision 1.49  2005/06/20 08:01:58  farhi
 * Install ABSORB counter for run-time PROP macros.
 * Report at end of simulation if needed.
@@ -71,7 +74,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.50 2005-06-20 09:02:10 farhi Exp $
+* $Id: cogen.c,v 1.51 2005-06-20 09:16:48 farhi Exp $
 *
 *******************************************************************************/
 
@@ -602,7 +605,7 @@ cogen_decls(struct instr_def *instr)
 
   /* 8. Declaration of group flags */
   cout("/* Flag true when previous component acted on the neutron (SCATTER) */");
-  coutf("char %sScattered=0;", ID_PRE);
+  coutf("MCNUM %sScattered=0;", ID_PRE);
   /* ADD: E. Farhi Sep 25th, 2001 Set group flags */
   if (list_len(instr->grouplist) > 0)
   {
