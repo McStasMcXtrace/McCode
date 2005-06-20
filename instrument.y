@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-*	$Id: instrument.y,v 1.57 2004-03-04 19:04:08 pkwi Exp $
+* $Id: instrument.y,v 1.58 2005-06-20 09:04:48 farhi Exp $
 *
 *******************************************************************************/
 
@@ -44,63 +44,63 @@
 %union {
   char *number;
   char *string;
-  struct code_block *ccode;	/* User-supplied C code block */
-  CExp exp;			/* Expression datatype (for arguments) */
-  int linenum;			/* Starting line number for code block */
-  Coords_exp coords;		/* Coordinates for location or rotation */
-  List formals;			/* List of formal parameters */
-  List iformals;		/* List of formal instrument parameters */
-  List comp_iformals;		/* List of formal comp. input parameters */
-  struct instr_formal *iformal;	/* Single formal instrument parameter */
-  struct comp_iformal *cformal;	/* Single formal component input parameter */
-  Symtab actuals;		/* Values for formal parameters */
-  char **polform;		/* Polarisation state formal parameter */
+  struct code_block *ccode; /* User-supplied C code block */
+  CExp exp;     /* Expression datatype (for arguments) */
+  int linenum;      /* Starting line number for code block */
+  Coords_exp coords;    /* Coordinates for location or rotation */
+  List formals;     /* List of formal parameters */
+  List iformals;    /* List of formal instrument parameters */
+  List comp_iformals;   /* List of formal comp. input parameters */
+  struct instr_formal *iformal; /* Single formal instrument parameter */
+  struct comp_iformal *cformal; /* Single formal component input parameter */
+  Symtab actuals;   /* Values for formal parameters */
+  char **polform;   /* Polarisation state formal parameter */
   struct {List def, set, out, state;
-	  char **polarisation;} parms;	/* Parameter lists */
-  struct instr_def *instrument;	/* Instrument definition */
-  struct comp_inst *instance;	/* Component instance */
-  struct comp_place place;	/* Component place */
-  struct comp_orientation ori;	/* Component orientation */
-  struct NXDinfo *nxdinfo;	/* Info for NeXus dictionary interface */
+    char **polarisation;} parms;  /* Parameter lists */
+  struct instr_def *instrument; /* Instrument definition */
+  struct comp_inst *instance; /* Component instance */
+  struct comp_place place;  /* Component place */
+  struct comp_orientation ori;  /* Component orientation */
+  struct NXDinfo *nxdinfo;  /* Info for NeXus dictionary interface */
   struct group_inst *groupinst;
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
 
-%token TOK_ABSOLUTE	  "ABSOLUTE"
-%token TOK_AT		      "AT"
-%token TOK_COMPONENT	"COMPONENT"
-%token TOK_DECLARE	  "DECLARE"
-%token TOK_DEFINE	    "DEFINE"
-%token TOK_DEFINITION	"DEFINITION"
-%token TOK_END		    "END"
-%token TOK_FINALLY	  "FINALLY"
-%token TOK_EXTERN	    "EXTERN"
-%token TOK_INITIALIZE	"INITIALIZE"
-%token TOK_INSTRUMENT	"INSTRUMENT"
-%token TOK_MCDISPLAY	"MCDISPLAY"
-%token TOK_OUTPUT	    "OUTPUT"
-%token TOK_PARAMETERS	"PARAMETERS"
-%token TOK_POLARISATION	"POLARISATION"
-%token TOK_RELATIVE	  "RELATIVE"
-%token TOK_ROTATED	  "ROTATED"
+%token TOK_ABSOLUTE   "ABSOLUTE"
+%token TOK_AT         "AT"
+%token TOK_COMPONENT  "COMPONENT"
+%token TOK_DECLARE    "DECLARE"
+%token TOK_DEFINE     "DEFINE"
+%token TOK_DEFINITION "DEFINITION"
+%token TOK_END        "END"
+%token TOK_FINALLY    "FINALLY"
+%token TOK_EXTERN     "EXTERN"
+%token TOK_INITIALIZE "INITIALIZE"
+%token TOK_INSTRUMENT "INSTRUMENT"
+%token TOK_MCDISPLAY  "MCDISPLAY"
+%token TOK_OUTPUT     "OUTPUT"
+%token TOK_PARAMETERS "PARAMETERS"
+%token TOK_POLARISATION "POLARISATION"
+%token TOK_RELATIVE   "RELATIVE"
+%token TOK_ROTATED    "ROTATED"
 %token TOK_PREVIOUS   "PREVIOUS"
-%token TOK_SETTING	  "SETTING"
-%token TOK_STATE	    "STATE"
-%token TOK_TRACE	    "TRACE"
-%token TOK_SHARE	    "SHARE"   /* ADD: E. Farhi Sep 20th, 2001 shared code (shared declare) */
-%token TOK_EXTEND	    "EXTEND"  /* ADD: E. Farhi Sep 20th, 2001 extend code */
-%token TOK_GROUP	    "GROUP"   /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
+%token TOK_SETTING    "SETTING"
+%token TOK_STATE      "STATE"
+%token TOK_TRACE      "TRACE"
+%token TOK_SHARE      "SHARE"   /* ADD: E. Farhi Sep 20th, 2001 shared code (shared declare) */
+%token TOK_EXTEND     "EXTEND"  /* ADD: E. Farhi Sep 20th, 2001 extend code */
+%token TOK_GROUP      "GROUP"   /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
 %token TOK_SAVE       "SAVE"    /* ADD: E. Farhi Aug 25th, 2002 data save code */
-%token TOK_NEXUS     	"NEXUS"   /* ADD: E. Farhi Aug 6th, 2002 will use NeXus files for saving */
-%token TOK_DICTFILE	  "DICTFILE"  /* ADD: E. Farhi Aug 6th, 2002 Name of NeXus dictionary file */
-%token TOK_HDF   	    "HDF"     /* ADD: E. Farhi Aug 6th, 2002 HDF version number (4,5) */
+%token TOK_NEXUS      "NEXUS"   /* ADD: E. Farhi Aug 6th, 2002 will use NeXus files for saving */
+%token TOK_DICTFILE   "DICTFILE"  /* ADD: E. Farhi Aug 6th, 2002 Name of NeXus dictionary file */
+%token TOK_HDF        "HDF"     /* ADD: E. Farhi Aug 6th, 2002 HDF version number (4,5) */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
 *******************************************************************************/
 
-%token <string> TOK_ID		/* Note: returns new str_dup()'ed copy each time. */
+%token <string> TOK_ID    /* Note: returns new str_dup()'ed copy each time. */
 %token <string> TOK_STRING
 %token <number> TOK_NUMBER
 %token <string> TOK_CTOK
@@ -129,636 +129,636 @@
 %type <number>  hdfversion
 %%
 
-main:		  TOK_GENERAL compdefs instrument
-		| TOK_RESTRICTED compdef
+main:     TOK_GENERAL compdefs instrument
+    | TOK_RESTRICTED compdef
 ;
 
-compdefs:	  /* empty */
-		| compdefs compdef
+compdefs:   /* empty */
+    | compdefs compdef
 ;
 
-compdef:	  "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
-		  {
-		    struct comp_def *c;
-		    palloc(c);
-		    c->name = $3;
+compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
+      {
+        struct comp_def *c;
+        palloc(c);
+        c->name = $3;
         /* ADD: E. Farhi, Aug 14th, 2002 */
         c->source = str_quote(instr_current_filename);
-		    c->def_par = $4.def;
-		    c->set_par = $4.set;
-		    c->out_par = $4.out;
-		    c->state_par = $4.state;
-		    c->polarisation_par = $4.polarisation;
+        c->def_par = $4.def;
+        c->set_par = $4.set;
+        c->out_par = $4.out;
+        c->state_par = $4.state;
+        c->polarisation_par = $4.polarisation;
         c->share_code = $5;  /* ADD: E. Farhi Sep 20th, 2001 */
-		    c->decl_code = $6;  /* MOD: E. Farhi Sep 20th, 2001, shifted param numbs */
-		    c->init_code = $7;
-		    c->trace_code = $8;
+        c->decl_code = $6;  /* MOD: E. Farhi Sep 20th, 2001, shifted param numbs */
+        c->init_code = $7;
+        c->trace_code = $8;
         c->save_code = $9;  /* ADD: E. Farhi Aug 25th, 2002+shifted indexes */
-		    c->finally_code = $10;
-		    c->mcdisplay_code = $11;
+        c->finally_code = $10;
+        c->mcdisplay_code = $11;
         c->comp_inst_number = 0; /* ADD: E. Farhi Sep 20th, 2001 */
 
-		    /* Check definition and setting params for uniqueness */
-		    check_comp_formals(c->def_par, c->set_par, c->name);
-		    /* Put component definition in table. */
-		    symtab_add(read_components, c->name, c);
-        if (verbose) fprintf(stderr, "Embedding component %s\n", c->source);
-		  }
-;
-
-parameters:	  def_par set_par out_par state_par polarisation_par
-		  {
-		    $$.def = $1;
-		    $$.set = $2;
-		    $$.out = $3;
-		    $$.state = $4;
-		    $$.polarisation = $5;
-		  }
-;
-
-
-def_par: 	  /* empty */
-		  {
-		    $$ = list_create();
-		  }
-		| "DEFINITION" "PARAMETERS" comp_iformallist
-		  {
-		    $$ = $3;
-		  }
-;
-
-set_par: 	  /* empty */
-		  {
-		    $$ = list_create();
-		  }
-		| "SETTING" "PARAMETERS" comp_iformallist
-		  {
-		    $$ = $3;
-		  }
-;
-
-out_par:	  /* empty */
-		  {
-		    $$ = list_create();
-		  }
-		| "OUTPUT" "PARAMETERS" formallist
-		  {
-		    $$ = $3;
-		  }
-;
-
-state_par:	  "STATE" "PARAMETERS" formallist
-		  {
-		    $$ = $3;
-		  }
-;
-
-polarisation_par: /* empty */
-		  {
-		    $$ = NULL;
-		  }
-		| "POLARISATION" "PARAMETERS" '(' TOK_ID ',' TOK_ID ',' TOK_ID ')'
-		  {
-		    char **polform;
-		    nalloc(polform, 3);
-		    polform[0] = $4;
-		    polform[1] = $6;
-		    polform[2] = $8;
-		    $$ = polform;
-		  }
-;
-
-comp_iformallist: '(' comp_iformals ')'
-		  {
-		    $$ = $2;
-		  }
-;
-
-comp_iformals:	  /* empty */
-		  {
-		    $$ = list_create();
-		  }
-		| comp_iformals1
-		  {
-		    $$ = $1;
-		  }
-;
-
-comp_iformals1:	  comp_iformal
-		  {
-		    $$ = list_create();
-		    list_add($$, $1);
-		  }
-		| comp_iformals1 ',' comp_iformal
-		  {
-		    list_add($1, $3);
-		    $$ = $1;
-		  }
-;
-
-comp_iformal:	 TOK_ID TOK_ID
-		  {
-		    struct comp_iformal *formal;
-		    palloc(formal);
-		    if(!strcmp($1, "double")) {
-		      formal->type = instr_type_double;
-		    } else if(!strcmp($1, "int")) {
-		      formal->type = instr_type_int;
-		    } else if(!strcmp($1, "string")) {
-		      formal->type = instr_type_string;
-		    } else {
-		      print_error("Illegal type %s for component "
-				  "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
-		      formal->type = instr_type_double;
-		    }
-		    formal->id = $2;
-		    $$ = formal;
-		  }
-		| TOK_ID '*' TOK_ID
-		  {
-		    struct comp_iformal *formal;
-		    palloc(formal);
-		    if(!strcmp($1, "char")) {
-		      formal->type = instr_type_string;
-		    } else {
-		      print_error("Illegal type %s* for component "
-				  "parameter %s at line $s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
-		      formal->type = instr_type_double;
-		    }
-		    formal->id = $3;
-		    $$ = formal;
-		  }
-    | TOK_ID
-		  {
-		    struct comp_iformal *formal;
-		    palloc(formal);
-		    formal->id = str_dup($1);
-		    formal->isoptional = 0; /* No default value */
-        formal->type = instr_type_double;
-		    $$ = formal;
-		  }
-		| TOK_ID '=' exp
-		  {
-		    struct comp_iformal *formal;
-		    palloc(formal);
-		    formal->id = $1;
-		    formal->isoptional = 1; /* Default value available */
-		    formal->default_value = $3;
-        formal->type = instr_type_double;
-		    $$ = formal;
-		  }
-    | TOK_ID TOK_ID '=' exp
-      {
-		    struct comp_iformal *formal;
-		    palloc(formal);
-        if(!strcmp($1, "double")) {
-		      formal->type = instr_type_double;
-		    } else if(!strcmp($1, "int")) {
-		      formal->type = instr_type_int;
-		    } else if(!strcmp($1, "string")) {
-		      formal->type = instr_type_string;
-		    } else {
-		      print_error("Illegal type %s for component "
-				  "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
-		      formal->type = instr_type_double;
-		    }
-        formal->id = $2;
-		    formal->isoptional = 1; /* Default value available */
-		    formal->default_value = $4;
-		    $$ = formal;
-		  }
-    | TOK_ID '*' TOK_ID '=' exp
-      {
-		    struct comp_iformal *formal;
-		    palloc(formal);
-		    formal->id = $3;
-		    formal->isoptional = 1; /* Default value available */
-		    formal->default_value = $5;
-        if(!strcmp($1, "char")) {
-		      formal->type = instr_type_string;
-		    } else {
-		      print_error("Illegal type %s* for component "
-				  "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
-		      formal->type = instr_type_double;
-		    }
-		    $$ = formal;
+        /* Check definition and setting params for uniqueness */
+        check_comp_formals(c->def_par, c->set_par, c->name);
+        /* Put component definition in table. */
+        symtab_add(read_components, c->name, c);
+        if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
       }
 ;
 
-instrument:	  "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
-			{ instrument_definition->formals = $4; instrument_definition->name = $3; }
-		  declare initialize nexus instr_trace save finally "END"
-		  {
-		    instrument_definition->decls = $6;
-		    instrument_definition->inits = $7;
-		    instrument_definition->nxdinfo = $8;
+parameters:   def_par set_par out_par state_par polarisation_par
+      {
+        $$.def = $1;
+        $$.set = $2;
+        $$.out = $3;
+        $$.state = $4;
+        $$.polarisation = $5;
+      }
+;
+
+
+def_par:    /* empty */
+      {
+        $$ = list_create();
+      }
+    | "DEFINITION" "PARAMETERS" comp_iformallist
+      {
+        $$ = $3;
+      }
+;
+
+set_par:    /* empty */
+      {
+        $$ = list_create();
+      }
+    | "SETTING" "PARAMETERS" comp_iformallist
+      {
+        $$ = $3;
+      }
+;
+
+out_par:    /* empty */
+      {
+        $$ = list_create();
+      }
+    | "OUTPUT" "PARAMETERS" formallist
+      {
+        $$ = $3;
+      }
+;
+
+state_par:    "STATE" "PARAMETERS" formallist
+      {
+        $$ = $3;
+      }
+;
+
+polarisation_par: /* empty */
+      {
+        $$ = NULL;
+      }
+    | "POLARISATION" "PARAMETERS" '(' TOK_ID ',' TOK_ID ',' TOK_ID ')'
+      {
+        char **polform;
+        nalloc(polform, 3);
+        polform[0] = $4;
+        polform[1] = $6;
+        polform[2] = $8;
+        $$ = polform;
+      }
+;
+
+comp_iformallist: '(' comp_iformals ')'
+      {
+        $$ = $2;
+      }
+;
+
+comp_iformals:    /* empty */
+      {
+        $$ = list_create();
+      }
+    | comp_iformals1
+      {
+        $$ = $1;
+      }
+;
+
+comp_iformals1:   comp_iformal
+      {
+        $$ = list_create();
+        list_add($$, $1);
+      }
+    | comp_iformals1 ',' comp_iformal
+      {
+        list_add($1, $3);
+        $$ = $1;
+      }
+;
+
+comp_iformal:  TOK_ID TOK_ID
+      {
+        struct comp_iformal *formal;
+        palloc(formal);
+        if(!strcmp($1, "double")) {
+          formal->type = instr_type_double;
+        } else if(!strcmp($1, "int")) {
+          formal->type = instr_type_int;
+        } else if(!strcmp($1, "string")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("Illegal type %s for component "
+          "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $2;
+        $$ = formal;
+      }
+    | TOK_ID '*' TOK_ID
+      {
+        struct comp_iformal *formal;
+        palloc(formal);
+        if(!strcmp($1, "char")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("Illegal type %s* for component "
+          "parameter %s at line $s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $3;
+        $$ = formal;
+      }
+    | TOK_ID
+      {
+        struct comp_iformal *formal;
+        palloc(formal);
+        formal->id = str_dup($1);
+        formal->isoptional = 0; /* No default value */
+        formal->type = instr_type_double;
+        $$ = formal;
+      }
+    | TOK_ID '=' exp
+      {
+        struct comp_iformal *formal;
+        palloc(formal);
+        formal->id = $1;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $3;
+        formal->type = instr_type_double;
+        $$ = formal;
+      }
+    | TOK_ID TOK_ID '=' exp
+      {
+        struct comp_iformal *formal;
+        palloc(formal);
+        if(!strcmp($1, "double")) {
+          formal->type = instr_type_double;
+        } else if(!strcmp($1, "int")) {
+          formal->type = instr_type_int;
+        } else if(!strcmp($1, "string")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("Illegal type %s for component "
+          "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $2;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $4;
+        $$ = formal;
+      }
+    | TOK_ID '*' TOK_ID '=' exp
+      {
+        struct comp_iformal *formal;
+        palloc(formal);
+        formal->id = $3;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $5;
+        if(!strcmp($1, "char")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("Illegal type %s* for component "
+          "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        $$ = formal;
+      }
+;
+
+instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
+      { instrument_definition->formals = $4; instrument_definition->name = $3; }
+      declare initialize nexus instr_trace save finally "END"
+      {
+        instrument_definition->decls = $6;
+        instrument_definition->inits = $7;
+        instrument_definition->nxdinfo = $8;
         instrument_definition->saves  = $10;
-		    instrument_definition->finals = $11;
-		    instrument_definition->compmap = comp_instances;
+        instrument_definition->finals = $11;
+        instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;  /* ADD: E. Farhi Sep 25th, 2001 */
-		    instrument_definition->complist = comp_instances_list;
+        instrument_definition->complist = comp_instances_list;
         instrument_definition->grouplist = group_instances_list;  /* ADD: E. Farhi Sep 25th, 2001 */
 
-		    /* Check instrument parameters for uniqueness */
-		    check_instrument_formals(instrument_definition->formals,
-					     instrument_definition->name);
+        /* Check instrument parameters for uniqueness */
+        check_instrument_formals(instrument_definition->formals,
+               instrument_definition->name);
         if (verbose) fprintf(stderr, "Creating instrument %s\n", instrument_definition->name);
-		  }
+      }
 ;
 
 /* The instrument parameters may be either double (for numeric input),
    int (for integer-only), or char * (for strings). */
-instrpar_list:	  '(' instr_formals ')'
-		  {
-		    $$ = $2;
-		  }
-;
-
-instr_formals:	  /* empty */
-		  {
-		    $$ = list_create();
-		  }
-		| instr_formals1
-		  {
-		    $$ = $1;
-		  }
-;
-
-instr_formals1:	  instr_formal
-		  {
-		    $$ = list_create();
-		    list_add($$, $1);
-		  }
-		| instr_formals1 ',' instr_formal
-		  {
-		    list_add($1, $3);
-		    $$ = $1;
-		  }
-;
-
-instr_formal:	  TOK_ID TOK_ID
-		  {
-		    struct instr_formal *formal;
-		    palloc(formal);
-		    if(!strcmp($1, "double")) {
-		      formal->type = instr_type_double;
-		    } else if(!strcmp($1, "int")) {
-		      formal->type = instr_type_int;
-		    } else if(!strcmp($1, "string")) {
-		      formal->type = instr_type_string;
-		    } else {
-		      print_error("Illegal type %s for instrument "
-				  "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
-		      formal->type = instr_type_double;
-		    }
-		    formal->id = $2;
-		    $$ = formal;
-		  }
-		| TOK_ID '*' TOK_ID
-		  {
-		    struct instr_formal *formal;
-		    palloc(formal);
-		    if(!strcmp($1, "char")) {
-		      formal->type = instr_type_string;
-		    } else {
-		      print_error("Illegal type $s* for instrument "
-				  "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
-		      formal->type = instr_type_double;
-		    }
-		    formal->id = $3;
-		    $$ = formal;
-		  }
-		| TOK_ID	/* Default type is "double" */
-		  {
-		    struct instr_formal *formal;
-		    palloc(formal);
-		    formal->type = instr_type_double;
-		    formal->id = $1;
-        formal->isoptional = 0; /* No default value */
-		    $$ = formal;
-		  }
-    | TOK_ID '=' exp
-		  {
-		    struct instr_formal *formal;
-		    palloc(formal);
-		    formal->id = $1;
-		    formal->isoptional = 1; /* Default value available */
-		    formal->default_value = $3;
-        formal->type = instr_type_double;
-		    $$ = formal;
-		  }
-    | TOK_ID TOK_ID '=' exp
+instrpar_list:    '(' instr_formals ')'
       {
-		    struct instr_formal *formal;
-		    palloc(formal);
-        if(!strcmp($1, "double")) {
-		      formal->type = instr_type_double;
-		    } else if(!strcmp($1, "int")) {
-		      formal->type = instr_type_int;
-		    } else if(!strcmp($1, "string")) {
-		      formal->type = instr_type_string;
-		    } else {
-		      print_error("Illegal type %s for instrument "
-				  "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
-		      formal->type = instr_type_double;
-		    }
-        formal->id = $2;
-		    formal->isoptional = 1; /* Default value available */
-		    formal->default_value = $4;
-		    $$ = formal;
-		  }
-    | TOK_ID '*' TOK_ID '=' exp
-      {
-		    struct instr_formal *formal;
-		    palloc(formal);
-		    formal->id = $3;
-		    formal->isoptional = 1; /* Default value available */
-		    formal->default_value = $5;
-        if(!strcmp($1, "char")) {
-		      formal->type = instr_type_string;
-		    } else {
-		      print_error("Illegal type %s* for instrument "
-				  "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
-		      formal->type = instr_type_double;
-		    }
-		    $$ = formal;
+        $$ = $2;
       }
 ;
-declare:	  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
-		| "DECLARE" codeblock
-		  {
-		    $$ = $2;
-		  }
+
+instr_formals:    /* empty */
+      {
+        $$ = list_create();
+      }
+    | instr_formals1
+      {
+        $$ = $1;
+      }
 ;
 
-initialize:	  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
-		| "INITIALIZE" codeblock
-		  {
-		    $$ = $2;
-		  }
+instr_formals1:   instr_formal
+      {
+        $$ = list_create();
+        list_add($$, $1);
+      }
+    | instr_formals1 ',' instr_formal
+      {
+        list_add($1, $3);
+        $$ = $1;
+      }
+;
+
+instr_formal:   TOK_ID TOK_ID
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "double")) {
+          formal->type = instr_type_double;
+        } else if(!strcmp($1, "int")) {
+          formal->type = instr_type_int;
+        } else if(!strcmp($1, "string")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("Illegal type %s for instrument "
+          "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $2;
+        $$ = formal;
+      }
+    | TOK_ID '*' TOK_ID
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "char")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("Illegal type $s* for instrument "
+          "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $3;
+        $$ = formal;
+      }
+    | TOK_ID  /* Default type is "double" */
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->type = instr_type_double;
+        formal->id = $1;
+        formal->isoptional = 0; /* No default value */
+        $$ = formal;
+      }
+    | TOK_ID '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->id = $1;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $3;
+        formal->type = instr_type_double;
+        $$ = formal;
+      }
+    | TOK_ID TOK_ID '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        if(!strcmp($1, "double")) {
+          formal->type = instr_type_double;
+        } else if(!strcmp($1, "int")) {
+          formal->type = instr_type_int;
+        } else if(!strcmp($1, "string")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("Illegal type %s for instrument "
+          "parameter %s at line %s:%d.\n", $1, $2, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        formal->id = $2;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $4;
+        $$ = formal;
+      }
+    | TOK_ID '*' TOK_ID '=' exp
+      {
+        struct instr_formal *formal;
+        palloc(formal);
+        formal->id = $3;
+        formal->isoptional = 1; /* Default value available */
+        formal->default_value = $5;
+        if(!strcmp($1, "char")) {
+          formal->type = instr_type_string;
+        } else {
+          print_error("Illegal type %s* for instrument "
+          "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          formal->type = instr_type_double;
+        }
+        $$ = formal;
+      }
+;
+declare:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "DECLARE" codeblock
+      {
+        $$ = $2;
+      }
+;
+
+initialize:   /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "INITIALIZE" codeblock
+      {
+        $$ = $2;
+      }
 ;
 
 /* ADD: E. Farhi Sep 20th, 2001 SHARE component block included once */
-share:	  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
-		| "SHARE" codeblock
-		  {
-		    $$ = $2;
-		  }
+share:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "SHARE" codeblock
+      {
+        $$ = $2;
+      }
 ;
 
 
-nexus:		  /* empty: no NeXus support */
-		  {
-		    struct NXDinfo *nxdinfo;
-		    palloc(nxdinfo);
-		    nxdinfo->nxdfile = NULL;
-		    nxdinfo->any = 0;
-		    $$ = nxdinfo;
-		  }
-		| nexus "NEXUS" dictfile hdfversion
-		  { /* ADD: E.Farhi Aug 6th 2002: use default NeXus dictionary file */
-		    struct NXDinfo *nxdinfo = $1;
-		    if(nxdinfo->nxdfile)
-		    {
-		      print_error("Multiple NeXus DICTFILE declarations found (%s).\n"
-				  "At most one NeXus DICTFILE declarations may "
-				  "be used in an instrument", nxdinfo->nxdfile);
-		    }
-		    else 
+nexus:      /* empty: no NeXus support */
+      {
+        struct NXDinfo *nxdinfo;
+        palloc(nxdinfo);
+        nxdinfo->nxdfile = NULL;
+        nxdinfo->any = 0;
+        $$ = nxdinfo;
+      }
+    | nexus "NEXUS" dictfile hdfversion
+      { /* ADD: E.Farhi Aug 6th 2002: use default NeXus dictionary file */
+        struct NXDinfo *nxdinfo = $1;
+        if(nxdinfo->nxdfile)
+        {
+          print_error("Multiple NeXus DICTFILE declarations found (%s).\n"
+          "At most one NeXus DICTFILE declarations may "
+          "be used in an instrument", nxdinfo->nxdfile);
+        }
+        else
         {
           nxdinfo->nxdfile     = $3;
           nxdinfo->hdfversion = atof($4);
         }
-		    nxdinfo->any = 1; /* Now need NeXus support in runtime */
-		    $$ = nxdinfo;
-		  }
+        nxdinfo->any = 1; /* Now need NeXus support in runtime */
+        $$ = nxdinfo;
+      }
 ;
 dictfile: /* empty: default dictionary */
-		  {
-		    $$ = str_cat(instrument_definition->name, ".dic", NULL);
-		  }
+      {
+        $$ = str_cat(instrument_definition->name, ".dic", NULL);
+      }
     | dictfile "DICTFILE" TOK_STRING
       {
         $$ = $3;
       }
 ;
 hdfversion: /* empty: default HDF version */
-		  {
-		    $$ = "4";
-		  }
+      {
+        $$ = "4";
+      }
     | hdfversion "HDF" TOK_NUMBER
       {
         $$ = $3;
       }
 ;
 
-trace:		  "TRACE" codeblock
-		  {
-		    $$ = $2;
-		  }
+trace:      "TRACE" codeblock
+      {
+        $$ = $2;
+      }
 ;
 
-save:	  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
-		| "SAVE" codeblock
-		  {
-		    $$ = $2;
-		  }
+save:   /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "SAVE" codeblock
+      {
+        $$ = $2;
+      }
 ;
 
-finally:	  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
-		| "FINALLY" codeblock
-		  {
-		    $$ = $2;
-		  }
+finally:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "FINALLY" codeblock
+      {
+        $$ = $2;
+      }
 ;
 
-mcdisplay:	  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
-		| "MCDISPLAY" codeblock
-		  {
-		    $$ = $2;
-		  }
+mcdisplay:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "MCDISPLAY" codeblock
+      {
+        $$ = $2;
+      }
 ;
 
-instr_trace:	  "TRACE" complist
+instr_trace:    "TRACE" complist
 ;
-complist:	  /* empty */
-		  {
-		    comp_instances      = symtab_create();
-		    comp_instances_list = list_create();
+complist:   /* empty */
+      {
+        comp_instances      = symtab_create();
+        comp_instances_list = list_create();
         group_instances     = symtab_create();
         group_instances_list= list_create();
-		  }
-		| complist component
-		  {
-		    /* Check that the component instance name has not
+      }
+    | complist component
+      {
+        /* Check that the component instance name has not
                        been used before. */
-		    if(symtab_lookup(comp_instances, $2->name))
-		    {
-		      print_error("Multiple use of component instance name "
-				  "'%s' at line %s:%d.\n", $2->name, instr_current_filename, instr_current_line);
-		      /* Since this is an error condition, we do not
-		         worry about freeing the memory allocated for
-			 the component instance. */
-		    }
-		    else
-		    {
-		      symtab_add(comp_instances, $2->name, $2);
-		      list_add(comp_instances_list, $2);
-		      if($2->def)
-		      {
+        if(symtab_lookup(comp_instances, $2->name))
+        {
+          print_error("Multiple use of component instance name "
+          "'%s' at line %s:%d.\n", $2->name, instr_current_filename, instr_current_line);
+          /* Since this is an error condition, we do not
+             worry about freeing the memory allocated for
+       the component instance. */
+        }
+        else
+        {
+          symtab_add(comp_instances, $2->name, $2);
+          list_add(comp_instances_list, $2);
+          if($2->def)
+          {
             /* Check if the component handles polarisation. */
             if($2->def->polarisation_par)
             {
-	            instrument_definition->polarised = 1;
+              instrument_definition->polarised = 1;
             }
-		      }
-		    }
-		  }
+          }
+        }
+      }
 ;
 
-component:	  "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation groupref extend
-		  {
-		    struct comp_def *def;
-		    struct comp_inst *comp;
-        
+component:    "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation groupref extend
+      {
+        struct comp_def *def;
+        struct comp_inst *comp;
+
         def = read_component($4);
         if (def != NULL) def->comp_inst_number--;
-		    palloc(comp); /* Allocate new instance. */
-		    comp->name = $2;
-		    comp->def = def;
-		    palloc(comp->pos);
+        palloc(comp); /* Allocate new instance. */
+        comp->name = $2;
+        comp->def = def;
+        palloc(comp->pos);
         comp->group = $8;           /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
         comp->extend = $9;  /* ADD: E. Farhi Sep 20th, 2001 EXTEND block*/
         comp->index = 0;       /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
-		    comp->pos->place = $6.place;
-		    comp->pos->place_rel = $6.place_rel;
-		    comp->pos->orientation = $7.orientation;
-		    comp->pos->orientation_rel =
-		      $7.isdefault ? $6.place_rel : $7.orientation_rel;
-		    if(def != NULL)
-		    {
-		      /* Check actual parameters against definition and
+        comp->pos->place = $6.place;
+        comp->pos->place_rel = $6.place_rel;
+        comp->pos->orientation = $7.orientation;
+        comp->pos->orientation_rel =
+          $7.isdefault ? $6.place_rel : $7.orientation_rel;
+        if(def != NULL)
+        {
+          /* Check actual parameters against definition and
                          setting parameters. */
-		      comp_formals_actuals(comp, $5);
-		    }
-		    str_free($4);
-		    debugn((DEBUG_HIGH, "Component: %s.\n", $2));
+          comp_formals_actuals(comp, $5);
+        }
+        str_free($4);
+        debugn((DEBUG_HIGH, "Component: %s.\n", $2));
         previous_comp = comp; /* this comp will be 'previous' for the next */
-		    $$ = comp;
-		  }
+        $$ = comp;
+      }
 ;
 
-formallist:	  '(' formals ')'
-		  {
-		    $$ = $2;
-		  }
-;
-
-
-formals:	  /* empty */
-		  {
-		    $$ = list_create();
-		  }
-		| formals1
-		  {
-		    $$ = $1;
-		  }
-;
-
-formals1:	  TOK_ID
-		  {
-		    $$ = list_create();
-		    list_add($$, $1);
-		  }
-		| formals1 ',' TOK_ID
-		  {
-		    list_add($1, $3);
-		    $$ = $1;
-		  }
-;
-
-actuallist:	  '(' actuals ')'
-		  {
-		    $$ = $2;
-		  }
-;
-
-actuals:	  /* empty */
-		  {
-		    $$ = symtab_create();
-		  }
-		| actuals1
-		  {
-		    $$ = $1;
-		  }
-;
-
-actuals1:	  TOK_ID '=' exp
-		  {
-		    $$ = symtab_create();
-		    symtab_add($$, $1, $3);
-		    str_free($1);
-		  }
-		| actuals1 ',' TOK_ID '=' exp
-		  {
-		    symtab_add($1, $3, $5);
-		    str_free($3);
-		    $$ = $1;
-		  }
-;
-
-place:		  "AT" coords reference
-		  {
-		    $$.place = $2;
-		    $$.place_rel = $3;
-		  }
-;
-
-orientation:	  /* empty */
-		  {
-		    $$.orientation = coords_exp_origo(); /* Default to (0,0,0). */
-		    $$.isdefault = 1; /* No ROTATED modifier was present */
-		  }
-		| "ROTATED" coords reference
-		  {
-		    $$.orientation = $2;
-		    $$.orientation_rel = $3;
-		    $$.isdefault = 0;
-		  }
+formallist:   '(' formals ')'
+      {
+        $$ = $2;
+      }
 ;
 
 
-reference:	  "ABSOLUTE"
-		  {
-		    $$ = NULL;
-		  }
+formals:    /* empty */
+      {
+        $$ = list_create();
+      }
+    | formals1
+      {
+        $$ = $1;
+      }
+;
+
+formals1:   TOK_ID
+      {
+        $$ = list_create();
+        list_add($$, $1);
+      }
+    | formals1 ',' TOK_ID
+      {
+        list_add($1, $3);
+        $$ = $1;
+      }
+;
+
+actuallist:   '(' actuals ')'
+      {
+        $$ = $2;
+      }
+;
+
+actuals:    /* empty */
+      {
+        $$ = symtab_create();
+      }
+    | actuals1
+      {
+        $$ = $1;
+      }
+;
+
+actuals1:   TOK_ID '=' exp
+      {
+        $$ = symtab_create();
+        symtab_add($$, $1, $3);
+        str_free($1);
+      }
+    | actuals1 ',' TOK_ID '=' exp
+      {
+        symtab_add($1, $3, $5);
+        str_free($3);
+        $$ = $1;
+      }
+;
+
+place:      "AT" coords reference
+      {
+        $$.place = $2;
+        $$.place_rel = $3;
+      }
+;
+
+orientation:    /* empty */
+      {
+        $$.orientation = coords_exp_origo(); /* Default to (0,0,0). */
+        $$.isdefault = 1; /* No ROTATED modifier was present */
+      }
+    | "ROTATED" coords reference
+      {
+        $$.orientation = $2;
+        $$.orientation_rel = $3;
+        $$.isdefault = 0;
+      }
+;
+
+
+reference:    "ABSOLUTE"
+      {
+        $$ = NULL;
+      }
     | "RELATIVE" "PREVIOUS"
       {
         if (previous_comp) {
-          $$ = previous_comp; 
+          $$ = previous_comp;
         } else {
           print_warn(NULL, "Found invalid PREVIOUS reference at line %s:%d. Using ABSOLUTE.\n", instr_current_filename, instr_current_line);
           $$ = NULL;
         }
-      } 
+      }
     | "RELATIVE" "PREVIOUS" '(' TOK_NUMBER ')'
       {
         /* get the $4 previous item in comp_instances */
@@ -769,261 +769,261 @@ reference:	  "ABSOLUTE"
         if (!index) { /* invalid index reference */
           print_warn(NULL, "Found invalid PREVIOUS(%i) reference at line %s:%d. Using ABSOLUTE.\n", index, instr_current_filename, instr_current_line);
           $$ = NULL;
-        } else {  
+        } else {
           $$ = entry->val;
         }
-      } 
-		| "RELATIVE" compref
-		  {
-		    $$ = $2;
-		  }
+      }
+    | "RELATIVE" compref
+      {
+        $$ = $2;
+      }
 ;
 
 /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
 groupref:  /* empty */
-		  {
+      {
         $$ = NULL;
-		  }
+      }
     | "GROUP" groupdef
-		  {
+      {
         $$ = $2;
-		  }
+      }
 ;
 
 groupdef:   TOK_ID
       {
         struct group_inst *group;
         struct Symtab_entry *ent;
-        
+
         ent = symtab_lookup(group_instances, $1);
         if(ent == NULL)
         {
           palloc(group);    /* create new group instance */
-          group->name = $1;  
+          group->name = $1;
           group->index= 0;
           symtab_add(group_instances, $1, group);
-		      list_add(group_instances_list, group);
+          list_add(group_instances_list, group);
         }
         else
-          group = ent->val;  
+          group = ent->val;
         $$ = group;
       }
 
 ;
-compref:	  TOK_ID
-		  {
-		    struct comp_inst *comp;
-		    struct Symtab_entry *ent;
+compref:    TOK_ID
+      {
+        struct comp_inst *comp;
+        struct Symtab_entry *ent;
 
-		    ent = symtab_lookup(comp_instances, $1);
-		    comp = NULL;
-		    if(ent == NULL)
-		      print_error("Reference to undefined component %s at line %s:%d.\n",
-				  $1, instr_current_filename, instr_current_line);
-		    else
-		      comp = ent->val;
-		    str_free($1);
-		    $$ = comp;
-		  }
+        ent = symtab_lookup(comp_instances, $1);
+        comp = NULL;
+        if(ent == NULL)
+          print_error("Reference to undefined component %s at line %s:%d.\n",
+          $1, instr_current_filename, instr_current_line);
+        else
+          comp = ent->val;
+        str_free($1);
+        $$ = comp;
+      }
 ;
 
-coords:		  '(' exp ',' exp ',' exp ')'
-		  {
-		    $$.x = $2;
-		    $$.y = $4;
-		    $$.z = $6;
-		  }
+coords:     '(' exp ',' exp ',' exp ')'
+      {
+        $$.x = $2;
+        $$.y = $4;
+        $$.z = $6;
+      }
 ;
 
 /* ADD: E. Farhi Sep 20th, 2001 EXTEND block executed after component instance */
-extend:	  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
-		| "EXTEND" codeblock
-		  {
-		    $$ = $2;
-		  }
+extend:   /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "EXTEND" codeblock
+      {
+        $$ = $2;
+      }
 ;
 
 /* C expressions used to give component actual parameters.
    Top-level comma (',') operator NOT allowed. */
-exp:		  { $<linenum>$ = instr_current_line; } topexp
-		  {
-		    CExp e = $2;
-		    exp_setlineno(e, $<linenum>1 );
-		    $$ = e;
-		  }
-		| "EXTERN" { $<linenum>$ = instr_current_line; } TOK_ID
-		  {
-		    CExp e;
-		    /* Note: "EXTERN" is now obsolete and redundant. */
-		    e = exp_extern_id($3);
-		    exp_setlineno(e, $<linenum>2 );
-		    str_free($3);
-		    $$ = e;
-		  }
+exp:      { $<linenum>$ = instr_current_line; } topexp
+      {
+        CExp e = $2;
+        exp_setlineno(e, $<linenum>1 );
+        $$ = e;
+      }
+    | "EXTERN" { $<linenum>$ = instr_current_line; } TOK_ID
+      {
+        CExp e;
+        /* Note: "EXTERN" is now obsolete and redundant. */
+        e = exp_extern_id($3);
+        exp_setlineno(e, $<linenum>2 );
+        str_free($3);
+        $$ = e;
+      }
 ;
 
-topexp:		  topatexp
-		  {
-		    $$ = $1;
-		  }
-		| topexp topatexp
-		  {
-		    $$ = exp_compound(2, $1, $2);
-		    exp_free($2);
-		    exp_free($1);
-		  }
+topexp:     topatexp
+      {
+        $$ = $1;
+      }
+    | topexp topatexp
+      {
+        $$ = exp_compound(2, $1, $2);
+        exp_free($2);
+        exp_free($1);
+      }
 ;
 
 /* An atomic top-level C expression: either a parenthesized expression, or a
    single token that is NOT comma (','). */
-topatexp:	  TOK_ID
-		  {
-		    List_handle liter;
-		    struct instr_formal *formal;
-		    /* Check if this is an instrument parameter or not. */
-		    /* ToDo: This will be inefficient if the number of
+topatexp:   TOK_ID
+      {
+        List_handle liter;
+        struct instr_formal *formal;
+        /* Check if this is an instrument parameter or not. */
+        /* ToDo: This will be inefficient if the number of
                        instrument parameters is really huge. */
-		    liter = list_iterate(instrument_definition->formals);
-		    while(formal = list_next(liter))
-		    {
-		      if(!strcmp($1, formal->id))
-		      {
-			      /* It was an instrument parameter */
-			      $$ = exp_id($1);
-			      goto found;
-		      }
-		    }
-		    /* It was an external id. */
-		    $$ = exp_extern_id($1);
-		  found:
-		    str_free($1);
-		  }
-		| TOK_NUMBER
-		  {
-		    $$ = exp_number($1);
-		    str_free($1);
-		  }
-		| TOK_STRING
-		  {
-		    $$ = exp_string($1);
-		    str_free($1);
-		  }
-		| TOK_CTOK
-		  {
-		    $$ = exp_ctoken($1);
-		    str_free($1);
-		  }
-		| '='
-		  {
-		    $$ = exp_ctoken("=");
-		  }
-		| '*'
-		  {
-		    $$ = exp_ctoken("*");
-		  }
-		| '(' genexp ')'
-		  {
-		    CExp p1 = exp_ctoken("(");
-		    CExp p2 = exp_ctoken(")");
-		    $$ = exp_compound(3, p1, $2, p2);
-		    exp_free(p2);
-		    exp_free(p1);
-		    exp_free($2);
-		  }
-		| '(' ')'
-		  {
-		    CExp p1 = exp_ctoken("(");
-		    CExp p2 = exp_ctoken(")");
-		    $$ = exp_compound(2, p1, p2);
-		    exp_free(p2);
-		    exp_free(p1);
-		  }
-		| '[' genexp ']'
-		  {
-		    CExp p1 = exp_ctoken("[");
-		    CExp p2 = exp_ctoken("]");
-		    $$ = exp_compound(3, p1, $2, p2);
-		    exp_free(p2);
-		    exp_free(p1);
-		    exp_free($2);
-		  }
-		| '[' ']'
-		  {
-		    CExp p1 = exp_ctoken("[");
-		    CExp p2 = exp_ctoken("]");
-		    $$ = exp_compound(2, p1, p2);
-		    exp_free(p2);
-		    exp_free(p1);
-		  }
-		| '{' genexp '}'
-		  {
-		    CExp p1 = exp_ctoken("{");
-		    CExp p2 = exp_ctoken("}");
-		    $$ = exp_compound(3, p1, $2, p2);
-		    exp_free(p2);
-		    exp_free(p1);
-		    exp_free($2);
-		  }
-		| '{' '}'
-		  {
-		    CExp p1 = exp_ctoken("{");
-		    CExp p2 = exp_ctoken("}");
-		    $$ = exp_compound(2, p1, p2);
-		    exp_free(p2);
-		    exp_free(p1);
-		  }
+        liter = list_iterate(instrument_definition->formals);
+        while(formal = list_next(liter))
+        {
+          if(!strcmp($1, formal->id))
+          {
+            /* It was an instrument parameter */
+            $$ = exp_id($1);
+            goto found;
+          }
+        }
+        /* It was an external id. */
+        $$ = exp_extern_id($1);
+      found:
+        str_free($1);
+      }
+    | TOK_NUMBER
+      {
+        $$ = exp_number($1);
+        str_free($1);
+      }
+    | TOK_STRING
+      {
+        $$ = exp_string($1);
+        str_free($1);
+      }
+    | TOK_CTOK
+      {
+        $$ = exp_ctoken($1);
+        str_free($1);
+      }
+    | '='
+      {
+        $$ = exp_ctoken("=");
+      }
+    | '*'
+      {
+        $$ = exp_ctoken("*");
+      }
+    | '(' genexp ')'
+      {
+        CExp p1 = exp_ctoken("(");
+        CExp p2 = exp_ctoken(")");
+        $$ = exp_compound(3, p1, $2, p2);
+        exp_free(p2);
+        exp_free(p1);
+        exp_free($2);
+      }
+    | '(' ')'
+      {
+        CExp p1 = exp_ctoken("(");
+        CExp p2 = exp_ctoken(")");
+        $$ = exp_compound(2, p1, p2);
+        exp_free(p2);
+        exp_free(p1);
+      }
+    | '[' genexp ']'
+      {
+        CExp p1 = exp_ctoken("[");
+        CExp p2 = exp_ctoken("]");
+        $$ = exp_compound(3, p1, $2, p2);
+        exp_free(p2);
+        exp_free(p1);
+        exp_free($2);
+      }
+    | '[' ']'
+      {
+        CExp p1 = exp_ctoken("[");
+        CExp p2 = exp_ctoken("]");
+        $$ = exp_compound(2, p1, p2);
+        exp_free(p2);
+        exp_free(p1);
+      }
+    | '{' genexp '}'
+      {
+        CExp p1 = exp_ctoken("{");
+        CExp p2 = exp_ctoken("}");
+        $$ = exp_compound(3, p1, $2, p2);
+        exp_free(p2);
+        exp_free(p1);
+        exp_free($2);
+      }
+    | '{' '}'
+      {
+        CExp p1 = exp_ctoken("{");
+        CExp p2 = exp_ctoken("}");
+        $$ = exp_compound(2, p1, p2);
+        exp_free(p2);
+        exp_free(p1);
+      }
 ;
 
 /* Any C expression, including a top-level comma (',') operator. */
-genexp:		  genatexp
-		  {
-		    $$ = $1;
-		  }
-		| genexp genatexp
-		  {
-		    $$ = exp_compound(2, $1, $2);
-		    exp_free($2);
-		    exp_free($1);
-		  }
+genexp:     genatexp
+      {
+        $$ = $1;
+      }
+    | genexp genatexp
+      {
+        $$ = exp_compound(2, $1, $2);
+        exp_free($2);
+        exp_free($1);
+      }
 ;
 
-genatexp:	  topatexp
-		  {
-		    $$ = $1;
-		  }
-		| ','
-		  {
-		    $$ = exp_ctoken(",");
-		  }
+genatexp:   topatexp
+      {
+        $$ = $1;
+      }
+    | ','
+      {
+        $$ = exp_ctoken(",");
+      }
 ;
 
-codeblock:	  TOK_CODE_START code TOK_CODE_END
-		  {
-		    $2->filename = instr_current_filename;
-		    $2->quoted_filename = str_quote(instr_current_filename);
-		    $2->linenum = $1;
-		    $$ = $2;
-		  }
+codeblock:    TOK_CODE_START code TOK_CODE_END
+      {
+        $2->filename = instr_current_filename;
+        $2->quoted_filename = str_quote(instr_current_filename);
+        $2->linenum = $1;
+        $$ = $2;
+      }
 ;
 
-code:		  /* empty */
-		  {
-		    $$ = codeblock_new();
-		  }
+code:     /* empty */
+      {
+        $$ = codeblock_new();
+      }
 
-		| code TOK_CODE_LINE
-		  {
+    | code TOK_CODE_LINE
+      {
         list_add($1->lines, $2);
-		    $$ = $1;
-		  }
+        $$ = $1;
+      }
 ;
 
 %%
 
-static Pool parser_pool = NULL;	/* Pool of parser allocations. */
+static Pool parser_pool = NULL; /* Pool of parser allocations. */
 
 static int mc_yyparse(void)
 {
@@ -1037,7 +1037,7 @@ static int mc_yyparse(void)
   parser_pool = oldpool;
   return ret;
 }
-    
+
 /* Name of the file currently being parsed. */
 char *instr_current_filename = NULL;
 /* Number of the line currently being parsed. */
@@ -1080,8 +1080,8 @@ static void
 print_usage(void)
 {
   fprintf(stderr, "Usage:\n"
-	  "  mcstas [-o file] [-I dir1 ...] [-t] [-p] [-v] "
-	  "[--no-main] [--no-runtime] [--verbose] file\n");
+    "  mcstas [-o file] [-I dir1 ...] [-t] [-p] [-v] "
+    "[--no-main] [--no-runtime] [--verbose] file\n");
   fprintf(stderr, "      -o FILE --output-file=FILE Place C output in file FILE.\n");
   fprintf(stderr, "      -I DIR  --search-dir=DIR   Append DIR to the component search list. \n");
   fprintf(stderr, "      -t      --trace            Enable 'trace' mode for instrument display.\n");
@@ -1104,9 +1104,9 @@ static void
 print_version(void)
 { /* MOD: E. Farhi Sep 20th, 2001 version number */
   printf("McStas version " MCSTAS_VERSION "\n"
-	  "Copyright (C) Risoe National Laboratory, 1997-2004\n"
+    "Copyright (C) Risoe National Laboratory, 1997-2004\n"
     "Additions (C) Institut Laue Langevin, 2003-2004\n"
-	  "All rights reserved\n");
+    "All rights reserved\n");
   exit(0);
 }
 
@@ -1122,9 +1122,9 @@ make_output_filename(char *name)
   /* Find basename */
   p = strrchr(name, '/');
   if(p == NULL)
-    p = name;			/* No initial path. */
+    p = name;     /* No initial path. */
   else
-    p++;			/* Point past last '/' character. */
+    p++;      /* Point past last '/' character. */
 
   /* Check for trailing .instr suffix. */
   l = strlen(p);
@@ -1200,7 +1200,7 @@ parse_command_line(int argc, char *argv[])
     else if(argv[i][0] != '-')
     {
       if(instr_current_filename != NULL)
-        print_usage();		/* Multiple instruments given. */
+        print_usage();    /* Multiple instruments given. */
       instr_current_filename = str_dup(argv[i]);
     }
     else
@@ -1226,14 +1226,14 @@ main(int argc, char *argv[])
   argc = ccommand(&argv);
 #endif
 
-  yydebug = 0;			/* If 1, then bison gives verbose parser debug info. */
+  yydebug = 0;      /* If 1, then bison gives verbose parser debug info. */
 
   palloc(instrument_definition); /* Allocate instrument def. structure. */
   parse_command_line(argc, argv);
   if(!strcmp(instr_current_filename, "-"))
   {
     instrument_definition->source = str_dup("<stdin>");
-    file = fdopen(0, "r");	/* Lone '-' designates stdin. */
+    file = fdopen(0, "r");  /* Lone '-' designates stdin. */
   }
   else
   {
@@ -1242,7 +1242,7 @@ main(int argc, char *argv[])
   }
   if(file == NULL)
     fatal_error("Instrument definition file `%s' not found\n",
-		instr_current_filename);
+    instr_current_filename);
   instrument_definition->quoted_source =
     str_quote(instrument_definition->source);
   instr_current_line = 1;
@@ -1295,7 +1295,7 @@ check_comp_formals(List deflist, List setlist, char *compname)
     entry = symtab_lookup(formals, formal->id);
     if(entry != NULL)
       print_error("Definition parameter name %s is used multiple times "
-		  "in component %s\n", formal->id, compname);
+      "in component %s\n", formal->id, compname);
     else
       symtab_add(formals, formal->id, NULL);
   }
@@ -1306,7 +1306,7 @@ check_comp_formals(List deflist, List setlist, char *compname)
     entry = symtab_lookup(formals, formal->id);
     if(entry != NULL)
       print_error("Setting parameter name %s is used multiple times "
-		  "in component %s\n", formal->id, compname);
+      "in component %s\n", formal->id, compname);
     else
       symtab_add(formals, formal->id, NULL);
   }
@@ -1336,7 +1336,7 @@ check_instrument_formals(List formallist, char *instrname)
     entry = symtab_lookup(formals, formal->id);
     if(entry != NULL)
       print_error("Instrument parameter name %s is used multiple times "
-		  "in instrument %s\n", formal->id, instrname);
+      "in instrument %s\n", formal->id, instrname);
     else
       symtab_add(formals, formal->id, NULL);
   }
@@ -1355,7 +1355,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
   struct Symtab_entry *entry;
   Symtab defpar, setpar;
   Symtab_handle siter;
-  
+
   /* We need to check
      1. That all actual parameters correspond to formal parameters.
      2. That all formal parameters are assigned actual parameters. */
@@ -1375,7 +1375,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         symtab_add(defpar, formal->id, formal->default_value);
       } else {
         print_error("Unassigned definition parameter %s for component %s.\n",
-		          formal->id, comp->name);
+              formal->id, comp->name);
         symtab_add(defpar, formal->id, exp_number("0.0"));
       }
     } else {
@@ -1387,12 +1387,12 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-        static int seenb4 = 0;	/* Only print long error the first time */
+        static int seenb4 = 0;  /* Only print long error the first time */
         print_error("Illegal expression for DEFINITION parameter %s of component %s.\n%s",
           formal->id, comp->name,
           ( seenb4++ ? "" :
-	        "(Only variable names, constant numbers, and constant strings\n"
-	        "are allowed for DEFINITION parameters.)\n") );
+          "(Only variable names, constant numbers, and constant strings\n"
+          "are allowed for DEFINITION parameters.)\n") );
       }
     }
   }
@@ -1409,7 +1409,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         symtab_add(setpar, formal->id, formal->default_value);
       } else {
         print_error("Unassigned setting parameter %s for component %s.\n",
-		          formal->id, comp->name);
+              formal->id, comp->name);
         symtab_add(setpar, formal->id, exp_number("0.0"));
       }
     } else {
@@ -1426,7 +1426,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
        symtab_lookup(setpar, entry->name) == NULL)
     {
       print_error("Unmatched actual parameter %s for component %s.\n",
-		  entry->name, comp->name);
+      entry->name, comp->name);
     }
   }
   comp->defpar = defpar;
@@ -1450,18 +1450,18 @@ struct comp_def *
 read_component(char *name)
 {
   struct Symtab_entry *entry;
-  
+
   /* Look for an existing definition for the component. */
   entry = symtab_lookup(read_components, name);
   if(entry != NULL)
   {
-    return entry->val;		/* Return it if found. */
+    return entry->val;    /* Return it if found. */
   }
   else
   {
     FILE *file;
     int err;
-    
+
     /* Attempt to read definition from file components/<name>.com. */
     file = open_component_search(name);
     if(file == NULL)
@@ -1475,7 +1475,7 @@ read_component(char *name)
        must not be freed. */
     instr_current_filename = component_pathname;
     instr_current_line = 1;
-    err = mc_yyparse();		/* Read definition from file. */
+    err = mc_yyparse();   /* Read definition from file. */
     if(err != 0)
       fatal_error("Errors encountered during autoload of component %s.\n",
         name);
