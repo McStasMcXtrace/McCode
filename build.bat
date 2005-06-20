@@ -1,4 +1,4 @@
-@rem  
+@rem
 @rem   This file is part of the McStas neutron ray-trace simulation package
 @rem   Copyright (C) 1997-2004, All rights reserved
 @rem   Risoe National Laborartory, Roskilde, Denmark
@@ -20,21 +20,21 @@
 @rem
 @echo off
 @echo Simple batch script for building McStas on Win32 systems,
-@echo after build using Bloodshed Dev-Cpp. 
-@echo Requires 
+@echo after build using Bloodshed Dev-Cpp.
+@echo Requires
 @echo   c compiler (defaults to gcc)
-@echo   includes (defaults to Dev-Cpp standard location
+@echo   includes   (defaults to Dev-Cpp standard location)
 @echo ...
 @echo *** Start of User configuration ***
 @set CC=c:\Dev-Cpp\bin\gcc.exe
-@set /P CC=Set CC compiler variable (default is %CC%): 
+@set /P CC=Set CC compiler variable (default is %CC%):
 @set INCLUDE="C:\Dev-Cpp\include"
 @echo ...
-@echo NOTE: Set the include and lib paths using / or \\ - NOT single \
+@echo NOTE: Set the C include and lib paths using / or \\ - NOT single \
 @echo ...
-@set /P INCLUDE=Set INCLUDE variable (default is %INCLUDE%): 
+@set /P INCLUDE=Set C INCLUDE variable (default is %INCLUDE%):
 @set LIB="C:\Dev-Cpp\lib"
-@set /P LIB=Set LIB variable (default is %LIB%): 
+@set /P LIB=Set C LIB variable (default is %LIB%):
 @echo ...
 @echo ...
 @set DOZIP="0"
@@ -46,29 +46,29 @@
 @del mcstas.exe
 
 
-%CC% -c symtab.c -o symtab.o -I%INCLUDE%  
+%CC% -c symtab.c -o symtab.o -I%INCLUDE%
 
-%CC% -c cogen.c -o cogen.o -I%INCLUDE%  
+%CC% -c cogen.c -o cogen.o -I%INCLUDE%
 
-%CC% -c coords.c -o coords.o -I%INCLUDE%  
+%CC% -c coords.c -o coords.o -I%INCLUDE%
 
-%CC% -c debug.c -o debug.o -I%INCLUDE%  
+%CC% -c debug.c -o debug.o -I%INCLUDE%
 
-%CC% -c file.c -o file.o -I%INCLUDE%  
+%CC% -c file.c -o file.o -I%INCLUDE%
 
-%CC% -c instrument.tab.c -o instrument.tab.o -I%INCLUDE%  
+%CC% -c instrument.tab.c -o instrument.tab.o -I%INCLUDE%
 
-%CC% -c lex.yy.c -o lex.yy.o -I%INCLUDE%  
+%CC% -c lex.yy.c -o lex.yy.o -I%INCLUDE%
 
-%CC% -c list.c -o list.o -I%INCLUDE%  
+%CC% -c list.c -o list.o -I%INCLUDE%
 
-%CC% -c memory.c -o memory.o -I%INCLUDE%  
+%CC% -c memory.c -o memory.o -I%INCLUDE%
 
-%CC% -c port.c -o port.o -I%INCLUDE%  
+%CC% -c port.c -o port.o -I%INCLUDE%
 
-%CC% -c cexp.c -o cexp.o -I%INCLUDE%  
+%CC% -c cexp.c -o cexp.o -I%INCLUDE%
 
-%CC% symtab.o cogen.o coords.o debug.o file.o instrument.tab.o lex.yy.o list.o memory.o port.o cexp.o  -o "mcstas.exe" -L%LIB%  -I%INCLUDE%  
+%CC% symtab.o cogen.o coords.o debug.o file.o instrument.tab.o lex.yy.o list.o memory.o port.o cexp.o  -o "mcstas.exe" -L%LIB%  -I%INCLUDE%
 
 @if %DOZIP%=="0" goto end
 @echo creating zipfile for Win Distribution (requires zip)...
@@ -77,4 +77,5 @@ zip -r mcstas-%VERSION%-i686-Intel-Win32 .\mcstas-%VERSION%
 cd mcstas-%VERSION%
 :end
 
+@echo Build for Windows done. Press a key to exit.
 @pause
