@@ -17,6 +17,13 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.48  2005/05/31 13:26:16  farhi
+* Make possible to change setting parameter values in the INITIALIZE section.
+* It is thus easier to auto-configure components in their INIT code, depending
+* on some tests and checks...
+* Other sections use local copies of the setting parameters, e.g. TRACE, EXTEND
+* FINALLY, SAVE, ...
+*
 * Revision 1.47  2005/02/17 15:51:02  farhi
 * Added a neutron event per component, so that amessage is displayed when
 * no neutron reaches the COMP in FINALLY. Requested by R. Cubitt
@@ -60,7 +67,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.48 2005-05-31 13:26:16 farhi Exp $
+* $Id: cogen.c,v 1.49 2005-06-20 08:01:58 farhi Exp $
 *
 *******************************************************************************/
 
@@ -131,12 +138,13 @@
 * ##nsy
 * ##nsz
 * ##np
-* ##absorb
+* ##absorb          label for ABSORB (goto)
 * ##Scattered       Incremented each time a SCATTER is done
 * ##NCounter        Incremented each time a neutron is entering the component
+* ##AbsorbProp      single counter for removed events in PROP calls
 * ##comp_storein    Positions of neutron entering each comp (loc. coords)
 * ##Group<GROUP>    Flag true when in an active group
-* ##sig_message    Message for the signal handler (debug/trace, sim status)
+* ##sig_message     Message for the signal handler (debug/trace, sim status)
 *******************************************************************************/
 
 
@@ -581,7 +589,10 @@ cogen_decls(struct instr_def *instr)
   cout("/* Components position table (absolute and relative coords) */");
   coutf("Coords %scomp_posa[%i];", ID_PRE, list_len(instr->complist)+2);
   coutf("Coords %scomp_posr[%i];", ID_PRE, list_len(instr->complist)+2);
+  cout("/* Counter for each comp to check for inactive ones */");
   coutf("MCNUM  %sNCounter[%i];", ID_PRE, list_len(instr->complist)+2);
+  cout("/* Counter for PROP ABSORB */");
+  coutf("MCNUM  %sAbsorbProp=0;", ID_PRE);
 
   /* 8. Declaration of group flags */
   cout("/* Flag true when previous component acted on the neutron (SCATTER) */");
@@ -1183,6 +1194,7 @@ cogen_finally(struct instr_def *instr)
                            instr->finals);
     cout("");
   }
+  coutf("    if (%sAbsorbProp) fprintf(stderr, \"Warning: %g events were removed from simulation\\n         (negative time, rounding errors).\\n\", %sAbsorbProp);", ID_PRE, ID_PRE);
   cout("  mcsiminfo_close(); ");
   cout("}");
 }
