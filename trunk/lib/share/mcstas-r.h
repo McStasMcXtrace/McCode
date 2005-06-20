@@ -26,9 +26,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.71 2005-05-29 09:50:32 pkwi Exp $
+* $Id: mcstas-r.h,v 1.72 2005-06-20 08:09:07 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.71  2005/05/29 09:50:32  pkwi
+*       t=0 now allowed in PROP_X0, PROP_Y0, PROP_Z0. As far as I can see, there are no other occurancies of this problem in the propagation routines.
+*
+*       Fixes bug #43 on BugZilla
+*
 *       Revision 1.70  2005/02/24 15:57:20  farhi
 *       FIXED gravity bug (probably OK). Gravity is not handled properly in other Guide elements. Will adapt so that it works better...
 *       The n.v was not computed using the actual 'v' values when reaching the guide side, but before propagation. So the velocity was not reflected, but scattered depending on the previous neutron position/velocity, bringing strange divergence effects.
@@ -124,7 +129,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.71 $"
+#define MCSTAS_R_H "$Revision: 1.72 $"
 
 #include <math.h>
 #include <string.h>
@@ -213,6 +218,8 @@ extern struct mcinputtable_struct mcinputtable[];
 extern int    mcnumipar;
 extern char   mcinstrument_name[], mcinstrument_source[];
 extern MCNUM  mccomp_storein[]; /* 11 coords * number of components in instrument */
+extern MCNUM  mcAbsorbProp;
+extern MCNUM  mcScattered;
 #ifndef MC_ANCIENT_COMPATIBILITY
 extern int mctraceenabled, mcdefaultmain;
 #endif
@@ -235,7 +242,7 @@ struct mcformats_struct {
   char *EndNcount;
   };
 
-#ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables */
+#ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables (from mcstas-r.c) */
 extern FILE * mcsiminfo_file;
 extern int    mcgravitation;
 extern int    mcdotrace;
@@ -418,7 +425,7 @@ void   mcsiminfo_close(void);
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with acceleration */
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
   do { \
-    if(dt < 0) ABSORB; \
+    if(dt < 0) { mcAbsorbProp++; ABSORB; }\
     mcnlx  += mcnlvx*(dt) + (Ax)*(dt)*(dt)/2; \
     mcnly  += mcnlvy*(dt) + (Ay)*(dt)*(dt)/2; \
     mcnlz  += mcnlvz*(dt) + (Az)*(dt)*(dt)/2; \
@@ -430,7 +437,7 @@ void   mcsiminfo_close(void);
 
 #define PROP_DT(dt) \
   do { \
-    if(dt < 0) ABSORB; \
+    if(dt < 0) { mcAbsorbProp++; ABSORB; }; \
     if (mcgravitation) { Coords mcLocG; double mc_gx, mc_gy, mc_gz; \
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
@@ -446,7 +453,7 @@ void   mcsiminfo_close(void);
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gz/2, -mcnlvz, -mcnlz); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else ABSORB; }\
+    else { mcAbsorbProp++; ABSORB; }; }\
     else mcPROP_Z0; \
   } while(0)
 
@@ -454,9 +461,9 @@ void   mcsiminfo_close(void);
 #define mcPROP_Z0 \
   do { \
     double mc_dt; \
-    if(mcnlvz == 0) ABSORB; \
+    if(mcnlvz == 0) { mcAbsorbProp++; ABSORB; }; \
     mc_dt = -mcnlz/mcnlvz; \
-    if(mc_dt < 0) ABSORB; \
+    if(mc_dt < 0) { mcAbsorbProp++; ABSORB; }; \
     mcnlx += mcnlvx*mc_dt; \
     mcnly += mcnlvy*mc_dt; \
     mcnlt += mc_dt; \
@@ -471,16 +478,16 @@ void   mcsiminfo_close(void);
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gx/2, -mcnlvx, -mcnlx); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else ABSORB; }\
+    else { mcAbsorbProp++; ABSORB; }; }\
     else mcPROP_X0; \
   } while(0)
 
 #define mcPROP_X0 \
   do { \
     double mc_dt; \
-    if(mcnlvx == 0) ABSORB; \
+    if(mcnlvx == 0) { mcAbsorbProp++; ABSORB; }; \
     mc_dt = -mcnlx/mcnlvx; \
-    if(mc_dt < 0) ABSORB; \
+    if(mc_dt < 0) { mcAbsorbProp++; ABSORB; }; \
     mcnly += mcnlvy*mc_dt; \
     mcnlz += mcnlvz*mc_dt; \
     mcnlt += mc_dt; \
@@ -495,7 +502,7 @@ void   mcsiminfo_close(void);
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gy/2, -mcnlvy, -mcnly); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else ABSORB; }\
+    else { mcAbsorbProp++; ABSORB; }; }\
     else mcPROP_Y0; \
   } while(0)
 
@@ -503,9 +510,9 @@ void   mcsiminfo_close(void);
 #define mcPROP_Y0 \
   do { \
     double mc_dt; \
-    if(mcnlvy == 0) ABSORB; \
+    if(mcnlvy == 0) { mcAbsorbProp++; ABSORB; }; \
     mc_dt = -mcnly/mcnlvy; \
-    if(mc_dt < 0) ABSORB; \
+    if(mc_dt < 0) { mcAbsorbProp++; ABSORB; }; \
     mcnlx += mcnlvx*mc_dt; \
     mcnlz += mcnlvz*mc_dt; \
     mcnlt += mc_dt; \
