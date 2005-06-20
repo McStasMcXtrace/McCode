@@ -17,6 +17,10 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.49  2005/06/20 08:01:58  farhi
+* Install ABSORB counter for run-time PROP macros.
+* Report at end of simulation if needed.
+*
 * Revision 1.48  2005/05/31 13:26:16  farhi
 * Make possible to change setting parameter values in the INITIALIZE section.
 * It is thus easier to auto-configure components in their INIT code, depending
@@ -67,7 +71,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.49 2005-06-20 08:01:58 farhi Exp $
+* $Id: cogen.c,v 1.50 2005-06-20 09:02:10 farhi Exp $
 *
 *******************************************************************************/
 
@@ -82,7 +86,7 @@
 *
 * Code is output in the form of strings using the following functions:
 *   cout();                        (one line at a time)
-*   coutf();                        (with printf-style formatting)
+*   coutf();                       (with printf-style formatting)
 *
 * The type of numbers used in the generated code is given by the macro MCNUM
 * (defined in mcstas-r.h).
@@ -312,9 +316,11 @@ embed_file(char *name)
     /* If not found, look in the full search path. */
     if(f == NULL)
       f = open_file_search(name);
+    else printf("Embedding file      %s (system)\n", name);
     /* If still not found, abort. */
     if(f == NULL)
       fatal_error("Could not find file '%s'\n", name);
+    else printf("Embedding file      %s (user path)\n", name);
 
     cout("");
     code_set_source(name, 1);
@@ -1194,7 +1200,7 @@ cogen_finally(struct instr_def *instr)
                            instr->finals);
     cout("");
   }
-  coutf("    if (%sAbsorbProp) fprintf(stderr, \"Warning: %g events were removed from simulation\\n         (negative time, rounding errors).\\n\", %sAbsorbProp);", ID_PRE, ID_PRE);
+  coutf("    if (%sAbsorbProp) fprintf(stderr, \"Warning: %%g events were removed from simulation\\n         (negative time, rounding errors).\\n\", %sAbsorbProp);", ID_PRE, ID_PRE);
   cout("  mcsiminfo_close(); ");
   cout("}");
 }
