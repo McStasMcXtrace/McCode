@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.51  2005/06/20 09:16:48  farhi
+* Corrected mcScattered definition (char -> MCNUM)
+*
 * Revision 1.50  2005/06/20 09:02:10  farhi
 * Some more info in mcstas --verbose mode.
 *
@@ -74,7 +77,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.51 2005-06-20 09:16:48 farhi Exp $
+* $Id: cogen.c,v 1.52 2005-06-20 13:32:45 farhi Exp $
 *
 *******************************************************************************/
 
@@ -319,11 +322,11 @@ embed_file(char *name)
     /* If not found, look in the full search path. */
     if(f == NULL)
       f = open_file_search(name);
-    else printf("Embedding file      %s (system)\n", name);
+    else if (verbose) printf("Embedding file      %s (system)\n", name);
     /* If still not found, abort. */
     if(f == NULL)
       fatal_error("Could not find file '%s'\n", name);
-    else printf("Embedding file      %s (user path)\n", name);
+    else if (verbose) printf("Embedding file      %s (user path)\n", name);
 
     cout("");
     code_set_source(name, 1);
