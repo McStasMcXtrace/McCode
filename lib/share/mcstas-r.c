@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.112 2005-05-07 14:29:01 lieutenant Exp $
+* $Id: mcstas-r.c,v 1.113 2005-06-20 08:04:18 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.112  2005/05/07 14:29:01  lieutenant
+* function coords_add: z=0 if abs(z)<1e-14 to prevent loss of neutrons by numerical rounding errors
+*
 * Revision 1.111  2005/03/30 21:37:21  farhi
 * Corrected gravity bug at last after left test modification (A was replaced by 0 for comp testing, and not put back). Thanks Klaus ! Small time values replaced by 0 in 2nd order solve (Klaus).
 *
@@ -1739,7 +1742,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   mcfile_tag(f, format, pre, parent, "variables", vars);
   /* add warning in case of low statistics or large number of bins in text format mode */
   if (n*m*p > 1000 && Nsum < n*m*p && Nsum) fprintf(stderr,
-    "Warning: %s: file '%s': Low Statistics (%g events in %dx%dx%d bins) (mcinfo_data)\n",
+    "Warning: %s: file '%s': Possibly Low Statistics (%g events in %dx%dx%d bins) (mcinfo_data)\n",
     parent, filename, Nsum, m,n,p);
   if ( !strstr(format.Name, "binary")
     && (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab"))
@@ -2824,6 +2827,7 @@ coords_sub(Coords a, Coords b)
   c.x = a.x - b.x;
   c.y = a.y - b.y;
   c.z = a.z - b.z;
+  if (fabs(c.z) < 1e-14) c.z=0.0;
   return c;
 }
 
