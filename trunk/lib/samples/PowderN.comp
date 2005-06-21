@@ -8,7 +8,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 *              KL, 28.09.01   (two lines)
@@ -160,8 +160,9 @@ INITIALIZE
   
   for(i=0; i<Nq; i++)
   {
-    my_s_v2[i] = PI*PI*PI*pack*L[i].DW /(Vc*Vc*V2K*V2K)*(L[i].j * L[i].F2 / L[i].q); 
+    my_s_v2[i] = 4*PI*PI*PI*pack*L[i].DW /(Vc*Vc*V2K*V2K)*(L[i].j * L[i].F2 / L[i].q); 
                                       /* Is not yet divided by v^2 */
+    /* Squires [3.103] */
     my_s_v2_sum+=my_s_v2[i];
     q_v[i] = L[i].q*K2V;
     w_v[i] = L[i].w*K2V; 
