@@ -7,7 +7,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 *              KL, 28.09.01   (two lines)
@@ -79,9 +79,10 @@ INITIALIZE
 %{
   my_a_v = pack*sigma_a/Vc*2200;           /* Is not yet divided by v */
   my_inc = pack*sigma_inc/Vc;
-  my_s_v2_1 = PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_1*F2_1/q_1);  
-  my_s_v2_2 = PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_2*F2_2/q_2);  
+  my_s_v2_1 = 4*PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_1*F2_1/q_1);  
+  my_s_v2_2 = 4*PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_2*F2_2/q_2);  
                                       /* Is not yet divided by v^2 */
+  /* Squires [3.103] */
   q_v1 = q_1*K2V;
   q_v2 = q_2*K2V;
   w_v1 = w_1 * K2V;

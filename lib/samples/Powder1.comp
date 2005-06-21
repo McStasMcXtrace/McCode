@@ -10,7 +10,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -89,8 +89,9 @@ INITIALIZE
     else isrect=1; }
   
   my_a_v = pack*sigma_a/Vc*2200;           /* Is not yet divided by v */
-  my_s_v2 = PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q);  
+  my_s_v2 = 4*PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q);  
                                       /* Is not yet divided by v^2 */
+  /* Squires [3.103] */
   q_v = q*K2V;
   
   /* now compute target coords if a component index is supplied */
