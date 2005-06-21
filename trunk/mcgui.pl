@@ -1459,12 +1459,19 @@ sub Tk::TextUndo::FileSaveAsPopup
 {
  my ($w)=@_;
  menu_saveas($w);
-# my $name = $w->CreateFileSelect('getSaveFile',-title => 'File Save As');
-# if (defined($name) and length($name)) {
-#
-# }
-# return $w->Save($name) if defined($name) and length($name);
-# return 0;
+}
+
+sub Tk::TextUndo::FileLoadPopup
+{
+ my ($w)=@_;
+ my $name = $w->CreateFileSelect('getOpenFile',-title => 'File Load');
+ if (defined($name) && length($name)){
+     open_instr_def($w, $name);
+     return 1;
+     #menu_open($w);
+     #return $name#return $w->Load($name);
+ }
+ return 0;
 }
 
 # GUI callback function for updating line numbers etc.
