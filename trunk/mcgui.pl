@@ -1468,8 +1468,6 @@ sub Tk::TextUndo::FileLoadPopup
  if (defined($name) && length($name)){
      open_instr_def($w, $name);
      return 1;
-     #menu_open($w);
-     #return $name#return $w->Load($name);
  }
  return 0;
 }
