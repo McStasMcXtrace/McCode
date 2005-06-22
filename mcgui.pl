@@ -686,15 +686,7 @@ sub menu_run_simulation {
         my @command = ();
         # Check 'Plotter' setting
         my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-  if ($newsi->{'Format'} eq 0) {
-      $plotter = 'PGPLOT';
-  } elsif ($newsi->{'Format'} eq 1) {
-      $plotter = 'Matlab';
-  } elsif ($newsi->{'Format'} eq 2) {
-      $plotter = 'Scilab';
-  } elsif ($newsi->{'Format'} eq 3) {
-      $plotter = 'HTML';
-  }
+
         # Check 'Trace' setting if a scan or trace is
         # requested
         if ($newsi->{'Trace'}) {
