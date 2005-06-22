@@ -18,9 +18,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.113 2005-06-20 08:04:18 farhi Exp $
+* $Id: mcstas-r.c,v 1.114 2005-06-22 08:56:23 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.113  2005/06/20 08:04:18  farhi
+* More cautious message for Low Stat
+* Add rounding error check in coords_sub
+*
 * Revision 1.112  2005/05/07 14:29:01  lieutenant
 * function coords_add: z=0 if abs(z)<1e-14 to prevent loss of neutrons by numerical rounding errors
 *
@@ -1938,9 +1942,13 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   {
     /* if data: open new file for data else append for error/ncount */
     if (filename) {
+      char mode[10];
+
+      strcpy(mode,
+             (isdata != 1 || strstr(format.Name, "no header") ? "a" : "w"));
+      if (strstr(format.Name, "binary")) strcat(mode, "b");
       if (mcformat_data.Name) dataformat = mcformat_data;
-      datafile = mcnew_file(filename, dataformat.Extension,
-      (isdata != 1 || strstr(format.Name, "no header") ? "a" : "w"));
+      datafile = mcnew_file(filename, dataformat.Extension, mode);
     } else datafile = NULL;
     /* special case of IDL: can not have empty vectors. Init to 'external' */
     if (strstr(format.Name, "IDL") && f) fprintf(f, "'external'");
