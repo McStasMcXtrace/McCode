@@ -8,7 +8,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 *              KL, 28.09.01   (two lines)
@@ -145,6 +145,7 @@ DECLARE
 %}
 INITIALIZE
 %{
+  int i;
   struct line_data *L;
   read_line_data(reflections, &line_info);
   L = line_info.list;  
@@ -153,7 +154,7 @@ INITIALIZE
   my_s_v2 = malloc(Nq*sizeof(double));
   q_v = malloc(Nq*sizeof(double));
   w_v = malloc(Nq*sizeof(double));
-  int i;
+  
   my_a_v = pack*sigma_a/Vc*2200;           /* Is not yet divided by v */
   my_inc = pack*sigma_inc/Vc;
   my_s_v2_sum=0;
@@ -200,7 +201,7 @@ TRACE
     if (rand01() >= frac)    
      {   /* Make coherent scattering event */
       /* Choose point on Debye-Scherrer cone */
-      if (d_phi>0)
+      if (d_phi0>0)
       {
         d_phi = d_phi0*DEG2RAD/2.0*randpm1();
         p *= d_phi0/360.0;
@@ -210,7 +211,7 @@ TRACE
       line=floor(Nq*rand01());  /* Select between Nq powder lines */
       arg = (q_v[line]+w_v[line]*randnorm())/(2.0*v);
       my_s_n = my_s_v2[line]/(v*v);
-      if(arg > 1)
+      if(fabs(arg) > 1)
         ABSORB;                   /* No bragg scattering possible*/
       theta = asin(arg);          /* Bragg scattering law */
 
