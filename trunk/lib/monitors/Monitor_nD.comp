@@ -45,9 +45,9 @@
 * detection efficiency.
 *
 * The 'bins' and 'limits' modifiers are to be used after each variable,
-* and 'auto','log' and 'abs' come before it. (eg: auto abs log hdiv
-* limits=[-5 5] bins=10) When placed after all variables,  these two latter
-* modifiers apply to the signal (e.g. intensity). Unknown keywords are ignored.
+* and 'auto','log' and 'abs' come before it. (eg: auto abs log hdiv bins=10
+* limits=[-5 5]) When placed after all variables,  these two latter modifiers
+* apply to the signal (e.g. intensity). Unknown keywords are ignored.
 *
 * <b>Possible options are</b>
 * Variables to record:
@@ -69,10 +69,10 @@
 *     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
 *     user2                 to be assigned in an other component (see below)
 *
-* <b>Other options are:</b>
+* <b>Other options keywords are:</b>
 *     abs                       Will monitor the abs of the following variable
 *                               or of the signal (if used after all variables)
-*     auto                      Automatically set detector limits for one or all
+*     auto                      Automatically set detector limits for one/all
 *     all  {limits|bins|auto}   To set all limits or bins values or auto mode
 *     binary {float|double}     with 'source' option, saves in compact files
 *     bins=[bins=20]            Number of bins in the detector along dimension
@@ -81,19 +81,19 @@
 *     capture                   weight by lambda/lambda(2200m/s) capture flux
 *     file=string               Detector image file name. default is component
 *                                name, plus date and variable extension.
-*     incoming                  Monitor incoming beam in non flat (box/sph/cyl) det
+*     incoming                  Monitor incoming beam in non flat det
 *     intermediate=[5 in %]     Save ALL results every n% steps in simulation
 *     limits=[min max]          Lower/Upper limits for axes
 *                                (see up for the variable unit)
 *     list=[counts=1000] or all For a long file of neutron characteristics
 *                                with [counts] or all events
-*     log                       Will monitor the log10 of the following variable
+*     log                       Will monitor the log of the following variable
 *                               or of the signal (if used after all variables)
 *     min=[min_value]           Same as limits, but only sets the min or max
 *     max=[max_value]
-*     multiple                  For 1D monitors into multiple independant files
+*     multiple                  Create multiple independant 1D monitors files
 *     no or not                 Revert next option
-*     outgoing                  Monitor outgoing beam in non flat det (default)
+*     outgoing                  Monitor outgoing beam (default)
 *     parallel                  Use this option when the next component is at
 *                                the same position (parallel components)
 *     per cm2                   Intensity will be per cm^2
@@ -105,14 +105,16 @@
 *     unactivate                To unactivate detector (0D detector)
 *     verbose                   To display additional informations
 *     3He_pressure=[3 in bars]  The 3He gas pressure in detector.
-*                               3He_pressure=0 means perfect detector (default)
+*                               3He_pressure=0 is perfect detector (default)
 *
-* Detector shape options (specified as xwidth, yheight, zthick or x/y/z/min/max)
+* Detector shape options (specified as xwidth,yheight,zthick or x/y/z/min/max)
 *     box                       Box of size xwidth, yheight, zthick
 *     cylinder                  To get a cylindrical monitor
 *                                (diameter is xwidth, height is yheight).
 *     banana                    Same as cylinder, without top/bottom,
-*                                on restricted angular area
+*                                on restricted angular area; use theta
+*                                variable with limits to define arc.
+*                                (diameter is xwidth, height is yheight).
 *     disk                      Disk flat xy monitor. radius is xwidth.
 *     sphrere                   To get a spherical monitor (e.g. a 4PI)
 *                                (diameter is xwidth).
@@ -123,34 +125,37 @@
 *   xwidth = 0.1, yheight = 0.1, zthick = 0,
 *   options = "intensity per cm2 angle,limits=[-5 5] bins=10,with
 *              borders, file = mon1");
-*                           will monitor neutron angle from [z] axis, between -5
-*                        and 5 degrees, in 10 bins, into "mon1.A" output 1D file
-*   options = "sphere theta phi outgoing"   for a sphere PSD detector (out beam)
-*                                    and saves into file "MyMon_[Date_ID].th_ph"
+*                  will monitor neutron angle from [z] axis, between -5
+*                  and 5 degrees, in 10 bins, into "mon1.A" output 1D file
+*   options = "sphere theta phi outgoing"  for a sphere PSD detector (out
+*                  beam)  and saves into file "MyMon_[Date_ID].th_ph"
+*   options = "banana, theta limits=[10,130], bins=120, y" a theta/height
+         banana detector
 *   options = "angle radius all auto"   is a 2D monitor with automatic limits
-*   options = "list kx ky kz energy" records each neutron contribution in 1 file
+*   options = "list=1000 kx ky kz energy" records 1000 neutron event in a file
 *   options = "multiple kx ky kz, auto abs log t, and list all neutrons"
-*          makes 4 output 1D files and produces a complete list for all neutrons
-*          and monitor log(abs(tof)) within automatic limits (for t)
+*        makes 4 output 1D files and produces a complete list for all neutrons
+*        and monitor log(abs(tof)) within automatic limits (for t)
+
 *
 * <b>How to monitor any instrument/component variable into a Monitor_nD</b>
 * Suppose the Monitor_nD instance is named 'MyMonitor'.
 * 1) put in your instrument DECLARE:
 *      %include "monitor_nd-lib"
-*      MONND_DECLARE(MyMonitor);
-* 2) put in your instrument INITIALIZE (optionally, to set monitor name):
+*      MONND_DECLARE(MyMonitor); // will monitor custom things in MyMonitor
+* 2) put in your instrument INITIALIZE (optional, to set monitor name):
 *      MONND_USER_TITLE(MyMonitor, 1, "Log(age of the Captain)");
-*    This will set 'user1' (because of the '1', could be '2' as well) title.
+*    This will set 'user1' title (because of the '1', could be '2' as well).
 * 3) put just after the component where you want to monitor (to set the value)
 *      EXTEND
-*      %{
+*      %{ // attach a value to user1 in MyMonitor
 *        MONND_USER_VALUE(MyMonitor, 1, log(fabs(x*y+1))
 *      %}
-*    This will set 'user1' (because of the '1', could be '2' as well) value.
-*    The value to store in user1 may be obtained from local component variables
-*    (this requires to look into the component code, to extract a variable name)
-*    neutron coordinates, any instrument variable, and any other component
-*    variable (using MC_GETPAR).
+*   This will set 'user1' (because of the '1', could be '2' as well) value.
+*   The value to store in user1 may be obtained from local component variables
+*   (this requires to look into the comp code, to extract a variable name)
+*   or neutron coordinates or any instrument variable, or any other component
+*   variable (using MC_GETPAR).
 * 4) put further in the instrument (to monitor the user1 value defined before)
 *      COMPONENT MyMonitor = Monitor_nD(
 *       xwidth = 0.1, yheight = 0.1,
