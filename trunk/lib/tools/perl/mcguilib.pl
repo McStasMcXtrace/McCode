@@ -86,13 +86,11 @@ sub simulation_dialog {
     $si{'First'} = '' unless $si{'First'};
     $si{'Last'} = '' unless $si{'Last'};
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-    my $Format;
-    if (!$si{'Format'}) {
-  if ($plotter =~ /PGPLOT|McStas/i) { $si{'Format'} = 0; }
-  elsif ($plotter =~ /Matlab/i)     { $si{'Format'} = 1; }
-  elsif ($plotter =~ /Scilab/i)     { $si{'Format'} = 2; }
-  elsif ($plotter =~ /HTML/i)       { $si{'Format'} = 3; }
-    }
+
+    if    ($plotter =~ /PGPLOT|McStas/i) { $si{'Format'} = 0; }
+    elsif ($plotter =~ /Matlab/i)     { $si{'Format'} = 1; }
+    elsif ($plotter =~ /Scilab/i)     { $si{'Format'} = 2; }
+    elsif ($plotter =~ /HTML/i)       { $si{'Format'} = 3; }
 
     my $name_instr = $ii->{'Instrument-source'};
     my $dlg = $win->DialogBox(-title => "Run simulation $name_instr",
@@ -277,6 +275,22 @@ sub simulation_dialog {
     my ($indexLast) = $ListBoxLast->curselection();
     if ($indexLast) {
         $si{'Last'} = $ListBoxLast->get($indexLast);
+    }
+    if ($res eq 'Start') {
+      # update Plotter in case of change in this dialog (instead of Preferences)
+      if ($si{'Format'} eq 0) {
+        $plotter = 'PGPLOT';
+      } elsif ($si{'Format'} eq 1) {
+        $plotter = 'Matlab';
+      } elsif ($si{'Format'} eq 2) {
+        $plotter = 'Scilab';
+      } elsif ($si{'Format'} eq 3) {
+        $plotter = 'HTML';
+      }
+      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /binary/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
+      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_scriptfile"; }
+      # finally set the PLOTTER
+      $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
     }
     return ($res, \%si);
 }
