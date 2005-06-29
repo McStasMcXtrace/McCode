@@ -10,7 +10,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: Nov 25, 1998
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -26,6 +26,10 @@
 * Example: V_selector(width=0.03, height=0.05, l0=0.30, r0=0.12, phi=42.298,
 *            l1=0.25, tb=0.0004, rot=20000, nb=72)
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
+*
+* %VALIDATION
+* Jun 2005: extensive external test, no problems found 
+* Validated by: K. Lieutenant
 *
 * %P
 * INPUT PARAMETERS:
@@ -148,3 +152,4 @@ MCDISPLAY
 %}
 
 END
+

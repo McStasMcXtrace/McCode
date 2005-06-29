@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -52,6 +52,10 @@
 *        (H12)        T3=16.7 ,I3=1.0343e+12
 * ILL Hot source      T1=1695,I1=1.74e13,T2=708,I2=3.9e12
 *     
+* %VALIDATION
+* Feb 2005: output cross-checked for 3 Maxwellians against VITESS source 
+*           I(lambda), I(hor_div), I(vert_div) identical in shape and absolute values 
+* Validated by: K. Lieutenant
 *
 * %P
 * radius: (m)   Radius of circle in (x,y,0) plane where neutrons
