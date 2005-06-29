@@ -8,11 +8,12 @@
 * Component: Selector
 *
 * %Identification
-* Written by: <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
+* Written by: Peter Link
 * Date: MARCH 1999
 * Origin: Uni. Gottingen (Germany)
 * Version: 1.0
 * Release: McStas 1.6
+* Modified by: <a href="Andreas.Ostermann@frm2.tum.de">Andreas Ostermann</a>.
 *
 * velocity selector (helical lamella type) such as <b>V_selector</b> component
 *
@@ -22,6 +23,12 @@
 * Example: Selector(xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25,
 *            num=72,width=0.004,radius=0.12,alfa=48.298,feq=500)
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
+*
+* %VALIDATION
+* Jun 2005: extensive external test, problems are being solved at the moment 
+*
+* %BUGS
+* for transmission calculation, each neutron is supposed to be in the guide centre
 *
 * %Parameters
 * INPUT PARAMETERS:
