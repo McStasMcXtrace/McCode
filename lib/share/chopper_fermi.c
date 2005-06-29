@@ -1,28 +1,32 @@
-/*********************************************************************************************/
-/*  VITESS module 'chopper_fermi'                                                            */
-/*                                                                                           */
-/* The free non-commercial use of these routines is granted providing due credit is given to */
-/* the authors.                                                                              */
-/*                                                                                           */
-/* 1.00  Jul 2002  G. Zsigmond	initial version                                             */
-/* 1.01  Aug 2002  G. Zsigmond	forward all coordinates                                     */
-/* 1.02  Sep 2002  G. Zsigmond	included more channel windows                               */
-/* 1.03  Apr 2003  G. Zsigmond	sign correction                                             */
-/* 1.04  May 2003  G. Zsigmond	info changed                                                */
-/* 1.05  Jun 2003  G. Zsigmond	modulo function included for safety                         */
-/* 1.06  Jul 2003  G. Zsigmond	generalised for optional number of pulses; warnings included*/
-/* 1.07  Oct 2003  G. Zsigmond	superfluous modulo function cancelled                       */
-/* 1.08  Nov 2003  G. Zsigmond	put 2 more windows representing channels, now 6 windows     */
-/*                               in the big IF loop ">=" changed to ">"                      */
-/* 1.09  Jan 2004  K. Lieutenant changes for 'instrument.dat'                                */
-/* 1.10  Jan 2004  G. Zsigmond  back to 4 windows representing channels
-/* 1.11  Apr 2004  G. Zsigmond  negative time of flight defined
-/* 1.12  Apr 2004  G. Zsigmond  negative time of flight - corrections, set zero time
-/* 1.13  May 2004  G. Zsigmond  circular geom option and channel length included in curved fc
-/* 1.14  JUL 2004  G. Zsigmond  small change in Init to adapt to new GUI
-/* 1.15  OCT 2004  G. Zsigmond  changed to use both even or odd number of channels
-/* 1.16  MAR 2005  K. Lieutenant changes to use this module in McStas as well                */
-/*********************************************************************************************/
+/********************************************************************************************************************************************************/
+/*  VITESS module 'chopper_fermi'                                                            
+/*                                                                                           
+/* The free non-commercial use of these routines is granted providing due credit is given to 
+/* the authors.                                                                              
+/*                                                                                           
+/* 1.00  Jul 2002  G. Zsigmond	initial version                                             
+/* 1.01  Aug 2002  G. Zsigmond	forward all coordinates                                     
+/* 1.02  Sep 2002  G. Zsigmond	included more channel windows                               
+/* 1.03  Apr 2003  G. Zsigmond	sign correction                                             
+/* 1.04  May 2003  G. Zsigmond	info changed                                                
+/* 1.05  Jun 2003  G. Zsigmond	modulo function included for safety                         
+/* 1.06  Jul 2003  G. Zsigmond	generalised for optional number of pulses; warnings included
+/* 1.07  Oct 2003  G. Zsigmond	superfluous modulo function cancelled                       
+/* 1.08  Nov 2003  G. Zsigmond	put 2 more windows representing channels, now 6 windows    
+/*                               in the big IF loop ">=" changed to ">"                      
+/* 1.09  Jan 2004  K. Lieutenant changes for 'instrument.dat'                                
+/* 1.10  Jan 2004  G. Zsigmond   back to 4 windows representing channels
+/* 1.11  Apr 2004  G. Zsigmond   negative time of flight defined
+/* 1.12  Apr 2004  G. Zsigmond   negative time of flight - corrections, set zero time
+/* 1.13  May 2004  G. Zsigmond   circular geom option and channel length included in curved fc
+/* 1.14  JUL 2004  G. Zsigmond   small change in Init to adapt to new GUI
+/* 1.15  OCT 2004  G. Zsigmond   changed to use both even or odd number of channels
+/* 1.16  MAY 2005  G. Zsigmond   output changed to give trajectory coordinates at a plane crossing the center of the chopper (to be compatible with zero time option)
+/*	                              zero time option fixed to get one peak 
+/*                               shadowing cylinder opening activated 
+/* 1.17  MAY 2005  G. Zsigmond  new option choice of 4, 6(better,slower) or 8(much better, very slow) gates, 4 gates option adjusted
+/* 1.18  MAY 2005  K. Lieutenant changes to use this module in McStas as well               
+/********************************************************************************************************************************************************/
 
 #if defined VITESS
 
@@ -38,7 +42,8 @@
 /* START HEADER STORY */
 
 /* input parameters */
-int        zerotime=0;     /* option: set time (close to) zero                    -z */
+int        Ngates=4,    /* Number of gates forming the channel: 4 (default), 6 or 8 */
+           zerotime=0;     /* option: set time (close to) zero                    -z */
 long       Nchannels;      /* number of channels of the Fermi chopper             -l */
 double     omega,          /* frequency of rotation                       [1/s]   -n */
            height,         /* height of the Fermi chopper                  [cm]   -a */
@@ -69,7 +74,6 @@ double		asin2PI(double val)
   return result;
 }
 
-
 /* FINISH HEADER STORY */
 
 
@@ -80,7 +84,7 @@ int main(int argc, char **argv)
   /* Initialize the program according to the parameters given  */
 
   Init(argc, argv, VT_CHOP_FERMI);
-  print_module_name("Fermi-Chopper 1.16b");
+  print_module_name("Fermi-Chopper 1.17m");
   ChopperFermiInit(argc, argv);
 
 
@@ -139,7 +143,7 @@ int main(int argc, char **argv)
 
 			TOF = TOF + (- diameter/2. - Pos[0]) / fabs(Dir[0]) / V_FROM_LAMBDA(WL); 
 			
-			/*if(TOF<0) {fprintf(LogFilePtr,"\nERROR: This algorithm only works with positive time-of-flight \n"); exit(-1); }*/
+			if((TOF<0)&&(Nchannels==1)){fprintf(LogFilePtr,"\nERROR: Single-slit Fermi chopper needs positive flight time at the chopper position! \n"); exit(-1); }
 				
 			CopyVector(Dir, Path);
 
@@ -162,43 +166,43 @@ int main(int argc, char **argv)
 
 	  phase0 = fmod(Phase + omega*TOF, coef_pi*M_PI); 
 	
-	  TOF_zero = phase0/omega;
+	  for(k=0; k<Ngates; k++) 
+	  {
+		for(j=0; j < 2*Nchannels+2; j++) {
 
-	  for(k=0; k<4; k++) {
-  
-		for(j=1; j < 2*Nchannels+2; j++) {
+		  double x_ch_k_j, y_ch_k_j, sq_x_ch_k_j, Denom_k, Arg_k, arg_k, pha_k_j, y_ch_new_k_j;
 
-      double x_ch_k_j, y_ch_k_j, sq_x_ch_k_j, Denom_k, Arg_k, arg_k, pha_k_j, y_ch_new_k_j;
+		  x_ch_k_j    = x_ch[k][j];
+		  y_ch_k_j    = y_ch[k][j];
+		  sq_x_ch_k_j = sq(x_ch_k_j);
+		  Denom_k     = sqrt( sq_D_0_1 * (sq_x_ch_k_j + sq(y_ch_k_j)) );
 
-      x_ch_k_j    = x_ch[k][j];
-      y_ch_k_j    = y_ch[k][j];
-      sq_x_ch_k_j = sq(x_ch_k_j);
-      Denom_k     = sqrt( sq_D_0_1 * (sq_x_ch_k_j + sq(y_ch_k_j)) );
+		  Arg_k = dirpos / Denom_k;
 
-      Arg_k = dirpos / Denom_k;
+		  if (fabs(Arg_k) > 1.) {
+			Arg_k = vz_pos;
+			y_ch_new_k_j = Arg_k * sqrt(sq_term - sq_x_ch_k_j);
+		  } else
+			y_ch_new_k_j = y_ch_k_j; /* no intersection with trajectory */
 
-      if (fabs(Arg_k) > 1.) {
-		Arg_k = vz_pos;
-		y_ch_new_k_j = Arg_k * sqrt(sq_term - sq_x_ch_k_j);
-      } else
-		y_ch_new_k_j = y_ch_k_j; /* no intersection with trajectory */
+		  Denom_k = sqrt( sq_D_0_1 * (sq_x_ch_k_j + sq(y_ch_new_k_j)) );
 
-      Denom_k = sqrt( sq_D_0_1 * (sq_x_ch_k_j + sq(y_ch_new_k_j)) );
+		  arg_k = (Dir[0]*y_ch_new_k_j - Dir[1]*x_ch_k_j) / Denom_k;
 
-      arg_k = (Dir[0]*y_ch_new_k_j - Dir[1]*x_ch_k_j) / Denom_k;
-      if (fabs(arg_k) > 1.) {
-		phase[k][j] = 777;
-		  } else {
-		pha_k_j = asin(Arg_k) - asin(arg_k); 
+		  if (fabs(arg_k) > 1.) {
+			phase[k][j] = 777;} 
+			  
+		  else {
+			pha_k_j = asin(Arg_k) - asin(arg_k); 
 
-		if(x_ch_k_j < 0.) pha_k_j = - pha_k_j; 
-							
-		phase[k][j] =  pha_k_j - omega_fact * (x_ch_k_j * cos(pha_k_j) - y_ch_new_k_j * sin(pha_k_j) - Pos[0]);
+			if(x_ch_k_j < 0.) pha_k_j = - pha_k_j; 
+								
+			phase[k][j] =  pha_k_j - omega_fact * (x_ch_k_j * cos(pha_k_j) - y_ch_new_k_j * sin(pha_k_j) - Pos[0]);
 		  }
 		}
 	  }
 
-
+	  if(Ngates==4){
 		  m = -1; 
 
 		  for(j=0;j<2*Nchannels+1; j++) 
@@ -209,7 +213,6 @@ int main(int argc, char **argv)
 							   &&(phase[3][j] > phase0 )&&(phase0 > phase[3][j+1]))
 					{/*fprintf(LogFilePtr, "j  %d   phases %f   %f    %f\n", j, 57.296*phase[0][j], 57.296*phase[0][j+1], 57.296*phase0);*/ 
 											 goto happyend;}
-
 
 					m = m * (-1); 
 		  }
@@ -231,11 +234,89 @@ int main(int argc, char **argv)
 					{/*fprintf(LogFilePtr, "j  %d   phases %f   %f    %f\n", j, 57.296*phase[0][j], 57.296*phase[0][j+1], 57.296*phase0);*/ 
 											 goto happyend;}
 
-
 					m = m * (-1); 
 		  }
+	  }
 
-			ABSORB;
+	  if(Ngates==6){
+		  m = -1; 
+
+		  for(j=0;j<2*Nchannels+1; j++) 
+		  {
+					if((m == 1)&&(phase[0][j] < phase0 )&&(phase0 < phase[0][j+1])
+							   &&(phase[1][j] < phase0 )&&(phase0 < phase[1][j+1])
+							   &&(phase[2][j] < phase0 )&&(phase0 < phase[2][j+1])
+							   &&(phase[3][j] > phase0 )&&(phase0 > phase[3][j+1])
+							   &&(phase[4][j] > phase0 )&&(phase0 > phase[4][j+1])
+							   &&(phase[5][j] > phase0 )&&(phase0 > phase[5][j+1]))
+					{goto happyend;}
+											 
+					m = m * (-1); 
+		  }
+		  
+		  /* also tries one turn earlier  */
+		  
+		  if((phase0 > 0)&&(omega > 0)) phase0 +=  - coef_pi*M_PI;
+		  if((phase0 < 0)&&(omega < 0)) phase0 +=  coef_pi*M_PI;
+
+		  m = -1; 
+
+		  for(j=0;j<2*Nchannels+1; j++) 
+		  {
+					if((m == 1)&&(phase[0][j] < phase0 )&&(phase0 < phase[0][j+1])
+							   &&(phase[1][j] < phase0 )&&(phase0 < phase[1][j+1])
+							   &&(phase[2][j] < phase0 )&&(phase0 < phase[2][j+1])
+							   &&(phase[3][j] > phase0 )&&(phase0 > phase[3][j+1])
+							   &&(phase[4][j] > phase0 )&&(phase0 > phase[4][j+1])
+							   &&(phase[5][j] > phase0 )&&(phase0 > phase[5][j+1]))
+					{goto happyend;}
+											 
+					m = m * (-1); 
+		  }
+	  }
+
+	  if(Ngates==8){
+		  m = -1; 
+
+		  for(j=0;j<2*Nchannels+1; j++) 
+		  {
+					if((m == 1)&&(phase[0][j] < phase0 )&&(phase0 < phase[0][j+1])
+							   &&(phase[1][j] < phase0 )&&(phase0 < phase[1][j+1])
+							   &&(phase[2][j] < phase0 )&&(phase0 < phase[2][j+1])
+							   &&(phase[3][j] < phase0 )&&(phase0 < phase[3][j+1])
+							   &&(phase[4][j] > phase0 )&&(phase0 > phase[4][j+1])
+							   &&(phase[5][j] > phase0 )&&(phase0 > phase[5][j+1])
+							   &&(phase[6][j] > phase0 )&&(phase0 > phase[6][j+1])
+							   &&(phase[7][j] > phase0 )&&(phase0 > phase[7][j+1]))
+					{goto happyend;}
+											 
+					m = m * (-1); 
+		  }
+		  
+		  /* also tries one turn earlier  */
+		  
+		  if((phase0 > 0)&&(omega > 0)) phase0 +=  - coef_pi*M_PI;
+		  if((phase0 < 0)&&(omega < 0)) phase0 +=  coef_pi*M_PI;
+
+		  m = -1; 
+
+		  for(j=0;j<2*Nchannels+1; j++) 
+		  {
+					if((m == 1)&&(phase[0][j] < phase0 )&&(phase0 < phase[0][j+1])
+							   &&(phase[1][j] < phase0 )&&(phase0 < phase[1][j+1])
+							   &&(phase[2][j] < phase0 )&&(phase0 < phase[2][j+1])
+							   &&(phase[3][j] < phase0 )&&(phase0 < phase[3][j+1])
+							   &&(phase[4][j] > phase0 )&&(phase0 > phase[4][j+1])
+							   &&(phase[5][j] > phase0 )&&(phase0 > phase[5][j+1])
+							   &&(phase[6][j] > phase0 )&&(phase0 > phase[6][j+1])
+							   &&(phase[7][j] > phase0 )&&(phase0 > phase[7][j+1]))
+					{goto happyend;}
+											 
+					m = m * (-1); 
+		  }
+	  }
+
+					ABSORB;
 
 		  }
 	happyend:;
@@ -247,22 +328,26 @@ int main(int argc, char **argv)
 
 
 
-	/* translates neutron variables for output - X'= diameter/2. . */
+	/* translates neutron variables for output - X'= 0. . */
 
 	{
 		VectorType Path;
 
-		if(zerotime==1) Neutrons.Time = TOF_zero + (diameter/2. - Pos[0]) / fabs(Dir[0]) / V_FROM_LAMBDA(WL);
-		else Neutrons.Time = TOF + (diameter/2. - Pos[0]) / fabs(Dir[0]) / V_FROM_LAMBDA(WL); 
+		Neutrons.Time = TOF + (- Pos[0]) / Dir[0] / V_FROM_LAMBDA(WL); 
 			
+		if(zerotime==1)
+		{ 
+			Neutrons.Time = fabs(fmod(Neutrons.Time + Phase/omega + coef_pi*M_PI/omega/2., coef_pi*M_PI/omega)) - coef_pi*M_PI/2./omega ;
+		}
+
 		CopyVector(Dir, Path);
 
-		MultiplyByScalar(Path, (diameter/2. - Pos[0])/ Dir[0] );
+		MultiplyByScalar(Path, (- Pos[0])/ Dir[0] );
 
-		AddVector(Pos, Path);  
+		AddVector(Pos, Path);  /*Path = displacement vector */
 		
 		CopyVector(Pos, Neutrons.Position);
-	}											/*	 Path = displacement vector */
+	}												 
 
 	}
 #endif
@@ -283,7 +368,7 @@ my_exit:;
 
   fprintf(LogFilePtr," \n");
 
-  Cleanup(pos_ch[0]+diameter/2.0,pos_ch[1],pos_ch[2], 0.0,0.0);	
+  Cleanup(pos_ch[0],pos_ch[1],pos_ch[2], 0.0,0.0);	
 
   return 0;
 }
@@ -385,7 +470,9 @@ void ChopperFermiInit(int argc, char *argv[])
       argv++;
     }
 
-	if(pos_ch[0] < diameter/2.) {fprintf(LogFilePtr,"\nERROR: Position %9.3f cm is less than minimum position diameter/2=%9.3f cm  \n", pos_ch[0], diameter/2); exit(-1); }
+	if(pos_ch[0] < diameter/2.) {fprintf(LogFilePtr,"\nERROR: Minimum position is diameter/2 \n"); exit(-1); }
+
+	if(Nchannels==1) wallwidth=0.;
 
 	
   /* calculate edge positions */ 
@@ -399,7 +486,7 @@ void ChopperFermiInit(int argc, char *argv[])
 
       main_depth = 2. * sqrt(sq(diameter/2.) - sq(width/2.));
       if(depth > main_depth) {
-	fprintf(LogFilePtr,"\nERROR: Diameter too small - not compatible with 'width'!\nTake min %f cm\n", 2. * sqrt(sq(depth/2.) + sq(width/2.)));
+	fprintf(LogFilePtr,"\nERROR: Diameter too small - not compatible with 'channel length' and 'width'!\nTake min %f cm\n", 2. * sqrt(sq(depth/2.) + sq(width/2.)));
 
 	exit(-1);
       }
@@ -437,6 +524,13 @@ void ChopperFermiInit(int argc, char *argv[])
 	  {		  
 		x_ch[k][0] = x_ch[k][1] = x_ch[k][2*Nchannels] = x_ch[k][2*Nchannels+1] = - depth/2. *(3. - k)/3. + k/3. * depth/2.;
 	  }
+
+	  /* activating shadowing cylinder */
+
+		x_ch[0][0] = x_ch[0][1] = x_ch[0][2*Nchannels] = x_ch[0][2*Nchannels+1] = - main_depth/2.;
+	
+		x_ch[3][0] = x_ch[3][1] = x_ch[3][2*Nchannels] = x_ch[3][2*Nchannels+1] = main_depth/2.;
+	
 	}
 
     }
@@ -447,7 +541,7 @@ void ChopperFermiInit(int argc, char *argv[])
 		  {
 						  fprintf(LogFilePtr,"\nCurved Fermi chopper activated \n");
 
-						  fprintf(LogFilePtr,"\nGeometry option: ideally shaped (close to parabolic) long channels ('depth' inactive) \n");
+						  fprintf(LogFilePtr,"\nGeometry option: ideally shaped (close to parabolic) long channels ('channel length' inactive parameter) \n");
 
 						  fprintf(LogFilePtr,"\nRadius of curvature (parabolic approximation):\n" 
 											 "	%f cm at center\n" 
@@ -516,13 +610,13 @@ void ChopperFermiInit(int argc, char *argv[])
 
 				  main_depth = 2. * sqrt(sq(diameter/2.) - sq(width/2.));
 				  if(depth > main_depth) {
-					fprintf(LogFilePtr,"\nERROR: Diameter too small - not compatible with 'width'!\nTake min %f cm\n", 2. * sqrt(sq(depth/2.) + sq(width/2.))); exit(-1);}
+					fprintf(LogFilePtr,"\nERROR: Diameter too small - not compatible with 'channel length' and 'width'!\nTake min %f cm\n", 2. * sqrt(sq(depth/2.) + sq(width/2.))); exit(-1);}
 
 
 		  
 				  fprintf(LogFilePtr,"\nCurved Fermi chopper activated \n");
 
-				  fprintf(LogFilePtr,"\nGeometry option: circular shaped channels with fixed length (via 'depth') \n");
+				  fprintf(LogFilePtr,"\nGeometry option: circular shaped channels with fixed length (via 'channel length') \n");
 
 				  radius_of_curv = V_FROM_LAMBDA(optimal_wl)/2./omega;
 
@@ -579,6 +673,12 @@ void ChopperFermiInit(int argc, char *argv[])
 							shift_y += add;
 							m = m * (-1);
 					}
+				  /* activating shadowing cylinder */
+
+					x_ch[0][0] = x_ch[0][1] = x_ch[0][2*Nchannels] = x_ch[0][2*Nchannels+1] = - main_depth/2.;
+				
+					x_ch[3][0] = x_ch[3][1] = x_ch[3][2*Nchannels] = x_ch[3][2*Nchannels+1] = main_depth/2.;
+	
 
 			  }
 		}
@@ -597,5 +697,3 @@ void ChopperFermiCleanup()
 }/* End OwnCleanup */
 
 #endif
-
-
