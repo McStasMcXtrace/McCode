@@ -10,10 +10,9 @@
 *
 * %I
 * Written by: Geza Zsigmond
-* Modified by: Klaus Lieutenant
 * Date: Sep 2004
 * Origin: VITESS module 'chopper_fermi'
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Release: McStas 1.9
 *
 * Fermi chopper using the VITESS module 'chopper_fermi'
@@ -22,15 +21,26 @@
 * Fermi chopper with absorbing walls
 * can be straight, curved with circular, or curved with parabolic (ideal) shape 
 *
-* Example: Vitess_ChopperFermi(GeomOption=0, zerotime=0, Nchannels=20, 
+* Example: Vitess_ChopperFermi(GeomOption=0, zerotime=0, Nchannels=20, Ngates=4,
 *                              freq=300.0, height=0.05, width=0.04, 
 *                              depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0, 
 *                              wallwidth=0.0002, sGeomFileName="FC_geom.dat")
+*
+* %VALIDATION
+* Apr 2005: extensive external test, most problems solved (cf. 'Bugs') 
+* Validated by: K. Lieutenant
+*
+* limitations:
+* slow, especially for a high number of channels
+* 
+* %BUGS
+* reduction of transmission by shadowing cylinder underestimated
 *
 * %P
 * GeomOption:    [1]    option: 0:straight 1:parabolic 2:circular  
 * zerotime:      [1]    option: 1:'set time to zero'  0: 'do not'  
 * Nchannels:     [1]    number of channels of the Fermi chopper    
+* Ngates:        [1]    number of gates defining the channel: 4 (default), 6 or 8 for long wavelengths  
 * freq:         [Hz]    frequency of rotation                      
 * height:        [m]    height of the Fermi chopper                
 * width:         [m]    width of the Fermi chopper                 
@@ -46,7 +56,7 @@
 
 DEFINE COMPONENT Vitess_ChopperFermi
 DEFINITION PARAMETERS (sGeomFileName)
-SETTING PARAMETERS (int GeomOption=0.0, int zerotime=0, int Nchannels=20, 
+SETTING PARAMETERS (int GeomOption=0, int zerotime=0, int Nchannels=20, int Ngates=4,
                     freq=300.0, height=0.05, width=0.04, 
                     depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0,
                     wallwidth=0.0002)
