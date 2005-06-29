@@ -41,6 +41,16 @@
 * Christian Carbogno   <carbogno@ph.tum.de>
 * and Helmut Schober   <schober@ill.fr>
 *
+* %VALIDATION
+* Apr 2005: extensive external test, most problems solved (cf. 'Bugs') 
+* Validated by: K. Lieutenant
+*
+* limitations:
+* no blade width used
+* 
+* %BUGS
+* overestimates peak width for long wavelengths
+*
 * %Parameters
 * INPUT PARAMETERS:
 *
