@@ -44,6 +44,10 @@
 #define CHAR_BUF_LARGE     5120
 #define CHAR_BUF_SMALL      256
 
+#ifdef VITESS
+ #define ABSORB continue
+#endif
+
 typedef enum 
 {	VT_CUBE   = 1,
 	VT_CYL    = 2,
