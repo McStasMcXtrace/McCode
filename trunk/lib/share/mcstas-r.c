@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.114 2005-06-22 08:56:23 farhi Exp $
+* $Id: mcstas-r.c,v 1.115 2005-06-29 15:08:49 lieutenant Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.114  2005/06/22 08:56:23  farhi
+* Adding 'b' flag to fopen (new files) for binary support on Win32
+*
 * Revision 1.113  2005/06/20 08:04:18  farhi
 * More cautious message for Low Stat
 * Add rounding error check in coords_sub
@@ -2041,7 +2044,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           {
             double x;
 
-            x = *x1+(*x2-*x1)*(index)/(m*n*p);
+            x = *x1+(*x2-*x1)*(index+0.5)/(m*n*p);
             if (m*n*p > 1) fprintf(datafile, "%g %g %g %g\n", x, I, E, N);
           }
           else
