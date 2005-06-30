@@ -49,6 +49,9 @@
 * limits=[-5 5]) When placed after all variables,  these two latter modifiers
 * apply to the signal (e.g. intensity). Unknown keywords are ignored.
 *
+* In the case of multiple components at the same position, the 'parallel'
+* keyword must be used in each instance instead of defining a GROUP.
+*
 * <b>Possible options are</b>
 * Variables to record:
 *     kx ky kz k wavevector (Angs-1) [    usually axis are
