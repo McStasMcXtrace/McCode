@@ -18,9 +18,13 @@
 *
 * Flex scanner for instrument definition files.
 *
-*	$Id: instrument.l,v 1.35 2004-11-19 16:22:09 farhi Exp $
+*	$Id: instrument.l,v 1.36 2005-06-30 14:05:46 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.35  2004/11/19 16:22:09  farhi
+*	kernel (parser) now supports escape sequences in comp/instr parameters
+*	e.g. in Win32 pathes... (reported by R. Peacock, ILL)
+*	
 *	Revision 1.34  2003/10/06 15:02:43  farhi
 *	Added PREVIOUS and PREVIOUS(index) keyword for component reference.
 *	Works with RELATIVE keyword. index is the index backward and
@@ -179,6 +183,7 @@ ALPHANUM	{ALPHA}|{DIGIT}|"_"
 
 NUMBER		-?({DIGIT}*".")?{DIGIT}+([Ee][+-]?{DIGIT}+)?
 ID		{DIGIT}*{ALPHA}{ALPHANUM}*
+EOL             (\r\n|\n|\r)
 INCLUDE "%include"
 
 %%
@@ -238,17 +243,18 @@ SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
 "->"|"."|"!"|"~"|"++"|"--"|"+"|"-"|"&"|"sizeof"|"*"|"/"|"%"|"+"|"-"|"<<"|">>"|"<"|"<="|">"|">="|"=="|"!="|"^"|"|"|"&&"|"||"|"?"|":"|"+="|"-="|"*="|"/="|"%="|"&="|"^="|"|="|"<<="|">>=" {
 		  yylval.string = str_dup(yytext);
 		  return TOK_CTOK;
+\
 		}
 
   /* Scanning embedded C code. */
 
-"%""{"[\t ]*\n	{
+"%""{"[\t ]*{EOL}	{
 		  yylval.linenum = instr_current_line;
 		  instr_current_line++;
 		  BEGIN(ccode);
 		  return TOK_CODE_START;
 		}
-"%""{"[^\n]*\n	{
+"%""{"[^\n]*{EOL}	{
 		  instr_current_line++;
 		  print_error("%%{ token not on a line by itself "
                   "on line %d of file '%s': %s.\n",
@@ -258,21 +264,21 @@ SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
 
 <ccode>{
     /* normal %} symbol to end C code block */
-    [\t ]*"%""}"[\t ]*\n	instr_current_line++; BEGIN(INITIAL); return TOK_CODE_END;
+    [\t ]*"%""}"[\t ]*{EOL}	instr_current_line++; BEGIN(INITIAL); return TOK_CODE_END;
     /* %} symbol surrounded by some unrelevant stuff */
-    [^\n]*"%""}"[^\n]*\n	{
+    [^\n]*"%""}"[^\n]*{EOL}	{
 			  instr_current_line++;
 			  print_warn(NULL, "%%} terminator not on a line by itself "
                     "on line %d of file '%s': %s.\n",
 				      instr_current_line, instr_current_filename, yytext);
 			}
     /* %include full line -> jump to cfullincl state */
-    [\t ]*{INCLUDE}[^\n]*\n { 
+    [\t ]*{INCLUDE}[^\n]*{EOL} { 
       yyless(0);  /* re-use the current line, but within cfullincl state */
       BEGIN(cfullincl); 
       }
     /* full line as C code */
-    [^\n]*\n		{
+    [^\n]*{EOL}		{
 			  instr_current_line++;
 			  yylval.string = str_dup(yytext);
 			  return TOK_CODE_LINE;
@@ -290,15 +296,15 @@ SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
 			  yylval.string = str_dup_n(&yytext[1], strlen(yytext) - 2);
 			  return TOK_STRING;
 			}
-\"[^\n\"]*\n		{
+\"[^\n\"]*{EOL}		{
 			  print_error("Error: Unterminated string "
                     "on line %d of file '%s': %s.\n",
 				      instr_current_line, instr_current_filename, yytext);
 			}
 
  /* %-style comments - ignore everything to end of line. */
-"%"\n		instr_current_line++; /* Ignore comment. */
-"% "[^\n]*\n	instr_current_line++; /* Ignore comment. */
+"%"{EOL}		instr_current_line++; /* Ignore comment. */
+"% "[^\n]*{EOL}	instr_current_line++; /* Ignore comment. */
 
  /* Include files for McStas comp/instr (INITIAL state). */
  /* then next token is the file name */
@@ -372,20 +378,20 @@ SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
   } /* end  cinclname */   
 		
  /* C++ "//"-style comments - ignore everything to end of line. */
-"//"[^\n]*\n	instr_current_line++; /* Ignore comment. */
+"//"[^\n]*{EOL}	instr_current_line++; /* Ignore comment. */
 
  /* C-style comments. */
 "/*"		BEGIN(ccomment);
 <ccomment>{
  [^*\n]*	/* Ignore comment. */
- [^*\n]*\n	instr_current_line++; /* Ignore comment. */
+ [^*\n]*{EOL}	instr_current_line++; /* Ignore comment. */
  "*"+[^*/\n]*	/* Ignore comment. */
- "*"+[^*/\n]*\n	instr_current_line++; /* Ignore comment. */
+ "*"+[^*/\n]*{EOL}	instr_current_line++; /* Ignore comment. */
  "*"+"/"	BEGIN(INITIAL);	/* End of comment. */
 }
 
 [ \t]+			/* Ignore whitespace. */
-[ \t]*\n		instr_current_line++; /* Ignore whitespace. */
+[ \t]*{EOL}		instr_current_line++; /* Ignore whitespace. */
 
 <INITIAL,ccode><<EOF>> {
 		  if(file_stack_ptr <= 0)
@@ -495,3 +501,4 @@ push_autoload(FILE *file)
   push_file(file, TRUE, TRUE);
   BEGIN(initial_token);
 }
+
