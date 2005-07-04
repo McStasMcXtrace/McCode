@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.25 2005-04-11 11:40:44 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.26 2005-07-04 08:19:50 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.25  2005/04/11 11:40:44  farhi
+* Added missing n-dims argument to printf for capture flux warning
+*
 * Revision 1.24  2005/03/14 10:48:54  farhi
 * Added warning when setting capture flux (meaningful with integral flux) for
 * more than 1 bin.
@@ -151,6 +154,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_DEFS->COORD_PHI    =25;
     mc_mn_DEFS->COORD_USER1  =26;
     mc_mn_DEFS->COORD_USER2  =27;
+    mc_mn_DEFS->COORD_KXY    =28;
+    mc_mn_DEFS->COORD_VXY    =29;
 
 /* mc_mn_token modifiers */
     mc_mn_DEFS->COORD_VAR    =0;    /* next mc_mn_token should be a variable or normal option */
@@ -420,8 +425,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_ENERGY; strcpy(mc_mn_Set_Vars_Coord_Label,"Energy [meV]"); strcpy(mc_mn_Set_Vars_Coord_Var,"E"); mc_mn_lmin = 0; mc_mn_lmax = 100; }
         if (!strcmp(mc_mn_token, "lambda") || !strcmp(mc_mn_token, "wavelength"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_LAMBDA; strcpy(mc_mn_Set_Vars_Coord_Label,"Wavelength [Angs]"); strcpy(mc_mn_Set_Vars_Coord_Var,"L"); mc_mn_lmin = 0; mc_mn_lmax = 100; }
-        if (!strcmp(mc_mn_token, "radius"))
+        if (!strcmp(mc_mn_token, "radius") || !strcmp(mc_mn_token, "xy"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_RADIUS; strcpy(mc_mn_Set_Vars_Coord_Label,"Radius [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"R"); mc_mn_lmin = 0; mc_mn_lmax = mc_mn_xmax; }
+        if (!strcmp(mc_mn_token, "vxy"))
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VXY; strcpy(mc_mn_Set_Vars_Coord_Label,"Radial Velocity [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"V"); mc_mn_lmin = 0; mc_mn_lmax = 2000; }
+        if (!strcmp(mc_mn_token, "kxy"))
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VXY; strcpy(mc_mn_Set_Vars_Coord_Label,"Radial Wavevector [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"K"); mc_mn_lmin = 0; mc_mn_lmax = 2; }
         if (!strcmp(mc_mn_token, "angle"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_ANGLE; strcpy(mc_mn_Set_Vars_Coord_Label,"Angle [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"A"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
         if (!strcmp(mc_mn_token, "hdiv")|| !strcmp(mc_mn_token, "divergence") || !strcmp(mc_mn_token, "xdiv") || !strcmp(mc_mn_token, "dx"))
@@ -508,12 +517,14 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VX)
        || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VY)
        || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VZ)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_V))
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_V)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VXY))
        strcpy(mc_mn_Short_Label[mc_mn_i],"Velocity");
       else
       if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KX)
        || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KY)
        || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KZ)
+       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KXY)
        || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_K))
        strcpy(mc_mn_Short_Label[mc_mn_i],"Wavevector");
       else
@@ -829,7 +840,11 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS) mc_mn_XY = sqrt(mc_mn_Vars->cx*mc_mn_Vars->cx+mc_mn_Vars->cy*mc_mn_Vars->cy);
         else
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VXY) mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy);
+        else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_K) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);  mc_mn_XY *= V2K; }
+        else
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KXY) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy);  mc_mn_XY *= V2K; }
         else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ENERGY) { mc_mn_XY = mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz;  mc_mn_XY *= VS2E; }
         else
