@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.115 2005-06-29 15:08:49 lieutenant Exp $
+* $Id: mcstas-r.c,v 1.116 2005-07-04 09:06:42 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.115  2005/06/29 15:08:49  lieutenant
+* x values centred (for 1-dim PGPLOT plots) Bug 39
+*
 * Revision 1.114  2005/06/22 08:56:23  farhi
 * Adding 'b' flag to fopen (new files) for binary support on Win32
 *
@@ -1753,7 +1756,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     parent, filename, Nsum, m,n,p);
   if ( !strstr(format.Name, "binary")
     && (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab"))
-    && (n*m*p > 10000) ) fprintf(stderr,
+    && (n*m*p > 10000 || m > 1000) ) fprintf(stderr,
       "Warning: %s: file '%s' (%s format): Large matrices (%dx%dx%d) in text mode may be slow"
       " or fail at import (mcinfo_data)\n",
       parent, filename, format.Name, m,n,p);
