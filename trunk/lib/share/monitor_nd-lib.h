@@ -20,9 +20,13 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.11 2005-02-22 16:11:03 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.12 2005-07-04 08:20:16 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.11  2005/02/22 16:11:03  farhi
+*	Now saving absolute position of monitors as "position" field in header
+*	Useful for plotting e.g. flux vs distance
+*
 *	Revision 1.10  2005/01/18 10:35:56  farhi
 *	Intall new MACROs for easy User Variable usage in Monitor_nD
 *	MONND_DECLARE(comp)
@@ -73,6 +77,8 @@
     char COORD_ENERGY;
     char COORD_LAMBDA;
     char COORD_RADIUS;
+    char COORD_KXY   ;
+    char COORD_VXY   ;
     char COORD_HDIV  ;
     char COORD_VDIV  ;
     char COORD_ANGLE ;
