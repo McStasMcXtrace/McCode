@@ -230,7 +230,7 @@ sub mcdoc_generate {
 sub mcdoc_test {
     my $status;
     my $printer = sub { putmsg($cmdwin, "$_[0]\n", 'msg'); $main_window->update;};
-    $status = do_test($printer, 1, $MCSTAS::mcstas_config{'PLOTTER'}, 'comnpatible graphics');
+    $status = do_test($printer, 1, $MCSTAS::mcstas_config{'PLOTTER'}, 'compatible graphics');
     if (defined $status) { putmsg($cmdwin, "$status", 'msg'); }
 }
 
