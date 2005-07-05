@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.52  2005/06/20 13:32:45  farhi
+* Only display mcstas-r.* embed files with --verbose
+*
 * Revision 1.51  2005/06/20 09:16:48  farhi
 * Corrected mcScattered definition (char -> MCNUM)
 *
@@ -77,7 +80,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.52 2005-06-20 13:32:45 farhi Exp $
+* $Id: cogen.c,v 1.53 2005-07-05 12:18:00 farhi Exp $
 *
 *******************************************************************************/
 
@@ -499,14 +502,6 @@ cogen_comp_decls_doit(void *arg)
 {
   struct comp_inst *comp = arg;
 
-  /* Output the 'share' declaration code block
-    (once for all same components)*/
-  if (comp->def->comp_inst_number < 0)
-  {
-    coutf("/* Shared user declarations for all components '%s'. */", comp->def->name);
-    codeblock_out(comp->def->share_code);
-    comp->def->comp_inst_number *= -1;  /* will not be included anymore */
-  }
   /* Output the user declaration code block. */
   if (list_len(comp->def->decl_code->lines) > 0)
     codeblock_out(comp->def->decl_code);
@@ -516,6 +511,20 @@ static void
 cogen_comp_decls(struct comp_inst *comp)
 {
   cogen_comp_scope(comp, 0, cogen_comp_decls_doit, comp);
+}
+
+static void
+cogen_comp_shares(struct comp_inst *comp)
+{
+  /* Output the 'share' declaration code block
+    (once for all same components)*/
+
+  if (comp->def->comp_inst_number < 0)
+  {
+    coutf("/* Shared user declarations for all components '%s'. */", comp->def->name);
+    codeblock_out(comp->def->share_code);
+    comp->def->comp_inst_number *= -1;
+  }
 }
 
 
@@ -578,7 +587,8 @@ cogen_decls(struct instr_def *instr)
   }
   list_iterate_end(liter);
   coutf("  NULL, NULL, instr_type_double, \"\"");
-  coutf("};");
+  coutf("};");  /* 5. Declaration of component definition and setting parameters. */
+
   cout("");
 
   /* 4. User's declarations from the instrument definition file. */
@@ -586,9 +596,17 @@ cogen_decls(struct instr_def *instr)
   cogen_instrument_scope(instr, (void (*)(void *))codeblock_out, instr->decls);
   cout("");
 
-  /* 5. Declaration of component definition and setting parameters. */
-  cout("/* Declarations of component definition and setting parameters. */");
-  cout("");
+  /* 5. Component SHAREs. */
+  liter = list_iterate(instr->complist);
+  while(comp = list_next(liter))
+  {
+    if((list_len(comp->def->share_code->lines) > 0) && (comp->def->comp_inst_number < 0))
+    {
+      cogen_comp_shares(comp);
+      cout("");
+    }
+  }
+  list_iterate_end(liter);
 
   /* ADD: E. Farhi, Sep 20th 2001 */
   /* 6. Table to store neutron states when entering each component */
@@ -622,6 +640,9 @@ cogen_decls(struct instr_def *instr)
   }
 
   /* 9. Declaration of component definition/setting parameters */
+  cout("/* Declarations of component definition and setting parameters. */");
+  cout("");
+  index = 0;
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
