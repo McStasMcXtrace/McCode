@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.16 2005-07-05 14:25:42 farhi Exp $
+* $Id: read_table-lib.c,v 1.17 2005-07-05 14:30:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.16  2005/07/05 14:25:42  farhi
+* added file size in t_Table structure
+*
 * Revision 1.15  2005/07/05 12:06:40  farhi
 * added new functions for table Array handling
 * to be used in Isotropic_sqw and mcformat
@@ -611,7 +614,7 @@
     if (!mc_rt_Table.block_number) strcpy(mc_rt_buffer, "catenated");
     else sprintf(mc_rt_buffer, "block %i", mc_rt_Table.block_number);
     printf("Table from file '%s' (%s)", mc_rt_Table.filename, mc_rt_buffer);
-    if (mc_rt_Table.filezise) printf(" of size %li", mc_rt_Table.filezise);
+    if (mc_rt_Table.filesize) printf(" of size %li", mc_rt_Table.filesize);
     if ((mc_rt_Table.data   != NULL) && (mc_rt_Table.rows*mc_rt_Table.columns))
     {
       printf(" is %li x %li ", mc_rt_Table.rows, mc_rt_Table.columns);
