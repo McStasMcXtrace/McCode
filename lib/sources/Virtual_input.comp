@@ -10,19 +10,19 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.10 $
+* Version:  $Revision: 1.11 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
 *
-* Source-like component that generates neutron events from an ascii/binary 
+* Source-like component that generates neutron events from an ascii/binary
 * 'virtual source' file.
 *
 * %D
 *   This component reads neutron events stored into a file, and sends them into
 * the instrument. It thus replaces a Source component, using a previously
 * computed neutron set. The 'source' file type may be either of text or binary
-* format. The component may recognize its format automatically, but you may 
+* format. The component may recognize its format automatically, but you may
 * force the file type ('type' parameter). The number of neutron events for the
 * simulation is set to the length of the 'source' file times the
 * repetition parameter 'repeat_count' (1 by default).
@@ -44,14 +44,14 @@
 * Then unactivate the part of the simulation description before (and including)
 * the component MySourceCreator. Put the new instrument source:
 *   COMPONENT Source = Virtual_input(file="MySource.list")
-* at the same position as 'MySourceCreator'. 
+* at the same position as 'MySourceCreator'.
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
 * Vitess simulation (104 bytes per neutron) and read with Vitess_input.
 *
 * %P
 * INPUT PARAMETERS
-* file:         (str) name of the neutron input file, or stdin if left to 0. 
-* 
+* file:         (str) name of the neutron input file, or stdin if left to 0.
+*
 * Optional input parameters:
 * bufsize:      (records)   Size of neutron input buffer. 0 for 'use all'.
 * repeat_count: (1)         Number of times the source must be generated.
@@ -66,7 +66,7 @@
 DEFINE COMPONENT Virtual_input
 DEFINITION PARAMETERS (file=0, type=0)
 SETTING PARAMETERS (repeat_count = 1, bufsize=0)
-OUTPUT PARAMETERS (rep,pos,nrows,nread,Offset,rTable, Virtual_input_Read_Input)
+OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,file_ncount)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
@@ -79,13 +79,13 @@ long Virtual_input_Read_Input(char *aFile, char *aType, t_Table *aTable, long *a
     long max_lines = 50000;
     long length=0;
     char bType[32];
-    
-    if (!aFile) return (-1);
+
+    if (!aFile) return (0);
     if (aType) strcpy(bType, aType);
     else strcpy(bType, "???");
 
     Table_Free(aTable);
-    
+
     /* Try to Open neutron input text file. */
     if((aFile && aType == NULL) || !strcmp(bType,"text")) {
       Table_Read_Offset(aTable, aFile, 0, aOffset, max_lines);  /* read data from file into rTable */
@@ -100,27 +100,27 @@ long Virtual_input_Read_Input(char *aFile, char *aType, t_Table *aTable, long *a
 
 DECLARE
 %{
-  int     rep=0;      /* Neutron repeat count */
-  long    pos=0;
-  long    nrows=0;
-  long    nread=0;
-  long    Offset=0;
+  int     repeat_number=1; /* Neutron repeat of the file */
+  long    pos=0;        /* current pos in block */
+  long    nrows=0;      /* total nrows in block */
+  long    Offset=0;     /* offset in file */
+  double  file_ncount=0;  /* total number of neutrons in file */
+  char    read_block=1; /* flag to start by reading block */
   t_Table rTable;
 %}
 
 INITIALIZE
 %{
   Table_Init(&rTable);
-  rep = repeat_count+1;
-  
+
   if (!file || !repeat_count)
   {
     fprintf(stderr,"Virtual_input: %s: please give me a file name (file) to read (repeat_count>0).\n", NAME_CURRENT_COMP);
     exit(-1);
   }
-  if (type && strstr(type, "Vitess")) 
+  if (type && strstr(type, "Vitess"))
   { fprintf(stderr, "Virtual_input: %s: Vitess files may be read using the Vitess_input component\n", NAME_CURRENT_COMP); exit(-1); }
-  
+
   if (bufsize) mcset_ncount(bufsize*repeat_count);
 
   printf("Virtual_input: %s: Reading neutron events from file '%s'. Repeat %g time(s)\n", NAME_CURRENT_COMP, file, repeat_count);
@@ -128,31 +128,60 @@ INITIALIZE
 
 TRACE
 %{
-    /* while not eof */
-    /* read file at offset */
-    if (rep >= repeat_count) {
-      nrows = Virtual_input_Read_Input(file, type, &rTable, &Offset);
-      if (nrows) { rep = 0; pos = 0; nread++; }
-    }
-    
-    if (!nrows)
-      { mcset_ncount(mcget_run_num()); ABSORB; }
-     /* for each buffer, loop: repeat counts */
-     /* for each repeat count: loop: generate neutrons */
-    if (pos >= nrows)
-      { rep++; pos = 0; } /* Reposition at start of buffer */
- 
-    /* &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz */
-    mcrestore_neutron(rTable.data,pos, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz, &p); 
 
-    pos++;
-    p /= repeat_count;
-    SCATTER;
+  while (read_block) {
+    /* read block and increase Offset for next reading */
+    nrows = Virtual_input_Read_Input(file, type, &rTable, &Offset);
+
+    if (!nrows) { /* nrows is 0 if end of file/no file */
+      if (!file_ncount) {
+        file_ncount = mcget_run_num();  /* ncount in file */
+        printf("Virtual_input: %s: file '%s' contains %g events\n", NAME_CURRENT_COMP, file, file_ncount);
+      }
+      Offset = 0;       /* reposition to begining of file */
+      repeat_number++;  /* we start a new repeat_count loop */
+
+      /* end of simulation if ... */
+      if (repeat_number > repeat_count) {
+        printf("Virtual_input: %s: Ending after %g events (%i repeat count)\n", NAME_CURRENT_COMP, mcget_run_num(), (long)repeat_count);
+        read_block=0; mcset_ncount(mcget_run_num()); ABSORB;
+      }
+      /* else continue reading blocks */
+
+    } else { /* block at Offset could be read */
+      pos = 0;  /* position at begining of block */
+      read_block = 0;
+    }
+  }
+
+  /* &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz */
+  mcrestore_neutron(rTable.data,pos, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz, &p);
+
+  pos++;
+  p /= repeat_count;
+  SCATTER;
+
+  if (pos >= nrows) { /* reached end of block */
+    read_block = 1;
+  }
 %}
 
 FINALLY
 %{
   Table_Free(&rTable);
+  if (!file_ncount) {
+    printf("Warning: Virtual_input: %s: file '%s' was not used entirely.\n"
+           "               Intensities may be wrong. Increase ncount value\n",
+           NAME_CURRENT_COMP, file);
+  } else {
+    double tmp;
+    tmp = mcget_run_num()/file_ncount;
+    if (fabs((tmp/ ceil(tmp)) -1) > 0.02)
+      printf("Warning: Virtual_input: %s: simulation finished in the middle of file '%s'\n"
+             "               ncount=%g but file contains %g events\n"
+             "               Set ncount to Nx%g or higher\n",
+           NAME_CURRENT_COMP, file, mcget_run_num(), file_ncount, file_ncount*repeat_count);
+  }
 %}
 
 MCDISPLAY
