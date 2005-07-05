@@ -1033,10 +1033,10 @@ TRACE
 /* in 3D space. Every component instance must have a unique name. Here, */
 /* Origin is used. This Arm() component is set to define the origin of  */
 /* our global coordinate system (AT (0,0,0) ABSOLUTE). It may be used   */
-/* for further RELATIVE reference, and even replaced by a Progress_bar  */
-/* component. Other useful keywords are : ROTATED EXTEND GROUP PREVIOUS */
-/* Also think about adding a neutron source !                           */
-COMPONENT Origin = Arm()
+/* for further RELATIVE reference, Other useful keywords are : ROTATED  */
+/* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
+/* Progress_bar is an Arm displaying simulation progress.               */
+COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 INSTR_FINISH
 my $instr_template_end = <<INSTR_FINISH;
