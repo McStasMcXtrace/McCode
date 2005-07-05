@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.15 2005-07-05 12:06:40 farhi Exp $
+* $Id: read_table-lib.c,v 1.16 2005-07-05 14:25:42 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.15  2005/07/05 12:06:40  farhi
+* added new functions for table Array handling
+* to be used in Isotropic_sqw and mcformat
+*
 * Revision 1.13  2005/01/20 14:16:43  farhi
 * New functions to read separately all numerical bmocks in a text data file
 * Will be used for Data conversion from PGPLOT/McStas (mcformat tool)
@@ -95,13 +99,15 @@
 *           number of read elements (-1: error, 0:header only)
 *           updated *offset position (where end of reading occured)
 *******************************************************************************/
-  long Table_Read_Offset(t_Table *mc_rt_Table, char *mc_rt_File, 
-                         long mc_rt_block_number, long *mc_rt_offset, 
+  long Table_Read_Offset(t_Table *mc_rt_Table, char *mc_rt_File,
+                         long mc_rt_block_number, long *mc_rt_offset,
                          long mc_rt_max_lines)
   { /* reads all/a data block in 'file' and returns a Table structure  */
     FILE *mc_rt_hfile;
     long  mc_rt_nelements;
     long  mc_rt_begin;
+    long  mc_rt_filesize=0;
+    struct stat mc_rt_stfile;
 
     if (!mc_rt_Table) return(-1);
     if (!mc_rt_File)  return(-1);
@@ -125,10 +131,12 @@
       }
     }
     if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
+    else { stat(mc_rt_File,&mc_rt_stfile); mc_rt_filesize = mc_rt_stfile.st_size; }
     mc_rt_begin     = ftell(mc_rt_hfile);
     mc_rt_nelements = Table_Read_Handle(mc_rt_Table, mc_rt_hfile, mc_rt_block_number, mc_rt_max_lines);
     mc_rt_Table->begin = mc_rt_begin;
     mc_rt_Table->end   = ftell(mc_rt_hfile);
+    if (mc_rt_filesize) mc_rt_Table->filesize = mc_rt_filesize;
     strncpy(mc_rt_Table->filename, mc_rt_File, 128);
     if (mc_rt_offset) *mc_rt_offset=mc_rt_Table->end;
     fclose(mc_rt_hfile);
@@ -161,7 +169,7 @@
     long    mc_rt_begin;
 
     if (!mc_rt_Table) return(-1);
-    
+
     Table_Init(mc_rt_Table);
     if (!mc_rt_File)  return(-1);
 
@@ -227,6 +235,7 @@
     mc_rt_Table->columns = mc_rt_columns;
     mc_rt_Table->array_length = 1;
     mc_rt_Table->block_number = 1;
+    mc_rt_Table->filesize=mc_rt_filesize;
 
     Table_Stat(mc_rt_Table);
 
@@ -250,7 +259,7 @@
 * Data block should be a rectangular matrix or vector.
 * Data block may be rebined with Table_Rebin (also sort in ascending order)
 *******************************************************************************/
-  long Table_Read_Handle(t_Table *mc_rt_Table, FILE *mc_rt_hfile, 
+  long Table_Read_Handle(t_Table *mc_rt_Table, FILE *mc_rt_hfile,
                          long mc_rt_block_number, long mc_rt_max_lines)
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
     double *mc_rt_Data;
@@ -282,7 +291,7 @@
     do { /* while (!mc_rt_flag_End_row_loop) */
       char  mc_rt_line[4096];
       long  mc_rt_back_pos=0;   /* ftell start of line */
-      
+
       mc_rt_back_pos = ftell(mc_rt_hfile);
       if (fgets(mc_rt_line, 4096, mc_rt_hfile) != NULL) { /* analyse line */
         int mc_rt_i=0;
@@ -298,7 +307,7 @@
           double mc_rt_X;
 
           /* get the number of columns splitting line with strtok */
-          if (sscanf(mc_rt_line,"%lg ",&mc_rt_X) == 1) 
+          if (sscanf(mc_rt_line,"%lg ",&mc_rt_X) == 1)
           { /* line begins at least with one num */
             char  *mc_rt_InputTokens, *mc_rt_lexeme;
             char   mc_rt_flag_End_Line= 0;
@@ -311,7 +320,7 @@
               mc_rt_InputTokens = NULL;
               if ((mc_rt_lexeme != NULL) && (strlen(mc_rt_lexeme) != 0))
               { /* reading line: the token is not empty */
-                if (sscanf(mc_rt_lexeme,"%lg ",&mc_rt_X) == 1)  
+                if (sscanf(mc_rt_lexeme,"%lg ",&mc_rt_X) == 1)
                 { /* reading line: the token is a number in the line */
                   if (!mc_rt_flag_In_array)
                   { /* reading num: not already in a block: starts a new data block */
@@ -365,7 +374,7 @@
                 } /* end reading num: end if sscanf mc_rt_lexeme -> numerical */
                 else
                 { /* reading line: the token is not numerical in that line. end block */
-                  mc_rt_flag_End_Line = 1; 
+                  mc_rt_flag_End_Line = 1;
                   mc_rt_flag_In_array = 0;
                 }
               }
@@ -420,7 +429,7 @@
     mc_rt_Table->data         = mc_rt_Data;
     mc_rt_Table->rows         = mc_rt_Rows;
     mc_rt_Table->columns      = mc_rt_Columns;
-    
+
     Table_Stat(mc_rt_Table);
     return (mc_rt_count_in_array);
 
@@ -429,7 +438,7 @@
 /*******************************************************************************
 * long Rebin_Table(t_Table *Table)
 *   ACTION: rebin a single Table, sorting 1st column in ascending order
-*   input   Table: single table containing data. 
+*   input   Table: single table containing data.
 *                  The data block is reallocated in this process
 *   return  updated Table with increasing, evenly spaced first column (index 0)
 *           number of data elements (-1: error, 0:header only)
@@ -576,7 +585,7 @@
 
     return(mc_rt_Value);
   } /* end Table_Value */
-  
+
 /*******************************************************************************
 * void Table_Free(t_Table *Table)
 *   ACTION: free a single Table
@@ -590,7 +599,7 @@
     mc_rt_Table->data   = NULL;
     mc_rt_Table->header = NULL;
   } /* end Table_Free */
-  
+
 /******************************************************************************
 * void Table_Info(t_Table Table)
 *    ACTION: print informations about a single Table
@@ -598,10 +607,11 @@
   void Table_Info(t_Table mc_rt_Table)
   {
     char mc_rt_buffer[256];
-    
+
     if (!mc_rt_Table.block_number) strcpy(mc_rt_buffer, "catenated");
     else sprintf(mc_rt_buffer, "block %i", mc_rt_Table.block_number);
-    printf("Table from file '%s' (%s)", mc_rt_Table.filename, mc_rt_buffer); 
+    printf("Table from file '%s' (%s)", mc_rt_Table.filename, mc_rt_buffer);
+    if (mc_rt_Table.filezise) printf(" of size %li", mc_rt_Table.filezise);
     if ((mc_rt_Table.data   != NULL) && (mc_rt_Table.rows*mc_rt_Table.columns))
     {
       printf(" is %li x %li ", mc_rt_Table.rows, mc_rt_Table.columns);
@@ -623,6 +633,7 @@
     mc_rt_Table->data    = NULL;
     mc_rt_Table->header  = NULL;
     mc_rt_Table->filename[0]= '\0';
+    mc_rt_Table->filesize=0;
     mc_rt_Table->rows    = 0;
     mc_rt_Table->columns = 0;
     mc_rt_Table->min_x   = 0;
@@ -710,7 +721,7 @@
     }
     /* send back number of extracted blocks */
     if (mc_rt_blocks) *mc_rt_blocks = mc_rt_block_number-1;
-    
+
     /* now store total number of elements in Table array */
     for (mc_rt_offset=0; mc_rt_offset < mc_rt_block_number;
       mc_rt_Table_Array[mc_rt_offset++].array_length = mc_rt_block_number);
@@ -732,7 +743,7 @@
     } while (mc_rt_index>= 0);
     free(mc_rt_Table);
   } /* end Table_Free_Array */
-  
+
 /******************************************************************************
 * void Table_Info_Array(t_Table *Table)
 *    ACTION: print informations about a Table array
@@ -741,9 +752,9 @@
   long Table_Info_Array(t_Table *mc_rt_Table)
   {
     long mc_rt_index=0;
-    
+
     if (!mc_rt_Table) return(-1);
-    while (mc_rt_index < mc_rt_Table[mc_rt_index].array_length 
+    while (mc_rt_index < mc_rt_Table[mc_rt_index].array_length
        && (mc_rt_Table[mc_rt_index].data || mc_rt_Table[mc_rt_index].header)
        && (mc_rt_Table[mc_rt_index].rows*mc_rt_Table[mc_rt_index].columns) ) {
       Table_Info(mc_rt_Table[mc_rt_index]);
