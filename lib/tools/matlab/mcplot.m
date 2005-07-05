@@ -452,7 +452,7 @@ function mcplot_menu_action(action, object)
         all_plots = get(all_axes(index_a), 'Children');
         for index_p = 1:length(all_plots)
           this_child = all_plots(index_p);
-	  if strcmp(get(this_child, 'Type'), 'line') | strcmp(get(this_child, 'Type'), 'hggroup')
+    if strcmp(get(this_child, 'Type'), 'line') | strcmp(get(this_child, 'Type'), 'hggroup')
             set(all_axes(index_a), 'YScale', scale);
           elseif strcmp(get(this_child, 'Type'), 'surface')
             set(all_axes(index_a), 'ZScale', scale);
@@ -468,10 +468,7 @@ function mcplot_menu_action(action, object)
         end
       end
     case 'exit'  % Close all
-      Stop=questdlg('Exit Matlab/McPlot ?','McPlot: Exit ?','Yes','No','Yes');
-      if strcmp(Stop,'Yes')
         exit
-      end
     case 'about'
       t = {'McStas McPlot menu',...
         '', ...
