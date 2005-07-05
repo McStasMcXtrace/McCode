@@ -279,7 +279,7 @@ sub simulation_dialog {
     if ($res eq 'Start') {
       # update Plotter in case of change in this dialog (instead of Preferences)
       if ($si{'Format'} eq 0) {
-        $plotter = 'PGPLOT';
+        $plotter = 'McStas';
       } elsif ($si{'Format'} eq 1) {
         $plotter = 'Matlab';
       } elsif ($si{'Format'} eq 2) {
