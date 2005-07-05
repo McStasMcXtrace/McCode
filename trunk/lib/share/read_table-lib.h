@@ -23,9 +23,13 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.12 2005-07-05 12:06:40 farhi Exp $
+* $Id: read_table-lib.h,v 1.13 2005-07-05 14:25:59 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.12  2005/07/05 12:06:40  farhi
+* added new functions for table Array handling
+* to be used in Isotropic_sqw and mcformat
+*
 * Revision 1.10  2005/01/20 14:16:43  farhi
 * New functions to read separately all numerical bmocks in a text data file
 * Will be used for Data conversion from PGPLOT/McStas (mcformat tool)
@@ -83,6 +87,7 @@
   typedef struct struct_table
   {
     char    filename[128];
+    long    filesize;
     char   *header;  /* text header, e.g. comments */
     double *data;    /* vector { x[0], y[0], ... x[n-1], y[n-1]... } */
     double  min_x;   /* min value of first column */
