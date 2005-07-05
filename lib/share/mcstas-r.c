@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.116 2005-07-04 09:06:42 farhi Exp $
+* $Id: mcstas-r.c,v 1.117 2005-07-05 12:04:22 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.116  2005/07/04 09:06:42  farhi
+* test for scilab not bianry and large matrix -> warning more often...
+*
 * Revision 1.115  2005/06/29 15:08:49  lieutenant
 * x values centred (for 1-dim PGPLOT plots) Bug 39
 *
@@ -4135,19 +4138,19 @@ mcparseoptions(int argc, char *argv[])
   for(j = 0; j < mcnumipar; j++)
     {
       paramsetarray[j] = 0;
-      if (mcinputtable[j].val && strlen(mcinputtable[j].val))
+      if (mcinputtable[j].val != NULL && strlen(mcinputtable[j].val))
       {
         int  status;
         char buf[1024];
         strncpy(buf, mcinputtable[j].val, 1024);
         status = (*mcinputtypes[mcinputtable[j].type].getparm)
                    (buf, mcinputtable[j].par);
-        if(!status) fprintf(stderr, "Invalid %s default value %s in instrument definition (mcparseoptions)\n", mcinputtable[j].name, buf);
+        if(!status) fprintf(stderr, "Invalid '%s' default value %s in instrument definition (mcparseoptions)\n", mcinputtable[j].name, buf);
         else paramsetarray[j] = 1;
       } else {
         (*mcinputtypes[mcinputtable[j].type].getparm)
           (NULL, mcinputtable[j].par);
-        paramsetarray[j] = 1;
+        paramsetarray[j] = 0;
       }
     }
 
