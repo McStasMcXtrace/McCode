@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -52,7 +52,7 @@
 * file:     Filename of neutron file to write. Default is standard
 *           output [string]. If not given, a unique name will be used.
 * bufsize:  Size of neutron output buffer [records]
-*           default is 10000. A zero value will save all.
+*           default is 0, i.e. save all.
 * type:     Type of output file 'text','float','double' [string]
 *           default is text
 *
@@ -62,8 +62,8 @@
 
 DEFINE COMPONENT Virtual_output
 DEFINITION PARAMETERS (file = 0, type = 0)
-SETTING PARAMETERS (bufsize = 10000)
-OUTPUT PARAMETERS (DEFS, Vars)
+SETTING PARAMETERS (bufsize = 0)
+OUTPUT PARAMETERS (DEFS, Vars, mcformat_sim, mcformat_vo, mcformat_override)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
@@ -74,8 +74,11 @@ SHARE
 
 DECLARE
 %{
-  MonitornD_Defines_type DEFS;
+  MonitornD_Defines_type   DEFS;
   MonitornD_Variables_type Vars;
+  struct mcformats_struct  mcformat_sim;
+  struct mcformats_struct  mcformat_vo;
+  char                     mcformat_override;
 %}
 
 INITIALIZE
@@ -97,6 +100,10 @@ INITIALIZE
   Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
   if (file != NULL)
     strncpy(Vars.Mon_File, file, 128);
+
+  mcformat_override = !strstr(Vars.option, "binary");
+  mcformat_sim      = mcformat;
+  mcformat_vo       = mcuse_format("McStas");
 %}
 
 TRACE
@@ -117,7 +124,9 @@ TRACE
   Vars.csz = sz;
   Vars.ct  = t;
 
+  if (mcformat_override) mcformat = mcformat_vo;
   pp = Monitor_nD_Trace(&DEFS, &Vars);
+  if (mcformat_override) mcformat = mcformat_sim;
   Vars.Nsum++;
   Vars.psum += pp;
   Vars.p2sum += pp*pp;
@@ -126,17 +135,11 @@ TRACE
 
 SAVE
 %{
-  struct mcformats_struct mcformat_cpy;
 
-  if (!strstr(Vars.option, "binary")) {
-    mcformat_cpy = mcformat;                  /* save current format */
-    mcformat     = mcuse_format("McStas");    /* MCSTAS_FORMAT */
-  }
+
+  if (mcformat_override) mcformat = mcformat_vo;
   Monitor_nD_Save(&DEFS, &Vars);
-  if (!strstr(Vars.option, "binary")) {
-    mcclear_format(mcformat);
-    mcformat = mcformat_cpy;                  /* restore previous format */
-  }
+  if (mcformat_override) mcformat = mcformat_sim;
 %}
 
 FINALLY
