@@ -17,6 +17,10 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.53  2005/07/05 12:18:00  farhi
+* Moved SHAREs defore definition/setting parameter comp definition
+* to avoid name clash. Was reason for failure of updated read_table-lib
+*
 * Revision 1.52  2005/06/20 13:32:45  farhi
 * Only display mcstas-r.* embed files with --verbose
 *
@@ -80,7 +84,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.53 2005-07-05 12:18:00 farhi Exp $
+* $Id: cogen.c,v 1.54 2005-07-06 08:24:43 farhi Exp $
 *
 *******************************************************************************/
 
@@ -558,7 +562,19 @@ cogen_decls(struct instr_def *instr)
     coutf("void %snxdict_nxout(void); ", ID_PRE);
   }
 
-  /* 2. Global variables for instrument parameters. */
+  /* 2. Component SHAREs. */
+  liter = list_iterate(instr->complist);
+  while(comp = list_next(liter))
+  {
+    if((list_len(comp->def->share_code->lines) > 0) && (comp->def->comp_inst_number < 0))
+    {
+      cogen_comp_shares(comp);
+      cout("");
+    }
+  }
+  list_iterate_end(liter);
+
+  /* 3. Global variables for instrument parameters. */
   cout("/* Instrument parameters. */");
   liter = list_iterate(instr->formals);
   while(i_formal = list_next(liter))
@@ -568,7 +584,7 @@ cogen_decls(struct instr_def *instr)
   list_iterate_end(liter);
   cout("");
 
-  /* 3. Table of instrument parameters. */
+  /* 4. Table of instrument parameters. */
   coutf("#define %sNUMIPAR %d", ID_PRE, list_len(instr->formals));
   coutf("int %snumipar = %d;", ID_PRE, list_len(instr->formals));
   coutf("struct %sinputtable_struct %sinputtable[%sNUMIPAR+1] = {",
@@ -588,33 +604,18 @@ cogen_decls(struct instr_def *instr)
   list_iterate_end(liter);
   coutf("  NULL, NULL, instr_type_double, \"\"");
   coutf("};");  /* 5. Declaration of component definition and setting parameters. */
-
   cout("");
 
-  /* 4. User's declarations from the instrument definition file. */
+  /* 5. User's declarations from the instrument definition file. */
   cout("/* User declarations from instrument definition. */");
   cogen_instrument_scope(instr, (void (*)(void *))codeblock_out, instr->decls);
   cout("");
 
-  /* 5. Component SHAREs. */
-  liter = list_iterate(instr->complist);
-  while(comp = list_next(liter))
-  {
-    if((list_len(comp->def->share_code->lines) > 0) && (comp->def->comp_inst_number < 0))
-    {
-      cogen_comp_shares(comp);
-      cout("");
-    }
-  }
-  list_iterate_end(liter);
-
-  /* ADD: E. Farhi, Sep 20th 2001 */
   /* 6. Table to store neutron states when entering each component */
   cout("/* Neutron state table at each component input (local coords) */");
   cout("/* [x, y, z, vx, vy, vz, t, sx, sy, sz, p] */");
   coutf("MCNUM %scomp_storein[11*%i];", ID_PRE, list_len(instr->complist)+2);
 
-  /* ADD: E. Farhi Sep 24th, 2001 group instances */
   /* 7. Table to store position (abs/rel) for each component */
   cout("/* Components position table (absolute and relative coords) */");
   coutf("Coords %scomp_posa[%i];", ID_PRE, list_len(instr->complist)+2);
@@ -627,7 +628,7 @@ cogen_decls(struct instr_def *instr)
   /* 8. Declaration of group flags */
   cout("/* Flag true when previous component acted on the neutron (SCATTER) */");
   coutf("MCNUM %sScattered=0;", ID_PRE);
-  /* ADD: E. Farhi Sep 25th, 2001 Set group flags */
+
   if (list_len(instr->grouplist) > 0)
   {
     cout("/* Component group definitions (flags) */");
@@ -648,8 +649,8 @@ cogen_decls(struct instr_def *instr)
   {
     List_handle liter2;
 
-    index++; /* ADD: E. Farhi Sep 20th, 2001 a new comp */
-    comp->index = index; /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
+    index++;
+    comp->index = index;
 
     if(list_len(comp->def->def_par) > 0)
     {                                /* (The if avoids a redundant comment.) */
