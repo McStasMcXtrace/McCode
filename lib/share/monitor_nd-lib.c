@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.26 2005-07-04 08:19:50 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.27 2005-07-06 08:16:28 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.26  2005/07/04 08:19:50  farhi
+* added support for kxy and vxy radial distributions
+*
 * Revision 1.25  2005/04/11 11:40:44  farhi
 * Added missing n-dims argument to printf for capture flux warning
 *
@@ -428,9 +431,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         if (!strcmp(mc_mn_token, "radius") || !strcmp(mc_mn_token, "xy"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_RADIUS; strcpy(mc_mn_Set_Vars_Coord_Label,"Radius [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"R"); mc_mn_lmin = 0; mc_mn_lmax = mc_mn_xmax; }
         if (!strcmp(mc_mn_token, "vxy"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VXY; strcpy(mc_mn_Set_Vars_Coord_Label,"Radial Velocity [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"V"); mc_mn_lmin = 0; mc_mn_lmax = 2000; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VXY; strcpy(mc_mn_Set_Vars_Coord_Label,"Radial Velocity [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"Vxy"); mc_mn_lmin = 0; mc_mn_lmax = 2000; }
         if (!strcmp(mc_mn_token, "kxy"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VXY; strcpy(mc_mn_Set_Vars_Coord_Label,"Radial Wavevector [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"K"); mc_mn_lmin = 0; mc_mn_lmax = 2; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_KXY; strcpy(mc_mn_Set_Vars_Coord_Label,"Radial Wavevector [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"Kxy"); mc_mn_lmin = 0; mc_mn_lmax = 2; }
         if (!strcmp(mc_mn_token, "angle"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_ANGLE; strcpy(mc_mn_Set_Vars_Coord_Label,"Angle [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"A"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
         if (!strcmp(mc_mn_token, "hdiv")|| !strcmp(mc_mn_token, "divergence") || !strcmp(mc_mn_token, "xdiv") || !strcmp(mc_mn_token, "dx"))
