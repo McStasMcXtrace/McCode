@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.18 2005-07-06 08:44:28 farhi Exp $
+* $Id: read_table-lib.c,v 1.19 2005-07-06 09:50:45 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.18  2005/07/06 08:44:28  farhi
+* Display headers in Table_Info
+* Also works with Arrays
+*
 * Revision 1.17  2005/07/05 14:30:27  farhi
 * misprint
 *
@@ -708,10 +712,11 @@
     if (!mc_rt_Table_Array) {
       fprintf(stderr, "Error: Can not allocate memory %i (Table_Read_Array).\n",
          mc_rt_allocated*sizeof(t_Table));
+      *mc_rt_blocks = 0;
       return (NULL);
     }
 
-    while (mc_rt_nelements)
+    while (mc_rt_nelements > 0)
     {
       t_Table mc_rt_Table;
 
@@ -729,6 +734,7 @@
         if (!mc_rt_Table_Array) {
           fprintf(stderr, "Error: Can not re-allocate memory %i (Table_Read_Array).\n",
               mc_rt_allocated*sizeof(t_Table));
+          *mc_rt_blocks = 0;
           return (NULL);
         }
       }
