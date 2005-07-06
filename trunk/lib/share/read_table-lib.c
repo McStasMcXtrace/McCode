@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.17 2005-07-05 14:30:27 farhi Exp $
+* $Id: read_table-lib.c,v 1.18 2005-07-06 08:44:28 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.17  2005/07/05 14:30:27  farhi
+* misprint
+*
 * Revision 1.16  2005/07/05 14:25:42  farhi
 * added file size in t_Table structure
 *
@@ -623,6 +626,17 @@
       /* printf("Data axis range %f-%f, step=%f\n", mc_rt_Table.min_x, mc_rt_Table.max_x, mc_rt_Table.step_x); */
     }
     else printf(" is empty.\n");
+    if (mc_rt_Table.header && strlen(mc_rt_Table.header)) {
+      char header[80];
+      int  i;
+      if (strlen(mc_rt_Table.header) > 70) {
+        strncpy(header, mc_rt_Table.header, 70-4);
+        strcat( header, " ...");
+      } else strcpy(header, mc_rt_Table.header);
+      for (i=0; i<strlen(header); i++)
+        if (header[i] == '\n') header[i] = ';';
+      printf("  '%s'\n", header);
+    }
   } /* end Table_Info */
 
 /******************************************************************************
