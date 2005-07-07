@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.19 2005-07-06 09:50:45 farhi Exp $
+* $Id: read_table-lib.c,v 1.20 2005-07-07 14:16:57 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.19  2005/07/06 09:50:45  farhi
+* Added check for non existing data file in Table_*_Array functions
+*
 * Revision 1.18  2005/07/06 08:44:28  farhi
 * Display headers in Table_Info
 * Also works with Arrays
@@ -675,22 +678,27 @@
   {
     long   mc_rt_i;
     double mc_rt_max_x, mc_rt_min_x;
+    double mc_rt_row=1;
+    double mc_rt_n;
 
     if (!mc_rt_Table) return;
     if (!mc_rt_Table->rows || !mc_rt_Table->columns) return;
+    if (mc_rt_Table->rows == 1) mc_rt_row=0;
     mc_rt_max_x = mc_rt_Table->data[0];
     mc_rt_min_x = mc_rt_Table->data[(mc_rt_Table->rows-1)*mc_rt_Table->columns];
+    mc_rt_n     = (mc_rt_row ? mc_rt_Table->rows : mc_rt_Table->columns);
 
-    for (mc_rt_i=0; mc_rt_i < mc_rt_Table->rows; mc_rt_i++)
+    for (mc_rt_i=0; mc_rt_i < mc_rt_n; mc_rt_i++)
     {
       double mc_rt_X;
-      mc_rt_X = Table_Index(*mc_rt_Table,mc_rt_i  ,0);
+      mc_rt_X = (mc_rt_row ? Table_Index(*mc_rt_Table,mc_rt_i  ,0)
+                           : Table_Index(0, *mc_rt_Table,mc_rt_i));
       if (mc_rt_X < mc_rt_min_x) mc_rt_min_x = mc_rt_X;
       if (mc_rt_X > mc_rt_max_x) mc_rt_max_x = mc_rt_X;
     } /* for */
     mc_rt_Table->max_x = mc_rt_max_x;
     mc_rt_Table->min_x = mc_rt_min_x;
-    mc_rt_Table->step_x = (mc_rt_Table->max_x - mc_rt_Table->min_x)/mc_rt_Table->rows;
+    mc_rt_Table->step_x = (mc_rt_Table->max_x - mc_rt_Table->min_x)/mc_rt_n;
   } /* end Table_Stat */
 
 /******************************************************************************
