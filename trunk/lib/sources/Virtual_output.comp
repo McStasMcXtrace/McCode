@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -37,7 +37,7 @@
 *
 * Beware the size of generated files ! When saving all events (bufsize=0) the
 * required memory has been optimized and remains very small. On the other hand
-* using large bufsize values requires huge storage memory.
+* using large bufsize values (not recommanded) requires huge storage memory.
 * Both will generate huge files.
 *
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
@@ -52,7 +52,7 @@
 * file:     Filename of neutron file to write. Default is standard
 *           output [string]. If not given, a unique name will be used.
 * bufsize:  Size of neutron output buffer [records]
-*           default is 0, i.e. save all.
+*           default is 0, i.e. save all (recommanded).
 * type:     Type of output file 'text','float','double' [string]
 *           default is text
 *
@@ -83,17 +83,23 @@ DECLARE
 
 INITIALIZE
 %{
+  long element_size;
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
 
-  if (bufsize) sprintf(Vars.option, "list=%g", bufsize);
+  if (bufsize > 0) sprintf(Vars.option, "list=%g", bufsize);
   else strcat(Vars.option, "list all");
 
   if (type)
   {
     if (strstr(type, "Vitess"))
     { fprintf(stderr, "Virtual_output: %s: Vitess files may be generated using the Vitess_output component\n", NAME_CURRENT_COMP); exit(-1); }
-    if (strstr(type, "binary") || strstr(type, "float")) strcat(Vars.option, ", binary float");
-    if (strstr(type, "double")) strcat(Vars.option, ", binary double");
+    if (strstr(type, "binary") || strstr(type, "float")) {
+      strcat(Vars.option, ", binary float");
+      element_size = sizeof(float);
+    } else if (strstr(type, "double")) {
+      strcat(Vars.option, ", binary double");
+      element_size = sizeof(double);
+    } else element_size = 85;
   }
 
   strcat(Vars.option,", x y z vx vy vz t sx sy sz");
@@ -104,6 +110,14 @@ INITIALIZE
   mcformat_override = !strstr(Vars.option, "binary");
   mcformat_sim      = mcformat;
   mcformat_vo       = mcuse_format("McStas");
+
+  if (bufsize >= 1e5) {
+    printf("Warning: Virtual_output: %s: buffer size=%g\n"
+           "         Beware virtual output generated file size (about %g Mo)\n"
+           "         Memory required is about %g Mo\n",
+           NAME_CURRENT_COMP, bufsize, bufsize*element_size/1e6,
+           bufsize*sizeof(double)/1e6);
+  }
 %}
 
 TRACE
