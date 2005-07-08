@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.20 2005-07-07 14:16:57 farhi Exp $
+* $Id: read_table-lib.c,v 1.21 2005-07-08 13:15:43 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.20  2005/07/07 14:16:57  farhi
+* Min and Max are computed for both row and column vectors
+*
 * Revision 1.19  2005/07/06 09:50:45  farhi
 * Added check for non existing data file in Table_*_Array functions
 *
@@ -692,7 +695,7 @@
     {
       double mc_rt_X;
       mc_rt_X = (mc_rt_row ? Table_Index(*mc_rt_Table,mc_rt_i  ,0)
-                           : Table_Index(0, *mc_rt_Table,mc_rt_i));
+                           : Table_Index(*mc_rt_Table,0, mc_rt_i));
       if (mc_rt_X < mc_rt_min_x) mc_rt_min_x = mc_rt_X;
       if (mc_rt_X > mc_rt_max_x) mc_rt_max_x = mc_rt_X;
     } /* for */
