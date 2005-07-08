@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.12 $
+* Version:  $Revision: 1.13 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -50,13 +50,14 @@
 *
 * %P
 * INPUT PARAMETERS
-* file:         (str) name of the neutron input file, or stdin if left to 0.
+* file:         (str) Name of the neutron input file, or stdin if left to 0.
 *
 * Optional input parameters:
-* repeat_count: (1)         Number of times the source must be generated.
+* repeat_count: (1)   Number of times the source must be generated.
 *                           0 unactivates the component
-* type:         (str) may be "text", "float" or "double" to force file type.
-*                     default is text file.
+* type:         (str) May be "text", "float" or "double" to force file type.
+*                           default is text file.
+* verbose:      (0/1) Display additional information about source (recommanded)
 *
 * %E
 *
