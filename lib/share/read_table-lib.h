@@ -23,9 +23,12 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.13 2005-07-05 14:25:59 farhi Exp $
+* $Id: read_table-lib.h,v 1.14 2005-07-12 14:46:34 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.13  2005/07/05 14:25:59  farhi
+* Added filesize in t_Table struct
+*
 * Revision 1.12  2005/07/05 12:06:40  farhi
 * added new functions for table Array handling
 * to be used in Isotropic_sqw and mcformat
@@ -112,12 +115,14 @@ long     Table_Read_Offset       (t_Table *Table, char *File, long block_number,
 long     Table_Read_Offset_Binary(t_Table *Table, char *File, char *Type,
                                   long *Offset, long Rows, long Columns);
 long     Table_Rebin(t_Table *Table);
-void     Table_Info (t_Table Table);
+long     Table_Info (t_Table Table);
 double   Table_Index(t_Table Table,   long i, long j);
 double   Table_Value(t_Table Table, double X, long j);
 t_Table *Table_Read_Array(char *File, long *blocks);
 void     Table_Free_Array(t_Table *Table);
 long     Table_Info_Array(t_Table *Table);
+void     Table_Alloc(t_Table *Table, long rows, long columns);
+int      Table_SetElement(t_Table *Table, long i, long j, double value);
 
 /* private functions */
 void Table_Init(t_Table *Table);

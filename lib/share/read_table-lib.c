@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.21 2005-07-08 13:15:43 farhi Exp $
+* $Id: read_table-lib.c,v 1.22 2005-07-12 14:46:26 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.21  2005/07/08 13:15:43  farhi
+* Mismatch in argument swap
+*
 * Revision 1.20  2005/07/07 14:16:57  farhi
 * Min and Max are computed for both row and column vectors
 *
@@ -566,8 +569,8 @@
     long mc_rt_AbsIndex;
 
     if (mc_rt_i < 0)        mc_rt_i = 0;
-    if (mc_rt_i >= mc_rt_Table.rows)    mc_rt_i = mc_rt_Table.rows-1;
     if (mc_rt_j < 0)        mc_rt_j = 0;
+    if (mc_rt_i >= mc_rt_Table.rows)    mc_rt_i = mc_rt_Table.rows-1;
     if (mc_rt_j >= mc_rt_Table.columns) mc_rt_j = mc_rt_Table.columns-1;
     mc_rt_AbsIndex = mc_rt_i*(mc_rt_Table.columns)+mc_rt_j;
     if (mc_rt_Table.data != NULL)
@@ -575,6 +578,32 @@
     else
       return(0);
   } /* end Table_Index */
+
+/*******************************************************************************
+* void Table_SetElement(t_Table *Table, long i, long j, double value)
+*   ACTION: set an element [i,j] of a single Table
+*   input   Table: table containing data
+*           i : index of row      (0:mc_rt_Rows-1)
+*           j : index of column   (0:Columns-1)
+*           value = data[i][j]
+* Returns 0 in case of error
+* Tests are performed on indexes i,j to avoid errors
+*******************************************************************************/
+  int Table_SetElement(t_Table *mc_rt_Table, long mc_rt_i, long mc_rt_j,
+                        double mc_rt_value)
+  {
+    long mc_rt_AbsIndex;
+
+    if (mc_rt_i < 0)        mc_rt_i = 0;
+    if (mc_rt_i >= mc_rt_Table->rows)    mc_rt_i = mc_rt_Table->rows-1;
+    if (mc_rt_j < 0)        mc_rt_j = 0;
+    if (mc_rt_j >= mc_rt_Table->columns) mc_rt_j = mc_rt_Table->columns-1;
+    mc_rt_AbsIndex = mc_rt_i*(mc_rt_Table->columns)+mc_rt_j;
+    if (mc_rt_Table->data != NULL)
+      mc_rt_Table->data[mc_rt_AbsIndex] = mc_rt_value;
+    else return(0);
+    return(1);
+  } /* end Table_SetElement */
 
 /*******************************************************************************
 * double Table_Value(t_Table Table, double X, long j)
@@ -620,9 +649,10 @@
 * void Table_Info(t_Table Table)
 *    ACTION: print informations about a single Table
 *******************************************************************************/
-  void Table_Info(t_Table mc_rt_Table)
+  long Table_Info(t_Table mc_rt_Table)
   {
     char mc_rt_buffer[256];
+    long ret=0;
 
     if (!mc_rt_Table.block_number) strcpy(mc_rt_buffer, "catenated");
     else sprintf(mc_rt_buffer, "block %i", mc_rt_Table.block_number);
@@ -631,9 +661,10 @@
     if ((mc_rt_Table.data   != NULL) && (mc_rt_Table.rows*mc_rt_Table.columns))
     {
       printf(" is %li x %li ", mc_rt_Table.rows, mc_rt_Table.columns);
-      if (mc_rt_Table.rows > 1) printf("(x=%g:%g).\n", mc_rt_Table.min_x, mc_rt_Table.max_x);
+      if (mc_rt_Table.rows*mc_rt_Table.columns > 1)
+        printf("(x=%g:%g).\n", mc_rt_Table.min_x, mc_rt_Table.max_x);
       else printf("(x=%g).\n", mc_rt_Table.min_x);
-      /* printf("Data axis range %f-%f, step=%f\n", mc_rt_Table.min_x, mc_rt_Table.max_x, mc_rt_Table.step_x); */
+      ret = mc_rt_Table.rows*mc_rt_Table.columns;
     }
     else printf(" is empty.\n");
     if (mc_rt_Table.header && strlen(mc_rt_Table.header)) {
@@ -647,6 +678,7 @@
         if (header[i] == '\n') header[i] = ';';
       printf("  '%s'\n", header);
     }
+    return(ret);
   } /* end Table_Info */
 
 /******************************************************************************
@@ -671,6 +703,31 @@
     mc_rt_Table->begin   = 0;
     mc_rt_Table->end     = 0;
   } /* end Table_Init */
+
+/******************************************************************************
+* void Table_Alloc(t_Table *Table, m, n)
+*   ACTION: initialise a Table to empty m by n table
+*   return: empty Table
+*******************************************************************************/
+void Table_Alloc(t_Table *mc_rt_Table, long rows, long columns)
+{
+  double *mc_rt_data=NULL;
+  long   i;
+  Table_Init(mc_rt_Table);
+  if (rows*columns > 1) {
+    mc_rt_data    = (double*)malloc(rows*columns*sizeof(double));
+    if (mc_rt_data) for (i=0; i < rows*columns; mc_rt_data[i++]=0);
+    else {
+      fprintf(stderr,"Error: allocating %d double elements."
+                     "Too big (Table_Alloc).\n", rows*columns);
+      rows = columns = 0;
+    }
+  }
+  mc_rt_Table->rows    = rows;
+  mc_rt_Table->columns = columns;
+  mc_rt_Table->data    = mc_rt_data;
+} /* end Table_Alloc */
+
 
 /******************************************************************************
 * void Table_Stat(t_Table *Table)
