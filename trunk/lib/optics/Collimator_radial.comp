@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi <farhi@ill.fr>
 * Date: July 2005
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.9
 *
@@ -78,6 +78,7 @@ INITIALIZE
   /* check for input parameters */
   if (radius <= 0) exit(printf("Collimator_radial: %s: incorrect radius\n", NAME_CURRENT_COMP));
   if (nchan <= 0)  exit(printf("Collimator_radial: %s: incorrect number of channels\n", NAME_CURRENT_COMP));
+  nchan = ceil(nchan);
   if (len <= 0)    exit(printf("Collimator_radial: %s: invalid collimator length\n", NAME_CURRENT_COMP));
 
   theta_max *= DEG2RAD;
@@ -88,7 +89,7 @@ INITIALIZE
   window_theta   = fabs(theta_max-theta_min)/nchan;
 
   if (soller_theta1 > window_theta || soller_theta2 > window_theta)
-    exit(printf("Collimator_radial: %s: the %i channels of size %f [deg]\n"
+    exit(printf("Collimator_radial: %s: the %f channels of size %f [deg]\n"
       "do not fit within the angular range %g [deg]\n",
       NAME_CURRENT_COMP, nchan, soller_theta1*RAD2DEG, window_theta*RAD2DEG));
 
