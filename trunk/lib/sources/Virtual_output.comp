@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -38,13 +38,17 @@
 * Beware the size of generated files ! When saving all events (bufsize=0) the
 * required memory has been optimized and remains very small. On the other hand
 * using large bufsize values (not recommanded) requires huge storage memory.
-* Both will generate huge files.
+* Moreover, using the 'bufsize' parameter will often lead to wrong intentities.
+* Both methods will generate huge files.
 *
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
 * Vitess simulation (104 bytes per neutron) and read with Vitess_input.
 *
-* Example: Virtual_output(file="MySource.dat", bufsize = 100000)
-*   will generate a 9 Mo text file.
+* Example: Virtual_output(file="MySource.dat")
+*   will generate a 9 Mo text file for 1e5 events stored.
+*
+* %BUGS
+* Using bufsize non-zero generates a virtual source with wrong intensity
 *
 * %P
 * INPUT PARAMETERS
@@ -111,8 +115,8 @@ INITIALIZE
   mcformat_sim      = mcformat;
   mcformat_vo       = mcuse_format("McStas");
 
-  if (bufsize >= 1e5) {
-    printf("Warning: Virtual_output: %s: buffer size=%g\n"
+  if (bufsize > 0) {
+    printf("Warning: Virtual_output: %s: buffer size=%g not recommanded\n"
            "         Beware virtual output generated file size (about %g Mo)\n"
            "         Memory required is about %g Mo\n",
            NAME_CURRENT_COMP, bufsize, bufsize*element_size/1e6,
@@ -142,7 +146,7 @@ TRACE
   pp = Monitor_nD_Trace(&DEFS, &Vars);
   if (mcformat_override) mcformat = mcformat_sim;
   Vars.Nsum++;
-  Vars.psum += pp;
+  Vars.psum  += pp;
   Vars.p2sum += pp*pp;
   SCATTER;
 %}
@@ -160,8 +164,12 @@ FINALLY
 %{
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
-  if (bufsize) printf("Virtual_output: %s: Saved %li events in file %s\n", NAME_CURRENT_COMP, Vars.Buffer_Block, Vars.Mon_File);
-  else printf("Virtual_output: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+  if (bufsize) {
+    printf("Virtual_output: %s: Saved %li events in file %s\n"
+           "WARNING         When using this source, intensities must be divided\n"
+           "                by a factor %g\n",
+           NAME_CURRENT_COMP, Vars.Buffer_Block, Vars.Mon_File, Vars.Nsum/bufsize);
+  } else printf("Virtual_output: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
 %}
 
 MCDISPLAY
