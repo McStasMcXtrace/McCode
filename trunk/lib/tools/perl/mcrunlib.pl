@@ -404,7 +404,7 @@ sub do_test {
       "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_11 linup-6.instr PHM=-37.077 TTM=-74 TT=33.57 OMA=-16.44,-18.44 TTA=-34.883 C1=30 OMC1=-5.5 C2=28 C3=67",
       "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
   @test_monitor_names =("mon9_I","mon9_I","PSD_4pi_I","D7_SC3_In_I","","","","","","","","","","","","","","");
-  @test_monitor_values=(4.61739e-08,3.39694e-08,1.90823e-06,2.89923e-11,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+  @test_monitor_values=(6.2e-08,4.2e-08,2.1e-06,2.8e-11,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
   } # end of compatible test definition
   # now execute each simulation and look for errors
   my $error_flag    = 0;
@@ -484,6 +484,9 @@ sub do_test {
             my $sb = stat($filename);
             if ($sb->size) {
               &$printer("[OK] $this_name ($filename)");
+              $this_flag = 0;
+            } else {
+              &$printer("[Warning] $this_name ($filename) exists but is empty");
               $this_flag = 0;
             }
           } # end if (-f "$filename")
