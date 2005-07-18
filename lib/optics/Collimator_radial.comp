@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi <farhi@ill.fr>
 * Date: July 2005
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: Risoe
 * Release: McStas 1.9
 *
@@ -54,6 +54,7 @@
 *                            the divergence parameter
 * roc          (1)         Enable oscillation of collimator with an amplitude
 *                            of 'roc' times a single soller size (w1).
+* verbose      (0/1)       Gives additional information
 *
 * %E
 *******************************************************************************/
@@ -63,7 +64,7 @@ DEFINE COMPONENT Collimator_radial
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1=0.015, h1=.3, w2=0.015, h2=.3, len=.35,
                     divergence=40,transmission=1,
-                    theta_min=5, theta_max=165, nchan=128, radius=0, nblades=0, roc=0)
+                    theta_min=5, theta_max=165, nchan=128, radius=0, nblades=0, roc=0, verbose=0)
 OUTPUT PARAMETERS (soller_theta1, soller_theta2, window_theta, use_approx)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -103,6 +104,12 @@ INITIALIZE
     divergence   = fabs(atan2(blades_thick,len));
     use_approx   = 0;
   } else { divergence = 0; nblades = 0; }
+  if (verbose) {
+    printf("Collimator_radial: %s: %g Soller channels of %g layers, divergence %g [min]\n"
+           "                   Apertures Total=%g [deg] Soller=%g [deg] %s\n",
+    NAME_CURRENT_COMP, nchan, nblades, divergence*RAD2MIN,
+    window_theta*RAD2DEG, soller_theta1*RAD2DEG, (roc ? "oscillating" : ""));
+  }
 
 %}
 TRACE
@@ -128,18 +135,17 @@ TRACE
   /* get index of input Soller */
   if (t0 > 0 && t1 > t0) {
     PROP_DT(t0);
-    if (roc) {
-      roc_theta = roc*randpm1()*soller_theta1/2;
-    }
-    input_theta = atan2(x, z);
+    if (roc) roc_theta = roc*randpm1()*soller_theta1/2;
+
+    input_theta = atan2(x, z) + roc_theta;
     /* channel number (start at 0) */
-    input_chan  = floor((input_theta - theta_min - roc_theta)/window_theta);
+    input_chan  = floor((input_theta - theta_min)/window_theta);
     if (input_chan >= 0 && input_chan < nchan) ok=1;
     if (ok) {
-      input_center= theta_min + roc_theta + input_chan*window_theta
-                  + (window_theta+soller_theta1)/2;
+      input_center= theta_min + input_chan*window_theta
+                  + (window_theta)/2;
       /* are we outside the soller */
-      phi = input_center - input_theta;
+      phi = input_theta - input_center;
 
       if (fabs(phi) > soller_theta1/2) ABSORB; /* outside input soller */
       /* get blade number in soller */
@@ -149,15 +155,15 @@ TRACE
       /* propagate to output radius */
       PROP_DT(t1-t0);
       SCATTER;
-      output_theta = atan2(x, z);
+      output_theta = atan2(x, z) + roc_theta;
       /* channel number (start at 0) */
-      output_chan  = floor((output_theta - theta_min - roc_theta)/window_theta);
-      /* did we changed channel ? */
+      output_chan  = floor((output_theta - theta_min)/window_theta);
+      /* did we change channel ? */
       if (output_chan != input_chan) ABSORB; /* changed soller */
-      output_center= theta_min + roc_theta + output_chan*window_theta
-                   + (window_theta+soller_theta2)/2;
+      output_center= theta_min + output_chan*window_theta
+                   + (window_theta)/2;
       /* are we outside the soller */
-      phi = output_center - output_theta;
+      phi = output_theta -output_center;
       if (fabs(phi) > soller_theta2/2) ABSORB; /* outside output soller */
       /* get blade number in soller */
       output_blade = floor(phi/soller_theta2*nblades);
