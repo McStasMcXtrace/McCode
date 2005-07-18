@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.27 2005-07-06 08:16:28 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.28 2005-07-18 14:38:00 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.27  2005/07/06 08:16:28  farhi
+* Misprint for Kxy/Vxy. Better Variable name as well.
+*
 * Revision 1.26  2005/07/04 08:19:50  farhi
 * added support for kxy and vxy radial distributions
 *
@@ -781,7 +784,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
           mc_mn_XY = (mc_mn_Vars->Coord_Max[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i]);
 
           mc_mn_Coord[mc_mn_i] = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_While_Buffer*(mc_mn_Vars->Coord_Number+1)];
-          if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY);
+          if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY + 0.5);
           else mc_mn_Coord_Index[mc_mn_i] = 0;
           if (mc_mn_Vars->Flag_With_Borders)
           {
@@ -884,7 +887,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         else if (!mc_mn_Vars->Flag_Auto_Limits)
         {
           mc_mn_XY = (mc_mn_Vars->Coord_Max[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i]);
-          if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY);
+          if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY + 0.5);
           else mc_mn_Coord_Index[mc_mn_i] = 0;
           if (mc_mn_Vars->Flag_With_Borders)
           {
@@ -1020,7 +1023,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
             /* scanning variables in Buffer */
             mc_mn_XY = (mc_mn_Vars->Coord_Max[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i]);
             mc_mn_Coord[mc_mn_i] = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_While_Buffer*(mc_mn_Vars->Coord_Number+1)];
-            if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY);
+            if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY + 0.5);
             else mc_mn_Coord_Index[mc_mn_i] = 0;
             if (mc_mn_Vars->Flag_With_Borders)
             {
