@@ -13,14 +13,14 @@
 * Date: January 2000
 * Release: McStas 1.6
 * Origin: Risoe
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 *
 * Rectangular/circular beam stop.
 *
 * %D
-* A simple rectangular or circular beam stop. 
+* A simple rectangular or circular beam stop.
 * Infinitely thin and infinitely absorbing.
-* The beam stop is by default rectangular. You may either 
+* The beam stop is by default rectangular. You may either
 * specify the radius (circular shape), or the rectangular bounds.
 *
 * Example: Beamstop(xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05)
@@ -43,12 +43,13 @@ DEFINE COMPONENT Beamstop
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0,radius=0)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS(sx, sy, sz)
 
 INITIALIZE
 %{
   if (xmin == 0 && xmax == 0 && ymin == 0 & ymax == 0 && radius == 0)
     { fprintf(stderr,"Beamstop: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
-  
+
 %}
 
 TRACE
@@ -58,7 +59,7 @@ TRACE
     || ((radius==0) && (x>xmin && x<xmax && y>ymin && y<ymax)))
       ABSORB;
     else
-    SCATTER;
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
 %}
 
 MCDISPLAY
