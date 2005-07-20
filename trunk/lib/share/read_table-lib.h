@@ -23,9 +23,13 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.14 2005-07-12 14:46:34 farhi Exp $
+* $Id: read_table-lib.h,v 1.15 2005-07-20 13:08:43 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.14  2005/07/12 14:46:34  farhi
+* Added Table_Alloc to create a user empty Table
+* and Table_SetElement
+*
 * Revision 1.13  2005/07/05 14:25:59  farhi
 * Added filesize in t_Table struct
 *
@@ -121,11 +125,11 @@ double   Table_Value(t_Table Table, double X, long j);
 t_Table *Table_Read_Array(char *File, long *blocks);
 void     Table_Free_Array(t_Table *Table);
 long     Table_Info_Array(t_Table *Table);
-void     Table_Alloc(t_Table *Table, long rows, long columns);
 int      Table_SetElement(t_Table *Table, long i, long j, double value);
+void     Table_Init(t_Table *Table, long rows, long columns);
 
 /* private functions */
-void Table_Init(t_Table *Table);
+
 void Table_Free(t_Table *Table);
 long Table_Read_Handle(t_Table *Table, FILE *fid, long block_number, long max_lines);
 static void Table_Stat(t_Table *Table);
