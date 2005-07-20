@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.22 2005-07-12 14:46:26 farhi Exp $
+* $Id: read_table-lib.c,v 1.23 2005-07-20 13:08:43 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.22  2005/07/12 14:46:26  farhi
+* Added Table_Alloc to create a user empty Table
+* and Table_SetElement
+*
 * Revision 1.21  2005/07/08 13:15:43  farhi
 * Mismatch in argument swap
 *
@@ -189,7 +193,7 @@
 
     if (!mc_rt_Table) return(-1);
 
-    Table_Init(mc_rt_Table);
+    Table_Init(mc_rt_Table, 0, 0);
     if (!mc_rt_File)  return(-1);
 
     stat(mc_rt_File,&mc_rt_stfile);
@@ -293,7 +297,7 @@
     char  mc_rt_flag_End_row_loop   = 0;
 
     if (!mc_rt_Table) return(-1);
-    Table_Init(mc_rt_Table);
+    Table_Init(mc_rt_Table, 0, 0);
 
     if(!mc_rt_hfile) {
        fprintf(stderr, "Error: File handle is NULL (Table_Read_Handle).\n");
@@ -682,51 +686,41 @@
   } /* end Table_Info */
 
 /******************************************************************************
-* void Table_Init(t_Table *Table)
-*   ACTION: initialise a Table to empty (private)
-*   return: empty Table
-*******************************************************************************/
-  void Table_Init(t_Table *mc_rt_Table)
-  {
-    if (!mc_rt_Table) return;
-    mc_rt_Table->data    = NULL;
-    mc_rt_Table->header  = NULL;
-    mc_rt_Table->filename[0]= '\0';
-    mc_rt_Table->filesize=0;
-    mc_rt_Table->rows    = 0;
-    mc_rt_Table->columns = 0;
-    mc_rt_Table->min_x   = 0;
-    mc_rt_Table->max_x   = 0;
-    mc_rt_Table->step_x  = 0;
-    mc_rt_Table->block_number = 0;
-    mc_rt_Table->array_length = 0;
-    mc_rt_Table->begin   = 0;
-    mc_rt_Table->end     = 0;
-  } /* end Table_Init */
-
-/******************************************************************************
-* void Table_Alloc(t_Table *Table, m, n)
+* void Table_Init(t_Table *Table, m, n)
 *   ACTION: initialise a Table to empty m by n table
 *   return: empty Table
 *******************************************************************************/
-void Table_Alloc(t_Table *mc_rt_Table, long rows, long columns)
+void Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 {
   double *mc_rt_data=NULL;
   long   i;
-  Table_Init(mc_rt_Table);
-  if (rows*columns > 1) {
+
+  if (!mc_rt_Table) return;
+
+  mc_rt_Table->header  = NULL;
+  mc_rt_Table->filename[0]= '\0';
+  mc_rt_Table->filesize=0;
+  mc_rt_Table->min_x   = 0;
+  mc_rt_Table->max_x   = 0;
+  mc_rt_Table->step_x  = 0;
+  mc_rt_Table->block_number = 0;
+  mc_rt_Table->array_length = 0;
+  mc_rt_Table->begin   = 0;
+  mc_rt_Table->end     = 0;
+
+  if (rows*columns >= 1) {
     mc_rt_data    = (double*)malloc(rows*columns*sizeof(double));
     if (mc_rt_data) for (i=0; i < rows*columns; mc_rt_data[i++]=0);
     else {
       fprintf(stderr,"Error: allocating %d double elements."
-                     "Too big (Table_Alloc).\n", rows*columns);
+                     "Too big (Table_Init).\n", rows*columns);
       rows = columns = 0;
     }
   }
-  mc_rt_Table->rows    = rows;
-  mc_rt_Table->columns = columns;
+  mc_rt_Table->rows    = (rows > 1 ? rows : 0);
+  mc_rt_Table->columns = (columns > 1 ? columns : 0);
   mc_rt_Table->data    = mc_rt_data;
-} /* end Table_Alloc */
+} /* end Table_Init */
 
 
 /******************************************************************************
