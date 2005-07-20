@@ -11,7 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
@@ -79,6 +79,10 @@
 * reflect: reflectivity file name of text file as 2 columns [k, R]
 * transmit:transmission file name of text file as 2 columns [k, T]
 *
+* OUTPUT PARAMETERS:
+* col:     column index for last hit blade (1:NH)
+* row:     row index for last hit blade (1:NV)
+*
 * %Link
 * <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00031.html">Additional note</a> from Peter Link.
 * <a href="Mosaic_anisotropic.html">Mosaic_anisotropic</a> by Kristian Nielsen
@@ -90,7 +94,7 @@
 DEFINE COMPONENT Monochromator_curved
 DEFINITION PARAMETERS (reflect=0, transmit=0)
 SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=0.3,Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
-OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable, tTable)
+OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable, tTable, row, col)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
@@ -127,6 +131,7 @@ DECLARE
   double mono_Q;
   double SlabWidth, SlabHeight;
   t_Table rTable, tTable;
+  double row,col;
 %}
 
 INITIALIZE
@@ -215,7 +220,7 @@ TRACE
 
     if (z1>zmin && z1<zmax && y1>ymin && y1<ymax && zp<SlabWidth && yp< SlabHeight)
     {                           /* Intersect the crystal? no gap ? */
-      double row,col, sna,snb,csa,csb,vxp,vyp,vzp;
+      double sna,snb,csa,csb,vxp,vyp,vzp;
       double tilth,tiltv;         /* used to calculate tilt angle of slab */
       double ratio, order, k, kux,kuy,kuz;
       double kix,kiy,kiz;
