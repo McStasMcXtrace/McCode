@@ -18,9 +18,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.117 2005-07-05 12:04:22 farhi Exp $
+* $Id: mcstas-r.c,v 1.118 2005-07-21 10:19:24 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.117  2005/07/05 12:04:22  farhi
+* Solve bug with default values and non optional parameters
+*
 * Revision 1.116  2005/07/04 09:06:42  farhi
 * test for scilab not bianry and large matrix -> warning more often...
 *
@@ -3824,6 +3827,7 @@ randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_an
   {
     randvec_target_circle(xo, yo, zo, solid_angle,
                xi, yi, zi, 0);
+    return;
   }
   else
   {
@@ -3866,9 +3870,9 @@ randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_an
   rotate (*xo, *yo, *zo, xt, yt, zt, theta, xu,  yu,  zu);
 
   /* Go back to local coordinate system */
-    tmp = coords_set(*xo, *yo, *zo);
-    tmp = rot_apply(A, tmp);
-    coords_get(tmp, &*xo, &*yo, &*zo);
+  tmp = coords_set(*xo, *yo, *zo);
+  tmp = rot_apply(A, tmp);
+  coords_get(tmp, &*xo, &*yo, &*zo);
 
 }
 
@@ -3889,6 +3893,7 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
   {
     randvec_target_circle(xo, yo, zo, solid_angle,
                xi, yi, zi, 0);
+    return;
   }
   else
   {
