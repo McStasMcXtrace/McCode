@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -74,11 +74,11 @@ TRACE
       IntermediateCnts = 0;
       fprintf(stdout, "\nTrace ETA ");
       if (difftime(EndTime,StartTime) < 60.0)
-        fprintf(stdout, "%g [s] ", difftime(EndTime,StartTime));
+        fprintf(stdout, "%g [s] %% ", difftime(EndTime,StartTime));
       else if (difftime(EndTime,StartTime) > 3600.0)
-        fprintf(stdout, "%g [h] ", difftime(EndTime,StartTime)/3660.0);
+        fprintf(stdout, "%g [h] %% ", difftime(EndTime,StartTime)/3660.0);
       else
-        fprintf(stdout, "%g [min] ", difftime(EndTime,StartTime)/60.0);
+        fprintf(stdout, "%g [min] %% ", difftime(EndTime,StartTime)/60.0);
     } else IntermediateCnts += 1e5;
     fflush(stdout);
   }
@@ -87,8 +87,9 @@ TRACE
   {
     double tmp;
     tmp = percent*mcget_ncount()/100;
-    fprintf(stdout, "%d \n", (int)(ncount*100/mcget_ncount())); fflush(stdout);
+    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount())); fflush(stdout);
     IntermediateCnts = ncount + tmp;
+    if (IntermediateCnts >= mcget_ncount()) fprintf(stdout, "\n");
     if (flag_save) mcsave(NULL);
   }
 %}
