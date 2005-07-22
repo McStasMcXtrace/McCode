@@ -10,14 +10,17 @@
 * %I
 * Written by: Emmanuel Farhi <farhi@ill.fr>
 * Date: July 2005
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: Risoe
 * Release: McStas 1.9
 *
-* A radial analytical Soller collimator (with/without triangular approximation).
+* A radial Soller collimator.
 *
 * %D
 * Radial Soller collimator with rectangular opening and specified length.
+* The collimator is made of many rectangular channels stacked radially.
+* Each channel is a set of transmitting layers, separated by an absorbing
+* material, the whole stuff is inside an absorbing housing.
 * The component should be positioned at the radius center.
 * When specifying the divergence parameter, the transmission function is an
 * average (triangular approximation) and does not utilize knowledge of
@@ -92,7 +95,7 @@ INITIALIZE
 
   if (soller_theta1 > window_theta || soller_theta2 > window_theta)
     exit(printf("Collimator_radial: %s: the %f channels of size %f [deg]\n"
-      "do not fit within the angular range %g [deg]\n",
+                "                   do not fit within the angular range %g [deg]\n",
       NAME_CURRENT_COMP, nchan, soller_theta1*RAD2DEG, window_theta*RAD2DEG));
 
   if (divergence && !nblades) {
@@ -106,10 +109,12 @@ INITIALIZE
     use_approx   = 0;
   } else { divergence = 0; nblades = 0; }
   if (verbose) {
-    printf("Collimator_radial: %s: %g Soller channels of %g layers, divergence %g [min]\n"
-           "                   Apertures Total=%g [deg] Soller=%g [deg] %s\n",
-    NAME_CURRENT_COMP, nchan, nblades, divergence*RAD2MIN,
-    window_theta*RAD2DEG, soller_theta1*RAD2DEG, (roc ? "oscillating" : ""));
+    printf("Collimator_radial: %s: divergence %g [min] %s\n"
+           "    Total opening [%f:%f] [deg] as %g channels of %g layers\n"
+           "    Channel Window=%g [deg] Soller=%g [deg]\n",
+    NAME_CURRENT_COMP, divergence*RAD2MIN, (roc ? "oscillating" : ""),
+    theta_min*RAD2DEG, theta_max*RAD2DEG, nchan, nblades,
+    window_theta*RAD2DEG, soller_theta1*RAD2DEG);
   }
 
 %}
