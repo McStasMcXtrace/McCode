@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: 1.0.0 (includes MONITOR_ND_LIB_H)
+* Version: $Revision: 1.27 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -54,21 +54,21 @@
 *
 * <b>Possible options are</b>
 * Variables to record:
-*     kx ky kz k wavevector (Angs-1) [    usually axis are
-*     vx vy vz v            (m/s)         x=horz., y=vert., z=on axis]
-*     x y z                 (m)      Distance, Position
-*     kxy vxy xy radius     (m)      Radial wavevector, velocity and position
-*     t time                (s)      Time of Flight
-*     energy omega          (meV)
-*     lambda wavelength     (Angs)
-*     p intensity flux      (n/s) or (n/cm^2/s)
-*     ncounts               (1)
-*     sx sy sz              (1)      Spin
-*     vdiv ydiv dy          (deg)    vertical divergence (y)
-*     hdiv divergence xdiv  (deg)    horizontal divergence (x)
-*     angle                 (deg)    divergence from <z> direction
-*     theta longitude       (deg)    longitude (x/z) [for sphere and cylinder]
-*     phi   lattitude       (deg)    lattitude (y/z) [for sphere and cylinder]
+*     kx ky kz k wavevector [Angs-1] (    usually axis are
+*     vx vy vz v            [m/s]         x=horz., y=vert., z=on axis)
+*     x y z                 [m]      Distance, Position
+*     kxy vxy xy radius     [m]      Radial wavevector, velocity and position
+*     t time                [s]      Time of Flight
+*     energy omega          [meV]
+*     lambda wavelength     [Angs]
+*     p intensity flux      [n/s] or [n/cm^2/s]
+*     ncounts               [1]
+*     sx sy sz              [1]      Spin
+*     vdiv ydiv dy          [deg]    vertical divergence (y)
+*     hdiv divergence xdiv  [deg]    horizontal divergence (x)
+*     angle                 [deg]    divergence from <z> direction
+*     theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
+*     phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
 *
 *     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
 *     user2                 to be assigned in an other component (see below)
@@ -172,43 +172,41 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth:  (m)  Width/diameter of detector (x). Default is 10 cm.
-* yheight: (m)  Height of detector (y). Default is 10 cm.
-* zthick:  (m)  Thichness of detector (z)
-* options: (str)  String that specifies the configuration of the monitor
+* xwidth:  [m]  Width/diameter of detector (x). Default is 10 cm.
+* yheight: [m]  Height of detector (y). Default is 10 cm.
+* zthick:  [m]  Thichness of detector (z)
+* options: [str]  String that specifies the configuration of the monitor
 *                 The general syntax is "[x] options..." (see <b>Descr.</b>)
 *
 * Optional input parameters (override xwidth yheight zthick):
-* xmin:   (m)    Lower x bound of opening
-* xmax:   (m)    Upper x bound of opening
-* ymin:   (m)    Lower y bound of opening
-* ymax:   (m)    Upper y bound of opening
-* zmin:   (m)    Lower z bound of opening
-* zmax:   (m)    Upper z bound of opening
-* filename(str)  Output file name (overrides file=XX option)
-* bins    (1)    Number of bins to force for all variables.
+* xmin:   [m]    Lower x bound of opening
+* xmax:   [m]    Upper x bound of opening
+* ymin:   [m]    Lower y bound of opening
+* ymax:   [m]    Upper y bound of opening
+* zmin:   [m]    Lower z bound of opening
+* zmax:   [m]    Upper z bound of opening
+* filename:[str] Output file name (overrides file=XX option)
+* bins:   [1]    Number of bins to force for all variables.
 *                Use 'bins' keyword in 'options' for heterogeneous bins
-* min     (u)    Minimum range value to force for all variables
+* min:    [u]    Minimum range value to force for all variables
 *                Use 'min' or 'limits' keyword in 'options' for other limits
-* max     (u)    Maximum range value to force for all variables
+* max:    [u]    Maximum range value to force for all variables
 *                Use 'max' or 'limits' keyword in 'options' for other limits
 *
 * OUTPUT PARAMETERS:
 *
-* DEFS: structure containing Monitor_nD Defines (struct)
-* Vars: structure containing Monitor_nD variables (struct)
+* DEFS: structure containing Monitor_nD Defines [struct]
+* Vars: structure containing Monitor_nD variables [struct]
 *
 * %Link
 * <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
 * <a href="PreMonitor_nD.html">PreMonitor_nD</a>
 *
 * %End
-*******************************************************************************/
-
-
+******************************************************************************/
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (options=0, filename=0)
-SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-FLT_MAX, max=FLT_MAX)
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e37, max=1e37)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

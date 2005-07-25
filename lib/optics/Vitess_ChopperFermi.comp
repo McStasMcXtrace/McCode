@@ -12,43 +12,43 @@
 * Written by: Geza Zsigmond
 * Date: Sep 2004
 * Origin: VITESS module 'chopper_fermi'
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Release: McStas 1.9
 *
 * Fermi chopper using the VITESS module 'chopper_fermi'
 *
 * %D
 * Fermi chopper with absorbing walls
-* can be straight, curved with circular, or curved with parabolic (ideal) shape 
+* can be straight, curved with circular, or curved with parabolic (ideal) shape
 *
 * Example: Vitess_ChopperFermi(GeomOption=0, zerotime=0, Nchannels=20, Ngates=4,
-*                              freq=300.0, height=0.05, width=0.04, 
-*                              depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0, 
+*                              freq=300.0, height=0.05, width=0.04,
+*                              depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0,
 *                              wallwidth=0.0002, sGeomFileName="FC_geom.dat")
 *
 * %VALIDATION
-* Apr 2005: extensive external test, most problems solved (cf. 'Bugs') 
+* Apr 2005: extensive external test, most problems solved (cf. 'Bugs')
 * Validated by: K. Lieutenant
 *
 * limitations:
 * slow, especially for a high number of channels
-* 
+*
 * %BUGS
 * reduction of transmission by shadowing cylinder underestimated
 *
 * %P
-* GeomOption:    [1]    option: 0:straight 1:parabolic 2:circular  
-* zerotime:      [1]    option: 1:'set time to zero'  0: 'do not'  
-* Nchannels:     [1]    number of channels of the Fermi chopper    
-* Ngates:        [1]    number of gates defining the channel: 4 (default), 6 or 8 for long wavelengths  
-* freq:         [Hz]    frequency of rotation                      
-* height:        [m]    height of the Fermi chopper                
-* width:         [m]    width of the Fermi chopper                 
-* depth:         [m]    channel length of the Fermi chopper        
-* r_curv:        [m]    curvature of the curved Fermi chopper      
-* diameter:      [m]    diameter of the shadowing cylinder         
-* Phase:        [deg]   dephasing angle at zero time               
-* wallwidth:     [m]    thickness of walls separating the channels 
+* GeomOption:    [1]    option: 0:straight 1:parabolic 2:circular
+* zerotime:      [1]    option: 1:'set time to zero'  0: 'do not'
+* Nchannels:     [1]    number of channels of the Fermi chopper
+* Ngates:        [1]    number of gates defining the channel: 4=default, 6 or 8 for long wavelengths
+* freq:         [Hz]    frequency of rotation
+* height:        [m]    height of the Fermi chopper
+* width:         [m]    width of the Fermi chopper
+* depth:         [m]    channel length of the Fermi chopper
+* r_curv:        [m]    curvature of the curved Fermi chopper
+* diameter:      [m]    diameter of the shadowing cylinder
+* Phase:        [deg]   dephasing angle at zero time
+* wallwidth:     [m]    thickness of walls separating the channels
 * sGeomFileName:[str]   name of output file for geometry information
 *
 * %E
@@ -57,11 +57,11 @@
 DEFINE COMPONENT Vitess_ChopperFermi
 DEFINITION PARAMETERS (sGeomFileName)
 SETTING PARAMETERS (int GeomOption=0, int zerotime=0, int Nchannels=20, int Ngates=4,
-                    freq=300.0, height=0.05, width=0.04, 
+                    freq=300.0, height=0.05, width=0.04,
                     depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0,
                     wallwidth=0.0002)
-OUTPUT PARAMETERS (Option, CurvGeomOption, TOF, TOF_zero, WL, radius_of_curv, 
-                   main_depth, shift_y, angle_channel, phase0, y_ch, x_ch, coef_pi, 
+OUTPUT PARAMETERS (Option, CurvGeomOption, TOF, TOF_zero, WL, radius_of_curv,
+                   main_depth, shift_y, angle_channel, phase0, y_ch, x_ch, coef_pi,
                    XFILEName, GeomFilePtr, Pos, Dir, Neutrons, pos_ch, omega, optimal_wl)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
@@ -80,19 +80,19 @@ DECLARE
   double     omega      = 0.0,     /* rotation frequency */
              optimal_wl = 0.0;     /* optimal wavelength */
   VectorType pos_ch={0.0,0.0,0.0}; /* centre pos. of the FC in the frame of the exit of the prev. comp. [cm] */
- 
+
  #define  MCSTAS_SHARE
  %include "chopper_fermi.c"   /* include functions */
  #undef   MCSTAS_SHARE
 %}
 
 INITIALIZE
-%{ 
+%{
   // diameter = mcFCdiameter
 
   double x,y,z;
-  coords_get(POS_R_COMP_INDEX(INDEX_CURRENT_COMP), &x, &y, &z); 
-  pos_ch[0] = -100.0 * z;   
+  coords_get(POS_R_COMP_INDEX(INDEX_CURRENT_COMP), &x, &y, &z);
+  pos_ch[0] = -100.0 * z;
   pos_ch[1] = -100.0 * x;
   pos_ch[2] = -100.0 * y;
 
@@ -107,10 +107,10 @@ INITIALIZE
   mccFermiChopper_wallwidth *= 100.0;
   mccFermiChopper_omega      = mccFermiChopper_freq*2*PI/1000.0;  /* 1/s -> 2pi/ms */
   mccFermiChopper_Phase     *= DEG2RAD;
- 
+
   /* checks and completion of input data */
   CurvGeomOption = (int) GeomOption;
-  if (GeomOption > 0 && omega*r_curv==0) 
+  if (GeomOption > 0 && omega*r_curv==0)
   { printf("Error: 'omega*r_curv' must not be zero for curved Fermi chopper"); exit(-1);}
   switch(GeomOption)
   { case 0: Option=1; mccFermiChopper_optimal_wl=0.0;    break;
@@ -118,7 +118,7 @@ INITIALIZE
     case 2: Option=2; mccFermiChopper_optimal_wl=LAMBDA_FROM_V(2.0*mccFermiChopper_omega*mccFermiChopper_r_curv); break;
     default: printf("Wrong option! Good options: 0-straight, 1-parabolic, 2-circular");
   }
-  
+
   ChopperFermiInit(0, NULL);
 %}
 
@@ -133,7 +133,7 @@ TRACE
 %}
 
 FINALLY
-%{ 
+%{
  ChopperFermiCleanup();
  McCleanupVt();
 %}

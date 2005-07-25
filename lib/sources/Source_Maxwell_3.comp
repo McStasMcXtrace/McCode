@@ -8,9 +8,9 @@
 * Component: Source_Maxwell_3
 *
 * %I
-* Written by: Kim Lefmann 
+* Written by: Kim Lefmann
 * Date: March 2001
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -22,8 +22,12 @@
 * The source produces a continuous spectrum.
 * The sampling of the neutrons is uniform in lambda.
 *
-* Units of flux: neutrons/cm^2/second/ster  
+* Units of flux: neutrons/cm^2/second/ster
 * (McStas units are in general neutrons/second)
+*
+* Example:  PSI cold source T1=150.42 K / 2.51 AA     I1 = 3.67 E11
+*                           T2=38.74 K / 4.95 AA      I2 = 3.64 E11
+*                           T3=14.84 K / 9.5 AA       I3 = 0.95 E11
 *
 * %P
 * Input parameters:
@@ -45,15 +49,12 @@
 * I3:     (*)    l-integrated flux, 3  - - -
 * size:   (m)    Edge of cube shaped source (for backward compatibility)
 *
-* Example:  PSI cold source T1=150.42 K / 2.51 AA     I1 = 3.67 E11
-*                           T2=38.74 K / 4.95 AA      I2 = 3.64 E11
-*                           T3=14.84 K / 9.5 AA       I3 = 0.95 E11
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Source_Maxwell_3
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (size=0, height=0, width=0, l_low, l_high, dist, xw, yh, 
+SETTING PARAMETERS (size=0, height=0, width=0, l_low, l_high, dist, xw, yh,
                     T1, T2=300, T3=300, I1, I2=0, I3=0)
 OUTPUT PARAMETERS (M)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -70,7 +71,7 @@ DECLARE
       double a=949.0/temp;
       return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
     }
-  
+
 %}
 
 INITIALIZE
@@ -95,10 +96,10 @@ TRACE
   z=0;
   x = 0.5*w_source*randpm1();
   y = 0.5*h_source*randpm1();         /* Choose initial position */
- 
-  randvec_target_rect(&xf, &yf, &r, &w_focus, 
-        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP); 
-  
+
+  randvec_target_rect(&xf, &yf, &r, &w_focus,
+        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+
   dx = xf-x;
   dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
@@ -117,7 +118,7 @@ TRACE
   printf("l %g, w_focus %g \n", lambda, w_focus);  */
 
     p *= w_mult*w_focus;                /* Correct for target focusing etc */
-    p *= I1*M(lambda,T1)+I2*M(lambda,T2)+I3*M(lambda,T3); 
+    p *= I1*M(lambda,T1)+I2*M(lambda,T2)+I3*M(lambda,T3);
                                         /* Calculate true intensity */
 %}
 
@@ -128,7 +129,7 @@ MCDISPLAY
                 (double)xw/2.0, -(double)yh/2.0, 0.0,
                 (double)xw/2.0,  (double)yh/2.0, 0.0,
                -(double)xw/2.0,  (double)yh/2.0, 0.0,
-               -(double)xw/2.0, -(double)yh/2.0, 0.0); 
+               -(double)xw/2.0, -(double)yh/2.0, 0.0);
 %}
 
 END

@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: 1.7
+* Version: $Revision: 1.119 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.118 2005-07-21 10:19:24 farhi Exp $
+* $Id: mcstas-r.c,v 1.119 2005-07-25 14:55:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.118  2005/07/21 10:19:24  farhi
+* Corrected big bug in randvec_*_rect routines when shooting 4PI
+* (when one of the params is 0)
+* 'circle' routine was OK.
+*
 * Revision 1.117  2005/07/05 12:04:22  farhi
 * Solve bug with default values and non optional parameters
 *

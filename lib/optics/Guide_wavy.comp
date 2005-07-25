@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -46,8 +46,8 @@
 * alpha4:   (AA)   Slope of reflectivity
 * m4:       (1)    m-value of material, bottom.
 * W4:       (AA-1) Width of supermirror cut-off
-* wavy_z   (deg)  Waviness in the z-(flight-)direction
-* wavy_xy  (deg)  Waviness in the transverse direction
+* wavy_z:  (deg)  Waviness in the z-(flight-)direction
+* wavy_xy: (deg)  Waviness in the transverse direction
 *
 * %D
 * Example values: m=2 Qc=0.0218 (nat. Ni) W=1/300 alpha=4.38 R0=0.995

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.33 $
+* Version: $Revision: 1.34 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -23,12 +23,16 @@
 * The mosaic may EITHER be specified isotropic by setting the mosaic input
 * parameter, OR anisotropic by setting the mosaic_h, mosaic_v, and mosaic_n
 * parameters.
-* Crystal structure is specified with an ascii data file. Each line
-* contains 4 or more numbers, separated by white space. The first three numbers
-* are the (h,k,l) indices of the reciprocal lattice point, and the last
-* number is the value of the structure factor |F|**2, in barns. (The rest of
-* the numbers are not used; the file is in the format output by the
-* Crystallographica program).
+* Crystal structure is specified with an ascii data file. Each line contains
+* 4 or more numbers, separated by white space:
+*
+*       h k l ... F2
+*
+* The first three numbers are the (h,k,l) indices of the reciprocal lattice
+* point, and the last number is the value of the structure factor |F|**2, in
+* barns. The rest of the numbers are not used; the file is in the format
+* output by the Crystallographica program.
+* Lines begining by '#' are read as comments (ignored).
 *
 * Example: Single_crystal(xwidth=0.01, yheight=0.01, zthick=0.01,
 *           delta_d_d=1e-4, mosaic = 5,
@@ -44,40 +48,49 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xwidth      : Width of crystal [m]
-* yheight     : Height of crystal [m]
-* zthick      : Thichness of crystal (no extinction simulated) [m]
-* delta_d_d   : Lattice spacing variance, gaussian RMS [1]
-* mosaic      : Crystal mosaic (isotropic), gaussian RMS [arc minutes]
-* mosaic_h    : Horizontal (rotation around Y) mosaic (anisotropic),
+* xwidth:    Width of crystal [m]
+* yheight:   Height of crystal [m]
+* zthick:    Thichness of crystal (no extinction simulated) [m]
+* delta_d_d: Lattice spacing variance, gaussian RMS [1]
+* mosaic:    Crystal mosaic (isotropic), gaussian RMS [arc minutes]
+* mosaic_h:  Horizontal (rotation around Y) mosaic (anisotropic),
 *               gaussian RMS [arc minutes]
-* mosaic_v    : Vertical (rotation around Z) mosaic (anisotropic),
+* mosaic_v:  Vertical (rotation around Z) mosaic (anisotropic),
 *               gaussian RMS [arc minutes]
-* mosaic_n    : Out-of-plane (Rotation around X) mosaic (anisotropic),
+* mosaic_n:  Out-of-plane (Rotation around X) mosaic (anisotropic),
 *               gaussian RMS [arc minutes]
-* ax,ay,az    : Coordinates of first unit cell vector [AA]
-* bx,by,bz    : Coordinates of second unit cell vector [AA]
-* cx,cy,cz    : Coordinates of third unit cell vector [AA]
-* reflections : File name containing structure factors of reflections [string]
-*                 Use empty ("") or NULL for incoherent scattering only.
-* order       : limit multiple scattering up to given order
+* ax:        [AA]
+* ay:        Coordinates of first unit cell vector [AA]
+* az:        [AA]
+* bx:        [AA]
+* by:        Coordinates of second unit cell vector [AA]
+* bz:        [AA]
+* cx:        [AA]
+* cy:        Coordinates of third unit cell vector [AA]
+* cz:        [AA]
+* reflections: File name containing structure factors of reflections. Use
+*              empty ("") or NULL for incoherent scattering only [string]
+* order:      limit multiple scattering up to given order
 *                 (0: all, 1: first, 2: second, ...) [1]
 *
 * Optional input parameters:
 *
-* p_transmit  : Monte Carlo probability for neutrons to be transmitted
+* p_transmit: Monte Carlo probability for neutrons to be transmitted
 *               without any scattering. Used to improve statistics from
 *               weak reflections [1]
-* absorbtion  : Absorbtion cross-section per unit cell at 2200 m/s [barns]
-* incoherent  : Incoherent scattering cross-section per unit cell [barns]
-* aa,bb,cc    : unit cell angles alpha, beta and gamma [deg].
-*               Then uses norms of vectors a,b and c as lattice parameters.
+* absorbtion: Absorbtion cross-section per unit cell at 2200 m/s [barns]
+* incoherent: Incoherent scattering cross-section per unit cell [barns]
+* aa:         [deg].
+* bb:         unit cell angles alpha, beta and gamma. Then uses norms of
+*               vectors a,b and c as lattice parameters [deg]
+* cc:         [deg].
 *
 * OUTPUT PARAMETERS:
 *
-* hkl_info    : Internal [nstructure]
+* hkl_info: Internal [structure]
 *
-*******************************************************************************/
+* %E
+****************************************************************************/
 
 /*
   %D

@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: 1.2
+* Version: $Revision: 1.24 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.23 2005-07-20 13:08:43 farhi Exp $
+* $Id: read_table-lib.c,v 1.24 2005-07-25 14:55:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.23  2005/07/20 13:08:43  farhi
+* Changed Table_Init calling sequence (overrides Table_Alloc)
+*
 * Revision 1.22  2005/07/12 14:46:26  farhi
 * Added Table_Alloc to create a user empty Table
 * and Table_SetElement

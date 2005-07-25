@@ -12,9 +12,9 @@
 * Date:   Aug 28, 2002
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.2
+* Version: $Revision: 1.13 $
 *
-* This file is to be imported by the mcstas2vitess perl script 
+* This file is to be imported by the mcstas2vitess perl script
 * It handles the way Vitess parses parameters.
 * Functions are used by the Virtual_input and Virtual_output
 * components.
@@ -22,27 +22,30 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.h,v 1.12 2005-04-27 14:42:07 lieutenant Exp $
+* $Id: vitess-lib.h,v 1.13 2005-07-25 14:55:08 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
-*	Revision 1.11  2003/02/11 12:28:46  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
-*	
+* $Log: not supported by cvs2svn $
+* Revision 1.12  2005/04/27 14:42:07  lieutenant
+* structure 'Neutron' only included if 'general.h' was not included
+*
+* Revision 1.11  2003/02/11 12:28:46  farhi
+* Variouxs bug fixes after tests in the lib directory
+* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+* read_table:corrected MC_SYS_DIR -> MCSTAS define
+* monitor_nd-lib: fix Log(signal) log(coord)
+* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+* Progress_bar: precent -> percent parameter
+* CS: ----------------------------------------------------------------------
+*
 * Revision 1.2 2002/08/28 11:39:00 ef
-*	Changed to lib/share/c code. Updated to Vitess 2.3 Neutron structure.
+* Changed to lib/share/c code. Updated to Vitess 2.3 Neutron structure.
 *
 * Revision 1.1 2000/08/28 11:39:00 kn
-*	Initial revision
+* Initial revision
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
-#define VITESS_LIB_H "$Revision: 1.12 $"
+#define VITESS_LIB_H "$Revision: 1.13 $"
 
 #ifndef GENERAL_H
  #include <math.h>
@@ -52,37 +55,37 @@
  /* The Neutron structure, taken from VITESS 2.3 source code "general.h" */
  typedef double VectorType[3];
  typedef struct
- { 
-	char           IDGrp[2];
-	unsigned long  IDNo; 
+ {
+  char           IDGrp[2];
+  unsigned long  IDNo;
  }
  TotalID;
- typedef struct 
+ typedef struct
  {
-	TotalID        ID;
-	char           Debug;
-	short          Color;
-	double         Time;
-	double         Wavelength;
-	double         Probability;
-	VectorType     Position;
-	VectorType     Vector;
-	VectorType     Spin;
+  TotalID        ID;
+  char           Debug;
+  short          Color;
+  double         Time;
+  double         Wavelength;
+  double         Probability;
+  VectorType     Position;
+  VectorType     Vector;
+  VectorType     Spin;
  }
  Neutron;
 #endif
 
-extern char *vitess_infile;	/* Neutron input file name, or NULL. */
-extern char *vitess_outfile;	/* Neutron output file name, or NULL. */
-extern int vitess_tracepoints;	/* If true, use dots as progress-indicator */
-extern int vitess_repcnt;	/* Number of times to repeat this neutron */
-extern int vitess_bufsize;	/* The buffer size for neutron read/write */
+extern char *vitess_infile; /* Neutron input file name, or NULL. */
+extern char *vitess_outfile;  /* Neutron output file name, or NULL. */
+extern int vitess_tracepoints;  /* If true, use dots as progress-indicator */
+extern int vitess_repcnt; /* Number of times to repeat this neutron */
+extern int vitess_bufsize;  /* The buffer size for neutron read/write */
 
 /* vitess-lib function prototypes */
 /* ========================================================================= */
 Neutron mcstas2vitess(double x, double y, double z,
                       double vx, double vy, double vz,
-                      double t, 
+                      double t,
                       double sx, double sy, double sz,
                       double p);
 void vitess2mcstas(Neutron neu,
@@ -92,9 +95,9 @@ void vitess2mcstas(Neutron neu,
                    double *t, double *p);
 void vitess_option_error(char *opt);
 void vitess_parseopt(int argc, char *argv[],
-		     double *dptr[], char dchr[], char **sptr[], char schr[]);
+         double *dptr[], char dchr[], char **sptr[], char schr[]);
 int vitess_main(int argc, char *argv[], int **check_finished,
-		double *dptr[], char dchr[], char **sptr[], char schr[]);
+    double *dptr[], char dchr[], char **sptr[], char schr[]);
 
 #endif
 

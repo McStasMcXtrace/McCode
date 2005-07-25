@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Granroth
 * Date: July 2004
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: SNS Project Oak Ridge National Laboratory
 *
 * A source that produces a time and energy distribution from the SNS moderator files
@@ -30,7 +30,7 @@
 *
 * %P
 * Input parameters:
-* S_filename:   Filename of source data
+* S_filename:   Filename of source data (str)
 * width:  (m)   width of moderator
 * height: (m)   height of moderator
 * dist:   (m)   Distance from source to the focusing rectangle

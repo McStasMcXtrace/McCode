@@ -8,12 +8,12 @@
 * Component: EPSD_monitor.comp
 *
 * %I
-* Written by: Kim Lefmann 
+* Written by: Kim Lefmann
 * Date: 16.4.00
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: Risoe
 * Release: McStas 1.6
-* 
+*
 * A monitor measuring neutron intensity vs. position, x, and neutron energy, E
 *
 * %D
@@ -30,10 +30,10 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
-* Emin:     Lower bound of energy
-* Emax:     Upper bound of energy
-* nx:       Number of pixel columns in scattering plane
-* nE:       Number of energy bins
+* Emin:     Lower bound of energy (meV)
+* Emax:     Upper bound of energy (meV)
+* nx:       Number of pixel columns in scattering plane (1)
+* nE:       Number of energy bins (1)
 * filename: Name of file in which to store the detector image (text)
 *
 * OUTPUT PARAMETERS:
@@ -48,7 +48,7 @@
 DEFINE COMPONENT EPSD_monitor
 DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, Emin, Emax, nx, nE, filename)
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2) 
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -61,7 +61,7 @@ INITIALIZE
     int i,j;
 
     for (i=0; i<nx; i++)
-     for (j=0; j<nE; j++) 
+     for (j=0; j<nE; j++)
      {
       PSD_N[i][j] = 0;
       PSD_p[i][j] = 0;
@@ -89,9 +89,9 @@ TRACE
 SAVE
   %{
     DETECTOR_OUT_2D("EPSD monitor", "Position [m]", "Energy [meV]",
-		    xmin, xmax, Emin, Emax, nx, nE,
-		    &PSD_N[0][0], &PSD_p[0][0], &PSD_p2[0][0],
-		    filename);
+        xmin, xmax, Emin, Emax, nx, nE,
+        &PSD_N[0][0], &PSD_p[0][0], &PSD_p2[0][0],
+        filename);
   %}
 
 END

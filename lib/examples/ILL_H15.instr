@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas 1.8
-* Version: 0.1
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H15 curved cold guide at the ILL
@@ -23,7 +23,7 @@
 * lambda: (AA) central wavelength
 * dl_percent: (%) percentage from 0 to 100 for d_lambda/lambda
 *
-* %Link 
+* %Link
 * The <a href="http://www.ill.fr/YellowBook/IN6">IN6 TOF</a> at the ILL
 *
 * %End
@@ -53,7 +53,7 @@ double gGap         = 0.001;
 double gRh          = 2700; /* upwards */
 /* guide section parameters (total length/number of elements) */
 double gH =0.2;
-double L_H15_2 =5.5  /6,  Rh_H15_2 =0; 
+double L_H15_2 =5.5  /6,  Rh_H15_2 =0;
 double L_H15_3 =9.973/10, Rh_H15_3 =0; /* end: d ~ 15.5 moderator at -5.9 */
 double L_H15_4 =6.973/7,  Rh_H15_4 =0; /* end: d ~ 22.5 ... */
 double L_H15_5 =4.75 /5,  Rh_H15_5 =0; /* VTE is at the end of this section */
@@ -119,7 +119,7 @@ COMPONENT VCS = Source_gen(
   AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT Al_window1 = Al_window(win_thick=Al_Thickness)
-AT (0,0,0.21) RELATIVE VCS 
+AT (0,0,0.21) RELATIVE VCS
 
 COMPONENT Al_window2 = Al_window(win_thick=Al_Thickness)
 AT (0,0,0.61) RELATIVE VCS
@@ -136,7 +136,7 @@ AT (0,0,2.43) RELATIVE VCS
 /* H15-1: L=3.17 m in 1 element. no curvature */
 
 COMPONENT PinkCarter = Guide_gravity(
-  w1=0.038, h1=0.2, w2=0.032, h2=0.2, l=3.170, 
+  w1=0.038, h1=0.2, w2=0.032, h2=0.2, l=3.170,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,2.525) RELATIVE VCS
 

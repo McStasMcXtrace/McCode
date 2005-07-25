@@ -12,20 +12,20 @@
 * Date: Feb. 12,1999
 * Origin: Uni. Gottingen (Germany)
 * Release: McStas 1.6
-* Version: 1.0
-* Modified by: Peter Link Feb. 12,1999, Added double bent feature by: 
-* Modified by: Peter Link Sep. 24. 1999, corrected bug in rotation of v-coords: 
+* Version: $Revision: 1.6 $
+* Modified by: Peter Link Feb. 12,1999, Added double bent feature by:
+* Modified by: Peter Link Sep. 24. 1999, corrected bug in rotation of v-coords:
 * Modified by: EF, Feb 13th 2002: Read reflectivity table
 *
 * Double bent monochromator with multiple slabs
-* 
+*
 * %Description
 * Double bent monochromator which uses a small-mosaicity approximation as well
 * as the approximation vy^2 << vz^2 + vx^2.
 * Second order scattering is neglected.
 * For an unrotated monochromator component, the crystal plane lies in the y-z
 * plane (ie. parallel to the beam).
-* When curvatures are set to 0, the monochromator is flat. 
+* When curvatures are set to 0, the monochromator is flat.
 * The curvatures approximation for parallel beam focusing to distance L, with
 * monochromator rotation angle A1 are:
 *   RV = 2*L*sin(DEG2RAD*A1);
@@ -45,7 +45,7 @@
 * Cu       002 DM=1.807 AA
 * Cu       220 DM=1.278 AA
 * Cu       111 DM=2.095 AA
-* 
+*
 * %Parameters
 * INPUT PARAMETERS:
 *
@@ -58,18 +58,18 @@
 * mosaicv: Vertical mosaic FWHM (arc minutes)
 * r0:      Maximum reflectivity (1)
 * Q:       Scattering vector (AA-1)
-* RV:      radius of vertical focussing (m). flat for 0.
-* RH:      radius of horizontal focussing (m). flat for 0.
+* RV:      radius of vertical focussing, flat for 0 (m)
+* RH:      radius of horizontal focussing, flat for 0 (m)
 *
 * optional parameters
-* DM:      monochromator d-spacing (Angstrom) instead of Q=2*pi/DM 
+* DM:      monochromator d-spacing instead of Q=2*pi/DM (Angstrom)
 * mosaic:  sets mosaich=mosaicv (arc minutes)
 * width:   total width of monochromator (m)
 * height:  total height of monochromator (m)
 * verbose: verbosity level (0/1)
-* reflect: reflectivity file name of text file as 2 columns [k, R]
+* reflect: reflectivity file name of text file as 2 columns [k, R] (str)
 *
-* %Link 
+* %Link
 * <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00031.html">Additional note</a> from <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
 *
 * %End
@@ -96,7 +96,7 @@ DECLARE
   double SlabWidth, SlabHeight;
   t_Table rTable;
   %}
-  
+
 INITIALIZE
 %{
   if (mosaic != 0) {
@@ -105,14 +105,14 @@ INITIALIZE
   else {
     mos_y = mosaich;
     mos_z = mosaicv; }
-  
+
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
-  
+
   if (mono_Q == 0) { fprintf(stderr,"Monochromator_2foc: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
   if (r0 == 0) { fprintf(stderr,"Monochromator_2foc: %s: Error reflectivity r0 is null\n", NAME_CURRENT_COMP); exit(-1); }
   if (NH*NV == 0) { fprintf(stderr,"Monochromator_2foc: %s: no slabs ??? (NH or NV=0)\n", NAME_CURRENT_COMP); exit(-1); }
-  
+
   if (verbose)
   {
     printf("Monochromator_2foc: component %s Q=%.3g Angs-1 (DM=%.4g Angs)\n", NAME_CURRENT_COMP, mono_Q, 2*PI/mono_Q);
@@ -130,7 +130,7 @@ INITIALIZE
       }
     }
   }
-  
+
   if (reflect != NULL)
   {
     if (verbose) fprintf(stdout, "Monochromator_2foc : %s : Reflectivity data (k, R)\n", NAME_CURRENT_COMP);
@@ -139,7 +139,7 @@ INITIALIZE
     if (rTable.rows < 2) Table_Free(&rTable);
     Table_Info(rTable);
   } else rTable.data = NULL;
-  
+
   if (width == 0) SlabWidth = zwidth;
   else SlabWidth = (width+gap)/NH - gap;
   if (height == 0) SlabHeight = yheight;
@@ -153,7 +153,7 @@ TRACE
   if(vx != 0.0 && (dt = -x/vx) >= 0.0)
   {
     double zmin,zmax, ymin,ymax, zp,yp, y1,z1,t1;
-    
+
     zmax = ((NH*(SlabWidth+gap))-gap)/2;
     zmin = -1*zmax;
     ymax = ((NV*(SlabHeight+gap))-gap)/2;
@@ -172,7 +172,7 @@ TRACE
       double row,col, sna,snb,csa,csb,vxp,vyp,vzp;
       double v, theta0, theta, tmp3;
       double tilth,tiltv;         /* used to calculate tilt angle of slab */
-      
+
       col = ceil ( (z1-zmin)/(SlabWidth+gap));  /* which slab hit ? */
       row = ceil ( (y1-ymin)/(SlabHeight+gap));
       if (RH != 0) tilth = asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
@@ -188,23 +188,23 @@ TRACE
       csb = cos(tiltv);
       vxp = vx*csa*csb+vy*snb-vz*sna*csb;
       vyp = -vx*csa*snb+vy*csb+vz*sna*snb;
-      vzp = vx*sna+vz*csa;  
+      vzp = vx*sna+vz*csa;
 
       /* First: scattering in plane */
       /* theta0 = atan2(vx,vz);  neutron angle to slab Risoe version */
 
       v = sqrt(vxp*vxp+vyp*vyp+vzp*vzp);
-	    theta0 = asin(vxp/v);                /* correct neutron angle to slab */
+      theta0 = asin(vxp/v);                /* correct neutron angle to slab */
 
       theta = asin(Q2V*mono_Q/(2.0*v));               /* Bragg's law */
-	    if (theta0 < 0)
+      if (theta0 < 0)
               theta = -theta;
-	    tmp3 = (theta-theta0)/(MIN2RAD*mos_y);
-	    if (tmp3 < DIV_CUTOFF)
-	    {
+      tmp3 = (theta-theta0)/(MIN2RAD*mos_y);
+      if (tmp3 < DIV_CUTOFF)
+      {
         double my_r0, k;
         double dphi,tmp1,tmp2,tmp4,vratio,phi,cs,sn;
-        
+
         k = V2K*v;
 
         if (rTable.data != NULL)
@@ -212,12 +212,12 @@ TRACE
           my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */
         }
         else my_r0 = r0;
-        if (my_r0 >= 1) 
+        if (my_r0 >= 1)
         {
           if (verbose) fprintf(stdout, "Warning: Monochromator_2foc : lowered reflectivity from %f to 0.99 (k=%f)\n", my_r0, k);
           my_r0=0.99;
         }
-        if (my_r0 < 0) 
+        if (my_r0 < 0)
         {
           if (verbose) fprintf(stdout, "Warning: Monochromator_2foc : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
           my_r0=0;
@@ -231,14 +231,14 @@ TRACE
         tmp1 = 2*theta;
         cs = cos(tmp1);
         sn = sin(tmp1);
-        tmp2 = cs*vxp - sn*vzp; 
+        tmp2 = cs*vxp - sn*vzp;
         vyp = vyp;
         /* vz = cs*vz + sn*vx; diese Zeile wurde durch die folgende ersetzt */
-        tmp4 = vyp/vzp;  /* korrigiert den schrägen Einfall aufs Plättchen  */
-        vzp = cs*(-vyp*sin(tmp4)+vzp*cos(tmp4)) + sn*vxp;  
+        tmp4 = vyp/vzp;  /* korrigiert den schrï¿½en Einfall aufs Plï¿½tchen  */
+        vzp = cs*(-vyp*sin(tmp4)+vzp*cos(tmp4)) + sn*vxp;
         vxp = tmp2;
 
-        /* Second: scatering out of plane. 
+        /* Second: scatering out of plane.
            Approximation is that Debye-Scherrer cone is a plane */
 
         phi = atan2(vyp,vzp);  /* out-of plane angle */
@@ -251,12 +251,12 @@ TRACE
         vxp = vxp*vratio;
 
         /* rotate v coords back */
-	      vx = vxp*csb*csa-vyp*snb*csa+vzp*sna;
-	      vy = vxp*snb+vyp*csb;
-	      vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa;    
-	      /* v=sqrt(vx*vx+vy*vy+vz*vz);  */
+        vx = vxp*csb*csa-vyp*snb*csa+vzp*sna;
+        vy = vxp*snb+vyp*csb;
+        vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa;
+        /* v=sqrt(vx*vx+vy*vy+vz*vz);  */
         SCATTER;
-	    } /* end if Bragg ok */
+      } /* end if Bragg ok */
     } /* End intersect the crystal (if z1) */
   } /* End neutron moving towards crystal (if vx)*/
 %}
@@ -273,18 +273,18 @@ MCDISPLAY
     {
       double zmin,zmax,ymin,ymax;
       double xt, xt1, yt, yt1;
-      
+
       zmin = (SlabWidth+gap)*(ih-NH/2.0)+gap/2;
       zmax = zmin+SlabWidth;
       ymin = (SlabHeight+gap)*(iv-NV/2.0)+gap/2;
       ymax = ymin+SlabHeight;
 
-      if (RH) 
+      if (RH)
       { xt = zmin*zmin/RH;
         xt1 = zmax*zmax/RH; }
       else { xt = 0; xt1 = 0; }
-      
-      if (RV) 
+
+      if (RV)
       { yt = ymin*ymin/RV;
         yt1 = ymax*ymax/RV; }
       else { yt = 0; yt1 = 0; }

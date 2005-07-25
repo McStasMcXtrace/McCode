@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: 1.5
+* Version: $Revision: 1.74 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.73 2005-07-18 14:43:05 farhi Exp $
+* $Id: mcstas-r.h,v 1.74 2005-07-25 14:55:08 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.73  2005/07/18 14:43:05  farhi
+*       Now gives a warning message per component for 'computational absorbs'
+*
 *       Revision 1.72  2005/06/20 08:09:07  farhi
 *       Changed all ABSORB by adding mcAbsorbProp incrementation
 *       in PROP macros
@@ -133,7 +136,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.73 $"
+#define MCSTAS_R_H "$Revision: 1.74 $"
 
 #include <math.h>
 #include <string.h>

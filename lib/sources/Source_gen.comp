@@ -10,14 +10,14 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
 * Modified by: EF, Sep 18, 2001 ; corrected illumination bug. Add options
 * Modified by: EF, Oct 30, 2001 ; minor changes. mccompcurname replaced
 *
-* Circular/squared neutron source with flat or Maxwellian energy/wavelength  
+* Circular/squared neutron source with flat or Maxwellian energy/wavelength
 * spectrum (possibly spatially gaussian)
 *
 * %D
@@ -44,52 +44,54 @@
 * Some sources parameters:
 * PSI cold source T1=150.42,I1=3.67e11 T2=38.74,I2=3.64e11
 *                 T3=14.84,I3=0.95e11
-* ILL VCS cold source T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13 
+* ILL VCS cold source T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13
 *        (H1)         T3=16.7 ,I3=3.0423e+12
-* ILL HCS cold source T1=413.5,I1=10.22e12,T2=145.8,I2=3.44e13 
+* ILL HCS cold source T1=413.5,I1=10.22e12,T2=145.8,I2=3.44e13
 *        (H5)         T3=40.1 ,I3=2.78e13
 * ILL Thermal tube    T1=683.7,I1=0.5874e+13,T2=257.7,I2=2.5099e+13
 *        (H12)        T3=16.7 ,I3=1.0343e+12
 * ILL Hot source      T1=1695,I1=1.74e13,T2=708,I2=3.9e12
-*     
+*
 * %VALIDATION
-* Feb 2005: output cross-checked for 3 Maxwellians against VITESS source 
-*           I(lambda), I(hor_div), I(vert_div) identical in shape and absolute values 
+* Feb 2005: output cross-checked for 3 Maxwellians against VITESS source
+*           I(lambda), I(hor_div), I(vert_div) identical in shape and absolute values
 * Validated by: K. Lieutenant
 *
 * %P
-* radius: (m)   Radius of circle in (x,y,0) plane where neutrons
+* radius: [m]   Radius of circle in (x,y,0) plane where neutrons
 *               are generated. You may also use 'h' and 'w' for a square source
-* dist:   (m)   Distance to target along z axis.
-* xw:     (m)   Width(x) of target. If dist is not given, xw = horz. div  (deg)
-* yh:     (m)   Height(y) of target. If dist is not given, yh = vert. div (deg)
-* E0:     (meV) Mean energy of neutrons. You may also use Lambda0.
-* dE:     (meV) Energy spread of neutrons (half width).
+* dist:   [m]   Distance to target along z axis.
+* xw:     [m]   Width(x) of target.
+*                 If dist is not given, xw = horz. div  in deg
+* yh:     [m]   Height(y) of target.
+*                 If dist is not given, yh = vert. div in deg
+* E0:     [meV] Mean energy of neutrons. You may also use Lambda0.
+* dE:     [meV] Energy spread of neutrons, half width.
 *
 * Optional parameters:
-* Lambda0:  (AA)  Mean wavelength of neutrons.
-* dLambda:  (AA)  Wavelength spread of neutrons (half width).
-* Emin:     (meV) Minimum energy of neutrons
-* Emax:     (meV) Maximum energy of neutrons
-* Lmin:     (AA)  Minimum wavelength of neutrons
-* Lmax:     (AA)  Maximum wavelength of neutrons
-* h         (m)   Source y-height (then does not use radius parameter)
-* w         (m)   Source x-width  (then does not use radius parameter)
-* length    (m)   Source z-length (not anymore flat)
-* T1        (K)   Temperature of the Maxwellian source (0=none)
-* I1:       (1/(cm**2*st*AA)) Source flux per solid angle, area and Angstrom
-* T2        (K)   Second Maxwellian source Temperature (0=none)
-* I2:       (1/(cm**2*st*AA)) Second Maxwellian Source flux 
-* T3        (K)   Third Maxwellian source Temperature (0=none)
-* I3:       (1/(cm**2*st*AA)) Third Maxwellian Source flux 
-* gaussian  (0/1) Use gaussian beam (normal distributions)
-* verbose   (0/1) display info about the source. -1 unactivate source.
+* Lambda0:  [AA]  Mean wavelength of neutrons.
+* dLambda:  [AA]  Wavelength spread of neutrons,half width
+* Emin:     [meV] Minimum energy of neutrons
+* Emax:     [meV] Maximum energy of neutrons
+* Lmin:     [AA]  Minimum wavelength of neutrons
+* Lmax:     [AA]  Maximum wavelength of neutrons
+* h:        [m]   Source y-height, then does not use radius parameter
+* w:        [m]   Source x-width, then does not use radius parameter
+* length:   [m]   Source z-length, not anymore flat
+* T1:       [K]   Temperature of the Maxwellian source, 0=none
+* I1:       [1/(cm**2*st*AA)] Source flux per solid angle, area and Angstrom
+* T2:       [K]   Second Maxwellian source Temperature, 0=none
+* I2:       [1/(cm**2*st*AA)] Second Maxwellian Source flux
+* T3:       [K]   Third Maxwellian source Temperature, 0=none
+* I3:       [1/(cm**2*st*AA)] Third Maxwellian Source flux
+* gaussian: [0/1] Use gaussian beam, normal distributions
+* verbose:  [0/1] display info about the source. -1 unactivate source.
 *
 * %L
-* <href="http://www.ill.fr/Yellowbook">The ILL Yellow book</a>
+* <a href="http://www.ill.fr/Yellowbook">The ILL Yellow book</a>
 * P. Ageron, Nucl. Inst. Meth. A 284 (1989) 197
 * %E
-*******************************************************************************/
+******************************************************************************/
 
 DEFINE COMPONENT Source_gen
 DEFINITION PARAMETERS ()
@@ -108,13 +110,13 @@ DECLARE
 INITIALIZE
 %{
   double factor, delta_lambda, source_area, k;
-  
+
   if (radius == 0 && h == 0 && w == 0)
   {
     fprintf(stderr,"Source_gen: Error: Please precise source geometry (radius, h, w)\n");
     exit(-1);
   }
-  if (xw*yh == 0)   
+  if (xw*yh == 0)
   {
     fprintf(stderr,"Source_gen: Error: Please precise source target (xw, yh)\n");
     exit(-1);
@@ -123,7 +125,7 @@ INITIALIZE
     gaussian = 1;
   else
     gaussian = 0;
-  
+
   if ((Emin != 0) && (Emax != 0))
   { E0 = (Emin+Emax)/2; dE=fabs(Emin-Emax)/2; }
   if ((E0 != 0) && (dE != 0))
@@ -133,32 +135,32 @@ INITIALIZE
   }
   if ((Lmin != 0) && (Lmax != 0))
   { Lambda0 = (Lmin+Lmax)/2; dLambda=fabs(Lmin-Lmax)/2; }
-  if ((Lambda0 != 0) || (dLambda != 0)) 
+  if ((Lambda0 != 0) || (dLambda != 0))
   { lambda_0 = Lambda0; d_lambda=dLambda; }
-  
-  radius = fabs(radius); w=fabs(w); h=fabs(h);  I1=fabs(I1); 
-  lambda_0=fabs(lambda_0); d_lambda=fabs(d_lambda); 
+
+  radius = fabs(radius); w=fabs(w); h=fabs(h);  I1=fabs(I1);
+  lambda_0=fabs(lambda_0); d_lambda=fabs(d_lambda);
   xw = fabs(xw); yh=fabs(yh); dist=fabs(dist);
-  
+
   if ((lambda_0-d_lambda <= 0) || (lambda_0+d_lambda <= 0))
   {
     fprintf(stderr,"Source_gen: Warning: Wavelength will reach negative values\n");
 
   }
-    
+
   if (dist == 0)
   {
     fprintf(stderr,"Source_gen: warning: focusing distance is null. Set to 1 rad\n");
     dist = 57.296;
   }
-  
+
   delta_lambda = 2*d_lambda;
   Lmin = lambda_0 - d_lambda; /* AAngstroem */
   Lmax = lambda_0 + d_lambda;
 
   if (I1 != 0)
   {
-   
+
     if ((h == 0) || (w == 0))
       source_area = radius*radius*PI*1e4; /* circular cm^2 */
     else
@@ -169,32 +171,32 @@ INITIALIZE
   else
     p_in = 1.0/4/PI; /* Small angle approx. */
   p_in /= mcget_ncount();
-  
-    
-  k  = 1.38066e-23;	/* k_B */
+
+
+  k  = 1.38066e-23; /* k_B */
   if (T1 > 0)
   {
     lambda0  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T1);
-    lambda02 = lambda0*lambda0;	   
-    L2P      = 2*lambda02*lambda02; 
+    lambda02 = lambda0*lambda0;
+    L2P      = 2*lambda02*lambda02;
   }
   else
     { lambda0 = lambda_0; }
-    
+
   if (T2 > 0)
   {
     lambda0b  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T2);
-    lambda02b = lambda0b*lambda0b;	   
-    L2Pb      = 2*lambda02b*lambda02b; 
+    lambda02b = lambda0b*lambda0b;
+    L2Pb      = 2*lambda02b*lambda02b;
   }
   else
     { lambda0b = lambda_0; }
-  
+
   if (T3 > 0)
   {
     lambda0c  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T3);
-    lambda02c = lambda0c*lambda0c;	   
-    L2Pc      = 2*lambda02c*lambda02c; 
+    lambda02c = lambda0c*lambda0c;
+    L2Pc      = 2*lambda02c*lambda02c;
     if (I3 == 0) I3 = I1;
   }
   else
@@ -230,7 +232,7 @@ TRACE
 %{
   double theta0,phi0,theta1,phi1,chi,theta,phi,v,r, lambda;
   double Maxwell, lambda2, lambda5;
-  
+
   if (verbose >= 0)
   {
 
@@ -254,23 +256,23 @@ TRACE
     theta0= -atan((x-xw/2.0)/dist);              /* Angles to aim at target */
     phi0  = -atan((y-yh/2.0)/dist);
 
-    theta1= -atan((x+xw/2.0)/dist);              
+    theta1= -atan((x+xw/2.0)/dist);
     phi1  = -atan((y+yh/2.0)/dist);
 
     /* shot towards target : flat distribution */
 
     if (gaussian)
     {
-      theta= theta0+(theta1- theta0)*(randnorm()*FWHM2RMS+0.5); 
+      theta= theta0+(theta1- theta0)*(randnorm()*FWHM2RMS+0.5);
       phi  = phi0  +(phi1  - phi0)  *(randnorm()*FWHM2RMS+0.5);
     }
     else
     {
-      theta= theta0+(theta1- theta0)*rand01(); 
-      phi  = phi0  +(phi1  - phi0)  *rand01(); 
+      theta= theta0+(theta1- theta0)*rand01();
+      phi  = phi0  +(phi1  - phi0)  *rand01();
     }
     /* Assume linear distribution */
-    lambda = lambda_0+d_lambda*randpm1(); 
+    lambda = lambda_0+d_lambda*randpm1();
     if (lambda <= 0) ABSORB;
     lambda2 = lambda*lambda;
     lambda5 = lambda2*lambda2*lambda;
@@ -292,12 +294,12 @@ TRACE
               if (I3 == 0) I3 = I1;
               Maxwell += (I3/I1)*L2Pc/lambda5*exp(-lambda02c/lambda2);
             }
-            p *= Maxwell; 
+            p *= Maxwell;
     }
 
     vz=v*cos(phi)*cos(theta);
     vy=v*sin(phi);
-    vx=v*cos(phi)*sin(theta); 
+    vx=v*cos(phi)*sin(theta);
     SCATTER;
   }
 %}
@@ -308,7 +310,7 @@ MCDISPLAY
   double xmax;
   double ymin;
   double ymax;
-  
+
   if ((h == 0) || (w == 0))
   {
     magnify("xy");
@@ -323,13 +325,13 @@ MCDISPLAY
 
     magnify("xy");
     multiline(5, (double)xmin, (double)ymin, 0.0,
-        	   (double)xmax, (double)ymin, 0.0,
-        	   (double)xmax, (double)ymax, 0.0,
-        	   (double)xmin, (double)ymax, 0.0,
-        	   (double)xmin, (double)ymin, 0.0);
+             (double)xmax, (double)ymin, 0.0,
+             (double)xmax, (double)ymax, 0.0,
+             (double)xmin, (double)ymax, 0.0,
+             (double)xmin, (double)ymin, 0.0);
     if (gaussian)
       circle("xy",0,0,0,sqrt(w*w+h*h)/4);
-  }         
+  }
 %}
 
 END

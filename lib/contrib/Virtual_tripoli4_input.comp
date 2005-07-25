@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.6 $
+* Version:  $Revision: 1.7 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -51,25 +51,25 @@
 *
 * %P
 * INPUT PARAMETERS
-* file:         (str) Name of the Tripoli4.4 neutron input file
-* repeat_count: (1)   Number of times the source must be generated.
+* file:         [str] Name of the Tripoli4.4 neutron input file
+* repeat_count: [1]   Number of times the source must be generated.
 *                           0 unactivates the component
-* verbose:      (0|1) Displays additional informations if set to 1
-* intensity:    (n/s) Initial total Source integrated intensity
-* autocenter:   (str) String which may contain following keywords.
+* verbose:      [0|1] Displays additional informations if set to 1
+* intensity:    [n/s] Initial total Source integrated intensity
+* autocenter:   [str] String which may contain following keywords.
 *                     "translate" or "center"  to center the beam area AT (0,0,0)
 *                     "rotate"    or "orient"  to center the beam velocity along Z
 *                     "change axes"            to change coordinate system definition
 *                     Other words are ignored.
 *
 * OUTPUT PARAMETERS
-* head:   (char)        header buffer
-* nl:     (long)        nb of lines in header
-* mean_x: (double)      \
-* mean_y: (double)      source center coordinates
-* mean_z: (double)      /
-* angle2z:(double, rad) rotation angle required to orient beam along Z axis
-* nbatch: (long)        number of read neutron batches
+* head:   [char]        header buffer
+* nl:     [long]        nb of lines in header
+* mean_x: [double]      \
+* mean_y: [double]      source center coordinates
+* mean_z: [double]      /
+* angle2z:[double, rad] rotation angle required to orient beam along Z axis
+* nbatch: [long]        number of read neutron batches
 *
 * %L
 * <a href="http://www.nea.fr/html/dbprog/tripoli-abs.html">Tripoli</a>

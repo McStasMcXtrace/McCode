@@ -8,7 +8,7 @@
 * Component: He3_cell
 *
 * %Identification
-* Written by: Trefor Roberts 
+* Written by: Trefor Roberts
 * Date: March 1999
 * Origin: ILL
 * version: 1.0
@@ -25,13 +25,13 @@
 * %Parameters
 * Input parameters:
 *
-* radius:    radius of the cylinder (m)
-* length:    length of the cylinder (m)
-* pressure:  pressure of the gas in the cell (bar)
-* p3he:      polarisation of the 3He gas (-1 to +1)
-* bx:        x component of field at the cell (tesla)
-* by:        y component of field at the cell (tesla)
-* bz:        z component of field at the cell (tesla)
+* radius:    radius of the cylinder [m]
+* length:    length of the cylinder [m]
+* pressure:  pressure of the gas in the cell [bar]
+* p3he:      polarisation of the 3He gas [-1 to +1]
+* bx:        x component of field at the cell [tesla]
+* by:        y component of field at the cell [tesla]
+* bz:        z component of field at the cell [tesla]
 *
 * %Link
 * <a href="http://www.ill.fr/tas/mcstas/>The McStas ILL page, and the instrument section</a>
@@ -49,9 +49,9 @@ DECLARE
 %{
 #ifndef opac_cnv
 #define opac_cnv    7.33     /* opacity conversion factor so that
-                                the opacity can be expressed in 
-					                      bar.m.angstroms */
-#define gyro        1.832e8  /* absolute value of the gyromagnetic 
+                                the opacity can be expressed in
+                                bar.m.angstroms */
+#define gyro        1.832e8  /* absolute value of the gyromagnetic
                                 ratio of the neutron (s-1T-1) */
 #endif
 %}
@@ -83,7 +83,7 @@ a 3He cell lies along the beam. */
 /* Calculate the neutron velocity and wavelength */
 
     v=sqrt(vx*vx+vy*vy+vz*vz);
-    lambda=2*PI/(V2K*v);    
+    lambda=2*PI/(V2K*v);
 
 /* Calculate the path length of the neutron through the gas */
 
@@ -92,7 +92,7 @@ a 3He cell lies along the beam. */
 
 /* Calculate the opacity of the cell for the path length travelled */
 
-    opacity=pressure*l_full*lambda*opac_cnv;		
+    opacity=pressure*l_full*lambda*opac_cnv;
 
 /* propagate the polarisation accross the cell (assuming a constant
 magnetic field).  The actual interaction point is not taken into account
@@ -103,13 +103,13 @@ as only the parallel and perpendicular components are important. */
     sx=px;
     sy=py;
     sz=pz;
-		
+
 /* adjust the neutron weight according to spin state relative to the
 3He nuclei - antiparallel spins are as good as absorbed, whereas parallel
 spins are transmitted (depending upon degree of polarisation of gas */
 
     if(scalar_prod(sx,sy,sz,bx,by,bz)>0)
-    {        
+    {
       p*=0.5*exp(-opacity*(1.0-p3he));
     } else {
       p*=0.5*exp(-opacity*(1.0+p3he));

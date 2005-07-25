@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas 1.8
-* Version: 0.1
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H113 ballistic curved cold guide at the ILL
@@ -23,7 +23,7 @@
 * lambda: (AA) central wavelength
 * dl_percent: (%) percentage from 0 to 100 for d_lambda/lambda
 *
-* %Link 
+* %Link
 * The <a href="http://www.ill.fr/YellowBook/PF1">PF1b beam line</a> at the ILL
 *
 * %End
@@ -53,13 +53,13 @@ double gGap         = 0.001;
 /* guide curvatures */
 double gRh          = -4000; /* downwards */
 /* guide section parameters (total length/number of elements) */
-double L_H113_2 =5.5  /6,  Rh_H113_2 =0; 
-double L_H113_3 =3.0  /3,  Rh_H113_3 =0; 
+double L_H113_2 =5.5  /6,  Rh_H113_2 =0;
+double L_H113_3 =3.0  /3,  Rh_H113_3 =0;
 double L_H113_4 =10.0 /10, Rh_H113_4 =0; /* divergent 60-90 */
-double L_H113_5 =11.0 /11, Rh_H113_5 =0; 
-double L_H113_6 =11.0 /11, Rh_H113_6 =0; 
-double L_H113_7 =11.0 /11, Rh_H113_7 =0; 
-double L_H113_8 =11.0 /11, Rh_H113_8 =0; 
+double L_H113_5 =11.0 /11, Rh_H113_5 =0;
+double L_H113_6 =11.0 /11, Rh_H113_6 =0;
+double L_H113_7 =11.0 /11, Rh_H113_7 =0;
+double L_H113_8 =11.0 /11, Rh_H113_8 =0;
 double L_H113_9 =10.0 /10, Rh_H113_9 =0; /* convergent 90-60 */
 
 %}
@@ -117,7 +117,7 @@ COMPONENT VCS = Source_gen(
   AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT Al_window1 = Al_window(win_thick=Al_Thickness)
-AT (0,0,0.21) RELATIVE VCS 
+AT (0,0,0.21) RELATIVE VCS
 
 COMPONENT Al_window2 = Al_window(win_thick=Al_Thickness)
 AT (0,0,0.61) RELATIVE VCS
@@ -134,7 +134,7 @@ AT (0,0,2.43) RELATIVE VCS
 /* H113-1: L=3.17 m in 1 element. no curvature */
 
 COMPONENT PinkCarter = Guide_gravity(
-  w1=0.068, h1=0.2, w2=0.062, h2=0.2, l=3.170, 
+  w1=0.068, h1=0.2, w2=0.062, h2=0.2, l=3.170,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalueIP, W=gW)
 AT (0,0,2.525) RELATIVE VCS
 

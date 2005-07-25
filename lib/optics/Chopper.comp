@@ -10,7 +10,7 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -29,22 +29,22 @@
 *
 * w:       (m)      Width of the slits at the bottom side
 * R:       (m)      Radius of the disc
-* f:       (rad/s)  angular frequency of the Chopper 
+* f:       (rad/s)  angular frequency of the Chopper
 *                   (algebraic sign defines the direction of rotation)
 * n:       (1)      Number of slits
 * pha:     (s)      Phase
 *
 * Optional parameters:
-* IsFirst  (0/1)    Set it to 1 for the first chopper position in a cw source
+* IsFirst: (0/1)    Set it to 1 for the first chopper position in a cw source
 *                   (it then spreads the neutron time distribution)
-* n_pulse  (1)      Number of pulses
+* n_pulse: (1)      Number of pulses
 *
 * %D
 * Example values: w=0.05 R=0.5 f=2500 n=3 pha=0 n_pulse=1
 *
 * %E
 *******************************************************************************/
- 
+
 DEFINE COMPONENT Chopper
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R, w=0.05, f=2500.0, n=3, pha=0, IsFirst=0, n_pulse=1)
@@ -64,11 +64,11 @@ INITIALIZE
       if (IsFirst && n_pulse <=0)
       { fprintf(stderr,"Chopper: %s: wrong First chopper pulse number (n_pulse)\n", NAME_CURRENT_COMP);
         exit(-1); }
-      
+
       /* time between two pulses */
       Tg=2*PI/fabs(f)/n;
 
-      /* how long can neutrons pass the Chopper at a single point */ 
+      /* how long can neutrons pass the Chopper at a single point */
       To=2*atan(w/R/2.0)/fabs(f);
  %}
 
@@ -77,10 +77,10 @@ TRACE
     double toff;
 
     PROP_Z0;
-    
+
     if (IsFirst)
     {
-      t=atan2(x,y+R)/f+To*(rand01()-0.5)+pha+floor(n_pulse*rand01())*Tg; 
+      t=atan2(x,y+R)/f+To*(rand01()-0.5)+pha+floor(n_pulse*rand01())*Tg;
       p*=n*atan2(w,R)/2/PI;
     }
     else
@@ -88,16 +88,16 @@ TRACE
       toff=fabs(t-atan2(x,y+R)/f-pha)+To/2.0;
 
       /* does neutron hit the slit? */
-      if (fmod(toff,Tg)>To) 
+      if (fmod(toff,Tg)>To)
          ABSORB;
     }
     SCATTER;
  %}
- 
+
 MCDISPLAY
 %{
   magnify("xy");
   circle("xy", 0, 0, 0, R);
 %}
- 
+
 END

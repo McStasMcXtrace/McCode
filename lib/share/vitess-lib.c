@@ -12,54 +12,57 @@
 * Date:   Aug 28, 2002
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.2
+* Version: $Revision: 1.13 $
 *
-* This file is to be imported by the mcstas2vitess perl script 
-* It handles the way Vitess parses parameters. 
+* This file is to be imported by the mcstas2vitess perl script
+* It handles the way Vitess parses parameters.
 * Functions are imported in the Virtual_imput and Virtual_output
 * components. Embedded within instrument if MC_EMBEDDED_RUNTIME is defined.
 *
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.c,v 1.12 2005-04-27 14:46:10 lieutenant Exp $
+* $Id: vitess-lib.c,v 1.13 2005-07-25 14:55:08 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
-*	Revision 1.10  2003/02/11 12:28:46  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
-*	
+* $Log: not supported by cvs2svn $
+* Revision 1.12  2005/04/27 14:46:10  lieutenant
+* new: McInitVt(), McCleanupVt(), setParDirectory(), FullParName(); correction: coordinate change
+*
+* Revision 1.10  2003/02/11 12:28:46  farhi
+* Variouxs bug fixes after tests in the lib directory
+* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+* read_table:corrected MC_SYS_DIR -> MCSTAS define
+* monitor_nd-lib: fix Log(signal) log(coord)
+* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+* Progress_bar: precent -> percent parameter
+* CS: ----------------------------------------------------------------------
+*
 * Revision 1.2 2002/08/28 11:39:00 ef
-*	Changed to lib/share/c code. 
+* Changed to lib/share/c code.
 *
 * Revision 1.1 2000/08/28 11:39:00 kn
-*	Initial revision
+* Initial revision
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
 #error McStas : please import this library with %include "vitess-lib"
-#endif  
+#endif
 
 /* Convert McStas state parameters to VITESS Neutron structure. In
    VITESS, the neutron velocity is represented by a wavelength in
    AAngstroem and a unit direction vector, time is in msec and
    positions are in cm.*/
 Neutron mcstas2vitess(double x, double y, double z,
-		      double vx, double vy, double vz,
-		      double t, 
+          double vx, double vy, double vz,
+          double t,
           double sx, double sy, double sz,
           double p)
 {
   static unsigned long  i=0;
-  double v,s;			/* Neutron speed */
-  Neutron neu;			/* Vitess Neutron structure */
+  double v,s;     /* Neutron speed */
+  Neutron neu;      /* Vitess Neutron structure */
 
-  neu.Position[0] = z*100;	/* Convert position from m to cm */
+  neu.Position[0] = z*100;  /* Convert position from m to cm */
   neu.Position[1] = x*100;
   neu.Position[2] = y*100;
   v = sqrt(vx*vx + vy*vy + vz*vz);
@@ -68,8 +71,8 @@ Neutron mcstas2vitess(double x, double y, double z,
     fprintf(stderr, "Error: zero velocity! (mcstas2vitess)\n");
     exit(1);
   }
-  neu.Wavelength = 3956.0346/v;	/* Convert speed to wavelength */
-  neu.Vector[0] = vz/v;		/* Convert velocity to unit direction vector */
+  neu.Wavelength = 3956.0346/v; /* Convert speed to wavelength */
+  neu.Vector[0] = vz/v;   /* Convert velocity to unit direction vector */
   neu.Vector[1] = vx/v;
   neu.Vector[2] = vy/v;
   s = sqrt(sx*sx+sy*sy+sz*sz);
@@ -79,9 +82,9 @@ Neutron mcstas2vitess(double x, double y, double z,
     neu.Spin[1] = sx/s;
     neu.Spin[2] = sy/s;
   }
-  
-  neu.Time = t*1000;		/* Convert time from sec to msec */
-  neu.Probability = p;		/* Neutron weight */
+
+  neu.Time = t*1000;    /* Convert time from sec to msec */
+  neu.Probability = p;    /* Neutron weight */
   neu.Color = 0;
   neu.Debug = 'N';
   neu.ID.IDGrp[0] = 'A';
@@ -95,15 +98,15 @@ Neutron mcstas2vitess(double x, double y, double z,
    AAngstroem and a unit direction vector, time is in msec and
    positions are in cm. */
 void vitess2mcstas(Neutron neu,
-		   double *x, double *y, double *z,
-		   double *vx, double *vy, double *vz,
-       double *t, 
+       double *x, double *y, double *z,
+       double *vx, double *vy, double *vz,
+       double *t,
        double *sx, double *sy, double *sz,
-		   double *p)
+       double *p)
 {
-  double v;			/* Neutron speed */
+  double v;     /* Neutron speed */
 
-  *x = 0.01*neu.Position[1];	/* Convert position from cm to m */
+  *x = 0.01*neu.Position[1];  /* Convert position from cm to m */
   *y = 0.01*neu.Position[2];
   *z = 0.01*neu.Position[0];
   if(neu.Wavelength == 0.0)
@@ -111,23 +114,23 @@ void vitess2mcstas(Neutron neu,
     fprintf(stderr, "Error: zero wavelength! (mcstas2vitess: )\n");
     exit(1);
   }
-  v = 3956.0346/neu.Wavelength;	/* Convert wavelength to speed */
-  *vx = v*neu.Vector[1];	/* Convert unit direction vector to velocity */
+  v = 3956.0346/neu.Wavelength; /* Convert wavelength to speed */
+  *vx = v*neu.Vector[1];  /* Convert unit direction vector to velocity */
   *vy = v*neu.Vector[2];
-  *vz = v*neu.Vector[0];	
+  *vz = v*neu.Vector[0];
   *sx = neu.Spin[1];
   *sy = neu.Spin[2];
   *sz = neu.Spin[0];
-  *t = 0.001*neu.Time;		/* Convert msec to sec */
-  *p = neu.Probability;		/* Neutron weight */
+  *t = 0.001*neu.Time;    /* Convert msec to sec */
+  *p = neu.Probability;   /* Neutron weight */
 }
 
 /* Standard VITESS option parsing. */
-char *vitess_infile;		/* Neutron input file name, or NULL. */
-char *vitess_outfile;		/* Neutron output file name, or NULL. */
-int vitess_tracepoints;		/* If true, use dots as progress-indicator */
-int vitess_repcnt;		/* Number of times to repeat this neutron */
-int vitess_bufsize;		/* The buffer size for neutron read/write */
+char *vitess_infile;    /* Neutron input file name, or NULL. */
+char *vitess_outfile;   /* Neutron output file name, or NULL. */
+int vitess_tracepoints;   /* If true, use dots as progress-indicator */
+int vitess_repcnt;    /* Number of times to repeat this neutron */
+int vitess_bufsize;   /* The buffer size for neutron read/write */
 
 void
 vitess_option_error(char *opt)
@@ -138,7 +141,7 @@ vitess_option_error(char *opt)
 
 void
 vitess_parseopt(int argc, char *argv[],
-		double *dptr[], char dchr[], char **sptr[], char schr[])
+    double *dptr[], char dchr[], char **sptr[], char schr[])
 {
   int i, j;
 
@@ -149,9 +152,9 @@ vitess_parseopt(int argc, char *argv[],
   vitess_repcnt = 1;
   vitess_bufsize = 10000;
   for(i = 0; dptr[i]; i++)
-    *dptr[i] = 0;		/* Set all double parameters to zero */
+    *dptr[i] = 0;   /* Set all double parameters to zero */
   for(i = 0; sptr[i]; i++)
-    *sptr[i] = NULL;		/* Set all string parameters to NULL */
+    *sptr[i] = NULL;    /* Set all string parameters to NULL */
 
   /* Now loop over all option arguments. */
   for(i = 1; i < argc; i++)
@@ -161,65 +164,65 @@ vitess_parseopt(int argc, char *argv[],
     switch(argv[i][1])
     {
       case 'f':
-	vitess_infile = &argv[i][2];
-	break;
+  vitess_infile = &argv[i][2];
+  break;
       case 'F':
-	vitess_outfile = &argv[i][2];
-	break;
+  vitess_outfile = &argv[i][2];
+  break;
       case 'J':
-	vitess_tracepoints = 1;
-	break;
+  vitess_tracepoints = 1;
+  break;
       case 'L':
-	if(!freopen(&argv[i][2], "wt", stderr))
-	{
-	  fprintf(stderr, "Can't open %s for output!\n", &argv[i][2]);
-	  exit(1);
-	}
-	break;
+  if(!freopen(&argv[i][2], "wt", stderr))
+  {
+    fprintf(stderr, "Can't open %s for output!\n", &argv[i][2]);
+    exit(1);
+  }
+  break;
       case 'Z':
-	srandom(atol(&(argv[i][2])));
-	break;
+  srandom(atol(&(argv[i][2])));
+  break;
       case 'A':
-	vitess_repcnt = atol(&(argv[i][2]));
-	break;
+  vitess_repcnt = atol(&(argv[i][2]));
+  break;
       case 'B':
-	vitess_bufsize = atol(&(argv[i][2]));
-	break;
+  vitess_bufsize = atol(&(argv[i][2]));
+  break;
       default:
-	/* First look for a matching double parameter. */
-	for(j = 0; dchr[j]; j++)
-	{
-	  if(argv[i][1] == dchr[j])
-	  {
-	    *dptr[j] = atof(&(argv[i][2]));
-	    break;
-	  }
-	}
-	if(!dchr[j])
-	{
-	  /* Then look for a matching string parameter. */
-	  for(j = 0; schr[j]; j++)
-	  {
-	    if(argv[i][1] == schr[j])
-	    {
-	      *sptr[j] = &(argv[i][2]);
-	      break;
-	    }
-	  }
-	  if(!schr[j])
-	    vitess_option_error(argv[i]);
-	}
+  /* First look for a matching double parameter. */
+  for(j = 0; dchr[j]; j++)
+  {
+    if(argv[i][1] == dchr[j])
+    {
+      *dptr[j] = atof(&(argv[i][2]));
+      break;
+    }
+  }
+  if(!dchr[j])
+  {
+    /* Then look for a matching string parameter. */
+    for(j = 0; schr[j]; j++)
+    {
+      if(argv[i][1] == schr[j])
+      {
+        *sptr[j] = &(argv[i][2]);
+        break;
+      }
+    }
+    if(!schr[j])
+      vitess_option_error(argv[i]);
+  }
     }
   }
 }
 
 int vitess_main(int argc, char *argv[], int **check_finished,
-		double *dptr[], char dchr[], char **sptr[], char schr[])
+    double *dptr[], char dchr[], char **sptr[], char schr[])
 {
   /* ToDo: Make a cleaner interface here, to avoid relying on McStas
      internals. For example, this relies on it being ok to omit
      mcsiminfo_init() and mcsiminfo_close(). */
-  srandom(time(NULL));	/* Random seed */
+  srandom(time(NULL));  /* Random seed */
   vitess_parseopt(argc, argv, dptr, dchr, sptr, schr); /* VITESS-style option parser */
   mcinit();
   do
@@ -243,7 +246,7 @@ int vitess_main(int argc, char *argv[], int **check_finished,
 
 double dTimeMeas   =  0.0,  /* time of measurement           [s]   */
        dLmbdWant   =  0.0,  /* desired wavelength            [Ang] */
-       dFreq       =  0.0;  /* frequency of the soure        [Hz]  */ 
+       dFreq       =  0.0;  /* frequency of the soure        [Hz]  */
 
 long     BufferSize;      /* size of the neutron input and output buffer */
 Neutron* InputNeutrons;   /* input neutron Buffer */
@@ -257,7 +260,7 @@ short    bTrace=TRUE,     /* criterion: write trace files */
 char*    ParDirectory;    /* parameter directory */
 int      ParDirectoryLength;
 
-void setParDirectory (char *a); 
+void setParDirectory (char *a);
 
 /**************************************************************/
 /* Init does a general program initialization, which is ok    */
@@ -271,7 +274,7 @@ void McInitVt()
   LogFilePtr  = stdout;
 
   if (mcdirname==NULL)
-	  setParDirectory(getenv("PWD") ? getenv("PWD") : ".");
+    setParDirectory(getenv("PWD") ? getenv("PWD") : ".");
   else
     setParDirectory(mcdirname);
   idum    = -mcseed;
@@ -342,7 +345,7 @@ char* FullParName(char* filename)
   } else if (sel == 0) {
     a = ParDirectory;
     alen = ParDirectoryLength;
-  } 
+  }
   blen = strlen(filename);
   if ((res = (char *) malloc(alen+blen+1)))
   { if (alen)

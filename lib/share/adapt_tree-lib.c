@@ -12,7 +12,7 @@
 * Date:   Sep 02, 2002
 * Origin: Risoe/ILL
 * Release: McStas 1.6
-* Version: 1.1
+* Version: $Revision: 1.7 $
 *
 * This file is to be imported by components handling adaptative trees, like
 * Source_adapt and Adapt_check (in lib/sources)
@@ -21,16 +21,25 @@
 * Usage: within SHARE
 * %include "adapt_tree-lib"
 *
-* $Id: adapt_tree-lib.c,v 1.6 2003-02-11 12:28:46 farhi Exp $
+* $Id: adapt_tree-lib.c,v 1.7 2005-07-25 14:55:08 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
+* $Log: not supported by cvs2svn $
+* Revision 1.6  2003/02/11 12:28:46  farhi
+* Variouxs bug fixes after tests in the lib directory
+* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+* read_table:corrected MC_SYS_DIR -> MCSTAS define
+* monitor_nd-lib: fix Log(signal) log(coord)
+* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+* Progress_bar: precent -> percent parameter
+* CS: ----------------------------------------------------------------------
+*
 * Revision 1.1 2002/09/02 18:59:05 ef
-*	Initial revision extracted from mcstas-r.c/h
+* Initial revision extracted from mcstas-r.c/h
 *******************************************************************************/
 
 #ifndef ADAPT_TREE_LIB_H
 #error McStas : please import this library with %include "adapt_tree-lib"
-#endif  
+#endif
 
 /*******************************************************************************
 * Find i in adaptive search tree t s.t. v(i) <= v < v(i+1).
@@ -38,18 +47,18 @@
 int
 adapt_tree_search(struct adapt_tree *t, adapt_t v)
 {
-  adapt_t F = 0;		/* Current value. */
-  int i = 0;			/* Current candidate. */
+  adapt_t F = 0;    /* Current value. */
+  int i = 0;      /* Current candidate. */
   int step = t->initstep;
   adapt_t *s = t->s;
   int j;
   for(j = t->root; step > 0; step >>= 1)
   {
-    F += s[j];			/* Cumulative value in current node */
+    F += s[j];      /* Cumulative value in current node */
     if(v < F)
-      j -= step;		/* Value is to the left or above. */
+      j -= step;    /* Value is to the left or above. */
     else
-      i = j, j += step;		/* Value is current or to the right. */
+      i = j, j += step;   /* Value is current or to the right. */
   }
   /* Now j is at the bottom of a tree (a leaf node). */
   if(v < F + s[j])

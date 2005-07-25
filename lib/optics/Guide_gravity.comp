@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -38,7 +38,7 @@
 *           R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005)
 *
 * %VALIDATION
-* May 2005: extensive internal test, all problems solved 
+* May 2005: extensive internal test, all problems solved
 * Validated by: K. Lieutenant
 *
 * %P
@@ -64,19 +64,19 @@
 * mright:  (1)    m-value of material for right.  vert. mirror
 * mtop:    (1)    m-value of material for top.    horz. mirror
 * mbottom: (1)    m-value of material for bottom. horz. mirror
-* kh       (1)    Number of horizontal channels in the guide (>= 1)
+* kh:      (1)    Number of horizontal channels in the guide (>= 1)
 *                 (kh-1 horizontal dividing walls)
 *                 this enables to have k*kh rectangular channels
-* G        (m/s2) Gravitation norm. 0 value disables G effects.
-* wavy     (deg)  Global guide waviness
-* wavy_z   (deg)  Partial waviness along propagation axis
-* wavy_tb  (deg)  Partial waviness in transverse direction for top/bottom mirrors
-* wavy_lr  (deg)  Partial waviness in transverse direction for left/right mirrors
-* chamfers (m)    Global chamfers specifications (in/out/mirror sides)
-* chamfers_z  (m) Input and output chamfers
-* chamfers_lr (m) Chamfers on left/right mirror sides
-* chamfers_tb (m) Chamfers on top/bottom mirror sides
-* nelements   (1) Number of sections in the guide element (length l/nelements)
+* G:       (m/s2) Gravitation norm. 0 value disables G effects.
+* wavy:    (deg)  Global guide waviness
+* wavy_z:  (deg)  Partial waviness along propagation axis
+* wavy_tb: (deg)  Partial waviness in transverse direction for top/bottom mirrors
+* wavy_lr: (deg)  Partial waviness in transverse direction for left/right mirrors
+* chamfers:(m)    Global chamfers specifications (in/out/mirror sides)
+* chamfers_z: (m) Input and output chamfers
+* chamfers_lr:(m) Chamfers on left/right mirror sides
+* chamfers_tb:(m) Chamfers on top/bottom mirror sides
+* nelements:  (1) Number of sections in the guide element (length l/nelements)
 *
 * OUTPUT PARAMETERS
 *
@@ -223,7 +223,7 @@ SHARE
   int Gravity_guide_Trace(double *dt,
         Gravity_guide_Vars_type *aVars,
         double cx, double cy, double cz,
-	      double cvx, double cvy, double cvz,
+        double cvx, double cvy, double cvz,
         double cxnum, double cxk, double cynum, double cyk,
         double *cnx, double *cny,double *cnz)
   {
@@ -344,10 +344,10 @@ TRACE
 
     if (dt!=0.0) PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz);
     if (dt>0.0)  GVars.N_reflection[6]++;
-    this_width  = w1; 
+    this_width  = w1;
     this_height = h1;
 
-	/* check if we are in the box input, else absorb */
+  /* check if we are in the box input, else absorb */
     if (fabs(x) > this_width/2 || fabs(y) > this_height/2)
       ABSORB;
     else
@@ -393,7 +393,7 @@ TRACE
         bounces++;
         /* now look for intersection with guide sides and exit */
         side = Gravity_guide_Trace(&dt, &GVars, x, y, z,
-	          vx, vy, vz, w_chnum, k, h_chnum, kh,
+            vx, vy, vz, w_chnum, k, h_chnum, kh,
             &nx, &ny, &nz);
 
         /* only positive dt are valid */

@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    2.0
+* Version:    $Revision: 1.6 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 *
@@ -42,12 +42,12 @@
 * and Helmut Schober   <schober@ill.fr>
 *
 * %VALIDATION
-* Apr 2005: extensive external test, most problems solved (cf. 'Bugs') 
+* Apr 2005: extensive external test, most problems solved (cf. 'Bugs')
 * Validated by: K. Lieutenant
 *
 * limitations:
 * no blade width used
-* 
+*
 * %BUGS
 * overestimates peak width for long wavelengths
 *
@@ -64,7 +64,7 @@
 * width:   (m)      optional total width of slit package
 * nu:      (Hz)     chopper frequency
 * eff:     (1)      efficiency = transmission x fraction of transparent material
-* filename (str)    optional file name to write component statistics (debuging)
+* filename:(str)    optional file name to write component statistics (debuging)
 *
 * Supermirror constants:
 * m:       (1)      m-value of material. Zero means completely absorbing.

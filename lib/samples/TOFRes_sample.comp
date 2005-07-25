@@ -11,33 +11,33 @@
 * Modified from Res_sample, written by: Kristian Nielsen
 * Date: 1999
 * Written by: KL, 10 October 2004
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
 * Sample for TOF resolution function calculation.
 *
 * %D
-* An inelastic sample with completely uniform scattering in both solid angle 
-* and energy. This sample is used together with the TOFRes_monitor component 
-* and (optionally) the mcresplot front-end to compute the resolution 
-* function of all time-of-flight instruments. 
+* An inelastic sample with completely uniform scattering in both solid angle
+* and energy. This sample is used together with the TOFRes_monitor component
+* and (optionally) the mcresplot front-end to compute the resolution
+* function of all time-of-flight instruments.
 * The method of time focusing is used to optimize the simulations.
 *
 * The shape of the sample is either a hollow cylinder or a rectangular box. The
-* hollow cylinder shape is specified with an inner and outer radius. 
+* hollow cylinder shape is specified with an inner and outer radius.
 * The box is specified with dimensions xwidth, yheight, zthick.
 *
 * The scattered neutrons will have directions towards a given target and
-* energies between E0-dE and E0+dE, where E0 is calculated from the position 
+* energies between E0-dE and E0+dE, where E0 is calculated from the position
 * and width of the time bin.
-* This target area is default disk shaped, but may also be rectangular 
+* This target area is default disk shaped, but may also be rectangular
 * if specified focus_xw and focus_yh
 * or focus_aw and focus_ah, respectively in meters and degrees.
 * The target itself is either situated according to given coordinates (x,y,z),
-* or setting the relative target_index of the component to focus at 
-* (next is +1). This target position will be set to its AT position. 
-* When targeting to centered components, such as spheres or cylinders, 
+* or setting the relative target_index of the component to focus at
+* (next is +1). This target position will be set to its AT position.
+* When targeting to centered components, such as spheres or cylinders,
 * define an Arm component where to focus at.
 *
 * Example: TOFRes_sample(radius_i=0.001, radius_o=0.01, h=0.04,
@@ -46,27 +46,27 @@
 *
 * %P
 * INPUT PARAMETERS:
-*       
-* radius_i  : Inner radius of hollow cylinder in (x,z) plane, or width of
+*
+* radius_i: Inner radius of hollow cylinder in (x,z) plane, or width of
 *             box along X (m)
-* radius_o  : Outer radius of hollow cylinder (m)
-* h         : Height of box or cylinder along Y (m)
-* focus_r   : Radius of sphere containing target. (m)
-* target_x  :
-* target_y  : position of target to focus at (m)
-* target_z  :
-* time_bin  : position of time bin (us)
+* radius_o: Outer radius of hollow cylinder (m)
+* h:        Height of box or cylinder along Y (m)
+* focus_r:  Radius of sphere containing target. (m)
+* target_x:
+* target_y: position of target to focus at (m)
+* target_z:
+* time_bin: position of time bin (us)
 * time_width: width of time bin (us)
 *
 * Optional parameters
-* xwidth    : horiz. dimension of sample, as a width (m)
-* yheight   : vert.. dimension of sample, as a height (m)
-* zthick    : thickness of sample (m)
-* focus_xw  : horiz. dimension of a rectangular area (m)
-* focus_yh  : vert.. dimension of a rectangular area (m)
-* focus_aw  : horiz. angular dimension of a rectangular area (deg)
-* focus_ah  : vert.. angular dimension of a rectangular area (deg)
-* target_index: relative index of component to focus at, e.g. next is +1 (1).
+* xwidth:   horiz. dimension of sample, as a width (m)
+* yheight:  vert.  dimension of sample, as a height (m)
+* zthick:   thickness of sample (m)
+* focus_xw: horiz. dimension of a rectangular area (m)
+* focus_yh: vert.  dimension of a rectangular area (m)
+* focus_aw: horiz. angular dimension of a rectangular area (deg)
+* focus_ah: vert.  angular dimension of a rectangular area (deg)
+* target_index: relative index of component to focus at, e.g. next is +1 (1)
 *
 * %E
 *******************************************************************************/
@@ -75,7 +75,7 @@ DEFINE COMPONENT TOFRes_sample
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_i=0,radius_o=0.01,h=0.05,focus_r=0.05,
     time_bin=20000, time_width=10,
-    target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0, 
+    target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
     focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, int target_index=0)
 OUTPUT PARAMETERS (res_struct)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -98,20 +98,20 @@ DECLARE
 INITIALIZE
 %{
 
-  f = 50; 
+  f = 50;
   if (!radius_o || !h) {
     if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     else res_struct.isrect=1; }
   else res_struct.isrect=0;
-  
+
   /* now compute target coords if a component index is supplied */
   if (target_index)
   {
-    Coords ToTarget; 
+    Coords ToTarget;
     ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
     ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
     coords_get(ToTarget, &res_struct.tx, &res_struct.ty, &res_struct.tz);
-  } 
+  }
   else
   { res_struct.tx = target_x; res_struct.ty = target_y; res_struct.tz = target_z; }
 
@@ -143,7 +143,7 @@ TRACE
   double flight_time;           /* Calculated time-of-flight from source to target (detector) */
   double dt0, dt1, dt2, dt;     /* Flight times through sample */
   double solid_angle=0;         /* Solid angle of target as seen from scattering point */
-  double aim_x, aim_y, aim_z, aim_length;   
+  double aim_x, aim_y, aim_z, aim_length;
                                 /* Position of target relative to scattering point */
   double scat_factor;           /* Simple cross-section model */
   int    intersect=0;
@@ -153,7 +153,7 @@ TRACE
     intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
   else
     intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
-  
+
   if(intersect)
   {
     if(t0 < 0) ABSORB;
@@ -190,21 +190,21 @@ TRACE
     aim_z = res_struct.tz-z;
     aim_length = sqrt(aim_x*aim_x+aim_y*aim_y+aim_z*aim_z);
     if(res_struct.aw && res_struct.ah) {
-      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 
+      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
         aim_x, aim_y, aim_z, res_struct.aw, res_struct.ah, ROT_A_CURRENT_COMP);
     } else if(res_struct.xw && res_struct.yh) {
-      randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
+      randvec_target_rect(&vx, &vy, &vz, &solid_angle,
         aim_x, aim_y, aim_z, res_struct.xw, res_struct.yh, ROT_A_CURRENT_COMP);
     } else {
-        randvec_target_circle(&vx, &vy, &vz, &solid_angle, 
+        randvec_target_circle(&vx, &vy, &vz, &solid_angle,
           aim_x, aim_y, aim_z, focus_r);
     }
     NORM(vx, vy, vz);
-    flight_time = -t + 1e-6*(time_bin + time_width * randpm1()); 
+    flight_time = -t + 1e-6*(time_bin + time_width * randpm1());
 /* Correct for too large or negative flight_times */
 /* Should perhaps be done more cleanly (more user choices) ?! */
-    for (; flight_time<0; flight_time += 1/f); 
-    for (; flight_time>1/f; flight_time -= 1/f); 
+    for (; flight_time<0; flight_time += 1/f);
+    for (; flight_time>1/f; flight_time -= 1/f);
     v = aim_length / flight_time;
 /* !! Remember later to correct for Jacobian in MC choice, t to V !! */
 
