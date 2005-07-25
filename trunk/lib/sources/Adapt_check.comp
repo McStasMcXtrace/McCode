@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -28,9 +28,7 @@
 * Example: Adapt_check(source_comp=MySource)
 *
 * %P
-* INPUT PARAMETERS:
-*
-* source_comp:   The name of the Source_adapt component in the
+* source_comp: [no quotes] The name of the Source_adapt component in the
 *                instrument definition.
 *
 * %E
@@ -44,8 +42,8 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
 #ifndef ADAPT_TREE_LIB_H
-#error Adapt_check : needs Source_adapt component and %include "adapt_tree-lib" 
-#endif  
+#error Adapt_check : needs Source_adapt component and %include "adapt_tree-lib"
+#endif
 %}
 
 TRACE

@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -53,11 +53,11 @@
 * %P
 * INPUT PARAMETERS
 *
-* file:     Filename of neutron file to write. Default is standard
+* file: [str] Filename of neutron file to write. Default is standard
 *           output [string]. If not given, a unique name will be used.
-* bufsize:  Size of neutron output buffer [records]
-*           default is 0, i.e. save all (recommanded).
-* type:     Type of output file 'text','float','double' [string]
+* bufsize:[1] Size of neutron output buffer
+*           default is 0, i.e. save all - recommanded.
+* type: [str] Type of output file 'text','float','double'
 *           default is text
 *
 * %E
@@ -65,8 +65,8 @@
 
 
 DEFINE COMPONENT Virtual_output
-DEFINITION PARAMETERS (file = 0, type = 0)
-SETTING PARAMETERS (bufsize = 0)
+DEFINITION PARAMETERS (file=0, type=0)
+SETTING PARAMETERS (bufsize=0)
 OUTPUT PARAMETERS (DEFS, Vars, mcformat_sim, mcformat_vo, mcformat_override)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)

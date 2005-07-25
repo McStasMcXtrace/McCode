@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: KL, 7 June 2005
@@ -19,29 +19,29 @@
 *
 * %D
 * Sample for use in a SANS instrument, models hard, mono disperse spheres in thin solution.
-* The shape of the sample may be a cylinder of given radius or a box with dimensions 
+* The shape of the sample may be a cylinder of given radius or a box with dimensions
 * xwidth, yheight, zthick. qmax defines a cutoff in q.
-* 
+*
 * Example: Sans_spheres(R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_a = 50, qmax = 0.3 ,xwidth=0.01, yheight=0.01, zthick=0.005)
 *
 * %P
 *
 * INPUT PARAMETERS
-*       
-* R	    : Radius of scattering hard spheres (AA)
-* Phi       : Particle volume fraction (1)
-* Delta_rho : Excess scattering length density (fm/AA^3)
-* sigma_a   : Absorption cross section density at 2200 m/s (m^-1)
-* qmax	    : Maximum momentum transfer (AA^-1)
 *
-* xwidth    : horiz. dimension of sample, as a width (m)
-* yheight   : vert.. dimension of sample, as a height (m)
-* zthick    : thickness of sample (m)
+* R:         Radius of scattering hard spheres (AA)
+* Phi:       Particle volume fraction (1)
+* Delta_rho: Excess scattering length density (fm/AA^3)
+* sigma_a:   Absorption cross section density at 2200 m/s (m^-1)
+* qmax:      Maximum momentum transfer (AA^-1)
+*
+* xwidth:    horiz. dimension of sample, as a width (m)
+* yheight:   vert . dimension of sample, as a height (m)
+* zthick:    thickness of sample (m)
 *
 * Variables calculated in the component
 *
-* my_s      : Attenuation factor due to scattering (m^-1)
-* my_a      : Attenuation factor due to absorbtion (m^-1)
+* my_s: Attenuation factor due to scattering (m^-1)
+* my_a: Attenuation factor due to absorbtion (m^-1)
 *
 * %Link
 *
@@ -61,14 +61,14 @@ DECLARE
 INITIALIZE
 %{
     if (!xwidth || !yheight || !zthick) {
-	exit(fprintf(stderr,"Sans_spheres: %s:	 sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    }	
-  
+  exit(fprintf(stderr,"Sans_spheres: %s:   sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    }
+
   my_a_v = sigma_a*2200;           /* Is not yet divided by v */
-  
+
   my_s_pre = Phi * 4*PI*R*R*R/3 * Delta_rho*Delta_rho;
 
-%}                                                                             
+%}
 TRACE
 %{
   double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
@@ -88,7 +88,7 @@ TRACE
     dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
     PROP_DT(dt);                /* Point of scattering */
     l = v*dt;                   /* Penetration in sample */
-    
+
     vx_i=vx;
     vy_i=vy;
     vz_i=vz;
@@ -106,8 +106,8 @@ TRACE
     f = 3 * (sin(q*R) - q*R*cos(q*R))/(q*R*q*R*q*R);
 
 
-    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) 		fprintf(stderr, "Sans_spheres: FATAL ERROR: Did not hit box from inside.\n");
-    		
+    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick))    fprintf(stderr, "Sans_spheres: FATAL ERROR: Did not hit box from inside.\n");
+
 
     l_1 = v*t1;
 /*    fprintf(stderr, "l_full: %g, qmax: %g p: %g my_s_pre: %g, f: %g, my_a_v/v: %g\n",l_full,qmax,p,my_s_pre,f,my_a_v/v);*/

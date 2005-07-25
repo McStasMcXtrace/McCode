@@ -12,10 +12,10 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas 1.1
-* Version: 0.1
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Tutorial
 *
-* A test instrument using a vanadium cylinder 
+* A test instrument using a vanadium cylinder
 *
 * %Description
 * This instrument shows the vanadium sample scattering anisotropy.
@@ -27,7 +27,7 @@
 * INPUT PARAMETERS:
 * ROT: (deg) Rotation angle of the PSD monitor
 *
-* %Link 
+* %Link
 * The McStas User manual
 * The McStas tutorial
 *
@@ -71,8 +71,8 @@ COMPONENT source = Source_flat(radius = 0.015, dist = 1,
 /* improve beam divergence.                            */
 /* The component is placed at a distance RELATIVE to   */
 /* a previous component...                             */
-COMPONENT collimator = Collimator_linear(len = 0.2, 
-  divergence = coll_div, xmin = -0.02, xmax = 0.02, 
+COMPONENT collimator = Collimator_linear(len = 0.2,
+  divergence = coll_div, xmin = -0.02, xmax = 0.02,
   ymin = -0.03, ymax = 0.03)
   AT (0, 0, 0.4) RELATIVE arm
 
@@ -83,7 +83,7 @@ COMPONENT collimator = Collimator_linear(len = 0.2,
 /* that we know for sure will not gain us more insight)*/
 /* Other options for smart targeting are available -   */
 /* refer to component documentation for info.          */
-COMPONENT target = V_sample(radius_i = 0.008, radius_o = 0.012, 
+COMPONENT target = V_sample(radius_i = 0.008, radius_o = 0.012,
   h = 0.015, focus_r = 0, pack = 1,
   target_x = 0, target_y = 0, target_z = 1)
   AT (0,0,1) RELATIVE arm
@@ -92,7 +92,7 @@ COMPONENT target = V_sample(radius_i = 0.008, radius_o = 0.012,
 /* on the sample position. The ROT parameter above     */
 /* defines rotation of this arm (and components        */
 /* relative to the arm)                                */
-COMPONENT arm2 = Arm() 
+COMPONENT arm2 = Arm()
   AT (0,0,0) RELATIVE target
   ROTATED (0,ROT,0) relative arm
 

@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Venturi
 * Date: Aug 03 2001
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Honeycomb_guide by K. Lefmann (buggy).
@@ -36,27 +36,27 @@
 * %P
 * INPUT PARAMETERS:
 *
-* w1:      (m)    Width at the guide entry
-* w2:      (m)    Width at the guide exit
-* l:       (m)    length of guide
-* R0:      (1)    Low-angle reflectivity
-* Qc:      (AA-1) Critical scattering vector
-* alpha:   (AA)   Slope of reflectivity
-* m:       (1)    m-value of material. Zero means completely absorbing.
-* W:       (AA-1) Width of supermirror cut-off
-* d:       (m)    Thicxkness of subdividing walls [0]
-* k:       (1)    Number of horizontal channels in the guide (>= 1) [1]
+* w1:      [m]    Width at the guide entry
+* w2:      [m]    Width at the guide exit
+* l:       [m]    length of guide
+* R0:      [1]    Low-angle reflectivity
+* Qc:      [AA-1] Critical scattering vector
+* alpha:   [AA]   Slope of reflectivity
+* m:       [1]    m-value of material. Zero means completely absorbing.
+* W:       [AA-1] Width of supermirror cut-off
+* d:       [m]    Thicxkness of subdividing walls [0]
+* k:       [1]    Number of horizontal channels in the guide (>= 1) [1]
 *                 (k-1 vertical dividing walls)
 *
 * Optional input parameters: (different ways for m-specifications)
 *
-* mright:    (1)    m-value of material for right.     vertical mirror
-* mleft:     (1)    m-value of material for left.      vertical mirror
-* mleftup:   (1)    m-value of material for leftup.    oblique mirror
-* mrightup:  (1)    m-value of material for rightdown. oblique mirror
-* mrightdown:(1)    m-value of material for leftup.    oblique mirror
-* mleftdown: (1)    m-value of material for rightdown. oblique mirror
-* G:         (m/s2) Gravitation norm. 0 value disables G effects.
+* mright:    [1]    m-value of material for right.     vertical mirror
+* mleft:     [1]    m-value of material for left.      vertical mirror
+* mleftup:   [1]    m-value of material for leftup.    oblique mirror
+* mrightup:  [1]    m-value of material for rightdown. oblique mirror
+* mrightdown:[1]    m-value of material for leftup.    oblique mirror
+* mleftdown: [1]    m-value of material for rightdown. oblique mirror
+* G:         [m/s2] Gravitation norm. 0 value disables G effects.
 *
 * OUTPUT PARAMETERS
 *
@@ -186,7 +186,7 @@ SHARE
   int Honeycomb_guide_Trace(double *dt,
         Honeycomb_guide_Vars_type *aVars,
         double cx, double cy, double cz,
-	      double cvx, double cvy, double cvz,
+        double cvx, double cvy, double cvz,
         double cxnum, int k, double cynum)
   {
     double B, C;
@@ -354,7 +354,7 @@ TRACE
       /* now look for intersection with guide sides and exit */
 
       side = Honeycomb_guide_Trace(&dt, &GVars, x, y, z,
-	        vx, vy, vz, w_chnum, k, h_chnum);
+          vx, vy, vz, w_chnum, k, h_chnum);
 
       /* only positive dt are valid */
       /* exit reflection loops if no intersection (neutron is after box) */

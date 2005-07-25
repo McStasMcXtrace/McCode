@@ -12,13 +12,13 @@
 * Date: 01st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.6
-* Version: 0.1
+* Version: $Revision: 1.7 $
 *
 * This component is a PreMonitor that is to be used with one Monitor_nD, in
-* order to record some neutron parameters 
+* order to record some neutron parameters
 *
 * %Description
-* Neutron parameters are stored when passing in the PreMonitor. 
+* Neutron parameters are stored when passing in the PreMonitor.
 * If this neutron then reaches the associated Monitor_nD, this latter component
 * will measure the previously stored parameters. This enables to study
 * correlations between a given parameter in one place of the instrument
@@ -40,11 +40,11 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* comp: name of the associated Monitor_nD where the detection should take place
+* comp: name of the associated Monitor_nD where the detection should take place [no quotes]
 *
 * OUTPUT PARAMETERS:
 *
-* %Link 
+* %Link
 * <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
 * <a href="Monitor_nD.html">Monitor_nD</a>
 *
@@ -70,12 +70,12 @@ INITIALIZE
 %}
 
 TRACE
-%{ 
+%{
     struct MonitornD_Variables *Vars = &(MC_GETPAR(comp, Vars));
     /* directly act on MonitornD_Variables pointer, do not need to update */
-    
-    PROP_Z0; 
-    
+
+    PROP_Z0;
+
     if (Vars->Flag_UsePreMonitor == 1)
     {
         Vars->cp = p;
@@ -92,7 +92,7 @@ TRACE
         SCATTER;
     }
 %}
-  
+
 MCDISPLAY
 %{
   /* A bit ugly; hard-coded dimensions. 0.1 m */

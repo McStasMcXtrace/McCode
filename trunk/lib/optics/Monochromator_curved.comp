@@ -11,7 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
@@ -65,19 +65,19 @@
 * NV:      number of slabs vertical   (rows)
 * mosaich: Horisontal mosaic FWHM (arc minutes)
 * mosaicv: Vertical mosaic FWHM (arc minutes)
-* r0:      Maximum reflectivity (1). O unactivates component.
+* r0:      Maximum reflectivity. O unactivates component (1)
 * Q:       Scattering vector (AA-1)
-* RV:      radius of vertical focussing (m). flat for 0.
-* RH:      radius of horizontal focussing (m). flat for 0.
+* RV:      radius of vertical focussing. flat for 0 (m)
+* RH:      radius of horizontal focussing. flat for 0 (m)
 *
 * optional parameters
-* DM:      monochromator d-spacing (Angstrom) instead of Q=2*pi/DM
+* DM:      monochromator d-spacing instead of Q=2*pi/DM (Angstrom)
 * mosaic:  sets mosaich=mosaicv (arc minutes)
 * width:   total width of monochromator (m)
 * height:  total height of monochromator (m)
 * verbose: verbosity level (0/1)
-* reflect: reflectivity file name of text file as 2 columns [k, R]
-* transmit:transmission file name of text file as 2 columns [k, T]
+* reflect: reflectivity file name of text file as 2 columns [k, R] [str]
+* transmit:transmission file name of text file as 2 columns [k, T] [str]
 *
 * OUTPUT PARAMETERS:
 * col:     column index for last hit blade (1:NH)

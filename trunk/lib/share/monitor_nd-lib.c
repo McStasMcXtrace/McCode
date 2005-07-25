@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: 1.1
+* Version: $Revision: 1.29 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.28 2005-07-18 14:38:00 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.29 2005-07-25 14:55:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.28  2005/07/18 14:38:00  farhi
+* Added 0.5 top all floor's so that bin are centered (at last)
+*
 * Revision 1.27  2005/07/06 08:16:28  farhi
 * Misprint for Kxy/Vxy. Better Variable name as well.
 *

@@ -12,7 +12,7 @@
 * Date: August 1998.
 * Origin: ISIS/Risoe
 * Release: McStas 1.1
-* Version: 0.1
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: ISIS
 *
 * Simple simulation of PRISMA2 with RITA-style analyser backend.
@@ -42,7 +42,7 @@
 * PHA7:(deg) Analyzer 7 tilt angle
 * TTA: (deg) Take-off angle at the analyzer position, aka A6
 *
-* %Link 
+* %Link
 * The McStas User manual
 * <a href="http://www.isis.rl.ac.uk/excitations/prisma/">PRISMA</a>
 *
@@ -90,12 +90,12 @@ TRACE
         tmp1 = 2*theta;
         cs = cos(tmp1);
         sn = sin(tmp1);
-        tmp2 = cs*vx - sn*vz; 
+        tmp2 = cs*vx - sn*vz;
         vy = vy;
-        vz = cs*vz + sn*vx; 
+        vz = cs*vz + sn*vx;
         vx = tmp2;
 
-        /* Second: scatering out of plane. 
+        /* Second: scatering out of plane.
            Approximation is that Debye-Scherrer cone is a plane */
 
         phi = atan2(vy,vz);                            /* out-of plane angle */
@@ -130,17 +130,17 @@ END
 /* Modified from TOF_monitor.comp to bin neutrons according to their
    "color". */
 DEFINE COMPONENT TOF_monitor_color
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, nchan, dt, filename, maxcolor) 
+DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, nchan, dt, filename, maxcolor)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-#ifdef MCSTAS_VERSION    
+#ifdef MCSTAS_VERSION
     double TOF_N[maxcolor+1][nchan];
 #else
     int    TOF_N[maxcolor+1][nchan];
-#endif    
+#endif
     double TOF_p[maxcolor+1][nchan];
     double TOF_p2[maxcolor+1][nchan];
   %}
@@ -183,7 +183,7 @@ TRACE
 FINALLY
   %{
     printf("writing TOF color\n");
-    
+
     DETECTOR_OUT_2D(
         "Time-of-flight monitor",
         "Neutron color",
@@ -192,7 +192,7 @@ FINALLY
         maxcolor+1, nchan,
         &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
         filename);
-        
+
   %}
 
 MCDISPLAY

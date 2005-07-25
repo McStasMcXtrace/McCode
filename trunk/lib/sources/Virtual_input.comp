@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.14 $
+* Version:  $Revision: 1.15 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -19,7 +19,7 @@
 * 'virtual source' file.
 *
 * %D
-*   This component reads neutron events stored into a file, and sends them into
+*  This component reads neutron events stored from a file, and sends them into
 * the instrument. It thus replaces a Source component, using a previously
 * computed neutron set. The 'source' file type may be either of text or binary
 * format. The component may recognize its format automatically, but you may
@@ -32,10 +32,10 @@
 * this low flux position with the 'source' file.
 *
 * Possible file formats are:
-* 1-text column formatted with lines containing 11 values in the order:
+* 1- text column formatted with lines containing 11 values in the order:
 *       p x y z vx vy vz t sx sy sz stored into about 83 bytes/n.
-* 2-float or double binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
-*       stored into 44 and 88 bytes/n respectively for float/double.
+* 2- float or double binary files stored into 44 and 88 bytes/n
+* (with the 11 values 'p x y z vx vy vz t sx sy sz') for float/double resp.
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
@@ -50,22 +50,20 @@
 *
 * %P
 * INPUT PARAMETERS
-* file:         (str) Name of the neutron input file, or stdin if left to 0.
+* file:         Name of the neutron input file [str]
 *
-* Optional input parameters:
-* repeat_count: (1)   Number of times the source must be generated.
-*                           0 unactivates the component
-* type:         (str) May be "text", "float" or "double" to force file type.
-*                           default is text file.
-* verbose:      (0/1) Display additional information about source (recommanded)
+* Optional input parameters
+* repeat_count: Number of times the source must be generated [1]
+* type:         May be "text", "float" or "double" to force file type.
+*                           default is text file [str]
+* verbose:      Display additional information about source, recommanded [0/1]
 *
 * %E
-*
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_input
 DEFINITION PARAMETERS (file=0, type=0)
-SETTING PARAMETERS (repeat_count = 1, verbose=0)
+SETTING PARAMETERS (verbose=0,repeat_count=1)
 OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,file_ncount,
                    mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz,
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,

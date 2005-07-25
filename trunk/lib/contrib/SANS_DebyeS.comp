@@ -11,7 +11,7 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    0.1
+* Version:    $Revision: 1.3 $
 * Release:    McStas 1.9
 *
 * Sample for Small Angle Neutron Scattering: Debye-Scherrer Ring
@@ -64,7 +64,7 @@ DECLARE
 INITIALIZE
 %{
     if (!xwidth || !yheight || !zthick) {
-	exit(fprintf(stderr,"SANS_DebyeS: %s:	 sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  exit(fprintf(stderr,"SANS_DebyeS: %s:  sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     }
 %}
 
@@ -109,7 +109,7 @@ TRACE
     vy = vout_y;
     vz = vout_z;
 
-    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) 		fprintf(stderr, "SANS_DebyeS: FATAL ERROR: Did not hit box from inside.\n");
+    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick))    fprintf(stderr, "SANS_DebyeS: FATAL ERROR: Did not hit box from inside.\n");
     }
 
     SCATTER;

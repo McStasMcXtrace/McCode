@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: 1.1
+* Version: $Revision: 1.13 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions.
@@ -20,34 +20,37 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.12 2005-07-04 08:20:16 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.13 2005-07-25 14:55:08 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
-*	Revision 1.11  2005/02/22 16:11:03  farhi
-*	Now saving absolute position of monitors as "position" field in header
-*	Useful for plotting e.g. flux vs distance
+* $Log: not supported by cvs2svn $
+* Revision 1.12  2005/07/04 08:20:16  farhi
+* added support for radial distributions vxy kxy and xy=radius
 *
-*	Revision 1.10  2005/01/18 10:35:56  farhi
-*	Intall new MACROs for easy User Variable usage in Monitor_nD
-*	MONND_DECLARE(comp)
-*	MONND_USER_TITLE(comp, num, title)
-*	MONND_USER_VALUE(comp, num, value)
-*	comp is the name of a Monitor_nD component; num is 1 or 2 for UserVariable
+* Revision 1.11  2005/02/22 16:11:03  farhi
+* Now saving absolute position of monitors as "position" field in header
+* Useful for plotting e.g. flux vs distance
 *
-*	Revision 1.9  2004/11/30 16:11:37  farhi
-*	defined some macros for an easier User variable handling. Should be updated in the header and Comp doc
+* Revision 1.10  2005/01/18 10:35:56  farhi
+* Intall new MACROs for easy User Variable usage in Monitor_nD
+* MONND_DECLARE(comp)
+* MONND_USER_TITLE(comp, num, title)
+* MONND_USER_VALUE(comp, num, value)
+* comp is the name of a Monitor_nD component; num is 1 or 2 for UserVariable
 *
-*	Revision 1.8  2003/02/11 12:28:46  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
+* Revision 1.9  2004/11/30 16:11:37  farhi
+* defined some macros for an easier User variable handling. Should be updated in the header and Comp doc
+*
+* Revision 1.8  2003/02/11 12:28:46  farhi
+* Variouxs bug fixes after tests in the lib directory
+* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+* read_table:corrected MC_SYS_DIR -> MCSTAS define
+* monitor_nd-lib: fix Log(signal) log(coord)
+* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+* Progress_bar: precent -> percent parameter
+* CS: ----------------------------------------------------------------------
 *
 * Revision 1.1 2002/08/28 11:39:00 ef
-*	Initial revision extracted from lib/monitors/Monitor_nD.comp
+* Initial revision extracted from lib/monitors/Monitor_nD.comp
 *******************************************************************************/
 
 #ifndef MONITOR_ND_LIB_H

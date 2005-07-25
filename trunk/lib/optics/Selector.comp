@@ -11,7 +11,7 @@
 * Written by: Peter Link
 * Date: MARCH 1999
 * Origin: Uni. Gottingen (Germany)
-* Version: 1.0
+* Version: $Revision: 1.6 $
 * Release: McStas 1.6
 * Modified by: <a href="Andreas.Ostermann@frm2.tum.de">Andreas Ostermann</a>.
 *
@@ -25,7 +25,7 @@
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
 *
 * %VALIDATION
-* Jun 2005: extensive external test, problems are being solved at the moment 
+* Jun 2005: extensive external test, problems are being solved at the moment
 *
 * %BUGS
 * for transmission calculation, each neutron is supposed to be in the guide centre
@@ -71,25 +71,25 @@ TRACE
    only the free space between two neighboring spokes is taken
    p is adjusted to transmission for parallel beam
   */
-	n_angle_in = atan2( x,y+radius)*RAD2DEG;
-	closed_angle = width/radius*RAD2DEG;
-	open_angle = 360/num-closed_angle;
-	sel_phase = open_angle*rand01();
-	p *= (open_angle/(closed_angle+open_angle));
+  n_angle_in = atan2( x,y+radius)*RAD2DEG;
+  closed_angle = width/radius*RAD2DEG;
+  open_angle = 360/num-closed_angle;
+  sel_phase = open_angle*rand01();
+  p *= (open_angle/(closed_angle+open_angle));
 
-	PROP_DT(dt);
+  PROP_DT(dt);
 
   if (x<xmin || x>xmax || y<ymin || y>ymax)
     ABSORB;                                  /* because outside frame */
   /* now let's look whether the neutron is still
  between the same two spokes or absorbed meanwhile */
 
-	n_angle_out = atan2(x,y+radius)*RAD2DEG;  /* neutron beam might be divergent */
+  n_angle_out = atan2(x,y+radius)*RAD2DEG;  /* neutron beam might be divergent */
 
-	sel_phase = sel_phase + feq*dt*360 - alfa;  /* rotor turned, but spokes are torsaded */
+  sel_phase = sel_phase + feq*dt*360 - alfa;  /* rotor turned, but spokes are torsaded */
 
-	if (n_angle_out<(n_angle_in-sel_phase) || n_angle_out>(n_angle_in-sel_phase+open_angle) )
-	  ABSORB;              /* because must have passed absorber */
+  if (n_angle_out<(n_angle_in-sel_phase) || n_angle_out>(n_angle_in-sel_phase+open_angle) )
+    ABSORB;              /* because must have passed absorber */
   else
     SCATTER;
 %}

@@ -7,7 +7,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 *              KL, 28.09.01   (two lines)
@@ -18,40 +18,39 @@
 * %P
 *
 * INPUT PARAMETERS
-*       
-* d_phi0    : Focussing angle corresponding to the vertical dimensions
-*             of the detector placed at the right distance (deg)
-* focus_r   : Focussing radius of incoherent (m) 
-* focus_xw  : horiz. dimension of a rectangular area (m)
-* focus_yh  : vert.. dimension of a rectangular area (m)
-* focus_aw  : horiz. angular dimension of a rectangular area (deg)
-* focus_ah  : vert.. angular dimension of a rectangular area (deg)
-* radius    : Radius of sample in (x,z) plane (m)       
-* h         : Height of sample y direction (m)
-* pack      : Packing factor (1)
-* Vc        : Volume of unit cell (AA^3)
-* sigma_a   : Absorption cross section per unit cell at 2200 m/s (fm^2)
-* sigma_inc : Incoherent cross section per unit cell (fm^2)
-* frac      : Fraction of incoherently scattered neutron rays
 *
-* q_1         : Scattering vector of reflection (AA^-1)
-* j_1         : Multiplicity of reflection (1)
-* F2_1        : Structure factor of reflection (fm^2)
-* w_1         : Intrinsic line broadening of reflection (AA^-1)
-* q_2
-* j_2
-* F2_2
-* w_2
-* DW        : Debye-Waller factor of reflection (1)
-* target_x  : 
-* target_y  : position of target to focus at (m)
-* target_z  :
-* target_index : component to focus at (integer) 
+* d_phi0::  Focussing angle corresponding to the vertical dimensions
+*             of the detector placed at the right distance [deg]
+* focus_r:  Focussing radius of incoherent [m]
+* focus_xw: horiz. dimension of a rectangular area [m]
+* focus_yh: vert.. dimension of a rectangular area [m]
+* focus_aw: horiz. angular dimension of a rectangular area [deg]
+* focus_ah: vert.. angular dimension of a rectangular area [deg]
+* radius:   Radius of sample in (x,z) plane [m]
+* h:        Height of sample y direction [m]
+* pack:     Packing factor [1]
+* Vc:       Volume of unit cell [AA^3]
+* sigma_a:  Absorption cross section per unit cell at 2200 m/s [fm^2]
+* sigma_inc:Incoherent cross section per unit cell [fm^2]
+* frac:     Fraction of incoherently scattered neutron rays [1]
+* q_1:      Scattering vector of reflection, Line 1 [AA^-1]
+* j_1:      Multiplicity of reflection, Line 1 [1]
+* F2_1:     Structure factor of reflection, Line 1 [fm^2]
+* w_1:      Intrinsic line broadening of reflection, Line 1 [AA^-1]
+* q_2:      Scattering vector of reflection, Line 2 [AA^-1]
+* j_2:      Multiplicity of reflection, Line 2 [1]
+* F2_2:     Structure factor of reflection, Line 2 [fm^2]
+* w_2:      Intrinsic line broadening of reflection, Line 2 [AA^-1]
+* DW:       Debye-Waller factor of reflection [1]
+* target_x: position of target to focus at [m]
+* target_y: position of target to focus at [m]
+* target_z: position of target to focus at [m]
+* target_index: component to focus at [integer]
 *
 * Variables calculated in the component
 *
-* my_s      : Attenuation factor due to scattering (m^-1)
-* my_a      : Attenuation factor due to absorbtion (m^-1)
+* my_s: Attenuation factor due to scattering [m^-1]
+* my_a: Attenuation factor due to absorbtion [m^-1]
 *
 * %L
 * <A HREF="http://neutron.risoe.dk/mcstas/components/Powder1/">Old
@@ -65,10 +64,10 @@
 
 DEFINE COMPONENT Powder2
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (d_phi0, radius, focus_r=0, h, pack, Vc, sigma_a, sigma_inc, 
+SETTING PARAMETERS (d_phi0, radius, focus_r=0, h, pack, Vc, sigma_a, sigma_inc,
                     frac, focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0,
                     j_1, q_1, F2_1, j_2, q_2, F2_2, w_1, w_2, DW,
-		    target_x=0, target_y=0, target_z=0, int target_index=0)
+        target_x=0, target_y=0, target_z=0, int target_index=0)
 OUTPUT PARAMETERS (my_s_v2, my_a_v, q_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -79,15 +78,15 @@ INITIALIZE
 %{
   my_a_v = pack*sigma_a/Vc*2200;           /* Is not yet divided by v */
   my_inc = pack*sigma_inc/Vc;
-  my_s_v2_1 = 4*PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_1*F2_1/q_1);  
-  my_s_v2_2 = 4*PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_2*F2_2/q_2);  
+  my_s_v2_1 = 4*PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_1*F2_1/q_1);
+  my_s_v2_2 = 4*PI*PI*PI*pack*DW/(Vc*Vc*V2K*V2K)*(j_2*F2_2/q_2);
                                       /* Is not yet divided by v^2 */
   /* Squires [3.103] */
   q_v1 = q_1*K2V;
   q_v2 = q_2*K2V;
   w_v1 = w_1 * K2V;
   w_v2 = w_2 * K2V;
-%}                                                                             
+%}
 TRACE
 %{
   double t0, t1, v, v1,l_full, l, l_1, dt, d_phi, theta, my_s, my_s_n;
@@ -105,7 +104,7 @@ TRACE
     PROP_DT(dt+t0);             /* Point of scattering */
     l = v*dt;                   /* Penetration in sample */
     if (target_index){
-      Coords ToTarget; 
+      Coords ToTarget;
       ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
       ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
       coords_get(ToTarget, &target_x, &target_y, &target_z);
@@ -113,10 +112,10 @@ TRACE
     aim_x = target_x-x;         /* Vector pointing at target (anal./det.) */
     aim_y = target_y-y;
     aim_z = target_z-z;
-    my_s = (my_s_v2_1+my_s_v2_2)/(v*v)+my_inc; 
+    my_s = (my_s_v2_1+my_s_v2_2)/(v*v)+my_inc;
         /* Total attenuation from scattering */
-    
-    if (rand01() >= frac)    
+
+    if (rand01() >= frac)
      {   /* Make coherent scattering event */
       /* Choose point on Debye-Scherrer cone */
       d_phi = d_phi0*DEG2RAD/2.0*randpm1();
@@ -141,8 +140,8 @@ TRACE
       vx = vout_x;
       vy = vout_y;
       vz = vout_z;
-  
-      if(!cylinder_intersect(&t0, &t1, x, y, z, 
+
+      if(!cylinder_intersect(&t0, &t1, x, y, z,
                            vx, vy, vz, radius, h))
       {
         /* Strange error: did not hit cylinder */
@@ -158,19 +157,19 @@ TRACE
      {  /* Make incoherent scattering event */
       v = sqrt(vx*vx+vy*vy+vz*vz);
       if(focus_aw && focus_ah) {
-	randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle, 
-				    aim_x, aim_y, aim_z, focus_aw*DEG2RAD, focus_ah*DEG2RAD, ROT_A_CURRENT_COMP);
+  randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
+            aim_x, aim_y, aim_z, focus_aw*DEG2RAD, focus_ah*DEG2RAD, ROT_A_CURRENT_COMP);
       } else if(focus_xw && focus_yh) {
-	randvec_target_rect(&vx, &vy, &vz, &solid_angle, 
-			    aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+  randvec_target_rect(&vx, &vy, &vz, &solid_angle,
+          aim_x, aim_y, aim_z, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
       } else {
-	randvec_target_sphere(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
+  randvec_target_sphere(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
       }
       v1 = sqrt(vx*vx+vy*vy+vz*vz);
       vx *= v/v1;
       vy *= v/v1;
       vz *= v/v1;
-      if(!cylinder_intersect(&t0, &t1, x, y, z, 
+      if(!cylinder_intersect(&t0, &t1, x, y, z,
                            vx, vy, vz, radius, h))
       {
         /* Strange error: did not hit cylinder */
@@ -185,9 +184,7 @@ TRACE
 /*  printf("Incoherent p_in: %g arg: %g  l_1: %g t0: %g t1: %g p: %g \n",
           p_in,(my_a_v/v+my_s)*(l+l_1),l_1,t0,t1,p); */
      }  /* Incoherent scattering event */
-  }
-  else
-    ABSORB;
+  } /* else transmit */
 %}
 
 MCDISPLAY

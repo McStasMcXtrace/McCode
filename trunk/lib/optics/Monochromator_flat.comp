@@ -11,7 +11,7 @@
 *
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -24,7 +24,7 @@
 * The mosaic is anisotropic gaussian, with different FWHMs in the Y and Z
 * directions. The scattering vector is perpendicular to the surface.
 *
-* Example: Monochromator_flat(zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1, 
+* Example: Monochromator_flat(zmin=-0.1, zmax=0.1, ymin=-0.1, ymax=0.1,
 *           mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
 *
 * %P
@@ -40,7 +40,7 @@
 * Q:       Magnitude of scattering vector (AA-1)
 *
 * optional parameters
-* DM:      monochromator d-spacing (Angstrom) instead of Q = 2*pi/DM
+* DM:      monochromator d-spacing instead of Q = 2*pi/DM (Angstrom)
 *
 * %E
 *******************************************************************************/
@@ -56,7 +56,7 @@ SHARE
 #ifndef GAUSS
   /* Define these arrays only once for all instances. */
   /* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
-     James O Wilkes, "Applied numerical methods", Wiley, 1969, page 103. 
+     James O Wilkes, "Applied numerical methods", Wiley, 1969, page 103.
      This reference is available from the Copenhagen UB2 library */
   double Gauss_X[] = {-0.987992518020485, -0.937273392400706, -0.848206583410427,
                 -0.724417731360170, -0.570972172608539, -0.394151347077563,
@@ -68,7 +68,7 @@ SHARE
                 0.198431485327111, 0.202578241925561, 0.198431485327111,
                 0.186161000115562, 0.166269205816994, 0.139570677926154,
                 0.107159220467172, 0.070366047488108, 0.030753241996117};
-  
+
 
 #define GAUSS(x,mean,rms) \
   (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
@@ -88,7 +88,7 @@ INITIALIZE
   mos_rms_y = MIN2RAD*mosaich/sqrt(8*log(2));
   mos_rms_z = MIN2RAD*mosaicv/sqrt(8*log(2));
   mos_rms_max = mos_rms_y > mos_rms_z ? mos_rms_y : mos_rms_z;
-  
+
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
 %}
@@ -200,8 +200,8 @@ TRACE
           }
           total *= width;
           /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
-	         * width 1/cos(theta) greater than the mosaic and correct for any
-	         * error by adjusting the neutron weight later. */
+           * width 1/cos(theta) greater than the mosaic and correct for any
+           * error by adjusting the neutron weight later. */
           phi = mos_sample*randnorm();
           /* Compute final wave vector kf and scattering vector q = ki - kf */
           cos_phi = cos(phi);

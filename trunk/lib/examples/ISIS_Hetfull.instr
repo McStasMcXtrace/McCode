@@ -12,18 +12,18 @@
 * Date: 22nd Jan 2004.
 * Origin: <a href="http://www.isis.rl.ac.uk">ISIS (UK)</a>
 * Release: McStas 1.7/1.8
-* Version: 0.1
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: ISIS
 *
 * HET: High Energy Transfer Chopper Spectrometer
 *
 * %Description
 * This instrument is a simple model of the HET spectrometer at the ISIS neutron
-* facility. The input arguments are hardwired so that the Fermi chopper position 
+* facility. The input arguments are hardwired so that the Fermi chopper position
 * is 10 metres from the moderator. This instrument uses the FC module written by
-* Andrew Garret which comes with no guarantees as to its accuracy in modelling the 
+* Andrew Garret which comes with no guarantees as to its accuracy in modelling the
 * Fermi Chopper.
-* 
+*
 *
 * Example: mcrun HETfull.instr E_0=443.0,E_1=470.0,chop_select=450.0,nu_chop=600.0, type=2
 *
@@ -52,25 +52,25 @@ int nslits;
 
 INITIALIZE
 %{
-/* 	type=1 sloppy chopper
-	type=2 B chopper
+/*  type=1 sloppy chopper
+  type=2 B chopper
 */
 if (type==1)
-	{c_h1=-0.032;
-	 c_h2=0.032;
-	 roc=-1.3;
-	 nslits=16;
-	 chan_w=0.00283;
-	 fprintf(stderr,"sloppy chopper selected");
-	}
+  {c_h1=-0.032;
+   c_h2=0.032;
+   roc=-1.3;
+   nslits=16;
+   chan_w=0.00283;
+   fprintf(stderr,"sloppy chopper selected");
+  }
 if (type==2)
-	{c_h1=-0.026;
-	 c_h2=0.026;
-	 roc=-0.92;
-	 nslits=24;
-	 chan_w=0.00184;	 
-	 fprintf(stderr,"250mev chopper selected");
-	}
+  {c_h1=-0.026;
+   c_h2=0.026;
+   roc=-0.92;
+   nslits=24;
+   chan_w=0.00184;
+   fprintf(stderr,"250mev chopper selected");
+  }
 
 /* hardwired for FC position 10m from moderator */
 chop_phase=0.002528*9.044/sqrt(chop_select);
@@ -87,7 +87,7 @@ COMPONENT ts1_mod = ISIS_moderator(
 
 COMPONENT FC = Chopper_Fermi(
 radius=0.05, nu=nu_chop, delta=chop_phase, ymin=c_h1, ymax=c_h2,
- w=chan_w, n=nslits, r_slit=roc) 
+ w=chan_w, n=nslits, r_slit=roc)
 AT (0,0,10) RELATIVE ts1_mod
 
 COMPONENT FCslit1 = Slit(
@@ -95,7 +95,7 @@ COMPONENT FCslit1 = Slit(
   AT (0, 0, 0.15) RELATIVE FC
 
 COMPONENT monT = Monitor_nD(
-    options = "square auto t bins=100", 
+    options = "square auto t bins=100",
     filename = "FC_mon.dat", xwidth=0.2, yheight = 0.2)
   AT (0, 0, 0.035) RELATIVE FCslit1
 
@@ -109,7 +109,7 @@ COMPONENT presampslit = Slit(
 
 COMPONENT target = V_sample(radius_o=0.00,
 xwidth=0.04,yheight=0.04,zthick=0.002,
-  focus_aw=19.38,focus_ah=3.435, 
+  focus_aw=19.38,focus_ah=3.435,
   pack = 1,
   target_x=0.8139,target_y=0.0,target_z=2.3678)
   AT (0,0,0.2) RELATIVE presampslit
@@ -118,7 +118,7 @@ COMPONENT a2=Arm()
 AT (0,0,0) RELATIVE target
 
 COMPONENT cyl = Monitor_nD(
-    options = "banana, auto t bins=100  , theta limits[9.31 28.69] bins=1", 
+    options = "banana, auto t bins=100  , theta limits[9.31 28.69] bins=1",
     filename = "det_out.dat",   xwidth=5.0,   yheight = 0.3)
   AT (0, 0, 0) RELATIVE a2
 

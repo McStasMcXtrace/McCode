@@ -12,7 +12,7 @@
 * Date: 6th Jan 2004.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.8
-* Version: 0.1
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: ILL
 *
 * The D9 hot diffractometer at the ILL.
@@ -22,28 +22,28 @@
 * For structural analysis beyond the determination of average atomic positions,
 * high resolution nuclear density maps are required. D9 is ideally suited for
 * this purpose. Because of the short wavelength very small atomic displacements
-* can be identified, accurate to typically 0.001 Å. A two-dimensional
-* multidetector is employed. 
+* can be identified, accurate to typically 0.001 ï¿½ A two-dimensional
+* multidetector is employed.
 * This simulation uses a quartz single crystal sample.
-* 
-* NOTE: as no transmission monochromator component is presently available, 
+*
+* NOTE: as no transmission monochromator component is presently available,
 * this simulation uses a monochromator in reflection, the width of which is
-* automatically adjusted so that the outcoming beam has the same width as 
+* automatically adjusted so that the outcoming beam has the same width as
 * that of a 6.5 cm wide transmission monochromator at the same take-off angle
 *
-* example (single image on detector): 
-*   mcrun D9_instr -n 1e8 Lambda=0.65 TwoTheta=60 Nu=15 delta_Omega=0 
-* 
-* example (peak scan): 
-*   mcrun D9_instr -n 1e7 Lambda=0.65 TwoTheta=60 Nu=0 
+* example (single image on detector):
+*   mcrun D9_instr -n 1e8 Lambda=0.65 TwoTheta=60 Nu=15 delta_Omega=0
+*
+* example (peak scan):
+*   mcrun D9_instr -n 1e7 Lambda=0.65 TwoTheta=60 Nu=0
 *     delta_Omega=-1.8,1.8 -N 31 -d Scan_0.65_60_0
 *
 * %Parameters
-* input parameters : 
-*    Lambda              : wavelength [Angstrom] 
-*    TwoTheta            : 2-Theta of sample reflection [degree] 
-*    Nu                  : lifting-arm angle [degree] 
-*    delta_Omega         : start,end of omega scan [degree] 
+* input parameters :
+*    Lambda              : wavelength [Angstrom]
+*    TwoTheta            : 2-Theta of sample reflection [degree]
+*    Nu                  : lifting-arm angle [degree]
+*    delta_Omega         : start,end of omega scan [degree]
 *
 * %Link
 * <a href="http://www.ill.fr/YellowBook/D9">D9@ILL</a> (YellowBook)
@@ -55,11 +55,11 @@ DEFINE INSTRUMENT ILL_D9(Lambda=0.65,TwoTheta=60,Nu=15,delta_Omega=0)
 DECLARE
 %{
 
-/* global variables */ 
+/* global variables */
 
-  double L1 = 7.0;      /* source-mono distance (m) */ 
-  double L2 = 2.58;     /* mono-sample */ 
-  double L3 = 0.49;     /* sample-det */ 
+  double L1 = 7.0;      /* source-mono distance (m) */
+  double L2 = 2.58;     /* mono-sample */
+  double L3 = 0.49;     /* sample-det */
 
   double VD = 0.0835;   /* opening of vertical diaphragm before mono (m) */
                         /* fully open VD = 0.0835 m for Cu mono 6 cm high */
@@ -100,17 +100,17 @@ DECLARE
 INITIALIZE
 %{
 
-  DS = Lambda/(2*(sin((TwoTheta/2)*DEG2RAD)));  
+  DS = Lambda/(2*(sin((TwoTheta/2)*DEG2RAD)));
                            /* d-spacing sample [Angstrom] */
-  
+
   A2 = 2*asin(Lambda/(2*DM))*RAD2DEG;
-                          /* mono 2 theta (arm to sample) */         
-  A2 *= SM; 
+                          /* mono 2 theta (arm to sample) */
+  A2 *= SM;
   A1 = A2/2;              /* mono theta (crystal) */
-  
-  A4 = TwoTheta;          
-  A4 *= SS;               /* sample 2 theta (arm to detector) */   
-  A3 = A4/2;              /* sample theta (crystal omega) */ 
+
+  A4 = TwoTheta;
+  A4 *= SS;               /* sample 2 theta (arm to detector) */
+  A3 = A4/2;              /* sample theta (crystal omega) */
 
   A5 = Nu;
   A5 *= SN;               /* lifting angle Nu (arm to detector) */
@@ -120,8 +120,8 @@ INITIALIZE
                           /* required to output a beam the same size as that */
                           /* from a 6.5 cm wide 7-blade transmission mono */
 
-  R_vf = 2*(L2)*sin(A1*DEG2RAD); 
-  R_hf = 2*(L2)/sin(A1*DEG2RAD); 
+  R_vf = 2*(L2)*sin(A1*DEG2RAD);
+  R_hf = 2*(L2)/sin(A1*DEG2RAD);
                           /* vertical and horizontal mono focussing */
                           /* radii (to detector) */
 
@@ -140,15 +140,15 @@ INITIALIZE
 TRACE
 
 /*
- * 2000 K hot source 20 cm thick defined by beamtube entrance 5 cm wide 
- * by 20 cm high, sending neutrons towards the exit of the graphite nose 
- * at the end of the beamtube 
+ * 2000 K hot source 20 cm thick defined by beamtube entrance 5 cm wide
+ * by 20 cm high, sending neutrons towards the exit of the graphite nose
+ * at the end of the beamtube
  */
 
 COMPONENT source = Source_gen(
-    dist = 3.1943, xw = 0.03264, yh = 0.136114, Lambda0 = Lambda, 
+    dist = 3.1943, xw = 0.03264, yh = 0.136114, Lambda0 = Lambda,
     dLambda = dLambda, h = 0.2, w = 0.05, T1 = 2000, length = 0.2)
-  AT (0, 0, 0) ABSOLUTE 
+  AT (0, 0, 0) ABSOLUTE
 
 /* exit of graphite nose of beamtube */
 
@@ -160,27 +160,27 @@ COMPONENT beamtube_nose = Slit(
 /* exits of the 3 rotating slits in the "bouchon" */
 
 COMPONENT rotor_1 = Slit(
-    xmin = -0.015355, xmax = 0.015355, 
+    xmin = -0.015355, xmax = 0.015355,
     ymin = -0.064507, ymax = 0.064507)
   AT (0, 0, 3.5893) RELATIVE source
 
 COMPONENT rotor_2 = Slit(
-    xmin = -0.01395, xmax = 0.01395, 
+    xmin = -0.01395, xmax = 0.01395,
     ymin = -0.05935, ymax = 0.05935)
   AT (0, 0, 4.0668) RELATIVE source
 
 COMPONENT rotor_3 = Slit(
-    xmin = -0.0125745, xmax = 0.0125745, 
+    xmin = -0.0125745, xmax = 0.0125745,
     ymin = -0.054257, ymax = 0.054257)
   AT (0, 0, 4.6103) RELATIVE source
 
 /* diaphragm in box with Al windows */
 
      COMPONENT mon_d_b = PSD_monitor(
-         nx = 60, ny = 60, filename = "Before_Diaphragms", 
+         nx = 60, ny = 60, filename = "Before_Diaphragms",
          xmin = -0.06, xmax = 0.06, ymin = -0.06, ymax = 0.06)
        AT (0, 0, 5.374) RELATIVE source
- 
+
 COMPONENT window_in = Al_window(
     win_thick = 0.0005)
   AT (0, 0, 5.384) RELATIVE source
@@ -198,10 +198,10 @@ COMPONENT window_out = Al_window(
   AT (0, 0, 6.254) RELATIVE source
 
      COMPONENT mon_d_a = PSD_monitor(
-         nx = 60, ny = 60, filename = "After_Diaphragms", 
+         nx = 60, ny = 60, filename = "After_Diaphragms",
          xmin = -0.06, xmax = 0.06, ymin = -0.06, ymax = 0.06)
        AT (0, 0, 0.01) RELATIVE diaphragm_h
- 
+
 /* monochromator */
 
 COMPONENT mono_cradle = Arm(
@@ -224,21 +224,21 @@ COMPONENT mono_out = Arm(
          nx = 60, ny = 60, filename = "After_Mono_20cm", xmin = -0.06,
          xmax = 0.06, ymin = -0.06, ymax = 0.06)
        AT (0, 0, 0.2) RELATIVE mono_out
- 
+
 /* B4C collimator at exit of mono housing, in and out positions */
 
      COMPONENT mon_c_b = PSD_monitor(
          nx = 60, ny = 60, filename = "Before_Coll", xmin = -0.06,
          xmax = 0.06, ymin = -0.06, ymax = 0.06)
        AT (0, 0, 1.19) RELATIVE mono_out
- 
+
 COMPONENT coll_in = Slit(
-    xmin = -0.022, xmax = 0.022, 
+    xmin = -0.022, xmax = 0.022,
     ymin = -0.0205, ymax = 0.0205)
   AT (0, 0, 1.2) RELATIVE mono_out
 
 COMPONENT coll_out = Slit(
-    xmin = -0.0185, xmax = 0.0185, 
+    xmin = -0.0185, xmax = 0.0185,
     ymin = -0.0175, ymax = 0.0175)
   AT (0, 0, 1.6) RELATIVE mono_out
 
@@ -246,14 +246,14 @@ COMPONENT coll_out = Slit(
          nx = 60, ny = 60, filename = "After_Coll", xmin = -0.06,
          xmax = 0.06, ymin = -0.06, ymax = 0.06)
        AT (0, 0, 0.01) RELATIVE coll_out
- 
+
 /* B4C aperture */
 
      COMPONENT mon_n_b = PSD_monitor(
          nx = 60, ny = 60, filename = "Before_Nose", xmin = -0.06,
          xmax = 0.06, ymin = -0.06, ymax = 0.06)
        AT (0, 0, MN) RELATIVE mono_out
- 
+
 COMPONENT nose = Slit(
     radius = AP)
   AT (0, 0, BN) RELATIVE mono_out
@@ -262,7 +262,7 @@ COMPONENT nose = Slit(
          nx = 60, ny = 60, filename = "After_Nose", xmin = -0.06,
          xmax = 0.06, ymin = -0.06, ymax = 0.06)
        AT (0, 0, 0.01) RELATIVE nose
- 
+
 /* sample */
 
 COMPONENT four_circle = Arm(       /* sample reference frame */

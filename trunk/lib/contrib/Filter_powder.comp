@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:benjamin.fortescue@oriel.ox.ac.uk">B. Fortescue</a>
 * Date: August 2000
-* Version: 1.2
+* Version: $Revision: 1.8 $
 * Release: McStas 1.7
 * Origin: ILL, Based on Be_filter, written by SN Klausen, December 1999,
 * Incorporating code from Single_crystal, written by KN, December 1999
@@ -18,7 +18,7 @@
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
 * Modified by: EF, 22nd May 2003 : Corrected velocity dir change bug.
 *
-* Box-shaped powder filter or sample
+* Box-shaped powder filter or sample (BUGGY)
 *
 * %D
 * This is a general box-shaped powder filter/sample which simulates
