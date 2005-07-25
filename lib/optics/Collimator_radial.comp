@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi <farhi@ill.fr>
 * Date: July 2005
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: Risoe
 * Release: McStas 1.9
 *
@@ -28,7 +28,8 @@
 * On the other hand, when specifying the number of blades, model is exact,
 * but statistics is lowered by a factor 2.
 * A zero divergence disables collimation (then the component works as a double
-* slit).
+* slit). If the input/output (w1, w2) width are 0, then a perfect collimator
+* is assumed (no slit check except for the total angular range).
 * The component can be made oscillating (usual on diffractometers and TOF
 * machines) with the 'roc' parameter.
 * The neutron beam outside the collimator area is transmitted unaffected.
@@ -47,18 +48,18 @@
 * len:        (m)          Length/Distance between slits
 * divergence: (min of arc) Divergence angle. May also be specified with the
 *                            nblades parameter
-* theta_min   (deg)        Minimum Theta angle for the radial setting
-* theta_max   (deg)        Maximum Theta angle for the radial setting
-* nchan       (1)          Number of channels in the theta range
-* radius      (m)          Radius of the collimator (to entry window)
+* theta_min:  (deg)        Minimum Theta angle for the radial setting
+* theta_max:  (deg)        Maximum Theta angle for the radial setting
+* nchan:      (1)          Number of channels in the theta range
+* radius:     (m)          Radius of the collimator (to entry window)
 *
 * Optional parameters
 * transmission:(1)         Transmission of Soller (0<=t<=1)
-* nblades      (1)         Number of blades composing each Soller. Overrides
+* nblades:     (1)         Number of blades composing each Soller. Overrides
 *                            the divergence parameter
-* roc          (1)         Enable oscillation of collimator with an amplitude
+* roc:         (1)         Enable oscillation of collimator with an amplitude
 *                            of 'roc' times a single soller size (w1).
-* verbose      (0/1)       Gives additional information
+* verbose:     (0/1)       Gives additional information
 *
 * %E
 *******************************************************************************/
@@ -69,13 +70,15 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1=0.015, h1=.3, w2=0.015, h2=.3, len=.35,
                     divergence=40,transmission=1,
                     theta_min=5, theta_max=165, nchan=128, radius=0, nblades=0, roc=0, verbose=0)
-OUTPUT PARAMETERS (soller_theta1, soller_theta2, window_theta, use_approx)
+OUTPUT PARAMETERS (soller_theta1, soller_theta2, window_theta,
+                   use_approx, ideal)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
   double soller_theta1, soller_theta2, window_theta;
   char   use_approx=1;
+  char   ideal     =0;
 %}
 INITIALIZE
 %{
@@ -89,14 +92,17 @@ INITIALIZE
   theta_max *= DEG2RAD;
   theta_min *= DEG2RAD;
 
-  soller_theta1  = atan2(fabs(w1), radius    );
-  soller_theta2  = atan2(fabs(w2), radius+len);
-  window_theta   = fabs(theta_max-theta_min)/nchan;
+  if (!w1 && !w2) { ideal=1; nblades=0; }
+  else {
+    soller_theta1  = atan2(fabs(w1), radius    );
+    soller_theta2  = atan2(fabs(w2), radius+len);
+    window_theta   = fabs(theta_max-theta_min)/nchan;
 
-  if (soller_theta1 > window_theta || soller_theta2 > window_theta)
-    exit(printf("Collimator_radial: %s: the %f channels of size %f [deg]\n"
+    if (soller_theta1 > window_theta || soller_theta2 > window_theta)
+      exit(printf("Collimator_radial: %s: the %f channels of size %f [deg]\n"
                 "                   do not fit within the angular range %g [deg]\n",
       NAME_CURRENT_COMP, nchan, soller_theta1*RAD2DEG, window_theta*RAD2DEG));
+  }
 
   if (divergence && !nblades) {
     divergence *= MIN2RAD;
@@ -110,11 +116,16 @@ INITIALIZE
   } else { divergence = 0; nblades = 0; }
   if (verbose) {
     printf("Collimator_radial: %s: divergence %g [min] %s\n"
-           "    Total opening [%f:%f] [deg] as %g channels of %g layers\n"
+             "    Total opening [%f:%f] [deg]",
+             NAME_CURRENT_COMP, divergence*RAD2MIN,
+             (roc ? "oscillating" : ""),
+              theta_min*RAD2DEG, theta_max*RAD2DEG);
+    if (!ideal)
+      printf(" as %g channels of %g layers\n"
            "    Channel Window=%g [deg] Soller=%g [deg]\n",
-    NAME_CURRENT_COMP, divergence*RAD2MIN, (roc ? "oscillating" : ""),
-    theta_min*RAD2DEG, theta_max*RAD2DEG, nchan, nblades,
-    window_theta*RAD2DEG, soller_theta1*RAD2DEG);
+           nchan, nblades,
+           window_theta*RAD2DEG, soller_theta1*RAD2DEG);
+    else printf(" (ideal)\n");
   }
 
 %}
@@ -141,38 +152,47 @@ TRACE
   /* get index of input Soller */
   if (t0 > 0 && t1 > t0) {
     PROP_DT(t0);
-    if (roc) roc_theta = roc*randpm1()*soller_theta1/2;
+    if (!ideal) {
+      if (roc) roc_theta = roc*randpm1()*soller_theta1/2;
 
-    input_theta = atan2(x, z) + roc_theta;
+      input_theta = atan2(x, z) + roc_theta;
     /* channel number (start at 0) */
-    input_chan  = floor((input_theta - theta_min)/window_theta);
-    if (input_chan >= 0 && input_chan < nchan && fabs(y) < h1/2) ok=1;
-    if (ok) {
-      input_center= theta_min + input_chan*window_theta
-                  + (window_theta)/2;
-      /* are we outside the soller */
-      phi = input_theta - input_center;
+      input_chan  = floor((input_theta - theta_min)/window_theta);
+      if (input_chan >= 0 && input_chan < nchan && fabs(y) <= h1/2) ok=1;
+    } else if (fabs(y) < h1/2) ok = 1;
 
-      if (fabs(phi) > soller_theta1/2) ABSORB; /* outside input soller */
+    if (ok) {
+      if (ideal)
+        input_center=atan2(x,z);
+      else {
+        input_center= theta_min + input_chan*window_theta
+                  + (window_theta)/2;
+        /* are we outside the soller ? */
+        phi = input_theta - input_center;
+
+        if (fabs(phi) > soller_theta1/2) ABSORB; /* outside input soller */
       /* get blade number in soller */
-      input_blade = floor(phi/soller_theta1*nblades);
+        input_blade = floor(phi/soller_theta1*nblades);
+      }
       SCATTER;
 
       /* propagate to output radius */
       PROP_DT(t1-t0);
       SCATTER;
-      output_theta = atan2(x, z) + roc_theta;
-      /* channel number (start at 0) */
-      output_chan  = floor((output_theta - theta_min)/window_theta);
-      /* did we change channel ? */
-      if (output_chan != input_chan) ABSORB; /* changed soller */
-      output_center= theta_min + output_chan*window_theta
-                   + (window_theta)/2;
-      /* are we outside the soller */
-      phi = output_theta -output_center;
-      if (fabs(phi) > soller_theta2/2 || fabs(y) > h2/2) ABSORB; /* outside output soller */
-      /* get blade number in soller */
-      output_blade = floor(phi/soller_theta2*nblades);
+      if (!ideal) {
+        output_theta = atan2(x, z) + roc_theta;
+        /* channel number (start at 0) */
+        output_chan  = floor((output_theta - theta_min)/window_theta);
+        /* did we change channel ? */
+        if (output_chan != input_chan) ABSORB; /* changed soller */
+        output_center= theta_min + output_chan*window_theta
+                    + (window_theta)/2;
+        /* are we outside the soller */
+        phi = output_theta -output_center;
+        if (fabs(phi) > soller_theta2/2 || fabs(y) > h2/2) ABSORB; /* outside output soller */
+        /* get blade number in soller */
+        output_blade = floor(phi/soller_theta2*nblades);
+      } else if (fabs(y) > h2/2) ABSORB;
 
       /* now handle blades or triangular approximation */
       if (divergence) {
