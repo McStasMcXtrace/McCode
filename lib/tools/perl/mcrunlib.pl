@@ -614,6 +614,9 @@ sub parse_header {
                     # Continuation line needs at least two additional
                     # indentations
                     $$thisparm .= "$2\n";
+                } elsif(/^[ \t]*([a-zA-Z0-9_]+)\s*(.*)/) {
+                    $thisparm = \$d->{'parhelp'}{$1}{'full'};
+                    $$thisparm = "$2\n";
                 } else {
                     # Skip it
                 }
@@ -648,12 +651,12 @@ sub parse_header {
             $text = $1;
         } else {
             # No unit. Just strip leading and trailing white space.
-            $unit = "";
+            $unit = "-";
             if($s =~ /^\s*((.|\n)*\S)\s*$/) {
                 $text = $1;
             } else {
                 $s =~ /^\s*$/ || die "mcrun: Internal: parse_header match 1";
-                $text = "";
+                $text = "$s";
             }
         }
         $d->{'parhelp'}{$i}{'unit'} = $unit;
@@ -686,7 +689,7 @@ sub get_comp_info {
             } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                 push @spar, $1;
             } else {
-                print STDERR "Warning: Unrecognized PARAMETER in instrument $cname: $1\n";
+                print STDERR "Warning: Unrecognized PARAMETER in instrument $cname: $1 from $s\n";
             }
         }
         if ($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i)
@@ -701,7 +704,7 @@ sub get_comp_info {
                 } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                     push @dpar, $1;
                 } else {
-                    print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname: $1\n";
+                    print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname: $1 from $s\n";
                 }
             }
         }
@@ -713,7 +716,7 @@ sub get_comp_info {
                 } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
                     push @spar, $1;
                 } else {
-                    print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname: $1.\n";
+                    print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname: $1 from $s.\n";
                 }
             }
         }
