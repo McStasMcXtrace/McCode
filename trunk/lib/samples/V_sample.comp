@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -117,6 +117,7 @@ INITIALIZE
   VarsV.my_a_v=(VarsV.rho * 100 * VarsV.sigma_a);
 
   /* now compute target coords if a component index is supplied */
+  VarsV.tx= VarsV.ty=VarsV.tz=0;
   if (target_index)
   {
     Coords ToTarget;
@@ -126,6 +127,10 @@ INITIALIZE
   }
   else
   { VarsV.tx = target_x; VarsV.ty = target_y; VarsV.tz = target_z; }
+
+  if (!(VarsV.tx || VarsV.ty || VarsV.tz))
+    printf("V_sample: %s: The target is not defined. Using direct beam (Z-axis).\n",
+      NAME_CURRENT_COMP);
 
   VarsV.distance=sqrt(VarsV.tx*VarsV.tx+VarsV.ty*VarsV.ty+VarsV.tz*VarsV.tz);
 
@@ -155,7 +160,7 @@ TRACE
   double l_i, l_o=0;            /* Flight path lenght in/out for scattered neutron */
   double my_a=0;                  /* Velocity-dependent attenuation factor */
   double solid_angle=0;         /* Solid angle of target as seen from scattering point */
-  double aim_x, aim_y, aim_z;   /* Position of target relative to scattering point */
+  double aim_x=0, aim_y=0, aim_z=1;   /* Position of target relative to scattering point */
   int    intersect=0;
 
   if (VarsV.isrect)
@@ -188,9 +193,11 @@ TRACE
 
       PROP_DT(dt+t0);             /* Point of scattering */
 
-      aim_x = VarsV.tx-x;         /* Vector pointing at target (anal./det.) */
-      aim_y = VarsV.ty-y;
-      aim_z = VarsV.tz-z;
+      if (!(VarsV.tx || VarsV.ty || VarsV.tz)) {
+        aim_x = VarsV.tx-x;       /* Vector pointing at target (anal./det.) */
+        aim_y = VarsV.ty-y;
+        aim_z = VarsV.tz-z;
+      }
       if(VarsV.aw && VarsV.ah) {
         randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
           aim_x, aim_y, aim_z, VarsV.aw, VarsV.ah, ROT_A_CURRENT_COMP);
