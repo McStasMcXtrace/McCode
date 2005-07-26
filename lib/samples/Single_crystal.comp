@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.34 $
+* Version: $Revision: 1.35 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -22,9 +22,9 @@
 * Rectangular geometry. Multiple scattering and secondary extinction included.
 * The mosaic may EITHER be specified isotropic by setting the mosaic input
 * parameter, OR anisotropic by setting the mosaic_h, mosaic_v, and mosaic_n
-* parameters.
+* parameters. Geometry is a box.
 * Crystal structure is specified with an ascii data file. Each line contains
-* 4 or more numbers, separated by white space:
+* 4 or more numbers, separated by white spaces:
 *
 *       h k l ... F2
 *
@@ -41,7 +41,7 @@
 *           cx = 0, cy = 0, cz = 11.6777,
 *           reflections="YBaCuO.lau")
 *
-* Vanadium incoherent elastic scattering
+* Vanadium incoherent elastic scattering with multiple scattering
 * Single_crystal(xwidth=0.01, yheight=0.01, zthick=0.01,
 *           reflections="", absorbtion=5.08, incoherent=4.935,
 *           ax=3.0282, by=3.0282, cz=3.0282/2)
