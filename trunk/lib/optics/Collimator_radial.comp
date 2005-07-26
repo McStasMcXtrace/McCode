@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi <farhi@ill.fr>
 * Date: July 2005
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: Risoe
 * Release: McStas 1.9
 *
@@ -29,14 +29,19 @@
 * but statistics is lowered by a factor 2.
 * A zero divergence disables collimation (then the component works as a double
 * slit). If the input/output (w1, w2) width are 0, then a perfect collimator
-* is assumed (no slit check except for the total angular range).
+* is assumed (no slit check except for the total angular range and height).
 * The component can be made oscillating (usual on diffractometers and TOF
 * machines) with the 'roc' parameter.
 * The neutron beam outside the collimator area is transmitted unaffected.
 *
-* Example: Collimator_radial(w1=0.015, h1=.3, w2=0.015, h2=.3, len=.35,
+* Example: Contains shadow parts due to radial geometry
+*        Collimator_radial(w1=0.015, h1=.3, w2=0.015, h2=.3, len=.35,
 *                   divergence=40,transmission=1,
 *                   theta_min=5, theta_max=165, nchan=128, radius=0.9)
+*
+* Ideal: Collimator_radial(w1=0, h1=.3, w2=0, h2=.3, len=.35,
+*                   divergence=40,transmission=1,
+*                   theta_min=5, theta_max=165, radius=0.9)
 *
 * %P
 * INPUT PARAMETERS:
@@ -121,9 +126,9 @@ INITIALIZE
              (roc ? "oscillating" : ""),
               theta_min*RAD2DEG, theta_max*RAD2DEG);
     if (!ideal)
-      printf(" as %g channels of %g layers\n"
+      printf(" as %g channels of %g layers %s\n"
            "    Channel Window=%g [deg] Soller=%g [deg]\n",
-           nchan, nblades,
+           nchan, nblades, (use_approx ? "(approx)" : ""),
            window_theta*RAD2DEG, soller_theta1*RAD2DEG);
     else printf(" (ideal)\n");
   }
