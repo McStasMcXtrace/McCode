@@ -7,7 +7,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 * Modified by: KL, 28.09.01   (two lines)
@@ -27,7 +27,7 @@
 * Powder structure is specified with an ascii data file. Each line contains 5
 * or more numbers, separated by white space:
 *
-*       ... j d F2 DW      (and Delta_d >= 0)
+*       ... j d F2 DW      (and Delta_d >= 0, then w=Delta_d)
 * or
 *       ... j d F2 DW w    (and Delta_d <  0)
 *
@@ -36,6 +36,10 @@
 * column, then set the Delta_d parameter to a positive or 0 value.
 * The rest of the numbers are not used;
 * Lines begining by '#' are read as comments (ignored).
+* Geometry is a powder filled cylinder.
+*
+* Example: PowderN(reflections = "c60.lau", d_phi0 = 15 , radius = 0.01,
+*   h = 0.05, Vc = 1076.89, sigma_a = 0, Delta_d=0)
 *
 * %P
 * INPUT PARAMETERS
@@ -130,11 +134,11 @@ SHARE
       exit(fprintf(stderr, "PowderN: %s: Error: The number of rows in %s"
           "should be at least %d\n", info->compname, SC_file, 1));
     else size = sTable.rows;
-    printf("PowderN: %s: Reading in %d rows from %s\n",
+    printf("PowderN: %s: Reading %d rows from %s\n",
           info->compname, size, SC_file);
     /* allocate line_data array */
     list = (struct line_data*)malloc(size*sizeof(struct line_data));
-    if (info.Delta_d >= 0) flag_shift=1;
+    if (info->Dd >= 0) flag_shift=1;
     for (i=0; i<size; i++)
     {
       /*      printf("Reading in line %i\n",i);*/
@@ -149,11 +153,13 @@ SHARE
       DW= Table_Index(sTable, i, sTable.columns-2+flag_shift);
       if (!flag_shift)
         w = Table_Index(sTable, i, sTable.columns-1); /* last column */
-      else w=info.Delta_d;
+      else w=info->Dd;
+      /*
       if (size >= 4) {
-        printf("Reflection %d: j=%g, d=%g, F2=%g, DW=%g, w=%g",
+        printf("Reflection %d: j=%g, d=%g, F2=%g, DW=%g, w=%g\n",
                 i,j,d,F2,DW,w);
       }
+      */
       list[i].j = j;
       list[i].q = (d ? 2*PI/d : 0);
       list[i].DW = DW;
@@ -184,11 +190,11 @@ SHARE
 %}
 
 DECLARE
-%{line_info.Dd = Delta_d;
+%{
   struct line_info_struct line_info;
   int Nq=0;
   double my_s_v2_sum;
-  double my_a_v, my_inc, ;
+  double my_a_v, my_inc;
   double *w_v,*q_v, *my_s_v2;
 %}
 INITIALIZE
@@ -196,7 +202,7 @@ INITIALIZE
   int i;
   struct line_data *L;
   line_info.Dd = Delta_d;
-  strncmp(list_info.compname, NAME_CURRENT_COMP, 256);
+  strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   my_a_v = pack*sigma_a/Vc*2200;           /* Is not yet divided by v */
   my_inc = pack*sigma_inc/Vc;
