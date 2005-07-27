@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.55  2005/07/18 14:43:05  farhi
+* Now gives a warning message per component for 'computational absorbs'
+*
 * Revision 1.54  2005/07/06 08:24:43  farhi
 * Moved again SHAREd blocks at the very begining of instrument C code
 * so that no name clash can occur.
@@ -88,7 +91,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.55 2005-07-18 14:43:05 farhi Exp $
+* $Id: cogen.c,v 1.56 2005-07-27 11:29:41 farhi Exp $
 *
 *******************************************************************************/
 
@@ -627,7 +630,7 @@ cogen_decls(struct instr_def *instr)
   cout("/* Counter for each comp to check for inactive ones */");
   coutf("MCNUM  %sNCounter[%i];", ID_PRE, list_len(instr->complist)+2);
   cout("/* Counter for PROP ABSORB */");
-  coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE);
+  coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE, list_len(instr->complist)+2);
 
   /* 8. Declaration of group flags */
   cout("/* Flag true when previous component acted on the neutron (SCATTER) */");
