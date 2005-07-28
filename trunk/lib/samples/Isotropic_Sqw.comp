@@ -1,0 +1,991 @@
+/*****************************************************************************
+*
+*  McStas, the neutron ray-tracing package
+*  Copyright(C) 2000 Risoe National Laboratory.
+*
+* Component: Isotropic_Sqw
+*
+* %I
+* Written by: Virginie Hugouvieux
+* Date: August 2003
+* Version:
+* Origin:  ILL
+* Modified by: E. Farhi, Jul 2005.
+*
+* Isotropic sample handling multiple scattering and absorption for a general
+* S(q,w) (coherent and/or incoherent)
+*
+* %D
+* An isotropic sample handling multiple scattering and including as input the
+* dynamic structure factor of the chosen sample (e.g. from Molecular
+* Dynamics). Handles elastic/inelastic, coherent and incoherent scattering -
+* depending on the input S(Q,w) - with multiple scattering and absorption.
+* Sample shape may be a cylinder, a box or a hollow cylinder.
+* Only the norm of Q is handled (not the vector), and thus suitable for ,
+* liquids, amorphous and powder samples.
+* If S(Q,w) files are specified as empty (0 or "") then the scattering is
+* elastic isotropic (Vanadium like).
+*
+* File format for S(Q,w) (coherent and incoherent)
+* q <number of q values>
+* w <number of w values>
+* q
+* < list of values in Angs-1>
+* w
+*  <list of values in meV>
+* sqw
+* <for each q value, list of S(q,w) values \n>
+*
+* See for instance file SQw_He4.dat
+*
+* Examples:
+* 1- Vanadium-like incoherent elastic scattering
+*   Isotropic_Sqw(V_rho=1/13.827, coh_incoh="V"
+*     sigma_abs=5.08, sigma_inc=4.935, sigma_coh=0)
+*
+* 2- liq-4He parameters
+*   Isotropic_Sqw(V_rho=0.072, coh_incoh="c", Sqw_coh="He4.sqw",
+*     sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, T=10)
+*
+*
+* %P
+* INPUT PARAMETERS:
+*
+* Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w)
+*                     Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1
+*                     Use 0 or "" to disable.
+* Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w)
+*                     Incoherent (self) part. Use 0 or "" to disable.
+* coh_incoh:  [str] Flag to compute either coherent ("c"), incoherent ("i")
+*                     or total ("t") S(q,w) signal. Use "" or "I" or "V" for
+*                     elastic incoherent Vanadium-like scattering (no S(q,w)).
+* sigma_coh:[barns] Coherent Scattering cross-section
+* sigma_inc:[barns] Incoherent Scattering cross-section
+* sigma_abs:[barns] Absorption cross-section
+* V_rho:     [AA-3] Density of atoms (1/unit cell)
+* T:            [K] Temperature of sample (detailed balance)
+* qmin:    [Angs-1] Minimum Q value to use in S(q,w)
+* qmax:    [Angs-1] Maximum Q value to use in S(q,w). Use 0 for auto mode.
+* wmin:       [meV] Minimum Energy value to use in S(q,w)
+* wmax:       [meV] Maximum Energy value to use in S(q,w). 0 for auto.
+* radius_o:     [m] Outer radius of sample in (x,z) plane
+* radius_i:     [m] Inner radius of sample in (x,z) plane
+* yheight:      [m] Height of sample in vertical direction for box/cylinder
+*                     shapes
+* xwidth:       [m] width for a box sample shape
+* zthick:       [m] thickness for a box sample shape
+* threshold:    [1] Value under which S(Q,w) is not accounted for.
+*                     to set according to the S(Q,w) values (i.e. not too low)
+* order:        [1] Limit multiple scattering up to given order
+*                     (0:all, 1:single, 2:double, ...)
+* verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose)
+* d_phi:      [deg] scattering vertical angular spreading (usually the heigh
+*                     of the next component/detector). Use 0 for full space.
+*                     This is only relevant for single scattering (order=1).
+*
+*OUTPUT PARAMETERS:
+*
+* VarSqw : internal structure containing many members/info
+* dq: wavecetor transfert [Angs-1]
+* dw: energy transfert [Angs-1]
+*
+* %L
+* Hugouvieux V, Farhi E, Johnson MR, Virtual neutron scattering experiments, Physica B, 350 (2004) 151.
+* Hugouvieux V, PhD, University of Montpellier II, France (2004).
+* Cross sections for single elements: <http://www.ncnr.nist.gov/resources/n-lengths/>
+* Cross sections for compounds:       <http://www.ncnr.nist.gov/resources/sldcalc.html>
+* %E
+*****************************************************************************/
+
+DEFINE COMPONENT Isotropic_Sqw
+  DEFINITION PARAMETERS (char* Sqw_coh=0, char* Sqw_inc=0,
+                         char* coh_incoh="t")
+  SETTING PARAMETERS(radius_i=0,radius_o=0,
+    xwidth=0, yheight=0, zthick=0,
+    qmin=0, qmax=0, wmin=0, wmax=0,
+    threshold=1e-10, int order=0, T=0, verbose=0, d_phi=0,
+    V_rho=0.072, sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0)
+  OUTPUT PARAMETERS (VarSqw, dq, dw)
+  STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+SHARE
+%{
+
+#ifndef ISOTROPIC_SQW
+#define ISOTROPIC_SQW
+
+%include "read_table-lib"
+
+/* For the density of states */
+struct Sqw_D_struct
+{
+  double omega;    /* omega value for the data block */
+  double I;        /* intensity for the current DOS block */
+  double cumul_I;  /* cumulated intensity (between 0 and 1) */
+};
+
+/* For the Q(w) probabilities */
+struct Sqw_Q_struct
+{
+   double Q;           /* omega value for the data block */
+   double proba;       /* normalized probability for the current DOS block */
+   double cumul_proba; /* normalized cumulated probability */
+};
+
+struct Sqw_sample_struct {
+  char   compname[256];
+
+  struct Sqw_D_struct  *DOS;           /* density of states */
+  struct Sqw_Q_struct **Q_proba_per_w; /* P(Q|w)=probability of each Q with w */
+
+  double s_abs, s_coh, s_inc;
+  double s_scatt;
+  double V_my_s;
+  double V_my_a_v;
+  double T2E;
+  double sqSE2K;
+  double q_min, q_max;
+  double w_min, w_max;
+  double sqw_threshold;
+
+  long   nb_q, nb_w; /* length of q and w vectors/axes */
+  char   scatt_type; /* total, coherent, incoherent */
+  char   verbose_output;
+  double factor;
+  char   isrect;
+
+  double dq, dw;
+  double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
+  double ti, tf;
+  double vi, vf;
+  double ki, kf;
+};
+
+#include <stdio.h>
+#include <math.h>
+
+/*****************************************************************************
+* Sqw_init_read:Read coherent/incoherent Sqw data files
+*   Retunrs Sqw total intensity, or -1 (isotropic) or 0 (error)
+* Used in : INITIALIZE (1)
+*****************************************************************************/
+double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
+{
+  t_Table *Table_coh=NULL;
+  t_Table *Table_inc=NULL;
+  t_Table  Sqw_total;
+  long   nblocks_coh=0, nblocks_inc=0;
+  long   i, j;
+  char   flag1=0, flag2=0; /* [t,c,i] and exit_flag */
+  double intensities_ci[2];
+  double q,w, val;
+  char   str[80];
+
+  if (Sqw->verbose_output > 1)
+    printf("Isotropic_Sqw: %s: Initialize\n",
+      Sqw->compname);
+
+  if (Sqw->s_coh) Table_coh = Table_Read_Array(file_coh, &nblocks_coh);
+  if (Sqw->s_inc) Table_inc = Table_Read_Array(file_inc, &nblocks_inc);
+
+  flag1 = Sqw->scatt_type;
+  if        (flag1 == 'i') {
+    if (nblocks_inc && Sqw->s_inc) Sqw->s_scatt= Sqw->s_inc;
+    else flag1 = '\0';
+  } else if (flag1 == 'c') {
+    if (nblocks_coh && Sqw->s_coh) Sqw->s_scatt= Sqw->s_coh;
+    else flag1 = '\0';
+  } else if (flag1 == 't') {
+    Sqw->s_scatt=0; flag1 = '\0';
+    if (nblocks_inc && Sqw->s_inc) {
+      Sqw->s_scatt += Sqw->s_inc; flag1 = 'i';
+    }
+    if (nblocks_coh && Sqw->s_coh) {
+      Sqw->s_scatt += Sqw->s_coh;
+      if (flag1 == '\0') flag1 = 'c';
+      else               flag1 = 't';
+    }
+    /* if nothing valid, defaults to Vanadium-like */
+  }
+
+  if (!flag1 || flag1 == 'I' || flag1 == 'V'
+   ||(!nblocks_coh && !nblocks_inc) ) { /* isotropic scattering case */
+    if (Sqw->verbose_output > 0)
+      printf("Isotropic_Sqw: %s: isotropic elastic incoherent scattering\n"
+             "               (Vanadium like)\n", Sqw->compname);
+    Sqw->scatt_type = 'I';
+    Sqw->s_scatt    = Sqw->s_inc;
+    return(-1);
+  }
+  Sqw->scatt_type = flag1;
+
+  for (i=0; i<=1; i++) {
+    long block;
+    char *file;
+    block = (i ? nblocks_coh : nblocks_inc);
+    file  = (i ? file_coh    : file_inc);
+
+    if (block) {
+      if (block != 3) {
+        printf("Isotropic_Sqw: %s: File %s contains %i block(s) instead of 3.\n",
+               Sqw->compname, file, block);
+        flag2 = 1;
+      }
+    }
+  }
+
+  if (nblocks_coh == 3 && nblocks_inc == 3 && !flag2) {
+    /* check dimensions/limits for Q, Energy in coh and inc Tables */
+    for (i=0; i < 3; i++) { /* i=[q,w,sqw] */
+      char msg[80];
+      if      (i == 0) strcpy(msg, "Q axis");
+      else if (i == 1) strcpy(msg, "Energy axis");
+      else             strcpy(msg, "Sqw data");
+
+      for (j=0; j < 2; j++) { /*Table  = (nblocks_coh ? Table_coh[i] : Table_inc[i]); j=[size, limits] */
+        char test=0;
+        if (j == 0)     /* test 1: size */
+          test = (Table_coh[i].rows*Table_coh[i].columns
+              !=  Table_inc[i].rows*Table_coh[i].columns);
+        else if (i < 2) /* test 2: limits */
+          test = (Table_coh[i].min_x != Table_inc[i].min_x
+               || Table_coh[i].max_x != Table_inc[i].max_x);
+
+        if (test) {
+          printf("Isotropic_Sqw: %s: Coherent %s and Incoherent %s files\n"
+                "                do not have the same %s %s.\n",
+                Sqw->compname, file_coh, file_inc, msg,
+                (j == 0 ? "size" : "limits"));
+          flag2 = 1;
+        }
+      } /* for j */
+    } /* for i */
+  } /* if (nblocks_coh && nblocks_inc && !flag2) */
+  /* print some info about Sqw files */
+  if (flag2) Sqw->verbose_output = 2;
+  if (nblocks_coh && Sqw->verbose_output > 1) {
+    printf("Isotropic_Sqw: Coherent file\n");
+    Table_Info_Array(Table_coh);
+  }
+  if (nblocks_inc && Sqw->verbose_output > 1) {
+    printf("Isotropic_Sqw: Incoherent file\n");
+    Table_Info_Array(Table_inc);
+  }
+  if (flag2) {
+    printf("ERROR          Wrong file format. Exiting.\n");
+    return(0);
+  }
+  /* we assume from here that griding is the same for q and w */
+
+  /* restrict gridding range to q and omega min/max */
+  for (i=0; i< 2; i++) { /* i=[q,w] */
+    long    index;
+    double  val_min, val_max;
+    double *usr_min,*usr_max;
+    t_Table Table;
+
+    Table  = (nblocks_coh ? Table_coh[i] : Table_inc[i]);
+    /* make q,w axes a single row */
+    if (Table.columns == 1) { Table.columns = Table.rows; Table.rows = 1; }
+    index  = Table.rows*Table.columns; /* full length of q,w */
+    val_min= Table.min_x;
+    val_max= Table.max_x;
+
+    if (i == 0) Sqw->nb_q = index; else Sqw->nb_w = index;
+    intensities_ci[i] = 0; /* i=[coh,inc] */
+
+    /* use either full range or restricted range */
+    usr_min = (i == 0 ? &(Sqw->q_min) : &(Sqw->w_min));
+    usr_max = (i == 0 ? &(Sqw->q_max) : &(Sqw->w_max));
+    if (!*usr_min && !*usr_max) {
+      *usr_min = val_min; *usr_max = val_max;
+    }
+  }
+
+  /* build the 'total' = coh+inc Sqw table in restricted range */
+  Table_Init(&Sqw_total, Sqw->nb_q, Sqw->nb_w);
+  Sqw_total.block_number = 1;
+
+  if (!Sqw_total.data) {
+    printf("Isotropic_Sqw: %s: Cannot allocate Sqw_total Table (%lix%li).\n"
+           "ERROR          Exiting.\n",
+      Sqw->compname, Sqw->nb_w, Sqw->nb_q);
+    return(0);
+  }
+
+  sprintf(Sqw_total.filename, "S(q,w) from files %s %s",
+    (file_coh ? file_coh : ""), (file_inc ? file_inc : "") );
+
+  for (i=0; i < (Sqw->nb_q) ; i++) {
+    double coh=0, inc=0, tmp;
+    for (j=0; j < (Sqw->nb_w) ; j++) {
+      flag2 = 1;
+      if (nblocks_coh) coh = Table_Index(Table_coh[2], i, j);
+      if (nblocks_inc) inc = Table_Index(Table_inc[2], i, j);
+      intensities_ci[0] += coh;
+      intensities_ci[1] += inc;
+
+      if      (flag1 == 'i') tmp = inc;
+      else if (flag1 == 'c') tmp = coh;
+      else                   tmp = coh+inc;
+      if (tmp < Sqw->sqw_threshold) flag2 = 0; /* Sqw lower than threshold */
+      /* check for q,w within min/max */
+      q  = Table_Index((nblocks_coh ? Table_coh[0] : Table_inc[0]), 0, i);
+      w  = Table_Index((nblocks_coh ? Table_coh[1] : Table_inc[1]), 0, j);
+      if (q < Sqw->q_min || q > Sqw->q_max) flag2 = 0; /* within q range  ? */
+      if (w < Sqw->w_min || w > Sqw->w_max) flag2 = 0; /* within w range  ? */
+      if (flag2) val++;
+      if (!Table_SetElement(&Sqw_total, i, j, (flag2 ? tmp : 0) ))
+        printf("Isotropic_Sqw: %s: Error when setting Sqw[%i,%i]=%g\n",
+          Sqw->compname, i,j, tmp);
+    }
+  }
+
+  if (!val) {
+    printf("Isotropic_Sqw: %s: selected (Q,w) range is outside\n"
+           "ERROR          available Sqw data.\n",
+      Sqw->compname);
+    return(0);
+  }
+  Table_Stat(&Sqw_total);
+
+  if      (flag1 == 'i') {
+    strcpy(str, "Incoherent");
+    Sqw->factor = intensities_ci[1];
+  } else if (flag1 == 'c') {
+    strcpy(str, "Coherent");
+    Sqw->factor = intensities_ci[0];
+  } else if (flag1 == 't') {
+    strcpy(str, "Incoherent+Coherent");
+    Sqw->factor = intensities_ci[0]+intensities_ci[1];
+  } else {
+    printf("Isotropic_Sqw: %s: Wrong scattering type (should be i,c,t,I,V).\n",
+      Sqw->compname);
+    return(0);
+  }
+  Sqw->factor /= intensities_ci[0]+intensities_ci[1];
+
+  if (Sqw->verbose_output > 0) {
+    printf("Isotropic_Sqw: %s: Generated %s Sqw Table with %g values\n"
+           "                   q=[%g:%g] w=[%g:%g]\n",
+           Sqw->compname, str, val, Sqw->q_min, Sqw->q_max, Sqw->w_min, Sqw->w_max);
+    Table_Info(Sqw_total);
+  }
+
+  if (Sqw->verbose_output > 1)
+    printf("Isotropic_Sqw: %s: Sqw sigma=%g for %s scattering\n",
+      Sqw->compname, Sqw->s_scatt, str);
+
+  /* set up density of states and index_wconst */
+  /* uses: Sqw_total and w axes */
+
+  Sqw->DOS =
+    (struct Sqw_D_struct*)calloc(Sqw->nb_w, sizeof(struct Sqw_D_struct));
+
+  if (!Sqw->DOS) {
+    printf("Isotropic_Sqw: %s: Cannot allocate DOS (%li bytes).\n"
+           "ERROR          Exiting.\n",
+      Sqw->compname, Sqw->nb_w*sizeof(struct Sqw_D_struct));
+    return(0);
+  }
+  val = 0;
+  for (j=0; j < (Sqw->nb_w) ; j++) {
+    double local_val=0;
+    w  = Table_Index((nblocks_coh ? Table_coh[1] : Table_inc[1]), 0, j);
+    for (i=0; i < (Sqw->nb_q) ; i++) { /* integrate on all q values */
+      local_val += Table_Index(Sqw_total, i, j);
+    }
+    Sqw->DOS[j].omega = w;
+    Sqw->DOS[j].I     = local_val;
+    val              += local_val; /* total intensity */
+  }
+  /* normnalize and compute cumulated probability */
+  for (j=0; j < (Sqw->nb_w) ; j++) {
+    Sqw->DOS[j].I      /= val;
+    Sqw->DOS[j].cumul_I = Sqw->DOS[j].I;
+    /* cumulated probabilities for the random choice */
+    if (j) Sqw->DOS[j].cumul_I += Sqw->DOS[j-1].cumul_I;
+  }
+  if (Sqw->verbose_output > 1)
+    printf("Isotropic_Sqw: %s: Generated DOS with total intensity %g\n",
+      Sqw->compname, val);
+
+  /* set up Q probability table per w bin */
+  /* uses:  Sqw_total */
+  Sqw->Q_proba_per_w =
+    (struct Sqw_Q_struct**)calloc(Sqw->nb_w, sizeof(struct Sqw_Q_struct*));
+
+  if (!Sqw->Q_proba_per_w) {
+    printf("Isotropic_Sqw: %s: Cannot allocate P(Q|w) array (%li bytes).\n"
+           "ERROR          Exiting.\n",
+      Sqw->compname, Sqw->nb_w*sizeof(struct Sqw_Q_struct*));
+    return(0);
+  }
+  for (j=0; j < (Sqw->nb_w) ; j++) {
+
+    Sqw->Q_proba_per_w[j]=
+        (struct Sqw_Q_struct*)calloc(Sqw->nb_q, sizeof(struct Sqw_Q_struct));
+
+    if (!Sqw->Q_proba_per_w[j]) {
+      printf("Isotropic_Sqw: %s: Cannot allocate P(Q|w)[%i] (%li bytes).\n"
+             "ERROR          Exiting.\n",
+        Sqw->compname, j, Sqw->nb_q*sizeof(struct Sqw_Q_struct));
+      return(0);
+    }
+    /* set P(Q|W) and compute total intensity */
+
+    for (i=0; i < (Sqw->nb_q) ; i++) {
+      q  = Table_Index( (nblocks_coh ? Table_coh[0] : Table_inc[0]), 0, i);
+      Sqw->Q_proba_per_w[j][i].Q     = q;
+      Sqw->Q_proba_per_w[j][i].proba = Table_Index(Sqw_total, i, j);
+      Sqw->Q_proba_per_w[j][i].cumul_proba = Sqw->Q_proba_per_w[j][i].proba/val;
+      if (i>0)     /* cumulate */
+        Sqw->Q_proba_per_w[j][i].cumul_proba +=
+          Sqw->Q_proba_per_w[j][i-1].cumul_proba;
+    }
+  }
+  if (Sqw->verbose_output > 1)
+    printf("Isotropic_Sqw: %s: Generated P(Q|w) with total intensity %g\n",
+      Sqw->compname, val);
+
+  Table_Free_Array(Table_coh);
+  Table_Free_Array(Table_inc);
+  Table_Free(&Sqw_total);
+
+  return(val);
+
+}
+
+/*****************************************************************************
+*  Sqw_search_root: Search for the roots of A*x**2 + B*x + C
+*   The roots are returned as x1 and x2
+* Used in : TRACE (1)
+*****************************************************************************/
+int Sqw_search_root(double A, double B, double C,
+             double *x1, double *x2)
+
+{
+
+  double delta, sqrtdelta, inv_2A;
+  int    OK = 0;
+
+  if (fabs(A) < 1E-10) {
+    if (B) {  *x1 = -C/B; *x2 = *x1; OK=3; }
+    /* else the speed is parallel tothe plane, no intersection: A=B=0 ret=0 */
+  } else {
+    delta = B*B - 4*A*C;
+    if (delta < 0) {
+      /* Racines Complexes */
+      OK=0;
+    } else {
+      /* Racines reelles */
+      sqrtdelta = sqrt(delta);
+      inv_2A = 1/(2*A);
+      *x1 = inv_2A*(-B - sqrtdelta);
+      *x2 = inv_2A*(-B + sqrtdelta);
+      OK = 1;
+    }
+    return(OK);
+  }
+}
+
+/*****************************************************************************
+*  Sqw_search_DOS: For a given random number 'randnum', search for the bin
+*   containing  the corresponding Sqw->DOS
+* Used in : TRACE (1)
+*****************************************************************************/
+int Sqw_search_DOS(struct Sqw_sample_struct *Sqw, double randnum)
+ {
+   int i=1;
+
+   /* TODO: use an index table to speed up table look-up */
+
+   while ((&(Sqw->DOS[i]) != NULL) && (randnum > Sqw->DOS[i].cumul_I))
+      i++;
+
+   if (&(Sqw->DOS[i]) == NULL)
+   {
+      fprintf(stderr, "Isotropic_Sqw: %s: No corresponding value in the DOS. randnum too big.\n", Sqw->compname);
+      fprintf(stderr, "  i=%i ; randnum=%f ; Sqw->DOS[i-1].cumul_I=%f (Sqw_search_DOS)\n",
+             i, randnum, Sqw->DOS[i-1].cumul_I);
+      return i-1;
+   }
+   else
+      return i;
+ }
+
+/*****************************************************************************
+*  Sqw_search_Q_proba_per_w: For a given random number randnum, search for
+*   the bin containing the corresponding Sqw->DOS in the Q probablility grid
+* Used in : TRACE (1)
+*****************************************************************************/
+int Sqw_search_Q_proba_per_w(struct Sqw_sample_struct *Sqw,
+                             double randnum, int index)
+  {
+    int i=0;
+
+    /* TODO: use an index table to speed up table look-up */
+
+    while ((&(Sqw->Q_proba_per_w[index][i]) != NULL)
+      && (randnum > Sqw->Q_proba_per_w[index][i].cumul_proba))
+        i++;
+
+    if (&(Sqw->Q_proba_per_w[index][i]) == NULL)
+      return -1;
+    else
+      return i;
+  }
+
+#endif
+
+%}
+
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+DECLARE
+%{
+
+  struct Sqw_sample_struct VarSqw;
+  double dq, dw;
+
+/* end DECLARE */
+%}
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+INITIALIZE
+%{
+  char local_coh_inc='\0';
+  /* check for parameters */
+
+  if (V_rho <= 0) exit(printf("Isotropic_Sqw: %s: sample has zero density (V_rho)\n",NAME_CURRENT_COMP));
+  if (!radius_i*radius_o*yheight && !xwidth*yheight*zthick)
+    exit(printf("Isotropic_Sqw: %s: not a box, nor a cylinder\n"
+                "ERROR:         sample has no volume (zero dimensions)\n",
+                        NAME_CURRENT_COMP));
+
+  if (radius_o && yheight) {
+    VarSqw.isrect = 0;
+    if (VarSqw.verbose_output)
+      printf("Isotropic_Sqw: %s: is a Cylinder : R_i=%f R_o=%f h=%f \n",
+            NAME_CURRENT_COMP, radius_i,radius_o,yheight);
+  } else if (xwidth*yheight*zthick) {
+    VarSqw.isrect = 1;
+    if (VarSqw.verbose_output)
+      printf("Isotropic_Sqw: %s: is a Box : dx=%f dy=%f dz=%f \n",
+            NAME_CURRENT_COMP, xwidth,yheight,zthick);
+  } else  {
+    printf("Isotropic_Sqw: %s: ERROR sample has no dimension\n"
+           "               set some of radius_o xwidth yheight zthick \n",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+
+  strncpy(VarSqw.compname, NAME_CURRENT_COMP, 256);
+  VarSqw.V_my_a_v  =(V_rho*100*sigma_abs*2200);
+  VarSqw.T2E       =(1/11.605);   /* Kelvin to meV */
+  VarSqw.sqSE2K = (V2K*SE2V)*(V2K*SE2V);
+  VarSqw.sqw_threshold = (threshold > 0 ? threshold : 0);
+  VarSqw.s_abs     = sigma_abs;
+  VarSqw.s_coh     = sigma_coh;
+  VarSqw.s_inc     = sigma_inc; /* s_scatt member initialized in Sqw_init */
+  VarSqw.factor    = 1;
+
+  if (coh_incoh && strlen(coh_incoh)) local_coh_inc = coh_incoh[0];
+  VarSqw.scatt_type    = local_coh_inc; /* total, coherent, incoherent */
+  VarSqw.verbose_output= verbose;
+
+  if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
+    printf("Isotropic_Sqw: %s: ERROR importing data files (Sqw_init)\n",NAME_CURRENT_COMP);
+    exit(0);
+  }
+  VarSqw.V_my_s    =(V_rho*100*VarSqw.s_scatt);
+
+  if (VarSqw.scatt_type != 'I' && !T)
+    exit(printf("Isotropic_Sqw: %s: sample temperature is zero (T)\n",NAME_CURRENT_COMP));
+
+  if (!VarSqw.s_scatt) {
+    printf("Isotropic_Sqw: %s: Scattering cross section is zero\n"
+           "               (sigma_coh, sigma_inc)\n",NAME_CURRENT_COMP);
+  }
+
+  if (!d_phi) d_phi = 2*PI; /* Sqw scatt on +/-PI angle theta */
+  else        d_phi = fabs(d_phi)*DEG2RAD;
+
+  if (VarSqw.scatt_type == 'I' && d_phi > PI) d_phi = 0; /* V_scatt on 4*PI */
+
+  if (d_phi && order != 1) {
+    printf("Isotropic_Sqw: %s: Focusing can only apply for single\n"
+           "               scattering. Setting to 4*PI mode.\n",
+           NAME_CURRENT_COMP);
+    d_phi = 0;
+  }
+
+/* end INITIALIZE */
+%}
+
+/*****************************************************************************/
+/*****************************************************************************/
+TRACE
+%{
+
+int    intersect;     /* flag to continue/stop */
+double t0,  t1,  t2,  t3; /* times for intersections */
+double dt0, dt1, dt2, dt; /* time intervals */
+double k=0, kf, kf1, kf2;
+double v=0, vf;
+double d_path;        /* total path length for straight trajectory */
+double V_my_a;        /* absorption cross-section scaled to velocity (2200) */
+double ws, wi;        /* probability for scattering/absorption and for */
+                      /* interaction along d_path */
+double tmp;           /* temporary var */
+double omega;         /* energy transfert */
+double q;             /* wavevector transfert */
+long   index_w;       /* energy index for table look-up DOS */
+long   index_q;       /* Q index for table look-up P(Q|w) */
+double c1, R,theta, costheta, sintheta; /* for the choice of kf direction */
+double u1x,u1y,u1z;
+double u2x,u2y,u2z;
+double u0x,u0y,u0z;
+int    index_counter;
+
+
+/* Store Initial neutron state */
+
+VarSqw.ki_x = V2K*vx;
+VarSqw.ki_y = V2K*vy;
+VarSqw.ki_z = V2K*vz;
+VarSqw.ti   = t;
+VarSqw.vi   = 0;
+VarSqw.ki   = 0;
+dq = 0; dw = 0;
+
+do { /* Main interaction loop. Ends with intersect=0 */
+
+  /* Intersection neutron trajectory / sample (sample surface) */
+  if (VarSqw.isrect)
+    intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zthick);
+  else
+    intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o,yheight);
+
+  /* Computing the intermediate times */
+  if (intersect) {
+    tmp = 0;
+    if (radius_i && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz,
+                                       radius_i,yheight))
+      tmp = 1; /* we also take into account the hollow part */
+    if (!tmp) t1 = t2 = t3; /* no empty space inside */
+  } else break; /* neutron does not hit sample: transmitted  */
+
+  if (intersect) { /* the neutron hits the sample */
+
+    if (!v) v  = sqrt(vx*vx+vy*vy+vz*vz);
+    k  = V2K*v;
+
+    if (!VarSqw.vi) VarSqw.vi = v;
+    if (!VarSqw.ki) VarSqw.ki = k;
+
+    if (t0 > 0) {  /* we are before the sample */
+      PROP_DT(t0); /* propagates neutron to the entry of the sample */
+    } else if (t1 > 0 && t1 > t0) { /* we are inside first part of the sample */
+      /* no propagation, stay inside */
+    } else if (t2 > 0 && t2 > t1) { /* we are in the hole */
+      PROP_DT(t2); /* propagate to inner surface of 2nd part of sample */
+    } else if (t3 > 0 && t3 > t2) { /* we are in the 2nd part of sample */
+      /* no propagation, stay inside */
+    }
+
+    dt0=t1-(t0 > 0 ? t0 : 0); /* Time in first part of hollow cylinder/cylinder/box */
+    dt1=t2-(t1 > 0 ? t1 : 0); /* Time in hole */
+    dt2=t3-(t2 > 0 ? t2 : 0); /* Time in 2nd part of hollow cylinder */
+
+    if (dt0 < 0) dt0 = 0;
+    if (dt1 < 0) dt1 = 0;
+    if (dt2 < 0) dt2 = 0;
+
+    if (!dt0 && !dt2) {
+      intersect = 0; /* the sample was passed entirely */
+      break;
+    }
+
+    if (!v) {
+      printf("Isotropic_Sqw: %s: ERROR: Null velocity\n",NAME_CURRENT_COMP);
+      ABSORB; /* should never occur */
+    }
+
+    /* check for scattering event */
+    d_path = v*( dt0 +dt2 );      /* total path lenght in sample */
+    V_my_a = VarSqw.V_my_a_v / v; /* absorption 'mu' */
+
+    dt = V_my_a + VarSqw.V_my_s;  /* total scattering Xsect (tmp var) */
+    if (!dt) {
+      printf("Isotropic_Sqw: %s: ERROR: Null Scattering cross section\n",NAME_CURRENT_COMP);
+      ABSORB; /* should never occur */
+    }
+
+    /* Proba of scattering vs absorption */
+    ws = VarSqw.V_my_s/dt;
+    /* Proba of interacing along length d_path */
+    wi = 1 - exp(-dt*d_path);
+
+    tmp = 0; /* flag used for propagation to exit point before ending */
+
+    /* are we next to the exit ? probably no scattering */
+    if (VarSqw.V_my_s*d_path <= 4e-7) {
+      tmp = 1;
+      p *= 1 - wi; /* No interaction before the exit */
+    }
+
+    /* MC choice: Interaction or transmission ? */
+    if (!tmp && wi > 0 && (wi == 1 || rand01() < wi)) { /* Interaction neutron/sample */
+      p*=ws; /* Update weight ; none absorbed ; all scattered */
+    } else tmp = 1; /* Transmission : no interaction neutron/sample */
+
+    if (tmp) { /* propagate to exit of sample */
+      intersect = 0;
+      dt = dt2+dt1+dt0;
+      if (dt > 0) PROP_DT(dt); /* go to exit point of sample */
+      break;
+    }
+  } /* end if intersect the neutron hits the sample */
+  else break;
+
+  if (intersect) { /* Multiple scattering event */
+
+    /* Decaying exponential distribution of the path length before scattering */
+    /* Select a point at which to scatter the neutron, taking
+         secondary extinction into account. */
+    if (dt*d_path < 1e-6)
+    /* For very weak scattering, use simple uniform sampling of scattering
+       point to avoid rounding errors. */
+      dt = rand0max(d_path);
+    else
+      dt = -log(1 - rand01()*(1 - exp(-dt*d_path))) / dt;
+    dt /= v; /* Time from present position to scattering point */
+
+    /* If t0 is in hole, propagate to next part of the hollow cylinder */
+    if (dt1 > 0 && dt0 > 0 && dt > dt0) dt += dt1;
+
+    /* Neutron propagation to the scattering point */
+    PROP_DT(dt);
+    /* accounts for relative weigh of coherent/incoherent Sqw integrals */
+    p*= VarSqw.factor;
+
+    if (VarSqw.scatt_type == 'I') {
+
+      /* CASE 1: isotropic elastic scattering (Vanadium like) */
+      if (d_phi && order == 1) {
+        randvec_target_rect_angular(&u1x, &u1y, &u1z, &tmp,
+            vx, vy, vz, 2*PI, d_phi, ROT_A_CURRENT_COMP);
+        p *= tmp/4*PI; /* weighted by focused range to total range */
+      } else
+        randvec_target_circle(&u1x, &u1y, &u1z, NULL, vx, vy, vz, 0);
+
+      vx = u1x; vy = u1y; vz = u1z;
+
+
+      /* printf("V_scatt: v_in=%f v_out=[%f %f %f]\n", v, vx, vy, vz); */
+
+      vf = v; kf = k;
+
+    } else {
+
+      /* CASE 2: (in)elastic, (in)coherent scattering according to S(Q,w) */
+
+      /* give us a limited number of tries for scattering */
+      for (index_counter=5; index_counter > 0 ; index_counter--) {
+        /* MC choice: energy transfer in the DOS */
+        index_w = Sqw_search_DOS(&VarSqw, rand01());
+        if (&(VarSqw.DOS[index_w]) != NULL) omega = VarSqw.DOS[index_w].omega;
+        else omega=0;
+
+        /* MC choice: detailed balance: choice between w and -w */
+        if (T && rand01() > 1/(1+exp(-omega/(T*VarSqw.T2E))) ) {
+          omega = -omega; /* anti Stokes */
+        }                 /* else Stokes */
+
+        /* MC choice: momentum transfer Q in P(Q|w) */
+        index_q = Sqw_search_Q_proba_per_w(&VarSqw, rand01(), index_w);
+        if (index_q == -1) {
+          continue; /* no Q value for this w choice */
+        }
+        if (&(VarSqw.Q_proba_per_w[index_w]) != NULL)
+          q = VarSqw.Q_proba_per_w[index_w][index_q].Q;
+        else ABSORB; /* should never occur */
+
+        /* Search for length of final wave vector kf */
+        /* kf is such that : hbar*w = hbar*hbar/2/m*(k*k - kf*kf) */
+        /* acceptable values for kf are kf1 and kf2 */
+        if (Sqw_search_root(1, 0, -k*k + VarSqw.sqSE2K*omega, &kf1, &kf2)) {
+          continue; /* all roots are imaginary */
+        }
+
+        /* MC choice: between kf1 and kf2 */
+        kf = (rand01() < 0.5 ? kf1 : kf2);
+        vf = K2V*kf;
+
+        /* Search of the direction of kf such that : q = ki - kf */
+        /* ks = c1*ki/norm(ki)^2 + u0 */
+        /* u0 is in the plane orthogonal to ki */
+
+        c1= (k*k+kf*kf-q*q)/(2*kf); /* unit is [k] */
+
+        /* u1 and u2 : basis of the plane orthogonal to ki */
+        u1x=0;           u1y=-vz;    u1z= vy; /* in vertical plane */
+        u2x=vy*vy+vz*vz; u2y=-vx*vy; u2z=-vx*vz;
+
+        NORM(u1x, u1y, u1z);
+        NORM(u2x, u2y, u2z);
+
+        /* circle radius = intersection with the plane defined by u1 and u2 */
+        R = 1-c1*c1/(k*k); /* unit is [1] */
+        if (R >= 0) R = sqrt(R);
+        else {
+          continue; /* No solution for R */
+        }
+
+        break; /* exit for loop on success */
+      } /* end for index_counter */
+
+      if (!index_counter) { /* for loop ended: failure for scattering */
+        intersect=0; /* Could not scatter: finish multiple scattering loop */
+        if (order && SCATTERED != order) ABSORB;
+        break;       /* finish multiple scattering loop */
+      }
+
+      /* Choose point on scattering cone */
+      if (order == 1 && d_phi)
+      { /* relate height of detector to the height on cone */
+        tmp = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+        if (tmp < -1 || tmp > 1) d_phi = 0;
+        else d_phi = 2*asin(arg);
+      }
+      if (d_phi) {
+        d_phi= fabs(d_phi);
+        theta= 2*rand01()*d_phi;
+        if (theta > d_phi) tmp = 1; else tmp = 0;
+        if (tmp) {
+          theta=PI+(theta-1.5*d_phi);
+        } else {
+          theta=theta-0.5*d_phi;
+        }
+        p *= d_phi/PI;
+      }
+      else
+        theta = PI*randpm1();
+
+      costheta = cos(theta); sintheta = sin(theta);
+
+      /* u0 = component of ks which is in the plane orthogonal to ki */
+      u0x=R*(costheta*u1x + sintheta*u2x);
+      u0y=R*(costheta*u1y + sintheta*u2y);
+      u0z=R*(costheta*u1z + sintheta*u2z);
+
+      tmp = v*k;
+
+      u0x=c1*vx/tmp + u0x; /* normalized output velocity */
+      u0y=c1*vy/tmp + u0y;
+      u0z=c1*vz/tmp + u0z;
+
+      /* Final velocity */
+      vx = vf*u0x;
+      vy = vf*u0y;
+      vz = vf*u0z;
+
+      v = vf; k = kf;
+
+    } /* end if (VarSqw.scatt_type) */
+
+    SCATTER;
+
+    /* test for a given multiple order */
+    if (order && SCATTERED >= order) {
+      intersect=0; /* reached required number of SCATTERing */
+      break;       /* finish multiple scattering loop */
+    }
+
+  } /* end if (intersect) Multiple scattering event  */
+
+} while (intersect); /* end do (intersect) */
+
+/* Store Final neutron state */
+VarSqw.kf_x = V2K*vx;
+VarSqw.kf_y = V2K*vy;
+VarSqw.kf_z = V2K*vz;
+VarSqw.tf   = t;
+VarSqw.vf = v;
+VarSqw.ki = k;
+
+if (SCATTERED) {
+
+  dq = sqrt((VarSqw.kf_x-VarSqw.ki_x)*(VarSqw.kf_x-VarSqw.ki_x)
+           +(VarSqw.kf_y-VarSqw.ki_y)*(VarSqw.kf_y-VarSqw.ki_y)
+           +(VarSqw.kf_z-VarSqw.ki_z)*(VarSqw.kf_z-VarSqw.ki_z));
+  dw = VS2E*(VarSqw.vf*VarSqw.vf - VarSqw.vi*VarSqw.vi);
+}
+
+/* end TRACE */
+%}
+
+FINALLY
+%{
+
+/* end FINALLY */
+%}
+/*****************************************************************************/
+/*****************************************************************************/
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  if(VarSqw.isrect)
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else
+  {
+    circle("xz", 0,  yheight/2.0, 0, radius_i);
+    circle("xz", 0,  yheight/2.0, 0, radius_o);
+    circle("xz", 0, -yheight/2.0, 0, radius_i);
+    circle("xz", 0, -yheight/2.0, 0, radius_o);
+    line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
+    line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
+    line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
+    line(-radius_o, -yheight/2.0, 0, -radius_o, +yheight/2.0, 0);
+    line(+radius_o, -yheight/2.0, 0, +radius_o, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -radius_o, 0, +yheight/2.0, -radius_o);
+    line(0, -yheight/2.0, +radius_o, 0, +yheight/2.0, +radius_o);
+  }
+/* end MCDISPLAY */
+%}
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+END
