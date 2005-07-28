@@ -7,7 +7,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 *              KL, 28.09.01   (two lines)
@@ -21,15 +21,15 @@
 * The shape of the sample may be a cylinder of given radius or a box with
 * dimensions xwidth, yheight, zthick.
 * The efficient is highly improved when restricting the vertical scattering
-* range within 'd_phi' on the Debye-Scherrer cone.
+* range on the Debye-Scherrer cone (with 'd_phi').
 * You may use PowderN to use N scattering lines defined in a file.
 *
 * %P
 *
 * INPUT PARAMETERS
 *
-* d_phi:   Focussing angle corresponding to the angular range generated on the
-*            on the left and right side of the Debye-Scherrer cone [deg,0-180]
+* d_phi:    Angle corresponding to the vertical angular range
+*             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
 * radius:   Radius of sample in (x,z) plane [m]
 * yheight:  Height of sample y direction [m]
 * pack:     Packing factor [1]
@@ -132,22 +132,8 @@ TRACE
 
     if (!frac || rand01() >= frac)
      {   /* Make coherent scattering event */
-        /* Choose point on Debye-Scherrer cone */
-      if (d_phi>0)
-      {
-        d_phi0  = 2*rand01()*d_phi;
-        if (d_phi0 > d_phi) arg = 1; else arg = 0;
-        if (arg) {
-          d_phi0=180+(d_phi0-1.5*d_phi);
-        } else {
-          d_phi0=d_phi0-0.5*d_phi;
-        }
-        d_phi0 *= DEG2RAD;
-        p *= d_phi/180;
-      }
-      else
-        d_phi0 = PI*randpm1();
 
+      /* choose line */
       if (rand01() > 0.5)  /* Select between the two powder lines */
        {
         arg = (q_v1+w_v1*randnorm())/(2.0*v);
@@ -161,6 +147,27 @@ TRACE
       if(arg > 1)
         ABSORB;                   /* No bragg scattering possible*/
       theta = asin(arg);          /* Bragg scattering law */
+
+/* Choose point on Debye-Scherrer cone */
+      if (d_phi)
+      { /* relate height of detector to the height on DS cone */
+        arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+        if (arg < -1 || arg > 1) d_phi = 0;
+        else d_phi = 2*asin(arg);
+      }
+      if (d_phi) {
+        d_phi = fabs(d_phi);
+        d_phi0= 2*rand01()*d_phi;
+        if (d_phi0 > d_phi) arg = 1; else arg = 0;
+        if (arg) {
+          d_phi0=PI+(d_phi0-1.5*d_phi);
+        } else {
+          d_phi0=d_phi0-0.5*d_phi;
+        }
+        p *= d_phi/PI;
+      }
+      else
+        d_phi0 = PI*randpm1();
 
       /* now find a nearly vertical rotation axis:
       *  (v along Z) x (X axis) -> nearly Y axis
