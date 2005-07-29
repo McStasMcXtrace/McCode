@@ -141,6 +141,10 @@ struct Sqw_sample_struct {
   struct Sqw_D_struct  *DOS;           /* density of states */
   struct Sqw_Q_struct **Q_proba_per_w; /* P(Q|w)=probability of each Q with w */
 
+  long  *DOS_lookup;
+  long  **QW_lookup;
+  long   lookup_length;
+
   double s_abs, s_coh, s_inc;
   double s_scatt;
   double V_my_s;
@@ -183,6 +187,8 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   double intensities_ci[2];
   double q,w, val;
   char   str[80];
+  long  *DOS_lookup;
+  long **QW_lookup;
 
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Initialize\n",
@@ -281,6 +287,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   /* we assume from here that griding is the same for q and w */
 
   /* restrict gridding range to q and omega min/max */
+  val = 0;
   for (i=0; i< 2; i++) { /* i=[q,w] */
     long    index;
     double  val_min, val_max;
@@ -316,7 +323,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
     return(0);
   }
 
-  sprintf(Sqw_total.filename, "S(q,w) from files %s %s",
+  sprintf(Sqw_total.filename, "S(q,w) from %s %s",
     (file_coh ? file_coh : ""), (file_inc ? file_inc : "") );
 
   for (i=0; i < (Sqw->nb_q) ; i++) {
@@ -426,6 +433,8 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   }
   for (j=0; j < (Sqw->nb_w) ; j++) {
 
+    double intensity=0;
+
     Sqw->Q_proba_per_w[j]=
         (struct Sqw_Q_struct*)calloc(Sqw->nb_q, sizeof(struct Sqw_Q_struct));
 
@@ -436,12 +445,15 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
       return(0);
     }
     /* set P(Q|W) and compute total intensity */
-
     for (i=0; i < (Sqw->nb_q) ; i++) {
       q  = Table_Index( (nblocks_coh ? Table_coh[0] : Table_inc[0]), 0, i);
       Sqw->Q_proba_per_w[j][i].Q     = q;
       Sqw->Q_proba_per_w[j][i].proba = Table_Index(Sqw_total, i, j);
-      Sqw->Q_proba_per_w[j][i].cumul_proba = Sqw->Q_proba_per_w[j][i].proba/val;
+      intensity                     += Sqw->Q_proba_per_w[j][i].proba;
+    }
+    for (i=0; i < (Sqw->nb_q) ; i++) {
+      Sqw->Q_proba_per_w[j][i].cumul_proba =
+                        Sqw->Q_proba_per_w[j][i].proba/intensity;
       if (i>0)     /* cumulate */
         Sqw->Q_proba_per_w[j][i].cumul_proba +=
           Sqw->Q_proba_per_w[j][i-1].cumul_proba;
@@ -450,6 +462,50 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated P(Q|w) with total intensity %g\n",
       Sqw->compname, val);
+
+  /* generate quick lookup tables for DOS and Q_proba_per_w */
+  Sqw->DOS_lookup = NULL;
+  DOS_lookup = (long*)calloc(Sqw->lookup_length, sizeof(long));
+  if (!DOS_lookup) {
+    printf("Isotropic_Sqw: %s: Cannot allocate DOS_lookup (%li bytes).\n"
+           "Warning        Will be slower.\n",
+      Sqw->compname, Sqw->lookup_length*sizeof(long));
+  }
+  if (DOS_lookup) {
+    for (i=0; i < Sqw->lookup_length; i++) {
+      w = (double)i/(double)Sqw->lookup_length;
+      DOS_lookup[i] = Sqw_search_DOS(Sqw, w);
+    }
+    Sqw->DOS_lookup = DOS_lookup;
+  }
+  Sqw->QW_lookup = NULL;
+  QW_lookup=(long**)calloc(Sqw->nb_w, sizeof(long*));
+  if (!QW_lookup) {
+    printf("Isotropic_Sqw: %s: Cannot allocate QW_lookup (%li bytes).\n"
+           "Warning        Will be slower.\n",
+      Sqw->compname, Sqw->nb_w*sizeof(long*));
+  }
+  if (QW_lookup) {
+    for (j=0; j < (Sqw->nb_w) ; j++) {
+      QW_lookup[j] = (long*)calloc(Sqw->lookup_length, sizeof(long));
+      if (!QW_lookup[j]) {
+        printf("Isotropic_Sqw: %s: Cannot allocate QW_lookup[%i] (%li bytes).\n"
+               "Warning        Will be slower.\n",
+        Sqw->compname, j, Sqw->lookup_length*sizeof(long));
+        free(QW_lookup); QW_lookup = NULL;
+      } else {
+        for (i=0; i < Sqw->lookup_length; i++) {
+          w = (double)i/(double)Sqw->lookup_length;
+          QW_lookup[j][i] = Sqw_search_Q_proba_per_w(Sqw, w, j);
+        }
+      }
+    }
+    Sqw->QW_lookup = QW_lookup;
+  }
+  if ((Sqw->QW_lookup || Sqw->DOS_lookup) && Sqw->verbose_output > 1)
+    printf("Isotropic_Sqw: %s: Generated lookup tables with %i entries\n",
+      Sqw->compname, Sqw->lookup_length);
+
 
   Table_Free_Array(Table_coh);
   Table_Free_Array(Table_inc);
@@ -498,24 +554,26 @@ int Sqw_search_root(double A, double B, double C,
 * Used in : TRACE (1)
 *****************************************************************************/
 int Sqw_search_DOS(struct Sqw_sample_struct *Sqw, double randnum)
- {
-   int i=1;
+{
+  int i=1;
 
-   /* TODO: use an index table to speed up table look-up */
+  if (Sqw->DOS_lookup) {
+    i = Sqw->DOS_lookup[(long)floor(randnum*Sqw->lookup_length)];
+  }
 
-   while ((&(Sqw->DOS[i]) != NULL) && (randnum > Sqw->DOS[i].cumul_I))
+  while (i < Sqw->nb_w && (&(Sqw->DOS[i]) != NULL) && (randnum > Sqw->DOS[i].cumul_I))
       i++;
 
-   if (&(Sqw->DOS[i]) == NULL)
-   {
+  if (&(Sqw->DOS[i]) == NULL)
+  {
       fprintf(stderr, "Isotropic_Sqw: %s: No corresponding value in the DOS. randnum too big.\n", Sqw->compname);
       fprintf(stderr, "  i=%i ; randnum=%f ; Sqw->DOS[i-1].cumul_I=%f (Sqw_search_DOS)\n",
-             i, randnum, Sqw->DOS[i-1].cumul_I);
+            i, randnum, Sqw->DOS[i-1].cumul_I);
       return i-1;
-   }
-   else
+  }
+  else
       return i;
- }
+}
 
 /*****************************************************************************
 *  Sqw_search_Q_proba_per_w: For a given random number randnum, search for
@@ -524,20 +582,23 @@ int Sqw_search_DOS(struct Sqw_sample_struct *Sqw, double randnum)
 *****************************************************************************/
 int Sqw_search_Q_proba_per_w(struct Sqw_sample_struct *Sqw,
                              double randnum, int index)
-  {
-    int i=0;
+{
+  int i=0;
 
-    /* TODO: use an index table to speed up table look-up */
-
-    while ((&(Sqw->Q_proba_per_w[index][i]) != NULL)
-      && (randnum > Sqw->Q_proba_per_w[index][i].cumul_proba))
-        i++;
-
-    if (&(Sqw->Q_proba_per_w[index][i]) == NULL)
-      return -1;
-    else
-      return i;
+  if (Sqw->QW_lookup && Sqw->QW_lookup[index]) {
+    i = Sqw->QW_lookup[index][(long)floor(randnum*Sqw->lookup_length)];
   }
+
+  while (i < Sqw->nb_q && (&(Sqw->Q_proba_per_w[index][i]) != NULL)
+    && (randnum > Sqw->Q_proba_per_w[index][i].cumul_proba)) {
+      i++;
+  }
+
+  if (&(Sqw->Q_proba_per_w[index][i]) == NULL)
+    return -1;
+  else
+    return i;
+}
 
 #endif
 
@@ -596,6 +657,7 @@ INITIALIZE
   VarSqw.s_coh     = sigma_coh;
   VarSqw.s_inc     = sigma_inc; /* s_scatt member initialized in Sqw_init */
   VarSqw.factor    = 1;
+  VarSqw.lookup_length=100;     /* length of lookup tables */
 
   if (coh_incoh && strlen(coh_incoh)) local_coh_inc = coh_incoh[0];
   VarSqw.scatt_type    = local_coh_inc; /* total, coherent, incoherent */
@@ -615,8 +677,7 @@ INITIALIZE
            "               (sigma_coh, sigma_inc)\n",NAME_CURRENT_COMP);
   }
 
-  if (!d_phi) d_phi = 2*PI; /* Sqw scatt on +/-PI angle theta */
-  else        d_phi = fabs(d_phi)*DEG2RAD;
+  if (d_phi) d_phi = fabs(d_phi)*DEG2RAD;
 
   if (VarSqw.scatt_type == 'I' && d_phi > PI) d_phi = 0; /* V_scatt on 4*PI */
 
@@ -864,7 +925,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
       { /* relate height of detector to the height on cone */
         tmp = sin(d_phi*DEG2RAD/2)/sin(2*theta);
         if (tmp < -1 || tmp > 1) d_phi = 0;
-        else d_phi = 2*asin(arg);
+        else d_phi = 2*asin(tmp);
       }
       if (d_phi) {
         d_phi= fabs(d_phi);
@@ -935,6 +996,11 @@ if (SCATTERED) {
 
 FINALLY
 %{
+  /* free memory */
+  if (VarSqw.DOS)           free(VarSqw.DOS);
+  if (VarSqw.Q_proba_per_w) free(VarSqw.Q_proba_per_w);
+  if (VarSqw.DOS_lookup)    free(VarSqw.DOS_lookup);
+  if (VarSqw.QW_lookup)     free(VarSqw.QW_lookup);
 
 /* end FINALLY */
 %}
