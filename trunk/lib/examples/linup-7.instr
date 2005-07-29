@@ -12,7 +12,7 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas 1.1
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -59,7 +59,6 @@ double tas1_ana_q = 1.87325;  /* 20meV */
 double tas1_ana_r0 = 0.6;
 
 double OMC1_d;
-double alu_focus_x;
 
 double mpos0, mpos1, mpos2, mpos3, mpos4, mpos5, mpos6, mpos7;
 double mrot0, mrot1, mrot2, mrot3, mrot4, mrot5, mrot6, mrot7;
@@ -79,7 +78,6 @@ INITIALIZE
   mpos7 =  3.5*d; mrot7 =  3.5*phi;
 
   OMC1_d = OMC1/60.0;
-  alu_focus_x = TT >= 0 ? 1000 : -1000;
 %}
 
 TRACE
@@ -208,12 +206,10 @@ COMPONENT sample = Powder1(
   radius = 0.007,
   h = 0.015,
   q = 1.8049,
-  d_phi0 = 4,
+  d_phi = 4,
   pack = 1, j = 6, DW = 1,
   F2 = 56.8,
-  Vc = 85.0054, sigma_a = 0.463,
-  target_x = alu_focus_x,  /* ToDo: GET_X(ana) */
-  target_y = 0, target_z = 1000)
+  Vc = 85.0054, sigma_a = 0.463)
   AT (0, 0, 1.565) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
 
 COMPONENT a3 = Arm()
