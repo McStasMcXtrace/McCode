@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.29 $
+* Version: $Revision: 1.30 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -193,7 +193,7 @@ TRACE
 
       PROP_DT(dt+t0);             /* Point of scattering */
 
-      if (!(VarsV.tx || VarsV.ty || VarsV.tz)) {
+      if ((VarsV.tx || VarsV.ty || VarsV.tz)) {
         aim_x = VarsV.tx-x;       /* Vector pointing at target (anal./det.) */
         aim_y = VarsV.ty-y;
         aim_z = VarsV.tz-z;
