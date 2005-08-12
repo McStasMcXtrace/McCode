@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.74 $
+* Version: $Revision: 1.75 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.74 2005-07-25 14:55:08 farhi Exp $
+* $Id: mcstas-r.h,v 1.75 2005-08-12 11:23:19 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.74  2005/07/25 14:55:08  farhi
+*       DOC update:
+*       checked all parameter [unit] + text to be OK
+*       set all versions to CVS Revision
+*
 *       Revision 1.73  2005/07/18 14:43:05  farhi
 *       Now gives a warning message per component for 'computational absorbs'
 *
@@ -136,7 +141,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.74 $"
+#define MCSTAS_R_H "$Revision: 1.75 $"
 
 #include <math.h>
 #include <string.h>
@@ -464,6 +469,17 @@ void   mcsiminfo_close(void);
     else mcPROP_Z0; \
   } while(0)
 
+#define PROP_Z0_ALLOW_BACKPROP \
+  do { \
+    if (mcgravitation) { Coords mcLocG; int mc_ret; \
+    double mc_dt, mc_gx, mc_gy, mc_gz; \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
+    mc_ret = solve_2nd_order(&mc_dt, -mc_gz/2, -mcnlvz, -mcnlz); \
+    if (mc_ret) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
+    else { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; }\
+    else mcPROP_Z0_ALLOW_BACKPROP; \
+  } while(0)
 
 #define mcPROP_Z0 \
   do { \
@@ -471,6 +487,17 @@ void   mcsiminfo_close(void);
     if(mcnlvz == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -mcnlz/mcnlvz; \
     if(mc_dt < 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    mcnlx += mcnlvx*mc_dt; \
+    mcnly += mcnlvy*mc_dt; \
+    mcnlt += mc_dt; \
+    mcnlz = 0; \
+  } while(0)
+
+#define mcPROP_Z0_ALLOW_BACKPROP \
+  do { \
+    double mc_dt; \
+    if(mcnlvz == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
+    mc_dt = -mcnlz/mcnlvz; \
     mcnlx += mcnlvx*mc_dt; \
     mcnly += mcnlvy*mc_dt; \
     mcnlt += mc_dt; \
