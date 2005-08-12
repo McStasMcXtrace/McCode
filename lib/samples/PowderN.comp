@@ -7,7 +7,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 * Modified by: KL, 28.09.01   (two lines)
@@ -242,8 +242,8 @@ TRACE
 %{
   double t0, t1, v, v1,l_full, l, l_1, dt, d_phi0, theta, my_s, my_s_n;
   double solid_angle;
-  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
-  int    line;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z,pmul;
+  int    line,flag;
   char   intersect=0;
 
   if (isrect)
@@ -289,13 +289,12 @@ TRACE
       if (d_phi) {
         d_phi = fabs(d_phi);
         d_phi0= 2*rand01()*d_phi;
-        if (d_phi0 > d_phi) arg = 1; else arg = 0;
-        if (arg) {
+        if (d_phi0 > d_phi) flag = 1; else flag = 0;
+        if (flag) {
           d_phi0=PI+(d_phi0-1.5*d_phi);
         } else {
           d_phi0=d_phi0-0.5*d_phi;
         }
-        p *= d_phi/PI;
       }
       else
         d_phi0 = PI*randpm1();
@@ -319,19 +318,21 @@ TRACE
       vy = tmp_vy;
       vz = tmp_vz;
 
-      arg=0;
-      if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) arg=1;
+      flag=0;
+      if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) flag=1;
       else if(!isrect && !cylinder_intersect(&t0, &t1, x, y, z,
-                            vx, vx, vx, radius, yheight)) arg=1;
+                            vx, vx, vx, radius, yheight)) flag=1;
 
-      if (arg) {
+      if (flag) {
         /* Strange error: did not hit cylinder */
         fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
         ABSORB;
       }
       l_1 = v*t1; /* go to exit */
 
-      arg= Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-frac);
+      pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-frac);
+      /* Correction in case of d_phi focusing */
+      pmul *= sin(d_phi/2);
 
     }  /* Coherent scattering event */
     else
@@ -345,29 +346,28 @@ TRACE
         randvec_target_circle(&vx, &vy, &vz,
           &solid_angle, 0, 0, 1, 0);
       }
-      p *= solid_angle/4*PI;
       v1 = sqrt(vx*vx+vy*vy+vz*vz);
       vx *= v/v1;
       vy *= v/v1;
       vz *= v/v1;
 
-      arg=0;
-      if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) arg=1;
+      flag=0;
+      if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) flag=1;
       else if(!isrect && !cylinder_intersect(&t0, &t1, x, y, z,
-                            vx, vx, vx, radius, yheight)) arg=1;
+                            vx, vx, vx, radius, yheight)) flag=1;
 
-      if (arg) {
+      if (flag) {
         /* Strange error: did not hit cylinder */
         fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
         ABSORB;
       }
       l_1 = v*t1;
 
-      p *= l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(frac);
-      p *= solid_angle/(4*PI);
+      pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(frac);
+      pmul *= solid_angle/(4*PI); 
 
     }  /* Incoherent scattering event */
-    p *= arg;
+    p *= pmul;
   } /* else transmit non interacting neutrons */
 
 %}
