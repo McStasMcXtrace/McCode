@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions.
@@ -20,9 +20,14 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.13 2005-07-25 14:55:08 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.14 2005-08-24 13:14:40 lieutenant Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.13  2005/07/25 14:55:08  farhi
+* DOC update:
+* checked all parameter [unit] + text to be OK
+* set all versions to CVS Revision
+*
 * Revision 1.12  2005/07/04 08:20:16  farhi
 * added support for radial distributions vxy kxy and xy=radius
 *
@@ -128,6 +133,7 @@
     int    Flag_Shape        ;
     char   Flag_Auto_Limits  ;   /* get limits from first Buffer */
     char   Flag_Absorb       ;   /* monitor is also a slit */
+    char   Flag_Exclusive    ;   /* absorb neutrons out of monitor limits */
     char   Flag_per_cm2      ;   /* flux is per cm2 */
     char   Flag_log          ;   /* log10 of the flux */
     char   Flag_parallel     ;   /* set neutron state back after detection (parallel components) */
