@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.29 $
+* Version: $Revision: 1.30 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,14 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.29 2005-07-25 14:55:08 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.30 2005-08-24 13:14:00 lieutenant Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.29  2005/07/25 14:55:08  farhi
+* DOC update:
+* checked all parameter [unit] + text to be OK
+* set all versions to CVS Revision
+*
 * Revision 1.28  2005/07/18 14:38:00  farhi
 * Added 0.5 top all floor's so that bin are centered (at last)
 *
@@ -198,6 +203,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_Vars->Flag_Shape        = mc_mn_DEFS->SHAPE_SQUARE;
     mc_mn_Vars->Flag_Auto_Limits  = 0;   /* get limits from first Buffer */
     mc_mn_Vars->Flag_Absorb       = 0;   /* monitor is also a slit */
+    mc_mn_Vars->Flag_Exclusive    = 0;   /* absorb neutrons out of monitor limits */
     mc_mn_Vars->Flag_per_cm2      = 0;   /* flux is per cm2 */
     mc_mn_Vars->Flag_log          = 0;   /* log10 of the flux */
     mc_mn_Vars->Flag_parallel     = 0;   /* set neutron state back after detection (parallel components) */
@@ -343,11 +349,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         }
 
         /* now look for general option keywords */
-        if (!strcmp(mc_mn_token, "borders")) {mc_mn_Vars->Flag_With_Borders = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "verbose")) {mc_mn_Vars->Flag_Verbose      = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "log"))     {mc_mn_Vars->Flag_log          = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "abs"))     {mc_mn_Flag_abs                = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "multiple")){mc_mn_Vars->Flag_Multiple     = 1; mc_mn_iskeyword=1; }
+        if (!strcmp(mc_mn_token, "borders"))  {mc_mn_Vars->Flag_With_Borders = 1; mc_mn_iskeyword=1; }
+        if (!strcmp(mc_mn_token, "verbose"))  {mc_mn_Vars->Flag_Verbose      = 1; mc_mn_iskeyword=1; }
+        if (!strcmp(mc_mn_token, "log"))      {mc_mn_Vars->Flag_log          = 1; mc_mn_iskeyword=1; }
+        if (!strcmp(mc_mn_token, "abs"))      {mc_mn_Flag_abs                = 1; mc_mn_iskeyword=1; }
+        if (!strcmp(mc_mn_token, "multiple")) {mc_mn_Vars->Flag_Multiple     = 1; mc_mn_iskeyword=1; }
+        if (!strcmp(mc_mn_token, "exclusive")){mc_mn_Vars->Flag_Exclusive    = 1; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "list")) {
           mc_mn_Vars->Flag_List = 1; mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_EVNT;  }
         if (!strcmp(mc_mn_token, "limits") || !strcmp(mc_mn_token, "min"))
@@ -931,15 +938,19 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
             within_limits=0;
         }
         if (within_limits)
-        for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
-        {
-          mc_mn_j = mc_mn_Coord_Index[mc_mn_i];
-          if (mc_mn_j >= 0 && mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i])
+        { for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
           {
-            mc_mn_Vars->Mon2D_N[mc_mn_i-1][mc_mn_j]++;
-            mc_mn_Vars->Mon2D_p[mc_mn_i-1][mc_mn_j] += mc_mn_pp;
-            mc_mn_Vars->Mon2D_p2[mc_mn_i-1][mc_mn_j] += mc_mn_pp*mc_mn_pp;
+            mc_mn_j = mc_mn_Coord_Index[mc_mn_i];
+            if (mc_mn_j >= 0 && mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i])
+            {
+              mc_mn_Vars->Mon2D_N[mc_mn_i-1][mc_mn_j]++;
+              mc_mn_Vars->Mon2D_p[mc_mn_i-1][mc_mn_j] += mc_mn_pp;
+              mc_mn_Vars->Mon2D_p2[mc_mn_i-1][mc_mn_j] += mc_mn_pp*mc_mn_pp;
+            }
           }
+        }
+        else if (mc_mn_Vars->Flag_Exclusive)
+        { mc_mn_pp = 0.0;
         }
       }
       else /* 2D case : mc_mn_Vars->Coord_Number==2 and !mc_mn_Vars->Flag_Multiple and !mc_mn_Vars->Flag_List */
@@ -952,6 +963,9 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
           mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j]++;
           mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j] += mc_mn_pp;
           mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j] += mc_mn_pp*mc_mn_pp;
+        }
+        else if (mc_mn_Vars->Flag_Exclusive)
+        { mc_mn_pp = 0.0;
         }
       }
     } /* end (mc_mn_Vars->Flag_Auto_Limits != 1) */
