@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.119 $
+* Version: $Revision: 1.120 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.119 2005-07-25 14:55:08 farhi Exp $
+* $Id: mcstas-r.c,v 1.120 2005-08-24 09:51:31 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.119  2005/07/25 14:55:08  farhi
+* DOC update:
+* checked all parameter [unit] + text to be OK
+* set all versions to CVS Revision
+*
 * Revision 1.118  2005/07/21 10:19:24  farhi
 * Corrected big bug in randvec_*_rect routines when shooting 4PI
 * (when one of the params is 0)
@@ -308,6 +313,7 @@ mcstatic int  mcdotrace              = 0;
 mcstatic FILE *mcsiminfo_file        = NULL;
 static   char *mcdirname             = NULL;
 static   char *mcsiminfo_name        = "mcstas";
+int      mcallowbackprop             = 0;
 
 /* Number of neutron histories to simulate. */
 mcstatic double mcncount             = 1e6;
