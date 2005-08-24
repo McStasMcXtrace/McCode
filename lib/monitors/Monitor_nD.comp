@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -83,6 +83,7 @@
 *     borders                   To also count off-limits neutrons
 *                                (X < min or X > max)
 *     capture                   weight by lambda/lambda(2200m/s) capture flux
+*     exclusive                 absorb neutrons out of monitor limits
 *     file=string               Detector image file name. default is component
 *                                name, plus date and variable extension.
 *     incoming                  Monitor incoming beam in non flat det
@@ -340,10 +341,15 @@ TRACE
     }
 
     pp = Monitor_nD_Trace(&DEFS, &Vars);
-    Vars.Nsum++;
-    Vars.psum += pp;
-    Vars.p2sum += pp*pp;
-    SCATTER;
+    if (pp==0.0)
+    { ABSORB;
+    }
+  	else
+    { Vars.Nsum++;
+      Vars.psum += pp;
+      Vars.p2sum += pp*pp;
+      SCATTER;
+    }
 
     /* now handles intermediate results saving */
     if ((Vars.Intermediate > 0) && (mcget_run_num() > Vars.IntermediateCnts))
