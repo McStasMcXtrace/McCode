@@ -1,7 +1,7 @@
 /*****************************************************************************
 *
-*  McStas, the neutron ray-tracing package
-*  Copyright(C) 2000 Risoe National Laboratory.
+*  McStas, neutron ray-tracing package
+*  Copyright(C) 2005 Risoe National Laboratory.
 *
 * Component: Isotropic_Sqw
 *
@@ -10,7 +10,7 @@
 * Date: August 2003
 * Version:
 * Origin:  ILL
-* Modified by: E. Farhi, Jul 2005.
+* Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
 * Isotropic sample handling multiple scattering and absorption for a general
 * S(q,w) (coherent and/or incoherent)
@@ -20,16 +20,42 @@
 * dynamic structure factor of the chosen sample (e.g. from Molecular
 * Dynamics). Handles elastic/inelastic, coherent and incoherent scattering -
 * depending on the input S(Q,w) - with multiple scattering and absorption.
-* Sample shape may be a cylinder, a box or a hollow cylinder.
-* Only the norm of Q is handled (not the vector), and thus suitable for ,
+* Only the norm of Q is handled (not the vector), and thus suitable for
 * liquids, amorphous and powder samples.
-* If S(Q,w) files are specified as empty (0 or "") then the scattering is
-* elastic isotropic (Vanadium like).
+* If cohenrent S(Q,w) file is specified as empty (0 or "") then the scattering
+* is constant isotropic (Vanadium like).
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting can speed-up substantially the computation. Additionally, for single
 * order scattering (order=1), you may restrict the vertical spreading of the
 * scattering area using d_phi parameter.
 *
+* <b>Sample shape:</b>
+* Sample shape may be a cylinder, a sphere, a box or a hollow cylinder/sphere.
+*   box/plate:       xwidth x yheight x zthick
+*   cylinder:        radius_o x yheight (radius_i=0)
+*   hollow cylinder: radius_o and radius_i x yheight radius_i
+*   sphere:          radius_o (yheight=0 radius_i=0)
+*   hollow sphere:   radius_o and radius_i (yheight=0)
+*
+* <b>Concentric components:</b>
+* This component has the ability to contain other components when used in
+* hollow cylinder geometry (namely sample environment, e.g. cryostat and
+* furnace structure). Such component 'shells' should be split into input and
+* output side surrounding the 'inside' components. First part must then use
+* 'concentric=1' flag to enter the inside part. The component itself must be
+* repeated to mark the end of the concentric zone. The number of concentric
+* shells and number of components inside is not limited.
+*
+* COMPONENT S_in = Isotropic_Sqw(file_coh="Aluminium", concentric=1, ...)
+* AT (0,0,0) RELATIVE sample_position
+*
+* COMPONENT something_inside ... // e.g. the sample itself or other walls)
+* ...
+*
+* COMPONENT S_out = Isotropic_Sqw(file_coh="Aluminium", concentric=1, ...)
+* AT (0,0,0) RELATIVE sample_position
+*
+* <b>Sqw file format:</b>
 * File format for S(Q,w) (coherent and incoherent) should contain 3 numerical
 * blocks, defining q axis values (vector), then energy axis values (vector),
 * then a matrix with one line per q axis value, containing Sqw values for
@@ -38,13 +64,19 @@
 *
 * Example:
 * # q axis values
-* < list of values in Angs-1>
+* # vector of n values in meV
+* 0.001000 .... 3.591000
 * # w axis values
-*  <list of values in meV>
+* # vector of m values in meV
+* 0.001391 ... 1.681391
 * # sqw values (one line per q axis value)
-* <for each q value, list of S(q,w) values \n>
+* # matrix of S(q,w) values (n rows x m values), one line per q value,
+* 9.721422  10.599145 ... 0.000000
+* 10.054191 11.025244 ... 0.000000
+* ...
+* 0.000000            ... 3.860253
 *
-* See for instance file SQw_He4.dat
+* See for instance file He4.sqw
 *
 * Examples:
 * 1- Vanadium-like incoherent elastic scattering
@@ -55,47 +87,52 @@
 *   Isotropic_Sqw(V_rho=0.072, Sqw_coh="He4.sqw",
 *     sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, T=10)
 *
+* %BUGS:
+* When used in concentric mode, multiple bouncing scattering (from input side
+* to output side) is not taken into account.
 *
 * %P
 * INPUT PARAMETERS:
-*
 * Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w)
 *                     Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1
-*                     Use 0 or "" to disable.
+*                     Use 0 or "" to scatter isotropically (V-like).
 * Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w)
 *                     Incoherent (self) part. Use 0 or "" to disable.
 * sigma_coh:[barns] Coherent Scattering cross-section. O to disable
 * sigma_inc:[barns] Incoherent Scattering cross-section. O to disable
 * sigma_abs:[barns] Absorption cross-section. O to disables
-* V_rho:     [AA-3] Density of atoms (1/unit cell)
-* T:            [K] Temperature of sample (detailed balance)
-* qmin:    [Angs-1] Minimum Q value to use in S(q,w)
+* V_rho:     [AA-3] Density of atoms (1/unit cell).
+* T:            [K] Temperature of sample, detailed balance
+* qmin:    [Angs-1] Minimum Q value to use in S(q,w).
 * qmax:    [Angs-1] Maximum Q value to use in S(q,w). Use 0 for auto mode.
-* wmin:       [meV] Minimum Energy value to use in S(q,w)
-* wmax:       [meV] Maximum Energy value to use in S(q,w). 0 for auto.
-* radius_o:     [m] Outer radius of sample in (x,z) plane
-* radius_i:     [m] Inner radius of sample in (x,z) plane
+* wmin:       [meV] Minimum Energy value to use in S(q,w).
+* wmax:       [meV] Maximum Energy value to use in S(q,w). 0 for auto.one
+* radius_o:     [m] Outer radius of sample in (x,z) plane. cylinder/sphere.
+* radius_i:     [m] Inner radius of sample in (x,z) plane. cylinder/sphere.
 * yheight:      [m] Height of sample in vertical direction for box/cylinder
 *                     shapes
 * xwidth:       [m] width for a box sample shape
 * zthick:       [m] thickness for a box sample shape
 * threshold:    [1] Value under which S(Q,w) is not accounted for.
-*                     to set according to the S(Q,w) values (i.e. not too low)
+*                     to set according to the S(Q,w) values ,i.e. not too low
 * order:        [1] Limit multiple scattering up to given order
-*                     (0:all, 1:single, 2:double, ...)
-* verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose)
+*                     0:all (default), 1:single, 2:double, ...
+* verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose).
 * d_phi:      [deg] scattering vertical angular spreading (usually the heigh
 *                     of the next component/detector). Use 0 for full space.
 *                     This is only relevant for single scattering (order=1).
+* concentric:   [1] indicates that this component in hollow cylinder geometry
+*                   may contain other components.
+*                   It should be then duplicated after the inside part.
+*                   See description for an example.
 *
-*OUTPUT PARAMETERS:
-*
+* OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
-* VarSqw.dq: wavevector transfert [Angs-1]
-* VarSqw.dw: energy transfert [Angs-1]
-* VarSqw.type: interaction type
+* VarSqw.dq wavevector transfert [Angs-1]
+* VarSqw.dw energy transfert [Angs-1]
+* VarSqw.type interaction type
 *         'c' (coherent),  't' (transmitted)
-*         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like)
+*         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
 * SCATTERED: order of multiple scattering
 *
 * %L
@@ -103,18 +140,18 @@
 * %L
 * Hugouvieux V, PhD, University of Montpellier II, France (2004).
 * %L
-* Cross sections for single elements: <http://www.ncnr.nist.gov/resources/n-lengths/>
+* Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
 * %L
-* Cross sections for compounds:       <http://www.ncnr.nist.gov/resources/sldcalc.html>
+* Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
 * %E
 *****************************************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
-  DEFINITION PARAMETERS (char* Sqw_coh=0, char* Sqw_inc=0)
+  DEFINITION PARAMETERS (Sqw_coh=0, Sqw_inc=0)
   SETTING PARAMETERS(radius_i=0,radius_o=0,
     xwidth=0, yheight=0, zthick=0,
     qmin=0, qmax=0, wmin=0, wmax=0,
-    threshold=1e-10, int order=0, T=0, verbose=0, d_phi=0,
+    threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0.072, sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0)
   OUTPUT PARAMETERS (VarSqw)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -178,7 +215,7 @@ struct Sqw_sample_struct {
   double sqw_threshold;
 
   char   verbose_output;
-  char   isrect;
+  char   shape; /* 0:cylinder, 1:box, 2:sphere */
 
   double dq, dw; /* q/w transfert */
   char   type; /* interaction type: c(coherent), i(incoherent),
@@ -613,24 +650,29 @@ INITIALIZE
   /* check for parameters */
 
   if (V_rho <= 0) exit(printf("Isotropic_Sqw: %s: sample has zero density (V_rho)\n",NAME_CURRENT_COMP));
-  if (!radius_i*radius_o*yheight && !xwidth*yheight*zthick)
-    exit(printf("Isotropic_Sqw: %s: not a box, nor a cylinder\n"
-                "ERROR:         sample has no volume (zero dimensions)\n",
-                        NAME_CURRENT_COMP));
 
-  if (radius_o && yheight) {
-    VarSqw.isrect = 0;
+  VarSqw.verbose_output= verbose;
+  if (radius_o>0) {
+    if (yheight>0) VarSqw.shape = 0; else VarSqw.shape = 2;
     if (VarSqw.verbose_output)
-      printf("Isotropic_Sqw: %s: is a Cylinder : R_i=%f R_o=%f h=%f \n",
-            NAME_CURRENT_COMP, radius_i,radius_o,yheight);
-  } else if (xwidth*yheight*zthick) {
-    VarSqw.isrect = 1;
+      printf("Isotropic_Sqw: %s: is a %s%s : R_i=%f R_o=%f h=%f \n",
+            NAME_CURRENT_COMP, (radius_i > 0 ? "hollow ":""),
+            (VarSqw.shape ? "Sphere" : "Cylinder"),
+            radius_i,radius_o,yheight);
+  } else if (xwidth>0 && yheight>0 && zthick>0) {
+    VarSqw.shape = 1;
     if (VarSqw.verbose_output)
       printf("Isotropic_Sqw: %s: is a Box : dx=%f dy=%f dz=%f \n",
             NAME_CURRENT_COMP, xwidth,yheight,zthick);
   } else  {
     printf("Isotropic_Sqw: %s: ERROR sample has no dimension\n"
            "               set some of radius_o xwidth yheight zthick \n",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if (concentric && (VarSqw.shape==1 || radius_i <= 0)) {
+    printf("Isotropic_Sqw: %s:Can not use concentric mode\n"
+           "ERROR          on non cylindrical/spherical shape.\n",
            NAME_CURRENT_COMP);
     exit(0);
   }
@@ -643,7 +685,7 @@ INITIALIZE
   VarSqw.s_abs     = sigma_abs;
   VarSqw.s_coh     = sigma_coh;
   VarSqw.s_inc     = sigma_inc; /* s_scatt member initialized in Sqw_init */
-  VarSqw.verbose_output= verbose;
+
 
 
   if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
@@ -700,6 +742,7 @@ double u2x,u2y,u2z;
 double u0x,u0y,u0z;
 int    index_counter;
 int    flag=0;
+int    flag_concentric=0;
 double my_t=0;
 struct Sqw_Data_struct Data_sqw;
 
@@ -718,17 +761,23 @@ dq = 0; dw = 0;
 do { /* Main interaction loop. Ends with intersect=0 */
 
   /* Intersection neutron trajectory / sample (sample surface) */
-  if (VarSqw.isrect)
+  if (VarSqw.shape==1)
     intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zthick);
-  else
+  else if (VarSqw.shape==0)
     intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o,yheight);
+  else
+    intersect=sphere_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o);
 
   /* Computing the intermediate times */
   if (intersect) {
     tmp = 0;
-    if (radius_i && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz,
+    if (radius_i) {
+      if ((VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz,
                                        radius_i,yheight))
+      || (VarSqw.shape==2 && sphere_intersect(&t1,&t2, x,y,z,vx,vy,vz,
+                                       radius_i)))
       tmp = 1; /* we also take into account the hollow part */
+    }
     if (!tmp) t1 = t2 = t3; /* no empty space inside */
   } else break; /* neutron does not hit sample: transmitted  */
 
@@ -751,13 +800,21 @@ do { /* Main interaction loop. Ends with intersect=0 */
       /* no propagation, stay inside */
     }
 
-    dt0=t1-(t0 > 0 ? t0 : 0); /* Time in first part of hollow cylinder/cylinder/box */
+    dt0=t1-(t0 > 0 ? t0 : 0); /* Time in first part of hollow/cylinder/box */
     dt1=t2-(t1 > 0 ? t1 : 0); /* Time in hole */
     dt2=t3-(t2 > 0 ? t2 : 0); /* Time in 2nd part of hollow cylinder */
 
     if (dt0 < 0) dt0 = 0;
     if (dt1 < 0) dt1 = 0;
     if (dt2 < 0) dt2 = 0;
+
+    /* initialize concentric mode */
+    if (concentric && !flag_concentric && t0 > 0
+     && VarSqw.shape==0 && radius_i > 0) flag_concentric=1;
+
+    if (flag_concentric == 1) {
+      dt1=dt2=0; /* force exit when reaching hole/2nd part */
+    }
 
     if (!dt0 && !dt2) {
       intersect = 0; /* the sample was passed entirely */
@@ -1035,7 +1092,7 @@ FINALLY
 MCDISPLAY
 %{
   magnify("xyz");
-  if(VarSqw.isrect)
+  if(VarSqw.shape==1)
   {
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
@@ -1058,7 +1115,7 @@ MCDISPLAY
     line(xmin, ymax, zmin, xmin, ymax, zmax);
     line(xmax, ymax, zmin, xmax, ymax, zmax);
   }
-  else
+  else if(VarSqw.shape==0)
   {
     circle("xz", 0,  yheight/2.0, 0, radius_i);
     circle("xz", 0,  yheight/2.0, 0, radius_o);
@@ -1072,6 +1129,13 @@ MCDISPLAY
     line(+radius_o, -yheight/2.0, 0, +radius_o, +yheight/2.0, 0);
     line(0, -yheight/2.0, -radius_o, 0, +yheight/2.0, -radius_o);
     line(0, -yheight/2.0, +radius_o, 0, +yheight/2.0, +radius_o);
+  } else {
+    circle("xy",0,0,0,radius_i);
+    circle("xz",0,0,0,radius_i);
+    circle("yz",0,0,0,radius_i);
+    circle("xy",0,0,0,radius_o);
+    circle("xz",0,0,0,radius_o);
+    circle("yz",0,0,0,radius_o);
   }
 /* end MCDISPLAY */
 %}
