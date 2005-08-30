@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -29,19 +29,26 @@
 * Emax=E0+dE or Lmin=Lambda0-dLambda and Lmax=Lambda0+dLambda. The I1 may
 * be either arbitrary (I1=0), or specified in neutrons per steradian per
 * square cm per Angstrom. A Maxwellian spectra may be selected if you give
-* the source temperatures (up to 3). The source shape is defined by its radius,
-* or can alternatively be squared if you specify non-zero h and w parameters.
+* the source temperatures (up to 3).
+* The source shape is defined by its radius, or can alternatively be squared
+* if you specify non-zero h and w parameters.
 * The beam is spatially uniform, but becomes gaussian if one of the source
 * dimensions (radius, h or w) is negative, or you set the gaussian flag.
-* Divergence profiles are triangular. The source may have a thickness.
+* Divergence profiles are triangular.
+* The source may have a thickness, which will broaden the default zero time
+* distribution.
 * For the Maxwellian spectra, the generated intensity is dPhi/dLambda (n/s/AA)
 * For flat spectra, the generated intensity is Phi (n/s).
 *
 * Usage example:
-*   Source_gen(radius=0.1,Lambda0=2.36,dLambda=0.16, T1 = 20, T2 = 38, I1=1e13)
+*   Source_gen(radius=0.1,Lambda0=2.36,dLambda=0.16, T1=20, T2=38, I1=1e13)
 *   Source_gen(h=0.1,w=0.1,Emin=1,Emax=3, I1=1e13, verbose=1, gaussian=1)
+*   EXTEND
+*   %{
+*      t = rand0max(1e-3); // set time from 0 to 1 ms for TOF instruments.
+*   %}
 *
-* Some sources parameters:
+* <b>Some sources parameters:</b>
 * PSI cold source T1=150.42,I1=3.67e11 T2=38.74,I2=3.64e11
 *                 T3=14.84,I3=0.95e11
 * ILL VCS cold source T1=216.8,I1=1.24e+13,T2=33.9,I2=1.02e+13
@@ -89,6 +96,7 @@
 *
 * %L
 * <a href="http://www.ill.fr/Yellowbook">The ILL Yellow book</a>
+* %L
 * P. Ageron, Nucl. Inst. Meth. A 284 (1989) 197
 * %E
 ******************************************************************************/

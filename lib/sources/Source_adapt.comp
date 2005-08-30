@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.27 $
+* Version: $Revision: 1.28 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -29,7 +29,7 @@
 * with low weights. The adjustment is made so as to attemt to make
 * the weights at the Adapt_check components equal.
 *
-* Focosing is achieved by only emitting neutrons towards a rectangle
+* Focusing is achieved by only emitting neutrons towards a rectangle
 * perpendicular to and placed at a certain distance along the Z axis.
 * Focusing is only approximate (for simplicity); neutrons are also
 * emitted to pass slightly above and below the focusing rectangle,

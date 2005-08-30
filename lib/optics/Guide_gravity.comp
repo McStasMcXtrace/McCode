@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -18,19 +18,20 @@
 * Modified by: E. Farhi, 2D channel array. Correct focus bug (Dec 14th 2002)
 * Modified by: E. Farhi, Waviness+chamfers+nelements (Aug 19th 2003)
 *
-* Neutron guide with gravity. Can be channeled and focusing.
+* Neutron straight guide with gravity. Can be channeled and focusing.
 * Waviness may be specified, as well as side chamfers (on substrate).
 *
 * %D
-* Models a rectangular guide tube centered on the Z axis. The entrance lies
-* in the X-Y plane. Gravitation applies also when reaching the guide input
-* window. The guide can be channeled (k,d parameters). The guide coating
+* Models a rectangular straight guide tube centered on the Z axis, with
+* gravitation handling. The entrance lies in the X-Y plane.
+* The guide can be channeled (k,d,kh parameters). The guide coating
 * specifications may be entered via different ways (global, or for
 * each wall m-value).
 * Waviness (random) may be specified either globally or for each mirror type.
 * Side chamfers (due to substrate processing) may be specified the same way.
-* The guide section may be splitted into nelements equivalent parts of length
-* l/nelements. Chamfers do apply in between these parts.
+* In order to model a realistic straight guide assembly, a long guide of
+* length 'l' may be splitted into 'nelements' between which chamfers/gaps are
+* positioned.
 * For details on the geometry calculation see the description in the McStas
 * reference manual.
 *
@@ -54,9 +55,9 @@
 * alpha:   (AA)   Slope of reflectivity
 * m:       (1)    m-value of material. Zero means completely absorbing.
 * W:       (AA-1) Width of supermirror cut-off
-* d:       (m)    Thicxkness of subdividing walls [0]
-* k:       (1)    Number of vertical channels in the guide (>= 1) [1]
-*                 (k-1 vertical dividing walls)
+* d:       (m)    Thicxkness of subdividing walls
+* k:       (1)    Number of vertical channels in the guide (>= 1)
+*                 (k-1 vertical dividing walls).
 *
 * Optional input parameters: (different ways for m-specifications)
 *
@@ -64,28 +65,28 @@
 * mright:  (1)    m-value of material for right.  vert. mirror
 * mtop:    (1)    m-value of material for top.    horz. mirror
 * mbottom: (1)    m-value of material for bottom. horz. mirror
-* kh:      (1)    Number of horizontal channels in the guide (>= 1)
-*                 (kh-1 horizontal dividing walls)
+* kh:      (1)    Number of horizontal channels in the guide (>= 1).
+*                 (kh-1 horizontal dividing walls).
 *                 this enables to have k*kh rectangular channels
 * G:       (m/s2) Gravitation norm. 0 value disables G effects.
 * wavy:    (deg)  Global guide waviness
 * wavy_z:  (deg)  Partial waviness along propagation axis
 * wavy_tb: (deg)  Partial waviness in transverse direction for top/bottom mirrors
 * wavy_lr: (deg)  Partial waviness in transverse direction for left/right mirrors
-* chamfers:(m)    Global chamfers specifications (in/out/mirror sides)
+* chamfers:(m)    Global chamfers specifications (in/out/mirror sides).
 * chamfers_z: (m) Input and output chamfers
 * chamfers_lr:(m) Chamfers on left/right mirror sides
 * chamfers_tb:(m) Chamfers on top/bottom mirror sides
-* nelements:  (1) Number of sections in the guide element (length l/nelements)
+* nelements:  (1) Number of sections in the guide (length l/nelements).
 *
 * OUTPUT PARAMETERS
 *
-* GVars:              (1) internal variables
-* GVars.N_reflection: (1) Array of the cumulated Number of reflections
-*                   N_reflection[0] total nb of reflections
-*                   N_reflection[1,2,3,4] l/r/t/b reflections
-*                   N_reflection[5] total nb neutrons exiting guide
-*                   N_reflection[6] total nb neutrons entering guide
+* GVars:              (1) internal variables.
+* GVars.N_reflection: (1) Array of the cumulated Number of reflections.
+*                   N_reflection[0] total nb of reflections,
+*                   N_reflection[1,2,3,4] l/r/t/b reflections,
+*                   N_reflection[5] total nb neutrons exiting guide,
+*                   N_reflection[6] total nb neutrons entering guide.
 *
 * %D
 * Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
