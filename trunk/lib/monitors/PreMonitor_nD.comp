@@ -12,20 +12,20 @@
 * Date: 01st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 *
-* This component is a PreMonitor that is to be used with one Monitor_nD, in
-* order to record some neutron parameters
+* Neutron parameters cross-correlation monitor.
 *
 * %Description
-* Neutron parameters are stored when passing in the PreMonitor.
-* If this neutron then reaches the associated Monitor_nD, this latter component
-* will measure the previously stored parameters. This enables to study
+* Neutron parameters are stored when entering in the PreMonitor.
+* If this neutron then reaches the associated Monitor_nD, this latter
+* component measures the previously stored parameters. This enables to study
 * correlations between a given parameter in one place of the instrument
 * and an other position in the instrument.
 *
 * <b>EXAMPLES:</b>
-* Here follows a Phase-Space diagram detector (used for guides for instance)
+* Here follows a Phase-Space correlation diagram detector
+* (used for guides for instance)
 *
 *  MyPreMonitor = PreMonitor_nD(
 *   comp = MyMonitor)
