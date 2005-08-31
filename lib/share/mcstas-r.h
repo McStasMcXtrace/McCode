@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.77 $
+* Version: $Revision: 1.78 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,17 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.77 2005-08-24 11:55:12 pkwi Exp $
+* $Id: mcstas-r.h,v 1.78 2005-08-31 08:35:53 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.77  2005/08/24 11:55:12  pkwi
+*       Usage of mcallowbackprop flag in all PROP routines. Use in component by e.g.
+*
+*       ALLOWBACKPROP;
+*       PROP_Z0;
+*
+*       Prop routines disallow backpropagation on exit.
+*
 *       Revision 1.76  2005/08/24 09:51:31  pkwi
 *       Beamstop and runtime modified according to Emmanuels remarks.
 *
@@ -157,7 +165,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.77 $"
+#define MCSTAS_R_H "$Revision: 1.78 $"
 
 #include <math.h>
 #include <string.h>
@@ -618,12 +626,14 @@ void   mcsiminfo_close(void);
 #endif
 
 #ifdef DEBUG
-#define mcDEBUG_INSTR() if(!mcdotrace); else printf("INSTRUMENT:\n");
-#define mcDEBUG_COMPONENT(name,c,t) if(!mcdotrace); else \
+#define mcDEBUG_INSTR() if(!mcdotrace); else { printf("INSTRUMENT:\n"); printf("Instrument '%s' (%s)\n", mcinstrument_name, mcinstrument_source); }
+#define mcDEBUG_COMPONENT(name,c,t) if(!mcdotrace); else {\
   printf("COMPONENT: \"%s\"\n" \
          "POS: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          name, c.x, c.y, c.z, t[0][0], t[0][1], t[0][2], \
-         t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]);
+         t[1][0], t[1][1], t[1][2], t[2][0], t[2][1], t[2][2]); \
+  printf("Component %30s AT (%g,%g,%g)\n", name, c.x, c.y, c.z); \
+  }
 #define mcDEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
 #define mcDEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
 #define mcDEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
