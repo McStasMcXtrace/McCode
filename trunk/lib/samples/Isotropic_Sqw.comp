@@ -67,7 +67,7 @@
 * # vector of n values in meV
 * 0.001000 .... 3.591000
 * # w axis values
-* # vector of m values in meV
+* # vector of m values in Angstroem-1
 * 0.001391 ... 1.681391
 * # sqw values (one line per q axis value)
 * # matrix of S(q,w) values (n rows x m values), one line per q value,
@@ -90,6 +90,11 @@
 * %BUGS:
 * When used in concentric mode, multiple bouncing scattering (from input side
 * to output side) is not taken into account.
+*
+* %VALIDATION
+* For Vanadium incoherent scattering mode, V_sample, Single_crystal and
+* Isotropic_Sqw produce equivalent results, eventhough the two later are more
+* accurate (geometry, multiple scattering).
 *
 * %P
 * INPUT PARAMETERS:
@@ -143,6 +148,8 @@
 * Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
 * %L
 * Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
+* %L
+* Example data file <a href="../data/He4.sqw">He4.sqw</a>
 * %E
 *****************************************************************************/
 
@@ -505,13 +512,16 @@ struct Sqw_Data_struct *Sqw_readfile(
 *****************************************************************************/
 double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
 {
+  double ret=0;
 
   struct Sqw_Data_struct *d_inc, *d_coh;
   d_inc = Sqw_readfile(Sqw, file_inc, &(Sqw->Data_inc));
-  if (d_inc && !d_inc->intensity && Sqw->s_inc)
+  if (d_inc && !d_inc->intensity && Sqw->s_inc) {
     if (Sqw->verbose_output > 0)
       printf("Isotropic_Sqw: %s: isotropic elastic incoherent scattering\n"
              "               (Vanadium like)\n", Sqw->compname);
+    ret=1;
+  }
   d_coh = Sqw_readfile(Sqw, file_coh, &(Sqw->Data_coh));
   if (!d_inc || !d_coh) return(0);
   if (d_coh && !d_coh->intensity && Sqw->s_coh)
@@ -538,7 +548,8 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
       return(0);
     }
   }
-  return(d_inc->intensity+d_coh->intensity);
+  if (!ret) ret=d_inc->intensity+d_coh->intensity;
+  return(ret);
 }
 
 /*****************************************************************************
@@ -771,7 +782,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
   /* Computing the intermediate times */
   if (intersect) {
     tmp = 0;
-    if (radius_i) {
+    if (radius_i>0) {
       if ((VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz,
                                        radius_i,yheight))
       || (VarSqw.shape==2 && sphere_intersect(&t1,&t2, x,y,z,vx,vy,vz,
@@ -809,8 +820,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (dt2 < 0) dt2 = 0;
 
     /* initialize concentric mode */
-    if (concentric && !flag_concentric && t0 > 0
-     && VarSqw.shape==0 && radius_i > 0) flag_concentric=1;
+    if (concentric && !flag_concentric && t0 >= 0
+     && VarSqw.shape==0 && radius_i > 0) {
+      flag_concentric=1;
+    }
 
     if (flag_concentric == 1) {
       dt1=dt2=0; /* force exit when reaching hole/2nd part */
@@ -859,8 +872,6 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     if (flag) { /* propagate to exit of sample and finish */
       intersect = 0;
-      dt = dt2+dt1+dt0;
-      if (dt > 0) PROP_DT(dt); /* go to exit point of sample */
       break;
     }
   } /* end if intersect the neutron hits the sample */
