@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,14 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.24 2005-07-25 14:55:08 farhi Exp $
+* $Id: read_table-lib.c,v 1.25 2005-08-31 14:50:29 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.24  2005/07/25 14:55:08  farhi
+* DOC update:
+* checked all parameter [unit] + text to be OK
+* set all versions to CVS Revision
+*
 * Revision 1.23  2005/07/20 13:08:43  farhi
 * Changed Table_Init calling sequence (overrides Table_Alloc)
 *
@@ -577,9 +582,17 @@
 
     if (mc_rt_i < 0)        mc_rt_i = 0;
     if (mc_rt_j < 0)        mc_rt_j = 0;
-    if (mc_rt_i >= mc_rt_Table.rows)    mc_rt_i = mc_rt_Table.rows-1;
-    if (mc_rt_j >= mc_rt_Table.columns) mc_rt_j = mc_rt_Table.columns-1;
-    mc_rt_AbsIndex = mc_rt_i*(mc_rt_Table.columns)+mc_rt_j;
+    /* handle vectors specifically */
+    if (mc_rt_Table.columns == 1 || mc_rt_Table.rows == 1) {
+      mc_rt_AbsIndex = mc_rt_i+mc_rt_j;
+    } else {
+      if (mc_rt_i >= mc_rt_Table.rows)    mc_rt_i = mc_rt_Table.rows-1;
+      if (mc_rt_j >= mc_rt_Table.columns) mc_rt_j = mc_rt_Table.columns-1;
+      mc_rt_AbsIndex = mc_rt_i*(mc_rt_Table.columns)+mc_rt_j;
+    }
+    if (mc_rt_AbsIndex >= mc_rt_Table.rows*mc_rt_Table.columns)
+      mc_rt_AbsIndex = mc_rt_Table.rows*mc_rt_Table.columns-1;
+    else if (mc_rt_AbsIndex < 0) mc_rt_AbsIndex=0;
     if (mc_rt_Table.data != NULL)
       return(mc_rt_Table.data[mc_rt_AbsIndex]);
     else
@@ -720,8 +733,8 @@ void Table_Init(t_Table *mc_rt_Table, long rows, long columns)
       rows = columns = 0;
     }
   }
-  mc_rt_Table->rows    = (rows > 1 ? rows : 0);
-  mc_rt_Table->columns = (columns > 1 ? columns : 0);
+  mc_rt_Table->rows    = (rows >= 1 ? rows : 0);
+  mc_rt_Table->columns = (columns >= 1 ? columns : 0);
   mc_rt_Table->data    = mc_rt_data;
 } /* end Table_Init */
 
