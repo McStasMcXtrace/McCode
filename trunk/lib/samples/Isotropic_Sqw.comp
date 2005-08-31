@@ -122,7 +122,7 @@
 *                     to set according to the S(Q,w) values ,i.e. not too low
 * order:        [1] Limit multiple scattering up to given order
 *                     0:all (default), 1:single, 2:double, ...
-* verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose).
+* verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug).
 * d_phi:      [deg] scattering vertical angular spreading (usually the heigh
 *                     of the next component/detector). Use 0 for full space.
 *                     This is only relevant for single scattering (order=1).
@@ -218,6 +218,8 @@ struct Sqw_sample_struct {
   double my_a_v;
   double T2E;
   double sqSE2K;
+  int    maxloop;
+  int    neutron_removed;
 
   double sqw_threshold;
 
@@ -329,8 +331,9 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* build the 'total' = Sqw table in restricted range */
   Table_Init(&Sqw_restrict, Sqw_Data->nb_q, Sqw_Data->nb_w);
   Sqw_restrict.block_number = 1;
+  Table_Info(Sqw_restrict);
 
-  if (!Sqw_restrict.data) {
+  if (!Sqw_restrict.data || !Sqw_restrict.rows*Sqw_restrict.columns) {
     printf("Isotropic_Sqw: %s: Cannot allocate Sqw_restrict Table (%lix%li).\n"
            "ERROR          Exiting.\n",
       Sqw->compname, Sqw_Data->nb_w, Sqw_Data->nb_q);
@@ -348,7 +351,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       if (sqw < Sqw->sqw_threshold) flag = 0; /* Sqw lower than threshold */
       /* check for q,w within min/max */
       q  = Table_Index(Table_Array[0], 0, i);
-      w  = Table_Index(Table_Array[0], 0, j);
+      w  = Table_Index(Table_Array[1], 0, j);
       if (q < Sqw_Data->q_min || q > Sqw_Data->q_max) flag = 0; /* within q range  ? */
       if (w < Sqw_Data->w_min || w > Sqw_Data->w_max) flag = 0; /* within w range  ? */
       if (flag) val += sqw; /* only on restricted range */
@@ -360,7 +363,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
   }
 
-  if (!val) {
+  if (!val || !sum) {
     printf("Isotropic_Sqw: %s: selected (Q,w) range is outside\n"
            "ERROR          available Sqw data.\n",
       Sqw->compname);
@@ -372,10 +375,11 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   if (Sqw->verbose_output > 0) {
     printf("Isotropic_Sqw: %s: Generated %s normalized Sqw probability Table\n"
-           "                   q=[%g:%g] w=[%g:%g] intensity=%g\n",
+           "                   q=[%g:%g] w=[%g:%g] intensity=%g size=[%ix%i]\n",
            Sqw->compname, file,
            Sqw_Data->q_min, Sqw_Data->q_max,
-           Sqw_Data->w_min, Sqw_Data->w_max, val);
+           Sqw_Data->w_min, Sqw_Data->w_max, val,
+           Sqw_Data->nb_q, Sqw_Data->nb_w);
     Table_Info(Sqw_restrict);
   }
 
@@ -410,8 +414,8 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (j) Sqw_Data->DOS[j].cumul_I += Sqw_Data->DOS[j-1].cumul_I;
   }
   if (Sqw->verbose_output > 1)
-    printf("Isotropic_Sqw: %s: Generated normalized DOS using total intensity %g\n",
-      Sqw->compname, val);
+    printf("Isotropic_Sqw: %s: Generated normalized DOS using total intensity %g size=%i\n",
+      Sqw->compname, val, Sqw_Data->nb_w);
 
   /* set up Q probability table per w bin */
   /* uses:  Sqw_restrict */
@@ -599,6 +603,7 @@ int Sqw_search_DOS(struct Sqw_Data_struct Sqw, double randnum)
 
   while (i < Sqw.nb_w && (&(Sqw.DOS[i]) != NULL) && (randnum > Sqw.DOS[i].cumul_I))
       i++;
+  if (i >= Sqw.nb_w) i = Sqw.nb_w;
 
   if (&(Sqw.DOS[i]) == NULL)
   {
@@ -608,7 +613,7 @@ int Sqw_search_DOS(struct Sqw_Data_struct Sqw, double randnum)
       return i-1;
   }
   else
-      return i;
+      return (i < Sqw.nb_w ? i : Sqw.nb_w-1);
 }
 
 /*****************************************************************************
@@ -648,7 +653,6 @@ DECLARE
 %{
 
   struct Sqw_sample_struct VarSqw;
-  double dq, dw;
 
 /* end DECLARE */
 %}
@@ -696,6 +700,8 @@ INITIALIZE
   VarSqw.s_abs     = sigma_abs;
   VarSqw.s_coh     = sigma_coh;
   VarSqw.s_inc     = sigma_inc; /* s_scatt member initialized in Sqw_init */
+  VarSqw.maxloop   = 100;
+  VarSqw.neutron_removed = 0;
 
 
 
@@ -706,7 +712,7 @@ INITIALIZE
   VarSqw.my_s    =(V_rho*100*(sigma_coh+sigma_inc));
 
   if ((sigma_coh || sigma_inc) && !T && VarSqw.Data_coh.intensity)
-    exit(printf("Isotropic_Sqw: %s: sample temperature is zero (T)\n",NAME_CURRENT_COMP));
+    exit(printf("Isotropic_Sqw: %s: ERROR sample temperature is zero (T)\n",NAME_CURRENT_COMP));
 
   if (!sigma_coh && !sigma_inc) {
     printf("Isotropic_Sqw: %s: Scattering cross section is zero\n"
@@ -767,7 +773,6 @@ VarSqw.ti   = t;
 VarSqw.vi   = 0;
 VarSqw.ki   = 0;
 VarSqw.type = '\0';
-dq = 0; dw = 0;
 
 do { /* Main interaction loop. Ends with intersect=0 */
 
@@ -836,6 +841,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     if (!v) {
       printf("Isotropic_Sqw: %s: ERROR: Null velocity\n",NAME_CURRENT_COMP);
+      VarSqw.neutron_removed++;
       ABSORB; /* should never occur */
     }
 
@@ -846,6 +852,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     my_t = my_a + VarSqw.my_s;  /* total scattering Xsect (tmp var) */
     if (!my_t) {
       printf("Isotropic_Sqw: %s: ERROR: Null Scattering cross section\n",NAME_CURRENT_COMP);
+      VarSqw.neutron_removed++;
       ABSORB; /* should never occur */
     }
 
@@ -938,7 +945,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (flag) { /* not true when V-like scattering */
 
       /* give us a limited number of tries for scattering */
-      for (index_counter=5; index_counter > 0 ; index_counter--) {
+      for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
 
         /* MC choice: energy transfer in the DOS */
         index_w = Sqw_search_DOS(Data_sqw, rand01());
@@ -947,18 +954,28 @@ do { /* Main interaction loop. Ends with intersect=0 */
         else omega=0;
 
         /* MC choice: detailed balance: choice between w and -w */
-        if (T && rand01() > 1/(1+exp(-omega/(T*VarSqw.T2E))) ) {
+        if (omega && T && rand01() > 1/(1+exp(-omega/(T*VarSqw.T2E))) ) {
           omega = -omega; /* anti Stokes */
         }                 /* else Stokes */
 
         /* MC choice: momentum transfer Q in P(Q|w) */
         index_q = Sqw_search_Q_proba_per_w(Data_sqw, rand01(), index_w);
         if (index_q == -1) {
+          if (VarSqw.verbose_output >= 3)
+            printf("Isotropic_Sqw: %s: Warning: No suitable P(q|w) transfert\n"
+               "               for w=%g index_w=%i\n",
+            NAME_CURRENT_COMP, omega, index_w);
+          VarSqw.neutron_removed++;
           continue; /* no Q value for this w choice */
         }
         if (&(Data_sqw.Q_proba_per_w[index_w]) != NULL)
           q = Data_sqw.Q_proba_per_w[index_w][index_q].Q;
         else {
+          if (VarSqw.verbose_output >= 3)
+            printf("Isotropic_Sqw: %s: Warning: No suitable q transfert\n"
+               "               for w=%g\n",
+            NAME_CURRENT_COMP, omega);
+          VarSqw.neutron_removed++;
           ABSORB; /* should never occur */
         }
 
@@ -966,6 +983,11 @@ do { /* Main interaction loop. Ends with intersect=0 */
         /* kf is such that : hbar*w = hbar*hbar/2/m*(k*k - kf*kf) */
         /* acceptable values for kf are kf1 and kf2 */
         if (!Sqw_search_root(1, 0, -k*k + VarSqw.sqSE2K*omega, &kf1, &kf2)) {
+          if (VarSqw.verbose_output >= 3)
+            printf("Isotropic_Sqw: %s: Warning: imagimary root for\n"
+                 "               w=%g q=%g\n",
+            NAME_CURRENT_COMP, omega, q);
+          VarSqw.neutron_removed++;
           continue; /* all roots are imaginary */
         }
 
@@ -983,21 +1005,25 @@ do { /* Main interaction loop. Ends with intersect=0 */
         u1x=0;           u1y=-vz;    u1z= vy; /* in vertical plane */
         u2x=vy*vy+vz*vz; u2y=-vx*vy; u2z=-vx*vz;
 
-        NORM(u1x, u1y, u1z);
-        NORM(u2x, u2y, u2z);
-
         /* circle radius = intersection with the plane defined by u1 and u2 */
         R = 1-c1*c1/(k*k); /* unit is [1] */
         if (R >= 0) R = sqrt(R);
         else {
           continue; /* No solution for R */
         }
+        NORM(u1x, u1y, u1z);
+        NORM(u2x, u2y, u2z);
 
         break; /* exit for loop on success */
       } /* end for index_counter */
 
       if (!index_counter) { /* for loop ended: failure for scattering */
         intersect=0; /* Could not scatter: finish multiple scattering loop */
+        if (VarSqw.verbose_output >= 2)
+          printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
+               "               last try (%i): w=%g q=%g R=%g\n",
+          NAME_CURRENT_COMP, VarSqw.maxloop, omega, q, R);
+        VarSqw.neutron_removed++;
         if (order && SCATTERED != order) ABSORB;
         break;       /* finish multiple scattering loop */
       }
@@ -1094,6 +1120,12 @@ FINALLY
   if (Data_sqw.Q_proba_per_w) free(Data_sqw.Q_proba_per_w);
   if (Data_sqw.DOS_lookup)    free(Data_sqw.DOS_lookup);
   if (Data_sqw.QW_lookup)     free(Data_sqw.QW_lookup);
+
+  if (VarSqw.neutron_removed)
+    printf("Isotropic_Sqw: %s: %i neutron events that should have scattered\n"
+           "               were removed because scattering conditions\n"
+           "Warning        could not be satisfied after %i tries.\n",
+          NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.maxloop);
 
 /* end FINALLY */
 %}
