@@ -31,7 +31,8 @@
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or a hollow cylinder/sphere.
-*   box/plate:       xwidth x yheight x zthick
+*   box/plate:       xwidth x yheight x zthick (thickness=0)
+*   hollow box/plate:xwidth x yheight x zthick and thickness>0
 *   cylinder:        radius_o x yheight (radius_i=0)
 *   hollow cylinder: radius_o and radius_i x yheight radius_i
 *   sphere:          radius_o (yheight=0 radius_i=0)
@@ -52,7 +53,7 @@
 * COMPONENT something_inside ... // e.g. the sample itself or other walls)
 * ...
 *
-* COMPONENT S_out = Isotropic_Sqw(file_coh="Aluminium", concentric=1, ...)
+* COMPONENT S_out = Isotropic_Sqw(file_coh="Aluminium", ...)
 * AT (0,0,0) RELATIVE sample_position
 *
 * <b>Sqw file format:</b>
@@ -78,7 +79,7 @@
 *
 * See for instance file He4.sqw
 *
-* Examples:
+* <b>Examples:</b>
 * 1- Vanadium-like incoherent elastic scattering
 *   Isotropic_Sqw(V_rho=1/13.827,
 *     sigma_abs=5.08, sigma_inc=4.935, sigma_coh=0)
@@ -130,12 +131,13 @@
 *                   may contain other components.
 *                   It should be then duplicated after the inside part.
 *                   See description for an example.
+* thickness:    [m] Thickness of hollow sample (overloads radius_i)
 *
 * OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
 * VarSqw.dq wavevector transfert [Angs-1]
 * VarSqw.dw energy transfert [Angs-1]
-* VarSqw.type interaction type
+* VarSqw.type interaction type of last event
 *         'c' (coherent),  't' (transmitted)
 *         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
 * SCATTERED: order of multiple scattering
@@ -155,7 +157,7 @@
 
 DEFINE COMPONENT Isotropic_Sqw
   DEFINITION PARAMETERS (Sqw_coh=0, Sqw_inc=0)
-  SETTING PARAMETERS(radius_i=0,radius_o=0,
+  SETTING PARAMETERS(radius_i=0,radius_o=0,thickness=0,
     xwidth=0, yheight=0, zthick=0,
     qmin=0, qmax=0, wmin=0, wmax=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
@@ -668,26 +670,41 @@ INITIALIZE
 
   VarSqw.verbose_output= verbose;
   if (radius_o>0) {
+    if (thickness>0 && thickness < radius_o) radius_i=radius_o-thickness;
     if (yheight>0) VarSqw.shape = 0; else VarSqw.shape = 2;
     if (VarSqw.verbose_output)
       printf("Isotropic_Sqw: %s: is a %s%s : R_i=%f R_o=%f h=%f \n",
             NAME_CURRENT_COMP, (radius_i > 0 ? "hollow ":""),
             (VarSqw.shape ? "Sphere" : "Cylinder"),
             radius_i,radius_o,yheight);
+    if (radius_i >= radius_o) {
+      printf("Isotropic_Sqw: %s:thickness/radius_i bigger than sample (radius_o) !\n"
+             "ERROR          Disabling\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
   } else if (xwidth>0 && yheight>0 && zthick>0) {
     VarSqw.shape = 1;
+    if (2*thickness>=xwidth || 2*thickness>=yheight || 2*thickness>zthick) {
+      printf("Isotropic_Sqw: %s:2*thickness bigger than sample (xwidth yheight zthick)!\n"
+             "ERROR          Disabling\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
     if (VarSqw.verbose_output)
-      printf("Isotropic_Sqw: %s: is a Box : dx=%f dy=%f dz=%f \n",
-            NAME_CURRENT_COMP, xwidth,yheight,zthick);
+      printf("Isotropic_Sqw: %s: is a %sBox : dx=%f dy=%f dz=%f \n",
+            NAME_CURRENT_COMP, (thickness>0 ? "hollow" : ""), xwidth,yheight,zthick);
   } else  {
     printf("Isotropic_Sqw: %s: ERROR sample has no dimension\n"
            "               set some of radius_o xwidth yheight zthick \n",
            NAME_CURRENT_COMP);
     exit(0);
   }
-  if (concentric && (VarSqw.shape==1 || radius_i <= 0)) {
+  if (concentric &&
+  !((VarSqw.shape==1 && thickness > 0) || (VarSqw.shape!=1 && radius_i > 0))) {
     printf("Isotropic_Sqw: %s:Can not use concentric mode\n"
-           "ERROR          on non cylindrical/spherical shape.\n",
+           "ERROR          on non hollow shape.\n",
            NAME_CURRENT_COMP);
     exit(0);
   }
@@ -793,7 +810,9 @@ do { /* Main interaction loop. Ends with intersect=0 */
       || (VarSqw.shape==2 && sphere_intersect(&t1,&t2, x,y,z,vx,vy,vz,
                                        radius_i)))
       tmp = 1; /* we also take into account the hollow part */
-    }
+    } else if (thickness>0 && VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz,
+             xwidth-2*thickness, yheight-2*thickness, zthick-2*thickness))
+      tmp = 1;
     if (!tmp) t1 = t2 = t3; /* no empty space inside */
   } else break; /* neutron does not hit sample: transmitted  */
 
@@ -1157,6 +1176,29 @@ MCDISPLAY
     line(xmax, ymin, zmin, xmax, ymin, zmax);
     line(xmin, ymax, zmin, xmin, ymax, zmax);
     line(xmax, ymax, zmin, xmax, ymax, zmax);
+
+    if (thickness>0) {
+      xmin = -0.5*xwidth+thickness;
+      xmax = -xmin;
+      ymin = -0.5*yheight+thickness;
+      ymax = -ymin;
+      zmin = -0.5*zthick+thickness;
+      zmax = -zmin;
+      multiline(5, xmin, ymin, zmin,
+                  xmax, ymin, zmin,
+                  xmax, ymax, zmin,
+                  xmin, ymax, zmin,
+                  xmin, ymin, zmin);
+      multiline(5, xmin, ymin, zmax,
+                  xmax, ymin, zmax,
+                  xmax, ymax, zmax,
+                  xmin, ymax, zmax,
+                  xmin, ymin, zmax);
+      line(xmin, ymin, zmin, xmin, ymin, zmax);
+      line(xmax, ymin, zmin, xmax, ymin, zmax);
+      line(xmin, ymax, zmin, xmin, ymax, zmax);
+      line(xmax, ymax, zmin, xmax, ymax, zmax);
+    }
   }
   else if(VarSqw.shape==0)
   {
