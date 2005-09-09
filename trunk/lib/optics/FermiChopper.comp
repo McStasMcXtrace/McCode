@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.6 $
+* Version:    $Revision: 1.7 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 *
@@ -24,9 +24,9 @@
 * Slit packages are straight. Chopper slits are separated by an infinitely
 * thin absorbing material. The effective transmission (resulting from fraction
 * of the transparent material and its transmission) may be specified.
-* Total slit package width is Nslit*w. The chopper slit package width may be
-* specified through the width of the full package, or the one of each single
-* slit.
+* The chopper slit package width may be specified through the total width 'width'
+* of the full package or the width 'w' of each single slit. The other parameter
+* is calculated by: width = Nslit*w.
 * The chopper needs a default velocity to calculate the initial value for an
 * iterative calculation of TOF values. This can be specified by its velocity,
 * energy, wavelength or wavevector.
@@ -49,7 +49,8 @@
 * no blade width used
 *
 * %BUGS
-* overestimates peak width for long wavelengths
+* - overestimates peak width for long wavelengths
+* - does not give the right pulse position, shape and width for slit widths below 0.1 mm
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -59,7 +60,7 @@
 * ymin:    (m)      lower y bound of cylinder
 * ymax:    (m)      upper y bound of cylinder
 * Nslit:   (1)      number of chopper slits
-* slit:    (m)      length of the short blades
+* slit:    (m)      channel length of the Fermi chopper
 * w:       (m)      width of one chopper slit
 * width:   (m)      optional total width of slit package
 * nu:      (Hz)     chopper frequency
@@ -80,6 +81,10 @@
 * lambda:  (Angs)   optional mean wavelength of prototype neutron
 * Ki:      (Angs-1) optional mean wavevector of prototype neutron
 * phase:   (deg)    chopper phase at t=0
+*
+* OUTPUT PARAMETERS:
+* FCVars :  (-)     structure containing many neutron counters for the data in 'filename', mean velocities, angular frequency of the chopper etc.
+*                   
 *
 * %End
 *****************************************************************************/
