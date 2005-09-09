@@ -8,12 +8,11 @@
 * Component: Selector
 *
 * %Identification
-* Written by: Peter Link
+* Written by: Peter Link, <a href="mailto:Andreas.Ostermann@frm2.tum.de">Andreas Ostermann</a>
 * Date: MARCH 1999
 * Origin: Uni. Gottingen (Germany)
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Release: McStas 1.6
-* Modified by: <a href="Andreas.Ostermann@frm2.tum.de">Andreas Ostermann</a>.
 *
 * velocity selector (helical lamella type) such as <b>V_selector</b> component
 *
