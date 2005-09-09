@@ -11,7 +11,7 @@
 * Written by: KL
 * Date: November 20, 1998
 * Modified by: KL, 8 October 2001
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -32,7 +32,7 @@
 * Jun 2005: wavelength distribution used in external tests of velocity selectors (o.k.)
 * Validated by: K. Lieutenant
 *
-* limitations:
+* %BUGS
 * distribution is uniform in (hor. and vert.) angle (relative to moderator normal),
 * therefore not suited for large angles
 *
@@ -97,14 +97,14 @@ TRACE
  { thetah = randpm1()*hdiv*DEG2RAD;
    thetav = randpm1()*vdiv*DEG2RAD;
  }
- 
+
  tan_h = tan(thetah);
  tan_v = tan(thetav);
 
  /* Perform the correct treatment - no small angle approx. here! */
  vz = v / sqrt(1 + tan_v*tan_v + tan_h*tan_h);
  vy = tan_v * vz;
- vx = tan_h * vz; 
+ vx = tan_h * vz;
 %}
 
 MCDISPLAY

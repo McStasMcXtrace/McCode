@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.7 $
+* Version:  $Revision: 1.8 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -73,7 +73,9 @@
 *
 * %L
 * <a href="http://www.nea.fr/html/dbprog/tripoli-abs.html">Tripoli</a>
+* %L
 * Virtual_tripoli4_output
+* %L
 * CAMPIONI Guillaume, Etude et Modelisation des Sources Froides de Neutrons, These de Doctorat, CEA Saclay/UJF (2004)
 *
 * %E

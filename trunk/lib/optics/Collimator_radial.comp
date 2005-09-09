@@ -10,8 +10,8 @@
 * %I
 * Written by: Emmanuel Farhi <farhi@ill.fr>
 * Date: July 2005
-* Version: $Revision: 1.7 $
-* Origin: Risoe
+* Version: $Revision: 1.8 $
+* Origin: ILL
 * Release: McStas 1.9
 *
 * A radial Soller collimator.
