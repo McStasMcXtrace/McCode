@@ -12,26 +12,42 @@
 * Date: Februar 7 1999
 * Origin: Uni. Erlangen (Germany)
 * Release: McStas 1.6
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 *
 * Models a curved neutron guide.
 *
 * %Description
-* Models a curved neutron guide.The entrance lies in the X-Y plane, centered
-* on the Z axis. The neutrons will also leave the bender in the X-Y plane at
-* the z-value l=r*Win, so you don't have to calculate the real exit coordinates
-* and you do not need a new arm. The bender is bent to the negative X axis;
-* it behaves like a parallel guide in the Y axis.
-* You may either enter the deviation angle 'Win' or the length 'l'.
-* The bender is shown straight, even if the implemented model is curved.
-* Thus, you don't have to shift the following component by the curved deviation.
+* Models a curved neutron guide with cylindrical walls.
 *
-* Example: Bender(w=0.05,h=0.12,r=250,d=0.001,Win=0.04,k=1,
-*   R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,
-*   R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,
-*   R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003)
+* Bender radius, entrance width and height are necessary input data. To define
+* the bender, you may either enter the deviation angle 'Win' or the length 'l'.
+* The bender may consist of 'k' vertical channels, separated by partioning walls
+* of thickness 'd'. Three different reflectivity profiles can be given: for outer
+* walls, for inner walls and for the top and bottom walls. The partitioning walls  
+* have the same coating as the exterior walls.
+* 
+* The entrance lies in the X-Y plane, centered on the Z axis. The neutrons will
+* also leave the bender in the X-Y plane at the z-value l=r*Win, i.e. they are
+* centred on (0,0,r*Win); they have an (average) flight direction along the z-axis.
+* Therefore, the following component is adjacent, if positioned AT (0,0,r*Win) 
+* <b>without</b> rotation.
+* So, seen from outside, it behaves like a straight guide along the Z axis. As a 
+* consequence, it is shown straight in 'mcdisplay'.
+* This behaviour results from a co-ordinate transformation inside the component.
+* It is done to facilitate its use. Neither rotation nor shift along the x-axis
+* need to be calculated; a new arm is not necessary. Internally, the bender is 
+* bent to the negative X axis;
 *
-* See also <a href="http://neutron.risoe.dk/mcstas/support/misc/Bender.html">Additional note</a> from <a href="mailto:philipp.bernhardt@krist.uni-erlangen.de">Philipp Bernhardt</a>.
+* Example: 
+* Bender of 120 mm height, 50 mm width, 250 m radius and 0.04 rad (or 2.292 deg) curvature
+* not channeled, with a standard m=2 coating on 
+* 
+* Bender(w=0.05,h=0.12,r=250,Win=0.04,
+*        R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,
+*        R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,
+*        R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003)
+*
+* See also <a href="http://neutron.risoe.dk/pipermail/neutron-mc/1999q1/000052.html">Additional note</a> from <a href="mailto:philipp.bernhardt@siemens.com">Philipp Bernhardt</a>.
 *
 * %BUGS
 * Some users have reported strange behaviours with this component.
@@ -43,20 +59,20 @@
 * w:       (m)          Width at the bender entry and exit
 * h:       (m)          Height at the bender entry and exit
 * r:       (m)          Radius of the bender
-* d:       (m)          Thickness of the partition, which separates the channels
 * Win:     (rad)        Angle of the deflection of the whole bender
 * k:       (1)          Number of channels inside the bender
-* R0a:     (1)          Low-angle reflectivity at the bender <b>concave</b> side
+* d:       (m)          Thickness of one blade separating the channels
+* R0a:     (1)          Low-angle reflectivity at the <b>outer</b> side of the bender
 * Qca:     (AA-1)       Critical scattering vector
 * alphaa:  (AA)         Slope of reflectivity
 * ma:      (1)          m-value of material
 * Wa:      (AA-1)       Width of supermirror cut-off
-* R0i:     (1)          Low-angle reflectivity at the bender <b>convex</b> side
+* R0i:     (1)          Low-angle reflectivity at the <b>inner</b> side of the bender
 * Qci:     (AA-1)       Critical scattering vector
 * alphai:  (AA)         Slope of reflectivity
 * mi:      (1)          m-value of material
 * Wi:      (AA-1)       Width of supermirror cut-off
-* R0s:     (1)          Low-angle reflectivity at bender <b>top and bottom</b> side
+* R0s:     (1)          Low-angle reflectivity at the <b>top and bottom</b> side of the bender
 * Qcs:     (AA-1)       Critical scattering vector
 * alphas:  (AA)         Slope of reflectivity
 * ms:      (1)          m-value of material
@@ -65,12 +81,19 @@
 * Optional parameters:
 * l:       (m)          length of bender l=r*Win
 *
+* OUTPUT PARAMETERS:
+* bk:      (m)          Width of 1 channel + 1 separating blade
+* mWin:    (rad)        Angle of the deflection of the whole bender
+*
+* %L
+* <a href="../contrib/Guide_curved.comp.html>Guide_curved</a>
+*
 * %End
 *******************************************************************************/
 
 DEFINE COMPONENT Bender
 DEFINITION PARAMETERS
-(w,h,r,d=0.001,Win=0.04,k=1,R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003,l=0)
+(w,h,r,Win=0.04,k=1,d=0.001,R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003,l=0)
 
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (bk, mWin)
