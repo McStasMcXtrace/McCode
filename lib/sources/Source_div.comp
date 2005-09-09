@@ -11,7 +11,7 @@
 * Written by: KL
 * Date: November 20, 1998
 * Modified by: KL, 8 October 2001
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -23,6 +23,9 @@
 * The neutron energy is uniformly distributed between E0-dE and E0+dE or
 * a wavelength is uniformly distributed between Lambda0-dLambda and Lambda0+dLambda.
 * If energy and wavelength are given, energy is used.
+* In the case of uniform distribution (gauss=0), angles are uniformly distributed 
+* between -hdiv and +hdiv as well as -vdiv and +vdiv. For Gaussian distribution
+* (gauss=1), 'hdiv' and 'vdiv' define the FWHM of a Gauss'schen distribution,
 *
 * Example: Source_div(width=0.1, height=0.1, hdiv=2, vdiv=2, E0=14, dE=2, gauss=0)
 *
@@ -46,6 +49,11 @@
 * Lambda0: (Ang) Mean wavelength of neutrons (only relevant for E0=0)
 * dLambda: (Ang) Wavelength spread of neutrons.
 * gauss:    (-)  Criterion: 0: uniform, 1: Gaussian distribution (default)
+*
+* OUTPUT PARAMETERS:
+* sigmah:  (rad) parameter 'sigma' of the Gaussian distribution for horizontal divergence
+* sigmav:  (rad) parameter 'sigma' of the Gaussian distribution for vertical divergence
+* p_init:   (-)  normalisation factor 1/'neutron_count'
 *
 * %E
 *******************************************************************************/
