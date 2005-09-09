@@ -54,7 +54,7 @@ double     omega,          /* frequency of rotation                       [1/s] 
            Phase,          /* dephasing angle at zero time                [deg]   -l */
            wallwidth;      /* thickness of walls separating the channels          -m */
 char       sGeomFileName[512];/* name of output file for geometry information        -G */
-VectorType pos_ch;         /* centre position of the Fermi chopper         [m] X,Y,V */
+VectorType pos_ch;         /* centre position of the Fermi chopper        [cm] X,Y,V */
 
 /* other global parameters */
 #include "chopper_fermi.h"
