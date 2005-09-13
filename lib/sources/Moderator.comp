@@ -10,7 +10,7 @@
 * %I
 * Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -40,7 +40,7 @@
 
 DEFINE COMPONENT Moderator
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius, E0, E1, dist, xw, yh, t0, Ec, gam)
+SETTING PARAMETERS (radius, E0, E1, dist, xw, yh, t0=37.15, Ec=9.0, gam=39.1)
 OUTPUT PARAMETERS (p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
