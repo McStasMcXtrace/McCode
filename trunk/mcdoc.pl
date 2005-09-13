@@ -580,6 +580,10 @@ if ($use_local) {
 }
 my @tblist = map "<A href=\"#$_\">$_</A>", @sections;
 my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";
+$toolbar .= "<P ALIGN=CENTER>\n [ <a href=\"$MCSTAS::sys_dir/doc/mcstas-manual.pdf\">User Manual</a>
+| <a href=\"$MCSTAS::sys_dir/doc/mcstas-components.pdf\">Component Manual</a>
+| <a href=\"$MCSTAS::sys_dir/doc/tutorial/html/tutorial.html\">McStas tutorial</a>
+| <a href=\"$MCSTAS::sys_dir/data\">Data files</a> ]\n</P>\n";
 
 if ($filehandle) {
   html_main_start($filehandle, $toolbar);
