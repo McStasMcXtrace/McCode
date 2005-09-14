@@ -7,7 +7,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
 * Modified by: KL, 28.09.01   (two lines)
@@ -119,7 +119,7 @@ SHARE
       struct line_data *list;     /* Reflection array */
       int  count;                  /* Number of reflections */
       double Dd;
-      double DW;
+      double DWfactor;
       char compname[256];
     };
 
@@ -140,8 +140,8 @@ SHARE
     }
 
     Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
-    if (!((sTable.columns >= 3 &&  info->Dd >= 0 && info->DW > 0)
-       || (sTable.columns >= 4 && (info->Dd >= 0 || info->DW > 0))
+    if (!((sTable.columns >= 3 &&  info->Dd >= 0 && info->DWfactor > 0)
+       || (sTable.columns >= 4 && (info->Dd >= 0 || info->DWfactor > 0))
        || (sTable.columns >= 5)))
       exit(fprintf(stderr,
           "PowderN: %s: Error: The number of columns in %s\n"
@@ -165,18 +165,18 @@ SHARE
       double b1[3], b2[3];
       int    index;
 
-      if (info->Dd >= 0 && info->DW > 0) {
+      if (info->Dd >= 0 && info->DWfactor > 0) {
         flag_shift=2;
-        DWfactor  = info->DW;
+        DWfactor  = info->DWfactor;
         w         = info->Dd;
       } else if (info->Dd >= 0) {
         flag_shift=1;
         DWfactor  = Table_Index(sTable, i, sTable.columns-1);
         w         = info->Dd;
-      } else if (info->DW > 0) {
+      } else if (info->DWfactor > 0) {
         flag_shift=1;
         w         = Table_Index(sTable, i, sTable.columns-1);
-        DWfactor  = info->DW;
+        DWfactor  = info->DWfactor;
       } else {
         w         = Table_Index(sTable, i, sTable.columns-1);
         DWfactor  = Table_Index(sTable, i, sTable.columns-2);
@@ -230,7 +230,7 @@ INITIALIZE
   int i;
   struct line_data *L;
   line_info.Dd = Delta_d;
-  line_info.DW = DW;
+  line_info.DWfactor = DW;
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
 
