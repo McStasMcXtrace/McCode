@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: March 2001
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -32,8 +32,8 @@
 * %P
 * Input parameters:
 *
-* height: (m)    Width of rectangular source
-* width:  (m)    Height of rectangular source
+* height: (m)    Height of rectangular source
+* width:  (m)    Width of rectangular source
 * l_low:  (AA)   Lower edge of lambda distribution
 * l_high: (AA)   Upper edge of lambda distribution
 * dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
