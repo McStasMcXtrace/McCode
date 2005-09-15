@@ -17,12 +17,12 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.41 2004-09-21 12:21:19 farhi Exp $
+* $Id: mcstas.h,v 1.42 2005-09-15 10:46:10 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.41 $"
+#define MCSTAS_H "$Revision: 1.42 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,16 +45,16 @@
 
 typedef struct Pool_header *Pool;
 
-void *mem(size_t);		/* Allocate memory. */
-void memfree(void *);		/* Free memory. */
-char *str_dup(char *);		/* Allocate new copy of string. */
+void *mem(size_t);    /* Allocate memory. */
+void memfree(void *);   /* Free memory. */
+char *str_dup(char *);    /* Allocate new copy of string. */
 char *str_dup_n(char *string, int n); /* Copies only first N chars. */
 char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
-char *str_quote(char *string);	/* Quote string for inclusion in C code */
-void str_free(char *);		/* Free memory for string. */
+char *str_quote(char *string);  /* Quote string for inclusion in C code */
+void str_free(char *);    /* Free memory for string. */
 
-Pool pool_create(void);		/* Create pool. */
-void pool_free(Pool p);		/* Free pool and associated memory. */
+Pool pool_create(void);   /* Create pool. */
+void pool_free(Pool p);   /* Free pool and associated memory. */
 void *pool_mem(Pool p, size_t size); /* Allocate memory in pool. */
 
 
@@ -110,12 +110,12 @@ struct Symtab_entry *symtab_previous(Symtab st, int index);
 typedef struct List_header *List;
 typedef struct List_position *List_handle;
 
-List list_create(void);		/* Create list. */
-void list_add(List, void *);	/* Add element at end. */
-void list_free(List, void (*)(void *));	/* Deallocate a list. */
-int list_len(List l);		/* Get list length. */
-List_handle list_iterate(List);	/* Prepare to traverse list. */
-void *list_next(List_handle);	/* Get next element in list. */
+List list_create(void);   /* Create list. */
+void list_add(List, void *);  /* Add element at end. */
+void list_free(List, void (*)(void *)); /* Deallocate a list. */
+int list_len(List l);   /* Get list length. */
+List_handle list_iterate(List); /* Prepare to traverse list. */
+void *list_next(List_handle); /* Get next element in list. */
 void list_iterate_end(List_handle); /* End list traversal. */
 
 
@@ -128,18 +128,18 @@ void list_iterate_end(List_handle); /* End list traversal. */
 typedef struct cexp *CExp;
 
 /* Extern functions defined in cexp.c */
-CExp exp_id(char *id);		/* Make normal identifier. */
-CExp exp_extern_id(char *id);	/* Make extern identifier. */
-CExp exp_number(char *n);	/* Make expression from number. */
-CExp exp_string(char *s);	/* Make expression from string. */
-CExp exp_ctoken(char *s);	/* Make expression from generic C token */
-CExp exp_compound(int n, ...);	/* Make compound expression */
-void exp_free(CExp e);		/* Free memory for expression */
-char *exp_tostring(CExp e);	/* Convert expression to string. */
+CExp exp_id(char *id);    /* Make normal identifier. */
+CExp exp_extern_id(char *id); /* Make extern identifier. */
+CExp exp_number(char *n); /* Make expression from number. */
+CExp exp_string(char *s); /* Make expression from string. */
+CExp exp_ctoken(char *s); /* Make expression from generic C token */
+CExp exp_compound(int n, ...);  /* Make compound expression */
+void exp_free(CExp e);    /* Free memory for expression */
+char *exp_tostring(CExp e); /* Convert expression to string. */
 void exp_fprint(FILE *f, CExp e); /* Output an expression to file. */
-int exp_isvalue(CExp e);	/* Ask if expression is a value. */
+int exp_isvalue(CExp e);  /* Ask if expression is a value. */
 void exp_setlineno(CExp e, int n); /* Set line number of expression */
-int exp_getlineno(CExp e);	/* Get line number of expression, or zero */
+int exp_getlineno(CExp e);  /* Get line number of expression, or zero */
 
 /*******************************************************************************
 * Definitions in coords.c
@@ -179,9 +179,9 @@ Coords_exp coords_exp_origo(void);
 
 struct comp_position
   {
-    Coords_exp place;		       /* (x,y,z) coordinate. */
+    Coords_exp place;          /* (x,y,z) coordinate. */
     struct comp_inst *place_rel;       /* Instance relative to, or NULL. */
-    Coords_exp orientation;	       /* X/Y/Z rotation. */
+    Coords_exp orientation;        /* X/Y/Z rotation. */
     struct comp_inst *orientation_rel;
   };
 
@@ -195,8 +195,8 @@ struct comp_orientation
   {
     Coords_exp orientation;
     struct comp_inst *orientation_rel;
-    int isdefault;	/* True if this is a default orientation, generated
-			   when no ROTATED modifier is given. */
+    int isdefault;  /* True if this is a default orientation, generated
+         when no ROTATED modifier is given. */
   };
 
 /*******************************************************************************
@@ -283,15 +283,15 @@ void cogen(char *output_name, struct instr_def *instr);
 * Functions and variables defined in debug.c
 *******************************************************************************/
 
-extern int error_encountered;	/* Set to 1 when print_error called. */
+extern int error_encountered; /* Set to 1 when print_error called. */
 
-void print_error(char *, ...);	/* Normal error messages. */
+void print_error(char *, ...);  /* Normal error messages. */
 void print_warn(int *flag, char *format, ...); /* Warning. */
-void fatal_error(char *, ...);	/* Report a fatal error and exit the program. */
+void fatal_error(char *, ...);  /* Report a fatal error and exit the program. */
 
 #ifdef DEBUG
 
-void debug_printf(char *, ...);	/* Internal; use debug macro instead. */
+void debug_printf(char *, ...); /* Internal; use debug macro instead. */
 void debugn_printf(int, char *, ...); /* Internal; use debugn macro instead. */
 
 /*******************************************************************************
@@ -308,10 +308,10 @@ void debugn_printf(int, char *, ...); /* Internal; use debugn macro instead. */
 #define debugn(msg) debugn_printf msg
 
 /* 'Standard' debugging levels. */
-#define DEBUG_ALWAYS  0		/* Always shown (if debugging enabled). */
+#define DEBUG_ALWAYS  0   /* Always shown (if debugging enabled). */
 #define DEBUG_HIGH   10
 #define DEBUG_MEDIUM 20
-#define DEBUG_LOW    30		/* Only shown at high debugging level. */
+#define DEBUG_LOW    30   /* Only shown at high debugging level. */
 
 /*******************************************************************************
 * Macro used to change the current debugging level. Useful to enable
@@ -339,10 +339,10 @@ extern int debug_current_level;
 /* Code blocks. */
 struct code_block
   {
-    char *filename;		/* Name of origin source file. */
-    char *quoted_filename;	/* Same, quoted for inclusion in C code. */
-    int linenum;		/* Line number of first line. */
-    List lines;			/* List of lines (strings with \n at end). */
+    char *filename;   /* Name of origin source file. */
+    char *quoted_filename;  /* Same, quoted for inclusion in C code. */
+    int linenum;    /* Line number of first line. */
+    List lines;     /* List of lines (strings with \n at end). */
   };
 
 /* Note: the enum instr_formal_types definition MUST be kept
@@ -356,19 +356,19 @@ enum instr_formal_types
 struct comp_iformal
   {
     enum instr_formal_types type; /* Type (string, int, double) */
-    char *id;			/* Parameter name */
-    int isoptional;		/* True if default value is available */
-    CExp default_value;		/* Default value if isoptional is true */
+    char *id;     /* Parameter name */
+    int isoptional;   /* True if default value is available */
+    CExp default_value;   /* Default value if isoptional is true */
   };
 
 /* Component definitions. */
 struct comp_def
   {
-    char *name;			/* Component name. */
-    char *source;		/*  ADD: E. Farhi Aug 14th, 2002 Name of source file for definition */
+    char *name;     /* Component name. */
+    char *source;   /*  ADD: E. Farhi Aug 14th, 2002 Name of source file for definition */
     int  comp_inst_number; /* ADD: E. Farhi Sep 20th, 2001 Number of this comp in the instrument  */
     List def_par, set_par, out_par, state_par; /* Formal parameters. */
-    char **polarisation_par;	/* Polarisation state formal parameters. */
+    char **polarisation_par;  /* Polarisation state formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
     struct code_block *init_code;   /* Initializeation code. */
@@ -377,7 +377,7 @@ struct comp_def
     struct code_block *finally_code;    /* Code for simulation end. */
     struct code_block *mcdisplay_code;  /* Code for drawing components. */
   };
-  
+
 /* ADD: E. Farhi Sep 24th, 2001 Component group instances */
 struct group_inst
   {
@@ -388,56 +388,57 @@ struct group_inst
 /* Component instance. */
 struct comp_inst
   {
-    char *name;			/* Instance name. */
-    struct comp_def *def;	/* Pointer to definition. */
-    struct comp_position *pos;	/* Component position (place & orientation). */
-    struct code_block *extend; /* ADD: E. Farhi Sep 20th, 2001 code following comp instance */ 
+    char *name;     /* Instance name. */
+    char *type;     /* type of component */
+    struct comp_def *def; /* Pointer to definition. */
+    struct comp_position *pos;  /* Component position (place & orientation). */
+    struct code_block *extend; /* ADD: E. Farhi Sep 20th, 2001 code following comp instance */
     int    index;  /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
     struct group_inst *group;       /* ADD: E. Farhi Sep 24th, 2001 group name in which comp is */
-    Symtab defpar, setpar;	/* Parameter values. */
+    Symtab defpar, setpar;  /* Parameter values. */
   };
 
 /* Instrument formal parameters. */
 struct instr_formal
   {
     enum instr_formal_types type; /* Type (string, int, double) */
-    char *id;			  /* Parameter name */
-    int isoptional;		/* True if default value is available */
-    CExp default_value;		/* Default value if isoptional is true */
+    char *id;       /* Parameter name */
+    int isoptional;   /* True if default value is available */
+    CExp default_value;   /* Default value if isoptional is true */
   };
 
 /* NeXus dictionary information. NeXus is supported through the NXDICT
 * API, and only if one NXDICTFILE declaration is
-* present in the instrument. 
+* present in the instrument.
 */
 struct NXDinfo
   {
-    char *nxdfile;		/* NeXus dictionary file, or NULL */
-    int any;			    /* True only if any NXDICTFILE decls. */
+    char *nxdfile;    /* NeXus dictionary file, or NULL */
+    int any;          /* True only if any NXDICTFILE decls. */
     int hdfversion;  /* may be 4 (default) or 5 */
   };
-  
+
 /* Instrument definition. */
 struct instr_def
   {
-    char *name;			/* Instrument name */
-    char *source;		/* Name of source file for definition */
-    char *quoted_source;	/* File name quoted for inclusion in C */
-    struct code_block *decls;	/* Code for declarations */
-    struct code_block *inits;	/* Code for initializations */
+    char *name;     /* Instrument name */
+    char *source;   /* Name of source file for definition */
+    char *quoted_source;  /* File name quoted for inclusion in C */
+    struct code_block *decls; /* Code for declarations */
+    struct code_block *inits; /* Code for initializations */
     struct code_block *saves;   /* Code executed to save data */
-    struct code_block *finals;	/* Code for simulation end */
-    List formals;		/* List of formal parameters */
-    Symtab compmap;		/* Map of component names to instances */
+    struct code_block *finals;  /* Code for simulation end */
+    List formals;   /* List of formal parameters */
+    Symtab compmap;   /* Map of component names to instances */
     Symtab groupmap;  /* Map of component group names */
-    List complist;		/* List of components in declaration order */
-    List grouplist;		/* List of component groups in declaration order */
-    struct NXDinfo *nxdinfo;	/* NeXus dictionary declarations */
-    int use_default_main;	/* If set, output a main() function */
-    int include_runtime;	/* If set, include runtime in output */
-    int enable_trace;		/* If set, enable output of neutron traces */
-    int portable;		/* If set, emit strictly portable ANSI C */
-    int polarised;		/* If set, handle neutron polarisation */
+    List complist;    /* List of components in declaration order */
+    List grouplist;   /* List of component groups in declaration order */
+    struct NXDinfo *nxdinfo;  /* NeXus dictionary declarations */
+    int use_default_main; /* If set, output a main() function */
+    int include_runtime;  /* If set, include runtime in output */
+    int enable_trace;   /* If set, enable output of neutron traces */
+    int portable;   /* If set, emit strictly portable ANSI C */
+    int polarised;    /* If set, handle neutron polarisation */
   };
 
 #endif /* MCSTAS_H */

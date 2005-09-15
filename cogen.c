@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.56  2005/07/27 11:29:41  farhi
+* missing arg in printf
+*
 * Revision 1.55  2005/07/18 14:43:05  farhi
 * Now gives a warning message per component for 'computational absorbs'
 *
@@ -91,7 +94,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.56 2005-07-27 11:29:41 farhi Exp $
+* $Id: cogen.c,v 1.57 2005-09-15 10:46:10 farhi Exp $
 *
 *******************************************************************************/
 
@@ -162,6 +165,9 @@
 * ##nsy
 * ##nsz
 * ##np
+* ##compcurname
+* ##compcurtype
+* ##compcurindex
 * ##absorb          label for ABSORB (goto)
 * ##Scattered       Incremented each time a SCATTER is done
 * ##NCounter        Incremented each time a neutron is entering the component
@@ -492,7 +498,8 @@ cogen_comp_scope(struct comp_inst *comp, int infunc,
 {
   List_handle def, out;
 
-  coutf("#define %scompcurname %s", ID_PRE, comp->name);
+  coutf("#define %scompcurname  %s", ID_PRE, comp->name);
+  coutf("#define %scompcurtype  %s", ID_PRE, comp->type);
   coutf("#define %scompcurindex %i", ID_PRE, comp->index);
   def = list_iterate(comp->def->def_par);
   out = list_iterate(comp->def->out_par);
@@ -501,6 +508,7 @@ cogen_comp_scope(struct comp_inst *comp, int infunc,
   list_iterate_end(out);
   list_iterate_end(def);
   coutf("#undef %scompcurname", ID_PRE);
+  coutf("#undef %scompcurtype", ID_PRE);
   coutf("#undef %scompcurindex", ID_PRE);
 }
 
