@@ -8,7 +8,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: May 7, 2001
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
  Origin: Risoe
 * Release: McStas 1.6
 *
@@ -24,6 +24,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
 * nx:       Number of x bins (1)
 * filename: Name of file in which to store the detector image (text)
 *
@@ -37,8 +39,8 @@
 ******************************************************************************/
 
 DEFINE COMPONENT PSDlin_monitor
-DEFINITION PARAMETERS (nx, filename) 
-SETTING PARAMETERS (xmin, xmax, ymin, ymax)
+DEFINITION PARAMETERS (nx=20, filename)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (PSDlin_N, PSDlin_p, PSDlin_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -50,6 +52,16 @@ DECLARE
 INITIALIZE
   %{
     int i;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("PSDlin_monitor: %s: Null detection area !\n"
+                   "ERROR           (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
 
     for (i=0; i<nx; i++)
     {
@@ -66,7 +78,7 @@ TRACE
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
       i = floor(nx*(x-xmin)/(xmax-xmin));              /* Bin number */
-      if((i >= nx) || (i<0)) 
+      if((i >= nx) || (i<0))
       {
         printf("FATAL ERROR: wrong positioning in linear PSD. i= %i \n",i);
         exit(1);

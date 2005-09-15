@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -19,7 +19,7 @@
 * %D
 * A square single monitor that measures the energy of the incoming neutrons.
 *
-* Example: E_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+* Example: E_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
 *                 Emin=1, Emax=50, nchan=20, filename="Output.nrj")
 *
 * %P
@@ -29,6 +29,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
 * Emin:     Minimum energy to detect (meV)
 * Emax:     Maximum energy to detect (meV)
 * nchan:    Number of energy channels (1)
@@ -48,7 +50,7 @@
 
 DEFINE COMPONENT E_monitor
 DEFINITION PARAMETERS (nchan=20, filename)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, Emin, Emax)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, Emin, Emax)
 OUTPUT PARAMETERS (E_N, E_p, E_p2, S_p, S_pE, S_pE2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -60,6 +62,16 @@ DECLARE
 INITIALIZE
   %{
     int i;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("E_monitor: %s: Null detection area !\n"
+                   "ERROR      (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
 
     for (i=0; i<nchan; i++)
     {

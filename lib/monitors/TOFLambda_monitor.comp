@@ -8,7 +8,7 @@
 * %I
 * Written by: KL
 * Date: September 28, 2001
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -25,6 +25,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
 * nlam:     Number of bins in wavelength (1)
 * nt:       Number of bins in TOF (1)
 * t_0:      Minimum time (us)
@@ -44,8 +46,8 @@
 
 DEFINE COMPONENT TOFLambda_monitor
 DEFINITION PARAMETERS (nlam, nt, filename, t_0, t_1)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, lambda_0, lambda_1)
-OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2) 
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, lambda_0, lambda_1)
+OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -58,10 +60,20 @@ INITIALIZE
   %{
     int i,j;
 
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("TOFLambda_monitor: %s: Null detection area !\n"
+                   "ERROR              (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
     tt_0 = t_0*1e-6;
     tt_1 = t_1*1e-6;
     for (i=0; i<nlam; i++)
-     for (j=0; j<nt; j++) 
+     for (j=0; j<nt; j++)
      {
       TOFL_N[j][i] = 0;
       TOFL_p[j][i] = 0;
@@ -95,7 +107,7 @@ SAVE
     DETECTOR_OUT_2D(
         "TOF-wavelength monitor",
         "Time-of-flight [\\gms]", "Wavelength [AA]",
-        t_0, t_1, lambda_0, lambda_1, 
+        t_0, t_1, lambda_0, lambda_1,
         nt, nlam,
         &TOFL_N[0][0],&TOFL_p[0][0],&TOFL_p2[0][0],
         filename);

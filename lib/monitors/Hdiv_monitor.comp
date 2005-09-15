@@ -8,9 +8,9 @@
 * Component: Hdiv_monitor
 *
 *%I
-* Written by: KL,  
+* Written by: KL,
 * Date: Nov. 11, 1998
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Thomas Hansen,  December, 1999
@@ -18,10 +18,10 @@
 * A divergence sensitive monitor.
 *
 *%D
-* A divergence sensitive monitor. The counts are distributed in 
-* n pixels. 
+* A divergence sensitive monitor. The counts are distributed in
+* n pixels.
 *
-* Example: Hdiv_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, 
+* Example: Hdiv_monitor(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
 *           nh=20, filename="Output.hd", h_maxdiv=2)
 *
 *%P
@@ -31,6 +31,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
 * nh:       Number of pixel rows (1)
 * h_maxdiv  Maximal vertical divergence detected (degrees)
 * filename: Name of file in which to store the detector image (text)
@@ -47,9 +49,9 @@
 
 DEFINE COMPONENT Hdiv_monitor
 DEFINITION PARAMETERS (nh=20, filename)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, 
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0,
                        h_maxdiv=2 )
-OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
+OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -60,6 +62,16 @@ DECLARE
 INITIALIZE
   %{
     int i;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("Hdiv_monitor: %s: Null detection area !\n"
+                   "ERROR         (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
 
     for (i=0; i<nh; i++)
      {

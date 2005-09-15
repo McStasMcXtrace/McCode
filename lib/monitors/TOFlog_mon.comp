@@ -10,7 +10,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: October 2000
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -19,7 +19,7 @@
 * %D
 *
 * A rectangular time-of-flight monitor with logarithmic time binning.
-* (The neutron intensity is NOT given logarithmically) 
+* (The neutron intensity is NOT given logarithmically)
 *
 * %P
 * INPUT PARAMETERS:
@@ -28,6 +28,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
 * tlow:     Lower bound for time bins (mus)
 * thigh     Higher bound for time bins (mus)
 * ndec:     Number of time bins per decade (1)
@@ -43,8 +45,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOFlog_mon
-DEFINITION PARAMETERS (tlow, thigh, ndec, filename) 
-SETTING PARAMETERS (xmin, xmax, ymin, ymax)
+DEFINITION PARAMETERS (tlow, thigh, ndec, filename)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -59,8 +61,18 @@ DECLARE
 INITIALIZE
   %{
     int i;
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("TOFlog_mon: %s: Null detection area !\n"
+                   "ERROR       (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
     nchan=(int)ceil(ndec*log(thigh/tlow)/log(10.0));
-    if (nchan>LARGENUMBER) 
+    if (nchan>LARGENUMBER)
       printf("FATAL ERROR, too many time channels \n");
 
     for (i=0; i<nchan; i++)
@@ -79,7 +91,7 @@ TRACE
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
       i = (int)floor(ndec*log(1E6*t/tlow)/log(10.0));         /* Bin number */
-      if(i >= nchan) 
+      if(i >= nchan)
         i = nchan - 1;
       if(i < 0)
         i = 0;
