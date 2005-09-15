@@ -535,6 +535,7 @@ sub comp_instance_dialog {
         'INSTANCE' => "",
         'DEFINITION' => "",
         'VALUE' => { },
+        'OPTIONAL' => { },
         'AT' => { 'x' => "", 'y' => "", 'z' => "", 'relative' => "" },
         'ROTATED' => { 'x' => "", 'y' => "", 'z' => "", 'relative' => "" }
     };
@@ -573,7 +574,7 @@ sub comp_instance_dialog {
     $t->insert('end', "DESCRIPTION: (read it and fill-in PARAMETERS section below)\n\n", 'RED');
     $t->insert('end', $comp->{'description'});
 
-    $t->insert('end', "PARAMETERS:\n  (optional parameters may be left blank, see DESCRIPTION section)\n\n", 'RED');
+    $t->insert('end', "PARAMETERS:\n  (optional parameters may be left blank, see DESCRIPTION section)\nCharacter type parameters usually require quoting, e.g. filename=\"name\"\n\n", 'RED');
     for $p (@{$comp->{'inputpar'}}) {
         $t->insert('end', "$p:", 'BLUE');
         my $entry = $t->Entry(-relief => 'sunken', -width => 10,
@@ -587,7 +588,10 @@ sub comp_instance_dialog {
             $t->insert('end', "]");
         }
         my $def = $comp->{'parhelp'}{$p}{'default'};
-        $t->insert('end', " (OPTIONAL, default $def)") if defined($def);
+        if (defined($def)) {
+          $t->insert('end', " (OPTIONAL, default $def)");
+          $r->{'OPTIONAL'}{$p} = 1;
+        } else { $r->{'OPTIONAL'}{$p} = 0; }
         $t->insert('end', "\n");
         $t->insert('end', $comp->{'parhelp'}{$p}{'text'})
             if $comp->{'parhelp'}{$p}{'text'};
@@ -645,8 +649,8 @@ sub comp_instance_dialog {
       $dlg->grabRelease;
       if ($selected eq 'OK') {
         my $r_at = $r->{'AT'};
-  # Replace spaces in component instance name by underscores
-  $r->{'INSTANCE'} =~ s!\ !_!g;
+        # Replace spaces in component instance name by underscores
+        $r->{'INSTANCE'} =~ s!\ !_!g;
         if ($r->{'INSTANCE'} eq "") { # instance not defined !
             $dlg->messageBox(-message => "Instance name is not defined for component $comp->{'name'}. Please set it to a name of your own (e.g. My_Comp).",
                        -title => "$comp->{'name'}: No Instance Name",
@@ -666,6 +670,17 @@ sub comp_instance_dialog {
                        -icon => 'error');
             $selected = undef;
         } else { $noexit = 0; }
+        # check of non optional parameters
+        for $p (@{$comp->{'inputpar'}}) {
+          if(!defined($r->{'VALUE'}{$p}) && $r->{'OPTIONAL'}{$p} == 0) {
+            $dlg->messageBox(-message => "Parameter $p is left unset (non-optional). Please specify value.",
+                       -title => "$r->{'INSTANCE'}:$p left unset",
+                       -type => 'OK',
+                       -icon => 'error');
+            $selected = undef;
+            $noexit = 1;
+          }
+        }
       } else { $noexit = 0; }
     }
     $dlg->destroy;
