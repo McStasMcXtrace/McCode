@@ -1002,7 +1002,7 @@ my $instr_template_start = <<INSTR_FINISH;
 * Example: mcrun test.instr <parameters=values>
 *
 * %Parameters
-* Par1: (unit) Parameter1 description
+* Par1: [unit] Parameter1 description
 *
 * %Link
 * A reference/HTML link for more information
