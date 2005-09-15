@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.58 2005-06-20 09:04:48 farhi Exp $
+* $Id: instrument.y,v 1.59 2005-09-15 10:46:10 farhi Exp $
 *
 *******************************************************************************/
 
@@ -643,6 +643,7 @@ component:    "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation groupre
         if (def != NULL) def->comp_inst_number--;
         palloc(comp); /* Allocate new instance. */
         comp->name = $2;
+        comp->type = $4;
         comp->def = def;
         palloc(comp->pos);
         comp->group = $8;           /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
