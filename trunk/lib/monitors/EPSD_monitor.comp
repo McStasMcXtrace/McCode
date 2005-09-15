@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: 16.4.00
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -30,6 +30,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
 * Emin:     Lower bound of energy (meV)
 * Emax:     Upper bound of energy (meV)
 * nx:       Number of pixel columns in scattering plane (1)
@@ -46,8 +48,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT EPSD_monitor
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, Emin, Emax, nx, nE, filename)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (filename, nx=20, nE=20)
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, Emin, Emax)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -59,6 +61,16 @@ DECLARE
 INITIALIZE
   %{
     int i,j;
+
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("EPSD_monitor: %s: Null detection area !\n"
+                   "ERROR         (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
 
     for (i=0; i<nx; i++)
      for (j=0; j<nE; j++)

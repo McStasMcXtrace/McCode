@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -31,6 +31,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
+* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
+* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
 * npos:     Number of bins in position (1)
 * ndiv:     Number of bins in divergence (1)
 * maxdiv:   Maximal horizontal divergence detected (degrees)
@@ -47,8 +49,8 @@
 
 DEFINE COMPONENT DivPos_monitor
 DEFINITION PARAMETERS (npos=20, ndiv=20, filename)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, maxdiv=2)
-OUTPUT PARAMETERS (Div_N, Div_p, Div_p2) 
+SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, maxdiv=2)
+OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -60,8 +62,18 @@ INITIALIZE
   %{
     int i,j;
 
+    if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+    if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+
+    if ((xmin >= xmax) || (ymin >= ymax)) {
+            printf("DivPos_monitor: %s: Null detection area !\n"
+                   "ERROR           (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+           NAME_CURRENT_COMP);
+      exit(0);
+    }
+
     for (i=0; i<npos; i++)
-     for (j=0; j<ndiv; j++) 
+     for (j=0; j<ndiv; j++)
      {
       Div_N[i][j] = 0;
       Div_p[i][j] = 0;
