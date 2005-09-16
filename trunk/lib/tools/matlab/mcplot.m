@@ -591,16 +591,23 @@ function d=mcplot_plot(d,p)
       w=figure;
     else w = gcf; end
     if ~isempty(findstr(d.type,'2d'))
-      d.x=linspace(l(1),l(2),S(2));
-      d.y=linspace(l(3),l(4),S(1));
+      if S(2) > 1, d.stepx=abs(l(1)-l(2))/(S(2)-1); else d.stepx=0; end
+      if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end
+      d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));
+      d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1)); z=d.data;
       h=surface(d.x,d.y,d.data);
+      xlim([l(1) l(2)]); ylim([l(3) l(4)]);
       shading flat;
     elseif ~isempty(findstr(d.type,'1d'))
-      d.x=linspace(l(1),l(2),max(S));
+      if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1);
+      else d.stepx=0; end
+      d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));
       h=errorbar(d.x,d.data,d.errors);
+      xlim([l(1) l(2)]);
     else
       d.x=linspace(l(1),l(2),max(S));
       h=plot(d.x,d.data);
+      xlim([l(1) l(2)]);
     end
     set(h, 'UserData', d);
     hm = uicontextmenu;
@@ -630,7 +637,6 @@ function d=mcplot_plot(d,p)
   end
   if p == 2, t = t1; end
   xlabel(d.xlabel); ylabel(d.ylabel); h=title(t); set(h,'interpreter','none');
-  axis tight;
   if p==1, set(gca,'position',[.18,.18,.7,.65]);  end
   set(gcf,'name',t1);grid on;
   % if ~isempty(findstr(d.type,'2d')), colorbar; end

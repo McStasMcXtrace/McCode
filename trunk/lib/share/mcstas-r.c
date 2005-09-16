@@ -11,16 +11,29 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.120 $
+* Version: $Revision: 1.121 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.120 2005-08-24 09:51:31 pkwi Exp $
+* $Id: mcstas-r.c,v 1.121 2005-09-16 08:43:19 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.120  2005/08/24 09:51:31  pkwi
+* Beamstop and runtime modified according to Emmanuels remarks.
+*
+* To allow backpropagation in a specific component, use
+*
+* ALLOW_BACKPROP;
+*
+* before calling
+*
+* PROP_Z0;
+*
+* (One could consider making the backpropagation flag common to all propagation routines, should we do so?)
+*
 * Revision 1.119  2005/07/25 14:55:08  farhi
 * DOC update:
 * checked all parameter [unit] + text to be OK
@@ -628,11 +641,14 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "execstr(['l=[',d.xylimits,'];']); S=size(d.data);\n"
       "t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];\n"
       "mprintf('%%s\\n',t(:));\n"
-      "if length(strindex(d.type,'0d')),return;\n"
-      "else\nw=winsid();if length(w),w=w($)+1; else w=0; end\n"
+      "if length(strindex(d.type,'0d')),return; end\n"
+      "w=winsid();if length(w),w=w($)+1; else w=0; end\n"
       "xbasr(w); xset('window',w);\n"
       "if length(strindex(d.type,'2d'))\n"
-      " d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data;\n"
+      " if S(2) > 1, d.stepx=abs(l(1)-l(2))/(S(2)-1); else d.stepx=0; end\n"
+      " if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end\n"
+      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));\n"
+      " d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1)); z=d.data;\n"
       " xlab=d.xlabel; ylab=d.ylabel; x=d.x; y=d.y;\n"
       " fz=max(abs(z));fx=max(abs(d.x));fy=max(abs(d.y));\n"
       " if fx>0,fx=round(log10(fx)); x=x/10^fx; xlab=xlab+' [*10^'+string(fx)+']'; end\n"
@@ -640,8 +656,11 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       " if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end\n"
       " xset('colormap',hotcolormap(64));\n"
       " plot3d1(x,y,z',90,0,xlab+'@'+ylab+'@'+d.zlabel,[-1,2,4]); xtitle(t);\n"
-      "else\nd.x=linspace(l(1),l(2),max(S));\n"
-      " plot2d(d.x,d.data);xtitle(t,d.xlabel,d.ylabel);end\nend\n"
+      "else\n"
+      " if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1); else d.stepx=0; end\n"
+      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));\n"
+      " plot2d(d.x,d.data);xtitle(t,d.xlabel,d.ylabel);\n"
+      "end\n"
       "xname(t1);\nendfunction\n"
     "mc_%PAR=get_%PAR();\n",
     "// Section %TYP [%NAM] (level %LVL)\n"
@@ -701,10 +720,17 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "disp(t);\n"
       "if ~isempty(findstr(d.type,'0d')), return; end\n"
       "figure; if ~isempty(findstr(d.type,'2d'))\n"
-      "d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1));\n"
-      "surface(d.x,d.y,d.data);\n"
-      "else\nd.x=linspace(l(1),l(2),max(S));\nplot(d.x,d.data);end\n"
-      "xlabel(d.xlabel); ylabel(d.ylabel); title(t); axis tight;"
+      " if S(2) > 1, d.stepx=abs(l(1)-l(2))/(S(2)-1); else d.stepx=0; end\n"
+      " if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end\n"
+      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));\n"
+      " d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1));\n"
+      " surface(d.x,d.y,d.data); xlim([l(1) l(2)]); ylim([l(3) l(4)]);\n"
+      "else\n"
+      " if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1); else d.stepx=0; end\n"
+      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));\n"
+      " plot(d.x,d.data); xlim([l(1) l(2)]);\n"
+      "end\n"
+      "xlabel(d.xlabel); ylabel(d.ylabel); title(t); \n"
       "set(gca,'position',[.18,.18,.7,.65]); set(gcf,'name',t1);grid on;\n"
       "if ~isempty(findstr(d.type,'2d')), colorbar; end\n",
     "%% Section %TYP [%NAM] (level %LVL)\n"
@@ -941,9 +967,16 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "if ~isempty(findstr(d.type,'0d')), return; end\n"
       "xlabel(d.xlabel); ylabel(d.ylabel); title(t);"
       "figure; if ~isempty(findstr(d.type,'2d'))\n"
-      "d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1));\n"
-      "mesh(d.x,d.y,d.data);\n"
-      "else\nd.x=linspace(l(1),l(2),max(S));\nplot(d.x,d.data);end\nendfunction\n",
+      " if S(2) > 1, d.stepx=abs(l(1)-l(2))/(S(2)-1); else d.stepx=0; end\n"
+      " if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end\n"
+      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));\n"
+      " d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1));\n"
+      " mesh(d.x,d.y,d.data);\n"
+      "else\n"
+      " if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1); else d.stepx=0; end\n"
+      " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));\n"
+      " plot(d.x,d.data);\n"
+      "end\nendfunction\n",
     "%% Section %TYP [%NAM] (level %LVL)\n"
       "mc_%VNA.class = '%TYP';",
     "mc_%VPA.mc_%VNA = mc_%VNA;\n",

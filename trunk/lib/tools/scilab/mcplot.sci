@@ -708,7 +708,10 @@ function d=mcplot_plot(d,p)
       xdel(w); xbasc(w); xset('window',w);
     end
     if length(strindex(d.type,'2d'))
-      d.x=linspace(l(1),l(2),S(2)); d.y=linspace(l(3),l(4),S(1)); z=d.data;
+      if S(2) > 1, d.stepx=abs(l(1)-l(2))/(S(2)-1); else d.stepx=0; end
+      if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end
+      d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));
+      d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1)); z=d.data;
       if logscale == 1 then
         minz=1e-10;
         index_p=find(z>0); index_n=find(z<=0);
@@ -743,7 +746,9 @@ function d=mcplot_plot(d,p)
           e(index_n) = 0;
         end
       end
-      d.x=linspace(l(1),l(2),max(S));
+      if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1);
+      else d.stepx=0; end
+      d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));
       mcplot_errorbar(d.x,z,e);
       if p == 2, t = t1; end
       xtitle(t,d.xlabel,d.ylabel);
@@ -759,7 +764,9 @@ function d=mcplot_plot(d,p)
           z(index_n) = log10(minz/10);
         end
       end
-      d.x=linspace(l(1),l(2),max(S));
+      if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1);
+      else d.stepx=0; end
+      d.x=linspace(l(1)-d.stepx/2,l(2)+d.stepx/2,max(S));
       plot2d(d.x,z);
       if p == 2, t = t1; end
       xtitle(t,d.xlabel,d.ylabel);
