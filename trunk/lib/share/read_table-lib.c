@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.25 2005-08-31 14:50:29 farhi Exp $
+* $Id: read_table-lib.c,v 1.26 2005-09-16 14:19:03 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.25  2005/08/31 14:50:29  farhi
+* Fixed bugs when handling vectors with swapped (i,j) indexes
+*
 * Revision 1.24  2005/07/25 14:55:08  farhi
 * DOC update:
 * checked all parameter [unit] + text to be OK
@@ -141,6 +144,7 @@
     struct stat mc_rt_stfile;
 
     if (!mc_rt_Table) return(-1);
+    Table_Init(mc_rt_Table, 0, 0);
     if (!mc_rt_File)  return(-1);
     if (strlen(mc_rt_File) == 0) return (-1);
     mc_rt_hfile = fopen(mc_rt_File, "r");
