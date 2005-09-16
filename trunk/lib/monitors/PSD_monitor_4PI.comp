@@ -10,14 +10,14 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
 * Spherical position-sensitive detector.
 *
 * %D
-* An (n times m) pixel spherical PSD monitor using a cylindrical projection. 
+* An (n times m) pixel spherical PSD monitor using a cylindrical projection.
 * Mostly for test and debugging purposes.
 *
 * Example: PSD_monitor_4PI(radius=0.1,
@@ -62,7 +62,7 @@ INITIALIZE
   int i,j;
 
   for (i=0; i<nx; i++)
-    for (j=0; j<ny; j++) 
+    for (j=0; j<ny; j++)
     {
       PSD_N[i][j] = 0;
       PSD_p[i][j] = 0;
@@ -73,7 +73,7 @@ TRACE
 %{
   double t0, t1, phi;
   int i,j;
-    
+
   if(sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius) && t1 > 0)
   {
     if(t0 < 0)
@@ -81,12 +81,12 @@ TRACE
     /* t0 is now time of intersection with the sphere. */
     PROP_DT(t0);
     phi = atan2(x,z);
-    i = floor(nx*(phi/(2*PI) + 0.5));
+    i = floor(nx*(phi/(2*PI)));
     if(i == nx)
       i--;                      /* Special case for phi = PI. */
     else if(i < 0)
       y = 0;
-    j = floor(ny*(y/(2*radius) + 0.5));
+    j = floor(ny*(y/(2*radius)));
     if(j == ny)
       j--;                      /* Special case for y = radius. */
     else if(j < 0)
