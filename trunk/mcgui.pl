@@ -1238,6 +1238,9 @@ sub setup_cmdwin {
                                -anchor => 'w',
                                -justify => 'left');
     $instr_lab->pack(-side => 'left');
+    my $instr_run = $f2->Button(-text => "Run",
+                                -command => sub { menu_run_simulation($w) });
+    $instr_run->pack(-side => "right", -padx => 1, -pady => 1);
     my $instr_but = $f2->Button(-text => "Edit/New",
                                 -command => \&menu_edit_current);
     $instr_but->pack(-side => "right", -padx => 1, -pady => 1);
