@@ -8,7 +8,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: October 26, 2000
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -16,8 +16,8 @@
 the axis vertical. The monitor covers the whole cylinder (360 degrees).
 *
 * %D
-* An (n times m) pixel PSD monitor with cylinder shape, 
-* vertical axis, centered at (0,0,0). 
+* An (n times m) pixel PSD monitor with cylinder shape,
+* vertical axis, centered at (0,0,0).
 *
 * Example: PSDcyl_monitor(nr=20, ny=20, filename="Output.cyl",
 *           height=0.2, radius=0.1)
@@ -44,7 +44,7 @@ the axis vertical. The monitor covers the whole cylinder (360 degrees).
 DEFINE COMPONENT PSDcyl_monitor
 DEFINITION PARAMETERS (nr, ny, filename)
 SETTING PARAMETERS (height, radius)
-OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2) 
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -57,7 +57,7 @@ INITIALIZE
     int i,j;
 
     for (i=0; i<nr; i++)
-     for (j=0; j<ny; j++) 
+     for (j=0; j<ny; j++)
      {
       PSD_N[i][j] = 0;
       PSD_p[i][j] = 0;
@@ -70,7 +70,7 @@ TRACE
     double t0,t1,phi;
 
     if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, height))
-     {      
+     {
       if(t0>0)
        {
          printf("FATAL ERROR: Did not come from within cylinder.\n");
@@ -88,8 +88,8 @@ TRACE
         if (fabs(y)<(height- 1e-10))
          {
           phi=atan2(x,z);
-          i=(int)floor((phi/(2*PI)+0.5)*nr);
-          j=(int)floor((y/height+0.5)*ny);
+          i=(int)floor((phi/(2*PI))*nr);
+          j=(int)floor((y/height)*ny);
           PSD_N[i][j]++;
           PSD_p[i][j] += p;
           PSD_p2[i][j] += p*p;
