@@ -684,10 +684,18 @@ sub get_comp_info {
         $typ   = "Instrument";
         foreach (split(",", $2)) {
             if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
-                push @spar, $1;
-                $d->{'parhelp'}{$1}{'default'} = $2;
+                my $p = $1;
+                my @p_splitted = split(" ", $p);
+                my $length = scalar @p_splitted;
+                my $p_last_word = $p_splitted[$length-1];
+                push @spar, $p_last_word;
+                $d->{'parhelp'}{$p_last_word}{'default'} = $2;
             } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
-                push @spar, $1;
+                my $p = $1;
+                my @p_splitted = split(" ", $p);
+                my $length = scalar @p_splitted;
+                my $p_last_word = $p_splitted[$length-1];
+                push @spar, $p_last_word;
             } else {
                 print STDERR "Warning: Unrecognized PARAMETER in instrument $cname: $1 from $s\n";
             }
@@ -699,10 +707,18 @@ sub get_comp_info {
         if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i && $typ ne "Instrument") {
             foreach (split(",", $1)) {
                 if(/^\s*([a-zA-Z0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
-                    push @dpar, $1;
-                    $d->{'parhelp'}{$1}{'default'} = $2;
+                    my $p = $1;
+                    my @p_splitted = split(" ", $p);
+                    my $length = scalar @p_splitted;
+                    my $p_last_word = $p_splitted[$length-1];
+                    push @dpar, $p_last_word;
+                    $d->{'parhelp'}{$p_last_word}{'default'} = $2;
                 } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
-                    push @dpar, $1;
+                    my $p = $1;
+                    my @p_splitted = split(" ", $p);
+                    my $length = scalar @p_splitted;
+                    my $p_last_word = $p_splitted[$length-1];
+                    push @dpar, $p_last_word;
                 } else {
                     print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname: $1 from $s\n";
                 }
@@ -711,10 +727,18 @@ sub get_comp_info {
         if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i && $typ ne "Instrument") {
             foreach (split(",", $1)) {
                 if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
-                    push @spar, $1;
-                    $d->{'parhelp'}{$1}{'default'} = $2;
+                    my $p = $1;
+                    my @p_splitted = split(" ", $p);
+                    my $length = scalar @p_splitted;
+                    my $p_last_word = $p_splitted[$length-1];
+                    push @spar, $p_last_word;
+                    $d->{'parhelp'}{$p_last_word}{'default'} = $2;
                 } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
-                    push @spar, $1;
+                    my $p = $1;
+                    my @p_splitted = split(" ", $p);
+                    my $length = scalar @p_splitted;
+                    my $p_last_word = $p_splitted[$length-1];
+                    push @spar, $p_last_word;
                 } else {
                     print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname: $1 from $s.\n";
                 }
