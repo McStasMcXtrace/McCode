@@ -45,8 +45,8 @@ BEGIN {
   # custom configuration (this script)
   END {
     if (-f $tmp_file) {
-          print "mcplot: Removing temporary $tmp_file (5 sec)\n";
-          sleep 5;
+          print "mcplot: Removing temporary $tmp_file (10 sec)\n";
+          sleep 10;
           unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!";
     }
   }
