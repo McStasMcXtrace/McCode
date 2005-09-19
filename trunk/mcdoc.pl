@@ -123,9 +123,9 @@ sub html_table_entry {
     print $f "<TD> ";
     print $f "<B>" if %{$d->{'parhelp'}};
     if ($d->{'type'} eq "Instrument") {
-      print $f "$d->{'site'} <A HREF=\"$bn.$d->{'ext'}\">$d->{'name'}</A> ($d->{'path'})";
+      print $f "$d->{'site'} <A HREF=\"$vn.html\">$d->{'name'}</A> ($d->{'path'})";
     } else {
-      print $f "<A HREF=\"$bn.$d->{'ext'}\">$d->{'name'}</A>";
+      print $f "<A HREF=\"$vn.html\">$d->{'name'}</A>";
     }
     print $f "</B>" if %{$d->{'parhelp'}};
     print $f "</TD>\n";
@@ -135,7 +135,7 @@ sub html_table_entry {
     print $f "<TD>$d->{'identification'}{'author'}</TD>\n";
 
     print $f "<TD>";
-    print $f "<A HREF=\"$vn.html\">More...</A>";
+    print $f "<A HREF=\"$bn.$d->{'ext'}\">$bn.$d->{'ext'}</A>";
     print $f "</TD>\n";
 
     print $f "<TD>$d->{'identification'}{'short'}</TD>\n";
@@ -353,7 +353,7 @@ $header
 <TD><B><I>Name</I></B></TD>
 <TD WIDTH="10%"><B><I>Origin</I></B></TD>
 <TD WIDTH="10%"><B><I>Author(s)</I></B></TD>
-<TD WIDTH="10%"><B><I>Help</I></B></TD>
+<TD><B><I>Source code</I></B></TD>
 <TD><B><I>Description</I></B></TD>
 </TR>
 END
