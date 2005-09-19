@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.31 2005-09-16 08:43:19 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.32 2005-09-19 15:13:53 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.31  2005/09/16 08:43:19  farhi
+* Removed floor+0.5 in Monitor_nD
+* Take care of ploting with bin centers in mcplot stuff (inline+matlab+scilab+octave...)
+*
 * Revision 1.30  2005/08/24 13:14:00  lieutenant
 * new option 'exclusive'
 *
@@ -403,9 +407,15 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE; mc_mn_lmin = 0; mc_mn_lmax = 0;
 
         if (!strcmp(mc_mn_token, "x"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_X; strcpy(mc_mn_Set_Vars_Coord_Label,"x [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"x"); mc_mn_lmin = mc_mn_Vars->mxmin; mc_mn_lmax = mc_mn_Vars->mxmax; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_X; strcpy(mc_mn_Set_Vars_Coord_Label,"x [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"x");
+          mc_mn_lmin = mc_mn_Vars->mxmin; mc_mn_lmax = mc_mn_Vars->mxmax;
+          mc_mn_Vars->Coord_Min[mc_mn_Vars->Coord_Number] = mc_mn_Vars->mxmin;
+          mc_mn_Vars->Coord_Max[mc_mn_Vars->Coord_Number] = mc_mn_Vars->mxmax;}
         if (!strcmp(mc_mn_token, "y"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_Y; strcpy(mc_mn_Set_Vars_Coord_Label,"y [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"y"); mc_mn_lmin = mc_mn_Vars->mymin; mc_mn_lmax = mc_mn_Vars->mymax; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_Y; strcpy(mc_mn_Set_Vars_Coord_Label,"y [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"y");
+          mc_mn_lmin = mc_mn_Vars->mymin; mc_mn_lmax = mc_mn_Vars->mymax;
+          mc_mn_Vars->Coord_Min[mc_mn_Vars->Coord_Number] = mc_mn_Vars->mymin;
+          mc_mn_Vars->Coord_Max[mc_mn_Vars->Coord_Number] = mc_mn_Vars->mymax;}
         if (!strcmp(mc_mn_token, "z"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_Z; strcpy(mc_mn_Set_Vars_Coord_Label,"z [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"z"); mc_mn_lmin = mc_mn_Vars->mzmin; mc_mn_lmax = mc_mn_Vars->mzmax; }
         if (!strcmp(mc_mn_token, "k") || !strcmp(mc_mn_token, "wavevector"))
