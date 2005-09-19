@@ -29,14 +29,17 @@
 * order scattering (order=1), you may restrict the vertical spreading of the
 * scattering area using d_phi parameter.
 *
+* If you use this component and produce valuable scientific results, please cite
+* authors with references bellow (in Links).
+*
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or a hollow cylinder/sphere.
 *   box/plate:       xwidth x yheight x zthick (thickness=0)
 *   hollow box/plate:xwidth x yheight x zthick and thickness>0
 *   cylinder:        radius_o x yheight (radius_i=0)
-*   hollow cylinder: radius_o and radius_i x yheight radius_i
+*   hollow cylinder: radius_o x yheight and radius_i>0 or thickness>0
 *   sphere:          radius_o (yheight=0 radius_i=0)
-*   hollow sphere:   radius_o and radius_i (yheight=0)
+*   hollow sphere:   radius_o and radius_i>0 or thickness>0 (yheight=0)
 *
 * <b>Concentric components:</b>
 * This component has the ability to contain other components when used in
@@ -77,7 +80,8 @@
 * ...
 * 0.000000            ... 3.860253
 *
-* See for instance file He4.sqw
+* See for instance file He4.sqw. Such files may be obtained from e.g. INX,
+* Nathan, Lamp and IDA softwares.
 *
 * <b>Examples:</b>
 * 1- Vanadium-like incoherent elastic scattering
@@ -89,7 +93,8 @@
 *     sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, T=10)
 *
 * %BUGS:
-* When used in concentric mode, multiple bouncing scattering (traversing the hollow part) is not taken into account.
+* When used in concentric mode, multiple bouncing scattering (traversing the hollow part)
+* is not taken into account.
 *
 * %VALIDATION
 * For Vanadium incoherent scattering mode, V_sample, Single_crystal and
@@ -141,7 +146,7 @@
 *         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
 * SCATTERED: order of multiple scattering
 *
-* %L
+* %Links
 * Hugouvieux V, Farhi E, Johnson MR, Virtual neutron scattering experiments, Physica B, 350 (2004) 151.
 * %L
 * Hugouvieux V, PhD, University of Montpellier II, France (2004).
@@ -728,7 +733,8 @@ INITIALIZE
   VarSqw.my_s    =(V_rho*100*(sigma_coh+sigma_inc));
 
   if ((sigma_coh || sigma_inc) && !T && VarSqw.Data_coh.intensity)
-    exit(printf("Isotropic_Sqw: %s: ERROR sample temperature is zero (T)\n",NAME_CURRENT_COMP));
+    exit(printf("Isotropic_Sqw: %s: sample temperature is zero (T).\n"
+                "Warning        Disabling detailed balance.\n",NAME_CURRENT_COMP));
 
   if (!sigma_coh && !sigma_inc) {
     printf("Isotropic_Sqw: %s: Scattering cross section is zero\n"
@@ -994,7 +1000,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
                "               for w=%g\n",
             NAME_CURRENT_COMP, omega);
           VarSqw.neutron_removed++;
-          ABSORB; /* should never occur */
+          ABSORB;
         }
 
         /* Search for length of final wave vector kf */
@@ -1031,6 +1037,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
         }
         NORM(u1x, u1y, u1z);
         NORM(u2x, u2y, u2z);
+
+        p *= kf/k/4/PI;
 
         break; /* exit for loop on success */
       } /* end for index_counter */
@@ -1109,7 +1117,7 @@ VarSqw.kf_y = V2K*vy;
 VarSqw.kf_z = V2K*vz;
 VarSqw.tf   = t;
 VarSqw.vf = v;
-VarSqw.ki = k;
+VarSqw.kf = k;
 
 if (SCATTERED) {
 
