@@ -12,7 +12,7 @@
 * Date: 01st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 *
 * Neutron parameters cross-correlation monitor.
 *
@@ -46,6 +46,7 @@
 *
 * %Link
 * <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
+* %L
 * <a href="Monitor_nD.html">Monitor_nD</a>
 *
 * %End
