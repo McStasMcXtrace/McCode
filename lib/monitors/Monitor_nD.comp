@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -154,7 +154,7 @@
 * 3) put just after the component where you want to monitor (to set the value)
 *      EXTEND
 *      %{ // attach a value to user1 in MyMonitor
-*        MONND_USER_VALUE(MyMonitor, 1, log(fabs(x*y+1))
+*        MONND_USER_VALUE(MyMonitor, 1, log(fabs(x*y+1)));
 *      %}
 *   This will set 'user1' (because of the '1', could be '2' as well) value.
 *   The value to store in user1 may be obtained from local component variables
@@ -175,9 +175,9 @@
 *
 * xwidth:  [m]  Width/diameter of detector (x). Default is 10 cm.
 * yheight: [m]  Height of detector (y). Default is 10 cm.
-* zthick:  [m]  Thichness of detector (z)
+* zthick:  [m]  Thichness of detector (z).
 * options: [str]  String that specifies the configuration of the monitor
-*                 The general syntax is "[x] options..." (see <b>Descr.</b>)
+*                 The general syntax is "[x] options..." (see <b>Descr.</b>).
 *
 * Optional input parameters (override xwidth yheight zthick):
 * xmin:   [m]    Lower x bound of opening
@@ -186,7 +186,7 @@
 * ymax:   [m]    Upper y bound of opening
 * zmin:   [m]    Lower z bound of opening
 * zmax:   [m]    Upper z bound of opening
-* filename:[str] Output file name (overrides file=XX option)
+* filename:[str] Output file name (overrides file=XX option).
 * bins:   [1]    Number of bins to force for all variables.
 *                Use 'bins' keyword in 'options' for heterogeneous bins
 * min:    [u]    Minimum range value to force for all variables
@@ -201,6 +201,7 @@
 *
 * %Link
 * <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
+* %L
 * <a href="PreMonitor_nD.html">PreMonitor_nD</a>
 *
 * %End
