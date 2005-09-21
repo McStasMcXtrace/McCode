@@ -203,7 +203,7 @@ else  % if 's' is a 'struct'
   for index=1:length(h)
     pos = get(h(index),'position');
     pos = pos.*[1 ratio 1 ratio];
-    pos(find(pos < 0)) = 0;
+    pos(find(pos <= 0)) = 1e-3;
     set(h(index),'position',pos);
   end
 
@@ -258,6 +258,7 @@ function win = mcplot_addmenu()
   hcolor = uimenu(h, 'Label', '&Colors');
   hsave  = uimenu(h, 'Label', '&Save');
   hedit  = uimenu(h, 'Label', '&Edit');
+  hdata  = uimenu(h, 'Label', '&Data','Tag','gcf_Data_menu');
   t = {'Save as &PNG', 'save_png', ...
     'Save as EPS (BW)', 'save_eps', ...
     'Save as &EPS (Color)', 'save_epsc', ...
@@ -605,11 +606,13 @@ function d=mcplot_plot(d,p)
       h=errorbar(d.x,d.data,d.errors);
       xlim([l(1) l(2)]);
     else
-      d.x=linspace(l(1),l(2),max(S));
+      if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1);
+      else d.stepx=0; end
+      d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));
       h=plot(d.x,d.data);
       xlim([l(1) l(2)]);
     end
-    set(h, 'UserData', d);
+    set(h, 'UserData', d,'Tag',[ 'mcplot_data_' d.filename ]);
     hm = uicontextmenu;
     uimenu(hm, 'Label',['Duplicate ' d.filename], 'Callback', ...
       'mcplot(''duplicate'', ''action'', gco);');
@@ -633,6 +636,11 @@ function d=mcplot_plot(d,p)
     % can break in certain setups...
     for j=1:length(h)
       set(get(h(j),'parent'), 'UIContextMenu', hm, 'userdata',get(h(j),'userdata'));
+    end
+    % add data set to mcstas/Data menu
+    hdata = findobj(gcf,'Tag','gcf_Data_menu');
+    if ~isempty(hdata)
+      uimenu(hdata,'Label',d.filename,'Callback',[ 'h=findobj(''Tag'',''mcplot_data_' d.filename '''); if ~isempty(h), mcplot(''duplicate'', ''action'',h); end' ]);
     end
   end
   if p == 2, t = t1; end
