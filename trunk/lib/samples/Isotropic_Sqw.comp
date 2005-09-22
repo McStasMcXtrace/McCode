@@ -1070,7 +1070,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         } else {
           theta=theta-0.5*d_phi;
         }
-        p *= d_phi/PI;
+        p *= sin(d_phi/2);
       }
       else
         theta = PI*randpm1();
