@@ -730,9 +730,9 @@ function d=mcplot_plot(d,p)
       if fz>0,fz=round(log10(fz)); z=z/10^fz; t1=t1+' [*10^'+string(fz)+']'; end
       jet();
       plot3d1(x,y,z',90,0,xlab+'@'+ylab+'@'+d.zlabel,[-1,2,4]);
-      if p == 2, t = t1; end
+      if p == 2, t = d.filename; end
       xtitle(t);
-    elseif length(strindex(d.type,'1d'))
+    elseif length(strindex(d.type,'1d')) & length(find(getfield(1,d) == 'errors'))
       z = d.data; e = d.errors;
       if logscale == 1 then
         minz=0;
@@ -750,7 +750,7 @@ function d=mcplot_plot(d,p)
       else d.stepx=0; end
       d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));
       mcplot_errorbar(d.x,z,e);
-      if p == 2, t = t1; end
+      if p == 2, t = d.filename; end
       xtitle(t,d.xlabel,d.ylabel);
     else
       z = d.data;
@@ -768,7 +768,7 @@ function d=mcplot_plot(d,p)
       else d.stepx=0; end
       d.x=linspace(l(1)-d.stepx/2,l(2)+d.stepx/2,max(S));
       plot2d(d.x,z);
-      if p == 2, t = t1; end
+      if p == 2, t = d.filename; end
       xtitle(t,d.xlabel,d.ylabel);
     end
   end

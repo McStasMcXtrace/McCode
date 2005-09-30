@@ -599,7 +599,7 @@ function d=mcplot_plot(d,p)
       h=surface(d.x,d.y,d.data);
       xlim([l(1) l(2)]); ylim([l(3) l(4)]);
       shading flat;
-    elseif ~isempty(findstr(d.type,'1d'))
+    elseif ~isempty(findstr(d.type,'1d')) & isfield(d, 'errors')
       if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1);
       else d.stepx=0; end
       d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));
@@ -612,6 +612,7 @@ function d=mcplot_plot(d,p)
       h=plot(d.x,d.data);
       xlim([l(1) l(2)]);
     end
+    d.title = t;
     set(h, 'UserData', d,'Tag',[ 'mcplot_data_' d.filename ]);
     hm = uicontextmenu;
     uimenu(hm, 'Label',['Duplicate ' d.filename], 'Callback', ...
@@ -626,6 +627,7 @@ function d=mcplot_plot(d,p)
         uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.5);');
     end
     uimenu(hm, 'Label',['Export into mc_' d.filename ],'Callback', [ 'evalin(''base'',''mc_' d.filename ' = get(gco,''''userdata''''); disp([''''Exported data into variable mc_' d.filename ''''']);'');'])
+    uimenu(hm, 'Label',['Properties of ' d.filename ],'Callback', [ 'h=get(gco,''userdata''); msgbox(h.title,h.title(1,:),''help'');' ])
     fud = get(gcf,'UserData');
     if isfield(fud,'superdata')
         uimenu(hm,'Separator','on','Label','View scan step...','callback',['mcplot(''scanstep'',''action'', gcf);']);
@@ -643,7 +645,7 @@ function d=mcplot_plot(d,p)
       uimenu(hdata,'Label',d.filename,'Callback',[ 'h=findobj(''Tag'',''mcplot_data_' d.filename '''); if ~isempty(h), mcplot(''duplicate'', ''action'',h); end' ]);
     end
   end
-  if p == 2, t = t1; end
+  if p == 2, t = d.filename; end
   xlabel(d.xlabel); ylabel(d.ylabel); h=title(t); set(h,'interpreter','none');
   if p==1, set(gca,'position',[.18,.18,.7,.65]);  end
   set(gcf,'name',t1);grid on;

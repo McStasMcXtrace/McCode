@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions.
@@ -23,9 +23,14 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.16 2005-07-25 14:55:08 farhi Exp $
+* $Id: read_table-lib.h,v 1.17 2005-09-30 14:53:04 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.16  2005/07/25 14:55:08  farhi
+* DOC update:
+* checked all parameter [unit] + text to be OK
+* set all versions to CVS Revision
+*
 * Revision 1.15  2005/07/20 13:08:43  farhi
 * Changed Table_Init calling sequence (overrides Table_Alloc)
 *
@@ -96,7 +101,7 @@
 
   typedef struct struct_table
   {
-    char    filename[128];
+    char    filename[256];
     long    filesize;
     char   *header;  /* text header, e.g. comments */
     double *data;    /* vector { x[0], y[0], ... x[n-1], y[n-1]... } */
