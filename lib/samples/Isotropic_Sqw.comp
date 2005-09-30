@@ -64,7 +64,7 @@
 * blocks, defining q axis values (vector), then energy axis values (vector),
 * then a matrix with one line per q axis value, containing Sqw values for
 * each energy axis value. Comments (starting with '#') and non numerical lines
-* are ignored and used to separate blocks.
+* are ignored and used to separate blocks. Sampling must be regular.
 *
 * Example:
 * # q axis values
@@ -141,7 +141,7 @@
 * VarSqw : internal structure containing many members/info
 * VarSqw.dq wavevector transfert [Angs-1]
 * VarSqw.dw energy transfert [Angs-1]
-* VarSqw.type interaction type of last event
+* VarSqw.type interaction type of first event
 *         'c' (coherent),  't' (transmitted)
 *         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
 * SCATTERED: order of multiple scattering
@@ -165,7 +165,7 @@ DEFINE COMPONENT Isotropic_Sqw
     xwidth=0, yheight=0, zthick=0,
     qmin=0, qmax=0, wmin=0, wmax=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
-    V_rho=0.072, sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0)
+    V_rho=0.072, sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, save_files=0)
   OUTPUT PARAMETERS (VarSqw)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -198,11 +198,12 @@ struct Sqw_Q_struct
 
 struct Sqw_Data_struct /* contains normalized Sqw data for probabilities */
 {
-  struct Sqw_D_struct  *DOS;           /* density of states */
-  struct Sqw_Q_struct **Q_proba_per_w; /* P(Q|w)=probability of each Q with w */
+  struct Sqw_D_struct  *DOS;           /* P(w)  = density of states */
+  struct Sqw_Q_struct **Q_proba_per_w; /* P(Q|w)= probability of each Q with w */
 
   long  *DOS_lookup;
   long **QW_lookup;
+  double*Sq;  /* S(q) = \int_w S(q,w) */
   long   nb_q;
   long   nb_w; /* length of q and w vectors/axes */
   double q_min, q_max;
@@ -260,6 +261,7 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->Q_proba_per_w=NULL;
   Sqw_Data->DOS_lookup   =NULL;
   Sqw_Data->QW_lookup    =NULL;
+  Sqw_Data->Sq           =NULL;
 }
 
 /*****************************************************************************
@@ -337,7 +339,6 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* build the 'total' = Sqw table in restricted range */
   Table_Init(&Sqw_restrict, Sqw_Data->nb_q, Sqw_Data->nb_w);
   Sqw_restrict.block_number = 1;
-  Table_Info(Sqw_restrict);
 
   if (!Sqw_restrict.data || !Sqw_restrict.rows*Sqw_restrict.columns) {
     printf("Isotropic_Sqw: %s: Cannot allocate Sqw_restrict Table (%lix%li).\n"
@@ -350,7 +351,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   sum = val = 0;
   for (i=0; i < (Sqw_Data->nb_q) ; i++) {
     double sqw=0;
-    for (j=0; j < (Sqw_Data->nb_w) ; j++) {
+      for (j=0; j < (Sqw_Data->nb_w) ; j++) {
       flag = 1;
       if (nblocks) sqw = Table_Index(Table_Array[2], i, j);
 
@@ -422,6 +423,24 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated normalized DOS using total intensity %g size=%i\n",
       Sqw->compname, val, Sqw_Data->nb_w);
+
+  /* setup S(q) */
+  Sqw_Data->Sq =
+    (double *)calloc(Sqw_Data->nb_q, sizeof(double));
+  if (!Sqw_Data->Sq) {
+    printf("Isotropic_Sqw: %s: Cannot allocate S(Q) array (%li bytes).\n"
+           "ERROR          Exiting.\n",
+      Sqw->compname, Sqw_Data->nb_q*sizeof(double));
+    return(NULL);
+  }
+  for (i=0; i < (Sqw_Data->nb_q) ; i++) {
+    Sqw_Data->Sq[i] = 0;
+    for (j=0; j < (Sqw_Data->nb_w) ; j++)
+      Sqw_Data->Sq[i] += Table_Index(Sqw_restrict, i, j);
+  }
+  if (Sqw->verbose_output > 1)
+    printf("Isotropic_Sqw: %s: Generated S(Q), length %i\n",
+      Sqw->compname, Sqw_Data->nb_q);
 
   /* set up Q probability table per w bin */
   /* uses:  Sqw_restrict */
@@ -898,7 +917,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
       p*=ws; /* Update weight ; account for absorption and scatter */
     } else {
       flag = 1; /* Transmission : no interaction neutron/sample */
-      VarSqw.type = 't';
+      if (!VarSqw.type) VarSqw.type = 't';
     }
 
     if (flag) { /* propagate to exit of sample and finish */
@@ -949,21 +968,21 @@ do { /* Main interaction loop. Ends with intersect=0 */
         vx = u1x; vy = u1y; vz = u1z;
         vf = v; kf = k;
         flag = 0;
-        VarSqw.type = 'v';
+        if (!VarSqw.type) VarSqw.type = 'v';
         SCATTER;
       } else {
         /* CASE 1b: incoherent Sqw from file */
         if (VarSqw.Data_inc.intensity)
           Data_sqw = VarSqw.Data_inc;
         else flag=0;
-        VarSqw.type = 'i';
+        if (!VarSqw.type) VarSqw.type = 'i';
       }
     } else if (VarSqw.s_coh && tmp > VarSqw.s_inc) {
       if (VarSqw.Data_coh.intensity) {
         /* CASE2: coherent case */
         Data_sqw = VarSqw.Data_coh;
       } else flag=0;
-      VarSqw.type = 'c';
+      if (!VarSqw.type) VarSqw.type = 'c';
     }
 
     if (flag) { /* not true when V-like scattering */
@@ -1009,14 +1028,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (!Sqw_search_root(1, 0, -k*k + VarSqw.sqSE2K*omega, &kf1, &kf2)) {
           if (VarSqw.verbose_output >= 3)
             printf("Isotropic_Sqw: %s: Warning: imagimary root for\n"
-                 "               w=%g q=%g\n",
+                 "               w=%g q=%g (triangle canm not close)\n",
             NAME_CURRENT_COMP, omega, q);
           VarSqw.neutron_removed++;
           continue; /* all roots are imaginary */
         }
 
         /* MC choice: between kf1 and kf2 */
-        kf = (rand01() < 0.5 ? kf1 : kf2);
+        kf = fabs(rand01() < 0.5 ? kf1 : kf2);
         vf = K2V*kf;
 
         /* Search of the direction of kf such that : q = ki - kf */
@@ -1038,7 +1057,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         NORM(u1x, u1y, u1z);
         NORM(u2x, u2y, u2z);
 
-        p *= kf/k/4/PI;
+        p *= Data_sqw.Sq[index_q]*kf/k/4/PI;
 
         break; /* exit for loop on success */
       } /* end for index_counter */
@@ -1047,8 +1066,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
         intersect=0; /* Could not scatter: finish multiple scattering loop */
         if (VarSqw.verbose_output >= 2)
           printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
-               "               last try (%i): w=%g q=%g R=%g\n",
-          NAME_CURRENT_COMP, VarSqw.maxloop, omega, q, R);
+               "               last try (%i): type=%c w=%g q=%g R=%g\n",
+          NAME_CURRENT_COMP, VarSqw.maxloop, (VarSqw.type ? VarSqw.type : '-'), omega, q, R);
         VarSqw.neutron_removed++;
         if (order && SCATTERED != order) ABSORB;
         break;       /* finish multiple scattering loop */
@@ -1133,25 +1152,83 @@ if (SCATTERED) {
 FINALLY
 %{
   struct Sqw_Data_struct Data_sqw;
+  char tmp[1024];
 
   /* free memory: coh */
   Data_sqw = VarSqw.Data_coh;
+  if (save_files && Data_sqw.intensity) {
+    double DOS[Data_sqw.nb_w];
+    double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
+    long   i,j;
+
+    if (VarSqw.verbose_output >= 1)
+          printf("Isotropic_Sqw: %s: Writting coherent S(q), DOS and S(q,w) files as monitors.\n", NAME_CURRENT_COMP);
+
+    for (j=0; j < (Data_sqw.nb_w) ; j++) {
+      DOS[j] = Data_sqw.DOS[j].I;
+      for (i=0; i < (Data_sqw.nb_q) ; i++)
+        SQW[i][j] = Data_sqw.Q_proba_per_w[j][i].proba;
+    }
+    sprintf(tmp, "S(q) from %s (coherent)", Data_sqw.filename);
+    DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]","S(q)","q",
+      Data_sqw.q_min, Data_sqw.q_max,
+      Data_sqw.nb_q,NULL,Data_sqw.Sq,NULL,NAME_CURRENT_COMP "_coh.sq");
+    sprintf(tmp, "Normalized g(w) from %s (coherent)", Data_sqw.filename);
+    DETECTOR_OUT_1D(tmp,"Energy [meV]","g(w)","w",
+      Data_sqw.w_min, Data_sqw.w_max,
+      Data_sqw.nb_w,NULL,DOS,NULL,NAME_CURRENT_COMP "_coh.dos");
+    sprintf(tmp, "Normalized S(q,w) from %s (coherent)", Data_sqw.filename);
+    DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
+      Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
+      Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,NAME_CURRENT_COMP "_coh.sqw");
+  }
   if (Data_sqw.DOS)           free(Data_sqw.DOS);
   if (Data_sqw.Q_proba_per_w) free(Data_sqw.Q_proba_per_w);
   if (Data_sqw.DOS_lookup)    free(Data_sqw.DOS_lookup);
   if (Data_sqw.QW_lookup)     free(Data_sqw.QW_lookup);
+  if (Data_sqw.Sq)            free(Data_sqw.Sq);
+
 
   Data_sqw = VarSqw.Data_inc;
+  if (save_files && Data_sqw.intensity) {
+    double DOS[Data_sqw.nb_w];
+    double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
+    long   i,j;
+
+    if (VarSqw.verbose_output >= 1)
+          printf("Isotropic_Sqw: %s: Writting incoherent S(q), DOS and S(q,w) files as monitors.\n", NAME_CURRENT_COMP);
+
+    for (j=0; j < (Data_sqw.nb_w) ; j++) {
+      DOS[j] = Data_sqw.DOS[j].I;
+      for (i=0; i < (Data_sqw.nb_q) ; i++)
+        SQW[i][j] = Data_sqw.Q_proba_per_w[j][i].proba;
+    }
+    sprintf(tmp, "S(q) from %s (incoherent)", Data_sqw.filename);
+    DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]","S(q)","q",
+      Data_sqw.q_min, Data_sqw.q_max,
+      Data_sqw.nb_q,NULL,Data_sqw.Sq,NULL,NAME_CURRENT_COMP "_inc.sq");
+    sprintf(tmp, "Normalized g(w) from %s (incoherent)", Data_sqw.filename);
+    DETECTOR_OUT_1D(tmp,"Energy [meV]","g(w)","w",
+      Data_sqw.w_min, Data_sqw.w_max,
+      Data_sqw.nb_w,NULL,DOS,NULL,NAME_CURRENT_COMP "_inc.dos");
+    sprintf(tmp, "Normalized S(q,w) from %s (incoherent)", Data_sqw.filename);
+    DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
+      Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
+      Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,NAME_CURRENT_COMP "_inc.sqw");
+  }
+
   if (Data_sqw.DOS)           free(Data_sqw.DOS);
   if (Data_sqw.Q_proba_per_w) free(Data_sqw.Q_proba_per_w);
   if (Data_sqw.DOS_lookup)    free(Data_sqw.DOS_lookup);
   if (Data_sqw.QW_lookup)     free(Data_sqw.QW_lookup);
+  if (Data_sqw.Sq)            free(Data_sqw.Sq);
 
   if (VarSqw.neutron_removed)
     printf("Isotropic_Sqw: %s: %i neutron events that should have scattered\n"
            "               were removed because scattering conditions\n"
            "Warning        could not be satisfied after %i tries.\n",
           NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.maxloop);
+
 
 /* end FINALLY */
 %}
