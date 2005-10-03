@@ -23,6 +23,7 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 use FileHandle;
+use File::Basename;
 
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
@@ -153,6 +154,13 @@ if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
 if ($file =~ m'\.sci$' || $file =~ m'\.sce$') {$plotter = "Scilab"; }
 if ($file =~ m'\.sim$')  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
+
+# Chdir to directory containing base filename
+my ($basename,$dirname)=fileparse($file);
+$file = $basename;
+if (-d $dirname) {
+    chdir $dirname;
+}
 
 # Added E. Farhi, March 2003. plotter (pgplot, scilab, matlab, html) -> $file
 if ($plotter =~ /Scilab/i) {
