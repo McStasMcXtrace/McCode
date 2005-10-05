@@ -6,7 +6,7 @@
 * Component: Isotropic_Sqw
 *
 * %I
-* Written by: Virginie Hugouvieux
+* Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
 * Version:
 * Origin:  ILL
@@ -136,6 +136,7 @@
 *                   It should be then duplicated after the inside part.
 *                   See description for an example.
 * thickness:    [m] Thickness of hollow sample (overloads radius_i)
+* save_sqw:     [1] When set to 1, saves S(q), DOS and S(q,w) as monitors.
 *
 * OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
@@ -165,7 +166,7 @@ DEFINE COMPONENT Isotropic_Sqw
     xwidth=0, yheight=0, zthick=0,
     qmin=0, qmax=0, wmin=0, wmax=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
-    V_rho=0.072, sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, save_files=0)
+    V_rho=0.072, sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, save_sqw=0)
   OUTPUT PARAMETERS (VarSqw)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -421,8 +422,8 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (j) Sqw_Data->DOS[j].cumul_I += Sqw_Data->DOS[j-1].cumul_I;
   }
   if (Sqw->verbose_output > 1)
-    printf("Isotropic_Sqw: %s: Generated normalized DOS using total intensity %g size=%i\n",
-      Sqw->compname, val, Sqw_Data->nb_w);
+    printf("Isotropic_Sqw: %s: Generated normalized DOS[%i] using total intensity=%g\n",
+      Sqw->compname, Sqw_Data->nb_w, val);
 
   /* setup S(q) */
   Sqw_Data->Sq =
@@ -438,8 +439,10 @@ struct Sqw_Data_struct *Sqw_readfile(
     for (j=0; j < (Sqw_Data->nb_w) ; j++)
       Sqw_Data->Sq[i] += Table_Index(Sqw_restrict, i, j);
   }
+  /* normalize to unity */
+  for (i=0; i < (Sqw_Data->nb_q) ; Sqw_Data->Sq[i++] /= val);
   if (Sqw->verbose_output > 1)
-    printf("Isotropic_Sqw: %s: Generated S(Q), length %i\n",
+    printf("Isotropic_Sqw: %s: Generated S(Q)[%i]\n",
       Sqw->compname, Sqw_Data->nb_q);
 
   /* set up Q probability table per w bin */
@@ -1151,77 +1154,57 @@ if (SCATTERED) {
 
 FINALLY
 %{
-  struct Sqw_Data_struct Data_sqw;
-  char tmp[1024];
+  int  k;
 
-  /* free memory: coh */
-  Data_sqw = VarSqw.Data_coh;
-  if (save_files && Data_sqw.intensity) {
-    double DOS[Data_sqw.nb_w];
-    double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
-    long   i,j;
+  for (k=0; k < 2; k++) {
+    struct Sqw_Data_struct Data_sqw;
+    char tmp[1024];
+    char type_ci[64];
+    char ext[20];
+    char filename[256];
 
-    if (VarSqw.verbose_output >= 1)
-          printf("Isotropic_Sqw: %s: Writting coherent S(q), DOS and S(q,w) files as monitors.\n", NAME_CURRENT_COMP);
+    strcpy(type_ci, (k == 0 ? "coherent" : "incoherent"));
+    strcpy(ext, (k == 0 ? "coh" : "inc"));
+    Data_sqw =  (k == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
 
-    for (j=0; j < (Data_sqw.nb_w) ; j++) {
-      DOS[j] = Data_sqw.DOS[j].I;
-      for (i=0; i < (Data_sqw.nb_q) ; i++)
-        SQW[i][j] = Data_sqw.Q_proba_per_w[j][i].proba;
+    if (save_sqw && Data_sqw.intensity) {
+      double DOS[Data_sqw.nb_w];
+      double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
+      long   i,j;
+
+      if (VarSqw.verbose_output >= 1)
+            printf("Isotropic_Sqw: %s: Writting %s S(q), DOS and S(q,w) files as monitors.\n", NAME_CURRENT_COMP, type_ci);
+
+      for (j=0; j < (Data_sqw.nb_w) ; j++) {
+        DOS[j] = Data_sqw.DOS[j].I;
+        for (i=0; i < (Data_sqw.nb_q) ; i++)
+          SQW[i][j] = Data_sqw.Q_proba_per_w[j][i].proba;
+      }
+      sprintf(tmp, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
+      sprintf(filename, "%s_%s.sq", NAME_CURRENT_COMP, ext);
+      DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]","S(q)","q",
+        Data_sqw.q_min, Data_sqw.q_max,
+        Data_sqw.nb_q,NULL,Data_sqw.Sq,NULL,
+        filename);
+      sprintf(tmp, "Normalized DOS from %s (%s)", Data_sqw.filename, type_ci);
+      sprintf(filename, "%s_%s.dos", NAME_CURRENT_COMP, ext);
+      DETECTOR_OUT_1D(tmp,"Energy [meV]","g(w)","w",
+        Data_sqw.w_min, Data_sqw.w_max,
+        Data_sqw.nb_w,NULL,DOS,NULL,
+        filename);
+      sprintf(tmp, "Normalized S(q,w) from %s (%s)", Data_sqw.filename, type_ci);
+      sprintf(filename, "%s_%s.sqw", NAME_CURRENT_COMP, ext);
+      DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
+        Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
+        Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,
+        filename);
     }
-    sprintf(tmp, "S(q) from %s (coherent)", Data_sqw.filename);
-    DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]","S(q)","q",
-      Data_sqw.q_min, Data_sqw.q_max,
-      Data_sqw.nb_q,NULL,Data_sqw.Sq,NULL,NAME_CURRENT_COMP "_coh.sq");
-    sprintf(tmp, "Normalized g(w) from %s (coherent)", Data_sqw.filename);
-    DETECTOR_OUT_1D(tmp,"Energy [meV]","g(w)","w",
-      Data_sqw.w_min, Data_sqw.w_max,
-      Data_sqw.nb_w,NULL,DOS,NULL,NAME_CURRENT_COMP "_coh.dos");
-    sprintf(tmp, "Normalized S(q,w) from %s (coherent)", Data_sqw.filename);
-    DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
-      Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
-      Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,NAME_CURRENT_COMP "_coh.sqw");
+    if (Data_sqw.DOS)           free(Data_sqw.DOS);
+    if (Data_sqw.Q_proba_per_w) free(Data_sqw.Q_proba_per_w);
+    if (Data_sqw.DOS_lookup)    free(Data_sqw.DOS_lookup);
+    if (Data_sqw.QW_lookup)     free(Data_sqw.QW_lookup);
+    if (Data_sqw.Sq)            free(Data_sqw.Sq);
   }
-  if (Data_sqw.DOS)           free(Data_sqw.DOS);
-  if (Data_sqw.Q_proba_per_w) free(Data_sqw.Q_proba_per_w);
-  if (Data_sqw.DOS_lookup)    free(Data_sqw.DOS_lookup);
-  if (Data_sqw.QW_lookup)     free(Data_sqw.QW_lookup);
-  if (Data_sqw.Sq)            free(Data_sqw.Sq);
-
-
-  Data_sqw = VarSqw.Data_inc;
-  if (save_files && Data_sqw.intensity) {
-    double DOS[Data_sqw.nb_w];
-    double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
-    long   i,j;
-
-    if (VarSqw.verbose_output >= 1)
-          printf("Isotropic_Sqw: %s: Writting incoherent S(q), DOS and S(q,w) files as monitors.\n", NAME_CURRENT_COMP);
-
-    for (j=0; j < (Data_sqw.nb_w) ; j++) {
-      DOS[j] = Data_sqw.DOS[j].I;
-      for (i=0; i < (Data_sqw.nb_q) ; i++)
-        SQW[i][j] = Data_sqw.Q_proba_per_w[j][i].proba;
-    }
-    sprintf(tmp, "S(q) from %s (incoherent)", Data_sqw.filename);
-    DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]","S(q)","q",
-      Data_sqw.q_min, Data_sqw.q_max,
-      Data_sqw.nb_q,NULL,Data_sqw.Sq,NULL,NAME_CURRENT_COMP "_inc.sq");
-    sprintf(tmp, "Normalized g(w) from %s (incoherent)", Data_sqw.filename);
-    DETECTOR_OUT_1D(tmp,"Energy [meV]","g(w)","w",
-      Data_sqw.w_min, Data_sqw.w_max,
-      Data_sqw.nb_w,NULL,DOS,NULL,NAME_CURRENT_COMP "_inc.dos");
-    sprintf(tmp, "Normalized S(q,w) from %s (incoherent)", Data_sqw.filename);
-    DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
-      Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
-      Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,NAME_CURRENT_COMP "_inc.sqw");
-  }
-
-  if (Data_sqw.DOS)           free(Data_sqw.DOS);
-  if (Data_sqw.Q_proba_per_w) free(Data_sqw.Q_proba_per_w);
-  if (Data_sqw.DOS_lookup)    free(Data_sqw.DOS_lookup);
-  if (Data_sqw.QW_lookup)     free(Data_sqw.QW_lookup);
-  if (Data_sqw.Sq)            free(Data_sqw.Sq);
 
   if (VarSqw.neutron_removed)
     printf("Isotropic_Sqw: %s: %i neutron events that should have scattered\n"
