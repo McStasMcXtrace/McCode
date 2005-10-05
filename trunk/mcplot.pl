@@ -111,7 +111,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-      print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
+      print "DOC:      Please visit http://www.mcstas.org\n";
       exit;
   } elsif(/^-([a-zA-Z0-9_]+)$/) {
       $passed_arg_str_quit .= "-$1 ";

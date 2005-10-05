@@ -70,7 +70,7 @@ sub make_instr_file {
 DEFINE INSTRUMENT McStas_$comp_name()
 /*
  * This file has been automatically generated using the mcstas2vitess tool.
- * See http://mcstas.risoe.dk
+ * See http://www.mcstas.org
  * Component $comp_name converted into an instrument with Vitess I/O functions
  */
 DECLARE
@@ -203,7 +203,7 @@ if(@ARGV != 1) {
     print STDERR "       a Vitess module. Component string parameters should be declared\n";
     print STDERR "       as 'char*' setting parameters. Default values are allowed.\n";
     print STDERR "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-    print STDERR "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
+    print STDERR "DOC:      Please visit http://www.mcstas.org\n";
     exit 1;
 }
 
@@ -222,10 +222,10 @@ my $VIF = new FileHandle;
 my $vifname = "$compname.vif";
 if(open($VIF, $vifname)) {
     while(<$VIF>) {
-        if(/^\s*([a-zA-ZæøåÆØÅ0-9_]+)\s+-([a-zA-Z0-9])\s+(string|double)\s*$/) {
+        if(/^\s*([a-zA-Zï¿½ï¿½ï¿½0-9_]+)\s+-([a-zA-Z0-9])\s+(string|double)\s*$/) {
             $vif{$1} = [$2, $3];
             $vifletters{$2} = $1;
-        } elsif(/^\s*([a-zA-ZæøåÆØÅ0-9_]+)\s+-([a-zA-Z0-9])\s*$/) {
+        } elsif(/^\s*([a-zA-Zï¿½ï¿½ï¿½0-9_]+)\s+-([a-zA-Z0-9])\s*$/) {
             $vif{$1} = [$2, 'double'];
             $vifletters{$2} = $1;
         } else {
@@ -257,7 +257,7 @@ for $p (@{$data->{'inputpar'}}) {
         } while($let && $vifletters{$let});
         die "Too many component parameters!" unless $let;
     }
-    if($p =~ /(char\s*\*|string)\s+([a-zA-ZæøåÆØÅ0-9_]+)/i)
+    if($p =~ /(char\s*\*|string)\s+([a-zA-Zï¿½ï¿½ï¿½0-9_]+)/i)
       { $typ = 'string'; $p=$2; }
     $typ = 'double' unless $typ;
     push @param, [$p, $let, $typ];
