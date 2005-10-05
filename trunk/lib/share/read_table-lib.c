@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.26 2005-09-16 14:19:03 farhi Exp $
+* $Id: read_table-lib.c,v 1.27 2005-10-05 08:50:53 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.26  2005/09/16 14:19:03  farhi
+* Correct bug #56: SEGV when opening a non existent file with read-table. Was reported on usage of PowderN
+*
 * Revision 1.25  2005/08/31 14:50:29  farhi
 * Fixed bugs when handling vectors with swapped (i,j) indexes
 *
@@ -324,11 +327,11 @@
     mc_rt_Header[0] = '\0';
 
     do { /* while (!mc_rt_flag_End_row_loop) */
-      char  mc_rt_line[4096];
+      char  mc_rt_line[64*1024];
       long  mc_rt_back_pos=0;   /* ftell start of line */
 
       mc_rt_back_pos = ftell(mc_rt_hfile);
-      if (fgets(mc_rt_line, 4096, mc_rt_hfile) != NULL) { /* analyse line */
+      if (fgets(mc_rt_line, 64*1024, mc_rt_hfile) != NULL) { /* analyse line */
         int mc_rt_i=0;
         char  mc_rt_flag_Store_into_header=0;
         /* first skip blank and tabulation characters */
