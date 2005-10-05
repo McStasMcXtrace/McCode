@@ -120,7 +120,7 @@ sub read_mcstas_res {
     $gqz = int(2.3548/sqrt($res_mat->at(2,2))*1e4)/1e4;
     $gen = int(2.3548/sqrt($res_mat->at(3,3))*1e4)/1e4;
     print "[$gqx $gqy $gqz $gen]\n";
-    
+
     return($qx,$qy,$qz,$w,$p,$C_t,$res_mat,$size);
 }
 
@@ -130,10 +130,10 @@ sub plot_mcstas_res {
     if (defined(&dev)) { $dev = dev "$device",4,2; }
     else { $dev = pgopen("$device"); pgsubp(4,2); }
     die "DEV/PGOPEN $device failed!" unless $dev > 0;
-    
+
     pgsch(2.1);
     pgsci(1);
-    
+
     # Make a 3d visualization of the resolution elipsoid. Use MC
     # choice to eliminate the weights.
     $r = random $size;
@@ -144,25 +144,25 @@ sub plot_mcstas_res {
     $npts = $w_mc->nelem;
     $R0 = 1;
     $NP = $res_mat;
-    
-    # plot 2D histograms, and add the gaussian ellipsoid on top of each 
+
+    # plot 2D histograms, and add the gaussian ellipsoid on top of each
     pgpanl(1,1);
     q_hist2($qx_mc, $w_mc, "Q\\dx\\u [\\A\\u-1\\d]","\\gw [meV]",50,0);
     mcs_proj($R0,$NP,1, $qx_mc->sum/$npts, $w_mc->sum/$npts, pdl([0,1,3]),pdl([0,3]));
-             
+
     pgpanl(2,1);
     q_hist2($qy_mc, $w_mc, "Q\\dy\\u [\\A\\u-1\\d]","\\gw [meV]",50,0);
     mcs_proj($R0,$NP,0, $qy_mc->sum/$npts, $w_mc->sum/$npts, pdl([0,1,3]),pdl([1,3]));
-    
+
     pgpanl(3,1);
     q_hist2($qz_mc, $w_mc, "Q\\dz\\u [\\A\\u-1\\d]","\\gw [meV]",50,0);
     mcs_proj($R0,$NP,0, $qz_mc->sum/$npts, $w_mc->sum/$npts, pdl([0,2,3]),pdl([2,3]));
-    
+
     pgpanl(4,1);
     q_hist2($qx_mc, $qy_mc, "Q\\dx\\u [\\A\\u-1\\d]","Q\\dy\\u [\\A\\u-1\\d]",50,1);
     mcs_proj($R0,$NP,2, $qx_mc->sum/$npts, $qy_mc->sum/$npts,pdl([0,1,3]),pdl([0,1]));
 
-    
+
     pgpanl(1,2);
     my $offset=-1;
     pgmtxt("t",$offset-0*1.2,.0,0.0,"Bragg (Gaussian) Half Widths");
@@ -174,7 +174,7 @@ sub plot_mcstas_res {
            int(2.3548/sqrt($res_mat->at(2,2))*1e4)/1e4 . " \\A\\u-1\\d");
     pgmtxt("t",$offset-4*1.2,0.2,0.0,"\\gD\\gw = " .
            int(2.3548/sqrt($res_mat->at(3,3))*1e4)/1e4 . " meV");
-    
+
     pgmtxt("t",$offset-6*1.2,0.0,0.0,"Resolution matrix [Q\\dx\\u Q\\dy\\u Q\\dz\\u \\gw]:");
     $pos = matout($offset-7*1.2, $res_mat);
     pgmtxt("t",$pos+$offset-0*1.2,.0,0.0,"Covariance matrix [Q\\dx\\u Q\\dy\\u Q\\dz\\u \\gw]:");
@@ -182,20 +182,20 @@ sub plot_mcstas_res {
 
     pgpanl(2,2);
     pgmtxt("t",$offset-0*1.2,0.0,0.0,"File: $filename");
-    my $time=gmtime; 
+    my $time=gmtime;
     pgmtxt("t",$offset-1*1.2,0.0,0.0,"Date: $time");
     pgmtxt("t",$offset-2*1.2,0.0,0.0,"X along <Q> in plane");
     pgmtxt("t",$offset-3*1.2,0.0,0.0,"Y perp. to X in plane, Z upwards");
-    
+
     pgpanl(3,2);
-    
+
     my $i;
     my $j=0;
     my $shift=0.0;
     pgmtxt("t",$offset,0.0,0.0,"Instrument simulation parameters:");
     foreach $i (keys %{$si->{'Params'}}) {
       $j = $j+1;
-	    pgmtxt("t",$offset-$j*1.2,$shift,0.0,$i . " = " . $si->{'Params'}{$i});
+      pgmtxt("t",$offset-$j*1.2,$shift,0.0,$i . " = " . $si->{'Params'}{$i});
       if ($j > 20) { $shift = $shift+0.5; $j=0; }
     }
     if ($j == 0 && $shift == 0) { pgmtxt("t",$offset-2*1.2,0.0,0.0,"None"); }
@@ -229,7 +229,7 @@ sub q_hist2 {
     $dx=($xmax-$xmin)/$npts;
     $dy=($ymax-$ymin)/$npts;
     my $tr;
-    if (defined(&label_axes)) 
+    if (defined(&label_axes))
     { $tr = pdl [$xmin + $dx/2, $dx, 0, $ymin + $dy/2, 0, $dy]; }
     else
     { $tr = cat $xmin + $dx/2, $dx, pdl(0), $ymin + $dy/2, pdl(0), $dy; }
@@ -385,7 +385,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-      print "DOC:      Please visit http://neutron.risoe.dk/mcstas/\n";
+      print "DOC:      Please visit http://www.mcstas.org/\n";
       exit;
         } else {
       $filename = $ARGV[$i];
@@ -417,7 +417,7 @@ for (;;) {
     plot_mcstas_res($filename, "/xwin", $qx,$qy,$qz,$w,$p,$C_t,$res_mat,$size,1,$simulation_info);
     pgband(0, 0, $ax, $ay, $cx, $cy, $cc);
   }
-  last if $cc =~ /[xq]/i;  
+  last if $cc =~ /[xq]/i;
 }
 if (defined(&close_window)) { close_window(); }
       else { pgclos(); }

@@ -154,7 +154,7 @@ sub html_main_end {
 <HR WIDTH="100%">
 <CENTER>
   [ <A HREF="http://www.ill.fr/tas/mcstas/"><I>McStas</I> at ILL</A>
-  | <A href="http://mcstas.risoe.dk/"><I>McStas</I> at Ris&oslash;</A> ]
+  | <A href="http://www.mcstas.org/"><I>McStas</I> at Ris&oslash;</A> ]
 </CENTER>
 
 <P><BR>
@@ -457,10 +457,10 @@ for($i = 0; $i < @ARGV; $i++) {
       print "   -m    --manual   Open the McStas User manual\n";
       print "   -c    --comp     Open the McStas Component manual\n";
       print "   -t    --text     For single component, display as text\n";
-      print "   -w    --web      Open the McStas web page http://mcstas.risoe.dk/\n";
+      print "   -w    --web      Open the McStas web page http://www.mcstas.org/\n";
       print "         --tutorial Open the McStas tutorial from the local McStas library\n";
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-      print "DOC:      Please visit http://mcstas.risoe.dk/\n";
+      print "DOC:      Please visit http://www.mcstas.org/\n";
       exit;
   } elsif(/^--tools$/i || /^-l$/) {
       print "McStas Tools\n";
@@ -475,7 +475,7 @@ for($i = 0; $i < @ARGV; $i++) {
       print "   mcconvert     Matlab <-> Scilab script conversion tool\n";
       print "When used with the -h flag, all tools display a specific help.\n";
       print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess\n";
-      print "DOC:      Please visit http://mcstas.risoe.dk/\n";
+      print "DOC:      Please visit http://www.mcstas.org/\n";
       exit;
   } else {
       $file = $ARGV[$i];
@@ -485,7 +485,7 @@ for($i = 0; $i < @ARGV; $i++) {
 
 if ($show_website) {
   # open the index.html
-  my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} http://mcstas.risoe.dk/ ";
+  my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} http://www.mcstas.org/ ";
   print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   die "mcdoc: web site done.\n";
 }

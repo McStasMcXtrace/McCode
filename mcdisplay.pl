@@ -1,4 +1,4 @@
-#! /usr/bin/perl 
+#! /usr/bin/perl
 # Removed -w to get rid of "used only once" warnings
 
 # In emacs, please make this -*- perl -*- mode. Thanks.
@@ -54,7 +54,7 @@ BEGIN {
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
 
   # custom configuration (this script)
-  
+
   # If this is Win32, load OLE related modules -
   # we can not talk to Matlab using pipe on Win32 :(
   # PW 20030314
@@ -331,8 +331,8 @@ sub make_instrument {
               zoom_ymin => $ymin, zoom_ymax => $ymax,
               zoom_zmin => $zmin, zoom_zmax => $zmax);
     return %instr;
-}    
-        
+}
+
 
 sub transform {
     my ($comp, $x, $y, $z, $vx, $vy, $vz, $t, $ph1, $ph2) = @_;
@@ -435,14 +435,14 @@ sub read_neutron {
         }
     }
     exit unless $st == 2;        # Stop when EOF seen before neutron data end.
-    
+
     my %neutron = ('x' => \@x, 'y' => \@y, z => \@z,
                    vx => \@vx, vy => \@vy, vz => \@vz,
                    t => \@t, ph1 => \@ph1, ph2 => \@ph2,
                    comp => \@ncomp, numcomp => $numcomp, EndFlag => $EndFlag);
     return %neutron
 }
-    
+
 
 sub plot_components { # PGPLOT stuff only
     my ($rx, $ry, $rori, $rdis, $axis1, $axis2) = @_;
@@ -619,7 +619,7 @@ sub write_process {
       print STDERR "Matlab terminated! - Exiting.\n";
       return 2;
     }
-  } else { 
+  } else {
     # Simply write data to pipe/file
     print WRITER $command;
     return 1;
@@ -639,12 +639,12 @@ sub plot_instrument {
          $instr{'zoom_ymax'}, $instr{'zoom_zmin'}, $instr{'zoom_zmax'});
       my %vps;                        # Viewport/window setup.
       my ($vpx1,$vpx2,$vpy1,$vpy2,$wx1,$wx2,$wy1,$wy2);
-      
+
       # PGPLOT::pgpage;        # start new page/panel
       PGPLOT::pgbbuf;        # begin buffer batch output
-      
+
       # First show instrument from "above" (view in direction of y axis).
-      
+
       PGPLOT::pgsci(1);
       PGPLOT::pgsch(1.4);
       PGPLOT::pgenv($zmin, $zmax, $xmin, $xmax, ($zooming ? 0 : 1), 0);
@@ -655,14 +655,14 @@ sub plot_instrument {
                       'Z', 'X');
       plot_neutron($neutron{'z'}, $neutron{'x'}, $neutron{'y'},
                    $neutron{'vz'}, $neutron{'vx'}, $neutron{'vy'},$neutron{'comp'});
-      
+
       if($multi_view) {
         # Remember viewport setup for Z-X view.
         PGPLOT::pgqvp(0, $vpx1, $vpx2, $vpy1, $vpy2);
         PGPLOT::pgqwin($wx1, $wx2, $wy1, $wy2);
         $vps{'z-x'} = {VP => [$vpx1,$vpx2,$vpy1,$vpy2],
                        W => [$wx1,$wx2,$wy1,$wy2]};
-        
+
         # Now show instrument viewed in direction of z axis.
         PGPLOT::pgsci(1);
         PGPLOT::pgsch(1.4);
@@ -677,7 +677,7 @@ sub plot_instrument {
         PGPLOT::pgqwin($wx1, $wx2, $wy1, $wy2);
         $vps{'x-y'} = {VP => [$vpx1,$vpx2,$vpy1,$vpy2],
                        W => [$wx1,$wx2,$wy1,$wy2]};
-        
+
         # Now show instrument viewed in direction of x axis.
         PGPLOT::pgsci(1);
         PGPLOT::pgsch(1.4);
@@ -692,12 +692,12 @@ sub plot_instrument {
         PGPLOT::pgqwin($wx1, $wx2, $wy1, $wy2);
         $vps{'z-y'} = {VP => [$vpx1,$vpx2,$vpy1,$vpy2],
                        W => [$wx1,$wx2,$wy1,$wy2]};
-        
+
         # Set up viewport & window for mouse zoom.
-        if ($multi_view) { 
-                PGPLOT::pgpanl(2,2); 
+        if ($multi_view) {
+                PGPLOT::pgpanl(2,2);
                 PGPLOT::pgsci(1);
-                my $time=gmtime; 
+                my $time=gmtime;
                 PGPLOT::pgmtxt("t",0-1*1.2,0.0,0.0,"Date: $time");
                 PGPLOT::pgmtxt("t",-2-1*1.2,0,0.0,"Simulation: ");
                 PGPLOT::pgmtxt("t",-3-1*1.2,0.05,0.0,"$sim_cmd");
@@ -707,9 +707,9 @@ sub plot_instrument {
         PGPLOT::pgswin(0,1,0,1);
       }
       PGPLOT::pgebuf;        # end buffer batch output
-      
+
       return 0 if $noninteractive;
-      
+
       # Now wait for a keypress in the graphics window.
       my ($cx, $cy, $cc);
       $cx = $cy = 0;
@@ -749,7 +749,7 @@ sub plot_instrument {
       }
     } else {
       # Leave further checks for plot_neutron
-      $retval=plot_neutron($neutron{'z'}, $neutron{'x'}, $neutron{'y'}, 
+      $retval=plot_neutron($neutron{'z'}, $neutron{'x'}, $neutron{'y'},
                    $neutron{'vz'}, $neutron{'vx'}, $neutron{'vy'}, $neutron{'comp'});
       if ($retval==2) {
         return $retval;
@@ -761,7 +761,7 @@ sub plot_instrument {
 sub get_device { # PGPLOT stuff only
     my ($what) = @_;
     my $dev;
-    
+
     if (defined(&dev)) { $dev = dev($what); }
     else { $dev = PGPLOT::pgopen($what); }
     return $dev if $dev < 0;
@@ -818,17 +818,17 @@ for($i = 0; $i < @ARGV; $i++) {
     } elsif($ARGV[$i] =~ /^--last=([a-zA-Z0-9_]+)$/) {
         $last = $1;
     } elsif($ARGV[$i] eq "--save") {
-        $save = 1; 
+        $save = 1;
     } elsif(($ARGV[$i] =~ /^-p([a-zA-Z0-9_]+)$/) ||
               ($ARGV[$i] =~ /^--plotter=([a-zA-Z0-9_\"]+)$/) ||
               ($ARGV[$i] =~ /^--format=([a-zA-Z0-9_\"]+)$/)) {
-        $plotter = $1;        
+        $plotter = $1;
    } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
-        $file_output = $1;        
+        $file_output = $1;
    } else {
         if (defined($sim_cmd)) { push @cmdline, $ARGV[$i]; }
-        else { 
+        else {
           $sim_cmd = $ARGV[$i];
           $sim=$sim_cmd;
           # Remove trailing .out or .exe extension
@@ -856,15 +856,15 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  -gif|-ps|-psc               Export figure as gif/b&w ps/color ps and exit
  When using -ps -psc -gif, the program writes the hardcopy file and exits.
  SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
- DOC:      Please visit http://neutron.risoe.dk/mcstas/\n"
+ DOC:      Please visit http://www.mcstas.org/\n"
  unless $sim_cmd;
 
 if ($sim_cmd =~ m'\.instr$') # recompile .instr if needed
 { my @ccopts=();
   $sim_cmd = get_out_file($sim_cmd, 0, @ccopts); }
- 
 
-# Check value of $plotter and $file_output variables, set 
+
+# Check value of $plotter and $file_output variables, set
 # $MCSTAS::mcstas_config{'PLOTTER'} with scriptfile keyword
 if ($file_output) { $plotter .= "_scriptfile"; }
 
@@ -908,14 +908,14 @@ $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
 my $pg_devname = "/xserv";
 # Only set up PGPLOT stuff if needed
 if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
-  if ($int_mode == 1) 
-    { 
+  if ($int_mode == 1)
+    {
       my $ext  = "ps";
       my $type = "ps";
       if($direct_output eq "-gif") { $ext="gif"; $type="gif"; }
       elsif($direct_output eq "-png") { $ext="png"; $type="png"; }
       elsif($direct_output eq "-psc") { $type="cps"; }
-      $pg_devname = "$sim_cmd.$ext/$type"; 
+      $pg_devname = "$sim_cmd.$ext/$type";
     }
   my $global_device = get_device($pg_devname);
   if($global_device < 0) {
@@ -976,7 +976,7 @@ while(!eof(IN)) {
             # Do nothing...
         }
         $start_scilab = 0;
-    } 
+    }
     next if $neutron{'numcomp'} <= $inspect_pos;
 
     my $ret;

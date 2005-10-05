@@ -302,7 +302,7 @@ specified for building the instrument:
   MCSTAS_CFLAGS Options for compilation              ($cflags)
   MCSTAS_FORMAT Default FORMAT to use for data files ($MCSTAS::mcstas_config{'PLOTTER'})
 SEE ALSO: mcstas, mcdoc, mcplot, mcdisplay, mcgui, mcresplot, mcstas2vitess
-DOC:      Please visit http://neutron.risoe.dk/mcstas/
+DOC:      Please visit http://www.mcstas.org/
 ** No instrument definition name given\n" unless $sim_def || $exec_test;
 die "Number of points must be at least 1" unless $numpoints >= 1;
 }

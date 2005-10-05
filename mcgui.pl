@@ -242,7 +242,7 @@ sub mcdoc_about {
   P. Willendrup, E. Farhi and K. Lefmann, Physica B, 350 (2004) 735.\n
   K. Lefmann and K. Nielsen, Neutron News 10, 20, (1999).\n
   $version
-  Please visit <http://neutron.risoe.dk/mcstas/>",
+  Please visit <http://www.mcstas.org/>",
                                  -title => "McGUI: About McStas",
                                  -type => 'OK',
                                  -icon => 'info',
@@ -982,7 +982,7 @@ sub make_comp_inst {
 # The text for the instrument template.
 my $instr_template_start = <<INSTR_FINISH;
 /*******************************************************************************
-*         McStas instrument definition URL=http://mcstas.risoe.dk
+*         McStas instrument definition URL=http://www.mcstas.org
 *
 * Instrument: test (rename also the example and DEFINE lines below)
 *
