@@ -227,7 +227,7 @@ struct Sqw_sample_struct {
   double T2E;
   double sqSE2K;
   int    maxloop;
-  int    neutron_removed;
+  long   neutron_removed;
 
   double sqw_threshold;
 
@@ -439,8 +439,6 @@ struct Sqw_Data_struct *Sqw_readfile(
     for (j=0; j < (Sqw_Data->nb_w) ; j++)
       Sqw_Data->Sq[i] += Table_Index(Sqw_restrict, i, j);
   }
-  /* normalize to unity */
-  for (i=0; i < (Sqw_Data->nb_q) ; Sqw_Data->Sq[i++] /= val);
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated S(Q)[%i]\n",
       Sqw->compname, Sqw_Data->nb_q);
@@ -1060,7 +1058,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         NORM(u1x, u1y, u1z);
         NORM(u2x, u2y, u2z);
 
-        p *= Data_sqw.Sq[index_q]*kf/k/4/PI;
+        p *= Data_sqw.DOS[index_w].I*kf/k/4/PI;
 
         break; /* exit for loop on success */
       } /* end for index_counter */
@@ -1207,7 +1205,7 @@ FINALLY
   }
 
   if (VarSqw.neutron_removed)
-    printf("Isotropic_Sqw: %s: %i neutron events that should have scattered\n"
+    printf("Isotropic_Sqw: %s: %li neutron events that should have scattered\n"
            "               were removed because scattering conditions\n"
            "Warning        could not be satisfied after %i tries.\n",
           NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.maxloop);
