@@ -12,7 +12,7 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -47,19 +47,27 @@
 DEFINE COMPONENT Source_simple
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius, dist, xw, yh, E0=0, dE=0, Lambda0=0, dLambda=0, flux=1)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (pmul)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-  double pmul, pdir;
+  double pmul;
 %}
 INITIALIZE
 %{
   pmul=flux*PI*1e4*radius*radius/mcget_ncount();
+  if (radius < 0 || dist < 0 || xw < 0 || yh < 0
+    || (!Lambda0 && !dLambda && (E0 <= 0 || dE < 0 || E0-dE <= 0))
+    || (!E0 && !dE && (Lambda0 <= 0 || dLambda < 0 || Lambda0-dLambda <= 0))) {
+      printf("Source_simple: %s: Error in input parameter values!\n"
+             "ERROR          Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
 %}
 TRACE
 %{
- double chi,E,Lambda,v,r, xf, yf, rf, dx, dy;
+ double chi,E,Lambda,v,r, xf, yf, rf, dx, dy, pdir;
 
  t=0;
  z=0;
