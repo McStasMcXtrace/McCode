@@ -24,6 +24,12 @@
 * liquids, amorphous and powder samples.
 * If incohenrent S(Q,w) file is specified as empty (0 or "") then the
 * scattering is constant isotropic (Vanadium like).
+* In case your S(q,w) data contains both coherent and incoherent contributions
+* you should e.g. use 'file_coh' and set 'sigma_coh' to the total scattering
+* cross section.
+* The S(q,w) are used as probability tables, and the intensity is weighted to
+* the S(q,w) integral value. In case the norm of S(q,w) should be changed
+* (e.g. to 1 for monoatomic liquids), use 'norm_sqw' parameter.
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting can speed-up substantially the computation. Additionally, for single
 * order scattering (order=1), you may restrict the vertical spreading of the
@@ -137,6 +143,8 @@
 *                   See description for an example.
 * thickness:    [m] Thickness of hollow sample (overloads radius_i)
 * save_sqw:     [1] When set to 1, saves S(q), DOS and S(q,w) as monitors.
+* norm_sqw:     [1] When non 0, the value is used as the integral of S(q,w)
+*                   over the [q,w] range. Otherwise uses compued integral.
 *
 * OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
@@ -166,7 +174,8 @@ DEFINE COMPONENT Isotropic_Sqw
     xwidth=0, yheight=0, zthick=0,
     qmin=0, qmax=0, wmin=0, wmax=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
-    V_rho=0.072, sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, save_sqw=0)
+    V_rho=0.072, sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, save_sqw=0,
+    norm_sqw=0)
   OUTPUT PARAMETERS (VarSqw)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -1058,7 +1067,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         NORM(u1x, u1y, u1z);
         NORM(u2x, u2y, u2z);
 
-        p *= Data_sqw.DOS[index_w].I*kf/k/4/PI;
+        p *= kf/k/4/PI;
 
         break; /* exit for loop on success */
       } /* end for index_counter */
@@ -1114,8 +1123,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
       vz = vf*u0z;
 
       v = vf; k = kf;
-
-      p *= Data_sqw.intensity/Data_sqw.intensity_total;
+      /* nornalize to \int S or norm_sqw and weight to selected [q,w] range */
+      p *= (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity)*Data_sqw.intensity/Data_sqw.intensity_total;
 
       SCATTER;
 
@@ -1180,18 +1189,22 @@ FINALLY
       }
       sprintf(tmp, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sq", NAME_CURRENT_COMP, ext);
+      if (Data_sqw.nb_q > 1)
       DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]","S(q)","q",
         Data_sqw.q_min, Data_sqw.q_max,
         Data_sqw.nb_q,NULL,Data_sqw.Sq,NULL,
         filename);
       sprintf(tmp, "Normalized DOS from %s (%s)", Data_sqw.filename, type_ci);
+      if (Data_sqw.nb_w > 1)
       sprintf(filename, "%s_%s.dos", NAME_CURRENT_COMP, ext);
       DETECTOR_OUT_1D(tmp,"Energy [meV]","g(w)","w",
         Data_sqw.w_min, Data_sqw.w_max,
         Data_sqw.nb_w,NULL,DOS,NULL,
         filename);
-      sprintf(tmp, "Normalized S(q,w) from %s (%s)", Data_sqw.filename, type_ci);
+      sprintf(tmp, "S(q,w) from %s (%s), Norm=%g", Data_sqw.filename, type_ci,
+        (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity);
       sprintf(filename, "%s_%s.sqw", NAME_CURRENT_COMP, ext);
+      if (Data_sqw.nb_q*Data_sqw.nb_w > 1)
       DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
         Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
         Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,
