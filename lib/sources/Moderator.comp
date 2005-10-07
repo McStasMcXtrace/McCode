@@ -10,7 +10,7 @@
 * %I
 * Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -46,7 +46,13 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
-  double p_in,pdir;
+  double p_in;
+  if (radius < 0 || E0 < 0 || E1 < 0 || dist <= 0 || xw < 0 || yh < 0 || Ec < 0 || gam <= 0) {
+      printf("Moderator: %s: Error in input parameter values!\n"
+             "ERROR          Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
 %}
 INITIALIZE
 %{
@@ -54,7 +60,7 @@ INITIALIZE
 %}
 TRACE
 %{
-   double chi,v,r,tauv,E, xf, yf, rf, dx, dy;
+   double chi,v,r,tauv,E, xf, yf, rf, dx, dy, pdir;
 
    p=p_in;
    z=0;

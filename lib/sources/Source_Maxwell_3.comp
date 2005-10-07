@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: March 2001
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -56,7 +56,7 @@ DEFINE COMPONENT Source_Maxwell_3
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (size=0, height=0, width=0, l_low, l_high, dist, xw, yh,
                     T1, T2=300, T3=300, I1, I2=0, I3=0)
-OUTPUT PARAMETERS (M)
+OUTPUT PARAMETERS (M,l_range,w_mult,w_source,h_source)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
@@ -76,7 +76,7 @@ DECLARE
 
 INITIALIZE
 %{
-  if (!size==0) {
+  if (size>0) {
     w_source = h_source = size;
   } else {
     w_source = width;
@@ -86,6 +86,13 @@ INITIALIZE
   w_mult = w_source*h_source*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1/mcget_ncount();   /* correct for # neutron rays */
+
+    if (w_source <0 || h_source < 0 || l_low <= 0 || l_high <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0) {
+      printf("Source_Maxwell_3: %s: Error in input parameter values!\n"
+             "ERROR          Exiting\n",
+           NAME_CURRENT_COMP);
+      exit(0);
+  }
 %}
 
 TRACE
