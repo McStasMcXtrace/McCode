@@ -1123,8 +1123,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
       vz = vf*u0z;
 
       v = vf; k = kf;
-      /* nornalize to \int S or norm_sqw and weight to selected [q,w] range */
-      p *= (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity)*Data_sqw.intensity/Data_sqw.intensity_total;
+      /* nornalize to \int S or norm_sqw in selected [q,w] range */
+      p *= (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity);
 
       SCATTER;
 
