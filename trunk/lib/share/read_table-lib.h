@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions.
@@ -23,9 +23,12 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.17 2005-09-30 14:53:04 farhi Exp $
+* $Id: read_table-lib.h,v 1.18 2005-10-12 14:04:29 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.17  2005/09/30 14:53:04  farhi
+* REdiced length of title line in subplot's
+*
 * Revision 1.16  2005/07/25 14:55:08  farhi
 * DOC update:
 * checked all parameter [unit] + text to be OK
@@ -135,6 +138,8 @@ void     Table_Free_Array(t_Table *Table);
 long     Table_Info_Array(t_Table *Table);
 int      Table_SetElement(t_Table *Table, long i, long j, double value);
 void     Table_Init(t_Table *Table, long rows, long columns);
+
+char **Table_ParseHeader(char *header, ...);
 
 /* private functions */
 

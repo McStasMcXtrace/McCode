@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.27 $
+* Version: $Revision: 1.28 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.27 2005-10-05 08:50:53 farhi Exp $
+* $Id: read_table-lib.c,v 1.28 2005-10-12 14:04:29 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.27  2005/10/05 08:50:53  farhi
+* Extended buffer for Table line read (fgetl) to 64 ko instead of 4 ko.
+* It failed with large matrices (e.g. more than 100 columns)
+*
 * Revision 1.26  2005/09/16 14:19:03  farhi
 * Correct bug #56: SEGV when opening a non existent file with read-table. Was reported on usage of PowderN
 *
@@ -871,5 +875,59 @@ void Table_Init(t_Table *mc_rt_Table, long rows, long columns)
     printf("This Table array contains %i elements\n", mc_rt_index);
     return(mc_rt_index);
   } /* end Table_Info_Array */
+
+/******************************************************************************
+* char **Table_ParseHeaderchar *header, symbol1, symbol2, ..., NULL)
+*    ACTION: search for char* symbols in header and return their value or NULL
+*            Last argument MUST be NULL
+*    return: array of char* with line following each symbol, or NULL if not found
+*******************************************************************************/
+char **Table_ParseHeader(char *header, ...){
+  va_list ap;
+  char exit_flag=0;
+  char counter=0;
+  char **ret;
+
+  if (!header) return(NULL);
+
+  ret = (char**)calloc(MyNL_ARGMAX, sizeof(char*));
+  if (!ret) {
+    printf("Table_ParseHeader: %s: Cannot allocate %i values array for Parser (Table_ParseHeader).\n",
+      MyNL_ARGMAX);
+    return(NULL);
+  }
+
+  va_start(ap, header);
+  while(!exit_flag && counter < MyNL_ARGMAX-1)
+  {
+    char *arg_char;
+    char *pos;
+    /* get variable argument value as a char */
+    arg_char = va_arg(ap, char *);
+    ret[counter] = NULL;
+    if (!arg_char){
+      exit_flag = 1; break;
+    }
+    /* search for the symbol in the header */
+    pos = strstr(header, arg_char);
+    if (pos) {
+      char *eol_pos;
+      eol_pos = strchr(pos+strlen(arg_char), '\n');
+      if (!eol_pos)
+        eol_pos = strchr(pos+strlen(arg_char), '\r');
+      if (!eol_pos) eol_pos = pos+strlen(pos)-1;
+      ret[counter] = (char*)malloc(eol_pos - pos);
+      if (!ret[counter]) {
+        printf("Table_ParseHeader: %s: Cannot allocate value[%i] array for Parser (Table_ParseHeader).\n",
+          counter);
+        exit_flag = 1; break;
+      }
+      strncpy(ret[counter], pos+strlen(arg_char), eol_pos - pos - strlen(arg_char));
+    }
+    counter++;
+  }
+  va_end(ap);
+  return(ret);
+}
 
 /* end of read_table-lib.c */
