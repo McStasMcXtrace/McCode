@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.28 2005-10-12 14:04:29 farhi Exp $
+* $Id: read_table-lib.c,v 1.29 2005-10-14 11:38:28 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.28  2005/10/12 14:04:29  farhi
+* Added function to parse header, Table_ParseHeader(header, "symbol1", ... , NULL)
+* Useful for complex sample components, as well as mcformat/mcconvert stuff.
+*
 * Revision 1.27  2005/10/05 08:50:53  farhi
 * Extended buffer for Table line read (fgetl) to 64 ko instead of 4 ko.
 * It failed with large matrices (e.g. more than 100 columns)
@@ -178,7 +182,7 @@
     mc_rt_nelements = Table_Read_Handle(mc_rt_Table, mc_rt_hfile, mc_rt_block_number, mc_rt_max_lines);
     mc_rt_Table->begin = mc_rt_begin;
     mc_rt_Table->end   = ftell(mc_rt_hfile);
-    if (mc_rt_filesize) mc_rt_Table->filesize = mc_rt_filesize;
+    mc_rt_Table->filesize = (mc_rt_filesize>0 ? mc_rt_filesize : 0);
     strncpy(mc_rt_Table->filename, mc_rt_File, 128);
     if (mc_rt_offset) *mc_rt_offset=mc_rt_Table->end;
     fclose(mc_rt_hfile);
@@ -688,7 +692,7 @@
     if (!mc_rt_Table.block_number) strcpy(mc_rt_buffer, "catenated");
     else sprintf(mc_rt_buffer, "block %i", mc_rt_Table.block_number);
     printf("Table from file '%s' (%s)", mc_rt_Table.filename, mc_rt_buffer);
-    if (mc_rt_Table.filesize) printf(" of size %li", mc_rt_Table.filesize);
+    if (mc_rt_Table.filesize>0) printf(" of size %li", mc_rt_Table.filesize);
     if ((mc_rt_Table.data   != NULL) && (mc_rt_Table.rows*mc_rt_Table.columns))
     {
       printf(" is %li x %li ", mc_rt_Table.rows, mc_rt_Table.columns);
@@ -699,34 +703,38 @@
     }
     else printf(" is empty.\n");
     if (mc_rt_Table.header && strlen(mc_rt_Table.header)) {
-      char header[80];
+      char *header;
       int  i;
-      if (strlen(mc_rt_Table.header) > 70) {
-        strncpy(header, mc_rt_Table.header, 70-4);
+      header = malloc(80);
+      if (!header) return(ret);
+      for (i=0; i<80; header[i++]=0);
+      if (strlen(mc_rt_Table.header) > 75) {
+        strncpy(header, mc_rt_Table.header, 75-5);
         strcat( header, " ...");
       } else strcpy(header, mc_rt_Table.header);
       for (i=0; i<strlen(header); i++)
-        if (header[i] == '\n') header[i] = ';';
+        if (header[i] == '\n' || header[i] == '\r') header[i] = ';';
       printf("  '%s'\n", header);
+      free(header);
     }
     return(ret);
   } /* end Table_Info */
 
 /******************************************************************************
-* void Table_Init(t_Table *Table, m, n)
+* long Table_Init(t_Table *Table, m, n)
 *   ACTION: initialise a Table to empty m by n table
 *   return: empty Table
-*******************************************************************************/
-void Table_Init(t_Table *mc_rt_Table, long rows, long columns)
+******************************************************************************/
+long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 {
   double *mc_rt_data=NULL;
   long   i;
 
-  if (!mc_rt_Table) return;
+  if (!mc_rt_Table) return(0);
 
   mc_rt_Table->header  = NULL;
   mc_rt_Table->filename[0]= '\0';
-  mc_rt_Table->filesize=0;
+  mc_rt_Table->filesize= 0;
   mc_rt_Table->min_x   = 0;
   mc_rt_Table->max_x   = 0;
   mc_rt_Table->step_x  = 0;
@@ -747,6 +755,7 @@ void Table_Init(t_Table *mc_rt_Table, long rows, long columns)
   mc_rt_Table->rows    = (rows >= 1 ? rows : 0);
   mc_rt_Table->columns = (columns >= 1 ? columns : 0);
   mc_rt_Table->data    = mc_rt_data;
+  return(mc_rt_Table->rows*mc_rt_Table->columns);
 } /* end Table_Init */
 
 
@@ -882,6 +891,10 @@ void Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 *            Last argument MUST be NULL
 *    return: array of char* with line following each symbol, or NULL if not found
 *******************************************************************************/
+#ifndef MyNL_ARGMAX
+#define MyNL_ARGMAX 50
+#endif
+
 char **Table_ParseHeader(char *header, ...){
   va_list ap;
   char exit_flag=0;

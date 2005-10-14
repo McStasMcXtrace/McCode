@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions.
@@ -23,9 +23,13 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.18 2005-10-12 14:04:29 farhi Exp $
+* $Id: read_table-lib.h,v 1.19 2005-10-14 11:38:28 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.18  2005/10/12 14:04:29  farhi
+* Added function to parse header, Table_ParseHeader(header, "symbol1", ... , NULL)
+* Useful for complex sample components, as well as mcformat/mcconvert stuff.
+*
 * Revision 1.17  2005/09/30 14:53:04  farhi
 * REdiced length of title line in subplot's
 *
@@ -137,7 +141,7 @@ t_Table *Table_Read_Array(char *File, long *blocks);
 void     Table_Free_Array(t_Table *Table);
 long     Table_Info_Array(t_Table *Table);
 int      Table_SetElement(t_Table *Table, long i, long j, double value);
-void     Table_Init(t_Table *Table, long rows, long columns);
+long     Table_Init(t_Table *Table, long rows, long columns);
 
 char **Table_ParseHeader(char *header, ...);
 
