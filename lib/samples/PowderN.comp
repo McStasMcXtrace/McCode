@@ -9,7 +9,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -44,6 +44,8 @@
 *   #Vc <value of Vc>
 *   #sigma_abs <value of Absorption cross section>
 *   #sigma_inc <value of Incoherent cross section>
+*   #Debye_Waller <value of DW factor>
+*   #Detla_d/d <value of Detla_d/d>
 * These values are not read if entered as component parameters (Vc=...)
 *
 * The signification of the columns in the numerical block may be either
@@ -111,7 +113,7 @@
 * %E
 *****************************************************************************/
 DEFINE COMPONENT PowderN
-DEFINITION PARAMETERS (reflections, format=Crystallographica)
+DEFINITION PARAMETERS (reflections, format={ 0,0,0,0,0,0 })
 SETTING PARAMETERS (d_phi=0, radius=0.01, yheight=0.05,
         pack=1, Vc, sigma_abs=0, sigma_inc=0, Delta_d=-1, frac=0,
         xwidth=0, zthick=0, h=0, DW=0)
@@ -182,8 +184,10 @@ SHARE
       "column_F2",
       "column_DW",
       "column_Dd",
-      "column_inv2d", "column_1/2d", "column_sintheta_lambda",
-      "column_q", NULL);
+      "column_inv2d", "column_1/2d", "column_sintheta/lambda",
+      "column_q",
+      "DW", "Debye_Waller",
+      "Detla_d/d", NULL);
 
     if (parsing) {
       if (parsing[0] && !info->V_0)     info->V_0    =atof(parsing[0]);
@@ -201,7 +205,10 @@ SHARE
       if (parsing[12])                  info->column_order[5]=atoi(parsing[12]);
       if (parsing[13])                  info->column_order[5]=atoi(parsing[13]);
       if (parsing[14])                  info->column_order[6]=atoi(parsing[14]);
-      for (i=0; i<=14; i++) if (parsing[i]) free(parsing[i]);
+      if (parsing[15] && info->DWfactor<=0)      info->DWfactor=atof(parsing[15]);
+      if (parsing[16] && info->DWfactor<=0)      info->DWfactor=atof(parsing[16]);
+      if (parsing[17] && info->Dd <0)            info->Dd      =atof(parsing[17]);
+      for (i=0; i<=17; i++) if (parsing[i]) free(parsing[i]);
       free(parsing);
     }
 
