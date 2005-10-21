@@ -1250,6 +1250,9 @@ sub setup_cmdwin {
                              -anchor => 'w',
                              -justify => 'left');
     $res_lab->pack(-side => 'left');
+    my $plot_but = $f3->Button(-text => "Plot",
+                                -command => sub {menu_plot_results($w);});
+    $plot_but->pack(-side => "right", -padx => 1, -pady => 1);
     my $sim_but = $f3->Button(-text => "Read",
                                 -command => sub { menu_read_sim_file($w) });
     $sim_but->pack(-side => "right", -padx => 1, -pady => 1);
@@ -1277,25 +1280,30 @@ sub setup_cmdwin {
     for $l (split "\n", `mcstas --version`) {
         $cmdwin->insert('end', "$l\n", 'msg');
     }
-    if ($MCSTAS::mcstas_config{'HOSTFILE'} eq "") {
-          $cmdwin->insert('end',  "No MPI/grid machine list. MPI/grid disabled...
-  Define $ENV{'HOME'}/.mcstas-hosts\n");
-    } else {
+    if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no"
+    ||  $MCSTAS::mcstas_config{'SSH'} ne "no") {
       if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
         $cmdwin->insert('end', "MPI parallelisation is available\n");
       } elsif ($MCSTAS::mcstas_config{'SSH'} ne "no") {
         $cmdwin->insert('end', "Distributed scans (grid) computing is available\n");
       }
+      if ($MCSTAS::mcstas_config{'HOSTFILE'} eq "") {
+      $cmdwin->insert('end',
+"No MPI/grid machine list. MPI/grid disabled...
+  Define $ENV{'HOME'}/.mcstas-hosts first.\n");
+  $MCSTAS::mcstas_config{'MPIRUN'} = "no";
+  $MCSTAS::mcstas_config{'SSH'}    = "no";
     }
-    if ($MCSTAS::mcstas_config{'SCILAB'} eq "no") {
-      $cmdwin->insert('end', "Scilab plotter is NOT available\n");
-    }
-    if ($MCSTAS::mcstas_config{'MATLAB'} eq "no") {
-      $cmdwin->insert('end', "Matlab plotter is NOT available\n");
-    }
-    if ($MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
-      $cmdwin->insert('end', "Perl/PGPLOT plotter is NOT available\n");
-    }
+  }
+  if ($MCSTAS::mcstas_config{'SCILAB'} eq "no") {
+    $cmdwin->insert('end', "Scilab plotter is NOT available\n");
+  }
+  if ($MCSTAS::mcstas_config{'MATLAB'} eq "no") {
+    $cmdwin->insert('end', "Matlab plotter is NOT available\n");
+  }
+  if ($MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
+    $cmdwin->insert('end', "Perl/PGPLOT plotter is NOT available\n");
+  }
 
 }
 

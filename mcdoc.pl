@@ -135,7 +135,7 @@ sub html_table_entry {
     print $f "<TD>$d->{'identification'}{'author'}</TD>\n";
 
     print $f "<TD>";
-    print $f "<A HREF=\"$bn.$d->{'ext'}\">$bn.$d->{'ext'}</A>";
+    print $f "<A HREF=\"$bn.$d->{'ext'}\">$d->{'ext'}</A>";
     print $f "</TD>\n";
 
     print $f "<TD>$d->{'identification'}{'short'}</TD>\n";
@@ -275,6 +275,9 @@ TB_END
             print $f "WARNING: <B>This is an obsolete $d->{'type'}.";
             print $f "Please avoid usage whenever possible.</B>\n";
           }
+          if ($bn =~ m/contrib/i || $n =~ m/contrib/i) {
+            print $f "WARNING: <B>This is a contributed $d->{'type'}.</B>\n";
+          }
       }
       print $f "\n<H2><A NAME=ipar></A>Input parameters</H2>\n";
       if(@{$d->{'inputpar'}}) {
@@ -402,6 +405,9 @@ END
                   if ($sec =~ m/obsolete/i) {
                     print "WARNING: This is an obsolete $data->{'type'}. \n";
                     print "         Please avoid usage whenever possible.\n";
+                  }
+                  if ($sec =~ m/contrib/i) {
+                    print "WARNING: This is a contributed $data->{'type'}. \n";
                   }
                 } else {
                   add_comp_html($data, $filehandle, $basename, $name);
