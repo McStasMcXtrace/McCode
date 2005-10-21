@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -114,7 +114,7 @@ SAVE
         "E", Emin, Emax, nchan,
         &E_N[0],&E_p[0],&E_p2[0],
         filename);
-    printf("<E> : %g meV , E-width : %g meV \n",
+    if (S_p) printf("<E> : %g meV , E-width : %g meV \n",
      S_pE/S_p,sqrt(S_pE2/S_p - S_pE*S_pE/(S_p*S_p)) );
   %}
 
