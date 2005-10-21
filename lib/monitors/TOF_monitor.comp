@@ -10,7 +10,7 @@
 * %I
 * Written by:  KN, M. Hagen
 * Date: August 1998
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -43,7 +43,7 @@
 DEFINE COMPONENT TOF_monitor
 DEFINITION PARAMETERS (nchan=20, filename)
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, t0=0, t1=0, dt=1.0)
-OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2,t_min, t_max, delta_t)
+OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2, t_min, t_max, delta_t)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
@@ -95,12 +95,8 @@ TRACE
     {
       i = floor((1E6*t-t_min)/delta_t);              /* Bin number */
       if(i >= nchan) i = nchan - 1;
-      if(i < 0)
-      {
-        /* fprintf(stderr,"TOF_monitor: warning: time-of-flight below lower limit.\n"); */
-        i=0;
-        p=0;
-      }
+      if(i < 0) i=0;
+
       TOF_N[i]++;
       TOF_p[i] += p;
       TOF_p2[i] += p*p;
