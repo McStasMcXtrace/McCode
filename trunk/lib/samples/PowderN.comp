@@ -9,7 +9,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -33,7 +33,8 @@
 * range on the Debye-Scherrer cone (with 'd_phi').
 *
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
-*   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, Delta_d=0, DW=1)
+*   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, Delta_d=0, DW=1,
+*   format=Crystallographica)
 *
 * <b>Powder definition and file format</b>
 *
