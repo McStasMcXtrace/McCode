@@ -114,6 +114,10 @@
 *   Isotropic_Sqw(V_rho=0.072, Sqw_coh="He4.sqw",
 *     sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, T=10)
 *
+* 3- powder sample
+*   Isotropic_Sqw(V_rho=1/1076.89, Sqw_coh="c60.lau", powder_format=Crystallographica,
+*     sigma_abs=4, sigma_coh=1, sigma_inc=0, T=10)*
+*
 * %BUGS:
 * When used in concentric mode, multiple bouncing scattering (traversing the hollow part)
 * is not taken into account.
@@ -339,7 +343,8 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 
   size = sqwTable.rows;
   Table_Info(sqwTable);
-  printf("Isotropic_sqw: Converting %d powder lines from %s into S(q,w) data\n",
+  if (Sqw->verbose_output > 0)
+    printf("Isotropic_sqw: Converting %d powder lines from %s into S(q,w) data\n",
         size, sqwTable.filename);
   /* allocate line_data array */
   list = (struct line_data*)malloc(size*sizeof(struct line_data));
@@ -384,7 +389,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       F2 = (F2 >= 0 ? F2 : 0);
       d = (q > 0 ? 2*PI/d : 0);
       if (j == 0 || d == 0 || q == 0) {
-        printf("PowderN: %s: line %i has invalid definition\n"
+        printf("Isotropic_sqw: %s: line %i has invalid definition\n"
                "         (mult=0 or q=0 or d=0)\n", Sqw->compname, i);
         continue;
       }
@@ -407,7 +412,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       if (mult_count && (dspace_count != d || i == size-1)) {
         if (i == size-1 && j == mult_count+1) mult_count++;
         if (j == mult_count && Sqw->verbose_output > 1) {
-          printf("PowderN: %s: Set multiplicity to 1 for lines [%i:%i]\n"
+          printf("Isotropic_sqw: %s: Set multiplicity to 1 for lines [%i:%i]\n"
                  "         (d-spacing %g is duplicated %i times)\n",
           Sqw->compname, list_count-mult_count, list_count-1, d, mult_count);
           for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
@@ -422,7 +427,8 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   if (!flag_qSq)
     size = 3*(q_max - q_min)/q_step; /* set a default of 3 q values per line */
 
-  printf("Isotropic_sqw: q range [%g:%g], creating %li elements vector\n",
+  if (Sqw->verbose_output > 0)
+    printf("Isotropic_sqw: q range [%g:%g], creating %li elements vector\n",
         q_min, q_max, size);
 
   retTable = (t_Table*)calloc(4, sizeof(t_Table));
@@ -446,7 +452,10 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
         retTable[2].data[index] += list[i].F2;
       else
         retTable[2].data[index]
-            += 2*(2*PI)*(2*PI)*(2*PI)*(2*PI)*Sqw->rho*list[i].j*list[i].F2/q_step/Sqw->s_coh;
+            += 2*(2*PI)*(2*PI)*(2*PI)*(2*PI)*Sqw->rho
+               *list[i].j*list[i].F2*list[i].DWfactor
+               /q_step/(Sqw->type == 'c' ? Sqw->s_coh : Sqw->s_inc);
+/* using Dirac peaks at start. Delta_d/d will build Gaussians around 'q' */
     }
     Table_Stat(&retTable[0]); Table_Stat(&retTable[1]); Table_Stat(&retTable[2]);
   }
@@ -790,6 +799,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   double ret=0;
 
   struct Sqw_Data_struct *d_inc, *d_coh;
+  Sqw->type = 'i';
   d_inc = Sqw_readfile(Sqw, file_inc, &(Sqw->Data_inc));
   if (d_inc && !d_inc->intensity && Sqw->s_inc) {
     if (Sqw->verbose_output > 0)
@@ -797,6 +807,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
              "               (Vanadium like)\n", Sqw->compname);
     ret=1;
   }
+  Sqw->type = 'c';
   d_coh = Sqw_readfile(Sqw, file_coh, &(Sqw->Data_coh));
   if (!d_inc || !d_coh) return(0);
   if (d_coh && !d_coh->intensity && Sqw->s_coh)
@@ -1005,9 +1016,10 @@ INITIALIZE
 
   VarSqw.my_s    =(VarSqw.rho*100*(sigma_coh+sigma_inc));
 
-  if ((sigma_coh || sigma_inc) && !VarSqw.Temperature && VarSqw.Data_coh.intensity)
-    exit(printf("Isotropic_Sqw: %s: sample temperature is zero (T).\n"
-                "Warning        Disabling detailed balance.\n",NAME_CURRENT_COMP));
+  if ((sigma_coh || sigma_inc) && !VarSqw.Temperature
+   && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity))
+    printf("Isotropic_Sqw: %s: sample temperature is zero (T).\n"
+           "Warning        Disabling detailed balance.\n",NAME_CURRENT_COMP);
 
   if (!sigma_coh && !sigma_inc) {
     printf("Isotropic_Sqw: %s: Scattering cross section is zero\n"
