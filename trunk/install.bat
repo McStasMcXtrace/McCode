@@ -1,4 +1,4 @@
-@rem  
+@rem
 @rem   This file is part of the McStas neutron ray-trace simulation package
 @rem   Copyright (C) 1997-2004, All rights reserved
 @rem   Risoe National Laborartory, Roskilde, Denmark
@@ -19,9 +19,9 @@
 @rem   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @echo off
 @rem Simple batch script for installation of McStas on Win32 systems,
-@rem after build using Bloodshed Dev-Cpp. 
-@rem 
-@rem Please modify the path below for installing mcstas in non-standard 
+@rem after build using Bloodshed Dev-Cpp.
+@rem
+@rem Please modify the path below for installing mcstas in non-standard
 @rem location
 @echo ** McStas install.bat for Win32...
 @echo ...
@@ -41,10 +41,12 @@
 @echo       Select from the Windows menu:
 @echo       Start/Settings/Control Panel/System/Advanced/Environment Variables
 @echo ...
+@echo WARNING: McStas 1.9 for Windows requires Scilab <= 3.0 and Perl <= 5.6
+@echo ...
 @echo Use Ctrl-C if you want to break this script to install these packages or
 @pause
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
-@SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%): 
+@SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%):
 @echo Trying to guess your plotter and configuration...
 @mcconfig.pl
 @echo Installing in MCSTAS_SITE=%MCSTAS_SITE%
