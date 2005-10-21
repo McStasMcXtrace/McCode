@@ -583,7 +583,7 @@ function d=mcplot_plot(d,p)
   if ~p, return; end;
   eval(['l=[',d.xylimits,'];']);
   S=size(d.data);
-  t1=['[',d.parent,'] ',d.filename,': ',d.title];
+  t1=['[',d.parent,'] ',d.filename];
   t = strvcat(t1,['  ',d.variables,'=[',d.values,']'],['  ',d.signal],['  ',d.statistics]);
   disp(t);
   if ~isempty(findstr(d.type,'0d')),return;
