@@ -12,7 +12,7 @@
 * Date: Februar 7 1999
 * Origin: Uni. Erlangen (Germany)
 * Release: McStas 1.6
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 *
 * Models a curved neutron guide.
 *
@@ -21,36 +21,34 @@
 *
 * Bender radius, entrance width and height are necessary input data. To define
 * the bender, you may either enter the deviation angle 'Win' or the length 'l'.
-* The bender may consist of 'k' vertical channels, separated by partioning walls
+* The bender may consist of 'k' vertical channels, separated by partitioning walls
 * of thickness 'd'. Three different reflectivity profiles can be given: for outer
-* walls, for inner walls and for the top and bottom walls. The partitioning walls  
+* walls, for inner walls and for the top and bottom walls. The partitioning walls
 * have the same coating as the exterior walls.
-* 
+*
 * The entrance lies in the X-Y plane, centered on the Z axis. The neutrons will
 * also leave the bender in the X-Y plane at the z-value l=r*Win, i.e. they are
 * centred on (0,0,r*Win); they have an (average) flight direction along the z-axis.
-* Therefore, the following component is adjacent, if positioned AT (0,0,r*Win) 
+* Therefore, the following component is adjacent, if positioned AT (0,0,r*Win)
 * <b>without</b> rotation.
-* So, seen from outside, it behaves like a straight guide along the Z axis. As a 
+* So, seen from outside, it behaves like a straight guide along the Z axis. As a
 * consequence, it is shown straight in 'mcdisplay'.
 * This behaviour results from a co-ordinate transformation inside the component.
 * It is done to facilitate its use. Neither rotation nor shift along the x-axis
-* need to be calculated; a new arm is not necessary. Internally, the bender is 
+* need to be calculated; a new arm is not necessary. Internally, the bender is
 * bent to the negative X axis;
 *
-* Example: 
+* Example:
 * Bender of 120 mm height, 50 mm width, 250 m radius and 0.04 rad (or 2.292 deg) curvature
-* not channeled, with a standard m=2 coating on 
-* 
+* not channeled, with a standard m=2 coating on
+*
 * Bender(w=0.05,h=0.12,r=250,Win=0.04,
 *        R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,
 *        R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,
 *        R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003)
 *
-* See also <a href="http://neutron.risoe.dk/pipermail/neutron-mc/1999q1/000052.html">Additional note</a> from <a href="mailto:philipp.bernhardt@siemens.com">Philipp Bernhardt</a>.
-*
 * %BUGS
-* Some users have reported strange behaviours with this component.
+* Some users have reported potentially strange behaviours with this component.
 * This component does not work with gravitation on.
 *
 * %Parameters
@@ -86,7 +84,9 @@
 * mWin:    (rad)        Angle of the deflection of the whole bender
 *
 * %L
-* <a href="../contrib/Guide_curved.comp.html>Guide_curved</a>
+* <a href="../contrib/Guide_curved.comp.html>Guide_curved</a> (contributed)
+* %L
+* See also <a href="http://neutron.risoe.dk/pipermail/neutron-mc/1999q1/000052.html">Additional note</a> from <a href="mailto:philipp.bernhardt@siemens.com">Philipp Bernhardt</a>.
 *
 * %End
 *******************************************************************************/
