@@ -11,7 +11,7 @@
 * Written by: Peter Link, <a href="mailto:Andreas.Ostermann@frm2.tum.de">Andreas Ostermann</a>
 * Date: MARCH 1999
 * Origin: Uni. Gottingen (Germany)
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Release: McStas 1.6
 *
 * velocity selector (helical lamella type) such as <b>V_selector</b> component
@@ -44,7 +44,7 @@
 * feq:         frequency of rotation (1/s)
 *
 * %Links
-* See also Additional notes <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00032.html">March 1999</a> and <a href="http://neutron.risoe.dk/neutron-mc/arch/9904/msg00000.html">Jan 2000</a>.
+* See also Additional notes <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000134.html">March 1999</a> and <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q2/000136.html">Jan 2000</a>.
 *
 * %End
 *******************************************************************************/
