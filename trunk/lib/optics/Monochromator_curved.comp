@@ -11,11 +11,10 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
-*                                  by Kristian Nielsen and Peter Link
 * Modified by: EF, Feb 13th 2002:  Read reflectivity table
 * Modified by: EF, Oct 24th 2002:  Read transmission table
 *
@@ -84,9 +83,11 @@
 * row:     row index for last hit blade (1:NV)
 *
 * %Link
-* <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00031.html">Additional note</a> from Peter Link.
-* <a href="Mosaic_anisotropic.html">Mosaic_anisotropic</a> by Kristian Nielsen
-* <a href="Mon_2foc.html">Mon_2foc</a> by Peter Link
+* <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000133.html">Additional note</a> from Peter Link.
+* %L
+* Obsolete Mosaic_anisotropic by Kristian Nielsen
+* %L
+* Contributed Monochromator_2foc by Peter Link
 *
 * %End
 *******************************************************************************/

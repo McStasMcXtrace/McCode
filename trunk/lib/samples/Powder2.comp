@@ -7,11 +7,11 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: McStas release
 * Modified by: KL, KN 20.3.98 (rewrite)
-*              KL, 28.09.01   (two lines)
-*              KL, 22.05.03   (background)
+* Modified by: KL, 28.09.01   (two lines)
+* Modified by: KL, 22.05.03   (background)
 *
 * General powder sample with two scattering vectors.
 *
