@@ -1,6 +1,4 @@
 /*****************************************************************************
-*
-*
 * McStas, neutron ray-tracing package
 *         Copyright 1997-2000 Risoe National Laboratory, Roskilde, Denmark
 *
@@ -9,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -31,6 +29,8 @@
 * Incoherent scattering is only provided here to account for a background
 * The efficient is highly improved when restricting the vertical scattering
 * range on the Debye-Scherrer cone (with 'd_phi').
+* The unit cell volume Vc may also be computed when giving the density,
+* the atomic/molecular weight and the number of atoms per unit cell.
 *
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
 *   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, Delta_d=0, DW=1,
@@ -42,36 +42,39 @@
 * The powder data are free-text column based files.
 * Lines begining by '#' are read as comments (ignored) but they may contain
 * the following keywords (in the header):
-*   #Vc <value of Vc>
+*   #Vc <value of unit cell volume Vc>
 *   #sigma_abs <value of Absorption cross section>
 *   #sigma_inc <value of Incoherent cross section>
-*   #Debye_Waller <value of DW factor>
-*   #Detla_d/d <value of Detla_d/d>
+*   #Debye_Waller <value of Debye-Waller factor DW>
+*   #Detla_d/d <value of Detla_d/d width for all lines>
 * These values are not read if entered as component parameters (Vc=...)
 *
-* The signification of the columns in the numerical block may be either
+* The signification of the columns in the numerical block may be
 * set using the 'format' parameter. Built-in formats are:
 *   format=Crystallographica
 *   format=Fullprof
+*   format=Lazy
 * and these specifications it is important NOT to use quotes, as shown.
 *
 * An other possibility to define other formats is to set directly
 * the signification of the columns as a vector of indexes in the order
-*   format={j,d,F2,DW,Delta_d/d,1/2d,q}
+*   format={j,d,F2,DW,Delta_d/d,1/2d,q,F}
 * Signification of the symbols is given below. Indexes start at 1.
 * Indexes with zero means that the column is not present, so that:
-*   Crystallographica={ 4,5,7,0,0,0,0 }
-*   Fullprof         ={ 4,0,8,0,0,5,0 }
-* Here again, no quotes should be around the 'format' value.
+*   Crystallographica={ 4,5,7,0,0,0,0,0 }
+*   Fullprof         ={ 4,0,8,0,0,5,0,0 }
+*   Lazy             ={17,6,0,0,0,0,0,13}
+* Here again, NO quotes should be around the 'format' value.
 *
 * At last, the format may be overridden by direct definition of the
 * column indexes in the file itself by using the following keywords
 * in the header (e.g. '#column_j 4'):
 *   #column_j <index of the multiplicity 'j' column>
 *   #column_d <index of the d-spacing 'd' column>
-*   #column_F2 <index of the structure factor 'F2' column>
+*   #column_F2 <index of the squared structure factor '|F|^2' column>
+*   #column_F  <index of the structure factor norm '|F|' column>
 *   #column_DW <index of the Debye-Waller factor 'DW' column>
-*   #column_Dd <index of the Delta_d/d 'Dd' column>
+*   #column_Dd <index of the line width Delta_d/d 'Dd' column>
 *   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
 *   #column_q <index of the scattering wavevector 'q' column>
 *
@@ -82,42 +85,47 @@
 *             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
 * radius:   Radius of sample in (x,z) plane [m]
 * yheight:  Height of sample y direction [m]
-* pack:     Packing factor [1]
-* Vc:       Volume of unit cell [AA^3]
+* Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
 * sigma_abs:Absorption cross section per unit cell at 2200 m/s [fm^2]
 * sigma_inc:Incoherent cross section per unit cell [fm^2]
-* frac:     Fraction of incoherently scattered neutron rays [1]
 * reflections: Input file for reflections.
 *                Use only incoherent scattering if NULL or "" [string]
-* Delta_d:  global d-spacing spreading when the 'w' column
-*             is not available. Use 0 if ideal. [Angs]
-* DW:       global Debey-Waller factor when the 'DW' column
-*             is not available. Use 1 if included in F2 [1]
 * format:   name of the format, or list of column indexes (see Description). [no quotes]
 *
 * Optional parameters:
 * xwidth:  horiz. dimension of sample, as a width [m]
 * zthick:  thickness of sample [m]
 * h:       the same as yheight [m]
+* Delta_d:  global d-spacing spreading when the 'w' column
+*             is not available. Use 0 if ideal. [Angs]
+* DW:       global Debey-Waller factor when the 'DW' column
+*             is not available. Use 1 if included in F2 [1]
+* frac:     Fraction of incoherently scattered neutron rays [1]
+* pack:     Packing factor [1]
+* weight:   atomic/molecular weight of material [g/mol]
+* density:  density of material. V_rho=density/weight/1e24*N_A. [g/cm^3]
+* nb_atoms: number of atoms per unit cell [1]
 *
 * %L
 * See also: Powder1, Powder2 and PowderN
 * %L
-* See <a href="icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
+* See <a href="http://icsd.ill.fr">ICSD</a> Inorganic Crystal Structure Database
 * %L
 * Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
 * %L
 * Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
 * %L
 * Fullprof powder refinement:         http://www-llb.cea.fr/fullweb/fp2k/fp2k.htm
+* %L
+* Web Elements                        http://www.webelements.com/
 *
 * %E
 *****************************************************************************/
 DEFINE COMPONENT PowderN
-DEFINITION PARAMETERS (reflections, format={ 0,0,0,0,0,0 })
+DEFINITION PARAMETERS (reflections, format=Undefined)
 SETTING PARAMETERS (d_phi=0, radius=0.01, yheight=0.05,
-        pack=1, Vc, sigma_abs=0, sigma_inc=0, Delta_d=-1, frac=0,
-        xwidth=0, zthick=0, h=0, DW=0)
+        pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=-1, frac=0,
+        xwidth=0, zthick=0, h=0, DW=0, nb_atoms=1, density=0, weight=0)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2,
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, isrect, columns)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -129,10 +137,12 @@ SHARE
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL
 #define POWDERN_DECL
-/* format definitions in the order {j d F2 DW Dd inv2d q} */
+/* format definitions in the order {j d F2 DW Dd inv2d q F} */
 #ifndef Crystallographica
-#define Crystallographica { 4,5,7,0,0,0,0 }
-#define Fullprof          { 4,0,8,0,0,5,0 }
+#define Crystallographica { 4,5,7,0,0,0,0,0 }
+#define Fullprof          { 4,0,8,0,0,5,0,0 }
+#define Lazy              {17,6,0,0,0,0,0,0 }
+#define Undefined         { 0,0,0,0,0,0,0,0 }
 #endif
 
     struct line_data
@@ -151,10 +161,13 @@ SHARE
       double Dd;
       double DWfactor;
       double V_0;
+      double rho;
+      double at_weight;
+      double at_nb;
       double sigma_a;
       double sigma_i;
       char   compname[256];
-      int    column_order[7]; /* column signification */
+      int    column_order[8]; /* column signification */
     };
 
   int read_line_data(char *SC_file, struct line_info_struct *info)
@@ -178,17 +191,23 @@ SHARE
     /* parsing of header */
     parsing = Table_ParseHeader(sTable.header,
       "Vc","V_0",
-      "sigma_abs","sigma_a",
-      "sigma_inc","sigma_i",
+      "sigma_abs","sigma_a ",
+      "sigma_inc","sigma_i ",
       "column_j",
       "column_d",
       "column_F2",
       "column_DW",
       "column_Dd",
       "column_inv2d", "column_1/2d", "column_sintheta/lambda",
-      "column_q",
+      "column_q", /* 14 */
       "DW", "Debye_Waller",
-      "Detla_d/d", NULL);
+      "Detla_d/d",
+      "column_F ",
+      "V_rho",
+      "density",
+      "weight",
+      "nb_atoms",
+      NULL);
 
     if (parsing) {
       if (parsing[0] && !info->V_0)     info->V_0    =atof(parsing[0]);
@@ -206,10 +225,15 @@ SHARE
       if (parsing[12])                  info->column_order[5]=atoi(parsing[12]);
       if (parsing[13])                  info->column_order[5]=atoi(parsing[13]);
       if (parsing[14])                  info->column_order[6]=atoi(parsing[14]);
-      if (parsing[15] && info->DWfactor<=0)      info->DWfactor=atof(parsing[15]);
-      if (parsing[16] && info->DWfactor<=0)      info->DWfactor=atof(parsing[16]);
-      if (parsing[17] && info->Dd <0)            info->Dd      =atof(parsing[17]);
-      for (i=0; i<=17; i++) if (parsing[i]) free(parsing[i]);
+      if (parsing[15] && info->DWfactor<=0)    info->DWfactor=atof(parsing[15]);
+      if (parsing[16] && info->DWfactor<=0)    info->DWfactor=atof(parsing[16]);
+      if (parsing[17] && info->Dd <0)          info->Dd      =atof(parsing[17]);
+      if (parsing[18])                  info->column_order[7]=atoi(parsing[18]);
+      if (parsing[19] && !info->V_0)    info->V_0    =1/atof(parsing[19]);
+      if (parsing[20] && !info->rho)    info->rho    =atof(parsing[20]);
+      if (parsing[21] && !info->at_weight)     info->at_weight    =atof(parsing[21]);
+      if (parsing[22] && info->at_nb <= 1)  info->at_nb    =atof(parsing[22]);
+      for (i=0; i<=22; i++) if (parsing[i]) free(parsing[i]);
       free(parsing);
     }
 
@@ -232,17 +256,26 @@ SHARE
       if (info->Dd >= 0)      w         = info->Dd;
       if (info->DWfactor > 0) DWfactor  = info->DWfactor;
 
-      /* get data from table using columns {j d F2 DW Dd inv2d q} */
+      /* get data from table using columns {j d F2 DW Dd inv2d q F} */
       /* column indexes start at 1, thus need to substract 1 */
-      if (info->column_order[0])  j = Table_Index(sTable, i, info->column_order[0]-1); else j=0;
-      if (info->column_order[1])  d = Table_Index(sTable, i, info->column_order[1]-1); else d=0;
-      if (info->column_order[2]) F2 = Table_Index(sTable, i, info->column_order[2]-1); else F2=0;
-      if (info->column_order[3]) DWfactor = Table_Index(sTable, i, info->column_order[3]-1);
+      if (info->column_order[0] >0)
+        j = Table_Index(sTable, i, info->column_order[0]-1); else j=0;
+      if (info->column_order[1] >0)
+        d = Table_Index(sTable, i, info->column_order[1]-1); else d=0;
+      if (info->column_order[2] >0)
+        F2 = Table_Index(sTable, i, info->column_order[2]-1); else F2=0;
+      if (info->column_order[3] >0)
+        DWfactor = Table_Index(sTable, i, info->column_order[3]-1);
         else DWfactor= info->DWfactor;
-      if (info->column_order[4])  w = Table_Index(sTable, i, info->column_order[4]-1);
+      if (info->column_order[4] >0)
+        w = Table_Index(sTable, i, info->column_order[4]-1);
         else w=info->Dd;
-      if (info->column_order[5])  { d = Table_Index(sTable, i, info->column_order[5]-1); d = 1/d/2; }
-      if (info->column_order[6])  { d = Table_Index(sTable, i, info->column_order[6]-1); d = 2*PI/d; }
+      if (info->column_order[5] >0)
+        { d = Table_Index(sTable, i, info->column_order[5]-1); d = 1/d/2; }
+      if (info->column_order[6] >0)
+        { d = Table_Index(sTable, i, info->column_order[6]-1); d = 2*PI/d; }
+      if (info->column_order[7] >0  && !F2)
+        { F2 = Table_Index(sTable, i, info->column_order[7]-1); F2 *= F2; }
 
       /* assign and check values */
       j = (j > 0 ? j : 0);
@@ -294,7 +327,7 @@ DECLARE
   double my_a_v, my_inc;
   double *w_v,*q_v, *my_s_v2;
   char   isrect=0;
-  int    columns[7] = format;
+  int    columns[8] = format;
 %}
 INITIALIZE
 %{
@@ -303,16 +336,32 @@ INITIALIZE
   line_info.Dd       = Delta_d;
   line_info.DWfactor = DW;
   line_info.V_0      = Vc;
+  line_info.rho      = density;
+  line_info.at_weight= weight;
+  line_info.at_nb    = nb_atoms;
   line_info.sigma_a  = sigma_abs;
   line_info.sigma_i  = sigma_inc;
-  for (i=0; i< 7; i++) line_info.column_order[i] = columns[i];
+  for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
 
   if (!radius || !yheight) {
     if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"PowderN: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     else isrect=1; }
 
-  if (read_line_data(reflections, &line_info)) {
+  i = read_line_data(reflections, &line_info);
+
+  if (!line_info.V_0 && line_info.at_nb > 0
+    && line_info.at_weight > 0 && line_info.rho > 0) {
+    /* molar volume [cm^3/mol] = weight [g/mol] / density [g/cm^3] */
+    /* atom density per Angs^3 = [mol/cm^3] * N_Avogadro *(1e-8)^3 */
+    line_info.V_0 = line_info.at_nb
+      /(line_info.rho/line_info.at_weight/1e24*6.02214199e23);
+  }
+
+  if (line_info.V_0 <= 0)
+    exit(fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc)\n", NAME_CURRENT_COMP));
+
+  if (i) {
     L = line_info.list;
 
     Nq  = line_info.count;
@@ -323,7 +372,7 @@ INITIALIZE
       exit(fprintf(stderr,"PowderN: %s: ERROR allocating memory (init)\n", NAME_CURRENT_COMP));
     for(i=0; i<Nq; i++)
     {
-      my_s_v2[i] = 4*PI*PI*PI*pack*L[i].DWfactor
+      my_s_v2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0*V2K*V2K)
                  *(L[i].j * L[i].F2 / L[i].q);
       /* Is not yet divided by v^2 */
@@ -335,12 +384,13 @@ INITIALIZE
   } else exit(fprintf(stderr,
       "PowderN: %s: Data file has no valid powder line definition\n"
       "         Check format definition\n", NAME_CURRENT_COMP));
-  if (line_info.V_0 <= 0)
-    exit(fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc)\n", NAME_CURRENT_COMP));
+
   /* Is not yet divided by v */
   my_a_v = pack*line_info.sigma_a/line_info.V_0*2200;
   my_inc = pack*line_info.sigma_i/line_info.V_0;
   my_s_v2_sum=0;
+  printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
+    NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i);
 
 %}
 TRACE
