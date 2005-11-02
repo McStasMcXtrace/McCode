@@ -17,6 +17,10 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.57  2005/09/15 10:46:10  farhi
+* Added mccompcurtype to be e.g. the component type/class being used.
+* Not used yet, but will be with NeXus support and probably elsewere
+*
 * Revision 1.56  2005/07/27 11:29:41  farhi
 * missing arg in printf
 *
@@ -94,7 +98,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.57 2005-09-15 10:46:10 farhi Exp $
+* $Id: cogen.c,v 1.58 2005-11-02 09:18:38 farhi Exp $
 *
 *******************************************************************************/
 
@@ -340,13 +344,13 @@ embed_file(char *name)
     /* First look in the system directory. */
     f = open_file_search_sys(name);
     /* If not found, look in the full search path. */
-    if(f == NULL)
+    if(f == NULL) {
       f = open_file_search(name);
-    else if (verbose) printf("Embedding file      %s (system)\n", name);
-    /* If still not found, abort. */
-    if(f == NULL)
-      fatal_error("Could not find file '%s'\n", name);
-    else if (verbose) printf("Embedding file      %s (user path)\n", name);
+      /* If still not found, abort. */
+      if(f == NULL)
+        fatal_error("Could not find file '%s'\n", name);
+      else if (verbose) printf("Embedding file      %s (user path)\n", name);
+    } else if (verbose) printf("Embedding file      %s (%s)\n", name, get_sys_dir());
 
     cout("");
     code_set_source(name, 1);
