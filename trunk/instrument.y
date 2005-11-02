@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.59 2005-09-15 10:46:10 farhi Exp $
+* $Id: instrument.y,v 1.60 2005-11-02 09:18:38 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1388,12 +1388,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-        static int seenb4 = 0;  /* Only print long error the first time */
-        print_error("Illegal expression for DEFINITION parameter %s of component %s.\n%s",
-          formal->id, comp->name,
-          ( seenb4++ ? "" :
-          "(Only variable names, constant numbers, and constant strings\n"
-          "are allowed for DEFINITION parameters.)\n") );
+	print_warn(NULL, "Using DEFINITION parameter of component %s (potential syntax error)\n"
+		"  %s=%s\n",
+		comp->name, formal->id, exp_tostring(entry->val));
       }
     }
   }
