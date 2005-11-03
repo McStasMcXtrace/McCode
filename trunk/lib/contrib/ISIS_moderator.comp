@@ -10,10 +10,10 @@
  *
  * %I
  * Written by: S. Ansell and D. Champion
- * Date: August 2004
- * Version: $Revision: 1.3 $
+ * Date: AUGUST 2005
+ * Version: $Revision: 1.4 $
  * Origin: ISIS
- * Release: McStas 1.8
+ * Release: McStas 1.9
  *
  * ISIS Moderators
  *
@@ -34,15 +34,15 @@
  * Face:   (word) Name of the face - TS2:groove,hydrogen,narrow,broad -
  *                                 - TS1:Water,ch4,h2,merlin or instrument name eg maps, crisp etc. 
  *                                 - TS2: W1-9 E1-9
- * E0:     (meV) Lower edge of energy distribution
- * E1:     (meV) Upper edge of energy distribution
- * dist:   (m)   Distance from source to the focusing rectangle
- * xw:     (m)   Width of focusing rectangle
- * yh:     (m)   Height of focusing rectangle
+ * E0:       (meV) Lower edge of energy distribution
+ * E1:       (meV) Upper edge of energy distribution
+ * dist:     (m)   Distance from source to the focusing rectangle
+ * xw:       (m)   Width of focusing rectangle
+ * yh:       (m)   Height of focusing rectangle
  * modXsize: (m)  Moderator vertical size
  * modYsize: (m)  Moderator Horizontal size
- * CAngle: (radians)  Angle from the centre line
- * SAC:    (boolean)  Apply solid angle correction or not (1/0)
+ * CAngle:   (radians)  Angle from the centre line
+ * SAC:      (boolean)  Apply solid angle correction or not (1/0)
  *
  * %L
  * Further <A HREF="http://www.isis.rl.ac.uk/Computing/Software/MC/index.htm">information</A> should be
@@ -64,39 +64,51 @@ DECLARE
 %{
 
 #include <ctype.h>
+
+
+
+typedef struct 
+{
+  int nEnergy;        ///< Number of energy bins
+  int nTime;          ///< number of time bins
+
+  double* TimeBin;    ///< Time bins
+  double* EnergyBin;  ///< Energy bins
+
+  double** Flux;       ///< Flux per bin (integrated)
+  double* EInt;        ///< Integrated Energy point
+  double Total;        ///< Integrated Total
+
+} Source;
+
   /* New functions */
-  double Epass();
-  double Ezone(double);
-  int Tpass(double);
-  int Ipass(double);
-  void polcof(double*,double*,double*);
-  double polValue(int,double);
-  double polInterp(double);
-  double findValue(double*,double,double);
-  double findMax(double*);
-  void writeMidQuad(int);
-  void calcQcomp(int,double*,double*,double*);
-  double findTime(double*);
-  double Tprob(double*,double);
-  int cmdnumberD(char *,double*,const int);
+
+  int cmdnumberD(char *,double*);
   int cmdnumberI(char *,int*,const int);
+  double polInterp(double*,double*,int,double);
   FILE* openFile(char*);
+  FILE* openFileTest(char*);
+  int readHtable(FILE*,const double,const double);
+  int timeStart(char*);
+  int timeEnd(char*);
+  int energyBin(char*,double,double,double*,double*);
+  int notComment(char*);
+
   double strArea();
 
+  /* global variables */
 
   double p_in;            /* Polorization term (from McSTAS) */ 
   int Tnpts;              /* Number of points in parameteriation */
-  int Einc;               /* Number of points in energy seperated total (E0-E1) */
+
   double scaleSize;        /* correction for the actual area of the moderator viewed */
-  double eCol[200],vCol[200],iCol[200];
-  double eTotal;          /* the Intgrated intensity at the max Energy (E1) */
+
   double angleArea;       /* Area seen by the window  */
 
-  double eRange[500];     /* list of the energies in the table */
-  double Param[500][4];   /* Table param ,g1,g2,maxVal,Tcut */ 
-  double iBase[500];      /* List is integrated intensity from energy =0.0 -> Etable max.  */  
-  double reBase;          /* Value of the IBase at E0 */
-  int Ncount;             /* Count of number of points run */
+  double Nsim;		/* Total number of neutrons to be simulated */
+ 
+  int Ncount;          /* Number of neutron simulate so far*/
+  Source TS;
 
   /* runtime variables*/
 
@@ -104,61 +116,596 @@ DECLARE
   double rtmodX,rtmodY;    /* runtime moderator sizes, so that a negative argument may give a default size */
 
 
-  int
-    cmdnumberD(char *mc,double* num,const int len)
-    /* returns 1 on succe/Software/MC/index.htmss and 0 on failure */
+double** 
+matrix(const int m,const int n)
+ /*!
+   Determine a double matrix
+ */
+{
+  int i;
+  double* pv;
+  double** pd;
+
+  if (m<1) return 0;
+  if (n<1) return 0;
+  pv = (double*) malloc(m*n*sizeof(double));
+  pd = (double**) malloc(m*sizeof(double*));
+  if (!pd) 
     {
-      int i,j;
-      char* ss;
-      char **endptr;
-      double nmb;
-    
-      if (len<1) 
-	return 0;
-      j=0;
-    
-      for(i=0;i<len && mc[i] && 
-	    (mc[i]=='\t' || mc[i]==' '  || mc[i]==',');i++);
-      if(i==len || !mc[i]) return 0;
-      ss=malloc(sizeof(char)*(len+1));
-      /*  char *ss=new c/Software/MC/index.htmhar[len+1]; */
-      for(;i<len && mc[i]!='\n' && mc[i] 
-	    && mc[i]!='\t' && mc[i]!=' ' && mc[i]!=',';i++)
+      fprintf(stderr,"No room for matrix!\n");
+      exit(1);
+    }
+  for (i=0;i<m;i++)
+    pd[i]=pv + (i*n);
+  return pd;
+}
+
+
+double 
+polInterp(double* X,double* Y,int Psize,double Aim) 
+  /*! 
+    returns the interpolated polynomial between Epnts
+    and the integration 
+    \param X :: X coordinates
+    \param Y :: Y coordinates
+    \param Psize :: number of valid point in array to use
+    \param Aim :: Aim point to intepolate result (X coordinate)
+    \returns Energy point
+  */
+{
+  double out,errOut;         /* out put variables */
+  double C[Psize],D[Psize];
+  double testDiff,diff;
+  
+  double w,den,ho,hp;           /* intermediate variables */
+  int i,m,ns;
+
+
+  ns=0;
+  diff=fabs(Aim-X[0]);
+  C[0]=Y[0];
+  D[0]=Y[0];
+  for(i=1;i<Psize;i++)
+    {
+      testDiff=fabs(Aim-X[i]);
+      if (diff>testDiff)
 	{
-	  ss[j]=mc[i];
-	  j++;
+	  ns=i;
+	  diff=testDiff;
 	}
-      if (!j)
-	{ 
-	  free(ss);
-	  return 0;         //This should be impossible
-	}
-      ss[j]=0;
-      endptr=malloc(sizeof(char*));
-      nmb = strtod(ss,endptr); 
-      if (*endptr != ss+j)
+      C[i]=Y[i];
+      D[i]=Y[i];
+    }
+  
+  out=Y[ns];
+  ns--;              /* Now can be -1 !!!! */ 
+  
+  for(m=1;m<Psize;m++)
+    {
+      for(i=0;i<Psize-m;i++)
 	{
-	  free(endptr);
-	  free(ss);
-	  return 0;
+	  ho=X[i]-Aim;
+	  hp=X[i+m]-Aim;
+	  w=C[i+1]-D[i];
+	  /*	  den=ho-hp;  -- test !=0.0 */
+	  den=w/(ho-hp);
+	  D[i]=hp*den;
+	  C[i]=ho*den;
 	}
-      *num = (double) nmb;
-      for(j=0;j<i && mc[j];j++)
-	mc[j]=' ';
+      
+      errOut= (2*(ns+1)<(Psize-m)) ? C[ns+1] : D[ns--];
+      out+=errOut;
+    }
+  return out;
+}
+
+int
+binSearch(int Npts,double* AR,double V)
+  /*! 
+    Object is to find the point in 
+    array AR, closest to the value V 
+    Checked for ordered array returns lower of backeting objects
+  */
+{
+  int klo,khi,k;
+  if (Npts<=0) 
+    return 0;
+  if (V>AR[Npts-1])
+    return Npts;
+
+  if(AR[0]>0.0)AR[0]=0.0;
+
+  if (V<AR[0])
+    {
+      // if(AR[0]>0.0)AR[0]=0.0;
+      fprintf(stderr,"here");
+      return 0;
+    }
+  klo=0;
+  khi= Npts-1;
+  while (khi-klo >1)
+    {
+      k=(khi+klo) >> 1;    // quick division by 2
+      if (AR[k]>V)
+	khi=k;
+      else
+	klo=k;
+    } 
+  return khi;
+}
+
+int
+cmdnumberD(char *mc,double* num)
+ /*! 
+   \returns 1 on success 0 on failure
+ */
+{
+  int i,j;
+  char* ss;
+  char **endptr;
+  double nmb;  
+  int len;
+  
+  len=strlen(mc);
+  j=0;
+  
+  for(i=0;i<len && mc[i] && 
+	(mc[i]=='\t' || mc[i]==' '  || mc[i]==',');i++);
+  if(i==len || !mc[i]) return 0;
+  ss=malloc(sizeof(char)*(len+1));
+ 
+  for(;i<len && mc[i]!='\n' && mc[i] 
+	&& mc[i]!='\t' && mc[i]!=' ' && mc[i]!=',';i++)
+    {
+      ss[j]=mc[i];
+      j++;
+    }
+  if (!j)
+    { 
+      free(ss);
+      return 0;         //This should be impossible
+    }
+  ss[j]=0;
+  endptr=malloc(sizeof(char*));
+  nmb = strtod(ss,endptr); 
+  if (*endptr != ss+j)
+    {
       free(endptr);
       free(ss);
-      return 1;
+      return 0;
+    }
+  *num = (double) nmb;
+  for(j=0;j<i && mc[j];j++)
+    mc[j]=' ';
+  free(endptr);
+  free(ss);
+  return 1;
+}
+
+int 
+notComment(char* Line)
+ /*!
+   \returns 0 on a comment, 1 on a non-comment
+ */
+{
+  int len,i;
+
+  len=strlen(Line);
+  for(i=0;i<len && isspace(Line[i]);i++);
+
+  if (!Line[i] || Line[i]=='c' || Line[i]=='C' ||
+      Line[i]=='!' || Line[i]=='#')
+    return 0;
+  return 1;
+}
+
+int 
+timeStart(char* Line)
+ /*!
+   Search for a word time at the start of
+   the line.
+   \param Line :: Line to search
+   \returns 1 on success 0 on failure
+ */
+{
+  int len,i;
+
+  len=strlen(Line);
+  for(i=0;i<len && isspace(Line[i]);i++);
+  if (len-i<4) return 0;
+  return (strncmp(Line+i,"time",4)) ? 0 : 1;
+}
+
+int 
+timeEnd(char* Line)
+ /*!
+   Search for a word time at the start of
+   the line.
+   \param Line :: Line to search
+   \returns 1 on success 0 on failure
+ */
+{
+  int len,i;
+
+  len=strlen(Line);
+  for(i=0;i<len && isspace(Line[i]);i++);
+  if (len-i<5) return 0;
+  return (strncmp(Line+i,"total",5)) ? 0 : 1;
+}
+
+int 
+energyBin(char* Line,double Einit,double Eend,double* Ea,double* Eb)
+     /*!
+       Search for a word "energy bin:" at the start of
+       the line. Then separte off the energy bin values
+       \param Line :: Line to search
+       \param Ea :: first energy bin [meV]
+       \param Eb :: second energy bin [meV]
+       \returns 1 on success 0 on failure
+     */
+{
+  int len,i;
+  double A,B;
+
+  len=strlen(Line);
+  for(i=0;i<len && isspace(Line[i]);i++);
+  if (len-i<11) return 0;
+
+
+  if (strncmp(Line+i,"energy bin:",11))
+    return 0;
+
+  i+=11;
+  if (!cmdnumberD(Line+i,&A))
+    return 0;
+  // remove 'to'
+  for(;i<len-1 && Line[i]!='o';i++);
+  i++;
+  if (!cmdnumberD(Line+i,&B))
+    return 0;
+  A*=1e9;
+  B*=1e9;
+  *Ea=A;
+  *Eb=B;
+  if (*Eb>Einit && *Ea<Eend)
+    return 1;
+  return 0;
+}
+
+double
+calcFraction(double EI,double EE,double Ea,double Eb)
+ /*!
+   Calculate the fraction of the bin between Ea -> Eb
+   that is encompassed by EI->EE
+ */
+{
+  double frac;
+  double dRange;
+
+  if (EI>Eb)
+    return 0.0;
+  if (EE<Ea)
+    return 0.0;
+
+  dRange=Eb-Ea;
+  frac=(EI>Ea) ? (Eb-EI)/dRange : 1.0;
+
+
+  frac-=(EE<Eb) ? (Eb-EE)/dRange : 0.0;
+
+  //  if(frac != 1.0)
+  //  fprintf(stderr,"frac %g, Ea %g,Eb %g, EI %g, EE %g\n",frac,Ea,Eb,EI,EE);
+
+  return frac;
+}
+
+int
+readHtable(FILE* TFile,const double Einit,const double Eend)
+     /*!
+       Process a general h.o file to create an integrated
+       table of results from Einit -> Eend
+       \param Einit :: inital Energy
+       \parma Eend  :: final energy
+     */
+{
+  char ss[255];          /* BIG space for line */
+  double Ea,Eb;
+  double T,D;
+  double Efrac;          // Fraction of an Energy Bin
+  int Ftime;             // time Flag
+  int eIndex;             // energy Index
+  int tIndex;             // time Index
+  double Tsum;           // Running integration 
+  double Efraction;      // Amount to use for an energy/time bin
+
+  extern Source TS;
+  
+  int DebugCnt;
+  int i;
+  /*!
+    Status Flag::
+    Ftime=1 :: [time ] Reading Time : Data : Err [Exit on Total]
+  
+
+    /*
+    Double Read File to determine how many bins and 
+    memery size
+  */
+  Ea=0.0;
+  Eb=0.0;
+  fprintf(stderr,"Energy == %g %g\n",Einit,Eend);
+  eIndex= -1;
+  DebugCnt=0;
+  Ftime=0;
+  tIndex=0;
+  TS.nTime=0;
+  TS.nEnergy=0;
+  // Read file and get time bins
+  while(fgets(ss,255,TFile) && Eend>Ea)
+    {
+      if (notComment(ss))
+	{
+	  DebugCnt++;
+          if (!Ftime)
+	    {
+	      if (energyBin(ss,Einit,Eend,&Ea,&Eb))
+		{
+		  if (eIndex==0)
+		    TS.nTime=tIndex;
+		  eIndex++;
+		}
+	      else if (timeStart(ss))
+		{
+		  Ftime=1;
+		  tIndex=0;
+		}
+	    }
+	  else  // In the time section
+	    {
+	      if (timeEnd(ss))     // Found "total"
+		Ftime=0;
+	      else
+		{
+		  // Need to read the line in the case of first run
+		  if (TS.nTime==0)
+		    {
+		      if (cmdnumberD(ss,&T) &&
+			  cmdnumberD(ss,&D))
+			tIndex++;
+		    }
+		}
+	    }
+	}
+    }
+  // Plus 2 since we have a 0 counter and we have missed the last line.
+  TS.nEnergy=eIndex+2;
+  if (!TS.nTime && tIndex)
+    TS.nTime=tIndex;
+  // printf("tIndex %d %d %d %d \n",tIndex,eIndex,TS.nEnergy,TS.nTime);
+  
+  /* SECOND TIME THROUGH:: */
+  rewind(TFile);
+
+  TS.Flux=matrix(TS.nEnergy,TS.nTime);      
+  TS.EInt=(double*) malloc(TS.nEnergy*sizeof(double));
+  TS.TimeBin=(double*) malloc(TS.nTime*sizeof(double));
+  TS.EnergyBin=(double*) malloc(TS.nEnergy*sizeof(double));
+
+  Tsum=0.0;
+  Ea=0.0;
+  Eb=0.0;
+  eIndex=-1;
+  DebugCnt=0;
+  Ftime=0;
+  tIndex=0;
+  TS.EInt[0]=0.0;
+  // Read file and get time bins
+  while(fgets(ss,255,TFile) && Eend>Ea)
+    {
+      if (notComment(ss))
+	{
+	  DebugCnt++;
+          if (!Ftime)
+	    {
+	      if (energyBin(ss,Einit,Eend,&Ea,&Eb))
+		{
+		  eIndex++;
+		  TS.EnergyBin[eIndex]=(Einit>Ea) ? Einit : Ea;
+		  Efraction=calcFraction(Einit,Eend,Ea,Eb);
+		  Ftime++;
+		}
+	    }
+	  else if (Ftime==1)
+	    {
+	      if (timeStart(ss))
+		{
+		  Ftime=2;
+		  tIndex=0;
+		}
+	    }
+
+	  else           // In the time section
+	    {
+	      if (timeEnd(ss))     // Found "total"
+		{
+		  Ftime=0;
+		  TS.EInt[eIndex+1]=Tsum;
+		}
+	      else
+		{
+		  // Need to read the line in the case of first run
+		  if (cmdnumberD(ss,&T) &&
+		      cmdnumberD(ss,&D))
+		    {
+		      TS.TimeBin[tIndex]=T/1e8;     // convert Time into second (from shakes)
+		      Tsum+=D*Efraction;
+		      TS.Flux[eIndex][tIndex]=Tsum;
+		      tIndex++;
+		    }
+		}
+	    }
+	}
     }
 
-  int
-    cmdnumberI(char *mc,int* num,const int len)
-    /* returns 1 on success and 0 on failure */
+  TS.EnergyBin[eIndex+1]=Eend;
+  TS.Total=Tsum;
+
+  //  printf("tIndex %d %d %d \n",tIndex,eIndex,TS.nTime);
+  //printf("Tsum %g \n",Tsum);
+  //fprintf(stderr,"ebin1 ebinN %g %g\n",TS.EnergyBin[0],TS.EnergyBin[TS.nEnergy-1]);
+  
+  return;
+}
+
+void
+getPoint(double* TV,double* EV,double* lim1, double* lim2)
+ /*! 
+   Calculate the Time and Energy 
+   by sampling the file.
+   Uses TS table to find the point
+   \param TV :: 
+   \param EV ::
+   \param lim1 :: 
+   \param lim2 ::  
+ */
+{
+  int i;
+
+  extern Source TS;
+  double R0,R1,R,Rend;
+  int Epnt;       ///< Points to the next higher index of the neutron integral
+  int Tpnt;
+  int iStart,iEnd;
+  double TRange,Tspread;
+  double Espread,Estart;
+  double *EX;
+
+  // So that lowPoly+highPoly==maxPoly
+  const int maxPoly=6; 
+  const int highPoly=maxPoly/2;
+  const int lowPoly=maxPoly-highPoly;
+
+  // static int testVar=0;
+
+  R0=rand01();
+  /* if (testVar==0)
     {
-      int i,j;
-      char* ss;
-      char **endptr;
-      double nmb;
-      
+    R0=1.0e-8;
+    testVar=1;
+    }
+  */
+  Rend=R=TS.Total*R0;
+  // This gives Eint[Epnt-1] > R > Eint[Epnt]
+  Epnt=binSearch(TS.nEnergy-1,TS.EInt,R);
+  
+  //      if (Epnt < 0)
+  //   Epnt=1;
+  Tpnt=binSearch(TS.nTime-1,TS.Flux[Epnt-1],R);
+  //  fprintf(stderr,"TBoundaryX == %12.6e %12.6e \n",TS.TimeBin[Tpnt-1],TS.TimeBin[Tpnt]);
+  //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n\n",TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+  //  if (Epnt == -1)
+  //{
+  //    Epnt=0;
+  // fprintf(stderr,"\n Rvals == %g %d %d %g\n",R,Epnt,Tpnt,TS.TimeBin[0]);
+  //  fprintf(stderr,"EInt == %d %12.6e %12.6e %12.6e %12.6e \n",Epnt,TS.EInt[Epnt-1],R,TS.EInt[Epnt],TS.EInt[Epnt+1]);
+  // printf("EBoundary == %12.6e %12.6e \n",TS.EnergyBin[Epnt],TS.EnergyBin[Epnt+1]);
+
+  //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n\n",TS.Flux[Epnt+1][Tpnt],R,TS.Flux[Epnt+1][Tpnt+1]);
+  // }
+
+  if(R < TS.Flux[Epnt-1][Tpnt-1] || R >TS.Flux[Epnt-1][Tpnt] )
+    {
+      fprintf(stderr,"outside bin limits Tpnt/Epnt problem  %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],R,TS.Flux[Epnt-1][Tpnt]);
+    }
+
+  if(Epnt == 0)
+    {
+      Estart=0.0;
+      Espread=TS.EInt[0];
+      *EV=TS.EnergyBin[1];
+    }
+  else
+    {
+      Estart=TS.EInt[Epnt-1];
+      Espread=TS.EInt[Epnt]-TS.EInt[Epnt-1];
+      *EV=TS.EnergyBin[Epnt+1];
+    }
+  
+  if (Tpnt==0 || Epnt==0)
+    {
+      fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
+      exit(1);
+    }
+  if (Tpnt==TS.nTime)
+    {
+      fprintf(stderr,"BIG ERROR WITH Tpnt and Epnt\n");
+      exit(1);
+      *TV=0.0;
+      Tspread=TS.Flux[Epnt-1][0]-TS.EInt[Epnt-1];
+      TRange=TS.TimeBin[0];
+      R-=TS.EInt[Epnt-1];
+    }
+  else
+    {
+      *TV=TS.TimeBin[Tpnt-1];
+      TRange=TS.TimeBin[Tpnt]-TS.TimeBin[Tpnt-1];
+      Tspread=TS.Flux[Epnt-1][Tpnt]-TS.Flux[Epnt-1][Tpnt-1];
+      R-=TS.Flux[Epnt-1][Tpnt-1];
+    }
+  //  printf("R == %12.6e\n",R);
+  R/=Tspread;
+  //  printf("R == %12.6e\n",R);
+  *TV+=TRange*R;
+  
+  
+  R1=TS.EInt[Epnt-1]+Espread*rand01();
+  iStart=Epnt>lowPoly ? Epnt-lowPoly : 0;                  // max(Epnt-halfPoly,0)
+  iEnd=TS.nEnergy>Epnt+highPoly ? Epnt+highPoly : TS.nEnergy-1;  // min(nEnergy-1,Epnt+highPoly
+
+  *EV=polInterp(TS.EInt+iStart,TS.EnergyBin+iStart,1+iEnd-iStart,R1);
+  
+  //  fprintf(stderr,"Energy == %d %d %12.6e %12.6e \n",iStart,iEnd,R1,*EV);
+  //  fprintf(stderr,"bins == %12.6e %12.6e %12.6e %12.6e \n",TS.EnergyBin[iStart],TS.EnergyBin[iEnd],
+  //	  TS.EInt[Epnt],TS.EInt[Epnt-1]);
+
+    if(*TV < TS.TimeBin[Tpnt-1] || *TV > TS.TimeBin[Tpnt])
+    {
+      fprintf(stderr,"%d Tpnt %d Tval %g Epnt %d \n",TS.nTime,Tpnt,*TV,Epnt);
+      fprintf(stderr,"TBoundary == %12.6e,%g , %12.6e \n\n",TS.TimeBin[Tpnt-1],*TV,TS.TimeBin[Tpnt]);
+    }
+
+
+  if(*EV < *lim1 || *EV > *lim2)
+    {
+      fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",Epnt,Tpnt,TS.EnergyBin[Epnt-1],*EV,TS.EnergyBin[Epnt]);
+
+
+      fprintf(stderr,"TS == %g %g :: %d %d \n",TS.EInt[Epnt-1],TS.EInt[Epnt],iStart,iEnd);  
+      fprintf(stderr,"Points (%g) == ",R1);  
+      for(i=0;i<iEnd-iStart;i++)
+	fprintf(stderr," %g %g",*(TS.EInt+i+iStart),*(TS.EnergyBin+iStart+i));
+      fprintf(stderr,"\n");  
+
+      //fprintf(stderr,"energy value %g\n",*EV);
+      //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],Rend,TS.Flux[Epnt-1][Tpnt]);
+    }
+  return;
+}
+
+int
+cmdnumberI(char *mc,int* num,const int len)
+  /*!
+    \param mc == character string to use
+    \param num :: Place to put output
+    \param len == length of the character string to process 
+    returns 1 on success and 0 on failure 
+  */
+{
+  int i,j;
+  char* ss;
+  char **endptr;
+  double nmb;
+  
       if (len<1) 
 	return 0;
       j=0;
@@ -195,190 +742,17 @@ DECLARE
       free(ss);
       return 1;
     }
-
-  double Epass()
-    /*
-      This uses a binary search to find the energy point within the system of the 
-      system (searches in the selected range rtE0->rtE1) 
-    
-    */
-    {
-      double x;
-      x=-1.0;
-      while (x<rtE0 || x>rtE1)
-	{
-	  x=rand01()*eTotal;            /* Select a value between 0->maxIntensity */
-	  x=polInterp(x);                     /* calc the Energy corresponding to that i */
-	} 
-      return x;
-    }
-
-  double Ezone(double x)
-    /*
-      This uses a binary search to find the energy point within the system of the 
-      system 
-    */
-    {
-      double oE;
-      oE=polInterp(x);
-      return oE;
-    }
-
-  double polInterp(double intensity) 
-    /* returns the interpolated polynominal between iBase */
-    {
-      int idx;
-      double* X;                /* coordinate of iBase and eRange */
-      double* Y;
-      double aim;
-
-      double out,errOut;         /* out put variables */
-      double C[4],D[4];
-      double testDiff,diff;
-
-      double w,den,ho,hp;           /* intermediate variables */
-      int i,m,ns;
-
-      aim=intensity+reBase;         /* renormalise */
-      idx=Ipass(aim);
-      if (idx<2)
-	idx=2;
-
-      Y=eRange+idx-2;      /* note the swap */
-      X=iBase+idx-2;
-  
-      ns=0;
-      diff=fabs(aim-X[0]);
-      C[0]=Y[0];
-      D[0]=Y[0];
-      for(i=1;i<4;i++)
-	{
-	  testDiff=fabs(aim-X[i]);
-	  if (diff>testDiff)
-	    {
-	      ns=i;
-	      diff=testDiff;
-	    }
-	  C[i]=Y[i];
-	  D[i]=Y[i];
-	}
-  
-      out=Y[ns];
-      ns--;              /* Now can be -1 !!!! */ 
-
-      for(m=1;m<4;m++)
-	{
-	  for(i=0;i<4-m;i++)
-	    {
-	      ho=X[i]-aim;
-	      hp=X[i+m]-aim;
-	      w=C[i+1]-D[i];
-	      /*	  den=ho-hp;  -- test !=0.0 */
-	      den=w/(ho-hp);
-	      D[i]=hp*den;
-	      C[i]=ho*den;
-	    }
-
-	  errOut= (2*(ns+1)<(4-m)) ? C[ns+1] : D[ns--];
-	  out+=errOut;
-	}
-      return out;
-    }
-
  
-  void writeMidQuad(int N)
-    {
-      int i;
-      double yv,xv,step;
-      FILE* ofile;
-
-
-      step=eTotal/N;
-      xv=0.0;
-      ofile=fopen("MidValue.dat","w");
-      fprintf(stderr,"Opened MidValue\n");
-      for(i=0;i<N;i++)
-	{
-	  yv=Ezone(xv);
-	  fprintf(ofile,"%12.6g %12.6g\n",yv,xv);
-	  xv+=step;
-	}   
-      fclose(ofile);
-      return;
-    }
-
- 
-  int 
-    Tpass(double Eval)
-    /* Given an energy Eval it determine the Erange
-       bin between which Eval fits. Erange[out-1]<Eval<Erange[out]
-    */
-    {
-      int i,low,high;
-      i=Tnpts/2;
-      low=0;
-      high=Tnpts;
-      while(eRange[i-1]>Eval || Eval>eRange[i])
-	{
-	  if (Eval<eRange[i-1])
-	    {
-	      high=i;
-	      i=(low+i)/2;
-	    }
-	  else
-	    {
-	      low=i;
-	      i=(high+i)/2;
-	    }
-	}
-      if (i<1)
-	{
-	  fprintf(stderr, "return LOW BOUNDARY TPass %g %g\n",Eval,eRange[i]);
-	  i=1;
-	}
-      return i;
-    }
-
-  int 
-    Ipass(double NValue)
-    /* Given an intensity NValue it determine the Erange / Ibase
-       bin between which Nvalue fits. iBase[out-1]<NValue<iBase[out]
-    */
-    {
-      int i,low,high;
-      i=Tnpts/2;
-      low=0;
-      high=Tnpts;
-      while(iBase[i-1]>NValue || NValue>iBase[i])
-	{
-	  if (NValue<iBase[i-1])
-	    {
-	      high=i;
-	      i=(low+i)/2;
-	    }
-	  else
-	    {
-	      low=i;
-	      i=(high+i)/2;
-	    }
-	}
-      if (i<1)
-	{
-	  fprintf(stderr, "return LOW BOUNDARY IPass %g %g\n",NValue,iBase[i]);
-	  i=1;
-	}
-      return i;
-    }
 
   FILE* openFile(char* FileName)
-    {
-
-  
+    { 
       FILE* efile=0;
       char ss[256];
       char mct[256];
       char mcdir[256];
-  
+
+
+
       /* Is the file located in working dir? */
       efile=fopen(FileName,"r");
       if (!efile) {
@@ -412,314 +786,14 @@ DECLARE
       return efile;
     }
 
-
-  int processLine(char* sLine,double* Eread,double* Iread)
-    /* reads a line from the Etable file 
-       returns 1 if the line is good 
-       Updates: (counter) Tnpts 
-       iBase,Param,eRange
-         
-    */
-    {
-      double evalue,P1,P2,mvalue,tcut,la;      
-      int ix;
-      if (sLine[0]=='#')                                        /* # is a comment in the file */
-	return 0;
-  
-      ix=cmdnumberD(sLine,&evalue,254);                     /* Read Energy  */ 
-      ix+=cmdnumberD(sLine,&la,254);                        /* Read wavelength (discard) */ 
-      ix+=cmdnumberD(sLine,&P1,254);                        /* Read gm[1] */ 
-      ix+=cmdnumberD(sLine,&P2,254);                        /* Read gm[2] */ 
-      ix+=cmdnumberD(sLine,&mvalue,254);                    /* Read maxVal */ 
-      ix+=cmdnumberD(sLine,&tcut,254);                      /* Read TimeCut */ 
-      ix+=cmdnumberD(sLine,Iread,254);                      /* Intensity */ 
-      if (ix!=7)                                            /* Failed to read line */
-	return 0; 
-      eRange[Tnpts]=evalue*1000.0;                          /* Scale energy into meV */ 
-      *Eread=1000.0*evalue;
-      Param[Tnpts][0]=P1;
-      Param[Tnpts][1]=P2;
-      Param[Tnpts][2]=mvalue;                               /* THIS SHOULD BE RECALC HERE !!!! */
-      Param[Tnpts][3]=tcut;
-      iBase[Tnpts]=(Tnpts>0) ? *Iread+iBase[Tnpts-1] : *Iread; 
-      Tnpts++;
-      return 1;
-    }
-
-  int readEtable(FILE* eFile)
-    /* Reads the table give into the main global arrays */ 
-    {
-      double *eC,*iC;         /* pointers to save some typing */
-      double lastE,tmp;
-      Einc=1;                 /* Entry in the array table        */
-      vCol[0]=0.0;            /* neutrons in energy bin          */ 
-      eCol[0]=rtE0;             /* end Energy of bin               */ 
-      iCol[0]=0.0;            /* integrated neutron is bins to this point */
-      lastE=0.0;              /* previous energy used */
-      char ss[256];           /* Dump space for line */
-      double eV,vT;           /* Variables for process line to return energy and intensity */
-      double scale;           /* Temp holding variable for position betwene energies */ 
-      int j;                  /* loop counter */
-
-
-
-
-      while(lastE<rtE1)                            // File test here ....
-	{
-	  if (!fgets(ss,255,eFile))                                   /* read line from file */
-	    {
-	      fprintf(stderr,"Error with file beyond %f",rtE1);
-	      exit(1);
-	    }
-	  if (processLine(ss,&eV,&vT))                             /* Can we process the line properly */
-	    {
-	      if (eV>rtE0)
-		{
-		  if (eV>rtE1)
-		    {
-		      scale=(rtE1-eCol[Einc-1])/(eV-lastE);
-		      eCol[Einc]=rtE1;
-		      vCol[Einc]=scale*vT;
-		      iCol[Einc]=scale*vT+iCol[Einc-1];
-		      fprintf(stderr,"iCol(last) == %g:%g\n",eCol[Einc],iCol[Einc]);
-		    }
-		  else 
-		    {
-		      scale=(eV-eCol[Einc-1])/(eV-lastE);
-		      eCol[Einc]=eV;
-		      vCol[Einc]=scale*vT;
-		      iCol[Einc]=scale*vT+iCol[Einc-1];
-		      fprintf(stderr,"iCol(mid) == %g:%g\n",eCol[Einc],iCol[Einc]);
-		    }		  
-		  Einc++;
-		} 
-	      lastE=eV;
-	    }
-	}
-      eTotal=iCol[Einc-1];
-
-      if(Einc > 2)
-	{
-	  reBase=iBase[1+Tnpts-Einc]-iCol[1];      /* Value up to rtE0 (Einc starts from 1) */ 
-	}
-      else
-	{
-	  eC=eRange+Tnpts-Einc;        //pointer arithmetic to a place in eRange array
-	  scale=(rtE0-*eC)/(*(eC+1)-*eC); //need to calculate new scale
-	  fprintf(stderr,"scale=%g ",scale);
-	  iC=iBase+Tnpts-Einc;        //pointer arithmetic to a place in iBase array
-	  reBase= *iC*(1-scale)+*(iC+1)*scale; 
-	  fprintf(stderr,"eC=%g iC==%g ",*eC,*iC);
-	}
-      fprintf(stderr,"rebase= %g \n",reBase);
-      //  exit(1);
-
-
-      if (Tnpts<2 || Einc<2)
-	{
-	  fprintf(stderr, "Cannot read the sufficient Param file %d :: %d \n",Tnpts,Einc);
-	  exit(1);
-	}
-      /* Get 3 extra points for the iBase and eRange table (used in Quad fit) */
-      fgets(ss,255,eFile);                    /* read extra line from file */
-      for(j=0;j<3 && processLine(ss,&eV,&vT);j++)
-	fgets(ss,255,eFile);                  /* read line from file */
-
-      return Tnpts;
-    }
-
-  double findMax(double* gm)
-    {
-      /* Gets max from modfunction */
-      double tlow,tmid,thigh,vlow,vmid,vhigh;
-      double ttest,vtest;
-      int cnt;
-
-      tlow=0.0;
-      thigh=1e-3;
-      vlow=0.0;
-      vhigh=Tprob(gm,thigh);
-      cnt=0;
-      while(vhigh==0.0 && cnt<50)
-	{  /*  switch (toupper(Face[0]))*/
-	  thigh/=2.0;
-	  vhigh=Tprob(gm,thigh);
-	  cnt++;
-	}
-      if (cnt==50)
-	return 0.0;
-
-      tmid=(tlow+thigh)/2.0;
-      vmid=Tprob(gm,tmid);
-      cnt=0;
-  
-      while((thigh-tlow)>1e-12 && cnt<100)
-	{
-	  cnt++;
-	  if (vhigh>vlow)
-	    {
-	      ttest=(tlow+tmid)/2.0;
-	      vtest=Tprob(gm,ttest);
-	      if (vtest<vmid)
-		{
-		  vlow=vtest;
-		  tlow=ttest;
-		}
-	      else
-		{
-		  vhigh=vmid;
-		  thigh=tmid;
-		  vmid=vtest;
-		  tmid=ttest;
-		}
-	    }
-	  else
-	    {
-	      ttest=(thigh+tmid)/2.0; 
-
-	      vtest=Tprob(gm,ttest);
-	      if (vtest<vmid)
-		{
-		  vhigh=vtest;
-		  thigh=ttest;
-		}
-	      else
-		{
-		  vlow=vmid;
-		  tlow=tmid;
-		  vmid=vtest;
-		  tmid=ttest;
-		}
-	    }
-	}
-      return tmid;
-    }
- 
-  double 
-    findTime(double* P)
-    /* 
-       Calculates the time, use param [3] == max time 
-       param[2] == max values (used in Tprob)) 
-    */
-    {
-      double ttest,res,tp,maxT;
-      double scale;
-
-      //  *TW= 1.0;
-
-      maxT=P[3];
-      ttest=rand01();
-      if (ttest>0.99 && maxT<1e-3)
-	{
-	  ttest=rand01()*(1e-3-maxT);
-	  ttest+=maxT;
-	  tp=Tprob(P,ttest);
-	  tp*=100.0;
-	}
-      else
-	{
-	  ttest*=maxT/0.99;
-	  tp=Tprob(P,ttest);
-	}
-
-
-      //  for(i=0;i<4;i++)
-      //    fprintf(stderr,"%12.6g ");
-      //  fprintf(stderr,"\n");
-
-
-      res=rand01();
-
-      while(tp<res)
-	{
-	  ttest=rand01();
-	  if (ttest>0.99 && maxT<1e-3)
-	    {
-	      ttest=rand01()*(1e-3 -maxT);
-	      ttest+=maxT;
-	      tp=Tprob(P,ttest);
-	      tp*=100.0;
-	    }
-	  else
-	    {
-	      ttest*=maxT/0.99;
-	      tp=Tprob(P,ttest);
-	    }
-	  res=rand01();
-	}
-
-      //*TW=1.0;
-    
-      if (tp>1)
-	{
-	  fprintf(stderr,"Boundary condition >1 == %g %g from %g \n",maxT,ttest,tp);
-	  return -ttest;
-	}
-      return ttest;
-    }
-
-
-
-  double findValue(double* gm,double vmax,double tstart)
-    /*  Gets a value from modfunction
-	Between tstart and the end */
-    {
-      double tlow,thigh,vlow,vhigh;
-      double tmid,vmid,vtest,ttest;
-      int cnt;
-
-      if (tstart<0.0)
-	tstart=0.0;
-      if (vmax==0.0)
-	return 0.0;  
-      tlow=tstart;     //OUTPUT PARAMETERS (modXsize)
-
-      thigh=1e-3;     // start pnt at 1e-3 sec.
-      vlow=Tprob(gm,tlow);        
-      vhigh=Tprob(gm,thigh);        
-      if (vlow>vhigh)
-	{
-	  vtest=vhigh;
-	  vhigh=vlow;
-	  vlow=vtest;
-	  ttest=thigh;
-	  thigh=tlow;
-	  tlow=ttest;
-	}
-      if (vhigh<vmax || vlow>vmax)
-	{
-	  return tlow;
-	}
-    
-    
-      cnt=0;
-      while((vhigh-vlow)/(vhigh+vlow)>1e-3 && cnt<100)
-	{
-	  ttest=(tlow+thigh)/2.0;
-	  vtest=Tprob(gm,ttest);
-	  if (vtest>vmax)
-	    {
-	      vhigh=vtest;
-	      thigh=ttest;
-	    }
-	  else
-	    {
-	      vlow=vtest;
-	      tlow=ttest;
-	    }
-	}
-      return (thigh+tlow)/2.0;
-    }
-
-
   double strArea()
     {
       /* 
 	 Returns the mean Str view of the viewport 
 	 This integrates over each point on the window xw to yh 
 	 View port is symmetric so use only 1/4 of the view 
+	 for the calcuation.
 	 Control Values rtmodY rtmodX xw yh
-                    
       */
   
       double A;
@@ -737,7 +811,8 @@ DECLARE
 	  for(j=0;j<50;j++)         // Mod Y
 	    {
 	      My=j*rtmodY/100.0;
-	      for(aa=-50;aa<51;aa++)
+	      // Position on moderator == (Mx,My)
+	      for(aa=-50;aa<51;aa++)  //view port
 		for(bb=-50;bb<51;bb++)
 		  {
 		    Vx=aa*xw/101.0;
@@ -746,44 +821,18 @@ DECLARE
 		  }
 	    }
 	}
+	//change to Mx*My
+      A*=(rtmodY*rtmodX)/(10201.0*2500.0);
+      // Correct for the area of the viewport. (tables are per cm^2)
+      A*=xw*yh*10000;    
 
-      A*=(xw*yh)/(10101.0*2500.0);
       fprintf(stderr,"Viewport == %g %g Moderator size == (%g * %g) m^2 \n",xw,yh,rtmodX,rtmodY);
       fprintf(stderr,"Dist == %g (metres) \n",dist);
-      fprintf(stderr,"Viewport Solid angle == %g str\n",A);
+      fprintf(stderr,"Viewport Solid angle == %g str\n",A/(xw*yh*10000));
+      fprintf(stderr,"Solid angle used == %g str\n",A);
       return A;
     }
 
-
-
-  double Tprob(double* P,double x)
-    {
-      /*  Parameters are ::
-	  P[3]=max time
-	  P[2]= Integration factor (normalisation to 1)
-	  P[0]=t2
-	  P[1]=tln
-	  EQN val(t)=(1-exp(-t^2/t2^2))*exp(-t/t_ln)
-      */
-  
-      double l1,l2;
-  
-      l1= -(x*x)/(P[0]*P[0]);
-      if (l1>-50)
-	l1=1.0-exp(l1);
-      else
-	l1=1.0;
-      l2= -x/fabs(P[1]);
-      if (l2>-50)
-	l2=exp(l2);
-      else
-	return 0.0;
-#ifdef StuDEBUG
-      if (l1*l2/P[2]>1.0)
-	fprintf(stderr,"Fraction == %f %f %f %f %f %f\n",x,l1*l2/P[2],P[0],P[1],P[2],P[3]);
-#endif
-      return l1*l2/P[2];
-    }
 
   %}
 
@@ -804,7 +853,7 @@ INITIALIZE
       double Xsize;
       double Ysize;
     } Olist[50];
-
+  Nsim=mcget_ncount();
   Bcnt=0;
   // CH4 face 1 (north)
   strcpy(Olist[Bcnt].Name,"mari"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
@@ -870,10 +919,11 @@ INITIALIZE
 
   /* write out version number */
   fprintf(stderr,"**********************************************************************\n");
-  fprintf(stderr,"****   This is ISIS_moderator.comp version 0.9 (22/5/04)          ****\n");
+  fprintf(stderr,"****   This is ISIS_moderator.comp version 2.0 (25/8/05)          ****\n");
   fprintf(stderr,"****   Please check to see if your files are up-to-date           ****\n");
   fprintf(stderr,"****   http://www.isis.rl.ac.uk/Computing/Software/MC/index.htm   ****\n");
   fprintf(stderr,"**********************************************************************\n\n");
+
 
 
   /* convert arguments to runtime variables so that they may be altered */
@@ -905,6 +955,13 @@ INITIALIZE
       fprintf (stderr,"%g A -> %g A =>  %g meV -> %g meV\n",-E0,-E1,rtE0,rtE1);
     }
 
+
+
+
+
+
+  /**********************************************************************/
+
   Tnpts=0;
   Ncount=0;
   fprintf(stderr,"Face == %s \n",Face);
@@ -926,19 +983,19 @@ INITIALIZE
 	    rtmodY=Olist[i].Ysize;
 	    fprintf(stderr,"default modYsize used %g m\n",rtmodY);
 	  }
-	sprintf(fname,"Etable.%s",Olist[i].Name);
+	sprintf(fname,"h.%s",Olist[i].Name);
 	scaleSize=(SAC) ? 1.0 : rtmodY*rtmodX*10000.0;
 	break;
       }
 
-  if(i==Bcnt)
+  if(i==Bcnt)   /* Error condition */
     {
       fprintf(stderr,"Unknown moderator type ::%s::\n",lowerFace);
       fprintf(stderr,"Valid options == > \n");
       for(i=0;i<Bcnt;i++)
 	{
 	  fprintf(stderr," %s ",Olist[i].Name);
-	  if (!((i+1) % 4))
+/* 	  if (!((i+1) % 4)) */
 	    fprintf(stderr,"\n");
 	}
       scaleSize=modXsize*modYsize/0.0025;
@@ -950,108 +1007,82 @@ INITIALIZE
 
   /* READ PARAMETER FILE */
     
-  Tfile=openFile(fname);
+    Tfile=openFile(fname);
 
-  if (!readEtable(Tfile))
+  if (!readHtable(Tfile,rtE0,rtE1))
     {
-      fprintf(stderr,"Failed to read the Etable file \n");
+      fprintf(stderr,"Failed to read the Hzone file \n");
       exit(1);
     }
   fclose(Tfile);
-  //  writeMidQuad(500);
-  //  exit(1);
 
+  fprintf(stderr,"nEnergy == %d\n",TS.nEnergy);
 
   /* Do solid angle correction if required */
   // if SAC=0/1 solid angle is determined
-  if(dist)
-    angleArea=(SAC) ? strArea() : 1.0;
+  if (SAC)
+    angleArea=(dist>0.0) ? strArea() : 2*3.141592654;
   else
     angleArea=1.0;
 
-#ifdef StuDEBUG
-  for(j=0;j<Einc;j++)
-    fprintf(stderr,"%g %g %g\n",eCol[j],vCol[j],iCol[j]);
-#endif
 %}
 
 TRACE
 %{
   double v,r,E;
-  double xf,yf,dx,dy,w_focus,Efrac,mxp,txp;    /* mxp ->max var in param space */
-  double rParam[4];
+  double xf,yf,dx,dy,w_focus;    /* mxp ->max var in param space */
+  double Ival,Tval,Eval;
   double Ddist;   /* Temp versions of dist */
-  double timeWeight;     /* Weight of the time window */
-  int Ti,i;
+
+
   Ncount++;
 
   p=p_in;
+
+  p=1.0;         /* forcing */
   z=0;
-  x = 0.5*rtmodX*randpm1();
+  x = 0.5*rtmodX*randpm1();            /* Get point +/-0.5 *  */
   y = 0.5*rtmodY*randpm1();
   xf = 0.5*xw*randpm1();          /* Choose focusing position uniformly */
   yf = 0.5*yh*randpm1();
   dx = xf-x;
   dy = yf-y;
-  if (dist>0.0)                   /* check input variable */
+  if (dist>0.0)
     {
       r = sqrt(dx*dx+dy*dy+dist*dist);                 /* Actual distance to point */
-      w_focus = scaleSize*(dist*dist)/(r*r)*eTotal;
       Ddist=dist;
+      w_focus = (SAC) ? angleArea : scaleSize*(dist*dist)/(r*r);
     }
-  else
+  else   /* Assume that we have a window 1metre infront of the moderator */
+	 /*   with size area of detector and solid angle 1.0 */
     {
       r=1.0;
-      w_focus=eTotal*scaleSize;
+      w_focus=scaleSize;
       Ddist=1.0;
     }
 
-  E = Epass();
-  v = SE2V*sqrt(E);
-  vz = v*Ddist/r;
+  getPoint(&Tval,&Eval,&rtE0,&rtE1);
+
+  //fprintf(stderr,"outside %g mev\n", TS.Total );
+  if(Eval>rtE1 || Eval<rtE0)
+      fprintf(stderr,"outside %g mev\n", Eval );
+  
+  Ival=TS.Total*3.744905847e14*1.1879451;  /* ( of proton in 60uAmp) * (1-cos(30))*2*Pi  */
+ 
+  
+  v = SE2V*sqrt(Eval);      /* Calculate the velocity */
+  vz = v*Ddist/r; 
   vy = v*dy/r;
   vx = v*dx/r;
 
+  if (Ncount==1)
+    fprintf(stderr,"Totals:: %g %d %d \n",TS.Total,TS.nEnergy,TS.nTime);
+  if (!(Ncount % 100000))
+    fprintf(stderr,"FF[%d]=> %g %g %g %g \n",Ncount,Eval,Tval,TS.Total,Ival);
 
-  Ti = Tpass(E);  /* get an integer relating to the Erange for your selected energy */
-#ifdef StuDEBUG
-  fprintf(stderr,"E range == %f %f\n",eRange[Ti-1],eRange[Ti]);
-#endif
+  t=Tval;
 
-  /* --------------------------------- 
-     Scale by fraction between groups 
-     --------------------------------- 
-  */
-
-  Efrac = (E-eRange[Ti-1])/(eRange[Ti]-eRange[Ti-1]); 
-  if (!(Ncount % 10000))
-    fprintf(stderr,"FF[%d]=> %d %g %g  \n",Ncount,Ti,Efrac,E);
-  for(i=0;i<2;i++)
-    rParam[i]=(1.0-Efrac)*Param[Ti-1][i]+Efrac*Param[Ti][i];
-  for(i=2;i<4;i++)
-    rParam[i]=(Param[Ti][i]>Param[Ti-1][i]) ?  Param[Ti][i] : Param[Ti-1][i] ;
-
-  /* fprintf(stderr,"FF=> %g %d %g %g %g %g %g %g  \n",
-     E,Ti,eRange[Ti-1],eRange[Ti],rParam[0],rParam[1],rParam[2],rParam[3]); */
-
-  txp=findMax(rParam);      // Find the time at the function max.
-  mxp=Tprob(rParam,txp);            
-  rParam[3]=findValue(rParam,mxp/1000.0,txp);  
-  rParam[2]*=mxp;
-  t = findTime(rParam);
-  
-
-#ifdef StuDEBUG
-  if (t<0)
-    {
-      t*=-1;
-      fprintf(stderr,"FF=> %g %d %g %g %g %g  \n",E,Ti,eRange[Ti-1],eRange[Ti],rParam[2],rParam[3]); 
-    }
-  fprintf(stderr,"%g %g %g : E %g %g %g %g\n",vx,vy,vz,E,t,p_in,p);
-#endif
-  p=w_focus*angleArea;
-  
-
+  p=w_focus*Ival/Nsim;
 %}
 
 
