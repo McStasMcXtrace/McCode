@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -91,7 +91,7 @@ INITIALIZE
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
 
   if (bufsize > 0) sprintf(Vars.option, "list=%g", bufsize);
-  else strcat(Vars.option, "list all");
+  else strcpy(Vars.option, "list all");
 
   if (type)
   {
