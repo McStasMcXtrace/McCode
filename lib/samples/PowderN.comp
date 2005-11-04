@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -374,7 +374,7 @@ INITIALIZE
     {
       my_s_v2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0*V2K*V2K)
-                 *(L[i].j * L[i].F2 / L[i].q);
+                 *(L[i].j * L[i].F2 / L[i].q)*100;   // Factor 100 to convert from barns to fm^2
       /* Is not yet divided by v^2 */
       /* Squires [3.103] */
       my_s_v2_sum+=my_s_v2[i];
@@ -386,8 +386,8 @@ INITIALIZE
       "         Check format definition\n", NAME_CURRENT_COMP));
 
   /* Is not yet divided by v */
-  my_a_v = pack*line_info.sigma_a/line_info.V_0*2200;
-  my_inc = pack*line_info.sigma_i/line_info.V_0;
+  my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2         
+  my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
   my_s_v2_sum=0;
   printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
     NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i);
@@ -486,8 +486,8 @@ TRACE
       l_1 = v*t1; /* go to exit */
 
       pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-frac);
-      /* Correction in case of d_phi focusing */
-      pmul *= sin(d_phi/2);
+      /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
+      if (d_phi) pmul *= sin(d_phi/2);
 
     }  /* Coherent scattering event */
     else
