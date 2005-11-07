@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -69,9 +69,9 @@
 *               are generated. You may also use 'h' and 'w' for a square source
 * dist:   [m]   Distance to target along z axis.
 * xw:     [m]   Width(x) of target.
-*                 If dist is not given, xw = horz. div  in deg
+*                 If dist=0.0, xw = horz. div  in deg
 * yh:     [m]   Height(y) of target.
-*                 If dist is not given, yh = vert. div in deg
+*                 If dist=0.0, yh = vert. div in deg
 * E0:     [meV] Mean energy of neutrons. You may also use Lambda0.
 * dE:     [meV] Energy spread of neutrons, half width.
 *
@@ -158,8 +158,7 @@ INITIALIZE
 
   if (dist == 0)
   {
-    fprintf(stderr,"Source_gen: warning: focusing distance is null. Set to 1 rad\n");
-    dist = 57.296;
+    fprintf(stderr,"Source_gen: warning: focusing distance is null. xw and yh interpreted as divergence in deg\n");
   }
 
   delta_lambda = 2*d_lambda;
@@ -208,7 +207,7 @@ INITIALIZE
     if (I3 == 0) I3 = I1;
   }
   else
-    { lambda0b = lambda_0; }
+    { lambda0c = lambda_0; }
 
   if (verbose == 1)
   {
@@ -239,7 +238,7 @@ INITIALIZE
 TRACE
 %{
   double theta0,phi0,theta1,phi1,chi,theta,phi,v,r, lambda;
-  double Maxwell, lambda2, lambda5;
+  double tan_h, tan_v, Maxwell, lambda2, lambda5;
 
   if (verbose >= 0)
   {
@@ -261,11 +260,20 @@ TRACE
     if (length != 0)
       z = length*randpm1()/2;
 
-    theta0= -atan((x-xw/2.0)/dist);              /* Angles to aim at target */
-    phi0  = -atan((y-yh/2.0)/dist);
-
-    theta1= -atan((x+xw/2.0)/dist);
-    phi1  = -atan((y+yh/2.0)/dist);
+    if (dist == 0)
+    { 
+      theta0 =  DEG2RAD*xw; 
+      phi0   =  DEG2RAD*yh; 
+      theta1 = -DEG2RAD*xw; 
+      phi1   = -DEG2RAD*yh; 
+    }
+    else
+    { 
+      theta0= -atan((x-xw/2.0)/dist);              /* Angles to aim at target */
+      phi0  = -atan((y-yh/2.0)/dist);
+      theta1= -atan((x+xw/2.0)/dist);
+      phi1  = -atan((y+yh/2.0)/dist);
+    }
 
     /* shot towards target : flat distribution */
 
@@ -305,9 +313,12 @@ TRACE
             p *= Maxwell;
     }
 
-    vz=v*cos(phi)*cos(theta);
-    vy=v*sin(phi);
-    vx=v*cos(phi)*sin(theta);
+    /* Perform the correct treatment - no small angle approx. here! */
+    tan_h = tan(theta);
+    tan_v = tan(phi);
+    vz = v / sqrt(1 + tan_v*tan_v + tan_h*tan_h);
+    vy = tan_v * vz;
+    vx = tan_h * vz;
     SCATTER;
   }
 %}
