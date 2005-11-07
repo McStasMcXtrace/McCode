@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.9 $
+* Version:  $Revision: 1.10 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -232,6 +232,7 @@ INITIALIZE
   double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
 
   double n_neutrons=0;
+  double n_neutrons_p=0;
   long   filesize  =0;
 
   struct stat stfile;
@@ -297,7 +298,8 @@ INITIALIZE
         if (vx > max_vx) max_vx = vx;
         if (vy > max_vy) max_vy = vy;
         if (vz > max_vz) max_vz = z;
-        n_neutrons += p;
+        n_neutrons++;
+        n_neutrons_p += p;
       }
     }
 
@@ -319,15 +321,15 @@ INITIALIZE
     long   end_analyse=0;
     double cx,cy,cz;
     end_analyse = ftell(hfile);
-    mean_x  /= n_neutrons;
-    mean_y  /= n_neutrons;
-    mean_z  /= n_neutrons;
-    mean_vx /= n_neutrons;
-    mean_vy /= n_neutrons;
-    mean_vz /= n_neutrons;
-    mean_dx /= n_neutrons;
-    mean_dy /= n_neutrons;
-    mean_dz /= n_neutrons;
+    mean_x  /= n_neutrons_p;
+    mean_y  /= n_neutrons_p;
+    mean_z  /= n_neutrons_p;
+    mean_vx /= n_neutrons_p;
+    mean_vy /= n_neutrons_p;
+    mean_vz /= n_neutrons_p;
+    mean_dx /= n_neutrons_p;
+    mean_dy /= n_neutrons_p;
+    mean_dz /= n_neutrons_p;
     /* now estimates total ncount */
     mean_v = sqrt(mean_vx*mean_vx+mean_vy*mean_vy+mean_vz*mean_vz);
     n_count_extrapolated = n_neutrons*(filesize-first_batch)/(end_analyse - first_batch);
