@@ -11,7 +11,7 @@
 *
 * Written by: E. Farhi
 * Date: Nov 2005
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Release: McStas 1.9
 * Origin: Risoe
 *
@@ -50,7 +50,7 @@ DECLARE
   double mean_x =0, mean_y =0, mean_z =0;
   double mean_vx=0, mean_vy=0, mean_vz=0;
   double mean_dx=0, mean_dy=0, mean_dz=0;
-  double mean_t=-FLT_MAX;
+  double mean_t=-FLT_MAX, mean_v=0;
   double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
   double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
   double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
@@ -66,7 +66,7 @@ TRACE
   mean_t  += p*t;
   v = sqrt(vx*vx+vy*vy+vz*vz);
   if (v)
-    { mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
+    { mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); mean_v += p*v; }
   if (x  < min_x)  min_x  = x;
   if (y  < min_y)  min_y  = y;
   if (z  < min_z)  min_z  = z;
@@ -86,7 +86,6 @@ TRACE
 
 SAVE
 %{
-  double mean_v;
   double mean_k, mean_w=0, mean_L=0;
   Coords c;
 
@@ -102,8 +101,8 @@ SAVE
   mean_dy /= n_neutrons_p;
   mean_dz /= n_neutrons_p;
   mean_t  /= n_neutrons_p;
+  mean_v  /= n_neutrons_p;
   /* now estimates total ncount */
-  mean_v = sqrt(mean_vx*mean_vx+mean_vy*mean_vy+mean_vz*mean_vz);
 
   mean_k = V2K*mean_v;
   if (mean_k) mean_L = 2*PI/mean_k;
