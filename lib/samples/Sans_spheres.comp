@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: KL, 7 June 2005
@@ -65,7 +65,7 @@ INITIALIZE
   if (qmax) printf("Sans_spheres: %s: Parameter qmax is not used anymore. Ignoring.\n", NAME_CURRENT_COMP);
     }
 
-  my_a_v = sigma_a*2200;           /* Is not yet divided by v */
+  my_a_v = sigma_a*2200*100;           /* Is not yet divided by v. 100: Convert barns -> fm^2 */
 
   my_s_pre = Phi * 4*PI*R*R*R/3 * Delta_rho*Delta_rho;
 

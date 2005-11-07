@@ -10,7 +10,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -88,9 +88,9 @@ INITIALIZE
     if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"Powder1: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     else isrect=1; }
 
-  my_a_v = pack*sigma_a/Vc*2200;           /* Is not yet divided by v */
-  my_s_v2 = 4*PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q);
-                                      /* Is not yet divided by v^2 */
+  my_a_v = pack*sigma_a/Vc*2200*100;        /* Is not yet divided by v */
+  my_s_v2 = 4*PI*PI*PI*pack*j*F2*DW/(Vc*Vc*V2K*V2K*q)*100;
+  /* Is not yet divided by v^2. 100: convert from barns to fm^2 */
   /* Squires [3.103] */
   if (d) q=2*PI/d;
   q_v = q*K2V;
