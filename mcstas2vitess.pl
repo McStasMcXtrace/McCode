@@ -130,7 +130,7 @@ COMPONENT vitess_in = Vitess_input(
 COMPONENT comp = $comp_name(
     $comp_actuals)
   AT (pos_x, pos_y, pos_z) ABSOLUTE
-  ROTATED (0, 90, 90) ABSOLUTE
+  ROTATED (0, 0, 0) ABSOLUTE
 
 COMPONENT vitess_out = Vitess_output(
     file = vitess_outfile, bufsize = vitess_bufsize,
@@ -145,7 +145,7 @@ sub make_tcl_file {
     my ($F, $par, $d) = @_;
 
     print $F "### $d->{'name'}\n###\n";
-    print $F "gSet ", lc($d->{'name'}), "ESET {\n";
+    print $F "gSet mcstas_", lc($d->{'name'}), "ESET {\n";
     my $dsc = $d->{'identification'}{'short'};
     chomp $dsc;
     $dsc =~ s/\n/\\n/g;

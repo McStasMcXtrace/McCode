@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: McStas 1.5.0
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -40,12 +40,13 @@
 
 DEFINE COMPONENT Vitess_input
 DEFINITION PARAMETERS (file = 0)
-SETTING PARAMETERS (bufsize = 10000, repeat_count = 1)
+SETTING PARAMETERS (int bufsize = 10000, repeat_count = 1)
 OUTPUT PARAMETERS (hfile, buf, size, pos, rep, finished)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 SHARE
 %{
+%include "general"
 %include "vitess-lib" 
 %}
 
@@ -88,8 +89,6 @@ INITIALIZE
 
 TRACE
 %{
-  double v;			/* Neutron velocity */
-
   if(pos >= size) {
     /* Buffer is empty. */
     size = fread(buf, sizeof(Neutron), bufsize, hfile);

@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.15 $
+* Version:  $Revision: 1.16 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -65,7 +65,7 @@ DEFINE COMPONENT Virtual_input
 DEFINITION PARAMETERS (file=0, type=0)
 SETTING PARAMETERS (verbose=0,repeat_count=1)
 OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,file_ncount,
-                   mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz,
+                   mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz, n_neutrons,
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
                    max_vx, max_vy, max_vz, first_block, mean_x, mean_y, mean_z)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -106,6 +106,7 @@ DECLARE
   long    nrows=0;      /* total nrows in block */
   long    Offset=0;     /* offset in file */
   double  file_ncount=0;  /* total number of neutrons in file */
+  double  n_neutrons=0;
   char    read_block=1; /* flag to start by reading block */
   char    first_block=1;
   t_Table rTable;
@@ -171,10 +172,11 @@ TRACE
 
   if (first_block) {
     double v;
-    mean_x  += x;  mean_y  += y;  mean_z  += z;
-    mean_vx += vx; mean_vy += vy; mean_vz += vz;
+    mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
+    mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz;
     v = sqrt(vx*vx+vy*vy+vz*vz);
-    if (v) { mean_dx += fabs(vx/v); mean_dy += fabs(vy/v); mean_dz += fabs(vz/v); }
+    if (v)
+      { mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
     if (x  < min_x)  min_x  = x;
     if (y  < min_y)  min_y  = y;
     if (z  < min_z)  min_z  = z;
@@ -187,6 +189,7 @@ TRACE
     if (vx > max_vx) max_vx = vx;
     if (vy > max_vy) max_vy = vy;
     if (vz > max_vz) max_vz = z;
+    n_neutrons += p;
   }
 
   pos++;
@@ -198,15 +201,15 @@ TRACE
     if (first_block) {
       double n_count_extrapolated=0, mean_v;
       /* display statitics for 1st block */
-      mean_x  /= nrows;
-      mean_y  /= nrows;
-      mean_z  /= nrows;
-      mean_vx /= nrows;
-      mean_vy /= nrows;
-      mean_vz /= nrows;
-      mean_dx /= nrows;
-      mean_dy /= nrows;
-      mean_dz /= nrows;
+      mean_x  /= n_neutrons;
+      mean_y  /= n_neutrons;
+      mean_z  /= n_neutrons;
+      mean_vx /= n_neutrons;
+      mean_vy /= n_neutrons;
+      mean_vz /= n_neutrons;
+      mean_dx /= n_neutrons;
+      mean_dy /= n_neutrons;
+      mean_dz /= n_neutrons;
       /* now estimates total ncount */
       mean_v = sqrt(mean_vx*mean_vx+mean_vy*mean_vy+mean_vz*mean_vz);
       n_count_extrapolated = (double)nrows*rTable.filesize/Offset;
