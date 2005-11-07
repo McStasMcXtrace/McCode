@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.8 $
+* Version:  $Revision: 1.9 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -280,10 +280,11 @@ INITIALIZE
         exit_flag = 1;
       } else {
         double v;
-        mean_x  += x;  mean_y  += y;  mean_z  += z;
-        mean_vx += vx; mean_vy += vy; mean_vz += vz;
+        mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
+        mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz;
         v = sqrt(vx*vx+vy*vy+vz*vz);
-        if (v) { mean_dx += fabs(vx/v); mean_dy += fabs(vy/v); mean_dz += fabs(vz/v); }
+        if (v) {
+          mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
         if (x  < min_x)  min_x  = x;
         if (y  < min_y)  min_y  = y;
         if (z  < min_z)  min_z  = z;
@@ -296,7 +297,7 @@ INITIALIZE
         if (vx > max_vx) max_vx = vx;
         if (vy > max_vy) max_vy = vy;
         if (vz > max_vz) max_vz = z;
-        n_neutrons++;
+        n_neutrons += p;
       }
     }
 
