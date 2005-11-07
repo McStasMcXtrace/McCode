@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -48,7 +48,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 INITIALIZE
 %{
-  if (xmin == 0 && xmax == 0 && ymin == 0 & ymax == 0 && radius == 0)
+  if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0)
     { fprintf(stderr,"Slit: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
   
 %}
