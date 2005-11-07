@@ -12,7 +12,7 @@
 * Date:   Aug 28, 2002
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 *
 * This file is to be imported by the mcstas2vitess perl script
 * It handles the way Vitess parses parameters.
@@ -22,9 +22,14 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.h,v 1.13 2005-07-25 14:55:08 farhi Exp $
+* $Id: vitess-lib.h,v 1.14 2005-11-07 08:14:41 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.13  2005/07/25 14:55:08  farhi
+* DOC update:
+* checked all parameter [unit] + text to be OK
+* set all versions to CVS Revision
+*
 * Revision 1.12  2005/04/27 14:42:07  lieutenant
 * structure 'Neutron' only included if 'general.h' was not included
 *
@@ -45,7 +50,7 @@
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
-#define VITESS_LIB_H "$Revision: 1.13 $"
+#define VITESS_LIB_H "$Revision: 1.14 $"
 
 #ifndef GENERAL_H
  #include <math.h>
@@ -98,6 +103,11 @@ void vitess_parseopt(int argc, char *argv[],
          double *dptr[], char dchr[], char **sptr[], char schr[]);
 int vitess_main(int argc, char *argv[], int **check_finished,
     double *dptr[], char dchr[], char **sptr[], char schr[]);
+
+void McInitVt();
+void McCleanupVt();
+void setParDirectory (char *a);
+char* FullParName(char* filename);
 
 #endif
 

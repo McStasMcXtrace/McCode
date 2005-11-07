@@ -12,7 +12,7 @@
 * Date:   Aug 28, 2002
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 *
 * This file is to be imported by the mcstas2vitess perl script
 * It handles the way Vitess parses parameters.
@@ -22,9 +22,14 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.c,v 1.13 2005-07-25 14:55:08 farhi Exp $
+* $Id: vitess-lib.c,v 1.14 2005-11-07 08:14:41 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.13  2005/07/25 14:55:08  farhi
+* DOC update:
+* checked all parameter [unit] + text to be OK
+* set all versions to CVS Revision
+*
 * Revision 1.12  2005/04/27 14:46:10  lieutenant
 * new: McInitVt(), McCleanupVt(), setParDirectory(), FullParName(); correction: coordinate change
 *
@@ -47,6 +52,31 @@
 #ifndef VITESS_LIB_H
 #error McStas : please import this library with %include "vitess-lib"
 #endif
+
+/********************************************************************************************/
+#ifdef _MSC_VER
+# include <fcntl.h>
+# include <io.h>
+# define cSlash '\\'
+#else
+# define cSlash '/'
+#endif
+
+double dTimeMeas   =  0.0,  /* time of measurement           [s]   */
+       dLmbdWant   =  0.0,  /* desired wavelength            [Ang] */
+       dFreq       =  0.0;  /* frequency of the soure        [Hz]  */
+
+long     BufferSize;       /* size of the neutron input and output buffer */
+Neutron* InputNeutrons;    /* input neutron Buffer */
+Neutron* OutputNeutrons;   /* output neutron buffer */
+
+double   wei_min=0.0;      /* Minimal weight for tracing neutron */
+long     keygrav=1;
+short    bTrace=FALSE,     /* criterion: write trace files */
+         bOldFrame=FALSE,  /* criterion: co-ordinate system of prev. module used for current module */
+         bSepRate=FALSE;   /* criterion: write separate count rates */
+char*    ParDirectory;     /* parameter directory */
+int      ParDirectoryLength;
 
 /* Convert McStas state parameters to VITESS Neutron structure. In
    VITESS, the neutron velocity is represented by a wavelength in
@@ -161,106 +191,241 @@ vitess_parseopt(int argc, char *argv[],
   {
     if(argv[i][0] != '-')
       vitess_option_error(argv[i]);
-    switch(argv[i][1])
-    {
-      case 'f':
-  vitess_infile = &argv[i][2];
-  break;
-      case 'F':
-  vitess_outfile = &argv[i][2];
-  break;
-      case 'J':
-  vitess_tracepoints = 1;
-  break;
-      case 'L':
-  if(!freopen(&argv[i][2], "wt", stderr))
-  {
-    fprintf(stderr, "Can't open %s for output!\n", &argv[i][2]);
-    exit(1);
-  }
-  break;
-      case 'Z':
-  srandom(atol(&(argv[i][2])));
-  break;
-      case 'A':
-  vitess_repcnt = atol(&(argv[i][2]));
-  break;
-      case 'B':
-  vitess_bufsize = atol(&(argv[i][2]));
-  break;
-      default:
-  /* First look for a matching double parameter. */
-  for(j = 0; dchr[j]; j++)
-  {
-    if(argv[i][1] == dchr[j])
-    {
-      *dptr[j] = atof(&(argv[i][2]));
-      break;
-    }
-  }
-  if(!dchr[j])
-  {
-    /* Then look for a matching string parameter. */
-    for(j = 0; schr[j]; j++)
-    {
-      if(argv[i][1] == schr[j])
+
+    if (argv[i][0] == '-' && (argv[i][1] == '-'))
+    { switch(argv[i][2])
       {
-        *sptr[j] = &(argv[i][2]);
-        break;
+        case 'f':
+          vitess_infile = &argv[i][3];
+          break;
+        case 'F':
+          vitess_outfile = &argv[i][3];
+          break;
+        case 'J':
+          vitess_tracepoints = 1;
+          break;
+        case 'L':
+          if(!freopen(&argv[i][3], "wt", stderr))
+          {
+            fprintf(stderr, "Can't open %s for output!\n", &argv[i][2]);
+            exit(1);
+          }
+          LogFilePtr=stderr;
+          break;
+        case 'Z':
+          srandom(atol(&(argv[i][3])));
+          break;
+        case 'G':
+          mcgravitation = atol(&(argv[i][3]));
+          keygrav = mcgravitation;
+          break;
+        case 'B':
+          vitess_bufsize = atol(&(argv[i][3]));
+          break;
+        case 'P':
+          setParDirectory(&argv[i][3]);
+          break;
+        case 'U':
+          wei_min = atof(&(argv[i][3]));    /* minimal weight for tracing neutron */
       }
     }
-    if(!schr[j])
-      vitess_option_error(argv[i]);
-  }
+    else 
+    { /* First look for a matching double parameter. */
+      for(j = 0; dchr[j]; j++)
+      {
+        if(argv[i][1] == dchr[j])
+        {
+          *dptr[j] = atof(&(argv[i][2]));
+          goto end_loop;
+        }
+      }
+      if(!dchr[j])
+      {
+        /* Then look for a matching string parameter. */
+        for(j = 0; schr[j]; j++)
+        {
+          if(argv[i][1] == schr[j])
+          {
+            *sptr[j] = &(argv[i][2]);
+            goto end_loop;
+          }
+        }
+        if(!schr[j])
+          vitess_option_error(argv[i]);
+      }
     }
+end_loop:
+  continue;
   }
 }
+
+void WriteInstrData(long nModuleNo, VectorType Pos, double dLength, double dRotZ, double dRotY)
+{
+  FILE*  pFile=NULL;
+  char   *pBuffer, sBuffer[CHAR_BUF_SMALL+1];
+  int    m, i;
+
+  /* source module writes header lines */
+  if (nModuleNo==0)
+  { pFile = fopen( FullParName("instrument.inf"), "w");
+    fprintf(pFile, "# No ID    module           len [m]  x [m]   y [m]   z [m]    hor. [deg] ver.      W-Par.       H-Par.       R-Par       number  type Description\n");
+    fprintf(pFile, "# ------------------------------------------------------------------------------------------------------------------------------------------------\n");
+  }
+  /* first module of 2nd, 3rd ... part re-writes file up to end of previous part */
+  else if (vitess_infile!=NULL)
+  { i=-1;
+    pFile = fopen(FullParName("instrument.inf"), "r");
+    pBuffer=malloc(CHAR_BUF_SMALL*(nModuleNo+3+3));
+    for (m=-2; m<nModuleNo; m++)
+    { fgets (sBuffer, sizeof(sBuffer)-1, pFile);
+      strcpy(&pBuffer[++i*CHAR_BUF_SMALL], sBuffer);
+      if (memcmp(sBuffer, "EOP", 3)==0)
+      { fgets (sBuffer, sizeof(sBuffer)-1, pFile);
+        strcpy(&pBuffer[++i*CHAR_BUF_SMALL], sBuffer);
+      }
+    }
+    fclose(pFile);
+    pFile = fopen( FullParName("instrument.inf"), "w");
+    for (m=0; m<=i; m++)
+      fprintf(pFile, "%s", &pBuffer[CHAR_BUF_SMALL*m]);
+    fprintf(pFile, "EOP\n");
+    free(pBuffer);
+  }
+  /* each other module appends a line */
+  else
+  { pFile = fopen(FullParName("instrument.inf"), "a");
+  }
+
+  if (pFile) {
+    char cNF=' ';
+    if (bOldFrame) cNF='F';
+    fprintf(pFile, "%3ld %3d %-18.18s %7.3f %7.3f %7.3f %7.3f  %8.3f %8.3f  %12.4e %12.4e %12.4e %c %5ld %5d %s\n",
+                   nModuleNo, 500, mcinstrument_name, dLength, Pos[0], Pos[1], Pos[2],
+                   180.0/M_PI*dRotZ, 180.0/M_PI*dRotY, 0.0, 0.0, 0.0, cNF, 0, 0, NULL);
+    /* mark end of actual part */
+    if (vitess_outfile!=NULL && nModuleNo > 0)
+      fprintf(pFile, "EOP\n");
+    fclose(pFile);
+  }
+}
+
+void ReadInstrData(long* pModuleNo, VectorType Pos, double* pLength, double* pRotZ, double* pRotY)
+{
+  FILE*  pFile=NULL;
+  int    nModuleID;
+  long   No=0, nDum;
+  char   sBuffer[CHAR_BUF_LENGTH]="", sLine[CHAR_BUF_LENGTH]="", sLineH[CHAR_BUF_LENGTH]="";
+
+  *pModuleNo = 0;
+  Pos[0]   = Pos[1] = Pos[2] = 0.0;
+  *pLength = 0.0;
+  *pRotY   = 0.0;
+  *pRotZ   = 0.0;
+
+  pFile = fopen(FullParName("instrument.inf"), "r");
+  if (pFile)
+  {
+    if (vitess_infile==NULL)
+    { /* Read last line and copy content, except:
+		   lines containing F at pos 116-118, they have not a new frame) */
+      while (ReadLine(pFile, sBuffer, sizeof(sBuffer)-1))
+      { sscanf(sBuffer, "%ld", pModuleNo);
+		  // ndig = short(floor(lg10(*pModuleNo));
+        if (sBuffer[116]!='F' && sBuffer[117]!='F' && sBuffer[118]!='F') strcpy(sLine, sBuffer);
+		}
+    }
+    else
+    {  /* read until end of previous part, if input file is used */
+      while (ReadLine(pFile, sBuffer, sizeof(sBuffer)-1))
+      { if (memcmp(sBuffer, "EOP", 3)==0)
+        {  *pModuleNo = No;
+           strcpy(sLine, sLineH);
+        }
+        else
+        { sscanf(sBuffer, "%ld", &No);
+          if (sBuffer[116]!='F' && sBuffer[117]!='F' && sBuffer[118]!='F') strcpy(sLineH, sBuffer);
+		  }
+      }
+      if (strlen(sLine)==0) {*pModuleNo = No; strcpy(sLine, sLineH);}
+    }
+    sscanf(sLine, "%ld %3d %18c %lf %lf %lf %lf %lf %lf",
+                  &nDum, &nModuleID, sBuffer, pLength, &Pos[0], &Pos[1], &Pos[2], pRotZ, pRotY);
+    *pRotZ *= M_PI/180.0;
+    *pRotY *= M_PI/180.0;
+    fclose(pFile);
+  }
+}
+
+
+vitess_write(double NumNeutRead, double NumNeutWritten, double CntRate, double CntRateSqr,
+             double dShiftX,     double dShiftY,        double dShiftZ, 
+             double dHorizAngle, double dVertAngle)
+{
+  double dRotMatrix[3][3], dRotY, dRotZ, dLength,
+         CntRateErr;
+  long   nModuleNo=0;
+  int    k;
+  VectorType Shift,  /* Shift of end position        [m] */
+             EndPos; /* end position of prev. module [m] */
+
+  fprintf(LogFilePtr,"\n\nVITESS 2.6 / McStas 1.9  module %s\n", mcinstrument_name);
+
+  /* update 'instrument.inf' */
+  ReadInstrData(&nModuleNo, EndPos, &dLength, &dRotZ, &dRotY);
+  nModuleNo++;
+  Shift[0] = dShiftZ;
+  Shift[1] = dShiftX;
+  Shift[2] = dShiftY;
+  FillRMatrixZY(dRotMatrix, dRotY, dRotZ);
+  RotBackVector(dRotMatrix, Shift);
+  for (k=0; k<3; k++)
+    EndPos[k] += Shift[k];
+  dLength += LengthVector(Shift);
+  dRotZ   += dHorizAngle;
+  dRotY   += dVertAngle;
+  WriteInstrData(nModuleNo, EndPos, dLength, dRotZ, dRotY);
+
+  CntRateErr = sqrt( sq(CntRate)/NumNeutWritten
+                   + (NumNeutWritten*CntRateSqr-sq(CntRate)) / (NumNeutWritten-1) );
+  fprintf(stderr, "%2ld number of trajectories read         : %11.0f\n", nModuleNo, NumNeutRead);
+  fprintf(stderr, "   number of trajectories written      : %11.0f\n", NumNeutWritten);
+  fprintf(stderr, "(time averaged) neutron count rate     : %11.4e +/- %10.3e n/s \n", CntRate, CntRateErr);
+
+}
+
+
+extern int mccvitess_out_pos;
+extern double mcnp;
+extern double pos_x, pos_y, pos_z;
 
 int vitess_main(int argc, char *argv[], int **check_finished,
     double *dptr[], char dchr[], char **sptr[], char schr[])
 {
-  /* ToDo: Make a cleaner interface here, to avoid relying on McStas
-     internals. For example, this relies on it being ok to omit
-     mcsiminfo_init() and mcsiminfo_close(). */
+  double Ni_sum=0.0, No_sum=0.0, p_sum =0.0, p2_sum=0.0;
+
+  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
+  /* default is to output as McStas format */
+  mcformat_data.Name=NULL;
+  if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
+    mcformat_data = mcuse_format("VRML");
+
   srandom(time(NULL));  /* Random seed */
   vitess_parseopt(argc, argv, dptr, dchr, sptr, schr); /* VITESS-style option parser */
   mcinit();
   do
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
+    Ni_sum++;
     mcraytrace();
+    p_sum  += mcnp;
+    p2_sum += mcnp*mcnp;
   } while(!**check_finished);
+
+  No_sum = (double) mccvitess_out_pos;
+  vitess_write(Ni_sum, No_sum, p_sum, p2_sum, pos_x, pos_y, pos_z, 0.0, 0.0);
   mcfinally();
   return 0;
 }
-
-/********************************************************************************************/
-
-#ifdef _MSC_VER
-# include <fcntl.h>
-# include <io.h>
-# define cSlash '\\'
-#else
-# define cSlash '/'
-#endif
-
-double dTimeMeas   =  0.0,  /* time of measurement           [s]   */
-       dLmbdWant   =  0.0,  /* desired wavelength            [Ang] */
-       dFreq       =  0.0;  /* frequency of the soure        [Hz]  */
-
-long     BufferSize;      /* size of the neutron input and output buffer */
-Neutron* InputNeutrons;   /* input neutron Buffer */
-Neutron* OutputNeutrons;  /* output neutron buffer */
-
-double   wei_min=0.0;     /* Minimal weight for tracing neutron */
-long     keygrav=1;
-short    bTrace=TRUE,     /* criterion: write trace files */
-         bNewFrame=TRUE,  /* criterion: new co-ordinate system set for current module */
-         bSepRate=TRUE;   /* criterion: write separate count rates */
-char*    ParDirectory;    /* parameter directory */
-int      ParDirectoryLength;
-
-void setParDirectory (char *a);
 
 /**************************************************************/
 /* Init does a general program initialization, which is ok    */
@@ -271,7 +436,7 @@ void McInitVt()
 {
   /* Set some default values */
   BufferSize  = 2;
-  LogFilePtr  = stdout;
+  LogFilePtr  = stderr;
 
   if (mcdirname==NULL)
     setParDirectory(getenv("PWD") ? getenv("PWD") : ".");
