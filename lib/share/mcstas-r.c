@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.121 $
+* Version: $Revision: 1.122 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.121 2005-09-16 08:43:19 farhi Exp $
+* $Id: mcstas-r.c,v 1.122 2005-11-08 13:37:49 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.121  2005/09/16 08:43:19  farhi
+* Removed floor+0.5 in Monitor_nD
+* Take care of ploting with bin centers in mcplot stuff (inline+matlab+scilab+octave...)
+*
 * Revision 1.120  2005/08/24 09:51:31  pkwi
 * Beamstop and runtime modified according to Emmanuels remarks.
 *
@@ -1802,14 +1806,16 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   mcfile_tag(f, format, pre, parent, "variables", vars);
   /* add warning in case of low statistics or large number of bins in text format mode */
   if (n*m*p > 1000 && Nsum < n*m*p && Nsum) fprintf(stderr,
-    "Warning: %s: file '%s': Possibly Low Statistics (%g events in %dx%dx%d bins) (mcinfo_data)\n",
-    parent, filename, Nsum, m,n,p);
+    "Warning: file '%s':\n
+    "         Low Statistics (%g events in %dx%dx%d bins).\n",
+    filename, Nsum, m,n,p);
   if ( !strstr(format.Name, "binary")
     && (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab"))
     && (n*m*p > 10000 || m > 1000) ) fprintf(stderr,
-      "Warning: %s: file '%s' (%s format): Large matrices (%dx%dx%d) in text mode may be slow"
-      " or fail at import (mcinfo_data)\n",
-      parent, filename, format.Name, m,n,p);
+      "Warning: file '%s' (%s format)\n"
+      "         Large matrices (%dx%dx%d) in text mode may be\n"
+      "         slow or fail at import. Prefer binary mode.\n",
+      filename, format.Name, m,n,p);
 } /* mcinfo_data */
 
 /*******************************************************************************
