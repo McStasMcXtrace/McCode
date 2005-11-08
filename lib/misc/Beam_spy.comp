@@ -11,7 +11,7 @@
 *
 * Written by: E. Farhi
 * Date: Nov 2005
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Release: McStas 1.9
 * Origin: Risoe
 *
@@ -50,7 +50,7 @@ DECLARE
   double mean_x =0, mean_y =0, mean_z =0;
   double mean_vx=0, mean_vy=0, mean_vz=0;
   double mean_dx=0, mean_dy=0, mean_dz=0;
-  double mean_t=-FLT_MAX, mean_v=0;
+  double mean_t =0, mean_v=0;
   double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
   double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
   double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
@@ -123,8 +123,8 @@ SAVE
   printf("  Vx=%g Vy=%g Vz=%g\n", mean_vx, mean_vy, mean_vz);
   printf("  Beam mean energy:\n");
   printf("    speed=%g [m/s] energy=%g [meV]\n    wavelength=%g [Angs] wavevector=%g [Angs-1]\n", mean_v, mean_w, mean_L, mean_k);
-  printf("  Mean arrival time: t=%g [s]", mean_t);
-  DETECTOR_OUT_0D("Beam analyzer", n_neutrons, n_neutrons_p, n_neutrons_p2);
+  printf("  Mean arrival time: t=%g [s]\n", mean_t);
+  DETECTOR_OUT_0D("Beam analyzer " NAME_CURRENT_COMP, n_neutrons, n_neutrons_p, n_neutrons_p2);
 %}
 
 MCDISPLAY

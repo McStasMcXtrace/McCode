@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: October 4, 1997
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -80,7 +80,7 @@ TRACE
   %}
 SAVE
   %{
-    DETECTOR_OUT_0D("Single monitor", Nsum, psum, p2sum);
+    DETECTOR_OUT_0D("Single monitor " NAME_CURRENT_COMP, Nsum, psum, p2sum);
   %}
 
 MCDISPLAY
