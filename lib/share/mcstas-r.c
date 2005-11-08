@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.122 $
+* Version: $Revision: 1.123 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.122 2005-11-08 13:37:49 farhi Exp $
+* $Id: mcstas-r.c,v 1.123 2005-11-08 14:20:33 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.122  2005/11/08 13:37:49  farhi
+* Warnings for formats are now easier to read
+*
 * Revision 1.121  2005/09/16 08:43:19  farhi
 * Removed floor+0.5 in Monitor_nD
 * Take care of ploting with bin centers in mcplot stuff (inline+matlab+scilab+octave...)
@@ -1806,7 +1809,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   mcfile_tag(f, format, pre, parent, "variables", vars);
   /* add warning in case of low statistics or large number of bins in text format mode */
   if (n*m*p > 1000 && Nsum < n*m*p && Nsum) fprintf(stderr,
-    "Warning: file '%s':\n
+    "Warning: file '%s':\n"
     "         Low Statistics (%g events in %dx%dx%d bins).\n",
     filename, Nsum, m,n,p);
   if ( !strstr(format.Name, "binary")
