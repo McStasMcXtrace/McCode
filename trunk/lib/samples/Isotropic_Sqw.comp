@@ -22,22 +22,28 @@
 * depending on the input S(Q,w) - with multiple scattering and absorption.
 * Only the norm of Q is handled (not the vector), and thus suitable for
 * liquids, gazes, amorphous and powder samples.
+*
 * If incoherent S(Q,w) file is specified as empty (0 or "") then the
 * scattering is constant isotropic (Vanadium like).
 * In case you only have one S(q,w) data containing both coherent and
 * incoherent contributions you should e.g. use 'file_coh' and set 'sigma_coh'
 * to the total scattering cross section.
+*
 * The S(q,w) are used as probability tables, and the intensity is weighted to
-* the S(q,w) integral value. In case the norm of S(q,w) should be changed
-* (e.g. to 1 for monoatomic liquids), use 'norm_sqw' parameter.
+* the S(q,w) integral value. This integral value may be set from:
+*   norm_sqw=-1 compute |S| from the density (refer to the Component Manual)
+*   norm_sqw>0  use     |S| = norm_sqw
+*   norm_sqw=0  compute |S| = \int S(q,w) dq dw from raw data files
+* The default and recommanded normalization is 'norm_sqw=-1'.
+*
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting can speed-up substantially the computation and prevent some neutrons
 * to be removed when energy transfert is higher than actual neutron energy.
 * Additionally, for single order scattering (order=1), you may restrict the
 * vertical spreading of the scattering area using d_phi parameter.
 *
-* If you use this component and produce valuable scientific results, please cite
-* authors with references bellow (in Links).
+* If you use this component and produce valuable scientific results, please
+* cite authors with references bellow (in Links).
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or a hollow cylinder/sphere.
@@ -88,7 +94,7 @@
 * 0.000000            ... 3.860253
 *
 * See for instance file He4.sqw. Such files may be obtained from e.g. INX,
-* Nathan, Lamp and IDA softwares, as well as molecular dynamics.
+* Nathan, Lamp and IDA softwares, as well as Molecular Dynamics.
 *
 * <b>Powder file format:</b>
 * Files for coherent elastic powder scattering may also be used.
@@ -119,12 +125,11 @@
 *     sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, T=10)
 *
 * 3- powder sample
-*   Isotropic_Sqw(V_rho=1/1076.89, Sqw_coh="c60.lau", powder_format=Crystallographica,
-*     sigma_abs=4, sigma_coh=1, sigma_inc=0, T=10)*
+*  Isotropic_Sqw(Sqw_coh="Al.laz", save_sqw=1)
 *
 * %BUGS:
-* When used in concentric mode, multiple bouncing scattering (traversing the hollow part)
-* is not taken into account.
+* When used in concentric mode, multiple bouncing scattering
+* (traversing the hollow part) is not taken into account.
 *
 * %VALIDATION
 * For Vanadium incoherent scattering mode, V_sample, Single_crystal and
@@ -171,12 +176,12 @@
 * save_sqw:     [1] When set to 1, saves S(q), DOS and S(q,w) as monitors.
 * norm_sqw:     [1] When positive, the value is used as the integral of S(q,w)
 *                   over the [q,w] range. Null value request to uses computed
-*                   integral. Any negative value will normnalize on the density.
+*                   integral. Any negative value will normalize on the density.
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
 *
 * POWDER ELASTIC SCATTERING PARAMETERS:
-* powder_Dd:             [1] global d-spacing spreading, or 0 if ideal.
+* powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
 * powder_DW:             [1] global Debey-Waller factor, if not in |F2| or 1.
 * powder_format: [no quotes] name or definition of column indexes in file
 * powder_Vc:          [AA^3] volume of the unit cell
@@ -185,7 +190,7 @@
 * VarSqw : internal structure containing many members/info
 * VarSqw.dq wavevector transfert [Angs-1]
 * VarSqw.dw energy transfert [Angs-1]
-* VarSqw.type interaction type of first event
+* VarSqw.type interaction type of event
 *         'c' (coherent),  't' (transmitted)
 *         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
 * SCATTERED: order of multiple scattering
@@ -332,6 +337,10 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->Sq           =NULL;
 }
 
+double Sqw_powder_gauss(double x, double mean, double rms) {
+  return (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)));
+}
+
 /*****************************************************************************
 * Sqw_read_PowderN: Read PowderN data files
 *   Returns t_Table array or NULL in case of error
@@ -348,13 +357,13 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
     double w;                   /* Intrinsic line width */
   };
   struct line_data *list = NULL;
-  double dspace_count=0;
+  double q_count=0, j_count=0, F2_count=0;
   int    mult_count  =0;
   double q_step      =FLT_MAX;
   long   size        =0;
   int    i, index;
   double q_min=0, q_max=0;
-
+  char   flag=0;
   int    list_count=0;
   double q_step_cur;
   char   flag_qSq = 0;
@@ -383,17 +392,15 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       /* get data from table using columns {j d F2 DW Dd inv2d q} + { Sq }*/
       /* column indexes start at 1, thus need to substract 1 */
       if (Sqw->column_order[0]>0)
-        j = Table_Index(sqwTable, i, Sqw->column_order[0]-1); else j=0;
+        j = Table_Index(sqwTable, i, Sqw->column_order[0]-1);
       if (Sqw->column_order[1]>0)
-        d = Table_Index(sqwTable, i, Sqw->column_order[1]-1); else d=0;
+        d = Table_Index(sqwTable, i, Sqw->column_order[1]-1);
       if (Sqw->column_order[2]>0)
-        F2 = Table_Index(sqwTable, i, Sqw->column_order[2]-1); else F2=0;
+        F2 = Table_Index(sqwTable, i, Sqw->column_order[2]-1);
       if (Sqw->column_order[3]>0)
         DWfactor = Table_Index(sqwTable, i, Sqw->column_order[3]-1);
-      else DWfactor= Sqw->DWfactor;
       if (Sqw->column_order[4]>0)
         w = Table_Index(sqwTable, i, Sqw->column_order[4]-1);
-      else w=Sqw->Dd;
       if (Sqw->column_order[5]>0)  {
         d = Table_Index(sqwTable, i, Sqw->column_order[5]-1); if (d) d = 1/d/2; }
       if (Sqw->column_order[6]>0)
@@ -410,7 +417,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       /* assign and check values */
       j = (j > 0 ? j : 0);
       DWfactor = (DWfactor > 0 ? DWfactor : 1);
-      w = (w>0 ? 2*PI/w : 0);
+      w = (w>0 ? w : 0);
       F2 = (F2 >= 0 ? F2 : 0);
       d = (q > 0 ? 2*PI/d : 0);
       if (j == 0 || d == 0 || q == 0) {
@@ -433,17 +440,34 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       }
 
       /* adjust multiplicity if j-column + multiple d-spacing lines */
-      if (!mult_count)  { dspace_count  = d; mult_count=1; }
-      if (mult_count && (dspace_count != d || i == size-1)) {
-        if (i == size-1 && j == mult_count+1) mult_count++;
-        if (j == mult_count && Sqw->verbose_output > 1) {
-          printf("Isotropic_sqw: %s: Set multiplicity to 1 for lines [%i:%i]\n"
-                 "         (d-spacing %g is duplicated %i times)\n",
-          Sqw->compname, list_count-mult_count, list_count-1, d, mult_count);
+      /* if  d = previous d, increase line duplication index */
+      if (!q_count)     q_count = q;
+      if (!j_count)     j_count = j;
+      if (!F2_count)     F2_count = F2;
+      if (fabs(q_count-q) < 0.0001*fabs(q)
+       && fabs(F2_count-F2) < 0.0001*fabs(F2) && j_count == j) {
+       mult_count++; flag=0; }
+      else flag=1;
+      if (i == size-1) flag=1;
+      /* else if d != previous d : just passed equivalent lines */
+      if (flag) {
+        if (i == size-1) list_count++;
+      /*   if duplication index == previous multiplicity */
+      /*      set back multiplicity of previous lines to 1 */
+        if (mult_count == list[list_count-1].j
+        || (mult_count == list[list_count].j && i == size-1)) {
+          printf("Isotropic_Sqw: %s: Set multiplicity to 1 for lines [%i:%i]\n"
+                  "         (d-spacing %g is duplicated %i times)\n",
+            Sqw->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
           for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
+          mult_count   = 1;
+          q_count = q;
+          j_count = j;
+          F2_count = F2;
         }
-        mult_count = 0;
-      } else mult_count++;
+        if (i == size-1) list_count--;
+        flag=0;
+      }
       list_count++;
     } /* end for */
 
@@ -482,21 +506,31 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
     if (!flag_qSq)
       for (i=0; i<size; i++)
         retTable[0].data[i]  = q_min + i*(q_max - q_min)/size;
-    for (i=0; i<list_count; i++) {
-      index = (long)floor(size*(list[i].q - q_min)/(q_max - q_min));
-      if (index < 0) index=0;
-      else if (index >= size) index = size-1;
-      if (flag_qSq) {
-        retTable[2].data[index] += list[i].F2;
-        retTable[0].data[index]  = list[i].q;
-      } else {
-        retTable[2].data[index]
-            += (2*PI)*(2*PI)*(2*PI)*(2*PI)*Sqw->rho/2
-               *list[i].j*list[i].F2*(list[i].DWfactor ? list[i].DWfactor : 1)
-               /q_step/(Sqw->type == 'c' ? Sqw->s_coh : Sqw->s_inc);
-        /* using Dirac peaks at start. Delta_d/d will build Gaussians around 'q' */
+      for (i=0; i<list_count; i++) { /* loop on each Bragg peak */
+      double peak_qmin, peak_qmax,factor,q;
+      if (list[i].w > 0 && !flag_qSq) {
+        peak_qmin = list[i].q*(1 - list[i].w*3);
+        peak_qmax = list[i].q*(1 + list[i].w*3);
+      } else { /* Dirac peak, no width */
+        peak_qmin = peak_qmax = list[i].q;
       }
-    }
+      factor = 2*(2*PI)*(2*PI)*(2*PI)*(2*PI)*Sqw->rho
+               *list[i].j*(list[i].DWfactor ? list[i].DWfactor : 1)
+               /(Sqw->type == 'c' ? Sqw->s_coh : Sqw->s_inc)*list[i].F2;
+      for (q=peak_qmin; q <= peak_qmax; q += q_step) {
+        index = (long)floor(size*(q - q_min)/(q_max - q_min));
+        if (index < 0) index=0;
+        else if (index >= size) index = size-1;
+        if (flag_qSq) {
+          retTable[2].data[index] += list[i].F2;
+          retTable[0].data[index]  = list[i].q;
+        } else if (list[i].w <=0 || list[i].w*q < q_step) /* step function */
+          retTable[2].data[index] += factor/q_step;
+        else /* gaussian */
+          retTable[2].data[index] += factor
+                  * Sqw_powder_gauss(q, list[i].q, list[i].w*list[i].q);
+      }
+    } /* end for i */
     Table_Stat(&retTable[0]); Table_Stat(&retTable[1]); Table_Stat(&retTable[2]);
   }
 
@@ -703,22 +737,34 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated S(Q)[%i]\n",
       Sqw->compname, Sqw_Data->nb_q);
-  alpha /= Sqw_Data->nb_q;
-  if (alpha) {
+  alpha /= Sqw_Data->nb_q; /* this is \int q^2 S(q) dq */
+
+  if (alpha) { /* compute theoretical |S| norm */
     alpha = (Sqw_Data->q_max*Sqw_Data->q_max*Sqw_Data->q_max/3 - 2*PI*PI*Sqw->rho)/alpha;
-    if (Sqw->verbose_output > 1) printf("Isotropic_Sqw: %s: Normalization factor\n"
-                        "               alpha=S_norm/S_raw= %g\n",
-                        Sqw->compname, alpha);
-    if (Sqw->sqw_norm < 0) {
-      val *= alpha;
-      sum *= alpha;
-    }
+    val *= alpha;
+    sum *= alpha;
     for (i=0; i < (Sqw_Data->nb_q) ; Sqw_Data->Sq[i++] *= alpha);
-  } else {
+  }
+
+  val /= Sqw_Data->nb_q*Sqw_Data->nb_w;
+  sum /= Sqw_Data->nb_q*Sqw_Data->nb_w;
+
+  if (!alpha) {
     printf("Isotropic_Sqw: %s: Can not compute S(q) norm\n"
-           "Warning        Using raw norm |S|=%g\n",
+           "WARNING        Using raw norm |S|=%g (not safe)\n",
       Sqw->compname, sum);
-    alpha = 1;
+   alpha=1;
+  } else {
+    if (Sqw->verbose_output > 1
+        || fabs(log10(fabs(alpha))) > 1 )
+      printf("Isotropic_Sqw: %s: Theoretical %s Norm |S| = %g\n",
+                        Sqw->compname,
+                        (Sqw->type=='c' ? "coherent" : "incoherent"),
+                        sum);
+    if (Sqw->sqw_norm>0 && fabs(log10(fabs(sum/Sqw->sqw_norm))) > 0.1)
+      printf("WARNING        The specified norm %g is probably wrong\n"
+             "               Multiply intensistes by factor %g\n",
+        Sqw->sqw_norm, sum/Sqw->sqw_norm);
   }
 
   if (!val || !sum) {
@@ -733,8 +779,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   Table_Stat(&Sqw_restrict);
-  val /= Sqw_Data->nb_q*Sqw_Data->nb_w;
-  sum /= Sqw_Data->nb_q*Sqw_Data->nb_w;
+
   Sqw_Data->intensity       = val;
   Sqw_Data->intensity_total = sum;
 
@@ -1116,7 +1161,7 @@ INITIALIZE
 
   if ((VarSqw.s_coh || VarSqw.s_inc) && !VarSqw.Temperature
    && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity))
-    printf("Isotropic_Sqw: %s: sample temperature is zero (T).\n"
+    printf("Isotropic_Sqw: %s: Sample temperature is zero (T).\n"
            "Warning        Disabling detailed balance.\n",NAME_CURRENT_COMP);
 
   if (!VarSqw.s_coh && !VarSqw.s_inc) {
@@ -1167,6 +1212,7 @@ int    flag=0;
 int    flag_concentric=0;
 double my_t=0;
 double p_mult=1;
+double alpha, alpha0;
 struct Sqw_Data_struct Data_sqw;
 
 
@@ -1444,28 +1490,31 @@ do { /* Main interaction loop. Ends with intersect=0 */
         break;       /* finish multiple scattering loop */
       }
 
-      /* Choose point on scattering cone */
+      /* Choose point on Debye-Scherrer cone */
       if (order == 1 && d_phi)
-      { /* relate height of detector to the height on cone */
+      { /* relate height of detector to the height on DS cone */
         tmp = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+/* If full Debye-Scherrer cone is within d_phi, don't focus */
         if (tmp < -1 || tmp > 1) d_phi = 0;
-        else d_phi = 2*asin(tmp);
-      }
-      if (d_phi) {
-        d_phi= fabs(d_phi);
-        theta= 2*rand01()*d_phi;
-        if (theta > d_phi) tmp = 1; else tmp = 0;
-        if (tmp) {
-          theta=PI+(theta-1.5*d_phi);
+/* Otherwise, determine alpha to rotate from scattering plane
+     into d_phi focusing area*/
+        else alpha = 2*asin(tmp);
+      } /* else d_phi=0 from INIT */
+      if (d_phi) { /* Focusing */
+        alpha = fabs(alpha);
+        /* Trick to get scattering for pos/neg theta's */
+        alpha0= 2*rand01()*alpha;
+        if (alpha0 > alpha) {
+          alpha0=PI+(alpha0-1.5*alpha);
         } else {
-          theta=theta-0.5*d_phi;
+          alpha0=alpha0-0.5*alpha;
         }
-        p_mult *= sin(d_phi/2);
+        p_mult *= alpha/PI;
       }
       else
-        theta = PI*randpm1();
+        alpha0 = PI*randpm1();
 
-      costheta = cos(theta); sintheta = sin(theta);
+      costheta = cos(alpha0); sintheta = sin(alpha0);
 
       /* u0 = component of ks which is in the plane orthogonal to ki */
       u0x=R*(costheta*u1x + sintheta*u2x);
@@ -1590,8 +1639,8 @@ FINALLY
                  "WARNING        Set qmin=%g, qmax=%g, wmin=%g, wmax=%g\n"
                  "               to Focus simulation optimally.\n",
             NAME_CURRENT_COMP, type_ci, Data_sqw.filename,
-            Data_sqw.w_min, Data_sqw.w_max, Data_sqw.q_min, Data_sqw.q_max,
-            VarSqw.w_min,   VarSqw.w_max,   VarSqw.q_min,   VarSqw.q_max);
+            Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
+            VarSqw.q_min,   VarSqw.q_max,   VarSqw.w_min,   VarSqw.w_max);
 
     if (Data_sqw.DOS)           free(Data_sqw.DOS);
     if (Data_sqw.Q_proba_per_w) free(Data_sqw.Q_proba_per_w);
