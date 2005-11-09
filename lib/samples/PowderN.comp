@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -74,7 +74,7 @@
 *   #column_F2 <index of the squared structure factor '|F|^2' column>
 *   #column_F  <index of the structure factor norm '|F|' column>
 *   #column_DW <index of the Debye-Waller factor 'DW' column>
-*   #column_Dd <index of the line width Delta_d/d 'Dd' column>
+*   #column_Dd <index of the relative line width Delta_d/d 'Dd' column>
 *   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
 *   #column_q <index of the scattering wavevector 'q' column>
 *
@@ -90,13 +90,14 @@
 * sigma_inc:Incoherent cross section per unit cell [fm^2]
 * reflections: Input file for reflections.
 *                Use only incoherent scattering if NULL or "" [string]
-* format:   name of the format, or list of column indexes (see Description). [no quotes]
+* format:   name of the format, or list of column indexes
+              (see Description). [no quotes]
 *
 * Optional parameters:
 * xwidth:  horiz. dimension of sample, as a width [m]
 * zthick:  thickness of sample [m]
 * h:       the same as yheight [m]
-* Delta_d:  global d-spacing spreading when the 'w' column
+* Delta_d:  global relative Delta_d/d spreading when the 'w' column
 *             is not available. Use 0 if ideal. [Angs]
 * DW:       global Debey-Waller factor when the 'DW' column
 *             is not available. Use 1 if included in F2 [1]
@@ -124,7 +125,7 @@
 DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (reflections, format=Undefined)
 SETTING PARAMETERS (d_phi=0, radius=0.01, yheight=0.05,
-        pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=-1, frac=0,
+        pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, frac=0,
         xwidth=0, zthick=0, h=0, DW=0, nb_atoms=1, density=0, weight=0)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2,
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, isrect, columns)
@@ -177,7 +178,8 @@ SHARE
     t_Table sTable; /* sample data table structure from SC_file */
     int    i=0;
     int    mult_count  =0;
-    double dspace_count=0;
+    char   flag=0;
+    double q_count=0, j_count=0, F2_count=0;
     char **parsing;
     int    list_count=0;
 
@@ -250,7 +252,7 @@ SHARE
     for (i=0; i<size; i++)
     {
       /*      printf("Reading in line %i\n",i);*/
-      double j=0, d=0, w=0, DWfactor=0, F2=0;
+      double j=0, d=0, w=0, q=0, DWfactor=0, F2=0;
       int index;
 
       if (info->Dd >= 0)      w         = info->Dd;
@@ -259,53 +261,70 @@ SHARE
       /* get data from table using columns {j d F2 DW Dd inv2d q F} */
       /* column indexes start at 1, thus need to substract 1 */
       if (info->column_order[0] >0)
-        j = Table_Index(sTable, i, info->column_order[0]-1); else j=0;
+        j = Table_Index(sTable, i, info->column_order[0]-1);
       if (info->column_order[1] >0)
-        d = Table_Index(sTable, i, info->column_order[1]-1); else d=0;
+        d = Table_Index(sTable, i, info->column_order[1]-1);
       if (info->column_order[2] >0)
-        F2 = Table_Index(sTable, i, info->column_order[2]-1); else F2=0;
+        F2 = Table_Index(sTable, i, info->column_order[2]-1);
       if (info->column_order[3] >0)
         DWfactor = Table_Index(sTable, i, info->column_order[3]-1);
-        else DWfactor= info->DWfactor;
       if (info->column_order[4] >0)
         w = Table_Index(sTable, i, info->column_order[4]-1);
-        else w=info->Dd;
       if (info->column_order[5] >0)
-        { d = Table_Index(sTable, i, info->column_order[5]-1); d = 1/d/2; }
+        { d = Table_Index(sTable, i, info->column_order[5]-1);
+          d = (d > 0? 1/d/2 : 0); }
       if (info->column_order[6] >0)
-        { d = Table_Index(sTable, i, info->column_order[6]-1); d = 2*PI/d; }
+        { q = Table_Index(sTable, i, info->column_order[6]-1);
+          d = (q > 0 ? 2*PI/q : 0); }
       if (info->column_order[7] >0  && !F2)
         { F2 = Table_Index(sTable, i, info->column_order[7]-1); F2 *= F2; }
 
       /* assign and check values */
       j = (j > 0 ? j : 0);
-      d = (d > 0 ? 2*PI/d : 0);
+      q = (d > 0 ? 2*PI/d : 0); /* this is q */
       DWfactor = (DWfactor > 0 ? DWfactor : 1);
-      w = (w>0 ? 2*PI/w : 0);
+      w = (w>0 ? w : 0); /* this is q and d relative spreading */
       F2 = (F2 >= 0 ? F2 : 0);
-      if (j == 0 || d == 0) {
+      if (j == 0 || q == 0) {
         printf("PowderN: %s: line %i has invalid definition\n"
                "         (mult=0 or q=0 or d=0)\n", info->compname, i);
         continue;
       }
       list[list_count].j = j;
-      list[list_count].q = d;
+      list[list_count].q = q;
       list[list_count].DWfactor = DWfactor;
       list[list_count].w = w;
       list[list_count].F2= F2;
 
       /* adjust multiplicity if j-column + multiple d-spacing lines */
-      if (!mult_count)  { dspace_count  = d; mult_count=1; }
-      if (mult_count && (dspace_count != d || i == size-1)) {
-        if (i == size-1 && j == mult_count+1) mult_count++;
-        if (j == mult_count) {
+      /* if  d = previous d, increase line duplication index */
+      if (!q_count)     q_count = q;
+      if (!j_count)     j_count = j;
+      if (!F2_count)     F2_count = F2;
+      if (fabs(q_count-q) < 0.0001*fabs(q)
+       && fabs(F2_count-F2) < 0.0001*fabs(F2) && j_count == j) {
+       mult_count++; flag=0; }
+      else flag=1;
+      if (i == size-1) flag=1;
+      /* else if d != previous d : just passed equivalent lines */
+      if (flag) {
+        if (i == size-1) list_count++;
+      /*   if duplication index == previous multiplicity */
+      /*      set back multiplicity of previous lines to 1 */
+        if (mult_count == list[list_count-1].j
+        || (mult_count == list[list_count].j && i == size-1)) {
           printf("PowderN: %s: Set multiplicity to 1 for lines [%i:%i]\n"
-                 "         (d-spacing %g is duplicated %i times)\n",
-          info->compname, list_count-mult_count, list_count-1, 2*PI/d, mult_count);
+                  "         (d-spacing %g is duplicated %i times)\n",
+            info->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
           for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
+          mult_count   = 1;
+          q_count = q;
+          j_count = j;
+          F2_count = F2;
         }
-        mult_count = 0;
-      } else mult_count++;
+        if (i == size-1) list_count--;
+        flag=0;
+      }
       list_count++;
     } /* end for */
     printf("PowderN: %s: File %s done (%i valid lines).\n", info->compname, SC_file, list_count);
@@ -379,14 +398,14 @@ INITIALIZE
       /* Squires [3.103] */
       my_s_v2_sum+=my_s_v2[i];
       q_v[i] = L[i].q*K2V;
-      w_v[i] = L[i].w*K2V;
+      w_v[i] = L[i].w;
     }
   } else exit(fprintf(stderr,
       "PowderN: %s: Data file has no valid powder line definition\n"
       "         Check format definition\n", NAME_CURRENT_COMP));
 
   /* Is not yet divided by v */
-  my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2         
+  my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
   my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
   my_s_v2_sum=0;
   printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
@@ -426,7 +445,7 @@ TRACE
       if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
       else line = 0;
       if (w_v[line])
-        arg = (q_v[line]+w_v[line]*randnorm())/(2.0*v);
+        arg = q_v[line]*(1+w_v[line]*randnorm())/(2.0*v);
       else
         arg = q_v[line]/(2.0*v);
       my_s_n = my_s_v2[line]/(v*v);
@@ -438,16 +457,16 @@ TRACE
       if (d_phi)
       { /* relate height of detector to the height on DS cone */
         arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
-	/* If full Debye-Scherrer cone is within d_phi, don't focus */
+  /* If full Debye-Scherrer cone is within d_phi, don't focus */
         if (arg < -1 || arg > 1) d_phi = 0;
-	/* Otherwise, determine alpha to rotate from scattering plane 
-	   into d_phi focusing area*/
+  /* Otherwise, determine alpha to rotate from scattering plane
+     into d_phi focusing area*/
         else alpha = 2*asin(arg);
       }
       if (d_phi) {
-	/* Focusing */
+  /* Focusing */
         alpha = fabs(alpha);
-	/* Trick to get scattering for pos/neg theta's */
+  /* Trick to get scattering for pos/neg theta's */
         alpha0= 2*rand01()*alpha;
         if (alpha0 > alpha) {
           alpha0=PI+(alpha0-1.5*alpha);
@@ -525,6 +544,7 @@ TRACE
 
     }  /* Incoherent scattering event */
     p *= pmul;
+    SCATTER;
   } /* else transmit non interacting neutrons */
 
 %}
