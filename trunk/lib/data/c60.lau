@@ -1,5 +1,11 @@
 # C60: 'P a -3' (205) cubic
 # a=b=c=14.04078, 90 deg;
+#
+# Format parameters: Crystallographica format
+# column_j  4 multiplicity 'j'
+# column_d  5 d-spacing 'd' in [Angs]
+# column_F2 7 norm of scattering factor |F|^2 in [barn]
+#
 # h   k   l Mult. d-space 2Theta   F-squared
   1  -1   1   8  8.10645   10.905  34256.2
  -1   1  -1   8  8.10645   10.905  34256.2
