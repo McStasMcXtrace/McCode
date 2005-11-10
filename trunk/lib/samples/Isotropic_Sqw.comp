@@ -39,6 +39,7 @@
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting can speed-up substantially the computation and prevent some neutrons
 * to be removed when energy transfert is higher than actual neutron energy.
+* An automatic such process may be activated when 'auto_qw=1'.
 * Additionally, for single order scattering (order=1), you may restrict the
 * vertical spreading of the scattering area using d_phi parameter.
 *
@@ -63,13 +64,13 @@
 * repeated to mark the end of the concentric zone. The number of concentric
 * shells and number of components inside is not limited.
 *
-* COMPONENT S_in = Isotropic_Sqw(file_coh="Aluminium", concentric=1, ...)
+* COMPONENT S_in = Isotropic_Sqw(Sqw_coh="Al.laz", concentric=1, ...)
 * AT (0,0,0) RELATIVE sample_position
 *
 * COMPONENT something_inside ... // e.g. the sample itself or other walls
 * ...
 *
-* COMPONENT S_out = Isotropic_Sqw(file_coh="Aluminium", ...)
+* COMPONENT S_out = Isotropic_Sqw(Sqw_coh="Al.laz", ...)
 * AT (0,0,0) RELATIVE sample_position
 *
 * <b>Sqw file format:</b>
@@ -121,11 +122,10 @@
 *     sigma_abs=5.08, sigma_inc=4.935, sigma_coh=0)
 *
 * 2- liq-4He parameters
-*   Isotropic_Sqw(V_rho=0.072, Sqw_coh="He4.sqw",
-*     sigma_abs=0.00747, sigma_coh=1.34, sigma_inc=0, T=10)
+*   Isotropic_Sqw(..., Sqw_coh="He4.sqw", T=10)
 *
 * 3- powder sample
-*  Isotropic_Sqw(Sqw_coh="Al.laz", save_sqw=1)
+*  Isotropic_Sqw(..., Sqw_coh="Al.laz", save_sqw=1)
 *
 * %BUGS:
 * When used in concentric mode, multiple bouncing scattering
@@ -175,8 +175,10 @@
 *                   See description for an example.
 * save_sqw:     [1] When set to 1, saves S(q), DOS and S(q,w) as monitors.
 * norm_sqw:     [1] When positive, the value is used as the integral of S(q,w)
-*                   over the [q,w] range. Null value request to uses computed
-*                   integral. Any negative value will normalize on the density.
+*                   over the [q,w] range. Null value uses computed integral.
+*                   Any negative value will normalize on the density.
+* auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
+*                   to optimal setting whenever required.
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
 *
@@ -216,7 +218,7 @@ DEFINE COMPONENT Isotropic_Sqw
   DEFINITION PARAMETERS (Sqw_coh=0, Sqw_inc=0, powder_format=Undefined)
   SETTING PARAMETERS(radius_i=0,radius_o=0,thickness=0,
     xwidth=0, yheight=0, zthick=0,
-    qmin=0, qmax=0, wmin=0, wmax=0,
+    qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     norm_sqw=-1, powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0)
@@ -294,6 +296,7 @@ struct Sqw_sample_struct {
   long   neutron_removed;
   long   neutron_enter;
   long   neutron_pmult;
+  long   neutron_exit;
   double Dd, DWfactor;
 
   double sqw_threshold;
@@ -313,6 +316,7 @@ struct Sqw_sample_struct {
   int    column_order[9]; /* column signification */
   double Temperature;
   double sqw_norm;
+  char   sqw_auto;
 };
 
 #include <stdio.h>
@@ -671,9 +675,18 @@ struct Sqw_Data_struct *Sqw_readfile(
     val_min= Table.min_x;
     val_max= Table.max_x;
 
+    /* update min/max accroding to input parameters */
+    if (i == 0) { /* q */
+      val_min = (val_min < Sqw->q_min ? Sqw->q_min : val_min);
+      val_max = (val_max > Sqw->q_max ? Sqw->q_max : val_max);
+    } else {
+      val_min = (val_min < Sqw->w_min ? Sqw->w_min : val_min);
+      val_max = (val_max > Sqw->w_max ? Sqw->w_max : val_max);
+    }
+
     if (i == 0) Sqw_Data->nb_q = index; else Sqw_Data->nb_w = index;
 
-    /* use either full range or restricted range */
+    /* set restricted range */
     usr_min = (i == 0 ? &(Sqw_Data->q_min) : &(Sqw_Data->w_min));
     usr_max = (i == 0 ? &(Sqw_Data->q_max) : &(Sqw_Data->w_max));
     if (!*usr_min && !*usr_max) {
@@ -1131,12 +1144,14 @@ INITIALIZE
   VarSqw.neutron_removed = 0;
   VarSqw.neutron_enter   = 0;
   VarSqw.neutron_pmult   = 0;
-  VarSqw.w_max     = 0;
-  VarSqw.w_min     = FLT_MAX;
-  VarSqw.q_max     = 0;
-  VarSqw.q_min     = FLT_MAX;
+  VarSqw.neutron_exit    = 0;
+  VarSqw.w_max     = (wmax > 0 ? wmax : FLT_MAX);
+  VarSqw.w_min     = (wmin > 0 ? wmin : 0);
+  VarSqw.q_max     = (qmax > 0 ? qmax : FLT_MAX);
+  VarSqw.q_min     = (qmin > 0 ? qmin : 0);
   VarSqw.rho       = V_rho;
   VarSqw.sqw_norm  = norm_sqw;
+  VarSqw.sqw_auto  = auto_qw;
 
   /* PowderN compatibility members */
   VarSqw.Dd        = powder_Dd;
@@ -1180,6 +1195,11 @@ INITIALIZE
            NAME_CURRENT_COMP);
     d_phi = 0;
   }
+
+  VarSqw.w_max     = (wmax > 0 ? wmax : 0);
+  VarSqw.w_min     = (wmin > 0 ? wmin : FLT_MAX);
+  VarSqw.q_max     = (qmax > 0 ? qmax : 0);
+  VarSqw.q_min     = (qmin > 0 ? qmin : FLT_MAX);
 
 /* end INITIALIZE */
 %}
@@ -1546,6 +1566,24 @@ do { /* Main interaction loop. Ends with intersect=0 */
       if      (fabs(q) > VarSqw.q_max) VarSqw.q_max = fabs(q);
       else if (fabs(q) < VarSqw.q_min) VarSqw.q_min = fabs(q);
 
+      if (VarSqw.neutron_exit > VarSqw.maxloop
+       && VarSqw.neutron_removed && VarSqw.sqw_auto) {
+        if (VarSqw.verbose_output)
+          printf("Isotropic_Sqw: %s:  %li events removed out of %li.\n"
+                 "INFO:          Optimizing q=[%g:%g] w=[%g:%g]\n",
+          NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.neutron_exit,
+          VarSqw.q_min,   VarSqw.q_max,   VarSqw.w_min,   VarSqw.w_max);
+        VarSqw.Data_inc.q_min = VarSqw.Data_coh.q_min = VarSqw.q_min;
+        VarSqw.Data_inc.q_max = VarSqw.Data_coh.q_max = VarSqw.q_max;
+        VarSqw.Data_inc.w_min = VarSqw.Data_coh.w_min = VarSqw.w_min;
+        VarSqw.Data_inc.w_max = VarSqw.Data_coh.w_max = VarSqw.w_max;
+        if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
+          printf("Isotropic_Sqw: %s: ERROR re-importing data files (Sqw_init from TRACE)\n",NAME_CURRENT_COMP);
+          exit(0);
+        }
+        VarSqw.sqw_auto = 0;
+      }
+
     } /* end if (flag) */
 
     /* test for a given multiple order */
@@ -1572,6 +1610,8 @@ if (SCATTERED) {
                   +(VarSqw.kf_y-VarSqw.ki_y)*(VarSqw.kf_y-VarSqw.ki_y)
                   +(VarSqw.kf_z-VarSqw.ki_z)*(VarSqw.kf_z-VarSqw.ki_z));
   VarSqw.dw = VS2E*(VarSqw.vf*VarSqw.vf - VarSqw.vi*VarSqw.vi);
+
+  VarSqw.neutron_exit++;
 } else VarSqw.dq=VarSqw.dw=0;
 
 /* end TRACE */
@@ -1653,12 +1693,12 @@ FINALLY
     printf("Isotropic_Sqw: %s: %li neutron events (out of %li) that should have\n"
            "               scattered were removed because scattering conditions\n"
            "WARNING        could not be satisfied after %i tries.\n",
-          NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.neutron_enter, VarSqw.maxloop);
+          NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.neutron_exit, VarSqw.maxloop);
   if (VarSqw.neutron_pmult)
     printf("Isotropic_Sqw: %s: %li neutron events (out of %li) reached\n"
            "               unrealistic weight. The S(q,w) norm is probably too high\n"
            "WARNING        could not be satisfied after %i tries.\n",
-          NAME_CURRENT_COMP, VarSqw.neutron_pmult, VarSqw.neutron_enter, VarSqw.maxloop);
+          NAME_CURRENT_COMP, VarSqw.neutron_pmult, VarSqw.neutron_exit, VarSqw.maxloop);
 
 
 /* end FINALLY */
