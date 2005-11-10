@@ -1,10 +1,10 @@
 # Sqw data file for Isotropic_Sqw
 # liquid Rb: incoherent part
-# V_rho 0.0103 atom density per Angs^3
-# sigma_abs 0.38 absorption scattering cross section in [barn]
-# sigma_coh 6.32 coherent scattering cross section in [barn]
-# sigma_inc 0.5  incoherent scattering cross section in
-# Temperature 390 in [K]
+# V_rho       0.0103 atom density per Angs^3
+# sigma_abs   0.38   absorption scattering cross section in [barn]
+# sigma_coh   6.32   coherent scattering cross section in [barn]
+# sigma_inc   0.5    incoherent scattering cross section in [barn]
+# Temperature 390    in [K]
 # Data by V. Hugouvieux, PhD (2004)
 # q axis values
 # vector of m values in Angstroem-1
