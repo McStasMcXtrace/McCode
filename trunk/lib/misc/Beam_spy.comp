@@ -11,7 +11,7 @@
 *
 * Written by: E. Farhi
 * Date: Nov 2005
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Release: McStas 1.9
 * Origin: Risoe
 *
@@ -107,7 +107,7 @@ SAVE
   mean_k = V2K*mean_v;
   if (mean_k) mean_L = 2*PI/mean_k;
   mean_w = VS2E*mean_v*mean_v;
-  printf("Bean analysis for Component preceeding %s\n", NAME_CURRENT_COMP);
+  printf("Beam analysis for Component preceeding %s\n", NAME_CURRENT_COMP);
   printf("Absolute position AT (%g, %g, %g)\n", c.x, c.y, c.z);
 
   printf("  Beam size (full width in [m]):      ");
