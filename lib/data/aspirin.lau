@@ -1,5 +1,11 @@
 # Aspirinanhydride: 'P 41 21 2' (92) tetragonal
-# a=b=8.457, c=23.166; 90 deg; 
+# a=b=8.457, c=23.166; 90 deg;
+#
+# Format parameters: Crystallographica format
+# column_j  4 multiplicity 'j'
+# column_d  5 d-spacing 'd' in [Angs]
+# column_F2 7 norm of scattering factor |F|^2 in [barn]
+#
 # h   k   l Mult. d-space 2Theta   F-squared
   0   1   1   8  7.94419  11.1284  3959.16
  -1   0   1   8  7.94419  11.1284  3959.15

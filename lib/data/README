@@ -12,7 +12,7 @@
 * Date: 2002
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.6
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Modified by: EF, Dec 19th, 1998 : initial release 1.0
 *
 * This file is part of McStas  version 1.6, released <today Aug 28th, 2002>.
@@ -21,12 +21,16 @@
 * The prefered format is text, with header identified with the '#' character.
 * Here are recommanded extensions:
 *
-* lau : Laue pattern file, as issued from Crystallographica or FullProf
-*       data: # h   k   l Mult. d-space 2Theta   F-squared
-*       These files may be used with PowderN and Single_crystal
-* trm : transmission file, typically for monochromator crystals and filters
-*       data: # [ k (Angs-1) , Transmission (0-1) ]
-* rfl : reflectivity file, typically for mirrors and monochromator crystals
-*       data: # [ k (Angs-1) , Reflectivity (0-1) ]
+* lau : Laue pattern file, as issued from Crystallographica.
+*       For use with Single_crystal, PowderN, and Isotropic_Sqw.
+*       Data: [ h   k   l Mult. d-space 2Theta   F-squared ]
+* laz : Powder pattern file, as obtained from Lazy/ICSD.
+*       For use with PowderN, Isotropic_Sqw and possibly Single_crystal.
+* trm : transmission file, typically for monochromator crystals and filters.
+*       Data: [ k (Angs-1) , Transmission (0-1) ]
+* rfl : reflectivity file, typically for mirrors and monochromator crystals.
+*       Data: [ k (Angs-1) , Reflectivity (0-1) ]
+* sqw : S(q,omega) files for Isotropic_Sqw component.
+*       Data: [q] [omega] [S(q,omega)]
 *
 *******************************************************************************/
