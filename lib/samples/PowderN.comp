@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -46,7 +46,7 @@
 *   #sigma_abs <value of Absorption cross section>
 *   #sigma_inc <value of Incoherent cross section>
 *   #Debye_Waller <value of Debye-Waller factor DW>
-*   #Detla_d/d <value of Detla_d/d width for all lines>
+*   #Delta_d/d <value of Detla_d/d width for all lines>
 * These values are not read if entered as component parameters (Vc=...)
 *
 * The signification of the columns in the numerical block may be
