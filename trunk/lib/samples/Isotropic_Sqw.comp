@@ -39,7 +39,7 @@
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting can speed-up substantially the computation and prevent some neutrons
 * to be removed when energy transfert is higher than actual neutron energy.
-* An automatic such process may be activated when 'auto_qw=1'.
+* An automatic such process may be activated when 'auto_qw=1' (recommanded).
 * Additionally, for single order scattering (order=1), you may restrict the
 * vertical spreading of the scattering area using d_phi parameter.
 *
@@ -140,47 +140,50 @@
 * INPUT PARAMETERS:
 * Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w)
 *                     Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1
-*                     Use 0 or "" to scatter isotropically (V-like).
+*                     Use 0 or "" to disable.
 * Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w)
-*                     Incoherent (self) part. Use 0 or "" to disable.
+*                     Incoherent (self) part.
+*                     Use 0 or "" to scatter isotropically (V-like).
 * sigma_coh:[barns] Coherent Scattering cross-section. 0 to disable
 * sigma_inc:[barns] Incoherent Scattering cross-section. 0 to disable
 * sigma_abs:[barns] Absorption cross-section at 2200 m/s. 0 to disables
 * V_rho:     [AA-3] Density of atoms (nb atoms/unit cell V_0).
 * T:            [K] Temperature of sample, detailed balance
-* qmin:    [Angs-1] Minimum Q value to use in S(q,w).
-* qmax:    [Angs-1] Maximum Q value to use in S(q,w). Use 0 for auto mode.
-* wmin:       [meV] Minimum Energy value to use in S(q,w).
-* wmax:       [meV] Maximum Energy value to use in S(q,w). 0 for auto.one
+*
+* Geometry parameters:
 * radius_o:     [m] Outer radius of sample in (x,z) plane. cylinder/sphere.
 * radius_i:     [m] Inner radius of sample in (x,z) plane. cylinder/sphere.
 * yheight:      [m] Height of sample in vertical direction for box/cylinder
 *                     shapes
 * xwidth:       [m] width for a box sample shape
-* zthick:       [m] thickness for a box sample shape
+* zthick:       [m] thickness for a bulk box sample shape
+* thickness:    [m] Thickness of hollow sample (overrides radius_i)
 *
 * OPTIONAL PARAMETERS:
-* thickness:    [m] Thickness of hollow sample (overloads radius_i)
-* threshold:    [1] Value under which S(Q,w) is not accounted for.
-*                     to set according to the S(Q,w) values ,i.e. not too low
+* norm_sqw:     [1] When positive, the value is used as the integral of S(q,w)
+*                   Null value uses computed integral.
+*                   Any negative value will normalize on the density.
+* auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
+*                   to optimal setting whenever required.
+* concentric:   [1] indicates that this component in hollow cylinder geometry
+*                   may contain other components.
+*                   It should be then duplicated after the inside part.
+*                   See description for an example.
 * order:        [1] Limit multiple scattering up to given order
 *                     0:all (default), 1:single, 2:double, ...
 * verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug).
 * d_phi:      [deg] scattering vertical angular spreading (usually the heigh
 *                     of the next component/detector). Use 0 for full space.
 *                     This is only relevant for single scattering (order=1).
-* concentric:   [1] indicates that this component in hollow cylinder geometry
-*                   may contain other components.
-*                   It should be then duplicated after the inside part.
-*                   See description for an example.
 * save_sqw:     [1] When set to 1, saves S(q), DOS and S(q,w) as monitors.
-* norm_sqw:     [1] When positive, the value is used as the integral of S(q,w)
-*                   over the [q,w] range. Null value uses computed integral.
-*                   Any negative value will normalize on the density.
-* auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
-*                   to optimal setting whenever required.
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
+* qmin:    [Angs-1] Minimum Q value to use in S(q,w).
+* qmax:    [Angs-1] Maximum Q value to use in S(q,w).
+* wmin:       [meV] Minimum Energy value to use in S(q,w).
+* wmax:       [meV] Maximum Energy value to use in S(q,w).
+* threshold:    [1] Value under which S(Q,w) is not accounted for.
+*                     to set according to the S(Q,w) values ,i.e. not too low.
 *
 * POWDER ELASTIC SCATTERING PARAMETERS:
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.

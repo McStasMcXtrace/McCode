@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.8 $
+* Version:    $Revision: 1.9 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 *
@@ -49,7 +49,7 @@
 *
 * %BUGS
 * - overestimates peak width for long wavelengths
-* - does not give the right pulse position, shape and width for slit widths below 0.1 mm
+* - may not give the right pulse position, shape and width for slit widths below 0.1 mm
 *
 * %Parameters
 * INPUT PARAMETERS:
