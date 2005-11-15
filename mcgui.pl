@@ -708,7 +708,9 @@ sub menu_run_simulation {
             push @command, "${prefix}mcdisplay$suffix";
             if ($plotter =~ /PGPLOT|McStas/i) {
               push @command, "--plotter=PGPLOT";
-        push @command, "--multi";
+	      # Users seem to dislike multi-views with mcdisplay/PGPLOT
+              # We ought to have a switchbutton somewhere controlling this
+              # push @command, "--multi";
               # Be sure to read mcplotlib.pl in this case...
               require "mcplotlib.pl";
               # Standard mcdisplay.pl with PGPLOT bindings
