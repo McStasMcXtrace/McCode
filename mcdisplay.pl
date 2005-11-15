@@ -917,7 +917,7 @@ if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
       elsif($direct_output eq "-psc") { $type="cps"; }
       $pg_devname = "$sim_cmd.$ext/$type";
     }
-  my $global_device = get_device($pg_devname);
+  $global_device = get_device($pg_devname);
   if($global_device < 0) {
     print STDERR "mcdisplay: Failed to open PGPLOT device $pg_devname\n";
     exit 1;
@@ -998,10 +998,14 @@ while(!eof(IN)) {
               plot_instrument(1, \%instr, \%neutron);
               print STDERR "Wrote \"$tmp_pg_devname\"\n";
               ++$seq;
-            }
-            if (defined(&close_window)) { close_window(); }
-            else { PGPLOT::pgclos(); };
-            PGPLOT::pgslct($global_device);
+	    }
+            if (defined(&close_window)) { 
+		close_window($tmpdev); 
+	    } else {
+		PGPLOT::pgclos();
+	    }
+	    PGPLOT::pgslct($global_device);
+#	    PGPLOT::pgask(0);
           }
         }
     } while($ret != 0 && $ret != 2);
