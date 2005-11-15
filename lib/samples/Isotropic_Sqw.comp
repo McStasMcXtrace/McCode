@@ -157,7 +157,7 @@
 *                     shapes
 * xwidth:       [m] width for a box sample shape
 * zthick:       [m] thickness for a bulk box sample shape
-* thickness:    [m] Thickness of hollow sample (overrides radius_i)
+* thickness:    [m] Thickness of hollow sample (overrides radius_i).
 *
 * OPTIONAL PARAMETERS:
 * norm_sqw:     [1] When positive, the value is used as the integral of S(q,w)
