@@ -155,11 +155,13 @@ if ($file =~ m'\.sci$' || $file =~ m'\.sce$') {$plotter = "Scilab"; }
 if ($file =~ m'\.sim$')  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
 
-# Chdir to directory containing base filename
-my ($basename,$dirname)=fileparse($file);
-$file = $basename;
-if (-d $dirname) {
-    chdir $dirname;
+# On Win32, chdir to directory containing base filename
+if ($Config{'osname'} eq 'MSWin32') {
+    my ($basename,$dirname)=fileparse($file);
+    $file = $basename;
+    if (-d $dirname) {
+	chdir $dirname;
+    }
 }
 
 # Added E. Farhi, March 2003. plotter (pgplot, scilab, matlab, html) -> $file
