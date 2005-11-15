@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -204,7 +204,6 @@ INITIALIZE
     lambda0c  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T3);
     lambda02c = lambda0c*lambda0c;
     L2Pc      = 2*lambda02c*lambda02c;
-    if (I3 == 0) I3 = I1;
   }
   else
     { lambda0c = lambda_0; }
@@ -302,12 +301,10 @@ TRACE
             Maxwell= L2P/lambda5*exp(-lambda02/lambda2);  /* 1/AA */
             if ((T2 > 0) && (I1 != 0))
             {
-              if (I2 == 0) I2 = I1;
               Maxwell += (I2/I1)*L2Pb/lambda5*exp(-lambda02b/lambda2);
             }
             if ((T3 > 0) && (I1 != 0))
             {
-              if (I3 == 0) I3 = I1;
               Maxwell += (I3/I1)*L2Pc/lambda5*exp(-lambda02c/lambda2);
             }
             p *= Maxwell;
