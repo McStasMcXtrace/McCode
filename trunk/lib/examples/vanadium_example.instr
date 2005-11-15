@@ -8,11 +8,11 @@
 * Instrument: vanadium_example
 *
 * %Identification
-* Written by: KN and KL
+* Written by: Kristian Nielsen and Kim Lefmann
 * Date: 1998
 * Origin: Risoe
 * Release: McStas 1.1
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Tutorial
 *
 * A test instrument using a vanadium cylinder
@@ -67,8 +67,8 @@ COMPONENT source = Source_flat(radius = 0.015, dist = 1,
   xw=0.024, yh=0.015, E0=5, dE=0.2)
  AT (0,0,0) RELATIVE arm
 
-/* Here we have a collimator - or Soller - placed to   */
-/* improve beam divergence.                            */
+/* Here we have a soller - placed to improve beam      */
+/* divergence.                                         */
 /* The component is placed at a distance RELATIVE to   */
 /* a previous component...                             */
 COMPONENT collimator = Collimator_linear(len = 0.2,
@@ -77,7 +77,7 @@ COMPONENT collimator = Collimator_linear(len = 0.2,
   AT (0, 0, 0.4) RELATIVE arm
 
 /* We also need something to 'shoot at' - here a sample*/
-/* made from vanadium - an isotrope scatterer. Options */
+/* made from vanadium, an isotropic scatterer. Options */
 /* are available to restrict the solid angle in which  */
 /* neutrons are emitted (no need to simulate anything  */
 /* that we know for sure will not gain us more insight)*/
@@ -96,13 +96,13 @@ COMPONENT arm2 = Arm()
   AT (0,0,0) RELATIVE target
   ROTATED (0,ROT,0) relative arm
 
-/* For data output, let us place a detector. This      */
-/* detector is not very realistic, since it is sphere  */
-/* shaped and has a 10 m radius, but has the advantage */
-/* that EVERYTHING emitted from the sample will be     */
-/* picked up. Notice that this component changes       */
-/* orientation with the ROT input parameter of the     */
-/* instrument.                                         */
+/* For data output, let us place a detector. This       */
+/* detector is not very realistic, since it has a spher-*/
+/* ical shape with a 10 m radius, but has the advantage */
+/* that EVERYTHING emitted from the sample will be      */
+/* picked up. Notice that this component changes        */
+/* orientation with the ROT input parameter of the      */
+/* instrument.                                          */
 COMPONENT PSD_4pi = PSD_monitor_4PI(radius=10, nx=101, ny=51,
   filename="vanadium.psd")
   AT (0,0,0) RELATIVE target ROTATED (ROT,0,0) RELATIVE arm2
