@@ -457,8 +457,8 @@ sub do_test {
   if ($exec_test =~ /graphics/i) {
     @test_names   = ("Plot of Scan of parameters with Risoe TAS1 monochromator rocking curve (no collimator)",
       "Plot of Single simulation with Brookhaven H8 Termal TAS with vanadium sample");
-    @test_commands= ("mcplot$suffix -gif linup_1_45",
-      "mcplot$suffix -gif h8_test");
+    @test_commands= ("mcplot$suffix -psc linup_1_45",
+      "mcplot$suffix -psc h8_test");
     @test_monitor_names =("linup_1_45","h8_test");
     for ($j=0 ; $j<@test_commands ; $j++) {
       my $this_cmd =$test_commands[$j];
