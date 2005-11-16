@@ -22,7 +22,7 @@
 * Modified by: PEO, EF, October, 10th, 2001: release 1.5
 * Modified by: PW, EF, May 19th 2003: version 1.7
 * Modified by: PW, EF, March 4th 2004: version 1.8
-* Modified by: PW, EF, November 16th 2005: version 1.9 
+* Modified by: PW, EF, November 16th 2005: version 1.9
 *
 * This file is part of McStas  version 1.9, released November, 16th, 2005.
 * It gives a 'changes' list from the beginning of the project
@@ -35,7 +35,7 @@ Changes in McStas v1.9, Nov 16, 2005
     URL does no longer belong to Risoe or ILL but is http://www.mcstas.org.
   - The package has been strengthened by the presence of Klaus Lieutenant (former
     captain of Vitess, HMI) at ILL. He has focused a lot on validation and testing
-    of the package, giving very important input and done very valuable work. 
+    of the package, giving very important input and done very valuable work.
   - To help us in the fight against bugs, a BUGZILLA system has been set up for users
     to report their suggestions and problems. The system is available at the URL
     http://www.mcstas.org/McZilla .
@@ -65,34 +65,39 @@ Changes in McStas v1.9, Nov 16, 2005
     user manual. Replots intermediate data.
   - mcgui has been intensively revised, many annoyances have been removed and features adjusted
     for easier use.
-  
+
   Components
   - For simplicity, a number of components (especially monitors and sources) have been merged.
     This for example means that the Source_simple replaces the former Source_flat* components.
     Fewer duplications of code => smaller risk of old bugs surviving in the code.
   - PowderN: General powder sample component, replaces the simpler Powder1 and Powder2 components,
     has a very flexible system to read crystallographic data for powder line description. Is
-    in the process of beeing validated against data from DMC@PSI. The code itself and the 
+    in the process of beeing validated against data from DMC@PSI. The code itself and the
     validation of it is the result of collaboration between mainly Peter Willendrup from the
     McStas team and Laurent Chapon (ISIS), Uwe Filges (PSI) and Lukas Keller (PSI). A validation
     paper will be presented at ICNS, Sydney.
-  - Isotropic_Sqw: Originally work for the Ph.D. thesis of V. Hugovieux, ILL. Extended and 
-    validated intensively by Emmanuel Farhi, ILL. (Emmanuel, please write something here!!!)
-  - Vitess_ChopperFermi: Originally work by Geza Zsigmond, now PSI. Validated and adapted for
-    use with McStas by Klaus Lieutentant, ILL. (Klaus, please write something here!!!!)
-  - TOFRes_sample: time-of-flight version of the Res_sample component. Written by Kim Lefmann, 
+  - Isotropic_Sqw: Originally work for the Ph.D. thesis of V. Hugouvieux, ILL. Extended and
+    validated intensively by Emmanuel Farhi, ILL. It handles elastic and inelastic scattering
+    for both coherent and incoherent processes, with secondary absorption and multiple scattering.
+    The code has been validated against PowderN and V_sample. It comes with the same flexible
+    system as PowderN to read data files, including crystallographic data for powder line
+    description. Moreover, it may be used to describe concentric geometries in order to model
+    sample environments.
+  - Vitess_ChopperFermi: Originally work for Vitess by Geza Zsigmond, now PSI. Validated and
+    adapted for use with McStas by Klaus Lieutentant, ILL in the frame of the VnCS agreement.
+  - TOFRes_sample: time-of-flight version of the Res_sample component. Written by Kim Lefmann,
     Risoe. Will be merged with the res_sample component in next release.
   - The full suite of Fermi Choppers have been tested intensively by Klaus Lieutentant, partly
     inspired by the work of ILL stagiere Rebecca Peacock.
 
   WARNINGS
-  - Because of rapid changes in the support software for McStas, the current release has support 
+  - Because of rapid changes in the support software for McStas, the current release has support
     for only some releases of:
 
-    * Scilab (Win32 and Unix) - pick release 3.0 from , e.g. from 
+    * Scilab (Win32 and Unix) - pick release 3.0 from , e.g. from
       http://www.scilab.org/download/index_download.php?page=oldReleases.html
 
-    * Perl (Win32) - on Windows we only support Perl 5.6 - pick 
+    * Perl (Win32) - on Windows we only support Perl 5.6 - pick
       http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi
 
 
@@ -103,12 +108,12 @@ Changes in McStas v1.8, Mar 4, 2004
     based on these is not considered "derived work" but merely normal usage of the
     software package.
   - The McStas software package now includes a re-distribution of the plotlib
-    package for Scilab, (http://www.dma.utc.fr/~mottelet/myplot.html), courtesy of 
+    package for Scilab, (http://www.dma.utc.fr/~mottelet/myplot.html), courtesy of
     Stephane Mottelet (stephane.mottelet@dma.utc.fr). Plotlib is beeing distributed
     using a BSD like license. Plotlib needs not be precompiled anymore.
   - McStas now uses the Perl CPAN module Proc::Simple on unix platforms. Proc::Simple
     is distributed using the Perl artistic license.
-  
+
   General
   - Nightly CVS builds of McStas are now available to the public from
     http://mcstas.risoe.dk/cvs (optionally use the mcsync script to get these)
@@ -120,7 +125,7 @@ Changes in McStas v1.8, Mar 4, 2004
     with Win32 releases older than Windows 2000
   - Automatic detection of plotting backend, (make config)
   - Test procedure (make test)
-  
+
   Kernel (i.e. the 'mcstas' program)
   - a PREVIOUS keyword has been implemented, for referencing e.g. position placement
     to upsteam components.
@@ -131,23 +136,23 @@ Changes in McStas v1.8, Mar 4, 2004
   - Various bugfixes, especially on the Win32 platform and RedHat 9 specific stuff
   - mcgui now includes an option to 'scan' instrument parameters (previously only
     possible using mcrun.pl.
-  - mcconvert.pl script has been added to the distribution, converts between 
+  - mcconvert.pl script has been added to the distribution, converts between
     Matlab and Scilab type output. Cyclic conversion, e.g. Matlab->Scilab->Matlab
     is not supported.
   - mcplot opens scan steps with Matlab/Scilab backends
   - mcrun now has support for Matlab/Scilab backends, built in test procedure
-    (mcrun --test), poor man's grid computing - see the manual for information on 
+    (mcrun --test), poor man's grid computing - see the manual for information on
     how to use this.
   - mcdoc support for instrument headers, support for the built in tutorial
-  - Improved tutorial built into the gui tools  
+  - Improved tutorial built into the gui tools
   - editor, various improvements (line numbers etc.)
 
   Instruments
-  - mcgui now has a special Neutron Site menu (auto generated) to allow distribution 
+  - mcgui now has a special Neutron Site menu (auto generated) to allow distribution
     of instruments
   - instruments can now have default input values
   - several contributed / new instruments, have a look in your examples/ folder
-    
+
   Components
   - New components:
     $ Official components
@@ -156,7 +161,7 @@ Changes in McStas v1.8, Mar 4, 2004
       - Phonon_simple, a phonon scattering sample
       - Guide_gravity improved
     $ Contributed components
-      - Guide_tapering, guide with elliptical/parabolic/general tapering 
+      - Guide_tapering, guide with elliptical/parabolic/general tapering
         (Uwe Filges)
       - ISIS_moderator, (Stuart Ansell and Dickon Champion)
       - Guide_curved (Ross Stewart)
@@ -168,22 +173,22 @@ Changes in McStas v1.7, Jan 17, 2003
     of component. It has the same role as DECLARE, but only once.
   - the component files may have some %include inside '%{ }%' C DECLARE or SHARE
     blocks. The files to include are searched locally, and then in the library.
-    If an extension is found, just the specified file is included, else both 
+    If an extension is found, just the specified file is included, else both
     .h and .c are embedded if the --no-runtime has not been specified.
-    The instrument files can also embed external files, both in C blocks 
+    The instrument files can also embed external files, both in C blocks
     and in the instrument parts (DECLARE, etc...) as in previous releases.
   - The instrument and components may have char* setting parameters. For
     instruments, their length is limited to 1024 chars.
-  - The FINALLY section, that was executed at the end, has been split into 
+  - The FINALLY section, that was executed at the end, has been split into
     still the FINALLY, and a new SAVE section. This latter is executed
     at simulation end (just before the FINALLY), but also each time an
     intermediate save is required (e.g. a 'kill -USR2 <pid>' is used).
-  - An instrument source file may contain EXTEND %{ }% C blocks just after  
+  - An instrument source file may contain EXTEND %{ }% C blocks just after
     the usual AT...ROTATED.. keywords, to extend the behaviour of existing
-    components, without touching their code. All local component variables are 
-    available. This may for instance be used to add a new 'color' to neutrons, 
+    components, without touching their code. All local component variables are
+    available. This may for instance be used to add a new 'color' to neutrons,
     i.e. assign a new characteristic variable to the neutron.
-  - component instances in an instrument source file may be GROUPed into 
+  - component instances in an instrument source file may be GROUPed into
     exclusive assembly, i.e. only one component of the group will intercept
     neutron, the rest will be skipped. This is usefull for multi monochromators
     multi detectors, multiple collimators, ... This is a kind if splitting.
@@ -194,14 +199,14 @@ Changes in McStas v1.7, Jan 17, 2003
   - A global gravitation handling is now available, by setting the -g flag
   - many output formats are available for data. use the --format="format"
     flag, e.g. --format="Scilab". The full list is displayed with
-    the -h flag for the instrument program. 
-    example: 
+    the -h flag for the instrument program.
+    example:
       mcrun test.instr --format="Matlab binary" -n 1e4
     will create a mcstas.m file. Launch Matlab and execute
       s=mcstas('plot')  % will import data into s, and plot all detectors.
     Binary formats are handled by IDL, Matlab, Scilab.
     The present available format list is
-      "McStas" "Scilab" "Matlab" "IDL" "XML" "HTML" 
+      "McStas" "Scilab" "Matlab" "IDL" "XML" "HTML"
     The default format is McStas/PGPLOT, but may be specified globally using
     the MCSTAS_FORMAT environment variable
   - It is possible to save 3D data arrays, by calling the DETECTOR_OUT_3D macro.
@@ -221,7 +226,7 @@ Changes in McStas v1.7, Jan 17, 2003
   - obsolete directory contains components that were renamed or old.
   - misc/Progress_bar component now exists, and may save data regularly.
   - optics/Monochromator_curved can read reflectivity and transmission tables
-  - monitors/Monitor_nD can have automatic limits mode for either all or 
+  - monitors/Monitor_nD can have automatic limits mode for either all or
     selected monitored variables. It may also plot banana monitors for mcdisplay
     and trigger intermediate savings for all monitors (same as USR2 sig.)
     Also, it may monitor something else than the intensity, e.g. the mean
@@ -232,7 +237,7 @@ Changes in McStas v1.7, Jan 17, 2003
   - optics/Guide_gravity can handle a 2D array of channels
   - optics/Filter_gen can read a table from a file and affect the neutron beam
     (replaces the obsolete 'Flux_adapter'). It may act as a filter or a source
-  - samples: they now can all target towards any component, giving its index 
+  - samples: they now can all target towards any component, giving its index
     (no need to compute target_x/y/z vector, use e.g. target_index=+1)
   - samples/Res_monitor, Powder1 and V_sample may now have a sphere or box
     shape, and may focus to a circular or rectangular area
@@ -249,7 +254,7 @@ Changes in McStas v1.7, Jan 17, 2003
   - mcplot and mcdisplay work with Matlab, PGPLOT and Scilab plotters (set with
     the MCSTAS_FORMAT default setting, or -pPLOTTER, or PGPLOT if not set)
   - mcrun can not currently generate scan results in other formats than McStas
-  - mcsats2vitess works now ok for converting a McStas component to a Vitess one  
+  - mcsats2vitess works now ok for converting a McStas component to a Vitess one
 
 
 Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
@@ -257,32 +262,32 @@ Changes in McStas v1.6.1 (beta), Feb 18th, 2002.
  - a bug was corrected for very small signal statistics automatic limits
    search in Monitor_nD (0.16.4), that could cause parasitc peaks and
    fluctuations in detector.
-   
+
  - 'optics' components were renamed by categories, starting with Guide_...,
    Monochromator_..., Filter_... etc so that sorting is easier.
-   
+
  - Monochromator_2foc and Monochromator_curved can now read a reflectivity table
    file (eg. PG) with rows [k, R]. Both components give the same results, and
    can use the same parameters.
-   
- - mcplot can now read a list of detector files, without a '.sim' file. This 
-   enables to visualise a set of selected monitors, or may be used when the 
+
+ - mcplot can now read a list of detector files, without a '.sim' file. This
+   enables to visualise a set of selected monitors, or may be used when the
    mcstas.sim file was deleted. Detector files must be in current directory.
-   
+
  - the 1D and 2D detectors now compute simple signal statistics (min, max, mean,
    center and width of distributions) which are stored in the detector file
    and shown in plots (mcplot).
-   
- - The Virtual_input replaces the Source_file component (see below), and can 
+
+ - The Virtual_input replaces the Source_file component (see below), and can
    read text, Vitess and binary float files of neutron events.
 
 Changes in McStas v1.6-ill (alpha), October 29th, 2001.
 
- - In component definitions, a SHARE keyword followed by a C code block  
+ - In component definitions, a SHARE keyword followed by a C code block
    %{...}% acts the same as a DECLARE block, but is only included once in an
    instrument. This is very useful when using many identical components
    (guides, monitors, monochromators) to speed-up compiling and perfomrnaces.
-     SHARE 
+     SHARE
      %{ /* included only once for all identical components */
      %}
      DECLARE
@@ -291,31 +296,31 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
    Then all component programmers may add C functions to the 'kernel'. This is
    only worth when you plan to use a given component many times in a simulation
    (e.g. not for sources or samples). To downgrade a McStas 1.5 component, just
-   move the SHARE block C code into the DECLARE block. 
- - In an instrument definition, within the TRACE section, each COMPONENT 
+   move the SHARE block C code into the DECLARE block.
+ - In an instrument definition, within the TRACE section, each COMPONENT
    instance may include a C code block:
      COMPONENT Comp1 = Guide(...)
      AT (...) ROTATED (...)
-     EXTEND 
+     EXTEND
      %{ /* some C code to execute after component Comp1 */
         /* in current coordinate system. You may use Comp1 and global */
         /* instrument variables */
      %}
-   For instance, you can here give a 'color' (additional neutron    
+   For instance, you can here give a 'color' (additional neutron
    characteristic) and modify next components behaviours.
    This block is always executed in groups, but you can test if the componnet
    intercepted the neutron with the SCATTERED variable (if (SCATTERED) { ... }).
  - In an instrument TRACE section, it is possible to put a set of component
    in an exclusive group. Only one of the elements of the group can act on
    the neutron. If no element acts on the neutron, it is absorbed.
-   This is specially useful for multi-detectors, multi-monochromators in 
+   This is specially useful for multi-detectors, multi-monochromators in
    parallel, multiple collimators/guides (e.g. radial).
      COMPONENT Comp1 = Guide(...)
      AT (...) ROTATED (...) GROUP MyGroupName
-     
+
      COMPONENT Comp2 = Guide(...)
      AT (...) ROTATED (...) GROUP MyGroupName
-   Comp1 and Comp2 may even be at the same place. 
+   Comp1 and Comp2 may even be at the same place.
    For programmers: it is important that the component TRACE section contains a
    SCATTER keyword when it successfully intercepts it, to tell McStas that a
    component in a group acts on a neutron, and can skip other comp in the group.
@@ -330,8 +335,8 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
    Gravitation is included (on y axis). This component now uses the SHARE block.
    The Channeled_guide does not handle properly the focusing multichannels.
  - The Source_gen component focuses uniformly on the target, and can model
-   rectangular, disk, gaussian, and Maxwellian (up to 3 distributions) sources. 
-   Previous source components did not focus correctly on the target. They were 
+   rectangular, disk, gaussian, and Maxwellian (up to 3 distributions) sources.
+   Previous source components did not focus correctly on the target. They were
    also corrected, execpt the 'Source_Maxwell'. Source_gen can replace all thee
    previous sources.
  - A new Source_file component can take as input a text file containing an
@@ -349,9 +354,9 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
       -QUIT: end simulation immediately
  - The 2D detectors now also output the errors/counts on signal as 1D detectors.
    Set p2=NULL in DETECTOR_OUT_2D to unactivate error saving in components.
- - We tried to lower the number of components by merging similar ones. 
+ - We tried to lower the number of components by merging similar ones.
  - There are now new MACROS for the component programmer.
-     * mccompcurindex is the number (index) of the current component 
+     * mccompcurindex is the number (index) of the current component
        (1 is first component of instrument)
      * RESTORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p)
        restores the neutron state to the one at the input of the component
@@ -370,11 +375,11 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
        component (this is usefull for automatic targeting).
      * SCATTERED is non zero when previous component acted on neutron (let pass
        or scatter)
-       
+
    Warning: programmers, do not use anymore the 'mccompcurname' when writing
    your components. rather use the 'NAME_CURRENT_COMP'.
-       
-   Other minor modifications    
+
+   Other minor modifications
    #cleaned up non used variables in mcstas-r.c/h
    #tested and corrected components
         misc: Vitess_input/output: included Spin from Vitess. (vitess-lib.c/h)
@@ -382,19 +387,19 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
           what was needed in SHARE sections. now works OK.
         samples:
             Single_crystal (now can take lattice angles, forgot a %} at SHARE
-              end) 
+              end)
             provide *.dat diffraction samples from Crystallographica
         optics:
-            Beamstop now is a merging of Beamstop_circular and 
+            Beamstop now is a merging of Beamstop_circular and
               Beamstop_rectangular (using default  values to select shape)
             Channeled_guide: now output an error in multichannel focusing mode.
             Chopper: determined default values to have lambda~4 AA. Can handle
               First_Chopper (parameter IsFirst)
             Fermi_Chopper : default values for transmission every ~2 AA
-            Gravity_guide: limit loops to max of 1000 bounces for each 
+            Gravity_guide: limit loops to max of 1000 bounces for each
               components (to avoid endless loops)
             Mosaic_anisotropic: can take DM (d-spacing). default for graphite.
-            Powder_filter (did not work at all, now can take lattice angles, 
+            Powder_filter (did not work at all, now can take lattice angles,
               also works as a sample, can take samples/*.dat diffraction files)
             Selector: default values for transmission at ~4 AA
             Slit: now is a merging of Slit and Circular_slit (using default
@@ -404,16 +409,16 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
         sources
             Source_gen: can handle all previous sources in one component (up to
               3 Maxwellians). Corrected homogeneity bug for illumination.
-            Source_file: can read 'source' files from Vitess, text files (both 
-              90 bytes/neutron) and float binary  files (e.g, from Monitor_nD 
-              with options="list all, source binary" which is more compact in  
-              size, 48  bytes/neutron). Autorecognition of the format. The MCNP 
-              output is not fixed. Just tell MCNP  guys to output the float 
+            Source_file: can read 'source' files from Vitess, text files (both
+              90 bytes/neutron) and float binary  files (e.g, from Monitor_nD
+              with options="list all, source binary" which is more compact in
+              size, 48  bytes/neutron). Autorecognition of the format. The MCNP
+              output is not fixed. Just tell MCNP  guys to output the float
               binary or text file.
    #other tested components:
         monitors: all
         optics: Bender, Curved_Monochromator, Filter, Filter_Graphite,
-          Gravity_guide, Mon_2foc, 
+          Gravity_guide, Mon_2foc,
         Curved_Monochromator, Monochromator
    #not tested: Guide, He3_cell, Mirror, (should be ok ??!!)
    #moved to obsolete components:
@@ -429,84 +434,84 @@ Changes in McStas v1.6-ill (alpha), October 29th, 2001.
             Circular_slit
             Soller_trans.comp
    #perl scripts: mcplot (direct output -ps, -psc, -gif)
-   
+
 Changes in McStas v1.5, October, 10th, 2001
 
-Modified components 
+Modified components
       A corrected version of Arm.comp. For further information, see the emails by Ulrich
-      Wildgruber and Stuart Rycroft. (Apr. 26, 2001) 
+      Wildgruber and Stuart Rycroft. (Apr. 26, 2001)
       A corrected version of  Monitor_nD.comp. For further information, see the email by
-      Emmanuel Farhi. (Apr. 26, 2001) 
+      Emmanuel Farhi. (Apr. 26, 2001)
       A rewritten version of Gravity_guide.comp has been contributed by Emmanuel Farhi
       (see email). The component provided in the email works with McStas 1.4.2, but the official
       version of the component is not working with McStas 1.4.2 because support for this
-      component has been added to the kernel. (Aug. 7, 2001) 
+      component has been added to the kernel. (Aug. 7, 2001)
       An updated version of Monitor_nD.comp has been contributed by Emmanuel Farhi (see
       first and second email). The new version of the component is not working with McStas
-      1.4.2 because support for the component has been added to the kernel. (Aug. 8, 2001) 
+      1.4.2 because support for the component has been added to the kernel. (Aug. 8, 2001)
       Andrew Wildes and Emmanuel Farhi have detected an error when using focusing
       geometry in Channeled_guide. The slope of the channels is not computed corrected
       correctly, because the same left and right slopes are used in all channels. This has now
       been included properly in Gravity_guide, and it is recommended that this component is
-      used. (Sep. 18, 2001) 
+      used. (Sep. 18, 2001)
       The handling of illumination in Source_flat, Source_div and Source_flat_lambda have
-      been corrected. (Oct. 9, 2001) 
-  New components 
+      been corrected. (Oct. 9, 2001)
+  New components
       The He3_cell.comp has been contributed by Trefor Roberts. It models a cylindrical 3He
-      spin filter cell. (Aug. 8, 2001) 
+      spin filter cell. (Aug. 8, 2001)
       The Mon_2foc.comp has been contributed by Peter Link. It models a double bent
-      monochromator with multiple slabs. (Aug. 9, 2001) 
+      monochromator with multiple slabs. (Aug. 9, 2001)
       The Bender.comp has been contributed by Philipp Bernhardt. It models a curved neutron
-      guide. (Aug. 10, 2001) 
+      guide. (Aug. 10, 2001)
       The Powder_filter.comp has been contributed by Ben Fortescue. It models a general
-      box-shaped powder filter. (Aug. 16, 2001) 
+      box-shaped powder filter. (Aug. 16, 2001)
       The Source_Maxwell_3 component describes a source with three Maxwellian
-      distributions. (Sep. 17, 2001) 
+      distributions. (Sep. 17, 2001)
       Various monitors have been added: EPSD_monitor, PSDcyl_monitor, PSDlin_monitor,
-      TOF_cylPSD_monitor, TOFlog_mon. (Sep. 18, 2001) 
-          A minor error in TOF_cylPSD_monitor has been corrected. (Oct. 9, 2001) 
-      A new monitor TOFLambda_monitor has been added. (Oct. 9, 2001) 
-      A guide modeling waviness, Guide_wavy, has been added. (Oct. 9, 2001) 
-      A generic source, Source_gen, has been added. (Oct. 10, 2001) 
+      TOF_cylPSD_monitor, TOFlog_mon. (Sep. 18, 2001)
+          A minor error in TOF_cylPSD_monitor has been corrected. (Oct. 9, 2001)
+      A new monitor TOFLambda_monitor has been added. (Oct. 9, 2001)
+      A guide modeling waviness, Guide_wavy, has been added. (Oct. 9, 2001)
+      A generic source, Source_gen, has been added. (Oct. 10, 2001)
   The signal handling system has been updated to handle a special case. The signal handling
-  system will be documented in the manual of version 1.5. (Aug. 7, 2001) 
+  system will be documented in the manual of version 1.5. (Aug. 7, 2001)
   The representation of polarisation in McStas components and instruments is supposed to work
   as follows. Only components actually modifying the spin explicitly require the "POLARISATION
   PARAMETERS (sx,sy,sz)" line. An instrument handling polarisation may consist of  components
-  both with and without this line; it will transform the spin vector correctly anyway. The 
+  both with and without this line; it will transform the spin vector correctly anyway. The
   "POLARISATION PARAMETERS (sx,sy,sz)" line is therefore removed from all official
   components not dealing with polarisation. The reason is that for instruments without polarisation
   some simulation time is gained by excluding the transformations of the spin vector. (Aug. 9,
-  2001) 
-  Some definitions have been added that can be used in coding components: 
+  2001)
+  Some definitions have been added that can be used in coding components:
       NAME_CURRENT_COMP gives the name of the current component as a string. (Aug.
-      16, 2001) 
+      16, 2001)
       POS_A_CURRENT_COMP gives the absolute position of the current component. A
       component of the vector is referred to as POS_A_CURRENT_COMP.i where i is x, y or z.
-      (Aug. 16, 2001) 
+      (Aug. 16, 2001)
       ROT_A_CURRENT_COMP and  ROT_R_CURRENT_COMP give the orientation of the
       current component as rotation matrices (absolute orientation and the orientation relative to
       the previous component, respectively). A component of  a rotation matrice is referred to
-      as  ROT_A_CURRENT_COMP[m][n], where m and n are 0, 1, or 2. (Aug. 16, 2001) 
+      as  ROT_A_CURRENT_COMP[m][n], where m and n are 0, 1, or 2. (Aug. 16, 2001)
       POS_A_COMP(comp) gives the absolute position of the component with the name
       comp. Note that comp is not given as a string. A component of the vector is referred to as
-      POS_A_COMP(comp).i where i is x, y or z. (Aug. 16, 2001) 
+      POS_A_COMP(comp).i where i is x, y or z. (Aug. 16, 2001)
       ROT_A_COMP(comp) and ROT_R_COMP(comp)  give the orientation of the
       component comp as rotation matrices (absolute orientation and the orientation relative to
       its previous component, respectively). Note that comp is not given as a string. A
       component of  a rotation matrice is referred to as  ROT_A_COMP(comp)[m][n], where
-      m and n are 0, 1, or 2. (Aug. 16, 2001) 
+      m and n are 0, 1, or 2. (Aug. 16, 2001)
 
 Changes in McStas v1.4.1, March 16, 2001
 
  - New components: ESS_moderator_long.comp and ESS_moderator_short.comp
    (by Kim Lefmann), Source_Maxwell (by Emmanuel Farhi). Gravity_guide.comp
    is included in the official version.
- - Some support for the calculation of correlation functions in the 
+ - Some support for the calculation of correlation functions in the
    components Monitor_nD and PreMonitor_nD (by Emmanuel Farhi)
  - A signal handling system is included (by Emmanuel Farhi)
  - Misc. minor bug fixes
- - For more information: 
+ - For more information:
    http://neutron.risoe.dk/mcstas/developments/developments.html
 
 
