@@ -22,11 +22,79 @@
 * Modified by: PEO, EF, October, 10th, 2001: release 1.5
 * Modified by: PW, EF, May 19th 2003: version 1.7
 * Modified by: PW, EF, March 4th 2004: version 1.8
+* Modified by: PW, EF, November 16th 2005: version 1.9 
 *
-* This file is part of McStas  version 1.8, released March, 4th, 2004.
+* This file is part of McStas  version 1.9, released November, 16th, 2005.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v1.9, Nov 16, 2005
+
+  General
+  - To indicate the collaborative nature of the McStas package, the main website
+    URL does no longer belong to Risoe or ILL but is http://www.mcstas.org.
+  - The package has been strengthened by the presence of Klaus Lieutenant (former
+    captain of Vitess, HMI) at ILL. He has focused a lot on validation and testing
+    of the package, giving very important input and done very valuable work. 
+  - To help us in the fight against bugs, a BUGZILLA system has been set up for users
+    to report their suggestions and problems. The system is available at the URL
+    http://www.mcstas.org/McZilla .
+  - The VnCS (Virtual neutron Code Sharing) agreement has been signed by the leaders
+    of the Vitess and McStas software packages to formally support closer collaboration
+    and sharing of code between the packages. At least one component (Vitess_ChopperFermi)
+    now works with both packages, work done by Klaus Lieutenant and Geza Zsigmond.
+  - Many big and small BUGS ellimnated!
+  - First attempt at "concentric components" (sample environment). See Isotropic_Sqw in
+    the 'Components' section below.
+
+  Documentation
+  - With this release, the component manual has finally been updated! Major work has
+    been put into this by especially Kim Lefmann and Emmanuel Farhi. The user manual
+    has also been revised, but not as intensively.
+  - Improvements to tutorial/teaching material as result of Copenhagen University course on
+    neutron scattering, given by Kim Lefmann and Peter Willendrup. The idea is that when
+    improved further, the full simulation part of the course can serve as an extended
+    tutorial for McStas. In the package, projects on virtual experiments at DMC, RITA-2 and
+    SANS-2 at PSI is included.
+
+  Tools
+  - A web frontend is now available for McStas, check it out at http://www.mcstas.org/webfront .
+    Currently it is not actually part of the package, may become so in a near future release.
+  - On Unix systems, mcdaemon is a tool to periodically send -USR2 signals (save) to running
+    simulation processes. Is in an early state but should work okay, but not documented in the
+    user manual. Replots intermediate data.
+  - mcgui has been intensively revised, many annoyances have been removed and features adjusted
+    for easier use.
+  
+  Components
+  - For simplicity, a number of components (especially monitors and sources) have been merged.
+    This for example means that the Source_simple replaces the former Source_flat* components.
+    Fewer duplications of code => smaller risk of old bugs surviving in the code.
+  - PowderN: General powder sample component, replaces the simpler Powder1 and Powder2 components,
+    has a very flexible system to read crystallographic data for powder line description. Is
+    in the process of beeing validated against data from DMC@PSI. The code itself and the 
+    validation of it is the result of collaboration between mainly Peter Willendrup from the
+    McStas team and Laurent Chapon (ISIS), Uwe Filges (PSI) and Lukas Keller (PSI). A validation
+    paper will be presented at ICNS, Sydney.
+  - Isotropic_Sqw: Originally work for the Ph.D. thesis of V. Hugovieux, ILL. Extended and 
+    validated intensively by Emmanuel Farhi, ILL. (Emmanuel, please write something here!!!)
+  - Vitess_ChopperFermi: Originally work by Geza Zsigmond, now PSI. Validated and adapted for
+    use with McStas by Klaus Lieutentant, ILL. (Klaus, please write something here!!!!)
+  - TOFRes_sample: time-of-flight version of the Res_sample component. Written by Kim Lefmann, 
+    Risoe. Will be merged with the res_sample component in next release.
+  - The full suite of Fermi Choppers have been tested intensively by Klaus Lieutentant, partly
+    inspired by the work of ILL stagiere Rebecca Peacock.
+
+  WARNINGS
+  - Because of rapid changes in the support software for McStas, the current release has support 
+    for only some releases of:
+
+    * Scilab (Win32 and Unix) - pick release 3.0 from , e.g. from 
+      http://www.scilab.org/download/index_download.php?page=oldReleases.html
+
+    * Perl (Win32) - on Windows we only support Perl 5.6 - pick 
+      http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi
+
 
 Changes in McStas v1.8, Mar 4, 2004
 
