@@ -44,14 +44,8 @@ The McStas tools are written using the Perl language, with calls the perl-Tk lib
 \item{Win32:}
   \begin{itemize}
   \item{Get and install the ActivePerl package from\\
-      \htmladdnormallink{http://www.activestate.com/Products/Download/Register.plex?id=ActivePerl}{http://www.activestate.com/Products/Download/Register.plex?id=ActivePerl}
-      \\(Registration
-      not required)  This package provides Perl and
-      Perl-Tk.\\{\bf IMPORTANT: Use only version {\bf 5.6} and get the 'msi' type package!}}
-  \item{Optionally, get and install the ActiveTcl package from\\
-      \htmladdnormallink{http://www.activestate.com/Products/Download/Register.plex?id=ActiveTcl}{http://www.activestate.com/Products/Download/Register.plex?id=ActiveTcl}
-      \\(Registration
-      not required) This package provides Tcl/Tk.}
+      \htmladdnormallink{http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi}{http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi}
+      This package provides Perl and Perl-Tk.
   \item{You may need to update/install the Microsoft Windows Installer. Get it from Windows Support Downloads at \htmladdnormallink{http://www.microsoft.com/}{http://www.microsoft.com/}.}
   \item{Make sure that during installation, you have requested to attach the .pl and .tcl extensions to Perl and Tcl, and the \verb+C:\Perl\bin+ is in the PATH.}
   \end{itemize}
@@ -79,7 +73,7 @@ For plotting with McStas, different support packages can be used:
 \item{Matlab (Some Unix/Win32) - refer to
     \htmladdnormallink{http://www.mathworks.com}{http://www.mathworks.com}. Matlab licenses are rather costly, but discount programmes for university and research departments exist.}
 \item{Scilab (Unix/Win32/Mac...) - a free 'Matlab-like' package, available from
-    \htmladdnormallink{http://www-rocq.inria.fr/scilab/}{http://www-rocq.inria.fr/scilab/}.
+    \htmladdnormallink{http://www.scilab.org/download/index_download.php?page=oldReleases.html}{http://www.scilab.org/download/index_download.php?page=oldReleases.html}.
     \\{\bf IMPORTANT: McStas plotting only works properly with Scilab
       ver.$\leq $3.0 }\\
 On Windows systems, Scilab should be installed in a directory such as \verb+C:\Scilab+ (do NOT use spaces in names) and you should then add the \verb+C:\Scilab\bin+ directory to your PATH using\\\ \\
@@ -244,7 +238,7 @@ It is important that Perl is correctly installed to execute all the McStas tools
 Actually, the modifications to your environnement variables should be
 \begin{itemize}
     \item{\verb+PATH+ - Append e.g. \\
-    \verb+C:\mcstas\bin;c:\Program Files\Scilab-2.7.2\bin;C:\Perl\bin\;C:\Dev-Cpp\bin;+}
+    \verb+C:\mcstas\bin;c:\Program Files\Scilab-3.0\bin;C:\Perl\bin\;C:\Dev-Cpp\bin;+}
     \item{\verb+MCSTAS+ - Create it as e.g. \verb+C:\mcstas\lib+}
 \end{itemize}
 using menu item 'Start/Settings/Control Panel/System/Advanced/Environment Variables'. On some Windows systems, it may be necessary to logout/login (no need to restart the computer) to make these changes active for the whole session.
