@@ -1057,6 +1057,11 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
 push @options, "--format='$MCSTAS::mcstas_config{'PLOTTER'}'";
 
 if ($exec_test) {
+  # Unfortunately, Scilab direct graphics export is broken on Win32...
+  if ($Config{'osname'} eq 'MSWin32') {
+      $exec_test=~s!graphics!!g;
+      print STDERR "Sorry, graphics is not possible with --test on Win32...\n";
+  }
   my $status;
   $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $MCSTAS::mcstas_config{'PLOTTER'}, $exec_test);
   if (defined $status) {
