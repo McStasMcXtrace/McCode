@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi <farhi@ill.fr>
 * Date: July 2005
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: ILL
 * Release: McStas 1.9
 *
@@ -121,12 +121,12 @@ INITIALIZE
   } else { divergence = 0; nblades = 0; }
   if (verbose) {
     printf("Collimator_radial: %s: divergence %g [min] %s\n"
-             "    Total opening [%f:%f] [deg]",
+             "    Total opening [%.2g:%.2g] [deg]",
              NAME_CURRENT_COMP, divergence*RAD2MIN,
              (roc ? "oscillating" : ""),
               theta_min*RAD2DEG, theta_max*RAD2DEG);
     if (!ideal)
-      printf(" as %g channels of %g layers %s\n"
+      printf(" as %g channels of %.2g layers %s\n"
            "    Channel Window=%g [deg] Soller=%g [deg]\n",
            nchan, nblades, (use_approx ? "(approx)" : ""),
            window_theta*RAD2DEG, soller_theta1*RAD2DEG);
