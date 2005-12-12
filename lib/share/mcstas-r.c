@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.123 $
+* Version: $Revision: 1.124 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.123 2005-11-08 14:20:33 farhi Exp $
+* $Id: mcstas-r.c,v 1.124 2005-12-12 13:43:14 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.123  2005/11/08 14:20:33  farhi
+* misprint
+*
 * Revision 1.122  2005/11/08 13:37:49  farhi
 * Warnings for formats are now easier to read
 *
@@ -731,7 +734,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       " if S(1) > 1, d.stepy=abs(l(3)-l(4))/(S(1)-1); else d.stepy=0; end\n"
       " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,S(2));\n"
       " d.y=linspace(l(3)+d.stepy/2,l(4)-d.stepy/2,S(1));\n"
-      " surface(d.x,d.y,d.data); xlim([l(1) l(2)]); ylim([l(3) l(4)]);\n"
+      " surface(d.x,d.y,d.data); xlim([l(1) l(2)]); ylim([l(3) l(4)]); shading flat;\n"
       "else\n"
       " if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1); else d.stepx=0; end\n"
       " d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));\n"
