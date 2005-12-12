@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -144,26 +144,11 @@
 
 *
 * <b>How to monitor any instrument/component variable into a Monitor_nD</b>
-* Suppose the Monitor_nD instance is named 'MyMonitor'.
-* 1) put in your instrument DECLARE:
-*      %include "monitor_nd-lib"
-*      MONND_DECLARE(MyMonitor); // will monitor custom things in MyMonitor
-* 2) put in your instrument INITIALIZE (optional, to set monitor name):
-*      MONND_USER_TITLE(MyMonitor, 1, "Log(age of the Captain)");
-*    This will set 'user1' title (because of the '1', could be '2' as well).
-* 3) put just after the component where you want to monitor (to set the value)
-*      EXTEND
-*      %{ // attach a value to user1 in MyMonitor
-*        MONND_USER_VALUE(MyMonitor, 1, log(fabs(x*y+1)));
-*      %}
-*   This will set 'user1' (because of the '1', could be '2' as well) value.
-*   The value to store in user1 may be obtained from local component variables
-*   (this requires to look into the comp code, to extract a variable name)
-*   or neutron coordinates or any instrument variable, or any other component
-*   variable (using MC_GETPAR).
-* 4) put further in the instrument (to monitor the user1 value defined before)
+* Suppose you want to monitor a variable 'age' which you assign somwhere in
+* the instrument:
 *      COMPONENT MyMonitor = Monitor_nD(
 *       xwidth = 0.1, yheight = 0.1,
+*       user1=age, username1="Age of the Captain [years]",
 *       options="user1, auto")
 *      AT ...
 *
@@ -193,6 +178,10 @@
 *                Use 'min' or 'limits' keyword in 'options' for other limits
 * max:    [u]    Maximum range value to force for all variables
 *                Use 'max' or 'limits' keyword in 'options' for other limits
+* user1 [variable] Variable assigned to User1
+* user2 [variable] Variable assigned to User2
+* username1  [str] Name assigned to User1
+* username2  [str] Name assigned to User2
 *
 * OUTPUT PARAMETERS:
 *
@@ -207,7 +196,7 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS (options=0, filename=0)
+DEFINITION PARAMETERS (options=0, filename=0, user1=FLT_MAX, user2=FLT_MAX, username1=0, username2=0)
 SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
@@ -245,6 +234,9 @@ INITIALIZE
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
 
+  if (username1) strncpy(Vars.UserName1, username1, 32);
+  if (username2) strncpy(Vars.UserName2, username2, 32);
+
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
 
   if (filename != NULL) strncpy(Vars.Mon_File, filename, 128);
@@ -262,6 +254,9 @@ TRACE
   double  pp;
   int     intersect   = 0;
   char    Flag_Restore = 0;
+
+  if (user1 != FLT_MAX) Vars.UserVariable1 = user1;
+  if (user2 != FLT_MAX) Vars.UserVariable2 = user2;
 
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
