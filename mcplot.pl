@@ -71,6 +71,7 @@ my $nowindow = 0;
 my $do_swap=0;
 my $daemon=0;
 my $wait=10;
+my $logmode=0;
 our $tmp_file = "";
 
 $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
@@ -98,6 +99,8 @@ for($i = 0; $i < @ARGV; $i++) {
       $nowindow = 1;
   } elsif(/^-swap$/i) {
       $do_swap = 1;
+  } elsif(/^-log/i) {
+      $logmode = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "mcplot [-ps|-psc|-gif] <simfile | detector_file>\n";
       print "       [-pPLOTTER] Output graphics using {PGPLOT,Scilab,Matlab,HTML}\n";
@@ -124,6 +127,7 @@ for($i = 0; $i < @ARGV; $i++) {
 if ($do_plot)     { $passed_arg_str .= "-plot "; }
 if ($do_overview) { $passed_arg_str .= "-overview "; }
 if ($do_swap)     { $passed_arg_str .= "-swap "; }
+if ($logmode)     { $passed_arg_str .= "-log "; }
 
 if ($index == 0) {
   $file = "mcstas";
@@ -160,7 +164,7 @@ if ($Config{'osname'} eq 'MSWin32') {
     my ($basename,$dirname)=fileparse($file);
     $file = $basename;
     if (-d $dirname) {
-	chdir $dirname;
+  chdir $dirname;
     }
 }
 
@@ -271,19 +275,19 @@ sub pgplotit {
       unless @$datalist;
 
   if ($passed_arg_str_quit =~ /-cps|-psc/i) {
-    overview_plot("$file.ps/cps", $datalist, 0);
+    overview_plot("$file.ps/cps", $datalist, $passed_arg_str);
           die "Wrote color postscript file '$file.ps' (cps)\n";
   } elsif ($passed_arg_str_quit =~ /-ps/) {
-    overview_plot("$file.ps/ps", $datalist, 0);
+    overview_plot("$file.ps/ps", $datalist, $passed_arg_str);
           die "Wrote BW postscript file '$file.ps' (ps)\n";
   } elsif ($passed_arg_str_quit =~ /-ppm/) {
-    overview_plot("$file.ppm/ppm", $datalist, 0);
+    overview_plot("$file.ppm/ppm", $datalist, $passed_arg_str);
           die "Wrote PPM file '$file.ppm' (ppm)\n";
   } elsif ($passed_arg_str_quit =~ /-png/) {
-    overview_plot("$file.png/png", $datalist, 0);
+    overview_plot("$file.png/png", $datalist, $passed_arg_str);
           die "Wrote PNG file '$file.png' (png)\n";
   } elsif ($passed_arg_str_quit =~ /-gif/) {
-    overview_plot("$file.gif/gif", $datalist, 0);
+    overview_plot("$file.gif/gif", $datalist, $passed_arg_str);
           die "Wrote GIF file '$file.gif' (gif)\n";
   }
   if ($daemon eq 0) {
@@ -293,15 +297,19 @@ sub pgplotit {
   'C' color postscript
   'N' PNG file
   'M' PPM file
-  'G' GIF file\n";
+  'G' GIF file
+  'L' Toggle log10 plotting mode
+  'Q' quit\n";
   } else {
-      overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 0);
+      overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, $passed_arg_str);
   }
   if ($daemon eq 0) {
       for(;;) {
           my ($cc,$cx,$cy,$idx);
+          if ($logmode == 1) { $passed_arg_str .= "-log " }
+          else { $passed_arg_str =~ s|-log||; }
           # Do overview plot, letting user select a plot for full-screen zoom.
-          ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, 1);
+          ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, "$passed_arg_str -interactive ");
           last if $cc =~ /[xq]/i;        # Quit?
           if($cc =~ /[pcngm]/i) {        # Hardcopy?
               my $ext="ps";
@@ -309,12 +317,18 @@ sub pgplotit {
               if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
               if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
-              overview_plot("$file.$ext/$dev", $datalist, 0);
+              overview_plot("$file.$ext/$dev", $datalist, $passed_arg_str);
               print "Wrote file '$file.$ext' ($dev)\n";
               next;
           }
+          if($cc =~ /[l]/i) {        # toggle log mode
+            if ($logmode == 0) { $logmode=1; }
+            else { $logmode=0; $passed_arg_str =~ s|-log||; }
+            next;
+          }
+
           # now do a full-screen version of the plot selected by the user.
-          ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], 1);
+          ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], "$passed_arg_str -interactive ");
           last if $cc =~ /[xq]/i;        # Quit?
           if($cc =~ /[pcngm]/i) {        # Hardcopy?
               my $ext="ps";
@@ -323,8 +337,13 @@ sub pgplotit {
               if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
               my $filename = "$datalist->[$idx]{'Filename'}.$ext";
-              single_plot("$filename/$dev", $datalist->[$idx], 0);
+              single_plot("$filename/$dev", $datalist->[$idx], $passed_arg_str);
               print "Wrote file '$filename' ($dev)\n";
+          }
+          if($cc =~ /[l]/i) {        # toggle log mode
+            if ($logmode == 0) { $logmode=1; }
+            else { $logmode=0; $passed_arg_str =~ s|-log||; }
+            next;
           }
       }
   }

@@ -28,11 +28,19 @@ require "mcfrontlib2D.pl";
 
 sub plot_array_2d {
     my ($info,$m,$n) = @_;
-    my $data;
-    $data= get_detector_data_2D($info);
+    my $data_orig;
+    $data_orig= get_detector_data_2D($info);
+    my $data = $data_orig->copy;
     my ($x0,$x1,$y0,$y1) = @{$info->{'Limits'}};
     my ($dx,$dy) = (($x1 - $x0)/$m, ($y1 - $y0)/$n);
     my $tr = pdl [ $x0 + $dx/2, $dx, 0, $y0 + $dy/2, 0, $dy ];
+    if ($info->{'Logmode'} == 1 && $min <= 0) {
+      my $i=which($data <= 0);
+      my $j=which($data >  0);
+      my $low_data = $data->flat->index($i);
+      $low_data .= min($data->flat->index($j))/10;
+    }
+    if ($info->{'Logmode'} == 1) { $data = log10(abs($data)); }
     my ($min, $max) = (min($data), max($data));
     if ($min == $max) {
       if($min == 0) {
@@ -75,8 +83,11 @@ sub plot_array_2d {
       pgscr(1, $r1, $g1, $b1);
     }
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
-    pgmtxt("T", 2.5, 0.5, 0.5, "$info->{'Title'}     $info->{'Component'}");
+    my $title = "$info->{'Title'}     $info->{'Component'}";
+    if ($info->{'Logmode'} == 1) { $title = "[LOG] $title"; }
+    pgmtxt("T", 2.5, 0.5, 0.5, $title);
     pgmtxt("T", 1.0, 0.5, 0.5, "[$info->{'Filename'}] $info->{'Stats'}");
+    pgiden();
     pgebuf;
     release;
 }
@@ -88,13 +99,23 @@ sub plot_array_1d {
     my $nx = $info->{'Xvar'}[0];
     my $ny = $info->{'Yvar'}[0];
     my $x = $r->{$nx};
-    my $I = $r->{$ny};
+    my $I_orig = $r->{$ny};
+    my $I = $I_orig->copy;
     my ($x0,$x1) = @{$info->{'Limits'}};
     my ($min, $max, $err);
+    $min = min($I);
+    if ($info->{'Logmode'} == 1 && $min <= 0) {
+      my $i=which($I <= 0);
+      my $j=which($I >  0);
+      my $low_data = $I->flat->index($i);
+      $low_data .= min($I->flat->index($j))/10;
+    }
     if($info->{'Yerr'} && $info->{'Yerr'}[0]) {
       $err = $r->{$info->{'Yerr'}[0]};
+      if ($info->{'Logmode'} == 1) { $err = $err/$I; $I = log10(abs($I)); }
       ($min, $max) = (min($I - 2*$err), max($I + 2*$err));
     } else {
+      if ($info->{'Logmode'} == 1) { $I = log($I); }
       ($min, $max) = (min($I), max($I));
     }
     if($min == $max) {
@@ -115,8 +136,11 @@ sub plot_array_1d {
     errb($x, $I, $err) if defined($err);
     pgbox("BCNST", 0.0, 0.0, "BCNST", 0.0, 0.0);
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
-    pgmtxt("T", 2.5, 0.5, 0.5, "$info->{'Title'}     $info->{'Component'}");
+    my $title = "$info->{'Title'}     $info->{'Component'}";
+    if ($info->{'Logmode'} == 1) { $title = "[LOG] $title"; }
+    pgmtxt("T", 2.5, 0.5, 0.5, $title);
     pgmtxt("T", 1, 0.5, 0.5, "[$info->{'Filename'}] $info->{'Stats'}");
+    pgiden();
     pgebuf;
     release;
 }
@@ -168,9 +192,11 @@ sub overview_plot {
 
     my $info;
     for $info (@$datalist) {
+      if ($interactive =~ /-log/i) { $info->{'Logmode'} = 1; }
+      else { $info->{'Logmode'} = 0; }
       plot_dat_info($info);
     }
-    if($interactive) {
+    if($interactive =~ /interactive/i) {
       # Wait for user to select a plot.
       pgpanl(1,1);
       pgsvp(0,1,0,1);
@@ -200,8 +226,10 @@ sub single_plot {
     if (defined(&dev)) { $dev = dev("$devspec"); }
     else { $dev = pgopen("$devspec"); }
     die "DEV/PGOPEN $devspec failed!" unless $dev > 0;
+    if ($interactive =~ /-log/i) { $info->{'Logmode'} = 1; }
+    else { $info->{'Logmode'} = 0; }
     plot_dat_info($info);
-    if($interactive) {
+    if($interactive =~ /interactive/i) {
       # Wait for user to press a key.
       my ($ax,$ay,$cx,$cy,$cc) = (0,0,0,0,"");
       pgband(0, 0, $ax, $ay, $cx, $cy, $cc);
