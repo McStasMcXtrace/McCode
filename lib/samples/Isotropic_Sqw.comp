@@ -1499,15 +1499,18 @@ do { /* Main interaction loop. Ends with intersect=0 */
             q4 = Data_sqw.Q_proba_per_w[index_w-1][index_q].Q;
             q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
               + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
-          } else if (index_w < Data_sqw.nb_w && index_q > 0 && Data_sqw.nb_w > 1 && Data_sqw.nb_q > 1) { /* bilinear interpolation on + side */
+          } else if (index_q > 0 && Data_sqw.nb_q > 1) { /* bilinear interpolation on + side */
             ratio_q = (tmp - Data_sqw.Q_proba_per_w[index_w][index_q-1].cumul_proba)
                      /(Data_sqw.Q_proba_per_w[index_w][index_q].cumul_proba - Data_sqw.Q_proba_per_w[index_w][index_q-1].cumul_proba);
-            q3 = Data_sqw.Q_proba_per_w[index_w+1][index_q].Q;
             q1 = Data_sqw.Q_proba_per_w[index_w]  [index_q-1].Q;
-            q2 = Data_sqw.Q_proba_per_w[index_w+1][index_q-1].Q;
             q4 = Data_sqw.Q_proba_per_w[index_w]  [index_q].Q;
-            q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
-              + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
+            if (index_w < Data_sqw.nb_w-1 && Data_sqw.nb_w > 1) {
+              q3 = Data_sqw.Q_proba_per_w[index_w+1][index_q].Q;
+              q2 = Data_sqw.Q_proba_per_w[index_w+1][index_q-1].Q;
+              q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
+                + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
+            } else
+              q = (1-ratio_q)*q1 + ratio_q*q4;
           } else q = Data_sqw.Q_proba_per_w[index_w][index_q].Q;
         } else {
           if (VarSqw.verbose_output >= 3)
