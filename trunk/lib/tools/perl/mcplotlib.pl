@@ -34,13 +34,13 @@ sub plot_array_2d {
     my ($x0,$x1,$y0,$y1) = @{$info->{'Limits'}};
     my ($dx,$dy) = (($x1 - $x0)/$m, ($y1 - $y0)/$n);
     my $tr = pdl [ $x0 + $dx/2, $dx, 0, $y0 + $dy/2, 0, $dy ];
-    if ($info->{'Logmode'} == 1 && $min <= 0) {
+    if ($info->{'Logmode'} == 1 && $min <= 0 && max($data) > 0) {
       my $i=which($data <= 0);
       my $j=which($data >  0);
       my $low_data = $data->flat->index($i);
       $low_data .= min($data->flat->index($j))/10;
     }
-    if ($info->{'Logmode'} == 1) { $data = log10(abs($data)); }
+    if ($info->{'Logmode'} == 1 && max($data) > 0) { $data = log10(abs($data)); }
     my ($min, $max) = (min($data), max($data));
     if ($min == $max) {
       if($min == 0) {
@@ -104,7 +104,7 @@ sub plot_array_1d {
     my ($x0,$x1) = @{$info->{'Limits'}};
     my ($min, $max, $err);
     $min = min($I);
-    if ($info->{'Logmode'} == 1 && $min <= 0) {
+    if ($info->{'Logmode'} == 1 && $min <= 0 && max($I) > 0) {
       my $i=which($I <= 0);
       my $j=which($I >  0);
       my $low_data = $I->flat->index($i);
@@ -112,10 +112,10 @@ sub plot_array_1d {
     }
     if($info->{'Yerr'} && $info->{'Yerr'}[0]) {
       $err = $r->{$info->{'Yerr'}[0]};
-      if ($info->{'Logmode'} == 1) { $err = $err/$I; $I = log10(abs($I)); }
+      if ($info->{'Logmode'} == 1 && max($I) > 0) { $err = $err/$I; $I = log10(abs($I)); }
       ($min, $max) = (min($I - 2*$err), max($I + 2*$err));
     } else {
-      if ($info->{'Logmode'} == 1) { $I = log($I); }
+      if ($info->{'Logmode'} == 1 && max($I) > 0) { $I = log($I); }
       ($min, $max) = (min($I), max($I));
     }
     if($min == $max) {
