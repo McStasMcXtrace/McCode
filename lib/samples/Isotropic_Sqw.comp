@@ -679,7 +679,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     val_min= Table.min_x;
     val_max= Table.max_x;
 
-    /* update min/max accroding to input parameters */
+    /* update min/max according to input parameters */
     if (i == 0) { /* q */
       val_min = (val_min < Sqw->q_min ? Sqw->q_min : val_min);
       val_max = (val_max > Sqw->q_max ? Sqw->q_max : val_max);
@@ -696,6 +696,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (!*usr_min && !*usr_max) {
       *usr_min = val_min; *usr_max = val_max;
     }
+    if (*usr_max > val_max) *usr_max=val_max;
   }
 
   if (!Sqw_Data->nb_q  || !Sqw_Data->nb_w) {
@@ -754,12 +755,12 @@ struct Sqw_Data_struct *Sqw_readfile(
   alpha *= (Sqw_Data->q_max-Sqw_Data->q_min)/Sqw_Data->nb_q;
 
   /* mean S(q ,w) values = sum(S)/nb_q/nb_w */
-  val /= Sqw_Data->nb_q*Sqw_Data->nb_w;
-  sum /= Sqw_Data->nb_q*Sqw_Data->nb_w;
+  val *= (Sqw_Data->q_max-Sqw_Data->q_min)/Sqw_Data->nb_q; // restricted q,w range
+  sum *= (Sqw_Data->q_max-Sqw_Data->q_min)/Sqw_Data->nb_q; // total q,w range
   Sqw_Data->intensity_total = sum; /* raw norm */
 
   if (Sqw->verbose_output > 1)
-    printf("Isotropic_Sqw: %s: Generated S(Q)[%i], mean |S| = %g, \\int q^2 S(q) dq=%g\n",
+    printf("Isotropic_Sqw: %s: Generated S(Q)[%i], norm |S| = %g, \\int q^2 S(q) dq=%g\n",
       Sqw->compname, Sqw_Data->nb_q, Sqw_Data->intensity_total, alpha);
 
 
@@ -1722,7 +1723,7 @@ FINALLY
         Data_sqw.w_min, Data_sqw.w_max,
         Data_sqw.nb_w,NULL,DOS,NULL,
         filename);
-      sprintf(tmp, "S(q,w) from %s (%s), Mean=%g", Data_sqw.filename, type_ci,
+      sprintf(tmp, "S(q,w) from %s (%s), Norm=%g", Data_sqw.filename, type_ci,
         (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity));
       sprintf(filename, "%s_%s.sqw", NAME_CURRENT_COMP, ext);
       if (Data_sqw.nb_q > 1 && Data_sqw.nb_w > 1)
