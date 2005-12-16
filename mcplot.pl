@@ -306,7 +306,7 @@ sub pgplotit {
   if ($daemon eq 0) {
       for(;;) {
           my ($cc,$cx,$cy,$idx);
-          if ($logmode == 1) { $passed_arg_str .= "-log " }
+          if ($logmode == 1) { if ($passed_arg_str !~ /-log/i) { $passed_arg_str .= "-log "; } }
           else { $passed_arg_str =~ s|-log||; }
           # Do overview plot, letting user select a plot for full-screen zoom.
           ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, "$passed_arg_str -interactive ");
