@@ -744,7 +744,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (!nb_q_data  || !nb_w_data) {
     printf("Isotropic_Sqw: %s: Data file %s has null q or omega information (%lix%li).\n"
            "ERROR          Exiting.\n",
-      Sqw->compname, file, Snb_q_data, nb_w_data);
+      Sqw->compname, file, nb_q_data, nb_w_data);
     return(NULL);
   }
 
