@@ -1,5 +1,6 @@
 function legend(varargin)
 
+win=gcw();
 state=loadGraphicState(gcw());
 listOfPlots=state('listOfPlots');
 nb=length(listOfPlots);
@@ -11,6 +12,6 @@ if typ==-1
    error('legend : for type=-1 use the property ''legend'' in a plot command');
 end
 
-processLegend(mat);
+processLegend(win,mat);
 
 endfunction

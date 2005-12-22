@@ -6,7 +6,7 @@ if rhs==0
    load(PLOTLIB+'dinosaure.dat')
    clf()
    colormap green
-   trisurfl(nodes,x,y,z,'axis','equal','shading','interp')
+   trisurfl(nodes,x,y,z,'axis','equal','facecolor','interp')
 else
    mainPlot3d('trisurfl',varargin);
 end

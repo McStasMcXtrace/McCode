@@ -2,7 +2,7 @@ function graphinit(varargin)
 
 global myWorld
 
-defaultColormap=graycolormap(32);
+defaultColormap=jetcolormap(64);
 
 //
 // Initialisation of graphic state. Must be called once at startup

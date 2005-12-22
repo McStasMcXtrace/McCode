@@ -1,5 +1,5 @@
 function [modeStart,modeAdd,modeScale,nTicksX,nTicksY]=process2DPrelim(win,liste,Xscale,Yscale,...
-axisVect,axisTightX,axisTightY,axisRatio,axisStyle,colorBar,tab,matOfLegends,typeOfLegend)
+axisVect,axisTightX,axisTightY,axisRatio,axisStyle,colorBar,tab,matOfLegends,typeOfLegend,ticsx,ticsy)
 
 nTicksX=[];
 nTicksY=[];
@@ -16,10 +16,11 @@ if state('nextPlot')=='erase'
 
 	// set the number of tickmarks, depending of current subplot state
 
+
 	nTicksX = max(5,int(vp(3)*5));
 	nTicksY = max(5,int(vp(4)*5));
 
-	setFontSize(vp)
+	xset('font',6,setFontSize(vp));
 
 	minX=axisVect(1); maxX=axisVect(2);
 	minY=axisVect(3); maxY=axisVect(4);
@@ -30,6 +31,14 @@ if state('nextPlot')=='erase'
 	if ~ (axisTightY)
     	 [minY,maxY,nTicksY]=graduate(minY,maxY);
 	end
+
+        if ticsx=='none'
+		nTicksX=0;
+	end
+        if ticsy=='none'
+		nTicksY=0;
+	end
+
 
 	if ((maxY-minY)<%eps)
 		maxY=maxY*(1+2*%eps)+1;
@@ -49,7 +58,7 @@ if state('nextPlot')=='erase'
 	state('cbech')=cbech;
 	state('xlech')=xlech;
 	state('ylech')=ylech;
-   state('titech')=titech;
+        state('titech')=titech;
 
 else
 	L=length(state('listOfPlots'));
@@ -113,6 +122,8 @@ if colorBar~='off'
    state('colorbar')=colorBar;
    processColorBar(tab,colorBar,state);
 end
+
+
 
 saveGraphicState(state,win); // save the state of the current window
 

@@ -7,8 +7,7 @@ if rhs==0
    colormap hot 
    load(PLOTLIB+'tridem.dat')
    tripcolor(nodes,xy(1,:),xy(2,:),P(:,1),'shading', ...
-   'interp','view',[135 60],'colorbar','on', ...
-   'background',[0 0 1],'axis','equal')
+   'interp','view',[135 60],'colorbar','on','axis','equal')
 else
    mainPlot3d('tripcolor',varargin);
 end

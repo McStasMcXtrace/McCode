@@ -1,4 +1,4 @@
-function processLegend(mat,typ)
+function processLegend(win,mat,typ)
 
 numberOfLegends=size(mat,1);
 
@@ -6,114 +6,116 @@ if numberOfLegends==0
 	return
 end
 
-win=gcw()
-
-savedThickness=xget('thickness');
-state=loadGraphicState(win);
-listOfPlots=state('listOfPlots');
-fact=state('margin');
-vp=state('viewport');
-ech=state('ech');
-
-x=ech(1);y=ech(2);w=ech(3);h=ech(4);
-
 blanc=' ';
-mat=mat+blanc(ones(numberOfLegends,1));
+mat=blanc(ones(numberOfLegends,1))+mat;
 
 ind=find(mat==' ');
 indcol=1:numberOfLegends;
 indcol(ind)=[];
 mat(ind)=[];
 
-numberOfLegends=length(indcol);
+nl=length(indcol);
 
-rect=xstringl(1,1,mat);
+if nl==0
+	return
+end
 
-wb=rect(3);
-hb=rect(4);
+savedThickness=xget('thickness');
+state=loadGraphicState(win);
+
+listOfPlots=state('listOfPlots');
+nl=min(nl,length(listOfPlots))
+mat=mat(1:nl);
+
+if mat==[]
+   return
+end
+
+fact=state('margin');
+vp=state('viewport');
+ech=state('ech');
+x=ech(1);y=ech(2);w=ech(3);h=ech(4);
+
 
 [wrect,frect,logflag,arect]=xgetech();
 
-D=0.1;
+dim = xget('wdim');
+dim = dim.*vp(3:4);
 
-wf=wb/(frect(3)-frect(1))+D;
-hf=hb/(frect(4)-frect(2));
-
-m=max([w*D/10 h*D/10]);
+rect=xstringl(1,1,mat,6,setFontSize(vp));
+if MSDOS
+  hl=rect(4)/(frect(4)-frect(2))*h;
+else
+  hl=rect(4)/(frect(4)-frect(2))*h*1.5;
+end
+wl=rect(3)/(frect(3)-frect(1))*w*1.1;
 
 select typ
 case -1
 case 1
-   rect=[x+w*(1-wf)-m y+m w*(wf) h*hf]
+xl=x+w-wl-w/10;
+rect=[xl-w/40 y+h/40 wl+w/10 hl];
 case 2
-   rect=[x+m y+m w*(wf) h*hf]
+rect=[x+w/40 y+h/40 wl+w/10 hl];
 case 3
-   rect=[x+m y+h*(1-hf)-m w*(wf) h*hf]
+yl=y+h-hl;
+rect=[x+w/40 yl-h/40 wl+w/10 hl];
 case 4
-   rect=[x+w*(1-wf)-m y+h*(1-hf)-m w*(wf) h*hf]
+xl=x+w-wl-w/10;
+yl=y+h-hl;
+rect=[xl-w/40 yl-h/40 wl+w/10 hl];
 case 5
-   ll=(wf)*(frect(3)-frect(1));
-   hh=hb;
-   xr=frect(1)+(frect(3)-frect(1))/2;
-   yr=frect(2)+(frect(4)-frect(2))/2;
-   xset('pattern',addcolor(state('foreground')))
-   driver('X11');
-   xset('alufunction',6) // xor mode
-   xrect(xr,yr,ll,hh);
-   rep=[0 0 -1];
-   while rep(3)~=0
-      rep=xgetmouse();
-      xrect(xr,yr,ll,hh);
-      xrect(rep(1)-ll/2,rep(2)+hh/2,ll,hh);
-      xr=rep(1)-ll/2;
-      yr=rep(2)+hh/2;
-   end
-   xrect(xr,yr,ll,hh);
-   xset('alufunction',3); // replace mode
-   driver('Rec')
-   
-   rect=[x+w*(xr-frect(1))/(frect(3)-frect(1)),...
-   y+h*(1-(yr-frect(2))/(frect(4)-frect(2))),...
-   w*wf h*hf]
 end
-
-xsetech(wrect=rect,frect=[0 0 wf 1],arect=[0 0 0 0]);
-
+xsetech(wrect=rect,frect=[0 0 1 1],arect=[0 0 0 0]);
 xset('color',17);
-
-xfrect(0,1,wf,1);
+xfrect(0,1,1.02,1)
 xset('color',addcolor(state('foreground')))
 xset('thickness',1);
 xset('line style',1);
-xrect(0,1,wf,1);
-xstring(D,0,mat)
+xrect(0,1,1.02,1)
 
-step=1/(numberOfLegends);
+for i=1:nl 
 
-for k=1:numberOfLegends
+      xset('color',addcolor(state('foreground')))
+  	   xstringb(0,1-i/nl,mat(i,:),wl/(wl+w/10),1/nl)
 
-      [col,markerId,markersize,lineStyle]=listOfPlots(indcol(k))(3:6);
-      xset('line style',lineStyle);
-      xset('thickness',markersize);
-
-      X=[D*0.2 D*0.8]';
-      Y=(1-step/2-(k-1)*step)*[ 1 1]';
-      Xmark=D/2;
-      Ymark=Y(1);
-
-      if markerId ~=[]
-         xset('mark',markerId,markersize);
-         xset('dashes',col);
-         xpoly(Xmark,Ymark,'marks');
-         if lineStyle>0
-            xset('thickness',markersize);
-	    xset('line style',lineStyle);
-            xsegs(X,Y)
+      [col,markerId,markersize,lineStyle]=listOfPlots(indcol(i))(3:6);
+      
+      if state.typeOfPlot=="plot" | ...
+         state.typeOfPlot=="semilogx" | ...  
+         state.typeOfPlot=="semilogy" | ...
+         state.typeOfPlot=="loglog"
+      
+         xset('line style',lineStyle);
+         xset('thickness',markersize);
+         step=1/nl;
+	       X=linspace(wl/(wl+w/10),0.98,3)';
+	       Y=(1-step/2-(i-1)*step)*[ 1 1 1]';
+         if markerId ~=[]
+           xset('mark',markerId,markersize);
+           xset('dashes',col);
+   	       XP=linspace(wl/(wl+w/10),0.98,5)';
+           xpolys(XP(2:4),Y,-[markerId markerId markerId]);
+           if lineStyle>0
+             xset('thickness',markersize);
+	           xset('line style',lineStyle);
+             xpolys(X,Y,col)
+           end
+         else
+           xpolys(X,Y,col)
          end
-      else
-         xsegs(X,Y,col)
-      end
+       elseif state.typeOfPlot=='bar'
+         step=1/nl;
+	       X=linspace(wl/(wl+w/12),0.97,2)';
+	       Y=(1-step/2-(i-1)*step)+[-step/4 step/4]';
+	       _X=[X(1) X(2) X(2) X(1) X(1)]';
+         _Y=[Y(1) Y(1) Y(2) Y(2) Y(1)]';
+         xfpolys(_X,_Y,col);
+       end
+
 end
 
 xset('thickness',savedThickness);
-setCurrentViewport(state,win)
+setCurrentViewport(state,win);
+
+endfunction

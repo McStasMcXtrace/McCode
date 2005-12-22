@@ -12,3 +12,5 @@ elseif rhs==1
 else
    error('colormap : two many input arguments');
 end
+
+xbasr()

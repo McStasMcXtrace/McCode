@@ -7,7 +7,7 @@ if rhs==0
    theta=%pi/4+linspace(0,3*%pi/2,25);
    [R,T]=meshgrid(r,theta);
   
-pcolor(R.*cos(T),R.*sin(T),rand(T,'normal'),'shading','interp','colorbar','on','axis','equal')
+pcolor(R.*cos(T),R.*sin(T),rand(T,'normal'),'facecolor','interp','colorbar','on','axis','equal')
 else
    mainPlot3d('pcolor',varargin);
 end

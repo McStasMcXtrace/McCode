@@ -1,44 +1,42 @@
-Version 0.19 (Mon May 17 13:55:04 CEST 2004)
+Version 0.194 (Mon May 23 16:32:25 CEST 2005)
 
 Installation
 ============
-To Install this library: (Scilab >= 2.7, the installation script
-won't work even with 2.6)
+To Install this library : (Scilab >= 3.1-rc1)
 
 We Suppose here that <PATH> stands for  the path of the directory
 containing this README file.
 
-- On Unix/Linux systems
-     * Administrator
-        Has to execute, once and for all, the following instruction
+        The user has to execute, once and for all, the following instruction
         within Scilab:
+
         exec <PATH>/builder.sce
+
         This operation requires permission to write in <PATH>/macros
         to generate *.bin, names and lib files in <PATH>/macros
         directory.
-     * User
-        Should execute the following instruction within Scilab:
+
+        To load the library, execute the following instruction within Scilab:
+
         exec <PATH>/loader.sce
-        before using the library. To prevent deletion of the library
-	that would occur with the "clear" function, he can also put it
-        in his .scilab startup file for automatic loading.
 
-- On Windows systems
-     * Administrator
-        Has to execute, once and for all, the following instruction
-        within Scilab:
-        exec <PATH>\builder.sce
-        This operation requires permission to write in <PATH>\macros
-        to generate *.bin, names and lib files in <PATH>\macros
-        directory.
-    * User
-        Should execute the following instruction within Scilab:
-        exec <PATH>/loader.sce
-        before using the library. To prevent deletion of the library
-        that would occur with the "clear" function, he can also put it
-        in his .scilab startup file for automatic loading.
+        You can also put this instruction in your .scilab startup file for 
+        automatic loading. 
 
+        -> UNIX/Linux/Darwin : the location of this startup file is 
 
+               $HOME/.Scilab/Scilab-3.1-rc1/
+
+           if you are using Scilab-3.1-rc1, or 
+
+                $HOME/.Scilab/Scilab-3.1-rc1-CVS/
+
+       	   if you are using the CVS version.
+
+        -> Windows 2000/XP : the location of this startup file is
+
+              C:\Document and Settings\yourName\Scilab\Scilab-3.1-rc1
+  
 
 To learn more about the macros in this library,
 see the help section (in the scilab help menu)

@@ -20,6 +20,9 @@ axisTightY=%F;
 axisStyle='normal';
 axisVect=[];
 
+ticksx=[];
+ticksy=[];
+
 foreground=[];
 background=[];
 
@@ -72,7 +75,8 @@ while length(argList)
 
       else
 
-         if (type(argList(2))==10) // If the second argument is a string
+         if type(argList(2))==10 
+         // If the second argument is a string
             if or(size(argList(1))==1) // same treatment as above
                argList(0)=1:length(argList(1));
             else
@@ -89,6 +93,7 @@ while length(argList)
 
          minX=min(minX,min(X));         maxX=max(maxX,max(X));
          minY=min(minY,min(Y));         maxY=max(maxY,max(Y));
+         
          axisVect=[minX maxX minY maxY];
 
          argList(1)=null(); // Deletion of the two top arguments
@@ -110,7 +115,6 @@ while length(argList)
                else
                   _color=0; lineStyle=1; marker=[];
                end
-
             end
 
          end
@@ -121,7 +125,7 @@ while length(argList)
            end
          else // Abscissa and ordina are both matrices
             for j=1:size(X,2) // Add each couple
-               [currentColor,liste]=addPlot(X(:,j),Y(:,j),_color,marker,makersize,lineStyle,win);
+               [currentColor,liste]=addPlot(X(:,j),Y(:,j),_color,marker,markerSize,lineStyle,win);
             end
          end
 
@@ -134,6 +138,17 @@ while length(argList)
       case 'axis'
          [axisStyle,axisRatio,axisVect,axisTightX,axisTightY] = ...
 	 parseAxis(typeOfPlot,argList,axisStyle,axisRatio,axisVect,axisTightX,axisTightY);
+	       
+	 argList(1)=null(); argList(1)=null();
+
+      case 'ticksX'
+         [ticksx] = parseTicks(typeOfPlot,argList);
+	       
+	 argList(1)=null(); argList(1)=null();
+
+      case 'ticksY'
+         [ticksy] = parseTicks(typeOfPlot,argList);
+	       
 	 argList(1)=null(); argList(1)=null();
 
       case 'background'
@@ -142,6 +157,14 @@ while length(argList)
 
       case 'foreground'
          foreground = parseColor(typeOfPlot,'foreground',argList);
+         argList(1)=null(); argList(1)=null();
+         
+      case 'edgecolor'
+         edgecolor = parseColor(typeOfPlot,'edgecolor',argList);
+         argList(1)=null(); argList(1)=null();
+
+      case 'facecolor'
+         facecolor = parseColor(typeOfPlot,'facecolor',argList);
          argList(1)=null(); argList(1)=null();
  
       case 'Xscale'
@@ -155,7 +178,7 @@ while length(argList)
       case 'legend'
 
          argList(1)=null();
-	 [matOfLegends,nbProc,typeOfLegend]=parseLegend(typeOfPlot,argList,length(liste));         
+ 	 [matOfLegends,nbProc,typeOfLegend]=parseLegend(typeOfPlot,argList,length(liste));         
          if nbProc==0
             error('plot : missing string(s) for legend');
 	 end
@@ -198,13 +221,15 @@ end // while length(argList)
 // Common 2D stuff
 
 [modeStart,modeAdd,modeScale,nTicksX,nTicksY]=process2DPrelim(win,liste,Xscale,Yscale,...
-axisVect,axisTightX,axisTightY,axisRatio,axisStyle,'off',[],matOfLegends,typeOfLegend)
+axisVect,axisTightX,axisTightY,axisRatio,axisStyle,'off',[],matOfLegends,typeOfLegend,ticksx,ticksy)
 
 // Process the list of plots to do
 
 state=loadGraphicState(win);
+state.typeOfPlot=typeOfPlot;
 
 //xset('pattern',xget('foreground'));
+
 
 for k=1:length(liste)
 
@@ -220,7 +245,7 @@ for k=1:length(liste)
    xset('thickness',markerSize);
    xset('line style',lineStyle);
    if markerId ~=[]
-      xset('dashes',col);
+      xset('color',col);
       xset('mark',markerId,markerSize);
 
       plot2d1(modeScale,X,Y,-markerId,modeAdd,' ',state('axis'));
@@ -229,9 +254,9 @@ for k=1:length(liste)
          xset('line style',lineStyle); 
          plot2d1(modeScale,X,Y,col,modeAdd,' ',state('axis'))
       end
-      xset('dashes',0)
+      xset('color',0)
    else
-      plot2d1(modeScale,X,Y,col,modeAdd,' ',state('axis')); 
+        plot2d1(modeScale,X,Y,col,modeAdd,' ',state('axis')); 
    end
    xset('thickness',savedThickness);
 end
@@ -242,14 +267,15 @@ if state('nextPlot')=='erase'
    draw2DAxis(state,nTicksX,nTicksY,foreground,background,modeStart,gridFlag,gridColor)
    if state('subplotState')=='first'
    	state('subplotState')='other';
-	saveGraphicState(state,win);
    end
 end
+
+saveGraphicState(state,win);
 
 // Now process the legends (if applicable)
 
 if matOfLegends ~= []
-   processLegend(matOfLegends,typeOfLegend);
+   processLegend(win,matOfLegends,typeOfLegend);
 end
 
 if Xlabel~=[]
@@ -267,3 +293,5 @@ end
 xset('foreground',addcolor(foreground));
 
 // end of mainPlot
+
+endfunction

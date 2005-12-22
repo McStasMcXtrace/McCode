@@ -1,3 +1,104 @@
+
+Version 0.195
+-------------
+
+Added new properties :
+
+'ticksX','on|off|none'
+'ticksY','on|off|none'
+
+in 2d plots : used to turn on or off the ticks
+and ticks labels on X and Y axis.
+
+
+
+Version 0.194
+-------------
+
+Added a new function :
+
+bar : draws vertical bargraph. Type help bar to
+see usage and examples.
+
+Changed the plotlib0nnn-install folder to "plotlib" (will
+keep this for future versions also). The version number
+can be found as usual in the file macros/VERSION.
+
+Version 0.193
+-------------
+
+Fixed a problem with font size calculation by the function
+xstringl with Helvetica font under windows. Update of the
+README file to explain the new location of the .scilab 
+startup file since Scilab-3.1-rc1.
+
+Version 0.192
+-------------
+
+Implement some changes initially devoted to the future
+0.2 release. The plotlib still uses the Old graphics
+mode.
+
+1-Better legends (labels remain centered when resizing the window,
+and spacing is better computed).
+
+2-A new low level function for better Matlab compatibility
+
+fill(X,Y,C)
+
+draw some 2D polygons arranged in columns : i'th polygon
+has coordinates X(:,i),Y(:,i) and color(s) C(i) or C(:,i)
+if each vertex has a color (to do e.g. interpolated shading).
+
+3-New properties related to shading (2D and 3D)
+but you can now use the following properties/values :
+
+'facecolor','flat'
+'facecolor','interp'
+
+-> changes the shading type but does not change the
+edgecolor. You can now have interpolated shading+edges 
+(type trisurfl for an example).
+
+  The 'shading','interp' property/value pair is still valid
+  and is equivalent to 
+    'facecolor','interp','edgecolor','none'
+
+  The 'shading','faceted' property/value pair is still valid
+  and is equivalent to 
+    'facecolor','flat'
+
+  The 'shading','flat' property/value pair is still valid
+  and is equivalent to 
+    'facecolor','flat','edgecolor','none'
+
+
+4-Other properties related to shading (3D)
+
+For macros : surf,trisurf,surfl,trisurfl
+
+'backfacecolor',[r,g,b] -> the backfaces are painted with color [r,g,b]
+'backfacecolor','none'  -> the backfaces have the same color as the front
+faces
+'backfaceculling','yes|no' -> backfaces are not painted
+
+For macros : surfl,trisurfl
+
+'backfacelighting','lit' -> equivalent to 'backfacecolor','none'
+'backfacelighting','unlit' -> equivalent to 'backfacecolor',[r,g,b]
+where [r,g,b] is the "mean" color of the RGB colormap.
+
+5-Other changes
+
+New 'jet' value for the colormap property/function
+
+"colormap jet"
+
+Version 0.191
+-------------
+
+Slight modifications for XMLlab
+
 Version 0.19
 ------------
 

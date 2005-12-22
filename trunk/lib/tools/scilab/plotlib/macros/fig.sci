@@ -32,6 +32,11 @@ else
          winNum=max(winsid())+1;
        end
        argList(0)=winNum;
+   else
+   	if and(winsid()~=argList(1))
+		winNum=argList(1);
+		newWin=%T;
+	end
    end
 end
 
@@ -111,9 +116,8 @@ if cmap~=[]
 	n2=size(RGBmap,1);
 	finalColormap=[state('colormap');RGBmap];
 	state('RGBcolormaptable')=n1+1:n1+n2;
-	xset('colormap',finalColormap);	
-	xset('background',addcolor(state('frameColor')));
-	xset('foreground',addcolor(state('foreground')));
+	xset('colormap',finalColormap);
+	xset('background',findColorIndex(state('frameColor')));
 end
 
 saveGraphicState(state,winNum);
@@ -121,6 +125,7 @@ saveGraphicState(state,winNum);
 if newWin
 	clearWindow(winNum,'fig')
 end
+
 
 varargout(1)=winNum;
 

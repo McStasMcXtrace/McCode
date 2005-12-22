@@ -1,12 +1,12 @@
-function setFontSize(vp)
+function fontsize=setFontSize(vp)
 
 	dim = xget('wdim');
-	dim = dim.*vp(3:4);
+	dim = mean(dim.*vp(3:4));
 
-	if or(dim <= 400)   // font size, depending on
+    if dim <= 300
+      fontsize=0;
+	elseif dim <= 700   // font size, depending on
 	  fontsize=1;     // subplot state and window size
 	else
 	  fontsize=2;
 	end
-
-	xset('font',2,fontsize);

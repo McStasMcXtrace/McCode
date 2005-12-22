@@ -9,6 +9,7 @@ function mainPlot3d(typeOfPlot,argList)
 // (tri)surfl
 // (tri)pcolor
 // triplot
+// fill
 
 hidden=%T;
 numberOfVertices=4;     // default type of polygons
@@ -16,6 +17,8 @@ lightVect=[1;1;1];      // default position of light source (at infinity)
 azimuth=45;             // default azimuth
 elevation=54.7;         // default elevation
 facecolor=[];           // default facecolor for 'mesh'
+BackFaceColor="none";
+BackFaceCulling="no";
 edgecolor=[];           // default edgecolor for 'mesh'
 markersize=1;
 shadingType='faceted';
@@ -26,6 +29,9 @@ Xlabel=' ';
 Ylabel=' ';
 Zlabel=' ';
 Title=[];
+matOfLegends=[];
+ticksx=[];
+ticksy=[];
 
 gridFlag=%f;
 gridColor=[];
@@ -145,13 +151,14 @@ while length(argList)
 					argList(1)=null();argList(1)=null();argList(1)=null();
 					argNumber=argNumber+3;
 					
-				else // e.g. "surf,surfl, ..."
+				else // e.g. "surf,surfl, fill, ..."
 
 					[X,Y,Z,surfaceIsParam]=checkXYZQuadruple(typeOfPlot,argList(1),argList(2),argList(3));
 					argList(1)=null();argList(1)=null();argList(1)=null();
 					argNumber=argNumber+3;
 
 				end
+				
 
 				if type(Z)==1 // includes Z==[]
 					minX=min(minX,min(X));         maxX=max(maxX,max(X));
@@ -199,13 +206,22 @@ while length(argList)
       
    elseif (type(argList(1))==10) // If this argument is a string
 
-      select argList(1) // Try to identify a property name
+      select convstr(argList(1)) // Try to identify a property name
 
       case 'colorbar'
          colorBar=parseColorBar(typeOfPlot,argList);
 	 argList(1)=null(); argList(1)=null();
       case 'light'
          lightVect=parseLight(typeOfPlot,argList);
+	 argList(1)=null(); argList(1)=null();
+      case 'backfacelighting'
+         BackFaceColor=parseBackFaceLighting(typeOfPlot,argList);
+	 argList(1)=null(); argList(1)=null();
+      case 'backfacecolor'
+         BackFaceColor=parseColor(typeOfPlot,'backfacecolor',argList);
+	 argList(1)=null(); argList(1)=null();
+      case 'backfaceculling'
+         BackFaceCulling=parseBackFaceCulling(typeOfPlot,argList);
 	 argList(1)=null(); argList(1)=null();
       case 'view'
          [azimuth,elevation]=parseView(typeOfPlot,argList,azimuth,elevation);
@@ -217,11 +233,20 @@ while length(argList)
          edgecolor = parseColor(typeOfPlot,'edgecolor',argList);
          argList(1)=null(); argList(1)=null();
       case 'shading'
-         shadingType=parseShading(typeOfPlot,argList);
+         [facecolor,edgecolor]=parseShading(typeOfPlot,argList);
 	 argList(1)=null(); argList(1)=null();
       case 'axis'
          [axisStyle,axisRatio,axisVect,axisTightX,axisTightY] = ...
 	 parseAxis(typeOfPlot,argList,axisStyle,axisRatio,axisVect,axisTightX,axisTightY);
+	 argList(1)=null(); argList(1)=null();
+      case 'ticksx'
+         [ticksx] = parseTicks(typeOfPlot,argList);
+	       
+	 argList(1)=null(); argList(1)=null();
+
+      case 'ticksy'
+         [ticksx] = parseTicks(typeOfPlot,argList);
+	       
 	 argList(1)=null(); argList(1)=null();
       case 'background'
          background = parseColor(typeOfPlot,'background',argList);
@@ -247,6 +272,14 @@ while length(argList)
       case 'grid'
          [gridFlag,gridColor]=parseGrid(typeOfPlot,argList);
 	 argList(1)=null(); argList(1)=null();
+     case 'legend'
+       argList(1)=null();
+ 	     [matOfLegends,nbProc,typeOfLegend]=parseLegend(typeOfPlot,argList);         
+       if nbProc==0
+         error('bar : missing string(s) for legend');
+	     end
+       for k=1:nbProc; argList(1)=null(); end;
+
       else
          error(sprintf('%s : %s is an unknown property name',typeOfPlot,argList(1)));
       end // select argList(1)
@@ -266,13 +299,20 @@ if edgecolor==[]
    edgecolor=foreground;
 end
 
-if facecolor==[]
-   facecolor=background;
+if typeOfPlot=='mesh' | typeOfPlot=='trimesh' | typeOfPlot=='triplot'
+	if facecolor==[]
+	   facecolor=background;
+	end
+else
+	if facecolor==[]
+	   facecolor="flat";
+	end
 end
 
 labels=Xlabel+'@'+Ylabel+'@'+Zlabel;
 
 state=loadGraphicState(win)
+state('typeOfPlot')=typeOfPlot;
 
 // Now we process the list of plots to do
 
@@ -314,7 +354,8 @@ else
 
    if type(Z)==1 // if the surface/patch is defined by numerical data
 
-		if typeOfPlot=='trisurfl' | ...
+		if typeOfPlot=="fill" | typeOfPlot=="bar"
+        	elseif typeOfPlot=='trisurfl' | ...
 			typeOfPlot=='trisurf' | ...
 			typeOfPlot=='tripcolor' | ...
 			typeOfPlot=='trimesh' |...
@@ -326,7 +367,7 @@ else
 
 			if typeOfPlot=='tripcolor' & length(Z)~=length(X) // when color is given for triangles, not nodes
 				Z=Z(:)';
-				if shadingType=='interp' // Averaging of value for each node
+				if facecolor=='interp' // Averaging of value for each node
 					C=zeros(nnodes,1);
 					nV=zeros(nnodes,1);
 					t=zeros(3,1);
@@ -359,7 +400,7 @@ else
 
 				N=N*sparse([1:ntri;1:ntri]',1../(%eps+sqrt(sum(N.^2,'r'))));
 
-				if shadingType=='interp' // Averaging of illumination for each node
+				if facecolor=='interp' // Averaging of illumination for each node
 
 					L=computeLight(N,lightVect);
 					clear N;
@@ -394,16 +435,16 @@ else
 
 			[nv,nu]=size(X)          // parametric case
 			if typeOfPlot=='surfl'
-			[xu,yu,zu,xv,yv,zv]=parametricDiffData(X,Y,Z);
-			Z=Z+%i*matrix(computeLight(parametricNormals(xu,yu,zu,...
+			   [xu,yu,zu,xv,yv,zv]=parametricDiffData(X,Y,Z);
+			   Z=Z+%i*matrix(computeLight(parametricNormals(xu,yu,zu,...
 						xv,yv,zv),lightVect),nv,nu);
-         end
+            		end
 		 
-		// Now convert X,Y and Z to polygons	
-
-		[X,Y,Z]=generate3dPolygons(X,Y,Z,numberOfVertices,surfaceIsParam);
+	  	    // Now convert X,Y and Z to polygons	
  
-      end
+		    [X,Y,Z]=generate3dPolygons(X,Y,Z,numberOfVertices,surfaceIsParam);
+ 
+        	end
       
 	elseif type(Z)==13 // if the surface is defined by a function
 
@@ -427,12 +468,13 @@ else
 		end
 
 		state('axis')=ax;
-		saveGraphicState(state,win);
 
 	end
 
-	xset('dashes',addcolor(edgecolor));
-
+	if edgecolor~='none'
+	    xset('dashes',addcolor(edgecolor));
+	end
+    
 	if typeOfPlot=='mesh' | typeOfPlot=='trimesh'
 
 		if hidden
@@ -441,59 +483,97 @@ else
 			c=0;
 		end
 
+        	if BackFaceCulling=="yes"
+	            xset('hidden3d',0);
+        	else
+			if BackFaceColor=="none";
+				xset('hidden3d',-1);
+       		        else 
+            			xset('hidden3d',addcolor(BackFaceColor));
+			end            
+        	end
+
+
 		[modeStart]=process3DPrelim(win,axisVect,axisRatio,axisStyle,[],[]);
 		doThePlot3d(X,Y,Z,azimuth,elevation,labels,[c modeStart],axis());
 
 	elseif 	typeOfPlot=='surf' | ...
 			typeOfPlot=='pcolor' | ...
+			typeOfPlot=='fill' | ...
+			typeOfPlot=='bar' | ...
 			typeOfPlot=='tripcolor' | ...
 	  		typeOfPlot=='surfl' | ...
 	  		typeOfPlot=='trisurf' | ...
 	  		typeOfPlot=='trisurfl' | ...
 			typeOfPlot=="triplot"
 
-		if typeOfPlot~="triplot"
 
-			if typeOfPlot=='trisurfl'
 
-				if shadingType=='interp'
-					C=imag(Z);
-					Z=real(Z);
-				end
+		    if typeOfPlot ~= "triplot"
 
-			else
+			    if typeOfPlot=='trisurfl'
 
-				if isreal(Z)
-					C=Z;
-				else
-					C=imag(Z); Z=real(Z);   
-				end
+				    if facecolor=='interp'
+					    C=imag(Z);
+					    Z=real(Z);
+				    end
 
-				if shadingType~='interp'
-//					C=sum(C,'r')/size(C,1);
-					C=C(1,:);
-				end
+			    else
 
-			end
+				    if isreal(Z)
+					    C=Z;
+				    else
+					    C=imag(Z); Z=real(Z);   
+				    end
 
-			minC=min(C);
-			maxC=max(C);
+				    if facecolor=='flat'
+					    C=sum(C,'r')/size(C,1);
+    //					C=C(1,:);
+				    end
 
-			if minC==maxC
-				if minC==0
-					minC=-1; maxC=1;
-				elseif minC<0
-					maxC=0;
-					minC=2*minC;
-				else
-					minC=0;
-					maxC=maxC*2;
-				end
-			end
+			    end
+
+			    minC=min(C);
+			    maxC=max(C);
+
+            if typeOfPlot=="bar"
+                nSubBars=maxC;
+	            LOP=list();
+                if facecolor=='flat'
+                    barColors=1:maxC;
+			        if maxC==1
+			           barColors=1;
+			        else
+			           barColors=round((barColors-1)/(maxC-1)*(nc-1))+1;
+			        end
+			        for k=maxC:-1:1
+                        LOP(0)=list([],[],tab(barColors(k)),[],[],[])
+ 			        end
+                elseif facecolor=="none"
+                else // facecolor is a colorspec triple
+			        for k=maxC:-1:1
+                        LOP(0)=list([],[],addcolor(facecolor),[],[],[])
+ 			        end                                             
+                end
+		        state('listOfPlots')=LOP;
+                saveGraphicState(state,win)      
+            end
+
+            if minC==maxC
+	            if minC==0
+		            minC=-1; maxC=1;
+	            elseif minC<0
+		            maxC=0;
+		            minC=2*minC;
+	            else
+		            minC=0;
+		            maxC=maxC*2;
+	            end
+            end
 
 			if state('caxisMode')=='auto' // if the color axis is automatic
 
-				C=round((C-minC)/(maxC-minC)*(nc-1))+1;
+				C=round((C-minC)/(maxC-minC+%eps)*(nc-1))+1;
 				state('caxis')=[minC maxC];
 				saveGraphicState(state,win); // save the state of the current window
 
@@ -502,22 +582,24 @@ else
 				minCmaxC=state('caxis');
 				minC=minCmaxC(1);
 				maxC=minCmaxC(2);
-				C=round((C-minC)/(maxC-minC)*(nc-1))+1;
+				C=round((C-minC)/(maxC-minC+%eps)*(nc-1))+1;
 				C(C<1)=1; C(C>nc)=nc; // treshold the colors
 
 			end
 
-
-			if shadingType=='faceted'
-				flag=1;
-			else
+			if edgecolor=='none'
 				flag=-1;
+			else
+				flag=1;
 			end
 
-			if shadingType=='interp'
+			if facecolor=='interp'
 				C=matrix(tab(C),size(Z));
-			else
+			elseif facecolor=='flat' | facecolor=="none"
 				C=tab(C);
+            else // facecolor is a colorspec
+    			C=addcolor(facecolor);
+            	C=C(ones(1,size(X,2)));
 			end
 
 		else
@@ -525,13 +607,12 @@ else
 			if facecolor ~= 'none'
 				C=C+addcolor(facecolor);
 			end
-			shadingType="faceted";
 		end
 
-		if typeOfPlot=='pcolor' | typeOfPlot=='tripcolor' | typeOfPlot=='triplot'
+		if typeOfPlot=='pcolor'| typeOfPlot=='fill'| typeOfPlot=='bar'| typeOfPlot=='tripcolor' | typeOfPlot=='triplot'
 
 			[modeStart,modeAdd,modeScale,nTicksX,nTicksY]=process2DPrelim(win,[],'linear','linear',...
-			axisVect(1:4),axisTightX,axisTightY,axisRatio,axisStyle,colorBar,tab,[],[])
+			axisVect(1:4),axisTightX,axisTightY,axisRatio,axisStyle,colorBar,tab,[],[],ticksx,ticksy)
 
 			state=loadGraphicState(win);
 
@@ -540,16 +621,30 @@ else
 			process2DAxis(state,nTicksX,nTicksY,foreground,background,modeStart,modeScale,gridFlag,gridColor)
 			
 			xclip('clipgrf')
-
-			if shadingType=='flat'
-				xfpolys(X,Y,-C)
-			elseif shadingType=='faceted'
-				xset('dashes',addcolor(edgecolor));
-				xfpolys(X,Y,C)
-			elseif shadingType=='interp'
+         
+            if facecolor=='interp' & edgecolor=='none'
+//            	if edgecolor~='none'
+			       C=-C;
+//                end
+//            elseif edgecolor=='none'
+//				     C=-C;		 
+            end            
+            
+            if typeOfPlot=='bar' 
+              if facecolor=='none'
+                if edgecolor==foreground
+              	   xpolys([X;X(1,:)],[Y;Y(1,:)],C)
+                else
+                   C=addcolor(edgecolor);
+                   C=C(ones(1,size(X,2)));
+                   xpolys([X;X(1,:)],[Y;Y(1,:)],C)
+                end
+              else
+				xfpolys(X,Y,C)              
+              end                              
+            else 
 				xfpolys(X,Y,C)
 			end
-			
 			xclip()
 
 			// Now draw the axis and grid (2nd part of process2DAxis)
@@ -565,9 +660,24 @@ else
 			if Ylabel~=" "
 			   ylabel(Ylabel);
 			end
-
 		else
+        
+
+            
+            if BackFaceCulling=="yes"
+            	xset('hidden3d',0);
+            else
+			    if BackFaceColor=="auto";
+				    xset('hidden3d',mean(tab));		
+			    elseif BackFaceColor=="none";
+				    xset('hidden3d',-1);
+                else 
+            	    xset('hidden3d',addcolor(BackFaceColor));
+			    end            
+            end
+            
 			[modeStart]=process3DPrelim(win,axisVect,axisRatio,axisStyle,colorBar,tab);
+
 			doThePlot3d1(X,Y,list(Z,C),azimuth,elevation,labels,[flag modeStart],axis());
 		end
 
@@ -581,14 +691,32 @@ else
 end
 
 if state('nextPlot')=='erase'
-   if state('subplotState')=='first'
-   	state('subplotState')='other';
-	saveGraphicState(state,win);
-   end
+
+	if typeOfPlot=='pcolor' | typeOfPlot=='bar'
+//		ax(1)=min(X); ax(2)=min(Y);
+//		ax(3)=max(X); ax(4)=max(Y);
+//		axisVect=[ax(1) ax(3) ax(2) ax(4)];
+	else         
+		ax(1)=min(X); ax(2)=min(Y); ax(3)=min(real(Z));
+		ax(4)=max(X); ax(5)=max(Y); ax(6)=max(real(Z));
+		axisVect=[ax(1) ax(4) ax(2) ax(5) ax(3) ax(6)];
+		state('axis')=ax;
+	end
+
+
+        if state('subplotState')=='first'
+   	 state('subplotState')='other';
+        end
 end
+
+saveGraphicState(state,win);
 
 if Title~=[]
    title(Title);
+end
+
+if matOfLegends ~= []
+   processLegend(win,matOfLegends,typeOfLegend);
 end
 
 
