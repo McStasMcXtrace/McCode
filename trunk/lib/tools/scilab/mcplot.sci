@@ -184,7 +184,7 @@ function win = mcplot_addmenu(use_common_menu)
       end
       tcl_script = [ tcl_script, 'pack .foo.menu.mcplot -side left' ];
       // now send it to Tk
-      TK_EvalStr(tcl_script);
+      TCL_EvalStr(tcl_script);
     elseif argn(2) > 0
       // we shall use x_choices
       rep = x_choices(['Fig '+string(win)+': Choose something to do','Select ""Exit"" or ""Cancel"" to exit McPlot/Scilab'], list(list('Action:', 1, t)));
