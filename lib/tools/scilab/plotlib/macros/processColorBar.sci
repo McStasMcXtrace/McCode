@@ -11,17 +11,12 @@ ax=caxis();
 if typ=='left' | typ=='right'
 
 	xsetech(wrect=[x y w h],frect=[0 ax(1) 1 ax(2)],arect=[0 0 0 0]);
-	Matplot1(table($:-1:1)',[0 ax(1) 1 ax(2)])
+  xfpolys([0 1 1 0]',[ax(1) ax(1) ax(2) ax(2)]',[table(1) table(1) table($) table($)]');
 	plotframe([0 ax(1) 1 ax(2)],[1 0 2 4],[%f,%f],['','','']);
 
 elseif typ=='top' | typ=='bot'
 
 	xsetech(wrect=[x y w h],frect=[ax(1) 0  ax(2) 1],arect=[0 0 0 0]);
-	Matplot1(table,[ax(1) 0 ax(2) 1])
+  xfpolys([ax(1) ax(2) ax(2) ax(1)]',[0 0 1 1]',[table(1) table($) table($) table(1)]');
 	plotframe([ax(1) 0 ax(2) 1],[2 4 1 0],[%f,%f],['','','']);
-
-end
-
-if MSDOS
-	xbasr()
 end

@@ -8,7 +8,7 @@ viewport = state('viewport');
 
 if state('nextPlot')=='erase'
 
-	setFontSize(viewport)
+	xset('font',6,setFontSize(viewport));
 
 	minX=axisVect(1); maxX=axisVect(2);
 	minY=axisVect(3); maxY=axisVect(4);

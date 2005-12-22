@@ -22,6 +22,7 @@ General functions
 
 2D functions
 
+    bar - draws vertical bargraph
     plot - generic plot function.
     pcolor - 2D pseudo color patches
     semilogx - plot with logarihtmic x scale

@@ -1,6 +1,7 @@
 Plotlib - overview
 axis - get/set axis limits                     
 background  - change background
+bar - draws vertical bargraph
 caxis - set/get color axis
 clf - clear a figure                         
 colormap - Set/get the colormap of currently active figure

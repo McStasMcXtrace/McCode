@@ -6,13 +6,13 @@ nbProcessed=0;
    
 while length(parseList)
    if type(parseList(1))==10
-      if size(mat,1)<nb
+//      if size(mat,1)<nb
          mat=[mat;parseList(1)];
          parseList(1)=null();
 	 nbProcessed=nbProcessed+1;
-      else
-         break;
-      end
+//      else
+//         break;
+//      end
    elseif type(parseList(1))==1
       if length(parseList(1))==1
          if  parseList(1)>=-1 & parseList(1)<=5

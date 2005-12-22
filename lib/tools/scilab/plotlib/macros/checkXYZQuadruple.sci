@@ -106,6 +106,24 @@ elseif type(zin)==1 // 'classical' (Matlab style) case, zin is a matrix
       return;
    end
 
+   if typeOfPlot=="fill"
+       if size(xin,1) <3 | size(xin,1) >4
+        	error(sprintf('%s : X must have 3 or 4 rows',typeOfPlot));
+       end
+       if ~and(size(xin)==size(yin))
+        	error(sprintf('%s : X and Y must have the same size',typeOfPlot));
+       end
+       if ~and(size(xin)==size(zin))
+       	if size(zin,2) ~= size(xin,2)
+        	error(sprintf('%s : X,Y and C must have the same number of columns',typeOfPlot));        
+        end
+	   end
+       xout=xin;
+       yout=yin;
+       zout=zin;
+       return
+   end
+
    paramFlag=%T;
    if or(size(xin)==1) &  or(size(xin)==1) // X and Y are vectors (non-parametric case)
       xout=xin(:);

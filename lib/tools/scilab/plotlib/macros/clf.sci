@@ -28,10 +28,6 @@ s('Xscale')='linear';
 s('Yscale')='linear'
 s('listOfPlots')=list();
 
-xset('window',win);
-
-//xsetech(s('viewport'));
-
 saveGraphicState(s,win);  
 
 clearWindow(win)
