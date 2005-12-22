@@ -189,7 +189,6 @@ if ($plotter =~ /Scilab/i) {
   printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
   printf $fh "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');\n";
   printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')\\n');\n";
-  printf $fh "errcatch('mdelete(''$tmp_file'');','errcatch');\n";
   if ($passed_arg_str_quit) {
     printf $fh "quit\n";
   } else {
