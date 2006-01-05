@@ -10,7 +10,7 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Additions: Kaspar Hewitt Klenoe, 01 2006 (Jitter and beamstop)
@@ -51,7 +51,7 @@
 DEFINE COMPONENT Chopper
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (R, w=0.05, f=2500.0, n=3, j=0, wc=0, pha=0, IsFirst=0, n_pulse=1)
-OUTPUT PARAMETERS (Tg, T, To)
+OUTPUT PARAMETERS (Tg, T, To, Tc)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 DECLARE
