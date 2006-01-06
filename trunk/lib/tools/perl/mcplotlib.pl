@@ -83,10 +83,17 @@ sub plot_array_2d {
       pgscr(1, $r1, $g1, $b1);
     }
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
-    my $title = "$info->{'Title'}     $info->{'Component'}";
+    my $title = "$info->{'Component'}"; # removed {'Title'} which is often too long
     if ($info->{'Logmode'} == 1) { $title = "[LOG] $title"; }
-    pgmtxt("T", 2.5, 0.5, 0.5, $title);
-    pgmtxt("T", 1.0, 0.5, 0.5, "[$info->{'Filename'}] $info->{'Stats'}");
+    if ($info->{'ShowI'}) {
+      my $vars=$info->{'Values'};
+      pgmtxt("T", 0.25, 0.5, 0.5, "I=$vars->[0] Err=$vars->[1] N=$vars->[2]");
+      pgmtxt("T", 1.50, 0.5, 0.5, "$info->{'Stats'}");
+      pgmtxt("T", 2.75, 0.5, 0.5, "$title [$info->{'Filename'}]");
+    } else {
+      pgmtxt("T", 1.75, 0.5, 0.5, $info->{'Title'});
+      pgmtxt("T", 0.25, 0.5, 0.5, "$title [$info->{'Filename'}]");
+    }
     pgiden();
     pgebuf;
     release;
@@ -136,10 +143,17 @@ sub plot_array_1d {
     errb($x, $I, $err) if defined($err);
     pgbox("BCNST", 0.0, 0.0, "BCNST", 0.0, 0.0);
     pglab($info->{'Xlabel'}, $info->{'Ylabel'}, "");
-    my $title = "$info->{'Title'}     $info->{'Component'}";
+    my $title = "$info->{'Component'}"; # removed {'Title'} which is often too long
     if ($info->{'Logmode'} == 1) { $title = "[LOG] $title"; }
-    pgmtxt("T", 2.5, 0.5, 0.5, $title);
-    pgmtxt("T", 1, 0.5, 0.5, "[$info->{'Filename'}] $info->{'Stats'}");
+    if ($info->{'ShowI'}) {
+      my $vars=$info->{'Values'};
+      pgmtxt("T", 0.25, 0.5, 0.5, "I=$vars->[0] Err=$vars->[1] N=$vars->[2]");
+      pgmtxt("T", 1.50, 0.5, 0.5, "$info->{'Stats'}");
+      pgmtxt("T", 2.75, 0.5, 0.5, "$title [$info->{'Filename'}]");
+    } else {
+      pgmtxt("T", 1.75, 0.5, 0.5, $info->{'Title'});
+      pgmtxt("T", 0.25, 0.5, 0.5, "$title [$info->{'Filename'}]");
+    }
     pgiden();
     pgebuf;
     release;
@@ -194,6 +208,8 @@ sub overview_plot {
     for $info (@$datalist) {
       if ($interactive =~ /-log/i) { $info->{'Logmode'} = 1; }
       else { $info->{'Logmode'} = 0; }
+      if ($nx*$ny > 4) { $info->{'ShowI'} = 0; }
+      else { $info->{'ShowI'} = 1; }
       plot_dat_info($info);
     }
     if($interactive =~ /interactive/i) {
@@ -228,6 +244,7 @@ sub single_plot {
     die "DEV/PGOPEN $devspec failed!" unless $dev > 0;
     if ($interactive =~ /-log/i) { $info->{'Logmode'} = 1; }
     else { $info->{'Logmode'} = 0; }
+    $info->{'ShowI'} = 1;
     plot_dat_info($info);
     if($interactive =~ /interactive/i) {
       # Wait for user to press a key.
