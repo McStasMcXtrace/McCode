@@ -3,6 +3,7 @@
 # SPCGRP P 63/M M C   HEXAGONAL STRUCTURE
 # ATOM ZR 1 0.333300 0.666700 0.250000
 # SCATTERING FACTOR  COEFFICIENTS: ZR     F= 0.716 CM-12
+# Reference: Phase Transition (1992) 38, 127-220
 #
 # Format parameters: Lazy format <http://icsd.ill.fr>
 # column_j 17 multiplicity 'j'
@@ -16,6 +17,23 @@
 # density   6.511   in [g/cm^3]
 # weight    91.22   in [g/mol]
 # nb_atoms  2       in [atoms/unit cell]
+# v_sound   3800    in [m/s]
+# T_m       2128    melting temperature in [K]
+# T_b       4682    boiling temperature in [K]
+# At_number 40      atomic number Z
+# lattice_a 3.23208 lattice parameter a in [Angs]
+# lattice_c 5.14772 lattice parameter c in [Angs]
+# lattice_cc 120    lattice angle gamma in [deg]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
   1  0  0  10.29  20.58   2.7991  0.1276    31.91   1  0  0     219.0              0.7        -0.69         0.00  180.00  6  31.85
   0  0  2  11.20  22.40   2.5739  0.1509    37.74   0  0  2     244.8              1.4        -1.38         0.00  180.00  2  27.01
   1  0  1  11.73  23.46   2.4590  0.1654    41.34   1  0  1    1000.0              1.2        -1.19         0.00  180.00 12  24.70

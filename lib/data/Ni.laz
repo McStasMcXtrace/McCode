@@ -1,13 +1,9 @@
-# TITLE *Nickel-Ni-[FM3-M] Swanson, H.E.;Tatge, E.[1954]
+# TITLE *Nickel-Ni-[FM3-M] Swanson, H.E.;Tatge, E.[1954] [carcinogen]
 # CELL 3.523800 3.523800 3.523800 90.000000 90.000000 90.000000
 # SPCGRP F M 3 M     CUBIC STRUCTURE
 # ATOM NI 1 0.000000 0.000000 0.000000
 # SCATTERING FACTOR  COEFFICIENTS: NI     F= 1.030 CM-12
-#
-# Format parameters: Lazy format <http://icsd.ill.fr>
-# column_j 17 multiplicity 'j'
-# column_d 6  d-spacing 'd' in [Angs]
-# column_F 13 norm of scattering factor |F| in [barn]
+# Reference: Acta Crystallographica (1954) 7, 464-464
 #
 # Physical parameters:
 # sigma_coh 13.3    coherent scattering cross section in [barn]
@@ -16,6 +12,23 @@
 # density   8.908   in [g/cm^3]
 # weight    58.69   in [g/mol]
 # nb_atoms  4       in [atoms/unit cell]
+# v_sound   4970    in [m/s]
+# v_sound_l 6040    velocity of longitudinal sound in [m/s]
+# v_sound_t 3000    velocity of transversal sound in [m/s]
+# T_m       1728    melting temperature in [K]
+# T_b       3186    boiling temperature in [K]
+# At_number 28      atomic number Z
+# lattice_a 3.5238  lattice parameter a in [Angs]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
   1  1  1  14.23  28.45   2.0345  0.2416    60.40   1  1  1    1000.0              3.9         3.88         0.00    0.00  8  17.08
   2  0  0  16.49  32.97   1.7619  0.3221    80.53   2  0  0     546.2              3.8         3.80         0.00    0.00  6  12.95
   2  2  0  23.66  47.32   1.2459  0.6443   161.07   2  2  0     486.7              3.5         3.51         0.00    0.00 12   6.78

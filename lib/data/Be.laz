@@ -1,13 +1,9 @@
-# TITLE *-Be-[P63/MMC] Yang, Y.W.;Coppens, P.[1978]
+# TITLE *-Be-[P63/MMC] Yang, Y.W.;Coppens, P.[1978] [alpha phase below 1573 K, very toxic]
 # CELL 2.285800 2.285800 3.584300 90.000000 90.000000 120.000000
 # SPCGRP P 63/M M C  HEXAGONAL STRUCTURE
 # ATOM BE 1 0.333300 0.666700 0.750000
 # SCATTERING FACTOR  COEFFICIENTS: BE     F= 0.779 CM-12
-#
-# Format parameters: Lazy format <http://icsd.ill.fr>
-# column_j 17 multiplicity 'j'
-# column_d 6  d-spacing 'd' in [Angs]
-# column_F 13 norm of scattering factor |F| in [barn]
+# Reference: Acta Crystallographica A (1978) 34, 61-65
 #
 # Physical parameters:
 # sigma_coh 7.63    coherent scattering cross section in [barn]
@@ -16,6 +12,25 @@
 # density   1.848   in [g/cm^3]
 # weight    9.01    in [g/mol]
 # nb_atoms  2       in [atoms/unit cell]
+# v_sound   13000   in [m/s]
+# v_sound_l 12890   velocity of longitudinal sound in [m/s]
+# v_sound_t 8880    velocity of transversal sound in [m/s]
+# T_m       1560    melting temperature in [K]
+# T_b       2744    boiling temperature in [K]
+# At_number 4       atomic number Z
+# lattice_a 2.2858  lattice parameter a in [Angs]
+# lattice_c 3.5843  lattice parameter c in [Angs]
+# lattice_cc 120    lattice angle gamma in [deg]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
 1  0  0  14.63  29.26   1.9796  0.2552    63.80   1  0  0     223.8              0.7        -0.73         0.00  180.00  6  16.20
   0  0  2  16.20  32.40   1.7922  0.3114    77.84   0  0  2     239.6              1.4        -1.44         0.00  180.00  2  13.38
   1  0  1  16.77  33.54   1.7328  0.3330    83.26   1  0  1    1000.0              1.2         1.24         0.00    0.00 12  12.54

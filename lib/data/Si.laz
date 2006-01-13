@@ -3,11 +3,7 @@
 # SPCGRP F D 3 M   CUBIC STRUCTURE
 # ATOM SI 1 0.000000 0.000000 0.000000 0.540000
 # SCATTERING FACTOR  COEFFICIENTS: SI     F= 0.416 CM-12
-#
-# Format parameters: Lazy format <http://icsd.ill.fr>
-# column_j 17 multiplicity 'j'
-# column_d 6  d-spacing 'd' in [Angs]
-# column_F 13 norm of scattering factor |F| in [barn]
+# Reference: Materials Science Forum (2001) 378, 288-293
 #
 # Physical parameters:
 # sigma_coh 2.163   coherent scattering cross section in [barn]
@@ -16,7 +12,22 @@
 # density   2.33    in [g/cm^3]
 # weight    28.08   in [g/mol]
 # nb_atoms  16      in [atoms/unit cell]
- 1  1  1   9.18  18.35   3.1353  0.1017    25.43   1  1  1    1000.0              3.3        -3.28         0.00  180.00  8  39.83
+# v_sound   2200    in [m/s]
+# T_m       1687    melting temperature in [K]
+# T_b       3173    boiling temperature in [K]
+# At_number 14      atomic number Z
+# lattice_a 5.43053 lattice parameter a in [Angs]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
+  1  1  1   9.18  18.35   3.1353  0.1017    25.43   1  1  1    1000.0              3.3        -3.28         0.00  180.00  8  39.83
   2  2  0  15.09  30.19   1.9200  0.2713    67.82   2  2  0       0.0              0.0         0.00         0.00    0.00 12  15.27
   3  1  1  17.78  35.56   1.6374  0.3730    93.25   3  1  1     788.3              3.2         3.16         0.00    0.00 24  11.26
   2  2  2  18.60  37.20   1.5677  0.4069   101.73   2  2  2     959.2              6.3         6.30         0.00    0.00  8  10.37

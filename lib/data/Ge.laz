@@ -1,13 +1,9 @@
-# TITLE *-Ge-[FD3-MS] Cooper, A.S.[1983]
+# TITLE *-Ge-[FD3-MS] Cooper, A.S.[1983] [irritant]
 # CELL 5.656750 5.656750 5.656750 90.000000 90.000000 90.000000
 # SPCGRP F D 3 M   CUBIC STRUCTURE
 # ATOM GE 1 0.000000 0.000000 0.000000
 # SCATTERING FACTOR  COEFFICIENTS: GE     F= 0.819 CM-12
-#
-# Format parameters: Lazy format <http://icsd.ill.fr>
-# column_j 17 multiplicity 'j'
-# column_d 6  d-spacing 'd' in [Angs]
-# column_F 13 norm of scattering factor |F| in [barn]
+# Reference: Physical Review, Serie 3. B - Condensed Matter (1994) 50, 14947-14951
 #
 # Physical parameters:
 # sigma_coh 8.42    coherent scattering cross section in [barn]
@@ -16,6 +12,21 @@
 # density   5.323   in [g/cm^3]
 # weight    72.64   in [g/mol]
 # nb_atoms  16      in [atoms/unit cell]
+# v_sound   5400    in [m/s]
+# T_m       1211.4  melting temperature in [K]
+# T_b       3093    boiling temperature in [K]
+# At_number 32      atomic number Z
+# lattice_a 5.65675 lattice parameter a in [Angs]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
   1  1  1   8.81  17.61   3.2659  0.0938    23.44   1  1  1    1000.0              6.4        -6.40         0.00  180.00  8  43.17
   2  2  0  14.48  28.96   2.0000  0.2500    62.50   2  2  0       0.0              0.0         0.00         0.00    0.00 12  16.52
   3  1  1  17.05  34.09   1.7056  0.3438    85.94   3  1  1     746.3              6.0         6.01         0.00    0.00 24  12.17

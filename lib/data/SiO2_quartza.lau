@@ -5,6 +5,9 @@
 # column_j  4 multiplicity 'j'
 # column_d  5 d-spacing 'd' in [Angs]
 # column_F2 7 norm of scattering factor |F|^2 in [barn]
+# column_h 1
+# column_k 2
+# column_l 3
 #
 # h   k   l Mult. d-space 2Theta   F-squared
   1   0   0   6  4.25504  20.8592  268.167
