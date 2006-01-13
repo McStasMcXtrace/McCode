@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.36 $
+* Version: $Revision: 1.37 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -90,7 +90,7 @@
 * hkl_info: Internal [structure]
 *
 * %L
-* See <a href="icsd.ill.fr">ICSD</a> powder diffraction data base
+* See <a href="http://icsd.ill.fr">ICSD</a> powder diffraction data base
 * %L
 * Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
 * %L
