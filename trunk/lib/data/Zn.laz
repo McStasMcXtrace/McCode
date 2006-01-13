@@ -3,11 +3,7 @@
 # SPCGRP P 63/M M C   HEXAGONAL STRUCTURE
 # ATOM ZN 1 0.333300 0.666700 0.250000
 # SCATTERING FACTOR  COEFFICIENTS: ZN     F= 0.569 CM-12
-#
-# Format parameters: Lazy format <http://icsd.ill.fr>
-# column_j 17 multiplicity 'j'
-# column_d 6  d-spacing 'd' in [Angs]
-# column_F 13 norm of scattering factor |F| in [barn]
+# Reference: Physical Review, Serie 3. B - Condensed Matter (1997) 56, 5170-5179
 #
 # Physical parameters:
 # sigma_coh 4.054   coherent scattering cross section in [barn]
@@ -16,6 +12,25 @@
 # density   7.14    in [g/cm^3]
 # weight    65.41   in [g/mol]
 # nb_atoms  2       in [atoms/unit cell]
+# v_sound   3700    in [m/s]
+# v_sound_l 4210    velocity of longitudinal sound in [m/s]
+# v_sound_t 2440    velocity of transversal sound in [m/s]
+# T_m       692.68  melting temperature in [K]
+# T_b       1180    boiling temperature in [K]
+# At_number 30      atomic number Z
+# lattice_a 2.665   lattice parameter a in [Angs]
+# lattice_c 4.947   lattice parameter c in [Angs]
+# lattice_cc 120    lattice angle gamma in [deg]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
   0  0  2  11.66  23.32   2.4735  0.1634    40.86   0  0  2     318.4              1.1        -1.09         0.00  180.00  2  24.99
   1  0  0  12.51  25.02   2.3080  0.1877    46.93   1  0  0     206.0              0.5        -0.54         0.00  180.00  6  21.82
   1  0  1  13.83  27.66   2.0915  0.2286    57.15   1  0  1    1000.0              0.9        -0.93         0.00  180.00 12  18.02

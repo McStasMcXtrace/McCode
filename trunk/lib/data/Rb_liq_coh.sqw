@@ -11,6 +11,7 @@
 # sigma_coh   6.32   coherent scattering cross section in [barn]
 # sigma_inc   0.5    incoherent scattering cross section in [barn]
 # Temperature 350    in [K]
+# v_sound     1300   in [m/s]
 #
 # q axis values
 # vector of m values in Angstroem-1

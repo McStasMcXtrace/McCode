@@ -7,11 +7,21 @@
 # density   2.70    in [g/cm^3]
 # weight    26.98   in [g/mol]
 # nb_atoms  4       in [atoms/unit cell]
+# v_sound   5100    in [m/s]
+# v_sound_l 6420    velocity of longitudinal sound in [m/s]
+# v_sound_t 3040    velocity of transversal sound in [m/s]
+# T_m       933.5   melting temperature in [K]
+# T_b       2792.2  boiling  temperature in [K]
+# At_number 13      atomic number Z
+# lattice_a 4.04932 lattice parameter a in [Angs]
 #
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'
 # column_d  5 d-spacing 'd' in [Angs]
 # column_F2 7 norm of scattering factor |F|^2 in [barn]
+# column_h  1
+# column_k  2
+# column_l  3
 #
 # h   k   l Mult. d-space 2Theta   F-squared
 -1 0 0 6 4.0495 14.1851 0

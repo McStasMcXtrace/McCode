@@ -1,13 +1,9 @@
-# TITLE *Cadmium-Cd-[P63/MMC] Schneider, A.;Heimer, G.[1956]
+# TITLE *Cadmium-Cd-[P63/MMC] Schneider, A.;Heimer, G.[1956] at 298 K [toxic, carcinogen]
 # CELL 2.976000 2.976000 5.620000 90.000000 90.000000 120.000000
 # SPCGRP P 63/M M C   HEXAGONAL STRUCTURE
 # ATOM CD 1 0.333300 0.666700 0.250000
 # SCATTERING FACTOR  COEFFICIENTS: CD     F= 0.510 CM-12
-#
-# Format parameters: Lazy format <http://icsd.ill.fr>
-# column_j 17 multiplicity 'j'
-# column_d 6  d-spacing 'd' in [Angs]
-# column_F 13 norm of scattering factor |F| in [barn]
+# Reference: Physical Review, Serie 3. B - Condensed Matter (1997) 56, 5170-5179
 #
 # Physical parameters:
 # sigma_coh 3.04    coherent scattering cross section in [barn]
@@ -16,6 +12,23 @@
 # density   8.65    in [g/cm^3]
 # weight    112.4   in [g/mol]
 # nb_atoms  2       in [atoms/unit cell]
+# v_sound   2310    in [m/s]
+# T_m       594.2   melting temperature in [K]
+# T_b       1040    boiling temperature in [K]
+# At_number 48      atomic number Z
+# lattice_a 2.976   lattice parameter a in [Angs]
+# lattice_c 5.62    lattice parameter c in [Angs]
+# lattice_cc 120    lattice angle gamma in [deg]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
   0  0  2  10.25  20.50   2.8100  0.1266    31.66   0  0  2     326.4              1.0        -0.99         0.00  180.00  2  32.10
   1  0  0  11.19  22.37   2.5773  0.1505    37.64   1  0  0     204.1              0.5        -0.49         0.00  180.00  6  27.08
   1  0  1  12.32  24.65   2.3427  0.1822    45.55   1  0  1    1000.0              0.8        -0.84         0.00  180.00 12  22.47
