@@ -13,7 +13,7 @@
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
 * Isotropic sample handling multiple scattering and absorption for a general
-* S(q,w) (coherent and/or incoherent)
+* S(q,w) (coherent and/or incoherent/self)
 *
 * %D
 * An isotropic sample handling multiple scattering and including as input the
@@ -23,7 +23,7 @@
 * Only the norm of Q is handled (not the vector), and thus suitable for
 * liquids, gazes, amorphous and powder samples.
 *
-* If incoherent S(Q,w) file is specified as empty (0 or "") then the
+* If incoherent/self S(Q,w) file is specified as empty (0 or "") then the
 * scattering is constant isotropic (Vanadium like).
 * In case you only have one S(q,w) data containing both coherent and
 * incoherent contributions you should e.g. use 'Sqw_coh' and set 'sigma_coh'
@@ -161,13 +161,13 @@
 *
 * OPTIONAL PARAMETERS:
 * norm_sqw:     [1] When positive, the value is used as the integral of S(q,w)
-*                   Null value uses computed integral.
+*                   Null value uses computed raw integral.
 *                   Any negative value will normalize on the density.
 * auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
 *                   to optimal setting whenever required.
-* concentric:   [1] indicates that this component in hollow cylinder geometry
-*                   may contain other components.
-*                   It should be then duplicated after the inside part.
+* concentric:   [1] Indicates that this component in a hollow geometry
+*                   and may contain other components.
+*                   It should then be duplicated after the inside part.
 *                   See description for an example.
 * order:        [1] Limit multiple scattering up to given order
 *                     0:all (default), 1:single, 2:double, ...
@@ -221,7 +221,7 @@ DEFINE COMPONENT Isotropic_Sqw
   DEFINITION PARAMETERS (Sqw_coh=0, Sqw_inc=0, powder_format=Undefined)
   SETTING PARAMETERS(radius_i=0,radius_o=0,thickness=0,
     xwidth=0, yheight=0, zthick=0,
-    qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,
+    qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=1,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     norm_sqw=-1, powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0)
@@ -821,8 +821,9 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   if (Sqw_Data->alpha && Sqw->sqw_norm < 0) { /* apply normalization */
     if (Sqw->verbose_output > 0)
-      printf("Isotropic_Sqw: %s: Applying %g multiplication factor on |S|.\n",
-        Sqw->compname, Sqw_Data->alpha);
+      printf("Isotropic_Sqw: %s: Applying %g multiplication factor on %s |S|.\n",
+        Sqw->compname, Sqw_Data->alpha,
+        (Sqw->type=='c' ? "coherent" : "incoherent"));
     val *= Sqw_Data->alpha;
     sum *= Sqw_Data->alpha;
     for (i=0; i < (Sqw_Data->nb_q_data) ; Sqw_Data->Sq[i++] *= Sqw_Data->alpha);
@@ -841,7 +842,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     return(NULL);
   }
 
-  if (Sqw->verbose_output > 0 || !Sqw_Data->alpha)
+  if (Sqw->verbose_output > 1 || !Sqw_Data->alpha)
     printf("Isotropic_Sqw: %s: Generated %s S(Q)[%i], with norm |S| = %g\n",
       Sqw->compname, (Sqw->type=='c' ? "coherent" : "incoherent"),
       Sqw_Data->nb_q_data, Sqw_Data->intensity_total);
@@ -1394,6 +1395,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     }
 
     VarSqw.neutron_enter++;
+    p_mult = 1;
 
     if (!v) {
       printf("Isotropic_Sqw: %s: ERROR: Null velocity\n",NAME_CURRENT_COMP);
@@ -1440,7 +1442,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
   } /* end if intersect the neutron hits the sample */
   else break;
 
-  if (intersect) { /* Multiple scattering event */
+  if (intersect) { /* scattering event */
 
     /* Decaying exponential distribution of the path length before scattering */
     /* Select a point at which to scatter the neutron, taking
@@ -1713,7 +1715,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
       break;       /* finish multiple scattering loop */
     }
 
-  } /* end if (intersect) Multiple scattering event  */
+  } /* end if (intersect) scattering event  */
 
 } while (intersect); /* end do (intersect) (multiple scattering loop) */
 
