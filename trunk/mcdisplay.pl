@@ -72,6 +72,7 @@ require "mcrunlib.pl";
 # linux, Win32. Will investigate further regarding portability.
 # PW 20030404
 use IPC::Open2;
+use Math::Trig;
 
 $magnification = 1;
 $zooming = 0;
@@ -82,7 +83,7 @@ my (%transformations, @components);
 sub read_instrument {
     my ($in) = @_;
     my ($st, $comp);
-
+    my $compheader;
     $st = 0;
     @components = ();
     while(<$in>) {
@@ -112,6 +113,15 @@ sub read_instrument {
                 write_process("INSTRUMENT.save=1;\n");
               } else { write_process("INSTRUMENT.save=0;\n"); }
             }
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /VRML/i) {
+		write_process("#VRML V2.0 utf8\n".
+			      "Viewpoint {\n".
+			      "description \"Default\"".
+			      " position 0 0 10\n".
+			      "orientation 0 0 1  0".
+			      "jump FALSE".
+			      "}\n");
+	    }
         } elsif($st == 1 && /^COMPONENT:\s*"([a-zA-Z0-9_]+)"\s*/) {
             $comp = $1;
             @components = (@components, $comp);
@@ -123,11 +133,16 @@ sub read_instrument {
               # Initialize components in scilab struct:
               write_process("setcomponent('$comp');\n");
             }
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
+		$compheaders{$comp}="\n########################".
+		    " $comp ".
+		    "########################";
+	    }
         } elsif($st == 1 && /^POS:(.*)$/) {
             my @T;
             @T = split ",", $1;
             $transformations{$comp} = \@T;
-            $compcnt=scalar(@components);
+	    $compcnt=scalar(@components);
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
               # Component position for matlab struct:
               write_process("INSTRUMENT.$comp.T=ReshapeTransform([@T]);\n");
@@ -138,17 +153,45 @@ sub read_instrument {
               # Component position for scilab struct:
               write_process("setposition([@T]);\n");
             }
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
+		if($T[0]!=0 or $T[1]!=0 or $T[2]!=0){$transforms{$comp}.= "translation $T[0] $T[1] $T[2]\n";}
+		my $angle = acos(($T[3]+$T[7]+$T[11]-1)/2);
+		my $d21=$T[8]-$T[10]; my $d02=$T[9]-$T[5]; my $d10=$T[4]-$T[6];
+		my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);		
+		
+		if($d!=0){$transforms{$comp}.= "rotation ".$d21/$d.' '.$d02/$d.' '.$d10/$d." $angle\n";}
+		$nbcomp1++;
+		if($transforms{$comp})
+		{
+		    $compheaders{$comp}="$compheaders{$comp}".
+			"\nTransform {\n".
+			"$transforms{$comp}".
+			"children [";
+		}
+		$compheaders{$comp}="$compheaders{$comp}".
+		    "\nShape {\nappearance Appearance {\n\t".
+		    "material Material { emissiveColor ";
+		my $color = vrml_setcolor($nbcomp2,$nbcomp1);
+		$compheaders{$comp}="$compheaders{$comp}".
+		    "$color".
+		    "}}\n".
+		    "geometry IndexedLineSet {\ncoord Coordinate {\npoint [\n";
+		$nbcomp2++;
+		$comp = "";
+	    }
+	    
         } elsif($st == 1 && /^MCDISPLAY: start$/) {
             $st = 2;                # Start of component graphics representation
-        } elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_]+)/) {
+	} elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_]+)/) {
             $comp = $1;
-            $compdraw{$comp} = {};
+	    $compdraw{$comp} = {};
             $compdraw{$comp}{'elems'} = [];
+	    #$compdraw{$comp}{'header'} = $compheader;
             if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
               # Initialize component variable etc. in scilab
               write_process("trace_component('$comp');\n");
             }
-        } elsif($st == 2 && /^MCDISPLAY: magnify\('([xyz]*)'\)$/) {
+	} elsif($st == 2 && /^MCDISPLAY: magnify\('([xyz]*)'\)$/) {
             my $mag = $1;
             $compdraw{$comp}{'magX'} = 1 if $mag =~ /x/i;
             $compdraw{$comp}{'magY'} = 1 if $mag =~ /y/i;
@@ -239,7 +282,57 @@ sub read_instrument {
               # Scilab 'End of instrument'
               write_process("endtrace();\n");
             }
-        } elsif($st == 1 && /^INSTRUMENT END:/) {
+	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
+		foreach $comp (@components) {
+		    write_process("$compheaders{$comp}");
+		    my @multilineSize =();
+		    foreach $elem (@{$compdraw{$comp}{'elems'}}) {
+			push @multilineSize, $elem->{'count'};
+			my @coords = @{$elem->{'coords'}};
+			my $i=0;
+			my $coordstring="";
+			foreach $coord (@coords) {
+			    if ($i<2) {
+				$coordstring="$coordstring$coord ";
+				$i++;
+			    } else {
+				$i=0;
+				$coordstring="$coordstring$coord,";
+			    }
+			}
+			write_process("$coordstring\n");
+		    }
+		    write_process("]}\n");
+		    write_process("coordIndex [\n");
+		    
+		    my $c=0,$i,$j;
+		    my $m = join('/',@multilineSize);
+		    foreach $i (@multilineSize) 
+		    {
+			for($j=0; $j<$i; $j++)
+			{
+			    write_process("$c,");
+			    $c++;
+			}
+			write_process("-1,\n");
+		    }							
+		    write_process("]}}\n");
+		    if($transforms{$comp})
+		    {
+			write_process("]}\n");
+		    }
+		    my @T=@{$transformations{$comp}};
+		    
+		    write_process("Viewpoint {\n".
+				  "description \"$comp\"".
+				  " position".$T[0].' '.$T[1].' '.$T[2]."\n".
+				  "orientation 0 1 0  3.14".
+				  "jump FALSE".
+				  "}\n");	
+		}
+	    }
+	    
+	} elsif($st == 1 && /^INSTRUMENT END:/) {
             $st = 100;
             last;
         } else {
@@ -248,6 +341,7 @@ sub read_instrument {
     }
     exit if($st != 100);        # Stop when EOF seen before instrument end.
     return $#components + 1;
+    
 }
 
 
@@ -518,6 +612,23 @@ sub plot_neutron {
       }
       $retval=write_process("PlotNeutron(x,y,z);\n");
       return $retval;
+    } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /vrml/i) {
+      write_process("\nShape {\nappearance Appearance {\n\t".
+		    "material Material { emissiveColor 1 1 1\n transparency 0.7}}\n".
+		    "geometry IndexedLineSet {\ncoord Coordinate {\npoint [\n");
+      my $linelength="";
+      while($i < scalar(@$x)) {
+	  my $xx,$yy,$zz;
+	  # Needs swapping because of coordinate system in VRML instrument...
+	  $xx = $y->[$i];
+	  $yy = $z->[$i];
+	  $zz = $x->[$i];
+	  write_process("$xx $yy $zz, ");
+	  $linelength="$linelength$i ";
+	  $i++;
+      }
+      write_process("\n]}\ncoordIndex [$linelength -1,\n]}}");
+      return 1;
     }
 }
 
@@ -626,6 +737,26 @@ sub write_process {
   }
 }
 
+sub vrml_setcolor	{
+    ($num,$max)=@_;# 0<=$num<$max
+	if($num % 2)
+    {$num=$num/2;}
+    else
+    {$num=$num/2+$max/2;}
+    my $num=sprintf("%d",$num);#floor
+	my $H=(6*$num)/$max;# 0<=Hue<6
+	my $iH=sprintf("%d",$H);#integer form 0 to 5
+	#Saturation and Value are fixed to 1
+	my $dH=$H-$iH;
+    my $R,$G,$B;
+    if($iH==0){$R=1    ;$G=$dH  ;$B=0    }
+    elsif($iH==1){$R=1-$dH;$G=1    ;$B=0    }
+    elsif($iH==2){$R=0    ;$G=1    ;$B=$dH  }
+    elsif($iH==3){$R=0    ;$G=1-$dH;$B=1    }
+    elsif($iH==4){$R=$dH  ;$G=0    ;$B=1    }
+    else{$R=1    ;$G=0    ;$B=1-$dH}		 		 		 
+    return "$R $G $B";
+}
 
 sub plot_instrument {
     my ($noninteractive, $rinstr, $rneutron) = @_;
@@ -865,8 +996,8 @@ if ($sim_cmd =~ m'\.instr$') # recompile .instr if needed
 
 
 # Check value of $plotter and $file_output variables, set
-# $MCSTAS::mcstas_config{'PLOTTER'} with scriptfile keyword
-if ($file_output) { $plotter .= "_scriptfile"; }
+# $MCSTAS::mcstas_config{'PLOTTER'} with scriptfile keyword, always set for VRML
+if ($file_output || $plotter =~ /VRML/i) { $plotter .= "_scriptfile"; }
 
 if ($plotter =~ /Scilab/i && not $plotter =~ /scriptfile/i) {
   # Check for Win32, only file_output possible :(
@@ -886,6 +1017,7 @@ if ($plotter =~ /scriptfile/i && not $file_output) {
   $file_output="mcdisplay_commands";
   if ($plotter =~ /Matlab/i) { $file_output .=".m"; }
   elsif ($plotter =~ /Scilab/i) { $file_output .=".sci"; }
+  elsif ($plotter =~ /VRML/i) { $file_output .=".wrl"; }
   print STDERR "Outputting to file $file_output\n";
 }
 
@@ -924,6 +1056,15 @@ if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
   }
   my $seq = "";                        # Sequence number for multiple hardcopy
   PGPLOT::pgask(0);
+} elsif ($plotter =~ /vrml/i) {
+  # VRML always with file handle. VRML browser spawned after write of file.
+  print "Opening file ...\n";
+  open(WRITER, "> $file_output");
+  $pid=0;  
+  # Other VRML init stuff:
+  my $nbcomp1=0,$nbcomp2=0;
+  my %transforms;
+  my %compheaders;
 } elsif ($plotter =~ /Matlab/i && $plotter =~ /scriptfile/i) {
   # Matlab w/FILE is plotter - open a file handle
   open(WRITER, "> $file_output");
@@ -1020,3 +1161,4 @@ if ($plotter =~ /McStas|PGPLOT/i) {
 } else {
   close(WRITER);
 }
+
