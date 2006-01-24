@@ -21,6 +21,7 @@
 #            2 - Default to external editor
 # EXTERNAL_EDITOR - default external editor, overriden by VISUAL or EDITOR variables
 # BROWSER  - Default BROWSER, overriden by BROWSER variable
+# VRMLVIEW - Default VRML BROWSER, overriden by VRMLVIEW variable
 # PREFIX   - Prefix for commands (e.g. start or empty)
 # SUFFIX   - Suffix for perl scripts (.pl)
 # DATE     - date format
@@ -49,6 +50,7 @@ use Config;
      TERMINAL => '@TERMINAL@',
      EXTERNAL_EDITOR => '@EDITOR@',
      BROWSER => '@BROWSER@',
+     VRMLVIEW => '@VRMLVIEW@',
      PGPLOT => '@PGPLOT@',
      TCLTK => '@TCLTK@',
      SSH => '@SSH@',
@@ -149,6 +151,10 @@ if ($MCSTAS::mcstas_config{'EDITOR'} == 1 && $MCSTAS::mcstas_config{'CODETEXT'} 
 
 if ($ENV{'BROWSER'}) {
   $MCSTAS::mcstas_config{'BROWSER'} = $ENV{'BROWSER'} ;
+}
+
+if ($ENV{'VRMLVIEW'}) {
+  $MCSTAS::mcstas_config{'VRMLVIEW'} = $ENV{'VRMLVIEW'} ;
 }
 
 if ($ENV{'VISUAL'} || $ENV{'EDITOR'}) {
