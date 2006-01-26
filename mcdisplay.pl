@@ -506,6 +506,7 @@ sub read_neutron {
             $st = 2;
             last;
         } elsif (/^Detector:/){
+	  $st = 2;
           if (! $MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i) {
             # Should only be done if finished, and not called with --save flag...
             # Also, can only be done if tcl/tl available
@@ -1153,6 +1154,12 @@ while(!eof(IN)) {
     last if $ret == 2;
   }
 close(IN);
+if ($plotter =~ /VRML/i && !($MCSTAS::mcstas_config{'VRMLVIEW'} eq "no")) {
+    if (-e $file_output) {
+	print STDERR "Spawning $MCSTAS::mcstas_config{'VRMLVIEW'} to view $file_output\n";
+	open(VRML, "$MCSTAS::mcstas_config{'VRMLVIEW'} $file_output|")
+    }
+}
 
 # Properly close any open files etc.
 if ($plotter =~ /McStas|PGPLOT/i) {

@@ -10,6 +10,7 @@ our $mpirun;
 our $mpicc;
 our $terminal;
 our $plotter;
+our $vrmlview;
 
 if ($Config{'osname'} eq "MSWin32") {
     my $failed;
@@ -46,7 +47,27 @@ if ($Config{'osname'} eq "MSWin32") {
     }
     if ($failed) { $scilab = "runscilab.exe"; }
     print STDOUT "$scilab\n";
-    
+
+    print STDOUT "Checking for VRML viewer: ";
+    $failed=system('support\Win32\which.exe freewrl.exe');
+    if ($failed) { 
+      $failed=system('support\Win32\which.exe glview.exe'); 
+      $vrmlview = (not $failed) ? "glview.exe" : "no";
+    } 
+    if ($failed) { 
+      $failed=system('support\Win32\which.exe lookat.exe'); 
+      $vrmlview = (not $failed) ? "lookat.exe" : "no";
+    }
+    if ($failed) { 
+      $failed=system('support\Win32\which.exe openwrl.exe'); 
+      $vrmlview = (not $failed) ? "openwrl.exe" : "no";
+    }
+    if ($failed) {     
+      $failed=system('support\Win32\which.exe explorer.exe'); 
+      $vrmlview = (not $failed) ? "explorer.exe" : "no";
+    }
+    print STDOUT "$vrmlview\n";
+
     print STDOUT "Checking for Terminal: ";
     $failed=system('support\Win32\which.exe cmd.exe');
     if ($failed) { 
@@ -107,6 +128,8 @@ while (<READ>) {
         print WRITE "     SSH => 'no',\n";
     } elsif (/\w*BROWSER \=\w*/) {
         print WRITE "     BROWSER => 'start',\n";
+    } elsif (/\w*VRMLVIEW \=\w*/) {
+        print WRITE "     VRMLVIEW => '$vrmlview',\n";
     } elsif (/\w*TERMINAL \=\w*/) {
         print WRITE "     TERMINAL => '$terminal',\n";
     } elsif (/\w*MPICC \=\w*/) {
