@@ -116,6 +116,12 @@ sub read_instrument {
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /VRML/i) {
 		# Default viewpoint, 10 meters along z.
 		write_process("#VRML V2.0 utf8\n".
+			      "# Output from mcdisplay from the McStas ".
+			      "package, see http://www.mcstas.org\n".
+			      "#\n# Instrument used was $sim_cmd. ".
+			      "Full cmdline was:\n#\n# @ARGV\n#\n# ".
+			      "Please rerun instrument with -i option ".
+			      "to get more info.\n#\n".
 			      "Viewpoint {\n".
 			      "description \"Default\"".
 			      " position 0 0 10\n".
