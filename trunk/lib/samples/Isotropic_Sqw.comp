@@ -1014,8 +1014,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   d_coh = Sqw_readfile(Sqw, file_coh, &(Sqw->Data_coh));
   if (d_inc && !d_inc->intensity && Sqw->s_inc) {
     if (Sqw->verbose_output > 0)
-      printf("Isotropic_Sqw: %s: Using Isotropic elastic incoherent scattering\n"
-             "               (Vanadium like, sigma=%g [barns])\n", Sqw->compname, Sqw->s_inc);
+      printf("Isotropic_Sqw: %s: Using Isotropic elastic incoherent scattering (sigma=%g [barns])\n", Sqw->compname, Sqw->s_inc);
     ret=1;
   }
   if (!d_inc || !d_coh) return(0);
@@ -1397,7 +1396,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     VarSqw.neutron_enter++;
     p_mult = 1;
 
-    if (!v) {
+    if (v <= 0) {
       printf("Isotropic_Sqw: %s: ERROR: Null velocity\n",NAME_CURRENT_COMP);
       VarSqw.neutron_removed++;
       ABSORB; /* should never occur */
@@ -1408,7 +1407,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     my_a   = VarSqw.my_a_v / v; /* absorption 'mu' */
 
     my_t = my_a + VarSqw.my_s;  /* total scattering Xsect (tmp var) */
-    if (!my_t) {
+    if (my_t <= 0) {
       printf("Isotropic_Sqw: %s: ERROR: Null Scattering cross section\n",NAME_CURRENT_COMP);
       VarSqw.neutron_removed++;
       ABSORB; /* should never occur */
@@ -1423,15 +1422,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     /* are we next to the exit ? probably no scattering */
     if (VarSqw.my_s*d_path <= 4e-7) {
-      flag = 1;
-      p_mult *= 1 - wi; /* No interaction before the exit */
+      flag = 1; /* will do 1 - wi */
     }
-
     /* MC choice: Interaction or transmission ? */
-    if (!flag && wi > 0 && (wi == 1 || (tmp=rand01()) < wi)) { /* Interaction neutron/sample */
+    if (!flag && wi > 0 && (wi >= 1 || (tmp=rand01()) < wi)) { /* Interaction neutron/sample */
       p_mult *= ws; /* Update weight ; account for absorption and scatter */
     } else {
       flag = 1; /* Transmission : no interaction neutron/sample */
+      p_mult *= 1 - wi; /* No interaction before the exit */
       if (!VarSqw.type) VarSqw.type = 't';
     }
 
@@ -1476,7 +1474,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (d_phi && order == 1) {
           randvec_target_rect_angular(&u1x, &u1y, &u1z, &tmp,
               vx, vy, vz, 2*PI, d_phi, ROT_A_CURRENT_COMP);
-          p_mult *= tmp/4*PI; /* weighted by focused range to total range */
+          p_mult *= tmp/4/PI; /* weighted by focused range to total range */
         } else
           randvec_target_circle(&u1x, &u1y, &u1z, NULL, vx, vy, vz, 0);
 
@@ -1616,7 +1614,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         NORM(u1x, u1y, u1z);
         NORM(u2x, u2y, u2z);
 
-        p_mult *= kf/k/4/PI;
+        p_mult *= kf/k;
 
         break; /* exit for loop on success */
       } /* end for index_counter */
@@ -1677,9 +1675,6 @@ do { /* Main interaction loop. Ends with intersect=0 */
       v = vf; k = kf;
       /* nornalize to \int S or norm_sqw in selected [q,w] range */
       p_mult *= (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity);
-      if (p_mult > 1) VarSqw.neutron_pmult++;
-
-      p *= p_mult;
 
       SCATTER;
 
@@ -1709,6 +1704,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     } /* end if (flag) */
 
+    VarSqw.neutron_exit++;
+    p *= p_mult;
+    if (p_mult > 1) VarSqw.neutron_pmult++;
+
     /* test for a given multiple order */
     if (order && SCATTERED >= order) {
       intersect=0; /* reached required number of SCATTERing */
@@ -1734,7 +1733,6 @@ if (SCATTERED) {
                   +(VarSqw.kf_z-VarSqw.ki_z)*(VarSqw.kf_z-VarSqw.ki_z));
   VarSqw.dw = VS2E*(VarSqw.vf*VarSqw.vf - VarSqw.vi*VarSqw.vi);
 
-  VarSqw.neutron_exit++;
 } else VarSqw.dq=VarSqw.dw=0;
 
 /* end TRACE */
@@ -1819,10 +1817,8 @@ FINALLY
           NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.neutron_exit, VarSqw.maxloop);
   if (VarSqw.neutron_pmult)
     printf("Isotropic_Sqw: %s: %li neutron events (out of %li) reached\n"
-           "               unrealistic weight. The S(q,w) norm is probably too high\n"
-           "WARNING        could not be satisfied after %i tries.\n",
-          NAME_CURRENT_COMP, VarSqw.neutron_pmult, VarSqw.neutron_exit, VarSqw.maxloop);
-
+           "WARNING        unrealistic weight. The S(q,w) norm is probably too high\n",
+          NAME_CURRENT_COMP, VarSqw.neutron_pmult, VarSqw.neutron_exit);
 
 /* end FINALLY */
 %}
