@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -142,7 +142,7 @@ SHARE
 #ifndef Crystallographica
 #define Crystallographica { 4,5,7,0,0,0,0,0 }
 #define Fullprof          { 4,0,8,0,0,5,0,0 }
-#define Lazy              {17,6,0,0,0,0,0,0 }
+#define Lazy              {17,6,0,0,0,0,0,13 }
 #define Undefined         { 0,0,0,0,0,0,0,0 }
 #endif
 
@@ -186,6 +186,7 @@ SHARE
     if (!SC_file || !strlen(SC_file)) {
       printf("PowderN: %s: Using incoherent elastic scattering only\n",
           info->compname);
+      info->count = 0;
       return(0);
     }
     Table_Read(&sTable, SC_file, 1); /* read 1st block data from SC_file into sTable*/
@@ -400,9 +401,7 @@ INITIALIZE
       q_v[i] = L[i].q*K2V;
       w_v[i] = L[i].w;
     }
-  } else exit(fprintf(stderr,
-      "PowderN: %s: Data file has no valid powder line definition\n"
-      "         Check format definition\n", NAME_CURRENT_COMP));
+  }
 
   /* Is not yet divided by v */
   my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
@@ -416,7 +415,7 @@ TRACE
 %{
   double t0, t1, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n;
   double solid_angle;
-  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z,pmul;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z,pmul=1;
   int    line,flag;
   char   intersect=0;
 
@@ -439,76 +438,82 @@ TRACE
         /* Total attenuation from scattering */
 
     if (frac <= 0 || (frac < 1 && rand01() >= frac))
-    {   /* Make coherent scattering event */
+    { /* Make coherent scattering event */
 
-      /* choose line */
-      if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
-      else line = 0;
-      if (w_v[line])
-        arg = q_v[line]*(1+w_v[line]*randnorm())/(2.0*v);
-      else
-        arg = q_v[line]/(2.0*v);
-      my_s_n = my_s_v2[line]/(v*v);
-      if(fabs(arg) > 1)
-        ABSORB;                   /* No bragg scattering possible*/
-      theta = asin(arg);          /* Bragg scattering law */
+      if (line_info.count > 0) {
+        /* choose line */
+        if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
+        else line = 0;
+        if (w_v[line])
+          arg = q_v[line]*(1+w_v[line]*randnorm())/(2.0*v);
+        else
+          arg = q_v[line]/(2.0*v);
+        my_s_n = my_s_v2[line]/(v*v);
+        if(fabs(arg) > 1)
+          ABSORB;                   /* No bragg scattering possible*/
+        theta = asin(arg);          /* Bragg scattering law */
 
-      /* Choose point on Debye-Scherrer cone */
-      if (d_phi)
-      { /* relate height of detector to the height on DS cone */
-        arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
-  /* If full Debye-Scherrer cone is within d_phi, don't focus */
-        if (arg < -1 || arg > 1) d_phi = 0;
-  /* Otherwise, determine alpha to rotate from scattering plane
-     into d_phi focusing area*/
-        else alpha = 2*asin(arg);
-      }
-      if (d_phi) {
-  /* Focusing */
-        alpha = fabs(alpha);
-  /* Trick to get scattering for pos/neg theta's */
-        alpha0= 2*rand01()*alpha;
-        if (alpha0 > alpha) {
-          alpha0=PI+(alpha0-1.5*alpha);
-        } else {
-          alpha0=alpha0-0.5*alpha;
+        /* Choose point on Debye-Scherrer cone */
+        if (d_phi)
+        { /* relate height of detector to the height on DS cone */
+          arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+    /* If full Debye-Scherrer cone is within d_phi, don't focus */
+          if (arg < -1 || arg > 1) d_phi = 0;
+    /* Otherwise, determine alpha to rotate from scattering plane
+      into d_phi focusing area*/
+          else alpha = 2*asin(arg);
         }
-      }
-      else
-        alpha0 = PI*randpm1();
+        if (d_phi) {
+    /* Focusing */
+          alpha = fabs(alpha);
+    /* Trick to get scattering for pos/neg theta's */
+          alpha0= 2*rand01()*alpha;
+          if (alpha0 > alpha) {
+            alpha0=PI+(alpha0-1.5*alpha);
+          } else {
+            alpha0=alpha0-0.5*alpha;
+          }
+        }
+        else
+          alpha0 = PI*randpm1();
 
-      /* now find a nearly vertical rotation axis:
-        *  (v along Z) x (X axis) -> nearly Y axis
-        */
-      vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, 1,0,0);
+        /* now find a nearly vertical rotation axis:
+          *  (v along Z) x (X axis) -> nearly Y axis
+          */
+        vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, 1,0,0);
 
-      /* handle case where v and aim are parallel */
-      if (!tmp_vx && !tmp_vy && !tmp_vz) { tmp_vx=tmp_vz=0; tmp_vy=1; }
+        /* handle case where v and aim are parallel */
+        if (!tmp_vx && !tmp_vy && !tmp_vz) { tmp_vx=tmp_vz=0; tmp_vy=1; }
 
-      /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
-      rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*theta, tmp_vx,tmp_vy,tmp_vz);
+        /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
+        rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*theta, tmp_vx,tmp_vy,tmp_vz);
 
-      /* tmp_v = rotate v_out by alpha0 around 'v' (Debye-Scherrer cone) */
-      rotate(tmp_vx,tmp_vy,tmp_vz, vout_x,vout_y,vout_z, alpha0, vx, vy, vz);
-      vx = tmp_vx;
-      vy = tmp_vy;
-      vz = tmp_vz;
+        /* tmp_v = rotate v_out by alpha0 around 'v' (Debye-Scherrer cone) */
+        rotate(tmp_vx,tmp_vy,tmp_vz, vout_x,vout_y,vout_z, alpha0, vx, vy, vz);
+        vx = tmp_vx;
+        vy = tmp_vy;
+        vz = tmp_vz;
 
-      flag=0;
-      if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) flag=1;
-      else if(!isrect && !cylinder_intersect(&t0, &t1, x, y, z,
-                            vx, vx, vx, radius, yheight)) flag=1;
+        flag=0;
+        if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) flag=1;
+        else if(!isrect && !cylinder_intersect(&t0, &t1, x, y, z,
+                              vx, vx, vx, radius, yheight)) flag=1;
 
-      if (flag) {
-        /* Strange error: did not hit cylinder */
-        fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
-        ABSORB;
-      }
-      l_1 = v*t1; /* go to exit */
+        if (flag) {
+          /* Strange error: did not hit cylinder */
+          fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
+          ABSORB;
+        }
+        l_1 = v*t1; /* go to exit */
 
-      pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-frac);
-      /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
-      if (d_phi) pmul *= alpha/PI;
+        pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-frac);
+        /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
+        if (d_phi) pmul *= alpha/PI;
+
+        p *= pmul;
+        SCATTER;
+
+      } /* else transmit */
 
     }  /* Coherent scattering event */
     else
@@ -542,9 +547,11 @@ TRACE
       pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(frac);
       pmul *= solid_angle/(4*PI);
 
+      p *= pmul;
+      SCATTER;
+
     }  /* Incoherent scattering event */
-    p *= pmul;
-    SCATTER;
+
   } /* else transmit non interacting neutrons */
 
 %}
