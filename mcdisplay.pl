@@ -114,6 +114,7 @@ sub read_instrument {
               } else { write_process("INSTRUMENT.save=0;\n"); }
             }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /VRML/i) {
+		# Default viewpoint, 10 meters along z.
 		write_process("#VRML V2.0 utf8\n".
 			      "Viewpoint {\n".
 			      "description \"Default\"".
@@ -121,6 +122,141 @@ sub read_instrument {
 			      "orientation 0 0 1  0".
 			      "jump FALSE".
 			      "}\n");
+		# Definition of Origin + coordinate system arrows
+		write_process("# Sphere at the origin\n".
+			      "Shape { \n".
+			      "appearance Appearance { \n".
+			      "material Material {\n".
+			      "diffuseColor 1.0 1.0 0.0\n".
+			      "transparency 0.5 } }\n".
+			      "geometry Sphere { radius 0.01 } \n".
+			      "}\n".
+			      "\n".
+			      "# Axis-parallel arrows of length 1 metre\n".
+			      "DEF ARROW Group {\n".
+			      "children [\n".
+			      "Transform {\n".
+			      "translation 0 0.5 0\n".
+			      "children [\n".
+			      "Shape {\n".
+			      "appearance DEF ARROW_APPEARANCE Appearance {\n".
+			      "material Material {\n".
+			      "diffuseColor .3 .3 1\n".
+			      "emissiveColor .1 .1 .33\n".
+			      "}\n".
+			      "}\n".
+			      "geometry Cylinder {\n".
+			      "bottom FALSE\n".
+			      "radius .005\n".
+			      "height 1\n".
+			      "top FALSE\n".
+			      "} } ] }\n".
+			      "Transform {\n".
+			      "translation 0 1 0\n".
+			      "children [\n".
+			      "DEF ARROW_POINTER Shape {\n".
+			      "geometry Cone {\n".
+			      "bottomRadius .05\n".
+			      "height .1\n".
+			      "}\n".
+			      "appearance USE ARROW_APPEARANCE\n".
+			      "} ] } ] }\n".
+			      "# the arrow along X axis\n".
+			      "Transform {\n".
+			      "translation 0 0 0\n".
+			      "rotation 1 0 0 1.57\n".
+			      "children [\n".
+			      "Group {\n".
+			      "children [ \n".
+			      "USE ARROW\n".
+			      "] } ] }\n".
+			      "# the arrow along Z axis\n".
+			      "Transform {\n".
+			      "translation 0 0 0\n".
+			      "rotation 0 0 1 -1.57\n".
+			      "children [\n".
+			      "Group {\n".
+			      "children [ \n".
+			      "USE ARROW\n".
+			      "] } ] }\n".
+			      "\n".
+			      "# the Y label (which is vertical)\n".
+			      "DEF Y_Label Group {\n".
+			      "children [\n".
+			      "Transform {\n".
+			      "translation 0 1 0\n".
+			      "children [\n".
+			      "Billboard {\n".
+			      "children [\n".
+			      "Shape {\n".
+			      "appearance DEF LABEL_APPEARANCE Appearance {\n".
+			      "material Material {\n".
+			      "diffuseColor 1 1 .3\n".
+			      "emissiveColor .33 .33 .1\n".
+			      "} }\n".
+			      "geometry Text { \n".
+			      "string [\"y\" ]\n".
+			      "fontStyle FontStyle {  size .2 }\n".
+			      "} } ] } ] } ] }\n".
+			      "# the X label\n".
+			      "DEF X_Label Group {\n".
+			      "children [\n".
+			      "Transform {\n".
+			      "translation 1 0 0\n".
+			      "children [\n".
+			      "Billboard {\n".
+			      "children [\n".
+			      "Shape {\n".
+			      "appearance DEF LABEL_APPEARANCE Appearance {\n".
+			      "material Material {\n".
+			      "diffuseColor 1 1 .3\n".
+			      "emissiveColor .33 .33 .1\n".
+			      "} }\n".
+			      "geometry Text { \n".
+			      "string [\"x\"]\n".
+			      "fontStyle FontStyle {  size .2 }\n".
+			      "} } ] } ] } ] }\n".
+			      "# the Z label\n".
+			      "DEF Z_Label Group {\n".
+			      "children [\n".
+			      "Transform {\n".
+			      "translation 0 0.2 1\n".
+			      "children [\n".
+			      "Billboard {\n".
+			      "children [\n".
+			      "Shape {\n".
+			      "appearance DEF LABEL_APPEARANCE Appearance {\n".
+			      "material Material {\n".
+			      "diffuseColor 1 1 .3\n".
+			      "emissiveColor .33 .33 .1\n".
+			      "} }\n".
+			      "geometry Text { \n".
+			      "string [\"z\"]\n".
+			      "fontStyle FontStyle {  size .2 }\n".
+			      "} } ] } ] } ] }\n".
+			      "\n".
+			      "# The text information (header data )\n".
+			      "DEF Header Group {\n".
+			      "children [\n".
+			      "Transform {\n".
+			      "translation 0 1.2 0\n".
+			      "children [\n".
+			      "Billboard {\n".
+			      "children [\n".
+			      "Shape {\n".
+			      "appearance Appearance {\n".
+			      "material Material { \n".
+			      "diffuseColor .9 0 0\n".
+			      "emissiveColor .9 0 0 }\n".
+			      "}\n".
+			      "geometry Text {\n".
+			      "string [ \"McStas: $sim_cmd\" ]\n".
+			      "fontStyle FontStyle {\n".
+			      "style \"BOLD\"\n".
+			      "size .2\n".
+			      "    } } } ] } ] } ] }".
+			      "\n\n### Instrument begins here: ###\n\n");
+
 	    }
         } elsif($st == 1 && /^COMPONENT:\s*"([a-zA-Z0-9_]+)"\s*/) {
             $comp = $1;
