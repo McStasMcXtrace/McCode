@@ -1121,6 +1121,7 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
                              (Filename is Instr.scf / Instr.fig). Figure
                              files are used by mcgui.pl for visualising the
                              instrument. With PGPLOT, --save is nonfunctional.
+                             With VRML, --save disables spaw of VRML viewer.
  -gif|-ps|-psc               Export figure as gif/b&w ps/color ps and exit
  When using -ps -psc -gif, the program writes the hardcopy file and exits.
  SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
@@ -1292,8 +1293,10 @@ while(!eof(IN)) {
 close(IN);
 if ($plotter =~ /VRML/i && !($MCSTAS::mcstas_config{'VRMLVIEW'} eq "no")) {
     if (-e $file_output) {
-	print STDERR "Spawning $MCSTAS::mcstas_config{'VRMLVIEW'} to view $file_output\n";
-	open(VRML, "$MCSTAS::mcstas_config{'VRMLVIEW'} $file_output|")
+	if (! $save) {
+	    print STDERR "Spawning $MCSTAS::mcstas_config{'VRMLVIEW'} to view $file_output\n";
+	    open(VRML, "$MCSTAS::mcstas_config{'VRMLVIEW'} $file_output|");
+	}
     }
 }
 
