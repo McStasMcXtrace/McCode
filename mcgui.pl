@@ -690,7 +690,7 @@ sub menu_run_simulation {
         # Check 'Trace' setting if a scan or trace is
         # requested
         if ($newsi->{'Trace'}) {
-              # Here, a check is done for selected mcdisplay "backend"
+            # Here, a check is done for selected mcdisplay "backend"
             # Also, various stuff must be done differently on unix
             # type plaforms and on lovely Win32... :)
             # PW 20030314
@@ -764,6 +764,28 @@ sub menu_run_simulation {
                       }
                   }
               }
+            } elsif ($plotter =~ /html|vrml/i) {
+                push @command, "--plotter=VRML";
+		# Make a check for # of neutron histories,
+		# should be made small to avoid waiting a long time for
+		# mcdisplay...
+		# Subtract 0 to make sure $num_histories is treated as a
+		# number...
+		my $num_histories = $newsi->{'Ncount'} - 0;
+		if ($num_histories >=1e3) {
+		    my $break = $w->messageBox(-message => "$num_histories is a very large number\nof neutron histories when using\nVRML\nContinue ?",
+                     -title => "Warning: large number",
+                     -type => 'yesnocancel',
+                     -icon => 'error',
+                     -default => 'no');
+		    # Make first char lower case - default on
+		    # Win32 upper case default on Unix... (perl 5.8)
+		    $break = lcfirst($break);
+		    if ((lc($break) eq "no")||(lc($break) eq "cancel")) {
+			return 0;
+		    }
+		}
+              
             }
             push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
             push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
