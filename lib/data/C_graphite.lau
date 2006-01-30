@@ -1,5 +1,20 @@
 # Graphite (C): 'P 63 m c' (186) hexagonal
-# a=b=2.47, c=6.79; aa=bb=90, c=120; Sigma_a = 0.0035;
+# a=b=2.47, c=6.79; aa=bb=90, c=120;
+#
+# Physical parameters:
+# sigma_coh 5.551   coherent scattering cross section in [barn]
+# sigma_inc 0.001   incoherent scattering cross section in [barn]
+# sigma_abs 0.0035  absorption scattering cross section in [barn]
+# density   2.267   in [g/cm^3]
+# weight    12.01   in [g/mol]
+# nb_atoms  4       in [atoms/unit cell]
+# v_sound   18350   in [m/s]
+# T_m       3800    melting temperature in [K]
+# T_b       4300    boiling temperature in [K]
+# At_number 6       atomic number Z
+# lattice_a 2.464   lattice parameter a in [Angs]
+# lattice_c 6.711   lattice parameter c in [Angs]
+# lattice_cc 120    lattice angle gamma in [deg]
 #
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'

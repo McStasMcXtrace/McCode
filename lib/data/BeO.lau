@@ -1,5 +1,18 @@
 # BeO crystal, used for Berylium filters
-# a=b=2.714, c=4.405; aa=bb=90, cc=120; sigma_a = 0.0156,
+# a=b=2.714, c=4.405; aa=bb=90, cc=120;
+#
+# Physical parameters:
+# sigma_coh 11.85   coherent scattering cross section in [barn]
+# sigma_inc 0.003   incoherent scattering cross section in [barn]
+# sigma_abs 0.008   absorption scattering cross section in [barn]
+# density   3.01    in [g/cm^3]
+# weight    25.01   in [g/mol]
+# nb_atoms  4       in [atoms/unit cell]
+# T_m       2650    melting temperature in [K]
+# T_b       3243    boiling temperature in [K]
+# lattice_a 2.9508  lattice parameter a in [Angs]
+# lattice_c 4.6855  lattice parameter c in [Angs]
+# lattice_cc 120    lattice angle gamma in [deg]
 #
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'

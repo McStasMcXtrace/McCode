@@ -1,6 +1,14 @@
 # C60: 'P a -3' (205) cubic
 # a=b=c=14.04078, 90 deg;
 #
+# Physical parameters:
+# sigma_coh 5.551   coherent scattering cross section in [barn]
+# sigma_inc 0.001   incoherent scattering cross section in [barn]
+# sigma_abs 0.0035  absorption scattering cross section in [barn]
+# weight    12.01   in [g/mol]
+# At_number 6       atomic number Z
+# lattice_a 14.04078 lattice parameter a in [Angs]
+#
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'
 # column_d  5 d-spacing 'd' in [Angs]
