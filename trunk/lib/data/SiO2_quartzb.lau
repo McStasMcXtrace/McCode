@@ -1,6 +1,19 @@
 # quartz-beta (SiO2): 'P 62 2 2' (180) hexagonal
 # a=b=5.01, c=5.47, aa=bb=90, cc=120; Sigma_a = 0.171;
 #
+# Physical parameters:
+# sigma_coh 10.625  coherent scattering cross section in [barn]
+# sigma_inc 0.0056  incoherent scattering cross section in [barn]
+# sigma_abs 0.1714  absorption scattering cross section in [barn]
+# density   2.53    in [g/cm^3]
+# weight    60.08   in [g/mol]
+# nb_atoms  9       in [atoms/unit cell]
+# T_m       1140    melting temperature in [K]
+# T_b       2503    boiling temperature in [K]
+# lattice_a 4.9965  lattice parameter a in [Angs]
+# lattice_c 5.4543  lattice parameter c in [Angs]
+# lattice_cc 120    lattice angle gamma in [deg]
+#
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'
 # column_d  5 d-spacing 'd' in [Angs]

@@ -1,6 +1,14 @@
 # Adrenaline: P 21 (4) monoclinic
 # a=7.873, b=6.790, c=8.638; aa=cc=90, bb=98.02;
 #
+# Physical parameters:
+# lattice_a 7.873   lattice parameter a in [Angs]
+# lattice_b 6.790   lattice parameter b in [Angs]
+# lattice_c 8.638   lattice parameter c in [Angs]
+# lattice_aa 90     lattice angle alpha in [deg]
+# lattice_bb 98.02  lattice angle alpha in [deg]
+# lattice_cc 90     lattice angle alpha in [deg]
+#
 # Format parameters: Crystallographica format
 # column_j  4 multiplicity 'j'
 # column_d  5 d-spacing 'd' in [Angs]
