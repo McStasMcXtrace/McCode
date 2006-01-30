@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.29 $
+* Version: $Revision: 1.30 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.29 2005-10-14 11:38:28 farhi Exp $
+* $Id: read_table-lib.c,v 1.30 2006-01-30 12:55:10 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.29  2005/10/14 11:38:28  farhi
+* Corrected missing #define
+*
 * Revision 1.28  2005/10/12 14:04:29  farhi
 * Added function to parse header, Table_ParseHeader(header, "symbol1", ... , NULL)
 * Useful for complex sample components, as well as mcformat/mcconvert stuff.
@@ -179,11 +182,11 @@
     if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
     else { stat(mc_rt_File,&mc_rt_stfile); mc_rt_filesize = mc_rt_stfile.st_size; }
     mc_rt_begin     = ftell(mc_rt_hfile);
+    strncpy(mc_rt_Table->filename, mc_rt_File, 128);
     mc_rt_nelements = Table_Read_Handle(mc_rt_Table, mc_rt_hfile, mc_rt_block_number, mc_rt_max_lines);
     mc_rt_Table->begin = mc_rt_begin;
     mc_rt_Table->end   = ftell(mc_rt_hfile);
     mc_rt_Table->filesize = (mc_rt_filesize>0 ? mc_rt_filesize : 0);
-    strncpy(mc_rt_Table->filename, mc_rt_File, 128);
     if (mc_rt_offset) *mc_rt_offset=mc_rt_Table->end;
     fclose(mc_rt_hfile);
     return(mc_rt_nelements);
@@ -468,7 +471,10 @@
     }
     if (mc_rt_Rows * mc_rt_Columns != mc_rt_count_in_array)
     {
-      fprintf(stderr, "Warning: Read_Table :%s Data has %li values that should be %li x %li\n", (!mc_rt_block_number ? " catenated" : ""), mc_rt_count_in_array, mc_rt_Rows, mc_rt_Columns);
+      fprintf(stderr, "Warning: Read_Table :%s %s Data has %li values that should be %li x %li\n",
+        (mc_rt_Table->filename ? mc_rt_Table->filename : ""),
+        (!mc_rt_block_number ? " catenated" : ""),
+        mc_rt_count_in_array, mc_rt_Rows, mc_rt_Columns);
       mc_rt_Columns = mc_rt_count_in_array; mc_rt_Rows = 1;
     }
     mc_rt_Data     = (double*)realloc(mc_rt_Data, mc_rt_count_in_array*sizeof(double));
