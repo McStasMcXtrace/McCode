@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: McStas 1.5.0
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -41,7 +41,7 @@
 DEFINE COMPONENT Vitess_input
 DEFINITION PARAMETERS (file = 0)
 SETTING PARAMETERS (int bufsize = 10000, repeat_count = 1)
-OUTPUT PARAMETERS (hfile, buf, size, pos, rep, finished)
+OUTPUT PARAMETERS (hfile, ibuf, size, pos, rep, finished)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 SHARE
@@ -52,9 +52,9 @@ SHARE
 
 DECLARE
 %{
-
+char *filename;                 /* path + filename */
 FILE *hfile;			/* Neutron input file handle */
-Neutron *buf;			/* Neutron input buffer */
+Neutron *ibuf;			/* Neutron input buffer */
 int size;			/* Number of neutrons currently in buffer */
 int pos;			/* Current position in buffer */
 int rep;			/* Neutron repeat count */
@@ -64,18 +64,35 @@ int finished;			/* Set to 1 when last neutron read */
 INITIALIZE
 %{
   /* Open neutron input file. */
-  if(file)
-    hfile = fopen(file, "rb");
-  else
-    hfile = stdin;
-  if(!hfile)
+  if (file==NULL)
   {
-    fprintf(stderr, "Vitess_input: Error: Cannot open input file.\n");
-    exit(1);
+    hfile = stdin;
   }
+  else if (!strcmp(file, "no_file"))
+  {
+    hfile = NULL;
+  }
+  else
+  {
+    hfile = fopen((filename=FullParName(file)), "rb");
+    if(!hfile)
+    {
+      fprintf(stderr, "Vitess_output: Error: Cannot open input file %s.\n", filename);
+      exit(1);
+    }
+  }
+#ifdef WIN32
+  if(hfile==stdin) 
+  { if( _setmode(_fileno( stdin ), _O_BINARY ) == -1) 
+    { fprintf(stderr,"Can't set stdin to binary mode\n");
+      exit(1);
+    }
+  }
+#endif
+
   /* Allocate neutron input buffer. */
-  buf = calloc(bufsize, sizeof(Neutron));
-  if(!buf)
+  ibuf = calloc(bufsize, sizeof(Neutron));
+  if(!ibuf)
   {
     fprintf(stderr, "Vitess_input: Error: Cannot allocate neutron buffer.\n");
     exit(1);
@@ -91,7 +108,7 @@ TRACE
 %{
   if(pos >= size) {
     /* Buffer is empty. */
-    size = fread(buf, sizeof(Neutron), bufsize, hfile);
+    size = fread(ibuf, sizeof(Neutron), bufsize, hfile);
     if(size <= 0)
     {
       if(ferror(hfile))
@@ -109,7 +126,11 @@ TRACE
      the neutron. */
   if(finished)
     ABSORB;
-  vitess2mcstas(buf[pos], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
+  vitess2mcstas(ibuf[pos], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
+  vitess_col       =      ibuf[pos].Color;
+  vitess_ID.IDNo   =      ibuf[pos].ID.IDNo;
+  memcpy(vitess_ID.IDGrp, ibuf[pos].ID.IDGrp, 2);
+
   /* Repeat the same neutron state parameters the required number of
      times. */
   ++rep;
@@ -121,8 +142,8 @@ TRACE
 %}
 FINALLY
 %{
-  if(buf)
-    free(buf);
+  if(ibuf)
+    free(ibuf);
   if(hfile && file)
     fclose(hfile);
 %}
