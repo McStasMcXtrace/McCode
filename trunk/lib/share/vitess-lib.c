@@ -12,7 +12,7 @@
 * Date:   Aug 28, 2002
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 *
 * This file is to be imported by the mcstas2vitess perl script
 * It handles the way Vitess parses parameters.
@@ -22,9 +22,12 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.c,v 1.14 2005-11-07 08:14:41 farhi Exp $
+* $Id: vitess-lib.c,v 1.15 2006-02-06 18:18:42 lieutenant Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.14  2005/11/07 08:14:41  farhi
+* Modifications by Klaus: made mcstas2vitess work again.
+*
 * Revision 1.13  2005/07/25 14:55:08  farhi
 * DOC update:
 * checked all parameter [unit] + text to be OK
@@ -54,7 +57,7 @@
 #endif
 
 /********************************************************************************************/
-#ifdef _MSC_VER
+#ifdef WIN32
 # include <fcntl.h>
 # include <io.h>
 # define cSlash '\\'
@@ -394,39 +397,6 @@ vitess_write(double NumNeutRead, double NumNeutWritten, double CntRate, double C
 }
 
 
-extern int mccvitess_out_pos;
-extern double mcnp;
-extern double pos_x, pos_y, pos_z;
-
-int vitess_main(int argc, char *argv[], int **check_finished,
-    double *dptr[], char dchr[], char **sptr[], char schr[])
-{
-  double Ni_sum=0.0, No_sum=0.0, p_sum =0.0, p2_sum=0.0;
-
-  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
-  /* default is to output as McStas format */
-  mcformat_data.Name=NULL;
-  if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
-    mcformat_data = mcuse_format("VRML");
-
-  srandom(time(NULL));  /* Random seed */
-  vitess_parseopt(argc, argv, dptr, dchr, sptr, schr); /* VITESS-style option parser */
-  mcinit();
-  do
-  {
-    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
-    Ni_sum++;
-    mcraytrace();
-    p_sum  += mcnp;
-    p2_sum += mcnp*mcnp;
-  } while(!**check_finished);
-
-  No_sum = (double) mccvitess_out_pos;
-  vitess_write(Ni_sum, No_sum, p_sum, p2_sum, pos_x, pos_y, pos_z, 0.0, 0.0);
-  mcfinally();
-  return 0;
-}
-
 /**************************************************************/
 /* Init does a general program initialization, which is ok    */
 /* for all modules of the VITESS program package.             */
@@ -499,7 +469,7 @@ char* FullParName(char* filename)
      return 0;
 
   /* Do not change an absolute path. */
- #ifdef _MSC_VER
+ #ifdef WIN32
   /* we consider a filename with : as absolute */
   if (strstr(filename, ":")) sel = -1;
  #else
