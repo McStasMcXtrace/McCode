@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: KL, 7 June 2005
@@ -87,8 +87,8 @@ TRACE
     v = sqrt(vx*vx + vy*vy + vz*vz);
     l_full = v * (t1 - t0);             /* Length of full path through sample */
     dt = rand01()*(t1 - t0) + t0; /* Time of scattering */
-    PROP_DT(dt);                /* Point of scattering */
-    l = v*dt;                   /* Penetration in sample */
+    PROP_DT(dt);                  /* Point of scattering */
+    l = v*(dt-t0);                /* Penetration in sample */
 
     vx_i=vx;
     vy_i=vy;
@@ -112,7 +112,7 @@ TRACE
 
     l_1 = v*t1;
 /*    fprintf(stderr, "l_full: %g, qmax: %g p: %g my_s_pre: %g, f: %g, my_a_v/v: %g\n",l_full,qmax,p,my_s_pre,f,my_a_v/v);*/
-    p *= l_full*solid_angle/(4*PI)*my_s_pre*f*f*exp(-my_a_v*(l+l_1)*0/v);
+    p *= l_full*solid_angle/(4*PI)*my_s_pre*f*f*exp(-my_a_v*(l+l_1)/v);
     SCATTER;
   }
 %}
