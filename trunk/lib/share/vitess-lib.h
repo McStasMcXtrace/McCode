@@ -12,7 +12,7 @@
 * Date:   Aug 28, 2002
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 *
 * This file is to be imported by the mcstas2vitess perl script
 * It handles the way Vitess parses parameters.
@@ -22,9 +22,12 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.h,v 1.14 2005-11-07 08:14:41 farhi Exp $
+* $Id: vitess-lib.h,v 1.15 2006-02-06 18:16:36 lieutenant Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.14  2005/11/07 08:14:41  farhi
+* Modifications by Klaus: made mcstas2vitess work again.
+*
 * Revision 1.13  2005/07/25 14:55:08  farhi
 * DOC update:
 * checked all parameter [unit] + text to be OK
@@ -50,7 +53,7 @@
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H
-#define VITESS_LIB_H "$Revision: 1.14 $"
+#define VITESS_LIB_H "$Revision: 1.15 $"
 
 #ifndef GENERAL_H
  #include <math.h>
@@ -101,8 +104,6 @@ void vitess2mcstas(Neutron neu,
 void vitess_option_error(char *opt);
 void vitess_parseopt(int argc, char *argv[],
          double *dptr[], char dchr[], char **sptr[], char schr[]);
-int vitess_main(int argc, char *argv[], int **check_finished,
-    double *dptr[], char dchr[], char **sptr[], char schr[]);
 
 void McInitVt();
 void McCleanupVt();
