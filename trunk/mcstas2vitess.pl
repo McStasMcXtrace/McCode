@@ -106,10 +106,29 @@ char schr[] =
 /* Pointer to check whether all neutrons have been read. */
 int *check_finished;
 
+/* event parameters that exist in VITESS, but not in McStas */
+short   vitess_col;
+TotalID vitess_ID;
+
 /* Our main() function. */
 int main(int argc, char *argv[])
 {
-  vitess_main(argc, argv, &check_finished, dptr, dchr, sptr, schr);
+  mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
+  /* default is to output as McStas format */
+  mcformat_data.Name=NULL;
+  if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
+    mcformat_data = mcuse_format("VRML");
+
+  srandom(time(NULL));  /* Random seed */
+  vitess_parseopt(argc, argv, dptr, dchr, sptr, schr); /* VITESS-style option parser */
+  mcinit();
+  do
+  {
+    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
+    mcraytrace();
+  } while(!*check_finished);
+
+  mcfinally();
   exit(0);
 }
 %}
@@ -119,6 +138,7 @@ INITIALIZE
   /* This double-indirection is necessary here since MC_GETPAR is not
      available in the DECLARE section. */
   check_finished = &MC_GETPAR(vitess_in, finished);
+  vitess_col =0;
 %}
 TRACE
 
@@ -136,6 +156,15 @@ COMPONENT vitess_out = Vitess_output(
     file = vitess_outfile, bufsize = vitess_bufsize,
     progress = vitess_tracepoints)
   AT (0, 0, 0) ABSOLUTE
+
+FINALLY
+%{
+  double p_sum=0.0, p2_sum=0.0;
+
+  p_sum  = MC_GETPAR(vitess_out, p_out);
+  p2_sum = MC_GETPAR(vitess_out, p2_out);
+  vitess_write(mcNCounter[1]-1, mcNCounter[3], p_sum, p2_sum, pos_x, pos_y, pos_z, 0.0, 0.0);
+%}
 
 END
 INSTR_END
