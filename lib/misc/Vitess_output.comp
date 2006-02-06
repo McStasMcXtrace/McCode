@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: McStas 1.5.0
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -41,8 +41,8 @@
 
 DEFINE COMPONENT Vitess_output
 DEFINITION PARAMETERS (file = 0)
-SETTING PARAMETERS (int bufsize = 10000, progress = 0)
-OUTPUT PARAMETERS (hfile, buf, pos)
+SETTING PARAMETERS (int bufsize = 10000, int progress = 0)
+OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 SHARE
@@ -53,31 +53,46 @@ SHARE
 
 DECLARE
 %{
-
-FILE *hfile;			/* Neutron output file handle */
-Neutron *buf;			/* Neutron output buffer */
-int pos;			/* Current position in buffer */
+char *filename;                 /* path + filename             */
+FILE *hfile;			/* Neutron output file handle  */
+Neutron *obuf;			/* Neutron output buffer       */
+int pos;			/* Current position in buffer  */
+double p_out;                   /* sum of output weight        */
+double p2_out;                  /* square sum of output weight */
 %}
 
 INITIALIZE
 %{
   /* Open neutron output file. */
-  if(file)
-  {
-    hfile = fopen(file, "wb");
-  }
-  else
+  if (file==NULL)
   {
     hfile = stdout;
   }
-  if(!hfile)
+  else if (!strcmp(file, "no_file"))
   {
-    fprintf(stderr, "Vitess_output: Error: Cannot open output file.\n");
-    exit(1);
+    hfile = NULL;
   }
+  else
+  {
+    hfile = fopen((filename=FullParName(file)), "wb");
+    if(!hfile)
+    {
+      fprintf(stderr, "Vitess_output: Error: Cannot open output file %s.\n", filename);
+      exit(1);
+    }
+  }
+#ifdef WIN32
+  if(hfile==stdout) 
+  { if(_setmode(_fileno( stdout ), _O_BINARY ) == -1) 
+    { fprintf(stderr,"Can't set stdout to binary mode\n");
+      exit(1);
+    }
+  }
+#endif
+
   /* Allocate neutron output buffer. */
-  buf = calloc(bufsize, sizeof(Neutron));
-  if(!buf)
+  obuf = calloc(bufsize, sizeof(Neutron));
+  if(!obuf)
   {
     fprintf(stderr, "Vitess_output: Error: Cannot allocate neutron buffer.\n");
     exit(1);
@@ -91,8 +106,8 @@ TRACE
   int count;
 
   /* Flush output buffer if full. */
-  if(pos >= bufsize) {
-    count = fwrite(buf, sizeof(Neutron), bufsize, hfile);
+  if(hfile && pos >= bufsize) 
+  { count = fwrite(obuf, sizeof(Neutron), bufsize, hfile);
     if(progress)
     {
       fputc('.', stderr);	/* Output progress indicator. */
@@ -108,7 +123,13 @@ TRACE
       pos = 0;			/* Reposition at start of buffer */
     }
   }
-  buf[pos] = mcstas2vitess(x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  obuf[pos] = mcstas2vitess(x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  obuf[pos].Color   = vitess_col;
+  obuf[pos].ID.IDNo = vitess_ID.IDNo;     
+  memcpy(obuf[pos].ID.IDGrp, vitess_ID.IDGrp, 2);
+
+  p_out  += p;
+  p2_out += p*p;
   ++pos;
 %}
 FINALLY
@@ -116,8 +137,8 @@ FINALLY
   int count;
 
   /* Flush output buffer if necessary. */
-  if(pos > 0) {
-    count = fwrite(buf, sizeof(Neutron), pos, hfile);
+  if(hfile && pos > 0)
+  { count = fwrite(obuf, sizeof(Neutron), pos, hfile);
     if(count != pos)
     {
       fprintf(stderr, "Vitess_output: Error during write of neutron file.\n");
@@ -126,8 +147,8 @@ FINALLY
   }
   if(progress)
     fprintf(stderr, ".\n");	/* Output final progress indicator. */
-  if(buf)
-    free(buf);
+  if(obuf)
+    free(obuf);
   if(hfile && file)
     fclose(hfile);
 %}
