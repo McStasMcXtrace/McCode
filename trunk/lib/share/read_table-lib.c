@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.30 2006-01-30 12:55:10 farhi Exp $
+* $Id: read_table-lib.c,v 1.31 2006-02-14 15:29:40 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.30  2006/01/30 12:55:10  farhi
+* incomplete table warning displays file name
+*
 * Revision 1.29  2005/10/14 11:38:28  farhi
 * Corrected missing #define
 *
@@ -182,8 +185,8 @@
     if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
     else { stat(mc_rt_File,&mc_rt_stfile); mc_rt_filesize = mc_rt_stfile.st_size; }
     mc_rt_begin     = ftell(mc_rt_hfile);
-    strncpy(mc_rt_Table->filename, mc_rt_File, 128);
     mc_rt_nelements = Table_Read_Handle(mc_rt_Table, mc_rt_hfile, mc_rt_block_number, mc_rt_max_lines);
+    strncpy(mc_rt_Table->filename, mc_rt_File, 128);
     mc_rt_Table->begin = mc_rt_begin;
     mc_rt_Table->end   = ftell(mc_rt_hfile);
     mc_rt_Table->filesize = (mc_rt_filesize>0 ? mc_rt_filesize : 0);
@@ -352,6 +355,7 @@
         || (mc_rt_line[mc_rt_i] == ';') || (mc_rt_line[mc_rt_i] == '/'))
         { /* line is a comment */
           mc_rt_flag_Store_into_header=1;
+          mc_rt_flag_In_array = 0;
         } else {
           double mc_rt_X;
 
@@ -412,7 +416,7 @@
                   } /* reading num: end if mc_rt_flag_In_array */
                   else
                   { /* reading num: passed selected block */
-                    if (mc_rt_block_number > mc_rt_block_Current_index)
+                    if (mc_rt_block_number < mc_rt_block_Current_index)
                     { /* we finished to extract block -> force end of file reading */
                       mc_rt_flag_End_Line      = 1;
                       mc_rt_flag_End_row_loop  = 1;
@@ -452,6 +456,7 @@
           /* exit line and file if passed desired block */
           if (mc_rt_block_number && mc_rt_block_number == mc_rt_block_Current_index) {
             mc_rt_flag_End_row_loop  = 1;
+
           }
         }
       } /* end: if fgets */
