@@ -9,11 +9,11 @@
 *
 * Written by: Emmanuel Farhi
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: McStas 1.5/<a href="http://www.ill.fr">ILL</a>
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
 *                                  by Kristian Nielsen and Peter Link
-* Modified by: EF, 2004. Renamed to Monochromator_curved
+* Modified by: EF, 2004. Upgraded to Monochromator_curved
 *
 * Double bent multiple crystal slabs with anisotropic gaussian mosaic.
 *
@@ -34,7 +34,8 @@
 *
 * When you rotate the component by A1 = asin(Q/2/Ki)*RAD2DEG, do not forget to
 * rotate the following components by A2=2*A1 (for 1st order) !
-* OBSOLETE: rather use optics/Monochromator_curved
+* OBSOLETE: rather use optics/Monochromator_curved. The main change resides in
+* the way mosaic is handled.
 *
 * Example: Curved_Monochromator(zwidth=0.01, yheight=0.01, gap=0.0005,
 *           NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)

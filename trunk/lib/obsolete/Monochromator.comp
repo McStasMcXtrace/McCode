@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: McStas 1.5
 * Modified by: EF, 2004. Upgraded to Monochromator_flat
 *
@@ -19,7 +19,8 @@
 * %D
 * NOTE: This component is obsolete. Use the component Mosaic_anisotropic
 * instead, which has the same parameters. For a more detailed monochromator
-* simulation, use the component Single_crystal.
+* simulation, use the component Single_crystal. The main change resides in
+* the way mosaic is handled.
 *
 * Flat monochromator which uses a small-mosaicity approximation as well as
 * the approximation vy^2 << vz^2 + vx^2.
