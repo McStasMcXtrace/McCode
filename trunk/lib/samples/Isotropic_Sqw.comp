@@ -34,12 +34,13 @@
 *   norm_sqw=-1 compute |S| from the density (refer to the Component Manual)
 *   norm_sqw>0  use     |S| = norm_sqw
 *   norm_sqw=0  compute |S| = \int S(q,w) dq dw from raw data files
-* The default and recommanded normalization is 'norm_sqw=-1'.
+* The default and recommanded normalization is 'norm_sqw=-1' for liquid-like
+* materials, but 'norm_sqw=0' is definitely a better choice for powders.
 *
 * Focusing on the relevant [q,w] data range corresponding to the instrument
-* setting can speed-up substantially the computation and prevent some neutrons
+* setting may improve computation accuracy and prevent some neutrons
 * to be removed when energy transfert is higher than actual neutron energy.
-* An automatic such process may be activated when 'auto_qw=1' (recommanded).
+* An automatic such process may be activated when 'auto_qw=1'.
 * Additionally, for single order scattering (order=1), you may restrict the
 * vertical spreading of the scattering area using d_phi parameter.
 *
@@ -79,6 +80,7 @@
 * then a matrix with one line per q axis value, containing Sqw values for
 * each energy axis value. Comments (starting with '#') and non numerical lines
 * are ignored and used to separate blocks. Sampling must be regular.
+* It is recommanded to use norm_sqw=-1
 *
 * Example:
 * # q axis values
@@ -110,7 +112,7 @@
 * or column indexes (starting from 1) given as comments in the file header
 * (e.g. '#column_j 4'). Refer to the PowderN component for more details.
 * Delta_d/d and Debye-Waller factor may be specified for all lines with the
-* 'powder_Dd' and 'powder_DW' parameters.
+* 'powder_Dd' and 'powder_DW' parameters. It is important to set norm_sqw=0
 *
 * Additionally a special [q,Sq] format is also defined with:
 *   powder_format=qSq
@@ -132,9 +134,10 @@
 * (traversing the hollow part) is not taken into account.
 *
 * %VALIDATION
-* For Vanadium incoherent scattering mode, V_sample, Single_crystal and
-* Isotropic_Sqw produce equivalent results, eventhough the two later are more
-* accurate (geometry, multiple scattering).
+* For Vanadium incoherent scattering mode, V_sample, PowderN, Single_crystal
+* and Isotropic_Sqw produce equivalent results, eventhough the two later are
+* more accurate (geometry, multiple scattering). Isotropic_Sqw gives same
+* powder patterns as PowderN, with an intensity lower by a factor 1 to 2.
 *
 * %P
 * INPUT PARAMETERS:
@@ -144,9 +147,9 @@
 * Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w)
 *                     Incoherent (self) part.
 *                     Use 0 or "" to scatter isotropically (V-like).
-* sigma_coh:[barns] Coherent Scattering cross-section. 0 to disable
-* sigma_inc:[barns] Incoherent Scattering cross-section. 0 to disable
-* sigma_abs:[barns] Absorption cross-section at 2200 m/s. 0 to disables
+* sigma_coh:[barns] Coherent Scattering cross-section.
+* sigma_inc:[barns] Incoherent Scattering cross-section.
+* sigma_abs:[barns] Absorption cross-section at 2200 m/s.
 * V_rho:     [AA-3] Density of atoms (nb atoms/unit cell V_0).
 * T:            [K] Temperature of sample, detailed balance
 *
@@ -161,10 +164,10 @@
 *
 * OPTIONAL PARAMETERS:
 * norm_sqw:     [1] When positive, the value is used as the integral of S(q,w)
-*                   Null value uses computed raw integral.
-*                   Any negative value will normalize on the density.
+*                   Null value uses computed raw integral (powders).
+*                   Any negative value will normalize on the density (liquids).
 * auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
-*                   to optimal setting whenever required.
+*                   to optimal setting whenever required (recommanded).
 * concentric:   [1] Indicates that this component in a hollow geometry
 *                   and may contain other components.
 *                   It should then be duplicated after the inside part.
@@ -184,6 +187,7 @@
 * wmax:       [meV] Maximum Energy value to use in S(q,w).
 * threshold:    [1] Value under which S(Q,w) is not accounted for.
 *                     to set according to the S(Q,w) values ,i.e. not too low.
+* interpolate:  [1] Performs (q,w) smoothing from S(q,w) if true (recommanded).
 *
 * POWDER ELASTIC SCATTERING PARAMETERS:
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
@@ -221,10 +225,11 @@ DEFINE COMPONENT Isotropic_Sqw
   DEFINITION PARAMETERS (Sqw_coh=0, Sqw_inc=0, powder_format=Undefined)
   SETTING PARAMETERS(radius_i=0,radius_o=0,thickness=0,
     xwidth=0, yheight=0, zthick=0,
-    qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=1,
+    qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
-    norm_sqw=-1, powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0)
+    norm_sqw=-1, powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
+    interpolate=1)
   OUTPUT PARAMETERS (VarSqw, columns)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -323,6 +328,7 @@ struct Sqw_sample_struct {
   double Temperature;
   double sqw_norm;
   char   sqw_auto;
+  char   sqw_interp;
 };
 
 #include <stdio.h>
@@ -467,9 +473,9 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
         if (i == size-1) list_count++;
       /*   if duplication index == previous multiplicity */
       /*      set back multiplicity of previous lines to 1 */
-        if (mult_count == list[list_count-1].j
-        || (mult_count == list[list_count].j && i == size-1)) {
-          printf("Isotropic_Sqw: %s: Set multiplicity to 1 for lines [%i:%i]\n"
+        if (Sqw->verbose_output > 1 && (mult_count == list[list_count-1].j
+        || (mult_count == list[list_count].j && i == size-1))) {
+          printf("Isotropic_Sqw: %s: Setting multiplicity to 1 for lines [%i:%i]\n"
                   "         (d-spacing %g is duplicated %i times)\n",
             Sqw->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
           for (index=list_count-mult_count; index<list_count; list[index++].j = 1);
@@ -519,7 +525,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
     if (!flag_qSq)
       for (i=0; i<size; i++)
         retTable[0].data[i]  = q_min + i*(q_max - q_min)/size;
-      for (i=0; i<list_count; i++) { /* loop on each Bragg peak */
+    for (i=0; i<list_count; i++) { /* loop on each Bragg peak */
       double peak_qmin, peak_qmax,factor,q;
       if (list[i].w > 0 && !flag_qSq) {
         peak_qmin = list[i].q*(1 - list[i].w*3);
@@ -527,9 +533,10 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       } else { /* Dirac peak, no width */
         peak_qmin = peak_qmax = list[i].q;
       }
-      factor = 2*(2*PI)*(2*PI)*(2*PI)*(2*PI)*Sqw->rho
-               *list[i].j*(list[i].DWfactor ? list[i].DWfactor : 1)
-               /(Sqw->type == 'c' ? Sqw->s_coh : Sqw->s_inc)*list[i].F2;
+
+      factor = list[i].j*(list[i].DWfactor ? list[i].DWfactor : 1)
+               *Sqw->rho*4*PI
+               /(Sqw->type == 'c' ? Sqw->s_coh : Sqw->s_inc)*list[i].F2/list[i].q;
       for (q=peak_qmin; q <= peak_qmax; q += q_step) {
         index = (long)floor(size*(q - q_min)/(q_max - q_min));
         if (index < 0) index=0;
@@ -545,6 +552,10 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       }
     } /* end for i */
     Table_Stat(&retTable[0]); Table_Stat(&retTable[1]); Table_Stat(&retTable[2]);
+    if (Sqw->sqw_norm < 0)
+      printf("Isotropic_Sqw: %s: Automatic S(q,w) normalization is NOT recommanded\n"
+             "WARNING        for Powders ! Intensity might be wrong (use norm_sqw=0).\n",
+      Sqw->compname);
   }
 
   return(retTable);
@@ -568,7 +579,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   long     i, j;
   char     flag=1; /* exit_flag */
   double   q, w, val, sum;
-  double   mat_density=0, mat_weight=0;
+  double   mat_density=0, mat_weight=0, mat_at_nb=1;
   double   alpha=1;
   long    *DOS_lookup;
   long   **QW_lookup;
@@ -625,6 +636,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     "V_rho",
     "density",
     "weight",
+    "nb_atoms",
     NULL);
   if (parsing) {
     if (parsing[0] && !Sqw->rho)   Sqw->rho    =1/atof(parsing[0]);
@@ -648,17 +660,17 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (parsing[18])                  Sqw->column_order[8]=atoi(parsing[18]);
     if (parsing[19])                  Sqw->column_order[7]=atoi(parsing[19]);
     if (parsing[20] && !Sqw->rho)     Sqw->rho    =atof(parsing[20]);
-    if (parsing[21] && !Sqw->rho)     mat_density =atof(parsing[21]);
-    if (parsing[22] && !Sqw->rho)     mat_weight  =atof(parsing[22]);
-
-    for (i=0; i<=22; i++) if (parsing[i]) free(parsing[i]);
+    if (parsing[21] )     mat_density =atof(parsing[21]);
+    if (parsing[22] )     mat_weight  =atof(parsing[22]);
+    if (parsing[23] )     mat_at_nb   =atof(parsing[23]);
+    for (i=0; i<=23; i++) if (parsing[i]) free(parsing[i]);
     free(parsing);
   }
 
-  if (!Sqw->rho && mat_density > 0 && mat_weight > 0) {
+  if (!Sqw->rho && mat_density > 0 && mat_weight > 0 && mat_at_nb > 0) {
     /* molar volume [cm^3/mol] = weight [g/mol] / density [g/cm^3] */
     /* atom density per Angs^3 = [mol/cm^3] * N_Avogadro *(1e-8)^3 */
-    Sqw->rho = mat_density/mat_weight/1e24*6.02214199e23;
+    Sqw->rho = mat_density/mat_weight/1e24*6.02214199e23/mat_at_nb;
     if (Sqw->verbose_output > 0) printf("Isotropic_Sqw: %s: Computing atom density V_rho=%g [AA^-3] from file %s\n", Sqw->compname, Sqw->rho, file);
   }
 
@@ -821,9 +833,9 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   if (Sqw_Data->alpha && Sqw->sqw_norm < 0) { /* apply normalization */
     if (Sqw->verbose_output > 0)
-      printf("Isotropic_Sqw: %s: Applying %g multiplication factor on %s |S|.\n",
+      printf("Isotropic_Sqw: %s: Applying %g multiplication factor on %scoherent |S|.\n",
         Sqw->compname, Sqw_Data->alpha,
-        (Sqw->type=='c' ? "coherent" : "incoherent"));
+        (Sqw->type=='c' ? "" : "in"));
     val *= Sqw_Data->alpha;
     sum *= Sqw_Data->alpha;
     for (i=0; i < (Sqw_Data->nb_q_data) ; Sqw_Data->Sq[i++] *= Sqw_Data->alpha);
@@ -843,8 +855,8 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   if (Sqw->verbose_output > 1 || !Sqw_Data->alpha)
-    printf("Isotropic_Sqw: %s: Generated %s S(Q)[%i], with norm |S| = %g\n",
-      Sqw->compname, (Sqw->type=='c' ? "coherent" : "incoherent"),
+    printf("Isotropic_Sqw: %s: Generated %scoherent S(Q)[%i], with norm |S| = %g\n",
+      Sqw->compname, (Sqw->type=='c' ? "" : "in"),
       Sqw_Data->nb_q_data, Sqw_Data->intensity_total);
 
   if (!Sqw_Data->alpha)
@@ -862,7 +874,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   Table_Stat(&Sqw_restrict);
 
   if (Sqw->verbose_output > 0) {
-    printf("Isotropic_Sqw: %s: Generated %s normalized %scoherent Sqw\n"
+    printf("Isotropic_Sqw: %s: Generated %s %scoherent Sqw\n"
            "                   q=[%g:%g] w=[%g:%g] |S|=%g size=[%ix%i] sigma=%g [barns]\n",
            Sqw->compname, file, (Sqw->type == 'i' ? "in" : ""),
            Sqw_Data->q_min, Sqw_Data->q_max,
@@ -1221,6 +1233,7 @@ INITIALIZE
   VarSqw.rho       = V_rho;
   VarSqw.sqw_norm  = norm_sqw;
   VarSqw.sqw_auto  = auto_qw;
+  VarSqw.sqw_interp= interpolate;
 
   /* PowderN compatibility members */
   VarSqw.Dd        = powder_Dd;
@@ -1422,14 +1435,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     /* are we next to the exit ? probably no scattering */
     if (VarSqw.my_s*d_path <= 4e-7) {
-      flag = 1; /* will do 1 - wi */
+      flag = 1;
+      p_mult *= 1 - wi; /* No interaction before the exit */
     }
     /* MC choice: Interaction or transmission ? */
     if (!flag && wi > 0 && (wi >= 1 || (tmp=rand01()) < wi)) { /* Interaction neutron/sample */
       p_mult *= ws; /* Update weight ; account for absorption and scatter */
     } else {
       flag = 1; /* Transmission : no interaction neutron/sample */
-      p_mult *= 1 - wi; /* No interaction before the exit */
       if (!VarSqw.type) VarSqw.type = 't';
     }
 
@@ -1466,7 +1479,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     }
     tmp *= (VarSqw.s_coh+VarSqw.s_inc);
 
-    flag=1;
+    flag=0;
     if (VarSqw.s_inc && tmp < VarSqw.s_inc) {
       /* CASE 1: incoherent case */
       if (!VarSqw.Data_inc.intensity) {
@@ -1480,25 +1493,26 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
         vx = u1x; vy = u1y; vz = u1z;
         vf = v; kf = k;
-        flag = 0;
         if (!VarSqw.type) VarSqw.type = 'v';
         SCATTER;
       } else {
         /* CASE 1b: incoherent Sqw from file */
-        if (VarSqw.Data_inc.intensity)
+        if (VarSqw.Data_inc.intensity) {
           Data_sqw = VarSqw.Data_inc;
-        else flag=0;
-        if (!VarSqw.type) VarSqw.type = 'i';
+          if (!VarSqw.type) VarSqw.type = 'i';
+          flag = 1;
+        }
       }
     } else if (VarSqw.s_coh && tmp > VarSqw.s_inc) {
       if (VarSqw.Data_coh.intensity) {
         /* CASE2: coherent case */
         Data_sqw = VarSqw.Data_coh;
-      } else flag=0;
-      if (!VarSqw.type) VarSqw.type = 'c';
+        if (!VarSqw.type) VarSqw.type = 'c';
+        flag = 1;
+      }
     }
 
-    if (flag) { /* not true when V-like scattering */
+    if (flag) { /* true when S(q,w) table exists (Data_sqw) */
 
       /* give us a limited number of tries for scattering */
       for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
@@ -1508,16 +1522,18 @@ do { /* Main interaction loop. Ends with intersect=0 */
         /* index for rand > cumul DOS */
         index_w = Sqw_search_DOS(Data_sqw, tmp);
         if (&(Data_sqw.DOS[index_w]) != NULL) {
-          if (index_w > 0 && Data_sqw.nb_w > 1) { /* interpolate linearly energy */
-            ratio_w = (tmp                           - Data_sqw.DOS[index_w-1].cumul_I)
-                     /(Data_sqw.DOS[index_w].cumul_I - Data_sqw.DOS[index_w-1].cumul_I);
-            /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
-            omega = (1-ratio_w)*Data_sqw.DOS[index_w-1].omega + ratio_w*Data_sqw.DOS[index_w].omega;
-          } else if (Data_sqw.nb_w > 1) {
-            ratio_w = (tmp                             - Data_sqw.DOS[index_w].cumul_I)
-                     /(Data_sqw.DOS[index_w+1].cumul_I - Data_sqw.DOS[index_w].cumul_I);
-            /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
-            omega = (1-ratio_w)*Data_sqw.DOS[index_w].omega + ratio_w*Data_sqw.DOS[index_w+1].omega;
+          if (VarSqw.sqw_interp) {
+            if (index_w > 0 && Data_sqw.nb_w > 1) { /* interpolate linearly energy */
+              ratio_w = (tmp                           - Data_sqw.DOS[index_w-1].cumul_I)
+                      /(Data_sqw.DOS[index_w].cumul_I - Data_sqw.DOS[index_w-1].cumul_I);
+              /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
+              omega = (1-ratio_w)*Data_sqw.DOS[index_w-1].omega + ratio_w*Data_sqw.DOS[index_w].omega;
+            } else if (Data_sqw.nb_w > 1) {
+              ratio_w = (tmp                             - Data_sqw.DOS[index_w].cumul_I)
+                      /(Data_sqw.DOS[index_w+1].cumul_I - Data_sqw.DOS[index_w].cumul_I);
+              /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
+              omega = (1-ratio_w)*Data_sqw.DOS[index_w].omega + ratio_w*Data_sqw.DOS[index_w+1].omega;
+            }
           } else
             omega = Data_sqw.DOS[index_w].omega;
         } else {
@@ -1546,29 +1562,31 @@ do { /* Main interaction loop. Ends with intersect=0 */
           continue; /* no Q value for this w choice */
         }
         if (&(Data_sqw.Q_proba_per_w[index_w]) != NULL) {
-          if (index_q > 0 && index_w > 0 && Data_sqw.nb_w > 1 && Data_sqw.nb_q > 1) {
-            /* bilinear interpolation on - side */
-            closer_w= (ratio_w > .5 ? index_w : index_w-1);
-            ratio_q = (tmp - Data_sqw.Q_proba_per_w[closer_w][index_q-1].cumul_proba)
-                     /(Data_sqw.Q_proba_per_w[closer_w][index_q].cumul_proba - Data_sqw.Q_proba_per_w[closer_w][index_q-1].cumul_proba);
-            q3 = Data_sqw.Q_proba_per_w[index_w]  [index_q].Q;
-            q1 = Data_sqw.Q_proba_per_w[index_w-1][index_q-1].Q;
-            q2 = Data_sqw.Q_proba_per_w[index_w]  [index_q-1].Q;
-            q4 = Data_sqw.Q_proba_per_w[index_w-1][index_q].Q;
-            q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
-              + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
-          } else if (index_q > 0 && Data_sqw.nb_q > 1) { /* bilinear interpolation on + side */
-            ratio_q = (tmp - Data_sqw.Q_proba_per_w[index_w][index_q-1].cumul_proba)
-                     /(Data_sqw.Q_proba_per_w[index_w][index_q].cumul_proba - Data_sqw.Q_proba_per_w[index_w][index_q-1].cumul_proba);
-            q1 = Data_sqw.Q_proba_per_w[index_w]  [index_q-1].Q;
-            q4 = Data_sqw.Q_proba_per_w[index_w]  [index_q].Q;
-            if (index_w < Data_sqw.nb_w-1 && Data_sqw.nb_w > 1) {
-              q3 = Data_sqw.Q_proba_per_w[index_w+1][index_q].Q;
-              q2 = Data_sqw.Q_proba_per_w[index_w+1][index_q-1].Q;
+          if (VarSqw.sqw_interp) {
+            if (index_q > 0 && index_w > 0 && Data_sqw.nb_w > 1 && Data_sqw.nb_q > 1) {
+              /* bilinear interpolation on - side */
+              closer_w= (ratio_w > .5 ? index_w : index_w-1);
+              ratio_q = (tmp - Data_sqw.Q_proba_per_w[closer_w][index_q-1].cumul_proba)
+                      /(Data_sqw.Q_proba_per_w[closer_w][index_q].cumul_proba - Data_sqw.Q_proba_per_w[closer_w][index_q-1].cumul_proba);
+              q3 = Data_sqw.Q_proba_per_w[index_w]  [index_q].Q;
+              q1 = Data_sqw.Q_proba_per_w[index_w-1][index_q-1].Q;
+              q2 = Data_sqw.Q_proba_per_w[index_w]  [index_q-1].Q;
+              q4 = Data_sqw.Q_proba_per_w[index_w-1][index_q].Q;
               q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
                 + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
-            } else
-              q = (1-ratio_q)*q1 + ratio_q*q4;
+            } else if (index_q > 0 && Data_sqw.nb_q > 1) { /* bilinear interpolation on + side */
+              ratio_q = (tmp - Data_sqw.Q_proba_per_w[index_w][index_q-1].cumul_proba)
+                      /(Data_sqw.Q_proba_per_w[index_w][index_q].cumul_proba - Data_sqw.Q_proba_per_w[index_w][index_q-1].cumul_proba);
+              q1 = Data_sqw.Q_proba_per_w[index_w]  [index_q-1].Q;
+              q4 = Data_sqw.Q_proba_per_w[index_w]  [index_q].Q;
+              if (index_w < Data_sqw.nb_w-1 && Data_sqw.nb_w > 1) {
+                q3 = Data_sqw.Q_proba_per_w[index_w+1][index_q].Q;
+                q2 = Data_sqw.Q_proba_per_w[index_w+1][index_q-1].Q;
+                q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
+                  + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
+              } else
+                q = (1-ratio_q)*q1 + ratio_q*q4;
+            }
           } else q = Data_sqw.Q_proba_per_w[index_w][index_q].Q;
         } else {
           if (VarSqw.verbose_output >= 3)
@@ -1614,8 +1632,6 @@ do { /* Main interaction loop. Ends with intersect=0 */
         NORM(u1x, u1y, u1z);
         NORM(u2x, u2y, u2z);
 
-        p_mult *= kf/k;
-
         break; /* exit for loop on success */
       } /* end for index_counter */
 
@@ -1634,10 +1650,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
       if (order == 1 && d_phi)
       { /* relate height of detector to the height on DS cone */
         tmp = sin(d_phi*DEG2RAD/2)/sin(2*theta);
-/* If full Debye-Scherrer cone is within d_phi, don't focus */
+        /* If full Debye-Scherrer cone is within d_phi, don't focus */
         if (tmp < -1 || tmp > 1) d_phi = 0;
-/* Otherwise, determine alpha to rotate from scattering plane
-     into d_phi focusing area*/
+        /* Otherwise, determine alpha to rotate from scattering plane
+           into d_phi focusing area*/
         else alpha = 2*asin(tmp);
       } /* else d_phi=0 from INIT */
       if (d_phi) { /* Focusing */
@@ -1673,10 +1689,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
       vz = vf*u0z;
 
       v = vf; k = kf;
-      /* nornalize to \int S or norm_sqw in selected [q,w] range */
-      p_mult *= (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity);
 
       SCATTER;
+
+      p_mult *= kf/k; /* factor 4*PI for solid angle implicitely in MC */
+      /* nornalize to \int S or norm_sqw in selected [q,w] range */
+      p_mult *= (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity);
 
       if      (fabs(omega) > VarSqw.w_max) VarSqw.w_max = fabs(omega);
       // else if (fabs(omega) < VarSqw.w_min) VarSqw.w_min = fabs(omega);
@@ -1685,6 +1703,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
       if (VarSqw.neutron_exit > VarSqw.maxloop
        && VarSqw.neutron_removed && VarSqw.sqw_auto) {
+        double old_qmax_inc = VarSqw.Data_inc.q_max;
+        double old_qmax_coh = VarSqw.Data_coh.q_max;
+        double old_wmax_inc = VarSqw.Data_inc.w_max;
+        double old_wmax_coh = VarSqw.Data_coh.w_max;
         if (VarSqw.verbose_output)
           printf("Isotropic_Sqw: %s: %li events removed out of %li.\n"
                  "INFO:          Optimizing qmax=%g wmax=%g\n",
@@ -1696,8 +1718,18 @@ do { /* Main interaction loop. Ends with intersect=0 */
         VarSqw.Data_inc.w_max = VarSqw.Data_coh.w_max = VarSqw.w_max;
         VarSqw.sqw_auto = 2;
         if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
-          printf("Isotropic_Sqw: %s: ERROR re-importing data files (Sqw_init from TRACE)\n",NAME_CURRENT_COMP);
-          exit(0);
+
+          VarSqw.Data_inc.q_max =  old_qmax_inc;
+          VarSqw.Data_coh.q_max =  old_qmax_coh;
+          VarSqw.Data_inc.w_max =  old_wmax_inc;
+          VarSqw.Data_coh.w_max =  old_wmax_inc;
+          VarSqw.q_max = FLT_MAX; /* restore full (q,w) range */
+          VarSqw.w_max = FLT_MAX;
+          if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
+            printf("Isotropic_Sqw: %s: ERROR re-importing data files (Sqw_init from TRACE)\n",NAME_CURRENT_COMP);
+            exit(0);
+          } else
+            printf("Isotropic_Sqw: %s: Warning (q,w) range optimization failed. Ignoring.\n",NAME_CURRENT_COMP);
         }
         VarSqw.sqw_auto = 0;
       }
@@ -1817,7 +1849,7 @@ FINALLY
           NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.neutron_exit, VarSqw.maxloop);
   if (VarSqw.neutron_pmult)
     printf("Isotropic_Sqw: %s: %li neutron events (out of %li) reached\n"
-           "WARNING        unrealistic weight. The S(q,w) norm is probably too high\n",
+           "WARNING        unrealistic weight. The S(q,w) norm might be too high\n",
           NAME_CURRENT_COMP, VarSqw.neutron_pmult, VarSqw.neutron_exit);
 
 /* end FINALLY */
