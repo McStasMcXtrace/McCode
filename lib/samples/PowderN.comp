@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -86,8 +86,8 @@
 * radius:   Radius of sample in (x,z) plane [m]
 * yheight:  Height of sample y direction [m]
 * Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
-* sigma_abs:Absorption cross section per unit cell at 2200 m/s [fm^2]
-* sigma_inc:Incoherent cross section per unit cell [fm^2]
+* sigma_abs:Absorption cross section per unit cell at 2200 m/s [barns]
+* sigma_inc:Incoherent cross section per unit cell [barns]
 * reflections: Input file for reflections.
 *                Use only incoherent scattering if NULL or "" [string]
 * format:   name of the format, or list of column indexes
