@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -105,6 +105,10 @@ TRACE
 
   /* Propagate neutron to guide entrance. */
   PROP_Z0;
+  /* Scatter here to ensure that fully transmitted neutrons will not be
+     absorbed in a GROUP construction, e.g. all neutrons - even the 
+     later absorbed ones are scattered at the guide entry. */
+  SCATTER;
   if(x <= -whalf || x >= whalf || y <= -hhalf || y >= hhalf)
     ABSORB;
   for(;;)
