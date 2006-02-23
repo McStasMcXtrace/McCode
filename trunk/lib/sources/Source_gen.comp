@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -129,32 +129,45 @@ INITIALIZE
     fprintf(stderr,"Source_gen: Error: Please precise source target (xw, yh)\n");
     exit(-1);
   }
-  if ((radius < 0) || (h < 0) || (w < 0))
-    gaussian = 1;
-  else
-    gaussian = 0;
-
-  if ((Emin != 0) && (Emax != 0))
-  { E0 = (Emin+Emax)/2; dE=fabs(Emin-Emax)/2; }
-  if ((E0 != 0) && (dE != 0))
+  if (Emin < 0 || Emax < 0 || Lmin < 0 || Lmax < 0 || E0 < 0 || dE < 0 || Lambda0 < 0 || dLambda < 0)
   {
-    Lmin = sqrt(81.81/(E0+dE)); /* AAngstroem */
+    fprintf(stderr,"Source_gen: Error: Negative average or range values for wavelength or energy encountered\n");
+    exit(-1);
+  }
+  if ((Emin == 0 && Emax > 0) || (dE > 0 && dE >= E0))
+  {
+    fprintf(stderr,"Source_gen: Error: minimal energy cannot be less or equal zero\n");
+    exit(-1);
+  }
+
+  if ((Emax >= Emin) && (Emin > 0))
+  { E0 = (Emax+Emin)/2; 
+    dE = (Emax-Emin)/2; 
+  }
+  if ((E0 > dE) && (dE >= 0))
+  {
+    Lmin = sqrt(81.81/(E0+dE)); /* Angstroem */
     Lmax = sqrt(81.81/(E0-dE));
   }
-  if ((Lmin != 0) && (Lmax != 0))
-  { Lambda0 = (Lmin+Lmax)/2; dLambda=fabs(Lmin-Lmax)/2; }
-  if ((Lambda0 != 0) || (dLambda != 0))
-  { lambda_0 = Lambda0; d_lambda=dLambda; }
+  if (Lmax > 0) 
+  { Lambda0 = (Lmax+Lmin)/2; 
+    dLambda = (Lmax-Lmin)/2; 
+  }
+  if ((Lambda0 >= dLambda) && (dLambda > 0))
+  { lambda_0 = Lambda0; 
+    d_lambda = dLambda; 
+    if (verbose) fprintf(stdout,"Wavelength range %.3f +/- %.3f AA \n", Lambda0, dLambda);
+  }
+  else
+  { fprintf(stderr,"Source_gen: Error: Wavelength range %.3f +/- %.3f AA calculated \n", Lambda0, dLambda);
+    fprintf(stderr,"- whole wavelength range must be >= 0 \n");
+    fprintf(stderr,"- range must be > 0; otherwise intensity gets zero, use other sources in this case \n\n");
+    exit(-1);
+  } 
 
   radius = fabs(radius); w=fabs(w); h=fabs(h);  I1=fabs(I1);
   lambda_0=fabs(lambda_0); d_lambda=fabs(d_lambda);
   xw = fabs(xw); yh=fabs(yh); dist=fabs(dist);
-
-  if ((lambda_0-d_lambda <= 0) || (lambda_0+d_lambda <= 0))
-  {
-    fprintf(stderr,"Source_gen: Warning: Wavelength will reach negative values\n");
-
-  }
 
   if (dist == 0)
   {
@@ -162,7 +175,7 @@ INITIALIZE
   }
 
   delta_lambda = 2*d_lambda;
-  Lmin = lambda_0 - d_lambda; /* AAngstroem */
+  Lmin = lambda_0 - d_lambda; /* Angstroem */
   Lmax = lambda_0 + d_lambda;
 
   if (I1 != 0)
@@ -216,16 +229,16 @@ INITIALIZE
     else
       printf("(square)");
     printf("\n            spectra ");
-    printf("%.2f to %.2f AA (%.2f to %.2f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
+    printf("%.3f to %.3f AA (%.3f to %.3f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
     if (gaussian)
       printf(", gaussian beam");
     printf("\n");
     if (T1 != 0)
-      printf("            T1=%.1f K (%.2f AA)", T1, lambda0);
+      printf("            T1=%.1f K (%.3f AA)", T1, lambda0);
     if (T2*I2 != 0)
-      printf(", T2=%.1f K (%.2f AA)", T2, lambda0b);
+      printf(", T2=%.1f K (%.3f AA)", T2, lambda0b);
     if (T3*I3 != 0)
-      printf(", T3=%.1f K (%.2f AA)", T3, lambda0c);
+      printf(", T3=%.1f K (%.3f AA)", T3, lambda0c);
     if (T1) printf("\n");
     if (T1 && I1) printf("  Flux is dPhi/dLambda in [n/s/AA].\n");
     else          printf("  Flux is Phi in [n/s].\n");
