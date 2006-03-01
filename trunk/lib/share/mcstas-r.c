@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.124 $
+* Version: $Revision: 1.125 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.124 2005-12-12 13:43:14 farhi Exp $
+* $Id: mcstas-r.c,v 1.125 2006-03-01 16:06:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.124  2005/12/12 13:43:14  farhi
+* remove gridding on Matlab in-line plots
+*
 * Revision 1.123  2005/11/08 14:20:33  farhi
 * misprint
 *
@@ -3699,8 +3702,13 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
 
   if (D>=0)
   {
-    t_in  = (-(2*vz*z + 2*vx*x) - sqrt(D))/(2*(vz*vz + vx*vx));
-    t_out = (-(2*vz*z + 2*vx*x) + sqrt(D))/(2*(vz*vz + vx*vx));
+    if (vz*vz + vx*vx) {
+      t_in  = (-(2*vz*z + 2*vx*x) - sqrt(D))/(2*(vz*vz + vx*vx));
+      t_out = (-(2*vz*z + 2*vx*x) + sqrt(D))/(2*(vz*vz + vx*vx));
+    } else if (vy) { /* trajectory parallel to cylinder axis */
+      t_in = (y + h/2)/vy;
+      tout = (y - h/2)/vy;
+    } else return 0;
     y_in = vy*t_in + y;
     y_out =vy*t_out + y;
 
