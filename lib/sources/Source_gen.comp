@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -72,16 +72,18 @@
 *                 If dist=0.0, xw = horz. div  in deg
 * yh:     [m]   Height(y) of target.
 *                 If dist=0.0, yh = vert. div in deg
-* E0:     [meV] Mean energy of neutrons. You may also use Lambda0.
-* dE:     [meV] Energy spread of neutrons, half width.
 *
-* Optional parameters:
-* Lambda0:  [AA]  Mean wavelength of neutrons.
-* dLambda:  [AA]  Wavelength spread of neutrons,half width
+* Energy or wavelength range must be defined by giving min and max value or average and spread:
 * Emin:     [meV] Minimum energy of neutrons
 * Emax:     [meV] Maximum energy of neutrons
+* E0:       [meV] Mean energy of neutrons.
+* dE:       [meV] Energy spread of neutrons, half width.
 * Lmin:     [AA]  Minimum wavelength of neutrons
 * Lmax:     [AA]  Maximum wavelength of neutrons
+* Lambda0:  [AA]  Mean wavelength of neutrons.
+* dLambda:  [AA]  Wavelength spread of neutrons,half width
+*
+* Optional parameters:
 * h:        [m]   Source y-height, then does not use radius parameter
 * w:        [m]   Source x-width, then does not use radius parameter
 * length:   [m]   Source z-length, not anymore flat
@@ -103,7 +105,7 @@
 
 DEFINE COMPONENT Source_gen
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=0.0, dist=57.296, xw=0, yh=0, E0=14.68, dE=0, Lambda0=2.36, dLambda=0.1627, I1=0, h=0, w=0, gaussian=0, verbose=0, T1=0,Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
+SETTING PARAMETERS (radius=0.0, dist=57.296, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0, h=0, w=0, gaussian=0, verbose=0, T1=0,Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
 OUTPUT PARAMETERS (p_in,lambda0, lambda02, L2P,lambda_0,d_lambda,lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
