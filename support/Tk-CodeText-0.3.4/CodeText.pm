@@ -494,12 +494,11 @@ sub selectionModify {
 	if (@ranges eq 2) {
 		my $start = $cw->index($ranges[0]);
 		my $end = $cw->index($ranges[1]);
-#		print "doing from $start to $end\n";
 		while ($cw->compare($start, "<", $end)) {
-#			print "going to do something\n";
-			if ($mode) {
-				if ($cw->get("$start linestart", "$start linestart + 1 chars") eq $char) {
-					$cw->delete("$start linestart", "$start linestart + 1 chars");
+			if ($mode == 1) {
+			    my $len = length($char);
+			    if ($cw->get("$start linestart", "$start linestart + $len chars") eq $char) {
+					$cw->delete("$start linestart", "$start linestart + $len chars");
 				}
 			} else {
 				$cw->insert("$start linestart", $char)
