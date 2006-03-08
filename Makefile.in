@@ -194,7 +194,14 @@ pgplot:
 vrml:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-
+PGPLOT:
+	make pgplot
+Matlab:
+	make matlab
+Scilab:
+	make scilab
+VRML:
+	make vrml
 
 test:
 	./mcrun.fixpl --test
