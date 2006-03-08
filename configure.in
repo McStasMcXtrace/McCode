@@ -63,17 +63,20 @@ fi
 if test "$SCILAB" = "no" ; then
   if test "$MATLAB" = "no" ; then
     if test "$PGPLOT" = "no" ; then
-      echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT) could be found !"
+      if test "$VRMLVIEW" = "no" ; then
+        echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT, VRML) could be found !"
+      fi
     fi
   fi
 fi
 echo ""
 echo "To setup the plotting environment, execute either"
 echo "  make config (automaticly selects plotter, "
-echo "       prefers Scilab before Matlab before PGPLOT)"
+echo "       prefers Scilab before Matlab before PGPLOT before VRML)"
 echo "  make scilab (selects scilab)"
 echo "  make matlab (selects matlab)"
 echo "  make pgplot (selects pgplot)"
+echo "  make vrml   (selects vrml)"
 echo ""
 echo "After plotter config, build and install McStas by executing"
 echo "make; make install"

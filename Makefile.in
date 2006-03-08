@@ -48,6 +48,7 @@ BISONFLAGS = -v -d
 SCILAB = @SCILAB@
 MATLAB = @MATLAB@
 PGPLOT = @PGPLOT@
+VRML = @VRMLVIEW@
 
 XTERM = @TERM@
 
@@ -168,6 +169,9 @@ lex.yy.c: instrument.l
 
 # Prefer Scilab over Matlab over PGPLOT
 config: 
+	if [ $(VRML) != no ]; then \
+		make vrml; \
+	fi;
 	if [ $(PGPLOT) != no ]; then \
 		make pgplot; \
 	fi; \
@@ -187,6 +191,10 @@ matlab:
 pgplot:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'McStas'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
+vrml:
+	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
+	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
+
 
 test:
 	./mcrun.fixpl --test
