@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -93,8 +93,13 @@
 * I2:       [1/(cm**2*st*AA)] Second Maxwellian Source flux
 * T3:       [K]   Third Maxwellian source Temperature, 0=none
 * I3:       [1/(cm**2*st*AA)] Third Maxwellian Source flux
+* flux_file:[str] name of a file that contains the wavelength distribution of the flux in [1/(s*cm**2*st*AA)]
+*                 if a file is given, temperature and intensity values are ignored
 * gaussian: [0/1] Use gaussian beam, normal distributions
 * verbose:  [0/1] display info about the source. -1 unactivate source.
+*
+* Output parameters:
+* jmax:     [1]   number of data points in flux distribution array
 *
 * %L
 * <a href="http://www.ill.fr/Yellowbook">The ILL Yellow book</a>
@@ -103,23 +108,57 @@
 * %E
 ******************************************************************************/
 
+
 DEFINE COMPONENT Source_gen
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=0.0, dist=57.296, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0, h=0, w=0, gaussian=0, verbose=0, T1=0,Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
-OUTPUT PARAMETERS (p_in,lambda0, lambda02, L2P,lambda_0,d_lambda,lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc)
+DEFINITION PARAMETERS (string flux_file="")
+SETTING PARAMETERS (radius=0.0, dist=57.296, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0, h=0, w=0, gaussian=0, verbose=0, T1=0,
+                    Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
+OUTPUT PARAMETERS (p_in,lambda0, lambda02, L2P,lambda_0,d_lambda,lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc, jmax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+
+SHARE
+%{
+ double InterpLog(double lambda, double* pTabX, double* pTabF, int num_lines)
+ {
+   double ln_value;
+   short  j=0;
+   static short n_err=0;
+   
+   while (pTabX[j+1] < lambda && j+1 < num_lines) 
+   {	j++;
+   }
+   if (j+1 < num_lines)
+   {	/* linear  extrapolation (of logarithmic values) */ 
+     ln_value = pTabF[j] + (pTabF[j+1]-pTabF[j]) / (pTabX[j+1]-pTabX[j]) * (lambda-pTabX[j]);
+   }
+   else
+   /* read error: wavelength larger than all values in the distribution file */ 
+   { if (n_err==0) fprintf(stderr,"Source_gen: Warning: used wavelength range exceed range given in distribution file\n");
+     n_err++;
+   }
+   
+   return exp(ln_value);
+ }
+%}
 
 DECLARE
 %{
  double p_in;
  double lambda_0=0,d_lambda=0;
- double lambda0, lambda02, L2P; /* first Maxwellian source */
+ double lambda0, lambda02, L2P;     /* first Maxwellian source */
  double lambda0b, lambda02b, L2Pb;  /* second Maxwellian source */
  double lambda0c, lambda02c, L2Pc;  /* third Maxwellian source */
+ double lmbd[512], ln_flux[512];    /* arrays containing flux distribution              */
+ int    jmax;                       /* number of data points in flux distribution array */
 %}
+
 INITIALIZE
 %{
-  double factor, delta_lambda, source_area, k;
+  double delta_lambda, source_area, k, flux;
+  FILE*  pFile=NULL;
+  char   sLine[128];
+  int    j=0;
 
   if (radius == 0 && h == 0 && w == 0)
   {
@@ -180,48 +219,71 @@ INITIALIZE
   Lmin = lambda_0 - d_lambda; /* Angstroem */
   Lmax = lambda_0 + d_lambda;
 
-  if (I1 != 0)
+  if ((I1 > 0  && T1 > 0) || strlen(flux_file) > 0)
   {
-
     if ((h == 0) || (w == 0))
       source_area = radius*radius*PI*1e4; /* circular cm^2 */
     else
       source_area = h*w*1e4; /* square cm^2 */
-    factor = I1*source_area*delta_lambda;
-    p_in = factor;  /* p_in = (4*hdiv*vdiv)*factor; */
+    p_in = source_area*delta_lambda;
   }
   else
     p_in = 1.0/4/PI; /* Small angle approx. */
   p_in /= mcget_ncount();
 
-
-  k  = 1.38066e-23; /* k_B */
-  if (T1 > 0)
+  if (strlen(flux_file) > 0)
   {
-    lambda0  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T1);
-    lambda02 = lambda0*lambda0;
-    L2P      = 2*lambda02*lambda02;
+    pFile = fopen(flux_file,"rt");
+    if (pFile)
+    {
+      while(!feof(pFile) && j < 512)
+      {
+        fgets (sLine, sizeof(sLine)-1, pFile);
+        if (strlen(sLine) > 0)
+        { sscanf(sLine, "%lf %le", &lmbd[j], &flux);
+          ln_flux[j] = log(flux);
+          strcpy(sLine,"");
+          j++;
+        }
+      }
+      jmax=j;
+      fclose(pFile);
+    }
+    else
+    { fprintf(stderr,"file %s could not be opened to read flux distribution\n\n", flux_file);
+      exit(-1);
+    }
   }
   else
-    { lambda0 = lambda_0; }
+  { 
+    k  = 1.38066e-23; /* k_B */
+    if (T1 > 0)
+    {
+      lambda0  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T1);
+      lambda02 = lambda0*lambda0;
+      L2P      = 2*lambda02*lambda02;
+    }
+    else
+      { lambda0 = lambda_0; }
 
-  if (T2 > 0)
-  {
-    lambda0b  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T2);
-    lambda02b = lambda0b*lambda0b;
-    L2Pb      = 2*lambda02b*lambda02b;
-  }
-  else
-    { lambda0b = lambda_0; }
+    if (T2 > 0)
+    {
+      lambda0b  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T2);
+      lambda02b = lambda0b*lambda0b;
+      L2Pb      = 2*lambda02b*lambda02b;
+    }
+    else
+      { lambda0b = lambda_0; }
 
-  if (T3 > 0)
-  {
-    lambda0c  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T3);
-    lambda02c = lambda0c*lambda0c;
-    L2Pc      = 2*lambda02c*lambda02c;
+    if (T3 > 0)
+    {
+      lambda0c  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T3);
+      lambda02c = lambda0c*lambda0c;
+      L2Pc      = 2*lambda02c*lambda02c;
+    }
+    else
+      { lambda0c = lambda_0; }
   }
-  else
-    { lambda0c = lambda_0; }
 
   if (verbose == 1)
   {
@@ -235,20 +297,28 @@ INITIALIZE
     if (gaussian)
       printf(", gaussian beam");
     printf("\n");
-    if (T1 != 0)
-      printf("            T1=%.1f K (%.3f AA)", T1, lambda0);
-    if (T2*I2 != 0)
-      printf(", T2=%.1f K (%.3f AA)", T2, lambda0b);
-    if (T3*I3 != 0)
-      printf(", T3=%.1f K (%.3f AA)", T3, lambda0c);
-    if (T1) printf("\n");
-    if (T1 && I1) printf("  Flux is dPhi/dLambda in [n/s/AA].\n");
-    else          printf("  Flux is Phi in [n/s].\n");
+    if (strlen(flux_file) > 0)
+    { printf("  File %s for flux distribution used. Flux is dPhi/dLambda in [n/s/AA]. \n", flux_file);
+    }
+    else if (T1 && I1)
+    { if (T1 != 0)
+        printf("            T1=%.1f K (%.3f AA)", T1, lambda0);
+      if (T2*I2 != 0)
+        printf(", T2=%.1f K (%.3f AA)", T2, lambda0b);
+      if (T3*I3 != 0)
+        printf(", T3=%.1f K (%.3f AA)", T3, lambda0c);
+      if (T1) printf("\n");
+      printf("  Flux is dPhi/dLambda in [n/s/AA].\n");
+    }
+    else                               
+    { printf("  Flux is Phi in [n/s].\n");
+    }
   }
   else
     if (verbose == -1)
       printf("Source_gen: component %s unactivated", NAME_CURRENT_COMP);
 %}
+
 TRACE
 %{
   double theta0,phi0,theta1,phi1,chi,theta,phi,v,r, lambda;
@@ -304,25 +374,30 @@ TRACE
     /* Assume linear distribution */
     lambda = lambda_0+d_lambda*randpm1();
     if (lambda <= 0) ABSORB;
-    lambda2 = lambda*lambda;
-    lambda5 = lambda2*lambda2*lambda;
 
     v = K2V*(2*PI/lambda);
 
-    p *= p_in*fabs((theta1- theta0)*(phi1  - phi0));
+    p = p_in * fabs((theta1 - theta0)*(phi1 - phi0));
 
-    if (T1 > 0)
+    if (strlen(flux_file) > 0)
     {
-            Maxwell= L2P/lambda5*exp(-lambda02/lambda2);  /* 1/AA */
-            if ((T2 > 0) && (I1 != 0))
-            {
-              Maxwell += (I2/I1)*L2Pb/lambda5*exp(-lambda02b/lambda2);
-            }
-            if ((T3 > 0) && (I1 != 0))
-            {
-              Maxwell += (I3/I1)*L2Pc/lambda5*exp(-lambda02c/lambda2);
-            }
-            p *= Maxwell;
+       p *= InterpLog(lambda, lmbd, ln_flux, jmax); 
+    }
+    else if (T1 > 0 && I1 > 0)
+    {
+      lambda2 = lambda*lambda;
+      lambda5 = lambda2*lambda2*lambda;
+      Maxwell = I1 * L2P/lambda5 * exp(-lambda02/lambda2);  /* 1/AA */
+
+      if ((T2 > 0) && (I2 > 0))
+      {
+        Maxwell += I2 * L2Pb/lambda5 * exp(-lambda02b/lambda2);
+      }
+      if ((T3 > 0) && (I3 > 0))
+      {
+        Maxwell += I3 * L2Pc/lambda5 * exp(-lambda02c/lambda2);
+      }
+      p *= Maxwell;
     }
 
     /* Perform the correct treatment - no small angle approx. here! */
