@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -83,6 +83,7 @@ INITIALIZE
         exit(-1); }
       if (!omega) {
 	fprintf(stderr,"DiskChopper: %s WARNING: chopper frequency is 0!\n", NAME_CURRENT_COMP);
+	omega = 1e-15; /* We should actually use machine epsilon here... */
       }
       if (!(abs_out==1)) {
 	fprintf(stderr,"DiskChopper: %s WARNING: chopper will NOT absorb neutrons outside radius R\n", NAME_CURRENT_COMP);
@@ -100,10 +101,16 @@ INITIALIZE
       if (h == 0) {
 	h=R;
       }
-      /* Calulate t_0 from phi_0 */
+      /* Calulate t_0 from phi_0 and vice versa*/
       if (phi_0) {
+	if (t_0) {
+	  fprintf(stderr,"DiskChopper: %s WARNING: t_0 AND phi_0 specified. Using phi_0 setting\n", NAME_CURRENT_COMP);  
+	}
+	phi_0*=DEG2RAD;
 	t_0=phi_0/omega;
-      }
+      } else {
+	phi_0=t_0*omega;
+      } 
       
       /* Time from opening of slit to next opening of slit */
       Tg=2*PI/fabs(omega)/n;
@@ -166,8 +173,8 @@ MCDISPLAY
   
   for (j=0; j<n; j++) {
     /* Angular start/end of slit */
-    thetas[0] = j*(theta_0+(Tg-To)*omega) - theta_0/2;
-    thetas[3] = j*(theta_0+(Tg-To)*omega) + theta_0/2;
+    thetas[0] = j*(theta_0+(Tg-To)*omega) - theta_0/2 + phi_0;
+    thetas[3] = j*(theta_0+(Tg-To)*omega) + theta_0/2 + phi_0;
     /* Angular start/end of beamstop (possibly identical) */
     thetas[1] = thetas[0] + (theta_0 - theta_1)/2;
     thetas[2] = thetas[1] + theta_1;
