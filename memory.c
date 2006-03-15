@@ -16,7 +16,7 @@
 *
 * Memory management functions.
 *
-*	$Id: memory.c,v 1.18 2004-09-21 12:23:50 farhi Exp $
+*       $Id: memory.c,v 1.19 2006-03-15 15:52:15 farhi Exp $
 *
 *******************************************************************************/
 
@@ -36,7 +36,7 @@
 void *
 mem(size_t size)
 {
-  void *p = calloc(1, size);	/* Allocate and clear memory. */
+  void *p = calloc(1, size);    /* Allocate and clear memory. */
   if(p == NULL)
     fatal_error("memory exhausted during allocation of size %d.", size);
   return p;
@@ -93,11 +93,11 @@ str_cat(char *first, ...)
   va_list ap;
   int size;
   char *arg;
-  
-  size = 1;			/* Count final '\0'. */
+
+  size = 1;                     /* Count final '\0'. */
   va_start(ap, first);
   for(arg = first; arg != NULL; arg = va_arg(ap, char *))
-    size += strlen(arg);	/* Calculate string size. */
+    size += strlen(arg);        /* Calculate string size. */
   va_end(ap);
   s = mem(size);
   size = 0;
@@ -132,25 +132,25 @@ str_quote(char *string)
     char *p = string;
 
     if(pass == 0)
-      len = 0;			/* Prepare to compute length */
+      len = 0;                  /* Prepare to compute length */
     else
-      q = res = mem(len + 1);	/* Allocate buffer */
+      q = res = mem(len + 1);   /* Allocate buffer */
     /* Notice the cast to unsigned char; without it, the isprint(c) below will
        fail for characters with negative plain char values. */
     while((c = (unsigned char)(*p++)))
     {
       ptr = strchr(badchars, c);
       if(ptr != NULL)
-	sprintf(new, "\\%c", quotechars[ptr - badchars]);
+        sprintf(new, "\\%c", quotechars[ptr - badchars]);
       else if(isprint(c))
-	sprintf(new, "%c", c);
+        sprintf(new, "%c", c);
       else
-	sprintf(new, "\\%03o", c);
+        sprintf(new, "\\%03o", c);
       if(pass == 0)
-	len += strlen(new);	/* Count in length */
+        len += strlen(new);     /* Count in length */
       else
-	for(ptr = new; (*q = *ptr) != 0; ptr++)
-	  q++;			/* Copy over chars */
+        for(ptr = new; (*q = *ptr) != 0; ptr++)
+          q++;                  /* Copy over chars */
     }
   }
   return res;
@@ -166,7 +166,7 @@ str_free(char *string)
   memfree(string);
 }
 
-#ifdef MCSTAS_H
+#ifndef MCFORMAT
 
 struct Pool_header
   {
@@ -195,7 +195,7 @@ pool_free(Pool p)
 {
   List_handle liter;
   void *mem;
-  
+
   liter = list_iterate(p->list);
   while(mem = list_next(liter))
   {
