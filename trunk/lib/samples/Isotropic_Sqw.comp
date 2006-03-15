@@ -45,7 +45,7 @@
 * vertical spreading of the scattering area using d_phi parameter.
 *
 * If you use this component and produce valuable scientific results, please
-* cite authors with references bellow (in Links).
+* cite authors with references bellow (in <a href="#links">Links</a>).
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or a hollow cylinder/sphere.
@@ -137,7 +137,7 @@
 * For Vanadium incoherent scattering mode, V_sample, PowderN, Single_crystal
 * and Isotropic_Sqw produce equivalent results, eventhough the two later are
 * more accurate (geometry, multiple scattering). Isotropic_Sqw gives same
-* powder patterns as PowderN, with an intensity lower by a factor 1 to 2.
+* powder patterns as PowderN, with an intensity within 20 %.
 *
 * %P
 * INPUT PARAMETERS:
@@ -394,7 +394,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   size = sqwTable.rows;
   if (Sqw->verbose_output > 0) Table_Info(sqwTable);
   if (Sqw->verbose_output > 0)
-    printf("Isotropic_sqw: Converting %d powder lines from %s into S(q,w) data\n",
+    printf("Isotropic_sqw: Converting %ld powder lines from %s into S(q,w) data\n",
         size, sqwTable.filename);
   /* allocate line_data array */
   list = (struct line_data*)malloc(size*sizeof(struct line_data));
@@ -562,6 +562,97 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 } /* Sqw_read_PowderN */
 
 /*****************************************************************************
+*  Sqw_search_root: Search for the roots of A*x**2 + B*x + C
+*   The roots are returned as x1 and x2
+* Used in : TRACE (1)
+*****************************************************************************/
+int Sqw_search_root(double A, double B, double C,
+             double *x1, double *x2)
+
+{
+
+  double delta, sqrtdelta, inv_2A;
+  int    OK = 0;
+
+  if (fabs(A) < 1E-10) {
+    if (B) {  *x1 = -C/B; *x2 = *x1; OK=3; }
+    return 1;
+  } else {
+    delta = B*B - 4*A*C;
+    if (delta < 0) {
+      /* Imaginary roots */
+      OK=0;
+    } else {
+      /* Real roots */
+      sqrtdelta = sqrt(delta);
+      inv_2A = 1/(2*A);
+      *x1 = inv_2A*(-B - sqrtdelta);
+      *x2 = inv_2A*(-B + sqrtdelta);
+      OK = 1;
+    }
+    return(OK);
+  }
+}
+
+/*****************************************************************************
+*  Sqw_search_DOS: For a given random number 'randnum', search for the bin
+*   containing  the corresponding Sqw->DOS
+* Used in : TRACE (1)
+*****************************************************************************/
+int Sqw_search_DOS(struct Sqw_Data_struct Sqw, double randnum)
+{
+  int i=0;
+
+  if (randnum <0) randnum=0;
+  if (randnum >1) randnum=1;
+
+  if (Sqw.DOS_lookup) {
+    i = Sqw.DOS_lookup[(long)floor(randnum*Sqw.lookup_length)]-1;
+    if (i<0) i=0;
+  }
+
+  while (i < Sqw.nb_w && (&(Sqw.DOS[i]) != NULL) && (randnum > Sqw.DOS[i].cumul_I))
+      i++;
+  if (i >= Sqw.nb_w) i = Sqw.nb_w;
+
+  if (&(Sqw.DOS[i]) == NULL)
+  {
+      fprintf(stderr, "Isotropic_Sqw: No corresponding value in the DOS. randnum too big.\n");
+      fprintf(stderr, "  i=%i ; randnum=%f ; Sqw.DOS[i-1].cumul_I=%f (Sqw_search_DOS)\n",
+            i, randnum, Sqw.DOS[i-1].cumul_I);
+      return i-1;
+  }
+  else
+      return (i < Sqw.nb_w ? i : Sqw.nb_w-1);
+}
+
+/*****************************************************************************
+*  Sqw_search_Q_proba_per_w: For a given random number randnum, search for
+*   the bin containing the corresponding Sqw.DOS in the Q probablility grid
+* Used in : TRACE (1)
+*****************************************************************************/
+int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw,
+                             double randnum, int index)
+{
+  int i=0;
+
+  if (Sqw.QW_lookup && Sqw.QW_lookup[index]) {
+    i = Sqw.QW_lookup[index][(long)floor(randnum*Sqw.lookup_length)]-1;
+    if (i<0) i=0;
+  }
+
+  while (i < Sqw.nb_q && (&(Sqw.Q_proba_per_w[index][i]) != NULL)
+    && (randnum > Sqw.Q_proba_per_w[index][i].cumul_proba)) {
+      i++;
+  }
+
+  if (&(Sqw.Q_proba_per_w[index][i]) == NULL)
+    return -1;
+  else
+    return i;
+}
+
+/*****************************************************************************
 * Sqw_readfile: Read Sqw data files
 *   Returns Sqw_Data_struct or NULL in case of error
 * Used in : Sqw_init (2)
@@ -688,7 +779,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       Table_Array = newTable;
     } else if (nblocks != 3) {
       printf("Isotropic_Sqw: %s: "
-             "File %s contains %i block%s instead of 3.\n",
+             "File %s contains %li block%s instead of 3.\n",
               Sqw->compname, file, nblocks, (nblocks == 1 ? "" : "s"));
     } else flag=0;
   }
@@ -761,7 +852,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   if (!Sqw_Data->nb_q || !Sqw_Data->nb_w) {
-    printf("Isotropic_Sqw: %s: Selected range has null q or omega dimension (%lix%li).\n"
+    printf("Isotropic_Sqw: %s: File %s selected range has null q or omega dimension (%lix%li).\n"
            "ERROR          Exiting.\n",
       Sqw->compname, file, Sqw_Data->nb_w, Sqw_Data->nb_q);
     return(NULL);
@@ -806,7 +897,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       sum += sqw;           /* on total Sqw range */
       if (!Table_SetElement(&Sqw_restrict, i, j, (flag ? sqw : 0) ))
         printf("Isotropic_Sqw: %s: "
-               "Error when setting Sqw[%i,%i]=%g from file %s\n",
+               "Error when setting Sqw[%li,%li]=%g from file %s\n",
                Sqw->compname, i,j, sqw, file);
       sq += sqw;
     }
@@ -855,7 +946,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   if (Sqw->verbose_output > 1 || !Sqw_Data->alpha)
-    printf("Isotropic_Sqw: %s: Generated %scoherent S(Q)[%i], with norm |S| = %g\n",
+    printf("Isotropic_Sqw: %s: Generated %scoherent S(Q)[%li], with norm |S| = %g\n",
       Sqw->compname, (Sqw->type=='c' ? "" : "in"),
       Sqw_Data->nb_q_data, Sqw_Data->intensity_total);
 
@@ -875,7 +966,7 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   if (Sqw->verbose_output > 0) {
     printf("Isotropic_Sqw: %s: Generated %s %scoherent Sqw\n"
-           "                   q=[%g:%g] w=[%g:%g] |S|=%g size=[%ix%i] sigma=%g [barns]\n",
+           "                   q=[%g:%g] w=[%g:%g] |S|=%g size=[%lix%li] sigma=%g [barns]\n",
            Sqw->compname, file, (Sqw->type == 'i' ? "in" : ""),
            Sqw_Data->q_min, Sqw_Data->q_max,
            Sqw_Data->w_min, Sqw_Data->w_max, Sqw_Data->intensity,
@@ -915,7 +1006,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (j) Sqw_Data->DOS[j].cumul_I += Sqw_Data->DOS[j-1].cumul_I;
   }
   if (Sqw->verbose_output > 1)
-    printf("Isotropic_Sqw: %s: Generated normalized DOS[%i]\n",
+    printf("Isotropic_Sqw: %s: Generated normalized DOS[%li]\n",
       Sqw->compname, Sqw_Data->nb_w);
 
   /* set up Q probability table per w bin */
@@ -936,7 +1027,7 @@ struct Sqw_Data_struct *Sqw_readfile(
         (struct Sqw_Q_struct*)calloc(Sqw_Data->nb_q, sizeof(struct Sqw_Q_struct));
 
     if (!Sqw_Data->Q_proba_per_w[j]) {
-      printf("Isotropic_Sqw: %s: Cannot allocate P(Q|w)[%i] (%li bytes).\n"
+      printf("Isotropic_Sqw: %s: Cannot allocate P(Q|w)[%li] (%li bytes).\n"
              "ERROR          Exiting.\n",
         Sqw->compname, j, Sqw_Data->nb_q*sizeof(struct Sqw_Q_struct));
       return(NULL);
@@ -988,7 +1079,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       QW_lookup[j] =
         (long*)calloc(Sqw_Data->lookup_length, sizeof(long));
       if (!QW_lookup[j]) {
-        printf("Isotropic_Sqw: %s: Cannot allocate QW_lookup[%i] (%li bytes).\n"
+        printf("Isotropic_Sqw: %s: Cannot allocate QW_lookup[%li] (%li bytes).\n"
                "Warning        Will be slower.\n",
         Sqw->compname, j, Sqw_Data->lookup_length*sizeof(long));
         free(QW_lookup); Sqw_Data->QW_lookup = QW_lookup = NULL;
@@ -1001,7 +1092,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
   }
   if ((Sqw_Data->QW_lookup || Sqw_Data->DOS_lookup) && Sqw->verbose_output > 1)
-    printf("Isotropic_Sqw: %s: Generated lookup tables with %i entries\n",
+    printf("Isotropic_Sqw: %s: Generated lookup tables with %li entries\n",
       Sqw->compname, Sqw_Data->lookup_length);
 
   Table_Free_Array(Table_Array);
@@ -1024,7 +1115,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   d_inc = Sqw_readfile(Sqw, file_inc, &(Sqw->Data_inc));
   Sqw->type = 'c';
   d_coh = Sqw_readfile(Sqw, file_coh, &(Sqw->Data_coh));
-  if (d_inc && !d_inc->intensity && Sqw->s_inc) {
+  if (d_inc && !d_inc->intensity && Sqw->s_inc>0) {
     if (Sqw->verbose_output > 0)
       printf("Isotropic_Sqw: %s: Using Isotropic elastic incoherent scattering (sigma=%g [barns])\n", Sqw->compname, Sqw->s_inc);
     ret=1;
@@ -1056,96 +1147,6 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   }
   if (!ret) ret=d_inc->intensity+d_coh->intensity;
   return(ret);
-}
-
-/*****************************************************************************
-*  Sqw_search_root: Search for the roots of A*x**2 + B*x + C
-*   The roots are returned as x1 and x2
-* Used in : TRACE (1)
-*****************************************************************************/
-int Sqw_search_root(double A, double B, double C,
-             double *x1, double *x2)
-
-{
-
-  double delta, sqrtdelta, inv_2A;
-  int    OK = 0;
-
-  if (fabs(A) < 1E-10) {
-    if (B) {  *x1 = -C/B; *x2 = *x1; OK=3; }
-  } else {
-    delta = B*B - 4*A*C;
-    if (delta < 0) {
-      /* Imaginary roots */
-      OK=0;
-    } else {
-      /* Real roots */
-      sqrtdelta = sqrt(delta);
-      inv_2A = 1/(2*A);
-      *x1 = inv_2A*(-B - sqrtdelta);
-      *x2 = inv_2A*(-B + sqrtdelta);
-      OK = 1;
-    }
-    return(OK);
-  }
-}
-
-/*****************************************************************************
-*  Sqw_search_DOS: For a given random number 'randnum', search for the bin
-*   containing  the corresponding Sqw->DOS
-* Used in : TRACE (1)
-*****************************************************************************/
-int Sqw_search_DOS(struct Sqw_Data_struct Sqw, double randnum)
-{
-  int i=0;
-
-  if (randnum <0) randnum=0;
-  if (randnum >1) randnum=1;
-
-  if (Sqw.DOS_lookup) {
-    i = Sqw.DOS_lookup[(long)floor(randnum*Sqw.lookup_length)]-1;
-    if (i<0) i=0;
-  }
-
-  while (i < Sqw.nb_w && (&(Sqw.DOS[i]) != NULL) && (randnum > Sqw.DOS[i].cumul_I))
-      i++;
-  if (i >= Sqw.nb_w) i = Sqw.nb_w;
-
-  if (&(Sqw.DOS[i]) == NULL)
-  {
-      fprintf(stderr, "Isotropic_Sqw: No corresponding value in the DOS. randnum too big.\n");
-      fprintf(stderr, "  i=%i ; randnum=%f ; Sqw.DOS[i-1].cumul_I=%f (Sqw_search_DOS)\n",
-            i, randnum, Sqw.DOS[i-1].cumul_I);
-      return i-1;
-  }
-  else
-      return (i < Sqw.nb_w ? i : Sqw.nb_w-1);
-}
-
-/*****************************************************************************
-*  Sqw_search_Q_proba_per_w: For a given random number randnum, search for
-*   the bin containing the corresponding Sqw.DOS in the Q probablility grid
-* Used in : TRACE (1)
-*****************************************************************************/
-int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw,
-                             double randnum, int index)
-{
-  int i=0;
-
-  if (Sqw.QW_lookup && Sqw.QW_lookup[index]) {
-    i = Sqw.QW_lookup[index][(long)floor(randnum*Sqw.lookup_length)]-1;
-    if (i<0) i=0;
-  }
-
-  while (i < Sqw.nb_q && (&(Sqw.Q_proba_per_w[index][i]) != NULL)
-    && (randnum > Sqw.Q_proba_per_w[index][i].cumul_proba)) {
-      i++;
-  }
-
-  if (&(Sqw.Q_proba_per_w[index][i]) == NULL)
-    return -1;
-  else
-    return i;
 }
 
 #endif
@@ -1261,12 +1262,12 @@ INITIALIZE
   VarSqw.my_a_v  =(VarSqw.rho*100*VarSqw.s_abs*2200);
   VarSqw.my_s    =(VarSqw.rho*100*(VarSqw.s_coh+VarSqw.s_inc));
 
-  if ((VarSqw.s_coh || VarSqw.s_inc) && !VarSqw.Temperature
+  if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && !VarSqw.Temperature
    && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity))
     printf("Isotropic_Sqw: %s: Sample temperature is zero (T).\n"
            "Warning        Disabling detailed balance.\n",NAME_CURRENT_COMP);
 
-  if (!VarSqw.s_coh && !VarSqw.s_inc) {
+  if (VarSqw.s_coh<=0 && VarSqw.s_inc<=0) {
     printf("Isotropic_Sqw: %s: Scattering cross section is zero\n"
            "ERROR          (sigma_coh, sigma_inc)\n",NAME_CURRENT_COMP);
     exit(0);
@@ -1480,7 +1481,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     tmp *= (VarSqw.s_coh+VarSqw.s_inc);
 
     flag=0;
-    if (VarSqw.s_inc && tmp < VarSqw.s_inc) {
+    if (VarSqw.s_inc>0 && tmp < VarSqw.s_inc) {
       /* CASE 1: incoherent case */
       if (!VarSqw.Data_inc.intensity) {
         /* CASE 1a: no incoherent Sqw from file, use isotropic V-like */
@@ -1503,7 +1504,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           flag = 1;
         }
       }
-    } else if (VarSqw.s_coh && tmp > VarSqw.s_inc) {
+    } else if (VarSqw.s_coh>0 && tmp > VarSqw.s_inc) {
       if (VarSqw.Data_coh.intensity) {
         /* CASE2: coherent case */
         Data_sqw = VarSqw.Data_coh;
@@ -1539,7 +1540,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         } else {
           if (VarSqw.verbose_output >= 3)
             printf("Isotropic_Sqw: %s: Warning: No suitable w transfert\n"
-                   "               for index_w=%i. Using w=0.\n",
+                   "               for index_w=%li. Using w=0.\n",
               NAME_CURRENT_COMP, index_w);
           omega=0;
         }
@@ -1556,7 +1557,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (index_q == -1) {
           if (VarSqw.verbose_output >= 3)
             printf("Isotropic_Sqw: %s: Warning: No suitable P(q|w) transfert\n"
-               "               for w=%g index_w=%i\n",
+               "               for w=%g index_w=%li\n",
             NAME_CURRENT_COMP, omega, index_w);
           VarSqw.neutron_removed++;
           continue; /* no Q value for this w choice */
@@ -1722,7 +1723,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           VarSqw.Data_inc.q_max =  old_qmax_inc;
           VarSqw.Data_coh.q_max =  old_qmax_coh;
           VarSqw.Data_inc.w_max =  old_wmax_inc;
-          VarSqw.Data_coh.w_max =  old_wmax_inc;
+          VarSqw.Data_coh.w_max =  old_wmax_coh;
           VarSqw.q_max = FLT_MAX; /* restore full (q,w) range */
           VarSqw.w_max = FLT_MAX;
           if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
@@ -1818,7 +1819,7 @@ FINALLY
       if (Data_sqw.nb_q > 1 && Data_sqw.nb_w > 1)
         DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
         Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
-        Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,
+        Data_sqw.nb_w,Data_sqw.nb_q,NULL,&SQW[0][0],NULL,
         filename);
     }
     /* test if Sqw data is larger than used [q,w] range */
