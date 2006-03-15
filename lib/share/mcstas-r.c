@@ -11,16 +11,36 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.126 $
+* Version: $Revision: 1.127 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.126 2006-03-02 12:39:33 pkwi Exp $
+* $Id: mcstas-r.c,v 1.127 2006-03-15 15:59:37 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.126  2006/03/02 12:39:33  pkwi
+* Corrected typo in last commit:
+*
+* tout should have been t_out - resulted in:
+*
+* lp-07151:~> mcrun -c vanadium_example.instr
+* Translating instrument definition 'vanadium_example.instr' into C ...
+* mcstas -t -o vanadium_example.c vanadium_example.instr
+* Warning: 'Source_flat' is an obsolete component (not maintained).
+* Compiling C source 'vanadium_example.c' ...
+* gcc -g -O2 -o vanadium_example.out vanadium_example.c -lm
+* mcstas-r.c: In function `cylinder_intersect':
+* mcstas-r.c:3713: error: `tout' undeclared (first use in this function)
+* mcstas-r.c:3713: error: (Each undeclared identifier is reported only once
+* mcstas-r.c:3713: error: for each function it appears in.)
+* ** Error exit **
+* lp-07151:~>
+*
+* Please make simple tests of compilation etc. before committing...
+*
 * Revision 1.125  2006/03/01 16:06:25  farhi
 * Fixed error in cylinder_intersect when trajectory is parallel to the cylinder axis (raised by T. Vanvuure).
 *
@@ -1642,7 +1662,9 @@ void mcinfo_simulation(FILE *f, struct mcformats_struct format,
     for(i = 0; i < mcnumipar; i++)
     {
       if (mcrun_num || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
-        (*mcinputtypes[mcinputtable[i].type].printer)(Value, mcinputtable[i].par);
+        if (mcinputtable[i].par == NULL) {
+          strncpy(Value, (mcinputtable[i].val ? mcinputtable[i].val : ""), 256);
+        } else (*mcinputtypes[mcinputtable[i].type].printer)(Value, mcinputtable[i].par);
         fprintf(f, "%sParam: %s=%s", pre, mcinputtable[i].name, Value);
         fprintf(f, "\n");
       }
@@ -1653,7 +1675,9 @@ void mcinfo_simulation(FILE *f, struct mcformats_struct format,
     mcfile_section(f, format, "begin", pre, "parameters", "parameters", name, 3);
     for(i = 0; i < mcnumipar; i++)
     {
-      (*mcinputtypes[mcinputtable[i].type].printer)(Value, mcinputtable[i].par);
+      if (mcinputtable[i].par == NULL)
+        strncpy(Value, (mcinputtable[i].val ? mcinputtable[i].val : ""), 256);
+      else (*mcinputtypes[mcinputtable[i].type].printer)(Value, mcinputtable[i].par);
       mcfile_tag(f, format, pre, "parameters", mcinputtable[i].name, Value);
     }
     mcfile_section(f, format, "end", pre, "parameters", "parameters", name, 3);
@@ -2330,6 +2354,8 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   int mpi_event_list;
 #endif /* !USE_MPI */
 
+  if (!p1 || (p1 && m*n*p > 1 && (!filename_orig || !strlen(filename_orig)))) return(0);
+
   pre = (char *)malloc(20);
   if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
   strcpy(pre, strstr(format.Name, "VRML")
@@ -2365,8 +2391,6 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 
   if (m<0 || n<0 || p<0 || strstr(format.Name, "binary"))  /* do the swap once for all */
   {
-    double tmp1, tmp2;
-    char   *lab;
     istransposed = 1;
 
     i=m; m=abs(n); n=abs(i); p=abs(p);
@@ -2530,7 +2554,7 @@ double mcdetector_out_0D(char *t, double p0, double p1, double p2,
                          char *c, Coords posa)
 {
   return(mcdetector_out_012D(mcformat,
-    c, t,
+    (c ? c : "McStas component"), (t ? t : "McStas data"),
     1, 1, 1,
     "I", "", "",
     "I", "", "",
@@ -2547,10 +2571,10 @@ double mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *c, Coords posa)
 {
   return(mcdetector_out_012D(mcformat,
-    c, t,
+    (c ? c : "McStas component"), (t ? t : "McStas 1D data"),
     n, 1, 1,
-    xl, yl, (n > 1 ? "Signal per bin" : " Signal"),
-    xvar, "(I,I_err)", "I",
+    (xl ? xl : "X"), (yl ? yl : "Y"), (n > 1 ? "Signal per bin" : " Signal"),
+    (xvar ? xvar : "x"), "(I,I_err)", "I",
     x1, x2, 0, 0, 0, 0, f,
     p0, p1, p2, posa));
 }
@@ -2571,9 +2595,9 @@ double mcdetector_out_2D(char *t, char *xl, char *yl,
   if (yl && strlen(yl)) strncpy(yvar, yl, 2);
 
   return(mcdetector_out_012D(mcformat,
-    c, t,
+    (c ? c : "McStas component"), (t ? t : "McStas 2D data"),
     m, n, 1,
-    xl, yl, (n*m > 1 ? "Signal per bin" : " Signal"),
+    (xl ? xl : "X"), (yl ? yl : "Y"), (n*m > 1 ? "Signal per bin" : " Signal"),
     xvar, yvar, "I",
     x1, x2, y1, y2, 0, 0, f,
     p0, p1, p2, posa));
@@ -2590,10 +2614,10 @@ double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
                   char *c, Coords posa)
 {
   return(mcdetector_out_012D(mcformat,
-    c, t,
+    (c ? c : "McStas component"), (t ? t : "McStas 3D data"),
     m, n, p,
-    xl, yl, zl,
-    xvar, yvar, zvar,
+    (xl ? xl : "X"), (yl ? yl : "Y"), (zl ? zl : "Z"),
+    (xvar ? xvar : "x"), (yvar ? yvar : "y"), (zvar ? zvar : "z"),
     x1, x2, y1, y2, z1, z2, f,
     p0, p1, p2, posa));
 }
@@ -3950,7 +3974,7 @@ void
 randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
                double xi, double yi, double zi, double width, double height, Rotation A)
 {
-  double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, xt, yt, zt, xu, yu, zu, theta, phi, n_norm, m_norm;
+  double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, n_norm, m_norm;
   Coords tmp;
   Rotation Ainverse;
 
