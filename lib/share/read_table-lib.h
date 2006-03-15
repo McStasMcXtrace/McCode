@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions.
@@ -23,9 +23,12 @@
 * %include "read_table-lib"
 *
 *
-* $Id: read_table-lib.h,v 1.19 2005-10-14 11:38:28 farhi Exp $
+* $Id: read_table-lib.h,v 1.20 2006-03-15 16:04:14 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.19  2005/10/14 11:38:28  farhi
+* Corrected missing #define
+*
 * Revision 1.18  2005/10/12 14:04:29  farhi
 * Added function to parse header, Table_ParseHeader(header, "symbol1", ... , NULL)
 * Useful for complex sample components, as well as mcformat/mcconvert stuff.
@@ -73,7 +76,9 @@
 *******************************************************************************/
 
 #ifndef READ_TABLE_LIB_H
-#define READ_TABLE_LIB_H "1.2.0"
+#define READ_TABLE_LIB_H "$Revision: 1.20 $"
+
+#define READ_TABLE_STEPTOL  0.02 /* tolerancy for constant step approx */
 
 #ifndef MC_PATHSEP_C
 #ifdef WIN32
@@ -114,7 +119,7 @@
     double *data;    /* vector { x[0], y[0], ... x[n-1], y[n-1]... } */
     double  min_x;   /* min value of first column */
     double  max_x;   /* max value of first column */
-    double  step_x;  /* mean step value of first column */
+    double  step_x;  /* minimal step value of first column */
     long    rows;    /* number of rows in matrix block */
     long    columns; /* number of columns in matrix block */
 
@@ -122,6 +127,8 @@
     long    end;     /* stop  fseek index of block */
     long    block_number;  /* block index. 0 is catenation of all */
     long    array_length;  /* number of elements in the t_Table array */
+    char    monotonic; /* true when 1st column/vector data is monotonic */
+    char    constantstep; /* true when 1st column/vector data has constant step */
   } t_Table;
 
 /* read_table-lib function prototypes */
@@ -150,6 +157,9 @@ char **Table_ParseHeader(char *header, ...);
 void Table_Free(t_Table *Table);
 long Table_Read_Handle(t_Table *Table, FILE *fid, long block_number, long max_lines);
 static void Table_Stat(t_Table *Table);
+double Table_Interp1d(double x, double x1, double y1, double x2, double y2);
+double Table_Interp2d(double x, double y, double x1, double y1, double x2, double y2,
+  double z11, double z12, double z21, double z22);
 
 #endif
 
