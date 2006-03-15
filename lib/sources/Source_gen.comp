@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -93,9 +93,10 @@
 * I2:       [1/(cm**2*st*AA)] Second Maxwellian Source flux
 * T3:       [K]   Third Maxwellian source Temperature, 0=none
 * I3:       [1/(cm**2*st*AA)] Third Maxwellian Source flux
-* flux_file:[str] name of a file that contains the wavelength distribution of the flux in [1/(s*cm**2*st*AA)]
+* flux_file:[str] name of a file that contains the wavelength distribution of
+*                 the flux in [1/(s*cm**2*st*AA)]. Format is [lambda flux]
 *                 if a file is given, temperature and intensity values are ignored
-* gaussian: [0/1] Use gaussian beam, normal distributions
+* gaussian: [0/1] Use gaussian divergence beam, normal distributions
 * verbose:  [0/1] display info about the source. -1 unactivate source.
 *
 * Output parameters:
@@ -110,36 +111,16 @@
 
 
 DEFINE COMPONENT Source_gen
-DEFINITION PARAMETERS (string flux_file="")
-SETTING PARAMETERS (radius=0.0, dist=57.296, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0, h=0, w=0, gaussian=0, verbose=0, T1=0,
+DEFINITION PARAMETERS (flux_file=0)
+SETTING PARAMETERS (radius=0.0, dist=57.296, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0,
+                    h=0, w=0, gaussian=0, verbose=0, T1=0,
                     Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
-OUTPUT PARAMETERS (p_in,lambda0, lambda02, L2P,lambda_0,d_lambda,lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc, jmax)
+OUTPUT PARAMETERS (p_in,lambda0, lambda02, L2P,lambda_0,d_lambda,lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc, pTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-
 
 SHARE
 %{
- double InterpLog(double lambda, double* pTabX, double* pTabF, int num_lines)
- {
-   double ln_value;
-   short  j=0;
-   static short n_err=0;
-   
-   while (pTabX[j+1] < lambda && j+1 < num_lines) 
-   {	j++;
-   }
-   if (j+1 < num_lines)
-   {	/* linear  extrapolation (of logarithmic values) */ 
-     ln_value = pTabF[j] + (pTabF[j+1]-pTabF[j]) / (pTabX[j+1]-pTabX[j]) * (lambda-pTabX[j]);
-   }
-   else
-   /* read error: wavelength larger than all values in the distribution file */ 
-   { if (n_err==0) fprintf(stderr,"Source_gen: Warning: used wavelength range exceed range given in distribution file\n");
-     n_err++;
-   }
-   
-   return exp(ln_value);
- }
+%include "read_table-lib"
 %}
 
 DECLARE
@@ -149,62 +130,63 @@ DECLARE
  double lambda0, lambda02, L2P;     /* first Maxwellian source */
  double lambda0b, lambda02b, L2Pb;  /* second Maxwellian source */
  double lambda0c, lambda02c, L2Pc;  /* third Maxwellian source */
- double lmbd[512], ln_flux[512];    /* arrays containing flux distribution              */
- int    jmax;                       /* number of data points in flux distribution array */
+ t_Table pTable;
 %}
 
 INITIALIZE
 %{
-  double delta_lambda, source_area, k, flux;
-  FILE*  pFile=NULL;
-  char   sLine[128];
-  int    j=0;
+  double delta_lambda, source_area, k;
 
   if (radius == 0 && h == 0 && w == 0)
   {
-    fprintf(stderr,"Source_gen: Error: Please precise source geometry (radius, h, w)\n");
+    fprintf(stderr,"Source_gen: %s: Error: Please precise source geometry (radius, h, w)\n",
+      NAME_CURRENT_COMP);
     exit(-1);
   }
   if (xw*yh == 0)
   {
-    fprintf(stderr,"Source_gen: Error: Please precise source target (xw, yh)\n");
+    fprintf(stderr,"Source_gen: %s: Error: Please precise source target (xw, yh)\n",
+      NAME_CURRENT_COMP);
     exit(-1);
   }
   if (Emin < 0 || Emax < 0 || Lmin < 0 || Lmax < 0 || E0 < 0 || dE < 0 || Lambda0 < 0 || dLambda < 0)
   {
-    fprintf(stderr,"Source_gen: Error: Negative average or range values for wavelength or energy encountered\n");
+    fprintf(stderr,"Source_gen: %s: Error: Negative average\n"
+                   "            or range values for wavelength or energy encountered\n",
+                   NAME_CURRENT_COMP);
     exit(-1);
   }
   if ((Emin == 0 && Emax > 0) || (dE > 0 && dE >= E0))
   {
-    fprintf(stderr,"Source_gen: Error: minimal energy cannot be less or equal zero\n");
+    fprintf(stderr,"Source_gen: %s: Error: minimal energy cannot be less or equal zero\n",
+      NAME_CURRENT_COMP);
     exit(-1);
   }
 
   if ((Emax >= Emin) && (Emin > 0))
-  { E0 = (Emax+Emin)/2; 
-    dE = (Emax-Emin)/2; 
+  { E0 = (Emax+Emin)/2;
+    dE = (Emax-Emin)/2;
   }
   if ((E0 > dE) && (dE >= 0))
   {
     Lmin = sqrt(81.81/(E0+dE)); /* Angstroem */
     Lmax = sqrt(81.81/(E0-dE));
   }
-  if (Lmax > 0) 
-  { Lambda0 = (Lmax+Lmin)/2; 
-    dLambda = (Lmax-Lmin)/2; 
+  if (Lmax > 0)
+  { Lambda0 = (Lmax+Lmin)/2;
+    dLambda = (Lmax-Lmin)/2;
   }
   if ((Lambda0 >= dLambda) && (dLambda > 0))
-  { lambda_0 = Lambda0; 
-    d_lambda = dLambda; 
-    if (verbose) fprintf(stdout,"Wavelength range %.3f +/- %.3f AA \n", Lambda0, dLambda);
+  { lambda_0 = Lambda0;
+    d_lambda = dLambda;
   }
   else
-  { fprintf(stderr,"Source_gen: Error: Wavelength range %.3f +/- %.3f AA calculated \n", Lambda0, dLambda);
+  { fprintf(stderr,"Source_gen: %s: Error: Wavelength range %.3f +/- %.3f AA calculated \n",
+      NAME_CURRENT_COMP, Lambda0, dLambda);
     fprintf(stderr,"- whole wavelength range must be >= 0 \n");
     fprintf(stderr,"- range must be > 0; otherwise intensity gets zero, use other sources in this case \n\n");
     exit(-1);
-  } 
+  }
 
   radius = fabs(radius); w=fabs(w); h=fabs(h);  I1=fabs(I1);
   lambda_0=fabs(lambda_0); d_lambda=fabs(d_lambda);
@@ -212,14 +194,16 @@ INITIALIZE
 
   if (dist == 0)
   {
-    fprintf(stderr,"Source_gen: warning: focusing distance is null. xw and yh interpreted as divergence in deg\n");
+    fprintf(stderr,"Source_gen: %s: warning: focusing distance is null.\n"
+                   "            xw and yh interpreted as divergence in deg\n",
+                   NAME_CURRENT_COMP);
   }
 
   delta_lambda = 2*d_lambda;
   Lmin = lambda_0 - d_lambda; /* Angstroem */
   Lmax = lambda_0 + d_lambda;
 
-  if ((I1 > 0  && T1 > 0) || strlen(flux_file) > 0)
+  if ((I1 > 0  && T1 > 0) || (flux_file && strlen(flux_file) > 0))
   {
     if ((h == 0) || (w == 0))
       source_area = radius*radius*PI*1e4; /* circular cm^2 */
@@ -231,31 +215,11 @@ INITIALIZE
     p_in = 1.0/4/PI; /* Small angle approx. */
   p_in /= mcget_ncount();
 
-  if (strlen(flux_file) > 0)
+  if (flux_file && strlen(flux_file) > 0) {
+    if (Table_Read(&pTable, flux_file, 1) <= 0) /* read 1st block data from file into pTable */
+      exit(fprintf(stderr, "Source_gen: %s: can not read file %s\n", NAME_CURRENT_COMP, flux_file));
+  } else
   {
-    pFile = fopen(flux_file,"rt");
-    if (pFile)
-    {
-      while(!feof(pFile) && j < 512)
-      {
-        fgets (sLine, sizeof(sLine)-1, pFile);
-        if (strlen(sLine) > 0)
-        { sscanf(sLine, "%lf %le", &lmbd[j], &flux);
-          ln_flux[j] = log(flux);
-          strcpy(sLine,"");
-          j++;
-        }
-      }
-      jmax=j;
-      fclose(pFile);
-    }
-    else
-    { fprintf(stderr,"file %s could not be opened to read flux distribution\n\n", flux_file);
-      exit(-1);
-    }
-  }
-  else
-  { 
     k  = 1.38066e-23; /* k_B */
     if (T1 > 0)
     {
@@ -285,7 +249,7 @@ INITIALIZE
       { lambda0c = lambda_0; }
   }
 
-  if (verbose == 1)
+  if (verbose)
   {
     printf("Source_gen: component %s ", NAME_CURRENT_COMP);
     if ((h == 0) || (w == 0))
@@ -297,8 +261,9 @@ INITIALIZE
     if (gaussian)
       printf(", gaussian beam");
     printf("\n");
-    if (strlen(flux_file) > 0)
+    if (flux_file && strlen(flux_file) > 0)
     { printf("  File %s for flux distribution used. Flux is dPhi/dLambda in [n/s/AA]. \n", flux_file);
+      Table_Info(pTable);
     }
     else if (T1 && I1)
     { if (T1 != 0)
@@ -310,7 +275,7 @@ INITIALIZE
       if (T1) printf("\n");
       printf("  Flux is dPhi/dLambda in [n/s/AA].\n");
     }
-    else                               
+    else
     { printf("  Flux is Phi in [n/s].\n");
     }
   }
@@ -345,14 +310,14 @@ TRACE
       z = length*randpm1()/2;
 
     if (dist == 0)
-    { 
-      theta0 =  DEG2RAD*xw; 
-      phi0   =  DEG2RAD*yh; 
-      theta1 = -DEG2RAD*xw; 
-      phi1   = -DEG2RAD*yh; 
+    {
+      theta0 =  DEG2RAD*xw;
+      phi0   =  DEG2RAD*yh;
+      theta1 = -DEG2RAD*xw;
+      phi1   = -DEG2RAD*yh;
     }
     else
-    { 
+    {
       theta0= -atan((x-xw/2.0)/dist);              /* Angles to aim at target */
       phi0  = -atan((y-yh/2.0)/dist);
       theta1= -atan((x+xw/2.0)/dist);
@@ -379,9 +344,9 @@ TRACE
 
     p = p_in * fabs((theta1 - theta0)*(phi1 - phi0));
 
-    if (strlen(flux_file) > 0)
+    if (flux_file && strlen(flux_file) > 0)
     {
-       p *= InterpLog(lambda, lmbd, ln_flux, jmax); 
+       p *= Table_Value(pTable, lambda, 1);
     }
     else if (T1 > 0 && I1 > 0)
     {
@@ -408,6 +373,11 @@ TRACE
     vx = tan_h * vz;
     SCATTER;
   }
+%}
+
+FINALLY
+%{
+  Table_Free(&pTable);
 %}
 
 MCDISPLAY
