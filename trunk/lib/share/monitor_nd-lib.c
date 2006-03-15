@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.33 $
+* Version: $Revision: 1.34 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.33 2005-12-12 13:42:11 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.34 2006-03-15 16:01:43 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.33  2005/12/12 13:42:11  farhi
+* Corrected bug on multiple limits specifications (K. Lieutenant)
+*
 * Revision 1.32  2005/09/19 15:13:53  farhi
 * using 'y' variable also sets limits to detector dimensions, to enable 'banana' view without troubles.
 *
@@ -515,7 +518,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
             if (strcmp(mc_mn_token, "cm2") && strcmp(mc_mn_token, "incoming")
              && strcmp(mc_mn_token, "outgoing") && strcmp(mc_mn_token, "cm2")
              && strcmp(mc_mn_token, "cm^2") && strcmp(mc_mn_token, "float")
-             && strcmp(mc_mn_token, "double") && strcmp(mc_mn_token, "binary"))
+             && strcmp(mc_mn_token, "double") && strcmp(mc_mn_token, "binary") && mc_mn_Vars->Flag_Verbose)
               printf("Monitor_nD: %s: unknown '%s' keyword in 'options'. Ignoring.\n", mc_mn_Vars->compcurname, mc_mn_token);
           }
         }
