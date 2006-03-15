@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -46,6 +46,9 @@
 * abs_out: (0/1)    Absorb neutrons hitting outside of chopper radius?
 * t_0:     (s)      Time phase-shift
 * phi_0:   (deg)    Angular phase-shift (suppresses t_0)
+* w:       (m)      'width' of slits for compatibility with Chopper.comp
+* wc:      (m)      'width' of beamstops for compatibility with Chopper.comp
+* compat:  (1)      Chopper placement compatible with original Chopper.comp
 *
 * %D
 * Example values: theta_0=10 h=0.2 R=0.5 f=2500 n=3 pha=0 n_pulse=1 j=0 wc=0
@@ -55,17 +58,31 @@
 
 DEFINE COMPONENT DiskChopper
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (theta_0, R, h=0, omega, n=3, j=0, theta_1=0, t_0=0, IsFirst=0, n_pulse=1, abs_out=1, phi_0=0)
+SETTING PARAMETERS (theta_0, R, h=0, omega, n=3, j=0, theta_1=0, t_0=0, IsFirst=0, n_pulse=1, abs_out=1, phi_0=0, w=0, wc=0, compat=0)
 OUTPUT PARAMETERS (Tg, T, To, Tc)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 DECLARE
  %{
   double Tg,To,Tc;
+  double delta_y; /* Vertical placement of Chopper in relation to beam axis */
  %}
 
 INITIALIZE
  %{
+      /* Compatibility with old Chopper.comp interface */
+      if (w) {
+	theta_0=2*RAD2DEG*asin((w/2)/R);
+      }
+      if (wc) {
+	theta_1=2*RAD2DEG*asin((wc/2)/R);
+      }
+      if (compat) {
+	delta_y = R;
+      } else {
+	delta_y = R-h/2;
+      }
+      
       if (n<=0 || theta_0 < 0 || R <=0)
       { fprintf(stderr,"DiskChopper: %s: n, theta_0 and R must be > 0\n", NAME_CURRENT_COMP);
         exit(-1); }
@@ -127,7 +144,7 @@ TRACE
     double toff;
     double yprime;
     
-    yprime = y+R-h/2;
+    yprime = y+delta_y;
     PROP_Z0;
     
     /* Is neutron outside the vertical slit range and should we absorb? */
@@ -168,7 +185,7 @@ MCDISPLAY
   double Radius;
   double theta;
   magnify("xy");
-  circle("xy", 0, -R+h/2, 0, R);
+  circle("xy", 0, -delta_y, 0, R);
   /* Drawing the slit(s)/internal beamstop(s): */
   
   for (j=0; j<n; j++) {
@@ -201,7 +218,7 @@ MCDISPLAY
 	  Radius = R-h;
 	}
 	X[k] = Radius * sin(theta);
-	Y[k] = Radius * cos(theta)-R+h/2;
+	Y[k] = Radius * cos(theta)-delta_y;
       }
       multiline(5, 
 		(double)X[0], (double)Y[0], (double)0,
