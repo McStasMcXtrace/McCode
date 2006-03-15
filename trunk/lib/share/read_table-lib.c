@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.31 2006-02-14 15:29:40 farhi Exp $
+* $Id: read_table-lib.c,v 1.32 2006-03-15 16:03:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.31  2006/02/14 15:29:40  farhi
+* Fixed error when importing block number > 1
+*
 * Revision 1.30  2006/01/30 12:55:10  farhi
 * incomplete table warning displays file name
 *
@@ -182,8 +185,8 @@
         return (-1);
       }
     }
+    stat(mc_rt_File,&mc_rt_stfile); mc_rt_filesize = mc_rt_stfile.st_size;
     if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
-    else { stat(mc_rt_File,&mc_rt_stfile); mc_rt_filesize = mc_rt_stfile.st_size; }
     mc_rt_begin     = ftell(mc_rt_hfile);
     mc_rt_nelements = Table_Read_Handle(mc_rt_Table, mc_rt_hfile, mc_rt_block_number, mc_rt_max_lines);
     strncpy(mc_rt_Table->filename, mc_rt_File, 128);
@@ -225,8 +228,6 @@
     Table_Init(mc_rt_Table, 0, 0);
     if (!mc_rt_File)  return(-1);
 
-    stat(mc_rt_File,&mc_rt_stfile);
-    mc_rt_filesize = mc_rt_stfile.st_size;
     mc_rt_hfile = fopen(mc_rt_File, "r");
     if(!mc_rt_hfile)
     {
@@ -245,6 +246,9 @@
         return (-1);
       }
     }
+    stat(mc_rt_File,&mc_rt_stfile);
+    mc_rt_filesize = mc_rt_stfile.st_size;
+    mc_rt_Table->filesize=mc_rt_filesize;
     if (mc_rt_type && !strcmp(mc_rt_type,"double")) mc_rt_sizeofelement = sizeof(double);
     else  mc_rt_sizeofelement = sizeof(float);
     if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
@@ -255,14 +259,14 @@
     if (!mc_rt_nelements || mc_rt_filesize <= *mc_rt_offset) return(0);
     mc_rt_data    = (double*)malloc(mc_rt_nelements*mc_rt_sizeofelement);
     if (!mc_rt_data) {
-      fprintf(stderr,"Error: allocating %d elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
+      fprintf(stderr,"Error: allocating %ld elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
       exit(-1);
     }
     mc_rt_nelements = fread(mc_rt_data, mc_rt_sizeofelement, mc_rt_nelements, mc_rt_hfile);
 
     if (!mc_rt_data || !mc_rt_nelements)
     {
-      fprintf(stderr,"Error: reading %d elements from %s file '%s' (Table_Read_Offset_Binary)\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
+      fprintf(stderr,"Error: reading %ld elements from %s file '%s' (Table_Read_Offset_Binary)\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
       exit(-1);
     }
     mc_rt_Table->begin   = mc_rt_begin;
@@ -287,7 +291,6 @@
     mc_rt_Table->columns = mc_rt_columns;
     mc_rt_Table->array_length = 1;
     mc_rt_Table->block_number = 1;
-    mc_rt_Table->filesize=mc_rt_filesize;
 
     Table_Stat(mc_rt_Table);
 
@@ -404,7 +407,7 @@
                         mc_rt_Data     = (double*)realloc(mc_rt_Data, mc_rt_malloc_size*sizeof(double));
                         if (mc_rt_Data == NULL)
                         {
-                          fprintf(stderr, "Error: Can not re-allocate memory %i (Table_Read_Handle).\n", mc_rt_malloc_size*sizeof(double));
+                          fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n", mc_rt_malloc_size*sizeof(double));
                           return (-1);
                         }
                       }
@@ -498,97 +501,46 @@
 *   input   Table: single table containing data.
 *                  The data block is reallocated in this process
 *   return  updated Table with increasing, evenly spaced first column (index 0)
-*           number of data elements (-1: error, 0:header only)
+*           number of data elements (-1: error, 0:empty data)
 *******************************************************************************/
   long Table_Rebin(t_Table *mc_rt_Table)
   {
     double mc_rt_new_step=0;
     long   mc_rt_i;
-    long   mc_rt_tmp;
-    char   mc_rt_monotonic = 1;
     /* performs linear interpolation on X axis (0-th column) */
 
     if (!mc_rt_Table) return(-1);
     if (!mc_rt_Table->data
     || mc_rt_Table->rows*mc_rt_Table->columns == 0 || !mc_rt_Table->step_x)
       return(0);
-    mc_rt_tmp   = mc_rt_Table->rows;
-    mc_rt_new_step = mc_rt_Table->step_x;
-    for (mc_rt_i=0; mc_rt_i < mc_rt_Table->rows - 1; mc_rt_i++)
-    {
-      double mc_rt_current_step;
-      double mc_rt_X, mc_rt_diff;
-      mc_rt_X            = Table_Index(*mc_rt_Table,mc_rt_i  ,0);
-      mc_rt_diff         = Table_Index(*mc_rt_Table,mc_rt_i+1,0) - mc_rt_X;
-      mc_rt_current_step = fabs(mc_rt_diff);
-      if ((mc_rt_Table->max_x - mc_rt_Table->min_x)*mc_rt_diff < 0 && mc_rt_monotonic && mc_rt_Table->columns > 1)
-      {
-        char mc_rt_buffer[256];
-        if (!mc_rt_Table->block_number) strcpy(mc_rt_buffer, "catenated");
-        else sprintf(mc_rt_buffer, "block %i", mc_rt_Table->block_number);
-        fprintf(stderr, "Warning: Rebin_Table :%s Data from file '%s' (%li x %li) is not monotonic (at row %li)\n", mc_rt_buffer, mc_rt_Table->filename,
-          mc_rt_Table->rows, mc_rt_Table->columns, mc_rt_i);
-        mc_rt_monotonic = 0;
-      }
-      if (mc_rt_current_step > 0 && mc_rt_current_step < mc_rt_new_step) mc_rt_new_step = mc_rt_current_step;
-      else mc_rt_tmp--;
-    } /* for */
-    if (fabs(mc_rt_new_step/mc_rt_Table->step_x) >= 0.98)
+    Table_Stat(mc_rt_Table); /* recompute statitstics and minimal step */
+    mc_rt_new_step = mc_rt_Table->step_x; /* minimal step in 1st column */
+
+    if (mc_rt_Table->constantstep) /* already evenly spaced */
       return (mc_rt_Table->rows*mc_rt_Table->columns);
-    if (mc_rt_tmp > 0 && mc_rt_new_step > 0 && mc_rt_Table->columns > 1)  /* table was not already evenly sampled */
-    {
+    else {
       long mc_rt_Length_Table;
       double *mc_rt_New_Table;
-      /* modify step if leads to too many points */
-      if  (mc_rt_Table->rows > 2000)
-        if (mc_rt_new_step < mc_rt_Table->step_x)
-          mc_rt_new_step = mc_rt_Table->step_x;
-      if (mc_rt_new_step*10 < mc_rt_Table->step_x)
-        mc_rt_new_step = mc_rt_Table->step_x/10;
+
       mc_rt_Length_Table = ceil(fabs(mc_rt_Table->max_x - mc_rt_Table->min_x)/mc_rt_new_step);
       mc_rt_New_Table    = (double*)malloc(mc_rt_Length_Table*mc_rt_Table->columns*sizeof(double));
 
       for (mc_rt_i=0; mc_rt_i < mc_rt_Length_Table; mc_rt_i++)
       {
         long   mc_rt_j;
-        long   mc_rt_old_i;
         double mc_rt_X;
-        double mc_rt_X1, mc_rt_X2, mc_rt_Y1, mc_rt_Y2;
-        char   mc_rt_test=0;
         mc_rt_X = mc_rt_Table->min_x + mc_rt_i*mc_rt_new_step;
         mc_rt_New_Table[mc_rt_i*mc_rt_Table->columns] = mc_rt_X;
-        /* look for index surrounding X in the old table -> index old_i, old-1 */
-        for (mc_rt_old_i=1; mc_rt_old_i < mc_rt_Table->rows-1; mc_rt_old_i++)
-        {
-          mc_rt_X2 = Table_Index(*mc_rt_Table,mc_rt_old_i  ,0);
-          mc_rt_X1 = Table_Index(*mc_rt_Table,mc_rt_old_i-1,0);
-          if (mc_rt_Table->min_x < mc_rt_Table->max_x)
-            mc_rt_test = ((mc_rt_X1 <= mc_rt_X) && (mc_rt_X < mc_rt_X2));
-          else
-            mc_rt_test = ((mc_rt_X2 <= mc_rt_X) && (mc_rt_X < mc_rt_X1));
-          if (mc_rt_test) break;
-        }
-
         for (mc_rt_j=1; mc_rt_j < mc_rt_Table->columns; mc_rt_j++)
-        {
-          mc_rt_Y2 = Table_Index(*mc_rt_Table,mc_rt_old_i  ,mc_rt_j);
-          mc_rt_Y1 = Table_Index(*mc_rt_Table,mc_rt_old_i-1,mc_rt_j);
-          if (mc_rt_X2-mc_rt_X1)
-          {
-          /* linear interpolation */
-            double mc_rt_slope = (mc_rt_Y2-mc_rt_Y1)/(mc_rt_X2-mc_rt_X1);
-            mc_rt_New_Table[mc_rt_i*mc_rt_Table->columns+mc_rt_j] = mc_rt_Y1+mc_rt_slope*(mc_rt_X-mc_rt_X1);
-          }
-          else
-            mc_rt_New_Table[mc_rt_i*mc_rt_Table->columns+mc_rt_j] = mc_rt_Y2;
-        }
+          mc_rt_New_Table[mc_rt_i*mc_rt_Table->columns+mc_rt_j]
+                = Table_Value(*mc_rt_Table, mc_rt_X, mc_rt_j);
+      } /* end for mc_rt_i */
 
-      } /* end for  i */
       mc_rt_Table->rows = mc_rt_Length_Table;
       mc_rt_Table->step_x = mc_rt_new_step;
       free(mc_rt_Table->data);
       mc_rt_Table->data = mc_rt_New_Table;
-    } /* end if tmp */
+    } /* end else (!constantstep) */
     return (mc_rt_Table->rows*mc_rt_Table->columns);
   } /* end Rebin_Table */
 
@@ -654,11 +606,10 @@
 /*******************************************************************************
 * double Table_Value(t_Table Table, double X, long j)
 *   ACTION: read column [j] of a single Table at row which 1st column is X
-*   input   Table: table containing data. Must be monotonic and evenly sampled
-*                  use table_Rebin for that
+*   input   Table: table containing data.
 *           X : data value in the first column (index 0)
 *           j : index of column from which is extracted the Value (0:Columns-1)
-*   return  Value = data[index for X][j]
+*   return  Value = data[index for X][j] with linear interpolation
 * Returns Value from the j-th column of Table corresponding to the
 * X value for the 1st column (index 0)
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
@@ -667,15 +618,61 @@
   double Table_Value(t_Table mc_rt_Table, double X, long j)
   {
     long   mc_rt_Index;
-    double mc_rt_Value;
+    double mc_rt_X1, mc_rt_Y1, mc_rt_X2, mc_rt_Y2;
 
-    if (mc_rt_Table.step_x != 0)
-      mc_rt_Index = floor((X - mc_rt_Table.min_x)/mc_rt_Table.step_x);
-    else mc_rt_Index=0;
-    mc_rt_Value = Table_Index(mc_rt_Table, mc_rt_Index, j);
+    if (X > mc_rt_Table.max_x) return Table_Index(mc_rt_Table,mc_rt_Table.rows-1  ,j);
+    if (X < mc_rt_Table.min_x) return Table_Index(mc_rt_Table,0  ,j);
 
-    return(mc_rt_Value);
+    if (!mc_rt_Table.constantstep)
+      /* look for index surrounding X in the table -> mc_rt_Index */
+      for (mc_rt_Index=1; mc_rt_Index < mc_rt_Table.rows-1; mc_rt_Index++)
+      {
+        mc_rt_X2 = Table_Index(mc_rt_Table, mc_rt_Index  ,0);
+        mc_rt_X1 = Table_Index(mc_rt_Table, mc_rt_Index-1,0);
+        if ((mc_rt_X1 <= X) && (X < mc_rt_X2)) break;
+      } /* end for mc_rt_Index */
+    else {
+        mc_rt_Index = (long)ceil((X - mc_rt_Table.min_x)
+                          /(mc_rt_Table.max_x - mc_rt_Table.min_x)
+                            *mc_rt_Table.rows);
+        mc_rt_X2 = Table_Index(mc_rt_Table,mc_rt_Index  ,0);
+        mc_rt_X1 = Table_Index(mc_rt_Table,mc_rt_Index-1,0);
+    }
+    mc_rt_Y2 = Table_Index(mc_rt_Table,mc_rt_Index  ,j);
+    mc_rt_Y1 = Table_Index(mc_rt_Table,mc_rt_Index-1,j);
+
+    return Table_Interp1d(X, mc_rt_X1,mc_rt_Y1, mc_rt_X2,mc_rt_Y2);
   } /* end Table_Value */
+
+/*******************************************************************************
+* double Table_Value2d(t_Table Table, double X, double Y)
+*   ACTION: read element [X,Y] of a matrix Table
+*   input   Table: table containing data.
+*           X : column index, may be non integer
+*           Y : row index, may be non integer
+*   return  Value = data[index X][index Y] with bi-linear interpolation
+* Returns Value for the indexes [X,Y]
+* Tests are performed (within Table_Index) on indexes i,j to avoid errors
+* NOTE: data should rather be monotonic, and evenly sampled.
+*******************************************************************************/
+  double Table_Value2d(t_Table Table, double X, double Y)
+  {
+    double x1,x2,y1,y2,z11,z12,z21,z22;
+    x1 = floor(X);
+    y1 = floor(Y);
+    if (x1 > Table.rows-1 || x1 < 0)    x2 = x1;
+    else x2=x1+1;
+    if (y1 > Table.columns-1 || y1 < 0) y2 = y1;
+    else y2=y1+1;
+    z11=Table_Index(Table, x1, y1);
+    z12=Table_Index(Table, x1, y2);
+    z21=Table_Index(Table, x2, y1);
+    z22=Table_Index(Table, x2, y2);
+    return Table_Interp2d(X,Y,
+        x1,x1+1,y1,y1+1,
+        z11,z12,z21,z22);
+  } /* end Table_Value2d */
+
 
 /*******************************************************************************
 * void Table_Free(t_Table *Table)
@@ -701,7 +698,7 @@
     long ret=0;
 
     if (!mc_rt_Table.block_number) strcpy(mc_rt_buffer, "catenated");
-    else sprintf(mc_rt_buffer, "block %i", mc_rt_Table.block_number);
+    else sprintf(mc_rt_buffer, "block %li", mc_rt_Table.block_number);
     printf("Table from file '%s' (%s)", mc_rt_Table.filename, mc_rt_buffer);
     if (mc_rt_Table.filesize>0) printf(" of size %li", mc_rt_Table.filesize);
     if ((mc_rt_Table.data   != NULL) && (mc_rt_Table.rows*mc_rt_Table.columns))
@@ -751,6 +748,8 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
   mc_rt_Table->step_x  = 0;
   mc_rt_Table->block_number = 0;
   mc_rt_Table->array_length = 0;
+  mc_rt_Table->monotonic    = 0;
+  mc_rt_Table->constantstep = 0;
   mc_rt_Table->begin   = 0;
   mc_rt_Table->end     = 0;
 
@@ -758,7 +757,7 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
     mc_rt_data    = (double*)malloc(rows*columns*sizeof(double));
     if (mc_rt_data) for (i=0; i < rows*columns; mc_rt_data[i++]=0);
     else {
-      fprintf(stderr,"Error: allocating %d double elements."
+      fprintf(stderr,"Error: allocating %ld double elements."
                      "Too big (Table_Init).\n", rows*columns);
       rows = columns = 0;
     }
@@ -780,26 +779,59 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
     long   mc_rt_i;
     double mc_rt_max_x, mc_rt_min_x;
     double mc_rt_row=1;
+    char   mc_rt_monotonic=1;
+    char   mc_rt_constantstep=1;
+    double mc_rt_step=0;
     double mc_rt_n;
 
     if (!mc_rt_Table) return;
     if (!mc_rt_Table->rows || !mc_rt_Table->columns) return;
     if (mc_rt_Table->rows == 1) mc_rt_row=0;
-    mc_rt_max_x = mc_rt_Table->data[0];
-    mc_rt_min_x = mc_rt_Table->data[(mc_rt_Table->rows-1)*mc_rt_Table->columns];
+    mc_rt_max_x = -FLT_MAX;
+    mc_rt_min_x =  FLT_MAX;
     mc_rt_n     = (mc_rt_row ? mc_rt_Table->rows : mc_rt_Table->columns);
 
+    /* get min and max of first column/vector */
     for (mc_rt_i=0; mc_rt_i < mc_rt_n; mc_rt_i++)
     {
       double mc_rt_X;
       mc_rt_X = (mc_rt_row ? Table_Index(*mc_rt_Table,mc_rt_i  ,0)
-                           : Table_Index(*mc_rt_Table,0, mc_rt_i));
+                               : Table_Index(*mc_rt_Table,0, mc_rt_i));
       if (mc_rt_X < mc_rt_min_x) mc_rt_min_x = mc_rt_X;
       if (mc_rt_X > mc_rt_max_x) mc_rt_max_x = mc_rt_X;
     } /* for */
+    if (mc_rt_n > 1) {
+      /* mean step */
+      mc_rt_step = (mc_rt_max_x - mc_rt_min_x)/(mc_rt_n-1);
+      /* now test if table is monotonic on first column, and get minimal step size */
+      for (mc_rt_i=0; mc_rt_i < mc_rt_n-1; mc_rt_i++) {
+        double mc_rt_X, mc_rt_diff;;
+        mc_rt_X = (mc_rt_row ? Table_Index(*mc_rt_Table,mc_rt_i  ,0)
+                            : Table_Index(*mc_rt_Table,0, mc_rt_i));
+        mc_rt_diff         = Table_Index(*mc_rt_Table,mc_rt_i+1,0) - mc_rt_X;
+        if (fabs(mc_rt_diff) < fabs(mc_rt_step)) mc_rt_step = mc_rt_diff;
+        /* change sign ? */
+        if ((mc_rt_Table->max_x - mc_rt_Table->min_x)*mc_rt_diff < 0 && mc_rt_monotonic)
+          mc_rt_monotonic = 0;
+      } /* end for */
+      /* now test if steps are constant within READ_TABLE_STEPTOL */
+      if (mc_rt_monotonic) {
+      for (mc_rt_i=0; mc_rt_i < mc_rt_n-1; mc_rt_i++) {
+        double mc_rt_X, mc_rt_diff;
+        mc_rt_X = (mc_rt_row ? Table_Index(*mc_rt_Table,mc_rt_i  ,0)
+                            : Table_Index(*mc_rt_Table,0, mc_rt_i));
+        mc_rt_diff         = Table_Index(*mc_rt_Table,mc_rt_i+1,0) - mc_rt_X;
+        if ( !(fabs(mc_rt_step)*(1-READ_TABLE_STEPTOL) < fabs(mc_rt_diff)
+               && fabs(mc_rt_diff) < fabs(mc_rt_step)*(1+READ_TABLE_STEPTOL)) )
+        { mc_rt_constantstep = 0; break; }
+      }
+}
+    }
+    mc_rt_Table->step_x= mc_rt_step;
     mc_rt_Table->max_x = mc_rt_max_x;
     mc_rt_Table->min_x = mc_rt_min_x;
-    mc_rt_Table->step_x = (mc_rt_Table->max_x - mc_rt_Table->min_x)/mc_rt_n;
+    mc_rt_Table->monotonic = mc_rt_monotonic;
+    mc_rt_Table->constantstep = mc_rt_constantstep;
   } /* end Table_Stat */
 
 /******************************************************************************
@@ -819,7 +851,7 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
     /* fisrt allocate an initial empty t_Table array */
     mc_rt_Table_Array = (t_Table *)malloc(mc_rt_allocated*sizeof(t_Table));
     if (!mc_rt_Table_Array) {
-      fprintf(stderr, "Error: Can not allocate memory %i (Table_Read_Array).\n",
+      fprintf(stderr, "Error: Can not allocate memory %li (Table_Read_Array).\n",
          mc_rt_allocated*sizeof(t_Table));
       *mc_rt_blocks = 0;
       return (NULL);
@@ -841,7 +873,7 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
         mc_rt_Table_Array = (t_Table *)realloc(mc_rt_Table_Array,
            mc_rt_allocated*sizeof(t_Table));
         if (!mc_rt_Table_Array) {
-          fprintf(stderr, "Error: Can not re-allocate memory %i (Table_Read_Array).\n",
+          fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Array).\n",
               mc_rt_allocated*sizeof(t_Table));
           *mc_rt_blocks = 0;
           return (NULL);
@@ -856,7 +888,7 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 
     /* now store total number of elements in Table array */
     for (mc_rt_offset=0; mc_rt_offset < mc_rt_block_number;
-      mc_rt_Table_Array[mc_rt_offset++].array_length = mc_rt_block_number);
+      mc_rt_Table_Array[mc_rt_offset++].array_length = mc_rt_block_number-1);
 
     return(mc_rt_Table_Array);
   } /* end Table_Read_Array */
@@ -877,7 +909,7 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
   } /* end Table_Free_Array */
 
 /******************************************************************************
-* void Table_Info_Array(t_Table *Table)
+* long Table_Info_Array(t_Table *Table)
 *    ACTION: print informations about a Table array
 *    return: number of elements in the Table array
 *******************************************************************************/
@@ -892,7 +924,7 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
       Table_Info(mc_rt_Table[mc_rt_index]);
       mc_rt_index++;
     }
-    printf("This Table array contains %i elements\n", mc_rt_index);
+    printf("This Table array contains %li elements\n", mc_rt_index);
     return(mc_rt_index);
   } /* end Table_Info_Array */
 
@@ -909,14 +941,14 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 char **Table_ParseHeader(char *header, ...){
   va_list ap;
   char exit_flag=0;
-  char counter=0;
+  int counter=0;
   char **ret;
 
   if (!header) return(NULL);
 
   ret = (char**)calloc(MyNL_ARGMAX, sizeof(char*));
   if (!ret) {
-    printf("Table_ParseHeader: %s: Cannot allocate %i values array for Parser (Table_ParseHeader).\n",
+    printf("Table_ParseHeader: Cannot allocate %i values array for Parser (Table_ParseHeader).\n",
       MyNL_ARGMAX);
     return(NULL);
   }
@@ -942,16 +974,57 @@ char **Table_ParseHeader(char *header, ...){
       if (!eol_pos) eol_pos = pos+strlen(pos)-1;
       ret[counter] = (char*)malloc(eol_pos - pos);
       if (!ret[counter]) {
-        printf("Table_ParseHeader: %s: Cannot allocate value[%i] array for Parser (Table_ParseHeader).\n",
+        printf("Table_ParseHeader: Cannot allocate value[%i] array for Parser (Table_ParseHeader).\n",
           counter);
         exit_flag = 1; break;
       }
       strncpy(ret[counter], pos+strlen(arg_char), eol_pos - pos - strlen(arg_char));
+      ret[counter][eol_pos - pos - strlen(arg_char)]='\0';
     }
     counter++;
   }
   va_end(ap);
   return(ret);
-}
+} /* Table_ParseHeader */
+
+/******************************************************************************
+* double Table_Interp1d(x, x1, y1, x2, y2)
+*    ACTION: interpolates linearly at x between y1=f(x1) and y2=f(x2)
+*    return: y=f(x) value
+*******************************************************************************/
+double Table_Interp1d(double x,
+  double x1, double y1,
+  double x2, double y2)
+{
+  double slope;
+  if (x2 == x1) return (y1+y2)/2;
+  if (y1 == y2) return  y1;
+  slope = (y2 - y1)/(x2 - x1);
+  return y1+slope*(x - x1);
+} /* Table_Interp1d */
+
+/******************************************************************************
+* double Table_Interp2d(x,y, x1,y1, x2,y2, z11,z12,z21,z22)
+*    ACTION: interpolates bi-linearly at (x,y) between z1=f(x1,y1) and z2=f(x2,y2)
+*    return: z=f(x,y) value
+*    x,y |   x1   x2
+*    ----------------
+*     y1 |   z11  z21
+*     y2 |   z12  z22
+*******************************************************************************/
+double Table_Interp2d(double x, double y,
+  double x1, double y1,
+  double x2, double y2,
+  double z11, double z12, double z21, double z22)
+{
+  double ratio_x, ratio_y;
+  if (x2 == x1) return Table_Interp1d(y, y1,z11, y2,z12);
+  if (y1 == y2) return Table_Interp1d(x, x1,z11, x2,z21);
+
+  ratio_y = (y - y1)/(y2 - y1);
+  ratio_x = (x - x1)/(x2 - x1);
+  return (1-ratio_x)*(1-ratio_y)*z11 + ratio_x*(1-ratio_y)*z21
+    + ratio_x*ratio_y*z22         + (1-ratio_x)*ratio_y*z12;
+} /* Table_Interp2d */
 
 /* end of read_table-lib.c */
