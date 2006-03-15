@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -73,7 +73,7 @@ INITIALIZE
       { fprintf(stderr,"DiskChopper: %s: n * theta_0 exceeds 2PI\n", NAME_CURRENT_COMP);
         exit(-1); }
       if (theta_1 >= theta_0)
-      { fprintf(stderr,"DiskChopper: %s: theta_1 must me lower than \theta_0\n", NAME_CURRENT_COMP);
+      { fprintf(stderr,"DiskChopper: %s: theta_1 must me lower than theta_0\n", NAME_CURRENT_COMP);
         exit(-1); }
       if (h && h>R) {
 	fprintf(stderr,"DiskChopper: %s: h must be < R\n", NAME_CURRENT_COMP);
