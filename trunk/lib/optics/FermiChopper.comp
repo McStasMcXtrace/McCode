@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.9 $
+* Version:    $Revision: 1.10 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 *
@@ -235,10 +235,6 @@ DECLARE
 INITIALIZE
 %{
 
-/************************* INITIALIZE COUNTERS ******************************/
-
-  int i;
-
 /************************ CALCULATION CONSTANTS *****************************/
   FCVars.omega    = 2*PI*nu;
   FCVars.ph0      = phase/360;
@@ -307,7 +303,7 @@ TRACE
   double slit_input; /* length of the slits */
 
   /** Variables for calculating interaction with blades ***************/
-  double xp1, zp1, xp2, zp2, vxp1, vxp2, xp3, vzp1, vzp2, zp3;
+  double xp1, zp1, xp2, zp2, vxp1, vxp2, xp3, vzp1;
 
   /**  Reflections ***********************************************/
   double distance_W;
@@ -315,7 +311,6 @@ TRACE
 
   /** variables used for calculating new velocities after reflection **/
   double q;
-  double arg;
 
   /**  Multiple Reflections  ******************************/
   int loopcounter=0;   /* How many reflections happen? */
@@ -577,7 +572,7 @@ TRACE
 
 SAVE
 %{
-  double mean_k, mean_v, mean_t, mean_w=0, mean_L=0, ph0;
+  double mean_k, mean_v, mean_t, mean_w=0, mean_L=0;
 
   if (FCVars.sum_N) {
     mean_v = FCVars.sum_v/FCVars.sum_N;
