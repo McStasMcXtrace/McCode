@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.78 $
+* Version: $Revision: 1.79 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.78 2005-08-31 08:35:53 farhi Exp $
+* $Id: mcstas-r.h,v 1.79 2006-03-15 16:00:42 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.78  2005/08/31 08:35:53  farhi
+*       MCdisplay now prints component name and position when building view (bug/request 44 closed)
+*
 *       Revision 1.77  2005/08/24 11:55:12  pkwi
 *       Usage of mcallowbackprop flag in all PROP routines. Use in component by e.g.
 *
@@ -165,7 +168,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.78 $"
+#define MCSTAS_R_H "$Revision: 1.79 $"
 
 #include <math.h>
 #include <string.h>
@@ -238,10 +241,10 @@ enum instr_formal_types
     instr_type_double, instr_type_int, instr_type_string
   };
 struct mcinputtable_struct {
-  char *name;
-  void *par;
+  char *name; /* name of parameter */
+  void *par;  /* pointer to instrument parameter (variable) */
   enum instr_formal_types type;
-  char *val;
+  char *val;  /* default value */
 };
 
 typedef double MCNUM;
@@ -307,23 +310,17 @@ extern struct mcformats_struct mcformat_data;
  * MPI_MASTER(i):
  * execution of i only on master node
  */
-#define MPI_MASTER(statement)\
-{\
-        if(mpi_node_rank == mpi_node_root)\
-        {\
-                statement;\
-        }\
+#define MPI_MASTER(statement) { \
+  if(mpi_node_rank == mpi_node_root)\
+  { statement; } \
 }
 
 int mc_MPI_Reduce(void* sbuf, void* rbuf,
                   int count, MPI_Datatype dtype,
                   MPI_Op op, int root, MPI_Comm comm);
 
-
 #else /* !USE_MPI */
-
 #define MPI_MASTER(instr) instr
-
 #endif /* USE_MPI */
 
 /* I/O function prototypes ================================================== */
@@ -354,6 +351,10 @@ void   mcinfo_simulation(FILE *f, struct mcformats_struct format,
   char *pre, char *name); /* used to add sim parameters (e.g. in Res_monitor) */
 void   mcsiminfo_init(FILE *f);
 void   mcsiminfo_close(void);
+
+#ifndef FLT_MAX
+#define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
+#endif
 
 /* Following part is only embedded when not redundent with mcstas.h ========= */
 
@@ -393,10 +394,6 @@ void   mcsiminfo_close(void);
 # else
 #  define PI 3.14159265358979323846
 # endif
-#endif
-
-#ifndef FLT_MAX
-#define       FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
 #endif
 
 /* mccomp_posa and mccomp_posr are defined in McStas generated C code */
