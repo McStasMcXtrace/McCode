@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.16 $
+* Version:  $Revision: 1.17 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -219,7 +219,7 @@ TRACE
         mean_k = V2K*mean_v;
         if (mean_k) mean_L = 2*PI/mean_k;
         mean_w = VS2E*mean_v*mean_v;
-        printf("McStas Virtual Source file %s\nContains about %g neutrons\n", file, n_count_extrapolated);
+        printf("McStas Virtual Source file %s\nContains about %g events, intensity=%g\n", file, n_count_extrapolated, n_neutrons*rTable.filesize/Offset);
         if (n_count_extrapolated > mcget_ncount())
           printf("    (will use only %.3g %% of file)\n", 100*mcget_ncount()/n_count_extrapolated);
 
