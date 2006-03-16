@@ -1,0 +1,17 @@
+#!/bin/sh
+autoconf configure.in > configure
+chmod a+x configure
+LocalTime=`date +%Y_%m_%d_%l:%M`
+WorkDir=preCVStest.$LocalTime
+mkdir $WorkDir
+./configure --prefix $PWD/$WorkDir
+export MCSTAS=$PWD/$WorkDir/lib/mcstas
+export PATH=$PWD/$WorkDir/bin:$PATH
+make
+make install
+cd $WorkDir
+mcrun --test > $WorkDir.log 2>&1
+cd -
+echo
+echo "Please consult test results in $WorkDir before committing"
+echo
