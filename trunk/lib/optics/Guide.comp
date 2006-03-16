@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: September 2 1998
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -61,9 +61,13 @@ SETTING PARAMETERS (w1, h1, w2, h2, l, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.
 OUTPUT PARAMETERS (pTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
+SHARE
+%{
+%include "read_table-lib"
+%}
+
 DECLARE
 %{
-  %include "read_table-lib"
   t_Table pTable;
 %}
 
