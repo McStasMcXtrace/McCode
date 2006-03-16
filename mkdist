@@ -55,7 +55,7 @@ cd $DIST
 find . -name CVS -exec rm -r \{\} \; 2> /dev/null
 # Remove other unneeded stuff
 rm -rf support/Syntax-Highlight-Perl-1.0
-rm preCVStest
+rm -rf preCVStest*
 
 # Put in new version info:
 find  . -prune setversion -type f -exec ./setversion \{\} $1 \; 2> /dev/null
