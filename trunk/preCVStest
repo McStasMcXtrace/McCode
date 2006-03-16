@@ -1,7 +1,7 @@
 #!/bin/sh
 autoconf configure.in > configure
 chmod a+x configure
-LocalTime=`date +%Y_%m_%d_%l:%M`
+LocalTime=`date +%Y_%m_%d_%k:%M`
 WorkDir=preCVStest.$LocalTime
 mkdir $WorkDir
 ./configure --prefix $PWD/$WorkDir
@@ -13,5 +13,13 @@ cd $WorkDir
 mcrun --test > $WorkDir.log 2>&1
 cd -
 echo
-echo "Please consult test results in $WorkDir before committing"
+echo 1\) Consult mcrun --test results in $WorkDir
+echo 2\) Do further manual test in the environment below, 
+echo     depending on changes made.
+echo 3\) When convinced all is working, do your commit
+echo 
+echo Entering test environment using /bin/sh
+echo Type exit/logout/\^D to end
 echo
+export PS1="McStas CVS test #"
+/bin/sh
