@@ -9,6 +9,7 @@ export MCSTAS=$PWD/$WorkDir/lib/mcstas
 export PATH=$PWD/$WorkDir/bin:$PATH
 make
 make install
+make clean
 cd $WorkDir
 echo
 echo Starting mcrun --test
