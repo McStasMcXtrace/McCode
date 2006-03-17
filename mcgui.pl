@@ -320,7 +320,7 @@ sub menu_save {
     if($current_sim_def ne "") {
         $edit_control->Save($current_sim_def);
         $edit_window->title("Edit: $current_sim_def");
-        open_instr_def($w, $current_sim_def);
+	new_sim_def_name($w, $current_sim_def);
     } else {
         $error_override = sub {        # Temporary Tk::Error override
             $w->messageBox(-message => "Could not save file:\n$_[1].",
@@ -1462,7 +1462,7 @@ sub setup_edit {
     my $insert_menu = $menu->Menubutton(-text => 'Insert',  -underline => 0, -tearoff => 0);
     # This is only done for backward compatibility - we want to use Alt+s for saving...
     my $filemenu = $menu->Menubutton(-text => 'Search', -underline => 1);
-    $w->bind('<Alt-s>' => [\&Tk::TextUndo::Save, $w]);
+    $w->bind('<Alt-s>' => [\&menu_save, $w]);
     make_insert_menu($w, $insert_menu);
     my $label = $w->Label(-bd => '1', -text => 'Current line: 1');
     $e->pack(-expand => 'yes', -fill => 'both');
