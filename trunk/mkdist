@@ -11,7 +11,7 @@
 # PW, risoe, 20030123
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
+#   Copyright (C) 1997-2006, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -58,7 +58,9 @@ rm -rf support/Syntax-Highlight-Perl-1.0
 rm -rf preCVStest*
 
 # Put in new version info:
-find  . -prune setversion -type f -exec ./setversion \{\} $1 \; 2> /dev/null
+find . -wholename './setversion' -prune -o -type d -o -exec ./setversion \{\} $1 \;
+find . -wholename './setyear' -prune -o -type d -o -exec ./setyear \{\} \; 
+
 sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
 mv build.bat.new build.bat
 sed 's/mcstas-1.7/'mcstas-$1'/' install_docs/tex/install.tex > install_docs/tex/install.tex.new
@@ -117,6 +119,7 @@ make scilab
 rm TODO.txt
 rm mkdist
 rm setversion
+rm setyear
 rm header
 # Make new runs of configure not dependent of this system...
 rm config.*
