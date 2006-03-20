@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2004, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.60 2005-11-02 09:18:38 farhi Exp $
+* $Id: instrument.y,v 1.61 2006-03-20 14:10:07 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -1105,8 +1105,8 @@ static void
 print_version(void)
 { /* MOD: E. Farhi Sep 20th, 2001 version number */
   printf("McStas version " MCSTAS_VERSION "\n"
-    "Copyright (C) Risoe National Laboratory, 1997-2004\n"
-    "Additions (C) Institut Laue Langevin, 2003-2004\n"
+    "Copyright (C) Risoe National Laboratory, 1997-2006\n"
+    "Additions (C) Institut Laue Langevin, 2003-2006\n"
     "All rights reserved\n");
   exit(0);
 }
