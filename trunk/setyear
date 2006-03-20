@@ -34,3 +34,6 @@ rm -f $1.tmp
 sed 's/Copyright (C) Risoe National Laboratory, 1997-..../Copyright (C) Risoe National Laboratory, 1997-'$YEAR'/' $1 > $1.tmp
 cat $1.tmp > $1
 rm -f $1.tmp
+sed 's/Additions (C) Institut Laue Langevin, 2003-..../Additions (C) Institut Laue Langevin, 2003-'$YEAR'/' $1 > $1.tmp
+cat $1.tmp > $1
+rm -f $1.tmp
