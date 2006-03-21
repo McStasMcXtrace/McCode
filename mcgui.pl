@@ -785,14 +785,14 @@ sub menu_run_simulation {
 			return 0;
 		    }
 		}
-              
+
             }
             push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
             push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
             push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
             # push @command, "--save" if ($newsi->{'Trace'} eq 1);
         }
-  push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'};
+  push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix" if ($newsi->{'NScan'} > 1 && !$newsi->{'Trace'}) || ($newsi->{'mpi'} > 1);
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);
         # In the special case of --dir, we simply replace ' ' with '_'
