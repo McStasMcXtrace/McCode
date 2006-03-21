@@ -35,7 +35,7 @@ AC_PATH_PROGS(TCLTK,  [wish /usr/local/bin/wish tclsh], no)
 AC_PATH_PROGS(SSH,    [ssh /usr/local/bin/ssh], no)
 AC_PATH_PROGS(MPIRUN, [mpirun /usr/local/bin/mpirun], no)
 AC_PATH_PROGS(MPICC,  [mpicc /usr/local/bin/mpicc], no)
-AC_PATH_PROGS(BROWSER,[epiphany konqueror mozilla netscape galeon start msie /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
+AC_PATH_PROGS(BROWSER,[konqueror firefox mozilla-firefox mozilla netscape epiphany galeon start msie /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
 AC_PATH_PROGS(EDITOR, [nedit kate gedit xemacs xedit vim notepad wordpad], no)
 AC_PATH_PROGS(VRMLVIEW, [freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat])
 # Important here: gnome-terminal is broken:
