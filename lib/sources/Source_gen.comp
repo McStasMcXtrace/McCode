@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -29,7 +29,9 @@
 * Emax=E0+dE or Lmin=Lambda0-dLambda and Lmax=Lambda0+dLambda. The I1 may
 * be either arbitrary (I1=0), or specified in neutrons per steradian per
 * square cm per Angstrom. A Maxwellian spectra may be selected if you give
-* the source temperatures (up to 3).
+* the source temperatures (up to 3). Finally, a file with the flux as a
+* function of the wavelength [lambda(AA) flux(n/s/cm^2/st/AA)] may be used
+* with the 'flux_file' parameter. Format is 2 columns free text.
 * The source shape is defined by its radius, or can alternatively be squared
 * if you specify non-zero h and w parameters.
 * The beam is spatially uniform, but becomes gaussian if one of the source
@@ -218,6 +220,16 @@ INITIALIZE
   if (flux_file && strlen(flux_file) > 0) {
     if (Table_Read(&pTable, flux_file, 1) <= 0) /* read 1st block data from file into pTable */
       exit(fprintf(stderr, "Source_gen: %s: can not read file %s\n", NAME_CURRENT_COMP, flux_file));
+    else { /* put table in Log scale */
+      int i;
+      if (pTable.columns != 2) exit(fprintf(stderr, "Source_gen: %s: Flux file %s should contain 2 columns\n", NAME_CURRENT_COMP, flux_file));
+      for (i=0; i<pTable.rows; i++) {
+        double val = Table_Index(pTable, i,1);
+        if (val <= 0) fprintf(stderr, "Source_gen: %s: File %s has negative flux at row %i\n", NAME_CURRENT_COMP, flux_file, i+1);
+        val = log(val > 0 ? val : 1/FLT_MAX);
+        Table_SetElement(&pTable, i, 1, val);
+      }
+    }
   } else
   {
     k  = 1.38066e-23; /* k_B */
@@ -259,7 +271,7 @@ INITIALIZE
     printf("\n            spectra ");
     printf("%.3f to %.3f AA (%.3f to %.3f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
     if (gaussian)
-      printf(", gaussian beam");
+      printf(", gaussian divergence beam");
     printf("\n");
     if (flux_file && strlen(flux_file) > 0)
     { printf("  File %s for flux distribution used. Flux is dPhi/dLambda in [n/s/AA]. \n", flux_file);
@@ -346,7 +358,7 @@ TRACE
 
     if (flux_file && strlen(flux_file) > 0)
     {
-       p *= Table_Value(pTable, lambda, 1);
+       p *= exp(Table_Value(pTable, lambda, 1));
     }
     else if (T1 > 0 && I1 > 0)
     {
