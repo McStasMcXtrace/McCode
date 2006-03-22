@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.127 $
+* Version: $Revision: 1.128 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.127 2006-03-15 15:59:37 farhi Exp $
+* $Id: mcstas-r.c,v 1.128 2006-03-22 14:54:13 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.127  2006/03/15 15:59:37  farhi
+* output format function more robust (uses default args if called with NULL args)
+*
 * Revision 1.126  2006/03/02 12:39:33  pkwi
 * Corrected typo in last commit:
 *
@@ -703,11 +706,11 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "%PREt=[]; execstr('t=mc_%VNA.class','errcatch'); if ~length(t), mc_%VNA = struct(); end; mc_%VNA.class = '%TYP';",
     "%PREmc_%VPA.mc_%VNA = 0; mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
-    "%PREmc_%PAR.func='get_%PAR';\n%PREmc_%PAR.data = [ ",
+    "%PREmc_%PAR.func='get_%PAR';\n%PREmc_%PAR.data = [ \n",
     " ]; // end of data\n%PREif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\n%PREmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
-    "%PREerrors = [ ",
+    "%PREerrors = [ \n",
     " ]; // end of errors\n%PREif single_file == 1, mc_%PAR.errors=errors; end\n",
-    "%PREevents = [ ",
+    "%PREevents = [ \n",
     " ]; // end of events\n%PREif single_file == 1, mc_%PAR.events=events; end\n"},
   { "Matlab", "m",
     "function mc_%PAR = get_%PAR(p)\n"
@@ -773,11 +776,11 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "mc_%VNA.class = '%TYP';",
     "mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
-    "%PREmc_%PAR.func='%PAR';\n%PREmc_%PAR.data = [ ",
+    "%PREmc_%PAR.func='%PAR';\n%PREmc_%PAR.data = [ \n",
     " ]; %% end of data\nif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\nmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
-    "%PREerrors = [ ",
+    "%PREerrors = [ \n",
     " ]; %% end of errors\nif single_file, mc_%PAR.errors=errors; end\n",
-    "%PREevents = [ ",
+    "%PREevents = [ \n",
     " ]; %% end of events\nif single_file, mc_%PAR.events=events; end\n"},
   { "IDL", "pro",
     "; McStas/IDL file. Import using idl> s=%PAR() and s=%PAR(/plot) to plot\n"
@@ -904,10 +907,10 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
         " max=\"%YMAX\" dims=\"%NDIM\" range=\"1\"></%YVL>\n"
       "%PRE<%ZVL long_name=\"%ZLA\" axis=\"3\" primary=\"1\" min=\"%ZMIN\""
         " max=\"%ZMAX\" dims=\"%PDIM\" range=\"1\"></%ZVL>\n"
-      "%PRE<data long_name=\"%TITL\" signal=\"1\"  axis=\"[%XVL,%YVL,%ZVL]\" file_name=\"%FIL\">",
+      "%PRE<data long_name=\"%TITL\" signal=\"1\"  axis=\"[%XVL,%YVL,%ZVL]\" file_name=\"%FIL\">\n",
     "%PRE</data>\n",
-    "%PRE<errors>", "%PRE</errors>\n",
-    "%PRE<monitor>", "%PRE</monitor>\n"},
+    "%PRE<errors>\n", "%PRE</errors>\n",
+    "%PRE<monitor>\n", "%PRE</monitor>\n"},
   { "HTML", "html",
     "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD %DAT//EN\"\n"
       "\"http://www.w3.org/TR/html4/strict.dtd\">\n"
@@ -1017,11 +1020,11 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "mc_%VNA.class = '%TYP';",
     "mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
-    "%PREmc_%PAR.func='%PAR';\n%PREmc_%PAR.data = [ ",
+    "%PREmc_%PAR.func='%PAR';\n%PREmc_%PAR.data = [ \n",
     " ]; %% end of data\nif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\nmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
-    "%PREerrors = [ ",
+    "%PREerrors = [ \n",
     " ]; %% end of errors\nif single_file, mc_%PAR.errors=errors; end\n",
-    "%PREevents = [ ",
+    "%PREevents = [ \n",
     " ]; %% end of events\nif single_file, mc_%PAR.events=events; end\n"},
   { "VRML", "wrl",
     "#VRML V2.0 utf8\n%PREFormat: %FMT file\n"
