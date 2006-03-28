@@ -38,6 +38,7 @@ AC_PATH_PROGS(MPICC,  [mpicc /usr/local/bin/mpicc], no)
 AC_PATH_PROGS(BROWSER,[konqueror firefox mozilla-firefox mozilla netscape epiphany galeon start msie /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
 AC_PATH_PROGS(EDITOR, [nedit kate gedit xemacs xedit vim notepad wordpad], no)
 AC_PATH_PROGS(VRMLVIEW, [freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat])
+AC_PATH_PROGS(WGET, [wget], no)
 # Important here: gnome-terminal is broken:
 #  Any commandline arguments after -e must contain escaped spaces.
 # BUT: If escaped in the perl code, use of xterm/konsole is broken....
@@ -82,3 +83,10 @@ echo "After plotter config, build and install McStas by executing"
 echo "make; make install"
 echo ""
 echo "WARNING: McStas 1.9 requires Scilab <= 3.0"
+echo ""
+echo "If you experience crashes of mcgui when running in the Gnome"
+echo "environment, please come back here and do a"
+echo ""
+echo "  make tk"
+echo ""
+echo " - will install our patched version of perl-tk from the net"

@@ -50,6 +50,8 @@ MATLAB = @MATLAB@
 PGPLOT = @PGPLOT@
 VRML = @VRMLVIEW@
 
+WGET = @WGET@
+
 XTERM = @TERM@
 
 INSTALL=@INSTALL@
@@ -206,3 +208,10 @@ VRML:
 test:
 	./mcrun.fixpl --test
 
+# Optional auto install of patched perl-Tk package
+tk:
+	if [ $(WGET) != no ]; then \
+		$(WGET) http://www.mcstas.org/download/Tk-804.027_gtk2_patch.tar.gz &&\
+		tar xzvf Tk-804.027_gtk2_patch.tar.gz > /dev/null && \
+		cd Tk-804.027_gtk2_patch && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install ;\
+	fi;
