@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -59,13 +59,12 @@
 DEFINE COMPONENT DiskChopper
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (theta_0, R, h=0, omega, n=3, j=0, theta_1=0, t_0=0, IsFirst=0, n_pulse=1, abs_out=1, phi_0=0, w=0, wc=0, compat=0)
-OUTPUT PARAMETERS (Tg, T, To, Tc)
+OUTPUT PARAMETERS (Tg, T, To, Tc, delta_y)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 DECLARE
  %{
-  double Tg,To,Tc;
-  double delta_y; /* Vertical placement of Chopper in relation to beam axis */
+  double Tg,To,Tc,delta_y;
  %}
 
 INITIALIZE
@@ -143,7 +142,7 @@ TRACE
  %{
     double toff;
     double yprime;
-    
+
     yprime = y+delta_y;
     PROP_Z0;
     
