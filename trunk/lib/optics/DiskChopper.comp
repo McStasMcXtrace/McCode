@@ -10,11 +10,11 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
-* Kaspar Hewitt Klenoe, jan 2006.
+* Kaspar Hewitt Klenoe (jan 2006), adjustments by Rob Bewey (march 2006)
 * 
 *
 * %D
@@ -44,8 +44,8 @@
 * j        (s)      Jitter in the phase
 * theta_1: (deg)    Angular width of optional beamstop in chopper windows
 * abs_out: (0/1)    Absorb neutrons hitting outside of chopper radius?
-* t_0:     (s)      Time phase-shift
-* phi_0:   (deg)    Angular phase-shift (suppresses t_0)
+* t_0:     (s)      Time 'delay'
+* phi_0:   (deg)    Angular 'delay' (suppresses t_0)
 * w:       (m)      'width' of slits for compatibility with Chopper.comp
 * wc:      (m)      'width' of beamstops for compatibility with Chopper.comp
 * compat:  (1)      Chopper placement compatible with original Chopper.comp
@@ -117,13 +117,16 @@ INITIALIZE
       if (h == 0) {
 	h=R;
       }
-      /* Calulate t_0 from phi_0 and vice versa*/
+      
+      /* Calulate t_0 from phi_0 and vice versa, 'direction' moderated by sign of omega */
+      t_0 *=omega/fabs(omega);
       if (phi_0) {
 	if (t_0) {
 	  fprintf(stderr,"DiskChopper: %s WARNING: t_0 AND phi_0 specified. Using phi_0 setting\n", NAME_CURRENT_COMP);  
 	}
 	phi_0*=DEG2RAD;
-	t_0=phi_0/omega;
+	/* 'Delay' should always be a delay, taking rotation direction into account: */
+	t_0=omega*phi_0/(omega*omega);
       } else {
 	phi_0=t_0*omega;
       } 
@@ -158,12 +161,12 @@ TRACE
     
     if (IsFirst)
       {
-	t=atan2(x,yprime)/omega + To*randpm1()/2.0 + t_0 + j*randnorm() + floor(n_pulse*rand01())*Tg;
+	t=atan2(x,yprime)/omega + To*randpm1()/2.0 - t_0 + j*randnorm() + floor(n_pulse*rand01())*Tg;
 	p*=n*theta_0/2/PI;
       }
     else 
       {
-	toff=fabs(t-atan2(x,yprime)/omega + t_0 + j*randnorm());
+	toff=fabs(t-atan2(x,yprime)/omega - t_0 + j*randnorm());
 	/* does neutron hit beamstop? */
 	if (fmod(toff+Tc/2.0,Tg)<Tc) ABSORB;
 	/* does neutron hit outside slit? */
