@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -19,13 +19,18 @@
 *
 * %D
 * Models a disc chopper with n identical slits, which are symmetrically disposed
-* on the disc. Possibly, the slits can have central absorbing inserts ('beamstops'). 
+* on the disc. At time t=0, the centre of the first slit opening will be situated at the
+* vertical axis.
+*
+* Possibly, the slits can have central absorbing inserts ('beamstops'). 
+*
 * For more complicated gemometries, see component manual example of DiskChopper GROUPing.
 *
 * If the chopper is the 1st chopper of the instrument, it sets t time with phase
+* - Only relevant for when using continuous source modules.
 *
-* Example: DiskChopper(R=0.2, theta_0=10, f=2500.0, n=3, t_0=0, IsFirst=1) First chopper
-*          DiskChopper(R=0.2, theta_0=10, f=2500.0, n=3, t_0=0, IsFirst=0)
+* Example: DiskChopper(R=0.2, theta_0=10, omega=2500.0, n=3, t_0=0, IsFirst=1) First chopper
+*          DiskChopper(R=0.2, theta_0=10, omega=2500.0, n=3, t_0=0, IsFirst=0)
 *
 * %P
 * INPUT PARAMETERS:
@@ -44,14 +49,14 @@
 * j        (s)      Jitter in the phase
 * theta_1: (deg)    Angular width of optional beamstop in chopper windows
 * abs_out: (0/1)    Absorb neutrons hitting outside of chopper radius?
-* t_0:     (s)      Time 'delay'
+* t_0:     (s)      Time 'delay'.
 * phi_0:   (deg)    Angular 'delay' (suppresses t_0)
 * w:       (m)      'width' of slits for compatibility with Chopper.comp
 * wc:      (m)      'width' of beamstops for compatibility with Chopper.comp
 * compat:  (1)      Chopper placement compatible with original Chopper.comp
 *
 * %D
-* Example values: theta_0=10 h=0.2 R=0.5 f=2500 n=3 pha=0 n_pulse=1 j=0 wc=0
+* Example values: theta_0=10 h=0.2 R=0.5 omega=2500 n=3 t_0=0 n_pulse=1 j=0 wc=0
 *
 * %E
 *******************************************************************************/
