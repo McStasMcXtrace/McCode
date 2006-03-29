@@ -168,9 +168,9 @@ COMPONENT FOCUSguide = Channeled_guide(
 
 /* distance guide exit to chopper center 0.054 m */
 
-COMPONENT FirstChopper = Chopper(
+COMPONENT FirstChopper = DiskChopper(theta_0=0, compat=1, abs_out=0,
     R = 0.35, w = 0.07, f = DISC_SPEED, n = 2, pha = -FO_PHA, IsFirst = 1)
-  AT (0, -0.3, 69.674) RELATIVE a1
+  AT (0, 0, 69.674) RELATIVE a1
 
 COMPONENT  DISCTOF = TOF_monitor(
     nchan = 30, filename = "DISC_TOF.dat", xmin = -0.05,
