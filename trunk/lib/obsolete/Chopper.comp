@@ -10,9 +10,10 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: Risoe
 * Release: McStas 1.6
+* Modified by: P. Willendrup, renamed into DiskChopper with upgrade
 *
 * Disk chopper.
 *
@@ -20,6 +21,7 @@
 * Models a disc chopper with n identical slits, which are symmetrically disposed
 * on the disc.
 * If the chopper is the 1st chopper of the instrument, it sets t time with phase
+* OBSOLETE: rather use optics/DiskChopper
 *
 * Example: Chopper(R=0.2, w=0.05, f=2500.0, n=3, pha=0, IsFirst=1) First chopper
 *          Chopper(R=0.2, w=0.05, f=2500.0, n=3, pha=0, IsFirst=0)
