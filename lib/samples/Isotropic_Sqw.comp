@@ -1819,7 +1819,7 @@ FINALLY
       if (Data_sqw.nb_q > 1 && Data_sqw.nb_w > 1)
         DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
         Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
-        Data_sqw.nb_w,Data_sqw.nb_q,NULL,&SQW[0][0],NULL,
+        Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,
         filename);
     }
     /* test if Sqw data is larger than used [q,w] range */
