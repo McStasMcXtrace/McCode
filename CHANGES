@@ -28,6 +28,42 @@
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v1.9.1, Mar 29, 2006
+
+  General
+  - Update release, mainly bugfixes plus a few other things
+
+  Documentation
+  - Component manual slightly updated according to adding/modification of components.
+
+  Tools
+  - mcgui: A few bugfixes. Note also that if you experience crashes when starting/running
+    GNOME/Gtk2 applications, update your perl-Tk installation. Two ways to do this:
+    1) Get the tarball from http://www.mcstas.org/download/Tk-804.027_gtk2_patch.tar.gz and
+       install using 'perl Makefile.PL && make && make install'. 
+    2) Do a 'make tk' in the McStas unpacked McStas source directory. This will download and
+       install the tarball into your McStas system directory.
+
+  Components
+  - DiskChopper.comp - new disc chopper component. Chopper.comp made obsolete. 
+    See mcdoc page / component manual for further details.
+  - Guide.comp - reads reflectivity tables from disk.
+  - Isotropic_Sqw - minor bugfixes, validated against PowerN, V_sample, etc.
+  - PowderN - validated against Isotropix_Sqw, Squires, experimental data.
+
+  WARNINGS
+  - Because of rapid changes in the support software for McStas, the current release has support
+    for only some releases of:
+
+    * Scilab (Win32 and Unix) - pick release 4.0 if available or pick release 3.0 from , e.g. from
+      http://www.scilab.org/download/index_download.php?page=oldReleases.html
+
+    * Perl (Win32) - on Windows we only support Perl 5.6 - pick
+      http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi
+
+    * If you are running Unix with GNOME/Gtk2 applications, you may experience problems with mcgui
+      crashing, please install updated perl-Tk as noted above.
+
 Changes in McStas v1.9, Nov 16, 2005
 
   General
