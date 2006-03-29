@@ -2,7 +2,7 @@
 # liquid Cs: total contribution (coh+inc), atomic number 55
 # Data by Bodensteiner et al, Phys. Rev. A, 45 (1992) 5709 and 46 (1992) 3574.
 # Experiment on IN8@ILL and F3@FRM.
-# Data corrections: PG002 filtering, detector efficiency, energy 
+# Data corrections: PG002 filtering, detector efficiency, energy
 # resolution, multiple scattering and absorption using MSCAT (Copley)
 #
 # Physical parameters:
@@ -17,6 +17,7 @@
 # T_m       301.6   melting temperature in [K]
 # T_b       944     boiling temperature in [K]
 # At_number 55      atomic number Z
+# Temperature 308   in [K]
 #
 # q axis values
 # vector of m values in Angstroem-1
