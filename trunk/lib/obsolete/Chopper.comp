@@ -10,10 +10,9 @@
 * %I
 * Written by: Philipp Bernhardt
 * Date: Januar 22 1999
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.6
-* Additions: Kaspar Hewitt Klenoe, 01 2006 (Jitter and beamstop)
 *
 * Disk chopper.
 *
@@ -39,24 +38,22 @@
 * IsFirst: (0/1)    Set it to 1 for the first chopper position in a cw source
 *                   (it then spreads the neutron time distribution)
 * n_pulse: (1)      Number of pulses
-* j        (s)      Jitter in the phase
-* wc      (m)	  Width of optional beamstop in chopper windows
 *
 * %D
-* Example values: w=0.05 R=0.5 f=2500 n=3 pha=0 n_pulse=1 j=0 wc=0
+* Example values: w=0.05 R=0.5 f=2500 n=3 pha=0 n_pulse=1
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Chopper
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R, w=0.05, f=2500.0, n=3, j=0, wc=0, pha=0, IsFirst=0, n_pulse=1)
-OUTPUT PARAMETERS (Tg, T, To, Tc)
+SETTING PARAMETERS (R, w=0.05, f=2500.0, n=3, pha=0, IsFirst=0, n_pulse=1)
+OUTPUT PARAMETERS (Tg, T, To)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 DECLARE
  %{
-      double Tg,To,Tc;
+      double Tg,To;
  %}
 
 INITIALIZE
@@ -73,9 +70,6 @@ INITIALIZE
 
       /* how long can neutrons pass the Chopper at a single point */
       To=2*atan(w/R/2.0)/fabs(f);
-
-	/* how long are neutrons absorbed by beamstop in chopper windows? */
-	Tc=2*atan(wc/R/2.0)/fabs(f);
  %}
 
 TRACE
@@ -91,10 +85,10 @@ TRACE
     }
     else
     {
-      toff=fabs(t-atan2(x,y+R)/f-fabs(pha)+j*randnorm())+To/2.0;
+      toff=fabs(t-atan2(x,y+R)/f-pha)+To/2.0;
 
       /* does neutron hit the slit? */
-      if (fmod(toff,Tg)>To || fmod(toff,Tg)<Tc) 
+      if (fmod(toff,Tg)>To)
          ABSORB;
     }
     SCATTER;
@@ -103,7 +97,7 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
-  circle("xy", 0, -R, 0, R);
+  circle("xy", 0, 0, 0, R);
 %}
 
 END
