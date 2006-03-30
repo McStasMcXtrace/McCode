@@ -107,9 +107,10 @@ COMPONENT a1 = Arm()
 
 /* values for guide side window RNR11 */
 COMPONENT csource = Source_gen(
-   h = 0.135, w = 0.08, dist=1.77, xw = 0.05, yh = 0.12,
-   Lmin = 3.4, Lmax = dL, T1= 296.16, I1=8.5E11,
-   T2=40.68, I2=5.2E11)
+   radius = 0.08,xw = 0.05, yh = 0.14, dist = 1.5,
+   Lambda0 = 3.4, dLambda = dL,
+   T1=150.42,I1=5.98e11,
+   T2=37.23,I2=5.637e11,T3=14.9,I3=0.962e11)
 AT (0,0,0) RELATIVE a1  ROTATED (0,0,0) RELATIVE a1
 
 /* guide segment 1, m=2, 4.66 m */
@@ -168,7 +169,7 @@ COMPONENT FOCUSguide = Channeled_guide(
 /* distance guide exit to chopper center 0.054 m */
 
 COMPONENT FirstChopper = DiskChopper(theta_0=0, compat=1, abs_out=0,
-    R = 0.35, w = 0.07, f = DISC_SPEED, n = 2, pha = -FO_PHA, IsFirst = 1)
+    R = 0.35, w = 0.07, omega = DISC_SPEED, n = 2, t_0 = FO_PHA, IsFirst = 1)
   AT (0, 0, 69.674) RELATIVE a1
 
 COMPONENT  DISCTOF = TOF_monitor(
