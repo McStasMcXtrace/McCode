@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.79 $
+* Version: $Revision: 1.80 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.79 2006-03-15 16:00:42 farhi Exp $
+* $Id: mcstas-r.h,v 1.80 2006-04-05 11:45:05 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.79  2006/03/15 16:00:42  farhi
+*       minor modifications (position of FLT_MAX in code)
+*
 *       Revision 1.78  2005/08/31 08:35:53  farhi
 *       MCdisplay now prints component name and position when building view (bug/request 44 closed)
 *
@@ -168,7 +171,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.79 $"
+#define MCSTAS_R_H "$Revision: 1.80 $"
 
 #include <math.h>
 #include <string.h>
@@ -192,6 +195,10 @@
 #if (__dest_os == __mac_os)
 #define MAC
 #endif
+#endif
+
+#ifdef __FreeBSD__
+#include <sys/stat.h>
 #endif
 
 #ifndef MC_PATHSEP_C
