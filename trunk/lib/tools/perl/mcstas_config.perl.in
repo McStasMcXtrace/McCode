@@ -62,7 +62,7 @@ use Config;
      EDITOR => 1,
      MATLAB => '@MATLAB@',
      SCILAB => '@SCILAB@',
-     MATLAB_COMMAND => '-nojvm',
+     MATLAB_COMMAND => '-nodesktop -nosplash',
      SCILAB_COMMAND => '-nw',
      EXE => 'out',
      HOSTFILE => '',
