@@ -18,9 +18,12 @@
 *
 * Flex scanner for instrument definition files.
 *
-* $Id: instrument.l,v 1.37 2005-10-21 10:07:42 farhi Exp $
+* $Id: instrument.l,v 1.38 2006-04-06 08:46:20 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.37  2005/10/21 10:07:42  farhi
+* Restrict parsing to 'normal' chars. Scandinavian stuff removed as some LeX do not support that
+*
 * Revision 1.36  2005/06/30 14:05:46  farhi
 * Now supports \n and \r\n end of lines
 *
@@ -209,7 +212,7 @@ DEFINITION    return TOK_DEFINITION;
 END           return TOK_END;
 MCDISPLAY     return TOK_MCDISPLAY;
 FINALLY       return TOK_FINALLY;
-EXTERN        return TOK_EXTERN;
+EXTERN        return TOK_EXTERN;        /* optional */
 INITIALIZE    return TOK_INITIALIZE;
 INSTRUMENT    return TOK_INSTRUMENT;
 OUTPUT        return TOK_OUTPUT;
@@ -221,13 +224,19 @@ PREVIOUS      return TOK_PREVIOUS;
 SETTING       return TOK_SETTING;
 STATE         return TOK_STATE;
 TRACE         return TOK_TRACE;
-SHARE         return TOK_SHARE;       /* ADD: E. Farhi Sep 20th, 2001 */
-EXTEND        return TOK_EXTEND;      /* ADD: E. Farhi Sep 20th, 2001 */
-GROUP         return TOK_GROUP;       /* ADD: E. Farhi Sep 24th, 2001 */
-NEXUS         return TOK_NEXUS;       /* ADD: E. Farhi Aug 6th, 2002 */
-DICTFILE      return TOK_DICTFILE;    /* ADD: E. Farhi Aug 6th, 2002 */
-HDF           return TOK_HDF;         /* ADD: E. Farhi Aug 6th, 2002 */
-SAVE          return TOK_SAVE;        /* ADD: E. Farhi Aug 25th, 2002 */
+SHARE         return TOK_SHARE;
+EXTEND        return TOK_EXTEND;
+GROUP         return TOK_GROUP;         /* extended McStas grammar */
+NEXUS         return TOK_NEXUS;         /* optional */
+DICTFILE      return TOK_DICTFILE;      /* optional */
+HDF           return TOK_HDF;           /* optional */
+SAVE          return TOK_SAVE;
+JUMP          return TOK_JUMP;          /* extended McStas grammar */
+WHEN          return TOK_WHEN;          /* extended McStas grammar */
+NEXT          return TOK_NEXT;          /* extended McStas grammar */
+ITERATE       return TOK_ITERATE;       /* extended McStas grammar */
+MYSELF        return TOK_MYSELF;        /* extended McStas grammar */
+COPY          return TOK_COPY;
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */

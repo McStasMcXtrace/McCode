@@ -16,7 +16,7 @@
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.61 2006-03-20 14:10:07 pkwi Exp $
+* $Id: instrument.y,v 1.62 2006-04-06 08:46:20 farhi Exp $
 *
 *******************************************************************************/
 
@@ -63,6 +63,10 @@
   struct comp_orientation ori;  /* Component orientation */
   struct NXDinfo *nxdinfo;  /* Info for NeXus dictionary interface */
   struct group_inst *groupinst;
+  struct jump_struct *jump;
+  List   jumps;
+  struct jump_condition jumpcondition;
+  struct jump_name      jumpname;
 }
 
 %token TOK_RESTRICTED TOK_GENERAL
@@ -75,7 +79,7 @@
 %token TOK_DEFINITION "DEFINITION"
 %token TOK_END        "END"
 %token TOK_FINALLY    "FINALLY"
-%token TOK_EXTERN     "EXTERN"
+%token TOK_EXTERN     "EXTERN"  /* optional */
 %token TOK_INITIALIZE "INITIALIZE"
 %token TOK_INSTRUMENT "INSTRUMENT"
 %token TOK_MCDISPLAY  "MCDISPLAY"
@@ -88,13 +92,19 @@
 %token TOK_SETTING    "SETTING"
 %token TOK_STATE      "STATE"
 %token TOK_TRACE      "TRACE"
-%token TOK_SHARE      "SHARE"   /* ADD: E. Farhi Sep 20th, 2001 shared code (shared declare) */
-%token TOK_EXTEND     "EXTEND"  /* ADD: E. Farhi Sep 20th, 2001 extend code */
-%token TOK_GROUP      "GROUP"   /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
-%token TOK_SAVE       "SAVE"    /* ADD: E. Farhi Aug 25th, 2002 data save code */
-%token TOK_NEXUS      "NEXUS"   /* ADD: E. Farhi Aug 6th, 2002 will use NeXus files for saving */
-%token TOK_DICTFILE   "DICTFILE"  /* ADD: E. Farhi Aug 6th, 2002 Name of NeXus dictionary file */
-%token TOK_HDF        "HDF"     /* ADD: E. Farhi Aug 6th, 2002 HDF version number (4,5) */
+%token TOK_SHARE      "SHARE"
+%token TOK_EXTEND     "EXTEND"
+%token TOK_GROUP      "GROUP"   /* extended McStas grammar */
+%token TOK_SAVE       "SAVE"
+%token TOK_NEXUS      "NEXUS"   /* optional */
+%token TOK_DICTFILE   "DICTFILE"/* optional */
+%token TOK_HDF        "HDF"     /* optional */
+%token TOK_JUMP       "JUMP"    /* extended McStas grammar */
+%token TOK_WHEN       "WHEN"    /* extended McStas grammar */
+%token TOK_NEXT       "NEXT"    /* extended McStas grammar */
+%token TOK_ITERATE    "ITERATE" /* extended McStas grammar */
+%token TOK_MYSELF     "MYSELF"  /* extended McStas grammar */
+%token TOK_COPY       "COPY"    /* extended McStas grammar */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -109,11 +119,11 @@
 %token <string> TOK_CODE_LINE
 %token TOK_INVALID
 
-%type <instance> component compref reference   /* MOD: E. Farhi Sep 24th, 2001 add group */
-%type <groupinst> groupdef groupref   /* ADD: E. Farhi Sep 24th, 2001 add group */
-%type <ccode>   code codeblock share declare initialize trace extend save finally mcdisplay /* MOD: E. Farhi Sep 20th, 2001, add 'shared' and 'extend'+'save' 25/8/02 */
+%type <instance> component compref reference instref
+%type <groupinst> groupdef groupref
+%type <ccode>   code codeblock share declare initialize trace extend save finally mcdisplay
 %type <coords>  coords
-%type <exp>     exp topexp topatexp genexp genatexp
+%type <exp>     exp topexp topatexp genexp genatexp when
 %type <actuals> actuallist actuals actuals1
 %type <comp_iformals> comp_iformallist comp_iformals comp_iformals1
 %type <cformal> comp_iformal
@@ -125,8 +135,12 @@
 %type <place>   place
 %type <ori>     orientation
 %type <nxdinfo> nexus
-%type <string>  dictfile
+%type <string>  dictfile instname
 %type <number>  hdfversion
+%type <jump>    jump
+%type <jumps>   jumps jumps1
+%type <jumpname> jumpname
+%type <jumpcondition> jumpcondition
 %%
 
 main:     TOK_GENERAL compdefs instrument
@@ -162,7 +176,47 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         check_comp_formals(c->def_par, c->set_par, c->name);
         /* Put component definition in table. */
         symtab_add(read_components, c->name, c);
+        /* checks */
+        if (!list_len(c->state_par)) print_error("No particule state parameters defined in component "
+          "%s at line %s:%d.\n", $3, instr_current_filename, instr_current_line);
         if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
+      }
+    | "DEFINE" "COMPONENT" TOK_ID "COPY" TOK_ID parameters share declare initialize trace save finally mcdisplay "END"
+      {
+        /* create a copy of a comp, and initiate it with given blocks */
+        /* all redefined blocks override */
+        struct comp_def *def;
+
+        def = read_component($5);
+        struct comp_def *c;
+        palloc(c);
+        c->name = $3;
+        c->source = str_quote(instr_current_filename);
+        /* only overrides if redined as non empty  */
+        c->def_par   = (list_len($6.def) ? $6.def : def->def_par);
+        c->set_par   = (list_len($6.set) ? $6.set : def->set_par);
+        c->out_par   = (list_len($6.out) ? $6.out : def->out_par);
+        c->state_par = (list_len($6.state) ? $6.state : def->state_par);
+        c->polarisation_par = ($6.polarisation ? $6.polarisation : def->polarisation_par);
+
+        c->share_code = ($7->linenum ?  $7  : def->share_code);
+        c->decl_code  = ($8->linenum ?  $8  : def->decl_code);
+        c->init_code  = ($9->linenum ?  $9  : def->init_code);
+        c->trace_code = ($10->linenum ? $10 : def->trace_code);
+        c->save_code  = ($11->linenum ? $11 : def->save_code);
+        c->finally_code = ($12->linenum ? $12 : def->finally_code);
+        c->mcdisplay_code = ($13->linenum ? $13 : def->mcdisplay_code);
+        c->comp_inst_number = 0;
+
+        /* Check definition and setting params for uniqueness */
+        check_comp_formals(c->def_par, c->set_par, c->name);
+        /* Put component definition in table. */
+        symtab_add(read_components, c->name, c);
+        /* checks */
+        if (!list_len(c->state_par)) print_error("No particule state parameters defined in (copied) component "
+          "%s at line %s:%d.\n", $3, instr_current_filename, instr_current_line);
+        if (verbose) fprintf(stderr, "Embedding component %s from file %s\n", c->name, c->source);
+
       }
 ;
 
@@ -207,7 +261,11 @@ out_par:    /* empty */
       }
 ;
 
-state_par:    "STATE" "PARAMETERS" formallist
+state_par:    /* empty */
+      {
+        $$ = list_create();
+      }
+    | "STATE" "PARAMETERS" formallist
       {
         $$ = $3;
       }
@@ -488,6 +546,12 @@ declare:    /* empty */
       {
         $$ = codeblock_new();
       }
+    | "DECLARE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->decl_code;
+      }
     | "DECLARE" codeblock
       {
         $$ = $2;
@@ -498,16 +562,28 @@ initialize:   /* empty */
       {
         $$ = codeblock_new();
       }
+    | "INITIALIZE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->init_code;
+      }
     | "INITIALIZE" codeblock
       {
         $$ = $2;
       }
 ;
 
-/* ADD: E. Farhi Sep 20th, 2001 SHARE component block included once */
+/* SHARE component block included once. Toggle comp_inst_number sign from neg to pos in cogen.c */
 share:    /* empty */
       {
         $$ = codeblock_new();
+      }
+    | "SHARE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->share_code;
       }
     | "SHARE" codeblock
       {
@@ -553,7 +629,7 @@ dictfile: /* empty: default dictionary */
 ;
 hdfversion: /* empty: default HDF version */
       {
-        $$ = "4";
+        $$ = "5";
       }
     | hdfversion "HDF" TOK_NUMBER
       {
@@ -561,9 +637,19 @@ hdfversion: /* empty: default HDF version */
       }
 ;
 
-trace:      "TRACE" codeblock
+trace: /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "TRACE" codeblock
       {
         $$ = $2;
+      }
+    | "TRACE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->trace_code;
       }
 ;
 
@@ -575,6 +661,12 @@ save:   /* empty */
       {
         $$ = $2;
       }
+    | "SAVE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->save_code;
+      }
 ;
 
 finally:    /* empty */
@@ -585,6 +677,12 @@ finally:    /* empty */
       {
         $$ = $2;
       }
+    | "FINALLY" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->finally_code;
+      }
 ;
 
 mcdisplay:    /* empty */
@@ -594,6 +692,12 @@ mcdisplay:    /* empty */
     | "MCDISPLAY" codeblock
       {
         $$ = $2;
+      }
+    | "MCDISPLAY" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->mcdisplay_code;
       }
 ;
 
@@ -634,36 +738,85 @@ complist:   /* empty */
       }
 ;
 
-component:    "COMPONENT" TOK_ID '=' TOK_ID actuallist place orientation groupref extend
+instname: "COPY" '(' TOK_ID ')'
+      {
+        char str_index[10];
+        sprintf(str_index, "_%i", comp_current_index+1);
+        $$ = str_cat($3, str_index, NULL);
+      }
+    | TOK_ID
+      {
+        $$ = $1;
+      }
+;
+
+instref: "COPY" '(' compref ')' /* make a copy of a previous instance, with def+set */
+      {
+        struct comp_inst *comp_src;
+        struct comp_inst *comp;
+        comp_src = $3;
+        palloc(comp);
+        comp->type   = comp_src->type;
+        comp->defpar = comp_src->defpar;
+        comp->setpar = comp_src->setpar;
+        comp->def    = comp_src->def;
+        comp->extend = comp_src->extend;
+        comp->group  = comp_src->group;
+        comp->jump   = comp_src->jump;
+        comp->when   = comp_src->when;
+        $$ = comp;
+      }
+    | TOK_ID actuallist /* define new instance with def+set parameters */
       {
         struct comp_def *def;
         struct comp_inst *comp;
-
-        def = read_component($4);
+        def = read_component($1);
         if (def != NULL) def->comp_inst_number--;
-        palloc(comp); /* Allocate new instance. */
-        comp->name = $2;
-        comp->type = $4;
-        comp->def = def;
-        palloc(comp->pos);
-        comp->group = $8;           /* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
-        comp->extend = $9;  /* ADD: E. Farhi Sep 20th, 2001 EXTEND block*/
-        comp->index = 0;       /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
-        comp->pos->place = $6.place;
-        comp->pos->place_rel = $6.place_rel;
-        comp->pos->orientation = $7.orientation;
-        comp->pos->orientation_rel =
-          $7.isdefault ? $6.place_rel : $7.orientation_rel;
+        palloc(comp);
+        comp->type         = $1;
+        comp->def          = def;
+        comp->extend = codeblock_new();
+        comp->group  = NULL;
+        comp->jump   = list_create();
+        comp->when   = NULL;
         if(def != NULL)
         {
           /* Check actual parameters against definition and
                          setting parameters. */
-          comp_formals_actuals(comp, $5);
+          comp_formals_actuals(comp, $2);
         }
-        str_free($4);
-        debugn((DEBUG_HIGH, "Component: %s.\n", $2));
+        $$ = comp;
+      }
+;
+
+component:    "COMPONENT" instname '=' instref when place orientation groupref extend jumps
+      {
+
+        struct comp_inst *comp;
+
+        comp = $4;
+        if (comp->def != NULL) comp->def->comp_inst_number--;
+
+        comp->name = $2;
+
+        if ($5) comp->when  = $5;
+
+        palloc(comp->pos);
+        comp->pos->place = $6.place;
+        comp->pos->place_rel = $6.place_rel;
+        comp->pos->orientation = $7.orientation;
+        comp->pos->orientation_rel =
+            $7.isdefault ? $6.place_rel : $7.orientation_rel;
+
+        if ($8)            comp->group = $8;   /* component is part of an exclusive group */
+        if ($9->linenum)   comp->extend= $9;  /* EXTEND block*/
+        if (list_len($10)) comp->jump = $10;
+        comp->index = ++comp_current_index;     /* index of comp instance */
+
+        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $2, $4->type));
         previous_comp = comp; /* this comp will be 'previous' for the next */
         $$ = comp;
+
       }
 ;
 
@@ -726,6 +879,16 @@ actuals1:   TOK_ID '=' exp
       }
 ;
 
+when: /* empty */
+    {
+      $$ = NULL;
+    }
+  | "WHEN" exp
+    {
+      $$ = $2;
+    }
+;
+
 place:      "AT" coords reference
       {
         $$.place = $2;
@@ -751,28 +914,9 @@ reference:    "ABSOLUTE"
       {
         $$ = NULL;
       }
-    | "RELATIVE" "PREVIOUS"
+    | "RELATIVE" "ABSOLUTE"
       {
-        if (previous_comp) {
-          $$ = previous_comp;
-        } else {
-          print_warn(NULL, "Found invalid PREVIOUS reference at line %s:%d. Using ABSOLUTE.\n", instr_current_filename, instr_current_line);
-          $$ = NULL;
-        }
-      }
-    | "RELATIVE" "PREVIOUS" '(' TOK_NUMBER ')'
-      {
-        /* get the $4 previous item in comp_instances */
-        struct Symtab_entry *entry;
-        int index;
-        index = atoi($4);
-        entry = symtab_previous(comp_instances, index);
-        if (!index) { /* invalid index reference */
-          print_warn(NULL, "Found invalid PREVIOUS(%i) reference at line %s:%d. Using ABSOLUTE.\n", index, instr_current_filename, instr_current_line);
-          $$ = NULL;
-        } else {
-          $$ = entry->val;
-        }
+        $$ = NULL; /* tolerate this reference error */
       }
     | "RELATIVE" compref
       {
@@ -780,7 +924,7 @@ reference:    "ABSOLUTE"
       }
 ;
 
-/* ADD: E. Farhi Sep 24th, 2001 component is part of an exclusive group */
+/* component is part of an exclusive group */
 groupref:  /* empty */
       {
         $$ = NULL;
@@ -811,7 +955,30 @@ groupdef:   TOK_ID
       }
 
 ;
-compref:    TOK_ID
+compref:    "PREVIOUS"
+      {
+        if (previous_comp) {
+          $$ = previous_comp;
+        } else {
+          print_warn(NULL, "Found invalid PREVIOUS reference at line %s:%d. Using ABSOLUTE.\n", instr_current_filename, instr_current_line);
+          $$ = NULL;
+        }
+      }
+    | "PREVIOUS" '(' TOK_NUMBER ')'
+      {
+        /* get the $3 previous item in comp_instances */
+        struct Symtab_entry *entry;
+        int index;
+        index = atoi($3);
+        entry = symtab_previous(comp_instances, index);
+        if (!index || !entry) { /* invalid index reference */
+          print_warn(NULL, "Found invalid PREVIOUS(%i) reference at line %s:%d. Using ABSOLUTE.\n", index, instr_current_filename, instr_current_line);
+          $$ = NULL;
+        } else {
+          $$ = entry->val;
+        }
+      }
+    | TOK_ID
       {
         struct comp_inst *comp;
         struct Symtab_entry *ent;
@@ -836,7 +1003,7 @@ coords:     '(' exp ',' exp ',' exp ')'
       }
 ;
 
-/* ADD: E. Farhi Sep 20th, 2001 EXTEND block executed after component instance */
+/* EXTEND block executed after component instance */
 extend:   /* empty */
       {
         $$ = codeblock_new();
@@ -845,6 +1012,84 @@ extend:   /* empty */
       {
         $$ = $2;
       }
+;
+
+jumps: /* empty */
+    {
+      $$ = list_create();
+    }
+  | jumps1
+    {
+      $$ = $1;
+    }
+;
+
+jumps1: jump
+    {
+      $$ = list_create();
+      list_add($$, $1);
+    }
+  | jumps1 jump
+    {
+      list_add($1, $2);
+      $$ = $1;
+    }
+;
+
+jump:"JUMP" jumpname jumpcondition
+    {
+      struct jump_struct *jump;
+      palloc(jump);
+      jump->target      =$2.name;
+      jump->target_index=$2.index;
+      jump->condition  = $3.condition;
+      jump->iterate    = $3.iterate;
+      $$=jump;
+    }
+;
+
+jumpcondition: "WHEN" exp
+    {
+      $$.condition = $2;
+      $$.iterate   = 0;
+    }
+  | "ITERATE" exp
+    {
+      $$.condition = $2;
+      $$.iterate   = 1;
+    }
+;
+
+jumpname: "PREVIOUS"
+    {
+      $$.name  = NULL;
+      $$.index = -1;
+    }
+  |
+    "PREVIOUS" '(' TOK_NUMBER ')'
+    {
+      $$.name  = NULL;
+      $$.index = -atoi($3);
+    }
+  | "MYSELF"
+    {
+      $$.name  = NULL;
+      $$.index = 0;
+    }
+  | "NEXT"
+    {
+      $$.name  = NULL;
+      $$.index = +1;
+    }
+  | "NEXT" '(' TOK_NUMBER ')'
+    {
+      $$.name  = NULL;
+      $$.index = +atoi($3);    }
+  | TOK_ID
+    {
+      $$.name  = str_dup($1);
+      $$.index = 0;
+    }
 ;
 
 /* C expressions used to give component actual parameters.
@@ -897,6 +1142,7 @@ topatexp:   TOK_ID
             goto found;
           }
         }
+        list_iterate_end(liter);
         /* It was an external id. */
         $$ = exp_extern_id($1);
       found:
@@ -1043,6 +1289,8 @@ static int mc_yyparse(void)
 char *instr_current_filename = NULL;
 /* Number of the line currently being parsed. */
 int instr_current_line = 0;
+/* current instance index */
+long comp_current_index=0;
 
 /* Result from parsing instrument definition. */
 struct instr_def *instrument_definition;
@@ -1388,9 +1636,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-	print_warn(NULL, "Using DEFINITION parameter of component %s (potential syntax error)\n"
-		"  %s=%s\n",
-		comp->name, formal->id, exp_tostring(entry->val));
+  print_warn(NULL, "Using DEFINITION parameter of component %s (potential syntax error)\n"
+    "  %s=%s\n",
+    comp->name, formal->id, exp_tostring(entry->val));
       }
     }
   }
@@ -1423,10 +1671,25 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
     if(symtab_lookup(defpar, entry->name) == NULL &&
        symtab_lookup(setpar, entry->name) == NULL)
     {
-      print_error("Unmatched actual parameter %s for component %s.\n",
-      entry->name, comp->name);
+      Symtab_handle siter2;
+      struct Symtab_entry *entry2;
+
+      fprintf(stderr, "Unmatched actual parameter %s for component %s=%s.\n",
+      entry->name, comp->name, comp->type);
+      siter2 = symtab_iterate(defpar);
+      fprintf(stderr,"  Definition parameters: ");
+      while(entry2 = symtab_next(siter2))
+        fprintf(stderr, "%s ", entry2->name);
+      symtab_iterate_end(siter2);
+      siter2 = symtab_iterate(setpar);
+      fprintf(stderr,"\n  Setting parameters: ");
+      while(entry2 = symtab_next(siter2))
+        fprintf(stderr, "%s ", entry2->name);
+      symtab_iterate_end(siter2);
+      print_error("\n");
     }
   }
+  symtab_iterate_end(siter);
   comp->defpar = defpar;
   comp->setpar = setpar;
 }

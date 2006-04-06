@@ -17,6 +17,9 @@
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.58  2005/11/02 09:18:38  farhi
+* More tolerant about DEFINITION parameter values, enabling table init as for PowderN
+*
 * Revision 1.57  2005/09/15 10:46:10  farhi
 * Added mccompcurtype to be e.g. the component type/class being used.
 * Not used yet, but will be with NeXus support and probably elsewere
@@ -98,7 +101,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.58 2005-11-02 09:18:38 farhi Exp $
+* $Id: cogen.c,v 1.59 2006-04-06 08:46:20 farhi Exp $
 *
 *******************************************************************************/
 
@@ -372,7 +375,7 @@ embed_file(char *name)
     code_reset_source();
     symtab_add(lib_instances, name, NULL);
   } /* else file has already been embedded */
-}
+} /* embed_file */
 
 
 /*******************************************************************************
@@ -420,6 +423,9 @@ cogen_instrument_scope(struct instr_def *instr,
 /* Create the bindings for the SETTING parameter scope. Since the types of
 * setting parameters are known, local declarations can be used, avoiding the
 * problems with #define macro definitions.
+* infunc=0: no definition of parameters
+* infunc=1: define local copies of setting/definition parameters
+* infunc=2: same as 1, but for TRACE adds the EXTEND block and handles JUMPs
 */
 static void
 cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
@@ -443,6 +449,11 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
   }
   else
   {
+    /* adds conditional execution for the TRACE */
+    if (infunc==2 && comp->when) {
+      coutf("/* '%s' component has conditional execution */",comp->name);
+      coutf("if (%s)\n", exp_tostring(comp->when));
+    }
     (*func)(data);                /* Now do the body. */
     if(infunc == 2 && list_len(comp->extend->lines) > 0)
     {
@@ -450,8 +461,26 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
       coutf("    SIG_MESSAGE(\"%s (Trace:Extend)\");", comp->name); /* ADD: E. Farhi Aug 25th, 2002 */
       codeblock_out(comp->extend);
     }
+    if (infunc==2 && list_len(comp->jump) > 0) {
+      List_handle liter2;
+      liter2 = list_iterate(comp->jump);
+      struct jump_struct *this_jump;
+      while(this_jump = list_next(liter2)) {
+        char *exp=exp_tostring(this_jump->condition);
+        if (this_jump->iterate)
+          coutf("if (%sJumpCounter%s_%i < (%s)-1)"
+                "{ %sJumpCounter%s_%i++; goto %sJumpTrace_%s; }",
+            ID_PRE, comp->name, this_jump->index, exp,
+            ID_PRE, comp->name, this_jump->index,
+            ID_PRE, this_jump->target);
+        else
+          coutf("if (%s) goto %sJumpTrace_%s;",
+            exp, ID_PRE, this_jump->target);
+      }
+      list_iterate_end(liter2);
+    }
   }
-}
+} /* cogen_comp_scope_setpar */
 
 /* Create the #define statements to set up the scope for DEFINITION and OUTPUT
 * parameters.
@@ -494,7 +523,7 @@ cogen_comp_scope_rec(struct comp_inst *comp, List_handle def, List set_list,
     if(infunc && list_len(set_list) > 0)
       coutf("}   /* End of SETTING parameter declarations. */");
   }
-}
+} /* cogen_comp_scope_rec */
 
 static void
 cogen_comp_scope(struct comp_inst *comp, int infunc,
@@ -514,7 +543,7 @@ cogen_comp_scope(struct comp_inst *comp, int infunc,
   coutf("#undef %scompcurname", ID_PRE);
   coutf("#undef %scompcurtype", ID_PRE);
   coutf("#undef %scompcurindex", ID_PRE);
-}
+} /* cogen_comp_scope */
 
 
 /*******************************************************************************
@@ -650,11 +679,11 @@ cogen_decls(struct instr_def *instr)
 
   if (list_len(instr->grouplist) > 0)
   {
-    cout("/* Component group definitions (flags) */");
+    cout("/* Component group definitions (flags), equals index of scattering comp */");
     liter = list_iterate(instr->grouplist);
     while(group = list_next(liter))
     {
-      coutf("char %sGroup%s=0;", ID_PRE, group->name);
+      coutf("int %sGroup%s=0;", ID_PRE, group->name);
     }
     list_iterate_end(liter);
   }
@@ -669,7 +698,7 @@ cogen_decls(struct instr_def *instr)
     List_handle liter2;
 
     index++;
-    comp->index = index;
+    comp->index = index; /* should match the one defined with bison */
 
     if(list_len(comp->def->def_par) > 0)
     {                                /* (The if avoids a redundant comment.) */
@@ -708,6 +737,52 @@ cogen_decls(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
+    /* set target names for jumps and define iteration counters */
+    if(list_len(comp->jump) > 0) {
+      struct jump_struct *this_jump;
+      int    jump_index=0;
+      List_handle liter2;
+      liter2 = list_iterate(comp->jump);
+      while(this_jump = list_next(liter2)) {
+        List_handle liter3;
+        char *jump_target_type=NULL;
+        jump_index++;
+        struct comp_inst *comp3;
+        /* check name/type of target */
+        liter3 = list_iterate(instr->complist);
+        while(comp3 = list_next(liter3)) {
+          if ((this_jump->target && !strcmp(this_jump->target, comp3->name))
+           || (!this_jump->target && comp3->index == comp->index+this_jump->target_index) ) {
+            if (!this_jump->target) this_jump->target=comp3->name;
+            jump_target_type =comp3->type;
+            break;
+          }
+        }
+        list_iterate_end(liter3);
+
+        this_jump->index = jump_index;
+        if (!this_jump->target) {
+          fatal_error("JUMP %i (relative %i) from component %s "
+                      "points outside instrument.\n",
+            this_jump->index, this_jump->target_index, comp->name);
+        }
+        /* JUMP are valid only if MYSELF or between Arm's */
+        if (!(!strcmp(this_jump->target, comp->name) ||
+        (!strcmp(jump_target_type, "Arm") && !strcmp(comp->type, "Arm")) ))
+          fatal_error("JUMPs can only apply on MYSELF or Arm components.\n"
+                      "  Origin %s is a %s and Target %s is a %s.\n",
+            comp->name, comp->type, this_jump->target, jump_target_type);
+        /* create counter for iteration */
+        if (this_jump->iterate)
+          coutf("long %sJumpCounter%s_%i;",
+            ID_PRE, comp->name, this_jump->index);
+        fprintf(stderr,"Info:    Defining %s JUMP from %s to %s\n",
+          (this_jump->iterate ? "iterative" : "conditional"),
+          comp->name, this_jump->target);
+      }
+      list_iterate_end(liter2);
+    }
+
     if((list_len(comp->def->decl_code->lines) > 0) || (comp->def->comp_inst_number < 0))
     {
       coutf("/* User declarations for component '%s' [%i]. */", comp->name, index);
@@ -735,7 +810,7 @@ cogen_decls(struct instr_def *instr)
         ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   cout("");
 
-}
+} /* cogen_decls */
 
 
 /*******************************************************************************
@@ -759,7 +834,7 @@ cogen_nxdict(struct instr_def *instr)
 
 
 /*******************************************************************************
-* Generate the ##init() function.
+* cogen_init: Generate the INIT section.
 *******************************************************************************/
 static void
 cogen_init(struct instr_def *instr)
@@ -967,8 +1042,11 @@ cogen_init(struct instr_def *instr)
 
   cout("}");
   cout("");
-}
+} /* cogen_init */
 
+/*******************************************************************************
+* cogen_trace: Generate the TRACE section.
+*******************************************************************************/
 static void
 cogen_trace(struct instr_def *instr)
 {
@@ -1010,11 +1088,30 @@ cogen_trace(struct instr_def *instr)
     liter = list_iterate(instr->grouplist);
     while(group = list_next(liter))
     {
-      coutf("  %sGroup%s=0;", ID_PRE, group->name);
+      coutf("  %sGroup%s=0; /* equals index of scattering comp when in group */", ID_PRE, group->name);
     }
     list_iterate_end(liter);
   }
   coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
+
+  /* initiate iteration counters for each TRACE */
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL)
+  {
+    if(list_len(comp->jump) > 0) {
+      struct jump_struct *this_jump;
+      List_handle liter2;
+      liter2 = list_iterate(comp->jump);
+      while(this_jump = list_next(liter2)) {
+        /* create counter for iteration */
+        if (this_jump->iterate)
+          coutf("  %sJumpCounter%s_%i=0;",
+            ID_PRE, comp->name, this_jump->index);
+      }
+      list_iterate_end(liter2);
+    }
+  }
+  list_iterate_end(liter);
 
   /* Now the trace code for each component. Proper scope is set up for each
      component using #define/#undef. */
@@ -1031,8 +1128,8 @@ cogen_trace(struct instr_def *instr)
     List_handle statepars_handle;
 
     coutf("  /* TRACE Component %s. */", comp->name);
-    coutf("  SIG_MESSAGE(\"%s (Trace)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
-    coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
+
+
     /* Change of coordinates. */
     coutf("  %scoordschange(%sposr%s, %srotr%s,", ID_PRE, ID_PRE, comp->name,
           ID_PRE, comp->name);
@@ -1044,6 +1141,12 @@ cogen_trace(struct instr_def *instr)
             "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
             ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
 
+    /* JUMP RELATIVE comp */
+    coutf("  /* define label inside component %s (without coords transformations) */", comp->name);
+    coutf("  %sJumpTrace_%s:", ID_PRE, comp->name);
+
+    coutf("  SIG_MESSAGE(\"%s (Trace)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
+    coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
     /* Debugging (entry into component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
           "%snlt,%snlsx,%snlsy, %snlp)",
@@ -1074,13 +1177,14 @@ cogen_trace(struct instr_def *instr)
       coutf("#define %s %s%s", comp->def->polarisation_par[1], ID_PRE, "nlsy");
       coutf("#define %s %s%s", comp->def->polarisation_par[2], ID_PRE, "nlsz");
     }
-    /* ADD: E. Farhi Sep 20th, 2001 store neutron state in mccomp_storein */
+    /* store neutron state in mccomp_storein */
     coutf("  STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     coutf("  %sScattered=0;", ID_PRE);
     coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
+
     if (comp->group != NULL)
     {
       coutf("  if (!%sGroup%s)", ID_PRE, comp->group->name);
@@ -1097,8 +1201,12 @@ cogen_trace(struct instr_def *instr)
       coutf("  /* Leave %s group thus absorb non scattered neutrons */", last_group_name);
       coutf("  if (!%sGroup%s) ABSORB;", ID_PRE, last_group_name);
     }
+
+    /* write component parameters and trace+extend code */
+    /* also handles jumps after extend */
     cogen_comp_scope(comp, 2, (void (*)(void *))codeblock_out_brace,
                      comp->def->trace_code);
+
     if (comp->group != NULL)
     {
       coutf("#undef %sabsorb", ID_PRE);
@@ -1113,6 +1221,7 @@ cogen_trace(struct instr_def *instr)
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     }
+
     if(comp->def->polarisation_par)
     {
       coutf("#undef %s", comp->def->polarisation_par[2]);
@@ -1134,7 +1243,7 @@ cogen_trace(struct instr_def *instr)
   }
   list_iterate_end(liter);
 
-  /* Absorbing neutrons - goto this label to skip remaining components. */
+  /* Absorbing neutrons - goto this label to skip remaining components. End of TRACE */
   coutf(" %sabsorbAll:", ID_PRE);
 
   /* Debugging (final state). */
@@ -1164,8 +1273,10 @@ cogen_trace(struct instr_def *instr)
   /* Function end. */
   cout("}");
   cout("");
-}
-
+} /* cogen_trace */
+/*******************************************************************************
+* cogen_save: Generate the SAVE section.
+*******************************************************************************/
 static void
 cogen_save(struct instr_def *instr)
 {
@@ -1208,9 +1319,11 @@ cogen_save(struct instr_def *instr)
   }
   cout("  if (!handle) mcsiminfo_close(); ");
   cout("}");
-}
+} /* cogen_save */
 
-
+/*******************************************************************************
+* cogen_finally: Generate the FINALLY section.
+*******************************************************************************/
 static void
 cogen_finally(struct instr_def *instr)
 {
@@ -1258,9 +1371,11 @@ cogen_finally(struct instr_def *instr)
   }
   cout("  mcsiminfo_close(); ");
   cout("}");
-}
+} /* cogen_finally */
 
-
+/*******************************************************************************
+* cogen_mcdisplay: Generate the MCDISPLAY section.
+*******************************************************************************/
 static void
 cogen_mcdisplay(struct instr_def *instr)
 {
@@ -1274,8 +1389,9 @@ cogen_mcdisplay(struct instr_def *instr)
   cout("#define circle mcdis_circle");
   coutf("void %sdisplay(void) {", ID_PRE);
   cout("  printf(\"MCDISPLAY: start\\n\");");
-  cout("  /* Component MCDISPLAY code. */");
+  cout("  /* Components MCDISPLAY code. */");
   cout("");
+
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
@@ -1285,6 +1401,7 @@ cogen_mcdisplay(struct instr_def *instr)
       coutf("  /* MCDISPLAY code for component '%s'. */", comp->name);
       coutf("  SIG_MESSAGE(\"%s (McDisplay)\");", comp->name); /* ADD: E. Farhi Sep 20th, 2001 */
       coutf("  printf(\"MCDISPLAY: component %%s\\n\", \"%s\");", quoted_name);
+
       cogen_comp_scope(comp, 1, (void (*)(void *))codeblock_out_brace,
                        comp->def->mcdisplay_code);
       cout("");
@@ -1299,7 +1416,7 @@ cogen_mcdisplay(struct instr_def *instr)
   cout("#undef line");
   cout("#undef multiline");
   cout("#undef circle");
-}
+} /* cogen_mcdisplay */
 
 
 /*******************************************************************************

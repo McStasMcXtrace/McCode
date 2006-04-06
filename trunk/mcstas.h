@@ -17,12 +17,12 @@
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.42 2005-09-15 10:46:10 farhi Exp $
+* $Id: mcstas.h,v 1.43 2006-04-06 08:46:20 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.42 $"
+#define MCSTAS_H "$Revision: 1.43 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -227,6 +227,8 @@ extern Symtab read_components;
 extern char verbose;
 /* Will store component instance for PREVIOUS reference */
 extern struct comp_inst *previous_comp;
+/* current instance index */
+extern long comp_current_index;
 
 /* Check that component definition and setting parameters are unique. */
 void check_comp_formals(List deflist, List setlist, char *compname);
@@ -385,6 +387,10 @@ struct group_inst
     int  index;
   };
 
+struct when_condition {
+  CExp condition;
+
+};
 /* Component instance. */
 struct comp_inst
   {
@@ -396,6 +402,8 @@ struct comp_inst
     int    index;  /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
     struct group_inst *group;       /* ADD: E. Farhi Sep 24th, 2001 group name in which comp is */
     Symtab defpar, setpar;  /* Parameter values. */
+    List jump;    /* list of jumps to execute after trace/extend and mcdisplay */
+    CExp when;    /* NULL or condition to execute TRACE */
   };
 
 /* Instrument formal parameters. */
@@ -439,6 +447,27 @@ struct instr_def
     int enable_trace;   /* If set, enable output of neutron traces */
     int portable;   /* If set, emit strictly portable ANSI C */
     int polarised;    /* If set, handle neutron polarisation */
+  };
+
+struct jump_struct
+{
+  char *target;        /* name of component to jump to */
+  int   target_index;  /* index of component to jump to */
+  CExp  condition;     /* condition for jump or number of iterations */
+  char  iterate;       /* 1:iteration, 0:single conditional jump */
+  int   index;
+};
+
+struct jump_condition
+{
+  CExp  condition;     /* condition for jump or number of iterations */
+  char  iterate;       /* true for iteration, false for single conditional jump */
+};
+
+struct jump_name
+  {
+    char *name;
+    int  index;
   };
 
 #endif /* MCSTAS_H */
