@@ -41,6 +41,9 @@
 * setting may improve computation accuracy and prevent some neutrons
 * to be removed when energy transfert is higher than actual neutron energy.
 * An automatic such process may be activated when 'auto_qw=1'.
+* On the other hand, if the input S(q,w) data is too restricted in q, the
+* scattering conditions will be limited, leading to incomplete result.
+* Best conditions are get the widest S(q,w) data and use 'auto_qw=1'.
 * Additionally, for single order scattering (order=1), you may restrict the
 * vertical spreading of the scattering area using d_phi parameter.
 *
@@ -858,6 +861,14 @@ struct Sqw_Data_struct *Sqw_readfile(
     return(NULL);
   }
 
+  /* test if sampling is regular */
+  if (!Table_Array[0].constantstep || !Table_Array[1].constantstep) {
+    printf("Isotropic_Sqw: %s: File %s sampling is not regular. Re-sample Sqw data.\n"
+           "WARNING        Exiting.\n",
+      Sqw->compname, file);
+    return(NULL);
+  }
+
   /* build the 'total' = Sqw table in restricted range */
   Table_Init(&Sqw_restrict, Sqw_Data->nb_q, Sqw_Data->nb_w);
   Sqw_restrict.block_number = 1;
@@ -1140,9 +1151,8 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
       strcpy(msg, "Energy axis limits");
     if (strlen(msg)) {
       printf("Isotropic_Sqw: %s: Sqw data from files %s and %s do not match\n"
-             "ERROR          wrong %s\n",
+             "WARNING        wrong %s\n",
              Sqw->compname, file_coh, file_inc, msg);
-      return(0);
     }
   }
   if (!ret) ret=d_inc->intensity+d_coh->intensity;
@@ -1781,6 +1791,7 @@ FINALLY
     char type_ci[64];
     char ext[20];
     char filename[256];
+    char xvar[64];
 
     strcpy(type_ci, (k == 0 ? "coherent" : "incoherent"));
     strcpy(ext, (k == 0 ? "coh" : "inc"));
@@ -1801,23 +1812,26 @@ FINALLY
       }
       sprintf(tmp, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sq", NAME_CURRENT_COMP, ext);
+      sprintf(xvar, "S_%s(q)", ext);
       if (Data_sqw.nb_q_data > 1)
-        DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]","S(q)","q",
+        DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]",xvar,"q",
         Data_sqw.q_min, Data_sqw.q_max,
         Data_sqw.nb_q_data,NULL,Data_sqw.Sq,NULL,
         filename);
       sprintf(tmp, "Normalized DOS from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.dos", NAME_CURRENT_COMP, ext);
+      sprintf(xvar, "g_%s(w)", ext);
       if (Data_sqw.nb_w > 1)
-        DETECTOR_OUT_1D(tmp,"Energy [meV]","g(w)","w",
+        DETECTOR_OUT_1D(tmp,"Energy [meV]",xvar,"w",
         Data_sqw.w_min, Data_sqw.w_max,
         Data_sqw.nb_w,NULL,DOS,NULL,
         filename);
       sprintf(tmp, "S(q,w) from %s (%s), Norm=%g", Data_sqw.filename, type_ci,
         (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity));
       sprintf(filename, "%s_%s.sqw", NAME_CURRENT_COMP, ext);
+      sprintf(xvar, "Wavevector [Angs-1] %s", ext);
       if (Data_sqw.nb_q > 1 && Data_sqw.nb_w > 1)
-        DETECTOR_OUT_2D(tmp,"Wavevector [Angs-1]","Energy [meV]",
+        DETECTOR_OUT_2D(tmp,xvar,"Energy [meV]",
         Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
         Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,
         filename);
