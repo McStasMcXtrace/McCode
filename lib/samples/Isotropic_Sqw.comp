@@ -19,23 +19,15 @@
 * An isotropic sample handling multiple scattering and including as input the
 * dynamic structure factor of the chosen sample (e.g. from Molecular
 * Dynamics). Handles elastic/inelastic, coherent and incoherent scattering -
-* depending on the input S(Q,w) - with multiple scattering and absorption.
-* Only the norm of Q is handled (not the vector), and thus suitable for
+* depending on the input S(q,w) - with multiple scattering and absorption.
+* Only the norm of q is handled (not the vector), and thus suitable for
 * liquids, gazes, amorphous and powder samples.
 *
-* If incoherent/self S(Q,w) file is specified as empty (0 or "") then the
+* If incoherent/self S(q,w) file is specified as empty (0 or "") then the
 * scattering is constant isotropic (Vanadium like).
 * In case you only have one S(q,w) data containing both coherent and
 * incoherent contributions you should e.g. use 'Sqw_coh' and set 'sigma_coh'
 * to the total scattering cross section.
-*
-* The S(q,w) are used as probability tables, and the intensity is weighted to
-* the S(q,w) integral value. This integral value may be set from:
-*   norm_sqw=-1 compute |S| from the density (refer to the Component Manual)
-*   norm_sqw>0  use     |S| = norm_sqw
-*   norm_sqw=0  compute |S| = \int S(q,w) dq dw from raw data files
-* The default and recommanded normalization is 'norm_sqw=-1' for liquid-like
-* materials, but 'norm_sqw=0' is definitely a better choice for powders.
 *
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting may improve computation accuracy and prevent some neutrons
@@ -83,7 +75,6 @@
 * then a matrix with one line per q axis value, containing Sqw values for
 * each energy axis value. Comments (starting with '#') and non numerical lines
 * are ignored and used to separate blocks. Sampling must be regular.
-* It is recommanded to use norm_sqw=-1
 *
 * Example:
 * # q axis values
@@ -115,7 +106,7 @@
 * or column indexes (starting from 1) given as comments in the file header
 * (e.g. '#column_j 4'). Refer to the PowderN component for more details.
 * Delta_d/d and Debye-Waller factor may be specified for all lines with the
-* 'powder_Dd' and 'powder_DW' parameters. It is important to set norm_sqw=0
+* 'powder_Dd' and 'powder_DW' parameters.
 *
 * Additionally a special [q,Sq] format is also defined with:
 *   powder_format=qSq
@@ -166,9 +157,6 @@
 * thickness:    [m] Thickness of hollow sample (overrides radius_i).
 *
 * OPTIONAL PARAMETERS:
-* norm_sqw:     [1] When positive, the value is used as the integral of S(q,w)
-*                   Null value uses computed raw integral (powders).
-*                   Any negative value will normalize on the density (liquids).
 * auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
 *                   to optimal setting whenever required (recommanded).
 * concentric:   [1] Indicates that this component in a hollow geometry
@@ -192,7 +180,7 @@
 *                     to set according to the S(Q,w) values ,i.e. not too low.
 * interpolate:  [1] Performs (q,w) smoothing from S(q,w) if true (recommanded).
 *
-* POWDER ELASTIC SCATTERING PARAMETERS:
+* POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
 * powder_DW:             [1] global Debey-Waller factor, if not in |F2| or 1.
 * powder_format: [no quotes] name or definition of column indexes in file
@@ -231,7 +219,7 @@ DEFINE COMPONENT Isotropic_Sqw
     qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
-    norm_sqw=-1, powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
+    powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
     interpolate=1)
   OUTPUT PARAMETERS (VarSqw, columns)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -555,10 +543,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       }
     } /* end for i */
     Table_Stat(&retTable[0]); Table_Stat(&retTable[1]); Table_Stat(&retTable[2]);
-    if (Sqw->sqw_norm < 0)
-      printf("Isotropic_Sqw: %s: Automatic S(q,w) normalization is NOT recommanded\n"
-             "WARNING        for Powders ! Intensity might be wrong (use norm_sqw=0).\n",
-      Sqw->compname);
+    Sqw->sqw_norm = 0;
   }
 
   return(retTable);
@@ -934,10 +919,6 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   if (Sqw_Data->alpha && Sqw->sqw_norm < 0) { /* apply normalization */
-    if (Sqw->verbose_output > 0)
-      printf("Isotropic_Sqw: %s: Applying %g multiplication factor on %scoherent |S|.\n",
-        Sqw->compname, Sqw_Data->alpha,
-        (Sqw->type=='c' ? "" : "in"));
     val *= Sqw_Data->alpha;
     sum *= Sqw_Data->alpha;
     for (i=0; i < (Sqw_Data->nb_q_data) ; Sqw_Data->Sq[i++] *= Sqw_Data->alpha);
@@ -948,8 +929,8 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   if (!val || !sum) {
     printf("Isotropic_Sqw: %s: No valid data in the selected (Q,w) range.\n"
-           "ERROR          Available Sqw data is (|S|=%g)\n",
-      Sqw->compname, sum);
+           "ERROR          Available Sqw data is\n",
+      Sqw->compname);
     printf("                 q=[%g:%g] w=[%g:%g]\n",
            q_min_data, q_max_data,
            w_min_data, w_max_data);
@@ -957,21 +938,9 @@ struct Sqw_Data_struct *Sqw_readfile(
   }
 
   if (Sqw->verbose_output > 1 || !Sqw_Data->alpha)
-    printf("Isotropic_Sqw: %s: Generated %scoherent S(Q)[%li], with norm |S| = %g\n",
+    printf("Isotropic_Sqw: %s: Generated %scoherent S(Q)[%li]\n",
       Sqw->compname, (Sqw->type=='c' ? "" : "in"),
-      Sqw_Data->nb_q_data, Sqw_Data->intensity_total);
-
-  if (!Sqw_Data->alpha)
-    printf("Isotropic_Sqw: %s: Can not compute theoretical S(q) norm\n"
-           "WARNING        Using raw norm (not safe)\n",
-      Sqw->compname);
-
-  if (Sqw->sqw_norm > 0 &&
-   fabs(log10(fabs(Sqw_Data->intensity_total/Sqw->sqw_norm))) > 0.1)
-      printf("WARNING        The user specified |S| norm %g is probably wrong !\n"
-             "               Multiply intensities by factor %g\n"
-             "               or re-run with 'norm_sqw=-1'\n",
-        Sqw->sqw_norm, Sqw_Data->intensity_total/Sqw->sqw_norm);
+      Sqw_Data->nb_q_data);
 
   Table_Stat(&Sqw_restrict);
 
@@ -1242,7 +1211,7 @@ INITIALIZE
   VarSqw.q_max     = (qmax > 0 ? qmax : FLT_MAX);
   VarSqw.q_min     = (qmin > 0 ? qmin : 0);
   VarSqw.rho       = V_rho;
-  VarSqw.sqw_norm  = norm_sqw;
+  VarSqw.sqw_norm  = -1; /* automatic normalization for output files */
   VarSqw.sqw_auto  = auto_qw;
   VarSqw.sqw_interp= interpolate;
 
@@ -1275,7 +1244,7 @@ INITIALIZE
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && !VarSqw.Temperature
    && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity))
     printf("Isotropic_Sqw: %s: Sample temperature is zero (T).\n"
-           "Warning        Disabling detailed balance.\n",NAME_CURRENT_COMP);
+           "Warning        Disabling detailed balance.\n", NAME_CURRENT_COMP);
 
   if (VarSqw.s_coh<=0 && VarSqw.s_inc<=0) {
     printf("Isotropic_Sqw: %s: Scattering cross section is zero\n"
@@ -1555,11 +1524,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
           omega=0;
         }
 
-        /* MC choice: detailed balance: choice between w and -w */
-        if (omega && VarSqw.Temperature
-         && rand01() > 1/(1+exp(-omega/(VarSqw.Temperature*VarSqw.T2E))) ) {
-          omega = -omega; /* anti Stokes */
-        }                 /* else Stokes */
+        /* MC choice: detailed balance: choice between w and -w : w=Ei-Ef */
+        if (omega && VarSqw.Temperature) {
+          if (rand01() > 1/(1+exp(-omega/(VarSqw.Temperature*VarSqw.T2E))) )
+            omega = -omega; /* anti Stokes: sample loose energy into the neutron */
+          else {            /* else Stokes */
+            if (omega >= VS2E*v*v) continue; /* neutron can not loose more than its own energy */
+          }
+        }
 
         /* MC choice: momentum transfer Q in P(Q|w) */
         tmp = rand01();
@@ -1704,8 +1676,6 @@ do { /* Main interaction loop. Ends with intersect=0 */
       SCATTER;
 
       p_mult *= kf/k; /* factor 4*PI for solid angle implicitely in MC */
-      /* nornalize to \int S or norm_sqw in selected [q,w] range */
-      p_mult *= (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity);
 
       if      (fabs(omega) > VarSqw.w_max) VarSqw.w_max = fabs(omega);
       // else if (fabs(omega) < VarSqw.w_min) VarSqw.w_min = fabs(omega);
@@ -1826,8 +1796,8 @@ FINALLY
         Data_sqw.w_min, Data_sqw.w_max,
         Data_sqw.nb_w,NULL,DOS,NULL,
         filename);
-      sprintf(tmp, "S(q,w) from %s (%s), Norm=%g", Data_sqw.filename, type_ci,
-        (norm_sqw > 0 ? norm_sqw : Data_sqw.intensity));
+      sprintf(tmp, "S(q,w) from %s (%s), Norm=%g",
+        Data_sqw.filename, type_ci, Data_sqw.intensity);
       sprintf(filename, "%s_%s.sqw", NAME_CURRENT_COMP, ext);
       sprintf(xvar, "Wavevector [Angs-1] %s", ext);
       if (Data_sqw.nb_q > 1 && Data_sqw.nb_w > 1)
@@ -1838,11 +1808,10 @@ FINALLY
     }
     /* test if Sqw data is larger than used [q,w] range */
     if (VarSqw.neutron_removed && Data_sqw.nb_q*Data_sqw.nb_w > 1)
-    if ((VarSqw.w_max < Data_sqw.w_max || VarSqw.w_min > Data_sqw.w_min)
-     || (VarSqw.q_max < Data_sqw.q_max || VarSqw.q_min > Data_sqw.q_min))
+    if ((VarSqw.w_max*2 < Data_sqw.w_max) || (VarSqw.q_max*2 < Data_sqw.q_max))
           printf("Isotropic_Sqw: %s: Data from %s file %s in the range\n"
                  "                  q=[%g:%g] w=[%g:%g]\n"
-                 "                  is LARGER than accessible beam range.\n"
+                 "                  is larger than accessible beam range.\n"
                  "               This may result in neutron events removed.\n"
                  "WARNING        Set qmax=%g, wmax=%g\n"
                  "               to Focus simulation optimally, or set 'auto_qw=1'.\n",
