@@ -96,20 +96,23 @@ sub simulation_dialog {
     my $dlg = $win->DialogBox(-title => "Run simulation $name_instr",
                               -buttons => ["Start", "Cancel"]);
     my $top_frame = $dlg->Frame(-relief => 'raised', -border => 1);
+    $b = $dlg->Balloon(-state => 'balloon');
     $top_frame->pack(-fill => 'x');
     $top_frame->Label(-text => "Instrument source: $ii->{'Instrument-source'}",
           -anchor => 'w',
           -justify => 'left')->pack(-side => 'left');
-    $top_frame->Button(-text => "HTML docs", -width => 11,
+    my $genhtml = $top_frame->Button(-text => "HTML docs", -width => 11,
                 -command => sub {mcdoc_current($win)} )->pack(-side => 'right');
+    $b->attach($genhtml, -balloonmsg => "Generate documentation\nfor this instrument");
     # Set up the parameter input fields.
     my @parms = @{$ii->{'Parameters'}};
     my $numrows = int ((@parms + 2)/3);
     if($numrows > 0) {
-        $dlg->add('Label',
+        my $choiceparam = $dlg->add('Label',
                   -text => "Instrument parameters $typehelp:",
                   -anchor => 'w',
                   -justify => 'left')->pack(-fill => 'x');
+        $b->attach($choiceparam, -balloonmsg => "Specify instrument parameters\nscan ranges are 'MIN,MAX'");
         my $parm_frame = $dlg->Frame;
         $parm_frame->pack(-fill => 'both');
         my $row = 0;
@@ -151,44 +154,49 @@ sub simulation_dialog {
 
     my $f0 = $opt_frame->Frame;
     $f0->pack(-anchor => 'w', -fill => 'x');
-    $f0->Label(-text => "Output to (dir):")->pack(-side => 'left');
+    my $browsedir = $f0->Label(-text => "Output to (dir):")->pack(-side => 'left');
 
     my $dir_entry = $f0->Entry(-relief => 'sunken',
                                -width=>30,
                                -justify => 'left',
                                -textvariable => \$si{'Dir'});
     $dir_entry->pack(-side => 'left');
-    $f0->Checkbutton(-text => "force",-variable => \$si{'Force'})->pack(-side => 'left');
+    my $choiceforce = $f0->Checkbutton(-text => "force",-variable => \$si{'Force'})->pack(-side => 'left');
+    $b->attach($choiceforce, -balloonmsg => "Force to overwrite existing directories");
     $f0->Button(-text => "Browse ...", -width => 11,
                 -command => sub { my $d = get_dir_name($dlg, $si{'Dir'});
                                   $si{'Dir'} = $d if $d; } )->pack(-side => 'right');
-
+    $b->attach($browsedir, -balloonmsg => "Select a directory where to store results\nLeave blank to save at instrument location");
     my $f1 = $opt_frame->Frame;
     $f1->pack(-anchor => 'w');
-    $f1->Label(-text => "Neutron count:")->pack(-side => 'left');
+    my $choicencount = $f1->Label(-text => "Neutron count:")->pack(-side => 'left');
     my $ncount_entry = $f1->Entry(-relief => 'sunken',
                                   -width=>10,
                                   -justify => 'right',
                                   -textvariable => \$si{'Ncount'});
     $ncount_entry->pack(-side => 'left');
+    $b->attach($choicencount, -balloonmsg => "Number of neutron events to generate\nKeep it reasonable for Trace/3D view (1e6)");
     my $gravity = $f1->Checkbutton(-text => "gravity (BEWARE)", -variable => \$si{'gravity'})->pack(-side => 'left');
+    $b->attach($gravity, -balloonmsg => "Activates gravitation between and inside components\nExtended component must support gravitation (e.g. Guide_gravity)");
     if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
       if ($si{'mpi'} > 0) {
-        $f1->Label(-text => "# MPI nodes: ")->pack(-side => 'left');
+        my $mpinodes=$f1->Label(-text => "# MPI nodes: ")->pack(-side => 'left');
         $f1->Entry(-relief => 'sunken',
                -width=>10,
                -textvariable => \$si{'mpi'},
                -justify => 'right')->pack(-side => 'left');
+        $b->attach($mpinodes, -balloonmsg => "Parallelisation");
       }
       if ($si{'ssh'} > 0) {
-        $f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
+        my $sshnodes=$f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
           -variable => \$si{'Multi'},
           -relief => 'flat')->pack(-anchor => 'w');
+        $b->attach($sshnodes, -balloonmsg => "Scan step are distributed among a list of machines");
       }
     }
     my $ff1 = $opt_frame->Frame;
     $ff1->pack(-anchor => 'w');
-    $ff1->Checkbutton(-text => "Plot results, Format: ",
+    my $formatchoice = $ff1->Checkbutton(-text => "Plot results, Format: ",
                             -variable => \$si{'Autoplot'},
                             -relief => 'flat')->pack(-side => 'left');
     #my($ListBoxFormat)=$ff1->Scrolled('Listbox',-height => '2', -width => '20', -scrollbars => 'oe', -exportselection => 'false')->pack(-side => 'right');
@@ -196,6 +204,7 @@ sub simulation_dialog {
     #foreach my $format (@Formats) {
 #        $ListBoxFormat->insert('end', $format);
     #}
+    $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation\nSelect format here or from Simulation/Configuration menu item");
     $ff1->Radiobutton(-text => "PGPLOT",
                      -variable => \$si{'Format'},
                      -relief => 'flat',
@@ -230,33 +239,39 @@ sub simulation_dialog {
 
     my $f3 = $opt_frame->Frame;
     $f3->pack(-anchor => 'w');
-    $f3->Radiobutton(-text => "Trace (3D View)",
+    my $choice3d = $f3->Radiobutton(-text => "Trace (3D View)",
                      -variable => \$si{'Trace'},
                      -relief => 'flat',
                      -value => 1)->pack(-side => 'left');
-    $f3->Radiobutton(-text => "Simulate",
+    $b->attach($choice3d, -balloonmsg => "Draw instrument geometry (3D view)");
+    my $choicesim = $f3->Radiobutton(-text => "Simulate",
                      -variable => \$si{'Trace'},
                      -relief => 'flat',
                      -value => 0)->pack(-side => 'left');
-    $f3->Label(-text => "# Scanpoints: ")->pack(-side => 'left');
+    $b->attach($choicesim, -balloonmsg => "Simulation mode");
+    my $choicepnts = $f3->Label(-text => "# Scanpoints: ")->pack(-side => 'left');
     $f3->Entry(-relief => 'sunken',
                -width=>10,
                -textvariable => \$si{'NScan'},
                -justify => 'right')->pack(-side => 'left');
+    $b->attach($choicepnts, -balloonmsg => "Number of scan steps\nor simulation repetitions");
     # Gui stuff for selection of 'inspect' parameter
     # PW 20030314
     my $f4 = $opt_frame->Frame;
     $f4->pack(-anchor => 'w', -side => 'top', -fill => 'x');
-    $f4->Label(-text => "Inspect component: ", -height => '2')->pack(-side => 'left');
+    my $choiceinspect = $f4->Label(-text => "Inspect component: ", -height => '2')->pack(-side => 'left');
+    $b->attach($choiceinspect, -balloonmsg => "For Trace mode, only show neutrons reaching selected component");
     my($ListBox)=$f4->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
     # Selection of 'First' and 'Last' components to visualize
     my $f5 = $opt_frame->Frame;
     $f5->pack(-anchor => 'w', -side => 'top', -fill => 'x');
-    $f5->Label(-text => "First component: ", -height => '2')->pack(-side => 'left');
+    my $choicefirst = $f5->Label(-text => "First component: ", -height => '2')->pack(-side => 'left');
+    $b->attach($choicefirst, -balloonmsg => "For Trace mode, show instrument geometry from this component");
     my($ListBoxFirst)=$f5->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
     my $f6 = $opt_frame->Frame;
     $f6->pack(-anchor => 'w', -side => 'top', -fill => 'x');
-    $f6->Label(-text => "Last component: ", -height => '2')->pack(-side => 'left');
+    my $choicelast = $f6->Label(-text => "Last component: ", -height => '2')->pack(-side => 'left');
+    $b->attach($choicelast, -balloonmsg => "For Trace mode, show instrument geometry up to this component");
     my($ListBoxLast)=$f6->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
     my @data;
     @data=instrument_information($ii->{'Instrument-source'});

@@ -26,6 +26,7 @@
 # PW, 20030314
 use Config;
 use POSIX;
+use Tk::Balloon;
 
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
@@ -1268,6 +1269,7 @@ sub setup_menu {
 sub setup_cmdwin {
     my ($w) = @_;
     my $f2 = $w->Frame();
+    $b = $w->Balloon(-state => 'balloon');
     $f2->pack(-fill => 'x');
     my $instr_lab = $f2->Label(-text => "Instrument file: <None>",
                                -anchor => 'w',
@@ -1276,9 +1278,11 @@ sub setup_cmdwin {
     my $instr_run = $f2->Button(-text => "Run",
                                 -command => sub { menu_run_simulation($w) });
     $instr_run->pack(-side => "right", -padx => 1, -pady => 1);
+    $b->attach($instr_run, -balloonmsg => "Compile and Run current inctrument");
     my $instr_but = $f2->Button(-text => "Edit/New",
                                 -command => \&menu_edit_current);
     $instr_but->pack(-side => "right", -padx => 1, -pady => 1);
+    $b->attach($instr_but, -balloonmsg => "Edit current instrument description\nor create a new one from a Template");
     my $f3 = $w->Frame();
     $f3->pack(-fill => 'x');
     my $res_lab = $f3->Label(-text => "Simulation results: <None>",
@@ -1288,9 +1292,11 @@ sub setup_cmdwin {
     my $plot_but = $f3->Button(-text => "Plot",
                                 -command => sub {menu_plot_results($w);});
     $plot_but->pack(-side => "right", -padx => 1, -pady => 1);
+    $b->attach($plot_but, -balloonmsg => "Plot last simulation results");
     my $sim_but = $f3->Button(-text => "Read",
                                 -command => sub { menu_read_sim_file($w) });
     $sim_but->pack(-side => "right", -padx => 1, -pady => 1);
+    $b->attach($sim_but, -balloonmsg => "Open previous simulation results");
     my $status_lab = $w->Label(-text => "Status: Ok",
                                 -anchor => 'w',
                                 -justify => 'left');
