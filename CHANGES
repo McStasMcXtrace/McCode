@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: 1.8
+* Version: $Revision: 1.26 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -40,12 +40,12 @@ Changes in McStas v1.9.1, Mar 29, 2006
   - mcgui: A few bugfixes. Note also that if you experience crashes when starting/running
     GNOME/Gtk2 applications, update your perl-Tk installation. Two ways to do this:
     1) Get the tarball from http://www.mcstas.org/download/Tk-804.027_gtk2_patch.tar.gz and
-       install using 'perl Makefile.PL && make && make install'. 
+       install using 'perl Makefile.PL && make && make install'.
     2) Do a 'make tk' in the McStas unpacked McStas source directory. This will download and
        install the tarball into your McStas system directory.
 
   Components
-  - DiskChopper.comp - new disc chopper component. Chopper.comp made obsolete. 
+  - DiskChopper.comp - new disc chopper component. Chopper.comp made obsolete.
     See mcdoc page / component manual for further details.
   - Guide.comp - reads reflectivity tables from disk.
   - Isotropic_Sqw - minor bugfixes, validated against PowerN, V_sample, etc.

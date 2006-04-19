@@ -1,7 +1,7 @@
 # Library of McStas runtime perl functions
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
+#   Copyright (C) 1997-2006, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -706,21 +706,17 @@ sub get_comp_info {
         $cname = $1;
         if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*{}\"]+)\)!i && $typ ne "Instrument") {
             foreach (split(",", $1)) {
-                if(/^\s*([a-zA-Z0-9_]+)\s*\=\s*([-+.e0-9]+)\s*$/) { # name=numerical_value
+                if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*(.*)\s*$/) { # [type] name=other define
                     my $p = $1;
                     my @p_splitted = split(" ", $p);
                     my $length = scalar @p_splitted;
                     my $p_last_word = $p_splitted[$length-1];
                     push @dpar, $p_last_word;
                     $d->{'parhelp'}{$p_last_word}{'default'} = $2;
-                } elsif(/^\s*([a-zA-Z0-9_]+)\s*\=\s*(.*)\s*$/) { # name=other define
-                    my $p = $1;
-                    my @p_splitted = split(" ", $p);
-                    my $length = scalar @p_splitted;
-                    my $p_last_word = $p_splitted[$length-1];
-                    push @dpar, $p_last_word;
-                    $d->{'parhelp'}{$p_last_word}{'default'} = $2;
-                } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {                # name
+                    if ($length > 1) {
+                      $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
+                    }
+                } elsif(/^\s*([a-zA-Z0-9_\s\*]+)\s*$/) {                # name
                     my $p = $1;
                     my @p_splitted = split(" ", $p);
                     my $length = scalar @p_splitted;
@@ -733,26 +729,33 @@ sub get_comp_info {
         }
         if($s =~ m!SETTING\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]+)\)!i && $typ ne "Instrument") {
             foreach (split(",", $1)) {
-                if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) { # name=numerical_value
-                    my $p = $1;
-                    my @p_splitted = split(" ", $p);
-                    my $length = scalar @p_splitted;
-                    my $p_last_word = $p_splitted[$length-1];
-                    push @spar, $p_last_word;
-                    $d->{'parhelp'}{$p_last_word}{'default'} = $2;
-                } elsif(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) { # name=numerical_value
+                if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) { # [type] name=numerical value
                     my $p = $1;
                     my @p_splitted = split(" ", $p);
                     my $length = scalar @p_splitted;
                     my $p_last_word = $p_splitted[$length-1];
                     push @spar, $p_last_word;
                     my $p_first_word = $p_splitted[0];
-                    if ($p_first_word !~ m/char/ && $p_first_word !~ m/string/) {
+                    $d->{'parhelp'}{$p_last_word}{'default'} = $2;
+                    if ($length > 1) {
+                      $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
+                    }
+                } elsif(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*(.*)\s*$/) { # [type] name=other value
+                    my $p = $1;
+                    my @p_splitted = split(" ", $p);
+                    my $length = scalar @p_splitted;
+                    my $p_last_word = $p_splitted[$length-1];
+                    push @spar, $p_last_word;
+                    my $p_first_word = $p_splitted[0];
+                    if ($length > 1 && $p_first_word !~ m/char/ && $p_first_word !~ m/string/) {
                       print STDERR "
 Warning: SETTING parameter $1 with default value $2\n
          is not of type char/string. Ignoring default value.\n";
                     } else {
                       $d->{'parhelp'}{$p_last_word}{'default'} = $2;
+                    }
+                    if ($length > 1) {
+                      $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
                     }
                 } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {                    # name
                     my $p = $1;

@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Granroth
 * Date: July 2004
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: SNS Project Oak Ridge National Laboratory
 *
 * A source that produces a time and energy distribution from the SNS moderator files
@@ -46,7 +46,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SNS_source
-DEFINITION PARAMETERS (S_filename)
+DEFINITION PARAMETERS (string S_filename)
 SETTING PARAMETERS (width, height, dist, xw, yh, Emin, Emax)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in,
   inxvec,inyvec,Pvec,xylength,tcol,Ecol,txval,tyval,tPvec,Ptmat,

@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version:
+* Version: $Revision: 1.36 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
@@ -213,7 +213,7 @@
 *****************************************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
-  DEFINITION PARAMETERS (Sqw_coh=0, Sqw_inc=0, powder_format=Undefined)
+  DEFINITION PARAMETERS (string Sqw_coh=0, string Sqw_inc=0, powder_format=Undefined)
   SETTING PARAMETERS(radius_i=0,radius_o=0,thickness=0,
     xwidth=0, yheight=0, zthick=0,
     qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,

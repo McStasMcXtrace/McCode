@@ -12,7 +12,7 @@
 * Date: Feb. 12,1999
 * Origin: Uni. Gottingen (Germany)
 * Release: McStas 1.6
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Modified by: Peter Link Feb. 12,1999, Added double bent feature by:
 * Modified by: Peter Link Sep. 24. 1999, corrected bug in rotation of v-coords:
 * Modified by: EF, Feb 13th 2002: Read reflectivity table
@@ -76,7 +76,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monochromator_2foc
-DEFINITION PARAMETERS (reflect=0)
+DEFINITION PARAMETERS (string reflect=0)
 SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
 OUTPUT PARAMETERS (mos_y, mos_z,  mono_Q, SlabWidth, SlabHeight, rTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

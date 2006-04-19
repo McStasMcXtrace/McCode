@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: Nov. 11, 1998
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -50,7 +50,7 @@
 
 
 DEFINE COMPONENT Divergence_monitor
-DEFINITION PARAMETERS (nh=20, nv=20, filename)
+DEFINITION PARAMETERS (nh=20, nv=20, string filename)
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, h_maxdiv=2, v_maxdiv=2)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

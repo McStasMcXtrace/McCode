@@ -10,7 +10,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: October 2000
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -45,7 +45,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOFlog_mon
-DEFINITION PARAMETERS (tlow, thigh, ndec, filename)
+DEFINITION PARAMETERS (tlow, thigh, ndec, string filename)
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

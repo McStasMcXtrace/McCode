@@ -12,14 +12,14 @@
 * Date: 1997
 * Origin: Risoe
 * Release: all McStas
-* Version: all
+* Version: $Revision: 1.17 $
 *
 * This file is part of McStas.
 * It details the installation procedure
 *
 *******************************************************************************/
 
-NOTE: This document is obsolete - please refer to the documents in 
+NOTE: This document is obsolete - please refer to the documents in
 
 install_docs/tex/install.*
 install_docs/html/install.html
@@ -91,7 +91,7 @@ semantics. Search the archive of the mailing list
 (http://neutron.risoe.dk/neutron-mc/) for details. As far as we know,
 the front-end programs have not been used on Windows at this point.
 
-At Risø, we do not use McStas in Windows, so we cannot provide direct
+At Ris, we do not use McStas in Windows, so we cannot provide direct
 support for this operating system. Try asking on the mailing list if you
 need help. If you experience a specific problem with using McStas on
 Windows, send a description of the problem to the mailing list so that
@@ -110,7 +110,7 @@ by the compiler to make the simulations work. It may also be necessary
 to edit the default file paths in the file port.h, since environment
 variables are (as far as we know) not available on the Macintosh.
 
-At Risø, we do not use McStas on the Macintosh, so we cannot provide
+At Ris, we do not use McStas on the Macintosh, so we cannot provide
 direct support for this system. Try asking on the mailing list if you
 need help. If you experience a specific problem with using McStas on the
 Macintosh, send a description of the problem to the mailing list so that

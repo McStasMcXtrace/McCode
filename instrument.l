@@ -14,13 +14,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.22
+* Version: $Revision: 1.39 $
 *
 * Flex scanner for instrument definition files.
 *
-* $Id: instrument.l,v 1.38 2006-04-06 08:46:20 farhi Exp $
+* $Id: instrument.l,v 1.39 2006-04-19 13:06:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.38  2006/04/06 08:46:20  farhi
+* NEW GRAMMAR: JUMP WHEN ITERATE COPY ...
+* need doc in TeX now...
+*
 * Revision 1.37  2005/10/21 10:07:42  farhi
 * Restrict parsing to 'normal' chars. Scandinavian stuff removed as some LeX do not support that
 *

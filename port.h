@@ -12,11 +12,11 @@
 * Date: Nov 11, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.1
+* Version: $Revision: 1.14 $
 *
 * Header file for portability related stuff.
 *
-* $Id: port.h,v 1.13 2004-09-10 15:09:56 farhi Exp $
+* $Id: port.h,v 1.14 2006-04-19 13:06:26 farhi Exp $
 *
 *******************************************************************************/
 

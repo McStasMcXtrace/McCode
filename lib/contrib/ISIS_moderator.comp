@@ -11,7 +11,7 @@
  * %I
  * Written by: S. Ansell and D. Champion
  * Date: AUGUST 2005
- * Version: $Revision: 1.4 $
+ * Version: $Revision: 1.5 $
  * Origin: ISIS
  * Release: McStas 1.9
  *
@@ -20,9 +20,9 @@
  * %D
  * Produces a TS1 or TS2 ISIS moderator distribution.  The Face argument determines which moderator
  * is to be sampled. Each face uses a different Etable file (the location of which is determined by
- * the MCTABLES environment variable).  Neutrons are created having a range of energies 
+ * the MCTABLES environment variable).  Neutrons are created having a range of energies
  * determined by the E0 and E1 arguments.  Trajectories are produced such that they pass
- * through the moderator face (defined by modXsixe and modYsize) and a focusing rectangle 
+ * through the moderator face (defined by modXsixe and modYsize) and a focusing rectangle
  * (defined by xh,yh and dist).  Please download the documentation for precise instructions for use.
  *
  * Example:   ISIS_moderator(Face ="water", E0 = 49.0,E1 = 51.0, dist = 1.0, xw = 0.01,
@@ -32,7 +32,7 @@
  * INPUT PARAMETERS:
  *
  * Face:   (word) Name of the face - TS2:groove,hydrogen,narrow,broad -
- *                                 - TS1:Water,ch4,h2,merlin or instrument name eg maps, crisp etc. 
+ *                                 - TS1:Water,ch4,h2,merlin or instrument name eg maps, crisp etc.
  *                                 - TS2: W1-9 E1-9
  * E0:       (meV) Lower edge of energy distribution
  * E1:       (meV) Upper edge of energy distribution
@@ -48,15 +48,10 @@
  * Further <A HREF="http://www.isis.rl.ac.uk/Computing/Software/MC/index.htm">information</A> should be
  * downloaded from the ISIS MC website.
  * %E
- *
- *
- *
- *
- *
  *******************************************************************************/
 
 DEFINE COMPONENT ISIS_moderator
-DEFINITION PARAMETERS (Face)
+DEFINITION PARAMETERS (string Face)
 SETTING PARAMETERS (E0, E1,dist,xw,yh,modXsize,modYsize,CAngle,SAC)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
@@ -67,7 +62,7 @@ DECLARE
 
 
 
-typedef struct 
+typedef struct
 {
   int nEnergy;        ///< Number of energy bins
   int nTime;          ///< number of time bins
@@ -98,7 +93,7 @@ typedef struct
 
   /* global variables */
 
-  double p_in;            /* Polorization term (from McSTAS) */ 
+  double p_in;            /* Polorization term (from McSTAS) */
   int Tnpts;              /* Number of points in parameteriation */
 
   double scaleSize;        /* correction for the actual area of the moderator viewed */
@@ -106,7 +101,7 @@ typedef struct
   double angleArea;       /* Area seen by the window  */
 
   double Nsim;		/* Total number of neutrons to be simulated */
- 
+
   int Ncount;          /* Number of neutron simulate so far*/
   Source TS;
 
@@ -116,7 +111,7 @@ typedef struct
   double rtmodX,rtmodY;    /* runtime moderator sizes, so that a negative argument may give a default size */
 
 
-double** 
+double**
 matrix(const int m,const int n)
  /*!
    Determine a double matrix
@@ -130,7 +125,7 @@ matrix(const int m,const int n)
   if (n<1) return 0;
   pv = (double*) malloc(m*n*sizeof(double));
   pd = (double**) malloc(m*sizeof(double*));
-  if (!pd) 
+  if (!pd)
     {
       fprintf(stderr,"No room for matrix!\n");
       exit(1);
@@ -141,11 +136,11 @@ matrix(const int m,const int n)
 }
 
 
-double 
-polInterp(double* X,double* Y,int Psize,double Aim) 
-  /*! 
+double
+polInterp(double* X,double* Y,int Psize,double Aim)
+  /*!
     returns the interpolated polynomial between Epnts
-    and the integration 
+    and the integration
     \param X :: X coordinates
     \param Y :: Y coordinates
     \param Psize :: number of valid point in array to use
@@ -156,7 +151,7 @@ polInterp(double* X,double* Y,int Psize,double Aim)
   double out,errOut;         /* out put variables */
   double C[Psize],D[Psize];
   double testDiff,diff;
-  
+
   double w,den,ho,hp;           /* intermediate variables */
   int i,m,ns;
 
@@ -176,10 +171,10 @@ polInterp(double* X,double* Y,int Psize,double Aim)
       C[i]=Y[i];
       D[i]=Y[i];
     }
-  
+
   out=Y[ns];
-  ns--;              /* Now can be -1 !!!! */ 
-  
+  ns--;              /* Now can be -1 !!!! */
+
   for(m=1;m<Psize;m++)
     {
       for(i=0;i<Psize-m;i++)
@@ -192,7 +187,7 @@ polInterp(double* X,double* Y,int Psize,double Aim)
 	  D[i]=hp*den;
 	  C[i]=ho*den;
 	}
-      
+
       errOut= (2*(ns+1)<(Psize-m)) ? C[ns+1] : D[ns--];
       out+=errOut;
     }
@@ -201,14 +196,14 @@ polInterp(double* X,double* Y,int Psize,double Aim)
 
 int
 binSearch(int Npts,double* AR,double V)
-  /*! 
-    Object is to find the point in 
-    array AR, closest to the value V 
+  /*!
+    Object is to find the point in
+    array AR, closest to the value V
     Checked for ordered array returns lower of backeting objects
   */
 {
   int klo,khi,k;
-  if (Npts<=0) 
+  if (Npts<=0)
     return 0;
   if (V>AR[Npts-1])
     return Npts;
@@ -230,44 +225,44 @@ binSearch(int Npts,double* AR,double V)
 	khi=k;
       else
 	klo=k;
-    } 
+    }
   return khi;
 }
 
 int
 cmdnumberD(char *mc,double* num)
- /*! 
+ /*!
    \returns 1 on success 0 on failure
  */
 {
   int i,j;
   char* ss;
   char **endptr;
-  double nmb;  
+  double nmb;
   int len;
-  
+
   len=strlen(mc);
   j=0;
-  
-  for(i=0;i<len && mc[i] && 
+
+  for(i=0;i<len && mc[i] &&
 	(mc[i]=='\t' || mc[i]==' '  || mc[i]==',');i++);
   if(i==len || !mc[i]) return 0;
   ss=malloc(sizeof(char)*(len+1));
- 
-  for(;i<len && mc[i]!='\n' && mc[i] 
+
+  for(;i<len && mc[i]!='\n' && mc[i]
 	&& mc[i]!='\t' && mc[i]!=' ' && mc[i]!=',';i++)
     {
       ss[j]=mc[i];
       j++;
     }
   if (!j)
-    { 
+    {
       free(ss);
       return 0;         //This should be impossible
     }
   ss[j]=0;
   endptr=malloc(sizeof(char*));
-  nmb = strtod(ss,endptr); 
+  nmb = strtod(ss,endptr);
   if (*endptr != ss+j)
     {
       free(endptr);
@@ -282,7 +277,7 @@ cmdnumberD(char *mc,double* num)
   return 1;
 }
 
-int 
+int
 notComment(char* Line)
  /*!
    \returns 0 on a comment, 1 on a non-comment
@@ -299,7 +294,7 @@ notComment(char* Line)
   return 1;
 }
 
-int 
+int
 timeStart(char* Line)
  /*!
    Search for a word time at the start of
@@ -316,7 +311,7 @@ timeStart(char* Line)
   return (strncmp(Line+i,"time",4)) ? 0 : 1;
 }
 
-int 
+int
 timeEnd(char* Line)
  /*!
    Search for a word time at the start of
@@ -333,7 +328,7 @@ timeEnd(char* Line)
   return (strncmp(Line+i,"total",5)) ? 0 : 1;
 }
 
-int 
+int
 energyBin(char* Line,double Einit,double Eend,double* Ea,double* Eb)
      /*!
        Search for a word "energy bin:" at the start of
@@ -415,20 +410,20 @@ readHtable(FILE* TFile,const double Einit,const double Eend)
   int Ftime;             // time Flag
   int eIndex;             // energy Index
   int tIndex;             // time Index
-  double Tsum;           // Running integration 
+  double Tsum;           // Running integration
   double Efraction;      // Amount to use for an energy/time bin
 
   extern Source TS;
-  
+
   int DebugCnt;
   int i;
   /*!
     Status Flag::
     Ftime=1 :: [time ] Reading Time : Data : Err [Exit on Total]
-  
+
 
     /*
-    Double Read File to determine how many bins and 
+    Double Read File to determine how many bins and
     memery size
   */
   Ea=0.0;
@@ -482,11 +477,11 @@ readHtable(FILE* TFile,const double Einit,const double Eend)
   if (!TS.nTime && tIndex)
     TS.nTime=tIndex;
   // printf("tIndex %d %d %d %d \n",tIndex,eIndex,TS.nEnergy,TS.nTime);
-  
+
   /* SECOND TIME THROUGH:: */
   rewind(TFile);
 
-  TS.Flux=matrix(TS.nEnergy,TS.nTime);      
+  TS.Flux=matrix(TS.nEnergy,TS.nTime);
   TS.EInt=(double*) malloc(TS.nEnergy*sizeof(double));
   TS.TimeBin=(double*) malloc(TS.nTime*sizeof(double));
   TS.EnergyBin=(double*) malloc(TS.nEnergy*sizeof(double));
@@ -553,20 +548,20 @@ readHtable(FILE* TFile,const double Einit,const double Eend)
   //  printf("tIndex %d %d %d \n",tIndex,eIndex,TS.nTime);
   //printf("Tsum %g \n",Tsum);
   //fprintf(stderr,"ebin1 ebinN %g %g\n",TS.EnergyBin[0],TS.EnergyBin[TS.nEnergy-1]);
-  
+
   return;
 }
 
 void
 getPoint(double* TV,double* EV,double* lim1, double* lim2)
- /*! 
-   Calculate the Time and Energy 
+ /*!
+   Calculate the Time and Energy
    by sampling the file.
    Uses TS table to find the point
-   \param TV :: 
+   \param TV ::
    \param EV ::
-   \param lim1 :: 
-   \param lim2 ::  
+   \param lim1 ::
+   \param lim2 ::
  */
 {
   int i;
@@ -581,7 +576,7 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2)
   double *EX;
 
   // So that lowPoly+highPoly==maxPoly
-  const int maxPoly=6; 
+  const int maxPoly=6;
   const int highPoly=maxPoly/2;
   const int lowPoly=maxPoly-highPoly;
 
@@ -597,7 +592,7 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2)
   Rend=R=TS.Total*R0;
   // This gives Eint[Epnt-1] > R > Eint[Epnt]
   Epnt=binSearch(TS.nEnergy-1,TS.EInt,R);
-  
+
   //      if (Epnt < 0)
   //   Epnt=1;
   Tpnt=binSearch(TS.nTime-1,TS.Flux[Epnt-1],R);
@@ -630,7 +625,7 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2)
       Espread=TS.EInt[Epnt]-TS.EInt[Epnt-1];
       *EV=TS.EnergyBin[Epnt+1];
     }
-  
+
   if (Tpnt==0 || Epnt==0)
     {
       fprintf(stderr,"BIG ERROR WITH Tpnt: %d and Epnt: %d\n",Tpnt,Epnt);
@@ -656,14 +651,14 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2)
   R/=Tspread;
   //  printf("R == %12.6e\n",R);
   *TV+=TRange*R;
-  
-  
+
+
   R1=TS.EInt[Epnt-1]+Espread*rand01();
   iStart=Epnt>lowPoly ? Epnt-lowPoly : 0;                  // max(Epnt-halfPoly,0)
   iEnd=TS.nEnergy>Epnt+highPoly ? Epnt+highPoly : TS.nEnergy-1;  // min(nEnergy-1,Epnt+highPoly
 
   *EV=polInterp(TS.EInt+iStart,TS.EnergyBin+iStart,1+iEnd-iStart,R1);
-  
+
   //  fprintf(stderr,"Energy == %d %d %12.6e %12.6e \n",iStart,iEnd,R1,*EV);
   //  fprintf(stderr,"bins == %12.6e %12.6e %12.6e %12.6e \n",TS.EnergyBin[iStart],TS.EnergyBin[iEnd],
   //	  TS.EInt[Epnt],TS.EInt[Epnt-1]);
@@ -680,11 +675,11 @@ getPoint(double* TV,double* EV,double* lim1, double* lim2)
       fprintf(stderr,"outside boundaries\n Epnt= %d, Tpnt= %d binlo %g|%g| binhi %g \n",Epnt,Tpnt,TS.EnergyBin[Epnt-1],*EV,TS.EnergyBin[Epnt]);
 
 
-      fprintf(stderr,"TS == %g %g :: %d %d \n",TS.EInt[Epnt-1],TS.EInt[Epnt],iStart,iEnd);  
-      fprintf(stderr,"Points (%g) == ",R1);  
+      fprintf(stderr,"TS == %g %g :: %d %d \n",TS.EInt[Epnt-1],TS.EInt[Epnt],iStart,iEnd);
+      fprintf(stderr,"Points (%g) == ",R1);
       for(i=0;i<iEnd-iStart;i++)
 	fprintf(stderr," %g %g",*(TS.EInt+i+iStart),*(TS.EnergyBin+iStart+i));
-      fprintf(stderr,"\n");  
+      fprintf(stderr,"\n");
 
       //fprintf(stderr,"energy value %g\n",*EV);
       //  fprintf(stderr,"TFlux == %12.6e %12.6e %12.6e \n",TS.Flux[Epnt-1][Tpnt-1],Rend,TS.Flux[Epnt-1][Tpnt]);
@@ -697,38 +692,38 @@ cmdnumberI(char *mc,int* num,const int len)
   /*!
     \param mc == character string to use
     \param num :: Place to put output
-    \param len == length of the character string to process 
-    returns 1 on success and 0 on failure 
+    \param len == length of the character string to process
+    returns 1 on success and 0 on failure
   */
 {
   int i,j;
   char* ss;
   char **endptr;
   double nmb;
-  
-      if (len<1) 
+
+      if (len<1)
 	return 0;
       j=0;
-      
-      for(i=0;i<len && mc[i] && 
+
+      for(i=0;i<len && mc[i] &&
 	    (mc[i]=='\t' || mc[i]==' '  || mc[i]==',');i++);
       if(i==len || !mc[i]) return 0;
       ss=malloc(sizeof(char)*(len+1));
       /*  char *ss=new char[len+1]; */
-      for(;i<len && mc[i]!='\n' && mc[i] 
+      for(;i<len && mc[i]!='\n' && mc[i]
 	    && mc[i]!='\t' && mc[i]!=' ' && mc[i]!=',';i++)
 	{
 	  ss[j]=mc[i];
 	  j++;
 	}
       if (!j)
-	{ 
+	{
 	  free(ss);
 	  return 0;         //This should be impossible
 	}
       ss[j]=0;
       endptr=malloc(sizeof(char*));
-      nmb = strtod(ss,endptr); 
+      nmb = strtod(ss,endptr);
       if (*endptr != ss+j)
 	{
 	  free(endptr);
@@ -742,10 +737,10 @@ cmdnumberI(char *mc,int* num,const int len)
       free(ss);
       return 1;
     }
- 
+
 
   FILE* openFile(char* FileName)
-    { 
+    {
       FILE* efile=0;
       char ss[256];
       char mct[256];
@@ -758,7 +753,7 @@ cmdnumberI(char *mc,int* num,const int len)
       if (!efile) {
 	/* Is the file in a local 'tablefiles' folder? */
 	sprintf(ss,"%s%c%s%c%s", ".", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
-	efile=fopen(ss,"r"); 
+	efile=fopen(ss,"r");
 	fprintf(stderr,"Searching -- %s\n",ss);
       }
       if (!efile) {
@@ -766,8 +761,8 @@ cmdnumberI(char *mc,int* num,const int len)
 	if (getenv("MCTABLES")) {
 	  strcpy(mct, getenv("MCTABLES"));
 	  sprintf(ss, "%s%c%s", mct, MC_PATHSEP_C, FileName);
-	  efile=fopen(ss,"r");  
-	  fprintf(stderr,"Searching -- %s, MCTABLES directory\n",ss);         
+	  efile=fopen(ss,"r");
+	  fprintf(stderr,"Searching -- %s, MCTABLES directory\n",ss);
 	}
       }
       if (!efile) {
@@ -788,22 +783,22 @@ cmdnumberI(char *mc,int* num,const int len)
 
   double strArea()
     {
-      /* 
-	 Returns the mean Str view of the viewport 
-	 This integrates over each point on the window xw to yh 
-	 View port is symmetric so use only 1/4 of the view 
+      /*
+	 Returns the mean Str view of the viewport
+	 This integrates over each point on the window xw to yh
+	 View port is symmetric so use only 1/4 of the view
 	 for the calcuation.
 	 Control Values rtmodY rtmodX xw yh
       */
-  
+
       double A;
       double Vx,Vy;        // view temp points
       double Mx,My;        // moderator x,y
-      double D2;           // Distance ^2 
-      int i,j,aa,bb;       // loop variables 
+      double D2;           // Distance ^2
+      int i,j,aa,bb;       // loop variables
 
       D2=dist*dist;
-      A=0.0;  
+      A=0.0;
 
       for(i=0;i<50;i++)              // Mod X
 	{
@@ -824,7 +819,7 @@ cmdnumberI(char *mc,int* num,const int len)
 	//change to Mx*My
       A*=(rtmodY*rtmodX)/(10201.0*2500.0);
       // Correct for the area of the viewport. (tables are per cm^2)
-      A*=xw*yh*10000;    
+      A*=xw*yh*10000;
 
       fprintf(stderr,"Viewport == %g %g Moderator size == (%g * %g) m^2 \n",xw,yh,rtmodX,rtmodY);
       fprintf(stderr,"Dist == %g (metres) \n",dist);
@@ -869,7 +864,7 @@ INITIALIZE
   strcpy(Olist[Bcnt].Name,"crisp"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
   strcpy(Olist[Bcnt].Name,"iris"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.11; Bcnt++;
 
-  // Water face 1 
+  // Water face 1
   strcpy(Olist[Bcnt].Name,"polaris"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
   strcpy(Olist[Bcnt].Name,"het"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
   strcpy(Olist[Bcnt].Name,"tosca"); Olist[Bcnt].Xsize=0.12; Olist[Bcnt].Ysize=0.115; Bcnt++;
@@ -931,7 +926,7 @@ INITIALIZE
   rtE1=E1;
   rtmodX=modXsize;
   rtmodY=modYsize;
-  
+
 
   /* Convert NEGATIVE energy (denoting angstroms) into meV */
   if ( (rtE0<0 && E1>0) | (rtE0>0 && E1<0))
@@ -940,7 +935,7 @@ INITIALIZE
       exit(1);
     }
 
- 
+
   if (rtE0<0 && E1<0)
     {
       fprintf (stderr,"converting Angstroms to meV\n");
@@ -965,7 +960,7 @@ INITIALIZE
   Tnpts=0;
   Ncount=0;
   fprintf(stderr,"Face == %s \n",Face);
-  
+
   for(i=0;Face[i] && Face[i]!=' ';i++)
     lowerFace[i]=tolower(Face[i]);
   lowerFace[i]=0;
@@ -1006,7 +1001,7 @@ INITIALIZE
   fprintf(stderr,"Table == %d\n",table);
 
   /* READ PARAMETER FILE */
-    
+
     Tfile=openFile(fname);
 
   if (!readHtable(Tfile,rtE0,rtE1))
@@ -1066,12 +1061,12 @@ TRACE
   //fprintf(stderr,"outside %g mev\n", TS.Total );
   if(Eval>rtE1 || Eval<rtE0)
       fprintf(stderr,"outside %g mev\n", Eval );
-  
+
   Ival=TS.Total*3.744905847e14*1.1879451;  /* ( of proton in 60uAmp) * (1-cos(30))*2*Pi  */
- 
-  
+
+
   v = SE2V*sqrt(Eval);      /* Calculate the velocity */
-  vz = v*Ddist/r; 
+  vz = v*Ddist/r;
   vy = v*dy/r;
   vx = v*dx/r;
 

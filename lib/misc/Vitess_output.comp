@@ -8,8 +8,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.18 $
-* Origin: McStas 1.5.0
+* Version: $Revision: 1.19 $
+* Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
@@ -40,7 +40,7 @@
 
 
 DEFINE COMPONENT Vitess_output
-DEFINITION PARAMETERS (file = 0)
+DEFINITION PARAMETERS (string file = 0)
 SETTING PARAMETERS (int bufsize = 10000, int progress = 0)
 OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -48,7 +48,7 @@ POLARISATION PARAMETERS (sx,sy,sz)
 SHARE
 %{
 %include "general"
-%include "vitess-lib" 
+%include "vitess-lib"
 %}
 
 DECLARE
@@ -82,8 +82,8 @@ INITIALIZE
     }
   }
 #ifdef WIN32
-  if(hfile==stdout) 
-  { if(_setmode(_fileno( stdout ), _O_BINARY ) == -1) 
+  if(hfile==stdout)
+  { if(_setmode(_fileno( stdout ), _O_BINARY ) == -1)
     { fprintf(stderr,"Can't set stdout to binary mode\n");
       exit(1);
     }
@@ -98,7 +98,7 @@ INITIALIZE
     exit(1);
   }
   /* Initialize buffer. */
-  pos = 0;  
+  pos = 0;
 %}
 
 TRACE
@@ -106,7 +106,7 @@ TRACE
   int count;
 
   /* Flush output buffer if full. */
-  if(hfile && pos >= bufsize) 
+  if(hfile && pos >= bufsize)
   { count = fwrite(obuf, sizeof(Neutron), bufsize, hfile);
     if(progress)
     {
@@ -125,7 +125,7 @@ TRACE
   }
   obuf[pos] = mcstas2vitess(x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   obuf[pos].Color   = vitess_col;
-  obuf[pos].ID.IDNo = vitess_ID.IDNo;     
+  obuf[pos].ID.IDNo = vitess_ID.IDNo;
   memcpy(obuf[pos].ID.IDGrp, vitess_ID.IDGrp, 2);
 
   p_out  += p;

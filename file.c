@@ -12,13 +12,16 @@
 * Date: Sep 25, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.3
+* Version: $Revision: 1.18 $
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.17 2005-03-02 10:07:23 farhi Exp $
+*	$Id: file.c,v 1.18 2006-04-19 13:06:25 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.17  2005/03/02 10:07:23  farhi
+*	Now displays info/warning when using contributed components
+*
 *	Revision 1.16  2004/09/10 15:09:56  farhi
 *	Use same macro symbols for mcstas kernel and run-time for code uniformity
 *

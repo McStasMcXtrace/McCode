@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailtoguillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.3 $
+* Version:  $Revision: 1.4 $
 * Origin: <a href="http://www.cea-llb.fr">LLB</a>
 * Release: McStas 1.8
 *
@@ -60,7 +60,7 @@
 
 
 DEFINE COMPONENT Virtual_tripoli4_output
-DEFINITION PARAMETERS (file=0, virtual_tripoli4_input_comp=0)
+DEFINITION PARAMETERS (string file=0, virtual_tripoli4_input_comp=0)
 SETTING PARAMETERS (batch=1)
 OUTPUT PARAMETERS (hfile,previous_batch)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

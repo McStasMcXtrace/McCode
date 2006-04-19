@@ -1,9 +1,9 @@
 #!/bin/sh
 #
-# Simple script for setting up a mcstas distribution package. 
-# 
+# Simple script for setting up a mcstas distribution package.
+#
 # To be called with one input parameter - distribution tail filename, e.g.
-# 
+#
 # ./mkdist 1.7.3c -> ../mcstas-1.7.3c.tar.gz
 #
 # Assumes you have write access to ..
@@ -44,7 +44,7 @@ mv *.pdf $PW/..
 # Copy current PW checkout to DIST
 cd $PW
 cp -rp $PW $DIST
-# copy the doc in DIST/lib/doc 
+# copy the doc in DIST/lib/doc
 cp $PW/../mcstas-$1-manual.ps.gz $DIST/lib/doc/mcstas-manual.ps.gz
 cp $PW/../mcstas-$1-manual.pdf $DIST/lib/doc/mcstas-manual.pdf
 cp $PW/../mcstas-$1-components.ps.gz $DIST/lib/doc/mcstas-components.ps.gz
@@ -59,12 +59,10 @@ rm -rf preCVStest*
 
 # Put in new version info:
 find . -wholename './setversion' -prune -o -type d -o -exec ./setversion \{\} $1 \;
-find . -wholename './setyear' -prune -o -type d -o -exec ./setyear \{\} \; 
+find . -wholename './setyear' -prune -o -type d -o -exec ./setyear \{\} \;
 
 sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
 mv build.bat.new build.bat
-sed 's/mcstas-1.7/'mcstas-$1'/' install_docs/tex/install.tex > install_docs/tex/install.tex.new
-mv install_docs/tex/install.tex.new install_docs/tex/install.tex
 
 # Create ps/pdf/html based install info
 cd install_docs/tex
@@ -73,7 +71,7 @@ latex install
 dvips -o install.ps install.dvi
 ps2pdf install.ps install.pdf
 gzip install.ps
-mkdir ../html 
+mkdir ../html
 latex2html -local_icons -dir ../html install.tex
 # clean up
 rm install.aux
@@ -166,13 +164,13 @@ tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
 
 echo
 echo
-echo Your mcstas dist packages are placed in 
+echo Your mcstas dist packages are placed in
 echo ../mcstas-$1-src.tar.gz
 echo ../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz
 echo ../mcstas-$1-Win32-src.tar.gz
 echo
 echo NOTE: Win32 version must be built using \'build.bat\' of the Win32-src package
-echo 
+echo
 echo Your mcstas doc packages are placed in
 echo ../mcstas-$1-manual.ps.gz
 echo ../mcstas-$1-manual.pdf

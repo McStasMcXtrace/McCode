@@ -11,7 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
@@ -93,7 +93,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Monochromator_curved
-DEFINITION PARAMETERS (reflect=0, transmit=0)
+DEFINITION PARAMETERS (string reflect=0, string transmit=0)
 SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=0.3,Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
 OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable, tTable, row, col)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

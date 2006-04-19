@@ -10,10 +10,10 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: October 2000
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.6
-* Modified by: Kim Lefmann, October 9, 2001 
+* Modified by: Kim Lefmann, October 9, 2001
 *
 * Cylindrical (2pi) PSD Time-of-flight monitor.
 *
@@ -25,7 +25,7 @@
 * nt:    Number of time bins (1)
 * t_0:      Beginning of time window (mu-s)
 * t_1:      End of time window (mu-s)
-* nphi:     Number of angular bins (deg)     
+* nphi:     Number of angular bins (deg)
 * filename: Name of file in which to store the detector image (text)
 *
 * OUTPUT PARAMETERS:
@@ -33,12 +33,12 @@
 * TOF_N:    Array of neutron counts
 * TOF_p:    Array of neutron weight counts
 * TOF_p2:   Array of second moments
-* 
+*
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_cylPSD_monitor
-DEFINITION PARAMETERS (nt, filename, nphi) 
+DEFINITION PARAMETERS (nt, string filename, nphi)
 SETTING PARAMETERS (radius, height, t_0, t_1)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -63,22 +63,22 @@ INITIALIZE
         TOF_p2[i][j] = 0;
       }
     binphi=360.0/(double)nphi;
-  
+
   %}
 TRACE
   %{
     int i,j;
     double cyl_t0,cyl_t1,dt,phi;
 
-    if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, height)) 
-     /* No hit */ 
+    if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, height))
+     /* No hit */
       ABSORB;
     if(cyl_t0>0)  /* Neutron hits cylinder from the outside */
       ABSORB;
     dt=cyl_t1;
     PROP_DT(dt);
-    if(y>=height/2 || y<= -height/2) 
-      ABSORB;  /* Neutron hits cylinder ends; no detectors here */    
+    if(y>=height/2 || y<= -height/2)
+      ABSORB;  /* Neutron hits cylinder ends; no detectors here */
 
     i = floor((t-tt_0)*nt/(tt_1-tt_0));              /* Bin number */
 
@@ -100,7 +100,7 @@ SAVE
         "Cylindrical Time-of-flight PSD monitor",
         "Time-of-flight [\\gms]",
         "Angle [deg]",
-        t_0, t_1, -180, 180, 
+        t_0, t_1, -180, 180,
         nt, nphi,
         &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
         filename);

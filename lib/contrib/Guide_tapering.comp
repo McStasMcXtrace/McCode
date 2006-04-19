@@ -7,8 +7,9 @@
 * %I
 * Written by: Uwe Filges
 * Date: 22/10/2003
-* Version: $Revision: 1.6 $
-* Origin: McStas 1.6
+* Version: $Revision: 1.7 $
+* Release: McStas 1.9
+* Origin: PSI
 *
 * Models a rectangular tapered guide (many shapes)
 *
@@ -92,7 +93,7 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Guide_tapering
-DEFINITION PARAMETERS (option=0,segno=800)
+DEFINITION PARAMETERS (string option=0,segno=800)
 SETTING PARAMETERS (w1=0,h1=0,l,linw=0,loutw=0,linh=0,louth=0, R0=0.99,
                     Qcx=0.021,Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
                     mx=1, my=1)

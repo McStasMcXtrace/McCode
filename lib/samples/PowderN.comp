@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -123,7 +123,7 @@
 * %E
 *****************************************************************************/
 DEFINE COMPONENT PowderN
-DEFINITION PARAMETERS (reflections, format=Undefined)
+DEFINITION PARAMETERS (string reflections, format=Undefined)
 SETTING PARAMETERS (d_phi=0, radius=0.01, yheight=0.05,
         pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, frac=0,
         xwidth=0, zthick=0, h=0, DW=0, nb_atoms=1, density=0, weight=0)

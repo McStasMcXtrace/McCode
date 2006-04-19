@@ -6,8 +6,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.18 $
-* Origin: McStas 1.5 (Obsolete)
+* Version: $Revision: 1.19 $
+* Release: McStas 1.5 (Obsolete)
+* Origin: Risoe
 * Modified by: EF, 2004. Upgraded to optics/Slit with rect/circle shapes
 *
 * Circular slit.

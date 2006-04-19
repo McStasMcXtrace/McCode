@@ -8,8 +8,9 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version: 0.1
-* Origin: McStas 1.5//<a href="http://www.ill.fr">ILL</a>
+* Version: $Revision: 1.5 $
+* Release: McStas 1.5/<a href="http://www.ill.fr">ILL</a>
+* Origin: ILL
 * Modified by: EF, 2004. Upgraded into Virtual_input
 *
 * Source that generates neutron events from an ascii/binary 'source' file.

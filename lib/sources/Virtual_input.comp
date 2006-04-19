@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.17 $
+* Version:  $Revision: 1.18 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -62,7 +62,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_input
-DEFINITION PARAMETERS (file=0, type=0)
+DEFINITION PARAMETERS (string file=0, string type=0)
 SETTING PARAMETERS (verbose=0,repeat_count=1)
 OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,file_ncount,
                    mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz, n_neutrons,

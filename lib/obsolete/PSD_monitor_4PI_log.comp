@@ -6,8 +6,9 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.20 $
-* Origin: McStas 1.5 (Obsolete)
+* Version: $Revision: 1.21 $
+* Release: McStas 1.5 (Obsolete)
+* Origin: Risoe
 * Modified by: EF, 2004. Obsoleted as other comps do the same task
 *
 * Spherical position-sensitive detector with logarithmic scale.

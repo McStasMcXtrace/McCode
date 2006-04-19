@@ -12,13 +12,22 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.6
+* Version: $Revision: 1.19 $
 *
 * Support for conditional output of debugging information.
 *
-*	$Id: debug.c,v 1.18 2003-02-11 12:28:45 farhi Exp $
+*	$Id: debug.c,v 1.19 2006-04-19 13:06:25 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.18  2003/02/11 12:28:45  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*
 *	Revision 1.6  1999/03/18 07:29:10  kn
 *	Fix bug in print_warn().
 *
@@ -88,7 +97,7 @@ print_warn(int *flag, char *format, ...)
 * very user friendly, so it should be avoided if possible. However, it is
 * useful for such things as failed memory allocations of small sizes that are
 * a pain to handle correctly and extremely unlikely to occur in modern
-* virtual memory-capable systems. 
+* virtual memory-capable systems.
 *
 * Outputs a message passed in printf-style to stderr and exits.
 *******************************************************************************/

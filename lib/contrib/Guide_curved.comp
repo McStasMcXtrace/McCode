@@ -23,6 +23,7 @@
 *
 * %BUGS
 * This component does not work with gravitation on. Use component Guide_gravity then.
+* Systematic error on transmitted flux is found to be about 10%.
 *
 * %P
 * INPUT PARAMETERS:

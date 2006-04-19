@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.24
+* Version: $Revision: 1.60 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.59  2006/04/06 08:46:20  farhi
+* NEW GRAMMAR: JUMP WHEN ITERATE COPY ...
+* need doc in TeX now...
+*
 * Revision 1.58  2005/11/02 09:18:38  farhi
 * More tolerant about DEFINITION parameter values, enabling table init as for PowderN
 *
@@ -101,7 +105,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.59 2006-04-06 08:46:20 farhi Exp $
+* $Id: cogen.c,v 1.60 2006-04-19 13:06:25 farhi Exp $
 *
 *******************************************************************************/
 
