@@ -793,7 +793,7 @@ sub menu_run_simulation {
             push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
             # push @command, "--save" if ($newsi->{'Trace'} eq 1);
         }
-  push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix" if ($newsi->{'NScan'} > 1 && !$newsi->{'Trace'}) || ($newsi->{'mpi'} > 1);
+        push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix" if ($newsi->{'NScan'} > 1 && !$newsi->{'Trace'}) || ($newsi->{'mpi'} > 1);
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);
         # In the special case of --dir, we simply replace ' ' with '_'
@@ -824,34 +824,35 @@ sub menu_run_simulation {
         push @command, "--trace" if ($newsi->{'Trace'} eq 1);
         push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
         push @command, "--dir=$OutDir" if $newsi->{'Dir'};
-  if ($newsi->{'Force'} eq 1) {
-      if (-e $OutDir) {
-    rmtree($OutDir,0,1);
-      }
-  }
+        if ($newsi->{'Force'} eq 1) {
+          if (-e $OutDir) {
+            rmtree($OutDir,0,1);
+          }
+        }
         push @command, "--format='$plotter'";
 
-  my @unset = ();
-  my @multiple = ();
+       # add parameter values
+        my @unset = ();
+        my @multiple = ();
         for (@{$out_info->{'Parameters'}}) {
             if (length($newsi->{'Params'}{$_})>0) {
-    # Check for comma separated values
-    my @values = split(',',$newsi->{'Params'}{$_});
-    my $value = $newsi->{'Params'}{$_};
-    if (@values > 1) {
-        @multiple = (@multiple, $_);
-        if ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq ''){
-      my $j;
-      my $meanvalue=0;
-      for ($j=0; $j<@values; $j++) {
-          $meanvalue = $values[$j];
-      }
-      $meanvalue = $meanvalue / @values;
-      $value = $meanvalue;
-        }
-    }
-    push @command, "$_=$value";
-      } else {
+              # Check for comma separated values
+              my @values = split(',',$newsi->{'Params'}{$_});
+              my $value = $newsi->{'Params'}{$_};
+              if (@values > 1) {
+                  @multiple = (@multiple, $_);
+                  if ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq ''){
+                    my $j;
+                    my $meanvalue=0;
+                    for ($j=0; $j<@values; $j++) {
+                        $meanvalue = $values[$j];
+                    }
+                    $meanvalue = $meanvalue / @values;
+                    $value = $meanvalue;
+                  }
+              }
+              push @command, "$_=$value";
+            } else {
                 push @unset, $_;
             }
         }
@@ -863,36 +864,36 @@ sub menu_run_simulation {
                            -icon => 'error');
             return;
         }
-  if (@multiple > 0 && ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq '')) {
-      $w->messageBox(-message =>
-                           "Scan range(s) not applicable. Mean value subsituted for parameter(s):\n\n@multiple",
-                           -title => "No scan here!",
-                           -type => 'OK',
-                           -icon => 'info');
-  }
-  if (@multiple eq 0 && $newsi->{'NScan'} > 1) {
-      if (!$newsi->{'Trace'}) {
-    $w->messageBox(-message =>
-             "No scan range(s) given! Performing single simulation",
-             -title => "No scan here!",
-             -type => 'OK',
-             -icon => 'info');
-    $newsi->{'NScan'} = 0;
-      }
-  }
-  if ($newsi->{'gravity'} eq 1 && !$newsi->{'Trace'}) {
-      if ($newsi->{'GravityWarn'} eq 0) {
-    $w->messageBox(-message =>
-             "Only use --gravitation with components that support this!",
-             -title => "BEWARE!",
-             -type => 'OK',
-             -icon => 'warning');
-    $newsi->{'GravityWarn'} = 1;
-      }
-      push @command, "--gravitation";
-  }
-  push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
-  my $inittext = "Running simulation '$out_name' ...\n" .
+        if (@multiple > 0 && ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq '')) {
+            $w->messageBox(-message =>
+                                "Scan range(s) not applicable. Mean value subsituted for parameter(s):\n\n@multiple",
+                                -title => "No scan here!",
+                                -type => 'OK',
+                                -icon => 'info');
+        }
+        if (@multiple eq 0 && $newsi->{'NScan'} > 1) {
+            if (!$newsi->{'Trace'}) {
+          $w->messageBox(-message =>
+                  "No scan range(s) given! Performing single simulation",
+                  -title => "No scan here!",
+                  -type => 'OK',
+                  -icon => 'info');
+          $newsi->{'NScan'} = 0;
+            }
+        }
+        if ($newsi->{'gravity'} eq 1 && !$newsi->{'Trace'}) {
+            if ($newsi->{'GravityWarn'} eq 0) {
+              $w->messageBox(-message =>
+                      "Only use --gravitation with components that support this!",
+                      -title => "BEWARE!",
+                      -type => 'OK',
+                      -icon => 'warning');
+              $newsi->{'GravityWarn'} = 1;
+            }
+            push @command, "--gravitation";
+        }
+        push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
+        my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;
         $inf_sim=$newsi;
@@ -963,31 +964,24 @@ sub make_comp_inst {
     my $col = "";
     for $p (@{$cdata->{'inputpar'}}) {
         my $add;
-        my @p_splitted = split(" ", $p);
-        my $length = scalar @p_splitted;
-        my $p_last_word = $p_splitted[$length-1];
         if(defined($r->{'VALUE'}{$p}) && $r->{'VALUE'}{$p} !~ /^\s*$/) {
-          # Take care of the special case where the parameter is 'filename'
-          if (lc($p) eq 'filename') {
-            # Firstly, remove existing quotes :)
-            $r->{'VALUE'}{$p} =~ s!\"!!g;
-            $r->{'VALUE'}{$p} =~ s!\'!!g;
-            # Next, add quotes...
-            $r->{'VALUE'}{$p} = "\"$r->{'VALUE'}{$p}\"";
-          }
           if(defined($cdata->{'parhelp'}{$p}{'type'})) {
           if (($cdata->{'parhelp'}{$p}{'type'} eq "string" ||
                $cdata->{'parhelp'}{$p}{'type'} =~ /char/) &&
-                $r->{'VALUE'}{$p} !~ /\"([a-zA-Z_0-9+]+)\"/ &&
-                $r->{'VALUE'}{$p} !~ /\'([a-zA-Z_0-9+]+)\'/) {
+                $r->{'VALUE'}{$p} !~ /\".*\"/ &&
+                $r->{'VALUE'}{$p} !~ /\'.*\'/) {
+                  # Firstly, remove existing quotes :)
+                  $r->{'VALUE'}{$p} =~ s!\"!!g;
+                  $r->{'VALUE'}{$p} =~ s!\'!!g;
+                  # Next, add quotes...
                   $r->{'VALUE'}{$p} = "\"$r->{'VALUE'}{$p}\"";
                 }
           }
-          $add .= "$p_last_word = $r->{'VALUE'}{$p}";
+          $add .= "$p = $r->{'VALUE'}{$p}";
         } elsif(defined($cdata->{'parhelp'}{$p}{'default'})) {
             next;                # Omit non-specified default parameter
         } else {
-            $add.= "$p_last_word = ";
+            $add.= "$p = ";
         }
         if(length($col) > 0) {
             if(length("$col, $add") > 60) {

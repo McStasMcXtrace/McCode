@@ -131,10 +131,9 @@ sub simulation_dialog {
             if ($si{'Params'}{$p} eq "" && defined($ii->{'Params'}{$p}))
             { $si{'Params'}{$p} = $ii->{'Params'}{$p}; }
             if ($typeabbrev{$type} eq "S" &&
-            $si{'Params'}{$p} !~ /\"([a-zA-Z_0-9+]+)\"/ &&
-            $si{'Params'}{$p} !~ /\'([a-zA-Z_0-9+]+)\'/) {
-              my $r=$si{'Params'}{$p};
-              $si{'Params'}{$p} = "\"$r\"";
+            $si{'Params'}{$p} !~ /\".*\"/ &&
+            $si{'Params'}{$p} !~ /\'.*\'/) {
+              $si{'Params'}{$p} =~ s!\"!!g; # remove quotes
             }
             $w = $parm_frame->Entry(-relief => 'sunken',
                                     -width=>10,
