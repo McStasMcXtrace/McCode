@@ -9,7 +9,7 @@
 * %I
 * Written by: EF (from Flux_adapter)
 * Date: Dec, 15th, 2002
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -74,7 +74,7 @@
 *%E
 ***********************************************************************/
 DEFINE COMPONENT Filter_gen
-DEFINITION PARAMETERS (file=0, options=0)
+DEFINITION PARAMETERS (file=0, string options=0)
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, thickness=1, scaling=1)
 OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

@@ -8,8 +8,8 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.19 $
-* Origin: McStas 1.5.0
+* Version: $Revision: 1.20 $
+* Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
@@ -39,7 +39,7 @@
 
 
 DEFINE COMPONENT Vitess_input
-DEFINITION PARAMETERS (file = 0)
+DEFINITION PARAMETERS (string file = 0)
 SETTING PARAMETERS (int bufsize = 10000, repeat_count = 1)
 OUTPUT PARAMETERS (hfile, ibuf, size, pos, rep, finished)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -47,7 +47,7 @@ POLARISATION PARAMETERS (sx,sy,sz)
 SHARE
 %{
 %include "general"
-%include "vitess-lib" 
+%include "vitess-lib"
 %}
 
 DECLARE
@@ -82,8 +82,8 @@ INITIALIZE
     }
   }
 #ifdef WIN32
-  if(hfile==stdin) 
-  { if( _setmode(_fileno( stdin ), _O_BINARY ) == -1) 
+  if(hfile==stdin)
+  { if( _setmode(_fileno( stdin ), _O_BINARY ) == -1)
     { fprintf(stderr,"Can't set stdin to binary mode\n");
       exit(1);
     }

@@ -12,13 +12,16 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.4
+* Version: $Revision: 1.17 $
 *
 * Symbol tables.
 *
-*	$Id: symtab.c,v 1.16 2003-10-06 15:00:12 farhi Exp $
+*	$Id: symtab.c,v 1.17 2006-04-19 13:06:26 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.16  2003/10/06 15:00:12  farhi
+*	Added symtab_previous function for PREVIOUS keyword
+*
 *	Revision 1.15  2003/02/11 12:28:45  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
@@ -27,7 +30,7 @@
 *	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
 *	Progress_bar: precent -> percent parameter
 *	CS: ----------------------------------------------------------------------
-*	
+*
 *	Revision 1.4  1999/04/16 07:41:31  kn
 *	Make the value_free argument for the symtab_free function optional.
 *
@@ -126,7 +129,7 @@ struct Symtab_entry *
 symtab_add(Symtab st, char *name, void *value)
 {
   int i;
-  
+
   /* First see if an entry for this name already exists (it shouldn't, but ...) */
   for(i = 0; i < st->size; i++)
   {
@@ -222,7 +225,7 @@ symtab_previous(Symtab st, int index)
 {
   if (index <= 0 || index > st->size) {
     return NULL;
-  } else { 
+  } else {
     return &(st->entries[st->size - index]);
   }
 }

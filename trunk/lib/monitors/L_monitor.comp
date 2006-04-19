@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -47,7 +47,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT L_monitor
-DEFINITION PARAMETERS (nchan=20, filename)
+DEFINITION PARAMETERS (nchan=20, string filename)
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, Lmin, Lmax)
 OUTPUT PARAMETERS (L_N, L_p, L_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

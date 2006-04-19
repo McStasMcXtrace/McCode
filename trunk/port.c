@@ -12,11 +12,11 @@
 * Date: Nov 11, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.1
+* Version: $Revision: 1.12 $
 *
 * Code to handle portability issues (mainly Win32 stuff).
 *
-* $Id: port.c,v 1.11 2003-04-15 15:45:27 farhi Exp $
+* $Id: port.c,v 1.12 2006-04-19 13:06:26 farhi Exp $
 *
 *******************************************************************************/
 

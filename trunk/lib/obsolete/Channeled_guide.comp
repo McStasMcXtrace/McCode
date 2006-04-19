@@ -8,8 +8,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.22 $
-* Origin: McStas 1.5
+* Version: $Revision: 1.23 $
+* Release: McStas 1.5
+* Origin: Risoe
 * Modified by: EF, 2004. Renamed to optics/Guide_channeled
 *
 * Neutron guide with channels (bender section).

@@ -12,17 +12,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.24
+* Version: $Revision: 1.44 $
 *
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.43 2006-04-06 08:46:20 farhi Exp $
+* $Id: mcstas.h,v 1.44 2006-04-19 13:06:25 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.43 $"
+#define MCSTAS_H "$Revision: 1.44 $"
 
 #include <stdlib.h>
 #include <stdio.h>

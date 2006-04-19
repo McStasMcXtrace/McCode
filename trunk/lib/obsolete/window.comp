@@ -9,11 +9,12 @@
 * %I
 * Written by: S. Roth
 * Date: ???
-* Version: 0.1
-* Origin: McStas 1.5
+* Version: $Revision: 1.4 $
+* Release: McStas 1.5
+* Origin: Munich
 * Modified by: EF, 2004. Renamed into Al_window
 *
-// * An Al window plane with exponential absorption. No scattering
+* An Al window plane with exponential absorption. No scattering
 *
 * %D
 * OBSOLETE: rather use optics/Al_window.comp

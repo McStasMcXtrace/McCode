@@ -4,7 +4,7 @@
 #
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
+#   Copyright (C) 1997-2006, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -320,7 +320,7 @@ sub menu_save {
     if($current_sim_def ne "") {
         $edit_control->Save($current_sim_def);
         $edit_window->title("Edit: $current_sim_def");
-	new_sim_def_name($w, $current_sim_def);
+        new_sim_def_name($w, $current_sim_def);
     } else {
         $error_override = sub {        # Temporary Tk::Error override
             $w->messageBox(-message => "Could not save file:\n$_[1].",
@@ -708,7 +708,7 @@ sub menu_run_simulation {
             push @command, "${prefix}mcdisplay$suffix";
             if ($plotter =~ /PGPLOT|McStas/i) {
               push @command, "--plotter=PGPLOT";
-	      # Users seem to dislike multi-views with mcdisplay/PGPLOT
+              # Users seem to dislike multi-views with mcdisplay/PGPLOT
               # We ought to have a switchbutton somewhere controlling this
               # push @command, "--multi";
               # Be sure to read mcplotlib.pl in this case...
@@ -766,25 +766,25 @@ sub menu_run_simulation {
               }
             } elsif ($plotter =~ /html|vrml/i) {
                 push @command, "--plotter=VRML";
-		# Make a check for # of neutron histories,
-		# should be made small to avoid waiting a long time for
-		# mcdisplay...
-		# Subtract 0 to make sure $num_histories is treated as a
-		# number...
-		my $num_histories = $newsi->{'Ncount'} - 0;
-		if ($num_histories >=1e3) {
-		    my $break = $w->messageBox(-message => "$num_histories is a very large number\nof neutron histories when using\nVRML\nContinue ?",
+                # Make a check for # of neutron histories,
+                # should be made small to avoid waiting a long time for
+                # mcdisplay...
+                # Subtract 0 to make sure $num_histories is treated as a
+                # number...
+                my $num_histories = $newsi->{'Ncount'} - 0;
+                if ($num_histories >=1e3) {
+                    my $break = $w->messageBox(-message => "$num_histories is a very large number\nof neutron histories when using\nVRML\nContinue ?",
                      -title => "Warning: large number",
                      -type => 'yesnocancel',
                      -icon => 'error',
                      -default => 'no');
-		    # Make first char lower case - default on
-		    # Win32 upper case default on Unix... (perl 5.8)
-		    $break = lcfirst($break);
-		    if ((lc($break) eq "no")||(lc($break) eq "cancel")) {
-			return 0;
-		    }
-		}
+                    # Make first char lower case - default on
+                    # Win32 upper case default on Unix... (perl 5.8)
+                    $break = lcfirst($break);
+                    if ((lc($break) eq "no")||(lc($break) eq "cancel")) {
+                        return 0;
+                    }
+                }
 
             }
             push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
@@ -966,15 +966,23 @@ sub make_comp_inst {
         my $length = scalar @p_splitted;
         my $p_last_word = $p_splitted[$length-1];
         if(defined($r->{'VALUE'}{$p}) && $r->{'VALUE'}{$p} !~ /^\s*$/) {
-      # Take care of the special case where the parameter is 'filename'
-      if (lc($p) eq 'filename') {
-    # Firstly, remove existing quotes :)
-    $r->{'VALUE'}{$p} =~ s!\"!!g;
-    $r->{'VALUE'}{$p} =~ s!\'!!g;
-    # Next, add quotes...
-    $r->{'VALUE'}{$p} = "\"$r->{'VALUE'}{$p}\"";
-      }
-            $add .= "$p_last_word = $r->{'VALUE'}{$p}";
+          # Take care of the special case where the parameter is 'filename'
+          if (lc($p) eq 'filename') {
+            # Firstly, remove existing quotes :)
+            $r->{'VALUE'}{$p} =~ s!\"!!g;
+            $r->{'VALUE'}{$p} =~ s!\'!!g;
+            # Next, add quotes...
+            $r->{'VALUE'}{$p} = "\"$r->{'VALUE'}{$p}\"";
+          }
+          if(defined($cdata->{'parhelp'}{$p}{'type'})) {
+          if (($cdata->{'parhelp'}{$p}{'type'} eq "string" ||
+               $cdata->{'parhelp'}{$p}{'type'} =~ /char/) &&
+                $r->{'VALUE'}{$p} !~ /\"([a-zA-Z_0-9+]+)\"/ &&
+                $r->{'VALUE'}{$p} !~ /\'([a-zA-Z_0-9+]+)\'/) {
+                  $r->{'VALUE'}{$p} = "\"$r->{'VALUE'}{$p}\"";
+                }
+          }
+          $add .= "$p_last_word = $r->{'VALUE'}{$p}";
         } elsif(defined($cdata->{'parhelp'}{$p}{'default'})) {
             next;                # Omit non-specified default parameter
         } else {
@@ -1014,8 +1022,8 @@ my $instr_template_start = <<INSTR_FINISH;
 * Written by: Your name (email)
 * Date: Current Date
 * Origin: Your institution
-* Release: McStas 1.8
-* Version: 0.1
+* Release: McStas 1.6
+* Version: 0.2
 * %INSTRUMENT_SITE: Institution_name_as_a_single word
 *
 * Instrument short description
@@ -1192,6 +1200,9 @@ sub setup_menu {
     $filemenu->command(-label => 'Compile instrument',
                        -underline => 0,
                        -command => sub {menu_compile($w)});
+    $filemenu->command(-label => 'Save output/Log file',
+                       -underline => 1,
+                       -command => sub { setup_cmdwin_saveas($w) });
     $filemenu->command(-label => 'Clear output',
                        -underline => 1,
                        -command => sub { $cmdwin->delete("1.0", "end") });
@@ -1328,6 +1339,40 @@ sub setup_cmdwin {
   if ($MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
     $cmdwin->insert('end', "Perl/PGPLOT plotter is NOT available\n");
   }
+
+}
+
+
+# save command output into LOG file
+sub setup_cmdwin_saveas {
+  my ($w) = @_;
+  my $file;
+  if($current_sim_def) {
+      my ($inidir, $inifile);
+      if($current_sim_def =~ m!^(.*)/([^/]*)$!) {
+          ($inidir, $inifile) = ($1, $2);
+      } else {
+          ($inidir, $inifile) = ("", $current_sim_def);
+      }
+      $inifile =~ s/\.instr$//;
+      $inifile .= ".log";
+      $file = $w->getSaveFile(-defaultextension => ".log",
+                              -title => "Select LOG output file name",
+                              -initialdir => $inidir,
+                              -initialfile => $inifile);
+  } else {
+      $file = $w->getSaveFile(-defaultextension => ".log",
+                              -title => "Select LOG output file name");
+  }
+  return 0 unless $file;
+  my $outputtext = $cmdwin->get('1.0', 'end');
+  my $date = localtime(time());
+  open(MCLOG,">>$file");
+  print MCLOG "# Log file generated by McStas/mcgui\n";
+  print MCLOG "# Date: $date\n";
+  print MCLOG "$outputtext";
+  close(MCLOG);
+  return 1;
 
 }
 

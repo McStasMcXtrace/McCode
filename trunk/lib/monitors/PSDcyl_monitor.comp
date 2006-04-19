@@ -8,7 +8,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: October 26, 2000
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -42,7 +42,7 @@ the axis vertical. The monitor covers the whole cylinder (360 degrees).
 
 
 DEFINE COMPONENT PSDcyl_monitor
-DEFINITION PARAMETERS (nr, ny, filename)
+DEFINITION PARAMETERS (nr, ny, string filename)
 SETTING PARAMETERS (height, radius)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.9
+* Version: $Revision: 1.20 $
 *
 * Memory management functions.
 *
-*       $Id: memory.c,v 1.19 2006-03-15 15:52:15 farhi Exp $
+*       $Id: memory.c,v 1.20 2006-04-19 13:06:25 farhi Exp $
 *
 *******************************************************************************/
 

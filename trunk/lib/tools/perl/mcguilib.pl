@@ -1,7 +1,7 @@
 # Library of McStas gui functions
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
+#   Copyright (C) 1997-2006, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -125,7 +125,14 @@ sub simulation_dialog {
             $w->grid(-row => $row, -column => $col, -sticky => 'e');
             $col++;
             $si{'Params'}{$p} = "" unless defined($si{'Params'}{$p});
-      if ($si{'Params'}{$p} eq "" && defined($ii->{'Params'}{$p})) { $si{'Params'}{$p} = $ii->{'Params'}{$p}; }
+            if ($si{'Params'}{$p} eq "" && defined($ii->{'Params'}{$p}))
+            { $si{'Params'}{$p} = $ii->{'Params'}{$p}; }
+            if ($typeabbrev{$type} eq "S" &&
+            $si{'Params'}{$p} !~ /\"([a-zA-Z_0-9+]+)\"/ &&
+            $si{'Params'}{$p} !~ /\'([a-zA-Z_0-9+]+)\'/) {
+              my $r=$si{'Params'}{$p};
+              $si{'Params'}{$p} = "\"$r\"";
+            }
             $w = $parm_frame->Entry(-relief => 'sunken',
                                     -width=>10,
                                     -textvariable => \$si{'Params'}{$p},

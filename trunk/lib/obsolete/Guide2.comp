@@ -9,8 +9,9 @@
 * %Identification
 * Written by: KN
 * Date: September 2 1998, Modified by: KL, October 6, 1998
-* Origin: McStas 1.0 (1998)
-* Version: 1.0 (Obsolete)
+* Release: McStas 1.0 (1998)
+* Origin: Risoe
+* Version: $Revision: 1.5 $
 * Modified by: EF, 2004. Obsoleted as other comps do the same task
 *
 * Models a rectangular guide with different vert. and horiz. m mirror values.

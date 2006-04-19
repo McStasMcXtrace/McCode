@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.10 $
+* Version:  $Revision: 1.11 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -83,7 +83,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_tripoli4_input
-DEFINITION PARAMETERS (file=0, autocenter=0)
+DEFINITION PARAMETERS (string file=0, string autocenter=0)
 SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1)
 OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,begin_batch,do_rotate,do_translate,do_axes,
                    bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z)

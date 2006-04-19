@@ -9,8 +9,9 @@
 *
 * Written by: Kristian Nielsen
 * Date: January 2000
-* Origin: McStas 1.5 (Obsolete)
-* Version: $Revision: 1.16 $
+* Release: McStas 1.5 (Obsolete)
+* Origin: Risoe
+* Version: $Revision: 1.17 $
 * Modified by: EF, 2004. Renamed to optics/Beamstop with rect/circle shapes
 *
 * Rectangular beam stop.

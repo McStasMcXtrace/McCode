@@ -10,7 +10,7 @@
 * Date: 17 Sept 1999
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Modified by: (v 0.06) EF, Feb 2000;
 * Modified by: (v.0.07) EF, Mar 10th 2000; (smoothed, parse options). struct
 * Modified by: (v.0.08) EF, Oct 12th 2000; optim divergence for v and s
@@ -136,7 +136,7 @@ Mar 10 2000 : v0.07.2 gathered all variables into 2 structures
  /* PB : the use of 's2' in a component makes a conflict with McStas kernel */
 
 DEFINE COMPONENT Source_Optimizer
-DEFINITION PARAMETERS (options=0)
+DEFINITION PARAMETERS (string options=0)
 SETTING PARAMETERS (bins=10, step=0.1, keep=0.1)
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

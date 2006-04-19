@@ -12,13 +12,22 @@
 * Date: Aug  7, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: 1.6
+* Version: $Revision: 1.19 $
 *
-* Handle expressions used as arguments to components etc.	
+* Handle expressions used as arguments to components etc.
 *
-*	$Id: cexp.c,v 1.18 2003-02-11 12:28:45 farhi Exp $
+*	$Id: cexp.c,v 1.19 2006-04-19 13:06:25 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.18  2003/02/11 12:28:45  farhi
+*	Variouxs bug fixes after tests in the lib directory
+*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*	read_table:corrected MC_SYS_DIR -> MCSTAS define
+*	monitor_nd-lib: fix Log(signal) log(coord)
+*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*	Progress_bar: precent -> percent parameter
+*	CS: ----------------------------------------------------------------------
+*
 *	Revision 1.6  2000/07/27 09:04:59  kn
 *	Support full C expressions. Now stores source line numbers within
 *	expression representation, and distinguishes between values and compound

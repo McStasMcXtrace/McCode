@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -77,7 +77,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Source_adapt
-DEFINITION PARAMETERS (N_E=20, N_xpos=20, N_xdiv=20, alpha=0.25, beta=0.25,filename=0)
+DEFINITION PARAMETERS (N_E=20, N_xpos=20, N_xdiv=20, alpha=0.25, beta=0.25, string filename=0)
 SETTING PARAMETERS (xmin,xmax,ymin,ymax, dist=2.33, xw=0.05, yh=0.1, E0=14.68, dE=2, flux=1e13)
 OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

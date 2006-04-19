@@ -28,11 +28,11 @@
 //
 // Written by: E. Farhi
 // Date: 21st, March 2003
-// Release: McStas 1.6
+// Release: McStas 1.10a
 // Origin: ILL
 //
 //  This file is part of the McStas neutron ray-trace simulation package
-//  Copyright (C) 1997-2004, All rights reserved
+//  Copyright (C) 1997-2006, All rights reserved
 //  Risoe National Laborartory, Roskilde, Denmark
 //  Institut Laue Langevin, Grenoble, France
 //
@@ -184,7 +184,11 @@ function win = mcplot_addmenu(use_common_menu)
       end
       tcl_script = [ tcl_script, 'pack .foo.menu.mcplot -side left' ];
       // now send it to Tk
-      TCL_EvalStr(tcl_script);
+      if ~exists('TCL_EvalStr')
+        TK_EvalStr(tcl_script);
+      else
+        TCL_EvalStr(tcl_script);
+      end
     elseif argn(2) > 0
       // we shall use x_choices
       rep = x_choices(['Fig '+string(win)+': Choose something to do','Select ""Exit"" or ""Cancel"" to exit McPlot/Scilab'], list(list('Action:', 1, t)));

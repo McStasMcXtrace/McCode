@@ -8,8 +8,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.25 $
-* Origin: McStas 1.5 (Obsolete)
+* Version: $Revision: 1.26 $
+* Release: McStas 1.5 (Obsolete)
+* Origin: Risoe
 * Modified by: EF, 2004. Renamed as Monochromator_flat
 *
 * Mosaic crystal, possibly off-cut.

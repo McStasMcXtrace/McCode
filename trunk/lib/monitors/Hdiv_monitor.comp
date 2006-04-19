@@ -10,7 +10,7 @@
 *%I
 * Written by: KL,
 * Date: Nov. 11, 1998
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Thomas Hansen,  December, 1999
@@ -48,7 +48,7 @@
 
 
 DEFINE COMPONENT Hdiv_monitor
-DEFINITION PARAMETERS (nh=20, filename)
+DEFINITION PARAMETERS (nh=20, string filename)
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0,
                        h_maxdiv=2 )
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)

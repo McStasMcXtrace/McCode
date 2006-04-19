@@ -9,7 +9,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
@@ -70,7 +70,7 @@
 
 
 DEFINE COMPONENT Res_monitor
-DEFINITION PARAMETERS (filename=0, options=0, res_sample_comp)
+DEFINITION PARAMETERS (string filename=0, string options=0, res_sample_comp)
 SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
