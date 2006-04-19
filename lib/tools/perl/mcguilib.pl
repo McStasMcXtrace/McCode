@@ -478,6 +478,7 @@ sub preferences_dialog {
     my ($win) = @_;
     my $dlg = $win->DialogBox(-title => "McStas: Configuration options",
                               -buttons => ["OK"]);
+    $b = $dlg->Balloon(-state => 'balloon');
     my $lf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
     my $rf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
     my $buttons, $edit_buttons;
@@ -485,7 +486,8 @@ sub preferences_dialog {
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
     $lf->pack(-side => 'left', -fill => 'both');
-    $lf->Label(-text => "Plotting options:", -anchor => 'w')->pack(-fill => 'x');
+    my $plotopt = $lf->Label(-text => "Plotting options:", -anchor => 'w')->pack(-fill => 'x');
+    $b->attach($plotopt, -balloonmsg => "Select output format/plotter");
     $buttons[0]=$lf->Radiobutton(-text => "PGPLOT (original mcdisplay)",
                -anchor => 'w', -value => "PGPLOT", -variable => \$plotter)->pack(-fill => 'x');
     $buttons[1]=$lf->Radiobutton(-text => "Matlab (requires Matlab)",
@@ -500,6 +502,7 @@ sub preferences_dialog {
                -anchor => 'w', -value => "HTML", -variable => \$plotter)->pack(-fill => 'x');
     $buttons[6]=$lf->Checkbutton(-text => "Use binary files (faster)",
                -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
+    $b->attach($buttons[6], -balloonmsg => "Binary files are usually much faster\nto import (Matlab/Scilab)");
     if ($plotter=~ /PGPLOT|McStas/i) {
       $plotter_id=0;
     } elsif ($plotter =~ /Matlab/i && $plotter =~ /scriptfile/i) {
@@ -518,7 +521,8 @@ sub preferences_dialog {
 
     $editor = $MCSTAS::mcstas_config{'EDITOR'};
     $rf->pack(-side => 'top', -fill => 'both');
-    $rf->Label(-text => "Editor options:", -anchor => 'w')->pack(-fill => 'x');
+    my $editorchoice = $rf->Label(-text => "Editor options:", -anchor => 'w')->pack(-fill => 'x');
+    $b->attach($editorchoice, -balloonmsg => "Select editor to use to\ndisplay instrument descriptions");
     $edit_buttons[0]=$rf->Radiobutton(-text => "Simple built-in editor (McStas 1.7)",
                -anchor => 'w', -value => 0, -variable => \$editor)->pack(-fill => 'x');
     $edit_buttons[1]=$rf->Radiobutton(-text => "Advanced built-in editor",
@@ -527,6 +531,10 @@ sub preferences_dialog {
     $edit_buttons[2]=$rf->Radiobutton(-text => "External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})",
                -anchor => 'w', -value => 2, -variable => \$editor)->pack(-fill => 'x');
     $edit_buttons[$editor]->select;
+    $choicequote = $rf->Checkbutton(-text => "Surround strings with quotes",
+               -relief => 'flat', -variable => \$quote)->pack(-fill => 'x');
+    $b->attach($choicequote, -balloonmsg => "All string parameters will be surrounded with quotes\nThis option does not allow to pass variable names");
+    if ($quote) { $choicequote->select; }
 
     my $res = $dlg->Show;
     # add binary flag to plotter

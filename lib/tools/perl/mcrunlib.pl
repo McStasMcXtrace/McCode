@@ -717,12 +717,16 @@ sub get_comp_info {
                     if ($length > 1) {
                       $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
                     }
-                } elsif(/^\s*([a-zA-Z0-9_ \s\*]+)\s*$/) {                # name
+                } elsif(/^\s*([a-zA-Z0-9_ \s\*]+)\s*$/) {                # [type] name
                     my $p = $1;
                     my @p_splitted = split(" ", $p);
                     my $length = scalar @p_splitted;
                     my $p_last_word = $p_splitted[$length-1];
+                    my $p_first_word= $p_splitted[0];
                     push @dpar, $p_last_word;
+                    if ($length > 1) {
+                      $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
+                    }
                 } else {
                     print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname: $1 from $s\n";
                 }
@@ -758,12 +762,16 @@ Warning: SETTING parameter $1 with default value $2\n
                     if ($length > 1) {
                       $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
                     }
-                } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {                    # name
+                } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {                    # [type] name
                     my $p = $1;
                     my @p_splitted = split(" ", $p);
                     my $length = scalar @p_splitted;
                     my $p_last_word = $p_splitted[$length-1];
+                    my $p_first_word = $p_splitted[0];
                     push @spar, $p_last_word;
+                    if ($length > 1) {
+                      $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
+                    }
                 } else {
                     print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname: $1 from $s.\n";
                 }
