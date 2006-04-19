@@ -82,6 +82,7 @@ if ($Config{'osname'} ne 'MSWin32') {
     $background = '&';
 }
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
+our $quote=1; # default editor behaviour is to surround strings with quotes
 
 my $compinfo;                        # Cache of parsed component definitions
 my @compdefs;                        # List of available component definitions
@@ -968,6 +969,7 @@ sub make_comp_inst {
           if(defined($cdata->{'parhelp'}{$p}{'type'})) {
           if (($cdata->{'parhelp'}{$p}{'type'} eq "string" ||
                $cdata->{'parhelp'}{$p}{'type'} =~ /char/) &&
+               $quote == 1 &&
                 $r->{'VALUE'}{$p} !~ /\".*\"/ &&
                 $r->{'VALUE'}{$p} !~ /\'.*\'/) {
                   # Firstly, remove existing quotes :)
