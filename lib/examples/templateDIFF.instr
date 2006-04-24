@@ -1,0 +1,113 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: Template monochromator Diffractometer
+*
+* %Identification
+* Written by : E. Farhi
+* Date: 13 Avr 2006
+* Origin: LLB/ILL
+* Release: McStas 1.10
+* Version: 0.1
+* %INSTRUMENT_SITE: Tutorial
+*
+* Simple monochromator Diffractometer for powders
+*
+* %Description
+* A template powder diffractometer used as a tutorial at LLB
+*
+* Example: mcrun templateDIFF.instr lambda=1
+*
+* %Parameters
+* lambda: [Angs] Wavelength at monochromator
+* DM:     [Angs] d-spacing of monochromator
+* Powder: [str]  file name for powder description
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT templateDIFF(lambda=1, DM=3.355, string Powder="Al2O3_sapphire.laz")
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+double A1; /* rotation of monok and d-spacing */
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+A1 =asin(lambda/(2*DM))*RAD2DEG;
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+COMPONENT Source = Source_simple(
+    radius = 0.02, dist = 2, xw = 0.01, yh = 0.01,
+    Lambda0 = lambda, dLambda = lambda*0.05)
+  AT (0, 0, 0) RELATIVE Origin
+
+COMPONENT PSD = PSD_monitor(
+     nx = 20, ny = 20, filename = "PSD1", xwidth = 0.03,
+     yheight = 0.03)
+   AT (0, 0, 1) RELATIVE Source
+
+COMPONENT Lmon1 = L_monitor(
+    nchan = 50, filename = "Lmon1", xwidth = 0.1, yheight = 0.1,
+    Lmin = lambda*0.95, Lmax = lambda*1.05)
+  AT (0, 0, 0.01) RELATIVE PREVIOUS
+
+/* TIP: monochromator craddle */
+COMPONENT mono_craddle = Arm()
+  AT (0, 0, 1.5) RELATIVE Origin
+  ROTATED (0, A1, 0) RELATIVE Origin
+
+/* TIP: could use curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
+COMPONENT Monok = Monochromator_curved(
+    width = 0.1, height = 0.1, NH = 1, NV = 1, mosaich = 30,
+    mosaicv = 30, DM = DM)
+  AT (0, 0, 0) RELATIVE mono_craddle
+
+/* TIP: positionement axe de diffraction monok (ordre 1) */
+COMPONENT mono_out = Arm()
+  AT (0, 0, 0) RELATIVE mono_craddle
+  ROTATED (0, 2*A1, 0) RELATIVE Origin
+
+COMPONENT Lmon2 = L_monitor(
+    nchan = 50, filename = "Lmon2", xwidth = 0.1, yheight = 0.1,
+    Lmin = lambda*0.95, Lmax = lambda*1.05)
+  AT (0, 0, 0.2) RELATIVE mono_out
+
+COMPONENT Sample = PowderN(
+    reflections = Powder, radius = 0.01,
+    yheight = 0.2)
+  AT (0, 0, 1) RELATIVE mono_out
+EXTEND
+%{
+if (!SCATTERED) ABSORB; /* TIP: perfect beamstop */
+%}
+
+/* perfect detector: 1D(theta) */
+COMPONENT BananaTheta = Monitor_nD(
+    options = "banana, theta limits=[-10 120], bins=260",
+    xwidth = 3, yheight = 0.2)
+  AT (0, 0, 0) RELATIVE Sample
+
+/* perfect detector: 2D(theta,y) to see diffraction rings */
+COMPONENT BananaPSD = Monitor_nD(
+    options = "banana, theta limits=[-10 120] bins=260, y bins=50",
+    xwidth = 3.05, yheight = 0.5)
+  AT (0, 0, 0) RELATIVE Sample
+
+/* The END token marks the instrument definition end */
+END
+
