@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: GA, June 1999, added transmission
@@ -34,11 +34,12 @@
 * ymin:       (m)              Lower y bound on slits
 * ymax:       (m)              Upper y bound on slits
 * len:        (m)              Distance between slits
-* divergence: (minutes of arc) Divergence angle (calculated as atan(d/len),
+* divergence: (minutes of arc) Divergence horizontal angle (calculated as atan(d/len),
 *                              where d is the blade spacing)
 *
 * Optional parameters
-* transmission:(1)             transmission of Soller (0<=t<=1)
+* transmission:(1)              Transmission of Soller (0<=t<=1)
+* divergenceV: (minutes of arc) Divergence vertical angle
 *
 * %E
 *******************************************************************************/
@@ -46,17 +47,18 @@
 
 DEFINE COMPONENT Collimator_linear
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, divergence=40,transmission=1)
-OUTPUT PARAMETERS (slope)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, divergence=40,transmission=1, divergenceV=0)
+OUTPUT PARAMETERS (slope, slopeV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
-  double slope;
+  double slope, slopeV;
 %}
 INITIALIZE
 %{
   slope = tan(MIN2RAD*divergence);
+  slopeV= tan(MIN2RAD*divergenceV);
 %}
 TRACE
 %{
@@ -77,6 +79,14 @@ TRACE
         ABSORB;
       else
         p *= transmission*(1.0 - phi/slope);
+      SCATTER;
+    }
+    if (slopeV > 0) {
+      phi = fabs(vy/vz);
+      if (phi > slopeV)
+        ABSORB;
+      else
+        p *= transmission*(1.0 - phi/slopeV);
       SCATTER;
     }
 %}

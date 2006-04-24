@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.27 $
+* Version: $Revision: 1.28 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -178,7 +178,7 @@ INITIALIZE
   { Lambda0 = (Lmax+Lmin)/2;
     dLambda = (Lmax-Lmin)/2;
   }
-  if ((Lambda0 >= dLambda) && (dLambda > 0))
+  if ((Lambda0 >= dLambda) && (dLambda >= 0))
   { lambda_0 = Lambda0;
     d_lambda = dLambda;
   }
