@@ -787,11 +787,11 @@ sub comp_select_dialog {
     my $selected;
     my $chosen_cmp;
     my $select_cmd = sub {
-  # On some platforms, e.g. RedHat 9,
-  # $list->curselection is not a scalar!
-  my @sel = $list->curselection();
+        # On some platforms, e.g. RedHat 9,
+        # $list->curselection is not a scalar!
+        my @sel = $list->curselection();
         my $cname = $sorted[$sel[0]];
-  $chosen_cmp = $cname;
+        $chosen_cmp = $cname;
         my $info = fetch_comp_info($cname, $cinfo);
         $name->configure(-text => "Name: $info->{'name'}");
         $loc->configure(-text => "Location: $cname");
