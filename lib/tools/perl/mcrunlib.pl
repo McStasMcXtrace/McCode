@@ -679,18 +679,18 @@ sub get_comp_info {
     close($file);
     $typ = "Component";
     @opar = (); @dpar = (); @spar = ();
-    if ($s =~ m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]+)\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*]*)\)!i) {
+    if ($s =~ m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]+)\s*\((.*)\)!i) {
         $cname = $1;
         $typ   = "Instrument";
         foreach (split(",", $2)) {
-            if(/^\s*([a-zA-Z0-9_\s\*]+)\s*\=\s*([-+.e0-9]+)\s*$/) {
+            if(/^\s*([a-zA-Z0-9_ \s\*]+)\s*\=\s*(.*)\s*$/)  {  # [type] name=value
                 my $p = $1;
                 my @p_splitted = split(" ", $p);
                 my $length = scalar @p_splitted;
                 my $p_last_word = $p_splitted[$length-1];
                 push @spar, $p_last_word;
                 $d->{'parhelp'}{$p_last_word}{'default'} = $2;
-            } elsif(/^\s*([a-zA-Z0-9_]+)\s*$/) {
+            } elsif(/^\s*([a-zA-Z0-9_ \s\*]+)\s*$/) {                # [type] name
                 my $p = $1;
                 my @p_splitted = split(" ", $p);
                 my $length = scalar @p_splitted;
@@ -706,7 +706,7 @@ sub get_comp_info {
         $cname = $1;
         if($s =~ m!DEFINITION\s+PARAMETERS\s*\(([-+.a-zA-Z0-9_ \t\n\r=,/*{}\"]+)\)!i && $typ ne "Instrument") {
             foreach (split(",", $1)) {
-                if(/^\s*([a-zA-Z0-9_ \s\*]+)\s*\=\s*(.*)\s*$/) { # [type] name=other define
+                if(/^\s*([a-zA-Z0-9_ \s\*]+)\s*\=\s*(.*)\s*$/) { # [type] name=define
                     my $p = $1;
                     my @p_splitted = split(" ", $p);
                     my $length = scalar @p_splitted;
