@@ -1197,7 +1197,7 @@ sub setup_menu {
     $filemenu->command(-label => 'Compile instrument',
                        -underline => 0,
                        -command => sub {menu_compile($w)});
-    $filemenu->command(-label => 'Save output/Log file',
+    $filemenu->command(-label => 'Save output/Log file...',
                        -underline => 1,
                        -command => sub { setup_cmdwin_saveas($w) });
     $filemenu->command(-label => 'Clear output',
