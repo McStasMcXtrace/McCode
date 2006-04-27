@@ -24,3 +24,4 @@ varargin(0) = 'Yscale';
 mainPlot('plot',varargin);
 
 // end of plot
+endfunction

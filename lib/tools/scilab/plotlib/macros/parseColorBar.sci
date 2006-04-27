@@ -28,3 +28,4 @@ case 10 //  a string
 else
    error(sprintf('%s : missing colorbar spec',funcName));
 end
+endfunction

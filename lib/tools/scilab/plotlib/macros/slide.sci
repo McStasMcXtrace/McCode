@@ -15,3 +15,4 @@ function slide(text,color)
 
    saveGraphicState(state,winNum); // save the state of the current window
 
+endfunction

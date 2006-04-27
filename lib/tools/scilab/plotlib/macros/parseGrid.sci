@@ -29,3 +29,4 @@ case 1 // a matrix (must be a nx3 element vector)
 else
    error(sprintf('%s : missing grid spec',funcName));
 end
+endfunction

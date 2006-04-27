@@ -100,3 +100,4 @@ else
 end
 
 // end of getColorNumber
+endfunction

@@ -142,13 +142,20 @@ elseif type(zin)==1 // 'classical' (Matlab style) case, zin is a matrix
       if type(cin)==1 // the color spec is a matrix
          if and(size(cin)==size(zin))  
             zout=zout+%i*cin;
-	 else
-	    error(sprintf('%s : color spec must be %d x %d',typeOfPlot,size(zout,1),size(zout,2)));
-	 end
+	     else
+	        error(sprintf('%s : color spec must be %d x %d',typeOfPlot,size(zout,1),size(zout,2)));
+	     end
       else
          error(sprintf('%s : color spec must be a matrix',typeOfPlot));
       end
    end
+   
+   if typeOfPlot=="fill3"
+        if size(xin,1)<3 | size(xin,1)>4
+            error(sprintf('%s : fill3 does only work with triangles or quadrilaterals',typeOfPlot));
+        end 
+   end
+   
 if paramFlag
    xout=xin;
    yout=yin;
@@ -156,3 +163,4 @@ else
    zout=zout.'; // remember zin was passed in the 'matlab style' (rows=Y, cols=X)
 end
 end
+endfunction

@@ -28,3 +28,4 @@ elseif rhs==4
    [nodes,x,y,z]=varargin(1:4);
 end
 
+endfunction

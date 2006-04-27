@@ -43,5 +43,7 @@ elseif cb=="bot"
 end
 
 ech=[X Y LX LY];
-xlech=[X Y+LY+dyl/4 LX dyl];
+xlech=[X Y+LY+dyl/8 LX dyl];
 titech=[X Y-dy LX dy];
+
+endfunction

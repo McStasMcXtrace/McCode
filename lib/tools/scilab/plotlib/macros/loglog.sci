@@ -20,3 +20,4 @@ varargin(0) = 'Yscale';
 mainPlot('loglog',varargin);
 
 // end of loglog
+endfunction
