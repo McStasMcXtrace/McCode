@@ -20,3 +20,4 @@ varargin(0) = 'Yscale';
 mainPlot('semilogy',varargin);
 
 // end of semilogy
+endfunction

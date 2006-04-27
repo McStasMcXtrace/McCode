@@ -26,3 +26,4 @@ hf=hb/(frect(4)-frect(2));
 xsetech(wrect=[x+w*(1-wf) y w*wf h*hf],frect=[0 0 1 1],arect=[0 0 0 0]);
 xrect(0,1,1,1);
 xstring(0,0,mat)
+endfunction

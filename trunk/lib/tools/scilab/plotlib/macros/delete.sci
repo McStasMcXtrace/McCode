@@ -18,3 +18,4 @@ end
 xdel(winNum)
 
 saveGraphicState(list(),winNum)
+endfunction

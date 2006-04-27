@@ -24,3 +24,4 @@ deff('[z]=lightenedSurface(u,v)',['global currentSurf currentLightVect';...
 'z=z(:)+%i*computeLight(n,currentLightVect)']);
 
 end
+endfunction

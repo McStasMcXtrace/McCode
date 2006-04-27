@@ -33,3 +33,4 @@ saveGraphicState(s,win);
 clearWindow(win)
 
 // end of clf 
+endfunction

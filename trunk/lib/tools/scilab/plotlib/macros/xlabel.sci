@@ -14,3 +14,4 @@ rect=xstringl(0,0,labelString);
 xstring(.5-rect(3)/2,.5-rect(4)/2,labelString);
 
 setCurrentViewport(state,win)
+endfunction

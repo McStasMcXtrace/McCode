@@ -28,3 +28,4 @@ elseif rhs==0
 end
 
 saveGraphicState(state,winNum);
+endfunction

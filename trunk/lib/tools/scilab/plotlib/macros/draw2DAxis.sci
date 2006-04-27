@@ -16,3 +16,4 @@ function draw2DAxis(state,nTicksX,nTicksY,foreground,background,modeStart,gridFl
          xgrid(gc);
       end
       	  
+endfunction

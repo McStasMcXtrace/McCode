@@ -20,3 +20,4 @@ elseif typ=='top' | typ=='bot'
   xfpolys([ax(1) ax(2) ax(2) ax(1)]',[0 0 1 1]',[table(1) table($) table($) table(1)]');
 	plotframe([ax(1) 0 ax(2) 1],[2 4 1 0],[%f,%f],['','','']);
 end
+endfunction

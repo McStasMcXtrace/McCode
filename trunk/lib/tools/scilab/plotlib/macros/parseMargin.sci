@@ -17,3 +17,4 @@ case 1 // a matrix (must be a scalar)
 else
     error(sprintf('%s : missing margin value',funcName));
 end
+endfunction

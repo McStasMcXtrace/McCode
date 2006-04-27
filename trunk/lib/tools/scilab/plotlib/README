@@ -1,8 +1,8 @@
-Version 0.194 (Mon May 23 16:32:25 CEST 2005)
+Version 0.196 (Mon Apr 24 16:08:29 CEST 2006)
 
 Installation
 ============
-To Install this library : (Scilab >= 3.1-rc1)
+To Install this library : (Scilab >= 3.1.1)
 
 We Suppose here that <PATH> stands for  the path of the directory
 containing this README file.

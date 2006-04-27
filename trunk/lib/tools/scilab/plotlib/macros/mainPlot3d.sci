@@ -132,7 +132,7 @@ while length(argList)
 						argNumber=argNumber+4;
 					end		  
 
-				elseif ((typeOfPlot=='surf') | (typeOfPlot=='pcolor')) & length(argList)>=4 
+				elseif ((typeOfPlot=='surf') | (typeOfPlot=='fill3') | (typeOfPlot=='pcolor')) & length(argList)>=4 
 
 					if (type(argList(4))==1 | type(argList(4))==13) // a matrix or a function for the color
 						[X,Y,Z,surfaceIsParam]=checkXYZQuadruple(typeOfPlot,argList(1),argList(2),...
@@ -355,7 +355,7 @@ else
    if type(Z)==1 // if the surface/patch is defined by numerical data
 
 		if typeOfPlot=="fill" | typeOfPlot=="bar"
-        	elseif typeOfPlot=='trisurfl' | ...
+        elseif typeOfPlot=='trisurfl' | ...
 			typeOfPlot=='trisurf' | ...
 			typeOfPlot=='tripcolor' | ...
 			typeOfPlot=='trimesh' |...
@@ -431,20 +431,22 @@ else
 				Z=Z+%i*matrix(computeLight(nonParametricNormals(zx,zy),lightVect),ny,nx)';
 			end
 			[X,Y,Z]=genfac3d(X,Y,Z);
-		else  
+		else
 
 			[nv,nu]=size(X)          // parametric case
 			if typeOfPlot=='surfl'
 			   [xu,yu,zu,xv,yv,zv]=parametricDiffData(X,Y,Z);
 			   Z=Z+%i*matrix(computeLight(parametricNormals(xu,yu,zu,...
 						xv,yv,zv),lightVect),nv,nu);
-            		end
+            end
 		 
 	  	    // Now convert X,Y and Z to polygons	
  
-		    [X,Y,Z]=generate3dPolygons(X,Y,Z,numberOfVertices,surfaceIsParam);
- 
-        	end
+		    if typeOfPlot=='fill3'
+            else
+                [X,Y,Z]=generate3dPolygons(X,Y,Z,numberOfVertices,surfaceIsParam);                
+            end    
+        end
       
 	elseif type(Z)==13 // if the surface is defined by a function
 
@@ -505,7 +507,8 @@ else
 	  		typeOfPlot=='surfl' | ...
 	  		typeOfPlot=='trisurf' | ...
 	  		typeOfPlot=='trisurfl' | ...
-			typeOfPlot=="triplot"
+			typeOfPlot=="triplot" | ...
+            typeOfPlot=="fill3"
 
 
 
@@ -519,7 +522,6 @@ else
 				    end
 
 			    else
-
 				    if isreal(Z)
 					    C=Z;
 				    else
@@ -623,11 +625,11 @@ else
 			xclip('clipgrf')
          
             if facecolor=='interp' & edgecolor=='none'
-//            	if edgecolor~='none'
+ //           	if edgecolor~='none'
 			       C=-C;
-//                end
-//            elseif edgecolor=='none'
-//				     C=-C;		 
+ //               end
+            elseif edgecolor=='none'
+				     C=-C;		 
             end            
             
             if typeOfPlot=='bar' 

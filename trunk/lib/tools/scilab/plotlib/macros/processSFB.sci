@@ -31,3 +31,4 @@ if state('nextPlot')=='erase'
 	end
 	
 end
+endfunction

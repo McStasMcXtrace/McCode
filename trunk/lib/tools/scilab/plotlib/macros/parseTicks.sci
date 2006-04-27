@@ -20,3 +20,4 @@ case 10 //  a string
 else
    error(sprintf('%s : missing ticks spec',funcName));
 end
+endfunction

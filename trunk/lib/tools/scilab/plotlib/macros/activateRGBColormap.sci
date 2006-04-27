@@ -20,3 +20,4 @@ xset('background',addcolor(state('frameColor')));
 xset('foreground',addcolor(state('foreground')));
 
 saveGraphicState(state,winNum);
+endfunction

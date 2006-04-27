@@ -8,3 +8,4 @@ else
    winNum=xget('window');
 end
 
+endfunction

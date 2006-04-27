@@ -130,3 +130,4 @@ end
 varargout(1)=winNum;
 
 // end of fig
+endfunction

@@ -37,3 +37,4 @@ n=prod(size(ind2));
 X=matrix(X(ind2),nbVertices,n/nbVertices);
 Y=matrix(Y(ind2),nbVertices,n/nbVertices);
 Z=matrix(Z(ind2),nbVertices,n/nbVertices);	 
+endfunction

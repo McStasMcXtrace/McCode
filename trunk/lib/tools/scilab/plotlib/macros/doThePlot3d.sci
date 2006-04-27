@@ -19,3 +19,4 @@ if length(az)>1
 else
    plot3d(x,y,z,az($),el($),lab,ms,ax);
 end
+endfunction

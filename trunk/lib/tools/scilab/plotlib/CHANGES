@@ -1,3 +1,7 @@
+Version 0.196
+-------------
+
+Slight changes for Scilab 4.0 compatibility.
 
 Version 0.195
 -------------
@@ -9,7 +13,6 @@ Added new properties :
 
 in 2d plots : used to turn on or off the ticks
 and ticks labels on X and Y axis.
-
 
 
 Version 0.194

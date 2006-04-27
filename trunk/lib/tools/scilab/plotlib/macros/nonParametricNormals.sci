@@ -9,3 +9,4 @@ n=[-zu(:)';
 n=n*sparse([1:dim;1:dim]',1 ./sqrt(sum(n.^2,'r')));
 
 
+endfunction

@@ -34,3 +34,4 @@ case 10 // a string
 else
     error(sprintf('%s : missing %s color spec',funcName,colName));
 end
+endfunction
