@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.41 $
+* Version: $Revision: 1.42 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -177,7 +177,7 @@ SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d=1e-4,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
             p_transmit = -1, absorption = 0, incoherent = 0,
-            aa=0, bb=0, cc=0, order=0)
+            aa=0, bb=0, cc=0, order=0, powder=0)
 OUTPUT PARAMETERS(hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -680,9 +680,17 @@ TRACE
       l_full = t2*v;
 
       /* (1). Compute incoming wave vector ki */
-      kix = V2K*vx;
-      kiy = V2K*vy;
-      kiz = V2K*vz;
+      if (powder) { /* orientation of crystallite is random */
+        double nvx, nvy, nvz;
+        randvec_target_circle(&nvx, &nvy, &nvz, NULL, vx, vy, vz, 0);
+        kix = V2K*nvx;
+        kiy = V2K*nvy;
+        kiz = V2K*nvz;
+      } else {
+        kix = V2K*vx;
+        kiy = V2K*vy;
+        kiz = V2K*vz;
+      }
 
       /* (2). Intersection of Ewald sphere with recipprocal lattice points */
 

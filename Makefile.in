@@ -70,7 +70,7 @@ OBJECTS=instrument.tab.o lex.yy.o debug.o \
 PERLOBJ=gscan.fixpl mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
         mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl
 PERLBIN=gscan mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon
-BINOBJS=$(PERLOBJ) mcstas
+BINOBJS=$(PERLOBJ) mcstas mcformat
 
 .SUFFIXES: .c .o .pl .fixpl
 
@@ -89,6 +89,9 @@ all: $(BINOBJS)
 mcstas: $(OBJECTS)
 	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(OBJECTS) -lm
 
+mcformat: 
+	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) mcformat.c -lm
+
 clean:
 	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \
 	instrument.tab.c instrument.tab.h instrument.output lex.yy.c \
@@ -98,6 +101,7 @@ TAGS:
 
 install: installdirs $(BINOBJS)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
+	$(INSTALL_PROGRAM) mcformat $(bindir)/mcformat
 	for pgm in $(PERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
 	done
