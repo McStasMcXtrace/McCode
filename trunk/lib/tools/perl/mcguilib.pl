@@ -95,6 +95,7 @@ sub simulation_dialog {
     my $name_instr = $ii->{'Instrument-source'};
     my $dlg = $win->DialogBox(-title => "Run simulation $name_instr",
                               -buttons => ["Start", "Cancel"]);
+    my $data = component_information($ii->{'Instrument-source'});
     my $top_frame = $dlg->Frame(-relief => 'raised', -border => 1);
     $b = $dlg->Balloon(-state => 'balloon');
     $top_frame->pack(-fill => 'x');
@@ -127,6 +128,25 @@ sub simulation_dialog {
             my $w = $parm_frame->Label(-text => "$p$u:", -justify => 'right');
             $w->grid(-row => $row, -column => $col, -sticky => 'e');
             $col++;
+            # add tooltip
+            for $i (@{$data->{'inputpar'}}) {
+              if ($i eq $p) {
+                my $ballon;
+                if(defined($data->{'parhelp'}{$i}{'default'})) {
+                  $ballon = "<$i=$data->{'parhelp'}{$i}{'default'}>: ";
+                } else {
+                  $ballon = "<$i>: ";
+                }
+                $ballon .= "[$data->{'parhelp'}{$i}{'unit'}] "
+                  if $data->{'parhelp'}{$i}{'unit'};
+
+                $ballon .= "$data->{'parhelp'}{$i}{'text'} "
+                  if $data->{'parhelp'}{$i}{'text'};
+
+                $b->attach($w, -balloonmsg => $ballon);
+              }
+            }
+            # entry text field
             $si{'Params'}{$p} = "" unless defined($si{'Params'}{$p});
             if ($si{'Params'}{$p} eq "" && defined($ii->{'Params'}{$p}))
             { $si{'Params'}{$p} = $ii->{'Params'}{$p}; }
