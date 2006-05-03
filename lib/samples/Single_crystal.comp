@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -32,7 +32,28 @@
 * point, and the 7-th number is the value of the structure factor |F|**2, in
 * barns. The rest of the numbers are not used; the file is in the format
 * output by the Crystallographica program.
-* Lines begining by '#' are read as comments (ignored).
+* Lines begining by '#' are read as comments (ignored). Most sample parameters
+* may be defined from the data file header, following the same mechanism as
+* PowderN.
+*
+* Current data file header keywords include, for data format specification:
+*    #column_h <index of the Bragg Qh column>
+*    #column_k <index of the Bragg Qk column>
+*    #column_l <index of the Bragg Ql column>
+*    #column_F2 <index of the squared str. factor '|F|^2' column [b]>
+*    #column_F  <index of the structure factor norm '|F|' column>
+* and for material specification:
+*    #sigma_abs <value of Absorption cross section [barns]>
+*    #sigma_inc <value of Incoherent cross section [barns]>
+*    #Delta_d/d <value of Detla_d/d width for all lines>
+*    #lattice_a <value of the a lattice parameter [Angs]>
+*    #lattice_a <value of the b lattice parameter [Angs]>
+*    #lattice_a <value of the c lattice parameter [Angs]>
+*    #lattice_aa <value of the alpha lattice angle [deg]>
+*    #lattice_bb <value of the beta  lattice angle [deg]>
+*    #lattice_cc <value of the gamma lattice angle [deg]>
+*
+* See the Component Manual for more defails.
 *
 * Example: Single_crystal(xwidth=0.01, yheight=0.01, zthick=0.01,
 *           delta_d_d=1e-4, mosaic = 5,
@@ -589,7 +610,7 @@ INITIALIZE
 
 TRACE
 %{
-  double t1, t2;                /* Entry and exit times in sample */
+  double t1, t2=0;                /* Entry and exit times in sample */
   struct hkl_data *L;           /* Structure factor list */
   int i;                        /* Index into structure factor list */
   struct tau_data *T;           /* List of reflections close to Ewald sphere */

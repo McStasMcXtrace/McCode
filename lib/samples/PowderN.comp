@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -42,11 +42,11 @@
 * The powder data are free-text column based files.
 * Lines begining by '#' are read as comments (ignored) but they may contain
 * the following keywords (in the header):
-*   #Vc <value of unit cell volume Vc>
-*   #sigma_abs <value of Absorption cross section>
-*   #sigma_inc <value of Incoherent cross section>
+*   #Vc           <value of unit cell volume Vc [Angs^3]>
+*   #sigma_abs    <value of Absorption cross section [barns]>
+*   #sigma_inc    <value of Incoherent cross section [barns]>
 *   #Debye_Waller <value of Debye-Waller factor DW>
-*   #Delta_d/d <value of Detla_d/d width for all lines>
+*   #Delta_d/d    <value of Detla_d/d width for all lines>
 * These values are not read if entered as component parameters (Vc=...)
 *
 * The signification of the columns in the numerical block may be
@@ -69,14 +69,14 @@
 * At last, the format may be overridden by direct definition of the
 * column indexes in the file itself by using the following keywords
 * in the header (e.g. '#column_j 4'):
-*   #column_j <index of the multiplicity 'j' column>
-*   #column_d <index of the d-spacing 'd' column>
-*   #column_F2 <index of the squared structure factor '|F|^2' column>
-*   #column_F  <index of the structure factor norm '|F|' column>
-*   #column_DW <index of the Debye-Waller factor 'DW' column>
-*   #column_Dd <index of the relative line width Delta_d/d 'Dd' column>
+*   #column_j     <index of the multiplicity 'j' column>
+*   #column_d     <index of the d-spacing 'd' column [Angs]>
+*   #column_F2    <index of the squared str. factor '|F|^2' column [b]>
+*   #column_F     <index of the structure factor norm '|F|' column>
+*   #column_DW    <index of the Debye-Waller factor 'DW' column>
+*   #column_Dd    <index of the relative line width Delta_d/d 'Dd' column>
 *   #column_inv2d <index of the 1/2d=sin(theta)/lambda 'inv2d' column>
-*   #column_q <index of the scattering wavevector 'q' column>
+*   #column_q     <index of the scattering wavevector 'q' column [Angs-1]>
 *
 * %P
 * INPUT PARAMETERS
