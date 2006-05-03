@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.63 $
+* Version: $Revision: 1.64 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.63 2006-04-19 13:06:25 farhi Exp $
+* $Id: instrument.y,v 1.64 2006-05-03 13:49:40 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1623,8 +1623,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         /* Use default value for unassigned optional parameter */
         symtab_add(defpar, formal->id, formal->default_value);
       } else {
-        print_error("Unassigned definition parameter %s for component %s.\n",
-              formal->id, comp->name);
+        print_error("Unassigned DEFINITION parameter %s for component %s at line %s:%d.\n",
+              formal->id, comp->type,
+              instr_current_filename, instr_current_line);
         symtab_add(defpar, formal->id, exp_number("0.0"));
       }
     } else {
@@ -1636,9 +1637,10 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-  print_warn(NULL, "Using DEFINITION parameter of component %s (potential syntax error)\n"
+  print_warn(NULL, "Using DEFINITION parameter of component %s (potential syntax error) at line %s:%d\n"
     "  %s=%s\n",
-    comp->name, formal->id, exp_tostring(entry->val));
+    comp->type, instr_current_filename, instr_current_line,
+    formal->id, exp_tostring(entry->val));
       }
     }
   }
@@ -1654,8 +1656,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         /* Use default value for unassigned optional parameter */
         symtab_add(setpar, formal->id, formal->default_value);
       } else {
-        print_error("Unassigned setting parameter %s for component %s.\n",
-              formal->id, comp->name);
+        print_error("Unassigned SETTING parameter %s for component %s at line %s:%d.\n",
+              formal->id, comp->type,
+              instr_current_filename, instr_current_line);
         symtab_add(setpar, formal->id, exp_number("0.0"));
       }
     } else {
@@ -1674,8 +1677,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       Symtab_handle siter2;
       struct Symtab_entry *entry2;
 
-      fprintf(stderr, "Unmatched actual parameter %s for component %s=%s.\n",
-      entry->name, comp->name, comp->type);
+      fprintf(stderr, "Unmatched actual parameter %s for component %s at line %s:%d.\n",
+        entry->name, comp->type,
+        instr_current_filename, instr_current_line);
       siter2 = symtab_iterate(defpar);
       fprintf(stderr,"  Definition parameters: ");
       while(entry2 = symtab_next(siter2))
