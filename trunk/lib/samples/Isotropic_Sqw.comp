@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.36 $
+* Version: $Revision: 1.37 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
@@ -90,7 +90,7 @@
 * ...
 * 0.000000            ... 3.860253
 *
-* See for instance file He4.sqw. Such files may be obtained from e.g. INX,
+* See for instance file He4_liq_coh.sqw. Such files may be obtained from e.g. INX,
 * Nathan, Lamp and IDA softwares, as well as Molecular Dynamics.
 *
 * <b>Powder file format:</b>
@@ -118,7 +118,7 @@
 *     sigma_abs=5.08, sigma_inc=4.935, sigma_coh=0)
 *
 * 2- liq-4He parameters
-*   Isotropic_Sqw(..., Sqw_coh="He4.sqw", T=10)
+*   Isotropic_Sqw(..., Sqw_coh="He4_liq_coh.sqw", T=10)
 *
 * 3- powder sample
 *  Isotropic_Sqw(..., Sqw_coh="Al.laz", save_sqw=1)
@@ -952,8 +952,8 @@ struct Sqw_Data_struct *Sqw_readfile(
            Sqw_Data->w_min, Sqw_Data->w_max, Sqw_Data->intensity,
            Sqw_Data->nb_q, Sqw_Data->nb_w,
            (Sqw->type == 'i' ? Sqw->s_inc : Sqw->s_coh));
-  if (Sqw_Data->w_max < 1e-2 && Sqw_Data->w_min < 1e-2)
-    printf("               Mainly elastic scattering.\n");
+    if (Sqw_Data->w_max < 1e-2 && Sqw_Data->w_min < 1e-2)
+      printf("               Mainly elastic scattering.\n");
   }
 
   /* set up density of states and index_wconst */

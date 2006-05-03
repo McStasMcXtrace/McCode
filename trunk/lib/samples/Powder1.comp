@@ -10,7 +10,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.29 $
+* Version: $Revision: 1.30 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -38,12 +38,12 @@
 * yheight: Height of sample y direction [m]
 * pack:    Packing factor [1]
 * Vc:      Volume of unit cell [AA^3]
-* sigma_a: Absorption cross section per unit cell at 2200 m/s [fm^2]
+* sigma_a: Absorption cross section per unit cell at 2200 m/s [barns]
 *
 * q:       Scattering vector of reflection [AA^-1]
 * d:       d-spacing for sample, overrides 'q' [AA]
 * j:       Multiplicity of reflection [1]
-* F2:      Structure factor of reflection [fm^2]
+* F2:      Structure factor of reflection [barns]
 * DW:      Debye-Waller factor of reflection [1]
 *
 * Optional parameters:
