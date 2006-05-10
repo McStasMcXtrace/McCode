@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.37 $
+* Version: $Revision: 1.38 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
@@ -320,6 +320,11 @@ struct Sqw_sample_struct {
   double sqw_norm;
   char   sqw_auto;
   char   sqw_interp;
+  double mean_scatt;
+  double mean_abs;
+  double psum;
+  double single;
+  double multi;
 };
 
 #include <stdio.h>
@@ -1214,6 +1219,11 @@ INITIALIZE
   VarSqw.sqw_norm  = -1; /* automatic normalization for output files */
   VarSqw.sqw_auto  = auto_qw;
   VarSqw.sqw_interp= interpolate;
+  VarSqw.mean_scatt= 0;
+  VarSqw.mean_abs  = 0;
+  VarSqw.psum      = 0;
+  VarSqw.single    = 0;
+  VarSqw.multi     = 0;
 
   /* PowderN compatibility members */
   VarSqw.Dd        = powder_Dd;
@@ -1408,7 +1418,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     /* Proba of scattering vs absorption */
     ws = VarSqw.my_s/my_t;  /* (inc+coh)/(inc+coh+abs) */
-    /* Proba of interacing along length d_path */
+    /* Proba of interacting along length d_path */
     wi = 1 - exp(-my_t*d_path);
 
     flag = 0; /* flag used for propagation to exit point before ending */
@@ -1434,6 +1444,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
   else break;
 
   if (intersect) { /* scattering event */
+    /* mean scattering probability and absorption fraction */
+    VarSqw.mean_scatt += (1-exp(-VarSqw.my_s*d_path))*p;
+    VarSqw.mean_abs   += (1-ws)*p;
+    VarSqw.psum       += p;
 
     /* Decaying exponential distribution of the path length before scattering */
     /* Select a point at which to scatter the neutron, taking
@@ -1746,6 +1760,9 @@ if (SCATTERED) {
                   +(VarSqw.kf_z-VarSqw.ki_z)*(VarSqw.kf_z-VarSqw.ki_z));
   VarSqw.dw = VS2E*(VarSqw.vf*VarSqw.vf - VarSqw.vi*VarSqw.vi);
 
+  if (SCATTERED == 1) VarSqw.single += p;
+  else VarSqw.multi += p;
+
 } else VarSqw.dq=VarSqw.dw=0;
 
 /* end TRACE */
@@ -1824,7 +1841,7 @@ FINALLY
     if (Data_sqw.DOS_lookup)    free(Data_sqw.DOS_lookup);
     if (Data_sqw.QW_lookup)     free(Data_sqw.QW_lookup);
     if (Data_sqw.Sq)            free(Data_sqw.Sq);
-  }
+  } /* end for */
 
   if (VarSqw.neutron_removed)
     printf("Isotropic_Sqw: %s: %li neutron events (out of %li) that should have\n"
@@ -1835,6 +1852,16 @@ FINALLY
     printf("Isotropic_Sqw: %s: %li neutron events (out of %li) reached\n"
            "WARNING        unrealistic weight. The S(q,w) norm might be too high\n",
           NAME_CURRENT_COMP, VarSqw.neutron_pmult, VarSqw.neutron_exit);
+
+  if (VarSqw.verbose_output >= 1 && VarSqw.psum > 0) {
+    printf("Isotropic_Sqw: %s: Scattering fraction=%g of incoming intensity\n"
+           "               Absorption fraction           =%g\n",
+           NAME_CURRENT_COMP,
+           VarSqw.mean_scatt/VarSqw.psum, VarSqw.mean_abs/VarSqw.psum);
+    printf("               Single   scattering intensity =%g\n"
+           "               Multiple scattering intensity =%g\n",
+           VarSqw.single, VarSqw.multi);
+  }
 
 /* end FINALLY */
 %}
