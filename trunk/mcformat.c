@@ -46,7 +46,7 @@ then add/catenate and generate all
  */
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.1 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.2 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -111,6 +111,8 @@ int  mcdircount  =0; /* number of directories scanned */
 int  mcnbconvert =0; /* index of current file */
 FILE **mcsimfiles;
 char **mcdirnames;
+char **mcinstrnames;
+char **mcsources;
 char *mcoutputdir=NULL;
 
 struct fileparts_struct {
@@ -203,6 +205,27 @@ char *str_dup_label(char *orig)
 
   return(valid);
 } /* str_dup_label */
+
+/*******************************************************************************
+* str_last_word: points to last word of string
+*******************************************************************************/
+char *str_last_word(char *orig)
+{
+  char *pos=NULL;
+  char separators[]= MC_PATHSEP_S " !\"#$%&'()*,:;<=>?@[\\]^`/";
+  int  i=0;
+  /* search for last separator */
+  while (!pos) {
+    if (!pos) {
+      pos = strrchr(orig, separators[i]);
+      i++;
+    }
+  }
+  if (!pos) pos = orig;
+  else pos++;
+
+  return(pos);
+} /* str_last_word */
 
 
 /*******************************************************************************
@@ -620,12 +643,18 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
      */
   if (!McStasStruct.InstrName && !McStasStruct.Source)
     McStasStruct.Source = str_dup("McStas_Instrument");
-
-  if (!McStasStruct.InstrName && McStasStruct.Source) {
+  else if (!McStasStruct.InstrName && McStasStruct.Source) {
     char *ext=NULL; /* if not found, use instr file name without extension */
     ext = strstr(McStasStruct.Source, ".ins");
+    if (!ext) ext = strstr(McStasStruct.Source, " ins");
     if (ext) McStasStruct.InstrName = str_dup_n(McStasStruct.Source, (ext-McStasStruct.Source));
     else McStasStruct.InstrName = str_dup(McStasStruct.Source);
+  } else if (McStasStruct.InstrName && !McStasStruct.Source) {
+    char *ext=NULL; /* if not found, use instr file name without extension */
+    ext = strstr(McStasStruct.InstrName, ".ins");
+    if (!ext) ext = strstr(McStasStruct.InstrName, " ins");
+    if (ext) McStasStruct.Source = str_dup_n(McStasStruct.InstrName, (ext-McStasStruct.InstrName));
+    else McStasStruct.Source = str_dup(McStasStruct.InstrName);
   }
 
   if (McStasStruct.Ncount_str) McStasStruct.Ncount=atof(McStasStruct.Ncount_str);
@@ -852,7 +881,7 @@ static void mcformat_usedir(char *dir)
 {
 #ifdef MC_PORTABLE
   fprintf(stderr, "Error: "
-          "Directory output cannot be used with portable simulation (mcuse_dir)\n");
+          "Directory output cannot be used with portable simulation (mcformat_usedir)\n");
   return;
 #else  /* !MC_PORTABLE */
   if(mkdir(dir, 0777))
@@ -892,9 +921,13 @@ int mcformat_output(struct McStas_file_format McStasStruct)
         return(0);
       }
     if (!mcsimfiles[i]) {
-      mcdirname = McStasStruct.mcdirname;
+      mcdirname      = McStasStruct.mcdirname;
+      mcinstrnames[i]= str_dup(McStasStruct.InstrName);
+      mcsources[i]   = str_dup(McStasStruct.Source);
+      strncpy(mcinstrument_source, str_last_word(mcinstrnames[i]), MAX_LENGTH);
+      strncpy(mcinstrument_name  , str_last_word(mcsources[i]), MAX_LENGTH);
       mcsiminfo_init(NULL); /* open new SIM file in this dir for the first time */
-      mcsimfiles[i] = mcsiminfo_file;
+      mcsimfiles[i]  = mcsiminfo_file;
     } else mcsiminfo_file = mcsimfiles[i];
     mcdirname = mcdirnames[i];
   }
@@ -908,8 +941,8 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   mcgravitation       = (strstr(McStasStruct.gravitation, "yes") ? 1 : 0);
   mcrun_num = McStasStruct.RunNum;
   mcncount  = McStasStruct.Ncount;
-  strncpy(mcinstrument_source, McStasStruct.Source, MAX_LENGTH);
-  strncpy(mcinstrument_name  , McStasStruct.InstrName, MAX_LENGTH);
+  strncpy(mcinstrument_source, str_last_word(McStasStruct.Source), MAX_LENGTH);
+  strncpy(mcinstrument_name  , str_last_word(McStasStruct.InstrName), MAX_LENGTH);
   /* transfert mcnumipar */
   mcnumipar = McStasStruct.mcnumipar;
   for (i=0; i<mcnumipar; i++) {
@@ -960,6 +993,8 @@ int mcformat_convert(char *name)
     else mcdirname = lower_dir;
     mcdirnames[mcdircount] = lower_dir;
     mcsimfiles[mcdircount] = NULL;
+    mcinstrnames[mcdircount]=NULL;
+    mcsources[mcdircount]   =NULL;
     mcdircount++; /* number of directories scanned */
     ret += mcformat_dirwalk(name, mcformat_convert);
     mcdirname = upper_dir;
@@ -1445,8 +1480,10 @@ int main(int argc, char *argv[])
     mcnbconvert += mcformat_count(argv[i]);
   }
   if (mcdircount) { /* allocate list of directories amd FILE handles */
-    mcdirnames = (char**)mem(mcdircount*sizeof(char*));
-    mcsimfiles = (FILE**)mem(mcdircount*sizeof(FILE*));
+    mcdirnames  = (char**)mem(mcdircount*sizeof(char*));
+    mcsimfiles  = (FILE**)mem(mcdircount*sizeof(FILE*));
+    mcinstrnames= (char**)mem(mcdircount*sizeof(char*));
+    mcsources   = (char**)mem(mcdircount*sizeof(char*));
   }
   if (mcmergemode || mcscanmode) {
     printf("mcformat: Will process and merge/scan %d data file%s in %d director%s.\n",
@@ -1487,13 +1524,20 @@ int main(int argc, char *argv[])
     if (!mcdircount) mcsiminfo_close();
     else {
       for (j=0; j<mcdircount; j++) {
-        memfree(mcdirnames[j]);
-        mcsiminfo_file = mcsimfiles[j];
+        mcdirname = mcdirnames[j];
+        mcsiminfo_file     = mcsimfiles[j];
+        strncpy(mcinstrument_source, str_last_word(mcinstrnames[j]), MAX_LENGTH);
+        strncpy(mcinstrument_name  , str_last_word(mcsources[j]), MAX_LENGTH);
         mcsiminfo_close();
         mcsimfiles[j] = NULL;
+        memfree(mcinstrnames[j]);
+        memfree(mcsources[j]);
+        memfree(mcdirnames[j]);
       }
       memfree(mcdirnames);
       memfree(mcsimfiles);
+      memfree(mcinstrnames);
+      memfree(mcsources);
     }
   }
 
