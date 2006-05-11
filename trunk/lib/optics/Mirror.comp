@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -18,13 +18,25 @@
 *
 * %D
 * Single mirror plate (used to build guides in compound components).
+* The component Mirror models a single rectangular neutron mirror plate.
+* It can be used as a sample component or to e.g. assemble a complete neutron
+* guide by putting multiple mirror components at appropriate locations and
+* orientations in the instrument deﬁnition, much like a real guide is build
+* from individual mirrors.
+* Additionally, it may be centered in order to be used as a sample or
+* monochromator plate.
+* Reflectivity is either defined by an analytical model (see Component Manual)
+* or from a two-columns file with q [Angs-1] as first and R [0-1] as second.
+* In the local coordinate system, the mirror lies in the ﬁrst quadrant of the
+* x-y plane, with one corner at (0, 0, 0). Plane is thus perpendicular to the
+* incoming beam, and should usually be rotated.
 *
 * Example: Mirror(xlength=.1, yheight=.1,R0=0.99,Qc=0.021,alpha=6.1,m=2,W=0.003)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xlenght: (m)    length of mirror plate
+* xlength: (m)    length of mirror plate
 * yheight: (m)    height of mirror plate
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
@@ -41,7 +53,7 @@
 
 DEFINE COMPONENT Mirror
 DEFINITION PARAMETERS (string reflect=0)
-SETTING PARAMETERS (xlength, yheight,R0=0.99,Qc=0.021,alpha=6.07,m=2,W=0.003)
+SETTING PARAMETERS (xlength, yheight,R0=0.99,Qc=0.021,alpha=6.07,m=2,W=0.003, center=0)
 OUTPUT PARAMETERS (pTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -66,6 +78,7 @@ INITIALIZE
 TRACE
 %{
   double dt, q, B;
+  char intersect=0;
 
   /* First check if neutron has the right direction. */
   if(vz != 0.0 && (dt = -z/vz) >= 0)
@@ -74,7 +87,10 @@ TRACE
     x += vx*dt;
     y += vy*dt;
     /* Now check if neutron intersects mirror. */
-    if(x >= 0 && x <= xlength && y >= 0 && y <= yheight)
+    intersect = (center == 0 ?
+      x >= 0 && x <= xlength && y >= 0 && y <= yheight :
+      x>= -xlength/2 && x<=xlength/2 && y >= -yheight/2 && y <= yheight/2);
+    if(intersect)
     {
       z = 0;
       t += dt;
@@ -112,10 +128,20 @@ TRACE
 
 MCDISPLAY
 %{
-  multiline(5, 0.0, 0.0, 0.0,
-               (double)xlength, 0.0, 0.0,
-               (double)xlength, (double)yheight, 0.0,
-               0.0, (double)yheight, 0.0,
-               0.0, 0.0, 0.0);
+  double xmax, xmin, ymax, ymin;
+  magnify("xy");
+
+  if (center == 0) {
+    xmax= xlength; xmin=0;
+    ymax= yheight; ymin=0;
+  } else {
+    xmax= xlength/2; xmin=-xmax;
+    ymax= yheight/2; ymin=-ymax;
+  }
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+               (double)xmax, (double)ymin, 0.0,
+               (double)xmax, (double)ymax, 0.0,
+               (double)xmin, (double)ymax, 0.0,
+               (double)xmin, (double)ymin, 0.0);
 %}
 END
