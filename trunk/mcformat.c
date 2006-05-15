@@ -38,15 +38,8 @@
 * %End
 *******************************************************************************/
 
-/* TODO: if add/catenate mode
-first scan files, store their location and characteristics, do not generate anything.
-then group them by similar type (only ncount should possibly change)
-then add/catenate and generate all
-
- */
-
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.2 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.3 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -211,20 +204,27 @@ char *str_dup_label(char *orig)
 *******************************************************************************/
 char *str_last_word(char *orig)
 {
-  char *pos=NULL;
-  char separators[]= MC_PATHSEP_S " !\"#$%&'()*,:;<=>?@[\\]^`/";
-  int  i=0;
-  /* search for last separator */
-  while (!pos) {
-    if (!pos) {
-      pos = strrchr(orig, separators[i]);
-      i++;
-    }
-  }
-  if (!pos) pos = orig;
-  else pos++;
+  char *pos_end  =NULL;
+  char *pos_begin=NULL;
+  char separators[]= MC_PATHSEP_S " !\"#$%&'()*,:;<=>?@[\\]^`/.";
 
-  return(pos);
+  /* first skip trailing separators */
+  pos_end = orig+strlen(orig);
+  while (pos_end > orig) {
+    if (strchr(separators, *pos_end)) pos_end--; /* pass separators at the end */
+    else break;
+  }
+  pos_begin = pos_end-1;
+  /* search for non separators (pass word) */
+  while (pos_begin >= orig) {
+    if (!strchr(separators, *pos_begin)) pos_begin--; /* pass non separators */
+    else break;
+  }
+  pos_begin++;
+
+  if (pos_begin < orig) pos_begin=orig;
+
+  return(pos_begin);
 } /* str_last_word */
 
 
@@ -751,32 +751,29 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   mcnumipar = 0;
   while (tok) { /* extract parameter=value as clean names */
     tok = strstr(s, "Param");
+    if (!tok) tok = strstr(s, "param");
     if (!tok) break;
     parsing = Table_ParseHeader(tok, "Param", NULL); /* get line */
+    if (!parsing[0])
+      parsing = Table_ParseHeader(tok, "param", NULL); /* get line */
     name_start = (parsing[0] ? str_dup(parsing[0]) : NULL);
     memfree(parsing[0]); free(parsing);
     if (!name_start) break;
     equal_sign = strchr(name_start+strlen("Param")+1, '=');
     if (equal_sign > name_start && strlen(name_start)) {
-      char *name       = str_dup_name(name_start, equal_sign - name_start);
+      char *name_to_equal=str_dup_n(name_start, equal_sign-name_start);
+      char *name=str_last_word(name_to_equal);
       char *value      = str_dup(equal_sign+1);
-      char status=0;
       if (name && value && strlen(name) && strlen(value)) {
-        char *name_label = str_dup(name_start);
-        int   space_count=0;
-        while (name_label[space_count] && (name_label[space_count] > 122
-          || name_label[space_count] < 32
-          || strchr("!\"#$%&'()*,:;<=>?@[\\]^`/ ", name_label[space_count])) )
-        space_count++;
-        memfree(name_label);
-        name_label = str_dup(name+space_count);
+        char *name_label = str_dup_label(name);
+        /* printf("name_to_equal='%s' name='%s' value='%s'\n", name_to_equal, name, value); */
         mcinputtable[mcnumipar].name = name_label;
         mcinputtable[mcnumipar].type = instr_type_string;
         mcinputtable[mcnumipar].val  = value;
         mcinputtable[mcnumipar].par  = NULL;
         mcnumipar++;
       }
-      memfree(name);
+      memfree(name_to_equal);
     }
     memfree(name_start);
     s = tok+strlen("Param");
