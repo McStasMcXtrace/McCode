@@ -1,5 +1,5 @@
 # Makefile for McStas.
-#  
+#
 #   This file is part of the McStas neutron ray-trace simulation package
 #   Copyright (C) 1997-2004, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
@@ -17,7 +17,7 @@
 #
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 SHELL = /bin/sh
 
@@ -36,6 +36,8 @@ CC = @CC@
 CFLAGS = @CFLAGS@
 LDFLAGS= @LDFLAGS@
 DEFS = @DEFS@ $(DEBUG)
+
+HAVE_LIBPTHREAD = @HAVE_LIBPTHREAD@
 
 PERL = @PERL@
 
@@ -89,7 +91,7 @@ all: $(BINOBJS)
 mcstas: $(OBJECTS)
 	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(OBJECTS) -lm
 
-mcformat: 
+mcformat:
 	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) mcformat.c -lm
 
 clean:
@@ -147,8 +149,8 @@ install: installdirs $(BINOBJS)
 	done
 	./mcdoc.fixpl --text
 	mkdir $(mc_libdir)/tools/perl/modules
-	cd support/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install 
-	cd support/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install 
+	cd support/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
+	cd support/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
 
 
 installdirs:
@@ -174,7 +176,7 @@ lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
 
 # Prefer Scilab over Matlab over PGPLOT
-config: 
+config:
 	if [ $(VRML) != no ]; then \
 		make vrml; \
 	fi;
@@ -186,12 +188,12 @@ config:
 	fi; \
 	if [ $(SCILAB) != no ]; then \
 		make scilab; \
-	fi; 
+	fi;
 
 scilab:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'Scilab'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-matlab: 
+matlab:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'Matlab'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
 pgplot:

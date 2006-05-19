@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.128 $
+* Version: $Revision: 1.129 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.128 2006-03-22 14:54:13 farhi Exp $
+* $Id: mcstas-r.c,v 1.129 2006-05-19 14:17:40 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.128  2006/03/22 14:54:13  farhi
+* Added EOL chars (\n) for all matrix output to all formats except IDL
+* (which has limitations in the way matrix are entered).
+* Will generate data sets to be handled by mcformat/mcconvert
+*
 * Revision 1.127  2006/03/15 15:59:37  farhi
 * output format function more robust (uses default args if called with NULL args)
 *
@@ -567,10 +572,11 @@ double mcget_run_num(void)
 }
 
 
-#ifdef USE_MPI
-
-/* MPI rank */
+#if defined(USE_MPI) || defined(USE_THREADS)
 static int mpi_node_count;
+#endif
+#ifdef USE_MPI
+/* MPI rank */
 static int mpi_node_rank;
 static int mpi_node_root = 0;
 
@@ -4117,6 +4123,9 @@ mchelp(char *pgmname)
 "  -i        --info           Detailed instrument information.\n"
 "  --format=FORMAT            Output data files using format FORMAT\n"
 "                             (use option +a to include text header in files\n"
+#ifdef USE_THREADS
+"  --threads=NB_CPU           Split simulation into NB_CPU threads\n"
+#endif
 );
   if(mcnumipar > 0)
   {
@@ -4329,6 +4338,10 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;
+#ifdef USE_THREADS
+    else if(!strncmp("--threads=", argv[i], 10))
+      mpi_node_count = atoi(&argv[i][10]);
+#endif
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
@@ -4498,6 +4511,20 @@ void sighandler(int sig)
 }
 #endif /* !NOSIGNALS */
 
+void *
+mcstas_raytrace(void *p_node_ncount)
+{
+  double node_ncount = *((double*)p_node_ncount);
+  double local_mcrun_num=0;
+  while(local_mcrun_num < node_ncount)
+  {
+    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
+    mcraytrace();
+    local_mcrun_num++;
+  }
+  mcrun_num += local_mcrun_num;
+}
+
 /* mcstas_main: McStas main() function. */
 int
 mcstas_main(int argc, char *argv[])
@@ -4507,8 +4534,13 @@ mcstas_main(int argc, char *argv[])
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
-  int  mpi_mcncount;
 #endif /* USE_MPI */
+#if defined (USE_MPI) || defined(USE_THREADS)
+  double mpi_mcncount;
+#endif /* USE_MPI */
+#ifdef USE_THREADS
+  pthread_t threads[mpi_node_count];
+#endif
 
 #ifdef MAC
   argc = ccommand(&argv);
@@ -4516,7 +4548,7 @@ mcstas_main(int argc, char *argv[])
 
 #ifdef USE_MPI
   MPI_Init(&argc,&argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &mpi_node_count);
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_node_count); /* get number of nodes */
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_node_rank);
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
@@ -4577,27 +4609,52 @@ mcstas_main(int argc, char *argv[])
 #endif
 
 /* ================ main neutron generation/propagation loop ================ */
+#if defined (USE_MPI) || defined(USE_THREADS)
+  mpi_mcncount = mpi_node_count > 1 ?
+    floor(mcncount / mpi_node_count) :
+    mcncount; /* number of neutrons per thread/node */
+#endif
+
+/* main neutron event loop */
+
+#ifdef USE_THREADS
+/* distribute threads */
+if (mpi_node_count > 1) {
+  double remain_ncount = mcncount - (mpi_node_count-1)*mpi_mcncount;
+  int i;
+  for (i=0; i<mpi_node_count-1; i++){
+    if (pthread_create( &(threads[i]), NULL,
+      mcstas_raytrace, (void*) &mpi_mcncount))
+      fprintf(stderr,"Error: could not create thread %i (mcstas_main)\n", i);
+  }
+  /* now go on with master thread with remaining events */
+  mcstas_raytrace(&remain_ncount);
+} else mcstas_raytrace(&mcncount);     /* full Ncount */
+#else
+
 #ifdef USE_MPI
-  mpi_mcncount = mcncount / mpi_node_count;
+mcstas_raytrace(&mpi_mcncount); /* sliced Ncount on each MPI node */
+#else
+mcstas_raytrace(&mcncount);     /* full Ncount */
+#endif
 
-  while(mcrun_num < mpi_mcncount)
-  {
-    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
-    mcraytrace();
-    mcrun_num++;
-  }
+#endif
 
+#ifdef USE_THREADS
+/* wait for termination of child threads */
+if (mpi_node_count > 1) {
+  int i;
+  for (i=0; i<mpi_node_count-1; i++)
+    pthread_join(threads[i], NULL);
+}
+#endif
+
+#ifdef USE_MPI
+ /* merge data from MPI nodes */
   mc_MPI_Reduce(&mcrun_num, &mcrun_num, 1, MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+#endif
 
-#else /* !USE_MPI */
-  while(mcrun_num < mcncount)
-  {
-    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
-    mcraytrace();
-    mcrun_num++;
-  }
-#endif /* !USE_MPI */
-
+/* save/finally executed by master node/thread */
   mcfinally();
   mcclear_format(mcformat);
   if (mcformat_data.Name) mcclear_format(mcformat_data);

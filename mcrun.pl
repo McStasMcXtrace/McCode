@@ -83,6 +83,7 @@ my $end=-1;                     # last scan number to run in slave mode
 my $multi=0;                    # multi machine mode
 my @hostlist = ();              # list of remote machines to run on...
 my $mpi = 0;                    # how many nodes used with MPI? 0 implies no MPI.
+my $threads = 0;                # number of threads for multi-cpu machines
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -187,6 +188,9 @@ sub parse_args {
             $exec_test="compatible and graphics";
         } elsif(/^--(test)\=(.*)$/) {
             $exec_test="$2";
+        } elsif(/^--(threads)\=(.*)$/) {
+            push @options, "--$1=$2";
+            $threads = $2;
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
@@ -226,6 +230,13 @@ sub parse_args {
         print STDERR "mcrun: You have no mpicc/mpirun available, --mpi disabled...\n";
         $mpi   = 0;
       }
+    }
+
+    # Adapt to multi-threading (overrides MPI and griding)
+    if ($threads > 1 && $MCSTAS::mcstas_config{THREADS} ne "no") {
+      $mpi   = 0;
+      $multi = 0;
+      $MCSTAS::mcstas_config{CFLAGS} = $MCSTAS::mcstas_config{CFLAGS} . " -DUSE_THREADS -lpthread";
     }
 
     # Adapt parameters to MPI (if used) which overrides grid.
@@ -273,6 +284,11 @@ sub parse_args {
    -p=FILE   --param=FILE     Read parameters from file FILE.
    -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
    -N NP     --numpoints=NP   Set number of scan points.
+   -M        --multi          Spawn simulations to multiple machine grid.
+             --grid           See the documentation for more info.
+                              --multi Not supported on Win32.
+   --mpi=NB_CPU               Spread simulation over NB_CPU machines using MPI
+   --machines=MACHINES        Read machine names from file MACHINES (MPI/grid)
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
    -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
@@ -287,11 +303,7 @@ sub parse_args {
    --test                     Execute McStas selftest and generate report
    --format=FORMAT            Output data files using format FORMAT.
                               (format list obtained from <instr>.out -h)
-   -M        --multi          Spawn simulations to multiple machine grid.
-             --grid           See the documentation for more info.
-                              --multi Not supported on Win32.
-   --mpi=NB_CPU               Spread simulation over NB_CPU machines using MPI
-   --machines=MACHINES        Read machine names from file MACHINES (MPI/grid)
+   --threads=NB_CPU           Use threads for multi-cpu machines
 
 This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be

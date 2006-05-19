@@ -26,6 +26,8 @@ AC_PROG_CC
 AC_PROG_INSTALL
 CF_ANSI_CC_CHECK
 MC_ANSI_MATH_PROTO
+AC_CHECK_LIB(pthread, pthread_create, HAVE_LIBPTHREAD=yes, HAVE_LIBPTHREAD=no)
+AC_SUBST(HAVE_LIBPTHREAD)
 AC_CHECK_FUNCS(strcasecmp fdopen)
 AC_PATH_PROGS(PERL,   [perl5 perl /usr/local/bin/perl], no)
 AC_PATH_PROGS(SCILAB, [scilab runscilab /usr/local/bin/scilab /usr/lib/scilab/bin/scilab /lib/scilab/bin/scilab scilex], no)
