@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.129 $
+* Version: $Revision: 1.130 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.129 2006-05-19 14:17:40 farhi Exp $
+* $Id: mcstas-r.c,v 1.130 2006-05-19 19:01:15 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.129  2006/05/19 14:17:40  farhi
+* Added support for multi threading with --threads=NB option for mcrun or instr.out
+* Requires new option in mcgui run dialog: a popup menu to select run mode ?
+*
 * Revision 1.128  2006/03/22 14:54:13  farhi
 * Added EOL chars (\n) for all matrix output to all formats except IDL
 * (which has limitations in the way matrix are entered).
@@ -4338,9 +4342,13 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;
-#ifdef USE_THREADS
+
     else if(!strncmp("--threads=", argv[i], 10))
+#ifdef USE_THREADS
       mpi_node_count = atoi(&argv[i][10]);
+#else
+      fprintf(stderr,"Warning: Simulation has not been compiled with threading support.\n"
+                     "         Use '-DUSE_THREADS -lpthread' when compiling C source.\n");
 #endif
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
@@ -4521,8 +4529,8 @@ mcstas_raytrace(void *p_node_ncount)
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
     mcraytrace();
     local_mcrun_num++;
+    mcrun_num ++;
   }
-  mcrun_num += local_mcrun_num;
 }
 
 /* mcstas_main: McStas main() function. */
