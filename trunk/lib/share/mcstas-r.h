@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.80 $
+* Version: $Revision: 1.81 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.80 2006-04-05 11:45:05 pkwi Exp $
+* $Id: mcstas-r.h,v 1.81 2006-05-19 14:17:40 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.80  2006/04/05 11:45:05  pkwi
+*       Need to include <sys/stat.h> on FreeBSD 6.0 / PC-BSD (maybe also other bsd's?!) for prototype declaration of mkdir call...
+*
 *       Revision 1.79  2006/03/15 16:00:42  farhi
 *       minor modifications (position of FLT_MAX in code)
 *
@@ -171,7 +174,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.80 $"
+#define MCSTAS_R_H "$Revision: 1.81 $"
 
 #include <math.h>
 #include <string.h>
@@ -230,6 +233,11 @@
 #ifndef NOSIGNALS
 #define NOSIGNALS
 #endif
+#endif
+
+#ifdef USE_THREADS
+#include <pthread.h>
+#undef USE_MPI /* THREADS prefered against MPI use */
 #endif
 
 #ifdef USE_MPI

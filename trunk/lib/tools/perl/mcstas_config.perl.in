@@ -69,7 +69,8 @@ use Config;
      MODULES => '',
      CODETEXT => 'no',
      PROCSIMPLE => 'no',
-     TEMP => 'no'
+     TEMP => 'no',
+     THREADS => '@HAVE_LIBPTHREAD@'
      );
 
 # **** installed site perl modules availability
