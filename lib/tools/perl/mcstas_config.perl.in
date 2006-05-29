@@ -135,6 +135,11 @@ foreach $inc (@INC) {
   if (-e "$where") {
     $storable = $where; # we got CodeText+TextEdit
   }
+
+  $where="$inc/Math/Amoeba.pm";
+  if (-e "$where") {
+    $MCSTAS::mcstas_config{'AMOEBA'} = $where; # we got Math::Amoeba
+  }
 }
 
 if ($MCSTAS::mcstas_config{'CODETEXT'} ne "no") {
