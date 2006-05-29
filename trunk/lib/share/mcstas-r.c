@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.130 $
+* Version: $Revision: 1.131 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.130 2006-05-19 19:01:15 farhi Exp $
+* $Id: mcstas-r.c,v 1.131 2006-05-29 11:51:02 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.130  2006/05/19 19:01:15  farhi
+* rum_num now regularly incremented and display warning when pthread requested but not compiled
+*
 * Revision 1.129  2006/05/19 14:17:40  farhi
 * Added support for multi threading with --threads=NB option for mcrun or instr.out
 * Requires new option in mcgui run dialog: a popup menu to select run mode ?
@@ -4531,6 +4534,9 @@ mcstas_raytrace(void *p_node_ncount)
     local_mcrun_num++;
     mcrun_num ++;
   }
+  #ifdef USE_THREADS
+  pthread_exit((void *) 0);
+  #endif
 }
 
 /* mcstas_main: McStas main() function. */
@@ -4546,9 +4552,6 @@ mcstas_main(int argc, char *argv[])
 #if defined (USE_MPI) || defined(USE_THREADS)
   double mpi_mcncount;
 #endif /* USE_MPI */
-#ifdef USE_THREADS
-  pthread_t threads[mpi_node_count];
-#endif
 
 #ifdef MAC
   argc = ccommand(&argv);
@@ -4628,33 +4631,49 @@ mcstas_main(int argc, char *argv[])
 #ifdef USE_THREADS
 /* distribute threads */
 if (mpi_node_count > 1) {
-  double remain_ncount = mcncount - (mpi_node_count-1)*mpi_mcncount;
-  int i;
-  for (i=0; i<mpi_node_count-1; i++){
-    if (pthread_create( &(threads[i]), NULL,
-      mcstas_raytrace, (void*) &mpi_mcncount))
-      fprintf(stderr,"Error: could not create thread %i (mcstas_main)\n", i);
+  pthread_t thread[mpi_node_count];
+  pthread_attr_t attr;
+  int rc, t, status;
+  double threads_ncount[mpi_node_count];
+  for (t=0; t<mpi_node_count; t++) {
+    threads_ncount[t]=floor(t ? mpi_mcncount : mcncount-mpi_mcncount*(mpi_node_count-1));
   }
-  /* now go on with master thread with remaining events */
-  mcstas_raytrace(&remain_ncount);
+
+  /* Initialize and set thread detached attribute */
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+  for(t=0; t<mpi_node_count; t++)
+  {
+    rc = pthread_create(&thread[t], &attr, mcstas_raytrace, (void*)&(threads_ncount[t]));
+    if (rc)
+    {
+        fprintf(stderr, "ERROR; return code from [%i] pthread_create() is %d\n", t, rc);
+        exit(-1);
+    }
+  }
+
+  /* Free attribute and wait for the other threads */
+  pthread_attr_destroy(&attr);
+  for(t=0; t<mpi_node_count; t++)
+  {
+    rc = pthread_join(thread[t], (void **)&status);
+    if (rc)
+    {
+        fprintf(stderr, "ERROR; return code from [%i] pthread_join() is %d\n", t, rc);
+        exit(-1);
+    }
+  }
+
 } else mcstas_raytrace(&mcncount);     /* full Ncount */
 #else
 
-#ifdef USE_MPI
+#ifdef USE_MPI /* use mpirun */
 mcstas_raytrace(&mpi_mcncount); /* sliced Ncount on each MPI node */
 #else
-mcstas_raytrace(&mcncount);     /* full Ncount */
+mcstas_raytrace(&mcncount);     /* single cpu full Ncount */
 #endif
 
-#endif
-
-#ifdef USE_THREADS
-/* wait for termination of child threads */
-if (mpi_node_count > 1) {
-  int i;
-  for (i=0; i<mpi_node_count-1; i++)
-    pthread_join(threads[i], NULL);
-}
 #endif
 
 #ifdef USE_MPI
