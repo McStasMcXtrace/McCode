@@ -4,7 +4,7 @@
 #
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
+#   Copyright (C) 1997-2006, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -85,6 +85,14 @@ my @hostlist = ();              # list of remote machines to run on...
 my $mpi = 0;                    # how many nodes used with MPI? 0 implies no MPI.
 my $threads = 0;                # number of threads for multi-cpu machines
 
+our @optim_names = ();          # list of monitor names to optimize
+our $optim_flag=0;              # 0: normal scan, 1: optim some monitors, 2: optim all
+our @guess;                     # starting set of parameters (centers of scans)
+our @scale;                     # ranges of parameters (ratio from center)
+our $optim_iterations=0;        # total number of function calls in optim
+our @optim_last;
+my  $optim_prec=1e-3;
+
 # Name of compiled simulation executable.
 my $out_file;
 # Instrument information data structure.
@@ -159,6 +167,13 @@ sub parse_args {
             $mpi = $1;
         } elsif (/^--machines\=(.*)$/) {
             $MCSTAS::mcstas_config{'HOSTFILE'} = $1;
+        } elsif (/^--optim\=(.*)$/) {
+            $optim_flag = 1;
+            push @optim_names, "$1";
+        } elsif (/^--optim$/) {
+            $optim_flag = 2; # optimize all monitors
+        } elsif (/^--optim-prec\=(.*)$/) {
+            $optim_prec = $1;
         }
         # Standard McStas options needing special treatment by mcrun.
         elsif(/^--dir\=(.*)$/ || /^-d(.+)$/) {
@@ -208,6 +223,11 @@ sub parse_args {
                 $sim_def = $_;
             }
         }
+    }
+
+    # optiization can not use grid/ssh
+    if ($optim_flag) {
+      $multi=0;
     }
 
     # tests for grid/mpi support
@@ -286,9 +306,12 @@ sub parse_args {
    -N NP     --numpoints=NP   Set number of scan points.
    -M        --multi          Spawn simulations to multiple machine grid.
              --grid           See the documentation for more info.
-                              --multi Not supported on Win32.
+                                --multi Not supported on Win32.
    --mpi=NB_CPU               Spread simulation over NB_CPU machines using MPI
    --machines=MACHINES        Read machine names from file MACHINES (MPI/grid)
+   --optim=COMP               Add COMP to the list of monitors to maximize
+                                (optimization criteria)
+   --optim-prec=PREC          Relative requested accuracy of criteria (1e-3)
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
    -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
@@ -316,7 +339,7 @@ specified for building the instrument:
 SEE ALSO: mcstas, mcdoc, mcplot, mcdisplay, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://www.mcstas.org/
 ** No instrument definition name given\n" unless $sim_def || $exec_test;
-die "Number of points must be at least 1" unless $numpoints >= 1;
+die "Number of points must be at least 1" unless $numpoints >= 1 || $optim_flag;
 }
 
 # Check the input parameter specifications for variables to scan.
@@ -333,7 +356,7 @@ sub check_input_params {
             $minval[$j] = $1;
             $maxval[$j] = $2;
             $scanned[$j] = $i;
-            if($minval[$j] != $maxval[$j] && $numpoints == 1) {
+            if($minval[$j] != $maxval[$j] && $numpoints == 1 && $optim_flag == 0) {
                 die "mcrun: Cannot scan variable $v using only one data point.
 Please use -N to specify the number of points.";
             }
@@ -746,9 +769,14 @@ sub do_scan {
             my $j;
             for($j = 0; $j < @{$info->{VARS}}; $j++) {
                 my $i = $info->{VARS}[$j]; # Index of variable to be scanned
-                $vals{$params[$i]} =
-                    ($info->{MAX}[$j] - $info->{MIN}[$j])/($numpoints - 1)*$point +
-                    $info->{MIN}[$j];
+                if ($numpoints > 1) {
+                  $vals{$params[$i]} =
+                      ($info->{MAX}[$j] - $info->{MIN}[$j])/($numpoints - 1)*$point +
+                      $info->{MIN}[$j];
+                } else {
+                  $vals{$params[$i]} =
+                      ($info->{MAX}[$j] + $info->{MIN}[$j])/2;
+                }
                 $out .= "$vals{$params[$i]} ";
                 $variables .= "$params[$i] " if $firsttime
                 }
@@ -767,7 +795,7 @@ sub do_scan {
             }
             die "mcrun: Failed to spawn simulation command" unless defined($pid);
             if($pid) {                # Parent
-                # install SIG handler
+                # install SIG handler for scans
                 sub sighandler {
                   my $signame = shift;
                   kill $signame, $pid;
@@ -776,12 +804,14 @@ sub do_scan {
                     $point = $numpoints;
                   }
                 }
-                $SIG{'INT'}  = \&sighandler;
-                $SIG{'TERM'} = \&sighandler;
-                if ($Config{'osname'} ne 'MSWin32') {
-                  $SIG{'USR1'} = \&sighandler;
-                  $SIG{'USR2'} = \&sighandler;
-                  $SIG{'HUP'}  = \&sighandler;
+                if ($optim_flag == 0) {
+                  $SIG{'INT'}  = \&sighandler;
+                  $SIG{'TERM'} = \&sighandler;
+                  if ($Config{'osname'} ne 'MSWin32') {
+                    $SIG{'USR1'} = \&sighandler;
+                    $SIG{'USR2'} = \&sighandler;
+                    $SIG{'HUP'}  = \&sighandler;
+                  }
                 }
                 while(<SIM>) {
                     chomp;
@@ -800,12 +830,14 @@ sub do_scan {
                     print "$_\n";
                 }
                 # remove SIG handler
-                $SIG{'INT'}  = 'DEFAULT';
-                $SIG{'TERM'} = 'DEFAULT';
-                if ($Config{'osname'} ne 'MSWin32') {
-                  $SIG{'USR1'} = 'DEFAULT';
-                  $SIG{'USR2'} = 'DEFAULT';
-                  $SIG{'HUP'}  = 'DEFAULT';
+                if ($optim_flag == 0) {
+                  $SIG{'INT'}  = 'DEFAULT';
+                  $SIG{'TERM'} = 'DEFAULT';
+                  if ($Config{'osname'} ne 'MSWin32') {
+                    $SIG{'USR1'} = 'DEFAULT';
+                    $SIG{'USR2'} = 'DEFAULT';
+                    $SIG{'HUP'}  = 'DEFAULT';
+                  }
                 }
             } else {                # Child
                 open(STDERR, ">&STDOUT") || die "mcrun: Can't dup stdout";
@@ -837,6 +869,8 @@ sub do_scan {
     output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile, $datablock);
 
     print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
+
+    return ($datablock,$variables);
 }
 
 # Do a multi scan on several machines...
@@ -1084,20 +1118,100 @@ if ($exec_test) {
   }
 }
 
-my $scan_info = check_input_params(); # Get variables to scan, if any
+our $scan_info = check_input_params(); # Get variables to scan, if any
 $out_file = get_out_file($sim_def, $force_compile, @ccopts);
 exit(1) unless $out_file;
 exit(1) if $ncount == 0;
 
 $instr_info = get_sim_info("$out_file","--format='$MCSTAS::mcstas_config{'PLOTTER'}'");
 
-if($numpoints == 1) {
+if($numpoints == 1 && $optim_flag == 0) {
     do_single();
 } else {
     if ($multi == 1) {
         print STDERR "Doing multi...\n";
         do_scan_multi($scan_info);
     } else {
-        do_scan($scan_info);
+        if ($optim_flag && $MCSTAS::mcstas_config{'AMOEBA'}) {
+          # main optimization routine. Use optim_names, scan_info, numpoints, data_dir and vals
+          my @optim_p;
+          my $minimum;
+          require "mcoptimlib.pl";
+          my $max_iteration=20;
+          if ($numpoints > 1) { $max_iteration = $numpoints; }
+          my $j;
+          my $i;
+
+          # get guessed parameter set (MAX-MIN) and scale. Print optimization config
+          die "Specify parameter range=MIN,MAX for optimization\n" unless @{$scan_info->{VARS}};
+
+          print STDERR "Starting optimization of $sim_def paramaters:\n";
+          for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
+            $i = $scan_info->{VARS}[$j]; # Index of variable to be scanned
+            $guess[$j] = ($scan_info->{MAX}[$j] + $scan_info->{MIN}[$j])/2;
+            $scale[$j] = ($scan_info->{MAX}[$j] - $scan_info->{MIN}[$j])/2;
+#             if ($guess[$j] != 0) {
+#               $scale[$j] = $scale[$j]/$guess[$j];
+#             }
+            print "$params[$i]=$guess[$j] ";
+          }
+          print STDERR "\nto maximize ($max_iteration iterations, within $optim_prec accuracy):\n  ";
+          if ($optim_flag > 1) {
+            print STDERR "All monitors";
+          } else {
+            my $i;
+            for($i = 0; $i < @optim_names; $i++) {
+              print STDERR "$optim_names[$i] ";
+            }
+          }
+          print STDERR "\n";
+
+          # set numpoints to 1 for do_scan
+          $numpoints = 1;
+
+          # undefine $data_dir not to have dir overwrite error in do_scan
+          my $data_dir_saved = $data_dir ? $data_dir : undef;
+          undef($data_dir);
+
+          # call Amoeba to minimize criteria
+          my $p;
+          ($p,$minimum) =
+            MinimiseND(\@guess,\@scale,\&minimize_function,$optim_prec,$max_iteration);
+
+          @optim_p = @optim_last;
+
+          # constrain within limits
+          for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
+            if    ($optim_p[$j] > $scan_info->{MAX}[$j]) { $optim_p[$j] = $scan_info->{MAX}[$j]; }
+            elsif ($optim_p[$j] < $scan_info->{MIN}[$j]) { $optim_p[$j] = $scan_info->{MIN}[$j]; }
+          }
+
+          # display result
+          if ($optim_iterations >= $max_iteration) {
+            print STDERR "Optimization failed (no convergence after $optim_iterations iterations).\nLast estimates:\n";
+          } else {
+            print STDERR "Optimized parameters:\n";
+          }
+
+          for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
+            $i = $scan_info->{VARS}[$j]; # Index of variable to be scanned
+            print "$params[$i]=$optim_p[$j] ";
+          }
+          print STDERR "\n";
+
+          # reactivate $data_dir and relaunch minimize_function to fill directory
+          # mcstas.sim is last iteration result
+          if ($data_dir_saved) {
+            $data_dir = $data_dir_saved;
+            print STDERR "Generating optimized configuration in --dir=$data_dir\n";
+            minimize_function(@optim_p); # this also sets scan-info
+          }
+
+        } else {
+          if ($optim_flag && not $MCSTAS::mcstas_config{'AMOEBA'}) {
+            print STDERR "Optimization not available (install Math::Amoeba first)";
+          }
+          do_scan($scan_info); # single iteration
+        }
     }
 }
