@@ -218,28 +218,17 @@ sub simulation_dialog {
     my $formatchoice = $ff1->Checkbutton(-text => "Plot results, Format: ",
                             -variable => \$si{'Autoplot'},
                             -relief => 'flat')->pack(-side => 'left');
-    #my($ListBoxFormat)=$ff1->Scrolled('Listbox',-height => '2', -width => '20', -scrollbars => 'oe', -exportselection => 'false')->pack(-side => 'right');
-    #my @Formats = ('PGPLOT','Matlab','Scilab','HTML/VRML');
-    #foreach my $format (@Formats) {
-#        $ListBoxFormat->insert('end', $format);
-    #}
     $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation\nSelect format here or from Simulation/Configuration menu item");
-    $ff1->Radiobutton(-text => "PGPLOT",
-                     -variable => \$si{'Format'},
-                     -relief => 'flat',
-                     -value => 0)->pack(-side => 'left');
-    $ff1->Radiobutton(-text => "Matlab",
-                     -variable => \$si{'Format'},
-                     -relief => 'flat',
-                     -value => 1)->pack(-side => 'left');
-    $ff1->Radiobutton(-text => "Scilab",
-                     -variable => \$si{'Format'},
-                     -relief => 'flat',
-                     -value => 2)->pack(-side => 'left');
-    $ff1->Radiobutton(-text => "HTML/VRML",
-                     -variable => \$si{'Format'},
-                     -relief => 'flat',
-                     -value => 3)->pack(-side => 'left');
+    $ff1->Optionmenu (
+      -textvariable => $plotter,
+      -variable     => \$si{'Format'},
+      -options      => [
+                        ['PGPLOT', 0 ],
+                        ['Matlab', 1 ],
+                        ['Scilab', 2 ],
+                        ['HTML/VRML', 3]
+                       ]
+    )->pack();
     my $f2 = $opt_frame->Frame;
     $f2->pack(-anchor => 'w');
     $f2->Radiobutton(-text => "Random seed",
