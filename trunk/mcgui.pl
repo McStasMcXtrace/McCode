@@ -429,11 +429,12 @@ sub putmsg {
 }
 
 sub run_dialog_create {
-    my ($w, $title, $text, $cancel_cmd) = @_;
+    my ($w, $title, $text, $cancel_cmd, $update_cmd) = @_;
     my $dlg = $w->Toplevel(-title => $title);
     $dlg->transient($dlg->Parent->toplevel);
     $dlg->withdraw;
     $dlg->protocol("WM_DELETE_WINDOW" => sub { } );
+    $b = $dlg->Balloon(-state => 'balloon');
     # Add labels
     $dlg->Label(-text => $text,
                 -anchor => 'w',
@@ -442,7 +443,13 @@ sub run_dialog_create {
     $bot_frame->pack(-side => "top", -fill => "both",
                      -ipady => 3, -ipadx => 3);
     my $but = $bot_frame->Button(-text => "Cancel", -command => $cancel_cmd);
+    $b->attach($but, -balloonmsg => "Save results\nand Stop/Abort");
     $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
+    if ($Config{'osname'} ne 'MSWin32') {
+      $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
+      $but->pack(-side => "right");
+      $b->attach($but, -balloonmsg => "Save results\nand continue");
+    }
     return $dlg;
 }
 
@@ -484,13 +491,16 @@ sub run_dialog {
     my ($state, $success) = (0, 0);
     # Initialize the dialog.
     my $cancel_cmd = sub {
-        kill -15, $pid unless $state; # signal 15 is SIGTERM
+        kill "TERM", $pid unless $state; # signal 15 is SIGTERM
+    };
+    my $update_cmd = sub {
+        kill "USR2", $pid unless $state; # signal 15 is SIGTERM
     };
     my $text='Simulation';
     if ($inf_sim->{'Mode'}==1) { $text='Trace/3D View'; }
     elsif ($inf_sim->{'Mode'}==2) { $text='Parameter Optimization'; }
     my $dlg = run_dialog_create($w, "Running simulation",
-                                "$text running ...", $cancel_cmd);
+                                "$text running ...", $cancel_cmd, $update_cmd);
     putmsg($cmdwin, $inittext, 'msg'); # Must appear before any other output
     # Set up the pipe reader callback
     my $reader = sub {
@@ -499,9 +509,11 @@ sub run_dialog {
     $w->fileevent($fh, 'readable', $reader);
     $status_label->configure(-text => "Status: Running $text");
     my $savefocus = run_dialog_popup($dlg);
+    $dlg->Busy();
     do {
         $w->waitVariable(\$state);
     } until $state;
+    $dlg->Unbusy;
     run_dialog_retract($dlg, $savefocus);
     my $status = close($fh);
     $status_label->configure(-text => "Status: Done");
@@ -1620,15 +1632,8 @@ $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
 
-if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
-  $inf_sim->{'cluster'} = 1;
-  $inf_sim->{'nodes'}   = 2;
-} elsif ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
-  $inf_sim->{'cluster'} = 2;
-  $inf_sim->{'nodes'}   = 4;
-} elsif ($MCSTAS::mcstas_config{'SSH'} ne "no") {
-  $inf_sim->{'cluster'} = 3;
-} else { $inf_sim->{'cluster'} = 0; }
+$inf_sim->{'cluster'} = 0;
+$inf_sim->{'nodes'}   = 2;
 
 my $open_editor = 0;
 

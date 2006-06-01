@@ -256,7 +256,7 @@ sub simulation_dialog {
                             -relief => 'flat')->pack(-side => 'left');
     $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation");
     my $formatchoice_val=$plotter;
-    if ($plotter =~ /HTML/) { $formatchoice_val='HTML/VRML'; }
+    if ($plotter =~ /HTML|VRML/) { $formatchoice_val='HTML/VRML'; }
     $formatchoice = $line->Optionmenu (
       -textvariable => \$formatchoice_val,
       -options      => ['PGPLOT','Matlab','Scilab','HTML/VRML'], -fg => 'blue'
@@ -563,66 +563,106 @@ sub preferences_dialog {
     my $lf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
     my $rf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
     my $buttons, $edit_buttons;
-    my $plotter_id=0;
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
     $lf->pack(-side => 'left', -fill => 'both');
-    my $plotopt = $lf->Label(-text => "Plotting options:", -anchor => 'w')->pack(-fill => 'x');
+
+    # data format choice
+    my $formatchoice_val;
+    my $plotopt = $lf->Label(-text => "Plotting options:", -anchor => 'w', -fg=>'blue'
+    )->pack(-fill => 'x');
     $b->attach($plotopt, -balloonmsg => "Select output format/plotter");
-    $buttons[0]=$lf->Radiobutton(-text => "PGPLOT (original mcdisplay)",
-               -anchor => 'w', -value => "PGPLOT", -variable => \$plotter)->pack(-fill => 'x');
-    $buttons[1]=$lf->Radiobutton(-text => "Matlab (requires Matlab)",
-               -anchor => 'w', -value => "Matlab", -variable => \$plotter)->pack(-fill => 'x');
-    $buttons[2]=$lf->Radiobutton(-text => "Matlab scriptfile",
-               -anchor => 'w', -value => "Matlab_scriptfile", -variable => \$plotter)->pack(-fill => 'x');
-    $buttons[3]=$lf->Radiobutton(-text => "Scilab (requires Scilab)",
-               -anchor => 'w', -value => "Scilab", -variable => \$plotter)->pack(-fill => 'x');
-    $buttons[4]=$lf->Radiobutton(-text => "Scilab scriptfile",
-               -anchor => 'w', -value => "Scilab_scriptfile", -variable => \$plotter)->pack(-fill => 'x');
-    $buttons[5]=$lf->Radiobutton(-text => "HTML/VRML document",
-               -anchor => 'w', -value => "HTML", -variable => \$plotter)->pack(-fill => 'x');
-    $buttons[6]=$lf->Checkbutton(-text => "Use binary files (faster)",
-               -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
-    $b->attach($buttons[6], -balloonmsg => "Binary files are usually much faster\nto import (Matlab/Scilab)");
-    if ($plotter=~ /PGPLOT|McStas/i) {
-      $plotter_id=0;
-    } elsif ($plotter =~ /Matlab/i && $plotter =~ /scriptfile/i) {
-      $plotter_id=2;
-    } elsif ($plotter =~ /Matlab/i) {
-      $plotter_id=1;
-    } elsif ($plotter =~ /Scilab/i && $plotter =~ /scriptfile/i) {
-      $plotter_id=4;
-    } elsif ($plotter =~ /Scilab/i) {
-      $plotter_id=3;
-    } elsif ($plotter =~ /HTML/i || $plotter =~ /VRML/i) {
-      $plotter_id=5;
+    if ($plotter =~ /Matlab/i) {
+      $formatchoice_val= 'Matlab' . ($plotter =~ /scriptfile/ ?
+        ' scriptfile' : ' (requires Matlab)');
     }
-    $buttons[$plotter_id]->select;
-    if ($binary == 1) { $buttons[6]->select; }
+     if ($plotter =~ /Scilab/i) {
+      $formatchoice_val= 'Scilab' . ($plotter =~ /scriptfile/ ?
+        ' scriptfile' : ' (requires Scilab)');
+    }
+    if ($plotter =~ /HTML|VRML/i) { $formatchoice_val='HTML/VRML document'; }
+    my $formatchoice = $lf->Optionmenu (
+      -textvariable => \$formatchoice_val,
+      -options      => ['PGPLOT (original McStas)',
+        'Matlab (requires Matlab)', 'Matlab scriptfile',
+        'Scilab (requires Scilab)', 'Scilab scriptfile',
+        'HTML/VRML document']
+    )->pack(-fill => 'x');
+
+    $button_bin=$lf->Checkbutton(-text => "Use binary files (faster)",
+               -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
+    $b->attach($button_bin, -balloonmsg => "Binary files are usually much faster\nto import (Matlab/Scilab)\nand smaller in size");
+    if ($plotter =~ /binary/) { $button_bin->select; }
+
+    # handle clustering methods
+    my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
+    my $choicecluster_val;
+    if ($inf_sim{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
+    elsif ($inf_sim{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+    elsif ($inf_sim{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
+    elsif ($inf_sim{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
+    my $choices=[ 'None (single CPU)'];
+    if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
+      push @{ $choices }, 'Threads (multi-core)';
+    }
+    if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
+      push @{ $choices }, 'MPI (clusters)';
+    }
+    if ($MCSTAS::mcstas_config{'SSH'} ne "no") {
+      push @{ $choices }, 'Scans over SSH';
+    }
+    $choicecluster=$lf->Optionmenu (
+      -textvariable => \$choicecluster_val,
+      -options      => $choices
+    )->pack(-fill => 'x');
 
     $editor = $MCSTAS::mcstas_config{'EDITOR'};
-    $rf->pack(-side => 'top', -fill => 'both');
-    my $editorchoice = $rf->Label(-text => "Editor options:", -anchor => 'w')->pack(-fill => 'x');
+    my $editorchoice_val;
+    if ($editor == 0) { $editorchoice_val="Simple built-in editor (McStas 1.7)"; }
+    elsif ($editor == 1) { $editorchoice_val='Advanced built-in editor';}
+    elsif ($editor == 2) { $editorchoice_val="External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})";}
+    my $editorchoice = $lf->Label(-text => "Editor options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $b->attach($editorchoice, -balloonmsg => "Select editor to use to\ndisplay instrument descriptions");
-    $edit_buttons[0]=$rf->Radiobutton(-text => "Simple built-in editor (McStas 1.7)",
-               -anchor => 'w', -value => 0, -variable => \$editor)->pack(-fill => 'x');
-    $edit_buttons[1]=$rf->Radiobutton(-text => "Advanced built-in editor",
-               -anchor => 'w', -value => 1, -variable => \$editor,
-               -state => ($MCSTAS::mcstas_config{'CODETEXT'} ne "no" ? 'normal' : 'disabled'))->pack(-fill => 'x');
-    $edit_buttons[2]=$rf->Radiobutton(-text => "External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})",
-               -anchor => 'w', -value => 2, -variable => \$editor)->pack(-fill => 'x');
-    $edit_buttons[$editor]->select;
-    $choicequote = $rf->Checkbutton(-text => "Surround strings with quotes",
+    $choices=["Simple built-in editor (McStas 1.7)","External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})"];
+    if  ($MCSTAS::mcstas_config{'CODETEXT'} ne "no") {
+      push @{ $choices }, 'Advanced built-in editor';
+    }
+    my $choiceeditor = $lf->Optionmenu (
+      -textvariable => \$editorchoice_val,
+      -options      => $choices
+    )->pack(-fill => 'x');
+    $choicequote = $lf->Checkbutton(-text => "Surround strings with quotes",
                -relief => 'flat', -variable => \$quote)->pack(-fill => 'x');
     $b->attach($choicequote, -balloonmsg => "All string parameters will be surrounded with quotes\nThis option does not allow to pass variable names");
     if ($quote) { $choicequote->select; }
 
     my $res = $dlg->Show;
+
+    if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
+    elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
+    elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
     # add binary flag to plotter
-    if ($binary == 1 && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
+    if ($binary == 1 && $formatchoice_val =~ /Scilab|Matlab/i) {
+      $plotter .= "_binary";
+    }
+    if ($formatchoice_val =~ /scriptfile/i && $plotter =~ /Scilab|Matlab/i) {
+      $plotter .= "_scriptfile";
+    }
     # finally set the PLOTTER
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
-    $MCSTAS::mcstas_config{'EDITOR'}  = $editor;
+
+    $inf_sim{'cluster'} = do {
+      if     ($choicecluster_val =~ /^None/)   { 0 }
+      elsif ($choicecluster_val =~ /^Threads/){ 1 }
+      elsif ($choicecluster_val =~ /^MPI/)    { 2 }
+      elsif ($choicecluster_val =~ /^Scans/)  { 3 }
+    };
+
+    $MCSTAS::mcstas_config{'EDITOR'}  = do {
+      if     ($editorchoice_val =~ /^Simple/)   { 0 }
+      elsif ($editorchoice_val =~ /^Advanced/){ 1 }
+      elsif ($editorchoice_val =~ /^External/)    { 2 }
+    };
 
     return ($res);
 }
