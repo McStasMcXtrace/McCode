@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.131 $
+* Version: $Revision: 1.132 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.131 2006-05-29 11:51:02 farhi Exp $
+* $Id: mcstas-r.c,v 1.132 2006-06-01 09:12:45 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.131  2006/05/29 11:51:02  farhi
+* Fixed thread joining that caused SEGV when using many threads
+*
 * Revision 1.130  2006/05/19 19:01:15  farhi
 * rum_num now regularly incremented and display warning when pthread requested but not compiled
 *
@@ -4379,6 +4382,9 @@ mcparseoptions(int argc, char *argv[])
         exit(1);
       }
     }
+    else if(argv[i][0] == '-') {
+      fprintf(stderr, "Error: unrecognized option argument %s (mcparseoptions). Ignored.\n", argv[i++]);
+    }
     else
       mcusage(argv[0]);
   }
@@ -4527,7 +4533,7 @@ mcstas_raytrace(void *p_node_ncount)
 {
   double node_ncount = *((double*)p_node_ncount);
   double local_mcrun_num=0;
-  while(local_mcrun_num < node_ncount)
+  while(local_mcrun_num < node_ncount && mcrun_num < mcncount)
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
     mcraytrace();
