@@ -127,7 +127,7 @@ sub get_sim_info {
 # results is an error message.
 #
 sub get_out_file_init {
-    my ($inname, $force) = @_;
+    my ($inname, $force, $mpi, $threads) = @_;
     return (undef, "mcrun: No simulation filename given") unless $inname;
     # Add a default extension of ".instr" if given name does not exist
     # as file.
@@ -159,6 +159,8 @@ sub get_out_file_init {
     $sim_def = "$base_name.instr" unless $file_type eq MCSTAS;
     my $v = { };
     $v->{'force'} = $force;
+    $v->{'mpi'} = $mpi;
+    $v->{'threads'} = $threads;
     $v->{'file_type'} = $file_type;
     $v->{'dir'} = $dir;
     $v->{'sim_def'} = $sim_def;
@@ -202,6 +204,8 @@ sub get_out_file_next {
   my $c_age = $v->{'c_age'};
   my $out_age = $v->{'out_age'};
   my $stage = $v->{'stage'};
+  my $mpi   = $v->{'mpi'};
+  my $threads   = $v->{'threads'};
   if($stage eq PRE_MCSTAS) {
     # Translate simulation definition into C if newer than existing C
     # version.
@@ -253,6 +257,13 @@ sub get_out_file_next {
       # ToDo: splitting CFLAGS should handle shell quoting as well ...
       my $cc     = $MCSTAS::mcstas_config{CC};
       my $cflags = $MCSTAS::mcstas_config{CFLAGS};
+      if ($v->{'threads'}) {
+        $cflags .= " -DUSE_THREADS -lpthread ";
+      }
+      if ($v->{'mpi'}) {
+        $cflags .= " -DUSE_MPI ";
+        $cc      = $MCSTAS::mcstas_config{MPICC};
+      }
       # Needs quoting on MSWin32:
       if ($Config{'osname'} eq 'MSWin32') {
         $out_name="\"$out_name\"";
@@ -285,9 +296,9 @@ sub get_out_file_next {
 # The optional $force option, if true, forces unconditional recompilation.
 #
 sub get_out_file {
-    my ($inname, $force) = @_;
+    my ($inname, $force, $mpi, $threads) = @_;
     my ($v, $msg, $status, $value);
-    ($v, $msg) = get_out_file_init($inname, $force);
+    ($v, $msg) = get_out_file_init($inname, $force, $mpi, $threads);
     unless($v) {
         print STDERR "$msg\n";
         return undef;

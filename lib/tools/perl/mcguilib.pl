@@ -58,39 +58,31 @@ my $typehelp = "(D=floating point, I=integer, S=string)";
 sub simulation_dialog {
     my ($win, $ii, $origsi) = @_;
     my %si = $origsi ? %$origsi : ();
-    my $doseed;
-    if($origsi->{'Seed'}) {
+    if($origsi->{'Seed'} ne "" && $origsi->{'Seed'} ne 0) {
         $si{'Seed'} = $origsi->{'Seed'};
-        $doseed = 1;
     } else {
         $si{'Seed'} = "";
-        $doseed = 0;
     }
-    $si{'Autoplot'} = 0 unless $si{'Autoplot'};
-    $si{'Ncount'} = 1e6 unless $si{'Ncount'};
-    $si{'gravity'}   = 0 unless $si{'gravity'};
-    $si{'GravityWarn'}   = 0 unless $si{'GravityWarn'};
-    $si{'Trace'} = 0 unless $si{'Trace'};
+    $si{'Forcecompile'} = 0 unless $si{'Forcecompile'};
+    $si{'Autoplot'}=0 unless $si{'Autoplot'};
+    $si{'Ncount'}= 1e6 unless $si{'Ncount'};
+    $si{'gravity'}=0 unless $si{'gravity'};
+    $si{'GravityWarn'} = 0 unless $si{'GravityWarn'};
+    $si{'Mode'}  = 0; # always start in Simulation mode
     $si{'NScan'} = 0 unless $si{'NScan'};
-    $si{'Multi'} = 0 unless $si{'Multi'};
     $si{'Force'} = 0 unless $si{'Force'};
-    $si{'mpi'}   = 0 unless $si{'mpi'};
+    $si{'nodes'} = 1 unless $si{'nodes'};
+    $si{'cluster'}=0 unless $si{'cluster'};
     # 'Inspect' field for use of mcdisplay's built-in
     # neutron filter, filtering away all neutrons not
     # reaching a given component
     # PW 20030314
     $si{'Inspect'} = '' unless $si{'Inspect'};
-    $si{'InsNum'} = 0 unless $si{'InsNum'};
     # Similarly, First and Last fields for selection of
     # component range to visualize..
     $si{'First'} = '' unless $si{'First'};
     $si{'Last'} = '' unless $si{'Last'};
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
-
-    if    ($plotter =~ /PGPLOT|McStas/i) { $si{'Format'} = 0; }
-    elsif ($plotter =~ /Matlab/i)     { $si{'Format'} = 1; }
-    elsif ($plotter =~ /Scilab/i)     { $si{'Format'} = 2; }
-    elsif ($plotter =~ /HTML/i)       { $si{'Format'} = 3; }
 
     my $name_instr = $ii->{'Instrument-source'};
     my $dlg = $win->DialogBox(-title => "Run simulation $name_instr",
@@ -101,7 +93,8 @@ sub simulation_dialog {
     $top_frame->pack(-fill => 'x');
     $top_frame->Label(-text => "Instrument source: $ii->{'Instrument-source'}",
           -anchor => 'w',
-          -justify => 'left')->pack(-side => 'left');
+          -justify => 'left',
+          -fg => 'red')->pack(-side => 'left');
     my $genhtml = $top_frame->Button(-text => "HTML docs", -width => 11,
                 -command => sub {mcdoc_current($win)} )->pack(-side => 'right');
     $b->attach($genhtml, -balloonmsg => "Generate documentation\nfor this instrument");
@@ -111,9 +104,9 @@ sub simulation_dialog {
     if($numrows > 0) {
         my $choiceparam = $dlg->add('Label',
                   -text => "Instrument parameters $typehelp:",
-                  -anchor => 'w',
+                  -anchor => 'w', -fg => 'blue',
                   -justify => 'left')->pack(-fill => 'x');
-        $b->attach($choiceparam, -balloonmsg => "Specify instrument parameters\nscan ranges are 'MIN,MAX'");
+        $b->attach($choiceparam, -balloonmsg => "Specify instrument parameters\n ranges are 'MIN,MAX' for scans/optimization");
         my $parm_frame = $dlg->Frame;
         $parm_frame->pack(-fill => 'both');
         my $row = 0;
@@ -171,116 +164,180 @@ sub simulation_dialog {
     my $opt_frame = $dlg->Frame;
     $opt_frame->pack(-anchor => 'w', -fill => 'x');
 
-    my $f0 = $opt_frame->Frame;
-    $f0->pack(-anchor => 'w', -fill => 'x');
-    my $browsedir = $f0->Label(-text => "Output to (dir):")->pack(-side => 'left');
+    # ouput dir/force
+    my $line = $opt_frame->Frame;
+    $line->pack(-anchor => 'w', -fill => 'x');
+    my $browsedir = $line->Label(-text => "Output to (dir):")->pack(-side => 'left');
 
-    my $dir_entry = $f0->Entry(-relief => 'sunken',
+    my $dir_entry = $line->Entry(-relief => 'sunken',
                                -width=>30,
                                -justify => 'left',
                                -textvariable => \$si{'Dir'});
     $dir_entry->pack(-side => 'left');
-    my $choiceforce = $f0->Checkbutton(-text => "force",-variable => \$si{'Force'})->pack(-side => 'left');
+    my $choiceforce = $line->Checkbutton(-text => "force",-variable => \$si{'Force'})->pack(-side => 'left');
     $b->attach($choiceforce, -balloonmsg => "Force to overwrite existing directories");
-    $f0->Button(-text => "Browse ...", -width => 11,
+    $line->Button(-text => "Browse...", -width => 9,
                 -command => sub { my $d = get_dir_name($dlg, $si{'Dir'});
                                   $si{'Dir'} = $d if $d; } )->pack(-side => 'right');
     $b->attach($browsedir, -balloonmsg => "Select a directory where to store results\nLeave blank to save at instrument location");
-    my $f1 = $opt_frame->Frame;
-    $f1->pack(-anchor => 'w');
-    my $choicencount = $f1->Label(-text => "Neutron count:")->pack(-side => 'left');
-    my $ncount_entry = $f1->Entry(-relief => 'sunken',
+
+    # ncounts/gravitation
+    my $line = $opt_frame->Frame;
+    $line->pack(-anchor => 'w', -fill => 'x');
+    my $choicencount = $line->Label(-text => "Neutron count:")->pack(-side => 'left');
+    my $ncount_entry = $line->Entry(-relief => 'sunken',
                                   -width=>10,
                                   -justify => 'right',
                                   -textvariable => \$si{'Ncount'});
     $ncount_entry->pack(-side => 'left');
-    $b->attach($choicencount, -balloonmsg => "Number of neutron events to generate\nKeep it reasonable for Trace/3D view (1e6)");
-    my $gravity = $f1->Checkbutton(-text => "gravity (BEWARE)", -variable => \$si{'gravity'})->pack(-side => 'left');
-    $b->attach($gravity, -balloonmsg => "Activates gravitation between and inside components\nExtended component must support gravitation (e.g. Guide_gravity)");
-    if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
-      if ($si{'mpi'} > 0) {
-        my $mpinodes=$f1->Label(-text => "# MPI nodes: ")->pack(-side => 'left');
-        $f1->Entry(-relief => 'sunken',
-               -width=>10,
-               -textvariable => \$si{'mpi'},
-               -justify => 'right')->pack(-side => 'left');
-        $b->attach($mpinodes, -balloonmsg => "Parallelisation");
-      }
-      if ($si{'ssh'} > 0) {
-        my $sshnodes=$f1->Checkbutton(-text => "Distribute mcrun scans (grid)",
-          -variable => \$si{'Multi'},
-          -relief => 'flat')->pack(-anchor => 'w');
-        $b->attach($sshnodes, -balloonmsg => "Scan step are distributed among a list of machines");
-      }
-    }
-    my $ff1 = $opt_frame->Frame;
-    $ff1->pack(-anchor => 'w');
-    my $formatchoice = $ff1->Checkbutton(-text => "Plot results, Format: ",
-                            -variable => \$si{'Autoplot'},
-                            -relief => 'flat')->pack(-side => 'left');
-    $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation\nSelect format here or from Simulation/Configuration menu item");
-    $ff1->Optionmenu (
-      -textvariable => \$plotter,
-      -variable     => \$si{'Format'},
-      -options      => [
-                        ['PGPLOT', 0 ],
-                        ['Matlab', 1 ],
-                        ['Scilab', 2 ],
-                        ['HTML/VRML', 3]
-                       ]
-    )->pack();
-    my $f2 = $opt_frame->Frame;
-    $f2->pack(-anchor => 'w');
-    $f2->Radiobutton(-text => "Random seed",
-                     -variable => \$doseed,
-                     -relief => 'flat',
-                     -value => 0)->pack(-side => 'left');
-    $f2->Radiobutton(-text => "Set seed to",
-                     -variable => \$doseed,
-                     -relief => 'flat',
-                     -value => 1)->pack(-side => 'left');
-    $ncount_entry = $f2->Entry(-relief => 'sunken',
-                               -width=>10,
-                               -textvariable => \$si{'Seed'},
-                               -justify => 'right');
-    $ncount_entry->pack(-side => 'left');
+    $b->attach($choicencount, -balloonmsg => "Number of neutron events to generate\nKeep it reasonable for Trace/3D view (1e3)");
+    my $gravity = $line->Checkbutton(-text => "gravity (BEWARE)", -variable => \$si{'gravity'})->pack(-side => 'left');
+    $b->attach($gravity, -balloonmsg => "Activates gravitation between and inside components\nExtended (long) components must support gravitation (e.g. Guide_gravity)");
 
-    my $f3 = $opt_frame->Frame;
-    $f3->pack(-anchor => 'w');
-    my $choice3d = $f3->Radiobutton(-text => "Trace (3D View)",
-                     -variable => \$si{'Trace'},
-                     -relief => 'flat',
-                     -value => 1)->pack(-side => 'left');
-    $b->attach($choice3d, -balloonmsg => "Draw instrument geometry (3D view)");
-    my $choicesim = $f3->Radiobutton(-text => "Simulate",
-                     -variable => \$si{'Trace'},
-                     -relief => 'flat',
-                     -value => 0)->pack(-side => 'left');
-    $b->attach($choicesim, -balloonmsg => "Simulation mode");
-    my $choicepnts = $f3->Label(-text => "# Scanpoints: ")->pack(-side => 'left');
-    $f3->Entry(-relief => 'sunken',
-               -width=>10,
+    # random seed (follow Ncount)
+    my $seed_entry = $line->Label(-text => "    Random seed:")->pack(-side => 'left');
+    $line->Entry(-relief => 'sunken',
+                               -width=>4,
+                               -textvariable => \$si{'Seed'},
+                               -justify => 'right'
+    )->pack(-side => 'left');
+    $b->attach($seed_entry, -balloonmsg => "Seed value (for reproducible results).\nLeave blank for Random.");
+
+    # execution mode
+    my $line = $opt_frame->Frame;
+    $line->pack(-anchor => 'w');
+    my $choiceexec_val;
+    if ($si{'Mode'} == 1)     { $choiceexec_val='Trace (3D view)'; }
+    elsif ($si{'Mode'} == 0) { $choiceexec_val='Simulate'; }
+    elsif ($si{'Mode'} == 2) { $choiceexec_val='Optimize Parameters'; }
+    my $choices=[ 'Simulate', 'Trace (3D view)'];
+    if ($MCSTAS::mcstas_config{'AMOEBA'}) {
+      push @{ $choices }, 'Optimize Parameters';
+    }
+    my $choiceexec = $line->Optionmenu (
+      -textvariable=>\$choiceexec_val,
+      -options  => $choices,
+      -command  => sub {
+                      if ($choiceexec_val =~ /Trace/) {
+                        $choicepnts->configure(-state=>'disabled');
+                        $labelpnts->configure(-foreground=>'gray');
+                        $choiceinspect->configure(-text=>'Inspect component: ',-foreground=>'black');
+                        $choicefirst->configure(-foreground=>'black', -text=>'First component: ');
+                        $choicelast->configure(-foreground=>'black', -text=>'Last component: ');
+                      } elsif ($choiceexec_val =~ /Simulate/) {
+                        $choicepnts->configure(-state=>'normal');
+                        $labelpnts->configure(-foreground=>'black',-text=>'# steps');
+                        $choiceinspect->configure(-foreground=>'gray');
+                        $choicefirst->configure(-foreground=>'gray');
+                        $choicelast->configure(-foreground=>'gray');
+                      } elsif ($choiceexec_val =~ /Optimize/) {
+                        $choicepnts->configure(-state=>'normal');
+                        $labelpnts->configure(-foreground=>'black',-text=>'# optim');
+                        $choiceinspect->configure(-foreground=>'black',-text=>'Maximize monitor: ');
+                        $choicefirst->configure(-foreground=>'black',-text=>'Maximize monitor: ');
+                        $choicelast->configure(-foreground=>'black',-text=>'Maximize monitor: ');
+                      }
+                   } ,
+      -fg => 'blue'
+    )->pack(-side => 'left');
+
+    $b->attach($choiceexec, -balloonmsg => "Select execution mode");
+    our $labelpnts = $line->Label(-text => "# steps: ")->pack(-side => 'left');
+    $b->attach($labelpnts, -balloonmsg => "Number of scan steps\nsimulation repetitions\nor max optimization steps (20)");
+    our $choicepnts = $line->Entry(-relief => 'sunken',
+               -width=>4,
                -textvariable => \$si{'NScan'},
                -justify => 'right')->pack(-side => 'left');
-    $b->attach($choicepnts, -balloonmsg => "Number of scan steps\nor simulation repetitions");
+
+
+    # output format (same line as exec mode)
+    my $formatchoice = $line->Checkbutton(-text => "Plot results, Format: ",
+                            -variable => \$si{'Autoplot'},
+                            -relief => 'flat')->pack(-side => 'left');
+    $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation");
+    my $formatchoice_val=$plotter;
+    if ($plotter =~ /HTML/) { $formatchoice_val='HTML/VRML'; }
+    $formatchoice = $line->Optionmenu (
+      -textvariable => \$formatchoice_val,
+      -options      => ['PGPLOT','Matlab','Scilab','HTML/VRML'], -fg => 'blue'
+    )->pack(-side => 'left');
+    $b->attach($formatchoice, -balloonmsg => "Select format here or\nfrom Simulation/Configuration menu item");
+
+    # handle clustering methods
+    my $line = $opt_frame->Frame;
+    $line->pack(-anchor => 'w');
+    our $choicecluster=$line->Label(-text => "Clustering:")->pack(-side => 'left');
+    $b->attach($choicecluster, -balloonmsg => "Recommanded methods:
+* Threads on multi-core/multi-cpu machines
+* MPI on clusters");
+    my $choicecluster_val;
+    if ($si{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
+    elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+    elsif ($si{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
+    elsif ($si{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
+    my $choicecluster_orig=$choicecluster_val;
+    my $choices=[ 'None (single CPU)'];
+    if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
+      push @{ $choices }, 'Threads (multi-core)';
+    }
+    if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
+      push @{ $choices }, 'MPI (clusters)';
+    }
+    if ($MCSTAS::mcstas_config{'SSH'} ne "no") {
+      push @{ $choices }, 'Scans over SSH';
+    }
+    $choicecluster=$line->Optionmenu (
+      -textvariable => \$choicecluster_val,
+      -command      => sub {
+                      if ($choicecluster_val =~ /None|Scans/) {
+                        $mpinodes->configure(-state=>'disabled');
+                        $labelnodes->configure(-foreground=>'gray');
+                      } else {
+                        $mpinodes->configure(-state=>'normal');
+                        $labelnodes->configure(-foreground=>'black');
+                      }
+                   },
+      -options      => $choices
+    )->pack(-side => 'left');
+
+    if ($MCSTAS::mcstas_config{'THREADS'} ne "no"
+     || $MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
+        our $labelnodes=$line->Label(-text => "Number of nodes: ")->pack(-side => 'left');
+        $b->attach($labelnodes, -balloonmsg => "Number of nodes to use\nfor Parallelisation");
+        our $mpinodes = $line->Entry(-relief => 'sunken',
+               -width=>10,
+               -textvariable => \$si{'nodes'},
+               -justify => 'right')->pack(-side => 'left');
+
+    }
+
     # Gui stuff for selection of 'inspect' parameter
     # PW 20030314
     my $f4 = $opt_frame->Frame;
     $f4->pack(-anchor => 'w', -side => 'top', -fill => 'x');
-    my $choiceinspect = $f4->Label(-text => "Inspect component: ", -height => '2')->pack(-side => 'left');
-    $b->attach($choiceinspect, -balloonmsg => "For Trace mode, only show neutrons reaching selected component");
-    my($ListBox)=$f4->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
+    our $choiceinspect = $f4->Label(-text => "Inspect component: ", -height => '2',-foreground=>'gray'
+    )->pack(-side => 'left');
+    $b->attach($choiceinspect, -balloonmsg =>
+"Trace mode: only show neutrons reaching selected component
+Optimize Mode: signal 1 to maximize. Component MUST be a monitor");
+    our($ListBox)=$f4->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
     # Selection of 'First' and 'Last' components to visualize
     my $f5 = $opt_frame->Frame;
     $f5->pack(-anchor => 'w', -side => 'top', -fill => 'x');
-    my $choicefirst = $f5->Label(-text => "First component: ", -height => '2')->pack(-side => 'left');
-    $b->attach($choicefirst, -balloonmsg => "For Trace mode, show instrument geometry from this component");
-    my($ListBoxFirst)=$f5->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
+    our $choicefirst = $f5->Label(-text => "First component: ", -height => '2',-foreground=>'gray'
+    )->pack(-side => 'left');
+    $b->attach($choicefirst, -balloonmsg => "Trace mode: show instrument geometry FROM this component
+Optimize Mode: signal 2 to maximize. Component MUST be a monitor");
+    our($ListBoxFirst)=$f5->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
     my $f6 = $opt_frame->Frame;
     $f6->pack(-anchor => 'w', -side => 'top', -fill => 'x');
-    my $choicelast = $f6->Label(-text => "Last component: ", -height => '2')->pack(-side => 'left');
-    $b->attach($choicelast, -balloonmsg => "For Trace mode, show instrument geometry up to this component");
-    my($ListBoxLast)=$f6->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
+    our $choicelast = $f6->Label(-text => "Last component: ", -height => '2',-foreground=>'gray'
+    )->pack(-side => 'left');
+    $b->attach($choicelast, -balloonmsg => "Trace mode: show instrument geometry UP TO this component
+Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
+    our($ListBoxLast)=$f6->Scrolled('Listbox',-height => '1', -width => '40', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
+
+    # fill listboxes
     my @data;
     @data=instrument_information($ii->{'Instrument-source'});
     foreach my $dat (@data) {
@@ -290,8 +347,8 @@ sub simulation_dialog {
     }
     $ListBox->activate(0);
     $ListBoxFirst->activate(0);
+
     my $res = $dlg->Show;
-    $si{'Seed'} = 0 unless $doseed;
     # Check value of ListBoxes -
     my ($index) = $ListBox->curselection();
     if ($index) {
@@ -306,22 +363,37 @@ sub simulation_dialog {
     if ($indexLast) {
         $si{'Last'} = $ListBoxLast->get($indexLast);
     }
+
     if ($res eq 'Start') {
       # update Plotter in case of change in this dialog (instead of Preferences)
-      if ($si{'Format'} eq 0) {
-        $plotter = 'McStas';
-      } elsif ($si{'Format'} eq 1) {
-        $plotter = 'Matlab';
-      } elsif ($si{'Format'} eq 2) {
-        $plotter = 'Scilab';
-      } elsif ($si{'Format'} eq 3) {
+      $plotter = $formatchoice_val;
+      if ($plotter =~ /HTML/) {
         $plotter = 'HTML';
       }
       if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /binary/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
       if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_scriptfile"; }
       # finally set the PLOTTER
       $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
+
+      $si{'cluster'} = do {
+        if     ($choicecluster_val =~ /^None/)   { 0 }
+        elsif ($choicecluster_val =~ /^Threads/){ 1 }
+        elsif ($choicecluster_val =~ /^MPI/)    { 2 }
+        elsif ($choicecluster_val =~ /^Scans/)  { 3 }
+      };
+
+      if ($choicecluster_orig ne $choicecluster_val) {
+        # require re-compilation
+        $si{'Forcecompile'} = 1;
+      }
+
+      $si{'Mode'} = do {
+        if     ($choiceexec_val =~ /^Simulate/) { 0 }
+        elsif ($choiceexec_val =~ /^Trace/)    { 1 }
+        elsif ($choiceexec_val =~ /^Optimize/) { 2 }
+      };
     }
+
     return ($res, \%si);
 }
 

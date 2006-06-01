@@ -252,24 +252,19 @@ sub parse_args {
       }
     }
 
-    # Adapt to multi-threading (overrides MPI and griding)
+    # Adapt to multi-threading (overrides griding)
     if ($threads > 1 && $MCSTAS::mcstas_config{THREADS} ne "no") {
-      $mpi   = 0;
       $multi = 0;
-      $MCSTAS::mcstas_config{CFLAGS} = $MCSTAS::mcstas_config{CFLAGS} . " -DUSE_THREADS -lpthread";
     }
 
     # Adapt parameters to MPI (if used) which overrides grid.
     if ($mpi >= 1 && $MCSTAS::mcstas_config{MPICC} ne "no") {
       $multi = 0;
-      $MCSTAS::mcstas_config{CC}     = $MCSTAS::mcstas_config{MPICC};
-      $MCSTAS::mcstas_config{CFLAGS} = $MCSTAS::mcstas_config{CFLAGS} . " -DUSE_MPI ";
     }
 
     if ($data_dir && $slavedir) {
         $data_dir="$slavedir$data_dir";
     }
-
 
     if ($multi == 1) {
         # Check that something is available in the .mcstas-hosts
@@ -339,7 +334,8 @@ specified for building the instrument:
 SEE ALSO: mcstas, mcdoc, mcplot, mcdisplay, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://www.mcstas.org/
 ** No instrument definition name given\n" unless $sim_def || $exec_test;
-die "Number of points must be at least 1" unless $numpoints >= 1 || $optim_flag;
+
+if ($numpoints < 1) { $numpoints=1; }
 }
 
 # Check the input parameter specifications for variables to scan.
@@ -392,6 +388,7 @@ sub exec_sim {
         exec $cmd;
     } else {
         if ($mpi >= 1) {
+            print "Using $MCSTAS::mcstas_config{'MPIRUN'} -np $mpi -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}  @cmdlist";
             $cmd = "$MCSTAS::mcstas_config{'MPIRUN'} -np $mpi -machinefile $MCSTAS::mcstas_config{'HOSTFILE'} @cmdlist";
         } else {
             $cmd = "@cmdlist";
@@ -1159,7 +1156,6 @@ if($numpoints == 1 && $optim_flag == 0) {
           if ($optim_flag > 1) {
             print STDERR "All monitors";
           } else {
-            my $i;
             for($i = 0; $i < @optim_names; $i++) {
               print STDERR "$optim_names[$i] ";
             }
@@ -1188,7 +1184,7 @@ if($numpoints == 1 && $optim_flag == 0) {
 
           # display result
           if ($optim_iterations >= $max_iteration) {
-            print STDERR "Optimization failed (no convergence after $optim_iterations iterations).\nLast estimates:\n";
+            print STDERR "Optimization failed (no convergence after $optim_iterations iterations).\nIncrease number of iterations (-N 100) or looser required accuracy (--optim-prec=1e-2).\nLast estimates:\n";
           } else {
             print STDERR "Optimized parameters:\n";
           }
@@ -1209,7 +1205,7 @@ if($numpoints == 1 && $optim_flag == 0) {
 
         } else {
           if ($optim_flag && not $MCSTAS::mcstas_config{'AMOEBA'}) {
-            print STDERR "Optimization not available (install Math::Amoeba first)";
+            print STDERR "Optimization not available (install perl Math::Amoeba first)";
           }
           do_scan($scan_info); # single iteration
         }

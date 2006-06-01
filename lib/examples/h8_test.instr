@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -29,7 +29,7 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* Lambda  : source energy      [Angs]
+* Lambda: source energy      [Angs]
 *
 * %Link
 * Neutron News 13 (No. 4), 24-29 (2002).
