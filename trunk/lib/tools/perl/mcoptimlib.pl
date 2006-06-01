@@ -55,9 +55,11 @@ sub minimize_function {
 
   # search optim_names in variables
   # get list of monitors to maximize and loop
+  my $found_monitor=0;
   for ($j = @{$scan_info->{VARS}}; $j < @vars; $j += 2) {
     if ($optim_flag > 1) { # all monitors
       $y = $y + $vals[$j]; # add all values for criteria
+      $found_monitor=1;
     } else { # selected monitors
       my $i;
       for($i = 0; $i < @optim_names; $i++) {
@@ -65,10 +67,12 @@ sub minimize_function {
         # add each value of monitor to $y
         if ($vars[$j] eq "$this_name" . "_I") {
           $y = $y + $vals[$j]; # add corresponding value to found name for criteria
+          $found_monitor=1;
         }
       }
     }
   } # end for j
+  die "optimization: selected component is not a monitor\n" unless $found_monitor;
   @optim_last = @p;
   $optim_iterations++;
 

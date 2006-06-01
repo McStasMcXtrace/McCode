@@ -486,15 +486,18 @@ sub run_dialog {
     my $cancel_cmd = sub {
         kill -15, $pid unless $state; # signal 15 is SIGTERM
     };
+    my $text='Simulation';
+    if ($inf_sim->{'Mode'}==1) { $text='Trace/3D View'; }
+    elsif ($inf_sim->{'Mode'}==2) { $text='Parameter Optimization'; }
     my $dlg = run_dialog_create($w, "Running simulation",
-                                "Simulation running ...", $cancel_cmd);
+                                "$text running ...", $cancel_cmd);
     putmsg($cmdwin, $inittext, 'msg'); # Must appear before any other output
     # Set up the pipe reader callback
     my $reader = sub {
         run_dialog_reader($w, $fh, $cmdwin, \$state, \$success);
     };
     $w->fileevent($fh, 'readable', $reader);
-    $status_label->configure(-text => "Status: Running simulation");
+    $status_label->configure(-text => "Status: Running $text");
     my $savefocus = run_dialog_popup($dlg);
     do {
         $w->waitVariable(\$state);
@@ -512,7 +515,7 @@ sub run_dialog {
 }
 
 sub dialog_get_out_file {
-    my ($w, $file, $force) = @_;
+    my ($w, $file, $force, $mpi, $threads) = @_;
     # The $state variable is set when the spawned command finishes.
     my ($state, $cmd_success);
     my $success = 0;
@@ -529,7 +532,7 @@ sub dialog_get_out_file {
     # The dialog isn't actually popped up unless/until a command is
     # run or an error occurs.
     my $savefocus;
-    my ($compile_data, $msg) = get_out_file_init($file, $force);
+    my ($compile_data, $msg) = get_out_file_init($file, $force, $mpi, $threads);
     if(!$compile_data) {
         &$printer("Could not compile simulation:\n$msg");
     } else {
@@ -603,7 +606,8 @@ sub dialog_get_out_file {
 sub compile_instrument {
     my ($w, $force) = @_;
     return undef unless ask_save_before_simulate($w);
-    my $out_name = dialog_get_out_file($w, $current_sim_def, $force);
+    my $out_name = dialog_get_out_file($w, $current_sim_def, $force,
+      $inf_sim->{'cluster'} == 2 ? 1 : 0, $inf_sim->{'cluster'} == 1 ? 1 : 0);
     unless($out_name && -x $out_name) {
         $w->messageBox(-message => "Could not compile simulation.",
                        -title => "Compile failed",
@@ -611,6 +615,7 @@ sub compile_instrument {
                        -icon => 'error');
         return undef;
     }
+    $inf_sim->{'Forcecompile'} = 0;
     return $out_name;
 }
 
@@ -623,7 +628,8 @@ sub menu_compile{
                        -icon => 'error');
         return undef;
     }
-    compile_instrument($w, 1);        # Force recompilation.
+    # Force recompilation.
+    compile_instrument($w, 1);
     return 1;
 }
 
@@ -689,9 +695,9 @@ sub menu_run_simulation {
         # Check 'Plotter' setting
         my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
 
-        # Check 'Trace' setting if a scan or trace is
+        # Check 'Mode' setting if a scan/trace/optim is
         # requested
-        if ($newsi->{'Trace'}) {
+        if ($newsi->{'Mode'} == 1) {
             # Here, a check is done for selected mcdisplay "backend"
             # Also, various stuff must be done differently on unix
             # type plaforms and on lovely Win32... :)
@@ -699,12 +705,10 @@ sub menu_run_simulation {
             #
             # Check if this is Win32, call perl accordingly...
             if ($Config{'osname'} eq 'MSWin32') {
-              if ($newsi->{'Trace'} eq 1 ) {
-                # Win32 'start' command needed to background the process..
-                push @command, "$MCSTAS::mcstas_config{'PREFFIX'}";
-                # Also, disable plotting of results after mcdisplay run...
-                $newsi->{'Autoplot'}=0;
-              }
+              # Win32 'start' command needed to background the process..
+              push @command, "$MCSTAS::mcstas_config{'PREFFIX'}";
+              # Also, disable plotting of results after mcdisplay run...
+              $newsi->{'Autoplot'}=0;
             }
             # 'mcdisplay' trace mode
             push @command, "${prefix}mcdisplay$suffix";
@@ -792,9 +796,24 @@ sub menu_run_simulation {
             push @command, "-i$newsi->{'Inspect'}" if $newsi->{'Inspect'};
             push @command, "--first=$newsi->{'First'}" if $newsi->{'First'};
             push @command, "--last=$newsi->{'Last'}" if $newsi->{'Last'};
-            # push @command, "--save" if ($newsi->{'Trace'} eq 1);
-        }
-        push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix" if ($newsi->{'NScan'} > 1 && !$newsi->{'Trace'}) || ($newsi->{'mpi'} > 1);
+            # push @command, "--save";
+        } # end Mode=Trace mcdisplay
+        elsif ($newsi->{'Mode'} == 2) { # optimize
+          push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix";
+          push @command, "--optim=$newsi->{'Inspect'}" if $newsi->{'Inspect'};
+          push @command, "--optim=$newsi->{'First'}" if $newsi->{'First'};
+          push @command, "--optim=$newsi->{'Last'}" if $newsi->{'Last'};
+          if (not ($newsi->{'Last'} || $newsi->{'Inspect'} || $newsi->{'First'})) {
+            $w->messageBox(-message => "No optimization criteria defined\nSelect a monitor to maximize",
+                       -title => "Optimization failed",
+                       -type => 'OK',
+                       -icon => 'error');
+            return 0;
+          }
+        } # end Mode=Optimize
+        elsif ($newsi->{'Mode'} == 0) { # simulate
+          push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix"
+        } # end Mode=simulate
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);
         # In the special case of --dir, we simply replace ' ' with '_'
@@ -816,14 +835,22 @@ sub menu_run_simulation {
             $OutDir =~ s! !\ !g;
           }
         }
-        if ($newsi->{'mpi'} > 1) {
-          push @command, "--mpi=$newsi->{'mpi'}";
-        } elsif ($newsi->{'Multi'} > 0) {
+        # clustering methods
+        if ($newsi->{'cluster'} == 2) {
+          push @command, "--mpi=$newsi->{'nodes'}";
+        } elsif ($newsi->{'cluster'} == 1) {
+          push @command, "--threads=$newsi->{'nodes'}";
+        } elsif ($newsi->{'cluster'} == 3) {
           push @command, "--multi";
         }
+        if ($newsi->{'Forcecompile'} == 1) {
+          $inf_sim->{'cluster'} = $newsi->{'cluster'};
+          $out_name = compile_instrument($w, 1);
+        }
+
         push @command, "--ncount=$newsi->{'Ncount'}";
-        push @command, "--trace" if ($newsi->{'Trace'} eq 1);
-        push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'};
+        push @command, "--trace" if ($newsi->{'Mode'} eq 1);
+        push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'} ne "" && $newsi->{'Seed'} ne 0;
         push @command, "--dir=$OutDir" if $newsi->{'Dir'};
         if ($newsi->{'Force'} eq 1) {
           if (-e $OutDir) {
@@ -835,6 +862,7 @@ sub menu_run_simulation {
        # add parameter values
         my @unset = ();
         my @multiple = ();
+        if ($newsi->{'NScan'} eq '') { $newsi->{'NScan'} = 1; }
         for (@{$out_info->{'Parameters'}}) {
             if (length($newsi->{'Params'}{$_})>0) {
               # Check for comma separated values
@@ -842,7 +870,9 @@ sub menu_run_simulation {
               my $value = $newsi->{'Params'}{$_};
               if (@values > 1) {
                   @multiple = (@multiple, $_);
-                  if ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq ''){
+                  if (($newsi->{'Mode'} == 0 && $newsi->{'NScan'} < 2)
+                   || $newsi->{'Mode'} == 1) {
+                   # compute mean value if range no applicable
                     my $j;
                     my $meanvalue=0;
                     for ($j=0; $j<@values; $j++) {
@@ -865,7 +895,8 @@ sub menu_run_simulation {
                            -icon => 'error');
             return;
         }
-        if (@multiple > 0 && ($newsi->{'Trace'} eq 1 || $newsi->{'NScan'} < 2 || $newsi->{'NScan'} eq '')) {
+        if (@multiple > 0 && (($newsi->{'Mode'} == 0 && $newsi->{'NScan'} < 2)
+                   || $newsi->{'Mode'} == 1) ) {
             $w->messageBox(-message =>
                                 "Scan range(s) not applicable. Mean value subsituted for parameter(s):\n\n@multiple",
                                 -title => "No scan here!",
@@ -873,16 +904,23 @@ sub menu_run_simulation {
                                 -icon => 'info');
         }
         if (@multiple eq 0 && $newsi->{'NScan'} > 1) {
-            if (!$newsi->{'Trace'}) {
-          $w->messageBox(-message =>
-                  "No scan range(s) given! Performing single simulation",
-                  -title => "No scan here!",
-                  -type => 'OK',
-                  -icon => 'info');
-          $newsi->{'NScan'} = 0;
+            if ($newsi->{'Mode'} == 0) {
+              $w->messageBox(-message =>
+                      "No scan range(s) given! Performing single simulation",
+                      -title => "No scan here!",
+                      -type => 'OK',
+                      -icon => 'info');
+              $newsi->{'NScan'} = 0;
+            } elsif ($newsi->{'Mode'} == 2) {
+              $w->messageBox(-message =>
+                      "No optimization range(s) given! ",
+                      -title => "No range here!",
+                      -type => 'OK',
+                      -icon => 'error');
+              return;
             }
         }
-        if ($newsi->{'gravity'} eq 1 && !$newsi->{'Trace'}) {
+        if ($newsi->{'gravity'} eq 1 && !$newsi->{'Mode'}) {
             if ($newsi->{'GravityWarn'} eq 0) {
               $w->messageBox(-message =>
                       "Only use --gravitation with components that support this!",
@@ -893,7 +931,10 @@ sub menu_run_simulation {
             }
             push @command, "--gravitation";
         }
-        push @command, "-N$newsi->{'NScan'}" if $newsi->{'NScan'} > 1 && !$newsi->{'Trace'} ;
+        if (($newsi->{'Mode'} == 0 && $newsi->{'NScan'} > 1)
+         || $newsi->{'Mode'} == 2) {
+          push @command, "-N$newsi->{'NScan'}";
+        }
         my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;
@@ -916,7 +957,8 @@ sub menu_run_simulation {
             $inf_sim=$newsi;
         }
         $inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
-        $inf_sim->{'Trace'} = $newsi->{'Trace'};
+        $inf_sim->{'Mode'}     = $newsi->{'Mode'};
+        $inf_sim->{'cluster'}  = $newsi->{'cluster'};
 
         if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
           plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
@@ -1269,12 +1311,12 @@ sub setup_cmdwin {
     $f2->pack(-fill => 'x');
     my $instr_lab = $f2->Label(-text => "Instrument file: <None>",
                                -anchor => 'w',
-                               -justify => 'left');
+                               -justify => 'left',-fg => 'red');
     $instr_lab->pack(-side => 'left');
-    my $instr_run = $f2->Button(-text => "Run",
+    my $instr_run = $f2->Button(-text => "Run", -fg => 'blue',
                                 -command => sub { menu_run_simulation($w) });
     $instr_run->pack(-side => "right", -padx => 1, -pady => 1);
-    $b->attach($instr_run, -balloonmsg => "Compile and Run current inctrument");
+    $b->attach($instr_run, -balloonmsg => "Compile and Run current instrument");
     my $instr_but = $f2->Button(-text => "Edit/New",
                                 -command => \&menu_edit_current);
     $instr_but->pack(-side => "right", -padx => 1, -pady => 1);
@@ -1317,30 +1359,30 @@ sub setup_cmdwin {
     for $l (split "\n", `mcstas --version`) {
         $cmdwin->insert('end', "$l\n", 'msg');
     }
-    if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no"
-    ||  $MCSTAS::mcstas_config{'SSH'} ne "no") {
-      if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
-        $cmdwin->insert('end', "MPI parallelisation is available\n");
-      } elsif ($MCSTAS::mcstas_config{'SSH'} ne "no") {
-        $cmdwin->insert('end', "Distributed scans (grid) computing is available\n");
-      }
-      if ($MCSTAS::mcstas_config{'HOSTFILE'} eq "") {
+
+    my $text="";
+    if ($MCSTAS::mcstas_config{'SCILAB'} ne "no")   { $text .= "Scilab "; }
+    if ($MCSTAS::mcstas_config{'MATLAB'} ne "no")   { $text .= "Matlab "; }
+    if ($MCSTAS::mcstas_config{'PGPLOT'} ne "no")   { $text .= "PGPLOT/McStas "; }
+    if ($MCSTAS::mcstas_config{'BROWSER'} ne "no")  { $text .= "HTML "; }
+    if ($MCSTAS::mcstas_config{'VRMLVIEW'} ne "no") { $text .= "VRML "; }
+    if ($text ne "") { $cmdwin->insert('end', "Plotters: $text\n"); }
+
+    if ($MCSTAS::mcstas_config{'HOSTFILE'} eq "" &&
+          ($MCSTAS::mcstas_config{'MPIRUN'} ne "no"
+        ||  $MCSTAS::mcstas_config{'SSH'} ne "no") ) {
       $cmdwin->insert('end',
-"No MPI/grid machine list. MPI/grid disabled...
-  Define $ENV{'HOME'}/.mcstas-hosts first.\n");
-  $MCSTAS::mcstas_config{'MPIRUN'} = "no";
-  $MCSTAS::mcstas_config{'SSH'}    = "no";
+"** No MPI/grid machine list. MPI/ssh clustering disabled **
+Define $ENV{'HOME'}/.mcstas-hosts or MCSTAS/lib/tools/perl/mcstas-hosts first.\n");
+    $MCSTAS::mcstas_config{'MPIRUN'} = "no";
+    $MCSTAS::mcstas_config{'SSH'}    = "no";
     }
-  }
-  if ($MCSTAS::mcstas_config{'SCILAB'} eq "no") {
-    $cmdwin->insert('end', "Scilab plotter is NOT available\n");
-  }
-  if ($MCSTAS::mcstas_config{'MATLAB'} eq "no") {
-    $cmdwin->insert('end', "Matlab plotter is NOT available\n");
-  }
-  if ($MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
-    $cmdwin->insert('end', "Perl/PGPLOT plotter is NOT available\n");
-  }
+    my $text_grid="";
+    if ($MCSTAS::mcstas_config{'THREADS'} ne "no") { $text_grid .= "Threads "; }
+    if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no")  { $text_grid .= "MPI "; }
+    if ($MCSTAS::mcstas_config{'SSH'} ne "no")     { $text_grid .= "Scan/ssh "; }
+    if ($text_grid ne "") { $cmdwin->insert('end', "Clustering methods: $text_grid\n"); }
+
 
 }
 
@@ -1578,8 +1620,15 @@ $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
 
-$inf_sim->{'ssh'}    = ($MCSTAS::mcstas_config{'SSH'} ne "no" ? 1 : 0);
-$inf_sim->{'mpi'}    = ($MCSTAS::mcstas_config{'MPIRUN'} ne "no" ? 1 : 0);
+if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
+  $inf_sim->{'cluster'} = 1;
+  $inf_sim->{'nodes'}   = 2;
+} elsif ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
+  $inf_sim->{'cluster'} = 2;
+  $inf_sim->{'nodes'}   = 4;
+} elsif ($MCSTAS::mcstas_config{'SSH'} ne "no") {
+  $inf_sim->{'cluster'} = 3;
+} else { $inf_sim->{'cluster'} = 0; }
 
 my $open_editor = 0;
 
