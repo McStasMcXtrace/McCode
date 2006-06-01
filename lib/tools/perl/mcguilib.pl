@@ -220,7 +220,7 @@ sub simulation_dialog {
                             -relief => 'flat')->pack(-side => 'left');
     $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation\nSelect format here or from Simulation/Configuration menu item");
     $ff1->Optionmenu (
-      -textvariable => $plotter,
+      -textvariable => \$plotter,
       -variable     => \$si{'Format'},
       -options      => [
                         ['PGPLOT', 0 ],
