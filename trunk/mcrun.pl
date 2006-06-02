@@ -91,6 +91,10 @@ our @guess;                     # starting set of parameters (centers of scans)
 our @scale;                     # ranges of parameters (ratio from center)
 our $optim_iterations=0;        # total number of function calls in optim
 our @optim_last;
+our @optim_datablock = ();
+our @optim_youts=();
+our $optim_variables;
+our @optim_first;
 my  $optim_prec=1e-3;
 
 # Name of compiled simulation executable.
@@ -305,7 +309,7 @@ sub parse_args {
    --mpi=NB_CPU               Spread simulation over NB_CPU machines using MPI
    --machines=MACHINES        Read machine names from file MACHINES (MPI/grid)
    --optim=COMP               Add COMP to the list of monitors to maximize
-                                (optimization criteria)
+                                (optimization criteria, requires Math::Amoeba)
    --optim-prec=PREC          Relative requested accuracy of criteria (1e-3)
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
@@ -417,14 +421,17 @@ sub do_instr_header {
 
 # Write Matlab/Scilab function header to datafile
 sub do_instr_init {
-    my ($OUT) = @_;
+    my ($OUT, $filename) = @_;
+    my $funcname=$filename;
+    if ($funcname =~ m'^mcstas\.[^/]*$') { $funcname = "mcstas"; }
+    else { $funcname =~ s/\./_/; }
     if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
         print $OUT <<ENDCODE
 function mcstas = get_mcstas(p)
 % Embedded function for building 'mcplot' compatible structure
 % PW, RISOE, 20030701
 %
-% import data using s=mcstas('plot');
+% import data using $filename; s=get_mcstas('plot');
 if nargout == 0 | nargin > 0, p=1; else p=0; end
 ENDCODE
     } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
@@ -636,13 +643,13 @@ sub output_sim_file {
         print $SIM "\nbegin simulation\n";
         $loc_prefix = "";
       } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
-        do_instr_init($SIM);
+        do_instr_init($SIM, $filename);
         do_instr_header("% ", $SIM);
         print $SIM "\nsim.class='simulation';\n";
         print $SIM "sim.name='$filename';\n";
         $loc_prefix = "sim.";
       } else {
-        do_instr_init($SIM);
+        do_instr_init($SIM, $filename);
         do_instr_header("// ", $SIM);
         print $SIM "\nsim = struct(); sim.class='simulation';\n";
         print $SIM "sim.name='$filename';\n";
@@ -843,18 +850,18 @@ sub do_scan {
 
         my $ret = close(SIM);
         die "mcrun: Exit due to error returned by simulation program" if $got_error || (! $ret && ($? != 0 || $!));
-              if ($firsttime eq 1) {
-                if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
-                    if (($slave eq 0) || ($slave eq 'localhost')) {
-                        output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
-                    }
-                }
-              } else {
-                push @lab_datablock, "\n";
+        if ($firsttime eq 1) {
+          if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+              if (($slave eq 0) || ($slave eq 'localhost')) {
+                  output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
               }
+          }
+        } else {
+          push @lab_datablock, "\n";
+        }
         if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
                 print $DAT "$out\n";
-              }
+        }
         push @lab_datablock, "$out";
         $firsttime = 0;
         }
@@ -867,7 +874,7 @@ sub do_scan {
 
     print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
 
-    return ($datablock,$variables);
+    return ($datablock,$variables, @youts);
 }
 
 # Do a multi scan on several machines...
@@ -1202,6 +1209,29 @@ if($numpoints == 1 && $optim_flag == 0) {
             print STDERR "Generating optimized configuration in --dir=$data_dir\n";
             minimize_function(@optim_p); # this also sets scan-info
           }
+          # output optimization results as a scan
+          my $prefix = "";
+          if($data_dir) { $prefix = "$data_dir/"; }
+          my $datfile = "mcstas.dat";
+          my $simfile = $datfile;
+          $simfile =~ s/\.dat$//;         # Strip any trailing ".dat" extension ...
+          $simfile .= $format_ext;        # ... and add ".sim|m|sci" extension.
+          my $datablock = join(" ", @optim_datablock);  # mcoptimlib-> @optim_datablock, @optim_youts, $optim_variable
+
+          # Only initialize / use $DAT datafile if format is PGPLOT
+          if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+            my $DAT = new FileHandle;
+            open($DAT, ">${prefix}$datfile");
+            output_dat_header($DAT, "# ", $scan_info, \@optim_youts, $optim_variables, $datfile);
+            print $DAT "$datablock\n";
+            close($DAT);
+          } else {
+            $datfile = $simfile;             # Any reference should be to the simfile
+          }
+
+          output_sim_file("${prefix}$simfile", $scan_info, \@optim_youts, $optim_variables, $datfile, $datablock);
+
+          print "Optimization file: '${prefix}$datfile'\nOptimized parameters: $optim_variables\n";
 
         } else {
           if ($optim_flag && not $MCSTAS::mcstas_config{'AMOEBA'}) {

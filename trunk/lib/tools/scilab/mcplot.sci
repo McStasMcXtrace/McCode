@@ -1163,7 +1163,12 @@ if typeof(object) == 'string' // if object is a string
   //    opens filename with exec(filename,-1)
   exec(filename, -1); // compile the file
   mcstas = [];
+  mprintf('mcstas = get_mcstas();\n');
   execstr('mcstas = get_mcstas();','errcatch');
+  if ~length(mcstas)
+    mprintf('mcstas = get_mcstas_'+part(ext,[2:length(ext)])+'();\n');
+    execstr('mcstas = get_mcstas_'+part(ext,[2:length(ext)])+'();','errcatch');
+  end
   if ~length(mcstas)
     // function does not exist. Try using valid name
     valid_name = object;
@@ -1172,7 +1177,7 @@ if typeof(object) == 'string' // if object is a string
       if (index), by_char = '_'; else by_char = 'm'; end
       valid_name = strsubst(valid_name, part(to_replace, index), by_char);
     end
-    mprintf('mcstas = get_'+valid_name+'();\n')
+    mprintf('mcstas = get_'+valid_name+'();\n');
     execstr('mcstas = get_'+valid_name+'();','errcatch');
     if ~length(mcstas)
       mprintf('mcplot: Could not extract McStas structure from file '+object+'\n');
