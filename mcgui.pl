@@ -812,15 +812,14 @@ sub menu_run_simulation {
         } # end Mode=Trace mcdisplay
         elsif ($newsi->{'Mode'} == 2) { # optimize
           push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix";
-          push @command, "--optim=$newsi->{'Inspect'}" if $newsi->{'Inspect'};
-          push @command, "--optim=$newsi->{'First'}" if $newsi->{'First'};
-          push @command, "--optim=$newsi->{'Last'}" if $newsi->{'Last'};
           if (not ($newsi->{'Last'} || $newsi->{'Inspect'} || $newsi->{'First'})) {
-            $w->messageBox(-message => "No optimization criteria defined\nRun again and select a\nMONITOR to maximize\n(in lower lists)",
-                       -title => "Can not Optimized",
-                       -type => 'OK',
-                       -icon => 'error');
-            return 0;
+            putmsg($cmdwin, "Warning: No criteria/monitor selected\n
+         Global optimization using all monitors\n");
+            push @command, "--optim";
+          } else {
+            push @command, "--optim=$newsi->{'Inspect'}" if $newsi->{'Inspect'};
+            push @command, "--optim=$newsi->{'First'}" if $newsi->{'First'};
+            push @command, "--optim=$newsi->{'Last'}" if $newsi->{'Last'};
           }
         } # end Mode=Optimize
         elsif ($newsi->{'Mode'} == 0) { # simulate
@@ -947,6 +946,7 @@ sub menu_run_simulation {
          || $newsi->{'Mode'} == 2) {
           push @command, "-N$newsi->{'NScan'}";
         }
+        $inf_sim->{'Mode'}     = $newsi->{'Mode'};
         my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
         my $success = my_system $w, $inittext, @command;

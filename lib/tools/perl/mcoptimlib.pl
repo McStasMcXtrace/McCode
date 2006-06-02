@@ -36,6 +36,9 @@ sub minimize_function {
   my @minval = ();
   my @maxval = ();
 
+  my $out = "$optim_iterations ";
+  my @youts=();
+
   # create a copy of the global $scan_info within limits
   for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
     if    ($p[$j] > $scan_info->{MAX}[$j]) { $p[$j] = $scan_info->{MAX}[$j]; }
@@ -43,13 +46,14 @@ sub minimize_function {
     $minval[$j]  = $p[$j];
     $maxval[$j]  = $p[$j];
     $scanned[$j] = $scan_info->{VARS}[$j];
+    $out .= "$p[$j] "; # parameter values for this iteration step
   }
 
   # assemble $scan_info from optim_info and optimization step ($numpoints=1)
   my $optim_info = { VARS => \@scanned, MIN => \@minval, MAX => \@maxval };
 
   # execute single iteration step (do_scan). returns [params_val I err ... I err]
-  ($datablock, $variables) = do_scan($optim_info);
+  ($datablock, $variables, @youts) = do_scan($optim_info);
   my @vars = split(" ", $variables);
   my @vals = split(" ", $datablock);
 
@@ -57,22 +61,39 @@ sub minimize_function {
   # get list of monitors to maximize and loop
   my $found_monitor=0;
   for ($j = @{$scan_info->{VARS}}; $j < @vars; $j += 2) {
+    if ($optim_iterations == 0) { $optim_first[$j] = 0; }
+    my $value = $vals[$j];
+    if ($optim_first[$j] == 0 && $value != 0) {
+      $optim_first[$j] = abs($value);
+    }
+    if ($optim_first[$j] > 0) {
+      $value /= $optim_first[$j];
+    }
     if ($optim_flag > 1) { # all monitors
-      $y = $y + $vals[$j]; # add all values for criteria
-      $found_monitor=1;
+      $y = $y + $value; # add all values for criteria
+      $found_monitor++;
     } else { # selected monitors
       my $i;
       for($i = 0; $i < @optim_names; $i++) {
         my $this_name = $optim_names[$i];
         # add each value of monitor to $y
         if ($vars[$j] eq "$this_name" . "_I") {
-          $y = $y + $vals[$j]; # add corresponding value to found name for criteria
-          $found_monitor=1;
+          $y = $y + $value; # add corresponding value to found name for criteria
+          $found_monitor++;
         }
       }
     }
+    $out .= " $vals[$j] $vals[$j+1]";
   } # end for j
-  die "optimization: selected component is not a monitor\n" unless $found_monitor;
+  die "optimization: ERROR: selected component is not a monitor\n" unless $found_monitor;
+  $out .= " $y 0";
+  push @optim_datablock, "$out\n";
+  if ($optim_iterations == 0) {
+    $optim_variables = "step " . $variables;
+    @optim_youts = @youts;
+    $optim_variables .= " criteria null";
+    push @optim_youts, " (criteria,null)";
+  }
   @optim_last = @p;
   $optim_iterations++;
 

@@ -38,6 +38,7 @@
       <item> POLARISATION </item>
       <item> SETTING </item>
       <item> STATE </item>
+      <item> OUTPUT </item>
       <item> INSTRUMENT </item>
       <item> include </item>
     </list>
@@ -110,6 +111,9 @@
       <item> PREVIOUS </item>
       <item> RELATIVE </item>
       <item> ROTATED </item>
+      <item> WHEN </item>
+      <item> JUMP </item>
+      <item> ITERATE </item>
     </list>
     <list name="types">
       <item> auto </item>
@@ -135,6 +139,10 @@
       <item> FIXME </item>
       <item> TODO </item>
       <item> ### </item>
+      <item> Identification </item>
+      <item> Description </item>
+      <item> Parameters </item>
+      <item> Link </item>
     </list>
     <contexts>
       <context attribute="Normal Text" lineEndContext="#stay" name="Normal">
