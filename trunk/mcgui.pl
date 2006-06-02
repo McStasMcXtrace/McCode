@@ -445,7 +445,7 @@ sub run_dialog_create {
     my $but = $bot_frame->Button(-text => "Cancel", -command => $cancel_cmd);
     $b->attach($but, -balloonmsg => "Save results\nand Stop/Abort");
     $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
-    if ($Config{'osname'} ne 'MSWin32') {
+    if ($Config{'osname'} ne 'MSWin32' && $update_cmd) {
       $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
       $but->pack(-side => "right");
       $b->attach($but, -balloonmsg => "Save results\nand continue");
@@ -499,8 +499,8 @@ sub run_dialog {
     my $text='Simulation';
     if ($inf_sim->{'Mode'}==1) { $text='Trace/3D View'; }
     elsif ($inf_sim->{'Mode'}==2) { $text='Parameter Optimization'; }
-    my $dlg = run_dialog_create($w, "Running simulation",
-                                "$text running ...", $cancel_cmd, $update_cmd);
+    my $dlg = run_dialog_create($w, "Running simulation $current_sim_def",
+                                "$text running\n($current_sim_def)...", $cancel_cmd, $update_cmd);
     putmsg($cmdwin, $inittext, 'msg'); # Must appear before any other output
     # Set up the pipe reader callback
     my $reader = sub {
@@ -536,8 +536,8 @@ sub dialog_get_out_file {
     my $cancel_cmd = sub {
         kill -15, $pid if $pid && !$state; # signal 15 is SIGTERM
     };
-    my $dlg = run_dialog_create($w, "Compiling simulation ...",
-                                "Compiling simulation", $cancel_cmd);
+    my $dlg = run_dialog_create($w, "Compiling simulation $current_sim_def",
+                                "Compiling simulation\n($current_sim_def)", $cancel_cmd);
     my $printer = sub { putmsg($cmdwin, "$_[0]\n", 'msg'); };
     # Set up the pipe reader callback
     $status_label->configure(-text => "Status: Compiling simulation");
@@ -816,8 +816,8 @@ sub menu_run_simulation {
           push @command, "--optim=$newsi->{'First'}" if $newsi->{'First'};
           push @command, "--optim=$newsi->{'Last'}" if $newsi->{'Last'};
           if (not ($newsi->{'Last'} || $newsi->{'Inspect'} || $newsi->{'First'})) {
-            $w->messageBox(-message => "No optimization criteria defined\nSelect a monitor to maximize",
-                       -title => "Optimization failed",
+            $w->messageBox(-message => "No optimization criteria defined\nRun again and select a\nMONITOR to maximize\n(in lower lists)",
+                       -title => "Can not Optimized",
                        -type => 'OK',
                        -icon => 'error');
             return 0;

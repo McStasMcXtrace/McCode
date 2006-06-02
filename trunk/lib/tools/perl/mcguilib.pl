@@ -255,7 +255,10 @@ sub simulation_dialog {
                             -variable => \$si{'Autoplot'},
                             -relief => 'flat')->pack(-side => 'left');
     $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation");
-    my $formatchoice_val=$plotter;
+    my $formatchoice_val;
+    if ($plotter =~ /McStas|PGPLOT/i)  { $formatchoice_val= 'PGPLOT'; }
+    if ($plotter =~ /Matlab/i)  { $formatchoice_val= 'Matlab'; }
+    if ($plotter =~ /Scilab/i) { $formatchoice_val= 'Scilab'; }
     if ($plotter =~ /HTML|VRML/) { $formatchoice_val='HTML/VRML'; }
     $formatchoice = $line->Optionmenu (
       -textvariable => \$formatchoice_val,
@@ -366,10 +369,11 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
 
     if ($res eq 'Start') {
       # update Plotter in case of change in this dialog (instead of Preferences)
-      $plotter = $formatchoice_val;
-      if ($plotter =~ /HTML/) {
-        $plotter = 'HTML';
-      }
+      if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
+      elsif ($formatchoice_val =~ /McStas|PGPLOT/i)  { $plotter= 'PGPLOT'; }
+      elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
+      elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
+
       if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /binary/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
       if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_scriptfile"; }
       # finally set the PLOTTER
@@ -572,15 +576,14 @@ sub preferences_dialog {
     my $plotopt = $lf->Label(-text => "Plotting options:", -anchor => 'w', -fg=>'blue'
     )->pack(-fill => 'x');
     $b->attach($plotopt, -balloonmsg => "Select output format/plotter");
-    if ($plotter =~ /Matlab/i) {
+    if ($plotter =~ /McStas|PGPLOT/i)  { $formatchoice_val= 'PGPLOT (original McStas)'; }
+    elsif ($plotter =~ /Matlab/i) {
       $formatchoice_val= 'Matlab' . ($plotter =~ /scriptfile/ ?
         ' scriptfile' : ' (requires Matlab)');
-    }
-     if ($plotter =~ /Scilab/i) {
+    } elsif ($plotter =~ /Scilab/i) {
       $formatchoice_val= 'Scilab' . ($plotter =~ /scriptfile/ ?
         ' scriptfile' : ' (requires Scilab)');
-    }
-    if ($plotter =~ /HTML|VRML/i) { $formatchoice_val='HTML/VRML document'; }
+    } elsif ($plotter =~ /HTML|VRML/i) { $formatchoice_val='HTML/VRML document'; }
     my $formatchoice = $lf->Optionmenu (
       -textvariable => \$formatchoice_val,
       -options      => ['PGPLOT (original McStas)',
@@ -638,9 +641,10 @@ sub preferences_dialog {
 
     my $res = $dlg->Show;
 
-    if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
-    elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
-    elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
+if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
+      elsif ($formatchoice_val =~ /McStas|PGPLOT/i)  { $plotter= 'PGPLOT'; }
+      elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
+      elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
     # add binary flag to plotter
     if ($binary == 1 && $formatchoice_val =~ /Scilab|Matlab/i) {
       $plotter .= "_binary";
