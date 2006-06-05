@@ -211,6 +211,8 @@ Scilab:
 	make scilab
 VRML:
 	make vrml
+install-pgplot:
+	cd support/pgplot && ./pgplot.sh && echo "run ./configure; make; makeinstall again"
 
 test:
 	./mcrun.fixpl --test
