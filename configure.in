@@ -39,7 +39,7 @@ AC_PATH_PROGS(MPIRUN, [mpirun /usr/local/bin/mpirun], no)
 AC_PATH_PROGS(MPICC,  [mpicc /usr/local/bin/mpicc], no)
 AC_PATH_PROGS(BROWSER,[konqueror firefox mozilla-firefox mozilla netscape epiphany galeon start msie /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
 AC_PATH_PROGS(EDITOR, [nedit kate gedit xemacs xedit vim notepad wordpad], no)
-AC_PATH_PROGS(VRMLVIEW, [freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat])
+AC_PATH_PROGS(VRMLVIEW, [freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
 AC_PATH_PROGS(WGET, [wget], no)
 # Important here: gnome-terminal is broken:
 #  Any commandline arguments after -e must contain escaped spaces.
@@ -82,13 +82,17 @@ echo "  make pgplot (selects pgplot)"
 echo "  make vrml   (selects vrml)"
 echo ""
 echo "After plotter config, build and install McStas by executing"
-echo "make; make install"
+echo "  make; make install"
 echo ""
 echo "WARNING: McStas 1.10 requires Scilab >= 3.1"
 echo ""
-echo "If you experience crashes of mcgui when running in the Gnome"
-echo "environment, please come back here and do a"
+echo "Gnome support: If you experience crashes of mcgui when running in the "
+echo "Gnome environment, please come back here and do a"
 echo ""
 echo "  make tk"
 echo ""
 echo " - will install our patched version of perl-tk from the net"
+echo ""
+echo "PGPLOT install: you may try our automatic PGPLOT installation with"
+echo ""
+echo "  make install-pgplot; ./configure; make; make install"
