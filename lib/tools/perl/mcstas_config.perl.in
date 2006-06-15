@@ -34,7 +34,8 @@
 # EXE      - executable extension
 # CODETEXT - check for Tk::CodeText availability
 # PROCSIMPLE - check for Proc::Simple availability
-# TEMP - check for File::Temp availability
+# TEMP     - check for File::Temp availability
+# THREADS  - flag for Threading support [yes|no]
 #
 # NOTE: If you modify this file to change a SCILAB equal to 'no' to adjust an existing
 # installation to a new install of scilab, enter the FULL PATH to the scilab binary, e.g.
@@ -75,6 +76,9 @@ use Config;
 
 # **** installed site perl modules availability
 
+my $perl_PGPLOT=0;
+my $pdl=0;
+
 if ($MCSTAS::mcstas_config{'PGPLOT'} ne "no") {
   $MCSTAS::mcstas_config{'PGPLOT'} = "no";  # unset it and then search pgperl
   foreach $inc (@INC) {
@@ -82,10 +86,24 @@ if ($MCSTAS::mcstas_config{'PGPLOT'} ne "no") {
     if (-e $where) {
       $MCSTAS::mcstas_config{'PGPLOT'}=$inc; # we got pgplot+pgperl
       require PGPLOT;
+      $perl_PGPLOT=$where;
+
     }
+    $where="$inc/PDL.pm";
+		if (-e "$where") {
+			$pdl = $where; # we got PDL
+		}
+  }
+  if (not $perl_PGPLOT) {
+  	print STDERR "PGPLOT unactivated: install perl-PGPLOT first\n";
+  }
+  if (not $pdl) {
+  	print STDERR "PGPLOT unactivated: install perl-PDL first\n";
   }
 }
 
+
+my $perl_tk=0;
 if ($MCSTAS::mcstas_config{'TCLTK'} ne "no") {
   $MCSTAS::mcstas_config{'TCLTK'} = "no";  # unset it and then search perl-tk
   foreach $inc (@INC) {
@@ -93,7 +111,11 @@ if ($MCSTAS::mcstas_config{'TCLTK'} ne "no") {
     if (-e $where) {
       $MCSTAS::mcstas_config{'TCLTK'} = $inc; # we got tk+perltk
       require Tk;
+      $perl_tk = $where;
     }
+  }
+  if (not $perl_tk) {
+  	print STDERR "McGUI not available: install perl-Tk first\n";
   }
 }
 
@@ -140,6 +162,7 @@ foreach $inc (@INC) {
   if (-e "$where") {
     $MCSTAS::mcstas_config{'AMOEBA'} = $where; # we got Math::Amoeba
   }
+
 }
 
 if ($MCSTAS::mcstas_config{'CODETEXT'} ne "no") {
