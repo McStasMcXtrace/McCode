@@ -89,7 +89,7 @@ sub minimize_function {
   $out .= " $y 0";
   push @optim_datablock, "$out\n";
   if ($optim_iterations == 0) {
-    $optim_variables = "step " . $variables;
+    $optim_variables = "Point " . $variables;
     @optim_youts = @youts;
     $optim_variables .= " criteria null";
     push @optim_youts, " (criteria,null)";

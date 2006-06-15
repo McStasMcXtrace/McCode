@@ -545,7 +545,7 @@ sub do_data_header {
     my $xlabel;
     my $min;
     my $max;
-    if (@{$info->{VARS}} == 0) { $xlabel = "Point number"; $scannedvars="Point"; $xvars="Point"; $min=1; $max=$numpoints; }
+    if (@{$info->{VARS}} == 0 || $optim_flag) { $xlabel = "Point number"; $scannedvars="Point"; $xvars="Point"; $min=1; $max=$numpoints; }
     else {
       $xlabel = $params[$info->{VARS}[0]];
       $scannedvars = join ", ", map($params[$_], @{$info->{VARS}});
@@ -628,10 +628,15 @@ sub output_sim_file {
     my $SIM = new FileHandle;
     my $loc_prefix = "";
     my $instr_name = $sim_def;
-    my $i = $info->{VARS}[0]; # Index of variable to be scanned
+    my $i;
+    my $namvar;
+    if (@{$info->{VARS}} == 0 || $optim_flag) { $namvar = "Point number"; }
+    else {
+      $i = $info->{VARS}[0]; # Index of variable to be scanned
+      $namvar = defined($i) && $params[$i] ? $params[$i] : "nothing";
+    }
     my $minvar = $info->{MIN}[0] ? $info->{MIN}[0] : 0;
     my $maxvar = $info->{MAX}[0] ? $info->{MAX}[0] : 0;
-    my $namvar = defined($i) && $params[$i] ? $params[$i] : "nothing";
 
     $instr_name =~ s/\.instr$//;        # Strip any trailing ".instr" extension ...
     open($SIM, ">$filename") ||
@@ -1210,6 +1215,7 @@ if($numpoints == 1 && $optim_flag == 0) {
             minimize_function(@optim_p); # this also sets scan-info
           }
           # output optimization results as a scan
+          $numpoints = $optim_iterations;
           my $prefix = "";
           if($data_dir) { $prefix = "$data_dir/"; }
           my $datfile = "mcstas.dat";
