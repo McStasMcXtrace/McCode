@@ -41,6 +41,9 @@ AC_PATH_PROGS(BROWSER,[konqueror firefox mozilla-firefox mozilla netscape epipha
 AC_PATH_PROGS(EDITOR, [nedit kate gedit xemacs xedit vim notepad wordpad], no)
 AC_PATH_PROGS(VRMLVIEW, [freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
 AC_PATH_PROGS(WGET, [wget], no)
+AC_PATH_PROGS(PERLDL,   [perldl /usr/local/bin/perldl /usr/bin/perldl], no)
+AC_PATH_PROGS(G77, [g77 f77 g95 f95 gfortran], no)
+AC_PATH_PROGS(MAKE,   [make gmake], no)
 # Important here: gnome-terminal is broken:
 #  Any commandline arguments after -e must contain escaped spaces.
 # BUT: If escaped in the perl code, use of xterm/konsole is broken....
@@ -48,6 +51,11 @@ AC_PATH_PROGS(WGET, [wget], no)
 # :(
 AC_PATH_PROGS(TERMINAL,   [xterm konsole gnome-terminal.wrapper], no)
 AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl)
+
+if test "$MAKE" == "no" ; then
+  echo "ERROR: McStas installation requires 'make' or 'gmake'"
+  exit
+fi
 
 if test "$PERL" = "no" ; then
   echo "WARNING: No Perl executable could be found !"
@@ -58,28 +66,31 @@ if test "$PERL" = "no" ; then
 fi
 if test "$TCLTK" = "no" ; then
   echo "WARNING: No Tcl/Tk installation could be found !"
-  echo "You will not be able to use McGUI interface"
+  echo "You might not be able to use McGUI interface"
 fi
 if test "$BROWSER" = "no" ; then
   echo "WARNING: No HTML browser could be found !"
 fi
-if test "$SCILAB" = "no" ; then
-  if test "$MATLAB" = "no" ; then
-    if test "$PGPLOT" = "no" ; then
-      if test "$VRMLVIEW" = "no" ; then
-        echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT, VRML) could be found !"
-      fi
-    fi
-  fi
+if test "$SCILAB" == "no" && test "$MATLAB" == "no" && test "$PGPLOT" == "no" && test "$VRMLVIEW" == "no" ; then
+  echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT, VRML) could be found !"
 fi
+
 echo ""
 echo "To setup the plotting environment, execute either"
 echo "  make config (automaticly selects plotter, "
 echo "       prefers Scilab before Matlab before PGPLOT before VRML)"
+if test "$SCILAB" != "no" ; then
 echo "  make scilab (selects scilab)"
+fi
+if test "$MATLAB" != "no" ; then
 echo "  make matlab (selects matlab)"
+fi
+if test "$PGPLOT" != "no" ; then
 echo "  make pgplot (selects pgplot)"
+fi
+if test "$VRMLVIEW" != "no" ; then
 echo "  make vrml   (selects vrml)"
+fi
 echo ""
 echo "After plotter config, build and install McStas by executing"
 echo "  make; make install"
@@ -87,12 +98,21 @@ echo ""
 echo "WARNING: McStas 1.10 requires Scilab >= 3.1"
 echo ""
 echo "Gnome support: If you experience crashes of mcgui when running in the "
-echo "Gnome environment, please come back here and do a"
+echo "  Gnome environment, please come back here and do a"
 echo ""
 echo "  make tk"
 echo ""
-echo " - will install our patched version of perl-tk from the net"
+echo "will install our patched version of perl-tk from the net"
 echo ""
-echo "PGPLOT install: you may try our automatic PGPLOT installation with"
-echo ""
-echo "  make install-pgplot; ./configure; make; make install"
+if test "$PGPLOT" == "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
+  echo "PGPLOT install: you may try our automatic PGPLOT installation with"
+  echo ""
+  echo "# make install-pgplot; ./configure; make; make install"
+else if test "$PGPLOT" == "no" ; then
+  echo "To install PGPLOT for McStas, you need:"
+  echo "= perl-PDL (perldl)"
+  echo "= a fortran compiler (g77, gfortran)"
+  echo "Install these and re-run McStas installation ./configure"
+  fi
+fi
+
