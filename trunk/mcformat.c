@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.3 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.4 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1207,7 +1207,7 @@ int mcformat_scan_compare(int nb)
    */
   int scan_index1=0;
   int j;
-  printf("Enter mcformat_scan_compare\n");
+
   /* loop on Scans_to_merge: index > -1  */
   for (scan_index1=0; scan_index1<nb; scan_index1++) {
     if (Scans_to_merge[scan_index1] < 0 || Scans_to_merge[scan_index1] < scan_index1) continue;
@@ -1284,7 +1284,7 @@ int mcformat_scan_compare(int nb)
 
     /* go to end of scan and continue to search for scans */
   } /* for scan_index1 */
-  printf("Exit mcformat_scan_compare\n");
+  printf("Exit mcformat_scan_compare: scan writing not implementing yet !\n");
 }
 
 /*******************************************************************************
@@ -1297,7 +1297,7 @@ int mcformat_merge_output(int nb)
   if (mcmergemode || mcscanmode == 1) {
     /* output files for non empty elements */
     for (i=0; i<nb; i++) {
-      if (mcformat_output(Files_to_Merge[i]))
+      if (mcformat_output(Files_to_Merge[i])) {
         if (mcverbose) {
           printf("mcformat: merging/scanning %s ", Files_to_Merge[i].outputname);
           printf("into %s%s ",
@@ -1305,10 +1305,9 @@ int mcformat_merge_output(int nb)
             Files_to_Merge[i].mcdirname ? MC_PATHSEP_S : "");
           if (mctestmode) printf("(--test mode)\n"); else printf("\n");
         }
+      }
     }
   }
-
-
 
   if (mcscanmode) {
   /* build and output scans (if any) for non empty elements of same index */
@@ -1332,7 +1331,7 @@ void mcformat_usage(char *pgmname)
   fprintf(stderr, "mcformat version %s format conversion tool for McStas\n", MCFORMAT);
   fprintf(stderr, "Usage: %s [options] file1|dir1 file2|dir2 ...\n", pgmname);
   fprintf(stderr,
-"Converts/merge files and directories from McStas format to an other specified format\n"
+"Convert/merge files and directories from McStas format to an other specified format\n"
 "Options are:\n"
 "  -d DIR    --dir=DIR        Put all data files in directory DIR.\n"
 "  -f FILE   --file=FILE      Put all data in a single file.\n"
@@ -1341,11 +1340,12 @@ void mcformat_usage(char *pgmname)
 "  -h        --help           Show this help message.\n"
 "  --format=FORMAT            Output data files using format FORMAT\n"
 "  -c        --force          Force writting in existing directories\n"
-"                             and enabled relaxed merging mode (no name check)\n"
+"                             and enable relaxed merging mode (no name check)\n"
 "  -t        --test           Test mode, does not write files\n"
 "  -m        --merge          Add/Append equivalent data files and lists\n"
 "            --merge-samedir  Merges inside same directories (dangerous)\n"
 "  -s        --scan           Gather simulations per scan series\n"
+"            --verbose        Verbose mode\n"
 "\n"
 "Examples:\n"
 "mcformat -d target_dir original_dir # using default target format %s\n"
@@ -1464,6 +1464,8 @@ int main(int argc, char *argv[])
 
   /* parse parameters from the command line and get files to convert */
   mcformat_parseoptions(argc, argv);
+
+  if (!files_to_convert_NB) {  mcformat_usage(argv[0]); exit(-1); }
   if (!mcformat_data.Name && !strcmp(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
 
@@ -1511,7 +1513,6 @@ int main(int argc, char *argv[])
     mcformat_merge_compare(mcnbconvert);
     /* iterative call to output routine for remaining elements of Files_to_Merge */
     mcformat_merge_output(mcnbconvert);
-
     if (Files_to_Merge) memfree(Files_to_Merge);
     if (Scans_to_merge) memfree(Scans_to_merge);
   }
@@ -1521,15 +1522,17 @@ int main(int argc, char *argv[])
     if (!mcdircount) mcsiminfo_close();
     else {
       for (j=0; j<mcdircount; j++) {
-        mcdirname = mcdirnames[j];
-        mcsiminfo_file     = mcsimfiles[j];
-        strncpy(mcinstrument_source, str_last_word(mcinstrnames[j]), MAX_LENGTH);
-        strncpy(mcinstrument_name  , str_last_word(mcsources[j]), MAX_LENGTH);
-        mcsiminfo_close();
-        mcsimfiles[j] = NULL;
-        memfree(mcinstrnames[j]);
-        memfree(mcsources[j]);
-        memfree(mcdirnames[j]);
+        if (mcsimfiles[j]) {
+          mcdirname = mcdirnames[j];
+          mcsiminfo_file     = mcsimfiles[j];
+          strncpy(mcinstrument_source, str_last_word(mcinstrnames[j]), MAX_LENGTH);
+          strncpy(mcinstrument_name  , str_last_word(mcsources[j]), MAX_LENGTH);
+          mcsiminfo_close();
+          mcsimfiles[j] = NULL;
+          memfree(mcinstrnames[j]);
+          memfree(mcsources[j]);
+          memfree(mcdirnames[j]);
+        }
       }
       memfree(mcdirnames);
       memfree(mcsimfiles);
