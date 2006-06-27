@@ -112,6 +112,7 @@ else if test "$PGPLOT" == "no" ; then
   echo "To install PGPLOT for McStas, you need:"
   echo "= perl-PDL (perldl)"
   echo "= a fortran compiler (g77, gfortran)"
+  echo "= X11-dev libraries/includes"
   echo "Install these and re-run McStas installation ./configure"
   fi
 fi
