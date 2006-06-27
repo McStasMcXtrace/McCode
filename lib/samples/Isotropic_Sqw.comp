@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.38 $
+* Version: $Revision: 1.39 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
@@ -35,9 +35,13 @@
 * An automatic such process may be activated when 'auto_qw=1'.
 * On the other hand, if the input S(q,w) data is too restricted in q, the
 * scattering conditions will be limited, leading to incomplete result.
-* Best conditions are get the widest S(q,w) data and use 'auto_qw=1'.
+* Best conditions are to get the widest S(q,w) data and use 'auto_qw=1'.
 * Additionally, for single order scattering (order=1), you may restrict the
 * vertical spreading of the scattering area using d_phi parameter.
+*
+* An important option to enhance statistics is to set 'p_interact' to, say,
+* 30 percent (0.3) in order to force a fraction of the beam to scatter. This
+* will result on a larger number of scattered events, retaining intensity.
 *
 * If you use this component and produce valuable scientific results, please
 * cite authors with references bellow (in <a href="#links">Links</a>).
@@ -158,7 +162,7 @@
 *
 * OPTIONAL PARAMETERS:
 * auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
-*                   to optimal setting whenever required (recommanded).
+*                   to optimal setting whenever required.
 * concentric:   [1] Indicates that this component in a hollow geometry
 *                   and may contain other components.
 *                   It should then be duplicated after the inside part.
@@ -179,6 +183,8 @@
 * threshold:    [1] Value under which S(Q,w) is not accounted for.
 *                     to set according to the S(Q,w) values ,i.e. not too low.
 * interpolate:  [1] Performs (q,w) smoothing from S(q,w) if true (recommanded).
+* p_interact:   [1] Force a given fraction of the beam to scatter, keeping
+*                   intensity right, to enhance small signals (-1 unactivate).
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
@@ -220,7 +226,7 @@ DEFINE COMPONENT Isotropic_Sqw
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-    interpolate=1)
+    interpolate=1, p_interact=-1)
   OUTPUT PARAMETERS (VarSqw, columns)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -1313,6 +1319,7 @@ int    flag_concentric=0;
 double my_t=0;
 double p_mult=1;
 double alpha, alpha0;
+double mc_trans, p_trans, mc_interact;
 struct Sqw_Data_struct Data_sqw;
 
 
@@ -1419,21 +1426,33 @@ do { /* Main interaction loop. Ends with intersect=0 */
     /* Proba of scattering vs absorption */
     ws = VarSqw.my_s/my_t;  /* (inc+coh)/(inc+coh+abs) */
     /* Proba of interacting along length d_path */
-    wi = 1 - exp(-my_t*d_path);
+    p_trans = exp(-my_t*d_path);
+    wi = 1 - p_trans;
 
     flag = 0; /* flag used for propagation to exit point before ending */
 
-    /* are we next to the exit ? probably no scattering */
+    /* are we next to the exit ? probably no scattering (avoid rounding errors) */
     if (VarSqw.my_s*d_path <= 4e-7) {
       flag = 1;
       p_mult *= 1 - wi; /* No interaction before the exit */
     }
+    /* force a given fraction of beam to scatter */
+    if (!SCATTERED && p_interact>0 && p_interact<1) {
+      /* not scattered yet, but we force a portion of the beam to interact */
+      /* This is used to improve statistics on single scattering (and multiple) */
+      mc_trans = 1-p_interact;
+    } else {
+      mc_trans = p_trans;
+    }
+    mc_interact = 1 - mc_trans;
+    if (mc_interact <= 0 || mc_interact>1) flag=1;
     /* MC choice: Interaction or transmission ? */
-    if (!flag && wi > 0 && (wi >= 1 || (tmp=rand01()) < wi)) { /* Interaction neutron/sample */
+    if (!flag && mc_interact > 0 && (mc_interact >= 1 || (tmp=rand01()) < mc_interact)) { /* Interaction neutron/sample */
       p_mult *= ws; /* Update weight ; account for absorption and scatter */
     } else {
       flag = 1; /* Transmission : no interaction neutron/sample */
       if (!VarSqw.type) VarSqw.type = 't';
+      p_mult *= p_trans/mc_trans;
     }
 
     if (flag) { /* propagate to exit of sample and finish */
@@ -1448,6 +1467,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
     VarSqw.mean_scatt += (1-exp(-VarSqw.my_s*d_path))*p;
     VarSqw.mean_abs   += (1-ws)*p;
     VarSqw.psum       += p;
+
+    if (!SCATTERED && p_interact >0 && p_interact<1) p_mult *= fabs(wi/mc_interact);
 
     /* Decaying exponential distribution of the path length before scattering */
     /* Select a point at which to scatter the neutron, taking
