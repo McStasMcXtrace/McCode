@@ -73,13 +73,11 @@
 @mcdoc.pl --text
 @echo Placing Mcstas.pm in perl tree....
 @support\win32\perlinst.pl Tk\CodeText\Bash.pm support\Tk-CodeText-0.3.4\CodeText\McStas.pm
-@echo ..............................................................
-@echo Please remember to add %MCSTAS_SITE%\bin to your PATH!
-@echo Also, set the MCSTAS environment variable to %MCSTAS_SITE%\lib
-@echo .
-@echo To do that, access from the Windows Start manu:
-@echo .
-@echo   Start/Settings/Control Panel/System/Advanced/Environment Variables
+@echo ...............................................................
+@echo Modifying Windows registry for MCSTAS and PATH system variables
+@echo ...............................................................
+@reg add HKCU\Environment /v MCSTAS /d %MCSTAS_SITE%\lib
+@reg add HKCU\Environment /v PATH /d "%MCSTAS_SITE%\bin;%PATH%"
 @echo ..............................................................
 @echo Start McStas with the command mcgui.pl. You may create a shortcut to
 @echo this program situated in %MCSTAS_SITE%\bin. Put it on your Desktop.
