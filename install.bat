@@ -45,6 +45,13 @@
 @echo ...
 @echo Use Ctrl-C if you want to break this script to install these packages or
 @pause
+@if "%DEVBIN%"=="" set DEVBIN=c:\Dev-CPP\bin
+@SET /P DEVBIN=Where is your Dev-CPP installation? (default is %DEVBIN%):
+@if "%PERLBIN%"=="" set PERLBIN=c:\perl\bin
+@SET /P PERLBIN=Where is your perl.exe? (default is %PERLBIN%):
+@if "%SCIBIN%"=="" set SCIBIN=c:\progra~1\scilab-4.0\bin
+@SET /P PERLBIN=Where is your Scilab? (default is %SCIBIN%):
+@set PATH=%PERLBIN%;%SCIBIN%;%DEVBIN%;%PATH%
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
 @SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%):
 @echo Trying to guess your plotter and configuration...
@@ -79,8 +86,12 @@
 @reg add HKCU\Environment /v MCSTAS /d "%MCSTAS_SITE%\lib" /f
 @reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH /d "%MCSTAS_SITE%\bin;%PATH%" /f /t REG_EXPAND_SZ
 @echo ..............................................................
-@echo Start McStas with the command mcgui.pl. You may create a shortcut to
-@echo this program situated in %MCSTAS_SITE%\bin. Put it on your Desktop.
+@echo .
+@echo Please log off and on again to finish the McStas setup!
+@echo .
+@echo After that, start McStas with the command mcgui.pl. You may create a 
+@echo shortcut to this program situated in %MCSTAS_SITE%\bin. Put it on your 
+@echo Desktop.
 @echo .
 @echo Thanks for using McStas. End of the installation.
 @pause
