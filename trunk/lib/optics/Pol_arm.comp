@@ -1,0 +1,72 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pol_arm
+*
+* %I
+*
+* Written by: Peter Christiansen
+* Date: July 2006
+* Version: $Revision: 1.1 $
+* Release: McStas 1.10
+* Origin: RISOE
+*
+* Polariser arm.
+*
+* %D 
+* This arm works as a normal arm (sets up a new coordinate
+* system), but also sets the polarisation!
+* By default it sets the polarisation vector to (0, 0, 0) = unpolarized. 
+*
+* If the flag randomOn is switched on random pointing Polarization vectors 
+* with unit length are generated.
+*
+* %P
+* Input parameters:
+*
+* randomOn:       Generate random values if randomOn!=0. 
+*
+* (none)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pol_arm
+DEFINITION PARAMETERS (randomOn=0)
+SETTING PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+TRACE
+%{
+  double theta, phi;
+
+  sx = 0; 
+  sy = 0;
+  sz = 0;
+
+  if(randomOn!=0) {
+    
+    theta = 2*PI*rand01(); // 0-2*PI
+    phi   = acos(2*rand01()-1); // 0-PI 
+    
+    sx = sin(phi)*cos(theta);
+    sy = sin(phi)*sin(theta);
+    sz = cos(phi);
+  }
+%}
+
+MCDISPLAY
+%{
+  /* A bit ugly; hard-coded dimensions. */
+  magnify("");
+  line(0,0,0,0.2,0,0);
+  line(0,0,0,0,0.2,0);
+  line(0,0,0,0,0,0.2);
+%}
+
+END
