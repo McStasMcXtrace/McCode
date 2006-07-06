@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -29,6 +29,9 @@
 * This target position will be set to its AT position. When targeting to
 * centered components, such as spheres or cylinders, define an Arm component
 * where to focus to.
+*
+* Peter Christiansen: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P 
+* NB! As above multiple scattering is ignored .
 *
 * Example: V_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,pack=1,
 *           target_index=1)
@@ -79,6 +82,7 @@ SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0,
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=13.827, int target_index=0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
@@ -240,6 +244,12 @@ TRACE
       /* We do not consider scattering from 2nd part (outgoing) */
       p /= 4*PI/solid_angle;
       p /= frac;
+
+      /* Polarisation part (1/3 NSF, 2/3 SF) */
+      sx *= -1.0/3.0;
+      sy *= -1.0/3.0;
+      sz *= -1.0/3.0;
+	
       SCATTER;
     }
   else /* Transmitting */
