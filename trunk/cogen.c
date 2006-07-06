@@ -12,11 +12,18 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.60 $
+* Version: $Revision: 1.61 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.60  2006/04/19 13:06:25  farhi
+* * Updated Release, Version and Origin fields in headers
+* * Improved setversion to update all McStasx.y occurencies into current release
+* * Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
+* * Added possibility to save log of the session to a file (appended) in mcgui
+* * Made Scilab use either TCL_EvalStr or TK_EvalStr
+*
 * Revision 1.59  2006/04/06 08:46:20  farhi
 * NEW GRAMMAR: JUMP WHEN ITERATE COPY ...
 * need doc in TeX now...
@@ -105,7 +112,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.60 2006-04-19 13:06:25 farhi Exp $
+* $Id: cogen.c,v 1.61 2006-07-06 08:58:36 pchr Exp $
 *
 *******************************************************************************/
 
@@ -1390,6 +1397,8 @@ cogen_mcdisplay(struct instr_def *instr)
   cout("#define magnify mcdis_magnify");
   cout("#define line mcdis_line");
   cout("#define multiline mcdis_multiline");
+  cout("#define rectangle mcdis_rectangle");
+  cout("#define box mcdis_box");
   cout("#define circle mcdis_circle");
   coutf("void %sdisplay(void) {", ID_PRE);
   cout("  printf(\"MCDISPLAY: start\\n\");");
@@ -1419,6 +1428,8 @@ cogen_mcdisplay(struct instr_def *instr)
   cout("#undef magnify");
   cout("#undef line");
   cout("#undef multiline");
+  cout("#undef rectangle");
+  cout("#undef box");
   cout("#undef circle");
 } /* cogen_mcdisplay */
 
