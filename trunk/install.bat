@@ -85,6 +85,7 @@
 @echo ...............................................................
 @reg add HKCU\Environment /v MCSTAS /d "%MCSTAS_SITE%\lib" /f
 @reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH /d "%MCSTAS_SITE%\bin;%PATH%" /f /t REG_EXPAND_SZ
+@reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATHEXT /d "%PATHEXT%;.pl%" /f /t REG_EXPAND_SZ
 @echo ..............................................................
 @echo .
 @echo Please log off and on again to finish the McStas setup!
