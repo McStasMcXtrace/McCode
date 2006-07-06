@@ -509,11 +509,12 @@ sub run_dialog {
     $w->fileevent($fh, 'readable', $reader);
     $status_label->configure(-text => "Status: Running $text");
     my $savefocus = run_dialog_popup($dlg);
-    $dlg->Busy();
+# Here, we ought to set the $dlg Busy/Unbusy, cause of trouble on Win32.
+#    $dlg->Busy();
     do {
         $w->waitVariable(\$state);
     } until $state;
-    $dlg->Unbusy;
+#    $dlg->Unbusy;
     run_dialog_retract($dlg, $savefocus);
     my $status = close($fh);
     $status_label->configure(-text => "Status: Done");
