@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.81 $
+* Version: $Revision: 1.82 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,13 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.81 2006-05-19 14:17:40 farhi Exp $
+* $Id: mcstas-r.h,v 1.82 2006-07-06 08:59:21 pchr Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.81  2006/05/19 14:17:40  farhi
+*       Added support for multi threading with --threads=NB option for mcrun or instr.out
+*       Requires new option in mcgui run dialog: a popup menu to select run mode ?
+*
 *       Revision 1.80  2006/04/05 11:45:05  pkwi
 *       Need to include <sys/stat.h> on FreeBSD 6.0 / PC-BSD (maybe also other bsd's?!) for prototype declaration of mkdir call...
 *
@@ -174,7 +178,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.81 $"
+#define MCSTAS_R_H "$Revision: 1.82 $"
 
 #include <math.h>
 #include <string.h>
@@ -710,7 +714,10 @@ void mcdisplay(void);
 void mcdis_magnify(char *);
 void mcdis_line(double, double, double, double, double, double);
 void mcdis_multiline(int, ...);
+void mcdis_rectangle(char *, double, double, double, double, double);
+void mcdis_box(double, double, double, double, double, double);
 void mcdis_circle(char *, double, double, double, double);
+
 
 typedef int mc_int32_t;
 mc_int32_t mc_random(void);
@@ -743,6 +750,7 @@ void mcgenstate(void);
 double randnorm(void);
 void normal_vec(double *nx, double *ny, double *nz,
     double x, double y, double z);
+int inside_rectangle(double, double, double, double); 
 int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
     double vx, double vy, double vz, double dx, double dy, double dz);
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,

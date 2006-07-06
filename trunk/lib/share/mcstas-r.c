@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.132 $
+* Version: $Revision: 1.133 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.132 2006-06-01 09:12:45 farhi Exp $
+* $Id: mcstas-r.c,v 1.133 2006-07-06 08:59:21 pchr Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.132  2006/06/01 09:12:45  farhi
+* Correct bug related to event for run_num > ncount
+* Now forces simulation to finish both in Virtual_input and mcraytrace()
+*
 * Revision 1.131  2006/05/29 11:51:02  farhi
 * Fixed thread joining that caused SEGV when using many threads
 *
@@ -2870,19 +2874,68 @@ void mcdis_line(double x1, double y1, double z1,
 void mcdis_multiline(int count, ...){
   va_list ap;
   double x,y,z;
-
+  
   printf("MCDISPLAY: multiline(%d", count);
   va_start(ap, count);
   while(count--)
-  {
+    {
     x = va_arg(ap, double);
     y = va_arg(ap, double);
     z = va_arg(ap, double);
     printf(",%g,%g,%g", x, y, z);
-  }
+    }
   va_end(ap);
   printf(")\n");
 }
+
+void mcdis_rectangle(char* plane, double x, double y, double z, 
+		     double width, double height){
+  // draws a rectangle in the plane
+  // x is ALWAYS width and y is ALWAYS height 
+  if (strcmp("xy", plane)==0) {
+    mcdis_multiline(5, 
+		    x - width/2, y - height/2, z,
+		    x + width/2, y - height/2, z,
+		    x + width/2, y + height/2, z,
+		    x - width/2, y + height/2, z,
+		    x - width/2, y - height/2, z);
+  } else if (strcmp("xz", plane)==0) {
+    mcdis_multiline(5, 
+		    x - width/2, y, z - height/2,
+		    x + width/2, y, z - height/2,
+		    x + width/2, y, z + height/2,
+		    x - width/2, y, z + height/2,
+		    x - width/2, y, z - height/2);
+  } else if (strcmp("yz", plane)==0) {
+    mcdis_multiline(5, 
+		    x, y - height/2, z - width/2,
+		    x, y - height/2, z + width/2,
+		    x, y + height/2, z + width/2,
+		    x, y + height/2, z - width/2,
+		    x, y - height/2, z - width/2);
+  } else {
+      
+    fprintf(stderr, "Error: Definition of plane %s unknown\n", plane);
+    exit(1);
+  } 
+}    
+
+/*  draws a box with center at (x, y, z) and
+    width (deltax), height (deltay), length (deltaz) */
+void mcdis_box(double x, double y, double z, 
+	       double width, double height, double length){
+
+  mcdis_rectangle("xy", x, y, z-length/2, width, height); 
+  mcdis_rectangle("xy", x, y, z+length/2, width, height); 
+  mcdis_line(x-width/2, y-height/2, z-length/2,
+	     x-width/2, y-height/2, z+length/2); 
+  mcdis_line(x-width/2, y+height/2, z-length/2,
+	     x-width/2, y+height/2, z+length/2); 
+  mcdis_line(x+width/2, y-height/2, z-length/2,
+	     x+width/2, y-height/2, z+length/2); 
+  mcdis_line(x+width/2, y+height/2, z-length/2,
+	     x+width/2, y+height/2, z+length/2); 
+}    
 
 void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
@@ -3615,6 +3668,16 @@ void normal_vec(double *nx, double *ny, double *nz,
   *nx = y/l;
   *ny = -x/l;
   *nz = 0;
+}
+
+/* inside_rectangle: Check if (x,y) is inside rectangle (xwidth, yheight) */
+/* return 0 if outside and 1 if inside */
+int inside_rectangle(double x, double y, double xwidth, double yheight)
+{
+  if (x>-xwidth/2 && x<xwidth/2 && y>-yheight/2 && y<yheight/2)
+    return 1;
+  else
+    return 0;
 }
 
 /* box_intersect: compute time intersection with a box
