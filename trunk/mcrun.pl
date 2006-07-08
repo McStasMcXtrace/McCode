@@ -947,7 +947,7 @@ sub do_scan_multi {
     my $stop = 0;
     my $output_opt = $data_dir ? "--dir=$data_dir" : "--no-output-files";
     my @extras = (@options, map("$_=$vals{$_}", @params), $output_opt, "--format=$MCSTAS::mcstas_config{'PLOTTER'}");
-    $out_file = get_out_file($sim_def, $force_compile, @ccopts);
+    $out_file = get_out_file($sim_def, $force_compile, $mpi, $threads, @ccopts);
     # Create local tmpdir...
     my_system("mkdir $tmpdir/","mcrun: dir there already?");
     print STDOUT "Spawning child mcrun's...\n";
@@ -1128,7 +1128,7 @@ if ($exec_test) {
 }
 
 our $scan_info = check_input_params(); # Get variables to scan, if any
-$out_file = get_out_file($sim_def, $force_compile, @ccopts);
+$out_file = get_out_file($sim_def, $force_compile, $mpi, $threads, @ccopts);
 exit(1) unless $out_file;
 exit(1) if $ncount == 0;
 

@@ -127,7 +127,7 @@ sub get_sim_info {
 # results is an error message.
 #
 sub get_out_file_init {
-    my ($inname, $force, $mpi, $threads) = @_;
+    my ($inname, $force, $mpi, $threads, @ccopts) = @_;
     return (undef, "mcrun: No simulation filename given") unless $inname;
     # Add a default extension of ".instr" if given name does not exist
     # as file.
@@ -161,6 +161,7 @@ sub get_out_file_init {
     $v->{'force'} = $force;
     $v->{'mpi'} = $mpi;
     $v->{'threads'} = $threads;
+    $v->{'ccopts'} = join(" ",@ccopts);
     $v->{'file_type'} = $file_type;
     $v->{'dir'} = $dir;
     $v->{'sim_def'} = $sim_def;
@@ -206,6 +207,7 @@ sub get_out_file_next {
   my $stage = $v->{'stage'};
   my $mpi   = $v->{'mpi'};
   my $threads   = $v->{'threads'};
+  my $ccopts = $v->{'ccopts'};
   if($stage eq PRE_MCSTAS) {
     # Translate simulation definition into C if newer than existing C
     # version.
@@ -257,10 +259,10 @@ sub get_out_file_next {
       # ToDo: splitting CFLAGS should handle shell quoting as well ...
       my $cc     = $MCSTAS::mcstas_config{CC};
       my $cflags = $MCSTAS::mcstas_config{CFLAGS};
-      if ($v->{'threads'}) {
+      if ($v->{'threads'} && $MCSTAS::mcstas_config{THREADS} ne "no") {
         $cflags .= " -DUSE_THREADS -lpthread ";
       }
-      if ($v->{'mpi'}) {
+      if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
         $cflags .= " -DUSE_MPI ";
         $cc      = $MCSTAS::mcstas_config{MPICC};
       }
@@ -270,7 +272,7 @@ sub get_out_file_next {
         $c_name="\"$c_name\"";
       }
       my $cmd = [$cc, split(' ', $cflags), "-o",
-                 $out_name, $c_name, "-lm"];
+                 $out_name, $c_name, "-lm", $ccopts];
       &$printer(join(" ", @$cmd));
       $v->{'stage'} = POST_CC;
       return (RUN_CMD, $cmd);
@@ -296,9 +298,9 @@ sub get_out_file_next {
 # The optional $force option, if true, forces unconditional recompilation.
 #
 sub get_out_file {
-    my ($inname, $force, $mpi, $threads) = @_;
+    my ($inname, $force, $mpi, $threads, @ccopts) = @_;
     my ($v, $msg, $status, $value);
-    ($v, $msg) = get_out_file_init($inname, $force, $mpi, $threads);
+    ($v, $msg) = get_out_file_init($inname, $force, $mpi, $threads, @ccopts);
     unless($v) {
         print STDERR "$msg\n";
         return undef;
