@@ -237,12 +237,12 @@ sub parse_args {
     # tests for grid/mpi support
     if ($mpi >= 1 || $multi == 1) {
       if (! -e $MCSTAS::mcstas_config{'HOSTFILE'}) {
-        print STDERR "mcrun: No MPI/grid machine list. MPI/grid disabled...
-     Define $ENV{'HOME'}/.mcstas-hosts
-     or $MCSTAS::mcstas_config{'HOSTFILE'}
-     or use option --machines=<file>!\n";
+        print STDERR "mcrun: No MPI/grid machine list.
+     Grid disabled, MPI will run locally...
+  Define $ENV{'HOME'}/.mcstas-hosts
+  or $MCSTAS::mcstas_config{'HOSTFILE'}
+  or use option --machines=<file>!\n";
         $multi = 0;
-        $mpi   = 0;
         $MCSTAS::mcstas_config{'HOSTFILE'} = "";
       }
       if ($multi == 1 && $MCSTAS::mcstas_config{'SSH'} eq "no") {
@@ -391,9 +391,15 @@ sub exec_sim {
         }
         exec $cmd;
     } else {
-        if ($mpi >= 1) {
-            print "Using $MCSTAS::mcstas_config{'MPIRUN'} -np $mpi -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}  @cmdlist";
-            $cmd = "$MCSTAS::mcstas_config{'MPIRUN'} -np $mpi -machinefile $MCSTAS::mcstas_config{'HOSTFILE'} @cmdlist";
+        if ($mpi >= 1 && $MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
+            print "Using $MCSTAS::mcstas_config{'MPIRUN'} -np $mpi";
+            $cmd = "$MCSTAS::mcstas_config{'MPIRUN'} -np $mpi";
+            if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
+              print " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
+              $cmd .= " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
+            }
+            print " @cmdlist\n";
+            $cmd .= " @cmdlist";
         } else {
             $cmd = "@cmdlist";
         }

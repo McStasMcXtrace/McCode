@@ -259,11 +259,12 @@ sub get_out_file_next {
       # ToDo: splitting CFLAGS should handle shell quoting as well ...
       my $cc     = $MCSTAS::mcstas_config{CC};
       my $cflags = $MCSTAS::mcstas_config{CFLAGS};
+      my $libs = "-lm";
       if ($v->{'threads'} && $MCSTAS::mcstas_config{THREADS} ne "no") {
-        $cflags .= " -DUSE_THREADS -lpthread ";
+        $libs .= " -DUSE_THREADS -lpthread ";
       }
       if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
-        $cflags .= " -DUSE_MPI ";
+        $libs .= " -DUSE_MPI ";
         $cc      = $MCSTAS::mcstas_config{MPICC};
       }
       # Needs quoting on MSWin32:
@@ -271,8 +272,9 @@ sub get_out_file_next {
         $out_name="\"$out_name\"";
         $c_name="\"$c_name\"";
       }
+      if ($ccopts) { $libs .= $ccopts; }
       my $cmd = [$cc, split(' ', $cflags), "-o",
-                 $out_name, $c_name, "-lm", $ccopts];
+                 $out_name, $c_name, split(' ', $libs)];
       &$printer(join(" ", @$cmd));
       $v->{'stage'} = POST_CC;
       return (RUN_CMD, $cmd);
