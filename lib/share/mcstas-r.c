@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.133 $
+* Version: $Revision: 1.134 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.133 2006-07-06 08:59:21 pchr Exp $
+* $Id: mcstas-r.c,v 1.134 2006-07-11 12:21:17 pchr Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.133  2006/07/06 08:59:21  pchr
+* Added new draw methods for rectangle and box.
+*
 * Revision 1.132  2006/06/01 09:12:45  farhi
 * Correct bug related to event for run_num > ncount
 * Now forces simulation to finish both in Virtual_input and mcraytrace()
@@ -3329,7 +3332,8 @@ mcsetstate(double x, double y, double z, double vx, double vy, double vz,
 void
 mcgenstate(void)
 {
-  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
+  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+  // old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1);
 }
 
 /* McStas random number routine. */
@@ -4598,7 +4602,8 @@ mcstas_raytrace(void *p_node_ncount)
   double local_mcrun_num=0;
   while(local_mcrun_num < node_ncount && mcrun_num < mcncount)
   {
-    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1);
+    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+    // old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1);
     mcraytrace();
     local_mcrun_num++;
     mcrun_num ++;
