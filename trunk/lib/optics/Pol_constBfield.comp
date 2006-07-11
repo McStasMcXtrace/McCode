@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -47,16 +47,15 @@
 DEFINE COMPONENT Pol_constBfield
 DEFINITION PARAMETERS (xw, yh, length)
 SETTING PARAMETERS (B=0, fliplambda=0, flipangle=180)
+OUTPUT PARAMETERS(omegaL)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
      
-DECLARE
+SHARE
 %{
-  /*   Larmor frequency */
-  double omegaL = 0;
-
   double IntersectWall(double pos, double vel, double wallpos) {
-    
+    /* Function to calculate where the neutron hit the wall */
+
     if(vel==0)
       return -1;
     
@@ -65,6 +64,13 @@ DECLARE
     else 
       return (-wallpos-pos)/vel;
   }
+  %}
+
+
+DECLARE
+%{
+  /*   Larmor frequency */
+  double omegaL = 0;  
   %}
 
 INITIALIZE
