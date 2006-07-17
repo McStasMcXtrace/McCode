@@ -59,7 +59,7 @@ INITIALIZE
 
 TRACE
 %{
-  double t11, t12, t21, t22, theta, alpha, endtime, phi;
+  double t11, t12, t21, t22, theta, alphaAng, endtime, phi;
   double time, time1, time2, q, R;
   int ii, i_bounce;
 
@@ -101,10 +101,10 @@ TRACE
     switch(i_bounce) {
   case 1:           /* Inside or Outside wall */
             phi   = atan(vx/vz);        /* angle of neutron trajectory */
-    alpha = asin(z/R);      /* angle of guide wall */
-    theta = fabs(phi - alpha);    /* angle of reflection */
-            vz    = vel_xz*cos(2.0*alpha - phi);
-    vx    = vel_xz*sin(2.0*alpha - phi);
+    alphaAng = asin(z/R);      /* angle of guide wall */
+    theta = fabs(phi - alphaAng);    /* angle of reflection */
+            vz    = vel_xz*cos(2.0*alphaAng - phi);
+    vx    = vel_xz*sin(2.0*alphaAng - phi);
     break;
   case 2:       /* Top or Bottom wall */
     theta = fabs(atan(vy/vz));
