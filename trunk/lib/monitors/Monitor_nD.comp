@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.33 $
+* Version: $Revision: 1.34 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -102,6 +102,7 @@
 *     parallel                  Use this option when the next component is at
 *                                the same position (parallel components)
 *     per cm2                   Intensity will be per cm^2
+*     per steradian             Intensity will be per steradian (requires auto)
 *     premonitor                Will monitor neutron parameters stored
 *                                previously with <b>PreMonitor_nD</b>.
 *     signal=[var]              Will monitor [var] instead of usual intensity
@@ -113,7 +114,7 @@
 *                               3He_pressure=0 is perfect detector (default)
 *
 * Detector shape options (specified as xwidth,yheight,zthick or x/y/z/min/max)
-*     box                       Box of size xwidth, yheight, zthick
+*     box                       Box of size xwidth, yheight, zthick.
 *     cylinder                  To get a cylindrical monitor
 *                                (diameter is xwidth, height is yheight).
 *     banana                    Same as cylinder, without top/bottom,
@@ -123,7 +124,9 @@
 *     disk                      Disk flat xy monitor. radius is xwidth.
 *     sphere                    To get a spherical monitor (e.g. a 4PI)
 *                                (diameter is xwidth).
-*     square                    Square flat xy monitor (xwidth, yheight)
+*     square                    Square flat xy monitor (xwidth, yheight).
+*     previous                  The monitor uses PREVIOUS component as detector
+*                               surface.
 *
 * <b>EXAMPLES:</b>
 * MyMon = Monitor_nD(
@@ -286,6 +289,8 @@ TRACE
   {
     intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, fabs(Vars.mxmax-Vars.mxmin), fabs(Vars.mymax-Vars.mymin), fabs(Vars.mzmax-Vars.mzmin));
   }
+  else if (abs(Vars.Flag_Shape) == SHAPE_PREVIOUS) /* previous comp */
+  { intersect = 1; }
 
   if (intersect)
   {
@@ -327,7 +332,6 @@ TRACE
       p *= XY;
     }
 
-    if (Vars.Flag_per_cm2 && Vars.area != 0) Vars.cp /= Vars.area;
     if (Vars.Flag_capture)
     {
       XY = sqrt(Vars.cvx*Vars.cvx+Vars.cvy*Vars.cvy+Vars.cvz*Vars.cvz);

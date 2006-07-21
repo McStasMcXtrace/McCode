@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions.
@@ -20,9 +20,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.14 2005-08-24 13:14:40 lieutenant Exp $
+* $Id: monitor_nd-lib.h,v 1.15 2006-07-21 09:03:23 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.14  2005/08/24 13:14:40  lieutenant
+* new option 'exclusive'
+*
 * Revision 1.13  2005/07/25 14:55:08  farhi
 * DOC update:
 * checked all parameter [unit] + text to be OK
@@ -123,7 +126,7 @@
 
   typedef struct MonitornD_Variables
   {
-    double area;
+    double area, steradian;
     double Sphere_Radius     ;
     double Cylinder_Height   ;
     char   Flag_With_Borders ;   /* 2 means xy borders too */
@@ -135,6 +138,7 @@
     char   Flag_Absorb       ;   /* monitor is also a slit */
     char   Flag_Exclusive    ;   /* absorb neutrons out of monitor limits */
     char   Flag_per_cm2      ;   /* flux is per cm2 */
+    char   Flag_per_st       ;   /* flux is per steradian */
     char   Flag_log          ;   /* log10 of the flux */
     char   Flag_parallel     ;   /* set neutron state back after detection (parallel components) */
     char   Flag_Binary_List  ;
@@ -177,6 +181,7 @@
     double *Mon2D_Buffer;
 
     double mxmin,mxmax,mymin,mymax,mzmin,mzmax;
+    double mean_dx, mean_dy, min_x, min_y, max_x, max_y, mean_p;
 
     char   compcurname[128];
     Coords compcurpos;
