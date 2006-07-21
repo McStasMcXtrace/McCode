@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions.
@@ -20,9 +20,14 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.15 2006-07-21 09:03:23 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.16 2006-07-21 14:09:07 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.15  2006/07/21 09:03:23  farhi
+* Added in options'per steradian' flux estimate, and possibility to glue the
+* monitor to the shape of the 'previous' component (unactivate propagation), so
+* that we can mnonitor what's going on at the output surface of the previous comp.
+*
 * Revision 1.14  2005/08/24 13:14:40  lieutenant
 * new option 'exclusive'
 *
@@ -121,6 +126,7 @@
     char SHAPE_CYLIND;
     char SHAPE_BANANA; /* cylinder without top/bottom, on restricted angular area */
     char SHAPE_BOX   ;
+    char SHAPE_PREVIOUS;
 
   } MonitornD_Defines_type;
 
