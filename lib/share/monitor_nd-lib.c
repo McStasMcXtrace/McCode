@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.34 $
+* Version: $Revision: 1.35 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.34 2006-03-15 16:01:43 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.35 2006-07-21 09:03:23 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.34  2006/03/15 16:01:43  farhi
+* 'keyword ignored' warning only in verbose mode
+*
 * Revision 1.33  2005/12/12 13:42:11  farhi
 * Corrected bug on multiple limits specifications (K. Lieutenant)
 *
@@ -206,6 +209,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_DEFS->SHAPE_CYLIND =3;
     mc_mn_DEFS->SHAPE_BANANA =4;
     mc_mn_DEFS->SHAPE_BOX    =5;
+    mc_mn_DEFS->SHAPE_PREVIOUS=6;
 
     mc_mn_Vars->Sphere_Radius     = 0;
     mc_mn_Vars->Cylinder_Height   = 0;
@@ -218,6 +222,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_Vars->Flag_Absorb       = 0;   /* monitor is also a slit */
     mc_mn_Vars->Flag_Exclusive    = 0;   /* absorb neutrons out of monitor limits */
     mc_mn_Vars->Flag_per_cm2      = 0;   /* flux is per cm2 */
+    mc_mn_Vars->Flag_per_st       = 0;   /* flux is per steradian (in Auto mode only) */
     mc_mn_Vars->Flag_log          = 0;   /* log10 of the flux */
     mc_mn_Vars->Flag_parallel     = 0;   /* set neutron state back after detection (parallel components) */
     mc_mn_Vars->Flag_Binary_List  = 0;   /* save list as a binary file (smaller) */
@@ -232,6 +237,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_Vars->IntermediateCnts  = 0;
     mc_mn_Vars->Flag_capture      = 0;
     mc_mn_Vars->Flag_signal       = mc_mn_DEFS->COORD_P;
+    mc_mn_Vars->mean_dx=mc_mn_Vars->mean_dy=0;
+    mc_mn_Vars->min_x = mc_mn_Vars->max_x  =0;
+    mc_mn_Vars->min_y = mc_mn_Vars->max_y  =0;
+    mc_mn_Vars->steradian=0;
 
     mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE;
     mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR;
@@ -279,14 +288,14 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     }
 
     if (strstr(mc_mn_Vars->option, "cm2") || strstr(mc_mn_Vars->option, "cm^2")) mc_mn_Vars->Flag_per_cm2 = 1;
+    if (strstr(mc_mn_Vars->option, "steradian")) mc_mn_Vars->Flag_per_st = 1;
 
     if (strstr(mc_mn_Vars->option, "binary") || strstr(mc_mn_Vars->option, "float"))
       mc_mn_Vars->Flag_Binary_List  = 1;
     if (strstr(mc_mn_Vars->option, "double"))
       mc_mn_Vars->Flag_Binary_List  = 2;
 
-    if (mc_mn_Vars->Flag_per_cm2) strncpy(mc_mn_Vars->Coord_Label[0],"Intensity [n/cm^2/s]",30);
-    else strncpy(mc_mn_Vars->Coord_Label[0],"Intensity [n/s]",30);
+    strcpy(mc_mn_Vars->Coord_Label[0],"Intensity");
     strncpy(mc_mn_Vars->Coord_Var[0],"p",30);
     mc_mn_Vars->Coord_Type[0] = mc_mn_DEFS->COORD_P;
     mc_mn_Vars->Coord_Bin[0] = 1;
@@ -389,6 +398,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         if (!strcmp(mc_mn_token, "square")) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "disk"))   { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_DISK; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "box"))     { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_BOX; mc_mn_iskeyword=1; }
+        if (!strcmp(mc_mn_token, "previous")) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_PREVIOUS; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "parallel")){ mc_mn_Vars->Flag_parallel = 1; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "capture")) { mc_mn_Vars->Flag_capture = 1; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "auto") && (mc_mn_Flag_auto != -1)) {
@@ -432,10 +442,19 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_T; strcpy(mc_mn_Set_Vars_Coord_Label,"TOF [s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"t"); mc_mn_lmin = 0; mc_mn_lmax = .1; }
         if ((!strcmp(mc_mn_token, "p") || !strcmp(mc_mn_token, "intensity") || !strcmp(mc_mn_token, "flux")))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_P;
-            if (mc_mn_Vars->Flag_per_cm2) strcpy(mc_mn_Set_Vars_Coord_Label,"Intensity [n/cm^2/s]");
-            else strcpy(mc_mn_Set_Vars_Coord_Label,"Intensity [n/s]");
+            strcpy(mc_mn_Set_Vars_Coord_Label,"Intensity");
+            strncat(mc_mn_Set_Vars_Coord_Label, " [n/s", 30);
+            if (mc_mn_Vars->Flag_per_cm2) strncat(mc_mn_Set_Vars_Coord_Label, "/cm2", 30);
+            if (mc_mn_Vars->Flag_per_st) {
+              if (mc_mn_Vars->Flag_Auto_Limits)
+                strncat(mc_mn_Set_Vars_Coord_Label, "/st", 30);
+            }
+            if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number)
+              strncat(mc_mn_Set_Vars_Coord_Label, "/bin", 30);
+            strncat(mc_mn_Set_Vars_Coord_Label, "]", 30);
             strcpy(mc_mn_Set_Vars_Coord_Var,"I");
-            mc_mn_lmin = 0; mc_mn_lmax = FLT_MAX; }
+            mc_mn_lmin = 0; mc_mn_lmax = FLT_MAX;
+          }
 
         if (!strcmp(mc_mn_token, "vx"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VX; strcpy(mc_mn_Set_Vars_Coord_Label,"vx [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"vx"); mc_mn_lmin = -1000; mc_mn_lmax = 1000; }
@@ -518,7 +537,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
             if (strcmp(mc_mn_token, "cm2") && strcmp(mc_mn_token, "incoming")
              && strcmp(mc_mn_token, "outgoing") && strcmp(mc_mn_token, "cm2")
              && strcmp(mc_mn_token, "cm^2") && strcmp(mc_mn_token, "float")
-             && strcmp(mc_mn_token, "double") && strcmp(mc_mn_token, "binary") && mc_mn_Vars->Flag_Verbose)
+             && strcmp(mc_mn_token, "double") && strcmp(mc_mn_token, "binary")
+             && strcmp(mc_mn_token, "steradian") && mc_mn_Vars->Flag_Verbose)
               printf("Monitor_nD: %s: unknown '%s' keyword in 'options'. Ignoring.\n", mc_mn_Vars->compcurname, mc_mn_token);
           }
         }
@@ -607,9 +627,23 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       mc_mn_XY *= mc_mn_Vars->Coord_Bin[mc_mn_i];
     } /* end for mc_mn_Short_Label */
 
+    if ((mc_mn_Vars->Coord_Type[0] & 31) == mc_mn_DEFS->COORD_P) {
+      strncat(mc_mn_Vars->Coord_Label[0], " [n/s", 30);
+      if (mc_mn_Vars->Flag_per_cm2) strncat(mc_mn_Vars->Coord_Label[0], "/cm2", 30);
+      if (mc_mn_Vars->Flag_per_st) {
+        if (mc_mn_Vars->Flag_Auto_Limits)
+          strncat(mc_mn_Vars->Coord_Label[0], "/st", 30);
+        else
+          printf("Monitor_nD: %s: Flux per steradian requires Auto limits mode\n"
+                 "WARNING     use options='.. auto ...'\n", mc_mn_Vars->compcurname);
+      }
+      if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number)
+        strncat(mc_mn_Vars->Coord_Label[0], "/bin", 30);
+      strncat(mc_mn_Vars->Coord_Label[0], "]", 30);
+    }
+
     /* update label 'signal per bin' if more than 1 bin */
     if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number) {
-      strncat(mc_mn_Vars->Coord_Label[0], " per bin", 30);
       if (mc_mn_Vars->Flag_capture)
         printf("Monitor_nD: %s: Using capture flux weightening on %ld bins.\n"
                "            Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", mc_mn_Vars->compcurname, (long)mc_mn_XY);
@@ -622,6 +656,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) strcat(mc_mn_Vars->Monitor_Label, " (Cylinder)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) strcat(mc_mn_Vars->Monitor_Label, " (Banana)");
     if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX)    strcat(mc_mn_Vars->Monitor_Label, " (Box)");
+    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_PREVIOUS) strcat(mc_mn_Vars->Monitor_Label, " (on PREVIOUS)");
     if ((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX))
     {
       if (strstr(mc_mn_Vars->option, "incoming"))
@@ -722,7 +757,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       mc_mn_Vars->area = PI*mc_mn_Vars->Sphere_Radius*mc_mn_Vars->Sphere_Radius; /* disk shapes */
     }
     if (mc_mn_Vars->area == 0) mc_mn_Vars->Coord_Number = 0;
-    if (mc_mn_Vars->Coord_Number == 0 && mc_mn_Vars->Flag_Verbose)  printf("Monitor_nD: %s is unactivated (0D)\n", mc_mn_Vars->compcurname);
+    if (mc_mn_Vars->Coord_Number == 0 && mc_mn_Vars->Flag_Verbose)
+      printf("Monitor_nD: %s is unactivated (0D)\n", mc_mn_Vars->compcurname);
     mc_mn_Vars->Cylinder_Height = fabs(mc_mn_Vars->mymax - mc_mn_Vars->mymin);
 
     if (mc_mn_Vars->Intermediate < 0) mc_mn_Vars->Intermediate = 0;
@@ -836,6 +872,26 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
     {
       for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
       { /* handle current neutron : last while */
+        if (mc_mn_Vars->Flag_Auto_Limits==1) {
+          double v;
+          v=sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx
+                +mc_mn_Vars->cvy*mc_mn_Vars->cvy
+                +mc_mn_Vars->cvz*mc_mn_Vars->cvz);
+          if (mc_mn_Vars->min_x > mc_mn_Vars->cx) mc_mn_Vars->min_x = mc_mn_Vars->cx;
+          if (mc_mn_Vars->max_x < mc_mn_Vars->cx) mc_mn_Vars->max_x = mc_mn_Vars->cx;
+          if (mc_mn_Vars->min_y > mc_mn_Vars->cy) mc_mn_Vars->min_y = mc_mn_Vars->cy;
+          if (mc_mn_Vars->max_y < mc_mn_Vars->cy) mc_mn_Vars->max_y = mc_mn_Vars->cy;
+          mc_mn_Vars->mean_p  += mc_mn_Vars->cp;
+          if (v) {
+            mc_mn_Vars->mean_dx += mc_mn_Vars->cp*fabs(mc_mn_Vars->cvx/v);
+            mc_mn_Vars->mean_dy += mc_mn_Vars->cp*fabs(mc_mn_Vars->cvy/v);
+          }
+          mc_mn_Vars->area =(mc_mn_Vars->max_x-mc_mn_Vars->min_x)
+                           *(mc_mn_Vars->max_y-mc_mn_Vars->min_y)*1E4; /* cm2 */
+          if (mc_mn_Vars->Flag_per_st)
+          mc_mn_Vars->steradian = 2*fabs(2*atan(mc_mn_Vars->mean_dx/mc_mn_Vars->mean_p)
+                                    *sin(2*atan(mc_mn_Vars->mean_dy/mc_mn_Vars->mean_p)/2));
+        }
 
         mc_mn_XY = 0;
         mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
@@ -945,6 +1001,12 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
     /* store n1d/2d section for Buffer or current neutron in while */
     if (mc_mn_Vars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
     {
+
+      if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area      != 0)
+        mc_mn_pp /= mc_mn_Vars->area;
+      if (mc_mn_Vars->Flag_per_st  && mc_mn_Vars->steradian != 0)
+        mc_mn_pp /= mc_mn_Vars->steradian;
+
     /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
       if (mc_mn_Vars->Flag_Multiple)
       { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors (intensity is not included) */
@@ -1017,6 +1079,14 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     double  mc_mn_ratio;
 
     mc_mn_ratio = 100*mcget_run_num()/mcget_ncount();
+    if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area && mc_mn_Vars->Flag_Verbose)
+      printf("Monitor_nD: %s: detector area is %g [cm2]\n",
+        mc_mn_Vars->compcurname, mc_mn_Vars->area);
+    if (mc_mn_Vars->Flag_per_st && mc_mn_Vars->steradian && mc_mn_Vars->Flag_Verbose)
+      printf("Monitor_nD: %s: beam solid angle is %g [st] (%g x %g [deg2])\n",
+        mc_mn_Vars->compcurname, mc_mn_Vars->steradian,
+        atan(mc_mn_Vars->mean_dx/mc_mn_Vars->mean_p)*RAD2DEG,
+        atan(mc_mn_Vars->mean_dy/mc_mn_Vars->mean_p)*RAD2DEG);
 
     if (mc_mn_ratio < 99)
     {
@@ -1471,7 +1541,8 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,
         mc_mn_restricted = 1; }
     }
 
-    if (!mc_mn_restricted && (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE))
+    if ((!mc_mn_restricted && (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE))
+    || abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_PREVIOUS)
     {
       mcdis_magnify("");
       mcdis_circle("xy",0,0,0,mc_mn_radius);
