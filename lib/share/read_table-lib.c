@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.32 $
+* Version: $Revision: 1.33 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.32 2006-03-15 16:03:27 farhi Exp $
+* $Id: read_table-lib.c,v 1.33 2006-07-21 09:05:05 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.32  2006/03/15 16:03:27  farhi
+* interpolation functions now in the table handling by default.
+* corrected nelements in array length return value of Table_Read_Array
+*
 * Revision 1.31  2006/02/14 15:29:40  farhi
 * Fixed error when importing block number > 1
 *
@@ -548,7 +552,7 @@
 * double Table_Index(t_Table Table, long i, long j)
 *   ACTION: read an element [i,j] of a single Table
 *   input   Table: table containing data
-*           i : index of row      (0:mc_rt_Rows-1)
+*           i : index of row      (0:Rows-1)
 *           j : index of column   (0:Columns-1)
 *   return  Value = data[i][j]
 * Returns Value from the i-th row, j-th column of Table
@@ -648,8 +652,8 @@
 * double Table_Value2d(t_Table Table, double X, double Y)
 *   ACTION: read element [X,Y] of a matrix Table
 *   input   Table: table containing data.
-*           X : column index, may be non integer
-*           Y : row index, may be non integer
+*           X : row index, may be non integer
+*           Y : column index, may be non integer
 *   return  Value = data[index X][index Y] with bi-linear interpolation
 * Returns Value for the indexes [X,Y]
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
@@ -669,7 +673,7 @@
     z21=Table_Index(Table, x2, y1);
     z22=Table_Index(Table, x2, y2);
     return Table_Interp2d(X,Y,
-        x1,x1+1,y1,y1+1,
+        x1,y1,x2,y2,
         z11,z12,z21,z22);
   } /* end Table_Value2d */
 
