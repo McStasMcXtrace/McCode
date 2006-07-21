@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.12 $
+* Version:  $Revision: 1.13 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -349,7 +349,7 @@ INITIALIZE
       mean_k = V2K*mean_v;
       if (mean_k) mean_L = 2*PI/mean_k;
       mean_w = VS2E*mean_v*mean_v;
-      printf("Tripoli4 file %s\nContains %s%g neutrons in %d batches of size %g\n",
+      printf("Tripoli4 file %s\nContains %s%g neutrons in %d batches of size %d\n",
         file, T4_ANALYSE ? "about " : "",
         n_count_extrapolated, nbatch*(filesize-first_batch)/(end_analyse - first_batch), nsize);
       if (n_count_extrapolated > mcget_ncount())
