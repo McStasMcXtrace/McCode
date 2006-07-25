@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.82 $
+* Version: $Revision: 1.83 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.82 2006-07-06 08:59:21 pchr Exp $
+* $Id: mcstas-r.h,v 1.83 2006-07-25 08:49:13 pchr Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.82  2006/07/06 08:59:21  pchr
+*       Added new draw methods for rectangle and box.
+*
 *       Revision 1.81  2006/05/19 14:17:40  farhi
 *       Added support for multi threading with --threads=NB option for mcrun or instr.out
 *       Requires new option in mcgui run dialog: a popup menu to select run mode ?
@@ -178,7 +181,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.82 $"
+#define MCSTAS_R_H "$Revision: 1.83 $"
 
 #include <math.h>
 #include <string.h>
@@ -551,7 +554,7 @@ void   mcsiminfo_close(void);
 #define mcPROP_X0 \
   do { \
     double mc_dt; \
-    if(mcnlvx == 0) { mcAbsorbProp[INDEX_CURRENT_COMP++; ABSORB; }; \
+    if(mcnlvx == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -mcnlx/mcnlvx; \
     if(mc_dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mcnly += mcnlvy*mc_dt; \
@@ -569,7 +572,7 @@ void   mcsiminfo_close(void);
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gy/2, -mcnlvy, -mcnly); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
-    else { if (mcallowbackprop ==0) {mcAbsorbProp[INDEX_CURRENT_COMP++; ABSORB; }}; }\
+    else { if (mcallowbackprop ==0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Y0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -578,9 +581,9 @@ void   mcsiminfo_close(void);
 #define mcPROP_Y0 \
   do { \
     double mc_dt; \
-    if(mcnlvy == 0) { mcAbsorbProp[INDEX_CURRENT_COMP++; ABSORB; }; \
+    if(mcnlvy == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -mcnly/mcnlvy; \
-    if(mc_dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP++; ABSORB; }; \
+    if(mc_dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mcnlx += mcnlvx*mc_dt; \
     mcnlz += mcnlvz*mc_dt; \
     mcnlt += mc_dt; \
