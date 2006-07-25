@@ -11,7 +11,7 @@
 *
 * Written by: Peter Christiansen
 * Date: 2006
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -47,6 +47,8 @@
 * These equations are taken from: 
 * Lovesey: "Theory of neutron scattering from condensed matter, Volume
 * 2", Eq. 10.96 and Eq. 10.110
+*
+* This component works with gravity (uses PROP_X0).
 *
 * Example: Monochromator_pol(zw=0.2, yh=0.2, mosaic=30.0, dspread=0.0025,
 *                            Rup=1.0, Rdown=0.0, Q=1.8734)
@@ -131,77 +133,68 @@ TRACE
   double sx_in, sy_in, sz_in;
   int i;
   
-  /* Moving towards crystal? */
-  if(vx != 0.0 && (dt = -x/vx) >= 0.0) {                             
-    
-    y1 = y + vy*dt;             /* Propagate to crystal plane */
-    z1 = z + vz*dt;
-    t1 = t + dt;
-    
-    if (inside_rectangle(z1, y1, zw, yh)) {/* Intersect the crystal? */
-      
-      // calculate sin(Bragg angle)
-      vel = sqrt(vx*vx + vy*vy + vz*vz);
-      sinTheta = abs(vx)/vel; 
-      
-      // calculate lambdaBragg
-      lambdaBragg = 2.0*DM*sinTheta;
-      
-      // calculate lambda of neutron
-      lambda = 2*PI/(V2K*vel);
-      
-      
-      // calculate deltaLambda squared and sigmaLambda squared
-      dLambda2 = (lambda-lambdaBragg)*(lambda-lambdaBragg);
-      // The sigmaLambda is propagated by differentiating thge bragg 
-      // condition: Lambda = 2*d*sinTheta
-      sigmaLambda2 = 2.0*2.0 * sinTheta*sinTheta * d_rms*d_rms+
-	2.0*2.0 * DM*DM * (1.0-sinTheta*sinTheta) * mos_rms*mos_rms;
-      
-      // calculate peak reflection probability
-      R0 = FN*FN + 2*FN*FM*sy + FM*FM;
-      
-      // calculate reflection probability
-      p_reflect = R0*exp(-dLambda2/(2.0*sigmaLambda2));      
+  /* Propagate to crystal */
+  PROP_X0;
 
-      if(debug > 0) {
-	printf("\n Lambda: %f, Lambda_Bragg: %f\n", lambda, lambdaBragg);
+  if (inside_rectangle(z, y, zw, yh)) {/* Intersect the crystal? */
+    
+    // calculate sin(Bragg angle)
+    vel = sqrt(vx*vx + vy*vy + vz*vz);
+    sinTheta = abs(vx)/vel; 
+    
+    // calculate lambdaBragg
+    lambdaBragg = 2.0*DM*sinTheta;
+    
+    // calculate lambda of neutron
+    lambda = 2*PI/(V2K*vel);
+    
+    
+    // calculate deltaLambda squared and sigmaLambda squared
+    dLambda2 = (lambda-lambdaBragg)*(lambda-lambdaBragg);
+    // The sigmaLambda is propagated by differentiating thge bragg 
+    // condition: Lambda = 2*d*sinTheta
+    sigmaLambda2 = 2.0*2.0 * sinTheta*sinTheta * d_rms*d_rms+
+      2.0*2.0 * DM*DM * (1.0-sinTheta*sinTheta) * mos_rms*mos_rms;
+    
+      // calculate peak reflection probability
+    R0 = FN*FN + 2*FN*FM*sy + FM*FM;
+    
+    // calculate reflection probability
+    p_reflect = R0*exp(-dLambda2/(2.0*sigmaLambda2));      
+    
+    if(debug > 0) {
+      printf("\n Lambda: %f, Lambda_Bragg: %f\n", lambda, lambdaBragg);
 	printf("sigmaLambda: %f, R0: %f, p_reflect: %f\n", 
 	       sqrt(sigmaLambda2), R0, p_reflect);
 	printf("S_in:  (%f, %f, %f)\n", sx, sy, sz);
-      }
-            
-      if((pThreshold>0 && p_reflect>pThreshold) || rand01()<p_reflect) { 
-	/* Reflect */
-	
-	// scale weight if neutron was accepted because of threshold
-	if(pThreshold>0 && p_reflect>pThreshold)
-	  p*=p_reflect;
-	
-	x = 0;
-	y = y1;
-	z = z1;
-	t = t1;
-	vx = -vx;
-	
-	// Outgoing polarisation
-	// Remember that we have asummed that eta-tilde = (0, 1, 0)
-	sx_in = sx;
-	sy_in = sy;
-	sz_in = sz;
-	sx = (FN*FN - FM*FM)*sx_in/R0;
-	sy = ((FN*FN - FM*FM)*sy_in + 2*FN*FM + 2*FM*FM*sy_in)/R0;
-	sz = (FN*FN - FM*FM)*sz_in/R0;
-
-	if(debug > 0)
-	  printf("S_out: (%f, %f, %f)\n", sx, sy, sz);
-
-	assert(sx*sx+sy*sy+sz*sz <= 1);
-	
-	SCATTER;
-      } /* End MC choice to reflect or transmit neutron */
-    } /* End intersect the crystal */
-  } /* End neutron moving towards crystal */
+    }
+    
+    if((pThreshold>0 && p_reflect>pThreshold) || rand01()<p_reflect) { 
+      /* Reflect */
+      
+      // scale weight if neutron was accepted because of threshold
+      if(pThreshold>0 && p_reflect>pThreshold)
+	p*=p_reflect;
+      
+      vx = -vx;
+      
+      // Outgoing polarisation
+      // Remember that we have asummed that eta-tilde = (0, 1, 0)
+      sx_in = sx;
+      sy_in = sy;
+      sz_in = sz;
+      sx = (FN*FN - FM*FM)*sx_in/R0;
+      sy = ((FN*FN - FM*FM)*sy_in + 2*FN*FM + 2*FM*FM*sy_in)/R0;
+      sz = (FN*FN - FM*FM)*sz_in/R0;
+      
+      if(debug > 0)
+	printf("S_out: (%f, %f, %f)\n", sx, sy, sz);
+      
+      assert(sx*sx+sy*sy+sz*sz <= 1);
+      
+      SCATTER;
+    } /* End MC choice to reflect or transmit neutron */
+  } /* End intersect the crystal */
   
   %}
 
