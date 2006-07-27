@@ -8,11 +8,12 @@
 * Component: Virtual_mcnp_input.comp
 
 * %I
-* Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a>
+* Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.1 $
+* Version:  $Revision: 1.2 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
+* Modified by: EF, July 25th 2006: bug fixes.
 *
 * This component uses a file of recorded neutrons from the reactor monte carlo
 * code MCNP as a source of particles.
@@ -28,6 +29,7 @@
 * The component has the ability to center and orient the neutron beam to the Z-axis.
 * It also may change the coordinate system from the MCNP frame to the McStas one.
 * The verbose mode is highly recommanded as it displays lots of useful informations.
+* To obtain absolute intensity, set 'intensity' and 'nps' parameters.
 * The source total 'intensity' is 1.054e18 for LLB/Saclay and 4.28e18 for ILL/Grenoble.
 *
 * Format of MCNP events are :
@@ -40,10 +42,10 @@
 * EXAMPLE:
 * To generate PTRAC files using MCNP/MCNPX, add at the end of your input file:
 *   ptrac         file = asc
-*                 max  = -1000000
+*                 max  = -1000000   // number of neutrons to generate and stop
 *                 write = all
 *                 event = sur
-*                 filter = 2001,jsu
+*                 filter = 2001,jsu // surface id
 * To create a 'source' from a MCNP simulation event file for the ILL:
 * COMPONENT source = Virtual_mcnp_input(
 *    file = "H10p", intensity=4.28e18, nps=11328982,
@@ -57,7 +59,9 @@
 * verbose:      [0|1] Displays additional informations if set to 1
 * intensity:    [n/s] Intensity multiplication factor
 * nps:          [1]   Number of total events shot by MCNP to generate the PTRAC
-*                     as indicated at the end of the MCNP 'o' file, as 'nps ='
+*                     as indicated at the end of the MCNP 'o' file
+*                     as 'source particle weight for summary table normalization'
+*                     or alternatively 'nps = '.
 * autocenter:   [str] String which may contain following keywords.
 *                     "translate" or "center"  to center the beam area AT (0,0,0)
 *                     "rotate"    or "orient"  to center the beam velocity along Z
@@ -167,7 +171,7 @@ int mcnp_get_particle(FILE *hfile,float * tableau,int *old_surface,int *surface_
 				}
 
 				else{
-					fprintf(stderr,"MCNP_input:Error:Unknown file format \n");
+					fprintf(stderr,"MCNP_input: Error: Unknown file format \n");
 					exit_flag=1;
 					return (exit_flag);
 				}
@@ -209,7 +213,7 @@ int mcnp_create_neutron(FILE *hfile, double *x,double *y,double *z,
 
 }
 /* mcnp_get_header:
-   function that gets header lines until the MCNP start of a batch
+   function that gets header lines until the MCNP start of data
  */
 char *mcnp_get_header(FILE *hfile){
   int i;
@@ -354,7 +358,7 @@ INITIALIZE
       mean_k = V2K*mean_v;
       if (mean_k) mean_L = 2*PI/mean_k;
       mean_w = VS2E*mean_v*mean_v;
-      printf("MCNP file %s\nContains %s%g neutrons in %d batches\n",
+      printf("MCNP file %s\nContains %s%g neutrons\n",
         file, MCNP_ANALYSE ? "about " : "",
         n_count_extrapolated);
       if (n_count_extrapolated > mcget_ncount())
@@ -416,7 +420,7 @@ INITIALIZE
     fprintf(stderr, "MCNP_input: %s: Error: file %s neutrons does not contains any neutron. \n",NAME_CURRENT_COMP, file);
     exit(-1);
   }
-  /* reposition at start of file (batch start) */
+  /* reposition at start of file (data start) */
   if (fseek(hfile, begin_neutrons,SEEK_SET)) {
     fprintf(stderr, "MCNP_input: %s: Error: Can not reset MCNP file (fseek error at analyse). \n",NAME_CURRENT_COMP);
     exit_flag = 1;
@@ -464,7 +468,7 @@ TRACE
   if (result_read==EOF) {  /* normal end of file */
     rep++;
     if (rep < repeat_count) {
-      /* reposition at start of file (batch start) */
+      /* reposition at start of file (data start) */
       int ret = fseek(hfile, begin_neutrons,SEEK_SET);
       if (ret) {
         fprintf(stderr, "MCNP_input: %s: Error: Can not repeat MCNP file (fseek error at repeat %d). \n",NAME_CURRENT_COMP, rep);
