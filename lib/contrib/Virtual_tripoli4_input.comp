@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.13 $
+* Version:  $Revision: 1.14 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -65,6 +65,8 @@
 *                     Other words are ignored.
 * T4_ANALYSE:   [1]   Number of neutron events to read for file pre-analysis.
 *                     Use 0 to analyze them all.
+* radius:       [1]   In the case the Tripoli4 batch file is a point, you may
+*                     specify a disk emission area for the source.
 *
 * OUTPUT PARAMETERS
 * head:   [char]        header buffer
@@ -88,7 +90,7 @@
 
 DEFINE COMPONENT Virtual_tripoli4_input
 DEFINITION PARAMETERS (string file=0, string autocenter=0)
-SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1, T4_ANALYSE=10000)
+SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1, T4_ANALYSE=10000, radius=0)
 OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,begin_batch,do_rotate,do_translate,do_axes,
                    bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -289,6 +291,13 @@ INITIALIZE
         exit_flag = 1;
       } else {
         double v;
+        if (radius > 0) /* force a disk source area */
+        {
+          chi=2*PI*rand01();                          /* Choose point on source */
+          r=sqrt(rand01())*radius;                    /* with uniform distribution. */
+          x=r*cos(chi);
+          y=r*sin(chi);
+        }
         mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
         mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz;
         v = sqrt(vx*vx+vy*vy+vz*vz);
@@ -358,6 +367,8 @@ INITIALIZE
         printf("    (limiting simulation to %g neutrons)\n", n_count_extrapolated*repeat_count);
       printf("  Source size (full width in [m]):      ");
       printf("    dX=%g dY=%g dZ=%g\n", max_x-min_x, max_y-min_y, max_z-min_z);
+      if (fabs((max_x-min_x)*(max_y-min_y)) < 1e-6 && radius <= 0)
+        printf("WARNING: source area is a point. Use radius > 0 to make it a disk\n");
       printf("  Source center (in [m]):               ");
       printf("    X0=%g Y0=%g Z0=%g\n", mean_x, mean_y, mean_z);
       printf("  Beam velocity divergence (half width in [deg]):");
@@ -437,6 +448,13 @@ TRACE
       fprintf(stderr,"  Finishing simulation\n");
       exit_flag = 1;
     } else {
+      if (radius > 0) /* force a disk source area */
+      {
+        chi=2*PI*rand01();                          /* Choose point on source */
+        r=sqrt(rand01())*radius;                    /* with uniform distribution. */
+        x=r*cos(chi);
+        y=r*sin(chi);
+      }
       if (do_translate) { /* translate the beam to origin */
         x -= mean_x; y -= mean_y; z -= mean_z;
       }
