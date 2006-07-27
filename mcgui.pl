@@ -445,7 +445,7 @@ sub run_dialog_create {
     my $but = $bot_frame->Button(-text => "Cancel", -command => $cancel_cmd);
     $b->attach($but, -balloonmsg => "Save results\nand Stop/Abort");
     $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
-    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}==0) {
+    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}==0 && $inf_sim->{'cluster'} != 2) {
       $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
       $but->pack(-side => "right");
       $b->attach($but, -balloonmsg => "Save results\nand continue");
@@ -1632,7 +1632,7 @@ $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
 
-$inf_sim->{'cluster'} = 0;
+$inf_sim->{'cluster'} = 0; # single,threads,mpi,ssh
 $inf_sim->{'nodes'}   = 2;
 
 my $open_editor = 0;
