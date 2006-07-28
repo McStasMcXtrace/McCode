@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.14 $
+* Version:  $Revision: 1.15 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -293,6 +293,7 @@ INITIALIZE
         double v;
         if (radius > 0) /* force a disk source area */
         {
+          double chi,r;
           chi=2*PI*rand01();                          /* Choose point on source */
           r=sqrt(rand01())*radius;                    /* with uniform distribution. */
           x=r*cos(chi);
@@ -450,6 +451,7 @@ TRACE
     } else {
       if (radius > 0) /* force a disk source area */
       {
+        double chi,r;
         chi=2*PI*rand01();                          /* Choose point on source */
         r=sqrt(rand01())*radius;                    /* with uniform distribution. */
         x=r*cos(chi);
