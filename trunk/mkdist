@@ -56,6 +56,9 @@ find . -name CVS -exec rm -r \{\} \; 2> /dev/null
 # Remove other unneeded stuff
 rm -rf support/Syntax-Highlight-Perl-1.0
 rm -rf preCVStest*
+# Make sure that all comps and instrs have unix linefeeds
+find . -name \*.comp -exec dos2unix \{\} \;
+find . -name \*.instr -exec dos2unix \{\} \;
 
 # Put in new version info:
 find . -wholename './setversion' -prune -o -type d -o -exec ./setversion \{\} $1 \;
