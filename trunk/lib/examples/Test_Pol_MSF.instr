@@ -8,7 +8,7 @@
 * Date: July 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: tests
 *
 * This instrument demonstrates how to use the Pol_constBfield
@@ -120,13 +120,31 @@ COMPONENT pollambdaMonitor2y =
 PolLambda_monitor(xw=0.1, yh=0.1,
 		  nlam=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=0, my=1, mz=0, filename="pollambdaMon2y.data")
-     AT (0, 0, 0.35) RELATIVE armMSF
+     AT (0, 0, 0.3) RELATIVE armMSF
 
 COMPONENT pollambdaMonitor2z =
 PolLambda_monitor(xw=0.1, yh=0.1,
 		  nlam=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=0, my=0, mz=1, filename="pollambdaMon2z.data")
-     AT (0, 0, 0.40) RELATIVE armMSF
+     AT (0, 0, 0.3) RELATIVE armMSF
+
+COMPONENT mpollambdaMonitor2x =
+MeanPolLambda_monitor(xw=0.1, yh=0.1,
+		      nlam=100, Lmin = 0.0, Lmax = 10.0,
+		      mx=1, my=0, mz=0, filename="mpollambdaMon2x.data")
+     AT (0, 0, 0.3) RELATIVE armMSF
+
+COMPONENT mpollambdaMonitor2y =
+MeanPolLambda_monitor(xw=0.1, yh=0.1,
+		      nlam=100, Lmin = 0.0, Lmax = 10.0,
+		      mx=0, my=1, mz=0, filename="mpollambdaMon2y.data")
+     AT (0, 0, 0.3) RELATIVE armMSF
+
+COMPONENT mpollambdaMonitor2z =
+MeanPolLambda_monitor(xw=0.1, yh=0.1,
+		      nlam=100, Lmin = 0.0, Lmax = 10.0,
+		      mx=0, my=0, mz=1, filename="mpollambdaMon2z.data")
+     AT (0, 0, 0.3) RELATIVE armMSF
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
