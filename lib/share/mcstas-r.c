@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.134 $
+* Version: $Revision: 1.135 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.134 2006-07-11 12:21:17 pchr Exp $
+* $Id: mcstas-r.c,v 1.135 2006-08-03 13:11:18 pchr Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.134  2006/07/11 12:21:17  pchr
+* Changed polarization default value to be (0, 0, 0) (old was: sy=1)
+*
 * Revision 1.133  2006/07/06 08:59:21  pchr
 * Added new draw methods for rectangle and box.
 *
@@ -3022,6 +3025,41 @@ coords_neg(Coords a)
   b.y = -a.y;
   b.z = -a.z;
   return b;
+}
+
+/* coords_scale: Scale a vector. */
+Coords coords_scale(Coords b, double scale) {
+  Coords a;
+  
+  a.x = b.x*scale;
+  a.y = b.y*scale;
+  a.z = b.z*scale;
+  return a;
+}
+  
+/* coords_sp: Scalar product: a . b */
+double coords_sp(Coords a, Coords b) {
+  double value;
+  
+  value = a.x*b.x + a.y*b.y + a.z*b.z;
+  return value;
+}
+  
+/* coords_xp: Cross product: a = b x c. */
+Coords coords_xp(Coords b, Coords c) {
+  Coords a;
+  
+  a.x = b.y*c.z - c.y*b.z;
+  a.y = b.z*c.x - c.z*b.x;
+  a.z = b.x*c.y - c.x*b.y;
+  return a;
+}
+  
+/* coords_print: Print out vector values. */
+void coords_print(Coords a) {
+  
+  fprintf(stdout, "(%f, %f, %f)\n", a.x, a.y, a.z);
+  return;
 }
 
 /*******************************************************************************
