@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.83 $
+* Version: $Revision: 1.84 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.83 2006-07-25 08:49:13 pchr Exp $
+* $Id: mcstas-r.h,v 1.84 2006-08-03 13:11:18 pchr Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.83  2006/07/25 08:49:13  pchr
+*       Inserted missing end brackets in routines PROP_X0 and PROP_Y0.
+*
 *       Revision 1.82  2006/07/06 08:59:21  pchr
 *       Added new draw methods for rectangle and box.
 *
@@ -181,7 +184,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.83 $"
+#define MCSTAS_R_H "$Revision: 1.84 $"
 
 #include <math.h>
 #include <string.h>
@@ -733,6 +736,10 @@ Coords coords_get(Coords a, MCNUM *x, MCNUM *y, MCNUM *z);
 Coords coords_add(Coords a, Coords b);
 Coords coords_sub(Coords a, Coords b);
 Coords coords_neg(Coords a);
+Coords coords_scale(Coords b, double scale);
+double coords_sp(Coords a, Coords b);
+Coords coords_xp(Coords b, Coords c);
+void   coords_print(Coords a);
 
 void rot_set_rotation(Rotation t, double phx, double phy, double phz);
 void rot_mul(Rotation t1, Rotation t2, Rotation t3);
