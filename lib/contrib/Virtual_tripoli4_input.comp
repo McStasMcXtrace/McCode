@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.15 $
+* Version:  $Revision: 1.16 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -65,7 +65,7 @@
 *                     Other words are ignored.
 * T4_ANALYSE:   [1]   Number of neutron events to read for file pre-analysis.
 *                     Use 0 to analyze them all.
-* radius:       [1]   In the case the Tripoli4 batch file is a point, you may
+* radius:       [m]   In the case the Tripoli4 batch file is a point, you may
 *                     specify a disk emission area for the source.
 *
 * OUTPUT PARAMETERS
