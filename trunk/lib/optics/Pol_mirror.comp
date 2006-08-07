@@ -1,0 +1,188 @@
+/****************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Pol_mirror
+*
+* %I
+* Written by: Peter Christiansen
+* Date: July 2006
+* Version: $Revision: 1.1 $
+* Origin: RISOE
+* Release: McStas 1.10
+*
+* Polarising mirror.
+*
+* %D
+* This component models a rectangular infinitely thin mirror.
+* For an unrotated component, the mirror surface lies in the Y-Z
+* plane (ie. parallel to the beam).
+* It relies on similar physics as the Monochromator_pol.
+* The reflec function and parameters are passed to this component to
+* give a bigger freedom. 
+* The up direction is hardcoded to be along the y-axis (0, 1, 0)
+* For now we assume:
+* P(Transmit|Q) = 1 - P(Reflect|Q)
+* i.e. NO ABSORPTION!
+*
+* There are 3 options:
+* 1) Reflect and transmit (randomly choose) [default]
+* 2) Only reflect (reduce weight)
+* 3) Only transmit (reduce weight)
+*
+* GRAVITY: YES
+* POLARISATION: YES
+*
+* %BUGS 
+* NO ABSORPTION
+*
+* %P
+* INPUT PARAMETERS:
+*
+* zw:        Width of the mirror (m)
+* yh:        Height of the mirror (m)
+* rUpFunc:   Reflection function for spin up (q, *par, *r) (1)
+* rUpPar:    Parameters for rUpFunc (1)
+* rDownFunc: Reflection function for spin down (q, *par, *r)(1)
+* rDownPar:  Parameters for rDownFunc (1)
+* option:    1:Reflect/trasmit, 2:Reflect only, 3:Transmit only (1)
+*
+* OUTPUT PARAMETERS:
+*
+* isPolarising:  Flag set if rUp different from rDown (1)
+*
+* %L
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Pol_mirror
+DEFINITION PARAMETERS (rUpFunc, rDownFunc, rUpPar, rDownPar, zw, yh)
+SETTING PARAMETERS (int option=1)
+OUTPUT PARAMETERS (isPolarising)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+#include <assert.h>
+  %include "pol-lib"
+     %}
+
+DECLARE
+%{
+  int isPolarising = 1; // default is that guide is polarising
+  %}
+
+INITIALIZE
+%{
+  if ((zw<=0) || (yh <= 0)) {
+    fprintf(stderr, "Pol_mirror: %s: NULL or negative length scale!\n"
+	    "ERROR      (zw,yh). Exiting\n",
+	    NAME_CURRENT_COMP);
+    exit(1);
+  }
+  
+  if (option<1 || option>3) {
+    fprintf(stderr, "Pol_mirror: %s: Option %d not supported. Exiting.\n",
+	    NAME_CURRENT_COMP, option);
+    exit(1);
+  }
+  
+  if (rUpFunc==rDownFunc && rUpPar==rDownPar) {
+    isPolarising = 0;
+    fprintf(stdout,"Pol_mirror %s: Component is not polarising!\n",
+	    NAME_CURRENT_COMP);
+  }
+  
+  %}
+
+TRACE
+%{
+  double Q, Rup, Rdown, FN, FM, refWeight;
+  int reflect = -1;
+  
+  // propagate to mirror plane
+  PROP_X0;
+
+  if (inside_rectangle(z, y, zw, yh)) {/* Intersect the crystal? */
+    
+    // calculate scattering vector magnitude
+    Q = fabs(2*vx*V2K); 
+    assert(Q>=0);
+    
+    // calculate reflection probability
+    if(!isPolarising) {
+      
+      rUpFunc(Q, rUpPar, &refWeight);
+      
+    } else {
+      
+      rUpFunc(Q, rUpPar, &Rup);
+      rDownFunc(Q, rDownPar, &Rdown);
+      GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
+      GetMonoPolRefProb(FN, FM, sy, &refWeight);
+    }
+    
+    // check that refWeight is meaningfull
+    assert(refWeight>=0 && refWeight<=1); 
+    
+    // find out if neutrons is reflected or transmitted
+    if (option==1) { // reflect OR transmit
+      
+      if (rand01()<refWeight) //reflect 
+	reflect = 1;
+      else
+	reflect = 0;
+      
+    } else if (option==2) { // reflect ONLY
+      
+      if(refWeight==0) // only transmission
+	ABSORB;
+      
+      reflect = 1;
+      p *= refWeight;
+      
+    } else if (option==3) { // transmit ONLY
+      
+      if(refWeight==1) // only reflection
+	ABSORB;
+      
+      reflect = 0;
+      p *= (1-refWeight);
+      
+    } 
+
+    assert(reflect==0 || reflect==1);
+
+    // set outgoing velocity and polarisation
+    if (reflect==1) { // reflect
+      
+      vx = -vx;
+      if(isPolarising)
+	SetMonoPolRefOut(FN, FM, refWeight, &sx, &sy, &sz);    
+      
+    } else { // transmit
+      
+      if(isPolarising)
+	SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);    
+      
+    } 
+    
+    if(isPolarising)
+      assert(sx*sx+sy*sy+sz*sz<=1); // check that polarisation is meaningfull
+    
+    SCATTER;
+  } /* End intersect the mirror */
+  %}
+
+MCDISPLAY
+%{
+  magnify("zy");
+  rectangle("yz", 0, 0, 0, zw, yh);
+  %}
+
+END
