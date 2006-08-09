@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -33,6 +33,17 @@
 * 2) Only reflect (reduce weight)
 * 3) Only transmit (reduce weight)
 *
+* Examples:
+* Reflection function parametrization 
+* Pol_mirror(zw = 0.40, yh = 0.40, option=1,
+*	     rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003})
+*
+* Table function 
+* Pol_mirror(zw = 0.40, yh = 0.40, option=2, 
+*	     rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl",
+*	     rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl", 
+*	     useTables=1)
+*
 * GRAVITY: YES
 * POLARISATION: YES
 *
@@ -48,6 +59,7 @@
 * rUpPar:    Parameters for rUpFunc (1)
 * rDownFunc: Reflection function for spin down (q, *par, *r)(1)
 * rDownPar:  Parameters for rDownFunc (1)
+* useTables: Parameters are 0: Values, 1: Table names (1) 
 * option:    1:Reflect/trasmit, 2:Reflect only, 3:Transmit only (1)
 *
 * OUTPUT PARAMETERS:
@@ -60,9 +72,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_mirror
-DEFINITION PARAMETERS (rUpFunc, rDownFunc, rUpPar, rDownPar, zw, yh)
+DEFINITION PARAMETERS (rUpFunc, rDownFunc=rUpFunc, rUpPar, rDownPar=rUpPar, 
+		       useTables=0, zw, yh)
 SETTING PARAMETERS (int option=1)
-OUTPUT PARAMETERS (isPolarising)
+OUTPUT PARAMETERS (rUpParPtr, rDownParPtr)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
@@ -70,15 +83,38 @@ SHARE
 %{
 #include <assert.h>
   %include "pol-lib"
+  %include "read_table-lib"
      %}
 
 DECLARE
 %{
   int isPolarising = 1; // default is that guide is polarising
+#if (useTables)
+  t_Table *rUpParPtr   = 0;
+  t_Table *rDownParPtr = 0;
+#else 
+  double rUpParPtr[]   = rUpPar;
+  double rDownParPtr[] = rDownPar;
+#endif
   %}
 
 INITIALIZE
 %{
+#if (useTables)
+  rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
+  rDownParPtr = (t_Table*) malloc(sizeof(t_Table));
+  if (Table_Read(rUpParPtr, rUpPar, 1) <= 0) {
+    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+	    NAME_CURRENT_COMP, rUpPar);
+    exit(1);
+  }
+  if (Table_Read(rDownParPtr, rDownPar, 1) <= 0) { 
+    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+	    NAME_CURRENT_COMP, rDownPar);
+    exit(1);
+  }
+#endif
+
   if ((zw<=0) || (yh <= 0)) {
     fprintf(stderr, "Pol_mirror: %s: NULL or negative length scale!\n"
 	    "ERROR      (zw,yh). Exiting\n",
@@ -90,20 +126,14 @@ INITIALIZE
     fprintf(stderr, "Pol_mirror: %s: Option %d not supported. Exiting.\n",
 	    NAME_CURRENT_COMP, option);
     exit(1);
-  }
-  
-  if (rUpFunc==rDownFunc && rUpPar==rDownPar) {
-    isPolarising = 0;
-    fprintf(stdout,"Pol_mirror %s: Component is not polarising!\n",
-	    NAME_CURRENT_COMP);
-  }
-  
+  }  
   %}
 
 TRACE
 %{
   double Q, Rup, Rdown, FN, FM, refWeight;
   int reflect = -1;
+  int isPolarising = 0;
   
   // propagate to mirror plane
   PROP_X0;
@@ -115,17 +145,16 @@ TRACE
     assert(Q>=0);
     
     // calculate reflection probability
-    if(!isPolarising) {
+    rUpFunc(Q, rUpParPtr, &Rup);
+    rDownFunc(Q, rDownParPtr, &Rdown);
+    
+    if(Rup != Rdown) {
       
-      rUpFunc(Q, rUpPar, &refWeight);
-      
-    } else {
-      
-      rUpFunc(Q, rUpPar, &Rup);
-      rDownFunc(Q, rDownPar, &Rdown);
+      isPolarising = 1;
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &refWeight);
-    }
+    } else
+      refWeight = Rup;
     
     // check that refWeight is meaningfull
     assert(refWeight>=0 && refWeight<=1); 
