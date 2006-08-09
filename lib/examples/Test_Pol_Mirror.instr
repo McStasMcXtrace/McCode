@@ -7,7 +7,7 @@
 * Written by: Peter Christiansen 
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: tests
 *
 * Test that Pol_mirror reflects, transmits, and polarizes. 
@@ -39,9 +39,6 @@ DECLARE
 %{
   int reflected;
 
-  double upReflecPar[5]   = {1.0, 0.0219, 6.07, 2.0, 0.003};
-  double downReflecPar[5] = {0.1, 0.0219, 6.07, 2.0, 0.003};
-  
   void StdReflecFunc(double q, double *par, double *r) {
     /* R0:      [1]    Low-angle reflectivity
      * Qc:      [AA-1] Critical scattering vector
@@ -66,6 +63,14 @@ DECLARE
     }
     
     *r = R0*0.5*(1 - tanh(arg))*(1 - alpha*(q - Qc));
+    return;
+  }
+
+  void TableReflecFunc(double q, t_Table *par, double *r) {
+    
+    *r = Table_Value(*par, q, 1);
+    if(*r>1)
+      *r = 1;
     return;
   }
   %}
@@ -101,11 +106,18 @@ L_monitor(nchan = 30, filename = "lambdaStart.dat",
 	  Lmin = 0.0, Lmax = 30)
      AT (0, 0, 0.5) RELATIVE Origin
 
-COMPONENT mirror = 
-Pol_mirror(zw = 0.40, yh = 0.40, option=mirrorOption, 
-	   rUpFunc=StdReflecFunc, rUpPar=upReflecPar,
-	   rDownFunc=StdReflecFunc, rDownPar=downReflecPar)
+COMPONENT mirror =
+Pol_mirror(zw = 0.40, yh = 0.40, option=mirrorOption,
+	   rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003},
+	   rDownFunc=StdReflecFunc, rDownPar={0.1, 0.0219, 6.07, 2.0, 0.003})
      AT (0, 0, 1.0) RELATIVE Origin ROTATED (0, 2, 0) RELATIVE Origin
+
+/* COMPONENT mirror = */
+/* Pol_mirror(zw = 0.40, yh = 0.40, option=mirrorOption, */
+/* 	   rUpFunc=TableReflecFunc, rUpPar="supermirror_m3.rfl", */
+/* 	   rDownFunc=TableReflecFunc, rDownPar="supermirror_m2.rfl",  */
+/* 	   useTables=1) */
+/*      AT (0, 0, 1.0) RELATIVE Origin ROTATED (0, 2, 0) RELATIVE Origin */
 
 COMPONENT armTransmit = Arm()
      AT (0, 0, 1) RELATIVE Origin
