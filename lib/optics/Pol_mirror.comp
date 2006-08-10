@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -21,8 +21,8 @@
 * For an unrotated component, the mirror surface lies in the Y-Z
 * plane (ie. parallel to the beam).
 * It relies on similar physics as the Monochromator_pol.
-* The reflec function and parameters are passed to this component to
-* give a bigger freedom. 
+* The reflec function (see e.g. share/ref-lib for examples) and parameters 
+* are passed to this component to give a bigger freedom. 
 * The up direction is hardcoded to be along the y-axis (0, 1, 0)
 * For now we assume:
 * P(Transmit|Q) = 1 - P(Reflect|Q)
@@ -32,6 +32,11 @@
 * 1) Reflect and transmit (randomly choose) [default]
 * 2) Only reflect (reduce weight)
 * 3) Only transmit (reduce weight)
+*
+* The parameters can either be 
+* double pointer initializations (e.g. {1.0, 0.0219, 6.07, 2.0, 0.003}) 
+* or table names (e.g."supermirror_m2.rfl" AND useTables=1).
+* NB! This might cause warnings by the compiler that can be ignored.
 *
 * Examples:
 * Reflection function parametrization 
@@ -43,6 +48,8 @@
 *	     rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl",
 *	     rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl", 
 *	     useTables=1)
+*
+* See also the example instrument Test_Pol_Mirror (under tests).  
 *
 * GRAVITY: YES
 * POLARISATION: YES
@@ -64,15 +71,14 @@
 *
 * OUTPUT PARAMETERS:
 *
-* isPolarising:  Flag set if rUp different from rDown (1)
-*
 * %L
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_mirror
-DEFINITION PARAMETERS (rUpFunc, rDownFunc=rUpFunc, rUpPar, rDownPar=rUpPar, 
+DEFINITION PARAMETERS (rUpFunc=StdReflecFunc, rDownFunc=rUpFunc, 
+		       rUpPar={0.99,0.0219,6.07,2.0,0.003}, rDownPar=rUpPar, 
 		       useTables=0, zw, yh)
 SETTING PARAMETERS (int option=1)
 OUTPUT PARAMETERS (rUpParPtr, rDownParPtr)
@@ -83,7 +89,7 @@ SHARE
 %{
 #include <assert.h>
   %include "pol-lib"
-  %include "read_table-lib"
+  %include "ref-lib"
      %}
 
 DECLARE
