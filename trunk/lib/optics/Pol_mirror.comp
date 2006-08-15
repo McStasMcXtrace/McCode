@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -94,7 +94,6 @@ SHARE
 
 DECLARE
 %{
-  int isPolarising = 1; // default is that guide is polarising
 #if (useTables)
   t_Table *rUpParPtr   = 0;
   t_Table *rDownParPtr = 0;
