@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.84 $
+* Version: $Revision: 1.85 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.84 2006-08-03 13:11:18 pchr Exp $
+* $Id: mcstas-r.h,v 1.85 2006-08-15 12:09:35 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.84  2006/08/03 13:11:18  pchr
+*       Added additional functions for handling vectors.
+*
 *       Revision 1.83  2006/07/25 08:49:13  pchr
 *       Inserted missing end brackets in routines PROP_X0 and PROP_Y0.
 *
@@ -184,7 +187,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.84 $"
+#define MCSTAS_R_H "$Revision: 1.85 $"
 
 #include <math.h>
 #include <string.h>
@@ -412,6 +415,7 @@ void   mcsiminfo_close(void);
 #define RMS2FWHM 2.35482004503     /* root-mean-square (standard deviation) */
 #define HBAR     1.05457168e-34    /* [Js] h bar Planck constant CODATA 2002 */
 #define MNEUTRON 1.67492728e-27    /* [kg] mass of neutron CODATA 2002 */
+#define GRAVITY  9.81              /* [m/s^2] gravitational acceleration */
 
 #ifndef PI
 # ifdef M_PI
@@ -507,7 +511,7 @@ void   mcsiminfo_close(void);
   do { \
     if(dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     if (mcgravitation) { Coords mcLocG; double mc_gx, mc_gy, mc_gz; \
-    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     PROP_GRAV_DT(dt, mc_gx, mc_gy, mc_gz); } \
     else mcPROP_DT(dt); \
@@ -519,7 +523,7 @@ void   mcsiminfo_close(void);
   do { \
     if (mcgravitation) { Coords mcLocG; int mc_ret; \
     double mc_dt, mc_gx, mc_gy, mc_gz; \
-    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gz/2, -mcnlvz, -mcnlz); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
@@ -545,7 +549,7 @@ void   mcsiminfo_close(void);
   do { \
     if (mcgravitation) { Coords mcLocG; int mc_ret; \
     double mc_dt, mc_gx, mc_gy, mc_gz; \
-    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gx/2, -mcnlvx, -mcnlx); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
@@ -571,7 +575,7 @@ void   mcsiminfo_close(void);
   do { \
     if (mcgravitation) { Coords mcLocG; int mc_ret; \
     double mc_dt, mc_gx, mc_gy, mc_gz; \
-    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-9.8,0)); \
+    mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
     mc_ret = solve_2nd_order(&mc_dt, -mc_gy/2, -mcnlvy, -mcnly); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
