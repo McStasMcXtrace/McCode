@@ -565,7 +565,8 @@ sub make_instrument {
               zmin => $zmin, zmax => $zmax,
               zoom_xmin => $xmin, zoom_xmax => $xmax,
               zoom_ymin => $ymin, zoom_ymax => $ymax,
-              zoom_zmin => $zmin, zoom_zmax => $zmax);
+              zoom_zmin => $zmin, zoom_zmax => $zmax,
+	      zoom_tmin => 0, zoom_tmax => 50);
     return %instr;
 }
 
@@ -627,19 +628,22 @@ sub read_neutron {
             $numcomp++;
             $dropit = 1;        # Drop the first state (entry point).
         } elsif($st == 1 && (/^STATE:(.*)$/ || /^SCATTER:(.*)$/)) {
-            # Neutron state.
-            $dropit = 0, next if $dropit; # Skip entry point
-            ($x[$i], $y[$i], $z[$i],
-             $vx[$i], $vy[$i], $vz[$i],
-             $t[$i], $ph1[$i], $ph2[$i]) = split ",", $1;
-            ($x[$i], $y[$i], $z[$i],
-             $vx[$i], $vy[$i], $vz[$i],
-             $t[$i], $ph1[$i], $ph2[$i]) =
-                 transform($comp, $x[$i], $y[$i], $z[$i],
-                           $vx[$i], $vy[$i], $vz[$i],
-                           $t[$i], $ph1[$i], $ph2[$i]);
-            $ncomp[$i] = $comp;
-            $i++;
+	    # Neutron state.
+	    $dropit = 0, next if $dropit; # Skip entry point
+	    ($x[$i], $y[$i], $z[$i],
+	     $vx[$i], $vy[$i], $vz[$i],
+	     $t[$i], $ph1[$i], $ph2[$i]) = split ",", $1;
+	    ($x[$i], $y[$i], $z[$i],
+	     $vx[$i], $vy[$i], $vz[$i],
+	     $t[$i], $ph1[$i], $ph2[$i]) =
+		 transform($comp, $x[$i], $y[$i], $z[$i],
+			   $vx[$i], $vy[$i], $vz[$i],
+			   $t[$i], $ph1[$i], $ph2[$i]);
+	    $ncomp[$i] = $comp;
+	    if($TOF){
+		$t[$i] = 1000*$t[$i]; # Units of milli-seconds
+	    }
+	    $i++;
         } elsif($st == 1 && /^ABSORB:/) {
             # Neutron was absorbed.
             next;                # No special action needed.
@@ -689,25 +693,39 @@ sub plot_components { # PGPLOT stuff only
     @x = @$rx;
     @y = @$ry;
     @ori = @$rori;
-
+    
     PGPLOT::pgsci(2);
-    PGPLOT::pgline($#x + 1, \@x, \@y);
-    PGPLOT::pgpt($#x + 1, \@x, \@y, 20);
-    $col = 4;
-    for($i = 0; $i <= $#components; $i++) {
-        my $comp = $components[$i];
-        PGPLOT::pgsci($col++);
-        $col = 4 if $col > 15;
-        if($compdraw{$comp}) {
-            foreach $elem (@{$compdraw{$comp}{'elems'}}) {
-                if($elem->{'type'} eq 'multiline') {
-                    PGPLOT::pgline($elem->{'count'}, $elem->{$axis1}, $elem->{$axis2});
-                }
-            }
-        } else {
-            PGPLOT::pgsch(1.4);
-            PGPLOT::pgpt(1, $x[$i], $y[$i], 26);
-        }
+    if ($TOF) {
+	my $zz;
+	my @ZZ;
+	my @TT;
+	$col = 4;
+	foreach $zz (@x) {
+	    @ZZ = ($zz, $zz);
+	    @TT = ($tmin, $tmax);
+	    PGPLOT::pgsci($col++);
+	    $col = 4 if $col > 15;
+	    PGPLOT::pgline(2, \@TT, \@ZZ); 
+	}
+    } else {
+	PGPLOT::pgline($#x + 1, \@x, \@y);
+        PGPLOT::pgpt($#x + 1, \@x, \@y, 20);
+	$col = 4;
+	for($i = 0; $i <= $#components; $i++) {
+	    my $comp = $components[$i];
+	    PGPLOT::pgsci($col++);
+	    $col = 4 if $col > 15;
+	    if($compdraw{$comp}) {
+		foreach $elem (@{$compdraw{$comp}{'elems'}}) {
+		    if($elem->{'type'} eq 'multiline') {
+		      PGPLOT::pgline($elem->{'count'}, $elem->{$axis1}, $elem->{$axis2});
+		    }
+		}
+	    } else {
+	        PGPLOT::pgsch(1.4);
+		  PGPLOT::pgpt(1, $x[$i], $y[$i], 26);
+	      }
+	}
     }
 }
 
@@ -719,6 +737,7 @@ sub plot_neutron {
       # PGPLOT only
       PGPLOT::pgsci(3);
       PGPLOT::pgline(scalar(@$x), $x, $y);
+      $nump =  scalar(@$x);
       # Show component entry/exit points in same colour as respective component.
       # This should also be done w/ Matlab/Scilab...
       $i = 0;
@@ -786,9 +805,13 @@ sub show_comp_names { # PGPLOT stuff only
     PGPLOT::pgsch(25/$count);
     my $i;
     for($i = 0; $i < @comps; $i++) {
-        PGPLOT::pgsci($col++);
-        $col = 4 if $col > 15;
-        PGPLOT::pgmtxt('RV', 0.2, 1 - ($i+0.5)/$count, 0.0, $comps[$i]);
+	PGPLOT::pgsci($col++);
+	  $col = 4 if $col > 15;
+	if ($TOF) {
+	    PGPLOT::pgmtxt('RV', 0.2, ($i+0.5)/$count, 0.0, $comps[$i]);
+	} else {
+	    PGPLOT::pgmtxt('RV', 0.2, 1 - ($i+0.5)/$count, 0.0, $comps[$i]);
+	}
     }
 }
 
@@ -857,6 +880,14 @@ sub do_zoom {
     $rinstr->{"zoom_${a2}min"} = $cy;
     $rinstr->{"zoom_${a2}max"} = $cy1;
     $zooming = 1;
+    if ($TOF) {
+	$TOFINIT = 0;
+	$rinstr->{"zoom_tmin"} = $cx;
+	$rinstr->{"zoom_tmax"} = $cx1;
+	$rinstr->{"zoom_zmin"} = $cy;
+	$rinstr->{"zoom_zmax"} = $cy1;
+	$tmax=cx1;
+    }
 }
 
 sub write_process {
@@ -909,8 +940,9 @@ sub plot_instrument {
     # The following only relevant in PGPLOT mode
     if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
       my ($xmin, $xmax, $ymin, $ymax, $zmin, $zmax) =
-        ($instr{'zoom_xmin'}, $instr{'zoom_xmax'}, $instr{'zoom_ymin'},
+         ($instr{'zoom_xmin'}, $instr{'zoom_xmax'}, $instr{'zoom_ymin'},
          $instr{'zoom_ymax'}, $instr{'zoom_zmin'}, $instr{'zoom_zmax'});
+      ($tmin, $tmax) = ($instr{'zoom_tmin'}, $instr{'zoom_tmax'});
       my %vps;                        # Viewport/window setup.
       my ($vpx1,$vpx2,$vpy1,$vpy2,$wx1,$wx2,$wy1,$wy2);
 
@@ -921,15 +953,26 @@ sub plot_instrument {
 
       PGPLOT::pgsci(1);
       PGPLOT::pgsch(1.4);
-      PGPLOT::pgenv($zmin, $zmax, $xmin, $xmax, ($zooming ? 0 : 1), 0);
-      PGPLOT::pglab("Z Axis [m]", "X Axis [m]", ($multi_view ? "Z-X view" : "Z-X view: $sim_cmd"));
-      show_comp_names($rinstr);
-      PGPLOT::pgsch(1.4);
-      plot_components($instr{'z'}, $instr{'x'}, $instr{'ori'}, $instr{'dis'},
+      if ($TOF) {
+	if ($TOFINIT==0) {
+	    PGPLOT::pgenv($tmin, $tmax, $zmin, $zmax, ($zooming ? 0 : 1), 0);
+	    PGPLOT::pglab("TOF (ms)", "Z Axis [m]", "TOF diagram: $sim_cmd");
+	    $TOFINIT=1;
+	    show_comp_names($rinstr);
+	}
+	plot_components($instr{'z'}, $instr{'x'},$instr{'ori'}, $instr{'dis'},'T', 'Z');
+	plot_neutron($neutron{'t'}, $neutron{'z'}, $neutron{'y'},
+                     $neutron{'vz'}, $neutron{'vx'}, $neutron{'vy'},$neutron{'comp'});
+      } else {
+        PGPLOT::pgenv($zmin, $zmax, $xmin, $xmax, ($zooming ? 0 : 1), 0);
+        PGPLOT::pglab("Z Axis [m]", "X Axis [m]", ($multi_view ? "Z-X view" : "Z-X view: $sim_cmd"));
+        show_comp_names($rinstr);
+        PGPLOT::pgsch(1.4);
+        plot_components($instr{'z'}, $instr{'x'}, $instr{'ori'}, $instr{'dis'},
                       'Z', 'X');
-      plot_neutron($neutron{'z'}, $neutron{'x'}, $neutron{'y'},
-                   $neutron{'vz'}, $neutron{'vx'}, $neutron{'vy'},$neutron{'comp'});
-
+        plot_neutron($neutron{'z'}, $neutron{'x'}, $neutron{'y'},
+                     $neutron{'vz'}, $neutron{'vx'}, $neutron{'vy'},$neutron{'comp'});
+      }
       if($multi_view) {
         # Remember viewport setup for Z-X view.
         PGPLOT::pgqvp(0, $vpx1, $vpx2, $vpy1, $vpy2);
@@ -1061,6 +1104,7 @@ undef $save;
 undef $direct_output;
 undef $sim_cmd;
 undef $sim;
+undef $TOF;
 my $plotter;
 undef $file_output;
 my $int_mode=0; # interactive mode(0), non interactive (1)
@@ -1100,6 +1144,8 @@ for($i = 0; $i < @ARGV; $i++) {
    } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;
+   } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
+       $TOF = 1;
    } else {
         if (defined($sim_cmd)) { push @cmdline, $ARGV[$i]; }
         else {
@@ -1116,6 +1162,7 @@ if ($show_help) { undef $sim_cmd; }
 die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  -h        --help            Show this help
  -m        --multi           Show the three instrument side views
+ -T        --TOF             Special Time Of Flight acceptance diagram mode
  -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
  -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,Scilab,Matlab}
@@ -1142,6 +1189,17 @@ if ($sim_cmd =~ m'\.instr$') # recompile .instr if needed
 # Check value of $plotter and $file_output variables, set
 # $MCSTAS::mcstas_config{'PLOTTER'} with scriptfile keyword, always set for VRML
 if ($file_output || $plotter =~ /VRML/i) { $plotter .= "_scriptfile"; }
+
+if ($TOF) {
+    $TOFINIT=0;
+    $tmax=50;
+    if (!($plotter =~ /McStas|PGPLOT/i)) {
+	print STDERR "\n***************************************\n";
+	print STDERR "TOF only possible using plotter PGPLOT\nSelecting PGPLOT";
+	print STDERR "\n***************************************\n";
+	$plotter="PGPLOT";
+    }
+}
 
 if ($plotter =~ /Scilab/i && not $plotter =~ /scriptfile/i) {
   # Check for Win32, only file_output possible :(
