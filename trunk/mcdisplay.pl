@@ -963,9 +963,12 @@ sub plot_instrument {
 	plot_neutron($neutron{'t'}, $neutron{'z'}, $neutron{'y'},
                      $neutron{'vz'}, $neutron{'vx'}, $neutron{'vy'},$neutron{'comp'});
       } else {
-        PGPLOT::pgenv($zmin, $zmax, $xmin, $xmax, ($zooming ? 0 : 1), 0);
-        PGPLOT::pglab("Z Axis [m]", "X Axis [m]", ($multi_view ? "Z-X view" : "Z-X view: $sim_cmd"));
-        show_comp_names($rinstr);
+	  if (!($keep) || ($keep && $PGINIT==0)) {
+	      PGPLOT::pgenv($zmin, $zmax, $xmin, $xmax, ($zooming ? 0 : 1), 0);
+	      PGPLOT::pglab("Z Axis [m]", "X Axis [m]", ($multi_view ? "Z-X view" : "Z-X view: $sim_cmd"));
+	      show_comp_names($rinstr);
+	      $PGINIT=1;
+	  }
         PGPLOT::pgsch(1.4);
         plot_components($instr{'z'}, $instr{'x'}, $instr{'ori'}, $instr{'dis'},
                       'Z', 'X');
@@ -1024,7 +1027,7 @@ sub plot_instrument {
       }
       PGPLOT::pgebuf;        # end buffer batch output
 
-      return 0 if ($noninteractive || TOF);
+      return 0 if ($noninteractive || $TOF || $keep);
 
       # Now wait for a keypress in the graphics window.
       my ($cx, $cy, $cc);
@@ -1105,6 +1108,8 @@ undef $sim_cmd;
 undef $sim;
 undef $TOF;
 undef $tmax;
+undef $keep;
+undef $PGINIT;
 my $plotter;
 undef $file_output;
 my $int_mode=0; # interactive mode(0), non interactive (1)
@@ -1144,8 +1149,12 @@ for($i = 0; $i < @ARGV; $i++) {
    } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;
-   } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
+   } elsif($ARG[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
        $TOF = 1;
+   } elsif($ARGV[$i] eq "--keep" || $ARGV[$i] eq "-k") {
+       $keep = 1;
+       $int_mode = 0;
+       $PGINIT = 0;
    } elsif($ARGV[$i] =~ /^--tmax=([0-9\.]+)$/) {
        $tmax=$1;
    } else {
@@ -1173,6 +1182,8 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
                              (Only used when PLOTTER = {Scilab, Matlab})
            --first=COMP      First component to visualize {Scilab, Matlab}
            --last=COMP       Last component to visualize {Scilab, Matlab}
+ -k        --keep            Plot all neutrons events together (Primarily for
+                             use with PGPLOT and -psc / -gif etc.)
            --save            Output a Scilab/Matlab figure file and exit
                              (Filename is Instr.scf / Instr.fig). Figure
                              files are used by mcgui.pl for visualising the
