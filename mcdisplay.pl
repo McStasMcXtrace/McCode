@@ -1342,7 +1342,7 @@ while(!eof(IN)) {
     do {
         $ret = plot_instrument($int_mode, \%instr, \%neutron);
         if ($plotter =~ /McStas|PGPLOT/i) {
-	  if (! ($TOF)) {
+	  if (! ($TOF) && ! ($keep)) {
 		if ($int_mode == 1) { $ret =2; print STDERR "Wrote \"$pg_devname\"\n"; }
 	  }
           if($ret == 3 || $ret == 4 || $ret == 5 || $ret == 6) {
