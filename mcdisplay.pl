@@ -955,7 +955,7 @@ sub plot_instrument {
       if ($TOF) {
 	if ($TOFINIT==0) {
 	    PGPLOT::pgenv($tmin, $tmax, $zmin, $zmax, ($zooming ? 0 : 1), 0);
-	    PGPLOT::pglab("TOF (ms)", "Z Axis [m]", "TOF diagram: $sim_cmd");
+	    PGPLOT::pglab("TOF [ms]", "Z Axis [m]", "TOF diagram: $sim_cmd");
 	    $TOFINIT=1;
 	    show_comp_names($rinstr);
 	}
