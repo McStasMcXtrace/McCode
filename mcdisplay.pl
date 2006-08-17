@@ -566,7 +566,7 @@ sub make_instrument {
               zoom_xmin => $xmin, zoom_xmax => $xmax,
               zoom_ymin => $ymin, zoom_ymax => $ymax,
               zoom_zmin => $zmin, zoom_zmax => $zmax,
-	      zoom_tmin => 0, zoom_tmax => 50);
+	      zoom_tmin => 0, zoom_tmax => $tmax);
     return %instr;
 }
 
@@ -737,7 +737,6 @@ sub plot_neutron {
       # PGPLOT only
       PGPLOT::pgsci(3);
       PGPLOT::pgline(scalar(@$x), $x, $y);
-      $nump =  scalar(@$x);
       # Show component entry/exit points in same colour as respective component.
       # This should also be done w/ Matlab/Scilab...
       $i = 0;
@@ -1025,7 +1024,7 @@ sub plot_instrument {
       }
       PGPLOT::pgebuf;        # end buffer batch output
 
-      return 0 if $noninteractive;
+      return 0 if ($noninteractive || TOF);
 
       # Now wait for a keypress in the graphics window.
       my ($cx, $cy, $cc);
@@ -1105,6 +1104,7 @@ undef $direct_output;
 undef $sim_cmd;
 undef $sim;
 undef $TOF;
+undef $tmax;
 my $plotter;
 undef $file_output;
 my $int_mode=0; # interactive mode(0), non interactive (1)
@@ -1146,6 +1146,8 @@ for($i = 0; $i < @ARGV; $i++) {
         $file_output = $1;
    } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
        $TOF = 1;
+   } elsif($ARGV[$i] =~ /^--tmax=([0-9\.]+)$/) {
+       $tmax=$1;
    } else {
         if (defined($sim_cmd)) { push @cmdline, $ARGV[$i]; }
         else {
@@ -1163,6 +1165,7 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  -h        --help            Show this help
  -m        --multi           Show the three instrument side views
  -T        --TOF             Special Time Of Flight acceptance diagram mode
+           --tmax=TMAX       Maxiumum TOF [ms] (defaults to 50 ms)
  -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
  -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,Scilab,Matlab}
@@ -1192,7 +1195,9 @@ if ($file_output || $plotter =~ /VRML/i) { $plotter .= "_scriptfile"; }
 
 if ($TOF) {
     $TOFINIT=0;
-    $tmax=50;
+    if(! ($tmax)) {
+	$tmax=50;
+    }
     if (!($plotter =~ /McStas|PGPLOT/i)) {
 	print STDERR "\n***************************************\n";
 	print STDERR "TOF only possible using plotter PGPLOT\nSelecting PGPLOT";
@@ -1326,7 +1331,9 @@ while(!eof(IN)) {
     do {
         $ret = plot_instrument($int_mode, \%instr, \%neutron);
         if ($plotter =~ /McStas|PGPLOT/i) {
-          if ($int_mode == 1) { $ret =2; print STDERR "Wrote \"$pg_devname\"\n"; }
+	  if (! ($TOF)) {
+		if ($int_mode == 1) { $ret =2; print STDERR "Wrote \"$pg_devname\"\n"; }
+	  }
           if($ret == 3 || $ret == 4 || $ret == 5 || $ret == 6) {
             my $ext="ps";
             my $type = $ret == 3 ? "ps" : "cps";
