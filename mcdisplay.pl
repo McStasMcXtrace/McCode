@@ -1149,7 +1149,7 @@ for($i = 0; $i < @ARGV; $i++) {
    } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;
-   } elsif($ARG[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
+   } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
        $TOF = 1;
    } elsif($ARGV[$i] eq "--keep" || $ARGV[$i] eq "-k") {
        $keep = 1;
