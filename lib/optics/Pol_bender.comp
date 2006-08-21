@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: August 2006
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -292,7 +292,7 @@ TRACE
     Rright = absR + sign*whalf - sign*slitHit*slitWidth - sign*spacerhalf;
     
     if(debug>0)
-      printf("slitHit: %d/%f, Rleft: %f, Rright: %f\n", 
+      printf("\nslitHit: %d/%f, Rleft: %f, Rright: %f\n", 
 	     slitHit, (x+whalf)/slitWidth, Rleft, Rright);
   } else { // only 1 slit
     
@@ -401,18 +401,26 @@ TRACE
       
       rTopUpFunc(Q, rTopUpParPtr, &Rup);
       rTopDownFunc(Q, rTopDownParPtr, &Rdown);
+      if(debug>0)
+	fprintf(stdout, "\tTop hit:\n");
     } else if(time==tBot) {
       
       rBotUpFunc(Q, rBotUpParPtr, &Rup);
       rBotDownFunc(Q, rBotDownParPtr, &Rdown);
+      if(debug>0)
+	fprintf(stdout, "\tBot hit:\n");
     } else if(time==tRight) {
-      
-      rLeftUpFunc(Q, rLeftUpParPtr, &Rup);
-      rLeftDownFunc(Q, rLeftDownParPtr, &Rdown);
-    } else if(time==tLeft) {
       
       rRightUpFunc(Q, rRightUpParPtr, &Rup);
       rRightDownFunc(Q, rRightDownParPtr, &Rdown);
+      if(debug>0)
+	fprintf(stdout, "\tRight hit:\n");
+    } else if(time==tLeft) {
+      
+      rLeftUpFunc(Q, rLeftUpParPtr, &Rup);
+      rLeftDownFunc(Q, rLeftDownParPtr, &Rdown);
+      if(debug>0)
+	fprintf(stdout, "\tLeft hit:\n");
     }
     
     if(Rup != Rdown) {
@@ -424,9 +432,10 @@ TRACE
       weight = Rup;
     
     if(debug>0)
-      printf("Theta: %f, lambda: %f, Q: %f, weight: %f\n",
-	     theta, 2*PI/(sqrt(vx*vx + vy*vy + vz*vz)*V2K),
-	     Q, weight);
+      printf("\tlambda: %.2f AA, Q: %.4f, Rup: %.4f, Rdown: %.4f,"
+	     " weight: %.4f\n",
+	     2*PI/(sqrt(vx*vx + vy*vy + vz*vz)*V2K), Q, 
+	     Rup, Rdown, weight);
     
     // check that refWeight is meaningfull
     assert(weight>=0 && weight<=1); 
