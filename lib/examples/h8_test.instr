@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -58,6 +58,7 @@ INITIALIZE
   int    ORDER = 1;
   double vi, Ki;
   int    SM,SS,SA;
+  char *hostname;
 
   /* SM : scattering at mono to the right (-1)/left(+1) */
   /* SS : scattering at sample to the right (-1)/left(+1) */
@@ -81,8 +82,12 @@ INITIALIZE
   A3 = A4/2;    /* A4 : sample 2 theta (arm to analyser) */
   A6 *= SA;       /* A5 : analyser theta (crystal) */
   A5 = A6/2;    /* A6 : analyser 2 theta (arm to Dector) */
-
-  printf("Instrument : H8, v%s (21/02/01) on %s.\n",VERSION,getenv("HOSTNAME"));
+  
+  hostname = getenv("HOSTNAME");
+  if (hostname == NULL) {
+    hostname="(undefined)";
+  }
+  printf("Instrument : H8, v%s (21/02/01) on %s.\n",VERSION,hostname);
   printf("Monochromator : (DM = %g)\n",DM);
   printf("A1 = %.2f, A2 = %.2f (deg)\n",A1,A2);
   printf("Ki = %.4g Angs-1 Energy = %.4g meV\nVelocity = %.4g m/s, Lambda = %.4g Angs\n", Ki, Ei, vi,
