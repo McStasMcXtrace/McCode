@@ -12,7 +12,7 @@
 * Date: August, 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 *
 * This file is to be imported by polarisation components. 
 * It handles some shared functions. 
@@ -23,9 +23,12 @@
 * Usage: within SHARE
 * %include "pol-lib"
 *
-* $Id: pol-lib.c,v 1.1 2006-07-31 13:17:10 pchr Exp $
+* $Id: pol-lib.c,v 1.2 2006-08-28 10:12:25 pchr Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2006/07/31 13:17:10  pchr
+* Made a library with some polarisation routines.
+*
 *
 ****************************************************************************/
 
@@ -134,6 +137,113 @@ void SetMonoPolTransOut(double mc_pol_FN, double mc_pol_FM,
   *mc_pol_sy = (*mc_pol_sy - mc_pol_sy_ref)/(1 - mc_pol_refProb);
   *mc_pol_sz = (*mc_pol_sz - mc_pol_sz_ref)/(1 - mc_pol_refProb);
   return;
+}
+
+/****************************************************************************
+* void SimpleNumMagnetPrecession(double x, double y, double z, double t,
+*			         double vx, double vy, double vz,
+*			         double* sx, double* sy, double* sz, double dt)
+* 
+*****************************************************************************/
+void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y, 
+			       double mc_pol_z, double mc_pol_time,
+			       double mc_pol_vx, double mc_pol_vy, 
+			       double mc_pol_vz,
+			       double* mc_pol_sx, double* mc_pol_sy, 
+			       double* mc_pol_sz, double mc_pol_deltaT,
+			       Coords mc_pol_posLM, Rotation mc_pol_rotLM) {
+  
+  double mc_pol_Bx, mc_pol_By, mc_pol_Bz, mc_pol_phiz;
+  double mc_pol_BxStart, mc_pol_ByStart, mc_pol_BzStart, mc_pol_Bstart;
+  double mc_pol_BxTemp, mc_pol_ByTemp, mc_pol_BzTemp, mc_pol_Btemp;
+  double mc_pol_Bstep, mc_pol_timeStep, mc_pol_sp;
+  const double mc_pol_spThreshold  = cos(1.0*DEG2RAD);
+  const double mc_pol_omegaL = -2 * PI * 29.16e6; // MHz*rad/Tesla
+  const double mc_pol_startTimeStep = 1e-5; // s
+  double dummy1, dummy2;
+  Rotation mc_pol_rotBack;
+  
+  // change coordinates from local system to magnet system
+  mccoordschange(mc_pol_posLM, mc_pol_rotLM,
+		 &mc_pol_x, &mc_pol_y, &mc_pol_z, 
+		 &mc_pol_vx, &mc_pol_vy, &mc_pol_vz, &mc_pol_time,
+		 &dummy1, &dummy2);
+  mccoordschange_polarisation(mc_pol_rotLM, mc_pol_sx, mc_pol_sy, mc_pol_sz);
+  
+  // get initial B-field value
+  mcMagneticField(mc_pol_x, mc_pol_y, mc_pol_z, mc_pol_time, 
+		  &mc_pol_BxTemp, &mc_pol_ByTemp, &mc_pol_BzTemp);
+  
+  do {
+    
+    mc_pol_Bx = 0; mc_pol_By = 0; mc_pol_Bz = 0; mc_pol_phiz = 0; 
+    mc_pol_BxStart = mc_pol_BxTemp; mc_pol_ByStart = mc_pol_ByTemp; 
+    mc_pol_BzStart = mc_pol_BzTemp;
+    mc_pol_Bstart = 
+      sqrt(mc_pol_BxStart*mc_pol_BxStart + mc_pol_ByStart*mc_pol_ByStart 
+	   + mc_pol_BzStart*mc_pol_BzStart);
+    mc_pol_timeStep = mc_pol_startTimeStep;
+    
+    if(mc_pol_deltaT<mc_pol_timeStep)
+      mc_pol_timeStep = mc_pol_deltaT;
+    
+    do {
+      
+      mcMagneticField(mc_pol_x+mc_pol_vx*mc_pol_timeStep, 
+		      mc_pol_y+mc_pol_vy*mc_pol_timeStep, 
+		      mc_pol_z+mc_pol_vz*mc_pol_timeStep, 
+		      mc_pol_time+mc_pol_timeStep,
+		      &mc_pol_BxTemp, &mc_pol_ByTemp, &mc_pol_BzTemp);
+      // not so elegant, but this is how we kame sure that the steps decrease
+      // when the WHILE condition is not met
+      mc_pol_timeStep *= 0.5;
+      
+      mc_pol_Btemp = 
+	sqrt(mc_pol_BxTemp*mc_pol_BxTemp + mc_pol_ByTemp*mc_pol_ByTemp 
+	     + mc_pol_BzTemp*mc_pol_BzTemp);
+      
+      mc_pol_sp =
+	scalar_prod(mc_pol_BxStart, mc_pol_ByStart, mc_pol_BzStart, 
+		    mc_pol_BxTemp, mc_pol_ByTemp, mc_pol_BzTemp);
+      mc_pol_sp /= mc_pol_Bstart*mc_pol_Btemp;
+      
+    } while (mc_pol_sp<mc_pol_spThreshold);
+    
+    mc_pol_timeStep*=2;
+    
+    // update coordinate values
+    mc_pol_x += mc_pol_vx*mc_pol_timeStep;
+    mc_pol_y += mc_pol_vy*mc_pol_timeStep; 
+    mc_pol_z += mc_pol_vz*mc_pol_timeStep; 
+    mc_pol_time += mc_pol_timeStep;
+    mc_pol_deltaT -= mc_pol_timeStep;
+    
+    mc_pol_Bx = 0.5 * (mc_pol_BxStart + mc_pol_BxTemp);
+    mc_pol_By = 0.5 * (mc_pol_ByStart + mc_pol_ByTemp);
+    mc_pol_Bz = 0.5 * (mc_pol_BzStart + mc_pol_BzTemp);
+    mc_pol_phiz = fmod(sqrt(mc_pol_Bx*mc_pol_Bx+
+			    mc_pol_By*mc_pol_By+
+			    mc_pol_Bz*mc_pol_Bz)
+		       *mc_pol_timeStep*mc_pol_omegaL, 2*PI);
+
+    // Do the neutron spin precession
+    
+    if(!(mc_pol_Bx==0 && mc_pol_By==0 && mc_pol_Bz==0)) {
+      
+      double mc_pol_sx_in = *mc_pol_sx;
+      double mc_pol_sy_in = *mc_pol_sy;
+      double mc_pol_sz_in = *mc_pol_sz;
+      
+      rotate(*mc_pol_sx, *mc_pol_sy, *mc_pol_sz, 
+	     mc_pol_sx_in, mc_pol_sy_in, mc_pol_sz_in, 
+	     mc_pol_phiz, mc_pol_Bx, mc_pol_By, mc_pol_Bz);
+    }
+    
+  } while (mc_pol_deltaT>0);
+  
+  // change back spin coordinates from magnet system to local system
+  rot_transpose(mc_pol_rotLM, mc_pol_rotBack); 
+  mccoordschange_polarisation(mc_pol_rotBack, mc_pol_sx, mc_pol_sy, mc_pol_sz);
 }
 
 /* end of pol-lib.c */

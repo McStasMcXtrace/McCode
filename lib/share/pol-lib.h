@@ -12,7 +12,7 @@
 * Date: August, 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 *
 * This file is to be imported by polarisation components.
 * It handles some shared functions.
@@ -24,14 +24,17 @@
 * %include "pol-lib"
 *
 *
-* $Id: pol-lib.h,v 1.1 2006-07-31 13:17:10 pchr Exp $
+* $Id: pol-lib.h,v 1.2 2006-08-28 10:12:25 pchr Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2006/07/31 13:17:10  pchr
+* Made a library with some polarisation routines.
+*
 *
 ****************************************************************************/
 
 #ifndef POL_LIB_H
-#define POL_LIB_H "$Revision: 1.1 $"
+#define POL_LIB_H "$Revision: 1.2 $"
 
 // Routines used for Monochromator and guides/mirrors 
 // in the special (usual) case where
@@ -41,6 +44,11 @@ void GetMonoPolFNFM(double, double, double*, double*);
 void GetMonoPolRef(double, double, double, double*);
 void SetMonoPolRefOut(double, double, double, double*, double*, double*);
 void SetMonoPolTransOut(double, double, double, double*, double*, double*);
+
+// Routines for spin precession in magnetic fields
+void SimpleNumMagnetPrecession(double, double, double, double, double, double, 
+			       double, double*, double*, double*, double, 
+			       Coords, Rotation);
 
 #endif
 
