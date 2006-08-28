@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.61 $
+* Version: $Revision: 1.62 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.61  2006/07/06 08:58:36  pchr
+* 'Added rectangle and box drawing modes.
+*
 * Revision 1.60  2006/04/19 13:06:25  farhi
 * * Updated Release, Version and Origin fields in headers
 * * Improved setversion to update all McStasx.y occurencies into current release
@@ -112,7 +115,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.61 2006-07-06 08:58:36 pchr Exp $
+* $Id: cogen.c,v 1.62 2006-08-28 10:34:25 pchr Exp $
 *
 *******************************************************************************/
 
@@ -1396,6 +1399,7 @@ cogen_mcdisplay(struct instr_def *instr)
   /* User FINALLY code from component definitions (for each instance). */
   cout("#define magnify mcdis_magnify");
   cout("#define line mcdis_line");
+  cout("#define dashed_line mcdis_dashed_line");
   cout("#define multiline mcdis_multiline");
   cout("#define rectangle mcdis_rectangle");
   cout("#define box mcdis_box");
@@ -1427,6 +1431,7 @@ cogen_mcdisplay(struct instr_def *instr)
   cout("}");
   cout("#undef magnify");
   cout("#undef line");
+  cout("#undef dashed_line");
   cout("#undef multiline");
   cout("#undef rectangle");
   cout("#undef box");
