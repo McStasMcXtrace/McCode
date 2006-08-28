@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.135 $
+* Version: $Revision: 1.136 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.135 2006-08-03 13:11:18 pchr Exp $
+* $Id: mcstas-r.c,v 1.136 2006-08-28 10:12:25 pchr Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.135  2006/08/03 13:11:18  pchr
+* Added additional functions for handling vectors.
+*
 * Revision 1.134  2006/07/11 12:21:17  pchr
 * Changed polarization default value to be (0, 0, 0) (old was: sy=1)
 *
@@ -391,6 +394,16 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 static   char *mcdirname             = NULL;
 static   char *mcsiminfo_name        = "mcstas";
 int      mcallowbackprop             = 0;
+int      mcMagnet                    = 0;
+double*  mcMagnetData                = NULL;
+Coords   mcMagnetPos;
+Rotation mcMagnetRot;
+
+// mcMagneticField(x, y, z, t, Bx, By, Bz)
+void (*mcMagneticField) (double, double, double, double, 
+			 double*, double*, double*) = NULL;
+void (*mcMagnetPrecession) (double, double, double, double, double, double, 
+			    double, double*, double*, double*, double, Coords, Rotation) = NULL;
 
 /* Number of neutron histories to simulate. */
 mcstatic double mcncount             = 1e6;
@@ -2875,6 +2888,18 @@ void mcdis_line(double x1, double y1, double z1,
                 double x2, double y2, double z2){
   printf("MCDISPLAY: multiline(2,%g,%g,%g,%g,%g,%g)\n",
          x1,y1,z1,x2,y2,z2);
+}
+
+void mcdis_dashed_line(double x1, double y1, double z1,
+		       double x2, double y2, double z2, int n){
+  int i;
+  const double dx = (x2-x1)/(2*n+1);
+  const double dy = (y2-y1)/(2*n+1);
+  const double dz = (z2-z1)/(2*n+1);
+  
+  for(i = 0; i < n+1; i++)
+    mcdis_line(x1 + 2*i*dx,     y1 + 2*i*dy,     z1 + 2*i*dz,
+	       x1 + (2*i+1)*dx, y1 + (2*i+1)*dy, z1 + (2*i+1)*dz);
 }
 
 void mcdis_multiline(int count, ...){

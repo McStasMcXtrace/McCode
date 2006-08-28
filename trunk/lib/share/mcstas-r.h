@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.85 $
+* Version: $Revision: 1.86 $
 *
 * Runtime system header for McStas.
 *
@@ -26,9 +26,16 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.85 2006-08-15 12:09:35 pkwi Exp $
+* $Id: mcstas-r.h,v 1.86 2006-08-28 10:12:25 pchr Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.85  2006/08/15 12:09:35  pkwi
+*       Global define GRAVITY=9.81, used in PROP_ routines and Guide_gravity. Will add handeling of
+*
+*       -g xx / --gravitation==xx
+*
+*       in mcstas-r.c at a later time.
+*
 *       Revision 1.84  2006/08/03 13:11:18  pchr
 *       Added additional functions for handling vectors.
 *
@@ -187,7 +194,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.85 $"
+#define MCSTAS_R_H "$Revision: 1.86 $"
 
 #include <math.h>
 #include <string.h>
@@ -429,7 +436,7 @@ void   mcsiminfo_close(void);
 #define POS_A_COMP_INDEX(index) \
     (mccomp_posa[index])
 #define POS_R_COMP_INDEX(index) \
-    (mccomp_posr[index]) \
+    (mccomp_posr[index]) 
 /* mcScattered defined in McStas generated C code */
 #define SCATTERED mcScattered
 
@@ -460,7 +467,7 @@ void   mcsiminfo_close(void);
 #define SCATTER do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnlsx,mcnlsy, mcnlp); mcScattered++;} while(0)
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-        mcnlt,mcnlsx,mcnlsy, mcnlp); mcDEBUG_ABSORB(); goto mcabsorb;} while(0)
+        mcnlt,mcnlsx,mcnlsy, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
 /* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
 * after #define C sample, MC_GETPAR(C,x) would refer to component C, not to
 * component sample. Such are the joys of ANSI C.
@@ -475,6 +482,16 @@ void   mcsiminfo_close(void);
 #define RESTORE_NEUTRON(index, x, y, z, vx, vy, vz, t, sx, sy, sz, p) \
   mcrestore_neutron(mccomp_storein,index, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
 
+#define MAGNET_ON \
+  do { \
+    mcMagnet = 1; \
+  } while(0)
+
+#define MAGNET_OFF \
+  do { \
+    mcMagnet = 0; \
+  } while(0)
+
 #define ALLOW_BACKPROP \
   do { \
     mcallowbackprop = 1; \
@@ -485,8 +502,20 @@ void   mcsiminfo_close(void);
     mcallowbackprop = 0; \
   } while(0)
 
+#define PROP_MAGNET(dt) \
+  do { \
+    /* change coordinates from local system to magnet system */ \
+    Rotation rotLM, rotTemp; \
+    Coords   posLM = coords_sub(POS_A_CURRENT_COMP, mcMagnetPos); \
+    rot_transpose(ROT_A_CURRENT_COMP, rotTemp); \
+    rot_mul(rotTemp, mcMagnetRot, rotLM); \
+    mcMagnetPrecession(mcnlx, mcnly, mcnlz, mcnlt, mcnlvx, mcnlvy, mcnlvz, \
+	   	       &mcnlsx, &mcnlsy, &mcnlsz, dt, posLM, rotLM); \
+  } while(0)
+     
 #define mcPROP_DT(dt) \
   do { \
+    if (mcMagnet && dt > 0) PROP_MAGNET(dt);\
     mcnlx += mcnlvx*(dt); \
     mcnly += mcnlvy*(dt); \
     mcnlz += mcnlvz*(dt); \
@@ -497,6 +526,7 @@ void   mcsiminfo_close(void);
 #define PROP_GRAV_DT(dt, Ax, Ay, Az) \
   do { \
     if(dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
+    if (mcMagnet) printf("Spin precession gravity\n"); \
     mcnlx  += mcnlvx*(dt) + (Ax)*(dt)*(dt)/2; \
     mcnly  += mcnlvy*(dt) + (Ay)*(dt)*(dt)/2; \
     mcnlz  += mcnlvz*(dt) + (Az)*(dt)*(dt)/2; \
@@ -538,9 +568,7 @@ void   mcsiminfo_close(void);
     if(mcnlvz == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -mcnlz/mcnlvz; \
     if(mc_dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
-    mcnlx += mcnlvx*mc_dt; \
-    mcnly += mcnlvy*mc_dt; \
-    mcnlt += mc_dt; \
+    mcPROP_DT(mc_dt); \
     mcnlz = 0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -564,9 +592,7 @@ void   mcsiminfo_close(void);
     if(mcnlvx == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -mcnlx/mcnlvx; \
     if(mc_dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
-    mcnly += mcnlvy*mc_dt; \
-    mcnlz += mcnlvz*mc_dt; \
-    mcnlt += mc_dt; \
+    mcPROP_DT(mc_dt); \
     mcnlx = 0; \
     DISALLOW_BACKPROP;\
   } while(0)
@@ -591,9 +617,7 @@ void   mcsiminfo_close(void);
     if(mcnlvy == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
     mc_dt = -mcnly/mcnlvy; \
     if(mc_dt < 0 && mcallowbackprop == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
-    mcnlx += mcnlvx*mc_dt; \
-    mcnlz += mcnlvz*mc_dt; \
-    mcnlt += mc_dt; \
+    mcPROP_DT(mc_dt); \
     mcnly = 0; \
     DISALLOW_BACKPROP; \
   } while(0)
@@ -723,6 +747,7 @@ void mcdisplay(void);
 
 void mcdis_magnify(char *);
 void mcdis_line(double, double, double, double, double, double);
+void mcdis_dashed_line(double, double, double, double, double, double, int);
 void mcdis_multiline(int, ...);
 void mcdis_rectangle(char *, double, double, double, double, double);
 void mcdis_box(double, double, double, double, double, double);
