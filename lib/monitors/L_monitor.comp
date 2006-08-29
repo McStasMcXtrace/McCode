@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: April 20, 1998
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -34,7 +34,7 @@
 * yheight:  Height of detector (y). Overrides ymin,ymax. (m)
 * Lmin:     Minimum wavelength to detect (AA)
 * Lmax:     Maximum wavelength to detect (AA)
-* nchan:    Number of energy channels (1)
+* nchan:    Number of wavelength channels (1)
 * filename: Name of file in which to store the detector image (text)
 *
 * OUTPUT PARAMETERS:
