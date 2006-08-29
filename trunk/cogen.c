@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -12,11 +12,18 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.62 $
+* Version: $Revision: 1.63 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.62  2006/08/28 10:34:25  pchr
+* In cogen.c - implementation of dashed line for mcdisplay.
+*
+* Added component Pol_simpleBfield handeling magnetic fields and spin precession.
+*
+* Test instruments for different types of usage supplied.
+*
 * Revision 1.61  2006/07/06 08:58:36  pchr
 * 'Added rectangle and box drawing modes.
 *
@@ -115,7 +122,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.62 2006-08-28 10:34:25 pchr Exp $
+* $Id: cogen.c,v 1.63 2006-08-29 15:57:07 farhi Exp $
 *
 *******************************************************************************/
 
@@ -706,10 +713,14 @@ cogen_decls(struct instr_def *instr)
   cout("/* Declarations of component definition and setting parameters. */");
   cout("");
   index = 0;
+
+
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
     List_handle liter2;
+    /* define component mutex for threads */
+    coutf("#ifdef USE_THREADS \n static pthread_mutex_t %s;\n static int %sowner =-1;\n#endif",comp->name,comp->name);
 
     index++;
     comp->index = index; /* should match the one defined with bison */
@@ -846,7 +857,6 @@ cogen_nxdict(struct instr_def *instr)
   coutf("  SIG_MESSAGE(\"%s (NeXus init)\");", instr->name); /* ADD: E. Farhi Aug 25th, 2002 */
 }
 
-
 /*******************************************************************************
 * cogen_init: Generate the INIT section.
 *******************************************************************************/
@@ -879,8 +889,10 @@ cogen_init(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   last = NULL;
   coutf("    %sDEBUG_INSTR()", ID_PRE);
+
   while((comp = list_next(liter)) != NULL)
   {
+    coutf("#ifdef USE_THREADS\npthread_mutex_init(&%s,NULL);\n#endif",comp->name);
     struct comp_inst *relcomp; /* Component relative to. */
     char *x, *y, *z;
 
@@ -1072,7 +1084,6 @@ cogen_trace(struct instr_def *instr)
 
   /* Output the function header. */
   coutf("void %sraytrace(void) {", ID_PRE);
-
   /* Local neutron state. */
   cout("  /* Copy neutron state to local variables. */");
   coutf("  MCNUM %snlx = %snx;", ID_PRE, ID_PRE);
@@ -1132,6 +1143,8 @@ cogen_trace(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
+    /* lock mutex to protect memory */
+    coutf("#ifdef USE_THREADS\npthread_mutex_lock(&%s) ; %sowner=pthread_self();\n#endif",comp->name,comp->name);
     char *statepars[10];
     static char *statepars_names[10] =
       {
@@ -1196,6 +1209,8 @@ cogen_trace(struct instr_def *instr)
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+
+    coutf("#ifdef USE_THREADS\n%sowner=-1;\npthread_mutex_unlock(&%s) ;\n #endif",comp->name,comp->name);
     coutf("  %sScattered=0;", ID_PRE);
     coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
 
@@ -1253,12 +1268,20 @@ cogen_trace(struct instr_def *instr)
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     cout("");
-
   }
   list_iterate_end(liter);
 
   /* Absorbing neutrons - goto this label to skip remaining components. End of TRACE */
   coutf(" %sabsorbAll:", ID_PRE);
+
+  coutf("#ifdef USE_THREADS");
+  liter = list_iterate(instr->complist);
+  while((comp = list_next(liter)) != NULL){
+    /* destroy remaining mutexes when absorbing */
+    coutf("\t if (pthread_equal(pthread_self(),%sowner))pthread_mutex_unlock(&%s);",comp->name,comp->name);
+  }
+  list_iterate_end(liter);
+  coutf("#endif");
 
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
@@ -1354,6 +1377,7 @@ cogen_finally(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
+    coutf("#ifdef USE_THREADS\n pthread_mutex_destroy(&%s);\n#endif",comp->name);
     if(list_len(comp->def->finally_code->lines) > 0)
     {
       coutf("  /* User FINALLY code for component '%s'. */", comp->name);
