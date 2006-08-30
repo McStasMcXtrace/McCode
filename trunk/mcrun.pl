@@ -310,6 +310,7 @@ sub parse_args {
    --machines=MACHINES        Read machine names from file MACHINES (MPI/grid)
    --optim=COMP               Add COMP to the list of monitors to maximize
                                 (optimization criteria, requires Math::Amoeba)
+   --optim                    Maximize all monitors
    --optim-prec=PREC          Relative requested accuracy of criteria (1e-3)
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
