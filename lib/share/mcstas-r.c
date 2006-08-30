@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.136 $
+* Version: $Revision: 1.137 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.136 2006-08-28 10:12:25 pchr Exp $
+* $Id: mcstas-r.c,v 1.137 2006-08-30 12:13:41 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.136  2006/08/28 10:12:25  pchr
+* Basic infrastructure for spin propagation in magnetic fields.
+*
 * Revision 1.135  2006/08/03 13:11:18  pchr
 * Added additional functions for handling vectors.
 *
@@ -400,9 +403,9 @@ Coords   mcMagnetPos;
 Rotation mcMagnetRot;
 
 // mcMagneticField(x, y, z, t, Bx, By, Bz)
-void (*mcMagneticField) (double, double, double, double, 
+void (*mcMagneticField) (double, double, double, double,
 			 double*, double*, double*) = NULL;
-void (*mcMagnetPrecession) (double, double, double, double, double, double, 
+void (*mcMagnetPrecession) (double, double, double, double, double, double,
 			    double, double*, double*, double*, double, Coords, Rotation) = NULL;
 
 /* Number of neutron histories to simulate. */
@@ -607,6 +610,9 @@ double mcget_run_num(void)
 
 #if defined(USE_MPI) || defined(USE_THREADS)
 static int mpi_node_count;
+#endif
+#ifdef USE_THREADS
+pthread_mutex_t protect=PTHREAD_MUTEX_INITIALIZER;
 #endif
 #ifdef USE_MPI
 /* MPI rank */
@@ -2896,7 +2902,7 @@ void mcdis_dashed_line(double x1, double y1, double z1,
   const double dx = (x2-x1)/(2*n+1);
   const double dy = (y2-y1)/(2*n+1);
   const double dz = (z2-z1)/(2*n+1);
-  
+
   for(i = 0; i < n+1; i++)
     mcdis_line(x1 + 2*i*dx,     y1 + 2*i*dy,     z1 + 2*i*dz,
 	       x1 + (2*i+1)*dx, y1 + (2*i+1)*dy, z1 + (2*i+1)*dz);
@@ -2905,7 +2911,7 @@ void mcdis_dashed_line(double x1, double y1, double z1,
 void mcdis_multiline(int count, ...){
   va_list ap;
   double x,y,z;
-  
+
   printf("MCDISPLAY: multiline(%d", count);
   va_start(ap, count);
   while(count--)
@@ -2919,54 +2925,54 @@ void mcdis_multiline(int count, ...){
   printf(")\n");
 }
 
-void mcdis_rectangle(char* plane, double x, double y, double z, 
+void mcdis_rectangle(char* plane, double x, double y, double z,
 		     double width, double height){
   // draws a rectangle in the plane
-  // x is ALWAYS width and y is ALWAYS height 
+  // x is ALWAYS width and y is ALWAYS height
   if (strcmp("xy", plane)==0) {
-    mcdis_multiline(5, 
+    mcdis_multiline(5,
 		    x - width/2, y - height/2, z,
 		    x + width/2, y - height/2, z,
 		    x + width/2, y + height/2, z,
 		    x - width/2, y + height/2, z,
 		    x - width/2, y - height/2, z);
   } else if (strcmp("xz", plane)==0) {
-    mcdis_multiline(5, 
+    mcdis_multiline(5,
 		    x - width/2, y, z - height/2,
 		    x + width/2, y, z - height/2,
 		    x + width/2, y, z + height/2,
 		    x - width/2, y, z + height/2,
 		    x - width/2, y, z - height/2);
   } else if (strcmp("yz", plane)==0) {
-    mcdis_multiline(5, 
+    mcdis_multiline(5,
 		    x, y - height/2, z - width/2,
 		    x, y - height/2, z + width/2,
 		    x, y + height/2, z + width/2,
 		    x, y + height/2, z - width/2,
 		    x, y - height/2, z - width/2);
   } else {
-      
+
     fprintf(stderr, "Error: Definition of plane %s unknown\n", plane);
     exit(1);
-  } 
-}    
+  }
+}
 
 /*  draws a box with center at (x, y, z) and
     width (deltax), height (deltay), length (deltaz) */
-void mcdis_box(double x, double y, double z, 
+void mcdis_box(double x, double y, double z,
 	       double width, double height, double length){
 
-  mcdis_rectangle("xy", x, y, z-length/2, width, height); 
-  mcdis_rectangle("xy", x, y, z+length/2, width, height); 
+  mcdis_rectangle("xy", x, y, z-length/2, width, height);
+  mcdis_rectangle("xy", x, y, z+length/2, width, height);
   mcdis_line(x-width/2, y-height/2, z-length/2,
-	     x-width/2, y-height/2, z+length/2); 
+	     x-width/2, y-height/2, z+length/2);
   mcdis_line(x-width/2, y+height/2, z-length/2,
-	     x-width/2, y+height/2, z+length/2); 
+	     x-width/2, y+height/2, z+length/2);
   mcdis_line(x+width/2, y-height/2, z-length/2,
-	     x+width/2, y-height/2, z+length/2); 
+	     x+width/2, y-height/2, z+length/2);
   mcdis_line(x+width/2, y+height/2, z-length/2,
-	     x+width/2, y+height/2, z+length/2); 
-}    
+	     x+width/2, y+height/2, z+length/2);
+}
 
 void mcdis_circle(char *plane, double x, double y, double z, double r){
   printf("MCDISPLAY: circle('%s',%g,%g,%g,%g)\n", plane, x, y, z, r);
@@ -3055,34 +3061,34 @@ coords_neg(Coords a)
 /* coords_scale: Scale a vector. */
 Coords coords_scale(Coords b, double scale) {
   Coords a;
-  
+
   a.x = b.x*scale;
   a.y = b.y*scale;
   a.z = b.z*scale;
   return a;
 }
-  
+
 /* coords_sp: Scalar product: a . b */
 double coords_sp(Coords a, Coords b) {
   double value;
-  
+
   value = a.x*b.x + a.y*b.y + a.z*b.z;
   return value;
 }
-  
+
 /* coords_xp: Cross product: a = b x c. */
 Coords coords_xp(Coords b, Coords c) {
   Coords a;
-  
+
   a.x = b.y*c.z - c.y*b.z;
   a.y = b.z*c.x - c.z*b.x;
   a.z = b.x*c.y - c.x*b.y;
   return a;
 }
-  
+
 /* coords_print: Print out vector values. */
 void coords_print(Coords a) {
-  
+
   fprintf(stdout, "(%f, %f, %f)\n", a.x, a.y, a.z);
   return;
 }
@@ -4669,7 +4675,13 @@ mcstas_raytrace(void *p_node_ncount)
     // old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1);
     mcraytrace();
     local_mcrun_num++;
+#ifdef USE_THREADS
+    pthread_mutex_lock(&protect);
+#endif
     mcrun_num ++;
+#ifdef USE_THREADS
+    pthread_mutex_unlock(&protect);
+#endif
   }
   #ifdef USE_THREADS
   pthread_exit((void *) 0);
