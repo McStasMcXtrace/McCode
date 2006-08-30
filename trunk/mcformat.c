@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.4 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.5 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1366,6 +1366,8 @@ void
 mcformat_parseoptions(int argc, char *argv[])
 {
   int i;
+  char cwd[1024];
+  mcdirname = NULL;
   for(i = 1; i < argc; i++)
   {
     if(!strcmp("-d", argv[i]) && (i + 1) < argc)
@@ -1443,6 +1445,10 @@ mcformat_parseoptions(int argc, char *argv[])
       fprintf(stderr, "Warning: %s files will contain text headers.\n"
                       "         Use -a option to clean up.\n", mcformat.Name);
     strcat(mcformat.Name, " with text headers");
+  }
+  if (!mcdirname) {
+    getcwd(cwd, 1024);
+    mcdirname = str_dup(cwd); /* default is to export to PWD */
   }
 } /* mcformat_parseoptions */
 
