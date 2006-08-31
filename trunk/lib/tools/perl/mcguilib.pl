@@ -68,7 +68,7 @@ sub simulation_dialog {
     $si{'Ncount'}= 1e6 unless $si{'Ncount'};
     $si{'gravity'}=0 unless $si{'gravity'};
     $si{'GravityWarn'} = 0 unless $si{'GravityWarn'};
-    $si{'Mode'}  = 0; # always start in Simulation mode
+    $si{'Mode'}  = 0 unless $si{'Mode'};
     $si{'NScan'} = 0 unless $si{'NScan'};
     $si{'Force'} = 0 unless $si{'Force'};
     $si{'nodes'} = 1 unless $si{'nodes'};
