@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.16 $
+* Version:  $Revision: 1.17 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -351,8 +351,13 @@ INITIALIZE
     mean_dz /= n_neutrons_p;
     /* now estimates total ncount */
     mean_v = sqrt(mean_vx*mean_vx+mean_vy*mean_vy+mean_vz*mean_vz);
-    n_count_extrapolated = n_neutrons*(filesize-first_batch)/(end_analyse - first_batch);
-    nbatch_extrapolated  = nbatch    *(filesize-first_batch)/(end_analyse - first_batch);
+    if (T4_ANALYSE>0) {
+      n_count_extrapolated = n_neutrons*(filesize-first_batch)/(end_analyse - first_batch);
+      nbatch_extrapolated  = nbatch    *(filesize-first_batch)/(end_analyse - first_batch);
+    } else {
+      n_count_extrapolated = n_neutrons;
+      nbatch_extrapolated  = nbatch;
+    }
     if (verbose) {
       double mean_k, mean_w=0, mean_L=0;
 
@@ -395,7 +400,7 @@ INITIALIZE
       if (strstr(autocenter, "translate") || strstr(autocenter, "center"))
         do_translate = 1;
       if (strstr(autocenter, "rescale") && intensity && nbatch_extrapolated && nsize) {
-        intensity_extrapolated = intensity/nbatch_extrapolated/nsize;
+        intensity_extrapolated = fabs(intensity/nbatch_extrapolated/nsize);
         printf("* Automatic Normalisation factor Intensity/N/B = %g [n/s]\n",
           intensity_extrapolated);
       }
@@ -474,7 +479,7 @@ TRACE
         tx=vx; ty=vy; tz=vz; vx=ty; vy=tz; vz=tx;
       }
     }
-    if (intensity_extrapolated) p *= intensity_extrapolated;
+    if (intensity_extrapolated) p *= fabs(intensity_extrapolated);
     SCATTER;
     break;
   }
