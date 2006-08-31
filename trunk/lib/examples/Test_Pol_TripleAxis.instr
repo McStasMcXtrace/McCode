@@ -8,7 +8,7 @@
 * Date: July 2006.
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: tests
 *
 * Based on Emmanuel Farhi's thermal H8 triple-axis spectrometer from
@@ -19,25 +19,26 @@
 * spectrometer from former Brookhaven reactor. It has an (polarizing)
 * monochromator and a (polarizaing) analyzer. The sample is a vanadium
 * cylinder.
-* Three cases are done at the same time:
-* 1) No polarization: Up/Down->Up/Down
-* 2) No spin flip: Up->Up 
-* 3) Spin flip (flipper is inserted): Up->Down
-* The Vanadium smple should give I1=2*(I2+I3) and I3=2*I2!.
+* Three cases can be done:
+* -1) Spin flip (flipper is inserted): Up->Down
+*  0) No polarization: Up/Down->Up/Down
+*  1) No spin flip: Up->Up 
+* The Vanadium sample should give I(0)=2*(I(-1)+I(1)) and I(-1)=2*I(1).
 *
-* Example: mcrun Test_Pol_TripleAxis.instr
+* Example: mcrun Test_Pol_TripleAxis.instr OPTION=1
 *
 * %Parameters
 * INPUT PARAMETERS:
-* Lambda  : Source wavelength   [Angs]
-* Moz     : Mosaicity           [Arc minutes]
+* OPTION  : See above           [1]
+* LAMBDA  : Source wavelength   [Angs]
+* MOZ     : Mosaicity           [Arc minutes]
 *
 * %Link
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Test_Pol_TripleAxis(Lambda=2.0, Moz=40)
+DEFINE INSTRUMENT Test_Pol_TripleAxis(int OPTION, LAMBDA=2.0, MOZ=40)
 
 DECLARE
 %{
@@ -48,7 +49,7 @@ DECLARE
   double A1,A2;
   double A3,A4;
   double A5,A6;
-  double mono_q, Ei, Lambda;
+  double mono_q, Ei;
   
   /* This variable helps us switch on and of the spin flipper*/
   double filterProb;
@@ -61,6 +62,12 @@ INITIALIZE
   double vi, Ki, Kf;
   int    SM, SS, SA;
   
+  if(OPTION<-1 || OPTION>1) {
+    
+    printf("OPTION %d not permitted.", OPTION);
+    exit(1);
+  }
+
   /* SM : scattering at mono to the right (-1)/left(+1) */
   /* SS : scattering at sample to the right (-1)/left(+1) */
   /* SA : scattering at analyser to the right (-1)/left(+1) */
@@ -68,7 +75,7 @@ INITIALIZE
   
   mono_q = 2*PI*ORDER/DM;  /* Q mono in Angs-1 */
 
-  Ki = 2*PI/Lambda;
+  Ki = 2*PI/LAMBDA;
   vi = K2V*fabs(Ki);
   Ei = VS2E*vi*vi;
   
@@ -90,20 +97,14 @@ INITIALIZE
 TRACE
 /* Source description */
 
-COMPONENT Origin = Pol_arm()
+COMPONENT Origin = Arm()
      AT (0,0,0) ABSOLUTE
-EXTEND
-%{
-  // Multiply probability by 3 because we have 3 cases
-  p*=3.0;
-  filterProb = rand01();
-  %}
 
 /* a flat constant source */
 COMPONENT Source = 
-Source_flat(radius  = 0.01, dist = 5.0,
-	    xw = 0.02, yh = 0.02,
-	    E0 = Ei, dE = 0.5)
+Source_simple(radius  = 0.01, dist = 5.0,
+	      xw = 0.02, yh = 0.02,
+	      E0 = Ei, dE = 0.5)
      AT (0,0,0) RELATIVE Origin
 
 COMPONENT Mono_Arm = Arm()
@@ -114,20 +115,20 @@ COMPONENT Mono_Out = Arm()
 
 COMPONENT Mono = 
 Monochromator_flat(width = 0.10, height = 0.08,
-		   mosaich = Moz, mosaicv = Moz,
+		   mosaich = MOZ, mosaicv = MOZ,
 		   r0 = 1.0, Q=mono_q)
-     WHEN (filterProb<1.0/3.0) AT (0, 0, 0) RELATIVE Mono_Arm
+     WHEN (OPTION==0) AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT Mono_pol = 
 Monochromator_pol(zw = 0.10, yh = 0.08,
-		  mosaic = Moz, dspread = 0.0,
+		  mosaic = MOZ, dspread = 0.0,
 		  Rup = 1.0, Rdown = 0.0, Q=mono_q, debug = 0)
-     WHEN (filterProb>=1.0/3.0) AT (0, 0, 0) RELATIVE Mono_Arm
+     WHEN (OPTION==-1 || OPTION==1) AT (0, 0, 0) RELATIVE Mono_Arm
 
 
 COMPONENT pollambdaMonitorMono =
 PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=40, Lmin = 0.97*Lambda, Lmax = 1.03*Lambda, npol=11,
+		  nlam=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
 		  my=1, filename="pollambdaMonMono.data")
      AT (0, 0, 0.5) RELATIVE Mono_Out
 
@@ -145,18 +146,18 @@ V_sample(radius_i = 0.0, radius_o = 0.024, h = 0.0254,
 
 COMPONENT pollambdaMonitorSample =
 PolLambda_monitor(xw=0.10, yh=0.10,
-		  nlam=40, Lmin = 0.97*Lambda, Lmax = 1.03*Lambda, npol=11,
+		  nlam=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
 		  my=1, filename="pollambdaMonSample.data")
      AT (0, 0, 0.25) RELATIVE Sample_Out
 
 COMPONENT msf =
-Pol_constBfield(xw=0.10, yh=0.10, length=0.2, fliplambda=Lambda)
-     WHEN (filterProb>2.0/3.0) AT (0, 0, 0.4) RELATIVE Sample_Out
+Pol_constBfield(xw=0.10, yh=0.10, length=0.2, fliplambda=LAMBDA)
+     WHEN (OPTION==-1) AT (0, 0, 0.4) RELATIVE Sample_Out
 ROTATED (0, 0, 90) RELATIVE Sample_Out
 
 COMPONENT pollambdaMonitorMSF =
 PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=40, Lmin = 0.97*Lambda, Lmax = 1.03*Lambda, npol=11,
+		  nlam=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
 		  my=1, filename="pollambdaMonMsf.data")
      AT (0, 0, 0.75) RELATIVE Sample_Out
 
@@ -168,36 +169,21 @@ COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
 
 COMPONENT Ana = 
 Monochromator_flat(width = 0.10, height = 0.08,
-		   mosaich = Moz, mosaicv = Moz,
+		   mosaich = MOZ, mosaicv = MOZ,
 		   r0 = 1.0, Q=mono_q)
-     WHEN (filterProb<1.0/3.0) AT (0, 0, 0) RELATIVE Ana_Arm
+     WHEN (OPTION==0) AT (0, 0, 0) RELATIVE Ana_Arm
 
 COMPONENT Ana_pol = 
 Monochromator_pol(zw = 0.10, yh = 0.08,
-		  mosaic = Moz, dspread = 0.0,
+		  mosaic = MOZ, dspread = 0.0,
 		  Rup = 1.0, Rdown = 0.0, Q=mono_q, debug = 0)
-     WHEN (filterProb>=1.0/3.0) AT (0, 0, 0) RELATIVE Ana_Arm
+     WHEN (OPTION==-1 || OPTION==1) AT (0, 0, 0) RELATIVE Ana_Arm
 
 
-COMPONENT pollambdaMonitorAna =
+COMPONENT pollambdaMonitorDet =
 PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=40, Lmin = 0.97*Lambda, Lmax = 1.03*Lambda, npol=11,
-		  my=1, filename="pollambdaMonAna.data")
+		  nlam=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
+		  my=1, filename="pollambdaMonDet.data")
      AT (0, 0, 0.15) RELATIVE Ana_Out
-
-COMPONENT He3H_NOPOL = 
-PSD_monitor(xwidth  = 0.10, yheight = 0.10,
-	    nx=20, ny=20, filename="He3H_NOPOL.psd")
-     WHEN (filterProb<1.0/3.0) AT (0, 0, 0.5) RELATIVE Ana_Out
-
-COMPONENT He3H_NSF = 
-PSD_monitor(xwidth  = 0.10, yheight = 0.10,
-	    nx=20, ny=20, filename="He3H_NSF.psd")
-     WHEN (filterProb>=1.0/3.0 && filterProb<2.0/3.0) AT (0, 0, 0.5) RELATIVE Ana_Out
-
-COMPONENT He3H_SF = 
-PSD_monitor(xwidth  = 0.10, yheight = 0.10,
-	    nx=20, ny=20, filename="He3H_SF.psd")
-     WHEN (filterProb>2.0/3.0) AT (0, 0, 0.5) RELATIVE Ana_Out
 
 END
