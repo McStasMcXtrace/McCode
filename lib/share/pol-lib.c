@@ -12,7 +12,7 @@
 * Date: August, 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 *
 * This file is to be imported by polarisation components. 
 * It handles some shared functions. 
@@ -23,9 +23,12 @@
 * Usage: within SHARE
 * %include "pol-lib"
 *
-* $Id: pol-lib.c,v 1.2 2006-08-28 10:12:25 pchr Exp $
+* $Id: pol-lib.c,v 1.3 2006-08-31 12:56:59 pchr Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2006/08/28 10:12:25  pchr
+* Basic infrastructure for spin propagation in magnetic fields.
+*
 * Revision 1.1  2006/07/31 13:17:10  pchr
 * Made a library with some polarisation routines.
 *
@@ -158,7 +161,6 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
   double mc_pol_BxTemp, mc_pol_ByTemp, mc_pol_BzTemp, mc_pol_Btemp;
   double mc_pol_Bstep, mc_pol_timeStep, mc_pol_sp;
   const double mc_pol_spThreshold  = cos(1.0*DEG2RAD);
-  const double mc_pol_omegaL = -2 * PI * 29.16e6; // MHz*rad/Tesla
   const double mc_pol_startTimeStep = 1e-5; // s
   double dummy1, dummy2;
   Rotation mc_pol_rotBack;
@@ -244,6 +246,24 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
   // change back spin coordinates from magnet system to local system
   rot_transpose(mc_pol_rotLM, mc_pol_rotBack); 
   mccoordschange_polarisation(mc_pol_rotBack, mc_pol_sx, mc_pol_sy, mc_pol_sz);
+}
+
+/****************************************************************************
+* double GetConstantField(double length, double lambda, double angle)
+* 
+* Return the magnetic field in Tesla required to flip a neutron with
+* wavelength lambda(1/velocity), angle degrees, over the specified 
+* length(=time*velocity).
+* 
+*****************************************************************************/
+double GetConstantField(double mc_pol_length, double mc_pol_lambda, 
+			double mc_pol_angle)
+{
+  const double mc_pol_velocity = K2V*2*PI/mc_pol_lambda;
+  const double mc_pol_time = mc_pol_length/mc_pol_velocity;
+  
+  // B*omegaL*time = angle
+  return mc_pol_angle*DEG2RAD/mc_pol_omegaL/mc_pol_time; // T
 }
 
 /* end of pol-lib.c */

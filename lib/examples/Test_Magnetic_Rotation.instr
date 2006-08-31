@@ -8,7 +8,7 @@
 * Date: August 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: tests
 *
 * This instrument demonstrates how to use the Pol_constBfield
@@ -80,8 +80,8 @@ Source_simple(radius = 0.01, dist = 1.0, xw = 0.01, yh = 0.01, Lambda0 = 5,
 	      dLambda = 4.99, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT polFilter =
-Pol_filter(xw=0.1, yh=0.1, fy=1, Tup=1.0, Tdown=0.0)
+COMPONENT polSetter =
+Set_pol(py=1)
      AT (0, 0, 0.5) RELATIVE Origin
 
 COMPONENT pollambdaMonitor1x =
