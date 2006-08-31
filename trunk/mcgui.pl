@@ -83,6 +83,7 @@ if ($Config{'osname'} ne 'MSWin32') {
 }
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 our $quote=1; # default editor behaviour is to surround strings with quotes
+our $cflags=1;# default compilation behaviour is to use CFLAGS
 
 my $compinfo;                        # Cache of parsed component definitions
 my @compdefs;                        # List of available component definitions
