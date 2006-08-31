@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.5 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.6 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1345,6 +1345,7 @@ void mcformat_usage(char *pgmname)
 "  -m        --merge          Add/Append equivalent data files and lists\n"
 "            --merge-samedir  Merges inside same directories (dangerous)\n"
 "  -s        --scan           Gather simulations per scan series\n"
+"  -so       --scan-only      Create scan series but does not merge data\n"
 "            --verbose        Verbose mode\n"
 "\n"
 "Examples:\n"
