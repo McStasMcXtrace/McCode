@@ -639,9 +639,16 @@ sub preferences_dialog {
     $b->attach($choicequote, -balloonmsg => "All string parameters will be surrounded with quotes\nThis option does not allow to pass variable names");
     if ($quote) { $choicequote->select; }
 
+    $MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'} unless $MCSTAS::mcstas_config{'CFLAGS_SAVED'};
+    my $compilchoice = $lf->Label(-text => "Compilation options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
+    $choicecflags = $lf->Checkbutton(-text => "Optimize ($MCSTAS::mcstas_config{'CFLAGS_SAVED'})",
+               -relief => 'flat', -variable => \$cflags)->pack(-fill => 'x');
+    $b->attach($choicecflags, -balloonmsg => "Uncheck to compile faster but simulate slower");
+    if ($cflags) { $choicecflags->select; }
+
     my $res = $dlg->Show;
 
-if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
+    if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
       elsif ($formatchoice_val =~ /McStas|PGPLOT/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
@@ -667,6 +674,12 @@ if ($formatchoice_val =~ /Matlab/i)    { $plotter= 'Matlab'; }
       elsif ($editorchoice_val =~ /^Advanced/){ 1 }
       elsif ($editorchoice_val =~ /^External/)    { 2 }
     };
+
+    if ($cflags) {
+      $MCSTAS::mcstas_config{'CFLAGS'} = $MCSTAS::mcstas_config{'CFLAGS_SAVED'};
+    } else {
+      $MCSTAS::mcstas_config{'CFLAGS'} = "";
+    }
 
     return ($res);
 }
