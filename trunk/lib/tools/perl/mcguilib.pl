@@ -596,7 +596,9 @@ sub preferences_dialog {
                -relief => 'flat', -variable => \$binary)->pack(-fill => 'x');
     $b->attach($button_bin, -balloonmsg => "Binary files are usually much faster\nto import (Matlab/Scilab)\nand smaller in size");
     if ($plotter =~ /binary/) { $button_bin->select; }
-
+    $pgmultiflag = $lf->Checkbutton(-text => "3-pane view with PGPLOT trace",
+				     -relief => 'flat', -variable => \$pgmulti)->pack(-fill => 'x');
+    $b->attach($pgmultiflag, -balloonmsg => "Check to view 3 panes in PGPLOT mcdisplay");
     # handle clustering methods
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;

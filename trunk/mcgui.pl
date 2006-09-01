@@ -84,6 +84,7 @@ if ($Config{'osname'} ne 'MSWin32') {
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 our $quote=1; # default editor behaviour is to surround strings with quotes
 our $cflags=1;# default compilation behaviour is to use CFLAGS
+our $pgmulti=0;# default PGPLOT mcdisplay behaviour is non-multi view
 
 my $compinfo;                        # Cache of parsed component definitions
 my @compdefs;                        # List of available component definitions
@@ -728,9 +729,11 @@ sub menu_run_simulation {
             push @command, "${prefix}mcdisplay$suffix";
             if ($plotter =~ /PGPLOT|McStas/i) {
               push @command, "--plotter=PGPLOT";
-              # Users seem to dislike multi-views with mcdisplay/PGPLOT
-              # We ought to have a switchbutton somewhere controlling this
-              # push @command, "--multi";
+              # Selection of PGPLOT 3-pane view from config menu only.
+	      # Default is to NOT use 3-pane view.
+              if ($pgmulti) {
+		  push @command, "--multi";
+	      }
               # Be sure to read mcplotlib.pl in this case...
               require "mcplotlib.pl";
               # Standard mcdisplay.pl with PGPLOT bindings
