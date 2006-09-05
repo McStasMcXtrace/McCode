@@ -10,12 +10,12 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.17 $
+* Version:  $Revision: 1.18 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
 *
-* This component uses a file of recorded neutrons from the reactor monte carlo
+* This component reads a file of recorded neutrons from the reactor Monte Carlo
 * code TRIPOLI4.4 as a source of particles.
 *
 * %D
@@ -65,6 +65,8 @@
 *                     Other words are ignored.
 * T4_ANALYSE:   [1]   Number of neutron events to read for file pre-analysis.
 *                     Use 0 to analyze them all.
+* T4_ANALYSE_EMIN:    Minimal energy to use for file pre-analysis [meV]
+* T4_ANALYSE_EMAX:    Maximal energy to use for file pre-analysis [meV]
 * radius:       [m]   In the case the Tripoli4 batch file is a point, you may
 *                     specify a disk emission area for the source.
 *
@@ -90,7 +92,7 @@
 
 DEFINE COMPONENT Virtual_tripoli4_input
 DEFINITION PARAMETERS (string file=0, string autocenter=0)
-SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1, T4_ANALYSE=10000, radius=0)
+SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1, T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0)
 OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,begin_batch,do_rotate,do_translate,do_axes,
                    bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -217,7 +219,7 @@ DECLARE
   char  do_rotate=0, do_translate=0, do_axes=0;
   double mean_x =0, mean_y =0, mean_z =0;
   double bx,by,bz;
-  double angle2z;
+  double angle2z=0;
   long   nbatch=0;
   long   nsize =0;
   double intensity_extrapolated=0;
@@ -229,7 +231,7 @@ INITIALIZE
   char  exit_flag=0;  /* set to 1 if end of simulation */
   int   result_read;
 
-  double mean_vx=0, mean_vy=0, mean_vz=0;
+  double mean_vx=0, mean_vy=0, mean_vz=0, mean_v=0;
   double mean_dx=0, mean_dy=0, mean_dz=0;
   double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
   double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
@@ -290,34 +292,33 @@ INITIALIZE
         fprintf(stderr, "Tripoli4_input: %s: Error: Cannot get neutron %d in batch %d.\n",NAME_CURRENT_COMP,n_neutrons,begin_batch);
         exit_flag = 1;
       } else {
-        double v;
-        if (radius > 0) /* force a disk source area */
-        {
-          double chi,r;
-          chi=2*PI*rand01();                          /* Choose point on source */
-          r=sqrt(rand01())*radius;                    /* with uniform distribution. */
-          x=r*cos(chi);
-          y=r*sin(chi);
-        }
-        mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
-        mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz;
+        double v,w;
+        /* if an energy filter is set, use it */
         v = sqrt(vx*vx+vy*vy+vz*vz);
-        if (v) {
-          mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
-        if (x  < min_x)  min_x  = x;
-        if (y  < min_y)  min_y  = y;
-        if (z  < min_z)  min_z  = z;
-        if (vx < min_vx) min_vx = vx;
-        if (vy < min_vy) min_vy = vy;
-        if (vz < min_vz) min_vz = z;
-        if (x  > max_x)  max_x  = x;
-        if (y  > max_y)  max_y  = y;
-        if (z  > max_z)  max_z  = z;
-        if (vx > max_vx) max_vx = vx;
-        if (vy > max_vy) max_vy = vy;
-        if (vz > max_vz) max_vz = z;
+        w = VS2E*v*v;
+        if ( (!T4_ANALYSE_EMIN && !T4_ANALYSE_EMAX)
+          || (T4_ANALYSE_EMIN <= w && w <= T4_ANALYSE_EMAX) ) {
+          mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
+          mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz; mean_v += p*v;
+          angle2z += p*vz/v;
+
+          if (v) {
+            mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
+          if (x  < min_x)  min_x  = x;
+          if (y  < min_y)  min_y  = y;
+          if (z  < min_z)  min_z  = z;
+          if (vx < min_vx) min_vx = vx;
+          if (vy < min_vy) min_vy = vy;
+          if (vz < min_vz) min_vz = z;
+          if (x  > max_x)  max_x  = x;
+          if (y  > max_y)  max_y  = y;
+          if (z  > max_z)  max_z  = z;
+          if (vx > max_vx) max_vx = vx;
+          if (vy > max_vy) max_vy = vy;
+          if (vz > max_vz) max_vz = z;
+          n_neutrons_p += p;
+        }
         n_neutrons++;
-        n_neutrons_p += p;
       }
     }
 
@@ -335,7 +336,6 @@ INITIALIZE
 
   if (n_neutrons) {
     double n_count_extrapolated=0;
-    double mean_v;
     long   end_analyse=0;
     double cx,cy,cz;
     double nbatch_extrapolated=0;
@@ -349,8 +349,9 @@ INITIALIZE
     mean_dx /= n_neutrons_p;
     mean_dy /= n_neutrons_p;
     mean_dz /= n_neutrons_p;
+    mean_v  /= n_neutrons_p;
+    angle2z /= n_neutrons_p;
     /* now estimates total ncount */
-    mean_v = sqrt(mean_vx*mean_vx+mean_vy*mean_vy+mean_vz*mean_vz);
     if (T4_ANALYSE>0) {
       n_count_extrapolated = n_neutrons*(filesize-first_batch)/(end_analyse - first_batch);
       nbatch_extrapolated  = nbatch    *(filesize-first_batch)/(end_analyse - first_batch);
@@ -366,7 +367,7 @@ INITIALIZE
       mean_w = VS2E*mean_v*mean_v;
       printf("Tripoli4 file %s\nContains %s%g neutrons in %d batches of size %d\n",
         file, T4_ANALYSE ? "about " : "",
-        n_count_extrapolated, nbatch*(filesize-first_batch)/(end_analyse - first_batch), nsize);
+        n_count_extrapolated, nbatch_extrapolated, nsize);
       if (n_count_extrapolated > mcget_ncount())
         printf("    (will use only %.3g %% of file)\n", 100*mcget_ncount()/n_count_extrapolated);
       else
@@ -410,7 +411,8 @@ INITIALIZE
     cx = mean_vx/mean_v; cy = mean_vy/mean_v; cz = mean_vz/mean_v;
 
     /* compute angle to rotate in order to come back to Z axis */
-    angle2z = acos(cz); /* in RAD */
+    // angle2z = acos(cz); /* in RAD */
+    angle2z = acos(angle2z);
     /* get rotation axis b=c x [0 0 1] */
     if (angle2z) {
       vec_prod(bx,by,bz, cx,cy,cz, 0,0,1);
@@ -454,6 +456,9 @@ TRACE
       fprintf(stderr,"  Finishing simulation\n");
       exit_flag = 1;
     } else {
+      if (do_translate) { /* translate the beam to origin */
+        x -= mean_x; y -= mean_y; z -= mean_z;
+      }
       if (radius > 0) /* force a disk source area */
       {
         double chi,r;
@@ -461,9 +466,6 @@ TRACE
         r=sqrt(rand01())*radius;                    /* with uniform distribution. */
         x=r*cos(chi);
         y=r*sin(chi);
-      }
-      if (do_translate) { /* translate the beam to origin */
-        x -= mean_x; y -= mean_y; z -= mean_z;
       }
       if (do_rotate) {    /* rotate the beam so that its main axis is along Z */
         double nvx, nvy, nvz;

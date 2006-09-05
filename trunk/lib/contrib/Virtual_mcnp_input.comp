@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.2 $
+* Version:  $Revision: 1.3 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -250,7 +250,7 @@ DECLARE
   char  do_rotate=0, do_translate=0, do_axes=0;
   double mean_x =0, mean_y =0, mean_z =0;
   double bx,by,bz;
-  double angle2z;
+  double angle2z=0;
   long   begin_neutrons=0;
   int old_surface=-1;
   int  surface;
@@ -262,7 +262,7 @@ INITIALIZE
 %{
   char  exit_flag=0;  /* set to 1 if end of simulation */
 
-  double mean_vx=0, mean_vy=0, mean_vz=0;
+  double mean_vx=0, mean_vy=0, mean_vz=0; mean_v=0;
   double mean_dx=0, mean_dy=0, mean_dz=0;
   double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
   double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
@@ -310,9 +310,10 @@ INITIALIZE
 	exit_flag = 1;
 	} else {
 	double v;
-	mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
-	mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz;
 	v = sqrt(vx*vx+vy*vy+vz*vz);
+	mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
+	mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz; mean_v += p*v;
+	angle2z += p*vz/v;
 	if (v) {
 		mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
 	if (x  < min_x)  min_x  = x;
@@ -349,8 +350,8 @@ INITIALIZE
     mean_dx /= n_neutrons_p;
     mean_dy /= n_neutrons_p;
     mean_dz /= n_neutrons_p;
-    /* now estimates total ncount */
-    mean_v = sqrt(mean_vx*mean_vx+mean_vy*mean_vy+mean_vz*mean_vz);
+    mean_v  /= n_neutrons_p;
+    angle2z /= n_neutrons_p;
     n_count_extrapolated = n_neutrons*(filesize-begin_neutrons)/(end_analyse - begin_neutrons);
     if (verbose) {
       double mean_k, mean_w=0, mean_L=0;
@@ -401,7 +402,7 @@ INITIALIZE
     cx = mean_vx/mean_v; cy = mean_vy/mean_v; cz = mean_vz/mean_v;
 
     /* compute angle to rotate in order to come back to Z axis */
-    angle2z = acos(cz); /* in RAD */
+    angle2z = acos(angle2z); /* in RAD */
     /* get rotation axis b=c x [0 0 1] */
     if (angle2z) {
       vec_prod(bx,by,bz, cx,cy,cz, 0,0,1);

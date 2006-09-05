@@ -11,7 +11,7 @@
 *
 * Written by: E. Farhi
 * Date: Nov 2005
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Release: McStas 1.9
 * Origin: Risoe
 *
@@ -37,9 +37,10 @@
 DEFINE COMPONENT Beam_spy
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
-OUTPUT PARAMETERS (mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz, n_neutrons,
+OUTPUT PARAMETERS (mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz,
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
-                   max_vx, max_vy, max_vz,  mean_x, mean_y, mean_z, mean_t)
+                   max_vx, max_vy, max_vz,  mean_x, mean_y, mean_z, mean_t, mean_v,
+                   n_neutrons_p, n_neutrons, n_neutrons_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
@@ -87,21 +88,23 @@ TRACE
 SAVE
 %{
   double mean_k, mean_w=0, mean_L=0;
+  double smean_vx, smean_vy, smean_vz, smean_dx, smean_dy, smean_dz;
+  double smean_x, smean_y, smean_z, smean_t, smean_v;
   Coords c;
 
   c = POS_A_CURRENT_COMP;
   /* display statitics */
-  mean_x  /= n_neutrons_p;
-  mean_y  /= n_neutrons_p;
-  mean_z  /= n_neutrons_p;
-  mean_vx /= n_neutrons_p;
-  mean_vy /= n_neutrons_p;
-  mean_vz /= n_neutrons_p;
-  mean_dx /= n_neutrons_p;
-  mean_dy /= n_neutrons_p;
-  mean_dz /= n_neutrons_p;
-  mean_t  /= n_neutrons_p;
-  mean_v  /= n_neutrons_p;
+  smean_x  = mean_x  / n_neutrons_p;
+  smean_y  = mean_y  / n_neutrons_p;
+  smean_z  = mean_z  / n_neutrons_p;
+  smean_vx = mean_vx / n_neutrons_p;
+  smean_vy = mean_vy / n_neutrons_p;
+  smean_vz = mean_vz / n_neutrons_p;
+  smean_dx = mean_dx / n_neutrons_p;
+  smean_dy = mean_dy / n_neutrons_p;
+  smean_dz = mean_dz / n_neutrons_p;
+  smean_t  = mean_t  / n_neutrons_p;
+  smean_v  = mean_v  / n_neutrons_p;
   /* now estimates total ncount */
 
   mean_k = V2K*mean_v;
@@ -113,17 +116,17 @@ SAVE
   printf("  Beam size (full width in [m]):      ");
   printf("    dX=%g dY=%g dZ=%g\n", max_x-min_x, max_y-min_y, max_z-min_z);
   printf("  Beam center (in [m]):               ");
-  printf("    X0=%g Y0=%g Z0=%g\n", mean_x, mean_y, mean_z);
+  printf("    X0=%g Y0=%g Z0=%g\n", smean_x, smean_y, smean_z);
   printf("  Beam velocity divergence (half width in [deg]):");
   printf("  dVx=%g dVy=%g dVz=%g\n",
-    atan(mean_dx)*RAD2DEG,
-    atan(mean_dy)*RAD2DEG,
-    atan(mean_dz)*RAD2DEG);
+    atan(smean_dx)*RAD2DEG,
+    atan(smean_dy)*RAD2DEG,
+    atan(smean_dz)*RAD2DEG);
   printf("  Beam speed (in [m/s]):                ");
-  printf("  Vx=%g Vy=%g Vz=%g\n", mean_vx, mean_vy, mean_vz);
+  printf("  Vx=%g Vy=%g Vz=%g\n", smean_vx, smean_vy, smean_vz);
   printf("  Beam mean energy:\n");
-  printf("    speed=%g [m/s] energy=%g [meV]\n    wavelength=%g [Angs] wavevector=%g [Angs-1]\n", mean_v, mean_w, mean_L, mean_k);
-  printf("  Mean arrival time: t=%g [s]\n", mean_t);
+  printf("    speed=%g [m/s] energy=%g [meV]\n    wavelength=%g [Angs] wavevector=%g [Angs-1]\n", smean_v, mean_w, mean_L, mean_k);
+  printf("  Mean arrival time: t=%g [s]\n", smean_t);
   DETECTOR_OUT_0D("Beam analyzer " NAME_CURRENT_COMP, n_neutrons, n_neutrons_p, n_neutrons_p2);
 %}
 
