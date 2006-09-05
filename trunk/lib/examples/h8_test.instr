@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.6
-* Version: $Revision: 1.6 $
+* Release: McStas 1.10
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -41,7 +41,7 @@ DEFINE INSTRUMENT H8_test(Lambda=2.36)
 
 DECLARE
 %{
-  #define VERSION "0.01"
+  #define VERSION "1.7"
   double DM         = 3.3539;   /* Monochromator d-spacing in Angs */
                                 /* PG002 Orders : 1st 3.355 2e 1.6775, 3e 1.1183 */
 
@@ -58,7 +58,7 @@ INITIALIZE
   int    ORDER = 1;
   double vi, Ki;
   int    SM,SS,SA;
-  char *hostname;
+  char hostname[256];
 
   /* SM : scattering at mono to the right (-1)/left(+1) */
   /* SS : scattering at sample to the right (-1)/left(+1) */
@@ -82,11 +82,9 @@ INITIALIZE
   A3 = A4/2;    /* A4 : sample 2 theta (arm to analyser) */
   A6 *= SA;       /* A5 : analyser theta (crystal) */
   A5 = A6/2;    /* A6 : analyser 2 theta (arm to Dector) */
-  
-  hostname = getenv("HOSTNAME");
-  if (hostname == NULL) {
-    hostname="(undefined)";
-  }
+
+  strcpy(hostname, getenv("HOSTNAME") ? getenv("HOSTNAME") : "localhost");
+
   printf("Instrument : H8, v%s (21/02/01) on %s.\n",VERSION,hostname);
   printf("Monochromator : (DM = %g)\n",DM);
   printf("A1 = %.2f, A2 = %.2f (deg)\n",A1,A2);
@@ -97,6 +95,8 @@ Lambda);
 
 TRACE
 /* Source description */
+COMPONENT Origin=Progress_bar()
+AT (0,0,0) ABSOLUTE
 
 /* a flat constant source */
 COMPONENT Source = Source_flat(
