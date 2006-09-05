@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.137 $
+* Version: $Revision: 1.138 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.137 2006-08-30 12:13:41 farhi Exp $
+* $Id: mcstas-r.c,v 1.138 2006-09-05 15:26:18 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.137  2006/08/30 12:13:41  farhi
+* Define mutexes for mcstas-r parts.
+*
 * Revision 1.136  2006/08/28 10:12:25  pchr
 * Basic infrastructure for spin propagation in magnetic fields.
 *
@@ -925,7 +928,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "%PRE%VNA={class:'%TYP'}\n",
     "%PREstv,%VPA,'%VNA',%VNA\n",
     "%PREstv,%SEC,'%NAM','%VAL'\n",
-    "%PREstv,%PAR,'func','%PAR' & data=[ ",
+    "%PREstv,%PAR,'func','%PAR' & data=[ $\n",
     " ]\n%PREif size(data,/type) eq 7 then single_file=0 else single_file=1\n"
     "%PREstv,%PAR,'data',data & data=0 & %PAR=mcplot_inline(%PAR,p)\n",
     "%PREif single_file ne 0 then begin errors=[ ",
