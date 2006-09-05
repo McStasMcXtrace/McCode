@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.6 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.7 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -176,7 +176,7 @@ char *str_dup_label(char *orig)
   {
     if ( (orig[i] > 122)
       || (orig[i] < 32)
-      || (strchr("\"'=.:;", orig[i]) != NULL) )
+      || (strchr("\"'=:;", orig[i]) != NULL) )
     {
       orig[i] = ' ';
     }
@@ -921,8 +921,8 @@ int mcformat_output(struct McStas_file_format McStasStruct)
       mcdirname      = McStasStruct.mcdirname;
       mcinstrnames[i]= str_dup(McStasStruct.InstrName);
       mcsources[i]   = str_dup(McStasStruct.Source);
-      strncpy(mcinstrument_source, str_last_word(mcinstrnames[i]), MAX_LENGTH);
-      strncpy(mcinstrument_name  , str_last_word(mcsources[i]), MAX_LENGTH);
+      strncpy(mcinstrument_name,     str_last_word(mcinstrnames[i]), MAX_LENGTH);
+      strncpy(mcinstrument_source  , str_dup(mcsources[i]), MAX_LENGTH);
       mcsiminfo_init(NULL); /* open new SIM file in this dir for the first time */
       mcsimfiles[i]  = mcsiminfo_file;
     } else mcsiminfo_file = mcsimfiles[i];
@@ -938,7 +938,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   mcgravitation       = (strstr(McStasStruct.gravitation, "yes") ? 1 : 0);
   mcrun_num = McStasStruct.RunNum;
   mcncount  = McStasStruct.Ncount;
-  strncpy(mcinstrument_source, str_last_word(McStasStruct.Source), MAX_LENGTH);
+  strncpy(mcinstrument_source, str_dup(McStasStruct.Source), MAX_LENGTH);
   strncpy(mcinstrument_name  , str_last_word(McStasStruct.InstrName), MAX_LENGTH);
   /* transfert mcnumipar */
   mcnumipar = McStasStruct.mcnumipar;
