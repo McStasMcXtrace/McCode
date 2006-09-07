@@ -312,6 +312,7 @@ sub parse_args {
                                 (optimization criteria, requires Math::Amoeba)
    --optim                    Maximize all monitors
    --optim-prec=PREC          Relative requested accuracy of criteria (1e-3)
+   --test                     Execute McStas selftest and generate report
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
    -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
@@ -323,7 +324,6 @@ sub parse_args {
    --no-output-files          Do not write any data files.
    -h        --help           Show help message.
    -i        --info           Detailed instrument information.
-   --test                     Execute McStas selftest and generate report
    --format=FORMAT            Output data files using format FORMAT.
                               (format list obtained from <instr>.out -h)
    --threads=NB_CPU           Use threads for multi-cpu machines
@@ -1254,3 +1254,5 @@ if($numpoints == 1 && $optim_flag == 0) {
         }
     }
 }
+exit(0);
+

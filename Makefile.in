@@ -26,6 +26,7 @@ exec_prefix = @exec_prefix@
 bindir = @bindir@
 srcdir = @srcdir@
 libdir = @libdir@
+mandir = @mandir@
 
 
 DEBUG = -DDEBUG=0
@@ -148,6 +149,7 @@ install: installdirs $(BINOBJS)
 	  fi \
 	done
 	./mcdoc.fixpl --text
+	$(INSTALL_DATA) *.1 $(mandir)/man1
 	mkdir $(mc_libdir)/tools/perl/modules
 	cd support/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
 	cd support/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install

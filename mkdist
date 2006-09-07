@@ -92,10 +92,25 @@ DAY=`date +"%d"`
 YEAR=`date +"%Y"`
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.h > mcstas.h.tmp
 cat mcstas.h.tmp > mcstas.h
-rm -f mcstas.h.tmp
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.c > mcformat.c.tmp
 cat mcformat.c.tmp > mcformat.c
-rm -f mcformat.c.tmp
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.1 > mcstas.1.tmp
+cat mcstas.1.tmp > mcstas.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcrun.1 > mcrun.1.tmp
+cat mcrun.1.tmp  > mcrun.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcdoc.1  > mcdoc.1.tmp
+cat mcdoc.1.tmp > mcdoc.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcgui.1  > mcgui.1.tmp
+cat mcgui.1.tmp > mcgui.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcplot.1 > mcplot.1.tmp
+cat mcplot.1.tmp > mcplot.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcdisplay.1 > mcdisplay.1.tmp
+cat mcdisplay.1.tmp > mcdisplay.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcconvert.1 > mcconvert.1.tmp
+cat mcconvert.1.tmp > mcconvert.1
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.1 > mcformat.1.tmp
+cat mcformat.1.tmp > mcformat.1
+rm -f *.tmp
 
 # Create configure
 autoconf configure.in > configure
