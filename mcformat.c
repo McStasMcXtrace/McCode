@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.7 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.8 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -750,12 +750,15 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   char *name_start=NULL;
   mcnumipar = 0;
   while (tok) { /* extract parameter=value as clean names */
-    tok = strstr(s, "Param");
+    tok = strstr(s, "Parameters");
+    if (!tok) tok = strstr(s, "parameters");
+    if (!tok) tok = strstr(s, "Param");
     if (!tok) tok = strstr(s, "param");
     if (!tok) break;
-    parsing = Table_ParseHeader(tok, "Param", NULL); /* get line */
-    if (!parsing[0])
-      parsing = Table_ParseHeader(tok, "param", NULL); /* get line */
+    parsing = Table_ParseHeader(tok, "Parameters", NULL); /* get line */
+    if (!parsing[0]) parsing = Table_ParseHeader(tok, "parameters", NULL); /* get line */
+    if (!parsing[0]) parsing = Table_ParseHeader(tok, "Param", NULL); /* get line */
+    if (!parsing[0]) parsing = Table_ParseHeader(tok, "param", NULL); /* get line */
     name_start = (parsing[0] ? str_dup(parsing[0]) : NULL);
     memfree(parsing[0]); free(parsing);
     if (!name_start) break;
