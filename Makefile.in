@@ -157,7 +157,7 @@ install: installdirs $(BINOBJS)
 
 
 installdirs:
-	$(srcdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir)
+	$(srcdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir) $(mandir)/man1
 
 instrument.tab.o: mcstas.h
 lex.yy.o: mcstas.h instrument.tab.h
