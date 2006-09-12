@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * Mcstas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: Risoe
-* Release: McStas 1.6
+* Release: McStas 1.9.1
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *
@@ -25,7 +25,7 @@
 * (McStas units are in general neutrons/second)
 *
 * Example general parameters (general):
-*          size=0.12 l_low=0.1 l_high=10 dist=2 xw=0.06 yh=0.12 freq=50
+*          size=0.12 l_low=0.1 l_high=10 dist=1.6 xw=0.19 yh=0.15 freq=16.67
 *          branchframe=0.5
 *
 * Example moderator specific parameters
@@ -110,7 +110,7 @@ DECLARE
 INITIALIZE
 %{
   if (n == 1 || n2 == 1 || l_low<=0 || l_high <=0 || dist == 0
-    || branch1 == 0 || branch2 == 0 || branchtail == 0 || tau == 0)
+    || branch2 == 0 || branch_tail == 0 || tau == 0)
   {
     printf("ESS_moderator_long: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {l_low l_high dist d tau branch1/2/tail} and 1 value for {n n2 branch1/2/tail}\n", NAME_CURRENT_COMP);
     exit(-1);
@@ -222,6 +222,13 @@ TRACE
                                           /* Calculate true intensity */
   }
  }
+ if (rand01()<branchframe)
+   {
+     t+=1/freq;
+     p/=(branchframe);
+   }
+ else
+   p/=(1-branchframe);
 %}
 
 MCDISPLAY
