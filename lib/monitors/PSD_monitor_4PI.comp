@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 * Origin: Risoe
-* Release: McStas 1.6
+* Release: McStas 1.10c
 *
 * Spherical position-sensitive detector.
 *
@@ -71,7 +71,7 @@ INITIALIZE
 %}
 TRACE
 %{
-  double t0, t1, phi;
+  double t0, t1, phi, theta;
   int i,j;
 
   if(sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius) && t1 > 0)
@@ -86,7 +86,8 @@ TRACE
       i = nx-1;                      /* Special case for phi = PI. */
     else if(i < 0)
       i = 0;
-    j = floor(ny*(y/(2*radius)+0.5));
+    theta=asin(y/radius);
+    j = floor(ny*(theta+PI/2)/PI+0.5);
     if(j >= ny)
       j = ny-1;                      /* Special case for y = radius. */
     else if(j < 0)
