@@ -34,7 +34,7 @@ sub plot_array_2d {
     my ($x0,$x1,$y0,$y1) = @{$info->{'Limits'}};
     my ($dx,$dy) = (($x1 - $x0)/$m, ($y1 - $y0)/$n);
     my $tr = pdl [ $x0 + $dx/2, $dx, 0, $y0 + $dy/2, 0, $dy ];
-    if ($info->{'Logmode'} == 1 && $min <= 0 && max($data) > 0) {
+    if ($info->{'Logmode'} == 1 && min($data) <= 0 && max($data) > 0) {
       my $i=which($data <= 0);
       my $j=which($data >  0);
       my $low_data = $data->flat->index($i);
