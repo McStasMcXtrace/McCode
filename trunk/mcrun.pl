@@ -62,14 +62,15 @@ require "mcrunlib.pl";
 autoflush STDOUT 1;
 
 # Various parameters determined by the command line.
-my ($sim_def, $force_compile, $data_dir, $data_file);
+my ($sim_def, $force_compile, $data_file);
+our $data_dir;
 my $ncount = 1e6;               # Number of neutron histories in one simulation
-my $numpoints = 1;              # Number of points in scan (if any)
-my @params = ();                # List of input parameters
+our $numpoints = 1;              # Number of points in scan (if any)
+our @params = ();                # List of input parameters
 my %vals;                       # Hash of input parameter values
 my @options = ();               # Additional command line options (mcstas)
 my @ccopts = ();                # Additional command line options (cc)
-my $format_ext;                 # sim file extension
+our $format_ext;                 # sim file extension
 my $format_assign;              # assignation symbol ':', '='
 my $format_start_value;         # symbol before field value
 my $format_end_value;           # symbol after field value
@@ -90,11 +91,14 @@ our $optim_flag=0;              # 0: normal scan, 1: optim some monitors, 2: opt
 our @guess;                     # starting set of parameters (centers of scans)
 our @scale;                     # ranges of parameters (ratio from center)
 our $optim_iterations=0;        # total number of function calls in optim
-our @optim_last;
+our @optim_best;
 our @optim_datablock = ();
 our @optim_youts=();
 our $optim_variables;
 our @optim_first;
+our $optim_bestvalue=0;
+our $max_iteration=20;
+our $data_dir_saved = undef;
 my  $optim_prec=1e-3;
 
 # Name of compiled simulation executable.
@@ -1135,7 +1139,7 @@ if ($exec_test) {
 }
 
 our $scan_info = check_input_params(); # Get variables to scan, if any
-$out_file = get_out_file($sim_def, $force_compile, $mpi, $threads, @ccopts);
+$out_file      = get_out_file($sim_def, $force_compile, $mpi, $threads, @ccopts);
 exit(1) unless $out_file;
 exit(1) if $ncount == 0;
 
@@ -1150,10 +1154,8 @@ if($numpoints == 1 && $optim_flag == 0) {
     } else {
         if ($optim_flag && $MCSTAS::mcstas_config{'AMOEBA'}) {
           # main optimization routine. Use optim_names, scan_info, numpoints, data_dir and vals
-          my @optim_p;
-          my $minimum;
           require "mcoptimlib.pl";
-          my $max_iteration=20;
+          $max_iteration = 4*@{$scan_info->{VARS}};
           if ($numpoints > 1) { $max_iteration = $numpoints; }
           my $j;
           my $i;
@@ -1161,90 +1163,54 @@ if($numpoints == 1 && $optim_flag == 0) {
           # get guessed parameter set (MAX-MIN) and scale. Print optimization config
           die "Specify parameter range=MIN,MAX for optimization\n" unless @{$scan_info->{VARS}};
 
-          print STDERR "Starting optimization of $sim_def paramaters:\n";
+          print "Starting optimization of $sim_def paramaters:\n";
           for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
             $i = $scan_info->{VARS}[$j]; # Index of variable to be scanned
             $guess[$j] = ($scan_info->{MAX}[$j] + $scan_info->{MIN}[$j])/2;
             $scale[$j] = ($scan_info->{MAX}[$j] - $scan_info->{MIN}[$j])/2;
-#             if ($guess[$j] != 0) {
-#               $scale[$j] = $scale[$j]/$guess[$j];
-#             }
             print "$params[$i]=$guess[$j] ";
           }
-          print STDERR "\nto maximize ($max_iteration iterations, within $optim_prec accuracy):\n  ";
+          print "\nto maximize ($max_iteration iterations, within $optim_prec accuracy):\n  ";
           if ($optim_flag > 1) {
-            print STDERR "All monitors";
+            print "All monitors";
           } else {
             for($i = 0; $i < @optim_names; $i++) {
-              print STDERR "$optim_names[$i] ";
+              print "$optim_names[$i] ";
             }
           }
-          print STDERR "\n";
+          print "\n";
 
           # set numpoints to 1 for do_scan
           $numpoints = 1;
 
           # undefine $data_dir not to have dir overwrite error in do_scan
-          my $data_dir_saved = $data_dir ? $data_dir : undef;
+          $data_dir_saved = $data_dir ? $data_dir : undef;
           undef($data_dir);
 
-          # call Amoeba to minimize criteria
-          my $p;
-          ($p,$minimum) =
-            MinimiseND(\@guess,\@scale,\&minimize_function,$optim_prec,$max_iteration);
+          $SIG{'INT'}  = \&sighandler_optim;
+          $SIG{'TERM'} = \&sighandler_optim;
+          if ($Config{'osname'} ne 'MSWin32') {
+            $SIG{'USR1'} = \&sighandler_optim;
+            $SIG{'USR2'} = \&sighandler_optim;
+            $SIG{'HUP'}  = \&sighandler_optim;
+          }
 
-          @optim_p = @optim_last;
+          # call Amoeba to minimize criteria
+          my ($p,$minimum) =
+            MinimiseND(\@guess,\@scale,\&minimize_function,$optim_prec,$max_iteration);
 
           # constrain within limits
           for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
-            if    ($optim_p[$j] > $scan_info->{MAX}[$j]) { $optim_p[$j] = $scan_info->{MAX}[$j]; }
-            elsif ($optim_p[$j] < $scan_info->{MIN}[$j]) { $optim_p[$j] = $scan_info->{MIN}[$j]; }
+            if    ($optim_best[$j] > $scan_info->{MAX}[$j]) { $optim_best[$j] = $scan_info->{MAX}[$j]; }
+            elsif ($optim_best[$j] < $scan_info->{MIN}[$j]) { $optim_best[$j] = $scan_info->{MIN}[$j]; }
           }
 
           # display result
           if ($optim_iterations >= $max_iteration) {
-            print STDERR "Optimization failed (no convergence after $optim_iterations iterations).\nIncrease number of iterations (-N 100) or looser required accuracy (--optim-prec=1e-2).\nLast estimates:\n";
-          } else {
-            print STDERR "Optimized parameters:\n";
+            print "Optimization failed (no convergence after $optim_iterations iterations).\nIncrease number of iterations (-N 100) or looser required accuracy (--optim-prec=1e-2).\nLast estimates:\n";
           }
 
-          for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
-            $i = $scan_info->{VARS}[$j]; # Index of variable to be scanned
-            print "$params[$i]=$optim_p[$j] ";
-          }
-          print STDERR "\n";
-
-          # reactivate $data_dir and relaunch minimize_function to fill directory
-          # mcstas.sim is last iteration result
-          if ($data_dir_saved) {
-            $data_dir = $data_dir_saved;
-            print STDERR "Generating optimized configuration in --dir=$data_dir\n";
-            minimize_function(@optim_p); # this also sets scan-info
-          }
-          # output optimization results as a scan
-          $numpoints = $optim_iterations;
-          my $prefix = "";
-          if($data_dir) { $prefix = "$data_dir/"; }
-          my $datfile = "mcstas.dat";
-          my $simfile = $datfile;
-          $simfile =~ s/\.dat$//;         # Strip any trailing ".dat" extension ...
-          $simfile .= $format_ext;        # ... and add ".sim|m|sci" extension.
-          my $datablock = join(" ", @optim_datablock);  # mcoptimlib-> @optim_datablock, @optim_youts, $optim_variable
-
-          # Only initialize / use $DAT datafile if format is PGPLOT
-          if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
-            my $DAT = new FileHandle;
-            open($DAT, ">${prefix}$datfile");
-            output_dat_header($DAT, "# ", $scan_info, \@optim_youts, $optim_variables, $datfile);
-            print $DAT "$datablock\n";
-            close($DAT);
-          } else {
-            $datfile = $simfile;             # Any reference should be to the simfile
-          }
-
-          output_sim_file("${prefix}$simfile", $scan_info, \@optim_youts, $optim_variables, $datfile, $datablock);
-
-          print "Optimization file: '${prefix}$datfile'\nOptimized parameters: $optim_variables\n";
+          save_optimization(1);
 
         } else {
           if ($optim_flag && not $MCSTAS::mcstas_config{'AMOEBA'}) {

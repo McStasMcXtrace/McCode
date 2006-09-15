@@ -94,10 +94,84 @@ sub minimize_function {
     $optim_variables .= " criteria null";
     push @optim_youts, " (criteria,null)";
   }
-  @optim_last = @p;
+  if ($optim_iterations == 0 || $y >= $optim_bestvalue) {
+    @optim_best      = @p;
+    $optim_bestvalue = $y;
+  }
   $optim_iterations++;
 
+  print "Optimization $optim_iterations criteria=$y\n";
+
   return -$y;
+}
+
+sub sighandler_optim {
+  my $signame = shift;
+  print "mcrun: Recieved signal $signame during optimization (iteration $optim_iterations).\n";
+  if ($signame eq "INT" || $signame eq "TERM") {
+    save_optimization(0);
+    exit(0);
+  } else {
+    print "# Optimization history:\n";
+    my $datablock = join(" ", @optim_datablock);  # mcoptimlib-> @optim_datablock, @optim_youts, $optim_variable
+    print "# variables: $optim_variables\n";
+    print "$datablock\n";
+  }
+}
+
+# function to save optimization history
+sub save_optimization {
+  my ($final_call) = @_;
+  my ($j);
+
+  # constrain within limits
+  for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
+    if    ($optim_best[$j] > $scan_info->{MAX}[$j]) { $optim_best[$j] = $scan_info->{MAX}[$j]; }
+    elsif ($optim_best[$j] < $scan_info->{MIN}[$j]) { $optim_best[$j] = $scan_info->{MIN}[$j]; }
+  }
+
+  # display result
+  print "Iteration $optim_iterations parameters:\n";
+
+  for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
+    $i = $scan_info->{VARS}[$j]; # Index of variable to be scanned
+    print "$params[$i]=$optim_best[$j] ";
+  }
+  print "\n";
+
+  # reactivate $data_dir and relaunch minimize_function to fill directory
+  # mcstas.sim is last iteration result
+  if ($data_dir_saved) {
+    $data_dir = $data_dir_saved;
+    print "Generating optimized configuration in --dir=$data_dir\n";
+    minimize_function(@optim_best); # this also sets scan-info by calling do_scan
+  }
+  # output optimization results as a scan
+  $numpoints = $optim_iterations;
+  my $prefix = "";
+  if($data_dir) { $prefix = "$data_dir/"; }
+  my $datfile = "mcstas.dat";
+  my $simfile = $datfile;
+  $simfile =~ s/\.dat$//;         # Strip any trailing ".dat" extension ...
+  $simfile .= $format_ext;        # ... and add ".sim|m|sci" extension.
+  my $datablock = join(" ", @optim_datablock);  # mcoptimlib-> @optim_datablock, @optim_youts, $optim_variable
+
+  # Only initialize / use $DAT datafile if format is PGPLOT
+  if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+    my $DAT = new FileHandle;
+    open($DAT, ">${prefix}$datfile");
+    output_dat_header($DAT, "# ", $scan_info, \@optim_youts, $optim_variables, $datfile);
+    print $DAT "$datablock\n";
+    close($DAT);
+  } else {
+    $datfile = $simfile;             # Any reference should be to the simfile
+  }
+
+  output_sim_file("${prefix}$simfile", $scan_info, \@optim_youts, $optim_variables, $datfile, $datablock);
+
+  print "Optimization file: '${prefix}$datfile'\nOptimized parameters: $optim_variables\n";
+  undef($data_dir);
+  $numpoints = 1;
 }
 
 1;
