@@ -39,7 +39,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.8 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.9 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -423,7 +423,7 @@ struct McStas_file_format mcformat_init_mcstas_struct(void)
   return(McStasStruct);
 } /* mcformat_init_mcstas_struct */
 
-/*
+
 void mcformat_print_mcstas_struct(struct McStas_file_format McStasStruct)
 {
   printf("Structure from file %s\n", McStasStruct.filename);
@@ -474,7 +474,7 @@ void mcformat_print_mcstas_struct(struct McStas_file_format McStasStruct)
   printf("  mcnumipar  = %d\n", McStasStruct.mcnumipar);
   printf("  inputtable = %s\n", McStasStruct.mcinputtable ? "OK": "NULL");
 }
-*/
+
 
 /*******************************************************************************
 * mcformat_free_mcstas_struct: Free a McStas data structure
@@ -838,6 +838,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     }
   }
   McStasStruct.m *= -1; /* always transposed in files w/r to memory */
+
   /* free McStasStruct.Data for better memory management */
   Table_Free_Array(McStasStruct.Data); McStasStruct.Data=NULL;
 
@@ -904,7 +905,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
 {
   char *currentdir= mcdirname; /* save current dir */
   int i;
-
+  
   if (mctestmode) return(1);
   if (!McStasStruct.p1) return(0); /* empty data */
   /* determine in which directory we are and set SIM file */
@@ -931,7 +932,6 @@ int mcformat_output(struct McStas_file_format McStasStruct)
     } else mcsiminfo_file = mcsimfiles[i];
     mcdirname = mcdirnames[i];
   }
-
 /* transfert to global variables used in output functions */
   if (!McStasStruct.Date) mcstartdate = 0;
   else {
@@ -950,6 +950,12 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   }
   mcdirname = McStasStruct.mcdirname;
 
+  if (strstr(McStasStruct.Format, "PGPLOT") && strstr(McStasStruct.type, "array_1d")) {
+    mcdetector_out_1D(McStasStruct.title, McStasStruct.xlabel, McStasStruct.ylabel,
+                  McStasStruct.xvar, McStasStruct.x1, McStasStruct.x2, McStasStruct.m,
+                  McStasStruct.p0, McStasStruct.p1, McStasStruct.p2, McStasStruct.outputname,
+                  McStasStruct.component, McStasStruct.POSITION);
+  } else
   mcdetector_out_012D(mcformat,
     McStasStruct.component,
     McStasStruct.title,
@@ -962,7 +968,6 @@ int mcformat_output(struct McStas_file_format McStasStruct)
     McStasStruct.p1,
     McStasStruct.p2,
     McStasStruct.POSITION);
-
 
   mcdirname = currentdir;
   return(1);
@@ -1000,6 +1005,7 @@ int mcformat_convert(char *name)
     mcdirname = upper_dir;
   } else {
     /* process the current file */
+    if (mcverbose) printf("mcformat: reading %s (%ld bytes)\n", name, stbuf.st_size);
     McStasFile = mcformat_read_mcstas(name);
 
     if (!McStasFile.p1) {
@@ -1010,6 +1016,7 @@ int mcformat_convert(char *name)
     if (!mcmergemode && !mcscanmode) { /* direct conversion */
 
       /* now calls the output routines: sim and data files (0d, 1d, 2d) and free */
+      if (mcverbose) mcformat_print_mcstas_struct(McStasFile); fflush(stdout);
       if (mcformat_output(McStasFile))
         if (mcverbose) {
           printf("mcformat: converting %s (%ld bytes) ", name, stbuf.st_size);
