@@ -556,8 +556,10 @@ sub do_data_header {
     my $xlabel;
     my $min;
     my $max;
-    if (@{$info->{VARS}} == 0 || $optim_flag) { $xlabel = "Point number"; $scannedvars="Point"; $xvars="Point"; $min=1; $max=$numpoints; }
-    else {
+    if (@{$info->{VARS}} == 0 || $optim_flag) {
+      $xlabel = "Point number"; $scannedvars="Point"; $xvars="Point"; $min=1; $max=$numpoints;
+      if ($optim_flag) { push @$xvar_list, $xvars; }
+    } else {
       $xlabel = $params[$info->{VARS}[0]];
       $scannedvars = join ", ", map($params[$_], @{$info->{VARS}});
       $xvars = join " ", map($params[$_], @{$info->{VARS}});
