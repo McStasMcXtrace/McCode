@@ -219,6 +219,10 @@ install-pgplot:
 test:
 	./mcrun.fixpl --test
 
+uninstall:
+	cd $(bindir); rm -f $(BINOBJS)
+	rm -rf $(mc_libdir)
+
 # Optional auto install of patched perl-Tk package
 tk:
 	if [ $(WGET) != no ]; then \
