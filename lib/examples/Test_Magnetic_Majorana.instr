@@ -8,7 +8,7 @@
 * Date: August 2006
 * Origin: RISOE
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: tests
 *
 * This instrument demonstrates how to use the Pol_simpleBfield
@@ -71,8 +71,8 @@ Source_simple(radius = 0.001, dist = 1.0, xw = 0.001, yh = 0.001,
 	      Lambda0 = 15, dLambda = 14.0, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT polFilter =
-Pol_filter(xw=0.1, yh=0.1, fx=1, Tup=1.0, Tdown=0.0)
+COMPONENT polSetter =
+Set_pol(px=1)
      AT (0, 0, 0.5) RELATIVE Origin
 
 COMPONENT pollambdaMonitor1x = 
