@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.19 $
+* Version:  $Revision: 1.20 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -53,21 +53,23 @@
 * file:         Name of the neutron input file [str]
 *
 * Optional input parameters
-* repeat_count: Number of times the source must be generated [1]
+* repeat_count: Number of times the source must be generated/repeated [1]
 * type:         May be "text", "float" or "double" to force file type.
 *                           default is text file [str]
 * verbose:      Display additional information about source, recommanded [0/1]
+* smooth:       Smooth sparsed event files for file repetitions [0/1]
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_input
 DEFINITION PARAMETERS (string file=0, string type=0)
-SETTING PARAMETERS (verbose=0,repeat_count=1)
+SETTING PARAMETERS (verbose=0,repeat_count=1,smooth=1)
 OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,file_ncount,
                    mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz, n_neutrons,
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
-                   max_vx, max_vy, max_vz, first_block, mean_x, mean_y, mean_z, end_reading)
+                   max_vx, max_vy, max_vz, first_block, mean_x, mean_y, mean_z,
+                   end_reading, n_count_extrapolated)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
@@ -120,6 +122,7 @@ DECLARE
   double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
   double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
   double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
+  double n_count_extrapolated=0;
 %}
 
 INITIALIZE
@@ -136,6 +139,18 @@ INITIALIZE
 
   if (verbose)
     printf("Virtual_input: %s: Reading neutron events from file '%s'. Repeat %g time(s)\n", NAME_CURRENT_COMP, file, repeat_count);
+
+#ifdef USE_MPI
+  if (!smooth) {
+    if (verbose)
+    printf("Virtual_input: %s: MPI execution requires to smooth virtual source\n"
+           "WARNING        Setting smooth=1\n", NAME_CURRENT_COMP);
+    smooth=1;
+  }
+#endif
+
+if (verbose && smooth)
+      printf("* Beam will be smoothed\n");
 %}
 
 TRACE
@@ -202,7 +217,7 @@ TRACE
     if (pos >= nrows) { /* reached end of block */
       read_block = 1;
       if (first_block) {
-        double n_count_extrapolated=0, mean_v;
+        double mean_v;
         /* display statitics for 1st block */
         mean_x  /= n_neutrons;
         mean_y  /= n_neutrons;
@@ -242,6 +257,20 @@ TRACE
         }
       }
       first_block= 0;
+    }
+#ifdef USE_MPI
+    if (smooth && n_count_extrapolated)
+#else
+    if (smooth && repeat_number>1 && n_count_extrapolated)
+#endif
+    {
+      /* apply smmothing */
+      x += randnorm()*(max_x-min_x)/n_count_extrapolated/2;
+      y += randnorm()*(max_y-min_y)/n_count_extrapolated/2;
+      z += randnorm()*(max_z-min_z)/n_count_extrapolated/2;
+      vx += randnorm()*(max_vx-min_vx)/n_count_extrapolated/2;
+      vy += randnorm()*(max_vy-min_vy)/n_count_extrapolated/2;
+      vx += randnorm()*(max_vz-min_vz)/n_count_extrapolated/2;
     }
   } else { ABSORB; }
 %}
