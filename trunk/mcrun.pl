@@ -171,6 +171,8 @@ sub parse_args {
             if ($Config{'osname'} eq 'MSWin32') {
                 print STDOUT "mcrun: Sorry, --grid is not supported on windows!\n";
             } else { $multi=1; }
+        } elsif (/^--mpi$/) {
+            $mpi = 2;
         } elsif (/^--mpi\=(.*)$/) {
             $mpi = $1;
         } elsif (/^--machines\=(.*)$/) {
@@ -244,7 +246,7 @@ sub parse_args {
         print STDERR "mcrun: No MPI/grid machine list.
      Grid disabled, MPI will run locally...
   Define $ENV{'HOME'}/.mcstas-hosts
-  or $MCSTAS::mcstas_config{'HOSTFILE'}
+  or $MCSTAS::sys_dir/tools/perl/mcstas-host
   or use option --machines=<file>!\n";
         $multi = 0;
         $MCSTAS::mcstas_config{'HOSTFILE'} = "";

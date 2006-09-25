@@ -259,7 +259,7 @@ sub get_out_file_next {
       # ToDo: splitting CFLAGS should handle shell quoting as well ...
       my $cc     = $MCSTAS::mcstas_config{CC};
       my $cflags = $MCSTAS::mcstas_config{CFLAGS};
-      my $libs = "-lm";
+      my $libs = "-lm ";
       if ($v->{'threads'} && $MCSTAS::mcstas_config{THREADS} ne "no") {
         $libs .= " -DUSE_THREADS -lpthread ";
       }
