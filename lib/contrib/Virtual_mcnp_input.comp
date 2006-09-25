@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.3 $
+* Version:  $Revision: 1.4 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -72,6 +72,7 @@
 * surface_id:   [1]   Index of the emitting MCNP surface to use. -1 for all.
 * MCNP_ANALYSE: [1]   Number of neutron events to read for file pre-analysis.
 *                     Use 0 to analyze them all.
+* smooth:       [0/1] Smooth sparsed event files for file repetitions.
 *
 * OUTPUT PARAMETERS
 * head:   [char]        header buffer
@@ -92,10 +93,13 @@
 
 DEFINE COMPONENT Virtual_mcnp_input
 DEFINITION PARAMETERS (string file=0, string autocenter=0)
-SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,int surface_id=-1, nps=0)
+SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,int surface_id=-1,
+                    nps=0,smooth=1)
 OUTPUT PARAMETERS (hfile,head,rep,begin_neutrons,do_rotate,do_translate,do_axes,
                    bx,by,bz,angle2z,mean_x, mean_y, mean_z,
-                   old_surface,surface,informed_event,informed_surface)
+                   old_surface,surface,informed_event,informed_surface,
+                   min_x, min_y, min_z,    max_x , max_y , max_z ,
+                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
@@ -107,82 +111,71 @@ SHARE
 
 #include <sys/stat.h>
 int mcnp_get_particle(FILE *hfile,float * tableau,int *old_surface,int *surface_id,int *informed_event,int *informed_surface){
-		char *c;
-		int exit_flag=0;
-		float arg1=-1;
-		float arg2=-1;
-		float arg3=-1;
-		float arg4=-1;
-		float arg5=-1;
-		float arg6=-1;
-		float arg7=-1;
-		float arg8=-1;
-		float arg9=-1;
-		int err=-1;
-		int new_surface=-1;
-		char chaine[1024];
-		int serr=0;
-		if (!tableau) exit(fprintf(stderr, "MCNP_input: Error in mem alloc \n"));
+    char *c;
+    int exit_flag=0;
+    float arg1=-1;
+    float arg2=-1;
+    float arg3=-1;
+    float arg4=-1;
+    float arg5=-1;
+    float arg6=-1;
+    float arg7=-1;
+    float arg8=-1;
+    float arg9=-1;
+    int err=-1;
+    int new_surface=-1;
+    char chaine[1024];
+    int serr=0;
+    if (!tableau) exit(fprintf(stderr, "MCNP_input: Error in mem alloc \n"));
 
-			c=fgets(chaine,1024,hfile);
+    c=fgets(chaine,1024,hfile);
 
-			while(c!=NULL){
-				err=sscanf(chaine,"%e %e %e %e %e %e %e %e %e",&arg1,&arg2,&arg3,&arg4,&arg5,&arg6,&arg7,&arg8,&arg9);
+    while (c!=NULL) {
+      err=sscanf(chaine,"%e %e %e %e %e %e %e %e %e",&arg1,&arg2,&arg3,&arg4,&arg5,&arg6,&arg7,&arg8,&arg9);
 
-				if(err==2){
-					if(arg2!=3000 && arg2!=9000 && informed_event==0){
-						fprintf(stderr, "Warning : Unknown event  %g in current file  \n \n",arg2);
-						*informed_event=1;
-					}
-				}
+      if (err==2) { /* test number of numerical values read from line */
+        if(arg2!=3000 && arg2!=9000 && informed_event==0){
+          fprintf(stderr, "Warning : Unknown event  %g in current file  \n \n",arg2);
+          *informed_event=1;
+        }
+      } else if (err==7 || err==6) {
+        new_surface=arg3;
 
-				else if(err==7 || err==6){
-					new_surface=arg3;
+        if(new_surface!=*surface_id && *surface_id!=-1) serr=1;
 
-					if(new_surface!=*surface_id && *surface_id!=-1){
-						serr=1;
-					}
+        if(*old_surface!=-1 && *informed_surface!=1 && new_surface!=*old_surface){
+          printf("Warning : Different surfaces in current file \n \n");
+          *informed_surface=1;
+        }
 
-					if(*old_surface!=-1 && *informed_surface!=1 && new_surface!=*old_surface){
-						printf("Warning : Different surfaces in current file \n \n");
-						*informed_surface=1;
-					}
+        *old_surface=new_surface;
+      } else if (err==9 ) {
+        if(serr==0){
+          tableau[0]=arg1;
+          tableau[1]=arg2;
+          tableau[2]=arg3;
+          tableau[3]=arg4;
+          tableau[4]=arg5;
+          tableau[5]=arg6;
+          tableau[6]=arg7;
+          tableau[7]=arg8;
+          tableau[8]=arg9;
+          return (exit_flag);
+        }
+        serr=0;
+      } else {
+        fprintf(stderr,"MCNP_input: Error: Unknown file format \n");
+        exit_flag=1;
+        return (exit_flag);
+      }
+      c=fgets(chaine,1024,hfile);
 
-					*old_surface=new_surface;
-
-				}
-
-				else if(err==9 ){
-					if(serr==0){
-						tableau[0]=arg1;
-						tableau[1]=arg2;
-						tableau[2]=arg3;
-						tableau[3]=arg4;
-						tableau[4]=arg5;
-						tableau[5]=arg6;
-						tableau[6]=arg7;
-						tableau[7]=arg8;
-						tableau[8]=arg9;
-						return (exit_flag);
-					}
-
-					serr=0;
-
-				}
-
-				else{
-					fprintf(stderr,"MCNP_input: Error: Unknown file format \n");
-					exit_flag=1;
-					return (exit_flag);
-				}
-				c=fgets(chaine,1024,hfile);
-
-			}
-		exit_flag=1;
-		return (exit_flag);
+    }
+    exit_flag=1;
+    return (exit_flag);
 }
 /* mcnp_create_neutron:
-   function that reads values following the NEUTRON keyword
+   function that creates an event
    and assigns neutron parameters.
    Warning: mcnp Coord system (x y z) = (-x z y)
  */
@@ -190,7 +183,8 @@ int mcnp_create_neutron(FILE *hfile, double *x,double *y,double *z,
                                  double *vx, double *vy, double *vz,
                                  double *t,
                                  double *sx, double *sy, double *sz,
-                                 double *p,int *old_surface,int *surface_id,int *informed_event ,int *informed_surface)
+                                 double *p,int *old_surface,int *surface_id,int *informed_event,
+                                 int *informed_surface)
 {
   double Mev2Joule=1.602e-13;
   double speed;
@@ -213,7 +207,7 @@ int mcnp_create_neutron(FILE *hfile, double *x,double *y,double *z,
 
 }
 /* mcnp_get_header:
-   function that gets header lines until the MCNP start of data
+   function that gets/allocate header lines until the MCNP start of data
  */
 char *mcnp_get_header(FILE *hfile){
   int i;
@@ -229,7 +223,7 @@ char *mcnp_get_header(FILE *hfile){
   strcat(head, buffer);
   fgets(buffer,1024,hfile);
   strcat(head, buffer);
-
+  /* skip 6 lines */
   for (i=0; i<=6; i++) fgets(buffer,1024,hfile);
 
   return head;
@@ -256,18 +250,19 @@ DECLARE
   int  surface;
   int informed_event = 0;
   int informed_surface = 0;
+  double n_count_extrapolated=0;
+  double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
+  double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
+  double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
+  double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
 %}
 
 INITIALIZE
 %{
   char  exit_flag=0;  /* set to 1 if end of simulation */
 
-  double mean_vx=0, mean_vy=0, mean_vz=0; mean_v=0;
+  double mean_vx=0, mean_vy=0, mean_vz=0, mean_v=0;
   double mean_dx=0, mean_dy=0, mean_dz=0;
-  double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
-  double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
-  double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
-  double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
 
   double n_neutrons=0;
   double n_neutrons_p=0;
@@ -304,40 +299,38 @@ INITIALIZE
     * do that for the first 1e4 neutrons, and extrapolates to file size */
 
   while (!exit_flag && (n_neutrons <= MCNP_ANALYSE || !MCNP_ANALYSE)) {
-	double x,y,z,vx,vy,vz,t,p,sx,sy,sz;
-	if (mcnp_create_neutron(hfile,&x,&y,&z,&vx,&vy,&vz,&t,&sx,&sy,&sz,&p,&old_surface,&surface,&informed_event,&informed_surface)) {/*END OF FILE*/
-	fprintf(stderr, "MCNP_input: %s: Cannot get neutron %g : Error or End of File reached .\n",NAME_CURRENT_COMP,n_neutrons+1);
-	exit_flag = 1;
-	} else {
-	double v;
-	v = sqrt(vx*vx+vy*vy+vz*vz);
-	mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
-	mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz; mean_v += p*v;
-	angle2z += p*vz/v;
-	if (v) {
-		mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
-	if (x  < min_x)  min_x  = x;
-	if (y  < min_y)  min_y  = y;
-	if (z  < min_z)  min_z  = z;
-	if (vx < min_vx) min_vx = vx;
-	if (vy < min_vy) min_vy = vy;
-	if (vz < min_vz) min_vz = z;
-	if (x  > max_x)  max_x  = x;
-	if (y  > max_y)  max_y  = y;
-	if (z  > max_z)  max_z  = z;
-	if (vx > max_vx) max_vx = vx;
-	if (vy > max_vy) max_vy = vy;
-	if (vz > max_vz) max_vz = z;
-	n_neutrons++;
-	n_neutrons_p += p;
-	}
-
-
+    double x,y,z,vx,vy,vz,t,p,sx,sy,sz;
+    if (mcnp_create_neutron(
+        hfile,&x,&y,&z,&vx,&vy,&vz,&t,&sx,&sy,&sz,&p,
+        &old_surface,&surface,&informed_event,&informed_surface)) {/*END OF FILE*/
+      fprintf(stderr, "MCNP_input: %s: Cannot get neutron %g : Error or End of File reached .\n",NAME_CURRENT_COMP,n_neutrons+1);
+      exit_flag = 1;
+    } else {
+      double v;
+      v = sqrt(vx*vx+vy*vy+vz*vz);
+      mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
+      mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz; mean_v += p*v;
+      angle2z += p*vz/v;
+      if (v) {
+        mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
+      if (x  < min_x)  min_x  = x;
+      if (y  < min_y)  min_y  = y;
+      if (z  < min_z)  min_z  = z;
+      if (vx < min_vx) min_vx = vx;
+      if (vy < min_vy) min_vy = vy;
+      if (vz < min_vz) min_vz = z;
+      if (x  > max_x)  max_x  = x;
+      if (y  > max_y)  max_y  = y;
+      if (z  > max_z)  max_z  = z;
+      if (vx > max_vx) max_vx = vx;
+      if (vy > max_vy) max_vy = vy;
+      if (vz > max_vz) max_vz = z;
+      n_neutrons++;
+      n_neutrons_p += p;
+    }
   } /* end while */
 
   if (n_neutrons) {
-    double n_count_extrapolated=0;
-    double mean_v;
     long   end_analyse=0;
     double cx,cy,cz;
     end_analyse = ftell(hfile);
@@ -409,11 +402,12 @@ INITIALIZE
     } else { /* already well oriented: nothing to do */
       do_rotate = 0;
     }
-    if (verbose && (do_rotate || do_translate)) {
+    if (verbose && (do_rotate || do_translate || do_axes || smooth)) {
       printf("* Beam will be ");
       if (do_translate) printf("translated (in position) ");
       if (do_rotate)    printf("rotated (%.3g [deg] to Z-axis) ", angle2z*RAD2DEG);
-      if (do_axes)      printf("axes-swaped MCNP->McStas");
+      if (do_axes)      printf("axes-swaped MCNP->McStas ");
+      if (smooth)       printf("smoothed ");
       printf("\n");
     }
 
@@ -426,6 +420,15 @@ INITIALIZE
     fprintf(stderr, "MCNP_input: %s: Error: Can not reset MCNP file (fseek error at analyse). \n",NAME_CURRENT_COMP);
     exit_flag = 1;
   }
+
+#ifdef USE_MPI
+  if (!smooth) {
+    if (verbose)
+    printf("MCNP_input: %s: MPI execution requires to smooth virtual source\n"
+           "WARNING     Setting smooth=1\n", NAME_CURRENT_COMP);
+    smooth=1;
+  }
+#endif
 
 %}
 
@@ -463,7 +466,20 @@ TRACE
       SCATTER;
     }
 
-
+#ifdef USE_MPI
+    if (smooth && n_count_extrapolated)
+#else
+    if (smooth && rep > 1 && n_count_extrapolated)
+#endif
+    {
+      /* apply smmothing */
+      x += randnorm()*(max_x-min_x)/n_count_extrapolated/2;
+      y += randnorm()*(max_y-min_y)/n_count_extrapolated/2;
+      z += randnorm()*(max_z-min_z)/n_count_extrapolated/2;
+      vx += randnorm()*(max_vx-min_vx)/n_count_extrapolated/2;
+      vy += randnorm()*(max_vy-min_vy)/n_count_extrapolated/2;
+      vx += randnorm()*(max_vz-min_vz)/n_count_extrapolated/2;
+    }
 
 
   if (result_read==EOF) {  /* normal end of file */
@@ -478,7 +494,7 @@ TRACE
       if (verbose) printf("MCNP_input: %s: Start Neutron Number %d (iteration %d)\n",NAME_CURRENT_COMP,begin_neutrons, rep);
     }
     else {
-    	exit_flag=1;
+      exit_flag=1;
     }
   }
 

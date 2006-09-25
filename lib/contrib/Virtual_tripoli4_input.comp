@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.18 $
+* Version:  $Revision: 1.19 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.8
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -69,6 +69,7 @@
 * T4_ANALYSE_EMAX:    Maximal energy to use for file pre-analysis [meV]
 * radius:       [m]   In the case the Tripoli4 batch file is a point, you may
 *                     specify a disk emission area for the source.
+* smooth:       [0/1] Smooth sparsed event files for file repetitions.
 *
 * OUTPUT PARAMETERS
 * head:   [char]        header buffer
@@ -92,9 +93,12 @@
 
 DEFINE COMPONENT Virtual_tripoli4_input
 DEFINITION PARAMETERS (string file=0, string autocenter=0)
-SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1, T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0)
+SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1,
+                    T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0,smooth=1)
 OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,begin_batch,do_rotate,do_translate,do_axes,
-                   bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated)
+                   bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated,
+                   min_x, min_y, min_z,    max_x , max_y , max_z ,
+                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
@@ -223,6 +227,12 @@ DECLARE
   long   nbatch=0;
   long   nsize =0;
   double intensity_extrapolated=0;
+
+  double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
+  double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
+  double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
+  double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
+  double n_count_extrapolated=0;
 %}
 
 INITIALIZE
@@ -233,10 +243,6 @@ INITIALIZE
 
   double mean_vx=0, mean_vy=0, mean_vz=0, mean_v=0;
   double mean_dx=0, mean_dy=0, mean_dz=0;
-  double min_x = FLT_MAX, min_y = FLT_MAX, min_z = FLT_MAX;
-  double max_x =-FLT_MAX, max_y =-FLT_MAX, max_z =-FLT_MAX;
-  double min_vx= FLT_MAX, min_vy= FLT_MAX, min_vz= FLT_MAX;
-  double max_vx=-FLT_MAX, max_vy=-FLT_MAX, max_vz=-FLT_MAX;
 
   double n_neutrons=0;
   double n_neutrons_p=0;
@@ -335,7 +341,6 @@ INITIALIZE
   } /* end while */
 
   if (n_neutrons) {
-    double n_count_extrapolated=0;
     long   end_analyse=0;
     double cx,cy,cz;
     double nbatch_extrapolated=0;
@@ -353,8 +358,8 @@ INITIALIZE
     angle2z /= n_neutrons_p;
     /* now estimates total ncount */
     if (T4_ANALYSE>0) {
-      n_count_extrapolated = n_neutrons*(filesize-first_batch)/(end_analyse - first_batch);
-      nbatch_extrapolated  = nbatch    *(filesize-first_batch)/(end_analyse - first_batch);
+      n_count_extrapolated = n_neutrons*fabs(filesize-first_batch)/(end_analyse - first_batch);
+      nbatch_extrapolated  = nbatch    *fabs(filesize-first_batch)/(end_analyse - first_batch);
     } else {
       n_count_extrapolated = n_neutrons;
       nbatch_extrapolated  = nbatch;
@@ -367,7 +372,7 @@ INITIALIZE
       mean_w = VS2E*mean_v*mean_v;
       printf("Tripoli4 file %s\nContains %s%g neutrons in %d batches of size %d\n",
         file, T4_ANALYSE ? "about " : "",
-        n_count_extrapolated, nbatch_extrapolated, nsize);
+        n_count_extrapolated, (long)nbatch_extrapolated, nsize);
       if (n_count_extrapolated > mcget_ncount())
         printf("    (will use only %.3g %% of file)\n", 100*mcget_ncount()/n_count_extrapolated);
       else
@@ -419,11 +424,12 @@ INITIALIZE
     } else { /* already well oriented: nothing to do */
       do_rotate = 0;
     }
-    if (verbose && (do_rotate || do_translate)) {
+    if (verbose && (do_rotate || do_translate || do_axes || smooth)) {
       printf("* Beam will be ");
       if (do_translate) printf("translated (in position) ");
       if (do_rotate)    printf("rotated (%.3g [deg] to Z-axis) ", angle2z*RAD2DEG);
-      if (do_axes)      printf("axes-swaped Tripoli->McStas");
+      if (do_axes)      printf("axes-swaped Tripoli->McStas ");
+      if (smooth)       printf("smoothed ");
       printf("\n");
     }
 
@@ -437,6 +443,15 @@ INITIALIZE
     fprintf(stderr, "Tripoli4_input: %s: Error: Can not reset Tripoli4 file (fseek error at analyse). \n",NAME_CURRENT_COMP);
     exit_flag = 1;
   }
+
+#ifdef USE_MPI
+  if (!smooth) {
+    if (verbose)
+    printf("Tripoli4_input: %s: MPI execution requires to smooth virtual source\n"
+           "WARNING         Setting smooth=1\n", NAME_CURRENT_COMP);
+    smooth=1;
+  }
+#endif
 
 %}
 
@@ -511,6 +526,21 @@ TRACE
     }
   }
 
+#ifdef USE_MPI
+    if (smooth && n_count_extrapolated)
+#else
+    if (smooth && rep > 1 && n_count_extrapolated)
+#endif
+    {
+      /* apply smmothing */
+      x += randnorm()*(max_x-min_x)/n_count_extrapolated/2;
+      y += randnorm()*(max_y-min_y)/n_count_extrapolated/2;
+      z += randnorm()*(max_z-min_z)/n_count_extrapolated/2;
+      vx += randnorm()*(max_vx-min_vx)/n_count_extrapolated/2;
+      vy += randnorm()*(max_vy-min_vy)/n_count_extrapolated/2;
+      vx += randnorm()*(max_vz-min_vz)/n_count_extrapolated/2;
+    }
+
   if (result_read==EOF) {  /* normal end of file */
     rep++;
     if (rep < repeat_count) {
@@ -545,6 +575,18 @@ FINALLY
     if (nbatch && nsize && intensity && !intensity_extrapolated)
     printf("* Normalisation factor Intensity/N/B = %g [n/s]\n", intensity/nbatch/nsize);
   }
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  double width =(max_x-min_x)/2;
+  double height=(max_y-min_y)/2;
+  multiline(5, -width/2.0, -height/2.0, 0.0,
+                width/2.0, -height/2.0, 0.0,
+                width/2.0,  height/2.0, 0.0,
+               -width/2.0,  height/2.0, 0.0,
+               -width/2.0, -height/2.0, 0.0);
 %}
 
 END
