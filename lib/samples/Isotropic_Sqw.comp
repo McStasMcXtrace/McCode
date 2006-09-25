@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
@@ -185,6 +185,7 @@
 * interpolate:  [1] Performs (q,w) smoothing from S(q,w) if true (recommanded).
 * p_interact:   [1] Force a given fraction of the beam to scatter, keeping
 *                   intensity right, to enhance small signals (-1 unactivate).
+* auto_sigma:   [1] Compute real scattered intensity when true (default).
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
@@ -226,7 +227,7 @@ DEFINE COMPONENT Isotropic_Sqw
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-    interpolate=1, p_interact=-1)
+    interpolate=1, p_interact=-1, auto_sigma=1)
   OUTPUT PARAMETERS (VarSqw, columns)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -275,6 +276,7 @@ struct Sqw_Data_struct /* contains normalized Sqw data for probabilities */
   long  *DOS_lookup;
   long **QW_lookup;
   double*Sq;  /* S(q) = \int_w S(q,w) */
+  double*iqSq; /* \int q S(q) dq */
   t_Table Sqw;
   long   nb_q;
   long   nb_w; /* length of q and w vectors/axes on restricted range */
@@ -286,7 +288,7 @@ struct Sqw_Data_struct /* contains normalized Sqw data for probabilities */
   char   filename[80];
   double intensity;
   double intensity_total;
-  double alpha; /* ratio for S(q,w) normnalization */
+  double alpha; /* ratio for S(q,w) normalization */
 };
 
 struct Sqw_sample_struct {
@@ -333,8 +335,6 @@ struct Sqw_sample_struct {
   double psum_scatt;
   double single;
   double multi;
-  double my_inc, my_inc_n, my_inc_s;
-  double my_coh, my_coh_n, my_coh_s;
 };
 
 #include <stdio.h>
@@ -360,6 +360,7 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->DOS_lookup   =NULL;
   Sqw_Data->QW_lookup    =NULL;
   Sqw_Data->Sq           =NULL;
+  Sqw_Data->iqSq         =NULL;
 }
 
 double Sqw_powder_gauss(double x, double mean, double rms) {
@@ -674,7 +675,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   char     flag=1; /* exit_flag */
   double   q, w, val, sum;
   double   mat_density=0, mat_weight=0, mat_at_nb=1;
-  double   alpha=1;
+  double   alpha=1, beta=0;
   long    *DOS_lookup;
   long   **QW_lookup;
   char   **parsing;
@@ -891,7 +892,14 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw->compname, nb_q_data*sizeof(double));
     return(NULL);
   }
-  sum = val = alpha = 0;
+  Sqw_Data->iqSq = (double *)calloc(nb_q_data, sizeof(double));
+  if (!Sqw_Data->iqSq) {
+    printf("Isotropic_Sqw: %s: Cannot allocate [\\int q S(Q)] array (%li bytes).\n"
+           "ERROR          Exiting.\n",
+      Sqw->compname, nb_q_data*sizeof(double));
+    return(NULL);
+  }
+  sum = val = alpha = beta = 0;
   for (i=0; i < nb_q_data ; i++) {
     double sqw=0, sq=0;
     q  = Table_Index(Table_Array[0], 0, i);
@@ -914,6 +922,8 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
     Sqw_Data->Sq[i] = sq;
     alpha += q*q*sq;
+    beta  += q*sq;
+    Sqw_Data->iqSq[i] = beta*(q_max_data-q_min_data)/nb_q_data;
   }
   /* alpha is \int q^2 S(q) dq */
   alpha *= (q_max_data-q_min_data)/nb_q_data;
@@ -1216,7 +1226,7 @@ INITIALIZE
   VarSqw.s_abs     = sigma_abs;
   VarSqw.s_coh     = sigma_coh;
   VarSqw.s_inc     = sigma_inc; /* s_scatt member initialized in Sqw_init */
-  VarSqw.maxloop   = 1;         /* attempts to close triangle */
+  VarSqw.maxloop   = 100;       /* attempts to close triangle */
   VarSqw.minevents = 100;       /* minimal # of events required to get dynamical range */
   VarSqw.neutron_removed = 0;
   VarSqw.neutron_enter   = 0;
@@ -1260,9 +1270,6 @@ INITIALIZE
   if (VarSqw.rho <= 0) exit(printf("Isotropic_Sqw: %s: Null density (V_rho)\n",NAME_CURRENT_COMP));
   /* 100: convert from barns to fm^2 */
   VarSqw.my_a_v  =(VarSqw.rho*100*VarSqw.s_abs*2200);
-  VarSqw.my_inc  = VarSqw.my_coh  = 0;
-  VarSqw.my_inc_n= VarSqw.my_coh_n= 0;
-  VarSqw.my_inc_s= VarSqw.my_coh_s= 0;
   VarSqw.my_s    =(VarSqw.rho*100*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
                                   +VarSqw.s_inc>0 ? VarSqw.s_inc : 0));
 
@@ -1424,10 +1431,31 @@ do { /* Main interaction loop. Ends with intersect=0 */
     /* check for scattering event */
     d_path = v*( dt0 +dt2 );    /* total path lenght in sample */
     my_a   = VarSqw.my_a_v / v; /* absorption 'mu' */
+    /* compute total scattering X section */
+    /* \int q S(q) dq /2 /ki^2 sigma  OR  bare Xsection*/
+    /* contains the 4*PI*kf/ki factor */
     double coh, inc;
-    coh = VarSqw.my_coh>0 ? VarSqw.my_coh : VarSqw.s_coh;
+    coh = VarSqw.s_coh;
+    inc = VarSqw.s_inc;
+    if (auto_sigma && k && VarSqw.s_coh>0 && VarSqw.Data_coh.intensity) {
+      int index_2k = (int)floor(VarSqw.Data_coh.nb_q_data
+                   * (2*k - VarSqw.Data_coh.q_min)
+                   / (VarSqw.Data_coh.q_max-VarSqw.Data_coh.q_min));
+      if (index_2k < 0) index_2k=0;
+      if (index_2k >= VarSqw.Data_coh.nb_q_data)
+        index_2k=VarSqw.Data_coh.nb_q_data-1;
+      coh = VarSqw.s_coh/2/k/k*VarSqw.Data_coh.iqSq[index_2k];
+    }
+    if (auto_sigma && k && VarSqw.s_inc>0 && VarSqw.Data_inc.intensity) {
+      int index_2k = (int)floor(VarSqw.Data_inc.nb_q_data
+                   * (2*k - VarSqw.Data_inc.q_min)
+                   / (VarSqw.Data_inc.q_max-VarSqw.Data_inc.q_min));
+      if (index_2k < 0) index_2k=0;
+      if (index_2k >= VarSqw.Data_inc.nb_q_data)
+        index_2k=VarSqw.Data_inc.nb_q_data-1;
+      inc = VarSqw.s_inc/2/k/k*VarSqw.Data_inc.iqSq[index_2k];
+    }
     if (coh<0) coh=0;
-    inc = VarSqw.my_inc>0 ? VarSqw.my_inc : VarSqw.s_inc;
     if (inc<0) inc=0;
     VarSqw.my_s    =(VarSqw.rho*100*(coh + inc));
 
@@ -1750,21 +1778,6 @@ do { /* Main interaction loop. Ends with intersect=0 */
       if      (fabs(omega) > VarSqw.w_max) VarSqw.w_max = fabs(omega);
       if      (fabs(q) > VarSqw.q_max) VarSqw.q_max = fabs(q);
 
-      /* compute total intensity equivalewnt Xsect */
-      /* contains the kf/ki factor */
-      /* factor 4*PI for solid angle implicitely in MC */
-      if (VarSqw.type == 'c') {
-        VarSqw.my_coh_n++;
-        VarSqw.my_coh_s+= VarSqw.s_coh/2/k/k*q
-                       *Table_Index(Data_sqw.Sqw, index_q, index_w)*Data_sqw.alpha;
-        VarSqw.my_coh = VarSqw.my_coh_s/VarSqw.my_coh_n*VarSqw.q_max;
-      } else if (VarSqw.type == 'i') {
-        VarSqw.my_inc_n++;
-        VarSqw.my_inc_s+= VarSqw.s_inc/2/k/k*q
-                       *Table_Index(Data_sqw.Sqw, index_q, index_w)*Data_sqw.alpha;
-        VarSqw.my_inc = VarSqw.my_inc_s/VarSqw.my_inc_n*VarSqw.q_max;
-      }
-
       v = vf; k = kf; /* for next iteration */
 
       if (VarSqw.neutron_exit > VarSqw.minevents
@@ -1839,10 +1852,10 @@ if (SCATTERED) {
 /* end TRACE */
 %}
 
-FINALLY
+SAVE
 %{
   int  k;
-
+#ifndef USE_MPI
   for (k=0; k < 2; k++) {
     struct Sqw_Data_struct Data_sqw;
     char tmp[1024];
@@ -1855,8 +1868,7 @@ FINALLY
     strcpy(ext, (k == 0 ? "coh" : "inc"));
     Data_sqw =  (k == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
 
-    Table_Free(&(Data_sqw.Sqw));
-
+    /* only on MPI node root or local machine */
     if (save_sqw && Data_sqw.intensity) {
       double DOS[Data_sqw.nb_w];
       double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
@@ -1896,6 +1908,25 @@ FINALLY
         Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,
         filename);
     }
+
+  } /* end for */
+#endif
+
+/* end SAVE */
+%}
+
+FINALLY
+%{
+  int  k;
+
+  for (k=0; k < 2; k++) {
+    struct Sqw_Data_struct Data_sqw;
+    char type_ci[64];
+
+    strcpy(type_ci, (k == 0 ? "coherent" : "incoherent"));
+    Data_sqw =  (k == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
+
+    Table_Free(&(Data_sqw.Sqw));
     /* test if Sqw data is larger than used [q,w] range */
     if (VarSqw.neutron_removed && Data_sqw.nb_q*Data_sqw.nb_w > 1)
     if ((VarSqw.w_max*2 < Data_sqw.w_max) || (VarSqw.q_max*2 < Data_sqw.q_max))
@@ -1934,16 +1965,6 @@ FINALLY
     printf("               Single   scattering intensity =%g\n"
            "               Multiple scattering intensity =%g\n",
            VarSqw.single, VarSqw.multi);
-  }
-  if (VarSqw.verbose_output >= 1 && VarSqw.psum_scatt > 0) {
-    printf("Isotropic_Sqw: %s: bound cross sections for q=[0:%g]:\n", NAME_CURRENT_COMP, VarSqw.q_max);
-    double coh=VarSqw.my_coh ? VarSqw.my_coh : VarSqw.s_coh;
-    if (coh > 0)
-      printf("               Coherent   s_coh=%g [barns]\n", coh);
-    double inc=VarSqw.my_inc ? VarSqw.my_inc : VarSqw.s_inc;
-    if (inc > 0)
-      printf("               Incoherent s_inc=%g [barns]\n", inc);
-    printf("               Absorption s_abs=%g [barns]\n", VarSqw.s_abs);
   }
 
 /* end FINALLY */
