@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.29 $
+* Version: $Revision: 1.30 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -497,7 +497,7 @@ TRACE
         flag=0;
         if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) flag=1;
         else if(!isrect && !cylinder_intersect(&t0, &t1, x, y, z,
-                              vx, vx, vx, radius, yheight)) flag=1;
+                              vx, vy, vz, radius, yheight)) flag=1;
 
         if (flag) {
           /* Strange error: did not hit cylinder */
@@ -535,7 +535,7 @@ TRACE
       flag=0;
       if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) flag=1;
       else if(!isrect && !cylinder_intersect(&t0, &t1, x, y, z,
-                            vx, vx, vx, radius, yheight)) flag=1;
+                            vx, vy, vz, radius, yheight)) flag=1;
 
       if (flag) {
         /* Strange error: did not hit cylinder */

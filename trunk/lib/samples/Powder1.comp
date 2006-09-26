@@ -10,7 +10,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -163,7 +163,7 @@ TRACE
     arg=0;
     if (isrect && !box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) arg=1;
     else if(!isrect && !cylinder_intersect(&t0, &t1, x, y, z,
-                          vx, vx, vx, radius, yheight)) arg=1;
+                          vx, vy, vz, radius, yheight)) arg=1;
 
     if (arg) {
       /* Strange error: did not hit cylinder */
