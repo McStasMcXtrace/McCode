@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.4 $
+* Version:  $Revision: 1.5 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -430,6 +430,11 @@ INITIALIZE
   }
 #endif
 
+  double min_dv=fabs(max_vx-min_vx);
+  if (min_dv > fabs(max_vy-min_vy)) min_dv = fabs(max_vy-min_vy);
+  if (min_dv > fabs(max_vz-min_vz)) min_dv = fabs(max_vz-min_vz);
+  min_vx = min_dv;
+
 %}
 
 TRACE
@@ -440,8 +445,6 @@ TRACE
 
   while(1) {
     if (mcnp_create_neutron(hfile,&x,&y,&z,&vx,&vy,&vz,&t,&sx,&sy,&sz,&p,&old_surface,&surface,&informed_event,&informed_surface)) {
-      fprintf(stderr, "Virtual_mcnp_input: %s: Cannot create neutron Error or End of file reached.\n",NAME_CURRENT_COMP);
-      fprintf(stderr,"  Finishing simulation\n");
       result_read=EOF;
       exit_flag = 1;
     } else {
@@ -462,7 +465,7 @@ TRACE
         tx=x;  ty=y;  tz=z;   x=ty;  y=tz;  z=tx;
         tx=vx; ty=vy; tz=vz; vx=ty; vy=tz; vz=tx;
       }
-      if (intensity && nps) p *= intensity/nps;
+      if (intensity && nps) p *= intensity/nps/repeat_count;
       SCATTER;
     }
 
@@ -476,31 +479,34 @@ TRACE
       x += randnorm()*(max_x-min_x)/n_count_extrapolated/2;
       y += randnorm()*(max_y-min_y)/n_count_extrapolated/2;
       z += randnorm()*(max_z-min_z)/n_count_extrapolated/2;
-      vx += randnorm()*(max_vx-min_vx)/n_count_extrapolated/2;
-      vy += randnorm()*(max_vy-min_vy)/n_count_extrapolated/2;
-      vx += randnorm()*(max_vz-min_vz)/n_count_extrapolated/2;
+      vx += randnorm()*min_vx/n_count_extrapolated/2;
+      vy += randnorm()*min_vx/n_count_extrapolated/2;
+      vx += randnorm()*min_vx/n_count_extrapolated/2;
     }
 
 
   if (result_read==EOF) {  /* normal end of file */
     rep++;
-    if (rep < repeat_count) {
+    if (rep <= repeat_count) {
       /* reposition at start of file (data start) */
       int ret = fseek(hfile, begin_neutrons,SEEK_SET);
       if (ret) {
         fprintf(stderr, "MCNP_input: %s: Error: Can not repeat MCNP file (fseek error at repeat %d). \n",NAME_CURRENT_COMP, rep);
         exit_flag = 1;
+      } else {
+        if (verbose) printf("MCNP_input: %s: Start Neutron Number %d (iteration %d)\n",NAME_CURRENT_COMP,begin_neutrons, rep);
+        exit_flag=0;
       }
-      if (verbose) printf("MCNP_input: %s: Start Neutron Number %d (iteration %d)\n",NAME_CURRENT_COMP,begin_neutrons, rep);
     }
-    else {
-      exit_flag=1;
-    }
+    else exit_flag=1;
   }
 
-  if (exit_flag) { mcset_ncount(mcget_run_num()); ABSORB; }
-    SCATTER;
-    break;
+  if (exit_flag) {
+    if (verbose) printf("  Finishing simulation\n");
+    mcset_ncount(mcget_run_num()); ABSORB;
+  }
+  SCATTER;
+  break;
 } /* end while */
 
 
