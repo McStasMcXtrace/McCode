@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.20 $
+* Version:  $Revision: 1.21 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -149,6 +149,11 @@ INITIALIZE
   }
 #endif
 
+  double min_dv=fabs(max_vx-min_vx);
+  if (min_dv > fabs(max_vy-min_vy)) min_dv = fabs(max_vy-min_vy);
+  if (min_dv > fabs(max_vz-min_vz)) min_dv = fabs(max_vz-min_vz);
+  min_vx = min_dv;
+
 if (verbose && smooth)
       printf("* Beam will be smoothed\n");
 %}
@@ -268,9 +273,9 @@ TRACE
       x += randnorm()*(max_x-min_x)/n_count_extrapolated/2;
       y += randnorm()*(max_y-min_y)/n_count_extrapolated/2;
       z += randnorm()*(max_z-min_z)/n_count_extrapolated/2;
-      vx += randnorm()*(max_vx-min_vx)/n_count_extrapolated/2;
-      vy += randnorm()*(max_vy-min_vy)/n_count_extrapolated/2;
-      vx += randnorm()*(max_vz-min_vz)/n_count_extrapolated/2;
+      vx += randnorm()*min_vx/n_count_extrapolated/2;
+      vy += randnorm()*min_vx/n_count_extrapolated/2;
+      vx += randnorm()*min_vx/n_count_extrapolated/2;
     }
   } else { ABSORB; }
 %}
