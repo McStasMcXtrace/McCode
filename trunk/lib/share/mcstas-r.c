@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.138 $
+* Version: $Revision: 1.139 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.138 2006-09-05 15:26:18 farhi Exp $
+* $Id: mcstas-r.c,v 1.139 2006-10-03 22:14:24 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.138  2006/09/05 15:26:18  farhi
+* Update of mcformat
+*
 * Revision 1.137  2006/08/30 12:13:41  farhi
 * Define mutexes for mcstas-r parts.
 *
@@ -1076,7 +1079,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     " ]; %% end of events\nif single_file, mc_%PAR.events=events; end\n"},
   { "VRML", "wrl",
     "#VRML V2.0 utf8\n%PREFormat: %FMT file\n"
-      "%PREuse freeWRL, openvrml, vrmlview, CosmoPlayer, Cortona... to view file\n"
+      "%PREuse freeWRL, openvrml, vrmlview, CosmoPlayer, Cortona, Octaga... to view file\n"
       "WorldInfo {\n"
       "title \"%SRC/%FIL simulation World Data\"\n"
       "info [ \"URL:    http://neutron.risoe.dk/\"\n"
