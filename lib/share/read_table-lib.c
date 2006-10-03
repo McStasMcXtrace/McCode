@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.33 $
+* Version: $Revision: 1.34 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.33 2006-07-21 09:05:05 farhi Exp $
+* $Id: read_table-lib.c,v 1.34 2006-10-03 22:16:45 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.33  2006/07/21 09:05:05  farhi
+* fixed bug in 2D interpolation routine
+*
 * Revision 1.32  2006/03/15 16:03:27  farhi
 * interpolation functions now in the table handling by default.
 * corrected nelements in array length return value of Table_Read_Array
@@ -177,10 +180,16 @@
       char mc_rt_path[256];
       char mc_rt_dir[256];
 
-      if (!strchr(mc_rt_File, MC_PATHSEP_C))
+      if (!mc_rt_hfile)
       {
         strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
+        mc_rt_hfile = fopen(mc_rt_path, "r");
+      }
+      if (!mc_rt_hfile)
+      {
+        strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
+        sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, mc_rt_File);
         mc_rt_hfile = fopen(mc_rt_path, "r");
       }
       if(!mc_rt_hfile)
@@ -238,10 +247,16 @@
       char mc_rt_path[256];
       char mc_rt_dir[256];
 
-      if (!strchr(mc_rt_File, MC_PATHSEP_C))
+      if (!mc_rt_hfile)
       {
         strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
+        mc_rt_hfile = fopen(mc_rt_path, "r");
+      }
+      if (!mc_rt_hfile)
+      {
+        strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
+        sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, mc_rt_File);
         mc_rt_hfile = fopen(mc_rt_path, "r");
       }
       if(!mc_rt_hfile)
