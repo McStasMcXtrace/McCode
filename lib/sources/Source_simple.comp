@@ -12,7 +12,7 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -32,6 +32,10 @@
 * %P
 * radius: [m]   Radius of circle in (x,y,0) plane where neutrons
 *               are generated.
+* height  [m]   Height of rectangle in (x,y,0) plane where neutrons
+*               are generated.
+* width   [m]   Width of rectangle in (x,y,0) plane where neutrons
+*               are generated.
 * dist:   [m]   Distance to target along z axis.
 * xw:     [m]   Width(x) of target
 * yh:     [m]   Height(y) of target
@@ -46,17 +50,29 @@
 
 DEFINE COMPONENT Source_simple
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius, dist, xw, yh, E0=0, dE=0, Lambda0=0, dLambda=0, flux=1)
+SETTING PARAMETERS (radius=0, height=0, width=0, dist, xw, yh, E0=0, dE=0, Lambda0=0, dLambda=0, flux=1)
 OUTPUT PARAMETERS (pmul)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
 %{
-  double pmul;
+  double pmul, srcArea;
+  int square;
 %}
 INITIALIZE
 %{
-  pmul=flux*PI*1e4*radius*radius/mcget_ncount();
-  if (radius < 0 || dist < 0 || xw < 0 || yh < 0
+  square = 0;
+  /* Determine source area: */
+  if (!radius == 0 && height == 0 && width == 0) {
+    square = 0;
+    srcArea = PI*radius*radius;
+  } else if(radius == 0 && !height ==0 && !width==0) {
+    square = 1;
+    srcArea = width * height;
+  }
+  
+  
+  pmul=flux*1e4*srcArea/mcget_ncount();
+  if (srcArea <= 0 || dist < 0 || xw < 0 || yh < 0
     || (!Lambda0 && !dLambda && (E0 <= 0 || dE < 0 || E0-dE <= 0))
     || (!E0 && !dE && (Lambda0 <= 0 || dLambda < 0 || Lambda0-dLambda <= 0))) {
       printf("Source_simple: %s: Error in input parameter values!\n"
@@ -71,12 +87,16 @@ TRACE
 
  t=0;
  z=0;
-
- chi=2*PI*rand01();                          /* Choose point on source */
- r=sqrt(rand01())*radius;                    /* with uniform distribution. */
- x=r*cos(chi);
- y=r*sin(chi);
-
+ 
+ if (square == 1) {
+   x = width * (rand01() - 0.5);
+   y = height * (rand01() - 0.5);
+ } else {
+   chi=2*PI*rand01();                          /* Choose point on source */
+   r=sqrt(rand01())*radius;                    /* with uniform distribution. */
+   x=r*cos(chi);
+   y=r*sin(chi);
+ }
  randvec_target_rect(&xf, &yf, &rf, &pdir,
         0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
 
@@ -101,8 +121,13 @@ TRACE
 
 MCDISPLAY
 %{
-  magnify("xy");
-  circle("xy",0,0,0,radius);
+  if (square == 1) {
+    magnify("xy");
+    rectangle("xy",0,0,0,width,height);
+  } else {
+    magnify("xy");
+    circle("xy",0,0,0,radius);
+  }
 %}
 
 END
