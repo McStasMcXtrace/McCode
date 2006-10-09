@@ -117,153 +117,165 @@ sub read_instrument {
             }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /VRML/i) {
 		# Default viewpoint, 10 meters along z.
-		write_process("#VRML V2.0 utf8\n".
-			      "# Output from mcdisplay from the McStas ".
-			      "package, see http://www.mcstas.org\n".
-			      "#\n# Instrument used was $sim_cmd. ".
-			      "Full cmdline was:\n#\n# @ARGV\n#\n# ".
-			      "Please rerun instrument with -i option ".
-			      "to get more info.\n#\n".
-			      "Viewpoint {\n".
-			      "description \"Default\"".
-			      " position 0 0 10\n".
-			      "orientation 0 0 1  0".
-			      "jump FALSE".
-			      "}\n");
+		write_process("#VRML V2.0 utf8\n
+# Format: VRML 2.0\n
+# Output from mcdisplay from the McStas package, see http://www.mcstas.org
+# use freeWRL, openvrml, vrmlview, CosmoPlayer, Cortona, Octaga... to view file
+#\n# Instrument used was $sim_cmd. Full cmdline was:\n#
+# mcdisplay @ARGV
+#\n# Please rerun instrument with -i option to get more info.\n#\n
+WorldInfo { 
+  title \"McStas: $sim_cmd instrument\"
+  info [ \"URL:    http://www.mcstas.org/\"
+    \"Editor: mcdisplay @ARGV\"
+    \"Creator:$sim_cmd simulation (McStas)\" ]
+}
+Viewpoint {
+  description \"Default\"
+   position 0 0.2 -1
+  orientation 0 1 0 3.14
+  jump FALSE
+}
+Background {
+  skyAngle [ 1.57 1.57]
+  skyColor [0 0 1, 1 1 1, 0.1 0 0]
+}\n");
 		# Definition of Origin + coordinate system arrows
-		write_process("# Sphere at the origin\n".
-			      "Shape { \n".
-			      "appearance Appearance { \n".
-			      "material Material {\n".
-			      "diffuseColor 1.0 1.0 0.0\n".
-			      "transparency 0.5 } }\n".
-			      "geometry Sphere { radius 0.01 } \n".
-			      "}\n".
-			      "\n".
-			      "# Axis-parallel arrows of length 1 metre\n".
-			      "DEF ARROW Group {\n".
-			      "children [\n".
-			      "Transform {\n".
-			      "translation 0 0.5 0\n".
-			      "children [\n".
-			      "Shape {\n".
-			      "appearance DEF ARROW_APPEARANCE Appearance {\n".
-			      "material Material {\n".
-			      "diffuseColor .3 .3 1\n".
-			      "emissiveColor .1 .1 .33\n".
-			      "}\n".
-			      "}\n".
-			      "geometry Cylinder {\n".
-			      "bottom FALSE\n".
-			      "radius .005\n".
-			      "height 1\n".
-			      "top FALSE\n".
-			      "} } ] }\n".
-			      "Transform {\n".
-			      "translation 0 1 0\n".
-			      "children [\n".
-			      "DEF ARROW_POINTER Shape {\n".
-			      "geometry Cone {\n".
-			      "bottomRadius .05\n".
-			      "height .1\n".
-			      "}\n".
-			      "appearance USE ARROW_APPEARANCE\n".
-			      "} ] } ] }\n".
-			      "# the arrow along X axis\n".
-			      "Transform {\n".
-			      "translation 0 0 0\n".
-			      "rotation 1 0 0 1.57\n".
-			      "children [\n".
-			      "Group {\n".
-			      "children [ \n".
-			      "USE ARROW\n".
-			      "] } ] }\n".
-			      "# the arrow along Z axis\n".
-			      "Transform {\n".
-			      "translation 0 0 0\n".
-			      "rotation 0 0 1 -1.57\n".
-			      "children [\n".
-			      "Group {\n".
-			      "children [ \n".
-			      "USE ARROW\n".
-			      "] } ] }\n".
-			      "\n".
-			      "# the Y label (which is vertical)\n".
-			      "DEF Y_Label Group {\n".
-			      "children [\n".
-			      "Transform {\n".
-			      "translation 0 1 0\n".
-			      "children [\n".
-			      "Billboard {\n".
-			      "children [\n".
-			      "Shape {\n".
-			      "appearance DEF LABEL_APPEARANCE Appearance {\n".
-			      "material Material {\n".
-			      "diffuseColor 1 1 .3\n".
-			      "emissiveColor .33 .33 .1\n".
-			      "} }\n".
-			      "geometry Text { \n".
-			      "string [\"y\" ]\n".
-			      "fontStyle FontStyle {  size .2 }\n".
-			      "} } ] } ] } ] }\n".
-			      "# the X label\n".
-			      "DEF X_Label Group {\n".
-			      "children [\n".
-			      "Transform {\n".
-			      "translation 1 0 0\n".
-			      "children [\n".
-			      "Billboard {\n".
-			      "children [\n".
-			      "Shape {\n".
-			      "appearance DEF LABEL_APPEARANCE Appearance {\n".
-			      "material Material {\n".
-			      "diffuseColor 1 1 .3\n".
-			      "emissiveColor .33 .33 .1\n".
-			      "} }\n".
-			      "geometry Text { \n".
-			      "string [\"x\"]\n".
-			      "fontStyle FontStyle {  size .2 }\n".
-			      "} } ] } ] } ] }\n".
-			      "# the Z label\n".
-			      "DEF Z_Label Group {\n".
-			      "children [\n".
-			      "Transform {\n".
-			      "translation 0 0.2 1\n".
-			      "children [\n".
-			      "Billboard {\n".
-			      "children [\n".
-			      "Shape {\n".
-			      "appearance DEF LABEL_APPEARANCE Appearance {\n".
-			      "material Material {\n".
-			      "diffuseColor 1 1 .3\n".
-			      "emissiveColor .33 .33 .1\n".
-			      "} }\n".
-			      "geometry Text { \n".
-			      "string [\"z\"]\n".
-			      "fontStyle FontStyle {  size .2 }\n".
-			      "} } ] } ] } ] }\n".
-			      "\n".
-			      "# The text information (header data )\n".
-			      "DEF Header Group {\n".
-			      "children [\n".
-			      "Transform {\n".
-			      "translation 0 1.2 0\n".
-			      "children [\n".
-			      "Billboard {\n".
-			      "children [\n".
-			      "Shape {\n".
-			      "appearance Appearance {\n".
-			      "material Material { \n".
-			      "diffuseColor .9 0 0\n".
-			      "emissiveColor .9 0 0 }\n".
-			      "}\n".
-			      "geometry Text {\n".
-			      "string [ \"McStas: $sim_cmd\" ]\n".
-			      "fontStyle FontStyle {\n".
-			      "style \"BOLD\"\n".
-			      "size .2\n".
-			      "    } } } ] } ] } ] }".
-			      "\n\n### Instrument begins here: ###\n\n");
+		write_process("# Sphere at the origin
+Shape { 
+  appearance Appearance { 
+  material Material {
+  diffuseColor 1.0 1.0 0.0
+  transparency 0.5 } }
+  geometry Sphere { radius 0.01 }
+}
+# Axis-parallel arrows of length 1 metre
+DEF ARROW Group {
+children [
+Transform {
+  translation 0 0.5 0
+  children [
+  Shape {
+  appearance DEF ARROW_APPEARANCE Appearance {
+  material Material {
+  diffuseColor .3 .3 1
+  emissiveColor .1 .1 .33
+  }
+  }
+  geometry Cylinder {
+  bottom FALSE
+  radius .005
+  height 1
+  top FALSE
+  } } ] }
+Transform {
+  translation 0 1 0
+  children [
+  DEF ARROW_POINTER Shape {
+  geometry Cone {
+  bottomRadius .05
+  height .1
+  }
+  appearance USE ARROW_APPEARANCE
+  } ] }
+] }
+# the arrow along X axis
+Transform {
+  translation 0 0 0
+  rotation 1 0 0 1.57
+  children [
+  Group {
+  children [ 
+  USE ARROW
+  ] } ] }
+# the arrow along Z axis
+Transform {
+  translation 0 0 0
+  rotation 0 0 1 -1.57
+  children [
+  Group {
+  children [ 
+  USE ARROW
+  ] } ] }
+# the Y label (which is vertical)
+DEF Y_Label Group {
+children [
+Transform {
+  translation 0 1 0
+  children [
+  Billboard {
+  children [
+  Shape {
+  appearance DEF LABEL_APPEARANCE Appearance {
+  material Material {
+  diffuseColor 1 1 .3
+  emissiveColor .33 .33 .1
+  } }
+  geometry Text { 
+  string [\"y\" ]
+  fontStyle FontStyle {  size .2 }
+  } } ] } ] } 
+] }
+# the X label
+DEF X_Label Group {
+children [
+Transform {
+  translation 1 0 0
+  children [
+  Billboard {
+  children [
+  Shape {
+  appearance DEF LABEL_APPEARANCE Appearance {
+  material Material {
+  diffuseColor 1 1 .3
+  emissiveColor .33 .33 .1
+  } }
+  geometry Text { 
+  string [\"x\"]
+  fontStyle FontStyle {  size .2 }
+  } } ] } ] } 
+] }
+# the Z label
+DEF Z_Label Group {
+children [
+Transform {
+  translation 0 0.2 1
+  children [
+  Billboard {
+  children [
+  Shape {
+  appearance DEF LABEL_APPEARANCE Appearance {
+  material Material {
+  diffuseColor 1 1 .3
+  emissiveColor .33 .33 .1
+  } }
+  geometry Text { 
+  string [\"z\"]
+  fontStyle FontStyle {  size .2 }
+  } } ] } ] } 
+] }
+# The text information (header data )
+DEF Header Group {
+children [
+Transform {
+  translation 0 1.2 0
+  children [
+  Billboard {
+  children [
+  Shape {
+  appearance Appearance {
+  material Material { 
+  diffuseColor .9 0 0
+  emissiveColor .9 0 0 }
+  }
+  geometry Text {
+  string [ \"McStas: $sim_cmd\" ]
+  fontStyle FontStyle {
+  style \"BOLD\"
+  size .2
+  } } } ] } ] } 
+] }
+\n### Instrument begins here: ###\n");
 
 	    }
         } elsif($st == 1 && /^COMPONENT:\s*"([a-zA-Z0-9_]+)"\s*/) {
@@ -301,8 +313,8 @@ sub read_instrument {
 		if($T[0]!=0 or $T[1]!=0 or $T[2]!=0){$transforms{$comp}.= "translation $T[0] $T[1] $T[2]\n";}
 		my $angle = acos(($T[3]+$T[7]+$T[11]-1)/2);
 		my $d21=$T[8]-$T[10]; my $d02=$T[9]-$T[5]; my $d10=$T[4]-$T[6];
-		my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);		
-		
+		my $d=sqrt($d21*$d21+$d02*$d02+$d10*$d10);
+
 		if($d!=0){$transforms{$comp}.= "rotation ".$d21/$d.' '.$d02/$d.' '.$d10/$d." $angle\n";}
 		$nbcomp1++;
 		if($transforms{$comp})
@@ -323,7 +335,7 @@ sub read_instrument {
 		$nbcomp2++;
 		$comp = "";
 	    }
-	    
+
         } elsif($st == 1 && /^MCDISPLAY: start$/) {
             $st = 2;                # Start of component graphics representation
 	} elsif($st == 2 && /^MCDISPLAY: component ([a-zA-Z0-9_]+)/) {
@@ -448,10 +460,10 @@ sub read_instrument {
 		    }
 		    write_process("]}\n");
 		    write_process("coordIndex [\n");
-		    
+
 		    my $c=0,$i,$j;
 		    my $m = join('/',@multilineSize);
-		    foreach $i (@multilineSize) 
+		    foreach $i (@multilineSize)
 		    {
 			for($j=0; $j<$i; $j++)
 			{
@@ -459,23 +471,23 @@ sub read_instrument {
 			    $c++;
 			}
 			write_process("-1,\n");
-		    }							
+		    }
 		    write_process("]}}\n");
 		    if($transforms{$comp})
 		    {
 			write_process("]}\n");
 		    }
 		    my @T=@{$transformations{$comp}};
-		    
+
 		    write_process("Viewpoint {\n".
 				  "description \"$comp\"".
 				  " position".$T[0].' '.$T[1].' '.$T[2]."\n".
-				  "orientation 0 1 0  3.14".
-				  "jump FALSE".
-				  "}\n");	
+				  "orientation 0 1 0  3.14\n".
+				  "jump FALSE ".
+				  "}\n");
 		}
 	    }
-	    
+
 	} elsif($st == 1 && /^INSTRUMENT END:/) {
             $st = 100;
             last;
@@ -485,7 +497,7 @@ sub read_instrument {
     }
     exit if($st != 100);        # Stop when EOF seen before instrument end.
     return $#components + 1;
-    
+
 }
 
 
@@ -695,7 +707,7 @@ sub plot_components { # PGPLOT stuff only
     @x = @$rx;
     @y = @$ry;
     @ori = @$rori;
-    
+
     PGPLOT::pgsci(2);
     if ($TOF) {
 	my $zz;
@@ -707,7 +719,7 @@ sub plot_components { # PGPLOT stuff only
 	    @TT = ($tmin, $tmax);
 	    PGPLOT::pgsci($col++);
 	    $col = 4 if $col > 15;
-	    PGPLOT::pgline(2, \@TT, \@ZZ); 
+	    PGPLOT::pgline(2, \@TT, \@ZZ);
 	}
     } else {
 	PGPLOT::pgline($#x + 1, \@x, \@y);
@@ -929,7 +941,7 @@ sub vrml_setcolor	{
     elsif($iH==2){$R=0    ;$G=1    ;$B=$dH  }
     elsif($iH==3){$R=0    ;$G=1-$dH;$B=1    }
     elsif($iH==4){$R=$dH  ;$G=0    ;$B=1    }
-    else{$R=1    ;$G=0    ;$B=1-$dH}		 		 		 
+    else{$R=1    ;$G=0    ;$B=1-$dH}
     return "$R $G $B";
 }
 
@@ -1280,7 +1292,7 @@ if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
   # VRML always with file handle. VRML browser spawned after write of file.
   print "Opening file ...\n";
   open(WRITER, "> $file_output");
-  $pid=0;  
+  $pid=0;
   # Other VRML init stuff:
   my $nbcomp1=0,$nbcomp2=0;
   my %transforms;
@@ -1362,8 +1374,8 @@ while(!eof(IN)) {
               print STDERR "Wrote \"$tmp_pg_devname\"\n";
               ++$seq;
 	    }
-            if (defined(&close_window)) { 
-		close_window($tmpdev); 
+            if (defined(&close_window)) {
+		close_window($tmpdev);
 	    } else {
 		PGPLOT::pgclos();
 	    }

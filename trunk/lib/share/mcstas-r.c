@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.139 $
+* Version: $Revision: 1.140 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.139 2006-10-03 22:14:24 farhi Exp $
+* $Id: mcstas-r.c,v 1.140 2006-10-09 11:31:35 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.139  2006/10/03 22:14:24  farhi
+* Added octaga VRML player in install
+*
 * Revision 1.138  2006/09/05 15:26:18  farhi
 * Update of mcformat
 *
@@ -674,7 +677,7 @@ mcstatic struct mcformats_struct mcformat_data;
 mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
   { "McStas", "sim",
     "%PREFormat: %FMT file. Use mcplot/PGPLOT to view.\n"
-      "%PREURL:    http://neutron.risoe.dk/\n"
+      "%PREURL:    http://www.mcstas.org/\n"
       "%PREEditor: %USR\n"
       "%PRECreator:%SRC simulation (McStas " MCSTAS_VERSION ")\n"
       "%PREDate:   Simulation started (%DATL) %DAT\n"
@@ -695,7 +698,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "if argn(2) > 0, p=1; else p=0; end\n"
       "mc_%PAR = struct();\n"
       "mc_%PAR.Format ='%FMT';\n"
-      "mc_%PAR.URL    ='http://neutron.risoe.dk';\n"
+      "mc_%PAR.URL    ='http://www.mcstas.org';\n"
       "mc_%PAR.Editor ='%USR';\n"
       "mc_%PAR.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
       "mc_%PAR.Date   =%DATL; // for getdate\n"
@@ -770,7 +773,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "%% Import data using matlab> s=%PAR; and s=%PAR('plot'); to plot\n"
       "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
       "mc_%PAR.Format ='%FMT';\n"
-      "mc_%PAR.URL    ='http://neutron.risoe.dk';\n"
+      "mc_%PAR.URL    ='http://www.mcstas.org';\n"
       "mc_%PAR.Editor ='%USR';\n"
       "mc_%PAR.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
       "mc_%PAR.Date   =%DATL; %% for datestr\n"
@@ -921,7 +924,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "; McStas simulation %SRC: %FIL\n"
       "; import using s=%PAR() and s=%PAR(/plot) to plot\n"
       "if keyword_set(plot) then p=1 else p=0\n"
-      "%7$s={Format:'%FMT',URL:'http://neutron.risoe.dk',"
+      "%7$s={Format:'%FMT',URL:'http://www.mcstas.org',"
       "Editor:'%USR',$\n"
       "Creator:'%SRC McStas " MCSTAS_VERSION " simulation',$\n"
       "Date:%DATL,"
@@ -942,7 +945,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "<?xml version=\"1.0\" ?>\n<!--\n"
       "URL:    http://www.neutron.anl.gov/nexus/xml/NXgroup.xml\n"
       "Editor: %USR\n"
-      "Creator:%SRC McStas " MCSTAS_VERSION " [neutron.risoe.dk].\n"
+      "Creator:%SRC McStas " MCSTAS_VERSION " [www.mcstas.org].\n"
       "Date:   Simulation started (%DATL) %DAT\n"
       "File:   %FIL\n"
       "View with Mozilla, InternetExplorer, gxmlviewer, kxmleditor\n-->\n"
@@ -966,13 +969,13 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD %DAT//EN\"\n"
       "\"http://www.w3.org/TR/html4/strict.dtd\">\n"
       "<HTML><HEAD><META name=\"Author\" content=\"%PAR\">\n"
-      "<META name=\"Creator\" content=\"%PAR (%SRC) McStas " MCSTAS_VERSION " [neutron.risoe.dk] simulation\">\n"
+      "<META name=\"Creator\" content=\"%PAR (%SRC) McStas " MCSTAS_VERSION " [www.mcstas.org] simulation\">\n"
       "<META name=\"Date\" content=\"%DAT\">\n"
       "<TITLE>[McStas %PAR (%SRC)]%FIL</TITLE></HEAD>\n"
       "<BODY><center><h1><a name=\"%PAR\">"
         "McStas simulation %SRC (%SRC): Result file %FIL.html</a></h1></center><br>\n"
         "This simulation report was automatically created by"
-        " <a href=\"http://neutron.risoe.dk/\"><i>McStas " MCSTAS_VERSION "</i></a><br>\n"
+        " <a href=\"http://www.mcstas.org/\"><i>McStas " MCSTAS_VERSION "</i></a><br>\n"
         "<pre>User:   %USR<br>\n"
         "%PRECreator: <a href=\"%SRC\">%SRC</a> %PAR McStas simulation<br>\n"
         "%PREFormat:  %FMT<br>\n"
@@ -994,7 +997,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "# import data using s=get_%PAR();\n"
       "%PAR = fields();\n"
       "%PAR.Format =\"%FMT\";\n"
-      "%PAR.URL    =\"http://neutron.risoe.dk\";\n"
+      "%PAR.URL    =\"http://www.mcstas.org\";\n"
       "%PAR.Editor =\"%USR\";\n"
       "%PAR.Creator=\"%SRC McStas " MCSTAS_VERSION " simulation\";\n"
       "%PAR.Date   =%DATL;\n"
@@ -1017,7 +1020,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "%% Import data using octave> s=%PAR(); and plot with s=%PAR('plot');\n"
       "if nargin > 0, p=1; else p=0; end\n"
       "mc_%PAR.Format ='%FMT';\n"
-      "mc_%PAR.URL    ='http://neutron.risoe.dk';\n"
+      "mc_%PAR.URL    ='http://www.mcstas.org';\n"
       "mc_%PAR.Editor ='%USR';\n"
       "mc_%PAR.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
       "mc_%PAR.Date   =%DATL; %% for datestr\n"
@@ -1081,14 +1084,14 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "#VRML V2.0 utf8\n%PREFormat: %FMT file\n"
       "%PREuse freeWRL, openvrml, vrmlview, CosmoPlayer, Cortona, Octaga... to view file\n"
       "WorldInfo {\n"
-      "title \"%SRC/%FIL simulation World Data\"\n"
-      "info [ \"URL:    http://neutron.risoe.dk/\"\n"
+      "title \"%SRC/%FIL simulation Data\"\n"
+      "info [ \"URL:    http://www.mcstas.org/\"\n"
       "       \"Editor: %USR\"\n"
       "       \"Creator:%SRC simulation (McStas)\"\n"
       "       \"Date:   Simulation started (%DATL) %DAT\"\n"
       "       \"File:   %FIL\" ]\n}\n"
       "NavigationInfo { type \"EXAMINE\" headlight TRUE}\n"
-      "Background { skyColor [ 0.0 0.0 0.0 ] }\n",
+      "Background { skyAngle [ 1.57 1.57] skyColor [0 0 1, 1 1 1, 0.1 0 0] }\n",
     "%PREEndDate:%DAT\n",
     "%PREbegin %TYP %PAR\n",
     "%PREend %TYP %PAR\n",
