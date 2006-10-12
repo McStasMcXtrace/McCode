@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,23 +11,25 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.6
-* Version: 0.1
+* Release: McStas 1.10b
+* Version: $Revision: 1.10 $
 *
-* A McStas format converter from McStas/PGPLOT to anything else.
+* A McStas format converter to merge concert data files.
 *
 * %Description
 *
-* A McStas format converter from McStas/PGPLOT to anything else.
+* A McStas format converter to merge concert data files.
 * Parameters are the files/directories to process, and option flags.
 * May be used to:
-* 1- continue an interupted simulation, and then add (--add option) the similar
+* 1- continue an interupted simulation, and then add (--merge option) the similar
 *    data files.
 * 2- generate complex data formats to be used using different viewer from
-*    original simple text format.
-* 3- catenate list files (--merge options)
+*    original simple text format (--format=...).
+* 3- catenate list files
+* 4- reconstruct parameter scan sumulations (--scan)
 *
-* Limitations: can not convert from IDL files (matrices miss their first line)
+* Limitations: can not convert from binary files. Conversion from HTML/VRML
+* may fail.
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -39,11 +41,15 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.9 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.10 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
 #undef USE_MPI
+#endif
+
+#ifdef USE_THREADS
+#undef USE_THREADS
 #endif
 
 /* Instead of including mcstas.h file, which would then require to link most
@@ -51,7 +57,7 @@
    the mcstas.h file.
    Build: cc -o mcformat mcformat.c -lm
 */
-#define MCSTAS_VERSION "X.Y.Z, Month Day, Year"
+#define MCSTAS_VERSION "1.10b - Oct. 12, 2006"
 
 #define fatal_error printf  /* remove debug.c dependency */
 #define debug(msg)
@@ -356,11 +362,16 @@ struct McStas_file_format {
   char   *ratio;
   double  RunNum;
   double *p0, *p1, *p2;
+  double Nsum, Psum, P2sum;
   Coords  POSITION;
 
   int  mcnumipar;
   struct mcinputtable_struct *mcinputtable;
   char *mcdirname;
+  double Scan_ipar_value;
+  int    Scan_ipar_index;
+  double Scan_mon_distance;
+  int    Scan_mon_index;
 }; /* McStas_file_format */
 
 struct McStas_file_format *Files_to_Merge=NULL;
@@ -401,6 +412,9 @@ struct McStas_file_format mcformat_init_mcstas_struct(void)
   McStasStruct.p0         = NULL;
   McStasStruct.p1         = NULL;
   McStasStruct.p2         = NULL;
+  McStasStruct.Nsum       = 0;
+  McStasStruct.Psum       = 0;
+  McStasStruct.P2sum      = 0;
   McStasStruct.POSITION.x=McStasStruct.POSITION.y=McStasStruct.POSITION.z=0;
 
   McStasStruct.RunNum     = 0;
@@ -734,6 +748,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   }
 
   McStasStruct.filename   = str_dup(filename);
+  if (!McStasStruct.component) McStasStruct.component=str_dup(filename);
   struct fileparts_struct file_parts=fileparts(filename);
   char *tmp=str_cat(file_parts.Name, ".", file_parts.Extension, NULL);
   McStasStruct.outputname = str_dup_name(tmp, 0);
@@ -905,7 +920,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
 {
   char *currentdir= mcdirname; /* save current dir */
   int i;
-  
+
   if (mctestmode) return(1);
   if (!McStasStruct.p1) return(0); /* empty data */
   /* determine in which directory we are and set SIM file */
@@ -1129,7 +1144,7 @@ int mcformat_merge_compare(int nb)
       /* Names check: InstrName, Source and component */
       /* directories must be different except if mcmergesamedir */
       /* not taken into account in force mode */
-      char flag_names = ( mcforcemode ||
+      char flag_names = (
         (!ThisStruct.InstrName || !McStasStruct.InstrName
             || !strcmp(ThisStruct.InstrName, McStasStruct.InstrName)) &&
         (!ThisStruct.Source || !McStasStruct.Source
@@ -1142,12 +1157,12 @@ int mcformat_merge_compare(int nb)
 
       /* handle scan index */
       if (!flag_equiv_parval) {
-        /* attach index j to scan origin 'i' */
-        if (Scans_to_merge[i] < 0) Scans_to_merge[i] = i;
-        if (Scans_to_merge[j] < 0) Scans_to_merge[j] = i;
-        if (mcverbose) fprintf(stderr,"  Gathering Scan step %s/%s (%d) with %s/%s (%d)\n",
+        /* attach index j to scan column origin monitor 'i' */
+        if (mcverbose && Scans_to_merge[j] < 0 && Scans_to_merge[i] >= 0) fprintf(stderr,"  Gathering Scan step %s/%s (%d) with %s/%s (%d)\n",
           McStasStruct.mcdirname, McStasStruct.outputname, i,
           ThisStruct.mcdirname,  ThisStruct.outputname,    j);
+        if (Scans_to_merge[i] < 0) Scans_to_merge[i] = i;
+        if (Scans_to_merge[j] < 0) Scans_to_merge[j] = i;
         /* next i if this is a scan (no add/cat) */
         continue; /* for j */
       }
@@ -1195,16 +1210,74 @@ int mcformat_merge_compare(int nb)
         memfree(ThisStruct.p0); memfree(ThisStruct.p1); memfree(ThisStruct.p2);
         Files_to_Merge[j].p0=Files_to_Merge[j].p1=Files_to_Merge[j].p2=NULL;
       }
+      Files_to_Merge[i].Ncount += ThisStruct.Ncount;
+      Files_to_Merge[i].RunNum += ThisStruct.RunNum;
     } /* end for j */
+    /* now count integral values for item Files_to_Merge[i] */
+    double Nsum=0, Psum=0, P2sum=0;
+    for (j=0; j<abs(Files_to_Merge[i].m*Files_to_Merge[i].n*Files_to_Merge[i].p); j++) {
+      double N=1,I=0,E=0;
+      if (Files_to_Merge[i].p0) N = Files_to_Merge[i].p0[j];
+      if (Files_to_Merge[i].p1) I = Files_to_Merge[i].p1[j];
+      if (Files_to_Merge[i].p2) E = Files_to_Merge[i].p2[j];
+      Nsum += N;
+      Psum += I;
+      P2sum += Files_to_Merge[i].p2 ? E : I*I;
+    }
+    Files_to_Merge[i].Nsum = Nsum;
+    Files_to_Merge[i].Psum = Psum;
+    Files_to_Merge[i].P2sum= P2sum;
 
   } /* end for i */
   return(nb);
 } /* mcformat_merge_compare */
 
-/*******************************************************************************
+/* sorting functions for qsort: sort monitor files with distance */
+#ifdef HAVE_QSORT
+int sort_distances (const void *a, const void *b)
+{
+  const int *pa = (const int *) a;
+  const int *pb = (const int *) b;
+  int ia=*pa;
+  int ib=*pb;
+  double da=Files_to_Merge[ia].POSITION.x*Files_to_Merge[ia].POSITION.x
+           +Files_to_Merge[ia].POSITION.y*Files_to_Merge[ia].POSITION.y
+           +Files_to_Merge[ia].POSITION.z*Files_to_Merge[ia].POSITION.z;
+  double db=Files_to_Merge[ib].POSITION.x*Files_to_Merge[ib].POSITION.x
+           +Files_to_Merge[ib].POSITION.y*Files_to_Merge[ib].POSITION.y
+           +Files_to_Merge[ib].POSITION.z*Files_to_Merge[ib].POSITION.z;
+  if       (da > db) return 1;
+  else if (da < db) return -1;
+  else /* same distance, sort on names */
+  return strcmp(Files_to_Merge[ia].filename, Files_to_Merge[ib].filename);
+}
+
+/* sorting functions for qsort: sort monitor column with ipar.val */
+int sort_ipar_mon (const void *a, const void *b)
+{
+  const int *pa = (const int *) a;
+  const int *pb = (const int *) b;
+  int ia=*pa;
+  int ib=*pb;
+  double da=Files_to_Merge[ia].mcinputtable[0].type == instr_type_string ?
+    0 : atof(Files_to_Merge[ia].mcinputtable[0].val);
+  double db=Files_to_Merge[ib].mcinputtable[0].type == instr_type_string ?
+    0 : atof(Files_to_Merge[ib].mcinputtable[0].val);
+  if       (da > db) return 1;
+  else if (da < db) return -1;
+  else {/* same distance, sort on ipar value then filenames */
+   int tmp=strcmp(Files_to_Merge[ia].mcinputtable[0].val,
+                  Files_to_Merge[ib].mcinputtable[0].val);
+   if (tmp) return(tmp);
+   else return strcmp(Files_to_Merge[ia].filename, Files_to_Merge[ib].filename);
+  }
+}
+#endif
+
+/*********************************************************************
 * mcformat_scan_compare: assemble scanned monitors into multiarray sets
 *                        warning: this function is a real headache
-*******************************************************************************/
+*********************************************************************/
 int mcformat_scan_compare(int nb)
 {
   /* definition of a scan
@@ -1216,7 +1289,7 @@ int mcformat_scan_compare(int nb)
       -same ipar values define rows
    */
   int scan_index1=0;
-  int j;
+  int i,j;
 
   /* loop on Scans_to_merge: index > -1  */
   for (scan_index1=0; scan_index1<nb; scan_index1++) {
@@ -1224,31 +1297,36 @@ int mcformat_scan_compare(int nb)
     /* get all sets of given index: Scans_to_merge[j] = index */
     int scan_length1= 1;
     int next_in_scan=-1;
-    int last_in_scan=-1;
     int ipar_var    = 0;
-    /* compute length of set (length of scan): scan_length1 */
-    for (j=scan_index1+1; j<nb; j++) if (Scans_to_merge[scan_index1] == Scans_to_merge[j]) {
-      scan_length1++;
-      if (next_in_scan < 0) next_in_scan = j;
-      last_in_scan=j;
-    }
+    int scan_index2;
+    /* compute length of monitor column (length of scan): scan_length1 */
+    for (scan_index2=scan_index1+1; scan_index2<nb; scan_index2++)
+      if (Scans_to_merge[scan_index1] == Scans_to_merge[scan_index2]) {
+        scan_length1++;
+        if (next_in_scan < 0) next_in_scan = scan_index2;
+      }
     if (scan_length1 <= 1) continue; /* not a scan, single data set: go to next data file */
 
-    /* count other sets in Scans_to_merge with same ipar names and values: mon_count */
+    /* count other monitors in Scans_to_merge with same ipar names and values: mon_count */
     int mon_count=0;
-    int scan_index2;
+    int Scan_columns[nb];
+    for (scan_index2=0; scan_index2<nb; Scan_columns[scan_index2++]=-1);
+
     for (scan_index2=0; scan_index2<nb; scan_index2++) {
       char flag_matchpar=0;
-      if (scan_index1 == scan_index2) { mon_count++; continue; }
+      if (scan_index1 == scan_index2) {
+        mon_count++; Scan_columns[scan_index2] = scan_index1; continue;
+      }
       /* must be a scan */
       if (Scans_to_merge[scan_index2] < 0) continue; /* scan_index2 */
       /* must have same numipar */
       if (Files_to_Merge[scan_index1].mcnumipar != Files_to_Merge[scan_index2].mcnumipar) continue; /* scan_index2 */
-      /* must have same scan length */
+      /* must have same scan length as first monitor */
       int scan_length2= 0;
-      for (j=scan_index2; j<nb; j++) if (Scans_to_merge[scan_index2] == Scans_to_merge[j]) {
-        scan_length2++;
-      }
+      for (j=scan_index2; j<nb; j++)
+        if (Scans_to_merge[scan_index2] == Scans_to_merge[j]) {
+          scan_length2++;
+        }
       if (scan_length1 != scan_length2) continue; /* scan_index2 */
       /* must have same ipar.name and values along column */
       int ipar2;
@@ -1256,24 +1334,27 @@ int mcformat_scan_compare(int nb)
         char *this_parname = Files_to_Merge[scan_index2].mcinputtable[ipar2].name;
         char *this_parval  = Files_to_Merge[scan_index2].mcinputtable[ipar2].val;
         /* look back into 'scan_index1' series for similar parameters */
-        int scan_index1b;
-        for(scan_index1b=scan_index1; scan_index1b<nb; scan_index1b++) {
-          if (Scans_to_merge[scan_index1b] == Scans_to_merge[scan_index1]) {
+        for(j=scan_index1; j<nb; j++) {
+          if (Scans_to_merge[j] == Scans_to_merge[scan_index1]) {
             /* in original column, look if we can find ipar */
             int ipar1;
-            for (ipar1=0; ipar1<Files_to_Merge[scan_index1b].mcnumipar; ipar1++) {
-              if (strcmp(Files_to_Merge[scan_index1b].mcinputtable[ipar1].name, this_parname)
-               || strcmp(Files_to_Merge[scan_index1b].mcinputtable[ipar1].val,  this_parval) ) continue; /* ipar1 */
+            for (ipar1=0; ipar1<Files_to_Merge[j].mcnumipar; ipar1++) {
+              if (strcmp(Files_to_Merge[j].mcinputtable[ipar1].name, this_parname)
+               || strcmp(Files_to_Merge[j].mcinputtable[ipar1].val,  this_parval) ) continue; /* ipar1 */
               flag_matchpar=1;
               break;
             } /* for ipar1 */
-            if (flag_matchpar) break; /* scan_index1b: we found matching ipar both in scan_index1 and scan_index2 */
+            if (flag_matchpar) break; /* j: we found matching ipar both in scan_index1 and scan_index2 */
           } /* if */
         } /* for scan_index1b */
         if (!flag_matchpar) break; /* ipar2: ipar of scan_index2 not found in scan_index1 */
       } /* for ipar2 */
       if (!flag_matchpar) continue; /* scan_index2: an ipar of scan_index2 was not found in scan_index1. try other scan_index2 */
-      else mon_count++;
+      else {
+        mon_count++;
+        /* attach that file to first monitor of dir/column */
+        Scan_columns[scan_index2] = scan_index2;
+      }
     } /* for scan_index2 */
 
     /* get first varying ipar: ipar_var */
@@ -1285,17 +1366,125 @@ int mcformat_scan_compare(int nb)
     if (j < Files_to_Merge[scan_index1].mcnumipar) ipar_var=j;
     /* now we know how many scanned monitor there are */
 
-    printf("scan from %s has %d rows(scan steps) of %d columns (monitors ) varying %s\n",
-      Files_to_Merge[scan_index1].filename, scan_length1, mon_count,
+    if (mcverbose)
+      fprintf(stderr, "scan from %s has %d rows (scan steps) of %d columns (monitors) varying %s\n",
+        Files_to_Merge[scan_index1].filename, scan_length1, mon_count,
+        Files_to_Merge[scan_index1].mcinputtable[ipar_var].name);
+
+    /* single Scan_columns[] is an unsorted row
+      and have same ipar name/value in same dir/row */
+
+    /* single Scans_to_merge[i] value is an unsorted column
+      and have same name in different directories/columns
+      but different ipar values */
+
+    /* allocate array: scan_length1(rows)*(mcnumipar+2*mon_count) */
+    t_Table Scan;
+    if (!Table_Init(&Scan,
+      scan_length1,
+      Files_to_Merge[scan_index1].mcnumipar+2*mon_count)) {
+      fprintf(stderr, "Warning: %s: Can not allocate Scan %ix(%i+2*%i) multiarray_1d. Skipping.\n",
+          Files_to_Merge[scan_index1].filename, scan_length1,
+          Files_to_Merge[scan_index1].mcnumipar,
+          mon_count);
+      continue;
+    }
+    char *header=(char*)mem(64*MAX_LENGTH); strcpy(header, "");
+    char *youts =(char*)mem(64*MAX_LENGTH); strcpy(youts,  "");
+    double ipar_min, ipar_max;
+
+    /* we first sort Scan_columns(monitors) with distance */
+    int Scan_distances[mon_count];  /* this is column index */
+    j = 0;
+#ifdef HAVE_QSORT
+    for (scan_index2=0; scan_index2<nb; scan_index2++)
+      if (Scan_columns[scan_index2]>=0) Scan_distances[j++] = Scan_columns[scan_index2];
+    qsort(Scan_distances, mon_count, sizeof(int), sort_distances);
+#endif
+    for (j=0; j<mon_count; j++) { /* loop for each column */
+      int Monitor_column[scan_length1];
+      int k=0;
+      for (i=0; i<scan_length1; Monitor_column[i++]=-1);
+      for (scan_index2=0; scan_index2<nb; scan_index2++) {
+        /* find Scan_distances[j] in Scans_to_merge */
+        if (Scans_to_merge[scan_index2] >= 0 && Scans_to_merge[scan_index2] == Scan_distances[j]) {
+          Monitor_column[k++] = scan_index2;
+          Scans_to_merge[scan_index2]=-1; /*unactivate that scan element */
+        }
+      }
+      /* sort each monitor column with ipar value */
+#ifdef HAVE_QSORT
+      qsort(Monitor_column, scan_length1, sizeof(int), sort_ipar_mon);
+#endif
+      /* extract sorted column and set Scan */
+      for (i=0; i<scan_length1; i++) { /* loop on column elements(row) */
+        Table_SetElement(&Scan,
+          i, Files_to_Merge[scan_index1].mcnumipar+2*j,
+          Files_to_Merge[Monitor_column[i]].Psum);
+        Table_SetElement(&Scan,
+          i, Files_to_Merge[scan_index1].mcnumipar+2*j+1,
+          Files_to_Merge[Monitor_column[i]].P2sum);
+        if (j==0) { /* first monitor in row also sets ipar */
+          for (k=0; k<Files_to_Merge[Monitor_column[i]].mcnumipar; k++) {
+            Table_SetElement(&Scan,
+              i, k,
+              atof(Files_to_Merge[Monitor_column[i]].mcinputtable[k].val));
+            /* set name of ipar */
+            if (i==0) {
+              strcat(header, Files_to_Merge[Monitor_column[i]].mcinputtable[k].name);
+              strcat(header, " ");
+            }
+          }
+        } /* if j==0 */
+        if (i == 0)
+          ipar_min=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[0].val);
+        else if (i == scan_length1-1)
+          ipar_max=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[0].val);
+      } /* for i */
+      strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_I ");
+      strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_Err ");
+      strcat(youts, "("); strcat(youts, Files_to_Merge[Scan_distances[j]].outputname); strcat(youts, "_I,");
+      strcat(youts, Files_to_Merge[Scan_distances[j]].outputname); strcat(youts, "_Err) ");
+
+    } /* for j */
+    Scan.header=header;
+
+    Scans_to_merge[scan_index1]=-1; /* unactivate that scan element */
+
+    char *title=str_cat("Scan of ",
       Files_to_Merge[scan_index1].mcinputtable[ipar_var].name);
+    /* output scan multiarray */
+    /* for PGPLOT: open mcstas.sim */
+    if (strstr(mcformat.Name, "McStas")) mcsiminfo_init(NULL); /* open new SIM file in this dir for the first time */
+    else mcsiminfo_name=NULL;
+    char *datfile=NULL;
+    if (mcsingle_file && mcsiminfo_name) datfile=str_dup(mcsiminfo_name);
+    if (!datfile) datfile = str_cat("mcstas.", strstr(mcformat.Name, "McStas") ? "dat" : mcformat.Extension, NULL);
+    strcat(mcformat.Name, " scan ");
+    if (mcverbose)
+      fprintf(stderr, "Writing scan file=%s (%s)\n", datfile, mcsiminfo_name);
+    mcdetector_out_012D(mcformat,
+      Files_to_Merge[scan_index1].component, title,
+      -scan_length1, Files_to_Merge[scan_index1].mcnumipar+2*mon_count,  1,
+      Files_to_Merge[scan_index1].mcinputtable[ipar_var].name,
+      Files_to_Merge[scan_index1].ylabel, "",
+      Files_to_Merge[scan_index1].mcinputtable[ipar_var].name,
+      youts,
+      header,
+      ipar_min, ipar_max, 0, 0, 0, 0,
+      datfile,
+      NULL, Scan.data, NULL,
+      Files_to_Merge[scan_index1].POSITION);
 
-    /* allocate array: scan_length1(rows)*(mcnumipar+3*mon_count) */
-    /* fill array with other iteration of scan_index2 */
-
+    /* for PGPLOT: close mcstas.sim */
+    if (strstr(mcformat.Name, "McStas")) mcsiminfo_close();
+    Table_Free(&Scan);
+    memfree(datfile);
+    memfree(youts);
+    memfree(title);
     /* go to end of scan and continue to search for scans */
   } /* for scan_index1 */
-  printf("Exit mcformat_scan_compare: scan writing not implementing yet !\n");
-}
+} /*  mcformat_scan_compare /
 
 /*******************************************************************************
 * mcformat_merge_output: output non empty files
@@ -1338,7 +1527,7 @@ void mcformat_usage(char *pgmname)
 {
   int i;
 
-  fprintf(stderr, "mcformat version %s format conversion tool for McStas\n", MCFORMAT);
+  fprintf(stderr, "mcformat version %s format conversion tool (McStas " PACKAGE_VERSION ")\n", MCFORMAT);
   fprintf(stderr, "Usage: %s [options] file1|dir1 file2|dir2 ...\n", pgmname);
   fprintf(stderr,
 "Convert/merge files and directories from McStas format to an other specified format\n"
@@ -1350,7 +1539,6 @@ void mcformat_usage(char *pgmname)
 "  -h        --help           Show this help message.\n"
 "  --format=FORMAT            Output data files using format FORMAT\n"
 "  -c        --force          Force writting in existing directories\n"
-"                             and enable relaxed merging mode (no name check)\n"
 "  -t        --test           Test mode, does not write files\n"
 "  -m        --merge          Add/Append equivalent data files and lists\n"
 "            --merge-samedir  Merges inside same directories (dangerous)\n"
@@ -1359,11 +1547,13 @@ void mcformat_usage(char *pgmname)
 "            --verbose        Verbose mode\n"
 "\n"
 "Examples:\n"
-"mcformat -d target_dir original_dir # using default target format %s\n"
+"mcformat -d target_dir original_dir\n"
+"  # using default target format %s\n"
 "mcformat -d target_dir original_dir --format=target_format\n"
-"mcformat -d target_dir original_dir1 original_dir2 --merge # add simulation data sets (grids)\n"
-"mcformat -d target_dir file1 file2 --merge-samedir\n"
-"  # add simulation data files, possibly from the same data set\n\n",
+"mcformat -d target_dir original_dir1 original_dir2 --merge\n"
+"  # merge simulation data sets (grids)\n"
+"mcformat -d target_dir dir1 dir2 ... --scan\n"
+"  # merge scan data sets\n\n",
 getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
 
   fprintf(stderr, "Available output formats are (default is %s):\n  ", mcformat.Name);
@@ -1377,7 +1567,7 @@ void
 mcformat_parseoptions(int argc, char *argv[])
 {
   int i;
-  char cwd[1024];
+  char cwd[MAX_LENGTH];
   mcdirname = NULL;
   for(i = 1; i < argc; i++)
   {
@@ -1458,7 +1648,7 @@ mcformat_parseoptions(int argc, char *argv[])
     strcat(mcformat.Name, " with text headers");
   }
   if (!mcdirname) {
-    getcwd(cwd, 1024);
+    getcwd(cwd, MAX_LENGTH);
     mcdirname = str_dup(cwd); /* default is to export to PWD */
   }
 } /* mcformat_parseoptions */
