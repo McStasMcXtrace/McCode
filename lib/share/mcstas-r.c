@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,17 +10,20 @@
 * %Identification
 * Written by: KN
 * Date:    Aug 29, 1997
-* Release: McStas 1.6
-* Version: $Revision: 1.140 $
+* Release: McStas 1.10b
+* Version: $Revision: 1.141 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.140 2006-10-09 11:31:35 farhi Exp $
+* $Id: mcstas-r.c,v 1.141 2006-10-12 12:09:11 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.140  2006/10/09 11:31:35  farhi
+* Added blue/white sky to VRML output files. Prefer Octagaplayer.
+*
 * Revision 1.139  2006/10/03 22:14:24  farhi
 * Added octaga VRML player in install
 *
@@ -1090,7 +1093,6 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "       \"Creator:%SRC simulation (McStas)\"\n"
       "       \"Date:   Simulation started (%DATL) %DAT\"\n"
       "       \"File:   %FIL\" ]\n}\n"
-      "NavigationInfo { type \"EXAMINE\" headlight TRUE}\n"
       "Background { skyAngle [ 1.57 1.57] skyColor [0 0 1, 1 1 1, 0.1 0 0] }\n",
     "%PREEndDate:%DAT\n",
     "%PREbegin %TYP %PAR\n",
@@ -1826,14 +1828,15 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     }
   }
 
-  if (m*n*p == 1)
+  if (abs(m*n*p) == 1)
   { strcpy(type, "array_0d"); strcpy(stats, ""); }
   else if (n == 1 || m == 1)
   { if (m == 1) {m = n; n = 1; }
     sprintf(type, "array_1d(%d)", m);
     sprintf(stats, "X0=%g; dX=%g;", fmon_x, smon_x); }
   else
-  { if (p == 1) sprintf(type, "array_2d(%d, %d)", m, n);
+  { if (strstr(format.Name," scan ")) sprintf(type, "multiarray_1d(%d)", n);
+    else if (p == 1) sprintf(type, "array_2d(%d, %d)", m, n);
     else sprintf(type, "array_3d(%d, %d, %d)", m, n, p);
     sprintf(stats, "X0=%g; dX=%g; Y0=%g; dY=%g;", fmon_x, smon_x, fmon_y, smon_y); }
   strcpy(c, "I ");
@@ -1879,24 +1882,26 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   strcpy(lim_field, "xylimits");
   if (n*m > 1)
   {
-    mcfile_tag(f, format, pre, parent, "xvar", xvar);
-    mcfile_tag(f, format, pre, parent, "yvar", yvar);
+    mcfile_tag(f, format, pre, parent, (strstr(format.Name," scan ") ? "xvars" : "xvar"), xvar);
+    mcfile_tag(f, format, pre, parent, (strstr(format.Name," scan ") ? "yvars" : "yvar"), yvar);
     mcfile_tag(f, format, pre, parent, "xlabel", xlabel);
     mcfile_tag(f, format, pre, parent, "ylabel", ylabel);
-    if ((n == 1 || m == 1) && strstr(format.Name, "McStas"))
+    if ((n == 1 || m == 1 || strstr(format.Name," scan ")) && strstr(format.Name, "McStas"))
     {
       sprintf(limits, "%g %g", *x1, *x2);
       strcpy(lim_field, "xlimits");
     }
     else
     {
-      mcfile_tag(f, format, pre, parent, "zvar", zvar);
-      mcfile_tag(f, format, pre, parent, "zlabel", zlabel);
+      if (!strstr(format.Name," scan ")) {
+        mcfile_tag(f, format, pre, parent, "zvar", zvar);
+        mcfile_tag(f, format, pre, parent, "zlabel", zlabel);
+      }
       sprintf(limits, "%g %g %g %g %g %g", *x1, *x2, *y1, *y2, *z1, *z2);
     }
   } else strcpy(limits, "0 0 0 0 0 0");
   mcfile_tag(f, format, pre, parent, lim_field, limits);
-  mcfile_tag(f, format, pre, parent, "variables", vars);
+  mcfile_tag(f, format, pre, parent, "variables", strstr(format.Name," scan ") ? zvar : vars);
   /* add warning in case of low statistics or large number of bins in text format mode */
   if (n*m*p > 1000 && Nsum < n*m*p && Nsum) fprintf(stderr,
     "Warning: file '%s':\n"
@@ -2141,7 +2146,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   }
   else if (just_header == 0)
   {
-    if (strstr(format.Name, "McStas") && m*n*p>1 && f)
+    if (strstr(format.Name, "McStas") && abs(m*n*p)>1 && f)
     {
       if (is1d) sprintf(sec,"array_1d(%d)", m);
       else if (p==1) sprintf(sec,"array_2d(%d,%d)", m,n);
@@ -2196,13 +2201,13 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           {
             double x;
 
-            x = *x1+(*x2-*x1)*(index+0.5)/(m*n*p);
-            if (m*n*p > 1) fprintf(datafile, "%g %g %g %g\n", x, I, E, N);
+            x = *x1+(*x2-*x1)*(index+0.5)/(abs(m*n*p));
+            if (abs(m*n*p) > 1) fprintf(datafile, "%g %g %g %g\n", x, I, E, N);
           }
           else
           {
             fprintf(datafile, "%g", value);
-            if ((isIDL || isPython) && ((i+1)*(j+1) < m*n*p)) fprintf(datafile, ",");
+            if ((isIDL || isPython) && ((i+1)*(j+1) < abs(m*n*p))) fprintf(datafile, ",");
             else fprintf(datafile, " ");
           }
         }
@@ -2219,15 +2224,15 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       if (d && isBinary == 1)  /* float */
       {
         float *s;
-        s = (float*)malloc(m*n*p*sizeof(float));
+        s = (float*)malloc(abs(m*n*p)*sizeof(float));
         if (s)
         {
           long    i, count;
-          for (i=0; i<m*n*p; i++)
+          for (i=0; i<abs(m*n*p); i++)
             { if (isdata != 2 || israw_data) s[i] = (float)d[i];
               else s[i] = (float)mcestimate_error(p0[i],p1[i],p2[i]); }
-          count = fwrite(s, sizeof(float), m*n*p, datafile);
-          if (count != m*n*p) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)m*n*p);
+          count = fwrite(s, sizeof(float), abs(m*n*p), datafile);
+          if (count != abs(m*n*p)) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)abs(m*n*p));
           free(s);
         } else fprintf(stderr, "McStas: Out of memory for writing float binary file '%s' (mcfile_datablock)\n", filename);
       }
@@ -2237,17 +2242,17 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
         double *s=NULL;
         if (isdata == 2 && !israw_data)
         {
-          s = (double*)malloc(m*n*p*sizeof(double));
+          s = (double*)malloc(abs(m*n*p)*sizeof(double));
           if (s) { long i;
-            for (i=0; i<m*n*p; i++)
+            for (i=0; i<abs(m*n*p); i++)
               s[i] = (double)mcestimate_error(p0[i],p1[i],p2[i]);
             d = s;
           }
           else fprintf(stderr, "McStas: Out of memory for writing 'errors' part of double binary file '%s' (mcfile_datablock)\n", filename);
         }
-        count = fwrite(d, sizeof(double), m*n*p, datafile);
+        count = fwrite(d, sizeof(double), abs(m*n*p), datafile);
         if (isdata == 2 && s) free(s);
-        if (count != m*n*p) fprintf(stderr, "McStas: error writing double binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)m*n*p);
+        if (count != abs(m*n*p)) fprintf(stderr, "McStas: error writing double binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)abs(m*n*p));
       }
     } /* end if Binary */
   }
@@ -2320,7 +2325,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   }
   else
   {
-    if (strstr(format.Name, "McStas") && just_header == 0 && m*n*p > 1)
+    if (strstr(format.Name, "McStas") && just_header == 0 && abs(m*n*p) > 1)
       fprintf(f,"%send %s\n", pre, sec);
   }
 
@@ -2411,13 +2416,13 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   int mpi_event_list;
 #endif /* !USE_MPI */
 
-  if (!p1 || (p1 && m*n*p > 1 && (!filename_orig || !strlen(filename_orig)))) return(0);
+  if (!p1 || (p1 && abs(m*n*p) > 1 && (!filename_orig || !strlen(filename_orig)))) return(0);
 
   pre = (char *)malloc(20);
   if (!pre) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
   strcpy(pre, strstr(format.Name, "VRML")
            || strstr(format.Name, "OpenGENIE") ? "# " : "");
-  if (filename_orig) {
+  if (filename_orig && abs(m*n*p) > 1) {
     filename = (char *)malloc(1024);
     if (!filename) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
     strcpy(filename, filename_orig);
