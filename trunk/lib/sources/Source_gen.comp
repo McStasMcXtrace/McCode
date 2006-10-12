@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -141,6 +141,8 @@ SHARE
 %{
 %include "read_table-lib"
 
+#ifndef SOURCE_GEN_DEF
+#define SOURCE_GEN_DEF
 /*******************************************************************************
 * str_dup_numeric: makes a clean copy of a string and allocate as numeric
 *******************************************************************************/
@@ -169,6 +171,7 @@ char *str_dup_numeric(char *orig)
 
   return(orig);
 } /* str_dup_numeric */
+#endif
 %}
 
 DECLARE
@@ -389,8 +392,8 @@ INITIALIZE
       source_area = radius*radius*PI*1e4; /* circular cm^2 */
     else
       source_area = h*w*1e4; /* square cm^2 */
-    p_in = source_area*delta_lambda;
-    if (!T1) p_in *= I1;
+    p_in = source_area;
+    if (!T1) p_in *= I1; else p_in *=delta_lambda;
   }
   else
     p_in = 1.0/4/PI; /* Small angle approx. */
@@ -556,41 +559,6 @@ TRACE
 
 FINALLY
 %{
-/*
-  double i,j,k;
-  double r,x,theta;
-  double psd[pTable_x.columns][pTable_x.rows];
-  double psD[pTable_x.columns][pTable_x.rows];
-  for (i=0; i<pTable_x.columns; i++)
-    for (j=0; j<pTable_x.rows; j++)
-      psd[(int)j][(int)i] = psD[(int)j][(int)i] =0;
-  for (k=0; k<10000; k++) {
-    x    =rand01()*(pTable_xmax-pTable_xmin)+pTable_xmin;
-    theta=rand01()*(pTable_dxmax-pTable_dxmin)+pTable_dxmin;
-    j = (x-            pTable_xmin) /(pTable_xmax -pTable_xmin) *pTable_x.columns;
-    i = (theta-pTable_dxmin)/(pTable_dxmax-pTable_dxmin)*pTable_x.rows;
-    r = Table_Value2d(pTable_x, i,j);
-    // printf("i=%d j=%d\n", (int)i, (int)j);
-    psd[(int)floor(j)][(int)floor(i)] = Table_Index(pTable_x, (int)i, (int)j);
-    psD[(int)floor(j)][(int)floor(i)] = r;
-  }
-  DETECTOR_OUT_2D(
-        "SG test Table_x",
-        "X",
-        "xdiv",
-        pTable_xmin, pTable_xmax, pTable_dxmin, pTable_dxmax,
-        pTable_x.columns, pTable_x.rows,
-        NULL,&psd[0][0],NULL,
-        "SGtest.dat");
-  DETECTOR_OUT_2D(
-        "SG test Table_x Interp2d",
-        "X",
-        "xdiv",
-        pTable_xmin, pTable_xmax, pTable_dxmin, pTable_dxmax,
-        pTable_x.columns, pTable_x.rows,
-        NULL,&psD[0][0],NULL,
-        "SGinterp.dat");
-        */
   Table_Free(&pTable);
   Table_Free(&pTable_x);
   Table_Free(&pTable_y);
