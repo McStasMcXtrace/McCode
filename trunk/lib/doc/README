@@ -12,20 +12,20 @@ Usage: mcdoc [options] <dir|file>
    -t    --text    For single component, display as text
    -w    --web     Open the McStas web page http://neutron.risoe.dk/mcstas/
 SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
-DOC:      Please visit http://neutron.risoe.dk/mcstas/
+DOC:      Please visit http://www.mcstas.org/
 
 For instance, to access the McStas web site, type:
-  
+
   mcdoc --web
-  
+
 To access the McStas User Manual, type
 
   mcdoc --manual
-  
+
 To browse the component library, type
 
   mcdoc --show
-  
+
 Finally, to display the help for a single component, type for instance
 
   mcdoc Guide.comp
@@ -33,10 +33,10 @@ Finally, to display the help for a single component, type for instance
 or
 
   mcdoc --text Guide.comp
-  
+
 Except for the last example, all mcdoc calls will requires BROWSER to be defined.
 Usually, BROWSER is set as 'netscape', 'konqueror', 'safari', nautilus', etc
-  
+
 The list of available McStas Tools is
 
    mcstas        Main instrument compiler

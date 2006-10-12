@@ -31,14 +31,15 @@ mandir = @mandir@
 
 DEBUG = -DDEBUG=0
 mc_libdir = $(libdir)/mcstas
-#DEBUG=
 
 CC = @CC@
 CFLAGS = @CFLAGS@
 LDFLAGS= @LDFLAGS@
-DEFS = @DEFS@ $(DEBUG)
 
 HAVE_LIBPTHREAD = @HAVE_LIBPTHREAD@
+HAVE_QSORT = -DHAVE_QSORT=@HAVE_QSORT@
+
+DEFS = @DEFS@ $(HAVE_QSORT) $(DEBUG)
 
 PERL = @PERL@
 
@@ -90,10 +91,10 @@ BINOBJS=$(PERLOBJ) mcstas mcformat
 all: $(BINOBJS)
 
 mcstas: $(OBJECTS)
-	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(OBJECTS) -lm
+	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
 
 mcformat:
-	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) mcformat.c -lm
+	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm
 
 clean:
 	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \

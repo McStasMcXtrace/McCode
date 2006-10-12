@@ -110,6 +110,8 @@ sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcconvert.1 > m
 cat mcconvert.1.tmp > mcconvert.1
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.1 > mcformat.1.tmp
 cat mcformat.1.tmp > mcformat.1
+sed 's/X.Y.Z/'$1'/' configure.in > configure.in.tmp
+cat configure.in.tmp > configure.in
 rm -f *.tmp
 
 # Create configure
