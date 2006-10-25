@@ -124,7 +124,7 @@ sub read_instrument {
 #\n# Instrument used was $sim_cmd. Full cmdline was:\n#
 # mcdisplay @ARGV
 #\n# Please rerun instrument with -i option to get more info.\n#\n
-WorldInfo { 
+WorldInfo {
   title \"McStas: $sim_cmd instrument\"
   info [ \"URL:    http://www.mcstas.org/\"
     \"Editor: mcdisplay @ARGV\"
@@ -138,12 +138,12 @@ Viewpoint {
 }
 Background {
   skyAngle [ 1.57 1.57]
-  skyColor [0 0 1, 1 1 1, 0.1 0 0]
+  skyColor [0 0 1, .1 .1 .1, 0.1 0 0]
 }\n");
 		# Definition of Origin + coordinate system arrows
 		write_process("# Sphere at the origin
-Shape { 
-  appearance Appearance { 
+Shape {
+  appearance Appearance {
   material Material {
   diffuseColor 1.0 1.0 0.0
   transparency 0.5 } }
@@ -185,7 +185,7 @@ Transform {
   rotation 1 0 0 1.57
   children [
   Group {
-  children [ 
+  children [
   USE ARROW
   ] } ] }
 # the arrow along Z axis
@@ -194,7 +194,7 @@ Transform {
   rotation 0 0 1 -1.57
   children [
   Group {
-  children [ 
+  children [
   USE ARROW
   ] } ] }
 # the Y label (which is vertical)
@@ -211,10 +211,10 @@ Transform {
   diffuseColor 1 1 .3
   emissiveColor .33 .33 .1
   } }
-  geometry Text { 
+  geometry Text {
   string [\"y\" ]
   fontStyle FontStyle {  size .2 }
-  } } ] } ] } 
+  } } ] } ] }
 ] }
 # the X label
 DEF X_Label Group {
@@ -230,10 +230,10 @@ Transform {
   diffuseColor 1 1 .3
   emissiveColor .33 .33 .1
   } }
-  geometry Text { 
+  geometry Text {
   string [\"x\"]
   fontStyle FontStyle {  size .2 }
-  } } ] } ] } 
+  } } ] } ] }
 ] }
 # the Z label
 DEF Z_Label Group {
@@ -249,10 +249,10 @@ Transform {
   diffuseColor 1 1 .3
   emissiveColor .33 .33 .1
   } }
-  geometry Text { 
+  geometry Text {
   string [\"z\"]
   fontStyle FontStyle {  size .2 }
-  } } ] } ] } 
+  } } ] } ] }
 ] }
 # The text information (header data )
 DEF Header Group {
@@ -264,7 +264,7 @@ Transform {
   children [
   Shape {
   appearance Appearance {
-  material Material { 
+  material Material {
   diffuseColor .9 0 0
   emissiveColor .9 0 0 }
   }
@@ -273,7 +273,7 @@ Transform {
   fontStyle FontStyle {
   style \"BOLD\"
   size .2
-  } } } ] } ] } 
+  } } } ] } ] }
 ] }
 \n### Instrument begins here: ###\n");
 

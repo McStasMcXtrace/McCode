@@ -106,7 +106,7 @@ website at
 \section{Source code build}
 \label{s:src}
 The \htmladdnormallink{McStas}{http://www.mcstas.org} package is
-beeing co-developed for mainly Linux and Windows systems. However, 
+beeing co-developed for mainly Linux and Windows systems. However,
 the Linux build instructions below will work on most Unix
 systems, including Mac OS X). For an updated list of platforms on which McStas has been
 built, refer to the \htmladdnormallink{project website}{http://www.mcstas.org}.
@@ -252,6 +252,13 @@ Once installed, you may check and tune the guessed configuration stored within f
 \item{\verb+MCSTAS/tools/perl/mcstas_config.perl+ on Unix/Linux systems}
 \end{itemize}
 where \verb+MCSTAS+ is the location for the McStas library.
+
+You may, on Linux systems, ask for a reconfiguration (e.g. after installing MPI, Matlab, ...) with the commands, e.g:
+\begin{verbatim}
+cd MCSTAS/tools/perl/
+sudo ./mcstas_reconfigure
+\end{verbatim}
+On Windows systems, the reconfiguration is performed with the \verb+mcconfig.pl+ command.
 
 The \verb+examples+ directory of the distribution contains a set of instrument examples. These are used for the McStas self test procedure, which is executed with
 \begin{verbatim}

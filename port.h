@@ -12,11 +12,11 @@
 * Date: Nov 11, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 *
 * Header file for portability related stuff.
 *
-* $Id: port.h,v 1.14 2006-04-19 13:06:26 farhi Exp $
+* $Id: port.h,v 1.15 2006-10-25 09:39:34 farhi Exp $
 *
 *******************************************************************************/
 
@@ -60,6 +60,7 @@
 
 #ifdef WIN32
 #define HAVE_STRCASECMP
+#define PACKAGE_BUGREPORT "www.mcstas.org"
 #endif
 #ifndef HAVE_STRCASECMP
 int strcasecmp(char *, char *);

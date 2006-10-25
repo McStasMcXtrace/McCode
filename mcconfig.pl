@@ -1,9 +1,10 @@
 #!/usr/bin/perl
 
 use Config;
+use File::Copy;
 
 our $scilab;
-our $tcltk; 
+our $tcltk;
 our $matlab;
 our $cc;
 our $mpirun;
@@ -14,87 +15,101 @@ our $vrmlview;
 
 if ($Config{'osname'} eq "MSWin32") {
     my $failed;
+    my $which="support\Win32\which.exe";
+    if (not -f $which) { $which="which.exe"; }
 
     print STDOUT "\nConfiguring McStas on Win32\n\n";
-    
+
     print STDOUT "Checking for C compiler: ";
-    $failed=system('support\Win32\which.exe cc.exe');
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe gcc.exe'); 
-      $cc = (not $failed) ? "gcc.exe" : "no";
-    } else { $cc = "cc.exe"; }
+
+      $failed=system("$which cc.exe");
+      if ($failed) {
+        $failed=system("$which gcc.exe");
+        $cc = (not $failed) ? "gcc.exe" : "no";
+      } else { $cc = "cc.exe"; }
+
     print STDOUT "$cc\n";
-    
+
     print STDOUT "Checking for Matlab: ";
 
-    $failed=system('support\Win32\which.exe matlab.exe');
-    $matlab = (not $failed) ? "matlab.exe" : "no";
+      $failed=system("$which matlab.exe");
+      $matlab = (not $failed) ? "matlab.exe" : "no";
+
     print STDOUT "$matlab\n";
 
     print STDOUT "Checking for Scilab: ";
-    $failed=system('support\Win32\which.exe runscilab.exe');
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe scilab.exe'); 
-      $scilab = (not $failed) ? "scilab.exe" : "no";
-    }
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe wscilex.exe'); 
-      $scilab = (not $failed) ? "wscilex.exe" : "no";
-    }
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe scilab.bat'); 
-      $scilab = (not $failed) ? "scilab.bat" : "no";
-    }
-    if ($failed) { $scilab = "runscilab.exe"; }
+
+      $failed=system("$which runscilab.exe");
+      if ($failed) {
+        $failed=system("$which scilab.exe");
+        $scilab = (not $failed) ? "scilab.exe" : "no";
+      }
+      if ($failed) {
+        $failed=system("$which wscilex.exe");
+        $scilab = (not $failed) ? "wscilex.exe" : "no";
+      }
+      if ($failed) {
+        $failed=system("$which scilab.bat");
+        $scilab = (not $failed) ? "scilab.bat" : "no";
+      }
+      if ($failed) { $scilab = "runscilab.exe"; }
+
     print STDOUT "$scilab\n";
 
     print STDOUT "Checking for VRML viewer: ";
-    $failed=system('support\Win32\which.exe freewrl.exe');
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe glview.exe'); 
-      $vrmlview = (not $failed) ? "glview.exe" : "no";
-    } 
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe lookat.exe'); 
-      $vrmlview = (not $failed) ? "lookat.exe" : "no";
-    }
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe openwrl.exe'); 
-      $vrmlview = (not $failed) ? "openwrl.exe" : "no";
-    }
-    if ($failed) {     
-      $failed=system('support\Win32\which.exe explorer.exe'); 
-      $vrmlview = (not $failed) ? "explorer.exe" : "no";
-    }
+
+      $failed=system("$which freewrl.exe");
+      if ($failed) {
+        $failed=system("$which glview.exe");
+        $vrmlview = (not $failed) ? "glview.exe" : "no";
+      }
+      if ($failed) {
+        $failed=system("$which lookat.exe");
+        $vrmlview = (not $failed) ? "lookat.exe" : "no";
+      }
+      if ($failed) {
+        $failed=system("$which openwrl.exe");
+        $vrmlview = (not $failed) ? "openwrl.exe" : "no";
+      }
+      if ($failed) {
+        $failed=system("$which Octaga.exe");
+        $vrmlview = (not $failed) ? "Octaga.exe" : "no";
+      }
+      if ($failed) {
+        $failed=system("$which explorer.exe");
+        $vrmlview = (not $failed) ? "explorer.exe" : "no";
+      }
+      if ($failed) { $vrmlview = "start"; }
+
     print STDOUT "$vrmlview\n";
 
     print STDOUT "Checking for Terminal: ";
-    $failed=system('support\Win32\which.exe cmd.exe');
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe command.com'); 
+    $failed=system("$which cmd.exe");
+    if ($failed) {
+      $failed=system("$which command.com");
       $terminal = (not $failed) ? "command.com" : "no";
     } else { $terminal = "cmd.exe"; }
     print STDOUT "$terminal\n";
-    
+
     print STDOUT "Checking for Tcl/Tk: ";
-    $failed=system('support\Win32\which.exe wperl.exe');
+    $failed=system("$which wperl.exe");
     $tcltk = (not $failed) ? "wperl.exe" : "no";
-    if ($failed) { 
-      $failed=system('support\Win32\which.exe wish.exe'); 
+    if ($failed) {
+      $failed=system("$which wish.exe");
       $tcltk = (not $failed) ? "wish.exe" : "no";
     }
     print STDOUT "$tcltk\n";
-    
+
     print STDOUT "Checking for MPI compiler: ";
-    $failed=system('support\Win32\which.exe mpicc.exe');
+    $failed=system("$which mpicc.exe");
     $mpicc = (not $failed) ? "mpicc.exe" : "no";
     print STDOUT "$mpicc\n";
-    
+
     print STDOUT "Checking for MPI run: ";
-    $failed=system('support\Win32\which.exe mpirun.exe');
+    $failed=system("$which mpirun.exe");
     $mpirun = (not $failed) ? "mpirun.exe" : "no";
     print STDOUT "$mpi\n";
-    
+
     # On Win32, matlab is preferred before scilab, which
     # lacks certain functionality...
     if ($matlab ne "no") {
@@ -112,9 +127,17 @@ if ($Config{'osname'} eq "MSWin32") {
 }
 
 
-print STDOUT "The plotter is $plotter";
-my $fid = open(READ,"<lib/tools/perl/mcstas_config.perl") || die "Could not open config file\n";
-my $fid2 = open(WRITE,">lib/tools/perl/mcstas_config.perl.new") || die "Could not write to new config file\n";
+print STDOUT "The plotter is $plotter\n";
+my $file = "mcstas_config.perl";
+if (not -f $file) { $file = "lib/tools/perl/mcstas_config.perl"; }
+if (not -f $file) { $file = "../lib/tools/perl/mcstas_config.perl"; }
+if (not -f $file) { $file = "$ENV{'MCSTAS'}/tools/perl/mcstas_config.perl"; }
+my $fid = open(READ,"<$file");
+if (not $fid) { die "Could not open config file $file\n"; }
+
+my $file2 = "$file.new";
+my $fid2 = open(WRITE,">$file2") || die "Could not write to new config file $file2\n";
+
 while (<READ>) {
     if (/\w*PLOTTER \=\w*/) {
         print WRITE "     PLOTTER => '$plotter',\n";
@@ -158,8 +181,8 @@ while (<READ>) {
 }
 close(WRITE);
 # It should now be ok to overwrite the config file:
-system("copy lib\\tools\\perl\\mcstas_config.perl.new lib\\tools\\perl\\mcstas_config.perl");
-print STDOUT "Updating lib\\tools\\perl\\mcstas_config.perl\n";
+copy("$file2", "$file");
+print STDOUT "Updating: $file2 $file\n";
 print STDOUT "Installing Tk-CodeText extension (ppm)\n";
 system("ppm install support\\ppds\\Syntax-Highlight-Perl.ppd");
 system("ppm install support\\ppds\\Tk-CodeText.ppd");

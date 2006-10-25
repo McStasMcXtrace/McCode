@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.65 $
+* Version: $Revision: 1.66 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.65 2006-10-12 12:11:13 farhi Exp $
+* $Id: instrument.y,v 1.66 2006-10-25 09:39:34 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1341,6 +1341,7 @@ print_usage(void)
   fprintf(stderr, "  The file will be processed and translated into a C code program.\n");
   fprintf(stderr, "  The default component search list is usually defined by the 'MCSTAS'\n");
   fprintf(stderr, "  environment variable. Use 'mcrun' to both run mcstas and the C compiler.\n");
+  fprintf(stderr, "  Use 'mcgui' to run the McStas GUI.\n");
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "  them (.c -> .o) before assembling the program.\n");
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui\n");

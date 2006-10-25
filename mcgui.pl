@@ -241,17 +241,29 @@ sub mcdoc_test {
 sub mcdoc_about {
   my ($w) = @_;
   my $version = `mcstas --version`;
-  my $ret = $w->messageBox(-message => "This is the McStas Graphical User Interface. McStas is a tool for Monte Carlo neutron scattering simulations. It provides a complete set of tools, components, and example instruments.\n
+  # create a small font for Message Box
+  $w->fontCreate('small',
+    -family=>'Helvetica',
+    -weight=>'normal',
+    -size=>12);
+  my $msg="This is the McStas Graphical User Interface. McStas is a tool for Monte Carlo neutron scattering simulations. It provides a complete set of tools, components, and example instruments.\n
   This software required a significant effort to be brought to you. If you enjoy it, please use following references in your work:\n
   P. Willendrup, E. Farhi and K. Lefmann, Physica B, 350 (2004) 735.\n
   K. Lefmann and K. Nielsen, Neutron News 10, 20, (1999).\n
   $version
-  Please visit <http://www.mcstas.org/>",
+  Please visit <http://www.mcstas.org/>";
+  if ($Config{'osname'} eq 'MSWin32') {
+    $w->messageBox(-message =>$msg,
                                  -title => "McGUI: About McStas",
                                  -type => 'OK',
-                                 -icon => 'info',
-                                 -width => 40,
-                                 -default => 'cancel');
+                                 -icon => 'info');
+  } else {
+    $w->messageBox(-message =>$msg,
+                                 -title => "McGUI: About McStas",
+                                 -type => 'OK',
+                                 -font => 'small',
+                                 -icon => 'info');
+  }
 }
 
 
