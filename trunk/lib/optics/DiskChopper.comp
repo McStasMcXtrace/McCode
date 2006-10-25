@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -69,11 +69,17 @@ STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 DECLARE
  %{
-  double Tg,To,Tc,delta_y;
+  double Tg,To,Tc,delta_y,height;
  %}
 
 INITIALIZE
  %{
+      /* If slit height 'unset', assume full opening */
+      if (h == 0) {
+	height=R;
+      } else {
+	height=h;
+      }
       /* Compatibility with old Chopper.comp interface */
       if (w) {
 	theta_0=2*RAD2DEG*asin((w/2)/R);
@@ -84,7 +90,7 @@ INITIALIZE
       if (compat) {
 	delta_y = R;
       } else {
-	delta_y = R-h/2;
+	delta_y = R-height/2;
       }
       
       if (n<=0 || theta_0 < 0 || R <=0)
@@ -118,10 +124,6 @@ INITIALIZE
       theta_0*=DEG2RAD;
       theta_1*=DEG2RAD;
 
-      /* If slit height 'unset', assume full opening */
-      if (h == 0) {
-	h=R;
-      }
       
       /* Calulate t_0 from phi_0 and vice versa, 'direction' moderated by sign of omega */
       t_0 *=omega/fabs(omega);
@@ -159,7 +161,7 @@ TRACE
       ABSORB;
     }
     /* Does neutron hit inner solid part of chopper in case of h!=R? */
-    if ((x*x+yprime*yprime)<(R-h)*(R-h)) {
+    if ((x*x+yprime*yprime)<(R-height)*(R-height)) {
       ABSORB;
     }
     
@@ -209,20 +211,20 @@ MCDISPLAY
 	if (k==0) {
 	  theta = thetas[2*l];
 	  if (l==1 && (!theta_1)) {
-	    Radius = R-h;
+	    Radius = R-height;
 	  } else {
 	    Radius = R;
 	  }
 	} else if (k==4) {
 	  theta = thetas[2*l+1];
 	  if (l==0 && (!theta_1)) {
-	    Radius = R-h;
+	    Radius = R-height;
 	  } else {
 	    Radius = R;
 	  }
 	} else {
 	  theta = thetas[2*l]+(k-1)*(thetas[2*l+1]-thetas[2*l])/2;
-	  Radius = R-h;
+	  Radius = R-height;
 	}
 	X[k] = Radius * sin(theta);
 	Y[k] = Radius * cos(theta)-delta_y;
