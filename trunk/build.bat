@@ -43,7 +43,7 @@
 @set VERSION=MCSTAS_VERSION
 @echo Doing Win32 build using %CC% -I%INCLUDE% -L%LIB%
 @del *.o
-@del mcstas.exe
+@del mcstas.exe mcformat.exe
 
 
 %CC% -c symtab.c -o symtab.o -I%INCLUDE%
@@ -69,6 +69,8 @@
 %CC% -c cexp.c -o cexp.o -I%INCLUDE%
 
 %CC% symtab.o cogen.o coords.o debug.o file.o instrument.tab.o lex.yy.o list.o memory.o port.o cexp.o  -o "mcstas.exe" -L%LIB%  -I%INCLUDE%
+
+%CC% mcformat.c -o "mcformat.exe"  -L%LIB%  -I%INCLUDE%
 
 @if %DOZIP%=="0" goto end
 @echo creating zipfile for Win Distribution (requires zip)...

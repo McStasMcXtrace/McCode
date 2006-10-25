@@ -112,11 +112,18 @@ sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.1 > mc
 cat mcformat.1.tmp > mcformat.1
 sed 's/X.Y.Z/'$1'/' configure.in > configure.in.tmp
 cat configure.in.tmp > configure.in
+sed 's/X.Y.Z/'$1'/' mcstas-pgplot.spec > mcstas-pgplot-$1.spec
+rm mcstas-pgplot.spec
+sed 's/X.Y.Z/'$1'/' mcstas.spec > mcstas-$1.spec
+rm mcstas.spec
 rm -f *.tmp
 
 # Create configure
 autoconf configure.in > configure
 chmod a+x configure
+autoconf lib/tools/perl/mcstas_reconfigure.in > lib/tools/perl/mcstas_reconfigure
+chmod a+x lib/tools/perl/mcstas_reconfigure
+chmod a+w lib/tools/perl/mcstas_config.perl
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
 flex -i instrument.l
@@ -197,5 +204,4 @@ echo ../mcstas-$1-manual.pdf
 echo ../mcstas-$1-components.ps.gz
 echo ../mcstas-$1-components.pdf
 echo
-
 

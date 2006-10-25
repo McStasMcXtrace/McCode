@@ -20,6 +20,8 @@ McStas is based on a compiler [mcstas(1)] that reads a high-level specification 
 .PP
 McStas supports triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
 .PP
+To start mcstas, use: mcgui(1)
+.PP
 The package consists of the following user commands:
 .TP
 mcgui(1)
@@ -119,6 +121,7 @@ Execute instrument simulation
 The
 .B MCSTAS
 environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
+The McStas configuration file is MCSTAS/tools/perl/mcstas_config.perl which you can reconfigure by running: MCSTAS/tools/perl/mcstas_reconfigure
 .P
 The
 .B MCSTAS_FORMAT

@@ -71,6 +71,8 @@
 :inst
 @echo Copying in the files...
 @copy mcstas.exe %MCSTAS_SITE%\bin
+@copy mcformat.exe %MCSTAS_SITE%\bin
+@copy support\Win32\which.exe %MCSTAS_SITE%\bin
 @copy *.pl %MCSTAS_SITE%\bin
 @xcopy /e /y /q /i lib %MCSTAS_SITE%\lib
 @echo Done
@@ -90,8 +92,8 @@
 @echo .
 @echo Please log off and on again to finish the McStas setup!
 @echo .
-@echo After that, start McStas with the command mcgui.pl. You may create a 
-@echo shortcut to this program situated in %MCSTAS_SITE%\bin. Put it on your 
+@echo After that, start McStas with the command mcgui.pl. You may create a
+@echo shortcut to this program situated in %MCSTAS_SITE%\bin. Put it on your
 @echo Desktop.
 @echo .
 @echo Thanks for using McStas. End of the installation.

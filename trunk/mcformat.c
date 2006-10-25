@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10b
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 *
 * A McStas format converter to merge concert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.10 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.11 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -900,7 +900,11 @@ static void mcformat_usedir(char *dir)
           "Directory output cannot be used with portable simulation (mcformat_usedir)\n");
   return;
 #else  /* !MC_PORTABLE */
+#ifndef WIN32
   if(mkdir(dir, 0777))
+#else
+  if(mkdir(dir))
+#endif
   {
     if (!mcforcemode) {
       fprintf(stderr, "Error: unable to create directory '%s' (mcformat_usedir)\n", dir);
@@ -1527,7 +1531,7 @@ void mcformat_usage(char *pgmname)
 {
   int i;
 
-  fprintf(stderr, "mcformat version %s format conversion tool (McStas " PACKAGE_VERSION ")\n", MCFORMAT);
+  fprintf(stderr, "mcformat version %s format conversion tool (McStas " MCSTAS_VERSION ")\n", MCFORMAT);
   fprintf(stderr, "Usage: %s [options] file1|dir1 file2|dir2 ...\n", pgmname);
   fprintf(stderr,
 "Convert/merge files and directories from McStas format to an other specified format\n"

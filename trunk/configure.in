@@ -1,6 +1,6 @@
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
+#   Copyright (C) 1997-2006, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -20,7 +20,7 @@
 #
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(McStas, X.Y.Z, www.mcstas.org)
+AC_INIT(McStas, 1.10, www.mcstas.org)
 AC_PROG_CC
 AC_PROG_INSTALL
 CF_ANSI_CC_CHECK
@@ -54,7 +54,19 @@ AC_PATH_PROGS(MAKE,   [make gmake], no)
 # Hence we allow only gnome-terminal.wrapper which is debian only
 # :(
 AC_PATH_PROGS(TERMINAL,   [xterm konsole gnome-terminal.wrapper], no)
-AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl)
+
+AC_ARG_WITH([pic],
+  [AS_HELP_STRING([--with-pic],
+     [enable support for PIC libraries (required to compile PGPLOT on some systems)])],
+  [USE_PIC=$withval],
+  [USE_PIC=no])
+AC_SUBST(USE_PIC)
+
+AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl support/pgplot/pgplot.sh)
+
+chmod a+x support/pgplot/pgplot.sh
+chmod a+x lib/tools/perl/mcstas_reconfigure
+chmod a+w lib/tools/perl/mcstas_config.perl
 
 if test "$MAKE" == "no" ; then
   echo "ERROR: McStas installation requires 'make' or 'gmake'"
