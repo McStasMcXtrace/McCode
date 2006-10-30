@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: September 2 1998
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -195,6 +195,8 @@ TRACE
         weight = .5*(1-tanh(arg))*(1-alpha*(q-Qc));
       else
         ABSORB;                               /* Cutoff ~ 1E-10 */
+      weight *= R0;
+    } else { /* q <= Qc */
       weight *= R0;
     }
     p *= weight;
