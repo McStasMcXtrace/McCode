@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.66 $
+* Version: $Revision: 1.67 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.66 2006-10-25 09:39:34 farhi Exp $
+* $Id: instrument.y,v 1.67 2006-11-06 14:30:00 farhi Exp $
 *
 *******************************************************************************/
 
@@ -186,16 +186,21 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         /* create a copy of a comp, and initiate it with given blocks */
         /* all redefined blocks override */
         struct comp_def *def;
-
         def = read_component($5);
         struct comp_def *c;
         palloc(c);
         c->name = $3;
         c->source = str_quote(instr_current_filename);
-        /* only overrides if redined as non empty  */
-        c->def_par   = (list_len($6.def) ? $6.def : def->def_par);
-        c->set_par   = (list_len($6.set) ? $6.set : def->set_par);
-        c->out_par   = (list_len($6.out) ? $6.out : def->out_par);
+        /* only catenate if defined as non empty  */
+        c->def_par   = list_create(); list_cat(c->def_par, def->def_par);
+        if (list_len($6.def)) list_cat(c->def_par,$6.def);
+
+        c->set_par   = list_create(); list_cat(c->set_par, def->set_par);
+        if (list_len($6.set)) list_cat(c->set_par,$6.set);
+
+        c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
+        if (list_len($6.out)) list_cat(c->out_par,$6.out);
+
         c->state_par = (list_len($6.state) ? $6.state : def->state_par);
         c->polarisation_par = ($6.polarisation ? $6.polarisation : def->polarisation_par);
 
@@ -420,7 +425,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals,
                instrument_definition->name);
-        if (verbose) fprintf(stderr, "Creating instrument %s\n", instrument_definition->name);
+        if (verbose) fprintf(stderr, "Creating instrument %s (with %i component instances)\n", instrument_definition->name, comp_current_index);
       }
 ;
 
@@ -542,56 +547,8 @@ instr_formal:   TOK_ID TOK_ID
         $$ = formal;
       }
 ;
-declare:    /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "DECLARE" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->decl_code;
-      }
-    | "DECLARE" codeblock
-      {
-        $$ = $2;
-      }
-;
 
-initialize:   /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "INITIALIZE" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->init_code;
-      }
-    | "INITIALIZE" codeblock
-      {
-        $$ = $2;
-      }
-;
-
-/* SHARE component block included once. Toggle comp_inst_number sign from neg to pos in cogen.c */
-share:    /* empty */
-      {
-        $$ = codeblock_new();
-      }
-    | "SHARE" "COPY" TOK_ID
-      {
-        struct comp_def *def;
-        def = read_component($3);
-        $$ = def->share_code;
-      }
-    | "SHARE" codeblock
-      {
-        $$ = $2;
-      }
-;
-
-
+/* NeXus output support */
 nexus:      /* empty: no NeXus support */
       {
         struct NXDinfo *nxdinfo;
@@ -601,7 +558,7 @@ nexus:      /* empty: no NeXus support */
         $$ = nxdinfo;
       }
     | nexus "NEXUS" dictfile hdfversion
-      { /* ADD: E.Farhi Aug 6th 2002: use default NeXus dictionary file */
+      { /* use default NeXus dictionary file */
         struct NXDinfo *nxdinfo = $1;
         if(nxdinfo->nxdfile)
         {
@@ -637,6 +594,97 @@ hdfversion: /* empty: default HDF version */
       }
 ;
 
+
+declare:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "DECLARE" codeblock
+      {
+        $$ = $2;
+      }
+    | "DECLARE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->decl_code;
+      }
+    | "DECLARE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def   *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->decl_code->filename;
+        cb->quoted_filename = def->decl_code->quoted_filename;
+        cb->linenum         = def->decl_code->linenum;
+        list_cat(cb->lines, def->decl_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+;
+
+initialize:   /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "INITIALIZE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->init_code;
+      }
+    | "INITIALIZE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def   *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->init_code->filename;
+        cb->quoted_filename = def->init_code->quoted_filename;
+        cb->linenum         = def->init_code->linenum;
+        list_cat(cb->lines, def->init_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+    | "INITIALIZE" codeblock
+      {
+        $$ = $2;
+      }
+;
+
+/* SHARE component block included once. Toggle comp_inst_number sign from neg to pos in cogen.c */
+share:    /* empty */
+      {
+        $$ = codeblock_new();
+      }
+    | "SHARE" codeblock
+      {
+        $$ = $2;
+      }
+    | "SHARE" "COPY" TOK_ID
+      {
+        struct comp_def *def;
+        def = read_component($3);
+        $$ = def->share_code;
+      }
+    | "SHARE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->share_code->filename;
+        cb->quoted_filename = def->share_code->quoted_filename;
+        cb->linenum         = def->share_code->linenum;
+        list_cat(cb->lines, def->share_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
+
+;
+
+
 trace: /* empty */
       {
         $$ = codeblock_new();
@@ -650,6 +698,19 @@ trace: /* empty */
         struct comp_def *def;
         def = read_component($3);
         $$ = def->trace_code;
+      }
+    | "TRACE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->trace_code->filename;
+        cb->quoted_filename = def->trace_code->quoted_filename;
+        cb->linenum         = def->trace_code->linenum;
+        list_cat(cb->lines, def->trace_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
       }
 ;
 
@@ -667,6 +728,19 @@ save:   /* empty */
         def = read_component($3);
         $$ = def->save_code;
       }
+    | "SAVE" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->save_code->filename;
+        cb->quoted_filename = def->save_code->quoted_filename;
+        cb->linenum         = def->save_code->linenum;
+        list_cat(cb->lines, def->save_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
 ;
 
 finally:    /* empty */
@@ -683,6 +757,19 @@ finally:    /* empty */
         def = read_component($3);
         $$ = def->finally_code;
       }
+    | "FINALLY" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->finally_code->filename;
+        cb->quoted_filename = def->finally_code->quoted_filename;
+        cb->linenum         = def->finally_code->linenum;
+        list_cat(cb->lines, def->finally_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
+      }
 ;
 
 mcdisplay:    /* empty */
@@ -698,6 +785,19 @@ mcdisplay:    /* empty */
         struct comp_def *def;
         def = read_component($3);
         $$ = def->mcdisplay_code;
+      }
+    | "MCDISPLAY" "COPY" TOK_ID "EXTEND" codeblock
+      {
+        struct comp_def *def;
+        struct code_block *cb;
+        cb = codeblock_new();
+        def = read_component($3);
+        cb->filename        = def->mcdisplay_code->filename;
+        cb->quoted_filename = def->mcdisplay_code->quoted_filename;
+        cb->linenum         = def->mcdisplay_code->linenum;
+        list_cat(cb->lines, def->mcdisplay_code->lines);
+        list_cat(cb->lines, $5->lines);
+        $$ = cb;
       }
 ;
 
@@ -750,7 +850,26 @@ instname: "COPY" '(' TOK_ID ')'
       }
 ;
 
-instref: "COPY" '(' compref ')' /* make a copy of a previous instance, with def+set */
+instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance, with def+set */
+      {
+        struct comp_inst *comp_src;
+        struct comp_inst *comp;
+        comp_src = $3;
+        palloc(comp);
+        comp->type   = comp_src->type;
+        comp->def    = comp_src->def;
+        comp->extend = comp_src->extend;
+        comp->group  = comp_src->group;
+        comp->jump   = comp_src->jump;
+        comp->when   = comp_src->when;
+        /* now catenate src and actual parameters */
+        comp->actuals= symtab_create();
+        symtab_cat(comp->actuals, $5);
+        symtab_cat(comp->actuals, comp_src->actuals);
+        comp_formals_actuals(comp, comp->actuals);
+        $$ = comp;
+      }
+    | "COPY" '(' compref ')'
       {
         struct comp_inst *comp_src;
         struct comp_inst *comp;
@@ -764,6 +883,7 @@ instref: "COPY" '(' compref ')' /* make a copy of a previous instance, with def+
         comp->group  = comp_src->group;
         comp->jump   = comp_src->jump;
         comp->when   = comp_src->when;
+        comp->actuals= comp_src->actuals;
         $$ = comp;
       }
     | TOK_ID actuallist /* define new instance with def+set parameters */
@@ -779,11 +899,12 @@ instref: "COPY" '(' compref ')' /* make a copy of a previous instance, with def+
         comp->group  = NULL;
         comp->jump   = list_create();
         comp->when   = NULL;
+        comp->actuals= $2;
         if(def != NULL)
         {
           /* Check actual parameters against definition and
                          setting parameters. */
-          comp_formals_actuals(comp, $2);
+          comp_formals_actuals(comp, comp->actuals);
         }
         $$ = comp;
       }
@@ -953,9 +1074,9 @@ groupdef:   TOK_ID
           group = ent->val;
         $$ = group;
       }
-
 ;
-compref:    "PREVIOUS"
+
+compref: "PREVIOUS"
       {
         if (previous_comp) {
           $$ = previous_comp;
@@ -1036,7 +1157,7 @@ jumps1: jump
     }
 ;
 
-jump:"JUMP" jumpname jumpcondition
+jump: "JUMP" jumpname jumpcondition
     {
       struct jump_struct *jump;
       palloc(jump);
@@ -1065,8 +1186,7 @@ jumpname: "PREVIOUS"
       $$.name  = NULL;
       $$.index = -1;
     }
-  |
-    "PREVIOUS" '(' TOK_NUMBER ')'
+  | "PREVIOUS" '(' TOK_NUMBER ')'
     {
       $$.name  = NULL;
       $$.index = -atoi($3);
