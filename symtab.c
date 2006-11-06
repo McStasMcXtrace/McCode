@@ -12,13 +12,20 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 *
 * Symbol tables.
 *
-*	$Id: symtab.c,v 1.17 2006-04-19 13:06:26 farhi Exp $
+*	$Id: symtab.c,v 1.18 2006-11-06 14:30:00 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.17  2006/04/19 13:06:26  farhi
+*	* Updated Release, Version and Origin fields in headers
+*	* Improved setversion to update all McStasx.y occurencies into current release
+*	* Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
+*	* Added possibility to save log of the session to a file (appended) in mcgui
+*	* Made Scilab use either TCL_EvalStr or TK_EvalStr
+*	
 *	Revision 1.16  2003/10/06 15:00:12  farhi
 *	Added symtab_previous function for PREVIOUS keyword
 *
@@ -239,3 +246,18 @@ symtab_iterate_end(Symtab_handle sh)
 {
   memfree(sh);
 }
+
+/*******************************************************************************
+* Catenate symtab2 to symtab1
+*******************************************************************************/
+Symtab symtab_cat(Symtab st1, Symtab st2)
+{
+  Symtab_handle siter;
+  struct Symtab_entry *sitem;
+  siter = symtab_iterate(st2);
+  while(sitem = symtab_next(siter))
+    symtab_add(st1, sitem->name, sitem->val);
+  symtab_iterate_end(siter);
+  return(st1);
+}
+

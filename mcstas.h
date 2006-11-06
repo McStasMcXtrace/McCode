@@ -12,17 +12,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.44 $
+* Version: $Revision: 1.45 $
 *
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.44 2006-04-19 13:06:25 farhi Exp $
+* $Id: mcstas.h,v 1.45 2006-11-06 14:30:00 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.44 $"
+#define MCSTAS_H "$Revision: 1.45 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -404,6 +404,7 @@ struct comp_inst
     Symtab defpar, setpar;  /* Parameter values. */
     List jump;    /* list of jumps to execute after trace/extend and mcdisplay */
     CExp when;    /* NULL or condition to execute TRACE */
+    Symtab actuals; /* save actual/given parameters for COPY */
   };
 
 /* Instrument formal parameters. */

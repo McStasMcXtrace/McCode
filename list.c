@@ -12,33 +12,40 @@
 * Date: Jul  3, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 *
 * Implementation of lists.
 *
-*	$Id: list.c,v 1.16 2006-04-19 13:06:25 farhi Exp $
+*       $Id: list.c,v 1.17 2006-11-06 14:30:00 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
-*	Revision 1.15  2003/02/11 12:28:45  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
+*       $Log: not supported by cvs2svn $
+*       Revision 1.16  2006/04/19 13:06:25  farhi
+*       * Updated Release, Version and Origin fields in headers
+*       * Improved setversion to update all McStasx.y occurencies into current release
+*       * Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
+*       * Added possibility to save log of the session to a file (appended) in mcgui
+*       * Made Scilab use either TCL_EvalStr or TK_EvalStr
 *
-*	Revision 1.4  2001/03/15 15:11:13  peo
-*	Changed MAXELEMENTS to 5000
+*       Revision 1.15  2003/02/11 12:28:45  farhi
+*       Variouxs bug fixes after tests in the lib directory
+*       mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
+*       read_table:corrected MC_SYS_DIR -> MCSTAS define
+*       monitor_nd-lib: fix Log(signal) log(coord)
+*       HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
+*       Progress_bar: precent -> percent parameter
+*       CS: ----------------------------------------------------------------------
 *
-*	Revision 1.3  1998/10/02 08:37:44  kn
-*	Fixed header comment.
+*       Revision 1.4  2001/03/15 15:11:13  peo
+*       Changed MAXELEMENTS to 5000
 *
-*	Revision 1.2  1997/09/07 17:58:11  kn
-*	Snapshot with (untested) code generation complete.
+*       Revision 1.3  1998/10/02 08:37:44  kn
+*       Fixed header comment.
 *
-*	Revision 1.1  1997/08/13 09:15:16  kn
-*	Initial revision
+*       Revision 1.2  1997/09/07 17:58:11  kn
+*       Snapshot with (untested) code generation complete.
+*
+*       Revision 1.1  1997/08/13 09:15:16  kn
+*       Initial revision
 *
 *******************************************************************************/
 
@@ -63,8 +70,8 @@ struct List_header
 /* Position in a list for doing list traversals. */
 struct List_position
   {
-    struct List_header *list;		/* The list we are traversing. */
-    int index;			/* Next element to return. */
+    struct List_header *list;           /* The list we are traversing. */
+    int index;                  /* Next element to return. */
   };
 
 
@@ -174,4 +181,18 @@ void
 list_iterate_end(List_handle lh)
 {
   memfree(lh);
+}
+
+/*******************************************************************************
+* Catenate list2 to list1
+*******************************************************************************/
+List list_cat(List l1, List l2)
+{
+  List_handle liter;
+  void*       litem;
+  liter = list_iterate(l2);
+  while(litem = list_next(liter))
+    list_add(l1, litem);
+  list_iterate_end(liter);
+  return(l1);
 }
