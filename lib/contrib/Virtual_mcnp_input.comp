@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.5 $
+* Version:  $Revision: 1.6 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -30,7 +30,8 @@
 * It also may change the coordinate system from the MCNP frame to the McStas one.
 * The verbose mode is highly recommanded as it displays lots of useful informations.
 * To obtain absolute intensity, set 'intensity' and 'nps' parameters.
-* The source total 'intensity' is 1.054e18 for LLB/Saclay and 4.28e18 for ILL/Grenoble.
+* The source total intensity is 1.054e18 for LLB/Saclay (14 MW) and 4.28e18 for
+* ILL/Grenoble (58 MW).
 *
 * Format of MCNP events are :
 *
@@ -95,7 +96,7 @@ DEFINE COMPONENT Virtual_mcnp_input
 DEFINITION PARAMETERS (string file=0, string autocenter=0)
 SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,int surface_id=-1,
                     nps=0,smooth=1)
-OUTPUT PARAMETERS (hfile,head,rep,begin_neutrons,do_rotate,do_translate,do_axes,
+OUTPUT PARAMETERS (hfile,head,rep,begin_neutrons,do_rotate,do_translate,
                    bx,by,bz,angle2z,mean_x, mean_y, mean_z,
                    old_surface,surface,informed_event,informed_surface,
                    min_x, min_y, min_z,    max_x , max_y , max_z ,
@@ -202,6 +203,10 @@ int mcnp_create_neutron(FILE *hfile, double *x,double *y,double *z,
     *p=field[7];
     *sx=1.;*sy=*sz=0;
     *t=field[8];
+    // now change axis system
+    double tx, ty, tz;
+    tx=*x;  ty=*y;  tz=*z;   *x=-ty;  *y=-tz;  *z=tx;
+    tx=*vx; ty=*vy; tz=*vz; *vx=-ty; *vy=-tz; *vz=tx;
   }
   return (exit_flag);
 
@@ -241,7 +246,7 @@ DECLARE
   FILE *hfile;                    /* Neutron input file handle */
   char *head;                    /*MCNP header*/
 
-  char  do_rotate=0, do_translate=0, do_axes=0;
+  char  do_rotate=0, do_translate=0;
   double mean_x =0, mean_y =0, mean_z =0;
   double bx,by,bz;
   double angle2z=0;
@@ -374,15 +379,8 @@ INITIALIZE
       printf("    speed=%g [m/s] energy=%g [meV]\n    wavelength=%g [Angs] wavevector=%g [Angs-1]\n", mean_v, mean_w, mean_L, mean_k);
     }
     if (autocenter) {
-
-      if (strstr(autocenter, "change") &&
-            (strstr(autocenter, "axis")   || strstr(autocenter, "axes")
-          || strstr(autocenter, "system") || strstr(autocenter, "coord")) )
-        do_axes      = 1;
       if (strstr(autocenter, "rotate") || strstr(autocenter, "orient")) {
         do_rotate    = 1;
-        if (do_axes) printf("WARNING: can not swap axes when rotation is activated\n");
-        do_axes      = 0;
       }
       if (strstr(autocenter, "translate") || strstr(autocenter, "center"))
         do_translate = 1;
@@ -402,11 +400,10 @@ INITIALIZE
     } else { /* already well oriented: nothing to do */
       do_rotate = 0;
     }
-    if (verbose && (do_rotate || do_translate || do_axes || smooth)) {
+    if (verbose && (do_rotate || do_translate || smooth)) {
       printf("* Beam will be ");
       if (do_translate) printf("translated (in position) ");
       if (do_rotate)    printf("rotated (%.3g [deg] to Z-axis) ", angle2z*RAD2DEG);
-      if (do_axes)      printf("axes-swaped MCNP->McStas ");
       if (smooth)       printf("smoothed ");
       printf("\n");
     }
@@ -459,12 +456,6 @@ TRACE
          x = nvx;  y=nvy;  z=nvz;
       }
 
-      if (do_axes) {
-        /* MCNP/Vitess (xyz) - > McStas (zxy) */
-        double tx, ty, tz;
-        tx=x;  ty=y;  tz=z;   x=ty;  y=tz;  z=tx;
-        tx=vx; ty=vy; tz=vz; vx=ty; vy=tz; vz=tx;
-      }
       if (intensity && nps) p *= intensity/nps/repeat_count;
       SCATTER;
     }

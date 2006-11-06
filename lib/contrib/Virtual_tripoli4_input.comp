@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.20 $
+* Version:  $Revision: 1.21 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
-* Release: McStas 1.8
+* Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
 *
 * This component reads a file of recorded neutrons from the reactor Monte Carlo
@@ -29,12 +29,13 @@
 *
 * Note that axes orientation may be different between TRIPOLI4.4 and McStas.
 * The component has the ability to center and orient the neutron beam to the Z-axis.
-* It also may change the coordinate system from the Tripoli frame to the McStas one.
+* It also changes the coordinate system from the Tripoli frame to the McStas one.
 * The verbose mode is highly recommanded as it displays lots of useful informations,
 * including the absolute intensity normalisation factor. All neutron fluxes in the
 * instrument should be multiplied by this factor. Such a renormalization is done
 * when 'autocenter' contains the word 'rescale'.
-* The source total intensity is 1.054e18 for LLB/Saclay and 4.28e18 for ILL/Grenoble.
+* The source total intensity is 1.054e18 for LLB/Saclay (14 MW) and 4.28e18 for
+* ILL/Grenoble (58 MW).
 *
 * Format of TRIPOLI4.4 event files is :
 *
@@ -60,7 +61,6 @@
 * autocenter:   [str] String which may contain following keywords.
 *                     "translate" or "center"  to center the beam area AT (0,0,0)
 *                     "rotate"    or "orient"  to center the beam velocity along Z
-*                     "change axes"            to change coordinate system definition
 *                     "rescale"                to adapt intensity to abs. units.
 *                     Other words are ignored.
 * T4_ANALYSE:   [1]   Number of neutron events to read for file pre-analysis.
@@ -95,7 +95,7 @@ DEFINE COMPONENT Virtual_tripoli4_input
 DEFINITION PARAMETERS (string file=0, string autocenter=0)
 SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1,
                     T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0,smooth=1)
-OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,begin_batch,do_rotate,do_translate,do_axes,
+OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,begin_batch,do_rotate,do_translate,
                    bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated,
                    min_x, min_y, min_z,    max_x , max_y , max_z ,
                    min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated)
@@ -180,6 +180,10 @@ int tripoli_create_neutron(FILE *hfile, double *x,double *y,double *z,
     *p=field[7];
     *sx=1.;*sy=*sz=0;
     *t=0;
+    // now change axis system
+    double tx, ty, tz;
+    tx=*x;  ty=*y;  tz=*z;   *x=-ty;  *y=-tz;  *z=tx;
+    tx=*vx; ty=*vy; tz=*vz; *vx=-ty; *vy=-tz; *vz=tx;
   }
   return (exit_flag);
 }
@@ -220,7 +224,7 @@ DECLARE
   long  nl;                       /* Number of lines in header*/
   long  first_batch=0;                /* position in file of first batch */
   long  begin_batch=0, end_batch=0;   /* current batch numbers */
-  char  do_rotate=0, do_translate=0, do_axes=0;
+  char  do_rotate=0, do_translate=0;
   double mean_x =0, mean_y =0, mean_z =0;
   double bx,by,bz;
   double angle2z=0;
@@ -394,14 +398,8 @@ INITIALIZE
       printf("    speed=%g [m/s] energy=%g [meV]\n    wavelength=%g [Angs] wavevector=%g [Angs-1]\n", mean_v, mean_w, mean_L, mean_k);
     }
     if (autocenter) {
-      if (strstr(autocenter, "change") &&
-            (strstr(autocenter, "axis")   || strstr(autocenter, "axes")
-          || strstr(autocenter, "system") || strstr(autocenter, "coord")) )
-        do_axes      = 1;
       if (strstr(autocenter, "rotate") || strstr(autocenter, "orient")) {
         do_rotate    = 1;
-        if (do_axes) printf("WARNING: can not swap axes when rotation is activated\n");
-        do_axes      = 0;
       }
       if (strstr(autocenter, "translate") || strstr(autocenter, "center"))
         do_translate = 1;
@@ -424,11 +422,10 @@ INITIALIZE
     } else { /* already well oriented: nothing to do */
       do_rotate = 0;
     }
-    if (verbose && (do_rotate || do_translate || do_axes || smooth)) {
+    if (verbose && (do_rotate || do_translate || smooth)) {
       printf("* Beam will be ");
       if (do_translate) printf("translated (in position) ");
       if (do_rotate)    printf("rotated (%.3g [deg] to Z-axis) ", angle2z*RAD2DEG);
-      if (do_axes)      printf("axes-swaped Tripoli->McStas ");
       if (smooth)       printf("smoothed ");
       printf("\n");
     }
@@ -493,12 +490,6 @@ TRACE
         vx = nvx; vy=nvy; vz=nvz;
         rotate(nvx,nvy,nvz,  x, y, z, angle2z, bx,by,bz);
          x = nvx;  y=nvy;  z=nvz;
-      }
-      if (do_axes) {
-        /* Tripoli/Vitess (xyz) - > McStas (zxy) */
-        double tx, ty, tz;
-        tx=x;  ty=y;  tz=z;   x=ty;  y=tz;  z=tx;
-        tx=vx; ty=vy; tz=vz; vx=ty; vy=tz; vz=tx;
       }
     }
     if (intensity_extrapolated) p *= fabs(intensity_extrapolated/repeat_count);
