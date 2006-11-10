@@ -23,6 +23,10 @@
 @rem
 @rem Please modify the path below for installing mcstas in non-standard
 @rem location
+
+@if "%NSIS%"=="AUTO" cd mcstas-%MCSTAS_VERSION%
+@if "%NSIS%"=="AUTO" goto nsis
+
 @echo ** McStas install.bat for Win32...
 @echo ...
 @echo To have a fully functional McStas installation, you should have
@@ -54,6 +58,7 @@
 @set PATH=%PERLBIN%;%SCIBIN%;%DEVBIN%;%PATH%
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
 @SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%):
+:nsis
 @echo Trying to guess your plotter and configuration...
 @mcconfig.pl
 @echo Installing in MCSTAS_SITE=%MCSTAS_SITE%
@@ -97,4 +102,6 @@
 @echo Desktop.
 @echo .
 @echo Thanks for using McStas. End of the installation.
+@if "%NSIS%"=="AUTO" goto end
 @pause
+:end
