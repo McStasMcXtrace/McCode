@@ -24,7 +24,7 @@
 @rem Please modify the path below for installing mcstas in non-standard
 @rem location
 
-@if "%NSIS%"=="AUTO" cd mcstas-%MCSTAS_VERSION%
+@if "%NSIS%"=="AUTO" cd mcstas-%MCVERSION%
 @if "%NSIS%"=="AUTO" goto nsis
 
 @echo ** McStas install.bat for Win32...
