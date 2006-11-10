@@ -61,7 +61,6 @@ SectionEnd
 
 Section "McStas ${VERSION} (required)"
   File mcstas-${VERSION}-i686-Intel-Win32.zip
-  File ZipDLL.dll
   ZipDLL::extractall "mcstas-${VERSION}-i686-Intel-Win32.zip" "."
   SectionIn RO
   
@@ -73,11 +72,10 @@ Section "McStas ${VERSION} (required)"
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("PERLBIN", "c:\perl\bin").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("SCIBIN", "c:\progra~1\scilab-4.0\bin").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCSTAS_SITE", "$INSTDIR").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCSTAS_VERSION", "${VERSION}").r0'
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCVERSION", "${VERSION}").r0'
       
 
   ; Execute batch installer
-  ExecWait "cmd"
   ExecWait "mcstas-${VERSION}\install.bat"
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\McStas "Install_Dir" "$INSTDIR"
