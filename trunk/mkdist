@@ -66,6 +66,8 @@ find . -wholename './setyear' -prune -o -type d -o -exec ./setyear \{\} \;
 
 sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
 mv build.bat.new build.bat
+sed 's/MCSTAS_VERSION/'$1'/' mcstas.nsi > mcstas.nsi.new
+mv mcstas.nsi.new mcstas.nsi
 
 # Create ps/pdf/html based install info
 cd install_docs/tex
