@@ -15,7 +15,7 @@ our $vrmlview;
 
 if ($Config{'osname'} eq "MSWin32") {
     my $failed;
-    my $which="support\Win32\which.exe";
+    my $which="support\\Win32\\which.exe";
     if (not -f $which) { $which="which.exe"; }
 
     print STDOUT "\nConfiguring McStas on Win32\n\n";
