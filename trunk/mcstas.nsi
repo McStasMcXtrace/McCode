@@ -1,102 +1,344 @@
-; mcstas.nsi
-;
-; This script is based on example1.nsi, but it remember the directory, 
-; has uninstall support and (optionally) installs start menu shortcuts.
-;
-; It will install example2.nsi into a directory that the user selects,
-
-;--------------------------------
+!define TEMP1 $R0
 
 !ifndef VERSION
   !define VERSION "MCSTAS_VERSION"
 !endif
 
-; The name of the installer
-Name "McStas"
-
-; The file to write
+ 
+!include MUI.nsh
+!include Sections.nsh
+ 
+Name "McStas plus support tools"
 OutFile "McStas-${VERSION}.exe"
 
-; The default installation directory
-InstallDir C:\McStas
+##===========================================================================
+## Modern UI Pages
+##===========================================================================
+ 
+!insertmacro MUI_PAGE_WELCOME
+ 
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesCheck
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE ComponentsLeave
+!insertmacro MUI_PAGE_COMPONENTS
+ 
+## This is the title on the first Directory page
+#!define MUI_DIRECTORYPAGE_TEXT_TOP "$(MUI_DIRECTORYPAGE_TEXT_TOP_A)"
+ 
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesA
+#!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
 
-; Registry key to check for directory (so if you install again, it will 
-; overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\McStas" "Install_Dir"
+Page custom SetCustom
+ 
+## This is the title on the second Directory page
+!define MUI_DIRECTORYPAGE_TEXT_TOP "$(MUI_DIRECTORYPAGE_TEXT_TOP_B)"
+ 
+!define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesB
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+ 
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE DeleteSectionsINI
+!insertmacro MUI_PAGE_FINISH
+ 
+!insertmacro MUI_LANGUAGE "English"
+ 
+##===========================================================================
+## Language strings
+##===========================================================================
+ 
+LangString NoSectionsSelected ${LANG_ENGLSH} "You haven't selected any sections!"
+ 
+LangString MUI_DIRECTORYPAGE_TEXT_TOP_B ${LANG_ENGLSH} "Setup will install \
+McStas in the following folder... WARNING: Spaces and specials chars are unsupported here!"
+ 
+##===========================================================================
+## Start sections
+##===========================================================================
+ 
+## Sections Group 1
+SectionGroup /e "Support tools" PROG1 
 
-;--------------------------------
-
-; Pages
-
-Page components
-Page directory
-Page instfiles
-
-UninstPage uninstConfirm
-UninstPage instfiles
-
-;--------------------------------
-
-; The stuff to install
-
-Section "Perl 5.6 (optional, recommend)"
+Section "Perl 5.6"
+   SetOutPath "$TEMP"
    File ActivePerl-5.6.1.635-MSWin32-x86.msi
    ExecWait "msiexec /i ActivePerl-5.6.1.635-MSWin32-x86.msi"
+   messagebox mb_ok "Perl installation complete!"
 SectionEnd
 
-Section "Dev-cpp (optional, recommend)"
+Section "Dev-cpp"
+   SetOutPath "$TEMP"
    File devcpp4980.exe
    ExecWait "devcpp4980.exe"
+   messagebox mb_ok "Dev-CPP installation complete!"
 SectionEnd
 
-Section "Scilab (optional, recommend)"
+Section "Scilab 4.0"
+   SetOutPath "$TEMP"
    File scilab-4.0.exe
    ExecWait "scilab-4.0.exe"
+   messagebox mb_ok "Scilab installation complete!"
 SectionEnd
 
-Section "Cortona VRML viewer (optional, recommend)"
+Section "Cortona VRML" CORT
+   SetOutPath "$TEMP"
    File cortvrml.exe
    ExecWait "cortvrml.exe"
+   messagebox mb_ok "Cortona installation complete!"
 SectionEnd
 
-Section "McStas ${VERSION} (required)"
+SectionGroupEnd
+ 
+## Sections Group 2
+SectionGroup /e "McStas" PROG2
+  
+Section "McStas ${VERSION} (required)" MCSTAS
+  ; Start by going to the temp folder...
+  SetOutPath "$TEMP"
+
   File mcstas-${VERSION}-i686-Intel-Win32.zip
-  ZipDLL::extractall "mcstas-${VERSION}-i686-Intel-Win32.zip" "."
+  ZipDLL::extractall "mcstas-${VERSION}-i686-Intel-Win32.zip" ""
   SectionIn RO
   
-  ; Set output path to the installation directory.
-  ;SetOutPath $INSTDIR
-
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("NSIS", "AUTO").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVBIN", "c:\Dev-cpp\bin").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("PERLBIN", "c:\perl\bin").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("SCIBIN", "c:\progra~1\scilab-4.0\bin").r0'
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVBIN", "$4").r0'
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("PERLBIN",  "$3").r0'
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("SCIBIN", "$5").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCSTAS_SITE", "$INSTDIR").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCVERSION", "${VERSION}").r0'
       
 
   ; Execute batch installer
-  ExecWait "mcstas-${VERSION}\install.bat"
-  ; Write the installation path into the registry
-  WriteRegStr HKLM SOFTWARE\McStas "Install_Dir" "$INSTDIR"
-  
-  ; Write the uninstall keys for Windows
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "DisplayName" "McStas"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "NoRepair" 1
-  WriteUninstaller "uninstall.exe"
-  
+  ExecWait "$TEMP\mcstas-${VERSION}\install.bat"
+ 
 SectionEnd
 
-; Optional section (can be disabled by the user)
-Section "Start Menu Shortcuts"
+Section "Windows setup" WIN
+   SectionIn RO
 
-  CreateDirectory "$SMPROGRAMS\McStas"
-  CreateShortCut "$SMPROGRAMS\McStas\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-  CreateShortCut "$SMPROGRAMS\McStas\McStas (MakeNSISW).lnk" "$INSTDIR\mcstas-1.10beta.nsi" "" "$INSTDIR\mcstas-1.10beta.nsi" 0
+   ; Create desktop and SM link for mcgui.pl
+   CreateShortCut "$DESKTOP\McStas.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
+   CreateDirectory "$SMPROGRAMS\McStas"
+   CreateShortCut "$SMPROGRAMS\McStas\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+   CreateShortCut "$SMPROGRAMS\McStas\McStas.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
   
+   ; Write the installation path into the registry
+   WriteRegStr HKLM SOFTWARE\McStas "Install_Dir" "$INSTDIR"
+
+   ; Write the uninstall keys for Windows
+   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "DisplayName" "McStas"
+   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "UninstallString" '"$INSTDIR\uninstall.exe"'
+   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "NoModify" 1
+   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas" "NoRepair" 1
+   WriteUninstaller "uninstall.exe"
+
+   messagebox mb_ok "McStas install complete! Please log off to complete configuration."
+
 SectionEnd
+ 
+SectionGroupEnd
+ 
+##===========================================================================
+## Settings
+##===========================================================================
+ 
+#!define PROG1_InstDir    "C:\PROG1"
+!define PROG1_StartIndex ${PROG1}
+!define PROG1_EndIndex   ${CORT}
+ 
+!define PROG2_InstDir "C:\McStas"
+!define PROG2_StartIndex ${PROG2}
+!define PROG2_EndIndex   ${WIN}
+ 
+##===========================================================================
+## Please don't modify below here unless you're a NSIS 'wiz-kid'
+##===========================================================================
+ 
+## Create $PLUGINSDIR
+Function .onInit
+
+  ;Extract InstallOptions files
+  ;$PLUGINSDIR will automatically be removed when the installer closes
+  
+  InitPluginsDir
+  File /oname=$PLUGINSDIR\mcstas.ini "mcstas.ini"
+  
+FunctionEnd
+
+Function SetCustom
+  !insertmacro MUI_HEADER_TEXT "Support app location" ""
+  ;Display the InstallOptions dialog
+  Push ${TEMP1}
+    InstallOptions::dialog "$PLUGINSDIR\mcstas.ini"
+  Pop ${TEMP1}
+  
+    ReadINIStr $3 "$PLUGINSDIR\mcstas.ini" "Field 3" "State"
+    ReadINIStr $4 "$PLUGINSDIR\mcstas.ini" "Field 5" "State"
+    ReadINIStr $5 "$PLUGINSDIR\mcstas.ini" "Field 7" "State"
+
+FunctionEnd
+
+
+## If user goes back to this page from 1st Directory page
+## we need to put the sections back to how they were before
+Var IfBack
+Function SelectFilesCheck
+ StrCmp $IfBack 1 0 NoCheck
+  Call ResetFiles
+ NoCheck:
+FunctionEnd
+ 
+## Also if no sections are selected, warn the user!
+Function ComponentsLeave
+Push $R0
+Push $R1
+ 
+ Call IsPROG1Selected
+  Pop $R0
+ Call IsPROG2Selected
+  Pop $R1
+ StrCmp $R0 1 End
+ StrCmp $R1 1 End
+  Pop $R1
+  Pop $R0
+ MessageBox MB_OK|MB_ICONEXCLAMATION "$(NoSectionsSelected)"
+ Abort
+ 
+End:
+Pop $R1
+Pop $R0
+FunctionEnd
+ 
+Function IsPROG1Selected
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG1_StartIndex} # Group 1 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   SectionGetFlags $R0 $R1			# Get section flags
+    IntOp $R1 $R1 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} 0 +3		# If section is selected, done
+     StrCpy $R0 1
+     Goto Done
+    StrCmp $R0 ${PROG1_EndIndex} 0 Loop
+ 
+ Done:
+Pop $R1
+Exch $R0
+FunctionEnd
+ 
+Function IsPROG2Selected
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG2_StartIndex}    # Group 2 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   SectionGetFlags $R0 $R1			# Get section flags
+    IntOp $R1 $R1 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} 0 +3		# If section is selected, done
+     StrCpy $R0 1
+     Goto Done
+    StrCmp $R0 ${PROG2_EndIndex} 0 Loop
+ 
+ Done:
+Pop $R1
+Exch $R0
+FunctionEnd
+ 
+## Here we are selecting first sections to install
+## by unselecting all the others!
+Function SelectFilesA
+ 
+ # If user clicks Back now, we will know to reselect Group 2's sections for
+ # Components page
+ StrCpy $IfBack 1
+ 
+ # We need to save the state of the Group 2 Sections
+ # for the next InstFiles page
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG2_StartIndex} # Group 2 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   SectionGetFlags $R0 $R1				    # Get section flags
+    WriteINIStr "$PLUGINSDIR\sections.ini" Sections $R0 $R1 # Save state
+    !insertmacro UnselectSection $R0			    # Then unselect it
+    StrCmp $R0 ${PROG2_EndIndex} 0 Loop
+ 
+ # Don't install prog 1?
+ Call IsPROG1Selected
+ Pop $R0
+ StrCmp $R0 1 +4
+  Pop $R1
+  Pop $R0
+  Abort
+ 
+ # Set current $INSTDIR to PROG1_InstDir define
+ #StrCpy $INSTDIR "${PROG1_InstDir}"
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
+ 
+## Here we need to unselect all Group 1 sections
+## and then re-select those in Group 2 (that the user had selected on
+## Components page)
+Function SelectFilesB
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG1_StartIndex}    # Group 1 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+    !insertmacro UnselectSection $R0		# Unselect it
+    StrCmp $R0 ${PROG1_EndIndex} 0 Loop
+ 
+ Call ResetFiles
+ 
+ # Don't install prog 2?
+ Call IsPROG2Selected
+ Pop $R0
+ StrCmp $R0 1 +4
+  Pop $R1
+  Pop $R0
+  Abort
+ 
+ # Set current $INSTDIR to PROG2_InstDir define
+ StrCpy $INSTDIR "${PROG2_InstDir}"
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
+ 
+## This will set all sections to how they were on the components page
+## originally
+Function ResetFiles
+Push $R0
+Push $R1
+ 
+ StrCpy $R0 ${PROG2_StartIndex}    # Group 2 start
+ 
+  Loop:
+   IntOp $R0 $R0 + 1
+   ReadINIStr "$R1" "$PLUGINSDIR\sections.ini" Sections $R0 # Get sec flags
+    SectionSetFlags $R0 $R1				  # Re-set flags for this sec
+    StrCmp $R0 ${PROG2_EndIndex} 0 Loop
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
+ 
+## Here we are deleting the temp INI file at the end of installation
+Function DeleteSectionsINI
+ Delete "$PLUGINSDIR\Sections.ini"
+ FlushINI "$PLUGINSDIR\Sections.ini"
+FunctionEnd
 
 ;--------------------------------
 
@@ -109,14 +351,15 @@ Section "Uninstall"
   DeleteRegKey HKLM SOFTWARE\McStas
 
   ; Remove files and uninstaller
-  Delete $INSTDIR\mcstas-1.10beta.nsi
   Delete $INSTDIR\uninstall.exe
 
   ; Remove shortcuts, if any
   Delete "$SMPROGRAMS\McStas\*.*"
 
-  ; Remove directories used
+  ; Remove directories and files used
+  Delete "$DESKTOP\McStas.lnk"
   RMDir "$SMPROGRAMS\McStas"
-  RMDir "$INSTDIR"
+  RMDir /R "$INSTDIR"
+  
 
 SectionEnd
