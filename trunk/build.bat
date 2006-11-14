@@ -82,6 +82,8 @@ cd mcstas-%VERSION%
 @echo creating Nullsoft installer .exe (requires nullsoft builder)
 copy mcstas.ini ..
 copy mcstas.nsi ..
+copy mcstas.bmp ..
+copy LICENSE.rtf ..
 cd ..
 @rem In principle, we could have a check for the other support apps here...
 c:\progra~1\nsis\makensis mcstas.nsi
