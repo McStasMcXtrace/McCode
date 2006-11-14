@@ -28,7 +28,7 @@
  * %End
 */
 
-DEFINE INSTRUMENT PSI_Focus_VS_Simple(lambda=3.4,
+DEFINE INSTRUMENT Test_Isotropic_Sqw(lambda=3.4,
   string sample_coh="Rb_liq_coh.sqw", string sample_inc="Rb_liq_inc.sqw", interpolate=1)
 
 TRACE
