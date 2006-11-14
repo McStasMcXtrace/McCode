@@ -38,6 +38,7 @@
 @echo ...
 @echo ...
 @set DOZIP="0"
+@set DONSIS="0"
 @rem *** End of User configuration ***
 @rem
 @set VERSION=MCSTAS_VERSION
@@ -77,6 +78,13 @@
 cd ..
 zip -r mcstas-%VERSION%-i686-Intel-Win32 .\mcstas-%VERSION%
 cd mcstas-%VERSION%
+@if %DONSIS%=="0" goto end
+@echo creating Nullsoft installer .exe (requires nullsoft builder)
+copy mcstas.ini ..
+copy mcstas.nsi ..
+cd ..
+@rem In principle, we could have a check for the other support apps here...
+start mcstas.nsi
 :end
 
 @echo Build for Windows done. Press a key to exit.
