@@ -186,5 +186,7 @@ print STDOUT "Updating: $file2 $file\n";
 print STDOUT "Installing Tk-CodeText extension (ppm)\n";
 system("ppm install support\\ppds\\Syntax-Highlight-Perl.ppd");
 system("ppm install support\\ppds\\Tk-CodeText.ppd");
+system("ppm install support\\ppds\\Math-Amoeba.ppd");
+
 
 
