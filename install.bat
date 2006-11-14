@@ -55,10 +55,10 @@
 @SET /P PERLBIN=Where is your perl.exe? (default is %PERLBIN%):
 @if "%SCIBIN%"=="" set SCIBIN=c:\progra~1\scilab-4.0\bin
 @SET /P PERLBIN=Where is your Scilab? (default is %SCIBIN%):
-@set PATH=%PERLBIN%;%SCIBIN%;%DEVBIN%;%PATH%
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
 @SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%):
 :nsis
+@set PATH=%PERLBIN%;%SCIBIN%;%DEVBIN%;%PATH%
 @echo Trying to guess your plotter and configuration...
 @mcconfig.pl
 @echo Installing in MCSTAS_SITE=%MCSTAS_SITE%

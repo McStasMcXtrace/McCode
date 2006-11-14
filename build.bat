@@ -84,7 +84,7 @@ copy mcstas.ini ..
 copy mcstas.nsi ..
 cd ..
 @rem In principle, we could have a check for the other support apps here...
-start mcstas.nsi
+c:\progra~1\nsis\makensis mcstas.nsi
 :end
 
 @echo Build for Windows done. Press a key to exit.
