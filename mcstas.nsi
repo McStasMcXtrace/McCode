@@ -1,3 +1,25 @@
+#    This file is part of the McStas neutron ray-trace simulation package
+#    Copyright (C) 1997-2004, All rights reserved
+#    Risoe National Laborartory, Roskilde, Denmark
+#    Institut Laue Langevin, Grenoble, France
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#    mcstas.nsi: input file for the McStas NullSoft installer
+#
+
 !define TEMP1 $R0
 
 !ifndef VERSION
@@ -8,14 +30,24 @@
 !include MUI.nsh
 !include Sections.nsh
  
-Name "McStas plus support tools"
+Name "McStas plus tools"
 OutFile "McStas-${VERSION}.exe"
 
 ##===========================================================================
 ## Modern UI Pages
 ##===========================================================================
- 
-!insertmacro MUI_PAGE_WELCOME
+
+!define MUI_WELCOMEFINISHPAGE_BITMAP "mcstas.bmp" 
+!define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of \
+McStas release ${VERSION} on Win32 systems.\
+\n\nMcStas is a ray-tracing Monte Carlo neutron simulator (see <http://www.mcstas.org>).\
+\n\nThis installer will set up McStas and support tools on your computer.\
+\n\nNOTE: Please install all software on C:\ and do NOT USE SPACES in the McStas installation\
+directory name."
+
+
+!insertmacro MUI_PAGE_WELCOME 
+!insertmacro MUI_PAGE_LICENSE "LICENSE.rtf"
  
 !define MUI_PAGE_CUSTOMFUNCTION_PRE SelectFilesCheck
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE ComponentsLeave
@@ -38,6 +70,8 @@ Page custom SetCustom
 !insertmacro MUI_PAGE_INSTFILES
  
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE DeleteSectionsINI
+
+!define MUI_FINISHPAGE_NOAUTOCLOSE
 !insertmacro MUI_PAGE_FINISH
  
 !insertmacro MUI_LANGUAGE "English"
