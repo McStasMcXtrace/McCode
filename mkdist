@@ -68,6 +68,9 @@ sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
 mv build.bat.new build.bat
 sed 's/MCSTAS_VERSION/'$1'/' mcstas.nsi > mcstas.nsi.new
 mv mcstas.nsi.new mcstas.nsi
+sed 's/MCSTAS_VERSION/'$1'/' deb/control > deb/control.new
+mv deb/control.new deb/control
+
 
 # Create ps/pdf/html based install info
 cd install_docs/tex
@@ -190,7 +193,7 @@ sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/which.exe .
 cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
-
+rm -rf mcstas-$1
 echo
 echo
 echo Your mcstas dist packages are placed in
@@ -206,4 +209,15 @@ echo ../mcstas-$1-manual.pdf
 echo ../mcstas-$1-components.ps.gz
 echo ../mcstas-$1-components.pdf
 echo
-
+# In case of a debian build host, we also build a .deb and .rpm (using alien)
+if [ -e /etc/debian_version ]
+then
+  echo Proceeding to .deb/.rpm build
+  ./mcstas/deb/debcreate $1
+  echo 
+  echo
+  echo Build packages created:
+  echo
+  ls -lf mcstas-$1*.*
+  echo
+fi

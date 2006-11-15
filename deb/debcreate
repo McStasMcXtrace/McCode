@@ -1,0 +1,53 @@
+#!/bin/sh
+# Script to wrap McStas mkdist build in a .deb package
+export SRCDIR=$PWD
+export SRCPKG=mcstas-$1-src.tar.gz
+
+#TMPDIR="/tmp/mcdeb"
+TMPDIR=`mktemp -d`
+cd $TMPDIR
+mkdirhier debian/usr/local
+
+echo Sources are in $SRCDIR
+echo Building .deb from $SRCPKG in $TMPDIR
+echo
+tar xzvf $SRCDIR/$SRCPKG
+cd mcstas-$1
+# Correct the makefile slightly:
+sed -e 's+pgm.fixpl+pgm.pl+' -e 's+./mcdoc.fixpl --text++' Makefile.in > Makefile.in.deb
+mv Makefile.in.deb Makefile.in
+./configure --prefix=$TMPDIR/debian/usr/local
+make install-pgplot
+./configure --prefix=$TMPDIR/debian/usr/local
+# Correct the makefile slightly:
+sed 's/pgm.fixpl/pgm.pl/' Makefile
+make
+make install
+rm -rf $TMPDIR/debian/usr/local/lib/mcstas.*
+
+mkdir $TMPDIR/debian/DEBIAN
+mkdirhier $TMPDIR/debian/usr/share/doc/mcstas
+find $TMPDIR/debian -type d -exec chmod 0755 \{\} \;
+cp $TMPDIR/mcstas-$1/deb/control $TMPDIR/debian/DEBIAN
+cp $TMPDIR/mcstas-$1/deb/prerm $TMPDIR/debian/DEBIAN
+cp $TMPDIR/mcstas-$1/deb/postinst $TMPDIR/debian/DEBIAN
+
+chmod 0755 $TMPDIR/debian/DEBIAN/prerm
+chmod 0755 $TMPDIR/debian/DEBIAN/postinst
+
+cp $TMPDIR/mcstas-$1/CHANGES $TMPDIR/debian/usr/share/doc/mcstas/changelog
+cp $TMPDIR/mcstas-$1/CHANGES $TMPDIR/debian/usr/share/doc/mcstas/changelog.Debian
+cp $TMPDIR/mcstas-$1/COPYING $TMPDIR/debian/usr/share/doc/mcstas/copyright
+
+cd $TMPDIR/
+rm -rf mcstas-$1
+mv debian mcstas-$1
+
+dpkg-deb --build mcstas-$1
+
+cp mcstas-$1.deb $SRCDIR
+mv mcstas-$1 mcstas-$1_debbuild
+sudo alien -k --scripts --to-rpm mcstas-$1.deb
+cp mcstas-$1*.rpm $SRCDIR
+
+rm -rf $TMPDIR
