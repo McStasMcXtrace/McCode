@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.35 $
+* Version: $Revision: 1.36 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,14 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.35 2006-07-21 09:03:23 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.36 2006-11-16 10:14:21 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.35  2006/07/21 09:03:23  farhi
+* Added in options'per steradian' flux estimate, and possibility to glue the
+* monitor to the shape of the 'previous' component (unactivate propagation), so
+* that we can mnonitor what's going on at the output surface of the previous comp.
+*
 * Revision 1.34  2006/03/15 16:01:43  farhi
 * 'keyword ignored' warning only in verbose mode
 *
@@ -1521,7 +1526,7 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,
      * sphere: look for angle, radius (->atan2(val,mc_mn_radius)), hdiv, vdiv
      * this activates a 'restricted' flag, to draw a region as blades on cylinder/sphere
      */
-    for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Number; mc_mn_i++)
+    for (mc_mn_i= 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
     {
       int mc_mn_Set_Vars_Coord_Type;
       mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
