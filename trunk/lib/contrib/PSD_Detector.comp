@@ -168,6 +168,9 @@
 * PSD_p:    Array of neutron weight counts
 * PSD_p2:   Array of second moments
 *
+* %L
+* The test/example instrument <a href="../examples/Test_PSD_Detector.instr">Test_PSD_Detector.instr</a>.
+*
 * %E
 *******************************************************************************/
 

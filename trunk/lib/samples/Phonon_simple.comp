@@ -6,7 +6,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: 04.02.04
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: Risoe
 *
 * A sample for phonon scattering
@@ -57,6 +57,9 @@
 * V_rho:  [AA^-3] Atomic density
 * V_my_s: [m^-1]  Attenuation factor due to incoherent scattering
 * V_my_a: [m^-1]  Attenuation factor due to absorbtion
+*
+* %L
+* The test/example instrument <a href="../examples/Test_Phonon.instr">Test_Phonon.instr</a>.
 *
 * %E
 ******************************************************************************/
