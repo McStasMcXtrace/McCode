@@ -4,14 +4,14 @@ function mcdisplay(varargin)
 %
 % Implementation of matlab functions for mcdisplay online plotting.
 %
-% Copyright 2003 Peter Willendrup, RISØ national laboratory
-% 
+% Copyright 2003 Peter Willendrup, RISï¿½national laboratory
+%
 % Covers also the scripts
-% PlotInstrument.m 
+% PlotInstrument.m
 % wait.m
-% CheckNeutNumber.m  
-% ReshapeTransform.m  
-% CheckTimeout.m     
+% CheckNeutNumber.m
+% ReshapeTransform.m
+% CheckTimeout.m
 % resume.m
 %
 % Written by: P. Willendrup
@@ -91,7 +91,7 @@ global FrameCount;
 FrameCount=0;
 
 % Set up simple control window
-h=figure('numbertitle','off','name','mcdisplay controls',...
+h=figure('numbertitle','off','name','mcdisplay controls (Trace/3D view)',...
 		      'units','normalized','tag','McDisp','toolbar',...
 		      'figure','pointer','watch',...
 		      'position',[0.1 0.1 0.8 0.8]);
@@ -196,7 +196,7 @@ Ndrawn=length(INSTRUMENT.neut);
 Nclear=Ndrawn-Nmax;
 if Nclear>0
   for j=1:Nclear
-    eval('delete(INSTRUMENT.neut(j))','');    	  
+    eval('delete(INSTRUMENT.neut(j))','');
   end
   INSTRUMENT.neut(1:Nclear)=[];
 end
