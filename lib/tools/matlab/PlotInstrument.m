@@ -28,16 +28,17 @@ figure(INSTRUMENT.fig);
 % Called from mcdisplay.pl or from uicontrol?
 if nargin==1
   Myview=[1e-10 90-1e-10];
-  % Axis labels	
-  xlabel('z/[m]');	
+  % Axis labels
+  xlabel('z/[m]');
   ylabel('x/[m]');
   zlabel('y/[m]');
   title(INSTRUMENT.descr,'interpreter','none');
+  set(INSTRUMENT.fig,'Name',[ 'mcdisplay: ' INSTRUMENT.descr ' (Trace/3D view)' ]);
 else
   Myview=view;
 end
 % Be sure to keep what ever is plotted
-hold on	
+hold on
 
 % Remove old plot
 delete(findobj('tag','Instrument'));
@@ -65,7 +66,8 @@ view(Myview);
 xlabel('z/[m]');
 ylabel('x/[m]');
 zlabel('y/[m]');
-title(INSTRUMENT.descr);
+title(INSTRUMENT.descr,'interpreter','none');
+set(INSTRUMENT.fig,'Name',[ 'mcdisplay: ' INSTRUMENT.descr ' (Trace/3D view)' ]);
 % Run through the component list
 Pcount=0;
 Plist=cell(0);
@@ -101,10 +103,10 @@ for j=1:size(INSTRUMENT.name,2)
       z=xyz(2,:);
       % Set name label on each component part
       popup=uicontextmenu;
-      label=uimenu(popup,'label',component);
+      label=uimenu(popup,'label',component,'ForeGroundColor',col);
       hc=plot3(xyz(3,:),xyz(1,:),xyz(2,:),col,'uicontextmenu',popup);
       set(hc,'tag','Instrument');
-      
+
       % Determine the full extent of the instrument
       ax(1)=min([ax(1); x(:)]);
       ax(2)=max([ax(2); x(:)]);
