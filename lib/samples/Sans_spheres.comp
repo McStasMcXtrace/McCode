@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: KL, 7 June 2005
@@ -24,6 +24,9 @@
 *
 * Example: Sans_spheres(R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_a = 50, qmax = 0.3 ,xwidth=0.01, yheight=0.01, zthick=0.005)
 *
+* %BUGS
+* This component does NOT simulate absolute intensities. This latter depends on the detector parameters.
+*
 * %P
 *
 * INPUT PARAMETERS
@@ -33,7 +36,8 @@
 * Delta_rho: Excess scattering length density (fm/AA^3)
 * sigma_a:   Absorption cross section density at 2200 m/s (m^-1)
 * qmax:      Maximum momentum transfer (AA^-1)
-*
+* Rdet:      Detector (disk-shaped) radius (m)
+* dist:      Distance from sample to detector (m)
 * xwidth:    horiz. dimension of sample, as a width (m)
 * yheight:   vert . dimension of sample, as a height (m)
 * zthick:    thickness of sample (m)
@@ -44,7 +48,9 @@
 * my_a: Attenuation factor due to absorbtion (m^-1)
 *
 * %Link
-*
+* The test/example instrument <a href="../examples/SANS.instr">SANS.instr</a>.
+%L
+* Some alternative implementations exist as contributed components.
 * %E
 *******************************************************************************/
 
