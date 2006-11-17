@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.10 $
+* Version:    $Revision: 1.11 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 *
@@ -85,7 +85,7 @@
 * FCVars :  (-)     structure
 *
 * %L
-* <a href="Vitess_ChopperFermi.html">Vitess_ChopperFermi<\a> component by
+* <a href="Vitess_ChopperFermi.html">Vitess_ChopperFermi</a> component by
 * G. Zsigmond, imported from Vitess by K. Lieutenant.
 *
 * %End
