@@ -25,11 +25,18 @@ sed 's/! PPDRIV/  PPDRIV/' drivers2.list > drivers3.list
 sed 's/! X2DRIV/  X2DRIV/' drivers3.list > drivers4.list
 sed 's/! XWDRIV/  XWDRIV/' drivers4.list > drivers.list
 \rm drivers?.list
-
+# Assuming default location of perl binary in /usr/local/bin does not work...
+#
+export PERLBIN=`which perl`
+sed 's+^#!/usr/local/bin/perl+#!'$PERLBIN'+' makehtml > makehtml.fixed
+cp makehtml.fixed makehtml
+chmod a+x makehtml
+rm makehtml.fixed
 echo $PGPLOT_SRC/makemake $PGPLOT_SRC linux   g77_gcc
 $PGPLOT_SRC/makemake $PGPLOT_SRC linux   g77_gcc
 sed 's/-lbsd//' makefile > makefile.new
-cp makefile.new makefile
+# On Debian stable make fails without X11R6/lib on lib path
+sed 's+-L/usr/X11/lib+-L/usr/X11/lib -L/usr/X11R6/lib+' makefile.new > makefile
 if test "@USE_PIC@" == "no" ; then
 rm makefile.new
 else
@@ -41,11 +48,12 @@ fi
 echo make; make cpg
 make
 make cpg
+
 make pgplot.html
 make clean
 # create links
-ln -s $PGPLOT_DIR/pgdisp /usr/local/bin/pgdisp
-ln -s $PGPLOT_DIR/pgxwin_server /usr/local/bin/pgxwin_server
+ln -sf $PGPLOT_DIR/pgdisp @prefix@/bin/pgdisp
+ln -sf $PGPLOT_DIR/pgxwin_server @prefix@/bin/pgxwin_server
 
 # install F77
 cd $ROOT_SRC
