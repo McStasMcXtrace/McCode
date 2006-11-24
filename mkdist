@@ -193,7 +193,7 @@ sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/which.exe .
 cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
-rm -rf mcstas-$1
+
 echo
 echo
 echo Your mcstas dist packages are placed in
@@ -209,15 +209,25 @@ echo ../mcstas-$1-manual.pdf
 echo ../mcstas-$1-components.ps.gz
 echo ../mcstas-$1-components.pdf
 echo
+echo WARNING: Please install to a test system and run the following tools
+echo before release:
+echo
+echo compiletest.sh \(check if all examples compile\)
+echo mcrun --test \(validation test of selected instruments\)
+echo
+echo Follow instructions in ../adm to publish on the web.
+echo
+# We'll wait until a later stable release to implement .deb/.rpm
+#
 # In case of a debian build host, we also build a .deb and .rpm (using alien)
-if [ -e /etc/debian_version ]
-then
-  echo Proceeding to .deb/.rpm build
-  ./mcstas/deb/debcreate $1
-  echo 
-  echo
-  echo Build packages created:
-  echo
-  ls -lf mcstas-$1*.*
-  echo
-fi
+#if [ -e /etc/debian_version ]
+#then
+#  echo Proceeding to .deb/.rpm build
+#  ./mcstas/deb/debcreate $1
+#  echo 
+#  echo
+#  echo Build packages created:
+#  echo
+#  ls -lf mcstas-$1*.*
+#  echo
+#fi
