@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.34 $
+* Version: $Revision: 1.35 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,14 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.34 2006-10-03 22:16:45 farhi Exp $
+* $Id: read_table-lib.c,v 1.35 2006-11-27 15:29:39 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.34  2006/10/03 22:16:45  farhi
+* Added realistic PSD_Detector component with Gas tables
+* Added test for Isotropic_Sqw
+* Data files can be in local path, MCSTAS/data and contrib sub-dirs
+*
 * Revision 1.33  2006/07/21 09:05:05  farhi
 * fixed bug in 2D interpolation routine
 *
@@ -638,6 +643,7 @@
   {
     long   mc_rt_Index;
     double mc_rt_X1, mc_rt_Y1, mc_rt_X2, mc_rt_Y2;
+    double ret=0;
 
     if (X > mc_rt_Table.max_x) return Table_Index(mc_rt_Table,mc_rt_Table.rows-1  ,j);
     if (X < mc_rt_Table.min_x) return Table_Index(mc_rt_Table,0  ,j);
@@ -651,16 +657,21 @@
         if ((mc_rt_X1 <= X) && (X < mc_rt_X2)) break;
       } /* end for mc_rt_Index */
     else {
-        mc_rt_Index = (long)ceil((X - mc_rt_Table.min_x)
+        mc_rt_Index = (long)floor((X - mc_rt_Table.min_x)
                           /(mc_rt_Table.max_x - mc_rt_Table.min_x)
-                            *mc_rt_Table.rows);
-        mc_rt_X2 = Table_Index(mc_rt_Table,mc_rt_Index  ,0);
-        mc_rt_X1 = Table_Index(mc_rt_Table,mc_rt_Index-1,0);
+                           *mc_rt_Table.rows);
+        mc_rt_X1 = Table_Index(mc_rt_Table,mc_rt_Index  ,0);
+        mc_rt_X2 = Table_Index(mc_rt_Table,mc_rt_Index+1,0);
     }
     mc_rt_Y2 = Table_Index(mc_rt_Table,mc_rt_Index  ,j);
     mc_rt_Y1 = Table_Index(mc_rt_Table,mc_rt_Index-1,j);
 
-    return Table_Interp1d(X, mc_rt_X1,mc_rt_Y1, mc_rt_X2,mc_rt_Y2);
+    if (!strcmp(mc_rt_Table.method,"linear"))
+      ret = Table_Interp1d(X, mc_rt_X1,mc_rt_Y1, mc_rt_X2,mc_rt_Y2);
+    else if (!strcmp(mc_rt_Table.method,"nearest"))
+      ret = Table_Interp1d_nearest(X, mc_rt_X1,mc_rt_Y1, mc_rt_X2,mc_rt_Y2);
+
+    return (ret);
   } /* end Table_Value */
 
 /*******************************************************************************
@@ -677,6 +688,7 @@
   double Table_Value2d(t_Table Table, double X, double Y)
   {
     double x1,x2,y1,y2,z11,z12,z21,z22;
+    double ret=0;
     x1 = floor(X);
     y1 = floor(Y);
     if (x1 > Table.rows-1 || x1 < 0)    x2 = x1;
@@ -687,9 +699,17 @@
     z12=Table_Index(Table, x1, y2);
     z21=Table_Index(Table, x2, y1);
     z22=Table_Index(Table, x2, y2);
-    return Table_Interp2d(X,Y,
-        x1,y1,x2,y2,
-        z11,z12,z21,z22);
+
+    if (!strcmp(Table.method,"linear"))
+      ret = Table_Interp2d(X,Y, x1,y1,x2,y2, z11,z12,z21,z22);
+    else {
+      if (fabs(X-x1) < fabs(X-x2)) {
+        if (fabs(Y-y1) < fabs(Y-y2)) ret = z11; else ret = z12;
+      } else {
+        if (fabs(Y-y1) < fabs(Y-y2)) ret = z21; else ret = z22;
+      }
+    }
+    return ret;
   } /* end Table_Value2d */
 
 
@@ -724,11 +744,15 @@
     {
       printf(" is %li x %li ", mc_rt_Table.rows, mc_rt_Table.columns);
       if (mc_rt_Table.rows*mc_rt_Table.columns > 1)
-        printf("(x=%g:%g).\n", mc_rt_Table.min_x, mc_rt_Table.max_x);
-      else printf("(x=%g).\n", mc_rt_Table.min_x);
+        printf("(x=%g:%g)", mc_rt_Table.min_x, mc_rt_Table.max_x);
+      else printf("(x=%g) ", mc_rt_Table.min_x);
       ret = mc_rt_Table.rows*mc_rt_Table.columns;
+      if (mc_rt_Table.monotonic)    printf(", monotonic");
+      if (mc_rt_Table.constantstep) printf(", constant step");
+      printf(". interpolation: %s\n", mc_rt_Table.method);
     }
     else printf(" is empty.\n");
+
     if (mc_rt_Table.header && strlen(mc_rt_Table.header)) {
       char *header;
       int  i;
@@ -771,6 +795,7 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
   mc_rt_Table->constantstep = 0;
   mc_rt_Table->begin   = 0;
   mc_rt_Table->end     = 0;
+  strcpy(mc_rt_Table->method,"linear");
 
   if (rows*columns >= 1) {
     mc_rt_data    = (double*)malloc(rows*columns*sizeof(double));
@@ -1021,6 +1046,19 @@ double Table_Interp1d(double x,
   slope = (y2 - y1)/(x2 - x1);
   return y1+slope*(x - x1);
 } /* Table_Interp1d */
+
+/******************************************************************************
+* double Table_Interp1d_nearest(x, x1, y1, x2, y2)
+*    ACTION: table lookup with nearest method at x between y1=f(x1) and y2=f(x2)
+*    return: y=f(x) value
+*******************************************************************************/
+double Table_Interp1d_nearest(double x,
+  double x1, double y1,
+  double x2, double y2)
+{
+  if (fabs(x-x1) < fabs(x-x2)) return (y1);
+  else return(y2);
+} /* Table_Interp1d_nearest */
 
 /******************************************************************************
 * double Table_Interp2d(x,y, x1,y1, x2,y2, z11,z12,z21,z22)
