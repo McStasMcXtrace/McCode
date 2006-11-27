@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.32 $
+* Version: $Revision: 1.33 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -79,9 +79,9 @@
 *               are generated. You may also use 'h' and 'w' for a square source
 * dist:   [m]   Distance to target along z axis.
 * xw:     [m]   Width(x) of target.
-*                 If dist=0.0, xw = half horz. div  in deg
+*                 If dist=0.0, xw = full horz. div  in deg
 * yh:     [m]   Height(y) of target.
-*                 If dist=0.0, yh = half vert. div in deg
+*                 If dist=0.0, yh = full vert. div in deg
 *
 * Energy or wavelength range must be defined by giving min and max value or
 * average and spread:
@@ -109,6 +109,10 @@
 *                 Comments (#) and further columns are ignored. Format is
 *                 compatible with McStas/PGPLOT wavelength monitor files.
 *                 When specified, temperature and intensity values are ignored.
+* flux_file_perAA:[1] When true (1), indicates that flux file data is already per
+*                 Angstroem. If false, file data is per wavelength bin.
+* flux_file_log:[1]   When true, will transform the flux table in log scale to
+*                 improve the sampling. This may also cause
 * xdiv_file:[str] Name of the x-horiz. divergence distribution file, given as a
 *                 free format text matrix, preceeded with a line
 *                   '# xylimits: xmin xmax xdiv_min xdiv_max'
@@ -130,9 +134,10 @@ DEFINE COMPONENT Source_gen
 DEFINITION PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=0)
 SETTING PARAMETERS (radius=0.0, dist=0, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0,
                     h=0, w=0, gaussian=0, verbose=0, T1=0,
+                    flux_file_perAA=0, flux_file_log=0,
                     Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
 OUTPUT PARAMETERS (p_in,
-  lambda0, lambda02, L2P,lambda_0,d_lambda,
+  lambda0, lambda02, L2P,
   lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc,
   pTable, pTable_x, pTable_y)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -177,7 +182,7 @@ char *str_dup_numeric(char *orig)
 DECLARE
 %{
  double p_in;
- double lambda_0=0,d_lambda=0;
+ double Lambda0=0;
  double lambda0, lambda02, L2P;     /* first Maxwellian source */
  double lambda0b, lambda02b, L2Pb;  /* second Maxwellian source */
  double lambda0c, lambda02c, L2Pc;  /* third Maxwellian source */
@@ -194,11 +199,12 @@ DECLARE
  double  pTable_dxmax;
  double  pTable_dymin;
  double  pTable_dymax;
+
 %}
 
 INITIALIZE
 %{
-  double delta_lambda, source_area, k;
+  double source_area, k;
 
   /* spectrum characteristics */
   if (flux_file && strlen(flux_file) > 0) {
@@ -208,10 +214,18 @@ INITIALIZE
     int i;
     if (pTable.columns < 2) exit(fprintf(stderr, "Source_gen: %s: Flux file %s should contain at least 2 columns\n", NAME_CURRENT_COMP, flux_file));
     double table_lmin=FLT_MAX, table_lmax=-FLT_MAX;
+    double tmin=FLT_MAX, tmax=-FLT_MAX;
     for (i=0; i<pTable.rows; i++) {
       double val = Table_Index(pTable, i,1);
-      if (val <= 0) fprintf(stderr, "Source_gen: %s: File %s has negative flux at row %i\n", NAME_CURRENT_COMP, flux_file, i+1);
-      val = log(val > 0 ? val : 1/FLT_MAX);
+      val = Table_Index(pTable, i,0); /* lambda */
+      if (val > tmax) tmax=val;
+      if (val < tmin) tmin=val;
+    }
+    for (i=0; i<pTable.rows; i++) {
+      double val = Table_Index(pTable, i,1);
+      if (val < 0) fprintf(stderr, "Source_gen: %s: File %s has negative flux at row %i\n", NAME_CURRENT_COMP, flux_file, i+1);
+      if (flux_file_log)
+        val = log(val > 0 ? val : tmin/10);
       Table_SetElement(&pTable, i, 1, val);
       val = Table_Index(pTable, i,0); /* lambda */
       if (val > table_lmax) table_lmax=val;
@@ -238,7 +252,7 @@ INITIALIZE
       L2P      = 2*lambda02*lambda02;
     }
     else
-      { lambda0 = lambda_0; }
+      { lambda0 = Lambda0; }
 
     if (T2 > 0)
     {
@@ -247,7 +261,7 @@ INITIALIZE
       L2Pb      = 2*lambda02b*lambda02b;
     }
     else
-      { lambda0b = lambda_0; }
+      { lambda0b = Lambda0; }
 
     if (T3 > 0)
     {
@@ -256,7 +270,7 @@ INITIALIZE
       L2Pc      = 2*lambda02c*lambda02c;
     }
     else
-      { lambda0c = lambda_0; }
+      { lambda0c = Lambda0; }
   }
 
   /* now read position-divergence files, if any */
@@ -294,7 +308,7 @@ INITIALIZE
         NAME_CURRENT_COMP, xylimits, xdiv_file, i);
 
     if (!w) w=pTable_xmax-pTable_xmin;
-    if (!xw && !dist) xw=fabs(pTable_dxmax-pTable_dxmin)/2;
+    if (!xw && !dist) xw=fabs(pTable_dxmax-pTable_dxmin);
   }
 
   if (ydiv_file && strlen(ydiv_file) > 0) {
@@ -330,7 +344,7 @@ INITIALIZE
       fprintf(stderr, "Source_gen: %s: invalid xylimits '%s' from file %s. extracted %i values\n",
         NAME_CURRENT_COMP, xylimits, ydiv_file, i);
     if (!h)  h=pTable_ymax-pTable_ymin;
-    if (!yh && !dist) yh=fabs(pTable_dymax-pTable_dymin)/2;
+    if (!yh && !dist) yh=fabs(pTable_dymax-pTable_dymin);
   }
 
   /* tests for parameter values */
@@ -360,11 +374,7 @@ INITIALIZE
   { Lambda0 = (Lmax+Lmin)/2;
     dLambda = (Lmax-Lmin)/2;
   }
-  if ((Lambda0 > dLambda) && (dLambda >= 0))
-  { lambda_0 = Lambda0;
-    d_lambda = dLambda;
-  }
-  else
+  if ((Lambda0 < dLambda) || (dLambda < 0))
   { fprintf(stderr,"Source_gen: %s: Error: Wavelength range %.3f +/- %.3f AA calculated \n",
       NAME_CURRENT_COMP, Lambda0, dLambda);
     fprintf(stderr,"- whole wavelength range must be >= 0 \n");
@@ -373,31 +383,33 @@ INITIALIZE
   }
 
   radius = fabs(radius); w=fabs(w); h=fabs(h);  I1=fabs(I1);
-  lambda_0=fabs(lambda_0); d_lambda=fabs(d_lambda);
+  Lambda0=fabs(Lambda0); dLambda=fabs(dLambda);
   xw = fabs(xw); yh=fabs(yh); dist=fabs(dist);
 
   if (dist == 0)
   {
     fprintf(stderr,"Source_gen: %s: warning: focusing distance is null.\n"
-                   "            xw and yh interpreted as divergence in deg\n",
+                   "            xw and yh interpreted as full divergence in [deg]\n",
                    NAME_CURRENT_COMP);
   }
-  delta_lambda = 2*d_lambda;
-  Lmin = lambda_0 - d_lambda; /* Angstroem */
-  Lmax = lambda_0 + d_lambda;
+  Lmin = Lambda0 - dLambda; /* Angstroem */
+  Lmax = Lambda0 + dLambda;
 
+  /* compute initial weight factor p_in to get [n/s] */
   if ((I1 > 0  && T1 >= 0) || (flux_file && strlen(flux_file) > 0))
-  {
+  { /* the I1,2,3 are usually in [n/s/cm2/st/AA] */
     if (radius)
       source_area = radius*radius*PI*1e4; /* circular cm^2 */
     else
       source_area = h*w*1e4; /* square cm^2 */
-    p_in = source_area;
-    if (!T1) p_in *= I1; else p_in *=delta_lambda;
+    p_in  = source_area; /* cm2 */
+    p_in *= (Lmax-Lmin); /* AA. 1 bin=AA/n */
+    if (flux_file && strlen(flux_file) && !flux_file_perAA)  p_in *= pTable.rows/(Lmax-Lmin);
   }
   else
-    p_in = 1.0/4/PI; /* Small angle approx. */
+    p_in = (I1 > 0? I1 : 1)/4/PI; /* Small angle approx. */
   p_in /= mcget_ncount();
+  if (!T1 && I1) p_in *= I1;
 
   if (radius == 0 && h == 0 && w == 0)
   {
@@ -504,16 +516,19 @@ TRACE
       phi  = phi0  +(phi1  - phi0)  *rand01();
     }
     /* Assume linear distribution */
-    lambda = lambda_0+d_lambda*randpm1();
+    lambda = Lambda0+dLambda*randpm1();
     if (lambda <= 0) ABSORB;
 
     v = K2V*(2*PI/lambda);
-
-    p = p_in * 2 * fabs((theta1 - theta0)*sin((phi1 - phi0)/2)); /* solid angle */
+    p = p_in;
+    if (!flux_file  || !strlen(flux_file))
+      p *=  2 * fabs((theta1 - theta0)*sin((phi1 - phi0)/2)); /* solid angle */
 
     if (flux_file && strlen(flux_file) > 0)
     {
-       p *= exp(Table_Value(pTable, lambda, 1));
+       double w=Table_Value(pTable, lambda, 1);
+       if (flux_file_log) w=exp(w);
+       p *= w;
     }
     else if (T1 > 0 && I1 > 0)
     {
