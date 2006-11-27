@@ -117,7 +117,7 @@ sub set_inputpar {
 # Set input parameter from "PAR=VAL" type string specification.
 sub set_inputpar_text {
     my ($text) = @_;
-    if($text =~ /^([a-z0-9_]+)\=(.*)$/) {
+    if($text =~ /^([A-Za-z0-9_]+)\=(.*)$/) {
         set_inputpar($1, $2);
     } else {
         die "mcrun: Invalid input parameter specification '$text'";
