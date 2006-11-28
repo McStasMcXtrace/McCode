@@ -31,7 +31,7 @@
 !include Sections.nsh
  
 Name "McStas plus tools"
-OutFile "McStas-${VERSION}.exe"
+OutFile "McStas-${VERSION}-i686-Win32.exe"
 
 ##===========================================================================
 ## Modern UI Pages
