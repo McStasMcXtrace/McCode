@@ -1,4 +1,29 @@
 \label{s:install}
+
+\section{Getting McStas}
+\label{s:obtain}
+The \htmladdnormallink{McStas}{http://www.mcstas.org} package is
+available in various distribution packages, from the project
+website at
+\htmladdnormallink{http://www.mcstas.org/download}{http://www.mcstas.org/download}.
+\begin{itemize}
+\item{\texttt{McStas-1.10-i686-Win32.exe}\\Preferred Windows
+    installation method: self-extracting executable
+    including essential support tools. - Refer to section
+    \ref{s:win32_install}. \\\ \\(If you prefer the old \verb+build.bat/install.bat+
+    procedure for Windows, you should instead download the alternative 
+    \\\texttt{mcstas-1.10-i686-unknown-Win32.zip} package. \\Please note that
+    the \verb+.exe+ method is clearly recommended.)}
+\item{\texttt{mcstas-1.10-i686-unknown-Linux.tar.gz}\\Binary package
+  for Linux systems, currently built on Ubuntu 6.06 'Dapper Drake'.
+  Should work on most Linux setups.
+ - Refer to section \ref{s:unix_install}}
+\item{\texttt{mcstas-1.10-src.tar.gz}\\Source code package for
+    building \htmladdnormallink{McStas}{http://www.mcstas.org} on
+    (at least) Linux and Windows XP. This package should compile on
+    most Unix platforms with an \texttt{ANSI-c} compiler. - Refer to section \ref{s:unix_install}}
+\end{itemize}
+
 \section{Licensing}
 The conditions on the use of McStas can be read in the files
 \verb+LICENSE+ and \verb+LICENSE.LIB+ in the distribution. Essentially,
@@ -7,141 +32,82 @@ may be distributed to others.
 New or modified component and instrument files may be shared by
 the user community, and the core team will be glad to include user contributions in the package.
 
-\section{Installing support Applications}
+\section{Installation on windows}
+\label{s:win32_install}
+As of release 1.10 of McStas, the preferred way to install on
+Microsoft Windows is using a self-extracting \texttt{.exe} file.
 
-To get a fully functional McStas installation, a few support applications are required. Essentially, you will need a C compiler, Perl and Perl-Tk, as well as a plotter such as Matlab, Scilab or PGPLOT. These should better be installed before McStas.
+\noindent The archive includes all software needed to run McStas, including perl, a
+c-compiler, a vrml viewer and Scilab for data plotting.
 
-Under Windows, we recommand to avoid using spaces when specifying the location of packages during their installation.
+\noindent Installation of all the provided support tools is needed to get a fully
+functional McStas. The option not to install some of the tools is only
+included for people who have one or more tools installed already.
 
-\subsection{C compiler}
-\label{s:Ccompiler}
+\noindent The safe and fully tested configuration/installation is to install all
+tools, leaving all installation defaults untouched. Specifically you
+may experience problems if you install to non-standard locations. 
 
-The C compiler is used for building the instrument simulation
-executable, which performs the actual simulation. It is called transparently by the mcgui and mcrun McStas tools.
+\noindent Simply follow the guidance given by the installer, pressing 'next' all
+the way.
 
-\begin{itemize}
-\item{Win32: Bloodshed Dev-C++ (Win32).
-  \label{s:instblood}
-  To install Bloodshed Dev-C++, download the installer package from
-  \\\
-  \\\htmladdnormallink{http://www.bloodshed.net/dev/devcpp.html}{http://www.bloodshed.net/dev/devcpp.html}.\\\
-  \\
-  When installed, add the \verb+C:\Dev-Cpp\bin+ directory to your PATH
-  using\\\ \\
-  'Start/Settings/Control Panel/System/Advanced/Environment Variables'.
-}
-\item{Unix/Linux: standard C compiler.
-  Most Unix/Linux systems come with a system C compiler, usually named 'cc' or 'gcc'. In case this would not be the case, install such a compiler from Linux packages (RedHat, SuSe or Debian), or compile it from scratch.
-}
-\end{itemize}
+\noindent If you experience any problems, or have some questions or ideas
+concerning McStas, please contact
+\htmladdnormallink{peter.willendup@risoe.dk}{mailto:peter.willendup@risoe.dk}
+or the McStas mailing list at \htmladdnormallink{neutron-mc@risoe.dk}{mailto:neutron-mc@risoe.dk}.
 
-\subsection{Gui tools (Perl + Tk)}
-\label{s:perltk}
 
-The McStas tools are written using the Perl language, with calls the perl-Tk library.
+\section{Installation on Unix systems}
+\label{s:unix_install}
+Our current reference Unix class platform is
+\htmladdnormallink{Ubuntu Linux}{http://www.ubuntu.com}, which is
+based on \htmladdnormallink{Debian
+  GNU/Linux}{http://www.debian.org}. Some testing is done on other
+Unix variants, including \htmladdnormallink{Fedora
+  Core}{http://fedora.redhat.com},
+\htmladdnormallink{SuSE}{http://www.novell.com/products/suselinux/}
+and \htmladdnormallink{FreeBSD}{http://www.freebsd.org}.
 
-\begin{itemize}
-\item{Win32:}
-  \begin{itemize}
-  \item{Get and install the ActivePerl package from\\
-      \htmladdnormallink{http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi}{http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi}
-      This package provides Perl and Perl-Tk.}
-  \item{You may need to update/install the Microsoft Windows Installer. Get it from Windows Support Downloads at \htmladdnormallink{http://www.microsoft.com/}{http://www.microsoft.com/}.}
-  \item{Make sure that during installation, you have requested to attach the .pl and .tcl extensions to Perl and Tcl, and the \verb+C:\Perl\bin+ is in the PATH.}
-  \end{itemize}
-\item{Unix/Linux:}
-  \begin{itemize}
-    \item{Install Perl, Tcl/Tk and perl-Tk. Prebuilt packages exist for
-      most Linux distributions and also most other Unix-like operating
-      systems. You will find these packages at \htmladdnormallink{http://freshmeat.net/}{http://freshmeat.net/}, \htmladdnormallink{http://www.rpmfind.net/linux/RPM/}{http://www.rpmfind.net/linux/RPM/} (for SuSe and RedHat) and using Fink Commander (for Mac OS X). Some Linux like system do not provide perl-Tk as an RPM/Debian file. You will then have to compile it from the source code (with ./configure; make; make install).}
-    \item{Consult the McStas webpage at \htmladdnormallink{http://www.mcstas.org}{http://www.mcstas.org} for updated links to the source code distributions.}
-    \end{itemize}
-  \end{itemize}
 
-\subsection{Plotting backends (All platforms)}
-\label{s:plotting}
-For plotting with McStas, different support packages can be used:
-\begin{itemize}
-\item{\htmladdnormallink{PGPLOT}{http://www.astro.caltech.edu/~tjp/pgplot/}/\htmladdnormallink{PDL (perl-PDL)}{http://pdl.perl.org}/\htmladdnormallink{pgperl (perl-PGPLOT)}{http://www.ast.cam.ac.uk/AAO/local/www/kgb/pgperl/} (Unix only) - Binary builds of the packages
-    exist for various Linux distributions (for instance
-    \htmladdnormallink{Debian}{http://www.debian.org} comes with
-    prebuilt versions). Prebuilt versions also exist for some commercial Unix'es.
-    Refer to distributor/vendor for documentation. The packages can also be
-    built from source using some (in many cases much) effort.  See the
-    PGPLOT documentation for further details.
-    You may need to define the \verb+PGPLOT_DIR+ variable to the location of the Pgplot library. }
-\item{Matlab (Some Unix/Win32) - refer to
-    \htmladdnormallink{http://www.mathworks.com}{http://www.mathworks.com}. Matlab licenses are rather costly, but discount programmes for university and research departments exist.}
-\item{Scilab (Unix/Win32/Mac...) - a free 'Matlab-like' package, available from
-    \htmladdnormallink{http://www.scilab.org/download/index\_download.php?page=oldReleases.html}{http://www.scilab.org/download/index_download.php?page=oldReleases.html}.
-    \\{\bf IMPORTANT: McStas plotting only works properly with Scilab
-      ver.$\leq $3.0 }\\
-On Windows systems, Scilab should be installed in a directory such as \verb+C:\Scilab+ (do NOT use spaces in names) and you should then add the \verb+C:\Scilab\bin+ directory to your PATH using\\\ \\
-'Start/Settings/Control Panel/System/Advanced/Environment Variables'.}
-\end{itemize}
+\noindent To get a fully functional McStas installation on Unix systems, a few support
+applications are required. Essentially, you will need a C compiler,
+Perl and Perl-Tk, as well as a plotter such as Matlab, Scilab or
+PGPLOT. In the installer package, we supply a method to install PGPLOT
+and related perl modules - see step \ref{pg_install} below. 
 
-\section{Getting McStas}
-\label{s:obtain}
-The \htmladdnormallink{McStas}{http://www.mcstas.org} package is
-available in three different distribution packages, from the project
-website at
-\htmladdnormallink{http://www.mcstas.org}{http://www.mcstas.org}, e.g.
-\begin{itemize}
-\item{\texttt{mcstas-1.9-src.tar.gz}\\Source code package for
-    building \htmladdnormallink{McStas}{http://www.mcstas.org} on
-    (at least) Linux and Windows 2000. This package should compile on
-    most Unix platforms with an \texttt{ANSI-c} compiler. - Refer to section \ref{s:src}}
-\item{\texttt{mcstas-1.9-i686-unknown-Linux.tar.gz}\\Binary package
-  for Linux systems, currently built on Debian GNU/Linux 3.0 'woody'.
-  Should work on most Linux setups.
- - Refer to section \ref{s:linbin}}
-\item{\texttt{mcstas-1.9-i686-unknown-Win32.zip}\\Binary package
-  for Win32 systems, currently built on Microsoft Windows 2000
-  professional, using the \texttt{gcc} 2.95 compiler from
-  \htmladdnormallink{Bloodshed Dev-C++ 5 Beta
-    7}{http://www.bloodshed.net/dev/devcpp.html}
-   - Refer to section \ref{s:winbin}}
-\end{itemize}
+\noindent On Debian and Ubuntu systems, the
+needed packages to install are \texttt{perl-tk, PDL, gcc,
+  libc6-dev}. Other recommended packages are \texttt{scilab, freewrl}.
 
-\section{Source code build}
-\label{s:src}
-The \htmladdnormallink{McStas}{http://www.mcstas.org} package is
-beeing co-developed for mainly Linux and Windows systems. However,
-the Linux build instructions below will work on most Unix
-systems, including Mac OS X). For an updated list of platforms on which McStas has been
-built, refer to the \htmladdnormallink{project website}{http://www.mcstas.org}.
-
-\subsection{Windows build}
-\begin{itemize}
-\item{Start by unpacking the \texttt{mcstas-1.9-src.tar.gz} package using
-e.g. \htmladdnormallink{Winzip}{http://www.winzip.com}.}
-\item{Compile the \htmladdnormallink{McStas}{http://www.mcstas.org} package using the \texttt{build.bat} script of the
-\texttt{mcstas-1.9} directory you just unpacked. Follow the on screen
-instructions.}
-\item{When the build has been done (e.g. \texttt{mcstas.exe}
-has been produced), proceed to install (Section \ref{s:winbin}).}
-\end{itemize}
-
-\subsection{Unix build}
-\label{s:build}
+\subsection{Configuration and installation}
 McStas uses autoconf to detect the system configuration and creates the
 proper Makefiles needed for compilation. On Unix-like systems, you
-should be able to compile and install McStas using the following steps:
+should be able to compile and/or install McStas using the following steps:
 \begin{enumerate}
 \item{Unpack the sources to somewhere convenient and change to the
     source directory:\\
-  gunzip -c mcstas-1.9-src.tar.gz | tar xf -\\
-  cd mcstas-1.9/}
-\item{Configure and compile McStas:\\
-  ./configure\\
-  make}
+  \texttt{gunzip -c <package>.tar.gz | tar xf -}\\
+  \texttt{cd mcstas-1.10/}}
+\item{Configure McStas:\\
+  \texttt{./configure}}
+\item{Build McStas (only in case of the \verb+mcstas-1.10-src.tar.gz+ package):\\
+  \texttt{make}}
+\item{Optionally build/install PGPLOT (as superuser):\\
+    \texttt{make install-pgplot \&\& ./configure}
+    \label{pg_install}}
 \item{Install McStas (as superuser):\\
-  make install}
+  \texttt{make install}
+\label{makeinst}}
 \end{enumerate}
 
-\noindent The installation of McStas in step 3 by default installs in the
-/usr/local/ directory, which on most systems requires superuser (root)
-privileges. To install in another directory, use the --prefix= option to
+
+
+\noindent The installation of McStas in step \ref{makeinst} by default installs in the
+\texttt{/usr/local/} directory, which on most systems requires superuser (root)
+privileges. 
+
+\subsection{Specifying non-standard options}
+To install in a different location than \texttt{/usr/local}, use the --prefix= option to
 configure in step 2. For example,\\
 
   ./configure --prefix=/home/joe\\
@@ -177,71 +143,6 @@ choices first:\\
 concerning McStas, please contact
 \htmladdnormallink{peter.willendup@risoe.dk}{mailto:peter.willendup@risoe.dk}
 or the McStas mailing list at \htmladdnormallink{neutron-mc@risoe.dk}{mailto:peter.willendup@risoe.dk}.
-
-You should try to make sure that the directory containing the McStas
-binaries (mcstas, gscan, mcdisplay, etc.) is contained in the PATH
-environment variable. The default directory is /usr/local/bin, which is
-usually, but not always, included in PATH. Alternatively, you can
-reference the McStas programs using the full path name, ie.\\
-
-  \verb+/usr/local/bin/mcstas my.instr+
-
-  \verb+perl /usr/local/bin/mcrun -N10 -n1e5 mysim -f output ARG=42+
-
-  \verb+perl /usr/local/bin/mcdisplay --multi mysim ARG=42+\\
-
-This may also be necessary for the front-end programs if the install
-procedure could not determine the location of the perl interpreter on
-your system.
-
-If McStas is installed properly, it should be able to find the files it
-needs automatically. If not, you should set the MCSTAS environment
-variable to the directory containing the runtime files "mcstas-r.c" and
-"mcstas-r.h" and the standard components (*.comp). Use one of\\
-
-  \verb+MCSTAS=/usr/local/lib/mcstas; export MCSTAS # sh, bash+
-
-  \verb+setenv MCSTAS /usr/local/lib/mcstas         # csh, tcsh+\\
-
-%The PGPLOT library, which can be used by the mcdisplay frontend
-%(alternatives are Scilab or Matlab), needs the PGPLOT\_DIR environment
-%variable to be set to the directory containing PGPLOT, eg.\\
-%
-%  \verb+PGPLOT_DIR=/usr/lib/pgplot; export PGPLOT_DIR # sh, bash+
-%
-%  \verb+setenv PGPLOT_DIR /usr/lib/pgplot             # csh, tcsh+\\
-%
-%\noindent See the PGPLOT documentation for further details.
-
-\section{Binary install, Linux}
-\label{s:linbin}
-Should be very easy, simply start from 'make install' in Section \ref{s:build}.
-
-\section{Binary install, Windows}
-\label{s:winbin}
-\begin{itemize}
-\item{Start by unpacking the \texttt{mcstas-1.9-i686-unknown-Win32.zip} package using
-e.g. \htmladdnormallink{Winzip}{http://www.winzip.com}.}
-\item{Execute the \texttt{install.bat} installation script. Follow the
-  on screen instructions.}
-\item{Set the required (see output of \texttt{install.bat}) environment variables using
-\\\ \\
-\noindent 'Start/Settings/Control Panel/System/Advanced/Environment
-Variables'\\\
-  \begin{itemize}
-    \item{\verb+PATH+  - Append e.g. \verb+C:\mcstas\bin+}
-    \item{\verb+MCSTAS+  - Create it as e.g. \verb+C:\mcstas\lib+}
-  \end{itemize}}
-\end{itemize}
-It is important that Perl is correctly installed to execute all the McStas tools (e.g. mcdoc.pl, mcrun.pl, mcgui.pl, \ldots). Create a shortcut of the \verb+C:\mcstas\bin\mcgui.pl+ on your Desktop (the icon should be a yellow dot). Whenever launched from the Windows Command window (cmd), you must specify the .pl extension to all McStas Perl script commands (e.g. 'mcrun.pl' and 'mcgui.pl', not 'mcrun' or 'mcgui') except for \verb+mcstas+ itself.
-
-Actually, the modifications to your environnement variables should be
-\begin{itemize}
-    \item{\verb+PATH+ - Append e.g. \\
-    \verb+C:\mcstas\bin;c:\Program Files\Scilab-3.0\bin;C:\Perl\bin\;C:\Dev-Cpp\bin;+}
-    \item{\verb+MCSTAS+ - Create it as e.g. \verb+C:\mcstas\lib+}
-\end{itemize}
-using menu item 'Start/Settings/Control Panel/System/Advanced/Environment Variables'. On some Windows systems, it may be necessary to logout/login (no need to restart the computer) to make these changes active for the whole session.
 
 \section{Finishing and Testing the McStas distribution}
 \label{s:testing}
