@@ -306,7 +306,7 @@ sub parse_args {
     die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max}
   mcrun options:
    -c        --force-compile  Force rebuilding of instrument.
-   -p=FILE   --param=FILE     Read parameters from file FILE.
+   -p FILE   --param=FILE     Read parameters from file FILE.
    -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
    -N NP     --numpoints=NP   Set number of scan points.
    -M        --multi          Spawn simulations to multiple machine grid.
