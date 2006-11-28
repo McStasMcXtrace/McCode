@@ -11,7 +11,7 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision: 1.3 $
+* Version:    $Revision: 1.4 $
 * Release:    McStas 1.9
 * %INSTRUMENT_SITE: FZ_Juelich
 *
@@ -84,7 +84,7 @@ COMPONENT detector = PSD_monitor(
     xmax = 0.3, ymin = -0.3, ymax = 0.3)
   AT (0, 0, Dlen) RELATIVE sample
 
-COMPONENT detector2 = PSD_monitor_rad(rmax=0.35, nr=500, filename="PSDr.dat")
+COMPONENT detector2 = PSD_monitor_rad(rmax=0.35, nr=500, filename="PSDr.dat", filename_av="PSDr_av.dat")
   AT (0, 0, 0.01) RELATIVE detector
 
 END
