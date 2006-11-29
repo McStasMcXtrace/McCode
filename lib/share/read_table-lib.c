@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.35 $
+* Version: $Revision: 1.36 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.35 2006-11-27 15:29:39 farhi Exp $
+* $Id: read_table-lib.c,v 1.36 2006-11-29 14:07:09 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.35  2006/11/27 15:29:39  farhi
+* Small improvement in interpolation methods of read-table lib.
+*
 * Revision 1.34  2006/10/03 22:16:45  farhi
 * Added realistic PSD_Detector component with Gas tables
 * Added test for Isotropic_Sqw
@@ -739,7 +742,7 @@
     if (!mc_rt_Table.block_number) strcpy(mc_rt_buffer, "catenated");
     else sprintf(mc_rt_buffer, "block %li", mc_rt_Table.block_number);
     printf("Table from file '%s' (%s)", mc_rt_Table.filename, mc_rt_buffer);
-    if (mc_rt_Table.filesize>0) printf(" of size %li", mc_rt_Table.filesize);
+    if (mc_rt_Table.filesize>0) printf(" of size %li", (long)mc_rt_Table.filesize);
     if ((mc_rt_Table.data   != NULL) && (mc_rt_Table.rows*mc_rt_Table.columns))
     {
       printf(" is %li x %li ", mc_rt_Table.rows, mc_rt_Table.columns);

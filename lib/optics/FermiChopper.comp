@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.11 $
+* Version:    $Revision: 1.12 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 *
@@ -96,7 +96,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
   ymin=-0.04, ymax=0.04, w=0.00022475, Nslit=200, R0=0.0,
   Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
-  zero_time=0, width=0, verbose=0,
+  zero_time=0, width=0, verbose=0, height=0,
   rad=0,slit=0,alpham=0,Wi=0,dist=0,Vi=0,curvature=0)
 OUTPUT PARAMETERS(FCVars)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
@@ -249,6 +249,7 @@ INITIALIZE
     printf("FermiChopper: %s: Parameter 'dist' is not valid anymore.\n"
            "WARNING       Use 'phase' instead. Ignoring.\n", NAME_CURRENT_COMP);
 
+  if (height>0) { ymax = height/2; ymin=-ymax; }
   /* check of input parameters */
   if (m <= 0) { m=0; R0=0; }
   if (radius <= 0) {
