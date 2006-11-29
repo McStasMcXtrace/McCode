@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.21 $
+* Version:  $Revision: 1.22 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -264,7 +264,7 @@ INITIALIZE
 
   if(!hfile)
   {
-    fprintf(stderr, "Tripoli4_input: %s: Error: Cannot open input file.\n", NAME_CURRENT_COMP);
+    fprintf(stderr, "Tripoli4_input: %s: Error: Cannot open input file %s.\n", NAME_CURRENT_COMP, file);
     exit(1);
   } else if (verbose)
     printf("Tripoli4_input: %s: opening Tripoli4 file '%s'\n", NAME_CURRENT_COMP, file);
