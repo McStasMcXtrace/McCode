@@ -76,8 +76,14 @@ PGPLOT. In the installer package, we supply a method to install PGPLOT
 and related perl modules - see step \ref{pg_install} below. 
 
 \noindent On Debian and Ubuntu systems, the
-needed packages to install are \texttt{perl-tk, PDL, gcc,
-  libc6-dev}. Other recommended packages are \texttt{scilab, freewrl}.
+needed packages to install are \texttt{perl-tk, pdl, gcc,
+  libc6-dev} (On Ubuntu you need to enable the 'universe' package
+distribution in /etc/apt/soources.list.) 
+
+\noindent We also recommend to install octaga vrml viwer from
+\htmladdnormallink{http://www.octaga.com/download_octaga.html}{http://www.octaga.com/download_octaga.html}
+and scilab-4.0 from
+\htmladdnormallink{http://www.scilab.org}{http://www.scilab.org}
 
 \subsection{Configuration and installation}
 McStas uses autoconf to detect the system configuration and creates the
@@ -92,7 +98,9 @@ should be able to compile and/or install McStas using the following steps:
   \texttt{./configure}}
 \item{Build McStas (only in case of the \verb+mcstas-1.10-src.tar.gz+ package):\\
   \texttt{make}}
-\item{Optionally build/install PGPLOT (as superuser):\\
+\item{Optionally build/install PGPLOT (as superuser - build 
+    dependencies are pdl, g77, libx11-dev, xserver-xorg-dev, libxt-dev
+    on Ubuntu):\\
     \texttt{make install-pgplot \&\& ./configure}
     \label{pg_install}}
 \item{Install McStas (as superuser):\\
