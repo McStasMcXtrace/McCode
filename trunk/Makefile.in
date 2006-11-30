@@ -219,7 +219,7 @@ install-pgplot:
 	cd support/pgplot && ./pgplot.sh && echo "McStas: run './configure; make; make install' again"
 
 install-scilab:
-	cd support/scilab %% ./scilab.sh && echo "McStas: run './configure; make; make install' again"
+	cd support/scilab && ./scilab.sh && echo "McStas: run './configure; make; make install' again"
 
 test:
 	./mcrun.fixpl --test
