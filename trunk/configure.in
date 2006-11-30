@@ -62,11 +62,11 @@ AC_ARG_WITH([pic],
   [USE_PIC=no])
 AC_SUBST(USE_PIC)
 
-AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl support/pgplot/pgplot.sh)
+AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl support/pgplot/pgplot.sh support/scilab/scilab.sh)
 
 chmod a+x support/pgplot/pgplot.sh
+chmod a+x support/scilab/scilab.sh
 chmod a+x lib/tools/perl/mcstas_reconfigure
-chmod a+w lib/tools/perl/mcstas_config.perl
 
 if test "$MAKE" == "no" ; then
   echo "ERROR: McStas installation requires 'make' or 'gmake'"
@@ -135,4 +135,10 @@ else if test "$PGPLOT" == "no" ; then
   echo "Install these and re-run McStas installation ./configure"
   fi
 fi
-
+if test "$SCILAB" == "no" ; then
+  echo "Scilab install: you may try our automatic Scilab installation with"
+  echo ""
+  echo "# make install-scilab; ./configure; make; make install"
+  echo ""
+  echo "(requires Linux/Intel, wget and root priviliges)"
+fi
