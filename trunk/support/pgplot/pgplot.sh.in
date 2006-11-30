@@ -60,7 +60,7 @@ cd $ROOT_SRC
 echo tar xzf ExtUtils-F77-1.13.tar.gz
 gunzip -c ExtUtils-F77-1.13.tar.gz | tar xf -
 cd ExtUtils-F77-1.13
-echo perl Makefile.PL; make; make instal
+echo perl Makefile.PL\; make\; make install
 perl Makefile.PL PREFIX=@prefix@
 make
 make install
@@ -70,7 +70,7 @@ cd $ROOT_SRC
 echo tar xzf PGPLOT-2.18.tar.gz
 gunzip -c PGPLOT-2.18.tar.gz | tar xf -
 cd PGPLOT-2.18
-echo perl Makefile.PL; make; make instal
+echo perl Makefile.PL\; make\; make install
 perl Makefile.PL PREFIX=@prefix@
 make
 make install
