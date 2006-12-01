@@ -73,7 +73,8 @@ and \htmladdnormallink{FreeBSD}{http://www.freebsd.org}.
 applications are required. Essentially, you will need a C compiler,
 Perl and Perl-Tk, as well as a plotter such as Matlab, Scilab or
 PGPLOT. In the installer package, we supply a method to install PGPLOT
-and related perl modules - see step \ref{pg_install} below. 
+and related perl modules - see step \ref{pg_install} below and also
+a method to download and install Scilab for Linux/Intel - see step \ref{sci_install}
 
 \noindent On Debian and Ubuntu systems, the
 needed packages to install are \texttt{perl-tk, pdl, gcc,
@@ -103,6 +104,10 @@ should be able to compile and/or install McStas using the following steps:
     on Ubuntu):\\
     \texttt{make install-pgplot \&\& ./configure}
     \label{pg_install}}
+\item{Optionally download/install Scilab (as superuser - only on Linux
+    with Intel hardware):\\
+    \texttt{make install-scilab \&\& ./configure}
+    \label{sci_install}}
 \item{Install McStas (as superuser):\\
   \texttt{make install}
 \label{makeinst}}
