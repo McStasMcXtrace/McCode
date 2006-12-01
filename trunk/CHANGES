@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -23,11 +23,101 @@
 * Modified by: PW, EF, May 19th 2003: version 1.7
 * Modified by: PW, EF, March 4th 2004: version 1.8
 * Modified by: PW, EF, November 16th 2005: version 1.9
+* Modified by: PW, EF, March 29th 2006: version 1.9.1
+* Modified by: PW, EF, December 4th 2006: version 1.10
 *
-* This file is part of McStas  version 1.9, released November, 16th, 2005.
+* This file is part of McStas  version 1.10, released December, 4th, 2006.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v1.10, Dec 4, 2006
+
+  General
+  - This release is a major step forward for McStas in terms of support for polarisation.
+    Peter Christiansen who worked at Risoe March-October 2006 was the main workforce 
+    behind this new functionality, backed by funding from ISIS, work by Rob Dalgliesh at 
+    ISIS plus functionality of the VitESS and NSIP packages. As this is the first release
+    with polarisation support, the methods and algorithms implemented are probably not the
+    final solution. Hence, documentation of the functionality has been placed in an appendix
+    to the manual. Polarisation users: Please give us feedback for further development!
+    Items marked by (p) below relate to the new polarisation support.
+  - New keywords for the meta language improves support for e.g. description of sample
+    enviroments.
+  - A method for automatic optimisation has been implemented, e.g. for achieving maximum flux
+    at the sample position (any quantity measured by a McStas monitor can be optimised) as a
+    function of simulation parameters.
+  - Bugfixes in many different areas.
+
+  Documentation
+  - Manual and component manual slightly updated according to adding/modification of components
+    and functionality. New appendix on the polarisation features. (p)
+
+  Kernel
+  - New WHEN keyword, conditional use of components,
+        COMPONENT MyComp=Component(...) WHEN (condition) AT
+  - New JUMP keyword, possibility to iterate a given component a number of times (multiple 
+    scattering) or for 'teleportation' to a given component. (USE WITH CAUTION)
+  - Improved COPY keyword with parameter substitution (Make a copy of an other component 
+    instance with a few parameters changed)
+  - Spin propagation algorithm (When magnetic field is set 'on', the central propagation
+    routines also handle Larmor precession in the field) (p)
+  - Handeling of analytical B-fields (p)
+
+  Tools
+  - New 'merge/convert' tool mcformat: Convert between McStas output formats and merge cluster
+    node datasets into one dataset.
+  - TOF mode for mcdisplay (statistical chopper acceptance diagrams generated from the simulated
+    neutron rays)
+  - Optmisation support in mcrun/mcgui using Perl::Amoeba (se description above)
+  - POSIX threading on multi-core processors (BEWARE, performance is generally better using MPI)
+  - mcgui: Note that if you experience crashes when starting/running GNOME/Gtk2 applications, 
+    update your perl-Tk installation. Two ways to do this:
+    1) Get the tarball from http://www.mcstas.org/download/Tk-804.027_gtk2_patch.tar.gz and
+       install using 'perl Makefile.PL && make && make install'.
+    2) Do a 'make tk' in the McStas unpacked McStas source directory. This will download and
+       install the tarball into your McStas system directory.
+
+  Components
+  - Monochromator_pol.comp - Polarising monochromator/analyzer (p)
+  - Pol_bender.comp - Polarising bender (p)
+  - Pol_mirror.comp - Polarising mirror (p)
+  - Pol_guide_vmirror.comp - Guide with semi-transparent, polarising mirror (p)
+  - Pol_simpleBfield.comp - Numerical precession in analytical B-fields (p)
+  - 3 Polarisation monitors - MeanPolLambda_monitor.comp, PolLambda_monitor.comp
+    Pol_monitor.comp (p)
+  - PSD_Detector.comp - Physical detector - comes with many gas lookup tables 
+    (Contrib: Thorwald van Vuure, ILL)
+  - Virtual_mcnp_*.comp - MCNP event file handeling
+    (Contrib: Chama Hennane, ENSIMAG and Emmanuel Farhi, ILL) 
+  - Source_multi_surfaces.comp - Source comp with multiple surface areas with individual
+    spectrums (Contrib: Ludovic Giller, Uwe Filges)
+  - V_sample enriched with quasi-elastic features (Kim Lefmann)
+          
+  Example Instruments
+  - TAS frontend with reciprocal space (hkl) calculator (Emmanuel Farhi)
+  - Example instruments for polarisation comps (p)
+  - QUENS_test.instr (Test of new quasi-elastic features V_sample)
+  
+  Installation
+  - Much easier installation on Windows, single executable file with all support applications
+    is now available. Simply click 'next' alle the way and you are done.
+  - PGPLOT and Scilab installation help tools on Linux systems
+
+  WARNINGS (Almost identical to those from release 1.9.1)
+  - Because of rapid changes in the support software for McStas, the current release has support
+    for only some releases of:
+
+    * Scilab (Win32 and Unix) - pick release 4.0 if available or pick release 3.0 from , e.g. from
+      http://www.scilab.org/download/index_download.php?page=oldReleases.html
+      (Automatically included in the Win32 .exe installer and Linux Scilab installer)
+
+    * Perl (Win32) - on Windows we only support Perl 5.6 - pick
+      http://downloads.activestate.com/ActivePerl/Windows/5.6/ActivePerl-5.6.1.638-MSWin32-x86.msi
+      (Automatically included in the Win32 .exe installer)
+
+    * If you are running Unix with GNOME/Gtk2 applications, you may experience problems with mcgui
+      crashing, please install updated perl-Tk from http://www.mcstas.org/download
+
 Changes in McStas v1.9.1, Mar 29, 2006
 
   General
