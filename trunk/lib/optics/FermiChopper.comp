@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.13 $
+* Version:    $Revision: 1.14 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -611,7 +611,7 @@ TRACE
   if (zero_time > 1 && FCVars.sum_N) { /* automatic phase adjustment */
     double mean_t, mean_phase;
     mean_t     = FCVars.sum_t/FCVars.sum_N;
-    mean_phase = fmod(mean_t*frequency*360, 360);
+    mean_phase = fmod(mean_t*nu*360, 360);
     FCVars.ph0 = mean_phase/360;
   }
 
@@ -630,7 +630,7 @@ SAVE
     /* base opening time */
     double div, mean_phase;
     div        = atan(w/length);
-    mean_phase = fmod(mean_t*frequency*360, 360);
+    mean_phase = fmod(mean_t*nu*360, 360);
     if (mean_phase > 180) mean_phase -= 360;
 
     if (!FCVars.sum_N_pass)
@@ -647,7 +647,7 @@ SAVE
            "              Intensity passing  FC   = %g [n/s]\n"
            , NAME_CURRENT_COMP,
            mean_v, mean_L, mean_w, mean_t, mean_phase,
-           (frequency ? div/PI/frequency : 1),
+           (nu ? div/PI/nu : 1),
            FCVars.sum_N,
            FCVars.sum_N_pass);
     if (!FCVars.sum_N_pass || verbose) {
@@ -694,7 +694,7 @@ MCDISPLAY
   double Nz,Nx;
 
   FCVars.omega=0;
-  FCVars.ph0  =0;
+  // FCVars.ph0  =0;
   Nz = (FCVars.C_slit ?  4 : 1);
   Nx = (Nslit > 11    ? 11 : Nslit);
   FCVars.C_slit *= -1;
