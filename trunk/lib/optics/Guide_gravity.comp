@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.27 $
+* Version: $Revision: 1.28 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -27,16 +27,23 @@
 * The guide can be channeled (k,d,kh parameters). The guide coating
 * specifications may be entered via different ways (global, or for
 * each wall m-value).
+*
 * Waviness (random) may be specified either globally or for each mirror type.
 * Side chamfers (due to substrate processing) may be specified the same way.
 * In order to model a realistic straight guide assembly, a long guide of
 * length 'l' may be splitted into 'nelements' between which chamfers/gaps are
 * positioned.
+*
 * The reflectivity may be specified either using an analytical mode (see
 * Component manual) or as a text file in free format, with 1st
 * column as q[Angs-1] and 2nd column as the reflecitivty in [0-1].
 * For details on the geometry calculation see the description in the McStas
 * component manual.
+*
+* There is a special rotating mode in order to approximate a Fermi Chopper
+* behaviour, in the case the neutron trajectory is nearly linear inside the
+* chopper slits, i.e. the neutrons are fast w/r/ to the chopper speed.
+* Slits are straight, but may be super-mirror coated.
 *
 * Example: Guide_gravity(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=12,
 *           R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003)
@@ -50,15 +57,15 @@
 *
 * w1:      (m)    Width at the guide entry
 * h1:      (m)    Height at the guide entry
-* w2:      (m)    Width at the guide exit
-* h2:      (m)    Height at the guide exit
+* w2:      (m)    Width at the guide exit. If 0, use w1.
+* h2:      (m)    Height at the guide exit. If 0, use h1.
 * l:       (m)    length of guide
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
 * alpha:   (AA)   Slope of reflectivity
 * m:       (1)    m-value of material. Zero means completely absorbing.
 * W:       (AA-1) Width of supermirror cut-off
-* d:       (m)    Thicxkness of subdividing walls
+* d:       (m)    Thickness of subdividing walls
 * k:       (1)    Number of vertical channels in the guide (>= 1)
 *                 (k-1 vertical dividing walls).
 *
@@ -82,6 +89,8 @@
 * chamfers_tb:(m) Chamfers on top/bottom mirror sides
 * nelements:  (1) Number of sections in the guide (length l/nelements).
 * reflect:  (str) Reflectivity file name. Format [q(Angs-1) R(0-1)]
+* nu:        (Hz) Rotation frequency (round/s) for Fermi Chopper approximation
+* phase:    (deg) Phase shift for the Fermi Chopper approximation
 *
 * OUTPUT PARAMETERS
 *
@@ -100,18 +109,19 @@
 
 DEFINE COMPONENT Guide_gravity
 DEFINITION PARAMETERS (string reflect=0)
-SETTING PARAMETERS (w1, h1, w2, h2, l,
+SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005,
   mleft=-1, mright=-1, mtop=-1, mbottom=-1, kh=1, G=0,
   wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
-  chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1)
+  chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
+  nu=0, phase=0)
 OUTPUT PARAMETERS (GVars, pTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
 %{
 #ifndef Gravity_guide_Version
-#define Gravity_guide_Version "$Revision: 1.27 $"
+#define Gravity_guide_Version "$Revision: 1.28 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
@@ -144,6 +154,7 @@ SHARE
     double wav_lr, wav_tb, wav_z;
     double chamfer_z, chamfer_lr, chamfer_tb;
     char   compcurname[256];
+    double fc_freq, fc_phase;
   } Gravity_guide_Vars_type;
 
   void Gravity_guide_Init(Gravity_guide_Vars_type *aVars,
@@ -152,7 +163,8 @@ SHARE
     MCNUM a_Gx, MCNUM a_Gy, MCNUM a_Gz,
     MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_kh,
     MCNUM a_wavy_lr, MCNUM a_wavy_tb, MCNUM a_wavy_z, MCNUM a_wavy,
-    MCNUM a_chamfers_z, MCNUM a_chamfers_lr, MCNUM a_chamfers_tb, MCNUM a_chamfers)
+    MCNUM a_chamfers_z, MCNUM a_chamfers_lr, MCNUM a_chamfers_tb, MCNUM a_chamfers,
+    MCNUM a_nu, MCNUM a_phase)
   {
     int i;
 
@@ -223,6 +235,9 @@ SHARE
       aVars->chamfer_lr=a_chamfers_lr;
       aVars->chamfer_tb=a_chamfers_tb;
     }
+
+    aVars->fc_freq  = a_nu;
+    aVars->fc_phase = a_phase;
   }
 
   int Gravity_guide_Trace(double *dt,
@@ -328,6 +343,13 @@ INITIALIZE
   { fprintf(stderr,"Guide_gravity: %s: k kh must be >0.\n", NAME_CURRENT_COMP);
     exit(-1); }
 
+  if (!w1 || !h1)
+  { fprintf(stderr,"Guide_gravity: %s: input widow is closed (w1=h1=0).\n", NAME_CURRENT_COMP);
+    exit(-1); }
+
+  if (!w2) w2=w1;
+  if (!h2) h2=h1;
+
   if (mcgravitation) G=-GRAVITY;
   mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,G,0));
   coords_get(mcLocG, &Gx, &Gy, &Gz);
@@ -335,14 +357,18 @@ INITIALIZE
   strcpy(GVars.compcurname, NAME_CURRENT_COMP);
 
   if (l > 0 && nelements > 0) {
+
     Gravity_guide_Init(&GVars,
       w1, h1, w2, h2, l, R0,
       Qc, alpha, m, W, k, d,
       Gx, Gy, Gz, mleft, mright, mtop,
       mbottom, kh, wavy_lr, wavy_tb, wavy_z, wavy,
-      chamfers_z, chamfers_lr, chamfers_tb, chamfers);
+      chamfers_z, chamfers_lr, chamfers_tb, chamfers,nu,phase);
     if (!G) for (i=0; i<5; GVars.A[i++] = 0);
-  }
+    if (GVars.fc_freq != 0 || GVars.fc_phase != 0)
+      printf("Guide_gravity: %s: Fermi Chopper mode: frequency=%g [Hz] phase=%g [deg]\n",
+        NAME_CURRENT_COMP, GVars.fc_freq, GVars.fc_phase);
+  } else printf("Guide_gravity: %s: unactivated (l=0 or nelements=0)\n", NAME_CURRENT_COMP);
 
 %}
 
@@ -352,6 +378,26 @@ TRACE
     double B, C, dt;
     int    ret, bounces = 0;
     double this_width, this_height;
+    double angle=0;
+
+    if (GVars.fc_freq != 0 || GVars.fc_phase != 0) { /* rotate neutron w/r to guide element */
+      /* approximation of rotating straight Fermi Chopper */
+      Coords   X = coords_set(x,y,z-l/2);  /* current coordinates of neutron in centered static frame */
+      Rotation R;
+      angle=fmod(360*GVars.fc_freq*t+GVars.fc_phase, 360); /* in deg */
+      /* modify angle so that Z0 guide side is always in front of incoming neutron */
+      if (angle > 90 && angle < 270) angle -= 180;
+      angle *= DEG2RAD;
+      rot_set_rotation(R, 0, -angle, 0); /* will rotate neutron instead of comp: negative side */
+      /* apply rotation to centered coordinates */
+      Coords   RX = rot_apply(R, X);
+      coords_get(RX, &x, &y, &z);
+      z = z+l/2;
+      /* rotate speed */
+      X  = coords_set(vx,vy,vz);
+      RX = rot_apply(R, X);
+      coords_get(RX, &vx, &vy, &vz);
+    }
 
     /* propagate to box input (with gravitation) in comp local coords */
     /* A = 0.5 n.g; B = n.v; C = n.(r-W); */
@@ -428,7 +474,7 @@ TRACE
         if (side == 5) /* neutron reaches end of guide: end loop and exit comp */
           { GVars.N_reflection[side]++; x += w_adj; y += h_adj; SCATTER; x -= w_adj; y -= h_adj; break; }
         /* else reflection on a guide wall */
-        if(GVars.M[side] == 0 || Qc == 0)  /* walls are absorbing */
+        if(GVars.M[side] == 0 || Qc == 0 || R0 == 0)  /* walls are absorbing */
           { x += w_adj; y += h_adj; ABSORB; }
         /* handle chamfers */
         this_width = w1+(w2-w1)*z/l;
@@ -479,6 +525,22 @@ TRACE
       } /* end for */
       x += w_adj; y += h_adj; /* Re-adjust origin after SCATTER */
     }
+
+    if (GVars.fc_freq != 0 || GVars.fc_phase != 0) { /* rotate back neutron w/r to guide element */
+      /* approximation of rotating straight Fermi Chopper */
+      Coords   X = coords_set(x,y,z-l/2);  /* current coordinates of neutron in centered static frame */
+      Rotation R;
+      rot_set_rotation(R, 0, angle, 0); /* will rotate back neutron: positive side */
+      /* apply rotation to centered coordinates */
+      Coords   RX = rot_apply(R, X);
+      coords_get(RX, &x, &y, &z);
+      z = z+l/2;
+      /* rotate speed */
+      X  = coords_set(vx,vy,vz);
+      RX = rot_apply(R, X);
+      coords_get(RX, &vx, &vy, &vz);
+    }
+
   } /* if l */
 %}
 
@@ -490,13 +552,14 @@ MCDISPLAY
     int i,j,n;
     double x1,x2,x3,x4;
     double y1,y2,y3,y4;
+    double nel = (nelements > 11 ? 11 : nelements);
 
     magnify("xy");
-    for (n=0; n<nelements; n++)
+    for (n=0; n<nel; n++)
     {
       double z0, z1;
-      z0 = n*(l/nelements);
-      z1 = (n+1)*(l/nelements);
+      z0 =     n*(l/nel);
+      z1 = (n+1)*(l/nel);
 
       for(j = 0; j < kh; j++)
       {
@@ -526,6 +589,14 @@ MCDISPLAY
         line(-w1/2.0, y1, z0, w1/2.0, y1, z0);
         line(-w2/2.0, y2, z1, w2/2.0, y2, z1);
       }
+    }
+
+    if (nu || phase) {
+      double radius = sqrt(w1*w1+l*l);
+      /* cylinder top/center/bottom  */
+      circle("xz", 0,-h1/2,0,radius);
+      circle("xz", 0,0    ,0,radius);
+      circle("xz", 0, h1/2,0,radius);
     }
   }
   else {
