@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.14 $
+* Version:    $Revision: 1.15 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -76,8 +76,9 @@
 * rad, slit, alpham,Wi,dist,Vi
 *
 * Constants to reset time of flight:
-* zero_time: (1)    set time to zero: 0=no,  1=once per half cycle, 2=auto adjust phase
-* phase:   (deg)    chopper phase at t=0
+* zero_time: (1)  set time to zero: 0=no,  1=once per half cycle, 2=auto adjust phase
+* phase:   (deg)  chopper phase at t=0
+* time:      (s)  sets phase so that transmision is centered on 'time'
 *
 * OUTPUT PARAMETERS:
 * FCVars :  (-)     structure
@@ -95,7 +96,7 @@ SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
   ymin=0, ymax=0, w=0.00022475, Nslit=200, R0=0.0,
   Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
   zero_time=0, width=0, verbose=0, height=0.08,
-  rad=0,slit=0,alpham=0,Wi=0,dist=0,Vi=0,curvature=0)
+  rad=0,slit=0,alpham=0,Wi=0,dist=0,Vi=0,curvature=0,time=0)
 OUTPUT PARAMETERS(FCVars)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
@@ -250,7 +251,9 @@ INITIALIZE
 
 /************************ CALCULATION CONSTANTS *****************************/
   FCVars.omega    = 2*PI*nu;
-  FCVars.ph0      = phase/360;
+  if (!phase && time) {
+     FCVars.ph0= fmod(-time*nu*360,360)*DEG2RAD;
+  } else FCVars.ph0      = phase*DEG2RAD;
   FCVars.sum_t=FCVars.sum_v=FCVars.sum_N=FCVars.sum_N_pass=0;
 
   /* compatibility parameters */
@@ -308,8 +311,8 @@ INITIALIZE
   }
   FCVars.L_slit = length;
   if (verbose && nu)
-    printf("FermiChopper: %s: frequency=%g [Hz] %g [rpm], time frame=%g [s]\n"
-      , NAME_CURRENT_COMP, nu, nu*60, 2/nu);
+    printf("FermiChopper: %s: frequency=%g [Hz] %g [rpm], time frame=%g [s] phase=%g [deg]\n"
+      , NAME_CURRENT_COMP, nu, nu*60, 2/nu, FCVars.ph0*RAD2DEG);
 
   FCVars.absorb_alreadyinside    = 0;
   FCVars.absorb_topbottom        = 0;
