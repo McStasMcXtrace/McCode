@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -121,7 +121,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef Gravity_guide_Version
-#define Gravity_guide_Version "$Revision: 1.28 $"
+#define Gravity_guide_Version "$Revision: 1.29 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
@@ -407,8 +407,9 @@ TRACE
     ret = solve_2nd_order(&dt, GVars.A[0], B, C);
     if (ret==0) ABSORB;
 
-    if (dt!=0.0) PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz);
-    if (dt>0.0)  GVars.N_reflection[6]++;
+    if (dt>0.0) PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz); else if (angle) ABSORB;
+    GVars.N_reflection[6]++;
+
     this_width  = w1;
     this_height = h1;
 
