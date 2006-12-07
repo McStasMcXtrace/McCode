@@ -12,7 +12,7 @@
 * Written by: Geza Zsigmond
 * Date: Sep 2004
 * Origin: VITESS module 'chopper_fermi'
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Release: McStas 1.9
 * Modified by: adapted for McStas by <a href="mailto:lieutena@ill.fr">K. Lieutenant</a>, Mar 2005;
 *
@@ -201,9 +201,9 @@ MCDISPLAY
   double index=0;
   double xpos, zpos, ymin, ymax, rad, w_ch;
   w_ch = (width - (Nchannels+1) * wallwidth) / Nchannels;
-  rad  = diameter/2.0;
-  ymin = -height/2.0;
-  ymax =  height/2.0;
+  rad  = diameter/2.0/100;
+  ymin = -height/2.0/100;
+  ymax =  height/2.0/100;
   magnify("xz");
   /* cylinder top/center/bottom  */
   circle("xz", 0,ymax,0,rad);
@@ -216,7 +216,7 @@ MCDISPLAY
   line( rad,ymin, 0  , rad,ymax, 0  );
   /* slit package */
   index = -Nchannels/2;
-  zpos  = depth/2;
+  zpos  = depth/2/100;
   for (index = -Nchannels/2; index < Nchannels/2; index++) {
     xpos = index*w_ch;
     multiline(5, xpos, ymin, -zpos,
