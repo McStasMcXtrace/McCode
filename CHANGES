@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.27 $
+* Version: $Revision: 1.28 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -36,10 +36,11 @@ Changes in McStas v1.10, Dec 4, 2006
   - This release is a major step forward for McStas in terms of support for polarisation.
     Peter Christiansen who worked at Risoe March-October 2006 was the main workforce 
     behind this new functionality, backed by funding from ISIS, work by Rob Dalgliesh at 
-    ISIS plus functionality of the VitESS and NSIP packages. As this is the first release
-    with polarisation support, the methods and algorithms implemented are probably not the
-    final solution. Hence, documentation of the functionality has been placed in an appendix
-    to the manual. Polarisation users: Please give us feedback for further development!
+    ISIS and inspiration from the VitESS and NISP packages. As this is the first release
+    with polarisation support, the methods and algorithms implemented will certainly be 
+    developed further. Hence, documentation of the functionality has been placed in an 
+    appendix to the manual. 
+    Polarisation users: Please give us feedback for further development!
     Items marked by (p) below relate to the new polarisation support.
   - New keywords for the meta language improves support for e.g. description of sample
     enviroments.
