@@ -12,7 +12,7 @@
 * Written by: Geza Zsigmond
 * Date: Sep 2004
 * Origin: VITESS module 'chopper_fermi'
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Release: McStas 1.9
 * Modified by: adapted for McStas by <a href="mailto:lieutena@ill.fr">K. Lieutenant</a>, Mar 2005;
 *
@@ -200,6 +200,7 @@ MCDISPLAY
 %{
   double index=0;
   double xpos, zpos, ymin, ymax, rad, w_ch;
+  Nchannels = (Nchannels > 11 ? 11 : Nchannels);
   w_ch = (width - (Nchannels+1) * wallwidth) / Nchannels;
   rad  = diameter/2.0/100;
   ymin = -height/2.0/100;
