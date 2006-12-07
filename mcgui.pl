@@ -839,6 +839,7 @@ sub menu_run_simulation {
             push @command, "--optim=$newsi->{'First'}" if $newsi->{'First'};
             push @command, "--optim=$newsi->{'Last'}" if $newsi->{'Last'};
           }
+	  push @command, "--optim-prec=$newsi->{'Prec'}" if $newsi->{'Prec'};
         } # end Mode=Optimize
         elsif ($newsi->{'Mode'} == 0) { # simulate
           push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix"
