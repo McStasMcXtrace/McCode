@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -91,9 +91,14 @@ Changes in McStas v1.10, Dec 4, 2006
   - Virtual_mcnp_*.comp - MCNP event file handeling
     (Contrib: Chama Hennane, ENSIMAG and Emmanuel Farhi, ILL) 
   - Source_multi_surfaces.comp - Source comp with multiple surface areas with individual
-    spectrums (Contrib: Ludovic Giller, Uwe Filges)
+    spectrums 
+    (Contrib: Ludovic Giller, EPFL and Uwe Filges, PSI)
+  - multi_pipe.comp - Defines a 'grid' of slits (focusing device)
+    (Contrib: Uwe Filges, PSI)
   - Exact_radial_coll.comp - Radial collimator comp, exact model
     (Contrib: Roland Schedler, HMI)
+  - FermiChopper_ILL.comp  - Fermi Chopper comp with optional supermirror coated blades.
+    (Contrib: Helmut Schober, ILL)
   - V_sample enriched with quasi-elastic features (Kim Lefmann)
           
   Example Instruments
