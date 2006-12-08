@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -67,8 +67,8 @@ Changes in McStas v1.10, Dec 4, 2006
   Tools
   - New 'merge/convert' tool mcformat: Convert between McStas output formats and merge cluster
     node datasets into one dataset.
-  - TOF mode for mcdisplay (statistical chopper acceptance diagrams generated from the simulated
-    neutron rays)
+  - TOF mode for mcdisplay (Statistical chopper acceptance diagrams generated from the simulated
+    neutron rays. Currently only supported on Unix systems with PGPLOT.)
   - Optmisation support in mcrun/mcgui using Perl::Amoeba (se description above)
   - POSIX threading on multi-core processors (BEWARE, performance is generally better using MPI)
   - mcgui: Note that if you experience crashes when starting/running GNOME/Gtk2 applications, 
