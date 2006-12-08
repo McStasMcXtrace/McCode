@@ -1,0 +1,327 @@
+/***********************************************************************
+*
+* McStas, version 1.2 released February 2000
+*         Maintained by Kristian Nielsen and Kim Lefmann,
+*         Risoe National Laboratory, Roskilde, Denmark
+*
+* %IDENTIFICATION
+*
+* Author: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
+* Date: 07 March 2000
+* Version: $Revision: 1.12 $
+* Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
+* Modified by: EF, 2004. Obsoleted as it is not stable/working
+*
+* Curved linear 1D MSGC PSD
+*
+* %DESCRIPTION
+*
+* A curved linear 1D PSD monitor using a cylindrical projection. This detector type is commonly
+* used in constant wavelength neutron powder diffraction, based either on multiwire- (MWGC) or
+* microstrip- (MSGC) gaschamber technology. This implementation is mainly pushed by the MSGC
+* realisation (D20) of such a PSD, as done on D20 at ILL. So some kind of 'polygonality' effect
+* resulting from the polygonal arrangement of MSGC plates will be considered in the near future
+* by an approximation of the electron avalanche trace in the electrical field.
+* OBSOLETE: rather use monitors/Monitor_nD with options="... banana ..."
+*
+* %PARAMETERS
+*
+* INPUT PARAMETERS:
+*
+* radius: (m)   Radius of detector at center of MSGC plate (=radius in <a href="PSD_entry.html">PSD_entry</a> + gap)  (1.471)
+* height: (m)   Height of detector (=height in <a href="PSD_entry.html">PSD_entry</a>)          (0.15)
+* nd:   (1)   Number of cells (=nd in <a href="PSD_entry.html">PSD_entry</a>)           (1536)
+* pitch:  (deg)   angular pitch (=pitch in <a href="PSD_entry.html">PSD_entry</a>)          (0.1)
+* gap:    (m)   gaschamber detection gap                    (0.053)
+* filename: (string)  Name of file in which to store the detector image             (NULL)
+* sign:   (1)   Chirality of 1st diffractometer axis=sign[takeoff of <a href="../d20adapt.instr">d20adapt.instr]</a>  (-1)
+* tt0:    (deg)   Angular position of 1st PSD cell (=tt0 in <a href="PSD_entry.html">PSD_entry</a>)     (0)
+* pdet:   (bar)   Pressure of 3He detection gas                   (1.2)
+* pT_trace: (m)   Average effective length of proton/tritium trace              (0.005)
+* period: (1)   Number of detection cells per MSGC plate (=period in <a href="PSD_entry.html">PSD_entry</a>)    (32)
+* cellwidth:  (m)   Width of one detection cell on a MSGC plate               (0.002568)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:      (*1)    Array of neutron counts
+* PSD_p:      (*1.0)    Array of neutron weight counts
+* PSD_p2:     (*1.0)    Array of second moments
+* alpha:  (rad)   Angle covered by one MSGC plate
+* R1:   (m)   PSD radius at MSGC edge
+*
+* %LINKS
+* <a href="../d20adapt.instr">Source code of d20adapt.instr</a>, where this component is used
+* %LINKS
+* <a href="PSD_entry.html">Source code of PSD_entry.comp</a>, a corresponding entry window
+*
+* %END
+*
+***********************************************************************/
+
+
+DEFINE COMPONENT PSD_curved
+DEFINITION PARAMETERS ( radius, height, nd, pitch, gap, filename, sign, tt0, pdet, pT_trace, period, cellwidth)
+SETTING PARAMETERS ()
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, alpha, R1)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+DECLARE
+%{
+    int   PSD_N[3601];
+    double  PSD_p[3601];
+    double  PSD_p2[3601];
+  double  alpha, R1;
+%}
+INITIALIZE
+%{
+  int i;
+
+  alpha=period*pitch/360.0*PI;
+  R1=radius/cos(alpha);
+  for (i=0; i<nd; i++)
+    {
+      PSD_N [i] = 0;
+      PSD_p [i] = 0;
+      PSD_p2[i] = 0;
+    }
+%}
+TRACE
+%{
+  double l,phi,v, l_full, t0, dt, t1, t2,t3, twotheta,eff,p_detection;
+  double psi,theta, ax,ay,az, tx,ty,tz, ox,oy,oz, bx,by,bz;
+  double x0,z0,R2,x1,z1,twotheta1,twotheta0,xp0,zp0,xp1,zp1,xx,zz,tmp;
+  int    i0,i1,i,plate0,plate1;
+
+  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius-gap, height) /* && t1 > 0 */)
+  {
+      /*if(t0 < 0) t0 = t1;*/
+      if(t0 < t1) t0 = t1;
+      /*PROP_DT(t0);*/
+  x+=vx*t0;
+  y+=vy*t0;
+  z+=vz*t0;
+  t+=t0;
+  SCATTER; /* incomming neutron */
+  /* if ((double)sign*twotheta/PI*180. < tt0-pitch)        ABSORB; */
+  /* if ((double)sign*twotheta/PI*180. > tt0+(nd+1)*pitch) ABSORB; */
+  /* Polygonality effect in MSGC PSD - the detection gap is not really constant ... */
+  /* Where would the n hit, if the outer radius is where the plates are closest to the entry */
+      cylinder_intersect(&t2, &t3, x, y, z, vx, vy, vz, radius, height);
+      if(t2 < 0) t2 = t3;
+  x0=x+t3*vx;
+  z0=z+t3*vz;
+      twotheta0 = -atan2(x0,z0);
+      i0 = floor(0.5+((double)sign*twotheta0/PI*180.0-tt0)/pitch);
+  plate0=i0/period;
+  /*
+  printf("\nplate: %d, cell %d, twotheta %lf\n",plate0,i0,twotheta0/PI*180.0);
+  */
+  /* Where would the n hit, if the outer radius is where two plates join */
+      cylinder_intersect(&t2, &t3, x, y, z, vx, vy, vz, R1, height);
+      if(t2 < 0) t2 = t3;
+  x1=x+t3*vx;
+  z1=z+t3*vz;
+      twotheta1 = -atan2(x1,z1);
+      i1 = floor(0.5+((double)sign*twotheta1/PI*180.0-tt0)/pitch);
+  plate1=i1/period;
+  /*
+  printf("plate: %d, cell %d, twotheta %lf\n",plate1,i1,twotheta1/PI*180.0);
+  */
+  /* We try now to get the radius R2 where the n hits the plate */
+    twotheta=(tt0-pitch/2.0+(plate0+0.5)*period*pitch)*PI/180.0;
+  /*
+  printf("twotheta of plate %d: %lf\n",plate0,twotheta*180.0/PI);
+    */
+    zp0=cos(twotheta-alpha)*R1;
+  xp0=sin(twotheta-alpha)*R1;
+  zp1=cos(twotheta+alpha)*R1;
+  xp1=sin(twotheta+alpha)*R1;
+  xx = (z0-(z1 -z0 )/(x1 -x0 )*x0) - (zp0-(zp1-zp0)/(xp1-xp0)*xp0);
+  xx/=     (zp1-zp0)/(xp1-xp0)     -      (z1 -z0 )/(x1 -x0 );
+  zz = (z0-(z1 -z0 )/(x1 -x0 )*x0) +      (z1 -z0 )/(x1 -x0 )     * xx ;
+  /*
+  printf("mt=%lf;bt=%lf \n",(z1 -z0 )/(x1 -x0 ),(z0 -(z1 -z0 )/(x1 -x0 )*x0 ));
+  printf("mp=%lf;bp=%lf \n",(zp1-zp0)/(xp1-xp0),(zp0-(zp1-zp0)/(xp1-xp0)*xp0));
+  printf("xx[0]=%lf;zz[0]=%lf\n",xx,zz);
+  */
+  R2=sqrt(xx*xx+zz*zz);
+  /*
+  printf("R0=%lf;R1=%lf;R2=%lf\n",radius,R1,R2);
+  printf("neutron hits plate %d (radius %lf < %lf < %lf) %lf %lf\n",plate0,radius,R2,R1,sqrt(x0*x0+z0*z0),sqrt(x1*x1+z1*z1));
+  printf("twotheta = %lf to %lf\n",twotheta0/PI*180.0,twotheta1/PI*180.0);
+  printf("plate %d (%lf,%lf) to (%lf,%lf)\n",plate0,xp0,zp0,xp1,zp1);
+  printf("n hits between (%lf,%lf) and (%lf,%lf)\n",x0,z0,x1,z1);
+  printf("%lf of plate \n",b);
+  */
+  if (plate1 != plate0)
+  {
+      twotheta=(tt0-pitch/2.0+(plate1+1)*period*pitch)*PI/180.0;
+      zp0=cos(twotheta-alpha)*R1;
+    xp0=sin(twotheta-alpha)*R1;
+    zp1=cos(twotheta+alpha)*R1;
+    xp1=sin(twotheta+alpha)*R1;
+    xx = (z0-(z1 -z0 )/(x1 -x0 )*x0) - (zp0-(zp1-zp0)/(xp1-xp0)*xp0);
+    xx/=     (zp1-zp0)/(xp1-xp0)     -      (z1 -z0 )/(x1 -x0 );
+    zz = (z0-(z1 -z0 )/(x1 -x0 )*x0) +      (z1 -z0 )/(x1 -x0 )     * xx ;
+    tmp=sqrt(xx*xx+zz*zz);
+    if (tmp<R2)
+    {
+      R2=tmp;
+      /*
+      printf("neutron hits plate %d (radius %lf < %lf < %lf)\n",plate1,radius,R2,R1);
+      */
+    }
+    /*
+    else printf("neutron hits plate %d (radius %lf < %lf < %lf)\n",plate0,radius,R2,R1);
+    */
+  }
+    if (R2 > R1)
+  {
+    /*
+    printf("neutron hits plate %d or %d (radius %lf < %lf < %lf)\n",plate0,plate1,radius,R2,R1);
+    printf("##############################################################\n");
+    */
+    R2=R1;
+  }
+  /* Now we got the virtual outer radius R2 which is in between 'radius' and 'R1' */
+      cylinder_intersect(&t2, &t3, x, y, z, vx, vy, vz, R2, height);
+      if(t2 < 0) t2 = t3;
+  /* The following thing is not working as exspected to trace the trajectory of a neutron through the detection gap
+      PROP_DT(t2);
+      SCATTER;
+      PROP_DT(-t2);
+      SCATTER;
+  */
+  x+=vx*t2;
+  y+=vy*t2;
+  z+=vz*t2;
+  SCATTER;
+  x-=vx*t2;
+  y-=vy*t2;
+  z-=vz*t2;
+  SCATTER;
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+      l_full = v * (t3);             /* Length of full path through sample */
+  /*
+  printf("Trajectory in gap %lfmm (%lf microsecs), ",l_full*1000,t3*1000000);
+      */
+      eff=1.0-exp(-0.07417*pdet*l_full*100.0*VL/v); /*  VL  = 1e10*HBAR*2*PI/MNEUTRON; */
+      dt = (t3) * -log(rand01()*(eff)+1.0-eff);/* + t0*/
+  /*
+  printf("efficiency %lf percent, capture after %lfmm\n",eff*100,dt*v*1000);
+      */
+      PROP_DT(dt);
+      SCATTER;                  /* Point of capture */
+      l = v*dt;                     /* Penetration in detector */
+      p_detection=p*eff;
+      p*=1-eff;         /* a not detected (=captured) neutron may continue the flightpath!) */
+      /* Now, 2Theta for the place, where the neutron should have been detected ... */
+  twotheta = -atan2(x,z);
+  /* target vector b from neutron to PSD (in plane: y=0) */
+  bx= sin(twotheta)*radius-x;
+  by= 0.0;
+  bz= cos(twotheta)*radius-z;
+  /* axis a perpendicular to neutron vector v */
+  vec_prod(ax,ay,az, vx,vy,vz,        bx,by,bz);
+  /* MC choice of angle component psi in a circle */
+  psi  =2*PI*rand01();
+  /* rotation in circle of neutron vector v around axis a (in plane) -> temporary trace vector t */
+  rotate  (tx,ty,tz, vx,vy,vz, psi,   ax,ay,az);
+  /* MC choice of second angle component in a sphere */
+  theta=acos(randpm1());
+  /* rotation in sphere of temporary trace vector t (out of plane) -> output pT trace vector o */
+  rotate  (ox,oy,oz, tx,ty,tz, theta, vx,vy,vz);
+  /* vx=ox;vy=oy;vz=oz;  - NOT the neutron changes it's direction but the pT trace o */
+  NORM(ox,oy,oz);
+  /* neutron is virtually detected at about a quarter of the total p/T trace length from capture */
+  ox*=pT_trace/4.0;
+  oy*=pT_trace/4.0;
+  oz*=pT_trace/4.0;
+  x+=ox;y+=oy;z+=oz;
+  /* SHOW the part of pT trace leading to the point of virtual neutron capture detcted by the cas chamber PSD */
+  SCATTER;
+  /* NOW 2Theta and phi is calculated for the gravicenter of electron avalanche */
+      twotheta = -atan2(x,z);
+      phi = asin(y/radius);
+      /* i = floor(0.5+(nx-1)*( (double)sign*twotheta/(2*PI) - tt0/360.)); */
+      i = floor(0.5+((double)sign*twotheta/PI*180.0-tt0)/pitch);
+      if ((i<nd && i>=0))
+      {
+          PSD_N [i] ++;
+          PSD_p [i] += p_detection;
+          PSD_p2[i] += p_detection*p_detection;
+    }
+      else
+      {
+        ABSORB;
+      }
+ }
+ else
+ {
+  ABSORB;
+ }
+ /* Yes, indeed, ABSORB IS a good idea for non-detected neutrons, as they do not interest anymore, and to use Check_adapt afterwards! */
+%}
+FINALLY
+%{
+  int i;
+  double total=0.0,histories=0.0;
+  char  string[40];
+
+  for (i=0;i<nd;i++)
+  {
+    total+=PSD_p[i];
+    histories+=PSD_N[i];
+  }
+  sprintf(string,"Curved lin. PSD %9.4lgn/s (%8.3lg events)",total,histories);
+  DETECTOR_OUT_1D(
+        string,
+        "2theta [deg]",
+        "Intensity",
+        "twotheta", tt0, tt0+nd*pitch, nd,
+        &PSD_N[0],&PSD_p[0],&PSD_p2[0],
+        filename);
+%}
+
+MCDISPLAY
+%{
+  double R2,x0,x1,z1,z0,twotheta,beta;
+  int plate,cell;
+
+  magnify("xyz");
+  R1=radius/cos(period*pitch/360.0*PI);
+  for (plate=0;plate<ceil((double)nd/(double)period);plate++)
+  {
+    twotheta=(tt0-pitch/2.0+(plate+0.5)*period*pitch)*PI/180.0;
+  beta=atan(period/2.0*cellwidth/radius);
+  R2=radius/cos(beta);
+    z0=cos(twotheta-beta)*R2;
+  x0=sin(twotheta-beta)*R2;
+  z1=cos(twotheta+beta)*R2;
+  x1=sin(twotheta+beta)*R2;
+    line(x0,-height/2.0, z0,x1,-height/2.0, z1);
+    line(x0,+height/2.0, z0,x1,+height/2.0, z1);
+    line(x0,-height/2.0, z0,x0,+height/2.0, z0);
+    line(x1,-height/2.0, z1,x1,+height/2.0, z1);
+  for (cell=0;cell<period;cell++)
+  {
+    circle("xz",x0+((double)cell+0.5)*(x1-x0)/(double)period,0,z0+((double)cell+0.5)*(z1-z0)/(double)period,cellwidth/2.0);
+  }
+  }
+  R2=radius-gap;
+  twotheta=(tt0-pitch/2.0)*PI/180.0;
+  z0=cos(twotheta)*R2;
+  x0=sin(twotheta)*R2;
+  line(x0, -height/2.0,z0,x0, height/2.0,z0);
+  for (cell=1;cell<=ceil((double)nd/(double)period)*period;cell++)
+  {
+    twotheta=(tt0-pitch/2.0+pitch*cell)*PI/180.0;
+  z1=cos(twotheta)*R2;
+  x1=sin(twotheta)*R2;
+  line(x0, -height/2.0,z0,x1, -height/2.0,z1);
+  line(x0,  height/2.0,z0,x1,  height/2.0,z1);
+  /* printf("%4d %10.5lf %10.5lf %10.5lf %10.5lf\n",cell ,x0,  z0,x1,z1);*/
+    x0=x1; z0=z1;
+  }
+  line(x0, -height/2.0,z0,x0, height/2.0,z0);
+%}
+END

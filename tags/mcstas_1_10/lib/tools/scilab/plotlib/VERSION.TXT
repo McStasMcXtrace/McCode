@@ -1,0 +1,13 @@
+*******************************
+Plotlib for Scilab distribution
+*******************************
+
+The author (Stephane Mottelet <stephane.mottelet@dma.utc.fr>)
+of plotlib has kindly allowed us to redistribute his work.
+
+The files in this directory + subdirs have been have been taken
+from plotlib v. 018b, available from
+
+http://www.dma.utc.fr/~mottelet/myplot.html
+
+The McStas team, September 22nd 2003

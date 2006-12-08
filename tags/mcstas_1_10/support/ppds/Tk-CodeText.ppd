@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOFTPKG NAME="Tk-CodeText" VERSION="0,3,4,0">
+  <IMPLEMENTATION>
+    <CODEBASE HREF="MSWin32-x86-multi-thread/Tk-CodeText-0.3.4.tar.gz" />
+    <DEPENDENCY NAME="Syntax-Highlight-Perl" VERSION="0,0,0,0" />
+    <ARCHITECTURE NAME="MSWin32-x86-multi-thread" />
+    <OS NAME="MSWin32" />
+  </IMPLEMENTATION>
+  <ABSTRACT>a TextUndo widget with syntax highlight capabilities</ABSTRACT>
+  <AUTHOR>Hans Jeuken (haje@toneel.demon.nl)</AUTHOR>
+  <TITLE>Tk-CodeText</TITLE>
+</SOFTPKG>

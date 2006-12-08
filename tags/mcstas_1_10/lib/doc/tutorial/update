@@ -1,0 +1,10 @@
+#!/bin/sh
+latex tutorial
+latex tutorial
+latex2html -local_icons tutorial
+mv tutorial html
+dvips tutorial.dvi -o tutorial.ps
+dvipdf tutorial.dvi -o tutorial.pdf
+rm tutorial.aux
+rm tutorial.log
+rm tutorial.dvi

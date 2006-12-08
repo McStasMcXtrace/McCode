@@ -1,0 +1,7 @@
+ GCW Get the number of current window.
+
+    w = gcw() returns the number of the currently active
+graphic window. A window is created if no one existed
+before the call.
+
+    See also fig, delete, clf, shg.                     

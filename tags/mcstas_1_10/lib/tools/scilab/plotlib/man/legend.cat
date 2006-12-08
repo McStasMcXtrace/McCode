@@ -1,0 +1,38 @@
+ LEGEND Graph legend.
+
+    legend(string1,string2,string3, ...) or 
+    
+    plot(...,'legend',string1,string2,string3,...)
+    
+    puts a legend on the current plot using the 
+    specified strings as labels.
+    
+    legend(...,Pos) or plot(...,'legend',...,Pos)
+    
+    places the legend in the specified
+    location:
+       -1 = outside the axis box on the right
+        1 = Upper right-hand corner (default)
+        2 = Upper left-hand corner
+        3 = Lower left-hand corner
+        4 = Lower right-hand corner
+        5 = Interactive placement with the mouse
+
+    Note : type=-1 is only available for the 
+    plot(...,'legend',...,Pos) syntax.
+
+    In the interactive placement (type=5) move the 
+    legend box with the mouse and press the left button 
+    to release it.
+
+    Examples with the function legend()
+    
+        x = linspace(0,2*%pi,64);
+        plot(x,cos(x),x,cos(2*x),x,cos(3*x));
+        legend('cos(x)','cos(2x)','cos(3x)',1);
+
+    Examples with the property 'legend'
+
+        plot(x,sin(x),x,cos(x),'legend','The sine','The cosine',-1)
+        plot(x,sin(x),x,cos(x),'legend','The sine',-1)
+	plot(x,sin(x),x,cos(x),'legend','The sine',5)
