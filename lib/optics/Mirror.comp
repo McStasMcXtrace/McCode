@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -24,10 +24,10 @@
 * orientations in the instrument deﬁnition, much like a real guide is build
 * from individual mirrors.
 * Additionally, it may be centered in order to be used as a sample or
-* monochromator plate.
+* monochromator plate, else it starts from AT position.
 * Reflectivity is either defined by an analytical model (see Component Manual)
 * or from a two-columns file with q [Angs-1] as first and R [0-1] as second.
-* In the local coordinate system, the mirror lies in the ﬁrst quadrant of the
+* In the local coordinate system, the mirror lies in the first quadrant of the
 * x-y plane, with one corner at (0, 0, 0). Plane is thus perpendicular to the
 * incoming beam, and should usually be rotated.
 *
@@ -46,6 +46,7 @@
 * reflect: (str)  Name of relfectivity file. Format [q(Angs-1) R(0-1)]
 * transmit:(1)    When true, non reflected neutrons are transmitted through
 *                 the mirror, instead of being absorbed.
+* center:  (1)    if true (1), the Mirror is centered arount AT position.
 *
 * %D
 * Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
