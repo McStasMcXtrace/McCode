@@ -70,7 +70,6 @@ sub simulation_dialog {
     $si{'GravityWarn'} = 0 unless $si{'GravityWarn'};
     $si{'Mode'}  = 0 unless $si{'Mode'};
     $si{'NScan'} = 0 unless $si{'NScan'};
-    $si{'Prec'} = 1e-3 unless $si{'Prec'};
     $si{'Force'} = 0 unless $si{'Force'};
     $si{'nodes'} = 1 unless $si{'nodes'};
     $si{'cluster'}=0 unless $si{'cluster'};
@@ -222,24 +221,18 @@ sub simulation_dialog {
                       if ($choiceexec_val =~ /Trace/) {
                         $choicepnts->configure(-state=>'disabled');
                         $labelpnts->configure(-foreground=>'gray');
-			$choiceprec->configure(-state=>'disabled');
-                        $labelprec->configure(-foreground=>'gray');
                         $choiceinspect->configure(-text=>'Inspect component: ',-foreground=>'black');
                         $choicefirst->configure(-foreground=>'black', -text=>'First component: ');
                         $choicelast->configure(-foreground=>'black', -text=>'Last component: ');
                       } elsif ($choiceexec_val =~ /Simulate/) {
                         $choicepnts->configure(-state=>'normal');
                         $labelpnts->configure(-foreground=>'black',-text=>'# steps');
-			$choiceprec->configure(-state=>'disabled');
-                        $labelprec->configure(-foreground=>'gray');
                         $choiceinspect->configure(-foreground=>'gray');
                         $choicefirst->configure(-foreground=>'gray');
                         $choicelast->configure(-foreground=>'gray');
                       } elsif ($choiceexec_val =~ /Optimize/) {
                         $choicepnts->configure(-state=>'normal');
                         $labelpnts->configure(-foreground=>'black',-text=>'# optim');
-			$choiceprec->configure(-state=>'normal');
-                        $labelprec->configure(-foreground=>'black');
                         $choiceinspect->configure(-foreground=>'black',-text=>'Maximize monitor: ');
                         $choicefirst->configure(-foreground=>'black',-text=>'Maximize monitor: ');
                         $choicelast->configure(-foreground=>'black',-text=>'Maximize monitor: ');
@@ -255,13 +248,6 @@ sub simulation_dialog {
                -width=>4,
                -textvariable => \$si{'NScan'},
                -justify => 'right')->pack(-side => 'left');
-    our $labelprec = $line->Label(-text => "prec.: ", -foreground=>'gray')->pack(-side => 'left');
-    $b->attach($labelprec, -balloonmsg => "Required precission in\noptimisation run.\n(Stop criterion)");
-    our $choiceprec = $line->Entry(-relief => 'sunken',
-	       -width=>4,
-               -textvariable => \$si{'Prec'},
-               -justify => 'right',
-	       -state => 'disabled')->pack(-side => 'left'); 
     # output format (same line as exec mode)
     my $formatchoice = $line->Checkbutton(-text => "Plot results, Format: ",
                             -variable => \$si{'Autoplot'},
@@ -658,6 +644,14 @@ sub preferences_dialog {
     $choicecflags = $lf->Checkbutton(-text => "Optimize ($MCSTAS::mcstas_config{'CFLAGS_SAVED'})",
                -relief => 'flat', -variable => \$cflags)->pack(-fill => 'x');
     $b->attach($choicecflags, -balloonmsg => "Uncheck to compile faster but simulate slower");
+    my $precchoice = $lf->Label(-text => "Optimization options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
+    $labelprec = $lf->Label(-text => "Precision",
+               -relief => 'flat')->pack(-side => 'left');
+    $choiceprec=$lf->Entry(-relief => 'sunken',
+	       -width=>8,
+               -textvariable => \$MCSTAS::mcstas_config{'PREC'},
+               -justify => 'right')->pack(-side => 'right'); 
+    $b->attach($labelprec, -balloonmsg => "Determines final precision in optimizations.\nSee McStas manual for details");
     if ($cflags) { $choicecflags->select; }
 
     my $res = $dlg->Show;

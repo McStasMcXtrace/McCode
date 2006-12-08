@@ -36,6 +36,7 @@
 # PROCSIMPLE - check for Proc::Simple availability
 # TEMP     - check for File::Temp availability
 # THREADS  - flag for Threading support [yes|no]
+# PREC     - optimization precision (stop criterion)
 #
 # NOTE: If you modify this file to change a SCILAB equal to 'no' to adjust an existing
 # installation to a new install of scilab, enter the FULL PATH to the scilab binary, e.g.
@@ -71,7 +72,8 @@ use Config;
      CODETEXT => 'no',
      PROCSIMPLE => 'no',
      TEMP => 'no',
-     THREADS => '@HAVE_LIBPTHREAD@'
+     THREADS => '@HAVE_LIBPTHREAD@',
+     PREC => '1e-3'
      );
 
 # **** installed site perl modules availability
