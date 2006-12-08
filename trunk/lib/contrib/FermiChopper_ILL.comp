@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.1 $
+* Version:    $Revision: 1.2 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 *
@@ -89,7 +89,7 @@
 * %End
 *****************************************************************************/
 
-DEFINE COMPONENT FermiChopperMP
+DEFINE COMPONENT FermiChopper_ILL
 DEFINITION PARAMETERS (filename=0)
 SETTING PARAMETERS (phase=0, rad=0.04, nu=100,
   ymin=-0.04, ymax=0.04, w=0.00022475, Nslit=200.0, R0=0.0,
@@ -101,7 +101,7 @@ STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 SHARE
 %{
   /* Definition of internal variable structure: all counters */
-  struct FermiChopperMP_struct {
+  struct FermiChopper_ILL_struct {
 
     int counter_cylinder;      /* neutrons interacting with the cylinder  */
     int counter_cylinder_pack; /* neutrons interacting with the cylinder and entering the megaslit */
@@ -285,7 +285,7 @@ double zinterpolation(double x, double z, double vx, double vz,
 
 DECLARE
 %{
-        struct FermiChopperMP_struct FCVars;
+        struct FermiChopper_ILL_struct FCVars;
 %}
 
 INITIALIZE
