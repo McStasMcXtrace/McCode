@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2006, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -12,8 +12,8 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.15 $
-* Release:    McStas 1.6
+* Version:    $Revision: 1.16 $
+* Release:    McStas 1.10
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
 *
@@ -124,13 +124,13 @@ SHARE
     long absorb_notreachentrance;
     long absorb_packentrance;
     long absorb_slitcoating;
-    long absorb_notreachslitwall;
+    long warn_notreachslitwall;
     long absorb_exitslitpack;
     long absorb_maxiterations;
     long absorb_wrongdirection;
     long absorb_nocontrol;
     long absorb_cylexit;
-    long absorb_notreachslitoutput;
+    long warn_notreachslitoutput;
   };
 
 /*****************************************************************************
@@ -321,13 +321,15 @@ INITIALIZE
   FCVars.absorb_notreachentrance = 0;
   FCVars.absorb_packentrance     = 0;
   FCVars.absorb_slitcoating      = 0;
-  FCVars.absorb_notreachslitwall = 0;
+  FCVars.warn_notreachslitwall = 0;
   FCVars.absorb_exitslitpack     = 0;
   FCVars.absorb_maxiterations    = 0;
   FCVars.absorb_wrongdirection   = 0;
   FCVars.absorb_nocontrol        = 0;
   FCVars.absorb_cylexit          = 0;
-  FCVars.absorb_notreachslitoutput=0;
+  FCVars.warn_notreachslitoutput=0;
+
+  printf("FC: m=%g R=%g\n", m, R0);
 
 %}
 
@@ -356,8 +358,6 @@ TRACE
   double t3;      /* interaction time */
   double dt;      /* interaction intervals */
   double t1,t2;   /* cylinder intersection time */
-  double time_in_cylinder;
-  double time_in_slit;
 
 /************************ TIME OF FLIGHT RESET ************************/
   if (zero_time && nu)
@@ -369,7 +369,7 @@ TRACE
     if (t1 <= 0) { FCVars.absorb_alreadyinside++; ABSORB; }    /* Neutron started inside the cylinder */
 
     dt=t2-t1;     /* total time of flight inside the cylinder  */
-    time_in_cylinder = dt;
+
     PROP_DT(t1);  /* Propagates neutron to entrance of the cylinder */
     SCATTER;
 
@@ -394,7 +394,7 @@ TRACE
     slit_input = (zp1 > 0 ? length/2 : -length/2);
 
     /* Checking if we are indeed in cylinder, outside slits */
-    if (!(zp1 > length/2 || zp1 < -length/2) ) { FCVars.absorb_sideentrance++; ABSORB; }
+    if (fabs(zp1) < length/2) { FCVars.absorb_sideentrance++; ABSORB; }
 
     /* time to reach slit package in [0,time to exit cylinder]: Z'=slit_input */
     t3 = FC_xzridder(x,z,vx,vz, t,dt, 'z', slit_input, FCVars);
@@ -432,7 +432,7 @@ TRACE
     t3 = FC_xzridder(x,z,vx,vz, t,dt, 'z', -slit_input, FCVars);
 
     if((t3 < 0)||(t3 > dt)) {
-      if (verbose > 1 && FCVars.absorb_notreachslitoutput < FermiChopper_MAXITER) {
+      if (verbose > 1 && FCVars.warn_notreachslitoutput < FermiChopper_MAXITER) {
         printf("FermiChopper: %s: Can not reach exit of slits\n"
                "              dt=%g. Ignore.\n",
           NAME_CURRENT_COMP, t3);
@@ -443,16 +443,14 @@ TRACE
         else if (t3 < 0)
           printf("              Error when solving intersection (FC_xzidder:2)\n");
       }
-      FCVars.absorb_notreachslitoutput++;
+      FCVars.warn_notreachslitoutput++;
       /* neutron can not reach slit output. Retain time interval */
     } else dt = t3; /* reduce time interval to [0, time of slit exit] */
-    time_in_slit = dt;
 
 /*********************PROPAGATION INSIDE THE SLIT PACKAGE *******************/
 
-    /* index of slit hit at entrance n1=0 (xp1=-N/2) ... N-1 (xp1=+N/2) */
-    n1 = floor(Nslit/2 - xp1/w);
-    if (n1 < 0) n1 = 0; if (n1 >= Nslit) n1 = Nslit-1;
+    /* index of slit hit at entrance n1=-N/2 (xp1=-) ... N/2 (xp1=+) */
+    n1 = floor(xp1/w);
 
 /******************* BEGIN LOOP FOR MULTIPLE REFLECTIONS ********************/
 
@@ -463,8 +461,7 @@ TRACE
       xp2 = FC_xzrot_dt(x,z,vx,vz,    t,   dt, 'x', FCVars); /* X'(t+dt) */
 
       /* slit index at the end of the slit: */
-      n2 = floor(Nslit/2 - xp2/w);
-      if (n2 < 0) n2 = 0; if (n2 >= Nslit) n2 = Nslit-1;
+      n2 = floor(xp2/w);
 
       vxp1= FC_xrot    (vx+z*FCVars.omega,vz-x*FCVars.omega,
                                       t,   FCVars);          /* dX'(t)/dt */
@@ -476,6 +473,8 @@ TRACE
       t3 = (vxp1 - vxp2 ? ((xp2 - xp1) + (t*vxp1 - (t+dt)*vxp2))/(vxp1 - vxp2)
                         : -1);
 
+//      printf("loopcounter=%i: [in: xp1=%g n1=%g] dt=%g [out: xp2=%g n2=%g]  ", loopcounter, xp1, n1, dt, xp2, n2);
+
       /* If method fails, take the middle of the interval*/
       if((t3 < 0)||(t3 > dt)) t3=dt*0.5; else t3 -= t;
 
@@ -483,8 +482,9 @@ TRACE
       xp3 = FC_xzrot_dt(x,z,vx,vz, t, t3, 'x', FCVars); /* X'(t3) */
 
       /* slit index at the tangent intersection/middle point */
-      n3 = floor(Nslit/2 - xp3/w);
-      if (n3 < 0) n3 = 0; if (n3 >= Nslit) n3 = Nslit-1;
+      n3 = floor(xp3/w);
+
+//      printf("[mid: xp3=%g n3=%g] t3=%g\n", xp3, n3, t3);
 
       /* change slit means there is a reflection inside */
       if ( (n2!=n1) || (n3!=n1) ) {
@@ -492,7 +492,7 @@ TRACE
         if (m == 0 || R0 == 0) { FCVars.absorb_slitcoating++; ABSORB; }
 
         /*Choosing the first change among [n2,n3] */
-        if (n3!=n1) { /* restrict search in [0,tangent point] */
+        if (n3!=n1) { /* restrict search in [0,tangent point]=[n1,n3] */
           n2=n3; dt = t3; }
 
         if (n2 > n1) { /* positive side of slit */
@@ -505,10 +505,10 @@ TRACE
         t3 = FC_xzridder(x,z,vx,vz, t,dt, 'x', distance_W, FCVars);
 
         if((t3 < 0)||(t3 > dt)) {
-          if (verbose > 1 && FCVars.absorb_notreachslitwall < FermiChopper_MAXITER) {
-            printf("FermiChopper: %s: Can not reach slit wall\n"
-                  "              dt=%g. Absorb.\n",
-              NAME_CURRENT_COMP, t3);
+          if (verbose > 1 && FCVars.warn_notreachslitwall < FermiChopper_MAXITER) {
+            printf("FermiChopper: %s: Can not reach slit wall (iteration %i)\n"
+                  "              dt=%g.\n",
+              NAME_CURRENT_COMP, dt, loopcounter);
             if (t3 == -3)
               printf("        No sign change to determine intersection (FC_xzidder:3)\n");
             else if (t3 == -2)
@@ -516,13 +516,14 @@ TRACE
             else if (t3 < 0)
               printf("        Error when solving intersection (FC_xzidder:3)\n");
           }
-          /* neutron can not reach slit wall. ABSORB */
-          FCVars.absorb_notreachslitwall++;
-          ABSORB;
+          /* neutron can not reach slit wall. use middle point */
+          FCVars.warn_notreachslitwall++;
+          t3 = dt/2;
         }
         zp1 = FC_xzrot_dt(x,z,vx,vz, t,t3, 'z', FCVars);
-        /* check if point is still in the slit package, else exit loop */
-        if (!(zp1 > length/2 && zp1 < -length/2) ) break;
+
+        /* check if middle point is still in the slit package, else exit loop */
+        if (fabs(zp1) > length/2) break;
 
         /* Propagate to slit wall point */
         PROP_DT(t3); dt -= t3;
@@ -531,7 +532,7 @@ TRACE
         vxp1 = FC_xrot(vx,vz, t, FCVars);
         vzp1 = FC_zrot(vx,vz, t, FCVars);
 
-        q    = MS2AA*(fabs(vxp1));
+        q    = 2*V2Q*(fabs(vxp1));
 
         if(q > Qc)
         {
@@ -553,7 +554,9 @@ TRACE
         vxp1 *= -1;
         /* apply transposed Transformation matrix */
         vx = FC_xrot( vxp1,-vzp1, t,FCVars);
-        vz = FC_xrot(-vxp1, vzp1, t,FCVars);
+        vz = FC_zrot(-vxp1, vzp1, t,FCVars);
+
+        n1 = n3;
 
       } /* end if changed slit index */
       else { /* neutron remains in the same slit: direct flight */
@@ -562,7 +565,7 @@ TRACE
     } /* end for */
 
     if (loopcounter >= FermiChopper_MAXITER) {
-      if (verbose && FCVars.absorb_maxiterations < FermiChopper_MAXITER)
+      if (verbose > 1 && FCVars.absorb_maxiterations < FermiChopper_MAXITER)
       printf("FermiChopper: %s:Max iterations %i reached inside slit. Absorb.\n",
         NAME_CURRENT_COMP, FermiChopper_MAXITER);
       FCVars.absorb_maxiterations++;
@@ -577,7 +580,7 @@ TRACE
       { FCVars.absorb_exitslitpack++;  ABSORB; } /* must be inside the cylinder */
 
     if (t1 > 0) {
-      if (verbose && FCVars.absorb_wrongdirection < FermiChopper_MAXITER)
+      if (verbose > 1 && FCVars.absorb_wrongdirection < FermiChopper_MAXITER)
       printf("FermiChopper: %s: Neutrons are leaving chopper\n"
              "              in the wrong direction. Absorb.\n", NAME_CURRENT_COMP);
       FCVars.absorb_wrongdirection++;
@@ -585,7 +588,7 @@ TRACE
     }
 
     if (t2 <= 0 && FCVars.absorb_nocontrol < FermiChopper_MAXITER) {
-      if (verbose)
+      if (verbose > 1)
       printf("FermiChopper: %s: Neutrons are leaving chopper\n"
              "              without any control. Absorb.\n", NAME_CURRENT_COMP);
       FCVars.absorb_nocontrol++;
@@ -597,7 +600,7 @@ TRACE
     SCATTER;
 
     /* Check if the neutron left the cylinder by its top or bottom */
-    if (y >= 0.99*height/2 || y <= -0.99*height/2 ) { FCVars.absorb_topbottom++; ABSORB; }
+    if (fabs(y) >= 0.99*height/2) { FCVars.absorb_topbottom++; ABSORB; }
 
 
     /* must have X'< slit package width at package Z'=cylinder output */
@@ -662,7 +665,7 @@ SAVE
              "              Can't prop. to slit pack:  %i\n"
              "              At slit pack entrance:     %i\n"
              "              On absorbing slit coating: %i\n"
-             "              Can not reach slit wall:   %i\n"
+             "Warning:      Can not reach slit wall:   %i\n"
              "              Exiting slit pack:         %i\n"
              "              Too many iterations:       %i\n"
              "              Prop. in wrong direction : %i\n"
@@ -677,13 +680,13 @@ SAVE
       FCVars.absorb_notreachentrance,
       FCVars.absorb_packentrance,
       FCVars.absorb_slitcoating,
-      FCVars.absorb_notreachslitwall,
+      FCVars.warn_notreachslitwall,
       FCVars.absorb_exitslitpack,
       FCVars.absorb_maxiterations,
       FCVars.absorb_wrongdirection,
       FCVars.absorb_nocontrol,
       FCVars.absorb_cylexit,
-      FCVars.absorb_notreachslitoutput);
+      FCVars.warn_notreachslitoutput);
     }
 
   }
