@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.33 $
+* Version: $Revision: 1.34 $
 * Origin: ILL/Risoe
 * Release: McStas 1.6
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -18,7 +18,7 @@
 * Modified by: EF, Oct 30, 2001 ; minor changes. mccompcurname replaced
 *
 * Circular/squared neutron source with flat or Maxwellian energy/wavelength
-* spectrum (possibly spatially gaussian)
+* spectrum
 *
 * %D
 * This routine is a neutron source (rectangular or circular), which aims at
@@ -43,9 +43,7 @@
 *   Monitor_nD(options="y vdiv, all auto")
 * The source shape is defined by its radius, or can alternatively be squared
 * if you specify non-zero h and w parameters.
-* The beam is spatially uniform, but becomes gaussian if one of the source
-* dimensions (radius, h or w) is negative, or you set the gaussian flag.
-* Divergence profiles are triangular.
+* The beam is divergence uniform,.
 * The source may have a thickness, which will broaden the default zero time
 * distribution.
 * For the Maxwellian spectra, the generated intensity is dPhi/dLambda (n/s/AA)
@@ -53,7 +51,7 @@
 *
 * Usage example:
 *   Source_gen(radius=0.1,Lambda0=2.36,dLambda=0.16, T1=20, I1=1e13)
-*   Source_gen(h=0.1,w=0.1,Emin=1,Emax=3, I1=1e13, verbose=1, gaussian=1)
+*   Source_gen(h=0.1,w=0.1,Emin=1,Emax=3, I1=1e13, verbose=1)
 *   EXTEND
 *   %{
 *      t = rand0max(1e-3); // set time from 0 to 1 ms for TOF instruments.
@@ -119,7 +117,6 @@
 * ydiv_file:[str] Name of the y-vert. divergence distribution file, given as a
 *                 free format text matrix, preceeded with a line
 *                   '# xylimits: ymin ymax ydiv_min ydiv_max'
-* gaussian: [0/1] Use gaussian divergence beam, normal distributions
 * verbose:  [0/1] display info about the source. -1 unactivate source.
 *
 * %L
@@ -133,7 +130,7 @@
 DEFINE COMPONENT Source_gen
 DEFINITION PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=0)
 SETTING PARAMETERS (radius=0.0, dist=0, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0,
-                    h=0, w=0, gaussian=0, verbose=0, T1=0,
+                    h=0, w=0, verbose=0, T1=0,
                     flux_file_perAA=0, flux_file_log=0,
                     Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
 OUTPUT PARAMETERS (p_in,
@@ -433,8 +430,6 @@ INITIALIZE
       printf("(square %g x %g)",h,w);
     printf("\n            spectra ");
     printf("%.3f to %.3f AA (%.3f to %.3f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
-    if (gaussian)
-      printf(", gaussian divergence beam");
     printf("\n");
     if (flux_file && strlen(flux_file) > 0)
     { printf("  File %s for flux distribution used. Flux is dPhi/dLambda in [n/s/AA]. \n", flux_file);
@@ -465,8 +460,9 @@ INITIALIZE
 
 TRACE
 %{
-  double theta0,phi0,theta1,phi1,chi,theta,phi,v,r, lambda;
-  double tan_h, tan_v, Maxwell, lambda2, lambda5;
+  double dx,dy,xf,yf,rf,pdir,chi,v,r, lambda;
+  double Maxwell, lambda2, lambda5;
+  double xwg, yhg;
 
   if (verbose >= 0)
   {
@@ -488,42 +484,28 @@ TRACE
     if (length != 0)
       z = length*randpm1()/2;
 
-    if (dist == 0)
-    {
-      theta0 =  DEG2RAD*xw/2;
-      phi0   =  DEG2RAD*yh/2;
-      theta1 = -DEG2RAD*xw/2;
-      phi1   = -DEG2RAD*yh/2;
-    }
+    if (dist>0)
+    randvec_target_rect(&xf, &yf, &rf, &pdir,
+        0, 0, dist, xwg, yhg, ROT_A_CURRENT_COMP);
     else
-    {
-      theta0= -atan((x-xw/2.0)/dist);              /* Angles to aim at target */
-      phi0  = -atan((y-yh/2.0)/dist);
-      theta1= -atan((x+xw/2.0)/dist);
-      phi1  = -atan((y+yh/2.0)/dist);
-    }
+    randvec_target_rect_angular(&xf, &yf, &rf, &pdir,
+        0, 0, 1, xwg*DEG2RAD, yhg*DEG2RAD, ROT_A_CURRENT_COMP);
 
-    /* shot towards target : flat distribution */
-
-    if (gaussian)
-    {
-      theta= theta0+(theta1- theta0)*(randnorm()*FWHM2RMS+0.5);
-      phi  = phi0  +(phi1  - phi0)  *(randnorm()*FWHM2RMS+0.5);
-    }
-    else
-    {
-      theta= theta0+(theta1- theta0)*rand01();
-      phi  = phi0  +(phi1  - phi0)  *rand01();
-    }
-    /* Assume linear distribution */
+    /* Assume linear wavelength distribution */
     lambda = Lambda0+dLambda*randpm1();
     if (lambda <= 0) ABSORB;
-
     v = K2V*(2*PI/lambda);
-    p = p_in;
-    if (!flux_file  || !strlen(flux_file))
-      p *=  2 * fabs((theta1 - theta0)*sin((phi1 - phi0)/2)); /* solid angle */
+    p = p_in*pdir;
 
+    dx = xf-x;
+    dy = yf-y;
+    rf = sqrt(dx*dx+dy*dy+dist*dist);
+
+    vz=v*dist/rf;
+    vy=v*dy/rf;
+    vx=v*dx/rf;
+
+    /* spectral dependency from files or Maxwellians */
     if (flux_file && strlen(flux_file) > 0)
     {
        double w=Table_Value(pTable, lambda, 1);
@@ -547,24 +529,18 @@ TRACE
       p *= Maxwell;
     }
 
-    /* Perform the correct treatment - no small angle approx. here! */
-    tan_h = tan(theta);
-    tan_v = tan(phi);
-    vz = v / sqrt(1 + tan_v*tan_v + tan_h*tan_h);
-    vy = tan_v * vz;
-    vx = tan_h * vz;
     /* optional x-xdiv and y-ydiv weightening: position=along columns, div=along rows */
     if (xdiv_file && strlen(xdiv_file) > 0 && pTable_xsum > 0) {
       double i,j;
       j = (x-            pTable_xmin) /(pTable_xmax -pTable_xmin) *pTable_x.columns;
-      i = (theta*RAD2DEG-pTable_dxmin)/(pTable_dxmax-pTable_dxmin)*pTable_x.rows;
+      i = (atan2(dx,rf)*RAD2DEG-pTable_dxmin)/(pTable_dxmax-pTable_dxmin)*pTable_x.rows;
       r = Table_Value2d(pTable_x, i,j); /* row, column */
       p *= r/pTable_xsum;
     }
     if (ydiv_file && strlen(ydiv_file) > 0 && pTable_ysum > 0) {
       double i,j;
       j = (y-            pTable_ymin) /(pTable_ymax -pTable_ymin) *pTable_y.columns;
-      i = (phi*RAD2DEG-  pTable_dymin)/(pTable_dymax-pTable_dymin)*pTable_y.rows;
+      i = (atan2(dy,rf)*RAD2DEG-  pTable_dymin)/(pTable_dymax-pTable_dymin)*pTable_y.rows;
       r = Table_Value2d(pTable_y, i,j);
       p *= r/pTable_ysum;
     }
@@ -590,8 +566,6 @@ MCDISPLAY
   {
     magnify("xy");
     circle("xy",0,0,0,radius);
-    if (gaussian)
-      circle("xy",0,0,0,radius/2);
   }
   else
   {
@@ -604,8 +578,6 @@ MCDISPLAY
              (double)xmax, (double)ymax, 0.0,
              (double)xmin, (double)ymax, 0.0,
              (double)xmin, (double)ymin, 0.0);
-    if (gaussian)
-      circle("xy",0,0,0,sqrt(w*w+h*h)/4);
   }
 %}
 
