@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10b
-* Version: $Revision: 1.142 $
+* Version: $Revision: 1.143 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.142 2006-12-19 15:11:57 farhi Exp $
+* $Id: mcstas-r.c,v 1.143 2006-12-19 18:51:52 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.142  2006/12/19 15:11:57  farhi
+* Restored basic threading support without mutexes. All is now in mcstas-r.c
+*
 * Revision 1.141  2006/10/12 12:09:11  farhi
 * mcformat can now handle scans, but only works with PGPLOT output format now.
 * Input format is any, compatible with --merge as well.
@@ -4556,8 +4559,9 @@ mcparseoptions(int argc, char *argv[])
       }
   }
   free(paramsetarray);
-
+#if defined (USE_MPI) || defined(USE_THREADS)
   if (mcdotrace) mpi_node_count=1; /* disable threading when in trace mode */
+#endif
 } /* mcparseoptions */
 
 #ifndef NOSIGNALS
