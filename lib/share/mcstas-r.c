@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10b
-* Version: $Revision: 1.141 $
+* Version: $Revision: 1.142 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.141 2006-10-12 12:09:11 farhi Exp $
+* $Id: mcstas-r.c,v 1.142 2006-12-19 15:11:57 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.141  2006/10/12 12:09:11  farhi
+* mcformat can now handle scans, but only works with PGPLOT output format now.
+* Input format is any, compatible with --merge as well.
+*
 * Revision 1.140  2006/10/09 11:31:35  farhi
 * Added blue/white sky to VRML output files. Prefer Octagaplayer.
 *
@@ -622,9 +626,6 @@ double mcget_run_num(void)
 
 #if defined(USE_MPI) || defined(USE_THREADS)
 static int mpi_node_count;
-#endif
-#ifdef USE_THREADS
-pthread_mutex_t protect=PTHREAD_MUTEX_INITIALIZER;
 #endif
 #ifdef USE_MPI
 /* MPI rank */
@@ -4555,6 +4556,8 @@ mcparseoptions(int argc, char *argv[])
       }
   }
   free(paramsetarray);
+
+  if (mcdotrace) mpi_node_count=1; /* disable threading when in trace mode */
 } /* mcparseoptions */
 
 #ifndef NOSIGNALS
@@ -4689,13 +4692,7 @@ mcstas_raytrace(void *p_node_ncount)
     // old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1);
     mcraytrace();
     local_mcrun_num++;
-#ifdef USE_THREADS
-    pthread_mutex_lock(&protect);
-#endif
     mcrun_num ++;
-#ifdef USE_THREADS
-    pthread_mutex_unlock(&protect);
-#endif
   }
   #ifdef USE_THREADS
   pthread_exit((void *) 0);

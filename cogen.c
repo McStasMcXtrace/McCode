@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.63 $
+* Version: $Revision: 1.64 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.63  2006/08/29 15:57:07  farhi
+* improved threads efficiency by using mutexes
+*
 * Revision 1.62  2006/08/28 10:34:25  pchr
 * In cogen.c - implementation of dashed line for mcdisplay.
 *
@@ -122,7 +125,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.63 2006-08-29 15:57:07 farhi Exp $
+* $Id: cogen.c,v 1.64 2006-12-19 15:11:56 farhi Exp $
 *
 *******************************************************************************/
 
@@ -719,8 +722,6 @@ cogen_decls(struct instr_def *instr)
   while(comp = list_next(liter))
   {
     List_handle liter2;
-    /* define component mutex for threads */
-    coutf("#ifdef USE_THREADS \n static pthread_mutex_t %s;\n static int %sowner =-1;\n#endif",comp->name,comp->name);
 
     index++;
     comp->index = index; /* should match the one defined with bison */
@@ -892,7 +893,6 @@ cogen_init(struct instr_def *instr)
 
   while((comp = list_next(liter)) != NULL)
   {
-    coutf("#ifdef USE_THREADS\npthread_mutex_init(&%s,NULL);\n#endif",comp->name);
     struct comp_inst *relcomp; /* Component relative to. */
     char *x, *y, *z;
 
@@ -1143,8 +1143,6 @@ cogen_trace(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-    /* lock mutex to protect memory */
-    coutf("#ifdef USE_THREADS\npthread_mutex_lock(&%s) ; %sowner=pthread_self();\n#endif",comp->name,comp->name);
     char *statepars[10];
     static char *statepars_names[10] =
       {
@@ -1210,7 +1208,6 @@ cogen_trace(struct instr_def *instr)
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
-    coutf("#ifdef USE_THREADS\n%sowner=-1;\npthread_mutex_unlock(&%s) ;\n #endif",comp->name,comp->name);
     coutf("  %sScattered=0;", ID_PRE);
     coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
 
@@ -1273,15 +1270,6 @@ cogen_trace(struct instr_def *instr)
 
   /* Absorbing neutrons - goto this label to skip remaining components. End of TRACE */
   coutf(" %sabsorbAll:", ID_PRE);
-
-  coutf("#ifdef USE_THREADS");
-  liter = list_iterate(instr->complist);
-  while((comp = list_next(liter)) != NULL){
-    /* destroy remaining mutexes when absorbing */
-    coutf("\t if (pthread_equal(pthread_self(),%sowner))pthread_mutex_unlock(&%s);",comp->name,comp->name);
-  }
-  list_iterate_end(liter);
-  coutf("#endif");
 
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
@@ -1377,7 +1365,6 @@ cogen_finally(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
   {
-    coutf("#ifdef USE_THREADS\n pthread_mutex_destroy(&%s);\n#endif",comp->name);
     if(list_len(comp->def->finally_code->lines) > 0)
     {
       coutf("  /* User FINALLY code for component '%s'. */", comp->name);
