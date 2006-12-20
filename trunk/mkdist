@@ -193,7 +193,21 @@ sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/which.exe .
 cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
-
+if [ `which makensis` ]; then
+    cd -
+    make mcstas.win32
+    cp mcstas.ini ..
+    cp mcstas.nsi ..
+    cp mcstas.bmp ..
+    cp LICENSE.rtf ..
+    cd ..
+    zip -r mcstas-$1-i686-Intel-Win32.zip mcstas-$1
+    cp winsupport/* .
+    makensis mcstas.nsi
+    echo Created Win32 binary packages: `ls *zip *exe`
+else
+    echo Binary versions for Win32 NOT created
+fi
 echo
 echo
 echo Your mcstas dist packages are placed in
