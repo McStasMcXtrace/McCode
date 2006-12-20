@@ -122,6 +122,9 @@ rm mcstas-pgplot.spec
 sed 's/X.Y.Z/'$1'/' mcstas.spec > mcstas-$1.spec
 rm mcstas.spec
 rm -f *.tmp
+sed 's/@RELEASE@/'$1'/' deb/debcreate > deb/debcreate.new
+mv deb/debcreate.new deb/debcreate
+chmod a+x deb/debcreate
 
 # Create configure
 autoconf configure.in > configure
@@ -234,14 +237,23 @@ echo
 # We'll wait until a later stable release to implement .deb/.rpm
 #
 # In case of a debian build host, we also build a .deb and .rpm (using alien)
-#if [ -e /etc/debian_version ]
-#then
-#  echo Proceeding to .deb/.rpm build
-#  ./mcstas/deb/debcreate $1
-#  echo 
-#  echo
-#  echo Build packages created:
-#  echo
-#  ls -lf mcstas-$1*.*
-#  echo
-#fi
+if [ -e /etc/debian_version ]
+then
+  if [ -e sarge-chroot ]
+  then
+    echo Proceeding to .deb/.rpm build
+    sudo cp mcstas-$1/deb/debcreate sarge-chroot/root
+    sudo cp mcstas-$1-src.tar.gz sarge-chroot/root
+    sudo chroot sarge-chroot /root/debcreate
+    echo 
+    echo
+    echo Build packages created:
+    echo
+    cp sarge-chroot/build/*deb .
+    cp sarge-chroot/build/*rpm .
+    ls -lf mcstas-$1*.*
+    echo
+  else
+    echo You need a chroot environment based on debootstrap in sarge-chroot before building deb/rpms
+  fi
+fi
