@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto hennanec@ensimag.fr">Chama Hennane</a>
 * Date: July 7th, 2006
-* Version:  $Revision: 1.1 $
+* Version:  $Revision: 1.2 $
 * Release: McStas 1.10
 *
 * Detector-like component that writes neutron state parameters into a
@@ -28,6 +28,8 @@
 * energy is in Mega eV
 * positions are in cm and the direction vector is normalized to 1.
 *
+* %BUGS
+* We recommand not to use parallel execution (MPI/Threads) with this component.
 *
 * EXAMPLE:
 * To create a file collecting all neutron states with MCNP5 format
@@ -84,6 +86,11 @@ INITIALIZE
   int i;
   char ** head;
   long nl;
+
+#if defined (USE_MPI) || defined(USE_THREADS)
+  exit(printf("MCNP_output: %s: ERROR This component can not be used in parallel execution mode. Abort.\n", NAME_CURRENT_COMP));
+#endif
+
   /* Open neutron output file. */
   if(file)
     hfile = fopen(file, "w");
@@ -114,8 +121,6 @@ INITIALIZE
   fprintf(hfile,"    1   2   7   8   9  17  18  19  20  21  22  23  24  25  26  27  28   7   8  10  11  17  18  19  20  21  22  23  24  25\n");
   fprintf(hfile,"   26  27  28   7   8  12  13  17  18  19  20  21  22  23  24  25  26  27  28   7   8  10  11  17  18  19  20  21  22  23\n");
   fprintf(hfile,"   24  25  26  27  28   7   8  14  15  17  18  19  20  21  22  23  24  25  26  27  28\n");
-
-
 %}
 
 TRACE
