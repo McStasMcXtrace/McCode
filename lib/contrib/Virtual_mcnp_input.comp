@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.6 $
+* Version:  $Revision: 1.7 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -39,6 +39,9 @@
 *
 * energy is in Mega eV, time in shakes (1e-8 s),
 * positions are in cm and the direction vector is normalized to 1.
+*
+* %BUGS
+* We recommand not to use parallel execution (MPI/Threads) with this component.
 *
 * EXAMPLE:
 * To generate PTRAC files using MCNP/MCNPX, add at the end of your input file:
@@ -418,12 +421,10 @@ INITIALIZE
     exit_flag = 1;
   }
 
-#ifdef USE_MPI
+#if defined (USE_MPI) || defined(USE_THREADS)
   if (!smooth) {
     if (verbose)
-    printf("MCNP_input: %s: MPI execution requires to smooth virtual source\n"
-           "WARNING     Setting smooth=1\n", NAME_CURRENT_COMP);
-    smooth=1;
+    printf("MCNP_input: %s: smoothing is recommended when running MPI/Threads execution\n", NAME_CURRENT_COMP);
   }
 #endif
 
@@ -460,7 +461,7 @@ TRACE
       SCATTER;
     }
 
-#ifdef USE_MPI
+#if defined (USE_MPI) || defined(USE_THREADS)
     if (smooth && n_count_extrapolated)
 #else
     if (smooth && rep > 1 && n_count_extrapolated)

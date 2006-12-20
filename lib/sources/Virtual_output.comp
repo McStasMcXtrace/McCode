@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -43,6 +43,9 @@
 *
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
 * Vitess simulation (104 bytes per neutron) and read with Vitess_input.
+*
+* %BUGS
+* We recommand not to use parallel execution (MPI/Threads) with this component.
 *
 * Example: Virtual_output(file="MySource.dat")
 *   will generate a 9 Mo text file for 1e5 events stored.
@@ -88,6 +91,11 @@ DECLARE
 INITIALIZE
 %{
   long element_size;
+
+#if defined(USE_THREADS)
+  exit(printf("Virtual_output: %s: Warning: This component can not be used in Multi-Threading execution mode. Abort.\n", NAME_CURRENT_COMP));
+#endif
+
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
 
   if (bufsize > 0) sprintf(Vars.option, "list=%g", bufsize);

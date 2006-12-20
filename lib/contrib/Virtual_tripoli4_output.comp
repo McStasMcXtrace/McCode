@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailtoguillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.4 $
+* Version:  $Revision: 1.5 $
 * Origin: <a href="http://www.cea-llb.fr">LLB</a>
 * Release: McStas 1.8
 *
@@ -33,6 +33,8 @@
 * energy is in Mega eV
 * positions are in cm and the direction vector is normalized to 1.
 *
+* %BUGS
+* We recommand not to use parallel execution (MPI/Threads) with this component.
 *
 * EXAMPLE:
 * To create a file collecting all neutron states with TRIPOLI4 format
@@ -78,6 +80,11 @@ INITIALIZE
   int i;
   char ** head;
   long nl;
+
+#if defined (USE_MPI) || defined(USE_THREADS)
+  exit(printf("Tripoli4_output: %s: ERROR This component can not be used in parallel execution mode. Abort.\n", NAME_CURRENT_COMP));
+#endif
+
   /* Open neutron output file. */
   if(file)
     hfile = fopen(file, "w");

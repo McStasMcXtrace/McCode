@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.21 $
+* Version:  $Revision: 1.22 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -36,6 +36,9 @@
 *       p x y z vx vy vz t sx sy sz stored into about 83 bytes/n.
 * 2- float or double binary files stored into 44 and 88 bytes/n
 * (with the 11 values 'p x y z vx vy vz t sx sy sz') for float/double resp.
+*
+* %BUGS
+* We recommand not to use parallel execution (MPI/Threads) with this component.
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
@@ -140,12 +143,10 @@ INITIALIZE
   if (verbose)
     printf("Virtual_input: %s: Reading neutron events from file '%s'. Repeat %g time(s)\n", NAME_CURRENT_COMP, file, repeat_count);
 
-#ifdef USE_MPI
+#if defined (USE_MPI) || defined(USE_THREADS)
   if (!smooth) {
     if (verbose)
-    printf("Virtual_input: %s: MPI execution requires to smooth virtual source\n"
-           "WARNING        Setting smooth=1\n", NAME_CURRENT_COMP);
-    smooth=1;
+    printf("Virtual_input: %s: smoothing is recommended when running MPI/Threads execution\n", NAME_CURRENT_COMP);
   }
 #endif
 
@@ -263,7 +264,7 @@ TRACE
       }
       first_block= 0;
     }
-#ifdef USE_MPI
+#if defined (USE_MPI) || defined(USE_THREADS)
     if (smooth && n_count_extrapolated)
 #else
     if (smooth && repeat_number>1 && n_count_extrapolated)
