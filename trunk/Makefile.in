@@ -33,6 +33,7 @@ DEBUG = -DDEBUG=0
 mc_libdir = $(libdir)/mcstas
 
 CC = @CC@
+MINGW = @MINGW@
 CFLAGS = @CFLAGS@
 LDFLAGS= @LDFLAGS@
 
@@ -70,6 +71,9 @@ INSTALL_DATA = @INSTALL_DATA@
 OBJECTS=instrument.tab.o lex.yy.o debug.o \
 	memory.o list.o symtab.o coords.o cexp.o \
 	file.o cogen.o port.o
+COBJECTS=instrument.tab.c lex.yy.c debug.c \
+	memory.c list.c symtab.c coords.c cexp.c \
+	file.c cogen.c port.c
 
 PERLOBJ=gscan.fixpl mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
         mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl
@@ -92,6 +96,11 @@ all: $(BINOBJS)
 
 mcstas: $(OBJECTS)
 	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
+
+mcstas.win32: $(COBJECTS)
+	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(LDFLAGS) $(DEFS) $(COBJECTS) -lm
+	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(LDFLAGS) $(DEFS) mcformat.c -lm
+
 
 mcformat:
 	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm

@@ -12,11 +12,11 @@
 * Date: Nov 11, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 *
 * Header file for portability related stuff.
 *
-* $Id: port.h,v 1.15 2006-10-25 09:39:34 farhi Exp $
+* $Id: port.h,v 1.16 2006-12-20 08:27:51 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -59,7 +59,6 @@
 #endif /* MCSTAS */
 
 #ifdef WIN32
-#define HAVE_STRCASECMP
 #define PACKAGE_BUGREPORT "www.mcstas.org"
 #endif
 #ifndef HAVE_STRCASECMP
