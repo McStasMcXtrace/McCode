@@ -1,53 +1,66 @@
 #!/bin/sh
-# Script to wrap McStas mkdist build in a .deb package
-export SRCDIR=$PWD
-export SRCPKG=mcstas-$1-src.tar.gz
+export RELEASE="@RELEASE@"
+export BUILDDIR="/build/mcstas-$RELEASE"
+export SRCDIR="/build/mcstas-$RELEASE-srcdir"
 
-#TMPDIR="/tmp/mcdeb"
-TMPDIR=`mktemp -d`
-cd $TMPDIR
-mkdirhier debian/usr/local
+apt-get -y --force-yes install perl-tk pdl gcc libc6-dev g77 libx11-dev x-window-system-dev libxt-dev lintian alien
 
-echo Sources are in $SRCDIR
-echo Building .deb from $SRCPKG in $TMPDIR
-echo
-tar xzvf $SRCDIR/$SRCPKG
-cd mcstas-$1
-# Correct the makefile slightly:
-sed -e 's+pgm.fixpl+pgm.pl+' -e 's+./mcdoc.fixpl --text++' Makefile.in > Makefile.in.deb
-mv Makefile.in.deb Makefile.in
-./configure --prefix=$TMPDIR/debian/usr/local
+rm -rf /build/*
+rm -rf /usr/local/lib/*
+rm -rf /usr/local/pgplot
+
+echo Performing mcstas install to /usr/local
+
+cd /build
+tar xzf /root/mcstas-${RELEASE}-src.tar.gz
+mv mcstas-${RELEASE} mcstas-${RELEASE}-srcdir
+cd mcstas-${RELEASE}-srcdir
+
+./configure
+
 make install-pgplot
-./configure --prefix=$TMPDIR/debian/usr/local
-# Correct the makefile slightly:
-sed 's/pgm.fixpl/pgm.pl/' Makefile
+
+./configure
+
 make
 make install
-rm -rf $TMPDIR/debian/usr/local/lib/mcstas.*
+cd /build
+rm -rf /usr/local/lib/mcstas.*
 
-mkdir $TMPDIR/debian/DEBIAN
-mkdirhier $TMPDIR/debian/usr/share/doc/mcstas
-find $TMPDIR/debian -type d -exec chmod 0755 \{\} \;
-cp $TMPDIR/mcstas-$1/deb/control $TMPDIR/debian/DEBIAN
-cp $TMPDIR/mcstas-$1/deb/prerm $TMPDIR/debian/DEBIAN
-cp $TMPDIR/mcstas-$1/deb/postinst $TMPDIR/debian/DEBIAN
 
-chmod 0755 $TMPDIR/debian/DEBIAN/prerm
-chmod 0755 $TMPDIR/debian/DEBIAN/postinst
 
-cp $TMPDIR/mcstas-$1/CHANGES $TMPDIR/debian/usr/share/doc/mcstas/changelog
-cp $TMPDIR/mcstas-$1/CHANGES $TMPDIR/debian/usr/share/doc/mcstas/changelog.Debian
-cp $TMPDIR/mcstas-$1/COPYING $TMPDIR/debian/usr/share/doc/mcstas/copyright
+mkdir ${BUILDDIR}
+mkdir ${BUILDDIR}/DEBIAN
+mkdir ${BUILDDIR}/usr/
+mkdir ${BUILDDIR}/usr/local/
+mkdir ${BUILDDIR}/usr/local/lib
+mkdir ${BUILDDIR}/usr/share
+mkdir ${BUILDDIR}/usr/share/doc
+mkdir ${BUILDDIR}/usr/share/doc/mcstas
 
-cd $TMPDIR/
-rm -rf mcstas-$1
-mv debian mcstas-$1
+cp -rp /usr/local/bin ${BUILDDIR}/usr/local
+cp -rp /usr/local/lib/* ${BUILDDIR}/usr/local/lib
+cp -rp /usr/local/pgplot ${BUILDDIR}/usr/local
 
-dpkg-deb --build mcstas-$1
+cp mcstas-${RELEASE}-srcdir/deb/control ${BUILDDIR}/DEBIAN
+cp mcstas-${RELEASE}-srcdir/deb/prerm ${BUILDDIR}/DEBIAN
+cp mcstas-${RELEASE}-srcdir/deb/postinst ${BUILDDIR}/DEBIAN
 
-cp mcstas-$1.deb $SRCDIR
-mv mcstas-$1 mcstas-$1_debbuild
-sudo alien -k --scripts --to-rpm mcstas-$1.deb
-cp mcstas-$1*.rpm $SRCDIR
+find ${BUILDDIR} -type d -exec chmod 0755 \{\} \;
 
-rm -rf $TMPDIR
+chmod 0755 ${BUILDDIR}/DEBIAN/prerm
+chmod 0755 ${BUILDDIR}/DEBIAN/postinst
+
+cp ${SRCDIR}/CHANGES ${BUILDDIR}/usr/share/doc/mcstas/changelog
+cp ${SRCDIR}/CHANGES ${BUILDDIR}/usr/share/doc/mcstas/changelog.Debian
+cp ${SRCDIR}/COPYING ${BUILDDIR}/usr/share/doc/mcstas/copyright
+
+dpkg-deb --build mcstas-${RELEASE}
+
+mv mcstas-${RELEASE}.deb mcstas-${RELEASE}-i686.deb
+
+rm -rf $BUILDDIR
+
+# Here is an implicit assumption on the arch...
+alien -k --scripts --to-rpm mcstas-${RELEASE}-i686.deb
+
