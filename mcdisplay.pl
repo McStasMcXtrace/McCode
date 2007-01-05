@@ -1124,6 +1124,7 @@ undef $TOF;
 undef $tmax;
 undef $keep;
 undef $PGINIT;
+undef $paramfile;
 my $plotter;
 undef $file_output;
 my $int_mode=0; # interactive mode(0), non interactive (1)
@@ -1163,6 +1164,8 @@ for($i = 0; $i < @ARGV; $i++) {
    } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;
+   } elsif($ARGV[$i] =~ /^--params=([a-zA-Z0-9_\"]+)$/) {
+	$paramfile = $1;
    } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
        $TOF = 1;
    } elsif($ARGV[$i] eq "--keep" || $ARGV[$i] eq "-k") {
@@ -1191,6 +1194,7 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
            --tmax=TMAX       Maxiumum TOF [ms] (defaults to 50 ms)
  -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
+           --params=FILE     Read input parameters from parameter file
  -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,Scilab,Matlab}
  -fFNAME   --file=FNAME      Output graphics commands to file FNAME
                              (Only used when PLOTTER = {Scilab, Matlab})
@@ -1208,6 +1212,27 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
  SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess
  DOC:      Please visit http://www.mcstas.org/\n"
  unless $sim_cmd;
+
+if($paramfile) {
+    open(IN, "<$paramfile") || die "mcdisplay: Failed to open parameter file '$paramfile'";
+    while(<IN>) {
+        my $p;
+        for $p (split) {
+	    if($p =~ /^([A-Za-z0-9_]+)\=(.*)$/) {
+		$parm = $1;
+		$val = $2;
+	    } 
+	    @vals = split(',',$val);
+	    if (@vals>1) {
+		$val = ($vals[0]+$vals[1])/2;
+		print "Parameter $parm: Substituting interval $vals[0],$vals[1] to $val\n";
+		push @cmdline, "$parm=$val";
+	    } else {
+		push @cmdline, $p; 
+	    }
+        }
+    }
+}
 
 if ($sim_cmd =~ m'\.instr$') # recompile .instr if needed
 { my @ccopts=();
