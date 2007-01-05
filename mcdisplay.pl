@@ -1164,7 +1164,7 @@ for($i = 0; $i < @ARGV; $i++) {
    } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;
-   } elsif($ARGV[$i] =~ /^--params=([a-zA-Z0-9_\"]+)$/) {
+   } elsif($ARGV[$i] =~ /^--param=([a-zA-Z0-9_\"]+)$/) {
 	$paramfile = $1;
    } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
        $TOF = 1;
@@ -1194,7 +1194,7 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
            --tmax=TMAX       Maxiumum TOF [ms] (defaults to 50 ms)
  -zZF      --zoom=ZF         Show zoomed view by factor ZF
  -iCOMP    --inspect=COMP    Show only trajectories reaching component COMP
-           --params=FILE     Read input parameters from parameter file
+           --param=FILE     Read input parameters from parameter file
  -pPLOTTER --plotter=PLOTTER Output graphics using {PGPLOT,Scilab,Matlab}
  -fFNAME   --file=FNAME      Output graphics commands to file FNAME
                              (Only used when PLOTTER = {Scilab, Matlab})
@@ -1215,6 +1215,7 @@ die "Usage: mcdisplay [-mzipfh][-gif|-ps|-psc] Instr.out [instr_options] params
 
 if($paramfile) {
     open(IN, "<$paramfile") || die "mcdisplay: Failed to open parameter file '$paramfile'";
+    print "\nmcdisplay: Parameters specified using file \"$paramfile\"\n";
     while(<IN>) {
         my $p;
         for $p (split) {
@@ -1232,6 +1233,7 @@ if($paramfile) {
 	    }
         }
     }
+    print "\n";
 }
 
 if ($sim_cmd =~ m'\.instr$') # recompile .instr if needed
