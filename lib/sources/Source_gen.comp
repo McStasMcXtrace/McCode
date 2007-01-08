@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.35 $
+* Version: $Revision: 1.36 $
 * Origin: ILL/Risoe
 * Release: McStas 1.10
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -127,7 +127,7 @@
 ******************************************************************************/
 
 
-DEFINE COMPONENT Source_gen111
+DEFINE COMPONENT Source_gen
 DEFINITION PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=0)
 SETTING PARAMETERS (radius=0.0, dist=0, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0,
                     h=0, w=0, verbose=0, T1=0,
