@@ -1164,7 +1164,7 @@ for($i = 0; $i < @ARGV; $i++) {
    } elsif(($ARGV[$i] =~ /^-f([a-zA-Z0-9_\-\/\ \.\:\"]+)$/) ||
               ($ARGV[$i] =~ /^--file=([a-zA-Z0-9_\-\/\ \.\:]+)$/)) {
         $file_output = $1;
-   } elsif($ARGV[$i] =~ /^--param=([a-zA-Z0-9_\"]+)$/) {
+   } elsif($ARGV[$i] =~ /^--param=([a-zA-Z0-9_\ \"\.\-\:]+)$/) {
 	$paramfile = $1;
    } elsif($ARGV[$i] eq "--TOF" || $ARGV[$i] eq "-T") {
        $TOF = 1;
@@ -1250,7 +1250,7 @@ if ($TOF) {
     if(! ($tmax)) {
 	$tmax=50;
     }
-    if (!($plotter =~ /McStas|PGPLOT/i)) {
+    if (!($plotter =~ /McStas|PGPLOT|Matlab/i)) {
 	print STDERR "\n***************************************\n";
 	print STDERR "TOF only possible using plotter PGPLOT\nSelecting PGPLOT";
 	print STDERR "\n***************************************\n";
