@@ -4,7 +4,7 @@
 #
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2006, All rights reserved
+#   Copyright (C) 1997-2007, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -303,7 +303,7 @@ sub parse_args {
     my $cc     = $MCSTAS::mcstas_config{CC};
     my $cflags = $MCSTAS::mcstas_config{CFLAGS};
 
-    die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max}
+    die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max|min,guess,max}
   mcrun options:
    -c        --force-compile  Force rebuilding of instrument.
    -p FILE   --param=FILE     Read parameters from file FILE.
@@ -356,12 +356,25 @@ sub check_input_params {
     my @scanned = ();
     my @minval = ();
     my @maxval = ();
+    my @guessval=();
     my $v;
     for $v (@params) {
-        if($vals{$v} =~ /^(.+),(.+)$/) {
+        if($vals{$v} =~ /^(.+),(.+),(.+)$/) {
+            # Variable to scan from min to max, with a guess value for optimization.
+            $minval[$j] = $1;
+            $maxval[$j] = $3;
+            $guessval[$j] = $2;
+            $scanned[$j] = $i;
+            if($minval[$j] != $maxval[$j] && $numpoints == 1 && $optim_flag == 0) {
+                die "mcrun: Cannot scan variable $v using only one data point.
+Please use -N to specify the number of points.";
+            }
+            $j++;
+        } elsif($vals{$v} =~ /^(.+),(.+)$/) {
             # Variable to scan from min to max.
             $minval[$j] = $1;
             $maxval[$j] = $2;
+            $guessval[$j] = ($1 + $2)/2;
             $scanned[$j] = $i;
             if($minval[$j] != $maxval[$j] && $numpoints == 1 && $optim_flag == 0) {
                 die "mcrun: Cannot scan variable $v using only one data point.
@@ -375,7 +388,7 @@ Please use -N to specify the number of points.";
         }
         $i++;
     }
-    return { VARS => \@scanned, MIN => \@minval, MAX => \@maxval };
+    return { VARS => \@scanned, MIN => \@minval, MAX => \@maxval, GUESS => \@guessval };
 }
 
 sub exec_sim {
@@ -1165,12 +1178,12 @@ if($numpoints == 1 && $optim_flag == 0) {
           my $i;
 
           # get guessed parameter set (MAX-MIN) and scale. Print optimization config
-          die "Specify parameter range=MIN,MAX for optimization\n" unless @{$scan_info->{VARS}};
+          die "Specify parameter range=MIN,MAX or MIN,GUESS,MAX for optimization\n" unless @{$scan_info->{VARS}};
 
           print "Starting optimization of $sim_def paramaters:\n";
           for($j = 0; $j < @{$scan_info->{VARS}}; $j++) {
             $i = $scan_info->{VARS}[$j]; # Index of variable to be scanned
-            $guess[$j] = ($scan_info->{MAX}[$j] + $scan_info->{MIN}[$j])/2;
+            $guess[$j] =  $scan_info->{GUESS}[$j];
             $scale[$j] = ($scan_info->{MAX}[$j] - $scan_info->{MIN}[$j])/2;
             print "$params[$i]=$guess[$j] ";
           }

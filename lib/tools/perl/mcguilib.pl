@@ -106,7 +106,7 @@ sub simulation_dialog {
                   -text => "Instrument parameters $typehelp:",
                   -anchor => 'w', -fg => 'blue',
                   -justify => 'left')->pack(-fill => 'x');
-        $b->attach($choiceparam, -balloonmsg => "Specify instrument parameters\n ranges are 'MIN,MAX' for scans/optimization");
+        $b->attach($choiceparam, -balloonmsg => "Specify instrument parameters\n ranges are 'MIN,MAX' for scans/optimization, \n or MIN,GUESS,VAL for optimization");
         my $parm_frame = $dlg->Frame;
         $parm_frame->pack(-fill => 'both');
         my $row = 0;
@@ -650,7 +650,7 @@ sub preferences_dialog {
     $choiceprec=$lf->Entry(-relief => 'sunken',
 	       -width=>8,
                -textvariable => \$MCSTAS::mcstas_config{'PREC'},
-               -justify => 'right')->pack(-side => 'right'); 
+               -justify => 'right')->pack(-side => 'right');
     $b->attach($labelprec, -balloonmsg => "Determines final precision in optimizations.\nSee McStas manual for details");
     if ($cflags) { $choicecflags->select; }
 
