@@ -1250,7 +1250,7 @@ if ($TOF) {
     if(! ($tmax)) {
 	$tmax=50;
     }
-    if (!($plotter =~ /McStas|PGPLOT|Matlab/i)) {
+    if (!($plotter =~ /McStas|PGPLOT/i)) {
 	print STDERR "\n***************************************\n";
 	print STDERR "TOF only possible using plotter PGPLOT\nSelecting PGPLOT";
 	print STDERR "\n***************************************\n";
