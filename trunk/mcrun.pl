@@ -382,14 +382,7 @@ Please use -N to specify the number of points.";
             }
             $j++;
         } elsif($vals{$v} =~ /^(.+)$/) {
-            # Constant variable (no action), except for optimization.
-            if ($optim_flag) {
-              $guessval[$j] = $1;
-              $minval[$j] = 0.5*$1;
-              $maxval[$j] = 1.5*$1;
-              $scanned[$j] = $i;
-              $j++;
-            }
+            # Constant variable (no action)
         } else {
             die "mcrun: Invalid parameter specification '$vals{$v}' for parameter $v";
         }
