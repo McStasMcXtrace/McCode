@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.86 $
+* Version: $Revision: 1.87 $
 *
 * Runtime system header for McStas.
 *
@@ -22,13 +22,19 @@
 *   int mcnumipar;
 *   char mcinstrument_name[], mcinstrument_source[];
 *   int mctraceenabled, mcdefaultmain;
+*   extern MCNUM  mccomp_storein[];
+*   extern MCNUM  mcAbsorbProp[];
+*   extern MCNUM  mcScattered;
 *   #define MCSTAS_VERSION "the McStas version"
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.86 2006-08-28 10:12:25 pchr Exp $
+* $Id: mcstas-r.h,v 1.87 2007-01-21 15:43:08 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.86  2006/08/28 10:12:25  pchr
+*       Basic infrastructure for spin propagation in magnetic fields.
+*
 *       Revision 1.85  2006/08/15 12:09:35  pkwi
 *       Global define GRAVITY=9.81, used in PROP_ routines and Guide_gravity. Will add handeling of
 *
@@ -194,7 +200,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.86 $"
+#define MCSTAS_R_H "$Revision: 1.87 $"
 
 #include <math.h>
 #include <string.h>
@@ -255,14 +261,25 @@
 #endif
 #endif
 
-#ifdef USE_THREADS
-#include <pthread.h>
-#undef USE_MPI /* THREADS prefered against MPI use */
-#endif
-
 #ifdef USE_MPI
 #ifndef NOSIGNALS
 #define NOSIGNALS
+#endif
+#undef USE_THREADS /* MPI prefered against THREADS use */
+#endif
+
+#ifdef USE_THREADS
+#include <pthread.h>
+#endif
+
+#if (HAVE_LIBNEXUS == 0)
+#undef HAVE_LIBNEXUS
+#endif
+
+/* remove NeXus dependency if not embedded by McStas */
+#ifdef HAVE_LIBNEXUS
+#ifndef NEXUSAPI
+#undef HAVE_LIBNEXUS
 #endif
 #endif
 
@@ -323,6 +340,8 @@ extern int    mcdotrace;
 extern struct mcformats_struct mcformats[];
 extern struct mcformats_struct mcformat;
 extern struct mcformats_struct mcformat_data;
+#else
+mcstatic FILE *mcsiminfo_file        = NULL;
 #endif
 
 /* Useful macros ============================================================ */
@@ -386,6 +405,7 @@ void   mcinfo_simulation(FILE *f, struct mcformats_struct format,
   char *pre, char *name); /* used to add sim parameters (e.g. in Res_monitor) */
 void   mcsiminfo_init(FILE *f);
 void   mcsiminfo_close(void);
+char *mcfull_file(char *name, char *ext);
 
 #ifndef FLT_MAX
 #define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
@@ -436,7 +456,7 @@ void   mcsiminfo_close(void);
 #define POS_A_COMP_INDEX(index) \
     (mccomp_posa[index])
 #define POS_R_COMP_INDEX(index) \
-    (mccomp_posr[index]) 
+    (mccomp_posr[index])
 /* mcScattered defined in McStas generated C code */
 #define SCATTERED mcScattered
 
@@ -512,7 +532,7 @@ void   mcsiminfo_close(void);
     mcMagnetPrecession(mcnlx, mcnly, mcnlz, mcnlt, mcnlvx, mcnlvy, mcnlvz, \
 	   	       &mcnlsx, &mcnlsy, &mcnlsz, dt, posLM, rotLM); \
   } while(0)
-     
+
 #define mcPROP_DT(dt) \
   do { \
     if (mcMagnet && dt > 0) PROP_MAGNET(dt);\
@@ -789,7 +809,7 @@ void mcgenstate(void);
 double randnorm(void);
 void normal_vec(double *nx, double *ny, double *nz,
     double x, double y, double z);
-int inside_rectangle(double, double, double, double); 
+int inside_rectangle(double, double, double, double);
 int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
     double vx, double vy, double vz, double dx, double dy, double dz);
 int cylinder_intersect(double *t0, double *t1, double x, double y, double z,

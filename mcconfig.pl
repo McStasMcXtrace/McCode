@@ -175,6 +175,8 @@ while (<READ>) {
         print WRITE "     EXTERNAL_EDITOR => 'notepad',\n";
     } elsif (/\w*EXE \=\w*/) {
         print WRITE "     EXE => 'exe',\n";
+    } elsif (/\w*THREADS \=\w*/) {
+        print WRITE "     THREADS => 'no',\n";
     } else {
         print WRITE;
     }

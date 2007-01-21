@@ -73,6 +73,7 @@ use Config;
      PROCSIMPLE => 'no',
      TEMP => 'no',
      THREADS => '@HAVE_LIBPTHREAD@',
+     NEXUS => '@HAVE_LIBNEXUS@',
      PREC => '1e-3'
      );
 

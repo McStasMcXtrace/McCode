@@ -1,7 +1,7 @@
 # Makefile for McStas.
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
+#   Copyright (C) 1997-2007, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -38,9 +38,12 @@ CFLAGS = @CFLAGS@
 LDFLAGS= @LDFLAGS@
 
 HAVE_LIBPTHREAD = @HAVE_LIBPTHREAD@
-HAVE_QSORT = -DHAVE_QSORT=@HAVE_QSORT@
+HAVE_QSORT = @HAVE_QSORT@
+HAVE_LIBNEXUS = @HAVE_LIBNEXUS@
+WITH_NEXUS = @WITH_NEXUS@
 
-DEFS = @DEFS@ $(HAVE_QSORT) $(DEBUG)
+DEFS = @DEFS@ $(DEBUG)
+LIBS = @LIBS@
 
 PERL = @PERL@
 
@@ -103,7 +106,7 @@ mcstas.win32: $(COBJECTS)
 
 
 mcformat:
-	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm
+	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(WITH_NEXUS)
 
 clean:
 	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \

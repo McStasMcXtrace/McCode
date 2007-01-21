@@ -10,17 +10,20 @@
 * %Identification
 * Written by: KN
 * Date:    Aug 29, 1997
-* Release: McStas 1.10b
-* Version: $Revision: 1.143 $
+* Release: McStas 1.10
+* Version: $Revision: 1.144 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.143 2006-12-19 18:51:52 farhi Exp $
+* $Id: mcstas-r.c,v 1.144 2007-01-21 15:43:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.143  2006/12/19 18:51:52  farhi
+* Trace disables MPI and Threads only in multicpu mode...
+*
 * Revision 1.142  2006/12/19 15:11:57  farhi
 * Restored basic threading support without mutexes. All is now in mcstas-r.c
 *
@@ -412,7 +415,7 @@ static   long mcstartdate            = 0;
 static   int  mcdisable_output_files = 0;
 mcstatic int  mcgravitation          = 0;
 mcstatic int  mcdotrace              = 0;
-mcstatic FILE *mcsiminfo_file        = NULL;
+/* mcstatic FILE *mcsiminfo_file        = NULL; */
 static   char *mcdirname             = NULL;
 static   char *mcsiminfo_name        = "mcstas";
 int      mcallowbackprop             = 0;
@@ -667,8 +670,11 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 #endif /* USE_MPI */
 
 /* Multiple output format support. ========================================== */
-
+#ifdef HAVE_LIBNEXUS
+#define mcNUMFORMATS 10
+#else
 #define mcNUMFORMATS 9
+#endif
 #ifndef MCSTAS_FORMAT
 #define MCSTAS_FORMAT "McStas"  /* default format */
 #endif
@@ -950,7 +956,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     " ]\n%PREstv,%PAR,'events',reform(events,%MDIM,%NDIM,/over) & events=0\n%PREendif\n\n"},
   { "XML", "xml",
     "<?xml version=\"1.0\" ?>\n<!--\n"
-      "URL:    http://www.neutron.anl.gov/nexus/xml/NXgroup.xml\n"
+      "URL:    http://www.nexusformat.org/\n"
       "Editor: %USR\n"
       "Creator:%SRC McStas " MCSTAS_VERSION " [www.mcstas.org].\n"
       "Date:   Simulation started (%DATL) %DAT\n"
@@ -1276,27 +1282,39 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "] # End of Errors\n",
     "Ncounts [\n",
     "] # End of Ncounts\n}" }
+#ifdef HAVE_LIBNEXUS
+    ,
+    { "NeXus", "nxs",
+    "%PREFormat: %FMT file. Use hdfview to view.\n"
+      "%PREURL:    http://www.mcstas.org/\n"
+      "%PREEditor: %USR\n"
+      "%PRECreator:%SRC simulation (McStas " MCSTAS_VERSION ")\n"
+      "%PREDate:   Simulation started (%DATL) %DAT\n"
+      "%PREFile:   %FIL\n",
+    "%PREEndDate:%DAT\n",
+    "%PREbegin %TYP\n",
+    "%PREend %TYP\n",
+    "%PRE%NAM: %VAL\n",
+    "", "",
+    "%PREErrors [%PAR/%FIL]: \n", "",
+    "%PREEvents [%PAR/%FIL]: \n", "" }
+#endif
 };
 
 /* file i/o handling ======================================================== */
 
 /*******************************************************************************
-* mcnew_file: opens a new file within mcdirname if non NULL
-*             if mode is non 0, then mode is used, else mode is 'w'
+* mcfull_file: allocates a full file name=mcdirname+file
 *******************************************************************************/
-FILE *mcnew_file(char *name, char *ext, char *mode)
+char *mcfull_file(char *name, char *ext)
 {
   int dirlen;
   char *mem;
-  FILE *file;
-
-  if (!name || strlen(name) == 0) return(NULL);
-
   dirlen = mcdirname ? strlen(mcdirname) : 0;
   mem = malloc(dirlen + strlen(name) + 256);
   if(!mem)
   {
-    fprintf(stderr, "Error: Out of memory (mcnew_file)\n");
+    fprintf(stderr, "Error: Out of memory (mcfull_file)\n");
     exit(1);
   }
   strcpy(mem, "");
@@ -1313,6 +1331,21 @@ FILE *mcnew_file(char *name, char *ext, char *mode)
     strcat(mem, ".");
     strcat(mem, ext);
   }
+  return(mem);
+}
+
+/*******************************************************************************
+* mcnew_file: opens a new file within mcdirname if non NULL
+*             if mode is non 0, then mode is used, else mode is 'w'
+*******************************************************************************/
+FILE *mcnew_file(char *name, char *ext, char *mode)
+{
+  char *mem;
+  FILE *file;
+
+  if (!name || strlen(name) == 0) return(NULL);
+
+  mem = mcfull_file(name, ext);
   file = fopen(mem, (mode ? mode : "w"));
   if(!file)
     fprintf(stderr, "Warning: could not open output file '%s' in mode '%s' (mcnew_file)\n", mem, mode);
@@ -1566,8 +1599,22 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
   strncpy(date, ctime(&t), 64);
   if (strlen(date)) date[strlen(date)-1] = '\0';
 
-
-
+#ifdef HAVE_LIBNEXUS
+  if (strstr(format.Name, "NeXus")) {
+    if(mcnxfile_header(mcnxHandle, part,
+    pre,                  /* %1$s  PRE  */
+    instrname,            /* %2$s  SRC  */
+    file,                 /* %3$s  FIL  */
+    format.Name,          /* %4$s  FMT  */
+    date,                 /* %5$s  DAT  */
+    user,                 /* %6$s  USR  */
+    valid_parent,         /* %7$s  PAR  */
+    date_l) == NX_ERROR) {
+      fprintf(stderr, "Error: writing NeXus header file %s (mcfile_header)\n", file);
+      return(-1);
+    } else return(1); }
+  else
+#endif
   return(pfprintf(f, HeadFoot, "sssssssl",
     pre,                  /* %1$s  PRE  */
     instrname,            /* %2$s  SRC  */
@@ -1597,7 +1644,14 @@ static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *
   if (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab") || strstr(format.Name, "IDL"))
     for(i = 0; i < strlen(value); i++)
       if (value[i] == '"' || value[i] == '\'') value[i] = ' ';
-
+#ifdef HAVE_LIBNEXUS
+  if (strstr(format.Name, "NeXus")) {
+    if(mcnxfile_tag(mcnxHandle, pre, valid_section, name, value) == NX_ERROR) {
+      fprintf(stderr, "Error: writing NeXus tag file %s/%s=%s (mcfile_tag)\n", section, name, value);
+      return(-1);
+    } else return(1); }
+  else
+#endif
   return(pfprintf(f, format.AssignTag, "ssss",
     pre,          /* %1$s PRE */
     valid_section,/* %2$s SEC */
@@ -1639,7 +1693,21 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
   {
     if (strlen(pre) > 2) pre[strlen(pre)-2]='\0';
   }
-
+#ifdef HAVE_LIBNEXUS
+  if (strstr(format.Name, "NeXus")) {
+    if (mcnxfile_section(mcnxHandle,part,
+    pre,
+    type,
+    name,
+    valid_name,
+    parent,
+    valid_parent,
+    level) == NX_ERROR) {
+      fprintf(stderr, "Error: writing NeXus section %s/%s=NX%s (mcfile_section)\n", parent, name, type);
+      ret=-1;
+    } else ret=1; }
+  else
+#endif
   ret = pfprintf(f, Section, "ssssssi",
     pre,          /* %1$s  PRE  */
     type,         /* %2$s  TYP  */
@@ -1927,7 +1995,17 @@ void mcsiminfo_init(FILE *f)
 {
   if (mcdisable_output_files) return;
   if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return;
-  if (!f) mcsiminfo_file = mcnew_file(mcsiminfo_name, mcformat.Extension, "w");
+#ifdef HAVE_LIBNEXUS
+  /* NeXus sim info is the NeXus root file */
+  if(strstr(mcformat.Name, "NeXus")) {
+    if (mcnxfile_init(mcsiminfo_name, mcformat.Extension, 0, &mcnxHandle) == NX_ERROR) {
+      fprintf(stderr, "Error: opening NeXus file %s (mcsiminfo_init)\n", mcsiminfo_name);
+    }
+    return; }
+  else
+#endif
+  if (!f) mcsiminfo_file = mcnew_file(mcsiminfo_name, mcformat.Extension,
+    strstr(mcformat.Name, "append") || strstr(mcformat.Name, "catenate") ? "a":"w");
   else mcsiminfo_file = f;
   if(!mcsiminfo_file)
     fprintf(stderr,
@@ -1946,10 +2024,19 @@ void mcsiminfo_init(FILE *f)
                || strstr(mcformat.Name, "OpenGENIE") ? "# " : "  ");
 
 
-    ismcstas = (strstr(mcformat.Name, "McStas") != NULL);
-    if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas");
-    else strcpy(root, "root");
-    if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
+    ismcstas = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
+    strcpy(root, strstr(mcformat.Name, "XML") ? "root" : "mcstas");
+    sprintf(simname, "%s%s%s",
+      mcdirname ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name);
+
+#ifdef HAVE_LIBNEXUS
+    if (strstr(mcformat.Name, "NeXus")) {
+      /* NXentry class */
+      char file_time[1024];
+      sprintf(file_time, "%s_%li", mcinstrument_name, mcstartdate);
+      mcfile_section(mcsiminfo_file, mcformat, "begin", pre, file_time, "entry", root, 1);
+    }
+#endif
 
     mcfile_header(mcsiminfo_file, mcformat, "header", pre, simname, root);
     /* begin-end instrument */
@@ -1984,18 +2071,24 @@ void mcsiminfo_close(void)
     strcpy(pre, strstr(mcformat.Name, "VRML")
                || strstr(mcformat.Name, "OpenGENIE") ? "# " : "  ");
 
-    ismcstas = (strstr(mcformat.Name, "McStas") != NULL);
-    if (mcdirname) sprintf(simname, "%s%s%s", mcdirname, MC_PATHSEP_S, mcsiminfo_name); else sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
-    if (strstr(mcformat.Name, "XML") == NULL && strstr(mcformat.Name, "NeXus") == NULL) strcpy(root, "mcstas"); else strcpy(root, "root");
+    ismcstas = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
+    strcpy(root, strstr(mcformat.Name, "XML") ? "root" : "mcstas");
+    sprintf(simname, "%s%s%s",
+      mcdirname ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name);
 
     if (!ismcstas)
     {
       mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
       mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
     }
+#ifdef HAVE_LIBNEXUS
+    if (strstr(mcformat.Name, "NeXus")) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "entry", root, 1);
+#endif
     mcfile_header(mcsiminfo_file, mcformat, "footer", pre, simname, root);
-
-    if (mcsiminfo_file != stdout) fclose(mcsiminfo_file);
+#ifdef HAVE_LIBNEXUS
+    if (strstr(mcformat.Name, "NeXus")) mcnxfile_close(&mcnxHandle);
+#endif
+    if (mcsiminfo_file != stdout && mcsiminfo_file && !strstr(mcformat.Name, "NeXus")) fclose(mcsiminfo_file);
     mcsiminfo_file = NULL;
 
     free(pre);
@@ -2055,6 +2148,18 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     mcvalid_name(valid_parent, parent, 64);
   else mcvalid_name(valid_parent, filename, 64);
 
+#ifdef HAVE_LIBNEXUS
+  if (strstr(format.Name, "NeXus")) {
+    if(strstr(format.Name, "no header") || strstr(format.Name, "no footer")
+    || strstr(format.Name, "append") || strstr(format.Name, "catenate"))
+      fprintf(stderr, "Warning: NeXus output does not support catenate mode\n");
+    if(mcnxfile_datablock(mcnxHandle, part,
+      pre, valid_parent, filename, xlabel, valid_xlabel, ylabel, valid_ylabel, zlabel, valid_zlabel, title, xvar, yvar, zvar, abs(m), abs(n), abs(p), *x1, *x2, *y1, *y2, *z1, *z2, p0, p1, p2) == NX_ERROR) {
+      fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
+      return(-1);
+    } else return(1); }
+#endif
+
   if (strstr(format.Name, " raw")) israw_data = 1;
 
   /* if normal or begin and part == data: output info_data (sim/data_file) */
@@ -2069,7 +2174,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   }
 
   /* if normal or begin: begin part (sim/data file) */
-  if (strlen(Begin) && just_header != 2 && f)
+  if (strlen(Begin) && just_header != 2 && f) {
     pfprintf(f, Begin, "sssssssssssssiiigggggg",
       pre,          /* %1$s   PRE  */
       valid_parent, /* %2$s   PAR  */
@@ -2093,7 +2198,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       *y2,           /* %20$g  YMAX */
       *z1,           /* %21$g  ZMIN */
       *z2);          /* %22$g  ZMAX */
-
+  }
  /* if normal, and !single:
   *   open datafile,
   *   if !ascii_only
@@ -2109,7 +2214,9 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
       char mode[10];
 
       strcpy(mode,
-             (isdata != 1 || strstr(format.Name, "no header") ? "a" : "w"));
+             (isdata != 1 || strstr(format.Name, "no header")
+             || strstr(format.Name, "append") || strstr(format.Name, "catenate") ?
+             "a" : "w"));
       if (strstr(format.Name, "binary")) strcat(mode, "b");
       if (mcformat_data.Name) dataformat = mcformat_data;
       datafile = mcnew_file(filename, dataformat.Extension, mode);
@@ -2169,16 +2276,16 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     int  isIDL, isPython;
     int  isBinary=0;
 
-    if (strstr(format.Name, "binary float")) isBinary=1;
-    else if (strstr(format.Name, "binary double")) isBinary=2;
+    if (strstr(format.Name, "binary")) isBinary=1;
+    if (strstr(format.Name, "float"))  isBinary=1;
+    else if (strstr(format.Name, "double")) isBinary=2;
     isIDL    = (strstr(format.Name, "IDL") != NULL);
     isPython = (strstr(format.Name, "Python") != NULL);
     if (isIDL) strcpy(eol_char,"$\n"); else strcpy(eol_char,"\n");
 
+    if (datafile && !isBinary)
     for(j = 0; j < n*p; j++)  /* loop on rows(y) */
     {
-      if(datafile && !isBinary && 0)
-        fprintf(datafile,"%s", pre);
       for(i = 0; i < m; i++)  /* write all columns (x) */
       {
         double I=0, E=0, N=0;
@@ -2196,7 +2303,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
         P2sum += p2 ? E : I*I;
 
         if (p0 && p1 && p2 && !israw_data) E = mcestimate_error(N,I,E);
-        if(datafile && !isBinary && isdata_present)
+        if(isdata_present)
         {
           if (isdata == 1) value = I;
           else if (isdata == 0) value = N;
@@ -2216,7 +2323,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           }
         }
       }
-      if (datafile && !isBinary && isdata_present) fprintf(datafile, eol_char);
+      if (isdata_present) fprintf(datafile, eol_char);
     } /* end 2 loops if not Binary */
     if (datafile && isBinary)
     {
@@ -2235,7 +2342,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           for (i=0; i<abs(m*n*p); i++)
             { if (isdata != 2 || israw_data) s[i] = (float)d[i];
               else s[i] = (float)mcestimate_error(p0[i],p1[i],p2[i]); }
-          count = fwrite(s, sizeof(float), abs(m*n*p), datafile);
+            count = fwrite(s, sizeof(float), abs(m*n*p), datafile);
           if (count != abs(m*n*p)) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)abs(m*n*p));
           free(s);
         } else fprintf(stderr, "McStas: Out of memory for writing float binary file '%s' (mcfile_datablock)\n", filename);
@@ -2264,8 +2371,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     mcvalid_name(valid_parent, parent, 64);
   else mcvalid_name(valid_parent, filename, 64);
   /* if normal or end: end_data */
-  if (strlen(End) && just_header != 1 && f)
-  {
+  if (strlen(End) && just_header != 1 && f) {
     pfprintf(f, End, "sssssssssssssiiigggggg",
       pre,          /* %1$s   PRE  */
       valid_parent, /* %2$s   PAR  */
@@ -2324,7 +2430,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           mcfile_header(datafile, dataformat, "footer", new_pre,
                         filename, valid_parent);
     }
-    if (datafile) fclose(datafile);
+    if (datafile && datafile != f) fclose(datafile);
     free(mode); free(new_pre);
   }
   else
@@ -2843,7 +2949,6 @@ struct mcformats_struct mcuse_format(char *format)
   if (strstr(low_format,"binary"))
   {
     if (strstr(low_format,"double")) strcat(usedformat.Name," binary double data");
-    else if (strstr(low_format,"nexus")) strcat(usedformat.Name," binary NeXus data");
     else strcat(usedformat.Name," binary float data");
     mcascii_only = 1;
   }
@@ -2890,7 +2995,13 @@ void mcclear_format(struct mcformats_struct usedformat)
 /* mcuse_file: will save data/sim files */
 static void mcuse_file(char *file)
 {
-  mcsiminfo_name = file;
+  if (file && strcmp(file, "auto"))
+    mcsiminfo_name = file;
+  else {
+    char *filename=(char*)malloc(1024);
+    sprintf(filename, "%s_%li", mcinstrument_name, mcstartdate);
+    mcsiminfo_name = filename;
+  }
   mcsingle_file  = 1;
 }
 
@@ -4387,6 +4498,8 @@ mcuse_dir(char *dir)
 static void
 mcinfo(void)
 {
+  if(strstr(mcformat.Name,"NeXus"))
+    exit(fprintf(stderr,"Error: Can not display instrument informtion in NeXus binary format\n"));
   mcsiminfo_init(stdout);
   mcsiminfo_close();
   exit(0);
@@ -4742,6 +4855,10 @@ mcstas_main(int argc, char *argv[])
   /* default is to output as McStas format */
   mcformat_data.Name=NULL;
   mcparseoptions(argc, argv);
+  if (strstr(mcformat.Name, "NeXus")) {
+    if (mcformat_data.Name) mcclear_format(mcformat_data);
+    mcformat_data.Name=NULL;
+  }
   if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
 
@@ -4776,7 +4893,9 @@ mcstas_main(int argc, char *argv[])
 #ifdef SIGSEGV
   signal( SIGSEGV ,sighandler);   /* segmentation violation */
 #endif
-  mcsiminfo_init(NULL); mcsiminfo_close();  /* makes sure we can do that */
+  if (!strstr(mcformat.Name,"NeXus")) {
+    mcsiminfo_init(NULL); mcsiminfo_close();  /* makes sure we can do that */
+  }
   SIG_MESSAGE("main (Init)");
   mcinit();
 #ifdef SIGINT

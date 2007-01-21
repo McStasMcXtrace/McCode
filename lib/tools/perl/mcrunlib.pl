@@ -267,6 +267,9 @@ sub get_out_file_next {
         $libs .= " -DUSE_MPI ";
         $cc      = $MCSTAS::mcstas_config{MPICC};
       }
+      if ($MCSTAS::mcstas_config{NEXUS} ne "0") {
+        $libs .= " -DHAVE_LIBNEXUS -lNeXus ";
+      }
       # Needs quoting on MSWin32:
       if ($Config{'osname'} eq 'MSWin32') {
         $out_name="\"$out_name\"";

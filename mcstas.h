@@ -12,17 +12,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.45 $
+* Version: $Revision: 1.46 $
 *
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.45 2006-11-06 14:30:00 farhi Exp $
+* $Id: mcstas.h,v 1.46 2007-01-21 15:43:05 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.45 $"
+#define MCSTAS_H "$Revision: 1.46 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -416,15 +416,15 @@ struct instr_formal
     CExp default_value;   /* Default value if isoptional is true */
   };
 
-/* NeXus dictionary information. NeXus is supported through the NXDICT
-* API, and only if one NXDICTFILE declaration is
+/* NeXus information. NeXus is supported through the NeXus
+* API, and only if one file name declaration is
 * present in the instrument.
 */
-struct NXDinfo
+struct NXinfo
   {
-    char *nxdfile;    /* NeXus dictionary file, or NULL */
-    int any;          /* True only if any NXDICTFILE decls. */
-    int hdfversion;  /* may be 4 (default) or 5 */
+    char *nxfile;    /* NeXus file, or NULL=instr-timestamp.nxs */
+    int any;         /* True only if any NEXUS decls. */
+    int hdfversion;  /* may be 4 or 5, or 0=xml */
   };
 
 /* Instrument definition. */
@@ -442,7 +442,7 @@ struct instr_def
     Symtab groupmap;  /* Map of component group names */
     List complist;    /* List of components in declaration order */
     List grouplist;   /* List of component groups in declaration order */
-    struct NXDinfo *nxdinfo;  /* NeXus dictionary declarations */
+    struct NXinfo *nxinfo;  /* NeXus declarations */
     int use_default_main; /* If set, output a main() function */
     int include_runtime;  /* If set, include runtime in output */
     int enable_trace;   /* If set, enable output of neutron traces */
