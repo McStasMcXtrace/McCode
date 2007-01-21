@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.64 $
+* Version: $Revision: 1.65 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.64  2006/12/19 15:11:56  farhi
+* Restored basic threading support without mutexes. All is now in mcstas-r.c
+*
 * Revision 1.63  2006/08/29 15:57:07  farhi
 * improved threads efficiency by using mutexes
 *
@@ -125,7 +128,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.64 2006-12-19 15:11:56 farhi Exp $
+* $Id: cogen.c,v 1.65 2007-01-21 15:43:04 farhi Exp $
 *
 *******************************************************************************/
 
@@ -626,14 +629,6 @@ cogen_decls(struct instr_def *instr)
   coutf("void %sdisplay(void);", ID_PRE);
   cout("");
 
-  if(instr->nxdinfo->any) {
-    coutf("/* Init NeXus file support declarations, using the NeXus Dictionary API */");
-    cout("#include \"nxdict.h\"");
-    coutf("void %snxdict_init(void); ", ID_PRE);
-    coutf("void %snxdict_cleanup(void); ", ID_PRE);
-    coutf("void %snxdict_nxout(void); ", ID_PRE);
-  }
-
   /* 2. Component SHAREs. */
   liter = list_iterate(instr->complist);
   while(comp = list_next(liter))
@@ -838,26 +833,6 @@ cogen_decls(struct instr_def *instr)
 
 } /* cogen_decls */
 
-
-/*******************************************************************************
-* Code generation for any NEXUS declarations.
-*******************************************************************************/
-
-/* this code generation comes after the 'init' code generation, thus comp
-   parameters are known, and can be saved within nxdict_init */
-
-static void
-cogen_nxdict(struct instr_def *instr)
-{
-  List_handle liter;
-  struct comp_inst *comp;
-  struct instr_formal *i_formal;
-  char *quoted_name = str_quote(instr->nxdinfo->nxdfile);
-  /* now create Instrument parameter list to be sent to NXdict routines */
-
-  coutf("  SIG_MESSAGE(\"%s (NeXus init)\");", instr->name); /* ADD: E. Farhi Aug 25th, 2002 */
-}
-
 /*******************************************************************************
 * cogen_init: Generate the INIT section.
 *******************************************************************************/
@@ -1054,17 +1029,19 @@ cogen_init(struct instr_def *instr)
   }
   list_iterate_end(liter);
 
-  if(instr->nxdinfo->any) {
-    coutf("#ifdef NXDICTAPI");
-    coutf("  %snxdict_init(); ", ID_PRE);
-    coutf("#endif");
-  }
-
   /* Output graphics representation of components. */
   coutf("    if(%sdotrace) %sdisplay();", ID_PRE, ID_PRE);
   coutf("    %sDEBUG_INSTR_END()", ID_PRE);
   cout("  }");
   cout("");
+#ifdef HAVE_LIBNEXUS
+  if (instr->nxinfo->any) {
+    cout ("/* NeXus support */\n");
+    coutf("if (strstr(%sformat.Name, \"NeXus\")) %suse_file(%s);\n",
+      ID_PRE, ID_PRE, instr->nxinfo->nxfile ? instr->nxinfo->nxfile : "NULL");
+    coutf("%snxversion=%i;\n", ID_PRE, instr->nxinfo->hdfversion);
+  }
+#endif
 
   cout("}");
   cout("");
@@ -1316,7 +1293,7 @@ cogen_save(struct instr_def *instr)
    * data is saved entirely. It is completed during the last siminfo_close
    * of mcraytrace
    */
-  cout("  if (!handle) mcsiminfo_init(NULL);");
+  coutf("  if (!handle) %ssiminfo_init(NULL);", ID_PRE);
   cout("  /* User component SAVE code. */");
   cout("");
   liter = list_iterate(instr->complist);
@@ -1342,7 +1319,7 @@ cogen_save(struct instr_def *instr)
                            instr->saves);
     cout("");
   }
-  cout("  if (!handle) mcsiminfo_close(); ");
+  coutf("  if (!handle) %ssiminfo_close(); ", ID_PRE);
   cout("}");
 } /* cogen_save */
 
@@ -1359,7 +1336,7 @@ cogen_finally(struct instr_def *instr)
   coutf("void %sfinally(void) {", ID_PRE);
   cout("  /* User component FINALLY code. */");
   /* first call SAVE code to save any remaining data */
-  cout("  mcsiminfo_init(NULL);");
+  coutf("  %ssiminfo_init(NULL);", ID_PRE);
   coutf("  %ssave(%ssiminfo_file); /* save data when simulation ends */", ID_PRE, ID_PRE);
   cout("");
   liter = list_iterate(instr->complist);
@@ -1394,7 +1371,7 @@ cogen_finally(struct instr_def *instr)
                            instr->finals);
     cout("");
   }
-  cout("  mcsiminfo_close(); ");
+  coutf("  %ssiminfo_close(); ", ID_PRE);
   cout("}");
 } /* cogen_finally */
 
@@ -1485,13 +1462,24 @@ cogen_runtime(struct instr_def *instr)
   {
     cout("#define MC_EMBEDDED_RUNTIME"); /* Some stuff will be static. */
     embed_file("mcstas-r.h");
+    if(instr->nxinfo->any) {
+      embed_file("nexus-lib.h"); /* will require linking with -DHAVE_LIBNEXUS -lNeXus */
+    }
+    if(instr->nxinfo->any) {
+      embed_file("nexus-lib.c");
+      if (verbose) printf("Requires library    -lNeXus\n");
+    }
     embed_file("mcstas-r.c");
   }
   else
   {
     coutf("#include \"%s%sshare%smcstas-r.h\"", sysdir_new, pathsep, pathsep);
+    if(instr->nxinfo->any)
+      coutf("#include \"%s%sshare%snexus-lib.h\"", sysdir_new, pathsep, pathsep);
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
-    fprintf(stderr,"To make instrument %s, compile and link with these libraries\n", instrument_definition->quoted_source);
+    if(instr->nxinfo->any)
+      fprintf(stderr,"Dependency: %s.o and '-lNeXus'\n", "nexus-lib");
+    fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n", instrument_definition->quoted_source, sysdir_new, pathsep);
   }
 
   coutf("#ifdef MC_TRACE_ENABLED");
@@ -1547,8 +1535,6 @@ cogen(char *output_name, struct instr_def *instr)
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);
-  if(instr->nxdinfo->any)
-    cogen_nxdict(instr);        /* Only if NEXUS is actually used */
   cogen_trace(instr);
   cogen_save(instr);
   cogen_finally(instr);

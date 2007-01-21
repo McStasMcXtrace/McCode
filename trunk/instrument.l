@@ -14,13 +14,20 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.39 $
+* Version: $Revision: 1.40 $
 *
 * Flex scanner for instrument definition files.
 *
-* $Id: instrument.l,v 1.39 2006-04-19 13:06:25 farhi Exp $
+* $Id: instrument.l,v 1.40 2007-01-21 15:43:04 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.39  2006/04/19 13:06:25  farhi
+* * Updated Release, Version and Origin fields in headers
+* * Improved setversion to update all McStasx.y occurencies into current release
+* * Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
+* * Added possibility to save log of the session to a file (appended) in mcgui
+* * Made Scilab use either TCL_EvalStr or TK_EvalStr
+*
 * Revision 1.38  2006/04/06 08:46:20  farhi
 * NEW GRAMMAR: JUMP WHEN ITERATE COPY ...
 * need doc in TeX now...
@@ -232,7 +239,6 @@ SHARE         return TOK_SHARE;
 EXTEND        return TOK_EXTEND;
 GROUP         return TOK_GROUP;         /* extended McStas grammar */
 NEXUS         return TOK_NEXUS;         /* optional */
-DICTFILE      return TOK_DICTFILE;      /* optional */
 HDF           return TOK_HDF;           /* optional */
 SAVE          return TOK_SAVE;
 JUMP          return TOK_JUMP;          /* extended McStas grammar */

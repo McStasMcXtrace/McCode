@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.67 $
+* Version: $Revision: 1.68 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.67 2006-11-06 14:30:00 farhi Exp $
+* $Id: instrument.y,v 1.68 2007-01-21 15:43:04 farhi Exp $
 *
 *******************************************************************************/
 
@@ -61,7 +61,7 @@
   struct comp_inst *instance; /* Component instance */
   struct comp_place place;  /* Component place */
   struct comp_orientation ori;  /* Component orientation */
-  struct NXDinfo *nxdinfo;  /* Info for NeXus dictionary interface */
+  struct NXinfo *nxinfo;  /* Info for NeXus interface */
   struct group_inst *groupinst;
   struct jump_struct *jump;
   List   jumps;
@@ -97,7 +97,6 @@
 %token TOK_GROUP      "GROUP"   /* extended McStas grammar */
 %token TOK_SAVE       "SAVE"
 %token TOK_NEXUS      "NEXUS"   /* optional */
-%token TOK_DICTFILE   "DICTFILE"/* optional */
 %token TOK_HDF        "HDF"     /* optional */
 %token TOK_JUMP       "JUMP"    /* extended McStas grammar */
 %token TOK_WHEN       "WHEN"    /* extended McStas grammar */
@@ -134,8 +133,8 @@
 %type <parms>   parameters
 %type <place>   place
 %type <ori>     orientation
-%type <nxdinfo> nexus
-%type <string>  dictfile instname
+%type <nxinfo> nexus
+%type <string>  nxfile instname
 %type <number>  hdfversion
 %type <jump>    jump
 %type <jumps>   jumps jumps1
@@ -414,7 +413,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
       {
         instrument_definition->decls = $6;
         instrument_definition->inits = $7;
-        instrument_definition->nxdinfo = $8;
+        instrument_definition->nxinfo = $8;
         instrument_definition->saves  = $10;
         instrument_definition->finals = $11;
         instrument_definition->compmap = comp_instances;
@@ -551,44 +550,44 @@ instr_formal:   TOK_ID TOK_ID
 /* NeXus output support */
 nexus:      /* empty: no NeXus support */
       {
-        struct NXDinfo *nxdinfo;
-        palloc(nxdinfo);
-        nxdinfo->nxdfile = NULL;
-        nxdinfo->any = 0;
-        $$ = nxdinfo;
+        struct NXinfo *nxinfo;
+        palloc(nxinfo);
+        nxinfo->nxfile = NULL;
+        nxinfo->any = 0;
+        $$ = nxinfo;
       }
-    | nexus "NEXUS" dictfile hdfversion
-      { /* use default NeXus dictionary file */
-        struct NXDinfo *nxdinfo = $1;
-        if(nxdinfo->nxdfile)
+    | nexus "NEXUS" nxfile hdfversion
+      { /* use default NeXus file */
+        struct NXinfo *nxinfo = $1;
+        if(nxinfo->nxfile)
         {
-          print_error("Multiple NeXus DICTFILE declarations found (%s).\n"
-          "At most one NeXus DICTFILE declarations may "
-          "be used in an instrument", nxdinfo->nxdfile);
+          print_error("Multiple NeXus output file declarations found (%s).\n"
+          "At most one NeXus file name may "
+          "be used in an instrument", nxinfo->nxfile);
         }
         else
         {
-          nxdinfo->nxdfile     = $3;
-          nxdinfo->hdfversion = atof($4);
+          nxinfo->nxfile     = $3;
+          nxinfo->hdfversion = strstr($4, "XML") || strstr($4, "xml") ? 0 : atof($4);
         }
-        nxdinfo->any = 1; /* Now need NeXus support in runtime */
-        $$ = nxdinfo;
+        nxinfo->any = 1; /* Now need NeXus support in runtime */
+        $$ = nxinfo;
       }
 ;
-dictfile: /* empty: default dictionary */
+nxfile: /* empty: default output file */
       {
-        $$ = str_cat(instrument_definition->name, ".dic", NULL);
+        $$ = NULL;
       }
-    | dictfile "DICTFILE" TOK_STRING
+    | nxfile TOK_STRING
       {
-        $$ = $3;
+        $$ = $2;
       }
 ;
 hdfversion: /* empty: default HDF version */
       {
         $$ = "5";
       }
-    | hdfversion "HDF" TOK_NUMBER
+    | hdfversion "HDF" TOK_STRING /* 4, 5 or XML */
       {
         $$ = $3;
       }
