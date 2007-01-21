@@ -273,14 +273,14 @@ sub simulation_dialog {
 * MPI on clusters");
     my $choicecluster_val;
     if ($si{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-    elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+#     elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($si{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($si{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
     my $choicecluster_orig=$choicecluster_val;
     my $choices=[ 'None (single CPU)'];
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
-      push @{ $choices }, 'Threads (multi-core)';
-    }
+#     if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
+#       push @{ $choices }, 'Threads (multi-core)';
+#     }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
@@ -301,8 +301,7 @@ sub simulation_dialog {
       -options      => $choices
     )->pack(-side => 'left');
 
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "no"
-     || $MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
+    if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
         our $labelnodes=$line->Label(-text => "Number of nodes: ")->pack(-side => 'left');
         $b->attach($labelnodes, -balloonmsg => "Number of nodes to use\nfor Parallelisation");
         our $mpinodes = $line->Entry(-relief => 'sunken',
@@ -601,13 +600,13 @@ sub preferences_dialog {
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
     if ($inf_sim{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-    elsif ($inf_sim{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+#     elsif ($inf_sim{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($inf_sim{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($inf_sim{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
     my $choices=[ 'None (single CPU)'];
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
-      push @{ $choices }, 'Threads (multi-core)';
-    }
+#     if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
+#       push @{ $choices }, 'Threads (multi-core)';
+#     }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
