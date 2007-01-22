@@ -11,16 +11,22 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.146 $
+* Version: $Revision: 1.147 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.146 2007-01-22 15:13:42 farhi Exp $
+* $Id: mcstas-r.c,v 1.147 2007-01-22 18:22:43 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.146  2007/01/22 15:13:42  farhi
+* Fully functional NeXus output format.
+* Works also for lists, but as catenation is not working in NAPI, one
+* has to store all in memory (e.g. with large Monitor_nD bufsize), so that
+* its written in one go at the end of sim.
+*
 * Revision 1.145  2007/01/22 01:38:25  farhi
 * Improved NeXus/NXdata support. Attributes may not be at the right place
 * yet.
@@ -1704,8 +1710,7 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
   char valid_parent[256];
   int  ret;
 
-  if(!f)
-    return (-1);
+  if(!f && !strstr(format.Name, "NeXus")) return (-1);
 
   if (part && !strcmp(part,"end")) Section = format.EndSection;
   else Section = format.BeginSection;
