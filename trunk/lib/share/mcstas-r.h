@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.87 $
+* Version: $Revision: 1.88 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.87 2007-01-21 15:43:08 farhi Exp $
+* $Id: mcstas-r.h,v 1.88 2007-01-22 01:38:25 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.87  2007/01/21 15:43:08  farhi
+*       NeXus support. Draft version (functional). To be tuned.
+*
 *       Revision 1.86  2006/08/28 10:12:25  pchr
 *       Basic infrastructure for spin propagation in magnetic fields.
 *
@@ -200,7 +203,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.87 $"
+#define MCSTAS_R_H "$Revision: 1.88 $"
 
 #include <math.h>
 #include <string.h>
@@ -354,6 +357,9 @@ mcstatic FILE *mcsiminfo_file        = NULL;
      mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
 #define DETECTOR_OUT_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f) \
      mcdetector_out_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_CUSTOM_HEADER(t)  if (t && strlen(t)) { \
+     mcDetectorCustomHeader=malloc(strlen(t)); \
+     if (mcDetectorCustomHeader) strcpy(mcDetectorCustomHeader, t); }
 
 /* MPI stuff ================================================================ */
 

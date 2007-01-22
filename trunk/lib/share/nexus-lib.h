@@ -11,7 +11,7 @@
 * Written by: EF
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 *
 * NeXus Runtime system header for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.h,v 1.1 2007-01-21 15:43:08 farhi Exp $
+* $Id: nexus-lib.h,v 1.2 2007-01-22 01:38:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2007/01/21 15:43:08  farhi
+* NeXus support. Draft version (functional). To be tuned.
+*
 *
 *******************************************************************************/
 
@@ -35,8 +38,6 @@
 NXhandle mcnxHandle;
 char    *mcnxFilename=NULL;
 long     mcnxversion;       /* init in cogen_init */
-
-extern FILE * mcsiminfo_file;
 
 /* NeXus output functions that replace calls to pfprintf in mcstas-r */
 int mcnxfile_init(char *name, char *ext, char mode, NXhandle *nxhandle);

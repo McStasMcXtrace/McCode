@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10b
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 *
 * A McStas format converter to merge concert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.12 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.13 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -66,11 +66,11 @@
 typedef struct Pool_header *Pool; /* allows memory to be included */
 #include "memory.c"
 
+#include "lib/share/mcstas-r.h" /* with decl of MC_PATHSEP */
+
 #ifdef HAVE_LIBNEXUS
 #include "lib/share/nexus-lib.h"
 #endif
-
-#include "lib/share/mcstas-r.h" /* with decl of MC_PATHSEP */
 
 #include "lib/share/mcstas-r.c"
 

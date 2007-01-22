@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.1 2007-01-21 15:43:08 farhi Exp $
+* $Id: nexus-lib.c,v 1.2 2007-01-22 01:38:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.1  2007/01/21 15:43:08  farhi
+* NeXus support. Draft version (functional). To be tuned.
+*
 *
 *******************************************************************************/
 
@@ -31,10 +34,12 @@
 int mcnxfile_init(char *name, char *ext, char mode, NXhandle *nxhandle)
 {
   int mcnxMode=NXACC_CREATE5;
-  mcnxFilename = mcfull_file(name, ext);
-  if (mcnxversion==4) mcnxMode =NXACC_CREATE;
-  else if (mcnxversion==5) mcnxMode =NXACC_CREATE5;
-  else if (mcnxversion==0) mcnxMode =NXACC_CREATEXML;
+  char mcnxExt[10];
+  strcpy(mcnxExt, ext);
+  if (mcnxversion==4) { mcnxMode =NXACC_CREATE; strcpy(mcnxExt, "nx4"); }
+  else if (mcnxversion==5) { mcnxMode =NXACC_CREATE5; strcpy(mcnxExt, "nx5"); }
+  else if (mcnxversion==0) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
+  mcnxFilename = mcfull_file(name, mcnxExt);
   if (NXopen(mcnxFilename, mcnxMode, nxhandle) == NX_ERROR) {
     mcsiminfo_file = NULL;
   } else { mcsiminfo_file=(FILE*)mcnxFilename; }
@@ -61,12 +66,9 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
   if (!strcmp(part, "header")) {
     if (NXputattr(nxhandle, "user_name", user, strlen(user), NX_CHAR) == NX_ERROR)
       return(NX_ERROR);
-    NXputattr(nxhandle, "file_time", date, strlen(date), NX_CHAR);
-    NXputattr(nxhandle, "NeXus_version", NEXUS_VERSION,
-      strlen(NEXUS_VERSION), NX_CHAR);
-    if (mcnxversion==4) NXputattr(nxhandle, "HDF_version", "4", 1, NX_CHAR);
-    if (mcnxversion==5) NXputattr(nxhandle, "HDF5_version", "5", 1, NX_CHAR);
-    if (mcnxversion==0) NXputattr(nxhandle, "XML_version", "1.0", 3, NX_CHAR);
+    // NXputattr(nxhandle, "file_time", date, strlen(date), NX_CHAR);
+    // NXputattr(nxhandle, "NeXus_version", NEXUS_VERSION,
+    //  strlen(NEXUS_VERSION), NX_CHAR);
     char creator[128];
     sprintf(creator, "%s McStas " MCSTAS_VERSION " [www.mcstas.org]", instrname);
     NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR);
@@ -99,11 +101,15 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
     char *valid_parent, /* %6$s  VPA  */
     int   level)        /* %7$i  LVL */
 {
+  char nxname[1024];
+  if (!strcmp(type, "instrument")) strcpy(nxname, "instrument");
+  else if (!strcmp(type, "simulation")) strcpy(nxname, "simulation");
+  else strcpy(nxname, valid_name);
   if (!strcmp(part, "begin")) {
     char nxtype[128];
     sprintf(nxtype, "NX%s", type);
-    if (NXmakegroup(nxhandle, name, nxtype) == NX_ERROR) return(NX_ERROR);
-    return(NXopengroup(nxhandle, name, nxtype));
+    NXmakegroup(nxhandle, nxname, nxtype);
+    return(NXopengroup(nxhandle, nxname, nxtype));
   } else if (!strcmp(part, "end")) {
     return(NXclosegroup(nxhandle));
   }
@@ -111,35 +117,11 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
 
 /* mcnxfile_datablock: data block begin/end. Returns: NX_ERROR or NX_OK */
 int mcnxfile_datablock(NXhandle nxhandle, char *part,
-      char *pre,          /* %1$s   PRE  */
-      char *valid_parent, /* %2$s   PAR  */
-      char *filename,     /* %3$s   FIL  */
-      char *xlabel,       /* %4$s   XLA  */
-      char *valid_xlabel, /* %5$s   XVL  */
-      char *ylabel,       /* %6$s   YLA  */
-      char *valid_ylabel, /* %7$s   YVL  */
-      char *zlabel,       /* %8$s   ZLA  */
-      char *valid_zlabel, /* %9$s   ZVL  */
-      char *title,        /* %10$s  TITL */
-      char *xvar,         /* %11$s  XVAR */
-      char *yvar,         /* %12$s  YVAR */
-      char *zvar,         /* %13$s  ZVAR */
-      int  m,            /* %14$i  MDIM */
-      int  n,            /* %15$i  NDIM */
-      int  p,            /* %16$i  PDIM */
-      double x1,           /* %17$g  XMIN */
-      double x2,           /* %18$g  XMAX */
-      double y1,           /* %19$g  YMIN */
-      double y2,           /* %20$g  YMAX */
-      double z1,           /* %21$g  ZMIN */
-      double z2,           /* %22$g  ZMAX */
-      double *p0,
-      double *p1,
-      double *p2)
+      char *format, char *valid_parent, char *filename, char *xlabel, char *valid_xlabel, char *ylabel, char *valid_ylabel, char *zlabel, char *valid_zlabel, char *title, char *xvar, char *yvar, char *zvar, int  m, int  n, int  p, double x1, double x2, double y1, double y2, double z1, double z2, double *p0, double *p1, double *p2)
 {
   /* first write attributes */
   char creator[128];
-  sprintf(creator, "%s component %s", mcinstrument_name, valid_parent);
+  sprintf(creator, "%s: component %s", mcinstrument_name, valid_parent);
   if (NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR) == NX_ERROR)
     return(NX_ERROR);
   /* then writes axes, only for data */
@@ -153,6 +135,10 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       if (NXmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &m) == NX_ERROR) return(NX_ERROR);
       NXopendata(nxhandle, valid_xlabel);
       NXputdata (nxhandle, axis);
+      NXputattr (nxhandle, "long_name", xlabel, strlen(xlabel), NX_CHAR);
+      NXputattr (nxhandle, "short_name", xvar, strlen(xvar), NX_CHAR);
+      int naxis=1;
+      NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
     }
     if (n > 1) {
       double axis[n];
@@ -161,6 +147,10 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       NXmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &n);
       NXopendata(nxhandle, valid_ylabel);
       NXputdata (nxhandle, axis);
+      NXputattr (nxhandle, "long_name", ylabel, strlen(ylabel), NX_CHAR);
+      NXputattr (nxhandle, "short_name", yvar, strlen(yvar), NX_CHAR);
+      int naxis=2;
+      NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
     }
     if (p > 1) {
       double axis[p];
@@ -169,6 +159,10 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       NXmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &p);
       NXopendata(nxhandle, valid_zlabel);
       NXputdata (nxhandle, axis);
+      NXputattr (nxhandle, "long_name", zlabel, strlen(zlabel), NX_CHAR);
+      NXputattr (nxhandle, "short_name", zvar, strlen(zvar), NX_CHAR);
+      int naxis=3;
+      NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
     }
   }
   /* then write data */
@@ -177,15 +171,37 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
   if (m > 1) { rank++; dims[0]=m; }
   if (n > 1) { rank++; dims[1]=n; }
   if (p > 1) { rank++; dims[2]=p; }
-
-  if (NXmakedata(nxhandle, valid_parent, NX_FLOAT64, rank, dims) == NX_ERROR) return(NX_ERROR);
-  NXopendata(nxhandle, valid_parent);
+  char nxname[1024];
   double *data;
-  if (strstr(part,"data"))    data=p1;
-  if (strstr(part,"errors"))  data=p2;
-  if (strstr(part,"ncount"))  data=p0;
-  /* TODO: compute real errors */
-  return(NXputdata (nxhandle, data));
+  if (strstr(part,"data"))    { data=p1; strcpy(nxname, "data"); }
+  else if (strstr(part,"errors"))  { data=p2; strcpy(nxname, "errors"); }
+  else if (strstr(part,"ncount"))  { data=p0; strcpy(nxname, "ncount"); }
+  if (NXmakedata(nxhandle, nxname, NX_FLOAT64, rank, dims) == NX_ERROR) return(NX_ERROR);
+  NXopendata(nxhandle, nxname);
+  int ret=0;
+  int israw=(strstr(format, " raw") != NULL);
+  if (data == p2 && !israw) {
+    double* s = (double*)malloc(abs(m*n*p)*sizeof(double));
+    if (s) {
+      long    i;
+      for (i=0; i<abs(m*n*p); i++)
+        s[i] = mcestimate_error(p0[i],p1[i],p2[i]);
+      ret = NXputdata (nxhandle, s);
+      free(s);
+    } else {
+      fprintf(stderr, "McStas: Out of memory for writing NeXus file '%s' (mcfile_datablock)\n", filename);
+      ret = NXputdata (nxhandle, data);
+      NXputattr(nxhandle, "raw", "yes", 3, NX_CHAR);
+    }
+  } else
+    ret = NXputdata (nxhandle, data);
+  NXputattr(nxhandle, "parent", valid_parent, strlen(valid_parent), NX_CHAR);
+  int signal=1;
+  if (strstr(part,"data")) NXputattr(nxhandle, "signal", &signal, 1, NX_INT32);
+  char nxtitle[1024];
+  sprintf(nxtitle, "%s %s", nxname, title);
+  NXputattr(nxhandle, "long_name", nxtitle, strlen(nxtitle), NX_CHAR);
+  return(ret);
 } /* mcnxfile_datablock */
 
 #endif
