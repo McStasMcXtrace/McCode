@@ -1166,6 +1166,22 @@ sub menu_insert_instr_template {
     }
 }
 
+sub menu_insert_file {
+    my ($w) = @_;
+    if($edit_control) {
+	my $file = $w->getOpenFile(-title => "Select file to insert", -initialdir => "$ENV{'PWD'}");
+	return 0 unless $file;
+	my $fid = open(FILE, "<$file");
+	my $input;
+	while (<FILE>) {
+	    $input = "$input$_";
+	}
+	$edit_control->see('insert');
+	$edit_control->insert('insert', $input);
+	$edit_control->see('insert');
+    }
+}
+
 # Allow the user to populate a given component definition in a dialog
 # window, and produce a corresponding component instance.
 sub menu_insert_x {
@@ -1228,6 +1244,9 @@ sub make_insert_menu {
     }
     $menu->command(-label => "Instrument template",
                    -command => sub { menu_insert_instr_template($w) },
+                   -underline => 0);
+    $menu->command(-label => "File",
+                   -command => sub { menu_insert_file($w) },
                    -underline => 0);
     $menu->command(-label => "Component ...",
                    -accelerator => 'Alt+M',
