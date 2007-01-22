@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 
@@ -10,9 +10,9 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 1.6
+* Release: McStas 1.11
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
 *
 * Detector-like component that writes neutron state parameters into a 'virtual
@@ -119,7 +119,7 @@ INITIALIZE
   if (file != NULL)
     strncpy(Vars.Mon_File, file, 128);
 
-  mcformat_override = !strstr(Vars.option, "binary");
+  mcformat_override = (!strstr(Vars.option, "binary") && !strstr(mcformat.Name, "NeXus"));
   mcformat_sim      = mcformat;
   mcformat_vo       = mcuse_format("McStas");
 

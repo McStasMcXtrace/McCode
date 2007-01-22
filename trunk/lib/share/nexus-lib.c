@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,15 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.3 2007-01-22 15:13:42 farhi Exp $
+* $Id: nexus-lib.c,v 1.4 2007-01-22 18:22:43 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2007/01/22 15:13:42  farhi
+* Fully functional NeXus output format.
+* Works also for lists, but as catenation is not working in NAPI, one
+* has to store all in memory (e.g. with large Monitor_nD bufsize), so that
+* its written in one go at the end of sim.
+*
 * Revision 1.2  2007/01/22 01:38:25  farhi
 * Improved NeXus/NXdata support. Attributes may not be at the right place
 * yet.
@@ -74,13 +80,14 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     char creator[128];
     sprintf(creator, "%s McStas " MCSTAS_VERSION " [www.mcstas.org]", instrname);
     NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR);
+    NXputattr(nxhandle, "simulation_begin", date, strlen(date), NX_CHAR);
     char *url="http://www.nexusformat.org/";
     NXputattr(nxhandle, "URL", url, strlen(url), NX_CHAR);
     char *browser="hdfview or NXbrowse";
     NXputattr(nxhandle, "Browser", browser, strlen(browser), NX_CHAR);
     return(NXputattr(nxhandle, "Format", format_name, strlen(format_name), NX_CHAR));
   } else
-    return(NXputattr(nxhandle, "file_update_time", date, strlen(date), NX_CHAR));
+    return(NXputattr(nxhandle, "simulation_end", date, strlen(date), NX_CHAR));
 } /* mcnxfile_header */
 
 /* mcnxfile_tag: tag=value in the current group. Returns: NX_ERROR or NX_OK */
@@ -141,10 +148,12 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
   if (!strcmp(part, "begin")) {
     char nxtype[128];
     sprintf(nxtype, "NX%s", type);
-    NXmakegroup(nxhandle, nxname, nxtype);
+    if (NXmakegroup(nxhandle, nxname, nxtype) == NX_ERROR)
+      fprintf(stderr, "Warning: could not open SDS to store %s %s information\n",
+        nxname, nxtype);
     NXopengroup(nxhandle, nxname, nxtype);
     /* open a SDS to store attributes */
-    sprintf(nxname, "Information about %s of type %s is stored in attributes", name, type);
+    sprintf(nxname, "Information about %s of type %s is stored in attributes", name, nxtype);
     length = strlen(nxname);
     NXmakedata(nxhandle, "information", NX_CHAR, 1, &length);
     NXopendata(nxhandle, "information");
@@ -158,11 +167,6 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
 int mcnxfile_datablock(NXhandle nxhandle, char *part,
       char *format, char *valid_parent, char *filename, char *xlabel, char *valid_xlabel, char *ylabel, char *valid_ylabel, char *zlabel, char *valid_zlabel, char *title, char *xvar, char *yvar, char *zvar, int  m, int  n, int  p, double x1, double x2, double y1, double y2, double z1, double z2, double *p0, double *p1, double *p2)
 {
-  /* first write attributes */
-  char creator[128];
-  sprintf(creator, "%s: component %s", mcinstrument_name, valid_parent);
-  if (NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR) == NX_ERROR)
-    return(NX_ERROR);
   /* then writes axes, only for data */
   if (strstr(part, "data")) {
     int i;
@@ -243,6 +247,10 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
   char nxtitle[1024];
   sprintf(nxtitle, "%s %s", nxname, title);
   NXputattr(nxhandle, "long_name", nxtitle, strlen(nxtitle), NX_CHAR);
+  /* first write attributes */
+  char creator[128];
+  sprintf(creator, "%s: component %s", mcinstrument_name, valid_parent);
+  NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR);
   return(NXclosedata(nxhandle));
 } /* mcnxfile_datablock */
 
