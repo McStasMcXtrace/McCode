@@ -144,7 +144,7 @@ export INSTALL="./install-sh -c"
 
 # Also, do a ./configure to create Makefile and mcstas_config.perl
 # These will be dependent on this system, ofcourse...
-./configure
+./configure --without-nexus
 # Select scilab as default plotter
 make scilab
 
@@ -167,7 +167,7 @@ cd $DIST
 
 # Default again to Linux' /usr/bin/install -c (or whatever ./configure finds)
 export INSTALL=
-./configure
+./configure --without-nexus
 # Select scilab as default plotter
 make scilab
 
@@ -190,7 +190,7 @@ cd $DIST
 make clean
 flex -i instrument.l
 bison -v -d instrument.y
-./configure
+./configure --without-nexus
 sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
 sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/which.exe .
