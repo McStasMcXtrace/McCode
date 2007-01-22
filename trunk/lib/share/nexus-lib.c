@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.2 2007-01-22 01:38:25 farhi Exp $
+* $Id: nexus-lib.c,v 1.3 2007-01-22 15:13:42 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.2  2007/01/22 01:38:25  farhi
+* Improved NeXus/NXdata support. Attributes may not be at the right place
+* yet.
+*
 * Revision 1.1  2007/01/21 15:43:08  farhi
 * NeXus support. Draft version (functional). To be tuned.
 *
@@ -31,14 +35,15 @@
 #ifdef HAVE_LIBNEXUS
 
 /* NeXus output functions that replace calls to pfprintf in mcstas-r */
-int mcnxfile_init(char *name, char *ext, char mode, NXhandle *nxhandle)
+int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
 {
   int mcnxMode=NXACC_CREATE5;
   char mcnxExt[10];
   strcpy(mcnxExt, ext);
-  if (mcnxversion==4) { mcnxMode =NXACC_CREATE; strcpy(mcnxExt, "nx4"); }
-  else if (mcnxversion==5) { mcnxMode =NXACC_CREATE5; strcpy(mcnxExt, "nx5"); }
+  if (mcnxversion==4)      { mcnxMode =NXACC_CREATE;    strcpy(mcnxExt, "nx4"); }
+  else if (mcnxversion==5) { mcnxMode =NXACC_CREATE5;   strcpy(mcnxExt, "nx5"); }
   else if (mcnxversion==0) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
+  if (!strcmp(mode, "a"))    mcnxMode|=NXACC_RDWR;
   mcnxFilename = mcfull_file(name, mcnxExt);
   if (NXopen(mcnxFilename, mcnxMode, nxhandle) == NX_ERROR) {
     mcsiminfo_file = NULL;
@@ -52,7 +57,7 @@ int mcnxfile_close(NXhandle *nxHandle)
 }
 
 /* mcnxfile_header: header/footer. f=mcsiminfo_file, datafile */
-/* write class attributes. Returns: NX_ERROR or NX_OK */
+/* write class attributes in current SDS. Returns: NX_ERROR or NX_OK */
 int mcnxfile_header(NXhandle nxhandle, char *part,
     char *pre,                  /* %1$s  PRE  */
     char *instrname,            /* %2$s  SRC  */
@@ -66,9 +71,6 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
   if (!strcmp(part, "header")) {
     if (NXputattr(nxhandle, "user_name", user, strlen(user), NX_CHAR) == NX_ERROR)
       return(NX_ERROR);
-    // NXputattr(nxhandle, "file_time", date, strlen(date), NX_CHAR);
-    // NXputattr(nxhandle, "NeXus_version", NEXUS_VERSION,
-    //  strlen(NEXUS_VERSION), NX_CHAR);
     char creator[128];
     sprintf(creator, "%s McStas " MCSTAS_VERSION " [www.mcstas.org]", instrname);
     NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR);
@@ -102,16 +104,53 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
     int   level)        /* %7$i  LVL */
 {
   char nxname[1024];
+  int length;
+  if (!strcmp(part, "end_data"))   return(NXclosedata(nxhandle));
+  if (!strcmp(part, "end"))        return(NXclosegroup(nxhandle));
+
   if (!strcmp(type, "instrument")) strcpy(nxname, "instrument");
   else if (!strcmp(type, "simulation")) strcpy(nxname, "simulation");
   else strcpy(nxname, valid_name);
+  if (!strcmp(part, "instr_code")) {
+    FILE *f;
+    char *instr_code=NULL;
+    struct stat stfile;
+    if (stat(name,&stfile) != 0) {
+      instr_code = (char*)malloc(1024);
+      if (instr_code) sprintf(instr_code, "File %s not found", name);
+    } else {
+      long filesize = stfile.st_size;
+      f=fopen(name, "r");
+      instr_code = (char*)malloc(filesize);
+      if (instr_code && f) fread(instr_code, 1, filesize, f);
+      if (f) fclose(f);
+    }
+    length = strlen(instr_code);
+    if (length) {
+      NXmakedata(nxhandle, "instr_code", NX_CHAR, 1, &length);
+        NXopendata(nxhandle, "instr_code");
+        NXputdata (nxhandle, instr_code);
+        NXputattr (nxhandle, "file_name", name, strlen(name), NX_CHAR);
+        NXputattr (nxhandle, "file_size", &length, 1, NX_INT32);
+        NXputattr (nxhandle, "McStas_version", MCSTAS_VERSION, strlen(MCSTAS_VERSION), NX_CHAR);
+        NXputattr (nxhandle, "instr_name", parent, strlen(parent), NX_CHAR);
+      return(NXclosedata(nxhandle));
+    } else
+    return(NX_ERROR);
+  }
   if (!strcmp(part, "begin")) {
     char nxtype[128];
     sprintf(nxtype, "NX%s", type);
     NXmakegroup(nxhandle, nxname, nxtype);
-    return(NXopengroup(nxhandle, nxname, nxtype));
-  } else if (!strcmp(part, "end")) {
-    return(NXclosegroup(nxhandle));
+    NXopengroup(nxhandle, nxname, nxtype);
+    /* open a SDS to store attributes */
+    sprintf(nxname, "Information about %s of type %s is stored in attributes", name, type);
+    length = strlen(nxname);
+    NXmakedata(nxhandle, "information", NX_CHAR, 1, &length);
+    NXopendata(nxhandle, "information");
+    NXputdata (nxhandle, nxname);
+    NXputattr(nxhandle, "name", name, strlen(name), NX_CHAR);
+    NXputattr(nxhandle, "parent", parent, strlen(parent), NX_CHAR);
   }
 } /* mcnxfile_section */
 
@@ -139,6 +178,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       NXputattr (nxhandle, "short_name", xvar, strlen(xvar), NX_CHAR);
       int naxis=1;
       NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+      NXclosedata(nxhandle);
     }
     if (n > 1) {
       double axis[n];
@@ -151,6 +191,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       NXputattr (nxhandle, "short_name", yvar, strlen(yvar), NX_CHAR);
       int naxis=2;
       NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+      NXclosedata(nxhandle);
     }
     if (p > 1) {
       double axis[p];
@@ -163,6 +204,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       NXputattr (nxhandle, "short_name", zvar, strlen(zvar), NX_CHAR);
       int naxis=3;
       NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+      NXclosedata(nxhandle);
     }
   }
   /* then write data */
@@ -201,7 +243,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
   char nxtitle[1024];
   sprintf(nxtitle, "%s %s", nxname, title);
   NXputattr(nxhandle, "long_name", nxtitle, strlen(nxtitle), NX_CHAR);
-  return(ret);
+  return(NXclosedata(nxhandle));
 } /* mcnxfile_datablock */
 
 #endif
