@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.145 $
+* Version: $Revision: 1.146 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.145 2007-01-22 01:38:25 farhi Exp $
+* $Id: mcstas-r.c,v 1.146 2007-01-22 15:13:42 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.145  2007/01/22 01:38:25  farhi
+* Improved NeXus/NXdata support. Attributes may not be at the right place
+* yet.
+*
 * Revision 1.144  2007/01/21 15:43:08  farhi
 * NeXus support. Draft version (functional). To be tuned.
 *
@@ -1358,6 +1362,26 @@ FILE *mcnew_file(char *name, char *ext, char *mode)
 } /* mcnew_file */
 
 /*******************************************************************************
+* str_rep: Replaces a token by an other (of SAME length) in a string
+* This function modifies 'string'
+*******************************************************************************/
+char *str_rep(char *string, char *from, char *to)
+{
+  char *p;
+
+  if (!string || !strlen(string)) return(string);
+  if (strlen(from) != strlen(to)) return(string);
+
+  p   = string;
+
+  while (( p = strstr(p, from) ) != NULL) {
+    long index;
+    for (index=0; index<strlen(to); index++) p[index]=to[index];
+  }
+  return(string);
+}
+
+/*******************************************************************************
 * mcvalid_name: makes a valid string for variable names.
 *   copy 'original' into 'valid', replacing invalid characters by '_'
 *   char arrays must be pre-allocated. n can be 0, or the maximum number of
@@ -1379,7 +1403,7 @@ static char *mcvalid_name(char *valid, char *original, int n)
   {
     if ( (valid[i] > 122)
       || (valid[i] < 32)
-      || (strchr("!\"#$%&'()*+,-.:;<=>?@[\\]^`/ ", valid[i]) != NULL) )
+      || (strchr("!\"#$%&'()*+,-.:;<=>?@[\\]^`/ \n\r\t", valid[i]) != NULL) )
     {
       if (i) valid[i] = '_'; else valid[i] = 'm';
     }
@@ -1646,8 +1670,10 @@ static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *
 
   /* remove quote chars in values */
   if (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab") || strstr(format.Name, "IDL"))
-    for(i = 0; i < strlen(value); i++)
-      if (value[i] == '"' || value[i] == '\'') value[i] = ' ';
+    for(i = 0; i < strlen(value); i++) {
+      if (value[i] == '"' || value[i] == '\'')   value[i] = ' ';
+      if (value[i] == '\n'  || value[i] == '\r') value[i] = ';';
+    }
 #ifdef HAVE_LIBNEXUS
   if (strstr(format.Name, "NeXus")) {
     if(mcnxfile_tag(mcnxHandle, pre, valid_section, name, value) == NX_ERROR) {
@@ -1700,13 +1726,7 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
 #ifdef HAVE_LIBNEXUS
   if (strstr(format.Name, "NeXus")) {
     if (mcnxfile_section(mcnxHandle,part,
-    pre,
-    type,
-    name,
-    valid_name,
-    parent,
-    valid_parent,
-    level) == NX_ERROR) {
+      pre, type, name, valid_name, parent, valid_parent, level) == NX_ERROR) {
       fprintf(stderr, "Error: writing NeXus section %s/%s=NX%s (mcfile_section)\n", parent, name, type);
       ret=-1;
     } else ret=1; }
@@ -1950,7 +1970,8 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     } else strcpy(signal, "");
 
     mcfile_tag(f, format, pre, parent, "statistics", stats);
-    mcfile_tag(f, format, pre, parent, "signal", signal);
+    mcfile_tag(f, format, pre, parent,
+      strstr(format.Name, "NeXus") ? "Signal" : "signal", signal);
 
     sprintf(values, "%g %g %g", sum_z, mcestimate_error(Nsum, sum_z, P2sum), Nsum);
     mcfile_tag(f, format, pre, parent, "values", values);
@@ -1991,6 +2012,12 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
       "         slow or fail at import. Prefer binary mode.\n",
       filename, format.Name, m,n,p);
    if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
+     if (strstr(format.Name, "Octave") || strstr(format.Name, "Matlab"))
+       str_rep(mcDetectorCustomHeader, "%PRE", "%   ");
+     else if (strstr(format.Name, "IDL"))    str_rep(mcDetectorCustomHeader, "%PRE", ";   ");
+     else if (strstr(format.Name, "Scilab")) str_rep(mcDetectorCustomHeader, "%PRE", "//  ");
+     else if (strstr(format.Name, "McStas")) str_rep(mcDetectorCustomHeader, "%PRE", "#   ");
+     else str_rep(mcDetectorCustomHeader, "%PRE", "    ");
      mcfile_tag(f, format, pre, parent, "custom", mcDetectorCustomHeader);
      free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL;
    }
@@ -2006,7 +2033,9 @@ void mcsiminfo_init(FILE *f)
 #ifdef HAVE_LIBNEXUS
   /* NeXus sim info is the NeXus root file */
   if(strstr(mcformat.Name, "NeXus")) {
-    if (mcnxfile_init(mcsiminfo_name, mcformat.Extension, 0, &mcnxHandle) == NX_ERROR) {
+    if (mcnxfile_init(mcsiminfo_name, mcformat.Extension,
+      strstr(mcformat.Name, "append") || strstr(mcformat.Name, "catenate") ? "a":"w",
+      &mcnxHandle) == NX_ERROR) {
       exit(fprintf(stderr, "Error: opening NeXus file %s (mcsiminfo_init)\n", mcsiminfo_name));
     } else mcsiminfo_file = (FILE *)mcsiminfo_name;
   } else
@@ -2046,14 +2075,31 @@ void mcsiminfo_init(FILE *f)
 #endif
 
     mcfile_header(mcsiminfo_file, mcformat, "header", pre, simname, root);
+#ifdef HAVE_LIBNEXUS
+    if (strstr(mcformat.Name, "NeXus"))
+    mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
+#endif
     /* begin-end instrument */
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, mcinstrument_name, "instrument", root, 1);
     mcinfo_instrument(mcsiminfo_file, mcformat, pre, mcinstrument_name);
+#ifdef HAVE_LIBNEXUS
+    if (strstr(mcformat.Name, "NeXus"))
+    mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
+#endif
+#ifdef HAVE_LIBNEXUS
+    if (strstr(mcformat.Name, "NeXus"))
+    mcnxfile_section(mcnxHandle,"instr_code",
+       pre, "instrument", mcinstrument_source, NULL, mcinstrument_name, NULL, 0);
+#endif
     if (ismcstas_nx) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
 
     /* begin-end simulation */
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, simname, "simulation", mcinstrument_name, 2);
     mcinfo_simulation(mcsiminfo_file, mcformat, pre, simname);
+#ifdef HAVE_LIBNEXUS
+    if (strstr(mcformat.Name, "NeXus"))
+    mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
+#endif
     if (ismcstas_nx) mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
 
     free(pre);
@@ -2157,17 +2203,17 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
 
 #ifdef HAVE_LIBNEXUS
   if (strstr(format.Name, "NeXus")) {
-    if(strstr(format.Name, "no header") || strstr(format.Name, "no footer")
-    || strstr(format.Name, "append") || strstr(format.Name, "catenate"))
-      fprintf(stderr, "Warning: NeXus output does not support catenate mode\n");
-    if(mcnxfile_datablock(mcnxHandle, part,
-      format.Name, valid_parent, filename, xlabel, valid_xlabel, ylabel, valid_ylabel, zlabel, valid_zlabel, title, xvar, yvar, zvar, abs(m), abs(n), abs(p), *x1, *x2, *y1, *y2, *z1, *z2, p0, p1, p2) == NX_ERROR) {
-      fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
-    } else
-    mcinfo_data(mcsiminfo_file, format, pre, valid_parent, title, m, n, p,
+    if (strstr(part,"data")) { /* writes attributes in information SDS */
+      mcinfo_data(mcsiminfo_file, format, pre, valid_parent, title, m, n, p,
                   xlabel, ylabel, zlabel, xvar, yvar, zvar,
                   x1, x2, y1, y2, z1, z2, filename, p0, p1, p2,
                   0, posa);
+      mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
+    }
+    if(mcnxfile_datablock(mcnxHandle, part,
+      format.Name, valid_parent, filename, xlabel, valid_xlabel, ylabel, valid_ylabel, zlabel, valid_zlabel, title, xvar, yvar, zvar, abs(m), abs(n), abs(p), *x1, *x2, *y1, *y2, *z1, *z2, p0, p1, p2) == NX_ERROR) {
+      fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
+    }
     return(0); }
 #endif
 
@@ -2809,27 +2855,6 @@ double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 
 /* end of file i/o functions ================================================ */
 
-
-/*******************************************************************************
-* str_rep: Replaces a token by an other (of SAME length) in a string
-* This function modifies 'string'
-*******************************************************************************/
-char *str_rep(char *string, char *from, char *to)
-{
-  char *p;
-
-  if (!string || !strlen(string)) return(string);
-  if (strlen(from) != strlen(to)) return(string);
-
-  p   = string;
-
-  while (( p = strstr(p, from) ) != NULL) {
-    long index;
-    for (index=0; index<strlen(to); index++) p[index]=to[index];
-  }
-  return(string);
-}
-
 /* mcuse_format_header: Replaces aliases names in format fields (header part) */
 char *mcuse_format_header(char *format_const)
 { /* Header Footer */
@@ -3010,7 +3035,7 @@ static void mcuse_file(char *file)
 {
   if (file && strcmp(file, "auto"))
     mcsiminfo_name = file;
-  else {
+  else if (!mcsiminfo_name || !strcmp(mcsiminfo_name, "mcstas")) {
     char *filename=(char*)malloc(1024);
     sprintf(filename, "%s_%li", mcinstrument_name, mcstartdate);
     mcsiminfo_name = filename;
