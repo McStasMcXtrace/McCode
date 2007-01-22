@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.144 $
+* Version: $Revision: 1.145 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.144 2007-01-21 15:43:08 farhi Exp $
+* $Id: mcstas-r.c,v 1.145 2007-01-22 01:38:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.144  2007/01/21 15:43:08  farhi
+* NeXus support. Draft version (functional). To be tuned.
+*
 * Revision 1.143  2006/12/19 18:51:52  farhi
 * Trace disables MPI and Threads only in multicpu mode...
 *
@@ -423,6 +426,7 @@ int      mcMagnet                    = 0;
 double*  mcMagnetData                = NULL;
 Coords   mcMagnetPos;
 Rotation mcMagnetRot;
+char*    mcDetectorCustomHeader      = NULL;
 
 // mcMagneticField(x, y, z, t, Bx, By, Bz)
 void (*mcMagneticField) (double, double, double, double,
@@ -1986,6 +1990,10 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
       "         Large matrices (%dx%dx%d) in text mode may be\n"
       "         slow or fail at import. Prefer binary mode.\n",
       filename, format.Name, m,n,p);
+   if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
+     mcfile_tag(f, format, pre, parent, "custom", mcDetectorCustomHeader);
+     free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL;
+   }
 } /* mcinfo_data */
 
 /*******************************************************************************
@@ -1999,10 +2007,9 @@ void mcsiminfo_init(FILE *f)
   /* NeXus sim info is the NeXus root file */
   if(strstr(mcformat.Name, "NeXus")) {
     if (mcnxfile_init(mcsiminfo_name, mcformat.Extension, 0, &mcnxHandle) == NX_ERROR) {
-      fprintf(stderr, "Error: opening NeXus file %s (mcsiminfo_init)\n", mcsiminfo_name);
-    }
-    return; }
-  else
+      exit(fprintf(stderr, "Error: opening NeXus file %s (mcsiminfo_init)\n", mcsiminfo_name));
+    } else mcsiminfo_file = (FILE *)mcsiminfo_name;
+  } else
 #endif
   if (!f) mcsiminfo_file = mcnew_file(mcsiminfo_name, mcformat.Extension,
     strstr(mcformat.Name, "append") || strstr(mcformat.Name, "catenate") ? "a":"w");
@@ -2014,7 +2021,7 @@ void mcsiminfo_init(FILE *f)
   else
   {
     char *pre; /* allocate enough space for indentations */
-    int  ismcstas;
+    int  ismcstas_nx;
     char simname[1024];
     char root[10];
 
@@ -2024,7 +2031,7 @@ void mcsiminfo_init(FILE *f)
                || strstr(mcformat.Name, "OpenGENIE") ? "# " : "  ");
 
 
-    ismcstas = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
+    ismcstas_nx = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
     strcpy(root, strstr(mcformat.Name, "XML") ? "root" : "mcstas");
     sprintf(simname, "%s%s%s",
       mcdirname ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name);
@@ -2042,12 +2049,12 @@ void mcsiminfo_init(FILE *f)
     /* begin-end instrument */
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, mcinstrument_name, "instrument", root, 1);
     mcinfo_instrument(mcsiminfo_file, mcformat, pre, mcinstrument_name);
-    if (ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
+    if (ismcstas_nx) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
 
     /* begin-end simulation */
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, simname, "simulation", mcinstrument_name, 2);
     mcinfo_simulation(mcsiminfo_file, mcformat, pre, simname);
-    if (ismcstas) mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
+    if (ismcstas_nx) mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
 
     free(pre);
   }
@@ -2061,7 +2068,7 @@ void mcsiminfo_close(void)
   if (mcdisable_output_files) return;
   if(mcsiminfo_file)
   {
-    int  ismcstas;
+    int  ismcstas_nx;
     char simname[1024];
     char root[10];
     char *pre;
@@ -2071,12 +2078,12 @@ void mcsiminfo_close(void)
     strcpy(pre, strstr(mcformat.Name, "VRML")
                || strstr(mcformat.Name, "OpenGENIE") ? "# " : "  ");
 
-    ismcstas = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
+    ismcstas_nx = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
     strcpy(root, strstr(mcformat.Name, "XML") ? "root" : "mcstas");
     sprintf(simname, "%s%s%s",
       mcdirname ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name);
 
-    if (!ismcstas)
+    if (!ismcstas_nx)
     {
       mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
       mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
@@ -2154,10 +2161,14 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     || strstr(format.Name, "append") || strstr(format.Name, "catenate"))
       fprintf(stderr, "Warning: NeXus output does not support catenate mode\n");
     if(mcnxfile_datablock(mcnxHandle, part,
-      pre, valid_parent, filename, xlabel, valid_xlabel, ylabel, valid_ylabel, zlabel, valid_zlabel, title, xvar, yvar, zvar, abs(m), abs(n), abs(p), *x1, *x2, *y1, *y2, *z1, *z2, p0, p1, p2) == NX_ERROR) {
+      format.Name, valid_parent, filename, xlabel, valid_xlabel, ylabel, valid_ylabel, zlabel, valid_zlabel, title, xvar, yvar, zvar, abs(m), abs(n), abs(p), *x1, *x2, *y1, *y2, *z1, *z2, p0, p1, p2) == NX_ERROR) {
       fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
-      return(-1);
-    } else return(1); }
+    } else
+    mcinfo_data(mcsiminfo_file, format, pre, valid_parent, title, m, n, p,
+                  xlabel, ylabel, zlabel, xvar, yvar, zvar,
+                  x1, x2, y1, y2, z1, z2, filename, p0, p1, p2,
+                  0, posa);
+    return(0); }
 #endif
 
   if (strstr(format.Name, " raw")) israw_data = 1;
@@ -2578,6 +2589,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     {
       MPI_MASTER
         (
+         if (!strstr(format.Name,"NeXus"))
          mcfile_section(simfile_f, format, "begin", pre, parent, "component", simname, 3);
          mcfile_section(simfile_f, format, "begin", pre, filename, "data", parent, 4);
          );
@@ -2689,6 +2701,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   if (!mcdisable_output_files)
     {
       mcfile_section(simfile_f, format, "end", pre, filename, "data", parent, 4);
+      if (!strstr(format.Name,"NeXus"))
       mcfile_section(simfile_f, format, "end", pre, parent, "component", simname, 3);
     }
 
