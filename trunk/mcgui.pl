@@ -78,9 +78,11 @@ my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
 my $prefix          = $MCSTAS::mcstas_config{'PREFIX'};
 my $suffix          = $MCSTAS::mcstas_config{'SUFFIX'};
 my $background; # Only really makes sense on Unix systems...
+my $detach = 0;
 if ($Config{'osname'} ne 'MSWin32') {
     $background = '&';
 }
+
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 our $quote=1; # default editor behaviour is to surround strings with quotes
 our $cflags=1;# default compilation behaviour is to use CFLAGS
@@ -965,6 +967,40 @@ sub menu_run_simulation {
          || $newsi->{'Mode'} == 2) {
           push @command, "-N$newsi->{'NScan'}";
         }
+
+	my $tmpfile;
+	if ($newsi->{'Detach'} == 1) { # Background simulations using 'at'
+
+	    # Create temporary file
+	    my $fid = open(READ, "mktemp |");
+	    while (<READ>) {
+		$tmpfile = $_;
+		chomp $tmpfile;
+	    }
+	    close($fid);
+
+	    # Write to temporary file
+	    $fid = open(WRITE, "> $tmpfile");
+	    print WRITE "#!/bin/sh\n";
+	    print WRITE "#\n# This is a temporary shell script to ";
+	    print WRITE "run a McStas simulation detached\n# from the GUI";
+	    print WRITE "\n#\n# Will be removed shortly.\n#\n";
+
+	    my $cmd = join(" ", @command);
+	    my $date = localtime(time());
+	    my $logfile = "${out_name}_${date}.log";
+	    $logfile =~ s!\ !_!g;
+	    print WRITE "$cmd > $logfile 2>&1 ";
+
+	    # Close; set execute mode
+	    close($fid);
+	    $fid = open(READ, "chmod a+x $tmpfile|");
+	    close($fid);
+	    $cmdwin->insert('end', "\nExecuting background job\n$cmd\n(logfile $logfile)\n\n",'');
+
+	    # Clear @command, things to do are now in $tmpfile
+	    @command = ($MCSTAS::mcstas_config{'AT'}, "-f", $tmpfile, "now");
+	}
         $inf_sim->{'Mode'}     = $newsi->{'Mode'};
         my $inittext = "Running simulation '$out_name' ...\n" .
             join(" ", @command) . "\n";
@@ -995,6 +1031,12 @@ sub menu_run_simulation {
           plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
                       $current_sim_file);
         }
+
+	if ($newsi->{'Detach'}) { # Clean up after background simulation 
+	    my $fid = open(READ,"rm -f $tmpfile|");
+	    close($fid);
+	}
+
       }
   }
 

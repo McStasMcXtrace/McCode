@@ -79,6 +79,7 @@ AC_PATH_PROGS(PERLDL,   [perldl /usr/local/bin/perldl /usr/bin/perldl], no)
 AC_PATH_PROGS(G77, [g77 f77 g95 f95 gfortran], no)
 AC_PATH_PROGS(MINGW, [i586-mingw32msvc-gcc], no)
 AC_PATH_PROGS(MAKE,   [make gmake], no)
+AC_PATH_PROGS(AT,  [at], no)
 # Important here: gnome-terminal is broken:
 #  Any commandline arguments after -e must contain escaped spaces.
 # BUT: If escaped in the perl code, use of xterm/konsole is broken....
