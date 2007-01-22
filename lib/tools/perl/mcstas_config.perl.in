@@ -25,13 +25,13 @@
 # PREFIX   - Prefix for commands (e.g. start or empty)
 # SUFFIX   - Suffix for perl scripts (.pl)
 # DATE     - date format
+# AT	   - Command to detach simulation process (Unix only)
 # MATLAB   - comand to launch matlab
 # SCILAB   - comand to launch scilab
 # EXE      - executable suffix (out or exe)
 # HOSTFILE - MPI/grid hosts/machine list
 # MATLAB_COMMAND - options to execute matlab
 # SCILAB_COMMAND - options to execute scilab
-# EXE      - executable extension
 # CODETEXT - check for Tk::CodeText availability
 # PROCSIMPLE - check for Proc::Simple availability
 # TEMP     - check for File::Temp availability
@@ -49,6 +49,7 @@ use Config;
      CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
      CC => '@CC@',
+     AT => '@AT@',
      TERMINAL => '@TERMINAL@',
      EXTERNAL_EDITOR => '@EDITOR@',
      BROWSER => '@BROWSER@',

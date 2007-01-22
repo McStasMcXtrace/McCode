@@ -71,6 +71,7 @@ sub simulation_dialog {
     $si{'Mode'}  = 0 unless $si{'Mode'};
     $si{'NScan'} = 0 unless $si{'NScan'};
     $si{'Force'} = 0 unless $si{'Force'};
+    $si{'Detach'} = 0 unless $si{'Detach'};
     $si{'nodes'} = 1 unless $si{'nodes'};
     $si{'cluster'}=0 unless $si{'cluster'};
     # 'Inspect' field for use of mcdisplay's built-in
@@ -214,6 +215,10 @@ sub simulation_dialog {
     if ($MCSTAS::mcstas_config{'AMOEBA'}) {
       push @{ $choices }, 'Optimize Parameters';
     }
+    if ($MCSTAS::mcstas_config{'AT'} ne 'no' && $Config{'osname'} ne 'MSWin32') {
+	push @{ $choices }, 'Simulate (bg)';
+	push @{ $choices }, 'Optimize (bg)';
+    }
     my $choiceexec = $line->Optionmenu (
       -textvariable=>\$choiceexec_val,
       -options  => $choices,
@@ -230,6 +235,7 @@ sub simulation_dialog {
                         $choiceinspect->configure(-foreground=>'gray');
                         $choicefirst->configure(-foreground=>'gray');
                         $choicelast->configure(-foreground=>'gray');
+		
                       } elsif ($choiceexec_val =~ /Optimize/) {
                         $choicepnts->configure(-state=>'normal');
                         $labelpnts->configure(-foreground=>'black',-text=>'# optim');
@@ -393,6 +399,9 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
         elsif ($choiceexec_val =~ /^Trace/)    { 1 }
         elsif ($choiceexec_val =~ /^Optimize/) { 2 }
       };
+      if ($choiceexec_val =~ /\(bg\)/) {
+	$si{'Detach'} = 1;
+      }
     }
 
     return ($res, \%si);
