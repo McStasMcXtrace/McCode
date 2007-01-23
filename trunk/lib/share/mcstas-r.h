@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.88 $
+* Version: $Revision: 1.89 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,13 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.88 2007-01-22 01:38:25 farhi Exp $
+* $Id: mcstas-r.h,v 1.89 2007-01-23 00:41:05 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.88  2007/01/22 01:38:25  farhi
+*       Improved NeXus/NXdata support. Attributes may not be at the right place
+*       yet.
+*
 *       Revision 1.87  2007/01/21 15:43:08  farhi
 *       NeXus support. Draft version (functional). To be tuned.
 *
@@ -203,7 +207,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.88 $"
+#define MCSTAS_R_H "$Revision: 1.89 $"
 
 #include <math.h>
 #include <string.h>
@@ -308,6 +312,7 @@ typedef MCNUM Rotation[3][3];
 
 /* the following variables are defined in the McStas generated C code
    but should be defined externally in case of independent library usage */
+#ifndef DANSE
 extern struct mcinputtable_struct mcinputtable[];
 extern int    mcnumipar;
 extern char   mcinstrument_name[], mcinstrument_source[];
@@ -316,6 +321,7 @@ extern MCNUM  mcAbsorbProp[];
 extern MCNUM  mcScattered;
 #ifndef MC_ANCIENT_COMPATIBILITY
 extern int mctraceenabled, mcdefaultmain;
+#endif
 #endif
 
 /* file I/O definitions and function prototypes */
@@ -765,11 +771,13 @@ char *mcfull_file(char *name, char *ext);
 #define rand0max(max) ( ((double)random()) / (((double)MC_RAND_MAX+1)/(max)) )
 #define randminmax(min,max) ( rand0max((max)-(min)) + (min) )
 
+#ifndef DANSE
 void mcinit(void);
 void mcraytrace(void);
 void mcsave(FILE *);
 void mcfinally(void);
 void mcdisplay(void);
+#endif
 
 void mcdis_magnify(char *);
 void mcdis_line(double, double, double, double, double, double);
@@ -838,6 +846,7 @@ void randvec_target_rect(double *xo, double *yo, double *zo,
 void extend_list(int count, void **list, int *size, size_t elemsize);
 
 int mcstas_main(int argc, char *argv[]);
+
 
 #endif /* !MCSTAS_H */
 

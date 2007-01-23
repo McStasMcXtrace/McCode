@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.147 $
+* Version: $Revision: 1.148 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.147 2007-01-22 18:22:43 farhi Exp $
+* $Id: mcstas-r.c,v 1.148 2007-01-23 00:41:05 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.147  2007/01/22 18:22:43  farhi
+* NeXus support for lists and Virtual_output
+*
 * Revision 1.146  2007/01/22 15:13:42  farhi
 * Fully functional NeXus output format.
 * Works also for lists, but as catenation is not working in NAPI, one
@@ -410,11 +413,15 @@
 #ifndef MCSTAS_R_H
 #include "mcstas-r.h"
 #endif
+#ifdef DANSE
+#include "mcstas-globals.h"
+#endif
 
 /*******************************************************************************
 * The I/O format definitions and functions
 *******************************************************************************/
 
+#ifndef DANSE
 #ifdef MC_ANCIENT_COMPATIBILITY
 int mctraceenabled = 0;
 int mcdefaultmain  = 0;
@@ -437,6 +444,7 @@ double*  mcMagnetData                = NULL;
 Coords   mcMagnetPos;
 Rotation mcMagnetRot;
 char*    mcDetectorCustomHeader      = NULL;
+#endif
 
 // mcMagneticField(x, y, z, t, Bx, By, Bz)
 void (*mcMagneticField) (double, double, double, double,
@@ -445,8 +453,10 @@ void (*mcMagnetPrecession) (double, double, double, double, double, double,
 			    double, double*, double*, double*, double, Coords, Rotation) = NULL;
 
 /* Number of neutron histories to simulate. */
+#ifndef DANSE
 mcstatic double mcncount             = 1e6;
 mcstatic double mcrun_num            = 0;
+#endif
 
 /* parameters handling ====================================================== */
 
@@ -693,8 +703,10 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 #define MCSTAS_FORMAT "McStas"  /* default format */
 #endif
 
+#ifndef DANSE
 mcstatic struct mcformats_struct mcformat;
 mcstatic struct mcformats_struct mcformat_data;
+#endif
 
 /*******************************************************************************
 * Definition of output formats. structure defined in mcstas-r.h
@@ -4528,9 +4540,11 @@ mcuse_dir(char *dir)
     (
      if(mkdir(dir, 0777))
        {
+#ifndef DANSE
          fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
          fprintf(stderr, "(Maybe the directory already exists?)\n");
          exit(1);
+#endif
        }
      mcdirname = dir;
      );
