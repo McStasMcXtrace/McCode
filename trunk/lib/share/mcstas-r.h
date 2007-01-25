@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.89 $
+* Version: $Revision: 1.90 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,17 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.89 2007-01-23 00:41:05 pkwi Exp $
+* $Id: mcstas-r.h,v 1.90 2007-01-25 14:57:36 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.89  2007/01/23 00:41:05  pkwi
+*       Edits by Jiao Lin (linjao@caltech.edu) for embedding McStas in the DANSE project. Define -DDANSE during compile will enable these edits.
+*
+*       Have tested that McStas works properly without the -DDANSE.
+*
+*       Jiao: Could you please test if all is now OK?
+*       (After 15 minutes) Get current CVS tarball from http://www.mcstas.org/cvs
+*
 *       Revision 1.88  2007/01/22 01:38:25  farhi
 *       Improved NeXus/NXdata support. Attributes may not be at the right place
 *       yet.
@@ -207,7 +215,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.89 $"
+#define MCSTAS_R_H "$Revision: 1.90 $"
 
 #include <math.h>
 #include <string.h>
@@ -388,6 +396,10 @@ int mc_MPI_Reduce(void* sbuf, void* rbuf,
 #else /* !USE_MPI */
 #define MPI_MASTER(instr) instr
 #endif /* USE_MPI */
+
+#if defined(USE_MPI) || defined(USE_THREADS)
+static int mpi_node_count;
+#endif
 
 /* I/O function prototypes ================================================== */
 
