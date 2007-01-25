@@ -11,19 +11,27 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.148 $
+* Version: $Revision: 1.149 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.148 2007-01-23 00:41:05 pkwi Exp $
+* $Id: mcstas-r.c,v 1.149 2007-01-25 14:57:36 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.148  2007/01/23 00:41:05  pkwi
+* Edits by Jiao Lin (linjao@caltech.edu) for embedding McStas in the DANSE project. Define -DDANSE during compile will enable these edits.
+*
+* Have tested that McStas works properly without the -DDANSE.
+*
+* Jiao: Could you please test if all is now OK?
+* (After 15 minutes) Get current CVS tarball from http://www.mcstas.org/cvs
+*
 * Revision 1.147  2007/01/22 18:22:43  farhi
 * NeXus support for lists and Virtual_output
-*
+
 * Revision 1.146  2007/01/22 15:13:42  farhi
 * Fully functional NeXus output format.
 * Works also for lists, but as catenation is not working in NAPI, one
@@ -653,10 +661,6 @@ double mcget_run_num(void)
   return mcrun_num;
 }
 
-
-#if defined(USE_MPI) || defined(USE_THREADS)
-static int mpi_node_count;
-#endif
 #ifdef USE_MPI
 /* MPI rank */
 static int mpi_node_rank;
@@ -2045,6 +2049,9 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
 *******************************************************************************/
 void mcsiminfo_init(FILE *f)
 {
+#ifdef USE_MPI
+  if(mpi_node_rank != mpi_node_root) return;
+#endif
   if (mcdisable_output_files) return;
   if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return;
 #ifdef HAVE_LIBNEXUS
@@ -2128,6 +2135,9 @@ void mcsiminfo_init(FILE *f)
 *******************************************************************************/
 void mcsiminfo_close(void)
 {
+#ifdef USE_MPI
+  if(mpi_node_rank != mpi_node_root) return;
+#endif
   if (mcdisable_output_files) return;
   if(mcsiminfo_file)
   {
@@ -2220,12 +2230,13 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
 
 #ifdef HAVE_LIBNEXUS
   if (strstr(format.Name, "NeXus")) {
-    if (strstr(part,"data")) { /* writes attributes in information SDS */
+    /* istransposed==1 : end NeXus data only with last output slab */
+    if (strstr(part,"data") && !strstr(format.Name,"no header")) { /* writes attributes in information SDS */
       mcinfo_data(mcsiminfo_file, format, pre, valid_parent, title, m, n, p,
                   xlabel, ylabel, zlabel, xvar, yvar, zvar,
                   x1, x2, y1, y2, z1, z2, filename, p0, p1, p2,
                   0, posa);
-      mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
+      mcnxfile_section(mcnxHandle,"end_data", NULL, filename, NULL, NULL, NULL, NULL, 0);
     }
     if(mcnxfile_datablock(mcnxHandle, part,
       format.Name, valid_parent, filename, xlabel, valid_xlabel, ylabel, valid_ylabel, zlabel, valid_zlabel, title, xvar, yvar, zvar, abs(m), abs(n), abs(p), *x1, *x2, *y1, *y2, *z1, *z2, p0, p1, p2) == NX_ERROR) {
@@ -2539,7 +2550,6 @@ static int mcfile_data(FILE *f, struct mcformats_struct format,
 
   /* return if f,n,m,p1 NULL */
   if ((m*n*p == 0) || !p1) return (-1);
-
   /* output data block */
   is1d = mcfile_datablock(f, format, pre, parent, "data",
     p0, p1, p2, m, n, p,
@@ -2621,26 +2631,23 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 #ifdef USE_MPI
   mpi_event_list = (strstr(format.Name," list ") != NULL);
 
-  if(!mpi_event_list)
-    {
-      /* we save additive data: reduce everything */
-      mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-      mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-      mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+  if (!mpi_event_list && mpi_node_count > 1) {
+    /* we save additive data: reduce everything */
+    mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+    mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+    mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
 
-      /* slaves are done */
-      if(mpi_node_rank != mpi_node_root)
-        return 0;
-    }
-
-#endif /* !USE_MPI */
-
-  if (m<0 || n<0 || p<0 || strstr(format.Name, "binary"))  /* do the swap once for all */
-  {
-    istransposed = 1;
-
-    i=m; m=abs(n); n=abs(i); p=abs(p);
+    /* slaves are done */
+    if(mpi_node_rank != mpi_node_root) return 0;
   }
+#endif /* USE_MPI */
+
+  if (!strstr(format.Name, "NeXus")
+  && (m<0 || n<0 || p<0 || strstr(format.Name, "binary") || strstr(format.Name, "transpose")) )
+  { /* do the swap once for all */
+    istransposed = 1;
+    i=m; m=abs(n); n=abs(i); p=abs(p);
+  } else m=abs(m); n=abs(n); p=abs(p);
 
   if (!strstr(format.Name," list ")) simfile_f = mcsiminfo_file; /* use sim file */
   if (mcdirname)
@@ -2648,149 +2655,122 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   else
     sprintf(simname, "%s%s%s", ".", MC_PATHSEP_S, mcsiminfo_name);
 
-  if (!mcdisable_output_files)
-    {
-      MPI_MASTER
-        (
-         if (!strstr(format.Name,"NeXus"))
-         mcfile_section(simfile_f, format, "begin", pre, parent, "component", simname, 3);
-         mcfile_section(simfile_f, format, "begin", pre, filename, "data", parent, 4);
-         );
-    }
+  if (!mcdisable_output_files) {
+    MPI_MASTER (
+      if (!strstr(format.Name,"NeXus"))
+      mcfile_section(simfile_f, format, "begin", pre, parent, "component", simname, 3);
+      mcfile_section(simfile_f, format, "begin", pre, filename, "data", parent, 4);
+      );
+  }
 
 #ifdef USE_MPI
-
-  if(mpi_event_list)
-    {
-      if(mpi_node_rank != mpi_node_root)
-        {
-          /* we save an event list: all slaves send their data to master */
-          {
-            /* m, n, p must be sent too, since all slaves do not have the same number of events */
-            int mnp[3];
-            mnp[0] = m; mnp[1] = n; mnp[2] = p;
-            MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD);
-          }
-          MPI_Send(p1, abs(m*n*p), MPI_DOUBLE, mpi_node_root, 1, MPI_COMM_WORLD);
-
-          /* slaves are done */
-          return 0;
+  if (mpi_event_list && mpi_node_count > 1) {
+    if (mpi_node_rank != mpi_node_root) {
+      /* we save an event list: all slaves send their data to master */
+      /* m, n, p must be sent too, since all slaves do not have the same number of events */
+      int mnp[3];
+      mnp[0] = m; mnp[1] = n; mnp[2] = p;
+      MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD);
+      MPI_Send(p1, abs(m*n*p), MPI_DOUBLE, mpi_node_root, 1, MPI_COMM_WORLD);
+      /* slaves are done */
+      return 0;
+    } else {
+      int node_i;
+      /* get, then save master and slaves event lists */
+      for(node_i=0; node_i<mpi_node_count; node_i++) {
+        char *no_footer = strstr(format.Name, "no footer");
+        if (node_i > 0) { /* get data from slaves */
+          MPI_Status mpi_status;
+          int mnp[3];
+          MPI_Recv(mnp, 3, MPI_INT, node_i, 1, MPI_COMM_WORLD, &mpi_status);
+          m = mnp[0]; n = mnp[1]; p = mnp[2];
+          MPI_Recv(p1, abs(m*n*p), MPI_DOUBLE, node_i, 1, MPI_COMM_WORLD, &mpi_status);
         }
-      else
-        {
-          int node_i;
-          char *no_footer = strstr(format.Name, "no footer");
+        if (!strstr(format.Name, "NeXus")) { /* not MPI+NeXus format */
+          if (node_i == 1) { /* first slave */
+            /* disables header: it has been written by master */
+            if (!strstr(format.Name, "no header")) strcat(format.Name, " no header ");
+          }
 
-          /*
-           * no_footer is NULL if a footer is requested
-           */
-          if(!no_footer)
-            {
-              /* we do not write the footer now */
-              strcat(format.Name, " no footer ");
-            }
-
-          /* save master events list */
-          if (!mcdisable_output_files)
+          if (node_i == mpi_node_count-1) { /* last node */
+            /* we write the last data block: request a footer */
+            if (!no_footer) strncpy(no_footer, "         ", 9);
+          } else if (node_i == 0) {
+            /* master does not need footer (followed by slaves) */
+            if (!no_footer) strcat(format.Name, " no footer "); /* slaves do not need footer */
+          }
+          if (!mcdisable_output_files) {
             mcfile_data(simfile_f, format,
                         pre, parent,
                         p0, p1, p2, m, n, p,
                         xlabel, ylabel, zlabel, title,
                         xvar, yvar, zvar,
                         x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
-
-          /* if a header was requested, it has been written */
-          if(!strstr(format.Name, "no header"))
-            strcat(format.Name, " no header ");
-
-          /* get and save slaves events lists */
-          for(node_i=1; node_i<mpi_node_count; ++node_i)
-            {
-              MPI_Status mpi_status;
-              {
-                int mnp[3];
-                MPI_Recv(mnp, 3, MPI_INT, node_i, 1, MPI_COMM_WORLD, &mpi_status);
-                m = mnp[0]; n = mnp[1]; p = mnp[2];
-              }
-              MPI_Recv(p1, abs(m*n*p), MPI_DOUBLE, node_i, 1, MPI_COMM_WORLD, &mpi_status);
-
-              if(node_i == mpi_node_count-1)
-                {
-                  /* we write the last data block: request a footer if needed */
-                  if(!no_footer)
-                    {
-                      no_footer = strstr(format.Name, "no footer");
-                      strncpy(no_footer, "         ", 9);
-                    }
-                }
-
-              if (!mcdisable_output_files)
-                mcfile_data(simfile_f, format,
-                            pre, parent,
-                            p0, p1, p2, m, n, p,
-                            xlabel, ylabel, zlabel, title,
-                            xvar, yvar, zvar,
-                            x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
-            }
+          }
         }
-    }
-  else
-    {
-      if (!mcdisable_output_files)
-        {
-          mcfile_data(simfile_f, format,
-                      pre, parent,
-                      p0, p1, p2, m, n, p,
-                      xlabel, ylabel, zlabel, title,
-                      xvar, yvar, zvar,
-                      x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
+#ifdef HAVE_LIBNEXUS
+        else {
+          /* MPI+NeXus: write one SDS per node list */
+          char part[256];
+          sprintf(part, "data_node_%i", node_i);
+          if(mcnxfile_datablock(mcnxHandle, part,
+              format.Name, parent, filename, xlabel, xlabel, ylabel, ylabel, zlabel, zlabel, title,
+              xvar, yvar, zvar, abs(m), abs(n), abs(p), x1, x2, y1, y2, z1, z2, NULL, p1, NULL)
+              == NX_ERROR) {
+            fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
+          }
         }
-    }
-
-#else /* !USE_MPI */
-
-  if (!mcdisable_output_files)
-    {
+#endif
+      } /* end for node_i */
+    } /* end list for master node */
+  } else {
+    if (!mcdisable_output_files) {
       mcfile_data(simfile_f, format,
                   pre, parent,
                   p0, p1, p2, m, n, p,
                   xlabel, ylabel, zlabel, title,
                   xvar, yvar, zvar,
-                  x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
+                  x1, x2, y1, y2, z1, z2, filename, 1, posa);
     }
+  }
 
+#else /* !USE_MPI */
+  if (!mcdisable_output_files) {
+    mcfile_data(simfile_f, format,
+                pre, parent,
+                p0, p1, p2, m, n, p,
+                xlabel, ylabel, zlabel, title,
+                xvar, yvar, zvar,
+                x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
+  }
 #endif /* !USE_MPI */
 
-  if (!mcdisable_output_files)
-    {
-      mcfile_section(simfile_f, format, "end", pre, filename, "data", parent, 4);
-      if (!strstr(format.Name,"NeXus"))
-      mcfile_section(simfile_f, format, "end", pre, parent, "component", simname, 3);
-    }
+  if (!mcdisable_output_files) {
+    mcfile_section(simfile_f, format, "end", pre, filename, "data", parent, 4);
+    if (!strstr(format.Name,"NeXus"))
+    mcfile_section(simfile_f, format, "end", pre, parent, "component", simname, 3);
+  }
 
-  if (simfile_f || mcdisable_output_files)
-    {
-      for(j = 0; j < n*p; j++)
-        {
-          for(i = 0; i < m; i++)
-            {
-              double N,I,E;
-              int index;
-              if (!istransposed) index = i*n*p + j;
-              else index = i+j*m;
-              if (p0) N = p0[index];
-              if (p1) I = p1[index];
-              if (p2) E = p2[index];
+  if (simfile_f || mcdisable_output_files) {
+    for(j = 0; j < n*p; j++) {
+      for(i = 0; i < m; i++) {
+        double N,I,E;
+        int index;
+        if (!istransposed) index = i*n*p + j;
+        else index = i+j*m;
+        if (p0) N = p0[index];
+        if (p1) I = p1[index];
+        if (p2) E = p2[index];
 
-              Nsum += p0 ? N : 1;
-              Psum += I;
-              P2sum += p2 ? E : I*I;
-            }
-        }
-      /* give 0D detector output. */
-      if ((!filename || !strlen(filename)) && title && strlen(title)) filename = title;
-      mcdetector_out(parent, Nsum, Psum, P2sum, filename);
+        Nsum += p0 ? N : 1;
+        Psum += I;
+        P2sum += p2 ? E : I*I;
+      }
     }
+    /* give 0D detector output. */
+    if ((!filename || !strlen(filename)) && title && strlen(title)) filename = title;
+    mcdetector_out(parent, Nsum, Psum, P2sum, filename);
+  }
   free(pre);
   return(Psum);
 } /* mcdetector_out_012D */
@@ -4423,10 +4403,13 @@ static void
 mcsetseed(char *arg)
 {
   mcseed = atol(arg);
-  if(mcseed)
+  if(mcseed) {
+#ifdef USE_MPI
+    if (mpi_node_count > 1) srandom(mcseed+mpi_node_rank);
+    else
+#endif
     srandom(mcseed);
-  else
-  {
+  } else {
     fprintf(stderr, "Error: seed must not be zero (mcsetseed)\n");
     exit(1);
   }
@@ -4900,8 +4883,10 @@ mcstas_main(int argc, char *argv[])
 
   t = (time_t)mcstartdate;
 #ifdef USE_MPI
-  srandom(time(&t) + mpi_node_rank);
-  t += mpi_node_rank;
+  if (mpi_node_count > 1) {
+    srandom(time(&t) + mpi_node_rank);
+    t += mpi_node_rank;
+  }
 #else /* !USE_MPI */
   srandom(time(&t));
 #endif /* !USE_MPI */
@@ -4911,6 +4896,7 @@ mcstas_main(int argc, char *argv[])
   mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
   /* default is to output as McStas format */
   mcformat_data.Name=NULL;
+  /* read simulation parameters and options */
   mcparseoptions(argc, argv);
   if (strstr(mcformat.Name, "NeXus")) {
     if (mcformat_data.Name) mcclear_format(mcformat_data);
@@ -4964,6 +4950,11 @@ mcstas_main(int argc, char *argv[])
   mpi_mcncount = mpi_node_count > 1 ?
     floor(mcncount / mpi_node_count) :
     mcncount; /* number of neutrons per thread/node */
+  if (mpi_node_count > 1) {
+    MPI_MASTER(
+    printf("Simulation %s (%s) running on %i nodes\n", mcinstrument_name, mcinstrument_source, mpi_node_count);
+    );
+    }
 #endif
 
 /* main neutron event loop */
@@ -5018,6 +5009,7 @@ mcstas_raytrace(&mcncount);     /* single cpu full Ncount */
 
 #ifdef USE_MPI
  /* merge data from MPI nodes */
+  if (mpi_node_count > 1)
   mc_MPI_Reduce(&mcrun_num, &mcrun_num, 1, MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
 #endif
 

@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.11
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -98,7 +98,7 @@ INITIALIZE
 
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
 
-  if (bufsize > 0) sprintf(Vars.option, "list=%g", bufsize);
+  if (bufsize > 0) sprintf(Vars.option, "list=%15g", bufsize);
   else strcpy(Vars.option, "list all");
 
   if (type)
@@ -123,13 +123,16 @@ INITIALIZE
   mcformat_sim      = mcformat;
   mcformat_vo       = mcuse_format("McStas");
 
-  if (bufsize > 0) {
-    printf("Warning: Virtual_output: %s: buffer size=%g not recommanded\n"
-           "         Beware virtual output generated file size (about %g Mo)\n"
-           "         Memory required is about %g Mo\n",
-           NAME_CURRENT_COMP, bufsize, bufsize*element_size/1e6,
-           bufsize*sizeof(double)/1e6);
-  }
+  if (bufsize <= 0 && strstr(mcformat.Name, "NeXus"))
+    exit(fprintf(stderr, "Virtual_output: %s: NeXus files output\n"
+                         "ERROR           require to use a buffer size (bufsize>0).\n",
+                         NAME_CURRENT_COMP));
+  else if (bufsize > 0 && !strstr(mcformat.Name, "NeXus"))
+    printf("Warning: Virtual_output: %s: buffer size=%g not recommanded\n", NAME_CURRENT_COMP, bufsize);
+  if (bufsize > 0) printf(
+           "Virtual_output: %s: Beware virtual output generated file size (max %g Mo)\n"
+           "WARNING         Memory required is %g Mo\n", NAME_CURRENT_COMP,
+           bufsize*element_size/1e6, bufsize*sizeof(double)/1e6);
 %}
 
 TRACE
@@ -173,10 +176,11 @@ FINALLY
   /* free pointers */
   Monitor_nD_Finally(&DEFS, &Vars);
   if (bufsize) {
-    printf("Virtual_output: %s: Saved %li events in file %s\n"
-           "WARNING         When using this source, intensities must be divided\n"
-           "                by a factor %g\n",
-           NAME_CURRENT_COMP, Vars.Buffer_Block, Vars.Mon_File, Vars.Nsum/bufsize);
+    printf("Virtual_output: %s: Saved %15f events (from buffer) in file %s\n",
+           NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+    if (bufsize < Vars.Nsum)
+      printf("WARNING         When using this source, intensities must be multiplied\n"
+             "                by a factor %g\n", Vars.Nsum/bufsize);
   } else printf("Virtual_output: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
 %}
 
