@@ -74,7 +74,8 @@ use Config;
      PROCSIMPLE => 'no',
      TEMP => 'no',
      THREADS => '@HAVE_LIBPTHREAD@',
-     NEXUS => '@HAVE_LIBNEXUS@',
+     NEXUS => '@WITH_NEXUS@',
+     HDFVIEW => '@HDFVIEW@',
      PREC => '1e-3'
      );
 

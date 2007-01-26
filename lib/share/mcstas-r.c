@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.149 $
+* Version: $Revision: 1.150 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.149 2007-01-25 14:57:36 farhi Exp $
+* $Id: mcstas-r.c,v 1.150 2007-01-26 16:23:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.149  2007/01/25 14:57:36  farhi
+* NeXus output now supports MPI. Each node writes a data set in the NXdata
+* group. Uses compression LZW (may be unactivated with the
+* -DHAVE_LIBNEXUS_FLAT).
+*
 * Revision 1.148  2007/01/23 00:41:05  pkwi
 * Edits by Jiao Lin (linjao@caltech.edu) for embedding McStas in the DANSE project. Define -DDANSE during compile will enable these edits.
 *
@@ -2959,7 +2964,15 @@ struct mcformats_struct mcuse_format(char *format)
   if (!format) exit(fprintf(stderr, "Error: Invalid NULL format. Exiting (mcuse_format)\n"));
   strcpy(low_format, format);
   for (i=0; i<strlen(low_format); i++) low_format[i]=tolower(format[i]);
+  /* handle format aliases */
   if (!strcmp(low_format, "pgplot")) strcpy(low_format, "mcstas");
+  if (!strcmp(low_format, "hdf"))    strcpy(low_format, "nexus");
+#ifndef HAVE_LIBNEXUS
+  if (!strcmp(low_format, "nexus"))
+    fprintf(stderr, "WARNING: to enable NeXus format you must use the\n"
+                    "         NEXUS keyword after the INITIALIZE section\n"
+                    "         in your instrument (and have the NeXus libs installed).\n");
+#endif
 
   tmp = (char *)malloc(256);
   if(!tmp) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format)\n"));

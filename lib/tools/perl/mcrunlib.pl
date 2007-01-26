@@ -265,10 +265,10 @@ sub get_out_file_next {
       }
       if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
         $libs .= " -DUSE_MPI ";
-        $cc      = $MCSTAS::mcstas_config{MPICC};
+        $cc      = $MCSTAS::mcstas_config{'MPICC'};
       }
-      if ($MCSTAS::mcstas_config{NEXUS} ne "0") {
-        $libs .= " -DHAVE_LIBNEXUS -lNeXus ";
+      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /NeXus|HDF/i && $MCSTAS::mcstas_config{'NEXUS'} ne "") {
+        $libs .= $MCSTAS::mcstas_config{'NEXUS'};
       }
       # Needs quoting on MSWin32:
       if ($Config{'osname'} eq 'MSWin32') {

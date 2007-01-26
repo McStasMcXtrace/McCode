@@ -160,6 +160,7 @@ if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
 if ($file =~ m'\.sci$' || $file =~ m'\.sce$') {$plotter = "Scilab"; }
 if ($file =~ m'\.sim$')  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
+if ($file =~ m'\.nxs$') { $plotter = "NeXus"; }
 
 # On Win32, chdir to directory containing base filename
 if ($Config{'osname'} eq 'MSWin32') {
@@ -171,7 +172,7 @@ if ($Config{'osname'} eq 'MSWin32') {
 }
 
 # Added E. Farhi, March 2003. plotter (pgplot, scilab, matlab, html) -> $file
-if ($plotter =~ /Scilab/i) {
+if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
   my $fh;
   # create a temporary scilab execution script
   if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
@@ -204,7 +205,7 @@ if ($plotter =~ /Scilab/i) {
   if ($nowindow) { system("$MCSTAS::mcstas_config{'SCILAB'} -nw -f $tmp_file\n"); }
   else { system("$MCSTAS::mcstas_config{'SCILAB'} -f $tmp_file\n"); }
 
-} elsif ($plotter =~ /Matlab/i) {
+} elsif ($plotter =~ /Matlab/i && $MCSTAS::mcstas_config{'MATLAB'} ne "no") {
   my $tosend = "$MCSTAS::mcstas_config{'MATLAB'} ";
   if ($nowindow) { $tosend .= "-nojvm -nosplash "; }
   $tosend .= "-r \"addpath('$MCSTAS::sys_dir/tools/matlab');addpath(pwd);s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');";
@@ -220,28 +221,12 @@ if ($plotter =~ /Scilab/i) {
       $tosend .= "end;\"\n";
     }
   system($tosend);
-} elsif ($plotter =~ /HTML|VRML/i) {
+} elsif ($plotter =~ /HTML|VRML/i && $MCSTAS::mcstas_config{'BROWSER'}) {
   system("$MCSTAS::mcstas_config{'BROWSER'} $file");
+} elsif ($plotter =~ /HDF|NeXus/i && $MCSTAS::mcstas_config{'HDFVIEW'} ne "no") {
+  system("$MCSTAS::mcstas_config{'HDFVIEW'} $file");
 } elsif ($plotter =~ /PGPLOT|McStas/i) {
   # McStas original mcplot using perl/PGPLOT
-
-  # Check if the PGPLOT module can be found, otherwise
-  # disable traditional PGPLOT support - output error
-  # message...
-  # PW 20030320
-  if ($MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
-    print STDERR "\n******************************************************\n";
-    print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
-    print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolutions:\n\n";
-    print STDERR "1) Install pgplot + pgperl packages (Unix/Linux/Cygwin) \n";
-    print STDERR "2) Rerun mcplot with -p/--plotter set to Scilab/Matlab/VRML \n";
-    print STDERR "3) Modify $MCSTAS::perl_dir/mcstas_config.perl\n";
-    print STDERR "   to set a different default plotter\n";
-    print STDERR "4) Set your env variable MCSTAS_FORMAT to set the default\n";
-    print STDERR "   data format and plotter\n";
-    print STDERR "******************************************************\n\n";
-    die "PGPLOT problems...\n";
-  }
 
   require "mcfrontlib2D.pl";
   require "mcplotlib.pl";
@@ -256,7 +241,25 @@ if ($plotter =~ /Scilab/i) {
       pgplotit();
   }
 
+} else {
+  if ($plotter =~ /PGPLOT|McStas/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
+    print STDERR "\n******************************************************\n";
+    print STDERR "Default / selected PLOTTER is PGPLOT - Problems:\n\n";
+    print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolutions:\n\n";
+    print STDERR "1) Install pgplot + pgperl packages (Unix/Linux/Cygwin) \n";
+    print STDERR "2) Rerun mcplot with -p/--plotter set to Scilab/Matlab/VRML \n";
+    print STDERR "3) Modify $MCSTAS::perl_dir/mcstas_config.perl\n";
+    print STDERR "   to set a different default plotter\n";
+    print STDERR "4) Set your env variable MCSTAS_FORMAT to set the default\n";
+    print STDERR "   data format and plotter\n";
+    print STDERR "5) Convert your PGPLOT/McStas files into an other format\n";
+    print STDERR "   using the mcformat tool\n";
+    print STDERR "******************************************************\n\n";
+  }
+  print STDERR "Using default Browser $MCSTAS::mcstas_config{'BROWSER'} to view result file $file\n";
+  system("$MCSTAS::mcstas_config{'BROWSER'} $file");
 }
+
 
 sub pgplotit {
   my ($sim_file) = $file;

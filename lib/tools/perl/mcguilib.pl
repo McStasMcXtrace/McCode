@@ -235,7 +235,7 @@ sub simulation_dialog {
                         $choiceinspect->configure(-foreground=>'gray');
                         $choicefirst->configure(-foreground=>'gray');
                         $choicelast->configure(-foreground=>'gray');
-		
+
                       } elsif ($choiceexec_val =~ /Optimize/) {
                         $choicepnts->configure(-state=>'normal');
                         $labelpnts->configure(-foreground=>'black',-text=>'# optim');
@@ -264,9 +264,15 @@ sub simulation_dialog {
     if ($plotter =~ /Matlab/i)  { $formatchoice_val= 'Matlab'; }
     if ($plotter =~ /Scilab/i) { $formatchoice_val= 'Scilab'; }
     if ($plotter =~ /HTML|VRML/) { $formatchoice_val='HTML/VRML'; }
+    if ($plotter =~ /NeXus|HDF/) { $formatchoice_val='NeXus/HDF'; }
+    if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
+      $opts = ['PGPLOT','Matlab','Scilab','HTML/VRML','NeXus/HDF'];
+    } else {
+      $opts = ['PGPLOT','Matlab','Scilab','HTML/VRML'];
+    }
     $formatchoice = $line->Optionmenu (
       -textvariable => \$formatchoice_val,
-      -options      => ['PGPLOT','Matlab','Scilab','HTML/VRML'], -fg => 'blue'
+      -options      => $opts, -fg => 'blue'
     )->pack(-side => 'left');
     $b->attach($formatchoice, -balloonmsg => "Select format here or\nfrom Simulation/Configuration menu item");
 
@@ -376,6 +382,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       elsif ($formatchoice_val =~ /McStas|PGPLOT/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
+      elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
 
       if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /binary/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_binary"; }
       if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_scriptfile"; }
@@ -589,13 +596,24 @@ sub preferences_dialog {
     } elsif ($plotter =~ /Scilab/i) {
       $formatchoice_val= 'Scilab' . ($plotter =~ /scriptfile/ ?
         ' scriptfile' : ' (requires Scilab)');
-    } elsif ($plotter =~ /HTML|VRML/i) { $formatchoice_val='HTML/VRML document'; }
-    my $formatchoice = $lf->Optionmenu (
-      -textvariable => \$formatchoice_val,
-      -options      => ['PGPLOT (original McStas)',
+    } elsif ($plotter =~ /HTML|VRML/i) {
+      $formatchoice_val='HTML/VRML document';
+    }  elsif ($plotter =~ /NeXus|HDF/i) {
+      $formatchoice_val='NeXus/HDF file'; }
+    if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
+      $opts = ['PGPLOT (original McStas)',
         'Matlab (requires Matlab)', 'Matlab scriptfile',
         'Scilab (requires Scilab)', 'Scilab scriptfile',
-        'HTML/VRML document']
+        'HTML/VRML document','NeXus/HDF file'];
+    } else {
+      $opts = ['PGPLOT (original McStas)',
+        'Matlab (requires Matlab)', 'Matlab scriptfile',
+        'Scilab (requires Scilab)', 'Scilab scriptfile',
+        'HTML/VRML document'];
+    }
+    my $formatchoice = $lf->Optionmenu (
+      -textvariable => \$formatchoice_val,
+      -options      =>$opts
     )->pack(-fill => 'x');
 
     $button_bin=$lf->Checkbutton(-text => "Use binary files (faster)",
@@ -668,6 +686,7 @@ sub preferences_dialog {
       elsif ($formatchoice_val =~ /McStas|PGPLOT/i)  { $plotter= 'PGPLOT'; }
       elsif ($formatchoice_val =~ /Scilab/i)    { $plotter= 'Scilab'; }
       elsif ($formatchoice_val =~ /HTML|VRML/i) { $plotter= 'HTML'; }
+      elsif ($formatchoice_val =~ /NeXus|HDF/i) { $plotter= 'NeXus'; }
     # add binary flag to plotter
     if ($binary == 1 && $formatchoice_val =~ /Scilab|Matlab/i) {
       $plotter .= "_binary";

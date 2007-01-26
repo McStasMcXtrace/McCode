@@ -1012,6 +1012,7 @@ sub menu_run_simulation {
         elsif ($plotter =~ /Matlab/i)     { $ext="m"; }
         elsif ($plotter =~ /Scilab/i)     { $ext="sci"; }
         elsif ($plotter =~ /HTML/i)       { $ext="html"; }
+        elsif ($plotter =~ /NeXus|HDF/i)  { $ext="nxs"; }
         $current_sim_file = $newsi->{'Dir'} ?
             "$newsi->{'Dir'}/mcstas.$ext" :
             "mcstas.$ext";
@@ -1032,7 +1033,7 @@ sub menu_run_simulation {
                       $current_sim_file);
         }
 
-	if ($newsi->{'Detach'}) { # Clean up after background simulation 
+	if ($newsi->{'Detach'}) { # Clean up after background simulation
 	    my $fid = open(READ,"rm -f $tmpfile|");
 	    close($fid);
 	}
@@ -1458,6 +1459,7 @@ sub setup_cmdwin {
     if ($MCSTAS::mcstas_config{'PGPLOT'} ne "no")   { $text .= "PGPLOT/McStas "; }
     if ($MCSTAS::mcstas_config{'BROWSER'} ne "no")  { $text .= "HTML "; }
     if ($MCSTAS::mcstas_config{'VRMLVIEW'} ne "no") { $text .= "VRML "; }
+    if ($MCSTAS::mcstas_config{'NEXUS'} ne "") { $text .= "NeXus "; }
     if ($text ne "") { $cmdwin->insert('end', "Plotters: $text\n"); }
 
     if ($MCSTAS::mcstas_config{'HOSTFILE'} eq "" &&
