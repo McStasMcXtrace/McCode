@@ -11,7 +11,7 @@
 * Written by: EF
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 *
 * NeXus Runtime system header for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,15 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.h,v 1.3 2007-01-22 15:13:42 farhi Exp $
+* $Id: nexus-lib.h,v 1.4 2007-01-26 16:23:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.3  2007/01/22 15:13:42  farhi
+* Fully functional NeXus output format.
+* Works also for lists, but as catenation is not working in NAPI, one
+* has to store all in memory (e.g. with large Monitor_nD bufsize), so that
+* its written in one go at the end of sim.
+*
 * Revision 1.2  2007/01/22 01:38:25  farhi
 * Improved NeXus/NXdata support. Attributes may not be at the right place
 * yet.
@@ -32,9 +38,7 @@
 *
 *******************************************************************************/
 
-#ifndef HAVE_LIBNEXUS
-#define HAVE_LIBNEXUS
-#endif
+#ifdef HAVE_LIBNEXUS
 
 #include "napi.h"
 #include <sys/stat.h>
@@ -105,3 +109,4 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       double *p1,
       double *p2);
 
+#endif

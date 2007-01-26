@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.68 $
+* Version: $Revision: 1.69 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.68 2007-01-21 15:43:04 farhi Exp $
+* $Id: instrument.y,v 1.69 2007-01-26 16:23:22 farhi Exp $
 *
 *******************************************************************************/
 
@@ -98,6 +98,7 @@
 %token TOK_SAVE       "SAVE"
 %token TOK_NEXUS      "NEXUS"   /* optional */
 %token TOK_HDF        "HDF"     /* optional */
+%token TOK_XML        "XML"     /* optional */
 %token TOK_JUMP       "JUMP"    /* extended McStas grammar */
 %token TOK_WHEN       "WHEN"    /* extended McStas grammar */
 %token TOK_NEXT       "NEXT"    /* extended McStas grammar */
@@ -586,6 +587,10 @@ nxfile: /* empty: default output file */
 hdfversion: /* empty: default HDF version */
       {
         $$ = "5";
+      }
+    | hdfversion "XML"
+      {
+        $$ = "XML";
       }
     | hdfversion "HDF" TOK_STRING /* 4, 5 or XML */
       {

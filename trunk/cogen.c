@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.65 $
+* Version: $Revision: 1.66 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.65  2007/01/21 15:43:04  farhi
+* NeXus support. Draft version (functional). To be tuned.
+*
 * Revision 1.64  2006/12/19 15:11:56  farhi
 * Restored basic threading support without mutexes. All is now in mcstas-r.c
 *
@@ -128,7 +131,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.65 2007-01-21 15:43:04 farhi Exp $
+* $Id: cogen.c,v 1.66 2007-01-26 16:23:22 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1034,14 +1037,14 @@ cogen_init(struct instr_def *instr)
   coutf("    %sDEBUG_INSTR_END()", ID_PRE);
   cout("  }");
   cout("");
-#ifdef HAVE_LIBNEXUS
   if (instr->nxinfo->any) {
     cout ("/* NeXus support */\n");
+    coutf("#ifdef HAVE_LIBNEXUS\n");
     coutf("if (strstr(%sformat.Name, \"NeXus\")) %suse_file(%s);\n",
       ID_PRE, ID_PRE, instr->nxinfo->nxfile ? instr->nxinfo->nxfile : "NULL");
     coutf("%snxversion=%i;\n", ID_PRE, instr->nxinfo->hdfversion);
+    coutf("#endif\n");
   }
-#endif
 
   cout("}");
   cout("");
@@ -1467,7 +1470,7 @@ cogen_runtime(struct instr_def *instr)
     }
     if(instr->nxinfo->any) {
       embed_file("nexus-lib.c");
-      if (verbose) printf("Requires library    -lNeXus\n");
+      if (verbose) printf("Requires library    -DHAVE_LIBNEXUS -lNeXus\n");
     }
     embed_file("mcstas-r.c");
   }
@@ -1478,7 +1481,7 @@ cogen_runtime(struct instr_def *instr)
       coutf("#include \"%s%sshare%snexus-lib.h\"", sysdir_new, pathsep, pathsep);
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
     if(instr->nxinfo->any)
-      fprintf(stderr,"Dependency: %s.o and '-lNeXus'\n", "nexus-lib");
+      fprintf(stderr,"Dependency: %s.o and '-DHAVE_LIBNEXUS -lNeXus'\n", "nexus-lib");
     fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n", instrument_definition->quoted_source, sysdir_new, pathsep);
   }
 

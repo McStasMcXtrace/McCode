@@ -39,15 +39,22 @@ AC_ARG_WITH([nexus],
   [AS_HELP_STRING([--with-nexus],
      [enable support for NeXus/HDF libraries])],
   [WITH_NEXUS="-DHAVE_LIBNEXUS -lNeXus"])
-AC_SUBST(WITH_NEXUS)
 if test "${with_nexus+set}" = set; then
   withval="$with_nexus"
-  ac_cv_lib_NeXus_NXopen=1;
+  ac_cv_lib_NeXus_NXopen=1
   AC_SUBST([HAVE_LIBNEXUS], [1])
   AC_DEFINE([HAVE_LIBNEXUS], [1])
 else
   AC_SUBST([HAVE_LIBNEXUS], [0])
-fi;
+fi
+AC_CHECK_HEADER(napi.h)
+if test "$ac_cv_header_napi_h" != "no"; then
+  ac_cv_lib_NeXus_NXopen=1
+  AC_SUBST([HAVE_LIBNEXUS], [1])
+  AC_DEFINE([HAVE_LIBNEXUS], [1])
+  AC_SUBST([WITH_NEXUS], ["-DHAVE_LIBNEXUS -lNeXus"])
+  AC_DEFINE([WITH_NEXUS], ["-DHAVE_LIBNEXUS -lNeXus"])
+fi
 AC_PATH_PROGS(PERL,   [perl5 perl /usr/local/bin/perl], no)
 AC_PATH_PROGS(SCILAB, [scilab runscilab /usr/local/bin/scilab /usr/lib/scilab/bin/scilab /lib/scilab/bin/scilab scilex], no)
 AC_PATH_PROGS(MATLAB, [matlab /usr/local/bin/matlab], no)
@@ -63,6 +70,8 @@ AC_PATH_PROGS(WGET, [wget], no)
 AC_PATH_PROGS(PERLDL,   [perldl /usr/local/bin/perldl /usr/bin/perldl], no)
 AC_PATH_PROGS(G77, [g77 f77 g95 f95 gfortran], no)
 AC_PATH_PROGS(MAKE,   [make gmake], no)
+AC_PATH_PROGS(AT,  [at], no)
+AC_PATH_PROGS(HDFVIEW,  [hdfview /usr/local/bin/hdfview /usr/local/hdfview/hdfview], no)
 # Important here: gnome-terminal is broken:
 #  Any commandline arguments after -e must contain escaped spaces.
 # BUT: If escaped in the perl code, use of xterm/konsole is broken....

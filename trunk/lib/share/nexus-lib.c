@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.5 2007-01-25 14:57:36 farhi Exp $
+* $Id: nexus-lib.c,v 1.6 2007-01-26 16:23:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.5  2007/01/25 14:57:36  farhi
+* NeXus output now supports MPI. Each node writes a data set in the NXdata
+* group. Uses compression LZW (may be unactivated with the
+* -DHAVE_LIBNEXUS_FLAT).
+*
 * Revision 1.3  2007/01/22 15:13:42  farhi
 * Fully functional NeXus output format.
 * Works also for lists, but as catenation is not working in NAPI, one
@@ -48,8 +53,8 @@ int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
   int mcnxMode=NXACC_CREATE5;
   char mcnxExt[10];
   strcpy(mcnxExt, ext);
-  if (mcnxversion==4)      { mcnxMode =NXACC_CREATE;    strcpy(mcnxExt, "nx4"); }
-  else if (mcnxversion==5) { mcnxMode =NXACC_CREATE5;   strcpy(mcnxExt, "nx5"); }
+  if (mcnxversion==4)      { mcnxMode =NXACC_CREATE;     }
+  else if (mcnxversion==5) { mcnxMode =NXACC_CREATE5;    }
   else if (mcnxversion==0) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
   if (!strcmp(mode, "a"))    mcnxMode|=NXACC_RDWR;
   mcnxFilename = mcfull_file(name, mcnxExt);
@@ -85,7 +90,7 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     NXputattr(nxhandle, "simulation_begin", date, strlen(date), NX_CHAR);
     char *url="http://www.nexusformat.org/";
     NXputattr(nxhandle, "URL", url, strlen(url), NX_CHAR);
-    char *browser="hdfview or NXbrowse";
+    char *browser="hdfview or NXbrowse or HDFExplorer";
     NXputattr(nxhandle, "Browser", browser, strlen(browser), NX_CHAR);
 #if defined (USE_MPI) || defined(USE_THREADS)
     NXputattr (nxhandle, "number_of_nodes", &mpi_node_count, 1, NX_INT32);

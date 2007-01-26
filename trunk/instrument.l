@@ -14,13 +14,16 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 *
 * Flex scanner for instrument definition files.
 *
-* $Id: instrument.l,v 1.40 2007-01-21 15:43:04 farhi Exp $
+* $Id: instrument.l,v 1.41 2007-01-26 16:23:22 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.40  2007/01/21 15:43:04  farhi
+* NeXus support. Draft version (functional). To be tuned.
+*
 * Revision 1.39  2006/04/19 13:06:25  farhi
 * * Updated Release, Version and Origin fields in headers
 * * Improved setversion to update all McStasx.y occurencies into current release
@@ -247,6 +250,7 @@ NEXT          return TOK_NEXT;          /* extended McStas grammar */
 ITERATE       return TOK_ITERATE;       /* extended McStas grammar */
 MYSELF        return TOK_MYSELF;        /* extended McStas grammar */
 COPY          return TOK_COPY;
+XML           return TOK_XML;
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */

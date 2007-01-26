@@ -108,7 +108,13 @@ if ($Config{'osname'} eq "MSWin32") {
     print STDOUT "Checking for MPI run: ";
     $failed=system("$which mpirun.exe");
     $mpirun = (not $failed) ? "mpirun.exe" : "no";
-    print STDOUT "$mpi\n";
+    print STDOUT "$mpirun\n";
+
+    print STDOUT "Checking for HDFView compiler: ";
+    $failed=system("$which hdfview.exe");
+    $hdfview = (not $failed) ? "hdfview.exe" : "no";
+    print STDOUT "$hdfview\n";
+
 
     # On Win32, matlab is preferred before scilab, which
     # lacks certain functionality...
@@ -177,6 +183,8 @@ while (<READ>) {
         print WRITE "     EXE => 'exe',\n";
     } elsif (/\w*THREADS \=\w*/) {
         print WRITE "     THREADS => 'no',\n";
+    } elsif (/\w*HDFVIEW \=\w*/) {
+        print WRITE "     HDFVIEW => '$hdfview',\n";
     } else {
         print WRITE;
     }
