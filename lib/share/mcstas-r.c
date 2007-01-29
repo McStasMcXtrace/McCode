@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.150 $
+* Version: $Revision: 1.151 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.150 2007-01-26 16:23:25 farhi Exp $
+* $Id: mcstas-r.c,v 1.151 2007-01-29 15:16:07 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.150  2007/01/26 16:23:25  farhi
+* NeXus final integration (mcplot, mcgui, mcrun).
+* Only mcgui initiate mcstas.nxs as default output file, whereas
+* simulation may use instr_time.nxs
+*
 * Revision 1.149  2007/01/25 14:57:36  farhi
 * NeXus output now supports MPI. Each node writes a data set in the NXdata
 * group. Uses compression LZW (may be unactivated with the
@@ -2038,14 +2043,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
       "         slow or fail at import. Prefer binary mode.\n",
       filename, format.Name, m,n,p);
    if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
-     if (strstr(format.Name, "Octave") || strstr(format.Name, "Matlab"))
-       str_rep(mcDetectorCustomHeader, "%PRE", "%   ");
-     else if (strstr(format.Name, "IDL"))    str_rep(mcDetectorCustomHeader, "%PRE", ";   ");
-     else if (strstr(format.Name, "Scilab")) str_rep(mcDetectorCustomHeader, "%PRE", "//  ");
-     else if (strstr(format.Name, "McStas")) str_rep(mcDetectorCustomHeader, "%PRE", "#   ");
-     else str_rep(mcDetectorCustomHeader, "%PRE", "    ");
      mcfile_tag(f, format, pre, parent, "custom", mcDetectorCustomHeader);
-     free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL;
    }
 } /* mcinfo_data */
 
@@ -2668,6 +2666,15 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       );
   }
 
+  if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
+     if (strstr(format.Name, "Octave") || strstr(format.Name, "Matlab"))
+       str_rep(mcDetectorCustomHeader, "%PRE", "%   ");
+     else if (strstr(format.Name, "IDL"))    str_rep(mcDetectorCustomHeader, "%PRE", ";   ");
+     else if (strstr(format.Name, "Scilab")) str_rep(mcDetectorCustomHeader, "%PRE", "//  ");
+     else if (strstr(format.Name, "McStas")) str_rep(mcDetectorCustomHeader, "%PRE", "#   ");
+     else str_rep(mcDetectorCustomHeader, "%PRE", "    ");
+   }
+
 #ifdef USE_MPI
   if (mpi_event_list && mpi_node_count > 1) {
     if (mpi_node_rank != mpi_node_root) {
@@ -2777,6 +2784,9 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     mcdetector_out(parent, Nsum, Psum, P2sum, filename);
   }
   free(pre);
+  if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
+     free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL;
+  }
   return(Psum);
 } /* mcdetector_out_012D */
 

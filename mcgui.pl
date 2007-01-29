@@ -1288,7 +1288,7 @@ sub make_insert_menu {
     $menu->command(-label => "Instrument template",
                    -command => sub { menu_insert_instr_template($w) },
                    -underline => 0);
-    $menu->command(-label => "File",
+    $menu->command(-label => "File ...",
                    -command => sub { menu_insert_file($w) },
                    -underline => 0);
     $menu->command(-label => "Component ...",
