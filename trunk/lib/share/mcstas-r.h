@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.90 $
+* Version: $Revision: 1.91 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.90 2007-01-25 14:57:36 farhi Exp $
+* $Id: mcstas-r.h,v 1.91 2007-01-29 15:51:56 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.90  2007/01/25 14:57:36  farhi
+*       NeXus output now supports MPI. Each node writes a data set in the NXdata
+*       group. Uses compression LZW (may be unactivated with the
+*       -DHAVE_LIBNEXUS_FLAT).
+*
 *       Revision 1.89  2007/01/23 00:41:05  pkwi
 *       Edits by Jiao Lin (linjao@caltech.edu) for embedding McStas in the DANSE project. Define -DDANSE during compile will enable these edits.
 *
@@ -215,7 +220,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.90 $"
+#define MCSTAS_R_H "$Revision: 1.91 $"
 
 #include <math.h>
 #include <string.h>
@@ -289,13 +294,6 @@
 
 #if (HAVE_LIBNEXUS == 0)
 #undef HAVE_LIBNEXUS
-#endif
-
-/* remove NeXus dependency if not embedded by McStas */
-#ifdef HAVE_LIBNEXUS
-#ifndef NEXUSAPI
-#undef HAVE_LIBNEXUS
-#endif
 #endif
 
 /* I/O section part ========================================================= */

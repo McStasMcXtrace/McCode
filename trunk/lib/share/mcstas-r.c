@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.151 $
+* Version: $Revision: 1.152 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.151 2007-01-29 15:16:07 farhi Exp $
+* $Id: mcstas-r.c,v 1.152 2007-01-29 15:51:56 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.151  2007/01/29 15:16:07  farhi
+* Output file customization in header, through the DETECTOR_CUSTOM_HEADER macro.
+* Small adds-on in install doc.
+*
 * Revision 1.150  2007/01/26 16:23:25  farhi
 * NeXus final integration (mcplot, mcgui, mcrun).
 * Only mcgui initiate mcstas.nxs as default output file, whereas
@@ -2981,7 +2985,8 @@ struct mcformats_struct mcuse_format(char *format)
   if (!strcmp(low_format, "nexus"))
     fprintf(stderr, "WARNING: to enable NeXus format you must use the\n"
                     "         NEXUS keyword after the INITIALIZE section\n"
-                    "         in your instrument (and have the NeXus libs installed).\n");
+                    "         in your instrument (and have the NeXus libs installed).\n"
+                    "         You should then select NeXus format, and perhaps re-compile.\n");
 #endif
 
   tmp = (char *)malloc(256);
@@ -3055,7 +3060,7 @@ static void mcuse_file(char *file)
 {
   if (file && strcmp(file, "auto"))
     mcsiminfo_name = file;
-  else if (!mcsiminfo_name || !strcmp(mcsiminfo_name, "mcstas")) {
+  else if (!mcsiminfo_name) {
     char *filename=(char*)malloc(1024);
     sprintf(filename, "%s_%li", mcinstrument_name, mcstartdate);
     mcsiminfo_name = filename;
