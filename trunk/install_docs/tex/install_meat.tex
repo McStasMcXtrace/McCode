@@ -84,6 +84,8 @@ distribution in the file \\\verb+/etc/apt/sources.list+.)
 \noindent We also recommend to install octaga vrml viewer from
 \\\htmladdnormallink{http://www.octaga.com/download\_octaga.html}{http://www.octaga.com/download_octaga.html}.
 
+\noindent Additionally, MPICH, Octave/Gnuplot, HDF and NeXus libraries may be installed, to enhance McStas clustering method and data formats.
+
 \subsection{Configuration and installation}
 McStas uses autoconf to detect the system configuration and creates the
 proper Makefiles needed for compilation. On Unix-like systems, you
@@ -125,6 +127,8 @@ configure in step 2. For example,\\
 
 \noindent will install the McStas programs in /home/joe/bin/ and the
 library files needed by McStas in /home/joe/lib/mcstas/.
+
+\noindent On 64-bits systems, you may have to use: ./configure --with-pic
 
 In case ./configure makes an incorrect guess, some environment variables
 can be set to override the defaults:
