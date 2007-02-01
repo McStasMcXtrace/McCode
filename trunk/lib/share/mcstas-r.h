@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.91 $
+* Version: $Revision: 1.92 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.91 2007-01-29 15:51:56 farhi Exp $
+* $Id: mcstas-r.h,v 1.92 2007-02-01 15:49:45 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.91  2007/01/29 15:51:56  farhi
+*       mcstas-r: avoid undef of HAVE_LIBNEXUS as napi is importer afterwards
+*
 *       Revision 1.90  2007/01/25 14:57:36  farhi
 *       NeXus output now supports MPI. Each node writes a data set in the NXdata
 *       group. Uses compression LZW (may be unactivated with the
@@ -220,7 +223,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.91 $"
+#define MCSTAS_R_H "$Revision: 1.92 $"
 
 #include <math.h>
 #include <string.h>
@@ -247,6 +250,14 @@
 #endif
 
 #ifdef __FreeBSD__
+#define NEED_STAT_H
+#endif
+
+#if defined(__APPLE__) && defined(__GNUC__)
+#define NEED_STAT_H
+#endif
+
+#ifdef NEED_STAT_H
 #include <sys/stat.h>
 #endif
 
