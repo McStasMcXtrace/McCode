@@ -12,7 +12,7 @@
 * Date: Feb. 12,1999
 * Origin: Uni. Gottingen (Germany)
 * Release: McStas 1.6
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Modified by: Peter Link Feb. 12,1999, Added double bent feature by:
 * Modified by: Peter Link Sep. 24. 1999, corrected bug in rotation of v-coords:
 * Modified by: EF, Feb 13th 2002: Read reflectivity table
@@ -70,7 +70,7 @@
 * reflect: reflectivity file name of text file as 2 columns [k, R] (str)
 *
 * %Link
-* <a href="http://neutron.risoe.dk/neutron-mc/arch/9903/msg00031.html">Additional note</a> from <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
+* <a href="http://mailman.risoe.dk/pipermail/neutron-mc/1999q1/000133.html">Additional note</a> from <a href="mailto:plink@physik.tu-muenchen.de">Peter Link</a>.
 *
 * %End
 *******************************************************************************/

@@ -10,7 +10,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -56,9 +56,6 @@
 * my_s: Attenuation factor due to scattering [m^-1]
 * my_a: Attenuation factor due to absorbtion [m^-1]
 *
-* %L
-* <A HREF="http://neutron.risoe.dk/mcstas/components/Powder1/">Old
-* description</A>, with explanation of focusing.
 * %L
 * <A HREF="http://neutron.risoe.dk/mcstas/components/tests/powder/">
 * Test results</A> (not up-to-date).
