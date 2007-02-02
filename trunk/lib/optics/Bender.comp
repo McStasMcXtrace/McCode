@@ -12,7 +12,7 @@
 * Date: Februar 7 1999
 * Origin: Uni. Erlangen (Germany)
 * Release: McStas 1.6
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 *
 * Models a curved neutron guide.
 *
@@ -86,7 +86,7 @@
 * %L
 * <a href="../contrib/Guide_curved.comp.html>Guide_curved</a> (contributed)
 * %L
-* See also <a href="http://neutron.risoe.dk/pipermail/neutron-mc/1999q1/000052.html">Additional note</a> from <a href="mailto:philipp.bernhardt@siemens.com">Philipp Bernhardt</a>.
+* See also <a href="http://mailman.risoe.dk/pipermail/neutron-mc/1999q1/000052.html">Additional note</a> from <a href="mailto:philipp.bernhardt@siemens.com">Philipp Bernhardt</a>.
 *
 * %End
 *******************************************************************************/
