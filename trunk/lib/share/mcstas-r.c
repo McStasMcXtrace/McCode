@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.152 $
+* Version: $Revision: 1.153 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.152 2007-01-29 15:51:56 farhi Exp $
+* $Id: mcstas-r.c,v 1.153 2007-02-05 10:16:08 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.152  2007/01/29 15:51:56  farhi
+* mcstas-r: avoid undef of HAVE_LIBNEXUS as napi is importer afterwards
+*
 * Revision 1.151  2007/01/29 15:16:07  farhi
 * Output file customization in header, through the DETECTOR_CUSTOM_HEADER macro.
 * Small adds-on in install doc.
@@ -4934,6 +4937,7 @@ mcstas_main(int argc, char *argv[])
     mcformat_data = mcuse_format("VRML");
 
   /* install sig handler, but only once !! after parameters parsing */
+#ifndef NOSIGNALS
 #ifdef SIGQUIT
   signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
 #endif
@@ -4971,6 +4975,7 @@ mcstas_main(int argc, char *argv[])
   mcinit();
 #ifdef SIGINT
   signal( SIGINT ,sighandler);    /* interrupt (rubout) only after INIT */
+#endif
 #endif
 
 /* ================ main neutron generation/propagation loop ================ */
