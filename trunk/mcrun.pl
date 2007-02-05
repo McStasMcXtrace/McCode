@@ -413,11 +413,11 @@ sub exec_sim {
     } else {
         if ($mpi >= 1 && $MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
             print "Using $MCSTAS::mcstas_config{'MPIRUN'} -np $mpi";
-            $cmd = "$MCSTAS::mcstas_config{'MPIRUN'} -np $mpi";
-            if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
+	    if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
               print " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
               $cmd .= " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
             }
+            $cmd = "$MCSTAS::mcstas_config{'MPIRUN'} -np $mpi";
             print " @cmdlist\n";
             $cmd .= " @cmdlist";
         } else {
