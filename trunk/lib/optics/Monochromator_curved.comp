@@ -11,7 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
@@ -283,9 +283,9 @@ TRACE
           my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */
         }
         else my_r0 = r0;
-        if (my_r0 >= 1)
+        if (my_r0 > 1)
         {
-          if (verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 1 (k=%f)\n", my_r0, k);
+          if (my_r0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 1 (k=%f)\n", my_r0, k);
           my_r0=0.999;
         }
         if (my_r0 < 0)
@@ -404,9 +404,9 @@ TRACE
         }
         else my_t0 = t0;
         /* do not SCATTER, else GROUP does not work */
-        if (my_t0 >= 1)
+        if (my_t0 > 1)
         {
-          if (verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered transmission from %f to 1 (k=%f)\n", my_t0, k);
+          if (my_t0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered transmission from %f to 1 (k=%f)\n", my_t0, k);
           my_t0=0.999;
         }
         if (my_t0 > 0) p*= my_t0;
