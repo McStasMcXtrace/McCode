@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.153 $
+* Version: $Revision: 1.154 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.153 2007-02-05 10:16:08 pkwi Exp $
+* $Id: mcstas-r.c,v 1.154 2007-02-06 14:07:40 vel Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.153  2007/02/05 10:16:08  pkwi
+* Mac OS, MPI related: Disable use of sighandler in case of NOSIGNALS
+*
 * Revision 1.152  2007/01/29 15:51:56  farhi
 * mcstas-r: avoid undef of HAVE_LIBNEXUS as napi is importer afterwards
 *
@@ -2004,7 +2007,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     {
       sprintf(signal, "Min=%g; Max=%g; Mean= %g;", min_z, max_z, mean_z);
       if (m > 1 && n == 1 && p == 1) { *y1 = min_z; *y2 = max_z; *z1=*y1; *z2=*y2; }
-      else if (m > 1 && n > 1) { *z1 = min_z; *z2 = max_z;}
+      else if (m > 1 && n > 1 && p == 1) { *z1 = min_z; *z2 = max_z;}
     } else strcpy(signal, "");
 
     mcfile_tag(f, format, pre, parent, "statistics", stats);
