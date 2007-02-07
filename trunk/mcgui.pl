@@ -515,6 +515,9 @@ sub run_dialog {
     my $text='Simulation';
     if ($inf_sim->{'Mode'}==1) { $text='Trace/3D View'; }
     elsif ($inf_sim->{'Mode'}==2) { $text='Parameter Optimization'; }
+    if ($pid && $Config{'osname'} ne 'MSWin32') {
+      $text .= " [pid $pid]";
+    }
     my $dlg = run_dialog_create($w, "Running simulation $current_sim_def",
                                 "$text running\n($current_sim_def)...", $cancel_cmd, $update_cmd);
     putmsg($cmdwin, $inittext, 'msg'); # Must appear before any other output
@@ -551,7 +554,7 @@ sub dialog_get_out_file {
     my ($fh, $pid, $out_name);
     # Initialize the dialog.
     my $cancel_cmd = sub {
-        kill -15, $pid if $pid && !$state; # signal 15 is SIGTERM
+        kill "TERM", $pid if $pid && !$state; # signal 15 is SIGTERM
     };
     my $dlg = run_dialog_create($w, "Compiling simulation $current_sim_def",
                                 "Compiling simulation\n($current_sim_def)", $cancel_cmd);
