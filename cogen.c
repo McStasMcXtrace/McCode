@@ -12,11 +12,16 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.66 $
+* Version: $Revision: 1.67 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.66  2007/01/26 16:23:22  farhi
+* NeXus final integration (mcplot, mcgui, mcrun).
+* Only mcgui initiate mcstas.nxs as default output file, whereas
+* simulation may use instr_time.nxs
+*
 * Revision 1.65  2007/01/21 15:43:04  farhi
 * NeXus support. Draft version (functional). To be tuned.
 *
@@ -131,7 +136,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.66 2007-01-26 16:23:22 farhi Exp $
+* $Id: cogen.c,v 1.67 2007-02-09 13:19:15 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1535,6 +1540,11 @@ cogen(char *output_name, struct instr_def *instr)
   cout(" */\n");
   cout("");
   coutf("#define MCSTAS_VERSION \"%s\"", MCSTAS_VERSION);
+  if (!instr->nxinfo->any) {
+    coutf("#ifdef HAVE_LIBNEXUS\n");
+    coutf("#error McStas : You need to add the NEXUS keyword after the INITIALIZE section in the instrument description to enable NeXuS output.\n");
+    coutf("#endif\n");
+  }
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);
