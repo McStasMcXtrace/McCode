@@ -11,7 +11,7 @@
 * Written by: EF
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 *
 * NeXus Runtime system header for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.h,v 1.4 2007-01-26 16:23:25 farhi Exp $
+* $Id: nexus-lib.h,v 1.5 2007-02-09 13:21:38 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.4  2007/01/26 16:23:25  farhi
+* NeXus final integration (mcplot, mcgui, mcrun).
+* Only mcgui initiate mcstas.nxs as default output file, whereas
+* simulation may use instr_time.nxs
+*
 * Revision 1.3  2007/01/22 15:13:42  farhi
 * Fully functional NeXus output format.
 * Works also for lists, but as catenation is not working in NAPI, one
