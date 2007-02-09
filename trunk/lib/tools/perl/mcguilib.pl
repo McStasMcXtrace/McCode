@@ -270,6 +270,7 @@ sub simulation_dialog {
     } else {
       $opts = ['PGPLOT','Matlab','Scilab','HTML/VRML'];
     }
+    my $formatchoice_orig=$formatchoice_val;
     $formatchoice = $line->Optionmenu (
       -textvariable => \$formatchoice_val,
       -options      => $opts, -fg => 'blue'
@@ -397,7 +398,11 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       };
 
       if ($choicecluster_orig ne $choicecluster_val) {
-        # require re-compilation
+        # if changing to MPI, require re-compilation
+        $si{'Forcecompile'} = 1;
+      }
+      if ($formatchoice_val ne $formatchoice_orig && $formatchoice_val =~ /NeXus|HDF/) {
+        # if changing to NeXus, require re-compilation
         $si{'Forcecompile'} = 1;
       }
 
