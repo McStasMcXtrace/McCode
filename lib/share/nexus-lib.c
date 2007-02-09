@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,13 +19,17 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.6 2007-01-26 16:23:25 farhi Exp $
+* $Id: nexus-lib.c,v 1.7 2007-02-09 13:21:37 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.6  2007/01/26 16:23:25  farhi
+* NeXus final integration (mcplot, mcgui, mcrun).
+* Only mcgui initiate mcstas.nxs as default output file, whereas
+* simulation may use instr_time.nxs
+*
 * Revision 1.5  2007/01/25 14:57:36  farhi
 * NeXus output now supports MPI. Each node writes a data set in the NXdata
-* group. Uses compression LZW (may be unactivated with the
-* -DHAVE_LIBNEXUS_FLAT).
+* group. Uses compression LZW when -DHAVE_LIBNEXUS_COMP.
 *
 * Revision 1.3  2007/01/22 15:13:42  farhi
 * Fully functional NeXus output format.
@@ -45,7 +49,7 @@
 
 #ifdef HAVE_LIBNEXUS
 
-/* if HAVE_LIBNEXUS_FLAT is defined, the data sets are not compressed */
+/* if HAVE_LIBNEXUS_COMP is defined, the data sets are compressed */
 
 /* NeXus output functions that replace calls to pfprintf in mcstas-r */
 int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
@@ -186,7 +190,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       double axis[m];
       for(i = 0; i < m; i++)
         axis[i] = x1+(x2-x1)*(i+0.5)/(abs(m));
-#ifndef HAVE_LIBNEXUS_FLAT
+#ifdef HAVE_LIBNEXUS_COMP
       NXcompmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &m, NX_COMP_LZW, &m);
 #else
       NXmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &m);
@@ -203,7 +207,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       double axis[n];
       for(i = 0; i < n; i++)
         axis[i] = y1+(y2-y1)*(i+0.5)/(abs(n));
-#ifndef HAVE_LIBNEXUS_FLAT
+#ifdef HAVE_LIBNEXUS_COMP
       NXcompmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &n, NX_COMP_LZW, &n);
 #else
       NXmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &n);
@@ -220,7 +224,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       double axis[p];
       for(i = 0; i < p; i++)
         axis[i] = z1+(z2-z1)*(i+0.5)/(abs(p));
-#ifndef HAVE_LIBNEXUS_FLAT
+#ifdef HAVE_LIBNEXUS_COMP
       NXcompmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &p, NX_COMP_LZW, &p);
 #else
       NXmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &p);
@@ -246,7 +250,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
   else if (strstr(part,"errors"))  { data=p2; }
   else if (strstr(part,"ncount"))  { data=p0; }
   /* ignore errors for making/opening data (in case this has already been done */
-#ifndef HAVE_LIBNEXUS_FLAT
+#ifdef HAVE_LIBNEXUS_COMP
   NXmakedata(nxhandle, nxname, NX_FLOAT64, rank, dims);
 #else
   NXcompmakedata(nxhandle, nxname, NX_FLOAT64, rank, dims, NX_COMP_LZW, dims);
