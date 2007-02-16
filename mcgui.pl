@@ -83,6 +83,35 @@ if ($Config{'osname'} ne 'MSWin32') {
     $background = '&';
 }
 
+my %shortcuts;
+# Gui shortcut setup, different for OS X, Unix, Win32
+if ($Config{'osname'} eq 'darwin') {
+    $shortcuts{'menuopen'}   = '<Meta-o>';
+    $shortcuts{'menurun'}    = '<Meta-u>';
+    $shortcuts{'menuplot'}   = '<Meta-p>';
+    # These ones are not too obvious, Meta-C and Meta-M taken by general
+    # OS bindings, Meta-s causing problems...
+    $shortcuts{'menuprefs'}  = '<Meta-F1>';
+    $shortcuts{'insertcomp'} = '<Meta-F2>';
+    $shortcuts{'menusave'}   = '<Meta-F3>';
+    # This one is implicit
+    $shortcuts{'menuquit'}   = '<Meta-w>';
+    $shortcuts{'cut'}        = '<Ctrl-x>';
+    $shortcuts{'copy'}       = '<Ctrl-c>';
+    $shortcuts{'paste'}      = '<Ctrl-v>';
+} else {
+    $shortcuts{'insertcomp'} = '<Alt-m>';
+    $shortcuts{'menuopen'}   = '<Alt-o>';
+    $shortcuts{'menurun'}    = '<Alt-u>';
+    $shortcuts{'menuplot'}   = '<Alt-p>';
+    $shortcuts{'menuprefs'}  = '<Alt-c>';
+    $shortcuts{'menusave'}   = '<Alt-s>';
+    $shortcuts{'menuquit'}   = '<Alt-q>';
+    $shortcuts{'cut'}        = '<Ctrl-x>';
+    $shortcuts{'copy'}       = '<Ctrl-c>';
+    $shortcuts{'paste'}      = '<Ctrl-v>';
+}
+
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 our $quote=1; # default editor behaviour is to surround strings with quotes
 our $cflags=1;# default compilation behaviour is to use CFLAGS
@@ -240,6 +269,41 @@ sub mcdoc_test {
     if (defined $status) { putmsg($cmdwin, "$status", 'msg'); }
 }
 
+sub mcdoc_shortcuts {
+    my ($w) = @_;
+    
+    $w->fontCreate('small',
+    -family=>'Helvetica',
+    -weight=>'normal',
+    -size=>12);
+    my $msg="mcgui has platform dependent shorcut keys.\n\nOn this machine ". 
+	"(OS type $Config{'osname'}) they are:\n\n".
+	"$shortcuts{'menuopen'} - Open instrument file\n".
+	"$shortcuts{'menurun'} - Run instrument\n".
+	"$shortcuts{'menuplot'} - Plot simulation data\n".
+	"$shortcuts{'menuprefs'} - Config menu\n".
+	"$shortcuts{'menuquit'} - Quit\n\n".
+	"$shortcuts{'insertcomp'} - Editor, insert comp\n".
+	"$shortcuts{'menusave'} - Editor, save instrument\n".
+	"$shortcuts{'cut'} - Editor cut\n".
+	"$shortcuts{'copy'} - Editor copy\n".
+	"$shortcuts{'paste'} - Editor paste";
+    
+    if ($Config{'osname'} eq 'MSWin32') {
+	$w->messageBox(-message =>$msg,
+		       -title => "McGUI: Shortcut keys",
+		       -type => 'OK',
+		       -icon => 'info');
+    } else {
+	$w->messageBox(-message =>$msg,
+		       -title => "McGUI: Shortcut keys",
+		       -type => 'OK',
+		       -font => 'small',
+		       -icon => 'info');
+    }
+    $w->fontDelete('small'); 
+}
+
 sub mcdoc_about {
   my ($w) = @_;
   my $version = `mcstas --version`;
@@ -266,6 +330,7 @@ sub mcdoc_about {
                                  -font => 'small',
                                  -icon => 'info');
   }
+  $w->fontDelete('small');
 }
 
 
@@ -1295,10 +1360,10 @@ sub make_insert_menu {
                    -command => sub { menu_insert_file($w) },
                    -underline => 0);
     $menu->command(-label => "Component ...",
-                   -accelerator => 'Alt+M',
+                   -accelerator =>  $shortcuts{'insertcomp'} ,
                    -command => sub { menu_insert_component($w) },
                    -underline => 0);
-    $w->bind('<Alt-m>' => sub { menu_insert_component($w) });
+    $w->bind($shortcuts{'insertcomp'} => sub { menu_insert_component($w) });
     # Now build all the menu entries for direct selection of component
     # definitions.
     my $p;
@@ -1319,10 +1384,10 @@ sub setup_menu {
     $menu->pack(-fill => 'x');
     my $filemenu = $menu->Menubutton(-text => 'File', -underline => 0);
     $filemenu->command(-label => 'Open instrument ...',
-                       -accelerator => 'Alt+O',
+                       -accelerator =>  $shortcuts{'menuopen'} ,
                        -command => [\&menu_open, $w],
                        -underline => 0);
-    $w->bind('<Alt-o>' => [\&menu_open, $w]);
+    $w->bind( $shortcuts{'menuopen'}  => [\&menu_open, $w]);
     $filemenu->command(-label => 'Edit current/New',
                        -underline => 0,
                        -command => \&menu_edit_current);
@@ -1344,9 +1409,9 @@ sub setup_menu {
     $filemenu->separator;
     $filemenu->command(-label => 'Quit',
                        -underline => 0,
-                       -accelerator => 'Alt+Q',
+                       -accelerator =>  $shortcuts{'menuquit'} ,
                        -command => \&menu_quit);
-    $w->bind('<Alt-q>' => \&menu_quit);
+    $w->bind( $shortcuts{'menuquit'}  => \&menu_quit);
     $filemenu->pack(-side=>'left');
     my $simmenu = $menu->Menubutton(-text => 'Simulation', -underline => 2);
     $simmenu->command(-label => 'Read old simulation ...',
@@ -1355,20 +1420,20 @@ sub setup_menu {
     $simmenu->separator;
     $simmenu->command(-label => 'Run simulation ...',
                       -underline => 1,
-                      -accelerator => 'Alt+U',
+                      -accelerator =>  $shortcuts{'menurun'} ,
                       -command => sub {menu_run_simulation($w);});
-    $w->bind('<Alt-u>' => [\&menu_run_simulation, $w]);
+    $w->bind( $shortcuts{'menurun'}  => [\&menu_run_simulation, $w]);
     $simmenu->command(-label => 'Plot results ...',
                       -underline => 0,
-                      -accelerator => 'Alt+P',
+                      -accelerator =>  $shortcuts{'menuplot'} ,
                       -command => sub {menu_plot_results($w);});
-    $w->bind('<Alt-p>' => [\&menu_plot_results, $w]);
+    $w->bind( $shortcuts{'insertcomp'}  => [\&menu_plot_results, $w]);
     $simmenu->separator;
     $simmenu->command(-label => 'Configuration options',
-                      -underline => 0,
-                      -accelerator => 'Alt+C',
+                      -underline => 1,
+                      -accelerator =>  $shortcuts{'menuprefs'} ,
                       -command => sub {menu_preferences($w);});
-    $w->bind('<Alt-c>' => [\&menu_preferences, $w]);
+    $w->bind( $shortcuts{'menuprefs'}  => [\&menu_preferences, $w]);
 
     $simmenu->pack(-side=>'left');
 
@@ -1395,6 +1460,9 @@ sub setup_menu {
                        -command => sub {mcdoc_test($w)});
     $helpmenu->command(-label => 'Generate component index',
                        -command => sub {mcdoc_generate()});
+    $helpmenu->command(-label => 'mcgui Shorcut keys',
+                       -command => sub {mcdoc_shortcuts($w)});
+    $helpmenu->separator;
     $helpmenu->command(-label => 'About McStas',
                        -command => sub {mcdoc_about($w)});
     $helpmenu->pack(-side=>'right');
@@ -1568,19 +1636,19 @@ sub setup_edit_1_7 {
                        -command => [\&menu_new, $w],
                        -underline => 0);
     $filemenu->command(-label => 'Save instrument',
-                       -accelerator => 'Alt+S',
+                       -accelerator =>  $shortcuts{'menusave'} ,
                        -command => [\&menu_save, $w],
                        -underline => 0);
-    $w->bind('<Alt-s>' => [\&menu_save, $w]);
+    $w->bind( $shortcuts{'menusave'}  => [\&menu_save, $w]);
     $filemenu->command(-label => 'Save instrument as ...',
                        -underline => 16,
                        -command => sub {menu_saveas($w)});
     $filemenu->separator;
     $filemenu->command(-label => 'Close',
                        -underline => 0,
-                       -accelerator => 'Alt+C',
+                       -accelerator =>  $shortcuts{'menuclose'} ,
                        -command => sub { editor_quit($w) } );
-    $w->bind('<Alt-c>' => sub { editor_quit($w) } );
+    $w->bind( $shortcuts{'menuclose'}  => sub { editor_quit($w) } );
     $filemenu->pack(-side=>'left');
     my $editmenu = $menu->Menubutton(-text => 'Edit', -underline => 0);
     $editmenu->command(-label => 'Undo',
@@ -1589,15 +1657,15 @@ sub setup_edit_1_7 {
     $w->bind('<Control-z>' => [\&menu_undo, $w]);
     $editmenu->separator;
     $editmenu->command(-label => 'Cut',
-                       -accelerator => 'Ctrl+X',
+                       -accelerator => $shortcuts{'cut'} ,
                        -command => sub { $e->clipboardCut(); },
                        -underline => 0);
     $editmenu->command(-label => 'Copy',
-                       -accelerator => 'Ctrl+C',
+                       -accelerator =>  $shortcuts{'copy'} ,
                        -command => sub { $e->clipboardCopy(); },
                        -underline => 1);
     $editmenu->command(-label => 'Paste',
-                       -accelerator => 'Ctrl+V',
+                       -accelerator =>  $shortcuts{'paste'} ,
                        -command => sub { $e->clipboardPaste(); },
                        -underline => 0);
     $editmenu->pack(-side=>'left');
@@ -1647,7 +1715,7 @@ sub setup_edit {
     my $insert_menu = $menu->Menubutton(-text => 'Insert',  -underline => 0, -tearoff => 0);
     # This is only done for backward compatibility - we want to use Alt+s for saving...
     my $filemenu = $menu->Menubutton(-text => 'Search', -underline => 1);
-    $w->bind('<Alt-s>' => [\&menu_save, $w]);
+    $w->bind( $shortcuts{'menusave'}  => [\&menu_save, $w]);
     make_insert_menu($w, $insert_menu);
     my $label = $w->Label(-bd => '1', -text => 'Current line: 1');
     $e->pack(-expand => 'yes', -fill => 'both');
