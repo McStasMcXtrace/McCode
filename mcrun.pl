@@ -246,8 +246,8 @@ sub parse_args {
         print STDERR "mcrun: No MPI/grid machine list.
      Grid disabled, MPI will run locally...
   Define $ENV{'HOME'}/.mcstas-hosts
-  or $MCSTAS::sys_dir/tools/perl/mcstas-host
-  or use option --machines=<file>!\n";
+  or $MCSTAS::sys_dir/tools/perl/mcstas-hosts
+  or use option --machines=<file>\n";
         $multi = 0;
         $MCSTAS::mcstas_config{'HOSTFILE'} = "";
       }

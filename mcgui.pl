@@ -1537,7 +1537,7 @@ sub setup_cmdwin {
           ($MCSTAS::mcstas_config{'MPIRUN'} ne "no"
         ||  $MCSTAS::mcstas_config{'SSH'} ne "no") ) {
       $cmdwin->insert('end',
-"** No MPI/grid machine list. ssh clustering disabled. MPI on localhost **
+"Warning: No MPI/grid machine list. ssh clustering disabled. MPI on localhost **
 Define $ENV{'HOME'}/.mcstas-hosts or MCSTAS/lib/tools/perl/mcstas-hosts first.\n");
       $MCSTAS::mcstas_config{'SSH'}    = "no";
     }
