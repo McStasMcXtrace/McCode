@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.154 $
+* Version: $Revision: 1.155 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.154 2007-02-06 14:07:40 vel Exp $
+* $Id: mcstas-r.c,v 1.155 2007-02-17 13:37:50 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.154  2007/02/06 14:07:40  vel
+* Axes limits for 3rd axis using  DETECTOR_OUT_3D are corrected
+*
 * Revision 1.153  2007/02/05 10:16:08  pkwi
 * Mac OS, MPI related: Disable use of sighandler in case of NOSIGNALS
 *
@@ -4971,15 +4974,17 @@ mcstas_main(int argc, char *argv[])
 #ifdef SIGSEGV
   signal( SIGSEGV ,sighandler);   /* segmentation violation */
 #endif
+#endif /* !NOSIGNALS */
   if (!strstr(mcformat.Name,"NeXus")) {
     mcsiminfo_init(NULL); mcsiminfo_close();  /* makes sure we can do that */
   }
   SIG_MESSAGE("main (Init)");
   mcinit();
+#ifndef NOSIGNALS
 #ifdef SIGINT
   signal( SIGINT ,sighandler);    /* interrupt (rubout) only after INIT */
 #endif
-#endif
+#endif /* !NOSIGNALS */
 
 /* ================ main neutron generation/propagation loop ================ */
 #if defined (USE_MPI) || defined(USE_THREADS)

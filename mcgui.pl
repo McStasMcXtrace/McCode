@@ -4,7 +4,7 @@
 #
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2006, All rights reserved
+#   Copyright (C) 1997-2007, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -1203,7 +1203,7 @@ my $instr_template_start = <<INSTR_FINISH;
 * Written by: Your name (email)
 * Date: Current Date
 * Origin: Your institution
-* Release: McStas 1.6
+* Release: McStas 1.11
 * Version: 0.2
 * %INSTRUMENT_SITE: Institution_name_as_a_single word
 *
@@ -1539,15 +1539,22 @@ sub setup_cmdwin {
       $cmdwin->insert('end',
 "** No MPI/grid machine list. ssh clustering disabled. MPI on localhost **
 Define $ENV{'HOME'}/.mcstas-hosts or MCSTAS/lib/tools/perl/mcstas-hosts first.\n");
-    $MCSTAS::mcstas_config{'SSH'}    = "no";
+      $MCSTAS::mcstas_config{'SSH'}    = "no";
     }
     my $text_grid="";
     # if ($MCSTAS::mcstas_config{'THREADS'} ne "no") { $text_grid .= "Threads "; }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no")  { $text_grid .= "MPI "; }
     if ($MCSTAS::mcstas_config{'SSH'} ne "no")     { $text_grid .= "Scan/ssh "; }
     if ($text_grid ne "") { $cmdwin->insert('end', "Clustering methods: $text_grid\n"); }
-
-
+    if (($MCSTAS::mcstas_config{'MPIRUN'} ne "no" || $MCSTAS::mcstas_config{'SSH'} ne "no")
+        && $Config{'osname'} ne 'MSWin32' && (not -e "$ENV{'HOME'}/.ssh/id_dsa")) {
+      # create DSA key for local MPI execution.
+      my $cmd = "ssh-keygen -q -t dsa -P \"\" -f $ENV{'HOME'}/.ssh/id_dsa";
+      putmsg($cmdwin, "Installing DSA key for SSH: $cmd\n", 'msg');
+      system("$cmd");
+      $cmd = "cat $ENV{'HOME'}/.ssh/id_dsa.pub >> $ENV{'HOME'}/.ssh/authorized_keys";
+      system("$cmd");
+    }
 }
 
 
@@ -1620,7 +1627,7 @@ sub Tk::CodeText::selectionModify {
 }
 
 sub setup_edit_1_7 {
-    # BEWARE: The code in this sub is from McStas 1.7,
+    # BEWARE: The code in this sub is from McStas version 1.7,
     # added only for those users unable to use the CodeText
     # based highlighting editor below. Other features are
     # also missing.
