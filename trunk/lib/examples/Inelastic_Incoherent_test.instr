@@ -1,17 +1,17 @@
 /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: QENStest 
+* Instrument: Inelastic_Incoherent_test 
 *
 * %Identification
 * Written by: Kim Lefmann
 * Date: 18.08.06
-* Origin: Risø
+* Origin: Risoe
 * Release: McStas 1.9
 * Version: 0.1
-* %INSTRUMENT_SITE: tests
+* %INSTRUMENT_SITE: test
 *
-* Testing the new quasi-elastic features of the V_sample component
+* Testing the QENS_incoherent component
 *
 * %Description
 * Instrument longer description (type, elements, usage...)
@@ -25,7 +25,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT QENS_test(Gamma=0.1,fracQE=0.5)
+DEFINE INSTRUMENT Inelastic_Incoherent_test(h_omega=0.5, frac_inel=0.2, Gamma=0.1, fracQE=0.2)
 
 DECLARE
 %{
@@ -51,9 +51,9 @@ COMPONENT Emon1 = E_monitor(
     yheight = 0.03, Emin = 0, Emax = 10)
   AT (0, 0, 9.989) RELATIVE Origin
 
-COMPONENT Sample = V_sample(
+COMPONENT Sample = Inelastic_Incoherent(
     radius_i = 0, radius_o = 0.01, h = 0.02, pack = 1, frac = 1,
-    f_QE = fracQE, gamma=Gamma,
+    f_inel = frac_inel, homega=h_omega, f_QE = fracQE, gamma=Gamma,
     focus_xw = 0.03, focus_yh = 0.10, sig_a = 0, sig_i = 1,
     V0 = 20, target_index = 2)
   AT (0, 0, 10) RELATIVE Origin
@@ -64,7 +64,7 @@ COMPONENT detector_arm = Arm()
 
 COMPONENT Emon2 = E_monitor(
     nchan = 1000, filename = "Emon2.dat", xwidth = 0.03,
-    yheight = 0.12, Emin = 0, Emax = 10)
+    yheight = 0.12, Emin = 4, Emax = 6)
   AT (0, 0, 2) RELATIVE detector_arm
 
 FINALLY
@@ -72,5 +72,6 @@ FINALLY
 %}
 
 END
+
 
 
