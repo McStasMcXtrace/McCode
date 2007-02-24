@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.155 $
+* Version: $Revision: 1.156 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.155 2007-02-17 13:37:50 farhi Exp $
+* $Id: mcstas-r.c,v 1.156 2007-02-24 16:44:41 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.155  2007/02/17 13:37:50  farhi
+* cogen: display tip when no NEXUS keyword but user wants NeXus output.
+* mcstas-r.c: fixed pb when using MPI, that gave 0 detector values.
+*
 * Revision 1.154  2007/02/06 14:07:40  vel
 * Axes limits for 3rd axis using  DETECTOR_OUT_3D are corrected
 *
@@ -2636,8 +2640,8 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     filename = (char *)malloc(1024);
     if (!filename) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
     strcpy(filename, filename_orig);
-    if (!strchr(filename, '.'))
-    { /* add extension to file name if it is missing */
+    if (!strchr(filename, '.') && !strstr(format.Name, "NeXus"))
+    { /* add extension to file name if it is missing and not NeXus  */
       strcat(filename,".");
       if (mcformat_data.Extension) strcat(filename,mcformat_data.Extension);
       else strcat(filename,mcformat.Extension);
@@ -3067,9 +3071,9 @@ void mcclear_format(struct mcformats_struct usedformat)
 /* mcuse_file: will save data/sim files */
 static void mcuse_file(char *file)
 {
-  if (file && strcmp(file, "auto"))
+  if (file && strcmp(file, "NULL"))
     mcsiminfo_name = file;
-  else if (!mcsiminfo_name) {
+  else {
     char *filename=(char*)malloc(1024);
     sprintf(filename, "%s_%li", mcinstrument_name, mcstartdate);
     mcsiminfo_name = filename;

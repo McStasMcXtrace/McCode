@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.7 2007-02-09 13:21:37 farhi Exp $
+* $Id: nexus-lib.c,v 1.8 2007-02-24 16:44:41 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.7  2007/02/09 13:21:37  farhi
+* NeXus compression does not work right. Use flat NeXus as default.
+*
 * Revision 1.6  2007/01/26 16:23:25  farhi
 * NeXus final integration (mcplot, mcgui, mcrun).
 * Only mcgui initiate mcstas.nxs as default output file, whereas
@@ -175,6 +178,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
     NXputattr(nxhandle, "name", name, strlen(name), NX_CHAR);
     NXputattr(nxhandle, "parent", parent, strlen(parent), NX_CHAR);
   }
+  return(NX_OK);
 } /* mcnxfile_section */
 
 /* mcnxfile_datablock: data block begin/end. Returns: NX_ERROR or NX_OK */
@@ -201,6 +205,9 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       NXputattr (nxhandle, "short_name", xvar, strlen(xvar), NX_CHAR);
       int naxis=1;
       NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+      NXputattr (nxhandle, "units", xvar, strlen(xvar), NX_CHAR);
+      int nprimary=1;
+      NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
       NXclosedata(nxhandle);
     }
     if (n >= 1) {
@@ -218,6 +225,9 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       NXputattr (nxhandle, "short_name", yvar, strlen(yvar), NX_CHAR);
       int naxis=2;
       NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+      NXputattr (nxhandle, "units", yvar, strlen(yvar), NX_CHAR);
+      int nprimary=1;
+      NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
       NXclosedata(nxhandle);
     }
     if (p > 1) {
@@ -235,6 +245,9 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       NXputattr (nxhandle, "short_name", zvar, strlen(zvar), NX_CHAR);
       int naxis=3;
       NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+       NXputattr (nxhandle, "units", zvar, strlen(zvar), NX_CHAR);
+      int nprimary=1;
+      NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
       NXclosedata(nxhandle);
     }
   } } /* end format != list for data */
