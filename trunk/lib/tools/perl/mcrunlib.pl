@@ -332,11 +332,14 @@ sub get_out_file {
 
 # McStas selftest procedure: copy LIB/examples and execute
 sub do_test {
-  my ($printer,$force, $plotter, $exec_test) = @_;
+  my ($printer,$force, $plotter, $exec_test, $mpi) = @_;
   my $j;
   my $pwd=getcwd;
 
   &$printer( "# McStas self-test (mcrun --test='$exec_test')");
+  if ($mpi) {
+      &$printer("# MPI enabled, spawning $mpi computenodes");
+  }
   &$printer(`mcstas --version`);
   &$printer("# Installing 'selftest' directory in $pwd");
   if (-d "selftest") # directory already exists
@@ -382,6 +385,9 @@ sub do_test {
   $suffix=$MCSTAS::mcstas_config{'SUFFIX'};
   $prefix=$MCSTAS::mcstas_config{'PREFIX'};
   $ENV{'MCSTAS_FORMAT'} = $plotter;
+  if ($mpi) {
+      $mpi="--mpi=$mpi";
+  }
 
   # compatible test definition
   if ($exec_test =~ /compatible/i) {
@@ -403,24 +409,24 @@ sub do_test {
       "Risoe TAS1: sample two-theta (TT aka A4). negative side . Powder sample",
       "Risoe TAS1: Triple axis mode. Analyzer rocking curve (OMA aka A5). Vanadium sample",
       "Risoe TAS1: Triple axis mode. Sample take-off (TT aka A4). Powder sample",);
-  @test_commands= ("mcrun$suffix --dir=prisma2a prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44",
-      "mcrun$suffix --dir=prisma2b prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44",
-      "mcrun$suffix --dir=V_test vanadium_example.instr --ncount=$n_single ROT=0",
-      "mcrun$suffix -n $n_single --dir=h8_test  h8_test.instr Lambda=2.359",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_1_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=0",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_2_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=30",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_3_45 linup-2.instr PHM=-37.077 TTM=-74 C1=30 OMC1=-50,50",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_4_45 linup-2.instr PHM=-39,-35 TTM=-74 C1=30 OMC1=-1.81715",
-      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m5 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-5",
-      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m6 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-6",
-      "mcrun$suffix --numpoints=31 -n $n_scan --dir=linup_5_m10 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-10",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_6_0 linup-3.instr PHM=-37.077 TTM=-74 TT=-1.5,1.5 C1=30 OMC1=-5.5 C2=0 C3=0",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_7 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=0",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_8 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_9 linup-5.instr PHM=-37.077 TTM=-74 TT=32,35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun$suffix --numpoints=41 -n $n_scan --dir=linup_10 linup-5.instr PHM=-37.077 TTM=-74 TT=-32,-35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_11 linup-6.instr PHM=-37.077 TTM=-74 TT=33.57 OMA=-16.44,-18.44 TTA=-34.883 C1=30 OMC1=-5.5 C2=28 C3=67",
-      "mcrun$suffix --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
+  @test_commands= ("mcrun$suffix $mpi  --dir=prisma2a prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44",
+      "mcrun$suffix $mpi  --dir=prisma2b prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44",
+      "mcrun$suffix $mpi  --dir=V_test vanadium_example.instr --ncount=$n_single ROT=0",
+      "mcrun$suffix $mpi  -n $n_single --dir=h8_test  h8_test.instr Lambda=2.359",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_1_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=0",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_2_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=30",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_3_45 linup-2.instr PHM=-37.077 TTM=-74 C1=30 OMC1=-50,50",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_4_45 linup-2.instr PHM=-39,-35 TTM=-74 C1=30 OMC1=-1.81715",
+      "mcrun$suffix $mpi  --numpoints=31 -n $n_scan --dir=linup_5_m5 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-5",
+      "mcrun$suffix $mpi  --numpoints=31 -n $n_scan --dir=linup_5_m6 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-6",
+      "mcrun$suffix $mpi  --numpoints=31 -n $n_scan --dir=linup_5_m10 linup-2.instr PHM=-38.5,-35.5 TTM=-74 C1=30 OMC1=-10",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_6_0 linup-3.instr PHM=-37.077 TTM=-74 TT=-1.5,1.5 C1=30 OMC1=-5.5 C2=0 C3=0",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_7 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=0",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_8 linup-4.instr PHM=-37.077 TTM=-74 TT=33.52 TTA=-3,3 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_9 linup-5.instr PHM=-37.077 TTM=-74 TT=32,35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_10 linup-5.instr PHM=-37.077 TTM=-74 TT=-32,-35 TTA=0 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun$suffix $mpi  --numpoints=21 -n $n_scan --dir=linup_11 linup-6.instr PHM=-37.077 TTM=-74 TT=33.57 OMA=-16.44,-18.44 TTA=-34.883 C1=30 OMC1=-5.5 C2=28 C3=67",
+      "mcrun$suffix $mpi  --numpoints=21 -n $n_scan --dir=linup_13 linup-7.instr PHM=-37.077 TTM=-74 TT=32.5,34.5 OMA=-17.45 TTA=-34.9 C1=30 OMC1=-5.5 C2=28 C3=67");
   @test_monitor_names =("mon9_I","mon9_I","PSD_4pi_I","D7_SC3_In_I","","","","","","","","","","","","","","");
   @test_monitor_values=(6.2e-08,4.2e-08,2.1e-06,3.11e-11,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
   } # end of compatible test definition
