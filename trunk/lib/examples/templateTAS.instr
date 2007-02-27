@@ -12,7 +12,7 @@
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tutorial
 *
 * Template RESCAL type triple-axis machine (TAS)
@@ -432,7 +432,7 @@ machine_hkl.bet2= BET2;
 machine_hkl.bet3= BET3;
 machine_hkl.bet4= BET4;
 
-/* gemetry tests w/r to collimator lengths */
+/* geometry tests w/r to collimator lengths */
 if (machine_hkl.l1 <= 5.34)
   exit(fprintf(stderr, "%s: ERROR: L1 too short. Min=5.34\n", NAME_CURRENT_COMP));
 

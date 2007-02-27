@@ -92,11 +92,6 @@ our @guess;                     # starting set of parameters (centers of scans)
 our @scale;                     # ranges of parameters (ratio from center)
 our $optim_iterations=0;        # total number of function calls in optim
 our @optim_best;
-our @optim_datablock = ();
-our @optim_youts=();
-our $optim_variables;
-our @optim_first;
-our $optim_bestvalue=0;
 our $max_iteration=20;
 our $data_dir_saved = undef;
 my  $optim_prec=1e-3;

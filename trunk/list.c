@@ -12,13 +12,17 @@
 * Date: Jul  3, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 *
 * Implementation of lists.
 *
-*       $Id: list.c,v 1.17 2006-11-06 14:30:00 farhi Exp $
+*       $Id: list.c,v 1.18 2007-02-27 16:25:48 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.17  2006/11/06 14:30:00  farhi
+*       Improved COPY grammar, enabling to either redefine sections, or extend them (with e.g. INITIALIZE COPY parent EXTEND %{ %})
+*       over-definition of parameters for comp instances in the .instr works OK.
+*
 *       Revision 1.16  2006/04/19 13:06:25  farhi
 *       * Updated Release, Version and Origin fields in headers
 *       * Improved setversion to update all McStasx.y occurencies into current release
@@ -65,7 +69,7 @@ struct List_header
     void **elements;
   };
 
-#define MAX_ELEMENTS 5000
+#define MAX_ELEMENTS 50000
 
 /* Position in a list for doing list traversals. */
 struct List_position
@@ -101,7 +105,7 @@ list_add(List l, void *e)
 
   /* Check if there is room for the new element. */
   if(l->size >= l->maxsize)
-    fatal_error("list_add: List too small.");
+    fatal_error("list_add: List too small (%d).", MAX_ELEMENTS);
 
   i = l->size;
   l->size++;
