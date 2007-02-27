@@ -24,6 +24,12 @@ use Config;
 use Math::Amoeba qw(MinimiseND);
 require "mcstas_config.perl";
 
+our $optim_bestvalue=0;
+our $optim_variables;
+our @optim_datablock = ();
+our @optim_first;
+our @optim_youts=();
+
 # must run optimization steps as scans in oder to extract Detector lines
 # from output: (mcrun::do_scan) mcrun -N 1
 sub minimize_function {
