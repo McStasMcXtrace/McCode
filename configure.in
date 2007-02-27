@@ -31,12 +31,6 @@ if test "${ac_cv_lib_pthread_pthread_create+set}" = set; then
 else
 	AC_SUBST([HAVE_LIBPTHREAD], [no])
 fi
-AC_CHECK_LIB(NeXus, NXopen)
-if test "${ac_cv_lib_NeXus_NXopen+set}" = set; then
-	AC_SUBST([HAVE_LIBNEXUS], [1])
-else
-	AC_SUBST([HAVE_LIBNEXUS], [0])
-fi
 AC_ARG_WITH([nexus],
   [AS_HELP_STRING([--with-nexus],
      [enable support for NeXus/HDF libraries])],
@@ -48,14 +42,6 @@ if test "${with_nexus+set}" = set; then
   AC_DEFINE([HAVE_LIBNEXUS], [1])
 else
   AC_SUBST([HAVE_LIBNEXUS], [0])
-fi
-AC_CHECK_HEADER(napi.h)
-if test "$ac_cv_header_napi_h" != "no"; then
-  ac_cv_lib_NeXus_NXopen=1
-  AC_SUBST([HAVE_LIBNEXUS], [1])
-  AC_DEFINE([HAVE_LIBNEXUS], [1])
-  AC_SUBST([WITH_NEXUS], ["-DHAVE_LIBNEXUS -lNeXus"])
-  AC_DEFINE([WITH_NEXUS], ["-DHAVE_LIBNEXUS -lNeXus"])
 fi
 AC_CHECK_LIB(c, qsort, HAVE_QSORT=1, HAVE_QSORT=0)
 AC_SUBST(HAVE_QSORT)
