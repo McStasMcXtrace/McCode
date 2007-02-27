@@ -144,7 +144,7 @@ export INSTALL="./install-sh -c"
 
 # Also, do a ./configure to create Makefile and mcstas_config.perl
 # These will be dependent on this system, ofcourse...
-./configure --without-nexus
+./configure
 # Select scilab as default plotter
 make scilab
 
@@ -167,7 +167,7 @@ cd $DIST
 
 # Default again to Linux' /usr/bin/install -c (or whatever ./configure finds)
 export INSTALL=
-./configure --without-nexus
+./configure
 # Select scilab as default plotter
 make scilab
 
@@ -190,7 +190,7 @@ cd $DIST
 make clean
 flex -i instrument.l
 bison -v -d instrument.y
-./configure --without-nexus
+./configure
 sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
 sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/which.exe .
@@ -198,6 +198,7 @@ cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
 if [ `which makensis` ]; then
     cd -
+    ./configure
     make mcstas.win32
     cp mcstas.ini ..
     cp mcstas.nsi ..
@@ -242,6 +243,10 @@ then
   if [ -e sarge-chroot ]
   then
     echo Proceeding to .deb/.rpm build
+    # First, clean up in case of previous McStas installs in the chrooot
+    sudo rm -f sarge-chroot/usr/local/bin/*
+    sudo rm -rf sarge-chroot/usr/local/lib/*
+    sudo rm -rf sarge-chroot/usr/local/pgplot
     sudo cp mcstas-$1/deb/debcreate sarge-chroot/root
     sudo cp mcstas-$1-src.tar.gz sarge-chroot/root
     sudo chroot sarge-chroot /root/debcreate
@@ -251,7 +256,7 @@ then
     echo
     cp sarge-chroot/build/*deb .
     cp sarge-chroot/build/*rpm .
-    ls -lf mcstas-$1*.*
+    ls -lf mcstas-$1*.* McStas-$1*.*
     echo
   else
     echo You need a chroot environment based on debootstrap in sarge-chroot before building deb/rpms
