@@ -101,8 +101,8 @@ mcstas: $(OBJECTS)
 	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
 
 mcstas.win32: $(COBJECTS)
-	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(LDFLAGS) $(DEFS) $(COBJECTS) -lm
-	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(LDFLAGS) $(DEFS) mcformat.c -lm
+	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(WITH_NEXUS)
+	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(WITH_NEXUS)
 
 
 mcformat:
