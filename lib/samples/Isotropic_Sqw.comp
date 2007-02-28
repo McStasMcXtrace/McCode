@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.44 $
+* Version: $Revision: 1.45 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
@@ -1437,8 +1437,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
     /* compute total scattering X section */
     /* \int q S(q) dq /2 /ki^2 sigma  OR  bare Xsection*/
     /* contains the 4*PI*kf/ki factor */
-    coh = VarSqw.s_coh*k*k/2;
-    inc = VarSqw.s_inc*k*k/2;
+    coh = VarSqw.s_coh;
+    inc = VarSqw.s_inc;
     if (auto_sigma && k && VarSqw.s_coh>0 && VarSqw.Data_coh.intensity) {
       int index_2k = (int)floor(VarSqw.Data_coh.nb_q_data
                    * (2*k - VarSqw.Data_coh.q_min)
