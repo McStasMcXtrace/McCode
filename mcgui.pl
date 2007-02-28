@@ -306,8 +306,7 @@ sub mcdoc_shortcuts {
 
 sub mcdoc_dsa {
     my ($w) = @_;
-    my $msg="Press Yes below to generate DSA key. \n".
-	"(Please allow up to 30 seconds to finish)";
+    my $msg="Press Yes to create DSA key.\n";
     my $do_dsa=$w->messageBox(-message =>$msg,
 		   -title => "McGUI: Generate DSA key?",
 		   -type => 'YesNoCancel',
@@ -317,8 +316,15 @@ sub mcdoc_dsa {
 	    putmsg($cmdwin, "DSA key generation cancelled!\n", 'msg');
 	return 0;
     }
-    install_ssh_key();
-    putmsg($cmdwin, "DSA key done!\n", 'msg');
+    # create DSA key for local MPI execution.
+    my $cmd = "ssh-keygen -q -t dsa -P \"\" -f $ENV{'HOME'}/.ssh/id_dsa";
+    putmsg($cmdwin, "Installing DSA key for SSH: \n$cmd\n", 'msg');
+    my $success=my_system($w, "Please wait while generating DSA key\n", $cmd);
+    $cmd = "cat $ENV{'HOME'}/.ssh/id_dsa.pub >> $ENV{'HOME'}/.ssh/authorized_keys";
+    system("$cmd");
+    if ($success) {
+	putmsg($cmdwin, "\nDSA key generated!\n", 'msg');
+    }
 }
 sub mcdoc_about {
   my ($w) = @_;
@@ -593,13 +599,13 @@ sub run_dialog {
     my $update_cmd = sub {
         kill "USR2", $pid unless $state; # signal 15 is SIGTERM
     };
-    my $text='Simulation';
+    my $text='Job';
     if ($inf_sim->{'Mode'}==1) { $text='Trace/3D View'; }
     elsif ($inf_sim->{'Mode'}==2) { $text='Parameter Optimization'; }
     if ($pid && $Config{'osname'} ne 'MSWin32') {
       $text .= " [pid $pid]";
     }
-    my $dlg = run_dialog_create($w, "Running simulation $current_sim_def",
+    my $dlg = run_dialog_create($w, "Running job $current_sim_def",
                                 "$text running\n($current_sim_def)...", $cancel_cmd, $update_cmd);
     putmsg($cmdwin, $inittext, 'msg'); # Must appear before any other output
     # Set up the pipe reader callback
@@ -1574,15 +1580,6 @@ Define $ENV{'HOME'}/.mcstas-hosts or MCSTAS/lib/tools/perl/mcstas-hosts first.\n
 	     "To make use of this, \n".
 	     "please go to the Help (McDoc) menu and select 'Install DSA key'.\n", 'msg');
     }
-}
-
-sub install_ssh_key {
-      # create DSA key for local MPI execution.
-      my $cmd = "ssh-keygen -q -t dsa -P \"\" -f $ENV{'HOME'}/.ssh/id_dsa";
-      putmsg($cmdwin, "Installing DSA key for SSH: $cmd\n", 'msg');
-      system("$cmd");
-      $cmd = "cat $ENV{'HOME'}/.ssh/id_dsa.pub >> $ENV{'HOME'}/.ssh/authorized_keys";
-      system("$cmd");
 }
 
 # save command output into LOG file
