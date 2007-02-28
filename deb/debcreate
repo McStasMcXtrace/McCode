@@ -22,6 +22,8 @@ make install-pgplot
 
 ./configure
 
+make pgplot
+
 make
 make install
 cd /build

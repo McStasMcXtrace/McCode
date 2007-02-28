@@ -199,6 +199,8 @@ tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
 if [ `which makensis` ]; then
     cd -
     ./configure
+    # Make sure we default to Scilab plotter
+    make scilab
     make mcstas.win32
     cp mcstas.ini ..
     cp mcstas.nsi ..
