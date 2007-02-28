@@ -304,6 +304,22 @@ sub mcdoc_shortcuts {
     $w->fontDelete('small'); 
 }
 
+sub mcdoc_dsa {
+    my ($w) = @_;
+    my $msg="Press Yes below to generate DSA key. \n".
+	"(Please allow up to 30 seconds to finish)";
+    my $do_dsa=$w->messageBox(-message =>$msg,
+		   -title => "McGUI: Generate DSA key?",
+		   -type => 'YesNoCancel',
+		   -icon => 'question',
+		   -default => 'yes');
+    if ((lc($do_dsa) eq "no")||(lc($do_dsa) eq "cancel")) {
+	    putmsg($cmdwin, "DSA key generation cancelled!\n", 'msg');
+	return 0;
+    }
+    install_ssh_key();
+    putmsg($cmdwin, "DSA key done!\n", 'msg');
+}
 sub mcdoc_about {
   my ($w) = @_;
   my $version = `mcstas --version`;
@@ -1463,6 +1479,11 @@ sub setup_menu {
     $helpmenu->command(-label => 'mcgui Shorcut keys',
                        -command => sub {mcdoc_shortcuts($w)});
     $helpmenu->separator;
+    if (!($Config{'osname'} eq 'MSWin32')) {
+	$helpmenu->command(-label => 'Install DSA key',
+			   -command => sub {mcdoc_dsa($w)});
+	$helpmenu->separator;
+    }
     $helpmenu->command(-label => 'About McStas',
                        -command => sub {mcdoc_about($w)});
     $helpmenu->pack(-side=>'right');
@@ -1548,15 +1569,21 @@ Define $ENV{'HOME'}/.mcstas-hosts or MCSTAS/lib/tools/perl/mcstas-hosts first.\n
     if ($text_grid ne "") { $cmdwin->insert('end', "Clustering methods: $text_grid\n"); }
     if (($MCSTAS::mcstas_config{'MPIRUN'} ne "no" || $MCSTAS::mcstas_config{'SSH'} ne "no")
         && $Config{'osname'} ne 'MSWin32' && (not -e "$ENV{'HOME'}/.ssh/id_dsa")) {
+      # Suggest to create DSA key for local MPI execution.
+      putmsg($cmdwin, "Your system has MPI/SSH parallelisation available. ".
+	     "To make use of this, \n".
+	     "please go to the Help (McDoc) menu and select 'Install DSA key'.\n", 'msg');
+    }
+}
+
+sub install_ssh_key {
       # create DSA key for local MPI execution.
       my $cmd = "ssh-keygen -q -t dsa -P \"\" -f $ENV{'HOME'}/.ssh/id_dsa";
       putmsg($cmdwin, "Installing DSA key for SSH: $cmd\n", 'msg');
       system("$cmd");
       $cmd = "cat $ENV{'HOME'}/.ssh/id_dsa.pub >> $ENV{'HOME'}/.ssh/authorized_keys";
       system("$cmd");
-    }
 }
-
 
 # save command output into LOG file
 sub setup_cmdwin_saveas {
