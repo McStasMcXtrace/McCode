@@ -237,14 +237,13 @@ echo mcrun --test \(validation test of selected instruments\)
 echo
 echo Follow instructions in ../adm to publish on the web.
 echo
-# We'll wait until a later stable release to implement .deb/.rpm
-#
-# In case of a debian build host, we also build a .deb and .rpm (using alien)
+# In case of a debian build host, we also build an .deb 
+# (.rpm was tried using alien - did not work too well)
 if [ -e /etc/debian_version ]
 then
   if [ -e sarge-chroot ]
   then
-    echo Proceeding to .deb/.rpm build
+    echo Proceeding to .deb build
     # First, clean up in case of previous McStas installs in the chrooot
     sudo rm -f sarge-chroot/usr/local/bin/*
     sudo rm -rf sarge-chroot/usr/local/lib/*
@@ -257,10 +256,9 @@ then
     echo Build packages created:
     echo
     cp sarge-chroot/build/*deb .
-    cp sarge-chroot/build/*rpm .
     ls -lf mcstas-$1*.* McStas-$1*.*
     echo
   else
-    echo You need a chroot environment based on debootstrap in sarge-chroot before building deb/rpms
+    echo You need a chroot environment based on debootstrap in sarge-chroot before building deb packages
   fi
 fi
