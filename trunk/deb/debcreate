@@ -64,5 +64,5 @@ mv mcstas-${RELEASE}.deb mcstas-${RELEASE}-i686.deb
 rm -rf $BUILDDIR
 
 # Here is an implicit assumption on the arch...
-alien -k --scripts --to-rpm mcstas-${RELEASE}-i686.deb
+#alien -k --scripts --to-rpm mcstas-${RELEASE}-i686.deb
 
