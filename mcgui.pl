@@ -307,6 +307,12 @@ sub mcdoc_shortcuts {
 sub mcdoc_dsa {
     my ($w) = @_;
     my $msg="Press Yes to create DSA key.\n";
+    my $key_exist = 0;
+    if (-e "$ENV{'HOME'}/.ssh/id_dsa") {
+	$msg = $msg."\nWarning! A DSA key exists!\n".
+	    "By pressing Yes it will be overwritten!";
+	$key_exist = 1;
+    }
     my $do_dsa=$w->messageBox(-message =>$msg,
 		   -title => "McGUI: Generate DSA key?",
 		   -type => 'YesNoCancel',
@@ -315,6 +321,9 @@ sub mcdoc_dsa {
     if ((lc($do_dsa) eq "no")||(lc($do_dsa) eq "cancel")) {
 	    putmsg($cmdwin, "DSA key generation cancelled!\n", 'msg');
 	return 0;
+    } 
+    if ($key_exist == 1) {
+	system("rm -f $ENV{'HOME'}/.ssh/id_dsa $ENV{'HOME'}/.ssh/id_dsa.pub");
     }
     # create DSA key for local MPI execution.
     my $cmd = "ssh-keygen -q -t dsa -P \"\" -f $ENV{'HOME'}/.ssh/id_dsa";
@@ -628,7 +637,7 @@ sub run_dialog {
         putmsg($cmdwin, "Simulation exited abnormally.\n");
         return undef;
     } else {
-        putmsg($cmdwin, "Simulation finished.\n", 'msg');
+        putmsg($cmdwin, "Job finished.\n", 'msg');
         return 1;
     }
 }
