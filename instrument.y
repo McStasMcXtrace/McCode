@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.69 $
+* Version: $Revision: 1.70 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.69 2007-01-26 16:23:22 farhi Exp $
+* $Id: instrument.y,v 1.70 2007-03-02 14:27:17 farhi Exp $
 *
 *******************************************************************************/
 
@@ -97,8 +97,6 @@
 %token TOK_GROUP      "GROUP"   /* extended McStas grammar */
 %token TOK_SAVE       "SAVE"
 %token TOK_NEXUS      "NEXUS"   /* optional */
-%token TOK_HDF        "HDF"     /* optional */
-%token TOK_XML        "XML"     /* optional */
 %token TOK_JUMP       "JUMP"    /* extended McStas grammar */
 %token TOK_WHEN       "WHEN"    /* extended McStas grammar */
 %token TOK_NEXT       "NEXT"    /* extended McStas grammar */
@@ -135,7 +133,7 @@
 %type <place>   place
 %type <ori>     orientation
 %type <nxinfo> nexus
-%type <string>  nxfile instname
+%type <string>  instname
 %type <number>  hdfversion
 %type <jump>    jump
 %type <jumps>   jumps jumps1
@@ -553,48 +551,24 @@ nexus:      /* empty: no NeXus support */
       {
         struct NXinfo *nxinfo;
         palloc(nxinfo);
-        nxinfo->nxfile = NULL;
         nxinfo->any = 0;
         $$ = nxinfo;
       }
-    | nexus "NEXUS" nxfile hdfversion
+    | nexus "NEXUS" hdfversion
       { /* use default NeXus file */
         struct NXinfo *nxinfo = $1;
-        if(nxinfo->nxfile)
-        {
-          print_error("Multiple NeXus output file declarations found (%s).\n"
-          "At most one NeXus file name may "
-          "be used in an instrument", nxinfo->nxfile);
-        }
-        else
-        {
-          nxinfo->nxfile     = $3;
-          nxinfo->hdfversion = strstr($4, "XML") || strstr($4, "xml") ? 0 : atof($4);
-        }
+        nxinfo->hdfversion    = $3;
         nxinfo->any = 1; /* Now need NeXus support in runtime */
         $$ = nxinfo;
-      }
-;
-nxfile: /* empty: default output file */
-      {
-        $$ = NULL;
-      }
-    | nxfile TOK_STRING
-      {
-        $$ = $2;
       }
 ;
 hdfversion: /* empty: default HDF version */
       {
         $$ = "5";
       }
-    | hdfversion "XML"
+    | hdfversion TOK_STRING
       {
-        $$ = "XML";
-      }
-    | hdfversion "HDF" TOK_STRING /* 4, 5 or XML */
-      {
-        $$ = $3;
+        $$ = $1;
       }
 ;
 
