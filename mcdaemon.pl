@@ -1,188 +1,110 @@
-#! /usr/bin/perl
+#!/usr/bin/perl
+#     This file is part of the McStas neutron ray-trace simulation package
+#     Copyright (C) 1997-2004, All rights reserved
+#     Risoe National Laborartory, Roskilde, Denmark
+#     Institut Laue Langevin, Grenoble, France
 #
-# Implements a daemon type perl script, sending USR2 to running mcstas 
-# process, plus running mcplot.
+#     This program is free software; you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation; either version 2 of the License, or
+#     (at your option) any later version.
 #
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
 #
-#   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2004, All rights reserved
-#   Risoe National Laborartory, Roskilde, Denmark
-#   Institut Laue Langevin, Grenoble, France
+#     You should have received a copy of the GNU General Public License
+#     along with this program; if not, write to the Free Software
+#     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; either version 2 of the License, or
-#   (at your option) any later version.
+# mcdaemon.pl - script to monitor / plot McStas output data on save (-USR2 or from
+# saves by the Progress_bar component)
 #
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-use Tk;
+use Cwd;
 use IPC::Open2;
 use File::Basename;
+use Time::localtime;
+use Config;
 
-my $win;
-my $PID;
-my @PIDs=();
-my $Instrument = "h8_test.out";
-my $Timeout = 300;
-my $Datafile = "mcstas.sim";
-my $Format = "McStas";
-my $working = 0;
-my $child = 0;
-my $McPlot = 0;
-
-# Check if we have any input parms:
-if (@ARGV==0) {
-    # Set up main window:
-    $win = new MainWindow;
-    setup_window($win);
-    MainLoop;
-} elsif(@ARGV==4) {
-    $PID = $ARGV[0];
-    $Timeout = $ARGV[1];
-    $Datafile = $ARGV[2];
-    $Format = $ARGV[3];
-    # Split in pieces
-    my $DataFile = basename($Datafile);
-    my $DataDir = dirname($Datafile);
-    print "Monitoring PID $PID in intervals of $Timeout seconds\n";
-    my $stop = 0;
-    while ($stop == 0) {
-	(kill 0, $PID) || (die "$PID has ended, terminating...\n");
-	# Sleep for a while...
-	sleep $Timeout;
-	(kill 'USR2', $PID) || (die "Could not send USR2 to $PID\n");
-	# Replotting in DataDir
-	if ($McPlot == 0) {
-	    chdir $DataDir || (die "Could not chdir to $DataDir\n");
-	    $McPlot=open2(READER,WRITER,"mcplot -p$Format --daemon=$PID --wait=$Timeout $DataFile") || (die "Could not spawn mcplot!\n");
-	}
+# Determine the path to the McStas system directory. This must be done
+# in the BEGIN block so that it can be used in a "use lib" statement
+# afterwards.
+BEGIN {
+  # default configuration (for all high level perl scripts)
+  if($ENV{"MCSTAS"}) {
+    $MCSTAS::sys_dir = $ENV{"MCSTAS"};
+  } else {
+    if ($Config{'osname'} eq 'MSWin32') {
+      $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+    } else {
+      $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
     }
-} else {
-    die "I need 0 or four input parameters:\n1) PID of simulation\n2) re-saving interval in seconds\n3) Output file to plot\n4) Used format\nFurther input parameters will be passed to mcplot (e.g. -gif)";
+  }
+  $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+
+  # custom configuration (this script)
+  $MCSTAS::perl_modules = "$MCSTAS::perl_dir/modules";
 }
 
-sub setup_window {
-    my ($w) = @_;
-    my $f1 = $w->Frame();
-    my $pid_list;
-    $f1->pack(-fill => 'x');
-    my $instr_lab = $f1->Label(-text => "Instrument to monitor:",
-                               -anchor => 'w',
-                               -justify => 'left');
-    $instr_lab->pack(-side => 'left');
-    my $instr_entry = $f1->Entry(-textvariable => \$Instrument,
-				 -justify => 'right');
-    $instr_entry->pack(-side => 'right');
-    my $f2 = $w->Frame();
-    my $inter_lab = $f2->Label(-text => "Datafile:",
-                               -anchor => 'w',
-                               -justify => 'left');
-    $inter_lab->pack(-side => 'left');
-    my $inter_entry = $f2->Entry(-textvariable => \$Datafile,
-				 -justify => 'right');
-    $inter_entry->pack(-side => 'right');
-    $f2->pack(-fill => 'x');
-    my $f3 = $w->Frame();
-    my $inter_lab = $f3->Label(-text => "Data format:",
-                               -anchor => 'w',
-                               -justify => 'left');
-    $inter_lab->pack(-side => 'left');
-    my $inter_entry = $f3->Entry(-textvariable => \$Format,
-				 -justify => 'right');
-    $inter_entry->pack(-side => 'right');
-    $f3->pack(-fill => 'x');
-    my $f4 = $w->Frame();
-    my $inter_lab = $f4->Label(-text => "Replot interval:",
-                               -anchor => 'w',
-                               -justify => 'left');
-    $inter_lab->pack(-side => 'left');
-    my $inter_entry = $f4->Entry(-textvariable => \$Timeout,
-				 -justify => 'right');
-    $inter_entry->pack(-side => 'right');
-    $f4->pack(-fill => 'x');
-    my $f5 = $w->Frame();
-    my $pid_fetch = $f5->Button(-text => "Fetch PID's", -command => sub {
-	@PIDs = get_pid();
-	$PID->delete(0,'end');
-	foreach my $pid (@PIDs) {
-	    $PID->insert(0,$pid);
-	}
-    }
-				);
-    $pid_fetch->pack(-side => 'left');
-    my $pid_label = $f5->Label(-text => "PID's:");
-    $pid_label->pack(-side => 'left');
-    $PID = $f5->Scrolled('Listbox',-height => '2', -scrollbars => 'osoe', -exportselection => 'false')->pack(-side => 'right');
-    $PID->pack(-side => 'right');
-    $f5->pack(-fill => 'x');
-    my $f6 = $w->Frame();
-    my $start = $f6->Button(-text => "Start", -command => sub {
-	start_it();
-    }
-			    );
-    $start->pack(-side => 'left');
-    my $stop = $f6->Button(-text => "Stop", -command => sub {
-	stop_it();
-    }
-			   );
-    $stop->pack(-side => 'left');
-    $f6->pack(-fill => 'x');
+use lib $MCSTAS::perl_dir;
+use lib $MCSTAS::perl_modules;
+require "mcstas_config.perl";
+
+# Input filename needed:
+if (@ARGV == 0) {
+    print "As minimum, I need a McStas output file (e.g. a mcstas.sim) to monitor. \n";
+    print "Possibly, also specify a 'waiting' interval in seconds (default 10 seconds)\nExiting.\n";
+    exit;
 }
 
-sub get_pid{
-    my $USER=$ENV{'USER'};
-    my $PIDdata=`ps -u $USER | grep $Instrument | grep -v grep `;
-    #$PIDdata =~ s/ //g;
-    my @List = split('\n',$PIDdata);
-    # Go through the list to get the first numeric element...
-    my ($j, $k);
-    my @sublist;
-    my @final_list;
-    for ($j=0; $j<@List; $j++) {
-	@sublist = split(' ',$List[$j]);
-	$final_list[$j] = $sublist[0];
-	print "first element is $sublist[0]\n";
-    }
-    return @final_list;
+my $filename = $ARGV[0];
+my $timeout = 10;
+if (@ARGV == 2) {
+    $timeout = $ARGV[1];
+}
+if ($filename eq ".") {
+    $filename = getcwd();
+}
+if (!($filename =~ /^\//)) {
+    $filename = getcwd()."/".$filename;
 }
 
-sub start_it{
-    if ($working == 0) {
-	# Check what PID to attack:
-	my @pids = $PID->get(0,'end');
-	my $selected = $PID->curselection()+1;
-	print "Current selection is $selected\n";
-	my $pid = @pids[$selected-1]+0;
-	# Ensure that we have a PID:
-	if ($pid>0 && (kill 0, $pid)) {
-	    print "mcdaemon $pid $Timeout $Datafile $Format &\n";
-	    $child=open(READER,"mcdaemon $pid $Timeout $Datafile $Format|");
-	    print "child process is $child\n";
-	    $working = 1;
+my $there = 0;
+if (!(-e $filename)) {
+    print "File $filename does not exist yet, waiting quietly here until it does...\n";
+    while ($there ==0 ) {
+	sleep $timeout;
+	if (-e $filename) {
+	    print "$filename has appeared, continuing...\n";
+	    $there = 1;
 	}
     }
 }
+my $dirname = dirname($filename);
+print "Working with $filename in dir $dirname\n";
 
-sub stop_it{
-    if ($working == 1) {
-	print "Terminating $child\n";
-	(kill 9, $child);
-	$working = 0;
-	print "Terminating $McPlot\n";
-	(kill 'TERM', $McPlot);
-	$McPlot=0;
+my $timestamp = (stat($filename))[9];
+my $newtime;
+print "start time given is $timestamp\n";
+
+while (1 == 1) {
+    sleep $timeout;
+    $newtime = (stat($filename))[9];
+    if (! ($newtime == $timestamp) ) {
+	print "Directory was accessed! - Replotting\n";
+	my $GFORMAT = "png";
+	system("mcplot -$GFORMAT $filename") || print("Problems spawning mcplot!\n");
+	my $timestring = ctime($newtime);
+	$timestring =~ s!\ !_!g;
+	system("mv $filename.$GFORMAT $dirname/mcstas_".$newtime.".$GFORMAT");
+	$timestamp = (stat($filename))[9];
+	$newtime = $timestamp;
+	# If this is PGPLOT we should do another call to get X11 output
+	if ($filename =~ /\.sim/) {
+	    system("mcplot -d $filename") || (die "Could not spawn mcplot!\n");
+	}
+	
     }
-}
-
-sub status {
-    my $PID = $_;
-    return (kill 0, $pid);
 }
