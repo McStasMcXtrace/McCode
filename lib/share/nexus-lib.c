@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,12 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.8 2007-02-24 16:44:41 farhi Exp $
+* $Id: nexus-lib.c,v 1.9 2007-03-02 14:35:56 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.8  2007/02/24 16:44:41  farhi
+* nexus support adapted partially for SNS. File name can be specified with -f option of instr.exe or mcrun or follow NEXUS keyword. The NULL filename will set 'instr_timestamp'.
+*
 * Revision 1.7  2007/02/09 13:21:37  farhi
 * NeXus compression does not work right. Use flat NeXus as default.
 *
@@ -52,18 +55,17 @@
 
 #ifdef HAVE_LIBNEXUS
 
-/* if HAVE_LIBNEXUS_COMP is defined, the data sets are compressed */
-
 /* NeXus output functions that replace calls to pfprintf in mcstas-r */
 int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
 {
   int mcnxMode=NXACC_CREATE5;
   char mcnxExt[10];
   strcpy(mcnxExt, ext);
-  if (mcnxversion==4)      { mcnxMode =NXACC_CREATE;     }
-  else if (mcnxversion==5) { mcnxMode =NXACC_CREATE5;    }
-  else if (mcnxversion==0) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
-  if (!strcmp(mode, "a"))    mcnxMode|=NXACC_RDWR;
+  for (i=0; i< strlen(mcnxversion); mcnxversion[i]=tolower(mcnxversion[i++]);
+  if (strstr(mcnxversion,"xml")) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
+  else if (strstr(mcnxversion,"4")) { mcnxMode =NXACC_CREATE;     }
+  else if (strstr(mcnxversion,"5")) { mcnxMode =NXACC_CREATE5;    }
+  if (!strcmp(mode, "a"))    mcnxMode |= NXACC_RDWR;
   mcnxFilename = mcfull_file(name, mcnxExt);
   if (NXopen(mcnxFilename, mcnxMode, nxhandle) == NX_ERROR) {
     mcsiminfo_file = NULL;
@@ -194,11 +196,11 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       double axis[m];
       for(i = 0; i < m; i++)
         axis[i] = x1+(x2-x1)*(i+0.5)/(abs(m));
-#ifdef HAVE_LIBNEXUS_COMP
-      NXcompmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &m, NX_COMP_LZW, &m);
-#else
-      NXmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &m);
-#endif
+      if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
+        NXcompmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &m, NX_COMP_LZW, &m);
+      else
+        NXmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &m);
+
       NXopendata(nxhandle, valid_xlabel);
       NXputdata (nxhandle, axis);
       NXputattr (nxhandle, "long_name", xlabel, strlen(xlabel), NX_CHAR);
@@ -214,11 +216,11 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       double axis[n];
       for(i = 0; i < n; i++)
         axis[i] = y1+(y2-y1)*(i+0.5)/(abs(n));
-#ifdef HAVE_LIBNEXUS_COMP
-      NXcompmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &n, NX_COMP_LZW, &n);
-#else
-      NXmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &n);
-#endif
+      if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
+        NXcompmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &n, NX_COMP_LZW, &n);
+      else
+        NXmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &n);
+
       NXopendata(nxhandle, valid_ylabel);
       NXputdata (nxhandle, axis);
       NXputattr (nxhandle, "long_name", ylabel, strlen(ylabel), NX_CHAR);
@@ -234,11 +236,11 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
       double axis[p];
       for(i = 0; i < p; i++)
         axis[i] = z1+(z2-z1)*(i+0.5)/(abs(p));
-#ifdef HAVE_LIBNEXUS_COMP
-      NXcompmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &p, NX_COMP_LZW, &p);
-#else
-      NXmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &p);
-#endif
+      if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
+        NXcompmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &p, NX_COMP_LZW, &p);
+      else
+        NXmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &p);
+
       NXopendata(nxhandle, valid_zlabel);
       NXputdata (nxhandle, axis);
       NXputattr (nxhandle, "long_name", zlabel, strlen(zlabel), NX_CHAR);
@@ -263,11 +265,11 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
   else if (strstr(part,"errors"))  { data=p2; }
   else if (strstr(part,"ncount"))  { data=p0; }
   /* ignore errors for making/opening data (in case this has already been done */
-#ifdef HAVE_LIBNEXUS_COMP
-  NXmakedata(nxhandle, nxname, NX_FLOAT64, rank, dims);
-#else
-  NXcompmakedata(nxhandle, nxname, NX_FLOAT64, rank, dims, NX_COMP_LZW, dims);
-#endif
+  if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
+    NXmakedata(nxhandle, nxname, NX_FLOAT64, rank, dims);
+  else
+    NXcompmakedata(nxhandle, nxname, NX_FLOAT64, rank, dims, NX_COMP_LZW, dims);
+
   NXopendata(nxhandle, nxname);
   int israw=(strstr(format, " raw") != NULL);
   if (data == p2 && !israw) {
