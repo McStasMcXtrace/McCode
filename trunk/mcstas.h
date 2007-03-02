@@ -12,17 +12,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.46 $
+* Version: $Revision: 1.47 $
 *
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.46 2007-01-21 15:43:05 farhi Exp $
+* $Id: mcstas.h,v 1.47 2007-03-02 14:27:17 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.46 $"
+#define MCSTAS_H "$Revision: 1.47 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -422,9 +422,8 @@ struct instr_formal
 */
 struct NXinfo
   {
-    char *nxfile;    /* NeXus file, or NULL=instr-timestamp.nxs */
     int any;         /* True only if any NEXUS decls. */
-    int hdfversion;  /* may be 4 or 5, or 0=xml */
+    char *hdfversion;  /* may be 4 or 5, or xml, with optionally compression */
   };
 
 /* Instrument definition. */

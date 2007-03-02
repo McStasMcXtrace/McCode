@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.67 $
+* Version: $Revision: 1.68 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.67  2007/02/09 13:19:15  farhi
+* When no NEXUS keyword in instrument and NeXus output requested, displays
+* an error/tip to add keyword after INITIALIZE
+*
 * Revision 1.66  2007/01/26 16:23:22  farhi
 * NeXus final integration (mcplot, mcgui, mcrun).
 * Only mcgui initiate mcstas.nxs as default output file, whereas
@@ -136,7 +140,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.67 2007-02-09 13:19:15 farhi Exp $
+* $Id: cogen.c,v 1.68 2007-03-02 14:27:17 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1045,9 +1049,7 @@ cogen_init(struct instr_def *instr)
   if (instr->nxinfo->any) {
     cout ("/* NeXus support */\n");
     coutf("#ifdef HAVE_LIBNEXUS\n");
-    coutf("if (strstr(%sformat.Name, \"NeXus\")) %suse_file(%s);\n",
-      ID_PRE, ID_PRE, instr->nxinfo->nxfile ? instr->nxinfo->nxfile : "NULL");
-    coutf("%snxversion=%i;\n", ID_PRE, instr->nxinfo->hdfversion);
+    coutf("strncmp(%snxversion,\"%s\",128);\n", ID_PRE, instr->nxinfo->hdfversion);
     coutf("#endif\n");
   }
 

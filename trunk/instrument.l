@@ -14,13 +14,18 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.41 $
+* Version: $Revision: 1.42 $
 *
 * Flex scanner for instrument definition files.
 *
-* $Id: instrument.l,v 1.41 2007-01-26 16:23:22 farhi Exp $
+* $Id: instrument.l,v 1.42 2007-03-02 14:27:17 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.41  2007/01/26 16:23:22  farhi
+* NeXus final integration (mcplot, mcgui, mcrun).
+* Only mcgui initiate mcstas.nxs as default output file, whereas
+* simulation may use instr_time.nxs
+*
 * Revision 1.40  2007/01/21 15:43:04  farhi
 * NeXus support. Draft version (functional). To be tuned.
 *
@@ -242,7 +247,6 @@ SHARE         return TOK_SHARE;
 EXTEND        return TOK_EXTEND;
 GROUP         return TOK_GROUP;         /* extended McStas grammar */
 NEXUS         return TOK_NEXUS;         /* optional */
-HDF           return TOK_HDF;           /* optional */
 SAVE          return TOK_SAVE;
 JUMP          return TOK_JUMP;          /* extended McStas grammar */
 WHEN          return TOK_WHEN;          /* extended McStas grammar */
@@ -250,7 +254,6 @@ NEXT          return TOK_NEXT;          /* extended McStas grammar */
 ITERATE       return TOK_ITERATE;       /* extended McStas grammar */
 MYSELF        return TOK_MYSELF;        /* extended McStas grammar */
 COPY          return TOK_COPY;
-XML           return TOK_XML;
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */
