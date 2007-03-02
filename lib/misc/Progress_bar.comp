@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -60,14 +60,12 @@ INITIALIZE
 TRACE
 %{
   double ncount;
-  int    skipme=1;
   ncount = mcget_run_num();
   if (!StartTime) {
     time(&StartTime); /* compute starting time */
     IntermediateCnts = 1e5;
   }
-  MPI_MASTER(skipme=0;); /* unactivate COMP when MPI node >1 */
-  if (!skipme && !EndTime && ncount >= IntermediateCnts) {
+  if (!EndTime && ncount >= IntermediateCnts) {
     time_t NowTime;
     time(&NowTime);
     if (difftime(NowTime,StartTime) > 10) {
@@ -97,7 +95,7 @@ TRACE
     fflush(stdout);
   }
 
-  if (!skipme && EndTime && ncount >= IntermediateCnts)
+  if (EndTime && ncount >= IntermediateCnts)
   {
     double tmp;
     tmp = percent*mcget_ncount()/100;
