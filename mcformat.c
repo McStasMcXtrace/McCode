@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10b
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 *
 * A McStas format converter to merge concert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.13 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.14 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1552,7 +1552,7 @@ void mcformat_usage(char *pgmname)
 "  -a        --data-only      Do not put any headers in the data files.\n"
 "  --no-output-files          Do not write any data files (test data).\n"
 "  -h        --help           Show this help message.\n"
-"  --format=FORMAT            Output data files using format FORMAT\n"
+"  -p FORMAT --format=FORMAT  Output data files using format FORMAT\n"
 "  -c        --force          Force writting in existing directories\n"
 "  -t        --test           Test mode, does not write files\n"
 "  -m        --merge          Add/Append equivalent data files and lists\n"
@@ -1621,6 +1621,14 @@ mcformat_parseoptions(int argc, char *argv[])
       mcformat=mcuse_format(&argv[i][9]);
     }
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
+      mcascii_only = 0;
+      mcformat=mcuse_format(argv[++i]);
+    }
+    else if(!strncmp("-p=", argv[i], 9)) {
+      mcascii_only = 0;
+      mcformat=mcuse_format(&argv[i][9]);
+    }
+    else if(!strcmp("-p", argv[i]) && (i + 1) < argc) {
       mcascii_only = 0;
       mcformat=mcuse_format(argv[++i]);
     }
