@@ -91,8 +91,8 @@ for($i = 0; $i < @ARGV; $i++) {
         $plotter = $1;
   } elsif(/^-i([a-zA-Z0-9_]+)$/ || /^--inspect=([a-zA-Z0-9_]+)$/) {
       $inspect = $1;
-  } elsif(/^-d([0-9]+)$/ || /^--daemon=([0-9]+)$/) {
-      $daemon = $1;
+  } elsif(/^-d$/ || /^--daemon$/) {
+      $daemon = 1;
   } elsif(/^-w([0-9\.]+)$/ || /^--wait=([0-9\.]+)$/) {
       $wait = $1;
   } elsif(/^\+nw$/i || /^\+tk$/i || /^\+java$/i || /^--withwindow$/i) {
@@ -232,11 +232,11 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
   require "mcplotlib.pl";
 
   # ADD/MOD: E. Farhi/V. Hugouvieux Feb 18th, 2002 : handle detector files
+
+  # daemon mode is for PGPLOT mode only - quick plot, then exit
   if (!($daemon eq 0)) {
-      while ( 1==1 ) {
           pgplotit();
-          sleep $wait;
-      }
+	  exit 1;
   }  else {
       pgplotit();
   }
