@@ -136,7 +136,7 @@ if ($index == 0) {
 } else { $file = $files[0]; }
 if (-d $file) { # check if dir containing result file
   my $newfile = "$file/mcstas";
-  if (-e "$newfile.m" || -e "$newfile.sci" || -e "$newfile.sim" || -e "$newfile.html") {
+  if (-e "$newfile.m" || -e "$newfile.sci" || -e "$newfile.sim" || -e "$newfile.html" || -e "$newfile.nxs") {
     $file = $newfile; }
 }
 
@@ -145,12 +145,14 @@ if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim" and not -e "$file
 if (-e "$file.sci" and not -e "$file.m" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Scilab"; }
 if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html") { $plotter = "PGPLOT"; }
 if (-e "$file.html" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = "HTML";   }
+if (-e "$file.nxs") { $plotter = "NeXus";   }
 
 # set default extension from plotter
 if    ($plotter =~ /Scilab/i) { $default_ext = ".sci"; }
 elsif ($plotter =~ /Matlab/i) { $default_ext = ".m"; }
 elsif ($plotter =~ /PGPLOT|McStas/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
+elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
 
 # if no extension in file name, add default extension.
 if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }
