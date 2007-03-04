@@ -67,23 +67,59 @@ if (@ARGV == 2) {
 if ($filename eq ".") {
     $filename = getcwd();
 }
-if (!($filename =~ /^\//)) {
+
+# Make sure we have an absolute path defined here...
+if (!($filename =~ /^\// || ($Config{'osname'} eq 'MSWin32' && ($filename =~ /^([a-zA-Z]):/ || /^\\/)))) {
     $filename = getcwd()."/".$filename;
 }
 
 my $there = 0;
-if (!(-e $filename)) {
-    print "File $filename does not exist yet, waiting quietly here until it does...\n";
-    while ($there ==0 ) {
-	sleep $timeout;
-	if (-e $filename) {
-	    print "$filename has appeared, continuing...\n";
-	    $there = 1;
+my $dirthere = 0;
+my @suffixlist = ('.sim','.m','.sci','.html');
+# First of all, if the file is there, work with that...
+if (-e $filename && (! -d $filename)) {
+    $there = 1;
+    $dirthere = 1;
+}
+if (!$there) {
+    my ($name,$dirname,$filesuf) = fileparse($filename,@suffixlist);
+    # First, check if we were called with the actual .sim/.m/.sci...
+    if ($filesuf) {
+	print "Found suffix $filesuf\n";
+    } else {
+	print "Called with dir input\n";
+	$dirname = $filename;
+	$name = "mcstas";
+    }
+    
+    
+    $filename = "$dirname/$name";
+    # First of all, the output dir must be there and of type directory
+    if (!(-e $dirname)) {
+	print "Output directory $dirname does not exist yet, waiting here until it does...\n";
+	while ($dirthere == 0) {
+	    if (-e $dirname && -d $dirname) {
+		$dirname = 1;
+	    }
+	    if (!$dirthere) {sleep $timeout;}
+	} 
+    } else {
+	print "Directory there, looking for plot file(s)\n";
+    }
+    while ($there == 0) {
+	my $j;
+	for ($j=0; $j<@suffixlist; $j++) {
+	    if (-e "$filename$suffixlist[$j]") {
+		$there = 1;
+		$name = "$name$suffixlist[$j]";
+		$j = scalar(@suffixlist);
+		$filename = "$dirname/$name";
+		print "Found datafile $name in $dirname, working with that...";
+	    } 
 	}
+	if (!$there) {sleep $timeout;}
     }
 }
-my $dirname = dirname($filename);
-print "Working with $filename in dir $dirname\n";
 
 my $timestamp = (stat($filename))[9];
 my $newtime;
@@ -102,6 +138,7 @@ while (1 == 1) {
 	$timestamp = (stat($filename))[9];
 	$newtime = $timestamp;
 	# If this is PGPLOT we should do another call to get X11 output
+	# (Currently only works if the file we work on has .sim extension)
 	if ($filename =~ /\.sim/) {
 	    system("mcplot -d $filename") || (die "Could not spawn mcplot!\n");
 	}

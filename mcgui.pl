@@ -188,16 +188,32 @@ sub menu_edit_current {
 
 sub menu_spawn_editor {
     my ($w) = @_;
-    my $pid;
+    my $cmd = "$external_editor $current_sim_def";
     if ($external_editor eq "no") { return 0; }
     # Must be handled differently on Win32 vs. unix platforms...
+    spawn_external($w,$cmd);
+}
+
+sub menu_spawn_mcdaemon {
+    my ($w,$dirname) = @_;
+    my $simfile = $current_sim_file;
+    if (!$simfile) {
+	$simfile = $dirname;
+    }
+    my $cmd = "mcdaemon$suffix $simfile";
+    spawn_external($w,$cmd);
+}
+sub spawn_external {
+    # Procedure to put external processes in the background
+    my ($w, $cmd) = @_;
+    my $pid;
     if($Config{'osname'} eq "MSWin32") {
-        system("$external_editor $current_sim_def");
+        system("start $cmd");
     } else {
         $pid = fork();
         if(!defined($pid)) {
             $w->messageBox(-message =>
-                           "Failed to spawn editor \"$external_editor $current_sim_def\".",
+                           "Failed to spawn command \"$cmd\".",
                            -title => "Command failed",
                            -type => 'OK',
                            -icon => 'error');
@@ -206,12 +222,12 @@ sub menu_spawn_editor {
             waitpid($pid, 0);
             return 1;
         } else {
-            # Double fork to avoid having to wait() for the editor to
+            # Double fork to avoid having to wait() for the command to
             # finish (or having it become a zombie). See man perlfunc.
             unless(fork()) {
-                exec("$external_editor $current_sim_def");
+                exec("$cmd");
                 # If we get here, the exec() failed.
-                print STDERR "Error: exec() of $external_editor failed!\n";
+                print STDERR "Error: exec() of command $cmd failed!\n";
                 POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
             }
             POSIX::_exit(0);                # CORE:exit needed to avoid Perl/Tk failure.
@@ -943,7 +959,7 @@ sub menu_run_simulation {
 	  push @command, "--optim-prec=$MCSTAS::mcstas_config{'PREC'}" if $MCSTAS::mcstas_config{'PREC'};
         } # end Mode=Optimize
         elsif ($newsi->{'Mode'} == 0) { # simulate
-          push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix"
+	    push @command, "$MCSTAS::mcstas_config{'prefix'}mcrun$suffix";
         } # end Mode=simulate
         push @command, "$out_name";
         my ($OutDir,$OutDirBak);
@@ -966,6 +982,16 @@ sub menu_run_simulation {
             $OutDir =~ s! !\ !g;
           }
         }
+	# In case of autoplot, spawn mcdaemon here
+	if ($newsi->{'Mode'} ==0 && $newsi->{'Autoplot'}) {
+	    my $dirname;
+	    if($newsi->{'Dir'}) {
+		$dirname = $newsi->{'Dir'};
+	    } else {
+		$dirname = getcwd();
+	    }
+	    menu_spawn_mcdaemon($w,$dirname);
+	}
         # clustering methods
         if ($newsi->{'cluster'} == 2) {
           push @command, "--mpi=$newsi->{'nodes'}";
@@ -1071,7 +1097,7 @@ sub menu_run_simulation {
 	if ($newsi->{'Detach'} == 1) { # Background simulations using 'at'
 
 	    # Create temporary file
-	    my $fid = open(READ, "mktemp |");
+	    my $fid = open(READ, "mktemp /tmp/McStas_XXXX |");
 	    while (<READ>) {
 		$tmpfile = $_;
 		chomp $tmpfile;
@@ -1127,14 +1153,14 @@ sub menu_run_simulation {
         $inf_sim->{'Mode'}     = $newsi->{'Mode'};
         $inf_sim->{'cluster'}  = $newsi->{'cluster'};
 
-        if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
-          plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
-                      $current_sim_file);
-        }
+        # if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
+#           plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
+#                       $current_sim_file);
+#         }
 
 	if ($newsi->{'Detach'}) { # Clean up after background simulation
-	    my $fid = open(READ,"rm -f $tmpfile|");
-	    close($fid);
+#	    my $fid = open(READ,"rm -f $tmpfile|");
+#	    close($fid);
 	}
 
       }
@@ -1469,6 +1495,12 @@ sub setup_menu {
     $simmenu->pack(-side=>'left');
 
     sitemenu_build($w,$menu);
+    
+    my $toolmenu = $menu->Menubutton(-text => 'Tools', -underline => 0);
+    
+    $toolmenu->command(-label => 'Online plotting of results',
+		       -command => sub {menu_spawn_mcdaemon($w,$current_sim_file);});
+    $toolmenu->pack(-side=>'left');
 
     my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
 
