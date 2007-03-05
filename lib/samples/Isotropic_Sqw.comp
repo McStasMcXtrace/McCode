@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.45 $
+* Version: $Revision: 1.46 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
@@ -1706,18 +1706,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
         c1= (k*k+kf*kf-q*q)/(2*kf); /* unit is [k] */
 
-        /* u1 and u2 : basis of the plane orthogonal to ki */
-        u1x=0;           u1y=-vz;    u1z= vy; /* in vertical plane */
-        u2x=vy*vy+vz*vz; u2y=-vx*vy; u2z=-vx*vz;
-
         /* circle radius = intersection with the plane defined by u1 and u2 */
         R = 1-c1*c1/(k*k); /* unit is [1] */
         if (R >= 0) R = sqrt(R);
         else {
           continue; /* No solution for R */
         }
-        NORM(u1x, u1y, u1z);
-        NORM(u2x, u2y, u2z);
 
         break; /* exit for loop on success */
       } /* end for index_counter */
@@ -1733,17 +1727,21 @@ do { /* Main interaction loop. Ends with intersect=0 */
         break;       /* finish multiple scattering loop */
       }
 
+      /* scattering angle from ki to DS cone */
+      theta = atan2(R,c1/k);
       /* Choose point on Debye-Scherrer cone */
       if (order == 1 && d_phi)
       { /* relate height of detector to the height on DS cone */
-        tmp = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+        tmp = sin(d_phi/2)/sin(theta);
         /* If full Debye-Scherrer cone is within d_phi, don't focus */
         if (tmp < -1 || tmp > 1) d_phi = 0;
         /* Otherwise, determine alpha to rotate from scattering plane
-           into d_phi focusing area*/
+            into d_phi focusing area*/
         else alpha = 2*asin(tmp);
-      } /* else d_phi=0 from INIT */
-      if (d_phi) { /* Focusing */
+        if (d_phi) p_mult *= alpha/PI;
+      }
+      if (d_phi) {
+        /* Focusing */
         alpha = fabs(alpha);
         /* Trick to get scattering for pos/neg theta's */
         alpha0= 2*rand01()*alpha;
@@ -1752,28 +1750,27 @@ do { /* Main interaction loop. Ends with intersect=0 */
         } else {
           alpha0=alpha0-0.5*alpha;
         }
-        p_mult *= alpha/PI;
       }
       else
         alpha0 = PI*randpm1();
 
-      costheta = cos(alpha0); sintheta = sin(alpha0);
+      /* now find a nearly vertical rotation axis:
+        *  (v along Z) x (X axis) -> nearly Y axis
+        */
+      vec_prod(u2x,u2y,u2z, vx,vy,vz, 1,0,0);
 
-      /* u0 = component of ks which is in the plane orthogonal to ki */
-      u0x=R*(costheta*u1x + sintheta*u2x);
-      u0y=R*(costheta*u1y + sintheta*u2y);
-      u0z=R*(costheta*u1z + sintheta*u2z);
+      /* handle case where v and aim are parallel */
+      if (!u2x && !u2y && !u2z) { u2x=u2z=0; u2y=1; }
 
-      tmp = v*k;
+      /* u1 = rotate 'v' by theta around u2: DS scattering angle, nearly in horz plane */
+      rotate(u1x,u1y,u1z, vx,vy,vz, theta, u2x,u2y,u2z);
 
-      u0x=c1*vx/tmp + u0x; /* normalized output velocity */
-      u0y=c1*vy/tmp + u0y;
-      u0z=c1*vz/tmp + u0z;
-
-      /* Final velocity */
-      vx = vf*u0x;
-      vy = vf*u0y;
-      vz = vf*u0z;
+      /* u0 = rotate u1 by alpha0 around 'v' (Debye-Scherrer cone) */
+      rotate(u0x,u0y,u0z, u1x,u1y,u1z, alpha0, vx, vy, vz);
+      NORM(u0x,u0y,u0z);
+      vx = u0x*vf;
+      vy = u0y*vf;
+      vz = u0z*vf;
 
       SCATTER;
 
