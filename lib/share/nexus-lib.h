@@ -11,7 +11,7 @@
 * Written by: EF
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 *
 * NeXus Runtime system header for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.h,v 1.6 2007-03-02 14:35:56 farhi Exp $
+* $Id: nexus-lib.h,v 1.7 2007-03-05 19:02:55 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.6  2007/03/02 14:35:56  farhi
+* Updated install doc for NeXus and reconfigure tool.
+* better NeXus support with compression
+*
 * Revision 1.5  2007/02/09 13:21:38  farhi
 * NeXus compression does not work right. Use flat NeXus as default.
 *
@@ -45,6 +49,12 @@
 *
 *
 *******************************************************************************/
+
+#ifdef USE_NEXUS
+#ifndef HAVE_LIBNEXUS
+#define HAVE_LIBNEXUS
+#endif
+#endif
 
 #ifdef HAVE_LIBNEXUS
 

@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.156 $
+* Version: $Revision: 1.157 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.156 2007-02-24 16:44:41 farhi Exp $
+* $Id: mcstas-r.c,v 1.157 2007-03-05 19:02:55 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.156  2007/02/24 16:44:41  farhi
+* nexus support adapted partially for SNS. File name can be specified with -f option of instr.exe or mcrun or follow NEXUS keyword. The NULL filename will set 'instr_timestamp'.
+*
 * Revision 1.155  2007/02/17 13:37:50  farhi
 * cogen: display tip when no NEXUS keyword but user wants NeXus output.
 * mcstas-r.c: fixed pb when using MPI, that gave 0 detector values.
@@ -2127,13 +2130,11 @@ void mcsiminfo_init(FILE *f)
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, mcinstrument_name, "instrument", root, 1);
     mcinfo_instrument(mcsiminfo_file, mcformat, pre, mcinstrument_name);
 #ifdef HAVE_LIBNEXUS
-    if (strstr(mcformat.Name, "NeXus"))
-    mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
-#endif
-#ifdef HAVE_LIBNEXUS
-    if (strstr(mcformat.Name, "NeXus"))
-    mcnxfile_section(mcnxHandle,"instr_code",
-       pre, "instrument", mcinstrument_source, NULL, mcinstrument_name, NULL, 0);
+    if (strstr(mcformat.Name, "NeXus")) {
+      mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
+      mcnxfile_section(mcnxHandle,"instr_code",
+        pre, "instrument", mcinstrument_source, NULL, mcinstrument_name, NULL, 0);
+    }
 #endif
     if (ismcstas_nx) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
 
@@ -2663,11 +2664,13 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 #endif /* USE_MPI */
 
   if (!strstr(format.Name, "NeXus")
-  && (m<0 || n<0 || p<0 || strstr(format.Name, "binary") || strstr(format.Name, "transpose")) )
+  && (m<0 || n<0 || p<0 || strstr(format.Name, "binary")))
   { /* do the swap once for all */
     istransposed = 1;
     i=m; m=abs(n); n=abs(i); p=abs(p);
   } else m=abs(m); n=abs(n); p=abs(p);
+
+  if (!strstr(format.Name, "NeXus") && strstr(format.Name, "transpose")) istransposed = !istransposed;
 
   if (!strstr(format.Name," list ")) simfile_f = mcsiminfo_file; /* use sim file */
   if (mcdirname)
@@ -2703,7 +2706,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       MPI_Send(p1, abs(m*n*p), MPI_DOUBLE, mpi_node_root, 1, MPI_COMM_WORLD);
       /* slaves are done */
       return 0;
-    } else {
+    } else { /* master node list */
       int node_i;
       /* get, then save master and slaves event lists */
       for(node_i=0; node_i<mpi_node_count; node_i++) {
@@ -2749,22 +2752,12 @@ static double mcdetector_out_012D(struct mcformats_struct format,
             fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
           }
         }
-#endif
+#endif /* HAVE_LIBNEXUS */
       } /* end for node_i */
     } /* end list for master node */
-  } else {
-    if (!mcdisable_output_files) {
-      mcfile_data(simfile_f, format,
-                  pre, parent,
-                  p0, p1, p2, m, n, p,
-                  xlabel, ylabel, zlabel, title,
-                  xvar, yvar, zvar,
-                  x1, x2, y1, y2, z1, z2, filename, 1, posa);
-    }
-  }
-
-#else /* !USE_MPI */
-  if (!mcdisable_output_files) {
+  } else
+#endif /* USE_MPI */
+  if (!mcdisable_output_files) { /* normal output */
     mcfile_data(simfile_f, format,
                 pre, parent,
                 p0, p1, p2, m, n, p,
@@ -2772,7 +2765,6 @@ static double mcdetector_out_012D(struct mcformats_struct format,
                 xvar, yvar, zvar,
                 x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
   }
-#endif /* !USE_MPI */
 
   if (!mcdisable_output_files) {
     mcfile_section(simfile_f, format, "end", pre, filename, "data", parent, 4);
@@ -2996,10 +2988,8 @@ struct mcformats_struct mcuse_format(char *format)
   if (!strcmp(low_format, "hdf"))    strcpy(low_format, "nexus");
 #ifndef HAVE_LIBNEXUS
   if (!strcmp(low_format, "nexus"))
-    fprintf(stderr, "WARNING: to enable NeXus format you must use the\n"
-                    "         NEXUS keyword after the INITIALIZE section\n"
-                    "         in your instrument (and have the NeXus libs installed).\n"
-                    "         You should then select NeXus format, and perhaps re-compile.\n");
+    fprintf(stderr, "WARNING: to enable NeXus format you must have the NeXus libs installed.\n"
+                    "         You should then re-compile with the -DHAVE_LIBNEXUS define.\n");
 #endif
 
   tmp = (char *)malloc(256);
