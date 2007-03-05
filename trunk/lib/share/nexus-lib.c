@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.9 2007-03-02 14:35:56 farhi Exp $
+* $Id: nexus-lib.c,v 1.10 2007-03-05 19:02:55 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.9  2007/03/02 14:35:56  farhi
+* Updated install doc for NeXus and reconfigure tool.
+* better NeXus support with compression
+*
 * Revision 1.8  2007/02/24 16:44:41  farhi
 * nexus support adapted partially for SNS. File name can be specified with -f option of instr.exe or mcrun or follow NEXUS keyword. The NULL filename will set 'instr_timestamp'.
 *
@@ -61,10 +65,15 @@ int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
   int mcnxMode=NXACC_CREATE5;
   char mcnxExt[10];
   strcpy(mcnxExt, ext);
-  for (i=0; i< strlen(mcnxversion); mcnxversion[i]=tolower(mcnxversion[i++]);
-  if (strstr(mcnxversion,"xml")) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
-  else if (strstr(mcnxversion,"4")) { mcnxMode =NXACC_CREATE;     }
-  else if (strstr(mcnxversion,"5")) { mcnxMode =NXACC_CREATE5;    }
+  char nxversion[128];
+  int i;
+  if (!mcnxversion || !strlen(mcnxversion)) strcpy(nxversion, "5");
+  else for (i=0; i< strlen(mcnxversion) && i < 128; nxversion[i]=tolower(mcnxversion[i++]));
+
+  if    (strstr(nxversion,"xml")) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
+  else if (strstr(nxversion,"4")) { mcnxMode =NXACC_CREATE;     }
+  else if (strstr(nxversion,"5")) { mcnxMode =NXACC_CREATE5;    }
+
   if (!strcmp(mode, "a"))    mcnxMode |= NXACC_RDWR;
   mcnxFilename = mcfull_file(name, mcnxExt);
   if (NXopen(mcnxFilename, mcnxMode, nxhandle) == NX_ERROR) {

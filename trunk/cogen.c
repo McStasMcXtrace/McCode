@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.68 $
+* Version: $Revision: 1.69 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.68  2007/03/02 14:27:17  farhi
+* NEXUS grammar is now simplified. a single string may follow the keyword.
+* NEXUS "5 ZIP" is recommended.
+*
 * Revision 1.67  2007/02/09 13:19:15  farhi
 * When no NEXUS keyword in instrument and NeXus output requested, displays
 * an error/tip to add keyword after INITIALIZE
@@ -140,7 +144,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.68 2007-03-02 14:27:17 farhi Exp $
+* $Id: cogen.c,v 1.69 2007-03-05 19:02:53 farhi Exp $
 *
 *******************************************************************************/
 
@@ -842,6 +846,8 @@ cogen_decls(struct instr_def *instr)
         ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
         ID_PRE, ID_PRE, ID_PRE, ID_PRE);
   cout("");
+  cout("/* end declare */");
+  cout("");
 
 } /* cogen_decls */
 
@@ -1046,14 +1052,14 @@ cogen_init(struct instr_def *instr)
   coutf("    %sDEBUG_INSTR_END()", ID_PRE);
   cout("  }");
   cout("");
-  if (instr->nxinfo->any) {
-    cout ("/* NeXus support */\n");
-    coutf("#ifdef HAVE_LIBNEXUS\n");
-    coutf("strncmp(%snxversion,\"%s\",128);\n", ID_PRE, instr->nxinfo->hdfversion);
-    coutf("#endif\n");
-  }
+  cout ("/* NeXus support */\n");
+  cout ("#ifdef HAVE_LIBNEXUS\n");
+  coutf("strncmp(%snxversion,\"%s\",128);\n", ID_PRE,
+    instr->nxinfo->any && instr->nxinfo->hdfversion && strlen(instr->nxinfo->hdfversion) ?
+      instr->nxinfo->hdfversion : "5");
+  cout ("#endif\n");
 
-  cout("}");
+  cout("} /* end init */");
   cout("");
 } /* cogen_init */
 
@@ -1283,7 +1289,7 @@ cogen_trace(struct instr_def *instr)
   coutf("  %snp = %snlp;", ID_PRE, ID_PRE);
 
   /* Function end. */
-  cout("}");
+  cout("} /* end trace */");
   cout("");
 } /* cogen_trace */
 /*******************************************************************************
@@ -1330,7 +1336,7 @@ cogen_save(struct instr_def *instr)
     cout("");
   }
   coutf("  if (!handle) %ssiminfo_close(); ", ID_PRE);
-  cout("}");
+  cout("} /* end save */");
 } /* cogen_save */
 
 /*******************************************************************************
@@ -1382,7 +1388,7 @@ cogen_finally(struct instr_def *instr)
     cout("");
   }
   coutf("  %ssiminfo_close(); ", ID_PRE);
-  cout("}");
+  cout("} /* end finally */");
 } /* cogen_finally */
 
 /*******************************************************************************
@@ -1426,7 +1432,7 @@ cogen_mcdisplay(struct instr_def *instr)
   list_iterate_end(liter);
 
   cout("  printf(\"MCDISPLAY: end\\n\");");
-  cout("}");
+  cout("} /* end display */");
   cout("#undef magnify");
   cout("#undef line");
   cout("#undef dashed_line");
@@ -1472,23 +1478,18 @@ cogen_runtime(struct instr_def *instr)
   {
     cout("#define MC_EMBEDDED_RUNTIME"); /* Some stuff will be static. */
     embed_file("mcstas-r.h");
-    if(instr->nxinfo->any) {
-      embed_file("nexus-lib.h"); /* will require linking with -DHAVE_LIBNEXUS -lNeXus */
-    }
-    if(instr->nxinfo->any) {
-      embed_file("nexus-lib.c");
-      if (verbose) printf("Requires library    -DHAVE_LIBNEXUS -lNeXus\n");
-    }
+    /* NeXus support, only active with -DHAVE_LIBNEXUS */
+    embed_file("nexus-lib.h"); /* will require linking with -DHAVE_LIBNEXUS -lNeXus */
+    embed_file("nexus-lib.c");
+    if (verbose) printf("Requires library    -DHAVE_LIBNEXUS -lNeXus (to enable NeXus support)\n");
     embed_file("mcstas-r.c");
   }
   else
   {
-    coutf("#include \"%s%sshare%smcstas-r.h\"", sysdir_new, pathsep, pathsep);
-    if(instr->nxinfo->any)
-      coutf("#include \"%s%sshare%snexus-lib.h\"", sysdir_new, pathsep, pathsep);
+    coutf("#include \"%s%sshare%smcstas-r.h\"",  sysdir_new, pathsep, pathsep);
+    coutf("#include \"%s%sshare%snexus-lib.h\"", sysdir_new, pathsep, pathsep);
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
-    if(instr->nxinfo->any)
-      fprintf(stderr,"Dependency: %s.o and '-DHAVE_LIBNEXUS -lNeXus'\n", "nexus-lib");
+    fprintf(stderr,"Dependency: %s.o and '-DHAVE_LIBNEXUS -lNeXus' to enable NeXus support\n", "nexus-lib");
     fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n", instrument_definition->quoted_source, sysdir_new, pathsep);
   }
 
@@ -1542,11 +1543,6 @@ cogen(char *output_name, struct instr_def *instr)
   cout(" */\n");
   cout("");
   coutf("#define MCSTAS_VERSION \"%s\"", MCSTAS_VERSION);
-  if (!instr->nxinfo->any) {
-    coutf("#ifdef HAVE_LIBNEXUS\n");
-    coutf("#error McStas : You need to add the NEXUS keyword after the INITIALIZE section in the instrument description to enable NeXuS output.\n");
-    coutf("#endif\n");
-  }
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);

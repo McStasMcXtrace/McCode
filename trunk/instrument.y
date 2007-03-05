@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.70 $
+* Version: $Revision: 1.71 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.70 2007-03-02 14:27:17 farhi Exp $
+* $Id: instrument.y,v 1.71 2007-03-05 19:02:54 farhi Exp $
 *
 *******************************************************************************/
 
@@ -547,18 +547,19 @@ instr_formal:   TOK_ID TOK_ID
 ;
 
 /* NeXus output support */
-nexus:      /* empty: no NeXus support */
+nexus:      /* empty: default NeXus support */
       {
         struct NXinfo *nxinfo;
         palloc(nxinfo);
         nxinfo->any = 0;
+        nxinfo->hdfversion    = NULL;
         $$ = nxinfo;
       }
     | nexus "NEXUS" hdfversion
-      { /* use default NeXus file */
+      { /* specify NeXus version */
         struct NXinfo *nxinfo = $1;
         nxinfo->hdfversion    = $3;
-        nxinfo->any = 1; /* Now need NeXus support in runtime */
+        nxinfo->any = 1;
         $$ = nxinfo;
       }
 ;
