@@ -285,7 +285,7 @@ sub mcdoc_test {
     if (defined $status) { putmsg($cmdwin, "$status", 'msg'); }
 }
 
-sub mcdoc_shortcuts {
+sub tools_shortcuts {
     my ($w) = @_;
     
     $w->fontCreate('small',
@@ -320,7 +320,7 @@ sub mcdoc_shortcuts {
     $w->fontDelete('small'); 
 }
 
-sub mcdoc_dsa {
+sub tools_dsa {
     my ($w) = @_;
     my $msg="Press Yes to create DSA key.\n";
     my $key_exist = 0;
@@ -351,6 +351,7 @@ sub mcdoc_dsa {
 	putmsg($cmdwin, "\nDSA key generated!\n", 'msg');
     }
 }
+
 sub mcdoc_about {
   my ($w) = @_;
   my $version = `mcstas --version`;
@@ -1502,6 +1503,14 @@ sub setup_menu {
 		       -command => sub {menu_spawn_mcdaemon($w,$current_sim_file);});
     $toolmenu->pack(-side=>'left');
 
+    $toolmenu->command(-label => 'mcgui Shorcut keys',
+                       -command => sub {tools_shortcuts($w)});
+    if (!($Config{'osname'} eq 'MSWin32')) {
+	$toolmenu->command(-label => 'Install DSA key',
+			   -command => sub {tools_dsa($w)});
+	$toolmenu->separator;
+    }
+
     my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
 
     $helpmenu->command(-label => 'McStas User manual',
@@ -1523,14 +1532,6 @@ sub setup_menu {
                        -command => sub {mcdoc_test($w)});
     $helpmenu->command(-label => 'Generate component index',
                        -command => sub {mcdoc_generate()});
-    $helpmenu->command(-label => 'mcgui Shorcut keys',
-                       -command => sub {mcdoc_shortcuts($w)});
-    $helpmenu->separator;
-    if (!($Config{'osname'} eq 'MSWin32')) {
-	$helpmenu->command(-label => 'Install DSA key',
-			   -command => sub {mcdoc_dsa($w)});
-	$helpmenu->separator;
-    }
     $helpmenu->command(-label => 'About McStas',
                        -command => sub {mcdoc_about($w)});
     $helpmenu->pack(-side=>'right');
@@ -1619,7 +1620,7 @@ Define $ENV{'HOME'}/.mcstas-hosts or MCSTAS/lib/tools/perl/mcstas-hosts first.\n
       # Suggest to create DSA key for local MPI execution.
       putmsg($cmdwin, "Your system has MPI/SSH parallelisation available. ".
 	     "To make use of this, \n".
-	     "please go to the Help (McDoc) menu and select 'Install DSA key'.\n", 'msg');
+	     "please go to the Tool menu and select 'Install DSA key'.\n", 'msg');
     }
 }
 
