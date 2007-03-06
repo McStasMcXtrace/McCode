@@ -28,6 +28,8 @@ use File::Basename;
 use Time::localtime;
 use Config;
 
+my $move_cmd;
+
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
 # afterwards.
@@ -38,8 +40,10 @@ BEGIN {
   } else {
     if ($Config{'osname'} eq 'MSWin32') {
       $MCSTAS::sys_dir = "c:\\mcstas\\lib";
+      $move_cmd = 'move';
     } else {
       $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
+      $move_cmd = 'mv';
     }
   }
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
@@ -134,7 +138,7 @@ while (1 == 1) {
 	system("mcplot -$GFORMAT $filename") || print("Problems spawning mcplot!\n");
 	my $timestring = ctime($newtime);
 	$timestring =~ s!\ !_!g;
-	system("mv $filename.$GFORMAT $dirname/mcstas_".$newtime.".$GFORMAT");
+	system("$move_cmd $filename.$GFORMAT $dirname/mcstas_".$newtime.".$GFORMAT");
 	$timestamp = (stat($filename))[9];
 	$newtime = $timestamp;
 	# If this is PGPLOT we should do another call to get X11 output
