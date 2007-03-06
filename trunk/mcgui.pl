@@ -983,8 +983,8 @@ sub menu_run_simulation {
             $OutDir =~ s! !\ !g;
           }
         }
-	# In case of autoplot, spawn mcdaemon here
-	if ($newsi->{'Mode'} ==0 && $newsi->{'Autoplot'}) {
+	# In case of autoplot and PGPLOT, spawn mcdaemon here
+	if ($newsi->{'Mode'} ==0 && $newsi->{'Autoplot'} && $plotter =~ /PGPLOT|McStas/i) {
 	    my $dirname;
 	    if($newsi->{'Dir'}) {
 		$dirname = $newsi->{'Dir'};
@@ -1499,16 +1499,18 @@ sub setup_menu {
     
     my $toolmenu = $menu->Menubutton(-text => 'Tools', -underline => 0);
     
-    $toolmenu->command(-label => 'Online plotting of results',
-		       -command => sub {menu_spawn_mcdaemon($w,$current_sim_file);});
-    $toolmenu->pack(-side=>'left');
-
+    # The following item for now only applies to non-Win32 systems...
+    if (!($Config{'osname'} eq 'MSWin32')) {
+	$toolmenu->command(-label => 'Online plotting of results',
+			   -command => sub {menu_spawn_mcdaemon($w,$current_sim_file);});
+	$toolmenu->pack(-side=>'left');
+    }
     $toolmenu->command(-label => 'mcgui Shorcut keys',
                        -command => sub {tools_shortcuts($w)});
+    # The following item for now only applies to non-Win32 systems...
     if (!($Config{'osname'} eq 'MSWin32')) {
 	$toolmenu->command(-label => 'Install DSA key',
 			   -command => sub {tools_dsa($w)});
-	$toolmenu->separator;
     }
 
     my $helpmenu = $menu->Menubutton(-text => 'Help (McDoc)', -underline => 0);
