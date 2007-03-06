@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.71 $
+* Version: $Revision: 1.72 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.71 2007-03-05 19:02:54 farhi Exp $
+* $Id: instrument.y,v 1.72 2007-03-06 09:39:10 farhi Exp $
 *
 *******************************************************************************/
 
@@ -565,7 +565,7 @@ nexus:      /* empty: default NeXus support */
 ;
 hdfversion: /* empty: default HDF version */
       {
-        $$ = "5";
+        $$ = "5 zip";
       }
     | hdfversion TOK_STRING
       {

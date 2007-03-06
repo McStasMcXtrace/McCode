@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.10 2007-03-05 19:02:55 farhi Exp $
+* $Id: nexus-lib.c,v 1.11 2007-03-06 09:39:15 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.10  2007/03/05 19:02:55  farhi
+* NEXUS support now works as MPI. NEXUS keyword is optional and only -DHAVE_LIBNEXUS is required. All instruments may then export in NEXUS if McStas
+* has been installed with --with-nexus
+*
 * Revision 1.9  2007/03/02 14:35:56  farhi
 * Updated install doc for NeXus and reconfigure tool.
 * better NeXus support with compression
@@ -67,7 +71,7 @@ int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
   strcpy(mcnxExt, ext);
   char nxversion[128];
   int i;
-  if (!mcnxversion || !strlen(mcnxversion)) strcpy(nxversion, "5");
+  if (!mcnxversion || !strlen(mcnxversion)) strcpy(nxversion, "5 zip");
   else for (i=0; i< strlen(mcnxversion) && i < 128; nxversion[i]=tolower(mcnxversion[i++]));
 
   if    (strstr(nxversion,"xml")) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
