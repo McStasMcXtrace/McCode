@@ -472,7 +472,7 @@ sub plot_dialog {
     push @plot_cmd, "mcplot$suffix";
     # Should only be done if we are using PGPLOT
     # PW 20030314 - Matlab / Scilab handling below
-    if ($MCSTAS::mcstas_config{'PLOTTER'} eq 0) {
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /McStas|PGPLOT/i) {
         # Load PGPLOT dependent stuff...
         require "mcplotlib.pl";
         $current_plot = -1;        # Component index, or -1 -> overview.
