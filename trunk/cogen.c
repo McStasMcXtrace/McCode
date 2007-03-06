@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.69 $
+* Version: $Revision: 1.70 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.69  2007/03/05 19:02:53  farhi
+* NEXUS support now works as MPI. NEXUS keyword is optional and only -DHAVE_LIBNEXUS is required. All instruments may then export in NEXUS if McStas
+* has been installed with --with-nexus
+*
 * Revision 1.68  2007/03/02 14:27:17  farhi
 * NEXUS grammar is now simplified. a single string may follow the keyword.
 * NEXUS "5 ZIP" is recommended.
@@ -144,7 +148,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.69 2007-03-05 19:02:53 farhi Exp $
+* $Id: cogen.c,v 1.70 2007-03-06 09:39:09 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1056,7 +1060,7 @@ cogen_init(struct instr_def *instr)
   cout ("#ifdef HAVE_LIBNEXUS\n");
   coutf("strncmp(%snxversion,\"%s\",128);\n", ID_PRE,
     instr->nxinfo->any && instr->nxinfo->hdfversion && strlen(instr->nxinfo->hdfversion) ?
-      instr->nxinfo->hdfversion : "5");
+      instr->nxinfo->hdfversion : "5 zip");
   cout ("#endif\n");
 
   cout("} /* end init */");
