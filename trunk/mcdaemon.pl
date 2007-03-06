@@ -79,7 +79,7 @@ if (!($filename =~ /^\// || ($Config{'osname'} eq 'MSWin32' && ($filename =~ /^(
 
 my $there = 0;
 my $dirthere = 0;
-my @suffixlist = ('.sim','.m','.sci','.html');
+my @suffixlist = ('.sim'); # Full list is ('.sim','.m','.sci','.html') - currently only PGPLOT makes sense;
 # First of all, if the file is there, work with that...
 if (-e $filename && (! -d $filename)) {
     $there = 1;
@@ -95,7 +95,6 @@ if (!$there) {
 	$dirname = $filename;
 	$name = "mcstas";
     }
-    
     
     $filename = "$dirname/$name";
     # First of all, the output dir must be there and of type directory
@@ -125,6 +124,13 @@ if (!$there) {
     }
 }
 
+($name,$dirname,$filesuf) = fileparse($filename,@suffixlist);
+
+if (!($filesuf eq "sim")) {
+    print "Sorry, currently PGPLOT is the only supported plotter with mcdaemon.\n";
+    exit 1;
+}
+
 my $timestamp = (stat($filename))[9];
 my $newtime;
 print "start time given is $timestamp\n";
@@ -134,7 +140,7 @@ while (1 == 1) {
     $newtime = (stat($filename))[9];
     if (! ($newtime == $timestamp) ) {
 	print "Directory was accessed! - Replotting\n";
-	my $GFORMAT = "png";
+	my $GFORMAT = "ps";
 	system("mcplot -$GFORMAT $filename") || print("Problems spawning mcplot!\n");
 	my $timestring = ctime($newtime);
 	$timestring =~ s!\ !_!g;
