@@ -23,15 +23,22 @@ sed 's/! GIDRIV/  GIDRIV/' drivers.list > drivers1.list
 sed 's/! PSDRIV/  PSDRIV/' drivers1.list > drivers2.list
 sed 's/! PPDRIV/  PPDRIV/' drivers2.list > drivers3.list
 sed 's/! X2DRIV/  X2DRIV/' drivers3.list > drivers4.list
-sed 's/! XWDRIV/  XWDRIV/' drivers4.list > drivers.list
+sed 's/! XWDRIV/  XWDRIV/' drivers4.list > drivers5.list
+sed 's/! LXDRIV/  LXDRIV/' drivers5.list > drivers.list
 \rm drivers?.list
 # Assuming default location of perl binary in /usr/local/bin does not work...
 #
 export PERLBIN=`which perl`
-sed 's+^#!/usr/local/bin/perl+#!'$PERLBIN'+' makehtml > makehtml.fixed
-cp makehtml.fixed makehtml
-chmod a+x makehtml
-rm makehtml.fixed
+sed 's+^#!/usr/local/bin/perl+#!'$PERLBIN'+' $PGPLOT_SRC/makehtml > $PGPLOT_SRC/makehtml.fixed
+cp $PGPLOT_SRC/makehtml.fixed $PGPLOT_SRC/makehtml
+chmod a+x $PGPLOT_SRC/makehtml
+rm $PGPLOT_SRC/makehtml.fixed
+
+sed 's+^#!/usr/local/bin/perl+#!'$PERLBIN'+' $PGPLOT_SRC/maketex > $PGPLOT_SRC/maketex.fixed
+cp $PGPLOT_SRC/maketex.fixed $PGPLOT_SRC/maketex
+chmod a+x $PGPLOT_SRC/maketex
+rm $PGPLOT_SRC/maketex.fixed
+
 echo $PGPLOT_SRC/makemake $PGPLOT_SRC linux   g77_gcc
 $PGPLOT_SRC/makemake $PGPLOT_SRC linux   g77_gcc
 sed 's/-lbsd//' makefile > makefile.new
@@ -40,17 +47,34 @@ sed 's+-L/usr/X11/lib+-L/usr/X11/lib -L/usr/X11R6/lib+' makefile.new > makefile
 if test "@USE_PIC@" == "no" ; then
 rm makefile.new
 else
+echo Using 64-bit PIC configuration
 sed 's/CFLAGC=/CFLAGC=-fPIC /' makefile > makefile.new
 sed 's/CFLAGD=/CFLAGD=-fPIC /' makefile.new > makefile
 sed 's/FFLAGC=/FFLAGC=-fPIC /' makefile > makefile.new
 sed 's/FFLAGD=/FFLAGD=-fPIC /' makefile.new > makefile
+# customize for 64-bit machines
+sed 's/INTEGER PIXMAP/INTEGER*8 PIXMAP/' $PGPLOT_SRC/drivers/wddriv.f > $PGPLOT_SRC/drivers/wddriv64.f
+cp $PGPLOT_SRC/drivers/wddriv64.f $PGPLOT_SRC/drivers/wddriv.f
+rm $PGPLOT_SRC/drivers/wddriv64.f
+sed 's/INTEGER PIXMAP/INTEGER*8 PIXMAP/' $PGPLOT_SRC/drivers/gidriv.f > $PGPLOT_SRC/drivers/gidriv64.f
+cp $PGPLOT_SRC/drivers/gidriv64.f $PGPLOT_SRC/drivers/gidriv.f
+rm $PGPLOT_SRC/drivers/gidriv64.f
+sed 's/INTEGER PIXMAP/INTEGER*8 PIXMAP/' $PGPLOT_SRC/drivers/ppdriv.f > $PGPLOT_SRC/drivers/ppdriv64.f
+sed 's/INTEGER\*8 PIXMAP(/INTEGER PIXMAP(/' $PGPLOT_SRC/drivers/ppdriv64.f > $PGPLOT_SRC/drivers/ppdriv.f
+rm $PGPLOT_SRC/drivers/ppdriv64.f
 fi
 echo make; make cpg
 make
+echo make cpg
 make cpg
-
+echo make pgplot.html
+rm pgplot.html pgplot-routines.tex
 make pgplot.html
+echo make pgplot-routines.tex
+make pgplot-routines.tex
+echo make clean
 make clean
+echo create links in @prefix@/bin
 # create links
 ln -sf $PGPLOT_DIR/pgdisp @prefix@/bin/pgdisp
 ln -sf $PGPLOT_DIR/pgxwin_server @prefix@/bin/pgxwin_server
