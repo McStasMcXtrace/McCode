@@ -74,6 +74,7 @@ my $do_swap=0;
 my $daemon=0;
 my $wait=10;
 my $logmode=0;
+my $contourmode=0;
 our $tmp_file = "";
 
 $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
@@ -103,6 +104,8 @@ for($i = 0; $i < @ARGV; $i++) {
       $do_swap = 1;
   } elsif(/^-log/i) {
       $logmode = 1;
+  } elsif(/^-contour/i) {
+      $contourmode = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "mcplot [-ps|-psc|-gif] <simfile | detector_file>\n";
       print "       [-pPLOTTER] Output graphics using {PGPLOT,Scilab,Matlab,HTML}\n";
@@ -112,6 +115,8 @@ for($i = 0; $i < @ARGV; $i++) {
       print "       [-iCOMP]    Only show monitors whos name match COMP\n";
       print "       [+nw]       Open {Scilab,Matlab} command window (with Tcl/Java)\n";
       print "       [-nw]       Open {Scilab,Matlab} command window (without Tcl/Java)\n";
+      print "       [-log]      Plot results in log10 scale\n";
+      print "       [-contour]  Display matrix/images as contour plots\n";
       print "  Plots all monitor data from a simulation, or a single data file.\n";
       print "  When using -ps -psc -gif, the program writes the hardcopy file\n";
       print "  and then exits.\n";
@@ -305,6 +310,7 @@ sub pgplotit {
   'M' PPM file
   'G' GIF file
   'L' Toggle log10 plotting mode
+  'T' Toggle contour plotting mode
   'Q' quit\n";
   } else {
       overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, $passed_arg_str);
@@ -314,6 +320,8 @@ sub pgplotit {
           my ($cc,$cx,$cy,$idx);
           if ($logmode == 1) { if ($passed_arg_str !~ /-log/i) { $passed_arg_str .= "-log "; } }
           else { $passed_arg_str =~ s|-log||; }
+          if ($contourmode == 1) { if ($passed_arg_str !~ /-contour/i) { $passed_arg_str .= "-contour "; } }
+          else { $passed_arg_str =~ s|-contour||; }
           # Do overview plot, letting user select a plot for full-screen zoom.
           ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, "$passed_arg_str -interactive ");
           last if $cc =~ /[xq]/i;        # Quit?
@@ -330,6 +338,11 @@ sub pgplotit {
           if($cc =~ /[l]/i) {        # toggle log mode
             if ($logmode == 0) { $logmode=1; }
             else { $logmode=0; $passed_arg_str =~ s|-log||; }
+            next;
+          }
+          if($cc =~ /[t]/i) {        # toggle contour plot mode
+            if ($contourmode == 0) { $contourmode=1; }
+            else { $contourmode=0; $passed_arg_str =~ s|-contour||; }
             next;
           }
 
@@ -349,6 +362,11 @@ sub pgplotit {
           if($cc =~ /[l]/i) {        # toggle log mode
             if ($logmode == 0) { $logmode=1; }
             else { $logmode=0; $passed_arg_str =~ s|-log||; }
+            next;
+          }
+          if($cc =~ /[t]/i) {        # toggle contour plot mode
+            if ($contourmode == 0) { $contourmode=1; }
+            else { $contourmode=0; $passed_arg_str =~ s|-contour||; }
             next;
           }
       }

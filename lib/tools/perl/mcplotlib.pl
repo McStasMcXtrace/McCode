@@ -76,7 +76,11 @@ sub plot_array_2d {
       pgscr(0, $r1, $g1, $b1);
       pgscr(1, $r0, $g0, $b0);
     }
-    imag $data, $min, $max, $tr;
+    if ($info->{'Contour'} == 1) {
+      cont $data, {TRANSFORM => $tr};
+    } else {
+      imag $data, $min, $max, $tr;
+    }
     pgwedg("RI", 0.5, 3.0, $min, $max, ' ');
     if($buf =~ /^V?PS$/i) {
       pgscr(0, $r0, $g0, $b0);
@@ -190,7 +194,7 @@ sub plot_dat_info {
     }elsif($type =~ /^\s*array_1d\s*\(\s*([0-9]+)\s*\)\s*$/i) {
       plot_array_1d($info, $1);
     } else {
-      print "Warning: Unimplemented plot type '$type' (plot_dat_info)";
+      print "Warning: Unimplemented plot type '$type' in file '$info->{Filename}' (plot_dat_info)";
     }
 }
 
@@ -208,6 +212,8 @@ sub overview_plot {
     for $info (@$datalist) {
       if ($interactive =~ /-log/i) { $info->{'Logmode'} = 1; }
       else { $info->{'Logmode'} = 0; }
+      if ($interactive =~ /-contour/i) { $info->{'Contour'} = 1; }
+      else { $info->{'Contour'} = 0; }
       if ($nx*$ny > 4) { $info->{'ShowI'} = 0; }
       else { $info->{'ShowI'} = 1; }
       plot_dat_info($info);
@@ -244,6 +250,8 @@ sub single_plot {
     die "DEV/PGOPEN $devspec failed!" unless $dev > 0;
     if ($interactive =~ /-log/i) { $info->{'Logmode'} = 1; }
     else { $info->{'Logmode'} = 0; }
+    if ($interactive =~ /-contour/i) { $info->{'Contour'} = 1; }
+    else { $info->{'Contour'} = 0; }
     $info->{'ShowI'} = 1;
     plot_dat_info($info);
     if($interactive =~ /interactive/i) {
