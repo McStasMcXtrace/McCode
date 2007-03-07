@@ -15,6 +15,7 @@
 #            - Matlab scriptfile (Unix / Win32)
 #            - Scilab (Unix only)
 #            - Scilab scriptfile (Unix / Win32)
+# PGDEV      - Default device for PGPLOT (usually /xserv or /gw)
 # EDITOR   - Choice of default built-in editor
 #            0 - McStas 1.7 editor (simple, no extra perl modules req'd)
 #            1 - CodeText editor with highlighting of McStas instrument code
@@ -55,6 +56,7 @@ use Config;
      BROWSER => '@BROWSER@',
      VRMLVIEW => '@VRMLVIEW@',
      PGPLOT => '@PGPLOT@',
+     PGDEV => '/xserv',
      TCLTK => '@TCLTK@',
      SSH => '@SSH@',
      MPIRUN => '@MPIRUN@',
@@ -214,7 +216,8 @@ $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
 
 # Attempt to locate pgplot directory if unset.
 $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
-$ENV{'PGPLOT_DEV'} = "/xserv" unless $ENV{'PGPLOT_DEV'};
+$ENV{'PGPLOT_DEV'} = $MCSTAS::mcstas_config{'PGDEV'} unless $ENV{'PGPLOT_DEV'};
+$MCSTAS::mcstas_config{'PGDEV'} = $ENV{'PGPLOT_DEV'};
 
 # override default CC/CFLAGS if MCSTAS_CC/CFLAGS defined
 $MCSTAS::mcstas_config{'CC'} = $ENV{'MCSTAS_CC'} if defined($ENV{'MCSTAS_CC'});

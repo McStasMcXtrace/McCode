@@ -428,7 +428,7 @@ sub dialog_plot_single {
     my $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
     if ($plotter =~ /PGPLOT|McStas/i) {
         $current_plot = $cl->index('active');
-        single_plot("/xserv", $di->[$current_plot], 0);
+        single_plot($MCSTAS::mcstas_config{'PGDEV'}, $di->[$current_plot], 0);
     }
 }
 

@@ -274,9 +274,9 @@ sub ensure_pgplot_xserv_started {
     my $olddev;
     pgqid($olddev);
     my $newdev;
-    if (defined(&dev)) { $newdev = dev("/xserv"); }
-    else { $newdev = pgopen("/xserv"); }
-    die "DEV/PGOPEN /xserv failed!" unless $newdev > 0;
+    if (defined(&dev)) { $newdev = dev($MCSTAS::mcstas_config{'PGDEV'}); }
+    else { $newdev = pgopen($MCSTAS::mcstas_config{'PGDEV'}); }
+    die "DEV/PGOPEN $MCSTAS::mcstas_config{'PGDEV'} failed!" unless $newdev > 0;
     if (defined(&close_window)) { close_window(); }
     else { pgclos(); }
     pgslct($olddev);
