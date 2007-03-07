@@ -413,7 +413,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       };
       if ($choiceexec_val =~ /\(bg\)/) {
 	$si{'Detach'} = 1;
-      }
+      } else { $si{'Detach'} = 0; }
     }
 
     return ($res, \%si);

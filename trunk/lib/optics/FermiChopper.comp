@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.17 $
+* Version:    $Revision: 1.18 $
 * Release:    McStas 1.10
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -623,7 +623,7 @@ TRACE
     double mean_t, mean_phase;
     mean_t     = FCVars.sum_t/FCVars.sum_N;
     mean_phase = fmod(mean_t*nu*360, 360);
-    FCVars.ph0 = mean_phase/360;
+    FCVars.ph0 = -mean_phase/360;
   }
 
 %}
@@ -652,7 +652,7 @@ SAVE
            "              Mean wavelength   lambda= %g [Angs]\n"
            "              Mean energy       omega = %g [meV]\n"
            "              Mean arrival time t     = %g [s]\n"
-           "              Mean phase              = %g [deg]\n"
+           "              Mean phase              = %g [deg] (negate to optimize transmission)\n"
            "              Opening time      dt    = %g [s]\n"
            "              Intensity reaching FC   = %g [n/s]\n"
            "              Intensity passing  FC   = %g [n/s]\n"
