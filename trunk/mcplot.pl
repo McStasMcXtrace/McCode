@@ -347,7 +347,7 @@ sub pgplotit {
           }
 
           # now do a full-screen version of the plot selected by the user.
-          ($cc, $cx, $cy) = single_plot("/xserv", $datalist->[$idx], "$passed_arg_str -interactive ");
+          ($cc, $cx, $cy) = single_plot($MCSTAS::mcstas_config{'PGDEV'}, $datalist->[$idx], "$passed_arg_str -interactive ");
           last if $cc =~ /[xq]/i;        # Quit?
           if($cc =~ /[pcngm]/i) {        # Hardcopy?
               my $ext="ps";

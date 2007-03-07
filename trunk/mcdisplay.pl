@@ -1296,7 +1296,7 @@ if ($plotter =~ /McStas|PGPLOT/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
 
 $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
 
-my $pg_devname = "/xserv";
+my $pg_devname = $MCSTAS::mcstas_config{'PGDEV'};
 # Only set up PGPLOT stuff if needed
 if ($plotter =~ /McStas|PGPLOT/i) { # PGPLOT is plotter!
   if ($int_mode == 1)
