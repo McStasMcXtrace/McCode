@@ -287,12 +287,12 @@ sub mcdoc_test {
 
 sub tools_shortcuts {
     my ($w) = @_;
-    
+
     $w->fontCreate('small',
     -family=>'Helvetica',
     -weight=>'normal',
     -size=>12);
-    my $msg="mcgui has platform dependent shorcut keys.\n\nOn this machine ". 
+    my $msg="mcgui has platform dependent shorcut keys.\n\nOn this machine ".
 	"(OS type $Config{'osname'}) they are:\n\n".
 	"$shortcuts{'menuopen'} - Open instrument file\n".
 	"$shortcuts{'menurun'} - Run instrument\n".
@@ -304,7 +304,7 @@ sub tools_shortcuts {
 	"$shortcuts{'cut'} - Editor cut\n".
 	"$shortcuts{'copy'} - Editor copy\n".
 	"$shortcuts{'paste'} - Editor paste";
-    
+
     if ($Config{'osname'} eq 'MSWin32') {
 	$w->messageBox(-message =>$msg,
 		       -title => "McGUI: Shortcut keys",
@@ -317,7 +317,7 @@ sub tools_shortcuts {
 		       -font => 'small',
 		       -icon => 'info');
     }
-    $w->fontDelete('small'); 
+    $w->fontDelete('small');
 }
 
 sub tools_dsa {
@@ -337,7 +337,7 @@ sub tools_dsa {
     if ((lc($do_dsa) eq "no")||(lc($do_dsa) eq "cancel")) {
 	    putmsg($cmdwin, "DSA key generation cancelled!\n", 'msg');
 	return 0;
-    } 
+    }
     if ($key_exist == 1) {
 	system("rm -f $ENV{'HOME'}/.ssh/id_dsa $ENV{'HOME'}/.ssh/id_dsa.pub");
     }
@@ -1098,25 +1098,29 @@ sub menu_run_simulation {
 	if ($newsi->{'Detach'} == 1) { # Background simulations using 'at'
 
 	    # Create temporary file
-	    my $fid = open(READ, "mktemp /tmp/McStas_XXXX |");
-	    while (<READ>) {
-		$tmpfile = $_;
-		chomp $tmpfile;
-	    }
-	    close($fid);
+	    my $fid;
+	    if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
+        require File::Temp;
+        ($fid, $tmpfile) = File::Temp::tempfile("McStas_XXXX", SUFFIX => '.sh');
+        if (not defined $fid) { $tmpfile=""; }
+      }
+      if ($tmpfile eq "") {
+        $tmpfile="McStas_000000.sh";
+        $fid = new FileHandle "> $tmpfile";
+      }
+      if (not defined $fid) { die "Could not open temporary McStas file $tmpfile\n"; }
 
 	    # Write to temporary file
-	    $fid = open(WRITE, "> $tmpfile");
-	    print WRITE "#!/bin/sh\n";
-	    print WRITE "#\n# This is a temporary shell script to ";
-	    print WRITE "run a McStas simulation detached\n# from the GUI";
-	    print WRITE "\n#\n# Will be removed shortly.\n#\n";
+	    print $fid "#!/bin/sh\n";
+	    print $fid "#\n# This is a temporary shell script to ";
+	    print $fid "run a McStas simulation detached\n# from the GUI";
+	    print $fid "\n#\n# Will be removed shortly.\n#\n";
 
 	    my $cmd = join(" ", @command);
 	    my $date = localtime(time());
 	    my $logfile = "${out_name}_${date}.log";
 	    $logfile =~ s!\ !_!g;
-	    print WRITE "$cmd > $logfile 2>&1 ";
+	    print $fid "$cmd > $logfile 2>&1 ";
 
 	    # Close; set execute mode
 	    close($fid);
@@ -1160,6 +1164,8 @@ sub menu_run_simulation {
 #         }
 
 	if ($newsi->{'Detach'}) { # Clean up after background simulation
+	 sleep(1);
+	 unlink($tmpfile)
 #	    my $fid = open(READ,"rm -f $tmpfile|");
 #	    close($fid);
 	}
@@ -1496,9 +1502,9 @@ sub setup_menu {
     $simmenu->pack(-side=>'left');
 
     sitemenu_build($w,$menu);
-    
+
     my $toolmenu = $menu->Menubutton(-text => 'Tools', -underline => 0);
-    
+
     # The following item for now only applies to non-Win32 systems...
     if (!($Config{'osname'} eq 'MSWin32')) {
 	$toolmenu->command(-label => 'Online plotting of results',
