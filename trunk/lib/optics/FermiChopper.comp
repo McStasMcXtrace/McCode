@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.16 $
+* Version:    $Revision: 1.17 $
 * Release:    McStas 1.10
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -73,7 +73,7 @@
 * Compatibility parameters:
 * ymin:     (m)   lower y bound of cylinder
 * ymax:     (m)   upper y bound of cylinder
-* rad, slit, alpham,Wi,dist,Vi
+* rad, slit, alpham,Wi,dist,Vi: compatibility parameters
 *
 * Constants to reset time of flight:
 * zero_time: (1)  set time to zero: 0=no,  1=once per half cycle, 2=auto adjust phase
@@ -290,9 +290,14 @@ INITIALIZE
            "    Adjusting Nslit=%f\n", NAME_CURRENT_COMP, Nslit);
   }
   if (length > radius*2) {
-    length = sqrt(radius*radius - Nslit*w*Nslit*w/4);
+    length = 2*sqrt(radius*radius - Nslit*w*Nslit*w/4);
     printf("FermiChopper: %s: Slit package is longer than the whole\n"
            "    chopper cylinder. Adjusting length=%g [m]\n", NAME_CURRENT_COMP, length);
+  }
+  if (Nslit == 1) {
+    length = 2*sqrt(radius*radius - Nslit*w*Nslit*w/4);
+    printf("FermiChopper: %s: No slit package (Nslit=1). Adjusting length=%g [m]\n",
+      NAME_CURRENT_COMP, length);
   }
 
   if (eff <= 0 || eff > 1) {
