@@ -58,6 +58,7 @@ require "mcstas_config.perl";
 
 # Input filename needed:
 if (@ARGV == 0) {
+    print "Usage: mcdaemon file|dir [wait]\n";
     print "As minimum, I need a McStas output file (e.g. a mcstas.sim) to monitor. \n";
     print "Possibly, also specify a 'waiting' interval in seconds (default 10 seconds)\nExiting.\n";
     exit;
@@ -67,6 +68,9 @@ my $filename = $ARGV[0];
 my $timeout = 10;
 if (@ARGV == 2) {
     $timeout = $ARGV[1];
+}
+if ($filename =~ /-h|--help/i) {
+    print "Usage: mcdaemon file|dir [wait]\n";
 }
 if ($filename eq ".") {
     $filename = getcwd();
@@ -95,7 +99,7 @@ if (!$there) {
 	$dirname = $filename;
 	$name = "mcstas";
     }
-    
+
     $filename = "$dirname/$name";
     # First of all, the output dir must be there and of type directory
     if (!(-e $dirname)) {
@@ -105,7 +109,7 @@ if (!$there) {
 		$dirname = 1;
 	    }
 	    if (!$dirthere) {sleep $timeout;}
-	} 
+	}
     } else {
 	print "Directory there, looking for plot file(s)\n";
     }
@@ -118,7 +122,7 @@ if (!$there) {
 		$j = scalar(@suffixlist);
 		$filename = "$dirname/$name";
 		print "Found datafile $name in $dirname, working with that...";
-	    } 
+	    }
 	}
 	if (!$there) {sleep $timeout;}
     }
@@ -152,6 +156,6 @@ while (1 == 1) {
 	if ($filename =~ /\.sim/) {
 	    system("mcplot -d $filename") || (die "Could not spawn mcplot!\n");
 	}
-	
+
     }
 }
