@@ -164,7 +164,7 @@ while (<READ>) {
     } elsif (/\w*MPICC \=\w*/) {
         print WRITE "     MPICC => '$mpicc',\n";
     } elsif (/\w*PGPLOT \=\w*/) {
-        print WRITE "     PGPLOT => 'no',\n";
+        print WRITE "     PGPLOT => 'yes',\n";
     } elsif (/\w*CC \=\w*/) {
         print WRITE "     CC => '$cc',\n";
     } elsif (/\w*CFLAGS \=\w*/) {
@@ -185,10 +185,8 @@ while (<READ>) {
         print WRITE "     THREADS => 'no',\n";
     } elsif (/\w*HDFVIEW \=\w*/) {
         print WRITE "     HDFVIEW => '$hdfview',\n";
-    } elsif (/\w*PGPLOT \=\w*/) {
-	print WRITE "     PGPLOT => 'yes',\n";
     } elsif (/\w*PGDEV \=\w*/) {
-	print WRITE "     PGDEv => '/gw',\n";
+	print WRITE "     PGDEV => '/gw',\n";
     } else {
         print WRITE;
     }
