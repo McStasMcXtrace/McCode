@@ -5,6 +5,6 @@
 	<IMPLEMENTATION>
 		<OS NAME="MSWin32" />
 		<ARCHITECTURE NAME="MSWin32-x86-multi-thread" />
-		<CODEBASE HREF="PGPLOT-2.19.tar.gz" />
+		<CODEBASE HREF="MSWin32-x86-multi-thread/PGPLOT-2.19.tar.gz" />
 	</IMPLEMENTATION>
 </SOFTPKG>

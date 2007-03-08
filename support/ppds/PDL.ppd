@@ -9,6 +9,6 @@
 		<DEPENDENCY NAME="Text-Balanced" VERSION="0,0,0,0" />
 		<OS NAME="MSWin32" />
 		<ARCHITECTURE NAME="MSWin32-x86-multi-thread" />
-		<CODEBASE HREF="PDL.tar.gz" />
+		<CODEBASE HREF="MSWin32-x86-multi-thread/PDL.tar.gz" />
 	<INSTALL EXEC="perl">install.ppm</INSTALL></IMPLEMENTATION>
 </SOFTPKG>
