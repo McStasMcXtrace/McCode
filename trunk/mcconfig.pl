@@ -200,9 +200,11 @@ system("ppm install support\\ppds\\Syntax-Highlight-Perl.ppd");
 system("ppm install support\\ppds\\Tk-CodeText.ppd");
 system("ppm install support\\ppds\\Math-Amoeba.ppd");
 print STDOUT "Installing PDL and PGPLOT extensions (ppm)\n";
-chdir("support/ppds");
-system("ppm install PGPLOT56.PPD");
-system("ppm install PDL.PPD");
+system("ppm install support\\ppds\\PGPLOT56.PPD");
+system("ppm install support\\ppds\\Text-Balanced.ppd");
+system("ppm install support\\ppds\\Parse-RecDescent.ppd");
+system("ppm install support\\ppds\\Inline.ppd");
+system("ppm install support\\ppds\\PDL.PPD");
 
 
 
