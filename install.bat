@@ -79,6 +79,7 @@
 @copy mcformat.exe %MCSTAS_SITE%\bin
 @copy support\Win32\which.exe %MCSTAS_SITE%\bin
 @copy *.pl %MCSTAS_SITE%\bin
+@copy support\pgplot_win32\*.* %MCSTAS_SITE%\bin
 @xcopy /e /y /q /i lib %MCSTAS_SITE%\lib
 @echo Done
 @echo Doing doc update using mcdoc...
@@ -91,6 +92,8 @@
 @echo Modifying Windows registry for MCSTAS and PATH system variables
 @echo ...............................................................
 @reg add HKCU\Environment /v MCSTAS /d "%MCSTAS_SITE%\lib" /f
+@reg add HKCU\Environment /v PGPLOT_FONT /d "%MCSTAS_SITE%\bin\grfont.dat" /f
+@reg add HKCU\Environment /v PGPLOT_DIR /d "%MCSTAS_SITE%\bin" /f
 @reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH /d "%MCSTAS_SITE%\bin;%PERLBIN%;%DEVBIN%;%SCIBIN%;%PATH%" /f /t REG_EXPAND_SZ
 @reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATHEXT /d "%PATHEXT%;.pl%" /f /t REG_EXPAND_SZ
 @echo ..............................................................

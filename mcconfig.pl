@@ -185,6 +185,10 @@ while (<READ>) {
         print WRITE "     THREADS => 'no',\n";
     } elsif (/\w*HDFVIEW \=\w*/) {
         print WRITE "     HDFVIEW => '$hdfview',\n";
+    } elsif (/\w*PGPLOT \=\w*/) {
+	print WRITE "     PGPLOT => 'yes',\n";
+    } elsif (/\w*PGDEV \=\w*/) {
+	print WRITE "     PGDEv => '/gw',\n";
     } else {
         print WRITE;
     }
@@ -197,6 +201,10 @@ print STDOUT "Installing Tk-CodeText extension (ppm)\n";
 system("ppm install support\\ppds\\Syntax-Highlight-Perl.ppd");
 system("ppm install support\\ppds\\Tk-CodeText.ppd");
 system("ppm install support\\ppds\\Math-Amoeba.ppd");
+print STDOUT "Installing PDL and PGPLOT extensions (ppm)\n";
+system("ppm install support\\ppds\\PGPLOT.ppd");
+system("ppm install support\\ppds\\PDL.PPD");
+
 
 
 
