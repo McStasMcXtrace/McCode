@@ -101,8 +101,8 @@ SectionEnd
 
 Section "Dev-cpp"
    SetOutPath "$TEMP"
-   File devcpp4980.exe
-   ExecWait "devcpp4980.exe"
+   File devcpp-4.9.9.2_setup.exe
+   ExecWait "devcpp-4.9.9.2_setup.exe"
    messagebox mb_ok "Dev-CPP installation complete!"
 SectionEnd
 
