@@ -195,16 +195,18 @@ close(WRITE);
 # It should now be ok to overwrite the config file:
 copy("$file2", "$file");
 print STDOUT "Updating: $file2 $file\n";
+
+chdir("support\\ppds");
 print STDOUT "Installing Tk-CodeText extension (ppm)\n";
-system("ppm install support\\ppds\\Syntax-Highlight-Perl.ppd");
-system("ppm install support\\ppds\\Tk-CodeText.ppd");
-system("ppm install support\\ppds\\Math-Amoeba.ppd");
+system("ppm install Syntax-Highlight-Perl.ppd");
+system("ppm install Tk-CodeText.ppd");
+system("ppm install Math-Amoeba.ppd");
 print STDOUT "Installing PDL and PGPLOT extensions (ppm)\n";
-system("ppm install support\\ppds\\PGPLOT56.PPD");
-system("ppm install support\\ppds\\Text-Balanced.ppd");
-system("ppm install support\\ppds\\Parse-RecDescent.ppd");
-system("ppm install support\\ppds\\Inline.ppd");
-system("ppm install support\\ppds\\PDL.PPD");
+system("ppm install PGPLOT56.PPD");
+system("ppm install Text-Balanced.ppd");
+system("ppm install Parse-RecDescent.ppd");
+system("ppm install Inline.ppd");
+system("ppm install PDL.PPD");
 
 
 
