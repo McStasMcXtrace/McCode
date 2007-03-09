@@ -468,7 +468,6 @@ sub plot_dialog {
     if ($Config{'osname'} ne 'MSWin32') { # change spaces into \spaces
       $sim_file_name =~ s! !\ !g;
     }
-    push @plot_cmd, $prefix;
     push @plot_cmd, "mcplot$suffix";
     push @plot_cmd, $sim_file_name;
     my $cmd=join(' ',@plot_cmd);
