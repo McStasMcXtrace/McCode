@@ -12,13 +12,20 @@
 * Date: Sep 25, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.18 2006-04-19 13:06:25 farhi Exp $
+*	$Id: file.c,v 1.19 2007-03-12 14:57:18 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.18  2006/04/19 13:06:25  farhi
+*	* Updated Release, Version and Origin fields in headers
+*	* Improved setversion to update all McStasx.y occurencies into current release
+*	* Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
+*	* Added possibility to save log of the session to a file (appended) in mcgui
+*	* Made Scilab use either TCL_EvalStr or TK_EvalStr
+*
 *	Revision 1.17  2005/03/02 10:07:23  farhi
 *	Now displays info/warning when using contributed components
 *
@@ -146,7 +153,7 @@ generic_open_file_search(char *name, FILE *(*try_open)(char *, char *))
     if(f != NULL)
       {
         if (!strcmp(sys_subdir_table[i], "obsolete")) fprintf(stderr, "Warning: '%s' is an obsolete component (not maintained).\n", name);
-        if (!strcmp(sys_subdir_table[i], "contrib"))  fprintf(stderr, "Info   : '%s' is a contributed component.\n", name);
+        if (!strcmp(sys_subdir_table[i], "contrib"))  fprintf(stderr, "Info:    '%s' is a contributed component.\n", name);
         return f;
       }
   }

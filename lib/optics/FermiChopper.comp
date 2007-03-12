@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.18 $
+* Version:    $Revision: 1.19 $
 * Release:    McStas 1.10
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -333,8 +333,6 @@ INITIALIZE
   FCVars.absorb_nocontrol        = 0;
   FCVars.absorb_cylexit          = 0;
   FCVars.warn_notreachslitoutput=0;
-
-  printf("FC: m=%g R=%g\n", m, R0);
 
 %}
 

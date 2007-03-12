@@ -91,6 +91,7 @@ chmod a+x support/pgplot/pgplot.sh
 chmod a+x support/scilab/scilab.sh
 chmod a+x lib/tools/perl/mcstas_reconfigure
 
+# warnings and errors
 if test "$MAKE" == "no" ; then
   echo "ERROR: McStas installation requires 'make' or 'gmake'"
   exit
@@ -114,45 +115,32 @@ if test "$SCILAB" == "no" && test "$MATLAB" == "no" && test "$PGPLOT" == "no" &&
   echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT, VRML) could be found !"
 fi
 
-echo ""
-echo "To setup the plotting environment, execute either"
-echo "  make config (automaticly selects plotter, "
-echo "       prefers Scilab before Matlab before PGPLOT before VRML)"
-if test "$SCILAB" != "no" ; then
-echo "  make scilab (selects scilab)"
+# final message at end of configure
+if test "$USE_PIC" != "no" ; then
+echo "Activating PIC compilation for: make install-pgplot"
 fi
-if test "$MATLAB" != "no" ; then
-echo "  make matlab (selects matlab)"
+if test "$HAVE_LIBNEXUS" != "0" ; then
+echo "Activating NeXus support in McStas"
 fi
-if test "$PGPLOT" != "no" ; then
-echo "  make pgplot (selects pgplot)"
-fi
-if test "$VRMLVIEW" != "no" ; then
-echo "  make vrml   (selects vrml)"
-fi
-echo ""
-echo "After plotter config, build and install McStas by executing"
-echo "  make; make install"
 echo ""
 if test "$WGET" != no ; then
   echo "Gnome support: If you experience crashes of mcgui when running in the "
   echo "  Gnome environment, please come back here and do a"
   echo ""
-  echo "  make tk"
+  echo "# make tk"
   echo ""
   echo "will install our patched version of perl-tk from the net"
-  echo ""
 fi
 if test "$PGPLOT" == "no" ; then
   echo "To install PGPLOT for McStas, you need:"
   echo "= perl-PDL (perldl, pdl)"
   echo "= a fortran compiler (g77, gfortran)"
   echo "= X11-dev libraries/includes (libx11-dev, xserver-xorg-dev, libxt-dev)"
-
 fi
 if test "$PGPLOT" == "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
   echo "PGPLOT install: you may try our automatic PGPLOT installation with"
   echo ""
+  echo "For 64-bit machines, re-run # ./configure --with-pic first"
   echo "# make install-pgplot; ./configure; make; make install"
 else if test "$PGPLOT" == "no" ; then
   echo "Install these and re-run McStas installation ./configure"
@@ -165,3 +153,23 @@ if test "$SCILAB" == "no" ; then
   echo ""
   echo "(requires Linux/Intel, wget and root priviliges)"
 fi
+echo ""
+echo "To setup the plotting environment, execute either"
+echo "# make config (automatically selects plotter, "
+echo "       prefers PGPLOT before Matlab before Scilab before VRML)"
+if test "$SCILAB" != "no" ; then
+echo "# make scilab (selects scilab)"
+fi
+if test "$MATLAB" != "no" ; then
+echo "# make matlab (selects matlab)"
+fi
+if test "$PGPLOT" != "no" ; then
+echo "# make pgplot (selects pgplot)"
+fi
+if test "$VRMLVIEW" != "no" ; then
+echo "# make vrml   (selects vrml)"
+fi
+echo ""
+echo "After (optional) plotter config, build and install McStas by executing"
+echo "# make; make install"
+echo ""
