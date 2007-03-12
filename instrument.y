@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.72 $
+* Version: $Revision: 1.73 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.72 2007-03-06 09:39:10 farhi Exp $
+* $Id: instrument.y,v 1.73 2007-03-12 14:12:16 farhi Exp $
 *
 *******************************************************************************/
 
@@ -103,6 +103,7 @@
 %token TOK_ITERATE    "ITERATE" /* extended McStas grammar */
 %token TOK_MYSELF     "MYSELF"  /* extended McStas grammar */
 %token TOK_COPY       "COPY"    /* extended McStas grammar */
+%token TOK_ENHANCE       "ENHANCE"    /* extended McStas grammar */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -121,7 +122,7 @@
 %type <groupinst> groupdef groupref
 %type <ccode>   code codeblock share declare initialize trace extend save finally mcdisplay
 %type <coords>  coords
-%type <exp>     exp topexp topatexp genexp genatexp when
+%type <exp>     exp topexp topatexp genexp genatexp when enhance
 %type <actuals> actuallist actuals actuals1
 %type <comp_iformals> comp_iformallist comp_iformals comp_iformals1
 %type <cformal> comp_iformal
@@ -132,7 +133,7 @@
 %type <parms>   parameters
 %type <place>   place
 %type <ori>     orientation
-%type <nxinfo> nexus
+%type <nxinfo>  nexus
 %type <string>  instname
 %type <number>  hdfversion
 %type <jump>    jump
@@ -154,21 +155,20 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         struct comp_def *c;
         palloc(c);
         c->name = $3;
-        /* ADD: E. Farhi, Aug 14th, 2002 */
         c->source = str_quote(instr_current_filename);
         c->def_par = $4.def;
         c->set_par = $4.set;
         c->out_par = $4.out;
         c->state_par = $4.state;
         c->polarisation_par = $4.polarisation;
-        c->share_code = $5;  /* ADD: E. Farhi Sep 20th, 2001 */
-        c->decl_code = $6;  /* MOD: E. Farhi Sep 20th, 2001, shifted param numbs */
+        c->share_code = $5;
+        c->decl_code = $6;
         c->init_code = $7;
         c->trace_code = $8;
-        c->save_code = $9;  /* ADD: E. Farhi Aug 25th, 2002+shifted indexes */
+        c->save_code = $9;
         c->finally_code = $10;
         c->mcdisplay_code = $11;
-        c->comp_inst_number = 0; /* ADD: E. Farhi Sep 20th, 2001 */
+        c->comp_inst_number = 0;
 
         /* Check definition and setting params for uniqueness */
         check_comp_formals(c->def_par, c->set_par, c->name);
@@ -416,9 +416,9 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         instrument_definition->saves  = $10;
         instrument_definition->finals = $11;
         instrument_definition->compmap = comp_instances;
-        instrument_definition->groupmap = group_instances;  /* ADD: E. Farhi Sep 25th, 2001 */
+        instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
-        instrument_definition->grouplist = group_instances_list;  /* ADD: E. Farhi Sep 25th, 2001 */
+        instrument_definition->grouplist = group_instances_list;
 
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals,
@@ -889,36 +889,55 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
       }
 ;
 
-component:    "COMPONENT" instname '=' instref when place orientation groupref extend jumps
+component: enhance "COMPONENT" instname '=' instref when place orientation groupref extend jumps
       {
-
         struct comp_inst *comp;
 
-        comp = $4;
+        comp = $5;
         if (comp->def != NULL) comp->def->comp_inst_number--;
 
-        comp->name = $2;
+        comp->name = $3;
+        comp->enhance = $1;
 
-        if ($5) comp->when  = $5;
+        if ($6) comp->when  = $6;
 
         palloc(comp->pos);
-        comp->pos->place = $6.place;
-        comp->pos->place_rel = $6.place_rel;
-        comp->pos->orientation = $7.orientation;
+        comp->pos->place = $7.place;
+        comp->pos->place_rel = $7.place_rel;
+        comp->pos->orientation = $8.orientation;
         comp->pos->orientation_rel =
-            $7.isdefault ? $6.place_rel : $7.orientation_rel;
+            $8.isdefault ? $7.place_rel : $8.orientation_rel;
 
-        if ($8)            comp->group = $8;   /* component is part of an exclusive group */
-        if ($9->linenum)   comp->extend= $9;  /* EXTEND block*/
-        if (list_len($10)) comp->jump = $10;
+        if ($9) {
+          comp->group = $9;    /* component is part of an exclusive group */
+          /* store first and last comp of group. Check if a ENHANCE is inside */
+          if (!comp->group->first_comp) comp->group->first_comp =comp->name;
+          comp->group->last_comp=comp->name;
+          if (comp->enhance && !comp->group->enhance) comp->group->enhance = comp->enhance;
+        }
+        if ($10->linenum)   comp->extend= $10;  /* EXTEND block*/
+        if (list_len($11))  comp->jump = $11;
         comp->index = ++comp_current_index;     /* index of comp instance */
 
-        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $2, $4->type));
+        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $3, $5->type));
         previous_comp = comp; /* this comp will be 'previous' for the next */
         $$ = comp;
 
       }
 ;
+
+enhance:    /* empty */
+      {
+        $$ = NULL;
+      }
+    | "ENHANCE"
+      {
+        $$ = exp_number("10");
+      }
+    | "ENHANCE" exp
+      {
+        $$ = $2;
+      }
 
 formallist:   '(' formals ')'
       {
@@ -1044,8 +1063,11 @@ groupdef:   TOK_ID
         if(ent == NULL)
         {
           palloc(group);    /* create new group instance */
-          group->name = $1;
-          group->index= 0;
+          group->name       = $1;
+          group->index      = 0;
+          group->first_comp = NULL;
+          group->last_comp  = NULL;
+          group->enhance       = NULL;
           symtab_add(group_instances, $1, group);
           list_add(group_instances_list, group);
         }
@@ -1400,7 +1422,7 @@ Symtab comp_instances;
 /* Will store component instance for PREVIOUS reference */
 struct comp_inst *previous_comp=NULL;
 
-/* ADD: E. Farhi Sep 24th, 2001 Map from names to component group instances. */
+/* Map from names to component group instances. */
 Symtab group_instances;
 
 /* Map from names to embedded libraries */
