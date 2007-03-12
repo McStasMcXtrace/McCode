@@ -12,17 +12,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.47 $
+* Version: $Revision: 1.48 $
 *
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.47 2007-03-02 14:27:17 farhi Exp $
+* $Id: mcstas.h,v 1.48 2007-03-12 14:12:16 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.47 $"
+#define MCSTAS_H "$Revision: 1.48 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,8 +45,8 @@
 
 typedef struct Pool_header *Pool;
 
-void *mem(size_t);    /* Allocate memory. */
-void memfree(void *);   /* Free memory. */
+void *mem(size_t);        /* Allocate memory. */
+void memfree(void *);     /* Free memory. */
 char *str_dup(char *);    /* Allocate new copy of string. */
 char *str_dup_n(char *string, int n); /* Copies only first N chars. */
 char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
@@ -110,12 +110,12 @@ struct Symtab_entry *symtab_previous(Symtab st, int index);
 typedef struct List_header *List;
 typedef struct List_position *List_handle;
 
-List list_create(void);   /* Create list. */
-void list_add(List, void *);  /* Add element at end. */
+List list_create(void);             /* Create list. */
+void list_add(List, void *);        /* Add element at end. */
 void list_free(List, void (*)(void *)); /* Deallocate a list. */
-int list_len(List l);   /* Get list length. */
-List_handle list_iterate(List); /* Prepare to traverse list. */
-void *list_next(List_handle); /* Get next element in list. */
+int list_len(List l);               /* Get list length. */
+List_handle list_iterate(List);     /* Prepare to traverse list. */
+void *list_next(List_handle);       /* Get next element in list. */
 void list_iterate_end(List_handle); /* End list traversal. */
 
 
@@ -213,9 +213,9 @@ extern struct instr_def *instrument_definition;
 extern Symtab comp_instances;
 /* List of component instances in declaration order. */
 extern List comp_instances_list;
-/* Map from names to component group instances. */ /* ADD: E. Farhi Sep 24th, 2001 group instances */
+/* Map from names to component group instances. */
 extern Symtab group_instances;
-/* List of component group instances in declaration order. */ /* ADD: E. Farhi Sep 24th, 2001 group instances */
+/* List of component group instances in declaration order. */
 extern List group_instances_list;
 /* Map from names to embedded libraries */
 extern Symtab lib_instances;
@@ -366,11 +366,11 @@ struct comp_iformal
 /* Component definitions. */
 struct comp_def
   {
-    char *name;     /* Component name. */
-    char *source;   /*  ADD: E. Farhi Aug 14th, 2002 Name of source file for definition */
-    int  comp_inst_number; /* ADD: E. Farhi Sep 20th, 2001 Number of this comp in the instrument  */
+    char *name;                     /* Component name. */
+    char *source;                   /*  Name of source file for definition */
+    int  comp_inst_number;          /* Number of this comp in the instrument  */
     List def_par, set_par, out_par, state_par; /* Formal parameters. */
-    char **polarisation_par;  /* Polarisation state formal parameters. */
+    char **polarisation_par;        /* Polarisation state formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
     struct code_block *init_code;   /* Initializeation code. */
@@ -380,11 +380,14 @@ struct comp_def
     struct code_block *mcdisplay_code;  /* Code for drawing components. */
   };
 
-/* ADD: E. Farhi Sep 24th, 2001 Component group instances */
+/* Component group instances */
 struct group_inst
   {
     char *name;
-    int  index;
+    int   index;
+    char *first_comp;
+    char *last_comp;
+    CExp  enhance;
   };
 
 struct when_condition {
@@ -396,33 +399,31 @@ struct comp_inst
   {
     char *name;     /* Instance name. */
     char *type;     /* type of component */
-    struct comp_def *def; /* Pointer to definition. */
-    struct comp_position *pos;  /* Component position (place & orientation). */
-    struct code_block *extend; /* ADD: E. Farhi Sep 20th, 2001 code following comp instance */
-    int    index;  /* ADD: E. Farhi Sep 20th, 2001 index of comp instance */
-    struct group_inst *group;       /* ADD: E. Farhi Sep 24th, 2001 group name in which comp is */
-    Symtab defpar, setpar;  /* Parameter values. */
-    List jump;    /* list of jumps to execute after trace/extend and mcdisplay */
-    CExp when;    /* NULL or condition to execute TRACE */
+    struct comp_def *def;           /* Pointer to definition. */
+    struct comp_position *pos;      /* Component position (place & orientation). */
+    struct code_block *extend;      /* NULL or code following comp instance */
+    int    index;   /* index of comp instance */
+    struct group_inst *group;       /* NULL or group name in which comp is */
+    Symtab defpar, setpar;          /* Parameter values. */
+    List jump;      /* NULL or list of jumps to execute after trace/extend */
+    CExp when;      /* NULL or condition to execute TRACE */
     Symtab actuals; /* save actual/given parameters for COPY */
+    CExp enhance;      /* NULL or number of ENHANCEs as an Expr */
   };
 
 /* Instrument formal parameters. */
 struct instr_formal
   {
     enum instr_formal_types type; /* Type (string, int, double) */
-    char *id;       /* Parameter name */
-    int isoptional;   /* True if default value is available */
-    CExp default_value;   /* Default value if isoptional is true */
+    char *id;                     /* Parameter name */
+    int isoptional;               /* True if default value is available */
+    CExp default_value;           /* Default value if isoptional is true */
   };
 
-/* NeXus information. NeXus is supported through the NeXus
-* API, and only if one file name declaration is
-* present in the instrument.
-*/
+/* NeXus information. NeXus is supported through the NeXus API */
 struct NXinfo
   {
-    int any;         /* True only if any NEXUS decls. */
+    int any;           /* True only if any NEXUS decls. */
     char *hdfversion;  /* may be 4 or 5, or xml, with optionally compression */
   };
 
@@ -431,22 +432,22 @@ struct instr_def
   {
     char *name;     /* Instrument name */
     char *source;   /* Name of source file for definition */
-    char *quoted_source;  /* File name quoted for inclusion in C */
+    char *quoted_source;      /* File name quoted for inclusion in C */
     struct code_block *decls; /* Code for declarations */
     struct code_block *inits; /* Code for initializations */
-    struct code_block *saves;   /* Code executed to save data */
-    struct code_block *finals;  /* Code for simulation end */
-    List formals;   /* List of formal parameters */
-    Symtab compmap;   /* Map of component names to instances */
-    Symtab groupmap;  /* Map of component group names */
-    List complist;    /* List of components in declaration order */
-    List grouplist;   /* List of component groups in declaration order */
-    struct NXinfo *nxinfo;  /* NeXus declarations */
-    int use_default_main; /* If set, output a main() function */
-    int include_runtime;  /* If set, include runtime in output */
-    int enable_trace;   /* If set, enable output of neutron traces */
-    int portable;   /* If set, emit strictly portable ANSI C */
-    int polarised;    /* If set, handle neutron polarisation */
+    struct code_block *saves; /* Code executed to save data */
+    struct code_block *finals;/* Code for simulation end */
+    List formals;             /* List of formal parameters */
+    Symtab compmap;           /* Map of component names to instances */
+    Symtab groupmap;          /* Map of component group names */
+    List complist;            /* List of components in declaration order */
+    List grouplist;           /* List of component groups in declaration order */
+    struct NXinfo *nxinfo;    /* NeXus declarations */
+    int use_default_main;     /* If set, output a main() function */
+    int include_runtime;      /* If set, include runtime in output */
+    int enable_trace;         /* If set, enable output of neutron traces */
+    int portable;             /* If set, emit strictly portable ANSI C */
+    int polarised;            /* If set, handle neutron polarisation */
   };
 
 struct jump_struct

@@ -3,7 +3,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -14,13 +14,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.42 $
+* Version: $Revision: 1.43 $
 *
 * Flex scanner for instrument definition files.
 *
-* $Id: instrument.l,v 1.42 2007-03-02 14:27:17 farhi Exp $
+* $Id: instrument.l,v 1.43 2007-03-12 14:12:16 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.42  2007/03/02 14:27:17  farhi
+* NEXUS grammar is now simplified. a single string may follow the keyword.
+* NEXUS "5 ZIP" is recommended.
+*
 * Revision 1.41  2007/01/26 16:23:22  farhi
 * NeXus final integration (mcplot, mcgui, mcrun).
 * Only mcgui initiate mcstas.nxs as default output file, whereas
@@ -69,7 +73,7 @@
 * embed only once for libraries (.h+.c)
 *
 * Revision 1.21  2001/09/24 10:00:00  ef
-* Added GROUP, EXTEND and SHARE tokens (for McStas 1.6)
+* Added GROUP, EXTEND and SHARE tokens (for McStas version 1.7)
 *
 * Revision 1.20  2000/07/27 09:06:42  kn
 * Added the extra tokens necessary to support full C expressions in
@@ -253,7 +257,8 @@ WHEN          return TOK_WHEN;          /* extended McStas grammar */
 NEXT          return TOK_NEXT;          /* extended McStas grammar */
 ITERATE       return TOK_ITERATE;       /* extended McStas grammar */
 MYSELF        return TOK_MYSELF;        /* extended McStas grammar */
-COPY          return TOK_COPY;
+COPY          return TOK_COPY;          /* extended McStas grammar */
+ENHANCE       return TOK_ENHANCE;       /* extended McStas grammar */
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */
