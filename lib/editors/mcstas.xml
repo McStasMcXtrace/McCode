@@ -44,6 +44,7 @@
     </list>
     <list name="mcstas_runtime">
       <item> ABSORB </item>
+      <item> SCATTERED </item>
       <item> MC_GETPAR </item>
       <item> DETECTOR_OUT </item>
       <item> DETECTOR_OUT_0D </item>
@@ -109,11 +110,15 @@
       <item> EXTEND </item>
       <item> GROUP </item>
       <item> PREVIOUS </item>
+      <item> NEXT </item>
+      <item> MYSELF </item>
       <item> RELATIVE </item>
       <item> ROTATED </item>
       <item> WHEN </item>
       <item> JUMP </item>
       <item> ITERATE </item>
+      <item> ENHANCE </item>
+      <item> COPY </item>
     </list>
     <list name="types">
       <item> auto </item>
