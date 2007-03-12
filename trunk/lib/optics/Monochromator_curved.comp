@@ -11,7 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
@@ -179,7 +179,7 @@ INITIALIZE
     Table_Read(&rTable, reflect, 1); /* read 1st block data from file into rTable */
     Table_Rebin(&rTable);         /* rebin as evenly, increasing array */
     if (rTable.rows < 2) Table_Free(&rTable);
-    Table_Info(rTable);
+    if (verbose) Table_Info(rTable);
   } else rTable.data = NULL;
 
   if (transmit != NULL)
@@ -188,7 +188,7 @@ INITIALIZE
     Table_Read(&tTable, transmit, 1); /* read 1st block data from file into rTable */
     Table_Rebin(&tTable);         /* rebin as evenly, increasing array */
     if (tTable.rows < 2) Table_Free(&tTable);
-    Table_Info(tTable);
+    if (verbose) Table_Info(tTable);
   } else tTable.data = NULL;
 
   if (width == 0) SlabWidth = zwidth;

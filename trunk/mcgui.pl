@@ -667,7 +667,7 @@ sub dialog_get_out_file {
     my ($fh, $pid, $out_name);
     # Initialize the dialog.
     my $cancel_cmd = sub {
-        kill "TERM", $pid if $pid && !$state; # signal 15 is SIGTERM
+        kill "TERM", $pid if $pid; # signal 15 is SIGTERM
     };
     my $dlg = run_dialog_create($w, "Compiling simulation $current_sim_def",
                                 "Compiling simulation\n($current_sim_def)", $cancel_cmd);

@@ -12,18 +12,23 @@
 * Date:   Sep 02, 2002
 * Origin: Risoe/ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 *
-* This file is to be imported by components handling adaptative trees, like
+* This file is to be imported by components handling adaptive trees, like
 * Source_adapt and Adapt_check (in lib/sources)
 * It handles some shared functions.
 *
 * Usage: within SHARE
 * %include "adapt_tree-lib"
 *
-* $Id: adapt_tree-lib.h,v 1.7 2005-07-25 14:55:08 farhi Exp $
+* $Id: adapt_tree-lib.h,v 1.8 2007-03-12 14:57:21 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.7  2005/07/25 14:55:08  farhi
+* DOC update:
+* checked all parameter [unit] + text to be OK
+* set all versions to CVS Revision
+*
 * Revision 1.6  2003/02/11 12:28:46  farhi
 * Variouxs bug fixes after tests in the lib directory
 * mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
