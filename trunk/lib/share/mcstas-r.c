@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.157 $
+* Version: $Revision: 1.158 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.157 2007-03-05 19:02:55 farhi Exp $
+* $Id: mcstas-r.c,v 1.158 2007-03-12 14:06:35 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.157  2007/03/05 19:02:55  farhi
+* NEXUS support now works as MPI. NEXUS keyword is optional and only -DHAVE_LIBNEXUS is required. All instruments may then export in NEXUS if McStas
+* has been installed with --with-nexus
+*
 * Revision 1.156  2007/02/24 16:44:41  farhi
 * nexus support adapted partially for SNS. File name can be specified with -f option of instr.exe or mcrun or follow NEXUS keyword. The NULL filename will set 'instr_timestamp'.
 *
@@ -2050,6 +2054,10 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   } else strcpy(limits, "0 0 0 0 0 0");
   mcfile_tag(f, format, pre, parent, lim_field, limits);
   mcfile_tag(f, format, pre, parent, "variables", strstr(format.Name," scan ") ? zvar : vars);
+  if (mcestimate_error(Nsum, sum_z, P2sum) > sum_z/4) fprintf(stderr,
+    "Warning: file '%s': Low Statistics\n",
+    filename);
+
   /* add warning in case of low statistics or large number of bins in text format mode */
   if (n*m*p > 1000 && Nsum < n*m*p && Nsum) fprintf(stderr,
     "Warning: file '%s':\n"
