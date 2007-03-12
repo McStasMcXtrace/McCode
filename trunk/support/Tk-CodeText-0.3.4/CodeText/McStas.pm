@@ -31,18 +31,18 @@ sub new { #purple #magenta #orange
     $self->lists({
 	    'Reserved' => [ # C statements and important functions
 		       'for', 'if', 'else', 'case', 'switch', 'default', 'printf', 'sprintf', 'fprintf',
-		       'static', 
+		       'static',
 		       ],
 	    'Keyword' => [ # McStas types, C variable types
-			  'COMPONENT', 'INSTRUMENT', 'int', 'long', 'char', 'double', 'void', 
+			  'COMPONENT', 'INSTRUMENT', 'int', 'long', 'char', 'double', 'void',
       			  ],
 	    'McSections' => [ # McStas sections
-			     'DEFINE','DECLARE','INITIALIZE', 'TRACE', 'SHARE',
+			     'DEFINE','DECLARE','INITIALIZE', 'TRACE', 'SHARE','SAVE','MCDISPLAY',
 			     'FINALLY', 'END',
 			     ],
 	    'McOther' => [ # McStas placement keywords plus section separators
-			   '%{','%}', 'AT', 'ABSOLUTE','RELATIVE','EXTEND',
-			   'ROTATED','GROUP','PREVIOUS',
+			   '%{','%}', 'AT', 'ABSOLUTE','RELATIVE','EXTEND','COPY',
+			   'ROTATED','GROUP','PREVIOUS','JUMP','WHEN','ITERATE','ENHANCE','MYSELF','NEXT'
 			  ],
 	});
     bless ($self, $class);
@@ -82,7 +82,7 @@ sub parseComment2 {
 	$self->snippetParse($1);
 	return $text;
     } else {
-	# Saw no stop sign... 
+	# Saw no stop sign...
 	$self->snippetParse($text);
 	return;
     }
@@ -178,15 +178,15 @@ sub parseText {
 	}
     #It shouldn't have come this far, but it has.
     return $self->parserError($text);
-    
-    
+
+
 }
 
 sub tokenTest {
     my ($hlt, $test, $list) = @_;
     my $l = $hlt->lists->{$list};
     my @list = reverse sort @$l;
-    
+
     foreach my $t (@$l) {
 	if ($t eq $test) {
 	    return $t;
@@ -196,16 +196,16 @@ sub tokenTest {
 1;
 
 __END__
-    
+
 
     =head1 NAME
-    
+
     Tk::CodeText::McStas - a Plugin for HTML syntax highlighting
-    
+
     =head1 SYNOPSIS
-    
+
     require Tk::CodeText::McStas;
-my $sh = new Tk::CodeText::McStas( [
+my $sh = new Tk::CodeText::McStas([
 				    ['Text'],
 				    ['Tag', -foreground => 'brown'],
 				    ['Attr', -foreground => 'darkblue'],
@@ -216,26 +216,26 @@ my $sh = new Tk::CodeText::McStas( [
 				    ]);
 
 =head1 DESCRIPTION
-    
+
     Tk::CodeText::McStas is a  plugin module that provides syntax highlighting
     for McStas to a Tk::CodeText text widget.
-    
+
     This module is more or less a hack/rewrite of Tk::CodeText::Bash
-    
+
     It inherits Tk::CodeText::Template. See also there.
-    
+
     =head1 AUTHOR
-    
+
     Peter Willendrup (peter.willendrup@risoe.dk)
-    
+
     =cut
-    
+
     =head1 BUGS
-    
+
     Unknown
-    
+
     =cut
-    
+
 
 
 
