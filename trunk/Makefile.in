@@ -196,15 +196,15 @@ lex.yy.c: instrument.l
 config:
 	if [ $(VRML) != no ]; then \
 		make vrml; \
-	fi;
-	if [ $(PGPLOT) != no ]; then \
-		make pgplot; \
+	fi; \
+	if [ $(SCILAB) != no ]; then \
+		make scilab; \
 	fi; \
 	if [ $(MATLAB) != no ]; then \
 		make matlab; \
 	fi; \
-	if [ $(SCILAB) != no ]; then \
-		make scilab; \
+	if [ $(PGPLOT) != no ]; then \
+		make pgplot; \
 	fi;
 
 scilab:
