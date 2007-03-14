@@ -345,11 +345,11 @@ sub tools_dsa {
     my $cmd = "ssh-keygen -q -t dsa -P \"\" -f $ENV{'HOME'}/.ssh/id_dsa";
     putmsg($cmdwin, "Installing DSA key for SSH: \n$cmd\n", 'msg');
     my $success=my_system($w, "Please wait while generating DSA key\n", $cmd);
-    $cmd = "cat $ENV{'HOME'}/.ssh/id_dsa.pub >> $ENV{'HOME'}/.ssh/authorized_keys";
-    system("$cmd");
     if ($success) {
-	putmsg($cmdwin, "\nDSA key generated!\n", 'msg');
-    }
+      $cmd = "cat $ENV{'HOME'}/.ssh/id_dsa.pub >> $ENV{'HOME'}/.ssh/authorized_keys";
+      system("$cmd");
+      putmsg($cmdwin, "\nDSA key generated to $ENV{'HOME'}/.ssh/authorized_keys\n", 'msg');
+    } else { putmsg($cmdwin, "\nDSA key generation FAILED!\n"); }
 }
 
 sub mcdoc_about {
@@ -572,9 +572,11 @@ sub run_dialog_create {
     $bot_frame->pack(-side => "top", -fill => "both",
                      -ipady => 3, -ipadx => 3);
     my $but = $bot_frame->Button(-text => "Cancel", -command => $cancel_cmd);
-    $b->attach($but, -balloonmsg => "Save results\nand Stop/Abort");
+    my $buttext = "Save results\nand Stop/Abort";
+    if ($text =~ /compil/i || $text =~ /DSA/i) { $buttext="Abort current Job"; }
+    $b->attach($but, -balloonmsg => $buttext);
     $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
-    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}!=1 && $inf_sim->{'cluster'} != 2) {
+    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}!=1 && $inf_sim->{'cluster'} != 2 && $text !~ /compil/i && $text !~ /DSA/i) {
       $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
       $but->pack(-side => "right");
       $b->attach($but, -balloonmsg => "Save results\nand continue");
@@ -625,15 +627,16 @@ sub run_dialog {
     my $update_cmd = sub {
         kill "USR2", $pid unless $state; # signal 15 is SIGTERM
     };
-    my $text='Job';
+    my $text="$inittext\nJob";
     if ($inf_sim->{'Mode'}==1) { $text='Trace/3D View'; }
     elsif ($inf_sim->{'Mode'}==2) { $text='Parameter Optimization'; }
     if ($pid && $Config{'osname'} ne 'MSWin32') {
       $text .= " [pid $pid]";
     }
-    my $dlg = run_dialog_create($w, "Running job $current_sim_def",
-                                "$text running\n($current_sim_def)...", $cancel_cmd, $update_cmd);
-    putmsg($cmdwin, $inittext, 'msg'); # Must appear before any other output
+    my $dlg = run_dialog_create($w, $inittext,
+                                "$text running ($current_sim_def)...",
+                                $cancel_cmd, $update_cmd);
+    putmsg($cmdwin, "$inittext\n", 'msg'); # Must appear before any other output
     # Set up the pipe reader callback
     my $reader = sub {
         run_dialog_reader($w, $fh, $cmdwin, \$state, \$success);
@@ -651,7 +654,7 @@ sub run_dialog {
     my $status = close($fh);
     $status_label->configure(-text => "Status: Done");
     if(!$success || (! $status && ($? != 0 || $!))) {
-        putmsg($cmdwin, "Simulation exited abnormally.\n");
+        putmsg($cmdwin, "Job exited abnormally.\n");
         return undef;
     } else {
         putmsg($cmdwin, "Job finished.\n", 'msg');
@@ -689,48 +692,12 @@ sub dialog_get_out_file {
                 $out_name = $val;
                 last;
             } elsif($type eq 'RUN_CMD') {
-                $savefocus = run_dialog_popup($dlg) unless $savefocus;
-                my $fh = new FileHandle;
-                # Open calls must be handled according to
-                # platform...
-                # PW 20030314
-                if ($Config{'osname'} eq 'MSWin32') {
-                  $pid = open($fh, "@$val 2>&1 |");
-                } else {
-                  $pid = open($fh, "-|");
-                }
-                unless(defined($pid)) {
-                    &$printer("Could not spawn command.");
-                    last;
-                }
-                if($pid) {                # Parent
-                    $state = 0; # Clear "command done" flag.
-                    $cmd_success = 0;
-                    my $reader = sub {
-                        run_dialog_reader($w, $fh,
-                                          $cmdwin, \$state, \$cmd_success);
-                    };
-                    $dlg->fileevent($fh, 'readable', $reader);
-                    do {
-                        $dlg->waitVariable(\$state);
-                    } until $state;
-                    my $ret = close($fh);
-                    undef($pid);
-                    unless($cmd_success && ($ret || ($? == 0 && ! $!))) {
+                $success = my_system($w, "Compiling simulation $current_sim_def",
+                  join(" ", @$val));
+                unless($success) {
                         &$printer("** Error exit **.");
                         last;
                     }
-                } else {                        # Child
-                    open(STDERR, ">&STDOUT") || die "Can't dup stdout";
-                    # Make the child the process group leader, so that
-                    # we can kill off any subprocesses it may have
-                    # spawned when the user selects CANCEL.
-                    setpgrp(0,0);
-                    exec @$val if @$val; # The "if @$val" avoids a Perl warning.
-                    # If we get here, the exec() failed.
-                    print STDERR "Error: exec() of $val->[0] failed!\n";
-                    POSIX::_exit(1);        # CORE:exit needed to avoid Perl/Tk failure.
-                }
             } elsif($type eq 'ERROR') {
                 &$printer("Error: $msg");
                 last;
@@ -791,8 +758,8 @@ sub my_system {
       $child_pid = open($fh, "-|");
     }
     unless(defined($child_pid)) {
-        $w->messageBox(-message => "Could not run simulation.",
-                       -title => "Run failed",
+        $w->messageBox(-message => "Could not run $inittext.",
+                       -title => "Job failed",
                        -type => 'OK',
                        -icon => 'error');
         return undef;
