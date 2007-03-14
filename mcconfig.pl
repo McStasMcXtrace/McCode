@@ -133,6 +133,8 @@ if ($Config{'osname'} eq "MSWin32") {
 }
 
 
+# As PGPLOT is now included with McStas, we will default to that:
+$plotter="PGPLOT";
 print STDOUT "The plotter is $plotter\n";
 my $file = "mcstas_config.perl";
 if (not -f $file) { $file = "lib/tools/perl/mcstas_config.perl"; }
