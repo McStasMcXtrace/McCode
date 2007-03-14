@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -21,9 +21,8 @@
 * the Init, Trace with the achieved percentage, and the Finally section.
 * Intermediate savings (e.g. triggered by USR2 signal) are also shown.
 * This component should be positioned at the very begining of the instrument
-* The profile option will save the number of events for each component
-* as a monitor. Its error bars are the number of absorbed neutrons.
-* It may be used to evaluate the simulation efficiency.
+* The profile option will save the intensity and number of events for each
+* component It may be used to evaluate the simulation efficiency.
 *
 * Example: Progress_bar(percent=10,flag_save=1) AT (0,0,0)
 *
@@ -31,7 +30,7 @@
 * INPUT PARAMETERS:
 * percent:  (%)   percentage interval between indications. Default is 10%.
 * flag_save:(0|1) flag to enable intermediate saving for all monitors
-* profile:  (string) file name to save the simulation event records profile 'Ncount'
+* profile:  (string) file name to save the simulation profile
 *                 if set to "", it is set to the name of the instrument.
 *
 * %E
@@ -119,11 +118,11 @@ SAVE
     if (!strlen(profile)) strcpy(filename, mcinstrument_name);
     else strcpy(filename, profile);
     DETECTOR_OUT_1D(
-        "Ncount/Absorb profiler",
+        "Intensity profiler",
         "Component index [1]",
-        "Ncount(Absorb)",
-        "N", 0.5, mcNUMCOMP-0.5, mcNUMCOMP-1,
-        &mcNCounter[1],&mcNCounter[1],&mcAbsorbProp[1],
+        "Intensity",
+        "I", 0.5, mcNUMCOMP-0.5, mcNUMCOMP-1,
+        &mcNCounter[1],&mcPCounter[1],&mcP2Counter[1],
         filename);
 
   }

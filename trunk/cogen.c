@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.71 $
+* Version: $Revision: 1.72 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.71  2007/03/12 14:12:16  farhi
+* ENHANCE COMPONENT grammar: new rule for yacc. Code generation and cleaner GROUP handling.
+*
 * Revision 1.70  2007/03/06 09:39:09  farhi
 * NeXus default output is now "5 zip". Then NEXUS keyword is purely optional.
 *
@@ -151,7 +154,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.71 2007-03-12 14:12:16 farhi Exp $
+* $Id: cogen.c,v 1.72 2007-03-14 15:33:22 farhi Exp $
 *
 *******************************************************************************/
 
@@ -715,6 +718,8 @@ cogen_decls(struct instr_def *instr)
   coutf("Coords %scomp_posr[%i];", ID_PRE, list_len(instr->complist)+2);
   cout("/* Counter for each comp to check for inactive ones */");
   coutf("MCNUM  %sNCounter[%i];", ID_PRE, list_len(instr->complist)+2);
+  coutf("MCNUM  %sPCounter[%i];", ID_PRE, list_len(instr->complist)+2);
+  coutf("MCNUM  %sP2Counter[%i];", ID_PRE, list_len(instr->complist)+2);
   coutf("#define %sNUMCOMP %d /* number of components */", ID_PRE, list_len(instr->complist)+1);
   cout("/* Counter for PROP ABSORB */");
   coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE, list_len(instr->complist)+2);
@@ -1009,7 +1014,8 @@ cogen_init(struct instr_def *instr)
 
     coutf("    %scomp_posa[%i] = %sposa%s;", ID_PRE, comp->index, ID_PRE, comp->name);
     coutf("    %scomp_posr[%i] = %sposr%s;", ID_PRE, comp->index, ID_PRE, comp->name);
-    coutf("    %sNCounter[%i]  = 0;", ID_PRE, comp->index);
+    coutf("    %sNCounter[%i]  = %sPCounter[%i] = %sP2Counter[%i] = 0;",
+          ID_PRE, comp->index, ID_PRE, comp->index, ID_PRE, comp->index);
     coutf("    %sAbsorbProp[%i]= 0;", ID_PRE, comp->index);
 
     last = comp;
@@ -1251,6 +1257,8 @@ cogen_trace(struct instr_def *instr)
 
     coutf("  %sScattered=0;", ID_PRE);
     coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
+    coutf("  %sPCounter[%i] += p;", ID_PRE, comp->index);
+    coutf("  %sP2Counter[%i] += p*p;", ID_PRE, comp->index);
 
     if (comp->group)
     {
