@@ -46,12 +46,14 @@ BEGIN {
 
   # custom configuration (this script)
   END {
-    if (-f $tmp_file) {
-          print "mcplot: Removing temporary $tmp_file (10 sec)\n";
-          sleep 10;
-          unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!";
+    if (-f $tmp_file ) {
+	if (!($plotter =~ /PGPLOT|McStas/i)) {
+	    print "mcplot: Removing temporary $tmp_file (10 sec)\n";
+	    sleep 10;
+	}
+	unlink($tmp_file) or die "mcplot: Couldn't unlink $tmp_file : $!";
+      }
     }
-  }
 }
 
 
@@ -68,7 +70,7 @@ my $index =0;
 my $passed_arg_str = "";
 my $passed_arg_str_quit = "";
 my $inspect = "";
-my ($plotter);
+our ($plotter);
 my $nowindow = 0;
 my $do_swap=0;
 my $daemon=0;
@@ -286,9 +288,6 @@ sub pgplotit {
   }
   die "No data in simulation file '$file'"
       unless @$datalist;
-  # Defines variable for global PGPLOT device
-#  my $global_dev = -1;
-#  my $global_spec ="";
   if ($passed_arg_str_quit =~ /-cps|-psc/i) {
     $global_dev = get_device("$file.ps/cps");
     overview_plot($datalist, $passed_arg_str);
@@ -310,9 +309,6 @@ sub pgplotit {
     overview_plot($datalist, $passed_arg_str);
           die "Wrote GIF file '$file.gif' (gif)\n";
   }
-  # Define global PGPLOT fallback-device
- # $global_spec = "$ENV{'PGPLOT_DEV'}";
- # $global_dev = get_device($global_spec);
   
   if ($daemon eq 0) {
       print "Click on a plot for full-window view.\n" if @$datalist > 1;
@@ -353,16 +349,7 @@ sub pgplotit {
               if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
               if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
-	      my $tmpdev = get_device("$file.$ext/$dev");
-	      if($tmpdev < 0) {
-		  print STDERR "mcdisplay: Warning: could not open PGPLOT output \"$file.$ext/$dev\" for hardcopy output\n";
-	      } else {
-		  overview_plot($datalist, $passed_arg_str);
-		  print "Wrote file '$file.$ext' ($dev)\n";
-	      }
-	      close_window($tmpdev);
-	      print "Selecting pgplot device $global_dev\n";
-	      PGPLOT::pgslct($global_dev);
+	      system("mcplot$MCSTAS::mcstas_config{'suffix'} --format=McStas -$dev $file");
               next;
           }
           elsif($cc =~ /[l]/i) {        # toggle log mode
@@ -384,15 +371,9 @@ sub pgplotit {
               if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
               if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
-              my $filename = "$datalist->[$idx]{'Filename'}.$ext";
-	      my $tmpdev = get_device("$filename/$dev");
-	      if($tmpdev < 0) {
-		  print STDERR "mcdisplay: Warning: could not open PGPLOT output \"$filename/$dev\" for hardcopy output\n";
-	      } else {
-		  single_plot($datalist->[$idx], $passed_arg_str);
-		  print "Wrote file '$filename' ($dev)\n";
-	      }
-	      pgslct($global_dev);
+              my $filename = "$datalist->[$idx]{'Filename'}";
+	      print "Spawning plot of $filename \n";
+	      system("mcplot$MCSTAS::mcstas_config{'suffix'} --format=McStas $filename -$dev");
           }
           if($cc =~ /[l]/i) {        # toggle log mode
             if ($logmode == 0) { $logmode=1; }

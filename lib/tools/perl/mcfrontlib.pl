@@ -299,25 +299,27 @@ sub mcpreplot {
 
   $f = 0;
   $mcfile = $files[$f];
+  my ($fh, $mcdetplot);
 
   if (open(MCOUTFILE,$mcfile))
   {
-    
-    open(MCSIM,">mcdetplot.sim");
+    require File::Temp;
+    ($fh, $mcdetplot) = File::Temp::tempfile("mcdetplot_XXXXX", SUFFIX => '.sim');
+    print "Creating temporary file $mcdetplot\n";
     # instrument
-    print MCSIM ("begin instrument\n");
+    print $fh ("begin instrument\n");
     $line=<MCOUTFILE>;
-    print MCSIM ("  Name: MY_INSTRUMENT\n");
-    print MCSIM ("  Parameters: PARAM\n");
-    print MCSIM ("  Instrument-source: INSTR.instr\n");
-    print MCSIM ("  Trace-enabled: yes\n");
-    print MCSIM ("  Default-main: yes\n");
-    print MCSIM ("  Embedded-runtime: yes\n");
-    print MCSIM ("end instrument\n");
+    print $fh ("  Name: MY_INSTRUMENT\n");
+    print $fh ("  Parameters: PARAM\n");
+    print $fh ("  Instrument-source: INSTR.instr\n");
+    print $fh ("  Trace-enabled: yes\n");
+    print $fh ("  Default-main: yes\n");
+    print $fh ("  Embedded-runtime: yes\n");
+    print $fh ("end instrument\n");
     
     # simulation 
-    print MCSIM ("\n");
-    print MCSIM ("begin simulation\n");
+    print $fh ("\n");
+    print $fh ("begin simulation\n");
     $line=<MCOUTFILE>;
     while($line =~ "# ")
     {
@@ -325,10 +327,10 @@ sub mcpreplot {
          @words = split(/# /,$line);
          my $this_word = $words[1];
          if ($this_word =~ /^\s*[A-Z]\s*/) {
-          print MCSIM ("  ",$words[1]); }
+          print $fh ("  ",$words[1]); }
          $line = <MCOUTFILE>;
     }
-    print MCSIM ("end simulation \n\n");
+    print $fh ("end simulation \n\n");
 
     close(MCOUTFILE);
 
@@ -338,17 +340,17 @@ sub mcpreplot {
          open(MCOUTFILE,$mcfile);
          $line = <MCOUTFILE>;
          
-         print MCSIM ("begin data\n");
+         print $fh ("begin data\n");
          while($line =~ "# ")
          {
            @words = split(/\# /,$line);
            my $this_word = $words[1];
            if (!($this_word =~ /^\s*[A-Z]\s*/)) {
-            print MCSIM ("  ",$words[1]); }
+            print $fh ("  ",$words[1]); }
            $line = <MCOUTFILE>;
          }
-         print MCSIM ("end data \n");
-         print MCSIM ("\n");
+         print $fh ("end data \n");
+         print $fh ("\n");
          close(MCOUTFILE);
 
          $f = $f + 1;
@@ -356,9 +358,9 @@ sub mcpreplot {
     }
 
      close(MCOUTFILE);
-     close(MCSIM);
+     close($fh);
   }
-  return ("mcdetplot.sim");
+  return $mcdetplot;
 }
 
 1;
