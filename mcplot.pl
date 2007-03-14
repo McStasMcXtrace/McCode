@@ -75,6 +75,8 @@ my $daemon=0;
 my $wait=10;
 my $logmode=0;
 my $contourmode=0;
+my $global_dev = -1;
+my $global_spec ="";
 our $tmp_file = "";
 
 $plotter = $MCSTAS::mcstas_config{'PLOTTER'};
@@ -284,23 +286,34 @@ sub pgplotit {
   }
   die "No data in simulation file '$file'"
       unless @$datalist;
-
+  # Defines variable for global PGPLOT device
+#  my $global_dev = -1;
+#  my $global_spec ="";
   if ($passed_arg_str_quit =~ /-cps|-psc/i) {
-    overview_plot("$file.ps/cps", $datalist, $passed_arg_str);
+    $global_dev = get_device("$file.ps/cps");
+    overview_plot($datalist, $passed_arg_str);
           die "Wrote color postscript file '$file.ps' (cps)\n";
   } elsif ($passed_arg_str_quit =~ /-ps/) {
-    overview_plot("$file.ps/ps", $datalist, $passed_arg_str);
+    $global_dev = get_device("$file.ps/ps");  
+    overview_plot($datalist, $passed_arg_str);
           die "Wrote BW postscript file '$file.ps' (ps)\n";
   } elsif ($passed_arg_str_quit =~ /-ppm/) {
-    overview_plot("$file.ppm/ppm", $datalist, $passed_arg_str);
+    $global_dev = get_device("$file.ppm/ppm");
+    overview_plot($datalist, $passed_arg_str);
           die "Wrote PPM file '$file.ppm' (ppm)\n";
   } elsif ($passed_arg_str_quit =~ /-png/) {
-    overview_plot("$file.png/png", $datalist, $passed_arg_str);
+    $global_dev = get_device("$file.png/png");
+    overview_plot($datalist, $passed_arg_str);
           die "Wrote PNG file '$file.png' (png)\n";
   } elsif ($passed_arg_str_quit =~ /-gif/) {
-    overview_plot("$file.gif/gif", $datalist, $passed_arg_str);
+    $global_dev = get_device("$file.gif/gif");
+    overview_plot($datalist, $passed_arg_str);
           die "Wrote GIF file '$file.gif' (gif)\n";
   }
+  # Define global PGPLOT fallback-device
+ # $global_spec = "$ENV{'PGPLOT_DEV'}";
+ # $global_dev = get_device($global_spec);
+  
   if ($daemon eq 0) {
       print "Click on a plot for full-window view.\n" if @$datalist > 1;
       print "Press key for hardcopy (in graphics window), 'Q' to quit
@@ -313,17 +326,26 @@ sub pgplotit {
   'T' Toggle contour plotting mode
   'Q' quit\n";
   } else {
-      overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, $passed_arg_str);
+      overview_plot($datalist, $passed_arg_str);
   }
+  my $global_open = 0;
   if ($daemon eq 0) {
       for(;;) {
+	  if ($global_open == 0) {
+	      if ($Config{'osname'} eq 'MSWin32') {
+		  $global_open = 1;
+	      }
+	      $global_spec = "$ENV{'PGPLOT_DEV'}";
+	      $global_dev = get_device($global_spec);
+	      PGPLOT::pgask(0);
+	  }
           my ($cc,$cx,$cy,$idx);
           if ($logmode == 1) { if ($passed_arg_str !~ /-log/i) { $passed_arg_str .= "-log "; } }
           else { $passed_arg_str =~ s|-log||; }
           if ($contourmode == 1) { if ($passed_arg_str !~ /-contour/i) { $passed_arg_str .= "-contour "; } }
           else { $passed_arg_str =~ s|-contour||; }
           # Do overview plot, letting user select a plot for full-screen zoom.
-          ($cc,$idx) = overview_plot("$ENV{'PGPLOT_DEV'}", $datalist, "$passed_arg_str -interactive ");
+          ($cc,$idx) = overview_plot($datalist, "$passed_arg_str -interactive ");
           last if $cc =~ /[xq]/i;        # Quit?
           if($cc =~ /[pcngm]/i) {        # Hardcopy?
               my $ext="ps";
@@ -331,23 +353,30 @@ sub pgplotit {
               if($cc =~ /g/i) { $dev = "gif"; $ext="gif"; }
               if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
-              overview_plot("$file.$ext/$dev", $datalist, $passed_arg_str);
-              print "Wrote file '$file.$ext' ($dev)\n";
+	      my $tmpdev = get_device("$file.$ext/$dev");
+	      if($tmpdev < 0) {
+		  print STDERR "mcdisplay: Warning: could not open PGPLOT output \"$file.$ext/$dev\" for hardcopy output\n";
+	      } else {
+		  overview_plot($datalist, $passed_arg_str);
+		  print "Wrote file '$file.$ext' ($dev)\n";
+	      }
+	      close_window($tmpdev);
+	      print "Selecting pgplot device $global_dev\n";
+	      PGPLOT::pgslct($global_dev);
               next;
           }
-          if($cc =~ /[l]/i) {        # toggle log mode
+          elsif($cc =~ /[l]/i) {        # toggle log mode
             if ($logmode == 0) { $logmode=1; }
             else { $logmode=0; $passed_arg_str =~ s|-log||; }
             next;
           }
-          if($cc =~ /[t]/i) {        # toggle contour plot mode
+          elsif($cc =~ /[t]/i) {        # toggle contour plot mode
             if ($contourmode == 0) { $contourmode=1; }
             else { $contourmode=0; $passed_arg_str =~ s|-contour||; }
             next;
-          }
-
+          } 
           # now do a full-screen version of the plot selected by the user.
-          ($cc, $cx, $cy) = single_plot($MCSTAS::mcstas_config{'PGDEV'}, $datalist->[$idx], "$passed_arg_str -interactive ");
+          ($cc, $cx, $cy) = single_plot($datalist->[$idx], "$passed_arg_str -interactive ");
           last if $cc =~ /[xq]/i;        # Quit?
           if($cc =~ /[pcngm]/i) {        # Hardcopy?
               my $ext="ps";
@@ -356,8 +385,14 @@ sub pgplotit {
               if($cc =~ /n/i) { $dev = "png"; $ext="png"; }
               if($cc =~ /m/i) { $dev = "ppm"; $ext="ppm"; }
               my $filename = "$datalist->[$idx]{'Filename'}.$ext";
-              single_plot("$filename/$dev", $datalist->[$idx], $passed_arg_str);
-              print "Wrote file '$filename' ($dev)\n";
+	      my $tmpdev = get_device("$filename/$dev");
+	      if($tmpdev < 0) {
+		  print STDERR "mcdisplay: Warning: could not open PGPLOT output \"$filename/$dev\" for hardcopy output\n";
+	      } else {
+		  single_plot($datalist->[$idx], $passed_arg_str);
+		  print "Wrote file '$filename' ($dev)\n";
+	      }
+	      pgslct($global_dev);
           }
           if($cc =~ /[l]/i) {        # toggle log mode
             if ($logmode == 0) { $logmode=1; }
