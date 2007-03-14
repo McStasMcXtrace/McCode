@@ -199,13 +199,9 @@ sub plot_dat_info {
 }
 
 sub overview_plot {
-    my ($devspec, $datalist, $interactive) = @_;
+    my ($datalist, $interactive) = @_;
     return unless @$datalist;
     my ($nx, $ny) = calc_panel_size(int(@$datalist));
-    my $dev;
-    if (defined(&dev)) { $dev = dev("$devspec"); }
-    else { $dev = pgopen("$devspec"); }
-    die "DEV/PGOPEN $devspec failed!" unless $dev > 0;
     pgsubp ($nx,$ny);
 
     my $info;
@@ -232,22 +228,16 @@ sub overview_plot {
       $j = $ny - 1 if $j >= $ny;
       my $idx = $i + $nx*$j;
       $idx = int(@$datalist) - 1 if $idx >= int(@$datalist);
-      if (defined(&close_window)) { close_window(); }
-      else { pgclos(); }
       return ($cc,$idx);
     } else {
-      if (defined(&close_window)) { close_window(); }
-      else { pgclos(); }
       return ();
     }
 }
 
 sub single_plot {
-    my ($devspec, $info, $interactive) = @_;
-    my $dev;
-    if (defined(&dev)) { $dev = dev("$devspec"); }
-    else { $dev = pgopen("$devspec"); }
-    die "DEV/PGOPEN $devspec failed!" unless $dev > 0;
+    my ($info, $interactive) = @_;
+    calc_panel_size(1);
+    pgsubp (0,0);
     if ($interactive =~ /-log/i) { $info->{'Logmode'} = 1; }
     else { $info->{'Logmode'} = 0; }
     if ($interactive =~ /-contour/i) { $info->{'Contour'} = 1; }
@@ -258,12 +248,8 @@ sub single_plot {
       # Wait for user to press a key.
       my ($ax,$ay,$cx,$cy,$cc) = (0,0,0,0,"");
       pgband(0, 0, $ax, $ay, $cx, $cy, $cc);
-      if (defined(&close_window)) { close_window(); }
-      else { pgclos(); }
       return ($cc, $cx, $cy);
     } else {
-      if (defined(&close_window)) { close_window(); }
-      else { pgclos(); }
       return ();
     }
 }
@@ -282,3 +268,21 @@ sub ensure_pgplot_xserv_started {
     pgslct($olddev);
 }
 1;
+
+
+sub get_device { # mcdisplay style deviceselection
+    my ($what) = @_;
+    my $dev;
+
+    if (defined(&dev)) { $dev = dev($what); }
+    else { $dev = PGPLOT::pgopen($what); }
+    return $dev if $dev < 0;
+    if($multi_view) {
+    # We use a 2x2 display format to view the instrument from three angles.
+        PGPLOT::pgsubp(2, 2);
+    } else {
+        # We use a 1x1 display for detail.
+        PGPLOT::pgsubp(1, 1);
+    }
+    return $dev;
+}
