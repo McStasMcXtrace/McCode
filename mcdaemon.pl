@@ -62,6 +62,7 @@ my $GFORMAT = "png";
 my $ext;
 my $filename = "";
 my $i;
+my $continue;
 
 if (@ARGV == 0) { Tkgui(); }
 
@@ -217,17 +218,19 @@ sub Tkgui {
     use Tk;
     use Tk::Toplevel;
     use Tk::DirTree;
+    $continue = 0;
     my $win = new MainWindow(-title => "McDaemon, monitor incoming McStas results");
     build_gui($win);
     MainLoop;
+    if (!($continue == 1)) {
+	exit;
+    }
 }
 
 sub build_gui {
     # When mcdaemon is run without any input parms, we'll build a gui
     # to set the parameters.
     my ($win) = @_;
-    #$win->Toplevel
-    # Label and buttons, input dir / file
     my $topframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
     $topframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
     $topframe->Label(-text => "Data:", -anchor => 'w',
@@ -252,7 +255,7 @@ sub build_gui {
     $bottomframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
    
     $bottomframe->Button(-text => "Cancel", -command => sub {exit;})->pack(-side => "right", -anchor => "e");
-    $bottomframe->Button(-text => "Ok", -command => sub {$win->destroy;})->pack(-side => "right", -anchor => "w");
+    $bottomframe->Button(-text => "Ok", -command => sub {$continue=1; $win->destroy;})->pack(-side => "right", -anchor => "w");
 }
 
 sub select_file {
