@@ -24,6 +24,8 @@ use Tk;
 use Tk::DialogBox;
 use Tk::ROText;
 use Tk::Listbox;
+use Tk::DirTree;
+
 # For calling mcplot properly in the case of Matlab/Scilab backend
 use Cwd;
 use File::Basename;
@@ -44,6 +46,49 @@ sub get_dir_name {
     $dlg->grab if $oldgrab eq 'local';
     return $f;
 }
+
+sub select_dir {
+    my ($start_dir) = @_;
+    my $top = new MainWindow;
+    $top->withdraw;
+    
+    my $t = $top->Toplevel;
+    $t->title("Choose directory:");
+    my $ok = 0; 
+    
+    my $f = $t->Frame->pack(-fill => "x", -side => "bottom");
+    
+    if($start_dir) {
+	$curr_dir = $start_dir;
+    } else {
+	$curr_dir = Cwd::cwd();
+    }
+    
+    my $d;
+    $d = $t->Scrolled('DirTree',
+		      -scrollbars => 'osoe',
+		      -width => 35,
+		      -height => 20,
+		      -selectmode => 'browse',
+		      -exportselection => 1,
+		      -browsecmd => sub { $curr_dir = shift },
+		      -command   => sub { $ok = 1 },
+		      )->pack(-fill => "both", -expand => 1);
+    $f->Button(-text => 'Ok',
+	       -command => sub { $ok =  1 })->pack(-side => 'left');
+    $f->Button(-text => 'Cancel',
+	       -command => sub { $ok = -1 })->pack(-side => 'left');
+    
+    $f->waitVariable(\$ok);
+    
+    $top->destroy;
+    if ($ok == 1) {
+	return $curr_dir;
+    } else {
+	return $start_dir;
+    }
+}
+
 
 # Query user for instrument parameters and simulation options for a
 # McStas simulation.
@@ -178,7 +223,7 @@ sub simulation_dialog {
     my $choiceforce = $line->Checkbutton(-text => "force",-variable => \$si{'Force'})->pack(-side => 'left');
     $b->attach($choiceforce, -balloonmsg => "Force to overwrite existing directories");
     $line->Button(-text => "Browse...", -width => 9,
-                -command => sub { my $d = get_dir_name($dlg, $si{'Dir'});
+                -command => sub { my $d = select_dir($si{'Dir'});
                                   $si{'Dir'} = $d if $d; } )->pack(-side => 'right');
     $b->attach($browsedir, -balloonmsg => "Select a directory where to store results\nLeave blank to save at instrument location");
 
