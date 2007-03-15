@@ -25,11 +25,11 @@
 use Cwd;
 use IPC::Open2;
 use File::Basename;
+use File::Path;
+use File::Copy;
 use Time::localtime;
 use Config;
-use File::Copy;
 
-my $move_cmd;
 
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
@@ -41,10 +41,8 @@ BEGIN {
   } else {
     if ($Config{'osname'} eq 'MSWin32') {
       $MCSTAS::sys_dir = "c:\\mcstas\\lib";
-      $move_cmd = 'move';
     } else {
       $MCSTAS::sys_dir = "/usr/local/lib/mcstas";
-      $move_cmd = 'mv';
     }
   }
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
@@ -60,12 +58,12 @@ require "mcstas_config.perl";
 my $dodisplay = 0;
 my $timeout = 5;
 my $show_help = 0;
-my $GFORMAT = "psc";
+my $GFORMAT = "png";
 my $ext;
 my $filename = "";
 my $i;
 
-if (@ARGV == 0) {$show_help = 1;}
+if (@ARGV == 0) { Tkgui(); }
 
 for($i = 0; $i < @ARGV; $i++) {
     if(($ARGV[$i] eq "-d") || ($ARGV[$i] eq "--display")) {
@@ -79,8 +77,7 @@ for($i = 0; $i < @ARGV; $i++) {
 	    ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png") || ($ARGV[$i] eq "-ppm")) {
 	$GFORMAT=$ARGV[$i];
 	$GFORMAT=~ s!-!!g;
-	$ext = $GFORMAT;
-	$ext =~ s!c!!g;
+
     } else {
 	# This is filename stuff...
 	$filename = $filename.$ARGV[$i];
@@ -107,10 +104,11 @@ Graphics selection options:
      
 }
 
-print "\nOkay, mcdaemon is monitoring $filename using these options:\n\n";
+print "\nOkay, mcdaemon is monitoring $filename using these options:\n";
+print "(press <ctrl+c> to stop mcdaemon)\n";
 print "Hardcopy format:    $GFORMAT\n";
 print "Timeout:            $timeout\n";
-if ($display == 1) {
+if ($dodisplay == 1) {
     print "D";
 } else {
     print "Not d";
@@ -185,6 +183,8 @@ if ($filesuf eq "sim") {
 my $timestamp = (stat($filename))[9];
 my $newtime;
 my $counter = -1;
+$ext = $GFORMAT;
+$ext =~ s!c!!g;
 while (1 == 1) {
     sleep $timeout;
     $newtime = (stat($filename))[9];
@@ -211,4 +211,88 @@ while (1 == 1) {
 	}
 
     }
+}
+
+sub Tkgui {
+    use Tk;
+    use Tk::Toplevel;
+    use Tk::DirTree;
+    my $win = new MainWindow(-title => "McDaemon, monitor incoming McStas results");
+    build_gui($win);
+    MainLoop;
+}
+
+sub build_gui {
+    # When mcdaemon is run without any input parms, we'll build a gui
+    # to set the parameters.
+    my ($win) = @_;
+    #$win->Toplevel
+    # Label and buttons, input dir / file
+    my $topframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
+    $topframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
+    $topframe->Label(-text => "Data:", -anchor => 'w',
+				     -justify => "center")->pack(-side => "left");
+    my $filelabel = $topframe->Entry(-width => 60, -relief => "sunken",
+				    -textvariable => \$filename)->pack(-side => "left");
+    my $fileselect = $topframe->Button(-text => "File", -command => [\&select_file, $win])->pack(-side => "left");
+    my $dirselect = $topframe->Button(-text => "Dir", -command => [\&select_dir])->pack(-side => "left");
+    my $midframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
+    $midframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
+    $midframe->Label(-text => "Timeout (seconds): ", -anchor => 'w',
+		     -justify => "center")->pack(-side => "left");
+    my $timelabel = $midframe->Entry(-width => 4, -relief => "sunken",
+				    -textvariable => \$timeout)->pack(-side => "left");
+    $midframe->Label(-text => "Hardcopy format: ", -anchor => 'w',
+		     -justify => "center")->pack(-side => "left");
+    my $gformats = ['psc','ps','gif','png','ppm'];
+    my $graphics = $midframe->Optionmenu(-textvariable => \$GFORMAT, -options => 
+					 $gformats)->pack(-side => 'left');
+    my $display = $midframe->Checkbutton(-text => "Display on screen?", -variable => \$dodisplay)->pack(-side => "left");
+    my $bottomframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
+    $bottomframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
+   
+    $bottomframe->Button(-text => "Cancel", -command => sub {exit;})->pack(-side => "right", -anchor => "e");
+    $bottomframe->Button(-text => "Ok", -command => sub {$win->destroy;})->pack(-side => "right", -anchor => "w");
+}
+
+sub select_file {
+    my ($w) = @_;
+    my $file = $w->getOpenFile(-title => "Select sim file to monitor", -initialdir => getcwd());
+    if ($file == 0) {
+	$filename = $file;
+    }
+}
+
+sub select_dir {
+    my $top = new MainWindow;
+    $top->withdraw;
+    
+    my $t = $top->Toplevel;
+    $t->title("Choose dir to monitor:");
+    my $ok = 0; 
+    my $f = $t->Frame->pack(-fill => "x", -side => "bottom");
+    
+    my $curr_dir = getcwd();
+    
+    my $d;
+    $d = $t->Scrolled('DirTree',
+		      -scrollbars => 'osoe',
+		      -width => 35,
+		      -height => 20,
+		      -selectmode => 'browse',
+		      -exportselection => 1,
+		      -browsecmd => sub { $curr_dir = shift },
+		      -command   => sub { $ok = 1 },
+		      )->pack(-fill => "both", -expand => 1);
+    $f->Button(-text => 'Ok',
+	       -command => sub { $ok =  1 })->pack(-side => 'left');
+    $f->Button(-text => 'Cancel',
+	       -command => sub { $ok = -1 })->pack(-side => 'left');
+    
+    $f->waitVariable(\$ok);
+    
+    if ($ok == 1) {
+	$filename = $curr_dir;
+    }
+    $top->destroy;
 }
