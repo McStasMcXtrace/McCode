@@ -203,6 +203,16 @@ sub menu_spawn_mcdaemon {
     my $cmd = "mcdaemon$suffix $simfile";
     spawn_external($w,$cmd);
 }
+
+sub menu_spawn_mcplot {
+    my ($w) = @_;
+    my $file = $w->getOpenFile(-title => "Select simulation file", -initialdir => getcwd());
+    if ($file == 0) {
+	my $cmd = "mcplot$suffix $file";
+	spawn_external($w,$cmd);
+    }
+}
+
 sub spawn_external {
     # Procedure to put external processes in the background
     my ($w, $cmd) = @_;
@@ -1471,13 +1481,14 @@ sub setup_menu {
     sitemenu_build($w,$menu);
 
     my $toolmenu = $menu->Menubutton(-text => 'Tools', -underline => 0);
-
-    # The following item for now only applies to non-Win32 systems...
-    if (!($Config{'osname'} eq 'MSWin32')) {
-	$toolmenu->command(-label => 'Online plotting of results',
-			   -command => sub {menu_spawn_mcdaemon($w,$current_sim_file);});
-	$toolmenu->pack(-side=>'left');
-    }
+    
+    $toolmenu->command(-label => 'Plot current results',
+		       -command => sub {menu_plot_results($w);});
+    $toolmenu->command(-label => 'Plot other results',
+		       -command => sub {menu_spawn_mcplot($w);});
+    $toolmenu->command(-label => 'Online plotting of results',
+		       -command => sub {menu_spawn_mcdaemon($w,$current_sim_file);});
+    $toolmenu->pack(-side=>'left');
     $toolmenu->command(-label => 'mcgui Shorcut keys',
                        -command => sub {tools_shortcuts($w)});
     # The following item for now only applies to non-Win32 systems...
