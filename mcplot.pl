@@ -322,6 +322,9 @@ sub pgplotit {
   'T' Toggle contour plotting mode
   'Q' quit\n";
   } else {
+      $global_spec = "$ENV{'PGPLOT_DEV'}";
+      $global_dev = get_device($global_spec);
+      PGPLOT::pgask(0);
       overview_plot($datalist, $passed_arg_str);
   }
   my $global_open = 0;
