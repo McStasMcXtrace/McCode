@@ -27,6 +27,7 @@ use IPC::Open2;
 use File::Basename;
 use Time::localtime;
 use Config;
+use File::Copy;
 
 my $move_cmd;
 
@@ -56,25 +57,65 @@ use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mcstas_config.perl";
 
-# Input filename needed:
-if (@ARGV == 0) {
-    print "Usage: mcdaemon file|dir [wait]\n";
-    print "As minimum, I need a McStas output file (e.g. a mcstas.sim) to monitor. \n";
-    print "Possibly, also specify a 'waiting' interval in seconds (default 10 seconds)\nExiting.\n";
-    exit;
+my $dodisplay = 0;
+my $timeout = 5;
+my $show_help = 0;
+my $GFORMAT = "psc";
+my $ext;
+my $filename = "";
+my $i;
+
+if (@ARGV == 0) {$show_help = 1;}
+
+for($i = 0; $i < @ARGV; $i++) {
+    if(($ARGV[$i] eq "-d") || ($ARGV[$i] eq "--display")) {
+        $dodisplay = 1;
+    } elsif($ARGV[$i] =~ /--help|-h$/) {
+        $show_help=1;
+    } elsif(($ARGV[$i] =~ /^-t([-0-9+]+)$/) ||
+            ($ARGV[$i] =~ /^--timeout=([-0-9+]+)$/)) {
+        $timeout = $1;
+    } elsif(($ARGV[$i] eq "-gif") || ($ARGV[$i] eq "-ps") ||
+	    ($ARGV[$i] eq "-psc") || ($ARGV[$i] eq "-png") || ($ARGV[$i] eq "-ppm")) {
+	$GFORMAT=$ARGV[$i];
+	$GFORMAT=~ s!-!!g;
+	$ext = $GFORMAT;
+	$ext =~ s!c!!g;
+    } else {
+	# This is filename stuff...
+	$filename = $filename.$ARGV[$i];
+    }
 }
 
-my $filename = $ARGV[0];
-my $timeout = 10;
-if (@ARGV == 2) {
-    $timeout = $ARGV[1];
+if ($show_help) {
+     die "Usage: mcdaemon [options] file|dir
+Where the possible options are:
+-h        --help           Show this help
+-d        --display        Display the plots generated at saves
+                           (default is NOT to display)
+-tSECS    --timeout=SECS   Minimum timeout between updating graphics
+                           (default is 5 seconds)
+Graphics selection options:
+      (Also depending on properties of your PGPLOT installation)
+-psc      Color Postscript (default)
+-ps       BW Postscript
+-gif      GIF format bitmap
+-png      PNG format bitmap
+-ppm      PPM format bitmap
+    
+";
+     
 }
-if ($filename =~ /-h|--help/i) {
-    print "Usage: mcdaemon file|dir [wait]\n";
+
+print "\nOkay, mcdaemon is monitoring $filename using these options:\n\n";
+print "Hardcopy format:    $GFORMAT\n";
+print "Timeout:            $timeout\n";
+if ($display == 1) {
+    print "D";
+} else {
+    print "Not d";
 }
-if ($filename eq ".") {
-    $filename = getcwd();
-}
+print "isplaying results on screen\n\n";
 
 # Make sure we have an absolute path defined here...
 if (!($filename =~ /^\// || ($Config{'osname'} eq 'MSWin32' && ($filename =~ /^([a-zA-Z]):/ || /^\\/)))) {
@@ -83,7 +124,10 @@ if (!($filename =~ /^\// || ($Config{'osname'} eq 'MSWin32' && ($filename =~ /^(
 
 my $there = 0;
 my $dirthere = 0;
-my @suffixlist = ('.sim'); # Full list is ('.sim','.m','.sci','.html') - currently only PGPLOT makes sense;
+my @suffixlist = ('.sim','.m','.sci','.html'); 
+# Currently only PGPLOT makes sense - having the other ones in the
+# list is simply to be able to display an error message.
+
 # First of all, if the file is there, work with that...
 if (-e $filename && (! -d $filename)) {
     $there = 1;
@@ -95,7 +139,7 @@ if (!$there) {
     if ($filesuf) {
 	print "Found suffix $filesuf\n";
     } else {
-	print "Called with dir input\n";
+	print "$filename seems to be a directory\n";
 	$dirname = $filename;
 	$name = "mcstas";
     }
@@ -103,7 +147,7 @@ if (!$there) {
     $filename = "$dirname/$name";
     # First of all, the output dir must be there and of type directory
     if (!(-e $dirname)) {
-	print "Output directory $dirname does not exist yet, waiting here until it does...\n";
+	print "Output output $dirname does not exist yet, waiting here ...\n";
 	while ($dirthere == 0) {
 	    if (-e $dirname && -d $dirname) {
 		$dirname = 1;
@@ -111,7 +155,7 @@ if (!$there) {
 	    if (!$dirthere) {sleep $timeout;}
 	}
     } else {
-	print "Directory there, looking for plot file(s)\n";
+	print "Searching for plot file(s) in $dirname\n";
     }
     while ($there == 0) {
 	my $j;
@@ -121,7 +165,7 @@ if (!$there) {
 		$name = "$name$suffixlist[$j]";
 		$j = scalar(@suffixlist);
 		$filename = "$dirname/$name";
-		print "Found datafile $name in $dirname, working with that...";
+		print "Found datafile $name in $dirname, continuing\n\n";
 	    }
 	}
 	if (!$there) {sleep $timeout;}
@@ -130,31 +174,40 @@ if (!$there) {
 
 ($name,$dirname,$filesuf) = fileparse($filename,@suffixlist);
 
-if (!($filesuf eq "sim")) {
-    print "Sorry, currently PGPLOT is the only supported plotter with mcdaemon.\n";
-    exit 1;
+my $PGstuff = 0;
+
+if ($filesuf eq "sim") {
+    # Nothing to do here, all is fine
+} elsif (!(-e "$dirname/mcstas.sim")) {
+    die "\n\nSorry, currently PGPLOT is the only supported plotter with mcdaemon.\n\n";
 }
 
 my $timestamp = (stat($filename))[9];
 my $newtime;
-print "start time given is $timestamp\n";
-
+my $counter = -1;
 while (1 == 1) {
     sleep $timeout;
     $newtime = (stat($filename))[9];
     if (! ($newtime == $timestamp) ) {
-	print "Directory was accessed! - Replotting\n";
-	my $GFORMAT = "ps";
-	system("mcplot -$GFORMAT $filename") || print("Problems spawning mcplot!\n");
+	$counter++;
+	print "Output files accessed! - Replotting\n";
+	system("mcplot -$GFORMAT $filename") || die "Problems spawning mcplot!\n";
 	my $timestring = ctime($newtime);
 	$timestring =~ s!\ !_!g;
-	system("$move_cmd $filename.$GFORMAT $dirname/mcstas_".$newtime.".$GFORMAT");
+	copy("$filename.$ext", "$dirname/mcstas_".$counter.".$ext") || 
+	    die "Could not rename mcplot outputfile $filename.$ext";
+	print "   (was renamed to mcstas_".$counter.".$ext)\n";
 	$timestamp = (stat($filename))[9];
 	$newtime = $timestamp;
-	# If this is PGPLOT we should do another call to get X11 output
+	# If this is PGPLOT/Unix we should do another call to get X11 output
 	# (Currently only works if the file we work on has .sim extension)
-	if ($filename =~ /\.sim/) {
-	    system("mcplot -d $filename") || (die "Could not spawn mcplot!\n");
+	# On Win32 we will ask the OS to display the graphic generated above.
+	if ($dodisplay == 1) {
+	    if ($Config{'osname'} eq 'MSWin32') {
+		system("start $dirname/mcstas_".$counter.".$ext");
+	    } else {
+		system("mcplot -d $filename") || (die "Could not spawn mcplot!\n");
+	    }
 	}
 
     }
