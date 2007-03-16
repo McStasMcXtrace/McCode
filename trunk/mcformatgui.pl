@@ -26,6 +26,7 @@ use IPC::Open2;
 use File::Basename;
 use File::Path;
 use File::Copy;
+use File::Spec;
 use Time::localtime;
 use Config;
 
@@ -170,7 +171,7 @@ sub build_gui {
 sub check_dir {	
     my ($win, $output) = @_;
     if (-d $output && -e $output) {
-	$output = "$output/converted";
+	$output = File::Spec->catfile( $output, "converted" );;
 	$win->messageBox(
 			 -message => "For safety reasons I will create the subdir \n\n$output\n\n as final destination.\n\n ".
 			 "This directory does not exist now but will be created at runtime.\n",
@@ -236,26 +237,21 @@ sub select_dir {
 }
 
 sub iformat_select {
-    use Switch;
-    switch ($iformat) {
-	case "McStas" {	  
-	    $oformat_ctrl->configure(-options => $oformats_iMcStas);
-	    $runmode_ctrl->configure(-options => $runmodes_iMcStas);
-	    $oformat = "McStas";
-	    $runmode = "Merge";
-	}
-	case "Matlab" {
-	    $oformat = "Scilab";
-	    $runmode = "Convert";
-	    $oformat_ctrl->configure(-options => $oformats_iMatlab);
-	    $runmode_ctrl->configure(-options => $runmode_ilab);
-	}
-	case "Scilab" {
-	    $oformat = "Matlab";
-	    $runmode = "Convert";
-	    $oformat_ctrl->configure(-options => $oformats_iScilab);
-	    $runmode_ctrl->configure(-options => $runmode_ilab);
-	}
+    if ($iformat eq "McStas") {
+	$oformat_ctrl->configure(-options => $oformats_iMcStas);
+	$runmode_ctrl->configure(-options => $runmodes_iMcStas);
+	$oformat = "McStas";
+	$runmode = "Merge";
+    } elsif ($iformat eq "Matlab") {
+	$oformat = "Scilab";
+	$runmode = "Convert";
+	$oformat_ctrl->configure(-options => $oformats_iMatlab);
+	$runmode_ctrl->configure(-options => $runmode_ilab);
+    } elsif ($iformat eq "Scilab") {
+	$oformat = "Matlab";
+	$runmode = "Convert";
+	$oformat_ctrl->configure(-options => $oformats_iScilab);
+	$runmode_ctrl->configure(-options => $runmode_ilab);
     }
 }
 
