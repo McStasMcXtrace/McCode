@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.46 $
+* Version: $Revision: 1.47 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 *
@@ -161,9 +161,7 @@
 * thickness:    [m] Thickness of hollow sample (overrides radius_i).
 *
 * OPTIONAL PARAMETERS:
-* auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
-*                   to optimal setting whenever required (recommanded).
-* concentric:   [1] Indicates that this component in a hollow geometry
+* concentric:   [1] Indicate that this component in a hollow geometry
 *                   and may contain other components.
 *                   It should then be duplicated after the inside part.
 *                   See description for an example.
@@ -182,10 +180,13 @@
 * wmax:       [meV] Maximum Energy value to use in S(q,w).
 * threshold:    [1] Value under which S(Q,w) is not accounted for.
 *                     to set according to the S(Q,w) values ,i.e. not too low.
-* interpolate:  [1] Performs (q,w) smoothing from S(q,w) if true (recommanded).
 * p_interact:   [1] Force a given fraction of the beam to scatter, keeping
 *                   intensity right, to enhance small signals (-1 unactivate).
 * auto_sigma:   [1] Compute real scattered intensity when true (default).
+* auto_norm:    [1] Compute the theoretical norm for S(q,w) when true.
+* auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
+*                   to optimal setting whenever required (recommanded).
+* interpolate:  [1] Perform (q,w) smoothing from S(q,w) if true (recommanded).
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
@@ -229,7 +230,7 @@ DEFINE COMPONENT Isotropic_Sqw
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-    interpolate=1, p_interact=-1, auto_sigma=1)
+    interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0)
   OUTPUT PARAMETERS (VarSqw, columns)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -945,7 +946,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
   }
 
-  if (Sqw_Data->alpha && Sqw->sqw_norm < 0) { /* apply normalization */
+  if (Sqw_Data->alpha && Sqw->sqw_norm) { /* apply normalization */
     val *= Sqw_Data->alpha;
     sum *= Sqw_Data->alpha;
     for (i=0; i < (Sqw_Data->nb_q_data) ; Sqw_Data->Sq[i++] *= Sqw_Data->alpha);
@@ -1239,7 +1240,7 @@ INITIALIZE
   VarSqw.q_max     = (qmax > 0 ? qmax : FLT_MAX);
   VarSqw.q_min     = (qmin > 0 ? qmin : 0);
   VarSqw.rho       = V_rho;
-  VarSqw.sqw_norm  = -1; /* automatic normalization for output files */
+  VarSqw.sqw_norm  = auto_norm;
   VarSqw.sqw_auto  = auto_qw;
   VarSqw.sqw_interp= interpolate;
   VarSqw.mean_scatt= 0;
