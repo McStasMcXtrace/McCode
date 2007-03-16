@@ -19,7 +19,7 @@
 #     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 # mcformatgui.pl - perl-Tk gui for mcformat and mcconvert tools.
-# 
+#
 
 use Cwd;
 use IPC::Open2;
@@ -28,6 +28,7 @@ use File::Path;
 use File::Copy;
 use File::Spec;
 use Time::localtime;
+use Tk::Balloon;
 use Config;
 
 
@@ -66,7 +67,7 @@ my $oformat="McStas";
 my $runmode="Merge";
 my $inputdir;
 my $outputdir;
-my $oformats_iMcStas = ['McStas','Scilab','Matlab','NeXus','IDL','HTML'];
+my $oformats_iMcStas;
 my $oformats_iMatlab = ['Scilab'];
 my $oformats_iScilab = ['Matlab'];
 my $runmodes_iMcStas = ['Convert','Merge','Scan assembly','Scan Merge'];
@@ -77,19 +78,35 @@ my $filename = "";
 my $i;
 my $continue;
 
-Tkgui();
+my $iformat_crtl;
 
+if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
+   $oformats_iMcStas = ['McStas','Scilab','Matlab','IDL','HTML','XML','Octave','NeXus'];
+} else {
+   $oformats_iMcStas = ['McStas','Scilab','Matlab','IDL','HTML','XML','Octave'];
+}
+
+Tkgui();
+$iformat  = iformat_select($inputdir);
 print "Ready to go:\n    $inputdir \@ $iformat format \n -> $outputdir \@ $oformat format\n Action: $runmode\n\n";
 
-if ($iformat eq "McStas") {
-    print "Input format is McStas, running mcformat to $runmode data. Output will go to $outputdir in $oformat...\n";
-    # Emmanuel, here is the place to do your mcformat stuff
-    
-} elsif (($iformat eq "Matlab") || ($iformat eq "Scilab")) {
+if ($iformat =~ /Matlab|Scilab/i && $oformat =~ /Matlab|Scilab/i
+ && $iformat ne $oformat && $runmode eq "Convert") {
     print "Using mcconvert.pl for $iformat -> $oformat conversion...\n";
-    system("mcconvert$MCSTAS::mcstas_config{'SUFFIX'} --format=$oformat --indir=$inputdir --outdir=$outputdir");
+    my $cmd="mcconvert$MCSTAS::mcstas_config{'SUFFIX'} --format=$oformat --indir=$inputdir --outdir=$outputdir";
+    print "Executing: $cmd\n";
+    system("$cmd");
 } else {
-    die "Ooops, don't know what to do about inputformat $iformat! Exiting.\n";
+    print "Input format is McStas, running mcformat to $runmode data. Output will go to $outputdir in $oformat...\n";
+    my $mode="";
+    if    ($runmode =~ /Scan assembly/i) { $mode="--scan-only"; }
+    elsif ($runmode =~ /Scan Merge/i)    { $mode="--scan"; }
+    elsif ($runmode =~ /merge/i)         { $mode="--merge"; }
+    my $cmd="mcformat";
+    if ($Config{'osname'} eq 'MSWin32') { $cmd .= ".$MCSTAS::mcstas_config{'EXE'}"; }
+    $cmd.=" --format=$oformat --dir=$outputdir $inputdir $mode";
+    print "Executing: $cmd\n";
+    system("$cmd");
 }
 
 
@@ -111,55 +128,58 @@ sub build_gui {
     # to set the parameters.
     my ($win) = @_;
     my $topframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
+    my $b = $win->Balloon(-state => 'balloon');
     $topframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
-    $topframe->Label(-text => "Input dir(s):", -anchor => 'w',
-				     -justify => "center", -width => 15)->pack(-side => "left");
-    $topframe->Entry(-width => 80, -relief => "sunken",
+    my $tmp1 = $topframe->Label(-text => "Input dir(s):", -anchor => 'w',
+				     -justify => "center", -width => 15, -fg => 'blue')->pack(-side => "left");
+	  $b->attach($tmp1, -balloonmsg => "Data directory to convert");
+    $topframe->Entry(-width => 40, -relief => "sunken",
 				    -textvariable => \$inputdir)->pack(-side => "left");
     my $dirselect = $topframe->Button(-text => "Select", -command => sub {
         $inputdir = select_dir($inputdir);
-	})->pack(-side => "left");
-    
+        $iformat  = iformat_select($inputdir);
+     })->pack(-side => "left");
+    $b->attach($dirselect, -balloonmsg => "Select an existing directory");
+
     my $top2frame = $win->Frame(-relief => 'raised', -borderwidth => 2);
     $top2frame->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
-    $top2frame->Label(-text => "Output dir :", -anchor => 'w',
-				     -justify => "center", -width => 15 )->pack(-side => "left");
-    $top2frame->Entry(-width => 80, -relief => "sunken",
+    $tmp2 = $top2frame->Label(-text => "Output dir  :", -anchor => 'w',
+				     -justify => "center", -width => 15, -fg => 'blue')->pack(-side => "left");
+		$b->attach($tmp2, -balloonmsg => "Target directory\nfor converted data");
+    $top2frame->Entry(-width => 40, -relief => "sunken",
 		      -textvariable => \$outputdir)->pack(-side => "left");
     my $dirselect = $top2frame->Button(-text => "Select", -command => sub {
         $outputdir = select_dir($outputdir);
-	$outputdir = check_dir($win,$outputdir);
-    }
-)->pack(-side => "left");
-    
+        $outputdir = check_dir($win,$outputdir);
+      })->pack(-side => "left");
+    $b->attach($dirselect, -balloonmsg => "Select an existing directory\nor enter a new one");
+
     my $midframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
     $midframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
-    $midframe->Label(-text => "Input format: ", -anchor => 'w',
-		     -justify => "center")->pack(-side => "left");
-    my $iformat_crtl = $midframe->Optionmenu(-textvariable => \$iformat, -options => 
-					 $iformats, -command => \&iformat_select, -variable => \$iform )->pack(-side => 'left');
-    $midframe->Label(-text => "Output format format: ", -anchor => 'w',
-		     -justify => "center")->pack(-side => "left");
+    $tmp3=$midframe->Label(-text => "Output format: ", -anchor => 'w',
+		     -justify => "center", -fg => 'blue')->pack(-side => "left");
+		$b->attach($tmp3, -balloonmsg => "Format for converted data\nNOTE: If input data is Matlab/Scilab\n      and output format is Scilab/Matlab\n      'Convert' mode will work also with binary data.");
     $oformats = $oformats_iMcStas;
-    $oformat_ctrl = $midframe->Optionmenu(-textvariable => \$oformat, -options => 
+    $oformat_ctrl = $midframe->Optionmenu(-textvariable => \$oformat, -options =>
 					 $oformats)->pack(-side => 'left');
-    $midframe->Label(-text => "Conversion mode: ", -anchor => 'w',
-		     -justify => "center")->pack(-side => "left");
+    $tmp4=$midframe->Label(-text => "Conversion mode: ", -anchor => 'w',
+		     -justify => "center", -fg => 'blue')->pack(-side => "left");
+		$b->attach($tmp4, -balloonmsg => "Convert: convert files one by one\nMerge: convert files and merge equivalent ones (e.g. clusters/grids)\nScan assembly: convert files and gather them in scan series\nScan merge: same as assembly, but also merge equivalent files");
     $runmodes = $runmodes_iMcStas;
-    $runmode_ctrl = $midframe->Optionmenu(-textvariable => \$runmode, -options => 
+    $runmode_ctrl = $midframe->Optionmenu(-textvariable => \$runmode, -options =>
 					 $runmodes)->pack(-side => 'left');
-    
+
     my $bottomframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
     $bottomframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
-   
-    $bottomframe->Button(-text => "Cancel", -command => sub {exit;})->pack(-side => "right", -anchor => "e");
-    $bottomframe->Button(-text => "Ok", -command => sub {
+
+    $bottomframe->Button(-text => "Cancel", -fg => 'red', -command => sub {exit;})->pack(-side => "right", -anchor => "e");
+    $bottomframe->Button(-text => "Ok", -fg => 'green', -command => sub {
 	if ($inputdir && $outputdir) {
 	    $outputdir = check_dir($win,$outputdir);
 	    $continue=1; $win->destroy;
 	} else {
 	    $win->messageBox(
-			     -message => "You must select a both an input and an output dir!", 
+			     -message => "You must select both an input and an output dir!",
 			     -title => "Problem:",
 			     -type => 'ok',
 			     -icon => 'error',
@@ -168,14 +188,14 @@ sub build_gui {
     })->pack(-side => "right", -anchor => "w");
 }
 
-sub check_dir {	
+sub check_dir {
     my ($win, $output) = @_;
     if (-d $output && -e $output) {
 	$output = File::Spec->catfile( $output, "converted" );;
 	$win->messageBox(
 			 -message => "For safety reasons I will create the subdir \n\n$output\n\n as final destination.\n\n ".
 			 "This directory does not exist now but will be created at runtime.\n",
-			 -title => "Notice:",
+			 -title => "Notice: Directory exists",
 			 -type => 'ok',
 			 -icon => 'info',
 			 -default => 'ok');
@@ -183,32 +203,24 @@ sub check_dir {
     return $output;
 }
 
-sub select_file {
-    my ($w) = @_;
-    my $file = $w->getOpenFile(-title => "Select sim file to monitor", -initialdir => getcwd());
-    if ($file == 0) {
-	$filename = $file;
-    }
-}
-
 sub select_dir {
     my ($start_dir) = @_;
     my $top = new MainWindow;
     $top->withdraw;
-    
+
     my $t = $top->Toplevel;
     $t->title("Choose dir to monitor:");
-    my $ok = 0; 
+    my $ok = 0;
     my $f = $t->Frame->pack(-fill => "x", -side => "bottom");
-    
+
     my $curr_dir;
-    
+
     if ($start_dir) {
 	$curr_dir = $start_dir;
-    } else { 
-	$curr_dir = getcwd(); 
+    } else {
+	$curr_dir = getcwd();
     }
-    
+
     my $d;
     $d = $t->Scrolled('DirTree',
 		      -scrollbars => 'osoe',
@@ -223,11 +235,11 @@ sub select_dir {
 	       -command => sub { $ok =  1 })->pack(-side => 'left');
     $f->Button(-text => 'Cancel',
 	       -command => sub { $ok = -1 })->pack(-side => 'left');
-    
+
     $f->waitVariable(\$ok);
-    
+
     $top->destroy;
-    
+
     if ($ok == 1) {
 	return $curr_dir;
     } else {
@@ -237,21 +249,26 @@ sub select_dir {
 }
 
 sub iformat_select {
-    if ($iformat eq "McStas") {
-	$oformat_ctrl->configure(-options => $oformats_iMcStas);
-	$runmode_ctrl->configure(-options => $runmodes_iMcStas);
-	$oformat = "McStas";
-	$runmode = "Merge";
-    } elsif ($iformat eq "Matlab") {
-	$oformat = "Scilab";
-	$runmode = "Convert";
-	$oformat_ctrl->configure(-options => $oformats_iMatlab);
-	$runmode_ctrl->configure(-options => $runmode_ilab);
-    } elsif ($iformat eq "Scilab") {
-	$oformat = "Matlab";
-	$runmode = "Convert";
-	$oformat_ctrl->configure(-options => $oformats_iScilab);
-	$runmode_ctrl->configure(-options => $runmode_ilab);
-    }
+  my ($dir) = @_;
+  my $file = $dir;
+
+  # check input data directory
+  if (-d $file) { # check if dir containing result file
+    my $newfile = "$file/mcstas";
+    if (-e "$newfile.m" || -e "$newfile.sci" || -e "$newfile.sim" || -e "$newfile.html" || -e "$newfile.nxs" || -e "$newfile.pro" || -e "$newfile.xml") {
+      $file = $newfile; }
+  }
+
+  # look if there is only one file type and set iformat
+  if (-e "$file.m")    { $iformat = "Matlab"; }
+  if (-e "$file.sci")  { $iformat = "Scilab"; }
+  if (-e "$file.sim")  { $iformat = "McStas"; }
+  if (-e "$file.html") { $iformat = "HTML";   }
+  if (-e "$file.xml")  { $iformat = "XML";    }
+  if (-e "$file.pro")  { $iformat = "IDL";    }
+  if (-e "$file.nxs")  { $iformat = "NeXus";  }
+
+  print "Input directory $dir presumably contains data in $iformat format.\n";
+  return($iformat);
 }
 
