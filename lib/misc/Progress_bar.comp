@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -37,8 +37,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Progress_bar
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (percent=10,flag_save=0,string profile=0)
+DEFINITION PARAMETERS (string profile=0)
+SETTING PARAMETERS (percent=10,flag_save=0)
 OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
