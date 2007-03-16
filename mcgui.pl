@@ -204,6 +204,13 @@ sub menu_spawn_mcdaemon {
     spawn_external($w,$cmd);
 }
 
+sub menu_spawn_mcformatgui {
+    my ($w) = @_;
+    my $cmd = "mcformatgui$suffix";
+    spawn_external($w,$cmd);
+}
+
+
 sub menu_spawn_mcplot {
     my ($w) = @_;
     my $file = $w->getOpenFile(-title => "Select simulation file", -initialdir => getcwd());
@@ -1488,6 +1495,8 @@ sub setup_menu {
 		       -command => sub {menu_spawn_mcplot($w);});
     $toolmenu->command(-label => 'Online plotting of results',
 		       -command => sub {menu_spawn_mcdaemon($w,$current_sim_file);});
+    $toolmenu->command(-label => 'Dataset convert/merge',
+		       -command => sub {menu_spawn_mcformatgui($w,$current_sim_file);});
     $toolmenu->pack(-side=>'left');
     $toolmenu->command(-label => 'mcgui Shorcut keys',
                        -command => sub {tools_shortcuts($w)});
