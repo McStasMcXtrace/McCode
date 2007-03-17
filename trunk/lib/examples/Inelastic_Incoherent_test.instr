@@ -9,7 +9,7 @@
 * Origin: Risoe
 * Release: McStas 1.9
 * Version: 0.1
-* %INSTRUMENT_SITE: test
+* %INSTRUMENT_SITE: tests
 *
 * Testing the QENS_incoherent component
 *
