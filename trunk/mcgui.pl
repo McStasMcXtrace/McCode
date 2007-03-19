@@ -1797,7 +1797,7 @@ sub setup_edit {
     $e->pack(-expand => 'yes', -fill => 'both');
     $label->pack(-side => 'left', -expand => 'no', -fill => 'x');
     $e->mark('set', 'insert', '0.0');
-    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w); 
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w);
 						 if ( $kill_when_editor_exits == 1) {
 						     $mw->destroy();
 						 }
@@ -1875,7 +1875,15 @@ if(@ARGV>0 && @ARGV<3) {
     my $j;
     my $filenames;
     for ($j=0; $j<@ARGV; $j++) {
-        if ($ARGV[$j] eq "--open") {
+        if ($ARGV[$j] eq "--help") {
+          print "mcgui <instrument_file>\n";
+          print "       [--help] Display command help\n";
+          print "       [--open] Start with the editor opened\n";
+          print "       [--edit] Edit instrument only\n";
+          print "SEE ALSO: mcstas, mcdoc, mcplot, mcrun, mcgui, mcresplot, mcstas2vitess, mcformat\n";
+          print "DOC:      Please visit http://www.mcstas.org\n";
+          exit;
+        } elsif ($ARGV[$j] eq "--open") {
             $open_editor = 1;
 #            menu_edit_current($win);
         } elsif ($ARGV[$j] eq "--edit") {

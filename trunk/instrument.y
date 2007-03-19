@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.73 $
+* Version: $Revision: 1.74 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.73 2007-03-12 14:12:16 farhi Exp $
+* $Id: instrument.y,v 1.74 2007-03-19 12:18:46 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1465,7 +1465,7 @@ print_usage(void)
   fprintf(stderr, "  Use 'mcgui' to run the McStas GUI.\n");
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
   fprintf(stderr, "  them (.c -> .o) before assembling the program.\n");
-  fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui\n");
+  fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
   fprintf(stderr, "DOC:      Please visit " PACKAGE_BUGREPORT "\n");
   exit(1);
 }
