@@ -67,6 +67,7 @@ require "mcguilib.pl";
 # require "mcplotlib.pl";
 require "mcrunlib.pl";
 
+my $kill_when_editor_exits = 0;
 my $current_sim_file;
 my $current_sim_def = "";
 my ($inf_instr, $inf_sim, $inf_data);
@@ -1751,7 +1752,11 @@ sub setup_edit_1_7 {
     $e->pack(-expand => 'yes', -fill => 'both');
     $e->mark('set', 'insert', '0.0');
     $e->Load($current_sim_def) if $current_sim_def && -r $current_sim_def;
-    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w);
+					     if ( $kill_when_editor_exits == 1) {
+						 $mw->destroy();
+					     }
+					 } );
     $edit_control = $e;
     $edit_window = $w;
     if ($current_sim_def) {
@@ -1791,7 +1796,11 @@ sub setup_edit {
     $e->pack(-expand => 'yes', -fill => 'both');
     $label->pack(-side => 'left', -expand => 'no', -fill => 'x');
     $e->mark('set', 'insert', '0.0');
-    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w) } );
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w); 
+						 if ( $kill_when_editor_exits == 1) {
+						     $mw->destroy();
+						 }
+					 } );
     $edit_control = $e;
     $edit_window = $w;
     $edit_label = $label;
@@ -1871,6 +1880,7 @@ if(@ARGV>0 && @ARGV<3) {
         } elsif ($ARGV[$j] eq "--edit") {
 	    $open_editor = 1;
 	    $win->withdraw;
+	    $kill_when_editor_exits = 1;
 	} else {
             $filenames = "$ARGV[$j]";
         }
