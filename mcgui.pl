@@ -194,6 +194,15 @@ sub menu_spawn_editor {
     spawn_external($w,$cmd);
 }
 
+sub menu_spawn_internal_editor {
+    my ($w) = @_;
+    my $cmd = "mcgui$suffix --edit $current_sim_def";
+    if ($external_editor eq "no") { return 0; }
+    # Must be handled differently on Win32 vs. unix platforms...
+    spawn_external($w,$cmd);
+}
+
+
 sub menu_spawn_mcdaemon {
     my ($w,$dirname) = @_;
     my $simfile = $current_sim_file;
@@ -1429,6 +1438,9 @@ sub setup_menu {
     $filemenu->command(-label => 'Edit current/New',
                        -underline => 0,
                        -command => \&menu_edit_current);
+    $filemenu->command(-label => 'Edit current/New (detached)',
+                       -underline => 0,
+                       -command => sub { menu_spawn_internal_editor($w) } );
     if($external_editor) {
         my $shortname = (split " ", $external_editor)[0];
         $shortname = (split "/", $shortname)[-1];
@@ -1856,7 +1868,10 @@ if(@ARGV>0 && @ARGV<3) {
         if ($ARGV[$j] eq "--open") {
             $open_editor = 1;
 #            menu_edit_current($win);
-        } else {
+        } elsif ($ARGV[$j] eq "--edit") {
+	    $open_editor = 1;
+	    $win->withdraw;
+	} else {
             $filenames = "$ARGV[$j]";
         }
     }
