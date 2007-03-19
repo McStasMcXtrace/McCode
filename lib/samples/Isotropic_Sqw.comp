@@ -1,16 +1,17 @@
 /*****************************************************************************
 *
 *  McStas, neutron ray-tracing package
-*  Copyright(C) 2005 Risoe National Laboratory.
+*  Copyright(C) 2007 Risoe National Laboratory.
 *
 * Component: Isotropic_Sqw
 *
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.47 $
+* Version: $Revision: 1.48 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
+* Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
 *
 * Isotropic sample handling multiple scattering and absorption for a general
 * S(q,w) (coherent and/or incoherent/self)
@@ -28,6 +29,9 @@
 * In case you only have one S(q,w) data containing both coherent and
 * incoherent contributions you should e.g. use 'Sqw_coh' and set 'sigma_coh'
 * to the total scattering cross section.
+* The implementation assumes that the S(q,w) data is normalized, i.e. S(q)
+* goes to 1 for large q. If this is not the case, the component can do that
+* when 'auto_norm=1'.
 *
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting may improve computation accuracy and prevent some neutrons
@@ -1317,8 +1321,8 @@ double dt0, dt1, dt2, dt; /* time intervals */
 double k=0, kf, kf1, kf2;
 double v=0, vf;
 double d_path;        /* total path length for straight trajectory */
-double my_a;        /* absorption cross-section scaled to velocity (2200) */
-double ws, p_scatt;        /* probability for scattering/absorption and for */
+double my_a;          /* absorption cross-section scaled to velocity (2200) */
+double ws, p_scatt;   /* probability for scattering/absorption and for */
                       /* interaction along d_path */
 double tmp;           /* temporary var */
 double ratio_w, ratio_q; /* variables for bilinear interpolation */
@@ -1328,7 +1332,7 @@ double omega=0;       /* energy transfert */
 double q=0;           /* wavevector transfert */
 long   index_w;       /* energy index for table look-up DOS */
 long   index_q;       /* Q index for table look-up P(Q|w) */
-double c1, R,theta, costheta, sintheta; /* for the choice of kf direction */
+double sintheta,theta, costheta; /* for the choice of kf direction */
 double u1x,u1y,u1z;
 double u2x,u2y,u2z;
 double u0x,u0y,u0z;
@@ -1702,34 +1706,31 @@ do { /* Main interaction loop. Ends with intersect=0 */
         vf = K2V*kf;
 
         /* Search of the direction of kf such that : q = ki - kf */
-        /* ks = c1*ki/norm(ki)^2 + u0 */
-        /* u0 is in the plane orthogonal to ki */
+        /* cos theta = (ki2+kf2-q2)/(2ki kf) */
 
-        c1= (k*k+kf*kf-q*q)/(2*kf); /* unit is [k] */
+        costheta= (k*k+kf*kf-q*q)/(2*kf*k); /* this is cos(theta) */
 
-        /* circle radius = intersection with the plane defined by u1 and u2 */
-        R = 1-c1*c1/(k*k); /* unit is [1] */
-        if (R >= 0) R = sqrt(R);
-        else {
-          continue; /* No solution for R */
+        if (-1 < costheta && costheta < 1) {
+          break; /* satisfies q momentum conservation */
         }
+//      else continue;
 
-        break; /* exit for loop on success */
+        /* exit for loop on success */
       } /* end for index_counter */
 
       if (!index_counter) { /* for loop ended: failure for scattering */
         intersect=0; /* Could not scatter: finish multiple scattering loop */
         if (VarSqw.verbose_output >= 2)
           printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
-               "               last try (%i): type=%c w=%g q=%g R=%g\n",
-          NAME_CURRENT_COMP, VarSqw.maxloop, (VarSqw.type ? VarSqw.type : '-'), omega, q, R);
+               "               last try (%i): type=%c w=%g q=%g cos(theta)=%g\n",
+          NAME_CURRENT_COMP, VarSqw.maxloop, (VarSqw.type ? VarSqw.type : '-'), omega, q, costheta);
         VarSqw.neutron_removed++;
         if (order && SCATTERED != order) ABSORB;
         break;       /* finish multiple scattering loop */
       }
 
       /* scattering angle from ki to DS cone */
-      theta = atan2(R,c1/k);
+      theta = acos(costheta);
       /* Choose point on Debye-Scherrer cone */
       if (order == 1 && d_phi)
       { /* relate height of detector to the height on DS cone */
