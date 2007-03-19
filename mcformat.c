@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10b
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 *
 * A McStas format converter to merge concert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.14 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.15 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -80,6 +80,7 @@ typedef struct Pool_header *Pool; /* allows memory to be included */
 #include "lib/share/read_table-lib.c"
 
 #include <dirent.h>
+#include <errno.h>
 
 /* Functions defined in memory.c */
 
@@ -917,12 +918,54 @@ static void mcformat_usedir(char *dir)
   if(mkdir(dir))
 #endif
   {
-    if (!mcforcemode) {
-      fprintf(stderr, "Error: unable to create directory '%s' (mcformat_usedir)\n", dir);
-      fprintf(stderr, "(Maybe the directory already exists? Use --force before -d %s to override)\n", dir);
-      exit(1);
-    } else fprintf(stderr, "mcformat: Warning: re-using output directory '%s'.\n", dir);
+    int errno_mkdir = errno;
+    if (errno_mkdir == ENOENT) {
+      if (mcverbose) fprintf(stderr, "mkdir: ENOENT A directory component in pathname '%s' does not exist or is a dangling symbolic link.\n", dir);
+      /* we build the required elements in the path */
+      struct fileparts_struct dir_parts = fileparts(dir);
+      if (strlen(dir_parts.Path)) {
+        char *path_pos= strrchr(dir_parts.Path, MC_PATHSEP_C);  /* last PATHSEP */
+        if (path_pos == dir_parts.Path+strlen(dir_parts.Path)-1) dir_parts.Path[strlen(dir_parts.Path)-1] = '\0';
+        if (mcverbose) fprintf(stderr, "mcformat: Warning: building output directory '%s' from '%s'.\n", dir_parts.Path, dir);
+        mcformat_usedir(dir_parts.Path);
+        fileparts_free(dir_parts);
+        mcformat_usedir(dir);
+      }
+    } else if (errno_mkdir == EEXIST) {
+      fprintf(stderr, "mkdir: EEXIST pathname already exists (not necessarily as a directory).\n");
+      if (!mcforcemode) {
+        fprintf(stderr, "Error: unable to create directory '%s' (mcformat_usedir)\n", dir);
+        fprintf(stderr, "(Maybe the directory already exists? Use --force before -d %s to override)\n", dir);
+        exit(1);
+      }
+      fprintf(stderr, "mcformat: Warning: re-using output directory '%s'.\n", dir);
+    } else {
+      switch (errno_mkdir) {
+      case EACCES:
+        fprintf(stderr, "mkdir: EACCES The parent directory does not allow write permission"
+        "or one of the directories in pathname did not allow search permission.\n"); break;
+      case EFAULT:
+        fprintf(stderr, "mkdir: EFAULT pathname points outside your accessible address space.\n"); break;
+      case ELOOP:
+        fprintf(stderr, "mkdir: ELOOP Too many symbolic links were encountered in resolving pathname.\n"); break;
+      case ENAMETOOLONG:
+        fprintf(stderr, "mkdir: ENAMETOOLONG pathname was too long.\n"); break;
+      case ENOMEM:
+        fprintf(stderr, "mkdir: ENOMEM Insufficient kernel memory was available.\n"); break;
+      case ENOSPC:
+        fprintf(stderr, "mkdir: ENOSPC The device containing pathname has no room for the new directory.\n"); break;
+      case ENOTDIR:
+        fprintf(stderr, "mkdir: ENOTDIR A component used as a directory in pathname is not, in fact, a directory.\n"); break;
+      case EPERM:
+        fprintf(stderr, "mkdir: EPERM The filesystem containing pathname does not support the creation of directories.\n"); break;
+      case EROFS:
+        fprintf(stderr, "mkdir: EROFS pathname refers to a file on a read-only filesystem.\n"); break;
+      }
+      fprintf(stderr, "mcformat: Fatal error accessing %s. Aborting.\n", dir);
+      exit(-1);
+    }
   }
+  if (mcverbose) fprintf(stderr, "mcformat: Creating directory %s.\n", dir);
   mcdirname = dir;
 
 #endif /* !MC_PORTABLE */
