@@ -327,8 +327,8 @@ sub simulation_dialog {
     $line->pack(-anchor => 'w');
     our $choicecluster=$line->Label(-text => "Clustering:")->pack(-side => 'left');
     $b->attach($choicecluster, -balloonmsg => "Recommended methods:
-* Threads on multi-core/multi-cpu machines
-* MPI on clusters");
+* Single for normal machines
+* MPI on clusters/multi-core machines");
     my $choicecluster_val;
     if ($si{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
 #     elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
