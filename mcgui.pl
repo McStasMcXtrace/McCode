@@ -967,16 +967,6 @@ sub menu_run_simulation {
             $OutDir =~ s! !\ !g;
           }
         }
-	# In case of autoplot and PGPLOT, spawn mcdaemon here
-	if ($newsi->{'Mode'} ==0 && $newsi->{'Autoplot'} && $plotter =~ /PGPLOT|McStas/i) {
-	    my $dirname;
-	    if($newsi->{'Dir'}) {
-		$dirname = $newsi->{'Dir'};
-	    } else {
-		$dirname = getcwd();
-	    }
-	    menu_spawn_mcdaemon($w,$dirname);
-	}
         # clustering methods
         if ($newsi->{'cluster'} == 2) {
           push @command, "--mpi=$newsi->{'nodes'}";
@@ -1142,10 +1132,10 @@ sub menu_run_simulation {
         $inf_sim->{'Mode'}     = $newsi->{'Mode'};
         $inf_sim->{'cluster'}  = $newsi->{'cluster'};
 
-        # if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
-#           plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
-#                       $current_sim_file);
-#         }
+        if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
+           plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
+                       $current_sim_file);
+        }
 
 	if ($newsi->{'Detach'}) { # Clean up after background simulation
 	 sleep(1);
