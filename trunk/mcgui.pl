@@ -592,9 +592,10 @@ sub run_dialog_create {
     $dlg->protocol("WM_DELETE_WINDOW" => sub { } );
     $b = $dlg->Balloon(-state => 'balloon');
     # Add labels
-    $dlg->Label(-text => $text,
+    my $text_label = $dlg->Label(-text => $text,
                 -anchor => 'w',
                 -justify => 'left')->pack(-fill => 'x');
+    $b->attach($text_label, -balloonmsg => $title);
     my $bot_frame = $dlg->Frame(-relief => "raised", -bd => 1);
     $bot_frame->pack(-side => "top", -fill => "both",
                      -ipady => 3, -ipadx => 3);
@@ -654,7 +655,7 @@ sub run_dialog {
     my $update_cmd = sub {
         kill "USR2", $pid unless $state; # signal 15 is SIGTERM
     };
-    my $text="$inittext\nJob";
+    my $text="Job";
     if ($inf_sim->{'Mode'}==1) { $text='Trace/3D View'; }
     elsif ($inf_sim->{'Mode'}==2) { $text='Parameter Optimization'; }
     if ($pid && $Config{'osname'} ne 'MSWin32') {
@@ -1491,7 +1492,7 @@ sub setup_menu {
     sitemenu_build($w,$menu);
 
     my $toolmenu = $menu->Menubutton(-text => 'Tools', -underline => 0);
-    
+
     $toolmenu->command(-label => 'Plot current results',
 		       -command => sub {menu_plot_results($w);});
     $toolmenu->command(-label => 'Plot other results',
