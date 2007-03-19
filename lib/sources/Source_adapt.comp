@@ -10,16 +10,22 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.29 $
+* Version: $Revision: 1.30 $
 * Origin: Risoe
 * Release: McStas 1.6
+* Modified by: Revised by: <a href="mailto:percival@physics.queensu.ca">Aaron M. Percival</a>
+* Modified by: 2007
+* Modified by: <a href="http://www.physics.queensu.ca">Queen's University Department of Physics</a>
+* Modified by: Added the option of having an initial distribution that is uniform in wavelength
 *
 * Neutron source with adaptive importance sampling
 *
+*
+*
 * %D
-* Rectangular source with flat energy distribution that uses adaptive
-* importance sampling to improve simulation efficiency. Works
-* together with the Adapt_check component.
+* Rectangular source with flat energy or wavelength distribution that
+* uses adaptive importance sampling to improve simulation efficiency.
+* Works together with the Adapt_check component.
 *
 * The source divides the three-dimensional phase space of (energy,
 * horizontal position, horizontal divergence) into a number of
@@ -47,21 +53,23 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xmin:   (m)          Left edge of rectangular source
-* xmax:   (m)          Right edge
-* ymin:   (m)          Lower edge
-* ymax:   (m)          Upper edge
-* dist:   (m)          Distance to target rectangle along z axis
-* xw:     (m)          Width(x) of target
-* yh:     (m)          Height(y) of target
-* E0:     (meV)        Mean energy of neutrons
-* dE:     (meV)        Energy spread (energy range is from E0-dE to E0+dE)
-* flux:   (1/(cm**2*AA**st)) Absolute source flux
-* N_E:    (1)          Number of bins in energy dimension
-* N_xpos: (1)          Number of bins in horizontal position
-* N_xdiv: (1)          Number of bins in horizontal divergence
-* alpha:  (1)          Learning cut-off factor (0 < alpha <= 1)
-* beta:   (1)          Aggressiveness of adaptive algorithm (0 < beta <= 1)
+* xmin:    (m)          Left edge of rectangular source
+* xmax:    (m)          Right edge
+* ymin:    (m)          Lower edge
+* ymax:    (m)          Upper edge
+* dist:    (m)          Distance to target rectangle along z axis
+* xw:      (m)          Width(x) of target
+* yh:      (m)          Height(y) of target
+* E0:      (meV)        Mean energy of neutrons
+* dE:      (meV)        Energy spread (energy range is from E0-dE to E0+dE)
+* lambda0: (AA)         Mean wavelength of neutrons (if energy not specified)
+* dlambda: (AA)         Wavelength spread
+* flux:    (1/(cm**2*AA**st)) Absolute source flux
+* N_E:     (1)          Number of bins in energy (or wavelength) dimension
+* N_xpos:  (1)          Number of bins in horizontal position
+* N_xdiv:  (1)          Number of bins in horizontal divergence
+* alpha:   (1)          Learning cut-off factor (0 < alpha <= 1)
+* beta:    (1)          Aggressiveness of adaptive algorithm (0 < beta <= 1)
 * filename: (string)   Optional filename for adaptive distribution output
 *
 * OUTPUT PARAMETERS:
@@ -78,7 +86,7 @@
 
 DEFINE COMPONENT Source_adapt
 DEFINITION PARAMETERS (N_E=20, N_xpos=20, N_xdiv=20, alpha=0.25, beta=0.25, string filename=0)
-SETTING PARAMETERS (xmin,xmax,ymin,ymax, dist=2.33, xw=0.05, yh=0.1, E0=14.68, dE=2, flux=1e13)
+SETTING PARAMETERS (xmin,xmax,ymin,ymax, dist=2.33, xw=0.05, yh=0.1, E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13)
 OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -110,9 +118,18 @@ INITIALIZE
 
   adpt.num = N_E*N_xpos*N_xdiv;
   adpt.a_beta = beta;
-  lambda_min = sqrt(81.81/(E0+dE)); /* AAngstroem */
-  lambda_max = sqrt(81.81/(E0-dE));
-  delta_lambda = lambda_max - lambda_min;
+  
+  if (E0 == 0) {
+	lambda_min = lambda0 - dlambda; /* AAngstroem */
+	lambda_max = lambda0 + dlambda;
+	delta_lambda = dlambda;
+  }
+  else {
+  	lambda_min = sqrt(81.81/(E0+dE)); /* AAngstroem */
+  	lambda_max = sqrt(81.81/(E0-dE));
+	delta_lambda = lambda_max - lambda_min;
+  }
+
   source_area = (xmax - xmin)*(ymax - ymin)*1e4; /* cm^2 */
   p_in = flux/mcget_ncount()*delta_lambda*source_area;
   adpt.atree = adapt_tree_init(adpt.num);
@@ -136,7 +153,7 @@ INITIALIZE
 %}
 TRACE
 %{
-  double thmin,thmax,phmin,phmax,theta,phi,E,v,r;
+  double thmin,thmax,phmin,phmax,theta,phi,v,r,E,lambda;
   double new_v;
   int i_E, i_xpos, i_xdiv;
 
@@ -165,11 +182,23 @@ TRACE
   phmin = atan2(-yh/2.0 - y, dist);
   phmax = atan2( yh/2.0 - y, dist);
   phi = phmin + rand01()*(phmax - phmin);
-  E = E0 - dE + (i_E + rand01())*(2.0*dE/(double)N_E);
-  v = sqrt(E)*SE2V;
-  vy = v*sin(phi);
-  vx = v*cos(phi)*sin(theta);
-  vz = v*cos(phi)*cos(theta);
+  
+  if(E0 == 0) {
+  	lambda = lambda0 - dlambda + (i_E + rand01())*(2.0*dlambda/(double)N_E);
+	v = 3.956E3/lambda;
+	vy = v*sin(phi);
+  	vx = v*cos(phi)*sin(theta);
+	vz = v*cos(phi)*cos(theta);
+  	
+  }
+  else {
+  	E = E0 - dE + (i_E + rand01())*(2.0*dE/(double)N_E);
+  	v = sqrt(E)*SE2V;
+  	vy = v*sin(phi);
+  	vx = v*cos(phi)*sin(theta);
+  	vz = v*cos(phi)*cos(theta);	
+  }
+
   t = 0;
   /* Adjust neutron weight. */
   p = p_in;
@@ -210,11 +239,22 @@ FINALLY
   {
     for(i = 0; i < adpt.num; i++)
       p1[i] = adpt.atree->v[i]/adpt.atree->total;
-    DETECTOR_OUT_1D("Adaptive source energy distribution",
+    
+    if(E0 == 0) {
+    	DETECTOR_OUT_1D("Adaptive source Wavelength distribution",
+        	    "Wavelength [AA]",
+                    "Probability",
+                    "lambda", lambda0 - dlambda, lambda0 + dlambda, adpt.num,
+    	            NULL, p1, NULL, filename);	    
+    }
+    else { 	
+    	DETECTOR_OUT_1D("Adaptive source energy distribution",
                     "Energy [meV]",
                     "Probability",
                     "E", E0 - dE, E0 + dE, adpt.num,
                     NULL, p1, NULL, filename);
+    }
+
     free(p1);
   }
   adapt_tree_free(adpt.atree);
