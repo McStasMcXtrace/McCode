@@ -30,6 +30,7 @@ use File::Spec;
 use Time::localtime;
 use Tk::Balloon;
 use Config;
+use FileHandle;
 
 
 # Determine the path to the McStas system directory. This must be done
@@ -72,6 +73,7 @@ my $oformats_iMatlab = ['Scilab'];
 my $oformats_iScilab = ['Matlab'];
 my $runmodes_iMcStas = ['Convert','Merge','Scan assembly','Scan Merge'];
 my $runmodes_ilab = ['Convert'];
+my $recordlog=0;
 
 my $ext;
 my $filename = "";
@@ -79,6 +81,7 @@ my $i;
 my $continue;
 
 my $iformat_crtl;
+my $oformat_line="";
 
 if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
    $oformats_iMcStas = ['McStas','Scilab','Matlab','IDL','HTML','XML','Octave','NeXus'];
@@ -86,29 +89,52 @@ if ($MCSTAS::mcstas_config{'NEXUS'} ne "") {
    $oformats_iMcStas = ['McStas','Scilab','Matlab','IDL','HTML','XML','Octave'];
 }
 
+my $cmd;
+my $logfile;
+my $date = time();
+$logfile = "mcformatgui_${date}.log";
 Tkgui();
 $iformat  = iformat_select($inputdir);
-print "Ready to go:\n    $inputdir \@ $iformat format \n -> $outputdir \@ $oformat format\n Action: $runmode\n\n";
+my $fid;
+
+if ($recordlog) {
+  $logfile = "mcformatgui_${date}.log";
+  $fid = new FileHandle "> $logfile";
+  if (defined $fid) {
+    print $fid "# mcformatgui log file '$logfile'\n";
+    print $fid "# Directories: $inputdir \@ $iformat format -> $outputdir \@ $oformat format.\n";
+    print $fid "# Action: $runmode\n";
+
+    print "mcformatgui: Recording $inputdir -> $outputdir operations into log file '$logfile'\n";
+  }
+}
 
 if ($iformat =~ /Matlab|Scilab/i && $oformat =~ /Matlab|Scilab/i
  && $iformat ne $oformat && $runmode eq "Convert") {
     print "Using mcconvert.pl for $iformat -> $oformat conversion...\n";
-    my $cmd="mcconvert$MCSTAS::mcstas_config{'SUFFIX'} --format=$oformat --indir=$inputdir --outdir=$outputdir";
-    print "Executing: $cmd\n";
-    system("$cmd");
-} else {
+    $cmd="mcconvert$MCSTAS::mcstas_config{'SUFFIX'} --format=$oformat --indir=$inputdir --outdir=$outputdir";
+
+} elsif ($oformat_line !~ /binary/s) {
     print "Input format is McStas, running mcformat to $runmode data. Output will go to $outputdir in $oformat...\n";
     my $mode="";
     if    ($runmode =~ /Scan assembly/i) { $mode="--scan-only"; }
     elsif ($runmode =~ /Scan Merge/i)    { $mode="--scan"; }
     elsif ($runmode =~ /merge/i)         { $mode="--merge"; }
-    my $cmd="mcformat";
+    $cmd="mcformat";
     if ($Config{'osname'} eq 'MSWin32') { $cmd .= ".$MCSTAS::mcstas_config{'EXE'}"; }
     $cmd.=" --format=$oformat --dir=$outputdir $inputdir $mode";
-    print "Executing: $cmd\n";
-    system("$cmd");
+} else {
+  print "mcformatgui: I do not have any appropriate method for conversion.\n";
+  print "ERROR        Try mcformat or mcconvert commands manually.\n";
+  exit();
 }
-
+if ($recordlog && defined $fid) {
+  print $fid "# Command: $cmd\n\n";
+  $cmd .= ">> $logfile 2>&1 ";
+  close($fid);
+}
+print "Executing: $cmd\n";
+system("$cmd");
 
 sub Tkgui {
     use Tk;
@@ -171,6 +197,8 @@ sub build_gui {
 
     my $bottomframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
     $bottomframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
+    my $recordlog = $bottomframe->Checkbutton(-text => "Record Log file",-variable => \$recordlog)->pack(-side => 'left');
+    $b->attach($recordlog, -balloonmsg => "Records data handling operations into $logfile file");
 
     $bottomframe->Button(-text => "Cancel", -fg => 'red', -command => sub {exit;})->pack(-side => "right", -anchor => "e");
     $bottomframe->Button(-text => "Ok", -fg => 'green', -command => sub {
@@ -191,7 +219,7 @@ sub build_gui {
 sub check_dir {
     my ($win, $output) = @_;
     if (-d $output && -e $output) {
-	$output = File::Spec->catfile( $output, "converted" );;
+	$output = File::Spec->catfile( $output, "$date" );
 	$win->messageBox(
 			 -message => "For safety reasons I will create the subdir \n\n$output\n\n as final destination.\n\n ".
 			 "This directory does not exist now but will be created at runtime.\n",
@@ -260,15 +288,25 @@ sub iformat_select {
   }
 
   # look if there is only one file type and set iformat
-  if (-e "$file.m")    { $iformat = "Matlab"; }
-  if (-e "$file.sci")  { $iformat = "Scilab"; }
-  if (-e "$file.sim")  { $iformat = "McStas"; }
-  if (-e "$file.html") { $iformat = "HTML";   }
-  if (-e "$file.xml")  { $iformat = "XML";    }
-  if (-e "$file.pro")  { $iformat = "IDL";    }
-  if (-e "$file.nxs")  { $iformat = "NeXus";  }
+  if (-e "$file.m")    { $iformat = "Matlab";  $file = "$file.m"; }
+  if (-e "$file.sci")  { $iformat = "Scilab";  $file = "$file.sci"; }
+  if (-e "$file.sim")  { $iformat = "McStas";  $file = "$file.sim"; }
+  if (-e "$file.html") { $iformat = "HTML";    $file = "$file.html"; }
+  if (-e "$file.xml")  { $iformat = "XML";     $file = "$file.xml";  }
+  if (-e "$file.pro")  { $iformat = "IDL";     $file = "$file.pro"; }
+  if (-e "$file.nxs")  { $iformat = "NeXus";   $file = "$file.nxs"; }
 
-  print "Input directory $dir presumably contains data in $iformat format.\n";
+  if (open $handle, $file) {
+    while(<$handle>) {
+      if(/Format\s*(.*?)\s*$/i) {
+          $oformat_line = $1;
+      }
+    }
+    close($fid);
+    print "Input directory $dir presumably contains data in $iformat format.\n";
+    if ($oformat_line =~ /binary/i) { print "       It contains binary blocks.\n"; }
+  } else { print "mcformatgui: Warning: Could not open file '$file'. Conversion may fail.\n"; }
+
   return($iformat);
 }
 

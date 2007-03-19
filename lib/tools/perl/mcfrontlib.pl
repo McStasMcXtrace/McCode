@@ -182,7 +182,7 @@ sub read_data_info {
       } elsif(/^\s*begin array_1D\s*\(([0-9]+)\)\s*/i) {
           $data = read_array2D($handle,4,$2);
       } elsif(/^\s*statistics:\s*(.*?)\s*$/i) {
-          $stats = $1;    
+          $stats = $1;
       } elsif(/^\s*end\s+data\s*$/i) {
           last;
       } else {
@@ -277,7 +277,7 @@ sub read_sim_info {
           return ($instrument_info, $simulation_info, \@datalist, $error);
       } elsif(/^\s*$/) {
           next;
-      } else { 
+      } else {
           # print "Invalid line in siminfo file (read_sim_info):\n'$_'";
       }
     }
@@ -309,15 +309,15 @@ sub mcpreplot {
     # instrument
     print $fh ("begin instrument\n");
     $line=<MCOUTFILE>;
-    print $fh ("  Name: MY_INSTRUMENT\n");
+    print $fh ("  Name: $mcfile\n");
     print $fh ("  Parameters: PARAM\n");
     print $fh ("  Instrument-source: INSTR.instr\n");
     print $fh ("  Trace-enabled: yes\n");
     print $fh ("  Default-main: yes\n");
     print $fh ("  Embedded-runtime: yes\n");
     print $fh ("end instrument\n");
-    
-    # simulation 
+
+    # simulation
     print $fh ("\n");
     print $fh ("begin simulation\n");
     $line=<MCOUTFILE>;
@@ -339,7 +339,7 @@ sub mcpreplot {
          # data
          open(MCOUTFILE,$mcfile);
          $line = <MCOUTFILE>;
-         
+
          print $fh ("begin data\n");
          while($line =~ "# ")
          {
