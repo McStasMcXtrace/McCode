@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -124,10 +124,12 @@ TRACE
     }
   }
   obuf[pos] = mcstas2vitess(x, y, z, vx, vy, vz, t, sx, sy, sz, p);
-  obuf[pos].Color   = vitess_col;
-  obuf[pos].ID.IDNo = vitess_ID.IDNo;
-  memcpy(obuf[pos].ID.IDGrp, vitess_ID.IDGrp, 2);
-
+  /* The following three lines have references to things that are no longer
+     in the McStas vitess libs */
+  /* obuf[pos].Color   = vitess_col;
+     obuf[pos].ID.IDNo = vitess_ID.IDNo;
+     memcpy(obuf[pos].ID.IDGrp, vitess_ID.IDGrp, 2); */
+  
   p_out  += p;
   p2_out += p*p;
   ++pos;
