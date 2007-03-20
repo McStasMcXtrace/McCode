@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -68,7 +68,7 @@ INITIALIZE
   {
     hfile = stdin;
   }
-  else if (!strcmp(file, "no_file"))
+  else if (!strcmp(file, "no_file") || !strcmp(file, ""))
   {
     hfile = NULL;
   }
@@ -77,7 +77,7 @@ INITIALIZE
     hfile = fopen((filename=FullParName(file)), "rb");
     if(!hfile)
     {
-      fprintf(stderr, "Vitess_output: Error: Cannot open input file %s.\n", filename);
+      fprintf(stderr, "Vitess_input: Error: Cannot open input file %s.\n", filename);
       exit(1);
     }
   }
@@ -127,9 +127,11 @@ TRACE
   if(finished)
     ABSORB;
   vitess2mcstas(ibuf[pos], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
-  vitess_col       =      ibuf[pos].Color;
-  vitess_ID.IDNo   =      ibuf[pos].ID.IDNo;
-  memcpy(vitess_ID.IDGrp, ibuf[pos].ID.IDGrp, 2);
+  /* The following three lines have references to things that are no longer
+     in the McStas vitess libs */
+  /*  vitess_col       =      ibuf[pos].Color;
+      vitess_ID.IDNo   =      ibuf[pos].ID.IDNo;
+      memcpy(vitess_ID.IDGrp, ibuf[pos].ID.IDGrp, 2); */
 
   /* Repeat the same neutron state parameters the required number of
      times. */
