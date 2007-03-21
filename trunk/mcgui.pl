@@ -205,12 +205,8 @@ sub menu_spawn_internal_editor {
 
 
 sub menu_spawn_mcdaemon {
-    my ($w,$dirname) = @_;
-    my $simfile = $current_sim_file;
-    if (!$simfile) {
-	$simfile = $dirname;
-    }
-    my $cmd = "mcdaemon$suffix $simfile";
+    my ($w) = @_;
+    my $cmd = "mcdaemon$suffix";
     spawn_external($w,$cmd);
 }
 
@@ -1510,7 +1506,7 @@ sub setup_menu {
     $toolmenu->command(-label => 'Plot other results',
 		       -command => sub {menu_spawn_mcplot($w);});
     $toolmenu->command(-label => 'Online plotting of results',
-		       -command => sub {menu_spawn_mcdaemon($w,$current_sim_file);});
+		       -command => sub {menu_spawn_mcdaemon($w);});
     $toolmenu->command(-label => 'Dataset convert/merge',
 		       -command => sub {menu_spawn_mcformatgui($w,$current_sim_file);});
     $toolmenu->pack(-side=>'left');
