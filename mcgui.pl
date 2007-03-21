@@ -331,6 +331,18 @@ sub tools_shortcuts {
 	"$shortcuts{'cut'} - Editor cut\n".
 	"$shortcuts{'copy'} - Editor copy\n".
 	"$shortcuts{'paste'} - Editor paste";
+	if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mcstas|pgplot/i) {
+	 $msg .= "\n\n
+  'P' - Plotter/PGPLOT export BW postscript
+  'C' - Plotter/PGPLOT export color postscript
+  'N' - Plotter/PGPLOT export PNG file
+  'M' - Plotter/PGPLOT export PPM file
+  'G' - Plotter/PGPLOT export GIF file
+  'L' - Plotter/PGPLOT Toggle log10 plotting mode (data)
+  'T' - Plotter/PGPLOT Toggle contour plotting mode (data)
+  'Z' - Plotter/PGPLOT zoom (in Trace/3D view)
+  'Q' - Plotter/PGPLOT quit";
+	}
 
     if ($Config{'osname'} eq 'MSWin32') {
 	$w->messageBox(-message =>$msg,
