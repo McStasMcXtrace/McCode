@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.8 $
+* Version:  $Revision: 1.9 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -57,7 +57,7 @@
 *
 * %P
 * INPUT PARAMETERS
-* file:         [str] Name of the MCNP PTRAC neutron input file
+* file:         [str] Name of the MCNP PTRAC neutron input file. Empty string "" unactivates component
 * repeat_count: [1]   Number of times the source must be generated.
 *                           0 unactivates the component
 * verbose:      [0|1] Displays additional informations if set to 1
@@ -280,7 +280,7 @@ INITIALIZE
   surface=surface_id;
   /* Open neutron input file. */
   /* (If empty filename given, present warning in case of verbose, perform nothing) */
-  
+
   if (!strcmp(file,"")) {
     if (verbose) printf("MCNP_input: %s: Empty filename given, doing nothing!\n", NAME_CURRENT_COMP, file);
   } else {
@@ -289,18 +289,18 @@ INITIALIZE
       filesize = stfile.st_size;
       hfile = fopen(file, "r");
     }
-    
+
     if(!hfile)
       {
 	fprintf(stderr, "MCNP_input: %s: Error: Cannot open input file %s.\n", NAME_CURRENT_COMP, file);
 	exit(1);
       } else if (verbose)
 	printf("MCNP_input: %s: opening MCNP/PTRAC file '%s'\n", NAME_CURRENT_COMP, file);
-    
+
     head = mcnp_get_header(hfile); /*  and reset to file start */
-    
+
     begin_neutrons = ftell(hfile);
-    
+
     if (verbose) fprintf(stdout, "%s\n", head);
     if (verbose) {
       printf("Analysing MCNP file %s (", file, MCNP_ANALYSE);
@@ -309,7 +309,7 @@ INITIALIZE
     }
     /* analyse MCNP file: count neutrons, get beam center and mean speed
      * do that for the first 1e4 neutrons, and extrapolates to file size */
-    
+
     while (!exit_flag && (n_neutrons <= MCNP_ANALYSE || !MCNP_ANALYSE)) {
       double x,y,z,vx,vy,vz,t,p,sx,sy,sz;
       if (mcnp_create_neutron(
@@ -341,7 +341,7 @@ INITIALIZE
 	n_neutrons_p += p;
       }
     } /* end while */
-    
+
     if (n_neutrons) {
       long   end_analyse=0;
       double cx,cy,cz;
@@ -360,7 +360,7 @@ INITIALIZE
       n_count_extrapolated = n_neutrons*(filesize-begin_neutrons)/(end_analyse - begin_neutrons);
       if (verbose) {
 	double mean_k, mean_w=0, mean_L=0;
-	
+
 	mean_k = V2K*mean_v;
 	if (mean_k) mean_L = 2*PI/mean_k;
 	mean_w = VS2E*mean_v*mean_v;
@@ -398,7 +398,7 @@ INITIALIZE
       /* compute the rotation matrix to make mean_v along the Z-axis */
       /* first normalize mean velocity (will be Z axis): c=v/|v| */
       cx = mean_vx/mean_v; cy = mean_vy/mean_v; cz = mean_vz/mean_v;
-      
+
       /* compute angle to rotate in order to come back to Z axis */
       angle2z = acos(angle2z); /* in RAD */
       /* get rotation axis b=c x [0 0 1] */
@@ -414,7 +414,7 @@ INITIALIZE
 	if (smooth)       printf("smoothed ");
 	printf("\n");
       }
-      
+
     } else {
       fprintf(stderr, "MCNP_input: %s: Error: file %s neutrons does not contains any neutron. \n",NAME_CURRENT_COMP, file);
       exit(-1);
@@ -424,19 +424,19 @@ INITIALIZE
       fprintf(stderr, "MCNP_input: %s: Error: Can not reset MCNP file (fseek error at analyse). \n",NAME_CURRENT_COMP);
       exit_flag = 1;
     }
-    
+
 #if defined (USE_MPI) || defined(USE_THREADS)
     if (!smooth) {
       if (verbose)
 	printf("MCNP_input: %s: smoothing is recommended when running MPI/Threads execution\n", NAME_CURRENT_COMP);
     }
 #endif
-    
+
     double min_dv=fabs(max_vx-min_vx);
     if (min_dv > fabs(max_vy-min_vy)) min_dv = fabs(max_vy-min_vy);
     if (min_dv > fabs(max_vz-min_vz)) min_dv = fabs(max_vz-min_vz);
     min_vx = min_dv;
-  } /* non-empty filename */   
+  } /* non-empty filename */
 %}
 
 TRACE
