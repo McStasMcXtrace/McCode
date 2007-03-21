@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -25,8 +25,8 @@
 * %P
 * INPUT PARAMETERS
 *
-* file:         Filename of neutron file to read. Default is
-*               standard input [string]
+* file:         Filename of neutron file to read. Default (NULL) is
+*               standard input. Empty string "" unactivates component [string]
 * bufsize:      Size of neutron input buffer [records]
 * repeat_count: Number of times to repeat each neutron read [1]
 *
@@ -52,31 +52,25 @@ SHARE
 
 DECLARE
 %{
-char *filename;                 /* path + filename */
-FILE *hfile;			/* Neutron input file handle */
-Neutron *ibuf;			/* Neutron input buffer */
-int size;			/* Number of neutrons currently in buffer */
-int pos;			/* Current position in buffer */
-int rep;			/* Neutron repeat count */
-int finished;			/* Set to 1 when last neutron read */
+char *filename=NULL;                 /* path + filename */
+FILE *hfile  =NULL;			/* Neutron input file handle */
+Neutron *ibuf=NULL;			/* Neutron input buffer */
+int size=0;			/* Number of neutrons currently in buffer */
+int pos=0;			/* Current position in buffer */
+int rep=0;			/* Neutron repeat count */
+int finished=0;			/* Set to 1 when last neutron read */
 %}
 
 INITIALIZE
 %{
   /* Open neutron input file. */
-  if (file==NULL)
-  {
+  if (file==NULL) {
     hfile = stdin;
-  }
-  else if (!strcmp(file, "no_file") || !strcmp(file, ""))
-  {
+  } else if (!strlen(file)) {
     hfile = NULL;
-  }
-  else
-  {
+  } else {
     hfile = fopen((filename=FullParName(file)), "rb");
-    if(!hfile)
-    {
+    if(!hfile) {
       fprintf(stderr, "Vitess_input: Error: Cannot open input file %s.\n", filename);
       exit(1);
     }
@@ -89,62 +83,56 @@ INITIALIZE
     }
   }
 #endif
-
-  /* Allocate neutron input buffer. */
-  ibuf = calloc(bufsize, sizeof(Neutron));
-  if(!ibuf)
-  {
-    fprintf(stderr, "Vitess_input: Error: Cannot allocate neutron buffer.\n");
-    exit(1);
+  if (hfile) {
+    /* Allocate neutron input buffer. */
+    ibuf = calloc(bufsize, sizeof(Neutron));
+    if(!ibuf)
+    {
+      fprintf(stderr, "Vitess_input: Error: Cannot allocate neutron buffer.\n");
+      exit(1);
+    }
   }
-  /* Initialize buffer. */
-  size = 0;
-  pos = 0;
-  rep = 0;
-  finished = 0;
 %}
 
 TRACE
 %{
-  if(pos >= size) {
-    /* Buffer is empty. */
-    size = fread(ibuf, sizeof(Neutron), bufsize, hfile);
-    if(size <= 0)
-    {
-      if(ferror(hfile))
-	fprintf(stderr, "Vitess_input: Error during read of neutron file.\n");
-      if(feof(hfile) || ferror(hfile))
-	finished = 1;		/* End of file or error reached */
+  if (hfile && ibuf) {
+    if(pos >= size) {
+      /* Buffer is empty. */
+      size = fread(ibuf, sizeof(Neutron), bufsize, hfile);
+      if(size <= 0) {
+        if(ferror(hfile))
+          fprintf(stderr, "Vitess_input: Error during read of neutron file.\n");
+        if(feof(hfile) || ferror(hfile))
+          finished = 1;		/* End of file or error reached */
+      } else {
+        pos = 0;			/* Reposition at start of buffer */
+      }
     }
-    else
-    {
-      pos = 0;			/* Reposition at start of buffer */
-    }
-  }
-  /* When no more neutron records are available in the neutron file,
-     any remaining iterations are skipped by immediately ABSORB'ing
-     the neutron. */
-  if(finished)
-    ABSORB;
-  vitess2mcstas(ibuf[pos], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
-  /* The following three lines have references to things that are no longer
-     in the McStas vitess libs */
-  /*  vitess_col       =      ibuf[pos].Color;
-      vitess_ID.IDNo   =      ibuf[pos].ID.IDNo;
-      memcpy(vitess_ID.IDGrp, ibuf[pos].ID.IDGrp, 2); */
+    /* When no more neutron records are available in the neutron file,
+      any remaining iterations are skipped by immediately ABSORB'ing
+      the neutron. */
+    if(finished)
+      ABSORB;
+    vitess2mcstas(ibuf[pos], &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz, &p);
+    /* The following three lines have references to things that are no longer
+      in the McStas vitess libs */
+    /*  vitess_col       =      ibuf[pos].Color;
+        vitess_ID.IDNo   =      ibuf[pos].ID.IDNo;
+        memcpy(vitess_ID.IDGrp, ibuf[pos].ID.IDGrp, 2); */
 
-  /* Repeat the same neutron state parameters the required number of
-     times. */
-  ++rep;
-  if(rep >= repeat_count)
-  {
-    rep = 0;
-    ++pos;
+    /* Repeat the same neutron state parameters the required number of
+      times. */
+    ++rep;
+    if(rep >= repeat_count) {
+      rep = 0;
+      ++pos;
+    }
   }
 %}
 FINALLY
 %{
-  if(ibuf)
+  if(hfile && ibuf)
     free(ibuf);
   if(hfile && file)
     fclose(hfile);

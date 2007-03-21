@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.24 $
+* Version:  $Revision: 1.25 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -55,7 +55,7 @@
 *
 * %P
 * INPUT PARAMETERS
-* file:         [str] Name of the Tripoli4.4 neutron input file
+* file:         [str] Name of the Tripoli4.4 neutron input file. Empty string "" unactivates component
 * repeat_count: [1]   Number of times the source must be generated.
 *                           0 unactivates the component
 * verbose:      [0|1] Displays additional informations if set to 1
@@ -258,7 +258,7 @@ INITIALIZE
 
   /* Open neutron input file. */
   /* (If empty filename given, present warning in case of verbose, perform nothing) */
-  
+
   if (!strcmp(file,"")) {
     if (verbose) printf("Tripoli4_input: %s: Empty filename given, doing nothing!\n", NAME_CURRENT_COMP, file);
   } else {
@@ -268,16 +268,16 @@ INITIALIZE
       filesize = stfile.st_size;
       hfile = fopen(file, "r");
     }
-    
+
     if(!hfile)
       {
 	fprintf(stderr, "Tripoli4_input: %s: Error: Cannot open input file %s.\n", NAME_CURRENT_COMP, file);
 	exit(1);
       } else if (verbose)
 	printf("Tripoli4_input: %s: opening Tripoli4 file '%s'\n", NAME_CURRENT_COMP, file);
-    
+
     head = tripoli_get_header(hfile, &nl); /*  and reset to file start */
-    
+
     while (tripoli_read_word(hfile,word) != EOF) {
       /* store position of first batch in file for repeat */
       first_batch=ftell(hfile);
@@ -291,18 +291,18 @@ INITIALIZE
 	if (tripoli_read_word(hfile,word)!=EOF) nsize=strtol(word,NULL,0);
       }
     }
-    
+
     if (verbose) {
       printf("Analysing Tripoli4 file %s (", file, T4_ANALYSE);
       if (T4_ANALYSE) printf("%g events)\n", T4_ANALYSE);
       else printf("all events)\n");
     }
-    
+
     /* analyse Tripoli file: count neutrons, get beam center and mean speed
      * do that for the first 1e4 neutrons, and extrapolates to file size */
     while (!exit_flag && (n_neutrons <= T4_ANALYSE || !T4_ANALYSE)) {
       result_read=tripoli_read_word(hfile,word);
-      
+
       if (is_neutron(word)) {  /* if key word NEUTRON is found */
 	double x,y,z,vx,vy,vz,t,p,sx,sy,sz;
 	if (tripoli_create_neutron(hfile,&x,&y,&z,&vx,&vy,&vz,&t,&sx,&sy,&sz,&p)) {
@@ -318,7 +318,7 @@ INITIALIZE
 	    mean_x  += p*x;  mean_y  += p*y;  mean_z  += p*z;
 	    mean_vx += p*vx; mean_vy += p*vy; mean_vz += p*vz; mean_v += p*v;
 	    angle2z += p*vz/v;
-	    
+
 	    if (v) {
 	      mean_dx += p*fabs(vx/v); mean_dy += p*fabs(vy/v); mean_dz += p*fabs(vz/v); }
 	    if (x  < min_x)  min_x  = x;
@@ -338,19 +338,19 @@ INITIALIZE
 	  n_neutrons++;
 	}
       }
-      
+
       if (begin_of_batch(word)){/* if key word BEGIN_OF_BATCH is found */
 	if (tripoli_read_word(hfile,word) != EOF) {
 	  begin_batch=strtol(word,NULL,0);
 	  nbatch++;
 	}
       }
-      
+
       if (result_read==EOF) {  /* normal end of file */
 	exit_flag=1;
       }
     } /* end while */
-    
+
     if (n_neutrons) {
       long   end_analyse=0;
       double cx,cy,cz;
@@ -377,7 +377,7 @@ INITIALIZE
       }
       if (verbose) {
 	double mean_k, mean_w=0, mean_L=0;
-	
+
 	mean_k = V2K*mean_v;
 	if (mean_k) mean_L = 2*PI/mean_k;
 	mean_w = VS2E*mean_v*mean_v;
@@ -419,7 +419,7 @@ INITIALIZE
       /* compute the rotation matrix to make mean_v along the Z-axis */
       /* first normalize mean velocity (will be Z axis): c=v/|v| */
       cx = mean_vx/mean_v; cy = mean_vy/mean_v; cz = mean_vz/mean_v;
-      
+
       /* compute angle to rotate in order to come back to Z axis */
       // angle2z = acos(cz); /* in RAD */
       angle2z = acos(angle2z);
@@ -436,7 +436,7 @@ INITIALIZE
 	if (smooth)       printf("smoothed ");
 	printf("\n");
       }
-      
+
     } else {
       fprintf(stderr, "Tripoli4_input: %s: Error: file %s neutrons does not contains any neutron. \n",NAME_CURRENT_COMP, file);
       exit(-1);
@@ -447,7 +447,7 @@ INITIALIZE
       fprintf(stderr, "Tripoli4_input: %s: Error: Can not reset Tripoli4 file (fseek error at analyse). \n",NAME_CURRENT_COMP);
       exit_flag = 1;
     }
-    
+
 #if defined (USE_MPI) || defined(USE_THREADS)
     if (!smooth) {
       if (verbose)
