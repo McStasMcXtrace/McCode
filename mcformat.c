@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10b
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 *
 * A McStas format converter to merge concert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.15 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.16 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -693,7 +693,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     if (i) McStasStruct.RunNum = runnum;
     if (i>1) {
       if (!McStasStruct.Ncount && ncount) McStasStruct.Ncount = ncount;
-      else if (mcverbose && ncount && McStasStruct.Ncount != ncount)
+      else if (ncount && McStasStruct.Ncount != ncount)
         fprintf(stderr, "Warning: %s: conflicting Ncount %f value with 'ratio' one %f\n",
           filename, McStasStruct.Ncount, ncount);
     }
@@ -701,7 +701,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
 
   if (!McStasStruct.Ncount) {
     McStasStruct.Ncount = 1e6;
-    if (mcverbose) fprintf(stderr, "Warning: %s: can not extract Ncount. using default (%g)\n",
+    fprintf(stderr, "Warning: %s: can not extract Ncount. using default (%g)\n",
       filename, McStasStruct.Ncount);
   }
   if (!McStasStruct.RunNum) McStasStruct.RunNum = McStasStruct.Ncount;
@@ -712,10 +712,10 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   else if (sscanf(McStasStruct.type, "array_2d(%d, %d)",&n,&m) == 2) p=1;
   else if (sscanf(McStasStruct.type, "array_3d(%d, %d, %d)",&n,&m,&p) == 3) { /* void */ }
   else if (sscanf(McStasStruct.type, "multiarray_1d(%d)", &m)) {
-    if (mcverbose && !mcscanmode) fprintf(stderr, "Warning: %s: use --scan flag for multiarray/scans (skipped)\n", filename);
+    if (!mcscanmode) fprintf(stderr, "Warning: %s: use --scan flag for multiarray/scans (skipped)\n", filename);
     return(McStasStruct);
   } else {
-    if (mcverbose) fprintf(stderr, "Warning: %s: invalid data type '%s'\n", filename, McStasStruct.type);
+    fprintf(stderr, "Warning: %s: invalid data type '%s' (not 1d/2d/3d/multiarray)\n", filename, McStasStruct.type);
     return(McStasStruct);
   }
 
@@ -725,16 +725,29 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   "# xvars: "
   "# yvars: "
 */
+  /* check if data block is transposed */
+  if (m != rTable[0].rows    && n != rTable[0].columns
+   && m == rTable[0].columns && n == rTable[0].rows) {
+    if (mcverbose) fprintf(stderr, "Warning: %s: Data block is transposed. Fixing.\n", filename);
+    int tmp=m;
+    m=n; n=tmp;
+  }
 
-
-  if (mcverbose && m != rTable[0].rows)
+  if (m != rTable[0].rows) {
     fprintf(stderr, "Warning: %s: conflicting Data row numbers\n"
-                    "         expected=%d found=%ld\n", filename, m, rTable[0].rows);
+                    "         expected=%d found=%ld. Fixing. Check first line of Data block.\n", filename, m, rTable[0].rows);
+    m = rTable[0].rows;
+  }
+  if (strstr(McStasStruct.Format, "binary") || strstr(McStasStruct.Format, "float") || strstr(McStasStruct.Format, "double"))
+    fprintf(stderr, "WARNING: %s: Format of data file indicates binary blocks."
+                    "         Not supported. Might crash.\n", filename);
   if (strstr(McStasStruct.Format, "PGPLOT") && array_length == 1 && strstr(McStasStruct.type, "array_1d") && rTable[0].columns == 4) flag_pgplot1d=1;
   if (flag_pgplot1d) n = 4;
-  if (mcverbose && n != rTable[0].columns)
+  if (n != rTable[0].columns) {
     fprintf(stderr, "Warning: %s: conflicting Data column numbers\n"
-                    "         expected=%d found=%ld\n", filename, n, rTable[0].columns);
+                    "         expected=%d found=%ld. Fixing. Check first line of Data block.\n", filename, n, rTable[0].columns);
+    n = rTable[0].columns;
+  }
   if (flag_pgplot1d) n = 1;
 
   McStasStruct.m = rTable[0].rows; /* dimensions from the Table */
@@ -754,7 +767,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
       &(McStasStruct.x1), &(McStasStruct.x2),
       &(McStasStruct.y1), &(McStasStruct.y2),
       &(McStasStruct.z1), &(McStasStruct.z2));
-    if (i != 2 && i != 4 && i != 6 && mcverbose)
+    if (i != 2 && i != 4 && i != 6)
       fprintf(stderr, "Warning: %s: invalid xylimits '%s'. extracted %i values\n",
         filename, McStasStruct.xylimits, i);
   }
@@ -850,7 +863,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
         McStasStruct.p2[tmp] = Table_Index(McStasStruct.Data[1], i, j);
         McStasStruct.p0[tmp] = Table_Index(McStasStruct.Data[2], i, j);
       }
-  } else if (mcverbose)
+  } else
     fprintf(stderr, "Warning: %s: can not store data blocks (total %ld).\n",
                     filename, array_length);
 
@@ -1011,7 +1024,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
     mcstartdate         = atol(McStasStruct.Date);
     if (!mcstartdate) sscanf(McStasStruct.Date, "Simulation started %ld", &mcstartdate);
   }
-  mcgravitation       = (strstr(McStasStruct.gravitation, "yes") ? 1 : 0);
+  mcgravitation       = (McStasStruct.gravitation && strstr(McStasStruct.gravitation, "yes") ? 1 : 0);
   mcrun_num = McStasStruct.RunNum;
   mcncount  = McStasStruct.Ncount;
   strncpy(mcinstrument_source, str_dup(McStasStruct.Source), MAX_LENGTH);
@@ -1022,6 +1035,9 @@ int mcformat_output(struct McStas_file_format McStasStruct)
     mcinputtable[i] = McStasStruct.mcinputtable[i];
   }
   mcdirname = McStasStruct.mcdirname;
+
+  /* write data file from McStasStruct */
+  if (mcverbose) printf("mcformat: Writing %s from %s\n", McStasStruct.outputname, McStasStruct.filename);
 
   if (strstr(McStasStruct.Format, "PGPLOT") && strstr(McStasStruct.type, "array_1d")) {
     mcdetector_out_1D(McStasStruct.title, McStasStruct.xlabel, McStasStruct.ylabel,
@@ -1168,7 +1184,6 @@ int mcformat_merge_compare(int nb)
       }
       if (!flag_equiv_parname) continue;
 
-
       /* Data/List: must be of same kind */
       char flag_list = 0;
         if ( strstr(ThisStruct.Format, " list ")      &&  strstr(McStasStruct.Format, " list "))
@@ -1194,14 +1209,15 @@ int mcformat_merge_compare(int nb)
       if (!flag_data) continue;
 
       /* Warning if gravitation not constant (may be forced) */
-      char flag_gravitation = mcforcemode || !strcmp(ThisStruct.gravitation, McStasStruct.gravitation);
-      if (!flag_gravitation && mcverbose)
+      char flag_gravitation = mcforcemode || (
+           ThisStruct.gravitation && McStasStruct.gravitation
+        && !strcmp(ThisStruct.gravitation, McStasStruct.gravitation));
+      if (!flag_gravitation && (ThisStruct.gravitation || McStasStruct.gravitation))
         fprintf(stderr, "Warning: Gravitation is not constant for %s and %s.\n",
           McStasStruct.filename, ThisStruct.filename);
 
       /* Names check: InstrName, Source and component */
       /* directories must be different except if mcmergesamedir */
-      /* not taken into account in force mode */
       char flag_names = (
         (!ThisStruct.InstrName || !McStasStruct.InstrName
             || !strcmp(ThisStruct.InstrName, McStasStruct.InstrName)) &&
