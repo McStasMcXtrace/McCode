@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10b
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 *
 * A McStas format converter to merge concert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.16 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.17 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -954,25 +954,45 @@ static void mcformat_usedir(char *dir)
       fprintf(stderr, "mcformat: Warning: re-using output directory '%s'.\n", dir);
     } else {
       switch (errno_mkdir) {
+#ifdef EACCES
       case EACCES:
         fprintf(stderr, "mkdir: EACCES The parent directory does not allow write permission"
         "or one of the directories in pathname did not allow search permission.\n"); break;
+#endif
+#ifdef EFAULT
       case EFAULT:
         fprintf(stderr, "mkdir: EFAULT pathname points outside your accessible address space.\n"); break;
+#endif
+#ifdef ELOOP
       case ELOOP:
         fprintf(stderr, "mkdir: ELOOP Too many symbolic links were encountered in resolving pathname.\n"); break;
+#endif
+#ifdef ENAMETOOLONG
       case ENAMETOOLONG:
         fprintf(stderr, "mkdir: ENAMETOOLONG pathname was too long.\n"); break;
+#endif
+#ifdef ENOMEM
       case ENOMEM:
         fprintf(stderr, "mkdir: ENOMEM Insufficient kernel memory was available.\n"); break;
+#endif
+#ifdef ENOSPC
       case ENOSPC:
         fprintf(stderr, "mkdir: ENOSPC The device containing pathname has no room for the new directory.\n"); break;
+#endif
+#ifdef ENOTDIR
       case ENOTDIR:
         fprintf(stderr, "mkdir: ENOTDIR A component used as a directory in pathname is not, in fact, a directory.\n"); break;
+#endif
+#ifdef EPERM
       case EPERM:
         fprintf(stderr, "mkdir: EPERM The filesystem containing pathname does not support the creation of directories.\n"); break;
+#endif
+#ifdef EROFS
       case EROFS:
         fprintf(stderr, "mkdir: EROFS pathname refers to a file on a read-only filesystem.\n"); break;
+#endif
+      default:
+        fprintf(stderr, "mkdir: ERROR %i using mkdir.\n", errno_mkdir); break;
       }
       fprintf(stderr, "mcformat: Fatal error accessing %s. Aborting.\n", dir);
       exit(-1);
