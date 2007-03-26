@@ -609,10 +609,10 @@ sub run_dialog_create {
                      -ipady => 3, -ipadx => 3);
     my $but = $bot_frame->Button(-text => "Cancel", -command => $cancel_cmd);
     my $buttext = "Save results\nand Stop/Abort";
-    if ($text =~ /compil/i || $text =~ /DSA/i) { $buttext="Abort current Job"; }
+    if ($text =~ /compil/i || $text =~ /DSA/i || $title =~ /compil/i || $title =~ /DSA/i ) { $buttext="Abort current Job"; }
     $b->attach($but, -balloonmsg => $buttext);
     $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
-    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}!=1 && $inf_sim->{'cluster'} != 2 && $text !~ /compil/i && $text !~ /DSA/i) {
+    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}!=1 && $inf_sim->{'cluster'} != 2 && $text !~ /compil/i && $text !~ /DSA/i && $title !~ /compil/i && $title !~ /DSA/i) {
       $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
       $but->pack(-side => "right");
       $b->attach($but, -balloonmsg => "Save results\nand continue");
