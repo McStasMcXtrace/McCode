@@ -11,7 +11,8 @@
  *
  * %Description
  * This instrument is a test instrument for the S(q,w) sample.
- * It produces a tof-angle detector
+ * It produces a tof-angle and q-energy detectors and also exports the
+ * S(q,w) and S(q) data.
  *
  *
  * Example: mcrun Test_Isotropic_Sqw.instr lambda=3.4
@@ -21,7 +22,6 @@
  *    lambda:      source energy                               [Angs]
  *    sample_coh:  name of coherent Sqw data file              [str]
  *    sample_inc:  name of incoherent Sqw data file            [str]
- *    interpolate: flag to interpolate Sqw tables              [1]
  *
  * %Link
  * The Isotropic_Sqw sample
@@ -29,7 +29,7 @@
 */
 
 DEFINE INSTRUMENT Test_Isotropic_Sqw(lambda=3.4,
-  string sample_coh="Rb_liq_coh.sqw", string sample_inc="Rb_liq_inc.sqw", interpolate=1)
+  string sample_coh="Rb_liq_coh.sqw", string sample_inc="Rb_liq_inc.sqw")
 
 TRACE
 
@@ -48,25 +48,25 @@ COMPONENT Sample_pos = Arm()
 AT (0, 0, 1.5) RELATIVE Origin
 
 COMPONENT Sample=Isotropic_Sqw(
-  radius_o = 0.01, yheight = 0.055,
-  Sqw_coh=sample_coh, Sqw_inc=sample_inc, interpolate=interpolate
+  radius_o = 0.01, yheight = 0.055, p_interact=0.8, save_sqw=1,
+  Sqw_coh=sample_coh, Sqw_inc=sample_inc
 ) AT (0, 0, 0) RELATIVE Sample_pos
 EXTEND
 %{
 if (!SCATTERED) ABSORB;
 %}
 
-COMPONENT Radial = Collimator_radial(
-    w1 = 0.017, h1 = 0.2, w2 = 0.034, h2 = 0.2, len = 0.2,
-    divergence = 60*5, theta_min = -180, theta_max = 180,
-    nchan = 72, radius = 0.2, roc = 1, verbose = 1)
-  AT (0, 0, 0) RELATIVE Sample_pos
+  /* detectors */
 
-  /* theta - time detectors */
+COMPONENT M_theta_t = Monitor_nD(
+ xwidth=2.5, yheight=0.2,
+ options="auto time, abs theta limits=[0 90], banana, parallel",
+ bins=100)
+AT (0,0,0) RELATIVE Sample_pos
 
-COMPONENT M_theta_t_all = Monitor_nD(
+COMPONENT M_qw = Monitor_nD(
  xwidth=2.5, yheight=0.4,
- options="time limits=[1e-3 4e-3], theta limits=[-180 180], banana, parallel",
+ options="auto kxy, auto energy, banana, parallel",
  bins=100)
 AT (0,0,0) RELATIVE Sample_pos
 
