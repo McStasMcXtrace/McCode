@@ -63,7 +63,7 @@ use Config;
      MPICC => '@MPICC@',
      PREFIX => '',
      SUFFIX => '',
-     PLOTTER => 'Scilab',
+     PLOTTER => 'PGPLOT',
      EDITOR => 1,
      MATLAB => '@MATLAB@',
      SCILAB => '@SCILAB@',
