@@ -14,13 +14,16 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.43 $
+* Version: $Revision: 1.44 $
 *
 * Flex scanner for instrument definition files.
 *
-* $Id: instrument.l,v 1.43 2007-03-12 14:12:16 farhi Exp $
+* $Id: instrument.l,v 1.44 2007-04-02 12:11:31 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.43  2007/03/12 14:12:16  farhi
+* SPLIT COMPONENT grammar: new rule for yacc. Code generation and cleaner GROUP handling.
+*
 * Revision 1.42  2007/03/02 14:27:17  farhi
 * NEXUS grammar is now simplified. a single string may follow the keyword.
 * NEXUS "5 ZIP" is recommended.
@@ -258,7 +261,7 @@ NEXT          return TOK_NEXT;          /* extended McStas grammar */
 ITERATE       return TOK_ITERATE;       /* extended McStas grammar */
 MYSELF        return TOK_MYSELF;        /* extended McStas grammar */
 COPY          return TOK_COPY;          /* extended McStas grammar */
-ENHANCE       return TOK_ENHANCE;       /* extended McStas grammar */
+SPLIT         return TOK_SPLIT;       /* extended McStas grammar */
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */
