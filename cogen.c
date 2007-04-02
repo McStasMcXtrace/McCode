@@ -12,13 +12,16 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.72 $
+* Version: $Revision: 1.73 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.72  2007/03/14 15:33:22  farhi
+* records N,p,p2 for each comp, for profiling in Progress_bar
+*
 * Revision 1.71  2007/03/12 14:12:16  farhi
-* ENHANCE COMPONENT grammar: new rule for yacc. Code generation and cleaner GROUP handling.
+* SPLIT COMPONENT grammar: new rule for yacc. Code generation and cleaner GROUP handling.
 *
 * Revision 1.70  2007/03/06 09:39:09  farhi
 * NeXus default output is now "5 zip". Then NEXUS keyword is purely optional.
@@ -154,7 +157,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.72 2007-03-14 15:33:22 farhi Exp $
+* $Id: cogen.c,v 1.73 2007-04-02 12:11:31 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1092,7 +1095,7 @@ cogen_init(struct instr_def *instr)
 *          and next comp in GROUP is tested.
 *   JUMP:  sends neutron to the JumpTrace labels, either with condition
 *          or condition is (counter < iterations)
-*   ENHANCE:  loops from comp/group TRACE to END, incrementing mcrun_num
+*   SPLIT: loops from comp/group TRACE to END, incrementing mcrun_num
 *******************************************************************************/
 static void
 cogen_trace(struct instr_def *instr)
@@ -1186,16 +1189,16 @@ cogen_trace(struct instr_def *instr)
       coutf("  %scoordschange_polarisation("
             "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
             ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
-    /* if comp is in a enhanced GROUP, install counter only for first comp of GROUP */
-    if (comp->group && comp->group->enhance) {
+    /* if comp is in a split GROUP, install counter only for first comp of GROUP */
+    if (comp->group && comp->group->split) {
       if (!strcmp(comp->name, comp->group->first_comp))
-        comp->enhance      = comp->group->enhance;
-      else comp->enhance   = NULL;
+        comp->split      = comp->group->split;
+      else comp->split   = NULL;
     }
-    if (comp->enhance) {
-      coutf("  /* ENHANCE counter for component %s */", comp->name);
-      coutf("  int %sEnhance_%s=0;", ID_PRE, comp->name);
-      fprintf(stderr,"Info:    Defining ENHANCE from %s to END\n",
+    if (comp->split) {
+      coutf("  /* SPLIT counter for component %s */", comp->name);
+      coutf("  int %sSplit_%s=0;", ID_PRE, comp->name);
+      fprintf(stderr,"Info:    Defining SPLIT from %s to END\n",
           comp->name);
     }
     /* JUMP RELATIVE comp */
@@ -1235,14 +1238,14 @@ cogen_trace(struct instr_def *instr)
       coutf("#define %s %s%s", comp->def->polarisation_par[2], ID_PRE, "nlsz");
     }
     /* store neutron state in mccomp_storein */
-    if (!comp->enhance)
+    if (!comp->split)
     coutf("  STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     else {
-      /* enhanceing: store first time, then restore neutron */
-      coutf("  if (!%sEnhance_%s) { /* STORE only the first time */", ID_PRE, comp->name);
+      /* spliting: store first time, then restore neutron */
+      coutf("  if (!%sSplit_%s) { /* STORE only the first time */", ID_PRE, comp->name);
       coutf("    STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
@@ -1252,7 +1255,7 @@ cogen_trace(struct instr_def *instr)
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp); }",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-      coutf("  %sEnhance_%s++; /* ENHANCE number */", ID_PRE, comp->name);
+      coutf("  %sSplit_%s++; /* SPLIT number */", ID_PRE, comp->name);
     }
 
     coutf("  %sScattered=0;", ID_PRE);
@@ -1292,18 +1295,18 @@ cogen_trace(struct instr_def *instr)
         coutf("/* end of GROUP %s */", comp->group->name);
         coutf("#undef %sabsorb", ID_PRE);
         coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
-        if (comp->group->enhance) {
-          /* only adapt weight for enhanced neutrons in last comp of GROUP */
-          char *exp=exp_tostring(comp->group->enhance); /* number of enhances */
-          coutf("  if (floor(%s) > 0) p /= floor(%s); /* adapt weight for ENHANCEed neutron in GROUP */",
+        if (comp->group->split) {
+          /* only adapt weight for splitd neutrons in last comp of GROUP */
+          char *exp=exp_tostring(comp->group->split); /* number of splits */
+          coutf("  if (floor(%s) > 0) p /= floor(%s); /* adapt weight for SPLITed neutron in GROUP */",
             exp, exp);
           str_free(exp);
         }
       }
-    } else if (comp->enhance) { /*  && !comp->group */
-      /* only enhance for SCATTERED neutrons in comp */
-      char *exp=exp_tostring(comp->enhance); /* number of enhances */
-      coutf("  if (floor(%s) > 0) p /= floor(%s); /* adapt weight for ENHANCEed neutron */", exp, exp);
+    } else if (comp->split) { /*  && !comp->group */
+      /* only split for SCATTERED neutrons in comp */
+      char *exp=exp_tostring(comp->split); /* number of splits */
+      coutf("  if (floor(%s) > 0) p /= floor(%s); /* adapt weight for SPLITed neutron */", exp, exp);
       str_free(exp);
     }
 
@@ -1326,18 +1329,18 @@ cogen_trace(struct instr_def *instr)
     cout("");
   }
   list_iterate_end(liter);
-  /* ENHANCEing: should loop components if required */
+  /* SPLITing: should loop components if required */
   liter = list_iterate(instr->complist);
-  char *reverse_EnhanceJumps = str_dup("");
-  char has_enhances=0;
+  char *reverse_SplitJumps = str_dup("");
+  char has_splits=0;
   while((comp = list_next(liter)) != NULL)
   {
-    if (comp->enhance) {
-      has_enhances = 1;
-      char *exp=exp_tostring(comp->enhance); /* number of enhances */
+    if (comp->split) {
+      has_splits = 1;
+      char *exp=exp_tostring(comp->split); /* number of splits */
       char line[256];
       char cat_line[1024]; strcpy(cat_line, "");
-      sprintf(line,"  if (%sEnhance_%s < (%s)) {\n",
+      sprintf(line,"  if (%sSplit_%s < (%s)) {\n",
         ID_PRE, comp->name, exp);
       strcat(cat_line, line);
       if (comp->group) {
@@ -1346,8 +1349,8 @@ cogen_trace(struct instr_def *instr)
       }
       sprintf(line,"    goto %sJumpTrace_%s;\n  }\n", ID_PRE, comp->name);
       strcat(cat_line, line);
-      char *tmp=str_cat(cat_line, reverse_EnhanceJumps, NULL);
-      str_free(reverse_EnhanceJumps); reverse_EnhanceJumps = tmp;
+      char *tmp=str_cat(cat_line, reverse_SplitJumps, NULL);
+      str_free(reverse_SplitJumps); reverse_SplitJumps = tmp;
       str_free(exp);
     }
   }
@@ -1356,7 +1359,7 @@ cogen_trace(struct instr_def *instr)
   /* Absorbing neutrons - goto this label to skip remaining components. End of TRACE */
   coutf("  %sabsorbAll:", ID_PRE);
 
-  if (has_enhances) coutf("  /* ENHANCE loops in reverse order */\n%s", reverse_EnhanceJumps);
+  if (has_splits) coutf("  /* SPLIT loops in reverse order */\n%s", reverse_SplitJumps);
 
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
@@ -1467,11 +1470,19 @@ cogen_finally(struct instr_def *instr)
     coutf("    if (!%sNCounter[%i]) "
       "fprintf(stderr, \"Warning: No neutron could reach Component[%i] %s\\n\");",
       ID_PRE, comp->index, comp->index, comp->name);
+    if (comp->split) {
+      char *exp=exp_tostring(comp->split); /* number of splits */
+      coutf("    if (%sNCounter[%i] < 1000*(%s)) fprintf(stderr, \n"
+        "\"Warning: Number of events reaching SPLIT position Component[%i] %s\\n\"\n"
+        "\"         is probably too low. Increase Ncount.\\n\");\n",
+          ID_PRE, comp->index, exp, comp->index, comp->name);
+      str_free(exp);
+    }
     coutf("    if (%sAbsorbProp[%i]) "
       "fprintf(stderr, "
-        "\"Warning: %%g events were removed in Component[%i] %s\\n"
-        "         (negative time, rounding errors).\\n"
-        "\", %sAbsorbProp[%i]);"
+        "\"Warning: %%g events were removed in Component[%i] %s\\n\""
+        "\"         (negative time, rounding errors).\\n\""
+        ", %sAbsorbProp[%i]);"
     , ID_PRE, comp->index, comp->index, comp->name, ID_PRE, comp->index);
   }
   list_iterate_end(liter);

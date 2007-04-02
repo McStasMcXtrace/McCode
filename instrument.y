@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.74 $
+* Version: $Revision: 1.75 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.74 2007-03-19 12:18:46 farhi Exp $
+* $Id: instrument.y,v 1.75 2007-04-02 12:11:31 farhi Exp $
 *
 *******************************************************************************/
 
@@ -103,7 +103,7 @@
 %token TOK_ITERATE    "ITERATE" /* extended McStas grammar */
 %token TOK_MYSELF     "MYSELF"  /* extended McStas grammar */
 %token TOK_COPY       "COPY"    /* extended McStas grammar */
-%token TOK_ENHANCE       "ENHANCE"    /* extended McStas grammar */
+%token TOK_SPLIT      "SPLIT"    /* extended McStas grammar */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -122,7 +122,7 @@
 %type <groupinst> groupdef groupref
 %type <ccode>   code codeblock share declare initialize trace extend save finally mcdisplay
 %type <coords>  coords
-%type <exp>     exp topexp topatexp genexp genatexp when enhance
+%type <exp>     exp topexp topatexp genexp genatexp when split
 %type <actuals> actuallist actuals actuals1
 %type <comp_iformals> comp_iformallist comp_iformals comp_iformals1
 %type <cformal> comp_iformal
@@ -889,7 +889,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
       }
 ;
 
-component: enhance "COMPONENT" instname '=' instref when place orientation groupref extend jumps
+component: split "COMPONENT" instname '=' instref when place orientation groupref extend jumps
       {
         struct comp_inst *comp;
 
@@ -897,7 +897,7 @@ component: enhance "COMPONENT" instname '=' instref when place orientation group
         if (comp->def != NULL) comp->def->comp_inst_number--;
 
         comp->name = $3;
-        comp->enhance = $1;
+        comp->split = $1;
 
         if ($6) comp->when  = $6;
 
@@ -910,10 +910,10 @@ component: enhance "COMPONENT" instname '=' instref when place orientation group
 
         if ($9) {
           comp->group = $9;    /* component is part of an exclusive group */
-          /* store first and last comp of group. Check if a ENHANCE is inside */
+          /* store first and last comp of group. Check if a SPLIT is inside */
           if (!comp->group->first_comp) comp->group->first_comp =comp->name;
           comp->group->last_comp=comp->name;
-          if (comp->enhance && !comp->group->enhance) comp->group->enhance = comp->enhance;
+          if (comp->split && !comp->group->split) comp->group->split = comp->split;
         }
         if ($10->linenum)   comp->extend= $10;  /* EXTEND block*/
         if (list_len($11))  comp->jump = $11;
@@ -926,15 +926,15 @@ component: enhance "COMPONENT" instname '=' instref when place orientation group
       }
 ;
 
-enhance:    /* empty */
+split:    /* empty */
       {
         $$ = NULL;
       }
-    | "ENHANCE"
+    | "SPLIT"
       {
         $$ = exp_number("10");
       }
-    | "ENHANCE" exp
+    | "SPLIT" exp
       {
         $$ = $2;
       }
@@ -1067,7 +1067,7 @@ groupdef:   TOK_ID
           group->index      = 0;
           group->first_comp = NULL;
           group->last_comp  = NULL;
-          group->enhance       = NULL;
+          group->split      = NULL;
           symtab_add(group_instances, $1, group);
           list_add(group_instances_list, group);
         }

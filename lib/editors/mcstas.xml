@@ -117,7 +117,7 @@
       <item> WHEN </item>
       <item> JUMP </item>
       <item> ITERATE </item>
-      <item> ENHANCE </item>
+      <item> SPLIT </item>
       <item> COPY </item>
     </list>
     <list name="types">

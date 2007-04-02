@@ -12,17 +12,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.48 $
+* Version: $Revision: 1.49 $
 *
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.48 2007-03-12 14:12:16 farhi Exp $
+* $Id: mcstas.h,v 1.49 2007-04-02 12:11:31 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.48 $"
+#define MCSTAS_H "$Revision: 1.49 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -387,7 +387,7 @@ struct group_inst
     int   index;
     char *first_comp;
     char *last_comp;
-    CExp  enhance;
+    CExp  split;
   };
 
 struct when_condition {
@@ -408,7 +408,7 @@ struct comp_inst
     List jump;      /* NULL or list of jumps to execute after trace/extend */
     CExp when;      /* NULL or condition to execute TRACE */
     Symtab actuals; /* save actual/given parameters for COPY */
-    CExp enhance;      /* NULL or number of ENHANCEs as an Expr */
+    CExp split;    /* NULL or number of SPLITs as an Expr */
   };
 
 /* Instrument formal parameters. */

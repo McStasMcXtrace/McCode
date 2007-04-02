@@ -42,7 +42,7 @@ sub new { #purple #magenta #orange
 			     ],
 	    'McOther' => [ # McStas placement keywords plus section separators
 			   '%{','%}', 'AT', 'ABSOLUTE','RELATIVE','EXTEND','COPY',
-			   'ROTATED','GROUP','PREVIOUS','JUMP','WHEN','ITERATE','ENHANCE','MYSELF','NEXT'
+			   'ROTATED','GROUP','PREVIOUS','JUMP','WHEN','ITERATE','SPLIT','MYSELF','NEXT'
 			  ],
 	});
     bless ($self, $class);
