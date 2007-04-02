@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.35 $
+* Version: $Revision: 1.36 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -237,8 +237,8 @@ INITIALIZE
   else if (min > -FLT_MAX) { sprintf(tmp, " all min=%g", min); strcat(Vars.option, tmp); }
   else if (max <  FLT_MAX) { sprintf(tmp, " all max=%g", max); strcat(Vars.option, tmp); }
 
-  if (username1) strncpy(Vars.UserName1, username1, 32);
-  if (username2) strncpy(Vars.UserName2, username2, 32);
+  strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 32);
+  strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
 
