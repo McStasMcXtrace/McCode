@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.36 $
+* Version: $Revision: 1.37 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.36 2006-11-16 10:14:21 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.37 2007-04-02 12:13:13 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.36  2006/11/16 10:14:21  farhi
+* Correct mcdisplay section with restricted banana/sphere (skipped last monitored variable)
+*
 * Revision 1.35  2006/07/21 09:03:23  farhi
 * Added in options'per steradian' flux estimate, and possibility to glue the
 * monitor to the shape of the 'previous' component (unactivate propagation), so
@@ -150,9 +153,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     char mc_mn_Flag_abs       = 0;
     int  mc_mn_Flag_auto      = 0;  /* -1: all, 1: the current variable */
     int  mc_mn_Set_Vars_Coord_Type;
-    char mc_mn_Set_Vars_Coord_Label[30];
-    char mc_mn_Set_Vars_Coord_Var[30];
-    char mc_mn_Short_Label[MONnD_COORD_NMAX][30];
+    char mc_mn_Set_Vars_Coord_Label[64];
+    char mc_mn_Set_Vars_Coord_Var[64];
+    char mc_mn_Short_Label[MONnD_COORD_NMAX][64];
     int  mc_mn_Set_Coord_Mode;
     long mc_mn_i=0, mc_mn_j=0;
     double mc_mn_lmin, mc_mn_lmax, mc_mn_XY;
@@ -503,9 +506,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         if (!strcmp(mc_mn_token, "ncounts"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NCOUNT; strcpy(mc_mn_Set_Vars_Coord_Label,"Neutrons [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"N"); mc_mn_lmin = 0; mc_mn_lmax = 1e10; }
         if (!strcmp(mc_mn_token, "user") || !strcmp(mc_mn_token, "user1"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER1; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName1,32); strcpy(mc_mn_Set_Vars_Coord_Var,"U1"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER1; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName1,30); strcpy(mc_mn_Set_Vars_Coord_Var,"U1"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
         if (!strcmp(mc_mn_token, "user2"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER2; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName2,32); strcpy(mc_mn_Set_Vars_Coord_Var,"U2"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER2; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName2,30); strcpy(mc_mn_Set_Vars_Coord_Var,"U2"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
 
         /* now stores variable keywords detected, if any */
         if (mc_mn_Set_Vars_Coord_Type != mc_mn_DEFS->COORD_NONE)
@@ -614,10 +617,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
           strcpy(mc_mn_Short_Label[mc_mn_i],"Intensity");
       else
       if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1)
-          strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName1,32);
+          strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName1,30);
       else
       if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2)
-          strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName2,32);
+          strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName2,30);
       else
           strcpy(mc_mn_Short_Label[mc_mn_i],"Unknown");
 
@@ -678,7 +681,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     if (mc_mn_Vars->Flag_UsePreMonitor == 1)
     {
         strcat(mc_mn_Vars->Monitor_Label, " at ");
-        strncat(mc_mn_Vars->Monitor_Label, mc_mn_Vars->UserName1,32);
+        strncat(mc_mn_Vars->Monitor_Label, mc_mn_Vars->UserName1,30);
     }
     if (mc_mn_Vars->Flag_log == 1) strcat(mc_mn_Vars->Monitor_Label, " [log] ");
 
@@ -958,7 +961,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)  { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cx,mc_mn_Vars->cz); }
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI) { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(sqrt(mc_mn_Vars->cx*mc_mn_Vars->cx+mc_mn_Vars->cy*mc_mn_Vars->cy),mc_mn_Vars->cz); }
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI) { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*asin(mc_mn_Vars->cy/mc_mn_Vars->cz); }
         else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1) mc_mn_XY = mc_mn_Vars->UserVariable1;
         else
