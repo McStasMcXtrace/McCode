@@ -151,8 +151,9 @@ sub plot_array_1d {
     if ($info->{'Logmode'} == 1) { $title = "[LOG] $title"; }
     if ($info->{'ShowI'}) {
       my $vars=$info->{'Values'};
-      if ($vars->[0]) { pgmtxt("T", 0.25, 0.5, 0.5, "I=$vars->[0] Err=$vars->[1] N=$vars->[2]"); }
-      pgmtxt("T", 1.50, 0.5, 0.5, "$info->{'Stats'}");
+      if ($vars->[0]) { pgmtxt("T", 0.25, 0.5, 0.5, "I=$vars->[0] Err=$vars->[1] N=$vars->[2] ; $info->{'Stats'}"); }
+      else { pgmtxt("T", 0.25, 0.5, 0.5, "$info->{'Stats'}"); }
+      pgmtxt("T", 1.50, 0.5, 0.5, $info->{'Title'});
       pgmtxt("T", 2.75, 0.5, 0.5, "$title [$info->{'Filename'}]");
     } else {
       pgmtxt("T", 1.75, 0.5, 0.5, $info->{'Title'});
