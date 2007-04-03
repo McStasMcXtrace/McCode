@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.158 $
+* Version: $Revision: 1.159 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.158 2007-03-12 14:06:35 farhi Exp $
+* $Id: mcstas-r.c,v 1.159 2007-04-03 13:29:49 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.158  2007/03/12 14:06:35  farhi
+* Warning 'Low Stat' when >25 % error in detector results
+*
 * Revision 1.157  2007/03/05 19:02:55  farhi
 * NEXUS support now works as MPI. NEXUS keyword is optional and only -DHAVE_LIBNEXUS is required. All instruments may then export in NEXUS if McStas
 * has been installed with --with-nexus
@@ -2800,7 +2803,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     if ((!filename || !strlen(filename)) && title && strlen(title)) filename = title;
     mcdetector_out(parent, Nsum, Psum, P2sum, filename);
   }
-  free(pre);
+  free(pre); if (filename) free(filename);
   if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
      free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL;
   }
@@ -3462,17 +3465,18 @@ mcstore_neutron(MCNUM *s, int index, double x, double y, double z,
                double vx, double vy, double vz, double t,
                double sx, double sy, double sz, double p)
 {
-    s[11*index+1]  = x ;
-    s[11*index+2]  = y ;
-    s[11*index+3]  = z ;
-    s[11*index+4]  = vx;
-    s[11*index+5]  = vy;
-    s[11*index+6]  = vz;
-    s[11*index+7]  = t ;
-    s[11*index+8]  = sx;
-    s[11*index+9]  = sy;
-    s[11*index+10] = sz;
-    s[11*index+0]  = p ;
+    double *dptr = &s[11*index+1];
+    *dptr++  = x;
+    *dptr++  = y ;
+    *dptr++  = z ;
+    *dptr++  = vx;
+    *dptr++  = vy;
+    *dptr++  = vz;
+    *dptr++  = t ;
+    *dptr++  = sx;
+    *dptr++  = sy;
+    *dptr++  = sz;
+    *dptr    = p ;
 }
 
 /*******************************************************************************
@@ -3483,17 +3487,18 @@ mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
                double *vx, double *vy, double *vz, double *t,
                double *sx, double *sy, double *sz, double *p)
 {
-    *x  =  s[11*index+1] ;
-    *y  =  s[11*index+2] ;
-    *z  =  s[11*index+3] ;
-    *vx =  s[11*index+4] ;
-    *vy =  s[11*index+5] ;
-    *vz =  s[11*index+6] ;
-    *t  =  s[11*index+7] ;
-    *sx =  s[11*index+8] ;
-    *sy =  s[11*index+9] ;
-    *sz =  s[11*index+10] ;
-    *p  =  s[11*index+0];
+    double *dptr = &s[11*index+1];
+    *x  =  *dptr++;
+    *y  =  *dptr++;
+    *z  =  *dptr++;
+    *vx =  *dptr++;
+    *vy =  *dptr++;
+    *vz =  *dptr++;
+    *t  =  *dptr++;
+    *sx =  *dptr++;
+    *sy =  *dptr++;
+    *sz =  *dptr++;
+    *p  =  *dptr;
 }
 
 /* init/run/rand handling =================================================== */
