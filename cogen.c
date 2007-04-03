@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.73 $
+* Version: $Revision: 1.74 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.73  2007/04/02 12:11:31  farhi
+* changed ENHANCE keyword to SPLIT
+*
 * Revision 1.72  2007/03/14 15:33:22  farhi
 * records N,p,p2 for each comp, for profiling in Progress_bar
 *
@@ -157,7 +160,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.73 2007-04-02 12:11:31 farhi Exp $
+* $Id: cogen.c,v 1.74 2007-04-03 13:16:58 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1160,6 +1163,18 @@ cogen_trace(struct instr_def *instr)
       }
       list_iterate_end(liter2);
     }
+    /* if comp is in a split GROUP, install counter only for first comp of GROUP */
+    if (comp->group && comp->group->split) {
+      if (!strcmp(comp->name, comp->group->first_comp))
+        comp->split      = comp->group->split;
+      else comp->split   = NULL;
+    }
+    if (comp->split) {
+      coutf("  /* SPLIT counter for component %s */", comp->name);
+      coutf("  int %sSplit_%s=0;", ID_PRE, comp->name);
+      fprintf(stderr,"Info:    Defining SPLIT from %s to END\n",
+          comp->name);
+    }
   }
   list_iterate_end(liter);
 
@@ -1189,18 +1204,6 @@ cogen_trace(struct instr_def *instr)
       coutf("  %scoordschange_polarisation("
             "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
             ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
-    /* if comp is in a split GROUP, install counter only for first comp of GROUP */
-    if (comp->group && comp->group->split) {
-      if (!strcmp(comp->name, comp->group->first_comp))
-        comp->split      = comp->group->split;
-      else comp->split   = NULL;
-    }
-    if (comp->split) {
-      coutf("  /* SPLIT counter for component %s */", comp->name);
-      coutf("  int %sSplit_%s=0;", ID_PRE, comp->name);
-      fprintf(stderr,"Info:    Defining SPLIT from %s to END\n",
-          comp->name);
-    }
     /* JUMP RELATIVE comp */
     coutf("  /* define label inside component %s (without coords transformations) */", comp->name);
     coutf("  %sJumpTrace_%s:", ID_PRE, comp->name);
@@ -1298,7 +1301,7 @@ cogen_trace(struct instr_def *instr)
         if (comp->group->split) {
           /* only adapt weight for splitd neutrons in last comp of GROUP */
           char *exp=exp_tostring(comp->group->split); /* number of splits */
-          coutf("  if (floor(%s) > 0) p /= floor(%s); /* adapt weight for SPLITed neutron in GROUP */",
+          coutf("  if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed neutron in GROUP */",
             exp, exp);
           str_free(exp);
         }
@@ -1306,7 +1309,7 @@ cogen_trace(struct instr_def *instr)
     } else if (comp->split) { /*  && !comp->group */
       /* only split for SCATTERED neutrons in comp */
       char *exp=exp_tostring(comp->split); /* number of splits */
-      coutf("  if (floor(%s) > 0) p /= floor(%s); /* adapt weight for SPLITed neutron */", exp, exp);
+      coutf("  if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed neutron */", exp, exp);
       str_free(exp);
     }
 
@@ -1348,6 +1351,8 @@ cogen_trace(struct instr_def *instr)
         strcat(cat_line, line);
       }
       sprintf(line,"    goto %sJumpTrace_%s;\n  }\n", ID_PRE, comp->name);
+      strcat(cat_line, line);
+      sprintf(line,"    else %sSplit_%s=0;\n", ID_PRE, comp->name);
       strcat(cat_line, line);
       char *tmp=str_cat(cat_line, reverse_SplitJumps, NULL);
       str_free(reverse_SplitJumps); reverse_SplitJumps = tmp;
