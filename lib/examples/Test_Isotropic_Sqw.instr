@@ -11,7 +11,7 @@
  *
  * %Description
  * This instrument is a test instrument for the S(q,w) sample.
- * It produces a tof-angle and q-energy detectors and also exports the
+ * It produces a tof-angle and angle-energy detectors and also exports the
  * S(q,w) and S(q) data.
  *
  *
@@ -60,13 +60,13 @@ if (!SCATTERED) ABSORB;
 
 COMPONENT M_theta_t = Monitor_nD(
  xwidth=2.5, yheight=0.2,
- options="auto time, abs theta limits=[0 90], banana, parallel",
+ options="auto time, abs angle limits=[0 180], banana, parallel",
  bins=100)
 AT (0,0,0) RELATIVE Sample_pos
 
 COMPONENT M_qw = Monitor_nD(
  xwidth=2.5, yheight=0.4,
- options="auto kxy, auto energy, banana, parallel",
+ options="angle limits=[0 180], auto energy, banana, parallel",
  bins=100)
 AT (0,0,0) RELATIVE Sample_pos
 

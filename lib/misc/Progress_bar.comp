@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -103,7 +103,11 @@ TRACE
   {
     double tmp;
     tmp = percent*mcget_ncount()/100;
-    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount())); fflush(stdout);
+    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount()
+#ifdef USE_MPI
+                                      *mpi_node_count
+#endif
+    )); fflush(stdout);
     IntermediateCnts = ncount + tmp;
     if (IntermediateCnts >= mcget_ncount()) fprintf(stdout, "\n");
     if (flag_save) mcsave(NULL);

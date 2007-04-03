@@ -45,7 +45,7 @@
 * This instrument model contains the complete H15 guide, a triple monochromator
 * (using the GROUP), two Fermi Choppers (including one background chopper), a
 * liquid sample handling coherent and incoherent processes (elastic and inelastic)
-* with multiple scattering, customized monitors, and the ENHANCE mechanism to
+* with multiple scattering, customized monitors, and the SPLIT mechanism to
 * improve the statistics.
 *
 * Example: mcrun ILL_H15_IN6.instr -n 1e4 --no-output-files LAMBDA=4.14000
@@ -835,7 +835,7 @@ AT (0,0,0) RELATIVE H15_8
  *   distance between each crystal ensemble 4 cm
  */
 
-ENHANCE COMPONENT Mono1 = Monochromator_curved(
+SPLIT COMPONENT Mono1 = Monochromator_curved(
   RV     = RV, NV = 7,NH=1,
   zwidth = 0.054, yheight = 0.029,
   DM     = 3.355, gap = 0.001,
@@ -955,7 +955,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 COMPONENT sample_pos = Arm()
 AT (0,0,LME) RELATIVE mono_out
 
-ENHANCE COMPONENT FoSample=Isotropic_Sqw(
+SPLIT COMPONENT FoSample=Isotropic_Sqw(
   radius_o = radius_o, thickness=thickness, yheight = 0.055,
   Sqw_coh=Sqw_coh, Sqw_inc=Sqw_inc, p_interact=0.9
 ) AT (0, 0, 0) RELATIVE sample_pos
