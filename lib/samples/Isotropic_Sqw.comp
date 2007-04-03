@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.51 $
+* Version: $Revision: 1.52 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -47,9 +47,6 @@
 * An important option to enhance statistics is to set 'p_interact' to, say,
 * 30 percent (0.3) in order to force a fraction of the beam to scatter. This
 * will result on a larger number of scattered events, retaining intensity.
-*
-* If you intend to study small inelastic contributions, you should set the
-* parameter 'low_sqw=0.1' to improve statistics on the inelastic low signal.
 *
 * If you use this component and produce valuable scientific results, please
 * cite authors with references bellow (in <a href="#links">Links</a>).
@@ -130,7 +127,7 @@
 *     sigma_abs=5.08, sigma_inc=4.935, sigma_coh=0)
 *
 * 2- liq-4He parameters
-*   Isotropic_Sqw(..., Sqw_coh="He4_liq_coh.sqw", T=10, low_sqw=0.5, p_interact=0.3)
+*   Isotropic_Sqw(..., Sqw_coh="He4_liq_coh.sqw", T=10, p_interact=0.3)
 *
 * 3- powder sample
 *  Isotropic_Sqw(..., Sqw_coh="Al.laz", save_sqw=1)
@@ -179,11 +176,8 @@
 * d_phi:      [deg] scattering vertical angular spreading (usually the heigh
 *                     of the next component/detector). Use 0 for full space.
 *                     This is only relevant for single scattering (order=1).
-* save_sqw:     [1] When set to 1, saves S(q), DOS and S(q,w) as monitors.
+* save_sqw:     [1] When set to 1, saves S(q), SW and S(q,w) as monitors.
 *                     not available in MPI mode.
-* low_sqw:      [0-1] When non 0, will enhance low inelastic signal
-*                     statisctics for which S(q,w) < low_sqw*max(S(q,w)).
-*                     good value is e.g. low_sqw=0.1
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
 * qmin:    [Angs-1] Minimum Q value to use in S(q,w).
@@ -243,7 +237,7 @@ DEFINE COMPONENT Isotropic_Sqw
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-    interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0, low_sqw=0)
+    interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0)
   OUTPUT PARAMETERS (VarSqw, columns)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -272,7 +266,7 @@ SHARE
 struct Sqw_D_struct
 {
   double omega;    /* omega value for the data block */
-  double value;        /* intensity for the current DOS block */
+  double value;        /* intensity for the current SW block */
   double cumul_proba;  /* cumulated intensity (between 0 and 1) */
 };
 
@@ -280,18 +274,16 @@ struct Sqw_D_struct
 struct Sqw_Q_struct
 {
    double Q;           /* omega value for the data block */
-   double value;       /* normalized probability for the current DOS block */
+   double value;       /* normalized probability for the current SW block */
    double cumul_proba; /* normalized cumulated probability */
 };
 
 struct Sqw_Data_struct /* contains normalized Sqw data for probabilities */
 {
-  struct Sqw_D_struct  *DOS;     /* P(w)  = density of states */
-  double               *DOS_high; /* index of optimized P(w) for low signal */
-  double                DOS_low_ratio; /* ratio DOS_high/DOS */
+  struct Sqw_D_struct  *SW;     /* P(w)  = density of states */
   struct Sqw_Q_struct **SQW;     /* P(Q|w)= probability of each Q with w */
 
-  long  *DOS_lookup;
+  long  *SW_lookup;
   long **QW_lookup;
   double*Sq;  /* S(q) = \int_w S(q,w) */
   double*iqSq; /* \int q S(q) dq */
@@ -348,7 +340,6 @@ struct Sqw_sample_struct {
   double sqw_norm;
   char   sqw_auto;
   char   sqw_interp;
-  double sqw_low;
   double mean_scatt;
   double mean_abs;
   double psum_scatt;
@@ -374,9 +365,9 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->intensity    =0;
   Sqw_Data->intensity_total=0;
   strcpy(Sqw_Data->filename, "");
-  Sqw_Data->DOS          =NULL;
+  Sqw_Data->SW          =NULL;
   Sqw_Data->SQW          =NULL;
-  Sqw_Data->DOS_lookup   =NULL;
+  Sqw_Data->SW_lookup   =NULL;
   Sqw_Data->QW_lookup    =NULL;
   Sqw_Data->Sq           =NULL;
   Sqw_Data->iqSq         =NULL;
@@ -579,7 +570,6 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
     } /* end for i */
     Table_Stat(&retTable[0]); Table_Stat(&retTable[1]); Table_Stat(&retTable[2]);
     Sqw->sqw_norm = 0; /* F2 are normalized already */
-    Sqw->sqw_low  = 0; /* no inelastic signal to enhance */
   }
 
   return(retTable);
@@ -619,31 +609,31 @@ int Sqw_search_root(double A, double B, double C,
 }
 
 /*****************************************************************************
-*  Sqw_search_DOS: For a given random number 'randnum', search for the bin
-*   containing  the corresponding Sqw->DOS
+*  Sqw_search_SW: For a given random number 'randnum', search for the bin
+*   containing  the corresponding Sqw->SW
 * Used in : TRACE (1)
 *****************************************************************************/
-int Sqw_search_DOS(struct Sqw_Data_struct Sqw, double randnum)
+int Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
 {
   int i=0;
 
   if (randnum <0) randnum=0;
   if (randnum >1) randnum=1;
 
-  if (Sqw.DOS_lookup) {
-    i = Sqw.DOS_lookup[(long)floor(randnum*Sqw.lookup_length)]-1;
+  if (Sqw.SW_lookup) {
+    i = Sqw.SW_lookup[(long)floor(randnum*Sqw.lookup_length)]-1;
     if (i<0) i=0;
   }
 
-  while (i < Sqw.nb_w && (&(Sqw.DOS[i]) != NULL) && (randnum > Sqw.DOS[i].cumul_proba))
+  while (i < Sqw.nb_w && (&(Sqw.SW[i]) != NULL) && (randnum > Sqw.SW[i].cumul_proba))
       i++;
   if (i >= Sqw.nb_w) i = Sqw.nb_w;
 
-  if (&(Sqw.DOS[i]) == NULL)
+  if (&(Sqw.SW[i]) == NULL)
   {
-      fprintf(stderr, "Isotropic_Sqw: No corresponding value in the DOS. randnum too big.\n");
-      fprintf(stderr, "  i=%i ; randnum=%f ; Sqw.DOS[i-1].cumul_proba=%f (Sqw_search_DOS)\n",
-            i, randnum, Sqw.DOS[i-1].cumul_proba);
+      fprintf(stderr, "Isotropic_Sqw: No corresponding value in the SW. randnum too big.\n");
+      fprintf(stderr, "  i=%i ; randnum=%f ; Sqw.SW[i-1].cumul_proba=%f (Sqw_search_SW)\n",
+            i, randnum, Sqw.SW[i-1].cumul_proba);
       return i-1;
   }
   else
@@ -652,7 +642,7 @@ int Sqw_search_DOS(struct Sqw_Data_struct Sqw, double randnum)
 
 /*****************************************************************************
 *  Sqw_search_Q_proba_per_w: For a given random number randnum, search for
-*   the bin containing the corresponding Sqw.DOS in the Q probablility grid
+*   the bin containing the corresponding Sqw.SW in the Q probablility grid
 * Used in : TRACE (1)
 *****************************************************************************/
 int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw,
@@ -696,7 +686,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   double   q, w, val, sum;
   double   mat_density=0, mat_weight=0, mat_at_nb=1;
   double   alpha=1, beta=0;
-  long    *DOS_lookup;
+  long    *SW_lookup;
   long   **QW_lookup;
   char   **parsing;
   double   q_min_data, q_max_data;
@@ -708,23 +698,23 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (Sqw->sqw_auto < 2) Sqw_Data_init(Sqw_Data);
   else { /* we are re-optimizing range */
     if (Sqw_Data->Sq)  free(Sqw_Data->Sq);
-    if (Sqw_Data->DOS) free(Sqw_Data->DOS);
+    if (Sqw_Data->SW) free(Sqw_Data->SW);
 
     if (Sqw_Data->SQW) {
       for (j=0; j < (Sqw_Data->nb_w) ; j++)
         if (Sqw_Data->SQW[j]) free(Sqw_Data->SQW[j]);
       free(Sqw_Data->SQW);
     }
-    if (Sqw_Data->DOS_lookup) free(Sqw_Data->DOS_lookup);
+    if (Sqw_Data->SW_lookup) free(Sqw_Data->SW_lookup);
     if (Sqw_Data->QW_lookup) {
       for (j=0; j < (Sqw_Data->nb_w) ; j++)
         if (Sqw_Data->QW_lookup[j]) free(Sqw_Data->QW_lookup[j]);
       free(Sqw_Data->QW_lookup);
     }
-    Sqw_Data->DOS_lookup = NULL;
+    Sqw_Data->SW_lookup = NULL;
     Sqw_Data->QW_lookup  = NULL;
     Sqw_Data->Sq         = NULL;
-    Sqw_Data->DOS        = NULL;
+    Sqw_Data->SW        = NULL;
     Sqw_Data->SQW        = NULL;
   }
 
@@ -1014,11 +1004,11 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* set up 'density of states' and index_wconst */
   /* uses: Sqw_restrict and w axes */
-  Sqw_Data->DOS =
+  Sqw_Data->SW =
     (struct Sqw_D_struct*)calloc(Sqw_Data->nb_w, sizeof(struct Sqw_D_struct));
 
-  if (!Sqw_Data->DOS) {
-    printf("Isotropic_Sqw: %s: Cannot allocate DOS (%li bytes).\n"
+  if (!Sqw_Data->SW) {
+    printf("Isotropic_Sqw: %s: Cannot allocate SW (%li bytes).\n"
            "ERROR          Exiting.\n",
       Sqw->compname, Sqw_Data->nb_w*sizeof(struct Sqw_D_struct));
     return(NULL);
@@ -1030,42 +1020,20 @@ struct Sqw_Data_struct *Sqw_readfile(
     for (i=0; i < (Sqw_Data->nb_q) ; i++) { /* integrate on all q values */
       local_val += Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha; /* S(q,w) */
     }
-    Sqw_Data->DOS[j].omega = w;
-    Sqw_Data->DOS[j].value = local_val; /* S(w) */
+    Sqw_Data->SW[j].omega = w;
+    Sqw_Data->SW[j].value = local_val; /* S(w) */
     val                   += local_val; /* total intensity */
-    if (dos_max_data < local_val) dos_max_data = local_val; /* max of the DOS distribution */
+    if (dos_max_data < local_val) dos_max_data = local_val; /* max of the SW distribution */
   }
-  /* handle low signal enhancement */
-  if (Sqw->sqw_low) { /* allocate */
-    Sqw_Data->DOS_high = (double*)calloc(Sqw_Data->nb_w, sizeof(double));
-    if (!Sqw_Data->DOS_high) {
-      printf("Isotropic_Sqw: %s: Cannot allocate DOS_high (%li bytes). Disabling low signal enhancement.\n",
-        Sqw->compname, Sqw_Data->nb_w*sizeof(double));
-      Sqw->sqw_low=0;
-    }
-  } else Sqw_Data->DOS_high=NULL;
-  if (Sqw->sqw_low) {
-    /* identify DOS elements higher than dos_max_data*low_sqw and compute reduced sum */
-    double intensity=0;
-    for (j=0; j < (Sqw_Data->nb_w) ; j++) {
-      if (Sqw_Data->DOS[j].value > dos_max_data*Sqw->sqw_low) {
-        Sqw_Data->DOS_high[j]  = Sqw_Data->DOS[j].value;
-        Sqw_Data->DOS[j].value = dos_max_data*Sqw->sqw_low;
-      } else
-        Sqw_Data->DOS_high[j]  = 0;
-      intensity += Sqw_Data->DOS[j].value;
-    }
-    Sqw_Data->DOS_low_ratio = intensity/val;
-    val = intensity;
-  }
+
   /* compute normalized cumulated probability */
   for (j=0; j < (Sqw_Data->nb_w) ; j++) {
-    Sqw_Data->DOS[j].cumul_proba = Sqw_Data->DOS[j].value/val;
+    Sqw_Data->SW[j].cumul_proba = Sqw_Data->SW[j].value/val;
     /* cumulated probabilities for the random choice */
-    if (j) Sqw_Data->DOS[j].cumul_proba += Sqw_Data->DOS[j-1].cumul_proba;
+    if (j) Sqw_Data->SW[j].cumul_proba += Sqw_Data->SW[j-1].cumul_proba;
   }
   if (Sqw->verbose_output > 1)
-    printf("Isotropic_Sqw: %s: Generated normalized DOS[%li]\n",
+    printf("Isotropic_Sqw: %s: Generated normalized SW[%li]\n",
       Sqw->compname, Sqw_Data->nb_w);
 
   /* set up Q probability table per w bin */
@@ -1097,7 +1065,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
     for (i=0; i < (Sqw_Data->nb_q) ; i++) {
       Sqw_Data->SQW[j][i].cumul_proba =
-                        Sqw_Data->SQW[j][i].value/Sqw_Data->DOS[j].value; /* S(q,w)/S(w) */
+                        Sqw_Data->SQW[j][i].value/Sqw_Data->SW[j].value; /* S(q,w)/S(w) */
       /* compute normalized cumulated probability */
       if (i) Sqw_Data->SQW[j][i].cumul_proba += Sqw_Data->SQW[j][i-1].cumul_proba;
     }
@@ -1106,19 +1074,19 @@ struct Sqw_Data_struct *Sqw_readfile(
     printf("Isotropic_Sqw: %s: Generated P(Q|w)\n",
       Sqw->compname);
 
-  /* generate quick lookup tables for DOS and SQW */
-  Sqw_Data->DOS_lookup = DOS_lookup
+  /* generate quick lookup tables for SW and SQW */
+  Sqw_Data->SW_lookup = SW_lookup
                          = (long*)calloc(Sqw_Data->lookup_length, sizeof(long));
 
-  if (!DOS_lookup) {
-    printf("Isotropic_Sqw: %s: Cannot allocate DOS_lookup (%li bytes).\n"
+  if (!SW_lookup) {
+    printf("Isotropic_Sqw: %s: Cannot allocate SW_lookup (%li bytes).\n"
            "Warning        Will be slower.\n",
       Sqw->compname, Sqw_Data->lookup_length*sizeof(long));
   }
-  if (DOS_lookup) {
+  if (SW_lookup) {
     for (i=0; i < Sqw_Data->lookup_length; i++) {
       w = (double)i/(double)Sqw_Data->lookup_length;
-      DOS_lookup[i] = Sqw_search_DOS(*Sqw_Data, w);
+      SW_lookup[i] = Sqw_search_SW(*Sqw_Data, w);
     }
   }
   Sqw_Data->QW_lookup = QW_lookup
@@ -1146,7 +1114,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       }
     }
   }
-  if ((Sqw_Data->QW_lookup || Sqw_Data->DOS_lookup) && Sqw->verbose_output > 1)
+  if ((Sqw_Data->QW_lookup || Sqw_Data->SW_lookup) && Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated lookup tables with %li entries\n",
       Sqw->compname, Sqw_Data->lookup_length);
 
@@ -1290,7 +1258,6 @@ INITIALIZE
   VarSqw.sqw_norm  = auto_norm;
   VarSqw.sqw_auto  = auto_qw;
   VarSqw.sqw_interp= interpolate;
-  VarSqw.sqw_low   = low_sqw;
   VarSqw.mean_scatt= 0;
   VarSqw.mean_abs  = 0;
   VarSqw.psum_scatt      = 0;
@@ -1374,7 +1341,7 @@ long   closer_w;
 double q1, q2, q3, q4;
 double omega=0;       /* energy transfert */
 double q=0;           /* wavevector transfert */
-long   index_w;       /* energy index for table look-up DOS */
+long   index_w;       /* energy index for table look-up SW */
 long   index_q;       /* Q index for table look-up P(Q|w) */
 double sintheta,theta, costheta; /* for the choice of kf direction */
 double u1x,u1y,u1z;
@@ -1627,30 +1594,27 @@ do { /* Main interaction loop. Ends with intersect=0 */
       /* give us a limited number of tries for scattering */
       for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
 
-        /* MC choice: energy transfer in the DOS */
+        /* MC choice: energy transfer in the SW */
         tmp = rand01();
-        /* index for rand > cumul DOS */
-        index_w = Sqw_search_DOS(Data_sqw, tmp);
-        if (&(Data_sqw.DOS[index_w]) != NULL) {
-          if (VarSqw.sqw_interp) {
-            if (index_w > 0 && Data_sqw.nb_w > 1) { /* interpolate linearly energy */
-              ratio_w = (tmp                           - Data_sqw.DOS[index_w-1].cumul_proba)
-                       /(Data_sqw.DOS[index_w].cumul_proba - Data_sqw.DOS[index_w-1].cumul_proba);
+        /* index for rand > cumul SW */
+        index_w = Sqw_search_SW(Data_sqw, tmp);
+        if (&(Data_sqw.SW[index_w]) != NULL) {
+          if (VarSqw.sqw_interp && Data_sqw.nb_w > 1) {
+            double w1, w2;
+            if (index_w > 0) { /* interpolate linearly energy */
+              ratio_w = (tmp                              - Data_sqw.SW[index_w-1].cumul_proba)
+                       /(Data_sqw.SW[index_w].cumul_proba - Data_sqw.SW[index_w-1].cumul_proba);
               /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
-              omega = (1-ratio_w)*Data_sqw.DOS[index_w-1].omega + ratio_w*Data_sqw.DOS[index_w].omega;
-            } else if (Data_sqw.nb_w > 1) {
-              ratio_w = (tmp                             - Data_sqw.DOS[index_w].cumul_proba)
-                      /(Data_sqw.DOS[index_w+1].cumul_proba - Data_sqw.DOS[index_w].cumul_proba);
-              /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
-              omega = (1-ratio_w)*Data_sqw.DOS[index_w].omega + ratio_w*Data_sqw.DOS[index_w+1].omega;
+              w1 = Data_sqw.SW[index_w-1].omega; w2 = Data_sqw.SW[index_w].omega;
+            } else { /* index_w = 0 */
+              ratio_w = (tmp                               - Data_sqw.SW[index_w].cumul_proba)
+                      /(Data_sqw.SW[index_w+1].cumul_proba - Data_sqw.SW[index_w].cumul_proba);
+              /* ratio_w=0 omega[index_w], ratio=1 omega[index+1] */
+              w1 = Data_sqw.SW[index_w].omega; w2 = Data_sqw.SW[index_w+1].omega;
             }
+            omega = (1-ratio_w)*w1 + ratio_w*w2;
           } else {
-            omega = Data_sqw.DOS[index_w].omega;
-          }
-          /* handle low stat enhancement */
-          if (VarSqw.sqw_low && Data_sqw.DOS_high) {
-            p_mult *= Data_sqw.DOS_low_ratio;
-            if (Data_sqw.DOS_high[index_w]) p_mult *= Data_sqw.DOS_high[index_w]/Data_sqw.DOS[index_w].value;
+            omega = Data_sqw.SW[index_w].omega;
           }
         } else {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<1000)
@@ -1681,9 +1645,9 @@ do { /* Main interaction loop. Ends with intersect=0 */
           continue; /* no Q value for this w choice */
         }
         if (&(Data_sqw.SQW[index_w]) != NULL) {
-          if (VarSqw.sqw_interp) {
-            if (index_q > 0 && index_w > 0 && Data_sqw.nb_w > 1 && Data_sqw.nb_q > 1) {
-              /* bilinear interpolation on - side */
+          if (VarSqw.sqw_interp && Data_sqw.nb_q > 1 && index_q > 0 ) {
+            if (index_w > 0 && Data_sqw.nb_w > 1) {
+              /* bilinear interpolation on - side: index_w > 0, index_q > 0 */
               closer_w= (ratio_w > .5 ? index_w : index_w-1);
               ratio_q = (tmp - Data_sqw.SQW[closer_w][index_q-1].cumul_proba)
                       /(Data_sqw.SQW[closer_w][index_q].cumul_proba - Data_sqw.SQW[closer_w][index_q-1].cumul_proba);
@@ -1693,8 +1657,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
               q4 = Data_sqw.SQW[index_w-1][index_q].Q;
               q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
                 + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
-            } else if (index_q > 0 && Data_sqw.nb_q > 1) { /* bilinear interpolation on + side */
-              double q1q,q4q;
+            } else { /* bilinear interpolation on + side: index_q > 0 */
               ratio_q = (tmp - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
                       /(Data_sqw.SQW[index_w][index_q].cumul_proba - Data_sqw.SQW[index_w][index_q-1].cumul_proba);
               q1 = Data_sqw.SQW[index_w]  [index_q-1].Q;
@@ -1904,16 +1867,15 @@ SAVE
     Data_sqw =  (k == 0 ? VarSqw.Data_coh : VarSqw.Data_inc);
 
     if (save_sqw && Data_sqw.intensity) {
-      double DOS[Data_sqw.nb_w];
+      double SW[Data_sqw.nb_w];
       double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
       long   i,j;
 
       if (VarSqw.verbose_output >= 1)
-            printf("Isotropic_Sqw: %s: Writting %s S(q), DOS and S(q,w) files as monitors.\n", NAME_CURRENT_COMP, type_ci);
+            printf("Isotropic_Sqw: %s: Writting %s S(q), SW and S(q,w) files as monitors.\n", NAME_CURRENT_COMP, type_ci);
 
       for (j=0; j < (Data_sqw.nb_w) ; j++) {
-        DOS[j] = Data_sqw.DOS[j].value;
-        if (VarSqw.sqw_low && Data_sqw.DOS_high && Data_sqw.DOS_high[j]) DOS[j] = Data_sqw.DOS_high[j];
+        SW[j] = Data_sqw.SW[j].value;
         for (i=0; i < (Data_sqw.nb_q) ; i++)
           SQW[i][j] = Data_sqw.SQW[j][i].value;
       }
@@ -1931,7 +1893,7 @@ SAVE
       if (Data_sqw.nb_w > 1)
         DETECTOR_OUT_1D(tmp,"Energy [meV]",xvar,"w",
         Data_sqw.w_min, Data_sqw.w_max,
-        Data_sqw.nb_w,NULL,DOS,NULL,
+        Data_sqw.nb_w,NULL,SW,NULL,
         filename);
       sprintf(tmp, "S(q,w) from %s (%s), Norm=%g",
         Data_sqw.filename, type_ci, Data_sqw.intensity);
@@ -1975,12 +1937,11 @@ FINALLY
             Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
             VarSqw.q_max,   VarSqw.w_max);
 
-    if (Data_sqw.DOS)           free(Data_sqw.DOS);
-    if (Data_sqw.DOS_high)      free(Data_sqw.DOS_high);
-    if (Data_sqw.SQW) free(Data_sqw.SQW);
-    if (Data_sqw.DOS_lookup)    free(Data_sqw.DOS_lookup);
-    if (Data_sqw.QW_lookup)     free(Data_sqw.QW_lookup);
-    if (Data_sqw.Sq)            free(Data_sqw.Sq);
+    if (Data_sqw.SW)           free(Data_sqw.SW);
+    if (Data_sqw.SQW)          free(Data_sqw.SQW);
+    if (Data_sqw.SW_lookup)    free(Data_sqw.SW_lookup);
+    if (Data_sqw.QW_lookup)    free(Data_sqw.QW_lookup);
+    if (Data_sqw.Sq)           free(Data_sqw.Sq);
   } /* end for */
 
   if (VarSqw.neutron_removed)
