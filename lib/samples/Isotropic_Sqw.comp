@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.52 $
+* Version: $Revision: 1.53 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -1497,7 +1497,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
       flag = 1;           /* No interaction before the exit */
     }
     /* force a given fraction of the beam to scatter */
-    if (p_interact>p_scatt && p_interact<1) {
+    if (p_interact>0 && p_interact<=1) {
       /* we force a portion of the beam to interact */
       /* This is used to improve statistics on single scattering (and multiple) */
       mc_trans = 1-p_interact;
@@ -1514,7 +1514,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     } else {
       flag = 1; /* Transmission : no interaction neutron/sample */
       if (!VarSqw.type) VarSqw.type = 't';
-      /* p_mult *= p_trans;   attenuate beam by portion which is scattered (and left along) */
+      p_mult *= fabs(p_trans/mc_trans);  /* attenuate beam by portion which is scattered (and left along) */
     }
 
     if (flag) { /* propagate to exit of sample and finish */
@@ -1695,8 +1695,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
           continue; /* all roots are imaginary */
         }
 
-        /* MC choice: between kf1 and kf2 */
-        kf = fabs(rand01() < 0.5 ? kf1 : kf2);
+        /* kf1 and kf2 are opposite */
+        kf = fabs(kf1);
         vf = K2V*kf;
 
         /* Search of the direction of kf such that : q = ki - kf */
