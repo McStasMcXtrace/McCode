@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.32 $
+* Version: $Revision: 1.33 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -73,7 +73,7 @@ Changes in McStas v1.11, April 20, 2007
     Test of the instructions have been performed on Mac OS X 10.4 Tiger on both Intel and PPC
     hardware.
   - McStas now comes in a Debian binary package (.deb), tested to work on Debian and Ubuntu systems. The debian
-    package provides McStas, pgplot and pgperl and have dependencies for the perl, perl-Tk, gcc and libc6-dev 
+    package provides McStas, pgplot and pgperl and have dependencies for the perl, perl-tk, gcc and libc6-dev 
     packages.
 
   Intel C compiler
