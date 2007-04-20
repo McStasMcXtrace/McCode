@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2004, All rights reserved
+*         Copyright 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -25,11 +25,73 @@
 * Modified by: PW, EF, November 16th 2005: version 1.9
 * Modified by: PW, EF, March 29th 2006: version 1.9.1
 * Modified by: PW, EF, December 4th 2006: version 1.10
+* Modified by: PW, EF, April 20th 2007: version 1.11
 *
-* This file is part of McStas  version 1.10, released December, 4th, 2006.
+* This file is part of McStas  version 1.11, released April, 20th, 2007.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v1.11, April 20, 2007
+
+  Metalanguage
+  - New SPLIT keyword for improving statistics. WARNING: Follow instructions in the documentation for safe
+    use of the SPLIT keyword. 
+
+  Components
+  - Source_adapt.comp, additions by Aaron Percival which allows to specify a flat wavlength distibution.
+  - Single_crystal.comp, warning NOT to use this component as a monochromator (bug fix/validation under way).
+
+  Example instruments
+  - New ILL_H15_IN6 and ILL_H142_IN12 instruments by Emmanuel Farhi are included.
+  - Histogrammer.instr - see the 'Tools' section
+
+  Datafiles
+  - Reflectivity curves from Swiss Neutronics (more work done, available in the next McStas release).
+  - More Sqw tables for use with the Isotropic_Sqw component.
+
+  Tools
+  - PGPLOT output format (original McStas format) is now possible on Windows. A pgplot/pgperl installation
+    is included in a standard McStas Win32 installation.
+  - New mcdaemon for visualisation of intermediate simulation results (obtained by sending USR2 signal to a 
+    running simulation or by using the Progress_bar component with flag_save=1).
+  - Improvements to mcgui:
+    * New tool menu with hooks to mcformat, mcdaemon and mcplot
+    * Possibility for auto-setup of MPI ssh keys
+    * Possibility to run the McStas editor in 'detached' mode, hence available whilst a simulation is running
+  - Histogrammer.instr: Special histogramming instrument for visualisation of virtual source files (Virtual_input,
+    VitESS, MCNP and Tripoli formats)
+
+  Output formats
+  - NeXus output format possible. To use this feature, HDF and NeXus libraries must be available
+    and functional on your system before installing McStas from source. (In case of a binary package, 
+    you MUST recompile the McStas software.) To enable a McStas build with NeXus, run 
+    ./configure --with-nexus.
+
+  Platform support
+  - Mac OS X is now considered a supported platform. For now, no actuall installer program
+    is given, but all needed software has been packed together with easy to follow instructions.
+    Test of the instructions have been performed on Mac OS X 10.4 Tiger on both Intel and PPC
+    hardware.
+  - McStas now comes in a Debian binary package (.deb), tested to work on Debian and Ubuntu systems. The debian
+    package provides McStas, pgplot and pgperl and have dependencies for the perl, perl-Tk, gcc and libc6-dev 
+    packages.
+
+  Intel C compiler
+  - The documentation now includes instructions to run McStas with the Intel C compiler (available on Windows,
+    Linux x86 and Mac OS x86 systems). Typically, a performance gain of 2 is found relative to gcc -O2. Relevant
+    compiler flags are:
+
+    MCSTAS_CFLAGS="-g -O2 -wd177,266,1011,181"
+    export MCSTAS_CC="icc"
+
+  - To run McStas with MPI and the Intel C compiler, you may have to edit your mpicc shell script to set:
+    
+    CC="icc"
+
+  Various
+  - A standard McStas source package now works directly within the DANSE framework.
+
+
 Changes in McStas v1.10, Dec 4, 2006
 
   General
