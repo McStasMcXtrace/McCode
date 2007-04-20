@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.53 $
+* Version: $Revision: 1.54 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -248,7 +248,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW
+#define ISOTROPIC_SQW $Revision: 1.54 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -471,7 +471,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       if (q_min > d) q_min = q;
       if (list_count > 1) {
         q_step_cur = fabs(list[list_count].q - list[list_count-1].q);
-        if (q_step_cur > 0 && (!q_step || q_step_cur < q_step))
+        if (q_step_cur > 1e-5 && (!q_step || q_step_cur < q_step))
          q_step = q_step_cur;
       }
 
@@ -522,11 +522,11 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   else {
     char *header;
     if (!Table_Init(&retTable[0], size, 1))
-      { printf("Isotropic_Sqw: Cannot allocate q-axis from Powder lines.\n"); return(NULL); }
+      { printf("Isotropic_Sqw: Cannot allocate q-axis [%i] from Powder lines.\n", size); return(NULL); }
     if (!Table_Init(&retTable[1], 1, 1))
       { printf("Isotropic_Sqw: Cannot allocate w-axis from Powder lines.\n"); return(NULL); }
     if (!Table_Init(&retTable[2], size, 1))
-      { printf("Isotropic_Sqw: Cannot allocate Sqw from Powder lines.\n"); return(NULL); }
+      { printf("Isotropic_Sqw: Cannot allocate Sqw [%i] from Powder lines.\n", size); return(NULL); }
     Table_Init(&retTable[3], 0,0);
 
     header = malloc(64); if (header)
@@ -691,7 +691,6 @@ struct Sqw_Data_struct *Sqw_readfile(
   char   **parsing;
   double   q_min_data, q_max_data;
   double   w_min_data, w_max_data;
-  double   dos_max_data=0;
   long     nb_q_data=0, nb_w_data=0;
 
   /* setup default */
@@ -1022,8 +1021,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
     Sqw_Data->SW[j].omega = w;
     Sqw_Data->SW[j].value = local_val; /* S(w) */
-    val                   += local_val; /* total intensity */
-    if (dos_max_data < local_val) dos_max_data = local_val; /* max of the SW distribution */
+    val                  += local_val; /* total intensity */
   }
 
   /* compute normalized cumulated probability */
@@ -1292,7 +1290,8 @@ INITIALIZE
                                   +VarSqw.s_inc>0 ? VarSqw.s_inc : 0));
 
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && !VarSqw.Temperature
-   && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity))
+   && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity)
+   && VarSqw.verbose_output)
     printf("Isotropic_Sqw: %s: Sample temperature not defined (T=0).\n"
            "Warning        Disabling detailed balance.\n", NAME_CURRENT_COMP);
 
@@ -1343,7 +1342,7 @@ double omega=0;       /* energy transfert */
 double q=0;           /* wavevector transfert */
 long   index_w;       /* energy index for table look-up SW */
 long   index_q;       /* Q index for table look-up P(Q|w) */
-double sintheta,theta, costheta; /* for the choice of kf direction */
+double theta, costheta; /* for the choice of kf direction */
 double u1x,u1y,u1z;
 double u2x,u2y,u2z;
 double u0x,u0y,u0z;
