@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.159 $
+* Version: $Revision: 1.160 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.159 2007-04-03 13:29:49 farhi Exp $
+* $Id: mcstas-r.c,v 1.160 2007-04-20 12:25:25 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.159  2007/04/03 13:29:49  farhi
+* store/restore neutron now uses incremented pointer.
+* Might improve slightly performances
+*
 * Revision 1.158  2007/03/12 14:06:35  farhi
 * Warning 'Low Stat' when >25 % error in detector results
 *
@@ -1439,6 +1443,7 @@ char *str_rep(char *string, char *from, char *to)
   }
   return(string);
 }
+#define VALID_NAME_LENGTH 32
 
 /*******************************************************************************
 * mcvalid_name: makes a valid string for variable names.
@@ -1456,6 +1461,7 @@ static char *mcvalid_name(char *valid, char *original, int n)
   if (n <= 0) n = strlen(valid);
 
   if (n > strlen(original)) n = strlen(original);
+  else original += strlen(original)-n;
   strncpy(valid, original, n);
 
   for (i=0; i < n; i++)
@@ -1677,10 +1683,10 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
         getenv("HOST") ? getenv("HOST") : "localhost");
   if (strstr(format.Name, "HTML")) {
     sprintf(instrname,"%s", mcinstrument_source);
-    mcvalid_name(valid_parent, mcinstrument_name, 256);
+    mcvalid_name(valid_parent, mcinstrument_name, VALID_NAME_LENGTH);
   } else {
     sprintf(instrname,"%s (%s)", mcinstrument_name, mcinstrument_source);
-    if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
+    if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, VALID_NAME_LENGTH);
     else strcpy(valid_parent, "root");
   }
   strncpy(date, ctime(&t), 64);
@@ -1725,7 +1731,7 @@ static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *
 
   if (!strlen(format.AssignTag) || (!name) || (!f)) return(-1);
 
-  mcvalid_name(valid_section, section, 256);
+  mcvalid_name(valid_section, section, VALID_NAME_LENGTH);
 
   /* remove quote chars in values */
   if (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab") || strstr(format.Name, "IDL"))
@@ -1773,8 +1779,8 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
   if (strcmp(part,"header") && strstr(format.Name, "no header")) return (-1);
   if (strcmp(part,"footer") && strstr(format.Name, "no footer")) return (-1);
 
-  mcvalid_name(valid_name, name, 256);
-  if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, 256);
+  mcvalid_name(valid_name, name, VALID_NAME_LENGTH);
+  if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, VALID_NAME_LENGTH);
   else strcpy(valid_parent, "root");
 
   if (!strcmp(part,"end") && pre)       /* un-indent */
@@ -2057,11 +2063,11 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   } else strcpy(limits, "0 0 0 0 0 0");
   mcfile_tag(f, format, pre, parent, lim_field, limits);
   mcfile_tag(f, format, pre, parent, "variables", strstr(format.Name," scan ") ? zvar : vars);
+  /* add warning in case of low statistics or large number of bins in text format mode */
   if (mcestimate_error(Nsum, sum_z, P2sum) > sum_z/4) fprintf(stderr,
     "Warning: file '%s': Low Statistics\n",
     filename);
-
-  /* add warning in case of low statistics or large number of bins in text format mode */
+  else
   if (n*m*p > 1000 && Nsum < n*m*p && Nsum) fprintf(stderr,
     "Warning: file '%s':\n"
     "         Low Statistics (%g events in %dx%dx%d bins).\n",
@@ -2257,8 +2263,8 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   mcvalid_name(valid_zlabel, zlabel, 64);
 
   if (strstr(format.Name, "McStas") || !filename || strlen(filename) == 0)
-    mcvalid_name(valid_parent, parent, 64);
-  else mcvalid_name(valid_parent, filename, 64);
+    mcvalid_name(valid_parent, parent, VALID_NAME_LENGTH);
+  else mcvalid_name(valid_parent, filename, VALID_NAME_LENGTH);
 
 #ifdef HAVE_LIBNEXUS
   if (strstr(format.Name, "NeXus")) {
@@ -2485,8 +2491,8 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     } /* end if Binary */
   }
   if (strstr(format.Name, "McStas") || !filename || strlen(filename) == 0)
-    mcvalid_name(valid_parent, parent, 64);
-  else mcvalid_name(valid_parent, filename, 64);
+    mcvalid_name(valid_parent, parent, VALID_NAME_LENGTH);
+  else mcvalid_name(valid_parent, filename, VALID_NAME_LENGTH);
   /* if normal or end: end_data */
   if (strlen(End) && just_header != 1 && f) {
     pfprintf(f, End, "sssssssssssssiiigggggg",
@@ -4898,6 +4904,7 @@ mcstas_raytrace(void *p_node_ncount)
   #ifdef USE_THREADS
   pthread_exit((void *) 0);
   #endif
+  return (NULL);
 }
 
 /* mcstas_main: McStas main() function. */
