@@ -796,6 +796,11 @@ sub do_scan {
         $end = $numpoints;
     }
     for($point = 0; $point < $numpoints; $point++) {
+	my @Monitors = ();
+	my @Monitors_E = ();
+	my @Intensities = ();
+	my @Errors = ();
+	my @Rays = ();
         if (($point >= $start) && ($point <= $end)) {
             my $out = "";
             my $j;
@@ -851,16 +856,39 @@ sub do_scan {
                         my $sim_I = $2;
                         my $sim_err = $4;
                         my $sim_N = $6;
-                        $out .= " $sim_I $sim_err";
-                        if($firsttime) {
-                            $variables .= " $1 $3";
-                            push @youts, "($1,$3)";
-                        }
+			my $Counter;
+			my $index = -1;
+			for ($Counter = 0; $Counter < @Monitors; $Counter++) {
+			    if ($1 eq $Monitors[$Counter]) {
+				$index = $Counter;
+			    }
+			}
+			if ($index == -1) {
+			    # Didn't record this monitor before
+			    push @Monitors, $1;
+			    push @Monitors_E, $3;
+			    push @Intensities, $sim_I;
+			    push @Errors, $sim_err;
+			    push @Rays, $sim_N;
+			} else {
+			    $Intensities[$index] = $sim_I;
+			    $Errors[$index] = $sim_err;
+			    $Rays[$index] = $sim_N;
+			}
                     } elsif(m'^Error:') { # quote hack '
                         $got_error = 1;
                     }
                     print "$_\n";
                 }
+		# Output final monitor data:
+		my $Counter = @Monitors;
+		for ($Counter = 0; $Counter < @Monitors; $Counter++) {
+		    if ($firsttime){
+			$variables .= " $Monitors[$Counter] $Monitors_E[$Counter]";
+			push @youts, "($Monitors[$Counter],$Monitors_E[$Counter])";
+		    }
+		    $out .= " $Intensities[$Counter] $Errors[$Counter]";
+		}
                 # remove SIG handler
                 if ($optim_flag == 0) {
                   $SIG{'INT'}  = 'DEFAULT';
