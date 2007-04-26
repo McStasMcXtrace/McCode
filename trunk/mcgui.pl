@@ -154,7 +154,7 @@ sub ask_save_before_simulate {
 sub is_erase_ok {
     my ($w) = @_;
     if($edit_control && $edit_control->numberChanges() > 0) {
-        my $ret = $w->messageBox(-message => "Ok to loose changes?",
+        my $ret = $w->messageBox(-message => "Ok to lose changes?",
                                  -title => "Erase ok?",
                                  -type => 'okcancel',
                                  -icon => 'question',
