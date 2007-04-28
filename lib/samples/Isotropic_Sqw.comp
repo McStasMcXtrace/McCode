@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.54 $
+* Version: $Revision: 1.55 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -248,7 +248,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.54 $
+#define ISOTROPIC_SQW $Revision: 1.55 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -471,7 +471,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       if (q_min > d) q_min = q;
       if (list_count > 1) {
         q_step_cur = fabs(list[list_count].q - list[list_count-1].q);
-        if (q_step_cur > 1e-5 && (!q_step || q_step_cur < q_step))
+        if (q_step_cur > 0 && (!q_step || q_step_cur < q_step))
          q_step = q_step_cur;
       }
 
@@ -1335,8 +1335,7 @@ double my_a;          /* absorption cross-section scaled to velocity (2200) */
 double ws, p_scatt;   /* probability for scattering/absorption and for */
                       /* interaction along d_path */
 double tmp;           /* temporary var */
-double ratio_w, ratio_q; /* variables for bilinear interpolation */
-long   closer_w;
+double ratio_w=0, ratio_q=0; /* variables for bilinear interpolation */
 double q1, q2, q3, q4;
 double omega=0;       /* energy transfert */
 double q=0;           /* wavevector transfert */
@@ -1478,10 +1477,16 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     my_t = my_a + VarSqw.my_s;  /* total scattering Xsect (tmp var) */
     if (my_t <= 0) {
-      printf("Isotropic_Sqw: %s: ERROR: Null total cross section\n",NAME_CURRENT_COMP);
+      if (VarSqw.neutron_removed<1000) printf("Isotropic_Sqw: %s: ERROR: Null total cross section %g. Removing event.\n",
+        NAME_CURRENT_COMP, my_t);
       VarSqw.neutron_removed++;
       ABSORB; /* should never occur */
-    } else if (VarSqw.my_s <= 0) printf("Isotropic_Sqw: %s: ERROR: Null scattering cross section\n",NAME_CURRENT_COMP);
+    } else if (VarSqw.my_s <= 0) {
+      if (VarSqw.verbose_output > 1 && VarSqw.neutron_removed<1000)
+        printf("Isotropic_Sqw: %s: Warning: Null scattering cross section %g. Ignoring.\n",
+          NAME_CURRENT_COMP, VarSqw.my_s);
+      VarSqw.my_s = 0;
+    }
 
     /* Proba of scattering vs absorption (integrating along the whole trajectory) */
     ws = VarSqw.my_s/my_t;  /* (inc+coh)/(inc+coh+abs) */
@@ -1605,11 +1610,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
                        /(Data_sqw.SW[index_w].cumul_proba - Data_sqw.SW[index_w-1].cumul_proba);
               /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
               w1 = Data_sqw.SW[index_w-1].omega; w2 = Data_sqw.SW[index_w].omega;
-            } else { /* index_w = 0 */
-              ratio_w = (tmp                               - Data_sqw.SW[index_w].cumul_proba)
-                      /(Data_sqw.SW[index_w+1].cumul_proba - Data_sqw.SW[index_w].cumul_proba);
+            } else { /* index_w = 0 interpolate to 0 energy */
+              if (Data_sqw.SW[index_w].cumul_proba)
+                ratio_w = tmp/Data_sqw.SW[index_w].cumul_proba;
+              else ratio_w=1;
               /* ratio_w=0 omega[index_w], ratio=1 omega[index+1] */
-              w1 = Data_sqw.SW[index_w].omega; w2 = Data_sqw.SW[index_w+1].omega;
+              w1 = Data_sqw.SW[index_w].omega; w2 = 0;
             }
             omega = (1-ratio_w)*w1 + ratio_w*w2;
           } else {
@@ -1622,6 +1628,9 @@ do { /* Main interaction loop. Ends with intersect=0 */
               NAME_CURRENT_COMP, index_w);
           omega=0;
         }
+        if ((ratio_w<0 || ratio_w > 1) && VarSqw.verbose_output && VarSqw.neutron_removed<1000)
+          printf("Isotropic_Sqw: %s: Warning: interpolation ratio_w=%g is wrong, index_w=%i\n",
+            NAME_CURRENT_COMP, ratio_w, index_w);
 
         /* MC choice: detailed balance: choice between w and -w : w=Ei-Ef */
         if (omega && VarSqw.Temperature) {
@@ -1647,9 +1656,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
           if (VarSqw.sqw_interp && Data_sqw.nb_q > 1 && index_q > 0 ) {
             if (index_w > 0 && Data_sqw.nb_w > 1) {
               /* bilinear interpolation on - side: index_w > 0, index_q > 0 */
-              closer_w= (ratio_w > .5 ? index_w : index_w-1);
-              ratio_q = (tmp - Data_sqw.SQW[closer_w][index_q-1].cumul_proba)
-                      /(Data_sqw.SQW[closer_w][index_q].cumul_proba - Data_sqw.SQW[closer_w][index_q-1].cumul_proba);
+              ratio_q = (tmp - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
+                      /(Data_sqw.SQW[index_w][index_q].cumul_proba - Data_sqw.SQW[index_w][index_q-1].cumul_proba);
               q3 = Data_sqw.SQW[index_w]  [index_q].Q;
               q1 = Data_sqw.SQW[index_w-1][index_q-1].Q;
               q2 = Data_sqw.SQW[index_w]  [index_q-1].Q;
@@ -1681,6 +1689,10 @@ do { /* Main interaction loop. Ends with intersect=0 */
           VarSqw.neutron_removed++;
           continue;
         }
+        if ((ratio_q<0 || ratio_q > 1) && VarSqw.verbose_output && VarSqw.neutron_removed<1000)
+          printf("Isotropic_Sqw: %s: Warning: interpolation ratio_q=%g is wrong, index_q=%i\n"
+                 "               ratio_w=%g, index_w=%i\n",
+            NAME_CURRENT_COMP, ratio_q, index_q, ratio_w, index_w);
 
         /* Search for length of final wave vector kf */
         /* kf is such that : hbar*w = hbar*hbar/2/m*(k*k - kf*kf) */
