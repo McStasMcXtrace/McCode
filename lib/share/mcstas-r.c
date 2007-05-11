@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.160 $
+* Version: $Revision: 1.161 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.160 2007-04-20 12:25:25 farhi Exp $
+* $Id: mcstas-r.c,v 1.161 2007-05-11 10:17:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.160  2007/04/20 12:25:25  farhi
+* Field names should not exceed e.g. 32 (for Matlab/scilab, etc compatibility).
+* Now using VALID_NAME_LENGTH define.
+*
 * Revision 1.159  2007/04/03 13:29:49  farhi
 * store/restore neutron now uses incremented pointer.
 * Might improve slightly performances
@@ -774,20 +778,20 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREErrors [%PAR/%FIL]: \n", "",
     "%PREEvents [%PAR/%FIL]: \n", "" },
   { "Scilab", "sci",
-    "function mc_%PAR = get_%PAR(p)\n"
+    "function mc_%VPA = get_%VPA(p)\n"
       "// %FMT function issued from McStas on %DAT\n"
       "// McStas simulation %SRC: %FIL %FMT\n"
-      "// Import data using scilab> exec('%PAR.sci',-1); s=get_%PAR(); and s=get_%PAR('plot'); to plot\n"
+      "// Import data using scilab> exec('%VPA.sci',-1); s=get_%VPA(); and s=get_%VPA('plot'); to plot\n"
       "mode(-1); //silent execution\n"
       "if argn(2) > 0, p=1; else p=0; end\n"
-      "mc_%PAR = struct();\n"
-      "mc_%PAR.Format ='%FMT';\n"
-      "mc_%PAR.URL    ='http://www.mcstas.org';\n"
-      "mc_%PAR.Editor ='%USR';\n"
-      "mc_%PAR.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
-      "mc_%PAR.Date   =%DATL; // for getdate\n"
-      "mc_%PAR.File   ='%FIL';\n",
-    "mc_%PAR.EndDate=%DATL; // for getdate\nendfunction\n"
+      "mc_%VPA = struct();\n"
+      "mc_%VPA.Format ='%FMT';\n"
+      "mc_%VPA.URL    ='http://www.mcstas.org';\n"
+      "mc_%VPA.Editor ='%USR';\n"
+      "mc_%VPA.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%VPA.Date   =%DATL; // for getdate\n"
+      "mc_%VPA.File   ='%FIL';\n",
+    "mc_%VPA.EndDate=%DATL; // for getdate\nendfunction\n"
     "function d=mcload_inline(d)\n"
       "// local inline func to load data\n"
       "execstr(['S=['+part(d.type,10:(length(d.type)-1))+'];']);\n"
@@ -839,30 +843,30 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       " plot2d(d.x,d.data);xtitle(t,d.xlabel,d.ylabel);\n"
       "end\n"
       "xname(t1);\nendfunction\n"
-    "mc_%PAR=get_%PAR();\n",
+    "mc_%VPA=get_%VPA();\n",
     "// Section %TYP [%NAM] (level %LVL)\n"
       "%PREt=[]; execstr('t=mc_%VNA.class','errcatch'); if ~length(t), mc_%VNA = struct(); end; mc_%VNA.class = '%TYP';",
     "%PREmc_%VPA.mc_%VNA = 0; mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
-    "%PREmc_%PAR.func='get_%PAR';\n%PREmc_%PAR.data = [ \n",
-    " ]; // end of data\n%PREif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\n%PREmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
+    "%PREmc_%VPA.func='get_%VPA';\n%PREmc_%VPA.data = [ \n",
+    " ]; // end of data\n%PREif length(mc_%VPA.data) == 0, single_file=0; else single_file=1; end\n%PREmc_%VPA=mcplot_inline(mc_%VPA,p);\n",
     "%PREerrors = [ \n",
-    " ]; // end of errors\n%PREif single_file == 1, mc_%PAR.errors=errors; end\n",
+    " ]; // end of errors\n%PREif single_file == 1, mc_%VPA.errors=errors; end\n",
     "%PREevents = [ \n",
-    " ]; // end of events\n%PREif single_file == 1, mc_%PAR.events=events; end\n"},
+    " ]; // end of events\n%PREif single_file == 1, mc_%VPA.events=events; end\n"},
   { "Matlab", "m",
-    "function mc_%PAR = get_%PAR(p)\n"
+    "function mc_%VPA = get_%VPA(p)\n"
       "%% %FMT function issued from McStas on %DAT\n"
       "%% McStas simulation %SRC: %FIL\n"
-      "%% Import data using matlab> s=%PAR; and s=%PAR('plot'); to plot\n"
+      "%% Import data using matlab> s=%VPA; and s=%VPA('plot'); to plot\n"
       "if nargout == 0 | nargin > 0, p=1; else p=0; end\n"
-      "mc_%PAR.Format ='%FMT';\n"
-      "mc_%PAR.URL    ='http://www.mcstas.org';\n"
-      "mc_%PAR.Editor ='%USR';\n"
-      "mc_%PAR.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
-      "mc_%PAR.Date   =%DATL; %% for datestr\n"
-      "mc_%PAR.File   ='%FIL';\n",
-    "mc_%PAR.EndDate=%DATL; %% for datestr\n"
+      "mc_%VPA.Format ='%FMT';\n"
+      "mc_%VPA.URL    ='http://www.mcstas.org';\n"
+      "mc_%VPA.Editor ='%USR';\n"
+      "mc_%VPA.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%VPA.Date   =%DATL; %% for datestr\n"
+      "mc_%VPA.File   ='%FIL';\n",
+    "mc_%VPA.EndDate=%DATL; %% for datestr\n"
       "function d=mcload_inline(d)\n"
       "%% local inline function to load data\n"
       "S=d.type; eval(['S=[ ' S(10:(length(S)-1)) ' ];']);\n"
@@ -914,14 +918,14 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "mc_%VNA.class = '%TYP';",
     "mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
-    "%PREmc_%PAR.func='%PAR';\n%PREmc_%PAR.data = [ \n",
-    " ]; %% end of data\nif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\nmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
+    "%PREmc_%VPA.func='%VPA';\n%PREmc_%VPA.data = [ \n",
+    " ]; %% end of data\nif length(mc_%VPA.data) == 0, single_file=0; else single_file=1; end\nmc_%VPA=mcplot_inline(mc_%VPA,p);\n",
     "%PREerrors = [ \n",
-    " ]; %% end of errors\nif single_file, mc_%PAR.errors=errors; end\n",
+    " ]; %% end of errors\nif single_file, mc_%VPA.errors=errors; end\n",
     "%PREevents = [ \n",
-    " ]; %% end of events\nif single_file, mc_%PAR.events=events; end\n"},
+    " ]; %% end of events\nif single_file, mc_%VPA.events=events; end\n"},
   { "IDL", "pro",
-    "; McStas/IDL file. Import using idl> s=%PAR() and s=%PAR(/plot) to plot\n"
+    "; McStas/IDL file. Import using idl> s=%VPA() and s=%VPA(/plot) to plot\n"
       "function mcload_inline,d\n"
       "; local inline function to load external data\n"
       "S=d.type & a=execute('S=long(['+strmid(S,9,strlen(S)-10)+'])')\n"
@@ -1003,28 +1007,28 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       " d=execute('S={'+T+':V'+ES+'}')\n"
       "endif else d=execute('S.'+T+'=V')\n"
       "end ; PRO stv\n"
-    "function %PAR,plot=plot\n"
+    "function %VPA,plot=plot\n"
       "; %FMT function issued from McStas on %DAT\n"
       "; McStas simulation %SRC: %FIL\n"
-      "; import using s=%PAR() and s=%PAR(/plot) to plot\n"
+      "; import using s=%VPA() and s=%VPA(/plot) to plot\n"
       "if keyword_set(plot) then p=1 else p=0\n"
       "%7$s={Format:'%FMT',URL:'http://www.mcstas.org',"
       "Editor:'%USR',$\n"
       "Creator:'%SRC McStas " MCSTAS_VERSION " simulation',$\n"
       "Date:%DATL,"
       "File:'%FIL'}\n",
-    "stv,%PAR,'EndDate',%DATL ; for systime\nreturn, %PAR\nend\n",
+    "stv,%VPA,'EndDate',%DATL ; for systime\nreturn, %VPA\nend\n",
     "; Section %TYP [%NAM] (level %LVL)\n"
       "%PRE%VNA={class:'%TYP'}\n",
     "%PREstv,%VPA,'%VNA',%VNA\n",
     "%PREstv,%SEC,'%NAM','%VAL'\n",
-    "%PREstv,%PAR,'func','%PAR' & data=[ $\n",
+    "%PREstv,%VPA,'func','%VPA' & data=[ $\n",
     " ]\n%PREif size(data,/type) eq 7 then single_file=0 else single_file=1\n"
-    "%PREstv,%PAR,'data',data & data=0 & %PAR=mcplot_inline(%PAR,p)\n",
+    "%PREstv,%VPA,'data',data & data=0 & %VPA=mcplot_inline(%VPA,p)\n",
     "%PREif single_file ne 0 then begin errors=[ ",
-    " ]\n%PREstv,%PAR,'errors',reform(errors,%MDIM,%NDIM,/over) & errors=0\n%PREendif\n",
+    " ]\n%PREstv,%VPA,'errors',reform(errors,%MDIM,%NDIM,/over) & errors=0\n%PREendif\n",
     "%PREif single_file ne 0 then begin events=[ ",
-    " ]\n%PREstv,%PAR,'events',reform(events,%MDIM,%NDIM,/over) & events=0\n%PREendif\n\n"},
+    " ]\n%PREstv,%VPA,'events',reform(events,%MDIM,%NDIM,/over) & events=0\n%PREendif\n\n"},
   { "XML", "xml",
     "<?xml version=\"1.0\" ?>\n<!--\n"
       "URL:    http://www.nexusformat.org/\n"
@@ -1098,18 +1102,18 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREIF (single_file = 1); %PAR.ncount = [ ",
     " ] array(%MDIM,%NDIM); # end of ncount\nENDIF\n"},
   { "Octave", "m",
-    "function mc_%PAR = get_%PAR(p)\n"
+    "function mc_%VPA = get_%VPA(p)\n"
       "%% %FMT function issued from McStas on %DAT\n"
       "%% McStas simulation %SRC: %FIL\n"
-      "%% Import data using octave> s=%PAR(); and plot with s=%PAR('plot');\n"
+      "%% Import data using octave> s=%VPA(); and plot with s=%VPA('plot');\n"
       "if nargin > 0, p=1; else p=0; end\n"
-      "mc_%PAR.Format ='%FMT';\n"
-      "mc_%PAR.URL    ='http://www.mcstas.org';\n"
-      "mc_%PAR.Editor ='%USR';\n"
-      "mc_%PAR.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
-      "mc_%PAR.Date   =%DATL; %% for datestr\n"
-      "mc_%PAR.File   ='%FIL';\n",
-    "mc_%PAR.EndDate=%DATL; %% for datestr\nendfunction\n"
+      "mc_%VPA.Format ='%FMT';\n"
+      "mc_%VPA.URL    ='http://www.mcstas.org';\n"
+      "mc_%VPA.Editor ='%USR';\n"
+      "mc_%VPA.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%VPA.Date   =%DATL; %% for datestr\n"
+      "mc_%VPA.File   ='%FIL';\n",
+    "mc_%VPA.EndDate=%DATL; %% for datestr\nendfunction\n"
       "if exist('mcload_inline'), return; end\n"
       "function d=mcload_inline(d)\n"
       "%% local inline function to load data\n"
@@ -1158,12 +1162,12 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "mc_%VNA.class = '%TYP';",
     "mc_%VPA.mc_%VNA = mc_%VNA;\n",
     "%PREmc_%SEC.%NAM = '%VAL';\n",
-    "%PREmc_%PAR.func='%PAR';\n%PREmc_%PAR.data = [ \n",
-    " ]; %% end of data\nif length(mc_%PAR.data) == 0, single_file=0; else single_file=1; end\nmc_%PAR=mcplot_inline(mc_%PAR,p);\n",
+    "%PREmc_%VPA.func='%VPA';\n%PREmc_%VPA.data = [ \n",
+    " ]; %% end of data\nif length(mc_%VPA.data) == 0, single_file=0; else single_file=1; end\nmc_%VPA=mcplot_inline(mc_%VPA,p);\n",
     "%PREerrors = [ \n",
-    " ]; %% end of errors\nif single_file, mc_%PAR.errors=errors; end\n",
+    " ]; %% end of errors\nif single_file, mc_%VPA.errors=errors; end\n",
     "%PREevents = [ \n",
-    " ]; %% end of events\nif single_file, mc_%PAR.events=events; end\n"},
+    " ]; %% end of events\nif single_file, mc_%VPA.events=events; end\n"},
   { "VRML", "wrl",
     "#VRML V2.0 utf8\n%PREFormat: %FMT file\n"
       "%PREuse freeWRL, openvrml, vrmlview, CosmoPlayer, Cortona, Octaga... to view file\n"
@@ -1180,14 +1184,14 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREend %TYP %PAR\n",
     "%PRE%SEC.%NAM= '%VAL'\n",
     "%PREThe Proto that contains data values and objects to plot these\n"
-      "PROTO I_ERR_N_%PAR [\n"
+      "PROTO I_ERR_N_%VPA [\n"
       "%PREthe PROTO parameters\n"
       "  field MFFloat Data [ ]\n"
       "  field MFFloat Errors [ ]\n"
       "  field MFFloat Ncounts [ ]\n"
       "] { %PREThe plotting objects/methods in the Proto\n"
       "  %PREdraw a small sphere at the origin\n"
-      "  DEF Data_%PAR Group {\n"
+      "  DEF Data_%VPA Group {\n"
       "  children [\n"
       "    DEF CoordinateOrigin Group {\n"
       "      children [\n"
@@ -1347,7 +1351,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "  ] }\n"
       "ROUTE GetScale.scale_vect TO TransformData.scale\n} # end of PROTO\n"
       "%PREnow we call the proto with Data values\n"
-      "I_ERR_N_%PAR {\nData [\n",
+      "I_ERR_N_%VPA {\nData [\n",
     "] # End of Data\n",
     "Errors [\n",
     "] # End of Errors\n",
@@ -1443,7 +1447,7 @@ char *str_rep(char *string, char *from, char *to)
   }
   return(string);
 }
-#define VALID_NAME_LENGTH 32
+#define VALID_NAME_LENGTH 64
 
 /*******************************************************************************
 * mcvalid_name: makes a valid string for variable names.
@@ -1727,11 +1731,13 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
 static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *section, char *name, char *value)
 {
   char valid_section[256];
+  char valid_name[256];
   int i;
 
   if (!strlen(format.AssignTag) || (!name) || (!f)) return(-1);
 
   mcvalid_name(valid_section, section, VALID_NAME_LENGTH);
+  mcvalid_name(valid_name, name, VALID_NAME_LENGTH);
 
   /* remove quote chars in values */
   if (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab") || strstr(format.Name, "IDL"))
@@ -1750,7 +1756,7 @@ static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *
   return(pfprintf(f, format.AssignTag, "ssss",
     pre,          /* %1$s PRE */
     valid_section,/* %2$s SEC */
-    name,         /* %3$s NAM */
+    valid_name,   /* %3$s NAM */
     value));      /* %4$s VAL */
 } /* mcfile_tag */
 
@@ -2909,7 +2915,8 @@ char *mcuse_format_header(char *format_const)
   str_rep(format, "%DATL","%8$li");/* Time elapsed since Jan 1st 1970, in seconds */
   str_rep(format, "%DAT", "%5$s"); /* Date as a string */
   str_rep(format, "%USR", "%6$s"); /* User/machine name */
-  str_rep(format, "%PAR", "%7$s"); /* Parent name (root/mcstas) */
+  str_rep(format, "%PAR", "%7$s"); /* Parent name (root/mcstas) valid_parent */
+  str_rep(format, "%VPA", "%7$s");
   return(format);
 }
 
@@ -2923,9 +2930,11 @@ char *mcuse_format_tag(char *format_const)
   if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_tag)\n"));
   strcpy(format, format_const);
   str_rep(format, "%PRE", "%1$s"); /* prefix */
-  str_rep(format, "%SEC", "%2$s"); /* section/parent name */
+  str_rep(format, "%SEC", "%2$s"); /* section/parent name valid_parent/section */
   str_rep(format, "%PAR", "%2$s");
-  str_rep(format, "%NAM", "%3$s"); /* name of field */
+  str_rep(format, "%VPA", "%2$s");
+  str_rep(format, "%NAM", "%3$s"); /* name of field valid_name */
+  str_rep(format, "%VNA", "%3$s");
   str_rep(format, "%VAL", "%4$s"); /* value of field */
   return(format);
 }
@@ -2960,7 +2969,8 @@ char *mcuse_format_data(char *format_const)
   if (!format) exit(fprintf(stderr, "Error: insufficient memory (mcuse_format_data)\n"));
   strcpy(format, format_const);
   str_rep(format, "%PRE", "%1$s"); /* prefix */
-  str_rep(format, "%PAR", "%2$s"); /* parent name (component instance name) */
+  str_rep(format, "%PAR", "%2$s"); /* parent name (component instance name) valid_parent */
+  str_rep(format, "%VPA", "%2$s");
   str_rep(format, "%FIL", "%3$s"); /* output file name (data) */
   str_rep(format, "%XLA", "%4$s"); /* x axis label */
   str_rep(format, "%XVL", "%5$s"); /* x axis valid label (letters/digits) */
