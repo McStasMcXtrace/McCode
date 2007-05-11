@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.55 $
+* Version: $Revision: 1.56 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -145,11 +145,11 @@
 * %P
 * INPUT PARAMETERS:
 * Sqw_coh:    [str] Name of the file containing the values of Q, w and S(Q,w)
-*                     Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1
-*                     Use 0 or "" to disable.
-* Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w)
+*                     Coherent part; Q in Angs-1, E in meV, S(q,w) in meV-1.
+*                     Use 0, NULL or "" to disable.
+* Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w).
 *                     Incoherent (self) part.
-*                     Use 0 or "" to scatter isotropically (V-like).
+*                     Use 0, NULL or "" to scatter isotropically (V-like).
 * sigma_coh:[barns] Coherent Scattering cross-section.
 * sigma_inc:[barns] Incoherent Scattering cross-section.
 * sigma_abs:[barns] Absorption cross-section at 2200 m/s.
@@ -176,7 +176,7 @@
 * d_phi:      [deg] scattering vertical angular spreading (usually the heigh
 *                     of the next component/detector). Use 0 for full space.
 *                     This is only relevant for single scattering (order=1).
-* save_sqw:     [1] When set to 1, saves S(q), SW and S(q,w) as monitors.
+* save_sqw:     [1] When set to 1, saves S(q), S(w) and S(q,w) as monitors.
 *                     not available in MPI mode.
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
@@ -248,7 +248,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.55 $
+#define ISOTROPIC_SQW $Revision: 1.56 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
