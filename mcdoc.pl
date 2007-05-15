@@ -35,6 +35,7 @@ my $use_local     = 0;  # true when also looking into current path
 my $single_comp_name = 0;  # component single name
 my $browser       = $MCSTAS::mcstas_config{'BROWSER'};
 my $is_forced     = 0; # true when force re-writting of existing HTML
+my @valid_names; # Full list of possible comp matches
 
 sub show_header { # output in text mode
     my ($d) = @_;
@@ -234,6 +235,7 @@ TB_END
 
     if ($is_single_file) {
       $out_file = "$valid_name.html";
+      push @valid_names, $out_file;
     }
 
     if ($is_opened) {
@@ -374,13 +376,13 @@ END
             next if (-d "$name"); # skip directories
             # extract the scanned comp/instr name from lib, removing possible path
             $name_base = basename($name);  # with extension
-            if ($single_comp_name_base =~ /^(.*)\.(com|comp|cmp|instr)$/) {
-              # requested doc name includes extension: search exact match
-              if($name_base =~ $single_comp_name_base) {
+            if ($single_comp_name_base =~ /^(.*)\.(com|comp|cmp|instr)$/i) {
+	      # requested doc name includes extension: search exact match
+              if((lc $name_base) =~ (lc $single_comp_name_base)) {
                 $does_match = 2;
               }
-            } elsif ($name_base =~ $single_comp_name_base) {
-              # requested doc name does not contain an extension: search all matches
+            } elsif ((lc $name_base) =~ (lc $single_comp_name_base)) {
+	      # requested doc name does not contain an extension: search all matches
               $does_match = 1;
             }
             # skip non comp/instr
@@ -424,6 +426,68 @@ END
 END
         } # end if filehandle
     } #end if open DIR
+}
+
+#
+# Add a search of components
+sub add_comp_search_html {
+    my ($search, $filehandle, @Incomps) = @_;
+    my @comps;
+    my ($j, $sec, $comp, $suf);
+    for ($j=0; $j<@Incomps; $j++) {
+	($comp,$sec,$suf) = fileparse($Incomps[$j],".html");
+	$comp = "$sec$comp.comp";
+	print "Testing for $comp\n";
+	if (-f "$comp") {
+	    push @comps, $comp;
+	}
+    }
+    return unless @comps;
+    if ($filehandle) {
+	print $filehandle <<END;
+<html>
+<header><title>McDoc: Search result for "$search"</title></header>
+<body>
+<h1>Result of component search for "$search" in your McStas library</h1>
+<p>(Please note that only current dir and $lib_dir were searched, discarding 'obsolete' components)
+<p><TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
+<TR>
+<TD><B><I>Name</I></B></TD>
+<TD WIDTH="10%"><B><I>Origin</I></B></TD>
+<TD WIDTH="10%"><B><I>Author(s)</I></B></TD>
+<TD><B><I>Source code</I></B></TD>
+<TD><B><I>Description</I></B></TD>
+</TR>
+END
+    } else {
+	 print "Could not write to search output file\n";
+    }
+
+    my $name;
+    for $comp (sort(@comps)) {
+	# extract the scanned comp/instr name from lib, removing possible path
+	($name, $sec, $suf) = fileparse($comp, ".comp");  # without extension
+	$data = component_information($comp);
+	if (not defined($data)) {
+	    print STDERR "mcdoc: Failed to get information for component/instrument '$comp'";
+	} else {
+	    print STDOUT "mcdoc: Search page adding $comp\n";
+	}
+	
+	if ($sec =~ m/obsolete/i) {
+	    print "WARNING: This is an obsolete $data->{'type'}. \n";
+	    print "         Please avoid usage whenever possible.\n";
+	}
+	if ($sec =~ m/contrib/i) {
+	    print "WARNING: This is a contributed $data->{'type'}. \n";
+	}
+	add_comp_html($data, $filehandle, "$sec/$name", $comp);
+    }
+    if ($filehandle) {
+	print $filehandle <<END;
+</TABLE>
+END
+    }
 }
 
 # Start of main ===============================
@@ -609,9 +673,21 @@ if ($filehandle) {
 }
 
 if (-f $out_file) {
-  if ($browser ne "text") {
-    # open the index.html
-    my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $out_file";
-    print "mcdoc: Starting $cmd\n"; system("$cmd\n");
-  }
+    if ($browser ne "text") {
+	# In case of multiple matches, create table of results:
+	if (@valid_names > 1) { 
+	    require File::temp;
+	    my $searchfile;
+	    ($filehandle, $searchfile) = File::Temp::tempfile("McDoc_XXXX", SUFFIX => '.html');
+	    open($filehandle, ">$searchfile") || die "Could not write to search output file\n";
+	    add_comp_search_html($file, $filehandle, @valid_names);
+	    html_main_end($filehandle, $toolbar);
+	    close($filehandle);
+	    $out_file = "$searchfile";
+	} 
+	
+	# open the index.html
+	my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $out_file";
+	print "mcdoc: Starting $cmd\n"; system("$cmd\n");
+    }
 }
