@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cd `dirname $0`
-export BROWSER=/Applications/Safari.app/Contents/MacOS/Safari
+export BROWSER=/usr/bin/open
 ./configure
 make pgplot
 make
