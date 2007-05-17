@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.10b
-* Version: $Revision: 1.17 $
+* Release: McStas 1.10
+* Version: $Revision: 1.18 $
 *
 * A McStas format converter to merge concert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.17 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.18 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -926,9 +926,9 @@ static void mcformat_usedir(char *dir)
   return;
 #else  /* !MC_PORTABLE */
 #ifndef WIN32
-  if(mkdir(dir, 0777))
+  if(!mctestmode && mkdir(dir, 0777))
 #else
-  if(mkdir(dir))
+  if(!mctestmode && mkdir(dir))
 #endif
   {
     int errno_mkdir = errno;
@@ -945,10 +945,10 @@ static void mcformat_usedir(char *dir)
         mcformat_usedir(dir);
       }
     } else if (errno_mkdir == EEXIST) {
-      fprintf(stderr, "mkdir: EEXIST pathname already exists (not necessarily as a directory).\n");
+      fprintf(stderr, "mkdir: EEXIST pathname %s already exists (not necessarily as a directory).\n", dir);
       if (!mcforcemode) {
         fprintf(stderr, "Error: unable to create directory '%s' (mcformat_usedir)\n", dir);
-        fprintf(stderr, "(Maybe the directory already exists? Use --force before -d %s to override)\n", dir);
+        fprintf(stderr, "(Maybe the directory already exists? Use --force or --test before -d %s to override)\n", dir);
         exit(1);
       }
       fprintf(stderr, "mcformat: Warning: re-using output directory '%s'.\n", dir);
@@ -998,7 +998,7 @@ static void mcformat_usedir(char *dir)
       exit(-1);
     }
   }
-  if (mcverbose) fprintf(stderr, "mcformat: Creating directory %s.\n", dir);
+  if (mcverbose) printf("mcformat: Creating directory %s.\n", dir);
   mcdirname = dir;
 
 #endif /* !MC_PORTABLE */
@@ -1059,12 +1059,12 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   /* write data file from McStasStruct */
   if (mcverbose) printf("mcformat: Writing %s from %s\n", McStasStruct.outputname, McStasStruct.filename);
 
-  if (strstr(McStasStruct.Format, "PGPLOT") && strstr(McStasStruct.type, "array_1d")) {
+  if (strstr(McStasStruct.Format, "PGPLOT") && strstr(McStasStruct.type, "array_1d") && !mctestmode) {
     mcdetector_out_1D(McStasStruct.title, McStasStruct.xlabel, McStasStruct.ylabel,
                   McStasStruct.xvar, McStasStruct.x1, McStasStruct.x2, McStasStruct.m,
                   McStasStruct.p0, McStasStruct.p1, McStasStruct.p2, McStasStruct.outputname,
                   McStasStruct.component, McStasStruct.POSITION);
-  } else
+  } else if (!mctestmode)
   mcdetector_out_012D(mcformat,
     McStasStruct.component,
     McStasStruct.title,
@@ -1111,6 +1111,7 @@ int mcformat_convert(char *name)
     mcsources[mcdircount]   =NULL;
     mcdircount++; /* number of directories scanned */
     ret += mcformat_dirwalk(name, mcformat_convert);
+    if (mcverbose) printf("mcformat: coming back to upper directory %s\n", upper_dir);
     mcdirname = upper_dir;
   } else {
     /* process the current file */
@@ -1212,7 +1213,7 @@ int mcformat_merge_compare(int nb)
           flag_list=2; /* two monitors */
       if (!flag_list) continue;
 
-      /* Data type check: dimension, limits, xvar, yvar, zvar */
+      /* Data type check: dimension, limits, xvar, yvar, zvar, xlabel, ylabel, zlabel */
       /* limits may be forced (to avoid rounding errors) */
       /* number of rows may be different for lists */
       char flag_data = (
@@ -1225,7 +1226,10 @@ int mcformat_merge_compare(int nb)
           ) &&
         (!ThisStruct.xvar || !McStasStruct.xvar || !strcmp(ThisStruct.xvar, McStasStruct.xvar)) &&
         (!ThisStruct.yvar || !McStasStruct.yvar || !strcmp(ThisStruct.yvar, McStasStruct.yvar)) &&
-        (!ThisStruct.zvar || !McStasStruct.zvar || !strcmp(ThisStruct.zvar, McStasStruct.zvar)) );
+        (!ThisStruct.zvar || !McStasStruct.zvar || !strcmp(ThisStruct.zvar, McStasStruct.zvar)) &&
+        (!ThisStruct.xlabel || !McStasStruct.xlabel || !strcmp(ThisStruct.xlabel, McStasStruct.xlabel)) &&
+        (!ThisStruct.ylabel || !McStasStruct.ylabel || !strcmp(ThisStruct.ylabel, McStasStruct.ylabel)) &&
+        (!ThisStruct.zlabel || !McStasStruct.zlabel || !strcmp(ThisStruct.zlabel, McStasStruct.zlabel)) );
       if (!flag_data) continue;
 
       /* Warning if gravitation not constant (may be forced) */
@@ -1252,7 +1256,7 @@ int mcformat_merge_compare(int nb)
       /* handle scan index */
       if (!flag_equiv_parval) {
         /* attach index j to scan column origin monitor 'i' */
-        if (mcverbose && Scans_to_merge[j] < 0 && Scans_to_merge[i] >= 0) fprintf(stderr,"  Gathering Scan step %s/%s (%d) with %s/%s (%d)\n",
+        if (mcverbose && Scans_to_merge[j] < 0 && Scans_to_merge[i] >= 0) printf("  Gathering Scan step %s/%s (%d) with %s/%s (%d)\n",
           McStasStruct.mcdirname, McStasStruct.outputname, i,
           ThisStruct.mcdirname,  ThisStruct.outputname,    j);
         if (Scans_to_merge[i] < 0) Scans_to_merge[i] = i;
@@ -1461,7 +1465,7 @@ int mcformat_scan_compare(int nb)
     /* now we know how many scanned monitor there are */
 
     if (mcverbose)
-      fprintf(stderr, "scan from %s has %d rows (scan steps) of %d columns (monitors) varying %s\n",
+      printf("scan from %s has %d rows (scan steps) of %d columns (monitors) varying %s\n",
         Files_to_Merge[scan_index1].filename, scan_length1, mon_count,
         Files_to_Merge[scan_index1].mcinputtable[ipar_var].name);
 
@@ -1490,15 +1494,16 @@ int mcformat_scan_compare(int nb)
     /* we first sort Scan_columns(monitors) with distance */
     int Scan_distances[mon_count];  /* this is column index */
     j = 0;
-#ifdef HAVE_QSORT
+
     for (scan_index2=0; scan_index2<nb; scan_index2++)
       if (Scan_columns[scan_index2]>=0) Scan_distances[j++] = Scan_columns[scan_index2];
+#ifdef HAVE_QSORT
     qsort(Scan_distances, mon_count, sizeof(int), sort_distances);
 #endif
     for (j=0; j<mon_count; j++) { /* loop for each column */
       int Monitor_column[scan_length1];
       int k=0;
-      for (i=0; i<scan_length1; Monitor_column[i++]=-1);
+      for (i=0; i<scan_length1; Monitor_column[i++]=i);
       for (scan_index2=0; scan_index2<nb; scan_index2++) {
         /* find Scan_distances[j] in Scans_to_merge */
         if (Scans_to_merge[scan_index2] >= 0 && Scans_to_merge[scan_index2] == Scan_distances[j]) {
@@ -1539,14 +1544,13 @@ int mcformat_scan_compare(int nb)
       strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_Err ");
       strcat(youts, "("); strcat(youts, Files_to_Merge[Scan_distances[j]].outputname); strcat(youts, "_I,");
       strcat(youts, Files_to_Merge[Scan_distances[j]].outputname); strcat(youts, "_Err) ");
-
     } /* for j */
     Scan.header=header;
 
     Scans_to_merge[scan_index1]=-1; /* unactivate that scan element */
 
     char *title=str_cat("Scan of ",
-      Files_to_Merge[scan_index1].mcinputtable[ipar_var].name);
+      Files_to_Merge[scan_index1].mcinputtable[ipar_var].name, NULL);
     /* output scan multiarray */
     /* for PGPLOT: open mcstas.sim */
     if (strstr(mcformat.Name, "McStas")) mcsiminfo_init(NULL); /* open new SIM file in this dir for the first time */
@@ -1556,7 +1560,8 @@ int mcformat_scan_compare(int nb)
     if (!datfile) datfile = str_cat("mcstas.", strstr(mcformat.Name, "McStas") ? "dat" : mcformat.Extension, NULL);
     strcat(mcformat.Name, " scan ");
     if (mcverbose)
-      fprintf(stderr, "Writing scan file=%s (%s)\n", datfile, mcsiminfo_name);
+      printf("Writing scan file=%s (%s) into directory %s\n", datfile, mcsiminfo_name, mcdirname);
+    if (!mctestmode)
     mcdetector_out_012D(mcformat,
       Files_to_Merge[scan_index1].component, title,
       -scan_length1, Files_to_Merge[scan_index1].mcnumipar+2*mon_count,  1,
@@ -1703,9 +1708,9 @@ mcformat_parseoptions(int argc, char *argv[])
       mcascii_only = 0;
       mcformat=mcuse_format(argv[++i]);
     }
-    else if(!strncmp("-p=", argv[i], 9)) {
+    else if(!strncmp("-p=", argv[i], 3)) {
       mcascii_only = 0;
-      mcformat=mcuse_format(&argv[i][9]);
+      mcformat=mcuse_format(&argv[i][3]);
     }
     else if(!strcmp("-p", argv[i]) && (i + 1) < argc) {
       mcascii_only = 0;

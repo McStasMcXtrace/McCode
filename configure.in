@@ -47,12 +47,10 @@ else
   AC_SUBST([WITH_NEXUS], [""])
   AC_DEFINE([WITH_NEXUS], [""])
 fi
-AC_CHECK_LIB(c, qsort, HAVE_QSORT=1, HAVE_QSORT=0)
-AC_SUBST(HAVE_QSORT)
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STRTOD
-AC_CHECK_FUNCS(strcasecmp fdopen)
+AC_CHECK_FUNCS(strcasecmp fdopen qsort)
 AC_PATH_PROGS(PERL,   [perl5 perl /usr/local/bin/perl], no)
 AC_PATH_PROGS(SCILAB, [scilab runscilab /usr/local/bin/scilab /usr/lib/scilab/bin/scilab /lib/scilab/bin/scilab scilex], no)
 AC_PATH_PROGS(MATLAB, [matlab /usr/local/bin/matlab], no)
