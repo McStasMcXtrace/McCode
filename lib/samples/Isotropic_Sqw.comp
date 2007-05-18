@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.56 $
+* Version: $Revision: 1.57 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -248,7 +248,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.56 $
+#define ISOTROPIC_SQW $Revision: 1.57 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1504,7 +1504,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (p_interact>0 && p_interact<=1) {
       /* we force a portion of the beam to interact */
       /* This is used to improve statistics on single scattering (and multiple) */
-      mc_trans = 1-p_interact;
+      if (!SCATTERED) mc_trans = 1-p_interact;
+      else            mc_trans = 1-p_interact/(4*SCATTERED+1); /* reduce effect on multi scatt */
     } else {
       mc_trans = p_trans; /* 1 - p_scatt */
     }
@@ -1553,10 +1554,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     PROP_DT(dt);
 
     /* choice between coherent/incoherent scattering */
-    if (!tmp) tmp = rand01();
-    else { /* re-use preceeding random shot */
-      tmp /= p_scatt;
-    }
+    tmp = rand01();
     /* local description at the scattering point (scat probability for atom) */
     tmp *= (coh+inc);
 
