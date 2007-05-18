@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 *
 * A McStas format converter to merge concert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.18 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.19 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1785,6 +1785,9 @@ int main(int argc, char *argv[])
 
   mcnbconvert = mcdircount = 0;
   mcoutputdir = mcdirname; /* base output dir */
+
+  if (mcscanmode && mcverbose && !strstr(mcformat.Name, "McStas"))
+    printf("Warning: Scan gathering mode is only compatible whe using --format=McStas\n");
 
   /* count the number of files to store */
   for(j = 0; j < files_to_convert_NB; j++) {

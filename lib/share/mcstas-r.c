@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.161 $
+* Version: $Revision: 1.162 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.161 2007-05-11 10:17:27 farhi Exp $
+* $Id: mcstas-r.c,v 1.162 2007-05-18 13:34:54 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.161  2007/05/11 10:17:27  farhi
+* fix field naming when generating/converting data files.
+*
 * Revision 1.160  2007/04/20 12:25:25  farhi
 * Field names should not exceed e.g. 32 (for Matlab/scilab, etc compatibility).
 * Now using VALID_NAME_LENGTH define.
@@ -744,9 +747,9 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 
 /* Multiple output format support. ========================================== */
 #ifdef HAVE_LIBNEXUS
-#define mcNUMFORMATS 10
-#else
 #define mcNUMFORMATS 9
+#else
+#define mcNUMFORMATS 8
 #endif
 #ifndef MCSTAS_FORMAT
 #define MCSTAS_FORMAT "McStas"  /* default format */
@@ -1077,30 +1080,6 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PRE<b>DATA</b><br><center><embed src=\"%FIL\" type=\"model/vrml\" width=\"75%%\" height=\"50%%\"></embed><br>File <a href=\"%FIL\">%FIL [VRML format]</a></center><br>\n", "%PREEnd of DATA<br>\n",
     "%PRE<b>ERRORS</b><br>\n","%PREEnd of ERRORS<br>\n",
     "%PRE<b>EVENTS</b><br>\n", "%PREEnd of EVENTS<br>\n"},
-  { "OpenGENIE", "gcl",
-    "PROCEDURE get_%PAR\n"
-      "RESULT %PAR\n"
-      "# %FMT procedure issued from McStas on %DAT\n"
-      "# McStas simulation %SRC: %FIL %FMT\n"
-      "# import data using s=get_%PAR();\n"
-      "%PAR = fields();\n"
-      "%PAR.Format =\"%FMT\";\n"
-      "%PAR.URL    =\"http://www.mcstas.org\";\n"
-      "%PAR.Editor =\"%USR\";\n"
-      "%PAR.Creator=\"%SRC McStas " MCSTAS_VERSION " simulation\";\n"
-      "%PAR.Date   =%DATL;\n"
-      "%PAR.File   =\"%FIL\";\n",
-    "%PAR.EndDate=%DATL;\nENDPROCEDURE\n",
-    "# Section %TYP [%NAM] (level %LVL)\n"
-      "%PRE%VNA = fields(); %VNA.class = \"%TYP\";",
-    "%PRE%VPA.%VNA = %VNA; free \"%VNA\";\n",
-    "%PRE%SEC.%NAM = \"%VAL\";\n",
-    "%PRE%PAR.func=\"get_%PAR\";\n%PRE%PAR.data = [ ",
-    " ] array(%MDIM,%NDIM); # end of data\nIF (length(%PAR.data) = 0); single_file=0; ELSE single_file=1; ENDIF\n%PAR=mcplot_inline(%PAR,p);\n",
-    "%PREIF (single_file = 1); %PAR.errors = [ ",
-    " ] array(%MDIM,%NDIM); # end of errors\nENDIF\n",
-    "%PREIF (single_file = 1); %PAR.ncount = [ ",
-    " ] array(%MDIM,%NDIM); # end of ncount\nENDIF\n"},
   { "Octave", "m",
     "function mc_%VPA = get_%VPA(p)\n"
       "%% %FMT function issued from McStas on %DAT\n"
