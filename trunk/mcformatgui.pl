@@ -117,6 +117,7 @@ if ($iformat =~ /Matlab|Scilab/i && $oformat =~ /Matlab|Scilab/i
 } elsif ($oformat_line !~ /binary/s) {
     print "Input format is McStas, running mcformat to $runmode data. Output will go to $outputdir in $oformat...\n";
     my $mode="";
+    if ($oformat =~ /IDL/i) { $oformat="IDL_binary"; }
     if    ($runmode =~ /Scan assembly/i) { $mode="--scan-only"; }
     elsif ($runmode =~ /Scan Merge/i)    { $mode="--scan"; }
     elsif ($runmode =~ /merge/i)         { $mode="--merge"; }
