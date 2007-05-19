@@ -473,15 +473,12 @@ END
 	} else {
 	    print STDOUT "mcdoc: Search page adding $comp\n";
 	}
-	
-	if ($sec =~ m/obsolete/i) {
-	    print "WARNING: This is an obsolete $data->{'type'}. \n";
-	    print "         Please avoid usage whenever possible.\n";
+	if (!($sec =~ m/obsolete/i)) {
+	    if ($sec =~ m/contrib/i) {
+		print "WARNING: This is a contributed $data->{'type'}. \n";
+	    }
+	    add_comp_html($data, $filehandle, "$sec/$name", $comp);
 	}
-	if ($sec =~ m/contrib/i) {
-	    print "WARNING: This is a contributed $data->{'type'}. \n";
-	}
-	add_comp_html($data, $filehandle, "$sec/$name", $comp);
     }
     if ($filehandle) {
 	print $filehandle <<END;
