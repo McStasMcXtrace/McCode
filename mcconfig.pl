@@ -100,14 +100,18 @@ if ($Config{'osname'} eq "MSWin32") {
     }
     print STDOUT "$tcltk\n";
 
-    print STDOUT "Checking for MPI compiler: ";
-    $failed=system("$which mpicc.exe");
-    $mpicc = (not $failed) ? "mpicc.exe" : "no";
-    print STDOUT "$mpicc\n";
-
+    # For now, mpicc is realised using a user-configurable
+    # batch script in the McStas bin directory
+    $mpicc = "mpicc.bat";
+    
+    #print STDOUT "Checking for MPI compiler: ";
+    #$failed=system("$which mpicc.exe");
+    #$mpicc = (not $failed) ? "mpicc.exe" : "no";
+    #print STDOUT "$mpicc\n";
+    
     print STDOUT "Checking for MPI run: ";
-    $failed=system("$which mpirun.exe");
-    $mpirun = (not $failed) ? "mpirun.exe" : "no";
+    $failed=system("$which mpiexec.exe");
+    $mpirun = (not $failed) ? "mpiexec.exe" : "no";
     print STDOUT "$mpirun\n";
 
     print STDOUT "Checking for HDFView compiler: ";

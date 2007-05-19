@@ -77,6 +77,7 @@
 @echo Copying in the files...
 @copy mcstas.exe %MCSTAS_SITE%\bin
 @copy mcformat.exe %MCSTAS_SITE%\bin
+@copy mpicc.bat %MCSTAS_SITE%\bin
 @copy support\Win32\which.exe %MCSTAS_SITE%\bin
 @copy *.pl %MCSTAS_SITE%\bin
 @copy support\pgplot_win32\*.* %MCSTAS_SITE%\bin

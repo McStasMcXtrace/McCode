@@ -408,10 +408,21 @@ sub exec_sim {
     } else {
         if ($mpi >= 1 && $MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
 	    $cmd = "$MCSTAS::mcstas_config{'MPIRUN'}";
+	    my $localonly = 1;
 	    if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
 		$cmd .= " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
+		$localonly = 0;
             }
-            $cmd .= " -np $mpi";
+	    # Win32 mpiexec needs different flags...
+	    if ($Config{'osname'} eq 'MSWin32') {
+		if ($localonly == 1) {
+		    $cmd .= " -localonly $mpi";
+		} else {
+		    $cmd .= " -n $mpi";
+		}
+	    } else {
+		$cmd .= " -np $mpi";
+	    }
 	    $cmd .= " @cmdlist";
 	    print "\nUsing MPI command \n $cmd \n\n";
         } else {
