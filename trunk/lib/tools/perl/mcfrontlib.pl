@@ -111,35 +111,35 @@ sub read_data_info {
     my ($compname,$title,$xlabel,$ylabel,$stats) = ("","","","","");
     my ($xmin,$xmax,$ymin,$ymax) = (0,1,0,1);
     while(<$handle>) {
-      if(/^\s*type:\s*(.*?)\s*$/i) {
+      if(/^\#*\s*type:\s*(.*?)\s*$/i) {
           $type = $1;
-      } elsif(/^\s*component:\s*([a-zA-Z_0-9]+)\s*$/i) {
+      } elsif(/^\#*\s*component:\s*([a-zA-Z_0-9]+)\s*$/i) {
           $compname = $1;
-      } elsif(/^\s*title:\s*(.*?)\s*$/i) {
+      } elsif(/^\#*\s*title:\s*(.*?)\s*$/i) {
           $title = strip_quote($1);
-      } elsif(/^\s*filename:\s*(.*?)\s*$/i) {
+      } elsif(/^\#*\s*filename:\s*(.*?)\s*$/i) {
           $fname = strip_quote($1);
-      } elsif(/^\s*variables:\s*([a-zA-Z_0-9 \t]*?)\s*$/i) {
+      } elsif(/^\#*\s*variables:\s*([a-zA-Z_0-9 \t]*?)\s*$/i) {
           @vars = split(" ", $1);
-      } elsif(/^\s*values:\s*([-+0-9.eE \t]*?)\s*$/i) {
+      } elsif(/^\#*\s*values:\s*([-+0-9.eE \t]*?)\s*$/i) {
           @vals = split(" ", $1);
-      } elsif(/^\s*xvar:\s*([a-zA-Z_0-9]+?)\s*$/i) {
+      } elsif(/^\#*\s*xvar:\s*([a-zA-Z_0-9]+?)\s*$/i) {
           $xvar = $1;
-      } elsif(/^\s*yvar:\s*([a-zA-Z_0-9]+?)\s*$/i) {
+      } elsif(/^\#*\s*yvar:\s*([a-zA-Z_0-9]+?)\s*$/i) {
           $yvar = $1;
           $yerr = undef;
-      } elsif(/^\s*yvar:\s*
+      } elsif(/^\#*\s*yvar:\s*
             \(\s*([a-zA-Z_0-9]+)\s*,
               \s*([a-zA-Z_0-9]+)\s*
             \)\s*$/ix) {
           $yvar = $1;
           $yerr = $2;
-      } elsif(/^\s*xvars:\s*
+      } elsif(/^\#*\s*xvars:\s*
             ([a-zA-Z_0-9]+
              (\s+[a-zA-Z_0-9]+)*
             )\s*$/ix) {
           @xvars = split(" ", $1);
-      } elsif(/^\s*yvars:
+      } elsif(/^\#*\s*yvars:
             ((
              \s*\([a-zA-Z_0-9]+,[a-zA-Z_0-9]+\)
             )+)\s*$/ix) {
@@ -153,17 +153,17 @@ sub read_data_info {
                 die "Internal: mcfrontlib/yvars";
             }
           }
-      } elsif(/^\s*xlabel:\s*(.*?)\s*$/i) {
+      } elsif(/^\#*\s*xlabel:\s*(.*?)\s*$/i) {
           $xlabel = strip_quote($1);
-      } elsif(/^\s*ylabel:\s*(.*?)\s*$/i) {
+      } elsif(/^\#*\s*ylabel:\s*(.*?)\s*$/i) {
           $ylabel = strip_quote($1);
-      } elsif(/^\s*xylimits:\s*
+      } elsif(/^\#*\s*xylimits:\s*
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s*$/ix) {
           ($xmin,$xmax,$ymin,$ymax) = ($1,$2,$3,$4);
-      } elsif(/^\s*xylimits:\s*
+      } elsif(/^\#*\s*xylimits:\s*
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s+
@@ -171,19 +171,19 @@ sub read_data_info {
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s*$/ix) {
           ($xmin,$xmax,$ymin,$ymax) = ($1,$2,$3,$4);
-      } elsif(/^\s*xlimits:\s*
+      } elsif(/^\#*\s*xlimits:\s*
             ([-+0-9.eE]+)\s+
             ([-+0-9.eE]+)\s*$/ix) {
           ($xmin,$xmax) = ($1,$2);
-      } elsif(/^\s*begin array2D\s*\(([0-9]+),([0-9]+)\)\s*/i) {
+      } elsif(/^\#*\s*begin array2D\s*\(([0-9]+),([0-9]+)\)\s*/i) {
           $data = read_array2D($handle,$1,$2);
-      } elsif(/^\s*begin array_2D\s*\(([0-9]+),([0-9]+)\)\s*/i) {
+      } elsif(/^\#*\s*begin array_2D\s*\(([0-9]+),([0-9]+)\)\s*/i) {
           $data = read_array2D($handle,$1,$2);
-      } elsif(/^\s*begin array_1D\s*\(([0-9]+)\)\s*/i) {
+      } elsif(/^\#*\s*begin array_1D\s*\(([0-9]+)\)\s*/i) {
           $data = read_array2D($handle,4,$2);
-      } elsif(/^\s*statistics:\s*(.*?)\s*$/i) {
+      } elsif(/^\#*\s*statistics:\s*(.*?)\s*$/i) {
           $stats = $1;
-      } elsif(/^\s*end\s+data\s*$/i) {
+      } elsif(/^\#*\s*end\s+data\s*$/i) {
           last;
       } else {
           # print "\# $_";
@@ -260,8 +260,8 @@ sub read_data_info {
 sub read_sim_info {
     my ($handle, $basedir) = @_;
     my @datalist = ();
-    my $instrument_info;
-    my $simulation_info;
+    my $instrument_info={};
+    my $simulation_info={};
     my $error = "no error";
     while(<$handle>) {
       if(/^\s*begin\s+data\s*$/i) {
@@ -272,8 +272,14 @@ sub read_sim_info {
       } elsif(/^\s*begin\s+simulation\s*$/i) {
           $simulation_info = read_simulation_info($handle);
       } elsif(/^\s*#(.*?)\s*$/i) {
-          $error = "This is a McStas single data file\n";
-          print $error;
+          # This is a McStas single data file
+          my @info = read_data_info($handle, $basedir);
+          push @datalist, grep($_->{Type} !~ /^\s*array_0d\s*$/, @info);
+          $simulation_info = read_simulation_info($handle);
+          # instr info
+          $instrument_info->{'Name'} = $info->{'Filename'};
+          $instrument_info->{'Parameters'} = $simulation_info->{'Params'};
+          $instrument_info->{'Instrument-source'} = $info->{'Component'};
           return ($instrument_info, $simulation_info, \@datalist, $error);
       } elsif(/^\s*$/) {
           next;
@@ -291,76 +297,6 @@ sub read_sim_file {
     my $handle = new FileHandle;
     open $handle, $file or die "Could not open file '$file'";
     read_sim_info($handle, $basedir);
-}
-
-# ADD/MOD: E. Farhi/V. Hugouvieux Feb 18th, 2002 : handle detector files
-sub mcpreplot {
-  my ($files) = @_;
-
-  $f = 0;
-  $mcfile = $files[$f];
-  my ($fh, $mcdetplot);
-
-  if (open(MCOUTFILE,$mcfile))
-  {
-    require File::Temp;
-    ($fh, $mcdetplot) = File::Temp::tempfile("mcdetplot_XXXXX", SUFFIX => '.sim');
-    print "Creating temporary file $mcdetplot\n";
-    # instrument
-    print $fh ("begin instrument\n");
-    $line=<MCOUTFILE>;
-    print $fh ("  Name: $mcfile\n");
-    print $fh ("  Parameters: PARAM\n");
-    print $fh ("  Instrument-source: INSTR.instr\n");
-    print $fh ("  Trace-enabled: yes\n");
-    print $fh ("  Default-main: yes\n");
-    print $fh ("  Embedded-runtime: yes\n");
-    print $fh ("end instrument\n");
-
-    # simulation
-    print $fh ("\n");
-    print $fh ("begin simulation\n");
-    $line=<MCOUTFILE>;
-    while($line =~ "# ")
-    {
-         # Date, Ncount, Numpoints, Param
-         @words = split(/# /,$line);
-         my $this_word = $words[1];
-         if ($this_word =~ /^\s*[A-Z]\s*/) {
-          print $fh ("  ",$words[1]); }
-         $line = <MCOUTFILE>;
-    }
-    print $fh ("end simulation \n\n");
-
-    close(MCOUTFILE);
-
-    while($mcfile)
-    {
-         # data
-         open(MCOUTFILE,$mcfile);
-         $line = <MCOUTFILE>;
-
-         print $fh ("begin data\n");
-         while($line =~ "# ")
-         {
-           @words = split(/\# /,$line);
-           my $this_word = $words[1];
-           if (!($this_word =~ /^\s*[A-Z]\s*/)) {
-            print $fh ("  ",$words[1]); }
-           $line = <MCOUTFILE>;
-         }
-         print $fh ("end data \n");
-         print $fh ("\n");
-         close(MCOUTFILE);
-
-         $f = $f + 1;
-         $mcfile = $files[$f];
-    }
-
-     close(MCOUTFILE);
-     close($fh);
-  }
-  return $mcdetplot;
 }
 
 1;

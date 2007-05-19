@@ -275,17 +275,6 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
 sub pgplotit {
   my ($sim_file) = $file;
   my ($instr_inf, $sim_inf, $datalist, $sim_error) = read_sim_file($file);
-  if ($sim_error !~ "no error") {
-    $file = mcpreplot($files);
-    $tmp_file = $file;
-    ($instr_inf, $sim_inf, $datalist, $det_error) = read_sim_file($file);
-    $file = $files[0];
-
-    if ($det_error !~ "no error") {
-      print "'$sim_file':'$sim_error'";
-      die   "'$tmp_file':'$det_error'";
-    }
-  }
   die "No data in simulation file '$file'"
       unless @$datalist;
   if ($passed_arg_str_quit =~ /-cps|-psc/i) {
@@ -293,7 +282,7 @@ sub pgplotit {
     overview_plot($datalist, $passed_arg_str);
           die "Wrote color postscript file '$file.ps' (cps)\n";
   } elsif ($passed_arg_str_quit =~ /-ps/) {
-    $global_dev = get_device("$file.ps/ps");  
+    $global_dev = get_device("$file.ps/ps");
     overview_plot($datalist, $passed_arg_str);
           die "Wrote BW postscript file '$file.ps' (ps)\n";
   } elsif ($passed_arg_str_quit =~ /-ppm/) {
@@ -309,7 +298,7 @@ sub pgplotit {
     overview_plot($datalist, $passed_arg_str);
           die "Wrote GIF file '$file.gif' (gif)\n";
   }
-  
+
   if ($daemon eq 0) {
       print "Click on a plot for full-window view.\n" if @$datalist > 1;
       print "Press key for hardcopy (in graphics window), 'Q' to quit
@@ -364,7 +353,7 @@ sub pgplotit {
             if ($contourmode == 0) { $contourmode=1; }
             else { $contourmode=0; $passed_arg_str =~ s|-contour||; }
             next;
-          } 
+          }
           # now do a full-screen version of the plot selected by the user.
           ($cc, $cx, $cy) = single_plot($datalist->[$idx], "$passed_arg_str -interactive ");
           last if $cc =~ /[xq]/i;        # Quit?
