@@ -121,6 +121,19 @@ if ($iformat =~ /Matlab|Scilab/i && $oformat =~ /Matlab|Scilab/i
     if    ($runmode =~ /Scan assembly/i) { $mode="--scan-only"; }
     elsif ($runmode =~ /Scan Merge/i)    { $mode="--scan"; }
     elsif ($runmode =~ /merge/i)         { $mode="--merge"; }
+    if ($mode =~ /scan/i && $oformat !~ /McStas/i) {
+      my $ret = $w->messageBox(
+          -message => "For a Scan Operation ($mode)\n
+            The McStas/PGPLOT output format if prefered.\n
+            Other formats will not display correctly.\n
+            Press 'Yes' to export in McStas\n
+            or 'No' to keep $oformat.",
+          -title => "Scan operation: McStas prefered.",
+          -type => 'YesNo',
+          -icon => 'question',
+          -default => 'yes');
+        if (lc($ret) eq "yes") { $oformat="McStas"; }
+    }
     $cmd="mcformat";
     if ($Config{'osname'} eq 'MSWin32') { $cmd .= ".$MCSTAS::mcstas_config{'EXE'}"; }
     $cmd.=" --format=$oformat --dir=$outputdir $inputdir $mode";
