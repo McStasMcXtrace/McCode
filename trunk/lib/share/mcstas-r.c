@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.162 $
+* Version: $Revision: 1.163 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.162 2007-05-18 13:34:54 farhi Exp $
+* $Id: mcstas-r.c,v 1.163 2007-05-20 12:15:49 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.162  2007/05/18 13:34:54  farhi
+* mcformat: warning when using --scan to non McStas/PGPLOT format
+* new instrument with sample container and single environment sheild
+* removed OpenGENIE format (never used)
+*
 * Revision 1.161  2007/05/11 10:17:27  farhi
 * fix field naming when generating/converting data files.
 *
@@ -4477,6 +4482,9 @@ mchelp(char *pgmname)
 "                             (use option +a to include text header in files\n"
 #ifdef USE_THREADS
 "  --threads=NB_CPU           Split simulation into NB_CPU threads\n"
+#endif
+#ifdef USE_MPI
+"\nThis instrument has been compiled with MPI extensions\n\n"
 #endif
 );
   if(mcnumipar > 0)
