@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.57 $
+* Version: $Revision: 1.58 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -248,7 +248,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.57 $
+#define ISOTROPIC_SQW $Revision: 1.58 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -711,10 +711,10 @@ struct Sqw_Data_struct *Sqw_readfile(
       free(Sqw_Data->QW_lookup);
     }
     Sqw_Data->SW_lookup = NULL;
-    Sqw_Data->QW_lookup  = NULL;
-    Sqw_Data->Sq         = NULL;
+    Sqw_Data->QW_lookup = NULL;
+    Sqw_Data->Sq        = NULL;
     Sqw_Data->SW        = NULL;
-    Sqw_Data->SQW        = NULL;
+    Sqw_Data->SQW       = NULL;
   }
 
   if (!file || !strlen(file) || !strcmp(file, "NULL")) return(Sqw_Data);
@@ -1242,7 +1242,7 @@ INITIALIZE
   VarSqw.s_abs     = sigma_abs;
   VarSqw.s_coh     = sigma_coh;
   VarSqw.s_inc     = sigma_inc; /* s_scatt member initialized in Sqw_init */
-  VarSqw.maxloop   = 100;       /* attempts to close triangle */
+  VarSqw.maxloop   = 100;       /* atempts to close triangle */
   VarSqw.minevents = 100;       /* minimal # of events required to get dynamical range */
   VarSqw.neutron_removed = 0;
   VarSqw.neutron_enter   = 0;
@@ -1275,32 +1275,23 @@ INITIALIZE
   /* optional ways to define rho */
   if (!VarSqw.rho && powder_Vc > 0)
     VarSqw.rho = 1/powder_Vc;
-
   if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
-    printf("Isotropic_Sqw: %s: ERROR importing data files (Sqw_init)\n",NAME_CURRENT_COMP);
-    exit(0);
+    printf("Isotropic_Sqw: %s: ERROR importing data files (Sqw_init coh=%s inc=%s).\n",NAME_CURRENT_COMP, Sqw_coh, Sqw_inc);
   }
-
-
-
-  if (VarSqw.rho <= 0) exit(printf("Isotropic_Sqw: %s: Null density (V_rho)\n",NAME_CURRENT_COMP));
+  if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && VarSqw.rho <= 0) exit(printf("Isotropic_Sqw: %s: Null density (V_rho)\n",NAME_CURRENT_COMP));
   /* 100: convert from barns to fm^2 */
   VarSqw.my_a_v  =(VarSqw.rho*100*VarSqw.s_abs*2200);
   VarSqw.my_s    =(VarSqw.rho*100*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
                                   +VarSqw.s_inc>0 ? VarSqw.s_inc : 0));
-
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && !VarSqw.Temperature
    && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity)
    && VarSqw.verbose_output)
     printf("Isotropic_Sqw: %s: Sample temperature not defined (T=0).\n"
            "Warning        Disabling detailed balance.\n", NAME_CURRENT_COMP);
-
   if (VarSqw.s_coh<=0 && VarSqw.s_inc<=0) {
     printf("Isotropic_Sqw: %s: Scattering cross section is zero\n"
-           "ERROR          (sigma_coh, sigma_inc)\n",NAME_CURRENT_COMP);
-    exit(0);
+           "ERROR          (sigma_coh, sigma_inc).\n",NAME_CURRENT_COMP);
   }
-
   if (d_phi) d_phi = fabs(d_phi)*DEG2RAD;
 
   if (d_phi > PI) d_phi = 0; /* V_scatt on 4*PI */
@@ -1316,7 +1307,7 @@ INITIALIZE
   VarSqw.w_min     = (wmin > 0 ? wmin : 0);
   VarSqw.q_max     = (qmax > 0 ? qmax : 0);
   VarSqw.q_min     = (qmin > 0 ? qmin : 0);
-
+printf("4\n");
 /* end INITIALIZE */
 %}
 
@@ -1369,13 +1360,14 @@ VarSqw.type = '\0';
 do { /* Main interaction loop. Ends with intersect=0 */
 
   /* Intersection neutron trajectory / sample (sample surface) */
-  if (VarSqw.shape==1)
-    intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zthick);
-  else if (VarSqw.shape==0)
-    intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o,yheight);
-  else
-    intersect=sphere_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o);
-
+  if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
+    if (VarSqw.shape==1)
+      intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zthick);
+    else if (VarSqw.shape==0)
+      intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o,yheight);
+    else
+      intersect=sphere_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o);
+  }
   /* Computing the intermediate times */
   if (intersect) {
     tmp = 0;
