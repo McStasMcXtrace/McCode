@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.58 $
+* Version: $Revision: 1.59 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -248,7 +248,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.58 $
+#define ISOTROPIC_SQW $Revision: 1.59 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1307,7 +1307,6 @@ INITIALIZE
   VarSqw.w_min     = (wmin > 0 ? wmin : 0);
   VarSqw.q_max     = (qmax > 0 ? qmax : 0);
   VarSqw.q_min     = (qmin > 0 ? qmin : 0);
-printf("4\n");
 /* end INITIALIZE */
 %}
 
@@ -1316,7 +1315,7 @@ printf("4\n");
 TRACE
 %{
 
-int    intersect;     /* flag to continue/stop */
+int    intersect=0;     /* flag to continue/stop */
 double t0,  t1,  t2,  t3; /* times for intersections */
 double dt0, dt1, dt2, dt; /* time intervals */
 double k=0, kf, kf1, kf2;
@@ -1367,7 +1366,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
       intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o,yheight);
     else
       intersect=sphere_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o);
-  }
+  } else intersect=0;
+
   /* Computing the intermediate times */
   if (intersect) {
     tmp = 0;
@@ -1855,6 +1855,7 @@ SAVE
   if (save_sqw)
     printf("Isotropic_Sqw: %s: Can not save S(q,w) data when running in MPI mode.\n", NAME_CURRENT_COMP);
 #else
+  if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)
   for (k=0; k < 2; k++) {
     struct Sqw_Data_struct Data_sqw;
     char tmp[1024];
@@ -1917,6 +1918,7 @@ FINALLY
 %{
   int  k;
 
+  if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)
   for (k=0; k < 2; k++) {
     struct Sqw_Data_struct Data_sqw;
     char type_ci[64];
@@ -1972,7 +1974,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  if (!concentric) {
+  if (!concentric && (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)) {
     magnify("xyz");
     if(VarSqw.shape==1)
     {
