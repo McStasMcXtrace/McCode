@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.92 $
+* Version: $Revision: 1.93 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.92 2007-02-01 15:49:45 pkwi Exp $
+* $Id: mcstas-r.h,v 1.93 2007-05-29 14:57:56 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.92  2007/02/01 15:49:45  pkwi
+*       For some instruments (e.g. h8) , it seems that <sys/stat.h> is needed to compile on Mac OS X (like FreeBSD)
+*
+*       Added define to include this.
+*
 *       Revision 1.91  2007/01/29 15:51:56  farhi
 *       mcstas-r: avoid undef of HAVE_LIBNEXUS as napi is importer afterwards
 *
@@ -223,7 +228,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.92 $"
+#define MCSTAS_R_H "$Revision: 1.93 $"
 
 #include <math.h>
 #include <string.h>
@@ -842,6 +847,7 @@ void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
                 double t, double sx, double sy, double sz, double p);
 void mcgenstate(void);
 double randnorm(void);
+double randtriangle(void);
 void normal_vec(double *nx, double *ny, double *nz,
     double x, double y, double z);
 int inside_rectangle(double, double, double, double);
