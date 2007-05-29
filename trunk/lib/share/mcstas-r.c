@@ -11,14 +11,14 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.163 $
+* Version: $Revision: 1.164 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.163 2007-05-20 12:15:49 pkwi Exp $
+* $Id: mcstas-r.c,v 1.164 2007-05-29 14:57:56 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.162  2007/05/18 13:34:54  farhi
@@ -3905,6 +3905,13 @@ randnorm(void)
   return X;
 }
 
+/* generate a random number from -1 to 1 with triangle distribution */
+double randtriangle(void) {
+  double randnum=rand01();
+  if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
+  else return(sqrt(2*randnum)-1);
+}
+
 /* intersect handling ======================================================= */
 
 /* normal_vec: Compute normal vector to (x,y,z). */
@@ -4482,9 +4489,6 @@ mchelp(char *pgmname)
 "                             (use option +a to include text header in files\n"
 #ifdef USE_THREADS
 "  --threads=NB_CPU           Split simulation into NB_CPU threads\n"
-#endif
-#ifdef USE_MPI
-"\nThis instrument has been compiled with MPI extensions\n\n"
 #endif
 );
   if(mcnumipar > 0)
