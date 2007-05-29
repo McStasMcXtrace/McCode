@@ -7,7 +7,7 @@
  *
  * %INSTRUMENT_SITE: ILL
  *
- * A test instrument for the S(q,w) sample, with furnace
+ * A test instrument for the S(q,w) sample, with furnace/container
  *
  * %Description
  * This instrument is a test instrument for the S(q,w) sample.
@@ -19,8 +19,8 @@
  * detector is 2.5 m diameter, with 40 cm heigh, 1 inch diameter detector tubes.
  *
  * Example:
- *   mcrun FurnaceSample.instr E0=4.94 dE=.24 dt=6.4e-6   cold TOF
- *   mcrun FurnaceSample.instr E0=33 dE=1.07 dt=9.6e-6    thermal TOF
+ *   mcrun ILL_TOF_Env.instr E0=4.94 dE=.24 dt=6.4e-6   cold TOF
+ *   mcrun ILL_TOF_Env.instr E0=33 dE=1.07 dt=9.6e-6    thermal TOF
  *
  * %Parameters
  * INPUT PARAMETERS:
@@ -143,7 +143,7 @@ EXTEND
   if      (SCATTERED == 1) flag_single=(VarSqw.type == 'c' ? 1 : 2);
   else if (SCATTERED >  1) flag_multi =(VarSqw.type == 'c' ? 1 : 2);
   else                     flag_multi =flag_single=0;
-  t = randpm1()*dt0;  // we assume that in the real instrument, the chopper is close to sample
+  t = randtriangle()*2*dt0;  // we assume that in the real instrument, the chopper is close to sample
 %}
 
 COMPONENT Container_out=Isotropic_Sqw(
