@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.59 $
+* Version: $Revision: 1.60 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -194,6 +194,8 @@
 * auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
 *                   to optimal setting whenever required (recommanded).
 * interpolate:  [1] Perform (q,w) smoothing from S(q,w) if true (recommanded).
+*                   Interpolation around elastic line is triangular when 1,
+*                   square when 2 and Dirac when 3.
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
@@ -248,7 +250,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.59 $
+#define ISOTROPIC_SQW $Revision: 1.60 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -365,9 +367,9 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->intensity    =0;
   Sqw_Data->intensity_total=0;
   strcpy(Sqw_Data->filename, "");
-  Sqw_Data->SW          =NULL;
+  Sqw_Data->SW           =NULL;
   Sqw_Data->SQW          =NULL;
-  Sqw_Data->SW_lookup   =NULL;
+  Sqw_Data->SW_lookup    =NULL;
   Sqw_Data->QW_lookup    =NULL;
   Sqw_Data->Sq           =NULL;
   Sqw_Data->iqSq         =NULL;
@@ -479,7 +481,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       /* if  d = previous d, increase line duplication index */
       if (!q_count)     q_count = q;
       if (!j_count)     j_count = j;
-      if (!F2_count)     F2_count = F2;
+      if (!F2_count)    F2_count= F2;
       if (fabs(q_count-q) < 0.0001*fabs(q)
        && fabs(F2_count-F2) < 0.0001*fabs(F2) && j_count == j) {
        mult_count++; flag=0; }
@@ -499,7 +501,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
           mult_count   = 1;
           q_count = q;
           j_count = j;
-          F2_count = F2;
+          F2_count= F2;
         }
         if (i == size-1) list_count--;
         flag=0;
@@ -582,9 +584,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 *****************************************************************************/
 int Sqw_search_root(double A, double B, double C,
              double *x1, double *x2)
-
 {
-
   double delta, sqrtdelta, inv_2A;
   int    OK = 0;
 
@@ -619,6 +619,8 @@ int Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
 
   if (randnum <0) randnum=0;
   if (randnum >1) randnum=1;
+
+  if (Sqw.nb_w == 1) return(0);
 
   if (Sqw.SW_lookup) {
     i = Sqw.SW_lookup[(long)floor(randnum*Sqw.lookup_length)]-1;
@@ -696,7 +698,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   /* setup default */
   if (Sqw->sqw_auto < 2) Sqw_Data_init(Sqw_Data);
   else { /* we are re-optimizing range */
-    if (Sqw_Data->Sq)  free(Sqw_Data->Sq);
+    if (Sqw_Data->Sq) free(Sqw_Data->Sq);
     if (Sqw_Data->SW) free(Sqw_Data->SW);
 
     if (Sqw_Data->SQW) {
@@ -1073,8 +1075,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw->compname);
 
   /* generate quick lookup tables for SW and SQW */
-  Sqw_Data->SW_lookup = SW_lookup
-                         = (long*)calloc(Sqw_Data->lookup_length, sizeof(long));
+  SW_lookup = (long*)calloc(Sqw_Data->lookup_length, sizeof(long));
 
   if (!SW_lookup) {
     printf("Isotropic_Sqw: %s: Cannot allocate SW_lookup (%li bytes).\n"
@@ -1086,9 +1087,9 @@ struct Sqw_Data_struct *Sqw_readfile(
       w = (double)i/(double)Sqw_Data->lookup_length;
       SW_lookup[i] = Sqw_search_SW(*Sqw_Data, w);
     }
+    Sqw_Data->SW_lookup = SW_lookup;
   }
-  Sqw_Data->QW_lookup = QW_lookup
-                      = (long**)calloc(Sqw_Data->nb_w, sizeof(long*));
+  QW_lookup = (long**)calloc(Sqw_Data->nb_w, sizeof(long*));
 
   if (!QW_lookup) {
     printf("Isotropic_Sqw: %s: Cannot allocate QW_lookup (%li bytes).\n"
@@ -1103,7 +1104,7 @@ struct Sqw_Data_struct *Sqw_readfile(
         printf("Isotropic_Sqw: %s: Cannot allocate QW_lookup[%li] (%li bytes).\n"
                "Warning        Will be slower.\n",
         Sqw->compname, j, Sqw_Data->lookup_length*sizeof(long));
-        free(QW_lookup); Sqw_Data->QW_lookup = QW_lookup = NULL;
+        free(QW_lookup); Sqw_Data->QW_lookup = QW_lookup = NULL; break;
       } else {
         for (i=0; i < Sqw_Data->lookup_length; i++) {
           w = (double)i/(double)Sqw_Data->lookup_length;
@@ -1111,6 +1112,7 @@ struct Sqw_Data_struct *Sqw_readfile(
         }
       }
     }
+    if (QW_lookup) Sqw_Data->QW_lookup = QW_lookup;
   }
   if ((Sqw_Data->QW_lookup || Sqw_Data->SW_lookup) && Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated lookup tables with %li entries\n",
@@ -1168,9 +1170,7 @@ double Sqw_init(struct Sqw_sample_struct *Sqw, char *file_coh, char *file_inc)
   if (!ret) ret=d_inc->intensity+d_coh->intensity;
   return(ret);
 }
-
 #endif
-
 %}
 
 
@@ -1237,7 +1237,7 @@ INITIALIZE
 
   strncpy(VarSqw.compname, NAME_CURRENT_COMP, 256);
   VarSqw.T2E       =(1/11.605);   /* Kelvin to meV */
-  VarSqw.sqSE2K = (V2K*SE2V)*(V2K*SE2V);
+  VarSqw.sqSE2K    = (V2K*SE2V)*(V2K*SE2V);
   VarSqw.sqw_threshold = (threshold > 0 ? threshold : 0);
   VarSqw.s_abs     = sigma_abs;
   VarSqw.s_coh     = sigma_coh;
@@ -1258,7 +1258,7 @@ INITIALIZE
   VarSqw.sqw_interp= interpolate;
   VarSqw.mean_scatt= 0;
   VarSqw.mean_abs  = 0;
-  VarSqw.psum_scatt      = 0;
+  VarSqw.psum_scatt= 0;
   VarSqw.single    = 0;
   VarSqw.multi     = 0;
 
@@ -1326,7 +1326,7 @@ double ws, p_scatt;   /* probability for scattering/absorption and for */
                       /* interaction along d_path */
 double tmp;           /* temporary var */
 double ratio_w=0, ratio_q=0; /* variables for bilinear interpolation */
-double q1, q2, q3, q4;
+double q11, q21, q22, q12;
 double omega=0;       /* energy transfert */
 double q=0;           /* wavevector transfert */
 long   index_w;       /* energy index for table look-up SW */
@@ -1365,7 +1365,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     else if (VarSqw.shape==0)
       intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o,yheight);
     else
-      intersect=sphere_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o);
+      intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius_o);
   } else intersect=0;
 
   /* Computing the intermediate times */
@@ -1374,7 +1374,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (radius_i>0) {
       if ((VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz,
                                        radius_i,yheight))
-      || (VarSqw.shape==2 && sphere_intersect(&t1,&t2, x,y,z,vx,vy,vz,
+      || (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz,
                                        radius_i)))
       tmp = 1; /* we also take into account the hollow part */
     } else if (thickness>0 && VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz,
@@ -1469,12 +1469,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     my_t = my_a + VarSqw.my_s;  /* total scattering Xsect (tmp var) */
     if (my_t <= 0) {
-      if (VarSqw.neutron_removed<1000) printf("Isotropic_Sqw: %s: ERROR: Null total cross section %g. Removing event.\n",
+      if (VarSqw.neutron_removed<VarSqw.maxloop) printf("Isotropic_Sqw: %s: ERROR: Null total cross section %g. Removing event.\n",
         NAME_CURRENT_COMP, my_t);
       VarSqw.neutron_removed++;
       ABSORB; /* should never occur */
     } else if (VarSqw.my_s <= 0) {
-      if (VarSqw.verbose_output > 1 && VarSqw.neutron_removed<1000)
+      if (VarSqw.verbose_output > 1 && VarSqw.neutron_removed<VarSqw.maxloop)
         printf("Isotropic_Sqw: %s: Warning: Null scattering cross section %g. Ignoring.\n",
           NAME_CURRENT_COMP, VarSqw.my_s);
       VarSqw.my_s = 0;
@@ -1526,7 +1526,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     /* mean scattering probability and absorption fraction */
     VarSqw.mean_scatt += (1-exp(-VarSqw.my_s*d_path))*p;
     VarSqw.mean_abs   += (1-ws)*p;
-    VarSqw.psum_scatt       += p;
+    VarSqw.psum_scatt += p;
 
     /* Decaying exponential distribution of the path length before scattering */
     /* Select a point at which to scatter the neutron, taking
@@ -1601,26 +1601,36 @@ do { /* Main interaction loop. Ends with intersect=0 */
               /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
               w1 = Data_sqw.SW[index_w-1].omega; w2 = Data_sqw.SW[index_w].omega;
             } else { /* index_w = 0 interpolate to 0 energy */
-              if (Data_sqw.SW[index_w].cumul_proba)
+              /* ratio_w=0 omega=0, ratio=1 omega[index] */
+              w1 = 0; w2= Data_sqw.SW[index_w].omega;
+              if (!w2 && index_w+1 < Data_sqw.nb_w)
+                w2= Data_sqw.SW[index_w+1].omega;
+              if (Data_sqw.nb_w && Data_sqw.SW[index_w].cumul_proba) { /* triangular distribution */
                 ratio_w = tmp/Data_sqw.SW[index_w].cumul_proba;
-              else ratio_w=1;
-              /* ratio_w=0 omega[index_w], ratio=1 omega[index+1] */
-              w1 = Data_sqw.SW[index_w].omega; w2 = 0;
+                if (VarSqw.sqw_interp == 1) { /* randtriangle */
+                  if (ratio_w>0.5) ratio_w=1-sqrt(2*(ratio_w-0.5)); else ratio_w=sqrt(2*ratio_w)-1;
+                }
+                else if (VarSqw.sqw_interp == 3) ratio_w=0;
+                /* interp=2: keep rand01 */
+              } else ratio_w=0;
             }
             omega = (1-ratio_w)*w1 + ratio_w*w2;
           } else {
             omega = Data_sqw.SW[index_w].omega;
           }
         } else {
-          if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<1000)
+          if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: No suitable w transfert\n"
                    "               for index_w=%li. Using w=0.\n",
               NAME_CURRENT_COMP, index_w);
           omega=0;
         }
-        if ((ratio_w<0 || ratio_w > 1) && VarSqw.verbose_output && VarSqw.neutron_removed<1000)
-          printf("Isotropic_Sqw: %s: Warning: interpolation ratio_w=%g is wrong, index_w=%i\n",
+        if (ratio_w<0 || ratio_w > 1) {
+          if (VarSqw.verbose_output>1 && VarSqw.neutron_removed<VarSqw.maxloop)
+            printf("Isotropic_Sqw: %s: Warning: interpolation ratio_w=%g is wrong, index_w=%i\n",
             NAME_CURRENT_COMP, ratio_w, index_w);
+          if (ratio_w<0) ratio_w=0; else if (ratio_w>1) ratio_w=1;
+        }
 
         /* MC choice: detailed balance: choice between w and -w : w=Ei-Ef */
         if (omega && VarSqw.Temperature) {
@@ -1635,7 +1645,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         tmp = rand01();
         index_q = Sqw_search_Q_proba_per_w(Data_sqw, tmp, index_w);
         if (index_q == -1) {
-          if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<1000)
+          if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: No suitable (q|w) transfert\n"
                "               for w=%g index_w=%li\n",
             NAME_CURRENT_COMP, omega, index_w);
@@ -1643,52 +1653,57 @@ do { /* Main interaction loop. Ends with intersect=0 */
           continue; /* no Q value for this w choice */
         }
         if (&(Data_sqw.SQW[index_w]) != NULL) {
-          if (VarSqw.sqw_interp && Data_sqw.nb_q > 1 && index_q > 0 ) {
+          if (VarSqw.sqw_interp && Data_sqw.nb_q > 1 && index_q > 0) {
             if (index_w > 0 && Data_sqw.nb_w > 1) {
               /* bilinear interpolation on - side: index_w > 0, index_q > 0 */
               ratio_q = (tmp - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
-                      /(Data_sqw.SQW[index_w][index_q].cumul_proba - Data_sqw.SQW[index_w][index_q-1].cumul_proba);
-              q3 = Data_sqw.SQW[index_w]  [index_q].Q;
-              q1 = Data_sqw.SQW[index_w-1][index_q-1].Q;
-              q2 = Data_sqw.SQW[index_w]  [index_q-1].Q;
-              q4 = Data_sqw.SQW[index_w-1][index_q].Q;
-              q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
-                + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
-            } else { /* bilinear interpolation on + side: index_q > 0 */
+                       /(Data_sqw.SQW[index_w][index_q].cumul_proba
+                       - Data_sqw.SQW[index_w][index_q-1].cumul_proba);
+              q22 = Data_sqw.SQW[index_w]  [index_q].Q;
+              q11 = Data_sqw.SQW[index_w-1][index_q-1].Q;
+              q21 = Data_sqw.SQW[index_w]  [index_q-1].Q;
+              q12 = Data_sqw.SQW[index_w-1][index_q].Q;
+              q = (1-ratio_w)*(1-ratio_q)*q11+ratio_w*(1-ratio_q)*q21
+                + ratio_w*ratio_q*q22        +(1-ratio_w)*ratio_q*q12;
+            } else { /* bilinear interpolation on + side: index_w=0, index_q > 0 */
               ratio_q = (tmp - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
-                      /(Data_sqw.SQW[index_w][index_q].cumul_proba - Data_sqw.SQW[index_w][index_q-1].cumul_proba);
-              q1 = Data_sqw.SQW[index_w]  [index_q-1].Q;
-              q4 = Data_sqw.SQW[index_w]  [index_q].Q;
+                       /(Data_sqw.SQW[index_w][index_q].cumul_proba
+                       - Data_sqw.SQW[index_w][index_q-1].cumul_proba);
+              q11 = Data_sqw.SQW[index_w]  [index_q-1].Q;
+              q12 = Data_sqw.SQW[index_w]  [index_q].Q;
               if (index_w < Data_sqw.nb_w-1 && Data_sqw.nb_w > 1) {
-                q3 = Data_sqw.SQW[index_w+1][index_q].Q;
-                q2 = Data_sqw.SQW[index_w+1][index_q-1].Q;
-                q = (1-ratio_w)*(1-ratio_q)*q1+ratio_w*(1-ratio_q)*q2
-                  + ratio_w*ratio_q*q3        +(1-ratio_w)*ratio_q*q4;
+                q22 = Data_sqw.SQW[index_w+1][index_q].Q;
+                q21 = Data_sqw.SQW[index_w+1][index_q-1].Q;
+                q = (1-ratio_w)*(1-ratio_q)*q11+ratio_w*(1-ratio_q)*q21
+                  + ratio_w*ratio_q*q22        +(1-ratio_w)*ratio_q*q12;
               } else {
-                q    = (1-ratio_q)*q1  + ratio_q*q4;
+                q    = (1-ratio_q)*q11  + ratio_q*q12;
               }
             }
           } else {
             q    = Data_sqw.SQW[index_w][index_q].Q;
           }
         } else {
-          if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<1000)
+          if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: No suitable q transfert\n"
                "               for w=%g\n",
             NAME_CURRENT_COMP, omega);
           VarSqw.neutron_removed++;
           continue;
         }
-        if ((ratio_q<0 || ratio_q > 1) && VarSqw.verbose_output && VarSqw.neutron_removed<1000)
+        if (ratio_q<0 || ratio_q > 1) {
+          if (VarSqw.verbose_output && VarSqw.neutron_removed<VarSqw.maxloop)
           printf("Isotropic_Sqw: %s: Warning: interpolation ratio_q=%g is wrong, index_q=%i\n"
                  "               ratio_w=%g, index_w=%i\n",
             NAME_CURRENT_COMP, ratio_q, index_q, ratio_w, index_w);
+          if (ratio_q<0) ratio_q=0; else if (ratio_q>1) ratio_q=1;
+        }
 
         /* Search for length of final wave vector kf */
         /* kf is such that : hbar*w = hbar*hbar/2/m*(k*k - kf*kf) */
         /* acceptable values for kf are kf1 and kf2 */
         if (!Sqw_search_root(1, 0, -k*k + VarSqw.sqSE2K*omega, &kf1, &kf2)) {
-          if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<1000)
+          if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: imaginary root for\n"
                  "               w=%g q=%g (triangle can not close)\n",
             NAME_CURRENT_COMP, omega, q);
@@ -1701,7 +1716,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         vf = K2V*kf;
 
         /* Search of the direction of kf such that : q = ki - kf */
-        /* cos theta = (ki2+kf2-q2)/(2ki kf) */
+        /* cos theta = (ki2+kf2-q21)/(2ki kf) */
 
         costheta= (k*k+kf*kf-q*q)/(2*kf*k); /* this is cos(theta) */
 
@@ -1715,7 +1730,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
       if (!index_counter) { /* for loop ended: failure for scattering */
         intersect=0; /* Could not scatter: finish multiple scattering loop */
-        if (VarSqw.verbose_output >= 2 && VarSqw.neutron_removed<1000)
+        if (VarSqw.verbose_output >= 2 && VarSqw.neutron_removed<VarSqw.maxloop)
           printf("Isotropic_Sqw: %s: Warning: No scattering [q,w] conditions\n"
                "               last try (%i): type=%c w=%g q=%g cos(theta)=%g\n",
           NAME_CURRENT_COMP, VarSqw.maxloop, (VarSqw.type ? VarSqw.type : '-'), omega, q, costheta);
