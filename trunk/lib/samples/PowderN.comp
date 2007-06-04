@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -106,6 +106,7 @@
 * weight:   atomic/molecular weight of material [g/mol]
 * density:  density of material. V_rho=density/weight/1e24*N_A. [g/cm^3]
 * nb_atoms: number of atoms per unit cell [1]
+* barns:    Flag to indicate if |F|^2 is in barns [1]
 *
 * %L
 * See also: Powder1, Powder2 and PowderN
@@ -126,7 +127,7 @@ DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (string reflections, format=Undefined)
 SETTING PARAMETERS (d_phi=0, radius=0.01, yheight=0.05,
         pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, frac=0,
-        xwidth=0, zthick=0, h=0, DW=0, nb_atoms=1, density=0, weight=0)
+        xwidth=0, zthick=0, h=0, DW=0, nb_atoms=1, density=0, weight=0, barns=0)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2,
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, isrect, columns)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -348,6 +349,7 @@ DECLARE
   double *w_v,*q_v, *my_s_v2;
   char   isrect=0;
   int    columns[8] = format;
+  double XsectionFactor;
 %}
 INITIALIZE
 %{
@@ -381,6 +383,12 @@ INITIALIZE
   if (line_info.V_0 <= 0)
     exit(fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc)\n", NAME_CURRENT_COMP));
 
+  if (barns) { /* Factor 100 to convert from barns to fm^2 */
+    XsectionFactor = 100;
+  } else {
+    XsectionFactor = 1;
+  }
+  
   if (i) {
     L = line_info.list;
 
@@ -394,7 +402,7 @@ INITIALIZE
     {
       my_s_v2[i] = 4*PI*PI*PI*pack*(L[i].DWfactor ? L[i].DWfactor : 1)
                  /(line_info.V_0*line_info.V_0*V2K*V2K)
-                 *(L[i].j * L[i].F2 / L[i].q)*100;   // Factor 100 to convert from barns to fm^2
+                 *(L[i].j * L[i].F2 / L[i].q)*XsectionFactor;  
       /* Is not yet divided by v^2 */
       /* Squires [3.103] */
       my_s_v2_sum+=my_s_v2[i];
@@ -406,7 +414,7 @@ INITIALIZE
   /* Is not yet divided by v */
   my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
   my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
-  my_s_v2_sum=0;
+
   printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
     NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i);
 
