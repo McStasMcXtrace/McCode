@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.164 $
+* Version: $Revision: 1.165 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.164 2007-05-29 14:57:56 farhi Exp $
+* $Id: mcstas-r.c,v 1.165 2007-06-06 12:30:07 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.164  2007/05/29 14:57:56  farhi
+* New rand function to shoot on a triangular distribution. Useful to simulate chopper time spread.
+*
 * Revision 1.162  2007/05/18 13:34:54  farhi
 * mcformat: warning when using --scan to non McStas/PGPLOT format
 * new instrument with sample container and single environment sheild
@@ -4489,6 +4492,9 @@ mchelp(char *pgmname)
 "                             (use option +a to include text header in files\n"
 #ifdef USE_THREADS
 "  --threads=NB_CPU           Split simulation into NB_CPU threads\n"
+#endif
+#ifdef USE_MPI
+"\nThis instrument has been compiled with MPI extensions\n\n"
 #endif
 );
   if(mcnumipar > 0)
