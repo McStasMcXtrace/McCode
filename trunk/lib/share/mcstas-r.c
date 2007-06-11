@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.165 $
+* Version: $Revision: 1.166 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.165 2007-06-06 12:30:07 pkwi Exp $
+* $Id: mcstas-r.c,v 1.166 2007-06-11 09:05:33 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.165  2007/06/06 12:30:07  pkwi
+* Re-introducing --help item for MPI enabled instruments. Was removed on last cvs commit... Please remember to cvs update before committing.
+*
 * Revision 1.164  2007/05/29 14:57:56  farhi
 * New rand function to shoot on a triangular distribution. Useful to simulate chopper time spread.
 *
@@ -2802,7 +2805,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     if ((!filename || !strlen(filename)) && title && strlen(title)) filename = title;
     mcdetector_out(parent, Nsum, Psum, P2sum, filename);
   }
-  free(pre); if (filename) free(filename);
+  free(pre); if (filename && filename_orig) free(filename);
   if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
      free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL;
   }
