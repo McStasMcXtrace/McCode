@@ -12,7 +12,7 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -40,17 +40,18 @@
 * xw:     [m]   Width(x) of target
 * yh:     [m]   Height(y) of target
 * E0:     [meV] Mean energy of neutrons.
-* dE:     [meV] Energy spread of neutrons.
+* dE:     [meV] Energy spread of neutrons (flat or gaussian sigma).
 * Lambda0:[AA]  Mean wavelength of neutrons.
 * dLambda:[AA]  Wavelength spread of neutrons.
 * flux:   [1/(s*cm**2*st)] Energy integrated flux
+* gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Source_simple
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=0, height=0, width=0, dist, xw, yh, E0=0, dE=0, Lambda0=0, dLambda=0, flux=1)
+SETTING PARAMETERS (radius=0, height=0, width=0, dist, xw, yh, E0=0, dE=0, Lambda0=0, dLambda=0, flux=1, gauss=0)
 OUTPUT PARAMETERS (pmul)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -107,10 +108,18 @@ TRACE
  p = pdir*pmul;
 
  if(Lambda0==0) {
-   E=E0+dE*randpm1();              /*  Choose from uniform distribution */
+   if (!gauss) {
+     E=E0+dE*randpm1();              /*  Choose from uniform distribution */
+   } else {
+     E=E0+randnorm()*dE;
+   }
    v=sqrt(E)*SE2V;
  } else {
-   Lambda=Lambda0+dLambda*randpm1();
+   if (!gauss) {
+     Lambda=Lambda0+dLambda*randpm1();
+   } else {
+     Lambda=randnorm()*dLambda;
+   }
    v = K2V*(2*PI/Lambda);
  }
 
