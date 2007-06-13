@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.23 $
+* Version:  $Revision: 1.24 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -197,7 +197,10 @@ TRACE
 
       /* &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy, &sz */
     if (!end_reading) {
-      mcrestore_neutron(rTable.data,pos, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz, &p);
+      /* BEWARE! This is a non-standard way of using mcrestore_neutron, order of parameters
+	 MUST be  &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz 
+         to match the data format from the Virtual_input files */
+      mcrestore_neutron(rTable.data,pos, &p, &x, &y, &z, &vx, &vy, &vz, &t, &sx, &sy,  &sz);
 
       if (first_block) {
         double v;
