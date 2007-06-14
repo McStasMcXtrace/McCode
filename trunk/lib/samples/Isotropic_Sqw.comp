@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.60 $
+* Version: $Revision: 1.61 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -194,8 +194,6 @@
 * auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
 *                   to optimal setting whenever required (recommanded).
 * interpolate:  [1] Perform (q,w) smoothing from S(q,w) if true (recommanded).
-*                   Interpolation around elastic line is triangular when 1,
-*                   square when 2 and Dirac when 3.
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
@@ -250,7 +248,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.60 $
+#define ISOTROPIC_SQW $Revision: 1.61 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -876,10 +874,10 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* test if sampling is regular */
   if (!Table_Array[0].constantstep || !Table_Array[1].constantstep) {
-    printf("Isotropic_Sqw: %s: File %s sampling is not regular. Re-sample Sqw data.\n"
-           "WARNING        Exiting.\n",
-      Sqw->compname, file);
-    return(NULL);
+    printf("Isotropic_Sqw: %s: File %s %s sampling is not regular. Check and re-sample Sqw data.\n"
+           "WARNING        Ignoring.\n",
+      Sqw->compname, file,
+      !Table_Array[0].constantstep ? "q" : "energy");
   }
 
   /* build the 'total' = Sqw table in restricted range */
@@ -1605,13 +1603,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
               w1 = 0; w2= Data_sqw.SW[index_w].omega;
               if (!w2 && index_w+1 < Data_sqw.nb_w)
                 w2= Data_sqw.SW[index_w+1].omega;
-              if (Data_sqw.nb_w && Data_sqw.SW[index_w].cumul_proba) { /* triangular distribution */
+              if (Data_sqw.nb_w && Data_sqw.SW[index_w].cumul_proba) {
                 ratio_w = tmp/Data_sqw.SW[index_w].cumul_proba;
-                if (VarSqw.sqw_interp == 1) { /* randtriangle */
-                  if (ratio_w>0.5) ratio_w=1-sqrt(2*(ratio_w-0.5)); else ratio_w=sqrt(2*ratio_w)-1;
-                }
-                else if (VarSqw.sqw_interp == 3) ratio_w=0;
-                /* interp=2: keep rand01 */
               } else ratio_w=0;
             }
             omega = (1-ratio_w)*w1 + ratio_w*w2;
@@ -1627,8 +1620,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
         }
         if (ratio_w<0 || ratio_w > 1) {
           if (VarSqw.verbose_output>1 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: interpolation ratio_w=%g is wrong, index_w=%i\n",
-            NAME_CURRENT_COMP, ratio_w, index_w);
+            printf("Isotropic_Sqw: %s: Warning: interpolation ratio_w=%g is wrong, index_w=%i, rand01=%g cumul=%g\n",
+            NAME_CURRENT_COMP, ratio_w, index_w, tmp, Data_sqw.SW[index_w].cumul_proba);
           if (ratio_w<0) ratio_w=0; else if (ratio_w>1) ratio_w=1;
         }
 
