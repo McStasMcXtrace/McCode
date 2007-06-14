@@ -12,9 +12,9 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 *
-* A McStas format converter to merge concert data files.
+* A McStas format converter to merge/convert data files.
 *
 * %Description
 *
@@ -28,8 +28,8 @@
 * 3- catenate list files
 * 4- reconstruct parameter scan sumulations (--scan)
 *
-* Limitations: can not convert from binary files. Conversion from HTML/VRML
-* may fail.
+* Limitations: can not convert from binary files; Conversion from HTML/VRML
+* may fail; does not handle event files.
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.19 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.20 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
