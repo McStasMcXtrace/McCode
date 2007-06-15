@@ -673,7 +673,7 @@ if (-f $out_file) {
     if ($browser ne "text") {
 	# In case of multiple matches, create table of results:
 	if (@valid_names > 1) { 
-	    require File::temp;
+	    require File::Temp;
 	    my $searchfile;
 	    ($filehandle, $searchfile) = File::Temp::tempfile("McDoc_XXXX", SUFFIX => '.html');
 	    open($filehandle, ">$searchfile") || die "Could not write to search output file\n";
