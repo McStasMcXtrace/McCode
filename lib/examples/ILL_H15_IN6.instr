@@ -884,7 +884,7 @@ COMPONENT SuppPos = Arm()
 AT (0,0,LME-LCE-LCC) RELATIVE mono_out
 
 COMPONENT Mon_SuppInL = Monitor_nD(
-  xwidth = 0.05, yheight = 0.98,
+  xwidth = 0.05, yheight = 0.098,
   options="lambda, all auto")
 AT (0,0,-0.07-0.002) RELATIVE SuppPos
 
@@ -905,7 +905,7 @@ EXTEND
 %}
 
 /* Suppressor Chopper position. */
-COMPONENT Suppressor = FermiChopper(radius=0.07, nu=Frequency/iRATIO,
+COMPONENT Suppressor = FermiChopper(radius=0.07, nu=-Frequency/iRATIO,
    height=0.098, width=0.052, Nslit=1, R0=0, phase=0,
    length=0.012, eff=1, verbose=1)
    WHEN (iRATIO > 0)
@@ -921,9 +921,9 @@ AT (0,0,+0.07+0.001) RELATIVE SuppPos
 COMPONENT FermiPos = Arm()
 AT (0,0,LME-LCE) RELATIVE mono_out
 
-COMPONENT FermiM = FermiChopper(phase=iPHASE, radius=0.04, nu=Frequency,
+COMPONENT FermiM = FermiChopper(phase=-iPHASE, radius=0.04, nu=-Frequency,
    height=0.064, width=0.044, Nslit=200.0, R0=.99,
-   Qc=0.02176, alpha=2.33, m=mFC, length=0.012, eff=1.0, verbose=1)
+   Qc=(mFC < 1 && mFC ? mFC*0.02176 : 0.02176), alpha=2.33, m=mFC, length=0.012, eff=1.0, verbose=1)
 AT (0,0,0) RELATIVE FermiPos
 
 COMPONENT Mon_FermiOutdT = Monitor_nD(
