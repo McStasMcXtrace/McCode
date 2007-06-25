@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.61 $
+* Version: $Revision: 1.62 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -150,9 +150,9 @@
 * Sqw_inc:    [str] Name of the file containing the values of Q, w and S(Q,w).
 *                     Incoherent (self) part.
 *                     Use 0, NULL or "" to scatter isotropically (V-like).
-* sigma_coh:[barns] Coherent Scattering cross-section.
-* sigma_inc:[barns] Incoherent Scattering cross-section.
-* sigma_abs:[barns] Absorption cross-section at 2200 m/s.
+* sigma_coh:[barns] Coherent Scattering cross-section. Use -1 to unactivate.
+* sigma_inc:[barns] Incoherent Scattering cross-section. Use -1 to unactivate.
+* sigma_abs:[barns] Absorption cross-section at 2200 m/s. Use -1 to unactivate.
 * V_rho:     [AA-3] Density of atoms (nb atoms/unit cell V_0).
 * T:            [K] Temperature of sample, detailed balance
 *
@@ -200,6 +200,7 @@
 * powder_DW:             [1] global Debey-Waller factor, if not in |F2| or 1.
 * powder_format: [no quotes] name or definition of column indexes in file
 * powder_Vc:          [AA^3] volume of the unit cell
+* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in barns.
 *
 * OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
@@ -237,7 +238,7 @@ DEFINE COMPONENT Isotropic_Sqw
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-    interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0)
+    interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0, powder_barns=0)
   OUTPUT PARAMETERS (VarSqw, columns)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -248,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.61 $
+#define ISOTROPIC_SQW $Revision: 1.62 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1276,11 +1277,15 @@ INITIALIZE
   if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
     printf("Isotropic_Sqw: %s: ERROR importing data files (Sqw_init coh=%s inc=%s).\n",NAME_CURRENT_COMP, Sqw_coh, Sqw_inc);
   }
+  if (VarSqw.s_coh < 0) VarSqw.s_coh=0;
+  if (VarSqw.s_inc < 0) VarSqw.s_inc=0;
+  if (VarSqw.s_abs < 0) VarSqw.s_abs=0;
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && VarSqw.rho <= 0) exit(printf("Isotropic_Sqw: %s: Null density (V_rho)\n",NAME_CURRENT_COMP));
   /* 100: convert from barns to fm^2 */
-  VarSqw.my_a_v  =(VarSqw.rho*100*VarSqw.s_abs*2200);
-  VarSqw.my_s    =(VarSqw.rho*100*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
-                                  +VarSqw.s_inc>0 ? VarSqw.s_inc : 0));
+  double factor = (powder_barns ? 100 : 1);
+  VarSqw.my_a_v  =(VarSqw.rho*factor*VarSqw.s_abs*2200);
+  VarSqw.my_s    =(VarSqw.rho*factor*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
+                                     +VarSqw.s_inc>0 ? VarSqw.s_inc : 0));
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && !VarSqw.Temperature
    && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity)
    && VarSqw.verbose_output)
@@ -1463,7 +1468,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     }
     if (coh<0) coh=0;
     if (inc<0) inc=0;
-    VarSqw.my_s    =(VarSqw.rho*100*(coh + inc));
+    VarSqw.my_s    =(VarSqw.rho*(powder_barns ? 100 : 1)*(coh + inc));
 
     my_t = my_a + VarSqw.my_s;  /* total scattering Xsect (tmp var) */
     if (my_t <= 0) {
