@@ -183,34 +183,44 @@ if ($filesuf eq "sim") {
 
 my $timestamp = (stat($filename))[9];
 my $newtime;
+my $globaltime;
 my $counter = -1;
+# Global timeout, if file is unchanged after $EndTime seconds, this mcdaemon will quit!
+my $EndTime = 600;
 $ext = $GFORMAT;
 $ext =~ s!c!!g;
 while (1 == 1) {
     sleep $timeout;
     $newtime = (stat($filename))[9];
-    if (! ($newtime == $timestamp) ) {
-	$counter++;
-	print "Output files accessed! - Replotting\n";
-	system("mcplot -$GFORMAT $filename") || die "Problems spawning mcplot!\n";
-	my $timestring = ctime($newtime);
-	$timestring =~ s!\ !_!g;
-	copy("$filename.$ext", "$dirname/mcstas_".$counter.".$ext") || 
-	    die "Could not rename mcplot outputfile $filename.$ext";
-	print "   (was renamed to mcstas_".$counter.".$ext)\n";
-	$timestamp = (stat($filename))[9];
-	$newtime = $timestamp;
-	# If this is PGPLOT/Unix we should do another call to get X11 output
-	# (Currently only works if the file we work on has .sim extension)
-	# On Win32 we will ask the OS to display the graphic generated above.
-	if ($dodisplay == 1) {
-	    if ($Config{'osname'} eq 'MSWin32') {
-		system("start $dirname/mcstas_".$counter.".$ext");
-	    } else {
-		system("mcplot -d $filename") || (die "Could not spawn mcplot!\n");
+    $globaltime = time();
+    if ($globaltime < $EndTime + $timestamp) {
+	if (! ($newtime == $timestamp) ) {
+	    $counter++;
+	    print "Output files accessed! - Replotting\n";
+	    system("mcplot -$GFORMAT $filename") || die "Problems spawning mcplot!\n";
+	    my $timestring = ctime($newtime);
+	    $timestring =~ s!\ !_!g;
+	    if (-e "$filename.$ext") {
+		copy("$filename.$ext", "$dirname/mcstas_".$counter.".$ext") || 
+		    die "Could not rename mcplot outputfile $filename.$ext";
+	    print "   (was renamed to mcstas_".$counter.".$ext)\n";
 	    }
+	    $timestamp = (stat($filename))[9];
+	    $newtime = $timestamp;
+	    # If this is PGPLOT/Unix we should do another call to get X11 output
+	    # (Currently only works if the file we work on has .sim extension)
+	    # On Win32 we will ask the OS to display the graphic generated above.
+	    if ($dodisplay == 1) {
+		if ($Config{'osname'} eq 'MSWin32') {
+		    system("start $dirname/mcstas_".$counter.".$ext");
+		} else {
+		    system("mcplot -d $filename") || (die "Could not spawn mcplot!\n");
+		}
+	    }
+	    
 	}
-
+    } else {
+	die "mcdaemon: No activity for $EndTime seconds on $filename. Exiting.\n";
     }
 }
 
