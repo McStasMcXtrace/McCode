@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.74 $
+* Version: $Revision: 1.75 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.74  2007/04/03 13:16:58  farhi
+* Fixed potential infinite loop when using SPLIT
+*
 * Revision 1.73  2007/04/02 12:11:31  farhi
 * changed ENHANCE keyword to SPLIT
 *
@@ -160,7 +163,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.74 2007-04-03 13:16:58 farhi Exp $
+* $Id: cogen.c,v 1.75 2007-06-25 12:37:29 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -1343,8 +1346,8 @@ cogen_trace(struct instr_def *instr)
       char *exp=exp_tostring(comp->split); /* number of splits */
       char line[256];
       char cat_line[1024]; strcpy(cat_line, "");
-      sprintf(line,"  if (%sSplit_%s < (%s)) {\n",
-        ID_PRE, comp->name, exp);
+      sprintf(line,"  if (%sSplit_%s && %sSplit_%s < (%s)) {\n",
+        ID_PRE, comp->name, ID_PRE, comp->name, exp);
       strcat(cat_line, line);
       if (comp->group) {
         sprintf(line,"    %sGroup%s=0;\n", ID_PRE, comp->group->name);
