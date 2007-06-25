@@ -721,7 +721,7 @@ sub get_comp_info {
                 my $p_last_word = $p_splitted[$length-1];
                 push @spar, $p_last_word;
             } else {
-                print STDERR "Warning: Unrecognized PARAMETER in instrument $cname: $1 from $s\n";
+                print STDERR "Warning: Possible syntax error in specification of PARAMETER in instrument $cname: $1 .\n";
             }
         }
         if ($s =~ /DEFINE\s+COMPONENT\s+([a-zA-Z0-9_]+)/i)
@@ -752,7 +752,7 @@ sub get_comp_info {
                       $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
                     }
                 } else {
-                    print STDERR "Warning: Unrecognized DEFINITION PARAMETER in component $cname: $1 from $s\n";
+                    print STDERR "Warning: Possible syntax error in specification of DEFINITION PARAMETER in component $cname: $1 .\n";
                 }
             }
         }
@@ -797,7 +797,7 @@ Warning: SETTING parameter $1 with default value $2\n
                       $d->{'parhelp'}{$p_last_word}{'type'} = $p_first_word;
                     }
                 } else {
-                    print STDERR "Warning: Unrecognized SETTING PARAMETER in component $cname: $1 from $s.\n";
+                    print STDERR "Warning: Possible syntax error in specification of SETTING PARAMETER in component $cname: $1 .\n";
                 }
             }
         }
