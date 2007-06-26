@@ -870,14 +870,16 @@ sub menu_run_simulation {
               if ($pgmulti) {
 		  push @command, "--multi";
 	      }
-              # Be sure to read mcplotlib.pl in this case...
-              require "mcplotlib.pl";
-              # Standard mcdisplay.pl with PGPLOT bindings
-              # Make sure the PGPLOT server is already started. If the
-              # PGPLOT server is not started, mcdisplay will start it,
-              # and the server will keep the pipe to mcdisplay open
-              # until the server exits, hanging mcgui.
-              ensure_pgplot_xserv_started();
+              if (!$Config{'osname'} eq 'MSWin32') {
+		  # Be sure to read mcplotlib.pl in this case...
+		  require "mcplotlib.pl";
+		  # Standard mcdisplay.pl with PGPLOT bindings
+		  # Make sure the PGPLOT server is already started. If the
+		  # PGPLOT server is not started, mcdisplay will start it,
+		  # and the server will keep the pipe to mcdisplay open
+		  # until the server exits, hanging mcgui.
+		  ensure_pgplot_xserv_started();
+	      }
             } elsif ($plotter =~ /Matlab/i && $plotter =~ /scriptfile/i) {
               push @command, "--plotter=Matlab";
               my $output_file = save_disp_file($w,'m');
