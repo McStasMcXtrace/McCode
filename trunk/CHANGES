@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.35 $
+* Version: $Revision: 1.36 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -76,6 +76,11 @@ Changes in McStas v1.11, June 26, 2007
   - McStas now comes in a Debian binary package (.deb), tested to work on Debian and Ubuntu systems. The debian
     package provides McStas, pgplot and pgperl and have dependencies for the perl, perl-tk, gcc, libg2c0, pdl and libc6-dev 
     packages.
+
+  Parallelisation
+  - The threading mechanism for parallelisation has been removed from McStas since it caused too many problems. For 
+    parallelisation on single machines (e.g. modern dual-core processors) or clusters, MPI (MPICH) is the recommended solution.
+    The McStas team members routinely run developer machines and clusters using MPI.
 
   Intel C compiler
   - The documentation now includes instructions to run McStas with the Intel C compiler (available on Windows,
