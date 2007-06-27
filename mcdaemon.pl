@@ -28,6 +28,7 @@ use File::Basename;
 use File::Path;
 use File::Copy;
 use Time::localtime;
+use Tk::Balloon;
 use Config;
 
 
@@ -100,9 +101,9 @@ Graphics selection options:
 -gif      GIF format bitmap
 -png      PNG format bitmap
 -ppm      PPM format bitmap
-    
+
 ";
-     
+
 }
 
 print "\nOkay, mcdaemon is monitoring $filename using these options:\n";
@@ -123,7 +124,7 @@ if (!($filename =~ /^\// || ($Config{'osname'} eq 'MSWin32' && ($filename =~ /^(
 
 my $there = 0;
 my $dirthere = 0;
-my @suffixlist = ('.sim','.m','.sci','.html'); 
+my @suffixlist = ('.sim','.m','.sci','.html');
 # Currently only PGPLOT makes sense - having the other ones in the
 # list is simply to be able to display an error message.
 
@@ -201,7 +202,7 @@ while (1 == 1) {
 	    my $timestring = ctime($newtime);
 	    $timestring =~ s!\ !_!g;
 	    if (-e "$filename.$ext") {
-		copy("$filename.$ext", "$dirname/mcstas_".$counter.".$ext") || 
+		copy("$filename.$ext", "$dirname/mcstas_".$counter.".$ext") ||
 		    die "Could not rename mcplot outputfile $filename.$ext";
 	    print "   (was renamed to mcstas_".$counter.".$ext)\n";
 	    }
@@ -217,7 +218,7 @@ while (1 == 1) {
 		    system("mcplot -d $filename") || (die "Could not spawn mcplot!\n");
 		}
 	    }
-	    
+
 	}
     } else {
 	die "mcdaemon: No activity for $EndTime seconds on $filename. Exiting.\n";
@@ -242,30 +243,37 @@ sub build_gui {
     # to set the parameters.
     my ($win) = @_;
     my $topframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
+    my $b = $win->Balloon(-state => 'balloon');
     $topframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
-    $topframe->Label(-text => "Data:", -anchor => 'w',
+    my $tmp1=$topframe->Label(-text => "Data:", -fg => 'blue', -anchor => 'w',
 				     -justify => "center")->pack(-side => "left");
+    $b->attach($tmp1, -balloonmsg => "Data directory to spy/monitor for changes");
     my $filelabel = $topframe->Entry(-width => 60, -relief => "sunken",
 				    -textvariable => \$filename)->pack(-side => "left");
     my $fileselect = $topframe->Button(-text => "File", -command => [\&select_file, $win])->pack(-side => "left");
+    $b->attach($fileselect, -balloonmsg => "Click here to select a file to monitor (e.g. mcstas.sim)");
     my $dirselect = $topframe->Button(-text => "Dir", -command => [\&select_dir])->pack(-side => "left");
+    $b->attach($dirselect, -balloonmsg => "Click here to select a directory to monitor");
     my $midframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
     $midframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
-    $midframe->Label(-text => "Timeout (seconds): ", -anchor => 'w',
+    my $tmp2= $midframe->Label(-text => "Timeout (seconds): ", -anchor => 'w',
 		     -justify => "center")->pack(-side => "left");
+    $b->attach($tmp2, -balloonmsg => "Sets the time between changes check");
     my $timelabel = $midframe->Entry(-width => 4, -relief => "sunken",
 				    -textvariable => \$timeout)->pack(-side => "left");
-    $midframe->Label(-text => "Hardcopy format: ", -anchor => 'w',
+    my $tmp3=$midframe->Label(-text => "Hardcopy format: ", -anchor => 'w',
 		     -justify => "center")->pack(-side => "left");
+    $b->attach($tmp3, -balloonmsg => "Sets the type of graphics output to generate");
     my $gformats = ['psc','ps','gif','png','ppm'];
-    my $graphics = $midframe->Optionmenu(-textvariable => \$GFORMAT, -options => 
+    my $graphics = $midframe->Optionmenu(-textvariable => \$GFORMAT, -options =>
 					 $gformats)->pack(-side => 'left');
     my $display = $midframe->Checkbutton(-text => "Display on screen?", -variable => \$dodisplay)->pack(-side => "left");
+    $b->attach($display, -balloonmsg => "Check that button to display the monitor overview on the fly");
     my $bottomframe = $win->Frame(-relief => 'raised', -borderwidth => 2);
     $bottomframe->pack(-side => "top", -fill => "both", -ipady => 3, -ipadx => 3);
-   
-    $bottomframe->Button(-text => "Cancel", -command => sub {exit;})->pack(-side => "right", -anchor => "e");
-    $bottomframe->Button(-text => "Ok", -command => sub {$continue=1; $win->destroy;})->pack(-side => "right", -anchor => "w");
+
+    $bottomframe->Button(-text => "Cancel", -fg => 'red', -command => sub {exit;})->pack(-side => "right", -anchor => "e");
+    $bottomframe->Button(-text => "Ok", -fg => 'green', -command => sub {$continue=1; $win->destroy;})->pack(-side => "right", -anchor => "w");
 }
 
 sub select_file {
@@ -279,14 +287,14 @@ sub select_file {
 sub select_dir {
     my $top = new MainWindow;
     $top->withdraw;
-    
+
     my $t = $top->Toplevel;
     $t->title("Choose dir to monitor:");
-    my $ok = 0; 
+    my $ok = 0;
     my $f = $t->Frame->pack(-fill => "x", -side => "bottom");
-    
+
     my $curr_dir = getcwd();
-    
+
     my $d;
     $d = $t->Scrolled('DirTree',
 		      -scrollbars => 'osoe',
@@ -301,9 +309,9 @@ sub select_dir {
 	       -command => sub { $ok =  1 })->pack(-side => 'left');
     $f->Button(-text => 'Cancel',
 	       -command => sub { $ok = -1 })->pack(-side => 'left');
-    
+
     $f->waitVariable(\$ok);
-    
+
     if ($ok == 1) {
 	$filename = $curr_dir;
     }
