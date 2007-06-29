@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -46,6 +46,8 @@ DECLARE
 %{
 #ifndef PROGRESS_BAR
 #define PROGRESS_BAR
+#else
+#error Only one Progress_bar component may be used in an instrument definition.
 #endif
 
   double IntermediateCnts=0;
@@ -84,7 +86,7 @@ TRACE
 #endif
                                       );
       else if (difftime(EndTime,StartTime) > 3600.0)
-        fprintf(stdout, "%g [h] %% ", difftime(EndTime,StartTime)/3660.0
+        fprintf(stdout, "%g [h] %% ", difftime(EndTime,StartTime)/3600.0
 #ifdef USE_MPI
                                       /mpi_node_count
 #endif

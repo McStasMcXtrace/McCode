@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
@@ -36,7 +36,7 @@
 *
 * The reflectivity may be specified either using an analytical mode (see
 * Component manual) or as a text file in free format, with 1st
-* column as q[Angs-1] and 2nd column as the reflecitivty in [0-1].
+* column as q[Angs-1] and 2nd column as the reflectivity R in [0-1].
 * For details on the geometry calculation see the description in the McStas
 * component manual.
 *
@@ -122,7 +122,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef Gravity_guide_Version
-#define Gravity_guide_Version "$Revision: 1.30 $"
+#define Gravity_guide_Version "$Revision: 1.31 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
