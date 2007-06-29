@@ -57,6 +57,7 @@ AC_PATH_PROGS(MATLAB, [matlab /usr/local/bin/matlab], no)
 AC_PATH_PROGS(PGPLOT, [pgxwin_server /usr/local/bin/pgxwin_server /usr/local/pgplot/pgxwin_server], no)
 AC_PATH_PROGS(TCLTK,  [wish /usr/local/bin/wish tclsh], no)
 AC_PATH_PROGS(SSH,    [ssh /usr/local/bin/ssh], no)
+AC_PATH_PROGS(DASH,   [dash /bin/dash /usr/bin/dash], no)
 AC_PATH_PROGS(MPIRUN, [mpirun /usr/local/bin/mpirun], no)
 AC_PATH_PROGS(MPICC,  [mpicc /usr/local/bin/mpicc], no)
 AC_PATH_PROGS(BROWSER,[konqueror firefox mozilla-firefox mozilla netscape gnome-open epiphany galeon start msie /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
@@ -171,3 +172,7 @@ echo ""
 echo "After (optional) plotter config, build and install McStas by executing"
 echo "# make; make install"
 echo ""
+if test "$DASH" != "no" ; then
+echo
+echo WARNING: Your system includes the $DASH shell which is known to cause problems.
+fi
