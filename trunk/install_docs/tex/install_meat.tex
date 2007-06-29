@@ -7,18 +7,19 @@ available in various distribution packages, from the project
 website at
 \htmladdnormallink{http://www.mcstas.org/download}{http://www.mcstas.org/download}.
 \begin{itemize}
-\item{\texttt{McStas-1.10-i686-Win32.exe}\\Preferred Windows
-    installation method: self-extracting executable
+\item{\texttt{McStas-1.11-i686-Win32.exe}\\Self-extracting executable
     including essential support tools. - Refer to section
-    \ref{s:win32_install}. \\\ \\(If you prefer the old \verb+build.bat/install.bat+
-    procedure for Windows, you should instead download the alternative
-    \\\texttt{mcstas-1.10-i686-unknown-Win32.zip} package. \\Please note that
-    the \verb+.exe+ method is clearly recommended.)}
-\item{\texttt{mcstas-1.10-i686-unknown-Linux.tar.gz}\\Binary package
-  for Linux systems, currently built on Ubuntu 6.06 'Dapper Drake'.
+    \ref{s:win32_install}. }
+\item{\texttt{McStas-1.11.dmg}\\Mac OS X disk image for PPC and Intel machines. Please follow
+    the instructions in the README file in the disk image. }
+\item{\texttt{mcstas-1.11-i686.deb}\\Binary Debian package, currently built on Debian stable.
+   Tested to work on Ubuntu and Debian systems.
+ - Refer to section \ref{ss:deb_install}}
+\item{\texttt{mcstas-1.11-i686-unknown-Linux.tar.gz}\\Binary package
+  for Linux systems, currently built on Debian stable.
   Should work on most Linux setups.
  - Refer to section \ref{s:unix_install}}
-\item{\texttt{mcstas-1.10-src.tar.gz}\\Source code package for
+\item{\texttt{mcstas-1.11-src.tar.gz}\\Source code package for
     building \htmladdnormallink{McStas}{http://www.mcstas.org} on
     (at least) Linux and Windows XP. This package should compile on
     most Unix platforms with an \texttt{ANSI-c} compiler. - Refer to section \ref{s:unix_install}}
@@ -73,9 +74,27 @@ Unix variants, including \htmladdnormallink{Fedora
   Core}{http://fedora.redhat.com},
 \htmladdnormallink{SuSE}{http://www.novell.com/products/suselinux/}
 and \htmladdnormallink{FreeBSD}{http://www.freebsd.org}.
+\ \\\ \\
+ WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
+  buttons fail in mcgui. Possible solutions are:
+\begin{itemize}
+ \item If your system is a Debian or Ubuntu, please install our Debian package which requests automatic removal of 'dash'. (See section \ref{ss:deb_install})
+ \item If your /bin/sh is dash, please install bash and manually change the /bin/sh link to point at bash.
+\end{itemize}
 
+\subsection{Debian class systems}
+\label{ss:deb_install}
+As of McStas 1.11, we provide a Debian binary package. We have tested that the
+package works properly on Ubuntu and Debian systems. To install it, please
+perform the following tasks:
+\begin{enumerate}
+\item{Download the package from \verb+http://www.mcstas.org/download+}
+\item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
+\item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+}
+\end{enumerate}
 
-\noindent To get a fully functional McStas installation on Unix systems, a few support
+\subsection{Other Linux/Unix systems}
+To get a fully functional McStas installation on Unix systems, a few support
 applications are required. Essentially, you will need a C compiler,
 Perl and Perl-Tk, as well as a plotter such as Matlab, Scilab or
 PGPLOT. In the installer package, we supply a method to install PGPLOT
@@ -100,10 +119,10 @@ should be able to compile and/or install McStas using the following steps:
 \item{Unpack the sources to somewhere convenient and change to the
     source directory:\\
   \texttt{gunzip -c <package>.tar.gz | tar xf -}\\
-  \texttt{cd mcstas-1.10/}}
+  \texttt{cd mcstas-1.11/}}
 \item{Configure McStas:\\
   \texttt{./configure}}
-\item{Build McStas (only in case of the \verb+mcstas-1.10-src.tar.gz+ package):\\
+\item{Build McStas (only in case of the \verb+mcstas-1.11-src.tar.gz+ package):\\
   \texttt{make}}
 \item{Optionally build/install PGPLOT (as superuser - build
     dependencies are pdl, g77, libx11-dev, xserver-xorg-dev, libxt-dev

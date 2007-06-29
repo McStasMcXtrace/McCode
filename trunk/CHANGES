@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.36 $
+* Version: $Revision: 1.37 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -97,6 +97,10 @@ Changes in McStas v1.11, June 26, 2007
   Various
   - A standard McStas source package now works directly within the DANSE framework.
 
+  WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
+  buttons fail in mcgui. Solutions:
+  a) If your system is a Debian or Ubuntu, please install our Debian package which requests automatic removal of 'dash'.
+  b) If your /bin/sh is dash, please install bash and manually change the /bin/sh link to point at bash.
 
 Changes in McStas v1.10, Dec 4, 2006
 
