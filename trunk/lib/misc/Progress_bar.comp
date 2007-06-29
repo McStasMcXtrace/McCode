@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -127,7 +127,7 @@ SAVE
         "Intensity profiler",
         "Component index [1]",
         "Intensity",
-        "I", 0.5, mcNUMCOMP-0.5, mcNUMCOMP-1,
+        "prof", 1, mcNUMCOMP, mcNUMCOMP-1,
         &mcNCounter[1],&mcPCounter[1],&mcP2Counter[1],
         filename);
 
