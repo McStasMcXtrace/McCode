@@ -661,10 +661,12 @@ sub run_dialog {
     my ($state, $success) = (0, 0);
     # Initialize the dialog.
     my $cancel_cmd = sub {
+        putmsg($cmdwin, "\nSending TERM to pid=$pid ($state)\n");
         kill "TERM", $pid unless $state; # signal 15 is SIGTERM
     };
     my $update_cmd = sub {
-        kill "USR2", $pid unless $state; # signal 15 is SIGTERM
+        putmsg($cmdwin, "n\Sending USR2 to pid=$pid ($state)\n");
+        kill "USR2", $pid unless $state; # signal USR2
     };
     my $text="Job";
     if ($inf_sim->{'Mode'}==1) { $text='Trace/3D View'; }
