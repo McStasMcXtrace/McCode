@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.63 $
+* Version: $Revision: 1.64 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.63 $
+#define ISOTROPIC_SQW $Revision: 1.64 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -553,7 +553,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       }
 
       factor = list[i].j*(list[i].DWfactor ? list[i].DWfactor : 1)
-               *Sqw->rho*4*PI
+               *Sqw->rho*PI/2
                /(Sqw->type == 'c' ? Sqw->s_coh : Sqw->s_inc)*list[i].F2/list[i].q;
       for (q=peak_qmin; q <= peak_qmax; q += q_step) {
         index = (long)floor(size*(q - q_min)/(q_max - q_min));
