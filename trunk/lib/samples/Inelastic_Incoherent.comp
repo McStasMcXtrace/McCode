@@ -5,12 +5,12 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: inelastic_incoherent
+* Component: Inelastic_Incoherent
 *
 * %I
 * Written by: Kim Lefmann
 * Date: 18.08.06; 21.02.07
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 *
@@ -18,8 +18,8 @@
 * Written on the basis of V_sample
 *
 * %D
-* A Double-cylinder shaped incoherent scatterer 
-* with both inelastic, elastic and quasielastic (Lorentzian) components. 
+* A Double-cylinder shaped incoherent scatterer
+* with both inelastic, elastic and quasielastic (Lorentzian) components.
 * No multiple scattering. Absorbtion included. No detailed balance factor.
 * The shape of the sample may be a box with dimensions xwidth, yheight, zthick.
 * The area to scatter to is a disk of radius 'focus_r' situated at the target.
@@ -32,8 +32,8 @@
 * centered components, such as spheres or cylinders, define an Arm component
 * where to focus to.
 *
-* Example: inelastic_incoherent(radius_i=0.001,radius_o=0.01,h=0.02,
-*          focus_r=0.035, pack=1, target_index=1, 
+* Example: Inelastic_Incoherent(radius_i=0.001,radius_o=0.01,h=0.02,
+*          focus_r=0.035, pack=1, target_index=1,
 *          f_inel = 0.2, homega=0.1, f_QE=0.2, gamma=0.1)
 *
 * %P
@@ -61,7 +61,7 @@
 * pack:     Packing factor [1]
 * frac:     MC Probability for scattering the ray; otherwise penetrate [1]
 * f_inel:   Fraction of real inelastic scattering [1]
-* homega:       Energy transfer of inelastic peak (+-) [meV] 
+* homega:       Energy transfer of inelastic peak (+-) [meV]
 * f_QE:     Fraction of quasielastic scattering (rest is elastic) [1]
 * gamma:    Lorentzian width of quasielastic broadening (HWHM) [meV]
 * target_index: relative index of component to focus at, e.g. next is +1 [1]
@@ -229,7 +229,7 @@ TRACE
             E_f = E_i + dE;
           else
             E_f = E_i - dE;
-          if (E_f <= 0) 
+          if (E_f <= 0)
             ABSORB;
 	  v_f = SE2V*sqrt(E_f);
           v = v_f;
@@ -241,7 +241,7 @@ TRACE
           E_i = VS2E*v_i*v_i;
           dE = gamma*tan(PI/2*randpm1());
           E_f = E_i + dE;
-          if (E_f <= 0) 
+          if (E_f <= 0)
             ABSORB;
 	  v_f = SE2V*sqrt(E_f);
           v = v_f;
