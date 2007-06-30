@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.19 $
+* Version:    $Revision: 1.20 $
 * Release:    McStas 1.10
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -363,7 +363,7 @@ TRACE
   double t1,t2;   /* cylinder intersection time */
 
 /************************ TIME OF FLIGHT RESET ************************/
-  if (zero_time && nu)
+  if (zero_time == 1 && nu)
     t -= floor( (t+1/(4*nu))*(2*nu) )/(2*nu);
 
 /************** test, if the neutron interacts with the cylinder ***/
@@ -383,6 +383,13 @@ TRACE
     FCVars.sum_v += p*vxp1;
     FCVars.sum_t += p*t;
     FCVars.sum_N += p;
+
+    if (zero_time > 1 && FCVars.sum_N) { /* automatic phase adjustment */
+      double mean_t, mean_phase;
+      mean_t     = FCVars.sum_t/FCVars.sum_N;
+      mean_phase = fmod(mean_t*nu*2*PI, 2*PI);
+      FCVars.ph0 = -mean_phase;
+    }
 
     /* neutron must enter the cylinder opening: |X'| < full package width*/
     xp1 = FC_xrot(x,z, t,FCVars); /* X'(t) */
@@ -616,13 +623,6 @@ TRACE
     FCVars.sum_N_pass += p;
 
   } /* end if cylinder_intersect */
-
-  if (zero_time > 1 && FCVars.sum_N) { /* automatic phase adjustment */
-    double mean_t, mean_phase;
-    mean_t     = FCVars.sum_t/FCVars.sum_N;
-    mean_phase = fmod(mean_t*nu*360, 360);
-    FCVars.ph0 = -mean_phase/360;
-  }
 
 %}
 

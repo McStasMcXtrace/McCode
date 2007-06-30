@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:d.champion@rl.ac.uk">Dickon Champion</a>
 * Date: 22nd Jan 2004.
 * Origin: <a href="http://www.isis.rl.ac.uk">ISIS (UK)</a>
-* Release: McStas 1.7/1.8
-* Version: $Revision: 1.3 $
+* Release: McStas CVS_070630/1.8
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: ISIS
 *
 * HET: High Energy Transfer Chopper Spectrometer
@@ -25,13 +25,12 @@
 * Fermi Chopper.
 *
 *
-* Example: mcrun HETfull.instr E_0=443.0,E_1=470.0,chop_select=450.0,nu_chop=600.0, type=2
+* Example: mcrun HETfull.instr E_0=443.0,E_1=470.0,nu_chop=600.0, type=2
 *
 * %Parameters
 * INPUT PARAMETERS:
 * E_0  : lowest energy sampled      [meV]
 * E_1  : highest energy sampled     [meV]
-* chop_select : energy selected by chopper [meV]
 * nu_chop : frequency of chopper rotation [Hz]
 * type : chopper package selected [sloppy chopper = 1, B chopper = 2]
 *
@@ -42,11 +41,11 @@
 
 
 
-DEFINE INSTRUMENT HET(E_0=443.0,E_1=470.0,chop_select=450.0,nu_chop=600.0,int type=2)
+DEFINE INSTRUMENT HET(E_0=443.0,E_1=470.0,nu_chop=600.0,int type=2)
 DECLARE
 %{
 /* chopper variables to compute according to "type" input */
-double c_h1,c_h2, roc, chan_w,chop_phase;
+double c_h1,c_h2, roc, chan_w;
 int nslits;
 %}
 
@@ -72,9 +71,6 @@ if (type==2)
    fprintf(stderr,"250mev chopper selected");
   }
 
-/* hardwired for FC position 10m from moderator */
-chop_phase=0.002528*9.044/sqrt(chop_select);
-
 %}
 TRACE
 COMPONENT a1 = Arm()
@@ -85,9 +81,14 @@ COMPONENT ts1_mod = ISIS_moderator(
     yh = 0.045, modXsize = 0.074, modYsize = 0.074, CAngle = 0.0, SAC=1)
   AT (0, 0, 0) RELATIVE a1
 
+COMPONENT monFC = Monitor_nD(
+    options = "square auto t bins=100",
+    filename = "FC_mon2.dat", xwidth=0.2, yheight = 0.2)
+  AT (0, 0, 9.8) RELATIVE a1
+
 COMPONENT FC = FermiChopper(
 radius=0.05, nu=nu_chop, phase=chop_phase, ymin=c_h1, ymax=c_h2,
- w=chan_w, Nslit=nslits, curvature=1.0/roc)
+ w=chan_w, Nslit=nslits, curvature=1.0/roc, verbose=1, zero_time=2)
 AT (0,0,10) RELATIVE ts1_mod
 
 COMPONENT FCslit1 = Slit(
@@ -111,7 +112,7 @@ COMPONENT target = V_sample(radius_o=0.00,
 xwidth=0.04,yheight=0.04,zthick=0.002,
   focus_aw=19.38,focus_ah=3.435,
   pack = 1,
-  target_x=0.8139,target_y=0.0,target_z=2.3678)
+  target_index=2)
   AT (0,0,0.2) RELATIVE presampslit
 
 COMPONENT a2=Arm()
@@ -122,59 +123,7 @@ COMPONENT cyl = Monitor_nD(
     filename = "det_out.dat",   xwidth=5.0,   yheight = 0.3)
   AT (0, 0, 0) RELATIVE a2
 
-
-
 END
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
