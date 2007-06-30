@@ -15,28 +15,28 @@
  * input parameters :
  *    lambda      : source energy                               [Angs]
  *    chopp_ratio : chopper radio Fermi Chopper to Disk Chopper [1]
- *    DET         : Detector angle                              [deg]        
+ *    DET         : Detector angle                              [deg]
  *
- * building : 
- *     mcstas focus_psi.instr 
+ * building :
+ *     mcstas focus_psi.instr
  *     gcc -O -o  focus_psi.out  focus_psi.c -lm
  *
  * Example: mcrun focus_psi.instr -n 1e6 lambda=3.4 chopp_ratio=1 DET=-69.9
- * 
+ *
  * %Parameters
  * INPUT PARAMETERS:
  *    lambda      : source energy                               [Angs]
  *    chopp_ratio : chopper radio Fermi Chopper to Disk Chopper [1]
- *    DET         : Detector angle                              [deg]    
+ *    DET         : Detector angle                              [deg]
  *
  * %Link
  * Written by U.Filges <uwe.filges@psi.ch> PSI, Jan 2004
- * %End 
-*/ 
+ * %End
+*/
 
 
 DEFINE INSTRUMENT FOCUS(lambda=3.4, chopp_ratio=1, DET=-69.9)
-    
+
 DECLARE
 %{
  double lambda;
@@ -48,7 +48,7 @@ DECLARE
  double FO_PHA;
  double DISC_SPEED, FERMI_SPEED;
  /* mono d-spacing */
- double monodd = 3.355; 
+ double monodd = 3.355;
  /* time constant [mus/A/m] */
  double c = 252.78;
  /* distance sample - detector */
@@ -63,40 +63,40 @@ DECLARE
  double mfc = 1.002;
  /* distance  monochromator - sample */
  double dms = 1.4997;
- /* setting range of sources */ 
+ /* setting range of sources */
  double dL = 0.7;
  double LMIN, LMAX;
  double EMIN, EMAX;
- 
+
 %}
 
 INITIALIZE
 %{
-  
+
  /* setting theta and 2Theta */
  PHM = asin(lambda/2/monodd)*180/PI;
  TTM = 2*PHM;
 
  /* setting speed of Fermi chopper, Disk chopper */
- FERMI_SPEED=1.0e6/(PI*lambda*c*(1./tan(PHM*PI/180))*(dsd*pow((1),1.5)+dfcs)*(1.0-(dms/dgm)));   
+ FERMI_SPEED=1.0e6/(PI*lambda*c*(1./tan(PHM*PI/180))*(dsd*pow((1),1.5)+dfcs)*(1.0-(dms/dgm)));
  DISC_SPEED = FERMI_SPEED/chopp_ratio;
- 
+
  /* calculate the phase between Fermi and Disk chopper */
  FO_PHA = (c*lambda*(ddcm+mfc))/1e6;
 
- /* setting monochromator curvature */ 
- RV_2 = 2*dms*(sin(DEG2RAD*PHM)); 
+ /* setting monochromator curvature */
+ RV_2 = 2*dms*(sin(DEG2RAD*PHM));
  RH_2 = 2*dms/(sin(DEG2RAD*PHM));
- 
+
  /* focusing neutrons on detector */
  fo_x = 2.5*sin(DET*PI/180);
  fo_z = 2.5*cos(DET*PI/180);
- 
+
  /* setting E and L monitors */
  LMIN = lambda - dL;
  LMAX = lambda + dL;
  EMIN = 81.81/(LMAX*LMAX);
- EMAX = 81.81/(LMIN*LMIN); 
+ EMAX = 81.81/(LMIN*LMIN);
 
 %}
 
@@ -113,9 +113,9 @@ COMPONENT csource = Source_gen(
 AT (0,0,0) RELATIVE a1  ROTATED (0,0,0) RELATIVE a1
 
 /* guide segment 1, m=2, 4.66 m */
-COMPONENT guide1 = Guide(w1=0.05, h1=0.12, w2=0.05, h2=0.12, 
-                         l=4.66, R0=0.995, Qc=0.0217, alpha = 5.76, 
-                         m = 2.0, W = 0.0033) 
+COMPONENT guide1 = Guide(w1=0.05, h1=0.12, w2=0.05, h2=0.12,
+                         l=4.66, R0=0.995, Qc=0.0217, alpha = 5.76,
+                         m = 2.0, W = 0.0033)
     AT (0,0,1.5) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 /* guide segment 2, curved, m=2, 24.5 m */
@@ -127,14 +127,14 @@ COMPONENT guide2 = Bender(
    AT (0,0,6.16) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 /* bunker wall, m=2, 3.0 m */
- COMPONENT bunker = Guide(w1=0.05, h1=.12, w2=0.05, h2=.12, 
-        l=3.0, R0=0.995, Qc=0.0217, alpha = 5.76, m = 2.0, W = 0.0033) 
-    AT (0,0,30.66) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1 
+ COMPONENT bunker = Guide(w1=0.05, h1=.12, w2=0.05, h2=.12,
+        l=3.0, R0=0.995, Qc=0.0217, alpha = 5.76, m = 2.0, W = 0.0033)
+    AT (0,0,30.66) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 /* guide segment 3, m=2, 32.95 m */
- COMPONENT guide3 = Guide(w1=0.05, h1=.12, w2=0.05, h2=.12, 
-        l=32.95, R0=0.995,Qc=0.0217, alpha = 5.76, m = 2.0, W = 0.0033) 
-    AT (0,0,33.66) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1 
+ COMPONENT guide3 = Guide(w1=0.05, h1=.12, w2=0.05, h2=.12,
+        l=32.95, R0=0.995,Qc=0.0217, alpha = 5.76, m = 2.0, W = 0.0033)
+    AT (0,0,33.66) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 /* guide exit at 66.61 m - measured flux 2.53 10e8 cm-2 s-1 mA-1 */
 
@@ -146,7 +146,7 @@ COMPONENT LambdaGuideExit = L_monitor(
 
 COMPONENT DivMonGuideExit = Divergence_monitor(
           nh=60, nv=60, filename="divguide.dat",
-          xmin=-0.025, xmax=0.025, ymin=-0.06, ymax=0.06, 
+          xmin=-0.025, xmax=0.025, ymin=-0.06, ymax=0.06,
           h_maxdiv=2, v_maxdiv=2)
   AT (0, 0, 66.612) RELATIVE a1  ROTATED (0, 0, 0) RELATIVE a1
 
@@ -161,9 +161,9 @@ COMPONENT FOCUSguide = Channeled_guide(
      w1 = 0.05, h1 = 0.12,
      w2 = 0.05, h2 = 0.095,
      l = 2.95, R0 = 0.995, Qcx = 0.0217, Qcy = 0.0217,
-     alphax = 5.76, alphay = 5.64, W = 0.0033, 
+     alphax = 5.76, alphay = 5.64, W = 0.0033,
      k = 1, d = 0.002, mx = 2.4, my = 3)
-  AT (0, 0, 66.67) RELATIVE a1 ROTATED (0, 0, 0) RELATIVE a1 
+  AT (0, 0, 66.67) RELATIVE a1 ROTATED (0, 0, 0) RELATIVE a1
 
 /* distance guide exit to chopper center 0.054 m */
 
@@ -181,7 +181,7 @@ COMPONENT PSDmon1Chopper = PSD_monitor(
     nx=60, ny=60, filename="psdchopper.dat")
   AT (0, 0, 69.719) RELATIVE a1  ROTATED (0, 0, 0) RELATIVE a1
 
-/* Be-filter optinal; distance chopper center to Be-Filter entry 0.06 m, 
+/* Be-filter optinal; distance chopper center to Be-Filter entry 0.06 m,
    Filter length 0.17 m */
 
 /*
@@ -194,7 +194,7 @@ COMPONENT BeFilter = Filter(
 /* distance chopper center to vakuum tube entry 0.398 m */
 
 /* vacuum tube part 1,  0.535 m */
- 
+
 COMPONENT VacuumTube1entry = Slit(radius = 0.085)
   AT (0, 0, 70.072) RELATIVE a1
 
@@ -231,7 +231,7 @@ COMPONENT  MONOTOF = TOF_monitor(
 
 COMPONENT DivMonMono = Divergence_monitor(
           nh=60, nv=60, filename="divmono.dat",
-          xmin=-0.05, xmax=0.05, ymin=-0.1, ymax=0.1, 
+          xmin=-0.05, xmax=0.05, ymin=-0.1, ymax=0.1,
           h_maxdiv=3, v_maxdiv=3)
   AT (0, 0, 72.42) RELATIVE a1  ROTATED (0, 0, 0) RELATIVE a1
 
@@ -247,7 +247,7 @@ COMPONENT mono = Monochromator_2foc(
           mosaich = 48, mosaicv = 48,
           r0 = 0.99,
           Q = 1.873,
-          RV = RV_2, RH = RH_2)  
+          RV = RV_2, RH = RH_2)
   AT (0, 0, 0) RELATIVE focus_mono
 
 COMPONENT a2 = Arm()
@@ -272,9 +272,9 @@ COMPONENT EMON_Fermi = E_monitor(
 
 COMPONENT DivMonfermi1 = Divergence_monitor(
           nh=30, nv=30, filename="divfermi1.dat",
-          xmin=-0.03, xmax=0.03, ymin=-0.05, ymax=0.05, 
+          xmin=-0.03, xmax=0.03, ymin=-0.05, ymax=0.05,
           h_maxdiv=2, v_maxdiv=2)
-  AT (0, 0, 0.9398) RELATIVE a2  
+  AT (0, 0, 0.9398) RELATIVE a2
 
 COMPONENT PSD_Fermi1 = PSD_monitor(
     xmin=-0.03, xmax=0.03, ymin=-0.055, ymax=0.055,
@@ -282,8 +282,8 @@ COMPONENT PSD_Fermi1 = PSD_monitor(
   AT (0, 0, 0.9399) RELATIVE a2  ROTATED (0, 0, 0) RELATIVE a2
 
 COMPONENT FoChopper = FermiChopper(
-    dist = 0, rad = 0.06, nu = FERMI_SPEED, ymin = -0.055, 
-    ymax = 0.055, w = 0.0005, Nslit = 120, alpham = 0, 
+    dist = 0, rad = 0.06, nu = FERMI_SPEED, ymin = -0.055,
+    ymax = 0.055, w = 0.0005, Nslit = 120, alpham = 0,
     Qc = 0 , m = 0, Wi = 0.0001, R0 = 0, Vi = 0.0001, slit = 0.012)
   AT (0, 0, 1.002) RELATIVE a2
 
@@ -294,9 +294,9 @@ COMPONENT PSD_Fermi2 = PSD_monitor(
 
 COMPONENT DivMonfermi2 = Divergence_monitor(
           nh=30, nv=30, filename="divfermi2.dat",
-          xmin=-0.03, xmax=0.03, ymin=-0.05, ymax=0.05, 
+          xmin=-0.03, xmax=0.03, ymin=-0.05, ymax=0.05,
           h_maxdiv=2, v_maxdiv=2)
-  AT (0, 0, 1.064) RELATIVE a2 
+  AT (0, 0, 1.064) RELATIVE a2
 
 COMPONENT  FERMITOF1 = TOF_monitor(
     nchan = 30, filename = "FERMI_TOF1.dat", xmin = -0.03,
@@ -346,6 +346,12 @@ COMPONENT FoSample = V_sample(
     target_x=fo_x, target_y=0, target_z=fo_z)
   AT (0, 0, 1.5) RELATIVE a2
 
+COMPONENT TOF_Det = Monitor_nD(
+ xwidth=1.5, yheight=0.2,
+ options="auto time, abs angle limits=[10 180], banana, parallel",
+ bins=100)
+AT(0, 0, 0) RELATIVE PREVIOUS
+
 COMPONENT a3 = Arm()
   AT (0,0,1.5) RELATIVE a2 ROTATED (0,DET,0) RELATIVE a2
 
@@ -357,7 +363,9 @@ AT (0, 0, 2.5) RELATIVE a3 ROTATED (0,DET,0) RELATIVE a2
 COMPONENT EMON_DET = E_monitor(
 	xmin = -0.2, xmax = 0.2, ymin = -0.2, ymax = 0.2,
 	Emin = EMIN, Emax = EMAX, nchan = 80, filename = "emon_det.dat")
-  AT(0, 0, 2.501) RELATIVE a3 ROTATED (0,DET,0) RELATIVE a2   
+  AT(0, 0, 2.501) RELATIVE a3 ROTATED (0,DET,0) RELATIVE a2
+
+
 
 END
 

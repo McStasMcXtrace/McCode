@@ -11,16 +11,31 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.167 $
+* Version: $Revision: 1.168 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.167 2007-06-13 08:46:08 pkwi Exp $
+* $Id: mcstas-r.c,v 1.168 2007-06-30 10:05:11 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.167  2007/06/13 08:46:08  pkwi
+* A couple of bugfixes...
+*
+* Virtual_input got the n+1'th weight for the n'th neutron.
+*
+* mcstas-r.c base adress for store/restore pointers fixed.
+*
+* These bugs had effect on use of virtual sources plus the new SPLIT keyword...
+*
+* Will double-check if this is a problem with current stable relase 1.10 and
+* report to neutron-mc.
+*
+* Thanks to Kim Lefmann / Linda Udby for noticing a subtile energy-widening
+* effect when using a virtual source!
+*
 * Revision 1.166  2007/06/11 09:05:33  pkwi
 * We need to also check on filename_orig here, otherwise free() is run on a descriptive string in case of Monitor.comp.
 *
@@ -2861,6 +2876,12 @@ double mcdetector_out_2D(char *t, char *xl, char *yl,
   strcpy(xvar, "x "); strcpy(yvar, "y ");
   if (xl && strlen(xl)) strncpy(xvar, xl, 2);
   if (yl && strlen(yl)) strncpy(yvar, yl, 2);
+
+  /* is it in fact a 1D call ? */
+  if (m == 1)      return(mcdetector_out_1D(
+                    t, yl, "I", yvar, y1, y2, n, p0, p1, p2, f, c, posa));
+  else if (n == 1) return(mcdetector_out_1D(
+                    t, xl, "I", xvar, x1, x2, m, p0, p1, p2, f, c, posa));
 
   return(mcdetector_out_012D(mcformat,
     (c ? c : "McStas component"), (t ? t : "McStas 2D data"),
