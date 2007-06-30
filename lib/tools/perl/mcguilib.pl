@@ -621,7 +621,7 @@ sub preferences_dialog {
     my $compilchoice = $lf->Label(-text => "Compilation options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $choicecflags = $lf->Checkbutton(-text => "Optimize ($MCSTAS::mcstas_config{'CFLAGS_SAVED'})",
                -relief => 'flat', -variable => \$cflags)->pack(-fill => 'x');
-    $b->attach($choicecflags, -balloonmsg => "Uncheck to compile faster but simulate slower");
+    $b->attach($choicecflags, -balloonmsg => "Check to compile slower but simulate faster");
     my $precchoice = $lf->Label(-text => "Optimization options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $labelprec = $lf->Label(-text => "Precision",
                -relief => 'flat')->pack(-side => 'left');
