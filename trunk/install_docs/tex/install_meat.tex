@@ -12,7 +12,7 @@ website at
     \ref{s:win32_install}. }
 \item{\texttt{McStas-1.11.dmg}\\Mac OS X disk image for PPC and Intel machines. Please follow
     the instructions in the README file in the disk image. }
-\item{\texttt{mcstas-1.11-i686.deb}\\Binary Debian package, currently built on Debian stable.
+\item{\texttt{mcstas-1.11-i686.deb} and \texttt{mcstas-1.11-x64.deb}\\Binary Debian GNU/Linux packages for 32 bit and 64 bit Intel respectively, currently built on Debian stable.
    Tested to work on Ubuntu and Debian systems.
  - Refer to section \ref{ss:deb_install}}
 \item{\texttt{mcstas-1.11-i686-unknown-Linux.tar.gz}\\Binary package
@@ -88,11 +88,18 @@ As of release 1.11, we provide a Debian binary package. We have tested that the
 package works properly on Ubuntu and Debian systems. To install it, please
 perform the following tasks:
 \begin{enumerate}
-\item{Download the package from \verb+http://www.mcstas.org/download+}
-\item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
-\item{As root, issue the command \\\verb+apt-get remove dash+}
-\item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+}
+%\item{Download the package from \verb+http://www.mcstas.org/download+}
+%\item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
+%\item{As root, issue the command \\\verb+apt-get remove dash+}
+%\item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+}
+\item{As root, add the following to your \verb+/etc/apt/sources.list+ :
+\\\verb+deb http://apt.mcstas.org binary/+ (32 bit package) or
+\\\verb+deb http://apt.mcstas.org binary64/+ (64 bit package)}
+\item{As root execute the command:\\\verb+apt-get update+}
+\item{As root execute the command:\\\verb+apt-get install mcstas+}
 \end{enumerate}
+Using our Debian package and updating your operating system will ensure automatic upgrade of McStas in case of
+a new release.
 
 \subsection{Other Linux/Unix systems}
 To get a fully functional McStas installation on Unix systems, a few support
