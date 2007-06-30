@@ -115,8 +115,10 @@ if ($Config{'osname'} eq 'darwin') {
 
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 our $quote=1; # default editor behaviour is to surround strings with quotes
-our $cflags=1;# default compilation behaviour is to use CFLAGS
 our $pgmulti=0;# default PGPLOT mcdisplay behaviour is non-multi view
+our $cflags=0;# Our default compilation behaviour is to NOT use CFLAGS
+$MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'};
+$MCSTAS::mcstas_config{'CFLAGS'} = '';
 
 my $compinfo;                        # Cache of parsed component definitions
 my @compdefs;                        # List of available component definitions
