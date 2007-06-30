@@ -42,6 +42,8 @@ OutFile "McStas-${VERSION}-i686-Win32.exe"
 McStas release ${VERSION} on Win32 systems.\
 \n\nMcStas is a ray-tracing Monte Carlo neutron simulator (see <http://www.mcstas.org>).\
 \n\nThis installer will set up McStas and support tools on your computer.\
+\n\nNOTE: If you have a previous, working installation of McStas on your machine, you should be able\
+to skip installation of the 'support tools' (skip by unchecking everything but McStas when prompted).\
 \n\nNOTE: Please install all software on C:\ and do NOT USE SPACES in the McStas installation\
 directory name."
 
