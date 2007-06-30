@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -28,9 +28,10 @@
 *
 * %P
 * INPUT PARAMETERS:
-* percent:  (%)   percentage interval between indications. Default is 10%.
-* flag_save:(0|1) flag to enable intermediate saving for all monitors
-* profile:  (string) file name to save the simulation profile
+* percent:  (0-100) percentage interval between updates. Default is 10%.
+* minutes:  (min)   time in minutes between updates (Overrides percent flag).
+* flag_save:(0|1)   flag to enable intermediate saving for all monitors
+* profile:  (str)   file name to save the simulation profile
 *                 if set to "", it is set to the name of the instrument.
 *
 * %E
@@ -38,7 +39,7 @@
 
 DEFINE COMPONENT Progress_bar
 DEFINITION PARAMETERS (string profile=0)
-SETTING PARAMETERS (percent=10,flag_save=0)
+SETTING PARAMETERS (percent=10,flag_save=0,minutes=0)
 OUTPUT PARAMETERS (IntermediateCnts,StartTime,EndTime)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -53,6 +54,7 @@ DECLARE
   double IntermediateCnts=0;
   time_t StartTime       =0;
   time_t EndTime         =0;
+  time_t CurrentTime     =0;
 %}
 
 INITIALIZE
@@ -71,9 +73,10 @@ TRACE
     time(&StartTime); /* compute starting time */
     IntermediateCnts = 1e3;
   }
+  time_t NowTime;
+  time(&NowTime);
   if (!EndTime && ncount >= IntermediateCnts) {
-    time_t NowTime;
-    time(&NowTime);
+    CurrentTime = NowTime;
     if (difftime(NowTime,StartTime) > 10) { /* wait 10 sec before writing ETA */
       EndTime = StartTime + (time_t)(difftime(NowTime,StartTime)
                            *mcget_ncount()/ncount);
@@ -101,16 +104,17 @@ TRACE
     fflush(stdout);
   }
 
-  if (EndTime && ncount >= IntermediateCnts)
+  if (EndTime &&
+    (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
+      || (percent && !minutes && ncount >= IntermediateCnts))   )
   {
-    double tmp;
-    tmp = percent*mcget_ncount()/100;
     fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount()
 #ifdef USE_MPI
                                       *mpi_node_count
 #endif
     )); fflush(stdout);
-    IntermediateCnts = ncount + tmp;
+    CurrentTime = NowTime;
+    IntermediateCnts = ncount + percent*mcget_ncount()/100;
     if (IntermediateCnts >= mcget_ncount()) fprintf(stdout, "\n");
     if (flag_save) mcsave(NULL);
   }
