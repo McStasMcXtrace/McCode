@@ -71,13 +71,21 @@ mv mcstas.nsi.new mcstas.nsi
 sed 's/MCSTAS_VERSION/'$1'/' deb/control > deb/control.new
 mv deb/control.new deb/control
 
-
 # Create ps/pdf/html based install info
 cd install_docs/tex
 latex install
 latex install
 dvips -o install.ps install.dvi
-ps2pdf install.ps install.pdf
+whichdvipdf=`which dvipdf`
+if [ -e "$whichdvipdf" ] ;
+then
+  echo "Generate install PDF files using dvipdf (better quality than ps2pdf)"
+  dvipdf install.dvi install.pdf
+else
+  echo "Generate install PDF files using ps2pdf"
+  ps2pdf install.ps install.pdf
+fi
+
 gzip install.ps
 mkdir ../html
 latex2html -local_icons -dir ../html install.tex
@@ -117,11 +125,6 @@ sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.1 > mc
 cat mcformat.1.tmp > mcformat.1
 sed 's/X.Y.Z/'$1'/' configure.in > configure.in.tmp
 cat configure.in.tmp > configure.in
-sed 's/X.Y.Z/'$1'/' mcstas-pgplot.spec > mcstas-pgplot-$1.spec
-rm mcstas-pgplot.spec
-sed 's/X.Y.Z/'$1'/' mcstas.spec > mcstas-$1.spec
-rm mcstas.spec
-rm -f *.tmp
 sed 's/@RELEASE@/'$1'/' deb/debcreate > deb/debcreate.new
 mv deb/debcreate.new deb/debcreate
 chmod a+x deb/debcreate
@@ -146,7 +149,7 @@ export INSTALL="./install-sh -c"
 # These will be dependent on this system, ofcourse...
 ./configure
 # Select scilab as default plotter
-make scilab
+make pgplot
 
 # Clean up
 rm TODO.txt
@@ -168,8 +171,8 @@ cd $DIST
 # Default again to Linux' /usr/bin/install -c (or whatever ./configure finds)
 export INSTALL=
 ./configure
-# Select scilab as default plotter
-make scilab
+# Select pgplot as default plotter
+make pgplot
 
 make
 UNAME=`uname`
@@ -237,7 +240,7 @@ echo mcrun --test \(validation test of selected instruments\)
 echo
 echo Follow instructions in ../adm to publish on the web.
 echo
-# In case of a debian build host, we also build an .deb 
+# In case of a debian build host, we also build an .deb
 # (.rpm was tried using alien - did not work too well)
 if [ -e /etc/debian_version ]
 then
@@ -251,7 +254,7 @@ then
     sudo cp mcstas-$1/deb/debcreate sarge-chroot/root
     sudo cp mcstas-$1-src.tar.gz sarge-chroot/root
     sudo chroot sarge-chroot /root/debcreate
-    echo 
+    echo
     echo
     echo Build packages created:
     echo
