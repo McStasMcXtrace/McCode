@@ -11,7 +11,7 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
@@ -98,6 +98,7 @@ DEFINITION PARAMETERS (string reflect=0, string transmit=0)
 SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
 OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable, tTable, row, col)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+     POLARISATION PARAMETERS (sx,sy,sz)
 
 SHARE
 %{
@@ -204,155 +205,169 @@ TRACE
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0 && r0)
   {                             /* Moving towards crystal? */
-    double zmin,zmax, ymin,ymax, zp,yp, y1,z1,t1;
+    double zmin,zmax, ymin,ymax, zp,yp;
 
-    y1 = y + vy*dt;             /* Propagate to crystal plane */
-    z1 = z + vz*dt;
-    t1 = t + dt;
+    /* Propagate to crystal plane */
+    PROP_DT(dt);    /* now in the vertical plane of monochromator */
 
     zmax = ((NH*(SlabWidth+gap))-gap)/2;
     zmin = -zmax;
     ymax = ((NV*(SlabHeight+gap))-gap)/2;
     ymin = -ymax;
 
-    zp = fmod ( (z1-zmin),(SlabWidth+gap) );
-    yp = fmod ( (y1-ymin),(SlabHeight+gap) );
-
     /* hit a slab or a gap ? */
 
-    if (z1>zmin && z1<zmax && y1>ymin && y1<ymax && zp<SlabWidth && yp< SlabHeight)
-    {                           /* Intersect the crystal? no gap ? */
-      double sna,snb,csa,csb,vxp,vyp,vzp;
+    if (z>zmin && z<zmax && y>ymin && y<ymax) { /* Intersect the crystal? */
       double tilth,tiltv;         /* used to calculate tilt angle of slab */
       double ratio, order, k, kux,kuy,kuz;
       double kix,kiy,kiz;
       int    do_transmit = 0;
 
-      col = ceil ( (z1-zmin)/(SlabWidth+gap));  /* which slab hit ? */
-      row = ceil ( (y1-ymin)/(SlabHeight+gap));
+      col = ceil ( (z-zmin)/(SlabWidth+gap));  /* which slab hit ? */
+      row = ceil ( (y-ymin)/(SlabHeight+gap));
       if (RH != 0) tilth = asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
       else tilth=0;
       if (RV != 0) tiltv = -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
       else tiltv=0;
 
-      /* rotate with tilth and tiltv */
+      /* restore neutron in order to transform to slab coordinates */
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
 
-      sna = sin(tilth);
-      snb = sin(tiltv);
-      csa = cos(tilth);
-      csb = cos(tiltv);
-      vxp =  vx*csa*csb+vy*snb-vz*sna*csb;
-      vyp = -vx*csa*snb+vy*csb+vz*sna*snb;
-      vzp =  vx*sna           +vz*csa;
+      /* rotate with tilth (around Y) and tiltv (around Z), center on plate */
+      double center_z=zmin+(col-0.5)*(SlabWidth+gap) -gap/2;
+      double center_y=ymin+(row-0.5)*(SlabHeight+gap)-gap/2;
+      Rotation T;
+      rot_set_rotation(T, 0, tilth,    tiltv);
+      /* now make the coordinate system change */
+      mccoordschange_polarisation(T, &vx, &vy, &vz);
+      y-=center_y;
+      z-=center_z;
+      coords_get(rot_apply(T,coords_set(x,y,z)),&x,&y,&z);
 
-      kix = V2K*vxp;             /* Initial wave vector */
-      kiy = V2K*vyp;
-      kiz = V2K*vzp;
-      /* Get reflection order and corresponding nominal scattering vector q0
-         of correct length and direction. Only the order with the closest
-         scattering vector is considered */
+      /* this is where polaisation should be handled, plus further down */
+      /* mccoordschange_polarisation(t, &sx, &sy, &sz); */
 
-      ratio = -2*kix/mono_Q;
-      order = floor(ratio + .5);
-      if(order == 0.0)
-        order = ratio < 0 ? -1 : 1;
-      /* Order will be negative when the neutron enters from the back, in
-         which case the direction of Q0 is flipped. */
-      if(order < 0)
-        order = -order;
-      /* Make sure the order is small enough to allow Bragg scattering at the
-         given neutron wavelength */
-      k = sqrt(kix*kix + kiy*kiy + kiz*kiz);
-      kux = kix/k;              /* Unit vector along ki */
-      kuy = kiy/k;
-      kuz = kiz/k;
-      if(order > 2*k/mono_Q)
-        order--;
-      if(order > 0)             /* Bragg scattering possible? */
-      {
-        double q0, q0x, theta, delta, p_reflect, tmp, my_r0;
+      /* now propagate to slab plane */
+      PROP_X0;
 
-        q0 = order*mono_Q;
-        q0x = ratio < 0 ? -q0 : q0;
-        theta = asin(q0/(2*k)); /* Actual bragg angle */
-        /* Make MC choice: reflect or transmit? */
-        delta = asin(fabs(kux)) - theta;
+      if (fabs(z) <= SlabWidth/2 && fabs(y) <= SlabHeight/2) { /* not in gap ? */
+        kix = V2K*vx;             /* Initial wave vector */
+        kiy = V2K*vy;
+        kiz = V2K*vz;
+        /* Get reflection order and corresponding nominal scattering vector q0
+          of correct length and direction. Only the order with the closest
+          scattering vector is considered */
+        ratio = -2*kix/mono_Q;
+        order = floor(ratio + .5);
+        if(order == 0.0) order = ratio < 0 ? -1 : 1;
+        /* Order will be negative when the neutron enters from the back, in
+          which case the direction of Q0 is flipped. */
+        if(order < 0) order = -order;
+        /* Make sure the order is small enough to allow Bragg scattering at the
+          given neutron wavelength */
+        k = sqrt(kix*kix + kiy*kiy + kiz*kiz);
+        kux = kix/k;              /* Unit vector along ki */
+        kuy = kiy/k;
+        kuz = kiz/k;
+        if(order > 2*k/mono_Q) order--;
+        if(order > 0) {           /* Bragg scattering possible? */
+          double q0, q0x, theta, delta, p_reflect, my_r0;
 
-        if (rTable.data != NULL)
-        {
-          my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */
-        }
-        else my_r0 = r0;
-        if (my_r0 > 1)
-        {
-          if (my_r0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 1 (k=%f)\n", my_r0, k);
-          my_r0=0.999;
-        }
-        if (my_r0 < 0)
-        {
-          if (verbose) fprintf(stdout, "Warning: Monochromator_curved : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
-          my_r0=0;
-        }
+          q0 = order*mono_Q;
+          q0x = ratio < 0 ? -q0 : q0;
+          theta = asin(q0/(2*k)); /* Actual bragg angle */
+          /* Make MC choice: reflect or transmit? */
+          delta = asin(fabs(kux)) - theta;
 
-        p_reflect = fabs(my_r0)*exp(-kiz*kiz/(kiy*kiy + kiz*kiz)*(delta*delta)/
-                           (2*mos_rms_y*mos_rms_y))*
-                       exp(-kiy*kiy/(kiy*kiy + kiz*kiz)*(delta*delta)/
-                           (2*mos_rms_z*mos_rms_z));
-
-        tmp = rand01();
-        if(tmp <= p_reflect)
-        {                       /* Reflect */
-          double bx,by,bz,ax,ay,az,phi;
-          double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
-          double total,c1x,c1y,c1z,width,mos_sample;
-          int i;
-
-          cos_2theta = cos(2*theta);
-          k_sin_2theta = k*sin(2*theta);
-          /* Get unit normal to plane containing ki and most probable kf */
-          vec_prod(bx, by, bz, kix, kiy, kiz, q0x, 0, 0);
-          NORM(bx,by,bz);
-          bx *= k_sin_2theta;
-          by *= k_sin_2theta;
-          bz *= k_sin_2theta;
-          /* Get unit vector normal to ki and b */
-          vec_prod(ax, ay, az, bx, by, bz, kux, kuy, kuz);
-          /* Compute the total scattering probability at this ki */
-          total = 0;
-          /* Choose width of Gaussian distribution to sample the angle
-           * phi on the Debye-Scherrer cone for the scattered neutron.
-           * The radius of the Debye-Scherrer cone is smaller by a
-           * factor 1/cos(theta) than the radius of the (partial) sphere
-           * describing the possible orientations of Q due to mosaicity, so we
-           * start with a width 1/cos(theta) greater than the largest of
-           * the two mosaics. */
-          mos_sample = mos_rms_max/cos(theta);
-          c1x = kix*(cos_2theta-1);
-          c1y = kiy*(cos_2theta-1);
-          c1z = kiz*(cos_2theta-1);
-          /* Loop, repeatedly reducing the sample width until it is small
-           * enough to avoid sampling scattering directions with
-           * ridiculously low scattering probability.
-           * Use a cut-off at 5 times the gauss width for considering
-           * scattering probability as well as for integration limits
-           * when integrating the sampled distribution below. */
-          for(;;) {
-            width = 5*mos_sample;
-            cos_phi = cos(width);
-            sin_phi = sin(width);
-            q_x = c1x + cos_phi*ax + sin_phi*bx;
-            q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_z;
-            q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_y;
-            /* Stop when we get near a factor of 25=5^2. */
-            if(q_z*q_z + q_y*q_y < (25/(2.0/3.0))*(q_x*q_x))
-              break;
-            mos_sample *= (2.0/3.0);
-          }
-          /* Now integrate the chosen sampling distribution, using a
-           * cut-off at five times sigma. */
-          for(i = 0; i < (sizeof(Gauss_X)/sizeof(double)); i++)
+          if (rTable.data != NULL)
           {
-            phi = width*Gauss_X[i];
+            my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */
+          }
+          else my_r0 = r0;
+          if (my_r0 > 1)
+          {
+            if (my_r0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 1 (k=%f)\n", my_r0, k);
+            my_r0=0.999;
+          }
+          if (my_r0 < 0)
+          {
+            if (verbose) fprintf(stdout, "Warning: Monochromator_curved : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
+            my_r0=0;
+          }
+
+          p_reflect = fabs(my_r0)*exp(-kiz*kiz/(kiy*kiy + kiz*kiz)*(delta*delta)/
+                            (2*mos_rms_y*mos_rms_y))*
+                        exp(-kiy*kiy/(kiy*kiy + kiz*kiz)*(delta*delta)/
+                            (2*mos_rms_z*mos_rms_z));
+
+          if(!t0 || rand01() <= p_reflect) { /* Reflect */
+            double bx,by,bz,ax,ay,az,phi;
+            double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
+            double total,c1x,c1y,c1z,width,mos_sample;
+            int i;
+
+            if (!t0) p *= p_reflect;
+            cos_2theta = cos(2*theta);
+            k_sin_2theta = k*sin(2*theta);
+            /* Get unit normal to plane containing ki and most probable kf */
+            vec_prod(bx, by, bz, kix, kiy, kiz, q0x, 0, 0);
+            NORM(bx,by,bz);
+            bx *= k_sin_2theta;
+            by *= k_sin_2theta;
+            bz *= k_sin_2theta;
+            /* Get unit vector normal to ki and b */
+            vec_prod(ax, ay, az, bx, by, bz, kux, kuy, kuz);
+            /* Compute the total scattering probability at this ki */
+            total = 0;
+            /* Choose width of Gaussian distribution to sample the angle
+            * phi on the Debye-Scherrer cone for the scattered neutron.
+            * The radius of the Debye-Scherrer cone is smaller by a
+            * factor 1/cos(theta) than the radius of the (partial) sphere
+            * describing the possible orientations of Q due to mosaicity, so we
+            * start with a width 1/cos(theta) greater than the largest of
+            * the two mosaics. */
+            mos_sample = mos_rms_max/cos(theta);
+            c1x = kix*(cos_2theta-1);
+            c1y = kiy*(cos_2theta-1);
+            c1z = kiz*(cos_2theta-1);
+            /* Loop, repeatedly reducing the sample width until it is small
+            * enough to avoid sampling scattering directions with
+            * ridiculously low scattering probability.
+            * Use a cut-off at 5 times the gauss width for considering
+            * scattering probability as well as for integration limits
+            * when integrating the sampled distribution below. */
+            for(;;) {
+              width = 5*mos_sample;
+              cos_phi = cos(width);
+              sin_phi = sin(width);
+              q_x =  c1x + cos_phi*ax + sin_phi*bx;
+              q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_z;
+              q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_y;
+              /* Stop when we get near a factor of 25=5^2. */
+              if(q_z*q_z + q_y*q_y < (25/(2.0/3.0))*(q_x*q_x))
+                break;
+              mos_sample *= (2.0/3.0);
+            }
+            /* Now integrate the chosen sampling distribution, using a
+            * cut-off at five times sigma. */
+            for(i = 0; i < (sizeof(Gauss_X)/sizeof(double)); i++)
+            {
+              phi = width*Gauss_X[i];
+              cos_phi = cos(phi);
+              sin_phi = sin(phi);
+              q_x = c1x + cos_phi*ax + sin_phi*bx;
+              q_y = c1y + cos_phi*ay + sin_phi*by;
+              q_z = c1z + cos_phi*az + sin_phi*bz;
+              p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
+                          GAUSS((q_y/q_x),0,mos_rms_z);
+              total += Gauss_W[i]*p_reflect;
+            }
+            total *= width;
+            /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
+             * width 1/cos(theta) greater than the mosaic and correct for any
+             * error by adjusting the neutron weight later. */
+            phi = mos_sample*randnorm();
+            /* Compute final wave vector kf and scattering vector q = ki - kf */
             cos_phi = cos(phi);
             sin_phi = sin(phi);
             q_x = c1x + cos_phi*ax + sin_phi*bx;
@@ -360,59 +375,51 @@ TRACE
             q_z = c1z + cos_phi*az + sin_phi*bz;
             p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
                         GAUSS((q_y/q_x),0,mos_rms_z);
-            total += Gauss_W[i]*p_reflect;
+
+            vx = K2V*(kix+q_x);
+            vy = K2V*(kiy+q_y);
+            vz = K2V*(kiz+q_z);
+            p *= p_reflect/(total*GAUSS(phi,0,mos_sample));
+
+            SCATTER;
+          } /* End MC choice to reflect or transmit neutron (if tmp<p_reflect) */
+          else do_transmit = 1;
+            /* else transmit neutron */
+        } /* End bragg scattering possible (if order) */
+        else do_transmit=1;
+        if (do_transmit)
+        {
+          double my_t0;
+          if (tTable.data != NULL)
+          {
+            my_t0 = t0*Table_Value(tTable, k, 1); /* 2nd column */
           }
-          total *= width;
-          /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
-     * width 1/cos(theta) greater than the mosaic and correct for any
-     * error by adjusting the neutron weight later. */
-          phi = mos_sample*randnorm();
-          /* Compute final wave vector kf and scattering vector q = ki - kf */
-          cos_phi = cos(phi);
-          sin_phi = sin(phi);
-          q_x = c1x + cos_phi*ax + sin_phi*bx;
-          q_y = c1y + cos_phi*ay + sin_phi*by;
-          q_z = c1z + cos_phi*az + sin_phi*bz;
-          p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
-                      GAUSS((q_y/q_x),0,mos_rms_z);
-          x = 0.0;
-          y = y1;
-          z = z1;
-          t = t1;
-
-          vxp = K2V*(kix+q_x);
-          vyp = K2V*(kiy+q_y);
-          vzp = K2V*(kiz+q_z);
-          p *= p_reflect/(total*GAUSS(phi,0,mos_sample));
-
-          /* rotate v coords back */
-          vx =  vxp*csb*csa-vyp*snb*csa+vzp*sna;
-          vy =  vxp*snb    +vyp*csb;
-          vz = -vxp*csb*sna+vyp*snb*sna+vzp*csa;
-          SCATTER;
-        } /* End MC choice to reflect or transmit neutron (if tmp<p_reflect) */
-        else do_transmit = 1;
-          /* else transmit neutron */
-      } /* End bragg scattering possible (if order) */
-      else do_transmit=1;
-      if (do_transmit)
-      {
-        double my_t0;
-        if (tTable.data != NULL)
-        {
-          my_t0 = t0*Table_Value(tTable, k, 1); /* 2nd column */
+          else my_t0 = t0;
+          /* do not SCATTER, else GROUP does not work */
+          if (my_t0 > 1)
+          {
+            if (my_t0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered transmission from %f to 1 (k=%f)\n", my_t0, k);
+            my_t0=0.999;
+          }
+          if (my_t0 > 0) p*= my_t0;
+          else ABSORB;
         }
-        else my_t0 = t0;
-        /* do not SCATTER, else GROUP does not work */
-        if (my_t0 > 1)
-        {
-          if (my_t0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered transmission from %f to 1 (k=%f)\n", my_t0, k);
-          my_t0=0.999;
-        }
-        if (my_t0 > 0) p*= my_t0;
-        else ABSORB;
-      }
-    } /* End intersect the crystal (if z1) */
+      } /* end if not in gap */
+      /* rotate back in component frame */
+      Rotation TT;
+      rot_transpose(T, TT);
+      /* now make the coordinate system change */
+      mccoordschange_polarisation(TT, &vx, &vy, &vz);
+      coords_get(rot_apply(TT,coords_set(x,y,z)),&x,&y,&z);
+      y+=center_y;
+      z+=center_z;
+
+      /* mccoordschange_polarisation(tt, &sx, &sy, &sz); */
+    } /* End intersect the crystal (if z) */
+    else {
+      /* restore neutron state when no interaction */
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }
   } /* End neutron moving towards crystal (if vx)*/
 %}
 
