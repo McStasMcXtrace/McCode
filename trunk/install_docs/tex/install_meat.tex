@@ -42,8 +42,8 @@ Microsoft Windows is using a self-extracting \texttt{.exe} file.
 c-compiler, a vrml viewer and Scilab for data plotting.
 
 \noindent Installation of all the provided support tools is needed to get a fully
-functional McStas. The option not to install some of the tools is only
-included for people who have one or more tools installed already.
+functional McStas. (The option not to install the tools is included for people who want to
+upgrade from a working, previous installation of McStas.)
 
 \noindent The safe and fully tested configuration/installation is to install all
 tools, leaving all installation defaults untouched. Specifically you
@@ -90,6 +90,7 @@ perform the following tasks:
 \begin{enumerate}
 \item{Download the package from \verb+http://www.mcstas.org/download+}
 \item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
+\item{As root, issue the command \\\verb+apt-get remove dash+}
 \item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+}
 \end{enumerate}
 
