@@ -3,6 +3,7 @@ Version: MCSTAS_VERSION
 Architecture: i386
 Depends: perl, perl-Tk, gcc, libc6-dev, libg2c0, pdl, bash
 Conflicts: dash
+Replaces: dash
 Suggests: scilab, freewrl
 Conflicts: pgplot5
 Replaces: pgplot5
