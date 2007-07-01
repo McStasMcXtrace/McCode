@@ -433,13 +433,16 @@ END
 sub add_comp_search_html {
     my ($search, $filehandle, @Incomps) = @_;
     my @comps;
-    my ($j, $sec, $comp, $suf);
+    my ($j, $sec, $comp, $inst, $suf);
     for ($j=0; $j<@Incomps; $j++) {
 	($comp,$sec,$suf) = fileparse($Incomps[$j],".html");
-	$comp = "$sec$comp.comp";
 	print "Testing for $comp\n";
+	$inst = "$sec$comp.instr";
+	$comp = "$sec$comp.comp";
 	if (-f "$comp") {
 	    push @comps, $comp;
+	} elsif (-f "$inst") {
+	    push @comps, $inst; 
 	}
     }
     return unless @comps;
@@ -466,8 +469,14 @@ END
     my $name;
     for $comp (sort(@comps)) {
 	# extract the scanned comp/instr name from lib, removing possible path
-	($name, $sec, $suf) = fileparse($comp, ".comp");  # without extension
+	if ($comp =~ m/comp/i) {
+	    ($name, $sec, $suf) = fileparse($comp, ".comp");  # without extension
+	} else {
+	    ($name, $sec, $suf) = fileparse($comp, ".instr");  # without extension
+	}
+	
 	$data = component_information($comp);
+	$data->{'path'} = $sec;
 	if (not defined($data)) {
 	    print STDERR "mcdoc: Failed to get information for component/instrument '$comp'";
 	} else {
