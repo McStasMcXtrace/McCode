@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.64 $
+* Version: $Revision: 1.65 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -200,7 +200,7 @@
 * powder_DW:             [1] global Debey-Waller factor, if not in |F2| or 1.
 * powder_format: [no quotes] name or definition of column indexes in file
 * powder_Vc:          [AA^3] volume of the unit cell
-* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in barns.
+* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in barns (barns=1 for laz, barns=0 for lau type files).
 *
 * OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
@@ -238,7 +238,7 @@ DEFINE COMPONENT Isotropic_Sqw
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-    interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0, powder_barns=0)
+    interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0, powder_barns=1)
   OUTPUT PARAMETERS (VarSqw, columns)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.64 $
+#define ISOTROPIC_SQW $Revision: 1.65 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica

@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.34 $
+* Version: $Revision: 1.35 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -112,7 +112,7 @@
 * weight:   atomic/molecular weight of material [g/mol]
 * density:  density of material. V_rho=density/weight/1e24*N_A. [g/cm^3]
 * nb_atoms: number of atoms per unit cell [1]
-* barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 [1]
+* barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 (barns=1 for laz, barns=0 for lau type files).[1]
 * concentric: Flag to indicate if sample is 'concentric' [1] 
 *
 * %L
@@ -135,7 +135,7 @@ DEFINITION PARAMETERS (string reflections, format=Undefined)
 SETTING PARAMETERS (d_phi=0, radius=0.01, radius_i=0, yheight=0.05,
 		    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, frac=0, tfrac=0.1,
 		    xwidth=0, zthick=0, xwidth_i=0, yheight_i=0, zthick_i=0, h=0, DW=0, nb_atoms=1, 
-		    concentric=0, density=0, weight=0, barns=0)
+		    concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2, 
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, isrect, columns)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
