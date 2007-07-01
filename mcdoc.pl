@@ -451,7 +451,7 @@ sub add_comp_search_html {
 <html>
 <header><title>McDoc: Search result for "$search"</title></header>
 <body>
-<h1>Result of component search for "$search" in your McStas library</h1>
+<h1>Result of search for "$search" in your McStas library</h1>
 <p>(Please note that only current dir and $lib_dir were searched, discarding 'obsolete' components)
 <p><TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
 <TR>
