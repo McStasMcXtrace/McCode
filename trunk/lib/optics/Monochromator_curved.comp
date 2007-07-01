@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,9 +11,9 @@
 *
 * Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
 * Date: Aug. 24th 2001
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 1.6
+* Release: McStas CVS_070701
 * Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
 * Modified by: EF, Feb 13th 2002:  Read reflectivity table
 * Modified by: EF, Oct 24th 2002:  Read transmission table
@@ -300,14 +300,13 @@ TRACE
                         exp(-kiy*kiy/(kiy*kiy + kiz*kiz)*(delta*delta)/
                             (2*mos_rms_z*mos_rms_z));
 
-          if(!t0 || rand01() <= p_reflect) { /* Reflect */
+          if(rand01() <= p_reflect) { /* Reflect */
             double bx,by,bz,ax,ay,az,phi;
             double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
             double total,c1x,c1y,c1z,width,mos_sample;
-            int i;
+            int i=0;
 
-            if (!t0) p *= p_reflect;
-            cos_2theta = cos(2*theta);
+            cos_2theta   = cos(2*theta);
             k_sin_2theta = k*sin(2*theta);
             /* Get unit normal to plane containing ki and most probable kf */
             vec_prod(bx, by, bz, kix, kiy, kiz, q0x, 0, 0);
@@ -336,7 +335,7 @@ TRACE
             * Use a cut-off at 5 times the gauss width for considering
             * scattering probability as well as for integration limits
             * when integrating the sampled distribution below. */
-            for(;;) {
+            for(i=0; i<100; i++) {
               width = 5*mos_sample;
               cos_phi = cos(width);
               sin_phi = sin(width);
