@@ -244,24 +244,24 @@ echo
 # (.rpm was tried using alien - did not work too well)
 if [ -e /etc/debian_version ]
 then
-  if [ -e sarge-chroot ]
+  if [ -e etch-chroot ]
   then
     echo Proceeding to .deb build
     # First, clean up in case of previous McStas installs in the chrooot
-    sudo rm -f sarge-chroot/usr/local/bin/*
-    sudo rm -rf sarge-chroot/usr/local/lib/*
-    sudo rm -rf sarge-chroot/usr/local/pgplot
-    sudo cp mcstas-$1/deb/debcreate sarge-chroot/root
-    sudo cp mcstas-$1-src.tar.gz sarge-chroot/root
-    sudo chroot sarge-chroot /root/debcreate
+    sudo rm -f etch-chroot/usr/local/bin/*
+    sudo rm -rf etch-chroot/usr/local/lib/*
+    sudo rm -rf etch-chroot/usr/local/pgplot
+    sudo cp mcstas-$1/deb/debcreate etch-chroot/root
+    sudo cp mcstas-$1-src.tar.gz etch-chroot/root
+    sudo chroot etch-chroot /root/debcreate
     echo
     echo
     echo Build packages created:
     echo
-    cp sarge-chroot/build/*deb .
+    cp etch-chroot/build/*deb .
     ls -lf mcstas-$1*.* McStas-$1*.*
     echo
   else
-    echo You need a chroot environment based on debootstrap in sarge-chroot before building deb packages
+    echo You need a chroot environment based on debootstrap in etch-chroot before building deb packages
   fi
 fi
