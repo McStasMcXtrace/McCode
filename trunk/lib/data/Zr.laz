@@ -5,11 +5,6 @@
 # SCATTERING FACTOR  COEFFICIENTS: ZR     F= 0.716 CM-12
 # Reference: Phase Transition (1992) 38, 127-220
 #
-# Format parameters: Lazy format <http://icsd.ill.fr>
-# column_j 17 multiplicity 'j'
-# column_d 6  d-spacing 'd' in [Angs]
-# column_F 13 norm of scattering factor |F| in [barn]
-#
 # Physical parameters:
 # sigma_coh 6.44    coherent scattering cross section in [barn]
 # sigma_inc 0.02    incoherent scattering cross section in [barn]
@@ -28,7 +23,7 @@
 # Format parameters: Lazy format <http://icsd.ill.fr>
 # column_j 17 multiplicity 'j'
 # column_d 6  d-spacing 'd' in [Angs]
-# column_F 13 norm of scattering factor |F| in [barn]
+# column_F 13 norm of scattering factor |F| in [barn^0.5]
 # column_h 1
 # column_k 2
 # column_l 3
