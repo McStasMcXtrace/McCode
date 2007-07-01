@@ -435,7 +435,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       # finally set the PLOTTER
       $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
 
-      $si{'cluster'} = do {
+      $si->{'cluster'} = do {
         if     ($choicecluster_val =~ /^None/)   { 0 }
         elsif ($choicecluster_val =~ /^Threads/){ 1 }
         elsif ($choicecluster_val =~ /^MPI/)    { 2 }
@@ -578,10 +578,10 @@ sub preferences_dialog {
     # handle clustering methods
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
-    if ($inf_sim{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
+    if ($inf_sim->{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
 #     elsif ($inf_sim{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
-    elsif ($inf_sim{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
-    elsif ($inf_sim{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
+    elsif ($inf_sim->{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
+    elsif ($inf_sim->{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
     my $choices=[ 'None (single CPU)'];
 #     if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
 #       push @{ $choices }, 'Threads (multi-core)';
@@ -649,7 +649,7 @@ sub preferences_dialog {
     # finally set the PLOTTER
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
 
-    $inf_sim{'cluster'} = do {
+    $inf_sim->{'cluster'} = do {
       if     ($choicecluster_val =~ /^None/)   { 0 }
       elsif ($choicecluster_val =~ /^Threads/){ 1 }
       elsif ($choicecluster_val =~ /^MPI/)    { 2 }
@@ -667,7 +667,7 @@ sub preferences_dialog {
     } else {
       $MCSTAS::mcstas_config{'CFLAGS'} = "";
     }
-
+    $MPIstuff = $inf_sim->{'cluster'};
     return ($res);
 }
 

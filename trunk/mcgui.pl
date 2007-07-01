@@ -1193,7 +1193,9 @@ sub menu_preferences {
     # PW 20040527
     my ($w) = @_;
     my $ret;
+    our $MPIstuff = $inf_sim->{'cluster'};
     ($ret) = preferences_dialog($w);
+    $inf_sim->{'cluster'} = $MPIstuff;
 }
 
 
