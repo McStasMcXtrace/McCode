@@ -2,8 +2,9 @@
 export RELEASE="@RELEASE@"
 export BUILDDIR="/build/mcstas-$RELEASE"
 export SRCDIR="/build/mcstas-$RELEASE-srcdir"
+export MACHINETYPE=`uname -m`
 
-apt-get -y --force-yes install perl-tk pdl gcc libc6-dev g77 libx11-dev x-window-system-dev libxt-dev lintian alien
+apt-get -y --force-yes install perl-tk pdl gcc libc6-dev g77 libx11-dev xorg-dev libxt-dev lintian
 
 rm -rf /build/*
 rm -rf /usr/local/lib/*
@@ -59,10 +60,8 @@ cp ${SRCDIR}/COPYING ${BUILDDIR}/usr/share/doc/mcstas/copyright
 
 dpkg-deb --build mcstas-${RELEASE}
 
-mv mcstas-${RELEASE}.deb mcstas-${RELEASE}-i686.deb
+mv mcstas-${RELEASE}.deb mcstas-${RELEASE}-${MACHINETYPE}.deb
 
 rm -rf $BUILDDIR
 
-# Here is an implicit assumption on the arch...
-#alien -k --scripts --to-rpm mcstas-${RELEASE}-i686.deb
 
