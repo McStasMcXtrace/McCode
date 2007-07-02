@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.37 $
+* Version: $Revision: 1.38 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -25,13 +25,13 @@
 * Modified by: PW, EF, November 16th 2005: version 1.9
 * Modified by: PW, EF, March 29th 2006: version 1.9.1
 * Modified by: PW, EF, December 4th 2006: version 1.10
-* Modified by: PW, EF, June 26th 2007: version 1.11
+* Modified by: PW, EF, July 2nd 2007: version 1.11
 *
 * This file is part of McStas  version 1.11, released June, 26th, 2007.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v1.11, June 26, 2007
+Changes in McStas v1.11, July 2nd, 2007
 
   Metalanguage
   - New SPLIT keyword for improving statistics. WARNING: Follow instructions in the documentation for safe
@@ -41,10 +41,15 @@ Changes in McStas v1.11, June 26, 2007
   - Source_adapt.comp, additions by Aaron Percival which allows to specify a flat wavlength distibution.
   - Single_crystal.comp, warning NOT to use this component as a monochromator (bug fix/validation under way).
   - PowderN.comp, can now be used in concentric mode, i.e. for modelling sample surroundings (cryostat, container..).
+  - Tunneling_sample.comp (new) Double-cylinder shaped all-incoherent scatterer with elastic, quasielastic (Lorentzian)
+    and tunneling (sharp) components. No multiple scattering. Absorbtion included. By Kim Lefmann
+  - TOF2E_monitor.comp (new) TOF-sensitive monitor, converting to energy. By Kim Lefmann
 
   Example instruments
   - New ILL_H15_IN6 and ILL_H142_IN12 instruments by Emmanuel Farhi are included.
   - Histogrammer.instr - see the 'Tools' section
+  - New ESS_IN5_reprate.instr Instrument for simulating IN5-TYPE (cold chopper) multi-frame spectrometer at ESS LPT.
+    (Also example instrument for Tunneling_sample.comp.) By  Kim Lefmann
 
   Datafiles
   - Reflectivity curves from Swiss Neutronics (more work done, available in the next McStas release).
