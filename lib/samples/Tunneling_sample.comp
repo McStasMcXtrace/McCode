@@ -1,26 +1,24 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Inelastic_Incoherent
+* Component: Tunneling_sample
 *
 * %I
-* Written by: Kim Lefmann
-* Date: 18.08.06; 21.02.07
-* Version: $Revision: 1.2 $
+* Written by: Kim Lefmann 
+* Date: 10.05.07
+* Version: $Revision: 1.1 $
 * Origin: Risoe
-* Release: McStas 1.9.1
-*
-* Inelastic incoherent sample with quasielastic and elastic contributions
-* Written on the basis of V_sample
+* Release: McStas 1.12
+* Modified from: Vanadium sample.
 *
 * %D
-* A Double-cylinder shaped incoherent scatterer
-* with both inelastic, elastic and quasielastic (Lorentzian) components.
-* No multiple scattering. Absorbtion included. No detailed balance factor.
+* A Double-cylinder shaped all-incoherent scatterer
+* with both elastic, quasielastic (Lorentzian), and tunneling (sharp) 
+* components. No multiple scattering. Absorbtion included.
 * The shape of the sample may be a box with dimensions xwidth, yheight, zthick.
 * The area to scatter to is a disk of radius 'focus_r' situated at the target.
 * This target area may also be rectangular if specified focus_xw and focus_yh
@@ -32,9 +30,12 @@
 * centered components, such as spheres or cylinders, define an Arm component
 * where to focus to.
 *
-* Example: Inelastic_Incoherent(radius_i=0.001,radius_o=0.01,h=0.02,
-*          focus_r=0.035, pack=1, target_index=1,
-*          f_inel = 0.2, homega=0.1, f_QE=0.2, gamma=0.1)
+* The outgoing polarization is calculated as for nuclear spin incoherence: 
+*   P' = 1/3*P-2/3P = -1/3P 
+* As above multiple scattering is ignored .
+*
+* Example: Tunneling_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,
+*           target_index=1)
 *
 * %P
 * INPUT PARAMETERS:
@@ -56,14 +57,13 @@
 * focus_aw: horiz. angular dimension of a rectangular area [deg]
 * focus_ah: vert.  angular dimension of a rectangular area [deg]
 * sig_a:    Absorbtion cross section pr. unit cell [barns]
-* sig_i:    Incoherent scattering cross section pr. unit cell [barns]
+* sig_i:    Total incoherent scattering cross section pr. unit cell [barns]
 * V0:       Unit cell volume [AA^3]
-* pack:     Packing factor [1]
 * frac:     MC Probability for scattering the ray; otherwise penetrate [1]
-* f_inel:   Fraction of real inelastic scattering [1]
-* homega:       Energy transfer of inelastic peak (+-) [meV]
-* f_QE:     Fraction of quasielastic scattering (rest is elastic) [1]
+* f_QE:     Fraction of quasielastic scattering [1]
+* f_tun:    Fraction of tunneling scattering (f_QE+f_tun < 1) [1] 
 * gamma:    Lorentzian width of quasielastic broadening (HWHM) [meV]
+* E_tun:    Tunneling energy [meV]
 * target_index: relative index of component to focus at, e.g. next is +1 [1]
 *
 * Variables calculated in the component
@@ -78,14 +78,15 @@
 * %E
 *******************************************************************************/
 
-DEFINE COMPONENT Inelastic_Incoherent
+DEFINE COMPONENT Tunneling_sample
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0,
-		    pack = 1, frac=1, f_inel=0.2, homega=0.1, f_QE=0.2, gamma=0.1,
+		    frac = 1, f_QE=0, f_tun=0, gamma=0, E_tun=0, 
   target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0,
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=13.827, int target_index=0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
@@ -102,6 +103,7 @@ DECLARE
     double xw,yh;       /* rectangular metrical dimensions */
     double tx,ty,tz;    /* target coords */
     } VarsV;
+  double ftun, fQE;
 %}
 
 INITIALIZE
@@ -119,7 +121,7 @@ INITIALIZE
 
   VarsV.sigma_a=sig_a;
   VarsV.sigma_i=sig_i;
-  VarsV.rho = (pack/V0);
+  VarsV.rho = (1/V0);
   VarsV.my_s=(VarsV.rho * 100 * VarsV.sigma_i);
   VarsV.my_a_v=(VarsV.rho * 100 * VarsV.sigma_a);
 
@@ -136,7 +138,7 @@ INITIALIZE
   { VarsV.tx = target_x; VarsV.ty = target_y; VarsV.tz = target_z; }
 
   if (!(VarsV.tx || VarsV.ty || VarsV.tz))
-    printf("V_sample: %s: The target is not defined. Using direct beam (Z-axis).\n",
+    printf("Tunneling_sample: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
 
   VarsV.distance=sqrt(VarsV.tx*VarsV.tx+VarsV.ty*VarsV.ty+VarsV.tz*VarsV.tz);
@@ -155,6 +157,25 @@ INITIALIZE
   if (focus_ah) {
     VarsV.ah = DEG2RAD*focus_ah;
   }
+
+  /* Check that probabilities are positive and do not exceed unity */
+  if (f_tun<0)
+    ftun=0;
+  else
+    ftun=f_tun;
+  if(f_QE<0)
+    fQE=0;
+  else
+    fQE=f_QE;
+  //  printf("Tunneling_sample: ftun %g %g fQE %g %g \n",f_tun,ftun,f_QE,fQE);
+  if ((ftun+fQE)>1) {
+    ftun=0;
+    printf("Tunneling_sample: Sum of inelastic probabilities > 1. Setting f_tun=0");
+    if (fQE>1) {
+      fQE=0;
+      printf("Tunneling_sample: Probability fQE > 1. Setting fQE=0.");
+    }
+  }
 %}
 
 TRACE
@@ -170,7 +191,7 @@ TRACE
   double aim_x=0, aim_y=0, aim_z=1;   /* Position of target relative to scattering point */
   double v_i, v_f, E_i, E_f; /* initial and final energies and velocities */
   double dE;                 /* Energy transfer */
-  double choice;             /* Choice of scattering method */
+  double scatt_choice;       /* Representing random choice of scattering type */
   int    intersect=0;
 
   if (VarsV.isrect)
@@ -218,36 +239,33 @@ TRACE
         randvec_target_circle(&vx, &vy, &vz, &solid_angle, aim_x, aim_y, aim_z, focus_r);
       }
       NORM(vx, vy, vz);
-
-      v_i = v;          /* Store initial velocity in case of quasielastic */
-      choice=rand01();
-      if (choice<f_inel)	/* Inelastic contribution */
+      
+      scatt_choice = rand01();  /* chooses type of scattering */
+      v_i = v;                  /* Store initial velocity in case of inel. */
+      E_i = VS2E*v_i*v_i;
+      //      printf("Tunneling_sample: scatt_choice %g fQE %g ftun %g \n",scatt_choice, fQE, ftun);
+      if (scatt_choice<(fQE+ftun))    /* Inelastic choices */
 	{
-          E_i = VS2E*v_i*v_i;
-          dE = homega;
-          if (rand01() > 0.5)
-            E_f = E_i + dE;
-          else
-            E_f = E_i - dE;
-          if (E_f <= 0)
+          if (scatt_choice<fQE) /* Quasielastic */
+          { dE = gamma*tan(PI/2*randpm1());
+	  //            printf("Tunneling_sample: Inside Quasielastic code \n");
+	  }
+	  else
+          { if (randpm1()>0)
+	      dE = E_tun;
+		else
+              dE = -E_tun;
+	  //	  printf("Tunneling_sample: Inside tunnel code \n");
+	  }
+          E_f = E_i + dE;
+          if (E_f <= 0) 
             ABSORB;
 	  v_f = SE2V*sqrt(E_f);
           v = v_f;
 	  /*          printf("vi: %g Ei: %g dE: %g Ef %g vf: %g v: %g \n",
 		      v_i,E_i,dE,E_f,v_f,v); */
 	}
-      if (choice>f_inel && choice<f_inel+f_QE)	/* Quasielastic contribution */
-	{
-          E_i = VS2E*v_i*v_i;
-          dE = gamma*tan(PI/2*randpm1());
-          E_f = E_i + dE;
-          if (E_f <= 0)
-            ABSORB;
-	  v_f = SE2V*sqrt(E_f);
-          v = v_f;
-	  /*          printf("vi: %g Ei: %g dE: %g Ef %g vf: %g v: %g \n",
-		      v_i,E_i,dE,E_f,v_f,v); */
-	} /* Otherwise: elastic scattering */
+
       vx *= v;
       vy *= v;
       vz *= v;
@@ -280,6 +298,12 @@ TRACE
       /* We do not consider scattering from 2nd part (outgoing) */
       p /= 4*PI/solid_angle;
       p /= frac;
+
+      /* Polarisation part (1/3 NSF, 2/3 SF) */
+      sx *= -1.0/3.0;
+      sy *= -1.0/3.0;
+      sz *= -1.0/3.0;
+	
       SCATTER;
     }
   else /* Transmitting; always elastic */
