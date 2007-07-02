@@ -11,7 +11,7 @@
  * %I
  * Written by: S. Ansell and D. Champion
  * Date: AUGUST 2005
- * Version: $Revision: 1.6 $
+ * Version: $Revision: 1.7 $
  * Origin: ISIS
  * Release: McStas 1.9
  *
@@ -549,7 +549,7 @@ readHtable(FILE* TFile,const double Einit,const double Eend)
   //printf("Tsum %g \n",Tsum);
   //fprintf(stderr,"ebin1 ebinN %g %g\n",TS.EnergyBin[0],TS.EnergyBin[TS.nEnergy-1]);
 
-  return;
+  return 1;
 }
 
 void
