@@ -84,18 +84,18 @@ and \htmladdnormallink{FreeBSD}{http://www.freebsd.org}.
 
 \subsection{Debian class systems}
 \label{ss:deb_install}
-As of release 1.11, we provide a Debian binary package. We have tested that the
+As of release 1.11, we provide a Debian binary package (32 bit package for Intel/AMD). We have tested that the
 package works properly on Ubuntu and Debian systems. To install it, please
 perform the following tasks:
 \begin{enumerate}
-%\item{Download the package from \verb+http://www.mcstas.org/download+}
-%\item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
-%\item{As root, issue the command \\\verb+apt-get remove dash+}
-%\item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+}
-\item{As root, add the following to your \verb+/etc/apt/sources.list+ :
-\\\verb+deb http://apt.mcstas.org binary/+ (32 bit package for Intel/AMD)}
-\item{As root execute the command:\\\verb+apt-get update+}
-\item{As root execute the command:\\\verb+apt-get install mcstas+}
+\item{Download the package from \verb+http://www.mcstas.org/download+}
+\item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
+\item{As root, issue the command \\\verb+apt-get remove dash ubuntu-minimal+}
+\item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+}
+%\item{As root, add the following to your \verb+/etc/apt/sources.list+ :
+%\\\verb+deb http://apt.mcstas.org binary/+ (32 bit package for Intel/AMD)}
+%\item{As root execute the command:\\\verb+apt-get update+}
+%\item{As root execute the command:\\\verb+apt-get install mcstas+}
 \end{enumerate}
 Using our Debian package and updating your operating system will ensure automatic upgrade of McStas in case of
 a new release.
