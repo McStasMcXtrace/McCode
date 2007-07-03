@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.65 $
+* Version: $Revision: 1.66 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.65 $
+#define ISOTROPIC_SQW $Revision: 1.66 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -453,6 +453,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 
       /* assign and check values */
       j = (j > 0 ? j : 0);
+      if (flag_qSq) j=1;
       DWfactor = (DWfactor > 0 ? DWfactor : 1);
       w = (w>0 ? w : 0);
       F2 = (F2 >= 0 ? F2 : 0);
@@ -562,11 +563,13 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
         if (flag_qSq) {
           retTable[2].data[index] += list[i].F2;
           retTable[0].data[index]  = list[i].q;
-        } else if (list[i].w <=0 || list[i].w*q < q_step) /* step function */
-          retTable[2].data[index] += factor/q_step;
-        else /* gaussian */
-          retTable[2].data[index] += factor
+        } else {
+          if (list[i].w <=0 || list[i].w*q < q_step) /* step function */
+            retTable[2].data[index] += factor/q_step;
+          else /* gaussian */
+            retTable[2].data[index] += factor
                   * Sqw_powder_gauss(q, list[i].q, list[i].w*list[i].q);
+        }
       }
     } /* end for i */
     Table_Stat(&retTable[0]); Table_Stat(&retTable[1]); Table_Stat(&retTable[2]);
