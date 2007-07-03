@@ -1,0 +1,29 @@
+#!/bin/sh
+autoconf configure.in > configure
+chmod a+x configure
+LocalTime=`date +%Y_%m_%d_%H.%M`
+WorkDir=preCVStest.$LocalTime
+mkdir $WorkDir
+./configure --prefix $PWD/$WorkDir
+export MCSTAS=$PWD/$WorkDir/lib/mcstas
+export PATH=$PWD/$WorkDir/bin:$PATH
+make
+make install
+make clean
+cd $WorkDir
+echo
+echo Starting mcrun --test
+mcrun --test > $WorkDir.log 2>&1
+echo mcrun --test done...
+cd -
+echo
+echo 1\) Consult mcrun --test results in $WorkDir
+echo 2\) Do further manual test in the environment below, 
+echo     depending on changes made.
+echo 3\) When convinced all is working, do your commit
+echo 
+echo Entering test environment using /bin/sh
+echo Type exit/logout/\^D to end
+echo
+export PS1="McStas CVS test # "
+/bin/sh -i

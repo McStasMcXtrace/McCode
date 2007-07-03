@@ -1,0 +1,192 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+
+* Component: Virtual_output
+*
+* %I
+* Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
+* Date: Dec 17th, 2002
+* Version: $Revision: 1.17 $
+* Origin: <a href="http://www.ill.fr">ILL</a>
+* Release: McStas 1.11
+* Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
+*
+* Detector-like component that writes neutron state parameters into a 'virtual
+* source' neutron file.
+*
+* %D
+* Detector-like component writing neutron state parameters to a
+* virtual source neutron file. The component geometry is the full
+* plane, and saves the neutron state as it exits from the previous
+* component.
+*
+*   It is particularly useful to generate a virtual source at a point that few
+* neutron reach. A long simulation will then only be performed once, to create
+* the upstream 'source' file. Further simulations are much faster if they start
+* from this low flux position with the 'source' file.
+*
+* Possible file formats are:
+* 1-text column formatted with lines containing 11 values in the order:
+*       p x y z vx vy vz t sx sy sz stored into about 83 bytes/n.
+* 2-float/double binary files (with the 11 values 'p x y z vx vy vz t sx sy sz')
+*       stored into 44 and 88 bytes/n respectively for float/double.
+*
+* Beware the size of generated files ! When saving all events (bufsize=0) the
+* required memory has been optimized and remains very small. On the other hand
+* using large bufsize values (not recommanded) requires huge storage memory.
+* Moreover, using the 'bufsize' parameter will often lead to wrong intentities.
+* Both methods will generate huge files.
+*
+* A Vitess file may be obtained from the 'Vitess_output' component or from a
+* Vitess simulation (104 bytes per neutron) and read with Vitess_input.
+*
+* %BUGS
+* We recommand not to use parallel execution (MPI/Threads) with this component.
+*
+* Example: Virtual_output(file="MySource.dat")
+*   will generate a 9 Mo text file for 1e5 events stored.
+*
+* %BUGS
+* Using bufsize non-zero generates a virtual source with wrong intensity
+*
+* %P
+* INPUT PARAMETERS
+*
+* file: [str] Filename of neutron file to write. Default is standard
+*           output [string]. If not given, a unique name will be used.
+* bufsize:[1] Size of neutron output buffer
+*           default is 0, i.e. save all - recommanded.
+* type: [str] Type of output file 'text','float','double'
+*           default is text
+*
+* %E
+*******************************************************************************/
+
+
+DEFINE COMPONENT Virtual_output
+DEFINITION PARAMETERS (string file=0, string type=0)
+SETTING PARAMETERS (bufsize=0)
+OUTPUT PARAMETERS (DEFS, Vars, mcformat_sim, mcformat_vo, mcformat_override)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+%include "monitor_nd-lib"
+%}
+
+DECLARE
+%{
+  MonitornD_Defines_type   DEFS;
+  MonitornD_Variables_type Vars;
+  struct mcformats_struct  mcformat_sim;
+  struct mcformats_struct  mcformat_vo;
+  char                     mcformat_override;
+%}
+
+INITIALIZE
+%{
+  long element_size;
+
+#if defined(USE_THREADS)
+  exit(printf("Virtual_output: %s: Warning: This component can not be used in Multi-Threading execution mode. Abort.\n", NAME_CURRENT_COMP));
+#endif
+
+  strcpy(Vars.compcurname, NAME_CURRENT_COMP);
+
+  if (bufsize > 0) sprintf(Vars.option, "list=%15g", bufsize);
+  else strcpy(Vars.option, "list all");
+
+  if (type)
+  {
+    if (strstr(type, "Vitess"))
+    { fprintf(stderr, "Virtual_output: %s: Vitess files may be generated using the Vitess_output component\n", NAME_CURRENT_COMP); exit(-1); }
+    if (strstr(type, "binary") || strstr(type, "float")) {
+      strcat(Vars.option, ", binary float");
+      element_size = sizeof(float);
+    } else if (strstr(type, "double")) {
+      strcat(Vars.option, ", binary double");
+      element_size = sizeof(double);
+    } else element_size = 85;
+  }
+
+  strcat(Vars.option,", x y z vx vy vz t sx sy sz");
+  Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
+  if (file != NULL)
+    strncpy(Vars.Mon_File, file, 128);
+
+  mcformat_override = (!strstr(Vars.option, "binary") && !strstr(mcformat.Name, "NeXus"));
+  mcformat_sim      = mcformat;
+  mcformat_vo       = mcuse_format("McStas");
+
+  if (bufsize <= 0 && strstr(mcformat.Name, "NeXus"))
+    exit(fprintf(stderr, "Virtual_output: %s: NeXus files output\n"
+                         "ERROR           require to use a buffer size (bufsize>0).\n",
+                         NAME_CURRENT_COMP));
+  else if (bufsize > 0 && !strstr(mcformat.Name, "NeXus"))
+    printf("Warning: Virtual_output: %s: buffer size=%g not recommanded\n", NAME_CURRENT_COMP, bufsize);
+  if (bufsize > 0) printf(
+           "Virtual_output: %s: Beware virtual output generated file size (max %g Mo)\n"
+           "WARNING         Memory required is %g Mo\n", NAME_CURRENT_COMP,
+           bufsize*element_size/1e6, bufsize*sizeof(double)/1e6);
+%}
+
+TRACE
+%{
+  double pp;
+
+  PROP_Z0;
+  /* transfert current neutron to Monitor_nD vars */
+  Vars.cp  = p;
+  Vars.cx  = x;
+  Vars.cvx = vx;
+  Vars.csx = sx;
+  Vars.cy  = y;
+  Vars.cvy = vy;
+  Vars.csy = sy;
+  Vars.cz  = z;
+  Vars.cvz = vz;
+  Vars.csz = sz;
+  Vars.ct  = t;
+
+  if (mcformat_override) mcformat = mcformat_vo;
+  pp = Monitor_nD_Trace(&DEFS, &Vars);
+  if (mcformat_override) mcformat = mcformat_sim;
+  Vars.Nsum++;
+  Vars.psum  += pp;
+  Vars.p2sum += pp*pp;
+  SCATTER;
+%}
+
+SAVE
+%{
+
+
+  if (mcformat_override) mcformat = mcformat_vo;
+  Monitor_nD_Save(&DEFS, &Vars);
+  if (mcformat_override) mcformat = mcformat_sim;
+%}
+
+FINALLY
+%{
+  /* free pointers */
+  Monitor_nD_Finally(&DEFS, &Vars);
+  if (bufsize) {
+    printf("Virtual_output: %s: Saved %15f events (from buffer) in file %s\n",
+           NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+    if (bufsize < Vars.Nsum)
+      printf("WARNING         When using this source, intensities must be multiplied\n"
+             "                by a factor %g\n", Vars.Nsum/bufsize);
+  } else printf("Virtual_output: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+%}
+
+MCDISPLAY
+%{
+  Monitor_nD_McDisplay(&DEFS, &Vars);
+%}
+
+END

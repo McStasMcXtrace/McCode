@@ -1,0 +1,23 @@
+#!/bin/sh
+#
+# Simple script to get/install scilab from the net.
+# 
+# Will probably require root priviliges
+#
+export REL=4.0
+export SCIREL=scilab-$REL
+export SCIFILE=$SCIREL.bin.linux-i686.tar.gz
+export PREF=@prefix@
+export TMPDIR=`mktemp -d`
+cd $TMPDIR
+echo "Get + unpack scilab from the net..."
+wget http://www.scilab.org/download/$REL/$SCIFILE
+gunzip -c $SCIFILE | tar xf -
+cd $PREF
+tar xzf $TMPDIR/$SCIFILE
+cd $SCIREL
+make
+echo "Setting up links in $PREF/bin"
+ln -s $PWD/bin/scil* $PREF/bin
+echo "Removing dowloaded archive"
+rm -rf $TMPDIR

@@ -1,0 +1,6 @@
+if isdef('plotlib')
+   predef(0);
+   clear plotlib
+end
+
+genlib('plotlib','SCI/macros/plotlib');exit

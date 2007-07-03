@@ -1,0 +1,449 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Powder_filter.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Powder_filter
+*
+* %I
+* Written by: <a href="mailto:benjamin.fortescue@oriel.ox.ac.uk">B. Fortescue</a>
+* Date: August 2000
+* Version: 1.1
+* Origin: Based on Be_filter, written by SN Klausen, December 1999,
+* Incorporating code from Single_crystal, written by KN, December 1999
+* Modified by: EF, Aug. 24th 2001: made it work
+* Modified by: EF, 2004. Renamed as Filter_powder
+*
+* Box-shaped powder filter
+*
+* %D
+* This is a general box-shaped powder filter which simulates multiple coherent
+* scattering vectors and absorption (incoherent scattering is modelled as
+* absorption).  Crystal structure is specified with an ascii data file. Each
+* line contains seven numbers, separated by white space. The first three
+* numbers are the (h,k,l) indices of the reciprocal lattice point, and the
+* last number is the value of the structure factor |F|**2, in barns.  (The rest
+* of the numbers are not used; the file is in the format output by the
+* Crystallographica program).  Optionally, a number of absorbing blades may be
+* incorporated into the filter - these are X-Z or Y-Z planes evenly spaced
+* along the X or Y axis of the filter which absorb any neutron encountering them.
+* OBSOLETE: rather use optics/Filter_powder
+*
+* EXAMPLE:
+* You may use something like:
+*     Powder_filter(
+*      ax=2.714, by=2.714, cz=4.405, cc=120,
+*      sigma_a = 0.0156,
+*      reflections="BeO.dat")
+* with file <a href="http://www.ill.fr/tas/mcstas/doc/BeO.dat">BeO.dat</a>.
+* See also <a href="http://www.ill.fr/tas/mcstas/doc/filter.ps">filter.ps</a> (PS doc).
+*
+* %P
+* INPUT PARAMETERS
+*
+* xmin        : Lower x-value of powder sample [m]
+* ymin        : Lower y-value of powder sample [m]
+* zmin        : Lower z-value of powder sample [m]
+* xmax        : Upper x-value of powder sample [m]
+* ymax        : Upper y-value of powder sample [m]
+* zmax        : Upper z-value of powder sample [m]
+* pack        : Packing factor of powder [1]
+* ax,ay,az    : Coordinates of first unit cell vector [AA]
+* bx,by,bz    : Coordinates of second unit cell vector [AA]
+* cx,cy,cz    : Coordinates of third unit cell vector [AA]
+* reflections : File name containing structure factors of reflections [string]
+* sigma_a     : Absorption cross-section per unit cell at 2200 m/s [barns]
+* DW          : Debye-Waller factor of reflection [1]
+* XBlades     : Number of vertical absorbing blades [1]
+* YBlades     : Number of horizontal absorbing blades [1]
+*
+* Optional input parameters:
+* aa,bb,cc    : unit cell angles alpha, beta and gamma (deg).
+*               Then uses norms of vectors a,b and c as lattice parameters.
+*
+* OUTPUT PARAMETERS
+*
+* mu_s      : Attenuation factor due to scattering [m^-1]
+* mu_a      : Attenuation factor due to absorbtion [m^-1]
+* %E
+*
+*******************************************************************************/
+
+DEFINE COMPONENT Powder_filter
+DEFINITION PARAMETERS (reflections)
+SETTING PARAMETERS (xmin =-0.05 , xmax = 0.05, ymin = -0.05, ymax = 0.05,
+     zmin = -0.05, zmax = 0.05,
+     ax=2.714, ay=0, az=0,
+     bx=0, by=2.714, bz=0,
+     cx=0, cy=0, cz=4.405,
+     pack = 1, sigma_a = 0.0156,
+     DW=1, XBlades=2, YBlades=2,
+     aa=90, bb=90, cc=0)
+OUTPUT PARAMETERS (XBlade_pos, YBlade_pos, xb,xt,yb,yt , pf_hkl_info)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+
+#ifndef BE_FILTER_DECL
+#define BE_FILTER_DECL
+
+#define PF_PLANES 200 /* Maximum number of Bragg planes */
+
+#define vec_prod_norm(xout, yout, zout, x1, y1, z1, x2, y2, z2) \
+  { \
+    double xtmp, ytmp, ztmp, pf_length; \
+    xtmp = (y1)*(z2) - (z1)*(y2); \
+    ytmp = (z1)*(x2) - (x1)*(z2); \
+    ztmp = (x1)*(y2) - (y1)*(x2); \
+    pf_length = sqrt(xtmp*xtmp + ytmp*ytmp + ztmp*ztmp); \
+    (xout) = xtmp/pf_length; \
+    (yout) = ytmp/pf_length; \
+    (zout) = ztmp/pf_length; \
+  }
+
+  struct pf_hkl_info_struct
+  {
+    struct pf_hkl_data *list;      /* Reflection array */
+    int count;                  /* Number of reflections */
+    struct pf_hkl_data *tau_list;  /* Reflections close to Ewald Sphere */
+    double m_ax,m_ay,m_az;      /* First unit cell axis (direct space, AA) */
+    double m_bx,m_by,m_bz;      /* Second unit cell axis */
+    double m_cx,m_cy,m_cz;      /* Third unit cell axis */
+    double asx,asy,asz;         /* First reciprocal lattice axis (1/AA) */
+    double bsx,bsy,bsz;         /* Second reciprocal lattice axis */
+    double csx,csy,csz;         /* Third reciprocal lattice axis */
+    double V0;                  /* Unit cell volume (AA**3) */
+  };
+  struct pf_hkl_data
+  {
+    int h,k,l;                  /* Indices for this reflection */
+    double F2;                  /* Value of structure factor */
+    double tau_x, tau_y, tau_z; /* Coordinates in reciprocal space */
+    double tau;                 /* pf_length of (tau_x, tau_y, tau_z) */
+    double u1x, u1y, u1z;       /* First axis of local coordinate system */
+    double u2x, u2y, u2z;       /* Second axis of local coordinate system */
+    double u3x, u3y, u3z;       /* Third axis of local coordinate system */
+    double sig1, sig2, sig3;    /* RMSs of Gauss axis */
+    double sig123;              /* The product sig1*sig2*sig3 */
+    double m1, m2, m3;          /* Diagonal matrix representation of Gauss */
+    double cutoff;              /* Cutoff value for Gaussian tails */
+  };
+
+
+  void
+  read_pf_hkl_data(char *file, struct pf_hkl_info_struct *info)
+  {
+    struct pf_hkl_data *list = NULL;
+    int size = 0;
+    FILE *f;
+    int i;
+
+    f = fopen(file, "r");
+    if(!f)
+    {
+      fprintf(stderr, "Powder_filter: Error: file '%s' cannot be opened.\n",
+              file);
+      exit(1);
+    }
+    i = 0;
+    while(!feof(f))
+    {
+      double h, k, l, multiplicity, d, ttheta, F2;
+      int ret;
+      char Buffer[1024];
+
+      ret = fscanf(f, "%lf %lf %lf %lf %lf %lf %lf\n",
+                   &h, &k, &l, &multiplicity, &d, &ttheta, &F2);
+      if(ret == EOF)
+        break;
+      if(ret != 7)
+      {
+        fgets(Buffer, 1024, f);
+        /*
+        fprintf(stderr,
+                "Powder_filter: Ignore line %d in file '%s'\n",
+                i+1, file);
+        fprintf(stderr,
+                "              : %s\n", Buffer); */
+        continue;
+      }
+      else
+      {
+        /* Extend list if not large enough. */
+        extend_list(i, (void **)&list, &size, sizeof(*list));
+        list[i].h = h;
+        list[i].k = k;
+        list[i].l = l;
+        list[i].F2 = F2;
+        /* Precompute some values */
+        list[i].tau_x = h*info->asx + k*info->bsx + l*info->csx;
+        list[i].tau_y = h*info->asy + k*info->bsy + l*info->csy;
+        list[i].tau_z = h*info->asz + k*info->bsz + l*info->csz;
+        list[i].tau = sqrt(list[i].tau_x*list[i].tau_x +
+                           list[i].tau_y*list[i].tau_y +
+                           list[i].tau_z*list[i].tau_z);
+        i++;
+      }
+    }
+    fclose(f);
+    printf("Powder_filter: Read %d reflections from file '%s'\n", i, file);
+    info->list = list;
+    info->count = i;
+    info->tau_list = malloc(i*sizeof(*info->tau_list));
+    if(!info->tau_list)
+    {
+      fprintf(stderr, "Powder_filter: Error: Out of memory!\n");
+      exit(1);
+    }
+  }
+
+  /* Calculate a pf_length l with exponential decaying destribution */
+  int pf_length(double *l, double dt_in, double dt_out, double v, double mu_tot)
+  {
+    double l_full, random;
+
+    if(dt_in > 0)
+      l_full = v*(dt_out-dt_in);
+    else
+      l_full = v*dt_out;
+    random = 1.0*rand()/RAND_MAX;
+    if (random <= 0) return(0);
+    *l = -log(random)/mu_tot;
+    if(*l < l_full) return 1;
+    else return 0;
+  }
+
+
+  /* Calculate the blades the neutron lies between */
+  void pf_bladelims(double *pb,double *pt,double p, int axis, double xblades, double *xblade_pos, double yblades, double *yblade_pos)
+  {
+    int i;
+    if(axis==0) {
+      for(i=0;i<xblades;i++) {
+        if(p>xblade_pos[i]) {
+          *pb=xblade_pos[i];
+          *pt=xblade_pos[i+1];
+        }
+      }
+    }
+    else {
+      for(i=0;i<yblades;i++) {
+        if(p>yblade_pos[i]) {
+          *pb=yblade_pos[i];
+          *pt=yblade_pos[i+1];
+        }
+      }
+    }
+  }
+
+  /* Calculate if a blade was hit */
+  int pf_hitblade(double x,double y, double dxb, double dxt, double dyb, double dyt, double xblades, double yblades)
+  {
+    int hit=0;
+    if(xblades>1) {
+      if(x>dxt||x<dxb) hit=1;
+    }
+    if(yblades>1) {
+      if(y>dyt||y<dyb) hit=1;
+    }
+    return hit;
+  }
+
+  /* Calculate which Debye-Scherre cone to use */
+  int pf_cones(double p_cone[PF_PLANES], int size)
+  {
+    double random;
+    int i=0;
+    random = 1.0*rand()/RAND_MAX;
+    while(i<size && random>p_cone[i]) i++;
+    return i;
+  }
+
+
+  /* Calculate a new pf_velocity on the Debye-Scherre cone */
+  int pf_velocity(double *vx, double *vy, double *vz, double v, double theta)
+  {
+    double phi;
+    double v1x, v1y, v1z, v2x, v2y, v2z, vxx, vyy, vzz;
+
+    phi = rand01()*2.0*PI;
+
+    vxx = *vx;  vyy = *vy;  vzz=*vz;
+    vec_prod_norm(v1x, v1y, v1z, 1, 0, 0, vxx, vyy, vzz);
+    vec_prod_norm(v2x, v2y, v2z, v1x, v1y, v1z,  vxx, vyy, vzz);
+    *vx = cos(2*theta)*vxx + v*sin(2*theta)*(sin(phi)*v1x + cos(phi)*v2x);
+    *vy = cos(2*theta)*vyy + v*sin(2*theta)*(sin(phi)*v1y + cos(phi)*v2y);
+    *vz = cos(2*theta)*vzz + v*sin(2*theta)*(sin(phi)*v1z + cos(phi)*v2z);
+    return 1;
+  }
+#endif /* BE_FILTER_DECL */
+
+  struct pf_hkl_info_struct pf_hkl_info;
+  double *XBlade_pos,*YBlade_pos;
+  double xb,xt,yb,yt;
+%}
+
+INITIALIZE
+%{
+
+  double tmp_x, tmp_y, tmp_z;
+  int i;
+  double as, bs, cs;
+
+  if (aa*bb*cc != 0)
+  {
+    as = sqrt(ax*ax+ay*ay+az*az);
+    bs = sqrt(bx*bx+by*by+bz*bz);
+    cs = sqrt(cx*cx+cy*cy+cz*cz);
+    ax = as; ay = 0; az = 0;
+    bx = bs*cos(cc*DEG2RAD);
+    by = bs*sin(cc*DEG2RAD);
+    bz = 0;
+    cx = cs*cos(bb*DEG2RAD);
+    cy = cs*(cos(aa*DEG2RAD)-cos(cc*DEG2RAD)*cos(bb*DEG2RAD))/sin(cc*DEG2RAD);
+    cz = sqrt(cs*cs - cx*cx - cy*cy);
+  }
+
+  pf_hkl_info.m_ax = ax;
+  pf_hkl_info.m_ay = ay;
+  pf_hkl_info.m_az = az;
+  pf_hkl_info.m_bx = bx;
+  pf_hkl_info.m_by = by;
+  pf_hkl_info.m_bz = bz;
+  pf_hkl_info.m_cx = cx;
+  pf_hkl_info.m_cy = cy;
+  pf_hkl_info.m_cz = cz;
+  /* Compute reciprocal lattice vectors. */
+  vec_prod(tmp_x, tmp_y, tmp_z, bx, by, bz, cx, cy, cz);
+  pf_hkl_info.V0 = fabs(scalar_prod(ax, ay, az, tmp_x, tmp_y, tmp_z));
+  pf_hkl_info.asx = 2*PI/pf_hkl_info.V0*tmp_x;
+  pf_hkl_info.asy = 2*PI/pf_hkl_info.V0*tmp_y;
+  pf_hkl_info.asz = 2*PI/pf_hkl_info.V0*tmp_z;
+  vec_prod(tmp_x, tmp_y, tmp_z, cx, cy, cz, ax, ay, az);
+  pf_hkl_info.bsx = 2*PI/pf_hkl_info.V0*tmp_x;
+  pf_hkl_info.bsy = 2*PI/pf_hkl_info.V0*tmp_y;
+  pf_hkl_info.bsz = 2*PI/pf_hkl_info.V0*tmp_z;
+  vec_prod(tmp_x, tmp_y, tmp_z, ax, ay, az, bx, by, bz);
+  pf_hkl_info.csx = 2*PI/pf_hkl_info.V0*tmp_x;
+  pf_hkl_info.csy = 2*PI/pf_hkl_info.V0*tmp_y;
+  pf_hkl_info.csz = 2*PI/pf_hkl_info.V0*tmp_z;
+  /* Read in structure factors, and do some pre-calculations. */
+  read_pf_hkl_data(reflections, &pf_hkl_info);
+
+/* Evenly space blades along the x-axis */
+  if(XBlades>1) {
+  XBlade_pos=calloc(XBlades,sizeof(double)); /* Make the list of blades long enough */
+    for(i=0;i<XBlades;i++) XBlade_pos[i]=xmin+i*(xmax-xmin)/(XBlades-1);
+  }
+
+/* Evenly space blades along the y-axis */
+  if(YBlades>1) {
+  YBlade_pos=calloc(YBlades,sizeof(double)); /* Make the list of blades long enough */
+    for(i=0;i<YBlades;i++) YBlade_pos[i]=ymin+i*(ymax-ymin)/(YBlades-1);
+  }
+%}
+
+TRACE
+%{
+  double dt_in, dt_out, dt, v, k, mu_s=0, mu_a, mu_tot, theta, l;
+  double norm=0,tau_max, p_cone[PF_PLANES];
+  int i,size=0;
+  struct pf_hkl_data *L;
+  struct pf_hkl_data *T;
+
+  /* Assuming neutron outside box: */
+  if(box_intersect(&dt_in, &dt_out, x-(xmax+xmin)/2 , y-(ymax+ymin)/2,
+    z-(zmax+zmin)/2, vx, vy, vz, xmax-xmin, ymax-ymin, zmax-zmin))
+  {
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    k = V2K*v;
+    tau_max=(2*k);
+    L=pf_hkl_info.list;
+    T=pf_hkl_info.tau_list;
+
+   /* Read those Bragg planes for which reflections can occur for the incident wavevector into T[] */
+
+    for(i=0;i<pf_hkl_info.count;i++) {
+      if(L[i].tau <= tau_max)
+      {
+        T[size].tau=L[i].tau;
+        T[size].F2=L[i].F2;
+
+          /* Cross-sections are in barns = 10**-28 m**2, and unit cell volumes are
+              in AA**3 = 10**-30 m**2. Hence a factor of 100 is used to convert
+              scattering pf_lengths to m**-1 */
+
+        mu_s += 100*PI*PI*PI*pack*4*T[size].F2
+          /(pf_hkl_info.V0*pf_hkl_info.V0*k*k*T[size].tau);
+        norm += T[size].F2/T[size].tau;
+        if (size >= PF_PLANES) break;
+        else size++;
+      }
+    } /* end for */
+
+   /* Divide the 0-1 range into regions with size
+      proportional to the (F2/tau)'s for the possible Bragg planes
+      to allow random selection of the D-S cone */
+
+    if (norm*T[0].tau == 0) ABSORB;
+    p_cone[0]=T[0].F2/(norm*T[0].tau);
+
+    for(i=1;i<size;i++) { p_cone[i]=p_cone[i-1]+(T[i].F2/(norm*T[i].tau)); }
+
+    if (mu_s < 0) mu_s=-mu_s;
+
+    /* Calculate mu_a from sigma_a (given as standard for a pf_velocity of 2200 m/s) */
+    mu_a=100*(sigma_a*2200/v)/pf_hkl_info.V0;
+
+    /* Adjust for inelastic scattering (count inelastically scattered neutrons as absorbed) */
+    mu_s*=DW;
+    mu_a+=mu_s*(1-DW);
+    mu_tot=mu_a + mu_s;
+
+
+    PROP_DT(dt_in);
+
+    if(XBlades>1) pf_bladelims(&xb,&xt,x-(xmax+xmin)/2,0, XBlades, XBlade_pos, YBlades, YBlade_pos);
+    if(YBlades>1) pf_bladelims(&yb,&yt,y-(ymax+ymin)/2,1, XBlades, XBlade_pos, YBlades, YBlade_pos);
+
+    while(pf_length(&l, dt_in, dt_out, v, mu_tot)) /* While inside box do...*/
+    {
+      if ((1.0*rand()/RAND_MAX)<(mu_a/mu_tot)) ABSORB;
+      dt = l/v;
+      PROP_DT(dt);
+      /* See if the neutron hit a blade */
+      if(pf_hitblade(x-(xmax+xmin)/2,y-(ymax+ymin)/2, xb, xt, yb, yt, XBlades, YBlades)) ABSORB;
+      i = pf_cones(p_cone, size);
+      theta=asin(T[i].tau/(2*k));
+      pf_velocity(&vx, &vy, &vz, v, theta);
+      SCATTER;
+      box_intersect(&dt_in, &dt_out, x-(xmax+xmin)/2 , y-(ymax+ymin)/2,
+        z-(zmax+zmin)/2, vx, vy, vz, xmax-xmin, ymax-ymin, zmax-zmin);
+    } /* while */
+
+  } /* if in box */
+  else
+    ABSORB;
+%}
+
+
+MCDISPLAY
+%{
+  magnify("xyz");
+  multiline(5, xmin, ymin, zmin,
+      xmax, ymin, zmin,
+      xmax, ymax, zmin,
+      xmin, ymax, zmin,
+      xmin, ymin, zmin);
+  multiline(5, xmin, ymin, zmax,
+      xmax, ymin, zmax,
+      xmax, ymax, zmax,
+      xmin, ymax, zmax,
+      xmin, ymin, zmax);
+  line(xmin, ymin, zmin, xmin, ymin, zmax);
+  line(xmax, ymin, zmin, xmax, ymin, zmax);
+  line(xmin, ymax, zmin, xmin, ymax, zmax);
+  line(xmax, ymax, zmin, xmax, ymax, zmax);
+%}
+END
