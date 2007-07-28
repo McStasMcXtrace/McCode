@@ -1640,6 +1640,7 @@ Define $ENV{'HOME'}/.mcstas-hosts or MCSTAS/lib/tools/perl/mcstas-hosts first.\n
 	     "To make use of this, \n".
 	     "please go to the Tool menu and select 'Install DSA key'.\n", 'msg');
     }
+    $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w);});		       
 }
 
 # save command output into LOG file
