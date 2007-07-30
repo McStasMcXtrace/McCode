@@ -12,11 +12,19 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.75 $
+* Version: $Revision: 1.76 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.75  2007/06/25 12:37:29  pkwi
+* Split bug corrected!
+*
+* Split_counter is smaller than rep count also if there is no split! - Made
+* previously ABSORB'ed neutrons go to the split position.
+*
+* mcstas-1.11 is now one step closer to release...
+*
 * Revision 1.74  2007/04/03 13:16:58  farhi
 * Fixed potential infinite loop when using SPLIT
 *
@@ -163,7 +171,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.75 2007-06-25 12:37:29 pkwi Exp $
+* $Id: cogen.c,v 1.76 2007-07-30 13:43:07 farhi Exp $
 *
 *******************************************************************************/
 
@@ -459,9 +467,9 @@ static void cogen_instrument_scope_rec(List_handle parlist,
   par = list_next(parlist);
   if(par != NULL)
   {
-    coutf("#define %s %sip%s", par->id, ID_PRE, par->id);
+    if (strlen(par->id)) coutf("#define %s %sip%s", par->id, ID_PRE, par->id);
     cogen_instrument_scope_rec(parlist, func, data);
-    coutf("#undef %s", par->id);
+    if (strlen(par->id)) coutf("#undef %s", par->id);
   }
   else
   {
@@ -682,29 +690,35 @@ cogen_decls(struct instr_def *instr)
   /* 3. Global variables for instrument parameters. */
   cout("/* Instrument parameters. */");
   liter = list_iterate(instr->formals);
+  int numipar=0;
   while(i_formal = list_next(liter))
   {
-    coutf("%s " ID_PRE "ip%s;", instr_formal_type_names_real[i_formal->type], i_formal->id);
+    if (strlen(i_formal->id)) {
+      coutf("%s " ID_PRE "ip%s;", instr_formal_type_names_real[i_formal->type], i_formal->id);
+      numipar++;
+    }
   }
   list_iterate_end(liter);
   cout("");
 
   /* 4. Table of instrument parameters. */
-  coutf("#define %sNUMIPAR %d", ID_PRE, list_len(instr->formals));
-  coutf("int %snumipar = %d;", ID_PRE, list_len(instr->formals));
+  coutf("#define %sNUMIPAR %d", ID_PRE, numipar);
+  coutf("int %snumipar = %d;", ID_PRE, numipar);
   coutf("struct %sinputtable_struct %sinputtable[%sNUMIPAR+1] = {",
         ID_PRE, ID_PRE, ID_PRE);
   liter = list_iterate(instr->formals);
   while(i_formal = list_next(liter))
   {
-    if (i_formal->isoptional && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
-      coutf("  \"%s\", &%sip%s, %s, %s, ", i_formal->id, ID_PRE,
-          i_formal->id, instr_formal_type_names[i_formal->type],
-          exp_tostring(i_formal->default_value));
-    else
-      coutf("  \"%s\", &%sip%s, %s, \"%s\", ", i_formal->id, ID_PRE, i_formal->id,
-          instr_formal_type_names[i_formal->type],
-          i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
+    if (strlen(i_formal->id)) {
+      if (i_formal->isoptional && !strcmp(instr_formal_type_names[i_formal->type],"instr_type_string"))
+        coutf("  \"%s\", &%sip%s, %s, %s, ", i_formal->id, ID_PRE,
+            i_formal->id, instr_formal_type_names[i_formal->type],
+            exp_tostring(i_formal->default_value));
+      else
+        coutf("  \"%s\", &%sip%s, %s, \"%s\", ", i_formal->id, ID_PRE, i_formal->id,
+            instr_formal_type_names[i_formal->type],
+            i_formal->isoptional ? exp_tostring(i_formal->default_value) : "");
+    }
   }
   list_iterate_end(liter);
   coutf("  NULL, NULL, instr_type_double, \"\"");
