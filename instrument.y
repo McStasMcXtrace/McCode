@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.12a
-* Version: $Revision: 1.76 $
+* Version: $Revision: 1.77 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.76 2007-07-30 12:25:41 farhi Exp $
+* $Id: instrument.y,v 1.77 2007-07-30 13:43:07 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1757,9 +1757,11 @@ check_instrument_formals(List formallist, char *instrname)
   while(formal = list_next(liter))
   {
     entry = symtab_lookup(formals, formal->id);
-    if(entry != NULL)
-      print_error("Instrument parameter name %s is used multiple times "
-      "in instrument %s\n", formal->id, instrname);
+    if(entry != NULL) {
+      print_warn(NULL, "Instrument parameter name %s is used multiple times "
+      "in instrument %s. Using first definition.\n", formal->id, instrname);
+      strcpy(formal->id, "");  /* unactivate recurrent definition */
+    }
     else
       symtab_add(formals, formal->id, NULL);
   }
