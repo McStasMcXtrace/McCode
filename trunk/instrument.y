@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,12 +11,12 @@
 * Written by: K.N.
 * Date: Jul  1, 1997
 * Origin: Risoe
-* Release: McStas 1.6
-* Version: $Revision: 1.75 $
+* Release: McStas 1.12a
+* Version: $Revision: 1.76 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.75 2007-04-02 12:11:31 farhi Exp $
+* $Id: instrument.y,v 1.76 2007-07-30 12:25:41 farhi Exp $
 *
 *******************************************************************************/
 
@@ -140,6 +140,7 @@
 %type <jumps>   jumps jumps1
 %type <jumpname> jumpname
 %type <jumpcondition> jumpcondition
+%type <linenum> notshare
 %%
 
 main:     TOK_GENERAL compdefs instrument
@@ -406,15 +407,27 @@ comp_iformal:  TOK_ID TOK_ID
       }
 ;
 
+/* read instrument definition and catenate if this not the first instance */
 instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
-      { instrument_definition->formals = $4; instrument_definition->name = $3; }
+      { if (!instrument_definition->formals) instrument_definition->formals = $4;
+        else { if (list_len($4)) list_cat(instrument_definition->formals,$4); }
+        if (!instrument_definition->name)    instrument_definition->name = $3;
+        else {
+          if (verbose) fprintf(stderr, "Catenate instrument %s to master instrument %s\n", $3, instrument_definition->name);
+          instrument_definition->has_included_instr++;
+        }
+      }
       declare initialize nexus instr_trace save finally "END"
       {
-        instrument_definition->decls = $6;
-        instrument_definition->inits = $7;
-        instrument_definition->nxinfo = $8;
-        instrument_definition->saves  = $10;
-        instrument_definition->finals = $11;
+        if (!instrument_definition->decls) instrument_definition->decls = $6;
+        else list_cat(instrument_definition->decls->lines, $6->lines);
+        if (!instrument_definition->inits) instrument_definition->inits = $7;
+        else list_cat(instrument_definition->inits->lines, $7->lines);
+        if (!instrument_definition->nxinfo) instrument_definition->nxinfo = $8;
+        if (!instrument_definition->saves) instrument_definition->saves = $10;
+        else list_cat(instrument_definition->saves->lines, $10->lines);
+        if (!instrument_definition->finals) instrument_definition->finals = $11;
+        else list_cat(instrument_definition->finals->lines, $11->lines);
         instrument_definition->compmap = comp_instances;
         instrument_definition->groupmap = group_instances;
         instrument_definition->complist = comp_instances_list;
@@ -423,7 +436,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals,
                instrument_definition->name);
-        if (verbose) fprintf(stderr, "Creating instrument %s (with %i component instances)\n", instrument_definition->name, comp_current_index);
+        if (verbose) fprintf(stderr, "Creating instrument %s (with %i component instances)\n", $3, comp_current_index);
       }
 ;
 
@@ -784,37 +797,48 @@ instr_trace:    "TRACE" complist
 ;
 complist:   /* empty */
       {
-        comp_instances      = symtab_create();
-        comp_instances_list = list_create();
-        group_instances     = symtab_create();
-        group_instances_list= list_create();
+        if (!comp_instances)      comp_instances      = symtab_create();
+        if (!comp_instances_list) comp_instances_list = list_create();
+        if (!group_instances)     group_instances     = symtab_create();
+        if (!group_instances_list)group_instances_list= list_create();
       }
     | complist component
       {
-        /* Check that the component instance name has not
-                       been used before. */
-        if(symtab_lookup(comp_instances, $2->name))
-        {
-          print_error("Multiple use of component instance name "
-          "'%s' at line %s:%d.\n", $2->name, instr_current_filename, instr_current_line);
-          /* Since this is an error condition, we do not
-             worry about freeing the memory allocated for
-       the component instance. */
-        }
+        if (!$2->removable) { /* must not be an INSTRUMENT COMPONENT after %include instr */
+          /* Check that the component instance name has not
+                        been used before. */
+          if(symtab_lookup(comp_instances, $2->name))
+          {
+            print_error("Multiple use of component instance name "
+            "'%s' at line %s:%d.\n", $2->name, instr_current_filename, instr_current_line);
+            /* Since this is an error condition, we do not
+              worry about freeing the memory allocated for
+              the component instance. */
+          }
+          else
+          {
+            symtab_add(comp_instances, $2->name, $2);
+            list_add(comp_instances_list, $2);
+            if($2->def)
+            {
+              /* Check if the component handles polarisation. */
+              if($2->def->polarisation_par)
+              {
+                instrument_definition->polarised = 1;
+              }
+            }
+            if (verbose) fprintf(stderr, "Component[%i]: %s = %s().\n", comp_current_index, $2->name, $2->type);
+          }
+        } /* if shared */
         else
         {
-          symtab_add(comp_instances, $2->name, $2);
-          list_add(comp_instances_list, $2);
-          if($2->def)
-          {
-            /* Check if the component handles polarisation. */
-            if($2->def->polarisation_par)
-            {
-              instrument_definition->polarised = 1;
-            }
-          }
+          if (verbose) fprintf(stderr, "Component[%i]: %s = %s() SKIPPED (INSTRUMENT COMPONENT, removable when included)\n", comp_current_index, $2->name, $2->type);
         }
       }
+    | complist instrument
+    {
+      /* included instrument */
+    }
 ;
 
 instname: "COPY" '(' TOK_ID ')'
@@ -889,37 +913,48 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
       }
 ;
 
-component: split "COMPONENT" instname '=' instref when place orientation groupref extend jumps
+notshare:    /* empty */
+      {
+        $$ = 0;
+      }
+    | "INSTRUMENT"
+      {
+        $$ = instrument_definition->has_included_instr; /* ignore comp if included from other instrument */
+      }
+;
+
+component: notshare split "COMPONENT" instname '=' instref when place orientation groupref extend jumps
       {
         struct comp_inst *comp;
 
-        comp = $5;
+        comp = $6;
         if (comp->def != NULL) comp->def->comp_inst_number--;
 
-        comp->name = $3;
-        comp->split = $1;
+        comp->name  = $4;
+        comp->split = $2;
+        comp->removable = $1;
 
-        if ($6) comp->when  = $6;
+        if ($7) comp->when  = $7;
 
         palloc(comp->pos);
-        comp->pos->place = $7.place;
-        comp->pos->place_rel = $7.place_rel;
-        comp->pos->orientation = $8.orientation;
+        comp->pos->place           = $8.place;
+        comp->pos->place_rel       = $8.place_rel;
+        comp->pos->orientation     = $9.orientation;
         comp->pos->orientation_rel =
-            $8.isdefault ? $7.place_rel : $8.orientation_rel;
+            $9.isdefault ? $8.place_rel : $9.orientation_rel;
 
-        if ($9) {
-          comp->group = $9;    /* component is part of an exclusive group */
+        if ($10) {
+          comp->group = $10;    /* component is part of an exclusive group */
           /* store first and last comp of group. Check if a SPLIT is inside */
           if (!comp->group->first_comp) comp->group->first_comp =comp->name;
           comp->group->last_comp=comp->name;
           if (comp->split && !comp->group->split) comp->group->split = comp->split;
         }
-        if ($10->linenum)   comp->extend= $10;  /* EXTEND block*/
-        if (list_len($11))  comp->jump = $11;
+        if ($11->linenum)   comp->extend= $11;  /* EXTEND block*/
+        if (list_len($12))  comp->jump  = $12;
         comp->index = ++comp_current_index;     /* index of comp instance */
 
-        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $3, $5->type));
+        debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $4, $6->type));
         previous_comp = comp; /* this comp will be 'previous' for the next */
         $$ = comp;
 
@@ -1475,8 +1510,8 @@ static void
 print_version(void)
 { /* MOD: E. Farhi Sep 20th, 2001 version number */
   printf("McStas version " MCSTAS_VERSION "\n"
-    "Copyright (C) Risoe National Laboratory, 1997-2006\n"
-    "Additions (C) Institut Laue Langevin, 2003-2006\n"
+    "Copyright (C) Risoe National Laboratory, 1997-2007\n"
+    "Additions (C) Institut Laue Langevin, 2003-2007\n"
     "All rights reserved\n");
   exit(0);
 }
@@ -1600,6 +1635,23 @@ main(int argc, char *argv[])
   yydebug = 0;      /* If 1, then bison gives verbose parser debug info. */
 
   palloc(instrument_definition); /* Allocate instrument def. structure. */
+  /* init root instrument to NULL */
+  instrument_definition->formals   = NULL;
+  instrument_definition->name      = NULL;
+  instrument_definition->decls     = NULL;
+  instrument_definition->inits     = NULL;
+  instrument_definition->nxinfo    = NULL;
+  instrument_definition->saves     = NULL;
+  instrument_definition->finals    = NULL;
+  instrument_definition->compmap   = NULL;
+  instrument_definition->groupmap  = NULL;
+  instrument_definition->complist  = NULL;
+  instrument_definition->grouplist = NULL;
+  instrument_definition->has_included_instr=0;
+  comp_instances      = NULL;
+  comp_instances_list = NULL;
+  group_instances     = NULL;
+  group_instances_list= NULL;
   parse_command_line(argc, argv);
   if(!strcmp(instr_current_filename, "-"))
   {

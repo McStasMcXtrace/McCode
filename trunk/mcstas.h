@@ -12,17 +12,17 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.49 $
+* Version: $Revision: 1.50 $
 *
 * Main header file containing declarations of external functions and
 * variables. This file is included by all modules.
 *
-* $Id: mcstas.h,v 1.49 2007-04-02 12:11:31 farhi Exp $
+* $Id: mcstas.h,v 1.50 2007-07-30 12:25:41 farhi Exp $
 *
 *******************************************************************************/
 
 #ifndef MCSTAS_H
-#define MCSTAS_H "$Revision: 1.49 $"
+#define MCSTAS_H "$Revision: 1.50 $"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -408,7 +408,8 @@ struct comp_inst
     List jump;      /* NULL or list of jumps to execute after trace/extend */
     CExp when;      /* NULL or condition to execute TRACE */
     Symtab actuals; /* save actual/given parameters for COPY */
-    CExp split;    /* NULL or number of SPLITs as an Expr */
+    CExp split;     /* NULL or number of SPLITs as an Expr */
+    int removable;  /* this comp is removed when included from an %include "instr" */
   };
 
 /* Instrument formal parameters. */
@@ -448,6 +449,7 @@ struct instr_def
     int enable_trace;         /* If set, enable output of neutron traces */
     int portable;             /* If set, emit strictly portable ANSI C */
     int polarised;            /* If set, handle neutron polarisation */
+    int has_included_instr;   /* Flag set when instruments are %included in instr */
   };
 
 struct jump_struct
