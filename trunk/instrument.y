@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas 1.12a
-* Version: $Revision: 1.77 $
+* Version: $Revision: 1.78 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.77 2007-07-30 13:43:07 farhi Exp $
+* $Id: instrument.y,v 1.78 2007-08-02 09:59:35 farhi Exp $
 *
 *******************************************************************************/
 
@@ -955,7 +955,8 @@ component: notshare split "COMPONENT" instname '=' instref when place orientatio
         comp->index = ++comp_current_index;     /* index of comp instance */
 
         debugn((DEBUG_HIGH, "Component[%i]: %s = %s().\n", comp_current_index, $4, $6->type));
-        previous_comp = comp; /* this comp will be 'previous' for the next */
+        /* this comp will be 'previous' for the next, except if removed at include */
+        if (!comp->removable) previous_comp = comp;
         $$ = comp;
 
       }
@@ -1755,7 +1756,7 @@ check_instrument_formals(List formallist, char *instrname)
   formals = symtab_create();
   liter = list_iterate(formallist);
   while(formal = list_next(liter))
-  {
+  if (strcmp(formal->id,"")) {
     entry = symtab_lookup(formals, formal->id);
     if(entry != NULL) {
       print_warn(NULL, "Instrument parameter name %s is used multiple times "
