@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.6
-* Version: $Revision: 1.93 $
+* Version: $Revision: 1.94 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.93 2007-05-29 14:57:56 farhi Exp $
+* $Id: mcstas-r.h,v 1.94 2007-08-09 16:47:34 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.93  2007/05/29 14:57:56  farhi
+*       New rand function to shoot on a triangular distribution. Useful to simulate chopper time spread.
+*
 *       Revision 1.92  2007/02/01 15:49:45  pkwi
 *       For some instruments (e.g. h8) , it seems that <sys/stat.h> is needed to compile on Mac OS X (like FreeBSD)
 *
@@ -228,7 +231,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.93 $"
+#define MCSTAS_R_H "$Revision: 1.94 $"
 
 #include <math.h>
 #include <string.h>
@@ -406,6 +409,8 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 int mc_MPI_Reduce(void* sbuf, void* rbuf,
                   int count, MPI_Datatype dtype,
                   MPI_Op op, int root, MPI_Comm comm);
+
+#define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
 
 #else /* !USE_MPI */
 #define MPI_MASTER(instr) instr

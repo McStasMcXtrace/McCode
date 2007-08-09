@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.168 $
+* Version: $Revision: 1.169 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.168 2007-06-30 10:05:11 farhi Exp $
+* $Id: mcstas-r.c,v 1.169 2007-08-09 16:47:34 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.168  2007/06/30 10:05:11  farhi
+* Focus: new TOF-angle detector, so tht it looks like real data
+* mcstas-r.c: fixed 2D monitor calls that are in fact 1D.
+* Plus cosmetics
+*
 * Revision 1.167  2007/06/13 08:46:08  pkwi
 * A couple of bugfixes...
 *
@@ -4603,18 +4608,21 @@ mcuse_dir(char *dir)
           "Directory output cannot be used with portable simulation (mcuse_dir)\n");
   exit(1);
 #else  /* !MC_PORTABLE */
-  MPI_MASTER
-    (
-     if(mkdir(dir, 0777))
-       {
+#ifdef USE_MPI
+    if(mpi_node_rank == mpi_node_root)
+    {
+#endif
+     if(mkdir(dir, 0777)) {
 #ifndef DANSE
          fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
          fprintf(stderr, "(Maybe the directory already exists?)\n");
          exit(1);
 #endif
-       }
+     }
      mcdirname = dir;
-     );
+#ifdef USE_MPI
+   }
+#endif
 #endif /* !MC_PORTABLE */
 }
 
