@@ -915,7 +915,10 @@ sub do_scan {
             }
 
         my $ret = close(SIM);
-        die "mcrun: Exit due to error returned by simulation program" if $got_error || (! $ret && ($? != 0 || $!));
+        if ($got_error || (! $ret && ($? != 0 || $!))) {
+          print "mcrun: Exit due to error returned by simulation program" ;
+          last;
+        }
         if ($firsttime eq 1) {
           if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
               if (($slave eq 0) || ($slave eq 'localhost')) {
