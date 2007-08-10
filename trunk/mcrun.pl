@@ -798,6 +798,7 @@ sub do_scan {
     my @lab_datablock = ();          # Storing of scan data in variable
                                      # for saving datablock in matlab/scilab
     my $datablock = "";              # 'sim' file.
+    my $Monitors_nb=0;
     # Initialize the @lab_datablock according to 'format'
     if ($start == -1) {
         $start = 0;
@@ -806,11 +807,11 @@ sub do_scan {
         $end = $numpoints;
     }
     for($point = 0; $point < $numpoints; $point++) {
-	my @Monitors = ();
-	my @Monitors_E = ();
-	my @Intensities = ();
-	my @Errors = ();
-	my @Rays = ();
+        my @Monitors = ();
+        my @Monitors_E = ();
+        my @Intensities = ();
+        my @Errors = ();
+        my @Rays = ();
         if (($point >= $start) && ($point <= $end)) {
             my $out = "";
             my $j;
@@ -826,7 +827,7 @@ sub do_scan {
                 }
                 $out .= "$vals{$params[$i]} ";
                 $variables .= "$params[$i] " if $firsttime
-                }
+            }
             if (@{$info->{VARS}} == 0) { $out .= "$point "; $variables .= "Point " if $firsttime; }
             # Decide how to handle output files.
             my $output_opt =
@@ -860,45 +861,46 @@ sub do_scan {
                     $SIG{'HUP'}  = \&sighandler;
                   }
                 }
+                my $Counter;
+                # analyze scan step output
                 while(<SIM>) {
                     chomp;
-                    if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ") {
+                    if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ")
                         my $sim_I = $2;
                         my $sim_err = $4;
                         my $sim_N = $6;
-			my $Counter;
-			my $index = -1;
-			for ($Counter = 0; $Counter < @Monitors; $Counter++) {
-			    if ($1 eq $Monitors[$Counter]) {
-				$index = $Counter;
-			    }
-			}
-			if ($index == -1) {
-			    # Didn't record this monitor before
-			    push @Monitors, $1;
-			    push @Monitors_E, $3;
-			    push @Intensities, $sim_I;
-			    push @Errors, $sim_err;
-			    push @Rays, $sim_N;
-			} else {
-			    $Intensities[$index] = $sim_I;
-			    $Errors[$index] = $sim_err;
-			    $Rays[$index] = $sim_N;
-			}
+                        my $index = -1;
+                        for ($Counter = 0; $Counter < @Monitors; $Counter++) {
+                            if ($1 eq $Monitors[$Counter]) {
+                              $index = $Counter;
+                            }
+                        }
+                        if ($index == -1) {
+                            # Didn't record this monitor before
+                            push @Monitors, $1;
+                            push @Monitors_E, $3;
+                            push @Intensities, $sim_I;
+                            push @Errors, $sim_err;
+                            push @Rays, $sim_N;
+                        } else {
+                            $Intensities[$index] = $sim_I;
+                            $Errors[$index] = $sim_err;
+                            $Rays[$index] = $sim_N;
+                        }
                     } elsif(m'^Error:') { # quote hack '
                         $got_error = 1;
                     }
                     print "$_\n";
+                } # end while
+                # Output final monitor data:
+                if (!$Monitors_nb) { $Monitors_nb = @Monitors; }
+                for ($Counter = 0; $Counter < @Monitors; $Counter++) {
+                    if ($firsttime){
+                      $variables .= " $Monitors[$Counter] $Monitors_E[$Counter]";
+                      push @youts, "($Monitors[$Counter],$Monitors_E[$Counter])";
+                    }
+                    $out .= " $Intensities[$Counter] $Errors[$Counter]";
                 }
-		# Output final monitor data:
-		my $Counter = @Monitors;
-		for ($Counter = 0; $Counter < @Monitors; $Counter++) {
-		    if ($firsttime){
-			$variables .= " $Monitors[$Counter] $Monitors_E[$Counter]";
-			push @youts, "($Monitors[$Counter],$Monitors_E[$Counter])";
-		    }
-		    $out .= " $Intensities[$Counter] $Errors[$Counter]";
-		}
                 # remove SIG handler
                 if ($optim_flag == 0) {
                   $SIG{'INT'}  = 'DEFAULT';
@@ -912,29 +914,36 @@ sub do_scan {
             } else {                # Child
                 open(STDERR, ">&STDOUT") || die "mcrun: Can't dup stdout";
                 exec_sim(@options, $output_opt);
-            }
+            } # end if pid
 
-        my $ret = close(SIM);
-        if ($got_error || (! $ret && ($? != 0 || $!))) {
-          print "mcrun: Exit due to error returned by simulation program" ;
-          last;
-        }
-        if ($firsttime eq 1) {
-          if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
-              if (($slave eq 0) || ($slave eq 'localhost')) {
-                  output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
+            my $ret = close(SIM);
+            if ($firsttime eq 1) {
+              if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+                  if (($slave eq 0) || ($slave eq 'localhost')) {
+                      output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
+                  }
               }
-          }
-        } else {
-          push @lab_datablock, "\n";
-        }
-        if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
-                print $DAT "$out\n";
-        }
-        push @lab_datablock, "$out";
-        $firsttime = 0;
-        }
-    }
+            } else {
+              push @lab_datablock, "\n";
+            }
+            if ($got_error || (! $ret && ($? != 0 || $!))) {
+              print "mcrun: Exit due to error returned by simulation program ($out_file=$?)\n" ;
+              # continue scan as further steps may be OK, and final scan dimension is right
+              my $Counter;
+              for ($Counter = 0; $Counter < $Monitors_nb; $Counter++) {
+                $out .= " 0 0";
+              }
+            }
+            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+                    print $DAT "$out\n";
+            }
+            push @lab_datablock, "$out";
+            $firsttime = 0;
+            if ($got_error || (! $ret && ($? != 0 || $!))) {
+              next;
+            }
+        } # end if point
+    } # end for point
     if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
       close($DAT);
     }
