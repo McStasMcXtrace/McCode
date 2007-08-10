@@ -761,6 +761,7 @@ sub dialog_get_out_file {
 sub compile_instrument {
     my ($w, $force) = @_;
     return undef unless ask_save_before_simulate($w);
+    print "Clustering set to $inf_sim->{'cluster'} \n";
     my $out_name = dialog_get_out_file($w, $current_sim_def, $force,
       $inf_sim->{'cluster'} == 2 ? 1 : 0, $inf_sim->{'cluster'} == 1 ? 1 : 0);
     unless($out_name && -x $out_name) {
@@ -874,7 +875,7 @@ sub menu_run_simulation {
               if ($pgmulti) {
 		  push @command, "--multi";
 	      }
-              if (!$Config{'osname'} eq 'MSWin32') {
+              if (!($Config{'osname'} eq 'MSWin32')) {
 		  # Be sure to read mcplotlib.pl in this case...
 		  require "mcplotlib.pl";
 		  # Standard mcdisplay.pl with PGPLOT bindings
@@ -1194,7 +1195,7 @@ sub menu_preferences {
     my ($w) = @_;
     my $ret;
     our $MPIstuff = $inf_sim->{'cluster'};
-    ($ret) = preferences_dialog($w);
+    ($ret) = preferences_dialog($w); #
     $inf_sim->{'cluster'} = $MPIstuff;
 }
 
