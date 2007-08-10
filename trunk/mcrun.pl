@@ -799,6 +799,7 @@ sub do_scan {
                                      # for saving datablock in matlab/scilab
     my $datablock = "";              # 'sim' file.
     my $Monitors_nb=0;
+    my $found_invalid_scans=0;
     # Initialize the @lab_datablock according to 'format'
     if ($start == -1) {
         $start = 0;
@@ -929,6 +930,7 @@ sub do_scan {
             if ($got_error || (! $ret && ($? != 0 || $!))) {
               print "mcrun: Exit due to error returned by simulation program ($out_file=$?)\n" ;
               # continue scan as further steps may be OK, and final scan dimension is right
+              $found_invalid_scans++;;
               my $Counter;
               for ($Counter = 0; $Counter < $Monitors_nb; $Counter++) {
                 $out .= " 0 0";
@@ -951,6 +953,9 @@ sub do_scan {
     output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile, $datablock);
 
     print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
+    if ($found_invalid_scans) {
+    die "mcrun: Error: Simulation $out_file returned $found_invalid_scans invalid scan steps,
+which intensity was set to zero in data file $datfile.\n"; }
 
     return ($datablock,$variables, @youts);
 }
