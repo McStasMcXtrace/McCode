@@ -266,10 +266,11 @@ sub ensure_pgplot_xserv_started {
     die "DEV/PGOPEN $MCSTAS::mcstas_config{'PGDEV'} failed!" unless $newdev > 0;
     if (defined(&close_window)) { close_window(); }
     else { pgclos(); }
-    pgslct($olddev);
+    if ($olddev) {
+	pgslct($olddev);
+    } 
+    return 1;
 }
-1;
-
 
 sub get_device { # mcdisplay style deviceselection
     my ($what) = @_;
