@@ -761,7 +761,6 @@ sub dialog_get_out_file {
 sub compile_instrument {
     my ($w, $force) = @_;
     return undef unless ask_save_before_simulate($w);
-    print "Clustering set to $inf_sim->{'cluster'} \n";
     my $out_name = dialog_get_out_file($w, $current_sim_def, $force,
       $inf_sim->{'cluster'} == 2 ? 1 : 0, $inf_sim->{'cluster'} == 1 ? 1 : 0);
     unless($out_name && -x $out_name) {
