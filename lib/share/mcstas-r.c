@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.169 $
+* Version: $Revision: 1.170 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.169 2007-08-09 16:47:34 farhi Exp $
+* $Id: mcstas-r.c,v 1.170 2007-08-10 11:30:44 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.169  2007/08/09 16:47:34  farhi
+* Solved old gcc compilation issue when using macros in macros.
+* Solved MPI issuie when exiting in the middle of a simulation. Now use MPI_Abort.
+*
 * Revision 1.168  2007/06/30 10:05:11  farhi
 * Focus: new TOF-angle detector, so tht it looks like real data
 * mcstas-r.c: fixed 2D monitor calls that are in fact 1D.
