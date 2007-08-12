@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.33 $
+* Version: $Revision: 1.34 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -58,6 +58,7 @@
 * focus_ah: vert.  angular dimension of a rectangular area [deg]
 * sig_a:    Absorbtion cross section pr. unit cell [barns]
 * sig_i:    Incoherent scattering cross section pr. unit cell [barns]
+* absorb_multiples: Correct for multiple scattering by absorption [1]
 * V0:       Unit cell volume [AA^3]
 * pack:     Packing factor [1]
 * frac:     MC Probability for scattering the ray; otherwise penetrate [1]
@@ -86,7 +87,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0,
 		    pack = 1, frac=1, f_QE=0, gamma=0,
   target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0,
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=13.827, int target_index=0)
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=13.827, int target_index=0, absorb_multiples=0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
@@ -265,6 +266,10 @@ TRACE
       l_o = v*dt; /* trajectory after scattering point: absorption only */
 
       p *= v/v_i*l_full*VarsV.my_s*exp(-my_a*(l_i+v_i/v*l_o)-VarsV.my_s*l_i);
+      if (absorb_multiples == 1) {
+	/* Attepmt correction for multiples by absorption */
+	p *= exp(-VarsV.my_s*l_o);
+      }
       /* We do not consider scattering from 2nd part (outgoing) */
       p /= 4*PI/solid_angle;
       p /= frac;
