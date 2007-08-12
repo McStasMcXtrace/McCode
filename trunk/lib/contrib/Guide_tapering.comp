@@ -7,9 +7,11 @@
 * %I
 * Written by: Uwe Filges
 * Date: 22/10/2003
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Release: McStas 1.9
 * Origin: PSI
+* Modified by: Rob Dalgliesh, ISIS, 2007
+* Modified by: Corrected display of scattering events. No effect on beam profile, divergence, TOF.
 *
 * Models a rectangular tapered guide (many shapes)
 *
@@ -144,8 +146,8 @@ INITIALIZE
     "Use Guide_gravity.\n",
     NAME_CURRENT_COMP);
   seg=segno;
-  l_seg=l/seg;
-  h12 = h1/2;
+  l_seg=l/(seg);
+  h12 = h1/2.0;
   if (option != NULL)
   {
      fu = (char*)malloc(sizeof(char)*(strlen(option)+1));
@@ -168,12 +170,12 @@ INITIALIZE
         /* elliptical mirrors */
         u1 = sqrt((linh*linh)+(h12*h12));
         u2 = sqrt((h12*h12) + ((l+louth)*(l+louth)));
-        a_ell_q = ((u1 + u2)/2)*((u1 + u2)/2);
-        b_ell_q = a_ell_q - ((lbh/2)*(lbh/2));
+        a_ell_q = ((u1 + u2)/2.0)*((u1 + u2)/2.0);
+        b_ell_q = a_ell_q - ((lbh/2.0)*(lbh/2.0));
         /* calculate heigth of guide exit (h2) */
-        div1 = ((lbh/2-louth)*(lbh/2-louth))/a_ell_q;
-        h2 = sqrt(b_ell_q*(1-div1));
-        h2 = h2*2;
+        div1 = ((lbh/2.0-louth)*(lbh/2.0-louth))/a_ell_q;
+        h2 = sqrt(b_ell_q*(1.0-div1));
+        h2 = h2*2.0;
      }
   } else if (!strcmp(fu,"parabolical")) {
      if ((linh > 0) && (louth > 0))
@@ -190,18 +192,18 @@ INITIALIZE
         /* parabolical mirrors */
         if (linh == 0)
         {
-           Div1=((2*louth+2*l)*(2*louth+2*l))/4;
-           p2_para=((sqrt(Div1+(h12*h12)))-(louth+l))*2;
+           Div1=((2.0*louth+2.0*l)*(2.0*louth+2.0*l))/4.0;
+           p2_para=((sqrt(Div1+(h12*h12)))-(louth+l))*2.0;
            /* calculate heigth of guide exit (h2) */
-           h2 = sqrt(p2_para*(louth+p2_para/4));
-           h2 = h2*2;
+           h2 = sqrt(p2_para*(louth+p2_para/4.0));
+           h2 = h2*2.0;
          } else {
             /* anti-trompete */
-           Div1=((2*linh)*(2*linh))/4;
-           p2_para=((sqrt(Div1+(h12*h12)))-linh)*2;
+           Div1=((2.0*linh)*(2.0*linh))/4.0;
+           p2_para=((sqrt(Div1+(h12*h12)))-linh)*2.0;
            /* calculate heigth of guide exit (h2) */
-           h2 = sqrt(p2_para*(l+linh+p2_para/4));
-           h2 = h2*2;
+           h2 = sqrt(p2_para*(l+linh+p2_para/4.0));
+           h2 = h2*2.0;
          }
      }
   } else if (!strncmp(fu,"file",4)) {
@@ -276,8 +278,8 @@ INITIALIZE
        {
          h1_in[i]=h1;
        } else {
-         mxi = (((lbh/2)-linh) - (l_seg * i));
-         h1_in[i] = (sqrt((1-((mxi*mxi)/a_ell_q))*b_ell_q))*2;
+         mxi = (((lbh/2.0)-linh) - (l_seg * i));
+         h1_in[i] = (sqrt((1.0-((mxi*mxi)/a_ell_q))*b_ell_q))*2.0;
        }
      h2_out[i-1] = h1_in[i];
      }
@@ -298,21 +300,21 @@ INITIALIZE
         {
            for (i=1;i<(seg+1);i++)
            {
-             h1_in[i] = (sqrt((p2_para/4+louth+(l_seg*ii))*p2_para))*2;
+             h1_in[i] = (sqrt((p2_para/4.0+louth+(l_seg*ii))*p2_para))*2.0;
              ii=ii-1;
              h2_out[i-1] = h1_in[i];
            }
         } else {
            for (i=1;i<(seg+1);i++)
            {
-             h1_in[i] = (sqrt((p2_para/4+linh+(l_seg*i))*p2_para))*2;
+             h1_in[i] = (sqrt((p2_para/4.0+linh+(l_seg*i))*p2_para))*2.0;
              h2_out[i-1] = h1_in[i];
            }
         }
      }
   }
   /* compute each value for horizontal mirrors */
-  w12 = w1/2;
+  w12 = w1/2.0;
   if (!strcmp(fu,"elliptical"))
   {
     /* calculate lbw the distance between focal points of horizontal mirrors */
@@ -325,18 +327,14 @@ INITIALIZE
        w2 = w1;
     } else {
        /* elliptical mirrors */
-       u1 = ((lbw/2)-linw)*((lbw/2)-linw);
-       u2 = (lbw/2)*(lbw/2);
-       div1 = u1/u2;
-       b_ell_q = (w12*w12)/(1-div1);
        u1 = sqrt((linw*linw)+(w12*w12));
        u2 = sqrt((w12*w12) + ((l+loutw)*(l+loutw)));
-       a_ell_q = ((u1 + u2)/2)*((u1 + u2)/2);
-       b_ell_q = a_ell_q - ((lbw/2)*(lbw/2));
+       a_ell_q = ((u1 + u2)/2.0)*((u1 + u2)/2.0);
+       b_ell_q = a_ell_q - ((lbw/2.0)*(lbw/2.0));
        /* calculate weigth of guide exit (w2) */
-       div1 = ((lbw/2-loutw)*(lbw/2-loutw))/a_ell_q;
-       w2 = sqrt(b_ell_q*(1-div1));
-       w2 = w2*2;
+       div1 = ((lbw/2.0-loutw)*(lbw/2.0-loutw))/a_ell_q;
+       w2 = sqrt(b_ell_q*(1.0-div1));
+       w2 = w2*2.0;
      }
   } else if (!strcmp(fu,"parabolical")) {
      if ((linw > 0) && (loutw > 0))
@@ -353,18 +351,18 @@ INITIALIZE
        if (linw == 0)
        {
           /* parabolical mirrors */
-          Div1=((2*loutw+2*l)*(2*loutw+2*l))/4;
-          p2_para=((sqrt(Div1+(w12*w12)))-(loutw+l))*2;
+          Div1=((2.0*loutw+2.0*l)*(2.0*loutw+2.0*l))/4.0;
+          p2_para=((sqrt(Div1+(w12*w12)))-(loutw+l))*2.0;
           /* calculate weigth of guide exit (w2) */
-          w2 = sqrt(p2_para*(loutw+p2_para/4));
-          w2 = w2*2;
+          w2 = sqrt(p2_para*(loutw+p2_para/4.0));
+          w2 = w2*2.0;
        } else {
           /* anti-trompete */
-          Div1=((2*linw)*(2*linw))/4;
-          p2_para=((sqrt(Div1+(w12*w12)))-linw)*2;
+          Div1=((2.0*linw)*(2.0*linw))/4.0;
+          p2_para=((sqrt(Div1+(w12*w12)))-linw)*2.0;
           /* calculate heigth of guide exit (w2) */
-          w2 = sqrt(p2_para*(l+linw+p2_para/4));
-          w2 = w2*2;
+          w2 = sqrt(p2_para*(l+linw+p2_para/4.0));
+          w2 = w2*2.0;
        }
      }
   }
@@ -381,15 +379,14 @@ INITIALIZE
   if (!strcmp(fu,"elliptical"))
   {
      w1_in[0]=w1;
-     a_ell_q = (lbw/2)*(lbw/2);
      for (i=1;i<seg;i++)
      {
        if (b_ell_q == 0)
        {
          w1_in[i]=w1;
        } else {
-         mxi = (((lbw/2)-linw) - (l_seg * i));
-         w1_in[i] = (sqrt((1-((mxi*mxi)/a_ell_q))*b_ell_q))*2;
+         mxi = (((lbw/2.0)-linw) - (l_seg * i));
+         w1_in[i] = (sqrt((1.0-((mxi*mxi)/a_ell_q))*b_ell_q))*2.0;
        }
        w2_out[i-1] = w1_in[i];
      }
@@ -439,7 +436,7 @@ INITIALIZE
 
 TRACE
 %{
-  double t1,t2;                                 /* Intersection times. */
+  double t1,t2,ts,zr;                                 /* Intersection times. */
   double av,ah,bv,bh,cv1,cv2,ch1,ch2,dd;        /* Intermediate values */
   double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
   int i;                                        /* Which mirror hit? */
@@ -452,12 +449,17 @@ TRACE
   Coords mctc1,mctc2;
   Rotation mctr1;
 
+  /* Propagate neutron to guide entrance. */
+  PROP_Z0;
   for (ii=0;ii<seg;ii++)
   {
-    /* Propagate neutron to guide entrance. */
-    PROP_Z0;
+    zr=ii*l_seg;
+    /* Propagate neutron to segment entrance. */
+    ts=(zr-z)/vz;
+    PROP_DT(ts);
     if(x <= w1_in[ii]/-2.0 || x >= w1_in[ii]/2.0 || y <= -hhalf[ii] || y >= hhalf[ii])
       ABSORB;
+
     /* Shift origin to center of channel hit (absorb if hit dividing walls) */
     x += w1_in[ii]/2.0;
     edge = floor(x/w1c[ii])*w1c[ii];
@@ -468,8 +470,10 @@ TRACE
     }
     x -= (edge + (w1c[ii]/2.0));
     hadj = edge + (w1c[ii]/2.0) - w1_in[ii]/2.0;
+
     for(;;)
     {
+      ts=(zr-z)/vz;
       /* Compute the dot products of v and n for the four mirrors. */
       av = l_seg*vx; bv = ww[ii]*vz;
       ah = l_seg*vy; bh = hh[ii]*vz;
@@ -478,10 +482,10 @@ TRACE
       vdotn_h1 = bh + ah;         /* Lower horizontal */
       vdotn_h2 = bh - ah;         /* Upper horizontal */
       /* Compute the dot products of (O - r) and n as c1+c2 and c1-c2 */
-      cv1 = -whalf[ii]*l_seg - z*ww[ii]; cv2 = x*l_seg;
-      ch1 = -hhalf[ii]*l_seg - z*hh[ii]; ch2 = y*l_seg;
+      cv1 = -whalf[ii]*l_seg - (z-zr)*ww[ii]; cv2 = x*l_seg;
+      ch1 = -hhalf[ii]*l_seg - (z-zr)*hh[ii]; ch2 = y*l_seg;
       /* Compute intersection times. */
-      t1 = (l_seg - z)/vz;
+      t1 = (zr+l_seg - z)/vz;
       i = 0;
       if(vdotn_v1 < 0 && (t2 = (cv1 - cv2)/vdotn_v1) < t1)
       {
@@ -569,21 +573,10 @@ TRACE
         }
       }
       p *= R0;
-    x += hadj; SCATTER; x -= hadj;
+      x += hadj; SCATTER; x -= hadj;
     }
     x += hadj; /* Re-adjust origin */
-    /* store current neutron state  */
-    if (ii<(seg-1))
-    {
-        z=z-l_seg;
-        STORE_NEUTRON(INDEX_CURRENT_COMP,x,y,z,vx,vy,vz,t,sx,sy,sz,p);
-    }
   }
-  if (seg > 1)
-  {
-  z=z+l_seg*(seg-1);
-  }
-
 %}
 
 MCDISPLAY
@@ -594,40 +587,25 @@ MCDISPLAY
   magnify("xy");
   for (ii=0; ii < segno; ii++)
   {
-   for(i = 0; i < 1; i++)
-    {
        multiline(5,
-             i*w1c[ii] - w1_in[ii]/2.0, -h1_in[ii]/2.0,
-             (double)l_seg*ii,
-             i*w2c[ii] - w2_out[ii]/2.0, -h2_out[ii]/2.0,
-             (double)l_seg*(ii+1.0),
-             i*w2c[ii] - w2_out[ii]/2.0,  h2_out[ii]/2.0,
-             (double)l_seg*(ii+1.0),
-             i*w1c[ii] - w1_in[ii]/2.0,  h1_in[ii]/2.0,
-             (double)l_seg*ii,
-             i*w1c[ii] - w1_in[ii]/2.0, -h1_in[ii]/2.0,
-             (double)l_seg*ii);
+             -w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii,
+             -w2_out[ii]/2.0, -h2_out[ii]/2.0,l_seg*((double)ii+1.0),
+             -w2_out[ii]/2.0,  h2_out[ii]/2.0,l_seg*((double)ii+1.0),
+             -w1_in[ii]/2.0,  h1_in[ii]/2.0,l_seg*(double)ii,
+             -w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii);
        multiline(5,
-             (i+1.0)*w1c[ii] - w1_in[ii]/2.0, -h1_in[ii]/2.0,
-             (double)l_seg*ii,
-             (i+1.0)*w2c[ii] - w2_out[ii]/2.0, -h2_out[ii]/2.0,
-             (double)l_seg*(ii+1.0),
-             (i+1.0)*w2c[ii] - w2_out[ii]/2.0,  h2_out[ii]/2.0,
-             (double)l_seg*(ii+1.0),
-             (i+1.0)*w1c[ii] - w1_in[ii]/2.0,  h1_in[ii]/2.0,
-             (double)l_seg*ii,
-             (i+1.0)*w1c[ii] - w1_in[ii]/2.0, -h1_in[ii]/2.0,
-             (double)l_seg*ii);
-        }
+             w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii,
+             w2_out[ii]/2.0, -h2_out[ii]/2.0,l_seg*((double)ii+1.0),
+             w2_out[ii]/2.0,  h2_out[ii]/2.0,l_seg*((double)ii+1.0),
+             w1_in[ii]/2.0,  h1_in[ii]/2.0,l_seg*(double)ii,
+             w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii);
   }
   line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
-  for(i=1; i<segno;i++)
+  for(i=0; i<segno;i++)
   {
-    line(-w2_out[i]/2.0, -h2_out[i]/2.0, (double)l_seg*i,
-          w2_out[i]/2.0, -h2_out[i]/2.0, (double)l_seg*i);
+    line(-w2_out[i]/2.0, -h2_out[i]/2.0, l_seg*(double)(i+1),
+          w2_out[i]/2.0, -h2_out[i]/2.0, l_seg*(double)(i+1));
   }
-  line(-w2/2.0, -h2/2.0, (double)l_seg*segno,
-        w2/2.0, -h2/2.0, (double)l_seg*segno);
 %}
 
 END
