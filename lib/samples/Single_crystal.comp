@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.43 $
+* Version: $Revision: 1.44 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -813,7 +813,8 @@ TRACE
       mc_interact = 1 - mc_trans;
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
-        p *= p_trans/mc_trans;
+        p *= l_full*tot_xlen*p_trans;
+
         break;
       }
       if(tot_xlen <= 0)
@@ -889,7 +890,10 @@ TRACE
       }
       SCATTER;
       /* exit if multiple scattering order has been reached */
-      if (order && event_counter >= order) break;
+      if (order && event_counter >= order) {
+        p *= l_full*tot_xlen*p_trans;
+	break;
+      }
       /* Repeat loop for next scattering event. */
     } /* end for (;;) */
   } /* box intsresect */
