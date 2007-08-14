@@ -7,11 +7,10 @@
 * %I
 * Written by: Uwe Filges
 * Date: 22/10/2003
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Release: McStas 1.9
 * Origin: PSI
 * Modified by: Rob Dalgliesh, ISIS, 2007
-* Modified by: Corrected display of scattering events. No effect on beam profile, divergence, TOF.
 *
 * Models a rectangular tapered guide (many shapes)
 *
@@ -99,17 +98,17 @@ DEFINITION PARAMETERS (string option=0,segno=800)
 SETTING PARAMETERS (w1=0,h1=0,l,linw=0,loutw=0,linh=0,louth=0, R0=0.99,
                     Qcx=0.021,Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
                     mx=1, my=1)
-OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_out,l_seg)
+OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_out,l_seg,seg)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
 
 DECLARE
 %{
-  double w1c[segno];
-  double w2c[segno];
-  double ww[segno], hh[segno];
-  double whalf[segno], hhalf[segno];
-  double lwhalf[segno], lhhalf[segno];
-  double h1_in[segno+1], h2_out[segno+1], w1_in[segno+1], w2_out[segno+1];
+  double *w1c;
+  double *w2c;
+  double *ww, *hh;
+  double *whalf, *hhalf;
+  double *lwhalf, *lhhalf;
+  double *h1_in, *h2_out, *w1_in, *w2_out;
   double l_seg, h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh;
   double mxi ,u1 ,u2 ,div1, p2_para;
   double test,Div1;
@@ -124,6 +123,19 @@ DECLARE
 
 INITIALIZE
 %{
+  // dynamic memory allocation is good
+  w1c = (double*)malloc(sizeof(double)*segno);
+  w2c = (double*)malloc(sizeof(double)*segno);
+  ww = (double*)malloc(sizeof(double)*segno);
+  hh = (double*)malloc(sizeof(double)*segno);
+  whalf = (double*)malloc(sizeof(double)*segno);
+  hhalf = (double*)malloc(sizeof(double)*segno);
+  lwhalf = (double*)malloc(sizeof(double)*segno);
+  lhhalf = (double*)malloc(sizeof(double)*segno);
+  h1_in = (double*)malloc(sizeof(double)*(segno+1));
+  h2_out = (double*)malloc(sizeof(double)*(segno+1));
+  w1_in = (double*)malloc(sizeof(double)*(segno+1));
+  w2_out = (double*)malloc(sizeof(double)*(segno+1));
 
   struct para {
     char st[128];
@@ -436,7 +448,7 @@ INITIALIZE
 
 TRACE
 %{
-  double t1,t2,ts,zr;                                 /* Intersection times. */
+  double t1,t2,ts,zr;                           /* Intersection times. */
   double av,ah,bv,bh,cv1,cv2,ch1,ch2,dd;        /* Intermediate values */
   double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
   int i;                                        /* Which mirror hit? */
@@ -459,7 +471,6 @@ TRACE
     PROP_DT(ts);
     if(x <= w1_in[ii]/-2.0 || x >= w1_in[ii]/2.0 || y <= -hhalf[ii] || y >= hhalf[ii])
       ABSORB;
-
     /* Shift origin to center of channel hit (absorb if hit dividing walls) */
     x += w1_in[ii]/2.0;
     edge = floor(x/w1c[ii])*w1c[ii];
@@ -470,11 +481,10 @@ TRACE
     }
     x -= (edge + (w1c[ii]/2.0));
     hadj = edge + (w1c[ii]/2.0) - w1_in[ii]/2.0;
-
     for(;;)
     {
-      ts=(zr-z)/vz;
       /* Compute the dot products of v and n for the four mirrors. */
+      ts=(zr-z)/vz;
       av = l_seg*vx; bv = ww[ii]*vz;
       ah = l_seg*vy; bh = hh[ii]*vz;
       vdotn_v1 = bv + av;         /* Left vertical */
@@ -485,7 +495,7 @@ TRACE
       cv1 = -whalf[ii]*l_seg - (z-zr)*ww[ii]; cv2 = x*l_seg;
       ch1 = -hhalf[ii]*l_seg - (z-zr)*hh[ii]; ch2 = y*l_seg;
       /* Compute intersection times. */
-      t1 = (zr+l_seg - z)/vz;
+      t1 = (zr + l_seg - z)/vz;
       i = 0;
       if(vdotn_v1 < 0 && (t2 = (cv1 - cv2)/vdotn_v1) < t1)
       {
@@ -577,6 +587,23 @@ TRACE
     }
     x += hadj; /* Re-adjust origin */
   }
+
+%}
+
+FINALLY
+%{
+  free(w1c);
+  free(w2c);
+  free(ww);
+  free(hh);
+  free(whalf);
+  free(hhalf);
+  free(lwhalf);
+  free(lhhalf);
+  free(h1_in);
+  free(h2_out);
+  free(w1_in);
+  free(w2_out);
 %}
 
 MCDISPLAY
@@ -585,27 +612,32 @@ MCDISPLAY
   int i,ii;
 
   magnify("xy");
+  
   for (ii=0; ii < segno; ii++)
   {
-       multiline(5,
-             -w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii,
-             -w2_out[ii]/2.0, -h2_out[ii]/2.0,l_seg*((double)ii+1.0),
-             -w2_out[ii]/2.0,  h2_out[ii]/2.0,l_seg*((double)ii+1.0),
-             -w1_in[ii]/2.0,  h1_in[ii]/2.0,l_seg*(double)ii,
-             -w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii);
-       multiline(5,
-             w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii,
-             w2_out[ii]/2.0, -h2_out[ii]/2.0,l_seg*((double)ii+1.0),
-             w2_out[ii]/2.0,  h2_out[ii]/2.0,l_seg*((double)ii+1.0),
-             w1_in[ii]/2.0,  h1_in[ii]/2.0,l_seg*(double)ii,
-             w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii);
+     multiline(5,
+        -w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii,
+        -w2_out[ii]/2.0, -h2_out[ii]/2.0,l_seg*((double)ii+1.0),
+        -w2_out[ii]/2.0,  h2_out[ii]/2.0,l_seg*((double)ii+1.0),
+        -w1_in[ii]/2.0,  h1_in[ii]/2.0,l_seg*(double)ii,
+        -w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii);
+     multiline(5,
+        w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii,
+        w2_out[ii]/2.0, -h2_out[ii]/2.0,l_seg*((double)ii+1.0),
+        w2_out[ii]/2.0,  h2_out[ii]/2.0,l_seg*((double)ii+1.0),
+        w1_in[ii]/2.0,  h1_in[ii]/2.0,l_seg*(double)ii,
+        w1_in[ii]/2.0, -h1_in[ii]/2.0,l_seg*(double)ii);
   }
   line(-w1/2.0, -h1/2.0, 0.0, w1/2.0, -h1/2.0, 0.0);
-  for(i=0; i<segno;i++)
+  line(-w1/2.0, h1/2.0, 0.0, w1/2.0, h1/2.0, 0.0);
+  for(i=0; i<segno;i++)   
   {
-    line(-w2_out[i]/2.0, -h2_out[i]/2.0, l_seg*(double)(i+1),
-          w2_out[i]/2.0, -h2_out[i]/2.0, l_seg*(double)(i+1));
+     line(-w2_out[i]/2.0, -h2_out[i]/2.0, l_seg*(double)(i+1),
+     w2_out[i]/2.0, -h2_out[i]/2.0, l_seg*(double)(i+1));
+     line(-w2_out[i]/2.0, h2_out[i]/2.0, l_seg*(double)(i+1),
+     w2_out[i]/2.0, h2_out[i]/2.0, l_seg*(double)(i+1));
   }
+
 %}
 
 END
