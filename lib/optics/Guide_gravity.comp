@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
-* Release: McStas 1.6
+* Release: McStas 1.11
 * Modified by: E. Farhi, from Gravity_guide by K. Lefmann (buggy).
 * Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
 * Modified by: E. Farhi, 2D channel array. Correct focus bug (Dec 14th 2002)
@@ -76,6 +76,10 @@
 * mright:  (1)    m-value of material for right.  vert. mirror
 * mtop:    (1)    m-value of material for top.    horz. mirror
 * mbottom: (1)    m-value of material for bottom. horz. mirror
+* aleft:   (1)    alphpa-value of left  vert. mirror
+* aright:  (1)    alphpa-value of right vert. mirror
+* atop:    (1)    alphpa-value of top   horz. mirror
+* abottom: (1)    alphpa-value of left  horz. mirror
 * kh:      (1)    Number of horizontal channels in the guide (>= 1).
 *                 (kh-1 horizontal dividing walls).
 *                 this enables to have k*kh rectangular channels
@@ -113,6 +117,7 @@ DEFINITION PARAMETERS (string reflect=0)
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003, k=1, d=0.0005,
   mleft=-1, mright=-1, mtop=-1, mbottom=-1, kh=1, G=0,
+  aleft=-1, aright=-1, atop=-1, abottom=-1,
   wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
   chamfers=0, chamfers_z=0, chamfers_lr=0, chamfers_tb=0, nelements=1,
   nu=0, phase=0)
@@ -122,7 +127,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef Gravity_guide_Version
-#define Gravity_guide_Version "$Revision: 1.31 $"
+#define Gravity_guide_Version "$Revision: 1.32 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
@@ -151,6 +156,7 @@ SHARE
     double w1c, h1c;
     double w2c, h2c;
     double M[5];
+    double Alpha[5];
     double nzC[5], norm_n2xy[5], Axy[5];
     double wav_lr, wav_tb, wav_z;
     double chamfer_z, chamfer_lr, chamfer_tb;
@@ -165,13 +171,14 @@ SHARE
     MCNUM a_mleft, MCNUM a_mright, MCNUM a_mtop, MCNUM a_mbottom, MCNUM a_kh,
     MCNUM a_wavy_lr, MCNUM a_wavy_tb, MCNUM a_wavy_z, MCNUM a_wavy,
     MCNUM a_chamfers_z, MCNUM a_chamfers_lr, MCNUM a_chamfers_tb, MCNUM a_chamfers,
-    MCNUM a_nu, MCNUM a_phase)
+    MCNUM a_nu, MCNUM a_phase, MCNUM a_aleft, MCNUM a_aright, MCNUM a_atop, MCNUM a_abottom)
   {
     int i;
 
     for (i=0; i<7; aVars->N_reflection[i++] = 0);
     for (i=0; i<5; aVars->M[i++] = 0);
-
+    for (i=0; i<5; aVars->Alpha[i++] = 0);
+    
     aVars->gx = a_Gx; /* The gravitation vector in the current component axis system */
     aVars->gy = a_Gy;
     aVars->gz = a_Gz;
@@ -184,10 +191,16 @@ SHARE
     aVars->h2c = (a_h2 - (a_kh-1)*a_d)/(double)a_kh;
 
     for (i=0; i <= 4;   aVars->M[i++]=a_m);
+    for (i=0; i <= 4;   aVars->Alpha[i++]=a_alpha);
     if (a_mleft   >= 0) aVars->M[1] =a_mleft  ;
     if (a_mright  >= 0) aVars->M[2] =a_mright ;
     if (a_mtop    >= 0) aVars->M[3] =a_mtop   ;
     if (a_mbottom >= 0) aVars->M[4] =a_mbottom;
+    if (a_aleft   >= 0) aVars->Alpha[1] =a_aleft  ;
+    if (a_aright  >= 0) aVars->Alpha[2] =a_aright ;
+    if (a_atop    >= 0) aVars->Alpha[3] =a_atop   ;
+    if (a_abottom >= 0) aVars->Alpha[4] =a_abottom;
+    
     /* n: normal vectors to surfaces */
     aVars->nx[1] =  a_l; aVars->ny[1] =  0;   aVars->nz[1] =  0.5*(aVars->w2c-aVars->w1c);  /* 1:+X left       */
     aVars->nx[2] = -a_l; aVars->ny[2] =  0;   aVars->nz[2] = -aVars->nz[1];             /* 2:-X right      */
@@ -364,7 +377,7 @@ INITIALIZE
       Qc, alpha, m, W, k, d,
       Gx, Gy, Gz, mleft, mright, mtop,
       mbottom, kh, wavy_lr, wavy_tb, wavy_z, wavy,
-      chamfers_z, chamfers_lr, chamfers_tb, chamfers,nu,phase);
+      chamfers_z, chamfers_lr, chamfers_tb, chamfers,nu,phase,aleft,aright,atop,abottom);
     if (!G) for (i=0; i<5; GVars.A[i++] = 0);
     if (GVars.fc_freq != 0 || GVars.fc_phase != 0)
       printf("Guide_gravity: %s: Fermi Chopper mode: frequency=%g [Hz] phase=%g [deg]\n",
@@ -513,7 +526,7 @@ TRACE
             if (W>0) arg = (q-GVars.M[side]*Qc)/W;
             else arg = (q-GVars.M[side]*Qc)*10000; /* W = 0.00001 */
 
-            if(arg < 10) B *= .5*(1-tanh(arg))*(1-alpha*(q-Qc));
+            if(arg < 10) B *= .5*(1-tanh(arg))*(1-GVars.Alpha[side]*(q-Qc));
             else { x += w_adj; y += h_adj; ABSORB; }; /* Cutoff ~ 1E-10 */
           }
         }
