@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.35 $
+* Version: $Revision: 1.36 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Aziz Daoud-aladine, ISIS, 2007
@@ -64,7 +64,7 @@
 * focus_ah:   vert.  angular dimension of a rectangular area [deg]
 * sig_a:      Absorbtion cross section pr. unit cell [barns]
 * sig_i:      Incoherent scattering cross section pr. unit cell [barns]
-* absorb_multiples: Correct for multiple scattering by absorption [1]
+* multiples:  Apply crude estimate for multiple scattering [1]
 * V0:         Unit cell volume [AA^3]
 * pack:       Packing factor [1]
 * frac:       MC Probability for scattering the ray; otherwise penetrate [1]
@@ -93,7 +93,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius_i=0, radius_o=0, h=0, focus_r = 0,
 		    pack = 1, frac=1, f_QE=0, gamma=0,
   target_x = 0, target_y = 0, target_z = 0, focus_xw=0, focus_yh=0,
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, absorb_multiples=0)
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, multiples=1)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
@@ -288,8 +288,11 @@ TRACE
       l_o = v*dt; /* trajectory after scattering point: absorption only */
 
       p *= v/v_i*l_full*VarsV.my_s*exp(-my_a*(l_i+v_i/v*l_o)-VarsV.my_s*l_i);
-      if (absorb_multiples == 1) {
-	/* Attepmt correction for multiples by absorption */
+      if (!multiples) {
+	/* If no "multiples", correct by applying scattering cross-sec and
+	   implicitly "absorb" further scattering (as in PowderN) 
+	   We are currently (august 2007) having a debate on which solution 
+	   is the most reasonable */
 	p *= exp(-VarsV.my_s*l_o);
       }
       /* We do not consider scattering from 2nd part (outgoing) */
