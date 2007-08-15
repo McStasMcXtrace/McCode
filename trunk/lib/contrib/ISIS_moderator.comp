@@ -11,7 +11,7 @@
  * %I
  * Written by: S. Ansell and D. Champion
  * Date: AUGUST 2005
- * Version: $Revision: 1.7 $
+ * Version: $Revision: 1.8 $
  * Origin: ISIS
  * Release: McStas 1.9
  *
@@ -835,8 +835,7 @@ INITIALIZE
 %{
   /* READ IN THE ENERGY FILE */
 
-  int table;         /* Variables */
-  char fname[256];
+  char fname[256];   /* Variables */
   FILE* Tfile;
   double tmp;
   char lowerFace[255];
@@ -998,7 +997,6 @@ INITIALIZE
     }
 
   rtmodY*=cos(CAngle);
-  fprintf(stderr,"Table == %d\n",table);
 
   /* READ PARAMETER FILE */
 
