@@ -3,9 +3,15 @@
 NEDIT:
 nedit should be copied to a .nedit file in your home directory
 
-KATE:
+KATE (KDE):
 mcstas.xml is for usage with the excellent kate editor of KDE. Copy the 
 file to e.g. /usr/share/apps/katepart/syntax/ (Correct path on a Debian 
+testing system)
+
+GEDIT (Gnome):
+mcstas.lang is for usage under Gnome. Gedit uses gtksourceview. The 
+syntax definition file should be copied in e.g.
+/usr/share/gtksourceview-1.0/language-specs/ (Correct path on a Debian 
 testing system)
 
 (X)EMACS:
