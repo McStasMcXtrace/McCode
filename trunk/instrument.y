@@ -11,12 +11,12 @@
 * Written by: K.N.
 * Date: Jul  1, 1997
 * Origin: Risoe
-* Release: McStas 1.12a
-* Version: $Revision: 1.78 $
+* Release: McStas X.Y.Z
+* Version: $Revision: 1.79 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.78 2007-08-02 09:59:35 farhi Exp $
+* $Id: instrument.y,v 1.79 2007-09-03 16:10:26 farhi Exp $
 *
 *******************************************************************************/
 
@@ -146,6 +146,8 @@
 main:     TOK_GENERAL compdefs instrument
     | TOK_RESTRICTED compdef
 ;
+
+/* COMPONENT grammar ************************************************************* */
 
 compdefs:   /* empty */
     | compdefs compdef
@@ -406,6 +408,8 @@ comp_iformal:  TOK_ID TOK_ID
         $$ = formal;
       }
 ;
+
+/* INSTRUMENT grammar ************************************************************* */
 
 /* read instrument definition and catenate if this not the first instance */
 instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
@@ -923,6 +927,8 @@ notshare:    /* empty */
       }
 ;
 
+/* INSTRUMENT TRACE grammar ******************************************************* */
+
 component: notshare split "COMPONENT" instname '=' instref when place orientation groupref extend jumps
       {
         struct comp_inst *comp;
@@ -974,6 +980,7 @@ split:    /* empty */
       {
         $$ = $2;
       }
+;
 
 formallist:   '(' formals ')'
       {
@@ -1284,22 +1291,25 @@ topexp:     topatexp
    single token that is NOT comma (','). */
 topatexp:   TOK_ID
       {
-        List_handle liter;
+        List_handle liter=NULL;
         struct instr_formal *formal;
         /* Check if this is an instrument parameter or not. */
         /* ToDo: This will be inefficient if the number of
                        instrument parameters is really huge. */
-        liter = list_iterate(instrument_definition->formals);
+        /* check if instrument parameters have been defined */
+        if (instrument_definition->formals)
+          liter = list_iterate(instrument_definition->formals);
+        if (liter)
         while(formal = list_next(liter))
         {
-          if(!strcmp($1, formal->id))
+          if($1 && formal->id && strcmp($1, "NULL") && !strcmp($1, formal->id))
           {
             /* It was an instrument parameter */
             $$ = exp_id($1);
             goto found;
           }
         }
-        list_iterate_end(liter);
+        if (liter) list_iterate_end(liter);
         /* It was an external id. */
         $$ = exp_extern_id($1);
       found:
@@ -1669,6 +1679,7 @@ main(int argc, char *argv[])
     instr_current_filename);
   instrument_definition->quoted_source =
     str_quote(instrument_definition->source);
+  if (verbose) fprintf(stderr, "Analyzing file      %s\n", instrument_definition->quoted_source);
   instr_current_line = 1;
   lex_new_file(file);
   read_components = symtab_create(); /* Create table of components. */
@@ -1682,9 +1693,9 @@ main(int argc, char *argv[])
   }
   else
   {
-
+    if (verbose) fprintf(stderr, "Starting to create C code %s\n", output_filename);
     cogen(output_filename, instrument_definition);
-    if (verbose) fprintf(stderr, "Generating code     %s\n", output_filename);
+    if (verbose) fprintf(stderr, "Generated C code    %s\n", output_filename);
     exit(0);
   }
 }
