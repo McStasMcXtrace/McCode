@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2007, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,14 +11,19 @@
 * Written by: K.N.
 * Date: Jul  3, 1997
 * Origin: Risoe
-* Release: McStas 1.6
-* Version: $Revision: 1.18 $
+* Release: McStas X.Y.Z
+* Version: $Revision: 1.19 $
 *
 * Implementation of lists.
 *
-*       $Id: list.c,v 1.18 2007-02-27 16:25:48 farhi Exp $
+*       $Id: list.c,v 1.19 2007-09-03 16:10:26 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.18  2007/02/27 16:25:48  farhi
+*       Increased list max size in code gen to 50000 lines/elements
+*       removed perl warnings in Win$
+*       plus cosmetics
+*
 *       Revision 1.17  2006/11/06 14:30:00  farhi
 *       Improved COPY grammar, enabling to either redefine sections, or extend them (with e.g. INITIALIZE COPY parent EXTEND %{ %})
 *       over-definition of parameters for comp instances in the .instr works OK.
@@ -164,6 +169,7 @@ list_iterate(List l)
 void *
 list_next(List_handle lh)
 {
+  if (!lh) return(NULL);
   /* Check if there are any more elements */
   if(lh->index >= lh->list->size)
   {
