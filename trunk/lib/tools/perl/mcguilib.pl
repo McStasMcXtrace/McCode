@@ -435,7 +435,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       # finally set the PLOTTER
       $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
 
-      $si->{'cluster'} = do {
+      $si{'cluster'} = do {
         if     ($choicecluster_val =~ /^None/)   { 0 }
         elsif ($choicecluster_val =~ /^Threads/){ 1 }
         elsif ($choicecluster_val =~ /^MPI/)    { 2 }
