@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.20 $
+* Version:    $Revision: 1.21 $
 * Release:    McStas 1.10
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -737,18 +737,27 @@ MCDISPLAY
     }
   }
   /* cylinder inner sides containing slit package */
+  double xp1, xp2, zp1, zp2;
   xpos = Nslit*w/2;
   zpos = sqrt(radius*radius - xpos*xpos);
-  multiline(5,   xpos, ymin, -zpos,
-                 xpos, ymax, -zpos,
-                 xpos, ymax, +zpos,
-                 xpos, ymin, +zpos,
-                 xpos, ymin, -zpos);
+  xp1 = FC_xrot(xpos, -zpos, 0, FCVars);
+  xp2 = FC_xrot(xpos, +zpos, 0, FCVars);
+  zp1 = FC_zrot(xpos, -zpos, 0, FCVars);
+  zp2 = FC_zrot(xpos, +zpos, 0, FCVars);
+  multiline(5,  xp1, ymin, zp1,
+                xp1, ymax, zp1,
+                xp2, ymax, zp2,
+                xp2, ymin, zp2,
+                xp1, ymin, zp1);
   xpos *= -1;
-  multiline(5,   xpos, ymin, -zpos,
-                 xpos, ymax, -zpos,
-                 xpos, ymax, +zpos,
-                 xpos, ymin, +zpos,
-                 xpos, ymin, -zpos);
+  xp1 = FC_xrot(xpos, -zpos, 0, FCVars);
+  xp2 = FC_xrot(xpos, +zpos, 0, FCVars);
+  zp1 = FC_zrot(xpos, -zpos, 0, FCVars);
+  zp2 = FC_zrot(xpos, +zpos, 0, FCVars);
+  multiline(5,  xp1, ymin, zp1,
+                xp1, ymax, zp1,
+                xp2, ymax, zp2,
+                xp2, ymin, zp2,
+                xp1, ymin, zp1);
 %}
 END
