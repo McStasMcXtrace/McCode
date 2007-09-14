@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.170 $
+* Version: $Revision: 1.171 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.170 2007-08-10 11:30:44 pkwi Exp $
+* $Id: mcstas-r.c,v 1.171 2007-09-14 14:46:48 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.170  2007/08/10 11:30:44  pkwi
+* Compilation of mcformat warned about missing newline at end of mcstas-r.c. Added.
+*
 * Revision 1.169  2007/08/09 16:47:34  farhi
 * Solved old gcc compilation issue when using macros in macros.
 * Solved MPI issuie when exiting in the middle of a simulation. Now use MPI_Abort.
@@ -4573,7 +4576,11 @@ static void
 mcshowhelp(char *pgmname)
 {
   mchelp(pgmname);
+#ifdef USE_MPI
+#undef exit
   exit(0);
+#define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
+#endif
 }
 
 /* mcusage: display usage when error in input arguments and exit with 1 */
@@ -4638,7 +4645,11 @@ mcinfo(void)
     exit(fprintf(stderr,"Error: Can not display instrument informtion in NeXus binary format\n"));
   mcsiminfo_init(stdout);
   mcsiminfo_close();
+#ifdef USE_MPI
+#undef exit
   exit(0);
+#define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
+#endif
 }
 
 /* mcparseoptions: parse command line arguments (options, parameters) */
