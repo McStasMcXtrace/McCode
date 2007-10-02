@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.171 $
+* Version: $Revision: 1.172 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.171 2007-09-14 14:46:48 farhi Exp $
+* $Id: mcstas-r.c,v 1.172 2007-10-02 09:59:00 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.171  2007/09/14 14:46:48  farhi
+* mcstas-r: instr.out with MPI may now exit without error code in case of 'usage' and 'info'.
+*
 * Revision 1.170  2007/08/10 11:30:44  pkwi
 * Compilation of mcformat warned about missing newline at end of mcstas-r.c. Added.
 *
@@ -4578,7 +4581,9 @@ mcshowhelp(char *pgmname)
   mchelp(pgmname);
 #ifdef USE_MPI
 #undef exit
+#endif
   exit(0);
+#ifdef USE_MPI
 #define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
 #endif
 }
@@ -4647,7 +4652,9 @@ mcinfo(void)
   mcsiminfo_close();
 #ifdef USE_MPI
 #undef exit
+#endif
   exit(0);
+#ifdef USE_MPI
 #define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
 #endif
 }
