@@ -24,7 +24,6 @@
 # Config module needed for various platform checks.
 # PW, 20030314
 use Config;
-use POSIX;
 use Tk::Balloon;
 
 # Determine the path to the McStas system directory. This must be done
