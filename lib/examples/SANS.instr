@@ -12,7 +12,7 @@
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: tests
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
@@ -69,6 +69,12 @@ COMPONENT coll2 = Slit(
 COMPONENT sample = Sans_spheres(R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_a=Sigma_a, qmax=Qmax)
    AT (0,0,0.2) RELATIVE coll2
 
+
+COMPONENT STOP = Beamstop(
+    radius = 0.05)
+  AT (0, 0, 2.9) RELATIVE sample
+
+
 COMPONENT detector = PSD_monitor(
     nx = 128, ny = 128, filename = "PSD.dat", xmin = -0.3,
     xmax = 0.3, ymin = -0.3, ymax = 0.3)
@@ -81,6 +87,12 @@ COMPONENT Ldetector = L_monitor(
   AT (0, 0, 3.01) RELATIVE sample
 
 
+COMPONENT PSDrad = PSD_monitor_rad(
+    filename = "psd2.dat", filename_av = "psd2_av.dat", rmax = 0.3)
+  AT (0, 0, 3.02) RELATIVE sample
+
+
+
 
 
 
@@ -88,6 +100,7 @@ FINALLY
 %{
 %}
 END
+
 
 
 
