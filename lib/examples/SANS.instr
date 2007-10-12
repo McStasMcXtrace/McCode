@@ -12,7 +12,7 @@
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: tests
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
@@ -30,14 +30,14 @@
 * r   : Radius of scattering hard spheres [AA]
 * PHI   : Particle volume fraction [1]
 * Delta_Rho : Excess scattering length density (fm/AA^3)
-* Sigma_a : Absorption cross section density at 2200 m/s [m^-1]
+* Sigma_a : Absorption cross section at 2200 m/s [barns]
 * Qmax    : Maximum momentum transfer [AA^-1]
 *
 * %Link
 * *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT Risoe_sans(Lambda=6, D_lambda=0.05, r=100, PHI=1e-3, Delta_Rho=0.6, Sigma_a=50, Qmax=0.3)
+DEFINE INSTRUMENT Risoe_sans(Lambda=6, D_lambda=0.05, r=100, PHI=1e-3, Delta_Rho=0.6, Sigma_a=0.5, Qmax=0.3)
 DECLARE
 %{
 %}
@@ -71,7 +71,7 @@ COMPONENT sample = Sans_spheres(R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_a=Sigma
 
 
 COMPONENT STOP = Beamstop(
-    radius = 0.05)
+    radius = 0.02)
   AT (0, 0, 2.9) RELATIVE sample
 
 
