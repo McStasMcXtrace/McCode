@@ -12,7 +12,7 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -73,11 +73,29 @@ INITIALIZE
   
   
   pmul=flux*1e4*srcArea/mcget_ncount();
-  if (srcArea <= 0 || dist < 0 || xw < 0 || yh < 0
-    || (!Lambda0 && !dLambda && (E0 <= 0 || dE < 0 || E0-dE <= 0))
+  if (srcArea <= 0) {
+    printf("Source_simple: %s: Source area is <= 0 !\n",
+	   "ERROR - Exiting",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if (dist < 0 || xw < 0 || yh < 0) {
+    printf("Source_simple: %s: Target area unmeaningful! (negative dist / xw / yh)\n",
+	   "ERROR - Exiting",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  
+  if ((!Lambda0 && !E0 && !dE && !dLambda)) {
+    printf("Source_simple: %s: You must specify either a wavelength or energy range!\n",
+	   "ERROR - Exiting",
+           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if ((!Lambda0 && !dLambda && (E0 <= 0 || dE < 0 || E0-dE <= 0))
     || (!E0 && !dE && (Lambda0 <= 0 || dLambda < 0 || Lambda0-dLambda <= 0))) {
-      printf("Source_simple: %s: Error in input parameter values!\n"
-             "ERROR          Exiting\n",
+    printf("Source_simple: %s: Unmeaningful definition of wavelength or energy range!\n",
+	   "ERROR - Exiting",
            NAME_CURRENT_COMP);
       exit(0);
   }
