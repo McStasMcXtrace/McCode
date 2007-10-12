@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.9 $
+* Version:  $Revision: 1.10 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -303,7 +303,7 @@ INITIALIZE
 
     if (verbose) fprintf(stdout, "%s\n", head);
     if (verbose) {
-      printf("Analysing MCNP file %s (", file, MCNP_ANALYSE);
+      printf("Analysing MCNP file %s (", file);
       if (MCNP_ANALYSE) printf("%g events)\n", MCNP_ANALYSE);
       else printf("all events)\n");
     }
