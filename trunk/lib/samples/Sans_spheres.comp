@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: KL, 7 June 2005
@@ -56,7 +56,7 @@
 
 DEFINE COMPONENT Sans_spheres
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, sigma_a=50, dist=6, Rdet=0.5 ,xwidth=0.01, yheight=0.01, zthick=0.005, qmax=0)
+SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, sigma_a=0.50, dist=6, Rdet=0.5 ,xwidth=0.01, yheight=0.01, zthick=0.005, qmax=0)
 OUTPUT PARAMETERS (my_s_v2, my_a_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
