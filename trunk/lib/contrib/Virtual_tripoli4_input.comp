@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.25 $
+* Version:  $Revision: 1.26 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -293,7 +293,7 @@ INITIALIZE
     }
 
     if (verbose) {
-      printf("Analysing Tripoli4 file %s (", file, T4_ANALYSE);
+      printf("Analysing Tripoli4 file %s (", file);
       if (T4_ANALYSE) printf("%g events)\n", T4_ANALYSE);
       else printf("all events)\n");
     }

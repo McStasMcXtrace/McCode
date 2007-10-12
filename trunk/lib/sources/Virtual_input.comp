@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.24 $
+* Version:  $Revision: 1.25 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -176,6 +176,8 @@ TRACE
           file_ncount = mcget_run_num();  /* ncount in file */
           if (verbose)
             printf("Virtual_input: %s: file '%s' contains %g events\n", NAME_CURRENT_COMP, file, file_ncount);
+          /* set ncount from file length */
+          mcset_ncount(file_ncount*repeat_count);
         }
         Offset = 0;       /* reposition to begining of file */
         repeat_number++;  /* we start a new repeat_count loop */
@@ -252,8 +254,6 @@ TRACE
             if (mean_k) mean_L = 2*PI/mean_k;
             mean_w = VS2E*mean_v*mean_v;
             printf("McStas Virtual Source file %s\nContains about %g events, intensity=%g\n", file, n_count_extrapolated, n_neutrons*rTable.filesize/Offset);
-            if (n_count_extrapolated > mcget_ncount())
-              printf("    (will use only %.3g %% of file)\n", 100*mcget_ncount()/n_count_extrapolated);
 
             printf("  Source size (full width in [m]):      ");
             printf("    dX=%g dY=%g dZ=%g\n", max_x-min_x, max_y-min_y, max_z-min_z);
@@ -269,6 +269,8 @@ TRACE
             printf("  Beam mean energy:\n");
             printf("    speed=%g [m/s] energy=%g [meV]\n    wavelength=%g [Angs] wavevector=%g [Angs-1]\n", mean_v, mean_w, mean_L, mean_k);
           }
+          /* set ncount from estimate with security margin 10 % */
+          mcset_ncount(n_count_extrapolated*repeat_count*1.1);
         }
         first_block= 0;
       }
