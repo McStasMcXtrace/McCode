@@ -22,7 +22,7 @@ Description: McStas is a computer program (written in C) that enables
  .
  To start McStas, use: mcgui
  .
- We recommand to install some of:
+ We recommend to install some of:
    Matlab, Scilab, Octave, Gnuplot, MPI, gdl, freewrl, gtklookat,
    octagaplayer as well.
  .

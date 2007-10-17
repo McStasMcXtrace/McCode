@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.66 $
+* Version: $Revision: 1.67 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -192,8 +192,8 @@
 * auto_norm:    [1] Normalize S(q,w) when -1. Use raw data when 0 (default),
 *                     multiply S(q,w) when auto_norm>0.
 * auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
-*                   to optimal setting whenever required (recommanded).
-* interpolate:  [1] Perform (q,w) smoothing from S(q,w) if true (recommanded).
+*                   to optimal setting whenever required (recommended).
+* interpolate:  [1] Perform (q,w) smoothing from S(q,w) if true (recommended).
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.66 $
+#define ISOTROPIC_SQW $Revision: 1.67 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica

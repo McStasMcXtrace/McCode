@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.10 $
+* Version:  $Revision: 1.11 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -28,7 +28,7 @@
 * Note that axes orientation may be different between MCNP and McStas.
 * The component has the ability to center and orient the neutron beam to the Z-axis.
 * It also may change the coordinate system from the MCNP frame to the McStas one.
-* The verbose mode is highly recommanded as it displays lots of useful informations.
+* The verbose mode is highly recommended as it displays lots of useful informations.
 * To obtain absolute intensity, set 'intensity' and 'nps' parameters.
 * The source total intensity is 1.054e18 for LLB/Saclay (14 MW) and 4.28e18 for
 * ILL/Grenoble (58 MW).
@@ -41,7 +41,7 @@
 * positions are in cm and the direction vector is normalized to 1.
 *
 * %BUGS
-* We recommand not to use parallel execution (MPI/Threads) with this component.
+* We recommend not to use parallel execution (MPI/Threads) with this component.
 *
 * EXAMPLE:
 * To generate PTRAC files using MCNP/MCNPX, add at the end of your input file:

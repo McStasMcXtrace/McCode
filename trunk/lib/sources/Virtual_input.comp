@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.25 $
+* Version:  $Revision: 1.26 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -38,7 +38,7 @@
 * (with the 11 values 'p x y z vx vy vz t sx sy sz') for float/double resp.
 *
 * %BUGS
-* We recommand not to use parallel execution (MPI/Threads) with this component.
+* We recommend not to use parallel execution (MPI/Threads) with this component.
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
@@ -59,7 +59,7 @@
 * repeat_count: Number of times the source must be generated/repeated [1]
 * type:         May be "text", "float" or "double" to force file type.
 *                           default is text file [str]
-* verbose:      Display additional information about source, recommanded [0/1]
+* verbose:      Display additional information about source, recommended [0/1]
 * smooth:       Smooth sparsed event files for file repetitions [0/1]
 *
 * %E
