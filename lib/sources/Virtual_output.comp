@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.11
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -37,7 +37,7 @@
 *
 * Beware the size of generated files ! When saving all events (bufsize=0) the
 * required memory has been optimized and remains very small. On the other hand
-* using large bufsize values (not recommanded) requires huge storage memory.
+* using large bufsize values (not recommended) requires huge storage memory.
 * Moreover, using the 'bufsize' parameter will often lead to wrong intentities.
 * Both methods will generate huge files.
 *
@@ -45,7 +45,7 @@
 * Vitess simulation (104 bytes per neutron) and read with Vitess_input.
 *
 * %BUGS
-* We recommand not to use parallel execution (MPI/Threads) with this component.
+* We recommend not to use parallel execution (MPI/Threads) with this component.
 *
 * Example: Virtual_output(file="MySource.dat")
 *   will generate a 9 Mo text file for 1e5 events stored.
@@ -59,7 +59,7 @@
 * file: [str] Filename of neutron file to write. Default is standard
 *           output [string]. If not given, a unique name will be used.
 * bufsize:[1] Size of neutron output buffer
-*           default is 0, i.e. save all - recommanded.
+*           default is 0, i.e. save all - recommended.
 * type: [str] Type of output file 'text','float','double'
 *           default is text
 *
@@ -128,7 +128,7 @@ INITIALIZE
                          "ERROR           require to use a buffer size (bufsize>0).\n",
                          NAME_CURRENT_COMP));
   else if (bufsize > 0 && !strstr(mcformat.Name, "NeXus"))
-    printf("Warning: Virtual_output: %s: buffer size=%g not recommanded\n", NAME_CURRENT_COMP, bufsize);
+    printf("Warning: Virtual_output: %s: buffer size=%g not recommended\n", NAME_CURRENT_COMP, bufsize);
   if (bufsize > 0) printf(
            "Virtual_output: %s: Beware virtual output generated file size (max %g Mo)\n"
            "WARNING         Memory required is %g Mo\n", NAME_CURRENT_COMP,

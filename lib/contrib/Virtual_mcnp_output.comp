@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto hennanec@ensimag.fr">Chama Hennane</a>
 * Date: July 7th, 2006
-* Version:  $Revision: 1.2 $
+* Version:  $Revision: 1.3 $
 * Release: McStas 1.10
 *
 * Detector-like component that writes neutron state parameters into a
@@ -29,7 +29,7 @@
 * positions are in cm and the direction vector is normalized to 1.
 *
 * %BUGS
-* We recommand not to use parallel execution (MPI/Threads) with this component.
+* We recommend not to use parallel execution (MPI/Threads) with this component.
 *
 * EXAMPLE:
 * To create a file collecting all neutron states with MCNP5 format

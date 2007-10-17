@@ -229,7 +229,7 @@ sub parse_args {
         }
     }
 
-    # optiization can not use grid/ssh
+    # optimization can not use grid/ssh
     if ($optim_flag) {
       $multi=0;
     }
@@ -929,7 +929,7 @@ sub do_scan {
             if ($got_error || (! $ret && ($? != 0 || $!))) {
               print "mcrun: Exit due to error returned by simulation program ($out_file=$?)\n" ;
               # continue scan as further steps may be OK, and final scan dimension is right
-              $found_invalid_scans++;;
+              $found_invalid_scans++;
               my $Counter;
               for ($Counter = 0; $Counter < $Monitors_nb; $Counter++) {
                 $out .= " 0 0";

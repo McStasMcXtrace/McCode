@@ -168,7 +168,7 @@ install: installdirs $(BINOBJS)
 	cd support/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
 	cd support/Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
 	chmod a+x $(mc_libdir)/tools/perl/mcstas_reconfigure
-	echo McStas library has been installed in $(mc_libdir), and binaries in $(bindir)
+	echo McStas library has been installed in MCSTAS=$(mc_libdir), and binaries in $(bindir)
 	echo "Start McStas with: mcgui or use mcrun for command line simulations"
 	echo "==== Installation finished. Thanks for using McStas ===="
 
