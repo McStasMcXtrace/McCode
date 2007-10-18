@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.173 $
+* Version: $Revision: 1.174 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.173 2007-10-17 13:05:04 farhi Exp $
+* $Id: mcstas-r.c,v 1.174 2007-10-18 10:01:22 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.173  2007/10/17 13:05:04  farhi
+* MPI run: solve output scrambling when using MPI: force fflush when saving.
+*
 * Revision 1.172  2007/10/02 09:59:00  farhi
 * Fixed exit call for instr --help and --info with or without MPI.
 *
@@ -2697,6 +2700,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       else strcat(filename,mcformat.Extension);
     }
   }
+  fflush(NULL);
 
 #ifdef USE_MPI
   mpi_event_list = (strstr(format.Name," list ") != NULL);
@@ -2708,7 +2712,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
     mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
 
     /* slaves are done */
-    if(mpi_node_rank != mpi_node_root) { fflush(stdout); fflush(stderr); return 0; }
+    if(mpi_node_rank != mpi_node_root) return 0;
   }
 #endif /* USE_MPI */
 
@@ -2845,6 +2849,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
      free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL;
   }
+  fflush(NULL);
   return(Psum);
 } /* mcdetector_out_012D */
 
