@@ -826,9 +826,13 @@ sub do_scan {
                       ($info->{MAX}[$j] + $info->{MIN}[$j])/2;
                 }
                 $out .= "$vals{$params[$i]} ";
-                $variables .= "$params[$i] " if $firsttime
+                $variables .= "$params[$i] " if $firsttime && !$found_invalid_scans
+            } # end for
+            if (@{$info->{VARS}} == 0) 
+            { 
+              $out .= "$point "; 
+              $variables .= "Point " if $firsttime && !$found_invalid_scans; 
             }
-            if (@{$info->{VARS}} == 0) { $out .= "$point "; $variables .= "Point " if $firsttime; }
             # Decide how to handle output files.
             my $output_opt =
                 $data_dir ? "--dir=$data_dir/$point" : "--no-output-files";
@@ -840,9 +844,9 @@ sub do_scan {
                 $pid = open(SIM, "@cmdlist |");
             } else {
                 $pid = open(SIM, "-|");
-            }
+            } # end if Config
             die "mcrun: Failed to spawn simulation command" unless defined($pid);
-            if($pid) {                # Parent
+            if($pid) {              # Parent
                 # install SIG handler for scans
                 sub sighandler {
                   my $signame = shift;
@@ -851,7 +855,7 @@ sub do_scan {
                     print STDERR "mcrun: Recieved signal $signame during scan ($point of $numpoints). Finishing.\n";
                     $point = $numpoints;
                   }
-                }
+                } # end sighandler
                 if ($optim_flag == 0) {
                   $SIG{'INT'}  = \&sighandler;
                   $SIG{'TERM'} = \&sighandler;
@@ -889,17 +893,23 @@ sub do_scan {
                         }
                     } elsif(m'^Error:') { # quote hack '
                         $got_error = 1;
-                    }
+                    } # end while SIM
                     print "$_\n";
                 } # end while
                 # Output final monitor data:
-                if (!$Monitors_nb) { $Monitors_nb = @Monitors; }
-                for ($Counter = 0; $Counter < @Monitors; $Counter++) {
-                    if ($firsttime){
-                      $variables .= " $Monitors[$Counter] $Monitors_E[$Counter]";
-                      push @youts, "($Monitors[$Counter],$Monitors_E[$Counter])";
-                    }
-                    $out .= " $Intensities[$Counter] $Errors[$Counter]";
+                if (!$Monitors_nb) { $Monitors_nb = @Monitors; }  # store number of monitors (valid scan)
+                if ($Monitors_nb > 0 && $Monitors_nb != @Monitors) {
+                  for ($Counter = 0; $Counter < $Monitors_nb; $Counter++) {
+                    $out .= " 0 0"; # add empty line to scan data when error prevents reading Monitors
+                  }
+                } else {
+                  for ($Counter = 0; $Counter < @Monitors; $Counter++) {  # skipped if no Monitor read
+                      if ($firsttime){
+                        $variables .= " $Monitors[$Counter] $Monitors_E[$Counter]";
+                        push @youts, "($Monitors[$Counter],$Monitors_E[$Counter])";
+                      }
+                      $out .= " $Intensities[$Counter] $Errors[$Counter]";
+                  }
                 }
                 # remove SIG handler
                 if ($optim_flag == 0) {
@@ -917,31 +927,28 @@ sub do_scan {
             } # end if pid
 
             my $ret = close(SIM);
-            if ($firsttime eq 1) {
-              if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
-                  if (($slave eq 0) || ($slave eq 'localhost')) {
-                      output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
-                  }
-              }
-            } else {
-              push @lab_datablock, "\n";
-            }
             if ($got_error || (! $ret && ($? != 0 || $!))) {
-              print "mcrun: Exit due to error returned by simulation program ($out_file=$?)\n" ;
-              # continue scan as further steps may be OK, and final scan dimension is right
               $found_invalid_scans++;
-              my $Counter;
-              for ($Counter = 0; $Counter < $Monitors_nb; $Counter++) {
-                $out .= " 0 0";
+              print "mcrun: Exit #$found_invalid_scans due to error returned by simulation program ($out_file=$?)\n" ;
+              # continue scan as further steps may be OK, and final scan dimension is right
+            }
+            # output section, only when we know how many monitors there are
+            if ($Monitors_nb) {
+              if ($firsttime eq 1) {  # output header for first valid scan step
+                if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+                    if (($slave eq 0) || ($slave eq 'localhost')) {
+                        output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
+                    }
+                }
+                $firsttime = 0;
+              } else {
+                push @lab_datablock, "\n";
               }
-            }
-            if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
-                    print $DAT "$out\n";
-            }
-            push @lab_datablock, "$out";
-            $firsttime = 0;
-            if ($got_error || (! $ret && ($? != 0 || $!))) {
-              next;
+              # add scan data line
+              if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+                      print $DAT "$out\n";
+              }
+              push @lab_datablock, "$out";
             }
         } # end if point
     } # end for point
@@ -953,8 +960,8 @@ sub do_scan {
 
     print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
     if ($found_invalid_scans) {
-    die "mcrun: Error: Simulation $out_file returned $found_invalid_scans invalid scan steps,
-which intensity was set to zero in data file $datfile.\n"; }
+      die "mcrun: Error: Simulation $out_file $data_dir returned $found_invalid_scans invalid scan steps,
+       which intensity was set to zero in data file $datfile.\n"; }
 
     return ($datablock,$variables, @youts);
 }
