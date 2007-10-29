@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.76 $
+* Version: $Revision: 1.77 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.76  2007/07/30 13:43:07  farhi
+* Instrument parameters may be specified more than once (specially when using %include "instr", e.g. Lambda in all instr). Recurrent parameters are
+* skipped, only the first def is used and a warning is issued.
+*
 * Revision 1.75  2007/06/25 12:37:29  pkwi
 * Split bug corrected!
 *
@@ -171,7 +175,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.76 2007-07-30 13:43:07 farhi Exp $
+* $Id: cogen.c,v 1.77 2007-10-29 18:41:18 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1298,11 +1302,14 @@ cogen_trace(struct instr_def *instr)
                      comp->def->trace_code);
 
     if (comp->group) {
+      coutf("#undef %sabsorb", ID_PRE);
+      coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
       coutf("  } /* end comp %s in GROUP %s */", comp->name, comp->group->name);
-      cout ("  /* Label to skip component instead of ABSORB */");
-      coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
       coutf("  if (SCATTERED) %sGroup%s=%i;",
         ID_PRE, comp->group->name, comp->index);
+      cout ("  /* Label to skip component instead of ABSORB */");
+      coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
+      
       if (strcmp(comp->name, comp->group->last_comp)) {
         /* not the last comp of GROUP: check if SCATTERED */
         coutf("  if (!%sGroup%s) /* restore neutron if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
@@ -1313,10 +1320,9 @@ cogen_trace(struct instr_def *instr)
       } else {
         /* last comp of GROUP: restore default ABSORB */
         coutf("/* end of GROUP %s */", comp->group->name);
-        coutf("#undef %sabsorb", ID_PRE);
-        coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
+        coutf("  if (!%sGroup%s) ABSORB; /* absorb neutrons non scattered in GROUP */", ID_PRE, comp->group->name);
         if (comp->group->split) {
-          /* only adapt weight for splitd neutrons in last comp of GROUP */
+          /* only adapt weight for split neutrons in last comp of GROUP */
           char *exp=exp_tostring(comp->group->split); /* number of splits */
           coutf("  if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed neutron in GROUP */",
             exp, exp);
