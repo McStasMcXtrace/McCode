@@ -125,10 +125,13 @@ sub html_table_entry {
     print $f "<TR>\n";
     print $f "<TD> ";
     print $f "<B>" if %{$d->{'parhelp'}};
+    my $link = "file://".$vn;
+    $link =~ s!\\!/!g;
+    
     if ($d->{'type'} eq "Instrument") {
-      print $f "$d->{'site'} <A HREF=\"$vn.html\">$d->{'name'}</A> ($d->{'path'})";
+      print $f "$d->{'site'} <A HREF=\"$link.html\">$d->{'name'}</A> ($d->{'path'})";
     } else {
-      print $f "<A HREF=\"$vn.html\">$d->{'name'}</A>";
+      print $f "<A HREF=\"$link.html\">$d->{'name'}</A>";
     }
     print $f "</B>" if %{$d->{'parhelp'}};
     print $f "</TD>\n";
@@ -573,21 +576,21 @@ if ($show_website) {
 
 if ($show_manual) {
   # open the manual using embedded acroread plugin
-  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $MCSTAS::sys_dir/doc/mcstas-manual.pdf";
+  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/mcstas-manual.pdf";
   print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   die "mcdoc: User manual done.\n";
 }
 
 if ($show_compman) {
   # open the component manual
-  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $MCSTAS::sys_dir/doc/mcstas-components.pdf";
+  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/mcstas-components.pdf";
   print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   die "mcdoc: Component manual done.\n";
 }
 
 if ($show_tutorial) {
   # open the index.html
-  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $MCSTAS::sys_dir/doc/tutorial/html/tutorial.html";
+  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/tutorial/html/tutorial.html";
   print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   die "mcdoc: Tutorial done.\n";
 }
@@ -661,7 +664,7 @@ if ($use_local) {
 }
 my @tblist = map "<A href=\"#$_\">$_</A>", @sections;
 my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";
-$toolbar .= "<P ALIGN=CENTER>\n [ <a href=\"$MCSTAS::sys_dir/doc/mcstas-manual.pdf\">User Manual</a>
+$toolbar .= "<P ALIGN=CENTER>\n [ <a href=\"$HTTP_SYSDIR/doc/mcstas-manual.pdf\">User Manual</a>
 | <a href=\"$HTTP_SYSDIR/doc/mcstas-components.pdf\">Component Manual</a>
 | <a href=\"$HTTP_SYSDIR/doc/tutorial/html/tutorial.html\">McStas tutorial</a>
 | <a href=\"$HTTP_SYSDIR/data\">Data files</a> ]\n</P>\n";
