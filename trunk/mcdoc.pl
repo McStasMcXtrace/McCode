@@ -36,6 +36,8 @@ my $single_comp_name = 0;  # component single name
 my $browser       = $MCSTAS::mcstas_config{'BROWSER'};
 my $is_forced     = 0; # true when force re-writting of existing HTML
 my @valid_names; # Full list of possible comp matches
+my $HTTP_SYSDIR = "file://".$MCSTAS::sys_dir; # Many browsers need a file:// to properly access local files
+$HTTP_SYSDIR =~ s!\\!/!g;
 
 sub show_header { # output in text mode
     my ($d) = @_;
@@ -660,9 +662,9 @@ if ($use_local) {
 my @tblist = map "<A href=\"#$_\">$_</A>", @sections;
 my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";
 $toolbar .= "<P ALIGN=CENTER>\n [ <a href=\"$MCSTAS::sys_dir/doc/mcstas-manual.pdf\">User Manual</a>
-| <a href=\"$MCSTAS::sys_dir/doc/mcstas-components.pdf\">Component Manual</a>
-| <a href=\"$MCSTAS::sys_dir/doc/tutorial/html/tutorial.html\">McStas tutorial</a>
-| <a href=\"$MCSTAS::sys_dir/data\">Data files</a> ]\n</P>\n";
+| <a href=\"$HTTP_SYSDIR/doc/mcstas-components.pdf\">Component Manual</a>
+| <a href=\"$HTTP_SYSDIR/doc/tutorial/html/tutorial.html\">McStas tutorial</a>
+| <a href=\"$HTTP_SYSDIR/data\">Data files</a> ]\n</P>\n";
 
 if ($filehandle) {
   html_main_start($filehandle, $toolbar);
