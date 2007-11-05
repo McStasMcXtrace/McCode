@@ -139,9 +139,12 @@ sub html_table_entry {
     print $f "<TD>$d->{'identification'}{'origin'}</TD>\n";
 
     print $f "<TD>$d->{'identification'}{'author'}</TD>\n";
-
+    
+    $link = "file://".$bn;
+    $link =~ s!\\!/!g;
+    
     print $f "<TD>";
-    print $f "<A HREF=\"$bn.$d->{'ext'}\">$d->{'ext'}</A>";
+    print $f "<A HREF=\"$link.$d->{'ext'}\">$d->{'ext'}</A>";
     print $f "</TD>\n";
 
     print $f "<TD>$d->{'identification'}{'short'}</TD>\n";
