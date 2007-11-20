@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.28 $
+* Version:  $Revision: 1.29 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -100,7 +100,7 @@ SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1,
 OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,begin_batch,do_rotate,do_translate,
                    bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated,
                    min_x, min_y, min_z,    max_x , max_y , max_z ,
-                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated)
+                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated, repeat_cnt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
@@ -221,6 +221,7 @@ char **tripoli_get_header(FILE *hfile,long *nl){
 DECLARE
 %{
   int   rep=1;                    /* Neutron repeat count */
+  int     repeat_cnt;             /* Repeat count, MPI taken into account */
   FILE *hfile;                    /* Neutron input file handle */
   char **head;                    /*Tripol4 header*/
   long  nl;                       /* Number of lines in header*/
@@ -460,6 +461,11 @@ INITIALIZE
     if (min_dv > fabs(max_vz-min_vz)) min_dv = fabs(max_vz-min_vz);
     min_vx = min_dv;
   } /* non-empty filename */
+  
+  repeat_cnt = repeat_count;
+  #if defined (USE_MPI)
+    repeat_cnt = ceil(repeat_cnt/mpi_node_count);
+  #endif
 %}
 
 TRACE
@@ -497,7 +503,7 @@ TRACE
          x = nvx;  y=nvy;  z=nvz;
       }
     }
-    if (intensity_extrapolated) p *= fabs(intensity_extrapolated/repeat_count);
+    if (intensity_extrapolated) p *= fabs(intensity_extrapolated/repeat_cnt);
     SCATTER;
     break;
   }
@@ -544,7 +550,7 @@ TRACE
 
   if (result_read==EOF) {  /* normal end of file */
     rep++;
-    if (rep <= repeat_count) {
+    if (rep <= repeat_cnt) {
       /* reposition at start of file (batch start) */
       int ret = fseek(hfile, first_batch,SEEK_SET);
       if (ret) {
@@ -558,11 +564,7 @@ TRACE
     else exit_flag=1;
   }
 
-  if (exit_flag) { mcset_ncount(mcget_run_num()
- #ifdef USE_MPI
- /mpi_node_count
- #endif
- ); ABSORB; }
+  if (exit_flag) { mcset_ncount(mcget_run_num()); ABSORB; }
 
 } /* end while */
 

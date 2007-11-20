@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.175 $
+* Version: $Revision: 1.176 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.175 2007-11-20 14:58:23 farhi Exp $
+* $Id: mcstas-r.c,v 1.176 2007-11-20 20:48:44 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.175  2007/11/20 14:58:23  farhi
+* Fixed change of ncount when using MPI (e.g. Virtual sources)
+*
 * Revision 1.174  2007/10/18 10:01:22  farhi
 * mcdetector_out: fflush(NULL) to flush all opened streams, not only for MPI.
 *
@@ -4968,7 +4971,11 @@ mcstas_raytrace(void *p_node_ncount)
 {
   double node_ncount = *((double*)p_node_ncount);
   double local_mcrun_num=0;
-  while(local_mcrun_num < node_ncount && mcrun_num < mcncount)
+  while(
+#ifdef USE_THREADS
+local_mcrun_num < node_ncount && 
+#endif
+mcrun_num < mcncount)
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
     // old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1);

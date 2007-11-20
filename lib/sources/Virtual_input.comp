@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.27 $
+* Version:  $Revision: 1.28 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -72,7 +72,7 @@ OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,file_ncount,
                    mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz, n_neutrons,
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
                    max_vx, max_vy, max_vz, first_block, mean_x, mean_y, mean_z,
-                   end_reading, n_count_extrapolated)
+                   end_reading, n_count_extrapolated, repeat_cnt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
@@ -107,6 +107,7 @@ long Virtual_input_Read_Input(char *aFile, char *aType, t_Table *aTable, long *a
 DECLARE
 %{
   int     repeat_number=1; /* Neutron repeat of the file */
+  int     repeat_cnt;     /* Repeat count, MPI taken into account */
   long    pos=0;        /* current pos in block */
   long    nrows=0;      /* total nrows in block */
   long    Offset=0;     /* offset in file */
@@ -161,7 +162,11 @@ INITIALIZE
         printf("* Beam will be smoothed\n");
   } else if (!file)
     exit(fprintf(stderr,"Virtual_input: %s: please give me a file name (file).\n", NAME_CURRENT_COMP));
-
+  
+  repeat_cnt = repeat_count;
+  #if defined (USE_MPI)
+    repeat_cnt = ceil(repeat_cnt/mpi_node_count);
+  #endif
 %}
 
 TRACE
@@ -177,24 +182,16 @@ TRACE
           if (verbose)
             printf("Virtual_input: %s: file '%s' contains %g events\n", NAME_CURRENT_COMP, file, file_ncount);
           /* set ncount from file length */
-          mcset_ncount(file_ncount*repeat_count
-#ifdef USE_MPI
- /mpi_node_count
- #endif
-);
+          mcset_ncount(file_ncount*repeat_cnt);
         }
         Offset = 0;       /* reposition to begining of file */
-        repeat_number++;  /* we start a new repeat_count loop */
+        repeat_number++;  /* we start a new repeat_cnt loop */
 
         /* end of simulation if ... */
-        if (repeat_number > repeat_count) {
+        if (repeat_number > repeat_cnt) {
           if (verbose)
-            printf("Virtual_input: %s: Ending after %g events (%i repeat count)\n", NAME_CURRENT_COMP, mcget_run_num(), (long)repeat_count);
-          read_block=0; mcset_ncount(mcget_run_num()
-#ifdef USE_MPI
-/mpi_node_count
-#endif
- ); pos=0;
+            printf("Virtual_input: %s: Ending after %g events (%i repeat count)\n", NAME_CURRENT_COMP, mcget_run_num(), (long)repeat_cnt);
+          read_block=0; mcset_ncount(mcget_run_num()); pos=0;
           end_reading = 1;
         }
         /* else continue reading blocks */
@@ -235,7 +232,7 @@ TRACE
       }
 
       pos++;
-      p /= repeat_count;
+      p /= repeat_cnt;
       SCATTER;
 
       if (pos >= nrows) { /* reached end of block */
@@ -278,7 +275,7 @@ TRACE
             printf("    speed=%g [m/s] energy=%g [meV]\n    wavelength=%g [Angs] wavevector=%g [Angs-1]\n", mean_v, mean_w, mean_L, mean_k);
           }
           /* set ncount from estimate with security margin 10 % */
-          mcset_ncount(n_count_extrapolated*repeat_count*1.1);
+          mcset_ncount(n_count_extrapolated*repeat_cnt*1.1);
         }
         first_block= 0;
       }
@@ -315,12 +312,12 @@ FINALLY
              "               ncount=%g but file contains %g events\n"
              "               Intensities may be wrong.\n"
              "               Increase ncount value to %g or higher.\n",
-           NAME_CURRENT_COMP, file, mcget_ncount(), file_ncount, file_ncount*repeat_count);
-    if (mcget_ncount() < file_ncount*repeat_count)
+           NAME_CURRENT_COMP, file, mcget_ncount(), file_ncount, file_ncount*repeat_cnt);
+    if (mcget_ncount() < file_ncount*repeat_cnt)
       printf("Warning: Virtual_input: %s: not all source %s repetitions were generated.\n"
              "               Intensities may be wrong.\n"
              "               Increase ncount value to %g or higher.\n",
-             NAME_CURRENT_COMP, file, file_ncount*repeat_count);
+             NAME_CURRENT_COMP, file, file_ncount*repeat_cnt);
   }
 %}
 
