@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.174 $
+* Version: $Revision: 1.175 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.174 2007-10-18 10:01:22 farhi Exp $
+* $Id: mcstas-r.c,v 1.175 2007-11-20 14:58:23 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.174  2007/10/18 10:01:22  farhi
+* mcdetector_out: fflush(NULL) to flush all opened streams, not only for MPI.
+*
 * Revision 1.173  2007/10/17 13:05:04  farhi
 * MPI run: solve output scrambling when using MPI: force fflush when saving.
 *
@@ -5127,10 +5130,9 @@ if (mpi_node_count > 1) {
 #else
 
 #ifdef USE_MPI /* use mpirun */
-mcstas_raytrace(&mpi_mcncount); /* sliced Ncount on each MPI node */
-#else
-mcstas_raytrace(&mcncount);     /* single cpu full Ncount */
+mcncount = mpi_mcncount;  /* sliced Ncount on each MPI node */
 #endif
+mcstas_raytrace(&mcncount);
 
 #endif
 
