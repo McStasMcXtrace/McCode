@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.26 $
+* Version:  $Revision: 1.27 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -177,7 +177,11 @@ TRACE
           if (verbose)
             printf("Virtual_input: %s: file '%s' contains %g events\n", NAME_CURRENT_COMP, file, file_ncount);
           /* set ncount from file length */
-          mcset_ncount(file_ncount*repeat_count);
+          mcset_ncount(file_ncount*repeat_count
+#ifdef USE_MPI
+ /mpi_node_count
+ #endif
+);
         }
         Offset = 0;       /* reposition to begining of file */
         repeat_number++;  /* we start a new repeat_count loop */
@@ -186,7 +190,11 @@ TRACE
         if (repeat_number > repeat_count) {
           if (verbose)
             printf("Virtual_input: %s: Ending after %g events (%i repeat count)\n", NAME_CURRENT_COMP, mcget_run_num(), (long)repeat_count);
-          read_block=0; mcset_ncount(mcget_run_num()); pos=0;
+          read_block=0; mcset_ncount(mcget_run_num()
+#ifdef USE_MPI
+/mpi_node_count
+#endif
+ ); pos=0;
           end_reading = 1;
         }
         /* else continue reading blocks */
