@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.12 $
+* Version:  $Revision: 1.13 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -103,7 +103,7 @@ OUTPUT PARAMETERS (hfile,head,rep,begin_neutrons,do_rotate,do_translate,
                    bx,by,bz,angle2z,mean_x, mean_y, mean_z,
                    old_surface,surface,informed_event,informed_surface,
                    min_x, min_y, min_z,    max_x , max_y , max_z ,
-                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated)
+                   min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated, repeat_cnt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
 
@@ -246,6 +246,7 @@ char *mcnp_get_header(FILE *hfile){
 DECLARE
 %{
   int   rep=1;                    /* Neutron repeat count */
+  int     repeat_cnt;             /* Repeat count, MPI taken into account */
   FILE *hfile;                    /* Neutron input file handle */
   char *head;                    /*MCNP header*/
 
@@ -437,6 +438,12 @@ INITIALIZE
     if (min_dv > fabs(max_vz-min_vz)) min_dv = fabs(max_vz-min_vz);
     min_vx = min_dv;
   } /* non-empty filename */
+  
+  repeat_cnt = repeat_count;
+  #if defined (USE_MPI)
+    repeat_cnt = ceil(repeat_cnt/mpi_node_count);
+  #endif
+
 %}
 
 TRACE
@@ -461,7 +468,7 @@ TRACE
          x = nvx;  y=nvy;  z=nvz;
       }
 
-      if (intensity && nps) p *= intensity/nps/repeat_count;
+      if (intensity && nps) p *= intensity/nps/repeat_cnt;
       SCATTER;
     }
 
@@ -483,7 +490,7 @@ TRACE
 
   if (result_read==EOF) {  /* normal end of file */
     rep++;
-    if (rep <= repeat_count) {
+    if (rep <= repeat_cnt) {
       /* reposition at start of file (data start) */
       int ret = fseek(hfile, begin_neutrons,SEEK_SET);
       if (ret) {
@@ -499,11 +506,7 @@ TRACE
 
   if (exit_flag) {
     if (verbose) printf("  Finishing simulation\n");
-    mcset_ncount(mcget_run_num()
- #ifdef USE_MPI
- /mpi_node_count
- #endif
- ); ABSORB;
+    mcset_ncount(mcget_run_num()); ABSORB;
   }
   SCATTER;
   break;
