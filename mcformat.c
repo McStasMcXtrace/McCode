@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.20 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.21 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1100,7 +1100,11 @@ int mcformat_convert(char *name)
   }
   if ((stbuf.st_mode & S_IFMT) == S_IFDIR) { /* dir: recursive call */
     char *upper_dir= mcdirname;
-    char *lower_dir= mcoutputdir ? str_cat(mcoutputdir, MC_PATHSEP_S, name, NULL)
+    char *name_win=name;
+#ifdef WIN32
+    if (isalpha(name[0]) && name[1] == ':') name_win += 2;  // skip Windows disk label before cat
+#endif
+    char *lower_dir= mcoutputdir ? str_cat(mcoutputdir, MC_PATHSEP_S, name_win, NULL)
                                : str_dup(name);
     /* entering new directory */
     if (!mctestmode) mcformat_usedir(lower_dir);

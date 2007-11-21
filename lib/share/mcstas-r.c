@@ -11,16 +11,26 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.176 $
+* Version: $Revision: 1.177 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.176 2007-11-20 20:48:44 pkwi Exp $
+* $Id: mcstas-r.c,v 1.177 2007-11-21 09:16:55 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.176  2007/11/20 20:48:44  pkwi
+* Fixes for MPI and input from virtual sources.
+*
+* When using a virtual source (with N neutron rays), the ncount is now
+* restricted to exactly
+*
+* Ncnt = N * ceil(k/m)
+*
+* where k is a requested number of repetitions and m is the number of mpi hosts.
+*
 * Revision 1.175  2007/11/20 14:58:23  farhi
 * Fixed change of ncount when using MPI (e.g. Virtual sources)
 *
@@ -5145,8 +5155,10 @@ mcstas_raytrace(&mcncount);
 
 #ifdef USE_MPI
  /* merge data from MPI nodes */
-  if (mpi_node_count > 1)
+  if (mpi_node_count > 1) {
+  MPI_Barrier(MPI_COMM_WORLD);
   mc_MPI_Reduce(&mcrun_num, &mcrun_num, 1, MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+  }
 #endif
 
 /* save/finally executed by master node/thread */
