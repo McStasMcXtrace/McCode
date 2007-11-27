@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.28 $
+* Version:  $Revision: 1.29 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -164,9 +164,9 @@ INITIALIZE
     exit(fprintf(stderr,"Virtual_input: %s: please give me a file name (file).\n", NAME_CURRENT_COMP));
   
   repeat_cnt = repeat_count;
-  #if defined (USE_MPI)
-    repeat_cnt = ceil(repeat_cnt/mpi_node_count);
-  #endif
+#if defined (USE_MPI)
+  repeat_cnt = ceil(1.0*repeat_cnt/mpi_node_count);
+#endif
 %}
 
 TRACE
@@ -233,6 +233,11 @@ TRACE
 
       pos++;
       p /= repeat_cnt;
+#ifdef USE_MPI
+      /* We always repeat by the number of nodes in an MPI run */
+      p /= mpi_node_count;
+#endif
+
       SCATTER;
 
       if (pos >= nrows) { /* reached end of block */
