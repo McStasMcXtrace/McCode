@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.13 $
+* Version:  $Revision: 1.14 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -441,7 +441,7 @@ INITIALIZE
   
   repeat_cnt = repeat_count;
   #if defined (USE_MPI)
-    repeat_cnt = ceil(repeat_cnt/mpi_node_count);
+    repeat_cnt = ceil(1.0*repeat_cnt/mpi_node_count);
   #endif
 
 %}
@@ -510,6 +510,10 @@ TRACE
   }
   SCATTER;
   break;
+  #ifdef USE_MPI
+      /* We always repeat by the number of nodes in an MPI run */
+      p /= mpi_node_count;
+  #endif
 } /* end while */
 
 

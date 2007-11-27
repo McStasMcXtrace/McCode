@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.29 $
+* Version:  $Revision: 1.30 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -464,7 +464,7 @@ INITIALIZE
   
   repeat_cnt = repeat_count;
   #if defined (USE_MPI)
-    repeat_cnt = ceil(repeat_cnt/mpi_node_count);
+    repeat_cnt = ceil(1.0*repeat_cnt/mpi_node_count);
   #endif
 %}
 
@@ -563,7 +563,10 @@ TRACE
     }
     else exit_flag=1;
   }
-
+  #ifdef USE_MPI
+      /* We always repeat by the number of nodes in an MPI run */
+      p /= mpi_node_count;
+  #endif
   if (exit_flag) { mcset_ncount(mcget_run_num()); ABSORB; }
 
 } /* end while */
