@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.67 $
+* Version: $Revision: 1.68 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.67 $
+#define ISOTROPIC_SQW $Revision: 1.68 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1379,7 +1379,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     tmp = 0;
     if (radius_i>0) {
       if ((VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz,
-                                       radius_i,yheight))
+                                       radius_i,yheight-2*thickness))
       || (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz,
                                        radius_i)))
       tmp = 1; /* we also take into account the hollow part */
