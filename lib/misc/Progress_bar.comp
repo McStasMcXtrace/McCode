@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -108,11 +108,7 @@ TRACE
     (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
       || (percent && !minutes && ncount >= IntermediateCnts))   )
   {
-    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount()
-#ifdef USE_MPI
-                                      *mpi_node_count
-#endif
-    )); fflush(stdout);
+    fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount())); fflush(stdout);
     CurrentTime = NowTime;
     IntermediateCnts = ncount + percent*mcget_ncount()/100;
     if (IntermediateCnts >= mcget_ncount()) fprintf(stdout, "\n");
