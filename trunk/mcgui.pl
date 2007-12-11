@@ -25,6 +25,7 @@
 # PW, 20030314
 use Config;
 use Tk::Balloon;
+use POSIX qw(_exit);
 
 # Determine the path to the McStas system directory. This must be done
 # in the BEGIN block so that it can be used in a "use lib" statement
