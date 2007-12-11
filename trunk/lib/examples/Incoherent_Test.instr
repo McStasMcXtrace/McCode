@@ -9,7 +9,7 @@
 * Origin: RISOE
 * Release: McStas 1.11
 * Version: 0.1
-* %INSTRUMENT_SITE: Tests
+* %INSTRUMENT_SITE: tests
 *
 * This instrument allows to compare incoherent scattering from different McStas 
 * sample components.

@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.77 $
+* Version: $Revision: 1.78 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.77  2007/10/29 18:41:18  farhi
+* Fixed GROUP issue that came in after SPLIT insertion in grammar
+*
 * Revision 1.76  2007/07/30 13:43:07  farhi
 * Instrument parameters may be specified more than once (specially when using %include "instr", e.g. Lambda in all instr). Recurrent parameters are
 * skipped, only the first def is used and a warning is issued.
@@ -175,7 +178,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.77 2007-10-29 18:41:18 farhi Exp $
+* $Id: cogen.c,v 1.78 2007-12-11 14:49:32 farhi Exp $
 *
 *******************************************************************************/
 
@@ -534,6 +537,8 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
     {
       coutf("/* '%s' component extend code */",comp->name);
       coutf("    SIG_MESSAGE(\"%s (Trace:Extend)\");", comp->name); /* signal handler message */
+      if (comp->when)
+        coutf("if (%s)\n", exp_tostring(comp->when));
       codeblock_out(comp->extend);
     }
     if (infunc==2 && list_len(comp->jump) > 0) {
