@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.177 $
+* Version: $Revision: 1.178 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.177 2007-11-21 09:16:55 farhi Exp $
+* $Id: mcstas-r.c,v 1.178 2007-12-12 08:48:58 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.177  2007/11/21 09:16:55  farhi
+* Added MPI_Barrier to easy synchronization of nodes before Reduce (hey Dude !)
+* (Windows) Fixed mcformat catenation of path containing disk label.
+*
 * Revision 1.176  2007/11/20 20:48:44  pkwi
 * Fixes for MPI and input from virtual sources.
 *
@@ -1915,8 +1919,12 @@ void mcinfo_simulation(FILE *f, struct mcformats_struct format,
   if (!f) return;
 
   run_num = mcget_run_num();
-  ncount  = mcget_ncount();
-
+  ncount  = 
+#ifdef USE_MPI
+    mpi_node_count * 
+#endif
+    mcget_ncount();
+  
   if (run_num == 0 || run_num == ncount) sprintf(Value, "%g", ncount);
   else sprintf(Value, "%g/%g", run_num, ncount);
   mcfile_tag(f, format, pre, name, "Ncount", Value);
@@ -2059,7 +2067,11 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   else sprintf(vars, "%s %s_err N", c, c);
 
   run_num = mcget_run_num();
-  ncount  = mcget_ncount();
+  ncount  = 
+#ifdef USE_MPI
+    mpi_node_count * 
+#endif
+    mcget_ncount();
   sprintf(ratio, "%g/%g", run_num, ncount);
 
   mcfile_tag(f, format, pre, parent, "type", type);
