@@ -7,8 +7,8 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: April 7, 2004
 * Origin:ILL
-* Release: McStas 1.11
-* Version: $Revision: 1.4 $
+* Release: McStas 1.12
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H142 S-curved cold guide at the ILL feeding IN12 TAS spectrometer
@@ -23,14 +23,16 @@
 * %Parameters
 * m:  (1) m-value of guide coating (H14/H142)
 * Ki: (AA) central wavevector for incoming neutrons
+* Q:  (AA-1) wavevector transfer at the sample
+* E:  (meV)  energy transfer at the sample
 *
 * %Link
-* The <a href="http://www.ill.fr/YellowBook/IN12">IN12 TAS</a> at the ILL
+* The <a href="http://www.ill.fr/in12">IN12 TAS</a> at the ILL
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_H142_IN12(m=1, Ki=2.662)
+DEFINE INSTRUMENT ILL_H142_IN12(m=1, Ki=2.662, Q=1.0, E=0.0)
 
 /* The DECLARE section allows us to declare variables or small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -71,9 +73,12 @@ double L_H142_13=2.5/2,   Rh_H142_13=0; /* straight */
 /* capture flux positions from moderator: 21.4    28.4    61.2 */
 /* IN12 variables */
 double DM         = 3.3539;	/* Monochromator d-spacing in Angs */
+double DA         = 3.3539; /* Analyzer d-spacing in Angs */
 double A1,A2; /* mono angles */
 double A3,A4; /* sample angles */
 double A5,A6; /* ana angles */
+double RMH, RMV, RAH, RAV;
+double L1=100000, L2=1.726, L3=1.300, L4=0.710;
 
 %}
 
@@ -111,27 +116,88 @@ if (gRh) {
   double SS = -1;
   double SA = 1;
 
-  /*  SM = 0; SS = -0; SA = 0; */
   double ORDER=1;
+  if (DM <= 0.1)
+  {
+    printf("TAS: " NAME_CURRENT_COMP " Mono DM = %f Angs, too small\n", DM);
+    exit(-1);
+  }
   double mono_q = 2*PI*ORDER/DM;  /* Q mono in Angs-1 */
 
-  double vi = K2V*fabs(Ki);
-  double Ei = VS2E*vi*vi;
+  double Vi = K2V*fabs(Ki);
+  double Ei = VS2E*Vi*Vi;
 
+  /* Monocrhomator characteristics (A1,A2 from Ki,DM) */
+  if ((Ki == 0) || (fabs(mono_q/2/Ki) > 1))
+  {
+    printf("TAS: " NAME_CURRENT_COMP " Can not reach this incident wavevector\n");
+    printf("with such a monochromator (A2)\n");
+    printf("Mono DM = %f Angs, requested Ki = %f Angs-1\n", DM, Ki);
+    exit(-1);
+  }
   A2 = asin(mono_q/2/Ki)*RAD2DEG*2;
-  A4 = A2; A6 = A2;
+  A2 *= SM;   /*A1 : mono theta (crystal) */
+  A1  = A2/2; /*A2 : mono 2 theta (arm to sample) */
+  double Ef = Ei - E;
+  if (Ef < 0)
 
-  A2 *= SM;	  /* A1 : mono theta (crystal) */
-  A1 = A2/2; 	/* A2 : mono 2 theta (arm to sample) */
-  A4 *= SS;	  /* A3 : sample theta */
-  A3 = A4/2; 	/* A4 : sample 2 theta (arm to analyser) */
-  A6 *= SA;	  /* A5 : analyser theta (crystal) */
-  A5 = A6/2; 	/* A6 : analyser 2 theta (arm to Dector) */
+  {
+    printf("TAS: " NAME_CURRENT_COMP " Out-going neutrons have negative energy !!\n");
+    printf("Incident Ei = %f meV, Exchange E = %f meV\n",Ei,E);
+    exit(-1);
+  }
 
-  printf("Instrument : %s, on %s.\n",NAME_CURRENT_COMP, getenv("HOSTNAME") ? getenv("HOSTNAME") : "localhost");
-  printf("Monochromator : (DM = %g)\n",DM);
-  printf("A1 = %.2f, A2 = %.2f (deg)\n",A1,A2);
-  printf("Ki = %.4g [Angs-1] Energy = %.4g [meV] Velocity = %.4g [m/s], Lambda = %.4g [Angs]\n", Ki, Ei, vi, sLambda);
+  /* Analyzer characteristics (A5,A6 from Kf, DA) */
+  double Vf = SE2V*sqrt(Ef);     /*final energy from energy transfert */
+  double Kf = V2K*Vf;
+  if (DA <= 0.1)
+  {
+    printf("TAS: " NAME_CURRENT_COMP " Ana DA = %f Angs, too small\n", DM);
+    exit(-1);
+  }
+  double ana_q = 2*PI*ORDER/DA; /* Q ana in Angs-1 */
+  if ((Kf == 0) || (fabs(mono_q/2/Kf) > 1))
+  {
+    printf("TAS: " NAME_CURRENT_COMP " Can not reach this out-going wavevector\n");
+    printf("with such an analyzer (A6)\n");
+    printf("Mono DA = %f Angs, requested Kf = %f Angs-1\n",DA, Kf);
+    exit(-1);
+  }
+  A6 = asin(ana_q/2/Kf)*RAD2DEG*2;
+  A6 *= SA;  /* A5 : analyser theta (crystal) */
+  A5  = A6/2; /* A6 : analyser 2 theta (arm to detector) */
+
+  /* Sample characteristics */
+  double arg = (Ki*Ki + Kf*Kf - Q*Q)/2/fabs(Ki*Kf);
+  if (fabs(arg) > 1)
+  {
+    printf("TAS: Can not close wavevector triangle (A4)\n");
+    printf("Incident Ki = %f Angs-1, Exchange Q=%f Angs-1, ",Ki,Q);
+    printf("Final Kf = %f Angs-1\n",Kf);
+    exit(-1);
+  }
+  A4 = acos(arg)*RAD2DEG;
+  A4 *= SS;   /*A4 : sample 2 theta (arm to analyser) */
+
+  /* computing of A3 requires sample reciprocal axes characteristics. Simplify... */
+  A3  = A4/2; /* A3 : sample theta */
+  
+  double L;
+  L=1/(1/L1+1/L2); RMV=2*L*sin(A1*DEG2RAD); RMH=0;
+  L=1/(1/L3+1/L4); RAV=0;                   RAH=2*L/sin(A5*DEG2RAD);
+
+  printf("%s: Detailed TAS configuration on %s.\n",NAME_CURRENT_COMP, getenv("HOSTNAME") ? getenv("HOSTNAME") : "localhost");
+    printf("* Incoming beam: EI=%.4g [meV] KI=%.4g [Angs-1] Vi=%.4g [m/s] Lambda = %.4g [Angs]\n", Ei, Ki, Vi, sLambda);
+    printf("* Outgoing beam: EF=%.4g [meV] KF=%.4g [Angs-1] Vf=%.4g [m/s]\n", Ef, Kf, Vf);
+  printf("* Transfert:     EN=%g [meV] QM=%g [Angs-1]\n", E, Q);
+    printf("Angles: A1=%.4g A2=%.4g A3=%.4g A4=%.4g A5=%.4g A6=%.4g [deg]\n",
+      A1, A2, A3, A4, A5, A6);
+    printf("Monochromator: DM=%.4g [Angs] RMH=%.4g [m] RMV=%.4g [m] %s\n",
+      DM, RMH, RMV,
+      (!RMH && !RMV ? "flat" : "curved"));
+    printf("Analyzer:      DA=%.4g [Angs] RAH=%.4g [m] RAV=%.4g [m] %s\n",
+      DA, RAH, RAV,
+      (!RAH && !RAV ? "flat" : "curved"));
 
 %}
 
@@ -792,7 +858,7 @@ SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   width = 0.08, height = 0.12, gap = 0.001,
   mosaic = 36,
   r0 = 1, DM=DM,
-  RV=(sin(A1*DEG2RAD)*2*1.726), NH=1, NV=6, reflect="HOPG.rfl")
+  RV=RMV, NH=1, NV=6, reflect="HOPG.rfl")
 AT (0, 0, 0) RELATIVE Mono_Craddle
 
 /*                                on mono, pointing towards sample */
@@ -816,7 +882,7 @@ AT (0, 0, 0.2223) RELATIVE Mono_Out
 /* we are here at 0.34+0.2223=0.562 from monok. L Monok-Sample=1.726. Left 1.1637 */
 
 COMPONENT Sample_Craddle = Arm()
-AT (0, 0, 1.1637+0.34) RELATIVE SC2 ROTATED (0, A3, 0) RELATIVE Mono_Out
+AT (0, 0, L2) RELATIVE Mono_Out ROTATED (0, A3, 0) RELATIVE Mono_Out
 
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
 AT (0,0,0.0001) RELATIVE Sample_Craddle ROTATED (0, A4, 0) RELATIVE Mono_Out
@@ -844,7 +910,7 @@ AT (0, 0, 0.2350) RELATIVE Sample_Out
 /* we are here at 0.34+0.235=0.575 from sample. L Sample-Ana=1300. Left 0.725 */
 
 COMPONENT Ana_Craddle = Arm()
-  AT (0, 0, 0.725+0.34) RELATIVE SC3 ROTATED (0, A5, 0) RELATIVE Sample_Out
+  AT (0, 0, L3) RELATIVE Sample_Out ROTATED (0, A5, 0) RELATIVE Sample_Out
 
 /* IN12 analyser: h x w = 11.8 x 12.1 cm2 , Graphite, 11 vertical blades */
 /* To Add: PG refelctivity from file or direct, Horizontal Curvature */
@@ -852,8 +918,8 @@ COMPONENT Ana_Craddle = Arm()
 SPLIT COMPONENT PG2Xtal = Monochromator_curved(
   width = 0.121, yheight = 0.118, gap = 0.001,
   mosaic = 36,
-  r0 = 1, DM=DM,
-  RV=0, RH=(2*(1/(1/0.710+1/1.30))/sin(A5*DEG2RAD)), NH=11, NV=1, reflect="HOPG.rfl")
+  r0 = 1, DM=DA,
+  RV=RAV, RH=RAH, NH=11, NV=1, reflect="HOPG.rfl")
 AT (0, 0, 0) RELATIVE Ana_Craddle
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
@@ -874,17 +940,18 @@ AT (0, 0, 0.3366) RELATIVE Ana_Out
 COMPONENT He3_1D = Monitor_nD(
   xmin = -0.05/2, xmax = 0.05/2,
   ymin = -0.12/2, ymax = 0.12/2,
-  options="lambda kx, cm2, auto")
-AT (0, 0, 0.2010+0.00004) RELATIVE SC4
+  options="lambda kx, cm2, auto, parallel")
+AT (0, 0, L4) RELATIVE Ana_Out
 
 COMPONENT He3 = Monitor_nD(
   xmin = -0.05/2, xmax = 0.05/2,
   ymin = -0.12/2, ymax = 0.12/2,
   options="x y, 3He_pressure=3, cylinder, outgoing")
-AT (0, 0, 0.2010+0.1724) RELATIVE SC4
+AT (0, 0, L4) RELATIVE Ana_Out
 
 /* The END token marks the instrument definition end */
 END
+
 
 
 
