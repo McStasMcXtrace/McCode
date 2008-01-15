@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.45 $
+* Version: $Revision: 1.46 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -474,6 +474,11 @@ SHARE
         list[i].sig3 = FWHM2RMS*list[i].tau*MIN2RAD*SC_mosaic;
       } else if(SC_mosaic_h > 0 && SC_mosaic_v > 0 && SC_mosaic_n > 0) {
         /* Use anisotropic mosaic. */
+        /*This is not implemeted fully yet (see todo below)- therefore exit with a warning*/ 
+        if ((SC_mosaic_h != SC_mosaic_v) || (SC_mosaic_v!=SC_mosaic_n)){
+          fprintf(stderr,"Single_crystal: Anisotropic mosaic not implemented yet - aborting.\n");
+          return(0);
+        }
         double mos_D[3][3];
         double mos_a, mos_b, mos_c, mos_det, mos_l1, mos_l2;
         double mos_e1_x, mos_e1_y, mos_e1_len, mos_e2_x, mos_e2_y, mos_e2_len;
