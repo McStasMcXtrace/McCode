@@ -136,8 +136,9 @@ Section "McStas ${VERSION} (required)" MCSTAS
   
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("NSIS", "AUTO").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVBIN", "$4").r0'
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("DEVLIB", "$5").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("PERLBIN",  "$3").r0'
-  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("SCIBIN", "$5").r0'
+  System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("SCIBIN", "$6").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCSTAS_SITE", "$INSTDIR").r0'
   System::Call 'Kernel32::SetEnvironmentVariableA(t, t) i("MCVERSION", "${VERSION}").r0'
       
@@ -205,10 +206,11 @@ Function SetCustom
   Push ${TEMP1}
     InstallOptions::dialog "$PLUGINSDIR\mcstas.ini"
   Pop ${TEMP1}
-  
+
     ReadINIStr $3 "$PLUGINSDIR\mcstas.ini" "Field 3" "State"
     ReadINIStr $4 "$PLUGINSDIR\mcstas.ini" "Field 5" "State"
     ReadINIStr $5 "$PLUGINSDIR\mcstas.ini" "Field 7" "State"
+    ReadINIStr $6 "$PLUGINSDIR\mcstas.ini" "Field 9" "State"
 
 FunctionEnd
 
