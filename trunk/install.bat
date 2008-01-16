@@ -50,6 +50,8 @@
 @pause
 @if "%DEVBIN%"=="" set DEVBIN=c:\Dev-CPP\bin
 @SET /P DEVBIN=Where is your Dev-CPP installation? (default is %DEVBIN%):
+@if "%DEVLIB%"=="" set DEVLIB=c:\Dev-CPP\libexec\gcc\mingw32\3.4.2
+@SET /P DEVLIB=What is the location of cc1.exe? (default is %DEVLIB%):
 @if "%PERLBIN%"=="" set PERLBIN=c:\perl\bin
 @SET /P PERLBIN=Where is your perl.exe? (default is %PERLBIN%):
 @if "%SCIBIN%"=="" set SCIBIN=c:\progra~1\scilab-4.0\bin
@@ -57,7 +59,8 @@
 @if "%MCSTAS_SITE%"=="" set MCSTAS_SITE=c:\mcstas
 @SET /P MCSTAS_SITE=Set McStas base directory (default is %MCSTAS_SITE%):
 :nsis
-@set PATH=%PERLBIN%;%SCIBIN%;%DEVBIN%;%PATH%
+@set ORIGPATH=%PATH%
+@set PATH=%PERLBIN%;%SCIBIN%;%DEVBIN%;%DEVLIB%;%PATH%
 @echo Trying to guess your plotter and configuration...
 @mcconfig.pl
 @echo Installing in MCSTAS_SITE=%MCSTAS_SITE%
@@ -94,7 +97,7 @@
 @reg add HKCU\Environment /v MCSTAS /d "%MCSTAS_SITE%\lib" /f
 @reg add HKCU\Environment /v PGPLOT_FONT /d "%MCSTAS_SITE%\bin\grfont.dat" /f
 @reg add HKCU\Environment /v PGPLOT_DIR /d "%MCSTAS_SITE%\bin" /f
-@reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH /d "%MCSTAS_SITE%\bin;%PERLBIN%;%DEVBIN%;%SCIBIN%;%PATH%" /f /t REG_EXPAND_SZ
+@reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATH /d "%MCSTAS_SITE%\bin;%PERLBIN%;%DEVBIN%;%DEVLIB%;%SCIBIN%;%ORIGPATH%" /f /t REG_EXPAND_SZ
 @reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v PATHEXT /d "%PATHEXT%;.pl%" /f /t REG_EXPAND_SZ
 @echo ..............................................................
 @echo .

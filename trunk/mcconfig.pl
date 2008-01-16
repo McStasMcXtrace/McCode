@@ -24,11 +24,9 @@ if ($Config{'osname'} eq "MSWin32") {
 
       $failed=system("$which cc.exe");
       if ($failed) {
-        $failed=system("$which gcc.exe");
-        $cc = (not $failed) ? "gcc.exe" : "no";
+        ($failed, $cc)=locate("gcc.exe");
+        $cc = (not $failed) ? "$cc" : "no";
       } else { $cc = "cc.exe"; }
-
-    print STDOUT "$cc\n";
 
     print STDOUT "Checking for Matlab: ";
 
@@ -215,5 +213,24 @@ system("ppm install Inline.ppd");
 system("ppm install PDL.PPD");
 
 
-
-
+sub locate {
+	my $cmdname=join(' ',@_);
+      my $path;
+      my $state;
+	open(READ,"which $cmdname |");
+      while (<READ>) {
+         $path = $_;
+	   chomp $path;
+      }
+      close(READ);
+	# Check for status - found or not:
+	$state = index('which: no', $path);
+	if ($state ==0) {
+	  # which reports no existance of $cmdname
+        $state = 1; 
+        $path = "";
+	} else {
+	  $state = 0;
+	}
+	return ($state, $path);
+}
