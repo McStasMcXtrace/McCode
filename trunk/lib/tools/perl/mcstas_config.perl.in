@@ -210,10 +210,6 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
   }
 }
 
-# Make sure that the current directory appears first in the path;
-# contrary to normal use, this is what the user expects here.
-$ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
-
 # Attempt to locate pgplot directory if unset.
 $ENV{'PGPLOT_DIR'} = "/usr/local/pgplot" unless $ENV{'PGPLOT_DIR'};
 $ENV{'PGPLOT_DEV'} = $MCSTAS::mcstas_config{'PGDEV'} unless $ENV{'PGPLOT_DEV'};
@@ -226,6 +222,9 @@ $MCSTAS::mcstas_config{'CFLAGS'} = $ENV{'MCSTAS_CFLAGS'} if defined($ENV{'MCSTAS
 # **** update fields depending on system specific configuration
 
 if ($Config{'osname'} ne 'MSWin32') { # Unix systems
+  # Make sure that the current directory appears first in the path;
+  # contrary to normal use, this is what the user expects here.
+  $ENV{PATH} = $ENV{PATH} ? ".:$ENV{PATH}" : ".";
   my $HOME = $ENV{'HOME'} ? "$ENV{'HOME'}" : ".";
   my $hostfile = "";
   if ($ENV{'HOME'}) { $hostfile = "$HOME/.mcstas-hosts"; }
