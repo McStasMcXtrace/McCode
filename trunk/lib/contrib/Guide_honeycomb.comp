@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Venturi
 * Date: Aug 03 2001
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Honeycomb_guide by K. Lefmann (buggy).
@@ -114,6 +114,7 @@ SHARE
     double M[7];
     double nzC[7], norm_n2xy[7], Axy[7];
     char   compcurname[256];
+    double warnings;
   } Honeycomb_guide_Vars_type;
 
   void Honeycomb_guide_Init(Honeycomb_guide_Vars_type *aVars,
@@ -130,6 +131,7 @@ SHARE
     aVars->gx = a_Gx; /* The gravitation vector in the current component axis system */
     aVars->gy = a_Gy;
     aVars->gz = a_Gz;
+    aVars->warnings=0;
 
     if (a_k <= 0) { fprintf(stderr,"%s: Fatal: no channel in this guide (kh or k=0).\n", aVars->compcurname); exit(-1); }
     if (a_d < 0)  { fprintf(stderr,"%s: Fatal: subdividing walls have negative thickness in this guide (d<0).\n", aVars->compcurname); exit(-1); }
@@ -359,7 +361,9 @@ TRACE
       /* only positive dt are valid */
       /* exit reflection loops if no intersection (neutron is after box) */
       if (side == 0 || dt <= 0)
-        { fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
+        { if (GVars.warnings < 100)
+              fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
+            GVars.warnings++;
           x += w_adj; y += h_adj; ABSORB; } /* should never occur */
 
       /* propagate to dt */
@@ -404,6 +408,14 @@ TRACE
   }
   else
     ABSORB;
+%}
+
+FINALLY
+%{
+if (GVars.warnings > 100) {
+  fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
+  fprintf(stderr,"%s: warning: This message has been repeated %g times\n", GVars.compcurname, GVars.warnings);
+}
 %}
 
 
