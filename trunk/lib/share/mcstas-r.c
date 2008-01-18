@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas 1.10
-* Version: $Revision: 1.178 $
+* Version: $Revision: 1.179 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.178 2007-12-12 08:48:58 pkwi Exp $
+* $Id: mcstas-r.c,v 1.179 2008-01-18 15:39:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.178  2007/12/12 08:48:58  pkwi
+* Fix for wrong ncount in monitor 'ratios' in case of MPI
+*
 * Revision 1.177  2007/11/21 09:16:55  farhi
 * Added MPI_Barrier to easy synchronization of nodes before Reduce (hey Dude !)
 * (Windows) Fixed mcformat catenation of path containing disk label.
@@ -4795,11 +4798,11 @@ mcparseoptions(int argc, char *argv[])
       mcascii_only = 0;
       mcformat=mcuse_format(argv[++i]);
     }
-    else if(!strncmp("--format_data=", argv[i], 14)) {
+    else if(!strncmp("--format_data=", argv[i], 14) || !strncmp("--format-data=", argv[i], 14)) {
       mcascii_only = 0;
       mcformat_data=mcuse_format(&argv[i][14]);
     }
-    else if(!strcmp("--format_data", argv[i]) && (i + 1) < argc) {
+    else if((!strcmp("--format_data", argv[i]) || !strcmp("--format-data", argv[i])) && (i + 1) < argc) {
       mcascii_only = 0;
       mcformat_data=mcuse_format(argv[++i]);
     }

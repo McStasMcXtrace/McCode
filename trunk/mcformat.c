@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.21 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.22 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1188,6 +1188,16 @@ int mcformat_merge_compare(int nb)
 
     /* skip empty elements */
     if (!McStasStruct.p1) continue;
+    
+    /* we multiply the p1 and p2 by the Ncount so that the operations take
+       into account the relative Ncount weight of each simulation. We will
+       dive by the sum(Ncount) at the end of operation */
+    if (!strstr(McStasStruct.Format, " list ")) /* NOT FOR LISTs (content non additive) */
+    for (j=0; j<abs(McStasStruct.m*McStasStruct.n*McStasStruct.p); j++) {
+      Files_to_Merge[i].p1[j] *= Files_to_Merge[i].Ncount;
+      Files_to_Merge[i].p2[j] *= Files_to_Merge[i].Ncount;
+    }
+    
     /* second loop to search for similar items to add to Files_to_Merge[i] */
     for (j=i+1; j<nb; j++) {
       struct McStas_file_format ThisStruct=Files_to_Merge[j];
@@ -1302,11 +1312,12 @@ int mcformat_merge_compare(int nb)
         Files_to_Merge[i].p1 = p1;
       } else { /* else add data i+j */
         int index_i;
-        /* add data from j to i */
+        /* add data from j to i. p1 and p2 are weighted by their Ncount */
         for (index_i=0; index_i<abs(McStasStruct.m*McStasStruct.n*McStasStruct.p); index_i++) {
           if (McStasStruct.p0) Files_to_Merge[i].p0[index_i] += ThisStruct.p0[index_i];
-          Files_to_Merge[i].p1[index_i] += ThisStruct.p1[index_i];
-          if (McStasStruct.p2) Files_to_Merge[i].p2[index_i] += ThisStruct.p2[index_i];
+                               Files_to_Merge[i].p1[index_i] += ThisStruct.Ncount*ThisStruct.p1[index_i];
+          if (McStasStruct.p2) Files_to_Merge[i].p2[index_i] += ThisStruct.Ncount*ThisStruct.p2[index_i];
+          
         }
         /* free and leave j in empty state */
         memfree(ThisStruct.p0); memfree(ThisStruct.p1); memfree(ThisStruct.p2);
@@ -1315,6 +1326,14 @@ int mcformat_merge_compare(int nb)
       Files_to_Merge[i].Ncount += ThisStruct.Ncount;
       Files_to_Merge[i].RunNum += ThisStruct.RunNum;
     } /* end for j */
+    
+    /* divide p1 and p2 by total Ncount to account for the weighted sum */
+    if (!strstr(McStasStruct.Format, " list ")) /* NOT FOR LISTs (content non additive) */
+    for (j=0; j<abs(McStasStruct.m*McStasStruct.n*McStasStruct.p); j++) {
+      Files_to_Merge[i].p1[j] /= Files_to_Merge[i].Ncount;
+      Files_to_Merge[i].p2[j] /= Files_to_Merge[i].Ncount;
+    }
+      
     /* now count integral values for item Files_to_Merge[i] */
     double Nsum=0, Psum=0, P2sum=0;
     for (j=0; j<abs(Files_to_Merge[i].m*Files_to_Merge[i].n*Files_to_Merge[i].p); j++) {
@@ -1720,11 +1739,11 @@ mcformat_parseoptions(int argc, char *argv[])
       mcascii_only = 0;
       mcformat=mcuse_format(argv[++i]);
     }
-    else if(!strncmp("--format_data=", argv[i], 14)) {
+    else if(!strncmp("--format_data=", argv[i], 14) || !strncmp("--format-data=", argv[i], 14)) {
       mcascii_only = 0;
       mcformat_data=mcuse_format(&argv[i][14]);
     }
-    else if(!strcmp("--format_data", argv[i]) && (i + 1) < argc) {
+    else if((!strcmp("--format_data", argv[i]) || !strcmp("--format-data", argv[i])) && (i + 1) < argc) {
       mcascii_only = 0;
       mcformat_data=mcuse_format(argv[++i]);
     }
