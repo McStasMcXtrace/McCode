@@ -94,6 +94,7 @@ our @optim_best;
 our $max_iteration=20;
 our $data_dir_saved = undef;
 my  $optim_prec=1e-3;
+our $optfile = "mcoptim.dat";   # Default filename for storing of optim history
 
 # Name of compiled simulation executable.
 my $out_file;
@@ -178,7 +179,9 @@ sub parse_args {
             $optim_flag = 2; # optimize all monitors
         } elsif (/^--optim-prec\=(.*)$/) {
             $optim_prec = $1;
-        }
+        } elsif (/^--optim-file\=(.*)$/) {
+	    $optfile = $1;
+	}
         # Standard McStas options needing special treatment by mcrun.
         elsif(/^--dir\=(.*)$/ || /^-d(.+)$/) {
             $data_dir = $1;
@@ -312,6 +315,8 @@ sub parse_args {
                                 (optimization criteria, requires Math::Amoeba)
    --optim                    Maximize all monitors
    --optim-prec=PREC          Relative requested accuracy of criteria (1e-3)
+   --optim-file=FILENAME      Defines filename for storing optim results.
+                                (Defaults to \"mcoptim.dat\")
    --test                     Execute McStas selftest and generate report
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
@@ -571,7 +576,12 @@ sub do_data_header {
     my $scannedvars;
     my $xvars;
     my $xvar_list;
-    my $yvars = join " ", @$youts;
+    my $yvars;
+    if(!(ref($youts) eq 'ARRAY')){
+	$yvars = $youts;
+    } else {
+	$yvars = join " ", @$youts;
+    }
     my $xlabel;
     my $min;
     my $max;
@@ -789,7 +799,10 @@ sub do_scan {
       autoflush $DAT 1;                # Preserves data even if interrupted.
     } else {
       $datfile = $simfile;             # Any reference should be to the simfile
-    }
+    } 
+    our $OPT;
+    our @opt_out;
+
     my $firsttime = 1;
     my $variables = "";
     my @youts = ();
