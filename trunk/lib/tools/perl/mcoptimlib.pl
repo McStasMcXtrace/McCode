@@ -104,7 +104,17 @@ sub minimize_function {
     $optim_bestvalue = $y;
   }
   $optim_iterations++;
-
+  
+  # Handle writing of mcplot-compatible optim output file
+  $numpoints = $optim_iterations;
+  $OPT = new FileHandle;
+  open($OPT, ">$optfile");
+  autoflush $OPT 1;
+  push @opt_out, "$optim_iterations $y 0\n";
+  output_dat_header($OPT, "# ",$scan_info, '(criteria,null)', 'Point criteria null', $optfile);
+  print $OPT "@opt_out\n";
+  close($OPT);
+  
   print "Optimization $optim_iterations criteria=$y\n";
 
   return -$y;
