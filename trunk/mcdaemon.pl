@@ -142,15 +142,11 @@ if (!$there) {
 	$dirname = $filename;
 	$name = "mcstas";
     }
-<<<<<<< mcdaemon.pl
     
     if ($dirname eq ''){
 	$dirname = '.';
     }
     
-=======
-
->>>>>>> 1.10
     $filename = "$dirname/$name";
     # First of all, the output dir must be there and of type directory
     if (!(-e $dirname)) {
