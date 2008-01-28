@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Helmuth Schoeber
 * Date: Sept. 13, 2006
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 *
@@ -39,6 +39,7 @@
 * filename: Name of file in which to store the detector image (text)
 * T_zero:   Zero point in time (s)
 * L_flight: flight length user in conversion (m)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -54,9 +55,10 @@
 
 DEFINE COMPONENT TOF2E_monitor
 DEFINITION PARAMETERS (nchan=20, filename)
-SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, Emin, Emax, T_zero, L_flight)
+  SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, Emin, Emax, T_zero, L_flight, restore_neutron=0)
 OUTPUT PARAMETERS (E_N, E_p, E_p2, S_p, S_pE, S_pE2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     double E_N[nchan];
@@ -107,6 +109,9 @@ TRACE
         E_p2[i] += p*p;
         SCATTER;
       }
+    }
+    if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
 SAVE

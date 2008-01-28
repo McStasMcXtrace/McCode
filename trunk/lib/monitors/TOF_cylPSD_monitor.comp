@@ -10,7 +10,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: October 2000
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Kim Lefmann, October 9, 2001
@@ -27,6 +27,7 @@
 * t_1:      End of time window (mu-s)
 * nphi:     Number of angular bins (deg)
 * filename: Name of file in which to store the detector image (text)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -39,9 +40,10 @@
 
 DEFINE COMPONENT TOF_cylPSD_monitor
 DEFINITION PARAMETERS (nt, string filename, nphi)
-SETTING PARAMETERS (radius, height, t_0, t_1)
+  SETTING PARAMETERS (radius, height, t_0, t_1, restore_neutron=0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     double TOF_N[nt][nphi];
@@ -92,7 +94,10 @@ TRACE
       TOF_N[i][j]++;
       TOF_p[i][j] += p;
       TOF_p2[i][j] += p*p;
-     }
+     } 
+    if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }
   %}
 SAVE
   %{
