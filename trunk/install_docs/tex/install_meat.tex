@@ -39,7 +39,8 @@ As of release 1.10 of McStas, the preferred way to install on
 Microsoft Windows is using a self-extracting \texttt{.exe} file.
 
 \noindent The archive includes all software needed to run McStas, including perl, a
-c-compiler, a vrml viewer and Scilab for data plotting.
+c-compiler, PDL, PGPLOT, a vrml viewer and Scilab 4.0. (Use PGPLOT or
+install Matlab if possible, since support for Scilab will eventually end.)
 
 \noindent Installation of all the provided support tools is needed to get a fully
 functional McStas. (The option not to install the tools is included for people who want to
@@ -103,9 +104,9 @@ Updating your operating system to a new release \emph{may} in some cases require
 To get a fully functional McStas installation on Unix systems, a few support
 applications are required. Essentially, you will need a C compiler,
 Perl and Perl-Tk, as well as a plotter such as Matlab, Scilab or
-PGPLOT. In the installer package, we supply a method to install PGPLOT
-and related perl modules - see step \ref{pg_install} below and also
-a method to download and install Scilab for Linux/Intel - see step \ref{sci_install}
+PGPLOT (Using Scilab is not recommended and support will eventually
+end). In the installer package, we supply a method to install PGPLOT
+and related perl modules - see step \ref{pg_install} below.
 
 \noindent On Debian and Ubuntu systems, the
 needed packages to install are \texttt{perl-tk, pdl, gcc,
@@ -135,10 +136,6 @@ should be able to compile and/or install McStas using the following steps:
     on Ubuntu):\\
     \texttt{make install-pgplot \&\& ./configure}
     \label{pg_install}}
-\item{Optionally download/install Scilab (as superuser - only on Linux
-    with Intel hardware):\\
-    \texttt{make install-scilab \&\& ./configure}
-    \label{sci_install}}
 \item{Install McStas (as superuser):\\
   \texttt{make install}
 \label{makeinst}}
