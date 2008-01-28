@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -39,6 +39,7 @@
 * lambda_0: Minimum wavelength detected (AA)
 * lambda_1: Maximum wavelength detected (AA)
 * filename: Name of file in which to store the detector image (string)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -50,10 +51,11 @@
 *******************************************************************************/
 
 DEFINE COMPONENT DivLambda_monitor
-DEFINITION PARAMETERS (nlam=20, ndiv=20, string filename)
+DEFINITION PARAMETERS (nlam=20, ndiv=20, string filename, restore_neutron=0)
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, maxdiv=2, lambda_0, lambda_1)
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     double Div_N[nlam][ndiv];
@@ -103,6 +105,9 @@ TRACE
         Div_p2[i][j] += p*p;
         SCATTER;
       }
+    }
+    if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
 SAVE

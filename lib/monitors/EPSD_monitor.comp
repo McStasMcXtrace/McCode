@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: 16.4.00
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -37,6 +37,7 @@
 * nx:       Number of pixel columns in scattering plane (1)
 * nE:       Number of energy bins (1)
 * filename: Name of file in which to store the detector image (text)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -48,10 +49,11 @@
 *******************************************************************************/
 
 DEFINE COMPONENT EPSD_monitor
-DEFINITION PARAMETERS (string filename, nx=20, nE=20)
+DEFINITION PARAMETERS (string filename, nx=20, nE=20, restore_neutron=0)
 SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, Emin, Emax)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     double PSD_N[nx][nE];
@@ -96,6 +98,9 @@ TRACE
       PSD_N[i][j]++;
       PSD_p[i][j] += p;
       PSD_p2[i][j] += p*p;
+    }    
+    if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
     }
   %}
 SAVE

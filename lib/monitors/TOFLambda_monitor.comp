@@ -8,7 +8,7 @@
 * %I
 * Written by: KL
 * Date: September 28, 2001
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -34,6 +34,8 @@
 * lambda_0: Minimum wavelength detected (AA)
 * lambda_1: Maximum wavelength detected (AA)
 * filename: Name of file in which to store the detector image (string)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
+*
 *
 * OUTPUT PARAMETERS:
 *
@@ -46,9 +48,10 @@
 
 DEFINE COMPONENT TOFLambda_monitor
 DEFINITION PARAMETERS (nlam, nt, string filename, t_0, t_1)
-SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, lambda_0, lambda_1)
+  SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, lambda_0, lambda_1, restore_neutron=0)
 OUTPUT PARAMETERS (tt_0, tt_1, TOFL_N, TOFL_p, TOFL_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
 DECLARE
   %{
     double TOFL_N[nt][nlam];
@@ -100,7 +103,10 @@ TRACE
         TOFL_p[j][i] += p;
         TOFL_p2[j][i] += p*p;
       }
-    }
+    } 
+    if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }  
   %}
 SAVE
   %{
