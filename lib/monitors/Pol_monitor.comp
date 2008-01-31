@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: Risoe
 * Release: McStas 1.10
 *
@@ -50,7 +50,6 @@ SETTING PARAMETERS (mx=0, my=0, mz=0)
 OUTPUT PARAMETERS (Pol_N, Pol_p, Pol_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
-PolARISATION PARAMETERS (sx,sy,sz)
      
 DECLARE
 %{
