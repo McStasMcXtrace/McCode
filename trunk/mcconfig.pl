@@ -57,8 +57,8 @@ if ($Config{'osname'} eq "MSWin32") {
 
     print STDOUT "Checking for gnuplot: ";
 
-      $failed=system("$which wgnuplot.exe");
-      $gnuplot = (not $failed) ? "wgnuplot.exe" : "no";
+      $failed=system("$which pgnuplot.exe");
+      $gnuplot = (not $failed) ? "pgnuplot.exe" : "no";
 
     print STDOUT "$gnuplot\n";
 
