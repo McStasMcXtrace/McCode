@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,8 +10,8 @@
 * %Identification
 * Written by: KN
 * Date:    Aug 29, 1997
-* Release: McStas 1.6
-* Version: $Revision: 1.94 $
+* Release: McStas CVS-080208
+* Version: $Revision: 1.95 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,13 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.94 2007-08-09 16:47:34 farhi Exp $
+* $Id: mcstas-r.h,v 1.95 2008-02-09 22:26:27 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.94  2007/08/09 16:47:34  farhi
+*       Solved old gcc compilation issue when using macros in macros.
+*       Solved MPI issuie when exiting in the middle of a simulation. Now use MPI_Abort.
+*
 *       Revision 1.93  2007/05/29 14:57:56  farhi
 *       New rand function to shoot on a triangular distribution. Useful to simulate chopper time spread.
 *
@@ -41,12 +45,12 @@
 *       Added define to include this.
 *
 *       Revision 1.91  2007/01/29 15:51:56  farhi
-*       mcstas-r: avoid undef of HAVE_LIBNEXUS as napi is importer afterwards
+*       mcstas-r: avoid undef of USE_NEXUS as napi is importer afterwards
 *
 *       Revision 1.90  2007/01/25 14:57:36  farhi
 *       NeXus output now supports MPI. Each node writes a data set in the NXdata
 *       group. Uses compression LZW (may be unactivated with the
-*       -DHAVE_LIBNEXUS_FLAT).
+*       -DUSE_NEXUS_FLAT).
 *
 *       Revision 1.89  2007/01/23 00:41:05  pkwi
 *       Edits by Jiao Lin (linjao@caltech.edu) for embedding McStas in the DANSE project. Define -DDANSE during compile will enable these edits.
@@ -231,7 +235,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.94 $"
+#define MCSTAS_R_H "$Revision: 1.95 $"
 
 #include <math.h>
 #include <string.h>
@@ -304,15 +308,15 @@
 #ifndef NOSIGNALS
 #define NOSIGNALS
 #endif
-#undef USE_THREADS /* MPI prefered against THREADS use */
 #endif
 
-#ifdef USE_THREADS
-#include <pthread.h>
+#ifdef USE_THREADS  /* user want threads */
+#define USE_OPENMP  /* we choose OpenMP, as POSIX threads are REALLY slow */
+#include <omp.h>
 #endif
 
-#if (HAVE_LIBNEXUS == 0)
-#undef HAVE_LIBNEXUS
+#if (USE_NEXUS == 0)
+#undef USE_NEXUS
 #endif
 
 /* I/O section part ========================================================= */
@@ -416,8 +420,11 @@ int mc_MPI_Reduce(void* sbuf, void* rbuf,
 #define MPI_MASTER(instr) instr
 #endif /* USE_MPI */
 
-#if defined(USE_MPI) || defined(USE_THREADS)
+#ifdef USE_MPI
 static int mpi_node_count;
+#endif
+#ifdef USE_OPENMP
+static int threads_node_count;
 #endif
 
 /* I/O function prototypes ================================================== */
@@ -789,7 +796,7 @@ char *mcfull_file(char *name, char *ext);
 #  define random mt_random
 #  define srandom mt_srandom
 #elif MC_RAND_ALG == 2
-   /* Algorithm used in McStas 1.1 and earlier (not recommended). */
+   /* Algorithm used in McStas CVS-080208 and earlier (not recommended). */
 #  define MC_RAND_MAX 0x7fffffff
 #  define random mc_random
 #  define srandom mc_srandom

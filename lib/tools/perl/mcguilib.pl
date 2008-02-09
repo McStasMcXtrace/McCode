@@ -1,7 +1,7 @@
 # Library of McStas gui functions
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2006, All rights reserved
+#   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -330,14 +330,14 @@ sub simulation_dialog {
 * MPI on clusters/multi-core machines");
     my $choicecluster_val;
     if ($si{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-#     elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+    elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($si{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($si{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
     my $choicecluster_orig=$choicecluster_val;
     my $choices=[ 'None (single CPU)'];
-#     if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
-#       push @{ $choices }, 'Threads (multi-core)';
-#     }
+    if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
+      push @{ $choices }, 'Threads (multi-core)';
+    }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
@@ -578,13 +578,13 @@ sub preferences_dialog {
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
     if ($inf_sim->{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-#     elsif ($inf_sim{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+    elsif ($inf_sim{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($inf_sim->{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($inf_sim->{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
     my $choices=[ 'None (single CPU)'];
-#     if ($MCSTAS::mcstas_config{'THREADS'} ne "no") {
-#       push @{ $choices }, 'Threads (multi-core)';
-#     }
+    if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
+      push @{ $choices }, 'Threads (multi-core)';
+    }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
@@ -598,12 +598,12 @@ sub preferences_dialog {
 
     $editor = $MCSTAS::mcstas_config{'EDITOR'};
     my $editorchoice_val;
-    if ($editor == 0) { $editorchoice_val="Simple built-in editor (McStas 1.7)"; }
+    if ($editor == 0) { $editorchoice_val="Simple built-in editor (McStas CVS-080208)"; }
     elsif ($editor == 1) { $editorchoice_val='Advanced built-in editor';}
     elsif ($editor == 2) { $editorchoice_val="External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})";}
     my $editorchoice = $lf->Label(-text => "Editor options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $b->attach($editorchoice, -balloonmsg => "Select editor to use to\ndisplay instrument descriptions");
-    $choices=["Simple built-in editor (McStas 1.7)","External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})"];
+    $choices=["Simple built-in editor (McStas CVS-080208)","External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})"];
     if  ($MCSTAS::mcstas_config{'CODETEXT'} ne "no") {
       push @{ $choices }, 'Advanced built-in editor';
     }

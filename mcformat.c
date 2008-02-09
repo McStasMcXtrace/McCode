@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.22 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.23 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -68,7 +68,7 @@ typedef struct Pool_header *Pool; /* allows memory to be included */
 
 #include "lib/share/mcstas-r.h" /* with decl of MC_PATHSEP */
 
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
 #include "lib/share/nexus-lib.h"
 #endif
 
@@ -104,7 +104,7 @@ int  mcnumipar             = 0;
 struct mcinputtable_struct mcinputtable[MAX_LENGTH];
 mcstatic FILE *mcsiminfo_file        = NULL;
 
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
 #include "lib/share/nexus-lib.c"
 #endif
 

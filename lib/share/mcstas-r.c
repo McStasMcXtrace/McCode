@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,17 +10,23 @@
 * %Identification
 * Written by: KN
 * Date:    Aug 29, 1997
-* Release: McStas 1.10
-* Version: $Revision: 1.179 $
+* Release: McStas CVS-080208
+* Version: $Revision: 1.180 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.179 2008-01-18 15:39:08 farhi Exp $
+* $Id: mcstas-r.c,v 1.180 2008-02-09 22:26:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.179  2008/01/18 15:39:08  farhi
+* mcformat merge mode now takes into account individual Ncount so that addition
+* is a weighted sum. Event lists (when 'list' is found in Format) are catenated
+* un-weighted.
+* Option --format_data aliased to --format-data (internal usage)
+*
 * Revision 1.178  2007/12/12 08:48:58  pkwi
 * Fix for wrong ncount in monitor 'ratios' in case of MPI
 *
@@ -109,7 +115,7 @@
 * Warning 'Low Stat' when >25 % error in detector results
 *
 * Revision 1.157  2007/03/05 19:02:55  farhi
-* NEXUS support now works as MPI. NEXUS keyword is optional and only -DHAVE_LIBNEXUS is required. All instruments may then export in NEXUS if McStas
+* NEXUS support now works as MPI. NEXUS keyword is optional and only -DUSE_NEXUS is required. All instruments may then export in NEXUS if McStas
 * has been installed with --with-nexus
 *
 * Revision 1.156  2007/02/24 16:44:41  farhi
@@ -126,7 +132,7 @@
 * Mac OS, MPI related: Disable use of sighandler in case of NOSIGNALS
 *
 * Revision 1.152  2007/01/29 15:51:56  farhi
-* mcstas-r: avoid undef of HAVE_LIBNEXUS as napi is importer afterwards
+* mcstas-r: avoid undef of USE_NEXUS as napi is importer afterwards
 *
 * Revision 1.151  2007/01/29 15:16:07  farhi
 * Output file customization in header, through the DETECTOR_CUSTOM_HEADER macro.
@@ -140,7 +146,7 @@
 * Revision 1.149  2007/01/25 14:57:36  farhi
 * NeXus output now supports MPI. Each node writes a data set in the NXdata
 * group. Uses compression LZW (may be unactivated with the
-* -DHAVE_LIBNEXUS_FLAT).
+* -DUSE_NEXUS_FLAT).
 *
 * Revision 1.148  2007/01/23 00:41:05  pkwi
 * Edits by Jiao Lin (linjao@caltech.edu) for embedding McStas in the DANSE project. Define -DDANSE during compile will enable these edits.
@@ -819,7 +825,7 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 #endif /* USE_MPI */
 
 /* Multiple output format support. ========================================== */
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
 #define mcNUMFORMATS 9
 #else
 #define mcNUMFORMATS 8
@@ -1409,7 +1415,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "] # End of Errors\n",
     "Ncounts [\n",
     "] # End of Ncounts\n}" }
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
     ,
     { "NeXus", "nxs",
     "%PREFormat: %FMT file. Use hdfview to view.\n"
@@ -1748,7 +1754,7 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
   strncpy(date, ctime(&t), 64);
   if (strlen(date)) date[strlen(date)-1] = '\0';
 
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
   if (strstr(format.Name, "NeXus")) {
     if(mcnxfile_header(mcnxHandle, part,
     pre,                  /* %1$s  PRE  */
@@ -1797,7 +1803,7 @@ static int mcfile_tag(FILE *f, struct mcformats_struct format, char *pre, char *
       if (value[i] == '"' || value[i] == '\'')   value[i] = ' ';
       if (value[i] == '\n'  || value[i] == '\r') value[i] = ';';
     }
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
   if (strstr(format.Name, "NeXus")) {
     if(mcnxfile_tag(mcnxHandle, pre, valid_section, name, value) == NX_ERROR) {
       fprintf(stderr, "Error: writing NeXus tag file %s/%s=%s (mcfile_tag)\n", section, name, value);
@@ -1845,7 +1851,7 @@ static int mcfile_section(FILE *f, struct mcformats_struct format, char *part, c
   {
     if (strlen(pre) > 2) pre[strlen(pre)-2]='\0';
   }
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
   if (strstr(format.Name, "NeXus")) {
     if (mcnxfile_section(mcnxHandle,part,
       pre, type, name, valid_name, parent, valid_parent, level) == NX_ERROR) {
@@ -2160,7 +2166,7 @@ void mcsiminfo_init(FILE *f)
 #endif
   if (mcdisable_output_files) return;
   if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return;
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
   /* NeXus sim info is the NeXus root file */
   if(strstr(mcformat.Name, "NeXus")) {
     if (mcnxfile_init(mcsiminfo_name, mcformat.Extension,
@@ -2195,7 +2201,7 @@ void mcsiminfo_init(FILE *f)
     sprintf(simname, "%s%s%s",
       mcdirname ? mcdirname : ".", MC_PATHSEP_S, mcsiminfo_name);
 
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus")) {
       /* NXentry class */
       char file_time[1024];
@@ -2205,14 +2211,14 @@ void mcsiminfo_init(FILE *f)
 #endif
 
     mcfile_header(mcsiminfo_file, mcformat, "header", pre, simname, root);
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus"))
     mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
 #endif
     /* begin-end instrument */
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, mcinstrument_name, "instrument", root, 1);
     mcinfo_instrument(mcsiminfo_file, mcformat, pre, mcinstrument_name);
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus")) {
       mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
       mcnxfile_section(mcnxHandle,"instr_code",
@@ -2224,7 +2230,7 @@ void mcsiminfo_init(FILE *f)
     /* begin-end simulation */
     mcfile_section(mcsiminfo_file, mcformat, "begin", pre, simname, "simulation", mcinstrument_name, 2);
     mcinfo_simulation(mcsiminfo_file, mcformat, pre, simname);
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus"))
     mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0);
 #endif
@@ -2265,11 +2271,11 @@ void mcsiminfo_close(void)
       mcfile_section(mcsiminfo_file, mcformat, "end", pre, simname, "simulation", mcinstrument_name, 2);
       mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "instrument", root, 1);
     }
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus")) mcfile_section(mcsiminfo_file, mcformat, "end", pre, mcinstrument_name, "entry", root, 1);
 #endif
     mcfile_header(mcsiminfo_file, mcformat, "footer", pre, simname, root);
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus")) mcnxfile_close(&mcnxHandle);
 #endif
     if (mcsiminfo_file != stdout && mcsiminfo_file && !strstr(mcformat.Name, "NeXus")) fclose(mcsiminfo_file);
@@ -2332,7 +2338,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
     mcvalid_name(valid_parent, parent, VALID_NAME_LENGTH);
   else mcvalid_name(valid_parent, filename, VALID_NAME_LENGTH);
 
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
   if (strstr(format.Name, "NeXus")) {
     /* istransposed==1 : end NeXus data only with last output slab */
     if (strstr(part,"data") && !strstr(format.Name,"no header")) { /* writes attributes in information SDS */
@@ -2824,7 +2830,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
                         x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
           }
         }
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
         else {
           /* MPI+NeXus: write one SDS per node list */
           char part[256];
@@ -2836,7 +2842,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
             fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
           }
         }
-#endif /* HAVE_LIBNEXUS */
+#endif /* USE_NEXUS */
       } /* end for node_i */
     } /* end list for master node */
   } else
@@ -3081,10 +3087,10 @@ struct mcformats_struct mcuse_format(char *format)
   /* handle format aliases */
   if (!strcmp(low_format, "pgplot")) strcpy(low_format, "mcstas");
   if (!strcmp(low_format, "hdf"))    strcpy(low_format, "nexus");
-#ifndef HAVE_LIBNEXUS
+#ifndef USE_NEXUS
   if (!strcmp(low_format, "nexus"))
     fprintf(stderr, "WARNING: to enable NeXus format you must have the NeXus libs installed.\n"
-                    "         You should then re-compile with the -DHAVE_LIBNEXUS define.\n");
+                    "         You should then re-compile with the -DUSE_NEXUS define.\n");
 #endif
 
   tmp = (char *)malloc(256);
@@ -4572,11 +4578,12 @@ mchelp(char *pgmname)
 "  --format=FORMAT            Output data files using format FORMAT\n"
 "                             (use option +a to include text header in files\n"
 #ifdef USE_THREADS
-"  --threads=NB_CPU           Split simulation into NB_CPU threads\n"
+"This instrument has been compiled with threading support.\n"
 #endif
 #ifdef USE_MPI
-"\nThis instrument has been compiled with MPI extensions\n\n"
+"This instrument has been compiled with MPI support. Use 'mpirun'.\n"
 #endif
+"\n"
 );
   if(mcnumipar > 0)
   {
@@ -4663,14 +4670,14 @@ mcuse_dir(char *dir)
           "Directory output cannot be used with portable simulation (mcuse_dir)\n");
   exit(1);
 #else  /* !MC_PORTABLE */
-#ifdef USE_MPI
+#ifdef USE_MPI  
     if(mpi_node_rank == mpi_node_root)
     {
 #endif
      if(mkdir(dir, 0777)) {
 #ifndef DANSE
          fprintf(stderr, "Error: unable to create directory '%s' (mcuse_dir)\n", dir);
-         fprintf(stderr, "(Maybe the directory already exists?)\n");
+         fprintf(stderr, "(Maybe the directory already exists?)\n");       
          exit(1);
 #endif
      }
@@ -4731,7 +4738,6 @@ mcparseoptions(int argc, char *argv[])
         paramsetarray[j] = 0;
       }
     }
-
   for(i = 1; i < argc; i++)
   {
     if(!strcmp("-s", argv[i]) && (i + 1) < argc)
@@ -4807,15 +4813,7 @@ mcparseoptions(int argc, char *argv[])
       mcformat_data=mcuse_format(argv[++i]);
     }
     else if(!strcmp("--no-output-files", argv[i]))
-      mcdisable_output_files = 1;
-
-    else if(!strncmp("--threads=", argv[i], 10))
-#ifdef USE_THREADS
-      mpi_node_count = atoi(&argv[i][10]);
-#else
-      fprintf(stderr,"Warning: Simulation has not been compiled with threading support.\n"
-                     "         Use '-DUSE_THREADS -lpthread' when compiling C source.\n");
-#endif
+      mcdisable_output_files = 1;   
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
@@ -4865,8 +4863,11 @@ mcparseoptions(int argc, char *argv[])
       }
   }
   free(paramsetarray);
-#if defined (USE_MPI) || defined(USE_THREADS)
+#ifdef USE_MPI
   if (mcdotrace) mpi_node_count=1; /* disable threading when in trace mode */
+#endif
+#ifdef USE_THREADS
+  if (mcdotrace) threads_node_count=1; /* disable threading when in trace mode */
 #endif
 } /* mcparseoptions */
 
@@ -4991,32 +4992,30 @@ void sighandler(int sig)
 }
 #endif /* !NOSIGNALS */
 
-void *
-mcstas_raytrace(void *p_node_ncount)
+/* main raytrace loop */
+void *mcstas_raytrace(void *p_node_ncount)
 {
   double node_ncount = *((double*)p_node_ncount);
-  double local_mcrun_num=0;
-  while(
-#ifdef USE_THREADS
-local_mcrun_num < node_ncount && 
+  
+#ifdef USE_OPENMP
+#pragma omp parallel if(threads_node_count>1) shared(node_ncount, mcrun_num)
+{
 #endif
-mcrun_num < mcncount)
+  while(mcrun_num < node_ncount)
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
     // old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1);
     mcraytrace();
-    local_mcrun_num++;
-    mcrun_num ++;
+    mcrun_num++;
   }
-  #ifdef USE_THREADS
-  pthread_exit((void *) 0);
-  #endif
+#ifdef USE_OPENMP  
+} /*-- End of parallel region --*/
+#endif
   return (NULL);
 }
 
 /* mcstas_main: McStas main() function. */
-int
-mcstas_main(int argc, char *argv[])
+int mcstas_main(int argc, char *argv[])
 {
 /*  double run_num = 0; */
   time_t t;
@@ -5039,23 +5038,41 @@ mcstas_main(int argc, char *argv[])
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
 #endif /* USE_MPI */
 
+/* *** print number of nodes *********************************************** */
   t = (time_t)mcstartdate;
+#ifdef USE_OPENMP  
+#pragma omp parallel shared(threads_node_count)
+{
+  if (omp_get_thread_num()==0) {
+    threads_node_count=omp_get_num_threads();
+    printf("Simulation %s (%s) running on %i OpenMP threads\n", 
+      mcinstrument_name, mcinstrument_source, threads_node_count);
+  } /* no need to adapt random seed as memory is shared */
+}
+#endif
+
 #ifdef USE_MPI
   if (mpi_node_count > 1) {
+    MPI_MASTER(
+    printf("Simulation %s (%s) running on %i MPI nodes (master is %s)\n", 
+      mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name);
+    );
+    /* adapt random seed for each node */
     srandom(time(&t) + mpi_node_rank);
     t += mpi_node_rank;
   }
 #else /* !USE_MPI */
   srandom(time(&t));
 #endif /* !USE_MPI */
-  mcstartdate = t;
+  mcstartdate = t;  /* set start date before parsing options and creating sim file */
 
+/* *** parse options ******************************************************* */
   SIG_MESSAGE("main (Start)");
   mcformat=mcuse_format(getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
   /* default is to output as McStas format */
   mcformat_data.Name=NULL;
   /* read simulation parameters and options */
-  mcparseoptions(argc, argv);
+  mcparseoptions(argc, argv); /* sets output dir and format */
   if (strstr(mcformat.Name, "NeXus")) {
     if (mcformat_data.Name) mcclear_format(mcformat_data);
     mcformat_data.Name=NULL;
@@ -5063,7 +5080,7 @@ mcstas_main(int argc, char *argv[])
   if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
 
-  /* install sig handler, but only once !! after parameters parsing */
+/* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS
 #ifdef SIGQUIT
   signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
@@ -5108,65 +5125,15 @@ mcstas_main(int argc, char *argv[])
 #endif /* !NOSIGNALS */
 
 /* ================ main neutron generation/propagation loop ================ */
-#if defined (USE_MPI) || defined(USE_THREADS)
+#if defined (USE_MPI)
   mpi_mcncount = mpi_node_count > 1 ?
     floor(mcncount / mpi_node_count) :
-    mcncount; /* number of neutrons per thread/node */
-  if (mpi_node_count > 1) {
-    MPI_MASTER(
-    printf("Simulation %s (%s) running on %i nodes\n", mcinstrument_name, mcinstrument_source, mpi_node_count);
-    );
-    }
+    mcncount; /* number of neutrons per node */
+  mcncount = mpi_mcncount;  /* sliced Ncount on each MPI node */
 #endif
 
 /* main neutron event loop */
-
-#ifdef USE_THREADS
-/* distribute threads */
-if (mpi_node_count > 1) {
-  pthread_t thread[mpi_node_count];
-  pthread_attr_t attr;
-  int rc, t, status;
-  double threads_ncount[mpi_node_count];
-  for (t=0; t<mpi_node_count; t++) {
-    threads_ncount[t]=floor(t ? mpi_mcncount : mcncount-mpi_mcncount*(mpi_node_count-1));
-  }
-
-  /* Initialize and set thread detached attribute */
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
-  for(t=0; t<mpi_node_count; t++)
-  {
-    rc = pthread_create(&thread[t], &attr, mcstas_raytrace, (void*)&(threads_ncount[t]));
-    if (rc)
-    {
-        fprintf(stderr, "ERROR; return code from [%i] pthread_create() is %d\n", t, rc);
-        exit(-1);
-    }
-  }
-
-  /* Free attribute and wait for the other threads */
-  pthread_attr_destroy(&attr);
-  for(t=0; t<mpi_node_count; t++)
-  {
-    rc = pthread_join(thread[t], (void **)&status);
-    if (rc)
-    {
-        fprintf(stderr, "ERROR; return code from [%i] pthread_join() is %d\n", t, rc);
-        exit(-1);
-    }
-  }
-
-} else mcstas_raytrace(&mcncount);     /* full Ncount */
-#else
-
-#ifdef USE_MPI /* use mpirun */
-mcncount = mpi_mcncount;  /* sliced Ncount on each MPI node */
-#endif
 mcstas_raytrace(&mcncount);
-
-#endif
 
 #ifdef USE_MPI
  /* merge data from MPI nodes */

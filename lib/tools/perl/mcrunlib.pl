@@ -1,7 +1,7 @@
 # Library of McStas runtime perl functions
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2006, All rights reserved
+#   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -259,8 +259,8 @@ sub get_out_file_next {
       my $cc     = $MCSTAS::mcstas_config{CC};
       my $cflags = $MCSTAS::mcstas_config{CFLAGS};
       my $libs = "-lm ";
-      if ($v->{'threads'} && $MCSTAS::mcstas_config{THREADS} ne "no") {
-        $libs .= " -DUSE_THREADS -lpthread ";
+      if ($v->{'threads'} && $MCSTAS::mcstas_config{THREADS} ne "") {
+        $libs .= $MCSTAS::mcstas_config{THREADS};
       }
       if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
         $libs .= " -DUSE_MPI ";

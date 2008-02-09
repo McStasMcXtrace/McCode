@@ -18,7 +18,7 @@
 # PGDEV      - Default device for PGPLOT (usually /xserv or /gw)
 # GNUDEV     - Default device for GNUPLOT (x11/aqua/windows)
 # EDITOR   - Choice of default built-in editor
-#            0 - McStas 1.7 editor (simple, no extra perl modules req'd)
+#            0 - McStas CVS-080208 editor (simple, no extra perl modules req'd)
 #            1 - CodeText editor with highlighting of McStas instrument code
 #            2 - Default to external editor
 # EXTERNAL_EDITOR - default external editor, overriden by VISUAL or EDITOR variables
@@ -79,8 +79,8 @@ use Config;
      CODETEXT => 'no',
      PROCSIMPLE => 'no',
      TEMP => 'no',
-     THREADS => '@HAVE_LIBPTHREAD@',
-     NEXUS => '@WITH_NEXUS@',
+     THREADS => '@HAVE_THREADS@',
+     NEXUS => '@HAVE_NEXUS@',
      HDFVIEW => '@HDFVIEW@',
      PREC => '1e-3'
      );
@@ -248,7 +248,7 @@ if ($Config{'osname'} ne 'MSWin32') { # Unix systems
 
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2006, All rights reserved
+#   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #

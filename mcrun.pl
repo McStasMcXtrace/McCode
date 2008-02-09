@@ -4,7 +4,7 @@
 #
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2007, All rights reserved
+#   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -83,7 +83,7 @@ my $end=-1;                     # last scan number to run in slave mode
 my $multi=0;                    # multi machine mode
 my @hostlist = ();              # list of remote machines to run on...
 my $mpi = 0;                    # how many nodes used with MPI? 0 implies no MPI.
-my $threads = 0;                # number of threads for multi-cpu machines
+my $threads = 0;                # openmp thread flag for multi-cpu machines
 
 our @optim_names = ();          # list of monitor names to optimize
 our $optim_flag=0;              # 0: normal scan, 1: optim some monitors, 2: optim all
@@ -210,9 +210,8 @@ sub parse_args {
             $exec_test="compatible and graphics";
         } elsif(/^--(test)\=(.*)$/) {
             $exec_test="$2";
-        } elsif(/^--(threads)\=(.*)$/) {
-            push @options, "--$1=$2";
-            $threads = $2;
+        } elsif(/^--(threads)\=(.*)$/ || /^--threads$/) {
+            $threads = 1;
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
@@ -260,7 +259,7 @@ sub parse_args {
     }
 
     # Adapt to multi-threading (overrides griding)
-    if ($threads > 1 && $MCSTAS::mcstas_config{THREADS} ne "no") {
+    if ($threads >= 1 && $MCSTAS::mcstas_config{THREADS} ne "") {
       $multi = 0;
     }
 
@@ -331,7 +330,7 @@ sub parse_args {
    -i        --info           Detailed instrument information.
    --format=FORMAT            Output data files using format FORMAT.
                               (format list obtained from <instr>.out -h)
-   --threads=NB_CPU           Use threads for multi-cpu machines
+   --threads                  Use OpenMP threads for multi-cpu machines
 
 This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be

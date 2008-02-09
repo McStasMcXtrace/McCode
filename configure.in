@@ -1,6 +1,6 @@
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2007, All rights reserved
+#   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -20,36 +20,30 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, 1.11, www.mcstas.org)
-AC_PROG_CC
+AC_REVISION($Revision: 1.50 $)
+AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
+Risoe National Laborartory, Roskilde, Denmark
+Institut Laue Langevin, Grenoble, France
+This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
+see file COPYING for further information])
+
+AC_ARG_WITH([cc], AC_HELP_STRING([--with-cc=c compiler], [Specify name of C compiler]),
+        [with_cc=$withval], [with_cc=yes])
+if test x"$with_cc" != x"no" ; then
+        if test x"$with_cc" != x"yes" ; then CC="$with_cc"; fi
+        AC_PROG_CC
+else
+        AC_MSG_ERROR([You need a C compiler to compile this package])
+fi
+
 AC_PROG_INSTALL
 CF_ANSI_CC_CHECK
 MC_ANSI_MATH_PROTO
-AC_CHECK_LIB(pthread, pthread_create)
-if test "${ac_cv_lib_pthread_pthread_create+set}" = set; then
-	AC_SUBST([HAVE_LIBPTHREAD], [yes])
-else
-	AC_SUBST([HAVE_LIBPTHREAD], [no])
-fi
-AC_ARG_WITH([nexus],
-  [AS_HELP_STRING([--with-nexus],
-     [enable support for NeXus/HDF libraries])],
-  [WITH_NEXUS="-DHAVE_LIBNEXUS -lNeXus"])
-if test "${with_nexus+set}" = set; then
-  withval="$with_nexus"
-  ac_cv_lib_NeXus_NXopen=1
-  AC_SUBST([HAVE_LIBNEXUS], [1])
-  AC_DEFINE([HAVE_LIBNEXUS], [1])
-  AC_SUBST([WITH_NEXUS], ["-DHAVE_LIBNEXUS -lNeXus"])
-  AC_DEFINE([WITH_NEXUS], ["-DHAVE_LIBNEXUS -lNeXus"])
-else
-  AC_SUBST([HAVE_LIBNEXUS], [0])
-  AC_SUBST([WITH_NEXUS], [""])
-  AC_DEFINE([WITH_NEXUS], [""])
-fi
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS(strcasecmp fdopen qsort)
+
 AC_PATH_PROGS(PERL,   [perl5 perl /usr/local/bin/perl], no)
 AC_PATH_PROGS(SCILAB, [scilab runscilab /usr/local/bin/scilab /usr/lib/scilab/bin/scilab /lib/scilab/bin/scilab scilex], no)
 AC_PATH_PROGS(MATLAB, [matlab /usr/local/bin/matlab], no)
@@ -59,7 +53,7 @@ AC_PATH_PROGS(TCLTK,  [wish /usr/local/bin/wish tclsh], no)
 AC_PATH_PROGS(SSH,    [ssh /usr/local/bin/ssh], no)
 AC_PATH_PROGS(DASH,   [dash /bin/dash /usr/bin/dash], no)
 AC_PATH_PROGS(MPIRUN, [mpirun /usr/local/bin/mpirun], no)
-AC_PATH_PROGS(MPICC,  [mpicc /usr/local/bin/mpicc], no)
+AC_PATH_PROGS(MPICC,  [mpicc hcc mpxlc_r mpxlc mpcc cmpicc /usr/local/bin/mpicc], no)
 AC_PATH_PROGS(BROWSER,[konqueror firefox mozilla-firefox mozilla netscape gnome-open epiphany galeon start msie /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
 AC_PATH_PROGS(EDITOR, [nedit kate gedit xemacs xedit vim notepad wordpad], no)
 AC_PATH_PROGS(VRMLVIEW, [octagaplayer freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
@@ -77,12 +71,64 @@ AC_PATH_PROGS(HDFVIEW,  [hdfview /usr/local/bin/hdfview /usr/local/hdfview/hdfvi
 # :(
 AC_PATH_PROGS(TERMINAL,   [xterm konsole gnome-terminal.wrapper], no)
 
+# handle PIC options
 AC_ARG_WITH([pic],
   [AS_HELP_STRING([--with-pic],
      [enable support for PIC libraries (required to compile PGPLOT on some systems)])],
   [USE_PIC=$withval],
   [USE_PIC=no])
 AC_SUBST(USE_PIC)
+
+# check for OpenMP threads and option to use at compile
+AC_CHECK_HEADER(omp.h, [ HAVE_THREADS=yes ])
+if test "$HAVE_THREADS" = yes; then
+  # test flag to use for compilation
+  AC_CACHE_CHECK([for OpenMP flag of _AC_LANG compiler], ax_cv_[]_AC_LANG_ABBREV[]_openmp, [save[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
+  ax_cv_[]_AC_LANG_ABBREV[]_openmp=unknown
+  # Flags to try:  -fopenmp (gcc), -openmp (icc), -mp (SGI & PGI),
+  #                -xopenmp (Sun), -omp (Tru64), -qsmp=omp (AIX), none
+  ax_openmp_flags="-fopenmp -openmp -mp -xopenmp -omp -qsmp=omp none"
+  if test "x$OPENMP_[]_AC_LANG_PREFIX[]FLAGS" != x; then
+    ax_openmp_flags="$OPENMP_[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flags"
+  fi
+  for ax_openmp_flag in $ax_openmp_flags; do
+    case $ax_openmp_flag in
+      none) []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[] ;;
+      *) []_AC_LANG_PREFIX[]FLAGS="$save[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flag" ;;
+    esac
+    AC_TRY_LINK_FUNC(omp_set_num_threads,
+	  [ax_cv_[]_AC_LANG_ABBREV[]_openmp=$ax_openmp_flag; break])
+  done
+  []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[]FLAGS
+  ]) # end AC_CACHE_CHECK
+  if test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" != "xnone"; then
+    OPENMP_[]_AC_LANG_PREFIX[]FLAGS=$ax_cv_[]_AC_LANG_ABBREV[]_openmp
+  fi
+  # now set DEFINE for mcstas_config
+  AC_SUBST([HAVE_THREADS], ["-DUSE_THREADS $OPENMP_CFLAGS "])
+  AC_DEFINE([HAVE_THREADS], ["-DUSE_THREADS $OPENMP_CFLAGS "])
+else
+  AC_SUBST([HAVE_THREADS], [])
+  AC_DEFINE([HAVE_THREADS], [])
+fi
+
+
+# check for MPI
+if test "$MPICC" != "no"; then
+  AC_CHECK_HEADER(mpi.h, , [ echo "WARNING: $MPICC may fail to compile without mpi.h" ] )
+fi
+
+# check for NeXus libraries
+AC_ARG_WITH([nexus],
+  [AS_HELP_STRING([--with-nexus],
+     [enable support for NeXus/HDF libraries])])
+if test "${with_nexus+set}" = set; then
+  AC_SUBST([HAVE_NEXUS], ["-DUSE_NEXUS -lNeXus "])
+  AC_DEFINE([HAVE_NEXUS], ["-DUSE_NEXUS -lNeXus "])
+else
+  AC_SUBST([HAVE_NEXUS], [])
+  AC_DEFINE([HAVE_NEXUS], [])
+fi
 
 AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl support/pgplot/pgplot.sh support/scilab/scilab.sh)
 
@@ -118,16 +164,17 @@ fi
 if test "$USE_PIC" != "no" ; then
 echo "Activating PIC compilation for: make install-pgplot"
 fi
-if test "$HAVE_LIBNEXUS" != "0" ; then
-echo "Activating NeXus support in McStas"
+if test "x$HAVE_NEXUS" != "x" ; then
+echo "Activating NeXus support in McStas ($HAVE_NEXUS)"
+fi
+if test "x$HAVE_THREADS" != "x" ; then
+echo "Activating OpenMP multi-threading support in McStas ($HAVE_THREADS)"
 fi
 echo ""
 if test "$WGET" != no ; then
   echo "Gnome support: If you experience crashes of mcgui when running in the "
   echo "  Gnome environment, please come back here and do a"
-  echo ""
   echo "# make tk"
-  echo ""
   echo "will install our patched version of perl-tk from the net"
 fi
 if test "$PGPLOT" == "no" ; then
@@ -175,4 +222,5 @@ echo ""
 if test "$DASH" != "no" ; then
 echo
 echo WARNING: Your system includes the $DASH shell which is known to cause problems.
+echo On Debian systems remove it with: apt-get remove dash
 fi
