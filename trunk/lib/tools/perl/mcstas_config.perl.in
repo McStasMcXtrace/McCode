@@ -10,12 +10,13 @@
 # PGPLOT   - location of PGPLOT
 # TCLTK    - location of TCLTK
 # PLOTTER  - Choice of default plotting backend, possible values:
-#            - PGPLOT (Unix only)
+#            - PGPLOT (Unix / Win32)
 #            - Matlab (Unix / Win32)
 #            - Matlab scriptfile (Unix / Win32)
 #            - Scilab (Unix only)
 #            - Scilab scriptfile (Unix / Win32)
 # PGDEV      - Default device for PGPLOT (usually /xserv or /gw)
+# GNUDEV     - Default device for GNUPLOT (x11/aqua/windows)
 # EDITOR   - Choice of default built-in editor
 #            0 - McStas 1.7 editor (simple, no extra perl modules req'd)
 #            1 - CodeText editor with highlighting of McStas instrument code
@@ -29,6 +30,7 @@
 # AT	   - Command to detach simulation process (Unix only)
 # MATLAB   - comand to launch matlab
 # SCILAB   - comand to launch scilab
+# GNUPLOT  - command to launch gnuplot
 # EXE      - executable suffix (out or exe)
 # HOSTFILE - MPI/grid hosts/machine list
 # MATLAB_COMMAND - options to execute matlab
@@ -57,6 +59,7 @@ use Config;
      VRMLVIEW => '@VRMLVIEW@',
      PGPLOT => '@PGPLOT@',
      PGDEV => '/xserv',
+     GNUDEV => 'x11',
      TCLTK => '@TCLTK@',
      SSH => '@SSH@',
      MPIRUN => '@MPIRUN@',
@@ -67,6 +70,7 @@ use Config;
      EDITOR => 1,
      MATLAB => '@MATLAB@',
      SCILAB => '@SCILAB@',
+     GNUPLOT => '@GNUPLOT@',
      MATLAB_COMMAND => '-nodesktop -nosplash',
      SCILAB_COMMAND => '-nw',
      EXE => 'out',

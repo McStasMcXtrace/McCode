@@ -1,7 +1,7 @@
 #! /usr/bin/perl
 #
 # Implements perl interface for plotting McStas data output using PGPLOT,
-# Matlab or Scilab
+# gnuplot, Matlab or Scilab
 #
 #   This file is part of the McStas neutron ray-trace simulation package
 #   Copyright (C) 1997-2004, All rights reserved
@@ -64,7 +64,7 @@ require "mcstas_config.perl";
 # ADD/MOD: E. Farhi Sep 21th, 2001 : handle -ps and -psc for automatic
 # print and exit
 my ($default_ext);
-my ($file, $files);
+our ($file, $files);
 my $index =0;
 my $passed_arg_str = "";
 my $passed_arg_str_quit = "";
@@ -111,7 +111,7 @@ for($i = 0; $i < @ARGV; $i++) {
       $contourmode = 1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "mcplot [-ps|-psc|-gif] <simfile | detector_file>\n";
-      print "       [-pPLOTTER] Output graphics using {PGPLOT,Scilab,Matlab,HTML}\n";
+      print "       [-pPLOTTER] Output graphics using {PGPLOT,gnuplot,Scilab,Matlab,HTML}\n";
       print "                   The file extension will also set the PLOTTER\n";
       print "       [-overview] Show all plots in a single window\n";
       print "       [-plot]     Show all plots in separate window(s)\n";
@@ -151,14 +151,14 @@ if (-d $file) { # check if dir containing result file
 # look if there is only one file type and set plotter to use
 if (-e "$file.m" and not -e "$file.sci" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Matlab"; }
 if (-e "$file.sci" and not -e "$file.m" and not -e "$file.sim" and not -e "$file.html") { $plotter = "Scilab"; }
-if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html") { $plotter = "PGPLOT"; }
+if (-e "$file.sim" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.html" and not ($plotter =~ /gnuplot/i)) { $plotter = "PGPLOT"; }
 if (-e "$file.html" and not -e "$file.m" and not -e "$file.sci" and not -e "$file.sim") { $plotter = "HTML";   }
 if (-e "$file.nxs") { $plotter = "NeXus";   }
 
 # set default extension from plotter
 if    ($plotter =~ /Scilab/i) { $default_ext = ".sci"; }
 elsif ($plotter =~ /Matlab/i) { $default_ext = ".m"; }
-elsif ($plotter =~ /PGPLOT|McStas/i) { $default_ext = ".sim"; }
+elsif ($plotter =~ /PGPLOT|McStas|gnuplot/i) { $default_ext = ".sim"; }
 elsif ($plotter =~ /HTML/i) { $default_ext = ".html"; }
 elsif ($plotter =~ /NeXus/i) { $default_ext = ".nxs"; }
 
@@ -168,7 +168,7 @@ if ($file !~ m'\.[^/]*$' && $default_ext) { $file .= $default_ext; }
 # set plotter from extension
 if ($file =~ m'\.m$')    { $plotter = "Matlab"; }
 if ($file =~ m'\.sci$' || $file =~ m'\.sce$') {$plotter = "Scilab"; }
-if ($file =~ m'\.sim$')  { $plotter = "PGPLOT"; }
+if ($file =~ m'\.sim$' and not($plotter =~ /gnuplot/i))  { $plotter = "PGPLOT"; }
 if ($file =~ m'\.html$') { $plotter = "HTML"; }
 if ($file =~ m'\.nxs$') { $plotter = "NeXus"; }
 
@@ -235,6 +235,10 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
   system("$MCSTAS::mcstas_config{'BROWSER'} $file");
 } elsif ($plotter =~ /HDF|NeXus/i && $MCSTAS::mcstas_config{'HDFVIEW'} ne "no") {
   system("$MCSTAS::mcstas_config{'HDFVIEW'} $file");
+} elsif ($plotter =~ /gnuplot/i) {
+  # McStas original mcplot format using GNUPLOT
+  require "mcgnuplot.pl";
+  gnuplotit($file);
 } elsif ($plotter =~ /PGPLOT|McStas/i) {
   # McStas original mcplot using perl/PGPLOT
 

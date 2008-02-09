@@ -6,6 +6,7 @@ use File::Copy;
 our $scilab;
 our $tcltk;
 our $matlab;
+our $gnuplot;
 our $cc;
 our $mpirun;
 our $mpicc;
@@ -53,6 +54,15 @@ if ($Config{'osname'} eq "MSWin32") {
       if ($failed) { $scilab = "runscilab.exe"; }
 
     print STDOUT "$scilab\n";
+
+    print STDOUT "Checking for gnuplot: ";
+
+      $failed=system("$which wgnuplot.exe");
+      $gnuplot = (not $failed) ? "wgnuplot.exe" : "no";
+
+    print STDOUT "$gnuplot\n";
+
+
 
     print STDOUT "Checking for VRML viewer: ";
 
@@ -155,6 +165,8 @@ while (<READ>) {
         print WRITE "     SCILAB => '$scilab',\n";
     } elsif (/\w*MATLAB \=\w*/) {
         print WRITE "     MATLAB => '$matlab',\n";
+    } elsif (/\w*GNUPLOT \=\w*/) {
+        print WRITE "     GNUPLOT => '$gnuplot',\n";
     } elsif (/\w*TCLTK \=\w*/) {
         print WRITE "     TCLTK => '$tcltk',\n";
     } elsif (/\w*SSH \=\w*/) {
@@ -191,6 +203,8 @@ while (<READ>) {
         print WRITE "     HDFVIEW => '$hdfview',\n";
     } elsif (/\w*PGDEV \=\w*/) {
 	print WRITE "     PGDEV => '/gw',\n";
+      } elsif (/\w*GNUDEV \=\w*/) {
+	print WRITE "     GNUDEV => 'windows',\n";
     } else {
         print WRITE;
     }
