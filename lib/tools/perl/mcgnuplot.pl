@@ -51,8 +51,7 @@ sub gnuplotit {
   # Set up pipe to gnuplot, do first overview plot
   # and build the Tk based gui.
   if ($pid == 0) {
-    $pid = open2(FGNUPLOT, GNUPLOT, "gnuplot");
-    #$MCSTAS::mcstas_config{GNUPLOT});
+    $pid = open2(FGNUPLOT, GNUPLOT, $MCSTAS::mcstas_config{GNUPLOT});
     # Allow gnuplot time to settle.
     sleep 2;
   }
@@ -67,31 +66,6 @@ sub gnuplotit {
     $currentmon = 'Overview';
     $monitorlist->configure(-options =>[@monitornames]);
   } 
-
-# require "mcgnuplot.pl";
-  #while (1==1) {};
-# This is where we'll set up gnuplot terminal etc.
-#   if ($passed_arg_str_quit =~ /-cps|-psc/i) {
-#     gnuplot_term("postscript color","$file.ps");
-    
-#     #die "Wrote color postscript file '$file.ps' (cps)\n";
-#   } elsif ($passed_arg_str_quit =~ /-ps/) {
-#     gnuplot_term("postscript color","$file.ps");
-#     gnuoverview_plot($datalist, $passed_arg_str);
-#     #die "Wrote BW postscript file '$file.ps' (ps)\n";
-#   } elsif ($passed_arg_str_quit =~ /-ppm/) {
-#     $global_dev = get_device("$file.ppm/ppm");
-#     overview_plot($datalist, $passed_arg_str);
-#           die "Wrote PPM file '$file.ppm' (ppm)\n";
-#   } elsif ($passed_arg_str_quit =~ /-png/) {
-#     $global_dev = get_device("$file.png/png");
-#     overview_plot($datalist, $passed_arg_str);
-#           die "Wrote PNG file '$file.png' (png)\n";
-#   } elsif ($passed_arg_str_quit =~ /-gif/) {
-#     $global_dev = get_device("$file.gif/gif");
-#     overview_plot($datalist, $passed_arg_str);
-#           die "Wrote GIF file '$file.gif' (gif)\n";
-#   }
 }
 
 sub overview_gnuplot {
