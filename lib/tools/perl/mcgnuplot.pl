@@ -32,6 +32,7 @@ my $default_term;
 # This part should perhaps go to mcstas_config.perl
 if ($Config{'osname'} eq 'MSWin32') {
   $default_term="windows";
+  $termnum ="";
 } elsif ($Config{'osname'} eq 'darwin') {
   $default_term="aqua";
 } else {
@@ -72,14 +73,15 @@ sub overview_gnuplot {
   my ($nx, $ny) = calc_panel_size(int(@$datalist));
   my $type;
   @monitornames = ('Overview');
-  if (int(@$datalist) < 10) {
+  # On Win32, multiple windows are not supported...
+  if (int(@$datalist) < 10 || ($default_term eq "windows")) {
     $type = 0;
     print GNUPLOT "\nset multiplot layout $ny,$nx\n";
   } else {
     $type = 1;
   }
   my $info;
-  if ($term eq $default_term) {
+  if (($term eq $default_term) && !($default_term eq "windows")) {
     $termnum=0;
   }
   for $info (@$datalist) {
@@ -101,7 +103,9 @@ sub gnuplot_single {
   if ($currentmon eq "Overview") {
     overview_gnuplot();
   } else {
-    $termnum++;
+    if (!($default_term eq "windows")) {
+      $termnum++;
+    } 
     print GNUPLOT "\nset term $term $termnum\n";
     for $info (@$datalist) {
       if ("$info->{Filename}" eq $currentmon) {
@@ -125,7 +129,9 @@ sub gnuplot_save {
     overview_gnuplot();
     print "Saved overview plot \"$file.$suffix\"\n";
   } else {
-    $termnum++;
+    if (!($default_term eq "windows")) {
+      $termnum++;
+    } 
     print GNUPLOT "\nset term $term $termnum\n";
     
     for $info (@$datalist) {
@@ -206,7 +212,7 @@ sub build_gui {
     $b->attach($tmp2, -balloonmsg => "Sets the time between changes check");
     $monitorlist = $midframe->Optionmenu(-textvariable => \$currentmon, -options =>
 					 [@monitornames])->pack(-side => 'left');
-    my $tmp3=$midframe->Button(-text => "Display (new win)", -anchor => 'w',
+    my $tmp3=$midframe->Button(-text => "Display", -anchor => 'w',
 		     -justify => "center", -command => [\&gnuplot_single])->pack(-side => "left");
     $b->attach($tmp3, -balloonmsg => "Plot selected monitor on screen");
     my $tmp4=$midframe->Button(-text => "Save, format ->", -anchor => 'w',
