@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,11 +19,14 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.11 2007-03-06 09:39:15 farhi Exp $
+* $Id: nexus-lib.c,v 1.12 2008-02-09 22:26:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.11  2007/03/06 09:39:15  farhi
+* NeXus default output is now "5 zip". Then NEXUS keyword is purely optional.
+*
 * Revision 1.10  2007/03/05 19:02:55  farhi
-* NEXUS support now works as MPI. NEXUS keyword is optional and only -DHAVE_LIBNEXUS is required. All instruments may then export in NEXUS if McStas
+* NEXUS support now works as MPI. NEXUS keyword is optional and only -DUSE_NEXUS is required. All instruments may then export in NEXUS if McStas
 * has been installed with --with-nexus
 *
 * Revision 1.9  2007/03/02 14:35:56  farhi
@@ -43,7 +46,7 @@
 *
 * Revision 1.5  2007/01/25 14:57:36  farhi
 * NeXus output now supports MPI. Each node writes a data set in the NXdata
-* group. Uses compression LZW when -DHAVE_LIBNEXUS_COMP.
+* group. Uses compression LZW when -DUSE_NEXUS_COMP.
 *
 * Revision 1.3  2007/01/22 15:13:42  farhi
 * Fully functional NeXus output format.
@@ -61,7 +64,7 @@
 *
 *******************************************************************************/
 
-#ifdef HAVE_LIBNEXUS
+#ifdef USE_NEXUS
 
 /* NeXus output functions that replace calls to pfprintf in mcstas-r */
 int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)

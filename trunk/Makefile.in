@@ -1,7 +1,7 @@
 # Makefile for McStas.
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2007, All rights reserved
+#   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -17,6 +17,15 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program; if not, write to the Free Software
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# Available methods for installation
+# make                 normal build
+# make install         normal installation
+# make install-pgplot  build and install PGPLOT, requires super-user
+# make clean           clean distro
+# make test            distro self-test
+# make plotter         best plotter choice
+
 
 SHELL = /bin/sh
 
@@ -36,10 +45,8 @@ MINGW = @MINGW@
 CFLAGS = @CFLAGS@
 LDFLAGS= @LDFLAGS@
 
-HAVE_LIBPTHREAD = @HAVE_LIBPTHREAD@
 HAVE_QSORT = @HAVE_QSORT@
-HAVE_LIBNEXUS = @HAVE_LIBNEXUS@
-WITH_NEXUS = @WITH_NEXUS@
+USE_NEXUS = @HAVE_NEXUS@
 
 DEFS = @DEFS@ $(DEBUG)
 LIBS = @LIBS@
@@ -100,12 +107,12 @@ mcstas: $(OBJECTS)
 	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
 
 mcstas.win32: $(COBJECTS)
-	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(WITH_NEXUS)
-	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(WITH_NEXUS)
+	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
+	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
 
 
 mcformat:
-	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(WITH_NEXUS)
+	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
 
 clean:
 	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \

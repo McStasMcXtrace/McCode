@@ -55,7 +55,7 @@ the way.
 
 
 
-\noindent For MPI (parallelisation) on Windows, we advice you to install MPICH2 from \htmladdnormallink{Argonne National Laboratory}{http://www-unix.mcs.anl.gov/mpi/mpich/} including development libraries before installing McStas. Also, your \verb+mpiexec.exe+ must be on the \verb+PATH+.
+\noindent For MPI (parallelisation) on Windows, we advice you to install MPICH2 from \htmladdnormallink{Argonne National Laboratory}{http://www-unix.mcs.anl.gov/mpi/mpich/} including development libraries before installing McStas. Also, your \verb+mpiexec.exe+ must be on the \verb+PATH+. You may have to customize the \verb+mpicc.bat+ script from the McStas distribution with the proper C compiler and MPI library path.
 
 
 
@@ -91,8 +91,9 @@ perform the following tasks:
 \begin{enumerate}
 \item{Download the package from \verb+http://www.mcstas.org/download+}
 \item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
+\item{Optionally, as root, issue the command \\\verb+apt-get install gcc-4.2 mpich-bin libmpich1.0c2 libmpich1.0-dev+ to benefit from MPI and OpenMP parallelization}
 \item{As root, issue the command \\\verb+apt-get remove dash ubuntu-minimal+}
-\item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+}
+\item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+. This later step may be replaced by a ./configure; make; make install procedure after extraction of the Mctas tarball (see below)}
 %\item{As root, add the following to your \verb+/etc/apt/sources.list+ :
 %\\\verb+deb http://apt.mcstas.org binary/+ (32 bit package for Intel/AMD)}
 %\item{As root execute the command:\\\verb+apt-get update+}
@@ -116,7 +117,7 @@ distribution in the file \\\verb+/etc/apt/sources.list+.)
 \noindent We also recommend to install octaga vrml viewer from
 \\\htmladdnormallink{http://www.octaga.com/download\_octaga.html}{http://www.octaga.com/download_octaga.html}.
 
-\noindent Additionally, MPICH, Octave/Gnuplot, HDF and NeXus libraries may be installed, to enhance McStas clustering method and data formats.
+\noindent Additionally, MPICH, OpenMP (gcc-4.2 or icc or pgcc), Octave/Gnuplot, HDF and NeXus libraries may be installed, to enhance McStas clustering method and data formats.
 
 \subsection{Configuration and installation}
 McStas uses autoconf to detect the system configuration and creates the
@@ -128,14 +129,14 @@ should be able to compile and/or install McStas using the following steps:
   \texttt{gunzip -c <package>.tar.gz | tar xf -}\\
   \texttt{cd mcstas-1.11/}}
 \item{Configure McStas:\\
-  \texttt{./configure}}
-\item{Build McStas (only in case of the \verb+mcstas-1.11-src.tar.gz+ package):\\
-  \texttt{make}}
+  \texttt{./configure} or \texttt{./configure --with-nexus --with-cc=gcc-4.2}}
 \item{Optionally build/install PGPLOT (as superuser - build
     dependencies are pdl, g77, libx11-dev, xserver-xorg-dev, libxt-dev
     on Ubuntu):\\
     \texttt{make install-pgplot \&\& ./configure}
     \label{pg_install}}
+\item{Build McStas (only in case of the \verb+mcstas-1.11-src.tar.gz+ package):\\
+  \texttt{make}}
 \item{Install McStas (as superuser):\\
   \texttt{make install}
 \label{makeinst}}
@@ -156,9 +157,13 @@ configure in step 2. For example,\\
 \noindent will install the McStas programs in /home/joe/bin/ and the
 library files needed by McStas in /home/joe/lib/mcstas/.
 
-\noindent On 64-bits systems, you may have to use: ./configure --with-pic
+\noindent On 64-bits systems, you may have to use: ./configure --with-pic before installing PGPLOT with: make install-pgplot
 
 \noindent To enable NeXus format in mcformat, you need the NeXus and HDF libraries, and have to use: ./configure --with-nexus
+
+\noindent To specify a non standard C compiler that supports OpenMP (e.g. gcc-4.2 or icc), you may use e.g.: ./configure --with-cc=gcc-4.2
+
+\noindent To enable a non standard C compiler to be used with MPI, you may have to edit your mpicc shell script to set e.g.: CC="icc", or redefine the 'cc' to point to your prefered compiler, e.g.: ln -s /usr/bin/gcc-4.2 /usr/bin/cc
 
 In case ./configure makes an incorrect guess, some environment variables
 can be set to override the defaults:

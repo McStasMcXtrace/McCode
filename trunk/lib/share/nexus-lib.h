@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,8 +10,8 @@
 * %Identification
 * Written by: EF
 * Date:    Jan 17, 2007
-* Release: McStas 1.10
-* Version: $Revision: 1.7 $
+* Release: McStas CVS-080208
+* Version: $Revision: 1.8 $
 *
 * NeXus Runtime system header for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,13 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.h,v 1.7 2007-03-05 19:02:55 farhi Exp $
+* $Id: nexus-lib.h,v 1.8 2008-02-09 22:26:27 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.7  2007/03/05 19:02:55  farhi
+* NEXUS support now works as MPI. NEXUS keyword is optional and only -DUSE_NEXUS is required. All instruments may then export in NEXUS if McStas
+* has been installed with --with-nexus
+*
 * Revision 1.6  2007/03/02 14:35:56  farhi
 * Updated install doc for NeXus and reconfigure tool.
 * better NeXus support with compression
@@ -51,12 +55,6 @@
 *******************************************************************************/
 
 #ifdef USE_NEXUS
-#ifndef HAVE_LIBNEXUS
-#define HAVE_LIBNEXUS
-#endif
-#endif
-
-#ifdef HAVE_LIBNEXUS
 
 #include "napi.h"
 #include <sys/stat.h>

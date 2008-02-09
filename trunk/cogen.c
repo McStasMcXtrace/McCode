@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.78 $
+* Version: $Revision: 1.79 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.78  2007/12/11 14:49:32  farhi
+* WHEN now disabled EXTEND
+* Added IN22 examples
+*
 * Revision 1.77  2007/10/29 18:41:18  farhi
 * Fixed GROUP issue that came in after SPLIT insertion in grammar
 *
@@ -48,7 +52,7 @@
 * NeXus default output is now "5 zip". Then NEXUS keyword is purely optional.
 *
 * Revision 1.69  2007/03/05 19:02:53  farhi
-* NEXUS support now works as MPI. NEXUS keyword is optional and only -DHAVE_LIBNEXUS is required. All instruments may then export in NEXUS if McStas
+* NEXUS support now works as MPI. NEXUS keyword is optional and only -DUSE_NEXUS is required. All instruments may then export in NEXUS if McStas
 * has been installed with --with-nexus
 *
 * Revision 1.68  2007/03/02 14:27:17  farhi
@@ -178,7 +182,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.78 2007-12-11 14:49:32 farhi Exp $
+* $Id: cogen.c,v 1.79 2008-02-09 22:26:26 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1104,7 +1108,7 @@ cogen_init(struct instr_def *instr)
   cout("  }");
   cout("");
   cout ("/* NeXus support */\n");
-  cout ("#ifdef HAVE_LIBNEXUS\n");
+  cout ("#ifdef USE_NEXUS\n");
   coutf("strncmp(%snxversion,\"%s\",128);\n", ID_PRE,
     instr->nxinfo->any && instr->nxinfo->hdfversion && strlen(instr->nxinfo->hdfversion) ?
       instr->nxinfo->hdfversion : "5 zip");
@@ -1622,10 +1626,10 @@ cogen_runtime(struct instr_def *instr)
   {
     cout("#define MC_EMBEDDED_RUNTIME"); /* Some stuff will be static. */
     embed_file("mcstas-r.h");
-    /* NeXus support, only active with -DHAVE_LIBNEXUS */
-    embed_file("nexus-lib.h"); /* will require linking with -DHAVE_LIBNEXUS -lNeXus */
+    /* NeXus support, only active with -DUSE_NEXUS */
+    embed_file("nexus-lib.h"); /* will require linking with -DUSE_NEXUS -lNeXus */
     embed_file("nexus-lib.c");
-    if (verbose) printf("Requires library    -DHAVE_LIBNEXUS -lNeXus (to enable NeXus support)\n");
+    if (verbose) printf("Requires library    -DUSE_NEXUS -lNeXus (to enable NeXus support)\n");
     embed_file("mcstas-r.c");
   }
   else
@@ -1633,7 +1637,7 @@ cogen_runtime(struct instr_def *instr)
     coutf("#include \"%s%sshare%smcstas-r.h\"",  sysdir_new, pathsep, pathsep);
     coutf("#include \"%s%sshare%snexus-lib.h\"", sysdir_new, pathsep, pathsep);
     fprintf(stderr,"Dependency: %s.o\n", "mcstas-r");
-    fprintf(stderr,"Dependency: %s.o and '-DHAVE_LIBNEXUS -lNeXus' to enable NeXus support\n", "nexus-lib");
+    fprintf(stderr,"Dependency: %s.o and '-DUSE_NEXUS -lNeXus' to enable NeXus support\n", "nexus-lib");
     fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n", instrument_definition->quoted_source, sysdir_new, pathsep);
   }
 
