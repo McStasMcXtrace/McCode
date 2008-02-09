@@ -84,12 +84,16 @@ sub overview_gnuplot {
   if (($term eq $default_term) && !($default_term eq "windows")) {
     $termnum=0;
   }
+  my $index=0;
   for $info (@$datalist) {
     if ($type) {
       print GNUPLOT "\nset term $term $termnum\n";
     }
-    push @monitornames, $info->{Filename};
-    gnuplot_dat_info($info);
+    push @monitornames, $info->{'Component'};
+    if ($info->{'Origin'} eq "scanfile") {
+      $index++;
+    }
+    gnuplot_dat_info($info, $index);
     if ($type)  {
       $termnum++;
     }
@@ -105,11 +109,15 @@ sub gnuplot_single {
   } else {
     if (!($default_term eq "windows")) {
       $termnum++;
-    } 
+    }
     print GNUPLOT "\nset term $term $termnum\n";
+    my $index=0;
     for $info (@$datalist) {
-      if ("$info->{Filename}" eq $currentmon) {
-        gnuplot_dat_info($info);
+      if ($info->{'Origin'} eq "scanfile") {
+	$index++;
+      }
+      if ($info->{'Component'} eq $currentmon) {
+        gnuplot_dat_info($info, $index);
       }
     }
   }
@@ -132,27 +140,33 @@ sub gnuplot_save {
     if (!($default_term eq "windows")) {
       $termnum++;
     } 
-    print GNUPLOT "\nset term $term $termnum\n";
-    
+    print GNUPLOT "\nset term $term\n";
+    my $index=0;
     for $info (@$datalist) {
-      if ("$info->{Filename}" eq $currentmon) {
-	print GNUPLOT "\nset output \"$currentmon.$suffix\"\n";
-        gnuplot_dat_info($info);
+      if ($info->{'Origin'} eq "scanfile") {
+	$index++;
+      }
+      if ($info->{'Component'} eq $currentmon) {
+     	print GNUPLOT "\nset output \"$currentmon.$suffix\"\n";
+        gnuplot_dat_info($info, $index);
 	print "Saved hardcopy \"$currentmon.$suffix\"\n";
       }
     }
-  }
+  }  
   $term = $default_term;
   print GNUPLOT "\nset term $term\n";
 }
 
 sub gnuplot_dat_info {
-    my ($info) = @_;
+    my ($info, $index) = @_;
+    if ($index == 0) {
+      $index = 1;
+    }
     my $type = $info->{'Type'};
     if($type =~ /^\s*array_2d\s*\(\s*([0-9]+)\s*,\s*([0-9]+)\s*\)\s*$/i) {
       gnuplot_array_2d($info, $1, $2);
     }elsif($type =~ /^\s*array_1d\s*\(\s*([0-9]+)\s*\)\s*$/i) {
-      gnuplot_array_1d($info, $1);
+      gnuplot_array_1d($info, $1, $index);
     } else {
       print "Warning: Unimplemented plot type '$type' in file '$info->{Filename}' (plot_dat_info)";
     }
@@ -173,8 +187,9 @@ sub gnuplot_array_1d {
   my ($info,$m,$n) = @_; 
   print GNUPLOT "\nset xlabel \"$info->{'Xlabel'}\"\nset ylabel \"$info->{'Ylabel'}\"\n";
   print GNUPLOT "\nset title \"$info->{'Component'}\"\n";
-  #my ($x0,$x1,$y0,$y1) = @{$info->{'Limits'}};
-  print GNUPLOT "\nplot \"$info->{Filename}\" u 1:2:3 with errorbars notitle\n";
+  my $int = 2*$n;
+  my $err = 2*$n+1;
+  print GNUPLOT "\nplot \"$info->{Filename}\" u 1:$int:$err with errorbars notitle\n";
 }
 
 sub Tkgui {

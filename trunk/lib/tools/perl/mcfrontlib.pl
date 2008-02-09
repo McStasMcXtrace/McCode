@@ -220,6 +220,7 @@ sub read_data_info {
       my $res = [];
       my $i;
       for($i = 0; $i < @yvars; $i++) {
+	  $compname = $yvars[$i];
           push @$res, { Type => "array_1d($size)",
                     Component => $compname,
                     Title => $title,
@@ -233,7 +234,8 @@ sub read_data_info {
                     Xlabel => $xlabel,
                     Ylabel => "$ylabel $yvars[$i]",
                     Limits => [$xmin,$xmax,$ymin,$ymax],
-                    Stats  => $stats
+                    Stats  => $stats,
+		    Origin => "scanfile"
                     };
       }
       return @$res;
