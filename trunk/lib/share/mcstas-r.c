@@ -10,15 +10,15 @@
 * %Identification
 * Written by: KN
 * Date:    Aug 29, 1997
-* Release: McStas CVS-080208
-* Version: $Revision: 1.181 $
+* Release: McStas X.Y
+* Version: $Revision: 1.182 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.181 2008-02-10 15:12:56 farhi Exp $
+* $Id: mcstas-r.c,v 1.182 2008-02-10 20:55:53 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.180  2008/02/09 22:26:27  farhi
@@ -4824,10 +4824,12 @@ mcparseoptions(int argc, char *argv[])
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;   
 #ifdef USE_OPENMP
-    else if(!strcmp("--threads", argv[i]))
-      threads_node_count=omp_get_num_threads();
-    else if(!strncmp("--threads=", argv[i],10))
+    else if(!strcmp("--threads", argv[i])) {
+      threads_node_count=0; /* will use available nodes */
+    }
+    else if(!strncmp("--threads=", argv[i],10)) {
       threads_node_count=atoi(&argv[i][10]);
+    }
 #endif
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
@@ -5055,17 +5057,6 @@ int mcstas_main(int argc, char *argv[])
 
 /* *** print number of nodes *********************************************** */
   t = (time_t)mcstartdate;
-#ifdef USE_OPENMP  
-if (!threads_node_count) threads_node_count=omp_get_num_threads();
-#pragma omp parallel shared(threads_node_count)
-{
-  if (omp_get_thread_num()==0) {
-    printf("Simulation %s (%s) running on %i OpenMP threads\n", 
-      mcinstrument_name, mcinstrument_source, threads_node_count);
-  } /* no need to adapt random seed as memory is shared */
-}
-#endif
-
 #ifdef USE_MPI
   if (mpi_node_count > 1) {
     MPI_MASTER(
@@ -5094,6 +5085,17 @@ if (!threads_node_count) threads_node_count=omp_get_num_threads();
   }
   if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
+    
+#ifdef USE_OPENMP 
+  #pragma omp parallel shared(threads_node_count)
+  {
+    if (!threads_node_count) threads_node_count=omp_get_num_threads();
+    if (omp_get_thread_num()==0) {
+      printf("Simulation %s (%s) running on %i OpenMP threads\n", 
+        mcinstrument_name, mcinstrument_source, threads_node_count);
+    } /* no need to adapt random seed as memory is shared */
+  }
+#endif
 
 /* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS

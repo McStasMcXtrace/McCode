@@ -10,8 +10,8 @@
 * %Identification
 * Written by: KN
 * Date:    Aug 29, 1997
-* Release: McStas CVS-080208
-* Version: $Revision: 1.96 $
+* Release: McStas X.Y
+* Version: $Revision: 1.97 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,15 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.96 2008-02-10 15:12:56 farhi Exp $
+* $Id: mcstas-r.h,v 1.97 2008-02-10 20:55:53 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.96  2008/02/10 15:12:56  farhi
+*       mcgui: save log when File/Quit
+*       mcrun/mcgui: OpenMP now uses the specified number of nodes
+*       mcstas-r: number of OpenMP nodes can be set by user. If left at default
+*       (--threads), then use omp_get_num_threads. This may be inaccurate on some systems..
+*
 *       Revision 1.95  2008/02/09 22:26:27  farhi
 *       Major contrib for clusters/multi-core: OpenMP support
 *       	try ./configure --with-cc=gcc4.2 or icc
@@ -242,7 +248,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.96 $"
+#define MCSTAS_R_H "$Revision: 1.97 $"
 
 #include <math.h>
 #include <string.h>
