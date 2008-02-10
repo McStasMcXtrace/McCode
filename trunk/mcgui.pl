@@ -1022,7 +1022,7 @@ sub menu_run_simulation {
         if ($newsi->{'cluster'} == 2) {
           push @command, "--mpi=$newsi->{'nodes'}";
         } elsif ($newsi->{'cluster'} == 1) {
-          push @command, "--threads";
+          push @command, "--threads=$newsi->{'nodes'}";
         } elsif ($newsi->{'cluster'} == 3) {
           push @command, "--multi";
         }

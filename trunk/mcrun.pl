@@ -210,8 +210,12 @@ sub parse_args {
             $exec_test="compatible and graphics";
         } elsif(/^--(test)\=(.*)$/) {
             $exec_test="$2";
-        } elsif(/^--(threads)\=(.*)$/ || /^--threads$/) {
-            $threads = 1;
+        } elsif(/^--threads$/) {
+        		$threads=1;
+            push @options, "--threads";
+        } elsif(/^--(threads)\=(.*)$/) {
+        		$threads=1;
+            push @options, "--threads=$2";
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
@@ -259,7 +263,7 @@ sub parse_args {
     }
 
     # Adapt to multi-threading (overrides griding)
-    if ($threads >= 1 && $MCSTAS::mcstas_config{THREADS} ne "") {
+    if ($threads != 0 && $MCSTAS::mcstas_config{THREADS} ne "") {
       $multi = 0;
     }
 
@@ -308,7 +312,7 @@ sub parse_args {
    -M        --multi          Spawn simulations to multiple machine grid.
              --grid           See the documentation for more info.
                                 --multi Not supported on Win32.
-   --mpi=NB_CPU               Spread simulation over NB_CPU machines using MPI
+   --mpi     --mpi=NB_CPU     Spread simulation over NB_CPU machines using MPI
    --machines=MACHINES        Read machine names from file MACHINES (MPI/grid)
    --optim=COMP               Add COMP to the list of monitors to maximize
                                 (optimization criteria, requires Math::Amoeba)
@@ -330,7 +334,7 @@ sub parse_args {
    -i        --info           Detailed instrument information.
    --format=FORMAT            Output data files using format FORMAT.
                               (format list obtained from <instr>.out -h)
-   --threads                  Use OpenMP threads for multi-cpu machines
+   --threads --threads=NB_CPU Use OpenMP threads for multi-cpu machines
 
 This program both runs mcstas with Instr and the C compiler to build an
 independent simulation program. The following environment variables may be
