@@ -38,6 +38,7 @@ if ($Config{'osname'} eq 'MSWin32') {
 } else {
   $default_term="x11";
 }
+$default_term = $MCSTAS::mcstas_config{GNUDEV};
 my $term = $default_term;
 my @monitornames;
 my $currentmon = 'Overview';
@@ -189,7 +190,8 @@ sub gnuplot_array_1d {
   print GNUPLOT "\nset title \"$info->{'Component'}\"\n";
   my $int = 2*$n;
   my $err = 2*$n+1;
-  print GNUPLOT "\nplot \"$info->{Filename}\" u 1:$int:$err with errorbars notitle\n";
+  print GNUPLOT "\nplot \"$info->{Filename}\" u 1:$int with lines notitle, ";
+  print GNUPLOT " \"$info->{Filename}\" u 1:$int:$err with errorbars notitle\n";
 }
 
 sub Tkgui {
