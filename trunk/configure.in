@@ -20,7 +20,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, 1.11, www.mcstas.org)
-AC_REVISION($Revision: 1.50 $)
+AC_REVISION($Revision: 1.51 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
@@ -91,7 +91,19 @@ if test "$HAVE_THREADS" = yes; then
   if test "x$OPENMP_[]_AC_LANG_PREFIX[]FLAGS" != x; then
     ax_openmp_flags="$OPENMP_[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flags"
   fi
-  for ax_openmp_flag in $ax_openmp_flags; do
+  for ax_openmp_flag  dnl will test flags to pass to compiler
+  in "-fopenmp -lgomp" 								dnl gcc 4.2 with explicit libgomp
+  "-fopenmp " 											  dnl gcc 4.2 
+  "-openmp -parallel"								  dnl icc with explicit parallel flag
+  "-openmp " 													dnl icc
+  "-mp" 															dnl pgi
+  "-xopenmp" 													dnl Sun
+  "-omp" 															dnl Tru64
+  "-qsmp=omp" 												dnl	AIX
+  "none" 															dnl no openmp
+  "$OPENMP_[]_AC_LANG_PREFIX[]FLAGS"  dnl flags defined by user
+  #
+  do
     case $ax_openmp_flag in
       none) []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[] ;;
       *) []_AC_LANG_PREFIX[]FLAGS="$save[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flag" ;;
