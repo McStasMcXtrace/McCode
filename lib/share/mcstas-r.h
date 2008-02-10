@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas CVS-080208
-* Version: $Revision: 1.95 $
+* Version: $Revision: 1.96 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,16 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.95 2008-02-09 22:26:27 farhi Exp $
+* $Id: mcstas-r.h,v 1.96 2008-02-10 15:12:56 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.95  2008/02/09 22:26:27  farhi
+*       Major contrib for clusters/multi-core: OpenMP support
+*       	try ./configure --with-cc=gcc4.2 or icc
+*       then mcrun --threads ...
+*       Also tidy-up configure. Made relevant changes to mcrun/mcgui to enable OpenMP
+*       Updated install-doc accordingly
+*
 *       Revision 1.94  2007/08/09 16:47:34  farhi
 *       Solved old gcc compilation issue when using macros in macros.
 *       Solved MPI issuie when exiting in the middle of a simulation. Now use MPI_Abort.
@@ -235,7 +242,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.95 $"
+#define MCSTAS_R_H "$Revision: 1.96 $"
 
 #include <math.h>
 #include <string.h>
@@ -424,7 +431,7 @@ int mc_MPI_Reduce(void* sbuf, void* rbuf,
 static int mpi_node_count;
 #endif
 #ifdef USE_OPENMP
-static int threads_node_count;
+static int threads_node_count=0;
 #endif
 
 /* I/O function prototypes ================================================== */

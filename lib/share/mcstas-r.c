@@ -11,16 +11,23 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas CVS-080208
-* Version: $Revision: 1.180 $
+* Version: $Revision: 1.181 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.180 2008-02-09 22:26:27 farhi Exp $
+* $Id: mcstas-r.c,v 1.181 2008-02-10 15:12:56 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.180  2008/02/09 22:26:27  farhi
+* Major contrib for clusters/multi-core: OpenMP support
+* 	try ./configure --with-cc=gcc4.2 or icc
+* then mcrun --threads ...
+* Also tidy-up configure. Made relevant changes to mcrun/mcgui to enable OpenMP
+* Updated install-doc accordingly
+*
 * Revision 1.179  2008/01/18 15:39:08  farhi
 * mcformat merge mode now takes into account individual Ncount so that addition
 * is a weighted sum. Event lists (when 'list' is found in Format) are catenated
@@ -4578,6 +4585,8 @@ mchelp(char *pgmname)
 "  --format=FORMAT            Output data files using format FORMAT\n"
 "                             (use option +a to include text header in files\n"
 #ifdef USE_THREADS
+"  --threads=NB_CPU           Split simulation into NB_CPU threads\n"
+"  --threads                  Split simulation into optimal machine threads\n"
 "This instrument has been compiled with threading support.\n"
 #endif
 #ifdef USE_MPI
@@ -4814,6 +4823,12 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;   
+#ifdef USE_OPENMP
+    else if(!strcmp("--threads", argv[i]))
+      threads_node_count=omp_get_num_threads();
+    else if(!strncmp("--threads=", argv[i],10))
+      threads_node_count=atoi(&argv[i][10]);
+#endif
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
@@ -5041,10 +5056,10 @@ int mcstas_main(int argc, char *argv[])
 /* *** print number of nodes *********************************************** */
   t = (time_t)mcstartdate;
 #ifdef USE_OPENMP  
+if (!threads_node_count) threads_node_count=omp_get_num_threads();
 #pragma omp parallel shared(threads_node_count)
 {
   if (omp_get_thread_num()==0) {
-    threads_node_count=omp_get_num_threads();
     printf("Simulation %s (%s) running on %i OpenMP threads\n", 
       mcinstrument_name, mcinstrument_source, threads_node_count);
   } /* no need to adapt random seed as memory is shared */
