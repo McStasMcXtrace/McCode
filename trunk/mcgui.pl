@@ -895,8 +895,8 @@ sub menu_run_simulation {
               # Selection of PGPLOT 3-pane view from config menu only.
 	      # Default is to NOT use 3-pane view.
               if ($pgmulti) {
-		  push @command, "--multi";
-	      }
+                push @command, "--multi";
+              }
               if (!($Config{'osname'} eq 'MSWin32')) {
 		  # Be sure to read mcplotlib.pl in this case...
 		  require "mcplotlib.pl";
@@ -1024,7 +1024,7 @@ sub menu_run_simulation {
         } elsif ($newsi->{'cluster'} == 1) {
           push @command, "--threads=$newsi->{'nodes'}";
         } elsif ($newsi->{'cluster'} == 3) {
-          push @command, "--multi";
+          push @command, "--multi=$newsi->{'nodes'}";
         }
         if ($newsi->{'Forcecompile'} == 1) {
           $inf_sim->{'cluster'} = $newsi->{'cluster'};
@@ -1040,7 +1040,7 @@ sub menu_run_simulation {
             rmtree($OutDir,0,1);
           }
         }
-        push @command, "--format='$plotter'";
+        push @command, "--format=$plotter";
 
        # add parameter values
         my @unset = ();
@@ -1647,14 +1647,15 @@ sub setup_cmdwin {
           ($MCSTAS::mcstas_config{'MPIRUN'} ne "no"
         ||  $MCSTAS::mcstas_config{'SSH'} ne "no") ) {
       $cmdwin->insert('end',
-"Warning: No MPI/grid machine list. ssh clustering disabled. MPI on localhost **
-Define $ENV{'HOME'}/.mcstas-hosts or MCSTAS/lib/tools/perl/mcstas-hosts first.\n");
-      $MCSTAS::mcstas_config{'SSH'}    = "no";
+"Warning: No MPI/grid machine list. Running locally.
+  Define $ENV{'HOME'}/.mcstas-hosts
+  or $MCSTAS::sys_dir/tools/perl/mcstas-hosts
+  or use option --machines=<file>\n");
     }
     my $text_grid="Single ";
     if ($MCSTAS::mcstas_config{'THREADS'} ne "") { $text_grid .= "Threads "; }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no")  { $text_grid .= "MPI "; }
-    if ($MCSTAS::mcstas_config{'SSH'} ne "no")     { $text_grid .= "Scan/ssh "; }
+    if ($MCSTAS::mcstas_config{'SSH'} ne "no")     { $text_grid .= "Grid "; }
     if ($text_grid ne "") { $cmdwin->insert('end', "Clustering methods: $text_grid\n"); }
     if (($MCSTAS::mcstas_config{'MPIRUN'} ne "no" || $MCSTAS::mcstas_config{'SSH'} ne "no")
         && $Config{'osname'} ne 'MSWin32' && (not -e "$ENV{'HOME'}/.ssh/id_dsa")) {

@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.182 $
+* Version: $Revision: 1.183 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.182 2008-02-10 20:55:53 farhi Exp $
+* $Id: mcstas-r.c,v 1.183 2008-02-14 08:56:35 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.182  2008/02/10 20:55:53  farhi
+* OpenMP number of nodes now set properly from either --threads=NB or
+* --threads which sets the computer core nb.
+*
 * Revision 1.180  2008/02/09 22:26:27  farhi
 * Major contrib for clusters/multi-core: OpenMP support
 * 	try ./configure --with-cc=gcc4.2 or icc
@@ -4825,7 +4829,7 @@ mcparseoptions(int argc, char *argv[])
       mcdisable_output_files = 1;   
 #ifdef USE_OPENMP
     else if(!strcmp("--threads", argv[i])) {
-      threads_node_count=0; /* will use available nodes */
+      threads_node_count=-1; /* will use available nodes */
     }
     else if(!strncmp("--threads=", argv[i],10)) {
       threads_node_count=atoi(&argv[i][10]);
@@ -5015,7 +5019,7 @@ void *mcstas_raytrace(void *p_node_ncount)
   double node_ncount = *((double*)p_node_ncount);
   
 #ifdef USE_OPENMP
-#pragma omp parallel if(threads_node_count>1) shared(node_ncount, mcrun_num)
+#pragma omp parallel if(threads_node_count>1) default(shared)
 {
 #endif
   while(mcrun_num < node_ncount)
@@ -5089,11 +5093,11 @@ int mcstas_main(int argc, char *argv[])
 #ifdef USE_OPENMP 
   #pragma omp parallel shared(threads_node_count)
   {
-    if (!threads_node_count) threads_node_count=omp_get_num_threads();
-    if (omp_get_thread_num()==0) {
+    if (threads_node_count<0) threads_node_count=omp_get_num_threads();
+    #pragma omp master
+    if (threads_node_count>1)
       printf("Simulation %s (%s) running on %i OpenMP threads\n", 
         mcinstrument_name, mcinstrument_source, threads_node_count);
-    } /* no need to adapt random seed as memory is shared */
   }
 #endif
 
