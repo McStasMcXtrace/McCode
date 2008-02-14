@@ -341,37 +341,37 @@ sub tools_shortcuts {
     -weight=>'normal',
     -size=>12);
     my $msg="mcgui has platform dependent shorcut keys.\n\nOn this machine ".
-	"(OS type $Config{'osname'}) they are:\n\n".
-	"$shortcuts{'menuopen'} - Open instrument file\n".
-	"$shortcuts{'menurun'} - Run instrument\n".
-	"$shortcuts{'menuplot'} - Plot simulation data\n".
-	"$shortcuts{'menuprefs'} - Config menu\n".
-	"$shortcuts{'menuquit'} - Quit\n\n".
-	"$shortcuts{'insertcomp'} - Editor, insert comp\n".
-	"$shortcuts{'menusave'} - Editor, save instrument\n".
-	"$shortcuts{'cut'} - Editor cut\n".
-	"$shortcuts{'copy'} - Editor copy\n".
-	"$shortcuts{'paste'} - Editor paste";
-	if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mcstas|pgplot/i) {
-	 $msg .= "\n\n
-  'P' - Plotter/PGPLOT export BW postscript
-  'C' - Plotter/PGPLOT export color postscript
-  'N' - Plotter/PGPLOT export PNG file
-  'M' - Plotter/PGPLOT export PPM file
-  'G' - Plotter/PGPLOT export GIF file
-  'L' - Plotter/PGPLOT Toggle log10 plotting mode (data)
-  'T' - Plotter/PGPLOT Toggle contour plotting mode (data)
-  'Z' - Plotter/PGPLOT zoom (in Trace/3D view)
-  'Q' - Plotter/PGPLOT quit";
-	}
+	    "(OS type $Config{'osname'}) they are:\n\n".
+	    "$shortcuts{'menuopen'} - Open instrument file\n".
+	    "$shortcuts{'menurun'} - Run instrument\n".
+	    "$shortcuts{'menuplot'} - Plot simulation data\n".
+	    "$shortcuts{'menuprefs'} - Config menu\n".
+	    "$shortcuts{'menuquit'} - Quit\n\n".
+	    "$shortcuts{'insertcomp'} - Editor, insert comp\n".
+	    "$shortcuts{'menusave'} - Editor, save instrument\n".
+	    "$shortcuts{'cut'} - Editor cut\n".
+	    "$shortcuts{'copy'} - Editor copy\n".
+	    "$shortcuts{'paste'} - Editor paste";
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /mcstas|pgplot/i) {
+     $msg .= "\n\n
+    'P' - Plotter/PGPLOT export BW postscript
+    'C' - Plotter/PGPLOT export color postscript
+    'N' - Plotter/PGPLOT export PNG file
+    'M' - Plotter/PGPLOT export PPM file
+    'G' - Plotter/PGPLOT export GIF file
+    'L' - Plotter/PGPLOT Toggle log10 plotting mode (data)
+    'T' - Plotter/PGPLOT Toggle contour plotting mode (data)
+    'Z' - Plotter/PGPLOT zoom (in Trace/3D view)
+    'Q' - Plotter/PGPLOT quit";
+    }
 
     if ($Config{'osname'} eq 'MSWin32') {
-	$w->messageBox(-message =>$msg,
+	    $w->messageBox(-message =>$msg,
 		       -title => "McGUI: Shortcut keys",
 		       -type => 'OK',
 		       -icon => 'info');
     } else {
-	$w->messageBox(-message =>$msg,
+	    $w->messageBox(-message =>$msg,
 		       -title => "McGUI: Shortcut keys",
 		       -type => 'OK',
 		       -font => 'small',
@@ -385,9 +385,9 @@ sub tools_dsa {
     my $msg="Press Yes to create DSA key.\n";
     my $key_exist = 0;
     if (-e "$ENV{'HOME'}/.ssh/id_dsa") {
-	$msg = $msg."\nWarning! A DSA key exists!\n".
+      $msg = $msg."\nWarning! A DSA key exists!\n".
 	    "By pressing Yes it will be overwritten!";
-	$key_exist = 1;
+      $key_exist = 1;
     }
     my $do_dsa=$w->messageBox(-message =>$msg,
 		   -title => "McGUI: Generate DSA key?",
@@ -396,10 +396,10 @@ sub tools_dsa {
 		   -default => 'yes');
     if ((lc($do_dsa) eq "no")||(lc($do_dsa) eq "cancel")) {
 	    putmsg($cmdwin, "DSA key generation cancelled!\n", 'msg');
-	return 0;
+      return 0;
     }
     if ($key_exist == 1) {
-	system("rm -f $ENV{'HOME'}/.ssh/id_dsa $ENV{'HOME'}/.ssh/id_dsa.pub");
+      system("rm -f $ENV{'HOME'}/.ssh/id_dsa $ENV{'HOME'}/.ssh/id_dsa.pub");
     }
     # create DSA key for local MPI execution.
     my $cmd = "ssh-keygen -q -t dsa -P \"\" -f $ENV{'HOME'}/.ssh/id_dsa";
@@ -640,7 +640,11 @@ sub run_dialog_create {
     if ($text =~ /compil/i || $text =~ /DSA/i || $title =~ /compil/i || $title =~ /DSA/i ) { $buttext="Abort current Job"; }
     $b->attach($but, -balloonmsg => $buttext);
     $but->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
-    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}!=1 && $inf_sim->{'cluster'} != 2 && $text !~ /compil/i && $text !~ /DSA/i && $title !~ /compil/i && $title !~ /DSA/i) {
+    # can only update when in Single or OpenMP simulation mode (no cluster/grid)
+    # and performing simulation
+    if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}==0
+      && $inf_sim->{'cluster'} <= 1 && $text !~ /compil/i && $text !~ /DSA/i 
+      && $title !~ /compil/i && $title !~ /DSA/i) {
       $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
       $but->pack(-side => "right");
       $b->attach($but, -balloonmsg => "Save results\nand continue");
@@ -1055,7 +1059,7 @@ sub menu_run_simulation {
                   @multiple = (@multiple, $_);
                   if (($newsi->{'Mode'} == 0 && $newsi->{'NScan'} < 2)
                    || $newsi->{'Mode'} == 1) {
-                   # compute mean value if range no applicable
+                   # compute mean value if range not applicable
                     my $j;
                     my $meanvalue=0;
                     for ($j=0; $j<@values; $j++) {
@@ -1660,9 +1664,8 @@ sub setup_cmdwin {
     if (($MCSTAS::mcstas_config{'MPIRUN'} ne "no" || $MCSTAS::mcstas_config{'SSH'} ne "no")
         && $Config{'osname'} ne 'MSWin32' && (not -e "$ENV{'HOME'}/.ssh/id_dsa")) {
       # Suggest to create DSA key for local MPI execution.
-      putmsg($cmdwin, "Your system has MPI/SSH parallelisation available. ".
-	     "To make use of this, \n".
-	     "please go to the Tool menu and select 'Install DSA key'.\n", 'msg');
+      putmsg($cmdwin, "Your system has MPI/SSH parallelisation available. To make use of this, \n".
+	     "  please go to the Tool menu and select 'Install DSA key'.\n", 'msg');
     }
     $w->protocol("WM_DELETE_WINDOW" => sub { editor_quit($w);});		       
 }

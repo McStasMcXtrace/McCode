@@ -433,16 +433,24 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /scriptfile/i && $plotter =~ /Scilab|Matlab/i) { $plotter .= "_scriptfile"; }
       # finally set the PLOTTER
       $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
+      
+      $si{'Mode'} = do {
+        if    ($choiceexec_val =~ /^Simulate/) { 0 }
+        elsif ($choiceexec_val =~ /^Trace/)    { 1 }
+        elsif ($choiceexec_val =~ /^Optimize/) { 2 }
+      };
+      # clustering methods do not apply with Trace mode.
+      if ($si{'Mode'} == 1) { $choicecluster_val=0; }
 
       $si{'cluster'} = do {
         if    ($choicecluster_val =~ /^None/)   { 0 }
-        elsif ($choicecluster_val =~ /^Threads/){ 1 }
-        elsif ($choicecluster_val =~ /^MPI/)    { 2 }
+        elsif ($choicecluster_val =~ /^Threads/){ 1 } # need recompile
+        elsif ($choicecluster_val =~ /^MPI/)    { 2 } # need recompile
         elsif ($choicecluster_val =~ /^SSH/)    { 3 }
       };
 
-      if ($choicecluster_orig ne $choicecluster_val) {
-        # if changing to MPI, require re-compilation
+      if (($si{'cluster'} == 1 || $si{'cluster'} == 2) && $choicecluster_orig ne $choicecluster_val) {
+        # if changing to MPI or threads clustering, require re-compilation
         $si{'Forcecompile'} = 1;
       }
       if ($formatchoice_val ne $formatchoice_orig && $formatchoice_val =~ /NeXus|HDF/) {
@@ -450,14 +458,8 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
         $si{'Forcecompile'} = 1;
       }
 
-      $si{'Mode'} = do {
-        if     ($choiceexec_val =~ /^Simulate/) { 0 }
-        elsif ($choiceexec_val =~ /^Trace/)    { 1 }
-        elsif ($choiceexec_val =~ /^Optimize/) { 2 }
-      };
-      if ($choiceexec_val =~ /\(bg\)/) {
-	$si{'Detach'} = 1;
-      } else { $si{'Detach'} = 0; }
+      if ($choiceexec_val =~ /\(bg\)/) { $si{'Detach'} = 1; } 
+      else { $si{'Detach'} = 0; }
     }
 
     return ($res, \%si);
