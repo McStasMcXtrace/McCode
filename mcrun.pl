@@ -378,12 +378,9 @@ sub exec_sim {
 	  use Proc::Simple;
 	  require File::Temp; # for tempdir
 		# distribute single simulation over $multi machines
-    # Add local machine as a first slave...
     my @opt = @options;
     if ($MCSTAS::mcstas_config{'HOSTFILE'} eq "" || $MCSTAS::mcstas_config{'SSH'} eq "no") {
       @hostlist = ("localhost");	# uses only local host if no SSH/machine list
-    } else {
-      @hostlist = ("localhost", @hostlist);
     }
     # The number of requested nodes is $multi
     print STDOUT "Distributing simulation $out_file over $multi nodes of @hostlist into $datadir\n";
@@ -465,7 +462,7 @@ sub exec_sim {
       print WRITE "# logfile from $hname\n";
       while (<READ>) {
           print WRITE "$_";
-          if ($j==$multi) { print STDOUT  "$_"; }
+          if ($j==$multi) { print STDOUT  "$_"; } # send mcformat result to stdout
       }
       close(READ);
     }
@@ -567,14 +564,14 @@ sub exec_sim_host {
 sub host_ssh {
 	my ($host,$cmd) = @_;
 	# further option: Net::SSH         (libnet-ssh)
-	my_system("ssh $host \"$cmd\"","error in ssh command");
+	my_system("$MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"","error in ssh command");
 }
 
 # send/receive a file to/from a host
 sub host_scp {
 	my ($orig,$dest) = @_;
 	# further option: Net::SCP::Expect (libnet-scp-expect)
-	my_system("scp -Crp $orig $dest","error in scp command");
+	my_system("$MCSTAS::mcstas_config{'SCP'} -Crp $orig $dest","error in scp command");
 }
 
 # Handle output of header information for .dat files and .sim information files.
@@ -1087,15 +1084,16 @@ sub my_system {
     my $WRITE = new FileHandle;
     my $READ = new FileHandle;
     my $ERR = new FileHandle;
-    IPC::Open3::open3($WRITE,$READ,$ERR,"$cmd ") || die "$cmd: $err\n";
+    IPC::Open3::open3($WRITE,$READ,$ERR,"$cmd ") || die "$cmd: $err (could not start)\n";
     while (<$READ>) {
         $output = $_;
         print STDERR "$output\n";
     }
     if (<$ERR> && $err ne "") {
         my @emsg = <$ERR>; # The error comes from here
-        die "$cmd: $err: @emsg\n";
+        die "$cmd: $err: (failed) @emsg\n";
     }
+    if (!<$ERR>) { return 0; } else { return "<$ERR>"; }
 }
 
                     ##########################
