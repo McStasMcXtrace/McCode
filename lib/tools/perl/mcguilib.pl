@@ -332,7 +332,7 @@ sub simulation_dialog {
     if ($si{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
     elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($si{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
-    elsif ($si{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
+    elsif ($si{'cluster'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choicecluster_orig=$choicecluster_val;
     my $choices=[ 'None (single CPU)'];
     if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
@@ -342,7 +342,7 @@ sub simulation_dialog {
       push @{ $choices }, 'MPI (clusters)';
     }
     if ($MCSTAS::mcstas_config{'SSH'} ne "no") {
-      push @{ $choices }, 'Scans over SSH';
+      push @{ $choices }, 'SSH (grid)';
     }
     $choicecluster=$line->Optionmenu (
       -textvariable => \$choicecluster_val,
@@ -435,10 +435,10 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
       $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
 
       $si{'cluster'} = do {
-        if     ($choicecluster_val =~ /^None/)   { 0 }
+        if    ($choicecluster_val =~ /^None/)   { 0 }
         elsif ($choicecluster_val =~ /^Threads/){ 1 }
         elsif ($choicecluster_val =~ /^MPI/)    { 2 }
-        elsif ($choicecluster_val =~ /^Scans/)  { 3 }
+        elsif ($choicecluster_val =~ /^SSH/)    { 3 }
       };
 
       if ($choicecluster_orig ne $choicecluster_val) {
@@ -577,10 +577,10 @@ sub preferences_dialog {
     # handle clustering methods
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
-    if ($inf_sim->{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-    elsif ($inf_sim{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+    if    ($inf_sim->{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
+    elsif ($inf_sim->{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($inf_sim->{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
-    elsif ($inf_sim->{'cluster'} == 3) { $choicecluster_val='Scans over SSH'; }
+    elsif ($inf_sim->{'cluster'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choices=[ 'None (single CPU)'];
     if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
       push @{ $choices }, 'Threads (multi-core)';
@@ -589,7 +589,7 @@ sub preferences_dialog {
       push @{ $choices }, 'MPI (clusters)';
     }
     if ($MCSTAS::mcstas_config{'SSH'} ne "no") {
-      push @{ $choices }, 'Scans over SSH';
+      push @{ $choices }, 'SSH (grid)';
     }
     $choicecluster=$lf->Optionmenu (
       -textvariable => \$choicecluster_val,
@@ -652,7 +652,7 @@ sub preferences_dialog {
       if     ($choicecluster_val =~ /^None/)   { 0 }
       elsif ($choicecluster_val =~ /^Threads/){ 1 }
       elsif ($choicecluster_val =~ /^MPI/)    { 2 }
-      elsif ($choicecluster_val =~ /^Scans/)  { 3 }
+      elsif ($choicecluster_val =~ /^SSH/)  { 3 }
     };
 
     $MCSTAS::mcstas_config{'EDITOR'}  = do {
