@@ -494,14 +494,14 @@ sub exec_sim_local {
     push @cmd, "$MCSTAS::mcstas_config{'MPIRUN'}";
     my $localonly = 1;
     if ($MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
-      push @opt, " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
+      push @cmd, " -machinefile $MCSTAS::mcstas_config{'HOSTFILE'}";
       $localonly = 0;
     }
     # Win32 mpiexec needs different flags...
     if ($Config{'osname'} eq 'MSWin32') {
-      if ($localonly == 1) { push @opt, " -localonly $mpi"; }
-      else { push @opt, " -n $mpi"; }
-    } else { push @opt, " -np $mpi"; }
+      if ($localonly == 1) { push @cmd, " -localonly $mpi"; }
+      else { push @cmd, " -n $mpi"; }
+    } else { push @cmd, " -np $mpi"; }
   }
   push @cmd, $out_file;
   push @cmd, @opt;
@@ -509,7 +509,7 @@ sub exec_sim_local {
   print "@cmd\n";
   
   # execute full command line
-  exec @cmd;  #may call exec as nothing has to be done afterwards
+  exec join(' ',@cmd);  #may call exec as nothing has to be done afterwards
 }
 
 # send a simulation to host $slave, retrieve data and remove tmp dir
