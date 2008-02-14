@@ -40,6 +40,7 @@
 # TEMP     - check for File::Temp availability
 # THREADS  - flag for Threading support [yes|no]
 # PREC     - optimization precision (stop criterion)
+# SSH      - SSH client
 #
 # NOTE: If you modify this file to change a SCILAB equal to 'no' to adjust an existing
 # installation to a new install of scilab, enter the FULL PATH to the scilab binary, e.g.
@@ -62,6 +63,7 @@ use Config;
      GNUDEV => 'x11',
      TCLTK => '@TCLTK@',
      SSH => '@SSH@',
+     SCP => '@SCP@',
      MPIRUN => '@MPIRUN@',
      MPICC => '@MPICC@',
      PREFIX => '',

@@ -61,8 +61,20 @@ if ($Config{'osname'} eq "MSWin32") {
       $gnuplot = (not $failed) ? "pgnuplot.exe" : "no";
 
     print STDOUT "$gnuplot\n";
+    
+    print STDOUT "Checking for SSH: ";
 
+      $failed=system("$which plink.exe");
+      $ssh = (not $failed) ? "plink.exe" : "no";
 
+    print STDOUT "$ssh\n";
+    
+    print STDOUT "Checking for SCP: ";
+
+      $failed=system("$which pscp.exe");
+      $scp = (not $failed) ? "pscp.exe" : "no";
+
+    print STDOUT "$scp\n";
 
     print STDOUT "Checking for VRML viewer: ";
 
@@ -170,7 +182,9 @@ while (<READ>) {
     } elsif (/\w*TCLTK \=\w*/) {
         print WRITE "     TCLTK => '$tcltk',\n";
     } elsif (/\w*SSH \=\w*/) {
-        print WRITE "     SSH => 'no',\n";
+        print WRITE "     SSH => '$ssh',\n";
+    } elsif (/\w*SCP \=\w*/) {
+        print WRITE "     SCP => '$scp',\n";
     } elsif (/\w*BROWSER \=\w*/) {
         print WRITE "     BROWSER => 'start',\n";
     } elsif (/\w*VRMLVIEW \=\w*/) {
