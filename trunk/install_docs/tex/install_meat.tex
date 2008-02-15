@@ -53,11 +53,10 @@ may experience problems if you install to non-standard locations.
 \noindent Simply follow the guidance given by the installer, pressing 'next' all
 the way.
 
-
+\noindent To use grid and cluster computing, you will need an SSH client. \MCS\ is configured to 
+use PuTTY.
 
 \noindent For MPI (parallelisation) on Windows, we advice you to install MPICH2 from \htmladdnormallink{Argonne National Laboratory}{http://www-unix.mcs.anl.gov/mpi/mpich/} including development libraries before installing McStas. Also, your \verb+mpiexec.exe+ must be on the \verb+PATH+. You may have to customize the \verb+mpicc.bat+ script from the McStas distribution with the proper C compiler and MPI library path.
-
-
 
 \noindent If you experience any problems, or have some questions or ideas
 concerning McStas, please contact
@@ -91,7 +90,7 @@ perform the following tasks:
 \begin{enumerate}
 \item{Download the package from \verb+http://www.mcstas.org/download+}
 \item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
-\item{Optionally, as root, issue the command \\\verb+apt-get install gcc-4.2 mpich-bin libmpich1.0c2 libmpich1.0-dev+ to benefit from MPI and OpenMP parallelization}
+\item{Optionally, as root, issue the command \\\verb+apt-get install openssh-client openssh-server mpich-bin libmpich1.0c2 libmpich1.0-dev+ to benefit from MPI and SSH grid parallelization}
 \item{As root, issue the command \\\verb+apt-get remove dash ubuntu-minimal+}
 \item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+. This later step may be replaced by a ./configure; make; make install procedure after extraction of the Mctas tarball (see below)}
 %\item{As root, add the following to your \verb+/etc/apt/sources.list+ :
@@ -117,7 +116,7 @@ distribution in the file \\\verb+/etc/apt/sources.list+.)
 \noindent We also recommend to install octaga vrml viewer from
 \\\htmladdnormallink{http://www.octaga.com/download\_octaga.html}{http://www.octaga.com/download_octaga.html}.
 
-\noindent Additionally, MPICH, OpenMP (gcc-4.2 or icc or pgcc), Octave/Gnuplot, HDF and NeXus libraries may be installed, to enhance McStas clustering method and data formats.
+\noindent Additionally, MPICH, OpenMP (gcc-4.2 or icc or pgcc), openssh, Octave/Gnuplot, HDF and NeXus libraries may be installed, to enhance McStas clustering method and data formats.
 
 \subsection{Configuration and installation}
 McStas uses autoconf to detect the system configuration and creates the

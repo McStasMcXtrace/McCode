@@ -284,9 +284,9 @@ sub parse_args {
    -N NP     --numpoints=NP   Set number of scan points.
              --grid=NB_CPU    Spawn simulations to multiple machine/cores grid.
              --multi=NB_CPU     see the documentation for more info.
-                                Only local host supported on Win32.
    --mpi     --mpi=NB_CPU     Spread simulation over NB_CPU machines using MPI
    --machines=MACHINES        Read machine names from file MACHINES (MPI/grid)
+   --slave=HOST               Execute simulation on distant HOST (SSH grid)
    --optim=COMP               Add COMP to the list of monitors to maximize
                                 (optimization criteria, requires Math::Amoeba)
    --optim                    Maximize all monitors
@@ -395,18 +395,19 @@ sub exec_sim {
     my $host_index=0;
     my $hosts = @hostlist;  # number of available nodes
     my $j;
+    my $hostncount=int($ncount/$multi);
     for ($j=0; $j<$multi; $j++) {
       my @opt = @options;
       $pids[$j]     =Proc::Simple->new();
       $hostnames[$j]=$hostlist[$host_index];
       $datadirs[$j] ="$griddir" . "_$j";
-      my $hostncount=int($ncount/$multi);
+      if ($j == $multi-1) { $hostncount=$ncount-$j*int($ncount/$multi); }
       # ask mcrun to launch on slaves
       # further option: threads so that we can manage passwords to avoid RSA/DSA keys
       push @opt, map("$_=$vals{$_}", @params);
       push @opt, "--format=PGPLOT";
       push @opt, "--ncount=$hostncount";
-      my $cmd="mcrun --slave=$hostnames[$j] $out_file --dir=$datadirs[$j]  @opt > $griddir/$hostnames[$j]_$j.log";
+      my $cmd="mcrun$MCSTAS::mcstas_config{'SUFFIX'} --slave=$hostnames[$j] $out_file --dir=$datadirs[$j]  @opt > $griddir/$hostnames[$j]_$j.log";
       $pids[$j]->Proc::Simple::start($cmd);
       print STDERR "Process $j at $hostnames[$j] started.\n";
       print "$cmd\n";
@@ -428,7 +429,7 @@ sub exec_sim {
       }
     }
     # merge data sets from $griddir into $data_dir (force mode as data_dir already exists from mcrun)
-    my $cmd="mcformat --merge --force --dir=$griddir --format=$MCSTAS::mcstas_config{'PLOTTER'} ";
+    my $cmd="mcformat$MCSTAS::mcstas_config{'EXE'} --merge --force --dir=$griddir --format=$MCSTAS::mcstas_config{'PLOTTER'} ";
     for ($j=0; $j<$multi; $j++) {
       $cmd .= "$datadirs[$j] ";
     }
