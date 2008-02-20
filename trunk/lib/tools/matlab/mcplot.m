@@ -601,13 +601,13 @@ function d=mcplot_plot(d,p)
     elseif ~isempty(findstr(d.type,'1d')) & isfield(d, 'errors')
       if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1);
       else d.stepx=0; end
-      d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));
+      d.x=linspace(l(1),l(2),max(S));
       h=errorbar(d.x,d.data,d.errors);
       xlim([l(1) l(2)]);
     else
       if max(S) > 1, d.stepx=abs(l(1)-l(2))/(max(S)-1);
       else d.stepx=0; end
-      d.x=linspace(l(1)+d.stepx/2,l(2)-d.stepx/2,max(S));
+      d.x=linspace(l(1),l(2),max(S));
       h=plot(d.x,d.data);
       xlim([l(1) l(2)]);
     end
