@@ -10,7 +10,9 @@ Needed knowledge and equipment work through the tutorial is
 \begin{itemize}
 \item{Undergraduate knowledge of mathematics and physics}
 \item{A computer with McStas installed (refer to the McStas
-    \htmladdnormallink{homepage}{http://mcstas.risoe.dk} \cite{Websites} for details) or a bootable McKnoppix cdrom (no installation required)}
+    \htmladdnormallink{homepage}{http://mcstas.risoe.dk}
+    \cite{Websites} for details) or a bootable McStas Ubuntu live DVD
+    (installation to harddisk possible, but not required)}
 \item{This paper}
 \end{itemize}
 \subsection{Goals and tasks}
@@ -68,9 +70,9 @@ includes for instance
     in some sense, examples used here are}
   \begin{itemize}
     \item{Vanadium. Scatters incoming neutron rays incoherently}
-    \item{Powder2. Can be thought of as a large number of crystals,
+    \item{PowderN. Can be thought of as a large number of crystals,
         each scattering neutron rays according to the Bragg law, thereby
-        producing two concentric Debye Sherrer cones. This sample also
+        producing N concentric Debye Sherrer cones. This sample also
         has the posibility of adding inchoherent, eleasticly scattered
         neutron rays.}
     \end{itemize}
@@ -373,16 +375,24 @@ Comment.}
 \subsection{Exercise: Insert a different sample}
 \begin{enumerate}
 \item{Next, let us insert something more interesting. Remove the
-    V\_sample and  PSD\_monitor\_4PI\_log. Insert a Powder2 component
+    V\_sample and  PSD\_monitor\_4PI\_log. Insert a PowderN component
     with the following parameters:
     \begin{verbatim}
-COMPONENT sample = Powder2(radius=0.01,h=0.01, q_1=1, q_2=1.3,
-   w_1=0, w_2=0, d_phi0=0.1, pack=0.5, DW=0.9, frac=0.5, 
-   focus_r=0.03, j_1=8, j_2=4, F2_1=1000, F2_2=1000, 
-   Vc=3.86*3.86*11.82, sigma_a=0, sigma_inc=2,
-   target_x = 0, target_y = 0, target_z = 0)
+COMPONENT sample = PowderN(radius=0.01,h=0.01, d_phi0=0.1, pack=0.5, 
+   DW=0.9, frac=0.5, focus_r=0.03, reflections="mylist.dat",
+   Vc=3.86*3.86*11.82, sigma_a=0, sigma_inc=2, barns=1)
   AT (0, 0, 0) RELATIVE a4
 \end{verbatim}
+You should also create a list of reflections, e.g. \texttt{mylist.dat}
+with the following contents:
+\begin{verbatim}
+# column_j 3 multiplicity 'j'
+# column_q 1  Scattering vector modulus [Angs^-1]
+# column_F2 2 Scattering factor |F^2| in [barns]
+1 1000 8
+1.3 1000 4
+\end{verbatim}
+
 (Adjust placement relative to your component naming etc.). Also insert
   a banana shaped detector,
 \begin{verbatim}
