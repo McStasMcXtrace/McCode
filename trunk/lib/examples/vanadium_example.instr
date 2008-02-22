@@ -12,7 +12,7 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas 1.1
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: Tutorial
 *
 * A test instrument using a vanadium cylinder
@@ -72,8 +72,7 @@ COMPONENT source = Source_flat(radius = 0.015, dist = 1,
 /* The component is placed at a distance RELATIVE to   */
 /* a previous component...                             */
 COMPONENT collimator = Collimator_linear(len = 0.2,
-  divergence = coll_div, xmin = -0.02, xmax = 0.02,
-  ymin = -0.03, ymax = 0.03)
+  divergence = coll_div, xwidth = 0.04, yheight=0.06)
   AT (0, 0, 0.4) RELATIVE arm
 
 /* We also need something to 'shoot at' - here a sample*/
