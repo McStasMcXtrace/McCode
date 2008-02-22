@@ -12,7 +12,7 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas 1.1
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Tutorial
 *
 * A test instrument using a vanadium cylinder
@@ -62,7 +62,7 @@ COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
 /* The source component is placed RELATIVE to the arm  */
 /* component, meaning that modifying the position or   */
 /* orientation of the arm will also affect the source  */
-/* component (and other components after that one...   */
+/* component (and other components after that one...)  */
 COMPONENT source = Source_flat(radius = 0.015, dist = 1,
   xw=0.024, yh=0.015, E0=5, dE=0.2)
  AT (0,0,0) RELATIVE arm
@@ -79,8 +79,9 @@ COMPONENT collimator = Collimator_linear(len = 0.2,
 /* We also need something to 'shoot at' - here a sample*/
 /* made from vanadium, an isotropic scatterer. Options */
 /* are available to restrict the solid angle in which  */
-/* neutrons are emitted (no need to simulate anything  */
-/* that we know for sure will not gain us more insight)*/
+/* neutrons are emitted (no need to simulate neutrons  */
+/* that we know for sure will not reach the rest of    */
+/* instrument).                                        */
 /* Other options for smart targeting are available -   */
 /* refer to component documentation for info.          */
 COMPONENT target = V_sample(radius_i = 0.008, radius_o = 0.012,
@@ -105,5 +106,5 @@ COMPONENT arm2 = Arm()
 /* instrument.                                          */
 COMPONENT PSD_4pi = PSD_monitor_4PI(radius=10, nx=101, ny=51,
   filename="vanadium.psd")
-  AT (0,0,0) RELATIVE target ROTATED (ROT,0,0) RELATIVE arm2
+  AT (0,0,0) RELATIVE arm2
 END
