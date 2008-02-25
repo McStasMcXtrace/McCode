@@ -429,7 +429,12 @@ sub exec_sim {
       }
     }
     # merge data sets from $griddir into $data_dir (force mode as data_dir already exists from mcrun)
-    my $cmd="mcformat$MCSTAS::mcstas_config{'EXE'} --merge --force --dir=$griddir --format=$MCSTAS::mcstas_config{'PLOTTER'} ";
+    my $cmd="mcformat";
+    if ($Config{'osname'} eq 'MSWin32') {
+      # Only apply suffix on Win32
+      $cmd .= ".$MCSTAS::mcstas_config{'EXE'}";
+    }
+    $cmd .= " --merge --force --dir=$griddir --format=$MCSTAS::mcstas_config{'PLOTTER'} ";
     for ($j=0; $j<$multi; $j++) {
       $cmd .= "$datadirs[$j] ";
     }
