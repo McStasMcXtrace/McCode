@@ -147,8 +147,12 @@ sub parse_args {
             $ncount = $1;
         } elsif(/^--ncount$/ || /^-n$/) {
             $ncount = $ARGV[++$i];
+	} elsif (/^--multi\=(.*)$/ || /^--grid\=(.*)$/) {
+            $multi=$1;
         } elsif (/^--multi/ || /^--grid/) {
+	  if ($multi == 0) {
             $multi=2;   # default to dual core/cpu machines
+	  }
         } elsif (/^--multi\=(.*)$/ || /^--grid\=(.*)$/) {
             $multi=$!;
         } elsif (/^--host\=(.*)$/ || /^--machine\=(.*)$/ || /^--slave\=(.*)$/) {
