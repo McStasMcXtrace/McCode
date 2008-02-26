@@ -379,7 +379,7 @@ sub exec_sim {
   } elsif (!$multi && $slave ne 0) {
   	exec_sim_host($datadir);	# single sim on defined host $slave
 	} else {
-	  use Proc::Simple;
+	  require Proc::Simple;
 	  require File::Temp; # for tempdir
 		# distribute single simulation over $multi machines
     my @opt = @options;
