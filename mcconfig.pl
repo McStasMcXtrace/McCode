@@ -229,13 +229,15 @@ copy("$file2", "$file");
 print STDOUT "Updating: $file2 $file\n";
 
 chdir("support\\ppds");
+print STDOUT "Installing Tk extension (ppm)\n";
+system("ppm install Tk.ppd");
 print STDOUT "Installing Tk-CodeText extension (ppm)\n";
 system("ppm install Syntax-Highlight-Perl.ppd");
 system("ppm install Tk-CodeText.ppd");
+print STDOUT "Installing Math-Amoeba extension (ppm)\n";
 system("ppm install Math-Amoeba.ppd");
 print STDOUT "Installing PDL and PGPLOT extensions (ppm)\n";
-system("ppm install PGPLOT56.PPD");
-system("ppm install Text-Balanced.ppd");
+system("ppm install PGPLOT.ppd");
 system("ppm install Parse-RecDescent.ppd");
 system("ppm install Inline.ppd");
 system("ppm install PDL.PPD");

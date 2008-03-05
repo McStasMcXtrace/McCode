@@ -44,7 +44,7 @@
 @echo       Select from the Windows menu:
 @echo       Start/Settings/Control Panel/System/Advanced/Environment Variables
 @echo ...
-@echo WARNING: McStas 1.9 for Windows requires Scilab <= 3.0 and Perl <= 5.6
+@echo WARNING: McStas 1.12 for Windows requires Scilab == 4.0 and Perl >= 5.6
 @echo ...
 @echo Use Ctrl-C if you want to break this script to install these packages or
 @pause

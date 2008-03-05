@@ -23,7 +23,7 @@
 @echo Please select an option:
 @echo .
 @echo 1) Install Dev-CPP 4.990 (including gcc) (*)
-@echo 2) Install perl 5.6 (*)
+@echo 2) Install perl 5.10 (*)
 @echo 3) Install Scilab 4.0 (*)
 @echo 4) Run McStas build script (Unneeded if you dowloaded 'binary' version)
 @echo 5) Run McStas install script 
@@ -57,8 +57,8 @@
 :perl
 @echo .
 @echo Proceeding to perl install...
-@.\support\Win32\wget http://www.mcstas.org/download/Win32/ActivePerl-5.6.1.635-MSWin32-x86.msi
-@start ActivePerl-5.6.1.635-MSWin32-x86.msi
+@.\support\Win32\wget http://www.mcstas.org/download/Win32/ActivePerl-5.10.0.1002-MSWin32-x86-283697.msi
+@start ActivePerl-5.10.0.1002-MSWin32-x86-283697.msi
 @set MYCHOICE=3
 @goto menu
 
