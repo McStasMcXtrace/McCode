@@ -93,10 +93,10 @@ McStas in the following folder... WARNING: Spaces and specials chars are unsuppo
 ## Sections Group 1
 SectionGroup /e "Support tools" PROG1 
 
-Section "Perl 5.6"
+Section "Perl 5.10"
    SetOutPath "$TEMP"
-   File ActivePerl-5.6.1.635-MSWin32-x86.msi
-   ExecWait "msiexec /i ActivePerl-5.6.1.635-MSWin32-x86.msi"
+   File ActivePerl-5.10.0.1002-MSWin32-x86-283697.msi
+   ExecWait "msiexec /i ActivePerl-5.10.0.1002-MSWin32-x86-283697.msi"
    messagebox mb_ok "Perl installation complete!"
 SectionEnd
 
