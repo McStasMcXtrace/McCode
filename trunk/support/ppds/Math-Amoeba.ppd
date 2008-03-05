@@ -1,36 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<SOFTPKG NAME="Math-Amoeba" VERSION="0,01,0,0">
-  <IMPLEMENTATION>
-    <CODEBASE HREF="sun4-solaris-thread-multi/Math-Amoeba.tar.gz" />
-    <ARCHITECTURE NAME="sun4-solaris-thread-multi" />
-    <OS NAME="solaris" />
-  </IMPLEMENTATION>
-  <IMPLEMENTATION>
-    <CODEBASE HREF="PA-RISC1.1-thread-multi/Math-Amoeba.tar.gz" />
-    <ARCHITECTURE NAME="PA-RISC1.1-thread-multi" />
-    <OS NAME="hpux" />
-  </IMPLEMENTATION>
-  <IMPLEMENTATION>
-    <CODEBASE HREF="MSWin32-x86-multi-thread/Math-Amoeba.tar.gz" />
-    <ARCHITECTURE NAME="MSWin32-x86-multi-thread" />
-    <OS NAME="MSWin32" />
-  </IMPLEMENTATION>
-  <IMPLEMENTATION>
-    <CODEBASE HREF="IA64.ARCHREV_0-thread-multi/Math-Amoeba.tar.gz" />
-    <ARCHITECTURE NAME="IA64.ARCHREV_0-thread-multi" />
-    <OS NAME="hpux" />
-  </IMPLEMENTATION>
-  <IMPLEMENTATION>
-    <CODEBASE HREF="i686-linux-thread-multi/Math-Amoeba.tar.gz" />
-    <ARCHITECTURE NAME="i686-linux-thread-multi" />
-    <OS NAME="linux" />
-  </IMPLEMENTATION>
-  <IMPLEMENTATION>
-    <CODEBASE HREF="IA64.ARCHREV_0-thread-multi-64all/Math-Amoeba.tar.gz" />
-    <ARCHITECTURE NAME="IA64.ARCHREV_0-thread-multi-64all" />
-    <OS NAME="hpux" />
-  </IMPLEMENTATION>
+<SOFTPKG NAME="Math-Amoeba" VERSION="0,04,0,0">
   <ABSTRACT>Multidimensional Function Minimisation</ABSTRACT>
-  <AUTHOR>John A.R. Williams (J.A.R.Williams@aston.ac.uk)</AUTHOR>
+  <AUTHOR>Tom Chau (tom@cpan.org)</AUTHOR>
+  <IMPLEMENTATION>
+    <ARCHITECTURE NAME="MSWin32-x86-multi-thread-5.10" />
+    <CODEBASE HREF="MSWin32-x86-multi-thread-5.10/Math-Amoeba-0.04.tar.gz" />
+    <OS NAME="MSWin32" />
+    <PROVIDE NAME="Math::Amoeba" VERSION="0.04" />
+  </IMPLEMENTATION>
   <TITLE>Math-Amoeba</TITLE>
 </SOFTPKG>
