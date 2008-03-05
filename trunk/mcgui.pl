@@ -711,17 +711,29 @@ sub run_dialog {
     my $reader = sub {
         run_dialog_reader($w, $fh, $cmdwin, \$state, \$success);
     };
-    $w->fileevent($fh, 'readable', $reader);
+    
     $status_label->configure(-text => "Status: Running $text");
     my $savefocus = run_dialog_popup($dlg);
-# Here, we ought to set the $dlg Busy/Unbusy, cause of trouble on Win32.
-#    $dlg->Busy();
-    do {
-        $w->waitVariable(\$state);
-    } until $state;
-#    $dlg->Unbusy;
+    my $status;
+    
+    # The following is a little hack which allows us to upgrade perl on Win32,
+    # where we have been stuck with 5.6 since 2003...
+    if ($Config{'osname'} ne 'MSWin32') {
+      $w->fileevent($fh, 'readable', $reader);
+      $dlg->Busy();
+      do {
+	$w->waitVariable(\$state);
+      } until $state;
+      $dlg->Unbusy; 
+      $status = close($fh);
+    } else {
+      # On Win32, mcrun and other commands run by themselves in seperate
+      # cmd.exe shell windows... Error messages etc. will go there.
+      $status = 1;
+      $success = 1;
+    }
     run_dialog_retract($dlg, $savefocus);
-    my $status = close($fh);
+    
     $status_label->configure(-text => "Status: Done");
     if(!$success || (! $status && ($? != 0 || $!))) {
         putmsg($cmdwin, "Job exited abnormally.\n");
@@ -764,6 +776,9 @@ sub dialog_get_out_file {
             } elsif($type eq 'RUN_CMD') {
                 $success = my_system($w, "Compiling simulation $current_sim_def",
                   join(" ", @$val));
+		if ($Config{'osname'} eq 'MSWin32') {
+		    $success=1;
+		}
                 unless($success) {
                         &$printer("** Error exit **.");
                         last;
@@ -823,7 +838,7 @@ sub my_system {
     # platform...
     # PW 20030314
     if ($Config{'osname'} eq 'MSWin32') {
-      $child_pid = open($fh, "@sysargs 2>&1 |");
+      $child_pid = open($fh, "start safewrap.pl @sysargs 2>&1 |");
     } else {
       $child_pid = open($fh, "-|");
     }
@@ -880,20 +895,7 @@ sub menu_run_simulation {
         # Check 'Mode' setting if a scan/trace/optim is
         # requested
         if ($newsi->{'Mode'} == 1) {
-            # Here, a check is done for selected mcdisplay "backend"
-            # Also, various stuff must be done differently on unix
-            # type plaforms and on lovely Win32... :)
-            # PW 20030314
-            #
-            # Check if this is Win32, call perl accordingly...
-            if ($Config{'osname'} eq 'MSWin32') {
-              # Win32 'start' command needed to background the process..
-              push @command, "$MCSTAS::mcstas_config{'PREFFIX'}";
-              # Also, disable plotting of results after mcdisplay run...
-              $newsi->{'Autoplot'}=0;
-            }
-            # 'mcdisplay' trace mode
-            push @command, "${prefix}mcdisplay$suffix";
+	    push @command, "mcdisplay$suffix";
             if ($plotter =~ /PGPLOT|McStas/i) {
               push @command, "--plotter=PGPLOT";
               # Selection of PGPLOT 3-pane view from config menu only.
