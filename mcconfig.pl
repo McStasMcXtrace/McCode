@@ -240,7 +240,7 @@ print STDOUT "Installing PDL and PGPLOT extensions (ppm)\n";
 system("ppm install PGPLOT.ppd");
 system("ppm install Parse-RecDescent.ppd");
 system("ppm install Inline.ppd");
-system("ppm install PDL.PPD");
+system("ppm install PDL.ppd");
 
 
 sub locate {
