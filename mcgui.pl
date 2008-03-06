@@ -720,11 +720,9 @@ sub run_dialog {
     # where we have been stuck with 5.6 since 2003...
     if ($Config{'osname'} ne 'MSWin32') {
       $w->fileevent($fh, 'readable', $reader);
-      $dlg->Busy();
       do {
 	$w->waitVariable(\$state);
       } until $state;
-      $dlg->Unbusy; 
       $status = close($fh);
     } else {
       # On Win32, mcrun and other commands run by themselves in seperate
@@ -745,7 +743,8 @@ sub run_dialog {
 }
 
 sub dialog_get_out_file {
-    my ($w, $file, $force, $mpi, $threads) = @_;
+    # In case of mcrunflag set, let mcrun handle the compilation
+    my ($w, $file, $force, $mpi, $threads, $mcrunflag) = @_;
     # The $state variable is set when the spawned command finishes.
     my ($state, $cmd_success);
     my $success = 0;
@@ -768,7 +767,7 @@ sub dialog_get_out_file {
     } else {
         $state = 0;
         for(;;) {
-            my ($type, $val) = get_out_file_next($compile_data, $printer);
+            my ($type, $val) = get_out_file_next($compile_data, $printer, $mcrunflag);
             if($type eq 'FINISHED') {
                 $success = 1;
                 $out_name = $val;
@@ -776,13 +775,16 @@ sub dialog_get_out_file {
             } elsif($type eq 'RUN_CMD') {
                 $success = my_system($w, "Compiling simulation $current_sim_def",
                   join(" ", @$val));
-		if ($Config{'osname'} eq 'MSWin32') {
-		    $success=1;
+		if (defined($mcrunflag) && $mcrunflag == 1) {
+		  $type = 'FINISHED';
+		  $success=1;
+		  &$printer("Please wait for mcrun window to exit.");
+		  last;
 		}
                 unless($success) {
                         &$printer("** Error exit **.");
                         last;
-                    }
+		}
             } elsif($type eq 'ERROR') {
                 &$printer("Error: $msg");
                 last;
@@ -803,14 +805,26 @@ sub dialog_get_out_file {
 sub compile_instrument {
     my ($w, $force) = @_;
     return undef unless ask_save_before_simulate($w);
+    my $mcrunflag;
+    if ($Config{'osname'} eq 'MSWin32') {
+      $mcrunflag = 1;
+    }
     my $out_name = dialog_get_out_file($w, $current_sim_def, $force,
-      $inf_sim->{'cluster'} == 2 ? 1 : 0, $inf_sim->{'cluster'} == 1 ? 1 : 0);
+      $inf_sim->{'cluster'} == 2 ? 1 : 0, $inf_sim->{'cluster'} == 1 ? 1 : 0, $mcrunflag);
     unless($out_name && -x $out_name) {
+      if ($mcrunflag == 1) {
+	$w->messageBox(-message => "Compile running in seperate window.\nPlease wait for the process to finish!",
+                       -title => "Notice",
+                       -type => 'OK',
+                       -icon => 'warning');
+        return undef;
+      } else {
         $w->messageBox(-message => "Could not compile simulation.",
                        -title => "Compile failed",
                        -type => 'OK',
                        -icon => 'error');
         return undef;
+      }
     }
     $inf_sim->{'Forcecompile'} = 0;
     return $out_name;
@@ -839,7 +853,7 @@ sub my_system {
     # PW 20030314
     if ($Config{'osname'} eq 'MSWin32') {
       $child_pid = open($fh, "start safewrap.pl @sysargs 2>&1 |");
-    } else {
+    } else { 
       $child_pid = open($fh, "-|");
     }
     unless(defined($child_pid)) {
