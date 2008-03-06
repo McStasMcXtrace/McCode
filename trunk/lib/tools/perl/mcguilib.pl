@@ -299,10 +299,17 @@ sub simulation_dialog {
                -textvariable => \$si{'NScan'},
                -justify => 'right')->pack(-side => 'left');
     # output format (same line as exec mode)
+    
     my $formatchoice = $line->Checkbutton(-text => "Plot results, Format: ",
-                            -variable => \$si{'Autoplot'},
-                            -relief => 'flat')->pack(-side => 'left');
+					  -variable => \$si{'Autoplot'},
+					  -relief => 'flat')->pack(-side => 'left');
+    
     $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation");
+    
+    if ($Config{'osname'} eq 'MSWin32') {
+      $formatchoice-> configure ( -state => 'disabled' );
+      $b->attach($formatchoice, -balloonmsg => "Plot automatically result after simulation (unix only)");
+    }
     my $formatchoice_val;
     if ($plotter =~ /McStas|PGPLOT/i)  { $formatchoice_val= 'PGPLOT'; }
     if ($plotter =~ /Matlab/i)  { $formatchoice_val= 'Matlab'; }
