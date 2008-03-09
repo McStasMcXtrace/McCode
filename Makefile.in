@@ -167,7 +167,8 @@ install: installdirs $(BINOBJS)
 	    $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
 	  fi \
 	done
-	export MCSTAS=$(mc_libdir)
+	MCSTAS=$(mc_libdir)
+	export MCSTAS
 	./mcdoc.fixpl --text
 	$(INSTALL_DATA) *.1 $(mandir)/man1
 	mkdir $(mc_libdir)/tools/perl/modules
