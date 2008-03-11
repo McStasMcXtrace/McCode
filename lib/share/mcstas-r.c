@@ -11,16 +11,22 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.183 $
+* Version: $Revision: 1.184 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.183 2008-02-14 08:56:35 farhi Exp $
+* $Id: mcstas-r.c,v 1.184 2008-03-11 16:13:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.183  2008/02/14 08:56:35  farhi
+* McRun/McGUI SSH grid now operates on each simulation. This emulates completely
+* MPI without installing it. Simulation steps for scans may also be distributed,
+* and single runs can be sent to execute on other machines transparently.
+* mcrun code has reduced in size. mcformat is used to merge nodes.
+*
 * Revision 1.182  2008/02/10 20:55:53  farhi
 * OpenMP number of nodes now set properly from either --threads=NB or
 * --threads which sets the computer core nb.
@@ -592,7 +598,7 @@ Rotation mcMagnetRot;
 char*    mcDetectorCustomHeader      = NULL;
 #endif
 
-// mcMagneticField(x, y, z, t, Bx, By, Bz)
+/* mcMagneticField(x, y, z, t, Bx, By, Bz) */
 void (*mcMagneticField) (double, double, double, double,
 			 double*, double*, double*) = NULL;
 void (*mcMagnetPrecession) (double, double, double, double, double, double,
@@ -3234,8 +3240,8 @@ void mcdis_multiline(int count, ...){
 
 void mcdis_rectangle(char* plane, double x, double y, double z,
 		     double width, double height){
-  // draws a rectangle in the plane
-  // x is ALWAYS width and y is ALWAYS height
+  /* draws a rectangle in the plane           */
+  /* x is ALWAYS width and y is ALWAYS height */
   if (strcmp("xy", plane)==0) {
     mcdis_multiline(5,
 		    x - width/2, y - height/2, z,
@@ -3711,7 +3717,7 @@ void
 mcgenstate(void)
 {
   mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-  // old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1);
+  /* old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
 }
 
 /* McStas random number routine. */
@@ -5025,7 +5031,7 @@ void *mcstas_raytrace(void *p_node_ncount)
   while(mcrun_num < node_ncount)
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-    // old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1);
+    /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
     mcraytrace();
     mcrun_num++;
   }

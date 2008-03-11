@@ -1237,7 +1237,7 @@ if($paramfile) {
 
 if ($sim_cmd =~ m'\.instr$') # recompile .instr if needed
 { my @ccopts=();
-  $sim_cmd = get_out_file($sim_cmd, 0, @ccopts); }
+  ($sim_cmd, undef) = get_out_file($sim_cmd, 0, @ccopts); }
 
 
 # Check value of $plotter and $file_output variables, set

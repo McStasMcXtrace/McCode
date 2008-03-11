@@ -751,6 +751,7 @@ sub dialog_get_out_file {
     my ($fh, $pid, $out_name);
     # Initialize the dialog.
     my $cancel_cmd = sub {
+        putmsg($cmdwin, "Sending KILL to $pid (compile)\n", 'msg');
         kill "TERM", $pid if $pid; # signal 15 is SIGTERM
     };
     my $dlg = run_dialog_create($w, "Compiling simulation $current_sim_def",
@@ -1047,8 +1048,14 @@ sub menu_run_simulation {
           push @command, "--multi=$newsi->{'nodes'}";
         }
         if ($newsi->{'Forcecompile'} == 1) {
-          $inf_sim->{'cluster'} = $newsi->{'cluster'};
-          $out_name = compile_instrument($w, 1);
+          if ($newsi->{'cluster'} == 3) {
+            # force compile from mcrun
+            push @command, "--force-compile";
+            $newsi->{'Forcecompile'} = 0;
+          } else { # compile from mcgui (locally)
+            $inf_sim->{'cluster'} = $newsi->{'cluster'};
+            $out_name = compile_instrument($w, 1);
+          }
         }
 
         push @command, "--ncount=$newsi->{'Ncount'}";
