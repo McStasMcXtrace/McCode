@@ -170,6 +170,7 @@ sub get_out_file_init {
     $v->{'c_age'} = -e $c_name ? -M $c_name : undef;
     $v->{'out_age'} = -e $out_name ? -M $out_name : undef;
     $v->{'stage'} = PRE_MCSTAS;
+    $v->{'cc_cmd'} = "";
     return ($v, "");
 }
 
@@ -209,6 +210,7 @@ sub get_out_file_next {
   my $mpi   = $v->{'mpi'};
   my $threads   = $v->{'threads'};
   my $ccopts = $v->{'ccopts'};
+  my $cccmd  = $v->{'cc_cmd'};
   if($stage eq PRE_MCSTAS) {
     # Translate simulation definition into C if newer than existing C
     # version.
@@ -261,31 +263,32 @@ sub get_out_file_next {
         return (ERROR, "Could not translate simulation '$sim_def' into C");
     }
     # Compile C source if newer than existing out file.
+    # ToDo: splitting CFLAGS should handle shell quoting as well ...
+    my $cc     = $MCSTAS::mcstas_config{CC};
+    my $cflags = $MCSTAS::mcstas_config{CFLAGS};
+    my $libs = "-lm ";
+    if ($v->{'threads'} && $MCSTAS::mcstas_config{THREADS} ne "") {
+      $libs .= $MCSTAS::mcstas_config{THREADS};
+    }
+    if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
+      $libs .= " -DUSE_MPI ";
+      $cc      = $MCSTAS::mcstas_config{'MPICC'};
+    }
+    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /NeXus|HDF/i && $MCSTAS::mcstas_config{'NEXUS'} ne "") {
+      $libs .= $MCSTAS::mcstas_config{'NEXUS'};
+    }
+    # Needs quoting on MSWin32:
+    if ($Config{'osname'} eq 'MSWin32') {
+      $out_name="\"$out_name\"";
+      $c_name="\"$c_name\"";
+    }
+    if ($ccopts) { $libs .= $ccopts; }
+    my $cmd = [$cc, split(' ', $cflags), "-o",
+               $out_name, $c_name, split(' ', $libs)];
+    $v->{'cc_cmd'} = join(" ", @$cmd);           
     if(($file_type eq MCSTAS || $file_type eq C) &&
        ($force || !defined($out_age) || $out_age > $c_age)) {
       &$printer("Compiling C source '$c_name' ...");
-      # ToDo: splitting CFLAGS should handle shell quoting as well ...
-      my $cc     = $MCSTAS::mcstas_config{CC};
-      my $cflags = $MCSTAS::mcstas_config{CFLAGS};
-      my $libs = "-lm ";
-      if ($v->{'threads'} && $MCSTAS::mcstas_config{THREADS} ne "") {
-        $libs .= $MCSTAS::mcstas_config{THREADS};
-      }
-      if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
-        $libs .= " -DUSE_MPI ";
-        $cc      = $MCSTAS::mcstas_config{'MPICC'};
-      }
-      if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /NeXus|HDF/i && $MCSTAS::mcstas_config{'NEXUS'} ne "") {
-        $libs .= $MCSTAS::mcstas_config{'NEXUS'};
-      }
-      # Needs quoting on MSWin32:
-      if ($Config{'osname'} eq 'MSWin32') {
-        $out_name="\"$out_name\"";
-        $c_name="\"$c_name\"";
-      }
-      if ($ccopts) { $libs .= $ccopts; }
-      my $cmd = [$cc, split(' ', $cflags), "-o",
-                 $out_name, $c_name, split(' ', $libs)];
       &$printer(join(" ", @$cmd));
       $v->{'stage'} = POST_CC;
       return (RUN_CMD, $cmd);
@@ -321,17 +324,17 @@ sub get_out_file {
     for(;;) {
         ($status, $value) = get_out_file_next($v, sub { print "$_[0]\n"; });
         if($status eq FINISHED) {
-            return $value;
+            return ($value,$v);
         } elsif($status eq RUN_CMD) {
             my $exit_val = system(@$value);
             if($exit_val) {
                 print STDERR "** Error exit **\n";
-                return undef;
+                return (undef,$v);
             }
             next;
         } elsif($status eq ERROR) {
             print STDERR "$value\n";
-            return undef;
+            return (undef,$v);
         } elsif(!($status eq CONTINUE)) {
             die "mcrun: Internal: get_out_file";
         }

@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.68 $
+* Version: $Revision: 1.69 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.68 $
+#define ISOTROPIC_SQW $Revision: 1.69 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -943,8 +943,8 @@ struct Sqw_Data_struct *Sqw_readfile(
   alpha *= (q_max_data-q_min_data)/nb_q_data;
 
   /* norm S(q ,w) = sum(S)*q_range/nb_q */
-  val *= (Sqw_Data->q_max-Sqw_Data->q_min)/Sqw_Data->nb_q; // restricted q,w range
-  sum *= (q_max_data-q_min_data)/nb_q_data;                // total q,w range
+  val *= (Sqw_Data->q_max-Sqw_Data->q_min)/Sqw_Data->nb_q; /* restricted q,w range */
+  sum *= (q_max_data-q_min_data)/nb_q_data;                /* total q,w range      */
 
   if      (Sqw->sqw_norm >0) Sqw_Data->alpha=Sqw->sqw_norm;
   else if (!Sqw->sqw_norm)   Sqw_Data->alpha=1;
@@ -1724,7 +1724,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (-1 < costheta && costheta < 1) {
           break; /* satisfies q momentum conservation */
         }
-//      else continue;
+/*      else continue; */
 
         /* exit for loop on success */
       } /* end for index_counter */
@@ -1803,9 +1803,9 @@ do { /* Main interaction loop. Ends with intersect=0 */
                  "INFO:          Optimizing qmax=%g wmax=%g\n",
           NAME_CURRENT_COMP, VarSqw.neutron_removed, VarSqw.neutron_exit,
           VarSqw.q_max, VarSqw.w_max);
-        // VarSqw.Data_inc.q_min = VarSqw.Data_coh.q_min = VarSqw.q_min;
+        /* VarSqw.Data_inc.q_min = VarSqw.Data_coh.q_min = VarSqw.q_min; */
         VarSqw.Data_inc.q_max = VarSqw.Data_coh.q_max = VarSqw.q_max*1.1;
-        // VarSqw.Data_inc.w_min = VarSqw.Data_coh.w_min = VarSqw.w_min;
+        /* VarSqw.Data_inc.w_min = VarSqw.Data_coh.w_min = VarSqw.w_min; */
         VarSqw.Data_inc.w_max = VarSqw.Data_coh.w_max = VarSqw.w_max*1.1;
         VarSqw.sqw_auto = 2; /* request new probability tables */
         if (!Sqw_init(&VarSqw, Sqw_coh, Sqw_inc)) {
