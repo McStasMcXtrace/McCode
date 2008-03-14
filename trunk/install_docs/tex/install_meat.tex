@@ -53,7 +53,7 @@ may experience problems if you install to non-standard locations.
 \noindent Simply follow the guidance given by the installer, pressing 'next' all
 the way.
 
-\noindent To use grid and cluster computing, you will need an SSH client. McStas is configured to 
+\noindent To use grid and cluster computing, you will need an SSH client. McStas is configured to
 use PuTTY.
 
 \noindent For MPI (parallelisation) on Windows, we advice you to install MPICH2 from \htmladdnormallink{Argonne National Laboratory}{http://www-unix.mcs.anl.gov/mpi/mpich/} including development libraries before installing McStas. Also, your \verb+mpiexec.exe+ must be on the \verb+PATH+. You may have to customize the \verb+mpicc.bat+ script from the McStas distribution with the proper C compiler and MPI library path.
@@ -90,7 +90,10 @@ perform the following tasks:
 \begin{enumerate}
 \item{Download the package from \verb+http://www.mcstas.org/download+}
 \item{As root, issue the command \\\verb+apt-get install perl perl-Tk gcc libc6-dev libg2c0 pdl bash+}
-\item{Optionally, as root, issue the command \\\verb+apt-get install openssh-client openssh-server mpich-bin libmpich1.0c2 libmpich1.0-dev+ to benefit from MPI and SSH grid parallelization}
+\item{Optionally, as root, issue the commands
+\\\verb+apt-get install openssh-client openssh-server+
+\\\verb+apt-get install mpich-bin libmpich1.0c2 libmpich1.0-dev+
+to benefit from MPI and SSH grid parallelization}
 \item{As root, issue the command \\\verb+apt-get remove dash ubuntu-minimal+}
 \item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+. This later step may be replaced by a ./configure; make; make install procedure after extraction of the Mctas tarball (see below)}
 %\item{As root, add the following to your \verb+/etc/apt/sources.list+ :
@@ -160,7 +163,7 @@ library files needed by McStas in /home/joe/lib/mcstas/.
 
 \noindent To enable NeXus format in mcformat, you need the NeXus and HDF libraries, and have to use: ./configure --with-nexus
 
-\noindent To specify a non standard C compiler that supports OpenMP (e.g. gcc-4.2 or icc), you may use e.g.: ./configure --with-cc=gcc-4.2
+\noindent To specify a non standard C compiler (e.g. gcc-4.2 or icc that support OpenMP), you may use e.g.: ./configure --with-cc=gcc-4.2
 
 \noindent To enable a non standard C compiler to be used with MPI, you may have to edit your mpicc shell script to set e.g.: CC="icc", or redefine the 'cc' to point to your prefered compiler, e.g.: ln -s /usr/bin/gcc-4.2 /usr/bin/cc
 
