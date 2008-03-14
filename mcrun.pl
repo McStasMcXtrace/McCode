@@ -147,12 +147,12 @@ sub parse_args {
             $ncount = $1;
         } elsif(/^--ncount$/ || /^-n$/) {
             $ncount = $ARGV[++$i];
-	} elsif (/^--multi\=(.*)$/ || /^--grid\=(.*)$/) {
+	      } elsif (/^--multi\=(.*)$/ || /^--grid\=(.*)$/) {
             $multi=$1;
         } elsif (/^--multi/ || /^--grid/) {
-	  if ($multi == 0) {
-            $multi=2;   # default to dual core/cpu machines
-	  }
+	        if ($multi == 0) {
+                  $multi=2;   # default to dual core/cpu machines
+	        }
         } elsif (/^--multi\=(.*)$/ || /^--grid\=(.*)$/) {
             $multi=$!;
         } elsif (/^--host\=(.*)$/ || /^--machine\=(.*)$/ || /^--slave\=(.*)$/) {
@@ -468,11 +468,14 @@ sub exec_sim {
     for ($j=0; $j<=$multi; $j++) { # last step is merge log
       my $log;
       my $hname;
-      if ($j==$multi) { $log="$griddir/mcformat.log"; $hname="merge"; }
-      else { $log="$griddir/$hostnames[$j]_$j.log"; $hname="$hostnames[$j] node $j"; }
+      if ($j==$multi) { $log="$griddir/mcformat.log"; $hname="merge (mcformat)"; }
+      else { 
+        $log="$griddir/$hostnames[$j]_$j.log"; $hname="$hostnames[$j] node $j"; 
+        copy($log,"$datadir/$hostnames[$j]_$j.log");
+      }
       open(READ, $log);
       print WRITE "################################################################################\n";
-      print WRITE "# logfile from $hname\n";
+      print WRITE "# logfile $hostnames[$j]_$j.log from $hname\n";
       while (<READ>) {
           print WRITE "$_";
           if ($j==$multi) { print STDOUT  "$_"; } # send mcformat result to stdout
@@ -481,7 +484,7 @@ sub exec_sim {
     }
     close(WRITE);
 
-    # removal of griddir is done automatically
+    # removal of $griddir is done automatically
     exit(0);
   }
 }
@@ -539,7 +542,7 @@ sub exec_sim_host {
 	} else {
 		require File::Temp; # for tempfile
 		if (!$datadir) { die "mcrun: exec_sim_host: require data_dir directory for storage\n" ; }
-		push @opt, "--dir=$datadir";
+		push @opt, "--dir=$slave";
 		push @opt, "--ncount=$ncount";
 
     # add format option to cmd stack
@@ -581,19 +584,19 @@ sub exec_sim_host {
 		my @cmd = ($out_file, @opt, map("$_=$vals{$_}", @params));
 		print STDERR "ssh $slave \"cd $tmpname && ./@cmd\"\n";
 		host_ssh($slave, "cd $tmpname && ./@cmd");
-		# retrieve data in $datadir (scp)
-		host_scp("$slave:$tmpname/$datadir",  "$datadir");
+		# retrieve data in $datadir or $pwd (scp) recursively
+		host_scp("$slave:$tmpname/$slave",  $datadir ? "$datadir" : ".", 1);
 		# remove tmpdir on host (ssh)
 		host_ssh($slave, "rm -rf $tmpname");
 		exit(0);
 	}
 }
 
-# send a command to a host
+# send a command to a host (does not die if failed)
 sub host_ssh {
 	my ($host,$cmd) = @_;
 	# further option: Net::SSH         (libnet-ssh)
-	my_system("$MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"","error in ssh $host \"$cmd\"");
+	my_system("$MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"","# ssh $host \"$cmd\"");
 }
 
 # send/receive a file to/from a host (does not die if failed)
@@ -601,9 +604,9 @@ sub host_scp {
 	my ($orig,$dest,$recursive) = @_;
 	# further option: Net::SCP::Expect (libnet-scp-expect)
 	if (defined($recursive) && $recursive == 1) { 
-	  my_system("$MCSTAS::mcstas_config{'SCP'} -Crp $orig $dest","");
+	  my_system("$MCSTAS::mcstas_config{'SCP'} -Crp $orig $dest","# scp $orig $dest");
 	} else {
-	  my_system("$MCSTAS::mcstas_config{'SCP'} -Cp $orig $dest","");
+	  my_system("$MCSTAS::mcstas_config{'SCP'} -Cp $orig $dest","# scp $orig $dest");
 	}
 }
 
@@ -983,7 +986,9 @@ sub do_scan {
             our $pid;
             if ($Config{'osname'} eq 'MSWin32') {
                 # Win32 needs all possible parameters here, since we can not open(SIM,"-|");
-                my @cmdlist = ($out_file, @options, map("$_=$vals{$_}", @params),
+                my @cmdlist = ("mcrun$MCSTAS::mcstas_config{'SUFFIX'}",
+                              $out_file, @options, map("$_=$vals{$_}", @params),
+                              $force_compile && ($multi >= 1 || $slave ne 0) ? "--force-compile" : "",
                 							$output_opt ? "--dir=$output_opt" : "--no-output-files",
                 							"--format=$MCSTAS::mcstas_config{'PLOTTER'}");
                 $pid = open(SIM, "@cmdlist |");
@@ -1124,7 +1129,7 @@ sub my_system {
     }
     if (<$ERR> && $err ne "") {
         my @emsg = <$ERR>; # The error comes from here
-        die "$cmd: $err: (failed) @emsg\n";
+        print STDERR "$cmd: $err: @emsg\n";
     }
     if (!<$ERR>) { return 0; } else { return "<$ERR>"; }
 }
@@ -1178,7 +1183,8 @@ if ($exec_test) {
 }
 
 our $scan_info = check_input_params(); # Get variables to scan, if any
-($out_file, undef) = get_out_file($sim_def, $force_compile, $mpi, $threads, @ccopts);
+# force compile only on localhost
+($out_file, undef) = get_out_file($sim_def, $force_compile && !$multi && $slave eq 0, $mpi, $threads, @ccopts);
 exit(1) unless $out_file;
 exit(1) if $ncount == 0;
 
