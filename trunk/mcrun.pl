@@ -467,15 +467,17 @@ sub exec_sim {
     print WRITE "# Distributed simulation log using $multi nodes\n";
     for ($j=0; $j<=$multi; $j++) { # last step is merge log
       my $log;
-      my $hname;
-      if ($j==$multi) { $log="$griddir/mcformat.log"; $hname="merge (mcformat)"; }
+      print WRITE "################################################################################\n";
+      if ($j==$multi) { 
+        $log="$griddir/mcformat.log";
+        print WRITE "# logfile $log from merge (mcformat)\n";
+      }
       else { 
-        $log="$griddir/$hostnames[$j]_$j.log"; $hname="$hostnames[$j] node $j"; 
+        $log="$griddir/$hostnames[$j]_$j.log";
         copy($log,"$datadir/$hostnames[$j]_$j.log");
+        print WRITE "# logfile $hostnames[$j]_$j.log from $hostnames[$j] node $j\n";
       }
       open(READ, $log);
-      print WRITE "################################################################################\n";
-      print WRITE "# logfile $hostnames[$j]_$j.log from $hname\n";
       while (<READ>) {
           print WRITE "$_";
           if ($j==$multi) { print STDOUT  "$_"; } # send mcformat result to stdout
