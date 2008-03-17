@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.23 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.24 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1195,7 +1195,7 @@ int mcformat_merge_compare(int nb)
     if (!strstr(McStasStruct.Format, " list ")) /* NOT FOR LISTs (content non additive) */
     for (j=0; j<abs(McStasStruct.m*McStasStruct.n*McStasStruct.p); j++) {
       Files_to_Merge[i].p1[j] *= Files_to_Merge[i].Ncount;
-      Files_to_Merge[i].p2[j] *= Files_to_Merge[i].Ncount;
+      if (Files_to_Merge[i].p2) Files_to_Merge[i].p2[j] *= Files_to_Merge[i].Ncount;
     }
     
     /* second loop to search for similar items to add to Files_to_Merge[i] */
@@ -1331,7 +1331,7 @@ int mcformat_merge_compare(int nb)
     if (!strstr(McStasStruct.Format, " list ")) /* NOT FOR LISTs (content non additive) */
     for (j=0; j<abs(McStasStruct.m*McStasStruct.n*McStasStruct.p); j++) {
       Files_to_Merge[i].p1[j] /= Files_to_Merge[i].Ncount;
-      Files_to_Merge[i].p2[j] /= Files_to_Merge[i].Ncount;
+      if (Files_to_Merge[i].p2) Files_to_Merge[i].p2[j] /= Files_to_Merge[i].Ncount;
     }
       
     /* now count integral values for item Files_to_Merge[i] */
@@ -1348,7 +1348,6 @@ int mcformat_merge_compare(int nb)
     Files_to_Merge[i].Nsum = Nsum;
     Files_to_Merge[i].Psum = Psum;
     Files_to_Merge[i].P2sum= P2sum;
-
   } /* end for i */
   return(nb);
 } /* mcformat_merge_compare */
