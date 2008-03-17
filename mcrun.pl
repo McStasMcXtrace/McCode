@@ -446,6 +446,7 @@ sub exec_sim {
       $cmd .= "$datadirs[$j] ";
     }
     $cmd .= "> $griddir/mcformat.log";
+    print STDERR "Merging grid results: $cmd\n";
     my_system($cmd,"");
     # clean up local datadirs
     for ($j=0; $j<$multi; $j++) {
@@ -453,6 +454,7 @@ sub exec_sim {
     }
     # move mcformat merged data set one level up and delete temporary dirs
     File::Path::rmtree("$datadir");
+    unlink("$datadir");
     rename("$griddir/$datadirs[0]",$datadir);
     
     # build up catenated log files into the merged data set dir
@@ -587,6 +589,7 @@ sub exec_sim_host {
 		print STDERR "ssh $slave \"cd $tmpname && ./@cmd\"\n";
 		host_ssh($slave, "cd $tmpname && ./@cmd");
 		# retrieve data in $datadir or $pwd (scp) recursively
+		print STDERR "Retrieving simulation $datadir data files from $slave:$tmpname\n";
 		host_scp("$slave:$tmpname/$slave",  $datadir ? "$datadir" : ".", 1);
 		# remove tmpdir on host (ssh)
 		host_ssh($slave, "rm -rf $tmpname");
