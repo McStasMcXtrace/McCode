@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.184 $
+* Version: $Revision: 1.185 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.184 2008-03-11 16:13:08 farhi Exp $
+* $Id: mcstas-r.c,v 1.185 2008-03-19 13:10:16 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.184  2008/03/11 16:13:08  farhi
+* Infrastructure for running mcrun/mcgui on a grid. --force-compile spans
+* over nodes. Local data files are sent to slaves for proper execution of
+* complex components.
+*
 * Revision 1.183  2008/02/14 08:56:35  farhi
 * McRun/McGUI SSH grid now operates on each simulation. This emulates completely
 * MPI without installing it. Simulation steps for scans may also be distributed,
@@ -2525,7 +2530,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
             double x;
 
             x = *x1+(*x2-*x1)*(index+0.5)/(abs(m*n*p));
-            if (abs(m*n*p) > 1) fprintf(datafile, "%g %g %g %g\n", x, I, E, N);
+            if (abs(m*n*p) > 1) fprintf(datafile, "%g %g %g %g", x, I, E, N);
           }
           else
           {
