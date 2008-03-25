@@ -11,14 +11,14 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.185 $
+* Version: $Revision: 1.186 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.185 2008-03-19 13:10:16 farhi Exp $
+* $Id: mcstas-r.c,v 1.186 2008-03-25 14:34:49 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.184  2008/03/11 16:13:08  farhi
@@ -2530,7 +2530,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
             double x;
 
             x = *x1+(*x2-*x1)*(index+0.5)/(abs(m*n*p));
-            if (abs(m*n*p) > 1) fprintf(datafile, "%g %g %g %g", x, I, E, N);
+            if (abs(m*n*p) > 1) fprintf(datafile, "%g %g %g %g\n", x, I, E, N);
           }
           else
           {
