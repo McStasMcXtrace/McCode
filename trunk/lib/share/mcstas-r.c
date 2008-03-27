@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.186 $
+* Version: $Revision: 1.187 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.186 2008-03-25 14:34:49 pkwi Exp $
+* $Id: mcstas-r.c,v 1.187 2008-03-27 12:47:26 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.186  2008/03/25 14:34:49  pkwi
+* Restoring Revision 1.184 since last commit breaks mcplot 1-D plots.
+*
+* (Emmanuel will fix 'locally' for mcformat)
+*
 * Revision 1.184  2008/03/11 16:13:08  farhi
 * Infrastructure for running mcrun/mcgui on a grid. --force-compile spans
 * over nodes. Local data files are sent to slaves for proper execution of
@@ -2522,25 +2527,24 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
         if (p0 && p1 && p2 && !israw_data) E = mcestimate_error(N,I,E);
         if(isdata_present)
         {
-          if (isdata == 1) value = I;
-          else if (isdata == 0) value = N;
-          else if (isdata == 2) value = E;
           if (is1d)
           {
             double x;
-
             x = *x1+(*x2-*x1)*(index+0.5)/(abs(m*n*p));
             if (abs(m*n*p) > 1) fprintf(datafile, "%g %g %g %g\n", x, I, E, N);
           }
           else
           {
+            if (isdata == 1) value = I;
+            else if (isdata == 0) value = N;
+            else if (isdata == 2) value = E;
             fprintf(datafile, "%g", value);
             if ((isIDL || isPython) && ((i+1)*(j+1) < abs(m*n*p))) fprintf(datafile, ",");
             else fprintf(datafile, " ");
           }
         }
       }
-      if (isdata_present) fprintf(datafile, eol_char);
+      if (isdata_present && !is1d) fprintf(datafile, eol_char);
     } /* end 2 loops if not Binary */
     if (datafile && isBinary)
     {

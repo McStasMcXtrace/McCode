@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.24 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.25 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -705,6 +705,9 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
       filename, McStasStruct.Ncount);
   }
   if (!McStasStruct.RunNum) McStasStruct.RunNum = McStasStruct.Ncount;
+  if (McStasStruct.RunNum < McStasStruct.Ncount*0.99)
+    fprintf(stderr, "Warning: %s: Temporary results with ratio %g/%g. Simulation results are not completed.\n",
+      filename, McStasStruct.RunNum, McStasStruct.Ncount);
 
   /* analyse type, and check that Data dims are m,n,p */
   if (!strcmp(McStasStruct.type, "array_0d")) m=n=p=1;
@@ -956,8 +959,8 @@ static void mcformat_usedir(char *dir)
       switch (errno_mkdir) {
 #ifdef EACCES
       case EACCES:
-        fprintf(stderr, "mkdir: EACCES The parent directory does not allow write permission"
-        "or one of the directories in pathname did not allow search permission.\n"); break;
+        fprintf(stderr, "mkdir: EACCES The parent directory does not allow write permission\n"
+        "       or one of the directories in pathname did not allow search permission.\n"); break;
 #endif
 #ifdef EFAULT
       case EFAULT:
