@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.39 $
+* Version: $Revision: 1.40 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -483,7 +483,7 @@ TRACE
 %{
   double t0, t1, t2, t3, v, v1,l_full, l, l_1, dt, alpha0, alpha, theta, my_s, my_s_n;
   double solid_angle, neutrontype;
-  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z,pmul=1;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z, nx, ny, nz, pmul=1;
   int    line;
   char   intersect=0;
   char   intersecti=0;
@@ -605,12 +605,17 @@ TRACE
 		alpha0 = PI*randpm1();
 	      
 	      /* now find a nearly vertical rotation axis:
+	       * Either
 	       *  (v along Z) x (X axis) -> nearly Y axis
+	       * Or
+	       *  (v along X) x (Z axis) -> nearly Y axis
 	       */
-	      vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, 1,0,0);
-	      
-	      /* handle case where v and aim are parallel */
-	      if (!tmp_vx && !tmp_vy && !tmp_vz) { tmp_vx=tmp_vz=0; tmp_vy=1; }
+	      if (fabs(scalar_prod(1,0,0,vx/v,vy/v,vz/v)) < fabs(scalar_prod(0,0,1,vx/v,vy/v,vz/v))) {
+		nx = 1; ny = 0; nz = 0;
+	      } else {
+		nx = 0; ny = 0; nz = 1;
+	      }
+	      vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, nx,ny,nz);
 	      
 	      /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
 	      rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*theta, tmp_vx,tmp_vy,tmp_vz);
