@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.69 $
+* Version: $Revision: 1.70 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.69 $
+#define ISOTROPIC_SQW $Revision: 1.70 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1767,10 +1767,18 @@ do { /* Main interaction loop. Ends with intersect=0 */
       else
         alpha0 = PI*randpm1();
 
-      /* now find a nearly vertical rotation axis:
-        *  (v along Z) x (X axis) -> nearly Y axis
-        */
-      vec_prod(u2x,u2y,u2z, vx,vy,vz, 1,0,0);
+      /* now find a nearly vertical rotation axis (u1) :
+	       * Either
+	       *  (v along Z) x (X axis) -> nearly Y axis
+	       * Or
+	       *  (v along X) x (Z axis) -> nearly Y axis
+	       */
+	    if (fabs(scalar_prod(1,0,0,vx/v,vy/v,vz/v)) < fabs(scalar_prod(0,0,1,vx/v,vy/v,vz/v))) {
+        u1x = 1; u1y = u1z = 0;
+	    } else {
+        u1x = u1y = 0; u1z = 1;
+	    }
+	    vec_prod(u2x,u2y,u2z, vx,vy,vz, u1x,u1y,u1z);
 
       /* handle case where v and aim are parallel */
       if (!u2x && !u2y && !u2z) { u2x=u2z=0; u2y=1; }
