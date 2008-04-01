@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions.
@@ -20,9 +20,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.16 2006-07-21 14:09:07 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.17 2008-04-01 09:15:04 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.16  2006/07/21 14:09:07  farhi
+* Fix wrong structure member
+*
 * Revision 1.15  2006/07/21 09:03:23  farhi
 * Added in options'per steradian' flux estimate, and possibility to glue the
 * monitor to the shape of the 'previous' component (unactivate propagation), so
@@ -103,6 +106,7 @@
     char COORD_PHI   ;
     char COORD_USER1 ;
     char COORD_USER2 ;
+    char COORD_USER3 ;
 
     /* token modifiers */
     char COORD_VAR   ; /* next token should be a variable or normal option */
@@ -173,8 +177,10 @@
     char   Flag_UsePreMonitor    ;   /* use a previously stored neutron parameter set */
     char   UserName1[128];
     char   UserName2[128];
+    char   UserName3[128];
     double UserVariable1;
     double UserVariable2;
+    double UserVariable3;
     double Intermediate;
     double IntermediateCnts;
     char   option[1024];
