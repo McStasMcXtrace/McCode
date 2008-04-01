@@ -385,7 +385,7 @@ FunctionEnd
 
 Section "Uninstall"
 
-   ; Create desktop link etc. for all users:
+   ; Remove desktop link etc. for all users:
    SetShellVarContext all  
 
   ; Remove registry keys
