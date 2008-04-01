@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.37 $
+* Version: $Revision: 1.38 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.37 2007-04-02 12:13:13 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.38 2008-04-01 09:15:04 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.37  2007/04/02 12:13:13  farhi
+* Fixed length of username1|2 to avoid buffer overflow.
+*
 * Revision 1.36  2006/11/16 10:14:21  farhi
 * Correct mcdisplay section with restricted banana/sphere (skipped last monitored variable)
 *
@@ -192,8 +195,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_DEFS->COORD_PHI    =25;
     mc_mn_DEFS->COORD_USER1  =26;
     mc_mn_DEFS->COORD_USER2  =27;
-    mc_mn_DEFS->COORD_KXY    =28;
-    mc_mn_DEFS->COORD_VXY    =29;
+    mc_mn_DEFS->COORD_USER3  =28;
+    mc_mn_DEFS->COORD_KXY    =29;
+    mc_mn_DEFS->COORD_VXY    =30;
 
 /* mc_mn_token modifiers */
     mc_mn_DEFS->COORD_VAR    =0;    /* next mc_mn_token should be a variable or normal option */
@@ -509,6 +513,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER1; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName1,30); strcpy(mc_mn_Set_Vars_Coord_Var,"U1"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
         if (!strcmp(mc_mn_token, "user2"))
           { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER2; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName2,30); strcpy(mc_mn_Set_Vars_Coord_Var,"U2"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
+        if (!strcmp(mc_mn_token, "user3"))
+          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER3; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName3,30); strcpy(mc_mn_Set_Vars_Coord_Var,"U3"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
 
         /* now stores variable keywords detected, if any */
         if (mc_mn_Set_Vars_Coord_Type != mc_mn_DEFS->COORD_NONE)
@@ -621,6 +627,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       else
       if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2)
           strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName2,30);
+      else
+      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER3)
+          strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName3,30);
       else
           strcpy(mc_mn_Short_Label[mc_mn_i],"Unknown");
 
@@ -966,6 +975,8 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1) mc_mn_XY = mc_mn_Vars->UserVariable1;
         else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2) mc_mn_XY = mc_mn_Vars->UserVariable2;
+        else
+        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER3) mc_mn_XY = mc_mn_Vars->UserVariable3;
         else
         mc_mn_XY = 0;
 

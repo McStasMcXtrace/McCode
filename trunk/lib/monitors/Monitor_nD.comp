@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.36 $
+* Version: $Revision: 1.37 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -70,8 +70,8 @@
 *     theta longitude       [deg]    longitude (x/z) [for sphere and cylinder]
 *     phi   lattitude       [deg]    lattitude (y/z) [for sphere and cylinder]
 *
-*     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2}
-*     user2                 to be assigned in an other component (see below)
+*     user user1            will monitor the [Mon_Name]_Vars.UserVariable{1|2|3}
+*     user2 user3           to be assigned in an other component (see below)
 *
 * <b>Other options keywords are:</b>
 *     abs                       Will monitor the abs of the following variable
@@ -181,10 +181,14 @@
 *                Use 'min' or 'limits' keyword in 'options' for other limits
 * max:    [u]    Maximum range value to force for all variables
 *                Use 'max' or 'limits' keyword in 'options' for other limits
-* user1 [variable] Variable assigned to User1
-* user2 [variable] Variable assigned to User2
-* username1  [str] Name assigned to User1
-* username2  [str] Name assigned to User2
+* user1: [variable] Variable assigned to User1
+* user2: [variable] Variable assigned to User2
+* user3: [variable] Variable assigned to User3
+* username1:  [str] Name assigned to User1
+* username2:  [str] Name assigned to User2
+* username3:  [str] Name assigned to User3
+* restore_neutron: [0|1] If set, the monitor does not influence the neutron state.
+*                        Equivalent to setting the 'parallel' option.
 *
 * OUTPUT PARAMETERS:
 *
@@ -199,8 +203,8 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, username1=0, username2=0)
-SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40)
+DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -239,6 +243,7 @@ INITIALIZE
 
   strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 32);
   strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
+  strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 32);
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
 
@@ -247,6 +252,8 @@ INITIALIZE
   /* check if user given filename with ext will be used more than once */
   if ( ((Vars.Flag_Multiple && Vars.Coord_Number > 1) || Vars.Flag_List) && strchr(Vars.Mon_File,'.') )
   { char *XY; XY = strrchr(Vars.Mon_File,'.'); *XY='_'; }
+  
+  if (restore_neutron) Vars.Flag_parallel=1;
 %}
 
 TRACE
@@ -260,6 +267,7 @@ TRACE
 
   if (user1 != FLT_MAX) Vars.UserVariable1 = user1;
   if (user2 != FLT_MAX) Vars.UserVariable2 = user2;
+  if (user3 != FLT_MAX) Vars.UserVariable3 = user3;
 
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
