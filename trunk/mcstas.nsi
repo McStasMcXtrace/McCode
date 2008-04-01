@@ -150,7 +150,9 @@ SectionEnd
 
 Section "Windows setup" WIN
    SectionIn RO
-
+   ; Create desktop link etc. for all users:
+   SetShellVarContext all
+   
    ; Create desktop and SM link for mcgui.pl
    CreateShortCut "$DESKTOP\McStas.lnk" "$INSTDIR\bin\mcgui.pl" "" "$INSTDIR\bin\mcgui.pl" 0
    CreateDirectory "$SMPROGRAMS\McStas"
@@ -382,7 +384,10 @@ FunctionEnd
 ; Uninstaller
 
 Section "Uninstall"
-  
+
+   ; Create desktop link etc. for all users:
+   SetShellVarContext all  
+
   ; Remove registry keys
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\McStas"
   DeleteRegKey HKLM SOFTWARE\McStas
