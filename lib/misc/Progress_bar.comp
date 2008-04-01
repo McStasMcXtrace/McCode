@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -83,23 +83,11 @@ TRACE
       IntermediateCnts = 0;
       fprintf(stdout, "\nTrace ETA ");
       if (difftime(EndTime,StartTime) < 60.0)
-        fprintf(stdout, "%g [s] %% ", difftime(EndTime,StartTime)
-#ifdef USE_MPI
-                                      /mpi_node_count
-#endif
-                                      );
+        fprintf(stdout, "%g [s] %% ", difftime(EndTime,StartTime));
       else if (difftime(EndTime,StartTime) > 3600.0)
-        fprintf(stdout, "%g [h] %% ", difftime(EndTime,StartTime)/3600.0
-#ifdef USE_MPI
-                                      /mpi_node_count
-#endif
-                                      );
+        fprintf(stdout, "%g [h] %% ", difftime(EndTime,StartTime));
       else
-        fprintf(stdout, "%g [min] %% ", difftime(EndTime,StartTime)/60.0
-#ifdef USE_MPI
-                                        /mpi_node_count
-#endif
-                                        );
+        fprintf(stdout, "%g [min] %% ", difftime(EndTime,StartTime)/60.0);
     } else IntermediateCnts += 1e3;
     fflush(stdout);
   }
