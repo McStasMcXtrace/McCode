@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.70 $
+* Version: $Revision: 1.71 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.70 $
+#define ISOTROPIC_SQW $Revision: 1.71 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -346,6 +346,7 @@ struct Sqw_sample_struct {
   double psum_scatt;
   double single;
   double multi;
+  double barns;
 };
 
 #include <stdio.h>
@@ -408,6 +409,15 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   t_Table *retTable;
 
   flag_qSq = (Sqw->column_order[8]>0 && Sqw->column_order[6]>0);
+  
+  if (Sqw->column_order[0] == 4 && Sqw->barns !=0)
+    printf("Isotropic_sqw: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
+           "WARNING:       but F2 unit is set to powder_barns=1 (barns). Intensity might be 100 times too high.\n", 
+           Sqw->compname, Sqw->barns);
+  if (Sqw->column_order[0] == 17 && Sqw->barns == 0)
+    printf("Isotropic_sqw: %s: Powder file probably of type Lazy Pulver (laz)\n"
+           "WARNING:       but F2 unit is set to powder_barns=0 (fm^2). Intensity might be 100 times too low.\n", 
+           Sqw->compname, Sqw->barns);
 
   size = sqwTable.rows;
   if (Sqw->verbose_output > 0) Table_Info(sqwTable);
@@ -459,7 +469,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       F2 = (F2 >= 0 ? F2 : 0);
       d = (q > 0 ? 2*PI/d : 0);
       if (j == 0 || d == 0 || q == 0) {
-        printf("Isotropic_sqw: %s: line %i has invalid definition\n"
+        printf("Isotropic_sqw: %s: Warning: line %i has invalid definition\n"
                "         (mult=0 or q=0 or d=0)\n", Sqw->compname, i);
         continue;
       }
@@ -524,11 +534,11 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   else {
     char *header;
     if (!Table_Init(&retTable[0], size, 1))
-      { printf("Isotropic_Sqw: Cannot allocate q-axis [%i] from Powder lines.\n", size); return(NULL); }
+      { printf("Isotropic_Sqw: ERROR Cannot allocate q-axis [%i] from Powder lines.\n", size); return(NULL); }
     if (!Table_Init(&retTable[1], 1, 1))
-      { printf("Isotropic_Sqw: Cannot allocate w-axis from Powder lines.\n"); return(NULL); }
+      { printf("Isotropic_Sqw: ERROR Cannot allocate w-axis from Powder lines.\n"); return(NULL); }
     if (!Table_Init(&retTable[2], size, 1))
-      { printf("Isotropic_Sqw: Cannot allocate Sqw [%i] from Powder lines.\n", size); return(NULL); }
+      { printf("Isotropic_Sqw: ERROR Cannot allocate Sqw [%i] from Powder lines.\n", size); return(NULL); }
     Table_Init(&retTable[3], 0,0);
 
     header = malloc(64); if (header)
@@ -556,6 +566,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       factor = list[i].j*(list[i].DWfactor ? list[i].DWfactor : 1)
                *Sqw->rho*PI/2
                /(Sqw->type == 'c' ? Sqw->s_coh : Sqw->s_inc)*list[i].F2/list[i].q;
+      if (Sqw->barns) factor *= 100;
       for (q=peak_qmin; q <= peak_qmax; q += q_step) {
         index = (long)floor(size*(q - q_min)/(q_max - q_min));
         if (index < 0) index=0;
@@ -635,7 +646,7 @@ int Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
 
   if (&(Sqw.SW[i]) == NULL)
   {
-      fprintf(stderr, "Isotropic_Sqw: No corresponding value in the SW. randnum too big.\n");
+      fprintf(stderr, "Isotropic_Sqw: Warning: No corresponding value in the SW. randnum too big.\n");
       fprintf(stderr, "  i=%i ; randnum=%f ; Sqw.SW[i-1].cumul_proba=%f (Sqw_search_SW)\n",
             i, randnum, Sqw.SW[i-1].cumul_proba);
       return i-1;
@@ -796,10 +807,10 @@ struct Sqw_Data_struct *Sqw_readfile(
       Table_Free_Array(Table_Array);
       Table_Array = newTable;
     } else if (nblocks != 3) {
-      printf("Isotropic_Sqw: %s: "
+      printf("Isotropic_Sqw: %s: ERROR "
              "File %s contains %li block%s instead of 3.\n",
               Sqw->compname, file, nblocks, (nblocks == 1 ? "" : "s"));
-    } else flag=0;
+    } else { flag=0; Sqw->barns=0; /* Sqw files do not use powder_barns */ }
   }
 
   /* print some info about Sqw files */
@@ -811,7 +822,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   if (flag) {
     if (nblocks) printf("ERROR          Wrong file format.\n"
       "               Disabling contribution.\n"
-      "               File must contain 3 blocks for [q,w,sqw]\n");
+      "               File must contain 3 blocks for [q,w,sqw] or Powder file\n");
     return(Sqw_Data);
   }
 
@@ -1263,6 +1274,7 @@ INITIALIZE
   VarSqw.psum_scatt= 0;
   VarSqw.single    = 0;
   VarSqw.multi     = 0;
+  VarSqw.barns     = powder_barns;
 
   /* PowderN compatibility members */
   VarSqw.Dd        = powder_Dd;
@@ -1285,9 +1297,8 @@ INITIALIZE
   if (VarSqw.s_abs < 0) VarSqw.s_abs=0;
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && VarSqw.rho <= 0) exit(printf("Isotropic_Sqw: %s: Null density (V_rho)\n",NAME_CURRENT_COMP));
   /* 100: convert from barns to fm^2 */
-  double factor = (powder_barns ? 100 : 1);
-  VarSqw.my_a_v  =(VarSqw.rho*factor*VarSqw.s_abs*2200);
-  VarSqw.my_s    =(VarSqw.rho*factor*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
+  VarSqw.my_a_v  =(VarSqw.rho*100*VarSqw.s_abs*2200);
+  VarSqw.my_s    =(VarSqw.rho*100*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
                                      +VarSqw.s_inc>0 ? VarSqw.s_inc : 0));
   if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && !VarSqw.Temperature
    && (VarSqw.Data_coh.intensity || VarSqw.Data_inc.intensity)
@@ -1471,7 +1482,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     }
     if (coh<0) coh=0;
     if (inc<0) inc=0;
-    VarSqw.my_s    =(VarSqw.rho*(powder_barns ? 100 : 1)*(coh + inc));
+    VarSqw.my_s    =(VarSqw.rho*100*(coh + inc));
 
     my_t = my_a + VarSqw.my_s;  /* total scattering Xsect (tmp var) */
     if (my_t <= 0) {
