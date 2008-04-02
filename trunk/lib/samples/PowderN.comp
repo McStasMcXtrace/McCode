@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -175,7 +175,7 @@ SHARE
 #define Undefined         { 0,0,0,0,0,0,0,0 }
 #endif
 
-    struct line_data
+  struct line_data
     {
       double F2;                  /* Value of structure factor */
       double q;                   /* Qvector */
@@ -197,6 +197,7 @@ SHARE
       double sigma_a;
       double sigma_i;
       char   compname[256];
+      double flag_barns;
       int    column_order[8]; /* column signification */
     };
 
@@ -276,6 +277,15 @@ SHARE
     Table_Info(sTable);
     printf("PowderN: %s: Reading %d rows from %s\n",
           info->compname, size, SC_file);
+          
+    if (info->column_order[0] == 4 && info->flag_barns !=0)
+    printf("PowderN: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
+           "WARNING: but F2 unit is set to barns=1 (barns). Intensity might be 100 times too high.\n", 
+           info->compname, info->flag_barns);
+  if (info->column_order[0] == 17 && info->flag_barns == 0)
+    printf("PowderN: %s: Powder file probably of type Lazy Pulver (laz)\n"
+           "WARNING: but F2 unit is set to barns=0 (fm^2). Intensity might be 100 times too low.\n", 
+           info->compname, info->flag_barns);
     /* allocate line_data array */
     list = (struct line_data*)malloc(size*sizeof(struct line_data));
 
@@ -341,8 +351,9 @@ SHARE
         if (i == size-1) list_count++;
       /*   if duplication index == previous multiplicity */
       /*      set back multiplicity of previous lines to 1 */
-        if (mult_count == list[list_count-1].j
-        || (mult_count == list[list_count].j && i == size-1)) {
+        if (mult_count && list_count>0 &&
+          (mult_count == list[list_count-1].j
+          || (mult_count == list[list_count].j && i == size-1)) ) {
           printf("PowderN: %s: Set multiplicity to 1 for lines [%i:%i]\n"
                   "         (d-spacing %g is duplicated %i times)\n",
             info->compname, list_count-mult_count, list_count-1, list[list_count-1].q, mult_count);
@@ -391,6 +402,7 @@ INITIALIZE
   line_info.at_nb    = nb_atoms;
   line_info.sigma_a  = sigma_abs;
   line_info.sigma_i  = sigma_inc;
+  line_info.flag_barns=barns;
   for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
   
@@ -420,10 +432,6 @@ INITIALIZE
     printf("PowderN %s WARNING: You have requested all neutrons be attenuated or incoherently scattered!\n", NAME_CURRENT_COMP);
   }
 
-  if (frac && !line_info.sigma_i) {
-    printf("PowderN %s WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
-  }
-
   if (concentric) {
     printf("PowderN %s WARNING: Concentric mode - remember to include the 'opposite' copy of this component !\n (The equivalent, 'opposite' comp should have concentric=0)\n", NAME_CURRENT_COMP);
     if (tfrac == 0) {
@@ -432,6 +440,10 @@ INITIALIZE
   }
   
   i = read_line_data(reflections, &line_info);
+  
+  if (frac && !line_info.sigma_i) {
+    printf("PowderN %s WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
+  }
 
   if (!line_info.V_0 && line_info.at_nb > 0
     && line_info.at_weight > 0 && line_info.rho > 0) {
@@ -444,7 +456,7 @@ INITIALIZE
   if (line_info.V_0 <= 0)
     exit(fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc)\n", NAME_CURRENT_COMP));
 
-  if (barns) { /* Factor 100 to convert from barns to fm^2 */
+  if (line_info.flag_barns) { /* Factor 100 to convert from barns to fm^2 */
     XsectionFactor = 100;
   } else {
     XsectionFactor = 1;
