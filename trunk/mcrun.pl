@@ -390,7 +390,13 @@ sub exec_sim {
     print STDOUT "Distributing simulation $out_file over $multi nodes of @hostlist into $datadir\n";
 
     # Create tmp dir on local host
-    my $griddir = File::Temp::tempdir( "mcrun_grid_XXXX", CLEANUP=>1); # will be removed on master node at exit
+    my $griddir;
+    if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
+      $griddir = File::Temp::tempdir( "$datadir"."_grid_XXXXX", CLEANUP=>1); # will be removed on master node at exit
+    } else {
+      $griddir = int(rand(99999));
+			$griddir = "$datadir"."_grid_$griddir";
+    }
     my $date0 = localtime(time());
 
     my @pids     =();
@@ -556,11 +562,11 @@ sub exec_sim_host {
 		# make distant tmpdir (ssh)
 		if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
 		  my $fh;
-			($fh, $tmpname) = File::Temp::tempfile('mcrun_tmp_XXXXX', UNLINK => 1); # throw file handle
+			($fh, $tmpname) = File::Temp::tempfile("mcrun_$slave"."_XXXXX", UNLINK => 1); # throw file handle
 			unlink $fh;
 		} else {
 		  $tmpname = int(rand(99999));
-			$tmpname = "mcrun_tmp_$tmpname";
+			$tmpname = "mcrun_$slave"."_$tmpname";
 		}
 		print STDERR "Sending simulation $sim_def and local data files to $slave:$tmpname\n";
 		host_ssh($slave, "mkdir $tmpname");
