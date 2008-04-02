@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.187 $
+* Version: $Revision: 1.188 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.187 2008-03-27 12:47:26 farhi Exp $
+* $Id: mcstas-r.c,v 1.188 2008-04-02 12:32:38 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.187  2008/03/27 12:47:26  farhi
+* Fixed unwanted additional NL chars when using mcformat on PGPLOT 1D
+*
 * Revision 1.186  2008/03/25 14:34:49  pkwi
 * Restoring Revision 1.184 since last commit breaks mcplot 1-D plots.
 *
@@ -5037,7 +5040,7 @@ void *mcstas_raytrace(void *p_node_ncount)
 #pragma omp parallel if(threads_node_count>1) default(shared)
 {
 #endif
-  while(mcrun_num < node_ncount)
+  while(mcrun_num < node_ncount && mcrun_num < mcget_ncount())
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
     /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
