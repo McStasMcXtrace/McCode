@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.188 $
+* Version: $Revision: 1.189 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.188 2008-04-02 12:32:38 farhi Exp $
+* $Id: mcstas-r.c,v 1.189 2008-04-02 13:20:20 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.188  2008/04/02 12:32:38  farhi
+* Add explicit condition for node raytrace loop end with ncount value,
+* instead of using local copy of ncount. Makes mcset_ncount work again...
+*
 * Revision 1.187  2008/03/27 12:47:26  farhi
 * Fixed unwanted additional NL chars when using mcformat on PGPLOT 1D
 *
@@ -5040,7 +5044,7 @@ void *mcstas_raytrace(void *p_node_ncount)
 #pragma omp parallel if(threads_node_count>1) default(shared)
 {
 #endif
-  while(mcrun_num < node_ncount && mcrun_num < mcget_ncount())
+  while(mcrun_num < node_ncount || mcrun_num < mcget_ncount())
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
     /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
