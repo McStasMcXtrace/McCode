@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.71 $
+* Version: $Revision: 1.72 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.71 $
+#define ISOTROPIC_SQW $Revision: 1.72 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -413,11 +413,11 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   if (Sqw->column_order[0] == 4 && Sqw->barns !=0)
     printf("Isotropic_sqw: %s: Powder file probably of type Crystallographica/Fullprof (lau)\n"
            "WARNING:       but F2 unit is set to powder_barns=1 (barns). Intensity might be 100 times too high.\n", 
-           Sqw->compname, Sqw->barns);
+           Sqw->compname);
   if (Sqw->column_order[0] == 17 && Sqw->barns == 0)
     printf("Isotropic_sqw: %s: Powder file probably of type Lazy Pulver (laz)\n"
            "WARNING:       but F2 unit is set to powder_barns=0 (fm^2). Intensity might be 100 times too low.\n", 
-           Sqw->compname, Sqw->barns);
+           Sqw->compname);
 
   size = sqwTable.rows;
   if (Sqw->verbose_output > 0) Table_Info(sqwTable);
