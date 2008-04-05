@@ -12,7 +12,7 @@
 * Date: 2007.
 * Origin: <a href="http://www-llb.cea.fr/">LLB</a>
 * Release: McStas 1.12
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: LLB
 *
 * Test instrument for neutron focalisation with a set of supermirrors. 
@@ -22,7 +22,7 @@
 * images the focal point onto the detector.
 *
 * %Description
-* Test instrument for the RomMirrorElli and RomMirrorPara components
+* Test instrument for the MirrorElli and MirrorPara components
 *
 * Example: mcrun Focalisation.instr Qmin=0.0001 G=1 H=.0001 F=.00066 DET=8.2 lambda=14 divergence=.1 BeamWidth=.05 TetaMin=3
 *
