@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.25 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.26 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -1401,7 +1401,7 @@ int sort_ipar_mon (const void *a, const void *b)
 * mcformat_scan_compare: assemble scanned monitors into multiarray sets
 *                        warning: this function is a real headache
 *********************************************************************/
-int mcformat_scan_compare(int nb)
+void mcformat_scan_compare(int nb)
 {
   /* definition of a scan
     Must be 'mergeable' data but with different ipar values
