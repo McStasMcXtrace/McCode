@@ -68,6 +68,11 @@ use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mcstas_config.perl";
 
+# Overload with user's personal config
+if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+}
+
 require "mcrunlib.pl";
 # IPC can probably be used safely, exists on sysv type systems,
 # linux, Win32. Will investigate further regarding portability.

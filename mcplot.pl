@@ -61,6 +61,12 @@ use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mcstas_config.perl";
 
+# Overload with user's personal config
+if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+}
+
+
 # ADD/MOD: E. Farhi Sep 21th, 2001 : handle -ps and -psc for automatic
 # print and exit
 my ($default_ext);

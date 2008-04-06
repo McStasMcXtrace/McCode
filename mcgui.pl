@@ -50,6 +50,11 @@ use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mcstas_config.perl";
 
+# Overload with user's personal config
+if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+}
+
 use strict;
 use FileHandle;
 use Tk;
@@ -1675,8 +1680,8 @@ sub setup_cmdwin {
         ||  $MCSTAS::mcstas_config{'SSH'} ne "no") ) {
       $cmdwin->insert('end',
 "Warning: No MPI/grid machine list. Running locally.
-  Define $ENV{'HOME'}/.mcstas-hosts
-  or $MCSTAS::sys_dir/tools/perl/mcstas-hosts
+  Define $ENV{'HOME'}/.mcstas/hosts
+  or $MCSTAS::sys_dir/tools/perl/hosts
   or use option --machines=<file>\n");
     }
     my $text_grid="Single ";

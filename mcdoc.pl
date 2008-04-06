@@ -23,6 +23,11 @@ BEGIN {
 use lib $MCSTAS::perl_dir;
 require "mcstas_config.perl";
 
+# Overload with user's personal config
+if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+}
+
 use FileHandle;
 use File::Basename;
 require "mcrunlib.pl";

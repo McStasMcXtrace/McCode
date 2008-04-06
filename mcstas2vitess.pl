@@ -37,6 +37,12 @@ use lib $MCSTAS::perl_dir;
 use FileHandle;
 
 require "mcstas_config.perl";
+
+# Overload with user's personal config
+if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+}
+
 require "mcrunlib.pl";
 
 sub make_instr_file {
