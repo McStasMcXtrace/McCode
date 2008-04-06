@@ -41,7 +41,16 @@
 # THREADS  - flag for Threading support [yes|no]
 # PREC     - optimization precision (stop criterion)
 # SSH      - SSH client
+# CLUSTER - Choice of default clustering method
+#          0 - No clustering
+#          1 - Threads (multi-core)
+#          2 - MPI (Clusters)
+#          3 - SSH (grid)
+# NODES   - Choice of defaults number of nodes (MPI/GRID/THREADS)
 #
+# MCGUI_CFLAGS - Choose whether CFLAGS should be applied in mcgui (0/1)
+# MCGUI_PGMULTI - Choose if mcgui uses 3-pane view when running mcplot/PGPLOT (0/1)
+# 
 # NOTE: If you modify this file to change a SCILAB equal to 'no' to adjust an existing
 # installation to a new install of scilab, enter the FULL PATH to the scilab binary, e.g.
 # /usr/local/scilab-3.1.1/bin/scilab
@@ -84,7 +93,11 @@ use Config;
      THREADS => '@HAVE_THREADS@',
      NEXUS => '@HAVE_NEXUS@',
      HDFVIEW => '@HDFVIEW@',
-     PREC => '1e-3'
+     PREC => '1e-3',
+     CLUSTER => 0,
+     NODES => 2,
+     MCGUI_CFLAGS => 0,
+     MCGUI_PGMULTI => 0
      );
 
 # **** installed site perl modules availability
