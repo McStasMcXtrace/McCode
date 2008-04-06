@@ -119,8 +119,6 @@ if ($Config{'osname'} eq 'darwin') {
 
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 our $quote=1; # default editor behaviour is to surround strings with quotes
-our $pgmulti=0;# default PGPLOT mcdisplay behaviour is non-multi view
-our $cflags=0;# Our default compilation behaviour is to NOT use CFLAGS
 $MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'};
 $MCSTAS::mcstas_config{'CFLAGS'} = '';
 
@@ -648,7 +646,7 @@ sub run_dialog_create {
     # can only update when in Single or OpenMP simulation mode (no cluster/grid)
     # and performing simulation
     if ($Config{'osname'} ne 'MSWin32' && $update_cmd && $inf_sim->{'Mode'}==0
-      && $inf_sim->{'cluster'} <= 1 && $text !~ /compil/i && $text !~ /DSA/i 
+      && $MCSTAS::mcstas_config{'CLUSTER'} <= 1 && $text !~ /compil/i && $text !~ /DSA/i 
       && $title !~ /compil/i && $title !~ /DSA/i) {
       $but = $bot_frame->Button(-text => "Update", -command => $update_cmd);
       $but->pack(-side => "right");
@@ -816,7 +814,7 @@ sub compile_instrument {
       $mcrunflag = 1;
     }
     my $out_name = dialog_get_out_file($w, $current_sim_def, $force,
-      $inf_sim->{'cluster'} == 2 ? 1 : 0, $inf_sim->{'cluster'} == 1 ? 1 : 0, $mcrunflag);
+      $MCSTAS::mcstas_config{'CLUSTER'} == 2 ? 1 : 0, $MCSTAS::mcstas_config{'CLUSTER'} == 1 ? 1 : 0, $mcrunflag);
     unless($out_name && -x $out_name) {
       if ($mcrunflag == 1) {
 	$w->messageBox(-message => "Compile running in seperate window.\nPlease wait for the process to finish!",
@@ -920,7 +918,7 @@ sub menu_run_simulation {
               push @command, "--plotter=PGPLOT";
               # Selection of PGPLOT 3-pane view from config menu only.
 	      # Default is to NOT use 3-pane view.
-              if ($pgmulti) {
+              if ($MCSTAS::mcstas_config{'MCGUI_PGMULTI'}) {
                 push @command, "--multi";
               }
               if (!($Config{'osname'} eq 'MSWin32')) {
@@ -1058,7 +1056,7 @@ sub menu_run_simulation {
             push @command, "--force-compile";
             $newsi->{'Forcecompile'} = 0;
           } else { # compile from mcgui (locally)
-            $inf_sim->{'cluster'} = $newsi->{'cluster'};
+            $MCSTAS::mcstas_config{'CLUSTER'} = $newsi->{'cluster'};
             $out_name = compile_instrument($w, 1);
           }
         }
@@ -1213,7 +1211,7 @@ sub menu_run_simulation {
         }
         $inf_sim->{'Autoplot'} = $newsi->{'Autoplot'};
         $inf_sim->{'Mode'}     = $newsi->{'Mode'};
-        $inf_sim->{'cluster'}  = $newsi->{'cluster'};
+        $MCSTAS::mcstas_config{'CLUSTER'}  = $newsi->{'cluster'};
 
         if ($newsi->{'Autoplot'}) { # Is beeing set to 0 above if Win32 + trace
            plot_dialog($w, $inf_instr, $inf_sim, $inf_data,
@@ -1248,9 +1246,9 @@ sub menu_preferences {
     # PW 20040527
     my ($w) = @_;
     my $ret;
-    our $MPIstuff = $inf_sim->{'cluster'};
+    our $MPIstuff = $MCSTAS::mcstas_config{'CLUSTER'};
     ($ret) = preferences_dialog($w); #
-    $inf_sim->{'cluster'} = $MPIstuff;
+    $MCSTAS::mcstas_config{'CLUSTER'} = $MPIstuff;
 }
 
 
@@ -1941,9 +1939,6 @@ my $win = new MainWindow;
 $main_window = $win;
 setup_menu($win);
 setup_cmdwin($win);
-
-$inf_sim->{'cluster'} = 0; # single,threads,mpi,ssh
-$inf_sim->{'nodes'}   = 2;
 
 my $open_editor = 0;
 

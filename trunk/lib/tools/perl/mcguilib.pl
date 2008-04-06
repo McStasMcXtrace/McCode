@@ -116,8 +116,8 @@ sub simulation_dialog {
     $si{'NScan'} = 0 unless $si{'NScan'};
     $si{'Force'} = 0 unless $si{'Force'};
     $si{'Detach'} = 0 unless $si{'Detach'};
-    $si{'nodes'} = 1 unless $si{'nodes'};
-    $si{'cluster'}=0 unless $si{'cluster'};
+    $si{'nodes'} = $MCSTAS::mcstas_config{'NODES'};
+    $si{'cluster'}= $MCSTAS::mcstas_config{'CLUSTER'};
     # 'Inspect' field for use of mcdisplay's built-in
     # neutron filter, filtering away all neutrons not
     # reaching a given component
@@ -581,15 +581,15 @@ sub preferences_dialog {
     $b->attach($button_bin, -balloonmsg => "Binary files are usually much faster\nto import (Matlab/Scilab)\nand smaller in size");
     if ($plotter =~ /binary/) { $button_bin->select; }
     $pgmultiflag = $lf->Checkbutton(-text => "3-pane view with PGPLOT trace",
-				     -relief => 'flat', -variable => \$pgmulti)->pack(-fill => 'x');
+				     -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_PGMULTI'})->pack(-fill => 'x');
     $b->attach($pgmultiflag, -balloonmsg => "Check to view 3 panes in PGPLOT mcdisplay");
     # handle clustering methods
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
-    if    ($inf_sim->{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-    elsif ($inf_sim->{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
-    elsif ($inf_sim->{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
-    elsif ($inf_sim->{'cluster'} == 3) { $choicecluster_val='SSH (grid)'; }
+    if    ($MCSTAS::mcstas_config{'CLUSTER'} == 0) { $choicecluster_val='None (single CPU)'; }
+    elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+    elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 2) { $choicecluster_val='MPI (clusters)'; }
+    elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choices=[ 'None (single CPU)'];
     if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
       push @{ $choices }, 'Threads (multi-core)';
@@ -628,7 +628,7 @@ sub preferences_dialog {
     $MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'} unless $MCSTAS::mcstas_config{'CFLAGS_SAVED'};
     my $compilchoice = $lf->Label(-text => "Compilation options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $choicecflags = $lf->Checkbutton(-text => "Optimize ($MCSTAS::mcstas_config{'CFLAGS_SAVED'})",
-               -relief => 'flat', -variable => \$cflags)->pack(-fill => 'x');
+               -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_CFLAGS'})->pack(-fill => 'x');
     $b->attach($choicecflags, -balloonmsg => "Check to compile slower but simulate faster");
     my $precchoice = $lf->Label(-text => "Optimization options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $labelprec = $lf->Label(-text => "Precision",
@@ -638,7 +638,7 @@ sub preferences_dialog {
                -textvariable => \$MCSTAS::mcstas_config{'PREC'},
                -justify => 'right')->pack(-side => 'right');
     $b->attach($labelprec, -balloonmsg => "Determines final precision in optimizations.\nSee McStas manual for details");
-    if ($cflags) { $choicecflags->select; }
+    if ($MCSTAS::mcstas_config{'MCGUI_CFLAGS'}) { $choicecflags->select; }
 
     my $res = $dlg->Show;
 
@@ -657,7 +657,7 @@ sub preferences_dialog {
     # finally set the PLOTTER
     $MCSTAS::mcstas_config{'PLOTTER'} = $plotter;
 
-    $inf_sim->{'cluster'} = do {
+    $MCSTAS::mcstas_config{'CLUSTER'} = do {
       if     ($choicecluster_val =~ /^None/)   { 0 }
       elsif ($choicecluster_val =~ /^Threads/){ 1 }
       elsif ($choicecluster_val =~ /^MPI/)    { 2 }
@@ -670,12 +670,12 @@ sub preferences_dialog {
       elsif ($editorchoice_val =~ /^External/)    { 2 }
     };
 
-    if ($cflags) {
+    if ($MCSTAS::mcstas_config{'MCGUI_CFLAGS'}) {
       $MCSTAS::mcstas_config{'CFLAGS'} = $MCSTAS::mcstas_config{'CFLAGS_SAVED'};
     } else {
       $MCSTAS::mcstas_config{'CFLAGS'} = "";
     }
-    $MPIstuff = $inf_sim->{'cluster'};
+    $MPIstuff = $MCSTAS::mcstas_config{'CLUSTER'};
     return ($res);
 }
 
