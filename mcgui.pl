@@ -1027,7 +1027,7 @@ sub menu_run_simulation {
         # on Win32 (also giving out a warning message). This is done
         # because Win32::GetShortPathName only works on directories that
         # actually exist... :(
-        if ($newsi->{'Dir'}) {
+        if ($newsi->{'Dir'} && !($newsi->{'Mode'})) {
           $OutDir=$newsi->{'Dir'};
           if ($Config{'osname'} eq 'MSWin32') {
             $OutDirBak = $OutDir;
@@ -1070,7 +1070,7 @@ sub menu_run_simulation {
             rmtree($OutDir,0,1);
           }
         }
-        push @command, "--format=$plotter";
+        push @command, "--format=$plotter" unless ($newsi->{'Mode'}==1);
 
        # add parameter values
         my @unset = ();
