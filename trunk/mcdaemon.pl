@@ -55,6 +55,12 @@ use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mcstas_config.perl";
 
+# Overload with user's personal config
+if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+}
+
+
 my $dodisplay = 0;
 my $timeout = 5;
 my $show_help = 0;

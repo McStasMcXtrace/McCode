@@ -49,6 +49,11 @@ use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
 require "mcstas_config.perl";
 
+# Overload with user's personal config
+if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+}
+
 use FileHandle;
 use strict;
 
@@ -230,8 +235,8 @@ sub parse_args {
     if ($mpi >= 1 || $multi >= 1) {
       if (! -e $MCSTAS::mcstas_config{'HOSTFILE'}) {
         print STDERR "mcrun: No MPI/grid machine list. Running locally.
-  Define $ENV{'HOME'}/.mcstas-hosts
-  or $MCSTAS::sys_dir/tools/perl/mcstas-hosts
+  Define $ENV{'HOME'}/.mcstas/hosts
+  or $MCSTAS::sys_dir/tools/perl/hosts
   or use option --machines=<file>\n";
         $MCSTAS::mcstas_config{'HOSTFILE'} = "";
       }

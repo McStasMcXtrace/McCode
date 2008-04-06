@@ -25,6 +25,12 @@ use File::Copy;
 use File::stat;
 use Cwd;
 require "mcstas_config.perl";
+
+# Overload with user's personal config
+if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+}
+
 require "mcfrontlib.pl";
 
 # get MCSTAS::mcstas_config{'PLOTTER'}
