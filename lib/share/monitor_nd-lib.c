@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.38 $
+* Version: $Revision: 1.39 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.38 2008-04-01 09:15:04 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.39 2008-04-06 14:02:41 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.38  2008/04/01 09:15:04  farhi
+* Monitor_nD now accepts up to 3 user variables, e.g. for coordinates
+* to be stored into "list".
+*
 * Revision 1.37  2007/04/02 12:13:13  farhi
 * Fixed length of username1|2 to avoid buffer overflow.
 *
@@ -858,6 +862,9 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         /* first while loops (mc_mn_While_Buffer) */
         /* auto limits case : scan Buffer within limits and store in Mon2D */
         mc_mn_pp = mc_mn_Vars->Mon2D_Buffer[mc_mn_While_Buffer*(mc_mn_Vars->Coord_Number+1)];
+	/* For some reason the Intel c compiler version 10.1 gives 0 counts with Monitor_nD!
+	   An ugly patch seems to be the following printf */
+	printf("");
         mc_mn_Coord[0] = mc_mn_pp;
 
         for (mc_mn_i = 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
