@@ -116,7 +116,6 @@ sub simulation_dialog {
     $si{'NScan'} = 0 unless $si{'NScan'};
     $si{'Force'} = 0 unless $si{'Force'};
     $si{'Detach'} = 0 unless $si{'Detach'};
-    $si{'nodes'} = $MCSTAS::mcstas_config{'NODES'};
     $si{'cluster'}= $MCSTAS::mcstas_config{'CLUSTER'};
     # 'Inspect' field for use of mcdisplay's built-in
     # neutron filter, filtering away all neutrons not
@@ -370,7 +369,7 @@ sub simulation_dialog {
         $b->attach($labelnodes, -balloonmsg => "Number of nodes to use\nfor Parallelisation");
         our $mpinodes = $line->Entry(-relief => 'sunken',
                -width=>10,
-               -textvariable => \$si{'nodes'},
+               -textvariable => \$MCSTAS::mcstas_config{'NODES'},
                -justify => 'right')->pack(-side => 'left');
 
     }
