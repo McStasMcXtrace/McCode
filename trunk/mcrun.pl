@@ -260,7 +260,8 @@ sub parse_args {
     if ($multi >= 1 && $MCSTAS::mcstas_config{'HOSTFILE'} ne "") {
         require Net::Ping;
         # Check that something is available in the .mcstas-hosts
-        print STDERR "Pinging $MCSTAS::mcstas_config{'HOSTFILE'} 1 per sec. since you requested --multi...\n";
+        print STDERR "Pinging $MCSTAS::mcstas_config{'HOSTFILE'} 1 per sec. since you requested --multi...\n"
+	  unless (!$MCSTAS::mcstas_config{'GRID_PING'});
         # Read the host file...
         my $pid = open(HOSTFILE,$MCSTAS::mcstas_config{'HOSTFILE'});
         my $host;
@@ -269,6 +270,7 @@ sub parse_args {
             # Remove spaces if any...
             $host =~ s! !!g;
             if ($host ne '' && $host !~ /^\s*#/) {  # not empty or comment line
+	      if ($MCSTAS::mcstas_config{'GRID_PING'}) {
                 my $p = Net::Ping->new();
                 my $response = 0;
                 $response= $p->ping($host, 1);
@@ -277,6 +279,9 @@ sub parse_args {
                 } else {
                     print STDERR "mcrun: Not spawning to host $host: not responding\n";
                 }
+	      } else {
+		push @hostlist, $host;
+	      }
             }
         }
         close(HOSTFILE);

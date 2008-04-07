@@ -41,6 +41,7 @@
 # THREADS  - flag for Threading support [yes|no]
 # PREC     - optimization precision (stop criterion)
 # SSH      - SSH client
+# GRID_PING - Ping hosts before gridding or not (1/0)
 # CLUSTER - Choice of default clustering method
 #          0 - No clustering
 #          1 - Threads (multi-core)
@@ -57,6 +58,8 @@
 #
 
 use Config;
+
+# HEADER END
 
 %MCSTAS::mcstas_config = (
      CFLAGS => '@CFLAGS@',
@@ -97,8 +100,11 @@ use Config;
      CLUSTER => 0,
      NODES => 2,
      MCGUI_CFLAGS => 0,
-     MCGUI_PGMULTI => 0
+     MCGUI_PGMULTI => 0,
+     GRID_PING => 0
      );
+
+# FOOTER START
 
 # **** installed site perl modules availability
 
