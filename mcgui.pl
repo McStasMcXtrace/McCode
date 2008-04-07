@@ -120,7 +120,6 @@ if ($Config{'osname'} eq 'darwin') {
 my $external_editor = $MCSTAS::mcstas_config{'EXTERNAL_EDITOR'};
 our $quote=1; # default editor behaviour is to surround strings with quotes
 $MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'};
-$MCSTAS::mcstas_config{'CFLAGS'} = '';
 
 my $compinfo;                        # Cache of parsed component definitions
 my @compdefs;                        # List of available component definitions
