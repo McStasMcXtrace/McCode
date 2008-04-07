@@ -1131,6 +1131,9 @@ sub menu_run_simulation {
           push @command, "--threads=$MCSTAS::mcstas_config{'NODES'}";
         } elsif ($newsi->{'cluster'} == 3) {
           push @command, "--multi=$MCSTAS::mcstas_config{'NODES'}";
+	  if ($MCSTAS::mcstas_config{'GRID_FORCECOMPILE'}) {
+	    push @command, "-c";
+	  }
         }
         if ($newsi->{'Forcecompile'} == 1) {
           if ($newsi->{'cluster'} == 3) {
