@@ -552,6 +552,88 @@ sub menu_saveas {
     return 1;
 }
 
+sub menu_save_config {
+  my ($w) = @_;
+  
+  my $initdir;
+  
+  if (-d $ENV{"HOME"}) {
+    if (!(-d $ENV{"HOME"}."/.mcstas")) {
+      mkdir $ENV{"HOME"}."./mcstas";
+    }
+    $initdir = $ENV{"HOME"}."/.mcstas/";
+  } else {
+    $initdir = $MCSTAS::perl_dir
+  }
+  my $file = $w->getSaveFile(-defaultextension => ".perl",
+                                -title => "Select instrument file name",
+                                -initialdir => $initdir,
+                                -initialfile => "mcstas_config.perl");
+  if ($file) { save_config($w,$file); }
+}
+
+sub save_config {
+  my ($w, $file) = @_;
+
+  # Start by collecting header + footer from perl_dir configfile
+  # for safe possible writing of this file...
+  
+  my ($HEADER, $FOOTER);
+  my $found_head = 0; my $found_foot = 0;
+
+  my $fh = new FileHandle;
+  my $fid = open($fh, "<", "$MCSTAS::perl_dir/mcstas_config.perl");
+  while (<$fh>) {
+    if (!$found_head) {
+      $HEADER = $HEADER.$_;
+    }
+    if (/^# HEADER/) { $found_head = 1; };
+    if (/^# FOOTER/) { $found_foot = 1; };
+    if ($found_foot) {
+      $FOOTER = $FOOTER.$_;
+    }
+  }
+
+  close($fh);
+  
+  my $fid = open($fh, ">", $file);
+  
+  if(!$fid) {
+    $w->messageBox(-message => "Error saving $file (permissions?)",
+		   -title => "Error saving configuration",
+                       -type => 'OK',
+		   -icon => 'error');
+    putmsg($w, "Problems saving configuration\n  $file\n", 'msg');
+    return;
+  } else {
+    print $fh $HEADER;
+    
+    my @keys = keys %MCSTAS::mcstas_config;
+    my @values = values %MCSTAS::mcstas_config;
+    
+    my ($j, $value, $key);
+    
+    print $fh "\n\%MCSTAS::mcstas_config = (\n";
+    for ($j=0; $j<@keys; $j++) {
+    # CFLAGS/CFLAGS_SAVED must be handled as special case
+      if (!($keys[$j] eq "CFLAGS")) {
+	if ($keys[$j] eq  "CFLAGS_SAVED") { $keys[$j] = "CFLAGS" };
+	print $fh "\t$keys[$j] => ";
+	if ($values[$j]+0 ne $values[$j]) {$values[$j] = "'$values[$j]'";}
+	print $fh "$values[$j]";
+	if ($j<@keys-1) {
+	  print $fh ",\n";
+	}
+      }
+    }
+    print $fh "\n);\n\n";  
+    print $fh $FOOTER;
+    close($fh);
+    putmsg($w, "Configuration file\n  $file\nsaved successfully\n", 'msg');
+    return;
+  }
+}
+
 sub menu_new {
     my ($w) = @_;
     return 0 unless(is_erase_ok($w));
@@ -1044,11 +1126,11 @@ sub menu_run_simulation {
         }
         # clustering methods
         if ($newsi->{'cluster'} == 2) {
-          push @command, "--mpi=$newsi->{'nodes'}";
+          push @command, "--mpi=$MCSTAS::mcstas_config{'NODES'}";
         } elsif ($newsi->{'cluster'} == 1) {
-          push @command, "--threads=$newsi->{'nodes'}";
+          push @command, "--threads=$MCSTAS::mcstas_config{'NODES'}";
         } elsif ($newsi->{'cluster'} == 3) {
-          push @command, "--multi=$newsi->{'nodes'}";
+          push @command, "--multi=$MCSTAS::mcstas_config{'NODES'}";
         }
         if ($newsi->{'Forcecompile'} == 1) {
           if ($newsi->{'cluster'} == 3) {
@@ -1530,6 +1612,10 @@ sub setup_menu {
     $filemenu->command(-label => 'Clear output',
                        -underline => 1,
                        -command => sub { $cmdwin->delete("1.0", "end") });
+    $filemenu->separator;
+    $filemenu->command(-label => 'Save configuration',
+                       -underline => 2,
+                       -command => sub {menu_save_config($w)});
     $filemenu->separator;
     $filemenu->command(-label => 'Quit',
                        -underline => 0,
