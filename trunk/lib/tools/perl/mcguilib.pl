@@ -603,7 +603,11 @@ sub preferences_dialog {
       -textvariable => \$choicecluster_val,
       -options      => $choices
     )->pack(-fill => 'x');
-
+    
+    $gridCflag = $lf->Checkbutton(-text => "Force compilation when gridding",
+				     -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'GRID_FORCECOMPILE'})->pack(-fill => 'x');
+    $b->attach($gridCflag, -balloonmsg => "Required with heterogenous grids");
+    
     $editor = $MCSTAS::mcstas_config{'EDITOR'};
     my $editorchoice_val;
     if ($editor == 0) { $editorchoice_val="Simple built-in editor (McStas CVS-080208)"; }
