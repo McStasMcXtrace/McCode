@@ -1064,7 +1064,7 @@ sub menu_run_simulation {
         push @command, "--ncount=$newsi->{'Ncount'}";
         push @command, "--trace" if ($newsi->{'Mode'} eq 1);
         push @command, "--seed=$newsi->{'Seed'}" if $newsi->{'Seed'} ne "" && $newsi->{'Seed'} ne 0;
-        push @command, "--dir=$OutDir" if $newsi->{'Dir'};
+        push @command, "--dir=$OutDir" if ($newsi->{'Dir'} && !$newsi->{'Mode'}==1);
         if ($newsi->{'Force'} eq 1) {
           if (-e $OutDir) {
             rmtree($OutDir,0,1);
