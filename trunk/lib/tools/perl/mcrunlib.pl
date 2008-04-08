@@ -27,7 +27,7 @@ use Cwd;
 require "mcstas_config.perl";
 
 # Overload with user's personal config
-if (-e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
   require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
 }
 
@@ -236,9 +236,9 @@ sub get_out_file_next {
        ($force || !defined($c_age) || $c_age > $sim_age)) {
         &$printer("Translating instrument definition '$sim_def'" .
                   " into C ...");
-      # On Win32, quote the filenames...
+      # On Win32, quote the filenames if containing spaces...
       my $dir=$v->{'dir'};
-      if ($Config{'osname'} eq 'MSWin32') {
+      if (($Config{'osname'} eq 'MSWin32') && (($c_name =~ /\ /) || ($dir =~ /\ /))) {
         $c_name="\"$c_name\"";
         $sim_def="\"$sim_def\"";
         if (defined($dir)) { $dir="\"$dir\""; }
@@ -283,8 +283,8 @@ sub get_out_file_next {
     if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /NeXus|HDF/i && $MCSTAS::mcstas_config{'NEXUS'} ne "") {
       $libs .= $MCSTAS::mcstas_config{'NEXUS'};
     }
-    # Needs quoting on MSWin32:
-    if ($Config{'osname'} eq 'MSWin32') {
+    # Needs quoting on MSWin32 if containing spaces...
+    if (($Config{'osname'} eq 'MSWin32') && ($out_name =~ /\ /)) {
       $out_name="\"$out_name\"";
       $c_name="\"$c_name\"";
     }
