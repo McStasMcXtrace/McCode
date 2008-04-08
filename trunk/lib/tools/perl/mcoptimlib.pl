@@ -112,7 +112,17 @@ sub minimize_function {
   
   # Handle writing of mcplot-compatible optim output file
   $numpoints = $optim_iterations;
-  $OPT = new FileHandle;
+  if (!$optfile) {
+    if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
+      require File::Temp;
+      ($OPT, $optfile) = File::Temp::tempfile("mcoptim"."_XXXX", SUFFIX => '.dat'); # throw file handle
+    } else {
+      $optfile = int(rand(9999));
+      $optfile = "mcoptim"."_$optfile.dat";
+    }
+  } else {
+    $OPT = new FileHandle;
+  }
   open($OPT, ">$optfile");
   autoflush $OPT 1;
   push @opt_out, "$optim_iterations $y 0\n";

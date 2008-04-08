@@ -95,15 +95,6 @@ our $max_iteration=20;
 our $data_dir_saved = undef;
 my  $optim_prec=1e-3;
 our $optfile;                   # Default filename for storing of optim history
-if ($MCSTAS::mcstas_config{'TEMP'} ne "no") {
-  require File::Temp;
-  my $fh;
-  ($fh, $optfile) = File::Temp::tempfile("mcoptim"."_XXXX", UNLINK => 1, SUFFIX => '.dat'); # throw file handle
-  unlink $fh;
-} else {
-  $optfile = int(rand(9999));
-  $optfile = "mcoptim"."_$optfile.dat";
-}
 
 # Name of compiled simulation executable.
 my $out_file;
