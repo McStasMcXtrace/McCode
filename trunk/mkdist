@@ -239,6 +239,32 @@ echo mcrun --test \(validation test of selected instruments\)
 echo
 echo Follow instructions in ../adm to publish on the web.
 echo
+
+# In case of mkfs.hfsplus available in /sbin we'll create the
+# DMG file for Mac OS X
+if [ -e /sbin/mkfs.hfsplus ]
+then
+    # Note: DMG file needs enough space to hold the support tools plus
+    # our own code. April 2008 this is about 120 megs...
+    dd if=/dev/zero of=./McStas-$1.dmg bs=1M count=120
+    /sbin/mkfs.hfsplus -v 'McStas' ./McStas-$1.dmg
+    # Likely needs root level access:
+    sudo mkdir /mnt/dmg
+    sudo mount -t hfsplus -o loop ./McStas-$1.dmg /mnt/dmg
+    # Copy the ./adm/OSX/DMG stuff to the mountpoint
+    sudo cp -rp ./adm/OSX/DMG/Applications /mnt/dmg
+    sudo cp ./adm/OSX/DMG/README.TXT /mnt/dmg
+    # Clear out CVS stuff
+    sudo find /mnt/dmg -type d -name CVS -exec rm -rf \{\} \;
+    # Copy McStas there
+    sudo cp ./mcstas-$1-src.tar.gz /mnt/dmg/Applications
+    # Unmount
+    sudo umount /mnt/dmg
+    sudo rm -rf /mnt/dmg
+    ls -l ./McStas-$1.dmg
+fi
+
+
 # In case of a debian build host, we also build an .deb
 # (.rpm was tried using alien - did not work too well)
 if [ -e /etc/debian_version ]
