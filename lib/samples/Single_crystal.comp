@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.46 $
+* Version: $Revision: 1.47 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -91,15 +91,16 @@
 *               gaussian RMS [arc minutes]
 * mosaic_n:  Out-of-plane (Rotation around X) mosaic (anisotropic),
 *               gaussian RMS [arc minutes]
-* ax:        [AA]
-* ay:        Coordinates of first unit cell vector [AA]
-* az:        [AA]
-* bx:        [AA]
-* by:        Coordinates of second unit cell vector [AA]
-* bz:        [AA]
-* cx:        [AA]
-* cy:        Coordinates of third unit cell vector [AA]
-* cz:        [AA]
+* recip_cell: Choice of direct/reciprocal (0/1) unit cell definition [1]
+* ax:        
+* ay:        Coordinates of first (direct/recip) unit cell vector [AA or AA^-1]
+* az:        
+* bx:        
+* by:        Coordinates of second (direct/recip) unit cell vector [AA or AA^-1]
+* bz:        
+* cx:        
+* cy:        Coordinates of third (direct/recip) unit cell vector [AA or AA^-1]
+* cz:        
 * reflections: File name containing structure factors of reflections. Use
 *              empty ("") or NULL for incoherent scattering only [string]
 * order:      limit multiple scattering up to given order
@@ -184,6 +185,7 @@ DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS(string reflections)
 SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d=1e-4,
             mosaic = -1, mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
+	    recip_cell=0,
             ax = 0, ay = 0, az = 0,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
@@ -235,6 +237,7 @@ SHARE
       double at_nb;               /* nb of atoms in a cell */
       double V0;                  /* Unit cell volume (AA**3) */
       int    column_order[5];     /* column signification [h,k,l,F,F2] */
+      int recip;                  /* Flag to indicate if recip or direct cell axes given */
     };
 
   struct tau_data
@@ -360,6 +363,11 @@ SHARE
               "Single_crystal: Error:Wrong c lattice vector definition\n");
       return(0);
     }
+    if (info->m_aa && info->m_bb && info->m_cc && info->recip) {
+      fprintf(stderr,
+              "Single_crystal: Error: Selecting reciprocal cell and angles is unmeaningful\n");
+      return(0);
+    }
 
     /* when lengths a,b,c + angles are given (instead of vectors a,b,c) */
     if (info->m_aa && info->m_bb && info->m_cc)
@@ -383,32 +391,67 @@ SHARE
 
       printf("Single_crystal: %s structure a=%g b=%g c=%g aa=%g bb=%g cc=%g ",
         (flag ? "INC" : SC_file), as, bs, cs, info->m_aa, info->m_bb, info->m_cc);
-    } else
-      printf("Single_crystal: %s structure a=[%g,%g,%g] b=[%g,%g,%g] c=[%g,%g,%g] ",
-        (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
-        info->m_bx ,info->m_by ,info->m_bz,
-        info->m_cx ,info->m_cy ,info->m_cz);
-
-    /* Compute reciprocal lattice vectors. */
-    vec_prod(tmp_x, tmp_y, tmp_z,
-             info->m_bx, info->m_by, info->m_bz,
-             info->m_cx, info->m_cy, info->m_cz);
-    info->V0 = fabs(
-              scalar_prod(info->m_ax, info->m_ay, info->m_az, tmp_x, tmp_y, tmp_z))
-              ;
-    printf("V0=%g\n", info->V0);
-
-    info->asx = 2*PI/info->V0*tmp_x;
-    info->asy = 2*PI/info->V0*tmp_y;
-    info->asz = 2*PI/info->V0*tmp_z;
-    vec_prod(tmp_x, tmp_y, tmp_z, info->m_cx, info->m_cy, info->m_cz, info->m_ax, info->m_ay, info->m_az);
-    info->bsx = 2*PI/info->V0*tmp_x;
-    info->bsy = 2*PI/info->V0*tmp_y;
-    info->bsz = 2*PI/info->V0*tmp_z;
-    vec_prod(tmp_x, tmp_y, tmp_z, info->m_ax, info->m_ay, info->m_az, info->m_bx, info->m_by, info->m_bz);
-    info->csx = 2*PI/info->V0*tmp_x;
-    info->csy = 2*PI/info->V0*tmp_y;
-    info->csz = 2*PI/info->V0*tmp_z;
+    } else {
+      if (!info->recip) {
+	printf("Single_crystal: %s structure a=[%g,%g,%g] b=[%g,%g,%g] c=[%g,%g,%g] ",
+	       (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
+	       info->m_bx ,info->m_by ,info->m_bz,
+	       info->m_cx ,info->m_cy ,info->m_cz);
+      } else {
+	printf("Single_crystal: %s structure a*=[%g,%g,%g] b*=[%g,%g,%g] c*=[%g,%g,%g] ",
+	       (flag ? "INC" : SC_file), info->m_ax ,info->m_ay ,info->m_az,
+	       info->m_bx ,info->m_by ,info->m_bz,
+	       info->m_cx ,info->m_cy ,info->m_cz);
+      }
+    }
+    /* Compute reciprocal or direct lattice vectors. */
+    if (!info->recip) {
+      vec_prod(tmp_x, tmp_y, tmp_z,
+	       info->m_bx, info->m_by, info->m_bz,
+	       info->m_cx, info->m_cy, info->m_cz);
+      info->V0 = fabs(scalar_prod(info->m_ax, info->m_ay, info->m_az, tmp_x, tmp_y, tmp_z));
+      printf("V0=%g\n", info->V0);
+      
+      info->asx = 2*PI/info->V0*tmp_x;
+      info->asy = 2*PI/info->V0*tmp_y;
+      info->asz = 2*PI/info->V0*tmp_z;
+      vec_prod(tmp_x, tmp_y, tmp_z, info->m_cx, info->m_cy, info->m_cz, info->m_ax, info->m_ay, info->m_az);
+      info->bsx = 2*PI/info->V0*tmp_x;
+      info->bsy = 2*PI/info->V0*tmp_y;
+      info->bsz = 2*PI/info->V0*tmp_z;
+      vec_prod(tmp_x, tmp_y, tmp_z, info->m_ax, info->m_ay, info->m_az, info->m_bx, info->m_by, info->m_bz);
+      info->csx = 2*PI/info->V0*tmp_x;
+      info->csy = 2*PI/info->V0*tmp_y;
+      info->csz = 2*PI/info->V0*tmp_z;
+    } else {
+      info->asx = info->m_ax;
+      info->asy = info->m_ay;
+      info->asz = info->m_az;
+      info->bsx = info->m_bx;
+      info->bsy = info->m_by;
+      info->bsz = info->m_bz;
+      info->csx = info->m_cx;
+      info->csy = info->m_cy;
+      info->csz = info->m_cz;
+      
+      vec_prod(tmp_x, tmp_y, tmp_z,
+	       info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI),
+	       info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI));
+      info->V0 = 1/fabs(scalar_prod(info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI), tmp_x, tmp_y, tmp_z));
+      printf("V0=%g\n", info->V0);
+      
+      info->asx = 2*PI/info->V0*tmp_x;
+      info->asy = 2*PI/info->V0*tmp_y;
+      info->asz = 2*PI/info->V0*tmp_z;
+      vec_prod(tmp_x, tmp_y, tmp_z, info->m_cx, info->m_cy, info->m_cz, info->m_ax, info->m_ay, info->m_az);
+      info->bsx = 2*PI/info->V0*tmp_x;
+      info->bsy = 2*PI/info->V0*tmp_y;
+      info->bsz = 2*PI/info->V0*tmp_z;
+      vec_prod(tmp_x, tmp_y, tmp_z, info->m_ax, info->m_ay, info->m_az, info->m_bx, info->m_by, info->m_bz);
+      info->csx = 2*PI/info->V0*tmp_x;
+      info->csy = 2*PI/info->V0*tmp_y;
+      info->csz = 2*PI/info->V0*tmp_z;
+    }
 
     if (flag) return(-1);
 
@@ -606,6 +649,7 @@ INITIALIZE
   hkl_info.m_cz = cz;
   hkl_info.sigma_a = absorption;
   hkl_info.sigma_i = incoherent;
+  hkl_info.recip = recip_cell;
 
   /* default format h,k,l,F,F2  */
   hkl_info.column_order[0]=1;
