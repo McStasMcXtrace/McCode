@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.189 $
+* Version: $Revision: 1.190 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.189 2008-04-02 13:20:20 pkwi Exp $
+* $Id: mcstas-r.c,v 1.190 2008-04-21 15:50:19 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.189  2008/04/02 13:20:20  pkwi
+* Minor correction: && -> || , otherwise we still stop at the cmdline/default ncount...
+*
 * Revision 1.188  2008/04/02 12:32:38  farhi
 * Add explicit condition for node raytrace loop end with ncount value,
 * instead of using local copy of ncount. Makes mcset_ncount work again...
@@ -4460,14 +4463,25 @@ randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_an
 
 }
 
-/* randvec_target_rect: Choose random direction towards target at (xi,yi,zi)
+/* randvec_target_rect_real: Choose random direction towards target at (xi,yi,zi)
  * with given dimension height x width (in meters !).
- * If height or width is zero, choose random direction in full 4PI, no target. */
+ *
+ * Local emission coordinate is taken into account and corrected for 'order' times.
+ * (See remarks posted to neutron-mc by George Apostolopoulus <gapost@ipta.demokritos.gr>)
+ *
+ * If height or width is zero, choose random direction in full 4PI, no target. 
+ * 
+ * Traditionally, this routine had the name randvec_target_rect - this is now a
+ * a define (see mcstas-r.h) pointing here. If you use the old rouine, you are NOT
+ * taking the local emmission coordinate into account. 
+*/
+
 void
-randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
-               double xi, double yi, double zi, double width, double height, Rotation A)
+randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle,
+               double xi, double yi, double zi, double width, double height, Rotation A, double lx, double ly, double lz, int order)
 {
   double dx, dy, dist, dist_p, nx, ny, nz, mx, my, mz, n_norm, m_norm;
+  double cos_theta;
   Coords tmp;
   Rotation Ainverse;
 
@@ -4482,11 +4496,11 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
   else
   {
 
-    /* Now choose point uniformly on quadrant within width x height */
+    /* Now choose point uniformly on rectangle within width x height */
     dx = width*randpm1()/2.0;
     dy = height*randpm1()/2.0;
 
-    /* Determine distance to target */
+    /* Determine distance to target plane*/
     dist = sqrt(xi*xi + yi*yi + zi*zi);
     /* Go to global coordinate system */
 
@@ -4521,13 +4535,23 @@ randvec_target_rect(double *xo, double *yo, double *zo, double *solid_angle,
     tmp = rot_apply(A, tmp);
     coords_get(tmp, &*xo, &*yo, &*zo);
 
-    /* Determine distance to random point */
-    dist_p = sqrt(dx*dx + dy*dy + dist*dist);
-
-    /* Adjust the 'solid angle' (here more thought of as a normalization constant) */
-    /* Works since we are in the relative coordinate system, origin is where we are at */
-    *solid_angle = (width*height*dist)/(dist_p*dist_p*dist_p);
-
+    if (solid_angle) {
+      /* Calculate vector from local point to remote random point */
+      lx = *xo - lx;
+      ly = *yo - ly;
+      lz = *zo - lz;
+      dist_p = sqrt(lx*lx + ly*ly + lz*lz);
+      
+      /* Adjust the 'solid angle' */
+      /* 1/r^2 to the chosen point times cos(\theta) between the normal */
+      /* vector of the target rectangle and direction vector of the chosen point. */
+      cos_theta = (xi * lx + yi * ly + zi * lz) / (dist * dist_p);
+      *solid_angle = width * height / (dist_p * dist_p); 
+      
+      for (int counter = 0; counter < order; counter++) {
+	*solid_angle = *solid_angle * cos_theta;
+      }
+    }
   }
 }
 

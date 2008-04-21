@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.97 $
+* Version: $Revision: 1.98 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,13 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.97 2008-02-10 20:55:53 farhi Exp $
+* $Id: mcstas-r.h,v 1.98 2008-04-21 15:50:19 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.97  2008/02/10 20:55:53  farhi
+*       OpenMP number of nodes now set properly from either --threads=NB or
+*       --threads which sets the computer core nb.
+*
 *       Revision 1.96  2008/02/10 15:12:56  farhi
 *       mcgui: save log when File/Quit
 *       mcrun/mcgui: OpenMP now uses the specified number of nodes
@@ -248,7 +252,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.97 $"
+#define MCSTAS_R_H "$Revision: 1.98 $"
 
 #include <math.h>
 #include <string.h>
@@ -408,6 +412,8 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 #define DETECTOR_CUSTOM_HEADER(t)  if (t && strlen(t)) { \
      mcDetectorCustomHeader=malloc(strlen(t)); \
      if (mcDetectorCustomHeader) strcpy(mcDetectorCustomHeader, t); }
+
+#define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9)  randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)
 
 /* MPI stuff ================================================================ */
 
@@ -892,9 +898,10 @@ void randvec_target_circle(double *xo, double *yo, double *zo,
 void randvec_target_rect_angular(double *xo, double *yo, double *zo,
     double *solid_angle,
                double xi, double yi, double zi, double height, double width, Rotation A);
-void randvec_target_rect(double *xo, double *yo, double *zo,
+void randvec_target_rect_real(double *xo, double *yo, double *zo,
     double *solid_angle,
-               double xi, double yi, double zi, double height, double width, Rotation A);
+	       double xi, double yi, double zi, double height, double width, Rotation A,
+			 double lx, double ly, double lz, int order);
 void extend_list(int count, void **list, int *size, size_t elemsize);
 
 int mcstas_main(int argc, char *argv[]);
