@@ -11,16 +11,34 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.190 $
+* Version: $Revision: 1.191 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.190 2008-04-21 15:50:19 pkwi Exp $
+* $Id: mcstas-r.c,v 1.191 2008-04-21 16:08:05 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.190  2008/04/21 15:50:19  pkwi
+* Name change randvec_target_rect -> randvec_target_rect_real .
+*
+* The renamed routine takes local emmission coordinate into account, correcting for the
+* effects mentioned by George Apostolopoulus <gapost@ipta.demokritos.gr> to the
+* neutron-mc list (parameter list extended by four parms).
+*
+* For backward-compatibility, a define has been added that maps randvec_target_rect
+* to the new routine, defaulting to the "old" behaviour.
+*
+* To make any use of these modifications, we need to correct all (or all relevant) comps
+* that have calls to randvec_target_rect.
+*
+* Will supply a small doc with plots showing that we now correct for the effect pointed
+* out by George.
+*
+* Similar change should in principle happen to the _sphere focusing routine.
+*
 * Revision 1.189  2008/04/02 13:20:20  pkwi
 * Minor correction: && -> || , otherwise we still stop at the cmdline/default ncount...
 *
@@ -4547,8 +4565,8 @@ randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle
       /* vector of the target rectangle and direction vector of the chosen point. */
       cos_theta = (xi * lx + yi * ly + zi * lz) / (dist * dist_p);
       *solid_angle = width * height / (dist_p * dist_p); 
-      
-      for (int counter = 0; counter < order; counter++) {
+      int counter;
+      for (counter = 0; counter < order; counter++) {
 	*solid_angle = *solid_angle * cos_theta;
       }
     }
