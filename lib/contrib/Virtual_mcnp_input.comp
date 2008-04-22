@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.14 $
+* Version:  $Revision: 1.15 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -283,7 +283,7 @@ INITIALIZE
   /* (If empty filename given, present warning in case of verbose, perform nothing) */
 
   if (!strcmp(file,"")) {
-    if (verbose) printf("MCNP_input: %s: Empty filename given, doing nothing!\n", NAME_CURRENT_COMP, file);
+    if (verbose) printf("MCNP_input: %s: Empty filename given, doing nothing!\n", NAME_CURRENT_COMP);
   } else {
     if (file) {
       stat(file,&stfile);
