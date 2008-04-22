@@ -12,7 +12,7 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas 1.1
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * %INSTRUMENT_SITE: Tutorial
 *
 * A test instrument using a vanadium cylinder
@@ -57,15 +57,15 @@ TRACE
 COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
 
 /* Next, we need some neutrons. Let's place a neutron  */
-/* source. Refer to documentation of Source_flat to    */
+/* source. Refer to documentation of Source_simple to  */
 /* understand the different input parameters.          */
 /* The source component is placed RELATIVE to the arm  */
 /* component, meaning that modifying the position or   */
 /* orientation of the arm will also affect the source  */
 /* component (and other components after that one...)  */
-COMPONENT source = Source_flat(radius = 0.015, dist = 1,
-  xw=0.024, yh=0.015, E0=5, dE=0.2)
- AT (0,0,0) RELATIVE arm
+COMPONENT source = Source_simple(radius = 0.015, dist = 1,
+  xw=0.024, yh=0.015, E0=5, dE=0.2, compat = 1)
+  AT (0,0,0) RELATIVE arm
 
 /* Here we have a soller - placed to improve beam      */
 /* divergence.                                         */

@@ -12,7 +12,7 @@
 * Date: August 1998.
 * Origin: ISIS/Risoe
 * Release: McStas 1.1
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ISIS
 *
 * Simple simulation of PRISMA2 with RITA-style analyser backend.
@@ -290,7 +290,7 @@ COMPONENT a2 = Arm() AT (0,0,0) RELATIVE sample ROTATED (0,TT,0) RELATIVE sample
 COMPONENT mon3 = Monitor(xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
      AT(0,0,0.39) RELATIVE a2
 
-COMPONENT coll2 = Soller(xmin = -0.015, xmax = 0.015,
+COMPONENT coll2 = Collimator_linear(xmin = -0.015, xmax = 0.015,
                          ymin = -0.025, ymax = 0.025,
                          len = 0.12, divergence = 120)
      AT(0,0,0.40) RELATIVE a2
