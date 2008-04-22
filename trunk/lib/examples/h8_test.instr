@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -99,12 +99,13 @@ COMPONENT Origin=Progress_bar()
 AT (0,0,0) ABSOLUTE
 
 /* a flat constant source */
-COMPONENT Source = Source_flat(
+COMPONENT Source = Source_simple(
   radius  = 0.10,
   dist = 2.7473,
   xw = 0.031, yh = 0.054,
   E0 = Ei,
-  dE = 0.5)
+  dE = 0.5,
+  compat = 1)
 AT (0,0,0) ABSOLUTE
 
 COMPONENT D0_Source = PSD_monitor(
@@ -157,7 +158,7 @@ AT (0, 0, 0.0001) RELATIVE As4
 COMPONENT Mono_Craddle = Arm()
   AT (0, 0, 5.2746) RELATIVE Source ROTATED (0, A1, 0) RELATIVE Source
 
-COMPONENT PG1Xtal = Monochromator(
+COMPONENT PG1Xtal = Monochromator_flat(
   zmin = -0.05, zmax = 0.05,
   ymin = -0.04, ymax = 0.04,
   mosaich = 40, mosaicv = 40,
@@ -228,7 +229,7 @@ AT (0, 0, 0.3047) RELATIVE SC3
 COMPONENT Ana_Craddle = Arm()
   AT (0, 0, 0.1397) RELATIVE D8_SC3_Out ROTATED (0, A5, 0) RELATIVE Sample_Out
 
-COMPONENT PG2Xtal = Monochromator(
+COMPONENT PG2Xtal = Monochromator_flat(
   zmin = -0.05, zmax = 0.05,
   ymin = -0.04, ymax = 0.04,
   mosaich = 40, mosaicv = 40,
