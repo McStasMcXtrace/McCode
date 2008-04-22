@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.30 $
+* Version:  $Revision: 1.31 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -261,7 +261,7 @@ INITIALIZE
   /* (If empty filename given, present warning in case of verbose, perform nothing) */
 
   if (!strcmp(file,"")) {
-    if (verbose) printf("Tripoli4_input: %s: Empty filename given, doing nothing!\n", NAME_CURRENT_COMP, file);
+    if (verbose) printf("Tripoli4_input: %s: Empty filename given, doing nothing!\n", NAME_CURRENT_COMP);
   } else {
     printf("non-empty filename given\n");
     if (file) {
@@ -518,7 +518,7 @@ TRACE
       } else nbatch++;
     }
     else {
-      fprintf(stderr, "Tripoli4_input: %s: Expect 'END_OF_BATCH', found '%s' (after batch %d).", word, begin_batch);
+      fprintf(stderr, "Tripoli4_input: %s: Expect 'END_OF_BATCH', found '%s' (after batch %d).", NAME_CURRENT_COMP, word, begin_batch);
       exit_flag = 1;
     }
   }
@@ -528,7 +528,7 @@ TRACE
       begin_batch=strtol(word,NULL,0);
     }
     else {
-      fprintf(stderr, "Tripoli4_input: %s: Expect 'BEGIN_OF_BATCH', found '%s' (after batch %d).", word, begin_batch);
+      fprintf(stderr, "Tripoli4_input: %s: Expect 'BEGIN_OF_BATCH', found '%s' (after batch %d).", NAME_CURRENT_COMP, word, begin_batch);
       exit_flag = 1;
     }
   }
