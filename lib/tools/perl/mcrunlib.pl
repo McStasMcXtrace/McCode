@@ -349,7 +349,7 @@ sub get_out_file {
 
 # McStas selftest procedure: copy LIB/examples and execute
 sub do_test {
-  my ($printer,$force, $plotter, $exec_test, $mpi) = @_;
+  my ($printer,$force, $plotter, $exec_test, $mpi, $ncount) = @_;
   my $j;
   my $pwd=getcwd;
 
@@ -387,8 +387,8 @@ sub do_test {
   # go into the selftest directory
   chdir("selftest") or return "mcrun: Can get into selftest: $!\n";
   # Initialize test
-  my $n_single=1e5;
-  my $n_scan=1e4;
+  my $n_single=int($ncount/10);
+  my $n_scan=int($ncount/100);
   my $now = localtime;
   my $start_sec = time();
   &$printer("# Counts: single=$n_single, scans=$n_scan");
