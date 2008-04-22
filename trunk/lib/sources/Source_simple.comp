@@ -12,7 +12,7 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -45,13 +45,14 @@
 * dLambda:[AA]  Wavelength spread of neutrons.
 * flux:   [1/(s*cm**2*st)] Energy integrated flux
 * gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
+* compat: [1]   Apply weighting/sampling as now obsolete Source_flat component
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Source_simple
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=0, height=0, width=0, dist, xw, yh, E0=0, dE=0, Lambda0=0, dLambda=0, flux=1, gauss=0)
+  SETTING PARAMETERS (radius=0, height=0, width=0, dist, xw, yh, E0=0, dE=0, Lambda0=0, dLambda=0, flux=1, gauss=0, compat=0)
 OUTPUT PARAMETERS (pmul)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -71,31 +72,31 @@ INITIALIZE
     srcArea = width * height;
   }
   
-  
-  pmul=flux*1e4*srcArea/mcget_ncount();
+  if (!compat) {
+    pmul=flux*1e4*srcArea/mcget_ncount();
+  } else {
+    gauss = 0;
+    pmul=1.0/(mcget_ncount()*4*PI);
+  }
   if (srcArea <= 0) {
-    printf("Source_simple: %s: Source area is <= 0 !\n",
-	   "ERROR - Exiting",
+    printf("Source_simple: %s: Source area is <= 0 !\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
     exit(0);
   }
   if (dist < 0 || xw < 0 || yh < 0) {
-    printf("Source_simple: %s: Target area unmeaningful! (negative dist / xw / yh)\n",
-	   "ERROR - Exiting",
+    printf("Source_simple: %s: Target area unmeaningful! (negative dist / xw / yh)\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
     exit(0);
   }
   
   if ((!Lambda0 && !E0 && !dE && !dLambda)) {
-    printf("Source_simple: %s: You must specify either a wavelength or energy range!\n",
-	   "ERROR - Exiting",
+    printf("Source_simple: %s: You must specify either a wavelength or energy range!\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
     exit(0);
   }
   if ((!Lambda0 && !dLambda && (E0 <= 0 || dE < 0 || E0-dE <= 0))
     || (!E0 && !dE && (Lambda0 <= 0 || dLambda < 0 || Lambda0-dLambda <= 0))) {
-    printf("Source_simple: %s: Unmeaningful definition of wavelength or energy range!\n",
-	   "ERROR - Exiting",
+    printf("Source_simple: %s: Unmeaningful definition of wavelength or energy range!\n ERROR - Exiting\n",
            NAME_CURRENT_COMP);
       exit(0);
   }
@@ -116,8 +117,8 @@ TRACE
    x=r*cos(chi);
    y=r*sin(chi);
  }
- randvec_target_rect(&xf, &yf, &rf, &pdir,
-        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+ randvec_target_rect_real(&xf, &yf, &rf, &pdir,
+			  0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
  dx = xf-x;
  dy = yf-y;

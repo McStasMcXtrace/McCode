@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.38 $
+* Version: $Revision: 1.39 $
 * Origin: ILL/Risoe
 * Release: McStas 1.10
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -486,8 +486,8 @@ TRACE
     v = K2V*(2*PI/lambda);
       
     if (dist>0) {
-      randvec_target_rect(&xf, &yf, &rf, &pdir,
-          0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+      randvec_target_rect_real(&xf, &yf, &rf, &pdir,
+			       0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
       
 
       dx = xf-x;

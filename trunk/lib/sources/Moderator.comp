@@ -10,7 +10,7 @@
 * %I
 * Written by: KN, M.Hagen
 * Date: August 1998
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -70,8 +70,8 @@ TRACE
    x = r*cos(chi);
    y = r*sin(chi);
 
-   randvec_target_rect(&xf, &yf, &rf, &pdir,
-        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+   randvec_target_rect_real(&xf, &yf, &rf, &pdir,
+		       0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
    dx = xf-x;
    dy = yf-y;

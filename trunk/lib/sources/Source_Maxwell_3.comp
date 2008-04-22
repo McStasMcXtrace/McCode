@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: March 2001
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -104,8 +104,8 @@ TRACE
   x = 0.5*w_source*randpm1();
   y = 0.5*h_source*randpm1();         /* Choose initial position */
 
-  randvec_target_rect(&xf, &yf, &r, &w_focus,
-        0, 0, dist, xw, yh, ROT_A_CURRENT_COMP);
+  randvec_target_rect_real(&xf, &yf, &r, &w_focus,
+		      0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
   dx = xf-x;
   dy = yf-y;
