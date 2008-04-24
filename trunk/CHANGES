@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.41 $
+* Version: $Revision: 1.42 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -43,21 +43,26 @@ Changes in McStas v1.12, May 1st, 2008
   - Please take care when combining WHEN, GROUP and EXTEND %{ %} - see the manual.
 
   Runtime
-  - Fix of specific focusing issue reported from Greece (write something more here).
+  - Fix of a limiting case focusing problem reported to neutron-mc by George Apostolopoulos.
+     (See http://mailman.risoe.dk/pipermail/neutron-mc/2007q4/002915.html )
 
   Components
   - When using the Virtual_input type components, --ncount is always set to an integer multiplum 
      (repeat_count) of the number of events in the file. See also related remark about MPI below.
-  - Sylvain Dessert comps / instr (WRITE PROPER NAMES HERE)
+  - New component: MirrorElli.comp, elliptical mirror. Contributed by Sylvain Desert, LLB
+  - New component: MirrorPara.comp, parabolic mirror. Contributed by Sylvain Desert, LLB
   - Single_crystal validation process - report status
   - Most monitors now allow to 'not propagate' the neutron, i.e. not influence the beam. Parameter name
      is 'restore_neutron'.
   - Check if PowderN concentricity was in 1.11!
  
   Example instruments
-  - IN22 in two configurations (CRG instrument @ ILL) by E. Farhi / P. Willendrup
-  - MIGHT have time to include dmc aswell...
-  - Incoherent test
+  - ILL_H25_IN22_sample/_resolution.instr (CRG instrument @ ILL) by E. Farhi / P. Willendrup
+  - Incoherent_Test.instr - instrument to compare incoherent scattering from the different sample comps
+     (V_samle, PowderN, Single_crystal, Isotropic_sqw). More instruments of this type planned (compare
+     guides etc.), P. Willendrup / E. Knudsen / A. Daoud-Aladine
+  - FocalisationMirrors.instr - test instrument for MirrorElli and MirrorPara, Sylvain Desert, LLB
+  - DMC, Powder Diffractometer, PSI, L. Keller / U. Filges / P. Willendrup
   - More here?
   
   Datafiles
@@ -73,7 +78,7 @@ Changes in McStas v1.12, May 1st, 2008
   - When scanning parameters, mcrun now terminates with a relevant error message if one or more scan steps
      failed (intensities explicitly set to 0 in those cases).
   - When running parameter optimisations, a logfile (default name is "mcoptim_XXXX.dat" where XXXX is a
-     pseudo-random string") is created during the optimisation, updated at each optim step.
+     pseudo-random string) is created during the optimisation, updated at each optim step.
   - We now provide syntax-highlighting setup files for vim and gedit editors.
 
   Output formats
