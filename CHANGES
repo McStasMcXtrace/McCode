@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -26,11 +26,93 @@
 * Modified by: PW, EF, March 29th 2006: version 1.9.1
 * Modified by: PW, EF, December 4th 2006: version 1.10
 * Modified by: PW, EF, July 3rd 2007: version 1.11
+* Modified by: PW, EF, May 1st 2008: version 1.12
 *
-* This file is part of McStas  version 1.11, released July 3rd, 2007.
+* This file is part of McStas  version 1.12, released May 1st, 2008.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v1.12, May 1st, 2008
+
+  Metalanguage
+  - New %include "instr" mechanism to include one instrument in another. (Useful for independent
+     build-up of e.g. primary and secondary spectrometer. Or easily see the effect of moving an instrument
+     to a different beamport or facility!) See the manual for details.
+  - When applying the WHEN keyword, an applied EXTEND %{ %} block will only be active if the WHEN
+     returns 'true'.
+  - Please take care when combining WHEN, GROUP and EXTEND %{ %} - see the manual.
+
+  Runtime
+  - Fix of specific focusing issue reported from Greece (write something more here).
+
+  Components
+  - When using the Virtual_input type components, --ncount is always set to an integer multiplum 
+     (repeat_count) of the number of events in the file. See also related remark about MPI below.
+  - Sylvain Dessert comps / instr (WRITE PROPER NAMES HERE)
+  - Single_crystal validation process - report status
+  - Most monitors now allow to 'not propagate' the neutron, i.e. not influence the beam. Parameter name
+     is 'restore_neutron'.
+  - Check if PowderN concentricity was in 1.11!
+ 
+  Example instruments
+  - IN22 in two configurations (CRG instrument @ ILL) by E. Farhi / P. Willendrup
+  - MIGHT have time to include dmc aswell...
+  - Incoherent test
+  - More here?
+  
+  Datafiles
+  - 'Bugfix', some of the provided .laz files did not have proper unit for |F2|.
+  
+  Documentation
+
+  Tools
+  - Support for per-user mcstas_config.perl file, located in $HOME/.mcstas/ . This folder is also the default
+     location of the 'host list' for use with MPI or gridding, simply name the file 'hosts'.
+  - mcgui Save Configuration for saving chosen settings on the 'Configuration options' and 'Run dialogue'.
+  - Possibilty to run MPI or grid simulations by default from mcgui.
+  - When scanning parameters, mcrun now terminates with a relevant error message if one or more scan steps
+     failed (intensities explicitly set to 0 in those cases).
+  - When running parameter optimisations, a logfile (default name is "mcoptim_XXXX.dat" where XXXX is a
+     pseudo-random string") is created during the optimisation, updated at each optim step.
+  - We now provide syntax-highlighting setup files for vim and gedit editors.
+
+  Output formats
+  - Rudimentary support for GNUPLOT when plotting with mcplot. Data file format is standard McStas/PGPLOT.
+ 
+  Platform support
+  - Mac OS X 10.3 Panther (ppc), 10.4 Tiger (pcc/intel), 10.5 Leopard (ppc/intel)
+  - Windows XP,  Windows Vista (Now with a recent perl version; 5.10 plus various fixes). New feature on Windows:
+     Simulations _always_ run in the background, freeing mcgui for other work.
+  - Linux (Reference platforms are Ubuntu/Debian, we have also tested Fedora 8, OpenSuSE 10.3 and CentOS 4 releases)
+  - FreeBSD (FreeBSD release 6.3 and its cousin DesktopBSD 1.6 recently tested)
+  - SUN Solaris 10 (Intel tested, Sparc probably OK)
+  
+  Parallelisation
+  - Improved stability of MPI simulations by addition of an 'MPI barrier' (reduces probability of nodes beeing 'out of sync'.
+  - On Windows, an 'mpicc.bat' script has been added for easier setup of McStas with gcc and MPI (We recommend MPICH).
+  - Mac OS X 10.5 Leopard is shipped with built-in support for MPI (OpenMPI). No need to install extra packages.
+  - Use of 'virtual sources' is now supported on MPI clusters. (If running on N nodes, all neutron events will be processed
+     on each of the N nodes - implicit repetition N times of the source contents.)
+  - OpenMP threading support (IS THIS TRUE OR NOT? NO POSSIBLE SETTING IN e.g. mcgui)
+  - Much improved gridding support (via ssh). Ready for heterogenous systems, e.g. mixed operating systems and hardware
+     types! (Requires -c compile flag for mcrun or equivalent setting in mcgui.) The only requirement is ssh client on the machine 
+     where the grid run is started, plus ssh daemon and c-compiler (e.g. gcc or simply cc) on the remote machines. Files in the 
+     current dir are transparently copied back and forth, causes a substantial network traffic in some cases. Output data from the 
+     nodes are automatically merged using mcformat. Just as efficient as MPI without any library dependencies at all. Make use 
+     of all processer cores in your machine, simply choose to 'grid'. Windows 'client' host OK, we autodetect ssh and scp binaries
+     from the Putty package.
+
+  Various
+  - A number of minor bugs ironed out, both in components, runtime code and tools.
+  - From release 1.12, McStas is GPL 2 only. The debate on the internet about the future GPL 3 license suggests that this license 
+     might have implications on the 'derived work', hence have implications on what and how our users use their McStas simulations
+     for. To protect user freedom, we will stick with GPL 2.     
+
+  WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
+  buttons fail in mcgui. Solutions:
+  a) If your system is a Debian or Ubuntu, please install our Debian package which requests automatic removal of 'dash'.
+  b) If your /bin/sh is dash, please install bash and manually change the /bin/sh link to point at bash.
+
 Changes in McStas v1.11, July 3rd, 2007
 
   Metalanguage
