@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.43 $
+* Version: $Revision: 1.44 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -106,7 +106,7 @@ ITEMS MARKED WITH (*) BELOW NEEDS UPDATE BEFORE RELEASE!
   - Mac OS X 10.5 Leopard is shipped with built-in support for MPI (OpenMPI). No need to install extra packages.
   - Use of 'virtual sources' is now supported on MPI clusters. (If running on N nodes, all neutron events will be processed
      on each of the N nodes - implicit repetition N times of the source contents.)
-  - OpenMP threading support (IS THIS TRUE OR NOT? NO POSSIBLE SETTING IN e.g. mcgui)
+  - OpenMP threading support 
   - Much improved gridding support (via ssh). Ready for heterogenous systems, e.g. mixed operating systems and hardware
      types! (Requires -c compile flag for mcrun or equivalent setting in mcgui.) The only requirement is ssh client on the machine 
      where the grid run is started, plus ssh daemon and c-compiler (e.g. gcc or simply cc) on the remote machines. Files in the 
@@ -121,9 +121,9 @@ ITEMS MARKED WITH (*) BELOW NEEDS UPDATE BEFORE RELEASE!
      might have implications on the 'derived work', hence have implications on what and how our users use their McStas simulations
      for. To protect user freedom, we will stick with GPL 2.     
 
-  WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update' 
+  WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 8.04) makes the 'Cancel' and 'Update' 
   buttons fail in mcgui. Solutions:
-  a) If your system is a Debian or Ubuntu, please install our Debian package which requests automatic removal of 'dash'.
+  a) If your system is a Debian or Ubuntu, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
   b) If your /bin/sh is dash, please install bash and manually change the /bin/sh link to point at bash.
 
 Changes in McStas v1.11, July 3rd, 2007
