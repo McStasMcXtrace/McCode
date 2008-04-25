@@ -559,7 +559,7 @@ sub menu_save_config {
   
   if (-d $ENV{"HOME"}) {
     if (!(-d $ENV{"HOME"}."/.mcstas")) {
-      mkdir $ENV{"HOME"}."./mcstas";
+      mkdir $ENV{"HOME"}."/.mcstas";
     }
     $initdir = $ENV{"HOME"}."/.mcstas/";
   } else {
