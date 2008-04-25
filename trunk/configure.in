@@ -20,7 +20,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, 1.11, www.mcstas.org)
-AC_REVISION($Revision: 1.52 $)
+AC_REVISION($Revision: 1.53 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
@@ -198,9 +198,8 @@ if test "$PGPLOT" == "no" ; then
 fi
 if test "$PGPLOT" == "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
   echo "PGPLOT install: you may try our automatic PGPLOT installation with"
-  echo ""
-  echo "For 64-bit machines, re-run # ./configure --with-pic first"
   echo "# make install-pgplot; ./configure; make; make install"
+  echo "(For 64-bit machines, reconfigure first: # ./configure --with-pic )"
 else if test "$PGPLOT" == "no" ; then
   echo "Install these and re-run McStas installation ./configure"
   fi
@@ -235,5 +234,5 @@ echo ""
 if test "$DASH" != "no" ; then
 echo
 echo WARNING: Your system includes the $DASH shell which is known to cause problems.
-echo On Debian systems remove it with: apt-get remove dash
+echo On Debian/Ubuntu systems, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
 fi

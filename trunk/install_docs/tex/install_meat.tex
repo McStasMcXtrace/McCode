@@ -75,10 +75,11 @@ Unix variants, including \htmladdnormallink{Fedora
 \htmladdnormallink{SuSE}{http://www.novell.com/products/suselinux/}
 and \htmladdnormallink{FreeBSD}{http://www.freebsd.org}.
 \ \\\ \\
- WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 7.04) makes the 'Cancel' and 'Update'
+ WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 8.04) makes the 'Cancel' and 'Update'
   buttons fail in mcgui. Possible solutions are:
 \begin{itemize}
- \item If your system is a Debian or Ubuntu, please install our Debian package which requests automatic removal of 'dash'. (See section \ref{ss:deb_install})
+ \item If your system is a Debian or Ubuntu, please run the command
+   \verb+dpkg-reconfigure dash+ and say 'no' to install dash as /bin/sh  (See section \ref{ss:deb_install})
  \item If your /bin/sh is dash, please install bash and manually change the /bin/sh link to point at bash.
 \end{itemize}
 
@@ -94,7 +95,8 @@ perform the following tasks:
 \\\verb+apt-get install openssh-client openssh-server+
 \\\verb+apt-get install mpich-bin libmpich1.0c2 libmpich1.0-dev+
 to benefit from MPI and SSH grid parallelization}
-\item{As root, issue the command \\\verb+apt-get remove dash ubuntu-minimal+}
+\item{As root, issue the command \\\verb+dpkg-reconfigure dash+\\and
+    say 'no' to install dash as /bin/sh.}
 \item{As root, issue the command \\\verb+dpkg -i mcstas-1.11-i686.deb+. This later step may be replaced by a ./configure; make; make install procedure after extraction of the Mctas tarball (see below)}
 %\item{As root, add the following to your \verb+/etc/apt/sources.list+ :
 %\\\verb+deb http://apt.mcstas.org binary/+ (32 bit package for Intel/AMD)}
