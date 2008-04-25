@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.98 $
+* Version: $Revision: 1.99 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,27 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.98 2008-04-21 15:50:19 pkwi Exp $
+* $Id: mcstas-r.h,v 1.99 2008-04-25 08:26:33 erkn Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.98  2008/04/21 15:50:19  pkwi
+*       Name change randvec_target_rect -> randvec_target_rect_real .
+*
+*       The renamed routine takes local emmission coordinate into account, correcting for the
+*       effects mentioned by George Apostolopoulus <gapost@ipta.demokritos.gr> to the
+*       neutron-mc list (parameter list extended by four parms).
+*
+*       For backward-compatibility, a define has been added that maps randvec_target_rect
+*       to the new routine, defaulting to the "old" behaviour.
+*
+*       To make any use of these modifications, we need to correct all (or all relevant) comps
+*       that have calls to randvec_target_rect.
+*
+*       Will supply a small doc with plots showing that we now correct for the effect pointed
+*       out by George.
+*
+*       Similar change should in principle happen to the _sphere focusing routine.
+*
 *       Revision 1.97  2008/02/10 20:55:53  farhi
 *       OpenMP number of nodes now set properly from either --threads=NB or
 *       --threads which sets the computer core nb.
@@ -252,7 +270,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.98 $"
+#define MCSTAS_R_H "$Revision: 1.99 $"
 
 #include <math.h>
 #include <string.h>
@@ -262,6 +280,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <time.h>
+#include <float.h>
 
 /* If the runtime is embedded in the simulation program, some definitions can
    be made static. */
@@ -759,6 +778,17 @@ char *mcfull_file(char *name, char *ext);
     (y) = mcrt_vpy + mcrt_vn1y; \
     (z) = mcrt_vpz + mcrt_vn1z; \
   } while(0)
+
+#define mirror(x,y,z,rx,ry,rz,nx,ny,nz) \
+  do { \
+    double mcrt_tmpx= (nx), mcrt_tmpy = (ny), mcrt_tmpz = (nz); \
+    double mcrt_tmpt; \
+    NORM(mcrt_tmpx, mcrt_tmpy, mcrt_tmpz); \
+    mcrt_tmpt=scalar_prod((rx),(ry),(rz),mcrt_tmpx,mcrt_tmpy,mcrt_tmpz); \
+    (x) = rx -2 * mcrt_tmpt*mcrt_rmpx; \
+    (y) = ry -2 * mcrt_tmpt*mcrt_rmpy; \
+    (z) = rz -2 * mcrt_tmpt*mcrt_rmpz; \
+  } while (0)
 
 #ifdef MC_TRACE_ENABLED
 #define DEBUG

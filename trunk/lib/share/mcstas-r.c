@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.191 $
+* Version: $Revision: 1.192 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.191 2008-04-21 16:08:05 pkwi Exp $
+* $Id: mcstas-r.c,v 1.192 2008-04-25 08:26:33 erkn Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.191  2008/04/21 16:08:05  pkwi
+* OpenMPI mpicc dislikes declaration of the counter var in the for(   ) (C99 extension)
+*
 * Revision 1.190  2008/04/21 15:50:19  pkwi
 * Name change randvec_target_rect -> randvec_target_rect_real .
 *
@@ -630,6 +633,7 @@ static   char *mcdirname             = NULL;
 static   char *mcsiminfo_name        = "mcstas";
 int      mcallowbackprop             = 0;
 int      mcMagnet                    = 0;
+/*the magnet stack*/
 double*  mcMagnetData                = NULL;
 Coords   mcMagnetPos;
 Rotation mcMagnetRot;
@@ -3436,6 +3440,19 @@ Coords coords_xp(Coords b, Coords c) {
   return a;
 }
 
+/* coords_mirror: Mirror a in plane (through the origin) defined by normal n*/
+Coords coords_mirror(Coords a, Coords n) {
+  double t;
+  Coords b;
+  if ((t=scalar_prod(n.x,n.y,n.z, n.x,n.y,n.z))!=1)
+    n.x/=sqrt(t);n.y/=sqrt(t);n.z/=sqrt(t);
+  t=scalar_prod(a.x,a.y,a.z,n.x,n.y,n.z);
+  b.x=a.x-2*t*n.x;
+  b.y=a.y-2*t*n.y;
+  b.z=a.z-2*t*n.z;
+  return b;
+}
+
 /* coords_print: Print out vector values. */
 void coords_print(Coords a) {
 
@@ -4322,7 +4339,7 @@ int solve_2nd_order(double *Idt,
   if (fabs(A) < 1E-10) /* this plane is parallel to the acceleration: A ~ 0 */
   {
     if (B) {  *Idt = -C/B; ret=3; }
-    /* else the speed is parallel tothe plane, no intersection: A=B=0 ret=0 */
+    /* else the speed is parallel to the plane, no intersection: A=B=0 ret=0 */
   }
   else
   {
@@ -4350,6 +4367,20 @@ int solve_2nd_order(double *Idt,
   return(ret);
 }
 
+/* plane_intersect: Calculate intersection between a plane and a line.
+ * returns 0 when no intersection is found (i.e. line is parallel to the plane)
+ * returns 1 or -1 when intersection time is positive and negative respectively
+ */  
+int
+plane_intersect(double *t, double x, double y, double z,
+                 double vx, double vy, double vz, double nx, double ny, double nz, double wx, double wy, double wz)
+{
+  double s;
+  if ((s=scalar_prod(nx,ny,nz,vx,vy,vz))<FLT_EPSILON) return 0;
+  *t = - scalar_prod(nx,ny,nz,x-wx,y-wy,z-wz)/s;
+  if (t<0) return -1;
+  else return 1;
+}
 
 /* randvec_target_circle: Choose random direction towards target at (x,y,z)
  * with given radius.
