@@ -627,9 +627,18 @@ sub preferences_dialog {
 
     $MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'} unless $MCSTAS::mcstas_config{'CFLAGS_SAVED'};
     my $compilchoice = $lf->Label(-text => "Compilation options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
-    $choicecflags = $lf->Checkbutton(-text => "Optimize ($MCSTAS::mcstas_config{'CFLAGS_SAVED'})",
+    $choicecflags = $lf->Checkbutton(-text => "Apply compiler flags: (define in textbox below)",
                -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_CFLAGS'})->pack(-fill => 'x');
     $b->attach($choicecflags, -balloonmsg => "Check to compile slower but simulate faster");
+    
+    #$clfags = $lf->Entry(-relief => 'sunken', width => 16, -textvariable => \$MCSTAS::mcstas_config{'CFLAGS_SAVED'},
+#			 -justify => 'right')->pack(-side => 'right');
+    $cflags=$lf->Entry(-relief => 'sunken',
+			   -width=>16,
+			   -textvariable => \$MCSTAS::mcstas_config{'CFLAGS_SAVED'},
+			   -justify => 'right')->pack(-fill => 'x');
+
+
     my $precchoice = $lf->Label(-text => "Optimization options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $labelprec = $lf->Label(-text => "Precision",
                -relief => 'flat')->pack(-side => 'left');
