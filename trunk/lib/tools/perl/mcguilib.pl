@@ -364,16 +364,13 @@ sub simulation_dialog {
       -options      => $choices
     )->pack(-side => 'left');
 
-    if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
-        our $labelnodes=$line->Label(-text => "Number of nodes: ")->pack(-side => 'left');
-        $b->attach($labelnodes, -balloonmsg => "Number of nodes to use\nfor Parallelisation");
-        our $mpinodes = $line->Entry(-relief => 'sunken',
-               -width=>10,
-               -textvariable => \$MCSTAS::mcstas_config{'NODES'},
-               -justify => 'right')->pack(-side => 'left');
-
-    }
-
+    our $labelnodes=$line->Label(-text => "Number of nodes: ")->pack(-side => 'left');
+    $b->attach($labelnodes, -balloonmsg => "Number of nodes to use\nfor Parallelisation");
+    our $mpinodes = $line->Entry(-relief => 'sunken',
+				 -width=>10,
+				 -textvariable => \$MCSTAS::mcstas_config{'NODES'},
+				 -justify => 'right')->pack(-side => 'left');
+        
     # Gui stuff for selection of 'inspect' parameter
     # PW 20030314
     my $f4 = $opt_frame->Frame;
