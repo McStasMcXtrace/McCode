@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.42 $
+* Version: $Revision: 1.43 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -34,6 +34,8 @@
 *******************************************************************************/
 Changes in McStas v1.12, May 1st, 2008
 
+ITEMS MARKED WITH (*) BELOW NEEDS UPDATE BEFORE RELEASE!
+
   Metalanguage
   - New %include "instr" mechanism to include one instrument in another. (Useful for independent
      build-up of e.g. primary and secondary spectrometer. Or easily see the effect of moving an instrument
@@ -44,18 +46,21 @@ Changes in McStas v1.12, May 1st, 2008
 
   Runtime
   - Fix of a limiting case focusing problem reported to neutron-mc by George Apostolopoulos.
-     (See http://mailman.risoe.dk/pipermail/neutron-mc/2007q4/002915.html )
+     ( See http://mailman.risoe.dk/pipermail/neutron-mc/2007q4/002915.html )
 
   Components
   - When using the Virtual_input type components, --ncount is always set to an integer multiplum 
      (repeat_count) of the number of events in the file. See also related remark about MPI below.
   - New component: MirrorElli.comp, elliptical mirror. Contributed by Sylvain Desert, LLB
   - New component: MirrorPara.comp, parabolic mirror. Contributed by Sylvain Desert, LLB
-  - Single_crystal validation process - report status
+  - (*) New component: Multilayer_NR_Sample.comp, multilayer sample for reflectometers. Contributed by
+     Robert Dalgliesh, ISIS. Dependency on GNU scientific library, instructions in instrument header.
+  - Single_crystal validation still ongoing, but has progressed: The algorithm seems OK, but is to some
+     extent not in sync with the documentation. New option to specify reciprocal space vectors directly.
+     (before only real space definitions were possible)
   - Most monitors now allow to 'not propagate' the neutron, i.e. not influence the beam. Parameter name
      is 'restore_neutron'.
-  - Check if PowderN concentricity was in 1.11!
- 
+   
   Example instruments
   - ILL_H25_IN22_sample/_resolution.instr (CRG instrument @ ILL) by E. Farhi / P. Willendrup
   - Incoherent_Test.instr - instrument to compare incoherent scattering from the different sample comps
@@ -63,8 +68,9 @@ Changes in McStas v1.12, May 1st, 2008
      guides etc.), P. Willendrup / E. Knudsen / A. Daoud-Aladine
   - FocalisationMirrors.instr - test instrument for MirrorElli and MirrorPara, Sylvain Desert, LLB
   - DMC, Powder Diffractometer, PSI, L. Keller / U. Filges / P. Willendrup
-  - More here?
-  
+  - (*) POSSIBLY MORE FROM PSI, Uwe will write back early next week.
+  - (*) Crisp3.instr - Design for ISIS TS2 by Robert Dalgliesh, test instrument for Multilayer_NR_Sample.
+
   Datafiles
   - 'Bugfix', some of the provided .laz files did not have proper unit for |F2|.
   
@@ -88,9 +94,11 @@ Changes in McStas v1.12, May 1st, 2008
   - Mac OS X 10.3 Panther (ppc), 10.4 Tiger (pcc/intel), 10.5 Leopard (ppc/intel)
   - Windows XP,  Windows Vista (Now with a recent perl version; 5.10 plus various fixes). New feature on Windows:
      Simulations _always_ run in the background, freeing mcgui for other work.
-  - Linux (Reference platforms are Ubuntu/Debian, we have also tested Fedora 8, OpenSuSE 10.3 and CentOS 4 releases)
+  - "Any" Linux - reference platforms are Ubuntu 8.04 (and earlier) and Debian 4.0 (and earlier). We have also tested 
+     Fedora 8, OpenSuSE 10.3 and CentOS 4 releases recently.
   - FreeBSD (FreeBSD release 6.3 and its cousin DesktopBSD 1.6 recently tested)
   - SUN Solaris 10 (Intel tested, Sparc probably OK)
+  - Plus probably any UNIX/POSIX type environment with a bit of effort...
   
   Parallelisation
   - Improved stability of MPI simulations by addition of an 'MPI barrier' (reduces probability of nodes beeing 'out of sync'.
