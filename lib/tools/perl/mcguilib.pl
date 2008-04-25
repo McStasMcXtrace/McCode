@@ -631,8 +631,6 @@ sub preferences_dialog {
                -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_CFLAGS'})->pack(-fill => 'x');
     $b->attach($choicecflags, -balloonmsg => "Check to compile slower but simulate faster");
     
-    #$clfags = $lf->Entry(-relief => 'sunken', width => 16, -textvariable => \$MCSTAS::mcstas_config{'CFLAGS_SAVED'},
-#			 -justify => 'right')->pack(-side => 'right');
     $cflags=$lf->Entry(-relief => 'sunken',
 			   -width=>16,
 			   -textvariable => \$MCSTAS::mcstas_config{'CFLAGS_SAVED'},
