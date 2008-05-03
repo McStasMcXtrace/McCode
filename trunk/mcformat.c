@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.26 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.27 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -773,6 +773,16 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     if (i != 2 && i != 4 && i != 6)
       fprintf(stderr, "Warning: %s: invalid xylimits '%s'. extracted %i values\n",
         filename, McStasStruct.xylimits, i);
+  }
+  
+  /* special case of 2D binary files: axes must be exchanged */
+  if (strstr(mcformat.Name, "binary") || strstr(mcformat.Name, "float") || strstr(mcformat.Name, "double"))
+  if (p == 1 && m>1 && n>1) {
+    double tmp; char* c;
+    tmp=McStasStruct.x1; McStasStruct.x1=McStasStruct.y1; McStasStruct.y1=tmp; 
+    tmp=McStasStruct.x2; McStasStruct.x2=McStasStruct.y2; McStasStruct.y2=tmp; 
+    c=McStasStruct.xlabel; McStasStruct.xlabel=McStasStruct.ylabel; McStasStruct.ylabel=c;
+    c=McStasStruct.xvar;   McStasStruct.xvar=McStasStruct.yvar;     McStasStruct.yvar=c;
   }
 
   McStasStruct.filename   = str_dup(filename);
