@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.44 $
+* Version: $Revision: 1.45 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -26,15 +26,13 @@
 * Modified by: PW, EF, March 29th 2006: version 1.9.1
 * Modified by: PW, EF, December 4th 2006: version 1.10
 * Modified by: PW, EF, July 3rd 2007: version 1.11
-* Modified by: PW, EF, May 1st 2008: version 1.12
+* Modified by: PW, EF, May 7nd 2008: version 1.12
 *
 * This file is part of McStas  version 1.12, released May 1st, 2008.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v1.12, May 1st, 2008
-
-ITEMS MARKED WITH (*) BELOW NEEDS UPDATE BEFORE RELEASE!
+Changes in McStas v1.12, May 7nd, 2008
 
   Metalanguage
   - New %include "instr" mechanism to include one instrument in another. (Useful for independent
@@ -53,8 +51,6 @@ ITEMS MARKED WITH (*) BELOW NEEDS UPDATE BEFORE RELEASE!
      (repeat_count) of the number of events in the file. See also related remark about MPI below.
   - New component: MirrorElli.comp, elliptical mirror. Contributed by Sylvain Desert, LLB
   - New component: MirrorPara.comp, parabolic mirror. Contributed by Sylvain Desert, LLB
-  - (*) New component: Multilayer_NR_Sample.comp, multilayer sample for reflectometers. Contributed by
-     Robert Dalgliesh, ISIS. Dependency on GNU scientific library, instructions in instrument header.
   - Single_crystal validation still ongoing, but has progressed: The algorithm seems OK, but is to some
      extent not in sync with the documentation. New option to specify reciprocal space vectors directly.
      (before only real space definitions were possible)
@@ -68,8 +64,6 @@ ITEMS MARKED WITH (*) BELOW NEEDS UPDATE BEFORE RELEASE!
      guides etc.), P. Willendrup / E. Knudsen / A. Daoud-Aladine
   - FocalisationMirrors.instr - test instrument for MirrorElli and MirrorPara, Sylvain Desert, LLB
   - DMC, Powder Diffractometer, PSI, L. Keller / U. Filges / P. Willendrup
-  - (*) POSSIBLY MORE FROM PSI, Uwe will write back early next week.
-  - (*) Crisp3.instr - Design for ISIS TS2 by Robert Dalgliesh, test instrument for Multilayer_NR_Sample.
 
   Datafiles
   - 'Bugfix', some of the provided .laz files did not have proper unit for |F2|.
