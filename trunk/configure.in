@@ -20,7 +20,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, 1.12, www.mcstas.org)
-AC_REVISION($Revision: 1.55 $)
+AC_REVISION($Revision: 1.56 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
@@ -60,7 +60,7 @@ AC_PATH_PROGS(EDITOR, [nedit kate gedit xemacs xedit vim notepad wordpad], no)
 AC_PATH_PROGS(VRMLVIEW, [octagaplayer freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
 AC_PATH_PROGS(WGET, [wget], no)
 AC_PATH_PROGS(PERLDL,   [perldl /usr/local/bin/perldl /usr/bin/perldl], no)
-AC_PATH_PROGS(G77, [g77 f77 g95 f95 gfortran], no)
+AC_PATH_PROGS(G77, [g77 f77 gfortran g95 f95], no)
 AC_PATH_PROGS(MINGW, [i586-mingw32msvc-gcc], no)
 AC_PATH_PROGS(MAKE,   [make gmake], no)
 AC_PATH_PROGS(AT,  [at], no)

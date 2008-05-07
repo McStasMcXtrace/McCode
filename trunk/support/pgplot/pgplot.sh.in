@@ -14,6 +14,7 @@ cp pgdispd/* pgplot/pgdispd/
 cd pgplot
 PGPLOT_SRC=$PWD
 PGPLOT_DIR="@prefix@/pgplot"; export PGPLOT_DIR
+LD_LIBRARY_PATH=$PGPLOT_DIR; export LD_LIBRARY_PATH
 mkdir $PGPLOT_DIR
 echo cp drivers.list $PGPLOT_DIR/drivers.list
 cp drivers.list $PGPLOT_DIR/drivers.list
@@ -25,7 +26,11 @@ else
   cp drivers.list drivers1.list
 fi
 sed 's/! PSDRIV/  PSDRIV/' drivers1.list > drivers2.list
-sed 's/! PPDRIV/  PPDRIV/' drivers2.list > drivers3.list
+if test "@BUILDTYPE@" != "g77_elf" ; then
+  sed 's/! PPDRIV/  PPDRIV/' drivers2.list > drivers3.list
+else
+  cp drivers2.list drivers3.list
+fi
 sed 's/! X2DRIV/  X2DRIV/' drivers3.list > drivers4.list
 sed 's/! XWDRIV/  XWDRIV/' drivers4.list > drivers5.list
 sed 's/! LXDRIV/  LXDRIV/' drivers5.list > drivers.list
@@ -87,12 +92,13 @@ echo create links in @prefix@/bin
 # create links
 ln -sf $PGPLOT_DIR/pgdisp @prefix@/bin/pgdisp
 ln -sf $PGPLOT_DIR/pgxwin_server @prefix@/bin/pgxwin_server
+ln -sf $PGPLOT_DIR/libpgplot.so /usr/lib/libpgplot.so
 
 # install F77
 cd $ROOT_SRC
-echo tar xzf ExtUtils-F77-1.13.tar.gz
-gunzip -c ExtUtils-F77-1.13.tar.gz | tar xf -
-cd ExtUtils-F77-1.13
+echo tar xzf ExtUtils-F77-1.16.tar.gz
+gunzip -c ExtUtils-F77-1.16.tar.gz | tar xf -
+cd ExtUtils-F77-1.16
 echo perl Makefile.PL\; make\; make install
 perl Makefile.PL PREFIX=@prefix@
 make
@@ -100,9 +106,9 @@ make install
 
 # install perl-PGPLOT
 cd $ROOT_SRC
-echo tar xzf PGPLOT-2.18.tar.gz
-gunzip -c PGPLOT-2.18.tar.gz | tar xf -
-cd PGPLOT-2.18
+echo tar xzf PGPLOT-2.20.tar.gz
+gunzip -c PGPLOT-2.20.tar.gz | tar xf -
+cd PGPLOT-2.20
 echo perl Makefile.PL\; make\; make install
 perl Makefile.PL PREFIX=@prefix@
 make
