@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.45 $
+* Version: $Revision: 1.46 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -26,13 +26,13 @@
 * Modified by: PW, EF, March 29th 2006: version 1.9.1
 * Modified by: PW, EF, December 4th 2006: version 1.10
 * Modified by: PW, EF, July 3rd 2007: version 1.11
-* Modified by: PW, EF, May 7nd 2008: version 1.12
+* Modified by: PW, EF, EK May 8th 2008: version 1.12
 *
-* This file is part of McStas  version 1.12, released May 1st, 2008.
+* This file is part of McStas  version 1.12, released May 8th, 2008.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v1.12, May 7nd, 2008
+Changes in McStas v1.12, May 8th, 2008
 
   Metalanguage
   - New %include "instr" mechanism to include one instrument in another. (Useful for independent
