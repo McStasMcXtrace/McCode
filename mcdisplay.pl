@@ -770,9 +770,13 @@ sub plot_neutron {
         $i++;
       }
     } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
-      # Matlab
+      # Matlab (split across multiple lines - otherwise sometimes
+      # crashes with component-rich instrs.) 
       $retval=write_process("mcdisplay('Timeout');\n");
-      $retval=write_process("mcdisplay('PlotNeutron',[@$x],[@$y],[@$z]);\n");
+      $retval=write_process("mcdisplay('PlotNeutron',...\n");
+      $retval=write_process("[@$x],...\n");
+      $retval=write_process("[@$y],...\n");
+      $retval=write_process("[@$z]);\n");
       return $retval;
     } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
       # Scilab
