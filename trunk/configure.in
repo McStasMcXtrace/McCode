@@ -20,7 +20,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, 1.12, www.mcstas.org)
-AC_REVISION($Revision: 1.54 $)
+AC_REVISION($Revision: 1.55 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
@@ -125,6 +125,14 @@ else
   AC_DEFINE([HAVE_THREADS], [])
 fi
 
+# Handle g77 and gfortran seperately
+if test "`basename $G77`" = "gfortran"; then
+  AC_SUBST([BUILDTYPE], [g77_elf])
+  AC_DEFINE([BUILDTYPE], [g77_elf])
+else
+  AC_SUBST([BUILDTYPE], [g77_gcc])
+  AC_DEFINE([BUILDTYPE], [g77_gcc])
+fi
 
 # check for MPI
 if test "$MPICC" != "no"; then
