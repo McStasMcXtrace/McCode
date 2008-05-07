@@ -21,11 +21,11 @@ cp drivers.list $PGPLOT_DIR/drivers.list
 echo cd $PGPLOT_DIR
 cd $PGPLOT_DIR
 sed 's/! GIDRIV/  GIDRIV/' drivers.list > drivers1.list
-sed 's/! PSDRIV/  PSDRIV/' drivers.list > drivers1.list
+sed 's/! PSDRIV/  PSDRIV/' drivers1.list > drivers2.list
 sed 's/! PPDRIV/  PPDRIV/' drivers2.list > drivers3.list
-sed 's/! X2DRIV/  X2DRIV/' drivers1.list > drivers2.list
-sed 's/! XWDRIV/  XWDRIV/' drivers2.list > drivers3.list
-sed 's/! LXDRIV/  LXDRIV/' drivers3.list > drivers.list
+sed 's/! X2DRIV/  X2DRIV/' drivers3.list > drivers4.list
+sed 's/! XWDRIV/  XWDRIV/' drivers4.list > drivers5.list
+sed 's/! LXDRIV/  LXDRIV/' drivers5.list > drivers.list
 \rm drivers?.list
 # Assuming default location of perl binary in /usr/local/bin does not work...
 #
