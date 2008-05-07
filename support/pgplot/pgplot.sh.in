@@ -19,7 +19,11 @@ echo cp drivers.list $PGPLOT_DIR/drivers.list
 cp drivers.list $PGPLOT_DIR/drivers.list
 echo cd $PGPLOT_DIR
 cd $PGPLOT_DIR
-sed 's/! GIDRIV/  GIDRIV/' drivers.list > drivers1.list
+if test "@BUILDTYPE@" != "g77_elf" ; then
+  sed 's/! GIDRIV/  GIDRIV/' drivers.list > drivers1.list
+else
+  cp drivers.list drivers1.list
+fi
 sed 's/! PSDRIV/  PSDRIV/' drivers1.list > drivers2.list
 sed 's/! PPDRIV/  PPDRIV/' drivers2.list > drivers3.list
 sed 's/! X2DRIV/  X2DRIV/' drivers3.list > drivers4.list
@@ -39,9 +43,14 @@ cp $PGPLOT_SRC/maketex.fixed $PGPLOT_SRC/maketex
 chmod a+x $PGPLOT_SRC/maketex
 rm $PGPLOT_SRC/maketex.fixed
 
-echo $PGPLOT_SRC/makemake $PGPLOT_SRC linux   g77_gcc
-$PGPLOT_SRC/makemake $PGPLOT_SRC linux   g77_gcc
+echo $PGPLOT_SRC/makemake $PGPLOT_SRC linux   @BUILDTYPE@
+$PGPLOT_SRC/makemake $PGPLOT_SRC linux   @BUILDTYPE@
+if test "@BUILDTYPE@" == "g77_elf" ; then
+    sed 's/g77/gfortran/' makefile > makefile.new
+    mv makefile.new makefile
+fi
 sed 's/-lbsd//' makefile > makefile.new
+
 # On Debian stable make fails without X11R6/lib on lib path
 sed 's+-L/usr/X11/lib+-L/usr/X11/lib -L/usr/X11R6/lib+' makefile.new > makefile
 if test "@USE_PIC@" == "no" ; then
