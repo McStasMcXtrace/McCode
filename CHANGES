@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.46 $
+* Version: $Revision: 1.47 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -63,13 +63,11 @@ Changes in McStas v1.12, May 8th, 2008
      (V_samle, PowderN, Single_crystal, Isotropic_sqw). More instruments of this type planned (compare
      guides etc.), P. Willendrup / E. Knudsen / A. Daoud-Aladine
   - FocalisationMirrors.instr - test instrument for MirrorElli and MirrorPara, Sylvain Desert, LLB
-  - DMC, Powder Diffractometer, PSI, L. Keller / U. Filges / P. Willendrup
+  - PSI_DMC.instr, Powder Diffractometer, PSI, L. Keller / U. Filges / P. Willendrup
 
   Datafiles
   - 'Bugfix', some of the provided .laz files did not have proper unit for |F2|.
   
-  Documentation
-
   Tools
   - Support for per-user mcstas_config.perl file, located in $HOME/.mcstas/ . This folder is also the default
      location of the 'host list' for use with MPI or gridding, simply name the file 'hosts'.
@@ -118,7 +116,7 @@ Changes in McStas v1.12, May 8th, 2008
   WARNING: The 'dash' shell which is used as /bin/sh on some Linux system (Including Ubuntu 8.04) makes the 'Cancel' and 'Update' 
   buttons fail in mcgui. Solutions:
   a) If your system is a Debian or Ubuntu, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
-  b) If your /bin/sh is dash, please install bash and manually change the /bin/sh link to point at bash.
+  b) If you run another Linux with /bin/sh beeing dash, please install bash and manually change the /bin/sh link to point at bash.
 
 Changes in McStas v1.11, July 3rd, 2007
 
