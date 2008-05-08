@@ -1,0 +1,14 @@
+GRID  Add a grid on a 2D plot
+    
+    Add the property/value pair 'grid','on' to add
+    a grid on your plot, e.g.
+    
+    plot(x,y,'grid','on')
+    
+    The grid color is the default background color.
+    To change the grid color the pair can be of the type
+    
+    'grid',[r g b]
+    
+    where each r,g,b value is in the interval [0,1].
+    

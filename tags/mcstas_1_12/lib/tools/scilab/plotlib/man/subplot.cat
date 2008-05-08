@@ -1,0 +1,14 @@
+ SUBPLOT Create axes in tiled positions.
+ 
+    subplot(m,n,p), breaks the Figure window
+    into an m-by-n matrix of small axes and selects the p-th axes for
+    for the current plot.  The axes
+    are counted along the top row of the Figure window, then the
+    second row, etc.  For example,
+
+    t=linspace(0,2*%pi); 
+    subplot(2,1,1); plot(t,cos(t)) 
+    subplot(2,1,2); plot(t,sin(t)) 
+
+    plots the cosinus on the top half of the window and the sinus on the
+    bottom half.

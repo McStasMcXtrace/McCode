@@ -1,0 +1,98 @@
+TODO / DONE list for mcstas-1.8 release
+***************************************
+
+DONE:
+* Bugfixes, especially Win32
+* Improved installation scripts / build scripts NOTE: New version 
+  incompatible with Win32 releases before windows 2000
+* Scan support in mcgui
+* mcplot opens scan steps in Matlab/Scilab backends
+* mcrun support for Matlab/Scilab backends
+* Instrument examples loadable from the mcgui Neutron Site menu
+  examples within lib/examples
+* GPL introduced as license
+* Scilab plotlib allowed for inclusion
+* plotlib utilized with getd() function, no need for precompiled
+  library
+* New components:
+  # Uwe Filges Guide_tapering
+  # Emmanuel Guide_gravity much improved
+  # Dickon Champion ISIS 2nd target station
+  # Sans sample component Kim/Peter/Lise
+  # New Guide_curved by Ross Stewart
+* Instrument default parameters
+* Rectangular focusing improved, also used for the sources
+* CVS builds on weekdays (nights) - now on official McStas page
+* Tool for automatic get+build of McStas CVS versions
+* new script mcconvert, to convert between Matlab and Scilab data output
+* Kernel PREVIOUS keyword, works together with RELATIVE keyword
+* Grammar for INSTRUMENT default values
+* bison mc_yyoverflow related bug fixed
+* Win32 improvements to Scilab mcdisplay backend
+* mcdoc support for instrument headers
+* More example instruments
+  # Test SANS machine (Kim/Peter/Lise) - will be improved with next release
+  # FOCUS@PSI (Uwe Filges) 
+* configure.in to check for Matlab/Scilab/PGPLOT (similar
+functionality on Win32 using mcc
+* make test / mcdoc --test plus corrections
+* Poor man's grid computing for mcrun
+* mcplot/Scilab scan problem fixed
+* Updated Mersene Twister algorithm
+* Fixed bug in Single_crystal, bug pointed out by Phil Seeger/Kristian Nielsen
+* Installation of Proc::Simple on unix platforms with perl...
+* New method for installing Perl modules in McStas library
+* Merge current Mosaic_anisotropic with fixes from Kristian Nielsen
+* Fixed bugs in Bender and Monochromator_flat
+* Tutorial for the ISIS workshop, could be put in the docs 
+* Fixed problem w/ mcgui instrument_name.instr 
+* Updated vanadium_example.instr
+* Tutorial integrated in mcdoc / Help menu
+* Make install process saves entire existing MCSTAS lib folder 
+  (due to problems reported by Thomas C Hansen, ILL)
+* Power2 added - should recieve update in the near future...
+* mcplot log/linear bug in Matlab backend fixed
+* V_sample, problem in insertion 'toplevel' editor 
+* Better explanation for creating a new instrument (Emmanuel)
+* Fixed various RedHat 9 specific problems regarding component
+  insertion plus spawning of external editor
+* Fixed spawning of external editor (Win32)
+* Keeping values when performing scans in mcgui
+* Trace scilab win32, suggest a low number of neutron histories...
+* Phonon_sample + test instrument (Kim Lefmann)
+* Path incorrect, scilab install 
+* Problem with Select backend
+* Win32, bug in compilation with unsaved, edited instrument file
+* Installation process, reverse order plotter <-> package
+* TODO list on cvs
+* line number in editor (go to line)
+* Fixed date string, mcplot year 5000 (matlab) (Needs timezone info,
+  have asked in comp.soft-sys.matlab for this...)
+* Doc update, especially regarding installation
+* Test runs of the tutorial and the package in general
+* McStas manual description of new features
+* McStas manual updates in general
+* more on inserting arms in the docs
+* Powder2 / Phonon_simple, rectangular focusing + target_index
+* mcplot problem running mcdisplay for instrument view (n exist) - fixed!
+* Final sanity check + make test
+* Changes document / Changes chapter in manual
+
+TODO:
+* Build of dist packages + web transfer
+
+PENDING:
+* 'Scan evolvement' plot of psd's (Pick PSD data from scan, plot together)
+* Scrollbar in editor (too hard? / platform specific) 
+* Online monitor plotting through USR2 signal
+* make test for old releases? 
+* Concentric components
+* 'Jumps'
+* Polarisation, magnetic fields 
+* Component manual (???!!!)
+* MPI support (More grid computing)
+* monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
+* monochromator_ ... (Lucia Alianelli) full monte carlo
+* Sharing tools with Vitess (mcplot, mcconvert)
+* mcresplot port to Matlab/Scilab
+

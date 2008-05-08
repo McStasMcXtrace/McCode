@@ -1,0 +1,50 @@
+# TITLE *-Cu-[FM3-M] Otte, H.M.[1961]
+# CELL 3.615050 3.615050 3.615050 90.000000 90.000000 90.000000
+# SPCGRP F M 3 M   CUBIC STRUCTURE
+# ATOM CU 1 0.000000 0.000000 0.000000
+# SCATTERING FACTOR  COEFFICIENTS: CU     F= 0.773 CM-12
+# Reference: Journal of Applied Physics (1961) 32, 1536-1546
+#
+# Physical parameters:
+# sigma_coh 7.485   coherent scattering cross section in [barn]
+# sigma_inc 0.55    incoherent scattering cross section in [barn]
+# sigma_abs 3.78    absorption scattering cross section in [barn]
+# density   8.92    in [g/cm^3]
+# weight    63.55   in [g/mol]
+# nb_atoms  4       in [atoms/unit cell]
+# v_sound   3570    in [m/s]
+# v_sound_l 4760    velocity of longitudinal sound in [m/s]
+# v_sound_t 2325    velocity of transversal sound in [m/s]
+# T_m       1357.8  melting temperature in [K]
+# T_b       3200    boiling temperature in [K]
+# At_number 29      atomic number Z
+# lattice_a 3.61505 lattice parameter a in [Angs]
+#
+# Format parameters: Lazy format <http://icsd.ill.fr>
+# column_j 17 multiplicity 'j'
+# column_d 6  d-spacing 'd' in [Angs]
+# column_F 13 norm of scattering factor |F| in [barn^0.5]
+# column_h 1
+# column_k 2
+# column_l 3
+#
+# H  K  L  THETA  2THETA D VALUE  1/D**2 SIN2*1000  H  K  L INTENSITY         /F(HKL)/       A(HKL)      B(HKL) PHA.ANG. MULT   LPG
+  1  1  1  13.86  27.72   2.0872  0.2296    57.39   1  1  1    1000.0              2.9         2.92         0.00    0.00  8  17.95
+  2  0  0  16.06  32.12   1.8075  0.3061    76.52   2  0  0     547.0              2.9         2.86         0.00    0.00  6  13.60
+  2  2  0  23.03  46.06   1.2781  0.6122   153.04   2  2  0     490.1              2.7         2.65         0.00    0.00 12   7.10
+  3  1  1  27.30  54.61   1.0900  0.8417   210.43   3  1  1     658.3              2.5         2.51         0.00    0.00 24   5.35
+  2  2  2  28.63  57.26   1.0436  0.9182   229.56   2  2  2     196.0              2.5         2.46         0.00    0.00  8   4.96
+  4  0  0  33.59  67.18   0.9038  1.2243   306.08   4  0  0      99.7              2.3         2.28         0.00    0.00  6   3.92
+  3  3  1  37.08  74.15   0.8293  1.4539   363.47   3  3  1     312.5              2.1         2.15         0.00    0.00 24   3.45
+  4  2  0  38.21  76.42   0.8083  1.5304   382.60   4  2  0     290.1              2.1         2.11         0.00    0.00 24   3.33
+  4  2  2  42.65  85.31   0.7379  1.8365   459.12   4  2  2     221.7              2.0         1.95         0.00    0.00 24   2.96
+  5  1  1  45.95  91.89   0.6957  2.0660   516.51   5  1  1     185.8              1.8         1.84         0.00    0.00 24   2.78
+  3  3  3  45.95  91.89   0.6957  2.0660   516.51   3  3  3      61.9              1.8         1.84         0.00    0.00  8   2.78
+  4  4  0  51.48 102.96   0.6391  2.4486   612.15   4  4  0      72.3              1.7         1.68         0.00    0.00 12   2.62
+  5  3  1  54.91 109.82   0.6111  2.6782   669.54   5  3  1     255.3              1.6         1.58         0.00    0.00 48   2.60
+  4  4  2  56.08 112.17   0.6025  2.7547   688.67   4  4  2     123.1              1.6         1.55         0.00    0.00 24   2.60
+  6  0  0  56.08 112.17   0.6025  2.7547   688.67   6  0  0      30.8              1.6         1.55         0.00    0.00  6   2.60
+  6  2  0  61.02 122.03   0.5716  3.0608   765.19   6  2  0     109.4              1.4         1.44         0.00    0.00 24   2.70
+  5  3  3  65.09 130.18   0.5513  3.2903   822.58   5  3  3     104.4              1.4         1.36         0.00    0.00 24   2.89
+  6  2  2  66.56 133.11   0.5450  3.3669   841.71   6  2  2     104.0              1.3         1.33         0.00    0.00 24   2.99
+  4  4  4  73.38 146.77   0.5218  3.6729   918.23   4  4  4      37.9              1.2         1.23         0.00    0.00  8   3.81

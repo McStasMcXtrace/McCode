@@ -1,0 +1,10 @@
+WHITEBG   Set the default color scheme
+
+    whitebg(c) where c=[r g b] is a vector giving the red,green and
+    blue intensity sets the default background of subsequent figures
+    to color c. Other colors, such as the frame color, the foreground
+    and background colors, the 2D colormap (for color cycling in 2D
+    plots) are set to adequate values.
+    
+    whitebg() sets the default background to white=[1 1 1]. The default
+    scheme at startup corrensponds to whiteg([0 0 0]) (black background).

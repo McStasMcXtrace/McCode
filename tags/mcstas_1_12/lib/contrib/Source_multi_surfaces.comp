@@ -1,0 +1,395 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2006, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Source_multi_surfaces
+*
+* %I
+* Written by: Ludovic Giller, Uwe Filges
+* Date: 31.10.06
+* Version: $Revision: 1.1 $
+* Origin: PSI/Villigen
+* Release: McStas 1.10
+* Modified by:
+*
+* Rectangular neutron source with subareas - using wavelength spectra reading
+* from files
+* 
+* %D
+* This routine is a rectangular neutron source, which aims at a square target
+* centered at the beam (in order to improve MC-acceptance rate).
+* The angular divergence is then given by the dimensions of the target.
+* The source surface can be divided in subareas (maximum 7 in one dimension). 
+* For each subarea a discret spectrum must be loaded given by its corresponding
+* file. The name of the files are saved in one file and will be called with the
+* parameter "names".
+* In fact the routine first reads the spectrum from files (up to 49) and it 
+* selects randomly a subarea. Secondly it generates a neutron with an random
+* energy, selected from the spectrum corresponding to the subsurface chosen, and
+* with a random direction of propagation within the target.
+* ATTENTION 1:  the files must be located in the working directory where also
+*		the instrument file is located
+* ATTENTION 2:  the wavelenght distribution (or binning) must be uniform 
+*
+*
+* Usage example:
+*   Source_multi_surfaces(h=0.16,w=0.09,dist=1.18,xw=0.08,yh=0.15,xdim=4,ydim=4,
+*                         Lmin=0.01,Lmax=10.0,names="files_name.dat")
+*
+* %P
+* h:       (m)   Source y-height
+* w:       (m)   Source x-width
+* dist:    (m)   Distance to target along z axis
+* xw:      (m)   Width(x) of target
+* yh:      (m)   Height(y) of target
+* xdim:    (int) Number of subareas in the x direction
+* ydim:    (int) Number of subareas in the y direction
+* Lmin:    (AA)  Minimum wavelength of neutrons
+* Lmax:    (AA)  Maximum wavelength of neutrons
+* Emin:    (eV)  Minimum energy of neutrons
+* Emax:    (eV)  Maximum energy of neutrons
+* names:   (str) Name of the file containing a list of the spectra file names
+*                eg. for a 3x2 (x,y) division :
+*                    spec1_1.dat spec1_2.dat spec1_3.dat
+*                    spec2_1.dat spec2_2.dat spec2_3.dat(RETURN-key)
+*
+*                ATTENTION : The line break after the last line is important.
+*			     Otherwise the files can not be read in !!!
+*
+*                and for example spec1_2.dat must be like, always from big to
+*                small lambda :
+*			#surface 1_2
+*			#comments must be preceded by "#"
+*			#lambda [AA] 	intensity [a.u.]
+*			9.0		1.39E+08
+*			8.75		9.67E+08
+*			8.5		1.17E+09
+*			8.25		1.50E+09
+*			8.0		1.60E+09
+*			7.75		1.43E+09
+*			7.5		1.40E+09
+*			7.25		1.36E+09
+*			7.0		1.35E+09
+*			6.75		1.33E+09
+*			6.5		1.32E+09
+*			6.25		1.31E+09
+*
+*
+*		[a.u.] 	means that your chosen unit for the intensity influences
+*			the outcoming unit. What you put in you will get out !
+*			i.e. whatever is the unit for the input intensity you
+*			will have the same unit for the the output.
+*			Generally McStas works in neutrons per second [n/s].
+*
+* %E
+*******************************************************************************/
+DEFINE COMPONENT Source_multi_surfaces
+DEFINITION PARAMETERS (names)
+SETTING PARAMETERS (h,w,dist,xw,yh,xdim,ydim,Emin=0.0,Emax=0.0,Lmin=0.0,Lmax=0.0)
+OUTPUT PARAMETERS (p_in)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+SHARE
+%{
+
+%include "read_table-lib"
+
+char *get_token(char **src, char *token_sep)
+{
+        char    *tok;
+        if (!src || !*src || !**src)
+                return(NULL);
+        while(**src && strchr(token_sep,**src))
+                (*src)++;
+        if (**src)
+                tok = *src;
+        else
+                return(NULL);
+        *src = strpbrk(*src,token_sep);
+        if (*src)
+        {
+                **src = 0;
+                (*src)++;
+                while(**src && strchr(token_sep,**src))
+                        (*src)++;
+        }
+        else
+                *src = "";
+        return(tok);
+}
+
+
+%}
+
+DECLARE
+%{
+       
+ double delta_lambda;
+ double p_in;
+ t_Table Tables[49];                             
+  
+%}
+INITIALIZE
+%{
+  int n_surf=1,c_surf=1;                  	/*numbers of subsurfaces*/
+  int rows_surf;                          	/*number of Source_multi_surfaces.comp rows*/
+  int i, j, string_num,k;                 	/*names_table indices*/
+
+  char *token;
+  FILE *files_name;
+  char fu[50];
+  struct names_table{
+       int index1;
+       char spec_name[128];
+       char tmp_name[512];
+    };
+  struct names_table values[50];       
+
+  for (i=0;i<50;i++)
+  {
+    values[i].index1=i;
+    sprintf(values[i].spec_name,"empty"); 
+  }
+  
+  if ((h == 0) || (w == 0))
+  {
+    fprintf(stderr,"Source_multi_surfaces: Error: Please precise source geometry (h, w)\n");
+    exit(-1);
+  }
+  if (xw*yh == 0)   
+  {
+    fprintf(stderr,"Source_multi_surfaces: Error: Please precise source target (xw, yh)\n");
+    exit(-1);
+  }
+  if ((xdim >= 8) || (ydim >= 8))
+  {
+    fprintf(stderr,"Source_multi_surfaces: Error: Number of subdivision in x or y too big (>=8)\n");
+    exit(-1);
+  }
+  if (dist == 0)
+  {
+    fprintf(stderr,"Source_multi_surfaces: Error: dist = 0\n");
+    exit(-1);
+  }
+  if ((Emin < 0) || (Emax < 0))
+  {
+    fprintf(stderr,"Source_multi_surfaces: Error: Energy will reach negative values (Emin or Emax < 0)\n");
+    exit(-1);
+  }  
+  if ((Lmin < 0) || (Lmax < 0))
+  {
+    fprintf(stderr,"Source_multi_surfaces: Error: Wavelength will reach negative values (Lmin or Lmax < 0)\n");
+    exit(-1);
+  }
+  
+  if ((Emax != 0) && (Emin != 0))
+  {
+  Lmin=sqrt(81.82/Emax/1e3);             	/* wavelength in AA */
+  Lmax=sqrt(81.82/Emin/1e3);  
+  }
+
+  delta_lambda=Lmax-Lmin;
+
+  n_surf = xdim*ydim;
+  
+  /*read files_name.dat, generate a table with the files names*/  
+
+  files_name = fopen(names, "r");
+
+  i=0;
+  rows_surf=0;  
+  while(1) 
+  {
+    if (feof(files_name)) break;
+    fgets(values[i].tmp_name,512,files_name);
+    i=i+1;
+    rows_surf=i;
+  }                                            /*we do not consider the number of line*/
+  
+  j=0;i=0;k=0;
+  for (j=0;j<rows_surf;j++)
+  {
+     token =strtok(values[j].tmp_name," ");   
+     if (j>0) i=i+(7-xdim);
+     sprintf(values[i].spec_name,"%s\n",token); 
+     i=i+1;     
+     k=k+1;
+     while (token = strtok(0," "))
+     {
+        sprintf(values[i].spec_name,"%s\n",token);
+        i=i+1;
+        k=k+1;
+        c_surf=k;
+     }
+   } 
+  sprintf(values[i-1].spec_name,"%s","empty"); 
+  fclose(files_name);
+  rows_surf=rows_surf-1;
+  
+  if (n_surf!=c_surf)
+  {
+    fprintf(stderr,"Source_multi_surfaces: Error: Number of subdivision (xdim*ydim) and number of input file not equal (files_name.dat)\n");
+    exit(-1);
+  }  
+  
+  /*read each input file and fill in 49 arrays*/
+  
+  for (i=0;i<7;i++)
+  {
+    for (j=0;j<7;j++)
+    {
+      k=i*7+j;
+      if (strcmp(values[k].spec_name,"empty"))
+      {
+        switch(j)
+		{
+			case 0 :
+				if (xdim > 1) {
+        				string_num=strlen(values[k].spec_name)-1; 
+     				} else {
+       				string_num=strlen(values[k].spec_name)-2; 
+     				}  
+				break;
+			case 6 :
+				if (xdim==7) {     
+       				string_num=strlen(values[k].spec_name)-2; 
+    				}
+				break;
+			default :
+				if (xdim==j+1) {     
+           				string_num=strlen(values[k].spec_name)-2; 
+        			} else {
+           				string_num=strlen(values[k].spec_name)-1;
+        			}
+		}
+        strncpy(fu,values[k].spec_name ,string_num);
+        fu[string_num] = '\0'; 
+        Table_Read(&Tables[k], fu, 0); 
+        if (Lmax > Table_Index(Tables[k],0,0))  {
+          fprintf(stderr,"Source_multi_surfaces: Error: Lmax or Emin not present in %s",values[k].spec_name);
+          fprintf(stderr,"Source_multi_surfaces: Choosen Lmax or Emin is %2.8f larger as the given Lmax-value in the file %s . \n",(Lmax-Table_Index(Tables[k],(Tables[k].rows-1),0)),values[k].spec_name);
+          exit(-1);
+        }       
+        if (Lmin < Table_Index(Tables[k],(Tables[k].rows-1),0))  {
+          fprintf(stderr,"Source_multi_surfaces: Error: Lmin or Emax not present in %s",values[k].spec_name);
+          fprintf(stderr,"Source_multi_surfaces: Choosen Lmin or Emax is %2.8f smaller as the given Lmin-value in the file %s . \n",(Table_Index(Tables[k],0,0)-Lmin),values[k].spec_name);
+          exit(-1);               
+        } 
+      } 
+    }
+  }
+
+  w=fabs(w); h=fabs(h);
+  xw = fabs(xw); yh=fabs(yh); dist=fabs(dist);
+
+  /*generate p_in*/
+  p_in = 1/mcget_ncount();
+  
+%}
+TRACE
+%{
+  double theta0,phi0,theta1,phi1,theta,phi;
+  double v,xpos,ypos;
+  double intensity,lambda;
+  double a,tan_v,tan_h;
+  int i,j,k;
+
+    z = 0;
+    x = w*randpm1()*0.5;         		   /*select point on the source (uniform)*/
+    y = h*randpm1()*0.5;
+   
+    xpos = (x/w+0.5)*xdim;       		   /*select the corresponding subsurface*/
+    ypos = (y/h+0.5)*ydim;
+    
+    /* printf("xpos %f, ypos %f \n", xpos, ypos);  */
+    
+    theta0= -atan((x-xw/2.0)/dist);                /*Angles to aim at target*/
+    phi0  = -atan((y-yh/2.0)/dist);
+    theta1= -atan((x+xw/2.0)/dist);
+    phi1  = -atan((y+yh/2.0)/dist);
+    
+    theta= theta0+(theta1- theta0)*rand01();       /*shot towards target*/
+    phi  = phi0  +(phi1  - phi0)  *rand01();     
+    
+    lambda=Lmin+delta_lambda*rand01();		   /*select the lambda randomly*/
+
+    intensity=0; a=0;
+
+    /*select the correct neutron in the correct table and give its intensity*/
+
+    /*assume a linear distribution between the values given in the files*/
+
+    k = floor(ypos)*7+floor(xpos);
+
+    for (i=0;i<(Tables[k].rows+1);i++)
+      {
+        if ((lambda <= Table_Index(Tables[k],i,0)) && (lambda > Table_Index(Tables[k],i+1,0))) 
+        {        
+          a=(Table_Index(Tables[k],i+1,1)-Table_Index(Tables[k],i,1))/(Table_Index(Tables[k],i+1,0)-Table_Index(Tables[k],i,0));
+          intensity=a*lambda+(Table_Index(Tables[k],i,1)-a*Table_Index(Tables[k],i,0));
+        }
+      }
+    
+    /*calculate the speed*/
+    
+    v = K2V*(2*PI/lambda);
+
+    /*calculate the p-value*/
+    
+    p = p*intensity*p_in*fabs((theta1 - theta0)*(phi1 - phi0));
+    
+    tan_h = tan(theta);
+    tan_v = tan(phi);
+    vz = v / sqrt(1 + tan_v*tan_v + tan_h*tan_h);
+    vy = tan_v * vz;
+    vx = tan_h * vz;    
+    
+    SCATTER;      
+
+    /*printf("intensity: %f lambda: %f \n", intensity, lambda);*/
+%}
+FINALLY
+%{
+  int i;
+  for (i=0;i<49;i++)
+    Table_Free(&Tables[i]);
+    
+  fprintf(stderr,"Source_multi_surfaces: Memory cleared\n");
+%}
+MCDISPLAY
+%{
+  double xmin;
+  double xmax;
+  double ymin;
+  double ymax;
+  double xline;
+  double yline;
+  
+  xmin = -w/2; xmax = w/2;
+  ymin = -h/2; ymax = h/2;
+
+  magnify("xy");
+  multiline(5, (double)xmin, (double)ymin, 0.0,
+        	   (double)xmax, (double)ymin, 0.0,
+        	   (double)xmax, (double)ymax, 0.0,
+        	   (double)xmin, (double)ymax, 0.0,
+        	   (double)xmin, (double)ymin, 0.0);
+        	   
+  /*the grid*/
+  
+  for (xline=(w/xdim)-(w/2); xline < w/2; xline=xline+(w/xdim)) {
+      line((double)xline, (double)ymin, 0.0, (double)xline, (double)ymax, 0.0);
+      }
+      
+  for (yline=(h/ydim)-(h/2); yline < h/2; yline=yline+(h/ydim)) {
+      line((double)xmin, (double)yline, 0.0, (double)xmax, (double)yline, 0.0);
+      }
+
+%}
+
+END
+
+

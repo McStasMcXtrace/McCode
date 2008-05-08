@@ -1,0 +1,132 @@
+#
+#   This file is part of the McStas neutron ray-trace simulation package
+#   Copyright (C) 1997-2008, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+dnl Process this file with autoconf to produce a configure script.
+
+AC_INIT(McStas, X.Y.Z, www.mcstas.org)
+AC_REVISION($Revision: 1.9 $)
+AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
+Risoe National Laborartory, Roskilde, Denmark
+Institut Laue Langevin, Grenoble, France
+This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
+see file COPYING for further information])
+
+AC_ARG_WITH([cc], AC_HELP_STRING([--with-cc=c compiler], [Specify name of C compiler]),
+        [with_cc=$withval], [with_cc=yes])
+if test x"$with_cc" != x"no" ; then
+        if test x"$with_cc" != x"yes" ; then CC="$with_cc"; fi
+        AC_PROG_CC
+else
+        AC_MSG_ERROR([You need a C compiler to compile this package])
+fi
+CF_ANSI_CC_CHECK
+
+AC_PATH_PROGS(PERL,   [perl5 perl /usr/local/bin/perl], no)
+AC_PATH_PROGS(SCILAB, [scilab runscilab /usr/local/bin/scilab /usr/lib/scilab/bin/scilab /lib/scilab/bin/scilab scilex], no)
+AC_PATH_PROGS(MATLAB, [matlab /usr/local/bin/matlab], no)
+AC_PATH_PROGS(GNUPLOT, [gnuplot /usr/local/bin/gnuplot], no)
+AC_PATH_PROGS(PGPLOT, [pgxwin_server /usr/local/bin/pgxwin_server /usr/local/pgplot/pgxwin_server], no)
+AC_PATH_PROGS(TCLTK,  [wish /usr/local/bin/wish tclsh], no)
+AC_PATH_PROGS(SSH,    [ssh plink /usr/local/bin/ssh], no)
+AC_PATH_PROGS(SCP,    [scp pscp /usr/local/bin/scp], no)
+AC_PATH_PROGS(DASH,   [dash /bin/dash /usr/bin/dash], no)
+AC_PATH_PROGS(MPIRUN, [mpirun /usr/local/bin/mpirun], no)
+AC_PATH_PROGS(MPICC,  [mpicc hcc mpxlc_r mpxlc mpcc cmpicc /usr/local/bin/mpicc], no)
+AC_PATH_PROGS(BROWSER,[konqueror firefox mozilla-firefox mozilla netscape gnome-open epiphany galeon start msie /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
+AC_PATH_PROGS(EDITOR, [nedit kate gedit xemacs xedit vim notepad wordpad], no)
+AC_PATH_PROGS(VRMLVIEW, [octagaplayer freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
+AC_PATH_PROGS(WGET, [wget], no)
+AC_PATH_PROGS(PERLDL,   [perldl /usr/local/bin/perldl /usr/bin/perldl], no)
+AC_PATH_PROGS(G77, [g77 f77 g95 f95 gfortran], no)
+AC_PATH_PROGS(MINGW, [i586-mingw32msvc-gcc], no)
+AC_PATH_PROGS(MAKE,   [make gmake], no)
+AC_PATH_PROGS(AT,  [at], no)
+AC_PATH_PROGS(HDFVIEW,  [hdfview /usr/local/bin/hdfview /usr/local/hdfview/hdfview], no)
+# Important here: gnome-terminal is broken:
+#  Any commandline arguments after -e must contain escaped spaces.
+# BUT: If escaped in the perl code, use of xterm/konsole is broken....
+# Hence we allow only gnome-terminal.wrapper which is debian only
+# :(
+AC_PATH_PROGS(TERMINAL,   [xterm konsole gnome-terminal.wrapper], no)
+
+# handle PIC options
+AC_ARG_WITH([pic],
+  [AS_HELP_STRING([--with-pic],
+     [enable support for PIC libraries (required to compile PGPLOT on some systems)])],
+  [USE_PIC=$withval],
+  [USE_PIC=no])
+AC_SUBST(USE_PIC)
+
+# check for OpenMP threads and option to use at compile
+AC_CHECK_HEADER(omp.h, [ HAVE_THREADS=yes ])
+if test "$HAVE_THREADS" = yes; then
+  # test flag to use for compilation
+  AC_CACHE_CHECK([for OpenMP flag of _AC_LANG compiler], ax_cv_[]_AC_LANG_ABBREV[]_openmp, [save[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
+  ax_cv_[]_AC_LANG_ABBREV[]_openmp=unknown
+  # Flags to try:  -fopenmp (gcc), -openmp (icc), -mp (SGI & PGI),
+  #                -xopenmp (Sun), -omp (Tru64), -qsmp=omp (AIX), none
+  ax_openmp_flags="-fopenmp -openmp -mp -xopenmp -omp -qsmp=omp none"
+  if test "x$OPENMP_[]_AC_LANG_PREFIX[]FLAGS" != x; then
+    ax_openmp_flags="$OPENMP_[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flags"
+  fi
+  for ax_openmp_flag in $ax_openmp_flags; do
+    case $ax_openmp_flag in
+      none) []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[] ;;
+      *) []_AC_LANG_PREFIX[]FLAGS="$save[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flag" ;;
+    esac
+    AC_TRY_LINK_FUNC(omp_set_num_threads,
+	  [ax_cv_[]_AC_LANG_ABBREV[]_openmp=$ax_openmp_flag; break])
+  done
+  []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[]FLAGS
+  ]) # end AC_CACHE_CHECK
+  if test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" != "xnone"; then
+    OPENMP_[]_AC_LANG_PREFIX[]FLAGS=$ax_cv_[]_AC_LANG_ABBREV[]_openmp
+  fi
+  # now set DEFINE for mcstas_config
+  AC_SUBST([HAVE_THREADS], ["-DUSE_THREADS $OPENMP_CFLAGS"])
+  AC_DEFINE([HAVE_THREADS], ["-DUSE_THREADS $OPENMP_CFLAGS"])
+else
+  AC_SUBST([HAVE_THREADS], [])
+  AC_DEFINE([HAVE_THREADS], [])
+fi
+
+
+# check for MPI
+if test "$MPICC" != "no"; then
+  AC_CHECK_HEADER(mpi.h, , [ echo "WARNING: $MPICC may fail to compile without mpi.h" ] )
+fi
+
+# check for NeXus libraries
+AC_ARG_WITH([nexus],
+  [AS_HELP_STRING([--with-nexus],
+     [enable support for NeXus/HDF libraries])])
+if test "${with_nexus+set}" = set; then
+  AC_SUBST([HAVE_NEXUS], ["-DUSE_NEXUS -lNeXus"])
+  AC_DEFINE([HAVE_NEXUS], ["-DUSE_NEXUS -lNeXus"])
+else
+  AC_SUBST([HAVE_NEXUS], [])
+  AC_DEFINE([HAVE_NEXUS], [])
+fi
+
+AC_OUTPUT(mcstas_config.perl)
+
+chmod a+x mcstas_reconfigure
+chmod a+w mcstas_config.perl
+
+echo "McStas has been reconfigured..."

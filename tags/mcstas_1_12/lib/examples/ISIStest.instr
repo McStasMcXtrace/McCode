@@ -1,0 +1,97 @@
+/*******************************************************************************
+* %Identification
+* Written by: <a href="mailto:D.Champion@rl.ac.uk">Dickon Champion</a>
+* Date: Aug 2004
+* Origin: <a href="http://www.isis.rl.ac.uk/">ISIS</a>
+*
+* %INSTRUMENT_SITE:tests
+*
+* %Description
+* Simple test instrument for the ISIS_moderator component.
+* Refer to the documentation in MCSTAS/contrib/doc/ISISdoc.pdf (.ps)
+* for further instructions on using the ISIS_moderator component
+*
+* Example: mcrun ISIStest.instr
+*
+* %Link
+* Written by D. Champion <D.Champion@rl.ac.uk> ISIS, Feb 2004
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ISIStest()
+
+TRACE
+
+COMPONENT a1 = Arm()
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT isis_mod = ISIS_moderator(
+	Face ="merlin", E0 = -0.3,E1 = -12, dist = 0.01, xw = 0.1,
+    yh = 0.1,modXsize=-0.5, modYsize=-0.8, CAngle = 0.0,SAC=0)
+  AT (0, 0, 0) RELATIVE a1
+
+
+COMPONENT lam1 = L_monitor(
+    nchan = 1000, filename = "lambdagr.dat", xmin = -1, xmax = 1,
+    ymin = -1, ymax = 1, Lmin = 0.3, Lmax = 12)
+  AT (0, 0, 0.02) RELATIVE isis_mod
+
+
+COMPONENT monL = Monitor_nD(
+    options = "square,  lambda limits[0.3 12.0] bins=1000",
+    filename = "LamND.dat", xwidth=2.0, yheight = 2.0)
+  AT (0, 0, 0.03) RELATIVE isis_mod
+
+
+COMPONENT monT = Monitor_nD(
+    options = "square, time auto",
+    filename = "timeND.dat", xwidth=2.0, yheight = 2.0)
+  AT (0, 0, 0.04) RELATIVE isis_mod
+
+END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
