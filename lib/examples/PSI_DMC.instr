@@ -8,7 +8,7 @@
 * Date: May 7th, 2008
 * Origin:PSI
 * Release: McStas 1.12
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: PSI
 *
 * %Description
@@ -97,7 +97,7 @@ AT (0, 0, 0) ABSOLUTE
 COMPONENT source = Source_Maxwell_3(
         height=0.156, width=0.126,
 	l_low=lambda-ldiff/2,l_high=lambda+ldiff/2,
-        dist=1.5, xw = 0.25, yh = 0.12,
+        dist=1.5, xw = 0.025, yh = 0.12,
         T1=296.16, I1=8.5E11,
         T2=40.68, I2=5.2E11)    
 AT (0,0,0) RELATIVE source_arm  ROTATED (0,0,0) RELATIVE source_arm
@@ -260,4 +260,5 @@ ROTATED (0, 0, 180) RELATIVE sa_arm
 
 
 END  
+
 
