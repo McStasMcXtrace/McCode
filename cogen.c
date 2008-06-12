@@ -12,11 +12,18 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.79 $
+* Version: $Revision: 1.80 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.79  2008/02/09 22:26:26  farhi
+* Major contrib for clusters/multi-core: OpenMP support
+* 	try ./configure --with-cc=gcc4.2 or icc
+* then mcrun --threads ...
+* Also tidy-up configure. Made relevant changes to mcrun/mcgui to enable OpenMP
+* Updated install-doc accordingly
+*
 * Revision 1.78  2007/12/11 14:49:32  farhi
 * WHEN now disabled EXTEND
 * Added IN22 examples
@@ -182,7 +189,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.79 2008-02-09 22:26:26 farhi Exp $
+* $Id: cogen.c,v 1.80 2008-06-12 14:23:19 farhi Exp $
 *
 *******************************************************************************/
 
@@ -505,9 +512,9 @@ cogen_instrument_scope(struct instr_def *instr,
 /* Create the bindings for the SETTING parameter scope. Since the types of
 * setting parameters are known, local declarations can be used, avoiding the
 * problems with #define macro definitions.
-* infunc=0: no definition of parameters
-* infunc=1: define local copies of setting/definition parameters
-* infunc=2: same as 1, but for TRACE adds the EXTEND block and handles JUMPs
+* infunc=0: no definition of parameters (decl/init)
+* infunc=1: define local copies of setting/definition parameters (save/finally)
+* infunc=2: same as 1, but for TRACE adds the EXTEND block and handles JUMPs (trace)
 */
 static void
 cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
@@ -520,14 +527,12 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
   if(formal != NULL)
   {
     /* Create local parameter equal to global value. */
-    if(infunc)
-      coutf("%s %s = %sc%s_%s;", instr_formal_type_names_real[formal->type], formal->id, ID_PRE, comp->name, formal->id);
-    else
-      coutf("#define %s %sc%s_%s", formal->id, ID_PRE, comp->name, formal->id);
+
+    coutf("%s %s = %sc%s_%s;", instr_formal_type_names_real[formal->type], formal->id, ID_PRE, comp->name, formal->id);
     cogen_comp_scope_setpar(comp, set, infunc, func, data);
 
     if(!infunc)
-      coutf("#undef %s", formal->id);
+      if (formal->type != instr_type_string) coutf("%sc%s_%s = %s;", ID_PRE, comp->name, formal->id, formal->id);
   }
   else
   {
