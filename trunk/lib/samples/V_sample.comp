@@ -10,11 +10,11 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.36 $
+* Version: $Revision: 1.37 $
 * Origin: Risoe
 * Release: McStas 1.6
-* Modified by: Aziz Daoud-aladine, ISIS, 2007
-* Modified by: Added option to handle a spherical sample shape
+* Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
+* Modified by: Reynald Arnerin, UFRIMAG, 2008: Added option to handle a complex geometry (OFF files)
 *
 * Vanadium sample.
 *
@@ -32,6 +32,11 @@
 * This target position will be set to its AT position. When targeting to
 * centered components, such as spheres or cylinders, define an Arm component
 * where to focus to.
+* The complex geometry option handles every closed non-convex polyhedra.
+* It computes the intersection points of the neutron ray with the object transparently 
+* so that it can be used like a regular sample object.
+* It supports the OFF and NOFF file format but not COFF (colored faces).
+* The default size and position of the object depends of the file datas.
 *
 * Peter Christiansen: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P
 * NB! As above multiple scattering is ignored .
@@ -39,7 +44,10 @@
 * Aziz Daoud-aladine: Added option to handle a spherical sample shape
 * Date: 10 July 2007
 *
-* Example: V_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,pack=1,
+* Reynald Arnerin: Added option to handle a complex geometry (OFF files)
+* Date: June 2008
+*
+* Example: V_sample(offfile=pc.off,focus_r=0.035,pack=1,
 *           target_index=1)
 *
 * %P
@@ -71,6 +79,10 @@
 * f_QE:       Fraction of quasielastic scattering (rest is elastic) [1]
 * gamma:      Lorentzian width of quasielastic broadening (HWHM) [1]
 * target_index: relative index of component to focus at, e.g. next is +1 [1]
+* offfile:    name of an OFF file for complex geometry. The OFF file may be 
+*             generated from XYZ coordinates using qhull/powercrust.
+* ratio:      scaling multiplication ratio for OFF files [1]
+* n_vertex_displayed: Number of vertices displayed in TRACE mode for OFF file representation
 *
 * Variables calculated in the component
 *
@@ -89,17 +101,20 @@
 *******************************************************************************/
 
 DEFINE COMPONENT V_sample
-DEFINITION PARAMETERS ()
+DEFINITION PARAMETERS (char *offfile=0)
 SETTING PARAMETERS (radius_i=0, radius_o=0, h=0, focus_r = 0,
 		    pack = 1, frac=1, f_QE=0, gamma=0,
   target_x = 0, target_y = 0, target_z = 0, focus_xw=0, focus_yh=0,
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, multiples=1)
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, multiples=1, ratio=1, n_vertex_displayed=5000.0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
 DECLARE
 %{
+
+  %include "interoff-lib"
+
   struct StructVarsV
   {
     double  sigma_a; /* Absorption cross section per atom (barns) */
@@ -113,10 +128,119 @@ DECLARE
     double  xw,yh;       /* rectangular metrical dimensions */
     double  tx,ty,tz;    /* target coords */
     } VarsV;
+
+    
+    long faceSize, vtxSize, polySize;
+    Coords* vtxArray;
+    Coords* normalArray;
+    unsigned long* faceArray;
+	
 %}
 
 INITIALIZE
 %{
+
+  if (offfile) {
+	  if(n_vertex_displayed<=0)
+		  exit(fprintf(stderr,"illegal number in n_vertex_displayed\n"));
+	
+	  t_Table vtxTable, faceTable;
+    long vtxIndex, faceIndex;
+
+	  double minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+	
+	
+    // get the indexes
+    if (getBlocksIndex(offfile,&vtxIndex,&vtxSize,&faceIndex, &polySize) <=0) exit(-1);
+   
+    //read vertex table = [x y z | x y z | ...]
+    Table_Read_Offset(&vtxTable, offfile, 0, &vtxIndex, vtxSize);
+
+    
+    //read face table = [nbvertex v1 v2 vn nbvertex v1 v2 vn ...]
+    Table_Read_Offset(&faceTable, offfile, 0, &faceIndex, 0);
+	
+	  faceSize=faceTable.columns;
+	  vtxArray=malloc(vtxSize*sizeof(Coords));
+	  //faceArray=malloc(faceSize*sizeof(unsigned long));
+	  normalArray=malloc(polySize*sizeof(Coords));
+	
+	  long i,j;
+	  for(i=0;i<vtxSize;++i)
+	  {
+		  vtxArray[i].x=Table_Index(vtxTable, i,0)*ratio;
+		  vtxArray[i].y=Table_Index(vtxTable, i,1)*ratio;
+		  vtxArray[i].z=Table_Index(vtxTable, i,2)*ratio;
+		
+		  //bounding box
+	    	if(vtxArray[i].x<minx)minx=vtxArray[i].x;
+	   	if(vtxArray[i].x>maxx)maxx=vtxArray[i].x;
+	    	if(vtxArray[i].y<miny)miny=vtxArray[i].y;
+	    	if(vtxArray[i].y>maxy)maxy=vtxArray[i].y;
+	    	if(vtxArray[i].z<minz)minz=vtxArray[i].z;
+	    	if(vtxArray[i].z>maxz)maxz=vtxArray[i].z;
+        
+	  }
+	  //table_read create a table on one line if the collumns are not constant, so there are 2 cases :
+	  if(faceTable.rows==1)
+	  {
+		  faceArray=malloc(faceSize*sizeof(unsigned long));
+		  for(i=0;i<faceSize;++i)
+		  {
+			  faceArray[i]=Table_Index(faceTable, 0, i);
+		  }
+	  }
+	  else
+	  {
+		  faceArray=malloc(polySize*faceSize*sizeof(unsigned long));
+		  for(i=0;i<polySize;++i)
+		  {
+			  for(j=0;j<faceSize;++j)
+				  faceArray[i*faceSize+j]=Table_Index(faceTable, i, j);
+		  }
+		  faceSize=faceSize*polySize;	
+	  }
+	  long indNormal=0;//index in polyArray
+	  i=0;		//index in faceArray
+	  while(i<faceSize)
+	  {	
+		  int nbVertex=faceArray[i];//nb of vertices of this polygon
+		  double vertices[3*nbVertex];
+		  int j;
+		
+		  for(j=0;j<nbVertex;++j)
+		  {
+			  unsigned long indVertPj=faceArray[i+j+1];
+			  vertices[3*j]=vtxArray[indVertPj].x;
+			  vertices[3*j+1]=vtxArray[indVertPj].y;
+			  vertices[3*j+2]=vtxArray[indVertPj].z;
+		  }
+		  ;
+		  polygon p;		
+		  p.p=vertices;
+		  p.npol=nbVertex;
+		  normal(&(p.normal),p);
+			
+		  normalArray[indNormal]=p.normal;
+		
+		  i+=nbVertex+1;
+		  indNormal++;	
+		
+	  }
+	  printf("\nload file : %s\n",offfile);
+	  printf("number of polygon : %d\n",polySize);
+	  printf("position of the center :\n");
+	  printf("x=%f \n",(minx+maxx)*0.5);
+	  printf("y=%f \n",(miny+maxy)*0.5);
+	  printf("z=%f \n",(minz+maxz)*0.5);
+	  printf("dimensions :\n");
+	  printf("length=%f \n",(-minx+maxx));
+	  printf("width=%f \n",(-miny+maxy));
+	  printf("depth=%f \n",(-minz+maxz));
+	  printf("(note that position and dimensions given are those of file, ratio and transformations are not considered here)\n");
+
+    VarsV.shapetyp=3;
+ } else {
   if ( (rad_sphere && (xwidth || yheight || zthick)) || (rad_sphere && (radius_o || h)) || ((xwidth || yheight || zthick) && (radius_o || h)) )
         exit(fprintf(stderr,"V_sample: %s: multiple and imcompatible sample shape definitions\n", NAME_CURRENT_COMP));
 	
@@ -130,7 +254,7 @@ INITIALIZE
       VarsV.shapetyp=1;
   else 
       VarsV.shapetyp=2;
-  
+}
 
 /*  if(VarsV.isrect) printf("isrect"); else printf("not isrect"); */
 
@@ -172,6 +296,8 @@ INITIALIZE
   if (focus_ah) {
     VarsV.ah = DEG2RAD*focus_ah;
   }
+
+
 %}
 
 TRACE
@@ -194,8 +320,24 @@ TRACE
   else
     if (VarsV.shapetyp == 1)
       intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
-  else
+  else if (VarsV.shapetyp == 0)
     intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
+  else if (VarsV.shapetyp == 3) {
+	  intersection t[200];
+    Coords A={x, y, z};
+	  Coords B={x+vx, y+vy, z+vz};
+    int t_size=clip_3D_mod(t, A, B,vtxArray, vtxSize, faceArray, faceSize, normalArray );
+    qsort(t,t_size,sizeof(intersection),compare);
+    cleanDouble(t,&t_size);
+    cleanInOut(t,&t_size);
+
+	  if(t_size>1)	
+	  {		
+		  t0 = t[0].time;
+		  t3 = t[1].time;
+      intersect=1;
+	  }
+  }
   if(intersect)
   {
     if(t0 < 0) ABSORB; /* we already passed the sample; this is illegal */
@@ -240,17 +382,17 @@ TRACE
 
       v_i = v;          /* Store initial velocity in case of quasielastic */
       if (rand01()<f_QE)	/* Quasielastic contribution */
-	{
+	    {
           E_i = VS2E*v_i*v_i;
           dE = gamma*tan(PI/2*randpm1());
           E_f = E_i + dE;
           if (E_f <= 0)
             ABSORB;
-	  v_f = SE2V*sqrt(E_f);
+	        v_f = SE2V*sqrt(E_f);
           v = v_f;
 	  /*          printf("vi: %g Ei: %g dE: %g Ef %g vf: %g v: %g \n",
 		      v_i,E_i,dE,E_f,v_f,v); */
-	}
+	    }
 
       vx *= v;
       vy *= v;
@@ -277,12 +419,14 @@ TRACE
           dt = t3;
         }
         else {
-	      if(!sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, rad_sphere)) {
-            /* ??? did not hit sphere */
-            printf("FATAL ERROR: Did not hit sphere from inside.\n");
-            exit(1);
-          }
-          dt = t3;  
+	      if(VarsV.shapetyp == 1){
+	        if(!sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, rad_sphere)) {
+              	/* ??? did not hit sphere */
+              	printf("FATAL ERROR: Did not hit sphere from inside.\n");
+                	exit(1);
+                }
+                dt = t3;  
+	        }
         }
       }
       l_o = v*dt; /* trajectory after scattering point: absorption only */
@@ -293,7 +437,7 @@ TRACE
 	   implicitly "absorb" further scattering (as in PowderN) 
 	   We are currently (august 2007) having a debate on which solution 
 	   is the most reasonable */
-	p *= exp(-VarsV.my_s*l_o);
+	      p *= exp(-VarsV.my_s*l_o);
       }
       /* We do not consider scattering from 2nd part (outgoing) */
       p /= 4*PI/solid_angle;
@@ -317,7 +461,7 @@ TRACE
 MCDISPLAY
 %{		
   magnify("xyz");
-  if (VarsV.shapetyp == 0) {
+  if (VarsV.shapetyp == 0) {	/* cylinder */
     circle("xz", 0,  h/2.0, 0, radius_i);
     circle("xz", 0,  h/2.0, 0, radius_o);
     circle("xz", 0, -h/2.0, 0, radius_i);
@@ -331,8 +475,7 @@ MCDISPLAY
     line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
     line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
   }
-  else { 
-	if (VarsV.shapetyp == 1) {
+  else if (VarsV.shapetyp == 1) { 	/* box */
       double xmin = -0.5*xwidth;
       double xmax =  0.5*xwidth;
       double ymin = -0.5*yheight;
@@ -354,12 +497,26 @@ MCDISPLAY
       line(xmin, ymax, zmin, xmin, ymax, zmax);
       line(xmax, ymax, zmin, xmax, ymax, zmax);
     }
-    else {
+    else if (VarsV.shapetyp == 2) {	/* sphere */
       circle("xy", 0,  0.0, 0, rad_sphere);
       circle("xz", 0,  0.0, 0, rad_sphere);
       circle("yz", 0,  0.0, 0, rad_sphere);        
     }
-  }
+    else if (VarsV.shapetyp == 3) {	/* OFF file */
+	int step=ceil((double)vtxSize/n_vertex_displayed);
+	unsigned int i;
+	for (i=0; i<vtxSize-1; i+=step) {
+		double x1,y1,z1,x2,y2,z2;
+		x1 = vtxArray[i].x;
+		y1 = vtxArray[i].y;
+		z1 = vtxArray[i].z;
+		x2 = vtxArray[i].x+.0001;
+		y2 = vtxArray[i].y+.0001;
+		z2 = vtxArray[i].z+.0001;
+
+		line(x1,y1,z1,x2,y2,z2);
+	}
+    }
 %}
 
 END
