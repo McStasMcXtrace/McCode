@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.37 $
+* Version: $Revision: 1.38 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
@@ -114,6 +114,7 @@ DECLARE
 %{
 
   %include "interoff-lib"
+  %include "read_table-lib"
 
   struct StructVarsV
   {
