@@ -626,6 +626,8 @@ sub preferences_dialog {
     if ($quote) { $choicequote->select; }
 
     $MCSTAS::mcstas_config{'CFLAGS_SAVED'} = $MCSTAS::mcstas_config{'CFLAGS'} unless $MCSTAS::mcstas_config{'CFLAGS_SAVED'};
+    $MCSTAS::mcstas_config{'CC_SAVED'} = $MCSTAS::mcstas_config{'CC'} unless $MCSTAS::mcstas_config{'CC_SAVED'}; 
+    $MCSTAS::mcstas_config{'MPICC_SAVED'} = $MCSTAS::mcstas_config{'MPICC'} unless $MCSTAS::mcstas_config{'MPICC_SAVED'};                              
     my $compilchoice = $lf->Label(-text => "Compilation options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $choicecflags = $lf->Checkbutton(-text => "Apply compiler flags: (define in textbox below)",
                -relief => 'flat', -variable => \$MCSTAS::mcstas_config{'MCGUI_CFLAGS'})->pack(-fill => 'x');
@@ -635,7 +637,16 @@ sub preferences_dialog {
 			   -width=>16,
 			   -textvariable => \$MCSTAS::mcstas_config{'CFLAGS_SAVED'},
 			   -justify => 'right')->pack(-fill => 'x');
-
+    $lf->Label(-text => "Compiler to use:", -anchor => 'n',)->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'CC_SAVED'},
+		       -justify => 'right')->pack(-fill => 'x');
+    $lf->Label(-text => "MPI Compiler to use:", -anchor => 'n')->pack(-fill => 'x');
+    $lf->Entry(-relief => 'sunken',
+		       -width=>16,
+		       -textvariable => \$MCSTAS::mcstas_config{'MPICC_SAVED'},
+		       -justify => 'right')->pack(-fill => 'x');
 
     my $precchoice = $lf->Label(-text => "Optimization options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
     $labelprec = $lf->Label(-text => "Precision",
@@ -682,6 +693,8 @@ sub preferences_dialog {
     } else {
       $MCSTAS::mcstas_config{'CFLAGS'} = "";
     }
+    $MCSTAS::mcstas_config{'CC'} = $MCSTAS::mcstas_config{'CC_SAVED'};
+    $MCSTAS::mcstas_config{'MPICC'} = $MCSTAS::mcstas_config{'MPICC_SAVED'};
     $MPIstuff = $MCSTAS::mcstas_config{'CLUSTER'};
     return ($res);
 }
