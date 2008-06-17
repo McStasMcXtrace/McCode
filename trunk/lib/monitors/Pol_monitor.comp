@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: Risoe
 * Release: McStas 1.10
 *
@@ -100,7 +100,7 @@ TRACE
     
     pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
     
-    if(abs(pol_proj>1)) {
+    if(fabs(pol_proj)>1) {
       fprintf(stderr, "Pol_monitor: %s: Pol vector longer than 1",
 	      NAME_CURRENT_COMP);
       exit(1);
