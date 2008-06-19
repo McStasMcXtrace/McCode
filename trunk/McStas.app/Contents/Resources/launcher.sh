@@ -72,6 +72,12 @@ then
   fi
   x11Check=`ps aux -U "$user" | grep -v grep | grep "$X11".app`
   displayListing=`find "$DISPLAYDIR" -mindepth 1 -user "$user"`
+  # Will return 5 if Leopard:
+  osVersion=0
+  osVersion+=`sw_vers | grep ProductVersion | cut -f 2 -d.`
+
+  if [ "$osVersion" -lt 5 ]
+  then
   
   if [ -z "$x11Check" ]  # check if x11 environment is running
   then
@@ -101,6 +107,7 @@ then
   displayNumber=${displayListing/*X/:}
   DISPLAY=$displayNumber.0    
   export DISPLAY
+  fi
 fi
 
 # check if the working directory exists and change directory
@@ -125,8 +132,11 @@ else
   "$PROGRAM" $ARGUMENTS "$@" > /dev/null 2>&1 &
 fi
 
-# bring X11 application to front
-if [ $USEX11 -eq 1 ]
+if [ "$osVersion" -lt 5 ]
 then
-  /usr/bin/open -a "$X11"
+  # bring X11 application to front
+  if [ $USEX11 -eq 1 ]
+  then
+    /usr/bin/open -a "$X11"
+  fi
 fi
