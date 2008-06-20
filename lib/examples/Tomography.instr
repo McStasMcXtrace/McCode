@@ -8,7 +8,7 @@
 * Date: June 20th, 2008
 * Origin: Risoe
 * Release: McStas 1.12
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: tests
 *
 * Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
@@ -64,7 +64,7 @@ AT (xtrans,ytrans,1+ztrans) RELATIVE Origin
 ROTATED (0,omega,0) RELATIVE Origin
 
 COMPONENT sample=V_sample(frac = frac_scatt, offfile = offfile, ratio = obj_ratio, sig_a=sigma_a,
-	focus_r=0.035, target_index=1)
+			  focus_xw=det_w, focus_yh=det_h, target_index=1)
 AT (0,0,0) RELATIVE samplearm 
 
 COMPONENT monitor = Monitor_nD(xwidth=det_w,yheight=det_h,options=opts)
