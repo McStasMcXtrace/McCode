@@ -330,7 +330,12 @@ int clip_3D_mod(intersection* t, Coords a, Coords b, Coords* vtxArray, unsigned 
 				++j;
 			}
 			if(j<pol.npol)
-			{
+			{	
+				if(t_size>MAX_INTERSECTION_SIZE)
+				{
+					fprintf(stderr, "Error: number of intersection exceeded (%d)\n", MAX_INTERSECTION_SIZE);
+      					return (0);
+				}
 				//both planes intersect the polygon, let's find the intersection point
 				//our polygon :
 				int k;
@@ -346,7 +351,7 @@ int clip_3D_mod(intersection* t, Coords a, Coords b, Coords* vtxArray, unsigned 
 				if(intersectPoly(&x, a, b, pol))
 				{						
 					t[t_size++]=x;
-				}
+				}					
 			}	
 		}
 		i+=pol.npol;
@@ -428,6 +433,210 @@ int cleanInOut(intersection* t, int* t_size)
 		}		
 	}
 	return 1;
+}
+
+
+void init_off(	char *offfile, double xwidth, double yheight, double zthick, off_data* datas)
+{
+	  //datas to be initialized
+	  long faceSize;
+    	  long vtxSize;
+	  long polySize;	 
+	  Coords* vtxArray;
+    	  Coords* normalArray;
+    	  unsigned long* faceArray;
+
+	  t_Table vtxTable, faceTable;
+    	  long vtxIndex, faceIndex;
+
+	  double minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+	
+	
+    	  // get the indexes
+    	  if (getBlocksIndex(offfile,&vtxIndex,&vtxSize,&faceIndex, &polySize) <=0) exit(-1);
+   
+  	  //read vertex table = [x y z | x y z | ...]
+  	  Table_Read_Offset(&vtxTable, offfile, 0, &vtxIndex, vtxSize);
+
+    
+  	  //read face table = [nbvertex v1 v2 vn nbvertex v1 v2 vn ...]
+  	  Table_Read_Offset(&faceTable, offfile, 0, &faceIndex, 0);
+	
+	  //initialize Arrays
+	  faceSize=faceTable.columns;
+	  vtxArray=malloc(vtxSize*sizeof(Coords));
+	  normalArray=malloc(polySize*sizeof(Coords));
+	
+	  long i,j;
+	  for(i=0;i<vtxSize;++i)
+	  {
+		vtxArray[i].x=Table_Index(vtxTable, i,0);
+		vtxArray[i].y=Table_Index(vtxTable, i,1);
+		vtxArray[i].z=Table_Index(vtxTable, i,2);
+		
+		//bounding box
+	    	if(vtxArray[i].x<minx)minx=vtxArray[i].x;
+	   	if(vtxArray[i].x>maxx)maxx=vtxArray[i].x;
+	    	if(vtxArray[i].y<miny)miny=vtxArray[i].y;
+	    	if(vtxArray[i].y>maxy)maxy=vtxArray[i].y;
+	    	if(vtxArray[i].z<minz)minz=vtxArray[i].z;
+	    	if(vtxArray[i].z>maxz)maxz=vtxArray[i].z;
+        
+	  }
+
+          //resizing and repositioning params
+	  double centrex=(minx+maxx)*0.5,
+		 centrey=(miny+maxy)*0.5,
+		 centrez=(minz+maxz)*0.5;
+	  
+	  double rangex=-minx+maxx,
+		 rangey=-miny+maxy,
+		 rangez=-minz+maxz;
+
+	  double ratiox=1,ratioy=1,ratioz=1;
+	  
+	  
+
+	  if(xwidth)
+	  {
+		ratiox=xwidth/rangex;
+		ratioy=ratiox;
+		ratioz=ratiox;
+	  }
+
+	  if(yheight)
+	  {
+		ratioy=yheight/rangey;
+		if(!xwidth) 
+			ratiox=ratioy;
+		ratioz=ratioy;
+	  }
+	
+	  if(zthick)
+	  {
+		ratioz=zthick/rangez;
+		if(!xwidth) 
+			ratiox=ratioz;
+		if(!yheight)
+			ratioy=ratioz;
+	  }
+		
+	   
+
+	  //center  and resize the object 
+	  for(i=0;i<vtxSize;++i)
+	  {
+		  vtxArray[i].x=(vtxArray[i].x-centrex)*ratiox;
+		  vtxArray[i].y=(vtxArray[i].y-centrey)*ratioy;
+		  vtxArray[i].z=(vtxArray[i].z-centrez)*ratioz;        
+	  }
+
+
+	  //table_read create a table on one line if the number of columns is not constant, so there are 2 cases :
+	  if(faceTable.rows==1)
+	  {
+		  //copy the table in a 1-row array
+		  faceArray=malloc(faceSize*sizeof(unsigned long));
+		  for(i=0;i<faceSize;++i)
+		  {
+			  faceArray[i]=Table_Index(faceTable, 0, i);
+		  }
+	  }
+	  else
+	  {
+		  //read each row of the table and concatenate in a 1-row array
+		  faceArray=malloc(polySize*(faceSize)*sizeof(unsigned long));
+		  for(i=0;i<polySize;++i)
+		  {
+			  for(j=0;j<faceSize;++j)
+				  faceArray[i*(faceSize)+j]=Table_Index(faceTable, i, j);
+		  }
+		  faceSize*=polySize;	
+	  }
+
+	  //precomputes normals
+	  long indNormal=0;//index in polyArray
+	  i=0;		//index in faceArray
+	  while(i<faceSize)
+	  {	
+		  int nbVertex=faceArray[i];//nb of vertices of this polygon
+		  double vertices[3*nbVertex];
+		  int j;
+		
+		  for(j=0;j<nbVertex;++j)
+		  {
+			  unsigned long indVertPj=faceArray[i+j+1];
+			  vertices[3*j]=vtxArray[indVertPj].x;
+			  vertices[3*j+1]=vtxArray[indVertPj].y;
+			  vertices[3*j+2]=vtxArray[indVertPj].z;
+		  }
+		  
+		  polygon p;		
+		  p.p=vertices;
+		  p.npol=nbVertex;
+		  normal(&(p.normal),p);
+			
+		  normalArray[indNormal]=p.normal;
+		
+		  i+=nbVertex+1;
+		  indNormal++;	
+		
+	  }
+
+
+	  printf("\nload file : %s\n",offfile);
+	  printf("number of polygon : %d\n",polySize);
+	  
+	  if(ratiox!=ratioy || ratiox!=ratioz || ratioy!=ratioz)
+		printf("Warning: proportions of the sample were modified. If you want to keep the originial proportions input either one of the dimensions\n");
+	  printf("dimensions :\n");
+	  printf("length=%f (%.3f%%)\n",rangex*ratiox,ratiox*100);
+	  printf("width=%f (%.3f%%)\n",rangey*ratioy,ratioy*100);
+	  printf("depth=%f (%.3f%%)\n",rangez*ratioz,ratioz*100);
+
+	  datas->vtxArray=vtxArray;
+	  datas->normalArray=normalArray;
+	  datas->faceArray=faceArray;
+	  datas->vtxSize=vtxSize;
+	  datas->polySize=polySize;
+	  datas->faceSize=faceSize;
+}
+
+
+int off_intersect(double* t0, double* t3, double x, double y, double z, double vx, double vy, double vz, off_data datas )
+{
+    intersection t[MAX_INTERSECTION_SIZE];
+    Coords A={x, y, z};
+    Coords B={x+vx, y+vy, z+vz};
+    int t_size=clip_3D_mod(t, A, B,datas.vtxArray, datas.vtxSize, datas.faceArray, datas.faceSize, datas.normalArray );
+    qsort(t,t_size,sizeof(intersection),compare);
+    cleanDouble(t,&t_size);
+    cleanInOut(t,&t_size);
+
+    if(t_size>1)	
+    {		
+	  *t0 = t[0].time;
+	  *t3 = t[1].time;
+	  return 1;
+    }
+    return 0;
+}
+
+void draw_offfile(off_data datas)
+{
+	int step=ceil((double)datas.vtxSize/N_VERTEX_DISPLAYED);
+	unsigned int i;
+	for (i=0; i<datas.vtxSize-1; i+=step) {
+		double x1,y1,z1,x2,y2,z2;
+		x1 = datas.vtxArray[i].x;
+		y1 = datas.vtxArray[i].y;
+		z1 = datas.vtxArray[i].z;
+		x2 = datas.vtxArray[i].x+.0001;
+		y2 = datas.vtxArray[i].y+.0001;
+		z2 = datas.vtxArray[i].z+.0001;
+
+		mcdis_line(x1,y1,z1,x2,y2,z2);
+	}
 }
 
 /* end of interoff-lib.c */

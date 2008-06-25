@@ -18,7 +18,7 @@
 *******************************************************************************/
 
 #ifndef INTEROFF_LIB_H
-#define INTEROFF_LIB_H "$Revision: 1.1 $"
+#define INTEROFF_LIB_H "$Revision: 1.2 $"
 
 #ifndef EPSILON
 #	define EPSILON 10e-13
@@ -29,6 +29,9 @@
 #define GEOMVIEW 0
 #define buf 256
 #define MAX_POL_SIZE 256
+#define N_VERTEX_DISPLAYED 5000
+#define MAX_INTERSECTION_SIZE 256
+
 /*
 typedef struct vertex {
   double x,y,z;
@@ -47,6 +50,15 @@ typedef struct polygon {
   int npol;  //number of vertex
   Coords normal;
 } polygon;
+
+typedef struct off_data {
+    long vtxSize;
+    long polySize;
+    long faceSize;
+    Coords* vtxArray;
+    Coords* normalArray;
+    unsigned long* faceArray;
+} off_data;
 
 
 //gives the normal vector of p
@@ -97,6 +109,13 @@ int cleanDouble(intersection* , int* );
 //Meaning the ray passes very close to the volume
 //returns 1 if there is a possibility of error
 int cleanInOut(intersection* , int* );
+
+
+void init_off(char*, double, double, double, off_data*);
+
+int off_intersect(double*, double*, double, double, double, double, double, double, off_data);
+
+void draw_offfile(off_data);
 
 #endif
 
