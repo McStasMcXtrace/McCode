@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.39 $
+* Version: $Revision: 1.40 $
 * Origin: Risoe
 * Release: McStas CVS_080612
 * Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
@@ -104,14 +104,18 @@ SETTING PARAMETERS (radius_i=0, radius_o=0, h=0, focus_r = 0,
 		    pack = 1, frac=1, f_QE=0, gamma=0,
   target_x = 0, target_y = 0, target_z = 0, focus_xw=0, focus_yh=0,
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, multiples=1)
-OUTPUT PARAMETERS(StructVarsV, VarsV)
+  OUTPUT PARAMETERS(StructVarsV, VarsV, offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
-DECLARE
+SHARE
 %{
   %include "read_table-lib"
   %include "interoff-lib"
+%}
+
+DECLARE
+%{
 
   struct StructVarsV
   {
