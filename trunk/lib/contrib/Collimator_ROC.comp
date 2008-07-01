@@ -11,7 +11,7 @@
 *
 * Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 15 May 2000
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
 * Release: McStas 1.6
 * Modified by: J.Ollivier Nov 2001: cleaned the code
@@ -63,6 +63,7 @@
 DEFINE COMPONENT Collimator_ROC
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (ROC_pitch,ROC_ri,ROC_ro,ROC_h,ROC_ttmin,ROC_ttmax,ROC_sign=1,ROC_present=1)
+OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 INITIALIZE
 %{

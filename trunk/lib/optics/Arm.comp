@@ -11,7 +11,7 @@
 *
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: September 1997
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Release: McStas 1.6
 * Origin: Risoe
 *
@@ -32,6 +32,7 @@
 DEFINE COMPONENT Arm
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 TRACE

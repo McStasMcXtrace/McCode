@@ -9,7 +9,7 @@
 * %I
 * Written by: S. Roth
 * Date: ???
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Release: McStas 1.5
 * Origin: Munich
 * Modified by: EF, 2004. Renamed into Al_window
@@ -36,6 +36,7 @@
 DEFINE COMPONENT window
 DEFINITION PARAMETERS (win_thick)
 SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE

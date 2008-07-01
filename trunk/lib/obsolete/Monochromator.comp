@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Henrik M. Roennow
 * Date: June 16, 1997
-* Version: $Revision: 1.25 $
+* Version: $Revision: 1.26 $
 * Release: McStas 1.5
 * Origin: Risoe
 * Modified by: EF, 2004. Upgraded to Monochromator_flat
@@ -51,6 +51,7 @@
 DEFINE COMPONENT Monochromator
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaich=30, mosaicv=30, r0=0.7, Q=1.8734)
+OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
