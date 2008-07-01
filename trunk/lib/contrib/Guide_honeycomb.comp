@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Venturi
 * Date: Aug 03 2001
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: E. Farhi, from Honeycomb_guide by K. Lefmann (buggy).
@@ -206,7 +206,7 @@ SHARE
     B = aVars->nz[7]*cvz; C = aVars->nz[7]*(cz - aVars->wz[7]);
     ret = solve_2nd_order(&dt0, aVars->A[7], B, C);
     if (ret && dt0>10e-10)
-    { dt_min = dt0; side=7; aVars->n_dot_v[7] = B; }
+    { dt_min = dt0; side=7; }
 
     loc_num = (3*cynum+cxnum)/2;
     for (i=6; i>0; i--)
@@ -376,7 +376,7 @@ TRACE
       if(GVars.M[side] == 0 || Qc == 0)  /* walls are absorbing */
         { x += w_adj; y += h_adj; ABSORB; }
       /* change/mirror velocity: h_f = v - n.2*n.v/|n|^2 */
-      B = GVars.nx[i]*vx + GVars.ny[i]*vy + GVars.nz[i]*vz;  /* n.v */
+      B = GVars.nx[side]*vx + GVars.ny[side]*vy + GVars.nz[side]*vz;  /* n.v */
       GVars.N_reflection[side]++; /* GVars.norm_n2 > 0 was checked at INIT */
       dt = 2*B/GVars.norm_n2[side]; /* 2*n.v/|n|^2 */
       vx -= GVars.nx[side]*dt;
