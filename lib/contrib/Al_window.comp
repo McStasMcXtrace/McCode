@@ -12,7 +12,7 @@
 * Date:       Jul 31, 2001
 * Origin:     FRM-II
 * Release: McStas 1.6
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 *
 * Aluminium window in the beam
 *
@@ -41,6 +41,7 @@
 DEFINE COMPONENT Al_window
 DEFINITION PARAMETERS (win_thick)
 SETTING PARAMETERS ()
+OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE

@@ -6,7 +6,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 * Release: McStas 1.5 (Obsolete)
 * Origin: Risoe
 * Modified by: EF, 2004. Upgraded to optics/Slit with rect/circle shapes
@@ -25,6 +25,7 @@
 DEFINE COMPONENT Circular_slit
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=0.01)
+OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 TRACE

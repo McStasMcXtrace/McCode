@@ -11,7 +11,7 @@
 * Date: September 2 1998, Modified by: KL, October 6, 1998
 * Release: McStas 1.0 (1998)
 * Origin: Risoe
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Modified by: EF, 2004. Obsoleted as other comps do the same task
 *
 * Models a rectangular guide with different vert. and horiz. m mirror values.
@@ -47,6 +47,7 @@
 DEFINE COMPONENT Guide2
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2, h2, l, R0=0.99, Qc=0.021, alpha=6.07, mh=2, mv=2, W=0.003)
+OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 TRACE

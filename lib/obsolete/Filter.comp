@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: Sept. 14 1998
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin:Risoe
 * Release: McStas 1.6
 * Modified by: EF, 2004. Obsoleted as better comps exist
@@ -46,6 +46,7 @@
 DEFINE COMPONENT Filter
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin, xmax, ymin, ymax, len, T0=0.9, T1=0.1, Emin=4.64, Emax=5)
+OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 TRACE
 %{
