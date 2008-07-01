@@ -175,8 +175,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT PSD_Detector
-DEFINITION PARAMETERS (nx=128, ny=128, filename=0, FN_Conv="He3inHe.table",
-  FN_Stop="He3inCF4.table")
+DEFINITION PARAMETERS (nx=128, ny=128, string filename=0, string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
 SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, depth=0.03,
   re=0.73, thres=100, PressureConv=5, PressureStop=1, interpolate=1, frac=0,
   verbose=0, LensOn=1, dc=0, borderx=-1, bordery=-1, xChDivRelSigma=0,
