@@ -32,16 +32,65 @@ else
 fi
 
 EXAMPLES="$MCSTAS/examples"
-EXECDIR=`mktemp -d`
+export EXMPLES
+EXECDIR=`mktemp -d -t McRun`
+export EXECDIR
 
-echo "Example folder used is $EXAMPLES"
+echo "Example folder used is $EXAMPLES - compiling in $EXECDIR"
+
+for file in `find $MCSTAS -name \*.comp -not -name \*dapt\* `;
+do
+    comp=`basename $file .comp`
+    instr=`echo $EXECDIR/cTest_$comp.instr`
+    export comp
+    export instr
+    echo Creating $instr
+    # Extract parameter names and set to 0...
+    # DEFINITION PARMS:
+    echo "DEFINE INSTRUMENT Test_$comp()" > $instr
+    echo "TRACE" >> $instr
+    echo "COMPONENT Test = $comp(" >> $instr
+    first=1
+    export first
+    for parm in `grep SETTING -A 100 $file | grep -B 100 OUTPUT | xargs echo | cut -f1 -d \) | cut -f2 -d \( | sed -e 's/int //g' | sed -e 's/double //g' | sed -e 's/string //g' | sed -e 's/char //g' | sed -e 's/\*//g' | sed -e 's/ =/=/g' | sed -e 's/= /=/g' | sed -e 's/ //g' | sed -e 's/,/ /g'`;
+    do
+	if [ "$first" != "1"  ]; then
+	    echo ", " >> $instr
+	else
+	  first=0
+	  export first 
+	fi
+	eq=`echo $parm | grep -c \=`
+	if [ "$eq" == "0"  ]; then
+	  echo `echo $parm` = 1 >> $instr
+	else
+	  echo `echo $parm` >> $instr  
+	fi   
+    done
+    for parm in `grep DEFINITION -A 100 $file | grep -B 100 SETTING | xargs echo | cut -f1 -d \) | cut -f2 -d \( | sed -e 's/int //g' | sed -e 's/double //g' | sed -e 's/string //g' | sed -e 's/char //g' | sed -e 's/\*//g' | sed -e 's/ =/=/g' | sed -e 's/= /=/g' | sed -e 's/ //g' | sed -e 's/,/ /g'`;
+    do
+	if [ "$first" != "1"  ]; then
+	    echo ", " >> $instr
+	else
+	  first=0
+	  export first 
+	fi
+	eq=`echo $parm | grep -c \=`
+	if [ "$eq" == "0"  ]; then
+	  echo `echo $parm ` = 1 >> $instr
+	else
+	  echo `echo $parm` >> $instr  
+	fi    
+    done
+    echo ") AT (0,0,0) ABSOLUTE" >> $instr
+    echo END >> $instr
+done    
 
 if [ -e $EXAMPLES ]
 then
   echo "Copying example instruments to $EXECDIR"
-  cp $EXAMPLES/*.instr $EXECDIR
+  #cp $EXAMPLES/*.instr $EXECDIR
   cd $EXECDIR
-  #for instr in `ls *.instr`
   NUMINSTR=`ls *.instr | wc -l`
   echo Test-compiling $NUMINSTR instrument files...
   for instr in `ls *.instr`
@@ -53,4 +102,3 @@ else
   echo "Sorry, $EXAMPLES did not exist"
   return 1
 fi
-
