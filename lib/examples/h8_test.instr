@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.10
-* Version: $Revision: 1.8 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.9 $
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -155,7 +155,7 @@ COMPONENT D2_A4 = PSD_monitor(
   nx=20, ny=20, filename="D2_A4.psd")
 AT (0, 0, 0.0001) RELATIVE As4
 
-COMPONENT Mono_Craddle = Arm()
+COMPONENT Mono_Cradle = Arm()
   AT (0, 0, 5.2746) RELATIVE Source ROTATED (0, A1, 0) RELATIVE Source
 
 COMPONENT PG1Xtal = Monochromator_flat(
@@ -163,11 +163,11 @@ COMPONENT PG1Xtal = Monochromator_flat(
   ymin = -0.04, ymax = 0.04,
   mosaich = 40, mosaicv = 40,
   r0 = 0.7, Q=mono_q)
-AT (0, 0, 0.0001) RELATIVE Mono_Craddle
+AT (0, 0, 0.0001) RELATIVE Mono_Cradle
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
-  AT (0,0,0.0002) RELATIVE Mono_Craddle ROTATED (0, A2, 0) RELATIVE Source
+  AT (0,0,0.0002) RELATIVE Mono_Cradle ROTATED (0, A2, 0) RELATIVE Source
 
 /* D3 should be in transmission, there at 222.2 mm */
 
@@ -191,14 +191,14 @@ COMPONENT D5_SC2_Out = PSD_monitor(
   nx=20, ny=20, filename="D5_SC2_Out.psd")
 AT (0, 0, 0.6097) RELATIVE SC2
 
-COMPONENT Sample_Craddle = Arm()
+COMPONENT Sample_Cradle = Arm()
 AT (0, 0, 0.7811) RELATIVE D5_SC2_Out ROTATED (0, A3, 0) RELATIVE Mono_Out
 
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
-AT (0,0,0) RELATIVE Sample_Craddle ROTATED (0, A4, 0) RELATIVE Mono_Out
+AT (0,0,0) RELATIVE Sample_Cradle ROTATED (0, A4, 0) RELATIVE Mono_Out
 
 COMPONENT Sample = V_sample(
- radius_i = 0.0, radius_o = 0.0064, h = 0.0254,
+ radius = 0.0064, yheight = 0.0254,
  focus_r = 0.035, pack = 1,
  target_x = 0, target_y = 0, target_z = 0.234)
 AT (0,0,0) RELATIVE Sample_Out
@@ -226,7 +226,7 @@ COMPONENT D8_SC3_Out = PSD_monitor(
 AT (0, 0, 0.3047) RELATIVE SC3
 
 
-COMPONENT Ana_Craddle = Arm()
+COMPONENT Ana_Cradle = Arm()
   AT (0, 0, 0.1397) RELATIVE D8_SC3_Out ROTATED (0, A5, 0) RELATIVE Sample_Out
 
 COMPONENT PG2Xtal = Monochromator_flat(
@@ -234,10 +234,10 @@ COMPONENT PG2Xtal = Monochromator_flat(
   ymin = -0.04, ymax = 0.04,
   mosaich = 40, mosaicv = 40,
   r0 = 0.7, Q=mono_q)
-AT (0, 0, 0) RELATIVE Ana_Craddle
+AT (0, 0, 0) RELATIVE Ana_Cradle
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
-AT (0,0,0) RELATIVE Ana_Craddle ROTATED (0, A6, 0) RELATIVE Sample_Out
+AT (0,0,0) RELATIVE Ana_Cradle ROTATED (0, A6, 0) RELATIVE Sample_Out
 
 /* D9 should be in transmission, there at 336.6 mm */
 

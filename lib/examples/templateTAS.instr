@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.10
-* Version: $Revision: 1.4 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Tutorial
 *
 * Template RESCAL type triple-axis machine (TAS)
@@ -497,7 +497,7 @@ COMPONENT SC1 = Collimator_linear(
   divergenceV=BET1)
 AT (0, 0, (machine_hkl.l1-5.34)/2) RELATIVE Source
 
-COMPONENT Mono_Craddle = Arm()
+COMPONENT Mono_Cradle = Arm()
   AT (0, 0, machine_hkl.l1) RELATIVE Source
   ROTATED (0, machine_real.a1, 0) RELATIVE Source
 
@@ -508,11 +508,11 @@ COMPONENT PG1Xtal = Monochromator_curved(
   RV=machine_real.rmv, RH=machine_real.rmh,
   mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
   r0 = 0.7, DM=machine_hkl.dm)
-AT (0, 0, 0) RELATIVE Mono_Craddle
+AT (0, 0, 0) RELATIVE Mono_Cradle
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
-  AT (0,0,0) RELATIVE Mono_Craddle
+  AT (0,0,0) RELATIVE Mono_Cradle
   ROTATED (0, machine_real.a2, 0) RELATIVE Source
 
 COMPONENT SC2 = Collimator_linear(
@@ -523,18 +523,18 @@ COMPONENT SC2 = Collimator_linear(
   divergenceV=BET2)
 AT (0, 0, (machine_hkl.l2-0.35)/2) RELATIVE Mono_Out
 
-COMPONENT Sample_Craddle = Arm()
+COMPONENT Sample_Cradle = Arm()
   AT (0, 0, machine_hkl.l2) RELATIVE Mono_Out
   ROTATED (0, machine_real.a3, 0) RELATIVE Mono_Out
 
 COMPONENT Sample = V_sample(
- radius_i = 0.0, radius_o = 0.0064, h = 0.0254,
+ radius = 0.0064, yheight = 0.0254,
  focus_xw = 0.06, focus_yh=0.12, pack = 1,
  target_index=2)
-AT (0,0,0) RELATIVE Sample_Craddle
+AT (0,0,0) RELATIVE Sample_Cradle
 
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
-  AT (0,0,0) RELATIVE Sample_Craddle
+  AT (0,0,0) RELATIVE Sample_Cradle
   ROTATED (0, machine_real.a4, 0) RELATIVE Mono_Out
 
 COMPONENT SC3 =Collimator_linear(
@@ -545,7 +545,7 @@ COMPONENT SC3 =Collimator_linear(
   divergenceV=BET3)
 AT (0, 0, (machine_hkl.l3-0.40)/2) RELATIVE Sample_Out
 
-COMPONENT Ana_Craddle = Arm()
+COMPONENT Ana_Cradle = Arm()
   AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
   ROTATED (0, machine_real.a5, 0) RELATIVE Sample_Out
 
@@ -556,10 +556,10 @@ COMPONENT PG2Xtal = Monochromator_curved(
   RV=machine_real.rav, RH=machine_real.rah,
   mosaich = machine_hkl.etaa, mosaicv = machine_hkl.etaa,
   r0 = 0.7, DM=machine_hkl.da)
-AT (0, 0, 0) RELATIVE Ana_Craddle
+AT (0, 0, 0) RELATIVE Ana_Cradle
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
-  AT (0,0,0) RELATIVE Ana_Craddle
+  AT (0,0,0) RELATIVE Ana_Cradle
   ROTATED (0, machine_real.a6, 0) RELATIVE Sample_Out
 
 COMPONENT SC4 =Collimator_linear(

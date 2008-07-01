@@ -7,8 +7,8 @@
 * Written by: Peter Christiansen
 * Date: July 2006.
 * Origin: RISOE.
-* Release: McStas 1.10
-* Version: $Revision: 1.1 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: tests
 *
 * Compares intensities of Monochromator_flat and Monochromator_pol

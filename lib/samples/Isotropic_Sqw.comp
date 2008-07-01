@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.72 $
+* Version: $Revision: 1.73 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -53,12 +53,12 @@
 *
 * <b>Sample shape:</b>
 * Sample shape may be a cylinder, a sphere, a box or a hollow cylinder/sphere.
-*   box/plate:       xwidth x yheight x zthick (thickness=0)
-*   hollow box/plate:xwidth x yheight x zthick and thickness>0
-*   cylinder:        radius_o x yheight (radius_i=0)
-*   hollow cylinder: radius_o x yheight and radius_i>0 or thickness>0
-*   sphere:          radius_o (yheight=0 radius_i=0)
-*   hollow sphere:   radius_o and radius_i>0 or thickness>0 (yheight=0)
+*   box/plate:       xwidth x yheight x zdepth (thickness=0)
+*   hollow box/plate:xwidth x yheight x zdepth and thickness>0
+*   cylinder:        radius x yheight (thickness=0)
+*   hollow cylinder: radius x yheight and thickness>0
+*   sphere:          radius (yheight=0 thickness=0)
+*   hollow sphere:   radius and thickness>0 (yheight=0)
 *
 * <b>Concentric components:</b>
 * This component has the ability to contain other components when used in
@@ -123,7 +123,7 @@
 *
 * <b>Examples:</b>
 * 1- Vanadium-like incoherent elastic scattering
-*   Isotropic_Sqw(V_rho=1/13.827,
+*   Isotropic_Sqw(radius=0.005, yheight=0.01, V_rho=1/13.827,
 *     sigma_abs=5.08, sigma_inc=4.935, sigma_coh=0)
 *
 * 2- liq-4He parameters
@@ -153,17 +153,16 @@
 * sigma_coh:[barns] Coherent Scattering cross-section. Use -1 to unactivate.
 * sigma_inc:[barns] Incoherent Scattering cross-section. Use -1 to unactivate.
 * sigma_abs:[barns] Absorption cross-section at 2200 m/s. Use -1 to unactivate.
-* V_rho:     [AA-3] Density of atoms (nb atoms/unit cell V_0).
+* V_rho:   [AA-3] Density of atoms (nb atoms/unit cell V_0).
 * T:            [K] Temperature of sample, detailed balance
 *
 * Geometry parameters:
-* radius_o:     [m] Outer radius of sample in (x,z) plane. cylinder/sphere.
-* radius_i:     [m] Inner radius of sample in (x,z) plane. cylinder/sphere.
+* radius:       [m] Outer radius of sample in (x,z) plane. cylinder/sphere.
+* xwidth:       [m] width for a box sample shape
 * yheight:      [m] Height of sample in vertical direction for box/cylinder
 *                     shapes
-* xwidth:       [m] width for a box sample shape
-* zthick:       [m] thickness for a bulk box sample shape
-* thickness:    [m] Thickness of hollow sample (overrides radius_i).
+* zdepth:       [m] depth for a box sample shape
+* thickness:    [m] Thickness of hollow sample
 *
 * OPTIONAL PARAMETERS:
 * concentric:   [1] Indicate that this component in a hollow geometry
@@ -200,7 +199,8 @@
 * powder_DW:             [1] global Debey-Waller factor, if not in |F2| or 1.
 * powder_format: [no quotes] name or definition of column indexes in file
 * powder_Vc:          [AA^3] volume of the unit cell
-* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in barns (barns=1 for laz, barns=0 for lau type files).
+* powder_barns:          [1] 0 when |F2| data in powder file are fm^2, 1 when in 
+*                              barns (barns=1 for laz, barns=0 for lau type files).
 *
 * OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
@@ -232,8 +232,8 @@
 
 DEFINE COMPONENT Isotropic_Sqw
   DEFINITION PARAMETERS (string Sqw_coh=0, string Sqw_inc=0, powder_format=Undefined)
-  SETTING PARAMETERS(radius_i=0,radius_o=0,thickness=0,
-    xwidth=0, yheight=0, zthick=0,
+  SETTING PARAMETERS(radius=0,thickness=0,
+    xwidth=0, yheight=0, zdepth=0,
     qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.72 $
+#define ISOTROPIC_SQW $Revision: 1.73 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1208,40 +1208,38 @@ INITIALIZE
   /* check for parameters */
 
   VarSqw.verbose_output= verbose;
-  if (radius_o>0) {
-    if (thickness>0 && thickness < radius_o) radius_i=radius_o-thickness;
+  if (radius>0) {
     if (yheight>0) VarSqw.shape = 0; else VarSqw.shape = 2;
     if (VarSqw.verbose_output)
-      printf("Isotropic_Sqw: %s: is a %s%s : R_i=%f R_o=%f h=%f \n",
-            NAME_CURRENT_COMP, (radius_i > 0 ? "hollow ":""),
+      printf("Isotropic_Sqw: %s: is a %s%s : R=%f thickness=%f h=%f \n",
+            NAME_CURRENT_COMP, (thickness > 0 ? "hollow ":""),
             (VarSqw.shape ? "Sphere" : "Cylinder"),
-            radius_i,radius_o,yheight);
-    if (radius_i >= radius_o) {
-      printf("Isotropic_Sqw: %s:thickness/radius_i bigger than sample (radius_o) !\n"
-             "ERROR          Disabling\n",
+            radius,thickness,yheight);
+    if (thickness >= radius) {
+      printf("Isotropic_Sqw: %s:thickness bigger than sample (radius) !\n"
+             "ERROR          Exiting\n",
            NAME_CURRENT_COMP);
       exit(0);
     }
-  } else if (xwidth>0 && yheight>0 && zthick>0) {
+  } else if (xwidth>0 && yheight>0 && zdepth>0) {
     VarSqw.shape = 1;
-    if (2*thickness>=xwidth || 2*thickness>=yheight || 2*thickness>zthick) {
-      printf("Isotropic_Sqw: %s:2*thickness bigger than sample (xwidth yheight zthick)!\n"
-             "ERROR          Disabling\n",
+    if (2*thickness>=xwidth || 2*thickness>=yheight || 2*thickness>zdepth) {
+      printf("Isotropic_Sqw: %s:2*thickness bigger than sample (xwidth yheight zdepth)!\n"
+             "ERROR          Exiting\n",
            NAME_CURRENT_COMP);
       exit(0);
     }
 
     if (VarSqw.verbose_output)
       printf("Isotropic_Sqw: %s: is a %sBox : dx=%f dy=%f dz=%f \n",
-            NAME_CURRENT_COMP, (thickness>0 ? "hollow" : ""), xwidth,yheight,zthick);
+            NAME_CURRENT_COMP, (thickness>0 ? "hollow" : ""), xwidth,yheight,zdepth);
   } else  {
-    printf("Isotropic_Sqw: %s: ERROR sample has no dimension\n"
-           "               set some of radius_o xwidth yheight zthick \n",
+    printf("Isotropic_Sqw: %s: sample has no dimension\n"
+           "ERROR          set some of radius xwidth yheight zdepth \n",
            NAME_CURRENT_COMP);
     exit(0);
   }
-  if (concentric &&
-  !((VarSqw.shape==1 && thickness > 0) || (VarSqw.shape!=1 && radius_i > 0))) {
+  if (concentric && thickness<=0) {
     printf("Isotropic_Sqw: %s:Can not use concentric mode\n"
            "ERROR          on non hollow shape.\n",
            NAME_CURRENT_COMP);
@@ -1378,24 +1376,24 @@ do { /* Main interaction loop. Ends with intersect=0 */
   /* Intersection neutron trajectory / sample (sample surface) */
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
     if (VarSqw.shape==1)
-      intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zthick);
+      intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
     else if (VarSqw.shape==0)
-      intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius_o,yheight);
+      intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius,yheight);
     else
-      intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius_o);
+      intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius);
   } else intersect=0;
 
   /* Computing the intermediate times */
   if (intersect) {
     tmp = 0;
-    if (radius_i>0) {
+    if (thickness>0 && radius>0) {
       if ((VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz,
-                                       radius_i,yheight-2*thickness))
+                                       radius-thickness,yheight-2*thickness))
       || (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz,
-                                       radius_i)))
+                                       radius-thickness)))
       tmp = 1; /* we also take into account the hollow part */
     } else if (thickness>0 && VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz,
-             xwidth-2*thickness, yheight-2*thickness, zthick-2*thickness))
+             xwidth-2*thickness, yheight-2*thickness, zdepth-2*thickness))
       tmp = 1;
     if (!tmp) t1 = t2 = t3; /* no empty space inside */
   } else break; /* neutron does not hit sample: transmitted  */
@@ -1432,7 +1430,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     /* initialize concentric mode */
     if (concentric && !flag_concentric && t0 >= 0
-     && VarSqw.shape==0 && radius_i > 0) {
+     && VarSqw.shape==0 && thickness>0) {
       flag_concentric=1;
     }
 
@@ -2017,8 +2015,8 @@ MCDISPLAY
       double xmax =  0.5*xwidth;
       double ymin = -0.5*yheight;
       double ymax =  0.5*yheight;
-      double zmin = -0.5*zthick;
-      double zmax =  0.5*zthick;
+      double zmin = -0.5*zdepth;
+      double zmax =  0.5*zdepth;
       multiline(5, xmin, ymin, zmin,
                   xmax, ymin, zmin,
                   xmax, ymax, zmin,
@@ -2039,7 +2037,7 @@ MCDISPLAY
         xmax = -xmin;
         ymin = -0.5*yheight+thickness;
         ymax = -ymin;
-        zmin = -0.5*zthick+thickness;
+        zmin = -0.5*zdepth+thickness;
         zmax = -zmin;
         multiline(5, xmin, ymin, zmin,
                     xmax, ymin, zmin,
@@ -2059,25 +2057,29 @@ MCDISPLAY
     }
     else if(VarSqw.shape==0)
     {
-      circle("xz", 0,  yheight/2.0, 0, radius_i);
-      circle("xz", 0,  yheight/2.0, 0, radius_o);
-      circle("xz", 0, -yheight/2.0, 0, radius_i);
-      circle("xz", 0, -yheight/2.0, 0, radius_o);
-      line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
-      line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
-      line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
-      line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
-      line(-radius_o, -yheight/2.0, 0, -radius_o, +yheight/2.0, 0);
-      line(+radius_o, -yheight/2.0, 0, +radius_o, +yheight/2.0, 0);
-      line(0, -yheight/2.0, -radius_o, 0, +yheight/2.0, -radius_o);
-      line(0, -yheight/2.0, +radius_o, 0, +yheight/2.0, +radius_o);
+      circle("xz", 0,  yheight/2.0, 0, radius);
+      circle("xz", 0, -yheight/2.0, 0, radius);
+      line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
+      line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
+      line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
+      line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+      if (thickness) {
+        double radius_i=radius-thickness;
+        circle("xz", 0,  yheight/2.0, 0, radius_i);
+        circle("xz", 0, -yheight/2.0, 0, radius_i);
+        line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
+        line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
+        line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
+        line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
+      }
     } else {
+      double radius_i=radius-thickness;
       circle("xy",0,0,0,radius_i);
       circle("xz",0,0,0,radius_i);
       circle("yz",0,0,0,radius_i);
-      circle("xy",0,0,0,radius_o);
-      circle("xz",0,0,0,radius_o);
-      circle("yz",0,0,0,radius_o);
+      circle("xy",0,0,0,radius);
+      circle("xz",0,0,0,radius);
+      circle("yz",0,0,0,radius);
     }
   }
 /* end MCDISPLAY */

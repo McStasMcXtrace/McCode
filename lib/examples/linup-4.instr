@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: A. Abrahamsen, N. B. Christensen, and E. Lauridsen
 * Date: 1998
 * Origin: Risoe
-* Release: McStas 1.1
-* Version: $Revision: 1.6 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -208,8 +208,8 @@ COMPONENT sample_check = PSD_monitor(
   AT (0, 0, 1.554) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
 
 COMPONENT sample = V_sample(
-  radius_i = 0.0075, radius_o = 0.010,
-  h = 0.019,
+  thickness = 0.0025, radius = 0.010,
+  yheight = 0.019,
   focus_r = 0.05, /* Guess focus (no GET_X yet...); check with PSD. */
   pack = 1,
   target_x = 0.2043, target_y = 0, target_z = 0.3085)

@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2007, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.11
-* Version: $Revision: 1.1 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: ILL
 *
 * IN22 RESCAL type triple-axis machine (TAS) with resolution monitor
@@ -881,7 +881,7 @@ AT (0,0,L_H25_10+gGap) RELATIVE PREVIOUS
 /* gap 0.3 m */
 
 /* Mono IN22 + OS IN22 only on upper part (120 mm), at 62.7 m from Lead Shutter */
-COMPONENT Mono_Craddle = Arm()
+COMPONENT Mono_Cradle = Arm()
   AT (0, 0, 0.15) RELATIVE PREVIOUS
   ROTATED (0, machine_real.a1, 0) RELATIVE PREVIOUS
 
@@ -892,31 +892,31 @@ SPLIT 10 COMPONENT PG1Xtal = Monochromator_curved(
   RV=machine_real.rmv, RH=machine_real.rmh,
   mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
   r0 = 0.7, DM=machine_hkl.dm)
-AT (0, 0, 0) RELATIVE Mono_Craddle
+AT (0, 0, 0) RELATIVE Mono_Cradle
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
-  AT (0,0,0) RELATIVE Mono_Craddle
-  ROTATED (0, machine_real.a2, 0) RELATIVE Mono_Craddle
+  AT (0,0,0) RELATIVE Mono_Cradle
+  ROTATED (0, machine_real.a2, 0) RELATIVE Mono_Cradle
 
 COMPONENT SC2 = Slit(
   xmin =-0.05/2, ymin =-0.1/2,
   xmax = 0.05/2, ymax = 0.1/2)
 AT (0, 0, 0.55) RELATIVE Mono_Out
 
-SPLIT 10 COMPONENT Sample_Craddle = Arm()
+SPLIT 10 COMPONENT Sample_Cradle = Arm()
   AT (0, 0, machine_hkl.l2) RELATIVE Mono_Out
   ROTATED (0, machine_real.a3, 0) RELATIVE Mono_Out
 
 /* sample position */
 COMPONENT Sample=Res_sample(
-  radius_i=(thickness > 0 ? radius-thickness : 0), radius_o=radius,h=height,
+  thickness=thickness, radius=radius,yheight=height,
   focus_xw=0.04,focus_yh=0.07,
   E0=EF, dE=3.0/100*EF, target_index=+2)
-  AT (0,0,0) RELATIVE Sample_Craddle
+  AT (0,0,0) RELATIVE Sample_Cradle
 
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
-  AT (0,0,0) RELATIVE Sample_Craddle
+  AT (0,0,0) RELATIVE Sample_Cradle
   ROTATED (0, machine_real.a4, 0) RELATIVE Mono_Out
 
 COMPONENT SC3 =Slit(
@@ -924,7 +924,7 @@ COMPONENT SC3 =Slit(
   xmax = 0.02/2, ymax = 0.03/2)
 AT (0, 0, 0.45) RELATIVE Sample_Out
 
-COMPONENT Ana_Craddle = Arm()
+COMPONENT Ana_Cradle = Arm()
   AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
   ROTATED (0, machine_real.a5, 0) RELATIVE Sample_Out
 
@@ -935,10 +935,10 @@ COMPONENT PG2Xtal = Monochromator_curved(
   RV=machine_real.rav, RH=machine_real.rah,
   mosaich = machine_hkl.etaa, mosaicv = machine_hkl.etaa,
   r0 = 0.7, DM=machine_hkl.da)
-AT (0, 0, 0) RELATIVE Ana_Craddle
+AT (0, 0, 0) RELATIVE Ana_Cradle
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
-  AT (0,0,0) RELATIVE Ana_Craddle
+  AT (0,0,0) RELATIVE Ana_Cradle
   ROTATED (0, machine_real.a6, 0) RELATIVE Sample_Out
 
 /* vertical 3He Detector */

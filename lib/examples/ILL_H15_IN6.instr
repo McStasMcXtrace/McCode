@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,7 +11,7 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 17th Jan 2005.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.11
+* Release: McStas CVS_080624
 * Version: 0.1
 * %INSTRUMENT_SITE: ILL
 *
@@ -69,7 +69,7 @@
 *   mFC:           [1]  super mirror FermiChopper coating m-value
 *   Sqw_coh:       [str] coherent S(q,w) file name
 *   Sqw_inc:       [str] incoherent S(q,w) file name
-*   radius_o:      [m]  outer radius of sample hollow cylinder
+*   radius:        [m]  outer radius of sample hollow cylinder
 *   thickness:     [m]  thickness of sample hollow cylinder
 *
 * %Link
@@ -91,7 +91,7 @@ DEFINE INSTRUMENT ILL_H15_IN6(LAMBDA=4.14, DLAMBDA=0.075, SPEED=-1,
   M1=-1, M2=-1, M3=-1, MONITOR=1, CHA_WIDTH=-1,
   TOF_DELAY=-1, TOF_CHA_RESOL=128, ELPEAK=-1, RATIO=1, m=1, mFC=0, PHASE=-360,
   string Sqw_coh="Rb_liq_coh.sqw", string Sqw_inc="Rb_liq_inc.sqw",
-  radius_o=0.01, thickness=0.005)
+  radius=0.01, thickness=0.005)
 
 DECLARE
 %{
@@ -148,7 +148,7 @@ DECLARE
   double iELPEAK;
   double iRATIO;
   double iSPEED;
-  double A2craddle;
+  double A2cradle;
   double iPHASE, period;
 
 /* monitoring monochromator index for neutrons being sent to IN6 */
@@ -200,7 +200,7 @@ INITIALIZE
   A3 = atan2(LME*sin(A2),(LME*cos(A2)-LMM))*RAD2DEG;
   A2 *=RAD2DEG;
 
-  A2craddle = A2;
+  A2cradle = A2;
 
   RV = 2*LME*sin(theta);
 
@@ -825,7 +825,7 @@ AT (0,0,0.15) RELATIVE H15_7_Out
 
 /* ----------------------- IN6 Monochromators GROUP ----------------------- */
 
-COMPONENT Craddle = Arm()
+COMPONENT Cradle = Arm()
 AT (0,0,0) RELATIVE H15_8
 
 /* triple-monochromator description:
@@ -841,7 +841,7 @@ SPLIT COMPONENT Mono1 = Monochromator_curved(
   DM     = 3.355, gap = 0.001,
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
-AT (0,0, -LMM) RELATIVE Craddle ROTATED (0,A1/2,0) RELATIVE Craddle
+AT (0,0, -LMM) RELATIVE Cradle ROTATED (0,A1/2,0) RELATIVE Craddle
 GROUP IN6Monoks
 EXTEND
 %{
@@ -854,7 +854,7 @@ COMPONENT Mono2 = Monochromator_curved(
   DM     = 3.355, gap = 0.001,
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
-AT (0,0, 0) RELATIVE Craddle ROTATED (0,A2/2,0) RELATIVE Craddle
+AT (0,0, 0) RELATIVE Cradle ROTATED (0,A2/2,0) RELATIVE Craddle
 GROUP IN6Monoks
 EXTEND
 %{
@@ -867,7 +867,7 @@ COMPONENT Mono3 = Monochromator_curved(
   DM     = 3.355, gap = 0.001,
   mosaic = 40, r0=1, t0=1,
   reflect="HOPG.rfl", transmit="HOPG.trm")
-AT (0,0, +LMM) RELATIVE Craddle ROTATED (0,A3/2,0) RELATIVE Craddle
+AT (0,0, +LMM) RELATIVE Cradle ROTATED (0,A3/2,0) RELATIVE Craddle
 GROUP IN6Monoks
 EXTEND
 %{
@@ -876,7 +876,7 @@ EXTEND
 
 /* sample position direction  */
 COMPONENT mono_out = Arm()
-AT (0,0,0) RELATIVE Craddle ROTATED (0,A2craddle,0) RELATIVE Craddle
+AT (0,0,0) RELATIVE Cradle ROTATED (0,A2craddle,0) RELATIVE Craddle
 
 /* --------------------------- IN6 Suppressor ------------------------ */
 
@@ -955,8 +955,8 @@ AT (0,0,0) RELATIVE PREVIOUS
 COMPONENT sample_pos = Arm()
 AT (0,0,LME) RELATIVE mono_out
 
-SPLIT COMPONENT FoSample=Isotropic_Sqw(
-  radius_o = radius_o, thickness=thickness, yheight = 0.055,
+SPLIT COMPONENT Sample=Isotropic_Sqw(
+  radius = radius, thickness=thickness, yheight = 0.055,
   Sqw_coh=Sqw_coh, Sqw_inc=Sqw_inc, p_interact=0.9
 ) AT (0, 0, 0) RELATIVE sample_pos
 EXTEND

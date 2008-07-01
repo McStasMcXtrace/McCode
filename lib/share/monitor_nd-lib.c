@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.39 $
+* Version: $Revision: 1.40 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,15 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.39 2008-04-06 14:02:41 pkwi Exp $
+* $Id: monitor_nd-lib.c,v 1.40 2008-07-01 19:50:23 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.39  2008/04/06 14:02:41  pkwi
+* Intel C compiler version 10.1 series fail with Monitor_nD (All events absorbed)....
+* The inserted empty printf seems to solve this?!
+*
+* I will try to file a support request at Intel on this problem...
+*
 * Revision 1.38  2008/04/01 09:15:04  farhi
 * Monitor_nD now accepts up to 3 user variables, e.g. for coordinates
 * to be stored into "list".
@@ -143,7 +149,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
   MonitornD_Variables_type *mc_mn_Vars,
   MCNUM mc_mn_xwidth,
   MCNUM mc_mn_yheight,
-  MCNUM mc_mn_zthick,
+  MCNUM mc_mn_zdepth,
   MCNUM mc_mn_xmin,
   MCNUM mc_mn_xmax,
   MCNUM mc_mn_ymin,
@@ -262,7 +268,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR;
 
     /* handle size parameters */
-    /* normal use is with xwidth, yheight, zthick */
+    /* normal use is with xwidth, yheight, zdepth */
     /* if xmin,xmax,ymin,ymax,zmin,zmax are non 0, use them */
     if (fabs(mc_mn_xmin-mc_mn_xmax) == 0)
       { mc_mn_Vars->mxmin = -fabs(mc_mn_xwidth)/2; mc_mn_Vars->mxmax = fabs(mc_mn_xwidth)/2; }
@@ -277,7 +283,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         else {mc_mn_Vars->mymin = mc_mn_ymax; mc_mn_Vars->mymax = mc_mn_ymin;}
       }
     if (fabs(mc_mn_zmin-mc_mn_zmax) == 0)
-      { mc_mn_Vars->mzmin = -fabs(mc_mn_zthick)/2; mc_mn_Vars->mzmax = fabs(mc_mn_zthick)/2; }
+      { mc_mn_Vars->mzmin = -fabs(mc_mn_zdepth)/2; mc_mn_Vars->mzmax = fabs(mc_mn_zthick)/2; }
     else
       { if (mc_mn_zmin < mc_mn_zmax) {mc_mn_Vars->mzmin = mc_mn_zmin; mc_mn_Vars->mzmax = mc_mn_zmax; }
         else {mc_mn_Vars->mzmin = mc_mn_zmax; mc_mn_Vars->mzmax = mc_mn_zmin; }

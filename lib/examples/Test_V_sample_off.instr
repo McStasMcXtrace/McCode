@@ -8,7 +8,7 @@
 * Date: June 12th, 2008
 * Origin: ILL
 * Release: McStas CVS-080208
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: tests
 *
 * Instrument to demonstrate the usage of OFF shape samples with totaly absorbing material.
@@ -16,7 +16,7 @@
 * %Description
 * Instrument to demonstrate the usage of OFF shape samples with totaly absorbing material.
 * The V_sample component is here used with a description file. The shape may be scaled
-* using the 'ratio' parameter.
+* forcing the size of the bounding box
 *
 * Example: mcrun Test_V_sample_off.instr
 *
@@ -40,12 +40,13 @@ COMPONENT source = Source_gen(
     radius = 0.05, dist = 1, xw = .1, yh = .1, E0 = 14, dE = .5)
   AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT sample=V_sample(offfile=offfile, ratio=1,
-	focus_r=0.035, target_index=1)
+COMPONENT sample=V_sample(offfile=offfile, xwidth=0, yheight=0, zdepth=0.15,
+	focus_xw=1, focus_yh=1, target_index=1)
 AT (0,0,1.5) RELATIVE source /*ROTATED (0,90,0) RELATIVE source*/
 
 COMPONENT monitor = Monitor_nD(xwidth=1,yheight=1,options="x y, all bins=300")
   AT (0, 0, 2) RELATIVE source
+
 EXTEND
 %{
 	if(SCATTERED) ABSORB;
