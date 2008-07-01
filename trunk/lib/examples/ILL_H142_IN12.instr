@@ -7,8 +7,8 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: April 7, 2004
 * Origin:ILL
-* Release: McStas 1.12
-* Version: $Revision: 1.5 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H142 S-curved cold guide at the ILL feeding IN12 TAS spectrometer
@@ -849,7 +849,7 @@ COMPONENT IN12_Mono_In = Monitor_nD(
   options="x y, cm2, all bins=40")
 AT (0,0,.12) RELATIVE CurvedGuideEnd
 
-COMPONENT Mono_Craddle = Arm()
+COMPONENT Mono_Cradle = Arm()
   AT (0, 0, .25) RELATIVE CurvedGuideEnd ROTATED (0, A1, 0) RELATIVE CurvedGuideEnd
 
 /* IN12 monochromator: h x w = 12.0 x 8.0 cm2 , Graphite, 6 horizontal blades */
@@ -859,11 +859,11 @@ SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   mosaic = 36,
   r0 = 1, DM=DM,
   RV=RMV, NH=1, NV=6, reflect="HOPG.rfl")
-AT (0, 0, 0) RELATIVE Mono_Craddle
+AT (0, 0, 0) RELATIVE Mono_Cradle
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
-  AT (0,0,0) RELATIVE Mono_Craddle ROTATED (0, A2, 0) RELATIVE CurvedGuideEnd
+  AT (0,0,0) RELATIVE Mono_Cradle ROTATED (0, A2, 0) RELATIVE CurvedGuideEnd
 
 COMPONENT D4_SC2_1D = Monitor_nD(
   xmin = -0.0420/2, xmax = 0.0420/2,
@@ -881,14 +881,14 @@ AT (0, 0, 0.2223) RELATIVE Mono_Out
 
 /* we are here at 0.34+0.2223=0.562 from monok. L Monok-Sample=1.726. Left 1.1637 */
 
-COMPONENT Sample_Craddle = Arm()
+COMPONENT Sample_Cradle = Arm()
 AT (0, 0, L2) RELATIVE Mono_Out ROTATED (0, A3, 0) RELATIVE Mono_Out
 
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
-AT (0,0,0.0001) RELATIVE Sample_Craddle ROTATED (0, A4, 0) RELATIVE Mono_Out
+AT (0,0,0.0001) RELATIVE Sample_Cradle ROTATED (0, A4, 0) RELATIVE Mono_Out
 
 SPLIT COMPONENT Sample = V_sample(
- radius_i = 0.0, radius_o = 0.0064, h = 0.0254,
+ radius = 0.0064, yheight = 0.0254,
  focus_r = 0.013, pack = 1,
  target_x = 0, target_y = 0, target_z = 0.234)
 AT (0,0,0) RELATIVE Sample_Out
@@ -909,7 +909,7 @@ AT (0, 0, 0.2350) RELATIVE Sample_Out
 
 /* we are here at 0.34+0.235=0.575 from sample. L Sample-Ana=1300. Left 0.725 */
 
-COMPONENT Ana_Craddle = Arm()
+COMPONENT Ana_Cradle = Arm()
   AT (0, 0, L3) RELATIVE Sample_Out ROTATED (0, A5, 0) RELATIVE Sample_Out
 
 /* IN12 analyser: h x w = 11.8 x 12.1 cm2 , Graphite, 11 vertical blades */
@@ -920,10 +920,10 @@ SPLIT COMPONENT PG2Xtal = Monochromator_curved(
   mosaic = 36,
   r0 = 1, DM=DA,
   RV=RAV, RH=RAH, NH=11, NV=1, reflect="HOPG.rfl")
-AT (0, 0, 0) RELATIVE Ana_Craddle
+AT (0, 0, 0) RELATIVE Ana_Cradle
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
-AT (0,0,0) RELATIVE Ana_Craddle ROTATED (0, A6, 0) RELATIVE Sample_Out
+AT (0,0,0) RELATIVE Ana_Cradle ROTATED (0, A6, 0) RELATIVE Sample_Out
 
 /* SC4 collimator. 80' = 6 slots */
 COMPONENT SC4 = Guide_gravity(
@@ -951,9 +951,4 @@ AT (0, 0, L4) RELATIVE Ana_Out
 
 /* The END token marks the instrument definition end */
 END
-
-
-
-
-
 

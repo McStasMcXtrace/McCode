@@ -435,8 +435,7 @@ int cleanInOut(intersection* t, int* t_size)
 	return 1;
 }
 
-
-void init_off(	char *offfile, double xwidth, double yheight, double zthick, off_data* datas)
+void init_off(	char *offfile, double xwidth, double yheight, double zdepth, off_data* datas)
 {
 	  //datas to be initialized
 	  long faceSize;
@@ -512,9 +511,9 @@ void init_off(	char *offfile, double xwidth, double yheight, double zthick, off_
 		ratioz=ratioy;
 	  }
 	
-	  if(zthick)
+	  if(zdepth)
 	  {
-		ratioz=zthick/rangez;
+		ratioz=zdepth/rangez;
 		if(!xwidth) 
 			ratiox=ratioz;
 		if(!yheight)
@@ -638,6 +637,5 @@ void draw_offfile(off_data datas)
 		mcdis_line(x1,y1,z1,x2,y2,z2);
 	}
 }
-
 /* end of interoff-lib.c */
 

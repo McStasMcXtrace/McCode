@@ -7,8 +7,8 @@
 * Written by: Peter Willendrup (peter.willendrup@risoe.dk)
 * Date: 2007-03-19
 * Origin: Risoe
-* Release: McStas 1.11
-* Version: $Revision: 1.3 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tools
 *
 * Takes eventfile input (Virtual_input/Vitess/MCNP/Tripoli4 formats) and applies Monitor_nD to generate

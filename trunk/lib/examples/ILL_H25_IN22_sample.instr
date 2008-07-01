@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2007, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.11
-* Version: $Revision: 1.1 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: ILL
 *
 * IN22 RESCAL type triple-axis machine (TAS) with sample/container/environment
@@ -906,7 +906,7 @@ AT (0,0,L_H25_10+gGap) RELATIVE PREVIOUS
 /* gap 0.3 m */
 
 /* Mono IN22 + OS IN22 only on upper part (120 mm), at 62.7 m from Lead Shutter */
-COMPONENT Mono_Craddle = Arm()
+COMPONENT Mono_Cradle = Arm()
   AT (0, 0, 0.15) RELATIVE PREVIOUS
   ROTATED (0, machine_real.a1, 0) RELATIVE PREVIOUS
 
@@ -917,19 +917,19 @@ SPLIT 10 COMPONENT PG1Xtal = Monochromator_curved(
   RV=machine_real.rmv, RH=machine_real.rmh,
   mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
   r0 = 0.7, DM=machine_hkl.dm)
-AT (0, 0, 0) RELATIVE Mono_Craddle
+AT (0, 0, 0) RELATIVE Mono_Cradle
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
-  AT (0,0,0) RELATIVE Mono_Craddle
-  ROTATED (0, machine_real.a2, 0) RELATIVE Mono_Craddle
+  AT (0,0,0) RELATIVE Mono_Cradle
+  ROTATED (0, machine_real.a2, 0) RELATIVE Mono_Cradle
 
 COMPONENT SC2 = Slit(
   xmin =-0.05/2, ymin =-0.1/2,
   xmax = 0.05/2, ymax = 0.1/2)
 AT (0, 0, 0.55) RELATIVE Mono_Out
 
-SPLIT 10 COMPONENT Sample_Craddle = Arm()
+SPLIT 10 COMPONENT Sample_Cradle = Arm()
   AT (0, 0, machine_hkl.l2) RELATIVE Mono_Out
   ROTATED (0, machine_real.a3, 0) RELATIVE Mono_Out
   EXTEND
@@ -940,32 +940,32 @@ SPLIT 10 COMPONENT Sample_Craddle = Arm()
 /* sample position */
 /* external shield */
 COMPONENT Environment_in=Isotropic_Sqw(
-  radius_o = environment_radius, yheight = 0.23, thickness=environment_thickness,
+  radius = environment_radius, yheight = 0.23, thickness=environment_thickness,
   auto_qw=0, Sqw_coh=environment, concentric=(environment_thickness > 0), verbose=1,
   order = 1, d_phi = 2
 )
 /* WHEN (environment_thickness > 0)*/
-AT (0, 0, 0) RELATIVE Sample_Craddle
+AT (0, 0, 0) RELATIVE Sample_Cradle
 EXTEND %{
   if (SCATTERED) {flag_env=1; }//printf("SCATTER on environment!\n"); }
 %}
 
 /* sample container */
 COMPONENT Container_in=Isotropic_Sqw(
-  radius_o = radius+0.0001+container_thickness, yheight = height, thickness=container_thickness,
+  radius = radius+0.0001+container_thickness, yheight = height, thickness=container_thickness,
   auto_qw=0, Sqw_coh=container, concentric=(container_thickness > 0), verbose=1
   ) WHEN(height && container_thickness > 0)
-AT (0, 0, 0) RELATIVE Sample_Craddle
+AT (0, 0, 0) RELATIVE Sample_Cradle
 EXTEND
 %{
   if (SCATTERED) flag_env=1;
 %}
 
 COMPONENT Sample=Isotropic_Sqw(
-  radius_o = radius, thickness=thickness, yheight = height,
+  radius = radius, thickness=thickness, yheight = height,
   Sqw_coh=coh, Sqw_inc=inc, auto_qw=0, p_interact=0.9,
   order = order, d_phi = 2, verbose=1, save_sqw=1, T=Temperature
-) AT (0, 0, 0) RELATIVE Sample_Craddle
+) AT (0, 0, 0) RELATIVE Sample_Cradle
 EXTEND
 %{
   if      (SCATTERED == 1) flag_single=(VarSqw.type == 'c' ? 1 : 2);
@@ -974,10 +974,10 @@ EXTEND
 %}
 
 COMPONENT Container_out=Isotropic_Sqw(
-  radius_o = radius+0.0001+container_thickness, yheight = height, thickness=container_thickness,
+  radius=radius+0.0001+container_thickness,yheight=height, thickness=container_thickness,
   auto_qw=0, Sqw_coh=container, verbose=0
   ) WHEN(height && container_thickness)
-AT (0, 0, 0) RELATIVE Sample_Craddle
+AT (0, 0, 0) RELATIVE Sample_Cradle
 EXTEND
 %{
   if (SCATTERED) flag_env=1;
@@ -985,17 +985,17 @@ EXTEND
 
 /* external shield */
 COMPONENT Environment_out=Isotropic_Sqw(
-radius_o = environment_radius, yheight = 0.23, thickness=environment_thickness,
-auto_qw=0, Sqw_coh=environment, verbose=0, order = 1, d_phi = 2
+  radius = environment_radius, yheight = 0.23, thickness=environment_thickness,
+  auto_qw=0, Sqw_coh=environment, verbose=0, order = 1, d_phi = 2
 )
 /* WHEN (environment_thickness > 0) */
-AT (0, 0, 0) RELATIVE Sample_Craddle
+AT (0, 0, 0) RELATIVE Sample_Cradle
 EXTEND %{
   if (SCATTERED) {flag_env=1; }//printf("SCATTERED enviroment outgoing\n");}
 %}
 
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
-  AT (0,0,0) RELATIVE Sample_Craddle
+  AT (0,0,0) RELATIVE Sample_Cradle
   ROTATED (0, machine_real.a4, 0) RELATIVE Mono_Out
 
 COMPONENT SC3 =Slit(
@@ -1003,7 +1003,7 @@ COMPONENT SC3 =Slit(
   xmax = 0.02/2, ymax = 0.03/2)
 AT (0, 0, 0.45) RELATIVE Sample_Out
 
-COMPONENT Ana_Craddle = Arm()
+COMPONENT Ana_Cradle = Arm()
   AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
   ROTATED (0, machine_real.a5, 0) RELATIVE Sample_Out
 
@@ -1014,10 +1014,10 @@ COMPONENT PG2Xtal = Monochromator_curved(
   RV=machine_real.rav, RH=machine_real.rah,
   mosaich = machine_hkl.etaa, mosaicv = machine_hkl.etaa,
   r0 = 0.7, DM=machine_hkl.da)
-AT (0, 0, 0) RELATIVE Ana_Craddle
+AT (0, 0, 0) RELATIVE Ana_Cradle
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
-  AT (0,0,0) RELATIVE Ana_Craddle
+  AT (0,0,0) RELATIVE Ana_Cradle
   ROTATED (0, machine_real.a6, 0) RELATIVE Sample_Out
 
 /* vertical 3He Detector */

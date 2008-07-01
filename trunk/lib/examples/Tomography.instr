@@ -7,8 +7,8 @@
 * Written by: Peter Willendrup, based on work by Reynald ARNERIN
 * Date: June 20th, 2008
 * Origin: Risoe
-* Release: McStas 1.12
-* Version: $Revision: 1.3 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: tests
 *
 * Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
@@ -26,12 +26,8 @@
 *
 * %Parameters
 * offfile:    [string] Name of the OFF file describing the sample shape
-* xtrans:     [m] Translation of sample-table in x direction
-* ytrans:     [m] Translation of sample-table in y direction
-* ztrans:     [m] Translation of sample-table in z direction
-* obj_ratio:  [1] Overall scaling factor for object geometry
 * omega:      [deg] Sample rotation around y 
-* sigma_a:    [barn] Sample absorption xs
+* sigma_abs:  [barn] Sample absorption xs
 * frac_scatt: [1] Fraction of neutrons to scatter in the sample
 * div_v:      [deg] Source vertical divergence
 * div_h:      [deg] Source horisontal divergence
@@ -47,8 +43,8 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Tomography(string offfile="bunny.off", xtrans = 0.02, ytrans = -0.1, ztrans = 0,  obj_ratio = 1,
-			     omega = 0, sigma_a=100, frac_scatt = 0, 
+DEFINE INSTRUMENT Tomography(string offfile="bunny.off", 
+			     omega = 0, sigma_abs=100, frac_scatt = 0, 
 			     div_v = 0, div_h = 0, source_w = 0.4, source_h = 0.2, 
 			     det_w = 0.4, det_h = 0.2, string opts="x bins=80 y bins=40")
 TRACE
@@ -60,10 +56,10 @@ COMPONENT source = Source_div(width = source_w, height = source_h, hdiv=div_h, v
 AT (0, 0, 0) RELATIVE Origin 
 
 COMPONENT samplearm = Arm()
-AT (xtrans,ytrans,1+ztrans) RELATIVE Origin
+AT (0,0,1+0) RELATIVE Origin
 ROTATED (0,omega,0) RELATIVE Origin
 
-COMPONENT sample=V_sample(frac = frac_scatt, offfile = offfile, ratio = obj_ratio, sig_a=sigma_a,
+COMPONENT sample=V_sample(frac = frac_scatt, offfile = offfile, yheight=0.1, sigma_abs=sigma_abs,
 			  focus_xw=det_w, focus_yh=det_h, target_index=1)
 AT (0,0,0) RELATIVE samplearm 
 
@@ -71,11 +67,4 @@ COMPONENT monitor = Monitor_nD(xwidth=det_w,yheight=det_h,options=opts)
 AT (0, 0, 2) RELATIVE source
 
 END
-
-
-
-
-
-
-
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: A. Abrahamsen, N. B. Christensen, and E. Lauridsen
 * Date: 1998
 * Origin: Risoe
-* Release: McStas 1.1
-* Version: $Revision: 1.6 $
+* Release: McStas CVS_080624
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National

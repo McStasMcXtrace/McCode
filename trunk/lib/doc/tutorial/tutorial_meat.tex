@@ -181,8 +181,8 @@ COMPONENT collimator = Collimator_linear(len = 0.2,
 /* instrument).                                        */
 /* Other options for smart targeting are available -   */
 /* refer to component documentation for info.          */
-COMPONENT target = V_sample(radius_i = 0.008, radius_o = 0.012, 
-  h = 0.015, focus_r = 0, pack = 1,
+COMPONENT target = V_sample(thickness = 0.004, radius = 0.012, 
+  yheight = 0.015, focus_r = 0, pack = 1,
   target_x = 0, target_y = 0, target_z = 1)
   AT (0,0,1) RELATIVE arm
 
@@ -380,7 +380,7 @@ Comment.}
     \begin{verbatim}
 COMPONENT sample = PowderN(radius=0.01,h=0.01, d_phi0=0.1, pack=0.5, 
    DW=0.9, frac=0.5, focus_r=0.03, reflections="mylist.dat",
-   Vc=3.86*3.86*11.82, sigma_a=0, sigma_inc=2, barns=1)
+   Vc=3.86*3.86*11.82, sigma_abs=0, sigma_inc=2, barns=1)
   AT (0, 0, 0) RELATIVE a4
 \end{verbatim}
 You should also create a list of reflections, e.g. \texttt{mylist.dat}

@@ -10,82 +10,74 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 * Origin: Risoe
 * Release: McStas CVS_080612
 * Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
+* Modified by: Peter Christiansen, Risoe: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P NB! As above multiple scattering is ignored .
 * Modified by: Reynald Arnerin, ILL, 2008: Added option to handle a complex geometry (OFF files)
 *
 * Vanadium sample.
 *
 * %D
-* A Double-cylinder shaped incoherent scatterer (a V-sample)
-* with both elastic and quasielastic (Lorentzian) components.
-* No multiple scattering. Absorbtion included.
-* The shape of the sample may be a box with dimensions xwidth, yheight, zthick.
-* The area to scatter to is a disk of radius 'focus_r' situated at the target.
-* This target area may also be rectangular if specified focus_xw and focus_yh
-* or focus_aw and focus_ah, respectively in meters and degrees.
-* The target itself is either situated according to given coordinates (x,y,z),
-* or defined with the relative target_index of the component to focus
-* to (next is +1).
-* This target position will be set to its AT position. When targeting to
-* centered components, such as spheres or cylinders, define an Arm component
-* where to focus to.
-* The complex geometry option handles every closed non-convex polyhedra.
-* It computes the intersection points of the neutron ray with the object transparently 
-* so that it can be used like a regular sample object.
-* It supports the OFF and NOFF file format but not COFF (colored faces).
-* The default size of the object depends of the file datas.
+* A Double-cylinder shaped incoherent scatterer (like Vanadium)
+*   with both elastic and quasielastic (Lorentzian) components.
+* No multiple scattering (but approximation available). Absorbtion included.
+* <b>Sample focusing:</b>
+*   The area to scatter to is a disk of radius 'focus_r' situated at the target.
+*   This target area may also be rectangular if specified focus_xw and focus_yh
+*   or focus_aw and focus_ah, respectively in meters and degrees.
+*   The target itself is either situated according to given coordinates (x,y,z),
+*   or defined with the relative target_index of the component to focus
+*   to (next is +1).
+*   This target position will be set to its AT position. When targeting to
+*   centered components, such as spheres or cylinders, define an Arm component
+*   where to focus to.
+* <b>Sample Shape:</b>
+*   The shape of the sample may be a filled box with dimensions 
+*   xwidth, yheight, zdepth, a cylinder with dimensions radius and yheight,
+*   a hollow cylinder with additional inner thickness, a filled
+*   sphere with radius, or a more complex geometry from OFF file.
+*   The complex geometry option handles any closed non-convex polyhedra.
+*   It computes the intersection points of the neutron ray with the object  
+*   transparently, so that it can be used like a regular sample object.
+*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   Such files may be generated from XYZ data using qhull/powercrust, and 
+*   viewed with geomview
+*   The default size of the object depends of the OFF file datas.
 *
-* Peter Christiansen: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P
-* NB! As above multiple scattering is ignored .
-*
-* Aziz Daoud-aladine: Added option to handle a spherical sample shape
-* Date: 10 July 2007
-*
-* Reynald Arnerin: Added option to handle a complex geometry (OFF files)
-* Date: June 2008
-*
-* Example: V_sample(offfile=pc.off,focus_r=0.035,pack=1,
-*           target_index=1)
+* Example: V_sample(radius=0.05,focus_r=0.035, pack=1, target_index=1)
+*          V_sample(offfile="bunny.off",focus_r=0.035, pack=1, target_index=1)
 *
 * %P
 * INPUT PARAMETERS:
-*
-* radius_i: Inner radius of sample in (x,z) plane [m]
-* radius_o: Outer radius of sample in (x,z) plane [m]
-* h:        Height of sample y direction [m]
-* focus_r:  Radius of disk containing target. Use 0 for full space [m]
-* target_x:
-* target_y: position of target to focus at [m]
-* target_z:
-*
-* Optional parameters
+* radius:   Outer radius of sample in (x,z) plane [m]
 * xwidth:     horiz. dimension of sample (bounding box if off file), as a width [m]
-* yheight:    vert.  dimension of sample (bounding box if off file), as a height [m]
-* zthick:     thickness of sample (bounding box if off file)[m]
-* rad_sphere: Radius for a spherical sample [m]
+* yheight:  Vert.  dimension of sample (bounding box if off file), as a height.
+*             A sphere shape is used when 0 [m]
+* zdepth:   Depth of sample (bounding box if off file)[m]
+* thickness:Thickness of hollow sample [m]
+* focus_r:  Radius of disk containing target. Use 0 for full space [m]
+* target_index: relative index of component to focus at, e.g. next is +1 [1]
+*
+* Optional parameters:
+* pack:       Packing factor [1]
+* multiples:  Apply crude estimate for multiple scattering [1]
+* frac:       MC Probability for scattering the ray; otherwise penetrate [1]
 * focus_xw:   horiz. dimension of a rectangular area [m]
 * focus_yh:   vert.  dimension of a rectangular area [m]
 * focus_aw:   horiz. angular dimension of a rectangular area [deg]
 * focus_ah:   vert.  angular dimension of a rectangular area [deg]
-* sig_a:      Absorbtion cross section pr. unit cell [barns]
-* sig_i:      Incoherent scattering cross section pr. unit cell [barns]
-* multiples:  Apply crude estimate for multiple scattering [1]
-* V0:         Unit cell volume [AA^3]
-* pack:       Packing factor [1]
-* frac:       MC Probability for scattering the ray; otherwise penetrate [1]
+* sigma_abs:  Absorbtion cross section pr. unit cell [barns]
+* sigma_inc:  Incoherent scattering cross section pr. unit cell [barns]
+* Vc:         Unit cell volume [AA^3]
 * f_QE:       Fraction of quasielastic scattering (rest is elastic) [1]
 * gamma:      Lorentzian width of quasielastic broadening (HWHM) [1]
-* target_index: relative index of component to focus at, e.g. next is +1 [1]
 * offfile:    name of an OFF file for complex geometry. The OFF file may be 
 *             generated from XYZ coordinates using qhull/powercrust.
-*
-* Variables calculated in the component
-*
-* V_my_s: Attenuation factor due to scattering [m^-1]
-* V_my_a: Attenuation factor due to absorbtion [m^-1]
+* target_x:
+* target_y:   position of target to focus at [m]
+* target_z:
 *
 * %L
 * <A HREF="http://neutron.risoe.dk/mcstas/components/tests/v_sample/">Test
@@ -100,11 +92,12 @@
 
 DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS (char *offfile=0)
-SETTING PARAMETERS (radius_i=0, radius_o=0, h=0, focus_r = 0,
-		    pack = 1, frac=1, f_QE=0, gamma=0,
-  target_x = 0, target_y = 0, target_z = 0, focus_xw=0, focus_yh=0,
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, multiples=1)
-  OUTPUT PARAMETERS(StructVarsV, VarsV, offdata)
+SETTING PARAMETERS (radius=0, xwidth=0, yheight=0, zdepth=0, thickness=0,
+  target_x = 0, target_y = 0, target_z = 0, focus_r = 0, 
+  focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0, 
+	pack = 1, frac=1, f_QE=0, gamma=0,
+  sigma_abs=5.08, sigma_inc=5.08, Vc=13.827, multiples=1)
+OUTPUT PARAMETERS(StructVarsV, VarsV, offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
@@ -124,51 +117,33 @@ DECLARE
     double  rho;     /* Density of atoms (AA-3) */
     double  my_s;
     double  my_a_v;
-    int     shapetyp;    /* 0 double well cylynder, 1 box,  3 sphere */
+    int     shapetyp;    /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
     double  distance;    /* when non zero, gives rect target distance */
     double  aw,ah;       /* rectangular angular dimensions */
     double  xw,yh;       /* rectangular metrical dimensions */
     double  tx,ty,tz;    /* target coords */
     } VarsV;
 
-    
-/*  long faceSize, vtxSize, polySize;
-    Coords* vtxArray;
-    Coords* normalArray;
-    unsigned long* faceArray;
-*/
-   off_data offdata;
-	
+    off_data offdata;
 %}
 
 INITIALIZE
 %{
-
+  VarsV.shapetyp=-1; /* no shape */
   if (offfile) {
-	  init_off(offfile, xwidth, yheight, zthick, &offdata);
-
+	  init_off(offfile, xwidth, yheight, zdepth, &offdata);
     VarsV.shapetyp=3;
- } else {
-  if ( (rad_sphere && (xwidth || yheight || zthick)) || (rad_sphere && (radius_o || h)) || ((xwidth || yheight || zthick) && (radius_o || h)) )
-        exit(fprintf(stderr,"V_sample: %s: multiple and imcompatible sample shape definitions\n", NAME_CURRENT_COMP));
-	
-  if (!rad_sphere)                      /* Cannot define a sphere */
-    if (!xwidth || !yheight || !zthick) /* Cannot define a rectangle */
-      if (!radius_o || !h)              /* Cannot define a cylinder either */
-        exit(fprintf(stderr,"V_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-      else                              /* It is a cylinder */
-        VarsV.shapetyp=0;
-    else                                /* It is a rectangle */
-      VarsV.shapetyp=1;
-  else 
-      VarsV.shapetyp=2;
-}
+  }
+  else if (xwidth && yheight && zdepth)  VarsV.shapetyp=1; /* box */
+  else if (radius > 0 && yheight)        VarsV.shapetyp=0; /* cylinder */
+  else if (radius && !yheight)           VarsV.shapetyp=2; /* sphere */
 
-/*  if(VarsV.isrect) printf("isrect"); else printf("not isrect"); */
+  if (VarsV.shapetyp < 0) 
+    exit(fprintf(stderr,"V_sample: %s: sample has invalid dimensions. Please check parameter values.\n", NAME_CURRENT_COMP));
 
-  VarsV.sigma_a=sig_a;
-  VarsV.sigma_i=sig_i;
-  VarsV.rho = (pack/V0);
+  VarsV.sigma_a=sigma_abs;
+  VarsV.sigma_i=sigma_inc;
+  VarsV.rho = (pack/Vc);
   VarsV.my_s=(VarsV.rho * 100 * VarsV.sigma_i);
   VarsV.my_a_v=(VarsV.rho * 100 * VarsV.sigma_a);
 
@@ -192,26 +167,17 @@ INITIALIZE
 
   /* different ways of setting rectangular area */
   VarsV.aw  = VarsV.ah = 0;
-  if (focus_xw) {
-  VarsV.xw = focus_xw;
-  }
-  if (focus_yh) {
-    VarsV.yh = focus_yh;
-  }
-  if (focus_aw) {
-    VarsV.aw = DEG2RAD*focus_aw;
-  }
-  if (focus_ah) {
-    VarsV.ah = DEG2RAD*focus_ah;
-  }
-
+  if (focus_xw) { VarsV.xw = focus_xw; }
+  if (focus_yh) { VarsV.yh = focus_yh; }
+  if (focus_aw) { VarsV.aw = DEG2RAD*focus_aw; }
+  if (focus_ah) { VarsV.ah = DEG2RAD*focus_ah; }
 
 %}
 
 TRACE
 %{
-  double t0, t3;                /* Entry/exit time for outer cylinder */
-  double t1, t2;                /* Entry/exit time for inner cylinder */
+  double t0, t3;                /* Entry/exit time for outer surface */
+  double t1, t2;                /* Entry/exit time for inner surface */
   double v;                     /* Neutron velocity */
   double dt0, dt1, dt2, dt;     /* Flight times through sample */
   double l_full;                /* Flight path length for non-scattered neutron */
@@ -224,15 +190,13 @@ TRACE
   int    intersect=0;
 
   if (VarsV.shapetyp == 2)
-    intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, rad_sphere);
-  else
-    if (VarsV.shapetyp == 1)
-      intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+    intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius);
+  else if (VarsV.shapetyp == 1)
+    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
   else if (VarsV.shapetyp == 0)
-    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
+    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
   else if (VarsV.shapetyp == 3) {
     intersect = off_intersect(&t0, &t3, x, y, z, vx, vy, vz, offdata );
-    
   }
   if(intersect)
   {
@@ -241,7 +205,7 @@ TRACE
     if(VarsV.shapetyp == 1 || VarsV.shapetyp == 2)
       t1 = t2 = t3;
     else
-      if(!radius_i || !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
+      if(!thickness || !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight))
         t1 = t2 = t3;
 
     dt0 = t1-t0;                /* Time in sample, ingoing */
@@ -295,19 +259,19 @@ TRACE
       vz *= v;
 
       if(VarsV.shapetyp == 0) {
-        if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h)) {
+        if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight)) {
           /* ??? did not hit cylinder */
           printf("FATAL ERROR: Did not hit cylinder from inside.\n");
           exit(1);
         }
         dt = t3; /* outgoing point */
-        if(cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h) &&
+        if(cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight) &&
            t2 > 0)
           dt -= (t2-t1);            /* Subtract hollow part */
       }
       else {
         if(VarsV.shapetyp == 1) {
-	      if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) {
+	      if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth)) {
             /* ??? did not hit box */
             printf("FATAL ERROR: Did not hit box from inside.\n");
             exit(1);
@@ -316,7 +280,7 @@ TRACE
         }
         else {
 	      if(VarsV.shapetyp == 1){
-	        if(!sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, rad_sphere)) {
+	        if(!sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius)) {
               	/* ??? did not hit sphere */
               	printf("FATAL ERROR: Did not hit sphere from inside.\n");
                 	exit(1);
@@ -358,26 +322,29 @@ MCDISPLAY
 %{		
   magnify("xyz");
   if (VarsV.shapetyp == 0) {	/* cylinder */
-    circle("xz", 0,  h/2.0, 0, radius_i);
-    circle("xz", 0,  h/2.0, 0, radius_o);
-    circle("xz", 0, -h/2.0, 0, radius_i);
-    circle("xz", 0, -h/2.0, 0, radius_o);
-    line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
-    line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
-    line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
-    line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
-    line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
-    line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
-    line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
-    line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
+    circle("xz", 0,  yheight/2.0, 0, radius);
+    circle("xz", 0, -yheight/2.0, 0, radius);
+    line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
+    line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
+    line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+    if (thickness) {
+      double radius_i=radius-thickness;
+      circle("xz", 0,  yheight/2.0, 0, radius_i);
+      circle("xz", 0, -yheight/2.0, 0, radius_i);
+      line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
+      line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
+      line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
+      line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
+    }
   }
   else if (VarsV.shapetyp == 1) { 	/* box */
       double xmin = -0.5*xwidth;
       double xmax =  0.5*xwidth;
       double ymin = -0.5*yheight;
       double ymax =  0.5*yheight;
-      double zmin = -0.5*zthick;
-      double zmax =  0.5*zthick;
+      double zmin = -0.5*zdepth;
+      double zmax =  0.5*zdepth;
       multiline(5, xmin, ymin, zmin,
                    xmax, ymin, zmin,
                    xmax, ymax, zmin,
@@ -394,12 +361,12 @@ MCDISPLAY
       line(xmax, ymax, zmin, xmax, ymax, zmax);
     }
     else if (VarsV.shapetyp == 2) {	/* sphere */
-      circle("xy", 0,  0.0, 0, rad_sphere);
-      circle("xz", 0,  0.0, 0, rad_sphere);
-      circle("yz", 0,  0.0, 0, rad_sphere);        
+      circle("xy", 0,  0.0, 0, radius);
+      circle("xz", 0,  0.0, 0, radius);
+      circle("yz", 0,  0.0, 0, radius);        
     }
     else if (VarsV.shapetyp == 3) {	/* OFF file */
-	draw_offfile(offdata);
+	    draw_offfile(offdata);
     }
 %}
 
