@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,14 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.40 2008-07-01 19:50:23 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.41 2008-07-01 20:28:13 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.40  2008/07/01 19:50:23  farhi
+* Common naming convention for components:
+*   xwidth, yheight, zdepth, radius, thickness
+*   sigma_abs, sigma_inc
+*
 * Revision 1.39  2008/04/06 14:02:41  pkwi
 * Intel C compiler version 10.1 series fail with Monitor_nD (All events absorbed)....
 * The inserted empty printf seems to solve this?!
@@ -283,7 +288,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         else {mc_mn_Vars->mymin = mc_mn_ymax; mc_mn_Vars->mymax = mc_mn_ymin;}
       }
     if (fabs(mc_mn_zmin-mc_mn_zmax) == 0)
-      { mc_mn_Vars->mzmin = -fabs(mc_mn_zdepth)/2; mc_mn_Vars->mzmax = fabs(mc_mn_zthick)/2; }
+      { mc_mn_Vars->mzmin = -fabs(mc_mn_zdepth)/2; mc_mn_Vars->mzmax = fabs(mc_mn_zdepth)/2; }
     else
       { if (mc_mn_zmin < mc_mn_zmax) {mc_mn_Vars->mzmin = mc_mn_zmin; mc_mn_Vars->mzmax = mc_mn_zmax; }
         else {mc_mn_Vars->mzmin = mc_mn_zmax; mc_mn_Vars->mzmax = mc_mn_zmin; }
