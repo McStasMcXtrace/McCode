@@ -7,7 +7,7 @@
 * %I
 * Written by: Uwe Filges
 * Date: 22/10/2003
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Release: McStas 1.9
 * Origin: PSI
 * Modified by: Rob Dalgliesh, ISIS, 2007
@@ -98,7 +98,9 @@ DEFINITION PARAMETERS (string option=0,segno=800)
 SETTING PARAMETERS (w1=0,h1=0,l,linw=0,loutw=0,linh=0,louth=0, R0=0.99,
                     Qcx=0.021,Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
                     mx=1, my=1)
-OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_out,l_seg,seg)
+OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_out,l_seg,seg,
+		  h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh, mxi ,u1 ,u2 ,div1, p2_para,
+		  test,Div1, i,ii,seg, fu, pos, file_name, ep, num)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
 
 DECLARE
@@ -193,7 +195,7 @@ INITIALIZE
      if ((linh > 0) && (louth > 0))
      {
        fprintf(stderr,"Component: %s (Guide_tapering) Two focal\n",NAME_CURRENT_COMP);
-       fprintf(stderr,"            points lout and linh are not allowed! \n", file_name);
+       fprintf(stderr,"            points lout and linh are not allowed! \n");
         free(fu);exit(-1);
      }
      if (louth == 0 && linh == 0)
@@ -235,7 +237,7 @@ INITIALIZE
         {
           fgets(segment[ii].st,128,num);
           if (ii >  799) {
-             fprintf(stderr,"Number of segments is limited to 800 !! \n",NAME_CURRENT_COMP);
+             fprintf(stderr,"%s: Number of segments is limited to 800 !! \n",NAME_CURRENT_COMP);
               free(fu);exit(-1);
           }
           ii++;
@@ -352,7 +354,7 @@ INITIALIZE
      if ((linw > 0) && (loutw > 0))
      {
        fprintf(stderr,"Component: %s (Guide_tapering) Two focal\n",NAME_CURRENT_COMP);
-       fprintf(stderr,"           points linw and loutw are not allowed! \n", file_name);
+       fprintf(stderr,"           points linw and loutw are not allowed! \n");
          free(fu);exit(-1);
      }
      if (loutw == 0 && linw == 0)
