@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailtoguillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.6 $
+* Version:  $Revision: 1.7 $
 * Origin: <a href="http://www.cea-llb.fr">LLB</a>
 * Release: McStas 1.8
 *
@@ -112,7 +112,7 @@ INITIALIZE
     batch = 1;
   }
   /* generates a default Tripoli 4 header */
-  fprintf(hfile,"# Data on the original simulation which generates this file : \n";
+  fprintf(hfile,"# Data on the original simulation which generates this file : \n");
   fprintf(hfile,"NB_BATCH   1\n");
   fprintf(hfile,"TAILLE     Unknown\n");
   fprintf(hfile,"PARTICULE  NEUTRON\n");
