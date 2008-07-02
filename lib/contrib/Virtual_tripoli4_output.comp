@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailtoguillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.7 $
+* Version:  $Revision: 1.8 $
 * Origin: <a href="http://www.cea-llb.fr">LLB</a>
 * Release: McStas 1.8
 *
@@ -116,7 +116,7 @@ INITIALIZE
   fprintf(hfile,"NB_BATCH   1\n");
   fprintf(hfile,"TAILLE     Unknown\n");
   fprintf(hfile,"PARTICULE  NEUTRON\n");
-  fprintf(hfile,"INTENSITE  %g\n",get_ncount());
+  fprintf(hfile,"INTENSITE  %g\n",mcget_ncount());
   fprintf(hfile,"SIMULATION PROTECTION\n");
   fprintf(hfile,"Following lines are: type, energy in MeV, position = (x,y,z) in cm, direction = (u,v,w), statistical weight\n");
 #endif
