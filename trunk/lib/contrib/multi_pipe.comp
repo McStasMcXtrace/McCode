@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,8 +10,8 @@
 * %I
 * Written by: Uwe Filges
 * Date: March, 2005
-* Version: $Revision: 1.1 $
-* Release: McStas 1.8
+* Version: $Revision: 1.2 $
+* Release: McStas 1.12
 *
 * multi pipe circular slit.
 *
@@ -47,35 +47,37 @@
 DEFINE COMPONENT multi_pipe
 DEFINITION PARAMETERS (file=0)
 SETTING PARAMETERS (xmin,xmax,ymin,ymax,radius=0.0,gap=0.0,thickness=0.0)
-OUTPUT PARAMETERS (xnum,ynum)
+OUTPUT PARAMETERS (pTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
 %{
 
 %include "read_table-lib"
-   int h_number;
-   double w_pipe,h_pipe;
-   double diam;
-   int user_file;
-   char file_name[1024];
-
+  
+   
 %}
 
 DECLARE
 %{
-   int ynum,xnum;
    t_Table pTable;
-
+   int user_file;
+   int ynum,xnum;
+   double diam;
+   double w_pipe,h_pipe;
+   int h_number;
+   
 %}
 
 
 INITIALIZE
 %{
-
+  
+  char file_name[1024];
   char *pos;
   char *fu;
-  int  check;
+  int  check;   
+  
 
   if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0 && gap==0)
     { fprintf(stderr,"multi_pipe: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
@@ -85,7 +87,7 @@ INITIALIZE
      strcpy(fu,file);
 
      user_file=1;
-  /*   Table_Init(&pTable); */
+
      Table_Read(&pTable, fu, 1);  /* read 1st block data from file into pTable */
      if (pTable.rows < 2) Table_Free(&pTable);
      Table_Info(pTable);
