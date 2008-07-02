@@ -27,7 +27,7 @@ New grammar(s) for 'Metacomponents' or 'Multicomponents' :
 (*) ARRAY positions=filename COMPONENT MyComp = Comp()
 /* SEQUENCE positions=filename COMPONENT MyComp = Comp()
 DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp() */
-(*) GROUP should jump to first member if SCATTERED (allows for multiple scattering, many-mirror setups etc.)
+(*) GROUP should jump to first member if SCATTERED (allows for multiple scattering, many-mirror setups etc.) Related: Remove ABSORB in samples when t0 < 0!!
 component initiated SPLIT (Transmit/Reflect)
 
 Tools/platform:
