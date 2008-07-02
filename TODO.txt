@@ -41,6 +41,7 @@ SWARM / Genetic algo?
 (N)2D-scans?
 mcgnuplot: DONE (almost)
 Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
+(*) mcgui signal handling in case of compilation / mpi
 
 Infrastructure:
 (*) cvs machine / webserver / bugzilla update... 
