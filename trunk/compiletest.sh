@@ -38,7 +38,7 @@ export EXECDIR
 
 echo "Example folder used is $EXAMPLES - compiling in $EXECDIR"
 
-for file in `find $MCSTAS -name \*.comp -not -name \*dapt\* `;
+for file in `find $MCSTAS -name \*.comp | grep -v obsolete | grep -v Adapt | grep -v Res_mon | grep -v PreMonitor_nD | grep -v Monitor_Optimizer`;
 do
     comp=`basename $file .comp`
     instr=`echo $EXECDIR/cTest_$comp.instr`
@@ -52,7 +52,7 @@ do
     echo "COMPONENT Test = $comp(" >> $instr
     first=1
     export first
-    for parm in `grep SETTING -A 100 $file | grep -B 100 OUTPUT | xargs echo | cut -f1 -d \) | cut -f2 -d \( | sed -e 's/int //g' | sed -e 's/double //g' | sed -e 's/string //g' | sed -e 's/char //g' | sed -e 's/\*//g' | sed -e 's/ =/=/g' | sed -e 's/= /=/g' | sed -e 's/ //g' | sed -e 's/,/ /g'`;
+    for parm in `grep SETTING -A 100 $file | grep -B 100 OUTPUT | sed -e 's/\"/\\\\"/g' | xargs echo | cut -f1 -d \) | cut -f2 -d \( | sed -e 's/int //g' | sed -e 's/double //g' | sed -e 's/string //g' | sed -e 's/char //g' | sed -e 's/\*//g' | sed -e 's/ =/=/g' | sed -e 's/= /=/g' | sed -e 's/ //g' | sed -e 's/,/ /g'`;
     do
 	if [ "$first" != "1"  ]; then
 	    echo ", " >> $instr
@@ -67,7 +67,7 @@ do
 	  echo `echo $parm` >> $instr  
 	fi   
     done
-    for parm in `grep DEFINITION -A 100 $file | grep -B 100 SETTING | xargs echo | cut -f1 -d \) | cut -f2 -d \( | sed -e 's/int //g' | sed -e 's/double //g' | sed -e 's/string //g' | sed -e 's/char //g' | sed -e 's/\*//g' | sed -e 's/ =/=/g' | sed -e 's/= /=/g' | sed -e 's/ //g' | sed -e 's/,/ /g'`;
+    for parm in `grep DEFINITION -A 100 $file | grep -B 100 SETTING | sed -e 's/\"/\\\\"/g' | xargs echo | cut -f1 -d \) | cut -f2 -d \( | sed -e 's/int //g' | sed -e 's/double //g' | sed -e 's/string //g' | sed -e 's/char //g' | sed -e 's/\*//g' | sed -e 's/ =/=/g' | sed -e 's/= /=/g' | sed -e 's/ //g' | sed -e 's/,/ /g'`;
     do
 	if [ "$first" != "1"  ]; then
 	    echo ", " >> $instr
