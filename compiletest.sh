@@ -38,7 +38,7 @@ export EXECDIR
 
 echo "Example folder used is $EXAMPLES - compiling in $EXECDIR"
 
-for file in `find $MCSTAS -name \*.comp | grep -v obsolete | grep -v Adapt | grep -v Res_mon | grep -v PreMonitor_nD | grep -v Monitor_Optimizer`;
+for file in `find $MCSTAS -name \*.comp | grep -v obsolete | grep -v Adapt | grep -v Res_mon | grep -v PreMonitor_nD | grep -v Monitor_Optimizer | grep -v Pol `;
 do
     comp=`basename $file .comp`
     instr=`echo $EXECDIR/cTest_$comp.instr`
@@ -89,7 +89,7 @@ done
 if [ -e $EXAMPLES ]
 then
   echo "Copying example instruments to $EXECDIR"
-  #cp $EXAMPLES/*.instr $EXECDIR
+  cp $EXAMPLES/*.instr $EXECDIR
   cd $EXECDIR
   NUMINSTR=`ls *.instr | wc -l`
   echo Test-compiling $NUMINSTR instrument files...
