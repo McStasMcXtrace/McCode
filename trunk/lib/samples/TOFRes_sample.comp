@@ -11,7 +11,7 @@
 * Modified from Res_sample, written by: Kristian Nielsen
 * Date: 1999
 * Written by: KL, 10 October 2004
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -158,74 +158,71 @@ TRACE
     if(res_struct.isrect) { t1 = t2 = t3; scat_factor = 2*zdepth; } /* box sample */
     else {  /* Hollow cylinder sample */
       /* Neutron enters at t=t0. */
-      if (thickness) {
-	if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight))
-	  t1 = t2 = t3;
-      }
-      
-      scat_factor = 2*(radius-thickness); 
-      
-      dt0 = t1-t0;                  /* Time in sample, ingoing */
-      dt1 = t2-t1;                  /* Time in hole */
-      dt2 = t3-t2;                  /* Time in sample, outgoing */
-      v = sqrt(vx*vx + vy*vy + vz*vz);
-      l_full = v * (dt0 + dt2);     /* Length of full path through sample */
-      p *= l_full/scat_factor;      /* Scattering probability */
-      dt = rand01()*(dt0+dt2);      /* Time of scattering (relative to t0) */
-      if (dt > dt0)
-	dt += dt1;
-      
-      PROP_DT(dt+t0);             /* Point of scattering */
-      
-      /* Store initial neutron state. */
-      if(p == 0) ABSORB;
-      res_struct.pi = p;
-      res_struct.ki_x = V2K*vx;
-      res_struct.ki_y = V2K*vy;
-      res_struct.ki_z = V2K*vz;
-      res_struct.rx = x;
-      res_struct.ry = y;
-      res_struct.rz = z;
-      
-      aim_x = res_struct.tx-x;       /* Vector pointing at target (anal./det.) */
-      aim_y = res_struct.ty-y;
-      aim_z = res_struct.tz-z;
-      aim_length = sqrt(aim_x*aim_x+aim_y*aim_y+aim_z*aim_z);
-      if(res_struct.aw && res_struct.ah) {
-	randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
-				    aim_x, aim_y, aim_z, res_struct.aw, res_struct.ah, ROT_A_CURRENT_COMP);
-      } else if(res_struct.xw && res_struct.yh) {
-	randvec_target_rect(&vx, &vy, &vz, &solid_angle,
-			    aim_x, aim_y, aim_z, res_struct.xw, res_struct.yh, ROT_A_CURRENT_COMP);
-      } else {
-        randvec_target_circle(&vx, &vy, &vz, &solid_angle,
-			      aim_x, aim_y, aim_z, focus_r);
-      }
-      NORM(vx, vy, vz);
-      flight_time = -t + 1e-6*(time_bin + time_width * randpm1());
-      /* Correct for too large or negative flight_times */
-      /* Should perhaps be done more cleanly (more user choices) ?! */
-      for (; flight_time<0; flight_time += 1/f);
-      for (; flight_time>1/f; flight_time -= 1/f);
-      v = aim_length / flight_time;
-      /* !! Remember later to correct for Jacobian in MC choice, t to V !! */
-      
-      /*    E=E0+dE*randpm1();
-	    v=sqrt(E)*SE2V; */
-      
-      vx *= v;
-      vy *= v;
-      vz *= v;
-      SCATTER;
-      
-      /* Store final neutron state. */
-      res_struct.kf_x = V2K*vx;
-      res_struct.kf_y = V2K*vy;
-      res_struct.kf_z = V2K*vz;
-      
-      /* printf("vf= (%g,%g,%g), kf=(%g,%g,%g) \n",vx,vy,vz,
-	 res_struct.kf_x,res_struct.kf_y,res_struct.kf_z); */
+      if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight) && thickness)
+        t1 = t2 = t3;
+      scat_factor = 2*(radius-thickness);
     }
+    dt0 = t1-t0;                  /* Time in sample, ingoing */
+    dt1 = t2-t1;                  /* Time in hole */
+    dt2 = t3-t2;                  /* Time in sample, outgoing */
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (dt0 + dt2);     /* Length of full path through sample */
+    p *= l_full/scat_factor;      /* Scattering probability */
+    dt = rand01()*(dt0+dt2);      /* Time of scattering (relative to t0) */
+    if (dt > dt0)
+      dt += dt1;
+
+    PROP_DT(dt+t0);             /* Point of scattering */
+
+    /* Store initial neutron state. */
+    if(p == 0) ABSORB;
+    res_struct.pi = p;
+    res_struct.ki_x = V2K*vx;
+    res_struct.ki_y = V2K*vy;
+    res_struct.ki_z = V2K*vz;
+    res_struct.rx = x;
+    res_struct.ry = y;
+    res_struct.rz = z;
+
+    aim_x = res_struct.tx-x;       /* Vector pointing at target (anal./det.) */
+    aim_y = res_struct.ty-y;
+    aim_z = res_struct.tz-z;
+    aim_length = sqrt(aim_x*aim_x+aim_y*aim_y+aim_z*aim_z);
+    if(res_struct.aw && res_struct.ah) {
+      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, res_struct.aw, res_struct.ah, ROT_A_CURRENT_COMP);
+    } else if(res_struct.xw && res_struct.yh) {
+      randvec_target_rect(&vx, &vy, &vz, &solid_angle,
+        aim_x, aim_y, aim_z, res_struct.xw, res_struct.yh, ROT_A_CURRENT_COMP);
+    } else {
+        randvec_target_circle(&vx, &vy, &vz, &solid_angle,
+          aim_x, aim_y, aim_z, focus_r);
+    }
+    NORM(vx, vy, vz);
+    flight_time = -t + 1e-6*(time_bin + time_width * randpm1());
+/* Correct for too large or negative flight_times */
+/* Should perhaps be done more cleanly (more user choices) ?! */
+    for (; flight_time<0; flight_time += 1/f);
+    for (; flight_time>1/f; flight_time -= 1/f);
+    v = aim_length / flight_time;
+/* !! Remember later to correct for Jacobian in MC choice, t to V !! */
+
+/*    E=E0+dE*randpm1();
+    v=sqrt(E)*SE2V; */
+
+    vx *= v;
+    vy *= v;
+    vz *= v;
+    SCATTER;
+
+      /* Store final neutron state. */
+    res_struct.kf_x = V2K*vx;
+    res_struct.kf_y = V2K*vy;
+    res_struct.kf_z = V2K*vz;
+
+/* printf("vf= (%g,%g,%g), kf=(%g,%g,%g) \n",vx,vy,vz,
+  res_struct.kf_x,res_struct.kf_y,res_struct.kf_z); */
+  }
 %}
 
 MCDISPLAY
