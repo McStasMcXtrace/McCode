@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.37 $
+* Version: $Revision: 1.38 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.37 2006-12-01 16:17:10 farhi Exp $
+* $Id: read_table-lib.c,v 1.38 2008-07-03 09:40:01 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.37  2006/12/01 16:17:10  farhi
+* cosmetics
+*
 * Revision 1.36  2006/11/29 14:07:09  farhi
 * cosmetics
 *
@@ -185,6 +188,7 @@
     Table_Init(mc_rt_Table, 0, 0);
     if (!mc_rt_File)  return(-1);
     if (strlen(mc_rt_File) == 0) return (-1);
+    if (!strcmp(mc_rt_File,"NULL") || !strcmp(mc_rt_File,"0"))  return(-1);
     mc_rt_hfile = fopen(mc_rt_File, "r");
     if(!mc_rt_hfile)
     {
@@ -251,6 +255,8 @@
 
     Table_Init(mc_rt_Table, 0, 0);
     if (!mc_rt_File)  return(-1);
+    if (strlen(mc_rt_File) == 0) return (-1);
+    if (!strcmp(mc_rt_File,"NULL") || !strcmp(mc_rt_File,"0"))  return(-1);
 
     mc_rt_hfile = fopen(mc_rt_File, "r");
     if(!mc_rt_hfile)
