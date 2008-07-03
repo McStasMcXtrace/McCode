@@ -42,6 +42,9 @@ SWARM / Genetic algo?
 mcgnuplot: DONE (almost)
 Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
 (*) mcgui signal handling in case of compilation / mpi
+(*) mcrun --test uses new information in instrument header to execute the test
+    %TEST: h8_test.instr Lambda=2.359
+    %VALIDATION: D7_SC3_In_I 3.11e-11
 
 Infrastructure:
 (*) cvs machine / webserver / bugzilla update... 
