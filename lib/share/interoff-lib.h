@@ -18,10 +18,10 @@
 *******************************************************************************/
 
 #ifndef INTEROFF_LIB_H
-#define INTEROFF_LIB_H "$Revision: 1.2 $"
+#define INTEROFF_LIB_H "$Revision: 1.3 $"
 
 #ifndef EPSILON
-#	define EPSILON 10e-13
+#define EPSILON 10e-13
 #endif
 
 //#include <float.h>
@@ -51,71 +51,25 @@ typedef struct polygon {
   Coords normal;
 } polygon;
 
-typedef struct off_data {
+typedef struct off_struct {
     long vtxSize;
     long polySize;
     long faceSize;
     Coords* vtxArray;
     Coords* normalArray;
     unsigned long* faceArray;
-} off_data;
-
-
-//gives the normal vector of p
-void normal(Coords* , polygon );
-
-//scalar product
-//#define scalar_prod(x1,y1,z1,x2,y2,z2) ( (x1)*(x2)+(y1)*(y2)+(z1)*(z2) )
-
-//based on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-//return 0 if the vertex is out
-//	 1 if it is in
-//	 -1 if on the boundary
-int pnpoly(polygon , Coords );
-
-//gives the intersection vertex between ray [a,b) and polygon p and its prametric value on (a b)
-//http://geometryalgorithms.com/Archive/algorithm_0105/algorithm_0105.htm
-int intersectPoly(intersection *, Coords , Coords , polygon );
-
-/*reads the indexes at the beginning of the off file as this :
-line 1  OFF
-line 2  nbVertex nbFaces nbEdges
-*/
-long getBlocksIndex(char* ,  long* ,  long* ,  long* ,  long*  );
-
+} off_struct;
 
 #define F(x,y,z,A,B,C,D)  ( (A)*(x) + (B)*(y) + (C)*(z) + (D) )
-
-
-//gives the equations of 2 perpandicular planes of [ab]
-void init_planes(Coords , Coords , MCNUM* , MCNUM* , MCNUM* , MCNUM *, MCNUM* , MCNUM* , MCNUM* );
-
-
-
+#ifndef sign
 #define sign(a) ( ((a)<0)?-1:((a)!=0) )
+#endif
 
+long off_init(char*, double, double, double, off_struct*);
 
-int clip_3D_mod(intersection* , Coords , Coords , Coords*, unsigned long, unsigned long*, unsigned long, Coords*);
+int  off_intersect(double*, double*, double, double, double, double, double, double, off_struct);
 
-
-int compare (void const *, void const *);
-
-
-//given an array of intesction throw those which appear several times
-//returns 1 if there is a possibility of error
-int cleanDouble(intersection* , int* );
-
-//given an array of intesction throw those which enter and exit in the same time
-//Meaning the ray passes very close to the volume
-//returns 1 if there is a possibility of error
-int cleanInOut(intersection* , int* );
-
-
-void init_off(char*, double, double, double, off_data*);
-
-int off_intersect(double*, double*, double, double, double, double, double, double, off_data);
-
-void draw_offfile(off_data);
+void off_display(off_struct);
 
 #endif
 
