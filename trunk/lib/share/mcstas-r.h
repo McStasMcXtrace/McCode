@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.99 $
+* Version: $Revision: 1.100 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.99 2008-04-25 08:26:33 erkn Exp $
+* $Id: mcstas-r.h,v 1.100 2008-07-04 13:02:18 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.99  2008/04/25 08:26:33  erkn
+*       added utility functions/macros for intersecting with a plane and mirroring a vector in a plane
+*
 *       Revision 1.98  2008/04/21 15:50:19  pkwi
 *       Name change randvec_target_rect -> randvec_target_rect_real .
 *
@@ -270,7 +273,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.99 $"
+#define MCSTAS_R_H "$Revision: 1.100 $"
 
 #include <math.h>
 #include <string.h>
@@ -892,6 +895,7 @@ Coords coords_xp(Coords b, Coords c);
 void   coords_print(Coords a);
 
 void rot_set_rotation(Rotation t, double phx, double phy, double phz);
+int  rot_test_identity(Rotation t);
 void rot_mul(Rotation t1, Rotation t2, Rotation t3);
 void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);
