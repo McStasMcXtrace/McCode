@@ -28,6 +28,9 @@ Refraction?
 (*) Checkup - use of PROP_DT in all comps?
 monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
 (*) monochromator_ ... (Lucia Alianelli) full monte carlo
+(*) DETECTOR_OUT_3D should be replaced by simpler catenation, 2D slices with index
+(*) Monitors: Should check if a filehandle is open already, if so we should concatenate
+(*) We need a couple of event-type monitors
 
 Instruments:
 (*) Laue_diff in examples
@@ -38,8 +41,9 @@ Metalanguage / runtime
 (*) Check use of rotation matrices - should not be used for non-rot stuff...
 New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
 (*) ARRAY positions=filename COMPONENT MyComp = Comp()
-/* SEQUENCE positions=filename COMPONENT MyComp = Comp()
-DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp() */
+Will only work for scattering type comps and event monitors (to be written)
+  /* SEQUENCE positions=filename COMPONENT MyComp = Comp()
+  DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp() */
 (*) GROUP should jump to first member if SCATTERED (allows for multiple scattering, many-mirror setups etc.) Related: Remove ABSORB in samples when t0 < 0!!
 component initiated SPLIT (Transmit/Reflect)
 
