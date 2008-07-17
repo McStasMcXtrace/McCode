@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -23,16 +23,16 @@
 * flipper. A neutron hitting outside the box opening or the box sides
 * is absorbed.
 *
-* Example: Pol_constBfield(xw=0.1, yh=0.1, length=0.2, fliplambda=5.0)
+* Example: Pol_constBfield(xwidth=0.1, yheight=0.1, length=0.2, fliplambda=5.0)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xw:         Width of opening (m). 
-* yh:         Height of opening (m). 
+* xwidth:     Width of opening (m). 
+* yheight:    Height of opening (m). 
 * length:     Length of field (m).
 * B:          Magnetic field along y-direction (Gauss)
-* fliplambda: Lambda for calculating B field
+* fliplambda: lambda for calculating B field
 * flipangle:  Angle flipped for lambda = fliplambda
 *             fliplambda and flipangle overrides B so a neutron with s
 *             = (1, 0, 0) and v = (0, 0, v(fliplambda)) will have s =
@@ -45,7 +45,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_constBfield
-DEFINITION PARAMETERS (xw, yh, length)
+DEFINITION PARAMETERS (xwidth, yheight, length)
 SETTING PARAMETERS (B=0, fliplambda=0, flipangle=180)
 OUTPUT PARAMETERS(omegaL)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -77,9 +77,9 @@ INITIALIZE
 %{
   double velocity = 0, time = 0;
   
-  if ((xw<=0) || (yh<=0) || (length<=0)) {
+  if ((xwidth<=0) || (yheight<=0) || (length<=0)) {
     fprintf(stderr, "Pol_filter: %s: Null or negative volume!\n"
-	    "ERROR      (xw, yh, length). Exiting\n",
+	    "ERROR      (xwidth, yheight, length). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
   }
@@ -111,18 +111,18 @@ TRACE
   double deltaT, deltaTx, deltaTy, sx_in, sz_in;
   
   PROP_Z0;
-  if (!inside_rectangle(x, y, xw, yh))
+  if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;
   
   // Time spent in B-field
   deltaT = length/vz;
   
   // check that track goes throgh without hitting the walls
-  if (!inside_rectangle(x+vx*deltaT, y+vy*deltaT, xw, yh)) {
+  if (!inside_rectangle(x+vx*deltaT, y+vy*deltaT, xwidth, yheight)) {
     
     // Propagate to the wall and absorb
-    deltaTx = IntersectWall(x, vx, xw/2);
-    deltaTy = IntersectWall(y, vy, yh/2);
+    deltaTx = IntersectWall(x, vx, xwidth/2);
+    deltaTy = IntersectWall(y, vy, yheight/2);
 
     if (deltaTx>=0 && deltaTx<deltaTy)
       deltaT = deltaTx;
@@ -155,7 +155,7 @@ MCDISPLAY
 %{
   magnify("xy");
   
-  box(0, 0, length/2, xw, yh, length);
+  box(0, 0, length/2, xwidth, yheight, length);
   %}
 
 END

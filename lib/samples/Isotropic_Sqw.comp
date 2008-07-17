@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.73 $
+* Version: $Revision: 1.74 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.73 $
+#define ISOTROPIC_SQW $Revision: 1.74 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1215,8 +1215,8 @@ INITIALIZE
             NAME_CURRENT_COMP, (thickness > 0 ? "hollow ":""),
             (VarSqw.shape ? "Sphere" : "Cylinder"),
             radius,thickness,yheight);
-    if (thickness >= radius) {
-      printf("Isotropic_Sqw: %s:thickness bigger than sample (radius) !\n"
+    if (thickness >= radius || (thickness && yheight && 2*thickness>=yheight)) {
+      printf("Isotropic_Sqw: %s:thickness bigger than sample (radius/height) !\n"
              "ERROR          Exiting\n",
            NAME_CURRENT_COMP);
       exit(0);
@@ -1293,7 +1293,8 @@ INITIALIZE
   if (VarSqw.s_coh < 0) VarSqw.s_coh=0;
   if (VarSqw.s_inc < 0) VarSqw.s_inc=0;
   if (VarSqw.s_abs < 0) VarSqw.s_abs=0;
-  if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && VarSqw.rho <= 0) exit(printf("Isotropic_Sqw: %s: Null density (V_rho)\n",NAME_CURRENT_COMP));
+  if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && VarSqw.rho <= 0) 
+    exit(printf("Isotropic_Sqw: %s: Null density (V_rho)\n",NAME_CURRENT_COMP));
   /* 100: convert from barns to fm^2 */
   VarSqw.my_a_v  =(VarSqw.rho*100*VarSqw.s_abs*2200);
   VarSqw.my_s    =(VarSqw.rho*100*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
@@ -1339,7 +1340,7 @@ double d_path;        /* total path length for straight trajectory */
 double my_a;          /* absorption cross-section scaled to velocity (2200) */
 double ws, p_scatt;   /* probability for scattering/absorption and for */
                       /* interaction along d_path */
-double tmp;           /* temporary var */
+double tmp_rand;      /* temporary var */
 double ratio_w=0, ratio_q=0; /* variables for bilinear interpolation */
 double q11, q21, q22, q12;
 double omega=0;       /* energy transfert */
@@ -1353,6 +1354,8 @@ double u0x,u0y,u0z;
 int    index_counter;
 int    flag=0;
 int    flag_concentric=0;
+int    flag_ishollow=0;
+double solid_angle=0;
 double my_t=0;
 double p_mult=1;
 double alpha, alpha0;
@@ -1375,40 +1378,29 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
   /* Intersection neutron trajectory / sample (sample surface) */
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
-    if (VarSqw.shape==1)
-      intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
-    else if (VarSqw.shape==0)
+    if (VarSqw.shape==0)
       intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius,yheight);
-    else
+    else if (VarSqw.shape==1)
+      intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
+    else if (VarSqw.shape==2)
       intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius);
   } else intersect=0;
 
   /* Computing the intermediate times */
   if (intersect) {
-    tmp = 0;
-    if (thickness>0 && radius>0) {
-      if ((VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz,
-                                       radius-thickness,yheight-2*thickness))
-      || (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz,
-                                       radius-thickness)))
-      tmp = 1; /* we also take into account the hollow part */
-    } else if (thickness>0 && VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz,
-             xwidth-2*thickness, yheight-2*thickness, zdepth-2*thickness))
-      tmp = 1;
-    if (!tmp) t1 = t2 = t3; /* no empty space inside */
+    flag_ishollow = 0;
+    if (thickness>0) {
+      if (VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz, radius-thickness,yheight-2*thickness))
+        flag_ishollow=1;
+      else if (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz, radius-thickness))
+        flag_ishollow=1;
+      else if (VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz, xwidth-2*thickness, yheight-2*thickness, zdepth-2*thickness))
+        flag_ishollow=1;
+    }
+    if (!flag_ishollow) t1 = t2 = t3; /* no empty space inside */
   } else break; /* neutron does not hit sample: transmitted  */
 
-  tmp = 0;
   if (intersect) { /* the neutron hits the sample */
-
-    if (!v) {
-      v  = vx*vx+vy*vy+vz*vz;
-      v = sqrt(v);
-    }
-    k  = V2K*v;
-
-    if (!VarSqw.vi) VarSqw.vi = v;
-    if (!VarSqw.ki) VarSqw.ki = k;
 
     if (t0 > 0) {  /* we are before the sample */
       PROP_DT(t0); /* propagates neutron to the entry of the sample */
@@ -1445,6 +1437,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     VarSqw.neutron_enter++;
     p_mult = 1;
+    if (!v) {
+      v  = vx*vx+vy*vy+vz*vz;
+      v = sqrt(v);
+    }
+    k  = V2K*v;
+
+    if (!VarSqw.vi) VarSqw.vi = v;
+    if (!VarSqw.ki) VarSqw.ki = k;
 
     if (v <= 0) {
       printf("Isotropic_Sqw: %s: ERROR: Null velocity\n",NAME_CURRENT_COMP);
@@ -1453,7 +1453,6 @@ do { /* Main interaction loop. Ends with intersect=0 */
     }
 
     /* check for scattering event */
-    d_path = v*( dt0 +dt2 );    /* total path lenght in sample */
     my_a   = VarSqw.my_a_v / v; /* absorption 'mu' */
     /* compute total scattering X section */
     /* \int q S(q) dq /2 /ki^2 sigma  OR  bare Xsection*/
@@ -1482,7 +1481,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (inc<0) inc=0;
     VarSqw.my_s    =(VarSqw.rho*100*(coh + inc));
 
-    my_t = my_a + VarSqw.my_s;  /* total scattering Xsect (tmp var) */
+    my_t = my_a + VarSqw.my_s;  /* total scattering Xsect */
     if (my_t <= 0) {
       if (VarSqw.neutron_removed<VarSqw.maxloop) printf("Isotropic_Sqw: %s: ERROR: Null total cross section %g. Removing event.\n",
         NAME_CURRENT_COMP, my_t);
@@ -1497,6 +1496,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     /* Proba of scattering vs absorption (integrating along the whole trajectory) */
     ws = VarSqw.my_s/my_t;  /* (inc+coh)/(inc+coh+abs) */
+    d_path = v*( dt0 +dt2 );    /* total path lenght in sample */
     /* Proba of transmission/interaction along length d_path */
     p_trans = exp(-my_t*d_path);
     p_scatt = 1 - p_trans; /* portion of beam which scatters */
@@ -1519,7 +1519,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     mc_scatt = 1 - mc_trans; /* portion of beam to scatter (or force to) */
     if (mc_scatt <= 0 || mc_scatt>1) flag=1;
     /* MC choice: Interaction or transmission ? */
-    if (!flag && mc_scatt > 0 && (mc_scatt >= 1 || (tmp=rand01()) < mc_scatt)) { /* Interaction neutron/sample */
+    if (!flag && mc_scatt > 0 && (mc_scatt >= 1 || rand01() < mc_scatt)) { /* Interaction neutron/sample */
       p_mult *= ws; /* Update weight ; account for absorption and retain scattered fraction */
       /* we have chosen portion mc_scatt of beam instead of p_scatt, so we compensate */
       p_mult *= fabs(p_scatt/mc_scatt); /* lower than 1 */
@@ -1532,6 +1532,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (flag) { /* propagate to exit of sample and finish */
       intersect = 0;
       p *= p_mult; /* apply absorption correction */
+      PROP_DT(dt0+dt2);
       break; /* exit main multi scatt while loop */
     }
   } /* end if intersect the neutron hits the sample */
@@ -1561,19 +1562,19 @@ do { /* Main interaction loop. Ends with intersect=0 */
     PROP_DT(dt);
 
     /* choice between coherent/incoherent scattering */
-    tmp = rand01();
+    tmp_rand = rand01();
     /* local description at the scattering point (scat probability for atom) */
-    tmp *= (coh+inc);
+    tmp_rand *= (coh+inc);
 
     flag=0;
-    if (VarSqw.s_inc>0 && tmp < inc) {
+    if (VarSqw.s_inc>0 && tmp_rand < inc) {
       /* CASE 1: incoherent case */
       if (!VarSqw.Data_inc.intensity) {
         /* CASE 1a: no incoherent Sqw from file, use isotropic V-like */
         if (d_phi && order == 1) {
-          randvec_target_rect_angular(&u1x, &u1y, &u1z, &tmp,
+          randvec_target_rect_angular(&u1x, &u1y, &u1z, &solid_angle,
               vx, vy, vz, 2*PI, d_phi, ROT_A_CURRENT_COMP);
-          p_mult *= tmp/4/PI; /* weighted by focused range to total range */
+          p_mult *= solid_angle/4/PI; /* weighted by focused range to total range */
         } else
           randvec_target_circle(&u1x, &u1y, &u1z, NULL, vx, vy, vz, 0);
 
@@ -1589,7 +1590,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           flag = 1;
         }
       }
-    } else if (VarSqw.s_coh>0 && tmp > VarSqw.s_inc) {
+    } else if (VarSqw.s_coh>0 && tmp_rand > VarSqw.s_inc) {
       if (VarSqw.Data_coh.intensity) {
         /* CASE2: coherent case */
         Data_sqw = VarSqw.Data_coh;
@@ -1604,14 +1605,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
       for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
 
         /* MC choice: energy transfer in the SW */
-        tmp = rand01();
+        tmp_rand = rand01();
         /* index for rand > cumul SW */
-        index_w = Sqw_search_SW(Data_sqw, tmp);
+        index_w = Sqw_search_SW(Data_sqw, tmp_rand);
         if (&(Data_sqw.SW[index_w]) != NULL) {
           if (VarSqw.sqw_interp && Data_sqw.nb_w > 1) {
             double w1, w2;
             if (index_w > 0) { /* interpolate linearly energy */
-              ratio_w = (tmp                              - Data_sqw.SW[index_w-1].cumul_proba)
+              ratio_w = (tmp_rand                              - Data_sqw.SW[index_w-1].cumul_proba)
                        /(Data_sqw.SW[index_w].cumul_proba - Data_sqw.SW[index_w-1].cumul_proba);
               /* ratio_w=0 omega[index_w-1], ratio=1 omega[index] */
               w1 = Data_sqw.SW[index_w-1].omega; w2 = Data_sqw.SW[index_w].omega;
@@ -1621,7 +1622,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
               if (!w2 && index_w+1 < Data_sqw.nb_w)
                 w2= Data_sqw.SW[index_w+1].omega;
               if (Data_sqw.nb_w && Data_sqw.SW[index_w].cumul_proba) {
-                ratio_w = tmp/Data_sqw.SW[index_w].cumul_proba;
+                ratio_w = tmp_rand/Data_sqw.SW[index_w].cumul_proba;
               } else ratio_w=0;
             }
             omega = (1-ratio_w)*w1 + ratio_w*w2;
@@ -1638,7 +1639,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         if (ratio_w<0 || ratio_w > 1) {
           if (VarSqw.verbose_output>1 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: interpolation ratio_w=%g is wrong, index_w=%i, rand01=%g cumul=%g\n",
-            NAME_CURRENT_COMP, ratio_w, index_w, tmp, Data_sqw.SW[index_w].cumul_proba);
+            NAME_CURRENT_COMP, ratio_w, index_w, tmp_rand, Data_sqw.SW[index_w].cumul_proba);
           if (ratio_w<0) ratio_w=0; else if (ratio_w>1) ratio_w=1;
         }
 
@@ -1652,8 +1653,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
         }
 
         /* MC choice: momentum transfer Q in P(Q|w) */
-        tmp = rand01();
-        index_q = Sqw_search_Q_proba_per_w(Data_sqw, tmp, index_w);
+        tmp_rand = rand01();
+        index_q = Sqw_search_Q_proba_per_w(Data_sqw, tmp_rand, index_w);
         if (index_q == -1) {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: No suitable (q|w) transfert\n"
@@ -1666,7 +1667,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           if (VarSqw.sqw_interp && Data_sqw.nb_q > 1 && index_q > 0) {
             if (index_w > 0 && Data_sqw.nb_w > 1) {
               /* bilinear interpolation on - side: index_w > 0, index_q > 0 */
-              ratio_q = (tmp - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
+              ratio_q = (tmp_rand - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
                        /(Data_sqw.SQW[index_w][index_q].cumul_proba
                        - Data_sqw.SQW[index_w][index_q-1].cumul_proba);
               q22 = Data_sqw.SQW[index_w]  [index_q].Q;
@@ -1676,7 +1677,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
               q = (1-ratio_w)*(1-ratio_q)*q11+ratio_w*(1-ratio_q)*q21
                 + ratio_w*ratio_q*q22        +(1-ratio_w)*ratio_q*q12;
             } else { /* bilinear interpolation on + side: index_w=0, index_q > 0 */
-              ratio_q = (tmp - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
+              ratio_q = (tmp_rand - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
                        /(Data_sqw.SQW[index_w][index_q].cumul_proba
                        - Data_sqw.SQW[index_w][index_q-1].cumul_proba);
               q11 = Data_sqw.SQW[index_w]  [index_q-1].Q;
@@ -1754,12 +1755,13 @@ do { /* Main interaction loop. Ends with intersect=0 */
       /* Choose point on Debye-Scherrer cone */
       if (order == 1 && d_phi)
       { /* relate height of detector to the height on DS cone */
-        tmp = sin(d_phi/2)/sin(theta);
+        double cone_focus;
+        cone_focus = sin(d_phi/2)/sin(theta);
         /* If full Debye-Scherrer cone is within d_phi, don't focus */
-        if (tmp < -1 || tmp > 1) d_phi = 0;
+        if (cone_focus < -1 || cone_focus > 1) d_phi = 0;
         /* Otherwise, determine alpha to rotate from scattering plane
             into d_phi focusing area*/
-        else alpha = 2*asin(tmp);
+        else alpha = 2*asin(cone_focus);
         if (d_phi) p_mult *= alpha/PI;
       }
       if (d_phi) {
@@ -1891,7 +1893,7 @@ SAVE
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)
   for (k=0; k < 2; k++) {
     struct Sqw_Data_struct Data_sqw;
-    char tmp[1024];
+    char tmp_str[1024];
     char type_ci[64];
     char ext[20];
     char filename[256];
@@ -1914,28 +1916,28 @@ SAVE
         for (i=0; i < (Data_sqw.nb_q) ; i++)
           SQW[i][j] = Data_sqw.SQW[j][i].value;
       }
-      sprintf(tmp, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
+      sprintf(tmp_str, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sq", NAME_CURRENT_COMP, ext);
       sprintf(xvar, "S_%s(q)", ext);
       if (Data_sqw.nb_q_data > 1)
-        DETECTOR_OUT_1D(tmp,"Wavevector [Angs-1]",xvar,"q",
+        DETECTOR_OUT_1D(tmp_str,"Wavevector [Angs-1]",xvar,"q",
         Data_sqw.q_min, Data_sqw.q_max,
         Data_sqw.nb_q_data,NULL,Data_sqw.Sq,NULL,
         filename);
-      sprintf(tmp, "Energy Density from %s (%s)", Data_sqw.filename, type_ci);
+      sprintf(tmp_str, "Energy Density from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sw", NAME_CURRENT_COMP, ext);
       sprintf(xvar, "S_%s(w)", ext);
       if (Data_sqw.nb_w > 1)
-        DETECTOR_OUT_1D(tmp,"Energy [meV]",xvar,"w",
+        DETECTOR_OUT_1D(tmp_str,"Energy [meV]",xvar,"w",
         Data_sqw.w_min, Data_sqw.w_max,
         Data_sqw.nb_w,NULL,SW,NULL,
         filename);
-      sprintf(tmp, "S(q,w) from %s (%s), Norm=%g",
+      sprintf(tmp_str, "S(q,w) from %s (%s), Norm=%g",
         Data_sqw.filename, type_ci, Data_sqw.intensity);
       sprintf(filename, "%s_%s.sqw", NAME_CURRENT_COMP, ext);
       sprintf(xvar, "Wavevector [Angs-1] %s", ext);
       if (Data_sqw.nb_q > 1 && Data_sqw.nb_w > 1)
-        DETECTOR_OUT_2D(tmp,xvar,"Energy [meV]",
+        DETECTOR_OUT_2D(tmp_str,xvar,"Energy [meV]",
         Data_sqw.q_min, Data_sqw.q_max, Data_sqw.w_min, Data_sqw.w_max,
         Data_sqw.nb_q,Data_sqw.nb_w,NULL,&SQW[0][0],NULL,
         filename);

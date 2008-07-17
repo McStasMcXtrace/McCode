@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: September 2 1998
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -58,7 +58,7 @@
 
 DEFINE COMPONENT Guide
 DEFINITION PARAMETERS (string reflect=0)
-SETTING PARAMETERS (w1, h1, w2, h2, l, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
+SETTING PARAMETERS (w1, h1, w2=0, h2=0, l, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
 OUTPUT PARAMETERS (pTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -78,6 +78,9 @@ INITIALIZE
     "This component produces wrong results with gravitation !\n"
     "Use Guide_gravity.\n",
     NAME_CURRENT_COMP);
+    
+  if (!w2) w2=w1;
+  if (!h2) h2=h1;
 
   if (reflect && strlen(reflect)) {
     if (Table_Read(&pTable, reflect, 1) <= 0) /* read 1st block data from file into pTable */

@@ -8,8 +8,8 @@
 * Date: July 2006.
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.3 $
-* %INSTRUMENT_SITE: tests
+* Version: $Revision: 1.4 $
+* %INSTRUMENT_SITE: Templates
 *
 * Based on Emmanuel Farhi's thermal H8 triple-axis spectrometer from
 * Brookhaven reactor
@@ -103,7 +103,7 @@ COMPONENT Origin = Arm()
 /* a flat constant source */
 COMPONENT Source = 
 Source_simple(radius  = 0.01, dist = 5.0,
-	      xw = 0.02, yh = 0.02,
+	      focus_xw = 0.02, focus_yh = 0.02,
 	      E0 = Ei, dE = 0.5)
      AT (0,0,0) RELATIVE Origin
 
@@ -114,21 +114,21 @@ COMPONENT Mono_Out = Arm()
      AT (0, 0, 0) RELATIVE Mono_Arm ROTATED (0, A2, 0) RELATIVE Source
 
 COMPONENT Mono = 
-Monochromator_flat(width = 0.10, height = 0.08,
+Monochromator_flat(zwidth = 0.10, yheight = 0.08,
 		   mosaich = MOZ, mosaicv = MOZ,
 		   r0 = 1.0, Q=mono_q)
      WHEN (OPTION==0) AT (0, 0, 0) RELATIVE Mono_Arm
 
 COMPONENT Mono_pol = 
-Monochromator_pol(zw = 0.10, yh = 0.08,
+Monochromator_pol(zwidth = 0.10, yheight = 0.08,
 		  mosaic = MOZ, dspread = 0.0,
 		  Rup = 1.0, Rdown = 0.0, Q=mono_q, debug = 0)
      WHEN (OPTION==-1 || OPTION==1) AT (0, 0, 0) RELATIVE Mono_Arm
 
 
 COMPONENT pollambdaMonitorMono =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
 		  my=1, filename="pollambdaMonMono.data")
      AT (0, 0, 0.5) RELATIVE Mono_Out
 
@@ -145,19 +145,19 @@ V_sample(radius = 0.024, yheight = 0.0254,
      AT (0, 0, 0) RELATIVE Sample_Out
 
 COMPONENT pollambdaMonitorSample =
-PolLambda_monitor(xw=0.10, yh=0.10,
-		  nlam=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
+PolLambda_monitor(xwidth=0.10, yheight=0.10,
+		  nL=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
 		  my=1, filename="pollambdaMonSample.data")
      AT (0, 0, 0.25) RELATIVE Sample_Out
 
 COMPONENT msf =
-Pol_constBfield(xw=0.10, yh=0.10, length=0.2, fliplambda=LAMBDA)
+Pol_constBfield(xwidth=0.10, yheight=0.10, length=0.2, fliplambda=LAMBDA)
      WHEN (OPTION==-1) AT (0, 0, 0.4) RELATIVE Sample_Out
 ROTATED (0, 0, 90) RELATIVE Sample_Out
 
 COMPONENT pollambdaMonitorMSF =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
 		  my=1, filename="pollambdaMonMsf.data")
      AT (0, 0, 0.75) RELATIVE Sample_Out
 
@@ -168,21 +168,21 @@ COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
      AT (0, 0, 0) RELATIVE Ana_Arm ROTATED (0, A6, 0) RELATIVE Sample_Out
 
 COMPONENT Ana = 
-Monochromator_flat(width = 0.10, height = 0.08,
+Monochromator_flat(zwidth = 0.10, yheight = 0.08,
 		   mosaich = MOZ, mosaicv = MOZ,
 		   r0 = 1.0, Q=mono_q)
      WHEN (OPTION==0) AT (0, 0, 0) RELATIVE Ana_Arm
 
 COMPONENT Ana_pol = 
-Monochromator_pol(zw = 0.10, yh = 0.08,
+Monochromator_pol(zwidth = 0.10, yheight = 0.08,
 		  mosaic = MOZ, dspread = 0.0,
 		  Rup = 1.0, Rdown = 0.0, Q=mono_q, debug = 0)
      WHEN (OPTION==-1 || OPTION==1) AT (0, 0, 0) RELATIVE Ana_Arm
 
 
 COMPONENT pollambdaMonitorDet =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=40, Lmin = 0.97*LAMBDA, Lmax = 1.03*LAMBDA, npol=11,
 		  my=1, filename="pollambdaMonDet.data")
      AT (0, 0, 0.15) RELATIVE Ana_Out
 

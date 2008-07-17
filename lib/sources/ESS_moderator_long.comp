@@ -10,7 +10,7 @@
 * %I
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 *
@@ -25,7 +25,7 @@
 * (McStas units are in general neutrons/second)
 *
 * Example general parameters (general):
-*          size=0.12 l_low=0.1 l_high=10 dist=1.6 xw=0.19 yh=0.15 freq=16.67
+*          size=0.12 Lmin=0.1 Lmax=10 dist=1.6 focus_xw=0.19 focus_yh=0.15 nu=16.67
 *          branchframe=0.5
 *
 * Example moderator specific parameters
@@ -61,12 +61,14 @@
 * Input parameters:
 *
 * size:   (m)    Edge of cube shaped source
-* l_low:  (AA)   Lower edge of lambda distribution
-* l_high: (AA)   Upper edge of energy distribution
+* Lmin:   (AA)   Lower edge of wavelength distribution
+* Lmax:   (AA)   Upper edge of wavelength distribution
 * dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
-* xw:     (m)    Width of focusing rectangle
-* yh:     (m)    Height of focusing rectangle
-* freq:   (Hz)   Frequency of pulses
+* focus_xw:(m)   Width of focusing rectangle
+* focus_yh:(m)   Height of focusing rectangle
+* target_index:(1)  relative index of component to focus at, e.g. next is +1
+*                this is used to compute 'dist' automatically.
+* nu:     (Hz)   Frequency of pulses
 * T:      (K)    Temperature of source
 * tau:    (s)    long time decay constant for pulse tail 1a
 * tau1:   (s)    long time decay constant for pulse tail 1b
@@ -91,9 +93,9 @@
 
 DEFINE COMPONENT ESS_moderator_long
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (size=0.12, l_low, l_high, dist, xw, yh, freq=50.0/3.0,
+SETTING PARAMETERS (size=0.12, Lmin, Lmax, dist=0, focus_xw, focus_yh, nu=50.0/3.0,
                     T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2e-3, n=20,
-		    n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10,
+                    n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10, int target_index=+1,
                     branch1=1, branch2=0.5, branch_tail=0.14350, branchframe=0)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -116,10 +118,20 @@ DECLARE
 
 INITIALIZE
 %{
-  if (n == 1 || n2 == 1 || l_low<=0 || l_high <=0 || dist == 0
+  if (target_index && !dist)
+  {
+    Coords ToTarget;
+    double tx,ty,tz;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+    dist=sqrt(tx*tx+ty*ty+tz*tz);
+  }
+  
+  if (n == 1 || n2 == 1 || Lmin<=0 || Lmax <=0 || dist == 0
     || branch2 == 0 || branch_tail == 0 || tau == 0)
   {
-    printf("ESS_moderator_long: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {l_low l_high dist d tau branch1/2/tail} and 1 value for {n n2 branch1/2/tail}\n", NAME_CURRENT_COMP);
+    printf("ESS_moderator_long: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {Lmin Lmax dist d tau branch1/2/tail} and 1 value for {n n2 branch1/2/tail}\n", NAME_CURRENT_COMP);
     exit(-1);
   }
 
@@ -128,11 +140,11 @@ INITIALIZE
     printf("ESS_moderator_long: %s: WARNING: Setting tau1 to zero implies branch 1=1.\n", NAME_CURRENT_COMP);
   }
 
-  l_range = l_high-l_low;
+  l_range = Lmax-Lmin;
   w_mult = size*size*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1/mcget_ncount();   /* Correct for number of rays */
-  w_mult *= freq;               /* Correct for frequency */
+  w_mult *= nu;               /* Correct for frequency */
 %}
 TRACE
 %{
@@ -144,13 +156,13 @@ TRACE
   y = 0.5*size*randpm1();         /* Choose initial position */
 
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
-			   0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+			   0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
   dx = xf-x;
   dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
 
-  lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
+  lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
   k = 2*PI/lambda;
   v = K2V*k;
 
@@ -237,7 +249,7 @@ TRACE
  }
  if (rand01()<branchframe)
    {
-     t+=1/freq;
+     t+=1/nu;
      p/=(branchframe);
    }
  else
@@ -248,6 +260,12 @@ MCDISPLAY
 %{
   magnify("xy");
   rectangle("xy", 0, 0, 0, size, size);
+  if (dist) {
+    dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2, focus_yh/2,dist, 4);
+    dashed_line(0,0,0, -focus_xw/2, focus_yh/2,dist, 4);
+  }
 %}
 
 END

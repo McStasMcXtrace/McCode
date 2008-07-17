@@ -7,7 +7,7 @@
 * %I
 * Written by: Uwe Filges
 * Date: 22/10/2003
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Release: McStas 1.9
 * Origin: PSI
 * Modified by: Rob Dalgliesh, ISIS, 2007
@@ -94,10 +94,10 @@
 ******************************************************************************/
 
 DEFINE COMPONENT Guide_tapering
-DEFINITION PARAMETERS (string option=0,segno=800)
+DEFINITION PARAMETERS (string option=0)
 SETTING PARAMETERS (w1=0,h1=0,l,linw=0,loutw=0,linh=0,louth=0, R0=0.99,
                     Qcx=0.021,Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
-                    mx=1, my=1)
+                    mx=1, my=1,segno=800)
 OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_out,l_seg,seg,
 		  h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh, mxi ,u1 ,u2 ,div1, p2_para,
 		  test,Div1, i,ii,seg, fu, pos, file_name, ep, num)

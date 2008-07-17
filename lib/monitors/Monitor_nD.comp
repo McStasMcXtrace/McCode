@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.38 $
+* Version: $Revision: 1.39 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -87,7 +87,6 @@
 *     file=string               Detector image file name. default is component
 *                                name, plus date and variable extension.
 *     incoming                  Monitor incoming beam in non flat det
-*     intermediate=[5 in %]     Save ALL results every n% steps in simulation
 *     limits=[min max]          Lower/Upper limits for axes
 *                                (see up for the variable unit)
 *     list=[counts=1000] or all For a long file of neutron characteristics
@@ -161,8 +160,8 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth:  [m]  Width/diameter of detector (x). Default is 10 cm.
-* yheight: [m]  Height of detector (y). Default is 10 cm.
+* xwidth:  [m]  Width/diameter of detector. Default is 10 cm.
+* yheight: [m]  Height of detector. Default is 10 cm.
 * zdepth:  [m]  Thichness of detector (z).
 * options: [str]  String that specifies the configuration of the monitor
 *                 The general syntax is "[x] options..." (see <b>Descr.</b>).
@@ -174,6 +173,7 @@
 * ymax:   [m]    Upper y bound of opening
 * zmin:   [m]    Lower z bound of opening
 * zmax:   [m]    Upper z bound of opening
+* radius: [m]    Radius of sphere/cylindrical monitor
 * filename:[str] Output file name (overrides file=XX option).
 * bins:   [1]    Number of bins to force for all variables.
 *                Use 'bins' keyword in 'options' for heterogeneous bins
@@ -204,7 +204,7 @@
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
-SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0)
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -244,6 +244,7 @@ INITIALIZE
   strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 32);
   strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
   strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 32);
+  if (radius) xwidth=2*radius;
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
 
@@ -359,13 +360,6 @@ TRACE
       SCATTER;
     }
 
-    /* now handles intermediate results saving */
-    if ((Vars.Intermediate > 0) && (mcget_run_num() > Vars.IntermediateCnts))
-    {
-      Vars.IntermediateCnts += Vars.Intermediate*mcget_ncount();
-      /* save results for all monitors in the simulation */
-      mcsave(NULL);
-    }
     if (Vars.Flag_parallel) /* back to neutron state before detection */
       Flag_Restore = 1;
   } /* end if intersection */

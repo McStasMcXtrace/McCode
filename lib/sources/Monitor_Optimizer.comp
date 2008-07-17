@@ -12,7 +12,7 @@
 * Date: 17 Sept 1999
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Modified by: EF, (Feb 2000)
 * Modified by: EF, Mar 10th, 2000 : now uses struct
 * Modified by: EF, Oct 12th, 2000 ; optim divergence (0.08)
@@ -33,19 +33,19 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xmin:     Lower x bound of detector opening (m)
-* xmax:     Upper x bound of detector opening (m)
-* ymin:     Lower y bound of detector opening (m)
-* ymax:     Upper y bound of detector opening (m)
+* xmin:     Lower x bound of monitor opening (m)
+* xmax:     Upper x bound of monitor opening (m)
+* ymin:     Lower y bound of monitor opening (m)
+* ymax:     Upper y bound of monitor opening (m)
 * optim_comp: name of the Source_Optimizer component in the
 *           instrument definition. Do not use quotes (no quotes)
+* xwidth:   Width of monitor. Overrides xmin,xmax. (m)
+* yheight:  Height of monitor. Overrides ymin,ymax. (m)
 *
 * OUTPUT PARAMETERS:
 *
 * none (see <b>Source_Optimizer.comp</b>)
 *
-* %Link
-* <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
 * %Link
 * <a href="Source_Optimizer.html">Source_Optimizer</a>
 *
@@ -54,7 +54,7 @@
 
 DEFINE COMPONENT Monitor_Optimizer
 DEFINITION PARAMETERS (optim_comp)
-SETTING PARAMETERS (xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+SETTING PARAMETERS (xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (This_Monitor_id)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
@@ -72,6 +72,9 @@ int This_Monitor_id;
 INITIALIZE
 %{
   struct Optim_Variables *Vars = &(MC_GETPAR(optim_comp, Vars));
+  
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
   Vars->Monitor_Number++;
   This_Monitor_id = Vars->Monitor_Number;

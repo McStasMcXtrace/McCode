@@ -5,15 +5,15 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: vanadium_example
+* Instrument: Samples_vanadium
 *
 * %Identification
 * Written by: Kristian Nielsen and Kim Lefmann
 * Date: 1998
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.10 $
-* %INSTRUMENT_SITE: Tutorial
+* Version: $Revision: 1.1 $
+* %INSTRUMENT_SITE: Tests_samples
 *
 * A test instrument using a vanadium cylinder
 *
@@ -21,7 +21,7 @@
 * This instrument shows the vanadium sample scattering anisotropy.
 * This is an effect of attenuation of the beam in the cylindrical sample.
 *
-* Example: mcrun vanadium_example.instr ROT=0
+* Example: mcrun Samples_vanadium.instr ROT=0
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -35,7 +35,7 @@
 *******************************************************************************/
 /* The line below defines the 'name' of our instrument */
 /* Here, we have a single input parameter, ROT         */
-DEFINE INSTRUMENT vanadium_example(ROT=0)
+DEFINE INSTRUMENT Samples_vanadium(ROT=0)
 
 /* The DECLARE section allows us to declare variables  */
 /* in c syntax. Here, coll_div (collimator divergence) */
@@ -64,14 +64,14 @@ COMPONENT arm = Arm() AT (0,0,0) ABSOLUTE
 /* orientation of the arm will also affect the source  */
 /* component (and other components after that one...)  */
 COMPONENT source = Source_simple(radius = 0.015, dist = 1,
-  xw=0.024, yh=0.015, E0=5, dE=0.2, compat = 1)
+  focus_xw=0.024, focus_yh=0.015, E0=5, dE=0.2)
   AT (0,0,0) RELATIVE arm
 
 /* Here we have a soller - placed to improve beam      */
 /* divergence.                                         */
 /* The component is placed at a distance RELATIVE to   */
 /* a previous component...                             */
-COMPONENT collimator = Collimator_linear(len = 0.2,
+COMPONENT collimator = Collimator_linear(length = 0.2,
   divergence = coll_div, xwidth = 0.04, yheight=0.06)
   AT (0, 0, 0.4) RELATIVE arm
 

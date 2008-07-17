@@ -1,11 +1,11 @@
-/* Instrument: ILL_TOF_Env.instr
+/* Instrument: templateTOF.instr
  *
  * %Identification
  * Written by: E. Farhi
  * Date: Jan 2004
  * Origin: ILL
  *
- * %INSTRUMENT_SITE: ILL
+ * %INSTRUMENT_SITE: Templates
  *
  * A test instrument for the S(q,w) sample, with furnace/container
  *
@@ -19,8 +19,8 @@
  * detector is 2.5 m diameter, with 40 cm heigh, 1 inch diameter detector tubes.
  *
  * Example:
- *   mcrun ILL_TOF_Env.instr E0=4.94 dE=.24 dt=6.4e-6   cold TOF
- *   mcrun ILL_TOF_Env.instr E0=33 dE=1.07 dt=9.6e-6    thermal TOF
+ *   mcrun templateTOF.instr E0=4.94 dE=.24 dt=6.4e-6   cold TOF
+ *   mcrun templateTOF.instr E0=33 dE=1.07 dt=9.6e-6    thermal TOF
  *
  * %Parameters
  * INPUT PARAMETERS:
@@ -31,7 +31,7 @@
  *  inc:       sample incoherent Sqw data file or NULL    [str]
  *  radius:    radius of sample (outer).                   [m]
  *  thickness: thickness of sample. 0=filled               [m]
- *  height:    height of sample. 0=sphere                  [m]
+ *  yheight:   height of sample. 0=sphere                  [m]
  *  container: container material or NULL                  [str]
  *  container_thickness: container thickness               [m]
  *  environment: sample environment material or NULL       [str]
@@ -41,13 +41,13 @@
  * %Link
  * The Isotropic_Sqw sample
  * %Link
- * The Test_Isotropic_Sqw example instrument
+ * The Samples_Isotropic_Sqw example instrument
  * %End
 */
 
-DEFINE INSTRUMENT ILL_TOF_Env(E0=4.94, dE=0.24, dt=6.4e-6,
+DEFINE INSTRUMENT templateTOF(E0=4.94, dE=0.24, dt=6.4e-6,
   string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw",
-  thickness=1e-4,height=0.0168,radius=0.005,
+  thickness=1e-4,yheight=0.0168,radius=0.005,
   string container="Nb.laz", container_thickness=50e-6,
   string environment="Al.laz", environment_radius=0.025, environment_thickness=2e-3)
 
@@ -78,8 +78,8 @@ INITIALIZE
   printf("%s: lambda=%g [Angs], k=%g [Angs-1], v=%g [m/s], E=%g [meV]. Time=[%g %g %g]\n",
     NAME_CURRENT_COMP, lambda,ki,vi, E0, t0*.75, t0, t0*1.5);
   printf("%s: sample is %s, with %s%s geometry.\n",
-    NAME_CURRENT_COMP, coh, thickness ? "hollow " : "", height ? "cylindrical" : "spherical");
-  if (height && container_thickness)
+    NAME_CURRENT_COMP, coh, thickness ? "hollow " : "", yheight ? "cylindrical" : "spherical");
+  if (yheight && container_thickness)
     printf("%s: container is %s (outer cylinder)\n", NAME_CURRENT_COMP, container);
   if (environment_thickness > 0)
     printf("%s: external environment is %s\n", NAME_CURRENT_COMP, environment);
@@ -87,7 +87,7 @@ INITIALIZE
   if (environment_thickness > 0 && radius > environment_radius-environment_thickness)
     exit(printf("%s: sample radius %g is larger than sample environment %g\n",
       NAME_CURRENT_COMP, radius, environment_radius-environment_thickness));
-  if (container_thickness > 0 && environment_thickness > 0 && height > 0
+  if (container_thickness > 0 && environment_thickness > 0 && yheight > 0
       && radius+container_thickness+0.0001 > environment_radius-environment_thickness)
     exit(printf("%s: sample container radius %g is larger than sample environment %g\n",
       NAME_CURRENT_COMP, radius+container_thickness+0.0001, environment_radius-environment_thickness));
@@ -104,7 +104,7 @@ EXTEND
 
 /* thermal source */
 COMPONENT csource = Source_gen(
-   radius = 0.02, xw = 2*radius, yh = height ? height : 2*radius, dist = 2.88,
+   radius = 0.02, focus_xw = 2*radius, focus_yh = yheight ? yheight : 2*radius, dist = 2.88,
    E0 = E0, dE = dE/2,
    T1=300.0,I1=1)
 AT (0,0,0) RELATIVE a1
@@ -125,9 +125,9 @@ EXTEND %{
 
 /* sample container */
 COMPONENT Container_in=Isotropic_Sqw(
-  radius = radius+0.0001+container_thickness, yheight = height, thickness=container_thickness,
+  radius = radius+0.0001+container_thickness, yheight = yheight, thickness=container_thickness,
   auto_qw=0, Sqw_coh=container, concentric=1, verbose=0
-  ) WHEN(height && container_thickness > 0)
+  ) WHEN(yheight && container_thickness > 0)
 AT (0, 0, 0) RELATIVE SampleIn
 EXTEND
 %{
@@ -135,7 +135,7 @@ EXTEND
 %}
 
 COMPONENT FoSample_in=Isotropic_Sqw(
-  radius = radius, thickness=thickness, yheight = height, save_sqw=1,
+  radius = radius, thickness=thickness, yheight = yheight, save_sqw=1,
   Sqw_coh=coh, Sqw_inc=inc, auto_qw=0, p_interact=0.9
 ) AT (0, 0, 0) RELATIVE SampleIn
 EXTEND
@@ -147,9 +147,9 @@ EXTEND
 %}
 
 COMPONENT Container_out=Isotropic_Sqw(
-  radius=radius+0.0001+container_thickness,yheight=height,thickness=container_thickness,
+  radius=radius+0.0001+container_thickness,yheight=yheight,thickness=container_thickness,
   auto_qw=0, Sqw_coh=container, verbose=0
-  ) WHEN(height && container_thickness)
+  ) WHEN(yheight && container_thickness)
 AT (0, 0, 0) RELATIVE SampleIn
 EXTEND
 %{

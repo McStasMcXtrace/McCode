@@ -8,8 +8,8 @@
 * Date: July 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
-* %INSTRUMENT_SITE: tests
+* Version: $Revision: 1.5 $
+* %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_constBfield
 * component.
@@ -57,8 +57,8 @@ COMPONENT Origin = Arm()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = 
-Source_simple(radius = 0.01, dist = 1.0, xw = 0.1, yh = 0.1, Lambda0 = 5,
-	      dLambda = 4.9, flux = 1)
+Source_simple(radius = 0.01, dist = 1.0, focus_xw = 0.1, focus_yh = 0.1, lambda0 = 5,
+	      dlambda = 4.9, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT polSetter =
@@ -66,20 +66,20 @@ Set_pol(px=1)
      AT (0, 0, 0.5) RELATIVE Origin
 
 COMPONENT pollambdaMonitor1x = 
-PolLambda_monitor(xw=0.1, yh=0.1, 
-		  nlam=100, Lmin = 0.0, Lmax = 10.0, npol=21, 
+PolLambda_monitor(xwidth=0.1, yheight=0.1, 
+		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21, 
 		  mx=1, my=0, mz=0, filename="pollambdaMon1x.data")
      AT (0, 0, 0.7) RELATIVE Origin
 
 COMPONENT pollambdaMonitor1y =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=100, Lmin = 0.0, Lmax = 10.0, npol=21,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=0, my=1, mz=0, filename="pollambdaMon1y.data")
      AT (0, 0, 0.75) RELATIVE Origin
 
 COMPONENT pollambdaMonitor1z =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=100, Lmin = 0.0, Lmax = 10.0, npol=21,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=0, my=0, mz=1, filename="pollambdaMon1z.data")
      AT (0, 0, 0.8) RELATIVE Origin
 
@@ -87,42 +87,42 @@ COMPONENT armMSF = Arm()
      AT (0,0,1) RELATIVE Origin
 
 COMPONENT msf =
-Pol_constBfield(xw=0.08, yh=0.08, length=0.2, fliplambda=5.0)
+Pol_constBfield(xwidth=0.08, yheight=0.08, length=0.2, fliplambda=5.0)
      AT (0, 0, 0) RELATIVE armMSF
 
 COMPONENT pollambdaMonitor2x =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=100, Lmin = 0.0, Lmax = 10.0, npol=21,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=1, my=0, mz=0, filename="pollambdaMon2x.data")
      AT (0, 0, 0.3) RELATIVE armMSF
 
 COMPONENT pollambdaMonitor2y =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=100, Lmin = 0.0, Lmax = 10.0, npol=21,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=0, my=1, mz=0, filename="pollambdaMon2y.data")
      AT (0, 0, 0.3) RELATIVE armMSF
 
 COMPONENT pollambdaMonitor2z =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=100, Lmin = 0.0, Lmax = 10.0, npol=21,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=100, Lmin = 0.0, Lmax = 10.0, npol=21,
 		  mx=0, my=0, mz=1, filename="pollambdaMon2z.data")
      AT (0, 0, 0.3) RELATIVE armMSF
 
 COMPONENT mpollambdaMonitor2x =
-MeanPolLambda_monitor(xw=0.1, yh=0.1,
-		      nlam=100, Lmin = 0.0, Lmax = 10.0,
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 0.0, Lmax = 10.0,
 		      mx=1, my=0, mz=0, filename="mpollambdaMon2x.data")
      AT (0, 0, 0.3) RELATIVE armMSF
 
 COMPONENT mpollambdaMonitor2y =
-MeanPolLambda_monitor(xw=0.1, yh=0.1,
-		      nlam=100, Lmin = 0.0, Lmax = 10.0,
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 0.0, Lmax = 10.0,
 		      mx=0, my=1, mz=0, filename="mpollambdaMon2y.data")
      AT (0, 0, 0.3) RELATIVE armMSF
 
 COMPONENT mpollambdaMonitor2z =
-MeanPolLambda_monitor(xw=0.1, yh=0.1,
-		      nlam=100, Lmin = 0.0, Lmax = 10.0,
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 0.0, Lmax = 10.0,
 		      mx=0, my=0, mz=1, filename="mpollambdaMon2z.data")
      AT (0, 0, 0.3) RELATIVE armMSF
 

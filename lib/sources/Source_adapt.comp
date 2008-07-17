@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Revised by: <a href="mailto:percival@physics.queensu.ca">Aaron M. Percival</a>
@@ -57,9 +57,11 @@
 * xmax:    (m)          Right edge
 * ymin:    (m)          Lower edge
 * ymax:    (m)          Upper edge
+* target_index:(1)      relative index of component to focus at, e.g. next is +1
+*                         this is used to compute 'dist' automatically.
 * dist:    (m)          Distance to target rectangle along z axis
-* xw:      (m)          Width(x) of target
-* yh:      (m)          Height(y) of target
+* focus_xw:      (m)    Width of target
+* focus_yh:      (m)    Height of target
 * E0:      (meV)        Mean energy of neutrons
 * dE:      (meV)        Energy spread (energy range is from E0-dE to E0+dE)
 * lambda0: (AA)         Mean wavelength of neutrons (if energy not specified)
@@ -70,7 +72,7 @@
 * N_xdiv:  (1)          Number of bins in horizontal divergence
 * alpha:   (1)          Learning cut-off factor (0 < alpha <= 1)
 * beta:    (1)          Aggressiveness of adaptive algorithm (0 < beta <= 1)
-* filename: (string)   Optional filename for adaptive distribution output
+* filename: (string)    Optional filename for adaptive distribution output
 *
 * OUTPUT PARAMETERS:
 *
@@ -86,7 +88,8 @@
 
 DEFINE COMPONENT Source_adapt
 DEFINITION PARAMETERS (N_E=20, N_xpos=20, N_xdiv=20, alpha=0.25, beta=0.25, string filename=0)
-SETTING PARAMETERS (xmin,xmax,ymin,ymax, dist=2.33, xw=0.05, yh=0.1, E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13)
+SETTING PARAMETERS (xmin,xmax,ymin,ymax, dist=0, focus_xw=0.05, focus_yh=0.1, 
+  E0=0, dE=0, lambda0=0, dlambda=0, flux=1e13, int target_index=+1)
 OUTPUT PARAMETERS (p_in, y_0, C, r_0, count, adpt)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -116,6 +119,16 @@ INITIALIZE
   int i;
   double a, lambda_min, lambda_max, delta_lambda, source_area;
 
+  if (target_index && !dist)
+  {
+    Coords ToTarget;
+    double tx,ty,tz;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+    dist=sqrt(tx*tx+ty*ty+tz*tz);
+  }
+  
   adpt.num = N_E*N_xpos*N_xdiv;
   adpt.a_beta = beta;
   
@@ -176,11 +189,11 @@ TRACE
   x = xmin + (i_xpos + rand01())*((xmax - xmin)/(double)N_xpos);
   y = ymin + rand01()*(ymax - ymin);
   z=0;
-  thmin = atan2(-xw/2.0 - x, dist);
-  thmax = atan2( xw/2.0 - x, dist);
+  thmin = atan2(-focus_xw/2.0 - x, dist);
+  thmax = atan2( focus_xw/2.0 - x, dist);
   theta = thmin + (i_xdiv + rand01())*((thmax - thmin)/(double)N_xdiv);
-  phmin = atan2(-yh/2.0 - y, dist);
-  phmax = atan2( yh/2.0 - y, dist);
+  phmin = atan2(-focus_yh/2.0 - y, dist);
+  phmax = atan2( focus_yh/2.0 - y, dist);
   phi = phmin + rand01()*(phmax - phmin);
   
   if(E0 == 0) {
@@ -267,6 +280,12 @@ MCDISPLAY
                (double)xmax, (double)ymax, 0.0,
                (double)xmin, (double)ymax, 0.0,
                (double)xmin, (double)ymin, 0.0);
+  if (dist) {
+    dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2, focus_yh/2,dist, 4);
+    dashed_line(0,0,0, -focus_xw/2, focus_yh/2,dist, 4);
+  }
 %}
 
 END

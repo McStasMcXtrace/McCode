@@ -8,8 +8,8 @@
 * Date: June 20th, 2008
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
-* %INSTRUMENT_SITE: tests
+* Version: $Revision: 1.5 $
+* %INSTRUMENT_SITE: Templates
 *
 * Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
 *
@@ -25,12 +25,12 @@
 * isosurface to do thresholding for extraction of the object surface.
 *
 * %Parameters
-* offfile:    [string] Name of the OFF file describing the sample shape
+* geometry:   [string] Name of the OFF file describing the sample shape
 * omega:      [deg] Sample rotation around y 
 * sigma_abs:  [barn] Sample absorption xs
 * frac_scatt: [1] Fraction of neutrons to scatter in the sample
-* div_v:      [deg] Source vertical divergence
-* div_h:      [deg] Source horisontal divergence
+* div_v:      [deg] Source vertical divergence (angular height)
+* div_h:      [deg] Source horisontal divergence (angular width)
 * source_w:   [m] Source width
 * source_h:   [m] Source height
 * det_w:      [m] Detector width
@@ -43,7 +43,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Tomography(string offfile="bunny.off", 
+DEFINE INSTRUMENT Tomography(string geometry="bunny.off", 
 			     omega = 0, sigma_abs=100, frac_scatt = 0, 
 			     div_v = 0, div_h = 0, source_w = 0.4, source_h = 0.2, 
 			     det_w = 0.4, det_h = 0.2, string opts="x bins=80 y bins=40")
@@ -52,15 +52,14 @@ TRACE
 COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
-COMPONENT source = Source_div(width = source_w, height = source_h, hdiv=div_h, vdiv=div_v, E0=14, dE=.5)
+COMPONENT source = Source_div(xwidth = source_w, yheight = source_h, focus_aw=div_h, focus_ah=div_v, E0=14, dE=.5)
 AT (0, 0, 0) RELATIVE Origin 
 
 COMPONENT samplearm = Arm()
 AT (0,0,1+0) RELATIVE Origin
 ROTATED (0,omega,0) RELATIVE Origin
 
-COMPONENT sample=V_sample(frac = frac_scatt, offfile = offfile, yheight=0.1, sigma_abs=sigma_abs,
-			  focus_xw=det_w, focus_yh=det_h, target_index=1)
+COMPONENT sample=Incoherent(p_interact = frac_scatt, geometry = geometry, yheight=0.1, sigma_abs=sigma_abs, focus_xw=det_w, focus_yh=det_h, target_index=1)
 AT (0,0,0) RELATIVE samplearm 
 
 COMPONENT monitor = Monitor_nD(xwidth=det_w,yheight=det_h,options=opts)

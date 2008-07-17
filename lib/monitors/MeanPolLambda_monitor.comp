@@ -5,12 +5,12 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: MeanPolLambda_monitor
+* Component: MeanPollambda_monitor
 *
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: Risoe
 * Release: McStas 1.10
 *
@@ -20,18 +20,18 @@
 * polarisation along a given normalized m-vector (mx, my, mz) as a
 * function of wavelength.
 *
-* Example: MeanPolLambda_monitor(xw=0.1, yh=0.1, npol=11, 
+* Example: MeanPollambda_monitor(xwidth=0.1, yheight=0.1, npol=11, 
 *                                my=1, filename="meanpollambdaMon.data")
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xw:       Width/diameter of detector (m) 
-* yh:       Height of detector (m)
+* xwidth:   Width of detector (m) 
+* yheight:  Height of detector (m)
 * mx:       X-component of monitor vector (can be negative) (1)
 * my:       Y-component of monitor vector (can be negative) (1)
 * mz:       Z-component of monitor vector (can be negative) (1)
-* nlam:     Number of bins in wavelength (1)
+* nL:       Number of bins in wavelength (1)
 * Lmin:     Minimum wavelength detected (AA)
 * Lmax:     Maximum wavelength detected (AA)
 * filename: Name of file in which to store the data (text)
@@ -48,7 +48,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT MeanPolLambda_monitor
-DEFINITION PARAMETERS (xw=0, yh=0, nlam=20, string filename, restore_neutron=0)
+DEFINITION PARAMETERS (xwidth=0.1, yheight=0.1, nL=20, string filename, restore_neutron=0)
 SETTING PARAMETERS (mx=0, my=0, mz=0, Lmin, Lmax)
 OUTPUT PARAMETERS (PolL_N, PolL_p, PolL_p2, HelpArray)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -56,10 +56,10 @@ POLARISATION PARAMETERS (sx,sy,sz)
      
 DECLARE
 %{  
-  double PolL_N[nlam];
-  double PolL_p[nlam];
-  double PolL_p2[nlam];
-  double HelpArray[nlam];
+  double PolL_N[nL];
+  double PolL_p[nL];
+  double PolL_p2[nL];
+  double HelpArray[nL];
   %}
 
 INITIALIZE
@@ -82,9 +82,9 @@ INITIALIZE
     exit(1);
   }
 
-  if ((xw<=0) || (yh <= 0)) {
+  if ((xwidth<=0) || (yheight <= 0)) {
     fprintf(stderr, "Pol_monitor: %s: Null detection area !\n"
-	   "ERROR      (xw,yh). Exiting",
+	   "ERROR      (xwidth,yheight). Exiting",
            NAME_CURRENT_COMP);
     exit(1);
   }
@@ -93,7 +93,7 @@ INITIALIZE
 
   NORM(mx, my, mz);
   
-  for (i=0; i<nlam; i++) {
+  for (i=0; i<nL; i++) {
       
       PolL_N[i] = 0;
       PolL_p[i] = 0;
@@ -111,12 +111,12 @@ TRACE
   PROP_Z0;
   lambda = (2*PI/V2K)/sqrt(vx*vx + vy*vy + vz*vz);
   
-  if (inside_rectangle(x, y, xw, yh) &&
+  if (inside_rectangle(x, y, xwidth, yheight) &&
       lambda > Lmin && lambda < Lmax) {
     
     pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
     
-    i= floor((lambda - Lmin)*nlam/(Lmax - Lmin));
+    i= floor((lambda - Lmin)*nL/(Lmax - Lmin));
 
     PolL_N[i]++;
     HelpArray[i] += p;
@@ -135,7 +135,7 @@ SAVE
   int i;
 
   // Average output
-  for (i=0; i<nlam; i++) {
+  for (i=0; i<nL; i++) {
     
     if(HelpArray[i] == 0)
       continue;
@@ -152,7 +152,7 @@ SAVE
   DETECTOR_OUT_1D("Pol-wavelength monitor", 
 		  "Wavelength [AA]",
 		  "Mean Polarisation", 
-		  "Wavelength", Lmin, Lmax, nlam,
+		  "Wavelength", Lmin, Lmax, nL,
 		  &PolL_N[0],&PolL_p[0],&PolL_p2[0],
 		  filename);
   %}
@@ -160,7 +160,7 @@ SAVE
 MCDISPLAY
 %{
   magnify("xy");
-  rectangle("xy", 0, 0, 0, xw, yh);
+  rectangle("xy", 0, 0, 0, xwidth, yheight);
   %}
 
 END

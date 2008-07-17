@@ -11,14 +11,14 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.193 $
+* Version: $Revision: 1.194 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.193 2008-07-04 13:02:18 pkwi Exp $
+* $Id: mcstas-r.c,v 1.194 2008-07-17 12:50:18 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
 * Revision 1.192  2008/04/25 08:26:33  erkn
@@ -3493,45 +3493,23 @@ void coords_print(Coords a) {
 void
 rot_set_rotation(Rotation t, double phx, double phy, double phz)
 {
-  if ((phx == 0) && (phy == 0) && (phz == 0)) {
-    t[0][0] = 1.0;
-    t[0][1] = 0.0;
-    t[0][2] = 0.0;
-    t[1][0] = 0.0;
-    t[1][1] = 1.0;
-    t[1][2] = 0.0;
-    t[2][0] = 0.0;
-    t[2][1] = 0.0;
-    t[2][2] = 1.0;
-  } else {
-    double cx = cos(phx);
-    double sx = sin(phx);
-    double cy = cos(phy);
-    double sy = sin(phy);
-    double cz = cos(phz);
-    double sz = sin(phz);
-    
-    t[0][0] = cy*cz;
-    t[0][1] = sx*sy*cz + cx*sz;
-    t[0][2] = sx*sz - cx*sy*cz;
-    t[1][0] = -cy*sz;
-    t[1][1] = cx*cz - sx*sy*sz;
-    t[1][2] = sx*cz + cx*sy*sz;
-    t[2][0] = sy;
-    t[2][1] = -sx*cy;
-    t[2][2] = cx*cy;
-  } 
-}
+  double cx = cos(phx);
+  double sx = sin(phx);
+  double cy = cos(phy);
+  double sy = sin(phy);
+  double cz = cos(phz);
+  double sz = sin(phz);
 
-/*******************************************************************************
-* rot_test_identity: Test if rotation is identity
-*******************************************************************************/
-int 
-rot_test_identity(Rotation t)
-{
-  return (t[0][0] + t[1][1] + t[2][2] == 3);
+  t[0][0] = cy*cz;
+  t[0][1] = sx*sy*cz + cx*sz;
+  t[0][2] = sx*sz - cx*sy*cz;
+  t[1][0] = -cy*sz;
+  t[1][1] = cx*cz - sx*sy*sz;
+  t[1][2] = sx*cz + cx*sy*sz;
+  t[2][0] = sy;
+  t[2][1] = -sx*cy;
+  t[2][2] = cx*cy;
 }
-
 
 /*******************************************************************************
 * rot_mul: Matrix multiplication of transformations (this corresponds to
@@ -3543,15 +3521,10 @@ void
 rot_mul(Rotation t1, Rotation t2, Rotation t3)
 {
   int i,j;
-  if (rot_test_identity(t1)) {
-    memcpy(t3, t2, 9 * sizeof (double));
-  } else if (rot_test_identity(t2)) {
-    memcpy(t3, t1, 9 * sizeof (double));
-  } else {
-    for(i = 0; i < 3; i++)
-      for(j = 0; j < 3; j++)
-	t3[i][j] = t1[i][0]*t2[0][j] + t1[i][1]*t2[1][j] + t1[i][2]*t2[2][j];
-  }
+
+  for(i = 0; i < 3; i++)
+    for(j = 0; j < 3; j++)
+      t3[i][j] = t1[i][0]*t2[0][j] + t1[i][1]*t2[1][j] + t1[i][2]*t2[2][j];
 }
 
 /*******************************************************************************
@@ -3560,7 +3533,15 @@ rot_mul(Rotation t1, Rotation t2, Rotation t3)
 void
 rot_copy(Rotation dest, Rotation src)
 {
-  memcpy(dest, src, 9 * sizeof (double));
+  dest[0][0] = src[0][0];
+  dest[0][1] = src[0][1];
+  dest[0][2] = src[0][2];
+  dest[1][0] = src[1][0];
+  dest[1][1] = src[1][1];
+  dest[1][2] = src[1][2];
+  dest[2][0] = src[2][0];
+  dest[2][1] = src[2][1];
+  dest[2][2] = src[2][2];
 }
 
 /*******************************************************************************
@@ -3587,14 +3568,11 @@ Coords
 rot_apply(Rotation t, Coords a)
 {
   Coords b;
-  if (rot_test_identity(t)) { 
-    return a;
-  } else {
-    b.x = t[0][0]*a.x + t[0][1]*a.y + t[0][2]*a.z;
-    b.y = t[1][0]*a.x + t[1][1]*a.y + t[1][2]*a.z;
-    b.z = t[2][0]*a.x + t[2][1]*a.y + t[2][2]*a.z;
-    return b;
-  }
+
+  b.x = t[0][0]*a.x + t[0][1]*a.y + t[0][2]*a.z;
+  b.y = t[1][0]*a.x + t[1][1]*a.y + t[1][2]*a.z;
+  b.z = t[2][0]*a.x + t[2][1]*a.y + t[2][2]*a.z;
+  return b;
 }
 
 /*******************************************************************************

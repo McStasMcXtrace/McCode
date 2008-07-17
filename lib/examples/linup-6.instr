@@ -12,7 +12,7 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -91,10 +91,10 @@ COMPONENT a1 = Arm()
 COMPONENT source = Source_simple(
   radius = 0.060,
   dist = 3.288,
-  xw = 0.042, yh = 0.082,
-  E0 = 20,    /* 20 meV */
-  dE = 0.82,    /* Sufficient for TAS1 geometry */
-  compat = 1)
+  focus_xw = 0.042, focus_yh = 0.082,
+  E0 = 20,     /* 20 meV */
+  dE = 0.82    /* Sufficient for TAS1 geometry */
+)
   AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT slit1 = Slit(
@@ -184,7 +184,7 @@ COMPONENT slitMS2 = Slit(
 
 COMPONENT c1 = Collimator_linear(
   xmin = -0.02, xmax = 0.02, ymin = -0.0375, ymax = 0.0375,
-  len = 0.250, divergence = C1)
+  length = 0.250, divergence = C1)
   AT (0, 0, 0.87) RELATIVE a2 ROTATED (0,OMC1_d,0) RELATIVE a2
 
 COMPONENT slitMS3 = Slit(radius = 0.025)
@@ -202,7 +202,7 @@ COMPONENT mon = Monitor(
 
 COMPONENT emon1 = E_monitor(
   xmin = -0.01, xmax = 0.01, ymin = -0.1, ymax = 0.1,
-  Emin = 19.25, Emax = 20.75, nchan = 35,
+  Emin = 19.25, Emax = 20.75, nE = 35,
   filename = "linup_6_1.vmon")
   AT(0, 0, 1.5) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
 
@@ -211,7 +211,7 @@ COMPONENT sample = V_sample(
   yheight = 0.019,
   focus_r = 0.05, /* Guess focus (no GET_X yet...); check with PSD. */
   pack = 1,
-  target_x = 0.2046, target_y = 0, target_z = 0.3083)
+  target_index=+3)
   AT (-0.0015, 0, 1.565) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
 
 COMPONENT a3 = Arm()
@@ -225,7 +225,7 @@ COMPONENT focus_check = PSD_monitor(
 
 COMPONENT c2 = Collimator_linear(
   xmin = -0.02, xmax = 0.02, ymin = -0.0315, ymax = 0.0315,
-  len = 0.300, divergence = C2)
+  length = 0.300, divergence = C2)
   AT (0, 0, 0.370) RELATIVE a3 ROTATED (0,0,0) RELATIVE a3
 
 COMPONENT ana = Monochromator_flat(
@@ -240,7 +240,7 @@ COMPONENT a4 = Arm()
 
 COMPONENT c3 = Collimator_linear(
   xmin = -0.02, xmax = 0.02, ymin = -0.05, ymax = 0.05,
-  len = 0.270, divergence = C3)
+  length = 0.270, divergence = C3)
   AT (0,0,0.104) RELATIVE a4 ROTATED (0,0,0) RELATIVE a4
 
 COMPONENT sng = Monitor(
@@ -249,7 +249,7 @@ COMPONENT sng = Monitor(
 
 COMPONENT emon2 = E_monitor(
   xmin = -0.0125, xmax = 0.0125,  ymin = -0.05, ymax = 0.05,
-  Emin = 19.25, Emax = 20.75, nchan = 35,
+  Emin = 19.25, Emax = 20.75, nE = 35,
   filename = "linup_6_2.vmon")
   AT(0, 0, 0.430001) RELATIVE a4 ROTATED (0,0,0) RELATIVE a4
 

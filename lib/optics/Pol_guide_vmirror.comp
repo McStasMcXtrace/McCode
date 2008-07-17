@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -34,8 +34,8 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xw:        [m]    Width at the guide entry
-* yh:        [m]    Height at the guide entry
+* xwidth:    [m]    Width at the guide entry
+* yheight:   [m]    Height at the guide entry
 * length:    [m]    length of guide
 * rFunc:     [1]    Guide Reflection function
 * rPar:      [1]    Guide Parameters for rFunc
@@ -43,7 +43,6 @@
 * rUpPar:    [1]    Mirror Parameters for rUpFunc
 * rDownFunc: [1]    Mirror Reflection function for spin down
 * rDownPar:  [1]    Mirror Parameters for rDownFunc
-* option:    [1]    Option for guide
 * useTables: [1]    Parameters are 0: Values, 1: Table names 
 * debug:     [1]    if debug > 0 print out some internal runtime parameters
 *
@@ -61,7 +60,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_guide_vmirror
-DEFINITION PARAMETERS (xw, yh, length,
+DEFINITION PARAMETERS (xwidth, yheight, length,
 		       rFunc=StdReflecFunc, rUpFunc=StdReflecFunc, 
 		       rDownFunc=StdReflecFunc, rPar, rUpPar, rDownPar,
 		       useTables=0)
@@ -121,9 +120,9 @@ INITIALIZE
   }
 #endif
   
-  if ((xw<=0) || (yh<= 0) || (length<=0)) {
+  if ((xwidth<=0) || (yheight<= 0) || (length<=0)) {
     fprintf(stderr, "POL_guide: %s: NULL or negative length scale!\n"
-	    "ERROR      (xw,yh,length). Exiting\n",
+	    "ERROR      (xwidth,yheight,length). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
   }
@@ -148,28 +147,28 @@ INITIALIZE
   pointOut  = coords_set(0, 0, length);
   
   // Top plane (+y dir) can be spanned by (1, 0, 0) & (0, 0, 1)
-  // and the point (0, yh/2, 0)
+  // and the point (0, yheight/2, 0)
   // A normal vector is (0, 1, 0)
   normalTop  = coords_set(0, 1, 0);
-  pointTop = coords_set(0, yh/2, 0);
+  pointTop = coords_set(0, yheight/2, 0);
   
   // Bottom plane (-y dir) can be spanned by (1, 0, 0) & (0, 0, 1)
-  // and the point (0, -yh/2, 0)
+  // and the point (0, -yheight/2, 0)
   // A normal vector is (0, 1, 0)
   normalBot  = coords_set(0, 1, 0);
-  pointBot = coords_set(0, -yh/2, 0);
+  pointBot = coords_set(0, -yheight/2, 0);
   
   // Left plane (+x dir) can be spanned by (0, 1, 0) & (0, 0, 1)
-  // and the point (xw/2, 0, 0)
+  // and the point (xwidth/2, 0, 0)
   // A normal vector is (1, 0, 0)
   normalLeft  = coords_set(1, 0, 0);
-  pointLeft = coords_set(xw/2, 0, 0);
+  pointLeft = coords_set(xwidth/2, 0, 0);
   
   // Right plane (-x dir) can be spanned by (0, 1, 0) & (0, 0, 1)
-  // and the point (-xw/2, 0, 0)
+  // and the point (-xwidth/2, 0, 0)
   // A normal vector is (1, 0, 0)
   normalRight  = coords_set(1, 0, 0);
-  pointRight = coords_set(-xw/2, 0, 0);
+  pointRight = coords_set(-xwidth/2, 0, 0);
   
   %}
 
@@ -177,7 +176,7 @@ TRACE
 %{
   /* time threshold */
   const double tThreshold = 1e-10/sqrt(vx*vx + vy*vy + vz*vz); 
-  const double xwhalf = xw/2;
+  const double xwhalf = xwidth/2;
   const double norm = 1.0/sqrt(xwhalf*xwhalf + length*length);
   double R;
   
@@ -190,7 +189,7 @@ TRACE
   /* Propagate neutron to guide entrance. */
   PROP_Z0;
   
-  if (!inside_rectangle(x, y, xw, yh))
+  if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;  
 
   if(x>0) {
@@ -381,11 +380,11 @@ MCDISPLAY
   magnify("xy");
   
   // draw box 
-  box(0, 0, length/2, xw, yh, length);
+  box(0, 0, length/2, xwidth, yheight, length);
   
   for(i = -1; i<=1; i+=2)
     for(j = -1; j<=1; j+=2)
-      line(0, j*yh/2, 0, i*xw/2, j*yh/2, length);
+      line(0, j*yheight/2, 0, i*xwidth/2, j*yheight/2, length);
   
   %}
 

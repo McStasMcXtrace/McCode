@@ -429,7 +429,7 @@ sub do_test {
   @test_commands= ("mcrun$suffix $mpi  --dir=prisma2a prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=-3 PHA2=-2 PHA3=-1 PHA4=0 PHA5=1 PHA6=2 PHA7=3 TTA=44",
       "mcrun$suffix $mpi  --dir=prisma2b prisma2.instr --ncount=$n_single TT=-30 PHA=22 PHA1=3 PHA2=2 PHA3=1 PHA4=0 PHA5=-1 PHA6=-2 PHA7=-3 TTA=44",
       "mcrun$suffix $mpi  --dir=V_test vanadium_example.instr --ncount=$n_single ROT=0",
-      "mcrun$suffix $mpi  -n $n_single --dir=h8_test  h8_test.instr Lambda=2.359",
+      "mcrun$suffix $mpi  -n $n_single --dir=h8_test  h8_test.instr lambda=2.359",
       "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_1_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=0",
       "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_2_45 linup-1.instr PHM=-39,-35 TTM=-74 C1=30",
       "mcrun$suffix $mpi  --numpoints=41 -n $n_scan --dir=linup_3_45 linup-2.instr PHM=-37.077 TTM=-74 C1=30 OMC1=-50,50",

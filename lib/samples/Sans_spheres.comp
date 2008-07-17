@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: KL, 7 June 2005
@@ -36,7 +36,7 @@
 * Delta_rho: Excess scattering length density (fm/AA^3)
 * sigma_abs: Absorption cross section density at 2200 m/s (m^-1)
 * qmax:      Maximum momentum transfer (AA^-1)
-* Rdet:      Detector (disk-shaped) radius (m)
+* focus_r:   Detector (disk-shaped) radius (m)
 * dist:      Distance from sample to detector (m)
 * xwidth:    horiz. dimension of sample, as a width (m)
 * yheight:   vert . dimension of sample, as a height (m)
@@ -56,7 +56,7 @@
 
 DEFINE COMPONENT Sans_spheres
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, sigma_abs=0.50, dist=6, Rdet=0.5 ,xwidth=0.01, yheight=0.01, zdepth=0.005, qmax=0)
+SETTING PARAMETERS (R=100, Phi=1e-3, Delta_rho=0.6, sigma_abs=0.50, dist=6, focus_r=0.5 ,xwidth=0.01, yheight=0.01, zdepth=0.005, qmax=0)
 OUTPUT PARAMETERS (my_s_v2, my_a_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -99,7 +99,7 @@ TRACE
     vx_i=vx;
     vy_i=vy;
     vz_i=vz;
-    randvec_target_circle(&vx, &vy, &vz, &solid_angle, 0, 0, dist, Rdet);
+    randvec_target_circle(&vx, &vy, &vz, &solid_angle, 0, 0, dist, focus_r);
 /*    printf("solid angle %g \n",solid_angle); */
     NORM(vx, vy, vz);
     vx *= v;

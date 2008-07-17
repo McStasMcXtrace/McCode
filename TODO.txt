@@ -2,20 +2,6 @@ TODO list for mcstas june 2008
 ***************************************
 Next is the 2.0 release (not all from here, priority items marked by (*)
 
-
-Community:
-(*) Urge authors of existing contrib/ comps to help write docs, headers, test instruments
-(*) Early warning that mcstas 2.0 WILL break some backward compatibility
-
-Testing:
-(*) Every component SHOULD have some sort of test, all comps should be present in an
-example or test instrument
-(*) Guide_test.instr ; Source_test.instr; Monochromator_test; etc...
-
-Documentation:
-(*) Everything needs an overhaul, we need updates for changed parameter names, polarisation 
-edits
-
 Components:
 (*) Uniform parameter naming for the component classes; Sources, Samples, Monitors, Guides, etc.
 (*) DiskChopper bug - rotation by PI in N=2 situation changes time structure?! (Asked Uwe, no response yet)
@@ -28,22 +14,19 @@ Refraction?
 (*) Checkup - use of PROP_DT in all comps?
 monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
 (*) monochromator_ ... (Lucia Alianelli) full monte carlo
-(*) DETECTOR_OUT_3D should be replaced by simpler catenation, 2D slices with index
-(*) Monitors: Should check if a filehandle is open already, if so we should concatenate
-(*) We need a couple of event-type monitors
+
 
 Instruments:
 (*) Laue_diff in examples
 (*) max parm Lucia vs. Monitor_nD (FIXED by _ hack)
 (*) IN22_sample - wrong direction / rotation of samle 2\theta mono ?
+(*) Guide_test.instr ; Source_test.instr; Monochromator_test; etc...
 
 Metalanguage / runtime
-(*) Check use of rotation matrices - should not be used for non-rot stuff...
 New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
 (*) ARRAY positions=filename COMPONENT MyComp = Comp()
-Will only work for scattering type comps and event monitors (to be written)
-  /* SEQUENCE positions=filename COMPONENT MyComp = Comp()
-  DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp() */
+/* SEQUENCE positions=filename COMPONENT MyComp = Comp()
+DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp() */
 (*) GROUP should jump to first member if SCATTERED (allows for multiple scattering, many-mirror setups etc.) Related: Remove ABSORB in samples when t0 < 0!!
 component initiated SPLIT (Transmit/Reflect)
 
@@ -59,9 +42,6 @@ SWARM / Genetic algo?
 mcgnuplot: DONE (almost)
 Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
 (*) mcgui signal handling in case of compilation / mpi
-(*) mcrun --test uses new information in instrument header to execute the test
-    %TEST: h8_test.instr Lambda=2.359
-    %VALIDATION: D7_SC3_In_I 3.11e-11
 
 Infrastructure:
 (*) cvs machine / webserver / bugzilla update... 

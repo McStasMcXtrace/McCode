@@ -12,29 +12,30 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.3 $
+* Version:    $Revision: 1.4 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
+* Modified by: E. Farhi, uniformize parameter names (Jul 2008)
 *
 * Fermi Chopper with rotating frame.
 *
 * %D
-* Models a fermi chopper with optional supermirror coated blades
+* Models a Fermi chopper with optional supermirror coated blades
 * supermirror facilities may be disabled by setting m = 0, R0=0
 * Slit packages are straight. Chopper slits are separated by an infinitely
 * thin absorbing material. The effective transmission (resulting from fraction
 * of the transparent material and its transmission) may be specified.
-* The chopper slit package width may be specified through the total width 'width'
+* The chopper slit package width may be specified through the total width 'xwidth'
 * of the full package or the width 'w' of each single slit. The other parameter
-* is calculated by: width = Nslit*w.
+* is calculated by: xwidth = nslit*w.
 * The chopper needs a default velocity to calculate the initial value for an
 * iterative calculation of TOF values. This can be specified by its velocity,
 * energy, wavelength or wavevector.
 *
 * Example:
-* FermiChopper_ILL(phase=-50.0, rad=0.04, nu=100,
-*   ymin=-0.04, ymax=0.04, w=0.00022475, Nslit=200.0, R0=0.0,
-*   Qc=0.02176, alpham=2.33, m=0.0, Vi=1000,  slit=0.012, eff=0.95,
+* FermiChopper_ILL(phase=-50.0, radius=0.04, nu=100,
+*   ymin=-0.04, ymax=0.04, w=0.00022475, nslit=200.0, R0=0.0,
+*   Qc=0.02176, alpha=2.33, m=0.0, Vi=1000,  length=0.012, eff=0.95,
 *   zero_time=0)
 *
 * Markus Poehlmann     <Markus.Poehlmann@ph.tum.de>
@@ -56,20 +57,21 @@
 * INPUT PARAMETERS:
 *
 * Geometrical chopper constants:
-* rad:     (m)      chopper cylinder radius
+* radius:  (m)      chopper cylinder radius
 * ymin:    (m)      lower y bound of cylinder
 * ymax:    (m)      upper y bound of cylinder
-* Nslit:   (1)      number of chopper slits
-* slit:    (m)      channel length of the Fermi chopper
+* nslit:   (1)      number of chopper slits
+* length:  (m)      channel length of the Fermi chopper
 * w:       (m)      width of one chopper slit
-* width:   (m)      optional total width of slit package
+* xwidth:  (m)      optional total width of slit package
+* yheight: (m)      Height of chopper. Overrides ymin,ymax. (m)
 * nu:      (Hz)     chopper frequency
 * eff:     (1)      efficiency = transmission x fraction of transparent material
 * filename:(str)    optional file name to write component statistics (debuging)
 *
 * Supermirror constants:
 * m:       (1)      m-value of material. Zero means completely absorbing.
-* alpham:  (AA)     slope of reflectivity
+* alpha:   (AA)     slope of reflectivity
 * Qc:      (AA-1)   critical scattering vector
 * Wi:      (AA-1)   width of supermirror cut-off
 * R0:      (1)      low-angle reflectivity
@@ -91,10 +93,10 @@
 
 DEFINE COMPONENT FermiChopper_ILL
 DEFINITION PARAMETERS (filename=0)
-SETTING PARAMETERS (phase=0, rad=0.04, nu=100,
-  ymin=-0.04, ymax=0.04, w=0.00022475, Nslit=200.0, R0=0.0,
-  Qc=0.02176, alpham=2.33, m=0.0, Wi=2e-3, Vi=0,  slit=0.012, eff=0.95,
-  zero_time=0, Ei=0, lambda=0, Ki=0, width=0)
+SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
+  ymin=-0.04, ymax=0.04, w=0.00022475, nslit=200.0, R0=0.0,
+  Qc=0.02176, alpha=2.33, m=0.0, Wi=2e-3, Vi=0,  length=0.012, eff=0.95,
+  zero_time=0, Ei=0, lambda=0, Ki=0, xwidth=0, yheight=0)
 OUTPUT PARAMETERS(FCVars)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
@@ -331,26 +333,27 @@ INITIALIZE
 
   /* check of input parameters */
   if (m < 0) m == 0;
-  if (rad <= 0) {
-    printf("FermiChopper: %s: FATAL: unrealistic cylinder radius rad=%g [m]\n", NAME_CURRENT_COMP, rad);
+  if (radius <= 0) {
+    printf("FermiChopper: %s: FATAL: unrealistic cylinder radius radius=%g [m]\n", NAME_CURRENT_COMP, radius);
     exit(-1);
   }
-  if (width > 0 && width < rad*2 && Nslit > 0) {
-    w = width/Nslit;
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if (xwidth > 0 && xwidth < radius*2 && nslit > 0) {
+    w = xwidth/nslit;
   }
   if (w <= 0) {
     printf("FermiChopper: %s: FATAL: Slits in the package have unrealistic width w=%g [m]\n", NAME_CURRENT_COMP, w);
     exit(-1);
   }
-  if (Nslit*w > rad*2) {
-    Nslit = floor(rad/w);
+  if (nslit*w > radius*2) {
+    nslit = floor(radius/w);
     printf("FermiChopper: %s: Too many slits to fit in the cylinder\n"
-           "Adjusting Nslit=%f\n", NAME_CURRENT_COMP, Nslit);
+           "Adjusting nslit=%f\n", NAME_CURRENT_COMP, nslit);
   }
-  if (slit > rad*2) {
-    slit = sqrt(rad*rad - Nslit*w*Nslit*w/4);
+  if (length > radius*2) {
+    length = sqrt(radius*radius - nslit*w*nslit*w/4);
     printf("FermiChopper: %s: Slit package is longer than the whole\n"
-           "chopper cylinder. Adjusting slit=%g [m]\n", NAME_CURRENT_COMP, slit);
+           "chopper cylinder. Adjusting length=%g [m]\n", NAME_CURRENT_COMP, length);
   }
 
   if (eff <= 0 || eff > 1) {
@@ -409,7 +412,7 @@ TRACE
 
 
 /************** test, if the neutron interacts with the cylinder ***/
-  if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, rad, ymax-ymin)){
+  if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, ymax-ymin)){
 
   if (t1 <= 0) ABSORB;    /* Neutron started inside the cylinder */
 
@@ -425,8 +428,8 @@ TRACE
 
 /* Checks if neutron enters or leaves from top or bottom of cylinder. */
 
-  if ( ((x*x + z*z) < 0.999*(rad*rad)) ||
-     ((((x+vx*dt)*(x+vx*dt) + (z+vz*dt)*(z+vz*dt))) < 0.999*(rad*rad)) )
+  if ( ((x*x + z*z) < 0.999*(radius*radius)) ||
+     ((((x+vx*dt)*(x+vx*dt) + (z+vz*dt)*(z+vz*dt))) < 0.999*(radius*radius)) )
        ABSORB;
 
   FCVars.counter_cylinder++;             /* adjusting interaction counter */
@@ -437,7 +440,7 @@ TRACE
 
 
 /************* checking wether the neutron can enter the chopper ***********/
-  if(fabs(xstrich(x,z,t, FCVars.omega, FCVars.t0))>=Nslit*w/2) ABSORB;
+  if(fabs(xstrich(x,z,t, FCVars.omega, FCVars.t0))>=nslit*w/2) ABSORB;
 
   FCVars.counter_cylinder_pack++;    /* adjusting interaction counter */
 
@@ -445,7 +448,7 @@ TRACE
 
 
   /* Checking on which side of the Chopper the Neutron enters******/
-  slit_length = 0.5*slit;
+  slit_length = 0.5*length;
   if(zstrich(x,z,t, FCVars.omega, FCVars.t0) < 0)
     slit_length *= -1;
 
@@ -472,7 +475,7 @@ TRACE
   dt -= t3;
 
   /*Checking if neutron hits the slits*/
-  if(fabs(xstrich(x,z,t, FCVars.omega, FCVars.t0)) >= Nslit*w/2) ABSORB;
+  if(fabs(xstrich(x,z,t, FCVars.omega, FCVars.t0)) >= nslit*w/2) ABSORB;
 
   /****Calculating where/when Neutron leaves the slits*******/
   f1  =  zstrich(x,z,t, FCVars.omega, FCVars.t0)+slit_length;
@@ -494,7 +497,7 @@ TRACE
 /*********************PROPAGATION INSIDE THE SLIT PACKET ****************/
 
   /***********Which slit was hit?******************/
-  n1 = Nslit - (int) ((Nslit/2) - xstrich(x,z,t, FCVars.omega, FCVars.t0)/w);
+  n1 = nslit - (int) ((nslit/2) - xstrich(x,z,t, FCVars.omega, FCVars.t0)/w);
   FCVars.counter_enter_slits[n1-1]++;  /* adjusting interaction counter */
   FCVars.counter_hit_slits++;  /* adjusting interaction counter */
 
@@ -528,11 +531,11 @@ TRACE
     /**Calculate different positions for the neutron to determine interaction.**/
 
     /*...at the end of the slit: */
-    n2 = Nslit - (int) ((Nslit/2)
+    n2 = nslit - (int) ((nslit/2)
        - xstrich(x+(vx*dt),z+(vz*dt),t+dt, FCVars.omega, FCVars.t0)/w);
 
     /*...at the before calculated t3: */
-    n3 = Nslit - (int) ((Nslit/2)
+    n3 = nslit - (int) ((nslit/2)
        - xstrich(x+(vx*t3),z+(vz*t3),t+t3, FCVars.omega, FCVars.t0)/w);
 
 
@@ -567,7 +570,7 @@ TRACE
         FCVars.counter_LR_error          = &FCVars.counter_R_error;
         FCVars.counter_LR_cylinder       = &FCVars.counter_R_cylinder;
 
-        distance_W = (n1-0.5*Nslit)*w;
+        distance_W = (n1-0.5*nslit)*w;
 
       } else {      /* left */
         FCVars.counter_LR_blades         = &FCVars.counter_L_blades;
@@ -582,7 +585,7 @@ TRACE
         FCVars.counter_LR_error          = &FCVars.counter_L_error;
         FCVars.counter_LR_cylinder       = &FCVars.counter_L_cylinder;
 
-        distance_W = (n1-(0.5*Nslit)-1)*w;
+        distance_W = (n1-(0.5*nslit)-1)*w;
 
       }
 
@@ -621,13 +624,13 @@ TRACE
       /*Propagate whole system to that point*/
       PROP_DT(time_prop_dt);
 
-      /*Propagate neutron back to his slit if he left it accidentally*/
+      /*Propagate neutron back to its slit if it left it accidentally*/
 
-      n4 = Nslit - (int) ((Nslit/2) - xstrich(x,z,t, FCVars.omega, FCVars.t0)/w);
+      n4 = nslit - (int) ((nslit/2) - xstrich(x,z,t, FCVars.omega, FCVars.t0)/w);
 
       while (n4 != n1){
         PROP_DT(-1e-10);
-        n4 = Nslit - (int) ((Nslit/2)
+        n4 = nslit - (int) ((nslit/2)
            - xstrich(x,z,t, FCVars.omega, FCVars.t0)/w);
       }
 
@@ -647,7 +650,7 @@ TRACE
 
       if (q > Qc && Wi){
         arg = (q-m*Qc)/Wi;
-        if (arg < 10.0) p *= 0.5*(1-tanh(arg))*(1-alpham*(q-Qc));
+        if (arg < 10.0) p *= 0.5*(1-tanh(arg))*(1-alpha*(q-Qc));
         else{
           (*FCVars.counter_abs_LR_blades[reflcounter-1])++;/*adjusting interaction counter*/
           ABSORB;
@@ -696,11 +699,11 @@ TRACE
 /********************* END OF THE FOR LOOP **********************************/
 
   /* Outgoing Slit Counter */
-  n1 = Nslit - (int) ((Nslit/2) - xstrich(x,z,t,FCVars.omega,FCVars.t0)/w);
+  n1 = nslit - (int) ((nslit/2) - xstrich(x,z,t,FCVars.omega,FCVars.t0)/w);
   FCVars.counter_exit_slits[n1-1]++;    //adjusting interaction counter
 
   /****New time of cylinder intersection will be calculated**********/
-  cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, rad, ymax-ymin);
+  cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, ymax-ymin);
 
   if (t1 > 0) {
     printf("FermiChopper: %s: Neutrons are leaving chopper in the wrong direction! \n", NAME_CURRENT_COMP);
@@ -714,14 +717,14 @@ TRACE
   PROP_DT(t2);
 
   /*****Checking if the neutron left the cylinder by his top or bottom **/
-  if  ((x*x + z*z) < 0.999*(rad*rad) ){
+  if  ((x*x + z*z) < 0.999*(radius*radius) ){
     FCVars.counter_top_bottom++;  //adjusting interaction counter
     ABSORB;
   }
 
 
   /*****Checking if neutron hits chopper exit ***/
-  if(fabs(xstrich(x,z,t,FCVars.omega,FCVars.t0))>=Nslit*w/2){
+  if(fabs(xstrich(x,z,t,FCVars.omega,FCVars.t0))>=nslit*w/2){
     FCVars.counter_out_cylinder++;    //adjusting interaction counter
     ABSORB;
   }
@@ -827,7 +830,7 @@ if (filename) {
 
   fprintf(header,"\tDETAILS: SLITS:\n\n");
   fprintf(header, "\t\t Entering \t\t Outgoing\n");
-  for(i=0; i<Nslit; i++)
+  for(i=0; i<nslit; i++)
   fprintf(header, "Slit number %i \t\t %i \t\t %i \n", i+1, FCVars.counter_enter_slits[i],FCVars.counter_exit_slits[i]);
 
 
@@ -846,18 +849,18 @@ MCDISPLAY
   double xpos, zpos;
   magnify("xz");
   /* cylinder top/center/bottom  */
-  circle("xz", 0,ymax,0,rad);
-  circle("xz", 0,0   ,0,rad);
-  circle("xz", 0,ymin,0,rad);
+  circle("xz", 0,ymax,0,radius);
+  circle("xz", 0,0   ,0,radius);
+  circle("xz", 0,ymin,0,radius);
   /* vertical lines to make a kind of volume */
-  line( 0  ,ymin,-rad, 0  ,ymax,-rad);
-  line( 0  ,ymin, rad, 0  ,ymax, rad);
-  line(-rad,ymin, 0  ,-rad,ymax, 0  );
-  line( rad,ymin, 0  , rad,ymax, 0  );
+  line( 0  ,ymin,-radius, 0  ,ymax,-radius);
+  line( 0  ,ymin, radius, 0  ,ymax, radius);
+  line(-radius,ymin, 0  ,-radius,ymax, 0  );
+  line( radius,ymin, 0  , radius,ymax, 0  );
   /* slit package */
-  index = -Nslit/2;
-  zpos  = slit/2;
-  for (index = -Nslit/2; index < Nslit/2; index++) {
+  index = -nslit/2;
+  zpos  = length/2;
+  for (index = -nslit/2; index < nslit/2; index++) {
     xpos = index*w;
     multiline(5, xpos, ymin, -zpos,
                  xpos, ymax, -zpos,
@@ -866,8 +869,8 @@ MCDISPLAY
                  xpos, ymin, -zpos);
   }
   /* cylinder inner sides containing slit package */
-  xpos = Nslit*w/2;
-  zpos = sqrt(rad*rad - xpos*xpos);
+  xpos = nslit*w/2;
+  zpos = sqrt(radius*radius - xpos*xpos);
   multiline(5,   xpos, ymin, -zpos,
                  xpos, ymax, -zpos,
                  xpos, ymax, +zpos,

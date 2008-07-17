@@ -11,7 +11,7 @@
 *
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -34,6 +34,8 @@
 * zmax:    Upper z-bound of crystal (m)
 * ymin:    Lower y-bound of crystal (m)
 * ymax:    Upper y-bound of crystal (m)
+* zwidth:  horizontal width of an individual slab (m)
+* yheight: vertical height of an individual slab (m)
 * mosaich: Horisontal mosaic (in Z direction) (FWHM) (arc minutes)
 * mosaicv: Vertical mosaic (in Y direction) (FWHM) (arc minutes)
 * r0:      Maximum reflectivity (1)
@@ -47,8 +49,8 @@
 
 DEFINE COMPONENT Monochromator_flat
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (zmin=0, zmax=0, ymin=0, ymax=0,
-  width=0, height=0,
+SETTING PARAMETERS (zmin=-0.05, zmax=0.05, ymin=-0.05, ymax=0.05,
+  zwidth=0, yheight=0,
   mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734, DM=0)
 OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -94,8 +96,8 @@ INITIALIZE
   mono_Q = Q;
   if (DM != 0) mono_Q = 2*PI/DM;
 
-  if (width>0)  { zmax = width/2;  zmin=-zmax; }
-  if (height>0) { ymax = height/2; ymin=-ymax; }
+  if (zwidth>0)  { zmax = zwidth/2;  zmin=-zmax; }
+  if (yheight>0) { ymax = yheight/2; ymin=-ymax; }
 
   if (zmin==zmax || ymin==ymax)
     exit(fprintf(stderr, "Monochromator_flat: %s : Surface is null (zmin,zmax,ymin,ymax)\n", NAME_CURRENT_COMP));
@@ -106,7 +108,7 @@ TRACE
   double y1,z1,t1,dt,kix,kiy,kiz,ratio,order,q0x,k,q0,theta;
   double bx,by,bz,kux,kuy,kuz,ax,ay,az,phi;
   double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
-  double delta,p_reflect,total,c1x,c1y,c1z,width,mos_sample;
+  double delta,p_reflect,total,c1x,c1y,c1z,zwidth,mos_sample;
   int i;
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0)
@@ -163,27 +165,27 @@ TRACE
           vec_prod(ax, ay, az, bx, by, bz, kux, kuy, kuz);
           /* Compute the total scattering probability at this ki */
           total = 0;
-          /* Choose width of Gaussian distribution to sample the angle
+          /* Choose zwidth of Gaussian distribution to sample the angle
            * phi on the Debye-Scherrer cone for the scattered neutron.
            * The radius of the Debye-Scherrer cone is smaller by a
            * factor 1/cos(theta) than the radius of the (partial) sphere
            * describing the possible orientations of Q due to mosaicity, so we
-           * start with a width 1/cos(theta) greater than the largest of
+           * start with a zwidth 1/cos(theta) greater than the largest of
            * the two mosaics. */
           mos_sample = mos_rms_max/cos(theta);
           c1x = kix*(cos_2theta-1);
           c1y = kiy*(cos_2theta-1);
           c1z = kiz*(cos_2theta-1);
-          /* Loop, repeatedly reducing the sample width until it is small
+          /* Loop, repeatedly reducing the sample zwidth until it is small
            * enough to avoid sampling scattering directions with
            * ridiculously low scattering probability.
-           * Use a cut-off at 5 times the gauss width for considering
+           * Use a cut-off at 5 times the gauss zwidth for considering
            * scattering probability as well as for integration limits
            * when integrating the sampled distribution below. */
           for(;;) {
-            width = 5*mos_sample;
-            cos_phi = cos(width);
-            sin_phi = sin(width);
+            zwidth = 5*mos_sample;
+            cos_phi = cos(zwidth);
+            sin_phi = sin(zwidth);
             q_x = c1x + cos_phi*ax + sin_phi*bx;
             q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_z;
             q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_y;
@@ -196,7 +198,7 @@ TRACE
            * cut-off at five times sigma. */
           for(i = 0; i < (sizeof(Gauss_X)/sizeof(double)); i++)
           {
-            phi = width*Gauss_X[i];
+            phi = zwidth*Gauss_X[i];
             cos_phi = cos(phi);
             sin_phi = sin(phi);
             q_x = c1x + cos_phi*ax + sin_phi*bx;
@@ -206,9 +208,9 @@ TRACE
                         GAUSS((q_y/q_x),0,mos_rms_z);
             total += Gauss_W[i]*p_reflect;
           }
-          total *= width;
+          total *= zwidth;
           /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
-           * width 1/cos(theta) greater than the mosaic and correct for any
+           * zwidth 1/cos(theta) greater than the mosaic and correct for any
            * error by adjusting the neutron weight later. */
           phi = mos_sample*randnorm();
           /* Compute final wave vector kf and scattering vector q = ki - kf */

@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: 0.9
+* Version: $Revision: 1.4 $
 * Origin: ILL
 * Release: McStas 1.9
 *
@@ -28,8 +28,8 @@
 *
 * The converter gas can be specified as He-3, BF3 or N2.
 * The filling pressure of converter gas must be specified along
-* with the depth: this gives an absorption probability (e.g. ~90% for
-* 0.18 nm neutrons at depth 3 cm and He-3 pressure 5 bar).
+* with the zdepth: this gives an absorption probability (e.g. ~90% for
+* 0.18 nm neutrons at zdepth 3 cm and He-3 pressure 5 bar).
 * The stopping gas can be specified as one of the following gases:
 * CF4, C3H8, CO2, Xe/TMA or He, or any for which a table of stopping
 * powers is available. NB: each stopping gas table has specific
@@ -51,7 +51,7 @@
 * - border effect (events outside the sensitive volume tend to be
 *   counted in the border pixels)
 * - parallax effect (with, if desired, an electrostatic lens to
-*   partially correct for this - use "algoLens=1")
+*   partially correct for this - use "LensOn=1")
 * - wall effect
 * To correctly take the wall effect into account, a value must be
 * specified for the energy threshold for acceptance of an event as a
@@ -89,28 +89,28 @@
 * imperfections in his physical machine and correct for them.
 *
 * Example: PSD_Detector(xwidth=0.192, yheight=0.192, nx=64, ny=64,
-*                       depth=0.03, thres=100, borderx=-1, bordery=-1,
+*                       zdepth=0.03, threshold=100, borderx=-1, bordery=-1,
 *                       PressureConv=5, PressureStop=1,
 *                       FN_Conv="He-3.table", FN_Stop="He3inCF4.table",
 *                       xChDivRelSigma=0, yChDivRelSigma=0,
 *                       filename="BIDIM19.psd")
 *
 * Example: PSD_Detector(xwidth=0.26, yheight=0.26, nx=128, ny=128,
-*                       depth=0.03, thres=100, borderx=-1, bordery=-1,
+*                       zdepth=0.03, threshold=100, borderx=-1, bordery=-1,
 *                       PressureConv=5, PressureStop=1,
 *                       FN_Conv="He-3.table", FN_Stop="He3inCF4.table",
 *                       xChDivRelSigma=0, yChDivRelSigma=0,
 *                       filename="BIDIM26.psd")
 *
 * Example: PSD_Detector(radius=0.0127, yheight=0.20, nx=1, ny=128,
-*                       thres=100, borderx=-1,
+*                       threshold=100, borderx=-1,
 *                       PressureConv=9.9, PressureStop=0.1,
 *                       FN_Conv="He3inHe.table", FN_Stop="He3inCO2.table",
 *                       yChDivRelSigma=0.006,
 *                       filename="ReuterStokes.psd")
 *
 * Example: PSD_Detector(awidth=1.533, yheight=0.4, na=640, ny=256,
-*                       re=0.73, depth=0.032, dc=0.026, thres=100,
+*                       radius=0.73, zdepth=0.032, dc=0.026, threshold=100,
 *                       borderx=-1, bordery=-1,
 *                       PressureConv=5, PressureStop=1,
 *                       FN_Conv="He3inHe.table", FN_Stop="He3inCF4.table",
@@ -122,12 +122,12 @@
 * INPUT PARAMETERS:
 *
 * xwidth:         Width of detector opening (m), in the case of a flat box
-* radius:         Radius of detector for cylindrical shape (m)
+* radius:         Radius of detector for cylindrical/banana shape (m)
 * awidth:         Width of detector opening along the horizontal arc of
 *                 the detector (m), measured along the inside arc of the
 *                 sensitive volume in the case of a 'banana' detector
 * yheight:        Height of detector opening (m)
-* depth:          Depth of the sensitive volume of the detector (m)
+* zdepth:         Depth of the sensitive volume of the detector (m)
 * nx:             Number of pixel columns (1)
 * ny:             Number of pixel rows (1)
 * borderx:        Width of (gas-filled) border on the side of the detector
@@ -143,18 +143,16 @@
 * FN_Stop:        Filename of the stopping power table of the stopping
 *                 gas (text)
 * PressureStop:   Pressure of stopping gas (bar)
-* thres:          Energy threshold for acceptance of an event (keV)
+* threshold:      Energy threshold for acceptance of an event (keV)
 * filename:       Name of file in which to store the detector image (text)
 * interpolate:    Performs energy interpolation if true (1)
 * verbose:        Gives more information and spectrum (1)
-* frac:           Fraction of statistical events to be treated by component.
+* p_interact:     Fraction of statistical events to be treated by component.
 *                 Set it to 0 to use real absorption probability (1)
 * LensOn:         =1 to simulate an electrostatic lens according to
 *                 P. Van Esch, NIM A 540 (2005) pp. 361-367
 * dc:             Distance from the entrance window to the cathode plane,
 *                 where the correction zone of the lens ends (m)
-* re:             Distance from center of detector to entry plane
-*                 in case of banana shape (m)
 * xChDivRelSigma: Sigma of the error in position determination along the x
 *                 axis (relative to xwidth), uniquely due to charge division
 *                 readout. Set to 0 in case of independent channel readout
@@ -176,8 +174,8 @@
 
 DEFINE COMPONENT PSD_Detector
 DEFINITION PARAMETERS (nx=128, ny=128, string filename=0, string FN_Conv="He3inHe.table", string FN_Stop="He3inCF4.table")
-SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, depth=0.03,
-  re=0.73, thres=100, PressureConv=5, PressureStop=1, interpolate=1, frac=0,
+SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
+  threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
   verbose=0, LensOn=1, dc=0, borderx=-1, bordery=-1, xChDivRelSigma=0,
   yChDivRelSigma=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
@@ -435,7 +433,7 @@ INITIALIZE
       PHSpectrum2[i] = 0;
     }
 
-    if (thres<0) thres=0;
+    if (threshold<0) threshold=0;
 
     Table_Read(&Part_He_3_n,FN_Conv,3); // the absorption cross section for 0.18 nm neutrons in the converter is read from the file
     if ( (Part_He_3_n.rows!=1) || (Part_He_3_n.columns!=1) ) {
@@ -471,7 +469,7 @@ INITIALIZE
     Table_Free(&Part_He_3_n);
     Table_Free(&Part_Stop_n);
 
-    if (frac>1) frac=1;
+    if (p_interact>1) p_interact=1;
 
   %}
 
@@ -480,7 +478,7 @@ TRACE
 
   long   i,j;
   double RangeProton,RangeTriton;
-  double rb=re+depth; // radius of the back plane of the detector
+  double rb=radius+zdepth; // radius of the back plane of the detector
   double lambda,NAvogadro,MolVolume,v,vt,mu;
   double length,GM,ZB,pa,RandomNumber,la,ta;
   double phi,theta;   // direction of emission of the particles
@@ -500,50 +498,50 @@ TRACE
 
 
   if (borderx==-2) borderx = xwidth/nx;
-  else if (borderx==-1) borderx = depth;
+  else if (borderx==-1) borderx = zdepth;
   else if (borderx<0) {
     fprintf(stderr,"PSD_Detector: %s: Negative x border zone specified. Exit.\n",
       NAME_CURRENT_COMP);
     exit(0);
   }
   if (bordery==-2) bordery = yheight/ny;
-  else if (bordery==-1) bordery = depth;
+  else if (bordery==-1) bordery = zdepth;
   else if (bordery<0) {
     fprintf(stderr,"PSD_Detector: %s: Negative y border zone specified. Exit.\n",
       NAME_CURRENT_COMP);
     exit(0);
   }
 
-  if (xwidth>0) {
+  if (xwidth>0) { /* panel */
     DetectorType+=1;
-    if (depth<0) {
-    fprintf(stderr,"PSD_Detector: %s: Detector box has no depth. Exit.\n",
+    if (zdepth<0) {
+    fprintf(stderr,"PSD_Detector: %s: Detector box has no zdepth. Exit.\n",
                            NAME_CURRENT_COMP);
     exit(0);
     }
   }
-  if (radius>0) {
-    DetectorType+=2;
+  if (radius>0 && !awidth) {
+    DetectorType+=2; /* cylinder */
   }
-  if (awidth>0) {
-    DetectorType+=4;
-    if (depth<0) {
-    fprintf(stderr,"PSD_Detector: %s: Detector 'banana' has no depth. Exit.\n",
+  if (awidth>0 && radius) {
+    DetectorType+=4; /* banana (*/
+    if (zdepth<0) {
+    fprintf(stderr,"PSD_Detector: %s: Detector 'banana' has no zdepth. Exit.\n",
                            NAME_CURRENT_COMP);
     exit(0);
     }
-    if (re<=0) {
+    if (radius<=0) {
     fprintf(stderr,"PSD_Detector: %s: Non-positive radial distance to the sample was specified. Exit.\n",
                            NAME_CURRENT_COMP);
     exit(0);
     }
-    if (((dc>depth) || (dc<0)) && (LensOn==1)) {
+    if (((dc>zdepth) || (dc<0)) && (LensOn==1)) {
     fprintf(stderr,"PSD_Detector: %s: Electrostatic lens was turned on, but\n"
-                   "              no valid depth of the cathode plane was specified. Exit.\n",
+                   "              no valid zdepth of the cathode plane was specified. Exit.\n",
                                   NAME_CURRENT_COMP);
     exit(0);
     }
-    if (awidth+2*borderx>6.28*re) {
+    if (awidth+2*borderx>2*PI*radius) {
     fprintf(stderr,"PSD_Detector: %s: Detector comes perilously close to encompassing 2pi. Exit.\n",
                            NAME_CURRENT_COMP);
     exit(0);
@@ -579,7 +577,7 @@ TRACE
 
   switch(DetectorType) {
     case 1:
-      intersect = box_intersect(&tin,&tout,x,y,z,vx,vy,vz,xwidth+2*borderx,yheight+2*bordery,depth);
+      intersect = box_intersect(&tin,&tout,x,y,z,vx,vy,vz,xwidth+2*borderx,yheight+2*bordery,zdepth);
       if (tin==tout) intersect=0;
       break;
     case 2:
@@ -587,7 +585,7 @@ TRACE
       if (tin==tout) intersect=0;
       break;
     case 4:
-    if (cylinder_intersect(&tine,&toute,x,y,z,vx,vy,vz,re,yheight+2*bordery)==0 ) {
+    if (cylinder_intersect(&tine,&toute,x,y,z,vx,vy,vz,radius,yheight+2*bordery)==0 ) {
         ISe=4; } // case for no intersection with the entrance-window-cylinder
     else {
         if (tine<=0 & toute<=0) {
@@ -756,14 +754,14 @@ TRACE
     ZB = exp( -GM ); // zone boundary for generating uniformly distributed random numbers [ZB,1]
     pa = 1 - ZB; // Probability of absorption somewhere along the length of the trajectory through the sensitive volume
 
-    if ( (frac <= 0 && (pa >= 1  || rand01() < pa))
-      || (frac > 0 && (frac >= 1 || rand01() < frac)) ) {
-      if (frac > 0 && frac < 1) pa /= frac;
-      if (frac <= 0) pa=1;
+    if ( (p_interact <= 0 && (pa >= 1  || rand01() < pa))
+      || (p_interact > 0 && (p_interact >= 1 || rand01() < p_interact)) ) {
+      if (p_interact > 0 && p_interact < 1) pa /= p_interact;
+      if (p_interact <= 0) pa=1;
       RandomNumber = (1-ZB)*rand01() + ZB; // uniformly distributed random number between ZB and 1
       la = -log(RandomNumber) / mu; // (in m) Absorption location (along trajectory), distributed exponentially declining
       ta = tin + la/v; // Absorption time
-      alimit= (0.5*awidth + borderx)/re; /* we take the gas-filled volume a bit larger
+      alimit= (0.5*awidth + borderx)/radius; /* we take the gas-filled volume a bit larger
         than the sensitive volume alone, which is realistic. Later we throw away events
         that do not end up in the sensitive volume. */
       aa=atan2(x+vx*ta,z+vz*ta);
@@ -794,7 +792,7 @@ TRACE
           // check intersection of charge trajectory
           switch(DetectorType) {
             case 1:
-              box_intersect(&tin,&tout,x,y,z,vxp,vyp,vzp,xwidth+2*borderx,yheight+2*bordery,depth);
+              box_intersect(&tin,&tout,x,y,z,vxp,vyp,vzp,xwidth+2*borderx,yheight+2*bordery,zdepth);
               if (tin>=0) {
                 t1=tin;
                 t2=tout;
@@ -816,7 +814,7 @@ TRACE
             case 4:
                 /******************************************************************
                 * What we have now is an absorption point somewhere between the two
-                * cylinder walls, with distance 'depth' of the sensitive volume, and
+                * cylinder walls, with distance 'zdepth' of the sensitive volume, and
                 * a direction of emission of the reaction products.
                 * What we need is very simple: for the first reaction product (the
                 * proton for absorption in He-3) we need the smallest positive time,
@@ -831,7 +829,7 @@ TRACE
                 VariousErrors+=32;
                 ABSORB;
                 }
-    if (cylinder_intersect(&tine,&toute,x,y,z,vxp,vyp,vzp,re,yheight+2*bordery) ==0) {
+    if (cylinder_intersect(&tine,&toute,x,y,z,vxp,vyp,vzp,radius,yheight+2*bordery) ==0) {
       tine=-HUGE_VAL; // ugly fix for cases where the inner cylinder is missed
       toute=HUGE_VAL;
     }
@@ -954,8 +952,8 @@ TRACE
             aCOG = atan2(xCOG,zCOG); // alpha coordinate (along the arc of the detector) of the Center Of Gravity of the charged particle tracks
               if (LensOn==1) {
                 rCOG = sqrt(xCOG*xCOG+zCOG*zCOG);
-                if (rCOG<re+dc) {
-                  yCOG = yCOG * exp( (re+depth-rCOG)*(re+depth-rCOG) / (2*depth*re) );
+                if (rCOG<radius+dc) {
+                  yCOG = yCOG * exp( (radius+zdepth-rCOG)*(radius+zdepth-rCOG) / (2*zdepth*radius) );
                     /* correction of the Y center-of-gravity coordinate by a lens
                     optimized according to P. Van Esch, NIM A 540 (2005) pp. 361-367   */
                 }
@@ -985,7 +983,7 @@ TRACE
               i = (long)floor( (xCOG + radius)       *nx   / (2*radius)  );
               break;
             case 4:
-              i = (long)floor( (aCOG + 0.5*awidth/re)*nx   / (awidth/re) );
+              i = (long)floor( (aCOG + 0.5*awidth/radius)*nx   / (awidth/radius) );
               break;
             default:
               break;
@@ -998,7 +996,7 @@ TRACE
              SensVolCumul += p*pa; /* probability that a signal was produced in the
                 sensitive volume, though not necessarily above the threshold.
     Note that, AT THIS POINT, the p has not been multiplied by pa yet. */
-             if (Energy>thres) {
+             if (Energy>threshold) {
                 // if the particles have deposited sufficient energy to be
                 // recognised as a neutron event (and not a gamma event)
                 x = xCOG; y = yCOG; z = zCOG; p *= pa;
@@ -1019,7 +1017,7 @@ TRACE
              }
           }
      } // end if absorption in case of border effects (left and right) in the banana
-    } /* end if frac */
+    } /* end if p_interact */
   } /* end if (box_intersect) */
 
 %}
@@ -1055,12 +1053,12 @@ SAVE
                    1-SensVolCumul/AbsCumul );
     fprintf(stdout,"Fraction of neutrons not counted because their signal is reduced below\n"
                    "%g keV due to the wall effect is %g.\n",
-                   thres,1-DetCumul/SensVolCumul );
+                   threshold,1-DetCumul/SensVolCumul );
     fprintf(stdout,"Theoretical limit to the position resolution in this gas is %g m FWHM\n"
                    "(of the rectangular distribution). This implies a sigma of %g m.\n",
                    2*(M1P1[nH_p]-M1T1[nH_t]),(M1P1[nH_p]-M1T1[nH_t])/sqrt(3) );
 
-    snprintf(xlabelstr,64,"Energy [keV], threshold set to %g keV",thres);
+    snprintf(xlabelstr,64,"Energy [keV], threshold set to %g keV",threshold);
     DETECTOR_OUT_1D(
       "Pulse Height Spectrum",
       xlabelstr,
@@ -1082,8 +1080,8 @@ MCDISPLAY
       double xmax =  0.5*xwidth;
       double ymin = -0.5*yheight;
       double ymax =  0.5*yheight;
-      double zmin = -0.5*depth;
-      double zmax =  0.5*depth;
+      double zmin = -0.5*zdepth;
+      double zmax =  0.5*zdepth;
       multiline(5, xmin, ymin, zmin,
                    xmax, ymin, zmin,
                    xmax, ymax, zmin,

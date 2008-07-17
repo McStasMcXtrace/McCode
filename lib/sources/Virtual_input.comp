@@ -10,26 +10,26 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.29 $
+* Version:  $Revision: 1.30 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
 *
 * Source-like component that generates neutron events from an ascii/binary
-* 'virtual source' file.
+* 'virtual source' filename.
 *
 * %D
-*  This component reads neutron events stored from a file, and sends them into
+*   This component reads neutron events stored from a file, and sends them into
 * the instrument. It thus replaces a Source component, using a previously
 * computed neutron set. The 'source' file type may be either of text or binary
 * format. The component may recognize its format automatically, but you may
-* force the file type ('type' parameter). The number of neutron events for the
+* force the filename type ('type' parameter). The number of neutron events for the
 * simulation is set to the length of the 'source' file times the
 * repetition parameter 'repeat_count' (1 by default).
 *   It is particularly useful to generate a virtual source at a point that few
 * neutron reach. A long simulation will then only be performed once, to create
-* the 'source' file. Further simulations are much faster if they start from
-* this low flux position with the 'source' file.
+* the 'source' filename. Further simulations are much faster if they start from
+* this low flux position with the 'source' filename.
 *
 * Possible file formats are:
 * 1- text column formatted with lines containing 11 values in the order:
@@ -38,37 +38,37 @@
 * (with the 11 values 'p x y z vx vy vz t sx sy sz') for float/double resp.
 *
 * %BUGS
-* We recommend not to use parallel execution (MPI/Threads) with this component.
+* We recommend NOT to use parallel execution (MPI/Threads) with this component.
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
-*   COMPONENT MySourceCreator = Virtual_output(file = "MySource.list")
+*   COMPONENT MySourceCreator = Virtual_output(filename = "MySource.list")
 * at the position where will be the Virtual_input.
 * Then unactivate the part of the simulation description before (and including)
 * the component MySourceCreator. Put the new instrument source:
-*   COMPONENT Source = Virtual_input(file="MySource.list")
+*   COMPONENT Source = Virtual_input(filename="MySource.list")
 * at the same position as 'MySourceCreator'.
-* A Vitess file may be obtained from the 'Vitess_output' component or from a
+* A Vitess filename may be obtained from the 'Vitess_output' component or from a
 * Vitess simulation (104 bytes per neutron) and read with Vitess_input.
 *
 * %P
 * INPUT PARAMETERS
-* file:         Name of the neutron input file. Empty string "" unactivates component [str]
+* filename:     Name of the neutron input file. Empty string "" unactivates component [str]
 *
 * Optional input parameters
 * repeat_count: Number of times the source must be generated/repeated [1]
-* type:         May be "text", "float" or "double" to force file type.
-*                           default is text file [str]
+* type:         May be "text", "float" or "double" to force filename type.
+*                           default is text filename [str]
 * verbose:      Display additional information about source, recommended [0/1]
-* smooth:       Smooth sparsed event files for file repetitions [0/1]
+* smooth:       Smooth sparsed event files for filename repetitions [0/1]
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_input
-DEFINITION PARAMETERS (string file=0, string type=0)
+DEFINITION PARAMETERS (string filename=0, string type=0)
 SETTING PARAMETERS (verbose=0,repeat_count=1,smooth=1)
-OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,file_ncount,
+OUTPUT PARAMETERS (read_block,pos,nrows,Offset,rTable,repeat_number,filename_ncount,
                    mean_vx, mean_vy, mean_vz, mean_dx, mean_dy, mean_dz, n_neutrons,
                    min_x, min_y, min_z, max_x, max_y, max_z, min_vx, min_vy, min_vz,
                    max_vx, max_vy, max_vz, first_block, mean_x, mean_y, mean_z,
@@ -92,9 +92,9 @@ long Virtual_input_Read_Input(char *aFile, char *aType, t_Table *aTable, long *a
 
     Table_Free(aTable);
 
-    /* Try to Open neutron input text file. */
+    /* Try to Open neutron input text filename. */
     if((aFile && aType == NULL) || !strcmp(bType,"text")) {
-      Table_Read_Offset(aTable, aFile, 0, aOffset, max_lines);  /* read data from file into rTable */
+      Table_Read_Offset(aTable, aFile, 0, aOffset, max_lines);  /* read data from filename into rTable */
       strcpy(bType, "text");
     }
     if (!aTable->data && aType && aType[0] != 't')
@@ -106,12 +106,12 @@ long Virtual_input_Read_Input(char *aFile, char *aType, t_Table *aTable, long *a
 
 DECLARE
 %{
-  int     repeat_number=1; /* Neutron repeat of the file */
+  int     repeat_number=1; /* Neutron repeat of the filename */
   int     repeat_cnt;     /* Repeat count, MPI taken into account */
   long    pos=0;        /* current pos in block */
   long    nrows=0;      /* total nrows in block */
-  long    Offset=0;     /* offset in file */
-  double  file_ncount=0;  /* total number of neutrons in file */
+  long    Offset=0;     /* offset in filename */
+  double  filename_ncount=0;  /* total number of neutrons in filename */
   double  n_neutrons=0;
   char    read_block=1; /* flag to start by reading block */
   char    first_block=1;
@@ -133,18 +133,18 @@ INITIALIZE
 %{
   Table_Init(&rTable, 0, 0);
 
-  if (!file || !repeat_count)
+  if (!filename || !repeat_count)
   {
-    fprintf(stderr,"Virtual_input: %s: please give me a file name (file) to read (repeat_count>0).\n", NAME_CURRENT_COMP);
+    fprintf(stderr,"Virtual_input: %s: please give me a filename name (filename) to read (repeat_count>0).\n", NAME_CURRENT_COMP);
     exit(-1);
   }
 
-  if (file && strlen(file) && repeat_count>0) {
+  if (filename && strlen(filename) && repeat_count>0) {
     if (type && strstr(type, "Vitess"))
     { fprintf(stderr, "Virtual_input: %s: Vitess files may be read using the Vitess_input component\n", NAME_CURRENT_COMP); exit(-1); }
 
     if (verbose)
-      printf("Virtual_input: %s: Reading neutron events from file '%s'. Repeat %g time(s)\n", NAME_CURRENT_COMP, file, repeat_count);
+      printf("Virtual_input: %s: Reading neutron events from filename '%s'. Repeat %g time(s)\n", NAME_CURRENT_COMP, filename, repeat_count);
 
   #if defined (USE_MPI) || defined(USE_THREADS)
     if (!smooth) {
@@ -160,8 +160,8 @@ INITIALIZE
 
     if (verbose && smooth)
         printf("* Beam will be smoothed\n");
-  } else if (!file)
-    exit(fprintf(stderr,"Virtual_input: %s: please give me a file name (file).\n", NAME_CURRENT_COMP));
+  } else if (!filename)
+    exit(fprintf(stderr,"Virtual_input: %s: please give me a filename name (filename).\n", NAME_CURRENT_COMP));
   
   repeat_cnt = repeat_count;
 #if defined (USE_MPI)
@@ -171,20 +171,20 @@ INITIALIZE
 
 TRACE
 %{
-  if (file && strlen(file)) {
+  if (filename && strlen(filename)) {
     while (read_block && !end_reading) {
       /* read block and increase Offset for next reading */
-      nrows = Virtual_input_Read_Input(file, type, &rTable, &Offset);
+      nrows = Virtual_input_Read_Input(filename, type, &rTable, &Offset);
 
-      if (!nrows) { /* nrows is 0 if end of file/no file */
-        if (!file_ncount) {
-          file_ncount = mcget_run_num();  /* ncount in file */
+      if (!nrows) { /* nrows is 0 if end of filename/no filename */
+        if (!filename_ncount) {
+          filename_ncount = mcget_run_num();  /* ncount in filename */
           if (verbose)
-            printf("Virtual_input: %s: file '%s' contains %g events\n", NAME_CURRENT_COMP, file, file_ncount);
-          /* set ncount from file length */
-          mcset_ncount(file_ncount*repeat_cnt);
+            printf("Virtual_input: %s: filename '%s' contains %g events\n", NAME_CURRENT_COMP, filename, filename_ncount);
+          /* set ncount from filename length */
+          mcset_ncount(filename_ncount*repeat_cnt);
         }
-        Offset = 0;       /* reposition to begining of file */
+        Offset = 0;       /* reposition to begining of filename */
         repeat_number++;  /* we start a new repeat_cnt loop */
 
         /* end of simulation if ... */
@@ -263,7 +263,7 @@ TRACE
             mean_k = V2K*mean_v;
             if (mean_k) mean_L = 2*PI/mean_k;
             mean_w = VS2E*mean_v*mean_v;
-            printf("McStas Virtual Source file %s\nContains about %g events, intensity=%g\n", file, n_count_extrapolated, n_neutrons*rTable.filesize/Offset);
+            printf("McStas Virtual Source filename %s\nContains about %g events, intensity=%g\n", filename, n_count_extrapolated, n_neutrons*rTable.filesize/Offset);
 
             printf("  Source size (full width in [m]):      ");
             printf("    dX=%g dY=%g dZ=%g\n", max_x-min_x, max_y-min_y, max_z-min_z);
@@ -305,24 +305,24 @@ TRACE
 FINALLY
 %{
   Table_Free(&rTable);
-  if (!file_ncount) {
-    printf("Warning: Virtual_input: %s: file '%s' was not used entirely.\n"
+  if (!filename_ncount) {
+    printf("Warning: Virtual_input: %s: filename '%s' was not used entirely.\n"
            "               Intensities may be wrong. Increase ncount value\n",
-           NAME_CURRENT_COMP, file);
+           NAME_CURRENT_COMP, filename);
   } else {
     double tmp;
-    tmp = mcget_ncount()/file_ncount;
+    tmp = mcget_ncount()/filename_ncount;
     if (fabs(rint(tmp)/tmp-1) > 0.02)
-      printf("Warning: Virtual_input: %s: simulation finished in the middle of file '%s'\n"
-             "               ncount=%g but file contains %g events\n"
+      printf("Warning: Virtual_input: %s: simulation finished in the middle of filename '%s'\n"
+             "               ncount=%g but filename contains %g events\n"
              "               Intensities may be wrong.\n"
              "               Increase ncount value to %g or higher.\n",
-           NAME_CURRENT_COMP, file, mcget_ncount(), file_ncount, file_ncount*repeat_cnt);
-    if (mcget_ncount() < file_ncount*repeat_cnt)
+           NAME_CURRENT_COMP, filename, mcget_ncount(), filename_ncount, filename_ncount*repeat_cnt);
+    if (mcget_ncount() < filename_ncount*repeat_cnt)
       printf("Warning: Virtual_input: %s: not all source %s repetitions were generated.\n"
              "               Intensities may be wrong.\n"
              "               Increase ncount value to %g or higher.\n",
-             NAME_CURRENT_COMP, file, file_ncount*repeat_cnt);
+             NAME_CURRENT_COMP, filename, filename_ncount*repeat_cnt);
   }
 %}
 

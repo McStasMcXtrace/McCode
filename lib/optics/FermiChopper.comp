@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.21 $
+* Version:    $Revision: 1.22 $
 * Release:    McStas 1.10
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -25,16 +25,16 @@
 * Slit packages are straight. Chopper slits are separated by an infinitely
 * thin absorbing material. The effective transmission (resulting from fraction
 * of the transparent material and its transmission) may be specified.
-* The chopper slit package width may be specified through the total width 'width'
-* of the full package or the width 'w' of each single slit. The other parameter
-* is calculated by: width = Nslit*w.
+* The chopper slit package xwidth may be specified through the total xwidth 'xwidth'
+* of the full package or the xwidth 'w' of each single slit. The other parameter
+* is calculated by: xwidth = nslit*w.
 * The chopper needs a default velocity to calculate the initial value for an
 * iterative calculation of TOF values. This can be specified by its velocity,
 * energy, wavelength or wavevector.
 *
 * Example:
 * FermiChopper(phase=-50.0, radius=0.04, nu=100,
-*   ymin=-0.04, ymax=0.04, w=0.00022475, Nslit=200.0, R0=0.0,
+*   ymin=-0.04, ymax=0.04, w=0.00022475, nslit=200.0, R0=0.0,
 *   Qc=0.02176, alpha=2.33, m=0.0, length=0.012, eff=0.95)
 *
 * %VALIDATION
@@ -42,22 +42,22 @@
 * Validated by: K. Lieutenant
 *
 * limitations:
-* no absorbing blade width used
+* no absorbing blade xwidth used
 *
 * %BUGS
-* - overestimates peak width for long wavelengths
-* - may not give the right pulse position, shape and width for slit widths below 0.1 mm
+* - overestimates peak xwidth for long wavelengths
+* - may not give the right pulse position, shape and xwidth for slit widths below 0.1 mm
 *
 * %Parameters
 * INPUT PARAMETERS:
 *
 * Geometrical chopper constants:
 * radius:   (m)   chopper cylinder radius
-* Nslit:    (1)   number of chopper slits
+* nslit:    (1)   number of chopper slits
 * length:   (m)   channel length of the Fermi chopper
 * w:        (m)   width of one chopper slit
-* width:    (m)   optional total width of slit package
-* height:   (m)   height of slit package
+* xwidth:   (m)   optional total width of slit package
+* yheight:  (m)   height of slit package
 * nu:       (Hz)  chopper frequency
 * eff:      (1)   efficiency = transmission x fraction of transparent material
 * verbose:  (1)   set to 1 or 2 gives debugging information
@@ -67,13 +67,12 @@
 * m:        (1)    m-value of material. Zero means completely absorbing.
 * alpha:    (AA)   slope of reflectivity
 * Qc:       (AA-1) critical scattering vector
-* W:        (AA-1) width of supermirror cut-off
+* W:        (AA-1) xwidth of supermirror cut-off
 * R0:       (1)    low-angle reflectivity
 *
 * Compatibility parameters:
 * ymin:     (m)   lower y bound of cylinder
 * ymax:     (m)   upper y bound of cylinder
-* rad, slit, alpham,Wi,dist,Vi: compatibility parameters
 *
 * Constants to reset time of flight:
 * zero_time: (1)  set time to zero: 0=no,  1=once per half cycle, 2=auto adjust phase
@@ -93,10 +92,10 @@
 DEFINE COMPONENT FermiChopper
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
-  ymin=0, ymax=0, w=0.00022475, Nslit=200, R0=0.0,
+  ymin=0, ymax=0, w=0.00022475, nslit=200, R0=0.0,
   Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
-  zero_time=0, width=0, verbose=0, height=0.08,
-  rad=0,slit=0,alpham=0,Wi=0,dist=0,Vi=0,curvature=0,time=0)
+  zero_time=0, xwidth=0, verbose=0, yheight=0.08,
+  curvature=0,time=0)
 OUTPUT PARAMETERS(FCVars)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
@@ -256,20 +255,12 @@ INITIALIZE
   } else FCVars.ph0      = phase*DEG2RAD;
   FCVars.sum_t=FCVars.sum_v=FCVars.sum_N=FCVars.sum_N_pass=0;
 
-  /* compatibility parameters */
-  if (rad)    radius=rad;
-  if (slit)   length=slit;
-  if (alpham) alpha =alpham;
-  if (Wi)     W     =Wi;
-  if (dist)
-    printf("FermiChopper: %s: Parameter 'dist' is not valid anymore.\n"
-           "WARNING       Use 'phase' instead. Ignoring.\n", NAME_CURRENT_COMP);
   /* check of input parameters */
-  if (Nslit < 1) Nslit=1;
-  if (height>0) { ymax = height/2; ymin=-ymax; }
-  if (ymax-ymin <= 0) exit(printf("FermiChopper: %s: FATAL: unrealistic cylinder height =%g [m]\n", NAME_CURRENT_COMP, ymax-ymin));
-  height = fabs(ymax-ymin);
-  ymax= height/2;
+  if (nslit < 1) nslit=1;
+  if (yheight>0) { ymax = yheight/2; ymin=-ymax; }
+  if (ymax-ymin <= 0) exit(printf("FermiChopper: %s: FATAL: unrealistic cylinder yheight =%g [m]\n", NAME_CURRENT_COMP, ymax-ymin));
+  yheight = fabs(ymax-ymin);
+  ymax= yheight/2;
   ymin=-ymax;
 
   if (m <= 0) { m=0; R0=0; }
@@ -277,26 +268,26 @@ INITIALIZE
     printf("FermiChopper: %s: FATAL: unrealistic cylinder radius radius=%g [m]\n", NAME_CURRENT_COMP, radius);
     exit(-1);
   }
-  if (width > 0 && width < radius*2 && Nslit > 0) {
-    w = width/Nslit;
+  if (xwidth > 0 && xwidth < radius*2 && nslit > 0) {
+    w = xwidth/nslit;
   }
   if (w <= 0) {
-    printf("FermiChopper: %s: FATAL: Slits in the package have unrealistic width w=%g [m]\n", NAME_CURRENT_COMP, w);
+    printf("FermiChopper: %s: FATAL: Slits in the package have unrealistic xwidth w=%g [m]\n", NAME_CURRENT_COMP, w);
     exit(-1);
   }
-  if (Nslit*w > radius*2) {
-    Nslit = floor(radius/w);
+  if (nslit*w > radius*2) {
+    nslit = floor(radius/w);
     printf("FermiChopper: %s: Too many slits to fit in the cylinder\n"
-           "    Adjusting Nslit=%f\n", NAME_CURRENT_COMP, Nslit);
+           "    Adjusting nslit=%f\n", NAME_CURRENT_COMP, nslit);
   }
   if (length > radius*2) {
-    length = 2*sqrt(radius*radius - Nslit*w*Nslit*w/4);
+    length = 2*sqrt(radius*radius - nslit*w*nslit*w/4);
     printf("FermiChopper: %s: Slit package is longer than the whole\n"
            "    chopper cylinder. Adjusting length=%g [m]\n", NAME_CURRENT_COMP, length);
   }
-  if (Nslit == 1) {
-    length = 2*sqrt(radius*radius - Nslit*w*Nslit*w/4);
-    printf("FermiChopper: %s: No slit package (Nslit=1). Adjusting length=%g [m]\n",
+  if (nslit == 1) {
+    length = 2*sqrt(radius*radius - nslit*w*nslit*w/4);
+    printf("FermiChopper: %s: No slit package (nslit=1). Adjusting length=%g [m]\n",
       NAME_CURRENT_COMP, length);
   }
 
@@ -367,7 +358,7 @@ TRACE
     t -= floor( (t+1/(4*nu))*(2*nu) )/(2*nu);
 
 /************** test, if the neutron interacts with the cylinder ***/
-  if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, height))
+  if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, yheight))
   {
     if (t1 <= 0) { FCVars.absorb_alreadyinside++; ABSORB; }    /* Neutron started inside the cylinder */
 
@@ -391,9 +382,9 @@ TRACE
       FCVars.ph0 = -mean_phase;
     }
 
-    /* neutron must enter the cylinder opening: |X'| < full package width*/
+    /* neutron must enter the cylinder opening: |X'| < full package xwidth*/
     xp1 = FC_xrot(x,z, t,FCVars); /* X'(t) */
-    if (fabs(xp1) >= Nslit*w/2) { FCVars.absorb_cylentrance++; ABSORB; }
+    if (fabs(xp1) >= nslit*w/2) { FCVars.absorb_cylentrance++; ABSORB; }
 
 /*********************** PROPAGATE TO SLIT PACKAGE **************************/
 
@@ -429,9 +420,9 @@ TRACE
     PROP_DT(t3);
     dt -= t3; /* remaining time to exit of cylinder */
 
-    /* must have X'< slit package width at package Z'=slit_input */
+    /* must have X'< slit package xwidth at package Z'=slit_input */
     xp1 = FC_xrot(x,z, t, FCVars);
-    if (fabs(xp1) >= Nslit*w/2) { FCVars.absorb_packentrance++; ABSORB; }
+    if (fabs(xp1) >= nslit*w/2) { FCVars.absorb_packentrance++; ABSORB; }
     if (mcdotrace) {
       zp1 = FC_zrot(x,z, t, FCVars);
       /* indicate position of neutron in mcdisplay */
@@ -586,7 +577,7 @@ TRACE
     /********************* EXIT SLIT PACKAGE ********************************/
 
     /* propagation times to cylinder. Should use t2 to exit */
-    if (!cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, height))
+    if (!cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, yheight))
       { FCVars.absorb_exitslitpack++;  ABSORB; } /* must be inside the cylinder */
 
     if (t1 > 0) {
@@ -610,12 +601,12 @@ TRACE
     SCATTER;
 
     /* Check if the neutron left the cylinder by its top or bottom */
-    if (fabs(y) >= 0.99*height/2) { FCVars.absorb_topbottom++; ABSORB; }
+    if (fabs(y) >= 0.99*yheight/2) { FCVars.absorb_topbottom++; ABSORB; }
 
 
-    /* must have X'< slit package width at package Z'=cylinder output */
+    /* must have X'< slit package xwidth at package Z'=cylinder output */
     xp1 = FC_xrot(x,z, t,FCVars);
-    if (fabs(xp1) >= Nslit*w/2) { FCVars.absorb_cylexit++; ABSORB; }
+    if (fabs(xp1) >= nslit*w/2) { FCVars.absorb_cylexit++; ABSORB; }
 
     /* Transmission coefficent */
     p = p*eff;          //finite cross section + transmission
@@ -705,7 +696,7 @@ MCDISPLAY
   FCVars.omega=0;
   // FCVars.ph0  =0;
   Nz = (FCVars.C_slit ?  4 : 1);
-  Nx = (Nslit > 11    ? 11 : Nslit);
+  Nx = (nslit > 11    ? 11 : nslit);
   FCVars.C_slit *= -1;
   magnify("xz");
   /* cylinder top/center/bottom  */
@@ -724,7 +715,7 @@ MCDISPLAY
       double xp1, xp2, zp1, zp2;
       zs1 = length*index_z/Nz;
       zs2 = length*(index_z+1)/Nz;
-      xs1 = w*Nslit*index_x/Nx;
+      xs1 = w*nslit*index_x/Nx;
       xp1 = FC_xrot(xs1, zs1, 0, FCVars);
       xp2 = FC_xrot(xs1, zs2, 0, FCVars);
       zp1 = FC_zrot(xs1, zs1, 0, FCVars);
@@ -738,7 +729,7 @@ MCDISPLAY
   }
   /* cylinder inner sides containing slit package */
   double xp1, xp2, zp1, zp2;
-  xpos = Nslit*w/2;
+  xpos = nslit*w/2;
   zpos = sqrt(radius*radius - xpos*xpos);
   xp1 = FC_xrot(xpos, -zpos, 0, FCVars);
   xp2 = FC_xrot(xpos, +zpos, 0, FCVars);

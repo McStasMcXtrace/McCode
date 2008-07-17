@@ -7,8 +7,8 @@
 * Written by: Peter Christiansen 
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.3 $
-* %INSTRUMENT_SITE: tests
+* Version: $Revision: 1.4 $
+* %INSTRUMENT_SITE: Tests_polarization
 *
 * Test that Pol_mirror reflects, transmits, and polarizes. 
 *
@@ -61,18 +61,18 @@ COMPONENT Origin = Progress_bar()
      AT (0,0,0) ABSOLUTE
 
 COMPONENT source = 
-Source_simple(radius = 0.001, dist = 1.0, xw = 0.01, yh = 0.01, Lambda0 = 15,
-	      dLambda = 14.5, flux = 1)
+Source_simple(radius = 0.001, dist = 1.0, focus_xw = 0.01, focus_yh = 0.01, lambda0 = 15,
+	      dlambda = 14.5, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT lamStart = 
-L_monitor(nchan = 30, filename = "lambdaStart.dat", 
+L_monitor(nL = 30, filename = "lambdaStart.dat", 
 	  xwidth = 0.20, yheight = 0.20, 
 	  Lmin = 0.0, Lmax = 30)
      AT (0, 0, 0.5) RELATIVE Origin
 
 COMPONENT mirror =
-Pol_mirror(zw = 0.40, yh = 0.40, option=mirrorOption,
+Pol_mirror(zwidth = 0.40, yheight = 0.40, option=mirrorOption,
 	   rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003},
 	   rDownPar={0.1, 0.0219, 6.07, 2.0, 0.003})
      AT (0, 0, 1.0) RELATIVE Origin ROTATED (0, 2, 0) RELATIVE Origin
@@ -92,8 +92,8 @@ COMPONENT armReflec = Arm()
      ROTATED (0, 4, 0) RELATIVE Origin
 
 COMPONENT pollambdaMonitorReflecY =
-MeanPolLambda_monitor(xw=0.05, yh=0.05,
-		      nlam=30, Lmin = 0, Lmax = 30,
+MeanPolLambda_monitor(xwidth=0.05, yheight=0.05,
+		      nL=30, Lmin = 0, Lmax = 30,
 		      my=1, filename="pollambdaMonReflecY.data")
      AT (0, 0, 1.0) RELATIVE armReflec
      GROUP monitorGroup
@@ -103,8 +103,8 @@ EXTEND
   %}
 
 COMPONENT pollambdaMonitorTransmitY =
-MeanPolLambda_monitor(xw=0.05, yh=0.05,
-		      nlam=30, Lmin = 0, Lmax = 30,
+MeanPolLambda_monitor(xwidth=0.05, yheight=0.05,
+		      nL=30, Lmin = 0, Lmax = 30,
 		      my=1, filename="pollambdaMonTransY.data")
      AT (0, 0, 1.0) RELATIVE armTransmit
      GROUP monitorGroup
@@ -114,13 +114,13 @@ EXTEND
   %}
 
 COMPONENT lamReflec = 
-L_monitor(nchan = 30, filename = "lambdaReflec.dat", 
+L_monitor(nL = 30, filename = "lambdaReflec.dat", 
 	  xwidth = 0.20, yheight = 0.20, 
 	  Lmin = 0.0, Lmax = 30)
      WHEN (reflected==1) AT (0, 0, 1.0) RELATIVE armReflec
 
 COMPONENT lamTrans = 
-L_monitor(nchan = 30, filename = "lambdaTrans.dat", 
+L_monitor(nL = 30, filename = "lambdaTrans.dat", 
 	  xwidth = 0.20, yheight = 0.20, 
 	  Lmin = 0.0, Lmax = 30)
      WHEN (reflected==0) AT (0, 0, 1.0) RELATIVE armTransmit

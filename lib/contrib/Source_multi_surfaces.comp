@@ -10,7 +10,7 @@
 * %I
 * Written by: Ludovic Giller, Uwe Filges
 * Date: 31.10.06
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: PSI/Villigen
 * Release: McStas 1.10
 * Modified by:
@@ -25,7 +25,7 @@
 * The source surface can be divided in subareas (maximum 7 in one dimension). 
 * For each subarea a discret spectrum must be loaded given by its corresponding
 * file. The name of the files are saved in one file and will be called with the
-* parameter "names".
+* parameter "filename".
 * In fact the routine first reads the spectrum from files (up to 49) and it 
 * selects randomly a subarea. Secondly it generates a neutron with an random
 * energy, selected from the spectrum corresponding to the subsurface chosen, and
@@ -34,25 +34,8 @@
 *		the instrument file is located
 * ATTENTION 2:  the wavelenght distribution (or binning) must be uniform 
 *
-*
-* Usage example:
-*   Source_multi_surfaces(h=0.16,w=0.09,dist=1.18,xw=0.08,yh=0.15,xdim=4,ydim=4,
-*                         Lmin=0.01,Lmax=10.0,names="files_name.dat")
-*
-* %P
-* h:       (m)   Source y-height
-* w:       (m)   Source x-width
-* dist:    (m)   Distance to target along z axis
-* xw:      (m)   Width(x) of target
-* yh:      (m)   Height(y) of target
-* xdim:    (int) Number of subareas in the x direction
-* ydim:    (int) Number of subareas in the y direction
-* Lmin:    (AA)  Minimum wavelength of neutrons
-* Lmax:    (AA)  Maximum wavelength of neutrons
-* Emin:    (eV)  Minimum energy of neutrons
-* Emax:    (eV)  Maximum energy of neutrons
-* names:   (str) Name of the file containing a list of the spectra file names
-*                eg. for a 3x2 (x,y) division :
+* The file giving the name of sub-sources is matrix like, 
+*    eg. for a 3x2 (x,y) division :
 *                    spec1_1.dat spec1_2.dat spec1_3.dat
 *                    spec2_1.dat spec2_2.dat spec2_3.dat(RETURN-key)
 *
@@ -84,11 +67,30 @@
 *			will have the same unit for the the output.
 *			Generally McStas works in neutrons per second [n/s].
 *
+* Usage example:
+*   Source_multi_surfaces(yheight=0.16,xwidth=0.09,dist=1.18,xw=0.08,yh=0.15,xdim=4,ydim=4,
+*                         Lmin=0.01,Lmax=10.0,filename="files_name.dat")
+*
+* %P
+* yheight: (m)   Source y-height
+* xwidth:  (m)   Source x-width
+* dist:    (m)   Distance to target along z axis
+* xw:      (m)   Width(x) of target
+* yh:      (m)   Height(y) of target
+* xdim:    (int) Number of subareas in the x direction
+* ydim:    (int) Number of subareas in the y direction
+* Lmin:    (AA)  Minimum wavelength of neutrons
+* Lmax:    (AA)  Maximum wavelength of neutrons
+* Emin:    (eV)  Minimum energy of neutrons
+* Emax:    (eV)  Maximum energy of neutrons
+* filename:   (str) Name of the file containing a list of the spectra file names
+*
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Source_multi_surfaces
-DEFINITION PARAMETERS (names)
-SETTING PARAMETERS (h,w,dist,xw,yh,xdim,ydim,Emin=0.0,Emax=0.0,Lmin=0.0,Lmax=0.0)
+DEFINITION PARAMETERS (string filename=0)
+SETTING PARAMETERS (yheight=0.16,xwidth=0.09,dist=1.18,xw=0.08,yh=0.15,xdim=4,ydim=4,
+  Emin=0.0,Emax=0.0,Lmin=0.0,Lmax=0.0)
 OUTPUT PARAMETERS (p_in)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -136,17 +138,17 @@ INITIALIZE
 %{
   int n_surf=1,c_surf=1;                  	/*numbers of subsurfaces*/
   int rows_surf;                          	/*number of Source_multi_surfaces.comp rows*/
-  int i, j, string_num,k;                 	/*names_table indices*/
+  int i, j, string_num,k;                 	/*filename_table indices*/
 
   char *token;
   FILE *files_name;
   char fu[50];
-  struct names_table{
+  struct filename_table{
        int index1;
        char spec_name[128];
        char tmp_name[512];
     };
-  struct names_table values[50];       
+  struct filename_table values[50];       
 
   for (i=0;i<50;i++)
   {
@@ -154,9 +156,9 @@ INITIALIZE
     sprintf(values[i].spec_name,"empty"); 
   }
   
-  if ((h == 0) || (w == 0))
+  if ((yheight == 0) || (xwidth == 0))
   {
-    fprintf(stderr,"Source_multi_surfaces: Error: Please precise source geometry (h, w)\n");
+    fprintf(stderr,"Source_multi_surfaces: Error: Please precise source geometry (yheight, xwidth)\n");
     exit(-1);
   }
   if (xw*yh == 0)   
@@ -195,9 +197,9 @@ INITIALIZE
 
   n_surf = xdim*ydim;
   
-  /*read files_name.dat, generate a table with the files names*/  
+  /*read files_name.dat, generate a table with the files filename*/  
 
-  files_name = fopen(names, "r");
+  files_name = fopen(filename, "r");
 
   i=0;
   rows_surf=0;  
@@ -282,7 +284,7 @@ INITIALIZE
     }
   }
 
-  w=fabs(w); h=fabs(h);
+  xwidth=fabs(xwidth); yheight=fabs(yheight);
   xw = fabs(xw); yh=fabs(yh); dist=fabs(dist);
 
   /*generate p_in*/
@@ -294,15 +296,15 @@ TRACE
   double theta0,phi0,theta1,phi1,theta,phi;
   double v,xpos,ypos;
   double intensity,lambda;
-  double a,tan_v,tan_h;
+  double a,tan_v,tan_yheight;
   int i,j,k;
 
     z = 0;
-    x = w*randpm1()*0.5;         		   /*select point on the source (uniform)*/
-    y = h*randpm1()*0.5;
+    x = xwidth*randpm1()*0.5;         		   /*select point on the source (uniform)*/
+    y = yheight*randpm1()*0.5;
    
-    xpos = (x/w+0.5)*xdim;       		   /*select the corresponding subsurface*/
-    ypos = (y/h+0.5)*ydim;
+    xpos = (x/xwidth+0.5)*xdim;       		   /*select the corresponding subsurface*/
+    ypos = (y/yheight+0.5)*ydim;
     
     /* printf("xpos %f, ypos %f \n", xpos, ypos);  */
     
@@ -341,11 +343,11 @@ TRACE
     
     p = p*intensity*p_in*fabs((theta1 - theta0)*(phi1 - phi0));
     
-    tan_h = tan(theta);
+    tan_yheight = tan(theta);
     tan_v = tan(phi);
-    vz = v / sqrt(1 + tan_v*tan_v + tan_h*tan_h);
+    vz = v / sqrt(1 + tan_v*tan_v + tan_yheight*tan_yheight);
     vy = tan_v * vz;
-    vx = tan_h * vz;    
+    vx = tan_yheight * vz;    
     
     SCATTER;      
 
@@ -368,8 +370,8 @@ MCDISPLAY
   double xline;
   double yline;
   
-  xmin = -w/2; xmax = w/2;
-  ymin = -h/2; ymax = h/2;
+  xmin = -xwidth/2; xmax = xwidth/2;
+  ymin = -yheight/2; ymax = yheight/2;
 
   magnify("xy");
   multiline(5, (double)xmin, (double)ymin, 0.0,
@@ -380,11 +382,11 @@ MCDISPLAY
         	   
   /*the grid*/
   
-  for (xline=(w/xdim)-(w/2); xline < w/2; xline=xline+(w/xdim)) {
+  for (xline=(xwidth/xdim)-(xwidth/2); xline < xwidth/2; xline=xline+(xwidth/xdim)) {
       line((double)xline, (double)ymin, 0.0, (double)xline, (double)ymax, 0.0);
       }
       
-  for (yline=(h/ydim)-(h/2); yline < h/2; yline=yline+(h/ydim)) {
+  for (yline=(yheight/ydim)-(yheight/2); yline < yheight/2; yline=yline+(yheight/ydim)) {
       line((double)xmin, (double)yline, 0.0, (double)xmax, (double)yline, 0.0);
       }
 

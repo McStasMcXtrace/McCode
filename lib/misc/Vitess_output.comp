@@ -8,16 +8,16 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 * Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
 *
-* Write neutron state parameters to VITESS neutron file.
+* Write neutron state parameters to VITESS neutron filename.
 *
 * %D
 * Detector-like component writing neutron state parameters to a
-* VITESS neutron file. Used to interface McStas components or
+* VITESS neutron filename. Used to interface McStas components or
 * simulations into VITESS. Each neutron is 104 bytes.
 *
 * Note that when standard output is used, as is the default, no
@@ -25,12 +25,12 @@
 * used, or the neutron output from this component will become
 * corrupted.
 *
-* Example: Vitess_output(file="MySource.vit", bufsize = 10000, progress = 1)
+* Example: Vitess_output(filename="MySource.vit", bufsize = 10000, progress = 1)
 *
 * %P
 * INPUT PARAMETERS
 *
-* file:     Filename of neutron file to write. Default is standard
+* filename: Filename of neutron file to write. Default is standard
 *           output [string]
 * bufsize:  Size of neutron output buffer [records]
 * progress: If not zero, output dots as progress indicator [flag]
@@ -40,7 +40,7 @@
 
 
 DEFINE COMPONENT Vitess_output
-DEFINITION PARAMETERS (string file = 0)
+DEFINITION PARAMETERS (string filename = 0)
 SETTING PARAMETERS (int bufsize = 10000, int progress = 0)
 OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -53,8 +53,8 @@ SHARE
 
 DECLARE
 %{
-char *filename;                 /* path + filename             */
-FILE *hfile;			/* Neutron output file handle  */
+char *file=NULL;                 /* path + filename             */
+FILE *hfile=NULL;			/* Neutron output filename handle  */
 Neutron *obuf;			/* Neutron output buffer       */
 int pos;			/* Current position in buffer  */
 double p_out;                   /* sum of output weight        */
@@ -63,21 +63,21 @@ double p2_out;                  /* square sum of output weight */
 
 INITIALIZE
 %{
-  /* Open neutron output file. */
-  if (file==NULL)
+  /* Open neutron output filename. */
+  if (filename==NULL || (filename && !strcmp(filename,"NULL")))
   {
     hfile = stdout;
   }
-  else if (!strcmp(file, "no_file"))
+  else if (!strlen(filename) || !strcmp(filename, "no_filename"))
   {
     hfile = NULL;
   }
   else
   {
-    hfile = fopen((filename=FullParName(file)), "wb");
+    hfile = fopen((file=FullParName(filename)), "wb");
     if(!hfile)
     {
-      fprintf(stderr, "Vitess_output: Error: Cannot open output file %s.\n", filename);
+      fprintf(stderr, "Vitess_output: Error: Cannot open output filename %s.\n", file);
       exit(1);
     }
   }
@@ -115,7 +115,7 @@ TRACE
     }
     if(count != bufsize)
     {
-      fprintf(stderr, "Vitess_output: Error during write of neutron file.\n");
+      fprintf(stderr, "Vitess_output: Error during write of neutron filename.\n");
       exit(1);
     }
     else
@@ -143,7 +143,7 @@ FINALLY
   { count = fwrite(obuf, sizeof(Neutron), pos, hfile);
     if(count != pos)
     {
-      fprintf(stderr, "Vitess_output: Error during write of neutron file.\n");
+      fprintf(stderr, "Vitess_output: Error during write of neutron file %s.\n", file);
       exit(1);
     }
   }
@@ -151,7 +151,7 @@ FINALLY
     fprintf(stderr, ".\n");	/* Output final progress indicator. */
   if(obuf)
     free(obuf);
-  if(hfile && file)
+  if(hfile && filename)
     fclose(hfile);
 %}
 MCDISPLAY

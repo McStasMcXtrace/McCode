@@ -10,7 +10,7 @@
 * %I
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001 
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -25,7 +25,7 @@
 * (McStas units are in general neutrons/second)
 *
 * Example general parameters (general):
-*          size=0.12 l_low=0.1 l_high=10 dist=2 xw=0.06 yh=0.12 freq=50
+*          size=0.12 Lmin=0.1 Lmax=10 dist=2 focus_xw=0.06 yh=0.12 nu=50
 *          branchframe=0.5
 *
 * Example moderator specific parameters
@@ -66,12 +66,14 @@
 * Input parameters:
 *
 * size:   (m)    Edge of cube shaped source 
-* l_low:  (AA)   Lower edge of lambda distribution
-* l_high: (AA)   Upper edge of energy distribution
+* Lmin:   (AA)   Lower edge of wavelength distribution
+* Lmax:   (AA)   Upper edge of wavelength distribution
 * dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
-* xw:     (m)    Width of focusing rectangle
-* yh:     (m)    Height of focusing rectangle
-* freq:   (Hz)   Frequency of pulses 
+* focus_xw:(m)   Width of focusing rectangle
+* focus_yh:(m)   Height of focusing rectangle
+* target_index:(1)  relative index of component to focus at, e.g. next is +1
+*                this is used to compute 'dist' automatically.
+* nu:     (Hz)   Frequency of pulses 
 * T:      (K)    Temperature of source 
 * tau:    (s)    long time decay constant for pulse, 1a 
 * tau1:   (s)    long time decay constant for pulse, 1b 
@@ -94,9 +96,10 @@
 
 DEFINE COMPONENT ESS_moderator_short
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (size, l_low, l_high, dist, xw, yh, 
-                    freq, T, tau, tau1, tau2, n, n2, chi2, I0, I2, 
-                    branch1, branch2, branchframe)
+SETTING PARAMETERS (size, Lmin, Lmax, dist, focus_xw, focus_yh, 
+                    nu=50, T=325, tau=22e-6, tau1=0, tau2=7e-6, n=5, n2=5, 
+                    chi2=2.5, I0=9e10, I2=4.6e10, branch1=0, branch2=0.5 ,
+                    branchframe=0, int target_index=+1)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -118,15 +121,25 @@ DECLARE
 
 INITIALIZE
 %{
-  if (n == 1 || n2 == 1 || l_low<=0 || l_high <=0 || dist == 0 
+  if (target_index && !dist)
+  {
+    Coords ToTarget;
+    double tx,ty,tz;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+    dist=sqrt(tx*tx+ty*ty+tz*tz);
+  }
+  
+  if (n == 1 || n2 == 1 || Lmin<=0 || Lmax <=0 || dist == 0 
     || branch1 == 1 || branch2 == 1 || tau == 0)
   {
-    printf("ESS_moderator_short: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {l_low l_high dist tau} and 1 value for {n n2 branch1/2/frame}\n", NAME_CURRENT_COMP);
+    printf("ESS_moderator_short: %s: Check parameters (lead to Math Error).\n Avoid 0 value for {Lmin Lmax dist tau} and 1 value for {n n2 branch1/2/frame}\n", NAME_CURRENT_COMP);
     exit(-1);
   }
   
-  Delta_t = 1.0/(double)freq;
-  l_range = l_high-l_low;
+  Delta_t = 1.0/(double)nu;
+  l_range = Lmax-Lmin;
   w_mult = size*size*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1/mcget_ncount();  /* Flux value */
@@ -142,13 +155,13 @@ TRACE
   y = 0.5*size*randpm1();         /* Choose initial position */
 
   randvec_target_rect_real(&xf, &yf, &r, &w_focus, 
-			   0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2); 
+			   0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2); 
  
   dx = xf-x;
   dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
 
-  lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
+  lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
   k = 2*PI/lambda;
   v = K2V*k;
 
@@ -213,11 +226,13 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
-  multiline(5, -(double)dist/2.0, -(double)dist/2.0, 0.0,
-                (double)dist/2.0, -(double)dist/2.0, 0.0,
-                (double)dist/2.0,  (double)dist/2.0, 0.0,
-               -(double)dist/2.0,  (double)dist/2.0, 0.0,
-               -(double)dist/2.0, -(double)dist/2.0, 0.0); 
+  rectangle("xy", 0, 0, 0, size, size);
+  if (dist) {
+    dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2, focus_yh/2,dist, 4);
+    dashed_line(0,0,0, -focus_xw/2, focus_yh/2,dist, 4);
+  }
 %}
 
 END

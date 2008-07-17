@@ -10,7 +10,7 @@
 * %I
 * Written by:  Kim Lefmann
 * Date: October 2000
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Kim Lefmann, October 9, 2001
@@ -21,10 +21,10 @@
 * INPUT PARAMETERS:
 *
 * radius:   Cylinder radius (m)
-* height:   Cylinder height (m)
-* nt:    Number of time bins (1)
-* t_0:      Beginning of time window (mu-s)
-* t_1:      End of time window (mu-s)
+* yheight:  Cylinder height (m)
+* nt:       Number of time bins (1)
+* tmin:     Beginning of time window (mu-s)
+* tmax:     End of time window (mu-s)
 * nphi:     Number of angular bins (deg)
 * filename: Name of file in which to store the detector image (text)
 * restore_neutron: If set, the monitor does not influence the neutron state (1)
@@ -39,8 +39,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT TOF_cylPSD_monitor
-DEFINITION PARAMETERS (nt, string filename, nphi)
-  SETTING PARAMETERS (radius, height, t_0, t_1, restore_neutron=0)
+DEFINITION PARAMETERS (nt=128, string filename=0, nphi=90)
+SETTING PARAMETERS (radius=1, yheight=0.3, tmin, tmax, restore_neutron=0)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
@@ -55,8 +55,8 @@ INITIALIZE
   %{
     int i,j;
 
-    tt_0=t_0*1e-6;
-    tt_1=t_1*1e-6;
+    tt_0=tmin*1e-6;
+    tt_1=tmax*1e-6;
     for (i=0; i<nt; i++)
       for (j=0; j<nphi; j++)
       {
@@ -72,14 +72,14 @@ TRACE
     int i,j;
     double cyl_t0,cyl_t1,dt,phi;
 
-    if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, height))
+    if(!cylinder_intersect(&cyl_t0, &cyl_t1, x,y,z,vx,vy,vz, radius, yheight))
      /* No hit */
       ABSORB;
     if(cyl_t0>0)  /* Neutron hits cylinder from the outside */
       ABSORB;
     dt=cyl_t1;
     PROP_DT(dt);
-    if(y>=height/2 || y<= -height/2)
+    if(y>=yheight/2 || y<= -yheight/2)
       ABSORB;  /* Neutron hits cylinder ends; no detectors here */
 
     i = floor((t-tt_0)*nt/(tt_1-tt_0));              /* Bin number */
@@ -105,7 +105,7 @@ SAVE
         "Cylindrical Time-of-flight PSD monitor",
         "Time-of-flight [\\gms]",
         "Angle [deg]",
-        t_0, t_1, -180, 180,
+        tmin, tmax, -180, 180,
         nt, nphi,
         &TOF_N[0][0],&TOF_p[0][0],&TOF_p2[0][0],
         filename);

@@ -12,8 +12,8 @@
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
-* %INSTRUMENT_SITE: Tutorial
+* Version: $Revision: 1.6 $
+* %INSTRUMENT_SITE: Templates
 *
 * Template RESCAL type triple-axis machine (TAS)
 *
@@ -484,7 +484,7 @@ TRACE
 COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
-  xw = 0.1, yh = 0.08,
+  focus_xw = 0.1, focus_yh = 0.08,
   E0 = machine_hkl.ei,
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE
@@ -492,7 +492,7 @@ AT (0,0,0) ABSOLUTE
 COMPONENT SC1 = Collimator_linear(
   xmin =-0.08/2, ymin =-0.11/2,
   xmax = 0.08/2, ymax = 0.11/2,
-  len = 5.34,
+  length = 5.34,
   divergence=ALF1,
   divergenceV=BET1)
 AT (0, 0, (machine_hkl.l1-5.34)/2) RELATIVE Source
@@ -518,7 +518,7 @@ COMPONENT Mono_Out = Arm()
 COMPONENT SC2 = Collimator_linear(
   xmin =-0.04/2, ymin =-0.07/2,
   xmax = 0.04/2, ymax = 0.07/2,
-  len = 0.35,
+  length = 0.35,
   divergence=ALF2,
   divergenceV=BET2)
 AT (0, 0, (machine_hkl.l2-0.35)/2) RELATIVE Mono_Out
@@ -540,7 +540,7 @@ COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
 COMPONENT SC3 =Collimator_linear(
   xmin =-0.06/2, ymin =-0.12/2,
   xmax = 0.06/2, ymax = 0.12/2,
-  len = 0.40,
+  length = 0.40,
   divergence=ALF3,
   divergenceV=BET3)
 AT (0, 0, (machine_hkl.l3-0.40)/2) RELATIVE Sample_Out
@@ -565,7 +565,7 @@ COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
 COMPONENT SC4 =Collimator_linear(
   xmin =-0.06/2, ymin =-0.12/2,
   xmax = 0.06/2, ymax = 0.12/2,
-  len = 0.24,
+  length = 0.24,
   divergence=ALF4,
   divergenceV=BET4)
 AT (0, 0, (machine_hkl.l4-0.24)/2) RELATIVE Ana_Out
