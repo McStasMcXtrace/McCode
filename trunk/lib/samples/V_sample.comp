@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.42 $
+* Version: $Revision: 1.43 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
@@ -61,8 +61,8 @@
 * target_z:
 * focus_xw:   horiz. dimension of a rectangular area [m]
 * focus_yh:   vert.  dimension of a rectangular area [m]
-* focus_aw:   horiz. angular dimension of a rectangular area [deg]
-* focus_ah:   vert.  angular dimension of a rectangular area [deg]
+* focus_aw:   angular width dimension of a rectangular area [deg]
+* focus_ah:   angular height dimension of a rectangular area [deg]
 * sig_a:      Same as sigma_abs [barns]
 * sig_i:      Same as sigma_inc [barns]
 * multiples:  Apply crude estimate for multiple scattering [1]
@@ -90,8 +90,8 @@
 
 DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=0, thickness=0, zdepth=0, Vc=13.827, sigma_abs=5.08, sigma_inc=5.08, radius_i=0, radius_o=0, h=0, focus_r = 0,
-		    pack = 1, frac=1, f_QE=0, gamma=0,
+SETTING PARAMETERS (radius=0, thickness=0, zdepth=0, Vc=13.827, sigma_abs=5.08, sigma_inc=5.08, 
+  radius_i=0, radius_o=0, h=0, focus_r = 0, pack = 1, frac=1, f_QE=0, gamma=0,
   target_x = 0, target_y = 0, target_z = 0, focus_xw=0, focus_yh=0,
   focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=0, sig_i=0, V0=0, int target_index=0, multiples=1)
 OUTPUT PARAMETERS(StructVarsV, VarsV)

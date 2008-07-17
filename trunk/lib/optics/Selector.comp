@@ -11,7 +11,7 @@
 * Written by: Peter Link, <a href="mailto:Andreas.Ostermann@frm2.tum.de">Andreas Ostermann</a>
 * Date: MARCH 1999
 * Origin: Uni. Gottingen (Germany)
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Release: McStas 1.6
 *
 * velocity selector (helical lamella type) such as <b>V_selector</b> component
@@ -22,13 +22,13 @@
 * Geometry is defined by two identical apertures at 12 o'clock position, 
 * The origin is at the ENTRANCE of the selector.
 *
-* Example: Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, len=0.25,
-*            num=72,width=0.0004, radius=0.12, alfa=48.298, feq=500)
+* Example: Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, length=0.25,
+*            num=72,width=0.0004, radius=0.12, alpha=48.298, nu=500)
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
 *
 * %VALIDATION
 * Jun 2005: extensive external test, one minor problem 
-* Jan 2006: problem solved (for McStas 1.9.1)
+* Jan 2006: problem solved (for McStas-1.9.1)
 * Validated by: K. Lieutenant
 *
 * %BUGS
@@ -41,12 +41,14 @@
 * xmax:        Upper x bound of entry aperture (m)
 * ymin:        Lower y bound of entry aperture (m)
 * ymax:        Upper y bound of entry aperture (m)
-* len:         rotor length  (m)
-* num:         number of spokes/lamella (1)
-* width:       width of spokes at beam-center (m)
+* xwidth:      Width of entry. Overrides xmin,xmax. (m)
+* yheight:     Height of entry. Overrides ymin,ymax. (m)
+* length:      rotor length  (m)
+* num:         number of absorbing subdivinding spokes/lamella (1)
+* d:           width of spokes at beam-center (m)
 * radius:      radius of beam-center (m)
-* alfa:        angle of torsion (deg)
-* feq:         frequency of rotation (1/s)
+* alpha:       angle of torsion (deg)
+* nu:          frequency of rotation (1/s)
 *
 * %Links
 * See also Additional notes <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000134.html">March 1999</a> and <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q2/000136.html">Jan 2000</a>.
@@ -57,9 +59,16 @@
 
 DEFINE COMPONENT Selector
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, len=0.25, num=72,width=0.0004,radius=0.12,alfa=48.298,feq=500)
+SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, length=0.25,
+  xwidth=0, yheight=0, num=72, d=0.0004, radius=0.12, alpha=48.298, nu=500)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+INITIALIZE
+%{
+  if (xwidth > 0)  { xmax=xwidth/2;  xmin=-xmax; }
+  if (yheight > 0) { ymax=yheight/2; ymin=-ymax; }
+%}
 TRACE
 %{
   double E;
@@ -72,14 +81,14 @@ TRACE
   E=VS2E*(vx*vx+vy*vy+vz*vz);
   if (x<xmin || x>xmax || y<ymin || y>ymax)
     ABSORB;                                  /* because outside frame */
-  dt = len/vz;
+  dt = length/vz;
   /* get phase angle of selector rotor as MonteCarlo choice
    only the free space between two neighboring spokes is taken
    p is adjusted to transmission for parallel beam
   */
   n_angle_in = atan2( x,y+radius)*RAD2DEG;
   act_radius = sqrt(x*x + pow(radius+y,2));
-  closed_angle = width/act_radius*RAD2DEG;
+  closed_angle = d/act_radius*RAD2DEG;
   open_angle = 360/num-closed_angle;
   sel_phase = open_angle*rand01();
   p *= (open_angle/(closed_angle+open_angle));
@@ -93,7 +102,7 @@ TRACE
 
   n_angle_out = atan2(x,y+radius)*RAD2DEG;  /* neutron beam might be divergent */
 
-  sel_phase = sel_phase + feq*dt*360 - alfa;  /* rotor turned, but spokes are torsaded */
+  sel_phase = sel_phase + nu*dt*360 - alpha;  /* rotor turned, but spokes are torsaded */
 
   if (n_angle_out<(n_angle_in-sel_phase) || n_angle_out>(n_angle_in-sel_phase+open_angle) )
     ABSORB;              /* because must have passed absorber */
@@ -116,12 +125,12 @@ MCDISPLAY
   double a;
   double xw, yh;
 
-  phi = alfa;
+  phi = alpha;
   Width  = (xmax-xmin)/2;
   height = (ymax-ymin)/2;
   x0 = xmin; x1 = xmax;
   y0 = ymin; y1 = ymax;
-  l0 = len; l1 = l0;
+  l0 = length; l1 = l0;
   r0 = radius;
 
   r = r0 + height;

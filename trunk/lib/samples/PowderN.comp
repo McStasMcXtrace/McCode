@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.43 $
+* Version: $Revision: 1.44 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -115,8 +115,8 @@
 *             is not available. Use 0 if ideal. [Angs]
 * format:   Name of the format, or list of column indexes
 *             (see Description). [no quotes]
-* frac:     Fraction of incoherently scattered neutron rays [1]
-* tfrac:    Fraction of transmitted (only attenuated) neutron rays [1]
+* p_inc:    Fraction of incoherently scattered neutron rays [1]
+* p_transmit: Fraction of transmitted (only attenuated) neutron rays [1]
 * d_phi:    Angle corresponding to the vertical angular range
 *             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
 * concentric: Flag to indicate if sample is 'concentric' [1] 
@@ -147,9 +147,9 @@
 * %E
 *****************************************************************************/
 DEFINE COMPONENT PowderN
-DEFINITION PARAMETERS (string reflections, format=Undefined)
+DEFINITION PARAMETERS (string reflections=0, format=Undefined)
 SETTING PARAMETERS (radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
-		    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, frac=0.1, tfrac=0.1,
+		    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
 		    DW=0, nb_atoms=1, d_phi=0, 
 		    concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
@@ -423,23 +423,23 @@ INITIALIZE
     exit(fprintf(stderr,"PowderN: %s: Inner hollow exeeds sample volume. Check dimensions.\n", NAME_CURRENT_COMP));
   }
   
-  if (frac + tfrac > 1) {
-    exit(fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'frac' and 'tfrac' parameters (sum is %g, exeeding 1)\n", 
-		 NAME_CURRENT_COMP, frac+tfrac));
-  } else if (frac + tfrac == 1) {
+  if (p_inc + p_transmit > 1) {
+    exit(fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1)\n", 
+		 NAME_CURRENT_COMP, p_inc+p_transmit));
+  } else if (p_inc + p_transmit == 1) {
     printf("PowderN %s WARNING: You have requested all neutrons be attenuated or incoherently scattered!\n", NAME_CURRENT_COMP);
   }
 
   if (concentric) {
     printf("PowderN %s WARNING: Concentric mode - remember to include the 'opposite' copy of this component !\n (The equivalent, 'opposite' comp should have concentric=0)\n", NAME_CURRENT_COMP);
-    if (tfrac == 0) {
-      printf("PowderN %s WARNING: Concentric mode and tfrac==0 !? Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
+    if (p_transmit == 0) {
+      printf("PowderN %s WARNING: Concentric mode and p_transmit==0 !? Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
     }
   }
   
   i = read_line_data(reflections, &line_info);
   
-  if (frac && !line_info.sigma_i) {
+  if (p_inc && !line_info.sigma_i) {
     printf("PowderN %s WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
   }
 
@@ -556,16 +556,16 @@ TRACE
 	
 	neutrontype = rand01();
 	/* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
-	if (neutrontype < tfrac) {
+	if (neutrontype < p_transmit) {
 	  neutrontype = 1; 
 	  l = l_full; /* Passing through, full length */
 	  PROP_DT(t3); 
-	} else if (neutrontype >= tfrac && neutrontype < (tfrac + frac)) {
+	} else if (neutrontype >= p_transmit && neutrontype < (p_transmit + p_inc)) {
 	  neutrontype = 2;
 	  l = v*dt;       /* Penetration in sample */
 	  PROP_DT(dt+t0); /* Point of scattering */
 	  SCATTER;
-	} else if (neutrontype >= tfrac + frac) {
+	} else if (neutrontype >= p_transmit + p_inc) {
 	  neutrontype = 3;
 	  l = v*dt;       /* Penetration in sample */
 	  PROP_DT(dt+t0); /* Point of scattering */
@@ -669,7 +669,7 @@ TRACE
 
 	      l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 	      
-	      pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-(frac+tfrac));
+	      pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
 	      /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
 	      if (d_phi) pmul *= alpha/PI;
 	    } /* else transmit <-- No powder lines in file */
@@ -722,14 +722,14 @@ TRACE
 
 	    l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
 	    
-	    pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(frac);
+	    pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(p_inc);
 	    pmul *= solid_angle/(4*PI);
 	    
 	  }  /* Incoherent scattering event */
 	else if (neutrontype == 1) {
 	  /* Make transmitted (absorption-corrected) event */
 	  /* No coodinate changes here, simply change neutron weight */
-	  pmul = exp(-(my_a_v/v+my_s)*(l))/(tfrac);
+	  pmul = exp(-(my_a_v/v+my_s)*(l))/(p_transmit);
         }
 	p *= pmul;
       } /* Neutron leaving since it has passed already */

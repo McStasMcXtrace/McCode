@@ -10,7 +10,7 @@
 *%I
 * Written by: KL,
 * Date: Nov. 11, 1998
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Thomas Hansen,  December, 1999
@@ -31,8 +31,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
-* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
+* xwidth:   Width of detector. Overrides xmin,xmax. (m)
+* yheight:  Height of detector. Overrides ymin,ymax. (m)
 * nh:       Number of pixel rows (1)
 * h_maxdiv  Maximal vertical divergence detected (degrees)
 * filename: Name of file in which to store the detector image (text)
@@ -49,9 +49,9 @@
 
 
 DEFINE COMPONENT Hdiv_monitor
-DEFINITION PARAMETERS (nh=20, string filename, restore_neutron=0)
-SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0,
-                       h_maxdiv=2 )
+DEFINITION PARAMETERS (nh=20, string filename=0)
+SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+  xwidth=0, yheight=0, h_maxdiv=2, restore_neutron=0 )
 OUTPUT PARAMETERS (Div_N, Div_p, Div_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)

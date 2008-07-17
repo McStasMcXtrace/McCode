@@ -12,7 +12,8 @@
 * Date:       Jul 31, 2001
 * Origin:     FRM-II
 * Release: McStas 1.6
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
+* Modified by: E. Farhi, uniformize parameter names (Jul 2008)
 *
 * Aluminium window in the beam
 *
@@ -20,14 +21,14 @@
 *
 * Aluminium window in the beam
 *
-* Example: Al_window(win_thick=0.002)
+* Example: Al_window(thickness=0.002)
 *
 * %BUGS
 * Only handles the absorption, and window has infinite width/height
 *
 * %P
 * INPUT PARAMETERS:
-* win_thick: Al Window thickness [m]
+* thickness: Al Window thickness [m]
 *
 *
 * Variables calculated in the component
@@ -39,7 +40,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Al_window
-DEFINITION PARAMETERS (win_thick)
+DEFINITION PARAMETERS (thickness=0.001)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -83,7 +84,7 @@ TRACE
 
   PROP_Z0;
 
-  dt0=win_thick/vz;
+  dt0=thickness/vz;
   v=sqrt(vx*vx+vy*vy+vz*vz);
   PROP_DT(dt0);
   dist=v*dt0;

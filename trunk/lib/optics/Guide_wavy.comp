@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -34,18 +34,18 @@
 * l:       (m)    length of guide
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
-* alpha1:   (AA)   Slope of reflectivity
+* alpha1:   (AA)   Slope of reflectivity left
 * m1:       (1)    m-value of material, left
-* W1:       (AA-1) Width of supermirror cut-off
-* alpha2:   (AA)   Slope of reflectivity
+* W1:       (AA-1) Width of supermirror cut-off left
+* alpha2:   (AA)   Slope of reflectivity right
 * m2:       (1)    m-value of material, right.
-* W2:       (AA-1) Width of supermirror cut-off
-* alpha3:   (AA)   Slope of reflectivity
+* W2:       (AA-1) Width of supermirror cut-off right
+* alpha3:   (AA)   Slope of reflectivity top
 * m3:       (1)    m-value of material, top.
-* W3:       (AA-1) Width of supermirror cut-off
-* alpha4:   (AA)   Slope of reflectivity
+* W3:       (AA-1) Width of supermirror cut-off top
+* alpha4:   (AA)   Slope of reflectivity bottom
 * m4:       (1)    m-value of material, bottom.
-* W4:       (AA-1) Width of supermirror cut-off
+* W4:       (AA-1) Width of supermirror cut-off bottom
 * wavy_z:  (deg)  Waviness in the z-(flight-)direction
 * wavy_xy: (deg)  Waviness in the transverse direction
 *
@@ -58,11 +58,11 @@
 
 DEFINE COMPONENT Guide_wavy
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, w2, h2, l, R0, Qc,
-alpha1, m1, W1,
-alpha2, m2, W2,
-alpha3, m3, W3,
-alpha4, m4, W4,
+SETTING PARAMETERS (w1, h1, w2=0, h2=0, l, R0=0.995, Qc=0.0218,
+alpha1=4.38, m1=2, W1=0.003,
+alpha2=4.38, m2=2, W2=0.003,
+alpha3=4.38, m3=2, W3=0.003,
+alpha4=4.38, m4=2, W4=0.003,
 wavy_z, wavy_xy)
 OUTPUT PARAMETERS (whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -74,6 +74,8 @@ DECLARE
 
 INITIALIZE
 %{
+  if (!w2) w2=w1;
+  if (!h2) h2=h1;
   f_h = 0.5*(w2 - w1), f_v = 0.5*(h2 - h1);
   whalf = 0.5*w1, hhalf = 0.5*h1;
   lwhalf = l*whalf, lhhalf = l*hhalf;

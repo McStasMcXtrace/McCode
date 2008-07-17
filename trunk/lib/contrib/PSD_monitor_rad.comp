@@ -11,7 +11,7 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision: 1.4 $
+* Version:    $Revision: 1.5 $
 * Release:    McStas 1.9
 * Modified:   Kim Lefmann
 * Date:       7 June 2005
@@ -23,8 +23,6 @@
 * Comment: The intensity is given as two files:
 *          1) a radial sum
 *          2) a radial average (i.e. intensity per area)
-*
-* This monitor may be replaced by the Monitor_nD(options="auto radius") component
 *
 * Example: PSD_monitor_rad(rmax=0.2, nr=100, filename="Output.psd", filename_av="Output_av.psd")
 *
@@ -50,8 +48,8 @@
 
 
 DEFINE COMPONENT PSD_monitor_rad
-DEFINITION PARAMETERS (nr=100, filename, filename_av)
-SETTING PARAMETERS (rmax)
+DEFINITION PARAMETERS (nr=100, string filename=0, string filename_av=0)
+SETTING PARAMETERS (rmax=0.2)
 OUTPUT PARAMETERS (PSDr_N, PSDr_p, PSDr_p2, PSDr_av_p, PSDr_av_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: April 17, 1998
-* Version: $Revision: 1.27 $
+* Version: $Revision: 1.28 $
 * Origin: Risoe
 * Release: McStas 1.10c
 *
@@ -47,8 +47,8 @@
 
 
 DEFINE COMPONENT PSD_monitor_4PI
-DEFINITION PARAMETERS (nx=90, ny=90, string filename, restore_neutron=0)
-SETTING PARAMETERS (radius)
+DEFINITION PARAMETERS (nx=90, ny=90, string filename=0)
+SETTING PARAMETERS (radius=1, restore_neutron=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)

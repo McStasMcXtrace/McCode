@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -31,19 +31,19 @@
 * x-y plane, with one corner at (0, 0, 0). Plane is thus perpendicular to the
 * incoming beam, and should usually be rotated.
 *
-* Example: Mirror(xlength=.1, yheight=.1,R0=0.99,Qc=0.021,alpha=6.1,m=2,W=0.003)
+* Example: Mirror(xwidth=.1, yheight=.1,R0=0.99,Qc=0.021,alpha=6.1,m=2,W=0.003)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* xlength: (m)    length of mirror plate
+* xwidth:  (m)    width of mirror plate
 * yheight: (m)    height of mirror plate
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
 * alpha:   (AA)   Slope of reflectivity
 * m:       (1)    m-value of material. Zero means completely absorbing.
 * W:       (AA-1) Width of supermirror cut-off
-* reflect: (str)  Name of relfectivity file. Format [q(Angs-1) R(0-1)]
+* reflect: (str)  Name of reflectivity file. Format [q(Angs-1) R(0-1)]
 * transmit:(1)    When true, non reflected neutrons are transmitted through
 *                 the mirror, instead of being absorbed.
 * center:  (1)    if true (1), the Mirror is centered arount AT position.
@@ -56,7 +56,7 @@
 
 DEFINE COMPONENT Mirror
 DEFINITION PARAMETERS (string reflect=0)
-SETTING PARAMETERS (xlength, yheight,R0=0.99,Qc=0.021,alpha=6.07,m=2,W=0.003, center=0, transmit=0)
+SETTING PARAMETERS (xwidth, yheight,R0=0.99,Qc=0.021,alpha=6.07,m=2,W=0.003, center=0, transmit=0)
 OUTPUT PARAMETERS (pTable)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -91,8 +91,8 @@ TRACE
     y += vy*dt;
     /* Now check if neutron intersects mirror. */
     intersect = (center == 0 ?
-      x >= 0 && x <= xlength && y >= 0 && y <= yheight :
-      x>= -xlength/2 && x<=xlength/2 && y >= -yheight/2 && y <= yheight/2);
+      x >= 0 && x <= xwidth && y >= 0 && y <= yheight :
+      x>= -xwidth/2 && x<=xwidth/2 && y >= -yheight/2 && y <= yheight/2);
     if (intersect) {
       z = 0;
       t += dt;
@@ -141,10 +141,10 @@ MCDISPLAY
   magnify("xy");
 
   if (center == 0) {
-    xmax= xlength; xmin=0;
+    xmax= xwidth; xmin=0;
     ymax= yheight; ymin=0;
   } else {
-    xmax= xlength/2; xmin=-xmax;
+    xmax= xwidth/2; xmin=-xmax;
     ymax= yheight/2; ymin=-ymax;
   }
   multiline(5, (double)xmin, (double)ymin, 0.0,

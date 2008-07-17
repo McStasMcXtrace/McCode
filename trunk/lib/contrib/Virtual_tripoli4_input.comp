@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.31 $
+* Version:  $Revision: 1.32 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -50,12 +50,12 @@
 * EXAMPLE:
 * To create a 'source' from a Tripoli4 simulation event file for the ILL:
 * COMPONENT source = Virtual_tripoli4_input(
-*    file = "ILL_SFH.dat", intensity=4.28e18,
+*    filename = "ILL_SFH.dat", intensity=4.28e18,
 *    verbose = 1, autocenter="translate rotate rescale")
 *
 * %P
 * INPUT PARAMETERS
-* file:         [str] Name of the Tripoli4.4 neutron input file. Empty string "" unactivates component
+* filename:     [str] Name of the Tripoli4.4 neutron input file. Empty string "" unactivates component
 * repeat_count: [1]   Number of times the source must be generated.
 *                           0 unactivates the component
 * verbose:      [0|1] Displays additional informations if set to 1
@@ -94,10 +94,10 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_tripoli4_input
-DEFINITION PARAMETERS (string file=0, string autocenter=0)
+DEFINITION PARAMETERS (string filename=0, string autocenter=0)
 SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=1,
                     T4_ANALYSE=10000, radius=0, T4_ANALYSE_EMIN=0, T4_ANALYSE_EMAX=0,smooth=1)
-OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_file,begin_batch,do_rotate,do_translate,
+OUTPUT PARAMETERS (hfile,head,nl,rep,begin_of_filename,begin_batch,do_rotate,do_translate,
                    bx,by,bz,angle2z,nbatch,nsize,mean_x, mean_y, mean_z, intensity_extrapolated,
                    min_x, min_y, min_z,    max_x , max_y , max_z ,
                    min_vx, min_vy, min_vz, max_vx, max_vy, max_vz, n_count_extrapolated, repeat_cnt)
@@ -258,24 +258,24 @@ INITIALIZE
   struct stat stfile;
 
   /* Open neutron input file. */
-  /* (If empty filename given, present warning in case of verbose, perform nothing) */
+  /* (If empty file given, present warning in case of verbose, perform nothing) */
 
-  if (!strcmp(file,"")) {
-    if (verbose) printf("Tripoli4_input: %s: Empty filename given, doing nothing!\n", NAME_CURRENT_COMP);
+  if (!strcmp(filename,"")) {
+    if (verbose) printf("Tripoli4_input: %s: Empty file given, doing nothing!\n", NAME_CURRENT_COMP);
   } else {
-    printf("non-empty filename given\n");
-    if (file) {
-      stat(file,&stfile);
+    printf("non-empty file given\n");
+    if (filename) {
+      stat(filename,&stfile);
       filesize = stfile.st_size;
-      hfile = fopen(file, "r");
+      hfile = fopen(filename, "r");
     }
 
     if(!hfile)
       {
-	fprintf(stderr, "Tripoli4_input: %s: Error: Cannot open input file %s.\n", NAME_CURRENT_COMP, file);
+	fprintf(stderr, "Tripoli4_input: %s: Error: Cannot open input file %s.\n", NAME_CURRENT_COMP, filename);
 	exit(1);
       } else if (verbose)
-	printf("Tripoli4_input: %s: opening Tripoli4 file '%s'\n", NAME_CURRENT_COMP, file);
+	printf("Tripoli4_input: %s: opening Tripoli4 file '%s'\n", NAME_CURRENT_COMP, filename);
 
     head = tripoli_get_header(hfile, &nl); /*  and reset to file start */
 
@@ -294,7 +294,7 @@ INITIALIZE
     }
 
     if (verbose) {
-      printf("Analysing Tripoli4 file %s (", file);
+      printf("Analysing Tripoli4 file %s (", filename);
       if (T4_ANALYSE) printf("%g events)\n", T4_ANALYSE);
       else printf("all events)\n");
     }
@@ -383,7 +383,7 @@ INITIALIZE
 	if (mean_k) mean_L = 2*PI/mean_k;
 	mean_w = VS2E*mean_v*mean_v;
 	printf("Tripoli4 file %s\nContains %s%g neutrons in %d batches of size %d\n",
-	       file, T4_ANALYSE ? "about " : "",
+	       filename, T4_ANALYSE ? "about " : "",
 	       n_count_extrapolated, (long)nbatch_extrapolated, nsize);
 	if (n_count_extrapolated > mcget_ncount())
 	  printf("    (will use only %.3g %% of file)\n", 100*mcget_ncount()/n_count_extrapolated);
@@ -439,7 +439,7 @@ INITIALIZE
       }
 
     } else {
-      fprintf(stderr, "Tripoli4_input: %s: Error: file %s neutrons does not contains any neutron. \n",NAME_CURRENT_COMP, file);
+      fprintf(stderr, "Tripoli4_input: %s: Error: file %s neutrons does not contains any neutron. \n",NAME_CURRENT_COMP, filename);
       exit(-1);
     }
     begin_batch = 0; nbatch=0;
@@ -460,7 +460,7 @@ INITIALIZE
     if (min_dv > fabs(max_vy-min_vy)) min_dv = fabs(max_vy-min_vy);
     if (min_dv > fabs(max_vz-min_vz)) min_dv = fabs(max_vz-min_vz);
     min_vx = min_dv;
-  } /* non-empty filename */
+  } /* non-empty file */
   
   repeat_cnt = repeat_count;
   #if defined (USE_MPI)
@@ -576,7 +576,7 @@ TRACE
 
 FINALLY
 %{
-  if (strcmp(file,"")) {
+  if (strcmp(filename,"")) {
     if (head)  free(head);
     if (hfile) fclose(hfile);
     if (verbose) {

@@ -11,7 +11,7 @@
 *
 * Written by: <a href="mailto:hansen@ill.fr">Thomas C Hansen</a>
 * Date: 15 May 2000
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: <a href="http://www.ill.fr">ILL</a> (Dif/<a href="http://www.ill.fr/YellowBook/D20">D20</a>)
 * Release: McStas 1.6
 * Modified by: J.Ollivier Nov 2001: cleaned the code
@@ -36,24 +36,22 @@
 *
 * Example: Collimator_ROC(
 *     ROC_pitch=5, ROC_ri=0.15, ROC_ro=0.3, ROC_h=0.15,
-*     ROC_ttmin=-25, ROC_ttmax=135, ROC_sign=-1, ROC_present=1)
+*     ROC_ttmin=-25, ROC_ttmax=135, ROC_sign=-1)
 *
 * %PARAMETERS
 *
 * INPUT PARAMETERS:
 *
-* ROC_pitch:  [deg] Angular pitch between the absorbing blades (1)
-* ROC_ri:     [m]   Inner radius of the collimator             (0.4)
-* ROC_ro:     [m]   Outer radius of the collimator             (1.2)
-* ROC_h:      [m]   Height of the collimator                   (0.153)
-* ROC_ttmin:  [deg] Lower scattering angle limit               (0)
-* ROC_ttmax:  [deg] Higher scattering angle limit              (100)
-* ROC_sign:   [1]   Chirality/takeoff sign                     (1)
-* ROC_present:[1]   Presence flag of this component            (1)
+* ROC_pitch:  [deg] Angular pitch between the absorbing blades 
+* ROC_ri:     [m]   Inner radius of the collimator             
+* ROC_ro:     [m]   Outer radius of the collimator             
+* ROC_h:      [m]   Height of the collimator                   
+* ROC_ttmin:  [deg] Lower scattering angle limit               
+* ROC_ttmax:  [deg] Higher scattering angle limit              
+* ROC_sign:   [1]   Chirality/takeoff sign                    
 *
 * %LINKS
-* <a href="http://www.ill.fr/YellowBook/D20/McStas/d20.instr">Source code of d20.instr</a>, where this component is used
-* <a href="http://www.ill.fr/YellowBook/D20/McStas/">Components for the simulation of D20</a>
+* <a href="http://www.ill.fr/d20/">D20 diffractometer at the ILL</a>
 *
 * %END
 *
@@ -62,7 +60,8 @@
 
 DEFINE COMPONENT Collimator_ROC
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (ROC_pitch,ROC_ri,ROC_ro,ROC_h,ROC_ttmin,ROC_ttmax,ROC_sign=1,ROC_present=1)
+SETTING PARAMETERS (ROC_pitch=1, ROC_ri=0.4, ROC_ro=1.2, ROC_h=0.153,
+  ROC_ttmin=0, ROC_ttmax=100, ROC_sign=1)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 INITIALIZE
@@ -76,58 +75,55 @@ TRACE
 %{
   double ROC_angle,x0,z0,x1,z1,a,r,xp,zp;
   double d,dt,pi,t0,t1,t2,t3,twotheta;
-  if (ROC_present)
-  {
-    if (cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, ROC_ri, ROC_h) && t1 > 0)
-    {
-      int MyAbsorb = 0;
 
-      if (t0 < 0) t0 = t1;
-      twotheta = -atan2(x+vx*t0,z+vz*t0);
-      if (( (double)ROC_sign*twotheta*RAD2DEG >= ROC_ttmin ) && ( (double)ROC_sign*twotheta*RAD2DEG <= ROC_ttmax ))
+  if (cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, ROC_ri, ROC_h) && t1 > 0)
+  {
+    int MyAbsorb = 0;
+
+    if (t0 < 0) t0 = t1;
+    twotheta = -atan2(x+vx*t0,z+vz*t0);
+    if (( (double)ROC_sign*twotheta*RAD2DEG >= ROC_ttmin ) && ( (double)ROC_sign*twotheta*RAD2DEG <= ROC_ttmax ))
+    {
+      if (cylinder_intersect(&t2, &t3, x, y, z, vx, vy, vz, ROC_ro, ROC_h) && t3 >0)
       {
-        if (cylinder_intersect(&t2, &t3, x, y, z, vx, vy, vz, ROC_ro, ROC_h) && t3 >0)
-        {
-          dt=(x*vz-z*vx)/(vx*vx+vz*vz);
-          xp=vz*dt;
-          zp=-vx*dt;
-          d=sqrt(xp*xp+zp*zp);
-          pi=1.0-RAD2DEG*fabs(asin(d/ROC_ro)-asin(d/ROC_ri))/ROC_pitch;
-          if (pi>0)
-             p*=pi;
-          else MyAbsorb = 1;
-        }
+        dt=(x*vz-z*vx)/(vx*vx+vz*vz);
+        xp=vz*dt;
+        zp=-vx*dt;
+        d=sqrt(xp*xp+zp*zp);
+        pi=1.0-RAD2DEG*fabs(asin(d/ROC_ro)-asin(d/ROC_ri))/ROC_pitch;
+        if (pi>0)
+           p*=pi;
         else MyAbsorb = 1;
       }
       else MyAbsorb = 1;
-      if (MyAbsorb)
-      {
-        PROP_DT(t0);
-        ABSORB;
-      }
     }
-    else ABSORB;
+    else MyAbsorb = 1;
+    if (MyAbsorb)
+    {
+      PROP_DT(t0);
+      ABSORB;
+    }
   }
+  else ABSORB;
+
 %}
 MCDISPLAY
 %{
   double ROC_angle,x0,z0,x1,z1;
 
-  if (ROC_present==1)
-  {  magnify("xz");
-     for (ROC_angle=ROC_ttmin; ROC_angle <= ROC_ttmax; ROC_angle += ROC_pitch)
-     {
-       x0=ROC_ri*sin(ROC_angle*DEG2RAD);
-       z0=ROC_ri*cos(ROC_angle*DEG2RAD);
-       x1=x0/ROC_ri*ROC_ro;
-       z1=z0/ROC_ri*ROC_ro;
-       multiline(5,
-        x0,  ROC_h/2, z0,
-        x0, -ROC_h/2, z0,
-        x1, -ROC_h/2, z1,
-        x1,  ROC_h/2, z1,
-        x0,  ROC_h/2, z0);
-     }
+  magnify("xz");
+  for (ROC_angle=ROC_ttmin; ROC_angle <= ROC_ttmax; ROC_angle += ROC_pitch)
+  {
+   x0=ROC_ri*sin(ROC_angle*DEG2RAD);
+   z0=ROC_ri*cos(ROC_angle*DEG2RAD);
+   x1=x0/ROC_ri*ROC_ro;
+   z1=z0/ROC_ri*ROC_ro;
+   multiline(5,
+    x0,  ROC_h/2, z0,
+    x0, -ROC_h/2, z0,
+    x1, -ROC_h/2, z1,
+    x1,  ROC_h/2, z1,
+    x0,  ROC_h/2, z0);
   }
 %}
 END

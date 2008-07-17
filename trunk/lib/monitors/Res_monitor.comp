@@ -9,7 +9,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
@@ -33,7 +33,7 @@
 *                                (diameter is xwidth, height is yheight).
 *     banana                    Same as cylinder, without top/bottom,
 *                                on restricted angular area
-*     disk                      Disk flat xy monitor. radius is xwidth.
+*     disk                      Disk flat xy monitor. diameter is xwidth.
 *     sphrere                   To get a spherical monitor (e.g. a 4PI)
 *                                (diameter is xwidth).
 *     square                    Square flat xy monitor (xwidth, yheight)
@@ -54,10 +54,11 @@
 *
 * OPTIONAL PARAMETERS (derived from Monitor_nD)
 *
-* xwidth:  (m)  Width/diameter of detector (x)
-* yheight: (m)  Height of detector (y)
-* zdepth:  (m)  Thichness of detector (z)
-* options: (str)  String that specifies the geometry of the monitor</br>
+* xwidth:  (m)  Width/diameter of detector
+* yheight: (m)  Height of detector
+* zdepth:  (m)  Thichness of detector
+* radius:  (m)  Radius of sphere/cylinder monitor
+* options: (str)String that specifies the geometry of the monitor</br>
 *
 * OUTPUT PARAMETERS:
 *
@@ -71,7 +72,8 @@
 
 DEFINE COMPONENT Res_monitor
 DEFINITION PARAMETERS (string filename=0, string options=0, res_sample_comp)
-SETTING PARAMETERS (xwidth=.1, yheight=.1, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
+SETTING PARAMETERS (xwidth=.1, yheight=.1, zdepth=0, radius=0,
+  xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -106,6 +108,8 @@ INITIALIZE
     sprintf(Vars.option, "%s list all, x vx sx y vy sy z vz sz t ", tmp);
   else
     sprintf(Vars.option, "%s list=%f, x vx sx y vy sy z vz sz t ", tmp, bufsize);
+    
+  if (radius) xwidth = 2*radius;
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
 

@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.11
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -20,14 +20,14 @@
 *
 * %D
 * Detector-like component writing neutron state parameters to a
-* virtual source neutron file. The component geometry is the full
+* virtual source neutron filename. The component geometry is the full
 * plane, and saves the neutron state as it exits from the previous
 * component.
 *
 *   It is particularly useful to generate a virtual source at a point that few
 * neutron reach. A long simulation will then only be performed once, to create
 * the upstream 'source' file. Further simulations are much faster if they start
-* from this low flux position with the 'source' file.
+* from this low flux position with the 'source' filename.
 *
 * Possible file formats are:
 * 1-text column formatted with lines containing 11 values in the order:
@@ -38,16 +38,16 @@
 * Beware the size of generated files ! When saving all events (bufsize=0) the
 * required memory has been optimized and remains very small. On the other hand
 * using large bufsize values (not recommended) requires huge storage memory.
-* Moreover, using the 'bufsize' parameter will often lead to wrong intentities.
+* Moreover, using the 'bufsize' parameter will often lead to wrong intensities.
 * Both methods will generate huge files.
 *
 * A Vitess file may be obtained from the 'Vitess_output' component or from a
 * Vitess simulation (104 bytes per neutron) and read with Vitess_input.
 *
 * %BUGS
-* We recommend not to use parallel execution (MPI/Threads) with this component.
+* We recommend NOT to use parallel execution (MPI/Threads) with this component.
 *
-* Example: Virtual_output(file="MySource.dat")
+* Example: Virtual_output(filename="MySource.dat")
 *   will generate a 9 Mo text file for 1e5 events stored.
 *
 * %BUGS
@@ -56,11 +56,11 @@
 * %P
 * INPUT PARAMETERS
 *
-* file: [str] Filename of neutron file to write. Default is standard
+* filename: [str] Filename of neutron file to write. Default is standard
 *           output [string]. If not given, a unique name will be used.
 * bufsize:[1] Size of neutron output buffer
 *           default is 0, i.e. save all - recommended.
-* type: [str] Type of output file 'text','float','double'
+* type: [str] Type of output filename 'text','float','double'
 *           default is text
 *
 * %E
@@ -68,7 +68,7 @@
 
 
 DEFINE COMPONENT Virtual_output
-DEFINITION PARAMETERS (string file=0, string type=0)
+DEFINITION PARAMETERS (string filename=0, string type=0)
 SETTING PARAMETERS (bufsize=0)
 OUTPUT PARAMETERS (DEFS, Vars, mcformat_sim, mcformat_vo, mcformat_override)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -116,8 +116,8 @@ INITIALIZE
 
   strcat(Vars.option,", x y z vx vy vz t sx sy sz");
   Monitor_nD_Init(&DEFS, &Vars, 0.1, 0.1, 0, 0,0,0,0,0,0); /* dims for mcdisplay */
-  if (file != NULL)
-    strncpy(Vars.Mon_File, file, 128);
+  if (filename != NULL)
+    strncpy(Vars.Mon_File, filename, 128);
 
   mcformat_override = (!strstr(Vars.option, "binary") && !strstr(mcformat.Name, "NeXus"));
   mcformat_sim      = mcformat;

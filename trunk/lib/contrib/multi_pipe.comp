@@ -10,7 +10,7 @@
 * %I
 * Written by: Uwe Filges
 * Date: March, 2005
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Release: McStas 1.12
 *
 * multi pipe circular slit.
@@ -31,31 +31,29 @@
 * %P
 * INPUT PARAMETERS
 *
-* radius: radius of a single hole
-* xmin: Lower x bound (m)
-* xmax: Upper x bound (m)
-* ymin: Lower y bound (m)
-* ymax: Upper y bound (m)
-* gap: distance between holes (m)
+* radius:    radius of a single hole
+* xmin:      Lower x bound (m)
+* xmax:      Upper x bound (m)
+* ymin:      Lower y bound (m)
+* ymax:      Upper y bound (m)
+* xwidth:    Width of slit plate. Overrides xmin,xmax. (m)
+* yheight:   Height of slit plate. Overrides ymin,ymax. (m)
+* gap:       distance between holes (m)
 * thickness: thickness of the pipe (m)
-* file: define user table of holes (str)
+* filename:  define user table of holes (str)
 *
 * %E
 *******************************************************************************/
 
-
 DEFINE COMPONENT multi_pipe
-DEFINITION PARAMETERS (file=0)
-SETTING PARAMETERS (xmin,xmax,ymin,ymax,radius=0.0,gap=0.0,thickness=0.0)
-OUTPUT PARAMETERS (pTable)
+DEFINITION PARAMETERS (string filename=0)
+SETTING PARAMETERS (xmin,xmax,ymin,ymax,radius=0.0,gap=0.0,thickness=0.0, xwidth=0, yheight=0)
+OUTPUT PARAMETERS (pTable, user_file, ynum, xnum, diam, w_pipe, h_pipe, h_number)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
 %{
-
 %include "read_table-lib"
-  
-   
 %}
 
 DECLARE
@@ -66,7 +64,6 @@ DECLARE
    double diam;
    double w_pipe,h_pipe;
    int h_number;
-   
 %}
 
 
@@ -78,13 +75,15 @@ INITIALIZE
   char *fu;
   int  check;   
   
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
   if (xmin == 0 && xmax == 0 && ymin == 0 && ymax == 0 && radius == 0 && gap==0)
     { fprintf(stderr,"multi_pipe: %s: Error: give geometry\n", NAME_CURRENT_COMP); exit(-1); }
   user_file=0;
-  if (file != NULL) {
-     fu=(char*)malloc(sizeof(char)*(strlen(file)+1));
-     strcpy(fu,file);
+  if (filename != NULL) {
+     fu=(char*)malloc(sizeof(char)*(strlen(filename)+1));
+     strcpy(fu,filename);
 
      user_file=1;
 
@@ -286,9 +285,9 @@ MCDISPLAY
 
   if (user_file==1) {
      /* open user file */
-      if (file != NULL) {
-         fu2=(char*)malloc(sizeof(char)*(strlen(file)+1));
-         strcpy(fu2,file);
+      if (filename != NULL) {
+         fu2=(char*)malloc(sizeof(char)*(strlen(filename)+1));
+         strcpy(fu2,filename);
          Table_Read(&plot_table, fu2, 1);  /* read 1st block data from file into pTable */
          if (plot_table.rows < 2) Table_Free(&plot_table);
          Table_Info(plot_table);

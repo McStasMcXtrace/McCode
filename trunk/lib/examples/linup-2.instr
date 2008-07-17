@@ -12,7 +12,7 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -82,10 +82,10 @@ COMPONENT a1 = Arm()
 COMPONENT source = Source_simple(
   radius = 0.060,
   dist = 3.288,
-  xw = 0.042, yh = 0.082,
-  E0 = 20,    /* 20 meV */
-  dE = 0.82,    /* Sufficient for TAS1 geometry */
-  compat = 1)
+  focus_xw = 0.042, focus_yh = 0.082,
+  E0 = 20,     /* 20 meV */
+  dE = 0.82    /* Sufficient for TAS1 geometry */
+)
   AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT slit1 = Slit(
@@ -175,7 +175,7 @@ COMPONENT slitMS2 = Slit(
 
 COMPONENT c1 = Collimator_linear(
   xmin = -0.02, xmax = 0.02, ymin = -0.0375, ymax = 0.0375,
-  len = 0.250, divergence = C1)
+  length = 0.250, divergence = C1)
   AT (0, 0, 0.87) RELATIVE a2 ROTATED (0,OMC1_d,0) RELATIVE a2
 
 COMPONENT slitMS3 = Slit(radius = 0.025)
@@ -189,7 +189,7 @@ COMPONENT slitMS5 = Slit(radius = 0.0275)
 
 COMPONENT emon1 = E_monitor(
   xmin = -0.01, xmax = 0.01, ymin = -0.1, ymax = 0.1,
-  Emin = 19.25, Emax = 20.75, nchan = 35,
+  Emin = 19.25, Emax = 20.75, nE = 35,
   filename = "linup_2.emon")
   AT(0, 0, 1.5) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
 

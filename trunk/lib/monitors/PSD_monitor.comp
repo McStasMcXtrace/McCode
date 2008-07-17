@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: Feb 3, 1998
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -30,8 +30,8 @@
 * xmax:     Upper x bound of detector opening (m)
 * ymin:     Lower y bound of detector opening (m)
 * ymax:     Upper y bound of detector opening (m)
-* xwidth:   Width/diameter of detector (x). Overrides xmin,xmax. (m)
-* yheight:  Height of detector (y). Overrides ymin,ymax. (m)
+* xwidth:   Width of detector. Overrides xmin,xmax. (m)
+* yheight:  Height of detector. Overrides ymin,ymax. (m)
 * nx:       Number of pixel columns (1)
 * ny:       Number of pixel rows (1)
 * filename: Name of file in which to store the detector image (text)
@@ -48,8 +48,8 @@
 
 
 DEFINE COMPONENT PSD_monitor
-DEFINITION PARAMETERS (nx=90, ny=90, string filename, restore_neutron=0)
-SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0)
+DEFINITION PARAMETERS (nx=90, ny=90, string filename=0, restore_neutron=0)
+SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)

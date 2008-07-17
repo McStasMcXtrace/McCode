@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -40,11 +40,11 @@
 *
 * Examples:
 * Reflection function parametrization 
-* Pol_mirror(zw = 0.40, yh = 0.40, option=1,
+* Pol_mirror(zwidth = 0.40, yheight = 0.40, option=1,
 *	     rUpFunc=StdReflecFunc, rUpPar={1.0, 0.0219, 6.07, 2.0, 0.003})
 *
 * Table function 
-* Pol_mirror(zw = 0.40, yh = 0.40, option=2, 
+* Pol_mirror(zwidth = 0.40, yheight = 0.40, option=2, 
 *	     rUpFunc=TableReflecFunc, rUpPar="supermirror_m2.rfl",
 *	     rDownFunc=TableReflecFunc, rDownPar="supermirror_m3.rfl", 
 *	     useTables=1)
@@ -60,14 +60,14 @@
 * %P
 * INPUT PARAMETERS:
 *
-* zw:        Width of the mirror (m)
-* yh:        Height of the mirror (m)
+* zwidth:    Width of the mirror (m)
+* yheight:   Height of the mirror (m)
 * rUpFunc:   Reflection function for spin up (q, *par, *r) (1)
 * rUpPar:    Parameters for rUpFunc (1)
 * rDownFunc: Reflection function for spin down (q, *par, *r)(1)
 * rDownPar:  Parameters for rDownFunc (1)
 * useTables: Parameters are 0: Values, 1: Table names (1) 
-* option:    1:Reflect/trasmit, 2:Reflect only, 3:Transmit only (1)
+* option:    1:Reflect/transmit, 2:Reflect only, 3:Transmit only (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -79,7 +79,7 @@
 DEFINE COMPONENT Pol_mirror
 DEFINITION PARAMETERS (rUpFunc=StdReflecFunc, rDownFunc=rUpFunc, 
 		       rUpPar={0.99,0.0219,6.07,2.0,0.003}, rDownPar=rUpPar, 
-		       useTables=0, zw, yh)
+		       useTables=0, zwidth, yheight)
 SETTING PARAMETERS (int option=1)
 OUTPUT PARAMETERS (rUpParPtr, rDownParPtr)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -120,9 +120,9 @@ INITIALIZE
   }
 #endif
 
-  if ((zw<=0) || (yh <= 0)) {
+  if ((zwidth<=0) || (yheight <= 0)) {
     fprintf(stderr, "Pol_mirror: %s: NULL or negative length scale!\n"
-	    "ERROR      (zw,yh). Exiting\n",
+	    "ERROR      (zwidth,yheight). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
   }
@@ -143,7 +143,7 @@ TRACE
   // propagate to mirror plane
   PROP_X0;
 
-  if (inside_rectangle(z, y, zw, yh)) {/* Intersect the crystal? */
+  if (inside_rectangle(z, y, zwidth, yheight)) {/* Intersect the crystal? */
     
     // calculate scattering vector magnitude
     Q = fabs(2*vx*V2K); 
@@ -216,7 +216,7 @@ TRACE
 MCDISPLAY
 %{
   magnify("zy");
-  rectangle("yz", 0, 0, 0, zw, yh);
+  rectangle("yz", 0, 0, 0, zwidth, yheight);
   %}
 
 END

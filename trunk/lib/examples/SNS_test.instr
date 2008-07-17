@@ -11,7 +11,7 @@
 * Written by: G. Granroth
 * Date: July 2004
 * Origin: SNS Project Oak Ridge National Laboratory
-* %INSTRUMENT_SITE:tests
+* %INSTRUMENT_SITE:SNS
 *
 * %Description
 * Simple test instrument for the SNS_source component.
@@ -29,30 +29,22 @@
 DEFINE INSTRUMENT SNS_test()
 
 TRACE
-COMPONENT mod=SNS_source(S_filename="source_sct091_tu_02_1.dat",
-                         width=0.1,
-                         height=0.12,
-                         dist=1,
-                         xw=0.10,
-                         yh=0.24,
-Emin=1.0,Emax=10.0)
+COMPONENT mod=SNS_source(filename="source_sct091_tu_02_1.dat",
+  xwidth=0.1, yheight=0.12,
+  dist=1, focus_xw=0.10, focus_yh=0.24,
+  Emin=1.0,Emax=10.0)
 AT(0,0,0) ABSOLUTE
 
-COMPONENT dett=TOF_monitor(xmin = -.025,
-	              xmax = .025,
-		      ymin = -.06,
-		      ymax = .06,
-		      nchan=500,
-                      dt=10,
-                      filename="tout.det")
+COMPONENT dett=TOF_monitor(
+  xmin = -.025, xmax = .025,
+  ymin = -.06, ymax = .06,
+  nt=500, dt=10,
+  filename="tout.det")
 At (0,0,1) RELATIVE mod
 
 COMPONENT det=Monitor_nD(
-                      xmin = -.5,
-	              xmax = .5,
-		      ymin = -.5,
-		      ymax = .5,
-		      options=" square x bins 100 limits=[-0.05 0.05]; y bins 100 limits=[-0.12 0.12]")
+  xmin = -.5, xmax = .5, ymin = -.5, ymax = .5,
+  options=" square x bins 100 limits=[-0.05 0.05]; y bins 100 limits=[-0.12 0.12]")
 AT (0,0,1.0000000000001) RELATIVE mod
 END
 

@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: August 2006
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -30,9 +30,9 @@
 *    slit1  slit2  slit3 
 *  |+     ++     ++     +|
 *  |+     ++     ++     +|  
-*  <---------------------> xw
-*  <------> xw/nslits (nslits=3)
-*         <> wspacer
+*  <---------------------> xwidth
+*  <------> xwidth/nslit (nslit=3)
+*         <> d
 *
 * The reflection functions and parameters defaults as follows:
 * Bot defaults to Top, Left defaults to Top, Right defaults to left.
@@ -40,8 +40,8 @@
 * Top(Up and Down) defaults to StdReflecFunc and  {0.99,0.0219,6.07,2.0,0.003}
 *
 * Example: 
-* Pol_bender(xw = 0.08, yh = 0.08, length = 1.0, radius= 10.0, 
-* 	     nslits=5, wspacer=0.0, endFlat=0, drawOption=2,
+* Pol_bender(xwidth = 0.08, yheight = 0.08, length = 1.0, radius= 10.0, 
+* 	     nslit=5, d=0.0, endFlat=0, drawOption=2,
 * 	     rTopUpPar={0.99, 0.0219, 6.07, 3.0, 0.003},
 * 	     rTopDownPar={0.99, 0.0219, 6.07, 1.0, 0.003})
 * 
@@ -58,12 +58,12 @@
 * %P
 * INPUT PARAMETERS:
 *
-* xw:           Width at the guide entry (m)
-* yh:           Height at the guide entry (m)
+* xwidth:       Width at the guide entry (m)
+* yheight:      Height at the guide entry (m)
 * length:       length of guide along center (m)
 * radius:       Radius of curvature of the guide (+:curve left/-:right) (m) 
-* nslits:       Number of slits (1)
-* wspacer:      Width of spacers. (m)
+* nslit:        Number of slits (1)
+* d:            Width of spacers (subdividing absorbing walls) (m)
 * endFlat:      If endflat>0 then entrance and exit planes are parallel. (1)
 * rTopUpFunc:   Top reflection function for spin up (q, *par, *reflecProb) (1)
 * rTopUpPar:    Parameters for rTopUpFunc (1)
@@ -85,7 +85,7 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Pol_bender
-DEFINITION PARAMETERS (xw, yh, length, radius, G=9.8,
+DEFINITION PARAMETERS (
 		       rTopUpFunc=StdReflecFunc, rTopDownFunc=StdReflecFunc, 
 		       rBotUpFunc=rTopUpFunc, rBotDownFunc=rTopDownFunc, 
 		       rLeftUpFunc=rTopUpFunc, rLeftDownFunc=rTopDownFunc, 
@@ -95,7 +95,7 @@ DEFINITION PARAMETERS (xw, yh, length, radius, G=9.8,
 		       rBotUpPar=rTopUpPar, rBotDownPar=rTopDownPar,
 		       rLeftUpPar=rTopUpPar, rLeftDownPar=rTopDownPar,
 		       rRightUpPar=rLeftUpPar, rRightDownPar=rLeftDownPar)
-SETTING PARAMETERS (int nslits=1, wspacer=0.0, int debug=0, int endFlat=0, 
+SETTING PARAMETERS (xwidth, yheight, length, radius, G=9.8, int nslit=1, d=0.0, int debug=0, int endFlat=0, 
 		    int drawOption=1)
 OUTPUT PARAMETERS (localG, normTopBot, normIn, normOut,  
 		   pointTop, pointBot, pointIn, pointOut, 
@@ -195,9 +195,9 @@ INITIALIZE
   }
 #endif
   
-  if ((xw<=0) || (yh <= 0) || (length<=0) || (radius==0)) {
+  if ((xwidth<=0) || (yheight <= 0) || (length<=0) || (radius==0)) {
     fprintf(stderr, "POL_bender: %s: NULL or negative length scale!\n"
-	    "ERROR      (xw,yh,length, radius). Exiting\n",
+	    "ERROR      (xwidth,yheight,length, radius). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
   }
@@ -236,26 +236,26 @@ INITIALIZE
   pointOut  = coords_set(radius-radius*cos(angle), 0, radius*sin(angle));
   
   // Top and bot plane (+y dir) can be spanned by (1, 0, 0) & (0, 0, 1)
-  // and the top point (0, yh/2, 0) and bot point (0, -yh/2, 0)
+  // and the top point (0, yheight/2, 0) and bot point (0, -yheight/2, 0)
   // A normal vector is (0, 1, 0)
   normTopBot  = coords_set(0, 1, 0);
-  pointTop = coords_set(0, yh/2, 0);
-  pointBot = coords_set(0, -yh/2, 0);
+  pointTop = coords_set(0, yheight/2, 0);
+  pointBot = coords_set(0, -yheight/2, 0);
   
 %}
 
 TRACE
 %{
-  const double whalf  = 0.5*xw; /* half width of guide */
-  const double hhalf  = 0.5*yh; /* half height of guide */
+  const double whalf  = 0.5*xwidth; /* half width of guide */
+  const double hhalf  = 0.5*yheight; /* half height of guide */
   const double z_off  = radius*sin(length/radius); /* z-comp of guide length */
   const double dThreshold = 1e-10; /* distance threshold */
   const double tThreshold = dThreshold/sqrt(vx*vx + vy*vy + vz*vz); 
   double angle_z_vout;       /* angle between z-axis and v_out */
   
   // Variables used in the case of multiple slits
-  const double slitWidth = xw/nslits; // slitwidth
-  const double spacerhalf  = 0.5*wspacer; /* half width of spacers */
+  const double slitWidth = xwidth/nslit; // slitwidth
+  const double spacerhalf  = 0.5*d; /* half width of spacers */
   int slitHit;                 // decide which slit is hit
   double posInSlit;            // position in slit
   
@@ -274,10 +274,10 @@ TRACE
 
   /* Propagate neutron to guide entrance. */
   PROP_Z0;
-  if (!inside_rectangle(x, y, xw, yh))
+  if (!inside_rectangle(x, y, xwidth, yheight))
     ABSORB;
   
-  if(nslits>1) {
+  if(nslit>1) {
     // check if neutron is absorbed on a spacer 
     posInSlit = fmod(x+whalf, slitWidth);
     if(posInSlit <= spacerhalf ||
@@ -331,8 +331,8 @@ TRACE
 		    coords_sp(normOut, coords_sub(xVec, pointOut)));
     
     /* Find itersection points with inside and outside guide walls */
-    cylinder_intersect(&t11, &t12 ,x - radius, y, z, vx, vy, vz, Rleft,  2*yh);
-    cylinder_intersect(&t21, &t22 ,x - radius, y, z, vx, vy, vz, Rright, 2*yh);
+    cylinder_intersect(&t11, &t12 ,x - radius, y, z, vx, vy, vz, Rleft,  2*yheight);
+    cylinder_intersect(&t21, &t22 ,x - radius, y, z, vx, vy, vz, Rright, 2*yheight);
     
     /* Choose appropriate reflection time */
     tLeft  = (t11 < tThreshold) ? t12 : t11;
@@ -461,10 +461,10 @@ MCDISPLAY
   int ns = 0;
   int j = 1;
   const double lengthOfGuide = sin(length/radius)*radius; 
-  const double slitWidth = xw/nslits; 
+  const double slitWidth = xwidth/nslit; 
   assert(lengthOfGuide>0);
   double R = 0; /* radius of arc */
-  int nSlitsMax = nslits;
+  int nSlitsMax = nslit;
   int nMax      = n;
   
   if (drawOption==2) {
@@ -482,16 +482,16 @@ MCDISPLAY
   magnify("xy");
   
   // draw opening 
-  rectangle("xy", 0, 0, 0, xw, yh);
+  rectangle("xy", 0, 0, 0, xwidth, yheight);
   
   for(ns=0; ns < nSlitsMax+1; ns++) {
     
     // to make sure the sides are drawn properly
-    if(ns==nSlitsMax && nSlitsMax<nslits) 
-      ns=nslits;
+    if(ns==nSlitsMax && nSlitsMax<nslit) 
+      ns=nslit;
     
     // calculate x for this R
-    R = radius - 0.5*xw + ns*slitWidth;
+    R = radius - 0.5*xwidth + ns*slitWidth;
 
     for(j=0; j<nMax; j++) {
       
@@ -513,23 +513,23 @@ MCDISPLAY
       
       x1 = xplot[nMax-1];
       z1 = zplot[nMax-1];
-    } else if(ns==nslits) { //last wall
+    } else if(ns==nslit) { //last wall
       
       x2 = xplot[nMax-1];
       z2 = zplot[nMax-1];
     }
     
     for(j=0; j<nMax-1; j++) {
-      line(xplot[j],  0.5*yh, zplot[j], xplot[j+1],  0.5*yh, zplot[j+1]);
-      line(xplot[j], -0.5*yh, zplot[j], xplot[j+1], -0.5*yh, zplot[j+1]);
+      line(xplot[j],  0.5*yheight, zplot[j], xplot[j+1],  0.5*yheight, zplot[j+1]);
+      line(xplot[j], -0.5*yheight, zplot[j], xplot[j+1], -0.5*yheight, zplot[j+1]);
     }
   }
   
   // draw end gap
-  line(x1, 0.5*yh, z1, x2, 0.5*yh, z2);
-  line(x1, 0.5*yh, z1, x1,-0.5*yh, z1);
-  line(x2,-0.5*yh, z2, x2, 0.5*yh, z2);
-  line(x1,-0.5*yh, z1, x2,-0.5*yh, z2);
+  line(x1, 0.5*yheight, z1, x2, 0.5*yheight, z2);
+  line(x1, 0.5*yheight, z1, x1,-0.5*yheight, z1);
+  line(x2,-0.5*yheight, z2, x2, 0.5*yheight, z2);
+  line(x1,-0.5*yheight, z1, x2,-0.5*yheight, z2);
   %}
 
 END

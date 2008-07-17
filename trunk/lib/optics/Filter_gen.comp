@@ -9,53 +9,53 @@
 * %I
 * Written by: EF (from Flux_adapter)
 * Date: Dec, 15th, 2002
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: ILL
 * Release: McStas 1.6
 *
 * This components may either set the flux or change it (filter-like), using
-* an external data file.
+* an external data filename.
 *
 *%D
 * This component changes the neutron flux (weight) in order to match
-* a reference table in a file.
+* a reference table in a filename.
 * Typically you may set the neutron flux (source-like), or multiply it
 * using a transmission table (filter-like).
 * The component may be placed after a source, in order to e.g.
 * simulate a real source from a reference table, or used as a filter (BeO)
 , or as a window (Al). The behaviour of the component is
-* specified using the 'options' parameter, or from the file itself (see below)
-* If the thickness for the transmission data file D was t0, and a different
+* specified using the 'options' parameter, or from the filename itself (see below)
+* If the thickness for the transmission data filename D was t0, and a different
 * thickness t1 would be required, then the resulting transmission is:
 *   D^(t1/t0).
 * You may use the 'thickness' and 'scaling' parameter for that purpose.
 *
 * <b>File format:</b>
-* This file may be of any 2-columns free format (k[Angs-1],p), (omega[meV],p)
-* and (lambda[Angs],p) where p is the weight. The type of the file may be
-* written explicitely in the file, as a comment, or using the 'options'
+* This filename may be of any 2-columns free format (k[Angs-1],p), (omega[meV],p)
+* and (lambda[Angs],p) where p is the weight. The type of the filename may be
+* written explicitely in the filename, as a comment, or using the 'options'
 * parameter.
-* Non mumerical content in file is treated as comment (e.g. lines starting
+* Non mumerical content in filename is treated as comment (e.g. lines starting
 * with '#' character).
 * A table rebinning and linear interpolation are performed.
 *
-* EXAMPLE : in order to simulate a PG filter, using the lib/data/HOPG.trm file
+* EXAMPLE : in order to simulate a PG filter, using the lib/data/HOPG.trm filename
 *      Filter_gen(xmin = -0.1, xmax = 0.1,
 *       ymin = -0.1, ymax = 0.1,
-*       file="HOPG.trm")
+*       filename="HOPG.trm")
 *
-* in this file, the comment line
+* in this filename, the comment line
 *     # wavevector multiply
 * sets the behaviour of the component. One may as well have used
 *     options="wavevector multiply"
 * in the component instance parameters.
 *
 *%P
-* file:    [str] name of the file to look at (first two columns data)
+* filename: [str] name of the filename to look at (first two columns data)
 *           data D should rather be sorted (ascending order) and monotonic
-*           file may contain options (see below) as comment
+*           filename may contain options (see below) as comment
 * options: [str] string that can contain:
-*          "[ k p ]"      or "wavector" for file type,
+*          "[ k p ]"      or "wavector" for filename type,
 *          "[ omega p]"   or "energy",
 *          "[ lambda p ]" or "wavelength",
 *          "set"          to set the weight according to the table,
@@ -68,14 +68,17 @@
 * xmax:    [m] dimension of filter
 * ymin:    [m] dimension of filter
 * ymax:    [m] dimension of filter
+* xwidth:  [m] Width/diameter of filter). Overrides xmin,xmax.
+* yheight: [m] Height of filter. Overrides ymin,ymax.
 *
 * %L
-* <a href="../data/HOPG.trm">HOPG.trm</a> file as an example.
+* <a href="../data/HOPG.trm">HOPG.trm</a> filename as an example.
 *%E
 ***********************************************************************/
 DEFINE COMPONENT Filter_gen
-DEFINITION PARAMETERS (file=0, string options=0)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, thickness=1, scaling=1)
+DEFINITION PARAMETERS (string filename=0, string options=0)
+SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+  xwidth=0, yheight=0, thickness=1, scaling=1)
 OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -83,7 +86,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef FILTER_GEN
-#define FILTER_GEN "1.0"
+#define FILTER_GEN $Revision: 1.6 $
 #define UNKNOWN_TABLE    0
 #define ENERGY_TABLE     1
 #define WAVEVECTOR_TABLE 2
@@ -130,12 +133,15 @@ DECLARE
 INITIALIZE
 %{
   char verbose = 0;
+  
+  if (xwidth  > 0) { xmax = xwidth/2;  xmin = -xmax; }
+  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
 
   FilterGen_Mode(options, &Mode_Table, &Type_Table, &verbose);
-  if (file != NULL)
+  if (filename != NULL)
   {
-    if (Table_Read(&pTable, file, 1) <= 0) /* read 1st block data from file into pTable */
-      exit(fprintf(stderr,"Filter_gen: %s: can not read file %s\n", NAME_CURRENT_COMP, file));
+    if (Table_Read(&pTable, filename, 1) <= 0) /* read 1st block data from filename into pTable */
+      exit(fprintf(stderr,"Filter_gen: %s: can not read filename %s\n", NAME_CURRENT_COMP, filename));
 
     Table_Rebin(&pTable);         /* rebin as evenly, increasing array */
     if (pTable.rows < 2 || !pTable.step_x) Table_Free(&pTable);

@@ -7,8 +7,8 @@
 * Written by: Peter Christiansen 
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.1 $
-* %INSTRUMENT_SITE: tests
+* Version: $Revision: 1.2 $
+* %INSTRUMENT_SITE: Tests_polarization
 *
 * Test Pol_guide_Vmirror. 
 *
@@ -57,12 +57,12 @@ COMPONENT Origin = Progress_bar()
      AT (0,0,0) ABSOLUTE
 
 COMPONENT source = 
-Source_simple(radius = 0.05, dist = 5.0, xw = 0.03, yh = 0.05, Lambda0 = 11,
-	      dLambda = 10, flux = 1e14)
+Source_simple(radius = 0.05, dist = 5.0, focus_xw = 0.03, focus_yh = 0.05, lambda0 = 11,
+	      dlambda = 10, flux = 1e14)
      AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT lamStart = 
-L_monitor(nchan = 30, filename = "lambdaStart.dat", 
+L_monitor(nL = 30, filename = "lambdaStart.dat", 
 	  xwidth = 0.10, yheight = 0.10, 
 	  Lmin = 1, Lmax = 21)
      AT (0, 0, 4.8) RELATIVE Origin
@@ -83,7 +83,7 @@ PSD_monitor(xwidth=0.10, yheight=0.10,
 // m_down = 0.7/1.73 ~ 0.4
 //                         R0      Qc       alpha  m     W
 COMPONENT POLguidevmirror = 
-Pol_guide_vmirror(xw = 0.03, yh = 0.05, 
+Pol_guide_vmirror(xwidth = 0.03, yheight = 0.05, 
 		  length = 1.8, debug=0, 		  
 		  rPar    ={GUIDEREF,  1.0*0.0219, 6.07, 1, 0.003},
 		  rUpPar  ={MIRRORREF, 2.0*0.0219, 6.07, 1, 0.003},
@@ -104,56 +104,56 @@ Guide(w1 = 0.03, h1 = 0.05, w2 = 0.03, h2 = 0.05,
       l = 11.0, m = 1.0, R0=GUIDEREF)
      AT (0, 0, 0) RELATIVE armGuide
 
-COMPONENT armLambdaStop = Arm()
+COMPONENT armlambdaStop = Arm()
      AT (0, 0, 11.0) 
      RELATIVE armGuide
 
 COMPONENT lamStopPolGuide = 
-L_monitor(nchan = 20, filename = "lambdaStopPolGuide.dat",
+L_monitor(nL = 20, filename = "lambdaStopPolGuide.dat",
 	  xwidth = 0.10, yheight = 0.10, 
 	  Lmin = 3, Lmax = 19)
-     AT (0, 0, 0.05) RELATIVE armLambdaStop
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
 
 COMPONENT psdPolGuide = 
 PSD_monitor(xwidth=0.10, yheight=0.10,
 	    nx=40, ny=40, filename="psdPolGuide.dat")
-     AT (0, 0, 0.05) RELATIVE armLambdaStop
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
 
 COMPONENT pollambdaMonitorX =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=20, Lmin = 1, Lmax = 21, npol=41,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=20, Lmin = 1, Lmax = 21, npol=41,
 		  mx=1, filename="pollambdaMonX.data")
-     AT (0, 0, 0.05) RELATIVE armLambdaStop
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
 
 COMPONENT pollambdaMonitorY =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=20, Lmin = 1, Lmax = 21, npol=41,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=20, Lmin = 1, Lmax = 21, npol=41,
 		  my=1, filename="pollambdaMonY.data")
-     AT (0, 0, 0.05) RELATIVE armLambdaStop
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
 
 COMPONENT pollambdaMonitorZ =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=20, Lmin = 1, Lmax = 21, npol=41,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=20, Lmin = 1, Lmax = 21, npol=41,
 		  mz=1, filename="pollambdaMonZ.data")
-     AT (0, 0, 0.05) RELATIVE armLambdaStop
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
 
 COMPONENT MPLMon2X =
-MeanPolLambda_monitor(xw=0.1, yh=0.1,
+MeanPollambda_monitor(xwidth=0.1, yheight=0.1,
 		      nlam=100, Lmin = 1, Lmax = 21,
 		      mx=1, my=0, mz=0, filename="MPLMon2X.data")
-     AT (0, 0, 0.10) RELATIVE armLambdaStop
+     AT (0, 0, 0.10) RELATIVE armlambdaStop
 
 COMPONENT MPLMon2Y =
-MeanPolLambda_monitor(xw=0.1, yh=0.1,
-		      nlam=100, Lmin = 1, Lmax = 21,
+MeanPollambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 1, Lmax = 21,
 		      mx=0, my=1, mz=0, filename="MPLMon2Y.data")
-     AT (0, 0, 0.10) RELATIVE armLambdaStop
+     AT (0, 0, 0.10) RELATIVE armlambdaStop
 
 COMPONENT MPLMon2Z =
-MeanPolLambda_monitor(xw=0.1, yh=0.1,
+MeanPollambda_monitor(xwidth=0.1, yheight=0.1,
 		      nlam=100, Lmin = 1, Lmax = 21,
 		      mx=0, my=0, mz=1, filename="MPLMon2Z.data")
-     AT (0, 0, 0.10) RELATIVE armLambdaStop
+     AT (0, 0, 0.10) RELATIVE armlambdaStop
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.48 $
+* Version: $Revision: 1.49 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -182,7 +182,7 @@
  */
 
 DEFINE COMPONENT Single_crystal
-DEFINITION PARAMETERS(string reflections)
+DEFINITION PARAMETERS(string reflections=0)
 SETTING PARAMETERS(xwidth, yheight, zdepth, delta_d_d=1e-4,
             mosaic = -1, mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
 	    recip_cell=0,

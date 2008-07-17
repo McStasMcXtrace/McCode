@@ -7,8 +7,8 @@
 * Written by: Peter Christiansen (peter.christiansen@risoe.dk)
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.1 $
-* %INSTRUMENT_SITE: tests
+* Version: $Revision: 1.2 $
+* %INSTRUMENT_SITE: Tests_optics
 *
 * Test that Pol_bender and Guide_curved intensities are the same. 
 *
@@ -84,12 +84,12 @@ EXTEND
   %}
 
 COMPONENT source = 
-Source_simple(radius = 0.01, dist = 1.2, xw = 0.08, yh = 0.08, Lambda0 = 5,
-	      dLambda = 4.5, flux = 1)
+Source_simple(radius = 0.01, dist = 1.2, focus_xw = 0.08, focus_yh = 0.08, lambda0 = 5,
+	      dlambda = 4.5, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT lamStart = 
-L_monitor(nchan = 20, filename = "lambdaStart.dat", xwidth = 0.10,
+L_monitor(nL = 20, filename = "lambdaStart.dat", xwidth = 0.10,
 	  yheight = 0.10, Lmin = 0.0, Lmax = 10)
      AT (0, 0, 0.1) RELATIVE Origin
 
@@ -99,58 +99,58 @@ PSD_monitor(xwidth=0.10, yheight=0.10,
      AT (0, 0, 0.15) RELATIVE Origin
 
 COMPONENT bender1 = 
-Pol_bender(xw = 0.08, yh = 0.08, length = guideLength, 
-	   radius = guideRadius, nslits=1)
+Pol_bender(xwidth = 0.08, yheight = 0.08, length = guideLength, 
+	   radius = guideRadius, nslit=1)
      WHEN (randomSwitch <= 1.0/3) AT (0, 0, 1.2) RELATIVE Origin
 
 COMPONENT bender2 = 
-Pol_bender(xw = 0.08, yh = 0.08, length = guideLength, 
-	   radius = -guideRadius, nslits=1)
+Pol_bender(xwidth = 0.08, yheight = 0.08, length = guideLength, 
+	   radius = -guideRadius, nslit=1)
      WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 1.2) RELATIVE Origin
 
 COMPONENT guide = 
-Guide_curved(w = 0.08, h = 0.08, l = guideLength, r = guideRadius)
+Guide_curved(w1 = 0.08, h1 = 0.08, l = guideLength, r = guideRadius)
      WHEN (randomSwitch > 2.0/3) AT (0, 0, 1.2) RELATIVE Origin
 
-COMPONENT armLambdaStop1 = Arm()
+COMPONENT armlambdaStop1 = Arm()
      AT (calcX(guideLength, guideRadius), 0, calcZ(guideLength, guideRadius)+1.2) 
      RELATIVE Origin
 ROTATED (0, calcAlpha(guideLength, guideRadius), 0) RELATIVE Origin
 
-COMPONENT armLambdaStop2 = Arm()
+COMPONENT armlambdaStop2 = Arm()
      AT (calcX(guideLength, -guideRadius), 0, calcZ(guideLength, -guideRadius)+1.2) 
      RELATIVE Origin
 ROTATED (0, calcAlpha(guideLength, -guideRadius), 0) RELATIVE Origin
 
 COMPONENT lamStopBender1 = 
-L_monitor(nchan = 20, filename = "lambdaStopBender1.dat", xwidth = 0.20,
+L_monitor(nL = 20, filename = "lambdaStopBender1.dat", xwidth = 0.20,
 	  yheight = 0.20, Lmin = 0.0, Lmax = 10)
-     WHEN (randomSwitch <= 1.0/3) AT (0, 0, 0.05) RELATIVE armLambdaStop1
+     WHEN (randomSwitch <= 1.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop1
 
 COMPONENT psdBender1 = 
 PSD_monitor(xwidth=0.10, yheight=0.10,
 	    nx=40, ny=40, filename="psdBender1.dat")
-     WHEN (randomSwitch <= 1.0/3) AT (0, 0, 0.05) RELATIVE armLambdaStop1
+     WHEN (randomSwitch <= 1.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop1
 
 COMPONENT lamStopBender2 = 
-L_monitor(nchan = 20, filename = "lambdaStopBender2.dat", xwidth = 0.20,
+L_monitor(nL = 20, filename = "lambdaStopBender2.dat", xwidth = 0.20,
 	  yheight = 0.20, Lmin = 0.0, Lmax = 10)
-     WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 0.05) RELATIVE armLambdaStop2
+     WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop2
 
 COMPONENT psdBender2 = 
 PSD_monitor(xwidth=0.10, yheight=0.10,
 	    nx=40, ny=40, filename="psdBender2.dat")
-     WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 0.05) RELATIVE armLambdaStop2
+     WHEN (randomSwitch > 1.0/3 && randomSwitch <= 2.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop2
 
 COMPONENT lamStopGuide = 
-L_monitor(nchan = 20, filename = "lambdaStopGuide.dat", xwidth = 0.20,
+L_monitor(nL = 20, filename = "lambdaStopGuide.dat", xwidth = 0.20,
 	  yheight = 0.20, Lmin = 0.0, Lmax = 10)
-     WHEN (randomSwitch > 2.0/3) AT (0, 0, 0.05) RELATIVE armLambdaStop1
+     WHEN (randomSwitch > 2.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop1
 
 COMPONENT psdGuide = 
 PSD_monitor(xwidth=0.10, yheight=0.10,
 	    nx=40, ny=40, filename="psdGuide.dat")
-     WHEN (randomSwitch > 2.0/3) AT (0, 0, 0.05) RELATIVE armLambdaStop1
+     WHEN (randomSwitch > 2.0/3) AT (0, 0, 0.05) RELATIVE armlambdaStop1
 
 
 /* This section is executed when the simulation ends (C code). Other    */

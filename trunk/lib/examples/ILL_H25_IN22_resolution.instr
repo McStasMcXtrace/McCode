@@ -12,7 +12,7 @@
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: ILL
 *
 * IN22 RESCAL type triple-axis machine (TAS) with resolution monitor
@@ -31,7 +31,8 @@
 *
 * Example: mcrun templateTAS.instr EN=0.5 QM=1
 * Example: mcrun templateTAS.instr A1=20.6
-* IN8 KI=2.662 L1=8.81 L2=1.8 L3=1.3 L4=0.65 QM=0.9
+* IN8  L1=8.81 L2=1.8 L3=1.3 L4=0.65
+* IN22 L1=63.0 L2=1.7 L3=1.0 L4=0.80
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -363,177 +364,177 @@ DECLARE
 
 INITIALIZE
 %{
-double Vi, Vf;
-char   anglemode = 0;
+  double Vi, Vf;
+  char   anglemode = 0;
 
-/* transfert instrument parameters for components */
-if (m)  gM = m;
-/* Element rotations = Element length / Curvature Radius * RAD2DEG */
-if (gRh) {
-  Rh_H25_1  = L_H25_1 /gRh*RAD2DEG;
-  Rh_H25_2  = L_H25_2 /gRh*RAD2DEG;
-  Rh_H25_3  = L_H25_3 /gRh*RAD2DEG;
-  Rh_H25_4  = L_H25_4 /gRh*RAD2DEG;
-  Rh_H25_5  = L_H25_5 /gRh*RAD2DEG;
-  Rh_H25_6  = L_H25_6 /gRh*RAD2DEG;
-  Rh_H25_7  = L_H25_7 /gRh*RAD2DEG;
-  Rh_H25_8  = L_H25_8 /gRh*RAD2DEG;
-}
+  /* transfert instrument parameters for components */
+  if (m)  gM = m;
+  /* Element rotations = Element length / Curvature Radius * RAD2DEG */
+  if (gRh) {
+    Rh_H25_1  = L_H25_1 /gRh*RAD2DEG;
+    Rh_H25_2  = L_H25_2 /gRh*RAD2DEG;
+    Rh_H25_3  = L_H25_3 /gRh*RAD2DEG;
+    Rh_H25_4  = L_H25_4 /gRh*RAD2DEG;
+    Rh_H25_5  = L_H25_5 /gRh*RAD2DEG;
+    Rh_H25_6  = L_H25_6 /gRh*RAD2DEG;
+    Rh_H25_7  = L_H25_7 /gRh*RAD2DEG;
+    Rh_H25_8  = L_H25_8 /gRh*RAD2DEG;
+  }
 
-printf("H25:Guide m=%g\n", gM);
+  printf("H25:Guide m=%g\n", gM);
 
-if (KFIX && FX) {
-  if      (FX == 1) KI = KFIX;
-  else if (FX == 2) KF = KFIX;
-}
+  if (KFIX && FX) {
+    if      (FX == 1) KI = KFIX;
+    else if (FX == 2) KF = KFIX;
+  }
 
-/* determine neutron energy from input */
-if (KI && !EI) {
-  Vi = K2V*fabs(KI);
-  EI = VS2E*Vi*Vi;
-}
-if (KF && !EF) {
-  Vf = K2V*fabs(KF);
-  EF = VS2E*Vf*Vf;
-}
+  /* determine neutron energy from input */
+  if (KI && !EI) {
+    Vi = K2V*fabs(KI);
+    EI = VS2E*Vi*Vi;
+  }
+  if (KF && !EF) {
+    Vf = K2V*fabs(KF);
+    EF = VS2E*Vf*Vf;
+  }
 
-machine_real.a1 = A1;
-machine_real.a2 = A2;
-machine_real.a3 = A3;
-machine_real.a4 = A4;
-machine_real.a5 = A5;
-machine_real.a6 = A6;
+  machine_real.a1 = A1;
+  machine_real.a2 = A2;
+  machine_real.a3 = A3;
+  machine_real.a4 = A4;
+  machine_real.a5 = A5;
+  machine_real.a6 = A6;
 
-if (A1 || A2 || A3 || A4 || A5 || A6) anglemode=1;
+  if (A1 || A2 || A3 || A4 || A5 || A6) anglemode=1;
 
-if (!anglemode) {
-  if (!EI && !EF)
+  if (!anglemode) {
+    if (!EI && !EF)
+        exit(fprintf(stderr,
+          "%s: ERROR: neutron beam energy is not defined (EI, EF, KI, KF)\n",
+          NAME_CURRENT_COMP));
+
+    /* energy conservation */
+    if (EI)
+      EF = EI - EN;
+    else if (EF)
+      EI = EF + EN;
+
+    /* determine remaining neutron energies */
+    if (!KI && EI) {
+      Vi = SE2V*sqrt(EI);
+      KI = V2K*Vi;
+    }
+    if (!KF && EF) {
+      Vf = SE2V*sqrt(EF);
+      KF = V2K*Vf;
+    }
+
+    if (!QM && !QH && !QK && !QL)
       exit(fprintf(stderr,
-        "%s: ERROR: neutron beam energy is not defined (EI, EF, KI, KF)\n",
+        "%s: ERROR: No Q trasnfert defined (QM, QH, QK, QL)\n",
         NAME_CURRENT_COMP));
-
-  /* energy conservation */
-  if (EI)
-    EF = EI - EN;
-  else if (EF)
-    EI = EF + EN;
-
-  /* determine remaining neutron energies */
-  if (!KI && EI) {
-    Vi = SE2V*sqrt(EI);
-    KI = V2K*Vi;
-  }
-  if (!KF && EF) {
-    Vf = SE2V*sqrt(EF);
-    KF = V2K*Vf;
   }
 
-  if (!QM && !QH && !QK && !QL)
-    exit(fprintf(stderr,
-      "%s: ERROR: No Q trasnfert defined (QM, QH, QK, QL)\n",
-      NAME_CURRENT_COMP));
-}
+  /* transfert sample parameters */
+  sample.aa = AA;
+  sample.bb = BB;
+  sample.cc = CC;
+  sample.as = AS;
+  sample.bs = BS;
+  sample.cs = CS;
+  sample.ax = AX;
+  sample.ay = AY;
+  sample.az = AZ;
+  sample.bx = BX;
+  sample.by = BY;
+  sample.bz = BZ;
 
-/* transfert sample parameters */
-sample.aa = AA;
-sample.bb = BB;
-sample.cc = CC;
-sample.as = AS;
-sample.bs = BS;
-sample.cs = CS;
-sample.ax = AX;
-sample.ay = AY;
-sample.az = AZ;
-sample.bx = BX;
-sample.by = BY;
-sample.bz = BZ;
+  /* transfert target parameters */
+  machine_hkl.ki = KI;
+  machine_hkl.kf = KF;
+  machine_hkl.ei = EI;
+  machine_hkl.ef = EF;
+  machine_hkl.qh = QH;
+  machine_hkl.qk = QK;
+  machine_hkl.ql = QL;
+  machine_hkl.en = EN;
+  machine_real.qm = QM;
 
-/* transfert target parameters */
-machine_hkl.ki = KI;
-machine_hkl.kf = KF;
-machine_hkl.ei = EI;
-machine_hkl.ef = EF;
-machine_hkl.qh = QH;
-machine_hkl.qk = QK;
-machine_hkl.ql = QL;
-machine_hkl.en = EN;
-machine_real.qm = QM;
+  if (verbose) {
+    printf("%s: Detailed TAS configuration\n", NAME_CURRENT_COMP);
+    printf("* Incoming beam: EI=%.4g [meV] KI=%.4g [Angs-1] Vi=%g [m/s]\n", EI, KI, Vi);
+    printf("* Outgoing beam: EF=%.4g [meV] KF=%.4g [Angs-1] Vf=%g [m/s]\n", EF, KF, Vf);
+  }
 
-if (verbose) {
-  printf("%s: Detailed TAS configuration\n", NAME_CURRENT_COMP);
-  printf("* Incoming beam: EI=%.4g [meV] KI=%.4g [Angs-1] Vi=%g [m/s]\n", EI, KI, Vi);
-  printf("* Outgoing beam: EF=%.4g [meV] KF=%.4g [Angs-1] Vf=%g [m/s]\n", EF, KF, Vf);
-}
+  /* transfert machine parameters */
+  machine_hkl.l1 = L1;
+  machine_hkl.l2 = L2;
+  machine_hkl.l3 = L3;
+  machine_hkl.l4 = L4;
+  machine_hkl.sm = SM;
+  machine_hkl.ss = SS;
+  machine_hkl.sa = SA;
+  machine_hkl.dm = DM;
+  machine_hkl.da = DA;
+  machine_real.rmv= RMV;
+  machine_real.rmh= RMH;
+  machine_real.rav= RAV;
+  machine_real.rah= RAH;
+  machine_hkl.etam= ETAM;
+  machine_hkl.etaa= ETAA;
+  machine_hkl.alf1= ALF1;
+  machine_hkl.alf2= ALF2;
+  machine_hkl.alf3= ALF3;
+  machine_hkl.alf4= ALF4;
+  machine_hkl.bet1= BET1;
+  machine_hkl.bet2= BET2;
+  machine_hkl.bet3= BET3;
+  machine_hkl.bet4= BET4;
 
-/* transfert machine parameters */
-machine_hkl.l1 = L1;
-machine_hkl.l2 = L2;
-machine_hkl.l3 = L3;
-machine_hkl.l4 = L4;
-machine_hkl.sm = SM;
-machine_hkl.ss = SS;
-machine_hkl.sa = SA;
-machine_hkl.dm = DM;
-machine_hkl.da = DA;
-machine_real.rmv= RMV;
-machine_real.rmh= RMH;
-machine_real.rav= RAV;
-machine_real.rah= RAH;
-machine_hkl.etam= ETAM;
-machine_hkl.etaa= ETAA;
-machine_hkl.alf1= ALF1;
-machine_hkl.alf2= ALF2;
-machine_hkl.alf3= ALF3;
-machine_hkl.alf4= ALF4;
-machine_hkl.bet1= BET1;
-machine_hkl.bet2= BET2;
-machine_hkl.bet3= BET3;
-machine_hkl.bet4= BET4;
+  /* geometry tests w/r to collimator lengths */
+  if (machine_hkl.l1 <= 5.34)
+    exit(fprintf(stderr, "%s: ERROR: L1 too short. Min=5.34\n", NAME_CURRENT_COMP));
 
-/* geometry tests w/r to collimator lengths */
-if (machine_hkl.l1 <= 5.34)
-  exit(fprintf(stderr, "%s: ERROR: L1 too short. Min=5.34\n", NAME_CURRENT_COMP));
+  if (machine_hkl.l2 <= 0.35)
+    exit(fprintf(stderr, "%s: ERROR: L2 too short. Min=0.35\n", NAME_CURRENT_COMP));
 
-if (machine_hkl.l2 <= 0.35)
-  exit(fprintf(stderr, "%s: ERROR: L2 too short. Min=0.35\n", NAME_CURRENT_COMP));
+  if (machine_hkl.l3 <= 0.40)
+    exit(fprintf(stderr, "%s: ERROR: L3 too short. Min=0.40\n", NAME_CURRENT_COMP));
 
-if (machine_hkl.l3 <= 0.40)
-  exit(fprintf(stderr, "%s: ERROR: L3 too short. Min=0.40\n", NAME_CURRENT_COMP));
+  if (machine_hkl.l4 <= 0.24)
+    exit(fprintf(stderr, "%s: ERROR: L4 too short. Min=0.24\n", NAME_CURRENT_COMP));
 
-if (machine_hkl.l4 <= 0.24)
-  exit(fprintf(stderr, "%s: ERROR: L4 too short. Min=0.24\n", NAME_CURRENT_COMP));
+  if (!anglemode) {
+    machine_real = qhkl2angles(sample, machine_hkl, machine_real);
+    if (strlen(machine_real.message))
+      exit(fprintf(stderr, "%s: ERROR: %s [qhkl2angles]\n",
+        NAME_CURRENT_COMP, machine_real.message));
+  }
 
-if (!anglemode) {
-  machine_real = qhkl2angles(sample, machine_hkl, machine_real);
-  if (strlen(machine_real.message))
-    exit(fprintf(stderr, "%s: ERROR: %s [qhkl2angles]\n",
-      NAME_CURRENT_COMP, machine_real.message));
-}
+  /* compute optimal curvatures */
+  double L;
+  L = 1/(1/L1+1/L2);
+  if (RMV < 0) machine_real.rmv = 2*L*sin(DEG2RAD*machine_real.a1);
+  if (RMH < 0) machine_real.rmh = 2*L/sin(DEG2RAD*machine_real.a1);
+  L = 1/(1/L3+1/L4);
+  if (RAV < 0) machine_real.rav = 2*L*sin(DEG2RAD*machine_real.a5);
+  if (RAH < 0) machine_real.rah = 2*L/sin(DEG2RAD*machine_real.a5);
 
-/* compute optimal curvatures */
-double L;
-L = 1/(1/L1+1/L2);
-if (RMV < 0) machine_real.rmv = 2*L*sin(DEG2RAD*machine_real.a1);
-if (RMH < 0) machine_real.rmh = 2*L/sin(DEG2RAD*machine_real.a1);
-L = 1/(1/L3+1/L4);
-if (RAV < 0) machine_real.rav = 2*L*sin(DEG2RAD*machine_real.a5);
-if (RAH < 0) machine_real.rah = 2*L/sin(DEG2RAD*machine_real.a5);
-
-if (verbose) {
-  printf("* Transfert:     EN=%g [meV] QM=%g [Angs-1]\n", EN, machine_real.qm);
-  printf("Angles: A1=%.4g A2=%.4g A3=%.4g A4=%.4g A5=%.4g A2.6626=%.4g [deg]\n",
-    machine_real.a1, machine_real.a2,
-    machine_real.a3, machine_real.a4,
-    machine_real.a5, machine_real.a6);
-  printf("Monochromator: DM=%.4g [Angs] RMH=%.4g [m] RMV=%.4g [m] %s\n",
-    machine_hkl.dm, machine_real.rmh, machine_real.rmv,
-    (!machine_real.rmh && !machine_real.rmv ? "flat" : "cur2.662ved"));
-  printf("Analyzer:      DA=%.4g [Angs] RAH=%.4g [m] RAV=%.4g [m] %s\n",
-    machine_hkl.da, machine_real.rah, machine_real.rav,
-    (!machine_real.rah && !machine_real.rav ? "flat" : "curved"));
-  printf("%s: sample is %s, with %s%s geometry.\n",
-    NAME_CURRENT_COMP, "Resolution", thickness ? "hollow " : "", "cylindrical");
-}
+  if (verbose) {
+    printf("* Transfert:     EN=%g [meV] QM=%g [Angs-1]\n", EN, machine_real.qm);
+    printf("Angles: A1=%.4g A2=%.4g A3=%.4g A4=%.4g A5=%.4g A2.6626=%.4g [deg]\n",
+      machine_real.a1, machine_real.a2,
+      machine_real.a3, machine_real.a4,
+      machine_real.a5, machine_real.a6);
+    printf("Monochromator: DM=%.4g [Angs] RMH=%.4g [m] RMV=%.4g [m] %s\n",
+      machine_hkl.dm, machine_real.rmh, machine_real.rmv,
+      (!machine_real.rmh && !machine_real.rmv ? "flat" : "cur2.662ved"));
+    printf("Analyzer:      DA=%.4g [Angs] RAH=%.4g [m] RAV=%.4g [m] %s\n",
+      machine_hkl.da, machine_real.rah, machine_real.rav,
+      (!machine_real.rah && !machine_real.rav ? "flat" : "curved"));
+    printf("%s: sample is %s, with %s%s geometry.\n",
+      NAME_CURRENT_COMP, "Resolution", thickness ? "hollow " : "", "cylindrical");
+  }
 %}
 /* end of INITIALIZE */
 
@@ -544,11 +545,11 @@ COMPONENT Origin = Progress_bar(percent=5)
   
 /* H25 Guide description */
 COMPONENT Thermal = Source_gen(
-  h        = 0.22,
-  w        = 0.14,
+  yheight  = 0.22,
+  xwidth   = 0.14,
   dist     = 2.38+0.8,
-  xw       = 0.038,
-  yh       = 0.2,
+  focus_xw = 0.038,
+  focus_yh = 0.2,
   E0 = machine_hkl.ei,
   dE = machine_hkl.ei*0.03,
   T1       = sT1,
@@ -580,11 +581,11 @@ AT (0,0,0.8+2.5+gGap) RELATIVE PinkCarter
 /* ******************** swiming pool guide ******************** */
 
 /* H25-1: L=3.5 m in 4 elements R horiz=-9000 m. start at 0 m from Lead Shutter */
-COMPONENT H25_1_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_1_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.230) RELATIVE LeadShutter
 
 COMPONENT H25_1 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_1,
+  w1=0.03, h1=0.2, l=L_H25_1,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_1,0) RELATIVE PREVIOUS
 
@@ -597,15 +598,15 @@ AT (0,0,L_H25_1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_1,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_1) = COPY(H25_1)
 AT (0,0,L_H25_1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_1,0) RELATIVE PREVIOUS
 
-COMPONENT H25_1_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_1_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_1+gGap) RELATIVE PREVIOUS
 
 /* H25-2: L=2.5 m in 3 elements R horiz=-9000 m start at 3.5 m from Lead Shutter */
-COMPONENT H25_2_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_2_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_2 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_2,
+  w1=0.03, h1=0.2, l=L_H25_2,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_2,0) RELATIVE PREVIOUS
 
@@ -615,17 +616,17 @@ AT (0,0,L_H25_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_2,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_2) = COPY(H25_2)
 AT (0,0,L_H25_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_2,0) RELATIVE PREVIOUS
 
-COMPONENT H25_2_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_2_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_2+gGap) RELATIVE PREVIOUS
 
 /* gap 0.148 m (VS) */
 
 /* H25-3: L=9.5 m in 10 elements Rh=-9000 m. start at 6 m from Lead Shutter */
-COMPONENT H25_3_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_3_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.148) RELATIVE PREVIOUS
 
 COMPONENT H25_3 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_3,
+  w1=0.03, h1=0.2, l=L_H25_3,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_3,0) RELATIVE PREVIOUS
 
@@ -656,17 +657,17 @@ AT (0,0,L_H25_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_3,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_3) = COPY(H25_3)
 AT (0,0,L_H25_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_3,0) RELATIVE PREVIOUS
 
-COMPONENT H25_3_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_3_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_3+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
 
 /* H25-4: L=7 m in 7 elements Rh=-9000 m. start at 15.5 m from Lead Shutter */
-COMPONENT H25_4_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_4_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_4 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_4,
+  w1=0.03, h1=0.2, l=L_H25_4,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_4,0) RELATIVE PREVIOUS
 
@@ -688,17 +689,17 @@ AT (0,0,L_H25_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_4,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_4) = COPY(H25_4)
 AT (0,0,L_H25_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_4,0) RELATIVE PREVIOUS
 
-COMPONENT H25_4_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_4_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_4+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
 
 /* H25-5: L=4.75 m in 5 elements Rh=-9000 m. start at 22.5 m from Lead Shutter */
-COMPONENT H25_5_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_5_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_5 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_5,
+  w1=0.03, h1=0.2, l=L_H25_5,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_5,0) RELATIVE PREVIOUS
 
@@ -714,17 +715,17 @@ AT (0,0,L_H25_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_5,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_5) = COPY(H25_5)
 AT (0,0,L_H25_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_5,0) RELATIVE PREVIOUS
 
-COMPONENT H25_5_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_5_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_5+gGap) RELATIVE PREVIOUS
 
 /* gap 0.109 mm OT1 H25 */
 
 /* H25-6: L=10 m in 10 elements Rh=-9000 m. start at 27.25 m from Lead Shutter */
-COMPONENT OT1_H25 = Al_window(win_thick=Al_Thickness)
+COMPONENT OT1_H25 = Al_window(thickness=Al_Thickness)
 AT (0,0,0.109) RELATIVE PREVIOUS
 
 COMPONENT H25_6 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_6,
+  w1=0.03, h1=0.2, l=L_H25_6,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_6,0) RELATIVE PREVIOUS
 
@@ -755,17 +756,17 @@ AT (0,0,L_H25_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_6,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_6) = COPY(H25_6)
 AT (0,0,L_H25_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_6,0) RELATIVE PREVIOUS
 
-COMPONENT H25_6_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_6_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_6+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
 
 /* H25-7: L=10 m in 10 elements Rh=-9000 m. start at 37.25 m from Lead Shutter */
-COMPONENT H25_7_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_7_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_7 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_7,
+  w1=0.03, h1=0.2, l=L_H25_7,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_7,0) RELATIVE PREVIOUS
 
@@ -796,15 +797,15 @@ AT (0,0,L_H25_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_7,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_7) = COPY(H25_7)
 AT (0,0,L_H25_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_7,0) RELATIVE PREVIOUS
 
-COMPONENT H25_7_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_7_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_7+gGap) RELATIVE PREVIOUS
 
 /* H25-8: L=5.0 m in 5 elements Rh=-9000 m. start at 47.25 m from Lead Shutter */
-COMPONENT H25_8_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_8_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_8 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_8,
+  w1=0.03, h1=0.2, l=L_H25_8,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_8,0) RELATIVE PREVIOUS
 
@@ -820,17 +821,17 @@ AT (0,0,L_H25_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_8,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_8) = COPY(H25_8)
 AT (0,0,L_H25_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_8,0) RELATIVE PREVIOUS
 
-COMPONENT H25_8_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_8_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_8+gGap) RELATIVE PREVIOUS
 
 /* Mono S18 + OS S18 only on lower part (80 mm) */
 
 /* H25-9: L=5.7 m in 6 elements Rh=-9000 m. start at 52.25 m from Lead Shutter */
-COMPONENT H25_9_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_9_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_9 = Guide_gravity(
-  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H25_9,
+  w1=0.03, h1=0.2, l=L_H25_9,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gM, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_9,0) RELATIVE PREVIOUS
 
@@ -849,13 +850,13 @@ AT (0,0,L_H25_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_9,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_9) = COPY(H25_9)
 AT (0,0,L_H25_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_9,0) RELATIVE PREVIOUS
 
-COMPONENT H25_9_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_9_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_9+gGap) RELATIVE PREVIOUS
 
 /* Mono D23 + OS D23 only on lower part (80 mm) + beam stop */
 
 /* H25-10: L=4.7 m in 5 elements Rh=-9000 m. start at 58 m from Lead Shutter */
-COMPONENT H25_10_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_10_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_10 = Guide_gravity(
@@ -875,7 +876,7 @@ AT (0,0,L_H25_10+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_10,0) RELATIVE PREVIO
 COMPONENT COPY(H25_10) = COPY(H25_10)
 AT (0,0,L_H25_10+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_10,0) RELATIVE PREVIOUS
 
-COMPONENT H25_10_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_10_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_10+gGap) RELATIVE PREVIOUS
 
 /* gap 0.3 m */
@@ -943,13 +944,12 @@ COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
 
 /* vertical 3He Detector */
 COMPONENT He3res=Res_monitor(filename="Output.res", res_sample_comp=Sample,
-          xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1)
+          xwidth=0.1, yheight=0.1)
 AT (0, 0, machine_hkl.l4) RELATIVE Ana_Out
 
 /* vertical 3He Detector */
 COMPONENT He3H = Monitor_nD(
-  xmin = -0.025400, xmax = 0.025400,
-  ymin = -0.042850, ymax = 0.042850,
+  xwidth = 0.508, yheight = 0.0857,
   bins=20, options="x y, parallel")
 AT (0, 0, machine_hkl.l4) RELATIVE Ana_Out
 

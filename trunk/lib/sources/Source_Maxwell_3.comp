@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: March 2001
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -32,17 +32,19 @@
 * %P
 * Input parameters:
 *
-* height: (m)    Height of rectangular source
-* width:  (m)    Width of rectangular source
-* l_low:  (AA)   Lower edge of lambda distribution
-* l_high: (AA)   Upper edge of lambda distribution
-* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
-* xw:     (m)    Width of focusing rectangle
-* yh:     (m)    Height of focusing rectangle
+* yheight: (m)   Height of rectangular source
+* xwidth:  (m)   Width of rectangular source
+* Lmin:    (AA)  Lower edge of lambda distribution
+* Lmax:    (AA)  Upper edge of lambda distribution
+* target_index:(1) relative index of component to focus at, e.g. next is +1
+*                    this is used to compute 'dist' automatically.
+* focus_xw:(m)    Width of focusing rectangle
+* focus_yh:(m)    Height of focusing rectangle
 * T1:     (K)    1st temperature of thermal distribution
 * I1:     (*)    l-integrated flux, 1 (in flux units, see above)
 *
 * Optional parameters:
+* dist:   (m)    Distance from source to focusing rectangle; at (0,0,dist)
 * T2:     (K)    2nd temperature of thermal distribution
 * T3:     (K)    3nd temperature of  - - -
 * I2:     (*)    l-integrated flux, 2 (in flux units, see above)
@@ -54,8 +56,8 @@
 
 DEFINE COMPONENT Source_Maxwell_3
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (size=0, height=0, width=0, l_low, l_high, dist, xw, yh,
-                    T1, T2=300, T3=300, I1, I2=0, I3=0)
+SETTING PARAMETERS (size=0, yheight=0, xwidth=0, Lmin, Lmax, dist, focus_xw, focus_yh,
+                    T1, T2=300, T3=300, I1, I2=0, I3=0, int target_index=+1)
 OUTPUT PARAMETERS (M,l_range,w_mult,w_source,h_source)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -66,7 +68,6 @@ DECLARE
 
   double M(double l, double temp)
 /* A normalised Maxwellian distribution : Integral over all l = 1 */
-/* TODO: Should go into the kernel */
     {
       double a=949.0/temp;
       return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
@@ -76,18 +77,28 @@ DECLARE
 
 INITIALIZE
 %{
+  if (target_index && !dist)
+  {
+    Coords ToTarget;
+    double tx,ty,tz;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+    dist=sqrt(tx*tx+ty*ty+tz*tz);
+  }
+  
   if (size>0) {
     w_source = h_source = size;
   } else {
-    w_source = width;
-    h_source = height;
+    w_source = xwidth;
+    h_source = yheight;
   }
-  l_range = l_high-l_low;
+  l_range = Lmax-Lmin;
   w_mult = w_source*h_source*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1/mcget_ncount();   /* correct for # neutron rays */
 
-  if (w_source <0 || h_source < 0 || l_low <= 0 || l_high <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0) {
+  if (w_source <0 || h_source < 0 || Lmin <= 0 || Lmax <= 0 || dist <= 0 || T1 <= 0 || T2 <= 0|| T3 <= 0) {
       printf("Source_Maxwell_3: %s: Error in input parameter values!\n"
              "ERROR          Exiting\n",
            NAME_CURRENT_COMP);
@@ -105,13 +116,13 @@ TRACE
   y = 0.5*h_source*randpm1();         /* Choose initial position */
 
   randvec_target_rect_real(&xf, &yf, &r, &w_focus,
-		      0, 0, dist, xw, yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+		      0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
 
   dx = xf-x;
   dy = yf-y;
   r = sqrt(dx*dx+dy*dy+dist*dist);
 
-  lambda = l_low+l_range*rand01();    /* Choose from uniform distribution */
+  lambda = Lmin+l_range*rand01();    /* Choose from uniform distribution */
   k = 2*PI/lambda;
   v = K2V*k;
 
@@ -132,11 +143,17 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
-  multiline(5, -(double)xw/2.0, -(double)yh/2.0, 0.0,
-                (double)xw/2.0, -(double)yh/2.0, 0.0,
-                (double)xw/2.0,  (double)yh/2.0, 0.0,
-               -(double)xw/2.0,  (double)yh/2.0, 0.0,
-               -(double)xw/2.0, -(double)yh/2.0, 0.0);
+  multiline(5, -(double)focus_xw/2.0, -(double)focus_yh/2.0, 0.0,
+                (double)focus_xw/2.0, -(double)focus_yh/2.0, 0.0,
+                (double)focus_xw/2.0,  (double)focus_yh/2.0, 0.0,
+               -(double)focus_xw/2.0,  (double)focus_yh/2.0, 0.0,
+               -(double)focus_xw/2.0, -(double)focus_yh/2.0, 0.0);
+  if (dist) {
+    dashed_line(0,0,0, -focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2,-focus_yh/2,dist, 4);
+    dashed_line(0,0,0,  focus_xw/2, focus_yh/2,dist, 4);
+    dashed_line(0,0,0, -focus_xw/2, focus_yh/2,dist, 4);
+  }
 %}
 
 END

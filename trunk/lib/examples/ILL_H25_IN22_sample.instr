@@ -12,7 +12,7 @@
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: ILL
 *
 * IN22 RESCAL type triple-axis machine (TAS) with sample/container/environment
@@ -569,11 +569,11 @@ COMPONENT Origin = Progress_bar(percent=5)
   
 /* H25 Guide description */
 COMPONENT Thermal = Source_gen(
-  h        = 0.22,
-  w        = 0.14,
+  yheight  = 0.22,
+  xwidth   = 0.14,
   dist     = 2.38+0.8,
-  xw       = 0.038,
-  yh       = 0.2,
+  focus_xw = 0.038,
+  focus_yh = 0.2,
   E0 = machine_hkl.ei,
   dE = machine_hkl.ei*0.03,
   T1       = sT1,
@@ -605,7 +605,7 @@ AT (0,0,0.8+2.5+gGap) RELATIVE PinkCarter
 /* ******************** swiming pool guide ******************** */
 
 /* H25-1: L=3.5 m in 4 elements R horiz=-9000 m. start at 0 m from Lead Shutter */
-COMPONENT H25_1_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_1_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.230) RELATIVE LeadShutter
 
 COMPONENT H25_1 = Guide_gravity(
@@ -622,11 +622,11 @@ AT (0,0,L_H25_1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_1,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_1) = COPY(H25_1)
 AT (0,0,L_H25_1+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_1,0) RELATIVE PREVIOUS
 
-COMPONENT H25_1_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_1_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_1+gGap) RELATIVE PREVIOUS
 
 /* H25-2: L=2.5 m in 3 elements R horiz=-9000 m start at 3.5 m from Lead Shutter */
-COMPONENT H25_2_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_2_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_2 = Guide_gravity(
@@ -640,13 +640,13 @@ AT (0,0,L_H25_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_2,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_2) = COPY(H25_2)
 AT (0,0,L_H25_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_2,0) RELATIVE PREVIOUS
 
-COMPONENT H25_2_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_2_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_2+gGap) RELATIVE PREVIOUS
 
 /* gap 0.148 m (VS) */
 
 /* H25-3: L=9.5 m in 10 elements Rh=-9000 m. start at 6 m from Lead Shutter */
-COMPONENT H25_3_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_3_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.148) RELATIVE PREVIOUS
 
 COMPONENT H25_3 = Guide_gravity(
@@ -681,13 +681,13 @@ AT (0,0,L_H25_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_3,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_3) = COPY(H25_3)
 AT (0,0,L_H25_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_3,0) RELATIVE PREVIOUS
 
-COMPONENT H25_3_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_3_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_3+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
 
 /* H25-4: L=7 m in 7 elements Rh=-9000 m. start at 15.5 m from Lead Shutter */
-COMPONENT H25_4_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_4_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_4 = Guide_gravity(
@@ -713,13 +713,13 @@ AT (0,0,L_H25_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_4,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_4) = COPY(H25_4)
 AT (0,0,L_H25_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_4,0) RELATIVE PREVIOUS
 
-COMPONENT H25_4_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_4_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_4+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
 
 /* H25-5: L=4.75 m in 5 elements Rh=-9000 m. start at 22.5 m from Lead Shutter */
-COMPONENT H25_5_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_5_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_5 = Guide_gravity(
@@ -739,13 +739,13 @@ AT (0,0,L_H25_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_5,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_5) = COPY(H25_5)
 AT (0,0,L_H25_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_5,0) RELATIVE PREVIOUS
 
-COMPONENT H25_5_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_5_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_5+gGap) RELATIVE PREVIOUS
 
 /* gap 0.109 mm OT1 H25 */
 
 /* H25-6: L=10 m in 10 elements Rh=-9000 m. start at 27.25 m from Lead Shutter */
-COMPONENT OT1_H25 = Al_window(win_thick=Al_Thickness)
+COMPONENT OT1_H25 = Al_window(thickness=Al_Thickness)
 AT (0,0,0.109) RELATIVE PREVIOUS
 
 COMPONENT H25_6 = Guide_gravity(
@@ -780,13 +780,13 @@ AT (0,0,L_H25_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_6,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_6) = COPY(H25_6)
 AT (0,0,L_H25_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_6,0) RELATIVE PREVIOUS
 
-COMPONENT H25_6_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_6_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_6+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
 
 /* H25-7: L=10 m in 10 elements Rh=-9000 m. start at 37.25 m from Lead Shutter */
-COMPONENT H25_7_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_7_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_7 = Guide_gravity(
@@ -821,11 +821,11 @@ AT (0,0,L_H25_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_7,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_7) = COPY(H25_7)
 AT (0,0,L_H25_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_7,0) RELATIVE PREVIOUS
 
-COMPONENT H25_7_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_7_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_7+gGap) RELATIVE PREVIOUS
 
 /* H25-8: L=5.0 m in 5 elements Rh=-9000 m. start at 47.25 m from Lead Shutter */
-COMPONENT H25_8_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_8_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_8 = Guide_gravity(
@@ -845,13 +845,13 @@ AT (0,0,L_H25_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_8,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_8) = COPY(H25_8)
 AT (0,0,L_H25_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_8,0) RELATIVE PREVIOUS
 
-COMPONENT H25_8_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_8_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_8+gGap) RELATIVE PREVIOUS
 
 /* Mono S18 + OS S18 only on lower part (80 mm) */
 
 /* H25-9: L=5.7 m in 6 elements Rh=-9000 m. start at 52.25 m from Lead Shutter */
-COMPONENT H25_9_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_9_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_9 = Guide_gravity(
@@ -874,13 +874,13 @@ AT (0,0,L_H25_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_9,0) RELATIVE PREVIOUS
 COMPONENT COPY(H25_9) = COPY(H25_9)
 AT (0,0,L_H25_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_9,0) RELATIVE PREVIOUS
 
-COMPONENT H25_9_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_9_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_9+gGap) RELATIVE PREVIOUS
 
 /* Mono D23 + OS D23 only on lower part (80 mm) + beam stop */
 
 /* H25-10: L=4.7 m in 5 elements Rh=-9000 m. start at 58 m from Lead Shutter */
-COMPONENT H25_10_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_10_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0.03) RELATIVE PREVIOUS
 
 COMPONENT H25_10 = Guide_gravity(
@@ -900,7 +900,7 @@ AT (0,0,L_H25_10+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_10,0) RELATIVE PREVIO
 COMPONENT COPY(H25_10) = COPY(H25_10)
 AT (0,0,L_H25_10+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H25_10,0) RELATIVE PREVIOUS
 
-COMPONENT H25_10_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H25_10_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H25_10+gGap) RELATIVE PREVIOUS
 
 /* gap 0.3 m */

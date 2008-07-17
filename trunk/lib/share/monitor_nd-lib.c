@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.41 $
+* Version: $Revision: 1.42 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.41 2008-07-01 20:28:13 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.42 2008-07-17 12:50:18 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.41  2008/07/01 20:28:13  farhi
+* Fixed zthick -> zdepth
+*
 * Revision 1.40  2008/07/01 19:50:23  farhi
 * Common naming convention for components:
 *   xwidth, yheight, zdepth, radius, thickness
@@ -222,7 +225,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_DEFS->COORD_FIL    =4;    /* next mc_mn_token is a filename */
     mc_mn_DEFS->COORD_EVNT   =5;    /* next mc_mn_token is a buffer size value */
     mc_mn_DEFS->COORD_3HE    =6;    /* next mc_mn_token is a 3He pressure value */
-    mc_mn_DEFS->COORD_INTERM =7;    /* next mc_mn_token is an intermediate save value (%) */
     mc_mn_DEFS->COORD_LOG    =32;   /* next variable will be in log scale */
     mc_mn_DEFS->COORD_ABS    =64;   /* next variable will be in abs scale */
     mc_mn_DEFS->COORD_SIGNAL =128;  /* next variable will be the signal var */
@@ -261,7 +263,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_Vars->UserVariable1     = 0;
     mc_mn_Vars->UserVariable2     = 0;
     mc_mn_Vars->He3_pressure      = 0;
-    mc_mn_Vars->IntermediateCnts  = 0;
     mc_mn_Vars->Flag_capture      = 0;
     mc_mn_Vars->Flag_signal       = mc_mn_DEFS->COORD_P;
     mc_mn_Vars->mean_dx=mc_mn_Vars->mean_dy=0;
@@ -391,11 +392,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
             mc_mn_Vars->He3_pressure = atof(mc_mn_token);
             mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_INTERM)
-        {
-            mc_mn_Vars->Intermediate = atof(mc_mn_token);
-            mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
-        }
 
         /* now look for general option keywords */
         if (!strcmp(mc_mn_token, "borders"))  {mc_mn_Vars->Flag_With_Borders = 1; mc_mn_iskeyword=1; }
@@ -437,9 +433,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
           mc_mn_Vars->Flag_UsePreMonitor = 1; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "3He_pressure")) {
           mc_mn_Vars->He3_pressure = 3; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "intermediate")) {
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_INTERM;
-          mc_mn_Vars->Intermediate = 5; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "no") || !strcmp(mc_mn_token, "not")) { mc_mn_Flag_No = 1;  mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "signal")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_SIGNAL;
 
@@ -793,10 +786,6 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       printf("Monitor_nD: %s is unactivated (0D)\n", mc_mn_Vars->compcurname);
     mc_mn_Vars->Cylinder_Height = fabs(mc_mn_Vars->mymax - mc_mn_Vars->mymin);
 
-    if (mc_mn_Vars->Intermediate < 0) mc_mn_Vars->Intermediate = 0;
-    if (mc_mn_Vars->Intermediate > 1) mc_mn_Vars->Intermediate /= 100;
-    mc_mn_Vars->IntermediateCnts = mc_mn_Vars->Intermediate*mcget_ncount();
-
     if (mc_mn_Vars->Flag_Verbose)
     {
       printf("Monitor_nD: %s is a %s.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Monitor_Label);
@@ -1125,10 +1114,6 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
         atan(mc_mn_Vars->mean_dx/mc_mn_Vars->mean_p)*RAD2DEG,
         atan(mc_mn_Vars->mean_dy/mc_mn_Vars->mean_p)*RAD2DEG);
 
-    if (mc_mn_ratio < 99)
-    {
-      if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s save intermediate results (%.2f %%).\n", mc_mn_Vars->compcurname, mc_mn_ratio);
-    }
     /* check Buffer flush when end of simulation reached */
     if ((mc_mn_Vars->Buffer_Counter <= mc_mn_Vars->Buffer_Block) && mc_mn_Vars->Flag_Auto_Limits && mc_mn_Vars->Mon2D_Buffer && mc_mn_Vars->Buffer_Counter)
     {

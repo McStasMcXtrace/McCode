@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H142 S-curved cold guide at the ILL
@@ -41,7 +41,7 @@ DECLARE
 double sT1=216.8,sI1=1.24e+13;
 double sT2=33.9, sI2=1.02e+13;
 double sT3=16.7 ,sI3=3.0423e+12;
-double sLambda;
+double slambda;
 /* guide coating parameters */
 double gR0          = 1;
 double gQc          = 0.021;
@@ -80,7 +80,7 @@ INITIALIZE
 
 if (H)  gH = H;
 if (m)  gMvalue = m;
-if (lambda) sLambda = lambda;
+if (lambda) slambda = lambda;
 
 
 /* Element rotations = Element length / Curvature Radius * RAD2DEG */
@@ -115,13 +115,13 @@ COMPONENT Origin = Arm()
 
 
 COMPONENT VCS = Source_gen(
-  h        = 0.22,
-  w        = 0.14,
+  yheight  = 0.22,
+  xwidth   = 0.14,
   dist     = 2.525,
-  xw       = 0.038,
-  yh       = 0.2,
-  Lmin     = sLambda*(1-dl_percent/100/2),
-  Lmax     = sLambda*(1+dl_percent/100/2),
+  focus_xw = 0.038,
+  focus_yh = 0.2,
+  Lmin     = slambda*(1-dl_percent/100/2),
+  Lmax     = slambda*(1+dl_percent/100/2),
   T1       = sT1,
   I1       = sI1,
   T2       = sT2,
@@ -131,19 +131,19 @@ COMPONENT VCS = Source_gen(
   verbose  = 1)
   AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT Al_window1 = Al_window(win_thick=Al_Thickness)
+COMPONENT Al_window1 = Al_window(thickness=Al_Thickness)
 AT (0,0,0.21) RELATIVE VCS
 
-COMPONENT Al_window2 = Al_window(win_thick=Al_Thickness)
+COMPONENT Al_window2 = Al_window(thickness=Al_Thickness)
 AT (0,0,0.61) RELATIVE VCS
 
-COMPONENT Al_window3 = Al_window(win_thick=Al_Thickness)
+COMPONENT Al_window3 = Al_window(thickness=Al_Thickness)
 AT (0,0,0.78) RELATIVE VCS
 
-COMPONENT Al_window4 = Al_window(win_thick=Al_Thickness)
+COMPONENT Al_window4 = Al_window(thickness=Al_Thickness)
 AT (0,0,0.92) RELATIVE VCS
 
-COMPONENT Al_window5 = Al_window(win_thick=Al_Thickness)
+COMPONENT Al_window5 = Al_window(thickness=Al_Thickness)
 AT (0,0,2.43) RELATIVE VCS
 
 /* H142-1: L=3.17 m in 1 element. no curvature */
@@ -185,7 +185,7 @@ COMPONENT Mon_2_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_2_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_2_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_2_1 = Guide_gravity(
@@ -218,7 +218,7 @@ COMPONENT H142_2_6 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_2,0) RELATIVE PREVIOUS
 
-COMPONENT H142_2_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_2_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_2+gGap) RELATIVE PREVIOUS
 
 /* gap 0.198 m (VS) */
@@ -248,7 +248,7 @@ COMPONENT Mon_3_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_3_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_3_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_3_1 = Guide_gravity(
@@ -301,7 +301,7 @@ COMPONENT H142_3_10 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_3,0) RELATIVE PREVIOUS
 
-COMPONENT H142_3_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_3_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_3+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
@@ -331,7 +331,7 @@ COMPONENT Mon_4_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_4_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_4_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_4_1 = Guide_gravity(
@@ -369,7 +369,7 @@ COMPONENT H142_4_7 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_4,0) RELATIVE PREVIOUS
 
-COMPONENT H142_4_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_4_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_4+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
@@ -399,7 +399,7 @@ COMPONENT Mon_5_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_5_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_5_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_5_1 = Guide_gravity(
@@ -427,7 +427,7 @@ COMPONENT H142_5_5 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_5,0) RELATIVE PREVIOUS
 
-COMPONENT H142_5_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_5_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_5+gGap) RELATIVE PREVIOUS
 
 /* gap .330 m (VTE) */
@@ -459,7 +459,7 @@ COMPONENT Mon_6_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_6_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_6_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_6_1 = Guide_gravity(
@@ -512,7 +512,7 @@ COMPONENT H142_6_10 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_6,0) RELATIVE PREVIOUS
 
-COMPONENT H142_6_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_6_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_6+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
@@ -542,7 +542,7 @@ COMPONENT Mon_7_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_7_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_7_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_7_1 = Guide_gravity(
@@ -595,7 +595,7 @@ COMPONENT H142_7_10 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_7,0) RELATIVE PREVIOUS
 
-COMPONENT H142_7_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_7_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_7+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
@@ -625,7 +625,7 @@ COMPONENT Mon_8_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_8_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_8_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_8_1 = Guide_gravity(
@@ -678,7 +678,7 @@ COMPONENT H142_8_10 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_8,0) RELATIVE PREVIOUS
 
-COMPONENT H142_8_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_8_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_8+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
@@ -708,7 +708,7 @@ COMPONENT Mon_9_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_9_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_9_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_9_1 = Guide_gravity(
@@ -761,7 +761,7 @@ COMPONENT H142_9_10 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_9+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_9,0) RELATIVE PREVIOUS
 
-COMPONENT H142_9_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_9_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_9+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
@@ -791,7 +791,7 @@ COMPONENT Mon_10_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_10_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_10_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_10_1 = Guide_gravity(
@@ -844,7 +844,7 @@ COMPONENT H142_10_10 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_10+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_10,0) RELATIVE PREVIOUS
 
-COMPONENT H142_10_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_10_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_10+gGap) RELATIVE PREVIOUS
 
 /* gap 0.03 m */
@@ -874,7 +874,7 @@ COMPONENT Mon_11_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_11_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_11_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_11_1 = Guide_gravity(
@@ -927,7 +927,7 @@ COMPONENT H142_11_10 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_11+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_11,0) RELATIVE PREVIOUS
 
-COMPONENT H142_11_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_11_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_11+gGap) RELATIVE PREVIOUS
 
 /* Here IN12 position. Gap .300 */
@@ -957,7 +957,7 @@ COMPONENT Mon_12_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_12_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_12_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_12_1 = Guide_gravity(
@@ -990,7 +990,7 @@ COMPONENT H142_12_6 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_12+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_12,0) RELATIVE PREVIOUS
 
-COMPONENT H142_12_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_12_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_12+gGap) RELATIVE PREVIOUS
 
 /* Here T16/T3 position. Gap .300 */
@@ -1020,7 +1020,7 @@ COMPONENT Mon_13_L = Monitor_nD(
   options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT H142_13_In = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_13_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_13_1 = Guide_gravity(
@@ -1033,7 +1033,7 @@ COMPONENT H142_13_2 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,L_H142_13+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H142_13,0) RELATIVE PREVIOUS
 
-COMPONENT H142_13_Out = Al_window(win_thick=Al_Thickness)
+COMPONENT H142_13_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H142_13+gGap) RELATIVE PREVIOUS
 
 /* LADI position */

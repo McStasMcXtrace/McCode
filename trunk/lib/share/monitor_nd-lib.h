@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions.
@@ -20,9 +20,13 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.17 2008-04-01 09:15:04 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.18 2008-07-17 12:50:18 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.17  2008/04/01 09:15:04  farhi
+* Monitor_nD now accepts up to 3 user variables, e.g. for coordinates
+* to be stored into "list".
+*
 * Revision 1.16  2006/07/21 14:09:07  farhi
 * Fix wrong structure member
 *
@@ -116,7 +120,6 @@
     char COORD_FIL   ; /* next token is a filename */
     char COORD_EVNT  ; /* next token is a buffer size value */
     char COORD_3HE   ; /* next token is a 3He pressure value */
-    char COORD_INTERM; /* next token is an intermediate save value (percent) */
     char COORD_LOG   ; /* next variable will be in log scale */
     char COORD_ABS   ; /* next variable will be in abs scale */
     char COORD_SIGNAL; /* next variable will be the signal var */
@@ -181,8 +184,6 @@
     double UserVariable1;
     double UserVariable2;
     double UserVariable3;
-    double Intermediate;
-    double IntermediateCnts;
     char   option[1024];
 
     double Nsum;

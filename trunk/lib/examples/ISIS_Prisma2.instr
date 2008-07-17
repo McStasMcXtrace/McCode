@@ -5,14 +5,14 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Instrument: Prisma2
+* Instrument: ISIS_Prisma2
 *
 * %Identification
 * Written by: Kristian Nielsen and Mark Hagen
 * Date: August 1998.
 * Origin: ISIS/Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.1 $
 * %INSTRUMENT_SITE: ISIS
 *
 * Simple simulation of PRISMA2 with RITA-style analyser backend.
@@ -27,7 +27,7 @@
 * line consists of the time-of-flight in microseconds followed by seven
 * intensities of neutrons from each individual analyser blade.
 *
-* Example: mcrun prisma2.instr TT=-30
+* Example: mcrun ISIS_Prisma2.instr TT=-30
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -207,7 +207,7 @@ MCDISPLAY
 END
 
 
-DEFINE INSTRUMENT prisma2(TT=-30,PHA=22,PHA1=-3,PHA2=-2,PHA3=-1,
+DEFINE INSTRUMENT ISIS_Prisma2(TT=-30,PHA=22,PHA1=-3,PHA2=-2,PHA3=-1,
                           PHA4=0,PHA5=1,PHA6=2,PHA7=3,TTA=4)
 
 DECLARE
@@ -246,10 +246,10 @@ TRACE
 COMPONENT mod = Moderator(
                           radius = 0.0707,
                           dist = 9.035,
-                          xw = 0.021,
-                          yh = 0.021,
-                          E0 = 10, E1 = 15,
-                          Ec = 9.0, t0 = 37.15, gam = 39.1)
+                          focus_xw = 0.021,
+                          focus_yh = 0.021,
+                          Emin = 10, Emax = 15,
+                          Ec = 9.0, t0 = 37.15, gamma = 39.1)
      AT (0,0,0) ABSOLUTE
 
 /* Use a slit to get the effect of a rectangular source. */
@@ -259,7 +259,7 @@ COMPONENT modslit = Slit(xmin = -0.05, xmax = 0.05,
 
 COMPONENT tof_test = TOF_monitor(xmin = -0.05, xmax = 0.05,
                                  ymin = -0.05, ymax = 0.05,
-                                 nchan = 500, dt = 1,
+                                 nt = 500, dt = 1,
                                  filename = "prisma2.mon")
      AT (0,0,0.005) RELATIVE mod
 
@@ -293,7 +293,7 @@ COMPONENT mon3 = Monitor(xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
 
 COMPONENT coll2 = Collimator_linear(xmin = -0.015, xmax = 0.015,
                          ymin = -0.025, ymax = 0.025,
-                         len = 0.12, divergence = 120)
+                         length = 0.12, divergence = 120)
      AT(0,0,0.40) RELATIVE a2
 
 COMPONENT mon4 = Monitor(xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)

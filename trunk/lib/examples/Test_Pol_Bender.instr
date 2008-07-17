@@ -7,8 +7,8 @@
 * Written by: Peter Christiansen 
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.1 $
-* %INSTRUMENT_SITE: tests
+* Version: $Revision: 1.2 $
+* %INSTRUMENT_SITE: Tests_polarization
 *
 * Test Pol_bender. 
 *
@@ -73,12 +73,12 @@ COMPONENT Origin = Progress_bar()
      AT (0,0,0) ABSOLUTE
 
 COMPONENT source = 
-Source_simple(radius = 0.02, dist = 1.2, xw = 0.08, yh = 0.08, Lambda0 = 15,
-	      dLambda = 14.5, flux = 1)
+Source_simple(radius = 0.02, dist = 1.2, focus_xw = 0.08, focus_yh = 0.08, lambda0 = 15,
+	      dlambda = 14.5, flux = 1)
      AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT lamStart = 
-L_monitor(nchan = 30, filename = "lambdaStart.dat", 
+L_monitor(nL = 30, filename = "lambdaStart.dat", 
 	  xwidth = 0.10, yheight = 0.10, 
 	  Lmin = 0.0, Lmax = 30)
      AT (0, 0, 0.1) RELATIVE Origin
@@ -89,40 +89,40 @@ PSD_monitor(xwidth=0.10, yheight=0.10,
      AT (0, 0, 1.15) RELATIVE Origin
 
 COMPONENT bender =
-Pol_bender(xw = 0.08, yh = 0.08, length = GUIDELENGTH, radius= GUIDERADIUS, 
-	   nslits=NSLITS, wspacer=WSPACER,
+Pol_bender(xwidth = 0.08, yheight = 0.08, length = GUIDELENGTH, radius= GUIDERADIUS, 
+	   nslit=NSLITS, d=WSPACER,
 	   endFlat=ENDOPTION, drawOption=DRAWOPTION,
 	   rTopUpPar={0.99, 0.0219, 6.07, 3.0, 0.003},
 	   rTopDownPar={0.99, 0.0219, 6.07, 2.0, 0.003})
      AT (0, 0, 1.2) RELATIVE Origin
 
-COMPONENT armLambdaStop = Arm()
+COMPONENT armlambdaStop = Arm()
      AT (calcX(GUIDELENGTH, GUIDERADIUS), 0, calcZ(GUIDELENGTH, GUIDERADIUS)+1.2) 
      RELATIVE Origin
 ROTATED (0, calcAlpha(GUIDELENGTH, GUIDERADIUS), 0) RELATIVE Origin
 
 COMPONENT lamStopBender = 
-L_monitor(nchan = 30, filename = "lambdaStopBender.dat", 
+L_monitor(nL = 30, filename = "lambdaStopBender.dat", 
 	  xwidth = 0.10, yheight = 0.10, 
 	  Lmin = 0.0, Lmax = 30)
-     AT (0, 0, 0.001) RELATIVE armLambdaStop
+     AT (0, 0, 0.001) RELATIVE armlambdaStop
 
 COMPONENT psdBender = 
 PSD_monitor(xwidth=0.10, yheight=0.10,
 	    nx=80, ny=80, filename="psdBender.dat")
-     AT (0, 0, 0.001) RELATIVE armLambdaStop
+     AT (0, 0, 0.001) RELATIVE armlambdaStop
 
 COMPONENT pollambdaMonitorY =
-PolLambda_monitor(xw=0.1, yh=0.1,
-		  nlam=30, Lmin = 0, Lmax = 30, npol=41,
+PolLambda_monitor(xwidth=0.1, yheight=0.1,
+		  nL=30, Lmin = 0, Lmax = 30, npol=41,
 		  my=1, filename="pollambdaMonY.data")
-     AT (0, 0, 0.05) RELATIVE armLambdaStop
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
 
 COMPONENT meanpollambdaMonitorY =
-MeanPolLambda_monitor(xw=0.1, yh=0.1,
-		      nlam=30, Lmin = 0, Lmax = 30,
-		      my=1, filename="meanpollambdaMonY.data")
-     AT (0, 0, 0.05) RELATIVE armLambdaStop
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+      nL=30, Lmin = 0, Lmax = 30,
+      my=1, filename="meanpollambdaMonY.data")
+     AT (0, 0, 0.05) RELATIVE armlambdaStop
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */

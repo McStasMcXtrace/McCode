@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: August 1998
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: GA, June 1999, added transmission
@@ -24,7 +24,7 @@
 * component works as a double slit).
 *
 * Example: Collimator_linear(xmin=-0.1, xmax=0.1, ymin=-0.1, ymax=0.1,
-*           len=0.25, divergence=40,transmission=0.7)
+*           length=0.25, divergence=40,transmission=0.7)
 *
 * %P
 * INPUT PARAMETERS:
@@ -35,8 +35,8 @@
 * ymax:       (m)              Upper y bound on slits
 * xwidth:     (m)              Width of slits
 * yheight:    (m)              Height of slits
-* len:        (m)              Distance between slits
-* divergence: (minutes of arc) Divergence horizontal angle (calculated as atan(d/len),
+* length:     (m)              Distance between input and output slits
+* divergence: (minutes of arc) Divergence horizontal angle (calculated as atan(d/length),
 *                              where d is the blade spacing)
 *
 * Optional parameters
@@ -49,7 +49,7 @@
 
 DEFINE COMPONENT Collimator_linear
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xmin=0, xmax=0, ymin=0, ymax=0, xwidth=0, yheight=0, len, divergence=40,transmission=1, divergenceV=0)
+SETTING PARAMETERS (xmin=-0.02, xmax=0.02, ymin=-0.05, ymax=0.05, xwidth=0, yheight=0, length=0.3, divergence=40,transmission=1, divergenceV=0)
 OUTPUT PARAMETERS (slope, slopeV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -66,7 +66,7 @@ INITIALIZE
 
   if ((xmin >= xmax) || (ymin >= ymax)) {
     printf("Collimator_linear: %s: Null slit opening area !\n"
-	   "ERROR        (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
+	         "ERROR              (xwidth,yheight,xmin,xmax,ymin,ymax). Exiting",
            NAME_CURRENT_COMP);
     exit(0);
   }
@@ -79,7 +79,7 @@ TRACE
     PROP_Z0;
     if (x<xmin || x>xmax || y<ymin || y>ymax)
       ABSORB;
-    dt = len/vz;
+    dt = length/vz;
     PROP_DT(dt);
     if (x<xmin || x>xmax || y<ymin || y>ymax)
       ABSORB;
@@ -111,12 +111,12 @@ MCDISPLAY
   magnify("xy");
   for(x = xmin, i = 0; i <= 3; i++, x += (xmax - xmin)/3.0)
     multiline(5, x, (double)ymin, 0.0, x, (double)ymax, 0.0,
-              x, (double)ymax, (double)len, x, (double)ymin, (double)len,
+              x, (double)ymax, (double)length, x, (double)ymin, (double)length,
               x, (double)ymin, 0.0);
   line(xmin, ymin, 0,   xmax, ymin, 0);
   line(xmin, ymax, 0,   xmax, ymax, 0);
-  line(xmin, ymin, len, xmax, ymin, len);
-  line(xmin, ymax, len, xmax, ymax, len);
+  line(xmin, ymin, length, xmax, ymin, length);
+  line(xmin, ymax, length, xmax, ymax, length);
 %}
 
 END
