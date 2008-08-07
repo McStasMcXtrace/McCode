@@ -203,9 +203,7 @@ sub parse_args {
         } elsif(/^--(format)\=(.*)$/ || /^--(plotter)\=(.*)$/) {
             $MCSTAS::mcstas_config{'PLOTTER'} = $2;
         } elsif(/^--test$/) {
-            $exec_test="compatible and graphics";
-        } elsif(/^--(test)\=(.*)$/) {
-            $exec_test="$2";
+            $exec_test=1;
         } elsif(/^--threads$/) {
         		$threads=1;
             push @options, "--threads";
@@ -1188,11 +1186,6 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
 }
 
 if ($exec_test) {
-  # Unfortunately, Scilab direct graphics export is broken on Win32...
-  if ($Config{'osname'} eq 'MSWin32') {
-      $exec_test=~s!graphics!!g;
-      print STDERR "Sorry, graphics is not possible with --test on Win32...\n";
-  }
   my $status;
   $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $MCSTAS::mcstas_config{'PLOTTER'}, $exec_test, $mpi, $ncount);
   if (defined $status) {

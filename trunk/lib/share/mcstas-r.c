@@ -11,16 +11,22 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.194 $
+* Version: $Revision: 1.195 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.194 2008-07-17 12:50:18 farhi Exp $
+* $Id: mcstas-r.c,v 1.195 2008-08-07 21:52:10 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.194  2008/07/17 12:50:18  farhi
+* MAJOR commit to McStas 2.x
+* uniformized parameter naming in components
+* uniformized SITE for instruments
+* all compile OK
+*
 * Revision 1.192  2008/04/25 08:26:33  erkn
 * added utility functions/macros for intersecting with a plane and mirroring a vector in a plane
 *
@@ -641,6 +647,8 @@ double*  mcMagnetData                = NULL;
 Coords   mcMagnetPos;
 Rotation mcMagnetRot;
 char*    mcDetectorCustomHeader      = NULL;
+char*    mcopenedfiles               = "";
+long     mcopenedfiles_size          = 0;
 #endif
 
 /* mcMagneticField(x, y, z, t, Bx, By, Bz) */
@@ -1544,7 +1552,19 @@ FILE *mcnew_file(char *name, char *ext, char *mode)
   file = fopen(mem, (mode ? mode : "w"));
   if(!file)
     fprintf(stderr, "Warning: could not open output file '%s' in mode '%s' (mcnew_file)\n", mem, mode);
+  else {
+    if (mcopenedfiles_size <= strlen(mcopenedfiles)+strlen(mem)) {
+      mcopenedfiles_size+=1024;
+      if (!mcopenedfiles || !strlen(mcopenedfiles))
+        mcopenedfiles = calloc(1, mcopenedfiles_size);
+      else
+        mcopenedfiles = realloc(mcopenedfiles, mcopenedfiles_size);
+    } 
+    strcat(mcopenedfiles, " ");
+    strcat(mcopenedfiles, mem);
+  }
   free(mem);
+  
   return file;
 } /* mcnew_file */
 
@@ -1567,8 +1587,8 @@ char *str_rep(char *string, char *from, char *to)
   }
   return(string);
 }
-#define VALID_NAME_LENGTH 64
 
+#define VALID_NAME_LENGTH 64
 /*******************************************************************************
 * mcvalid_name: makes a valid string for variable names.
 *   copy 'original' into 'valid', replacing invalid characters by '_'
@@ -2092,7 +2112,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
         if (p2) E = p2[index];
 
         if (m) x = *x1 + (i + 0.5)/m*(*x2 - *x1); else x = 0;
-        if (n) y = *y1 + (j + 0.5)/n/p*(*y2 - *y1); else y = 0;
+        if (n && p) y = *y1 + (j + 0.5)/n/p*(*y2 - *y1); else y = 0;
         z = p1[index];
         sum_xz += x*z;
         sum_yz += y*z;
@@ -2239,7 +2259,10 @@ void mcsiminfo_init(FILE *f)
   } else
 #endif
   if (!f) mcsiminfo_file = mcnew_file(mcsiminfo_name, mcformat.Extension,
-    strstr(mcformat.Name, "append") || strstr(mcformat.Name, "catenate") ? "a":"w");
+    strstr(mcformat.Name, "append") 
+      || strstr(mcformat.Name, "catenate")  
+      || strstr(mcopenedfiles, mcsiminfo_name) 
+    ? "a":"w");
   else mcsiminfo_file = f;
   if(!mcsiminfo_file)
     fprintf(stderr,
@@ -2472,7 +2495,9 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
 
       strcpy(mode,
              (isdata != 1 || strstr(format.Name, "no header")
-             || strstr(format.Name, "append") || strstr(format.Name, "catenate") ?
+              || strstr(format.Name, "append") 
+              || strstr(format.Name, "catenate") 
+              || strstr(mcopenedfiles, mcsiminfo_name) ?
              "a" : "w"));
       if (strstr(format.Name, "binary")) strcat(mode, "b");
       if (mcformat_data.Name) dataformat = mcformat_data;
@@ -2861,7 +2886,6 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       int node_i;
       /* get, then save master and slaves event lists */
       for(node_i=0; node_i<mpi_node_count; node_i++) {
-        char *no_footer = strstr(format.Name, "no footer");
         if (node_i > 0) { /* get data from slaves */
           MPI_Status mpi_status;
           int mnp[3];
@@ -2870,25 +2894,30 @@ static double mcdetector_out_012D(struct mcformats_struct format,
           MPI_Recv(p1, abs(m*n*p), MPI_DOUBLE, node_i, 1, MPI_COMM_WORLD, &mpi_status);
         }
         if (!strstr(format.Name, "NeXus")) { /* not MPI+NeXus format */
+          char *formatName_orig = mcformat.Name;  /* copy the pointer position */
+          char  formatName[256];
+          strcpy(formatName, mcformat.Name);
           if (node_i == 1) { /* first slave */
             /* disables header: it has been written by master */
-            if (!strstr(format.Name, "no header")) strcat(format.Name, " no header ");
+            if (!strstr(formatName, "no header")) strcat(formatName, " no header ");
           }
-
+          char *no_footer = strstr(formatName, "no footer");
           if (node_i == mpi_node_count-1) { /* last node */
             /* we write the last data block: request a footer */
-            if (!no_footer) strncpy(no_footer, "         ", 9);
+            if (no_footer) strncpy(no_footer, "         ", 9);
           } else if (node_i == 0) {
             /* master does not need footer (followed by slaves) */
-            if (!no_footer) strcat(format.Name, " no footer "); /* slaves do not need footer */
+            if (!no_footer) strcat(formatName, " no footer "); /* slaves do not need footer */
           }
           if (!mcdisable_output_files) {
+            mcformat.Name = formatName; /* use special customized format for list MPI */
             mcfile_data(simfile_f, format,
                         pre, parent,
                         p0, p1, p2, m, n, p,
                         xlabel, ylabel, zlabel, title,
                         xvar, yvar, zvar,
                         x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
+            mcformat.Name= formatName_orig; /* restore original format */
           }
         }
 #ifdef USE_NEXUS

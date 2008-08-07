@@ -8,7 +8,7 @@
 * Date: 13 Apr 2006
 * Origin: LLB/ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Templates
 *
 * Simple monochromator Diffractometer for powders
@@ -20,7 +20,7 @@
 * Ge       311 DM=1.714 AA
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolytic Graphite)
 *
-* Example: mcrun templateDIFF.instr lambda=1 RV=-1
+* %Example: lambda=1 Detector: BananaPSD_I=2.5e-9
 *
 * %Parameters
 * lambda: [Angs] Wavelength at monochromator

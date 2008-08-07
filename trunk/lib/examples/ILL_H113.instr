@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H113 ballistic curved cold guide at the ILL
@@ -16,12 +16,12 @@
 * %Description
 * The H113 ballistic curved cold guide at the ILL feeding PF1b
 *
-* Example: mcrun -n 1e7 --format=Matlab --dir=WhiteBeam ILL_H113.instr lambda=10
+* %Example: lambda=10 Detector: Mon_10_I=7.1e9
 *
 * %Parameters
-* m:  (1) m-value of whole guide coating. 0 means m=1.2 in-pile/2 afterwards
+* m:       (1) m-value of whole guide coating. 0 means m=1.2 in-pile/2 afterwards
 * lambda: (AA) central wavelength
-* dl_percent: (%) percentage from 0 to 100 for d_lambda/lambda
+* dlambda:(AA) wavelength spread. half width.
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/PF1">PF1b beam line</a> at the ILL
@@ -29,7 +29,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_H113(m=0, lambda=10, dl_percent=170)
+DEFINE INSTRUMENT ILL_H113(m=0, lambda=10, dlambda=8.5)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -72,6 +72,7 @@ INITIALIZE
 
 if (m)  { gMvalue = m; gMvalueIP = m; }
 if (lambda) slambda = lambda;
+if (!dlambda) dlambda = lambda*0.8;
 
 
 /* Element rotations = Element length / Curvature Radius * RAD2DEG */
@@ -95,7 +96,7 @@ TRACE
 /* for further RELATIVE reference, and even replaced by a Progress_bar  */
 /* component. Other useful keywords are : ROTATED EXTEND GROUP PREVIOUS */
 /* Also think about adding a neutron source !                           */
-COMPONENT Origin = Arm()
+COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 
@@ -105,8 +106,8 @@ COMPONENT VCS = Source_gen(
   dist     = 2.525,
   focus_xw = 0.068,
   focus_yh = 0.2,
-  Lmin     = slambda*(1-dl_percent/100/2),
-  Lmax     = slambda*(1+dl_percent/100/2),
+  Lmin     = slambda-dlambda,
+  Lmax     = slambda+dlambda,
   T1       = sT1,
   I1       = sI1,
   T2       = sT2,

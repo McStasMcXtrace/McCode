@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -25,7 +25,7 @@
 * cross comparison related in paper "A Model Instrument for Monte Carlo Code
 * Comparisons", Neutron News 13 (No. 4), 24-29 (2002).
 *
-* Example: mcrun BNL_H8.instr lambda=2.36
+* %Example: lambda=2.36 Detector: D7_SC3_In_I=3e-11
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -85,7 +85,7 @@ INITIALIZE
 
   strcpy(hostname, getenv("HOSTNAME") ? getenv("HOSTNAME") : "localhost");
 
-  printf("Instrument : %, v%s (21/02/01) on %s.\n",NAME_CURRENT_COMP, VERSION, hostname);
+  printf("Instrument : %s, v%s (21/02/01) on %s.\n",NAME_CURRENT_COMP, VERSION, hostname);
   printf("Monochromator : (DM = %g)\n",DM);
   printf("A1 = %.2f, A2 = %.2f (deg)\n",A1,A2);
   printf("Ki = %.4g Angs-1 Energy = %.4g meV\nVelocity = %.4g m/s, lambda = %.4g Angs\n", Ki, Ei, vi,
@@ -104,6 +104,7 @@ COMPONENT Source = Source_simple(
   dist = 2.7473,
   focus_xw = 0.031, focus_yh = 0.054,
   E0 = Ei,
+  compat=1,
   dE = 0.03*Ei)
 AT (0,0,0) ABSOLUTE
 
@@ -242,7 +243,8 @@ AT (0, 0, 0.3048+0.00001) RELATIVE SC4
 */
 COMPONENT He3H = PSD_monitor(
   xwidth = 0.0508, yheight = 0.0857,
-  nx=20, ny=20, filename="He3H.psd")
+  nx=20, ny=20, filename="D10_SC4_In.psd")
 AT (0, 0, 0.3049) RELATIVE SC4
 
 END
+

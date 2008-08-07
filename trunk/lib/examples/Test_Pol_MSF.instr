@@ -8,7 +8,7 @@
 * Date: July 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_constBfield
@@ -18,7 +18,7 @@
 * This instrument demonstrates how to use the component
 * Pol_constBfield to make a Mezei Spin flipper.
 *
-* Example: mcrun Test_Pol_MSF.instr
+* %Example: mcrun Test_Pol_MSF.instr Detector: pollambdaMonitor2z_I=0.136
 *
 * %Parameters
 *
@@ -42,7 +42,7 @@ INITIALIZE
 %{
 %}
 
-/* Here comes the TRACE section, where the actual      */
+/* Here comes the TRACE section, where the actual       */
 /* instrument is defined as a sequence of components.  */
 TRACE
 
@@ -53,7 +53,7 @@ TRACE
 /* for further RELATIVE reference, Other useful keywords are : ROTATED  */
 /* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
 /* Progress_bar is an Arm displaying simulation progress.               */
-COMPONENT Origin = Arm()
+COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = 

@@ -12,7 +12,7 @@
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: Templates
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
@@ -21,7 +21,7 @@
 * %Description
 * Very simple test instrument for the Sans_spheres component
 *
-* Example: mcrun templateSANS.instr r=100, PHI=1e-3, Delta_Rho=0.6, sigma_abs=50, Qmax=0.3
+* %Example: lambda=2 Detector: detector_I=0.00164025
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -46,7 +46,7 @@ INITIALIZE
 %}
 TRACE
 
-COMPONENT a1 = Arm()
+COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT arm = Arm(

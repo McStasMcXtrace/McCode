@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.27 $
+* Version: $Revision: 1.28 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.27 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.28 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -57,7 +57,7 @@
    the mcstas.h file.
    Build: cc -o mcformat mcformat.c -lm
 */
-#define MCSTAS_VERSION "1.10b - Oct. 12, 2006"
+#define MCSTAS_VERSION 
 
 #define fatal_error printf  /* remove debug.c dependency */
 #define debug(msg)
@@ -1661,7 +1661,7 @@ void mcformat_usage(char *pgmname)
 {
   int i;
 
-  fprintf(stderr, "mcformat version %s format conversion tool (McStas " MCSTAS_VERSION ")\n", MCFORMAT);
+  fprintf(stderr, "mcformat version %s format conversion tool (McStas " PACKAGE_VERSION ")\n", MCFORMAT);
   fprintf(stderr, "Usage: %s [options] file1|dir1 file2|dir2 ...\n", pgmname);
   fprintf(stderr,
 "Convert/merge files and directories from McStas format to an other specified format\n"

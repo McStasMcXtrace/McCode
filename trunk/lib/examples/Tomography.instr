@@ -8,7 +8,7 @@
 * Date: June 20th, 2008
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Templates
 *
 * Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
@@ -43,7 +43,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Tomography(string geometry="bunny.off", 
+DEFINE INSTRUMENT Tomography(string geometry="socket.off", 
 			     omega = 0, sigma_abs=100, frac_scatt = 0, 
 			     div_v = 0, div_h = 0, source_w = 0.4, source_h = 0.2, 
 			     det_w = 0.4, det_h = 0.2, string opts="x bins=80 y bins=40")

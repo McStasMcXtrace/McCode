@@ -8,7 +8,7 @@
 * Date: July 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * Tests Set_pol, V_sample, and pol monitors.
@@ -20,7 +20,7 @@
 * Second check is that when the polarisation is hardcoded to (0, 1, 0)
 * after V_sample it is (0, -1/3, 0).
 *
-* Example: mcrun Test_Pol_Set.instr
+* %Example: mcrun Test_Pol_Set.instr Detector: polMonitor3_I=2.5e-09
 *
 * %Parameters
 *
@@ -55,7 +55,7 @@ TRACE
 /* for further RELATIVE reference, Other useful keywords are : ROTATED  */
 /* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
 /* Progress_bar is an Arm displaying simulation progress.               */
-COMPONENT Origin = Arm()
+COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_simple(

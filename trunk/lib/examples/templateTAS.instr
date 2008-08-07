@@ -12,7 +12,7 @@
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Templates
 *
 * Template RESCAL type triple-axis machine (TAS)
@@ -27,8 +27,7 @@
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolytic Graphite)
 * Ge       311 DM=1.714 AA
 *
-* Example: mcrun templateTAS.instr EN=0.5 QM=1
-* Example: mcrun templateTAS.instr A1=20.6
+* %Example: QM=1 Detector: He3H_I=1.6e-11
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -480,8 +479,11 @@ if (verbose) {
 TRACE
 /* Source description */
 
+INSTRUMENT COMPONENT Origin=Progress_bar()
+AT (0,0,0) ABSOLUTE
+
 /* a flat constant source */
-COMPONENT Source = Source_gen(
+INSTRUMENT COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
   focus_xw = 0.1, focus_yh = 0.08,

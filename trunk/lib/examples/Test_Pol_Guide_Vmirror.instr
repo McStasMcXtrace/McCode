@@ -7,7 +7,7 @@
 * Written by: Peter Christiansen 
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * Test Pol_guide_Vmirror. 
@@ -16,7 +16,7 @@
 * A simple description of the V4 instrument in Berlin as explained in:
 * NIM A 451 (2000) 474-479
 *
-* Example: mcrun Test_Pol_Guide_Vmirror.instr
+* %Example: polariserIn=1 Detector: psdPolGuide_I=3.96e+12
 *
 * %Parameters
 *
@@ -138,20 +138,20 @@ PolLambda_monitor(xwidth=0.1, yheight=0.1,
      AT (0, 0, 0.05) RELATIVE armlambdaStop
 
 COMPONENT MPLMon2X =
-MeanPollambda_monitor(xwidth=0.1, yheight=0.1,
-		      nlam=100, Lmin = 1, Lmax = 21,
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 1, Lmax = 21,
 		      mx=1, my=0, mz=0, filename="MPLMon2X.data")
      AT (0, 0, 0.10) RELATIVE armlambdaStop
 
 COMPONENT MPLMon2Y =
-MeanPollambda_monitor(xwidth=0.1, yheight=0.1,
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		      nL=100, Lmin = 1, Lmax = 21,
 		      mx=0, my=1, mz=0, filename="MPLMon2Y.data")
      AT (0, 0, 0.10) RELATIVE armlambdaStop
 
 COMPONENT MPLMon2Z =
-MeanPollambda_monitor(xwidth=0.1, yheight=0.1,
-		      nlam=100, Lmin = 1, Lmax = 21,
+MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
+		      nL=100, Lmin = 1, Lmax = 21,
 		      mx=0, my=0, mz=1, filename="MPLMon2Z.data")
      AT (0, 0, 0.10) RELATIVE armlambdaStop
 

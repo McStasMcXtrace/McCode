@@ -15,7 +15,7 @@
 * Simple test instrument for the new Phonon_simple component.
 * Refer to the component documentation for further instructions.
 * 
-* Example: mcrun Samples_Phonon.instr
+* %Example: E=10 Detector: mon1_I=2.3682e-08
 *
 * %End
 ******************************************************************************/
@@ -23,7 +23,7 @@ DEFINE INSTRUMENT Samples_Phonon(E=10, DE=0, HDIV=0, VDIV=0, TT=72.69, OM=-43.3,
 
 TRACE
 
-COMPONENT a1 = Arm()
+COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_div(

@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * Mcstas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: KL, February 2001
 * Modified by: KL, 18 November 2001
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: Risoe
-* Release: McStas 1.9.1
+* Release: McStas CVS_080803
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *

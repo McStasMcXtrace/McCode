@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H15 curved cold guide at the ILL
@@ -16,13 +16,12 @@
 * %Description
 * The H15 curved cold guide at the ILL feeding IN6, D7, (IN10 on upper channel) D11
 *
-* Example: mcrun -n 1e7 --format=Matlab --dir=WhiteBeam ILL_H15.instr lambda=10
+* %Example: m=1 Detector: Mon_10_L_I=2.57171e+09
 *
 * %Parameters
 * m:          (1)  m-value of whole guide coating
 * lambda:     (AA) central wavelength
 * dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
-*                  avoid dlambda greater than lambda
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/IN6">IN6 TOF</a> at the ILL

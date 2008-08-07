@@ -8,7 +8,7 @@
 * Date: July 2006.
 * Origin: RISOE.
 * Release: McStas CVS_080624
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Compares intensities of Monochromator_flat and Monochromator_pol
@@ -18,7 +18,7 @@
 * Very simple setup to compare intensities between Monochromator_flat
 * and Monochromator_pol.
 *
-* Example: mcrun Test_Monchromators.instr
+* %Example: lambda=2 Detector: psd1_I=3e-05
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -69,7 +69,7 @@ INITIALIZE
 TRACE
 /* Source description */
 
-COMPONENT Origin = Arm()
+COMPONENT Origin = Progress_bar()
      AT (0,0,0) ABSOLUTE
 EXTEND
 %{

@@ -12,7 +12,7 @@
 * Date: August 1998.
 * Origin: ISIS/Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: ISIS
 *
 * Simple simulation of PRISMA2 with RITA-style analyser backend.
@@ -27,7 +27,7 @@
 * line consists of the time-of-flight in microseconds followed by seven
 * intensities of neutrons from each individual analyser blade.
 *
-* Example: mcrun ISIS_Prisma2.instr TT=-30
+* %Example: TT=-30 Detector: mon9_I=2.76748e-12
 *
 * %Parameters
 * INPUT PARAMETERS:

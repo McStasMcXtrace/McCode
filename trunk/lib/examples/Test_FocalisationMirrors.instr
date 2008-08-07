@@ -12,7 +12,7 @@
 * Date: 2007.
 * Origin: <a href="http://www-llb.cea.fr/">LLB</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Test instrument for neutron focalisation with a set of supermirrors. 
@@ -24,7 +24,7 @@
 * %Description
 * Test instrument for the MirrorElli and MirrorPara components
 *
-* Example: mcrun Test_FocalisationMirrors.instr Qmin=0.0001 G=1 H=.0001 F=.00066 DET=8.2 lambda=14 divergence=.1 BeamWidth=.05 TetaMin=3
+* %Example: G=1 Detector: monPSD_I=1.99699e-11
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -87,7 +87,7 @@ INITIALIZE %{
 
 TRACE
 
-COMPONENT base=Arm() 
+COMPONENT base=Progress_bar() 
 AT (0,0,0) ABSOLUTE
 
 COMPONENT source1 = Source_gen(focus_aw = divergence , focus_ah = .0001, lambda0=lambda, 

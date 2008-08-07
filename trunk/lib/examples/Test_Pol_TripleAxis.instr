@@ -8,7 +8,7 @@
 * Date: July 2006.
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Templates
 *
 * Based on Emmanuel Farhi's thermal H8 triple-axis spectrometer from
@@ -25,7 +25,7 @@
 *  1) No spin flip: Up->Up 
 * The Vanadium sample should give I(0)=2*(I(-1)+I(1)) and I(-1)=2*I(1).
 *
-* Example: mcrun Test_Pol_TripleAxis.instr OPTION=1
+* %Example: OPTION=-1 Detector: pollambdaMonitorDet_I=5.67118e-12
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -97,7 +97,7 @@ INITIALIZE
 TRACE
 /* Source description */
 
-COMPONENT Origin = Arm()
+COMPONENT Origin = Progress_bar()
      AT (0,0,0) ABSOLUTE
 
 /* a flat constant source */

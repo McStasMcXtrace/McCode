@@ -8,7 +8,7 @@
 * Date: August 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_simpleBfield
@@ -23,7 +23,7 @@
 *
 * Note that there are some sytematic fluctuation with the current solution.
 *
-* Example: mcrun Test_Magnetic_Majorana.instr
+* %Example: Blarge=1.0 Detector: pollambdaMonitor2z_I=8.8e-7
 *
 * %Parameters
 *

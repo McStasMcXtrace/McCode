@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.49 $
+* Version: $Revision: 1.50 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -74,7 +74,7 @@
 *
 * Also, always use a non-zero value of delta_d_d.
 *
-* %VALIDATION:
+* %VALIDATION
 * This component is undergoing validation.
 *
 * %P

@@ -7,7 +7,7 @@
 * Written by: Peter Christiansen 
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * Test Pol_bender. 
@@ -16,7 +16,7 @@
 * Test that Pol_bender polarizes an unpolarized beam, and allows one
 * to test the different options.
 *
-* Example: mcrun Test_Pol_Bender.instr
+* %Example: GUIDELENGTH=1 Detector: psdBender_I=0.7
 *
 * %Parameters
 *
