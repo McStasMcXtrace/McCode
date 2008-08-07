@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H24 curved thermal guide at the ILL
@@ -16,12 +16,12 @@
 * %Description
 * The H24 curved thermal guide at the ILL feeding IN3, IN13, D10 and S42/Orient Express
 *
-* Example: mcrun -n 1e7 --format=Matlab --dir=WhiteBeam ILL_H24.instr lambda=10
+* %Example: m=0 Detector: Mon_10_L_I=9.5576e+08
 *
 * %Parameters
 * m:          (1)  m-value of whole guide coating. m=0 means 0 in-pile, 1 out-pile
 * lambda:     (AA) central wavelength
-* dl_percent: (%)  percentage from 0 to 100 for d_lambda/lambda, half width
+* dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/IN3">IN3 TAS</a> at the ILL
@@ -29,7 +29,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_H24(m=0, lambda=4, dl_percent=170)
+DEFINE INSTRUMENT ILL_H24(m=0, lambda=4, dlambda=3.4)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -75,7 +75,7 @@ INITIALIZE
 
   if (m)  { gMvalue = m; gMvalueIP = m; }
   if (lambda) slambda = lambda;
-
+  if (!dlambda) dlambda = lambda*0.8;
 
   /* Element rotations = Element length / Curvature Radius * RAD2DEG */
   if (gRh) {
@@ -94,7 +94,7 @@ INITIALIZE
 /* instrument is defined as a sequence of components.  */
 TRACE
 
-COMPONENT Origin = Arm()
+COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT Thermal = Source_gen(
@@ -103,8 +103,8 @@ COMPONENT Thermal = Source_gen(
   dist     = 2.525,
   focus_xw = 0.038,
   focus_yh = 0.2,
-  Lmin     = slambda*(1-dl_percent/100/2),
-  Lmax     = slambda*(1+dl_percent/100/2),
+  Lmin     = slambda-dlambda,
+  Lmax     = slambda+dlambda,
   T1       = sT1,
   I1       = sI1,
   T2       = sT2,

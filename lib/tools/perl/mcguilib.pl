@@ -812,10 +812,10 @@ sub comp_instance_dialog {
     my $selected;
     my $ok_cmd = sub { $selected = 'OK' };
     my $cancel_cmd = sub { $selected = 'CANCEL' };
-    my $okbut = $bot_frame->Button(-text => "Ok", -command => $ok_cmd);
+    my $okbut = $bot_frame->Button(-text => "Ok", -command => $ok_cmd, -fg=>'GREEN');
     $okbut->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
     my $cancelbut = $bot_frame->Button(-text => "Cancel",
-                                       -command => $cancel_cmd);
+                                       -command => $cancel_cmd, -fg=>'RED');
     $cancelbut->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
     $dlg->protocol("WM_DELETE_WINDOW" => $cancel_cmd);
     $dlg->bind('<Escape>' => $cancel_cmd);
@@ -909,7 +909,7 @@ sub comp_select_dialog {
     $dlg->withdraw;
     my $f = $dlg->Frame();
     $f->pack(-side => 'top');
-    $f->Label(-text => "Available component definitions:")->pack;
+    $f->Label(-text => "Available component definitions:", -fg=>'blue')->pack;
     my $list = $f->Scrolled('MyListbox', -width => 50, -height => 10,
                             -setgrid => 1, -scrollbars => 'osre');
     $list->pack(-expand => 'yes', -fill => 'y', -anchor => 'n');
@@ -917,9 +917,9 @@ sub comp_select_dialog {
     my @namelist = map compname($_), @sorted;
     $list->insert(0, @namelist);
     $list->activate(0);
-    my $name = $f->Label(-text => "Name: ", -anchor => 'w');
+    my $name = $f->Label(-text => "Name: ", -anchor => 'w', -fg=>'red');
     $name->pack(-fill => 'x');
-    my $loc = $f->Label(-text => "Location: ", -anchor => 'w');
+    my $loc = $f->Label(-text => "Location: ", -anchor => 'w', -fg=>'red');
     $loc->pack(-fill => 'x');
     my $text = $f->Scrolled(qw/ROText -relief sunken -bd 2 -setgrid true
                             -height 10 -width 80 -scrollbars osoe/);
@@ -928,10 +928,10 @@ sub comp_select_dialog {
     my $f1 = $f->Frame();
     $f1->pack(-fill => 'x');
     my $author = $f1->Label(-text => "Author: ",
-                            -anchor => 'w', -justify => 'left');
+                            -anchor => 'w', -justify => 'left', -fg=>'blue');
     $author->pack(-side => 'left');
     my $date = $f1->Label(-text => "Date: ",
-                          -anchor => 'w', -justify => 'left');
+                          -anchor => 'w', -justify => 'left', -fg=>'blue');
     $date->pack(-side => 'right');
 
     my $bot_frame = $dlg->Frame(-relief => "raised", -bd => 1);
@@ -952,7 +952,7 @@ sub comp_select_dialog {
                            "Author: $info->{'identification'}{'author'}");
         $date->configure(-text => "Date: $info->{'identification'}{'date'}");
         $text->delete("1.0", "end");
-        $text->insert("end", "$info->{'identification'}{'short'}\n\n","short");
+        $text->insert("end", "$info->{'identification'}{'short'}\n\n","SHORT");
         $text->insert("end", $info->{'description'});
     };
     my $accept_cmd = sub { $selected = 'Ok'; };
@@ -961,10 +961,10 @@ sub comp_select_dialog {
     $list->selecthook($select_cmd);
     $list->bind('<Double-Button-1>' => $accept_cmd);
     $list->bind('<Return>' => $accept_cmd);
-    my $okbut = $bot_frame->Button(-text => "Ok", -command => $accept_cmd);
+    my $okbut = $bot_frame->Button(-text => "Ok", -command => $accept_cmd, -fg=>'green');
     $okbut->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
     my $cancelbut = $bot_frame->Button(-text => "Cancel",
-                                       -command => $cancel_cmd);
+                                       -command => $cancel_cmd, -fg=>'red');
     $cancelbut->pack(-side => "left", -expand => 1, -padx => 1, -pady => 1);
     $dlg->protocol("WM_DELETE_WINDOW" => $cancel_cmd);
     $dlg->bind('<Escape>' => $cancel_cmd);
@@ -1000,22 +1000,51 @@ sub sitemenu_build {
         next unless @instruments;
         @paths = map("$MCSTAS::sys_dir/examples/$_", grep(/\.(instr)$/, @instruments));
         my $j;
-        my @added; # Names of sites
+        my @added;   # Names of sites
         my @handles; # Menu handles
-        my $index;
         my $CurrentSub;
-  # Add subitem for instruments without cathegory
-  push @added, "Undefined site";
-  $CurrentSub = $sitemenu->cascade(-label => "Undefined site");
-  push @sites, $CurrentSub;
+        
+        # SEARCH sites, read all instruments to get the list of sites
+        for ($j=0 ; $j<@paths; $j++) {
+            # What site is this one from?
+            my $pid = open(READER,$paths[$j]);
+            while(<READER>) {
+                # Look for %INSTRUMENT_SITE:
+                if (/%INSTRUMENT_SITE:\s*(\w*)/) {
+                    # Check if that menu has been added?
+                    my $k;
+                    my $taken = 0;
+                    for ($k=0; $k<@added; $k++) {
+                        if ($added[$k] eq $1) { # found existing site sub-menu
+                            $taken = 1;
+                        }
+                    }
+                    if ($taken == 0) {          # add new site sub-menu
+                        push @added, $1;
+                    }
+                }
+            } # end while READER
+        }
+        
+        # SORT site items and build sub-menus
+        @added = sort @added;
+        # build sub-menus
+        for ($k=0; $k<@added; $k++) {
+          $CurrentSub = $sitemenu->cascade(-label => $added[$k]);
+          push @sites, $CurrentSub;
+        }
+        # add last item for Undefined site instruments
+        push @added, "Undefined site";
+        $CurrentSub = $sitemenu->cascade(-label => "Undefined site");
+        push @sites, $CurrentSub; # will be last site item
 
+        # STORE instruments 
         for ($j=0 ; $j<@paths; $j++) {
             # What site is this one from?
             my $pid = open(READER,$paths[$j]);
             my $cname="";  # real name of the instrument (DEFINE)
-            my ($base, $dirname, $suffix);
-            $base = "";
-      my $site_tag=0;
+            my $site_tag=0;
+            my $index=@added;
             while(<READER>) {
                 # Look for real instrument name
                 if (m!DEFINE\s+INSTRUMENT\s+([a-zA-Z0-9_]+)\s*(.*)!i) {
@@ -1023,35 +1052,23 @@ sub sitemenu_build {
                 }
                 # Look for %INSTRUMENT_SITE:
                 if (/%INSTRUMENT_SITE:\s*(\w*)/) {
-        # This one has a site tag
-        $site_tag = 1;
                     # Check if that menu has been added?
                     my $k;
-                    my $taken = 0;
                     for ($k=0; $k<@added; $k++) {
-                        if ($added[$k] eq $1) {
-                            $taken = 1;
+                        if ($added[$k] eq $1) { # found existing site sub-menu
                             $index = $k;
-                            $CurrentSub = $sites[$k];
+                            $site_tag=1;
                         }
-                    }
-                    if ($taken == 0) {
-                        push @added, $1;
-                        $CurrentSub = $sitemenu->cascade(-label => $1);
-                        push @sites, $CurrentSub;
-                        $index = @added;
                     }
                 }
             } # end while
             # Add the instrument to the given menu.
+            my ($base, $dirname, $suffix);
             ($base, $dirname, $suffix) = fileparse($paths[$j],".instr");
             if ($cname ne "" && $cname ne $base) { $base = "$base ($cname)"; }
-      if ($site_tag == 1) {
-    $CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
-      } else {
-    $CurrentSub = $sites[0]; # 'Undefined site' menu
-    $CurrentSub->command(-label => "$base", -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
-      }
+            $CurrentSub = $sites[$index];
+            $CurrentSub->command(-label => "$base", 
+              -command => [ sub { sitemenu_runsub(@_)}, $paths[$j], $w]);
         }
     }
 }

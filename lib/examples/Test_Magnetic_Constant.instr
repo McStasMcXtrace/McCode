@@ -8,7 +8,7 @@
 * Date: August 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_simpleBfield
@@ -21,7 +21,7 @@
 * This instrument matches the example: Test_Pol_MSF (under tests)
 * made with the old component: Pol_constBfield
 *
-* Example: mcrun Test_Magnetic_Constant.instr
+* %Example: ROT_ANGLE=180 Detector: pollambdaMonitor2z_I=0.076
 *
 * %Parameters
 *
@@ -66,7 +66,7 @@ TRACE
 /* for further RELATIVE reference, Other useful keywords are : ROTATED  */
 /* EXTEND GROUP PREVIOUS. Also think about adding a neutron source !    */
 /* Progress_bar is an Arm displaying simulation progress.               */
-COMPONENT Origin = Arm()
+COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = 

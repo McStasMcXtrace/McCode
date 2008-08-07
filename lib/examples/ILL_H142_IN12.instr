@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H142 S-curved cold guide at the ILL feeding IN12 TAS spectrometer
@@ -17,8 +17,7 @@
 * The H142 beam is the only S-curved guide at the ILL. It is used here to feed
 * the IN12 TAS spectrometer (classical configuration).
 *
-* Example:
-* mcrun -n 1e7 ILL_H142.instr m=1 Ki=2.662
+* %Example: m=0 E=3 Detector: D7_SC3_1D_I=1436.06
 *
 * %Parameters
 * m:  (1) m-value of guide coating (H14/H142)
@@ -267,6 +266,26 @@ AT (0,0,3.17+0.02) RELATIVE PinkCarter
 COMPONENT H142_2 = Arm()
 AT (0,0,3.59) RELATIVE PinkCarter
 
+COMPONENT Mon_2_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_2_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_2_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_2_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
 COMPONENT H142_2_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -309,6 +328,26 @@ AT (0,0,L_H142_2+gGap) RELATIVE PREVIOUS
 
 COMPONENT H142_3 = Arm()
 AT (0,0,0.198) RELATIVE H142_2_Out
+
+COMPONENT Mon_3_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_3_dxdy = Monitor_nD(
+  xwidth=0.6, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_3_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_3_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_3_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
@@ -373,6 +412,26 @@ AT (0,0,L_H142_3+gGap) RELATIVE PREVIOUS
 COMPONENT H142_4 = Arm()
 AT (0,0,0.03) RELATIVE H142_3_Out
 
+COMPONENT Mon_4_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_4_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_4_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_4_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
 COMPONENT H142_4_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -421,6 +480,26 @@ AT (0,0,L_H142_4+gGap) RELATIVE PREVIOUS
 COMPONENT H142_5 = Arm()
 AT (0,0,0.03) RELATIVE H142_4_Out
 
+COMPONENT Mon_5_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_5_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_5_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_5_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
 COMPONENT H142_5_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -460,6 +539,26 @@ AT (0,0,L_H142_5+gGap) RELATIVE PREVIOUS
 
 COMPONENT H142_6 = Arm()
 AT (0,-(0.2-gH)/2,0.330) RELATIVE H142_5_Out
+
+COMPONENT Mon_6_xy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_6_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_6_Phic = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_6_L = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_6_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
@@ -524,6 +623,26 @@ AT (0,0,L_H142_6+gGap) RELATIVE PREVIOUS
 COMPONENT H142_7 = Arm()
 AT (0,0,0.03+Al_Thickness) RELATIVE PREVIOUS
 
+COMPONENT Mon_7_xy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_7_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_7_Phic = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_7_L = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
 COMPONENT H142_7_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -586,6 +705,26 @@ AT (0,0,L_H142_7+gGap) RELATIVE PREVIOUS
 
 COMPONENT H142_8 = Arm()
 AT (0,0,0.03+Al_Thickness) RELATIVE PREVIOUS
+
+COMPONENT Mon_8_xy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_8_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_8_Phic = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_8_L = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_8_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
@@ -650,6 +789,26 @@ AT (0,0,L_H142_8+gGap) RELATIVE PREVIOUS
 COMPONENT H142_9 = Arm()
 AT (0,0,0.03+Al_Thickness) RELATIVE PREVIOUS
 
+COMPONENT Mon_9_xy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_9_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_9_Phic = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_9_L = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
 COMPONENT H142_9_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -713,6 +872,26 @@ AT (0,0,L_H142_9+gGap) RELATIVE PREVIOUS
 COMPONENT H142_10 = Arm()
 AT (0,0,0.03+Al_Thickness) RELATIVE PREVIOUS
 
+COMPONENT Mon_10_xy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_10_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_10_Phic = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_10_L = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
 COMPONENT H142_10_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -775,6 +954,26 @@ AT (0,0,L_H142_10+gGap) RELATIVE PREVIOUS
 
 COMPONENT H142_11 = Arm()
 AT (0,0,0.03+Al_Thickness) RELATIVE PREVIOUS
+
+COMPONENT Mon_11_xy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_11_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_11_Phic = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_11_L = Monitor_nD(
+  xwidth=0.03, yheight=gH,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H142_11_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS

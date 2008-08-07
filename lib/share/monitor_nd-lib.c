@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.42 $
+* Version: $Revision: 1.43 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,15 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.42 2008-07-17 12:50:18 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.43 2008-08-07 21:52:10 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.42  2008/07/17 12:50:18  farhi
+* MAJOR commit to McStas 2.x
+* uniformized parameter naming in components
+* uniformized SITE for instruments
+* all compile OK
+*
 * Revision 1.41  2008/07/01 20:28:13  farhi
 * Fixed zthick -> zdepth
 *
@@ -1219,7 +1225,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       if (mc_mn_Vars->Flag_List && mc_mn_Vars->Mon2D_Buffer) /* List: DETECTOR_OUT_2D */
       {
         int  ascii_only_orig;
-        char formatName[64];
+        char formatName[256];
         char *formatName_orig;
 
         if (mc_mn_Vars->Flag_List >= 2) mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter;

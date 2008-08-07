@@ -8,7 +8,7 @@
 * Date: Thorwald van Vuure
 * Origin: ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Test for PSD_Detector component
@@ -17,7 +17,7 @@
 * Test for PSD_Detector component showing charge drift
 * and parallax effect when rotating detector with e.g. 'rot=10'
 *
-* Example: mcrun Test_PSD_Detector.instr rot=0
+* %Example: rot=0 Detector: mydet_I=4.57301e-14
 *
 * %Parameters
 * rot: rotation angle of detector (deg)
@@ -36,7 +36,7 @@ COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT mysource = Source_gen(
-    lambda0 = 0.18, dlambda=0.01, focus_xw=0.0001, focus_yh=0.0001, radius=0.0001)
+    lambda0 = 0.18, dlambda=0.01, focus_aw=0.0001, focus_ah=0.0001, radius=0.0001)
   AT (0, 0, 0) RELATIVE Origin
   ROTATED (0,0,0) RELATIVE Origin
 
@@ -44,9 +44,9 @@ COMPONENT det_pos=Arm()
 AT (0, 0, 0.1) RELATIVE Origin
 
 COMPONENT mydet = PSD_Detector(
-    filename = "test_out.dat", xwidth = 0.01, yheight = .01, radius=.73,
+    filename = "test_out.dat", xwidth = 0.01, yheight = .01, zdepth = 3.2e-2, 
     dc=2.6e-2,
-    zdepth = 3.2e-2, PressureConv = 5, PressureStop = 1,
+    PressureConv = 5, PressureStop = 1,
     verbose = 1, LensOn=1, nx=64, ny=32,
     FN_Conv="Gas_tables/He3inHe.table", FN_Stop="Gas_tables/He3inCF4.table",
     p_interact=0, threshold=100,

@@ -11,7 +11,7 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision: 1.6 $
+* Version:    $Revision: 1.7 $
 * Release:    McStas CVS_080624
 * %INSTRUMENT_SITE: FZ_Juelich
 *
@@ -22,10 +22,15 @@
 * KWS2 SANS instrument at FZ-Juelich. Custom sample (None, Guinier, Debye or Any).
 * Sample is at 40 m from source. 2 detectors.
 *
+* %Example: lambda=7 sample=0 Detector: detector_I=3507.5 
+* %Example: lambda=7 sample=1 Detector: detector_I=3507.5
+* %Example: lambda=7 sample=2 Detector: detector_I=3507.5
+* %Example: lambda=7 sample=3 Detector: detector_I=3507.5
+*
 * %P
 * INPUT PARAMETERS:
 * lambda:    Mean wavelength of neutrons      [AA]
-* D_lambda:  Wavelength spread of neutrons    [AA]
+* dlambda:   Wavelength spread of neutrons    [AA]
 * sample:    type of sample, as 
 *            0=None, 1='AnySample', 2='Debye' or 3='Guinier' [int]
 * Clen:      distance to collimation in 0-20. Sample is at 40 m from source [m]
@@ -58,7 +63,7 @@ INITIALIZE
 
 TRACE
 
-COMPONENT origin = Arm()
+COMPONENT origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 
@@ -105,9 +110,8 @@ COMPONENT sampleGu = SANS_Guinier(transm=0.5, Rg=300, qmax=0.031416,
   AT (0, 0, Dlen-0.05) RELATIVE sample
 */
 
-/*Component Bstop = Beamstop(xwidth=1.5*NGblen, yheight = 1.5*NGblen)
+Component Bstop = Beamstop(xwidth=1.5*NGblen, yheight = 1.5*NGblen)
   AT (0, 0, Dlen-0.005) RELATIVE sample
-*/
 
 COMPONENT detector = PSD_monitor(
     nx = 128, ny = 128, filename = "PSD.dat", xwidth = 0.6, yheight = 0.6)

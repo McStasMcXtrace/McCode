@@ -12,7 +12,7 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -25,7 +25,7 @@
 * Here it is used as a diffractometer for a collimator tilt alignment. The
 * detector is at the sample position and there is no analyzer.
 *
-* Example: mcrun linup-2.instr C1=30
+* %Example: TTM=-74 Detector: sng_I=2.8e-07
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -76,13 +76,14 @@ INITIALIZE
 
 TRACE
 
-COMPONENT a1 = Arm()
+COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT source = Source_simple(
   radius = 0.060,
   dist = 3.288,
   focus_xw = 0.042, focus_yh = 0.082,
+  compat=1,
   E0 = 20,     /* 20 meV */
   dE = 0.82    /* Sufficient for TAS1 geometry */
 )

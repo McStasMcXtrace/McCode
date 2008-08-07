@@ -69,6 +69,8 @@ sed 's/MCSTAS_VERSION/'$1'/' mcstas.nsi > mcstas.nsi.new
 mv mcstas.nsi.new mcstas.nsi
 sed 's/MCSTAS_VERSION/'$1'/' deb/control > deb/control.new
 mv deb/control.new deb/control
+sed 's/MCSTAS_VERSION/'$1'/' configure.in > configure.in.new
+mv configure.in.new configure.in
 
 # Create ps/pdf/html based install info
 cd install_docs/tex

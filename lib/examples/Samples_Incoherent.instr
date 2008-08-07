@@ -24,7 +24,6 @@
 *   Isotropic_sqw
 *   Incoherent
 *
-*
 * Examples: 
 *
 * Compare incoherent scattering from all sample comps, beamstop in place:
@@ -42,6 +41,12 @@
 * and Isotroic_sqw (has the side-effect that back-scattered neutrons are absorbed):
 *
 *   mcrun Samples_Incoherent -d Some_third_directory -N4 SAMPLE=2,5 STOP=0 DB=1
+*
+* %Example: SAMPLE=1 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.84698e+06
+* %Example: SAMPLE=2 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.84703e+06
+* %Example: SAMPLE=3 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98269e+06
+* %Example: SAMPLE=4 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98520e+06
+* %Example: SAMPLE=5 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.99878e+06
 * 
 * %Parameters
 * L_min:    [AA] Minimum wavelength of neutrons
@@ -78,7 +83,7 @@ COMPONENT Source = ISIS_moderator(
 	SAC = 1) 
   AT (0, 0, 0) ABSOLUTE
 
-COMPONENT Coord = Arm()
+COMPONENT Coord = Progress_bar()
    AT (0.0,0.0,8.3000) RELATIVE Source
 
 /* set of samples *************************************************************/

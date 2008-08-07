@@ -14,13 +14,15 @@ Refraction?
 (*) Checkup - use of PROP_DT in all comps?
 monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
 (*) monochromator_ ... (Lucia Alianelli) full monte carlo
-
+Beam_spy -> Monitor(statistics=1)
 
 Instruments:
 (*) Laue_diff in examples
 (*) max parm Lucia vs. Monitor_nD (FIXED by _ hack)
 (*) IN22_sample - wrong direction / rotation of samle 2\theta mono ?
 (*) Guide_test.instr ; Source_test.instr; Monochromator_test; etc...
+TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off, SNS_test, Tomography
+use %include where ever possible
 
 Metalanguage / runtime
 New grammar(s) for 'Metacomponents' or 'Multicomponents' : 

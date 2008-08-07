@@ -15,7 +15,7 @@
  * S(q,w) and S(q) data.
  *
  *
- * Example: mcrun Samples_Isotropic_Sqw.instr lambda=3.4
+ * %Example: lambda=3.4 Detector: M_theta_t_I=6.42114e-08
  *
  * %Parameters
  * INPUT PARAMETERS:

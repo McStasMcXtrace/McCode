@@ -12,7 +12,7 @@
 * Date: 6th Jan 2004.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ILL
 *
 * The D9 hot diffractometer at the ILL.
@@ -283,7 +283,7 @@ COMPONENT sample = Single_crystal( /* rotate sample in omega */
     ax = DS, ay = 0, az = 0,
     bx = 0, by = DS, bz = 0,
     cx = 0, cy = 0, cz = DS,
-    reflections = "quartz.lau")
+    reflections = "SiO2_quartza.lau")
   AT (0, 0, 0) RELATIVE sample_cradle
   ROTATED (0, A3, 0) RELATIVE sample_cradle
 

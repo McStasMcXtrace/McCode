@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: ILL
 * Release: McStas 1.9
 *
@@ -152,7 +152,8 @@
 * LensOn:         =1 to simulate an electrostatic lens according to
 *                 P. Van Esch, NIM A 540 (2005) pp. 361-367
 * dc:             Distance from the entrance window to the cathode plane,
-*                 where the correction zone of the lens ends (m)
+*                 where the correction zone of the lens ends 
+*                 for banana shape and LensOn (m)
 * xChDivRelSigma: Sigma of the error in position determination along the x
 *                 axis (relative to xwidth), uniquely due to charge division
 *                 readout. Set to 0 in case of independent channel readout
@@ -180,7 +181,7 @@ SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
   yChDivRelSigma=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
   CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, DetCumul, PHSpectrum,
-  PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors)
+  PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,DetectorType)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
@@ -239,6 +240,7 @@ DECLARE
     long   VariousErrors=0; /* container for the occurrence of various
              errors, so that the algorithm gives the matching error
              messages only once each */
+    long   DetectorType=0; // 1 for box, 2 for tube, 4 for cylinder ('banana'). Anything else gives an error.
   %}
 
 INITIALIZE
@@ -274,6 +276,70 @@ INITIALIZE
     double *TempVar35;
     double *ETT1; // Energy transferred by triton
     double *PTT1; // Positions of transfer of energy by triton
+    
+    if (borderx==-2) borderx = xwidth/nx;
+  else if (borderx==-1) borderx = zdepth;
+  else if (borderx<0) {
+    fprintf(stderr,"PSD_Detector: %s: Negative x border zone specified. Exit.\n",
+      NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if (bordery==-2) bordery = yheight/ny;
+  else if (bordery==-1) bordery = zdepth;
+  else if (bordery<0) {
+    fprintf(stderr,"PSD_Detector: %s: Negative y border zone specified. Exit.\n",
+      NAME_CURRENT_COMP);
+    exit(0);
+  }
+
+  if (xwidth>0) { /* panel */
+    DetectorType+=1;
+    if (zdepth<0) {
+    fprintf(stderr,"PSD_Detector: %s: Detector box has no zdepth. Exit.\n",
+                           NAME_CURRENT_COMP);
+    exit(0);
+    }
+  }
+  if (radius>0 && !awidth) {
+    DetectorType+=2; /* cylinder */
+  }
+  if (awidth>0 && radius) {
+    DetectorType+=4; /* banana */
+    if (zdepth<0) {
+    fprintf(stderr,"PSD_Detector: %s: Detector 'banana' has no zdepth. Exit.\n",
+                           NAME_CURRENT_COMP);
+    exit(0);
+    }
+    if (radius<=0) {
+    fprintf(stderr,"PSD_Detector: %s: Non-positive radial distance to the sample was specified. Exit.\n",
+                           NAME_CURRENT_COMP);
+    exit(0);
+    }
+    if (!dc && zdepth && LensOn) dc = zdepth/2;
+    if (((dc>zdepth) || (dc<0)) && (LensOn==1)) {
+    fprintf(stderr,"PSD_Detector: %s: Electrostatic lens was turned on, but\n"
+                   "              no valid zdepth of the cathode plane was specified. Exit.\n",
+                                  NAME_CURRENT_COMP);
+    exit(0);
+    }
+    if (awidth+2*borderx>2*PI*radius) {
+    fprintf(stderr,"PSD_Detector: %s: Detector comes perilously close to encompassing 2pi. Exit.\n",
+                           NAME_CURRENT_COMP);
+    exit(0);
+    }
+  }
+  if (yheight<=0) {
+    fprintf(stderr,"PSD_Detector: %s: Detector has no height (yheight). Exit.\n",
+                           NAME_CURRENT_COMP);
+    exit(0);
+  }
+  if ( (DetectorType!=1) && (DetectorType!=2) &&(DetectorType!=4) ) {
+    fprintf(stderr,"PSD_Detector: %s: Detector has conflicting size\n"
+                   "              specifications, i.e. combinations of xwidth, radius\n"
+                   "              or awidth, or none at all. Exit.\n",
+                                  NAME_CURRENT_COMP);
+    exit(0); 
+  }
 
 
     for (i=0; i<nx; i++)
@@ -490,74 +556,10 @@ TRACE
   double EnergyP,EnergyT,SigmaEnergy;
   double lp,lt; // length proton- and triton tracks
   long   intersect;
-  long   DetectorType=0; // 1 for box, 2 for tube, 4 for cylinder ('banana'). Anything else gives an error.
   long   Impossibility; // used to check for impossible collisions
   double alimit; // borders of the sensitive volume + edges
   double aa; // alpha coordinate (along the arc of the detector) of the absorption
   double t1,t2; // time for the first and second charged particles to the next wall
-
-
-  if (borderx==-2) borderx = xwidth/nx;
-  else if (borderx==-1) borderx = zdepth;
-  else if (borderx<0) {
-    fprintf(stderr,"PSD_Detector: %s: Negative x border zone specified. Exit.\n",
-      NAME_CURRENT_COMP);
-    exit(0);
-  }
-  if (bordery==-2) bordery = yheight/ny;
-  else if (bordery==-1) bordery = zdepth;
-  else if (bordery<0) {
-    fprintf(stderr,"PSD_Detector: %s: Negative y border zone specified. Exit.\n",
-      NAME_CURRENT_COMP);
-    exit(0);
-  }
-
-  if (xwidth>0) { /* panel */
-    DetectorType+=1;
-    if (zdepth<0) {
-    fprintf(stderr,"PSD_Detector: %s: Detector box has no zdepth. Exit.\n",
-                           NAME_CURRENT_COMP);
-    exit(0);
-    }
-  }
-  if (radius>0 && !awidth) {
-    DetectorType+=2; /* cylinder */
-  }
-  if (awidth>0 && radius) {
-    DetectorType+=4; /* banana (*/
-    if (zdepth<0) {
-    fprintf(stderr,"PSD_Detector: %s: Detector 'banana' has no zdepth. Exit.\n",
-                           NAME_CURRENT_COMP);
-    exit(0);
-    }
-    if (radius<=0) {
-    fprintf(stderr,"PSD_Detector: %s: Non-positive radial distance to the sample was specified. Exit.\n",
-                           NAME_CURRENT_COMP);
-    exit(0);
-    }
-    if (((dc>zdepth) || (dc<0)) && (LensOn==1)) {
-    fprintf(stderr,"PSD_Detector: %s: Electrostatic lens was turned on, but\n"
-                   "              no valid zdepth of the cathode plane was specified. Exit.\n",
-                                  NAME_CURRENT_COMP);
-    exit(0);
-    }
-    if (awidth+2*borderx>2*PI*radius) {
-    fprintf(stderr,"PSD_Detector: %s: Detector comes perilously close to encompassing 2pi. Exit.\n",
-                           NAME_CURRENT_COMP);
-    exit(0);
-    }
-  }
-  if (yheight<=0) {
-    fprintf(stderr,"PSD_Detector: %s: Detector has no height (yheight). Exit.\n",
-                           NAME_CURRENT_COMP);
-    exit(0);
-  }
-    if ( (DetectorType!=1) && (DetectorType!=2) &&(DetectorType!=4) ) {
-      fprintf(stderr,"PSD_Detector: %s: Detector has conflicting size\n"
-                     "              specifications, i.e. combinations of xwidth, radius\n"
-                     "              or awidth, or none at all. Exit.\n",
-                                    NAME_CURRENT_COMP);
-      exit(0); }
 
   CountNeutrons += p;
 

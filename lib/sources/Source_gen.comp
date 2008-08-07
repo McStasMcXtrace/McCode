@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.41 $
+* Version: $Revision: 1.42 $
 * Origin: ILL/Risoe
-* Release: McStas 1.10
+* Release: McStas CVS_080730
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
 * Modified by: EF, Sep 18, 2001 ; corrected illumination bug. Add options
 * Modified by: EF, Oct 30, 2001 ; minor changes. mccompcurname replaced
@@ -27,11 +27,11 @@
 * target. However, it may be directly set using the 'focus-aw' and 'focus_ah'
 * parameters.
 *
-* The neutron energy/wavelength is distributed between Emin=E0-dE and
-* Emax=E0+dE or Lmin=lambda0-dlambda and Lmax=lambda0+dlambda. The I1 may
-* be either arbitrary (I1=0), or specified in neutrons per steradian per
-* square cm per Angstrom. A Maxwellian spectra may be selected if you give
-* the source temperatures (up to 3). 
+* The neutron energy/wavelength is distributed uniformly in wavelength between
+* Emin=E0-dE and Emax=E0+dE or Lmin=lambda0-dlambda and Lmax=lambda0+dlambda. 
+* The I1 may be either arbitrary (I1=0), or specified in neutrons per steradian
+* per square cm per Angstrom per s. A Maxwellian spectra may be selected if you 
+* give the source temperatures (up to 3). 
 *
 * Finally, a file with the flux as a
 * function of the wavelength [lambda(AA) flux(n/s/cm^2/st/AA)] may be used
@@ -52,9 +52,6 @@
 * The beam is divergence uniform,.
 * The source may have a thickness, which will broaden the default zero time
 * distribution.
-*
-* For the Maxwellian spectra, the generated intensity is dPhi/dlambda (n/s/AA)
-* For flat spectra, the generated intensity is Phi (n/s).
 *
 * Usage example:
 *   Source_gen(radius=0.1,lambda0=2.36,dlambda=0.16,T1=20,I1=1e13,focus_xw=0.01,focus_yh=0.01)
@@ -141,7 +138,7 @@ SETTING PARAMETERS (radius=0.0, dist=0, focus_xw=0.045, focus_yh=0.12, focus_aw=
                     yheight=0.1, xwidth=0.1, verbose=0, T1=0,
                     flux_file_perAA=0, flux_file_log=0,
                     Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,zdepth=0, int target_index=+1)
-OUTPUT PARAMETERS (p_in, lambda0, lambda02, L2P, lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc, pTable, pTable_x, pTable_y,pTable_xmin, pTable_xmax, pTable_xsum, pTable_ymin, pTable_ymax, pTable_ysum, pTable_dxmin, pTable_dxmax, pTable_dymin, pTable_dymax)
+OUTPUT PARAMETERS (p_in, lambda1, lambda2, lambda3, pTable, pTable_x, pTable_y,pTable_xmin, pTable_xmax, pTable_xsum, pTable_ymin, pTable_ymax, pTable_ysum, pTable_dxmin, pTable_dxmax, pTable_dymin, pTable_dymax,M)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
@@ -184,10 +181,9 @@ char *str_dup_numeric(char *orig)
 DECLARE
 %{
  double p_in;
- double lambda0=0;
- double lambda0, lambda02, L2P;     /* first Maxwellian source */
- double lambda0b, lambda02b, L2Pb;  /* second Maxwellian source */
- double lambda0c, lambda02c, L2Pc;  /* third Maxwellian source */
+ double lambda1;  /* first Maxwellian source */
+ double lambda2;  /* second Maxwellian source */
+ double lambda3;  /* third Maxwellian source */
  t_Table pTable;
  t_Table pTable_x;
  t_Table pTable_y;
@@ -201,6 +197,13 @@ DECLARE
  double  pTable_dxmax;
  double  pTable_dymin;
  double  pTable_dymax;
+ 
+ double M(double l, double temp)
+/* A normalised Maxwellian distribution : Integral over all l = 1 */
+    {
+      double a=949.0/temp;
+      return 2*a*a*exp(-a/(l*l))/(l*l*l*l*l);
+    }
 
 %}
 
@@ -254,35 +257,30 @@ INITIALIZE
       if (verbose) fprintf(stderr, "Source_gen: %s: Minimum wavelength %g is below table range lower limit %g. Constraining.\n", NAME_CURRENT_COMP, Lmin, table_lmin);
       Lmin = table_lmin;
     }
-  } else
+  }  /* end flux file */
+  else
   {
     k  = 1.38066e-23; /* k_B */
     if (T1 > 0)
     {
-      lambda0  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T1);
-      lambda02 = lambda0*lambda0;
-      L2P      = 2*lambda02*lambda02;
+      lambda1  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T1);
     }
     else
-      { lambda0 = lambda0; }
+      { lambda1 = lambda0; }
 
     if (T2 > 0)
     {
-      lambda0b  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T2);
-      lambda02b = lambda0b*lambda0b;
-      L2Pb      = 2*lambda02b*lambda02b;
+      lambda2  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T2);
     }
     else
-      { lambda0b = lambda0; }
+      { lambda2 = lambda0; }
 
     if (T3 > 0)
     {
-      lambda0c  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T3);
-      lambda02c = lambda0c*lambda0c;
-      L2Pc      = 2*lambda02c*lambda02c;
+      lambda3  = 1.0e10*sqrt(HBAR*HBAR*4.0*PI*PI/2.0/MNEUTRON/k/T3);
     }
     else
-      { lambda0c = lambda0; }
+      { lambda3 = lambda0; }
   }
 
   /* now read position-divergence files, if any */
@@ -321,7 +319,7 @@ INITIALIZE
 
     if (!xwidth) xwidth=pTable_xmax-pTable_xmin;
     if (!focus_xw && !dist) focus_xw=fabs(pTable_dxmax-pTable_dxmin);
-  }
+  } /* end xdiv file */
 
   if (ydiv_file && strlen(ydiv_file) > 0) {
     int i,j;
@@ -357,7 +355,7 @@ INITIALIZE
         NAME_CURRENT_COMP, xylimits, ydiv_file, i);
     if (!yheight)  yheight=pTable_ymax-pTable_ymin;
     if (!focus_yh && !dist) focus_yh=fabs(pTable_dymax-pTable_dymin);
-  }
+  } /* end ydiv file */
 
   /* tests for parameter values */
   if (Emin < 0 || Emax < 0 || Lmin < 0 || Lmax < 0 || E0 < 0 || dE < 0 || lambda0 < 0 || dlambda < 0)
@@ -398,7 +396,7 @@ INITIALIZE
   lambda0=fabs(lambda0); dlambda=fabs(dlambda);
   focus_xw = fabs(focus_xw); focus_yh=fabs(focus_yh); dist=fabs(dist);
 
-  if ((!focus_ah && !focus_aw) || (!focus_xw && !focus_yh))
+  if ((!focus_ah && !focus_aw) && (!focus_xw && !focus_yh))
   {
     fprintf(stderr,"Source_gen: %s: Error: No focusing information.\n"
                    "            Specify focus_xw, focus_yh or focus_aw, focus_ah\n",
@@ -420,7 +418,7 @@ INITIALIZE
     if (flux_file && strlen(flux_file) && !flux_file_perAA)  p_in *= pTable.rows/(Lmax-Lmin);
   }
   else
-    p_in = (I1 > 0? I1 : 1)/4/PI; /* Small angle approx. */
+    p_in = 1/4/PI; /* Small angle approx. */
   p_in /= mcget_ncount();
   if (!T1 && I1) p_in *= I1;
 
@@ -436,15 +434,16 @@ INITIALIZE
       NAME_CURRENT_COMP);
     exit(-1);
   }
-
+  
   if (verbose)
   {
     printf("Source_gen: component %s ", NAME_CURRENT_COMP);
     if ((yheight == 0) || (xwidth == 0))
       printf("(disk, radius=%g)", radius);
     else
-      printf("(square %g x %g)",yheight,xwidth);
-    printf("\n            spectra ");
+      printf("(square %g x %g)",xwidth,yheight);
+    printf("\n            focusing distance dist=%g area=%g x %g\n", dist, focus_xw, focus_yh);
+    printf("            spectra ");
     printf("%.3f to %.3f AA (%.3f to %.3f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
     printf("\n");
     if (flux_file && strlen(flux_file) > 0)
@@ -453,11 +452,11 @@ INITIALIZE
     }
     else if (T1>=0 && I1)
     { if (T1 != 0)
-        printf("            T1=%.1f K (%.3f AA)", T1, lambda0);
+        printf("            T1=%.1f K (%.3f AA)", T1, lambda1);
       if (T2*I2 != 0)
-        printf(", T2=%.1f K (%.3f AA)", T2, lambda0b);
+        printf(", T2=%.1f K (%.3f AA)", T2, lambda2);
       if (T3*I3 != 0)
-        printf(", T3=%.1f K (%.3f AA)", T3, lambda0c);
+        printf(", T3=%.1f K (%.3f AA)", T3, lambda3);
       if (T1) printf("\n");
       printf("  Flux is dPhi/dlambda in [n/s/cm2].\n");
     }
@@ -477,7 +476,7 @@ INITIALIZE
 TRACE
 %{
   double dx,dy,xf,yf,rf,pdir,chi,v,r, lambda;
-  double Maxwell, lambda2, lambda5;
+  double Maxwell;
   double xwg, yhg;
 
   if (verbose >= 0)
@@ -506,9 +505,8 @@ TRACE
       
     if (!focus_ah && !focus_aw) {
       randvec_target_rect_real(&xf, &yf, &rf, &pdir,
-			       0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
+       0, 0, dist, focus_xw, focus_yh, ROT_A_CURRENT_COMP, x, y, z, 2);
       
-
       dx = xf-x;
       dy = yf-y;
       rf = sqrt(dx*dx+dy*dy+dist*dist);
@@ -532,17 +530,15 @@ TRACE
     }
     else if (T1 > 0 && I1 > 0)
     {
-      lambda2 = lambda*lambda;
-      lambda5 = lambda2*lambda2*lambda;
-      Maxwell = I1 * L2P/lambda5 * exp(-lambda02/lambda2);  /* 1/AA */
+      Maxwell = I1 * M(lambda, T1);;  /* 1/AA */
 
       if ((T2 > 0) && (I2 > 0))
       {
-        Maxwell += I2 * L2Pb/lambda5 * exp(-lambda02b/lambda2);
+        Maxwell += I2 * M(lambda, T2);
       }
       if ((T3 > 0) && (I3 > 0))
       {
-        Maxwell += I3 * L2Pc/lambda5 * exp(-lambda02c/lambda2);
+        Maxwell += I3 * M(lambda, T3);;
       }
       p *= Maxwell;
     }

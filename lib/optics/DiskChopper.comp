@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -60,7 +60,7 @@
 
 DEFINE COMPONENT DiskChopper
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (theta_0=0, radius=0.5, yheight=0, nu, nslit=3, jitter=0, theta_1=0, delay=0, isfirst=0, nslit_pulse=1, abs_out=1, phase=0, xwidth=0)
+SETTING PARAMETERS (theta_0=0, radius=0.5, yheight=0, nu, nslit=3, jitter=0, theta_1=0, delay=0, isfirst=0, n_pluse=1, abs_out=1, phase=0, xwidth=0)
 OUTPUT PARAMETERS (Tg, T, To, Tc, delta_y, height,omega)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
@@ -92,8 +92,8 @@ INITIALIZE
       if (yheight && yheight>radius) {
         fprintf(stderr,"DiskChopper: %s: yheight must be < radius\n", NAME_CURRENT_COMP);
         exit(-1); }
-      if (isfirst && nslit_pulse <=0)
-      { fprintf(stderr,"DiskChopper: %s: wrong First chopper pulse number (nslit_pulse)\n", NAME_CURRENT_COMP);
+      if (isfirst && n_pluse <=0)
+      { fprintf(stderr,"DiskChopper: %s: wrong First chopper pulse number (n_pluse)\n", NAME_CURRENT_COMP);
         exit(-1); }
       if (!omega) {
         fprintf(stderr,"DiskChopper: %s WARNING: chopper frequency is 0!\n", NAME_CURRENT_COMP);
@@ -155,7 +155,7 @@ TRACE
     
     if (isfirst)
       {
-        t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + floor(nslit_pulse*rand01())*Tg;
+        t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + floor(n_pluse*rand01())*Tg;
         p*=nslit*theta_0/2/PI;
       }
     else 

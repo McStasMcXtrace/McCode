@@ -11,7 +11,7 @@
 * Refer to the documentation in MCSTAS/contrib/doc/ISISdoc.pdf (.ps)
 * for further instructions on using the ISIS_moderator component
 *
-* Example: mcrun ISIS_test.instr
+* %Example: mcrun ISIS_test.instr Detector: lam1_I=1.23634e+12
 *
 * %Link
 * Written by D. Champion <D.Champion@rl.ac.uk> ISIS, Feb 2004
@@ -21,11 +21,11 @@ DEFINE INSTRUMENT ISIS_test()
 
 TRACE
 
-COMPONENT a1 = Arm()
+COMPONENT a1 = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT isis_mod = ISIS_moderator(
-	Face ="merlin", Lmin = 0.3, Lmax = 12, dist = 0.01, focus_xw = 0.1,
+	Face ="narrow", Lmin = 0.3, Lmax = 12, dist = 0.01, focus_xw = 0.1,
     focus_yh = 0.1, xwidth=-0.5, yheight=-0.8, CAngle = 0.0,SAC=0)
   AT (0, 0, 0) RELATIVE a1
 
