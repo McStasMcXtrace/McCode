@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.27 $
+* Version: $Revision: 1.28 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -85,7 +85,7 @@ TRACE
       if (difftime(EndTime,StartTime) < 60.0)
         fprintf(stdout, "%g [s] %% ", difftime(EndTime,StartTime));
       else if (difftime(EndTime,StartTime) > 3600.0)
-        fprintf(stdout, "%g [h] %% ", difftime(EndTime,StartTime));
+        fprintf(stdout, "%g [h] %% ", difftime(EndTime,StartTime)/3600.0);
       else
         fprintf(stdout, "%g [min] %% ", difftime(EndTime,StartTime)/60.0);
     } else IntermediateCnts += 1e3;
