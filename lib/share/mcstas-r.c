@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.195 $
+* Version: $Revision: 1.196 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.195 2008-08-07 21:52:10 farhi Exp $
+* $Id: mcstas-r.c,v 1.196 2008-08-19 11:25:52 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.195  2008/08/07 21:52:10  farhi
+* Second major commit for v2: fixed sources, and most instruments for
+* automatic testing. A few instruments need more work still.
+*
 * Revision 1.194  2008/07/17 12:50:18  farhi
 * MAJOR commit to McStas 2.x
 * uniformized parameter naming in components
@@ -1553,7 +1557,8 @@ FILE *mcnew_file(char *name, char *ext, char *mode)
   if(!file)
     fprintf(stderr, "Warning: could not open output file '%s' in mode '%s' (mcnew_file)\n", mem, mode);
   else {
-    if (mcopenedfiles_size <= strlen(mcopenedfiles)+strlen(mem)) {
+    if (!mcopenedfiles || 
+        (mcopenedfiles && mcopenedfiles_size <= strlen(mcopenedfiles)+strlen(mem))) {
       mcopenedfiles_size+=1024;
       if (!mcopenedfiles || !strlen(mcopenedfiles))
         mcopenedfiles = calloc(1, mcopenedfiles_size);
@@ -2248,6 +2253,8 @@ void mcsiminfo_init(FILE *f)
 #endif
   if (mcdisable_output_files) return;
   if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return;
+  /* clear list of opened files to start new save session */
+  if (mcopenedfiles && strlen(mcopenedfiles) > 0) strcpy(mcopenedfiles, "");
 #ifdef USE_NEXUS
   /* NeXus sim info is the NeXus root file */
   if(strstr(mcformat.Name, "NeXus")) {
