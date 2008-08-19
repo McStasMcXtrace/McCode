@@ -210,6 +210,7 @@ sub parse_args {
         } elsif(/^--(threads)\=(.*)$/) {
         		$threads=$2;
             push @options, "--threads=$2";
+            print STDERR "mcrun: WARNING: Threading support is NOT recommended\n";
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
