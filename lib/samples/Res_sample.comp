@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -87,6 +87,10 @@ DECLARE
 
 INITIALIZE
 %{
+
+#if defined(USE_THREADS)
+    exit(printf("Res_sample: %s: ERROR: This component can not be used in Multi-Threading execution mode. Abort.\n", NAME_CURRENT_COMP));
+#endif
 
   if (!radius || !yheight) {
     if (!xwidth || !yheight || !zdepth) exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
