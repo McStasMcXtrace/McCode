@@ -43,10 +43,10 @@ mv *.pdf $PW/..
 # Copy current PW checkout to DIST
 cd $PW
 cp -rp $PW $DIST
-# copy the doc in DIST/lib/doc
-cp $PW/../mcstas-$1-manual.ps.gz $DIST/lib/doc/mcstas-manual.ps.gz
+# copy the doc in DIST/lib/doc. Only use PDF files in distro.
+#cp $PW/../mcstas-$1-manual.ps.gz $DIST/lib/doc/mcstas-manual.ps.gz
 cp $PW/../mcstas-$1-manual.pdf $DIST/lib/doc/mcstas-manual.pdf
-cp $PW/../mcstas-$1-components.ps.gz $DIST/lib/doc/mcstas-components.ps.gz
+#cp $PW/../mcstas-$1-components.ps.gz $DIST/lib/doc/mcstas-components.ps.gz
 cp $PW/../mcstas-$1-components.pdf $DIST/lib/doc/mcstas-components.pdf
 
 # Go in DIST, clean up CVS information
