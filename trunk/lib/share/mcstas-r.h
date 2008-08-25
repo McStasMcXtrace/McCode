@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.101 $
+* Version: $Revision: 1.102 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,15 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.101 2008-07-17 12:50:18 farhi Exp $
+* $Id: mcstas-r.h,v 1.102 2008-08-25 14:13:28 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.101  2008/07/17 12:50:18  farhi
+*       MAJOR commit to McStas 2.x
+*       uniformized parameter naming in components
+*       uniformized SITE for instruments
+*       all compile OK
+*
 *       Revision 1.99  2008/04/25 08:26:33  erkn
 *       added utility functions/macros for intersecting with a plane and mirroring a vector in a plane
 *
@@ -40,7 +46,7 @@
 *
 *       The renamed routine takes local emmission coordinate into account, correcting for the
 *       effects mentioned by George Apostolopoulus <gapost@ipta.demokritos.gr> to the
-*       neutron-mc list (parameter list extended by four parms).
+*       mcstas-users list (parameter list extended by four parms).
 *
 *       For backward-compatibility, a define has been added that maps randvec_target_rect
 *       to the new routine, defaulting to the "old" behaviour.
@@ -273,7 +279,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.101 $"
+#define MCSTAS_R_H "$Revision: 1.102 $"
 
 #include <math.h>
 #include <string.h>
