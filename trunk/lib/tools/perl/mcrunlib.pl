@@ -382,7 +382,7 @@ sub do_test {
   # Initialize test
   my $now = localtime;
   my $start_sec = time();
-  my $n_single=int($ncount/10);
+  my $n_single=int($ncount);
   &$printer("# Counts:        $n_single");
   &$printer("# Output format: $plotter");
   &$printer("# Start Date:    $now");
@@ -428,42 +428,48 @@ sub do_test {
         $error_flag = 1; 
         last; # go to next instrument (exit for $k)
       } else {
-        my $diff = 0;
-        my $sim_I= 0;
-        my $line;
         #Analyse test output if reference value is available
         if ($val_val[$k] ne 0) { # there is a reference value...
           # split the output in lines
+          my $line;
+          my $sim_I= 0;
+          my $sim_E= 0;
           for $line (split "\n", $res) {
             # search reference monitor in these lines
             if($line =~ m/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) {
               my $sim_I_name = $1;
               if ($val_det[$k] eq $sim_I_name) {
                 $sim_I = $2;
-                $diff = abs($sim_I/$val_val[$k] -1);
+                $sim_E = abs($4);
               }
             }
           } # end for $line
-          if ($diff) {
-            if ($diff > 0.2) {
+          if ($sim_E) { # found monitor for this test, either below 1 % or within Error bar
+            if (abs($sim_I/$sim_E) < 2) { # error is higher than half signal: stats too low
+              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E (statistics too low for testing, increase ncount)"); 
+              $test_abstract .= "[OK]     $base". "_$index (statistics too low for testing, increase ncount)\n";
+            } elsif (abs($val_val[$k]-$sim_I) < abs($val_val[$k]*0.05) || abs($val_val[$k]-$sim_I) < 3*$sim_E)  { 
+              my $diff = int(abs($sim_I/$val_val[$k]-1)*100+0.99);
+              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%"); 
+              $test_abstract .= "[OK]     $base". "_$index (accuracy, $diff \%)\n";
+            } elsif (abs($val_val[$k]-$sim_I) < abs($val_val[$k]*0.2))  { 
+              my $diff = int(abs($sim_I/$val_val[$k]-1)*100+0.99);
+              &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%"); 
+              $test_abstract .= "[OK]     $base". "_$index (accuracy, fair $diff \%)\n";
+            } else {
               $accuracy_flag = 1;
-              &$printer("[FAILED] $base: $val_det[$k] = $sim_I, should be $val_val[$k]");
+              &$printer("[FAILED] $base: $val_det[$k] = $sim_I +/- $sim_E, should be $val_val[$k] ");
               $test_abstract .= "[FAILED] $base". "_$index (accuracy)\n";
-            } else { 
-              $diff = $diff*100;
-              &$printer("[OK] $base: $val_det[$k] = $sim_I, accuracy within $diff %"); 
-              $test_abstract .= "[OK]     $base". "_$index (accuracy)\n";
             }
+          } else {
+            &$printer("[???] $base: $val_det[$k] = $sim_I (may have failed, reference not found)"); 
+            $test_abstract .= "[??????] $base". "_$index (may have failed, reference not found)\n";
           }
-        } # end if ($val_val[$k] ne 0)
-        if ($diff eq 0 && $val_val[$k] eq 0) { 
+        }  else {   # no reference value
           &$printer("[OK] $base: $val_det[$k] = $sim_I (accuracy not checked)"); 
           $test_abstract .= "[OK]     $base". "_$index (accuracy not checked)\n";
-        } elsif ($diff eq 0) {
-          &$printer("[???] $base: $val_det[$k] = $sim_I (may have failed)"); 
-          $test_abstract .= "[??????] $base". "_$index (may have failed)\n";
         }
-      } # end else
+      } # end else $child_error_code (execution)
     } # end for $k (examples in instrument)
   } # end for $j (instruments)
   my $elapsed_sec = time() - $start_sec;
