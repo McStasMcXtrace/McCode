@@ -8,7 +8,7 @@
 * Date: August 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_constBfield
@@ -21,7 +21,7 @@
 * See: 
 * Seeger et al. NIM A: Volume 457, Issues 1-2 , 11 January 2001, Pages 338-346
 *
-* %Example: mcrun Test_Magnetic_Rotation Detector: MPLMonNum2Y_I=3.5461
+* %Example: mcrun Test_Magnetic_Rotation Detector: MPLMonNum2Y_I=3.54525
 *
 * %Parameters
 *

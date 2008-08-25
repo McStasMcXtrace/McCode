@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H53 curved cold guide at the ILL
@@ -16,7 +16,7 @@
 * %Description
 * The H53 curved cold guide at the ILL feeding IN14, IN16, ADAM, EVA, PF1a
 *
-* %Example: m=0 Detector: Mon_P8_L_I=3.74693e+09
+* %Example: m=0 Detector: Mon_P8_L_I=4.97e+09
 *
 * %Parameters
 * m:  (1) m-value of whole guide coating

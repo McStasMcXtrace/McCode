@@ -11,7 +11,7 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision: 1.7 $
+* Version:    $Revision: 1.8 $
 * Release:    McStas CVS_080624
 * %INSTRUMENT_SITE: FZ_Juelich
 *
@@ -22,10 +22,10 @@
 * KWS2 SANS instrument at FZ-Juelich. Custom sample (None, Guinier, Debye or Any).
 * Sample is at 40 m from source. 2 detectors.
 *
-* %Example: lambda=7 sample=0 Detector: detector_I=3507.5 
-* %Example: lambda=7 sample=1 Detector: detector_I=3507.5
-* %Example: lambda=7 sample=2 Detector: detector_I=3507.5
-* %Example: lambda=7 sample=3 Detector: detector_I=3507.5
+* %Example: lambda=7 sample=0 Detector: detector_I=3450 
+* %Example: lambda=7 sample=1 Detector: detector_I=1227
+* %Example: lambda=7 sample=2 Detector: detector_I=1751
+* %Example: lambda=7 sample=3 Detector: detector_I=1249
 *
 * %P
 * INPUT PARAMETERS:
@@ -111,6 +111,7 @@ COMPONENT sampleGu = SANS_Guinier(transm=0.5, Rg=300, qmax=0.031416,
 */
 
 Component Bstop = Beamstop(xwidth=1.5*NGblen, yheight = 1.5*NGblen)
+WHEN (sample)
   AT (0, 0, Dlen-0.005) RELATIVE sample
 
 COMPONENT detector = PSD_monitor(

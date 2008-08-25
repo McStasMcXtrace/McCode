@@ -12,7 +12,7 @@
 * Date: 2007.
 * Origin: <a href="http://www-llb.cea.fr/">LLB</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Test instrument for neutron focalisation with a set of supermirrors. 
@@ -28,15 +28,15 @@
 *
 * %Parameters
 * INPUT PARAMETERS:
-* Qmin		: Minimum momentum transfer on the detector [AA^-1]
-* G		: Ratio of the mirror focal length = increase in accepted divergence angle [1]
-* H		: Height of mirrors [m]
-* F		: Parabolic focal [m]
-* DET 		: Distance between the two elliptic focal points [m]
-* lambda   	: Mean wavelength of neutrons [AA]
-* divergence	: source divergence (deg)
-* BeamWidth	: Length of the source to focalize [m]
-* TetaMin	: Minimum angle that must be reflected by the device assuming m=3 SM (TetaMin=3 for 5A and above neutron) [deg]
+* Qmin:       Minimum momentum transfer on the detector [AA^-1]
+* G:          Ratio of the mirror focal length = increase in accepted divergence angle [1]
+* H:          Height of mirrors [m]
+* F:          Parabolic focal [m]
+* DET:        Distance between the two elliptic focal points [m]
+* lambda:     Mean wavelength of neutrons [AA]
+* divergence: source divergence (deg)
+* BeamWidth:  Length of the source to focalize [m]
+* TetaMin:    Minimum angle that must be reflected by the device assuming m=3 SM (TetaMin=3 for 5A and above neutron) [deg]
 *
 * %Link
 * 

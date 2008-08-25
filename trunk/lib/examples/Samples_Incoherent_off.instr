@@ -8,7 +8,7 @@
 * Date: June 12th, 2008
 * Origin: ILL
 * Release: McStas CVS-080208
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: Tests_samples
 *
 * Instrument to demonstrate the usage of OFF shape samples with totally absorbing material.
@@ -18,7 +18,7 @@
 * The Incoherent component is here used with a description file. The shape may be scaled
 * forcing the size of the bounding box.
 *
-* Example: mcrun Samples_Incoherent_off.instr geometry="bunny.off"
+* Example: mcrun Samples_Incoherent_off.instr geometry="socket.off"
 *
 * %Parameters
 * geometry: [string] Name of the OFF file describing the sample shape

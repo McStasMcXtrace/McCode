@@ -8,7 +8,7 @@
 * Date: July 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_constBfield
@@ -18,7 +18,7 @@
 * This instrument demonstrates how to use the component
 * Pol_constBfield to make a Mezei Spin flipper.
 *
-* %Example: mcrun Test_Pol_MSF.instr Detector: pollambdaMonitor2z_I=0.136
+* %Example: mcrun Test_Pol_MSF.instr Detector: pollambdaMonitor2z_I=0.136736
 *
 * %Parameters
 *

@@ -7,7 +7,7 @@
 * Written by: Peter Christiansen 
 * Date: July 2006
 * Origin: RISOE
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * Test Pol_guide_Vmirror. 
@@ -16,7 +16,7 @@
 * A simple description of the V4 instrument in Berlin as explained in:
 * NIM A 451 (2000) 474-479
 *
-* %Example: polariserIn=1 Detector: psdPolGuide_I=3.96e+12
+* %Example: polariserIn=1 Detector: psdPolGuide_I=3.95407e+12
 *
 * %Parameters
 *

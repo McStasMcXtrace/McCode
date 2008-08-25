@@ -8,7 +8,7 @@
 * Date: August 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_simpleBfield
@@ -23,7 +23,7 @@
 * is timedependent (velocity-dependent), setting a B-field that will rotatate
 * the neutron spins by PI.
 *
-* %Example: mcrun Test_Magnetic_Userdefined.inst Detector: pollambdaMonitor2z_I=0.0185567
+* %Example: mcrun Test_Magnetic_Userdefined Detector: pollambdaMonitor2z_I=0.181511
 *
 * %Parameters
 *

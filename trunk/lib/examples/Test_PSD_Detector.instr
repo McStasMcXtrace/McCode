@@ -8,7 +8,7 @@
 * Date: Thorwald van Vuure
 * Origin: ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Test for PSD_Detector component
@@ -17,7 +17,7 @@
 * Test for PSD_Detector component showing charge drift
 * and parallax effect when rotating detector with e.g. 'rot=10'
 *
-* %Example: rot=0 Detector: mydet_I=4.57301e-14
+* %Example: rot=0 Detector: mydet_I=3.57344e-18
 *
 * %Parameters
 * rot: rotation angle of detector (deg)

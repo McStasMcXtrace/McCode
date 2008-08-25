@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H142 S-curved cold guide at the ILL
@@ -16,7 +16,7 @@
 * %Description
 * The H142 S-curved cold guide at the ILL feeding IN12, T3 and LADI
 *
-* %Example: m=1 Detector: Mon_14_L_I=1.99294e+09
+* %Example: m=1 Detector: Mon_14_L_I=2.00678e+09
 *
 * %Parameters
 * m:       (1) m-value of first curved setion (H14) guide coating
