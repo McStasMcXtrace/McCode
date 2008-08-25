@@ -12,7 +12,7 @@
 * Date: October 30, 1997
 * Modified by: KL, October 4, 2001
 * Modified by: Emmanuel Farhi, October 30, 2001. Serious bug corrected.
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -44,12 +44,12 @@
 * focus_xw:[m]  Width of target
 * focus_yh:[m]  Height of target
 * E0:     [meV] Mean energy of neutrons.
-* dE:     [meV] Energy spread of neutrons (flat or gaussian sigma).
+* dE:     [meV] Energy half spread of neutrons (flat or gaussian sigma).
 * lambda0:[AA]  Mean wavelength of neutrons.
-* dlambda:[AA]  Wavelength spread of neutrons.
+* dlambda:[AA]  Wavelength half spread of neutrons.
 * flux:   [1/(s*cm**2*st*energy unit)] flux per energy unit, Angs or meV
+*               if flux=0, the source emits 1 in 4*PI whole space.
 * gauss:  [1]   Gaussian (1) or Flat (0) energy/wavelength distribution
-* compat: [1]   Apply weighting/sampling as now obsolete Source_flat component
 *
 * %E
 *******************************************************************************/
@@ -59,7 +59,7 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (radius=0.1, yheight=0, xwidth=0, 
   dist=0, focus_xw=.045, focus_yh=.12, 
   E0=0, dE=0, lambda0=0, dlambda=0, 
-  flux=1, gauss=0, int target_index=+1, compat=0)
+  flux=1, gauss=0, int target_index=+1)
 OUTPUT PARAMETERS (pmul)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
@@ -79,16 +79,16 @@ INITIALIZE
     srcArea = xwidth * yheight;
   }
   
-  if (!compat) {
+  if (flux) {
     pmul=flux*1e4*srcArea/mcget_ncount();
+    if (dlambda)
+      pmul *= 2*dlambda;
+    else if (dE)
+      pmul *= 2*dE;
   } else {
     gauss = 0;
     pmul=1.0/(mcget_ncount()*4*PI);
   }
-  if (dlambda)
-    pmul *= 2*dlambda;
-  else if (dE)
-    pmul *= 2*dE;
   
   if (target_index && !dist)
   {

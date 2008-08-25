@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.42 $
+* Version: $Revision: 1.43 $
 * Origin: ILL/Risoe
 * Release: McStas CVS_080730
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -104,6 +104,7 @@
 * focus_ah: (deg) maximal (uniform) vert. height divergence
 * T1:       [K]   Temperature of the Maxwellian source, 0=none
 * I1:       [1/(cm**2*st*AA)] Source flux per solid angle, area and Angstrom
+*                 if I1=0, the source emits 1 in 4*PI whole space.
 * T2:       [K]   Second Maxwellian source Temperature, 0=none
 * I2:       [1/(cm**2*st*AA)] Second Maxwellian Source flux
 * T3:       [K]   Third Maxwellian source Temperature, 0=none
@@ -418,7 +419,7 @@ INITIALIZE
     if (flux_file && strlen(flux_file) && !flux_file_perAA)  p_in *= pTable.rows/(Lmax-Lmin);
   }
   else
-    p_in = 1/4/PI; /* Small angle approx. */
+    p_in = 1.0/4/PI; /* Small angle approx. */
   p_in /= mcget_ncount();
   if (!T1 && I1) p_in *= I1;
 
@@ -437,12 +438,12 @@ INITIALIZE
   
   if (verbose)
   {
-    printf("Source_gen: component %s ", NAME_CURRENT_COMP);
+    printf("Source_gen: component %s pin=%g ", NAME_CURRENT_COMP, p_in);
     if ((yheight == 0) || (xwidth == 0))
       printf("(disk, radius=%g)", radius);
     else
       printf("(square %g x %g)",xwidth,yheight);
-    printf("\n            focusing distance dist=%g area=%g x %g\n", dist, focus_xw, focus_yh);
+    if (dist) printf("\n            focusing distance dist=%g area=%g x %g\n", dist, focus_xw, focus_yh);
     printf("            spectra ");
     printf("%.3f to %.3f AA (%.3f to %.3f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
     printf("\n");
@@ -484,7 +485,7 @@ TRACE
 
     z=0;
 
-    if ((yheight == 0) || (xwidth == 0))
+    if (radius)
     {
       chi=2*PI*rand01();                          /* Choose point on source */
       r=sqrt(rand01())*radius;                    /* with uniform distribution. */
@@ -515,6 +516,7 @@ TRACE
       vy=v*dy/rf;
       vx=v*dx/rf;
     } else {
+
       randvec_target_rect_angular(&vx, &vy, &vz, &pdir,
           0, 0, 1, focus_aw*DEG2RAD, focus_ah*DEG2RAD, ROT_A_CURRENT_COMP);
       vx *= v; vy *= v; vz *= v;
