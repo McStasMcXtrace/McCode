@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.196 $
+* Version: $Revision: 1.197 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.196 2008-08-19 11:25:52 farhi Exp $
+* $Id: mcstas-r.c,v 1.197 2008-08-25 14:13:28 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.196  2008/08/19 11:25:52  farhi
+* make sure the opened file list is reset when calling mcsave (same save
+* session). already opened files are catenated, just as with the catenate
+* word in mcformat.Name
+*
 * Revision 1.195  2008/08/07 21:52:10  farhi
 * Second major commit for v2: fixed sources, and most instruments for
 * automatic testing. A few instruments need more work still.
@@ -42,7 +47,7 @@
 *
 * The renamed routine takes local emmission coordinate into account, correcting for the
 * effects mentioned by George Apostolopoulus <gapost@ipta.demokritos.gr> to the
-* neutron-mc list (parameter list extended by four parms).
+* mcstas-users list (parameter list extended by four parms).
 *
 * For backward-compatibility, a define has been added that maps randvec_target_rect
 * to the new routine, defaulting to the "old" behaviour.
@@ -152,7 +157,7 @@
 * These bugs had effect on use of virtual sources plus the new SPLIT keyword...
 *
 * Will double-check if this is a problem with current stable relase 1.10 and
-* report to neutron-mc.
+* report to mcstas-users.
 *
 * Thanks to Kim Lefmann / Linda Udby for noticing a subtile energy-widening
 * effect when using a virtual source!
@@ -4555,7 +4560,7 @@ randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_an
  * with given dimension height x width (in meters !).
  *
  * Local emission coordinate is taken into account and corrected for 'order' times.
- * (See remarks posted to neutron-mc by George Apostolopoulus <gapost@ipta.demokritos.gr>)
+ * (See remarks posted to mcstas-users by George Apostolopoulus <gapost@ipta.demokritos.gr>)
  *
  * If height or width is zero, choose random direction in full 4PI, no target. 
  * 
