@@ -11,7 +11,7 @@
 * Written by: KL
 * Date: November 20, 1998
 * Modified by: KL, 8 October 2001
-* Version: $Revision: 1.24 $
+* Version: $Revision: 1.25 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -106,6 +106,10 @@ INITIALIZE
   }
   
   p_init  = flux*1e4*xwidth*yheight/mcget_ncount();
+  if (!focus_aw || !focus_ah) 
+    exit(printf("Source_div: %s: Zero divergence defined. \n"
+                "ERROR       Use non zero values for focus_aw and focus_ah.\n",
+           NAME_CURRENT_COMP));
   p_init *= 2*fabs(DEG2RAD*focus_aw*sin(DEG2RAD*focus_ah/2));  /* solid angle */
   if (dlambda)
     p_init *= 2*dlambda;
