@@ -5,51 +5,63 @@ Next is the 2.0 release (not all from here, priority items marked by (*)
 Components:
 (*) Uniform parameter naming for the component classes; Sources, Samples, Monitors, Guides, etc.
 (*) DiskChopper bug - rotation by PI in N=2 situation changes time structure?! (Asked Uwe, no response yet)
-Robert McGreevy 4D- S(Q,w) - Analytical
+    Robert McGreevy 4D- S(Q,w) - Analytical
 (*) Single_crystal, new approaches / validation still..
 (*) Focusing lenses ala VitESS
-Single crystal / powder with magnetic order / polarisation / spin wave comp
-Refraction?
+    Single crystal / powder with magnetic order / polarisation / spin wave comp
+    Refraction?
 (*) Kill very old comps in obsolete (all? - will then allow "refill during 2.0 series)
 (*) Checkup - use of PROP_DT in all comps?
-monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
+    monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
 (*) monochromator_ ... (Lucia Alianelli) full monte carlo
-Beam_spy -> Monitor(statistics=1)
+    Beam_spy -> Monitor(statistics=1) ?
+
+Doc:
+    sync with new comp parameter names
+    check new instrument definitions doc in manual
+    update new testing mechanism doc and McDoc %example
 
 Instruments:
 (*) Laue_diff in examples
 (*) max parm Lucia vs. Monitor_nD (FIXED by _ hack)
 (*) IN22_sample - wrong direction / rotation of samle 2\theta mono ?
 (*) Guide_test.instr ; Source_test.instr; Monochromator_test; etc...
-TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off, SNS_test, Tomography
-use %include where ever possible
+(*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off, SNS_test, Tomography
+(*) TESTS: accuracy must take into account N value instead of default 20 %
+(*) use %include where ever possible e.g. ILL_H142_IN12=ILL_H142+templateTAS, ILL_H15_IN6=ILL_H15+templateTOF
 
 Metalanguage / runtime
-New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
+    New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
 (*) ARRAY positions=filename COMPONENT MyComp = Comp()
-/* SEQUENCE positions=filename COMPONENT MyComp = Comp()
-DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp() */
+//  SEQUENCE positions=filename COMPONENT MyComp = Comp()
+//  DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp()
 (*) GROUP should jump to first member if SCATTERED (allows for multiple scattering, many-mirror setups etc.) Related: Remove ABSORB in samples when t0 < 0!!
-component initiated SPLIT (Transmit/Reflect)
+    component initiated SPLIT (Transmit/Reflect)
+    save on already opened files: catenate mode, but require to initiate the file name list when starting mcsave. May be done in mcsiminfo_init DONE
+    instrument.y to check for case insensitive comp names in case include fails
+    support zlib (if exists at ./configure) to handle compressed files (.gz, .zip, .bz) either by calling external command extraction to TMP, or in memory.
+    support HTTP file access through wget if available from configure
 
 Tools/platform:
 mcresplot widths? FWHM vs. Sigma?  mcresplot port to Matlab/Scilab ?
 (*) mcstas2vitess, only supports double parms, should also do ones with explicit type.
 (*) mcrun --test with automatic compilation for all existing comps, plus all instruments
-Update mcrun --test=compatible to include --test=FP6 (etc)
+    Update mcrun --test=compatible to include --test=FP6 (etc)
 (*) gfortran update for PGPLOT build
-SWARM / Genetic algo? 
+    SWARM / Genetic algo? 
 (*) Scan over 'strings' filename=whatever.dat;whatever2.dat;whatever3.dat -N 3  (incl optim?)
-(N)2D-scans?
-mcgnuplot: DONE (almost)
-Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
+(N) 2D-scans?
+    mcgnuplot: DONE (almost)
+    Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
 (*) mcgui signal handling in case of compilation / mpi
+(*) REMOVE threading support that is misleading and not efficient (mcrui,mcstas-r,mcrun)
+(*) Intal  SSH/DSA key for grid/MPI
 
 Infrastructure:
 (*) cvs machine / webserver / bugzilla update... 
-Ruby on rails based mcweb?
+    Ruby on rails based mcweb?
 
 Polarisation, magnetic fields: (Mainly Erik)
-Magnetic field calculations from V. Hugovieux thesis work (cvs-01) - Freefem call in INITIALIZE %{%}
+    Magnetic field calculations from V. Hugouvieux thesis work (cvs-01) - Freefem call in INITIALIZE %{%}
 (*) More Pol comps
 (*) Pol example instrs
