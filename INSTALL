@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe
 * Release: all McStas
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 *
 * This file is part of McStas.
 * It details the installation procedure
@@ -84,43 +84,22 @@ Installing on non-Unix systems
 
 Windows:
 
-McStas has been successfully compiled on Windows using Microsoft
-Visual C++ in 32-bit mode. Define the preprocessor macro 'WIN32' when
-compiling to get McStas to use the Windows file system
-semantics. Search the archive of the mailing list
-(http://neutron.risoe.dk/neutron-mc/) for details. As far as we know,
-the front-end programs have not been used on Windows at this point.
-
-At Ris, we do not use McStas in Windows, so we cannot provide direct
-support for this operating system. Try asking on the mailing list if you
-need help. If you experience a specific problem with using McStas on
-Windows, send a description of the problem to the mailing list so that
-we can fix it in the next version.
-
-If you want to volunteer to provide Windows binaries to other users,
-please contact kristian.nielsen@risoe.dk.
+McStas can be installed on Windows machines, including all support applications
+(scilab, PGPLOT, VRML viewer, C compiler, perl, perl-Tk). The installer is a standard
+executable. Launch it and follow the instructions.
 
 Macintosh:
 
-McStas has been successfully compiled on the Macintosh using Code
-Warrior. Define the preprocessor macro 'MAC' when compiling to get
-McStas to use the Macintosh file system semantics. It is reportedly
-necessary to increase the default size of memory allocated to programs
-by the compiler to make the simulations work. It may also be necessary
-to edit the default file paths in the file port.h, since environment
-variables are (as far as we know) not available on the Macintosh.
-
-At Ris, we do not use McStas on the Macintosh, so we cannot provide
-direct support for this system. Try asking on the mailing list if you
-need help. If you experience a specific problem with using McStas on the
-Macintosh, send a description of the problem to the mailing list so that
-we can fix it in the next version.
+McStas can be installed on Mac OSX machines, including all support applications
+(scilab, PGPLOT, PDL, VRML viewer, C compiler, perl, perl-Tk).
+We provide a dmg installer containing information on the installation
+procedure.
 
 
 Troubleshooting
 ===============
 
-[Also see the FAQ at http://neutron.risoe.dk/mcstas/FAQ.html for
+[Also see the FAQ at http://mcstas.org/documentation/faq for
 up-to-date help on common problems in McStas.]
 
 You should try to make sure that the directory containing the McStas

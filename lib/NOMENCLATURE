@@ -20,3 +20,30 @@
 This file describes 'standard' McStas parameter names for components of different
 classes.
 
+Dimensions:
+radius
+xwidth
+yheight
+zdepth
+thickness
+w1 h1 w2 h2 l
+R0 Qc alpha m W
+length
+nslit
+
+Physical parameters:
+sigma_abs
+sigma_inc
+sigma_coh
+nu
+phase
+
+Monte Carlo parameters:
+p_interact
+focus_xw
+focus_yh
+focus_aw
+focus_ah
+
+Other:
+filename

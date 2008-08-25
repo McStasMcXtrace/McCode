@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.47 $
+* Version: $Revision: 1.48 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -43,7 +43,7 @@ Changes in McStas v1.12, May 8th, 2008
   - Please take care when combining WHEN, GROUP and EXTEND %{ %} - see the manual.
 
   Runtime
-  - Fix of a limiting case focusing problem reported to neutron-mc by George Apostolopoulos.
+  - Fix of a limiting case focusing problem reported to mcstas-users by George Apostolopoulos.
      ( See http://mailman.risoe.dk/pipermail/neutron-mc/2007q4/002915.html )
 
   Components
