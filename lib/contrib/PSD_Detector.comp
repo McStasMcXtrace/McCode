@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -181,6 +181,7 @@
 * PSD_N:    Array of neutron counts
 * PSD_p:    Array of neutron weight counts
 * PSD_p2:   Array of second moments
+* SCATERED: is 1 when neutron is absorbed by gas, and reaches 2 when charges are detected
 *
 * %L
 * The test/example instrument <a href="../examples/Test_PSD_Detector.instr">Test_PSD_Detector.instr</a>.
@@ -1124,7 +1125,7 @@ SAVE
           "X position [cm]",
           "Y position [cm]",
           -width/2*100.0, width/2*100.0, -yheight/2*100.0, yheight/2*100.0,
-          nx, ny,
+          (double)nx, (double)ny,
           &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
           filename);
   }
@@ -1164,15 +1165,17 @@ SAVE
 FINALLY
 %{
   /* free pointers */
-  Monitor_nD_Finally(&DEFS, &Vars);
-  if (bufsize && type && strlen(type) && strcmp(type, "NULL")) {
-    printf("PSD_Detector: %s: Saved %15f events (from buffer) in file %s\n",
-           NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
-    if (bufsize < Vars.Nsum)
-      printf("WARNING         When using this source, intensities must be multiplied\n"
-             "                by a factor %g\n", Vars.Nsum/bufsize);
-  } else if (type && strlen(type) && strcmp(type, "NULL"))
-    printf("PSD_Detector: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+  if (type && strlen(type) && strcmp(type, "NULL")) {
+    Monitor_nD_Finally(&DEFS, &Vars);
+    if (bufsize) {
+      printf("PSD_Detector: %s: Saved %15f events (from buffer) in file %s\n",
+             NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+      if (bufsize < Vars.Nsum)
+        printf("WARNING         When using this source, intensities must be multiplied\n"
+               "                by a factor %g\n", Vars.Nsum/bufsize);
+    } else
+      printf("PSD_Detector: %s: Saved %15f events (all) in file %s\n", NAME_CURRENT_COMP, Vars.Nsum, Vars.Mon_File);
+  }
 %}
 
 MCDISPLAY
@@ -1209,6 +1212,10 @@ MCDISPLAY
       line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
       line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
       line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+      if (zdepth>0){
+         circle("xz", 0,  h/2.0, 0, radius+zdepth);
+         circle("xz", 0, -h/2.0, 0, radius+zdepth);
+      }
   }
 %}
 
