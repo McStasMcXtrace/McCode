@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H24 curved thermal guide at the ILL
@@ -16,7 +16,7 @@
 * %Description
 * The H24 curved thermal guide at the ILL feeding IN3, IN13, D10 and S42/Orient Express
 *
-* %Example: m=0 Detector: Mon_10_L_I=9.5576e+08
+* %Example: m=0 Detector: Mon_10_L_I=9.45906e+08
 *
 * %Parameters
 * m:          (1)  m-value of whole guide coating. m=0 means 0 in-pile, 1 out-pile

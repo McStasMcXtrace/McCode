@@ -8,7 +8,7 @@
 * Date: July 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * Tests Set_pol, V_sample, and pol monitors.
@@ -20,7 +20,7 @@
 * Second check is that when the polarisation is hardcoded to (0, 1, 0)
 * after V_sample it is (0, -1/3, 0).
 *
-* %Example: mcrun Test_Pol_Set.instr Detector: polMonitor3_I=2.5e-09
+* %Example: mcrun Test_Pol_Set.instr Detector: polMonitor3_I=2.5222e-09
 *
 * %Parameters
 *

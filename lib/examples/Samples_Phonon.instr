@@ -12,14 +12,14 @@
 * %INSTRUMENT_SITE: Tests_samples
 *
 * %Description
-* Simple test instrument for the new Phonon_simple component.
+* Simple test instrument for the Phonon_simple component.
 * Refer to the component documentation for further instructions.
 * 
-* %Example: E=10 Detector: mon1_I=2.3682e-08
+* %Example: E=10 -n 1e5 Detector: mon1_I=1.80177e-22
 *
 * %End
 ******************************************************************************/
-DEFINE INSTRUMENT Samples_Phonon(E=10, DE=0, HDIV=0, VDIV=0, TT=72.69, OM=-43.3, C=8)
+DEFINE INSTRUMENT Samples_Phonon(E=10, DE=0, HDIV=1e-4, VDIV=1e-4, TT=72.69, OM=-43.3, C=8)
 
 TRACE
 

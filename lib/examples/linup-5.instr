@@ -12,7 +12,7 @@
 * Date: 1998
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -26,7 +26,7 @@
 * Here it is used as a diffractometer for an alignment study. The
 * sample is a powder and there is no analyzer.
 *
-* %Example: PHM=-37.077 Detector: sng_I=3.1e-10
+* %Example: PHM=-37.077 Detector: sng_I=4.50892e-07
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -87,7 +87,6 @@ COMPONENT source = Source_simple(
   radius = 0.060,
   dist = 3.288,
   focus_xw = 0.042, focus_yh = 0.082,
-  compat=1,
   E0 = 20,     /* 20 meV */
   dE = 0.82    /* Sufficient for TAS1 geometry */
 )
@@ -206,7 +205,7 @@ COMPONENT emon1 = E_monitor(
   filename = "linup_5_1.vmon")
   AT(0, 0, 1.5) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
 
-COMPONENT sample = Powder1(
+SPLIT COMPONENT sample = Powder1(
   radius = 0.007,
   yheight = 0.015,
   q = 1.8049,

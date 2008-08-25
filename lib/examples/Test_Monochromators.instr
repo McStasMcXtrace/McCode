@@ -8,7 +8,7 @@
 * Date: July 2006.
 * Origin: RISOE.
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Compares intensities of Monochromator_flat and Monochromator_pol
@@ -18,7 +18,9 @@
 * Very simple setup to compare intensities between Monochromator_flat
 * and Monochromator_pol.
 *
-* %Example: lambda=2 Detector: psd1_I=3e-05
+* %Example: lambda=2 Detector: psd1_I=3.00998e-05
+* %Example: lambda=2 Detector: psd2_I=3.00998e-05
+* %Example: lambda=2 Detector: psd3_I=3.00998e-05
 *
 * %Parameters
 * INPUT PARAMETERS:

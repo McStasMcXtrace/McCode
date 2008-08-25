@@ -12,18 +12,14 @@
  * %Description
  * This instrument is a model of the FOCUS Spectrometer at PSI, Villigen, CH.
  *
- * input parameters :
- *    lambda      : source energy                               [Angs]
- *    chopp_ratio : chopper radio Fermi Chopper to Disk Chopper [1]
- *    DET         : Detector angle                              [deg]
- *
+ * %Example: lambda=3.4 Detector: PSD_Fermi1_I=1.44416e+07
  * %Example: lambda=3.4 Detector: PSD_SAMPLE_I=178056
  *
  * %Parameters
  * INPUT PARAMETERS:
- *    lambda      : source energy                               [Angs]
- *    chopp_ratio : chopper radio Fermi Chopper to Disk Chopper [1]
- *    DET         : Detector angle                              [deg]
+ *    lambda:      source energy                               [Angs]
+ *    chopp_ratio: chopper radio Fermi Chopper to Disk Chopper [1]
+ *    DET:         Detector angle                              [deg]
  *
  * %Link
  * Written by U.Filges <uwe.filges@psi.ch> PSI, Jan 2004

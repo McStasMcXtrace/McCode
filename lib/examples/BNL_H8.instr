@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -25,7 +25,7 @@
 * cross comparison related in paper "A Model Instrument for Monte Carlo Code
 * Comparisons", Neutron News 13 (No. 4), 24-29 (2002).
 *
-* %Example: lambda=2.36 Detector: D7_SC3_In_I=3e-11
+* %Example: lambda=2.36 Detector: He3H_I=9.84026e-10
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -104,7 +104,6 @@ COMPONENT Source = Source_simple(
   dist = 2.7473,
   focus_xw = 0.031, focus_yh = 0.054,
   E0 = Ei,
-  compat=1,
   dE = 0.03*Ei)
 AT (0,0,0) ABSOLUTE
 
@@ -149,7 +148,7 @@ AT (0, 0, 0.0001) RELATIVE As4
 COMPONENT Mono_Cradle = Arm()
   AT (0, 0, 5.2746) RELATIVE Source ROTATED (0, A1, 0) RELATIVE Source
 
-COMPONENT PG1Xtal = Monochromator_flat(
+SPLIT COMPONENT PG1Xtal = Monochromator_flat(
   zwidth = 0.1, yheight = 0.08,
   mosaich = 40, mosaicv = 40,
   r0 = 0.7, Q=mono_q)
@@ -183,9 +182,9 @@ AT (0, 0, 0.7811) RELATIVE D5_SC2_Out ROTATED (0, A3, 0) RELATIVE Mono_Out
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
 AT (0,0,0) RELATIVE Sample_Cradle ROTATED (0, A4, 0) RELATIVE Mono_Out
 
-COMPONENT Sample = V_sample(
+SPLIT COMPONENT Sample = V_sample(
  radius = 0.0064, yheight = 0.0254,
- focus_r = 0.035, pack = 1,
+ focus_xw = 0.0478, focus_yh = 0.049, pack = 1,
  target_index = +1)
 AT (0,0,0) RELATIVE Sample_Out
 
@@ -207,11 +206,10 @@ COMPONENT D8_SC3_Out = PSD_monitor(
   nx=20, ny=20, filename="D8_SC3_Out.psd")
 AT (0, 0, 0.3047) RELATIVE SC3
 
-
 COMPONENT Ana_Cradle = Arm()
   AT (0, 0, 0.1397) RELATIVE D8_SC3_Out ROTATED (0, A5, 0) RELATIVE Sample_Out
 
-COMPONENT PG2Xtal = Monochromator_flat(
+SPLIT COMPONENT PG2Xtal = Monochromator_flat(
   zwidth = 0.10, yheight = 0.08,
   mosaich = 40, mosaicv = 40,
   r0 = 0.7, Q=mono_q)

@@ -15,21 +15,21 @@
 *
 * %Description
 * Simple test instrument for the SNS_source component.
-* Refer to SNS <A href="http://www.sns.gov/users/instrument_systems/components/moderator/">Source files.</A>
+* Refer to SNS <A href="http://neutrons.ornl.gov/instrument_systems/components/moderators.shtml">Source files.</A>
 *
 * Example: mcrun SNS_test.instr
 *
 * %Link
 * Written by G. Granroth
 * SNS_source component
-* <A href="http://www.sns.gov/users/instrument_systems/components/moderator/">Source files </A>
+* <A href="http://neutrons.ornl.gov/instrument_systems/components/moderators.shtml">Source files </A>
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT SNS_test()
+DEFINE INSTRUMENT SNS_test(string filename="source_sct091_tu_02_1.dat")
 
 TRACE
-COMPONENT mod=SNS_source(filename="source_sct091_tu_02_1.dat",
+COMPONENT mod=SNS_source(filename=filename,
   xwidth=0.1, yheight=0.12,
   dist=1, focus_xw=0.10, focus_yh=0.24,
   Emin=1.0,Emax=10.0)

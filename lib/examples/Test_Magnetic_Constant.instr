@@ -8,7 +8,7 @@
 * Date: August 2006
 * Origin: RISOE
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Tests_polarization
 *
 * This instrument demonstrates how to use the Pol_simpleBfield
@@ -21,7 +21,7 @@
 * This instrument matches the example: Test_Pol_MSF (under tests)
 * made with the old component: Pol_constBfield
 *
-* %Example: ROT_ANGLE=180 Detector: pollambdaMonitor2z_I=0.076
+* %Example: ROT_ANGLE=180 Detector: pollambdaMonitor2z_I=0.0768972
 *
 * %Parameters
 *

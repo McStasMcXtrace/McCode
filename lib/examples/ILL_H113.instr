@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H113 ballistic curved cold guide at the ILL
@@ -16,7 +16,7 @@
 * %Description
 * The H113 ballistic curved cold guide at the ILL feeding PF1b
 *
-* %Example: lambda=10 Detector: Mon_10_I=7.1e9
+* %Example: lambda=10 Detector: Mon_10_L_I=7.05e9
 *
 * %Parameters
 * m:       (1) m-value of whole guide coating. 0 means m=1.2 in-pile/2 afterwards

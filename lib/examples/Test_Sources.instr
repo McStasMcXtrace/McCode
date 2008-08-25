@@ -8,7 +8,7 @@
 * Date: Aug 3, 2008
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * A test instrument to compare sources
@@ -17,19 +17,19 @@
 * A test instrument to compare sources and check they provide the valid
 * sprectrum and intensity
 *
-* %Example: source=1 Detector: m1_I=1.0e+12
-* %Example: source=2 Detector: m1_I=1.0e+12
-* %Example: source=3 Detector: m1_I=1.0e+12 
-* %Example: source=4 Detector: m1_I=1.0e+12
-* %Example: source=5 Detector: m1_I=2.4e+11
-* %Example: source=6 Detector: m1_I=2.4e+11
-* %Example: source=7 Detector: m1_I=1.5e+11
-* %Example: source=8 Detector: m1_I=6.2e+11
+* %Example: source=1 Detector: m1_I=9.97273e+11
+* %Example: source=2 Detector: m1_I=9.48467e+11
+* %Example: source=3 Detector: m1_I=9.96553e+11
+* %Example: source=4 Detector: m1_I=9.966e+11
+* %Example: source=5 Detector: m1_I=2.4279e+11
+* %Example: source=6 Detector: m1_I=2.42284e+11
+* %Example: source=7 Detector: m1_I=1.50065e+11
+* %Example: source=8 Detector: m1_I=5.0787e+13
 *
 * %Parameters
 * source:  (1) selection of the source to use in 1=Source_adapt, 2=Source_div, 
-*               3=Source_gen, 4=Source_Maxwell_3, 5=Source_simple, 
-*               6=ESS_moderator_long, 7=Moderator, 8=Source_gen in simple mode
+*               3=Source_simple, 4=Source_gen (simple), 5=Source_gen, 
+*               6=Source_Maxwell_3, 7=ESS_moderator_long, 8=Moderator
 *
 * %End
 *******************************************************************************/

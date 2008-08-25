@@ -16,6 +16,7 @@
  *
  *
  * %Example: lambda=3.4 Detector: M_theta_t_I=6.42114e-08
+ PSD_I=7.07066e-06
  *
  * %Parameters
  * INPUT PARAMETERS:
