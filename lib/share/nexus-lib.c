@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,16 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.12 2008-02-09 22:26:27 farhi Exp $
+* $Id: nexus-lib.c,v 1.13 2008-08-26 13:32:05 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.12  2008/02/09 22:26:27  farhi
+* Major contrib for clusters/multi-core: OpenMP support
+* 	try ./configure --with-cc=gcc4.2 or icc
+* then mcrun --threads ...
+* Also tidy-up configure. Made relevant changes to mcrun/mcgui to enable OpenMP
+* Updated install-doc accordingly
+*
 * Revision 1.11  2007/03/06 09:39:15  farhi
 * NeXus default output is now "5 zip". Then NEXUS keyword is purely optional.
 *
@@ -117,7 +124,7 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     NXputattr(nxhandle, "URL", url, strlen(url), NX_CHAR);
     char *browser="hdfview or NXbrowse or HDFExplorer";
     NXputattr(nxhandle, "Browser", browser, strlen(browser), NX_CHAR);
-#if defined (USE_MPI) || defined(USE_THREADS)
+#if defined (USE_MPI) 
     NXputattr (nxhandle, "number_of_nodes", &mpi_node_count, 1, NX_INT32);
 #endif
     return(NXputattr(nxhandle, "Format", format_name, strlen(format_name), NX_CHAR));

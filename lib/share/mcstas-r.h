@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.102 $
+* Version: $Revision: 1.103 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.102 2008-08-25 14:13:28 farhi Exp $
+* $Id: mcstas-r.h,v 1.103 2008-08-26 13:32:05 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.102  2008/08/25 14:13:28  farhi
+*       changed neutron-mc to mcstas-users
+*
 *       Revision 1.101  2008/07/17 12:50:18  farhi
 *       MAJOR commit to McStas 2.x
 *       uniformized parameter naming in components
@@ -279,7 +282,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.102 $"
+#define MCSTAS_R_H "$Revision: 1.103 $"
 
 #include <math.h>
 #include <string.h>
@@ -353,11 +356,6 @@
 #ifndef NOSIGNALS
 #define NOSIGNALS
 #endif
-#endif
-
-#ifdef USE_THREADS  /* user want threads */
-#define USE_OPENMP  /* we choose OpenMP, as POSIX threads are REALLY slow */
-#include <omp.h>
 #endif
 
 #if (USE_NEXUS == 0)
@@ -470,8 +468,9 @@ int mc_MPI_Reduce(void* sbuf, void* rbuf,
 #ifdef USE_MPI
 static int mpi_node_count;
 #endif
-#ifdef USE_OPENMP
-static int threads_node_count=0;
+
+#ifdef USE_THREADS  /* user want threads */
+#error Threading (USE_THREADS) support has been removed for very poor efficiency. Use MPI/SSH grid instead.
 #endif
 
 /* I/O function prototypes ================================================== */
