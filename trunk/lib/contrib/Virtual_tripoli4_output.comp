@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailtoguillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.8 $
+* Version:  $Revision: 1.9 $
 * Origin: <a href="http://www.cea-llb.fr">LLB</a>
 * Release: McStas 1.8
 *
@@ -34,7 +34,7 @@
 * positions are in cm and the direction vector is normalized to 1.
 *
 * %BUGS
-* We recommend not to use parallel execution (MPI/Threads) with this component.
+* We recommend not to use parallel execution (MPI) with this component.
 *
 * EXAMPLE:
 * To create a file collecting all neutron states with TRIPOLI4 format
@@ -81,7 +81,7 @@ INITIALIZE
   char ** head;
   long nl;
 
-#if defined (USE_MPI) || defined(USE_THREADS)
+#if defined (USE_MPI)
   exit(printf("Tripoli4_output: %s: ERROR This component can not be used in parallel execution mode. Abort.\n", NAME_CURRENT_COMP));
 #endif
 

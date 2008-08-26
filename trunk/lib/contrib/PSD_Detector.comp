@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -575,9 +575,6 @@ INITIALIZE
 /* handle event files as in Virtual_output, with bufsize=0 ****************** */
   long element_size;
   if (type && strlen(type) && strcmp(type, "NULL")) {
-#if defined(USE_THREADS)
-    exit(printf("PSD_Detector: %s: Warning: This component can not be used in Multi-Threading execution mode. Abort.\n", NAME_CURRENT_COMP));
-#endif
     printf("PSD_Detector: %s: saving detector signal as events\n", NAME_CURRENT_COMP);
 
     strcpy(Vars.compcurname, NAME_CURRENT_COMP);

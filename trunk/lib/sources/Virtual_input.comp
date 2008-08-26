@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.30 $
+* Version:  $Revision: 1.31 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -38,7 +38,7 @@
 * (with the 11 values 'p x y z vx vy vz t sx sy sz') for float/double resp.
 *
 * %BUGS
-* We recommend NOT to use parallel execution (MPI/Threads) with this component.
+* We recommend NOT to use parallel execution (MPI) with this component.
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
@@ -146,10 +146,10 @@ INITIALIZE
     if (verbose)
       printf("Virtual_input: %s: Reading neutron events from filename '%s'. Repeat %g time(s)\n", NAME_CURRENT_COMP, filename, repeat_count);
 
-  #if defined (USE_MPI) || defined(USE_THREADS)
+  #if defined (USE_MPI)
     if (!smooth) {
       if (verbose)
-      printf("Virtual_input: %s: smoothing is recommended when running MPI/Threads execution\n", NAME_CURRENT_COMP);
+      printf("Virtual_input: %s: smoothing is recommended when running MPI execution\n", NAME_CURRENT_COMP);
     }
   #endif
 
@@ -284,7 +284,7 @@ TRACE
         }
         first_block= 0;
       }
-  #if defined (USE_MPI) || defined(USE_THREADS)
+  #if defined (USE_MPI)
       if (smooth && n_count_extrapolated)
   #else
       if (smooth && repeat_number>1 && n_count_extrapolated)

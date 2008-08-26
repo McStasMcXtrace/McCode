@@ -325,7 +325,7 @@ sub simulation_dialog {
       -textvariable => \$formatchoice_val,
       -options      => $opts, -fg => 'blue'
     )->pack(-side => 'left');
-    $b->attach($formatchoice, -balloonmsg => "Select format here or\nfrom Simulation/Configuration menu item");
+    $b->attach($formatchoice, -balloonmsg => "Select format here or\nfrom File/Preferences menu item");
 
     # handle clustering methods
     my $line = $opt_frame->Frame;
@@ -336,14 +336,14 @@ sub simulation_dialog {
 * MPI on clusters/multi-core machines");
     my $choicecluster_val;
     if ($si{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-    elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+    # elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($si{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($si{'cluster'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choicecluster_orig=$choicecluster_val;
     my $choices=[ 'None (single CPU)'];
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
-      push @{ $choices }, 'Threads (multi-core)';
-    }
+    # if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
+    #   push @{ $choices }, 'Threads (multi-core)';
+    # }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
@@ -447,7 +447,7 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
 
       $si{'cluster'} = do {
         if    ($choicecluster_val =~ /^None/)   { 0 }
-        elsif ($choicecluster_val =~ /^Threads/){ 1 } # need recompile
+        # elsif ($choicecluster_val =~ /^Threads/){ 1 } # need recompile
         elsif ($choicecluster_val =~ /^MPI/)    { 2 } # need recompile
         elsif ($choicecluster_val =~ /^SSH/)    { 3 }
       };
@@ -463,6 +463,21 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
 
       if ($choiceexec_val =~ /\(bg\)/) { $si{'Detach'} = 1; } 
       else { $si{'Detach'} = 0; }
+      
+      # add quotes to string instr parameters if needed
+      if ($quote) {
+        for $p (@parms) {
+          if ($ii->{'Parameter-types'}{$p} eq "string" &&
+            $si{'Params'}{$p} !~ /\".*\"/ &&
+            $si{'Params'}{$p} !~ /\'.*\'/) {
+              # Firstly, remove existing quotes  :) 
+                  $si{'Params'}{$p} =~ s!\"!!g;
+                  $si{'Params'}{$p} =~ s!\'!!g;
+                  # Next, add quotes...
+                  $si{'Params'}{$p} = "\"$si{'Params'}{$p}\"";
+            }
+        }
+      }
     }
 
     return ($res, \%si);
@@ -530,7 +545,7 @@ sub preferences_dialog {
     # Choice of internal editor
     # PW 20040527
     my ($win) = @_;
-    my $dlg = $win->DialogBox(-title => "McStas: Configuration options",
+    my $dlg = $win->DialogBox(-title => "McStas: Preferences",
                               -buttons => ["OK"]);
     $b = $dlg->Balloon(-state => 'balloon');
     my $lf = $dlg->Frame(-borderwidth => 2, -relief => 'ridge');
@@ -583,13 +598,13 @@ sub preferences_dialog {
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
     if    ($MCSTAS::mcstas_config{'CLUSTER'} == 0) { $choicecluster_val='None (single CPU)'; }
-    elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 1) { $choicecluster_val='Threads (multi-core)'; }
+    # elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choices=[ 'None (single CPU)'];
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
-      push @{ $choices }, 'Threads (multi-core)';
-    }
+    # if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
+    #   push @{ $choices }, 'Threads (multi-core)';
+    # }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
@@ -677,7 +692,7 @@ sub preferences_dialog {
 
     $MCSTAS::mcstas_config{'CLUSTER'} = do {
       if     ($choicecluster_val =~ /^None/)   { 0 }
-      elsif ($choicecluster_val =~ /^Threads/){ 1 }
+      # elsif ($choicecluster_val =~ /^Threads/){ 1 }
       elsif ($choicecluster_val =~ /^MPI/)    { 2 }
       elsif ($choicecluster_val =~ /^SSH/)  { 3 }
     };

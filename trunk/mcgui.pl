@@ -1127,8 +1127,8 @@ sub menu_run_simulation {
         # clustering methods
         if ($newsi->{'cluster'} == 2) {
           push @command, "--mpi=$MCSTAS::mcstas_config{'NODES'}";
-        } elsif ($newsi->{'cluster'} == 1) {
-          push @command, "--threads=$MCSTAS::mcstas_config{'NODES'}";
+        # } elsif ($newsi->{'cluster'} == 1) {
+        #   push @command, "--threads=$MCSTAS::mcstas_config{'NODES'}";
         } elsif ($newsi->{'cluster'} == 3) {
           push @command, "--multi=$MCSTAS::mcstas_config{'NODES'}";
 	  if ($MCSTAS::mcstas_config{'GRID_FORCECOMPILE'}) {
@@ -1616,6 +1616,11 @@ sub setup_menu {
                        -underline => 1,
                        -command => sub { $cmdwin->delete("1.0", "end") });
     $filemenu->separator;
+    $filemenu->command(-label => 'Preferences',
+                      -underline => 1,
+                      -accelerator =>  $shortcuts{'menuprefs'} ,
+                      -command => sub {menu_preferences($w);});
+    $w->bind( $shortcuts{'menuprefs'}  => [\&menu_preferences, $w]);
     $filemenu->command(-label => 'Save configuration',
                        -underline => 2,
                        -command => sub {menu_save_config($w)});
@@ -1641,12 +1646,6 @@ sub setup_menu {
                       -accelerator =>  $shortcuts{'menuplot'} ,
                       -command => sub {menu_plot_results($w);});
     $w->bind( $shortcuts{'insertcomp'}  => [\&menu_plot_results, $w]);
-    $simmenu->separator;
-    $simmenu->command(-label => 'Configuration options',
-                      -underline => 1,
-                      -accelerator =>  $shortcuts{'menuprefs'} ,
-                      -command => sub {menu_preferences($w);});
-    $w->bind( $shortcuts{'menuprefs'}  => [\&menu_preferences, $w]);
 
     $simmenu->pack(-side=>'left');
 
@@ -1667,7 +1666,7 @@ sub setup_menu {
                        -command => sub {tools_shortcuts($w)});
     # The following item for now only applies to non-Win32 systems...
     if (!($Config{'osname'} eq 'MSWin32')) {
-	$toolmenu->command(-label => 'Install DSA key',
+	$toolmenu->command(-label => 'Activate MPI/grid (DSA key)',
 			   -command => sub {tools_dsa($w)});
     }
 
@@ -1772,7 +1771,7 @@ sub setup_cmdwin {
   or use option --machines=<file>\n");
     }
     my $text_grid="Single ";
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "") { $text_grid .= "Threads "; }
+    # if ($MCSTAS::mcstas_config{'THREADS'} ne "") { $text_grid .= "Threads "; }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no")  { $text_grid .= "MPI "; }
     if ($MCSTAS::mcstas_config{'SSH'} ne "no")     { $text_grid .= "Grid "; }
     if ($text_grid ne "") { $cmdwin->insert('end', "Clustering methods: $text_grid\n"); }

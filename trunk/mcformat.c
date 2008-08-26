@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,15 +41,11 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.28 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.29 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
 #undef USE_MPI
-#endif
-
-#ifdef USE_THREADS
-#undef USE_THREADS
 #endif
 
 /* Instead of including mcstas.h file, which would then require to link most

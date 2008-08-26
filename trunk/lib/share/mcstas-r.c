@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.197 $
+* Version: $Revision: 1.198 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.197 2008-08-25 14:13:28 farhi Exp $
+* $Id: mcstas-r.c,v 1.198 2008-08-26 13:32:05 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.197  2008/08/25 14:13:28  farhi
+* changed neutron-mc to mcstas-users
+*
 * Revision 1.196  2008/08/19 11:25:52  farhi
 * make sure the opened file list is reset when calling mcsave (same save
 * session). already opened files are catenated, just as with the catenate
@@ -2890,8 +2893,12 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       /* m, n, p must be sent too, since all slaves do not have the same number of events */
       int mnp[3];
       mnp[0] = m; mnp[1] = n; mnp[2] = p;
-      MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD);
-      MPI_Send(p1, abs(m*n*p), MPI_DOUBLE, mpi_node_root, 1, MPI_COMM_WORLD);
+      res 
+        
+      if (MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD)!= MPI_SUCCESS)
+        fprintf(stderr, "Warning: node %i to master: MPI_Send mnp list error (mcdetector_out_012D)", mpi_node_rank);
+      if (MPI_Send(p1, abs(m*n*p), MPI_DOUBLE, mpi_node_root, 1, MPI_COMM_WORLD)!= MPI_SUCCESS)
+        fprintf(stderr, "Warning: node %i to master: MPI_Send p1 list error (mcdetector_out_012D)", mpi_node_rank);
       /* slaves are done */
       return 0;
     } else { /* master node list */
@@ -2901,9 +2908,11 @@ static double mcdetector_out_012D(struct mcformats_struct format,
         if (node_i > 0) { /* get data from slaves */
           MPI_Status mpi_status;
           int mnp[3];
-          MPI_Recv(mnp, 3, MPI_INT, node_i, 1, MPI_COMM_WORLD, &mpi_status);
+          if (MPI_Recv(mnp, 3, MPI_INT, node_i, 1, MPI_COMM_WORLD, &mpi_status)!= MPI_SUCCESS)
+            fprintf(stderr, "Warning: master from node %i: MPI_Recv mnp list error (mcdetector_out_012D)", node_i);
           m = mnp[0]; n = mnp[1]; p = mnp[2];
-          MPI_Recv(p1, abs(m*n*p), MPI_DOUBLE, node_i, 1, MPI_COMM_WORLD, &mpi_status);
+          if (MPI_Recv(p1, abs(m*n*p), MPI_DOUBLE, node_i, 1, MPI_COMM_WORLD, &mpi_status)!= MPI_SUCCESS)
+            fprintf(stderr, "Warning: master from node %i: MPI_Recv p1 list error (mcdetector_out_012D)", node_i);
         }
         if (!strstr(format.Name, "NeXus")) { /* not MPI+NeXus format */
           char *formatName_orig = mcformat.Name;  /* copy the pointer position */
@@ -4727,11 +4736,6 @@ mchelp(char *pgmname)
 "  -i        --info           Detailed instrument information.\n"
 "  --format=FORMAT            Output data files using format FORMAT\n"
 "                             (use option +a to include text header in files\n"
-#ifdef USE_THREADS
-"  --threads=NB_CPU           Split simulation into NB_CPU threads\n"
-"  --threads                  Split simulation into optimal machine threads\n"
-"This instrument has been compiled with threading support.\n"
-#endif
 #ifdef USE_MPI
 "This instrument has been compiled with MPI support. Use 'mpirun'.\n"
 #endif
@@ -4966,14 +4970,6 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;   
-#ifdef USE_OPENMP
-    else if(!strcmp("--threads", argv[i])) {
-      threads_node_count=-1; /* will use available nodes */
-    }
-    else if(!strncmp("--threads=", argv[i],10)) {
-      threads_node_count=atoi(&argv[i][10]);
-    }
-#endif
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
@@ -5025,9 +5021,6 @@ mcparseoptions(int argc, char *argv[])
   free(paramsetarray);
 #ifdef USE_MPI
   if (mcdotrace) mpi_node_count=1; /* disable threading when in trace mode */
-#endif
-#ifdef USE_THREADS
-  if (mcdotrace) threads_node_count=1; /* disable threading when in trace mode */
 #endif
 } /* mcparseoptions */
 
@@ -5157,10 +5150,6 @@ void *mcstas_raytrace(void *p_node_ncount)
 {
   double node_ncount = *((double*)p_node_ncount);
   
-#ifdef USE_OPENMP
-#pragma omp parallel if(threads_node_count>1) default(shared)
-{
-#endif
   while(mcrun_num < node_ncount || mcrun_num < mcget_ncount())
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
@@ -5168,9 +5157,6 @@ void *mcstas_raytrace(void *p_node_ncount)
     mcraytrace();
     mcrun_num++;
   }
-#ifdef USE_OPENMP  
-} /*-- End of parallel region --*/
-#endif
   return (NULL);
 }
 
@@ -5183,7 +5169,7 @@ int mcstas_main(int argc, char *argv[])
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
 #endif /* USE_MPI */
-#if defined (USE_MPI) || defined(USE_THREADS)
+#if defined (USE_MPI)
   double mpi_mcncount;
 #endif /* USE_MPI */
 
@@ -5228,17 +5214,6 @@ int mcstas_main(int argc, char *argv[])
   }
   if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
-    
-#ifdef USE_OPENMP 
-  #pragma omp parallel shared(threads_node_count)
-  {
-    if (threads_node_count<0) threads_node_count=omp_get_num_threads();
-    #pragma omp master
-    if (threads_node_count>1)
-      printf("Simulation %s (%s) running on %i OpenMP threads\n", 
-        mcinstrument_name, mcinstrument_source, threads_node_count);
-  }
-#endif
 
 /* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS
