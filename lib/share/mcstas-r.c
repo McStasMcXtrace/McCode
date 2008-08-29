@@ -11,16 +11,22 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.198 $
+* Version: $Revision: 1.199 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.198 2008-08-26 13:32:05 farhi Exp $
+* $Id: mcstas-r.c,v 1.199 2008-08-29 15:32:28 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.198  2008/08/26 13:32:05  farhi
+* Remove Threading support which is poor efficiency and may give wrong
+* results
+* Add quotes around string instrument parameters from mcgui simulation
+* dialog
+*
 * Revision 1.197  2008/08/25 14:13:28  farhi
 * changed neutron-mc to mcstas-users
 *
@@ -768,8 +774,7 @@ mcparm_string(char *s, void *vptr)
   *v = (char *)malloc(strlen(s) + 1);
   if(*v == NULL)
   {
-    fprintf(stderr, "Error: Out of memory (mcparm_string).\n");
-    exit(1);
+    exit(fprintf(stderr, "Error: Out of memory %li (mcparm_string).\n", strlen(s) + 1));
   }
   strcpy(*v, s);
   return 1;                        /* Success */
@@ -888,12 +893,21 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 {
   void *lrbuf;
   int dsize;
-  int res;
+  int res= MPI_SUCCESS;
 
   MPI_Type_size(dtype, &dsize);
   lrbuf = malloc(count*dsize);
+  if (lrbuf == NULL)
+    exit(fprintf(stderr, "Error: Out of memory %li (mc_MPI_Reduce).\n", count*dsize));
 
-  res = MPI_Reduce(sbuf, lrbuf, count, dtype, op, root, comm);
+  long offset=0;
+  int  length=10000;
+  while (offset < count || res != MPI_SUCCESS) {
+    if (offset+length > count-1) length=count-offset; else length=10000;
+    res = MPI_Reduce((void*)(sbuf+offset*dsize), (void*)(lrbuf+offset*dsize), length, dtype, op, root, comm);
+    offset += length;
+  }
+
   if(res != MPI_SUCCESS)
     fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce)", mpi_node_rank);
 
@@ -1529,8 +1543,7 @@ char *mcfull_file(char *name, char *ext)
   mem = malloc(dirlen + strlen(name) + 256);
   if(!mem)
   {
-    fprintf(stderr, "Error: Out of memory (mcfull_file)\n");
-    exit(1);
+    exit(fprintf(stderr, "Error: Out of memory %li (mcfull_file)\n", dirlen + strlen(name) + 256));
   }
   strcpy(mem, "");
   if(dirlen)
@@ -2641,7 +2654,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
             count = fwrite(s, sizeof(float), abs(m*n*p), datafile);
           if (count != abs(m*n*p)) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)abs(m*n*p));
           free(s);
-        } else fprintf(stderr, "McStas: Out of memory for writing float binary file '%s' (mcfile_datablock)\n", filename);
+        } else fprintf(stderr, "McStas: Out of memory for writing %li float binary file '%s' (mcfile_datablock)\n", abs(m*n*p)*sizeof(float), filename);
       }
       else if (d && isBinary == 2)  /* double */
       {
@@ -2655,7 +2668,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
               s[i] = (double)mcestimate_error(p0[i],p1[i],p2[i]);
             d = s;
           }
-          else fprintf(stderr, "McStas: Out of memory for writing 'errors' part of double binary file '%s' (mcfile_datablock)\n", filename);
+          else fprintf(stderr, "McStas: Out of memory for writing %li 'errors' part of double binary file '%s' (mcfile_datablock)\n", abs(m*n*p)*sizeof(double), filename);
         }
         count = fwrite(d, sizeof(double), abs(m*n*p), datafile);
         if (isdata == 2 && s) free(s);
@@ -2893,7 +2906,6 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       /* m, n, p must be sent too, since all slaves do not have the same number of events */
       int mnp[3];
       mnp[0] = m; mnp[1] = n; mnp[2] = p;
-      res 
         
       if (MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD)!= MPI_SUCCESS)
         fprintf(stderr, "Warning: node %i to master: MPI_Send mnp list error (mcdetector_out_012D)", mpi_node_rank);
@@ -4680,8 +4692,7 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
     *list = malloc(*size*elemsize);
     if(!*list)
     {
-      fprintf(stderr, "\nError: Out of memory (extend_list).\n");
-      exit(1);
+      exit(fprintf(stderr, "\nError: Out of memory %li (extend_list).\n", *size*elemsize));
     }
     if(oldlist)
     {
@@ -5032,7 +5043,7 @@ mcstatic char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 void sighandler(int sig)
 {
   /* MOD: E. Farhi, Sep 20th 2001: give more info */
-  time_t t1;
+  time_t t1, t0;
 #define SIG_SAVE 0
 #define SIG_TERM 1
 #define SIG_STAT 2
@@ -5106,8 +5117,9 @@ void sighandler(int sig)
   {
     printf("%.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
   }
+  t0 = (time_t)mcstartdate;
   t1 = time(NULL);
-  printf("# Date      : %s",ctime(&t1));
+  printf("# Date:      %s (Started %s)",ctime(&t1), ctime(&t0));
 
   if (sig == SIG_STAT)
   {
@@ -5189,8 +5201,8 @@ int mcstas_main(int argc, char *argv[])
 #ifdef USE_MPI
   if (mpi_node_count > 1) {
     MPI_MASTER(
-    printf("Simulation %s (%s) running on %i MPI nodes (master is %s)\n", 
-      mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name);
+    printf("Simulation %s (%s) running on %i nodes (master is %s, MPI version %i.%i).\n", 
+      mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
     );
     /* adapt random seed for each node */
     srandom(time(&t) + mpi_node_rank);
