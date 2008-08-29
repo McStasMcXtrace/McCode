@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -175,6 +175,7 @@
 *                 TOF detectors. (string)
 * bufsize:        Size of neutron output buffer
 *                 default is 0, i.e. save all - recommended. (1)
+* restore_neutron: If set, the monitor does not influence the neutron state (1)
 *
 * OUTPUT PARAMETERS:
 *
@@ -195,7 +196,7 @@ DEFINITION PARAMETERS (nx=128, ny=128, string filename=0,
 SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
   threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
   verbose=0, LensOn=1, dc=0, borderx=-1, bordery=-1, xChDivRelSigma=0,
-  yChDivRelSigma=0, bufsize=0)
+  yChDivRelSigma=0, bufsize=0, restore_neutron=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
   CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, DetCumul, PHSpectrum,
   PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
@@ -1156,6 +1157,9 @@ SAVE
       0.0, (double)(PHSpectrum_n-1), PHSpectrum_n,
       PHSpectrum0, PHSpectrum, PHSpectrum2,
       file_spectrum);
+  }
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
 %}
 

@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi
 * Date: 2002
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Origin: ILL
 * Release: McStas 1.6
 *
@@ -126,7 +126,7 @@ FINALLY
 %{
   time_t NowTime;
   time(&NowTime);
-  fprintf(stdout, "\nFinally. Time: ");
+  fprintf(stdout, "\nFinally [%s/%s]. Time: ", mcinstrument_name, mcdirname ? mcdirname : ".");
   if (difftime(NowTime,StartTime) < 60.0)
     fprintf(stdout, "%g [s] ", difftime(NowTime,StartTime));
   else if (difftime(NowTime,StartTime) > 3600.0)
