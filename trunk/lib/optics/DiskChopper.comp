@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -35,7 +35,7 @@
 * INPUT PARAMETERS:
 *
 * theta_0: (deg)    Angular width of the slits.
-* yheight: (m)      Slit height (if = 0, equal to radius). Auto centering of beam at yheight/2.
+* yheight: (m)      Slit height (if = 0, equal to radius). Auto centering of beam at half height.
 * radius:  (m)      Radius of the disc
 * nu:      (Hz)     Frequency of the Chopper, omega=2*PI*nu
 *                     (algebraic sign defines the direction of rotation)
@@ -77,7 +77,8 @@ INITIALIZE
       } else {
         height=yheight;
       }
-      omega=2*PI*nu;
+      delta_y = radius-height/2;
+      omega=2.0*PI*nu; /* rad/s */
       if (xwidth && !theta_0 && radius) theta_0 = 2*RAD2DEG*asin(xwidth/2/radius);
       
       if (nslit<=0 || theta_0 <= 0 || radius <=0)
@@ -122,11 +123,11 @@ INITIALIZE
         /* 'Delay' should always be a delay, taking rotation direction into account: */
         delay=omega*phase/(omega*omega);
       } else {
-        phase=delay*omega;
+        phase=delay*omega;  /* rad */
       } 
       
       /* Time from opening of slit to next opening of slit */
-      Tg=2*PI/fabs(omega)/nslit;
+      Tg=2.0*PI/fabs(omega)/nslit;
       
       /* How long can neutrons pass the Chopper at a single point */
       To=theta_0/fabs(omega);
@@ -156,7 +157,7 @@ TRACE
     if (isfirst)
       {
         t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + floor(n_pluse*rand01())*Tg;
-        p*=nslit*theta_0/2/PI;
+        p*=nslit*theta_0/2.0/PI;
       }
     else 
       {
@@ -173,7 +174,7 @@ TRACE
 MCDISPLAY
 %{
   
-  int jitter,k,l,kmin,kmax;
+  int j,k,l,kmin,kmax;
   /* Arrays for storing geometry of slit/beamstop */
   double X[5];
   double Y[5];
@@ -184,12 +185,12 @@ MCDISPLAY
   circle("xy", 0, -delta_y, 0, radius);
   /* Drawing the slit(s)/internal beamstop(s): */
   
-  for (jitter=0; jitter<nslit; jitter++) {
+  for (j=0; j<nslit; j++) {
     /* Angular start/end of slit */
-    thetas[0] = jitter*(theta_0+(Tg-To)*omega) - theta_0/2 + phase;
-    thetas[3] = jitter*(theta_0+(Tg-To)*omega) + theta_0/2 + phase;
+    thetas[0] = j*(theta_0+(Tg-To)*omega) - theta_0/2.0 + phase;
+    thetas[3] = j*(theta_0+(Tg-To)*omega) + theta_0/2.0 + phase;
     /* Angular start/end of beamstop (possibly identical) */
-    thetas[1] = thetas[0] + (theta_0 - theta_1)/2;
+    thetas[1] = thetas[0] + (theta_0 - theta_1)/2.0;
     thetas[2] = thetas[1] + theta_1;
     /* Draw two 'multilines' from start of slit to start of beamstop
        and end of beamstop to end of slit. */
@@ -210,7 +211,7 @@ MCDISPLAY
             Radius = radius;
           }
         } else {
-          theta = thetas[2*l]+(k-1)*(thetas[2*l+1]-thetas[2*l])/2;
+          theta = thetas[2*l]+(k-1)*(thetas[2*l+1]-thetas[2*l])/2.0;
           Radius = radius-height;
         }
         X[k] = Radius * sin(theta);

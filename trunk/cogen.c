@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.81 $
+* Version: $Revision: 1.82 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.81  2008/06/13 09:16:47  pkwi
+* Reverting to next-to-last version of cogen.c
+*
 * Revision 1.79  2008/02/09 22:26:26  farhi
 * Major contrib for clusters/multi-core: OpenMP support
 * 	try ./configure --with-cc=gcc4.2 or icc
@@ -189,7 +192,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.81 2008-06-13 09:16:47 pkwi Exp $
+* $Id: cogen.c,v 1.82 2008-08-29 15:37:14 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1517,14 +1520,14 @@ cogen_finally(struct instr_def *instr)
     if (comp->split) {
       char *exp=exp_tostring(comp->split); /* number of splits */
       coutf("    if (%sNCounter[%i] < 1000*(%s)) fprintf(stderr, \n"
-        "\"Warning: Number of events reaching SPLIT position Component[%i] %s\\n\"\n"
-        "\"         is probably too low. Increase Ncount.\\n\");\n",
-          ID_PRE, comp->index, exp, comp->index, comp->name);
+        "\"Warning: Number of events %%g reaching SPLIT position Component[%i] %s\\n\"\n"
+        "\"         is probably too low. Increase Ncount.\\n\", %sNCounter[%i]);\n",
+          ID_PRE, comp->index, exp, comp->index, comp->name, ID_PRE, comp->index);
       str_free(exp);
     }
     coutf("    if (%sAbsorbProp[%i]) "
       "fprintf(stderr, "
-        "\"Warning: %%g events were removed in Component[%i] %s\\n\""
+        "\"Warning: %%g events were removed in Component[%i] %s\\n\"\n"
         "\"         (negative time, rounding errors).\\n\""
         ", %sAbsorbProp[%i]);"
     , ID_PRE, comp->index, comp->index, comp->name, ID_PRE, comp->index);

@@ -12,7 +12,7 @@
 * Written by: Geza Zsigmond
 * Date: Sep 2004
 * Origin: VITESS module 'chopper_fermi'
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Release: McStas 1.9
 * Modified by: adapted for McStas by <a href="mailto:lieutena@ill.fr">K. Lieutenant</a>, Mar 2005;
 *
@@ -43,6 +43,9 @@
 * The option 'zerotime' may be used to reset the time at the chopper position. The
 * consequence is that only 1 pulse is generated instead of several.
 *
+* NOTE: This component must NOT be located at the same position as the previous one.
+*       This also stands for monitors and Arms. A non zero distance must be defined.
+*
 * Examples:
 *  straight Fermi chopper, 18000 rpm, 20 channels a 0.9 mm separated by 0.1 mm walls,
 *  16 mm channel length, minimal shadowing cylinder, phased to be open at 1 ms,
@@ -63,8 +66,7 @@
 * Apr 2005: extensive external test, most problems solved (cf. 'Bugs' and source header)
 * Validated by: K. Lieutenant
 *
-* limitations:
-* slow, especially for a high number of channels
+* limitations: slow, especially for a high number of channels
 *
 * %BUGS
 * reduction of transmission by a large shadowing cylinder underestimated

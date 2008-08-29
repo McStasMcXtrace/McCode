@@ -779,7 +779,7 @@ sub run_dialog {
         kill "TERM", $pid unless $state; # signal 15 is SIGTERM
     };
     my $update_cmd = sub {
-        putmsg($cmdwin, "n\Sending USR2 to pid=$pid ($state)\n");
+        putmsg($cmdwin, "\nSending USR2 to pid=$pid ($state)\n");
         kill "USR2", $pid unless $state; # signal USR2
     };
     my $text="Job";

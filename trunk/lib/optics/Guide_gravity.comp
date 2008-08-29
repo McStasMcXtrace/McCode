@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.34 $
+* Version: $Revision: 1.35 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.11
 * Modified by: E. Farhi, from Gravity_guide by nslit. Lefmann (buggy).
@@ -100,11 +100,11 @@
 * OUTPUT PARAMETERS
 *
 * GVars:              (1) internal variables.
-* GVars.N_filenameion: (1) Array of the cumulated Number of filenameions.
-*                   N_filenameion[0] total nb of filenameions,
-*                   N_filenameion[1,2,3,4] l/r/t/b filenameions,
-*                   N_filenameion[5] total nb neutrons exiting guide,
-*                   N_filenameion[6] total nb neutrons entering guide.
+* GVars.N_reflection: (1) Array of the cumulated Number of reflections.
+*                   N_reflection[0] total nb of reflections,
+*                   N_reflection[1,2,3,4] l/r/t/b reflections,
+*                   N_reflection[5] total nb neutrons exiting guide,
+*                   N_reflection[6] total nb neutrons entering guide.
 *
 * %D
 * Example values: m=4 Qc=0.02 W=1/300 alpha=6.49 R0=1
@@ -127,7 +127,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef Gravity_guide_Version
-#define Gravity_guide_Version "$Revision: 1.34 $"
+#define Gravity_guide_Version "$Revision: 1.35 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
@@ -152,7 +152,7 @@ SHARE
     double nx[6], ny[6], nz[6];
     double wx[6], wy[6], wz[6];
     double A[6], norm_n2[6], norm_n[6];
-    long   N_filenameion[7];
+    long   N_reflection[7];
     double w1c, h1c;
     double w2c, h2c;
     double M[5];
@@ -176,7 +176,7 @@ SHARE
   {
     int i;
 
-    for (i=0; i<7; aVars->N_filenameion[i++] = 0);
+    for (i=0; i<7; aVars->N_reflection[i++] = 0);
     for (i=0; i<5; aVars->M[i++] = 0);
     for (i=0; i<5; aVars->Alpha[i++] = 0);
     
@@ -362,6 +362,8 @@ INITIALIZE
   if (!w1 || !h1)
   { fprintf(stderr,"Guide_gravity: %s: input widow is closed (w1=h1=0).\n", NAME_CURRENT_COMP);
     exit(-1); }
+    
+  if (d*k > w1) exit(fprintf(stderr, "Guide_gravity: %s: absorbing walls fill input window. No space left for transmission (d*k > w1).\n", NAME_CURRENT_COMP));
 
   if (!w2) w2=w1;
   if (!h2) h2=h1;
@@ -381,9 +383,10 @@ INITIALIZE
       mbottom, nhslit, wavy_lr, wavy_tb, wavy_z, wavy,
       chamfers_z, chamfers_lr, chamfers_tb, chamfers,nu,phase,aleft,aright,atop,abottom);
     if (!G) for (i=0; i<5; GVars.A[i++] = 0);
-    if (GVars.fc_freq != 0 || GVars.fc_phase != 0)
+    if (GVars.fc_freq != 0 || GVars.fc_phase != 0) {
       printf("Guide_gravity: %s: Fermi Chopper mode: frequency=%g [Hz] phase=%g [deg]\n",
         NAME_CURRENT_COMP, GVars.fc_freq, GVars.fc_phase);
+    }
   } else printf("Guide_gravity: %s: unactivated (l=0 or nelements=0)\n", NAME_CURRENT_COMP);
 
 %}
@@ -424,7 +427,7 @@ TRACE
     if (ret==0) ABSORB;
 
     if (dt>0.0) PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz); else if (angle) ABSORB;
-    GVars.N_filenameion[6]++;
+    GVars.N_reflection[6]++;
 
     this_width  = w1;
     this_height = h1;
@@ -464,7 +467,7 @@ TRACE
 
 
       /* neutron is now in the input window of the guide */
-      /* do loops on filenameions in the box */
+      /* do loops on reflections in the box */
       for(;;)
       {
         /* get intersections for all box sides */
@@ -479,7 +482,7 @@ TRACE
             &nx, &ny, &nz);
 
         /* only positive dt are valid */
-        /* exit filenameion loops if no intersection (neutron is after box) */
+        /* exit reflection loops if no intersection (neutron is after box) */
         if (side == 0 || dt <= 0)
           { if (GVars.warnings < 100)
               fprintf(stderr,"%s: warning: neutron has entered guide, but can not exit !\n", GVars.compcurname);
@@ -489,10 +492,10 @@ TRACE
         /* propagate to dt */
         PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz);
 
-        /* do filenameion on speed for l/r/u/d sides */
+        /* do reflection on speed for l/r/u/d sides */
         if (side == 5) /* neutron reaches end of guide: end loop and exit comp */
-          { GVars.N_filenameion[side]++; x += w_adj; y += h_adj; SCATTER; x -= w_adj; y -= h_adj; break; }
-        /* else filenameion on a guide wall */
+          { GVars.N_reflection[side]++; x += w_adj; y += h_adj; SCATTER; x -= w_adj; y -= h_adj; break; }
+        /* else reflection on a guide wall */
         if(GVars.M[side] == 0 || Qc == 0 || R0 == 0)  /* walls are absorbing */
           { x += w_adj; y += h_adj; ABSORB; }
         /* handle chamfers */
@@ -508,7 +511,7 @@ TRACE
         if (GVars.chamfer_tb && (side==3 || side==4) && (fabs(x+w_adj)>this_width/2- GVars.chamfer_tb))
         { x += w_adj; y += h_adj; ABSORB; }
         /* change/mirror velocity: h_f = v - n.2*n.v/|n|^2 */
-        GVars.N_filenameion[side]++; /* GVars.norm_n2 > 0 was checked at INIT */
+        GVars.N_reflection[side]++; /* GVars.norm_n2 > 0 was checked at INIT */
         /* compute n.v using current values */
         B = scalar_prod(vx,vy,vz,nx,ny,nz);
         dt = 2*B/GVars.norm_n2[side]; /* 2*n.v/|n|^2 */
@@ -536,10 +539,10 @@ TRACE
         }
         if (B < 0) B=0;
         else if (B > 1) B=1;
-        p *= B;
+        if (!B) ABSORB; else p *= B;
         x += w_adj; y += h_adj; SCATTER; x -= w_adj; y -= h_adj;
-        GVars.N_filenameion[0]++;
-        /* go to the next filenameion */
+        GVars.N_reflection[0]++;
+        /* go to the next reflection */
         if (bounces > 1000) ABSORB;
       } /* end for */
       x += w_adj; y += h_adj; /* Re-adjust origin after SCATTER */
@@ -621,9 +624,9 @@ MCDISPLAY
     if (nu || phase) {
       double radius = sqrt(w1*w1+l*l);
       /* cylinder top/center/bottom  */
-      circle("xz", 0,-h1/2,-l/2,radius);
-      circle("xz", 0,0    ,-l/2,radius);
-      circle("xz", 0, h1/2,-l/2,radius);
+      circle("xz", 0,-h1/2,l/2,radius);
+      circle("xz", 0,0    ,l/2,radius);
+      circle("xz", 0, h1/2,l/2,radius);
     }
   }
   else {

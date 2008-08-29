@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.43 $
+* Version: $Revision: 1.44 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
@@ -52,8 +52,8 @@
 *
 * Optional parameters
 * h:        Same as yheight [m]
-* radius_i: Same as radius [m]
-* radius_o: radius-thickness [m]
+* radius_o: Same as radius [m]
+* radius_i: radius-thickness [m]
 * zthick:     Same as zdepth [m]
 * rad_sphere: Radius for a spherical sample [m]
 * target_x:

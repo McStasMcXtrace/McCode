@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Brookhaven
 *
 * The former thermal H8 triple-axis spectrometer from Brookhaven reactor
@@ -41,7 +41,6 @@ DEFINE INSTRUMENT BNL_H8(lambda=2.36)
 
 DECLARE
 %{
-  #define VERSION "$Revision"
   double DM         = 3.3539;   /* Monochromator d-spacing in Angs */
                                 /* PG002 Orders : 1st 3.355 2e 1.6775, 3e 1.1183 */
 
@@ -85,7 +84,7 @@ INITIALIZE
 
   strcpy(hostname, getenv("HOSTNAME") ? getenv("HOSTNAME") : "localhost");
 
-  printf("Instrument : %s, v%s (21/02/01) on %s.\n",NAME_CURRENT_COMP, VERSION, hostname);
+  printf("Instrument : %s on %s.\n",NAME_CURRENT_COMP, hostname);
   printf("Monochromator : (DM = %g)\n",DM);
   printf("A1 = %.2f, A2 = %.2f (deg)\n",A1,A2);
   printf("Ki = %.4g Angs-1 Energy = %.4g meV\nVelocity = %.4g m/s, lambda = %.4g Angs\n", Ki, Ei, vi,
