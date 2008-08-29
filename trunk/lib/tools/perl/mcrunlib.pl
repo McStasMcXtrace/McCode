@@ -410,7 +410,8 @@ sub do_test {
       $index++;
       # check command
       if ($this_cmd !~ m/$base/) { $this_cmd = "$base $this_cmd"; } # only parameters ?
-      if ($this_cmd !~ m/mcrun/) { $this_cmd = "mcrun $this_cmd"; } # omitted mcrun ?
+      if ($this_cmd !~ m/mcrun/ && $this_cmd !~ m/mcplot/ && $this_cmd !~ m/mcdisplay/) 
+                                 { $this_cmd = "mcrun $this_cmd"; } # omitted mcrun ?
       if ($mpi)                  { $this_cmd.= $mpi; }              # add mpi
       if ($this_cmd !~ m/-n/ && $this_cmd !~ m/--ncount/) { $this_cmd.= " -n $n_single"; }
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
@@ -482,8 +483,7 @@ sub do_test {
   } else {
     &$printer("# Installation check: OK.     Computing time: $elapsed_sec [sec].");
     if ($accuracy_flag) {
-      &$printer("# Accuracy     check: FAILED. Results are not reliable.");
-      &$printer("# >> This McStas installation does NOT produce accurate results.");
+      &$printer("# Accuracy     check: FAILED. Some results are not reliable.");
     } else {
       &$printer("# Accuracy     check: OK.");
     }
