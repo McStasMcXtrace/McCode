@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.199 $
+* Version: $Revision: 1.200 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.199 2008-08-29 15:32:28 farhi Exp $
+* $Id: mcstas-r.c,v 1.200 2008-08-29 15:35:08 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.199  2008/08/29 15:32:28  farhi
+* Indicate memory allocation size when reporting error.
+*
 * Revision 1.198  2008/08/26 13:32:05  farhi
 * Remove Threading support which is poor efficiency and may give wrong
 * results
@@ -5119,7 +5122,7 @@ void sighandler(int sig)
   }
   t0 = (time_t)mcstartdate;
   t1 = time(NULL);
-  printf("# Date:      %s (Started %s)",ctime(&t1), ctime(&t0));
+  printf("# Date:      %s (Started %s) ",ctime(&t1), ctime(&t0));
 
   if (sig == SIG_STAT)
   {
