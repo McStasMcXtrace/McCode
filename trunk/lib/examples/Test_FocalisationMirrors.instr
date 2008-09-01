@@ -12,7 +12,7 @@
 * Date: 2007.
 * Origin: <a href="http://www-llb.cea.fr/">LLB</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Test instrument for neutron focalisation with a set of supermirrors. 
@@ -24,7 +24,7 @@
 * %Description
 * Test instrument for the MirrorElli and MirrorPara components
 *
-* %Example: G=1 Detector: monPSD_I=1.99699e-11
+* %Example: G=1 Detector: monPSD_I=2.50457e-16
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -65,7 +65,7 @@ DECLARE %{
 %}
 
 INITIALIZE %{
-  T=(tan(TetaMin*3.1415926/180))*(tan(TetaMin*3.1415926/180));
+  T=(tan(TetaMin*DEG2RAD))*(tan(TetaMin*DEG2RAD));
   x1b=.5*(2*F+4*F/T+sqrt((2*F+4*F/T)*(2*F+4*F/T)-4*F*F));
   y1b=sqrt(4*F*x1b);
   y1h=y1b+BeamWidth;
@@ -81,7 +81,7 @@ INITIALIZE %{
   x2h=(2*A*A*F/Ellib/Ellib-DET/Ellia/Ellia-sqrt(Delta))/2/(1/Ellia/Ellia+A*A/Ellib/Ellib);
   y2b=Ellib*sqrt((1-(x2b+Ellia)*(x2b+Ellia)/Ellia/Ellia));
   y2h=Ellib*sqrt((1-(x2h+Ellia)*(x2h+Ellia)/Ellia/Ellia));
-  BS=Qmin*lambda/2/3.1415926*(DET+x2h);
+  BS=Qmin*lambda/2/PI*(DET+x2h);
   rayon1=BS*4*G*F/DET/T; 
 %}
 
@@ -94,7 +94,7 @@ COMPONENT source1 = Source_gen(focus_aw = divergence , focus_ah = .0001, lambda0
 			       dlambda=0.01, yheight = H/1000, xwidth = BeamWidth) 
 AT (0,0,0.1) RELATIVE PREVIOUS 
 
-COMPONENT mirpara = MirrorPara(reflect="supermirror_m3.rfl", xshift = BeamWidth, xshift=y1b,
+COMPONENT mirpara = MirrorPara(reflect="supermirror_m3.rfl", xwidth = BeamWidth, xshift=y1b,
 				  yheight = H*2, focus = F) 
 AT (-(y1b+BeamWidth/2), 0,0.1001) RELATIVE base
 

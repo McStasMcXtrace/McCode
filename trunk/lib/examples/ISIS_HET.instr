@@ -12,7 +12,7 @@
 * Date: 22nd Jan 2004.
 * Origin: <a href="http://www.isis.rl.ac.uk">ISIS (UK)</a>
 * Release: McStas CVS_070630/1.8
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: ISIS
 *
 * HET: High Energy Transfer Chopper Spectrometer
@@ -45,7 +45,7 @@ DEFINE INSTRUMENT ISIS_HET(Emin=443.0,Emax=470.0,nu_chop=600.0,int type=2)
 DECLARE
 %{
 /* chopper variables to compute according to "type" input */
-double c_h1,c_h2, roc, chan_w;
+double c_h,roc, chan_w;
 int nslits;
 %}
 
@@ -55,16 +55,14 @@ INITIALIZE
   type=2 B chopper
 */
 if (type==1)
-  {c_h1=-0.032;
-   c_h2=0.032;
+  {c_h=0.064;
    roc=-1.3;
    nslits=16;
    chan_w=0.00283;
    fprintf(stderr,"sloppy chopper selected");
   }
 if (type==2)
-  {c_h1=-0.026;
-   c_h2=0.026;
+  {c_h=0.052;
    roc=-0.92;
    nslits=24;
    chan_w=0.00184;
@@ -87,7 +85,7 @@ COMPONENT monFC = Monitor_nD(
   AT (0, 0, 9.8) RELATIVE a1
 
 COMPONENT FC = FermiChopper(
-  radius=0.05, nu=nu_chop, ymin=c_h1, ymax=c_h2,
+  radius=0.05, nu=nu_chop, yheight=c_h,
   w=chan_w, nslit=nslits, curvature=1.0/roc, verbose=1, zero_time=2)
 AT (0,0,10) RELATIVE ts1_mod
 
