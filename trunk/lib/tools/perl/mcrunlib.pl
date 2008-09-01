@@ -446,21 +446,20 @@ sub do_test {
             }
           } # end for $line
           if ($sim_E) { # found monitor for this test, either below 1 % or within Error bar
+            my $diff = int(abs($sim_I/$val_val[$k]-1)*100+0.99);
             if (abs($sim_I/$sim_E) < 2) { # error is higher than half signal: stats too low
               &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E (statistics too low for testing, increase ncount)"); 
               $test_abstract .= "[OK]     $base". "_$index (statistics too low for testing, increase ncount)\n";
             } elsif (abs($val_val[$k]-$sim_I) < abs($val_val[$k]*0.05) || abs($val_val[$k]-$sim_I) < 3*$sim_E)  { 
-              my $diff = int(abs($sim_I/$val_val[$k]-1)*100+0.99);
               &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%"); 
               $test_abstract .= "[OK]     $base". "_$index (accuracy, $diff \%)\n";
             } elsif (abs($val_val[$k]-$sim_I) < abs($val_val[$k]*0.2))  { 
-              my $diff = int(abs($sim_I/$val_val[$k]-1)*100+0.99);
               &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%"); 
               $test_abstract .= "[OK]     $base". "_$index (accuracy, fair $diff \%)\n";
             } else {
               $accuracy_flag = 1;
               &$printer("[FAILED] $base: $val_det[$k] = $sim_I +/- $sim_E, should be $val_val[$k] ");
-              $test_abstract .= "[FAILED] $base". "_$index (accuracy)\n";
+              $test_abstract .= "[FAILED] $base". "_$index (accuracy off by $diff)\n";
             }
           } else {
             &$printer("[???] $base: $val_det[$k] = $sim_I (may have failed, reference not found)"); 
