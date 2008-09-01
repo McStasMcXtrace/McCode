@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.35 $
+* Version: $Revision: 1.36 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.11
 * Modified by: E. Farhi, from Gravity_guide by nslit. Lefmann (buggy).
@@ -127,7 +127,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef Gravity_guide_Version
-#define Gravity_guide_Version "$Revision: 1.35 $"
+#define Gravity_guide_Version "$Revision: 1.36 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
@@ -363,7 +363,7 @@ INITIALIZE
   { fprintf(stderr,"Guide_gravity: %s: input widow is closed (w1=h1=0).\n", NAME_CURRENT_COMP);
     exit(-1); }
     
-  if (d*k > w1) exit(fprintf(stderr, "Guide_gravity: %s: absorbing walls fill input window. No space left for transmission (d*k > w1).\n", NAME_CURRENT_COMP));
+  if (d*nslit > w1) exit(fprintf(stderr, "Guide_gravity: %s: absorbing walls fill input window. No space left for transmission (d*nslit > w1).\n", NAME_CURRENT_COMP));
 
   if (!w2) w2=w1;
   if (!h2) h2=h1;
@@ -384,6 +384,8 @@ INITIALIZE
       chamfers_z, chamfers_lr, chamfers_tb, chamfers,nu,phase,aleft,aright,atop,abottom);
     if (!G) for (i=0; i<5; GVars.A[i++] = 0);
     if (GVars.fc_freq != 0 || GVars.fc_phase != 0) {
+      if (w1 != w2 || h1 != h2)
+      exit(fprintf(stderr,"Guide_gravity: %s: rotating slit pack must be straight (w1=w2 and h1=h2).\n", NAME_CURRENT_COMP));
       printf("Guide_gravity: %s: Fermi Chopper mode: frequency=%g [Hz] phase=%g [deg]\n",
         NAME_CURRENT_COMP, GVars.fc_freq, GVars.fc_phase);
     }
@@ -405,7 +407,7 @@ TRACE
       Rotation R;
       angle=fmod(360*GVars.fc_freq*t+GVars.fc_phase, 360); /* in deg */
       /* modify angle so that Z0 guide side is always in front of incoming neutron */
-      if (angle > 90 && angle < 270) angle -= 180;
+      if (angle > 90 && angle < 270) { angle -= 180; }
       angle *= DEG2RAD;
       rot_set_rotation(R, 0, -angle, 0); /* will rotate neutron instead of comp: negative side */
       /* apply rotation to centered coordinates */
@@ -464,7 +466,6 @@ TRACE
       }
       h_adj = h_edge + (GVars.h1c)/2.0;
       y -= h_adj; h_adj -=  h1/2.0;
-
 
       /* neutron is now in the input window of the guide */
       /* do loops on reflections in the box */
