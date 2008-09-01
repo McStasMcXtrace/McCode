@@ -25,9 +25,9 @@ Instruments:
 (*) Laue_diff in examples
 (*) max parm Lucia vs. Monitor_nD (FIXED by _ hack)
 (*) IN22_sample - wrong direction / rotation of samle 2\theta mono ?
-(*) Guide_test.instr ; Source_test.instr; Monochromator_test; etc...
-(*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off, SNS_test, Tomography
-    TESTS: accuracy must take into account N value instead of default 20 % DONE
+(*) Test_Fermi DONE ; Test_Sources DONE; Test_Guides ; Monochromator_test; etc...
+(*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off,  Tomography
+    TESTS: accuracy must take into account I_ERR value instead of default 20 % DONE
 (*) use %include where ever possible e.g. ILL_H142_IN12=ILL_H142+templateTAS, ILL_H15_IN6=ILL_H15+templateTOF
 
 Metalanguage / runtime

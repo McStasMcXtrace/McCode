@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -1102,6 +1102,9 @@ TRACE
       } // end if absorption in case of border effects (left and right) in the banana
     } /* end if p_interact */
   } /* end if (intersect) */
+  if (restore_neutron) {
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }
 
 %}
 
@@ -1157,9 +1160,6 @@ SAVE
       0.0, (double)(PHSpectrum_n-1), PHSpectrum_n,
       PHSpectrum0, PHSpectrum, PHSpectrum2,
       file_spectrum);
-  }
-  if (restore_neutron) {
-    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   }
 %}
 
