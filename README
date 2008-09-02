@@ -12,7 +12,7 @@
 * Date: 2008
 * Origin: Risoe
 * Release: all McStas
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 *
 * This file is part of McStas.
 * It details the installation procedure
@@ -66,8 +66,6 @@ The manual, along with much other information, is
 available from the McStas WWW home page:
 
     http://www.mcstas.org
-      and
-    http://www.ill.fr/tas/mcstas/
 
 Contacts for McStas are:
   Kim Lefmann <lefmann@fys.ku.dk> (KL)
