@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.200 $
+* Version: $Revision: 1.201 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.200 2008-08-29 15:35:08 farhi Exp $
+* $Id: mcstas-r.c,v 1.201 2008-09-02 08:36:17 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.200  2008/08/29 15:35:08  farhi
+* Split MPI_Reduce into 1e5 bits to avoid de-sync of nodes.. This was done
+* in fact in last commit.
+*
 * Revision 1.199  2008/08/29 15:32:28  farhi
 * Indicate memory allocation size when reporting error.
 *
@@ -897,6 +901,8 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
   void *lrbuf;
   int dsize;
   int res= MPI_SUCCESS;
+  
+  if (!sbuf) return(-1);
 
   MPI_Type_size(dtype, &dsize);
   lrbuf = malloc(count*dsize);
@@ -904,9 +910,9 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
     exit(fprintf(stderr, "Error: Out of memory %li (mc_MPI_Reduce).\n", count*dsize));
 
   long offset=0;
-  int  length=10000;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
   while (offset < count || res != MPI_SUCCESS) {
-    if (offset+length > count-1) length=count-offset; else length=10000;
+    if (offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
     res = MPI_Reduce((void*)(sbuf+offset*dsize), (void*)(lrbuf+offset*dsize), length, dtype, op, root, comm);
     offset += length;
   }
@@ -2861,9 +2867,9 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 
   if (!mpi_event_list && mpi_node_count > 1) {
     /* we save additive data: reduce everything */
-    mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-    mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-    mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+    if (p0) mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+    if (p1) mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+    if (p2) mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
 
     /* slaves are done */
     if(mpi_node_rank != mpi_node_root) return 0;
