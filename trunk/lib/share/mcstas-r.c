@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.201 $
+* Version: $Revision: 1.202 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.201 2008-09-02 08:36:17 farhi Exp $
+* $Id: mcstas-r.c,v 1.202 2008-09-02 14:50:42 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.201  2008/09/02 08:36:17  farhi
+* MPI support: block size defined in mcstas-r.h as 1e5. Correct bug when
+* p0, p1 or p2 are NULL, and re-enable S(q,w) save in Isotropic_Sqw with
+* MPI.
+*
 * Revision 1.200  2008/08/29 15:35:08  farhi
 * Split MPI_Reduce into 1e5 bits to avoid de-sync of nodes.. This was done
 * in fact in last commit.
@@ -895,11 +900,11 @@ double mpi_p[3];
 * mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
 *******************************************************************************/
 int mc_MPI_Reduce(void *sbuf, void *rbuf,
-                  int count, MPI_Datatype dtype,
+                  long count, MPI_Datatype dtype,
                   MPI_Op op, int root, MPI_Comm comm)
 {
   void *lrbuf;
-  int dsize;
+  long dsize;
   int res= MPI_SUCCESS;
   
   if (!sbuf) return(-1);
@@ -907,7 +912,7 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
   MPI_Type_size(dtype, &dsize);
   lrbuf = malloc(count*dsize);
   if (lrbuf == NULL)
-    exit(fprintf(stderr, "Error: Out of memory %li (mc_MPI_Reduce).\n", count*dsize));
+    exit(fprintf(stderr, "Error: Out of memory %li (mc_MPI_Reduce).\n", (long)count*dsize));
 
   long offset=0;
   int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */

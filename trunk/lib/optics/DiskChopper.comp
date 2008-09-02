@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: Risoe
 * Release: McStas 1.9.1
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -94,14 +94,14 @@ INITIALIZE
         fprintf(stderr,"DiskChopper: %s: yheight must be < radius\n", NAME_CURRENT_COMP);
         exit(-1); }
       if (isfirst && n_pluse <=0)
-      { fprintf(stderr,"DiskChopper: %s: wrong First chopper pulse number (n_pluse)\n", NAME_CURRENT_COMP);
+      { fprintf(stderr,"DiskChopper: %s: wrong First chopper pulse number (n_pluse=%g)\n", NAME_CURRENT_COMP, n_pulse);
         exit(-1); }
       if (!omega) {
         fprintf(stderr,"DiskChopper: %s WARNING: chopper frequency is 0!\n", NAME_CURRENT_COMP);
         omega = 1e-15; /* We should actually use machine epsilon here... */
       }
       if (!(abs_out==1)) {
-        fprintf(stderr,"DiskChopper: %s WARNING: chopper will NOT absorb neutrons outside radius radius\n", NAME_CURRENT_COMP);
+        fprintf(stderr,"DiskChopper: %s WARNING: chopper will NOT absorb neutrons outside radius %g [m]\n", NAME_CURRENT_COMP, radius);
         abs_out=0;
       }
       if (isfirst && theta_1) {
