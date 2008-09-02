@@ -8,13 +8,18 @@
 * Date: Sept 1st, 2008
 * Origin: ILL
 * Release: McStas CVS_080901
-* Version: $Revision: 1.2 $
-* %INSTRUMENT_SITE:ILL
+* Version: $Revision: 1.3 $
+* %INSTRUMENT_SITE: Tests_optics
 *
-* Cross comparison of fermi Chopper components
+* Cross comparison of Fermi Chopper components
 *
 * %Description
-* Instrument longer description (type, elements, usage...)
+* Cross comparison of Fermi Chopper components, using McStas and
+* contributed components, as well as rotating collimator approximations.
+*
+* %Example: Fermi=1 Detector: Monitor2_xt_I=8.11119e-05
+* %Example: Fermi=2 Detector: Monitor2_xt_I=8.9408e-05
+* %Example: Fermi=3 Detector: Monitor2_xt_I=8.08804e-05
 *
 * %Parameters
 * Fermi: [1] Choice of Fermi chopper component to test, with
@@ -28,12 +33,11 @@
 * %End
 *******************************************************************************/
 
-/* Change name of instrument and input parameters with default values */
 DEFINE INSTRUMENT Test_Fermi(int Fermi=1)
 
 INITIALIZE
 %{
-printf("%s: ", NAME_CURRENT_COMP);
+printf("\n%s: ", NAME_CURRENT_COMP);
 switch (Fermi) {
 case 1:
   printf("Using FermiChopper\n"); break;
