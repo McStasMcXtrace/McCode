@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.74 $
+* Version: $Revision: 1.75 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.74 $
+#define ISOTROPIC_SQW $Revision: 1.75 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1886,10 +1886,7 @@ if (SCATTERED) {
 SAVE
 %{
   int  k;
-#ifdef USE_MPI
-  if (save_sqw)
-    printf("Isotropic_Sqw: %s: Can not save S(q,w) data when running in MPI mode.\n", NAME_CURRENT_COMP);
-#else
+
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)
   for (k=0; k < 2; k++) {
     struct Sqw_Data_struct Data_sqw;
@@ -1944,7 +1941,6 @@ SAVE
     }
 
   } /* end for */
-#endif
 
 /* end SAVE */
 %}

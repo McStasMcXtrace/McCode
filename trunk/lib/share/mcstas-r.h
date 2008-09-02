@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.103 $
+* Version: $Revision: 1.104 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,15 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.103 2008-08-26 13:32:05 farhi Exp $
+* $Id: mcstas-r.h,v 1.104 2008-09-02 08:36:17 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.103  2008/08/26 13:32:05  farhi
+*       Remove Threading support which is poor efficiency and may give wrong
+*       results
+*       Add quotes around string instrument parameters from mcgui simulation
+*       dialog
+*
 *       Revision 1.102  2008/08/25 14:13:28  farhi
 *       changed neutron-mc to mcstas-users
 *
@@ -282,7 +288,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.103 $"
+#define MCSTAS_R_H "$Revision: 1.104 $"
 
 #include <math.h>
 #include <string.h>
@@ -454,6 +460,10 @@ mcstatic FILE *mcsiminfo_file        = NULL;
   if(mpi_node_rank == mpi_node_root)\
   { statement; } \
 }
+
+#ifndef MPI_REDUCE_BLOCKSIZE
+#define MPI_REDUCE_BLOCKSIZE 10000
+#endif
 
 int mc_MPI_Reduce(void* sbuf, void* rbuf,
                   int count, MPI_Datatype dtype,
