@@ -10,7 +10,7 @@
 * %I
 * Written by: Ross Stewart
 * Date: November 18 2003
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.8
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
@@ -49,7 +49,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Guide_curved
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, l, R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003, r=2700)
+SETTING PARAMETERS (w1, h1, l, R0=0.995, Qc=0.0218, alpha=4.38, m=2, W=0.003, r=2700)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -81,7 +81,7 @@ TRACE
   PROP_Z0;
   if(x <= -whalf || x >= whalf || y <= -hhalf || y >= hhalf)
     ABSORB;
-
+  SCATTER;
   for(;;)
   {
     /* Find itersection points of neutron with inside and outside guide walls */
@@ -116,7 +116,7 @@ TRACE
       break;
     }
     /* Now compute reflectivity. */
-    if (m == 0) ABSORB;
+    if (m == 0 || !R0) ABSORB;
 
     q = 4.0*PI*sin(theta)/lambda;
     if(q > Qc)

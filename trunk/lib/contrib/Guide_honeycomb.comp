@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Venturi
 * Date: Apr 2003
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: G. Venturi, Made Honeycomb from Guide_gravity (Apr 2003)
@@ -74,7 +74,7 @@
 DEFINE COMPONENT Guide_honeycomb
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, w2=0, l,
-  R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003, nslit=1, d=0.0005,
+  R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
   mleftup=-1, mrightup=-1, mleftdown=-1, mrightdown=-1,mleft=-1, mright=-1, G=0)
 OUTPUT PARAMETERS (GVars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -82,7 +82,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef Honeycomb_guide_Version
-#define Honeycomb_guide_Version "$Revision: 1.9 $"
+#define Honeycomb_guide_Version "$Revision: 1.10 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component

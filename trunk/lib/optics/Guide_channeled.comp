@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,8 +10,8 @@
 * %I
 * Written by: Christian Nielsen
 * Date: 1999
-* Version: $Revision: 1.16 $
-* Release: McStas 1.6
+* Version: $Revision: 1.17 $
+* Release: McStas CVS_080902
 * Origin: Risoe
 *
 * Neutron guide with channels (bender section).
@@ -75,8 +75,8 @@
 DEFINE COMPONENT Guide_channeled
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
-  R0=0.99, Qc=0, alpha=0, m=0, nslit=1, d=0.0005,
-  Qcx=0.021, Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003, mx=1, my=1, nu=0, phase=0)
+  R0=0.995, Qc=0, alpha=0, m=0, nslit=1, d=0.0005,
+  Qcx=0.0218, Qcy=0.0218, alphax=4.38, alphay=4.38, W=0.003, mx=1, my=1, nu=0, phase=0)
 OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -281,6 +281,7 @@ TRACE
     p *= R0;
     x += hadj; SCATTER; x -= hadj;
   } /* end for */
+  x += hadj; /* Re-adjust origin */
   if (nu != 0 || phase != 0) { /* rotate back neutron w/r to guide element */
       /* approximation of rotating straight Fermi Chopper */
       Coords   X = coords_set(x,y,z-l/2);  /* current coordinates of neutron in centered static frame */
@@ -295,7 +296,6 @@ TRACE
       RX = rot_apply(R, X);
       coords_get(RX, &vx, &vy, &vz);
     }
-  x += hadj; /* Re-adjust origin */
 %}
 
 MCDISPLAY
