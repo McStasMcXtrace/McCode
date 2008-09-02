@@ -459,7 +459,7 @@ sub do_test {
             } else {
               $accuracy_flag = 1;
               &$printer("[FAILED] $base: $val_det[$k] = $sim_I +/- $sim_E, should be $val_val[$k] ");
-              $test_abstract .= "[FAILED] $base". "_$index (accuracy off by $diff)\n";
+              $test_abstract .= "[FAILED] $base". "_$index (accuracy off by $diff \%)\n";
             }
           } else {
             &$printer("[???] $base: $val_det[$k] = $sim_I (may have failed, reference not found)"); 

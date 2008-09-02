@@ -12,7 +12,7 @@
 * Written by: Geza Zsigmond
 * Date: Sep 2004
 * Origin: VITESS module 'chopper_fermi'
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Release: McStas 1.9
 * Modified by: adapted for McStas by <a href="mailto:lieutena@ill.fr">K. Lieutenant</a>, Mar 2005;
 *
@@ -66,7 +66,7 @@
 * Apr 2005: extensive external test, most problems solved (cf. 'Bugs' and source header)
 * Validated by: K. Lieutenant
 *
-* limitations: slow, especially for a high number of channels
+* limitations: slow (10 times slower than FermiChopper), especially for a high number of channels
 *
 * %BUGS
 * reduction of transmission by a large shadowing cylinder underestimated

@@ -1594,7 +1594,7 @@ sub setup_menu {
                        -command => [\&menu_open, $w],
                        -underline => 0);
     $w->bind( $shortcuts{'menuopen'}  => [\&menu_open, $w]);
-    $filemenu->command(-label => 'Edit current/New',
+    $filemenu->command(-label => 'Edit current/New...',
                        -underline => 0,
                        -command => \&menu_edit_current);
     $filemenu->command(-label => 'Edit current/New (detached)',
@@ -1616,12 +1616,12 @@ sub setup_menu {
                        -underline => 1,
                        -command => sub { $cmdwin->delete("1.0", "end") });
     $filemenu->separator;
-    $filemenu->command(-label => 'Preferences',
+    $filemenu->command(-label => 'Preferences...',
                       -underline => 1,
                       -accelerator =>  $shortcuts{'menuprefs'} ,
                       -command => sub {menu_preferences($w);});
     $w->bind( $shortcuts{'menuprefs'}  => [\&menu_preferences, $w]);
-    $filemenu->command(-label => 'Save configuration',
+    $filemenu->command(-label => 'Save configuration...',
                        -underline => 2,
                        -command => sub {menu_save_config($w)});
     $filemenu->separator;
@@ -1636,12 +1636,12 @@ sub setup_menu {
                        -underline => 0,
                        -command => sub { menu_read_sim_file($w) });
     $simmenu->separator;
-    $simmenu->command(-label => 'Run simulation ...',
+    $simmenu->command(-label => 'Run simulation...',
                       -underline => 1,
                       -accelerator =>  $shortcuts{'menurun'} ,
                       -command => sub {menu_run_simulation($w);});
     $w->bind( $shortcuts{'menurun'}  => [\&menu_run_simulation, $w]);
-    $simmenu->command(-label => 'Plot results ...',
+    $simmenu->command(-label => 'Plot results...',
                       -underline => 0,
                       -accelerator =>  $shortcuts{'menuplot'} ,
                       -command => sub {menu_plot_results($w);});
