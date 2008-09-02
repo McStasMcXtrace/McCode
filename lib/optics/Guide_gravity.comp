@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2007, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: Aug 03 2001
-* Version: $Revision: 1.36 $
+* Version: $Revision: 1.37 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
-* Release: McStas 1.11
+* Release: McStas CVS_080902
 * Modified by: E. Farhi, from Gravity_guide by nslit. Lefmann (buggy).
 * Modified by: E. Farhi, focusing channels are now ok (Sept 4th, 2001).
 * Modified by: E. Farhi, 2D channel array. Correct focus bug (Dec 14th 2002)
@@ -115,7 +115,7 @@
 DEFINE COMPONENT Guide_gravity
 DEFINITION PARAMETERS (string reflect=0)
 SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
-  R0=0.99, Qc=0.0219, alpha=6.07, m=1.0, W=0.003, nslit=1, d=0.0005,
+  R0=0.995, Qc=0.0218, alpha=4.38, m=1.0, W=0.003, nslit=1, d=0.0005,
   mleft=-1, mright=-1, mtop=-1, mbottom=-1, nhslit=1, G=0,
   aleft=-1, aright=-1, atop=-1, abottom=-1,
   wavy=0, wavy_z=0, wavy_tb=0, wavy_lr=0,
@@ -127,7 +127,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef Gravity_guide_Version
-#define Gravity_guide_Version "$Revision: 1.36 $"
+#define Gravity_guide_Version "$Revision: 1.37 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
@@ -442,6 +442,8 @@ TRACE
       double w_edge, w_adj; /* Channel displacement on X */
       double h_edge, h_adj; /* Channel displacement on Y */
       double w_chnum,h_chnum; /* channel indexes */
+      
+      SCATTER;
 
       /* X: Shift origin to center of channel hit (absorb if hit dividing walls) */
       x += w1/2.0;
@@ -521,7 +523,7 @@ TRACE
         vz -= nz*dt;
 
         /* compute q and modify neutron weight */
-        /* scattering q=|nslit_i-nslit_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
+        /* scattering q=|n_i-n_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
         q = 2*V2Q*fabs(B)/GVars.norm_n[side];
 
         if (reflect && strlen(reflect))

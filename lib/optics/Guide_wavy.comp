@@ -9,7 +9,7 @@
 *
 * %I
 * Written by: Kim Lefmann
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -34,6 +34,10 @@
 * l:       (m)    length of guide
 * R0:      (1)    Low-angle reflectivity
 * Qc:      (AA-1) Critical scattering vector
+* alpha:   (AA)   Slope of filenameivity
+* m:       (1)    m-value of material. Zero means completely absorbing.
+* W:       (AA-1) Width of supermirror cut-off for all mirrors
+*
 * alpha1:   (AA)   Slope of reflectivity left
 * m1:       (1)    m-value of material, left
 * W1:       (AA-1) Width of supermirror cut-off left
@@ -46,6 +50,7 @@
 * alpha4:   (AA)   Slope of reflectivity bottom
 * m4:       (1)    m-value of material, bottom.
 * W4:       (AA-1) Width of supermirror cut-off bottom
+*
 * wavy_z:  (deg)  Waviness in the z-(flight-)direction
 * wavy_xy: (deg)  Waviness in the transverse direction
 *
@@ -58,12 +63,13 @@
 
 DEFINE COMPONENT Guide_wavy
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, w2=0, h2=0, l, R0=0.995, Qc=0.0218,
+SETTING PARAMETERS (w1, h1, w2=0, h2=0, l, 
+R0=0.995, Qc=0.0218, alpha=0, m=0, W=0,
 alpha1=4.38, m1=2, W1=0.003,
 alpha2=4.38, m2=2, W2=0.003,
 alpha3=4.38, m3=2, W3=0.003,
 alpha4=4.38, m4=2, W4=0.003,
-wavy_z, wavy_xy)
+wavy_z=0, wavy_xy=0)
 OUTPUT PARAMETERS (whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -74,6 +80,10 @@ DECLARE
 
 INITIALIZE
 %{
+  if (m)     { m1=m2=m3=m4=m; }
+  if (alpha) { alpha1=alpha2=alpha3=alpha4=alpha; }
+  if (W)     { W1=W2=W3=W4=W; }
+  
   if (!w2) w2=w1;
   if (!h2) h2=h1;
   f_h = 0.5*(w2 - w1), f_v = 0.5*(h2 - h1);
