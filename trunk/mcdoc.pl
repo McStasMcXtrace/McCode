@@ -167,8 +167,7 @@ sub html_main_end {
 <P>This Component list was updated on $date.
 <HR WIDTH="100%">
 <CENTER>
-  [ <A HREF="http://www.ill.fr/tas/mcstas/"><I>McStas</I> at ILL</A>
-  | <A href="http://www.mcstas.org/"><I>McStas</I> at Ris&oslash;</A> ]
+  [ <A href="http://www.mcstas.org/"><I>McStas web site</I></A> ]
 </CENTER>
 
 <P><BR>

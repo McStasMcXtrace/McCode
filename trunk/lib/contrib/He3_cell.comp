@@ -11,7 +11,7 @@
 * Written by: Trefor Roberts
 * Date: March 1999
 * Origin: ILL
-* version: $Revision: 1.6 $
+* version: $Revision: 1.7 $
 * Release: McStas 1.6
 *
 * Polarised 3He cell
@@ -32,9 +32,6 @@
 * bx:        x component of field at the cell [tesla]
 * by:        y component of field at the cell [tesla]
 * bz:        z component of field at the cell [tesla]
-*
-* %Link
-* <a href="http://www.ill.fr/tas/mcstas/>The McStas ILL page, and the instrument section</a>
 *
 * %End
 ***************************************************************************/

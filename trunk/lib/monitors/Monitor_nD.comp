@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.39 $
+* Version: $Revision: 1.40 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -196,8 +196,6 @@
 * Vars: structure containing Monitor_nD variables [struct]
 *
 * %Link
-* <a href="http://www.ill.fr/tas/mcstas/">McStas at ILL</a>
-* %L
 * <a href="PreMonitor_nD.html">PreMonitor_nD</a>
 *
 * %End
