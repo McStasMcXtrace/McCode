@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.75 $
+* Version: $Revision: 1.76 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.75 $
+#define ISOTROPIC_SQW $Revision: 1.76 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1905,8 +1905,10 @@ SAVE
       double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
       long   i,j;
 
-      if (VarSqw.verbose_output >= 1)
-            printf("Isotropic_Sqw: %s: Writting %s S(q), SW and S(q,w) files as monitors.\n", NAME_CURRENT_COMP, type_ci);
+      MPI_MASTER(
+        if (VarSqw.verbose_output >= 1)
+          printf("Isotropic_Sqw: %s: Writting %s S(q), SW and S(q,w) files as monitors.\n", NAME_CURRENT_COMP, type_ci);
+      )
 
       for (j=0; j < (Data_sqw.nb_w) ; j++) {
         SW[j] = Data_sqw.SW[j].value;
