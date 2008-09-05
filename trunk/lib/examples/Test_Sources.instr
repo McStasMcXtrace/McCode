@@ -8,14 +8,15 @@
 * Date: Aug 3, 2008
 * Origin:ILL
 * Release: McStas CVS_080901
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * A test instrument to compare sources
 *
 * %Description
 * A test instrument to compare sources and check they provide the valid
-* sprectrum and intensity
+* sprectrum and intensity. It shows that the first 4 flat sources are equivalent,
+* the 2 Maxwellian sources as well.
 *
 * %Example: source=1 Detector: m1_I=9.97273e+11
 * %Example: source=2 Detector: m1_I=9.48467e+11
@@ -37,25 +38,25 @@ DEFINE INSTRUMENT Test_Sources(int source=0)
 
 INITIALIZE
 %{
-printf("%s: ", NAME_CURRENT_COMP);
-switch (source) {
-case 1:
-  printf("Using Source_adapt\n"); break;
-case 2:
-  printf("Using Source_div\n"); break;
-case 3:
-  printf("Using Source_simple\n"); break;
-case 4:
-  printf("Using Source_gen (flat spectrum)\n"); break;
-case 5:
-  printf("Using Source_gen\n"); break;
-case 6:
-  printf("Using Source_Maxwell_3\n"); break;
-case 7:
-  printf("Using ESS_moderator_long\n"); break;
-case 8:
-  printf("Using Moderator\n"); break;
-}
+  printf("%s: ", NAME_CURRENT_COMP);
+  switch (source) {
+  case 1:
+    printf("Using Source_adapt\n"); break;
+  case 2:
+    printf("Using Source_div\n"); break;
+  case 3:
+    printf("Using Source_simple\n"); break;
+  case 4:
+    printf("Using Source_gen (flat spectrum)\n"); break;
+  case 5:
+    printf("Using Source_gen\n"); break;
+  case 6:
+    printf("Using Source_Maxwell_3\n"); break;
+  case 7:
+    printf("Using ESS_moderator_long\n"); break;
+  case 8:
+    printf("Using Moderator\n"); break;
+  }
 %}
 
 TRACE
