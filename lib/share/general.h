@@ -16,9 +16,7 @@
 #endif
 
 #define MN          1.6749284E-27
-#ifndef G
 #define G           9.80665 
-#define
 #define K           1.380662E-23
 #define NA          6.022137E23
 #define H           6.626076E-34
