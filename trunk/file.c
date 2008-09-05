@@ -12,13 +12,16 @@
 * Date: Sep 25, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.19 $
+* Version: $Revision: 1.20 $
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.19 2007-03-12 14:57:18 farhi Exp $
+*	$Id: file.c,v 1.20 2008-09-05 09:55:19 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.19  2007/03/12 14:57:18  farhi
+*	Cosmetics
+*	
 *	Revision 1.18  2006/04/19 13:06:25  farhi
 *	* Updated Release, Version and Origin fields in headers
 *	* Improved setversion to update all McStasx.y occurencies into current release
@@ -54,6 +57,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
 
 #include "mcstas.h"
 
@@ -100,6 +104,23 @@ try_open_component(char *dir, char *name)
     }
     else
       str_free(path);
+  }
+  /* component not found: we make a new case insensitive search */
+  struct dirent *dp;
+  DIR *dfd;
+  if (!dir || (dfd = opendir(dir)) == NULL) {
+    return NULL;
+  }
+  while ((dp = readdir(dfd)) != NULL) {
+    if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
+      continue;    /* skip self and parent */
+    for(i = 0; i < sizeof(suffixes)/sizeof(*suffixes); i++) {
+      char *lname = str_cat(name, suffixes[i], NULL);
+      if (!strcasecmp(dp->d_name, lname))
+        fprintf(stderr, "Info:    '%s' component used in instrument matches %s\n"
+                        "         from library but may be misspelled. Check instrument.\n", name, dp->d_name);
+      str_free(lname);
+    }
   }
   return NULL;
 }
