@@ -10,7 +10,7 @@
 * %I
 * Written by: Christian Nielsen
 * Date: 1999
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Release: McStas CVS_080902
 * Origin: Risoe
 *
@@ -26,7 +26,8 @@
 * behaviour, in the case the neutron trajectory is nearly linear inside the
 * chopper slits, i.e. the neutrons are fast w/r/ to the chopper speed.
 * Slits are straight, but may be super-mirror coated. In this case, the
-* component is NOT centered, but located at its entry window.
+* component is NOT centered, but located at its entry window. It should then 
+* be shifted by -l/2.
 *
 * Example: Guide_channeled(w1=0.1, h1=0.1, w2=0.1, h2=0.1, l=2.0,
 *  R0=0.99, Qcx=0.0219, Qcy=0.0219, alphax=6.07, alphay=6.07, W=0.003, nslit=1,
@@ -147,7 +148,8 @@ TRACE
     /* approximation of rotating straight Fermi Chopper */
     Coords   X = coords_set(x,y,z-l/2);  /* current coordinates of neutron in centered static frame */
     Rotation R;
-    angle=fmod(360*nu*t+phase, 360); /* in deg */
+    double dt=(-z+l/2)/vz; /* time shift to each center of slit package */
+    angle=fmod(360*nu*(t+dt)+phase, 360); /* in deg */
     /* modify angle so that Z0 guide side is always in front of incoming neutron */
     if (angle > 90 && angle < 270) { angle -= 180; }
     angle *= DEG2RAD;
