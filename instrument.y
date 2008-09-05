@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas X.Y.Z
-* Version: $Revision: 1.79 $
+* Version: $Revision: 1.80 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.79 2007-09-03 16:10:26 farhi Exp $
+* $Id: instrument.y,v 1.80 2008-09-05 09:55:19 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1675,11 +1675,14 @@ main(int argc, char *argv[])
     file = fopen(instr_current_filename, "r");
   }
   if(file == NULL)
-    fatal_error("Instrument definition file `%s' not found\n",
+    fatal_error("mcstas: Instrument definition file `%s' not found\n",
     instr_current_filename);
   instrument_definition->quoted_source =
     str_quote(instrument_definition->source);
-  if (verbose) fprintf(stderr, "Analyzing file      %s\n", instrument_definition->quoted_source);
+  if (verbose) {
+    fprintf(stderr, "McStas version " MCSTAS_VERSION "\n");
+    fprintf(stderr, "Analyzing file      %s\n", instrument_definition->quoted_source);
+  }
   instr_current_line = 1;
   lex_new_file(file);
   read_components = symtab_create(); /* Create table of components. */
@@ -1688,7 +1691,7 @@ main(int argc, char *argv[])
   fclose(file);
   if(err != 0 || error_encountered != 0)
   {
-    print_error("Errors encountered during parse.\n");
+    print_error("mcstas: Errors encountered during parse of %s.\n", instr_current_filename);
     exit(1);
   }
   else
