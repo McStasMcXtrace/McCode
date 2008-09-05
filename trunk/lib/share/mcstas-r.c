@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.202 $
+* Version: $Revision: 1.203 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.202 2008-09-02 14:50:42 farhi Exp $
+* $Id: mcstas-r.c,v 1.203 2008-09-05 10:04:20 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.202  2008/09/02 14:50:42  farhi
+* cosmetics
+*
 * Revision 1.201  2008/09/02 08:36:17  farhi
 * MPI support: block size defined in mcstas-r.h as 1e5. Correct bug when
 * p0, p1 or p2 are NULL, and re-enable S(q,w) save in Isotropic_Sqw with
@@ -900,11 +903,11 @@ double mpi_p[3];
 * mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
 *******************************************************************************/
 int mc_MPI_Reduce(void *sbuf, void *rbuf,
-                  long count, MPI_Datatype dtype,
+                  int count, MPI_Datatype dtype,
                   MPI_Op op, int root, MPI_Comm comm)
 {
   void *lrbuf;
-  long dsize;
+  int dsize;
   int res= MPI_SUCCESS;
   
   if (!sbuf) return(-1);
