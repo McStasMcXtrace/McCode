@@ -1,9 +1,10 @@
 TODO list for mcstas june 2008
 ***************************************
 Next is the 2.0 release (not all from here, priority items marked by (*)
+(D) means DONE
 
 Components:
-    Uniform parameter naming for the component classes; Sources, Samples, Monitors, Guides, etc. DONE
+ D  Uniform parameter naming for the component classes; Sources, Samples, Monitors, Guides, etc. DONE
     move some contrib comps as official comps
 (*) DiskChopper bug - rotation by PI in N=2 situation changes time structure?! (Asked Uwe, no response yet)
     Robert McGreevy 4D- S(Q,w) - Analytical
@@ -19,15 +20,15 @@ Components:
 Doc:
     sync with new comp parameter names
     check new instrument definitions doc in manual
-    update new testing mechanism doc and McDoc %example
+    update new testing mechanism doc and McDoc %example DONE
 
 Instruments:
 (*) Laue_diff in examples
 (*) max parm Lucia vs. Monitor_nD (FIXED by _ hack)
 (*) IN22_sample - wrong direction / rotation of samle 2\theta mono ?
-(*) Test_Fermi DONE ; Test_Sources DONE; Test_Guides ; Monochromator_test; etc...
+(D) Test_Fermi DONE ; Test_Sources DONE; Test_Guides DONE; Monochromator_test DONE
 (*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off,  Tomography
-    TESTS: accuracy must take into account I_ERR value instead of default 20 % DONE
+ D  TESTS: accuracy must take into account I_ERR value instead of default 20 % DONE
 (*) use %include where ever possible e.g. ILL_H142_IN12=ILL_H142+templateTAS, ILL_H15_IN6=ILL_H15+templateTOF
 
 Metalanguage / runtime
@@ -37,16 +38,16 @@ Metalanguage / runtime
 //  DISTRIBUTION Gauss parms sizes COMPONENT MyComp = Comp()
 (*) GROUP should jump to first member if SCATTERED (allows for multiple scattering, many-mirror setups etc.) Related: Remove ABSORB in samples when t0 < 0!!
     component initiated SPLIT (Transmit/Reflect)
-    save on already opened files: catenate mode DONE
-    instrument.y to check for case insensitive comp names in case include fails
+ D  save on already opened files: catenate mode DONE
+ D  instrument.y to check for case insensitive comp names in case include fails DONE
     support zlib (if exists at ./configure) to handle compressed files (.gz, .zip, .bz) either by calling external command extraction to TMP, or in memory.
     support HTTP file access through wget if available from configure
-(*) MPI: split Reduce/sed/receive into 1e5 blocks
+(D) MPI: split Reduce/sed/receive into 1e5 blocks DONE
 
 Tools/platform:
     mcresplot widths? FWHM vs. Sigma?  mcresplot port to Matlab/Scilab ?
 (*) mcstas2vitess, only supports double parms, should also do ones with explicit type.
-(*) mcrun --test: need to add plotter test
+(D) mcrun --test: need to add plotter test
     Update mcrun --test=compatible to include --test=FP6 (etc)
 (*) gfortran update for PGPLOT build
     SWARM / Genetic algo? 
@@ -55,7 +56,7 @@ Tools/platform:
     mcgnuplot: DONE (almost)
     Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
 (*) mcgui signal handling in case of compilation / mpi
-    REMOVE threading support that is misleading and not efficient (mcrui,mcstas-r,mcrun) DONE
+ D  REMOVE threading support that is misleading and not efficient (mcrui,mcstas-r,mcrun) DONE
 (*) mcgui menu item renamed as Intall SSH/DSA key for grid/MPI DONE
 
 Infrastructure:
