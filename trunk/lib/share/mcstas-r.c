@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.203 $
+* Version: $Revision: 1.204 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.203 2008-09-05 10:04:20 farhi Exp $
+* $Id: mcstas-r.c,v 1.204 2008-09-08 10:08:21 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.203  2008/09/05 10:04:20  farhi
+* sorry, my mistake...
+*
 * Revision 1.202  2008/09/02 14:50:42  farhi
 * cosmetics
 *
@@ -2542,7 +2545,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
              (isdata != 1 || strstr(format.Name, "no header")
               || strstr(format.Name, "append") 
               || strstr(format.Name, "catenate") 
-              || strstr(mcopenedfiles, mcsiminfo_name) ?
+              || strstr(mcopenedfiles, filename) ?
              "a" : "w"));
       if (strstr(format.Name, "binary")) strcat(mode, "b");
       if (mcformat_data.Name) dataformat = mcformat_data;
