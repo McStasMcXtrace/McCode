@@ -3,6 +3,8 @@
  * %Identification
  * Written by: <a href="mailto:Uwe.Filges@psi.ch">Uwe Filges</a>
  * Date: Jan 2004
+ * Version:    $Revision: 1.13 $
+ * Release:    McStas 2.0
  * Origin: <a href="http://www.psi.ch">PSI</a>
  *
  * %INSTRUMENT_SITE: PSI
@@ -13,7 +15,7 @@
  * This instrument is a model of the FOCUS Spectrometer at PSI, Villigen, CH.
  *
  * %Example: lambda=3.4 Detector: PSD_Fermi1_I=1.44416e+07
- * %Example: lambda=3.4 Detector: PSD_SAMPLE_I=106516
+ * %Example: lambda=3.4 Detector: PSD_SAMPLE_I=160242
  *
  * %Parameters
  * INPUT PARAMETERS:
@@ -154,13 +156,13 @@ COMPONENT FOCUSguide = Guide_channeled(
 
 /* distance guide exit to chopper center 0.054 m */
 
-COMPONENT FirstChopper = DiskChopper(theta_0=0, abs_out=0,
-    radius = 0.35, xwidth = 0.07, nu = DISC_SPEED/2/PI, nslit = 2, delay = FO_PHA, isfirst = 1)
+COMPONENT FirstChopper = DiskChopper(theta_0=0, abs_out=0, verbose=1,
+    radius = 0.70, xwidth = 0.07, nu = DISC_SPEED/2/PI, nslit = 2, delay = FO_PHA, isfirst = 1)
   AT (0, 0, 69.674) RELATIVE a1
-
-COMPONENT  DISCTOF = TOF_monitor(
-    nt = 30, filename = "DISC_TOF.dat", dt = 100,
-    xwidth = 0.1, yheight = 0.2)
+  
+COMPONENT  DISCTOF = Monitor_nD(
+    bins = 30, filename = "DISC_TOF.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
   AT (0, 0, 69.718) RELATIVE a1
 
 COMPONENT PSDmon1Chopper = PSD_monitor(
@@ -211,9 +213,9 @@ COMPONENT PSDmonMono = PSD_monitor(
     nx=60, ny=60, filename="psdmono.dat")
   AT (0, 0, 72.4) RELATIVE a1  ROTATED (0, 0, 0) RELATIVE a1
 
-COMPONENT  MONOTOF = TOF_monitor(
-    nt = 30, filename = "MONO_TOF.dat", xmin = -0.05,
-    xwidth = 0.1, yheight = 0.2, dt = 1000)
+COMPONENT  MONOTOF = Monitor_nD(
+    bins = 30, filename = "MONO_TOF.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
   AT (0, 0, 72.41) RELATIVE a1
 
 COMPONENT DivMonMono = Divergence_monitor(
@@ -240,13 +242,13 @@ SPLIT COMPONENT mono = Monochromator_2foc(
 COMPONENT a2 = Arm()
   AT (0,0,0) RELATIVE focus_mono ROTATED (0, TTM, 0) RELATIVE a1
 
-COMPONENT  FERMITOF_before = TOF_monitor(
-    nt = 30, filename = "FERMI_TOF_before.dat", dt = 1000,
-    xwidth=0.06, yheight=0.1)
+COMPONENT  FERMITOF_before = Monitor_nD(
+    bins = 30, filename = "FERMI_TOF_before.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
   AT (0, 0, 0.9) RELATIVE a2
 
 COMPONENT lambdaFermi = L_monitor(
-	xwidth=0.01, yheight=0.2,
+	xwidth=0.1, yheight=0.2,
 	Lmin = LMIN, Lmax = LMAX, nL = 60,
 	filename = "lambdafermi.dat")
   AT(0, 0, 0.901) RELATIVE a2
@@ -285,26 +287,19 @@ COMPONENT DivMonfermi2 = Divergence_monitor(
           maxdiv_h=2, maxdiv_v=2)
   AT (0, 0, 1.064) RELATIVE a2
 
-COMPONENT  FERMITOF1 = TOF_monitor(
-    nt = 30, filename = "FERMI_TOF1.dat", xmin = -0.03,
-    xwidth=0.06, yheight=0.1, dt = 1000)
+COMPONENT  FERMITOF1 = Monitor_nD(
+    bins = 30, filename = "FERMI_TOF1.dat.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
   AT (0, 0, 1.154) RELATIVE a2
 
 COMPONENT SAMPLE_SLIT = Slit(
     xwidth=0.02, yheight=0.06)
   AT (0, 0, 1.155) RELATIVE a2
 
-COMPONENT  FERMITOF2 = TOF_monitor(
-    nt = 30, filename = "FERMI_TOF2.dat", xwidth=0.1, yheight=0.2, dt = 100)
+COMPONENT  FERMITOF2 = Monitor_nD(
+    bins = 30, filename = "FERMI_TOF2.dat.dat", xmin = -0.05,
+    xmax = 0.05, ymin = -0.1, ymax = 0.1, options="auto, time")
   AT (0, 0, 1.2) RELATIVE a2
-
-COMPONENT  FERMITOF3 = TOF_monitor(
-    nt = 30, filename = "FERMI_TOF3.dat", xwidth=0.1, yheight=0.2, dt = 100)
-  AT (0, 0, 1.3) RELATIVE a2
-
-COMPONENT  FERMITOF5 = TOF_monitor(
-    nt = 30, filename = "FERMI_TOF5.dat", xwidth=0.1, yheight=0.2, dt = 100)
-  AT (0, 0, 1.4) RELATIVE a2
 
 COMPONENT PSD_SAMPLE = PSD_monitor(
     xwidth=0.02, yheight=0.1, 
