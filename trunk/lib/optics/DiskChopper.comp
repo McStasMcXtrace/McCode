@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: Risoe
-* Release: McStas 1.9.1
+* Release: McStas 2.0
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
 * Kaspar Hewitt Klenoe (jan 2006), adjustments by Rob Bewey (march 2006)
 *
@@ -51,6 +51,7 @@
 * delay:   (s)      Time 'delay'.
 * phase:   (deg)    Angular 'delay' (overrides delay)
 * xwidth:  (m)      Horizontal slit width opening at beam center 
+* verbose: (1)      Set to 1 to display Disk chopper configuration
 *
 * %D
 * Example values: theta_0=10 yheight=0.2 radius=0.5 nu=400 nslit=3 n_pulse=1
@@ -60,7 +61,7 @@
 
 DEFINE COMPONENT DiskChopper
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (theta_0=0, radius=0.5, yheight=0, nu, nslit=3, jitter=0, theta_1=0, delay=0, isfirst=0, n_pluse=1, abs_out=1, phase=0, xwidth=0)
+SETTING PARAMETERS (theta_0=0, radius=0.5, yheight=0, nu, nslit=3, jitter=0, theta_1=0, delay=0, isfirst=0, n_pulse=1, abs_out=1, phase=0, xwidth=0, verbose=0)
 OUTPUT PARAMETERS (Tg, T, To, Tc, delta_y, height,omega)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
@@ -77,9 +78,9 @@ INITIALIZE
       } else {
         height=yheight;
       }
-      delta_y = radius-height/2;
+      delta_y = radius-height/2; /* radius at beam center */
       omega=2.0*PI*nu; /* rad/s */
-      if (xwidth && !theta_0 && radius) theta_0 = 2*RAD2DEG*asin(xwidth/2/radius);
+      if (xwidth && !theta_0 && radius) theta_0 = 2*RAD2DEG*asin(xwidth/2/delta_y);
       
       if (nslit<=0 || theta_0 <= 0 || radius <=0)
       { fprintf(stderr,"DiskChopper: %s: nslit, theta_0 and radius must be > 0\n", NAME_CURRENT_COMP);
@@ -93,8 +94,8 @@ INITIALIZE
       if (yheight && yheight>radius) {
         fprintf(stderr,"DiskChopper: %s: yheight must be < radius\n", NAME_CURRENT_COMP);
         exit(-1); }
-      if (isfirst && n_pluse <=0)
-      { fprintf(stderr,"DiskChopper: %s: wrong First chopper pulse number (n_pluse=%g)\n", NAME_CURRENT_COMP, n_pulse);
+      if (isfirst && n_pulse <=0)
+      { fprintf(stderr,"DiskChopper: %s: wrong First chopper pulse number (n_pulse=%g)\n", NAME_CURRENT_COMP, n_pulse);
         exit(-1); }
       if (!omega) {
         fprintf(stderr,"DiskChopper: %s WARNING: chopper frequency is 0!\n", NAME_CURRENT_COMP);
@@ -134,6 +135,15 @@ INITIALIZE
       
       /* How long are neutrons absorbed by beamstop in chopper windows? */
       Tc=theta_1/fabs(omega);
+      
+      if (!xwidth) xwidth=2*delta_y*sin(theta_0/2);
+      
+      if (verbose && nu) {
+        printf("DiskChopper: %s: frequency=%g [Hz] %g [rpm], time frame=%g [s] phase=%g [deg]\n",
+          NAME_CURRENT_COMP, nu, nu*60, Tg, phase*RAD2DEG);
+        printf("             %g slits, angle=%g [deg] height=%g [m], width=%g [m] at radius=%g [m]\n",
+          nslit, theta_0*RAD2DEG, height, xwidth, delta_y);
+      }
  %}
 
 TRACE
@@ -156,7 +166,7 @@ TRACE
     
     if (isfirst)
       {
-        t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + floor(n_pluse*rand01())*Tg;
+        t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + floor(n_pulse*rand01())*Tg;
         p*=nslit*theta_0/2.0/PI;
       }
     else 
