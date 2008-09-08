@@ -12,7 +12,7 @@
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: Templates
 *
 * Template RESCAL type triple-axis machine (TAS)
@@ -27,7 +27,7 @@
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolytic Graphite)
 * Ge       311 DM=1.714 AA
 *
-* %Example: QM=1 Detector: He3H_I=1.6e-11
+* %Example: QM=1 Detector: He3H_I=5.34048e-12
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -503,7 +503,7 @@ COMPONENT Mono_Cradle = Arm()
   AT (0, 0, machine_hkl.l1) RELATIVE Source
   ROTATED (0, machine_real.a1, 0) RELATIVE Source
 
-COMPONENT PG1Xtal = Monochromator_curved(
+SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   width  = 0.10,
   height = 0.12,
   NH=1, NV=9,
@@ -529,7 +529,7 @@ COMPONENT Sample_Cradle = Arm()
   AT (0, 0, machine_hkl.l2) RELATIVE Mono_Out
   ROTATED (0, machine_real.a3, 0) RELATIVE Mono_Out
 
-COMPONENT Sample = V_sample(
+SPLIT COMPONENT Sample = V_sample(
  radius = 0.0064, yheight = 0.0254,
  focus_xw = 0.06, focus_yh=0.12, pack = 1,
  target_index=2)
@@ -551,7 +551,7 @@ COMPONENT Ana_Cradle = Arm()
   AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
   ROTATED (0, machine_real.a5, 0) RELATIVE Sample_Out
 
-COMPONENT PG2Xtal = Monochromator_curved(
+SPLIT COMPONENT PG2Xtal = Monochromator_curved(
   width  = 0.10,
   height = 0.12,
   NH=1, NV=9,
