@@ -8,7 +8,7 @@
 * Date: July 2006.
 * Origin: RISOE.
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Compares intensities of Monochromator components.
@@ -18,19 +18,19 @@
 * Very simple setup to compare intensities diffracted by Monochromators. 
 * It shows that implementations are equivalent.
 *
-* %Example: Mono=1 Detector: psd1_I=3.00998e-05
-* %Example: Mono=2 Detector: psd1_I=3.00998e-05
-* %Example: Mono=3 Detector: psd1_I=3.00998e-05
-* %Example: Mono=4 Detector: psd1_I=3.00998e-05
-* %Example: Mono=5 Detector: psd1_I=3.00998e-05
+* %Example: Mono=1 Detector: psd1_I=8.97959e-05
+* %Example: Mono=2 Detector: psd1_I=8.96391e-05
+* %Example: Mono=3 Detector: psd1_I=8.95371e-05
+* %Example: Mono=4 Detector: psd1_I=8.95851e-05
+* %Example: Mono=5 Detector: psd1_I=8.98186e-05
 *
 * %Parameters
 * INPUT PARAMETERS:
 * Mono:   Choice of Monochromator component to use, with
 *         1=Monochromator_flat
 *         2=Monochromator_pol
-*         3=Monochromator_pol forcing 1% events to be reflected
-*         4=Monochromator_curved in flat mode
+*         3=Monochromator_pol (forcing 1% events to be reflected)
+*         4=Monochromator_curved (in flat mode)
 *         5=Monochromator_2foc (contrib, flat mode)
 * lambda: Source wavelength   [Angs]
 * Moz:    Mosaicity           [Arc minutes]
