@@ -622,7 +622,7 @@ sub preferences_dialog {
     
     $editor = $MCSTAS::mcstas_config{'EDITOR'};
     my $editorchoice_val;
-    if ($editor == 0) { $editorchoice_val="Simple built-in editor (McStas CVS-080208)"; }
+    if ($editor == 0) { $editorchoice_val="Simple built-in editor"; }
     elsif ($editor == 1) { $editorchoice_val='Advanced built-in editor';}
     elsif ($editor == 2) { $editorchoice_val="External editor ($MCSTAS::mcstas_config{'EXTERNAL_EDITOR'})";}
     my $editorchoice = $lf->Label(-text => "Editor options:", -anchor => 'w',-fg=>'blue')->pack(-fill => 'x');
