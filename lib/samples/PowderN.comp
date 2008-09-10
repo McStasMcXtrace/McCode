@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.44 $
+* Version: $Revision: 1.45 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -409,9 +409,12 @@ INITIALIZE
     else isrect=1; }
     
   if (thickness>0) {
-    if (radius>0) radius_i=radius-thickness;
-    else {
-      xwidth_i=xwidth-thickness; yheight_i=yheight-thickness; zdepth_i=zdepth-thickness;
+    if (radius>thickness) {
+      radius_i=radius-thickness;
+    } else {
+      if (xwidth>thickness) xwidth_i=xwidth-thickness; 
+      if (yheight>thickness) yheight_i=yheight-thickness; 
+      if (zdepth>thickness) zdepth_i=zdepth-thickness;
     }
   }
   

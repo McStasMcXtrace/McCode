@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.76 $
+* Version: $Revision: 1.77 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -249,7 +249,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.76 $
+#define ISOTROPIC_SQW $Revision: 1.77 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1210,26 +1210,27 @@ INITIALIZE
   VarSqw.verbose_output= verbose;
   if (radius>0) {
     if (yheight>0) VarSqw.shape = 0; else VarSqw.shape = 2;
+    
+    if (thickness >= radius || (thickness && yheight && 2*thickness>=yheight)) {
+      printf("Isotropic_Sqw: %s:thickness bigger than sample (radius/height) !\n"
+             "WARNING        Setting full sample (thickness=0).\n",
+           NAME_CURRENT_COMP);
+      thickness = 0;
+    }
     if (VarSqw.verbose_output)
       printf("Isotropic_Sqw: %s: is a %s%s : R=%f thickness=%f h=%f \n",
             NAME_CURRENT_COMP, (thickness > 0 ? "hollow ":""),
             (VarSqw.shape ? "Sphere" : "Cylinder"),
             radius,thickness,yheight);
-    if (thickness >= radius || (thickness && yheight && 2*thickness>=yheight)) {
-      printf("Isotropic_Sqw: %s:thickness bigger than sample (radius/height) !\n"
-             "ERROR          Exiting\n",
-           NAME_CURRENT_COMP);
-      exit(0);
-    }
+
   } else if (xwidth>0 && yheight>0 && zdepth>0) {
     VarSqw.shape = 1;
-    if (2*thickness>=xwidth || 2*thickness>=yheight || 2*thickness>zdepth) {
+    if (2*thickness>=xwidth || 2*thickness>=yheight || 2*thickness>=zdepth) {
       printf("Isotropic_Sqw: %s:2*thickness bigger than sample (xwidth yheight zdepth)!\n"
-             "ERROR          Exiting\n",
+             "WARNING        Setting full sample (thickness=0).\n",
            NAME_CURRENT_COMP);
-      exit(0);
+      thickness = 0;
     }
-
     if (VarSqw.verbose_output)
       printf("Isotropic_Sqw: %s: is a %sBox : dx=%f dy=%f dz=%f \n",
             NAME_CURRENT_COMP, (thickness>0 ? "hollow" : ""), xwidth,yheight,zdepth);
