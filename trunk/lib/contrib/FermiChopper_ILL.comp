@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.4 $
+* Version:    $Revision: 1.5 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
@@ -92,7 +92,7 @@
 *****************************************************************************/
 
 DEFINE COMPONENT FermiChopper_ILL
-DEFINITION PARAMETERS (filename=0)
+DEFINITION PARAMETERS (string filename=0)
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
   ymin=-0.04, ymax=0.04, w=0.00022475, nslit=200.0, R0=0.0,
   Qc=0.02176, alpha=2.33, m=0.0, Wi=2e-3, Vi=0,  length=0.012, eff=0.95,
@@ -765,8 +765,8 @@ TRACE
 FINALLY
 %{
 /*Initialize Files*/
-
-if (filename) {
+MPI_MASTER(
+if (filename && strlen(filename) && strcmp(filename, "NULL")) {
 
   FILE *header;
   int i;
@@ -839,6 +839,7 @@ if (filename) {
   fclose(header);
   } else { fprintf(stderr,"FermiChopper: %s: could not open file %s\n",
            NAME_CURRENT_COMP, filename); }
+); /* end MPI_MASTER */
 }
 
 %}
