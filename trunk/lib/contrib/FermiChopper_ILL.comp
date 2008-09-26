@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.5 $
+* Version:    $Revision: 1.6 $
 * Release:    McStas 1.6
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
@@ -67,7 +67,7 @@
 * yheight: (m)      Height of chopper. Overrides ymin,ymax. (m)
 * nu:      (Hz)     chopper frequency
 * eff:     (1)      efficiency = transmission x fraction of transparent material
-* filename:(str)    optional file name to write component statistics (debuging)
+* verbose: (1)      optional flag to display component statistics (debuging)
 *
 * Supermirror constants:
 * m:       (1)      m-value of material. Zero means completely absorbing.
@@ -85,18 +85,18 @@
 * phase:   (deg)    chopper phase at t=0
 *
 * OUTPUT PARAMETERS:
-* FCVars :  (-)     structure containing many neutron counters for the data in 'filename', mean velocities, angular frequency of the chopper etc.
+* FCVars :  (-)     structure containing many neutron counters for the data in 'verbose', mean velocities, angular frequency of the chopper etc.
 *
 *
 * %End
 *****************************************************************************/
 
 DEFINE COMPONENT FermiChopper_ILL
-DEFINITION PARAMETERS (string filename=0)
+DEFINITION PARAMETERS ()
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
   ymin=-0.04, ymax=0.04, w=0.00022475, nslit=200.0, R0=0.0,
   Qc=0.02176, alpha=2.33, m=0.0, Wi=2e-3, Vi=0,  length=0.012, eff=0.95,
-  zero_time=0, Ei=0, lambda=0, Ki=0, xwidth=0, yheight=0)
+  zero_time=0, Ei=0, lambda=0, Ki=0, xwidth=0, yheight=0, verbose=0)
 OUTPUT PARAMETERS(FCVars)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
@@ -762,84 +762,71 @@ TRACE
     t -= (((int)((t+1/(4*nu))/(1/(2*nu))))*(1/(2*nu)));
 %}
 
-FINALLY
+SAVE
 %{
 /*Initialize Files*/
-MPI_MASTER(
-if (filename && strlen(filename) && strcmp(filename, "NULL")) {
 
-  FILE *header;
+if (verbose) {
   int i;
 
-  header = fopen(filename,"w");
-  if (header) {
+  fprintf(stdout,"*********** This is the result from FermiChopper.comp: %s ***********  \n\n\n", NAME_CURRENT_COMP);
+  fprintf(stdout,"\t INTERACTIONS:\n\n");
+  fprintf(stdout,"number of neutrons interacting with cylinder:      %i\n", FCVars.counter_cylinder);
+  fprintf(stdout,"number of neutrons hitting the big slit:           %d\n", FCVars.counter_cylinder_pack);
+  fprintf(stdout,"number of neutrons hitting one of the slits:       %d\n\n", FCVars.counter_hit_slits);
 
-  /* HEADER.DAT WRITING */
+  fprintf(stdout,"number of interactions with blades (overall):      %d\n", FCVars.counter_L_blades+FCVars.counter_R_blades);
+  fprintf(stdout,"number of interactions with left blades(overall):  %d\n", FCVars.counter_L_blades);
+  fprintf(stdout,"number of interactions with right blades(overall): %d\n\n", FCVars.counter_R_blades);
 
+  fprintf(stdout,"\t REFLECTIONS:\n\n");
+  fprintf(stdout,"number of successful reflections (overall):        %d\n\n", FCVars.counter_reflect);
 
-  fprintf(header,"*********** This is the result from FermiChopper.comp: %s ***********  \n\n\n", NAME_CURRENT_COMP);
-  fprintf(header,"\t INTERACTIONS:\n\n");
-  fprintf(header,"number of neutrons interacting with cylinder:     %i\n", FCVars.counter_cylinder);
-  fprintf(header,"number of neutrons hitting the big slit:          %d\n", FCVars.counter_cylinder_pack);
-  fprintf(header,"number of neutrons hitting one of the slits:      %d\n\n", FCVars.counter_hit_slits);
+  fprintf(stdout,"number of successful primary reflections at left blades:             %d\n", FCVars.counter_refl_L_blades[0]);
+  fprintf(stdout,"number of successful secondary reflections at left blades:           %d\n", FCVars.counter_refl_L_blades[1]);
+  fprintf(stdout,"number of successful more than secondary reflections at left blades: %d\n\n", FCVars.counter_refl_L_blades[2]);
+  fprintf(stdout,"number of successful primary reflections at right blades:            %d\n", FCVars.counter_refl_R_blades[0]);
+  fprintf(stdout,"number of successful secondary reflections at right blades:          %d\n", FCVars.counter_refl_R_blades[1]);
+  fprintf(stdout,"number of successful more than secondary reflections at right blades:%d\n\n",
+    FCVars.counter_refl_R_blades[2]);
+  fprintf(stdout,"\t ABSORPTIONS:\n\n");
 
-  fprintf(header,"number of interactions with blades (overall):    %d\n", FCVars.counter_L_blades+FCVars.counter_R_blades);
-  fprintf(header,"number of interactions with left blades(overall):  %d\n", FCVars.counter_L_blades);
-  fprintf(header,"number of interactions with right blades(overall): %d\n\n", FCVars.counter_R_blades);
+  fprintf(stdout,"number of absorbed neutrons at blades(overall):                      %d\n\n",
+    FCVars.counter_abs_L_blades[0]+FCVars.counter_abs_L_blades[1]+FCVars.counter_abs_L_blades[2]+FCVars.counter_abs_R_blades[0]+FCVars.counter_abs_R_blades[1]+FCVars.counter_abs_R_blades[2]);
 
-  fprintf(header,"\t REFLECTIONS:\n\n");
-  fprintf(header,"number of successful reflections (overall):       %d\n\n", FCVars.counter_reflect);
+  fprintf(stdout,"number of absorbed neutrons at left blades (primary):                %d\n", FCVars.counter_abs_L_blades[0]);
+  fprintf(stdout,"number of absorbed neutrons at left blades (secondary):              %d\n", FCVars.counter_abs_L_blades[1]);
+  fprintf(stdout,"number of absorbed neutrons at left blades (more than secondary):    %d\n\n", FCVars.counter_abs_L_blades[2]);
 
-  fprintf(header,"number of successful primary reflections at left blades : %d\n", FCVars.counter_refl_L_blades[0]);
-  fprintf(header,"number of successful secondary reflections at left blades : %d\n", FCVars.counter_refl_L_blades[1]);
-  fprintf(header,"number of successful more than secondary reflections at left blades : %d\n\n",                           FCVars.counter_refl_L_blades[2]);
-  fprintf(header,"number of successful primary reflections at right blades : %d\n", FCVars.counter_refl_R_blades[0]);
-  fprintf(header,"number of successful secondary reflections at right blades : %d\n", FCVars.counter_refl_R_blades[1]);
-  fprintf(header,"number of successful more than secondary reflections at right blades : %d\n\n",                         FCVars.counter_refl_R_blades[2]);
-  fprintf(header,"\t ABSORPTIONS:\n\n");
+  fprintf(stdout,"number of absorbed neutrons at right blades (primary):               %d\n", FCVars.counter_abs_R_blades[0]);
+  fprintf(stdout,"number of absorbed neutrons at right blades (secondary):             %d\n", FCVars.counter_abs_R_blades[1]);
+  fprintf(stdout,"number of absorbed neutrons at right blades (more than secondary):   %d\n\n", FCVars.counter_abs_R_blades[2]);
 
-  fprintf(header,"number of absorbed neutrons at blades(overall) :      %d\n\n",               FCVars.counter_abs_L_blades[0]+FCVars.counter_abs_L_blades[1]+FCVars.counter_abs_L_blades[2]+FCVars.counter_abs_R_blades[0]+FCVars.counter_abs_R_blades[1]+FCVars.counter_abs_R_blades[2]);
-
-  fprintf(header,"number of absorbed neutrons at left blades (primary) :      %d\n", FCVars.counter_abs_L_blades[0]);
-  fprintf(header,"number of absorbed neutrons at left blades (secondary) :      %d\n", FCVars.counter_abs_L_blades[1]);
-  fprintf(header,"number of absorbed neutrons at left blades (more than secondary) : %d\n\n", FCVars.counter_abs_L_blades[2]);
-
-  fprintf(header,"number of absorbed neutrons at right blades (primary) :      %d\n", FCVars.counter_abs_R_blades[0]);
-  fprintf(header,"number of absorbed neutrons at right blades (secondary) :      %d\n", FCVars.counter_abs_R_blades[1]);
-  fprintf(header,"number of absorbed neutrons at right blades (more than secondary) : %d\n\n", FCVars.counter_abs_R_blades[2]);
-
-  fprintf(header,"number of absorbed neutrons between slits and exit:  %d\n\n", FCVars.counter_out_cylinder);
-  fprintf(header,"number of absorbed neutrons because of an FCVars.counter_infinite loop:  %d\n\n", FCVars.counter_infinite);
-  fprintf(header,"number of absorbed neutrons because leaving the chooper from top or bottom:  %d\n\n", FCVars.counter_top_bottom);
+  fprintf(stdout,"number of absorbed neutrons between slits and exit:                  %d\n\n", FCVars.counter_out_cylinder);
+  fprintf(stdout,"number of absorbed neutrons because of an FCVars.counter_infinite loop:      %d\n\n", FCVars.counter_infinite);
+  fprintf(stdout,"number of absorbed neutrons because leaving the chooper from top or bottom:  %d\n\n", FCVars.counter_top_bottom);
 
 
-  fprintf(header,"\tDATA OF TRANSMITTED NEUTRONS:\n\n");
+  fprintf(stdout,"\tDATA OF TRANSMITTED NEUTRONS:\n\n");
 
-  fprintf(header,"number of transmitted neutrons (overall):         %d\n", FCVars.counter_transmited_total);
-  fprintf(header,"number of transmitted neutrons (not reflected):   %d\n\n", FCVars.counter_transmited);
+  fprintf(stdout,"number of transmitted neutrons (overall):         %d\n", FCVars.counter_transmited_total);
+  fprintf(stdout,"number of transmitted neutrons (not reflected):   %d\n\n", FCVars.counter_transmited);
 
-  fprintf(header,"number of neutrons reflected once :           %d\n", FCVars.counter_loops[0]);
-  fprintf(header,"number of neutrons reflected twice :           %d\n", FCVars.counter_loops[1]);
-  fprintf(header,"number of neutrons reflected more times :        %d\n\n", FCVars.counter_loops[2]);
+  fprintf(stdout,"number of neutrons reflected once :               %d\n", FCVars.counter_loops[0]);
+  fprintf(stdout,"number of neutrons reflected twice :              %d\n", FCVars.counter_loops[1]);
+  fprintf(stdout,"number of neutrons reflected more times :         %d\n\n", FCVars.counter_loops[2]);
 
-  fprintf(header,"number of 'breaking the algorithm' neutrons on right blade:      %d\n", FCVars.counter_R_cylinder);
-  fprintf(header,"number of 'breaking the algorithm' neutrons on left blade:      %d\n\n", FCVars.counter_L_cylinder);
+  fprintf(stdout,"number of 'breaking the algorithm' neutrons on right blade:      %d\n", FCVars.counter_R_cylinder);
+  fprintf(stdout,"number of 'breaking the algorithm' neutrons on left blade:       %d\n\n", FCVars.counter_L_cylinder);
 
-  fprintf(header, "Secant/Picard Method used / Errors at right blade\t %i \t %i \t %i\n", FCVars.counter_R_secant,  FCVars.counter_R_interpol, FCVars.counter_R_error);
-  fprintf(header, "Secant/Picard Method used / Errors at left blade\t %i \t %i \t %i\n\n", FCVars.counter_L_secant, FCVars.counter_L_interpol, FCVars.counter_L_error);
+  fprintf(stdout, "Secant/Picard Method used / Errors at right blade\t %i \t %i \t %i\n", FCVars.counter_R_secant,  FCVars.counter_R_interpol, FCVars.counter_R_error);
+  fprintf(stdout, "Secant/Picard Method used / Errors at left blade\t %i \t %i \t %i\n\n", FCVars.counter_L_secant, FCVars.counter_L_interpol, FCVars.counter_L_error);
 
-  fprintf(header,"\tDETAILS: SLITS:\n\n");
-  fprintf(header, "\t\t Entering \t\t Outgoing\n");
+  fprintf(stdout,"\tDETAILS: SLITS:\n\n");
+  fprintf(stdout, "\t\t Entering \t\t Outgoing\n");
   for(i=0; i<nslit; i++)
-  fprintf(header, "Slit number %i \t\t %i \t\t %i \n", i+1, FCVars.counter_enter_slits[i],FCVars.counter_exit_slits[i]);
+  fprintf(stdout, "Slit number %i \t\t %i \t\t %i \n", i+1, FCVars.counter_enter_slits[i],FCVars.counter_exit_slits[i]);
 
-
-  /*Closing Data Files*/
-
-  fclose(header);
-  } else { fprintf(stderr,"FermiChopper: %s: could not open file %s\n",
-           NAME_CURRENT_COMP, filename); }
-); /* end MPI_MASTER */
 }
 
 %}
