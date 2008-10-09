@@ -3,7 +3,7 @@
  * %Identification
  * Written by: <a href="mailto:Uwe.Filges@psi.ch">Uwe Filges</a>
  * Date: Jan 2004
- * Version:    $Revision: 1.13 $
+ * Version:    $Revision: 1.14 $
  * Release:    McStas 2.0
  * Origin: <a href="http://www.psi.ch">PSI</a>
  *
@@ -271,7 +271,7 @@ COMPONENT PSD_Fermi1 = PSD_monitor(
   AT (0, 0, 0.9399) RELATIVE a2  ROTATED (0, 0, 0) RELATIVE a2
 
 COMPONENT FoChopper = FermiChopper(
-    radius = 0.06, nu = FERMI_SPEED, yheight = 0.11,
+    radius = 0.06, nu = -FERMI_SPEED, yheight = 0.11,
     w = 0.0005, nslit = 120, alpha = 0,
     Qc = 0 , m = 0, W = 0.0001, R0 = 0, length = 0.012)
   AT (0, 0, 1.002) RELATIVE a2
