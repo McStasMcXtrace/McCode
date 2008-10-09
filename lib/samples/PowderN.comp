@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.45 $
+* Version: $Revision: 1.46 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -149,11 +149,11 @@
 DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (string reflections=0, format=Undefined)
 SETTING PARAMETERS (radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
-		    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
-		    DW=0, nb_atoms=1, d_phi=0, 
-		    concentric=0, density=0, weight=0, barns=1)
+                    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
+                    DW=0, nb_atoms=1, d_phi=0, 
+                    concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
-  my_s_v2_sum, my_a_v, my_inc, q_v, w_v, isrect, columns, 
+  my_s_v2_sum, my_a_v, my_inc, q_v, w_v, shape, columns, 
   radius_i, xwidth_i, yheight_i, zdepth_i)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -383,7 +383,7 @@ DECLARE
   double my_s_v2_sum;
   double my_a_v, my_inc;
   double *w_v,*q_v, *my_s_v2;
-  char   isrect=0;
+  char   shape=0; /* 0: cylinder, 1:box, 2: sphere */
   int    columns[8] = format;
   double XsectionFactor;
   double radius_i=0, xwidth_i=0, yheight_i=0, zdepth_i=0;
@@ -404,17 +404,21 @@ INITIALIZE
   for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
   
-  if (!radius || !yheight ) {
-    if (!xwidth || !yheight || !zdepth) exit(fprintf(stderr,"PowderN: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    else isrect=1; }
+  if (radius && yheight ) { shape=0; }                            /* cylinder */ 
+  else if (!radius && xwidth && yheight && zdepth)   { shape=1; } /* box */   
+  else if (radius && !xwidth && !yheight && !zdepth) { shape=2; } /* shpere */
+  else {
+    exit(fprintf(stderr,"PowderN: %s: sample has no volume (zero dimensions)\n"
+                        "ERROR    set some of radius xwidth yheight zdepth \n", NAME_CURRENT_COMP));
+  }
     
   if (thickness>0) {
     if (radius>thickness) {
       radius_i=radius-thickness;
     } else {
-      if (xwidth>thickness) xwidth_i=xwidth-thickness; 
+      if (xwidth>thickness)  xwidth_i=xwidth-thickness; 
       if (yheight>thickness) yheight_i=yheight-thickness; 
-      if (zdepth>thickness) zdepth_i=zdepth-thickness;
+      if (zdepth>thickness)  zdepth_i=zdepth-thickness;
     }
   }
   
@@ -422,19 +426,21 @@ INITIALIZE
     yheight_i = yheight;
   }
   
-  if ((isrect && ((zdepth_i > zdepth) || (xwidth_i > xwidth) || (yheight_i > yheight))) || (!isrect && (radius_i > radius) || (yheight_i > yheight))) {
+  if ((shape == 1 && (zdepth_i > zdepth || xwidth_i > xwidth || yheight_i > yheight)) 
+  || ( shape == 0 && (radius_i > radius || yheight_i > yheight))
+  || ( shape == 2 &&   radius_i > radius) ) {
     exit(fprintf(stderr,"PowderN: %s: Inner hollow exeeds sample volume. Check dimensions.\n", NAME_CURRENT_COMP));
   }
   
   if (p_inc + p_transmit > 1) {
     exit(fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1)\n", 
-		 NAME_CURRENT_COMP, p_inc+p_transmit));
+                 NAME_CURRENT_COMP, p_inc+p_transmit));
   } else if (p_inc + p_transmit == 1) {
     printf("PowderN %s WARNING: You have requested all neutrons be attenuated or incoherently scattered!\n", NAME_CURRENT_COMP);
   }
 
   if (concentric) {
-    printf("PowderN %s WARNING: Concentric mode - remember to include the 'opposite' copy of this component !\n (The equivalent, 'opposite' comp should have concentric=0)\n", NAME_CURRENT_COMP);
+    printf("PowderN: %s WARNING: Concentric mode - remember to include the 'opposite' copy of this component !\n (The equivalent, 'opposite' comp should have concentric=0)\n", NAME_CURRENT_COMP);
     if (p_transmit == 0) {
       printf("PowderN %s WARNING: Concentric mode and p_transmit==0 !? Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
     }
@@ -501,249 +507,254 @@ TRACE
   char   intersect=0;
   char   intersecti=0;
 
-  if (isrect) {
-    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+  if (shape == 1) {
+    intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
     intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
-  } else {
-    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+  } else if (shape == 0) {
+    intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
     intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+  } else if (shape == 2) {
+    intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
+    intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
   }
   
-  if(intersect && t3 >0)
-    {
+  if(intersect && t3 >0) {
       
-      if (concentric) {
-	/* Set up for concentric case */
-	/* 'Remove' the backside of this comp */
-	if (!intersecti) {
-	  t1 = (t3 + t0) /2;
-	}
-	t2 = t1;
-	t3 = t1;
-	dt = -1.0*rand01(); /* In case of scattering we will scatter on 'forward' part of sample */
+    if (concentric) {
+      /* Set up for concentric case */
+      /* 'Remove' the backside of this comp */
+      if (!intersecti) {
+        t1 = (t3 + t0) /2;
+      }
+      t2 = t1;
+      t3 = t1;
+      dt = -1.0*rand01(); /* In case of scattering we will scatter on 'forward' part of sample */
+    } else {
+      if (!intersecti) {
+        t1 = (t3 + t0) /2;
+        t2 = t1;
+      }
+      dt = randpm1(); /* Possibility to scatter at all points in line of sight */
+    }
+      
+    /* Neutron enters at t=t0. */
+    if(t0 < 0) t0=0; /* already in sample */
+    if(t1 < 0) t1=0; /* already in inner hollow */
+    if(t2 < 0) t2=0; /* already past inner hollow */
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (t3 - t2 + t1 - t0);
+
+    /* Calculate total scattering cross section at relevant velocity */
+    my_s_v2_sum=0;
+    for(line=0; line<Nq; line++) {
+      if (q_v[line] <= 2*v) {
+        my_s_v2_sum+=my_s_v2[line];
+      }
+    }
+      
+    if (t3 < 0) {
+            t3=0; /* Already past sample?! */
+            printf("PowderN %s Warning: Neutron has already passed us? (Skipped)\n", NAME_CURRENT_COMP);
+    } else {
+      if (dt<0) { /* Calculate scattering point position */
+        dt = fabs(dt)*(t1 - t0); /* 'Forward' part */
       } else {
-	if (!intersecti) {
-	  t1 = (t3 + t0) /2;
-	  t2 = t1;
-	}
-	dt = randpm1(); /* Possibility to scatter at all points in line of sight */
+        dt = dt * (t3 - t2) + (t2-t0) ; /* Possibly also 'backside' part */
       }
       
-      /* Neutron enters at t=t0. */
-      if(t0 < 0) t0=0; /* already in sample */
-      if(t1 < 0) t1=0; /* already in inner hollow */
-      if(t2 < 0) t2=0; /* already past inner hollow */
-      v = sqrt(vx*vx + vy*vy + vz*vz);
-      l_full = v * (t3 - t2 + t1 - t0);
-
-      /* Calculate total scattering cross section at relevant velocity */
-      my_s_v2_sum=0;
-      for(line=0; line<Nq; line++) {
-	if (q_v[line] <= 2*v) {
-	  my_s_v2_sum+=my_s_v2[line];
-	}
-      }
+      my_s = my_s_v2_sum/(v*v)+my_inc;
+      /* Total attenuation from scattering */
       
-      if (t3 < 0) {
-	t3=0; /* Already past sample?! */
-	printf("PowderN %s Warning: Neutron has already passed us? (Skipped)\n", NAME_CURRENT_COMP);
+      neutrontype = rand01();
+      /* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
+      if (neutrontype < p_transmit) {
+        neutrontype = 1; 
+        l = l_full; /* Passing through, full length */
+        PROP_DT(t3); 
+      } else if (neutrontype >= p_transmit && neutrontype < (p_transmit + p_inc)) {
+        neutrontype = 2;
+        l = v*dt;       /* Penetration in sample */
+        PROP_DT(dt+t0); /* Point of scattering */
+        SCATTER;
+      } else if (neutrontype >= p_transmit + p_inc) {
+        neutrontype = 3;
+        l = v*dt;       /* Penetration in sample */
+        PROP_DT(dt+t0); /* Point of scattering */
+        SCATTER;
       } else {
-	if (dt<0) { /* Calculate scattering point position */
-	  dt = fabs(dt)*(t1 - t0); /* 'Forward' part */
-	} else {
-	  dt = dt * (t3 - t2) + (t2-t0) ; /* Possibly also 'backside' part */
-	}
-	
-	my_s = my_s_v2_sum/(v*v)+my_inc;
-	/* Total attenuation from scattering */
-	
-	neutrontype = rand01();
-	/* How to handle this one? Transmit (1) / Incoherent (2) / Coherent (3) ? */
-	if (neutrontype < p_transmit) {
-	  neutrontype = 1; 
-	  l = l_full; /* Passing through, full length */
-	  PROP_DT(t3); 
-	} else if (neutrontype >= p_transmit && neutrontype < (p_transmit + p_inc)) {
-	  neutrontype = 2;
-	  l = v*dt;       /* Penetration in sample */
-	  PROP_DT(dt+t0); /* Point of scattering */
-	  SCATTER;
-	} else if (neutrontype >= p_transmit + p_inc) {
-	  neutrontype = 3;
-	  l = v*dt;       /* Penetration in sample */
-	  PROP_DT(dt+t0); /* Point of scattering */
-	  SCATTER;
-	} else {
-	  exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
-	}
-	
-	if (neutrontype == 3)
-	  { /* Make coherent scattering event */
-	    
-	    if (line_info.count > 0) {
-	      /* choose line */
-	      if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
-	      else line = 0;
-	      if (w_v[line])
-		arg = q_v[line]*(1+w_v[line]*randnorm())/(2.0*v);
-	      else
-		arg = q_v[line]/(2.0*v);
-	      my_s_n = my_s_v2[line]/(v*v);
-	      if(fabs(arg) > 1)
-		ABSORB;                   /* No bragg scattering possible*/
-	      theta = asin(arg);          /* Bragg scattering law */
-	      
-	      /* Choose point on Debye-Scherrer cone */
-	      if (d_phi)
-		{ /* relate height of detector to the height on DS cone */
-		  arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
-		  /* If full Debye-Scherrer cone is within d_phi, don't focus */
-		  if (arg < -1 || arg > 1) d_phi = 0;
-		  /* Otherwise, determine alpha to rotate from scattering plane
-		     into d_phi focusing area*/
-		  else alpha = 2*asin(arg);
-		}
-	      if (d_phi) {
-		/* Focusing */
-		alpha = fabs(alpha);
-		/* Trick to get scattering for pos/neg theta's */
-		alpha0= 2*rand01()*alpha;
-		if (alpha0 > alpha) {
-		  alpha0=PI+(alpha0-1.5*alpha);
-		} else {
-		  alpha0=alpha0-0.5*alpha;
-		}
-	      }
-	      else
-		alpha0 = PI*randpm1();
-	      
-	      /* now find a nearly vertical rotation axis:
-	       * Either
-	       *  (v along Z) x (X axis) -> nearly Y axis
-	       * Or
-	       *  (v along X) x (Z axis) -> nearly Y axis
-	       */
-	      if (fabs(scalar_prod(1,0,0,vx/v,vy/v,vz/v)) < fabs(scalar_prod(0,0,1,vx/v,vy/v,vz/v))) {
-		nx = 1; ny = 0; nz = 0;
-	      } else {
-		nx = 0; ny = 0; nz = 1;
-	      }
-	      vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, nx,ny,nz);
-	      
-	      /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
-	      rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*theta, tmp_vx,tmp_vy,tmp_vz);
-	      
-	      /* tmp_v = rotate v_out by alpha0 around 'v' (Debye-Scherrer cone) */
-	      rotate(tmp_vx,tmp_vy,tmp_vz, vout_x,vout_y,vout_z, alpha0, vx, vy, vz);
-	      vx = tmp_vx;
-	      vy = tmp_vy;
-	      vz = tmp_vz;
-	      
-	      /* Since now scattered and new direction given, calculate path to exit */
-	      if (isrect) {
-		intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-		intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
-	      } else {
-		intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-		intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
-	      }
-	      
-	      if (!intersect) {
-		/* Strange error: did not hit cylinder */
-		fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
-		ABSORB;
-	      }
-	      
-	      if (!intersecti) {
-		t1 = (t3 + t0) /2;
-		t2 = t1;
-	      }
-	      
-	      if (concentric && intersecti) {
-		/* In case of concentricity, 'remove' backward wall of sample */
-		t2 = t1;
-		t3 = t1;
-	      }
-	      
-	      if(t0 < 0) t0=0; /* already in sample */
-	      if(t1 < 0) t1=0; /* already in inner hollow */
-	      if(t2 < 0) t2=0; /* already past inner hollow */
-	      
+        exit(fprintf(stderr,"PowderN %s: DEAD - this shouldn't happen!\n", NAME_CURRENT_COMP));
+      }
+        
+      if (neutrontype == 3) { /* Make coherent scattering event */
+        if (line_info.count > 0) {
+          /* choose line */
+          if (Nq > 1) line=floor(Nq*rand01());  /* Select between Nq powder lines */
+          else line = 0;
+          if (w_v[line])
+            arg = q_v[line]*(1+w_v[line]*randnorm())/(2.0*v);
+          else
+            arg = q_v[line]/(2.0*v);
+            my_s_n = my_s_v2[line]/(v*v);
+          if(fabs(arg) > 1)
+            ABSORB;                   /* No bragg scattering possible*/
+          theta = asin(arg);          /* Bragg scattering law */
+              
+          /* Choose point on Debye-Scherrer cone */
+          if (d_phi)
+          { /* relate height of detector to the height on DS cone */
+            arg = sin(d_phi*DEG2RAD/2)/sin(2*theta);
+            /* If full Debye-Scherrer cone is within d_phi, don't focus */
+            if (arg < -1 || arg > 1) d_phi = 0;
+            /* Otherwise, determine alpha to rotate from scattering plane
+               into d_phi focusing area*/
+            else alpha = 2*asin(arg);
+          }
+          if (d_phi) {
+            /* Focusing */
+            alpha = fabs(alpha);
+            /* Trick to get scattering for pos/neg theta's */
+            alpha0= 2*rand01()*alpha;
+            if (alpha0 > alpha) {
+              alpha0=PI+(alpha0-1.5*alpha);
+            } else {
+              alpha0=alpha0-0.5*alpha;
+            }
+          }
+          else
+            alpha0 = PI*randpm1();
+              
+          /* now find a nearly vertical rotation axis:
+           * Either
+           *  (v along Z) x (X axis) -> nearly Y axis
+           * Or
+           *  (v along X) x (Z axis) -> nearly Y axis
+           */
+          if (fabs(scalar_prod(1,0,0,vx/v,vy/v,vz/v)) < fabs(scalar_prod(0,0,1,vx/v,vy/v,vz/v))) {
+            nx = 1; ny = 0; nz = 0;
+          } else {
+            nx = 0; ny = 0; nz = 1;
+          }
+          vec_prod(tmp_vx,tmp_vy,tmp_vz, vx,vy,vz, nx,ny,nz);
+          
+          /* v_out = rotate 'v' by 2*theta around tmp_v: Bragg angle */
+          rotate(vout_x,vout_y,vout_z, vx,vy,vz, 2*theta, tmp_vx,tmp_vy,tmp_vz);
+          
+          /* tmp_v = rotate v_out by alpha0 around 'v' (Debye-Scherrer cone) */
+          rotate(tmp_vx,tmp_vy,tmp_vz, vout_x,vout_y,vout_z, alpha0, vx, vy, vz);
+          vx = tmp_vx;
+          vy = tmp_vy;
+          vz = tmp_vz;
+          
+          /* Since now scattered and new direction given, calculate path to exit */
+          if (shape == 1) {
+            intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+            intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+          } else if (shape == 0) {
+            intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+            intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+          } else if (shape == 2) {
+            intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
+            intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+          }
+          
+          if (!intersect) {
+            /* Strange error: did not hit cylinder */
+            fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
+            ABSORB;
+          }
+          
+          if (!intersecti) {
+            t1 = (t3 + t0) /2;
+            t2 = t1;
+          }
+          
+          if (concentric && intersecti) {
+            /* In case of concentricity, 'remove' backward wall of sample */
+            t2 = t1;
+            t3 = t1;
+          }
+          
+          if(t0 < 0) t0=0; /* already in sample */
+          if(t1 < 0) t1=0; /* already in inner hollow */
+          if(t2 < 0) t2=0; /* already past inner hollow */
+          
 
-	      l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
-	      
-	      pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
-	      /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
-	      if (d_phi) pmul *= alpha/PI;
-	    } /* else transmit <-- No powder lines in file */
-	  }  /* Coherent scattering event */
-	else if (neutrontype == 2)
-	  {  /* Make incoherent scattering event */
-	    if(d_phi) {
-	      randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
-					  0, 0, 1,
-					  2*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
-	    } else {
-	      randvec_target_circle(&vx, &vy, &vz,
-				    &solid_angle, 0, 0, 1, 0);
-	    }
-	    v1 = sqrt(vx*vx+vy*vy+vz*vz);
-	    vx *= v/v1;
-	    vy *= v/v1;
-	    vz *= v/v1;
-	    
-	    /* Since now scattered and new direction given, calculate path to exit */
-	    if (isrect) {
-	      intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-	      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
-	    } else {
-	      intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-	      intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
-	    }
-	    
-	    if (!intersect) {
-	      /* Strange error: did not hit cylinder */
-	      fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
-	      ABSORB;
-	    }  
-	      
-	    if (!intersecti) {
-	      t1 = (t3 + t0) /2;
-	      t2 = t1;
-	    }
-	      
-	    if (concentric && intersecti) {
-	      /* In case of concentricity, 'remove' backward wall of sample */
-	      t2 = t1;
-	      t3 = t1;
-	    }
-	      
-	    if(t0 < 0) t0=0; /* already in sample */
-	    if(t1 < 0) t1=0; /* already in inner hollow */
-	    if(t2 < 0) t2=0; /* already past inner hollow */
-	      
-
-	    l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
-	    
-	    pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(p_inc);
-	    pmul *= solid_angle/(4*PI);
-	    
-	  }  /* Incoherent scattering event */
-	else if (neutrontype == 1) {
-	  /* Make transmitted (absorption-corrected) event */
-	  /* No coodinate changes here, simply change neutron weight */
-	  pmul = exp(-(my_a_v/v+my_s)*(l))/(p_transmit);
+          l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
+          
+          pmul  = Nq*l_full*my_s_n*exp(-(my_a_v/v+my_s)*(l+l_1))/(1-(p_inc+p_transmit));
+          /* Correction in case of d_phi focusing - BUT only when d_phi != 0 */
+          if (d_phi) pmul *= alpha/PI;
+        } /* else transmit <-- No powder lines in file */
+      }  /* Coherent scattering event */
+      else if (neutrontype == 2) {  /* Make incoherent scattering event */
+        if(d_phi) {
+          randvec_target_rect_angular(&vx, &vy, &vz, &solid_angle,
+                                      0, 0, 1,
+                                      2*PI, d_phi*DEG2RAD, ROT_A_CURRENT_COMP);
+        } else {
+          randvec_target_circle(&vx, &vy, &vz,
+                                &solid_angle, 0, 0, 1, 0);
         }
-	p *= pmul;
-      } /* Neutron leaving since it has passed already */
-    } /* else transmit non interacting neutrons */
+        v1 = sqrt(vx*vx+vy*vy+vz*vz);
+        vx *= v/v1;
+        vy *= v/v1;
+        vz *= v/v1;
+        
+        /* Since now scattered and new direction given, calculate path to exit */
+        if (shape == 1) {
+          intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+          intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+        } else if (shape == 0) {
+          intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+          intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+        } else if (shape == 2) {
+          intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
+          intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+        }
+        
+        if (!intersect) {
+          /* Strange error: did not hit cylinder */
+          fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
+          ABSORB;
+        }  
+          
+        if (!intersecti) {
+          t1 = (t3 + t0) /2;
+          t2 = t1;
+        }
+          
+        if (concentric && intersecti) {
+          /* In case of concentricity, 'remove' backward wall of sample */
+          t2 = t1;
+          t3 = t1;
+        }
+          
+        if(t0 < 0) t0=0; /* already in sample */
+        if(t1 < 0) t1=0; /* already in inner hollow */
+        if(t2 < 0) t2=0; /* already past inner hollow */
+          
+
+        l_1 = v*(t3 - t2 + t1 - t0); /* Length to exit */
+        
+        pmul = l_full*my_inc*exp(-(my_a_v/v+my_s)*(l+l_1))/(p_inc);
+        pmul *= solid_angle/(4*PI);
+            
+      }  /* Incoherent scattering event */
+      else if (neutrontype == 1) {
+        /* Make transmitted (absorption-corrected) event */
+        /* No coodinate changes here, simply change neutron weight */
+        pmul = exp(-(my_a_v/v+my_s)*(l))/(p_transmit);
+      }
+      p *= pmul;
+    } /* Neutron leaving since it has passed already */
+  } /* else transmit non interacting neutrons */
   
 %}
 
 MCDISPLAY
 %{
   magnify("xyz");
-  if (!isrect) {
+  if (shape == 0) {
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
     line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
@@ -759,7 +770,7 @@ MCDISPLAY
       line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
       line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
     }
-  } else {
+  } else if (shape == 1) {
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
@@ -788,20 +799,27 @@ MCDISPLAY
       zmin = -0.5*zdepth_i;
       zmax =  0.5*zdepth_i;
       multiline(5, xmin, ymin, zmin,
-		xmax, ymin, zmin,
-		xmax, ymax, zmin,
-		xmin, ymax, zmin,
-		xmin, ymin, zmin);
+                xmax, ymin, zmin,
+                xmax, ymax, zmin,
+                xmin, ymax, zmin,
+                xmin, ymin, zmin);
       multiline(5, xmin, ymin, zmax,
-		xmax, ymin, zmax,
-		xmax, ymax, zmax,
-		xmin, ymax, zmax,
-		xmin, ymin, zmax);
+                xmax, ymin, zmax,
+                xmax, ymax, zmax,
+                xmin, ymax, zmax,
+                xmin, ymin, zmax);
       line(xmin, ymin, zmin, xmin, ymin, zmax);
       line(xmax, ymin, zmin, xmax, ymin, zmax);
       line(xmin, ymax, zmin, xmin, ymax, zmax);
       line(xmax, ymax, zmin, xmax, ymax, zmax);
     }
+  } if (shape == 1) {
+    circle("xy",0,0,0,radius_i);
+    circle("xz",0,0,0,radius_i);
+    circle("yz",0,0,0,radius_i);
+    circle("xy",0,0,0,radius);
+    circle("xz",0,0,0,radius);
+    circle("yz",0,0,0,radius);
   }
 %}
 END
