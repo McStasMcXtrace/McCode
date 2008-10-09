@@ -12,7 +12,7 @@
 * Date: 22nd Jan 2004.
 * Origin: <a href="http://www.isis.rl.ac.uk">ISIS (UK)</a>
 * Release: McStas CVS_070630/1.8
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: ISIS
 *
 * HET: High Energy Transfer Chopper Spectrometer
@@ -85,7 +85,7 @@ COMPONENT monFC = Monitor_nD(
   AT (0, 0, 9.8) RELATIVE a1
 
 COMPONENT FC = FermiChopper(
-  radius=0.05, nu=nu_chop, yheight=c_h,
+  radius=0.05, nu=-nu_chop, yheight=c_h,
   w=chan_w, nslit=nslits, curvature=1.0/roc, verbose=1, zero_time=2)
 AT (0,0,10) RELATIVE ts1_mod
 
