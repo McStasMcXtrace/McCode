@@ -8,7 +8,7 @@
 * Date: 13 Apr 2006
 * Origin: LLB/ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: Templates
 *
 * Simple monochromator Diffractometer for powders
@@ -101,12 +101,12 @@ COMPONENT mono_cradle = Arm()
   ROTATED (0, A1, 0) RELATIVE Origin
 
 /* TIP: could use curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
-COMPONENT Monok = Monochromator_curved(
+SPLIT COMPONENT Monok = Monochromator_curved(
     width = 0.1, height = 0.1, NH = 1, NV = 11, RV=RV,
     mosaich = 30, mosaicv = 30, DM = DM)
   AT (0, 0, 0) RELATIVE mono_cradle
 
-/* TIP: positing diffraction direction for monok (order 1) */
+/* TIP: positioning diffraction direction for monok (order 1) */
 COMPONENT mono_out = Arm()
   AT (0, 0, 0) RELATIVE mono_cradle
   ROTATED (0, 2*A1, 0) RELATIVE Origin
@@ -116,7 +116,7 @@ COMPONENT Lmon2 = L_monitor(
     Lmin = lambda*0.95, Lmax = lambda*1.05)
   AT (0, 0, 0.2) RELATIVE mono_out
 
-COMPONENT Sample = PowderN(
+SPLIT COMPONENT Sample = PowderN(
     reflections = Powder, radius = 0.005,
     yheight = 0.1)
   AT (0, 0, L2) RELATIVE mono_out
