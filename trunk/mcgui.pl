@@ -829,7 +829,7 @@ sub run_dialog {
 
 sub dialog_get_out_file {
     # In case of mcrunflag set, let mcrun handle the compilation
-    my ($w, $file, $force, $mpi, $threads, $mcrunflag) = @_;
+    my ($w, $file, $force, $mpi, $cflags, $mcrunflag) = @_;
     # The $state variable is set when the spawned command finishes.
     my ($state, $cmd_success);
     my $success = 0;
@@ -847,7 +847,7 @@ sub dialog_get_out_file {
     # The dialog isn't actually popped up unless/until a command is
     # run or an error occurs.
     my $savefocus;
-    my ($compile_data, $msg) = get_out_file_init($file, $force, $mpi, $threads);
+    my ($compile_data, $msg) = get_out_file_init($file, $force, $mpi, 1);
     if(!$compile_data) {
         &$printer("Could not compile simulation:\n$msg");
     } else {
@@ -1127,8 +1127,6 @@ sub menu_run_simulation {
         # clustering methods
         if ($newsi->{'cluster'} == 2) {
           push @command, "--mpi=$MCSTAS::mcstas_config{'NODES'}";
-        # } elsif ($newsi->{'cluster'} == 1) {
-        #   push @command, "--threads=$MCSTAS::mcstas_config{'NODES'}";
         } elsif ($newsi->{'cluster'} == 3) {
           push @command, "--multi=$MCSTAS::mcstas_config{'NODES'}";
 	  if ($MCSTAS::mcstas_config{'GRID_FORCECOMPILE'}) {
@@ -1771,7 +1769,6 @@ sub setup_cmdwin {
   or use option --machines=<file>\n");
     }
     my $text_grid="Single ";
-    # if ($MCSTAS::mcstas_config{'THREADS'} ne "") { $text_grid .= "Threads "; }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no")  { $text_grid .= "MPI "; }
     if ($MCSTAS::mcstas_config{'SSH'} ne "no")     { $text_grid .= "Grid "; }
     if ($text_grid ne "") { $cmdwin->insert('end', "Clustering methods: $text_grid\n"); }
