@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H53 curved cold guide at the ILL
@@ -22,9 +22,6 @@
 * m:  (1) m-value of whole guide coating
 * lambda: (AA) central wavelength
 * dlambda:(AA) wavelength spread. half width.
-*
-* %Link
-* The <a href="http://www.ill.fr/YellowBook/IN14">IN14 TAS</a> at the ILL
 *
 * %End
 *******************************************************************************/
