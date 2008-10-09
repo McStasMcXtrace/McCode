@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.43 $
+* Version: $Revision: 1.44 $
 * Origin: ILL/Risoe
 * Release: McStas CVS_080730
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -438,7 +438,7 @@ INITIALIZE
   
   if (verbose)
   {
-    printf("Source_gen: component %s pin=%g ", NAME_CURRENT_COMP, p_in);
+    printf("Source_gen: component %s ", NAME_CURRENT_COMP);
     if ((yheight == 0) || (xwidth == 0))
       printf("(disk, radius=%g)", radius);
     else
