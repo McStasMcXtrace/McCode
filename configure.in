@@ -20,7 +20,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, MCSTAS_VERSION, www.mcstas.org)
-AC_REVISION($Revision: 1.59 $)
+AC_REVISION($Revision: 1.60 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
@@ -79,52 +79,6 @@ AC_ARG_WITH([pic],
   [USE_PIC=$withval],
   [USE_PIC=no])
 AC_SUBST(USE_PIC)
-
-# OpenMP/Threading support remove for poor efficiency until kernels do better
-# check for OpenMP threads and option to use at compile
-# AC_CHECK_HEADER(omp.h, [ HAVE_THREADS=yes ])
-# if test "$HAVE_THREADS" = yes; then
-  # test flag to use for compilation
-#   AC_CACHE_CHECK([for OpenMP flag of _AC_LANG compiler], ax_cv_[]_AC_LANG_ABBREV[]_openmp, [save[]_AC_LANG_PREFIX[]FLAGS=$[]_AC_LANG_PREFIX[]FLAGS
-#   ax_cv_[]_AC_LANG_ABBREV[]_openmp=unknown
-  # Flags to try:  -fopenmp (gcc), -openmp (icc), -mp (SGI & PGI),
-  #                -xopenmp (Sun), -omp (Tru64), -qsmp=omp (AIX), none
-#   ax_openmp_flags="-fopenmp -openmp -mp -xopenmp -omp -qsmp=omp none"
-#   if test "x$OPENMP_[]_AC_LANG_PREFIX[]FLAGS" != x; then
-#     ax_openmp_flags="$OPENMP_[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flags"
-#   fi
-#   for ax_openmp_flag  dnl will test flags to pass to compiler
-#   in "-fopenmp -lgomp" 								dnl gcc 4.2 with explicit libgomp
-#   "-fopenmp " 											  dnl gcc 4.2 
-#   "-openmp -parallel"								  dnl icc with explicit parallel flag
-#   "-openmp " 													dnl icc
-#   "-mp" 															dnl pgi
-#   "-xopenmp" 													dnl Sun
-#   "-omp" 															dnl Tru64
-#   "-qsmp=omp" 												dnl	AIX
-#   "none" 															dnl no openmp
-#   "$OPENMP_[]_AC_LANG_PREFIX[]FLAGS"  dnl flags defined by user
-  #
-#   do
-#     case $ax_openmp_flag in
-#       none) []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[] ;;
-#       *) []_AC_LANG_PREFIX[]FLAGS="$save[]_AC_LANG_PREFIX[]FLAGS $ax_openmp_flag" ;;
-#     esac
-#     AC_TRY_LINK_FUNC(omp_set_num_threads,
-# 	  [ax_cv_[]_AC_LANG_ABBREV[]_openmp=$ax_openmp_flag; break])
-#   done
-#   []_AC_LANG_PREFIX[]FLAGS=$save[]_AC_LANG_PREFIX[]FLAGS
-#   ]) # end AC_CACHE_CHECK
-#   if test "x$ax_cv_[]_AC_LANG_ABBREV[]_openmp" != "xnone"; then
-#     OPENMP_[]_AC_LANG_PREFIX[]FLAGS=$ax_cv_[]_AC_LANG_ABBREV[]_openmp
-#   fi
-#   # now set DEFINE for mcstas_config
-#   AC_SUBST([HAVE_THREADS], ["-DUSE_THREADS $OPENMP_CFLAGS "])
-#   AC_DEFINE([HAVE_THREADS], ["-DUSE_THREADS $OPENMP_CFLAGS "])
-# else
-#   AC_SUBST([HAVE_THREADS], [])
-#   AC_DEFINE([HAVE_THREADS], [])
-# fi
 
 # check for MPI
 if test "$MPICC" != "no"; then
