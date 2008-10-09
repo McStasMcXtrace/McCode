@@ -11,16 +11,22 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.204 $
+* Version: $Revision: 1.205 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.204 2008-09-08 10:08:21 farhi Exp $
+* $Id: mcstas-r.c,v 1.205 2008-10-09 14:47:53 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.204  2008/09/08 10:08:21  farhi
+* in save sessions, filename was not registered in mcopenedfiles,
+* but was searching for simfile (always opened) leading
+* to always catenated files. This happen when e.g. sending USR2 or using
+* intermediate saves.
+*
 * Revision 1.203  2008/09/05 10:04:20  farhi
 * sorry, my mistake...
 *
@@ -5139,7 +5145,8 @@ void sighandler(int sig)
   }
   t0 = (time_t)mcstartdate;
   t1 = time(NULL);
-  printf("# Date:      %s (Started %s) ",ctime(&t1), ctime(&t0));
+  printf("# Date:      %s", ctime(&t1));
+  printf("# Started:   %s", ctime(&t0));
 
   if (sig == SIG_STAT)
   {
