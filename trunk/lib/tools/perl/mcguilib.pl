@@ -336,14 +336,10 @@ sub simulation_dialog {
 * MPI on clusters/multi-core machines");
     my $choicecluster_val;
     if ($si{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-    # elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($si{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($si{'cluster'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choicecluster_orig=$choicecluster_val;
     my $choices=[ 'None (single CPU)'];
-    # if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
-    #   push @{ $choices }, 'Threads (multi-core)';
-    # }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
@@ -447,13 +443,12 @@ Optimize Mode: signal 3 to maximize. Component MUST be a monitor");
 
       $si{'cluster'} = do {
         if    ($choicecluster_val =~ /^None/)   { 0 }
-        # elsif ($choicecluster_val =~ /^Threads/){ 1 } # need recompile
         elsif ($choicecluster_val =~ /^MPI/)    { 2 } # need recompile
         elsif ($choicecluster_val =~ /^SSH/)    { 3 }
       };
 
       if (($si{'cluster'} == 1 || $si{'cluster'} == 2) && $choicecluster_orig ne $choicecluster_val) {
-        # if changing to MPI or threads clustering, require re-compilation
+        # if changing to MPI clustering, require re-compilation
         $si{'Forcecompile'} = 1;
       }
       if ($formatchoice_val ne $formatchoice_orig && $formatchoice_val =~ /NeXus|HDF/) {
@@ -598,13 +593,9 @@ sub preferences_dialog {
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
     if    ($MCSTAS::mcstas_config{'CLUSTER'} == 0) { $choicecluster_val='None (single CPU)'; }
-    # elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choices=[ 'None (single CPU)'];
-    # if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
-    #   push @{ $choices }, 'Threads (multi-core)';
-    # }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
@@ -692,7 +683,6 @@ sub preferences_dialog {
 
     $MCSTAS::mcstas_config{'CLUSTER'} = do {
       if     ($choicecluster_val =~ /^None/)   { 0 }
-      # elsif ($choicecluster_val =~ /^Threads/){ 1 }
       elsif ($choicecluster_val =~ /^MPI/)    { 2 }
       elsif ($choicecluster_val =~ /^SSH/)  { 3 }
     };

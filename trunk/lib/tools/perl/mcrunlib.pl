@@ -132,7 +132,7 @@ sub get_sim_info {
 # results is an error message.
 #
 sub get_out_file_init {
-    my ($inname, $force, $mpi, $threads, @ccopts) = @_;
+    my ($inname, $force, $mpi, $cflags, @ccopts) = @_;
     return (undef, "mcrun: No simulation filename given") unless $inname;
     # Add a default extension of ".instr" if given name does not exist
     # as file.
@@ -165,7 +165,7 @@ sub get_out_file_init {
     my $v = { };
     $v->{'force'} = $force;
     $v->{'mpi'} = $mpi;
-    $v->{'threads'} = $threads;
+    $v->{'cflags'} = $cflags;
     $v->{'ccopts'} = join(" ",@ccopts);
     $v->{'file_type'} = $file_type;
     $v->{'dir'} = $dir;
@@ -214,7 +214,7 @@ sub get_out_file_next {
   my $out_age = $v->{'out_age'};
   my $stage = $v->{'stage'};
   my $mpi   = $v->{'mpi'};
-  my $threads   = $v->{'threads'};
+  my $cflags   = $v->{'cflags'};
   my $ccopts = $v->{'ccopts'};
   my $cccmd  = $v->{'cc_cmd'};
   if($stage eq PRE_MCSTAS) {
@@ -271,11 +271,9 @@ sub get_out_file_next {
     # Compile C source if newer than existing out file.
     # ToDo: splitting CFLAGS should handle shell quoting as well ...
     my $cc     = $MCSTAS::mcstas_config{CC};
-    my $cflags = $MCSTAS::mcstas_config{CFLAGS};
+    my $mcstas_cflags = "";
+    if ($cflags) { $mcstas_cflags = $MCSTAS::mcstas_config{CFLAGS}; }
     my $libs = "-lm ";
-    if ($v->{'threads'} && $MCSTAS::mcstas_config{THREADS} ne "") {
-      $libs .= $MCSTAS::mcstas_config{THREADS};
-    }
     if ($v->{'mpi'} && $MCSTAS::mcstas_config{MPICC} ne "no") {
       $libs .= " -DUSE_MPI ";
       $cc      = $MCSTAS::mcstas_config{'MPICC'};
@@ -289,7 +287,7 @@ sub get_out_file_next {
       $c_name="\"$c_name\"";
     }
     if ($ccopts) { $libs .= $ccopts; }
-    my $cmd = [$cc, split(' ', $cflags), "-o",
+    my $cmd = [$cc, split(' ', $mcstas_cflags), "-o",
                $out_name, $c_name, split(' ', $libs)];
     $v->{'cc_cmd'} = join(" ", @$cmd);           
     if(($file_type eq MCSTAS || $file_type eq C) &&
@@ -320,9 +318,9 @@ sub get_out_file_next {
 # The optional $force option, if true, forces unconditional recompilation.
 #
 sub get_out_file {
-    my ($inname, $force, $mpi, $threads, @ccopts) = @_;
+    my ($inname, $force, $mpi, $cflags, @ccopts) = @_;
     my ($v, $msg, $status, $value);
-    ($v, $msg) = get_out_file_init($inname, $force, $mpi, $threads, @ccopts);
+    ($v, $msg) = get_out_file_init($inname, $force, $mpi, $cflags, @ccopts);
     unless($v) {
         print STDERR "$msg\n";
         return undef;
@@ -417,10 +415,9 @@ sub do_test {
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
       if ($this_cmd !~ m/-d/ && $this_cmd !~ m/--dir/) { $this_cmd.= " -d $base" . "_$index"; }
       
-      $env{'MCSTAS_CFLAGS'}="";
+      if ($this_cmd =~ m/mcrun/) { $this_cmd .= " --nocflags"; }
       &$printer("Executing: $this_cmd");
       my $res = qx/$this_cmd/;
-      $env{'MCSTAS_CFLAGS'}=$MCSTAS::mcstas_config{'CFLAGS'};
       my $child_error_text = $!;
       my $child_error_code = $?;
       if ($child_error_code) {

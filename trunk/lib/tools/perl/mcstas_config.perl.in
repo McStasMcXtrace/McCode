@@ -38,7 +38,6 @@
 # CODETEXT - check for Tk::CodeText availability
 # PROCSIMPLE - check for Proc::Simple availability
 # TEMP     - check for File::Temp availability
-# THREADS  - flag for Threading support [yes|no]
 # PREC     - optimization precision (stop criterion)
 # SSH      - SSH client
 # GRID_PING - Ping hosts before gridding or not (1/0)
@@ -95,7 +94,6 @@ use Config;
      CODETEXT => 'no',
      PROCSIMPLE => 'no',
      TEMP => 'no',
-     THREADS => '@HAVE_THREADS@',
      NEXUS => '@HAVE_NEXUS@',
      HDFVIEW => '@HDFVIEW@',
      PREC => '1e-3',
