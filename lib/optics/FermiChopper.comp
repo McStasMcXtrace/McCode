@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2007, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -12,10 +12,11 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.23 $
-* Release:    McStas 1.10
+* Version:    $Revision: 1.24 $
+* Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
+* Modified by: EF, Oct 2008: fix chopper orientation
 *
 * Fermi Chopper with rotating frame.
 *
@@ -85,6 +86,12 @@
 * %End
 *****************************************************************************/
 
+/* NOTE: 
+ *   The initial component version (McStas version < 2.0) was written 
+ *   with an inverted coordinate frame orientation. This corresponds 
+ *   to inverting the frequency and phase sign.
+ */
+
 DEFINE COMPONENT FermiChopper
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
@@ -132,7 +139,7 @@ SHARE
  * FC_zrot: returns Z' in rotating frame, from X,Z and t,omega,ph0
  ****************************************************************************/
 double FC_zrot(double X, double Z, double T, struct FermiChopper_struct FCs){
-  double omega=FCs.omega;
+  double omega =FCs.omega;
   double ph0   =FCs.ph0;
 
   return( Z*cos(omega*T+ph0)-X*sin(omega*T+ph0) );
@@ -144,7 +151,7 @@ double FC_zrot(double X, double Z, double T, struct FermiChopper_struct FCs){
  *          additional coordinate shift in case of curved slits
  ****************************************************************************/
 double FC_xrot(double X, double Z, double T, struct FermiChopper_struct FCs){
-  double omega=FCs.omega;
+  double omega =FCs.omega;
   double ph0   =FCs.ph0;
   double C_slit=FCs.C_slit;
   double ret, tmp;
@@ -257,7 +264,7 @@ INITIALIZE
 
   if (m <= 0) { m=0; R0=0; }
   if (radius <= 0) {
-    printf("FermiChopper: %s: FATAL: unrealistic cylinder radius radius=%g [m]\n", NAME_CURRENT_COMP, radius);
+    printf("FermiChopper: %s: FATAL: Unrealistic cylinder radius radius=%g [m]\n", NAME_CURRENT_COMP, radius);
     exit(-1);
   }
   if (xwidth > 0 && xwidth < radius*2 && nslit > 0) {
@@ -299,7 +306,7 @@ INITIALIZE
   }
   FCVars.L_slit = length;
   if (verbose && nu)
-    printf("FermiChopper: %s: frequency=%g [Hz] %g [rpm], time frame=%g [s] phase=%g [deg]\n"
+    printf("FermiChopper: %s: Frequency nu=%g [Hz] %g [rpm], time frame=%g [s] phase=%g [deg]\n"
       , NAME_CURRENT_COMP, nu, nu*60, 2/nu, FCVars.ph0*RAD2DEG);
 
   FCVars.absorb_alreadyinside    = 0;
@@ -309,13 +316,17 @@ INITIALIZE
   FCVars.absorb_notreachentrance = 0;
   FCVars.absorb_packentrance     = 0;
   FCVars.absorb_slitcoating      = 0;
-  FCVars.warn_notreachslitwall = 0;
+  FCVars.warn_notreachslitwall   = 0;
   FCVars.absorb_exitslitpack     = 0;
   FCVars.absorb_maxiterations    = 0;
   FCVars.absorb_wrongdirection   = 0;
   FCVars.absorb_nocontrol        = 0;
   FCVars.absorb_cylexit          = 0;
-  FCVars.warn_notreachslitoutput=0;
+  FCVars.warn_notreachslitoutput = 0;
+  
+  /* fix for the wrong coordinate frame orientation to come back to McStas XYZ system */
+  FCVars.omega *= -1;
+  FCVars.ph0   *= -1;
 
 %}
 
@@ -371,7 +382,7 @@ TRACE
       double mean_t, mean_phase;
       mean_t     = FCVars.sum_t/FCVars.sum_N;
       mean_phase = fmod(mean_t*nu*2*PI, 2*PI);
-      FCVars.ph0 = -mean_phase;
+      FCVars.ph0 = mean_phase;
     }
 
     /* neutron must enter the cylinder opening: |X'| < full package width*/
@@ -559,7 +570,7 @@ TRACE
 
     if (loopcounter >= FermiChopper_MAXITER) {
       if (verbose > 1 && FCVars.absorb_maxiterations < FermiChopper_MAXITER)
-      printf("FermiChopper: %s:Max iterations %i reached inside slit. Absorb.\n",
+      printf("FermiChopper: %s: Max iterations %i reached inside slit. Absorb.\n",
         NAME_CURRENT_COMP, FermiChopper_MAXITER);
       FCVars.absorb_maxiterations++;
       ABSORB;
@@ -606,6 +617,7 @@ TRACE
     FCVars.sum_N_pass += p;
 
   } /* end if cylinder_intersect */
+  if (!SCATTERED) ABSORB;
 
 %}
 
@@ -633,13 +645,14 @@ SAVE
            "              Mean wavelength   lambda= %g [Angs]\n"
            "              Mean energy       omega = %g [meV]\n"
            "              Mean arrival time t     = %g [s]\n"
-           "              Mean phase              = %g [deg] (negate to optimize transmission)\n"
+           "              Mean phase              = %g [deg] (%s)\n"
            "              Opening time      dt    = %g [s]\n"
            "              Intensity reaching FC   = %g [n/s]\n"
            "              Intensity passing  FC   = %g [n/s]\n"
            , NAME_CURRENT_COMP,
            mean_v, mean_L, mean_w, mean_t, mean_phase,
-           (nu ? div/PI/nu : 1),
+           (zero_time > 1 ? "set automatically" : "negate to optimize transmission"),
+           (nu ? fabs(div/PI/nu) : 1),
            FCVars.sum_N,
            FCVars.sum_N_pass);
     if (!FCVars.sum_N_pass || verbose) {
@@ -651,13 +664,11 @@ SAVE
              "              Can't prop. to slit pack:  %i\n"
              "              At slit pack entrance:     %i\n"
              "              On absorbing slit coating: %i\n"
-             "Warning:      Can not reach slit wall:   %i\n"
              "              Exiting slit pack:         %i\n"
              "              Too many iterations:       %i\n"
              "              Prop. in wrong direction : %i\n"
              "              Mad neutron (no control):  %i\n"
              "              At cylinder exit:          %i\n"
-             "Warning:      Can not reach slit output: %i\n"
       , NAME_CURRENT_COMP,
       FCVars.absorb_alreadyinside,
       FCVars.absorb_topbottom,
@@ -666,13 +677,18 @@ SAVE
       FCVars.absorb_notreachentrance,
       FCVars.absorb_packentrance,
       FCVars.absorb_slitcoating,
-      FCVars.warn_notreachslitwall,
+      
       FCVars.absorb_exitslitpack,
       FCVars.absorb_maxiterations,
       FCVars.absorb_wrongdirection,
       FCVars.absorb_nocontrol,
-      FCVars.absorb_cylexit,
-      FCVars.warn_notreachslitoutput);
+      FCVars.absorb_cylexit);
+      
+      if (FCVars.warn_notreachslitwall || FCVars.warn_notreachslitoutput)
+        printf("Warning:      Can not reach slit wall:   %i\n"
+               "Warning:      Can not reach slit output: %i\n",
+        FCVars.warn_notreachslitwall,
+        FCVars.warn_notreachslitoutput);
     }
 
   }
