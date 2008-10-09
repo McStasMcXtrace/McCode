@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -104,25 +104,25 @@ INITIALIZE
   rUpParPtr   = (t_Table*) malloc(sizeof(t_Table));
   rDownParPtr = (t_Table*) malloc(sizeof(t_Table));
   if (Table_Read(rParPtr, rPar, 1) <= 0) {
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rPar);
     exit(1);
   }
   if (Table_Read(rUpParPtr, rUpPar, 1) <= 0) {
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rUpPar);
     exit(1);
   }
   if (Table_Read(rDownParPtr, rDownPar, 1) <= 0) { 
-    fprintf(stderr,"Guide: %s: can not read file %s\n", 
+    fprintf(stderr,"Pol_guide_vmirror: %s: can not read file %s\n", 
 	    NAME_CURRENT_COMP, rDownPar);
     exit(1);
   }
 #endif
   
   if ((xwidth<=0) || (yheight<= 0) || (length<=0)) {
-    fprintf(stderr, "POL_guide: %s: NULL or negative length scale!\n"
-	    "ERROR      (xwidth,yheight,length). Exiting\n",
+    fprintf(stderr, "Pol_guide_vmirror: %s: NULL or negative length scale!\n"
+	                  "ERROR      (xwidth,yheight,length). Exiting\n",
 	    NAME_CURRENT_COMP);
     exit(1);
   }
@@ -130,7 +130,7 @@ INITIALIZE
   if (mcgravitation) {
     
     localG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0));
-    fprintf(stdout,"Pol_guide %s: Gravity is on!\n",
+    fprintf(stdout,"Pol_guide_vmirror: %s: Gravity is on!\n",
 	    NAME_CURRENT_COMP);
   } else
     localG = coords_set(0, 0, 0);
@@ -265,8 +265,8 @@ TRACE
     }
 
     if (time<=tThreshold)
-      fprintf(stdout, "tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
-	      "tUp: %f, tSide: %f, time: %f\n",
+      fprintf(stdout, "Pol_guide_vmirror: %s: tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
+	      "tUp: %f, tSide: %f, time: %f\n", NAME_CURRENT_COMP,
 	      tTop, tBot, tRight, tLeft, tUp, tSide, time);
 
     /* Has neutron left the guide? */
@@ -281,15 +281,15 @@ TRACE
     if(time <= tThreshold) {
       
       printf("Time below threshold!\n");
-      fprintf(stdout, "tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
-	      "tUp: %f, tSide: %f, time: %f\n",
+      fprintf(stdout, "Pol_guide_vmirror: %s: tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
+	      "tUp: %f, tSide: %f, time: %f\n", NAME_CURRENT_COMP,
 	      tTop, tBot, tRight, tLeft, tUp, tSide, time);
       break;
     }
       
     if(debug>0 && time==tLeft) {
       
-      fprintf(stdout, "\nLeft side hit: x, v, normal, point, gravity\n");
+      fprintf(stdout, "\nPol_guide_vmirror: %s: Left side hit: x, v, normal, point, gravity\n", NAME_CURRENT_COMP);
       coords_print(xVec);
       coords_print(vVec);
       coords_print(normalLeft);
@@ -302,12 +302,12 @@ TRACE
     }
     
     if(debug>0)
-      fprintf(stdout, "tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
-	      "tUp: %f, tSide: %f, time: %f\n",
+      fprintf(stdout, "Pol_guide_vmirror: %s: tTop: %f, tBot:%f, tRight: %f, tLeft: %f\n"
+	      "tUp: %f, tSide: %f, time: %f\n", NAME_CURRENT_COMP,
 	      tTop, tBot, tRight, tLeft, tUp, tSide, time);
     
     if(debug>0)
-      fprintf(stdout, "Start v: (%f, %f, %f)\n", vx, vy, vz);
+      fprintf(stdout, "Pol_guide_vmirror: %s: Start v: (%f, %f, %f)\n", NAME_CURRENT_COMP, vx, vy, vz);
 
     PROP_DT(time);
     if (mcgravitation)
@@ -325,7 +325,7 @@ TRACE
     else if(time==tMirror)
       normalPointer = &normalMirror;
     else
-      fprintf(stderr, "This should never happen!!!!\n");
+      fprintf(stderr, "Pol_guide_vmirror: %s: This should never happen!!!!\n", NAME_CURRENT_COMP);
 
     Q = 2*coords_sp(vVec, *normalPointer)*V2K;
     
@@ -356,7 +356,10 @@ TRACE
 	SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);
       }
 
-      assert(sx*sx+sy*sy+sz*sz<=1); // check that polarisation is meaningfull
+      if (sx*sx+sy*sy+sz*sz>1.000001) { // check that polarisation is meaningfull
+        fprintf(stderr, "Pol_guide_vmirror: %s: polarisation |s|=%g > 1 s=[%g,%g,%g]\n", 
+          NAME_CURRENT_COMP, sx*sx+sy*sy+sz*sz, sx, sy, sz); 
+      }
     }
 
     if(p==0) {
@@ -368,7 +371,7 @@ TRACE
     coords_get(vVec, &vx, &vy, &vz);    
     
     if(debug>0)
-      fprintf(stdout, "End v: (%f, %f, %f)\n", vx, vy, vz);
+      fprintf(stdout, "Pol_guide_vmirror: %s: End v: (%f, %f, %f)\n", NAME_CURRENT_COMP, vx, vy, vz);
   }
   
   %}
