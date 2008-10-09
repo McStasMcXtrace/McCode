@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Granroth
 * Date: July 2004
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * Origin: SNS Project Oak Ridge National Laboratory
 * Release: McStas 1.6
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
@@ -58,7 +58,7 @@ DEFINITION PARAMETERS (string filename=0)
 SETTING PARAMETERS (xwidth=0.1, yheight=0.12, dist=0, focus_xw=.1, focus_yh=.24, Emin=1, Emax=10, int target_index=+1)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in,
   inxvec,inyvec,Pvec,xylength,tcol,Ecol,txval,tyval,tPvec,Ptmat,
-  EPmax, EPmin,INorm,INorm,
+  EPmax, EPmin,INorm,INorm2,
   ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals,
   xonly,Pfunc,txonly,tPfunc)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -89,7 +89,7 @@ DECLARE
 
   void sns_source_load(char filename[], double *xvec, double *yvec, int xcol, int ycol, int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
   {
-    FILE *fp;
+    FILE *fp=NULL;
     int idx1,idx2,idx3; /* counter for number of x, y values */
     int jk,idx3max;
     int numtvals;
