@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -12,10 +12,11 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.6 $
-* Release:    McStas 1.6
+* Version:    $Revision: 1.7 $
+* Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
-* Modified by: E. Farhi, uniformize parameter names (Jul 2008)
+* Modified by: E. Farhi, Jul 2008: uniformize parameter names ()
+* Modified by: EF, Oct 2008: fix chopper orientation
 *
 * Fermi Chopper with rotating frame.
 *
@@ -52,6 +53,7 @@
 * %BUGS
 * - overestimates peak width for long wavelengths
 * - does not give the right pulse position, shape and width for slit widths below 0.1 mm
+* - fails sometimes when using MPI
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -91,6 +93,12 @@
 * %End
 *****************************************************************************/
 
+/* NOTE: 
+ *   The initial component version (McStas version < 2.0) was written 
+ *   with an inverted coordinate frame orientation. This corresponds 
+ *   to inverting the frequency and phase sign.
+ */
+ 
 DEFINE COMPONENT FermiChopper_ILL
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
@@ -327,14 +335,14 @@ INITIALIZE
   FCVars.counter_R_blades   = 0;
 /************************ CALCULATION CONSTANTS *****************************/
   FCVars.omega    = 2*PI*nu;
-  if (nu) FCVars.t0       = (nu ? -phase/360.0/nu : 0);
+  if (nu && phase) FCVars.t0 = -phase/360.0/nu;
   FCVars.mean_velocity_sum = 0;
   FCVars.auto_velocity     = 0;
 
   /* check of input parameters */
   if (m < 0) m == 0;
   if (radius <= 0) {
-    printf("FermiChopper: %s: FATAL: unrealistic cylinder radius radius=%g [m]\n", NAME_CURRENT_COMP, radius);
+    printf("FermiChopper_ILL: %s: FATAL: unrealistic cylinder radius radius=%g [m]\n", NAME_CURRENT_COMP, radius);
     exit(-1);
   }
   if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
@@ -342,23 +350,23 @@ INITIALIZE
     w = xwidth/nslit;
   }
   if (w <= 0) {
-    printf("FermiChopper: %s: FATAL: Slits in the package have unrealistic width w=%g [m]\n", NAME_CURRENT_COMP, w);
+    printf("FermiChopper_ILL: %s: FATAL: Slits in the package have unrealistic width w=%g [m]\n", NAME_CURRENT_COMP, w);
     exit(-1);
   }
   if (nslit*w > radius*2) {
     nslit = floor(radius/w);
-    printf("FermiChopper: %s: Too many slits to fit in the cylinder\n"
+    printf("FermiChopper_ILL: %s: Too many slits to fit in the cylinder\n"
            "Adjusting nslit=%f\n", NAME_CURRENT_COMP, nslit);
   }
   if (length > radius*2) {
     length = sqrt(radius*radius - nslit*w*nslit*w/4);
-    printf("FermiChopper: %s: Slit package is longer than the whole\n"
+    printf("FermiChopper_ILL: %s: Slit package is longer than the whole\n"
            "chopper cylinder. Adjusting length=%g [m]\n", NAME_CURRENT_COMP, length);
   }
 
   if (eff <= 0 || eff > 1) {
     eff = 0.95;
-    printf("FermiChopper: %s: Efficiency is unrealistic\n"
+    printf("FermiChopper_ILL: %s: Efficiency is unrealistic\n"
            "Adjusting eff=%f\n", NAME_CURRENT_COMP, eff);
   }
   if (Qc <= 0) { Qc = 0.02176; m = 0; }
@@ -373,10 +381,17 @@ INITIALIZE
     Vi = Ki * K2V;
   }
   if (Vi == 0) {
-    printf("FermiChopper: %s: Will determine automatically mean neutron velocity\n", NAME_CURRENT_COMP);
+    printf("FermiChopper_ILL: %s: Will determine automatically mean neutron velocity\n", NAME_CURRENT_COMP);
     FCVars.auto_velocity = 100;
     FCVars.mean_velocity = 1000;
   } else FCVars.mean_velocity = Vi;
+  
+  if (verbose && nu)
+    printf("FermiChopper_ILL: %s: frequency nu=%g [Hz] %g [rpm], time frame=%g [s] phase=%g [deg]\n"
+      , NAME_CURRENT_COMP, nu, nu*60, 2/nu, -FCVars.t0*360*nu);
+  
+  /* fix for the wrong coordinate frame orientation to come back to McStas XYZ system */
+  FCVars.omega *= -1;
 %}
 
 TRACE
@@ -421,7 +436,7 @@ TRACE
 
   if(dt > fabs((0.5/FCVars.omega*2*PI)))
   {
-    printf("FermiChopper: %s: Frequency too low. Method will fail.\n"
+    printf("FermiChopperloopcounter: %s: Frequency too low. Method will fail.\n"
            "              Absorbing neutron\n", NAME_CURRENT_COMP);
     ABSORB;
   }
@@ -466,7 +481,7 @@ TRACE
   if((t3 < 0)||(t3 > dt)){
     t3 = zinterpolation(x,z,vx,vz,t,dt,slit_length, FCVars.omega, FCVars.t0);
     if((t3 < 0)||(t3 > dt)){
-      printf("FermiChopper: %s: Entering problem\n", NAME_CURRENT_COMP);
+      printf("FermiChopper_ILL: %s: Entering problem\n", NAME_CURRENT_COMP);
     }
   }
 
@@ -488,7 +503,7 @@ TRACE
     if((dt1 < 0) || (dt1 > dt)){
       dt1 = zinterpolation(x,z,vx,vz,t,dt,-slit_length, FCVars.omega, FCVars.t0);
       if((dt1 <= 0) || (dt1 > dt)){
-        printf("FermiChopper: %s: Outgoing problem\n", NAME_CURRENT_COMP);
+        printf("FermiChopper_ILL: %s: Outgoing problem\n", NAME_CURRENT_COMP);
       }
     }
     dt=dt1;
@@ -509,7 +524,7 @@ TRACE
     /* Infinite loops shall be stopped and an error message be displayed */
     if (loopcounter>=100){
       FCVars.counter_infinite++; /* adjusting interaction counter */
-      printf("FermiChopper: %s: Infinite loop (%d), neutron absorbed.\n", NAME_CURRENT_COMP, loopcounter);
+      printf("FermiChopper_ILL: %s: Infinite loop (%d), neutron absorbed.\n", NAME_CURRENT_COMP, loopcounter);
       ABSORB;
     }
 
@@ -618,7 +633,7 @@ TRACE
       /*Check for errors in calculation*******/
       if ((time_prop_dt < 0) || (time_prop_dt > dt)){
         (*FCVars.counter_LR_error)++;    /* adjusting interaction counter */
-        printf("FermiChopper: %s: Reflecting interpolation Problem!\n", NAME_CURRENT_COMP);
+        printf("FermiChopper_ILL: %s: Reflecting interpolation Problem!\n", NAME_CURRENT_COMP);
         ABSORB;
       }
       /*Propagate whole system to that point*/
@@ -706,11 +721,11 @@ TRACE
   cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, ymax-ymin);
 
   if (t1 > 0) {
-    printf("FermiChopper: %s: Neutrons are leaving chopper in the wrong direction! \n", NAME_CURRENT_COMP);
+    printf("FermiChopper_ILL: %s: Neutrons are leaving chopper in the wrong direction! \n", NAME_CURRENT_COMP);
   }
 
   if (t2 <= 0) {
-    printf("FermiChopper: %s: Neutrons are leaving chopper without any control\n", NAME_CURRENT_COMP);
+    printf("FermiChopper_ILL: %s: Neutrons are leaving chopper without any control\n", NAME_CURRENT_COMP);
   }
 
 /*********** PROPAGATE TO CYLINDER SURFACE ***********************************/
@@ -733,7 +748,7 @@ TRACE
 
 
   if(loopcounter > 3)
-    printf("FermiChopper: %s: More than 3 reflections!\n", NAME_CURRENT_COMP);
+    printf("FermiChopper_ILL: %s: More than 3 reflections (%i) !\n", NAME_CURRENT_COMP, loopcounter);
 
   /*How many reflections happened?*/
   switch(reflcounter) {
@@ -764,68 +779,67 @@ TRACE
 
 SAVE
 %{
-/*Initialize Files*/
 
 if (verbose) {
   int i;
 
-  fprintf(stdout,"*********** This is the result from FermiChopper.comp: %s ***********  \n\n\n", NAME_CURRENT_COMP);
-  fprintf(stdout,"\t INTERACTIONS:\n\n");
-  fprintf(stdout,"number of neutrons interacting with cylinder:      %i\n", FCVars.counter_cylinder);
-  fprintf(stdout,"number of neutrons hitting the big slit:           %d\n", FCVars.counter_cylinder_pack);
-  fprintf(stdout,"number of neutrons hitting one of the slits:       %d\n\n", FCVars.counter_hit_slits);
+  printf("*********** This is the result from FermiChopper.comp: %s ***********  \n\n\n", NAME_CURRENT_COMP);
+  printf("\t INTERACTIONS:\n\n");
+  printf("number of neutrons interacting with cylinder:      %i\n", FCVars.counter_cylinder);
+  printf("number of neutrons hitting the big slit:           %d\n", FCVars.counter_cylinder_pack);
+  printf("number of neutrons hitting one of the slits:       %d\n\n", FCVars.counter_hit_slits);
 
-  fprintf(stdout,"number of interactions with blades (overall):      %d\n", FCVars.counter_L_blades+FCVars.counter_R_blades);
-  fprintf(stdout,"number of interactions with left blades(overall):  %d\n", FCVars.counter_L_blades);
-  fprintf(stdout,"number of interactions with right blades(overall): %d\n\n", FCVars.counter_R_blades);
+  printf("number of interactions with blades (overall):      %d\n", FCVars.counter_L_blades+FCVars.counter_R_blades);
+  printf("number of interactions with left blades(overall):  %d\n", FCVars.counter_L_blades);
+  printf("number of interactions with right blades(overall): %d\n\n", FCVars.counter_R_blades);
 
-  fprintf(stdout,"\t REFLECTIONS:\n\n");
-  fprintf(stdout,"number of successful reflections (overall):        %d\n\n", FCVars.counter_reflect);
+  printf("\t REFLECTIONS:\n\n");
+  printf("number of successful reflections (overall):        %d\n\n", FCVars.counter_reflect);
 
-  fprintf(stdout,"number of successful primary reflections at left blades:             %d\n", FCVars.counter_refl_L_blades[0]);
-  fprintf(stdout,"number of successful secondary reflections at left blades:           %d\n", FCVars.counter_refl_L_blades[1]);
-  fprintf(stdout,"number of successful more than secondary reflections at left blades: %d\n\n", FCVars.counter_refl_L_blades[2]);
-  fprintf(stdout,"number of successful primary reflections at right blades:            %d\n", FCVars.counter_refl_R_blades[0]);
-  fprintf(stdout,"number of successful secondary reflections at right blades:          %d\n", FCVars.counter_refl_R_blades[1]);
-  fprintf(stdout,"number of successful more than secondary reflections at right blades:%d\n\n",
+  printf("number of successful primary reflections at left blades:             %d\n", FCVars.counter_refl_L_blades[0]);
+  printf("number of successful secondary reflections at left blades:           %d\n", FCVars.counter_refl_L_blades[1]);
+  printf("number of successful more than secondary reflections at left blades: %d\n\n", FCVars.counter_refl_L_blades[2]);
+  printf("number of successful primary reflections at right blades:            %d\n", FCVars.counter_refl_R_blades[0]);
+  printf("number of successful secondary reflections at right blades:          %d\n", FCVars.counter_refl_R_blades[1]);
+  printf("number of successful more than secondary reflections at right blades:%d\n\n",
     FCVars.counter_refl_R_blades[2]);
-  fprintf(stdout,"\t ABSORPTIONS:\n\n");
+  printf("\t ABSORPTIONS:\n\n");
 
-  fprintf(stdout,"number of absorbed neutrons at blades(overall):                      %d\n\n",
+  printf("number of absorbed neutrons at blades(overall):                      %d\n\n",
     FCVars.counter_abs_L_blades[0]+FCVars.counter_abs_L_blades[1]+FCVars.counter_abs_L_blades[2]+FCVars.counter_abs_R_blades[0]+FCVars.counter_abs_R_blades[1]+FCVars.counter_abs_R_blades[2]);
 
-  fprintf(stdout,"number of absorbed neutrons at left blades (primary):                %d\n", FCVars.counter_abs_L_blades[0]);
-  fprintf(stdout,"number of absorbed neutrons at left blades (secondary):              %d\n", FCVars.counter_abs_L_blades[1]);
-  fprintf(stdout,"number of absorbed neutrons at left blades (more than secondary):    %d\n\n", FCVars.counter_abs_L_blades[2]);
+  printf("number of absorbed neutrons at left blades (primary):                %d\n", FCVars.counter_abs_L_blades[0]);
+  printf("number of absorbed neutrons at left blades (secondary):              %d\n", FCVars.counter_abs_L_blades[1]);
+  printf("number of absorbed neutrons at left blades (more than secondary):    %d\n\n", FCVars.counter_abs_L_blades[2]);
 
-  fprintf(stdout,"number of absorbed neutrons at right blades (primary):               %d\n", FCVars.counter_abs_R_blades[0]);
-  fprintf(stdout,"number of absorbed neutrons at right blades (secondary):             %d\n", FCVars.counter_abs_R_blades[1]);
-  fprintf(stdout,"number of absorbed neutrons at right blades (more than secondary):   %d\n\n", FCVars.counter_abs_R_blades[2]);
+  printf("number of absorbed neutrons at right blades (primary):               %d\n", FCVars.counter_abs_R_blades[0]);
+  printf("number of absorbed neutrons at right blades (secondary):             %d\n", FCVars.counter_abs_R_blades[1]);
+  printf("number of absorbed neutrons at right blades (more than secondary):   %d\n\n", FCVars.counter_abs_R_blades[2]);
 
-  fprintf(stdout,"number of absorbed neutrons between slits and exit:                  %d\n\n", FCVars.counter_out_cylinder);
-  fprintf(stdout,"number of absorbed neutrons because of an FCVars.counter_infinite loop:      %d\n\n", FCVars.counter_infinite);
-  fprintf(stdout,"number of absorbed neutrons because leaving the chooper from top or bottom:  %d\n\n", FCVars.counter_top_bottom);
+  printf("number of absorbed neutrons between slits and exit:                  %d\n\n", FCVars.counter_out_cylinder);
+  printf("number of absorbed neutrons because of an FCVars.counter_infinite loop:      %d\n\n", FCVars.counter_infinite);
+  printf("number of absorbed neutrons because leaving the chooper from top or bottom:  %d\n\n", FCVars.counter_top_bottom);
 
 
-  fprintf(stdout,"\tDATA OF TRANSMITTED NEUTRONS:\n\n");
+  printf("\tDATA OF TRANSMITTED NEUTRONS:\n\n");
 
-  fprintf(stdout,"number of transmitted neutrons (overall):         %d\n", FCVars.counter_transmited_total);
-  fprintf(stdout,"number of transmitted neutrons (not reflected):   %d\n\n", FCVars.counter_transmited);
+  printf("number of transmitted neutrons (overall):         %d\n", FCVars.counter_transmited_total);
+  printf("number of transmitted neutrons (not reflected):   %d\n\n", FCVars.counter_transmited);
 
-  fprintf(stdout,"number of neutrons reflected once :               %d\n", FCVars.counter_loops[0]);
-  fprintf(stdout,"number of neutrons reflected twice :              %d\n", FCVars.counter_loops[1]);
-  fprintf(stdout,"number of neutrons reflected more times :         %d\n\n", FCVars.counter_loops[2]);
+  printf("number of neutrons reflected once :               %d\n", FCVars.counter_loops[0]);
+  printf("number of neutrons reflected twice :              %d\n", FCVars.counter_loops[1]);
+  printf("number of neutrons reflected more times :         %d\n\n", FCVars.counter_loops[2]);
 
-  fprintf(stdout,"number of 'breaking the algorithm' neutrons on right blade:      %d\n", FCVars.counter_R_cylinder);
-  fprintf(stdout,"number of 'breaking the algorithm' neutrons on left blade:       %d\n\n", FCVars.counter_L_cylinder);
+  printf("number of 'breaking the algorithm' neutrons on right blade:      %d\n", FCVars.counter_R_cylinder);
+  printf("number of 'breaking the algorithm' neutrons on left blade:       %d\n\n", FCVars.counter_L_cylinder);
 
-  fprintf(stdout, "Secant/Picard Method used / Errors at right blade\t %i \t %i \t %i\n", FCVars.counter_R_secant,  FCVars.counter_R_interpol, FCVars.counter_R_error);
-  fprintf(stdout, "Secant/Picard Method used / Errors at left blade\t %i \t %i \t %i\n\n", FCVars.counter_L_secant, FCVars.counter_L_interpol, FCVars.counter_L_error);
+  printf( "Secant/Picard Method used / Errors at right blade\t %i \t %i \t %i\n", FCVars.counter_R_secant,  FCVars.counter_R_interpol, FCVars.counter_R_error);
+  printf( "Secant/Picard Method used / Errors at left blade\t %i \t %i \t %i\n\n", FCVars.counter_L_secant, FCVars.counter_L_interpol, FCVars.counter_L_error);
 
-  fprintf(stdout,"\tDETAILS: SLITS:\n\n");
-  fprintf(stdout, "\t\t Entering \t\t Outgoing\n");
+  printf("\tDETAILS: SLITS:\n\n");
+  printf( "\t\t Entering \t\t Outgoing\n");
   for(i=0; i<nslit; i++)
-  fprintf(stdout, "Slit number %i \t\t %i \t\t %i \n", i+1, FCVars.counter_enter_slits[i],FCVars.counter_exit_slits[i]);
+  printf( "Slit number %i \t\t %i \t\t %i \n", i+1, FCVars.counter_enter_slits[i],FCVars.counter_exit_slits[i]);
 
 }
 
