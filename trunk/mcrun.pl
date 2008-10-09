@@ -83,7 +83,7 @@ our $slave = 0;                 # 'slave' hostname for running remotely
 my $multi=0;                    # multi machine mode
 my @hostlist = ();              # list of remote machines to run on...
 my $mpi = 0;                    # how many nodes used with MPI? 0 implies no MPI.
-my $threads = 0;                # openmp thread flag for multi-cpu machines
+my $cflags = 1;                 # true if we use CFLAGS, else no CFLAGS is used
 
 our @optim_names = ();          # list of monitor names to optimize
 our $optim_flag=0;              # 0: normal scan, 1: optim some monitors, 2: optim all
@@ -204,13 +204,8 @@ sub parse_args {
             $MCSTAS::mcstas_config{'PLOTTER'} = $2;
         } elsif(/^--test$/) {
             $exec_test=1;
-        } elsif(/^--threads$/) {
-        		$threads=1;
-            push @options, "--threads";
-        } elsif(/^--(threads)\=(.*)$/) {
-        		$threads=$2;
-            push @options, "--threads=$2";
-            print STDERR "mcrun: WARNING: Threading support is NOT recommended\n";
+        } elsif(/^--nocflags$/) {
+            $cflags=0;
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
         } elsif(/^-([ahitg])$/) {
@@ -252,7 +247,6 @@ sub parse_args {
     }
 
     if ($multi >= 1) {  # grid: test hosts
-    		$threads = 0; # grid over-rides threads
     		# grid requires a data_dir for output
         if (!$data_dir) { die "mcrun: distributed computation requires data_dir directory for storage\n" ; }
     }
@@ -287,7 +281,7 @@ sub parse_args {
     }
 
     my $cc     = $MCSTAS::mcstas_config{CC};
-    my $cflags = $MCSTAS::mcstas_config{CFLAGS};
+    my $mcstas_cflags = $MCSTAS::mcstas_config{CFLAGS};
 
     die "Usage: mcrun [-cpnN] Instr [-sndftgahi] params={val|min,max|min,guess,max}
   mcrun options:
@@ -307,6 +301,7 @@ sub parse_args {
    --optim-file=FILENAME      Defines filename for storing optim results.
                                 (Defaults to \"mcoptim_XXXX.dat\")
    --test                     Execute McStas selftest and generate report
+   --nocflags                 Does not use CFLAGS for faster compilation
   Instr options:
    -s SEED   --seed=SEED      Set random seed (must be != 0)
    -n COUNT  --ncount=COUNT   Set number of neutrons to simulate.
@@ -327,7 +322,7 @@ specified for building the instrument:
   MCSTAS        Location of the McStas and component library
                   ($MCSTAS::sys_dir).
   MCSTAS_CC     Name of the C compiler               ($cc)
-  MCSTAS_CFLAGS Options for compilation              ($cflags)
+  MCSTAS_CFLAGS Options for compilation              ($mcstas_cflags)
   MCSTAS_FORMAT Default FORMAT to use for data files ($MCSTAS::mcstas_config{'PLOTTER'})
 SEE ALSO: mcstas, mcdoc, mcplot, mcdisplay, mcgui, mcresplot, mcstas2vitess
 DOC:      Please visit http://www.mcstas.org/
@@ -585,7 +580,7 @@ sub exec_sim_host {
 		host_scp($sim_def,  "$slave:$tmpname/$sim_def");
 		# compile locally if required (update C code)
 		my $v;
-		($out_file, $v) = get_out_file($sim_def, $force_compile, $mpi, $threads, @ccopts);
+		($out_file, $v) = get_out_file($sim_def, $force_compile, $mpi, $cflags, @ccopts);
 		if ($v->{'cc_cmd'} eq "") { 
 		  print STDERR "Failed to compile instrument $sim_def on slave $slave. Using master executable $out_file.\n"; 
 		  $force_compile=0; 
@@ -1199,7 +1194,7 @@ if ($exec_test) {
 
 our $scan_info = check_input_params(); # Get variables to scan, if any
 # force compile only on localhost
-($out_file, undef) = get_out_file($sim_def, $force_compile && !$multi && $slave eq 0, $mpi, $threads, @ccopts);
+($out_file, undef) = get_out_file($sim_def, $force_compile && !$multi && $slave eq 0, $mpi, $cflags, @ccopts);
 exit(1) unless $out_file;
 exit(1) if $ncount == 0;
 
