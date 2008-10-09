@@ -211,8 +211,6 @@ while (<READ>) {
         print WRITE "     EXTERNAL_EDITOR => 'notepad',\n";
     } elsif (/\w*EXE \=\w*/) {
         print WRITE "     EXE => 'exe',\n";
-    } elsif (/\w*THREADS \=\w*/) {
-        print WRITE "     THREADS => 'no',\n";
     } elsif (/\w*HDFVIEW \=\w*/) {
         print WRITE "     HDFVIEW => '$hdfview',\n";
     } elsif (/\w*PGDEV \=\w*/) {
