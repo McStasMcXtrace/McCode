@@ -1,6 +1,7 @@
 TODO list for mcstas june 2008
 ***************************************
-Next is the 2.0 release (not all from here, priority items marked by (*)
+Next is the 2.0 release (not all from here)
+(*) means priority items
 (D) means DONE
 
 Components:
@@ -11,11 +12,15 @@ Components:
 (*) Single_crystal, new approaches / validation still..
 (*) Focusing lenses ala VitESS
     Single crystal / powder with magnetic order / polarisation / spin wave comp
-    Refraction?
+    Refraction? lens comp planned for student at ILL
 (*) Kill very old comps in obsolete (all? - will then allow "refill during 2.0 series)
 (*) Checkup - use of PROP_DT in all comps?
     monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
 (*) monochromator_ ... (Lucia Alianelli) full monte carlo
+(*) PowderN, IsotropicSqw: add any shape
+(*) Sans_sphere: add other geometry than box, add target_index+rect area
+    add 'radius' parameter to Monitor_nD for easier specs
+    remove 'searching' messages in SNS and ISIS sources (not useful)
 
 Doc:
     sync with new comp parameter names
@@ -43,6 +48,7 @@ Metalanguage / runtime
     support zlib (if exists at ./configure) to handle compressed files (.gz, .zip, .bz) either by calling external command extraction to TMP, or in memory.
     support HTTP file access through wget if available from configure
 (D) MPI: split Reduce/sed/receive into 1e5 blocks DONE
+    read-table: handle \r for windows platforms when reading data in event files
 
 Tools/platform:
     mcresplot widths? FWHM vs. Sigma?  mcresplot port to Matlab/Scilab ?
@@ -57,7 +63,11 @@ Tools/platform:
     Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
 (*) mcgui signal handling in case of compilation / mpi
  D  REMOVE threading support that is misleading and not efficient (mcrui,mcstas-r,mcrun) DONE
-(*) mcgui menu item renamed as Intall SSH/DSA key for grid/MPI DONE
+(D) mcgui menu item renamed as Intall SSH/DSA key for grid/MPI DONE
+    mcformatgui <dir>: sets input dir (handle args)
+    update mcstas.lang for gedit to gtksourceview-2 
+(*) mcrun --test --mpi: some instruments do not scale with n_nodes
+    
 
 Infrastructure:
 (*) cvs machine / webserver / bugzilla update... 
@@ -67,3 +77,4 @@ Polarisation, magnetic fields: (Mainly Erik)
     Magnetic field calculations from V. Hugouvieux thesis work (cvs-01) - Freefem call in INITIALIZE %{%}
 (*) More Pol comps
 (*) Pol example instrs
+    read table of precomputed B coordinates (ANSYS, Freefem, ...)
