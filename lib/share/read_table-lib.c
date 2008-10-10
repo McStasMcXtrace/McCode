@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.38 $
+* Version: $Revision: 1.39 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.38 2008-07-03 09:40:01 farhi Exp $
+* $Id: read_table-lib.c,v 1.39 2008-10-10 10:33:42 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.38  2008/07/03 09:40:01  farhi
+* Handle "NULL" and "0" file names
+*
 * Revision 1.37  2006/12/01 16:17:10  farhi
 * cosmetics
 *
@@ -408,7 +411,7 @@
             mc_rt_InputTokens            = mc_rt_line;
 
             do { /* while (!mc_rt_flag_End_Line) */
-              mc_rt_lexeme      = (char *)strtok(mc_rt_InputTokens, " ,;\t\n\r");
+              mc_rt_lexeme      = (char *)strtok(mc_rt_InputTokens, " ,;\t\n");
               mc_rt_InputTokens = NULL;
               if ((mc_rt_lexeme != NULL) && (strlen(mc_rt_lexeme) != 0))
               { /* reading line: the token is not empty */
