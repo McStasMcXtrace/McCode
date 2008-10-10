@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.46 $
+* Version: $Revision: 1.47 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -436,13 +436,15 @@ INITIALIZE
     exit(fprintf(stderr,"PowderN: %s: You have requested an unmeaningful choice of the 'p_inc' and 'p_transmit' parameters (sum is %g, exeeding 1)\n", 
                  NAME_CURRENT_COMP, p_inc+p_transmit));
   } else if (p_inc + p_transmit == 1) {
-    printf("PowderN %s WARNING: You have requested all neutrons be attenuated or incoherently scattered!\n", NAME_CURRENT_COMP);
+    printf("PowderN: %s: You have requested all neutrons be attenuated\n"
+           "WARNING  or incoherently scattered!\n", NAME_CURRENT_COMP);
   }
 
   if (concentric) {
     printf("PowderN: %s WARNING: Concentric mode - remember to include the 'opposite' copy of this component !\n (The equivalent, 'opposite' comp should have concentric=0)\n", NAME_CURRENT_COMP);
     if (p_transmit == 0) {
-      printf("PowderN %s WARNING: Concentric mode and p_transmit==0 !? Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
+      printf("PowderN: %s: Concentric mode and p_transmit==0 !?\n"
+             "WARNING  Don't you want any transmitted neutrons?\n", NAME_CURRENT_COMP);
     }
   }
   
@@ -751,10 +753,18 @@ TRACE
   
 %}
 
+FINALLY 
+%{
+  free(line_info->list);
+  free(q_v);
+  free(w_v);
+  free(my_s_v2);
+%}
+
 MCDISPLAY
 %{
   magnify("xyz");
-  if (shape == 0) {
+  if (shape == 0) { /* cyl */
     circle("xz", 0,  yheight/2.0, 0, radius);
     circle("xz", 0, -yheight/2.0, 0, radius);
     line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
@@ -770,7 +780,7 @@ MCDISPLAY
       line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
       line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
     }
-  } else if (shape == 1) {
+  } else if (shape == 1) {  /* box */
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
@@ -813,7 +823,7 @@ MCDISPLAY
       line(xmin, ymax, zmin, xmin, ymax, zmax);
       line(xmax, ymax, zmin, xmax, ymax, zmax);
     }
-  } if (shape == 1) {
+  } if (shape == 2) { /* sphere */
     circle("xy",0,0,0,radius_i);
     circle("xz",0,0,0,radius_i);
     circle("yz",0,0,0,radius_i);
