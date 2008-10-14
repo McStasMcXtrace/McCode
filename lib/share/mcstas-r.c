@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.205 $
+* Version: $Revision: 1.206 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.205 2008-10-09 14:47:53 farhi Exp $
+* $Id: mcstas-r.c,v 1.206 2008-10-14 14:29:50 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.205  2008/10/09 14:47:53  farhi
+* cosmetics for SIGNAL displaying starting date
+*
 * Revision 1.204  2008/09/08 10:08:21  farhi
 * in save sessions, filename was not registered in mcopenedfiles,
 * but was searching for simfile (always opened) leading
@@ -4874,10 +4877,10 @@ mcuse_dir(char *dir)
          exit(1);
 #endif
      }
-     mcdirname = dir;
 #ifdef USE_MPI
    }
 #endif
+   mcdirname = dir;
 #endif /* !MC_PORTABLE */
 }
 

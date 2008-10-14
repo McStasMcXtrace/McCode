@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.47 $
+* Version: $Revision: 1.48 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -390,7 +390,7 @@ DECLARE
 %}
 INITIALIZE
 %{
-  int i;
+  int i=0;
   struct line_data *L;
   line_info.Dd       = Delta_d;
   line_info.DWfactor = DW;
@@ -448,11 +448,8 @@ INITIALIZE
     }
   }
   
-  i = read_line_data(reflections, &line_info);
-  
-  if (p_inc && !line_info.sigma_i) {
-    printf("PowderN %s WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
-  }
+  if (reflections && strlen(reflections) && strcmp(reflections, "NULL")) 
+    i = read_line_data(reflections, &line_info);
 
   if (!line_info.V_0 && line_info.at_nb > 0
     && line_info.at_weight > 0 && line_info.rho > 0) {
@@ -463,7 +460,11 @@ INITIALIZE
   }
 
   if (line_info.V_0 <= 0)
-    exit(fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc)\n", NAME_CURRENT_COMP));
+    fprintf(stderr,"PowderN: %s: density/unit cell volume is NULL (Vc). Unactivating component.\n", NAME_CURRENT_COMP);
+    
+  if (line_info.V_0 && p_inc && !line_info.sigma_i) {
+    printf("PowderN %s WARNING: You have requested statistics for incoherent scattering but not defined sigma_inc!\n", NAME_CURRENT_COMP);
+  }
 
   if (line_info.flag_barns) { /* Factor 100 to convert from barns to fm^2 */
     XsectionFactor = 100;
@@ -471,7 +472,7 @@ INITIALIZE
     XsectionFactor = 1;
   }
   
-  if (i) {
+  if (line_info.V_0 && i) {
     L = line_info.list;
 
     Nq  = line_info.count;
@@ -491,13 +492,14 @@ INITIALIZE
       w_v[i] = L[i].w;
     }
   }
+  if (line_info.V_0) {
+    /* Is not yet divided by v */
+    my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
+    my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
 
-  /* Is not yet divided by v */
-  my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
-  my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
-
-  printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
-    NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i);
+    printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
+      NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i);
+  }
 
 %}
 TRACE
@@ -508,16 +510,18 @@ TRACE
   int    line;
   char   intersect=0;
   char   intersecti=0;
-
-  if (shape == 1) {
-    intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-    intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
-  } else if (shape == 0) {
-    intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-    intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
-  } else if (shape == 2) {
-    intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
-    intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+  
+  if (line_info.V_0) {
+    if (shape == 1) {
+      intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+    } else if (shape == 0) {
+      intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+      intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+    } else if (shape == 2) {
+      intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
+      intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+    }
   }
   
   if(intersect && t3 >0) {
