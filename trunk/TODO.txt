@@ -21,6 +21,7 @@ Components:
 (*) Sans_sphere: add other geometry than box, add target_index+rect area
     add 'radius' parameter to Monitor_nD for easier specs
     remove 'searching' messages in SNS and ISIS sources (not useful)
+(*) more V_sample to obsolete and use Incoherent instead
 
 Doc:
     sync with new comp parameter names

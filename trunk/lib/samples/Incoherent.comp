@@ -10,14 +10,14 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.1 $
+* Version: $Revision: 1.2 $
 * Origin: Risoe
 * Release: McStas 1.9
 * Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
 * Modified by: Peter Christiansen, Risoe: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P NB! As above multiple scattering is ignored .
 * Modified by: Reynald Arnerin, ILL, 2008: Added option to handle a complex geometry (OFF files)
 *
-* Vanadium sample.
+* Incoherent sample (such as Vanadium) sample, with quasielastic component.
 *
 * %D
 * A Double-cylinder shaped incoherent scatterer (like Vanadium)
@@ -34,10 +34,11 @@
 *   centered components, such as spheres or cylinders, define an Arm component
 *   where to focus to.
 * <b>Sample Shape:</b>
-*   The shape of the sample may be a filled box with dimensions 
+*   The shape of the sample may be a box with dimensions 
 *   xwidth, yheight, zdepth, a cylinder with dimensions radius and yheight,
-*   a hollow cylinder with additional inner thickness, a filled
-*   sphere with radius, or a more complex geometry from OFF file.
+*   a filled sphere with radius, or a more complex geometry from OFF file.
+*   The box, cylinder and sphere geometries may be hollow, with a given wall
+*   thickness.
 *   The complex geometry option handles any closed non-convex polyhedra.
 *   It computes the intersection points of the neutron ray with the object  
 *   transparently, so that it can be used like a regular sample object.
@@ -47,7 +48,7 @@
 *   The default size of the object depends of the OFF file datas.
 *
 * Example: Incoherent(radius=0.05,focus_r=0.035, pack=1, target_index=1)
-*          Incoherent(geometry="bunny.off",focus_r=0.035, pack=1, target_index=1)
+*          Incoherent(geometry="socket.off",focus_r=0.035, pack=1, target_index=1)
 *
 * %P
 * INPUT PARAMETERS:
@@ -122,7 +123,6 @@ DECLARE
     double  my_s;
     double  my_a_v;
     int     shape;       /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
-    double  distance;    /* when non zero, gives rect target distance */
     double  aw,ah;       /* rectangular angular dimensions */
     double  xw,yh;       /* rectangular metrical dimensions */
     double  tx,ty,tz;    /* target coords */
@@ -175,8 +175,6 @@ INITIALIZE
   if (!(VarsInc.tx || VarsInc.ty || VarsInc.tz))
     printf("Incoherent: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
-
-  VarsInc.distance=sqrt(VarsInc.tx*VarsInc.tx+VarsInc.ty*VarsInc.ty+VarsInc.tz*VarsInc.tz);
 
   /* different ways of setting rectangular area */
   VarsInc.aw  = VarsInc.ah = 0;
@@ -407,35 +405,35 @@ MCDISPLAY
     }
   }
   else if (VarsInc.shape == 1) { 	/* box */
-      double xmin = -0.5*xwidth;
-      double xmax =  0.5*xwidth;
-      double ymin = -0.5*yheight;
-      double ymax =  0.5*yheight;
-      double zmin = -0.5*zdepth;
-      double zmax =  0.5*zdepth;
-      multiline(5, xmin, ymin, zmin,
-                   xmax, ymin, zmin,
-                   xmax, ymax, zmin,
-                   xmin, ymax, zmin,
-                   xmin, ymin, zmin);
-      multiline(5, xmin, ymin, zmax,
-                   xmax, ymin, zmax,
-                   xmax, ymax, zmax,
-                   xmin, ymax, zmax,
-                   xmin, ymin, zmax);
-      line(xmin, ymin, zmin, xmin, ymin, zmax);
-      line(xmax, ymin, zmin, xmax, ymin, zmax);
-      line(xmin, ymax, zmin, xmin, ymax, zmax);
-      line(xmax, ymax, zmin, xmax, ymax, zmax);
-    }
-    else if (VarsInc.shape == 2) {	/* sphere */
-      circle("xy", 0,  0.0, 0, radius);
-      circle("xz", 0,  0.0, 0, radius);
-      circle("yz", 0,  0.0, 0, radius);        
-    }
-    else if (VarsInc.shape == 3) {	/* OFF file */
-	    off_display(offdata);
-    }
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else if (VarsInc.shape == 2) {	/* sphere */
+    circle("xy", 0,  0.0, 0, radius);
+    circle("xz", 0,  0.0, 0, radius);
+    circle("yz", 0,  0.0, 0, radius);        
+  }
+  else if (VarsInc.shape == 3) {	/* OFF file */
+    off_display(offdata);
+  }
 %}
 
 END
