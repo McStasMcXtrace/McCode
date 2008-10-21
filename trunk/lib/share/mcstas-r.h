@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.104 $
+* Version: $Revision: 1.105 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.104 2008-09-02 08:36:17 farhi Exp $
+* $Id: mcstas-r.h,v 1.105 2008-10-21 15:19:18 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.104  2008/09/02 08:36:17  farhi
+*       MPI support: block size defined in mcstas-r.h as 1e5. Correct bug when
+*       p0, p1 or p2 are NULL, and re-enable S(q,w) save in Isotropic_Sqw with
+*       MPI.
+*
 *       Revision 1.103  2008/08/26 13:32:05  farhi
 *       Remove Threading support which is poor efficiency and may give wrong
 *       results
@@ -288,7 +293,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.104 $"
+#define MCSTAS_R_H "$Revision: 1.105 $"
 
 #include <math.h>
 #include <string.h>
@@ -515,6 +520,10 @@ char *mcfull_file(char *name, char *ext);
 
 #ifndef FLT_MAX
 #define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
+#endif
+
+#ifndef CHAR_BUF_LENGTH
+#define CHAR_BUF_LENGTH 1024
 #endif
 
 /* Following part is only embedded when not redundent with mcstas.h ========= */

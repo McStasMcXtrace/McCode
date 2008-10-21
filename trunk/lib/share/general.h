@@ -40,7 +40,9 @@
 #define LAMBDA_MAX          100.0
 
 #define BUFFER_SIZE       10000
+#ifndef CHAR_BUF_LENGTH
 #define CHAR_BUF_LENGTH    1024
+#endif
 #define CHAR_BUF_LARGE     5120
 #define CHAR_BUF_SMALL      256
 

@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.43 $
+* Version: $Revision: 1.44 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.43 2008-08-07 21:52:10 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.44 2008-10-21 15:19:19 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.43  2008/08/07 21:52:10  farhi
+* Second major commit for v2: fixed sources, and most instruments for
+* automatic testing. A few instruments need more work still.
+*
 * Revision 1.42  2008/07/17 12:50:18  farhi
 * MAJOR commit to McStas 2.x
 * uniformized parameter naming in components
@@ -1098,7 +1102,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     double *mc_mn_p0m = NULL;
     double *mc_mn_p1m = NULL;
     double *mc_mn_p2m = NULL;
-    char    mc_mn_Coord_X_Label[1024];
+    char    mc_mn_Coord_X_Label[CHAR_BUF_LENGTH];
     double  mc_mn_min1d, mc_mn_max1d;
     double  mc_mn_min2d, mc_mn_max2d;
     long    mc_mn_bin1d, mc_mn_bin2d;
@@ -1107,7 +1111,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     double  mc_mn_XY, mc_mn_pp;
     double  mc_mn_Coord[MONnD_COORD_NMAX];
     long    mc_mn_Coord_Index[MONnD_COORD_NMAX];
-    char    mc_mn_label[1024];
+    char    mc_mn_label[CHAR_BUF_LENGTH];
     double  mc_mn_ratio;
 
     mc_mn_ratio = 100*mcget_run_num()/mcget_ncount();

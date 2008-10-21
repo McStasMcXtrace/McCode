@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.39 $
+* Version: $Revision: 1.40 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.39 2008-10-10 10:33:42 farhi Exp $
+* $Id: read_table-lib.c,v 1.40 2008-10-21 15:19:19 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.39  2008/10/10 10:33:42  farhi
+* removed \r from token search when reading values in lines of files
+* for compatibility with Windows
+*
 * Revision 1.38  2008/07/03 09:40:01  farhi
 * Handle "NULL" and "0" file names
 *
@@ -358,7 +362,7 @@
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
     double *mc_rt_Data;
     char *mc_rt_Header;
-    long  mc_rt_malloc_size         = 1024;
+    long  mc_rt_malloc_size         = CHAR_BUF_LENGTH;
     long  mc_rt_malloc_size_h       = 4096;
     long  mc_rt_Rows = 0,   mc_rt_Columns = 0;
     long  mc_rt_count_in_array      = 0;
@@ -383,11 +387,11 @@
     mc_rt_Header[0] = '\0';
 
     do { /* while (!mc_rt_flag_End_row_loop) */
-      char  mc_rt_line[64*1024];
+      char  mc_rt_line[64*CHAR_BUF_LENGTH];
       long  mc_rt_back_pos=0;   /* ftell start of line */
 
       mc_rt_back_pos = ftell(mc_rt_hfile);
-      if (fgets(mc_rt_line, 64*1024, mc_rt_hfile) != NULL) { /* analyse line */
+      if (fgets(mc_rt_line, 64*CHAR_BUF_LENGTH, mc_rt_hfile) != NULL) { /* analyse line */
         int mc_rt_i=0;
         char  mc_rt_flag_Store_into_header=0;
         /* first skip blank and tabulation characters */
@@ -442,7 +446,7 @@
                     } else { /* store into data array */
                       if (mc_rt_count_in_array >= mc_rt_malloc_size)
                       { /* realloc data buffer if necessary */
-                        mc_rt_malloc_size = mc_rt_count_in_array+1024;
+                        mc_rt_malloc_size = mc_rt_count_in_array+CHAR_BUF_LENGTH;
                         mc_rt_Data     = (double*)realloc(mc_rt_Data, mc_rt_malloc_size*sizeof(double));
                         if (mc_rt_Data == NULL)
                         {

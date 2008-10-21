@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions.
@@ -20,9 +20,15 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.18 2008-07-17 12:50:18 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.19 2008-10-21 15:19:19 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.18  2008/07/17 12:50:18  farhi
+* MAJOR commit to McStas 2.x
+* uniformized parameter naming in components
+* uniformized SITE for instruments
+* all compile OK
+*
 * Revision 1.17  2008/04/01 09:15:04  farhi
 * Monitor_nD now accepts up to 3 user variables, e.g. for coordinates
 * to be stored into "list".
@@ -184,7 +190,7 @@
     double UserVariable1;
     double UserVariable2;
     double UserVariable3;
-    char   option[1024];
+    char   option[CHAR_BUF_LENGTH];
 
     double Nsum;
     double psum, p2sum;
