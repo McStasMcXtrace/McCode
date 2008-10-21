@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.28 $
+* Version: $Revision: 1.29 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -40,8 +40,7 @@
 *
 * %P
 * INPUT PARAMETERS:
-* thickness:Thickness of hollow cylinder in (x,z) plane, or width of
-*             box along X (m)
+* thickness:Thickness of hollow cylinder in (x,z) plane
 * radius:   Outer radius of hollow cylinder (m)
 * yheight:  vert. dimension of sample, as a height (m)
 * focus_r:  Radius of sphere containing target. (m)
@@ -78,7 +77,6 @@ DECLARE
       double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
       double rx,ry,rz,pi;
       char   isrect;      /* true when sample is a box */
-      double distance;    /* when non zero, gives rect target distance */
       double aw,ah;       /* rectangular angular dimensions */
       double xw,yh;       /* rectangular metrical dimensions */
       double tx,ty,tz;    /* target coords */
@@ -93,6 +91,7 @@ INITIALIZE
   else res_struct.isrect=0;
 
   /* now compute target coords if a component index is supplied */
+  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
   if (target_index)
   {
     Coords ToTarget;
@@ -102,9 +101,13 @@ INITIALIZE
   }
   else
   { res_struct.tx = target_x; res_struct.ty = target_y; res_struct.tz = target_z; }
+  
+  if (!(res_struct.tx || res_struct.ty || res_struct.tz)) {
+    printf("Res_sample: %s: The target is not defined. Using direct beam (Z-axis).\n",
+      NAME_CURRENT_COMP);
+    res_struct.tz=1;
+  }
 
-  res_struct.distance=sqrt(res_struct.tx*res_struct.tx
-      +res_struct.ty*res_struct.ty+res_struct.tz*res_struct.tz);
   /* different ways of setting rectangular area */
   res_struct.aw  = res_struct.ah = 0;
   if (focus_xw) {
