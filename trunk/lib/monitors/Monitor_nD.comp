@@ -12,7 +12,7 @@
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -115,14 +115,14 @@
 * Detector shape options (specified as xwidth,yheight,zdepth or x/y/z/min/max)
 *     box                       Box of size xwidth, yheight, zdepth.
 *     cylinder                  To get a cylindrical monitor
-*                                (diameter is xwidth, height is yheight).
+*                                (diameter is xwidth or set radius, height is yheight).
 *     banana                    Same as cylinder, without top/bottom,
 *                                on restricted angular area; use theta
 *                                variable with limits to define arc.
-*                                (diameter is xwidth, height is yheight).
+*                                (diameter is xwidth or set radius, height is yheight).
 *     disk                      Disk flat xy monitor. radius is xwidth.
 *     sphere                    To get a spherical monitor (e.g. a 4PI)
-*                                (diameter is xwidth).
+*                                (diameter is xwidth or set radius).
 *     square                    Square flat xy monitor (xwidth, yheight).
 *     previous                  The monitor uses PREVIOUS component as detector
 *                               surface.
@@ -160,9 +160,10 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth:  [m]  Width/diameter of detector. Default is 10 cm.
-* yheight: [m]  Height of detector. Default is 10 cm.
-* zdepth:  [m]  Thichness of detector (z).
+* xwidth:  [m]  Width of detector.
+* yheight: [m]  Height of detector.
+* zdepth:  [m]  Thickness of detector (z).
+* radius:  [m]  Radius of sphere/banana shape monitor
 * options: [str]  String that specifies the configuration of the monitor
 *                 The general syntax is "[x] options..." (see <b>Descr.</b>).
 *
@@ -173,7 +174,6 @@
 * ymax:   [m]    Upper y bound of opening
 * zmin:   [m]    Lower z bound of opening
 * zmax:   [m]    Upper z bound of opening
-* radius: [m]    Radius of sphere/cylindrical monitor
 * filename:[str] Output file name (overrides file=XX option).
 * bins:   [1]    Number of bins to force for all variables.
 *                Use 'bins' keyword in 'options' for heterogeneous bins
@@ -202,7 +202,7 @@
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
-SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0)
+SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -242,7 +242,16 @@ INITIALIZE
   strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 32);
   strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
   strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 32);
-  if (radius) xwidth=2*radius;
+  if (radius) { 
+    xwidth=2*radius;
+    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
+      strcat(Vars.option, " banana");
+    else if (!strstr(Vars.option ,"sphere"))
+      strcat(Vars.option, " sphere");
+  }
+  
+  if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax)
+    exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth).\n", NAME_CURRENT_COMP));
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
 
