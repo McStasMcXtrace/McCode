@@ -12,7 +12,7 @@
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * %INSTRUMENT_SITE: Templates
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
@@ -37,13 +37,8 @@
 * *
 * %End
 *******************************************************************************/
-DEFINE INSTRUMENT templateSANS(lambda=6, dlambda=0.05, r=100, PHI=1e-3, Delta_Rho=0.6, sigma_abs=0.5, Qmax=0.3)
-DECLARE
-%{
-%}
-INITIALIZE
-%{
-%}
+DEFINE INSTRUMENT templateSANS(lambda=6, dlambda=0.05, r=100, PHI=1e-3, Delta_Rho=0.6, sigma_abs=0.5)
+
 TRACE
 
 COMPONENT a1 = Progress_bar()
@@ -67,7 +62,8 @@ COMPONENT coll2 = Slit(
   AT (0, 0, 6) RELATIVE arm
 
 COMPONENT sample = Sans_spheres(
-  R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_abs=sigma_abs, qmax=Qmax)
+  R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_abs=sigma_abs, 
+  xwidth=0.01, yheight=0.01, zdepth=0.005)
    AT (0,0,0.2) RELATIVE coll2
 
 
@@ -92,14 +88,6 @@ COMPONENT PSDrad = PSD_monitor_rad(
     filename = "psd2.dat", filename_av = "psd2_av.dat", rmax = 0.3)
   AT (0, 0, 3.02) RELATIVE sample
 
-
-
-
-
-
-FINALLY
-%{
-%}
 END
 
 
