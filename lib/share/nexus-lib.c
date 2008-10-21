@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Jan 17, 2007
 * Release: McStas 1.10
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 *
 * NeXus Runtime output functions for McStas.
 * Overrides default mcstas runtime functions.
@@ -19,9 +19,15 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.c,v 1.13 2008-08-26 13:32:05 farhi Exp $
+* $Id: nexus-lib.c,v 1.14 2008-10-21 15:19:19 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.13  2008/08/26 13:32:05  farhi
+* Remove Threading support which is poor efficiency and may give wrong
+* results
+* Add quotes around string instrument parameters from mcgui simulation
+* dialog
+*
 * Revision 1.12  2008/02/09 22:26:27  farhi
 * Major contrib for clusters/multi-core: OpenMP support
 * 	try ./configure --with-cc=gcc4.2 or icc
@@ -152,7 +158,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
     char *valid_parent, /* %6$s  VPA  */
     int   level)        /* %7$i  LVL */
 {
-  char nxname[1024];
+  char nxname[CHAR_BUF_LENGTH];
   int length;
   if (!strcmp(part, "end_data"))   return(NXclosedata(nxhandle));
   if (!strcmp(part, "end"))        return(NXclosegroup(nxhandle));
@@ -165,7 +171,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
     char *instr_code=NULL;
     struct stat stfile;
     if (stat(name,&stfile) != 0) {
-      instr_code = (char*)malloc(1024);
+      instr_code = (char*)malloc(CHAR_BUF_LENGTH);
       if (instr_code) sprintf(instr_code, "File %s not found", name);
     } else {
       long filesize = stfile.st_size;
@@ -317,7 +323,7 @@ int mcnxfile_datablock(NXhandle nxhandle, char *part,
     NXputattr(nxhandle, "signal", &signal, 1, NX_INT32);
     NXputattr(nxhandle, "short_name", filename, strlen(filename), NX_CHAR);
   }
-  char nxtitle[1024];
+  char nxtitle[CHAR_BUF_LENGTH];
   sprintf(nxtitle, "%s '%s'", nxname, title);
   NXputattr(nxhandle, "long_name", nxtitle, strlen(nxtitle), NX_CHAR);
   /* first write attributes */

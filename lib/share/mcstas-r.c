@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.206 $
+* Version: $Revision: 1.207 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.206 2008-10-14 14:29:50 farhi Exp $
+* $Id: mcstas-r.c,v 1.207 2008-10-21 15:19:18 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.206  2008/10/14 14:29:50  farhi
+* sans sample expanded with cylinder and sphere. cosmetics and updated
+* todo.
+*
 * Revision 1.205  2008/10/09 14:47:53  farhi
 * cosmetics for SIGNAL displaying starting date
 *
@@ -1609,7 +1613,7 @@ FILE *mcnew_file(char *name, char *ext, char *mode)
   else {
     if (!mcopenedfiles || 
         (mcopenedfiles && mcopenedfiles_size <= strlen(mcopenedfiles)+strlen(mem))) {
-      mcopenedfiles_size+=1024;
+      mcopenedfiles_size+=CHAR_BUF_LENGTH;
       if (!mcopenedfiles || !strlen(mcopenedfiles))
         mcopenedfiles = calloc(1, mcopenedfiles_size);
       else
@@ -2037,7 +2041,7 @@ static void mcinfo_instrument(FILE *f, struct mcformats_struct format,
             (*mcinputtypes[mcinputtable[i].type].parminfo)
                 (mcinputtable[i].name));
     strcat(Value, ThisParam);
-    if (strlen(Value) > 1024) break;
+    if (strlen(Value) > CHAR_BUF_LENGTH) break;
   }
   mcfile_tag(f, format, pre, name, "Parameters", Value);
   mcfile_tag(f, format, pre, name, "Source", mcinstrument_source);
@@ -2329,7 +2333,7 @@ void mcsiminfo_init(FILE *f)
   {
     char *pre; /* allocate enough space for indentations */
     int  ismcstas_nx;
-    char simname[1024];
+    char simname[CHAR_BUF_LENGTH];
     char root[10];
 
     pre = (char *)malloc(20);
@@ -2346,7 +2350,7 @@ void mcsiminfo_init(FILE *f)
 #ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus")) {
       /* NXentry class */
-      char file_time[1024];
+      char file_time[CHAR_BUF_LENGTH];
       sprintf(file_time, "%s_%li", mcinstrument_name, mcstartdate);
       mcfile_section(mcsiminfo_file, mcformat, "begin", pre, file_time, "entry", root, 1);
     }
@@ -2394,7 +2398,7 @@ void mcsiminfo_close(void)
   if(mcsiminfo_file)
   {
     int  ismcstas_nx;
-    char simname[1024];
+    char simname[CHAR_BUF_LENGTH];
     char root[10];
     char *pre;
 
@@ -2870,7 +2874,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   strcpy(pre, strstr(format.Name, "VRML")
            || strstr(format.Name, "OpenGENIE") ? "# " : "");
   if (filename_orig && abs(m*n*p) > 1) {
-    filename = (char *)malloc(1024);
+    filename = (char *)malloc(CHAR_BUF_LENGTH);
     if (!filename) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
     strcpy(filename, filename_orig);
     if (!strchr(filename, '.') && !strstr(format.Name, "NeXus"))
@@ -3317,7 +3321,7 @@ static void mcuse_file(char *file)
   if (file && strcmp(file, "NULL"))
     mcsiminfo_name = file;
   else {
-    char *filename=(char*)malloc(1024);
+    char *filename=(char*)malloc(CHAR_BUF_LENGTH);
     sprintf(filename, "%s_%li", mcinstrument_name, mcstartdate);
     mcsiminfo_name = filename;
   }
@@ -3763,7 +3767,7 @@ void
 mcreadparams(void)
 {
   int i,j,status;
-  static char buf[1024];
+  static char buf[CHAR_BUF_LENGTH];
   char *p;
   int len;
 
@@ -3790,7 +3794,7 @@ mcreadparams(void)
 #ifdef USE_MPI
       if(mpi_node_rank == mpi_node_root)
         {
-          p = fgets(buf, 1024, stdin);
+          p = fgets(buf, CHAR_BUF_LENGTH, stdin);
           if(p == NULL)
             {
               fprintf(stderr, "Error: empty input for paramater %s (mcreadparams)\n", mcinputtable[i].name);
@@ -3799,9 +3803,9 @@ mcreadparams(void)
         }
       else
         p = buf;
-      MPI_Bcast(buf, 1024, MPI_CHAR, mpi_node_root, MPI_COMM_WORLD);
+      MPI_Bcast(buf, CHAR_BUF_LENGTH, MPI_CHAR, mpi_node_root, MPI_COMM_WORLD);
 #else /* !USE_MPI */
-      p = fgets(buf, 1024, stdin);
+      p = fgets(buf, CHAR_BUF_LENGTH, stdin);
       if(p == NULL)
         {
           fprintf(stderr, "Error: empty input for paramater %s (mcreadparams)\n", mcinputtable[i].name);
@@ -3812,7 +3816,7 @@ mcreadparams(void)
       if (!len || (len == 1 && (buf[0] == '\n' || buf[0] == '\r')))
       {
         if (mcinputtable[i].val && strlen(mcinputtable[i].val)) {
-          strncpy(buf, mcinputtable[i].val, 1024);  /* use default value */
+          strncpy(buf, mcinputtable[i].val, CHAR_BUF_LENGTH);  /* use default value */
           len = strlen(buf);
         }
       }
@@ -4922,8 +4926,8 @@ mcparseoptions(int argc, char *argv[])
       if (mcinputtable[j].val != NULL && strlen(mcinputtable[j].val))
       {
         int  status;
-        char buf[1024];
-        strncpy(buf, mcinputtable[j].val, 1024);
+        char buf[CHAR_BUF_LENGTH];
+        strncpy(buf, mcinputtable[j].val, CHAR_BUF_LENGTH);
         status = (*mcinputtypes[mcinputtable[j].type].getparm)
                    (buf, mcinputtable[j].par);
         if(!status) fprintf(stderr, "Invalid '%s' default value %s in instrument definition (mcparseoptions)\n", mcinputtable[j].name, buf);
