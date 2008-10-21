@@ -11,7 +11,7 @@
  * %I
  * Written by: S. Ansell and D. Champion
  * Date: AUGUST 2005
- * Version: $Revision: 1.12 $
+ * Version: $Revision: 1.13 $
  * Origin: ISIS
  * Release: McStas 1.9
  *
@@ -754,53 +754,49 @@ cmdnumberI(char *mc,int* num,const int len)
         /* Is MCTABLES set, files located there? */
         sprintf(ss, "%s%c%s", getenv("MCTABLES"), MC_PATHSEP_C, FileName);
         efile=fopen(ss,"r");
-        fprintf(stderr,"Searching -- %s, MCTABLES directory\n",ss);
       }
 
       /* Is the file located in working dir? */
       if (!efile) {
+      sprintf(ss,"%s", FileName);
         efile=fopen(FileName,"r");
-        fprintf(stderr,"Searching -- %s, local directory\n",FileName);
       }
       if (!efile) {
         /* Try locating the file in ./ISIS_tables library */
         sprintf(ss,"%s%c%s%c%s", ".", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
         efile=fopen(ss,"r");
-        fprintf(stderr,"Searching -- %s, local/ISIS_tables\n",ss);
       }
       if (!efile) {
         /* Try locating the file in the MCSTAS contrib/ISIS_tables library */
         sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
           MC_PATHSEP_C, "contrib", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
         efile=fopen(ss,"r");
-        fprintf(stderr,"Searching -- %s, MCSTAS contrib/ISIS_tables library\n",ss);
       }
       if (!efile) {
         /* Try locating the file in the MCSTAS data library */
         sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
           MC_PATHSEP_C, "contrib", MC_PATHSEP_C, FileName);
         efile=fopen(ss,"r");
-        fprintf(stderr,"Searching -- %s, MCSTAS data library\n",ss);
       }
       if (!efile) {
         /* Try locating the file in the MCSTAS data/ISIS_tables library */
         sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
           MC_PATHSEP_C, "data", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
         efile=fopen(ss,"r");
-        fprintf(stderr,"Searching -- %s, MCSTAS data/ISIS_tables library\n",ss);
       }
       if (!efile) {
         /* Try locating the file in the MCSTAS data library */
         sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
           MC_PATHSEP_C, "data", MC_PATHSEP_C, FileName);
         efile=fopen(ss,"r");
-        fprintf(stderr,"Searching -- %s, MCSTAS data library\n",ss);
       }
       if (!efile) { /* Still no file - die! */
         fprintf(stderr,"ISIS_moderator: ERROR: Could not read Etable file %s.\n", FileName);
         fprintf(stderr,"                Please check your McStas installation and/or MCTABLES/ISIS_tables setting!\n");
         exit(1);
       }
+      else 
+        fprintf(stderr,"Opening -- %s\n",ss);
       return efile;
     }
 
