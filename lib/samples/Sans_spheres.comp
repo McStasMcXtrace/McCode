@@ -10,7 +10,7 @@
 * %I
 * Written by: P. Willendrup, K. Lefmann, L. Arleth
 * Date: 19.12.2003
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: KL, 7 June 2005
@@ -21,13 +21,9 @@
 * Sample for use in a SANS instrument, models hard, mono disperse spheres in thin solution.
 *   The shape of the sample may be a filled box with dimensions 
 *   xwidth, yheight, zdepth, a cylinder with dimensions radius and yheight,
-*   a hollow cylinder with additional inner thickness, a filled
-*   sphere with radius.
+*   a filled sphere with radius.
 *
 * Example: Sans_spheres(R = 100, Phi = 1e-3, Delta_rho = 0.6, sigma_abs = 50, xwidth=0.01, yheight=0.01, zdepth=0.005)
-*
-* %BUGS
-* This component may NOT simulate absolute intensities. This latter depends on the detector parameters.
 *
 * %P
 *
@@ -90,6 +86,7 @@ INITIALIZE
                         "ERROR     Please check parameter values.\n", NAME_CURRENT_COMP));
   
   /* now compute target coords if a component index is supplied */
+  if (!target_index && !target_x && !target_y && !target_z) target_index=1;
   if (target_index)
   {
     Coords ToTarget;
@@ -98,9 +95,11 @@ INITIALIZE
     coords_get(ToTarget, &target_x, &target_y, &target_z);
   }
 
-  if (!(target_x || target_y || target_z))
+  if (!(target_x || target_y || target_z)) {
     printf("Sans_spheres: %s: The target is not defined. Using direct beam (Z-axis).\n",
       NAME_CURRENT_COMP);
+    target_z=1;
+  }
 
   my_a_v = sigma_abs*2200*100;           /* Is not yet divided by v. 100: Convert barns -> fm^2 */
 
@@ -110,7 +109,7 @@ INITIALIZE
 TRACE
 %{
   double t0, t1, v, l_full, l, l_1, dt, d_phi, theta, my_s;
-  double aim_x, aim_y, aim_z, axis_x, axis_y, axis_z;
+  double aim_x=0, aim_y=0, aim_z=1, axis_x, axis_y, axis_z;
   double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
   double f, solid_angle, vx_i, vy_i, vz_i, qx, qy, qz;
   char   intersect=0;
