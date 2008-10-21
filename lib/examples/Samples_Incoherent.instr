@@ -47,11 +47,16 @@
 * %Example: SAMPLE=3 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.97939e+06
 * %Example: SAMPLE=4 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98697e+06
 * %Example: SAMPLE=5 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98777e+06
+* %Example: SAMPLE=6 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.84719e+06
+* %Example: SAMPLE=7 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98377e+06
+* %Example: SAMPLE=8 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98491e+06
+* %Example: SAMPLE=9 STOP=1 V_multiples=0 Detector: PSD_Sphere_4pi_I=1.98586e+06
 * 
 * %Parameters
 * L_min:    [AA] Minimum wavelength of neutrons
 * L_max:    [AA] Maximum wavelength of neutrons
-* SAMPLE:    [1]  1==Vanadium 2==PowderN 3==Single_Crystal 4==Isotropic_sqw 5==Incoherent
+* SAMPLE:    [1]  box: 1=Vanadium 2=PowderN 3=Single_Crystal 4=Isotropic_Sqw 5=Incoherent
+*                 cube.off: 6=PowderN, 7=Single_Crystal 8=Isotropic_Sqw 9=Incoherent
 * V_multiples: [1]  Use crude estimate for multiple scattering in V_sample?
 * STOP:      [1]  Beamstop inserted? (Needed in case of comparison between V and SX/sqw).
 * DB:        [1]  Direct Beam monitor inserted? (Side-effect: absorbs 'backscattered' neutrons).
@@ -88,26 +93,55 @@ COMPONENT Coord = Progress_bar()
 
 /* set of samples *************************************************************/
 
-COMPONENT Vsample = V_sample(
-  xwidth=0.005, yheight=0.005, zdepth=0.005 , sigma_abs=ABS, sigma_inc=INC, multiples=V_multiples)
+COMPONENT Vsample = V_sample(multiples=V_multiples,
+  sigma_abs=ABS, sigma_inc=INC, 
+  xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==1) AT (0, 0, 0) RELATIVE Coord
 
 COMPONENT PowN = PowderN(reflections="", d_phi=0, Vc = 13.827, p_transmit = 0.5, p_inc = 0.5,
-  xwidth=0.005, yheight=0.005, zdepth=0.005 , sigma_abs=ABS, sigma_inc=INC, radius=0)
+  sigma_abs=ABS, sigma_inc=INC, 
+  xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==2) AT (0, 0, 0) RELATIVE Coord
 
-COMPONENT SX = Single_crystal(reflections="", order=Order,
-  xwidth=0.005, yheight=0.005, zdepth=0.005 , sigma_abs=ABS, sigma_inc=INC, 
-  ax=3.0282, by=3.0282, cz=3.0282/2)
+COMPONENT SX = Single_crystal(reflections="", order=Order, ax=3.0282, by=3.0282, cz=3.0282/2,
+  sigma_abs=ABS, sigma_inc=INC, 
+  xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==3) AT (0, 0, 0) RELATIVE Coord
 
-COMPONENT Sqw = Isotropic_Sqw(xwidth=0.005, yheight=0.005, zdepth=0.005 , V_rho=1/13.827, sigma_abs=ABS, sigma_inc=INC, 
-			      sigma_coh=0, order=Order)
+COMPONENT Sqw = Isotropic_Sqw(V_rho=1/13.827, order=Order,
+  sigma_abs=ABS, sigma_inc=INC, sigma_coh=0, 
+  xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==4) AT (0,0,0) RELATIVE Coord
 
-COMPONENT IncS = Incoherent(
-  xwidth=0.005, yheight=0.005, zdepth=0.005 , sigma_abs=ABS, sigma_inc=INC, order=Order)
+COMPONENT IncS = Incoherent(order=Order, 
+  sigma_abs=ABS, sigma_inc=INC, 
+  xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==5) AT (0, 0, 0) RELATIVE Coord
+
+
+/* set of samples with OFF geometry ********************************************/
+
+COMPONENT PowNg = PowderN(reflections="", d_phi=0, Vc = 13.827, p_transmit = 0.5, p_inc = 0.5,
+  sigma_abs=ABS, sigma_inc=INC, 
+  geometry="cube.off", xwidth=0.005)
+WHEN (SAMPLE==6) AT (0, 0, 0) RELATIVE Coord
+
+COMPONENT SXg = Single_crystal(reflections="", order=Order, ax=3.0282, by=3.0282, cz=3.0282/2,
+  sigma_abs=ABS, sigma_inc=INC, 
+  geometry="cube.off", xwidth=0.005)
+WHEN (SAMPLE==7) AT (0, 0, 0) RELATIVE Coord
+
+COMPONENT Sqwg = Isotropic_Sqw(V_rho=1/13.827, order=Order,
+  sigma_abs=ABS, sigma_inc=INC, sigma_coh=0, 
+  geometry="cube.off", xwidth=0.005)
+WHEN (SAMPLE==8) AT (0,0,0) RELATIVE Coord
+
+COMPONENT IncSg=Incoherent(order=Order, 
+  sigma_abs=ABS, sigma_inc=INC, 
+  geometry="cube.off", xwidth=0.005)
+WHEN (SAMPLE==9) AT (0, 0, 0) RELATIVE Coord
+
+
 
 /* end of samples *************************************************************/
 

@@ -8,7 +8,7 @@
 * Date: May 7th, 2008
 * Origin:PSI
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: PSI
 *
 * %Description
@@ -96,7 +96,7 @@ AT (0, 0, 0) ABSOLUTE
 COMPONENT source = Source_Maxwell_3(
         yheight=0.156, xwidth=0.126,
 	      Lmin=lambda-ldiff/2,Lmax=lambda+ldiff/2,
-        dist=1.5, focus_xw = 0.025, focus_yh = 0.12,
+        dist=1.5, focus_xw = 0.02, focus_yh = 0.12,
         T1=296.16, I1=8.5E11,
         T2=40.68, I2=5.2E11)    
 AT (0,0,0) RELATIVE source_arm  ROTATED (0,0,0) RELATIVE source_arm

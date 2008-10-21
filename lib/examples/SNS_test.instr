@@ -43,7 +43,7 @@ COMPONENT dett=TOF_monitor(
 At (0,0,1) RELATIVE mod
 
 COMPONENT det=Monitor_nD(
-  xmin = -.5, xmax = .5, ymin = -.5, ymax = .5,
+  xwidth = 1, yheight = 1,
   options=" square x bins 100 limits=[-0.05 0.05]; y bins 100 limits=[-0.12 0.12]")
 AT (0,0,1.0000000000001) RELATIVE mod
 END
