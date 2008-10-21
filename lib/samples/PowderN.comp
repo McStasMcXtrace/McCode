@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.48 $
+* Version: $Revision: 1.49 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -15,6 +15,7 @@
 * Modified by: KL, PW 01.05.05   (N lines)
 * Modified by: PW, LC 04.10.05   (Merge with Chapon Powder_multi)
 * Modified by: PW, KL 05.06.07   (Concentricity)
+* Modified by: EF,    17.10.08   (added any shape sample geometry)
 *
 * General powder sample (N lines, single scattering, incoherent scattering)
 *
@@ -33,12 +34,30 @@
 * The unit cell volume Vc may also be computed when giving the density,
 * the atomic/molecular weight and the number of atoms per unit cell.
 *
+* <b>Sample shape:</b>
+* Sample shape may be a cylinder, a sphere, a box or any other shape.
+*   box/plate:       xwidth x yheight x zdepth (thickness=0)
+*   hollow box/plate:xwidth x yheight x zdepth and thickness>0
+*   cylinder:        radius x yheight (thickness=0)
+*   hollow cylinder: radius x yheight and thickness>0
+*   sphere:          radius (yheight=0 thickness=0)
+*   hollow sphere:   radius and thickness>0 (yheight=0)
+*   any shape:       geometry=OFF_file
+*
+*   The complex geometry option handles any closed non-convex polyhedra.
+*   It computes the intersection points of the neutron ray with the object  
+*   transparently, so that it can be used like a regular sample object.
+*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   Such files may be generated from XYZ data using qhull/powercrust, and 
+*   viewed with geomview
+*   The default size of the object depends of the OFF file data, but its 
+*   bounding box may be resized using xwidth,yheight and zdepth.
+*
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
 *   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, Delta_d=0, DW=1,
 *   format=Crystallographica)
 *
-* <b>Powder definition and file format</b>
-*
+* <b>Powder definition file format</b>
 * Powder structure is specified with an ascii data file 'reflections'.
 * The powder data are free-text column based files.
 * Lines begining by '#' are read as comments (ignored) but they may contain
@@ -110,6 +129,8 @@
 *                Use only incoherent scattering if NULL or "" [string]
 *
 * Optional parameters:
+* d_phi:    Angle corresponding to the vertical angular range
+*             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
 * pack:     Packing factor [1]
 * Delta_d:  Global relative Delta_d/d spreading when the 'w' column
 *             is not available. Use 0 if ideal. [Angs]
@@ -117,9 +138,11 @@
 *             (see Description). [no quotes]
 * p_inc:    Fraction of incoherently scattered neutron rays [1]
 * p_transmit: Fraction of transmitted (only attenuated) neutron rays [1]
-* d_phi:    Angle corresponding to the vertical angular range
-*             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
-* concentric: Flag to indicate if sample is 'concentric' [1] 
+* concentric: Indicate that this component has a hollow geometry
+*               and may contain other components. It should then be duplicated 
+*               after the inside part (only for box, cylinder, sphere) [1] 
+* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
+*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 
 *             (barns=1 for laz, barns=0 for lau type files).[1]
 * sigma_abs:Absorption cross section per unit cell at 2200 m/s [barns]
@@ -143,24 +166,29 @@
 * Fullprof powder refinement:         http://www-llb.cea.fr/fullweb/fp2k/fp2k.htm
 * %L
 * Web Elements                        http://www.webelements.com/
+* %L
+* Geomview and Object File Format (OFF) <http|://www.geomview.org>
+* %L
+* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
 *
 * %E
 *****************************************************************************/
 DEFINE COMPONENT PowderN
-DEFINITION PARAMETERS (string reflections=0, format=Undefined)
+DEFINITION PARAMETERS (string reflections=0, format=Undefined, string geometry=0)
 SETTING PARAMETERS (radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
                     pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
                     DW=0, nb_atoms=1, d_phi=0, 
                     concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
-  my_s_v2_sum, my_a_v, my_inc, q_v, w_v, shape, columns, 
-  radius_i, xwidth_i, yheight_i, zdepth_i)
+  my_s_v2_sum, my_a_v, my_inc, q_v, w_v, columns, 
+  radius_i, xwidth_i, yheight_i, zdepth_i, offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
 %{
   /* used for reading data table from file */
   %include "read_table-lib"
+  %include "interoff-lib"
 /* Declare structures and functions only once in each instrument. */
 #ifndef POWDERN_DECL
 #define POWDERN_DECL
@@ -195,8 +223,12 @@ SHARE
       double sigma_i;
       char   compname[256];
       double flag_barns;
+      int    shape; /* 0 cylinder, 1 box, 2 sphere, 3 OFF file */
       int    column_order[8]; /* column signification */
+      int    flag_warning;
     };
+    
+  off_struct offdata;
 
   int read_line_data(char *SC_file, struct line_info_struct *info)
   {
@@ -383,10 +415,11 @@ DECLARE
   double my_s_v2_sum;
   double my_a_v, my_inc;
   double *w_v,*q_v, *my_s_v2;
-  char   shape=0; /* 0: cylinder, 1:box, 2: sphere */
   int    columns[8] = format;
   double XsectionFactor;
   double radius_i=0, xwidth_i=0, yheight_i=0, zdepth_i=0;
+  
+  off_struct offdata;
 %}
 INITIALIZE
 %{
@@ -401,15 +434,42 @@ INITIALIZE
   line_info.sigma_a  = sigma_abs;
   line_info.sigma_i  = sigma_inc;
   line_info.flag_barns=barns;
+  line_info.shape    = 0;
+  line_info.flag_warning=0;
   for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
   
-  if (radius && yheight ) { shape=0; }                            /* cylinder */ 
-  else if (!radius && xwidth && yheight && zdepth)   { shape=1; } /* box */   
-  else if (radius && !xwidth && !yheight && !zdepth) { shape=2; } /* shpere */
-  else {
-    exit(fprintf(stderr,"PowderN: %s: sample has no volume (zero dimensions)\n"
-                        "ERROR    set some of radius xwidth yheight zdepth \n", NAME_CURRENT_COMP));
+  line_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+	  if (off_init(geometry, xwidth, yheight, zdepth, &offdata)) {
+      line_info.shape=3; thickness=0; concentric=0;
+    }
+  }
+  else if (xwidth && yheight && zdepth)  line_info.shape=1; /* box */
+  else if (radius > 0 && yheight)        line_info.shape=0; /* cylinder */
+  else if (radius > 0 && !yheight)       line_info.shape=2; /* sphere */
+
+  if (line_info.shape < 0) 
+    exit(fprintf(stderr,"PowderN: %s: sample has invalid dimensions.\n"
+                        "ERROR    Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
+  if (thickness) {
+    if (radius && (radius < thickness || yheight < 2*thickness)) {
+      fprintf(stderr,"PowderN: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
+                     "WARNING  Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+      thickness=0;
+    }
+    else if (!radius && (xwidth < 2*thickness || yheight < 2*thickness || zdepth < 2*thickness)) {
+      fprintf(stderr,"PowderN: %s: hollow sample thickness is larger than its volume (box).\n"
+                     "WARNING  Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+      thickness=0;
+    }
+  }
+  
+  if (concentric && thickness<=0) {
+    printf("PowderN: %s:Can not use concentric mode\n"
+           "WARNING     on non hollow shape. Ignoring.\n",
+           NAME_CURRENT_COMP);
+    concentric=0;
   }
     
   if (thickness>0) {
@@ -424,12 +484,6 @@ INITIALIZE
   
   if (!yheight_i) {
     yheight_i = yheight;
-  }
-  
-  if ((shape == 1 && (zdepth_i > zdepth || xwidth_i > xwidth || yheight_i > yheight)) 
-  || ( shape == 0 && (radius_i > radius || yheight_i > yheight))
-  || ( shape == 2 &&   radius_i > radius) ) {
-    exit(fprintf(stderr,"PowderN: %s: Inner hollow exeeds sample volume. Check dimensions.\n", NAME_CURRENT_COMP));
   }
   
   if (p_inc + p_transmit > 1) {
@@ -448,7 +502,7 @@ INITIALIZE
     }
   }
   
-  if (reflections && strlen(reflections) && strcmp(reflections, "NULL")) 
+  if (reflections && strlen(reflections) && strcmp(reflections, "NULL") && strcmp(reflections, "0")) 
     i = read_line_data(reflections, &line_info);
 
   if (!line_info.V_0 && line_info.at_nb > 0
@@ -497,8 +551,8 @@ INITIALIZE
     my_a_v = pack*line_info.sigma_a/line_info.V_0*2200*100;   // Factor 100 to convert from barns to fm^2
     my_inc = pack*line_info.sigma_i/line_info.V_0*100;   // Factor 100 to convert from barns to fm^2
 
-    printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn]\n",
-      NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i);
+    printf("PowderN: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
+      NAME_CURRENT_COMP, line_info.V_0, line_info.sigma_a, line_info.sigma_i, reflections && strlen(reflections) ? reflections : "NULL");
   }
 
 %}
@@ -512,15 +566,18 @@ TRACE
   char   intersecti=0;
   
   if (line_info.V_0) {
-    if (shape == 1) {
+    if (line_info.shape == 1) {
       intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
-    } else if (shape == 0) {
+    } else if (line_info.shape == 0) {
       intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
       intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
-    } else if (shape == 2) {
+    } else if (line_info.shape == 2) {
       intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
       intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+    } else if (line_info.shape == 3) {
+      intersect  = off_intersect  (&t0, &t3, x,y,z, vx,vy,vz, offdata);
+      intersecti = 0; 
     }
   }
   
@@ -559,8 +616,10 @@ TRACE
     }
       
     if (t3 < 0) {
-            t3=0; /* Already past sample?! */
-            printf("PowderN %s Warning: Neutron has already passed us? (Skipped)\n", NAME_CURRENT_COMP);
+      t3=0; /* Already past sample?! */
+      if (line_info.flag_warning < 100) 
+      printf("PowderN: %s: Warning: Neutron has already passed us? (Skipped).\n", NAME_CURRENT_COMP);
+      line_info.flag_warning++;
     } else {
       if (dt<0) { /* Calculate scattering point position */
         dt = fabs(dt)*(t1 - t0); /* 'Forward' part */
@@ -652,20 +711,25 @@ TRACE
           vz = tmp_vz;
           
           /* Since now scattered and new direction given, calculate path to exit */
-          if (shape == 1) {
+          if (line_info.shape == 1) {
             intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
             intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
-          } else if (shape == 0) {
+          } else if (line_info.shape == 0) {
             intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
             intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
-          } else if (shape == 2) {
+          } else if (line_info.shape == 2) {
             intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
             intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+          } else if (line_info.shape == 3) {
+            intersect  = off_intersect  (&t0, &t3, x,y,z, vx,vy,vz, offdata);
+            intersecti = 0;
           }
           
           if (!intersect) {
             /* Strange error: did not hit cylinder */
-            fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
+            if (line_info.flag_warning < 100) 
+              fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (coh).\n", NAME_CURRENT_COMP);
+            line_info.flag_warning++;
             ABSORB;
           }
           
@@ -707,20 +771,25 @@ TRACE
         vz *= v/v1;
         
         /* Since now scattered and new direction given, calculate path to exit */
-        if (shape == 1) {
+        if (line_info.shape == 1) {
           intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
           intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
-        } else if (shape == 0) {
+        } else if (line_info.shape == 0) {
           intersect  = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
           intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
-        } else if (shape == 2) {
+        } else if (line_info.shape == 2) {
           intersect  = sphere_intersect  (&t0, &t3, x,y,z, vx,vy,vz, radius);
           intersecti = sphere_intersect  (&t1, &t2, x,y,z, vx,vy,vz, radius_i);
+        } else if (line_info.shape == 3) {
+          intersect  = off_intersect  (&t0, &t3, x,y,z, vx,vy,vz, offdata);
+          intersecti = 0;
         }
         
         if (!intersect) {
           /* Strange error: did not hit cylinder */
-          fprintf(stderr, "PowderN: FATAL ERROR: Did not hit sample from inside.\n");
+          if (line_info.flag_warning < 100) 
+            fprintf(stderr, "PowderN: %s: FATAL ERROR: Did not hit sample from inside (inc).\n", NAME_CURRENT_COMP);
+          line_info.flag_warning++;
           ABSORB;
         }  
           
@@ -759,81 +828,91 @@ TRACE
 
 FINALLY 
 %{
-  free(line_info->list);
+  free(line_info.list);
   free(q_v);
   free(w_v);
   free(my_s_v2);
+  if (line_info.flag_warning)
+    fprintf(stderr, "PowderN: %s: Error message was repeated %i times with absorbed neutrons.\n", 
+      NAME_CURRENT_COMP, line_info.flag_warning);
+    
 %}
 
 MCDISPLAY
 %{
-  magnify("xyz");
-  if (shape == 0) { /* cyl */
-    circle("xz", 0,  yheight/2.0, 0, radius);
-    circle("xz", 0, -yheight/2.0, 0, radius);
-    line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
-    line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
-    line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
-    line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
-    if (thickness) {
-      double radius_i=radius-thickness;
-      circle("xz", 0,  yheight/2.0, 0, radius_i);
-      circle("xz", 0, -yheight/2.0, 0, radius_i);
-      line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
-      line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
-      line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
-      line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
-    }
-  } else if (shape == 1) {  /* box */
-    double xmin = -0.5*xwidth;
-    double xmax =  0.5*xwidth;
-    double ymin = -0.5*yheight;
-    double ymax =  0.5*yheight;
-    double zmin = -0.5*zdepth;
-    double zmax =  0.5*zdepth;
-    multiline(5, xmin, ymin, zmin,
-                 xmax, ymin, zmin,
-                 xmax, ymax, zmin,
-                 xmin, ymax, zmin,
-                 xmin, ymin, zmin);
-    multiline(5, xmin, ymin, zmax,
-                 xmax, ymin, zmax,
-                 xmax, ymax, zmax,
-                 xmin, ymax, zmax,
-                 xmin, ymin, zmax);
-    line(xmin, ymin, zmin, xmin, ymin, zmax);
-    line(xmax, ymin, zmin, xmax, ymin, zmax);
-    line(xmin, ymax, zmin, xmin, ymax, zmax);
-    line(xmax, ymax, zmin, xmax, ymax, zmax);
-    if (zdepth_i) {
-      xmin = -0.5*xwidth_i;
-      xmax =  0.5*xwidth_i;
-      ymin = -0.5*yheight_i;
-      ymax =  0.5*yheight_i;
-      zmin = -0.5*zdepth_i;
-      zmax =  0.5*zdepth_i;
+  if (line_info.V_0) {
+    magnify("xyz");
+    if (line_info.shape == 0) { /* cyl */
+      circle("xz", 0,  yheight/2.0, 0, radius);
+      circle("xz", 0, -yheight/2.0, 0, radius);
+      line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
+      line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
+      line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
+      line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+      if (thickness) {
+        double radius_i=radius-thickness;
+        circle("xz", 0,  yheight/2.0, 0, radius_i);
+        circle("xz", 0, -yheight/2.0, 0, radius_i);
+        line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
+        line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
+        line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
+        line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
+      }
+    } else if (line_info.shape == 1) {  /* box */
+      double xmin = -0.5*xwidth;
+      double xmax =  0.5*xwidth;
+      double ymin = -0.5*yheight;
+      double ymax =  0.5*yheight;
+      double zmin = -0.5*zdepth;
+      double zmax =  0.5*zdepth;
       multiline(5, xmin, ymin, zmin,
-                xmax, ymin, zmin,
-                xmax, ymax, zmin,
-                xmin, ymax, zmin,
-                xmin, ymin, zmin);
+                   xmax, ymin, zmin,
+                   xmax, ymax, zmin,
+                   xmin, ymax, zmin,
+                   xmin, ymin, zmin);
       multiline(5, xmin, ymin, zmax,
-                xmax, ymin, zmax,
-                xmax, ymax, zmax,
-                xmin, ymax, zmax,
-                xmin, ymin, zmax);
+                   xmax, ymin, zmax,
+                   xmax, ymax, zmax,
+                   xmin, ymax, zmax,
+                   xmin, ymin, zmax);
       line(xmin, ymin, zmin, xmin, ymin, zmax);
       line(xmax, ymin, zmin, xmax, ymin, zmax);
       line(xmin, ymax, zmin, xmin, ymax, zmax);
       line(xmax, ymax, zmin, xmax, ymax, zmax);
+      if (zdepth_i) {
+        xmin = -0.5*xwidth_i;
+        xmax =  0.5*xwidth_i;
+        ymin = -0.5*yheight_i;
+        ymax =  0.5*yheight_i;
+        zmin = -0.5*zdepth_i;
+        zmax =  0.5*zdepth_i;
+        multiline(5, xmin, ymin, zmin,
+                  xmax, ymin, zmin,
+                  xmax, ymax, zmin,
+                  xmin, ymax, zmin,
+                  xmin, ymin, zmin);
+        multiline(5, xmin, ymin, zmax,
+                  xmax, ymin, zmax,
+                  xmax, ymax, zmax,
+                  xmin, ymax, zmax,
+                  xmin, ymin, zmax);
+        line(xmin, ymin, zmin, xmin, ymin, zmax);
+        line(xmax, ymin, zmin, xmax, ymin, zmax);
+        line(xmin, ymax, zmin, xmin, ymax, zmax);
+        line(xmax, ymax, zmin, xmax, ymax, zmax);
+      }
+    } if (line_info.shape == 2) { /* sphere */
+      if (radius_i) {
+        circle("xy",0,0,0,radius_i);
+        circle("xz",0,0,0,radius_i);
+        circle("yz",0,0,0,radius_i);
+      }
+      circle("xy",0,0,0,radius);
+      circle("xz",0,0,0,radius);
+      circle("yz",0,0,0,radius);
+    } else if (line_info.shape == 3) {	/* OFF file */
+      off_display(offdata);
     }
-  } if (shape == 2) { /* sphere */
-    circle("xy",0,0,0,radius_i);
-    circle("xz",0,0,0,radius_i);
-    circle("yz",0,0,0,radius_i);
-    circle("xy",0,0,0,radius);
-    circle("xz",0,0,0,radius);
-    circle("yz",0,0,0,radius);
   }
 %}
 END

@@ -8,10 +8,11 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.77 $
+* Version: $Revision: 1.78 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
+* Modified by: E. Farhi, Oct 2008: added any shape sample geometry
 *
 * Isotropic sample handling multiple scattering and absorption for a general
 * S(q,w) (coherent and/or incoherent/self)
@@ -52,13 +53,24 @@
 * cite authors with references bellow (in <a href="#links">Links</a>).
 *
 * <b>Sample shape:</b>
-* Sample shape may be a cylinder, a sphere, a box or a hollow cylinder/sphere.
+* Sample shape may be a cylinder, a sphere, a box or any other shape
 *   box/plate:       xwidth x yheight x zdepth (thickness=0)
 *   hollow box/plate:xwidth x yheight x zdepth and thickness>0
 *   cylinder:        radius x yheight (thickness=0)
 *   hollow cylinder: radius x yheight and thickness>0
 *   sphere:          radius (yheight=0 thickness=0)
 *   hollow sphere:   radius and thickness>0 (yheight=0)
+*   any shape:       geometry=OFF file
+*
+*   The complex geometry option handles any closed non-convex polyhedra.
+*   It computes the intersection points of the neutron ray with the object  
+*   transparently, so that it can be used like a regular sample object.
+*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   Such files may be generated from XYZ data using qhull/powercrust, and 
+*   viewed with geomview
+*   The default size of the object depends of the OFF file data, but its 
+*   bounding box may be resized using xwidth,yheight and zdepth.
+
 *
 * <b>Concentric components:</b>
 * This component has the ability to contain other components when used in
@@ -72,10 +84,9 @@
 * COMPONENT S_in = Isotropic_Sqw(Sqw_coh="Al.laz", concentric=1, ...)
 * AT (0,0,0) RELATIVE sample_position
 *
-* COMPONENT something_inside ... // e.g. the sample itself or other walls
-* ...
+* COMPONENT something_inside ... // e.g. the sample itself or other materials
 *
-* COMPONENT S_out = Isotropic_Sqw(Sqw_coh="Al.laz", ...)
+* COMPONENT S_out = COPY(S_in)(concentric=0)
 * AT (0,0,0) RELATIVE sample_position
 *
 * <b>Sqw file format:</b>
@@ -153,7 +164,7 @@
 * sigma_coh:[barns] Coherent Scattering cross-section. Use -1 to unactivate.
 * sigma_inc:[barns] Incoherent Scattering cross-section. Use -1 to unactivate.
 * sigma_abs:[barns] Absorption cross-section at 2200 m/s. Use -1 to unactivate.
-* V_rho:   [AA-3] Density of atoms (nb atoms/unit cell V_0).
+* V_rho:     [AA-3] Density of atoms (nb atoms/unit cell V_0).
 * T:            [K] Temperature of sample, detailed balance
 *
 * Geometry parameters:
@@ -165,10 +176,12 @@
 * thickness:    [m] Thickness of hollow sample
 *
 * OPTIONAL PARAMETERS:
-* concentric:   [1] Indicate that this component in a hollow geometry
-*                   and may contain other components.
-*                   It should then be duplicated after the inside part.
+* concentric:   [1] Indicate that this component has a hollow geometry and
+*                   may contain other components. It should then be duplicated 
+*                   after the inside part (only for box, cylinder, sphere) [1] 
 *                   See description for an example.
+* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
+*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * order:        [1] Limit multiple scattering up to given order
 *                     0:all (default), 1:single, 2:double, ...
 * verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug).
@@ -227,11 +240,15 @@
 * Web Elements                        http://www.webelements.com/
 * %L
 * The test/example instrument <a href="../examples/Test_Isotropic_Sqw.instr">Test_Isotropic_Sqw.instr</a>.
+* %L
+* Geomview and Object File Format (OFF) <http|://www.geomview.org>
+* %L
+* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
 * %E
 *****************************************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
-  DEFINITION PARAMETERS (string Sqw_coh=0, string Sqw_inc=0, powder_format=Undefined)
+  DEFINITION PARAMETERS (string Sqw_coh=0, string Sqw_inc=0, powder_format=Undefined, string geometry=0)
   SETTING PARAMETERS(radius=0,thickness=0,
     xwidth=0, yheight=0, zdepth=0,
     qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,
@@ -239,7 +256,7 @@ DEFINE COMPONENT Isotropic_Sqw
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
     interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0, powder_barns=1)
-  OUTPUT PARAMETERS (VarSqw, columns)
+  OUTPUT PARAMETERS (VarSqw, columns, offdata)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 /*****************************************************************************/
@@ -249,7 +266,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.77 $
+#define ISOTROPIC_SQW $Revision: 1.78 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -262,6 +279,7 @@ SHARE
 #define qSq               {-1,0,0,0,0,0,1,0 }
 
 %include "read_table-lib"
+%include "interoff-lib"
 
 /* For the density of states */
 struct Sqw_D_struct
@@ -282,7 +300,7 @@ struct Sqw_Q_struct
 struct Sqw_Data_struct /* contains normalized Sqw data for probabilities */
 {
   struct Sqw_D_struct  *SW;     /* P(w)  = density of states */
-  struct Sqw_Q_struct **SQW;     /* P(Q|w)= probability of each Q with w */
+  struct Sqw_Q_struct **SQW;    /* P(Q|w)= probability of each Q with w */
 
   long  *SW_lookup;
   long **QW_lookup;
@@ -325,7 +343,7 @@ struct Sqw_sample_struct {
   double sqw_threshold;
 
   char   verbose_output;
-  char   shape; /* 0:cylinder, 1:box, 2:sphere */
+  int    shape; /* 0:cylinder, 1:box, 2:sphere 3:any shape*/
 
   double dq, dw; /* q/w transfert */
   char   type; /* interaction type: c(coherent), i(incoherent),
@@ -374,6 +392,8 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->Sq           =NULL;
   Sqw_Data->iqSq         =NULL;
 }
+
+off_struct offdata;
 
 double Sqw_powder_gauss(double x, double mean, double rms) {
   return (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)));
@@ -1195,7 +1215,7 @@ DECLARE
 
   struct Sqw_sample_struct VarSqw;
   int    columns[8] = powder_format;
-
+  off_struct offdata;
 /* end DECLARE */
 %}
 
@@ -1208,43 +1228,58 @@ INITIALIZE
   /* check for parameters */
 
   VarSqw.verbose_output= verbose;
-  if (radius>0) {
-    if (yheight>0) VarSqw.shape = 0; else VarSqw.shape = 2;
-    
-    if (thickness >= radius || (thickness && yheight && 2*thickness>=yheight)) {
-      printf("Isotropic_Sqw: %s:thickness bigger than sample (radius/height) !\n"
-             "WARNING        Setting full sample (thickness=0).\n",
-           NAME_CURRENT_COMP);
-      thickness = 0;
+  VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+	  if (off_init(geometry, xwidth, yheight, zdepth, &offdata)) {
+      VarSqw.shape=3; thickness=0; concentric=0;
     }
-    if (VarSqw.verbose_output)
-      printf("Isotropic_Sqw: %s: is a %s%s : R=%f thickness=%f h=%f \n",
-            NAME_CURRENT_COMP, (thickness > 0 ? "hollow ":""),
-            (VarSqw.shape ? "Sphere" : "Cylinder"),
-            radius,thickness,yheight);
-
-  } else if (xwidth>0 && yheight>0 && zdepth>0) {
-    VarSqw.shape = 1;
-    if (2*thickness>=xwidth || 2*thickness>=yheight || 2*thickness>=zdepth) {
-      printf("Isotropic_Sqw: %s:2*thickness bigger than sample (xwidth yheight zdepth)!\n"
-             "WARNING        Setting full sample (thickness=0).\n",
-           NAME_CURRENT_COMP);
-      thickness = 0;
-    }
-    if (VarSqw.verbose_output)
-      printf("Isotropic_Sqw: %s: is a %sBox : dx=%f dy=%f dz=%f \n",
-            NAME_CURRENT_COMP, (thickness>0 ? "hollow" : ""), xwidth,yheight,zdepth);
-  } else  {
-    printf("Isotropic_Sqw: %s: sample has no dimension\n"
-           "ERROR          set some of radius xwidth yheight zdepth \n",
-           NAME_CURRENT_COMP);
-    exit(0);
   }
+  else if (xwidth && yheight && zdepth)  VarSqw.shape=1; /* box */
+  else if (radius > 0 && yheight)        VarSqw.shape=0; /* cylinder */
+  else if (radius > 0 && !yheight)       VarSqw.shape=2; /* sphere */
+
+  if (VarSqw.shape < 0) 
+    exit(fprintf(stderr,"Isotropic_Sqw: %s: sample has invalid dimensions.\n"
+                        "ERROR          Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
+  
+  if (thickness) {
+    if (radius && (radius < thickness || (yheight && yheight < 2*thickness))) {
+      fprintf(stderr,"Isotropic_Sqw: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
+                     "WARNING        Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+      thickness=0;
+    }
+    else if (!radius && (xwidth < 2*thickness || yheight < 2*thickness || zdepth < 2*thickness)) {
+      fprintf(stderr,"Isotropic_Sqw: %s: hollow sample thickness is larger than its volume (box).\n"
+                     "WARNING        Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+      thickness=0;
+    }
+  }
+  
+  if (VarSqw.verbose_output) {
+    switch (VarSqw.shape) {
+      case 0: printf("Isotropic_Sqw: %s: is a %s%s : radius=%f thickness=%f height=%f \n",
+              NAME_CURRENT_COMP, (thickness > 0 ? "hollow ":""),
+              "Cylinder",
+              radius,thickness,yheight);
+              break;
+      case 1: printf("Isotropic_Sqw: %s: is a %sBox : width=%f height=%f depth=%f \n",
+              NAME_CURRENT_COMP, (thickness>0 ? "hollow" : ""), xwidth,yheight,zdepth);
+              break;
+      case 2: printf("Isotropic_Sqw: %s: is a %s%s : radius=%f thickness=%f\n",
+              NAME_CURRENT_COMP, (thickness > 0 ? "hollow ":""),
+              "Sphere",
+              radius,thickness);
+              break;
+      case 3: printf("Isotropic_Sqw: %s: is a volume defined from file %s\n",
+              NAME_CURRENT_COMP, geometry);
+    }
+  }
+
   if (concentric && thickness<=0) {
     printf("Isotropic_Sqw: %s:Can not use concentric mode\n"
-           "ERROR          on non hollow shape.\n",
+           "WARNING        on non hollow shape. Ignoring.\n",
            NAME_CURRENT_COMP);
-    exit(0);
+    concentric=0;
   }
 
   strncpy(VarSqw.compname, NAME_CURRENT_COMP, 256);
@@ -1294,8 +1329,10 @@ INITIALIZE
   if (VarSqw.s_coh < 0) VarSqw.s_coh=0;
   if (VarSqw.s_inc < 0) VarSqw.s_inc=0;
   if (VarSqw.s_abs < 0) VarSqw.s_abs=0;
-  if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && VarSqw.rho <= 0) 
-    exit(printf("Isotropic_Sqw: %s: Null density (V_rho)\n",NAME_CURRENT_COMP));
+  if ((VarSqw.s_coh > 0 || VarSqw.s_inc > 0) && VarSqw.rho <= 0) {
+    printf("Isotropic_Sqw: %s: WARNING: Null density (V_rho). Unactivating component.\n",NAME_CURRENT_COMP);
+    VarSqw.s_coh=VarSqw.s_inc=0;
+  }
   /* 100: convert from barns to fm^2 */
   VarSqw.my_a_v  =(VarSqw.rho*100*VarSqw.s_abs*2200);
   VarSqw.my_s    =(VarSqw.rho*100*(VarSqw.s_coh>0 ? VarSqw.s_coh : 0
@@ -1385,6 +1422,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
       intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
     else if (VarSqw.shape==2)
       intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius);
+    else if (VarSqw.shape == 3)
+      intersect=off_intersect(&t0, &t3, x, y, z, vx, vy, vz, offdata );
   } else intersect=0;
 
   /* Computing the intermediate times */
@@ -2008,7 +2047,7 @@ FINALLY
 
 MCDISPLAY
 %{
-  if (!concentric && (VarSqw.s_coh > 0 || VarSqw.s_inc > 0)) {
+  if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
     magnify("xyz");
     if(VarSqw.shape==1)
     {
@@ -2073,14 +2112,18 @@ MCDISPLAY
         line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
         line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
       }
-    } else {
-      double radius_i=radius-thickness;
-      circle("xy",0,0,0,radius_i);
-      circle("xz",0,0,0,radius_i);
-      circle("yz",0,0,0,radius_i);
+    } else if(VarSqw.shape==2) {
+      if (thickness) {
+        double radius_i=radius-thickness;
+        circle("xy",0,0,0,radius_i);
+        circle("xz",0,0,0,radius_i);
+        circle("yz",0,0,0,radius_i);
+      }
       circle("xy",0,0,0,radius);
       circle("xz",0,0,0,radius);
       circle("yz",0,0,0,radius);
+    } else if (VarSqw.shape == 3) {	/* OFF file */
+      off_display(offdata);
     }
   }
 /* end MCDISPLAY */
