@@ -12,11 +12,18 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.82 $
+* Version: $Revision: 1.83 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.82  2008/08/29 15:37:14  farhi
+* cogen: SPLIT low stat indicates number of events
+* example: fixed %example reference values, and some zero divergence
+* sources
+* optics: added comments, fixed bug in recent DiskChopper
+* added Test_Fermi: ok, but Guide_gravity in rotating mode fails
+*
 * Revision 1.81  2008/06/13 09:16:47  pkwi
 * Reverting to next-to-last version of cogen.c
 *
@@ -192,7 +199,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.82 2008-08-29 15:37:14 farhi Exp $
+* $Id: cogen.c,v 1.83 2008-10-21 15:20:33 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1212,8 +1219,8 @@ cogen_trace(struct instr_def *instr)
     if (comp->split) {
       coutf("  /* SPLIT counter for component %s */", comp->name);
       coutf("  int %sSplit_%s=0;", ID_PRE, comp->name);
-      fprintf(stderr,"Info:    Defining SPLIT from %s to END\n",
-          comp->name);
+      fprintf(stderr,"Info:    Defining SPLIT from %s to END in instrument %s\n",
+          comp->name, instr->name);
     }
   }
   list_iterate_end(liter);
