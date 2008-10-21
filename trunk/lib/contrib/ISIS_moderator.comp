@@ -11,7 +11,7 @@
  * %I
  * Written by: S. Ansell and D. Champion
  * Date: AUGUST 2005
- * Version: $Revision: 1.13 $
+ * Version: $Revision: 1.14 $
  * Origin: ISIS
  * Release: McStas 1.9
  *
@@ -796,7 +796,7 @@ cmdnumberI(char *mc,int* num,const int len)
         exit(1);
       }
       else 
-        fprintf(stderr,"Opening -- %s\n",ss);
+        printf("Opening -- %s\n",ss);
       return efile;
     }
 

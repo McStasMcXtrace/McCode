@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Granroth
 * Date: July 2004
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * Origin: SNS Project Oak Ridge National Laboratory
 * Release: McStas 1.6
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
@@ -151,7 +151,7 @@ DECLARE
       exit(1);
     }
     else
-      fprintf(stderr,"Opening -- %s\n",ss);
+      printf("Opening -- %s\n",ss);
     /* skip header lines any line that begin with # */
     while((fgets(line,Maxlength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){
     }
