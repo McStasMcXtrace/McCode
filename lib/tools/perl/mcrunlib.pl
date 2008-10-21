@@ -347,10 +347,10 @@ sub get_out_file {
 
 # McStas selftest procedure: copy LIB/examples and execute
 sub do_test {
-  my ($printer,$force, $plotter, $exec_test, $mpi, $ncount) = @_;
+  my ($printer,$force, $plotter, $exec_test, $mpi, $ncount, $sim_def) = @_;
   my $pwd=getcwd;
 
-  &$printer( "# McStas self-test (mcrun --test='$exec_test')");
+  &$printer( "# McStas self-test (mcrun --test)");
   if ($mpi) {
       &$printer("# MPI enabled, spawning $mpi compute nodes");
   }
@@ -361,19 +361,31 @@ sub do_test {
   &$printer("# Installing '$tmpdir' directory in $pwd");
   # copy all instruments
   my @paths=();
-  &$printer("# Copying instruments from $MCSTAS::sys_dir/examples/");
-  if (opendir(DIR,"$MCSTAS::sys_dir/examples/")) {
-    my @instruments = readdir(DIR);
-    closedir(DIR);
-    next unless @instruments;
-    @paths = map("$MCSTAS::sys_dir/examples/$_", grep(/\.(instr)$/, @instruments));
-    for ($j=0 ; $j<@paths; $j++) {
-      my ($base, $dirname, $ext) = fileparse($paths[$j],".instr");
-      if (! copy("$paths[$j]","$tmpdir/$base$ext")) {
-        return "Could not copy $paths[$j] to '$tmpdir' directory: $!\n";
+  if ($sim_def && $sim_def !~ m'\.[^/]*$') { $sim_def .= ".instr"; }
+  if ($sim_def && -e "$sim_def.instr") {    # local instrument to test
+    &$printer("# Using instrument $sim_def");
+    push @paths, "$sim_def";
+    copy("$sim_def","$tmpdir/$sim_def");
+  } else {
+    &$printer("# Copying instruments from $MCSTAS::sys_dir/examples/");
+    if (opendir(DIR,"$MCSTAS::sys_dir/examples/")) {
+      my @instruments = readdir(DIR);
+      closedir(DIR);
+      next unless @instruments;
+      my @paths_loc = ();
+      @paths_loc = map("$MCSTAS::sys_dir/examples/$_", grep(/\.(instr)$/, @instruments));
+      for ($j=0 ; $j<@paths_loc; $j++) {
+        my ($base, $dirname, $ext) = fileparse($paths_loc[$j],".instr");
+        next if ($sim_def && $sim_def !~ $base);
+        if (! copy("$paths_loc[$j]","$tmpdir/$base$ext")) {
+          return "Could not copy $paths_loc[$j] to '$tmpdir' directory: $!\n";
+        } else {
+          push @paths, $paths_loc[$j];
+        }
       }
     }
-  } else { return "mcrun: no test instruments found. Aborting.\n"; }
+  }
+  if (!@paths) { return "mcrun: no test instruments found. Aborting.\n"; }
   # go into the selftest directory
   chdir($tmpdir) or return "mcrun: Can go into $tmpdir: $!\n";
   
@@ -394,7 +406,7 @@ sub do_test {
   my $accuracy_flag = 0;
   my $j;
   my $index=0;
-  my $test_abstract="Test Abstract\n";
+  my $test_abstract="Test Abstract for $tmpdir\n";
   for ($j=0 ; $j<@paths ; $j++) {  # loop on instruments
     my $data=component_information($paths[$j]);     # read instrument header and extract info
     my @val_par=@{$data->{'validation_par'}};
