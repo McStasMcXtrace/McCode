@@ -10,7 +10,7 @@
 * %I
 * Written by: E.M.Lauridsen, N.B.Christensen, A.B.Abrahamsen
 * Date: 4.2.98
-* Version: $Revision: 1.33 $
+* Version: $Revision: 1.34 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -48,7 +48,7 @@
 *
 * Optional parameters:
 * xwidth:  horiz. dimension of sample, as a width [m]
-* zdepth:  thickness of sample [m]
+* zdepth:  depth of box sample [m]
 *
 * Variables calculated in the component
 *

@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.44 $
+* Version: $Revision: 1.45 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
@@ -43,7 +43,7 @@
 * thickness:    Thickness of outer wall [m]
 * xwidth:       horiz. dimension of sample [m]
 * yheight:      vert.  dimension of sample [m]
-* zdepth:       thickness of sample [m]
+* zdepth:       depth of box sample [m]
 * focus_r:      Radius of disk containing target. Use 0 for full space [m]
 * target_index: relative index of component to focus at, e.g. next is +1 [1]
 * sigma_abs:    Absorbtion cross section pr. unit cell [barns]

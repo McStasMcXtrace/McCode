@@ -11,7 +11,7 @@
 * Modified from Res_sample, written by: Kristian Nielsen
 * Date: 1999
 * Written by: KL, 10 October 2004
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: Risoe
 * Release: McStas 1.6
 *
@@ -47,8 +47,7 @@
 * %P
 * INPUT PARAMETERS:
 *
-* thickness:Thickness of hollow cylinder in (x,z) plane, or width of
-*             box along X (m)
+* thickness:Thickness of hollow cylinder in (x,z) plane
 * radius:   Outer radius of hollow cylinder (m)
 * yheight:  vert.  dimension of sample, as a height (m)
 * focus_r:  Radius of sphere containing target. (m)
