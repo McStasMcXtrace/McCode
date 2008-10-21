@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.50 $
+* Version: $Revision: 1.51 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
@@ -22,7 +22,25 @@
 * Rectangular geometry. Multiple scattering and secondary extinction included.
 * The mosaic may EITHER be specified isotropic by setting the mosaic input
 * parameter, OR anisotropic by setting the mosaic_h, mosaic_v, and mosaic_n
-* parameters. Geometry is a box.
+* parameters.
+*
+* <b>Sample shape:</b>
+* Sample shape may be a cylinder, a sphere, a box or any other shape
+*   box/plate:       xwidth x yheight x zdepth
+*   cylinder:        radius x yheight
+*   sphere:          radius (yheight=0)
+*   any shape:       geometry=OFF file
+*
+*   The complex geometry option handles any closed non-convex polyhedra.
+*   It computes the intersection points of the neutron ray with the object  
+*   transparently, so that it can be used like a regular sample object.
+*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   Such files may be generated from XYZ data using qhull/powercrust, and 
+*   viewed with geomview
+*   The default size of the object depends of the OFF file data, but its 
+*   bounding box may be resized using xwidth,yheight and zdepth.
+*
+* <b>Crystal definition file format</b>
 * Crystal structure is specified with an ascii data file. Each line contains
 * 4 or more numbers, separated by white spaces:
 *
@@ -79,10 +97,12 @@
 *
 * %P
 * INPUT PARAMETERS:
-*
+* radius:   Outer radius of sample in (x,z) plane [m]
 * xwidth:    Width of crystal [m]
 * yheight:   Height of crystal [m]
 * zdepth:    Depth of crystal (no extinction simulated) [m]
+* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
+*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * delta_d_d: Lattice spacing variance, gaussian RMS [1]
 * mosaic:    Crystal mosaic (isotropic), gaussian RMS [arc minutes]
 * mosaic_h:  Horizontal (rotation around Y) mosaic (anisotropic),
@@ -128,6 +148,10 @@
 * Cross sections for single elements: http://www.ncnr.nist.gov/resources/n-lengths/
 * %L
 * Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
+* %L
+* Geomview and Object File Format (OFF) <http|://www.geomview.org>
+* %L
+* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
 *
 * %E
 ****************************************************************************/
@@ -182,22 +206,23 @@
  */
 
 DEFINE COMPONENT Single_crystal
-DEFINITION PARAMETERS(string reflections=0)
-SETTING PARAMETERS(xwidth, yheight, zdepth, delta_d_d=1e-4,
+DEFINITION PARAMETERS(string reflections=0, string geometry=0)
+SETTING PARAMETERS(xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
             mosaic = -1, mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
-	    recip_cell=0,
+            recip_cell=0,
             ax = 0, ay = 0, az = 0,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
             p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
             aa=0, bb=0, cc=0, order=0, powder=0)
-OUTPUT PARAMETERS(hkl_info)
+OUTPUT PARAMETERS(hkl_info, offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
 %{
   /* used for reading data table from file */
   %include "read_table-lib"
+  %include "interoff-lib"
 /* Declare structures and functions only once in each instrument. */
 #ifndef SINGLE_CRYSTAL_DECL
 #define SINGLE_CRYSTAL_DECL
@@ -237,7 +262,9 @@ SHARE
       double at_nb;               /* nb of atoms in a cell */
       double V0;                  /* Unit cell volume (AA**3) */
       int    column_order[5];     /* column signification [h,k,l,F,F2] */
-      int recip;                  /* Flag to indicate if recip or direct cell axes given */
+      int    recip;               /* Flag to indicate if recip or direct cell axes given */
+      int    shape;               /* 0:cylinder, 1:box, 2:sphere 3:any shape*/
+      int    flag_warning;        /* number of warnings */
     };
 
   struct tau_data
@@ -272,7 +299,7 @@ SHARE
     char flag=0;
     double nb_atoms=1;
 
-    if (!SC_file || !strlen(SC_file)) {
+    if (!SC_file || !strlen(SC_file) || !strcmp(SC_file,"NULL") || !strcmp(SC_file,"0")) {
       info->count = 0;
       flag=1;
     }
@@ -624,6 +651,7 @@ SHARE
 DECLARE
 %{
   struct hkl_info_struct hkl_info;
+  off_struct offdata;
 %}
 
 INITIALIZE
@@ -664,8 +692,25 @@ INITIALIZE
   if (hkl_info.count)
     printf("Single_crystal: %s: Read %d reflections from file '%s'\n",
       NAME_CURRENT_COMP, hkl_info.count, reflections);
-  else printf("Single_crystal: %s: Using sigma_inc elastic scattering only (s_inc=%g barn)\n",
+  else printf("Single_crystal: %s: Using incoherent elastic scattering only.\n",
       NAME_CURRENT_COMP, hkl_info.sigma_i);
+      
+  hkl_info.shape=-1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+	  if (off_init(geometry, xwidth, yheight, zdepth, &offdata)) {
+      hkl_info.shape=3; 
+    }
+  }
+  else if (xwidth && yheight && zdepth)  hkl_info.shape=1; /* box */
+  else if (radius > 0 && yheight)        hkl_info.shape=0; /* cylinder */
+  else if (radius > 0 && !yheight)       hkl_info.shape=2; /* sphere */
+
+  if (hkl_info.shape < 0) 
+    exit(fprintf(stderr,"Single_crystal: %s: sample has invalid dimensions.\n"
+                        "ERROR           Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
+  
+  printf("Single_crystal: %s: Vc=%g [Angs] sigma_abs=%g [barn] sigma_inc=%g [barn] reflections=%s\n",
+      NAME_CURRENT_COMP, hkl_info.V0, hkl_info.sigma_a, hkl_info.sigma_i, reflections && strlen(reflections) ? reflections : "NULL");
 %}
 
 TRACE
@@ -708,9 +753,21 @@ TRACE
   double xsect_factor;          /* Common factor in coherent cross-section */
   double p_trans;               /* Transmission probability */
   double mc_trans, mc_interact; /* Transmission, interaction MC choices */
-
-  if(box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
-                   xwidth, yheight, zdepth) && t2 > 0)
+  int    intersect=0;
+  
+  /* Intersection neutron trajectory / sample (sample surface) */
+  if (hkl_info.shape == 0)
+    intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
+  else if (hkl_info.shape == 1)
+    intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+  else if (hkl_info.shape == 2)
+    intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
+  else if (hkl_info.shape == 3)
+    intersect = off_intersect(&t1, &t2, x, y, z, vx, vy, vz, offdata );
+      
+  if (t2 < 0) intersect=0; /* we passed sample volume already */
+    
+  if(intersect)
   {                             /* Neutron intersects crystal */
     if(t1 > 0)
       PROP_DT(t1);                /* Move to crystal surface if not inside */
@@ -724,19 +781,29 @@ TRACE
     inc_xlen  = 1e2*inc_xsect/V0;
     L = hkl_info.list;
     T = hkl_info.tau_list;
-    for(;;)                       /* Loop over multiple scattering events */
-    {
-      /* Compute intersection between neutron flight path and sample. */
-      if(!box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
-                        xwidth, yheight, zdepth) || t2*v < -1e-9 || t1*v > 1e-9)
+    
+    do {  /* Loop over multiple scattering events */
+    
+      if (hkl_info.shape == 0)
+        intersect = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius, yheight);
+      else if (hkl_info.shape == 1)
+        intersect = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+      else if (hkl_info.shape == 2)
+        intersect = sphere_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius);
+      else if (hkl_info.shape == 3)
+        intersect = off_intersect(&t1, &t2, x, y, z, vx, vy, vz, offdata );
+      if(!intersect || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
-        fprintf(stderr,
+        if (hkl_info.flag_warning < 100) 
+          fprintf(stderr,
                 "Single_crystal: %s: Warning: neutron has unexpectedly left the crystal!\n"
                 "                t1=%g t2=%g x=%g y=%g z=%g vx=%g vy=%g vz=%g\n",
                 NAME_CURRENT_COMP, t1, t2, x, y, z, vx, vy, vz);
+        hkl_info.flag_warning++;
         break;
       }
+        
       l_full = t2*v;
 
       /* (1). Compute incoming wave vector ki */
@@ -752,7 +819,7 @@ TRACE
         kiz = V2K*vz;
       }
 
-      /* (2). Intersection of Ewald sphere with recipprocal lattice points */
+      /* (2). Intersection of Ewald sphere with reciprocal lattice points */
 
       /* Max possible tau with 5*sigma delta-d/d cutoff. */
       tau_max = 2*ki/(1 - 5*hkl_info.m_delta_d_d);
@@ -863,13 +930,13 @@ TRACE
       if(mc_trans > 0 && (mc_trans >= 1 || rand01() < mc_trans))  /* Transmit */
       {
         p *= p_trans/mc_trans;
-        break;
+        intersect=0; break;
       }
       if(tot_xlen <= 0)
         ABSORB;
 
       if(mc_interact <= 0)        /* Protect against rounding errors */
-        break;
+        { intersect=0; break; }
       if (!event_counter) p *= fabs(1 - p_trans)/mc_interact;
       /* Select a point at which to scatter the neutron, taking
          secondary extinction into account. */
@@ -938,34 +1005,59 @@ TRACE
       }
       SCATTER;
       /* exit if multiple scattering order has been reached */
-      if (order && event_counter >= order) break;
+      if (order && event_counter >= order) { intersect=0; break; }
       /* Repeat loop for next scattering event. */
-    } /* end for (;;) */
-  } /* box intsresect */
+    } while (intersect); /* end do (intersect) (multiple scattering loop) */
+  } /* if intersect */
+%}
+
+FINALLY
+%{
+  if (hkl_info.flag_warning)
+    fprintf(stderr, "Single_crystal: %s: Error message was repeated %i times with absorbed neutrons.\n", 
+      NAME_CURRENT_COMP, hkl_info.flag_warning);
 %}
 
 MCDISPLAY
 %{
-  double xmin = -0.5*xwidth;
-  double xmax =  0.5*xwidth;
-  double ymin = -0.5*yheight;
-  double ymax =  0.5*yheight;
-  double zmin = -0.5*zdepth;
-  double zmax =  0.5*zdepth;
   magnify("xyz");
-  multiline(5, xmin, ymin, zmin,
-               xmax, ymin, zmin,
-               xmax, ymax, zmin,
-               xmin, ymax, zmin,
-               xmin, ymin, zmin);
-  multiline(5, xmin, ymin, zmax,
-               xmax, ymin, zmax,
-               xmax, ymax, zmax,
-               xmin, ymax, zmax,
-               xmin, ymin, zmax);
-  line(xmin, ymin, zmin, xmin, ymin, zmax);
-  line(xmax, ymin, zmin, xmax, ymin, zmax);
-  line(xmin, ymax, zmin, xmin, ymax, zmax);
-  line(xmax, ymax, zmin, xmax, ymax, zmax);
+  if (hkl_info.shape == 0) {	/* cylinder */
+    circle("xz", 0,  yheight/2.0, 0, radius);
+    circle("xz", 0, -yheight/2.0, 0, radius);
+    line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
+    line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
+    line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
+    line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+  }
+  else if (hkl_info.shape == 1) { 	/* box */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+  else if (hkl_info.shape == 2) {	/* sphere */
+    circle("xy", 0,  0.0, 0, radius);
+    circle("xz", 0,  0.0, 0, radius);
+    circle("yz", 0,  0.0, 0, radius);        
+  }
+  else if (hkl_info.shape == 3) {	/* OFF file */
+    off_display(offdata);
+  }
 %}
 END
