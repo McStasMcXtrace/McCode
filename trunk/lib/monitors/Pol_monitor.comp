@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: Risoe
 * Release: McStas 1.10
 *
@@ -101,17 +101,21 @@ TRACE
     pol_proj = scalar_prod(mx, my, mz, sx, sy, sz);
     
     if(fabs(pol_proj)>1) {
-      fprintf(stderr, "Pol_monitor: %s: Pol vector longer than 1",
-	      NAME_CURRENT_COMP);
+      fprintf(stderr, "Pol_monitor: %s: Pol vector longer than 1 (%g, %g %g %g)\n",
+	      NAME_CURRENT_COMP,pol_proj,sx,sy,sz);
       exit(1);
     }
     
     i = floor((pol_proj+1.0)*npol/2.0);
+
     
-    // To take care of the case when m.s=1
+    /*To take care of the case when m.s=1*/
     if(i==npol)
       i--;
-    
+    /*To handle the case when m.s<-1 can happen due to rounding errors in trig functions*/
+    if(i<0)
+      i=0;
+
     if(i >= 0 && i < npol) {
 	Pol_N[i]++;
 	Pol_p[i] += p;
