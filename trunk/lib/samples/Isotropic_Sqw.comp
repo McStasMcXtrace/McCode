@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.78 $
+* Version: $Revision: 1.79 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -266,7 +266,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.78 $
+#define ISOTROPIC_SQW $Revision: 1.79 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -348,10 +348,12 @@ struct Sqw_sample_struct {
   double dq, dw; /* q/w transfert */
   char   type; /* interaction type: c(coherent), i(incoherent),
                                   V(isotropic incoherent), t(transmitted) */
+  /* store information from the last event */
   double ki_x,ki_y,ki_z,kf_x,kf_y,kf_z;
   double ti, tf;
   double vi, vf;
   double ki, kf;
+  double theta;
 
   double w_max, w_min, q_max, q_min;
   int    column_order[9]; /* column signification */
@@ -1071,6 +1073,7 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* set up Q probability table per w bin */
   /* uses:  Sqw_restrict */
+  double *iqSw = (double*)calloc(Sqw_Data->nb_w, sizeof(double));
   Sqw_Data->SQW =
     (struct Sqw_Q_struct**)calloc(Sqw_Data->nb_w, sizeof(struct Sqw_Q_struct*));
 
@@ -1090,17 +1093,24 @@ struct Sqw_Data_struct *Sqw_readfile(
         Sqw->compname, j, Sqw_Data->nb_q*sizeof(struct Sqw_Q_struct));
       return(NULL);
     }
+    iqSw[j] =0;
     /* set P(Q|W) and compute total intensity */
     for (i=0; i < (Sqw_Data->nb_q) ; i++) {
       q  = Table_Index(Table_Array[0], 0, i);
       Sqw_Data->SQW[j][i].Q     = q;
       Sqw_Data->SQW[j][i].value = Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha; /* S(q,w) */
+      iqSw[j]  += q*Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha;
     }
     for (i=0; i < (Sqw_Data->nb_q) ; i++) {
       Sqw_Data->SQW[j][i].cumul_proba =
                         Sqw_Data->SQW[j][i].value/Sqw_Data->SW[j].value; /* S(q,w)/S(w) */
       /* compute normalized cumulated probability */
       if (i) Sqw_Data->SQW[j][i].cumul_proba += Sqw_Data->SQW[j][i-1].cumul_proba;
+    }
+    /* modify cumulated S(q,w) distribution to include the Jacobian dOmega/dq and normalize */
+    for (i=0; i < (Sqw_Data->nb_q) ; i++) {
+      q  = Table_Index(Table_Array[0], 0, i);
+      Sqw_Data->SQW[j][i].cumul_proba *= q/iqSw[j]*Sqw_Data->SW[j].value;
     }
   }
   if (Sqw->verbose_output > 1)
@@ -1792,6 +1802,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
       /* scattering angle from ki to DS cone */
       theta = acos(costheta);
+
       /* Choose point on Debye-Scherrer cone */
       if (order == 1 && d_phi)
       { /* relate height of detector to the height on DS cone */
@@ -1905,8 +1916,9 @@ VarSqw.kf_x = V2K*vx;
 VarSqw.kf_y = V2K*vy;
 VarSqw.kf_z = V2K*vz;
 VarSqw.tf   = t;
-VarSqw.vf = v;
-VarSqw.kf = k;
+VarSqw.vf   = v;
+VarSqw.kf   = k;
+VarSqw.theta= theta;
 
 if (SCATTERED) {
 
