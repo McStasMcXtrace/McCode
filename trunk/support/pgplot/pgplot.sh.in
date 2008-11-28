@@ -14,7 +14,9 @@ cp pgdispd/* pgplot/pgdispd/
 cd pgplot
 PGPLOT_SRC=$PWD
 PGPLOT_DIR="@prefix@/pgplot"; export PGPLOT_DIR
-LD_LIBRARY_PATH=$PGPLOT_DIR; export LD_LIBRARY_PATH
+LD_LIBRARY_PATH=$PGPLOT_DIR:$LD_LIBRARY_PATH; export LD_LIBRARY_PATH
+LD_RUN_PATH=$PGPLOT_DIR:$LD_RUN_PATH; export LD_RUN_PATH
+
 mkdir $PGPLOT_DIR
 echo cp drivers.list $PGPLOT_DIR/drivers.list
 cp drivers.list $PGPLOT_DIR/drivers.list
@@ -84,15 +86,18 @@ echo create links in @prefix@/bin
 # create links
 ln -sf $PGPLOT_DIR/pgdisp @prefix@/bin/pgdisp
 ln -sf $PGPLOT_DIR/pgxwin_server @prefix@/bin/pgxwin_server
-ln -sf $PGPLOT_DIR/libpgplot.so /usr/lib/libpgplot.so
+ln -sf $PGPLOT_DIR/libpgplot.so @prefix@/lib/libpgplot.so
 
+PERL5LIB=`perl -e "print join(\":\", @INC);"`
+PERL5LIB=@prefix@/lib/mcstas/tools/perl/modules:$PERL5LIB
+export PERL5LIB
 # install F77
 cd $ROOT_SRC
 echo tar xzf ExtUtils-F77-1.16.tar.gz
 gunzip -c ExtUtils-F77-1.16.tar.gz | tar xf -
 cd ExtUtils-F77-1.16
-echo perl Makefile.PL\; make\; make install
-perl Makefile.PL PREFIX=@prefix@
+echo perl Makefile.PL INSTALL_BASE=@prefix@/lib/mcstas/tools/perl/modules\; make\; make install
+perl Makefile.PL PREFIX=@prefix@/lib/mcstas/tools/perl/modules LIB=@prefix@/lib/mcstas/tools/perl/modules
 make
 make install
 
@@ -101,8 +106,12 @@ cd $ROOT_SRC
 echo tar xzf PGPLOT-2.20.tar.gz
 gunzip -c PGPLOT-2.20.tar.gz | tar xf -
 cd PGPLOT-2.20
-echo perl Makefile.PL\; make\; make install
-perl Makefile.PL PREFIX=@prefix@
+if test "`basename @G77@`" == "g77" ; then
+    sed 's/#use ExtUtils::F77 qw(generic g77);/use ExtUtils::F77 qw(generic g77);/' Makefile.PL > Makefile.PL.new
+    mv Makefile.PL.new Makefile.PL
+fi
+echo perl Makefile.PL INSTALL_BASE=@prefix@/lib/mcstas/tools/perl/modules\; make\; make install
+perl Makefile.PL PREFIX=@prefix@/lib/mcstas/tools/perl/modules LIB=@prefix@/lib/mcstas/tools/perl/modules
 make
 make install
 
