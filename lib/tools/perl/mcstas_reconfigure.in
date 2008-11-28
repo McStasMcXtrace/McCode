@@ -20,12 +20,15 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, X.Y.Z, www.mcstas.org)
-AC_REVISION($Revision: 1.11 $)
+AC_REVISION($Revision: 1.12 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
 This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
 see file COPYING for further information])
+
+AC_PREFIX_DEFAULT(/usr/local)
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
 
 AC_ARG_WITH([cc], AC_HELP_STRING([--with-cc=c compiler], [Specify name of C compiler]),
         [with_cc=$withval], [with_cc=yes])
@@ -90,9 +93,8 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT(mcstas_config.perl)
+AC_OUTPUT($prefix/lib/mcstas/tools/perl/mcstas_config.perl)
 
-chmod a+x mcstas_reconfigure
-chmod a+w mcstas_config.perl
+chmod a+w $prefix/lib/mcstas/tools/perl/mcstas_config.perl
 
-echo "McStas has been reconfigured..."
+echo "McStas has been reconfigured in $prefix/lib/mcstas/tools/perl/mcstas_config.perl"
