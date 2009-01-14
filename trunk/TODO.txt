@@ -11,17 +11,18 @@ Components:
     Robert McGreevy 4D- S(Q,w) - Analytical
 (*) Single_crystal, new approaches / validation still..
 (*) Focusing lenses ala VitESS
-    Single crystal / powder with magnetic order / polarisation / spin wave comp
     Refraction? lens comp planned for student at ILL
+    Single crystal / powder with magnetic order / polarisation / spin wave comp
 (*) Kill very old comps in obsolete (all? - will then allow "refill during 2.0 series)
 (*) Checkup - use of PROP_DT in all comps?
     monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
 (*) monochromator_ ... (Lucia Alianelli) full monte carlo
-(*) PowderN, IsotropicSqw: add any shape
-(*) Sans_sphere: add other geometry than box, add target_index+rect area
-    add 'radius' parameter to Monitor_nD for easier specs
-    remove 'searching' messages in SNS and ISIS sources (not useful)
+ D  PowderN, IsotropicSqw: add any shape DONE
+ D  Sans_sphere: add other geometry than box, add target_index+rect area DONE (box,cyl,sphere)
+ D  add 'radius' parameter to Monitor_nD for easier specs
+ D  remove 'searching' messages in SNS and ISIS sources (not useful)
 (*) more V_sample to obsolete and use Incoherent instead
+(*) check Virtual_* comps with MPI
 
 Doc:
     sync with new comp parameter names
@@ -35,7 +36,7 @@ Instruments:
 (D) Test_Fermi DONE ; Test_Sources DONE; Test_Guides DONE; Monochromator_test DONE
 (*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off,  Tomography
  D  TESTS: accuracy must take into account I_ERR value instead of default 20 % DONE
-(*) use %include where ever possible e.g. ILL_H142_IN12=ILL_H142+templateTAS, ILL_H15_IN6=ILL_H15+templateTOF
+    use %include where ever possible e.g. ILL_H142_IN12=ILL_H142+templateTAS, ILL_H15_IN6=ILL_H15+templateTOF
 
 Metalanguage / runtime
     New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
@@ -49,12 +50,13 @@ Metalanguage / runtime
     support zlib (if exists at ./configure) to handle compressed files (.gz, .zip, .bz) either by calling external command extraction to TMP, or in memory.
     support HTTP file access through wget if available from configure
 (D) MPI: split Reduce/sed/receive into 1e5 blocks DONE
-    read-table: handle \r for windows platforms when reading data in event files
+(*) MPI: if MPI version>=2, do not use MPI_REDUCE_BLOCK
+ D  read-table: handle \r for windows platforms when reading data in event files DONE (to be checked)
 
 Tools/platform:
     mcresplot widths? FWHM vs. Sigma?  mcresplot port to Matlab/Scilab ?
 (*) mcstas2vitess, only supports double parms, should also do ones with explicit type.
-(D) mcrun --test: need to add plotter test
+    mcrun --test: need to add plotter test
     Update mcrun --test=compatible to include --test=FP6 (etc)
 (*) gfortran update for PGPLOT build
     SWARM / Genetic algo? 
@@ -68,6 +70,7 @@ Tools/platform:
     mcformatgui <dir>: sets input dir (handle args)
     update mcstas.lang for gedit to gtksourceview-2 
 (*) mcrun --test --mpi: some instruments do not scale with n_nodes
+(*) mcrun --test to check under windows
     
 
 Infrastructure:
