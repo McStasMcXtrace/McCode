@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -575,7 +575,7 @@ INITIALIZE
     
 /* handle event files as in Virtual_output, with bufsize=0 ****************** */
   long element_size;
-  if (type && strlen(type) && strcmp(type, "NULL")) {
+  if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     printf("PSD_Detector: %s: saving detector signal as events\n", NAME_CURRENT_COMP);
 
     strcpy(Vars.compcurname, NAME_CURRENT_COMP);
@@ -1074,7 +1074,7 @@ TRACE
               PHSpectrum2[i] += p*p; // 2nd order moments
             }
             /* save event file if activated */
-            if (type && strlen(type) && strcmp(type, "NULL")) {
+            if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
               double pp;
               Vars.cp  = p;
               Vars.cx  = x;
@@ -1111,7 +1111,7 @@ TRACE
 SAVE
 %{
 
-  if (type && strlen(type) && strcmp(type, "NULL")) {
+  if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     /* event file */
     if (mcformat_override) mcformat = mcformat_vo;
     Monitor_nD_Save(&DEFS, &Vars);
@@ -1166,7 +1166,7 @@ SAVE
 FINALLY
 %{
   /* free pointers */
-  if (type && strlen(type) && strcmp(type, "NULL")) {
+  if (type && strlen(type) && strcmp(type, "NULL") && strcmp(type, "0")) {
     Monitor_nD_Finally(&DEFS, &Vars);
     if (bufsize) {
       printf("PSD_Detector: %s: Saved %15f events (from buffer) in file %s\n",
