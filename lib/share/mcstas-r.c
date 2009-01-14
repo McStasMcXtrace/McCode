@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.207 $
+* Version: $Revision: 1.208 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.207 2008-10-21 15:19:18 farhi Exp $
+* $Id: mcstas-r.c,v 1.208 2009-01-14 13:16:22 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.207  2008/10/21 15:19:18  farhi
+* use common CHAR_BUFFER_LENGTH = 1024
+*
 * Revision 1.206  2008/10/14 14:29:50  farhi
 * sans sample expanded with cylinder and sphere. cosmetics and updated
 * todo.
@@ -935,8 +938,8 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 
   long offset=0;
   int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
-  while (offset < count || res != MPI_SUCCESS) {
-    if (offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
+  while (offset < count && res == MPI_SUCCESS) {
+    if (!length || offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
     res = MPI_Reduce((void*)(sbuf+offset*dsize), (void*)(lrbuf+offset*dsize), length, dtype, op, root, comm);
     offset += length;
   }
@@ -3318,7 +3321,7 @@ void mcclear_format(struct mcformats_struct usedformat)
 /* mcuse_file: will save data/sim files */
 static void mcuse_file(char *file)
 {
-  if (file && strcmp(file, "NULL"))
+  if (file && strcmp(file, "NULL") && strcmp(file, "0"))
     mcsiminfo_name = file;
   else {
     char *filename=(char*)malloc(CHAR_BUF_LENGTH);
