@@ -8,7 +8,7 @@
 * Date: May 7th, 2008
 * Origin:PSI
 * Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: PSI
 *
 * %Description
@@ -23,14 +23,14 @@
 *
 * %Parameters
 *	lambda:                  [AA]    Choice of wavelength, affects both monochromator and source component
-*       R:                       [1]     Reflectivity of non-curved guides
-*       R_curve:                 [1]     Reflectivity of curved guides
-*       filename:                [str]   Choice of reflection list file, e.g. from McStas data dir
-*       D_PHI:                   [deg]   Focusing 'd_phi' for PowderN, see mcdoc page
-*       SHIFT:                   [deg] 	 Rotation of detector, set to 0.1 to displace by half a bin
+* R:                       [1]     Reflectivity of non-curved guides
+* R_curve:                 [1]     Reflectivity of curved guides
+* filename:                [str]   Choice of reflection list file, e.g. from McStas data dir
+* D_PHI:                   [deg]   Focusing 'd_phi' for PowderN, see mcdoc page
+* SHIFT:                   [deg] 	 Rotation of detector, set to 0.1 to displace by half a bin
 *	PACK:                    [1]     Powder packing factor
-*       Dw:                      [1]     Powder Debye-Waller factor
-*       BARNS:                   [1]     Flag to define if powder reflection file |F2| is in Barns or fm
+* Dw:                      [1]     Powder Debye-Waller factor
+* BARNS:                   [1]     Flag to define if powder reflection file |F2| is in Barns or fm
 *
 * %Link
 * The <a href="http://lns00.psi.ch/montecarlo/">PSI Monte-Carlo</a> website.
@@ -250,8 +250,8 @@ ROTATED (0,0,0) RELATIVE sa_arm
 
 
 COMPONENT Detector = Monitor_nD(
-  xwidth=3.0,yheight=0.09,
-  options="banana, theta limits [19.9+SHIFT 99.9+SHIFT] bins=400, file=detector.dat")
+  xwidth=3.0, yheight=0.09, filename="detector.dat", min=19.9+SHIFT, max=99.9+SHIFT, bins=400,
+  options="banana, theta")
 AT (0,0,0) RELATIVE sa_arm
 ROTATED (0, 0, 180) RELATIVE sa_arm
 
