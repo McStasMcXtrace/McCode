@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.208 $
+* Version: $Revision: 1.209 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.208 2009-01-14 13:16:22 farhi Exp $
+* $Id: mcstas-r.c,v 1.209 2009-01-14 13:36:14 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.208  2009/01/14 13:16:22  farhi
+* Fix bug in MPI_reduce when splitting arrays into blocks.
+*
 * Revision 1.207  2008/10/21 15:19:18  farhi
 * use common CHAR_BUFFER_LENGTH = 1024
 *
@@ -2903,14 +2906,17 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   }
 #endif /* USE_MPI */
 
-  if (!strstr(format.Name, "NeXus")
-  && (m<0 || n<0 || p<0 || strstr(format.Name, "binary")))
-  { /* do the swap once for all */
-    istransposed = 1;
-    i=m; m=abs(n); n=abs(i); p=abs(p);
-  } else m=abs(m); n=abs(n); p=abs(p);
+  
 
-  if (!strstr(format.Name, "NeXus") && strstr(format.Name, "transpose")) istransposed = !istransposed;
+  if (!strstr(format.Name, "NeXus")) {
+    if (m<0 || n<0 || p<0)                istransposed = !istransposed;
+    if (strstr(format.Name, "binary"))    istransposed = !istransposed;
+    if (strstr(format.Name, "transpose")) istransposed = !istransposed;
+    if (istransposed)
+    { /* do the swap once for all */
+      i=m; m=abs(n); n=abs(i); p=abs(p);
+    }
+  } else m=abs(m); n=abs(n); p=abs(p);
 
   if (!strstr(format.Name," list ")) simfile_f = mcsiminfo_file; /* use sim file */
   if (mcdirname)
