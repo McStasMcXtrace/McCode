@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.79 $
+* Version: $Revision: 1.80 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -266,7 +266,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.79 $
+#define ISOTROPIC_SQW $Revision: 1.80 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -722,7 +722,7 @@ struct Sqw_Data_struct *Sqw_readfile(
   char     flag=1; /* exit_flag */
   double   q, w, val, sum;
   double   mat_density=0, mat_weight=0, mat_at_nb=1;
-  double   alpha=1, beta=0;
+  double   iq2Sq=1, iqSq=0;
   long    *SW_lookup;
   long   **QW_lookup;
   char   **parsing;
@@ -754,7 +754,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     Sqw_Data->SQW       = NULL;
   }
 
-  if (!file || !strlen(file) || !strcmp(file, "NULL")) return(Sqw_Data);
+  if (!file || !strlen(file) || !strcmp(file, "NULL") || !strcmp(file, "0")) return(Sqw_Data);
   Table_Array = Table_Read_Array(file, &nblocks);
   strncpy(Sqw_Data->filename, file, 80);
   if (!Table_Array) return(NULL);
@@ -946,7 +946,7 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw->compname, nb_q_data*sizeof(double));
     return(NULL);
   }
-  sum = val = alpha = beta = 0;
+  sum = val = iq2Sq = iqSq = 0;
   for (i=0; i < nb_q_data ; i++) {
     double sqw=0, sq=0;
     q  = Table_Index(Table_Array[0], 0, i);
@@ -968,12 +968,12 @@ struct Sqw_Data_struct *Sqw_readfile(
       sq += sqw;
     }
     Sqw_Data->Sq[i] = sq;
-    alpha += q*q*sq;
-    beta  += q*sq;
-    Sqw_Data->iqSq[i] = beta*(q_max_data-q_min_data)/nb_q_data;
+    iq2Sq += q*q*sq;
+    iqSq  += q*sq;
+    Sqw_Data->iqSq[i] = iqSq*(q_max_data-q_min_data)/nb_q_data;
   }
-  /* alpha is \int q^2 S(q) dq */
-  alpha *= (q_max_data-q_min_data)/nb_q_data;
+  /* iq2Sq is \int q^2 S(q) dq */
+  iq2Sq *= (q_max_data-q_min_data)/nb_q_data;
 
   /* norm S(q ,w) = sum(S)*q_range/nb_q */
   val *= (Sqw_Data->q_max-Sqw_Data->q_min)/Sqw_Data->nb_q; /* restricted q,w range */
@@ -983,10 +983,10 @@ struct Sqw_Data_struct *Sqw_readfile(
   else if (!Sqw->sqw_norm)   Sqw_Data->alpha=1;
 
   if (!Sqw_Data->alpha) {
-    if (alpha && Sqw->type == 'c') { /* compute theoretical |S| norm */
+    if (iq2Sq && Sqw->type == 'c') { /* compute theoretical |S| norm */
       Sqw_Data->alpha =
         (q_max_data*q_max_data*q_max_data/3 - 2*PI*PI*Sqw->rho)
-        /alpha; /* this is only valid for coherent scattering */
+        /iq2Sq; /* this is only valid for coherent scattering */
     } else if (Sqw_Data->Sq[Sqw_Data->nb_q_data-1]) {
       /* alternate approx normalization to 1 */
       Sqw_Data->alpha = 1/Sqw_Data->Sq[Sqw_Data->nb_q_data-1];
@@ -1073,7 +1073,6 @@ struct Sqw_Data_struct *Sqw_readfile(
 
   /* set up Q probability table per w bin */
   /* uses:  Sqw_restrict */
-  double *iqSw = (double*)calloc(Sqw_Data->nb_w, sizeof(double));
   Sqw_Data->SQW =
     (struct Sqw_Q_struct**)calloc(Sqw_Data->nb_w, sizeof(struct Sqw_Q_struct*));
 
@@ -1093,13 +1092,11 @@ struct Sqw_Data_struct *Sqw_readfile(
         Sqw->compname, j, Sqw_Data->nb_q*sizeof(struct Sqw_Q_struct));
       return(NULL);
     }
-    iqSw[j] =0;
     /* set P(Q|W) and compute total intensity */
     for (i=0; i < (Sqw_Data->nb_q) ; i++) {
       q  = Table_Index(Table_Array[0], 0, i);
       Sqw_Data->SQW[j][i].Q     = q;
       Sqw_Data->SQW[j][i].value = Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha; /* S(q,w) */
-      iqSw[j]  += q*Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha;
     }
     for (i=0; i < (Sqw_Data->nb_q) ; i++) {
       Sqw_Data->SQW[j][i].cumul_proba =
@@ -1110,8 +1107,12 @@ struct Sqw_Data_struct *Sqw_readfile(
     /* modify cumulated S(q,w) distribution to include the Jacobian dOmega/dq and normalize */
     for (i=0; i < (Sqw_Data->nb_q) ; i++) {
       q  = Table_Index(Table_Array[0], 0, i);
-      Sqw_Data->SQW[j][i].cumul_proba *= q/iqSw[j]*Sqw_Data->SW[j].value;
+      Sqw_Data->SQW[j][i].cumul_proba *= q;
     }
+    
+    /* normalize to keep the distribution between 0 and 1 */
+    for (i=0; i < (Sqw_Data->nb_q) ; Sqw_Data->SQW[j][i++].cumul_proba /= Sqw_Data->SQW[j][Sqw_Data->nb_q-1].cumul_proba);
+    
   }
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated P(Q|w)\n",
