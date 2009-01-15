@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.209 $
+* Version: $Revision: 1.210 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.209 2009-01-14 13:36:14 farhi Exp $
+* $Id: mcstas-r.c,v 1.210 2009-01-15 15:42:44 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.209  2009/01/14 13:36:14  farhi
+* Fixed transposition issue with matlab when generated using mcformat
+*
 * Revision 1.208  2009/01/14 13:16:22  farhi
 * Fix bug in MPI_reduce when splitting arrays into blocks.
 *
@@ -932,13 +935,13 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
   int dsize;
   int res= MPI_SUCCESS;
   
-  if (!sbuf) return(-1);
+  if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
 
   MPI_Type_size(dtype, &dsize);
   lrbuf = malloc(count*dsize);
   if (lrbuf == NULL)
     exit(fprintf(stderr, "Error: Out of memory %li (mc_MPI_Reduce).\n", (long)count*dsize));
-
+  /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
   long offset=0;
   int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
   while (offset < count && res == MPI_SUCCESS) {
@@ -2942,16 +2945,17 @@ static double mcdetector_out_012D(struct mcformats_struct format,
    }
 
 #ifdef USE_MPI
-  if (mpi_event_list && mpi_node_count > 1) {
+if (mpi_event_list && mpi_node_count > 1) {
     if (mpi_node_rank != mpi_node_root) {
       /* we save an event list: all slaves send their data to master */
       /* m, n, p must be sent too, since all slaves do not have the same number of events */
       int mnp[3];
       mnp[0] = m; mnp[1] = n; mnp[2] = p;
-        
+      
       if (MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD)!= MPI_SUCCESS)
         fprintf(stderr, "Warning: node %i to master: MPI_Send mnp list error (mcdetector_out_012D)", mpi_node_rank);
-      if (MPI_Send(p1, abs(m*n*p), MPI_DOUBLE, mpi_node_root, 1, MPI_COMM_WORLD)!= MPI_SUCCESS)
+      /* we must use MPI_Ssend (synchronous) instead of MPI_Send (max buffer size of 32000) */
+      if (!p1 || MPI_Ssend(p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, mpi_node_root, 2, MPI_COMM_WORLD)!= MPI_SUCCESS)
         fprintf(stderr, "Warning: node %i to master: MPI_Send p1 list error (mcdetector_out_012D)", mpi_node_rank);
       /* slaves are done */
       return 0;
@@ -2959,14 +2963,19 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       int node_i;
       /* get, then save master and slaves event lists */
       for(node_i=0; node_i<mpi_node_count; node_i++) {
-        if (node_i > 0) { /* get data from slaves */
+        double *this_p1=NULL; /* buffer to hold the list to save */
+        int    mnp[3]={0,0,0};        /* size of this buffer */
+        if (node_i != mpi_node_root) { /* get data from slaves */
           MPI_Status mpi_status;
-          int mnp[3];
+          
           if (MPI_Recv(mnp, 3, MPI_INT, node_i, 1, MPI_COMM_WORLD, &mpi_status)!= MPI_SUCCESS)
             fprintf(stderr, "Warning: master from node %i: MPI_Recv mnp list error (mcdetector_out_012D)", node_i);
-          m = mnp[0]; n = mnp[1]; p = mnp[2];
-          if (MPI_Recv(p1, abs(m*n*p), MPI_DOUBLE, node_i, 1, MPI_COMM_WORLD, &mpi_status)!= MPI_SUCCESS)
+          this_p1 = (double *)calloc(abs(mnp[0]*mnp[1]*mnp[2]), sizeof(double));
+          if (!this_p1 || MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i, 2, MPI_COMM_WORLD, &mpi_status)!= MPI_SUCCESS)
             fprintf(stderr, "Warning: master from node %i: MPI_Recv p1 list error (mcdetector_out_012D)", node_i);
+        } else {
+          this_p1 = p1; 
+          mnp[0] = m; mnp[1] = n; mnp[2] = p;
         }
         if (!strstr(format.Name, "NeXus")) { /* not MPI+NeXus format */
           char *formatName_orig = mcformat.Name;  /* copy the pointer position */
@@ -2980,15 +2989,15 @@ static double mcdetector_out_012D(struct mcformats_struct format,
           if (node_i == mpi_node_count-1) { /* last node */
             /* we write the last data block: request a footer */
             if (no_footer) strncpy(no_footer, "         ", 9);
-          } else if (node_i == 0) {
+          } else if (node_i == mpi_node_root) {
             /* master does not need footer (followed by slaves) */
             if (!no_footer) strcat(formatName, " no footer "); /* slaves do not need footer */
           }
-          if (!mcdisable_output_files) {
+          if (!mcdisable_output_files && this_p1) {
             mcformat.Name = formatName; /* use special customized format for list MPI */
             mcfile_data(simfile_f, format,
                         pre, parent,
-                        p0, p1, p2, m, n, p,
+                        NULL, this_p1, NULL, mnp[0], mnp[1], mnp[2],
                         xlabel, ylabel, zlabel, title,
                         xvar, yvar, zvar,
                         x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
@@ -3002,12 +3011,13 @@ static double mcdetector_out_012D(struct mcformats_struct format,
           sprintf(part, "data_node_%i", node_i);
           if(mcnxfile_datablock(mcnxHandle, part,
               format.Name, parent, filename, xlabel, xlabel, ylabel, ylabel, zlabel, zlabel, title,
-              xvar, yvar, zvar, abs(m), abs(n), abs(p), x1, x2, y1, y2, z1, z2, NULL, p1, NULL)
+              xvar, yvar, zvar, abs(mnp[0]), abs(mnp[1]), abs(mnp[2]), x1, x2, y1, y2, z1, z2, NULL, this_p1, NULL)
               == NX_ERROR) {
             fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
           }
         }
 #endif /* USE_NEXUS */
+      if (node_i != mpi_node_root && this_p1) free(this_p1);
       } /* end for node_i */
     } /* end list for master node */
   } else

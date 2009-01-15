@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.105 $
+* Version: $Revision: 1.106 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,12 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.105 2008-10-21 15:19:18 farhi Exp $
+* $Id: mcstas-r.h,v 1.106 2009-01-15 15:42:44 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.105  2008/10/21 15:19:18  farhi
+*       use common CHAR_BUFFER_LENGTH = 1024
+*
 *       Revision 1.104  2008/09/02 08:36:17  farhi
 *       MPI support: block size defined in mcstas-r.h as 1e5. Correct bug when
 *       p0, p1 or p2 are NULL, and re-enable S(q,w) save in Isotropic_Sqw with
@@ -293,7 +296,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.105 $"
+#define MCSTAS_R_H "$Revision: 1.106 $"
 
 #include <math.h>
 #include <string.h>
@@ -467,7 +470,7 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 }
 
 #ifndef MPI_REDUCE_BLOCKSIZE
-#define MPI_REDUCE_BLOCKSIZE 10000
+#define MPI_REDUCE_BLOCKSIZE 31000
 #endif
 
 int mc_MPI_Reduce(void* sbuf, void* rbuf,
