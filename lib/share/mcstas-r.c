@@ -11,22 +11,16 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.210 $
+* Version: $Revision: 1.211 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.210 2009-01-15 15:42:44 farhi Exp $
+* $Id: mcstas-r.c,v 1.211 2009-01-18 14:43:13 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
-* Revision 1.209  2009/01/14 13:36:14  farhi
-* Fixed transposition issue with matlab when generated using mcformat
-*
-* Revision 1.208  2009/01/14 13:16:22  farhi
-* Fix bug in MPI_reduce when splitting arrays into blocks.
-*
 * Revision 1.207  2008/10/21 15:19:18  farhi
 * use common CHAR_BUFFER_LENGTH = 1024
 *
@@ -935,7 +929,7 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
   int dsize;
   int res= MPI_SUCCESS;
   
-  if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
+  if (!sbuf || count <= 0) return(-1);
 
   MPI_Type_size(dtype, &dsize);
   lrbuf = malloc(count*dsize);
@@ -951,12 +945,71 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
   }
 
   if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce)", mpi_node_rank);
+    fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce) at offset=%i, count=%i\n", mpi_node_rank, offset, count);
 
   if(mpi_node_rank == root)
     memcpy(rbuf, lrbuf, count*dsize);
 
   free(lrbuf);
+  return res;
+}
+
+/*******************************************************************************
+* mc_MPI_Send: Send array to MPI node by blocks to avoid buffer limit
+*******************************************************************************/
+int mc_MPI_Send(void *sbuf, 
+                  int count, MPI_Datatype dtype,
+                  int dest, MPI_Comm comm)
+{
+  int dsize;
+  int res= MPI_SUCCESS;
+  
+  if (!sbuf || count <= 0) return(-1);
+
+  MPI_Type_size(dtype, &dsize);
+
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
+  while (offset < count && res == MPI_SUCCESS) {
+    if (offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
+    res = MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, comm);
+    offset += length;
+  }
+
+  if(res != MPI_SUCCESS)
+    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%i, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
+
+  return res;
+}
+
+/*******************************************************************************
+* mc_MPI_Recv: Receives arrays from MPI nodes by blocks to avoid buffer limit
+*             the buffer must have been allocated previously.
+*******************************************************************************/
+int mc_MPI_Recv(void *sbuf, 
+                  int count, MPI_Datatype dtype,
+                  int source, MPI_Comm comm)
+{
+  int dsize;
+  int res= MPI_SUCCESS;
+  
+  if (!sbuf || count <= 0) return(-1);
+
+  MPI_Type_size(dtype, &dsize);
+
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
+  while (offset < count && res == MPI_SUCCESS) {
+    if (offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
+    res = MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++, comm, MPI_STATUS_IGNORE);
+    offset += length;
+  }
+
+  if(res != MPI_SUCCESS)
+    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%i, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
+
   return res;
 }
 
@@ -2909,8 +2962,6 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   }
 #endif /* USE_MPI */
 
-  
-
   if (!strstr(format.Name, "NeXus")) {
     if (m<0 || n<0 || p<0)                istransposed = !istransposed;
     if (strstr(format.Name, "binary"))    istransposed = !istransposed;
@@ -2945,17 +2996,16 @@ static double mcdetector_out_012D(struct mcformats_struct format,
    }
 
 #ifdef USE_MPI
-if (mpi_event_list && mpi_node_count > 1) {
+  if (mpi_event_list && mpi_node_count > 1) {
     if (mpi_node_rank != mpi_node_root) {
       /* we save an event list: all slaves send their data to master */
       /* m, n, p must be sent too, since all slaves do not have the same number of events */
       int mnp[3];
       mnp[0] = m; mnp[1] = n; mnp[2] = p;
-      
-      if (MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD)!= MPI_SUCCESS)
+        
+      if (MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 0, MPI_COMM_WORLD)!= MPI_SUCCESS)
         fprintf(stderr, "Warning: node %i to master: MPI_Send mnp list error (mcdetector_out_012D)", mpi_node_rank);
-      /* we must use MPI_Ssend (synchronous) instead of MPI_Send (max buffer size of 32000) */
-      if (!p1 || MPI_Ssend(p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, mpi_node_root, 2, MPI_COMM_WORLD)!= MPI_SUCCESS)
+      if (!p1 || mc_MPI_Send(p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, mpi_node_root, MPI_COMM_WORLD)!= MPI_SUCCESS)
         fprintf(stderr, "Warning: node %i to master: MPI_Send p1 list error (mcdetector_out_012D)", mpi_node_rank);
       /* slaves are done */
       return 0;
@@ -2966,12 +3016,10 @@ if (mpi_event_list && mpi_node_count > 1) {
         double *this_p1=NULL; /* buffer to hold the list to save */
         int    mnp[3]={0,0,0};        /* size of this buffer */
         if (node_i != mpi_node_root) { /* get data from slaves */
-          MPI_Status mpi_status;
-          
-          if (MPI_Recv(mnp, 3, MPI_INT, node_i, 1, MPI_COMM_WORLD, &mpi_status)!= MPI_SUCCESS)
+          if (MPI_Recv(mnp, 3, MPI_INT, node_i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE)!= MPI_SUCCESS)
             fprintf(stderr, "Warning: master from node %i: MPI_Recv mnp list error (mcdetector_out_012D)", node_i);
           this_p1 = (double *)calloc(abs(mnp[0]*mnp[1]*mnp[2]), sizeof(double));
-          if (!this_p1 || MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i, 2, MPI_COMM_WORLD, &mpi_status)!= MPI_SUCCESS)
+          if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i, MPI_COMM_WORLD)!= MPI_SUCCESS)
             fprintf(stderr, "Warning: master from node %i: MPI_Recv p1 list error (mcdetector_out_012D)", node_i);
         } else {
           this_p1 = p1; 
@@ -2981,6 +3029,7 @@ if (mpi_event_list && mpi_node_count > 1) {
           char *formatName_orig = mcformat.Name;  /* copy the pointer position */
           char  formatName[256];
           strcpy(formatName, mcformat.Name);
+          if (!strstr(formatName, "append")) strcat(formatName, " append ");
           if (node_i == 1) { /* first slave */
             /* disables header: it has been written by master */
             if (!strstr(formatName, "no header")) strcat(formatName, " no header ");
@@ -3017,7 +3066,7 @@ if (mpi_event_list && mpi_node_count > 1) {
           }
         }
 #endif /* USE_NEXUS */
-      if (node_i != mpi_node_root && this_p1) free(this_p1);
+        if (node_i != mpi_node_root && this_p1) free(this_p1);
       } /* end for node_i */
     } /* end list for master node */
   } else
@@ -3337,7 +3386,7 @@ void mcclear_format(struct mcformats_struct usedformat)
 /* mcuse_file: will save data/sim files */
 static void mcuse_file(char *file)
 {
-  if (file && strcmp(file, "NULL") && strcmp(file, "0"))
+  if (file && strcmp(file, "NULL"))
     mcsiminfo_name = file;
   else {
     char *filename=(char*)malloc(CHAR_BUF_LENGTH);
