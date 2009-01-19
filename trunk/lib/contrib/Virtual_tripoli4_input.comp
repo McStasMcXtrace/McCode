@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:guillaume.campioni@cea.fr">Guillaume Campioni</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.33 $
+* Version:  $Revision: 1.34 $
 * Origin: <a href="http://www.serma.cea.fr/">SERMA</a>
 * Release: McStas 1.10
 * Modified by: E. Farhi: Added automatic orientation+beam info+intensity norm
@@ -45,7 +45,8 @@
 * positions are in cm and the direction vector is normalized to 1.
 *
 * %BUGS
-* We recommend not to use parallel execution (MPI) with this component.
+* We recommend NOT to use parallel execution (MPI) with this component. If you
+* need to, set parameter 'smooth=1'.
 *
 * EXAMPLE:
 * To create a 'source' from a Tripoli4 simulation event file for the ILL:
@@ -450,7 +451,7 @@ INITIALIZE
     }
 
 #if defined (USE_MPI)
-    if (!smooth) {
+    if (!smooth && mpi_node_count > 1) {
       if (verbose)
 	printf("Tripoli4_input: %s: smoothing (smooth=1) is recommended when running MPI execution\n", NAME_CURRENT_COMP);
     }

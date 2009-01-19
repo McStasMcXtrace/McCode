@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.23 $
+* Version: $Revision: 1.24 $
 * Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -21,6 +21,9 @@
 * simulations into VITESS. Each neutron is 104 bytes.
 *
 * Example: Vitess_input(filename="MySource.vit", bufsize = 10000, repeat_count = 2)
+*
+* %BUGS
+* We recommend NOT to use parallel execution (MPI) with this component.
 *
 * %P
 * INPUT PARAMETERS
@@ -64,7 +67,7 @@ int finished=0;			/* Set to 1 when last neutron read */
 INITIALIZE
 %{
   /* Open neutron input filename. */
-  if (filename==NULL || (filename && !strcmp(filename,"NULL"))) {
+  if (!filename || !strcmp(filename,"NULL") || !strcmp(filename,"0") || !strcmp(filename,"stdin"))) {
     hfile = stdin;
   } else if (!strlen(filename)) {
     hfile = NULL;

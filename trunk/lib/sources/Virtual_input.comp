@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Sep 28th, 2001
-* Version:  $Revision: 1.31 $
+* Version:  $Revision: 1.32 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.6
 * Modified by: EF, Oct 2002. make use of shared read-table library.
@@ -38,7 +38,8 @@
 * (with the 11 values 'p x y z vx vy vz t sx sy sz') for float/double resp.
 *
 * %BUGS
-* We recommend NOT to use parallel execution (MPI) with this component.
+* We recommend NOT to use parallel execution (MPI) with this component. If you
+* need to, set parameter 'smooth=1'.
 *
 * EXAMPLE:
 * To create a 'source' file collecting all neutron states, use:
@@ -58,9 +59,10 @@
 * Optional input parameters
 * repeat_count: Number of times the source must be generated/repeated [1]
 * type:         May be "text", "float" or "double" to force filename type.
-*                           default is text filename [str]
+*                 Default is text filename [str]
 * verbose:      Display additional information about source, recommended [0/1]
-* smooth:       Smooth sparsed event files for filename repetitions [0/1]
+* smooth:       Smooth sparsed event files for filename repetitions. Use this option with MPI.
+*                 This will apply gaussian distributions around initial events from the file [0/1]
 *
 * %E
 *******************************************************************************/
@@ -146,12 +148,12 @@ INITIALIZE
     if (verbose)
       printf("Virtual_input: %s: Reading neutron events from filename '%s'. Repeat %g time(s)\n", NAME_CURRENT_COMP, filename, repeat_count);
 
-  #if defined (USE_MPI)
-    if (!smooth) {
+#if defined (USE_MPI)
+    if (!smooth && mpi_node_count > 1) {
       if (verbose)
-      printf("Virtual_input: %s: smoothing is recommended when running MPI execution\n", NAME_CURRENT_COMP);
+      printf("Virtual_input: %s: smoothing (smooth=1) is recommended when running MPI execution\n", NAME_CURRENT_COMP);
     }
-  #endif
+#endif
 
     double min_dv=fabs(max_vx-min_vx);
     if (min_dv > fabs(max_vy-min_vy)) min_dv = fabs(max_vy-min_vy);

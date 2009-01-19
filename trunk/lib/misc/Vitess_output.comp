@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -26,6 +26,9 @@
 * corrupted.
 *
 * Example: Vitess_output(filename="MySource.vit", bufsize = 10000, progress = 1)
+*
+* %BUGS
+* This component will NOT work with parallel execution (MPI).
 *
 * %P
 * INPUT PARAMETERS
@@ -63,8 +66,15 @@ double p2_out;                  /* square sum of output weight */
 
 INITIALIZE
 %{
+
+#if defined (USE_MPI)
+    if (mpi_node_count > 1) {
+      exit(printf("Vitess_output: %s: ERROR: This component can not be used in parallel execution mode (MPI). Abort.\n", NAME_CURRENT_COMP));
+    }
+#endif
+
   /* Open neutron output filename. */
-  if (filename==NULL || (filename && !strcmp(filename,"NULL")))
+  if (!filename || !strcmp(filename,"NULL") || !strcmp(filename,"0") || !strcmp(filename,"stdout")))
   {
     hfile = stdout;
   }
