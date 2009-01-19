@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: June 28th, 2006
-* Version:  $Revision: 1.17 $
+* Version:  $Revision: 1.18 $
 * Origin: <a href="http://www.ill.fr/">ILL</a>
 * Release: McStas 1.10
 * Modified by: EF, July 25th 2006: bug fixes.
@@ -41,7 +41,8 @@
 * positions are in cm and the direction vector is normalized to 1.
 *
 * %BUGS
-* We recommend not to use parallel execution (MPI) with this component.
+* We recommend NOT to use parallel execution (MPI) with this component. If you
+* need to, set parameter 'smooth=1'.
 *
 * EXAMPLE:
 * To generate PTRAC files using MCNP/MCNPX, add at the end of your input file:
@@ -427,7 +428,7 @@ INITIALIZE
     }
 
 #if defined (USE_MPI)
-    if (!smooth) {
+    if (!smooth && mpi_node_count > 1) {
       if (verbose)
 	printf("MCNP_input: %s: smoothing (smooth=1) is recommended when running MPI execution.\n", NAME_CURRENT_COMP);
     }
