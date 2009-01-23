@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: August 2006
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -331,8 +331,14 @@ TRACE
 		    coords_sp(normOut, coords_sub(xVec, pointOut)));
     
     /* Find itersection points with inside and outside guide walls */
-    cylinder_intersect(&t11, &t12 ,x - radius, y, z, vx, vy, vz, Rleft,  2*yheight);
-    cylinder_intersect(&t21, &t22 ,x - radius, y, z, vx, vy, vz, Rright, 2*yheight);
+    if (!cylinder_intersect(&t11, &t12 ,x - radius, y, z, vx, vy, vz, Rleft,  2*yheight)){
+      /*neutron did not hit the cylinder*/
+      t11=t12=0;
+    }
+    if (!cylinder_intersect(&t21, &t22 ,x - radius, y, z, vx, vy, vz, Rright, 2*yheight)){
+      /*neutron did not hit the cylinder*/
+      t21=t22=0;
+    }
     
     /* Choose appropriate reflection time */
     tLeft  = (t11 < tThreshold) ? t12 : t11;
