@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.106 $
+* Version: $Revision: 1.107 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,13 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.106 2009-01-15 15:42:44 farhi Exp $
+* $Id: mcstas-r.h,v 1.107 2009-01-23 10:51:30 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.106  2009/01/15 15:42:44  farhi
+*       Saving lists using MPI: must use MPI_Ssend to avoid the buffer max size
+*       in MPI1
+*
 *       Revision 1.105  2008/10/21 15:19:18  farhi
 *       use common CHAR_BUFFER_LENGTH = 1024
 *
@@ -296,7 +300,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.106 $"
+#define MCSTAS_R_H "$Revision: 1.107 $"
 
 #include <math.h>
 #include <string.h>
@@ -922,6 +926,7 @@ Coords coords_xp(Coords b, Coords c);
 void   coords_print(Coords a);
 
 void rot_set_rotation(Rotation t, double phx, double phy, double phz);
+int  rot_test_identity(Rotation t);
 void rot_mul(Rotation t1, Rotation t2, Rotation t3);
 void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);
