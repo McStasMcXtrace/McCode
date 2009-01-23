@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.107 $
+* Version: $Revision: 1.108 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,14 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.107 2009-01-23 10:51:30 farhi Exp $
+* $Id: mcstas-r.h,v 1.108 2009-01-23 14:01:12 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.107  2009/01/23 10:51:30  farhi
+*       Minor speedup: Identity rotation matrices are now checked for and
+*       caculations reduced.
+*       It seems this McSatsStable commit did not got through for McStas 2.0
+*
 *       Revision 1.106  2009/01/15 15:42:44  farhi
 *       Saving lists using MPI: must use MPI_Ssend to avoid the buffer max size
 *       in MPI1
@@ -300,7 +305,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.107 $"
+#define MCSTAS_R_H "$Revision: 1.108 $"
 
 #include <math.h>
 #include <string.h>
@@ -474,7 +479,7 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 }
 
 #ifndef MPI_REDUCE_BLOCKSIZE
-#define MPI_REDUCE_BLOCKSIZE 31000
+#define MPI_REDUCE_BLOCKSIZE 10000
 #endif
 
 int mc_MPI_Reduce(void* sbuf, void* rbuf,
