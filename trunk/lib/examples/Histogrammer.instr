@@ -8,7 +8,7 @@
 * Date: 2007-03-19
 * Origin: Risoe
 * Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Tools
 *
 * Takes eventfile input (Virtual_input/Vitess/MCNP/Tripoli4 formats) and applies Monitor_nD to generate
@@ -29,11 +29,13 @@
 * %Parameters
 * MODE:    [int]    Input file mode/format - 0 for help on usage
 *                   1=McStas,2=Vitess,3=MCNP,4=Tripoli4
-* filename [string] Specifies input event file
-* options  [string] Specifies the histogramming rules used by Monitor_nD.
+* filename:[string] Specifies input event file
+* options: [string] Specifies the histogramming rules used by Monitor_nD.
 *                   It <b>MUST</b> contain the 'previous' word - see mcdoc page
-* type     [string] Virtual_input event files, 'type' parameter(text/float/double) - see mcdoc page
-* bufsize  [int]    Vitess_input 'buffersize' parameter - see mcdoc page
+* type:    [string] Virtual_input event files, 'type' parameter(text/float/double) - see mcdoc page
+* bufsize: [int]    Vitess_input 'buffersize' parameter - see mcdoc page
+* xwidth:  [m]      Horizontal width of detector, or diameter for banana,cylinder and shpere geometry
+* yheight: [m]      Vertical height of detector, for plate, cylinder, banana shape
 *
 * %BUGS
 * The options string currently does not work with commas (mcrun interprets this as scan parms)
@@ -53,7 +55,7 @@
 *******************************************************************************/
 
 /* Name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Histogrammer(string filename=0, int MODE=0 , string options="sphere theta phi outgoing previous", string type="text", int bufsize=10000)
+DEFINE INSTRUMENT Histogrammer(string filename=0, int MODE=0 , string options="sphere theta phi outgoing previous", string type="text", int bufsize=10000, xwidth=0.1, yheight=0.1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -145,7 +147,7 @@ WHEN (file_mode ==4)  AT (0, 0, 0) RELATIVE Origin
 /*    nx = 360, ny = 360, filename = "kugle.dat", radius = 1)*/
 /*    AT (0, 0, 0) RELATIVE Origin */
 
-COMPONENT Monitor = Monitor_nD(options=options)
+COMPONENT Monitor = Monitor_nD(options=options,xwidth=xwidth,yheight=yheight)
   AT (0, 0, 0) RELATIVE Origin
 
 END
