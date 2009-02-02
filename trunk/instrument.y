@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas X.Y.Z
-* Version: $Revision: 1.80 $
+* Version: $Revision: 1.81 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.80 2008-09-05 09:55:19 farhi Exp $
+* $Id: instrument.y,v 1.81 2009-02-02 14:28:33 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1873,15 +1873,29 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         instr_current_filename, instr_current_line);
       siter2 = symtab_iterate(defpar);
       fprintf(stderr,"  Definition parameters: ");
-      while(entry2 = symtab_next(siter2))
+      char misspelled[256];
+      strcpy(misspelled, "");
+      while(entry2 = symtab_next(siter2)) {
         fprintf(stderr, "%s ", entry2->name);
+        if (!strlen(misspelled) && (!strcasecmp(entry->name, entry2->name) 
+         ||  strcasestr(entry->name, entry2->name) 
+         ||  strcasestr(entry2->name, entry->name))) strcpy(misspelled, entry2->name);
+      }
       symtab_iterate_end(siter2);
       siter2 = symtab_iterate(setpar);
       fprintf(stderr,"\n  Setting parameters: ");
-      while(entry2 = symtab_next(siter2))
+      while(entry2 = symtab_next(siter2)) {
         fprintf(stderr, "%s ", entry2->name);
+        if (!strlen(misspelled) && (!strcasecmp(entry->name, entry2->name) 
+         ||  strcasestr(entry->name, entry2->name) 
+         ||  strcasestr(entry2->name, entry->name))) strcpy(misspelled, entry2->name);
+      }
       symtab_iterate_end(siter2);
       print_error("\n");
+      if (strlen(misspelled)) 
+      	fprintf(stderr, "Info:    '%s' parameter name used in instrument matches component %s\n"
+                        "         parameter '%s' from library but may be misspelled. Check component instance.\n", 
+                        entry->name, comp->type, misspelled);
     }
   }
   symtab_iterate_end(siter);
