@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.12 $
+* Version: $Revision: 1.13 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -396,6 +396,23 @@ INITIALIZE
   nH_t  = Part_He_3_t.rows;
   Table_Read(&Part_Stop_t,FN_Stop,2);
   nS_t = Part_Stop_t.rows;
+  if (!nH_p) {
+  	Table_Read(&Part_He_3_p,"Gas_tables" MC_PATHSEP_S FN_Conv,1);
+    nH_p = Part_He_3_p.rows;
+  }
+  if (!nS_p) {
+  	Table_Read(&Part_Stop_p,"Gas_tables" MC_PATHSEP_S FN_Stop,1);
+    nS_p = Part_Stop_p.rows;
+  }
+  if (!nH_t) {
+  	Table_Read(&Part_He_3_t,"Gas_tables" MC_PATHSEP_S FN_Conv,2);
+    nH_t  = Part_He_3_t.rows;
+  }
+  if (!nS_t) {
+  	Table_Read(&Part_Stop_t,"Gas_tables" MC_PATHSEP_S FN_Stop,2);
+    nS_t = Part_Stop_t.rows;
+  }
+  
 
   if (nH_p != nS_p || nH_t != nS_t) {
       fprintf(stderr,"PSD_Detector: %s: Data files for helium %s and stopping gas %s\n"
@@ -538,6 +555,8 @@ INITIALIZE
   if (threshold<0) threshold=0;
 
   Table_Read(&Part_He_3_n,FN_Conv,3); // the absorption cross section for 0.18 nm neutrons in the converter is read from the file
+  if (!Part_He_3_n.rows)
+  	Table_Read(&Part_He_3_n,"Gas_tables" MC_PATHSEP_S FN_Conv,3);
   if ( (Part_He_3_n.rows!=1) || (Part_He_3_n.columns!=1) ) {
       fprintf(stderr,"PSD_Detector: %s: Problem: the third part of the converter\n"
                      "              stopping power file should contain only \n"
@@ -547,6 +566,8 @@ INITIALIZE
       exit(-1);
   }
   Table_Read(&Part_Stop_n,FN_Stop,3); // the absorption cross section for 0.18 nm neutrons in the converter is read from the file
+  if (!Part_Stop_n.rows)
+  	Table_Read(&Part_Stop_n,"Gas_tables" MC_PATHSEP_S FN_Stop,3);
   if ( (Part_Stop_n.rows!=1) || (Part_Stop_n.columns!=1)) {
       fprintf(stderr,"PSD_Detector: %s: Problem: the third part of the stopping \n"
                      "              gas stopping power file should contain only \n"
