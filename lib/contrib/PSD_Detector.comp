@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.13 $
+* Version: $Revision: 1.14 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -19,19 +19,22 @@
 * converter (box, cylinder or 'banana').
 *
 * %D
-* An n times m pixel Position Sensitive Detector (PSD).
-* A flat rectangular box of given depth is simulated, or alternatively
-* a cylinder (when giving radius), or a horizontal cylindrical 'banana'
-* detector (when giving the width along the arc) filled with a mixture
-* of thermal-neutron converter gas and stopping gas.
-* Box and cylinder are centered around the origin, the 'banana' has the
-* origin as focus point.
-* The default os a simple 1D/2D position detector. However, setting
+* An n times m pixel Position Sensitive Detector (PSD), box, cylinder or banana
+* filled with a mixture of thermal-neutron converter gas and stopping gas.
+* This model implements wires detection, including charge drift, parallax, etc.
+* The default is a simple 1D/2D position detector. However, setting
 * the parameter 'type' to "events" will save the signal as an event file which
 * contains all neutron parameters at detection points, including time. This is
 * especially suited for TOF detectors. Please use Histogrammer afterwards.
 * The gas creation event (neutron absorption in gas) is flagged as SCATTERED==1, 
 * and the charge detection (signal) is flagged as SCATTERED==2.
+*
+* GEOMETRY:
+* A flat rectangular box of given depth is simulated, or alternatively
+* a cylinder (when giving radius), or a horizontal cylindrical 'banana'
+* detector (when giving the width along the arc).
+* Box position is at its center, the 'banana' and cylinder have their
+* position at focus point, symetric in angular range for the 'banana'.
 *
 * GAS SPECIFICATIONS:
 * The converter gas can be specified as He-3, BF3 or N2.
@@ -85,7 +88,7 @@
 * deposition in the detector does not allow for accurate modeling of
 * the border effect, and therefore the border pixels should be
 * ignored, just as in a real detector.
-* Note that specifying 0 width of the dead zone next tot the
+* Note that specifying 0 width of the dead zone next to the
 * sensitive volume, apart from being unrealistic, does not allow
 * accurate simulation of the border effect: in this case, there will
 * be a relative lack of events on the border pixels due to the wall
@@ -136,6 +139,8 @@
 * awidth:         Width of detector opening along the horizontal arc of
 *                 the detector, measured along the inside arc of the
 *                 sensitive volume in the case of a 'banana' detector (m)
+* angle:          Angular opening of detector in the case of a 'banana' 
+*                 detector, then overrides awidth parameter (deg)
 * yheight:        Height of detector opening (m)
 * zdepth:         Depth of the sensitive volume of the detector (m)
 * nx:             Number of pixel columns (1)
@@ -196,7 +201,7 @@ DEFINITION PARAMETERS (nx=128, ny=128, string filename=0,
 SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, zdepth=0.03,
   threshold=100, PressureConv=5, PressureStop=1, interpolate=1, p_interact=0,
   verbose=0, LensOn=1, dc=0, borderx=-1, bordery=-1, xChDivRelSigma=0,
-  yChDivRelSigma=0, bufsize=0, restore_neutron=0)
+  yChDivRelSigma=0, bufsize=0, restore_neutron=0, angle=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
   CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, DetCumul, PHSpectrum,
   PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,
@@ -328,12 +333,14 @@ INITIALIZE
     exit(0);
     }
   }
+  if (radius && angle>0)       awidth=angle/360*2*PI*radius;
+  else if (radius && awidth>0) angle = awidth*360/2/PI/radius;
   if (radius>0 && !awidth) {
     DetectorType+=2; /* cylinder */
   }
   if (awidth>0 && radius) {
     DetectorType+=4; /* banana */
-    if (zdepth<0) {
+    if (zdepth<=0) {
     fprintf(stderr,"PSD_Detector: %s: Detector 'banana' has no zdepth. Exit.\n",
                            NAME_CURRENT_COMP);
     exit(0);
@@ -373,7 +380,7 @@ INITIALIZE
     switch (DetectorType) {
     case 1: printf("box\n"); break;
     case 2: printf("tube\n"); break;
-    case 4: printf("cylinder ('banana')\n"); break;
+    case 4: printf("cylinder ('banana') opening angle=%g [deg] arc length=%g [m]\n", angle, awidth); break;
     default: 
       printf("not defined\n");
     }
@@ -1113,8 +1120,8 @@ TRACE
               pp = Monitor_nD_Trace(&DEFS, &Vars);
               if (mcformat_override) mcformat = mcformat_sim;
               Vars.Nsum++;
-              Vars.psum  += pp;
-              Vars.p2sum += pp*p;
+              Vars.psum  += p;
+              Vars.p2sum += p*p;
             }
             // initial version ABSORB detected neutrons. 
             // This was removed if user wants to analyze the behaviour of the detector
@@ -1137,6 +1144,7 @@ SAVE
     if (mcformat_override) mcformat = mcformat_vo;
     Monitor_nD_Save(&DEFS, &Vars);
     if (mcformat_override) mcformat = mcformat_sim;
+    DETECTOR_OUT(Vars.Nsum, Vars.psum, Vars.p2sum);
   } else {
     double width;
     if (xwidth>0) width=xwidth;
@@ -1205,39 +1213,70 @@ MCDISPLAY
   double h;
   h=yheight;
   magnify("xyz");
-  if (xwidth>0) {
-      double xmin = -0.5*xwidth;
-      double xmax =  0.5*xwidth;
-      double ymin = -0.5*yheight;
-      double ymax =  0.5*yheight;
-      double zmin = -0.5*zdepth;
-      double zmax =  0.5*zdepth;
-      multiline(5, xmin, ymin, zmin,
-                   xmax, ymin, zmin,
-                   xmax, ymax, zmin,
-                   xmin, ymax, zmin,
-                   xmin, ymin, zmin);
-      multiline(5, xmin, ymin, zmax,
-                   xmax, ymin, zmax,
-                   xmax, ymax, zmax,
-                   xmin, ymax, zmax,
-                   xmin, ymin, zmax);
-      line(xmin, ymin, zmin, xmin, ymin, zmax);
-      line(xmax, ymin, zmin, xmax, ymin, zmax);
-      line(xmin, ymax, zmin, xmin, ymax, zmax);
-      line(xmax, ymax, zmin, xmax, ymax, zmax);
+  if (xwidth>0) { /* box */
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
   }
   if (radius>0) {
-      circle("xz", 0,  h/2.0, 0, radius);
-      circle("xz", 0, -h/2.0, 0, radius);
-      line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
-      line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
-      line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
-      line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
-      if (zdepth>0){
-         circle("xz", 0,  h/2.0, 0, radius+zdepth);
-         circle("xz", 0, -h/2.0, 0, radius+zdepth);
-      }
+		if (!awidth) { /* cylinder */
+	    circle("xz", 0,  h/2.0, 0, radius);
+	    circle("xz", 0, -h/2.0, 0, radius);
+	    line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+	    line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+	    line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+	    line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+	    if (zdepth>0){
+	       circle("xz", 0,  h/2.0, 0, radius+zdepth);
+	       circle("xz", 0, -h/2.0, 0, radius+zdepth);
+	    }
+    } else {
+    	int NH=24;
+      int ih;
+			mcdis_magnify("xyz");
+			for(ih = 0; ih < NH; ih++) {
+		    double phi0, phi1;
+		    double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;
+		    phi0 = (-angle/2+(angle/NH)*ih)    *DEG2RAD; /* in xz plane */
+		    phi1 = (-angle/2+(angle/NH)*(ih+1))*DEG2RAD;
+	      
+		    z0 = radius*cos(phi0);
+		    x0 = radius*sin(phi0);
+		    y0 = -yheight/2;
+		    z1 = radius*cos(phi0);
+		    x1 = radius*sin(phi0);
+		    y1 = yheight/2;
+		    z2 = radius*cos(phi1);
+		    x2 = radius*sin(phi1);
+		    y2 = y1;
+		    z3 = radius*cos(phi1);
+		    x3 = radius*sin(phi1);
+		    y3 = y0;
+		    mcdis_multiline(5,
+		      x0,y0,z0,
+		      x1,y1,z1,
+		      x2,y2,z2,
+		      x3,y3,z3,
+		      x0,y0,z0);
+			}
+    }
   }
 %}
 
