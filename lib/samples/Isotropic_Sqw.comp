@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.80 $
+* Version: $Revision: 1.81 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -146,6 +146,8 @@
 * %BUGS:
 * When used in concentric mode, multiple bouncing scattering
 * (traversing the hollow part) is not taken into account.
+* When adapting the (q,w) range automatically, the guess may be wrong for highly
+* polychromatic beam.
 *
 * %VALIDATION
 * For Vanadium incoherent scattering mode, V_sample, PowderN, Single_crystal
@@ -200,12 +202,10 @@
 *                     to set according to the S(Q,w) values, i.e. not too low.
 * p_interact:   [1] Force a given fraction of the beam to scatter, keeping
 *                   intensity right, to enhance small signals (-1 unactivate).
-* auto_sigma:   [1] Compute real scattered intensity when true (default).
 * auto_norm:    [1] Normalize S(q,w) when -1. Use raw data when 0 (default),
 *                     multiply S(q,w) when auto_norm>0.
 * auto_qw:      [1] When set to 1, the [q,w] range will automatically be tuned
 *                   to optimal setting whenever required (recommended).
-* interpolate:  [1] Perform (q,w) smoothing from S(q,w) if true (recommended).
 *
 * POWDER ELASTIC SCATTERING PARAMETERS (see PowderN for more details):
 * powder_Dd:             [1] global Delta_d/d spreading, or 0 if ideal.
@@ -255,7 +255,7 @@ DEFINE COMPONENT Isotropic_Sqw
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
-    interpolate=1, p_interact=-1, auto_sigma=1, auto_norm=0, powder_barns=1)
+    p_interact=-1, auto_norm=0, powder_barns=1)
   OUTPUT PARAMETERS (VarSqw, columns, offdata)
   STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -266,7 +266,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.80 $
+#define ISOTROPIC_SQW $Revision: 1.81 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -320,7 +320,7 @@ struct Sqw_Data_struct /* contains normalized Sqw data for probabilities */
   double alpha; /* ratio for S(q,w) normalization */
 };
 
-struct Sqw_sample_struct {
+struct Sqw_sample_struct { /* global parameters gathered as a structure */
   char   compname[256];
 
   struct Sqw_Data_struct Data_inc;
@@ -360,7 +360,6 @@ struct Sqw_sample_struct {
   double Temperature;
   double sqw_norm;
   char   sqw_auto;
-  char   sqw_interp;
   double mean_scatt;
   double mean_abs;
   double psum_scatt;
@@ -372,6 +371,7 @@ struct Sqw_sample_struct {
 #include <stdio.h>
 #include <math.h>
 
+/* sets a Data S(q,w) to 'NULL' */
 void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
 {
   Sqw_Data->nb_q         =0;
@@ -397,6 +397,7 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
 
 off_struct offdata;
 
+/* gaussian distribution to appply around Bragg peaks in a powder */
 double Sqw_powder_gauss(double x, double mean, double rms) {
   return (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)));
 }
@@ -584,7 +585,7 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
       } else { /* Dirac peak, no width */
         peak_qmin = peak_qmax = list[i].q;
       }
-
+      /* S(q) intensity is here */
       factor = list[i].j*(list[i].DWfactor ? list[i].DWfactor : 1)
                *Sqw->rho*PI/2
                /(Sqw->type == 'c' ? Sqw->s_coh : Sqw->s_inc)*list[i].F2/list[i].q;
@@ -656,7 +657,7 @@ int Sqw_search_SW(struct Sqw_Data_struct Sqw, double randnum)
   if (randnum >1) randnum=1;
 
   if (Sqw.nb_w == 1) return(0);
-
+  /* benefit from fast lookup table if exists */
   if (Sqw.SW_lookup) {
     i = Sqw.SW_lookup[(long)floor(randnum*Sqw.lookup_length)]-1;
     if (i<0) i=0;
@@ -686,7 +687,7 @@ int Sqw_search_Q_proba_per_w(struct Sqw_Data_struct Sqw,
                              double randnum, int index)
 {
   int i=0;
-
+  /* benefit from fast lookup table if exists */
   if (Sqw.QW_lookup && Sqw.QW_lookup[index]) {
     i = Sqw.QW_lookup[index][(long)floor(randnum*Sqw.lookup_length)]-1;
     if (i<0) i=0;
@@ -1060,6 +1061,12 @@ struct Sqw_Data_struct *Sqw_readfile(
     Sqw_Data->SW[j].value = local_val; /* S(w) */
     val                  += local_val; /* total intensity */
   }
+  if (!val) {
+    printf("Isotropic_Sqw: %s: Total S(q,w) intensity is NULL.\n"
+           "ERROR          Exiting.\n",
+      Sqw->compname);
+    return(NULL);
+  }
 
   /* compute normalized cumulated probability */
   for (j=0; j < (Sqw_Data->nb_w) ; j++) {
@@ -1068,8 +1075,8 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (j) Sqw_Data->SW[j].cumul_proba += Sqw_Data->SW[j-1].cumul_proba;
   }
   if (Sqw->verbose_output > 1)
-    printf("Isotropic_Sqw: %s: Generated normalized SW[%li]\n",
-      Sqw->compname, Sqw_Data->nb_w);
+    printf("Isotropic_Sqw: %s: Generated normalized SW[%li] in range [0:%g]\n",
+      Sqw->compname, Sqw_Data->nb_w, Sqw_Data->SW[Sqw_Data->nb_w-1].cumul_proba);
 
   /* set up Q probability table per w bin */
   /* uses:  Sqw_restrict */
@@ -1099,19 +1106,18 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw_Data->SQW[j][i].value = Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha; /* S(q,w) */
     }
     for (i=0; i < (Sqw_Data->nb_q) ; i++) {
-      Sqw_Data->SQW[j][i].cumul_proba =
-                        Sqw_Data->SQW[j][i].value/Sqw_Data->SW[j].value; /* S(q,w)/S(w) */
-      /* compute normalized cumulated probability */
+      Sqw_Data->SQW[j][i].cumul_proba = Sqw_Data->SQW[j][i].value/Sqw_Data->SW[j].value; 
+      /* compute cumulated probability */
       if (i) Sqw_Data->SQW[j][i].cumul_proba += Sqw_Data->SQW[j][i-1].cumul_proba;
     }
-    /* modify cumulated S(q,w) distribution to include the Jacobian dOmega/dq and normalize */
+    /* modify cumulated S(q,w) distribution to include the Jacobian dOmega/dq */
     for (i=0; i < (Sqw_Data->nb_q) ; i++) {
       q  = Table_Index(Table_Array[0], 0, i);
       Sqw_Data->SQW[j][i].cumul_proba *= q;
     }
-    
-    /* normalize to keep the distribution between 0 and 1 */
-    for (i=0; i < (Sqw_Data->nb_q) ; Sqw_Data->SQW[j][i++].cumul_proba /= Sqw_Data->SQW[j][Sqw_Data->nb_q-1].cumul_proba);
+    /* normalize distribution to 0:1 range */
+    for (i=0; i < (Sqw_Data->nb_q) ; 
+    	Sqw_Data->SQW[j][i++].cumul_proba /= Sqw_Data->SQW[j][Sqw_Data->nb_q-1].cumul_proba);
     
   }
   if (Sqw->verbose_output > 1)
@@ -1125,8 +1131,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     printf("Isotropic_Sqw: %s: Cannot allocate SW_lookup (%li bytes).\n"
            "Warning        Will be slower.\n",
       Sqw->compname, Sqw_Data->lookup_length*sizeof(long));
-  }
-  if (SW_lookup) {
+  } else {
     for (i=0; i < Sqw_Data->lookup_length; i++) {
       w = (double)i/(double)Sqw_Data->lookup_length;
       SW_lookup[i] = Sqw_search_SW(*Sqw_Data, w);
@@ -1139,8 +1144,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     printf("Isotropic_Sqw: %s: Cannot allocate QW_lookup (%li bytes).\n"
            "Warning        Will be slower.\n",
       Sqw->compname, Sqw_Data->nb_w*sizeof(long*));
-  }
-  if (QW_lookup) {
+  } else {
     for (j=0; j < (Sqw_Data->nb_w) ; j++) {
       QW_lookup[j] =
         (long*)calloc(Sqw_Data->lookup_length, sizeof(long));
@@ -1156,7 +1160,7 @@ struct Sqw_Data_struct *Sqw_readfile(
         }
       }
     }
-    if (QW_lookup) Sqw_Data->QW_lookup = QW_lookup;
+    Sqw_Data->QW_lookup = QW_lookup;
   }
   if ((Sqw_Data->QW_lookup || Sqw_Data->SW_lookup) && Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated lookup tables with %li entries\n",
@@ -1313,7 +1317,6 @@ INITIALIZE
   VarSqw.rho       = V_rho;
   VarSqw.sqw_norm  = auto_norm;
   VarSqw.sqw_auto  = auto_qw;
-  VarSqw.sqw_interp= interpolate;
   VarSqw.mean_scatt= 0;
   VarSqw.mean_abs  = 0;
   VarSqw.psum_scatt= 0;
@@ -1510,7 +1513,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
     /* contains the 4*PI*kf/ki factor */
     coh = VarSqw.s_coh;
     inc = VarSqw.s_inc;
-    if (auto_sigma && k && VarSqw.s_coh>0 && VarSqw.Data_coh.intensity) {
+    if (k && VarSqw.s_coh>0 && VarSqw.Data_coh.intensity) {
       int index_2k = (int)floor(VarSqw.Data_coh.nb_q_data
                    * (2*k - VarSqw.Data_coh.q_min)
                    / (VarSqw.Data_coh.q_max-VarSqw.Data_coh.q_min));
@@ -1519,7 +1522,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         index_2k=VarSqw.Data_coh.nb_q_data-1;
       coh = VarSqw.s_coh/2/k/k*VarSqw.Data_coh.iqSq[index_2k];
     }
-    if (auto_sigma && k && VarSqw.s_inc>0 && VarSqw.Data_inc.intensity) {
+    if (k && VarSqw.s_inc>0 && VarSqw.Data_inc.intensity) {
       int index_2k = (int)floor(VarSqw.Data_inc.nb_q_data
                    * (2*k - VarSqw.Data_inc.q_min)
                    / (VarSqw.Data_inc.q_max-VarSqw.Data_inc.q_min));
@@ -1660,7 +1663,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         /* index for rand > cumul SW */
         index_w = Sqw_search_SW(Data_sqw, tmp_rand);
         if (&(Data_sqw.SW[index_w]) != NULL) {
-          if (VarSqw.sqw_interp && Data_sqw.nb_w > 1) {
+          if (Data_sqw.nb_w > 1) {
             double w1, w2;
             if (index_w > 0) { /* interpolate linearly energy */
               ratio_w = (tmp_rand                              - Data_sqw.SW[index_w-1].cumul_proba)
@@ -1715,7 +1718,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           continue; /* no Q value for this w choice */
         }
         if (&(Data_sqw.SQW[index_w]) != NULL) {
-          if (VarSqw.sqw_interp && Data_sqw.nb_q > 1 && index_q > 0) {
+          if (Data_sqw.nb_q > 1 && index_q > 0) {
             if (index_w > 0 && Data_sqw.nb_w > 1) {
               /* bilinear interpolation on - side: index_w > 0, index_q > 0 */
               ratio_q = (tmp_rand - Data_sqw.SQW[index_w][index_q-1].cumul_proba)
