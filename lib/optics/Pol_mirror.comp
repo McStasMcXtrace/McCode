@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -79,7 +79,7 @@
 DEFINE COMPONENT Pol_mirror
 DEFINITION PARAMETERS (rUpFunc=StdReflecFunc, rDownFunc=rUpFunc, 
 		       rUpPar={0.99,0.0219,6.07,2.0,0.003}, rDownPar=rUpPar, 
-                       useTables=0, zwidth, yheight, terminate_missed=0)
+                       useTables=0, zwidth, yheight)
 SETTING PARAMETERS (int option=1)
 OUTPUT PARAMETERS (rUpParPtr, rDownParPtr)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -212,8 +212,12 @@ TRACE
     SCATTER;
   
   } /* End intersect the mirror */
-  else if(terminate_missed) ABSORB;
-  %}
+  else
+  {
+    /*neutron will miss the mirror, so don't propagate i.e restore it*/
+    RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+  }  
+%}
 
 MCDISPLAY
 %{
