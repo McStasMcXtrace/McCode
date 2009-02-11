@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.44 $
+* Version: $Revision: 1.45 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.44 2008-10-21 15:19:19 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.45 2009-02-11 15:11:05 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.44  2008/10/21 15:19:19  farhi
+* use common CHAR_BUFFER_LENGTH = 1024
+*
 * Revision 1.43  2008/08/07 21:52:10  farhi
 * Second major commit for v2: fixed sources, and most instruments for
 * automatic testing. A few instruments need more work still.
@@ -315,7 +318,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_option_copy = (char*)malloc(strlen(mc_mn_Vars->option)+1);
     if (mc_mn_option_copy == NULL)
     {
-      fprintf(stderr,"Monitor_nD: %s cannot allocate mc_mn_option_copy (%li). Fatal.\n", mc_mn_Vars->compcurname, strlen(mc_mn_Vars->option));
+      fprintf(stderr,"Monitor_nD: %s cannot allocate mc_mn_option_copy (%li). Fatal.\n", mc_mn_Vars->compcurname, (long)strlen(mc_mn_Vars->option));
       exit(-1);
     }
 

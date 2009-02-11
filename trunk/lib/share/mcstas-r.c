@@ -11,16 +11,21 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.212 $
+* Version: $Revision: 1.213 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.212 2009-01-23 10:51:30 farhi Exp $
+* $Id: mcstas-r.c,v 1.213 2009-02-11 15:11:05 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.212  2009/01/23 10:51:30  farhi
+* Minor speedup: Identity rotation matrices are now checked for and
+* caculations reduced.
+* It seems this McSatsStable commit did not got through for McStas 2.0
+*
 * Revision 1.211  2009/01/18 14:43:13  farhi
 * Fixed MPI event list output (broken and reported first by A. Percival).
 * This required to split lists in small blocks not to overflow the MPI
@@ -2728,7 +2733,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           }
         }
       }
-      if (isdata_present && !is1d) fprintf(datafile, eol_char);
+      if (isdata_present && !is1d) fprintf(datafile, ,"%c", eol_char);
     } /* end 2 loops if not Binary */
     if (datafile && isBinary)
     {
