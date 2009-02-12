@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.213 $
+* Version: $Revision: 1.214 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.213 2009-02-11 15:11:05 farhi Exp $
+* $Id: mcstas-r.c,v 1.214 2009-02-12 10:43:48 erkn Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.213  2009/02/11 15:11:05  farhi
+* printf format fixes revealed with gcc 4.3
+*
 * Revision 1.212  2009/01/23 10:51:30  farhi
 * Minor speedup: Identity rotation matrices are now checked for and
 * caculations reduced.
@@ -4569,7 +4572,7 @@ plane_intersect(double *t, double x, double y, double z,
                  double vx, double vy, double vz, double nx, double ny, double nz, double wx, double wy, double wz)
 {
   double s;
-  if ((s=scalar_prod(nx,ny,nz,vx,vy,vz))<FLT_EPSILON) return 0;
+  if (fabs(s=scalar_prod(nx,ny,nz,vx,vy,vz))<FLT_EPSILON) return 0;
   *t = - scalar_prod(nx,ny,nz,x-wx,y-wy,z-wz)/s;
   if (t<0) return -1;
   else return 1;
