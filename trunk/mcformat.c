@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.29 $
+* Version: $Revision: 1.30 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.29 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.30 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -485,9 +485,9 @@ void mcformat_print_mcstas_struct(struct McStas_file_format McStasStruct)
 
   printf("  Data       = %s\n", McStasStruct.Data ? "OK" : "NULL");
 
-  printf("  m          = %d\n", McStasStruct.m);
-  printf("  n          = %d\n", McStasStruct.n);
-  printf("  p          = %d\n", McStasStruct.p);
+  printf("  m          = %ld\n", McStasStruct.m);
+  printf("  n          = %ld\n", McStasStruct.n);
+  printf("  p          = %ld\n", McStasStruct.p);
 
   printf("  p0         = %s\n", McStasStruct.p0 ? "OK": "NULL");
   printf("  p1         = %s\n", McStasStruct.p1 ? "OK": "NULL");
@@ -1294,7 +1294,7 @@ int mcformat_merge_compare(int nb)
         flag_list==2 ? "Adding" : "Appending",
         McStasStruct.mcdirname, McStasStruct.outputname, i,
         ThisStruct.mcdirname,  ThisStruct.outputname,    j,
-        abs(McStasStruct.m*McStasStruct.n*McStasStruct.p));
+        (long)abs(McStasStruct.m*McStasStruct.n*McStasStruct.p));
 
       if (flag_list==1) {  /* if list: catenate data j to end of i */
         /* allocate new array of size rows(i+j), same n,p */
