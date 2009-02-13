@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas X.Y.Z
-* Version: $Revision: 1.81 $
+* Version: $Revision: 1.82 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.81 2009-02-02 14:28:33 farhi Exp $
+* $Id: instrument.y,v 1.82 2009-02-13 14:03:20 farhi Exp $
 *
 *******************************************************************************/
 
@@ -440,7 +440,7 @@ instrument:   "DEFINE" "INSTRUMENT" TOK_ID instrpar_list
         /* Check instrument parameters for uniqueness */
         check_instrument_formals(instrument_definition->formals,
                instrument_definition->name);
-        if (verbose) fprintf(stderr, "Creating instrument %s (with %i component instances)\n", $3, comp_current_index);
+        if (verbose) fprintf(stderr, "Creating instrument %s (with %li component instances)\n", $3, comp_current_index);
       }
 ;
 
@@ -831,12 +831,12 @@ complist:   /* empty */
                 instrument_definition->polarised = 1;
               }
             }
-            if (verbose) fprintf(stderr, "Component[%i]: %s = %s().\n", comp_current_index, $2->name, $2->type);
+            if (verbose) fprintf(stderr, "Component[%li]: %s = %s().\n", comp_current_index, $2->name, $2->type);
           }
         } /* if shared */
         else
         {
-          if (verbose) fprintf(stderr, "Component[%i]: %s = %s() SKIPPED (INSTRUMENT COMPONENT, removable when included)\n", comp_current_index, $2->name, $2->type);
+          if (verbose) fprintf(stderr, "Component[%li]: %s = %s() SKIPPED (INSTRUMENT COMPONENT, removable when included)\n", comp_current_index, $2->name, $2->type);
         }
       }
     | complist instrument
@@ -848,7 +848,7 @@ complist:   /* empty */
 instname: "COPY" '(' TOK_ID ')'
       {
         char str_index[10];
-        sprintf(str_index, "_%i", comp_current_index+1);
+        sprintf(str_index, "_%li", comp_current_index+1);
         $$ = str_cat($3, str_index, NULL);
       }
     | TOK_ID

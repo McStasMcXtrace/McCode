@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.214 $
+* Version: $Revision: 1.215 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.214 2009-02-12 10:43:48 erkn Exp $
+* $Id: mcstas-r.c,v 1.215 2009-02-13 14:03:20 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.214  2009/02/12 10:43:48  erkn
+* check abs. value to protect for rounding errors - not signed value.
+*
 * Revision 1.213  2009/02/11 15:11:05  farhi
 * printf format fixes revealed with gcc 4.3
 *
@@ -821,7 +824,7 @@ mcparm_string(char *s, void *vptr)
   *v = (char *)malloc(strlen(s) + 1);
   if(*v == NULL)
   {
-    exit(fprintf(stderr, "Error: Out of memory %li (mcparm_string).\n", strlen(s) + 1));
+    exit(fprintf(stderr, "Error: Out of memory %li (mcparm_string).\n", (long)strlen(s) + 1));
   }
   strcpy(*v, s);
   return 1;                        /* Success */
@@ -1647,7 +1650,7 @@ char *mcfull_file(char *name, char *ext)
   mem = malloc(dirlen + strlen(name) + 256);
   if(!mem)
   {
-    exit(fprintf(stderr, "Error: Out of memory %li (mcfull_file)\n", dirlen + strlen(name) + 256));
+    exit(fprintf(stderr, "Error: Out of memory %li (mcfull_file)\n", (long)(dirlen + strlen(name) + 256)));
   }
   strcpy(mem, "");
   if(dirlen)
@@ -2736,7 +2739,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           }
         }
       }
-      if (isdata_present && !is1d) fprintf(datafile, ,"%c", eol_char);
+      if (isdata_present && !is1d) fprintf(datafile, "%s", eol_char);
     } /* end 2 loops if not Binary */
     if (datafile && isBinary)
     {
@@ -2758,7 +2761,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
             count = fwrite(s, sizeof(float), abs(m*n*p), datafile);
           if (count != abs(m*n*p)) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)abs(m*n*p));
           free(s);
-        } else fprintf(stderr, "McStas: Out of memory for writing %li float binary file '%s' (mcfile_datablock)\n", abs(m*n*p)*sizeof(float), filename);
+        } else fprintf(stderr, "McStas: Out of memory for writing %li float binary file '%s' (mcfile_datablock)\n", (long)abs(m*n*p)*sizeof(float), filename);
       }
       else if (d && isBinary == 2)  /* double */
       {
@@ -2772,7 +2775,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
               s[i] = (double)mcestimate_error(p0[i],p1[i],p2[i]);
             d = s;
           }
-          else fprintf(stderr, "McStas: Out of memory for writing %li 'errors' part of double binary file '%s' (mcfile_datablock)\n", abs(m*n*p)*sizeof(double), filename);
+          else fprintf(stderr, "McStas: Out of memory for writing %li 'errors' part of double binary file '%s' (mcfile_datablock)\n", (long)abs(m*n*p)*sizeof(double), filename);
         }
         count = fwrite(d, sizeof(double), abs(m*n*p), datafile);
         if (isdata == 2 && s) free(s);
