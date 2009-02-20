@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.215 $
+* Version: $Revision: 1.216 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.215 2009-02-13 14:03:20 farhi Exp $
+* $Id: mcstas-r.c,v 1.216 2009-02-20 16:17:55 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.215  2009/02/13 14:03:20  farhi
+* Fixed GCC 4.3 warnings. More will come in components.
+*
 * Revision 1.214  2009/02/12 10:43:48  erkn
 * check abs. value to protect for rounding errors - not signed value.
 *
@@ -4826,7 +4829,7 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
     *list = malloc(*size*elemsize);
     if(!*list)
     {
-      exit(fprintf(stderr, "\nError: Out of memory %li (extend_list).\n", *size*elemsize));
+      exit(fprintf(stderr, "\nError: Out of memory %li (extend_list).\n", (long)*size*elemsize));
     }
     if(oldlist)
     {

@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.84 $
+* Version: $Revision: 1.85 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.84  2009/02/20 13:52:27  farhi
+* Force type of 'string' to (char*) in generated code for DEFINITION
+* PARAMETERS
+*
 * Revision 1.83  2008/10/21 15:20:33  farhi
 * Info SPLIT indicates name of instrument
 *
@@ -202,7 +206,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.84 2009-02-20 13:52:27 farhi Exp $
+* $Id: cogen.c,v 1.85 2009-02-20 16:17:54 farhi Exp $
 *
 *******************************************************************************/
 
@@ -820,7 +824,7 @@ cogen_decls(struct instr_def *instr)
         if (c_formal->type != instr_type_string)
         	coutf("#define %sc%s_%s %s", ID_PRE, comp->name, c_formal->id, val);
         else
-        	coutf("#define %sc%s_%s (char*)%s", ID_PRE, comp->name, c_formal->id, val);
+        	coutf("#define %sc%s_%s %s /* this is declared as a string */", ID_PRE, comp->name, c_formal->id, val);
         str_free(val);
       }
       list_iterate_end(liter2);

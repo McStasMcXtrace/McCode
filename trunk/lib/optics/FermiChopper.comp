@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.24 $
+* Version:    $Revision: 1.25 $
 * Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -512,7 +512,7 @@ TRACE
           if (verbose > 1 && FCVars.warn_notreachslitwall < FermiChopper_MAXITER) {
             printf("FermiChopper: %s: Can not reach slit wall (iteration %i)\n"
                   "              dt=%g.\n",
-              NAME_CURRENT_COMP, dt, loopcounter);
+              NAME_CURRENT_COMP, loopcounter, dt);
             if (t3 == -3)
               printf("        No sign change to determine intersection (FC_xzidder:3)\n");
             else if (t3 == -2)
@@ -657,18 +657,18 @@ SAVE
            FCVars.sum_N_pass);
     if (!FCVars.sum_N_pass || verbose) {
       printf("FermiChopper: %s: Lost events anaylsis\n"
-             "              Already inside:            %i\n"
-             "              By Top/Bottom of cylinder: %i\n"
-             "              At cylinder entrance:      %i\n"
-             "              Hit cyl. entrance sides:   %i\n"
-             "              Can't prop. to slit pack:  %i\n"
-             "              At slit pack entrance:     %i\n"
-             "              On absorbing slit coating: %i\n"
-             "              Exiting slit pack:         %i\n"
-             "              Too many iterations:       %i\n"
-             "              Prop. in wrong direction : %i\n"
-             "              Mad neutron (no control):  %i\n"
-             "              At cylinder exit:          %i\n"
+             "              Already inside:            %li\n"
+             "              By Top/Bottom of cylinder: %li\n"
+             "              At cylinder entrance:      %li\n"
+             "              Hit cyl. entrance sides:   %li\n"
+             "              Can't prop. to slit pack:  %li\n"
+             "              At slit pack entrance:     %li\n"
+             "              On absorbing slit coating: %li\n"
+             "              Exiting slit pack:         %li\n"
+             "              Too many iterations:       %li\n"
+             "              Prop. in wrong direction : %li\n"
+             "              Mad neutron (no control):  %li\n"
+             "              At cylinder exit:          %li\n"
       , NAME_CURRENT_COMP,
       FCVars.absorb_alreadyinside,
       FCVars.absorb_topbottom,
@@ -685,8 +685,8 @@ SAVE
       FCVars.absorb_cylexit);
       
       if (FCVars.warn_notreachslitwall || FCVars.warn_notreachslitoutput)
-        printf("Warning:      Can not reach slit wall:   %i\n"
-               "Warning:      Can not reach slit output: %i\n",
+        printf("Warning:      Can not reach slit wall:   %li\n"
+               "Warning:      Can not reach slit output: %li\n",
         FCVars.warn_notreachslitwall,
         FCVars.warn_notreachslitoutput);
     }

@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.14 $
+* Version: $Revision: 1.15 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -403,20 +403,26 @@ INITIALIZE
   nH_t  = Part_He_3_t.rows;
   Table_Read(&Part_Stop_t,FN_Stop,2);
   nS_t = Part_Stop_t.rows;
+  /* if Gas tables can not be found, try by pre-pending Gas_tables */
+  char tmp[256];
   if (!nH_p) {
-  	Table_Read(&Part_He_3_p,"Gas_tables" MC_PATHSEP_S FN_Conv,1);
+  	sprintf(tmp, "Gas_tables", MC_PATHSEP_S, FN_Conv);
+  	Table_Read(&Part_He_3_p,tmp,1);
     nH_p = Part_He_3_p.rows;
   }
   if (!nS_p) {
-  	Table_Read(&Part_Stop_p,"Gas_tables" MC_PATHSEP_S FN_Stop,1);
+  	sprintf(tmp, "Gas_tables", MC_PATHSEP_S, FN_Stop);
+  	Table_Read(&Part_Stop_p,tmp,1);
     nS_p = Part_Stop_p.rows;
   }
   if (!nH_t) {
-  	Table_Read(&Part_He_3_t,"Gas_tables" MC_PATHSEP_S FN_Conv,2);
+    sprintf(tmp, "Gas_tables", MC_PATHSEP_S, FN_Conv);
+  	Table_Read(&Part_He_3_t,tmp,2);
     nH_t  = Part_He_3_t.rows;
   }
   if (!nS_t) {
-  	Table_Read(&Part_Stop_t,"Gas_tables" MC_PATHSEP_S FN_Stop,2);
+    sprintf(tmp, "Gas_tables", MC_PATHSEP_S, FN_Stop);
+  	Table_Read(&Part_Stop_t,tmp,2);
     nS_t = Part_Stop_t.rows;
   }
   
