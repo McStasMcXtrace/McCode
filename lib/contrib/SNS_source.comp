@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Granroth
 * Date: July 2004
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: SNS Project Oak Ridge National Laboratory
 * Release: McStas 1.6
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
@@ -87,7 +87,7 @@ DECLARE
       routine to load E, I and t I data from SNS source files
   -----------------------------------------------------------------*/
 
-  void sns_source_load(char filename[], double *xvec, double *yvec, int xcol, int ycol, int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
+  void sns_source_load(char file[], double *xvec, double *yvec, int xcol, int ycol, int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
   {
     FILE *fp=NULL;
     int idx1,idx2,idx3; /* counter for number of x, y values */
@@ -102,51 +102,51 @@ DECLARE
     double tcoltmp[Maxlength];
     double Ecoltmp[Maxlength];
     /* open filename */
-    if (filename) {
+    if (file) {
       
       if (!fp && getenv("MCTABLES")) {
         /* Is MCTABLES set, files located there? */
-        sprintf(ss, "%s%c%s", getenv("MCTABLES"), MC_PATHSEP_C, filename);
+        sprintf(ss, "%s%c%s", getenv("MCTABLES"), MC_PATHSEP_C, file);
         fp=fopen(ss,"r");
       }
 
       /* Is the filename located in working dir? */
       if (!fp) {
-        sprintf(ss, "%s", filename);
-        fp=fopen(filename,"r");
+        sprintf(ss, "%s", file);
+        fp=fopen(ss,"r");
       }
       if (!fp) {
         /* Try locating the file in ./SNS_tables library */
-        sprintf(ss,"%s%c%s%c%s", ".", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, filename);
+        sprintf(ss,"%s%c%s%c%s", ".", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, file);
         fp=fopen(ss,"r");
       }
       if (!fp) {
         /* Try locating the file in the MCSTAS contrib/SNS_tables library */
         sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
-          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, filename);
+          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, file);
         fp=fopen(ss,"r");
       }
       if (!fp) {
         /* Try locating the file in the MCSTAS data library */
         sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
-          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, filename);
+          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, file);
         fp=fopen(ss,"r");
       }
       if (!fp) {
         /* Try locating the file in the MCSTAS data/SNS_tables library */
         sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
-          MC_PATHSEP_C, "data", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, filename);
+          MC_PATHSEP_C, "data", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, file);
         fp=fopen(ss,"r");
       }
       if (!fp) {
         /* Try locating the file in the MCSTAS data library */
         sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
-          MC_PATHSEP_C, "data", MC_PATHSEP_C, filename);
+          MC_PATHSEP_C, "data", MC_PATHSEP_C, file);
         fp=fopen(ss,"r");
       }
     }
     if (!fp) { /* Still no file - die! */
-      fprintf(stderr,"SNS_source: ERROR: Could not read Etable file %s.\n", filename ? filename : "NULL");
+      fprintf(stderr,"SNS_source: ERROR: Could not read Etable file %s.\n", file ? file : "NULL");
       fprintf(stderr,"            Please check your McStas installation and/or MCTABLES/SNS_tables setting!\n");
       exit(1);
     }

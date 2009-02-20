@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.81 $
+* Version: $Revision: 1.82 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -266,7 +266,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.81 $
+#define ISOTROPIC_SQW $Revision: 1.82 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -557,11 +557,11 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
   else {
     char *header;
     if (!Table_Init(&retTable[0], size, 1))
-      { printf("Isotropic_Sqw: ERROR Cannot allocate q-axis [%i] from Powder lines.\n", size); return(NULL); }
+      { printf("Isotropic_Sqw: ERROR Cannot allocate q-axis [%li] from Powder lines.\n", size); return(NULL); }
     if (!Table_Init(&retTable[1], 1, 1))
       { printf("Isotropic_Sqw: ERROR Cannot allocate w-axis from Powder lines.\n"); return(NULL); }
     if (!Table_Init(&retTable[2], size, 1))
-      { printf("Isotropic_Sqw: ERROR Cannot allocate Sqw [%i] from Powder lines.\n", size); return(NULL); }
+      { printf("Isotropic_Sqw: ERROR Cannot allocate Sqw [%li] from Powder lines.\n", size); return(NULL); }
     Table_Init(&retTable[3], 0,0);
 
     header = malloc(64); if (header)
@@ -1692,7 +1692,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         }
         if (ratio_w<0 || ratio_w > 1) {
           if (VarSqw.verbose_output>1 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: interpolation ratio_w=%g is wrong, index_w=%i, rand01=%g cumul=%g\n",
+            printf("Isotropic_Sqw: %s: Warning: interpolation ratio_w=%g is wrong, index_w=%li, rand01=%g cumul=%g\n",
             NAME_CURRENT_COMP, ratio_w, index_w, tmp_rand, Data_sqw.SW[index_w].cumul_proba);
           if (ratio_w<0) ratio_w=0; else if (ratio_w>1) ratio_w=1;
         }
@@ -1758,8 +1758,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
         }
         if (ratio_q<0 || ratio_q > 1) {
           if (VarSqw.verbose_output && VarSqw.neutron_removed<VarSqw.maxloop)
-          printf("Isotropic_Sqw: %s: Warning: interpolation ratio_q=%g is wrong, index_q=%i\n"
-                 "               ratio_w=%g, index_w=%i\n",
+          printf("Isotropic_Sqw: %s: Warning: interpolation ratio_q=%g is wrong, index_q=%li\n"
+                 "               ratio_w=%g, index_w=%li\n",
             NAME_CURRENT_COMP, ratio_q, index_q, ratio_w, index_w);
           if (ratio_q<0) ratio_q=0; else if (ratio_q>1) ratio_q=1;
         }

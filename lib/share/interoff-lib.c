@@ -11,7 +11,7 @@
 * Written by: Reynald Arnerin
 * Date:    Jun 12, 2008
 * Origin: ILL
-* Release: $Revision: 1.5 $
+* Release: $Revision: 1.6 $
 * Version: McStas X.Y
 *
 * Object File Format intersection library for McStas.
@@ -457,7 +457,7 @@ long off_init(	char *offfile, double xwidth, double yheight, double zdepth, off_
   // get the indexes
   if (off_getBlocksIndex(offfile,&vtxIndex,&vtxSize,&faceIndex, &polySize) <=0) 
     return(0);
-  printf("  Number of polygons: %d\n",polySize);
+  printf("  Number of polygons: %ld\n",polySize);
  
   //read vertex table = [x y z | x y z | ...]
   Table_Read_Offset(&vtxTable, offfile, 0, &vtxIndex, vtxSize);

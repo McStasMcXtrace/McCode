@@ -444,12 +444,12 @@ void ChopperFermiInit(int argc, char *argv[])
 	  break;
 
 	case 'O':
-	  sscanf(arg, "%ld", &Option);
+	  sscanf(arg, "%d", &Option);
 	  if((Option!=1)&&(Option!=2)){fprintf(LogFilePtr,"\nERROR: Wrong option! Good options: 1-straight, 2-curved \n"); exit(-1); }
 	  break;
 
 	case 'g':
-	  sscanf(arg, "%ld", &CurvGeomOption);
+	  sscanf(arg, "%d", &CurvGeomOption);
 	  break;
 
 	case 'r':
@@ -461,7 +461,7 @@ void ChopperFermiInit(int argc, char *argv[])
 	  break;
 
 	case 'z':
-	  sscanf(arg, "%ld", &zerotime);
+	  sscanf(arg, "%d", &zerotime);
 	  break;
 
 
