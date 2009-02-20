@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.83 $
+* Version: $Revision: 1.84 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.83  2008/10/21 15:20:33  farhi
+* Info SPLIT indicates name of instrument
+*
 * Revision 1.82  2008/08/29 15:37:14  farhi
 * cogen: SPLIT low stat indicates number of events
 * example: fixed %example reference values, and some zero divergence
@@ -199,7 +202,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.83 2008-10-21 15:20:33 farhi Exp $
+* $Id: cogen.c,v 1.84 2009-02-20 13:52:27 farhi Exp $
 *
 *******************************************************************************/
 
@@ -814,7 +817,10 @@ cogen_decls(struct instr_def *instr)
       {
         struct Symtab_entry *entry = symtab_lookup(comp->defpar, c_formal->id);
         char *val = exp_tostring(entry->val);
-        coutf("#define %sc%s_%s %s", ID_PRE, comp->name, c_formal->id, val);
+        if (c_formal->type != instr_type_string)
+        	coutf("#define %sc%s_%s %s", ID_PRE, comp->name, c_formal->id, val);
+        else
+        	coutf("#define %sc%s_%s (char*)%s", ID_PRE, comp->name, c_formal->id, val);
         str_free(val);
       }
       list_iterate_end(liter2);
