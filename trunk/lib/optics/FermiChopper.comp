@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.26 $
+* Version:    $Revision: 1.27 $
 * Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -457,34 +457,15 @@ double FC_xzbis(double x, double z, double vx, double vz,
 double FC_xintersect(double x, double z, double vx, double vz,
                    double t, double dt,
                    double d, struct FermiChopper_struct FCs) {
-  /* use Secant method OK */
-  // return(FC_xzsecant(x, z, vx, vz, t, dt, 'x', d, FCs));
-  /* use False position method OK */
+  /* use False position method */
   return(FC_xzflsp(x, z, vx, vz, t, dt, 'x', d, FCs));
-  /* use Bisection method */
-  // return(FC_xzbis(x, z, vx, vz, t, dt, 'x', d, FCs));
-  
-  /* use Brent's method */
-  // return(FC_xzbrent(x, z, vx, vz, t, dt, 'x', d, FCs));
-  
-  /* use Ridder's position method */
-  // return(FC_xzriddr(x, z, vx, vz, t, dt, 'x', d, FCs));
 }
 
 double FC_zintersect(double x, double z, double vx, double vz,
                    double t, double dt,
                    double d, struct FermiChopper_struct FCs) {
-  /* use Secant method */
-  // return(FC_xzsecant(x, z, vx, vz, t, dt, 'z', d, FCs));
   /* use False position method */
   return(FC_xzflsp(x, z, vx, vz, t, dt, 'z', d, FCs));
-  /* use Bisection method */
-  // return(FC_xzbis(x, z, vx, vz, t, dt, 'z', d, FCs));
-  
-  /* use Brent's method */
-  // return(FC_xzbrent(x, z, vx, vz, t, dt, 'z', d, FCs));
-  /* use Ridder's position method */
-  // return(FC_xzriddr(x, z, vx, vz, t, dt, 'z', d, FCs));
 }
 
 #endif
