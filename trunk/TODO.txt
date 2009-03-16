@@ -22,7 +22,7 @@ Components:
  D  add 'radius' parameter to Monitor_nD for easier specs
  D  remove 'searching' messages in SNS and ISIS sources (not useful)
 (*) more V_sample to obsolete and use Incoherent instead
-(*) check Virtual_* comps with MPI
+ D check Virtual_* comps with MPI
 
 Doc:
     sync with new comp parameter names
@@ -33,10 +33,11 @@ Instruments:
 (*) Laue_diff in examples
 (*) max parm Lucia vs. Monitor_nD (FIXED by _ hack)
 (*) IN22_sample - wrong direction / rotation of samle 2\theta mono ?
-(D) Test_Fermi DONE ; Test_Sources DONE; Test_Guides DONE; Monochromator_test DONE
+ D  Test_Fermi DONE ; Test_Sources DONE; Test_Guides DONE; Monochromator_test DONE
 (*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off,  Tomography
  D  TESTS: accuracy must take into account I_ERR value instead of default 20 % DONE
     use %include where ever possible e.g. ILL_H142_IN12=ILL_H142+templateTAS, ILL_H15_IN6=ILL_H15+templateTOF
+    templateTAS: recompute Ki, Kf, ... when giving angles as input. Check KFIX/FX/KI/KF values.
 
 Metalanguage / runtime
     New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
@@ -49,8 +50,7 @@ Metalanguage / runtime
  D  instrument.y to check for case insensitive comp names in case include fails DONE
     support zlib (if exists at ./configure) to handle compressed files (.gz, .zip, .bz) either by calling external command extraction to TMP, or in memory.
     support HTTP file access through wget if available from configure
-(D) MPI: split Reduce/sed/receive into 1e5 blocks DONE
-(*) MPI: if MPI version>=2, do not use MPI_REDUCE_BLOCK
+ D  MPI: split Reduce/sed/receive into 1e5 blocks DONE
  D  read-table: handle \r for windows platforms when reading data in event files DONE (to be checked)
 
 Tools/platform:
@@ -66,9 +66,9 @@ Tools/platform:
     Scan evolvement' plot of psd's (Pick PSD data from scan, plot together) / mcplot opens scan steps in PGPLOT arrow keys
 (*) mcgui signal handling in case of compilation / mpi
  D  REMOVE threading support that is misleading and not efficient (mcrui,mcstas-r,mcrun) DONE
-(D) mcgui menu item renamed as Intall SSH/DSA key for grid/MPI DONE
+ D  mcgui menu item renamed as Intall SSH/DSA key for grid/MPI DONE
     mcformatgui <dir>: sets input dir (handle args)
-    update mcstas.lang for gedit to gtksourceview-2 
+ D  update mcstas.lang for gedit to gtksourceview-2 
 (*) mcrun --test --mpi: some instruments do not scale with n_nodes
 (*) mcrun --test to check under windows
     
