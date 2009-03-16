@@ -12,7 +12,7 @@
 * Date: 17th Jan 2005.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.9 $
+* Version: $Revision: 1.10 $
 * %INSTRUMENT_SITE: ILL
 *
 * The IN6 Time-of-Flight simulation, positioned as the first instrument in the
@@ -821,13 +821,13 @@ COMPONENT Mon_SuppInT = Monitor_nD(
 AT (0,0,-0.07-0.001) RELATIVE SuppPos
 EXTEND
 %{
-
-  double Vi=sqrt(vx*vx+vy*vy+vz*vz);
+  double Vi=sqrt(vx*vx+vy*vy+vz*vz); /* K2V*2*PI/sLambda; */
+  double ratio=PI*Frequency/iRATIO/atan(0.052/0.14);
   if (iRATIO && Vi) {
     /* compress flux/s into opening time atan(w/length)/PI/frequency */
-    /* suppressor time spread */
-    t = -0.07/Vi+(rand01()-0.5)/PI/Frequency*iRATIO*atan(0.052/0.14);
-    p /= PI*Frequency/iRATIO/atan(0.052/0.14);
+    /* suppressor time spread centered at 0 */
+    t = -(0.07/Vi)+(rand01()-0.5)/ratio;
+    p /= ratio;
   }
 %}
 

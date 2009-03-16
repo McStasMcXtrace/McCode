@@ -12,12 +12,12 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.27 $
+* Version:    $Revision: 1.28 $
 * Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
 * Modified by: EF, Oct 2008: fix chopper orientation
-* Modified by: EF, Mar 2009: improved intersection method (Ridder's fails, Secant OK, Brent OK)
+* Modified by: EF, Mar 2009: improved intersection method (use 'False Position')
 *
 * Fermi Chopper with rotating frame.
 *
@@ -183,126 +183,6 @@ double FC_xzrot_dt(double x, double z, double vx, double vz,
 }
 
 /*****************************************************************************
- * FC_xzsecant(x,z,vx,vz, t,dt, type='x' or 'z', d, FCs)
- *   solves X'=d and Z'=d with Secant method in time interval [0, dt].
- *           Returns time within [0,dt], from NumRecip in C, chap 9, p357 (rtsec)
- *           ERRORS: return -1 should never occur
- *                          -2 if exceed MAX iteration
- *                          -3 no sign change in range
- ****************************************************************************/
-double FC_xzsecant(double x, double z, double vx, double vz,
-                   double t, double dt,
-                   char type, double d, struct FermiChopper_struct FCs) {
-
-  int j;
-  double fl,f,dx,swap,xl,rts;
-  double x1,x2,xacc;
-  
-  x1 = 0;
-  x2 = dt;
-  xacc = FermiChopper_TimeAccuracy;
-
-  fl=FC_xzrot_dt(x,z,vx,vz, t,x1, type, FCs) - d;
-  f =FC_xzrot_dt(x,z,vx,vz, t,x2, type, FCs) - d;
-  if (fabs(fl) < fabs(f)) {
-    rts=x1;
-    xl=x2;
-    swap=fl;
-    fl=f;
-    f=swap;
-  } else {
-    xl=x1;
-    rts=x2;
-  }
-  for (j=1;j<=FermiChopper_MAXITER;j++) {
-    dx=(xl-rts)*f/(f-fl);
-    xl=rts;
-    fl=f;
-    rts += dx;
-    f=FC_xzrot_dt(x,z,vx,vz, t,rts, type, FCs) - d;
-    if (fabs(dx) < xacc || f == 0.0) return rts;
-  }
-  return(-2);
-} /* FC_xzsecant */
-
-/*****************************************************************************
- * FC_xzbrent(x,z,vx,vz, t,dt, type='x' or 'z', d, FCs)
- *   solves X'=d and Z'=d with Brent method in time interval [0, dt].
- *           Returns time within [0,dt], from NumRecip in C, chap 9, p360 (zbrent)
- *           ERRORS: return -1 should never occur
- *                          -2 if exceed MAX iteration
- *                          -3 no sign change in range
- ****************************************************************************/
-double FC_xzbrent(double x, double z, double vx, double vz,
-                  double t, double dt,
-                  char type, double d, struct FermiChopper_struct FCs) {
-
-  int iter;
-  double a=0,b=dt;
-  double c,dd,e,min1,min2;
-  double tol=FermiChopper_TimeAccuracy;
-  double EPS=FermiChopper_TimeAccuracy;
-  double fa=FC_xzrot_dt(x,z,vx,vz, t,a, type, FCs) - d;
-  double fb=FC_xzrot_dt(x,z,vx,vz, t,b, type, FCs) - d;
-  double fc,p,q,r,s,tol1,xm;
-
-  if (fb*fa > 0.0) return -3;
-  fc=fb;
-  for (iter=1;iter<=FermiChopper_MAXITER;iter++) {
-    if (fb*fc > 0.0) {
-      c=a;
-      fc=fa;
-      e=dd=b-a;
-    }
-    if (fabs(fc) < fabs(fb)) {
-      a=b;
-      b=c;
-      c=a;
-      fa=fb;
-      fb=fc;
-      fc=fa;
-    }
-    tol1=2.0*EPS*fabs(b)+0.5*tol;
-    xm=0.5*(c-b);
-    if (fabs(xm) <= tol1 || fb == 0.0) return b;
-    if (fabs(e) >= tol1 && fabs(fa) > fabs(fb)) {
-      s=fb/fa;
-      if (a == c) {
-        p=2.0*xm*s;
-        q=1.0-s;
-      } else {
-        q=fa/fc;
-        r=fb/fc;
-        p=s*(2.0*xm*q*(q-r)-(b-a)*(r-1.0));
-        q=(q-1.0)*(r-1.0)*(s-1.0);
-      }
-      if (p > 0.0)  q = -q;
-      p=fabs(p);
-      min1=3.0*xm*q-fabs(tol1*q);
-      min2=fabs(e*q);
-      if (2.0*p < (min1 < min2 ? min1 : min2)) {
-        e=dd;
-        dd=p/q;
-      } else {
-        dd=xm;
-        e=dd;
-      }
-    } else {
-      dd=xm;
-      e=dd;
-    }
-    a=b;
-    fa=fb;
-    if (fabs(dd) > tol1)
-      b += dd;
-    else
-      b += (xm > 0.0 ? fabs(tol1) : -fabs(tol1));
-    fb=FC_xzrot_dt(x,z,vx,vz, t,b, type, FCs) - d;
-  }
-  return -2;
-} /* FC_xzbrent */
-
-/*****************************************************************************
  * FC_xzflsp(x,z,vx,vz, t,dt, type='x' or 'z', d, FCs)
  *   solves X'=d and Z'=d with False position method in time interval [0, dt].
  *           Returns time within [0,dt], from NumRecip in C, chap 9, p366 (rtflsp)
@@ -351,105 +231,6 @@ double FC_xzflsp(double x, double z, double vx, double vz,
 	}
 	return -2;
 } /* FC_xzflsp */
-
-/*****************************************************************************
- * FC_xzriddr(x,z,vx,vz, t,dt, type='x' or 'z', d, FCs)
- *   solves X'=d and Z'=d with Ridder's method in time interval [0, dt].
- *           Returns time within [0,dt], from NumRecip in C, chap 9, p358 (zriddr)
- *           ERRORS: return -1 should never occur
- *                          -2 if exceed MAX iteration
- *                          -3 no sign change in range
- ****************************************************************************/
-#ifndef SIGN
-#define SIGN(a,b) ((b >= 0 ? fabs(a) : -fabs(a)))
-#endif
-double FC_xzriddr(double x, double z, double vx, double vz,
-                 double t, double dt,
-                 char type, double d, struct FermiChopper_struct FCs) {
-  int j;
-	float ans,fh,fl,fm,fnew,s,xh,xl,xm,xnew;
-	double x1,x2,xacc;
-	x1 = 0;
-  x2 = dt;
-  xacc = FermiChopper_TimeAccuracy;
-
-	fl=FC_xzrot_dt(x,z,vx,vz, t,x1, type, FCs) - d;
-  fh=FC_xzrot_dt(x,z,vx,vz, t,x2, type, FCs) - d;
-	if ((fl > 0.0 && fh < 0.0) || (fl < 0.0 && fh > 0.0)) {
-		xl=x1;
-		xh=x2;
-		ans=-FLT_MAX;
-		for (j=1;j<=FermiChopper_MAXITER;j++) {
-			xm=0.5*(xl+xh);
-			fm=FC_xzrot_dt(x,z,vx,vz, t,xm, type, FCs) - d;
-			s=sqrt(fm*fm-fl*fh);
-			if (s == 0.0) return ans;
-			xnew=xm+(xm-xl)*((fl >= fh ? 1.0 : -1.0)*fm/s);
-			if (fabs(xnew-ans) <= xacc) return ans;
-			ans=xnew;
-			fnew=FC_xzrot_dt(x,z,vx,vz, t,ans, type, FCs) - d;
-			if (fnew == 0.0) return ans;
-			if (SIGN(fm,fnew) != fm) {
-				xl=xm;
-				fl=fm;
-				xh=ans;
-				fh=fnew;
-			} else if (SIGN(fl,fnew) != fl) {
-				xh=ans;
-				fh=fnew;
-			} else if (SIGN(fh,fnew) != fh) {
-				xl=ans;
-				fl=fnew;
-			} else return -1;
-			if (fabs(xh-xl) <= xacc) return ans;
-		}
-		return -2;
-	}
-	else {
-		if (fl == 0.0) return x1;
-		if (fh == 0.0) return x2;
-		return -3;
-	}
-	return 0.0;
-} /* FC_xzriddr */
-
-/*****************************************************************************
- * FC_xzbis(x,z,vx,vz, t,dt, type='x' or 'z', d, FCs)
- *   solves X'=d and Z'=d with Bisection method in time interval [0, dt].
- *           Returns time within [0,dt], from NumRecip in C, chap 9, p354 (rtbis)
- *           ERRORS: return -1 should never occur
- *                          -2 if exceed MAX iteration
- *                          -3 no sign change in range
- ****************************************************************************/
-double FC_xzbis(double x, double z, double vx, double vz,
-                 double t, double dt,
-                 char type, double d, struct FermiChopper_struct FCs) {
-  int j;
-	double dx,f,fmid,xmid,rtb;
-	double x1,x2,xacc;
-	x1 = 0;
-  x2 = dt;
-  xacc = FermiChopper_TimeAccuracy;
-
-	f   =FC_xzrot_dt(x,z,vx,vz, t,x1, type, FCs) - d;
-  fmid=FC_xzrot_dt(x,z,vx,vz, t,x2, type, FCs) - d;
-	if (f*fmid >= 0.0) return -3;
-	if (f < 0) {
-		dx=x2-x1;
-		rtb = x1;
-	} else {
-		dx=x1-x2;
-		rtb = x2;
-	}
-	for (j=1;j<=FermiChopper_MAXITER;j++) {
-	  dx *= 0.5;
-		xmid=rtb+dx;
-		fmid=FC_xzrot_dt(x,z,vx,vz, t,xmid, type, FCs) - d;
-		if (fmid <= 0.0) rtb=xmid;
-		if (fabs(dx) < xacc || fmid == 0.0) return rtb;
-	}
-	return -2;
-} /* FC_xzbis */
 
 /*****************************************************************************
  * Wrappers to intersection methods 
