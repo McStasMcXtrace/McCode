@@ -12,11 +12,12 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.7 $
+* Version:    $Revision: 1.8 $
 * Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: E. Farhi, Jul 2008: uniformize parameter names ()
 * Modified by: EF, Oct 2008: fix chopper orientation
+* Modified by: EF, Mar 2009: fixed infinite recursion which may cause SEGV. Cleanup of code.
 *
 * Fermi Chopper with rotating frame.
 *
@@ -29,14 +30,11 @@
 * The chopper slit package width may be specified through the total width 'xwidth'
 * of the full package or the width 'w' of each single slit. The other parameter
 * is calculated by: xwidth = nslit*w.
-* The chopper needs a default velocity to calculate the initial value for an
-* iterative calculation of TOF values. This can be specified by its velocity,
-* energy, wavelength or wavevector.
 *
 * Example:
 * FermiChopper_ILL(phase=-50.0, radius=0.04, nu=100,
-*   ymin=-0.04, ymax=0.04, w=0.00022475, nslit=200.0, R0=0.0,
-*   Qc=0.02176, alpha=2.33, m=0.0, Vi=1000,  length=0.012, eff=0.95,
+*   yheight=0.08, w=0.00022475, nslit=200.0, R0=0.0,
+*   Qc=0.02176, alpha=2.33, m=0.0, length=0.012, eff=0.95,
 *   zero_time=0)
 *
 * Markus Poehlmann     <Markus.Poehlmann@ph.tum.de>
@@ -60,30 +58,25 @@
 *
 * Geometrical chopper constants:
 * radius:  (m)      chopper cylinder radius
-* ymin:    (m)      lower y bound of cylinder
-* ymax:    (m)      upper y bound of cylinder
+* yheight: (m)      Height of chopper
 * nslit:   (1)      number of chopper slits
 * length:  (m)      channel length of the Fermi chopper
 * w:       (m)      width of one chopper slit
 * xwidth:  (m)      optional total width of slit package
-* yheight: (m)      Height of chopper. Overrides ymin,ymax. (m)
+
 * nu:      (Hz)     chopper frequency
 * eff:     (1)      efficiency = transmission x fraction of transparent material
-* verbose: (1)      optional flag to display component statistics (debuging)
+* verbose: (1)      optional flag to display component statistics, use 1 or 3 (debuging)
 *
 * Supermirror constants:
 * m:       (1)      m-value of material. Zero means completely absorbing.
 * alpha:   (AA)     slope of reflectivity
 * Qc:      (AA-1)   critical scattering vector
-* Wi:      (AA-1)   width of supermirror cut-off
+* W:      (AA-1)   width of supermirror cut-off
 * R0:      (1)      low-angle reflectivity
 *
 * Constants to reset time of flight:
 * zero_time: (1)    set time to zero: 0: no  1: once per half cycle
-* Vi:      (m/s)    velocity of prototype neutron. Use 0 for automatic mode
-* Ei:      (meV)    optional mean energy of prototype neutron
-* lambda:  (Angs)   optional mean wavelength of prototype neutron
-* Ki:      (Angs-1) optional mean wavevector of prototype neutron
 * phase:   (deg)    chopper phase at t=0
 *
 * OUTPUT PARAMETERS:
@@ -94,7 +87,7 @@
 *****************************************************************************/
 
 /* NOTE: 
- *   The initial component version (McStas version < 2.0) was written 
+ *   The initial component version (McStas version <= 1.12) was written 
  *   with an inverted coordinate frame orientation. This corresponds 
  *   to inverting the frequency and phase sign.
  */
@@ -102,65 +95,22 @@
 DEFINE COMPONENT FermiChopper_ILL
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (phase=0, radius=0.04, nu=100,
-  ymin=-0.04, ymax=0.04, w=0.00022475, nslit=200.0, R0=0.0,
-  Qc=0.02176, alpha=2.33, m=0.0, Wi=2e-3, Vi=0,  length=0.012, eff=0.95,
-  zero_time=0, Ei=0, lambda=0, Ki=0, xwidth=0, yheight=0, verbose=0)
+  yheight=0.08, w=0.00022475, nslit=200.0, R0=0.0,
+  Qc=0.02176, alpha=2.33, m=0.0, W=2e-3, length=0.012, eff=0.95,
+  zero_time=0, xwidth=0, verbose=0)
 OUTPUT PARAMETERS(FCVars)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
 SHARE
 %{
+#ifndef FCILL_TimeAccuracy
+#define FCILL_TimeAccuracy 1e-8
+#define FCILL_MAXITER      10
   /* Definition of internal variable structure: all counters */
   struct FermiChopper_ILL_struct {
 
-    int counter_cylinder;      /* neutrons interacting with the cylinder  */
-    int counter_cylinder_pack; /* neutrons interacting with the cylinder and entering the megaslit */
-
-    int counter_hit_slits;       /* neutrons hitting the slits */
-    int counter_enter_slits[200];/* how many neutrons entering each slit */
-    int counter_exit_slits[200]; /* how many neutrons leaving each slit */
-
-    int *counter_LR_blades;
-    int counter_L_blades;
-    int counter_R_blades;   /* interactions with left/right blades */
-
-    int counter_reflect;    /* reflections (overall) */
-
-    int *counter_refl_LR_blades[3];
-    int counter_refl_L_blades[3];
-    int counter_refl_R_blades[3]; /* reflections: left blade, right blade  */
-
-    int *counter_abs_LR_blades[3];
-    int counter_abs_L_blades[3];
-    int counter_abs_R_blades[3]; /* absorptions: left blade, right blade   */
-
-    int *counter_LR_secant;
-    int counter_L_secant;
-    int counter_R_secant;  /* Secant method used */
-    int *counter_LR_interpol;
-    int counter_L_interpol;
-    int counter_R_interpol;/* IntPol method used */
-    int *counter_LR_error;
-    int counter_L_error;
-    int counter_R_error;   /* errors by numerical method   */
-
-    int counter_loops[3];  /* how often happen how many reflections */
-    int counter_infinite;  /* infinite loops broken up */
-
-    int *counter_LR_cylinder; /* neutrons leaving because they're */
-    int counter_L_cylinder;   /* hitting the wall outside the packet */
-    int counter_R_cylinder;
-    int counter_out_cylinder; /* neutrons absorbed, hitting the wall between slits and exit */
-    int counter_top_bottom;    /* leaving the chopper from his top or bottom     */
-
-    int counter_transmited_total; /* total transmitted neutrons */
-    int counter_transmited;    /* transmitted neutrons, not reflected */
-
     /** other variables ********************************/
     double omega, t0;  /* chopper rotation */
-    double mean_velocity;
-    double mean_velocity_sum;
-    int    auto_velocity;
   };
 
 
@@ -190,24 +140,20 @@ double xsecant(double x, double z, double vx, double vz,
   double counter = 0;
   double t1      = 0;
   double t2      = dt;
-  double f1      = xstrich(x,z,t, omega, t0)-d;
-  double f2      = xstrich(x+vx*t2,z+vz*t2,t+t2, omega, t0)-d;
+  double xr1     = xstrich(x,z,t, omega, t0)-d;
+  double xr2     = xstrich(x+vx*t2,z+vz*t2,t+t2, omega, t0)-d;
   double sign;
 
-  while ((fabs(dt1) > 1e-7) && (counter < 1000) && (f2-f1)){
+  while ((fabs(dt1) > FCILL_TimeAccuracy) && (counter < FCILL_MAXITER) && (xr2-xr1)){
     counter++;
-    dt1 = (t2-t1)*f2/(f2-f1);
+    dt1 = (t2-t1)*xr2/(xr2-xr1);
     t2  = t1;
-    f1  = f2;
+    xr1 = xr2;
     t1 += dt1;
-    f2  = xstrich(x+vx*(t1),z+vz*(t1),t+t1, omega, t0)-d;
+    xr2 = xstrich(x+vx*t1,z+vz*t1,t+t1, omega, t0)-d;
   }
 
-  sign = (xstrich(x+vx*(t1-2e-7),z+vz*(t1-2e-7),t+t1-2e-7, omega, t0)-d)
-        *(xstrich(x,z,t, omega, t0)-d);
-
-  if(sign < 0)        t1 = -1;
-  if(counter >= 1000) t1 = -1;
+  if(counter >= FCILL_MAXITER) t1 = -2;
 
   return(t1);
 }
@@ -221,19 +167,19 @@ double zsecant(double x, double z, double vx, double vz,
   double t2      = dt;
   double dt1     = 1;
   double counter = 0;
-  double f1      =  zstrich(x,z,t, omega, t0)-d;
-  double f2      =  zstrich(x+vx*t2,z+vz*t2,t+t2, omega, t0)-d;
+  double zr1     =  zstrich(x,z,t, omega, t0)-d;
+  double zr2     =  zstrich(x+vx*t2,z+vz*t2,t+t2, omega, t0)-d;
 
-  while ((fabs(dt1) > 1e-9) && (counter < 1000) && (f2-f1)){
+  while ((fabs(dt1) > FCILL_TimeAccuracy) && (counter < FCILL_MAXITER) && (zr2-zr1)){
     counter++;
-    dt1 = (t2-t1)*f2/(f2-f1);
+    dt1 = (t2-t1)*zr2/(zr2-zr1);
     t2  = t1;
-    f1  = f2;
+    zr1 = zr2;
     t1 += dt1;
-    f2  = zstrich(x+vx*(t1),z+vz*(t1),t+t1, omega, t0)-d;
+    zr2 = zstrich(x+vx*t1,z+vz*t1,t+t1, omega, t0)-d;
   }
 
-  if(counter >= 1000) t1=-1;
+  if(counter >= FCILL_MAXITER) t1=-1;
 
   return(t1);
 }
@@ -246,25 +192,21 @@ double xinterpolation(double x, double z, double vx, double vz,
                       double t, double dt, double d, double omega, double t0){
 
   double sign;
-  double f3=1, t3=0, t1=0, t2=dt, dt1=dt;
+  double xr3=1, t3=0, t1=0, t2=dt, dt1=dt;
   double counter = 0;
-  double f1      =  xstrich(x,z,t, omega, t0)-d;
-  double f2      =  xstrich(x+vx*dt,z+vz*dt,t+dt, omega, t0)-d;
+  double xr1      =  xstrich(x,z,t, omega, t0)-d;
+  double xr2      =  xstrich(x+vx*dt,z+vz*dt,t+dt, omega, t0)-d;
 
-  while ((fabs(f3) > 1e-7)&&(counter < 1000)){
+  while ((fabs(xr3) > FCILL_TimeAccuracy)&&(counter < FCILL_MAXITER)){
     counter++;
     t3 = (t1+t2)*0.5;
-    f3 = xstrich(x+(vx*(t3)),z+(vz*(t3)),t+t3, omega, t0)-d;
-    f2 = xstrich(x+(vx*(t2)),z+(vz*(t2)),t+t2, omega, t0)-d;
-    if(f2*f3<0) t1=t3;
-    else        t2=t3;
+    xr3 = xstrich(x+(vx*(t3)),z+(vz*(t3)),t+t3, omega, t0)-d;
+    xr2 = xstrich(x+(vx*(t2)),z+(vz*(t2)),t+t2, omega, t0)-d;
+    if(xr2*xr3<0) t1=t3;
+    else          t2=t3;
   }
 
-  sign = (xstrich(x+vx*(t3-2e-7),z+vz*(t3-2e-7),t+t3-2e-7, omega, t0)-d)
-        *(xstrich(x,z,t, omega, t0)-d);
-
-  if(sign < 0)        t3 = xinterpolation(x,z,vx,vz,t,t3,d, omega, t0);
-  if(counter >= 1000) t3=-1;
+  if(counter >= FCILL_MAXITER) t3=-1;
 
   return(t3);
 }
@@ -275,27 +217,27 @@ double zinterpolation(double x, double z, double vx, double vz,
                       double t, double dt, double d, double omega, double t0){
 
   double counter = 0;
-  double f3=1,f2,f1,t3=0,t1=0,t2=dt;
+  double zr3=1,zr2=0,t3=0,t1=0,t2=dt;
 
-  while ((fabs(f3)>1e-7)&&(counter<1000)){
+  while ((fabs(zr3)>FCILL_TimeAccuracy)&&(counter<FCILL_MAXITER)) {
     counter++;
     t3 = (t1+t2)*0.5;
-    f3 = zstrich(x+(vx*(t3)),z+(vz*(t3)),t+t3, omega, t0)-d;
-    f2 = zstrich(x+(vx*(t2)),z+(vz*(t2)),t+t2, omega, t0)-d;
-    if(f2*f3 < 0) t1=t3;
-    else          t2=t3;
+    zr3 = zstrich(x+(vx*(t3)),z+(vz*(t3)),t+t3, omega, t0)-d;
+    zr2 = zstrich(x+(vx*(t2)),z+(vz*(t2)),t+t2, omega, t0)-d;
+    if(zr2*zr3 < 0) t1=t3;
+    else            t2=t3;
   }
 
-  if(counter >= 1000) t3=-1;
+  if(counter >= FCILL_MAXITER) t3=-1;
 
   return(t3);
 }
-
+#endif
 %}
 
 DECLARE
 %{
-        struct FermiChopper_ILL_struct FCVars;
+  struct FermiChopper_ILL_struct FCVars;
 %}
 
 INITIALIZE
@@ -305,39 +247,9 @@ INITIALIZE
 
   int i;
 
-  FCVars.counter_transmited       = 0;
-  FCVars.counter_cylinder         = 0;
-  FCVars.counter_cylinder_pack    = 0;
-  FCVars.counter_reflect          = 0;
-  FCVars.counter_hit_slits        = 0;
-  FCVars.counter_transmited_total = 0;
-  FCVars.counter_out_cylinder     = 0;
-  FCVars.counter_infinite         = 0;
-  FCVars.counter_top_bottom       = 0;
-
-  for (i=0;i<3;i++){
-   FCVars.counter_loops[i]        = 0;
-  FCVars.counter_refl_L_blades[i] = 0;
-  FCVars.counter_refl_R_blades[i] = 0;
-  FCVars.counter_abs_R_blades[i]  = 0;
-  FCVars.counter_abs_L_blades[i]  = 0;
-  }
-
-  FCVars.counter_L_error    = 0;
-  FCVars.counter_R_error    = 0;
-  FCVars.counter_L_interpol = 0;
-  FCVars.counter_R_interpol = 0;
-  FCVars.counter_L_secant   = 0;
-  FCVars.counter_R_secant   = 0;
-  FCVars.counter_L_cylinder = 0;
-  FCVars.counter_R_cylinder = 0;
-  FCVars.counter_L_blades   = 0;
-  FCVars.counter_R_blades   = 0;
 /************************ CALCULATION CONSTANTS *****************************/
   FCVars.omega    = 2*PI*nu;
   if (nu && phase) FCVars.t0 = -phase/360.0/nu;
-  FCVars.mean_velocity_sum = 0;
-  FCVars.auto_velocity     = 0;
 
   /* check of input parameters */
   if (m < 0) m == 0;
@@ -345,7 +257,8 @@ INITIALIZE
     printf("FermiChopper_ILL: %s: FATAL: unrealistic cylinder radius radius=%g [m]\n", NAME_CURRENT_COMP, radius);
     exit(-1);
   }
-  if (yheight > 0) { ymax = yheight/2; ymin = -ymax; }
+  if (yheight <= 0) 
+  	exit(printf("FermiChopper_ILL: %s: FATAL: unrealistic cylinder yheight =%g [m]\n", NAME_CURRENT_COMP, yheight));
   if (xwidth > 0 && xwidth < radius*2 && nslit > 0) {
     w = xwidth/nslit;
   }
@@ -369,22 +282,8 @@ INITIALIZE
     printf("FermiChopper_ILL: %s: Efficiency is unrealistic\n"
            "Adjusting eff=%f\n", NAME_CURRENT_COMP, eff);
   }
-  if (Qc <= 0) { Qc = 0.02176; m = 0; }
-  if (Wi <= 0) Wi=1e-6;
-  if (Ei > 0) {
-    Vi = sqrt(Ei)*SE2V;
-  }
-  if (lambda > 0) {
-    Ki = 2*PI/lambda;
-  }
-  if (Ki > 0) {
-    Vi = Ki * K2V;
-  }
-  if (Vi == 0) {
-    printf("FermiChopper_ILL: %s: Will determine automatically mean neutron velocity\n", NAME_CURRENT_COMP);
-    FCVars.auto_velocity = 100;
-    FCVars.mean_velocity = 1000;
-  } else FCVars.mean_velocity = Vi;
+  if (Qc <= 0) { Qc = 0.02176; m = 0; R0=0; }
+  if (W <= 0) W=1e-6;
   
   if (verbose && nu)
     printf("FermiChopper_ILL: %s: frequency nu=%g [Hz] %g [rpm], time frame=%g [s] phase=%g [deg]\n"
@@ -400,16 +299,17 @@ TRACE
   /** local CALCULATION VARIABLES**************************************/
 
   /** Interaction with slitpacket ***************************/
-  double slit_length;   /* length of the slits */
-  double f1,f2;    /* distance to slitpacket entrance/exit */
+  double slit_input;   /* length of the slits */
+  double zr1,zr2;       /* distance to slitpacket entrance/exit in rotating frame */
+  double xr1,xr2;       /* X entrance/exit position in rotating frame */
 
   /** Variables for calculating interaction with blades ***************/
   double m1,m2;    /* slope of the tangents */
   double b1,b2;    /* y-intersection of tangent */
 
   /**  Reflections ***********************************************/
-  double time_prop_dt, distance_W;
-  int   n1,n2,n3,n4;
+  double t3a, t3b, distance_Wa, distance_Wb;
+  double n1,n2,n3,n4;
 
   /** variables used for calculating new velocities after reflection **/
   double q;
@@ -418,437 +318,336 @@ TRACE
 
   /**  Multiple Reflections  ******************************/
   int loopcounter=0;   /* How many reflections happen? */
-  int reflcounter=0;   /* loopcounter mod 3 */
 
   /** Time variables *********************************/
   double t3;      /* interaction time */
-  double dt,dt1;  /* interaction intervals */
+  double dt;      /* interaction intervals */
   double t1,t2;   /* cylinder intersection time */
 
 
 /************** test, if the neutron interacts with the cylinder ***/
-  if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, ymax-ymin)){
+  if (cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, yheight)) {
 
-  if (t1 <= 0) ABSORB;    /* Neutron started inside the cylinder */
-
-  dt=t2-t1;     /* total time of flight inside the cylinder  */
-  PROP_DT(t1);  /* Popagates neutron to entrance of the cylinder */
-
-  if(dt > fabs((0.5/FCVars.omega*2*PI)))
-  {
-    printf("FermiChopperloopcounter: %s: Frequency too low. Method will fail.\n"
-           "              Absorbing neutron\n", NAME_CURRENT_COMP);
-    ABSORB;
-  }
-
-/* Checks if neutron enters or leaves from top or bottom of cylinder. */
-
-  if ( ((x*x + z*z) < 0.999*(radius*radius)) ||
-     ((((x+vx*dt)*(x+vx*dt) + (z+vz*dt)*(z+vz*dt))) < 0.999*(radius*radius)) )
-       ABSORB;
-
-  FCVars.counter_cylinder++;             /* adjusting interaction counter */
-  if (FCVars.auto_velocity && FCVars.counter_cylinder <= FCVars.auto_velocity) {
-    FCVars.mean_velocity_sum += sqrt(vx*vx+vy*vy+vz*vz);
-    FCVars.mean_velocity = FCVars.mean_velocity_sum/FCVars.counter_cylinder;
-  }
-
-
-/************* checking wether the neutron can enter the chopper ***********/
-  if(fabs(xstrich(x,z,t, FCVars.omega, FCVars.t0))>=nslit*w/2) ABSORB;
-
-  FCVars.counter_cylinder_pack++;    /* adjusting interaction counter */
-
-/*********************** PROPAGATE TO SLIT PACKET **************************/
-
-
-  /* Checking on which side of the Chopper the Neutron enters******/
-  slit_length = 0.5*length;
-  if(zstrich(x,z,t, FCVars.omega, FCVars.t0) < 0)
-    slit_length *= -1;
-
-
-
-  /****Checking if the Neutron will hit the slits*****/
-  f1  =  zstrich(x,z,t, FCVars.omega, FCVars.t0)-slit_length;
-  f2  =  zstrich(x+vx*dt,z+vz*dt,t+dt, FCVars.omega, FCVars.t0)-slit_length;
-
-  if (f2*f1>0) ABSORB;
-
-  /****Calculating where/when Neutron hits the slits*******/
-  t3 = zsecant(x,z,vx,vz,t,dt,slit_length, FCVars.omega, FCVars.t0);
-
-  if((t3 < 0)||(t3 > dt)){
-    t3 = zinterpolation(x,z,vx,vz,t,dt,slit_length, FCVars.omega, FCVars.t0);
-    if((t3 < 0)||(t3 > dt)){
-      printf("FermiChopper_ILL: %s: Entering problem\n", NAME_CURRENT_COMP);
+    if (t1 <= 0) {
+      if (verbose > 2) 
+      	printf("FermiChopper_ILL: %s: ABSORB Neutron started inside the cylinder, t1=%g (enter)\n", 
+          NAME_CURRENT_COMP, t1);
+      ABSORB;    /* Neutron started inside the cylinder */
     }
-  }
 
-  /********Propagating whole system to that point****/
-  PROP_DT(t3);
-  dt -= t3;
+    dt=t2-t1;     /* total time of flight inside the cylinder  */
+    PROP_DT(t1);  /* Propagates neutron to entrance of the cylinder */
+    
+    if (verbose > 2)
+      printf("FermiChopper_ILL: %s: PROP_DT t1=%8.3g t2=%8.3g xyz=[%8.3g %8.3g %8.3g] v=[%8.3g %8.3g %8.3g] t=%8.3g (IN cyl).\n",
+             NAME_CURRENT_COMP, t1, t2, x,y,z,vx,vy,vz,t);
 
-  /*Checking if neutron hits the slits*/
-  if(fabs(xstrich(x,z,t, FCVars.omega, FCVars.t0)) >= nslit*w/2) ABSORB;
-
-  /****Calculating where/when Neutron leaves the slits*******/
-  f1  =  zstrich(x,z,t, FCVars.omega, FCVars.t0)+slit_length;
-  f2  =  zstrich(x+vx*dt,z+vz*dt,t+dt, FCVars.omega, FCVars.t0)+slit_length;
-
-  if (f1*f2>0 && FCVars.mean_velocity){ /* 2 *ideal time set */
-    dt=2*(sqrt((2*slit_length)*(2*slit_length)+w*w))/FCVars.mean_velocity;
-  } else {
-    dt1 = zsecant(x,z,vx,vz,t,dt,-slit_length, FCVars.omega, FCVars.t0);
-    if((dt1 < 0) || (dt1 > dt)){
-      dt1 = zinterpolation(x,z,vx,vz,t,dt,-slit_length, FCVars.omega, FCVars.t0);
-      if((dt1 <= 0) || (dt1 > dt)){
-        printf("FermiChopper_ILL: %s: Outgoing problem\n", NAME_CURRENT_COMP);
-      }
-    }
-    dt=dt1;
-  }
-
-/*********************PROPAGATION INSIDE THE SLIT PACKET ****************/
-
-  /***********Which slit was hit?******************/
-  n1 = nslit - (int) ((nslit/2) - xstrich(x,z,t, FCVars.omega, FCVars.t0)/w);
-  FCVars.counter_enter_slits[n1-1]++;  /* adjusting interaction counter */
-  FCVars.counter_hit_slits++;  /* adjusting interaction counter */
-
-
-/******************* BEGIN LOOP FOR MULTIPLE REFLECTIONS ********************/
-
-  for(;;){
-
-    /* Infinite loops shall be stopped and an error message be displayed */
-    if (loopcounter>=100){
-      FCVars.counter_infinite++; /* adjusting interaction counter */
-      printf("FermiChopper_ILL: %s: Infinite loop (%d), neutron absorbed.\n", NAME_CURRENT_COMP, loopcounter);
+    if(dt > fabs(0.5/FCVars.omega*2*PI) && verbose) {
+      printf("FermiChopper_ILL: %s: Frequency too low. Method will fail.\n"
+             "              Absorbing neutron\n", NAME_CURRENT_COMP);
       ABSORB;
     }
 
-/*Calculate most probable time for interaction with blades by using tangents*/
-    m1 = xstrich(vx,vz,t, FCVars.omega, FCVars.t0)
-       + FCVars.omega * zstrich(x,z,t, FCVars.omega, FCVars.t0);
-    m2 = xstrich(vx,vz,t+dt, FCVars.omega, FCVars.t0)
-       + FCVars.omega * zstrich(x+vx*dt,z+vz*dt,t+dt,FCVars.omega,FCVars.t0);
+  /* Checks if neutron enters or leaves from top or bottom of cylinder. */
+    if ( fabs(y) > yheight/2 ||
+        fabs(y+vy*dt) > yheight/2 ) {
+      if (verbose > 2) 
+      	printf("FermiChopper_ILL: %s: ABSORB Neutron hits top/bottom of cylinder, y=%8.3g (enter)\n", 
+          NAME_CURRENT_COMP, y);
+      ABSORB;
+    }
 
-    b1 = xstrich(x,z,t, FCVars.omega, FCVars.t0) - m1*t;
-    b2 = xstrich(x+vx*dt,z+vz*dt,t+dt, FCVars.omega, FCVars.t0) - m2*(t+dt);
+  /*  checking wether the neutron can enter the chopper (slit channel) */
+    xr1 = xstrich(x,z,t, FCVars.omega, FCVars.t0);
+    if(fabs(xr1)>=nslit*w/2) {
+      if (verbose > 2) 
+      	printf("FermiChopper_ILL: %s: ABSORB Neutron X is outside cylinder aperture, xp1=%8.3g (enter)\n", 
+          NAME_CURRENT_COMP, xr1);
+      ABSORB;
+    }
 
-    if (m1-m2) t3 = ((b2-b1)/(m1-m2))-t;
-    else       t3 = -1;
-
-    /*If method with tangens doesn't succeed, just take the middle of the interval*/
-    if((t3 < 0)||(t3 > dt)) t3=dt*0.5;
-
-    /**Calculate different positions for the neutron to determine interaction.**/
-
-    /*...at the end of the slit: */
-    n2 = nslit - (int) ((nslit/2)
-       - xstrich(x+(vx*dt),z+(vz*dt),t+dt, FCVars.omega, FCVars.t0)/w);
-
-    /*...at the before calculated t3: */
-    n3 = nslit - (int) ((nslit/2)
-       - xstrich(x+(vx*t3),z+(vz*t3),t+t3, FCVars.omega, FCVars.t0)/w);
+  /*********************** PROPAGATE TO SLIT PACKAGE **************************/
 
 
-    /*Does the neutron stay in the same slit?*/
-    if((n2!=n1)||(n3!=n1)){
+    /* Checking on which side of the Chopper the Neutron enters******/
+    slit_input = 0.5*length;
+    zr1 = zstrich(x,z,t, FCVars.omega, FCVars.t0);
+    zr2 = zstrich(x+vx*dt,z+vz*dt,t+dt, FCVars.omega, FCVars.t0);
+    if(zr1 < 0) slit_input *= -1;
 
-    /*Choosing the first time it isn't in the slit anymore*/
-      if(n3!=n1){
-        n2=n3;
-        dt = t3;
-      }
+    /*  Checking if the Neutron will hit the slits (Z) */
+    zr1  -=  slit_input;
+    zr2  -=  slit_input;
 
-      loopcounter++;  /* adjusting interaction counter */
+    if (zr2*zr1>0) {
+      if (verbose > 2) 
+      	printf("FermiChopper_ILL: %s: ABSORB Neutron Z does not change sign, zr1=%8.3g zr2=%8.3g (enter)\n", 
+          NAME_CURRENT_COMP, zr1,zr2);
+      ABSORB;
+    }
 
-    /*More than 3 reflections shall be counted as 3 or more reflections*/
-      if(loopcounter>3) reflcounter=3;
-      else              reflcounter=loopcounter;
+    /* Calculating where/when Neutron hits the slits (Z) */
+    t3 = zsecant(x,z,vx,vz,t,dt,slit_input, FCVars.omega, FCVars.t0);
 
-     /*******Will there be hit the right or the left blade? *******/
-    /************Setting distances and pointer to counters *******/
+    if((t3 < 0)||(t3 > dt)) {
+      t3 = zinterpolation(x,z,vx,vz,t,dt,slit_input, FCVars.omega, FCVars.t0);
+    }
+    if((t3 < 0)||(t3 > dt)) {
+      if (verbose) 
+      	printf("FermiChopper_ILL: %s: Can not reach entrance of slits. dt=%g t3=%g\n", NAME_CURRENT_COMP, dt, t3);
+      ABSORB;
+    }
 
-      if(n2 > n1){    /* right */
-        FCVars.counter_LR_blades         = &FCVars.counter_R_blades;
-        FCVars.counter_refl_LR_blades[0] = &(FCVars.counter_refl_R_blades[0]);
-        FCVars.counter_refl_LR_blades[1] = &(FCVars.counter_refl_R_blades[1]);
-        FCVars.counter_refl_LR_blades[2] = &(FCVars.counter_refl_R_blades[2]);
-        FCVars.counter_abs_LR_blades[0]  = &(FCVars.counter_abs_R_blades[0]);
-        FCVars.counter_abs_LR_blades[1]  = &(FCVars.counter_abs_R_blades[1]);
-        FCVars.counter_abs_LR_blades[2]  = &(FCVars.counter_abs_R_blades[2]);
-        FCVars.counter_LR_secant         = &FCVars.counter_R_secant;
-        FCVars.counter_LR_interpol       = &FCVars.counter_R_interpol;
-        FCVars.counter_LR_error          = &FCVars.counter_R_error;
-        FCVars.counter_LR_cylinder       = &FCVars.counter_R_cylinder;
+    /* Propagating whole system to that point */
+    PROP_DT(t3);
+    dt -= t3;
+    SCATTER;
+    
+    if (verbose > 2)
+      printf("FermiChopper_ILL: %s: PROP_DT t3=%8.3g dt=%8.3g xyz=[%8.3g %8.3g %8.3g] length=%g (slit enter).\n",
+             NAME_CURRENT_COMP, t3, dt, x,y,z, slit_input);
 
-        distance_W = (n1-0.5*nslit)*w;
+    /* Checking if neutron hits the slits entrance window (X) */
+    xr1 = xstrich(x,z,t, FCVars.omega, FCVars.t0);
+    if(fabs(xr1) >= nslit*w/2) {
+      if (verbose > 2) 
+      	printf("FermiChopper_ILL: %s: ABSORB Neutron X is outside slit package, xp1=%8.3g (enter)\n", 
+        NAME_CURRENT_COMP, xr1);
+      ABSORB;
+    }
 
-      } else {      /* left */
-        FCVars.counter_LR_blades         = &FCVars.counter_L_blades;
-        FCVars.counter_refl_LR_blades[0] = &(FCVars.counter_refl_L_blades[0]);
-        FCVars.counter_refl_LR_blades[1] = &(FCVars.counter_refl_L_blades[1]);
-        FCVars.counter_refl_LR_blades[2] = &(FCVars.counter_refl_L_blades[2]);
-        FCVars.counter_abs_LR_blades[0]  = &(FCVars.counter_abs_L_blades[0]);
-        FCVars.counter_abs_LR_blades[1]  = &(FCVars.counter_abs_L_blades[1]);
-        FCVars.counter_abs_LR_blades[2]  = &(FCVars.counter_abs_L_blades[2]);
-        FCVars.counter_LR_secant         = &FCVars.counter_L_secant;
-        FCVars.counter_LR_interpol       = &FCVars.counter_L_interpol;
-        FCVars.counter_LR_error          = &FCVars.counter_L_error;
-        FCVars.counter_LR_cylinder       = &FCVars.counter_L_cylinder;
+    /* Calculating where/when Neutron leaves the slits (Z) */
+    t3 = zsecant(x,z,vx,vz,t,dt,-slit_input, FCVars.omega, FCVars.t0);
+    if((t3 < 0) || (t3 > dt)){
+      t3 = zinterpolation(x,z,vx,vz,t,dt,-slit_input, FCVars.omega, FCVars.t0);
+    }
+    if((t3 <= 0) || (t3 > dt)){
+      if (verbose) 
+      	printf("FermiChopper_ILL: %s: Can not reach exit of slits. dt=%8.3g t3=%8.3g\n", NAME_CURRENT_COMP, dt, t3);
+      ABSORB;
+    } else dt=t3;
 
-        distance_W = (n1-(0.5*nslit)-1)*w;
+  /********************* PROPAGATION INSIDE THE SLIT PACKET *******************/
 
-      }
-
-      (*FCVars.counter_LR_blades)++;  /* adjusting interaction counter */
-
-    /************ABSORB to save calculation time ******************/
-      if (m == 0 || R0 == 0) {
-        (*(FCVars.counter_abs_LR_blades[reflcounter-1]))++;  /* adjusting interaction counter */
-        ABSORB;
-      }
+    /* Which slit was hit ? */
+    n1 = floor(xr1/w);
 
 
-/********************** WHEN DOES IT HIT THE BLADE? *************************/
+  /******************* BEGIN LOOP FOR MULTIPLE REFLECTIONS ********************/
 
-      /*********** SECANT METHOD ****************************/
+    for(loopcounter; loopcounter<=FCILL_MAXITER;loopcounter++){
+    	double dt_to_tangent=0; /* time shift to go to tangent intersection */
 
-      (*FCVars.counter_LR_secant)++;      /* adjusting interaction counter */
+  /* Calculate most probable time for interaction with blades by using tangents */
+      m1 = xstrich(vx,vz,t, FCVars.omega, FCVars.t0)
+         + FCVars.omega * zstrich(x,z,t, FCVars.omega, FCVars.t0);
+      m2 = xstrich(vx,vz,t+dt, FCVars.omega, FCVars.t0)
+         + FCVars.omega * zstrich(x+vx*dt,z+vz*dt,t+dt,FCVars.omega,FCVars.t0);
 
-      time_prop_dt = xsecant(x,z,vx,vz,t,dt,distance_W,
-                             FCVars.omega, FCVars.t0);
+      b1 = xstrich(x,z,t, FCVars.omega, FCVars.t0) - m1*t;
+      b2 = xstrich(x+vx*dt,z+vz*dt,t+dt, FCVars.omega, FCVars.t0) - m2*(t+dt);
 
-      /***** INTERPOLATION USED WHEN SECANT METHOD FAILS ****/
+      if (m1-m2) dt_to_tangent = ((b2-b1)/(m1-m2))-t;
+      else       dt_to_tangent = -1;
 
-      if ((time_prop_dt <= 1e-7) || (time_prop_dt > dt)){
-        (*FCVars.counter_LR_interpol)++;  /* adjusting interaction counter */
-        time_prop_dt = xinterpolation(x,z,vx,vz,t,dt,distance_W,
-                                      FCVars.omega, FCVars.t0);
-      }
+      /* If method with tangents doesn't succeed, just take the middle of the interval */
+      if((dt_to_tangent < 0)||(dt_to_tangent > dt)) dt_to_tangent=dt*0.5;
 
-      /*Check for errors in calculation*******/
-      if ((time_prop_dt < 0) || (time_prop_dt > dt)){
-        (*FCVars.counter_LR_error)++;    /* adjusting interaction counter */
-        printf("FermiChopper_ILL: %s: Reflecting interpolation Problem!\n", NAME_CURRENT_COMP);
-        ABSORB;
-      }
-      /*Propagate whole system to that point*/
-      PROP_DT(time_prop_dt);
+      /* Calculate different positions for the neutron to determine interaction. */
 
-      /*Propagate neutron back to its slit if it left it accidentally*/
+      /*...at the end of the slit: */
+      n2 = floor(xstrich(x+(vx*dt),z+(vz*dt),t+dt, FCVars.omega, FCVars.t0)/w);
 
-      n4 = nslit - (int) ((nslit/2) - xstrich(x,z,t, FCVars.omega, FCVars.t0)/w);
+      /*...at the before calculated t3: tangent intersection point */
+      n3 = floor(xstrich(x+(vx*dt_to_tangent),z+(vz*dt_to_tangent),t+dt_to_tangent, FCVars.omega, FCVars.t0)/w);
 
-      while (n4 != n1){
-        PROP_DT(-1e-10);
-        n4 = nslit - (int) ((nslit/2)
-           - xstrich(x,z,t, FCVars.omega, FCVars.t0)/w);
-      }
+      if (verbose > 2)
+        printf("FermiChopper_ILL: %s: t3=%8.3g n=[%g %g %g] (time at tangent intersection).\n",
+             NAME_CURRENT_COMP, dt_to_tangent, n1, n2, n3);
 
-    /***** Check if this point is inside the slit packet *********/
-      if(fabs(zstrich(x,z,t, FCVars.omega, FCVars.t0)) > fabs(slit_length)){
-        loopcounter--;    /* adjusting interaction counter */
-        reflcounter--;
-        (*FCVars.counter_LR_blades)--;  /* adjusting interaction counter */
-        (*FCVars.counter_LR_cylinder)++;
-        break;
-      }
+      /* Does the neutron stay in the same slit ? */
+      if((n2!=n1)||(n3!=n1)){
 
-/******************** REFLECTION ALGORITHM ********************************/
-      vper    = xstrich(vx,vz,t,FCVars.omega,FCVars.t0); /* perpendicular velocity (to blade) */
-      vpar    = zstrich(vx,vz,t, FCVars.omega, FCVars.t0);  /* parallel velocity (to blade) */
-      q       = MS2AA*(fabs(vper));
+        /* Choosing the first time it isn't in the slit anymore */
+        if(n3!=n1){
+          n2 = n3;
+        }
 
-      if (q > Qc && Wi){
-        arg = (q-m*Qc)/Wi;
-        if (arg < 10.0) p *= 0.5*(1-tanh(arg))*(1-alpha*(q-Qc));
-        else{
-          (*FCVars.counter_abs_LR_blades[reflcounter-1])++;/*adjusting interaction counter*/
+      /************ABSORB to save calculation time ******************/
+        if (m == 0 || R0 == 0) {
+          if (verbose > 2) 
+          	printf("FermiChopper_ILL: %s: ABSORB Neutron hits absorbing coating (change slit).\n", 
+              NAME_CURRENT_COMP);
           ABSORB;
         }
-      }
-
-      if (R0 != 0.0){
-        p *= R0;
-        FCVars.counter_reflect++;      /* adjusting interaction counter */
-        (*FCVars.counter_refl_LR_blades[reflcounter-1])++;
-
-        vper *= (-1);   /* Mirroring perpendicular velocity */
-
-        /**************SET NEW VELOCITIES***********/
-        vx = vper*cos(FCVars.omega*(t-FCVars.t0))
-           -  vpar*sin(FCVars.omega*(t-FCVars.t0));
-        vz = vper*sin(FCVars.omega*(t-FCVars.t0))
-           +  vpar*cos(FCVars.omega*(t-FCVars.t0));
-        SCATTER;
-      } else {
-       (*FCVars.counter_abs_LR_blades[reflcounter-1])++;  /* adjusting interaction counter */
-       ABSORB;
-      }
 
 
-      /* Recalculating when Neutron will leave the slitpacket */
-      f1  =  zstrich(x,z,t,FCVars.omega,FCVars.t0)+slit_length;
-      f2  =  zstrich(x+vx*dt,z+vz*dt,t+dt,FCVars.omega,FCVars.t0)+slit_length;
+  /********************** WHEN DOES IT HIT THE BLADE? *************************/
 
-      if (f1*f2>0 && FCVars.mean_velocity){
-        dt = 2*(sqrt((2*slit_length)*(2*slit_length)+w*w))/FCVars.mean_velocity;/* 2 *ideal time set  */
+        /*********** SECANT METHOD ****************************/
+        /* get position of slit wall towards which neutron is propagating */
+        if (n2 > n1) {     /* X' positive side of slit is in principle the first intersection to test*/
+          distance_Wa = n1*w+w;
+          distance_Wb = n1*w;
+        } else {           /* X' negative side of slit */
+        	distance_Wb = n1*w+w;
+          distance_Wa = n1*w;
         }
-      else{
-        dt1 = zsecant(x,z,vx,vz,t,dt,-slit_length,FCVars.omega,FCVars.t0);
-        if((dt1 < 0) || (dt1 > dt)){
-          dt1=zinterpolation(x,z,vx,vz,t,dt,-slit_length,
-                             FCVars.omega,FCVars.t0);
+
+        /* time shift to reach slit wall point in [0,dt_to_tangent]: X'=distance_W slit_wall */
+        t3a = xsecant(x,z,vx,vz,t,dt,distance_Wa, FCVars.omega, FCVars.t0);
+        t3b = xsecant(x,z,vx,vz,t,dt,distance_Wb, FCVars.omega, FCVars.t0);
+        if (t3b < 0) t3 = t3a;
+        else if (t3a < 0 && t3b > 0) t3 = t3b;
+        else t3 = (t3a < t3b ? t3a : t3b);
+
+        /***** INTERPOLATION USED WHEN SECANT METHOD FAILS ****/
+        /* try second intersection method in case of failure */
+        if ((t3 < 0) || (t3 > dt)) {
+        	t3a = xinterpolation(x,z,vx,vz,t,dt,distance_Wa, FCVars.omega, FCVars.t0);
+        	t3b = xinterpolation(x,z,vx,vz,t,dt,distance_Wb, FCVars.omega, FCVars.t0);
+        	if (t3b < 0) t3 = t3a;
+		      else if (t3a < 0 && t3b > 0) t3 = t3b;
+		      else t3 = (t3a < t3b ? t3a : t3b);
+        }
+
+        /* Check for errors in calculation*******/
+        if ((t3 < 0) || (t3 > dt)) {
+          if (verbose) 
+          	printf("FermiChopper_ILL: %s: Reflecting interpolation Problem. dt=%8.3g t3=%8.3g\n", 
+          	NAME_CURRENT_COMP, dt, t3);
+          ABSORB;
+        }
+        /* Propagate whole system to that point */
+        PROP_DT(t3); dt -= t3;
+        if (verbose > 2)
+          printf("FermiChopper_ILL: %s: PROP_DT t3=%8.3g dt=%8.3g xyz=[%8.3g %8.3g %8.3g] (on wall).\n",
+             NAME_CURRENT_COMP, t3, dt, x,y,z);
+
+        /* Check if this point is inside the slit packet */
+        if(fabs(zstrich(x,z,t, FCVars.omega, FCVars.t0)) > fabs(slit_input)){
+          if (verbose > 2) 
+          	printf("FermiChopper_ILL: %s: Neutron is outside slit pack (on slit wall).\n", 
+                NAME_CURRENT_COMP);
+          break;
+        }
+
+  /******************** REFLECTION ALGORITHM ********************************/
+        vper    = xstrich(vx,vz,t, FCVars.omega, FCVars.t0); /* perpendicular velocity (to blade) */
+        vpar    = zstrich(vx,vz,t, FCVars.omega, FCVars.t0);  /* parallel velocity (to blade) */
+        q       = 2*MS2AA*(fabs(vper));
+
+        if (q > Qc && W){
+          arg = (q-m*Qc)/W;
+          if (arg < 10.0) p *= 0.5*(1-tanh(arg))*(1-alpha*(q-Qc));
+          else {
+            if (verbose > 2) 
+            	printf("FermiChopper_ILL: %s: ABSORB Neutron hits absorbing coating (on slit wall).\n", 
+                NAME_CURRENT_COMP);
+            ABSORB;
           }
-        dt=dt1;
         }
-      }
-    else{
-      break;
-      }
+
+        if (R0 != 0.0){
+          p *= R0;
+
+          vper *= (-1);   /* Mirroring perpendicular velocity */
+
+          /**************SET NEW VELOCITIES***********/
+          vx =  vper*cos(FCVars.omega*(t-FCVars.t0))
+             -  vpar*sin(FCVars.omega*(t-FCVars.t0));
+          vz =  vper*sin(FCVars.omega*(t-FCVars.t0))
+             +  vpar*cos(FCVars.omega*(t-FCVars.t0));
+          SCATTER;
+        } else {
+          if (verbose > 2) 
+          	printf("FermiChopper_ILL: %s: ABSORB Neutron hits absorbing coating (R0=0).\n", 
+              NAME_CURRENT_COMP);
+         ABSORB;
+        }
+
+
+        /* Recalculating when Neutron will leave the slitpacket */
+        t3 = zsecant(x,z,vx,vz,t,dt,-slit_input,FCVars.omega,FCVars.t0);
+        if((t3 < 0) || (t3 > dt)) {
+          t3=zinterpolation(x,z,vx,vz,t,dt,-slit_input,
+                             FCVars.omega,FCVars.t0);
+        }
+        /* Check for errors in calculation*******/
+        if ((t3 < 0) || (t3 > dt)) {
+          if (verbose) 
+          	printf("FermiChopper_ILL: %s: Reflecting interpolation Problem. dt=%8.3g t3=%8.3g\n", 
+          	NAME_CURRENT_COMP, dt, t3);
+          ABSORB;
+        } else  dt=t3;
+      } /* end if n2 != n2 != n3 */
+      else break;
+    } /* end for */
+  /********************* END OF THE FOR LOOP **********************************/
+
+    /****New time of cylinder intersection will be calculated**********/
+    if (!cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, yheight)) {
+    	if (verbose > 2) 
+    		printf("FermiChopper_ILL: %s: ABSORB Neutron has unexpectidely exited cylinder ! (exiting)\n", 
+    			NAME_CURRENT_COMP);
+    	ABSORB; 
     }
-/********************* END OF THE FOR LOOP **********************************/
 
-  /* Outgoing Slit Counter */
-  n1 = nslit - (int) ((nslit/2) - xstrich(x,z,t,FCVars.omega,FCVars.t0)/w);
-  FCVars.counter_exit_slits[n1-1]++;    //adjusting interaction counter
+    if (t1 > 0 && verbose) {
+      printf("FermiChopper_ILL: %s: Neutrons are leaving chopper in the wrong direction! \n", NAME_CURRENT_COMP);
+    }
 
-  /****New time of cylinder intersection will be calculated**********/
-  cylinder_intersect (&t1, &t2, x, y, z, vx, vy, vz, radius, ymax-ymin);
+    if (t2 <= 0 && verbose) {
+      printf("FermiChopper_ILL: %s: Neutrons are leaving chopper without any control\n", NAME_CURRENT_COMP);
+    }
 
-  if (t1 > 0) {
-    printf("FermiChopper_ILL: %s: Neutrons are leaving chopper in the wrong direction! \n", NAME_CURRENT_COMP);
-  }
+  /*********** PROPAGATE TO CYLINDER SURFACE ***********************************/
+    PROP_DT(t2);
+    SCATTER;
+    
+    if (verbose > 2)
+      printf("FermiChopper_ILL: %s: t1=%8.3g PROP_DT t2=%8.3g xyz=[%8.3g %8.3g %8.3g] (OUT cyl).\n",
+             NAME_CURRENT_COMP, t1, t2, x,y,z);
 
-  if (t2 <= 0) {
-    printf("FermiChopper_ILL: %s: Neutrons are leaving chopper without any control\n", NAME_CURRENT_COMP);
-  }
+    /*****Checking if the neutron left the cylinder by his top or bottom **/
+    if  ( fabs(y) > yheight/2 ){
+      if (verbose > 2) 
+      	printf("FermiChopper_ILL: %s: ABSORB Neutron hits top/bottom of cylinder, y=%8.3g (exiting)\n", 
+          NAME_CURRENT_COMP, y);
+      ABSORB;
+    }
 
-/*********** PROPAGATE TO CYLINDER SURFACE ***********************************/
-  PROP_DT(t2);
 
-  /*****Checking if the neutron left the cylinder by his top or bottom **/
-  if  ((x*x + z*z) < 0.999*(radius*radius) ){
-    FCVars.counter_top_bottom++;  //adjusting interaction counter
+    /*****Checking if neutron hits chopper exit ***/
+    if(fabs(xstrich(x,z,t,FCVars.omega,FCVars.t0))>=nslit*w/2){
+      if (verbose > 2) 
+      	printf("FermiChopper_ILL: %s: ABSORB Neutron X is outside slit package cylinder, xp1=%8.3g (exiting)\n", 
+          NAME_CURRENT_COMP, xstrich(x,z,t,FCVars.omega,FCVars.t0));
+      ABSORB;
+    }
+
+    /**** Transmission coefficent******/
+    p = p*eff;          //finite cross section + transmission
+
+  } /* end if cylinder_intersect */
+  else {
+    if (verbose > 2 && 0) 
+    	printf("FermiChopper_ILL: %s: ABSORB Neutron has not interacted with FC\n", 
+        NAME_CURRENT_COMP);
     ABSORB;
   }
-
-
-  /*****Checking if neutron hits chopper exit ***/
-  if(fabs(xstrich(x,z,t,FCVars.omega,FCVars.t0))>=nslit*w/2){
-    FCVars.counter_out_cylinder++;    //adjusting interaction counter
-    ABSORB;
-  }
-
-  FCVars.counter_transmited_total++;    //adjusting interaction counter
-
-
-  if(loopcounter > 3)
-    printf("FermiChopper_ILL: %s: More than 3 reflections (%i) !\n", NAME_CURRENT_COMP, loopcounter);
-
-  /*How many reflections happened?*/
-  switch(reflcounter) {
-    case 0:      //No reflection
-      FCVars.counter_transmited++;  //adjusting interaction counter
-      break;
-    case 1:      //One reflection
-      FCVars.counter_loops[0]++;  //adjusting interaction counter
-      break;
-    case 2:      //Two reflections
-      FCVars.counter_loops[1]++;  //adjusting interaction counter
-      break;
-    case 3:      //Three or more reflections
-      FCVars.counter_loops[2]++;  //adjusting interaction counter
-      break;
-  }
-
-  /**** Transmission coefficent******/
-  p = p*eff;          //finite cross section + transmission
-
-  } /* end if cylender_intersect */
-  else ABSORB;
 
 /************************ TIME OF FLIGHT RESET ************************/
   if (zero_time && nu)
     t -= (((int)((t+1/(4*nu))/(1/(2*nu))))*(1/(2*nu)));
 %}
 
-SAVE
-%{
-
-if (verbose) {
-  int i;
-
-  printf("*********** This is the result from FermiChopper.comp: %s ***********  \n\n\n", NAME_CURRENT_COMP);
-  printf("\t INTERACTIONS:\n\n");
-  printf("number of neutrons interacting with cylinder:      %i\n", FCVars.counter_cylinder);
-  printf("number of neutrons hitting the big slit:           %d\n", FCVars.counter_cylinder_pack);
-  printf("number of neutrons hitting one of the slits:       %d\n\n", FCVars.counter_hit_slits);
-
-  printf("number of interactions with blades (overall):      %d\n", FCVars.counter_L_blades+FCVars.counter_R_blades);
-  printf("number of interactions with left blades(overall):  %d\n", FCVars.counter_L_blades);
-  printf("number of interactions with right blades(overall): %d\n\n", FCVars.counter_R_blades);
-
-  printf("\t REFLECTIONS:\n\n");
-  printf("number of successful reflections (overall):        %d\n\n", FCVars.counter_reflect);
-
-  printf("number of successful primary reflections at left blades:             %d\n", FCVars.counter_refl_L_blades[0]);
-  printf("number of successful secondary reflections at left blades:           %d\n", FCVars.counter_refl_L_blades[1]);
-  printf("number of successful more than secondary reflections at left blades: %d\n\n", FCVars.counter_refl_L_blades[2]);
-  printf("number of successful primary reflections at right blades:            %d\n", FCVars.counter_refl_R_blades[0]);
-  printf("number of successful secondary reflections at right blades:          %d\n", FCVars.counter_refl_R_blades[1]);
-  printf("number of successful more than secondary reflections at right blades:%d\n\n",
-    FCVars.counter_refl_R_blades[2]);
-  printf("\t ABSORPTIONS:\n\n");
-
-  printf("number of absorbed neutrons at blades(overall):                      %d\n\n",
-    FCVars.counter_abs_L_blades[0]+FCVars.counter_abs_L_blades[1]+FCVars.counter_abs_L_blades[2]+FCVars.counter_abs_R_blades[0]+FCVars.counter_abs_R_blades[1]+FCVars.counter_abs_R_blades[2]);
-
-  printf("number of absorbed neutrons at left blades (primary):                %d\n", FCVars.counter_abs_L_blades[0]);
-  printf("number of absorbed neutrons at left blades (secondary):              %d\n", FCVars.counter_abs_L_blades[1]);
-  printf("number of absorbed neutrons at left blades (more than secondary):    %d\n\n", FCVars.counter_abs_L_blades[2]);
-
-  printf("number of absorbed neutrons at right blades (primary):               %d\n", FCVars.counter_abs_R_blades[0]);
-  printf("number of absorbed neutrons at right blades (secondary):             %d\n", FCVars.counter_abs_R_blades[1]);
-  printf("number of absorbed neutrons at right blades (more than secondary):   %d\n\n", FCVars.counter_abs_R_blades[2]);
-
-  printf("number of absorbed neutrons between slits and exit:                  %d\n\n", FCVars.counter_out_cylinder);
-  printf("number of absorbed neutrons because of an FCVars.counter_infinite loop:      %d\n\n", FCVars.counter_infinite);
-  printf("number of absorbed neutrons because leaving the chooper from top or bottom:  %d\n\n", FCVars.counter_top_bottom);
-
-
-  printf("\tDATA OF TRANSMITTED NEUTRONS:\n\n");
-
-  printf("number of transmitted neutrons (overall):         %d\n", FCVars.counter_transmited_total);
-  printf("number of transmitted neutrons (not reflected):   %d\n\n", FCVars.counter_transmited);
-
-  printf("number of neutrons reflected once :               %d\n", FCVars.counter_loops[0]);
-  printf("number of neutrons reflected twice :              %d\n", FCVars.counter_loops[1]);
-  printf("number of neutrons reflected more times :         %d\n\n", FCVars.counter_loops[2]);
-
-  printf("number of 'breaking the algorithm' neutrons on right blade:      %d\n", FCVars.counter_R_cylinder);
-  printf("number of 'breaking the algorithm' neutrons on left blade:       %d\n\n", FCVars.counter_L_cylinder);
-
-  printf( "Secant/Picard Method used / Errors at right blade\t %i \t %i \t %i\n", FCVars.counter_R_secant,  FCVars.counter_R_interpol, FCVars.counter_R_error);
-  printf( "Secant/Picard Method used / Errors at left blade\t %i \t %i \t %i\n\n", FCVars.counter_L_secant, FCVars.counter_L_interpol, FCVars.counter_L_error);
-
-  printf("\tDETAILS: SLITS:\n\n");
-  printf( "\t\t Entering \t\t Outgoing\n");
-  for(i=0; i<nslit; i++)
-  printf( "Slit number %i \t\t %i \t\t %i \n", i+1, FCVars.counter_enter_slits[i],FCVars.counter_exit_slits[i]);
-
-}
-
-%}
-
 MCDISPLAY
 %{
   double index=0;
   double xpos, zpos;
+  double ymax = yheight/2; 
+  double ymin = -ymax;
   magnify("xz");
   /* cylinder top/center/bottom  */
   circle("xz", 0,ymax,0,radius);
