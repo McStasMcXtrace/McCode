@@ -7,8 +7,8 @@
 * Written by: E. Farhi [farhi@ill.fr]
 * Date: Sept 1st, 2008
 * Origin: ILL
-* Release: McStas CVS_080901
-* Version: $Revision: 1.4 $
+* Release: McStas CVS_090316
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Cross comparison of Fermi Chopper components
@@ -68,7 +68,9 @@ COMPONENT Source = Source_gen(
    yheight = 0.05, xwidth = 0.05)
   AT (0, 0, 0) RELATIVE PREVIOUS
 EXTEND %{
-	t = randtriangle()*1e-3;	/* 1 ms triangle time window */
+  /* 1 ms triangle time window */
+  // t = randtriangle()*1e-3;  /* trianglular distribution */
+  t = randpm1()*1e-3;          /* rectangular distribution */
 %}
 
 COMPONENT Monitor1_xt = Monitor_nD(
@@ -101,7 +103,7 @@ COMPONENT FC_McStas = FermiChopper(
 
 COMPONENT FC_ILL = FermiChopper_ILL(
     radius = 0.1, nu = 100, yheight = 0.05, 
-    nslit = 120, length = 0.012, lambda = 3.39, xwidth = 0.05)
+    nslit = 120, length = 0.012, xwidth = 0.05)
   WHEN (Fermi ==3)
   AT (0, 0, 0) RELATIVE FC_Position
 
