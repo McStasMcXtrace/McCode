@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.30 $
+* Version: $Revision: 1.31 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.30 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.31 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -811,14 +811,14 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     name_start = (parsing[0] ? str_dup(parsing[0]) : NULL);
     memfree(parsing[0]); free(parsing);
     if (!name_start) break;
-    equal_sign = strchr(name_start+strlen("Param")+1, '=');
+    equal_sign = strchr(name_start+1, '=');
     if (equal_sign > name_start && strlen(name_start)) {
       char *name_to_equal=str_dup_n(name_start, equal_sign-name_start);
       char *name=str_last_word(name_to_equal);
       char *value      = str_dup(equal_sign+1);
       if (name && value && strlen(name) && strlen(value)) {
         char *name_label = str_dup_label(name);
-        /* printf("name_to_equal='%s' name='%s' value='%s'\n", name_to_equal, name, value); */
+        /*printf("name_to_equal='%s' name='%s' value='%s'\n", name_to_equal, name, value); */
         mcinputtable[mcnumipar].name = name_label;
         mcinputtable[mcnumipar].type = instr_type_string;
         mcinputtable[mcnumipar].val  = value;
@@ -1200,7 +1200,7 @@ int mcformat_merge_compare(int nb)
     
     /* we multiply the p1 and p2 by the Ncount so that the operations take
        into account the relative Ncount weight of each simulation. We will
-       dive by the sum(Ncount) at the end of operation */
+       divide by the sum(Ncount) at the end of operation */
     if (!strstr(McStasStruct.Format, " list ")) /* NOT FOR LISTs (content non additive) */
     for (j=0; j<abs(McStasStruct.m*McStasStruct.n*McStasStruct.p); j++) {
       Files_to_Merge[i].p1[j] *= Files_to_Merge[i].Ncount;
@@ -1243,7 +1243,7 @@ int mcformat_merge_compare(int nb)
         (flag_list==1 || ThisStruct.m == McStasStruct.m) &&
         ThisStruct.n == McStasStruct.n &&
         ThisStruct.p == McStasStruct.p &&
-        (mcforcemode ||
+        (mcforcemode || mcscanmode ||
           (ThisStruct.n == 1 && ThisStruct.x1 == McStasStruct.x1) ||
           (ThisStruct.x1 == McStasStruct.x1 && ThisStruct.y1 == McStasStruct.y1)
           ) &&
@@ -1279,10 +1279,10 @@ int mcformat_merge_compare(int nb)
       /* handle scan index */
       if (!flag_equiv_parval) {
         /* attach index j to scan column origin monitor 'i' */
+        if (Scans_to_merge[i] < 0) Scans_to_merge[i] = i;
         if (mcverbose && Scans_to_merge[j] < 0 && Scans_to_merge[i] >= 0) printf("  Gathering Scan step %s/%s (%d) with %s/%s (%d)\n",
           McStasStruct.mcdirname, McStasStruct.outputname, i,
           ThisStruct.mcdirname,  ThisStruct.outputname,    j);
-        if (Scans_to_merge[i] < 0) Scans_to_merge[i] = i;
         if (Scans_to_merge[j] < 0) Scans_to_merge[j] = i;
         /* next i if this is a scan (no add/cat) */
         continue; /* for j */
@@ -1553,7 +1553,7 @@ void mcformat_scan_compare(int nb)
           Files_to_Merge[Monitor_column[i]].Psum);
         Table_SetElement(&Scan,
           i, Files_to_Merge[scan_index1].mcnumipar+2*j+1,
-          Files_to_Merge[Monitor_column[i]].P2sum);
+          mcestimate_error(Files_to_Merge[Monitor_column[i]].Ncount,Files_to_Merge[Monitor_column[i]].Psum,Files_to_Merge[Monitor_column[i]].P2sum));
         if (j==0) { /* first monitor in row also sets ipar */
           for (k=0; k<Files_to_Merge[Monitor_column[i]].mcnumipar; k++) {
             Table_SetElement(&Scan,
@@ -1567,9 +1567,9 @@ void mcformat_scan_compare(int nb)
           }
         } /* if j==0 */
         if (i == 0)
-          ipar_min=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[0].val);
+          ipar_min=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[ipar_var].val);
         else if (i == scan_length1-1)
-          ipar_max=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[0].val);
+          ipar_max=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[ipar_var].val);
       } /* for i */
       strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_I ");
       strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_Err ");
