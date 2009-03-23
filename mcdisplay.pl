@@ -120,6 +120,10 @@ sub read_instrument {
               } else { write_process("INSTRUMENT.save=0;\n"); }
             }
 	    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /VRML/i) {
+	    my @argv=@ARGV;
+	    for ($i=0; $i<@ARGV; $i++) {
+	    	$argv[$i] =~ s!\"!\'!g;
+	    }
 		# Default viewpoint, 10 meters along z.
 		write_process("#VRML V2.0 utf8\n
 # Format: VRML 2.0\n
@@ -131,7 +135,7 @@ sub read_instrument {
 WorldInfo {
   title \"McStas: $sim_cmd instrument\"
   info [ \"URL:    http://www.mcstas.org/\"
-    \"Editor: mcdisplay @ARGV\"
+    \"Editor: mcdisplay @argv\"
     \"Creator:$sim_cmd simulation (McStas)\" ]
 }
 Viewpoint {
