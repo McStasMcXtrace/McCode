@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.216 $
+* Version: $Revision: 1.217 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.216 2009-02-20 16:17:55 farhi Exp $
+* $Id: mcstas-r.c,v 1.217 2009-03-26 13:41:36 erkn Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.216  2009/02/20 16:17:55  farhi
+* Fixed warnings and a few bugs detected with GCC 4.3.
+*
 * Revision 1.215  2009/02/13 14:03:20  farhi
 * Fixed GCC 4.3 warnings. More will come in components.
 *
@@ -907,7 +910,7 @@ double mcestimate_error(double N, double p1, double p2)
   n1 = N - 1;
   /* Note: underflow may cause p2 to become zero; the fabs() below guards
      against this. */
-  return sqrt((N/n1)*fabs(p2 - pmean*pmean));
+  return sqrt((N/n1)*fabs(p2/N - pmean*pmean));
 }
 
 /* mcset_ncount: set total number of neutrons to generate */
