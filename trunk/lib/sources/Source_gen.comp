@@ -10,7 +10,7 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.44 $
+* Version: $Revision: 1.45 $
 * Origin: ILL/Risoe
 * Release: McStas CVS_080730
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
@@ -149,12 +149,11 @@ SHARE
 #ifndef SOURCE_GEN_DEF
 #define SOURCE_GEN_DEF
 /*******************************************************************************
-* str_dup_numeric: makes a clean copy of a string and allocate as numeric
+* str_dup_numeric: replaces non 'valid name' chars with spaces
 *******************************************************************************/
 char *str_dup_numeric(char *orig)
 {
   long i;
-  char *valid;
 
   if (!orig || !strlen(orig)) return(NULL);
 
@@ -478,7 +477,6 @@ TRACE
 %{
   double dx,dy,xf,yf,rf,pdir,chi,v,r, lambda;
   double Maxwell;
-  double xwg, yhg;
 
   if (verbose >= 0)
   {
