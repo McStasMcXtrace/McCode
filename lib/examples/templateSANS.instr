@@ -12,7 +12,7 @@
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * %INSTRUMENT_SITE: Templates
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
@@ -21,7 +21,7 @@
 * %Description
 * Very simple test instrument for the Sans_spheres component
 *
-* %Example: lambda=2 Detector: detector_I=0.00178936
+* %Example: lambda=6 Detector: detector_I=6.5e-17
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -61,7 +61,7 @@ COMPONENT coll2 = Slit(
     radius = 0.005)
   AT (0, 0, 6) RELATIVE arm
 
-COMPONENT sample = Sans_spheres(
+SPLIT COMPONENT sample = Sans_spheres(
   R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_abs=sigma_abs, 
   xwidth=0.01, yheight=0.01, zdepth=0.005)
    AT (0,0,0.2) RELATIVE coll2

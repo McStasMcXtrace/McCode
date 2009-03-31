@@ -8,7 +8,7 @@
 * Date: Sept 1st, 2008
 * Origin: ILL
 * Release: McStas CVS_090316
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Tests_optics
 *
 * Cross comparison of Fermi Chopper components
@@ -20,11 +20,11 @@
 * guide are 30% faster than McStas Fermi chopper, and on the other hand
 * Vitess implementation is 100 times slower.
 *
-* %Example: Fermi=1 Detector: Monitor2_xt_I=8.11119e-05
-* %Example: Fermi=2 Detector: Monitor2_xt_I=8.9408e-05
-* %Example: Fermi=3 Detector: Monitor2_xt_I=8.08804e-05
-* %Example: Fermi=4 Detector: Monitor2_xt_I=8.98832e-05
-* %Example: Fermi=5 Detector: Monitor2_xt_I=8.97584e-05
+* %Example: Fermi=1 Detector: Monitor2_xt_I=0.00051256
+* %Example: Fermi=2 Detector: Monitor2_xt_I=0.00058198
+* %Example: Fermi=3 Detector: Monitor2_xt_I=0.00051377
+* %Example: Fermi=4 Detector: Monitor2_xt_I=0.000572427
+* %Example: Fermi=5 Detector: Monitor2_xt_I=0.00058003
 *
 * %Parameters
 * Fermi: [1] Choice of Fermi chopper component to test, with
