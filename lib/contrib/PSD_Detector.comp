@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.16 $
+* Version: $Revision: 1.17 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -159,7 +159,8 @@
 *                 gas (text)
 * PressureStop:   Pressure of stopping gas (bar)
 * threshold:      Energy threshold for acceptance of an event (keV)
-* filename:       Name of file in which to store the detector image (text)
+* filename:       Name of file in which to store the detector image
+*                   The name of the component is used if file name is not specified (text)
 * interpolate:    Performs energy interpolation if true (1)
 * verbose:        Gives more information and spectrum (1)
 * p_interact:     Fraction of statistical events to be treated by component.
@@ -1163,12 +1164,15 @@ SAVE
           -width/2*100.0, width/2*100.0, -yheight/2*100.0, yheight/2*100.0,
           (double)nx, (double)ny,
           &PSD_N[0][0],&PSD_p[0][0],&PSD_p2[0][0],
-          filename);
+          filename && strcmp(filename,"0") && strcmp(filename,"NULL") ? 
+            filename : NAME_CURRENT_COMP);
   }
   if (verbose) {
     char file_spectrum[256];
     char xlabelstr[64];
-    snprintf(file_spectrum, 256, "%s.en", filename);
+    snprintf(file_spectrum, 256, "%s.en", 
+      filename && strcmp(filename,"0") && strcmp(filename,"NULL") ? 
+            filename : NAME_CURRENT_COMP);
     fprintf(stdout,"PSD_Detector: %s: statistics\n", NAME_CURRENT_COMP);
     fprintf(stdout,"  %g neutrons in the simulation, %g encounter the detector.\n",
                    CountNeutrons, GeomCumul );
