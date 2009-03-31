@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: Risoe
 * Release: McStas 2.0
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -184,7 +184,7 @@ TRACE
 MCDISPLAY
 %{
   
-  int j,k,l,kmin,kmax;
+  int j,k,l;
   /* Arrays for storing geometry of slit/beamstop */
   double X[5];
   double Y[5];
