@@ -10,7 +10,7 @@
 * %I
 * Written by: Christian Nielsen
 * Date: 1999
-* Version: $Revision: 1.18 $
+* Version: $Revision: 1.19 $
 * Release: McStas CVS_080902
 * Origin: Risoe
 *
@@ -139,7 +139,7 @@ TRACE
   double vdotn_v1,vdotn_v2,vdotn_h1,vdotn_h2;   /* Dot products. */
   int i;                                        /* Which mirror hit? */
   double q;                                     /* Q [1/AA] of reflection */
-  double vlen2,nlen2;                           /* Vector lengths squared */
+  double nlen2;                                 /* Vector lengths squared */
   double edge;
   double hadj;                                  /* Channel displacement */
   double angle=0;
@@ -302,7 +302,6 @@ TRACE
 
 MCDISPLAY
 %{
-  double x;
   int i;
 
   magnify("xy");
