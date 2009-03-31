@@ -10,7 +10,7 @@
 * %I
 * Written by: Thorwald van Vuure
 * Date: Feb 21st, 2005
-* Version: $Revision: 1.15 $
+* Version: $Revision: 1.16 $
 * Origin: ILL
 * Release: McStas 1.9
 * Modified by: E. Farhi Aug 2008, allow event detector mode to save TOF signal
@@ -644,7 +644,7 @@ TRACE
   long   i,j;
   double RangeProton,RangeTriton;
   double rb=radius+zdepth; // radius of the back plane of the detector
-  double lambda,NAvogadro,MolVolume,v,vt,mu;
+  double NAvogadro,MolVolume,v,vt,mu;
   double length,GM,ZB,pa,RandomNumber,la,ta;
   double phi,theta;   // direction of emission of the particles
   double vxp,vyp,vzp; // normalized speed of the particles
@@ -689,13 +689,13 @@ TRACE
       if (cylinder_intersect(&tine,&toute,x,y,z,vx,vy,vz,radius,yheight+2*bordery)==0 ) {
           ISe=4; } // case for no intersection with the entrance-window-cylinder
       else {
-        if (tine<=0 & toute<=0) {
+        if (tine<=0 && toute<=0) {
             ISe=1; // case for neutron outside the volume and moving away
         }
-        if (tine<=0 & toute>0) {
+        if (tine<=0 && toute>0) {
             ISe=2; // case for neutron inside the volume and moving (obviously) out
         }
-        if (tine>0 & toute>0) {
+        if (tine>0 && toute>0) {
             ISe=3; // case for neutron outside the volume and moving towards it
         }
         if (tine>toute && !(VariousErrors&2) ) {
@@ -710,13 +710,13 @@ TRACE
       if (cylinder_intersect(&tinb,&toutb,x,y,z,vx,vy,vz,rb,yheight+2*bordery)==0 || tinb==toutb) {
           ISb=4; } // case for no intersection with the back-plane-cylinder
       else {
-        if (tinb<=0 & toutb<=0) {
+        if (tinb<=0 && toutb<=0) {
             ISb=1; // case for neutron outside the volume and moving away
         }
-        if (tinb<=0 & toutb>0) {
+        if (tinb<=0 && toutb>0) {
             ISb=2; // case for neutron inside the volume and moving (obviously) out
         }
-        if (tinb>0 & toutb>0) {
+        if (tinb>0 && toutb>0) {
             ISb=3; // case for neutron outside the volume and moving towards it
         }
         if (tinb>toutb && !(VariousErrors&2) ) {
