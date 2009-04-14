@@ -1034,7 +1034,7 @@ sub do_scan {
                 # analyze scan step output
                 while(<SIM>) {
                     chomp;
-                    if(/Detector: ([^ =]+_I) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ")
+                    if(/Detector: ([^ =]+_[A-Z]) *= *([^ =]+) ([^ =]+_ERR) *= *([^ =]+) ([^ =]+_N) *= *([^ =]+) *(?:"[^"]+" *)?$/) { # Quote hack -> ")
                         my $sim_I = $2;
                         my $sim_err = $4;
                         my $sim_N = $6;
