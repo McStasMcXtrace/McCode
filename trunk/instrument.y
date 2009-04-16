@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas X.Y.Z
-* Version: $Revision: 1.82 $
+* Version: $Revision: 1.83 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.82 2009-02-13 14:03:20 farhi Exp $
+* $Id: instrument.y,v 1.83 2009-04-16 13:12:38 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1759,29 +1759,30 @@ check_comp_formals(List deflist, List setlist, char *compname)
 void
 check_instrument_formals(List formallist, char *instrname)
 {
-  Symtab formals;
   struct instr_formal *formal;
-  struct Symtab_entry *entry;
   List_handle liter;
 
-  /* We check the uniqueness by adding all the formals to a symbol table with
-     a dummy pointer value. Any formal parameter that already appears in the
-     symbol table is an error. */
-  formals = symtab_create();
+  /* We check the uniqueness. Any formal parameter that already appears in the
+     formal list is reported. */
   liter = list_iterate(formallist);
   while(formal = list_next(liter))
   if (strcmp(formal->id,"")) {
-    entry = symtab_lookup(formals, formal->id);
-    if(entry != NULL) {
-      print_warn(NULL, "Instrument parameter name %s is used multiple times "
-      "in instrument %s. Using first definition.\n", formal->id, instrname);
-      strcpy(formal->id, "");  /* unactivate recurrent definition */
-    }
-    else
-      symtab_add(formals, formal->id, NULL);
+      /* find first definition of parameter */
+      List_handle liter2;
+      struct instr_formal *formal2;
+      
+      liter2 = list_iterate(formallist);
+      while(formal2 = list_next(liter2)) {
+      	if (formal != formal2 && strlen(formal2->id) && !strcmp(formal->id, formal2->id)) {
+      		strcpy(formal2->id, "");  /* unactivate recurrent previous definition */
+      		if (verbose) print_warn(NULL, "Instrument parameter name %s is used multiple times "
+            "in instrument %s. Using last definition %s\n", formal->id, instrname, 
+            	formal->isoptional ? exp_tostring(formal->default_value) : "");
+          break;
+      	}
+      }
   }
   list_iterate_end(liter);
-  symtab_free(formals, NULL);
 }
 
 /*******************************************************************************
