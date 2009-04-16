@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Granroth
 * Date: July 2004
-* Version: $Revision: 1.11 $
+* Version: $Revision: 1.12 $
 * Origin: SNS Project Oak Ridge National Laboratory
 * Release: McStas 1.6
 * Modified by: E. Farhi, uniformize parameter names (Jul 2008)
@@ -581,6 +581,9 @@ TRACE
   vy = v*sin(phi);
   vx = v*cos(phi)*sin(theta);
   p*=INorm2/mcget_ncount();
+#if defined (USE_MPI)
+  if (mpi_node_count >1) p/=mpi_node_count;
+#endif
 %}
 FINALLY
 %{
