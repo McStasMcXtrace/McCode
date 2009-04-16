@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas 1.10
-* Version: $Revision: 1.31 $
+* Version: $Revision: 1.32 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.31 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.32 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -831,7 +831,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     s = tok+strlen("Param");
   } /* end while tok */
 
-  /* now transfert mcinputtable into McStasStruct */
+  /* now transfer mcinputtable into McStasStruct */
   McStasStruct.mcnumipar = mcnumipar;
   McStasStruct.mcinputtable = (struct mcinputtable_struct *)mem(mcnumipar*sizeof(struct mcinputtable_struct));
   for (i=0; i<mcnumipar; i++) {
@@ -840,7 +840,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
 
   McStasStruct.Data = rTable;
 
-  /* transfert Data into p0, p1, p2 */
+  /* transfer Data into p0, p1, p2 */
   McStasStruct.p1   = (double*)mem(McStasStruct.m*McStasStruct.n*McStasStruct.p*sizeof(double));
   if ((array_length == 3 || flag_pgplot1d) && !strstr(McStasStruct.Format, " list ")) {
     McStasStruct.p0 = (double*)mem(McStasStruct.m*McStasStruct.n*McStasStruct.p*sizeof(double));
@@ -1047,7 +1047,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
     } else mcsiminfo_file = mcsimfiles[i];
     mcdirname = mcdirnames[i];
   }
-/* transfert to global variables used in output functions */
+/* transfer to global variables used in output functions */
   if (!McStasStruct.Date) mcstartdate = 0;
   else {
     mcstartdate         = atol(McStasStruct.Date);
@@ -1058,7 +1058,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   mcncount  = McStasStruct.Ncount;
   strncpy(mcinstrument_source, str_dup(McStasStruct.Source), MAX_LENGTH);
   strncpy(mcinstrument_name  , str_last_word(McStasStruct.InstrName), MAX_LENGTH);
-  /* transfert mcnumipar */
+  /* transfer mcnumipar */
   mcnumipar = McStasStruct.mcnumipar;
   for (i=0; i<mcnumipar; i++) {
     mcinputtable[i] = McStasStruct.mcinputtable[i];
