@@ -387,7 +387,7 @@ sub do_test {
   }
   if (!@paths) { return "mcrun: no test instruments found. Aborting.\n"; }
   # go into the selftest directory
-  chdir($tmpdir) or return "mcrun: Can go into $tmpdir: $!\n";
+  chdir($tmpdir) or return "mcrun: Can not go into $tmpdir: $!\n";
   
   # Initialize test
   my $now = localtime;
@@ -414,6 +414,19 @@ sub do_test {
     my @val_val=@{$data->{'validation_val'}};
     my ($base, $dirname, $ext) = fileparse($paths[$j],".instr");
     my $k;
+    if (!@val_par) { 
+    	&$printer("Instrument without test: $base"); 
+    	my $this_cmd = "mcrun -c -n0 --nocflags $base";
+    	&$printer("Executing: $this_cmd");
+    	my $res = qx/$this_cmd/;
+    	if ($child_error_code) {
+    	  &$printer("[FAILED] $base: ($child_error_code): $child_error_text");
+        $test_abstract .= "[FAILED] $base". "_$index (compilation/execution)\n";
+        $error_flag++; 
+      } else {
+    		$test_abstract .= "[notest] $base (no test procedure)\n";
+    	}
+    }
     for ($k=0; $k<@val_par; $k++) { # loop on tests
       if ($k == 0) { &$printer("INSTRUMENT $base:\n  $data->{'identification'}{'short'}"); }
       my $this_cmd =$val_par[$k];
@@ -422,7 +435,7 @@ sub do_test {
       if ($this_cmd !~ m/$base/) { $this_cmd = "$base $this_cmd"; } # only parameters ?
       if ($this_cmd !~ m/mcrun/ && $this_cmd !~ m/mcplot/ && $this_cmd !~ m/mcdisplay/) 
                                  { $this_cmd = "mcrun $this_cmd"; } # omitted mcrun ?
-      if ($mpi)                  { $this_cmd.= $mpi; }              # add mpi
+      if ($this_cmd !~ m/mpi/ && $mpi) { $this_cmd .= $mpi; }              # add mpi
       if ($this_cmd !~ m/-n/ && $this_cmd !~ m/--ncount/) { $this_cmd.= " -n $n_single"; }
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
       if ($this_cmd !~ m/-d/ && $this_cmd !~ m/--dir/) { $this_cmd.= " -d $base" . "_$index"; }
@@ -434,8 +447,8 @@ sub do_test {
       my $child_error_code = $?;
       if ($child_error_code) {
         &$printer("[FAILED] $base: ($child_error_code): $child_error_text");
-        $test_abstract .= "[FAILED] $base". "_$index (execution)\n";
-        $error_flag = 1; 
+        $test_abstract .= "[FAILED] $base". "_$index (compilation/execution)\n";
+        $error_flag++; 
         last; # go to next instrument (exit for $k)
       } else {
         #Analyse test output if reference value is available
@@ -466,13 +479,13 @@ sub do_test {
               &$printer("[OK] $base: $val_det[$k] = $sim_I +/- $sim_E, equals $val_val[$k] within $diff \%"); 
               $test_abstract .= "[OK]     $base". "_$index (accuracy, fair $diff \%)\n";
             } else {
-              $accuracy_flag = 1;
+              $accuracy_flag++;
               &$printer("[FAILED] $base: $val_det[$k] = $sim_I +/- $sim_E, should be $val_val[$k] ");
               $test_abstract .= "[FAILED] $base". "_$index (accuracy off by $diff \%)\n";
             }
           } else {
             &$printer("[???] $base: $val_det[$k] = $sim_I (may have failed, reference not found)"); 
-            $test_abstract .= "[??????] $base". "_$index (may have failed, reference not found)\n";
+            $test_abstract .= "[??????] $base". "_$index (reference not found)\n";
           }
         }  else {   # no reference value
           &$printer("[OK] $base: $val_det[$k] = $sim_I (accuracy not checked)"); 
@@ -486,14 +499,16 @@ sub do_test {
   $now = localtime();
   &$printer($test_abstract);
   if ($error_flag) {
-    &$printer("# Installation check: FAILED. McStas has not been properly installed.");
-    &$printer("# >> Check that you have a C compiler, perl, and perl-Tk installed.");
+    &$printer("# Execution check:    FAILED. $error_flag instrument(s) did not compile/execute.");
+    &$printer("# >> Check instruments and McStas installation.");
   } else {
-    &$printer("# Installation check: OK.     Computing time: $elapsed_sec [sec].");
-    if ($accuracy_flag) {
-      &$printer("# Accuracy     check: FAILED. Some results are not reliable.");
+    &$printer("# Execution check:    OK.     Computing time: $elapsed_sec [sec] for $index tests.");
+    if ($accuracy_flag > 2) {
+      &$printer("# Accuracy check:     FAILED. $accuracy_flag test(s) with inaccurate results.");
+    } elsif ($accuracy_flag==0) {
+      &$printer("# Accuracy check:     OK.");
     } else {
-      &$printer("# Accuracy     check: OK.");
+    	&$printer("# Accuracy check:     FAIR. $accuracy_flag test(s) with inaccurate results.");
     }
   }
 
