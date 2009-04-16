@@ -10,7 +10,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.32 $
+* Version: $Revision: 1.33 $
 * Origin: Risoe
 * Release: McStas 1.6
 * Modified by: Revised by: <a href="mailto:percival@physics.queensu.ca">Aaron M. Percival</a>
@@ -49,6 +49,9 @@
 * high weight to ruin the statistics before the component adapts its
 * distribution to the problem at hand. Good general-purpose values
 * for these parameters are alpha = beta = 0.25.
+*
+* %VALIDATION
+* This component is not validated. It does not work properly with MPI.
 *
 * %P
 * INPUT PARAMETERS:
