@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.82 $
+* Version: $Revision: 1.83 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -37,7 +37,7 @@
 *
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting may improve computation accuracy and prevent some neutrons
-* to be removed when energy transfert is higher than actual neutron energy.
+* to be removed when energy transfer is higher than actual neutron energy.
 * An automatic such process may be activated when 'auto_qw=1'.
 * On the other hand, if the input S(q,w) data is too restricted in q, the
 * scattering conditions will be limited, leading to incomplete result.
@@ -217,8 +217,8 @@
 *
 * OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
-* VarSqw.dq wavevector transfert [Angs-1]
-* VarSqw.dw energy transfert [Angs-1]
+* VarSqw.dq wavevector transfer [Angs-1]
+* VarSqw.dw energy transfer [Angs-1]
 * VarSqw.type interaction type of event
 *         'c' (coherent),  't' (transmitted)
 *         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
@@ -266,7 +266,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.82 $
+#define ISOTROPIC_SQW $Revision: 1.83 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -345,7 +345,7 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   char   verbose_output;
   int    shape; /* 0:cylinder, 1:box, 2:sphere 3:any shape*/
 
-  double dq, dw; /* q/w transfert */
+  double dq, dw; /* q/w transfer */
   char   type; /* interaction type: c(coherent), i(incoherent),
                                   V(isotropic incoherent), t(transmitted) */
   /* store information from the last event */
@@ -1395,8 +1395,8 @@ double ws, p_scatt;   /* probability for scattering/absorption and for */
 double tmp_rand;      /* temporary var */
 double ratio_w=0, ratio_q=0; /* variables for bilinear interpolation */
 double q11, q21, q22, q12;
-double omega=0;       /* energy transfert */
-double q=0;           /* wavevector transfert */
+double omega=0;       /* energy transfer */
+double q=0;           /* wavevector transfer */
 long   index_w;       /* energy index for table look-up SW */
 long   index_q;       /* Q index for table look-up P(Q|w) */
 double theta, costheta; /* for the choice of kf direction */
@@ -1685,7 +1685,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           }
         } else {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: No suitable w transfert\n"
+            printf("Isotropic_Sqw: %s: Warning: No suitable w transfer\n"
                    "               for index_w=%li. Using w=0.\n",
               NAME_CURRENT_COMP, index_w);
           omega=0;
@@ -1711,7 +1711,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         index_q = Sqw_search_Q_proba_per_w(Data_sqw, tmp_rand, index_w);
         if (index_q == -1) {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: No suitable (q|w) transfert\n"
+            printf("Isotropic_Sqw: %s: Warning: No suitable (q|w) transfer\n"
                "               for w=%g index_w=%li\n",
             NAME_CURRENT_COMP, omega, index_w);
           VarSqw.neutron_removed++;
@@ -1750,7 +1750,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           }
         } else {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: No suitable q transfert\n"
+            printf("Isotropic_Sqw: %s: Warning: No suitable q transfer\n"
                "               for w=%g\n",
             NAME_CURRENT_COMP, omega);
           VarSqw.neutron_removed++;

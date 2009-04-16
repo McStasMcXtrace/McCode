@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.217 $
+* Version: $Revision: 1.218 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.217 2009-03-26 13:41:36 erkn Exp $
+* $Id: mcstas-r.c,v 1.218 2009-04-16 13:46:26 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.217  2009/03/26 13:41:36  erkn
+* fixed bug in mcestimate_error. Missing factor 1/N in quadratic (1st) term of square sum.
+*
 * Revision 1.216  2009/02/20 16:17:55  farhi
 * Fixed warnings and a few bugs detected with GCC 4.3.
 *
@@ -3950,7 +3953,7 @@ mcreadparams(void)
   }
 }
 
-/* mcsetstate: transfert parameters into global McStas variables */
+/* mcsetstate: transfer parameters into global McStas variables */
 void
 mcsetstate(double x, double y, double z, double vx, double vy, double vz,
            double t, double sx, double sy, double sz, double p)
