@@ -11,7 +11,7 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision: 1.8 $
+* Version:    $Revision: 1.9 $
 * Release:    McStas CVS_080624
 * %INSTRUMENT_SITE: FZ_Juelich
 *
@@ -23,7 +23,7 @@
 * Sample is at 40 m from source. 2 detectors.
 *
 * %Example: lambda=7 sample=0 Detector: detector_I=3450 
-* %Example: lambda=7 sample=1 Detector: detector_I=1227
+* %Example: lambda=7 sample=1 Detector: detector_I=1182
 * %Example: lambda=7 sample=2 Detector: detector_I=1751
 * %Example: lambda=7 sample=3 Detector: detector_I=1249
 *
@@ -58,7 +58,7 @@ INITIALIZE
     strcpy(sample_str, "None"); break;
   }
 
-  printf("%s: sample is selected as %s", NAME_CURRENT_COMP, sample_str);
+  printf("%s: sample is selected as %s\n", NAME_CURRENT_COMP, sample_str);
 %}
 
 TRACE
