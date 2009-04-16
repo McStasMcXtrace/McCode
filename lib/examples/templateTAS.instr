@@ -12,7 +12,7 @@
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_080624
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * %INSTRUMENT_SITE: Templates
 *
 * Template RESCAL type triple-axis machine (TAS)
@@ -20,14 +20,21 @@
 * %Description
 * This instrument is a simple model of triple-axis spectrometer.
 * It is directly illuminated by the moderator,
-* and has flat monochromator and analyzer. Sample is a vanadium cylinder.
-* Default geometry is from IN20@ILL.
+* and has curved monochromator and analyzer. 
+* Sample can be specified as a powder, liquid/amorphous or a pure incoherent 
+* scatterer (e.g. vanadium, which is the default). 
+* Sample geometry can be spherical or cylindrical.
+* For PG002 monochromator/analyzer setting, a reflectivity curve vs. wavelength 
+* is used, else reflectivity is set to 70 %. To suppress collimators, set their 
+* divergence to 0 (ALFn BETn).
+* Default instrument geometry is from IN20@ILL with PG monochromator/analyzer.
 *
 * Si       111 DM=3.135 AA
-* PG       002 DM=3.355 AA (Highly Oriented Pyrolytic Graphite)
+* PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
 * Ge       311 DM=1.714 AA
 *
-* %Example: QM=1 Detector: He3H_I=5.34048e-12
+* %Example: QM=1 Detector: D7_SC3_1D_I=3.3e-05
+* %Example: QM=1 Detector: He3H_I=2.8e-11
 *
 * %Parameters
 * INPUT PARAMETERS:
@@ -38,14 +45,14 @@
 * QH:   Measurement QH position in crystal [rlu]
 * QK:   Measurement QK position in crystal [rlu]
 * QL:   Measurement QL position in crystal [rlu]
-* EN:   Energy transfert in crystal [meV]
-* QM:   Wavevector transfert in crystal [Angs-1]
+* EN:   Energy transfer in crystal [meV]
+* QM:   Wavevector transfer in crystal [Angs-1]
 * KFIX: Fixed KI or KF value for Rescal compatibility [Angs-1]
 * FX:   Fixed KI or KF type for Rescal compatibility [1:KI,2:KF]
-* L1:   Source-Monochromator distance [m]
-* L2:   Monochromator-Sample distance [m]
-* L3:   Sample-Analyzer distance [m]
-* L4:   Analyzer-detector distance [m]
+* L1:   Source-Monochromator distance. Contains 1st Collimator of length 5.34 [m]
+* L2:   Monochromator-Sample distance. Contains 2nd Collimator of length 0.35 [m]
+* L3:   Sample-Analyzer distance. Contains 3rd Collimator of length 0.40 [m]
+* L4:   Analyzer-detector distance. Contains 4th Collimator of length 0.24 [m]
 * SM:   Scattering sense of beam from Monochromator [1:left, -1:right]
 * SS:   Scattering sense of beam from Sample [1:left, -1:right]
 * SA:   Scattering sense of beam from Analyzer [1:left, -1:right]
@@ -85,8 +92,23 @@
 * A6:   Analyzer take-off angle [deg]
 * verbose: print TAS configuration. 0 to be quiet [1]
 *
+* WM:   Width of monochromator [m]
+* HM:   Height of monochromator [m]
+* NVM:  Number of vertical slabs composing the monochromator [1]
+* NHM:  Number of horizontal slabs composing the monochromator [1]
+* WA:   Width of analyzer [m]
+* HA:   Height of analyzer [m]
+* NVA:  Number of vertical slabs composing the analyzer [1]
+* NHA:  Number of horizontal slabs composing the analyzer [1]
+*
+* Sqw_coh:   sample coherent S(q,w) file name. Use LAZ/LAU or SQW file, NULL to scatter incoherently [str] 
+* Sqw_inc:   sample incoherent S(q,w) file name. Use NULL to scatter incoherently [str] 
+* radius:    outer radius of sample hollow cylinder/sphere [m]
+* height:    sample height. Use 0 for a spherical shape [m]
+* thickness: thickness of sample hollow cylinder. 0 for bulk. [m]
+*
 * %Link
-* Rescal for Matlab at http://www.ill.fr/tas/matlab
+* Rescal for Matlab at http://www.ill.eu/instruments-support/computing-for-science/cs-software/all-software/matlab-ill/
 * %Link
 * Restrax at http://omega.ujf.cas.cz/restrax/
 * %End
@@ -99,7 +121,7 @@ EN=0, QM=0, KFIX=0, FX=0,
 L1=9, L2=2.1, L3=1.5, L4=0.7,
 SM=1, SS=-1, SA=1,
 DM=3.3539, DA=3.3539,
-RMV=0, RMH=0, RAV=0, RAH=0,
+RMV=-1, RMH=0, RAV=0, RAH=-1,
 ETAM=30, ETAA=30,
 ALF1=60, ALF2=60, ALF3=60, ALF4=60,
 BET1=120, BET2=120, BET3=120, BET4=120,
@@ -108,7 +130,11 @@ AA=90, BB=90, CC=90,
 AX=1, AY=0, AZ=0,
 BX=0, BY=1, BZ=0,
 verbose=1,
-A1=0,A2=0,A3=0,A4=0,A5=0,A6=0
+A1=0,A2=0,A3=0,A4=0,A5=0,A6=0,
+NHM=1, NVM=9, WM=0.10, HM=0.12,
+NHA=9, NVA=1, WA=0.10, HA=0.12,
+string Sqw_coh="NULL", string Sqw_inc="NULL",
+  radius=0.01, thickness=0.005, height=0.05
 )
 
 DECLARE
@@ -155,7 +181,7 @@ DECLARE
       double arg, cc;
       int i,j,k,l,m,n;
       char liquid_case=1;
-      /* transfert parameters to local arrays */
+      /* transfer parameters to local arrays */
       qhkl[0]   = machine_hkl.qh; /* HKL target */
       qhkl[1]   = machine_hkl.qk;
       qhkl[2]   = machine_hkl.ql;
@@ -371,11 +397,24 @@ if (!anglemode) {
 
   if (!QM && !QH && !QK && !QL)
     exit(fprintf(stderr,
-      "%s: ERROR: No Q trasnfert defined (QM, QH, QK, QL)\n",
+      "%s: ERROR: No Q transfer defined (QM, QH, QK, QL)\n",
       NAME_CURRENT_COMP));
+} else {
+  /* compute KI, KF if angles are consistent */
+  if (!KI && fabs(A2-2*A1) < 0.01) {
+    KI  = PI/DM/sin(DEG2RAD*A1*SM);
+  }
+  if (!KF && fabs(A6-2*A5) < 0.01) {
+    KF  = PI/DA/sin(DEG2RAD*A5*SA);
+  }
+  double qs=(KI*KI + KF*KF - cos(A4*DEG2RAD*SS)*(2*KI*KF));
+  if (!QM && qs>=0) QM = sqrt(qs);
+  else fprintf(stderr,
+      "%s: Warning: Can not compute Q-modulus from A4=%g [deg].\n",
+      NAME_CURRENT_COMP,A4);
 }
 
-/* transfert sample parameters */
+/* transfer sample parameters */
 sample.aa = AA;
 sample.bb = BB;
 sample.cc = CC;
@@ -389,7 +428,7 @@ sample.bx = BX;
 sample.by = BY;
 sample.bz = BZ;
 
-/* transfert target parameters */
+/* transfer target parameters */
 machine_hkl.ki = KI;
 machine_hkl.kf = KF;
 machine_hkl.ei = EI;
@@ -406,7 +445,7 @@ if (verbose) {
   printf("* Outgoing beam: EF=%.4g [meV] KF=%.4g [Angs-1] Vf=%g [m/s]\n", EF, KF, Vf);
 }
 
-/* transfert machine parameters */
+/* transfer machine parameters */
 machine_hkl.l1 = L1;
 machine_hkl.l2 = L2;
 machine_hkl.l3 = L3;
@@ -433,7 +472,7 @@ machine_hkl.bet4= BET4;
 
 /* geometry tests w/r to collimator lengths */
 if (machine_hkl.l1 <= 5.34)
-  exit(fprintf(stderr, "%s: ERROR: L1 too short. Min=5.34\n", NAME_CURRENT_COMP));
+  fprintf(stderr, "%s: Warning: L1 too short. Min=5.34. Removing 1st collimator.\n", NAME_CURRENT_COMP);
 
 if (machine_hkl.l2 <= 0.35)
   exit(fprintf(stderr, "%s: ERROR: L2 too short. Min=0.35\n", NAME_CURRENT_COMP));
@@ -461,7 +500,7 @@ if (RAV < 0) machine_real.rav = 2*L*sin(DEG2RAD*machine_real.a5);
 if (RAH < 0) machine_real.rah = 2*L/sin(DEG2RAD*machine_real.a5);
 
 if (verbose) {
-  printf("* Transfert:     EN=%g [meV] QM=%g [Angs-1]\n", EN, machine_real.qm);
+  printf("* Transfer:     EN=%g [meV] QM=%g [Angs-1]\n", EN, machine_real.qm);
   printf("Angles: A1=%.4g A2=%.4g A3=%.4g A4=%.4g A5=%.4g A6=%.4g [deg]\n",
     machine_real.a1, machine_real.a2,
     machine_real.a3, machine_real.a4,
@@ -472,6 +511,14 @@ if (verbose) {
   printf("Analyzer:      DA=%.4g [Angs] RAH=%.4g [m] RAV=%.4g [m] %s\n",
     machine_hkl.da, machine_real.rah, machine_real.rav,
     (!machine_real.rah && !machine_real.rav ? "flat" : "curved"));
+    
+  printf("Sample:        ");
+    if (strcmp(Sqw_coh, "NULL") && !strstr(Sqw_coh, ".laz") && !strstr(Sqw_coh, ".lau"))
+      printf("Isotropic (liquid/polymer) %s\n", Sqw_coh);
+    if (!strcmp(Sqw_coh, "NULL"))
+      printf("Incoherent\n");
+    if (strstr(Sqw_coh, ".laz") || strstr(Sqw_coh, ".lau"))
+      printf("Powder %s\n", Sqw_coh);
 }
 %}
 /* end of INITIALIZE */
@@ -491,31 +538,42 @@ INSTRUMENT COMPONENT Source = Source_gen(
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE
 
-COMPONENT SC1 = Collimator_linear(
+INSTRUMENT COMPONENT SC1 = Collimator_linear(
   xmin =-0.08/2, ymin =-0.11/2,
   xmax = 0.08/2, ymax = 0.11/2,
   length = 5.34,
   divergence=ALF1,
   divergenceV=BET1)
-AT (0, 0, (machine_hkl.l1-5.34)/2) RELATIVE Source
+WHEN (ALF1 && BET1)
+AT (0, 0, (machine_hkl.l1-5.34)/2) ABSOLUTE
+
+INSTRUMENT COMPONENT Guide_out=Arm()
+AT (0, 0, machine_hkl.l1) ABSOLUTE
 
 COMPONENT Mono_Cradle = Arm()
-  AT (0, 0, machine_hkl.l1) RELATIVE Source
-  ROTATED (0, machine_real.a1, 0) RELATIVE Source
-
+  AT (0, 0, 0) RELATIVE PREVIOUS
+  
 SPLIT COMPONENT PG1Xtal = Monochromator_curved(
-  width  = 0.10,
-  height = 0.12,
-  NH=1, NV=9,
+  width  = WM,
+  height = HM,
+  NH=NHM, NV=NVM,
   RV=machine_real.rmv, RH=machine_real.rmh,
-  mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
-  r0 = 0.7, DM=machine_hkl.dm)
+  DM=machine_hkl.dm, mosaich = machine_hkl.etam, mosaicv = machine_hkl.etam,
+  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7), 
+  reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Mono_Cradle
+ROTATED (0, machine_real.a1, 0) RELATIVE Mono_Cradle
 
 /*                                on mono, pointing towards sample */
 COMPONENT Mono_Out = Arm()
   AT (0,0,0) RELATIVE Mono_Cradle
-  ROTATED (0, machine_real.a2, 0) RELATIVE Source
+  ROTATED (0, machine_real.a2, 0) RELATIVE Mono_Cradle
+  
+  COMPONENT D4_SC2_1D = Monitor_nD(
+  xmin = -0.0420/2, xmax = 0.0420/2,
+  ymin = -0.1200/2, ymax = 0.1200/2,
+  options="lambda, cm2, auto")
+AT (0, 0, (machine_hkl.l2-0.35)/3) RELATIVE Mono_Out
 
 COMPONENT SC2 = Collimator_linear(
   xmin =-0.04/2, ymin =-0.07/2,
@@ -523,21 +581,42 @@ COMPONENT SC2 = Collimator_linear(
   length = 0.35,
   divergence=ALF2,
   divergenceV=BET2)
+WHEN (ALF2 && BET2)
 AT (0, 0, (machine_hkl.l2-0.35)/2) RELATIVE Mono_Out
 
-COMPONENT Sample_Cradle = Arm()
+SPLIT COMPONENT Sample_Cradle = Monitor_nD(xwidth=0.01, yheight=0.01, options="per cm2", restore_neutron=1)
   AT (0, 0, machine_hkl.l2) RELATIVE Mono_Out
   ROTATED (0, machine_real.a3, 0) RELATIVE Mono_Out
 
-SPLIT COMPONENT Sample = V_sample(
- radius = 0.0064, yheight = 0.0254,
- focus_xw = 0.06, focus_yh=0.12, pack = 1,
- target_index=2)
+/* Sqw when Sqw_coh is not NULL/.laz/.lau */
+COMPONENT SampleS = Isotropic_Sqw(
+  radius = radius, thickness=thickness, yheight = height,
+  Sqw_coh=Sqw_coh, Sqw_inc=Sqw_inc, p_interact=0.95, order=1, d_phi=RAD2DEG*atan2(HA,machine_hkl.l3) )
+WHEN (strcmp(Sqw_coh, "NULL") && !strstr(Sqw_coh, ".laz") && !strstr(Sqw_coh, ".lau"))
+AT (0,0,0) RELATIVE Sample_Cradle
+
+/* Incoherent when Sqw_coh is NULL */ 
+COMPONENT SampleI = Incoherent(
+  radius = radius, thickness=thickness, yheight = height,
+  p_interact=0.95, order=1, target_index=+4, focus_xw=WA, focus_yh=HA)
+WHEN (!strcmp(Sqw_coh, "NULL"))
+AT (0,0,0) RELATIVE Sample_Cradle
+
+/* Sqw when Sqw_coh is not .laz/.lau */
+COMPONENT SampleP = PowderN(
+  radius = radius, thickness=thickness, yheight = height, reflections=Sqw_coh,
+  p_transmit=1-0.95, d_phi=RAD2DEG*atan2(HA,machine_hkl.l3) )
+WHEN (strstr(Sqw_coh, ".laz") || strstr(Sqw_coh, ".lau"))
 AT (0,0,0) RELATIVE Sample_Cradle
 
 COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
   AT (0,0,0) RELATIVE Sample_Cradle
   ROTATED (0, machine_real.a4, 0) RELATIVE Mono_Out
+  
+COMPONENT D7_SC3_1D = Monitor_nD(
+  xwidth = 0.06, yheight = HA, bins=50, restore_neutron=1,
+  options="theta energy, all auto, banana")
+AT (0, 0, 0) RELATIVE Sample_Out
 
 COMPONENT SC3 =Collimator_linear(
   xmin =-0.06/2, ymin =-0.12/2,
@@ -545,24 +624,26 @@ COMPONENT SC3 =Collimator_linear(
   length = 0.40,
   divergence=ALF3,
   divergenceV=BET3)
+WHEN (ALF3 && BET3)
 AT (0, 0, (machine_hkl.l3-0.40)/2) RELATIVE Sample_Out
 
 COMPONENT Ana_Cradle = Arm()
   AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
-  ROTATED (0, machine_real.a5, 0) RELATIVE Sample_Out
 
 SPLIT COMPONENT PG2Xtal = Monochromator_curved(
-  width  = 0.10,
-  height = 0.12,
-  NH=1, NV=9,
+  width  = WA,
+  height = HA,
+  NH=NHA, NV=NVA,
   RV=machine_real.rav, RH=machine_real.rah,
-  mosaich = machine_hkl.etaa, mosaicv = machine_hkl.etaa,
-  r0 = 0.7, DM=machine_hkl.da)
+  DM=machine_hkl.da, mosaich = machine_hkl.etaa, mosaicv = machine_hkl.etaa,
+  r0 = (fabs(machine_hkl.dm-3.355) < 0.2 ? 1: 0.7), 
+  reflect=(fabs(machine_hkl.dm-3.355) < 0.2 ? "HOPG.rfl" : ""))
 AT (0, 0, 0) RELATIVE Ana_Cradle
+ROTATED (0, machine_real.a5, 0) RELATIVE Ana_Cradle
 
 COMPONENT Ana_Out = Arm() /*        this is the sample-ana axis */
   AT (0,0,0) RELATIVE Ana_Cradle
-  ROTATED (0, machine_real.a6, 0) RELATIVE Sample_Out
+  ROTATED (0, machine_real.a6, 0) RELATIVE Ana_Cradle
 
 COMPONENT SC4 =Collimator_linear(
   xmin =-0.06/2, ymin =-0.12/2,
@@ -570,6 +651,7 @@ COMPONENT SC4 =Collimator_linear(
   length = 0.24,
   divergence=ALF4,
   divergenceV=BET4)
+WHEN (ALF4 && BET4)  
 AT (0, 0, (machine_hkl.l4-0.24)/2) RELATIVE Ana_Out
 
 /* vertical 3He Detector */
