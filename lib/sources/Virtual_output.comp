@@ -10,7 +10,7 @@
 * %I
 * Written by: <a href="mailto:farhi@ill.fr">E. Farhi</a>
 * Date: Dec 17th, 2002
-* Version: $Revision: 1.21 $
+* Version: $Revision: 1.22 $
 * Origin: <a href="http://www.ill.fr">ILL</a>
 * Release: McStas 1.11
 * Modified by: E. Farhi, Dec 17th, 2002: based on Vitess_output and Monitor_nD lib.
@@ -135,7 +135,7 @@ TRACE
   double pp;
 
   PROP_Z0;
-  /* transfert current neutron to Monitor_nD vars */
+  /* transfer current neutron to Monitor_nD vars */
   Vars.cp  = p;
   Vars.cx  = x;
   Vars.cvx = vx;
