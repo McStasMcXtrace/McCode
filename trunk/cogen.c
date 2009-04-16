@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.85 $
+* Version: $Revision: 1.86 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.85  2009/02/20 16:17:54  farhi
+* Fixed warnings and a few bugs detected with GCC 4.3.
+*
 * Revision 1.84  2009/02/20 13:52:27  farhi
 * Force type of 'string' to (char*) in generated code for DEFINITION
 * PARAMETERS
@@ -206,7 +209,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.85 2009-02-20 16:17:54 farhi Exp $
+* $Id: cogen.c,v 1.86 2009-04-16 13:11:03 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1305,7 +1308,9 @@ cogen_trace(struct instr_def *instr)
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     else {
       /* spliting: store first time, then restore neutron */
-      coutf("  if (!%sSplit_%s) { /* STORE only the first time */", ID_PRE, comp->name);
+      char *exp=exp_tostring(comp->split); /* number of splits */
+      coutf("  if (!%sSplit_%s) {                   /* STORE only the first time */", ID_PRE, comp->name);
+      coutf("    if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed neutron */", exp, exp);
       coutf("    STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
@@ -1316,6 +1321,7 @@ cogen_trace(struct instr_def *instr)
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
       coutf("  %sSplit_%s++; /* SPLIT number */", ID_PRE, comp->name);
+      str_free(exp);
     }
 
     coutf("  %sScattered=0;", ID_PRE);
@@ -1357,19 +1363,7 @@ cogen_trace(struct instr_def *instr)
         /* last comp of GROUP: restore default ABSORB */
         coutf("/* end of GROUP %s */", comp->group->name);
         coutf("  if (!%sGroup%s) ABSORB; /* absorb neutrons non scattered in GROUP */", ID_PRE, comp->group->name);
-        if (comp->group->split) {
-          /* only adapt weight for split neutrons in last comp of GROUP */
-          char *exp=exp_tostring(comp->group->split); /* number of splits */
-          coutf("  if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed neutron in GROUP */",
-            exp, exp);
-          str_free(exp);
-        }
       }
-    } else if (comp->split) { /*  && !comp->group */
-      /* only split for SCATTERED neutrons in comp */
-      char *exp=exp_tostring(comp->split); /* number of splits */
-      coutf("  if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed neutron */", exp, exp);
-      str_free(exp);
     }
 
     if(comp->def->polarisation_par)
@@ -1545,7 +1539,7 @@ cogen_finally(struct instr_def *instr)
     coutf("    if (%sAbsorbProp[%i]) "
       "fprintf(stderr, "
         "\"Warning: %%g events were removed in Component[%i] %s\\n\"\n"
-        "\"         (negative time, rounding errors).\\n\""
+        "\"         (negative time, miss next components, rounding errors).\\n\""
         ", %sAbsorbProp[%i]);"
     , ID_PRE, comp->index, comp->index, comp->name, ID_PRE, comp->index);
   }
