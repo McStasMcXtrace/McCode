@@ -8,18 +8,18 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ILL
 *
-* The H15 curved cold guide at the ILL
+* The H15@ILL curved cold guide at the ILL (feeding IN6, D7, IN10, D11)
 *
 * %Description
-* The H15 curved cold guide at the ILL feeding IN6, D7, (IN10 on upper channel) D11
+* The H15@ILL curved guide sending cold neutrons from the VCS to IN6
 *
-* %Example: m=1 Detector: Mon_10_L_I=2.54952e+09
+* %Example: m=1 Detector: GuideOut_Phic_I=6.3e9
 *
 * %Parameters
-* m:          (1)  m-value of whole guide coating
+* m:          (1)  m-value of whole guide coating. 1 for Ni, 1.2 for Ni58, 2-4 for SM
 * lambda:     (AA) central wavelength
 * dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
 *
@@ -29,17 +29,12 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_H15(m=1, lambda=10, dlambda=8)
+DEFINE INSTRUMENT ILL_H15(m=1, lambda=4.14, dlambda=4)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
-  /* VCS (H1) source parameters */
-  double sT1=216.8,sI1=1.24e+13;
-  double sT2=33.9, sI2=1.02e+13;
-  double sT3=16.7 ,sI3=3.0423e+12;
-  double slambda;
   /* guide coating parameters */
   double gR0          = 1;
   double gQc          = 0.021;
@@ -70,11 +65,9 @@ DECLARE
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-  /* transfert instrument parameters for components */
+  /* transfer instrument parameters for components */
 
   if (m)  gMvalue = m;
-  if (lambda) slambda = lambda;
-  if (!dlambda) dlambda = lambda*0.8;
 
 
   /* Element rotations = Element length / Curvature Radius * RAD2DEG */
@@ -101,16 +94,13 @@ COMPONENT VCS = Source_gen(
   dist     = 2.525,
   focus_xw = 0.038,
   focus_yh = 0.2,
-  Lmin     = slambda-dlambda,
-  Lmax     = slambda+dlambda,
-  T1       = sT1,
-  I1       = sI1,
-  T2       = sT2,
-  I2       = sI2,
-  T3       = sT3,
-  I3       = sI3,
+  lambda0  = lambda,
+  dlambda  = dlambda,
+  T1=216.8,I1=1.24e+13,	/* VCS parameters */
+  T2=33.9, I2=1.02e+13,
+  T3=16.7 ,I3=3.0423e+12,
   verbose  = 1)
-  AT (0, 0, 0) RELATIVE Origin
+  AT (0, 0, 0) RELATIVE PREVIOUS
 
 COMPONENT Al_window1 = Al_window(thickness=Al_Thickness)
 AT (0,0,0.21) RELATIVE VCS
@@ -146,16 +136,6 @@ AT (0,0,3.17+0.02) RELATIVE PinkCarter
 COMPONENT H15_2 = Arm()
 AT (0,0,3.59) RELATIVE PinkCarter
 
-COMPONENT Mon_2_xy = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="x y, parallel, per cm2, slit, capture")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT Mon_2_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
 COMPONENT H15_2_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -164,29 +144,19 @@ COMPONENT H15_2_1 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
 
-COMPONENT H15_2_2 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_2,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_2_2 = COPY(PREVIOUS)
 AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
 
-COMPONENT H15_2_3 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_2,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_2_3 = COPY(PREVIOUS)
 AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
 
-COMPONENT H15_2_4 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_2,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_2_4 = COPY(PREVIOUS)
 AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
 
-COMPONENT H15_2_5 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_2,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_2_5 = COPY(PREVIOUS)
 AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
 
-COMPONENT H15_2_6 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_2,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_2_6 = COPY(PREVIOUS)
 AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
 
 COMPONENT H15_2_Out = Al_window(thickness=Al_Thickness)
@@ -199,16 +169,6 @@ AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS
 COMPONENT H15_3 = Arm()
 AT (0,0,0.198) RELATIVE H15_2_Out
 
-COMPONENT Mon_3_xy = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="x y, parallel, per cm2, slit, capture")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT Mon_3_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
 COMPONENT H15_3_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -217,49 +177,31 @@ COMPONENT H15_3_1 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_2 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_2 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_3 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_3 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_4 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_4 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_5 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_5 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_6 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_6 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_7 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_7 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_8 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_8 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_9 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_9 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
-COMPONENT H15_3_10 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_3_10 = COPY(PREVIOUS)
 AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
 COMPONENT H15_3_Out = Al_window(thickness=Al_Thickness)
@@ -272,16 +214,6 @@ AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS
 COMPONENT H15_4 = Arm()
 AT (0,0,0.03) RELATIVE H15_3_Out
 
-COMPONENT Mon_4_xy = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="x y, parallel, per cm2, slit, capture")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT Mon_4_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
 COMPONENT H15_4_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -290,34 +222,22 @@ COMPONENT H15_4_1 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
 
-COMPONENT H15_4_2 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_4,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_4_2 = COPY(PREVIOUS)
 AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
 
-COMPONENT H15_4_3 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_4,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_4_3 = COPY(PREVIOUS)
 AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
 
-COMPONENT H15_4_4 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_4,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_4_4 = COPY(PREVIOUS)
 AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
 
-COMPONENT H15_4_5 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_4,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_4_5 = COPY(PREVIOUS)
 AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
 
-COMPONENT H15_4_6 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_4,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_4_6 = COPY(PREVIOUS)
 AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
 
-COMPONENT H15_4_7 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_4,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_4_7 = COPY(PREVIOUS)
 AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
 
 COMPONENT H15_4_Out = Al_window(thickness=Al_Thickness)
@@ -330,16 +250,6 @@ AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS
 COMPONENT H15_5 = Arm()
 AT (0,0,0.03) RELATIVE H15_4_Out
 
-COMPONENT Mon_5_xy = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="x y, parallel, per cm2, slit, capture")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT Mon_5_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
 COMPONENT H15_5_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -348,24 +258,16 @@ COMPONENT H15_5_1 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
 
-COMPONENT H15_5_2 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_5,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_5_2 = COPY(PREVIOUS)
 AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
 
-COMPONENT H15_5_3 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_5,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_5_3 = COPY(PREVIOUS)
 AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
 
-COMPONENT H15_5_4 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_5,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_5_4 = COPY(PREVIOUS)
 AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
 
-COMPONENT H15_5_5 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_5,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_5_5 = COPY(PREVIOUS)
 AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
 
 COMPONENT H15_5_Out = Al_window(thickness=Al_Thickness)
@@ -380,16 +282,6 @@ AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS
 COMPONENT H15_6 = Arm()
 AT (0,0,0.330) RELATIVE H15_5_Out
 
-COMPONENT Mon_6_xy = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="x y, parallel, per cm2, slit, capture")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT Mon_6_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
 COMPONENT H15_6_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -398,59 +290,37 @@ COMPONENT H15_6_1 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_2 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_2 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_3 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_3 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_4 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_4 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_5 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_5 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_6 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_6 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_7 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_7 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_8 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_8 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_9 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_9 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_10 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_10 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_11 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_11 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
-COMPONENT H15_6_12 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_6_12 = COPY(PREVIOUS)
 AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
 COMPONENT H15_6_Out = Al_window(thickness=Al_Thickness)
@@ -463,16 +333,6 @@ AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS
 COMPONENT H15_7 = Arm()
 AT (0,0,0.03) RELATIVE H15_6_Out
 
-COMPONENT Mon_7_xy = Monitor_nD(
-  xwidth=0.06, yheight=gH,
-  options="x y, parallel, per cm2, slit, capture")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT Mon_7_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
 COMPONENT H15_7_In = Al_window(thickness=Al_Thickness)
 AT (0,0,0) RELATIVE PREVIOUS
 
@@ -481,159 +341,63 @@ COMPONENT H15_7_1 = Guide_gravity(
   R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_2 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_2 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_3 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_3 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_4 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_4 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_5 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_5 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_6 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_6 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_7 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_7 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_8 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_8 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_9 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_9 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
-COMPONENT H15_7_10 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+COMPONENT H15_7_10 = COPY(PREVIOUS)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
 COMPONENT H15_7_Out = Al_window(thickness=Al_Thickness)
 AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS
 
-/* gap 0.3 m */
-
-/* H15-7: L=5.573 m in 6 elements straight. Here IN6 monochromator position. */
-
-COMPONENT H15_8 = Arm()
-AT (0,0,0.3) RELATIVE H15_7_Out
-
-COMPONENT Mon_8_xy = Monitor_nD(
-  xwidth=0.06, yheight=gH,
-  options="x y, parallel, per cm2, slit, capture")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT Mon_8_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT H15_8_In = Al_window(thickness=Al_Thickness)
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT H15_8_1 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_8,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
-AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_8,0) RELATIVE PREVIOUS
-
-COMPONENT H15_8_2 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_8,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
-AT (0,0,L_H15_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_8,0) RELATIVE PREVIOUS
-
-COMPONENT H15_8_3 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_8,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
-AT (0,0,L_H15_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_8,0) RELATIVE PREVIOUS
-
-COMPONENT H15_8_4 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_8,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
-AT (0,0,L_H15_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_8,0) RELATIVE PREVIOUS
-
-COMPONENT H15_8_5 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_8,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
-AT (0,0,L_H15_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_8,0) RELATIVE PREVIOUS
-
-COMPONENT H15_8_6 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_8,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
-AT (0,0,L_H15_8+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_8,0) RELATIVE PREVIOUS
-
-COMPONENT H15_8_Out = Al_window(thickness=Al_Thickness)
-AT (0,0,L_H15_8+gGap) RELATIVE PREVIOUS
+COMPONENT GuideOut = Arm() AT (0,0,0.01) RELATIVE PREVIOUS
 
 /* gap 0.3 m */
 
-/* H15-7: L=1.250 m in 1 elements straight. Here D7 monochromator position. */
+/* Here IN6 monochromator position. */
 
-COMPONENT H15_9 = Arm()
-AT (0,0,0.3) RELATIVE H15_8_Out
-
-COMPONENT Mon_9_xy = Monitor_nD(
-  xwidth=0.06, yheight=gH,
-  options="x y, parallel, per cm2, slit, capture")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT Mon_9_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT H15_9_In = Al_window(thickness=Al_Thickness)
-AT (0,0,0) RELATIVE PREVIOUS
-
-COMPONENT H15_9_1 = Guide_gravity(
-  w1=0.03, h1=0.2, l=L_H15_9,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
-AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_9,0) RELATIVE PREVIOUS
-
-COMPONENT H15_9_Out = Al_window(thickness=Al_Thickness)
-AT (0,0,L_H15_9+gGap) RELATIVE PREVIOUS
-
-/* gap 0.03 m */
-
-/* Here D11 velocity selector position */
-
-COMPONENT Mon_10_xy = Monitor_nD(
-  xwidth=0.06, yheight=gH,
-  options="x y, parallel, per cm2, slit")
+COMPONENT GuideOut_xy = Monitor_nD(
+  xwidth=0.03, yheight=gH, restore_neutron=1,
+  options="x y, per cm2, slit")
 AT (0,0,0.01) RELATIVE PREVIOUS
 
-COMPONENT Mon_10_dxdy = Monitor_nD(
-  xwidth=0.06, yheight=gH,
-  options="dx dy, all auto, parallel, per cm2, slit")
+COMPONENT GuideOut_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=gH, restore_neutron=1,
+  options="dx dy, all auto, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Mon_10_Phic = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+COMPONENT GuideOut_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2, restore_neutron=1,
+  options="per cm2, capture, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Mon_10_L = Monitor_nD(
-  xwidth=0.03, yheight=0.2,
-  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+COMPONENT GuideOut_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2, restore_neutron=1,
+  options="lambda, limits=[1 21] bins=20, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
 /* The END token marks the instrument definition end */
 END
+
 
