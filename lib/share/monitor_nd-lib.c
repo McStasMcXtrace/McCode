@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas 1.6
-* Version: $Revision: 1.45 $
+* Version: $Revision: 1.46 $
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.45 2009-02-11 15:11:05 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.46 2009-04-16 13:47:15 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.45  2009/02/11 15:11:05  farhi
+* printf format fixes revealed with gcc 4.3
+*
 * Revision 1.44  2008/10/21 15:19:19  farhi
 * use common CHAR_BUFFER_LENGTH = 1024
 *
@@ -794,7 +797,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     {
       mc_mn_Vars->area = PI*mc_mn_Vars->Sphere_Radius*mc_mn_Vars->Sphere_Radius; /* disk shapes */
     }
-    if (mc_mn_Vars->area == 0) mc_mn_Vars->Coord_Number = 0;
+    if (mc_mn_Vars->area == 0 && abs(mc_mn_Vars->Flag_Shape) != mc_mn_DEFS->SHAPE_PREVIOUS) 
+      mc_mn_Vars->Coord_Number = 0;
     if (mc_mn_Vars->Coord_Number == 0 && mc_mn_Vars->Flag_Verbose)
       printf("Monitor_nD: %s is unactivated (0D)\n", mc_mn_Vars->compcurname);
     mc_mn_Vars->Cylinder_Height = fabs(mc_mn_Vars->mymax - mc_mn_Vars->mymin);
