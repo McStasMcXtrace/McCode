@@ -3,7 +3,7 @@
  * %Identification
  * Written by: <a href="mailto:Uwe.Filges@psi.ch">Uwe Filges</a>
  * Date: Jan 2004
- * Version:    $Revision: 1.14 $
+ * Version:    $Revision: 1.15 $
  * Release:    McStas 2.0
  * Origin: <a href="http://www.psi.ch">PSI</a>
  *
@@ -15,7 +15,7 @@
  * This instrument is a model of the FOCUS Spectrometer at PSI, Villigen, CH.
  *
  * %Example: lambda=3.4 Detector: PSD_Fermi1_I=1.44416e+07
- * %Example: lambda=3.4 Detector: PSD_SAMPLE_I=160242
+ * %Example: lambda=3.4 Detector: PSD_SAMPLE_I=161500
  *
  * %Parameters
  * INPUT PARAMETERS:
