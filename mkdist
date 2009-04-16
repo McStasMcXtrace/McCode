@@ -244,6 +244,7 @@ echo
 echo Follow instructions in ../adm to publish on the web.
 echo
 
+echo Build packages from `pwd`
 # In case of mkfs.hfsplus available in /sbin we'll create the
 # DMG file for Mac OS X
 if [ -e /sbin/mkfs.hfsplus ]
@@ -277,6 +278,7 @@ then
   then
     echo Proceeding to .deb build
     # First, clean up in case of previous McStas installs in the chrooot
+    sudo mkdir -p etch-chroot/build
     sudo rm -f etch-chroot/usr/local/bin/*
     sudo rm -rf etch-chroot/usr/local/lib/*
     sudo rm -rf etch-chroot/usr/local/pgplot
