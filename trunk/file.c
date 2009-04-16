@@ -12,13 +12,17 @@
 * Date: Sep 25, 1998
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.20 $
+* Version: $Revision: 1.21 $
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.20 2008-09-05 09:55:19 farhi Exp $
+*	$Id: file.c,v 1.21 2009-04-16 13:11:39 farhi Exp $
 *
 *	$Log: not supported by cvs2svn $
+*	Revision 1.20  2008/09/05 09:55:19  farhi
+*	mcstas now prints a hint if component to be included is not found but
+*	matches a name from the library (case insensitive name match)
+*	
 *	Revision 1.19  2007/03/12 14:57:18  farhi
 *	Cosmetics
 *	
@@ -65,7 +69,7 @@ static List search_list = NULL;
 
 /* MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir. Aug 27th, 2002: added share+contrib */
 static char *sys_subdir_table[] =
-  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "share" };
+  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "share", "examples" };
 
 /* Attempt to open FILE in directory DIR (or current directory if DIR is
    NULL). */
