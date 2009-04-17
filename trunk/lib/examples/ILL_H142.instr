@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.8 $
+* Version: $Revision: 1.9 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H142 S-curved cold guide at the ILL
@@ -19,10 +19,11 @@
 * %Example: m=1 Detector: GuideOut_Phic_I=9.3e+09
 *
 * %Parameters
-* m:          (1)  m-value of whole guide coating. 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* mip:        (1)  m-value of in-pile guide coating
 * lambda:     (AA) central wavelength
 * dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
-* H:          (m)  height of 2nd H142 curved section
+* gH:         (m)  height of 2nd H142 curved section
 *
 * %Link
 * The <a href="http://www.ill.fr/YellowBook/IN12">IN12 TAS</a> at the ILL
@@ -30,7 +31,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_H142(m=1, lambda=10, dlambda=8.5, H=0.12)
+DEFINE INSTRUMENT ILL_H142(m=1, lambda=10, dlambda=9.9, gH=0.12, mip=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -51,7 +52,6 @@ double gGap         = 0.001;
 /* guide curvatures */
 double gRh          = 2700; /* anti-clockwise */
 /* guide section parameters (total length/number of elements) */
-double gH =0.12;
 double L_H142_2 =6.0  /6,  Rh_H142_2 =0;
 double L_H142_3 =9.473/10, Rh_H142_3 =0; /* end: d ~ 15.5 moderator at -5.9 */
 double L_H142_4 =6.973/7,  Rh_H142_4 =0; /* end: d ~ 22.5 ... */
@@ -73,9 +73,6 @@ double L_H142_13=2.5/2,   Rh_H142_13=0; /* straight */
 /* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-/* transfer instrument parameters for components */
-
-if (H)  gH = H;
 
 /* Element rotations = Element length / Curvature Radius * RAD2DEG */
 if (gRh) {
@@ -145,12 +142,12 @@ AT (0,0,2.43) RELATIVE VCS
 
 COMPONENT PinkCarter = Guide_gravity(
   w1=0.038, h1=0.2, w2=0.032, h2=0.2, l=3.170,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=m, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=mip, W=gW)
 AT (0,0,2.525) RELATIVE VCS
 
 COMPONENT FirstObturator = Guide_gravity(
   w1=0.031, h1=0.2, w2=0.031, h2=0.2, l=0.228,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=m, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=mip, W=gW)
 AT (0,0,3.17+0.02) RELATIVE PinkCarter
 
 /* ******************** swiming pool guide ******************** */
