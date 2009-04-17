@@ -15,16 +15,16 @@
 *
 * The H16@ILL curved guide sending cold neutrons from the VCS to IN5.
 *
-* %Example: m=1 Detector: GuideOut_Phic_I=9.3e+09
+* %Example: m=1 Detector: GuideOut_Phic_I=1.85e+10
 *
 * %Parameters
+* m:        [1]  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
 * lambda:   [AA] mean incident wavelength.
 * dlambda:  [AA] wavelength half width. Use e.g. 0.8*lambda for white beam.
-* m:        [1]  m-value of whole guide coating. 1 for Ni, 1.2 for Ni58, 2-4 for SM
 *
 * %E
 ************************************************************************/
-DEFINE INSTRUMENT ILL_H16(lambda=4.5, dlambda=4, m=1)
+DEFINE INSTRUMENT ILL_H16(lambda=10, dlambda=9.9, m=1)
 DECLARE
 %{  
 //---Guide (1st part of guide) --------------------------------------

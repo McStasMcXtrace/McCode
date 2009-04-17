@@ -8,7 +8,7 @@
 * Date: April 7, 2004
 * Origin:ILL
 * Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H15@ILL curved cold guide at the ILL (feeding IN6, D7, IN10, D11)
@@ -16,10 +16,11 @@
 * %Description
 * The H15@ILL curved guide sending cold neutrons from the VCS to IN6
 *
-* %Example: m=1 Detector: GuideOut_Phic_I=6.3e9
+* %Example: m=1 Detector: GuideOut_Phic_I=1.16e10
 *
 * %Parameters
-* m:          (1)  m-value of whole guide coating. 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* m:          (1)  m-value of whole guide coating. 0 absorbing, 1 for Ni, 1.2 for Ni58, 2-4 for SM
+* mip:        (1)  m-value of in-pile guide coating
 * lambda:     (AA) central wavelength
 * dlambda:    (AA) wavelength half width. Use e.g. 0.8*lambda for white beam.
 *
@@ -29,7 +30,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_H15(m=1, lambda=4.14, dlambda=4)
+DEFINE INSTRUMENT ILL_H15(m=1, lambda=10, dlambda=9.9, mip=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -40,14 +41,12 @@ DECLARE
   double gQc          = 0.021;
   double gAlpha       = 4.07;
   double gW           = 1.0/300.0;
-  double gMvalue      = 1;
   /* gaps and Al windows parameters */
   double Al_Thickness = 0.002;
   double gGap         = 0.001;
   /* guide curvatures */
-  double gRh          = 2700; /* upwards */
+  double gRh          = 2700; /* anti clockwise */
   /* guide section parameters (total length/number of elements) */
-  double gH =0.2;
   double L_H15_2 =5.5  /6,  Rh_H15_2 =0;
   double L_H15_3 =9.973/10, Rh_H15_3 =0; /* end: d ~ 15.5 moderator at -5.9 */
   double L_H15_4 =6.973/7,  Rh_H15_4 =0; /* end: d ~ 22.5 ... */
@@ -62,13 +61,8 @@ DECLARE
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
-/* (C code). You may use them as component parameter values.         */
 INITIALIZE
 %{
-  /* transfer instrument parameters for components */
-
-  if (m)  gMvalue = m;
-
 
   /* Element rotations = Element length / Curvature Radius * RAD2DEG */
   if (gRh) {
@@ -77,6 +71,7 @@ INITIALIZE
     Rh_H15_4  = L_H15_4 /gRh*RAD2DEG;
     Rh_H15_5  = L_H15_5 /gRh*RAD2DEG;
   }
+  printf("Instrument: %s (H15@ILL cold guide on VCS).\n", NAME_CURRENT_COMP);
 
 %}
 
@@ -121,12 +116,12 @@ AT (0,0,2.43) RELATIVE VCS
 
 COMPONENT PinkCarter = Guide_gravity(
   w1=0.038, h1=0.2, w2=0.031, h2=0.2, l=3.170,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = mip, W=gW)
 AT (0,0,2.525) RELATIVE VCS
 
 COMPONENT FirstObturator = Guide_gravity(
   w1=0.031, h1=0.2, w2=0.031, h2=0.2, l=0.228,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = mip, W=gW)
 AT (0,0,3.17+0.02) RELATIVE PinkCarter
 
 /* ******************** swiming pool guide ******************** */
@@ -141,7 +136,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H15_2_1 = Guide_gravity(
   w1=0.03, h1=0.2, l=L_H15_2,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
 
 COMPONENT H15_2_2 = COPY(PREVIOUS)
@@ -174,7 +169,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H15_3_1 = Guide_gravity(
   w1=0.03, h1=0.2, l=L_H15_3,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
 
 COMPONENT H15_3_2 = COPY(PREVIOUS)
@@ -219,7 +214,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H15_4_1 = Guide_gravity(
   w1=0.03, h1=0.2, l=L_H15_4,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
 
 COMPONENT H15_4_2 = COPY(PREVIOUS)
@@ -255,7 +250,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H15_5_1 = Guide_gravity(
   w1=0.03, h1=0.2, l=L_H15_5,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
 
 COMPONENT H15_5_2 = COPY(PREVIOUS)
@@ -287,7 +282,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H15_6_1 = Guide_gravity(
   w1=0.03, h1=0.2, l=L_H15_6,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
 
 COMPONENT H15_6_2 = COPY(PREVIOUS)
@@ -338,7 +333,7 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 COMPONENT H15_7_1 = Guide_gravity(
   w1=0.03, h1=0.2, l=L_H15_7,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+  R0=gR0, Qc=gQc, alpha=gAlpha, m = m, W=gW)
 AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
 
 COMPONENT H15_7_2 = COPY(PREVIOUS)
@@ -378,12 +373,12 @@ COMPONENT GuideOut = Arm() AT (0,0,0.01) RELATIVE PREVIOUS
 /* Here IN6 monochromator position. */
 
 COMPONENT GuideOut_xy = Monitor_nD(
-  xwidth=0.03, yheight=gH, restore_neutron=1,
+  xwidth=0.03, yheight=0.2, restore_neutron=1,
   options="x y, per cm2, slit")
 AT (0,0,0.01) RELATIVE PREVIOUS
 
 COMPONENT GuideOut_dxdy = Monitor_nD(
-  xwidth=0.03, yheight=gH, restore_neutron=1,
+  xwidth=0.03, yheight=0.2, restore_neutron=1,
   options="dx dy, all auto, per cm2, slit")
 AT (0,0,0) RELATIVE PREVIOUS
 
