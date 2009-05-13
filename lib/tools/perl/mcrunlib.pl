@@ -434,7 +434,7 @@ sub do_test {
       # check command
       if ($this_cmd !~ m/$base/) { $this_cmd = "$base $this_cmd"; } # only parameters ?
       if ($this_cmd !~ m/mcrun/ && $this_cmd !~ m/mcplot/ && $this_cmd !~ m/mcdisplay/) 
-                                 { $this_cmd = "mcrun $this_cmd"; } # omitted mcrun ?
+                                 { $this_cmd = "mcrun.pl $this_cmd"; } # omitted mcrun ?
       if ($this_cmd !~ m/mpi/ && $mpi) { $this_cmd .= $mpi; }              # add mpi
       if ($this_cmd !~ m/-n/ && $this_cmd !~ m/--ncount/) { $this_cmd.= " -n $n_single"; }
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
