@@ -36,6 +36,7 @@ bindir = @bindir@
 srcdir = @srcdir@
 libdir = @libdir@
 mandir = @mandir@
+PWD = `pwd`
 
 
 DEBUG = -DDEBUG=0
@@ -118,7 +119,9 @@ mcformat:
 clean:
 	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \
 	instrument.tab.c instrument.tab.h instrument.output lex.yy.c \
-  config.cache Makefile
+	config.cache Makefile
+	rm -rf selftest_*/ selftest/
+
 TAGS:
 	etags *.[chly]
 
@@ -245,7 +248,7 @@ install-scilab:
 	cd support/scilab && ./scilab.sh && echo "McStas: run './configure; make; make install' again"
 
 test:
-	./mcrun.fixpl --test
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/lib; export PERL5LIB=${PWD}/lib/tools/perl; ./mcrun.fixpl --test
 
 uninstall:
 	cd $(bindir); rm -f $(BINOBJS)
