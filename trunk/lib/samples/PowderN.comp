@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.50 $
+* Version: $Revision: 1.51 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -453,19 +453,19 @@ INITIALIZE
     exit(fprintf(stderr,"PowderN: %s: sample has invalid dimensions.\n"
                         "ERROR    Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   if (thickness) {
-    if (radius && (radius < thickness || yheight < 2*thickness)) {
+    if (radius && (radius < fabs(thickness) || yheight < 2*fabs(thickness))) {
       fprintf(stderr,"PowderN: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
                      "WARNING  Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
       thickness=0;
     }
-    else if (!radius && (xwidth < 2*thickness || yheight < 2*thickness || zdepth < 2*thickness)) {
+    else if (!radius && (xwidth < 2*fabs(thickness) || yheight < 2*fabs(thickness) || zdepth < 2*fabs(thickness))) {
       fprintf(stderr,"PowderN: %s: hollow sample thickness is larger than its volume (box).\n"
                      "WARNING  Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
       thickness=0;
     }
   }
   
-  if (concentric && thickness<=0) {
+  if (concentric && thickness==0) {
     printf("PowderN: %s:Can not use concentric mode\n"
            "WARNING     on non hollow shape. Ignoring.\n",
            NAME_CURRENT_COMP);
@@ -476,9 +476,22 @@ INITIALIZE
     if (radius>thickness) {
       radius_i=radius-thickness;
     } else {
-      if (xwidth>thickness)  xwidth_i=xwidth-thickness; 
+      if (xwidth>thickness)  xwidth_i =xwidth -thickness; 
       if (yheight>thickness) yheight_i=yheight-thickness; 
-      if (zdepth>thickness)  zdepth_i=zdepth-thickness;
+      if (zdepth>thickness)  zdepth_i =zdepth -thickness;
+    }
+  } else if (thickness<0) {
+    thickness = fabs(thickness);
+    if (radius) {
+      radius_i=radius;
+      radius=radius_i+thickness;
+    } else {
+      xwidth_i =xwidth;
+      yheight_i=yheight;
+      zdepth_i =zdepth;
+      xwidth_i =xwidth +thickness; 
+      yheight_i=yheight+thickness; 
+      zdepth_i =zdepth +thickness;
     }
   }
   
