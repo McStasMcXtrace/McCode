@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2007, All rights reserved
+*         Copyright (C) 1997-2009, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas 1.10
-* Version: $Revision: 1.32 $
+* Release: McStas CVS_090504
+* Version: $Revision: 1.33 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.32 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.33 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifdef USE_MPI
@@ -53,7 +53,6 @@
    the mcstas.h file.
    Build: cc -o mcformat mcformat.c -lm
 */
-#define MCSTAS_VERSION 
 
 #define fatal_error printf  /* remove debug.c dependency */
 #define debug(msg)
@@ -442,6 +441,11 @@ struct McStas_file_format mcformat_init_mcstas_struct(void)
   McStasStruct.mcinputtable       =NULL;
   McStasStruct.mcdirname          =NULL;
 
+  McStasStruct.Scan_ipar_value  =0;
+  McStasStruct.Scan_ipar_index  =0;
+  McStasStruct.Scan_mon_distance=0;
+  McStasStruct.Scan_mon_index   =0;
+
   return(McStasStruct);
 } /* mcformat_init_mcstas_struct */
 
@@ -556,7 +560,6 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   int    m=1,n=1,p=1, i,j;
   long   array_length=0;
   char   flag_abort=0;
-  char   flag_transpose=0;
   char   flag_pgplot1d=0;
 
   /* init default empty return value */
@@ -573,7 +576,8 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
 
   /* returns if this is not a McStas format file, or invalid */
   if (!rTable[0].data || (array_length != 1 && array_length != 3))   {
-    if (mcverbose) fprintf(stderr, "mcformat: file %s is invalid (%ld blocks)\n", filename, array_length);
+    if (mcverbose) fprintf(stderr, "mcformat: file %s is invalid (%ld blocks)\n", 
+      filename, array_length);
     flag_abort=1;
   } else if (!rTable[0].header) {
     if (mcverbose) fprintf(stderr, "mcformat: Can not read header from file %s\n"
@@ -694,7 +698,6 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
           filename, McStasStruct.Ncount, ncount);
     }
   }
-
   if (!McStasStruct.Ncount) {
     McStasStruct.Ncount = 1e6;
     fprintf(stderr, "Warning: %s: can not extract Ncount. using default (%g)\n",
@@ -704,20 +707,22 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   if (McStasStruct.RunNum < McStasStruct.Ncount*0.99)
     fprintf(stderr, "Warning: %s: Temporary results with ratio %g/%g. Simulation results are not completed.\n",
       filename, McStasStruct.RunNum, McStasStruct.Ncount);
-
+  
   /* analyse type, and check that Data dims are m,n,p */
-  if (!strcmp(McStasStruct.type, "array_0d")) m=n=p=1;
-  else if (sscanf(McStasStruct.type, "array_1d(%d)",&m) == 1) n=p=1;
-  else if (sscanf(McStasStruct.type, "array_2d(%d, %d)",&n,&m) == 2) p=1;
-  else if (sscanf(McStasStruct.type, "array_3d(%d, %d, %d)",&n,&m,&p) == 3) { /* void */ }
-  else if (sscanf(McStasStruct.type, "multiarray_1d(%d)", &m)) {
-    if (!mcscanmode) fprintf(stderr, "Warning: %s: use --scan flag for multiarray/scans (skipped)\n", filename);
-    return(McStasStruct);
+  if (McStasStruct.type) {
+    if (!strcmp(McStasStruct.type, "array_0d")) m=n=p=1;
+    else if (sscanf(McStasStruct.type, "array_1d(%d)",&m) == 1) n=p=1;
+    else if (sscanf(McStasStruct.type, "array_2d(%d, %d)",&n,&m) == 2) p=1;
+    else if (sscanf(McStasStruct.type, "array_3d(%d, %d, %d)",&n,&m,&p) == 3) { /* void */ }
+    else if (sscanf(McStasStruct.type, "multiarray_1d(%d)", &m)) {
+      if (!mcscanmode) fprintf(stderr, "Warning: %s: use --scan flag for multiarray/scans (skipped)\n", filename);
+      return(McStasStruct);
+    }
   } else {
     fprintf(stderr, "Warning: %s: invalid data type '%s' (not 1d/2d/3d/multiarray)\n", filename, McStasStruct.type);
     return(McStasStruct);
   }
-
+  
 /* Scans: just test existence. If yes, then will skip the SIM file */
   /*
   "# Numpoints: "
@@ -731,16 +736,17 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     int tmp=m;
     m=n; n=tmp;
   }
-
   if (m != rTable[0].rows) {
     fprintf(stderr, "Warning: %s: conflicting Data row numbers\n"
                     "         expected=%d found=%ld. Fixing. Check first line of Data block.\n", filename, m, rTable[0].rows);
     m = rTable[0].rows;
   }
-  if (strstr(McStasStruct.Format, "binary") || strstr(McStasStruct.Format, "float") || strstr(McStasStruct.Format, "double"))
+  if (McStasStruct.Format && (strstr(McStasStruct.Format, "binary") || strstr(McStasStruct.Format, "float") || strstr(McStasStruct.Format, "double")))
     fprintf(stderr, "WARNING: %s: Format of data file indicates binary blocks."
                     "         Not supported. Might crash.\n", filename);
-  if (strstr(McStasStruct.Format, "PGPLOT") && array_length == 1 && strstr(McStasStruct.type, "array_1d") && rTable[0].columns == 4) flag_pgplot1d=1;
+  if (McStasStruct.Format && McStasStruct.type 
+    && strstr(McStasStruct.Format, "PGPLOT") && array_length == 1 
+    && strstr(McStasStruct.type, "array_1d") && rTable[0].columns == 4) flag_pgplot1d=1;
   if (flag_pgplot1d) n = 4;
   if (n != rTable[0].columns) {
     fprintf(stderr, "Warning: %s: conflicting Data column numbers\n"
@@ -748,7 +754,6 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     n = rTable[0].columns;
   }
   if (flag_pgplot1d) n = 1;
-
   McStasStruct.m = rTable[0].rows; /* dimensions from the Table */
   McStasStruct.n = flag_pgplot1d ? 1 : rTable[0].columns;
   McStasStruct.p = p; /* extracted from type */
@@ -780,7 +785,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     c=McStasStruct.xlabel; McStasStruct.xlabel=McStasStruct.ylabel; McStasStruct.ylabel=c;
     c=McStasStruct.xvar;   McStasStruct.xvar=McStasStruct.yvar;     McStasStruct.yvar=c;
   }
-
+  
   McStasStruct.filename   = str_dup(filename);
   if (!McStasStruct.component) McStasStruct.component=str_dup(filename);
   struct fileparts_struct file_parts=fileparts(filename);
@@ -791,7 +796,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
   McStasStruct.mcdirname  = str_dup(mcdirname);
   if (McStasStruct.position) sscanf(McStasStruct.position, "%lg %lg %lg",
     &McStasStruct.POSITION.x,&McStasStruct.POSITION.y,&McStasStruct.POSITION.z);
-
+  
   /* header analysis: get instrument parameters and fills numipar and inputtable */
   char *s = rTable[0].header;
   char *tok=s;
@@ -1021,10 +1026,14 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   char *currentdir= mcdirname; /* save current dir */
   int i;
 
+
   if (mctestmode) return(1);
   if (!McStasStruct.p1) return(0); /* empty data */
   /* determine in which directory we are and set SIM file */
+
   if (!mcdircount) {
+    if (!strlen(mcinstrument_name)) strcpy(mcinstrument_name, McStasStruct.InstrName);
+    if (!strlen(mcinstrument_source)) strcpy(mcinstrument_source, McStasStruct.Source);
     if (!mcsiminfo_file) mcsiminfo_init(NULL); /* open SIM file once */
   } else {
     if (!mcmergemode) i=mcdircount-1;
@@ -1035,7 +1044,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
     if (i >= mcdircount) {
         fprintf(stderr, "ERROR: unable to find directory '%s' in scanned list\n", McStasStruct.mcdirname);
         return(0);
-      }
+    }
     if (!mcsimfiles[i]) {
       mcdirname      = McStasStruct.mcdirname;
       mcinstrnames[i]= str_dup(McStasStruct.InstrName);
@@ -1047,6 +1056,7 @@ int mcformat_output(struct McStas_file_format McStasStruct)
     } else mcsiminfo_file = mcsimfiles[i];
     mcdirname = mcdirnames[i];
   }
+
 /* transfer to global variables used in output functions */
   if (!McStasStruct.Date) mcstartdate = 0;
   else {
@@ -1144,7 +1154,7 @@ int mcformat_convert(char *name)
         if (mcverbose) {
           printf("mcformat: converting %s (%ld bytes) ", name, stbuf.st_size);
           printf("into %s%s ", mcdirname ? mcdirname : ".", mcdirname ? MC_PATHSEP_S : "");
-          if (mctestmode) printf("(--test mode)\n"); else printf("\n");
+          if (mctestmode) printf(" (--test mode)\n"); else printf("\n");
         }
 
       mcformat_free_mcstas_struct(McStasFile);
@@ -1165,7 +1175,6 @@ int mcformat_convert(char *name)
 int mcformat_count(char *name)
 {
   struct stat               stbuf;
-  struct McStas_file_format McStasFile;
   int    ret=0;
 
   if (!name || !strlen(name)) return(0);
@@ -1520,7 +1529,7 @@ void mcformat_scan_compare(int nb)
     }
     char *header=(char*)mem(64*MAX_LENGTH); strcpy(header, "");
     char *youts =(char*)mem(64*MAX_LENGTH); strcpy(youts,  "");
-    double ipar_min, ipar_max;
+    double ipar_min=0, ipar_max=0;
 
     /* we first sort Scan_columns(monitors) with distance */
     int Scan_distances[mon_count];  /* this is column index */
@@ -1534,7 +1543,7 @@ void mcformat_scan_compare(int nb)
     for (j=0; j<mon_count; j++) { /* loop for each column */
       int Monitor_column[scan_length1];
       int k=0;
-      for (i=0; i<scan_length1; Monitor_column[i++]=i);
+      for (i=0; i<scan_length1; Monitor_column[i]=i) { i++; }
       for (scan_index2=0; scan_index2<nb; scan_index2++) {
         /* find Scan_distances[j] in Scans_to_merge */
         if (Scans_to_merge[scan_index2] >= 0 && Scans_to_merge[scan_index2] == Scan_distances[j]) {
@@ -1614,7 +1623,7 @@ void mcformat_scan_compare(int nb)
     memfree(title);
     /* go to end of scan and continue to search for scans */
   } /* for scan_index1 */
-} /*  mcformat_scan_compare /
+} /*  mcformat_scan_compare */
 
 /*******************************************************************************
 * mcformat_merge_output: output non empty files
@@ -1632,7 +1641,7 @@ int mcformat_merge_output(int nb)
           printf("into %s%s ",
             Files_to_Merge[i].mcdirname ? Files_to_Merge[i].mcdirname : ".",
             Files_to_Merge[i].mcdirname ? MC_PATHSEP_S : "");
-          if (mctestmode) printf("(--test mode)\n"); else printf("\n");
+          if (mctestmode) printf(" (--test mode)\n"); else printf("\n");
         }
       }
     }

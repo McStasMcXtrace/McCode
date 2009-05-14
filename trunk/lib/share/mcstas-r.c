@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2008, All rights reserved
+*         Copyright (C) 1997-2009, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.218 $
+* Version: $Revision: 1.219 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.218 2009-04-16 13:46:26 farhi Exp $
+* $Id: mcstas-r.c,v 1.219 2009-05-14 22:15:31 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.218  2009/04/16 13:46:26  farhi
+* cosmetics
+*
 * Revision 1.217  2009/03/26 13:41:36  erkn
 * fixed bug in mcestimate_error. Missing factor 1/N in quadratic (1st) term of square sum.
 *
@@ -39,7 +42,7 @@
 * Revision 1.212  2009/01/23 10:51:30  farhi
 * Minor speedup: Identity rotation matrices are now checked for and
 * caculations reduced.
-* It seems this McSatsStable commit did not got through for McStas 2.0
+* It seems this McSatsStable commit did not got through for McStas CVS_090504
 *
 * Revision 1.211  2009/01/18 14:43:13  farhi
 * Fixed MPI event list output (broken and reported first by A. Percival).
@@ -1764,14 +1767,17 @@ static char *mcvalid_name(char *valid, char *original, int n)
   return(valid);
 } /* mcvalid_name */
 
-#if defined(NL_ARGMAX) || defined(WIN32)
 /*******************************************************************************
-* pfprintf: just as fprintf, but with (char *)fmt_args being the list of arg type
+* pfprintf: just as fprintf with positional arguments %N$t, 
+*   but with (char *)fmt_args being the list of arg type 't'.
 *   Needed as the vfprintf is not correctly handled on some platforms.
 *   1- look for the maximum %d$ field in fmt
 *   2- look for all %d$ fields up to max in fmt and set their type (next alpha)
 *   3- retrieve va_arg up to max, and save pointer to arg in local arg array
 *   4- use strchr to split around '%' chars, until all pieces are written
+*   returns number of arguments written.
+* Warning: this function is restricted to only handles types t=s,g,i,li
+*          without additional field formating, e.g. %N$t
 *******************************************************************************/
 static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
 {
@@ -1817,9 +1823,10 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
           return(-fprintf(stderr,"pfprintf: invalid positional argument number (<=0 or >=%i) %s.\n", MyNL_ARGMAX, arg_posB[this_arg]));
         /* get type of positional argument: follows '%' -> arg_posE[this_arg]+1 */
         fmt_pos = arg_posE[this_arg]+1;
+        fmt_pos[0] = tolower(fmt_pos[0]);
         if (!strchr(printf_formats, fmt_pos[0]))
           return(-fprintf(stderr,"pfprintf: invalid positional argument type (%c != expected %c).\n", fmt_pos[0], fmt_args[arg_num[this_arg]-1]));
-        if (fmt_pos[0] == 'l' && fmt_pos[1] == 'i') fmt_pos++;
+        if (fmt_pos[0] == 'l' && (fmt_pos[1] == 'i' || fmt_pos[1] == 'd')) fmt_pos++;
         arg_posT[this_arg] = fmt_pos;
         /* get next argument... */
         this_arg++;
@@ -1839,22 +1846,22 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
   for (this_arg=0; this_arg<strlen(fmt_args); this_arg++)
   {
 
-    switch(fmt_args[this_arg])
+    switch(tolower(fmt_args[this_arg]))
     {
       case 's':                       /* string */
               arg_char[this_arg] = va_arg(ap, char *);
               break;
       case 'd':
       case 'i':
-      case 'c':                     /* int */
+      case 'c':                      /* int */
               arg_int[this_arg] = va_arg(ap, int);
               break;
-      case 'l':                       /* int */
+      case 'l':                       /* long int */
               arg_long[this_arg] = va_arg(ap, long int);
               break;
       case 'f':
       case 'g':
-      case 'G':                      /* double */
+      case 'e':                      /* double */
               arg_double[this_arg] = va_arg(ap, double);
               break;
       default: fprintf(stderr,"pfprintf: argument type is not implemented (arg %%%i$ type %c).\n", this_arg+1, fmt_args[this_arg]);
@@ -1874,7 +1881,7 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
       if (!fmt_bit) return(-fprintf(stderr,"pfprintf: not enough memory.\n"));
       strncpy(fmt_bit, fmt_pos, arg_posB[this_arg]-fmt_pos);
       fmt_bit[arg_posB[this_arg]-fmt_pos] = '\0';
-      fprintf(f, fmt_bit); /* fmt part without argument */
+      fprintf(f, "%s", fmt_bit); /* fmt part without argument */
     } else
     {
       fmt_bit = (char*)malloc(10);
@@ -1885,7 +1892,7 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
     strncat(fmt_bit, arg_posE[this_arg]+1, arg_posT[this_arg]-arg_posE[this_arg]);
     fmt_bit[arg_posT[this_arg]-arg_posE[this_arg]+1] = '\0';
 
-    switch(fmt_args[arg_n])
+    switch(tolower(fmt_args[arg_n]))
     {
       case 's': fprintf(f, fmt_bit, arg_char[arg_n]);
                 break;
@@ -1899,7 +1906,7 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
               break;
       case 'f':
       case 'g':
-      case 'G':                       /* double */
+      case 'e':                       /* double */
               fprintf(f, fmt_bit, arg_double[arg_n]);
               break;
     }
@@ -1914,18 +1921,6 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
   }
   return(this_arg);
 }
-#else
-static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
-{ /* wrapper to standard fprintf when the library function is OK (linux) */
-  va_list ap;
-  int tmp;
-
-  va_start(ap, fmt_args);
-  tmp=vfprintf(f, fmt, ap);
-  va_end(ap);
-  return(tmp);
-}
-#endif
 
 /*******************************************************************************
 * mcfile_header: output header/footer using specific file format.
@@ -1967,13 +1962,13 @@ static int mcfile_header(FILE *f, struct mcformats_struct format, char *part, ch
   sprintf(user,"%s on %s",
         getenv("USER") ? getenv("USER") : "mcstas",
         getenv("HOST") ? getenv("HOST") : "localhost");
+  strcpy(valid_parent, "root");
   if (strstr(format.Name, "HTML")) {
     sprintf(instrname,"%s", mcinstrument_source);
     mcvalid_name(valid_parent, mcinstrument_name, VALID_NAME_LENGTH);
   } else {
     sprintf(instrname,"%s (%s)", mcinstrument_name, mcinstrument_source);
     if (parent && strlen(parent)) mcvalid_name(valid_parent, parent, VALID_NAME_LENGTH);
-    else strcpy(valid_parent, "root");
   }
   strncpy(date, ctime(&t), 64);
   if (strlen(date)) date[strlen(date)-1] = '\0';
@@ -2438,7 +2433,6 @@ void mcsiminfo_init(FILE *f)
       mcfile_section(mcsiminfo_file, mcformat, "begin", pre, file_time, "entry", root, 1);
     }
 #endif
-
     mcfile_header(mcsiminfo_file, mcformat, "header", pre, simname, root);
 #ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus"))
@@ -2531,8 +2525,8 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
   double *x1, double *x2, double *y1, double *y2, double *z1, double *z2,
   char *filename, char istransposed, Coords posa)
 {
-  char *Begin;
-  char *End;
+  char *Begin=NULL;
+  char *End=NULL;
   char valid_xlabel[64];
   char valid_ylabel[64];
   char valid_zlabel[64];
@@ -3110,7 +3104,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   if (simfile_f || mcdisable_output_files) {
     for(j = 0; j < n*p; j++) {
       for(i = 0; i < m; i++) {
-        double N,I,E;
+        double N=0,I=0,E=0;
         int index;
         if (!istransposed) index = i*n*p + j;
         else index = i+j*m;

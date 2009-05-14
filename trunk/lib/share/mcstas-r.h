@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2008, All rights reserved
+*         Copyright (C) 1997-2009, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.108 $
+* Version: $Revision: 1.109 $
 *
 * Runtime system header for McStas.
 *
@@ -29,13 +29,17 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.108 2009-01-23 14:01:12 farhi Exp $
+* $Id: mcstas-r.h,v 1.109 2009-05-14 22:15:31 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.108  2009/01/23 14:01:12  farhi
+*       Back to smaller buffer size for MPI exchange, to ensure that it works on
+*       *most* machines.
+*
 *       Revision 1.107  2009/01/23 10:51:30  farhi
 *       Minor speedup: Identity rotation matrices are now checked for and
 *       caculations reduced.
-*       It seems this McSatsStable commit did not got through for McStas 2.0
+*       It seems this McSatsStable commit did not got through for McStas CVS_090513
 *
 *       Revision 1.106  2009/01/15 15:42:44  farhi
 *       Saving lists using MPI: must use MPI_Ssend to avoid the buffer max size
@@ -305,7 +309,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.108 $"
+#define MCSTAS_R_H "$Revision: 1.109 $"
 
 #include <math.h>
 #include <string.h>
@@ -316,6 +320,12 @@
 #include <errno.h>
 #include <time.h>
 #include <float.h>
+
+#ifndef MCSTAS_VERSION
+#ifdef PACKAGE_VERSION
+#define MCSTAS_VERSION PACKAGE_VERSION
+#endif
+#endif
 
 /* If the runtime is embedded in the simulation program, some definitions can
    be made static. */

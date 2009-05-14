@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2009, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,12 +11,12 @@
 * Written by: K.N.
 * Date: Jul  1, 1997
 * Origin: Risoe
-* Release: McStas 1.6
-* Version: $Revision: 1.20 $
+* Release: McStas CVS_090504
+* Version: $Revision: 1.21 $
 *
 * Memory management functions.
 *
-*       $Id: memory.c,v 1.20 2006-04-19 13:06:25 farhi Exp $
+*       $Id: memory.c,v 1.21 2009-05-14 22:15:30 farhi Exp $
 *
 *******************************************************************************/
 
@@ -38,7 +38,7 @@ mem(size_t size)
 {
   void *p = calloc(1, size);    /* Allocate and clear memory. */
   if(p == NULL)
-    fatal_error("memory exhausted during allocation of size %d.", size);
+    fatal_error("memory exhausted during allocation of size %ld.", (long)size);
   return p;
 }
 
@@ -120,7 +120,7 @@ str_quote(char *string)
 {
   char *badchars = "\\\"\r\n\t";
   char *quotechars = "\\\"rnt";
-  char *q, *res, *ptr;
+  char *q=NULL, *res=NULL, *ptr;
   int len, pass;
   int c;
   char new[5];
