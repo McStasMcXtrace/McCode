@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2009, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: EF
 * Date: Aug 28, 2002
 * Origin: ILL
-* Release: McStas 1.6
-* Version: $Revision: 1.40 $
+* Release: McStas CVS_090504
+* Version: $Revision: 1.41 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.40 2008-10-21 15:19:19 farhi Exp $
+* $Id: read_table-lib.c,v 1.41 2009-05-14 22:15:31 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.40  2008/10/21 15:19:19  farhi
+* use common CHAR_BUFFER_LENGTH = 1024
+*
 * Revision 1.39  2008/10/10 10:33:42  farhi
 * removed \r from token search when reading values in lines of files
 * for compatibility with Windows
@@ -661,7 +664,7 @@
   double Table_Value(t_Table mc_rt_Table, double X, long j)
   {
     long   mc_rt_Index;
-    double mc_rt_X1, mc_rt_Y1, mc_rt_X2, mc_rt_Y2;
+    double mc_rt_X1=0, mc_rt_Y1=0, mc_rt_X2=0, mc_rt_Y2=0;
     double ret=0;
 
     if (X > mc_rt_Table.max_x) return Table_Index(mc_rt_Table,mc_rt_Table.rows-1  ,j);
