@@ -78,7 +78,7 @@ my ($inf_instr, $inf_sim, $inf_data);
 my %inf_param_map;
 
 my ($main_window,$edit_window, $edit_control, $edit_label);
-my ($status_label, $current_results_label, $cmdwin, $current_instr_label);
+my ($status_label, $current_results_label, $cmdwin, $current_instr_label, $workdir);
 
 my $prefix          = $MCSTAS::mcstas_config{'PREFIX'};
 my $suffix          = $MCSTAS::mcstas_config{'SUFFIX'};
@@ -499,11 +499,25 @@ sub open_instr_def {
     new_sim_def_name($w, $file);
 }
 
+
+sub set_run_dir {
+  my ($w, $file) = @_;
+  my $dir = select_dir();
+  set_workdir($w, $dir);
+}
+
+sub set_workdir{
+  my ($w, $dir) = @_;
+  $workdir->delete("1.0", "end");
+  chdir($dir);
+  $workdir->insert('end', $dir);
+}
+
 sub menu_open {
     my ($w) = @_;
     return 0 unless(is_erase_ok($w));
     my $file = $w->getOpenFile(-defaultextension => ".instr",
-                               -title => "Select instrument file", -initialdir => "$ENV{'PWD'}");
+                               -title => "Select instrument file", -initialdir => getcwd());
     return 0 unless $file;
     open_instr_def($w, $file);
     return 1;
@@ -679,7 +693,7 @@ sub read_sim_data {
 sub load_sim_file {
     my ($w) = @_;
     my $file = $w->getOpenFile(-defaultextension => ".sim",
-                               -title => "Select simulation file", -initialdir => "$ENV{'PWD'}");
+                               -title => "Select simulation file", -initialdir => getcwd());
     if($file && -r $file) {
         $current_sim_file = $file ;
         new_simulation_results($w);
@@ -692,7 +706,7 @@ sub save_disp_file {
     # PW 20030314
     my ($w,$ext) = @_;
     my $file = $w->getSaveFile(-defaultextension => $ext,
-                               -title => "Select output filename", -initialdir => "$ENV{'PWD'}", -initialfile => "mcdisplay_output.$ext");
+                               -title => "Select output filename", -initialdir => getcwd(), -initialfile => "mcdisplay_output.$ext");
     return $file;
 }
 
@@ -1484,7 +1498,7 @@ sub menu_insert_instr_template {
 sub menu_insert_file {
     my ($w) = @_;
     if($edit_control) {
-	my $file = $w->getOpenFile(-title => "Select file to insert", -initialdir => "$ENV{'PWD'}");
+	my $file = $w->getOpenFile(-title => "Select file to insert", -initialdir => getcwd());
 	return 0 unless $file;
 	my $fid = open(FILE, "<$file");
 	my $input;
@@ -1729,11 +1743,13 @@ sub setup_cmdwin {
                                 -anchor => 'w',
                                 -justify => 'left');
     $status_lab->pack(-fill => 'x');
+    
+    my $f4 = $w->Frame();
     # Add the main text field, with scroll bar
-    my $rotext = $w->ROText(-relief => 'sunken', -bd => '2',
+    my $rotext = $f4->ROText(-relief => 'sunken', -bd => '2',
                             -setgrid => 'true',
                             -height => 24, -width => 80);
-    my $s = $w->Scrollbar(-command => [$rotext, 'yview']);
+    my $s = $f4->Scrollbar(-command => [$rotext, 'yview']);
     $rotext->configure(-yscrollcommand =>  [$s, 'set']);
     $s->pack(-side => 'right', -fill => 'y');
     $rotext->pack(-expand => 'yes', -fill => 'both');
@@ -1743,6 +1759,27 @@ sub setup_cmdwin {
     $current_results_label = $res_lab;
     $status_label = $status_lab;
     $cmdwin       = $rotext;
+    
+    $f4->pack(-fill => 'x');
+    my $f5 = $w->Frame();
+
+    my $runlab = $f5->Label(-text => "Working directory:",
+                                -anchor => 'w',
+                                -justify => 'left');
+    $runlab->pack(-side => 'left');
+    my $dir_but = $f5->Button(-text => "Set",
+			      -command => sub { set_run_dir($w) });
+    $dir_but->pack(-side => 'right');
+    my $dirbox = $f5->ROText(-relief => 'sunken', -bd => '0',
+			     -setgrid => 'true',
+			     -height => 1);
+    $dirbox->pack(-expand => 'yes', -fill => 'x');
+    $workdir = $dirbox;
+    set_workdir($w, getcwd());
+    $f5->pack(-fill => 'x');
+    
+    
+
     # Insert "mcstas --version" message in window. Do it a line at the
     # time, since otherwise the tags mechanism seems to get confused.
     my $l;
