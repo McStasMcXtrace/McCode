@@ -698,7 +698,7 @@ if (-f $out_file) {
 	if (@valid_names > 1) { 
 	    require File::Temp;
 	    my $searchfile;
-	    ($filehandle, $searchfile) = File::Temp::tempfile("McDoc_XXXX", SUFFIX => '.html');
+	    ($filehandle, $searchfile) = File::Temp::tempfile("McDoc_XXXX", SUFFIX => '.html', UNLINK => 1);
 	    open($filehandle, ">$searchfile") || die "Could not write to search output file\n";
 	    add_comp_search_html($file, $filehandle, @valid_names);
 	    html_main_end($filehandle, $toolbar);
