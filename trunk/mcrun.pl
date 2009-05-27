@@ -415,7 +415,7 @@ sub exec_sim {
       if ($force_compile) { 
         push @opt, "--force-compile"; # transfer request for recompilation on all nodes
       }
-      $pids[$j]     =Proc::Simple->new();
+      if ($ncount) { $pids[$j]     =Proc::Simple->new(); }
       $hostnames[$j]=$hostlist[$host_index];
       $datadirs[$j] ="$griddir" . "_$j";
       if ($j == $multi-1) { $hostncount=$ncount-$j*int($ncount/$multi); }
@@ -425,7 +425,9 @@ sub exec_sim {
       push @opt, "--format=PGPLOT";
       push @opt, "--ncount=$hostncount";
       my $cmd="mcrun$MCSTAS::mcstas_config{'SUFFIX'} --slave=$hostnames[$j] $out_file --dir=$datadirs[$j]  @opt > $griddir/$hostnames[$j]_$j.log";
-      $pids[$j]->Proc::Simple::start($cmd);  # asynchronous exec
+      if ($ncount) {
+        $pids[$j]->Proc::Simple::start($cmd);  # asynchronous exec
+      }
       print STDERR "Process $j at $hostnames[$j] started.\n";
       print "$cmd\n";
       $host_index++;
@@ -438,7 +440,7 @@ sub exec_sim {
     while ($stop < $multi) {  # wait until all hosts have finished
       sleep(1); # avoid using CPU for nothing
       for ($j=0; $j<$multi; $j++) {
-        if ($pids[$j] && $pids[$j]->Proc::Simple::poll() == 0) {
+        if ($pids[$j] && $pids[$j]->Proc::Simple::poll() == 0 || !$ncount) {
           print STDERR "Process $j at $hostnames[$j] terminated.\n";
           $stop++;
           $pids[$j]=0;
@@ -457,7 +459,7 @@ sub exec_sim {
     }
     $cmd .= "> $griddir/mcformat.log";
     print STDERR "Merging grid results: $cmd\n";
-    my_system($cmd,"");
+    if ($ncount) { my_system($cmd,""); }
     # clean up local datadirs
     for ($j=0; $j<$multi; $j++) {
       File::Path::rmtree("$datadirs[$j]");
@@ -539,7 +541,12 @@ sub exec_sim_local {
   print "@cmd\n";
   
   # execute full command line
-  exec join(' ',@cmd);  #may call exec as nothing has to be done afterwards
+  if ($ncount) { 
+    exec join(' ',@cmd);  #may call exec as nothing has to be done afterwards
+  } else {
+    exit(-1);
+    # Simulation not executed (ncount=0)
+  }
 }
 
 # send a simulation to host $slave, retrieve data and remove tmp dir
@@ -611,17 +618,25 @@ sub exec_sim_host {
 sub host_ssh {
 	my ($host,$cmd) = @_;
 	# further option: Net::SSH         (libnet-ssh)
-	my_system("$MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"","# ssh $host \"$cmd\"");
+	if ($ncount) {
+	  my_system("$MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"","# ssh $host \"$cmd\"");
+	} else {
+	  print STDERR "# $MCSTAS::mcstas_config{'SSH'} $host \"$cmd\"\n"; 
+	}
 }
 
 # send/receive a file to/from a host (does not die if failed)
 sub host_scp {
 	my ($orig,$dest,$recursive) = @_;
 	# further option: Net::SCP::Expect (libnet-scp-expect)
-	if (defined($recursive) && $recursive == 1) { 
-	  my_system("$MCSTAS::mcstas_config{'SCP'} -Crp $orig $dest","# scp $orig $dest");
+	if ($ncount) {
+	  if (defined($recursive) && $recursive == 1) {
+	    my_system("$MCSTAS::mcstas_config{'SCP'} -Crp $orig $dest","# scp $orig $dest");
+	  } else {
+	    my_system("$MCSTAS::mcstas_config{'SCP'} -Cp $orig $dest","# scp $orig $dest");
+	  }
 	} else {
-	  my_system("$MCSTAS::mcstas_config{'SCP'} -Cp $orig $dest","# scp $orig $dest");
+	  print STDERR "# $MCSTAS::mcstas_config{'SCP'} -Crp $orig $dest\n";
 	}
 }
 
@@ -932,11 +947,15 @@ sub do_scan {
     # Create the output directory if requested.
     my $prefix = "";
     if($data_dir) {
-      if(mkdir($data_dir, 0777)) {
-          $prefix = "$data_dir/";
+      if ($ncount) {
+        if(mkdir($data_dir, 0777)) {
+            $prefix = "$data_dir/";
+        } else {
+            die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
+            print $MCSTAS::mcstas_config{'PLOTTER'}; # unreachable code, avoids warning for mcstas_config
+        }
       } else {
-          die "Error: unable to create directory '$data_dir'.\n(Maybe the directory already exists?)";
-          print $MCSTAS::mcstas_config{'PLOTTER'}; # unreachable code, avoids warning for mcstas_config
+        print STDERR "# mkdir $data_dir\n";
       }
     }
     # Use user-specified output file name, with a default of "mcstas.dat".
@@ -950,8 +969,10 @@ sub do_scan {
     # Only initialize / use $DAT datafile if format is PGPLOT
     if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
       $DAT = new FileHandle;
-      open($DAT, ">${prefix}$datfile");
-      autoflush $DAT 1;                # Preserves data even if interrupted.
+      if ($ncount) {
+        open($DAT, ">${prefix}$datfile");
+        autoflush $DAT 1;                # Preserves data even if interrupted.
+      }
     } else {
       $datfile = $simfile;             # Any reference should be to the simfile
     }
@@ -1092,7 +1113,7 @@ sub do_scan {
             } # end if pid
 
             my $ret = close(SIM);
-            if ($got_error || (! $ret && ($? != 0 || $!))) {
+            if ($ncount && ($got_error || (! $ret && ($? != 0 || $!)))) {
               $found_invalid_scans++;
               print "mcrun: Exit #$found_invalid_scans due to error returned by simulation program ($out_file=$?)\n" ;
               # continue scan as further steps may be OK, and final scan dimension is right
@@ -1100,7 +1121,7 @@ sub do_scan {
             # output section, only when we know how many monitors there are
             if ($Monitors_nb) {
               if ($firsttime eq 1) {  # output header for first valid scan step
-                if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+                if ($ncount && $MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
                     output_dat_header($DAT, "# ", $info, \@youts, $variables, $datfile);
                 }
                 $firsttime = 0;
@@ -1108,24 +1129,29 @@ sub do_scan {
                 push @lab_datablock, "\n";
               }
               # add scan data line
-              if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+              if ($ncount && $MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
                       print $DAT "$out\n";
               }
               push @lab_datablock, "$out";
             }
         } # end if point
     } # end for point
-    if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
-      close($DAT);
-    }
-    $datablock = join(" ", @lab_datablock);
-    output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile, $datablock);
+    if ($ncount) {
+     if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /PGPLOT|McStas/i) {
+        close($DAT);
+      }
+      $datablock = join(" ", @lab_datablock);
+      output_sim_file("${prefix}$simfile", $info, \@youts, $variables, $datfile, $datablock);
 
-    print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
+      print "Output file: '${prefix}$datfile'\nOutput parameters: $variables\n";
+      
+    } else {
+      die "Ending simulation scan (ncount=0)\n";
+    }
     if ($found_invalid_scans) {
       die "mcrun: Error: Simulation $out_file $data_dir returned $found_invalid_scans invalid scan steps,
        which intensity was set to zero in data file $datfile.\n"; }
-
+    
     return ($datablock,$variables, @youts);
 }
 
@@ -1181,11 +1207,11 @@ if ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
   print STDERR "mcrun: Warning: format $MCSTAS::mcstas_config{'PLOTTER'} does not support parameter scans\n";
 }
 
-if ($exec_test) {
+if ($exec_test && $ncount) {
   my $status;
   $status = do_test(sub { print "$_[0]\n"; }, $force_compile, $MCSTAS::mcstas_config{'PLOTTER'}, $exec_test, $mpi, $ncount, $sim_def);
   if (defined $status) {
-    print STDERR "mcrun: $status";
+    print STDERR "mcrun: $status\n";
     exit(1);
   } else {
     exit(0);
@@ -1196,7 +1222,6 @@ our $scan_info = check_input_params(); # Get variables to scan, if any
 # force compile only on localhost
 ($out_file, undef) = get_out_file($sim_def, $force_compile && !$multi && $slave eq 0, $mpi, $cflags, @ccopts);
 exit(1) unless $out_file;
-exit(1) if $ncount == 0;
 
 $instr_info = get_sim_info("$out_file","--format=$MCSTAS::mcstas_config{'PLOTTER'}");
 
@@ -1267,7 +1292,7 @@ if($numpoints == 1 && $optim_flag == 0) {
 
 	} else {
 		if ($optim_flag && not $MCSTAS::mcstas_config{'AMOEBA'}) {
-		  print STDERR "Optimization not available (install perl Math::Amoeba first)";
+		  print STDERR "Optimization not available (install perl Math::Amoeba first)\n";
 		}
 		do_scan($scan_info); # single iteration
 	}
