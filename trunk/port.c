@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2009, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,12 +11,12 @@
 * Written by: K.N.
 * Date: Nov 11, 1998
 * Origin: Risoe
-* Release: McStas 1.6
-* Version: $Revision: 1.12 $
+* Release: McStas CVS_090602
+* Version: $Revision: 1.13 $
 *
 * Code to handle portability issues (mainly Win32 stuff).
 *
-* $Id: port.c,v 1.12 2006-04-19 13:06:26 farhi Exp $
+* $Id: port.c,v 1.13 2009-06-03 14:03:42 farhi Exp $
 *
 *******************************************************************************/
 
@@ -44,3 +44,29 @@ FILE *fdopen(int descr, const char *mode)
   return(NULL);
 }
 #endif /* HAVE_FDOPEN */
+
+#ifndef HAVE_STRCASESTR
+#include <ctype.h>
+
+char *
+strcasestr (char *haystack, char *needle)
+{
+	char *p, *startn = 0, *np = 0;
+
+	for (p = haystack; *p; p++) {
+		if (np) {
+			if (toupper(*p) == toupper(*np)) {
+				if (!*++np)
+					return startn;
+			} else
+				np = 0;
+		} else if (toupper(*p) == toupper(*needle)) {
+			np = needle + 1;
+			startn = p;
+		}
+	}
+
+	return 0;
+}
+#endif /* HAVE_STRCASESTR */
+

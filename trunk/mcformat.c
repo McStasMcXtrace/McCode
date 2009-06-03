@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_090504
-* Version: $Revision: 1.34 $
+* Version: $Revision: 1.35 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,11 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.34 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.35 $" /* avoid memory.c to define Pool functions */
+#endif
+
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION MCFORMAT
 #endif
 
 #ifdef USE_MPI
