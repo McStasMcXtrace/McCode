@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.219 $
+* Version: $Revision: 1.220 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.219 2009-05-14 22:15:31 farhi Exp $
+* $Id: mcstas-r.c,v 1.220 2009-06-09 09:16:00 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.219  2009/05/14 22:15:31  farhi
+* Hopefuly fix last GCC 4 'Invalid %N$ use detected' issues by using custom made
+* pfprintf and other minor similar fixes.
+*
 * Revision 1.218  2009/04/16 13:46:26  farhi
 * cosmetics
 *
@@ -5343,11 +5347,13 @@ int mcstas_main(int argc, char *argv[])
       mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
     );
     /* adapt random seed for each node */
-    srandom(time(&t) + mpi_node_rank);
+    mcseed=(long)(time(&t) + mpi_node_rank);
+    srandom(mcseed);
     t += mpi_node_rank;
   }
 #else /* !USE_MPI */
-  srandom(time(&t));
+  mcseed=(long)time(&t);
+  srandom(mcseed);
 #endif /* !USE_MPI */
   mcstartdate = t;  /* set start date before parsing options and creating sim file */
 
