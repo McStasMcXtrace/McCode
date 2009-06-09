@@ -12,7 +12,7 @@
 * Written by: M. Poehlmann, C. Carbogno, H. Schober, E. Farhi
 * Date:       May 2002
 * Origin:     ILL Grenoble / TU Muenchen
-* Version:    $Revision: 1.30 $
+* Version:    $Revision: 1.31 $
 * Release:    McStas CVS_080929
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
@@ -54,7 +54,7 @@
 * w:        (m)   width of one chopper slit
 * xwidth:   (m)   optional total width of slit package
 * yheight:  (m)   height of slit package
-* nu:       (Hz)  chopper frequency
+* nu:       (Hz)  chopper frequency. Omega=2*PI*nu in rad/s, nu*60 in rpm.
 * eff:      (1)   efficiency = transmission x fraction of transparent material
 * verbose:  (1)   set to 1,2 or 3 gives debugging information
 * curvature:(m-1) Curvature of slits (1/radius of curvature).
