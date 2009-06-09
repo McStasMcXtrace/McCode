@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.86 $
+* Version: $Revision: 1.87 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -191,7 +191,6 @@
 *                     of the next component/detector). Use 0 for full space.
 *                     This is only relevant for single scattering (order=1).
 * save_sqw:     [1] When set to 1, saves S(q), S(w) and S(q,w) as monitors.
-*                     not available in MPI mode.
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
 * qmin:    [Angs-1] Minimum Q value to use in S(q,w).
@@ -268,7 +267,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.86 $
+#define ISOTROPIC_SQW $Revision: 1.87 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
