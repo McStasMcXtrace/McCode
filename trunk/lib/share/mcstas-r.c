@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.221 $
+* Version: $Revision: 1.222 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.221 2009-06-10 11:45:29 erkn Exp $
+* $Id: mcstas-r.c,v 1.222 2009-06-10 13:01:44 erkn Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.221  2009/06/10 11:45:29  erkn
+* estimate_error is now a function pointer to allow drop-in replacement
+* Useful for nonlinear signals, such as polarization
+*
 * Revision 1.220  2009/06/09 09:16:00  farhi
 * Fix propagation bug in DiskChopper (yprime having coordinate from previous comp)
 * Seed is now saved in all simulation files (incl. when set from random)
@@ -4478,8 +4482,12 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
       t_in  = (-(2*vz*z + 2*vx*x) - sqrt(D))/(2*(vz*vz + vx*vx));
       t_out = (-(2*vz*z + 2*vx*x) + sqrt(D))/(2*(vz*vz + vx*vx));
     } else if (vy) { /* trajectory parallel to cylinder axis */
-      t_in = (y + h/2)/vy;
-      t_out = (y - h/2)/vy;
+      t_in = (-h/2-y)/vy;
+      t_out = (h/2-y)/vy;
+      if (t_in>t_out){
+        double tmp=t_in;
+        t_in=t_out;t_out=tmp;
+      }
     } else return 0;
     y_in = vy*t_in + y;
     y_out =vy*t_out + y;
