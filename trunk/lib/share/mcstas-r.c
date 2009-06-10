@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.220 $
+* Version: $Revision: 1.221 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.220 2009-06-09 09:16:00 farhi Exp $
+* $Id: mcstas-r.c,v 1.221 2009-06-10 11:45:29 erkn Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.220  2009/06/09 09:16:00  farhi
+* Fix propagation bug in DiskChopper (yprime having coordinate from previous comp)
+* Seed is now saved in all simulation files (incl. when set from random)
+*
 * Revision 1.219  2009/05/14 22:15:31  farhi
 * Hopefuly fix last GCC 4 'Invalid %N$ use detected' issues by using custom made
 * pfprintf and other minor similar fixes.
@@ -736,8 +740,8 @@ long     mcopenedfiles_size          = 0;
 #endif
 
 /* mcMagneticField(x, y, z, t, Bx, By, Bz) */
-void (*mcMagneticField) (double, double, double, double,
-			 double*, double*, double*) = NULL;
+int (*mcMagneticField) (double, double, double, double,
+    double*, double*, double*, void *) = NULL;
 void (*mcMagnetPrecession) (double, double, double, double, double, double,
 			    double, double*, double*, double*, double, Coords, Rotation) = NULL;
 
@@ -910,6 +914,7 @@ static struct
                 mcparmprinter_string
       };
 
+
 /* mcestimate_error: compute sigma from N,p,p2 in Gaussian large numbers approx */
 double mcestimate_error(double N, double p1, double p2)
 {
@@ -922,6 +927,9 @@ double mcestimate_error(double N, double p1, double p2)
      against this. */
   return sqrt((N/n1)*fabs(p2/N - pmean*pmean));
 }
+
+double (*mcestimate_error_p)
+  (double V2, double psum, double p2sum)=mcestimate_error; 
 
 /* mcset_ncount: set total number of neutrons to generate */
 void mcset_ncount(double count)
@@ -2332,7 +2340,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
     mcfile_tag(f, format, pre, parent,
       strstr(format.Name, "NeXus") ? "Signal" : "signal", signal);
 
-    sprintf(values, "%g %g %g", sum_z, mcestimate_error(Nsum, sum_z, P2sum), Nsum);
+    sprintf(values, "%g %g %g", sum_z, (*mcestimate_error_p)(Nsum, sum_z, P2sum), Nsum);
     mcfile_tag(f, format, pre, parent, "values", values);
   }
   strcpy(lim_field, "xylimits");
@@ -2359,7 +2367,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
   mcfile_tag(f, format, pre, parent, lim_field, limits);
   mcfile_tag(f, format, pre, parent, "variables", strstr(format.Name," scan ") ? zvar : vars);
   /* add warning in case of low statistics or large number of bins in text format mode */
-  if (mcestimate_error(Nsum, sum_z, P2sum) > sum_z/4) fprintf(stderr,
+  if ((*mcestimate_error_p)(Nsum, sum_z, P2sum) > sum_z/4) fprintf(stderr,
     "Warning: file '%s': Low Statistics\n",
     filename);
   else
@@ -2726,7 +2734,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
         Psum += I;
         P2sum += p2 ? E : I*I;
 
-        if (p0 && p1 && p2 && !israw_data) E = mcestimate_error(N,I,E);
+        if (p0 && p1 && p2 && !israw_data) E = (*mcestimate_error_p)(N,I,E);
         if(isdata_present)
         {
           if (is1d)
@@ -2764,7 +2772,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           long    i, count;
           for (i=0; i<abs(m*n*p); i++)
             { if (isdata != 2 || israw_data) s[i] = (float)d[i];
-              else s[i] = (float)mcestimate_error(p0[i],p1[i],p2[i]); }
+              else s[i] = (float)(*mcestimate_error_p)(p0[i],p1[i],p2[i]); }
             count = fwrite(s, sizeof(float), abs(m*n*p), datafile);
           if (count != abs(m*n*p)) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)abs(m*n*p));
           free(s);
@@ -2779,7 +2787,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           s = (double*)malloc(abs(m*n*p)*sizeof(double));
           if (s) { long i;
             for (i=0; i<abs(m*n*p); i++)
-              s[i] = (double)mcestimate_error(p0[i],p1[i],p2[i]);
+              s[i] = (double)(*mcestimate_error_p)(p0[i],p1[i],p2[i]);
             d = s;
           }
           else fprintf(stderr, "McStas: Out of memory for writing %li 'errors' part of double binary file '%s' (mcfile_datablock)\n", (long)abs(m*n*p)*sizeof(double), filename);
@@ -2915,7 +2923,7 @@ static int mcfile_data(FILE *f, struct mcformats_struct format,
 double mcdetector_out(char *cname, double p0, double p1, double p2, char *filename)
 {
   printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
-         cname, p1, cname, mcestimate_error(p0,p1,p2), cname, p0);
+         cname, p1, cname, (*mcestimate_error_p)(p0,p1,p2), cname, p0);
   if(filename && strlen(filename))
     printf(" \"%s\"", filename);
   printf("\n");
