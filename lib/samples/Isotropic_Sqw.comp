@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.87 $
+* Version: $Revision: 1.88 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -267,7 +267,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.87 $
+#define ISOTROPIC_SQW $Revision: 1.88 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1366,9 +1366,9 @@ INITIALIZE
 
   if (d_phi && order != 1) {
     printf("Isotropic_Sqw: %s: Focusing can only apply for single\n"
-           "               scattering. Setting to 4*PI mode.\n",
+           "               scattering. Setting to order=1.\n",
            NAME_CURRENT_COMP);
-    d_phi = 0;
+    order = 1;
   }
 
   VarSqw.w_max     = (wmax > 0 ? wmax : 0);
@@ -2114,7 +2114,7 @@ MCDISPLAY
       line(xmin, ymax, zmin, xmin, ymax, zmax);
       line(xmax, ymax, zmin, xmax, ymax, zmax);
 
-      if (thickness>0) {
+      if (thickness) {
         xmin = -0.5*xwidth+thickness;
         xmax = -xmin;
         ymin = -0.5*yheight+thickness;
