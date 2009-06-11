@@ -11,7 +11,7 @@
 * Written by: Reynald Arnerin
 * Date:    Jun 12, 2008
 * Origin: ILL
-* Release: $Revision: 1.7 $
+* Release: $Revision: 1.8 $
 * Version: McStas X.Y
 *
 * Object File Format intersection library for McStas.
@@ -200,10 +200,16 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
   
   printf("Loading file: %s\n",filename);
   char line[buf];
+  char *ret;
    *vtxIndex=0;
   *vtxSize=0;
   *faceIndex=0;
-  fgets(line,buf , f);// line 1 = "OFF"
+  ret=fgets(line,buf , f);// line 1 = "OFF"
+  if(ret == NULL)
+    {
+      fprintf(stderr, "Error: Can not read 1st line in file %s (interoff/off_getBlocksIndex)\n", filename);
+      exit(1);
+    }
 
   if(strncmp(line,"OFF",3))
   {
@@ -213,9 +219,14 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
 
   *vtxIndex+= strlen(line);
         
-  do
+  do  /* skip comments */
   {
-    fgets(line,buf , f);
+    ret=fgets(line,buf , f);
+    if(ret == NULL)
+    {
+      fprintf(stderr, "Error: Can not read line in file %s (interoff/off_getBlocksIndex)\n", filename);
+      exit(1);
+    }
     *vtxIndex+= strlen(line);
   }
   while(line[0]=='#');
@@ -227,7 +238,12 @@ long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* fac
   int i;
   for(i=0;i<*vtxSize;)
   {                              
-    fgets(line,buf,f);
+    ret=fgets(line,buf,f);
+    if(ret == NULL)
+    {
+      fprintf(stderr, "Error: Can not read vertex %i in file %s (interoff/off_getBlocksIndex)\n", i, filename);
+      exit(1);
+    }
     *faceIndex+=strlen(line); 
     if(line[0]!='#')i++;               
   }
