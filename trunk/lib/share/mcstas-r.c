@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.222 $
+* Version: $Revision: 1.223 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.222 2009-06-10 13:01:44 erkn Exp $
+* $Id: mcstas-r.c,v 1.223 2009-06-11 13:16:52 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.222  2009/06/10 13:01:44  erkn
+* fixed error in cylinder_intersect, for trajectories parallell to the cylinder axis
+*
 * Revision 1.221  2009/06/10 11:45:29  erkn
 * estimate_error is now a function pointer to allow drop-in replacement
 * Useful for nonlinear signals, such as polarization
@@ -985,7 +988,7 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
   }
 
   if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce) at offset=%i, count=%i\n", mpi_node_rank, offset, count);
+    fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce) at offset=%li, count=%i\n", mpi_node_rank, offset, count);
 
   if(mpi_node_rank == root)
     memcpy(rbuf, lrbuf, count*dsize);
@@ -1018,7 +1021,7 @@ int mc_MPI_Send(void *sbuf,
   }
 
   if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%i, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
+    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%li, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
 
   return res;
 }
@@ -1048,7 +1051,7 @@ int mc_MPI_Recv(void *sbuf,
   }
 
   if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%i, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
+    fprintf(stderr, "Warning: node %i: MPI_Recv error (mc_MPI_Recv) at offset=%li, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
 
   return res;
 }
