@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.17 $
+* Version: $Revision: 1.18 $
 * Origin: Risoe
 * Release: McStas 2.0
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
@@ -28,8 +28,8 @@
 * If the chopper is the 1st chopper of the instrument, it sets t time with phase
 * - Only relevant for when using continuous source modules.
 *
-* Example: DiskChopper(radius=0.2, theta_0=10, omega=2500.0, nslit=3, delay=0, isfirst=1) First chopper
-*          DiskChopper(radius=0.2, theta_0=10, omega=2500.0, nslit=3, delay=0, isfirst=0)
+* Example: DiskChopper(radius=0.2, theta_0=10, nu=41.7, nslit=3, delay=0, isfirst=1) First chopper
+*          DiskChopper(radius=0.2, theta_0=10, nu=41.7, nslit=3, delay=0, isfirst=0)
 *
 * %P
 * INPUT PARAMETERS:
@@ -150,7 +150,6 @@ TRACE
  %{
     double toff;
     double yprime;
-    
     PROP_Z0;
     yprime = y+delta_y;
     
@@ -166,8 +165,10 @@ TRACE
     
     if (isfirst)
       {
+        /* all events are put in the transmitted time frame */
         t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + floor(n_pulse*rand01())*Tg;
-        p*=nslit*theta_0/2.0/PI;
+        /* correction: chopper slits transmission opening/full disk */
+        p *= nslit*theta_0/2.0/PI; 
       }
     else 
       {
