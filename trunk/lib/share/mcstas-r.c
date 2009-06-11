@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.223 $
+* Version: $Revision: 1.224 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.223 2009-06-11 13:16:52 farhi Exp $
+* $Id: mcstas-r.c,v 1.224 2009-06-11 16:18:36 erkn Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.223  2009/06/11 13:16:52  farhi
+* Updating reconfigure (following configure)
+* Fixing a few printf format warnings with gcc4
+*
 * Revision 1.222  2009/06/10 13:01:44  erkn
 * fixed error in cylinder_intersect, for trajectories parallell to the cylinder axis
 *
@@ -4464,10 +4468,10 @@ int box_intersect(double *dt_in, double *dt_out,
 
 }
 
-/* cylinder_intersect: compute intersction with a cylinder
+/* cylinder_intersect: compute intersection with a cylinder
  * returns 0 when no intersection is found
  *      or 2/4/8/16 bits depending on intersection,
- *     and resulting times t0 and tdt_out1
+ *     and resulting times t0 and t1
  * Written by: EM,NB,ABA 4.2.98 */
 int
 cylinder_intersect(double *t0, double *t1, double x, double y, double z,
