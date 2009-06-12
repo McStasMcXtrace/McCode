@@ -134,15 +134,16 @@ should be able to compile and/or install McStas using the following steps:
   \texttt{cd mcstas-1.11/}}
 \item{Configure McStas:\\
   \texttt{./configure} or \texttt{./configure --with-nexus --with-cc=gcc-4.2}}
+\item{Build McStas (only in case of the \verb+mcstas-1.11-src.tar.gz+ package):\\
+  \texttt{make}}
+\item{Install McStas (as superuser):\\
+  \texttt{make install}
 \item{Optionally build/install PGPLOT (as superuser - build
     dependencies are pdl, g77, libx11-dev, xserver-xorg-dev, libxt-dev
     on Ubuntu):\\
     \texttt{make install-pgplot \&\& ./configure}
     \label{pg_install}}
-\item{Build McStas (only in case of the \verb+mcstas-1.11-src.tar.gz+ package):\\
-  \texttt{make}}
-\item{Install McStas (as superuser):\\
-  \texttt{make install}
+
 \label{makeinst}}
 \end{enumerate}
 
