@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.88 $
+* Version: $Revision: 1.89 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -224,7 +224,7 @@
 * SCATTERED: order of multiple scattering
 *
 * %Links
-* E. Farhi, V. Hugouvieux, M.R. Johnson, and W. Kob, Journal of Computational Physics 228 (2009) 5251–5261 "Virtual experiments: Combining realistic neutron scattering instrument and sample simulations"
+* E. Farhi, V. Hugouvieux, M.R. Johnson, and W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 "Virtual experiments: Combining realistic neutron scattering instrument and sample simulations"
 * %L
 * Hugouvieux V, Farhi E, Johnson MR, Physica B, 350 (2004) 151 "Virtual neutron scattering experiments"
 * %L
@@ -267,7 +267,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.88 $
+#define ISOTROPIC_SQW $Revision: 1.89 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1602,10 +1602,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (!flag && mc_scatt > 0 && (mc_scatt >= 1 || rand01() < mc_scatt)) { /* Interaction neutron/sample */
       p_mult *= ws; /* Update weight ; account for absorption and retain scattered fraction */
       /* we have chosen portion mc_scatt of beam instead of p_scatt, so we compensate */
+      if (!mc_scatt) ABSORB;
       p_mult *= fabs(p_scatt/mc_scatt); /* lower than 1 */
     } else {
       flag = 1; /* Transmission : no interaction neutron/sample */
       if (!VarSqw.type) VarSqw.type = 't';
+      if (!mc_trans) ABSORB;
       p_mult *= fabs(p_trans/mc_trans);  /* attenuate beam by portion which is scattered (and left along) */
     }
 
