@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.224 $
+* Version: $Revision: 1.225 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.224 2009-06-11 16:18:36 erkn Exp $
+* $Id: mcstas-r.c,v 1.225 2009-06-12 13:48:32 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.224  2009/06/11 16:18:36  erkn
+* typos fixed
+*
 * Revision 1.223  2009/06/11 13:16:52  farhi
 * Updating reconfigure (following configure)
 * Fixing a few printf format warnings with gcc4
@@ -2938,6 +2941,8 @@ double mcdetector_out(char *cname, double p0, double p1, double p2, char *filena
   if(filename && strlen(filename))
     printf(" \"%s\"", filename);
   printf("\n");
+  if (isnan(p0) || isnan(p1) || isnan(p2)) printf("WARNING: Nan detected in component %s\n", cname);
+  if (isinf(p0) || isinf(p1) || isinf(p2)) printf("WARNING: INF detected in component %s\n", cname);
   return(p0);
 }
 
@@ -2997,6 +3002,13 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 
     /* slaves are done */
     if(mpi_node_rank != mpi_node_root) return 0;
+    
+    if (!p0) {  /* additive signal must be then divided by the number of nodes */
+      for (i=0; i<abs(m*n*p); i++) {
+        p1[i] /= mpi_node_count;
+        if (p2) p2[i] /= mpi_node_count;
+      }
+    }
   }
 #endif /* USE_MPI */
 

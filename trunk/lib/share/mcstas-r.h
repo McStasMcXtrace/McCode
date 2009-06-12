@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.109 $
+* Version: $Revision: 1.110 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,13 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.109 2009-05-14 22:15:31 farhi Exp $
+* $Id: mcstas-r.h,v 1.110 2009-06-12 13:48:32 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.109  2009/05/14 22:15:31  farhi
+*       Hopefuly fix last GCC 4 'Invalid %N$ use detected' issues by using custom made
+*       pfprintf and other minor similar fixes.
+*
 *       Revision 1.108  2009/01/23 14:01:12  farhi
 *       Back to smaller buffer size for MPI exchange, to ensure that it works on
 *       *most* machines.
@@ -309,7 +313,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.109 $"
+#define MCSTAS_R_H "$Revision: 1.110 $"
 
 #include <math.h>
 #include <string.h>
@@ -677,6 +681,7 @@ char *mcfull_file(char *name, char *ext);
     mcnly += mcnlvy*(dt); \
     mcnlz += mcnlvz*(dt); \
     mcnlt += (dt); \
+    if (isnan(p) || isinf(p)) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
   } while(0)
 
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with acceleration */

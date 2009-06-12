@@ -12,11 +12,11 @@
 * Date: Jul  1, 1997
 * Origin: Risoe
 * Release: McStas X.Y.Z
-* Version: $Revision: 1.83 $
+* Version: $Revision: 1.84 $
 *
 * Bison parser for instrument definition files.
 *
-* $Id: instrument.y,v 1.83 2009-04-16 13:12:38 farhi Exp $
+* $Id: instrument.y,v 1.84 2009-06-12 13:48:32 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1894,8 +1894,9 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       symtab_iterate_end(siter2);
       print_error("\n");
       if (strlen(misspelled)) 
-      	fprintf(stderr, "Info:    '%s' parameter name used in instrument matches component %s\n"
-                        "         parameter '%s' from library but may be misspelled. Check component instance.\n", 
+      	fprintf(stderr, "Info:    '%s' parameter name used in instrument matches\n"
+                        "         component %s parameter '%s' from library but\n"
+                        "         may be misspelled. Check component instance.\n", 
                         entry->name, comp->type, misspelled);
     }
   }
