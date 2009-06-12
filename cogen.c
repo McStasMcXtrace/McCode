@@ -12,11 +12,14 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.86 $
+* Version: $Revision: 1.87 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.86  2009/04/16 13:11:03  farhi
+* Corrected bug for SPLIT on 'passive' components.
+*
 * Revision 1.85  2009/02/20 16:17:54  farhi
 * Fixed warnings and a few bugs detected with GCC 4.3.
 *
@@ -209,7 +212,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.86 2009-04-16 13:11:03 farhi Exp $
+* $Id: cogen.c,v 1.87 2009-06-12 13:48:32 farhi Exp $
 *
 *******************************************************************************/
 
@@ -1539,7 +1542,7 @@ cogen_finally(struct instr_def *instr)
     coutf("    if (%sAbsorbProp[%i]) "
       "fprintf(stderr, "
         "\"Warning: %%g events were removed in Component[%i] %s\\n\"\n"
-        "\"         (negative time, miss next components, rounding errors).\\n\""
+        "\"         (negative time, miss next components, rounding errors, Nan, Inf).\\n\""
         ", %sAbsorbProp[%i]);"
     , ID_PRE, comp->index, comp->index, comp->name, ID_PRE, comp->index);
   }
