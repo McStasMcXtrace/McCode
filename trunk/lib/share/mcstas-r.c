@@ -11,16 +11,20 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.225 $
+* Version: $Revision: 1.226 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.225 2009-06-12 13:48:32 farhi Exp $
+* $Id: mcstas-r.c,v 1.226 2009-06-16 12:34:02 erkn Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.225  2009/06/12 13:48:32  farhi
+* mcstas-r: nan and inf detection in PROP and detector output
+* mcstas-r: MPI writing files when p0==0. Now divide by MPI_nodes.
+*
 * Revision 1.224  2009/06/11 16:18:36  erkn
 * typos fixed
 *
@@ -4619,7 +4623,7 @@ plane_intersect(double *t, double x, double y, double z,
   double s;
   if (fabs(s=scalar_prod(nx,ny,nz,vx,vy,vz))<FLT_EPSILON) return 0;
   *t = - scalar_prod(nx,ny,nz,x-wx,y-wy,z-wz)/s;
-  if (t<0) return -1;
+  if (*t<0) return -1;
   else return 1;
 }
 
