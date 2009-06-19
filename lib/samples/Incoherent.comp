@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: Risoe
 * Release: McStas 1.9
 * Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
@@ -331,10 +331,12 @@ TRACE
       /* MC choice: Interaction or transmission ? */
       if (!flag && mc_scatt > 0 && (mc_scatt >= 1 || (rand01()) < mc_scatt)) { /* Interaction neutron/sample */
         p_mult *= ws; /* Update weight ; account for absorption and retain scattered fraction */
+        if (!mc_scatt) ABSORB;
         /* we have chosen portion mc_scatt of beam instead of p_scatt, so we compensate */
         p_mult *= fabs(p_scatt/mc_scatt); /* lower than 1 */
       } else {
         flag = 1; /* Transmission : no interaction neutron/sample */
+        if (!mc_trans) ABSORB;
         p_mult *= fabs(p_trans/mc_trans);  /* attenuate beam by portion which is scattered (and left along) */
       }
 
