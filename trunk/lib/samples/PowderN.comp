@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.52 $
+* Version: $Revision: 1.53 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -105,7 +105,7 @@
 *
 *
 * COMPONENT Cryo = PowderN(reflections="Al.laz", radius = 0.01, thickness = 0.001,
-*                          concentric = 1)
+*                          concentric = 1, p_interact=0.1)
 * AT (0,0,0) RELATIVE Somewhere
 *
 * COMPONENT Sample = some_other_component(with geometry FULLY enclosed in the hollow)
@@ -138,6 +138,7 @@
 *             (see Description). [no quotes]
 * p_inc:    Fraction of incoherently scattered neutron rays [1]
 * p_transmit: Fraction of transmitted (only attenuated) neutron rays [1]
+* p_interact: Fraction of events interacting with sample, e.g. 1-p_transmit-p_inc [1]
 * concentric: Indicate that this component has a hollow geometry
 *               and may contain other components. It should then be duplicated 
 *               after the inside part (only for box, cylinder, sphere) [1] 
@@ -177,7 +178,7 @@ DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (string reflections=0, format=Undefined, string geometry=0)
 SETTING PARAMETERS (radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
                     pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, p_inc=0.1, p_transmit=0.1,
-                    DW=0, nb_atoms=1, d_phi=0, 
+                    DW=0, nb_atoms=1, d_phi=0, p_interact=0,
                     concentric=0, density=0, weight=0, barns=1)
 OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
   my_s_v2_sum, my_a_v, my_inc, q_v, w_v, columns, 
@@ -496,6 +497,10 @@ INITIALIZE
   
   if (!yheight_i) {
     yheight_i = yheight;
+  }
+  if (p_interact) {
+    if (p_interact < p_inc) { double tmp=p_interact; p_interact=p_inc; p_inc=tmp; }
+    p_transmit = 1-p_interact-p_inc;
   }
   
   if (p_inc + p_transmit > 1) {
