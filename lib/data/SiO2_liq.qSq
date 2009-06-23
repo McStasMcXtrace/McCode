@@ -7,7 +7,7 @@
 # sigma_abs 0.17    absorption scattering cross section in [barn]
 # density   2.2     in [g/cm^3]
 # weight    60.08   in [g/mol]
-# T_m       846     melting temperature in [K]
+# T_m       1920    melting temperature in [K]
 # T_b       2503    boiling temperature in [K]
 #
 # Format parameters: Q	S(Q)
