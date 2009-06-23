@@ -20,7 +20,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, CVS_081127, www.mcstas.org)
-AC_REVISION($Revision: 1.64 $)
+AC_REVISION($Revision: 1.65 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
@@ -58,7 +58,7 @@ AC_PATH_PROGS(SCP,    [scp pscp /usr/local/bin/scp], no)
 AC_PATH_PROGS(DASH,   [dash /bin/dash /usr/bin/dash], no)
 AC_PATH_PROGS(MPIRUN, [mpirun /usr/local/bin/mpirun], no)
 AC_PATH_PROGS(MPICC,  [mpicc hcc mpxlc_r mpxlc mpcc cmpicc /usr/local/bin/mpicc], no)
-AC_PATH_PROGS(BROWSER,[firefox mozilla-firefox mozilla gnome-open konqueror epiphany galeon netscape /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
+AC_PATH_PROGS(BROWSER,[gnome-open firefox mozilla-firefox mozilla konqueror epiphany galeon netscape /Applications/Safari.app/Contents/MacOS/Safari /Applications/Firefox.app/Contents/MacOS/firefox], no)
 AC_PATH_PROGS(EDITOR, [gedit nedit kate xemacs gnome-open xedit vim notepad wordpad], no)
 AC_PATH_PROGS(VRMLVIEW, [octagaplayer freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
 AC_PATH_PROGS(WGET, [wget], no)
