@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.53 $
+* Version: $Revision: 1.54 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -413,8 +413,8 @@ DECLARE
 %{
   struct line_info_struct line_info;
   int Nq=0;
-  double my_s_v2_sum;
-  double my_a_v, my_inc;
+  double my_s_v2_sum=0;
+  double my_a_v=0, my_inc=0;
   double *w_v,*q_v, *my_s_v2;
   int    columns[8] = format;
   double XsectionFactor;
@@ -588,7 +588,7 @@ TRACE
   char   intersect=0;
   char   intersecti=0;
   
-  if (line_info.V_0) {
+  if (line_info.V_0 && (Nq || my_inc)) {
     if (line_info.shape == 1) {
       intersect  = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
       intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
