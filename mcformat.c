@@ -12,7 +12,7 @@
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
 * Release: McStas CVS_090504
-* Version: $Revision: 1.35 $
+* Version: $Revision: 1.36 $
 *
 * A McStas format converter to merge/convert data files.
 *
@@ -41,7 +41,7 @@
 *******************************************************************************/
 
 #ifndef MCFORMAT
-#define MCFORMAT  "$Revision: 1.35 $" /* avoid memory.c to define Pool functions */
+#define MCFORMAT  "$Revision: 1.36 $" /* avoid memory.c to define Pool functions */
 #endif
 
 #ifndef PACKAGE_VERSION
@@ -965,9 +965,9 @@ static void mcformat_usedir(char *dir)
       }
     } else if (errno_mkdir == EEXIST) {
       fprintf(stderr, "mkdir: EEXIST pathname %s already exists (not necessarily as a directory).\n", dir);
-      if (!mcforcemode) {
+      if (!mcforcemode && mcscanmode != 2) {
         fprintf(stderr, "Error: unable to create directory '%s' (mcformat_usedir)\n", dir);
-        fprintf(stderr, "(Maybe the directory already exists? Use --force or --test before -d %s to override)\n", dir);
+        fprintf(stderr, "(Maybe the directory already exists? Use --force, --scan-only or --test before -d %s to override)\n", dir);
         exit(1);
       }
       fprintf(stderr, "mcformat: Warning: re-using output directory '%s'.\n", dir);
@@ -1636,20 +1636,21 @@ void mcformat_scan_compare(int nb)
 int mcformat_merge_output(int nb)
 {
   int i;
-  if (mcmergemode || mcscanmode == 1) {
-    /* output files for non empty elements */
-    for (i=0; i<nb; i++) {
-      if (mcformat_output(Files_to_Merge[i])) {
-        if (mcverbose) {
-          printf("mcformat: merging/scanning %s ", Files_to_Merge[i].outputname);
-          printf("into %s%s ",
-            Files_to_Merge[i].mcdirname ? Files_to_Merge[i].mcdirname : ".",
-            Files_to_Merge[i].mcdirname ? MC_PATHSEP_S : "");
-          if (mctestmode) printf(" (--test mode)\n"); else printf("\n");
-        }
+  char mctestmode_sav=mctestmode;
+  if (mcscanmode == 2) mctestmode=1; /* scan only will skip writing for non scan files */
+  /* output files for non empty elements */
+  for (i=0; i<nb; i++) {
+    if (mcformat_output(Files_to_Merge[i])) {
+      if (mcverbose) {
+        printf("mcformat: merging/scanning %s ", Files_to_Merge[i].outputname);
+        printf("into %s%s ",
+          Files_to_Merge[i].mcdirname ? Files_to_Merge[i].mcdirname : ".",
+          Files_to_Merge[i].mcdirname ? MC_PATHSEP_S : "");
+        if (mctestmode) printf(" (--test or --scan-only mode)\n"); else printf("\n");
       }
     }
   }
+  mctestmode = mctestmode_sav;
 
   if (mcscanmode) {
   /* build and output scans (if any) for non empty elements of same index */
@@ -1831,7 +1832,7 @@ int main(int argc, char *argv[])
   mcoutputdir = mcdirname; /* base output dir */
 
   if (mcscanmode && mcverbose && !strstr(mcformat.Name, "McStas"))
-    printf("Warning: Scan gathering mode is only compatible whe using --format=McStas\n");
+    printf("Warning: Scan gathering mode is only compatible when using --format=McStas\n");
 
   /* count the number of files to store */
   for(j = 0; j < files_to_convert_NB; j++) {
