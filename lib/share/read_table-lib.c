@@ -12,7 +12,7 @@
 * Date: Aug 28, 2002
 * Origin: ILL
 * Release: McStas CVS_090504
-* Version: $Revision: 1.41 $
+* Version: $Revision: 1.42 $
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
@@ -21,9 +21,13 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-* $Id: read_table-lib.c,v 1.41 2009-05-14 22:15:31 farhi Exp $
+* $Id: read_table-lib.c,v 1.42 2009-06-23 11:09:24 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.41  2009/05/14 22:15:31  farhi
+* Hopefuly fix last GCC 4 'Invalid %N$ use detected' issues by using custom made
+* pfprintf and other minor similar fixes.
+*
 * Revision 1.40  2008/10/21 15:19:19  farhi
 * use common CHAR_BUFFER_LENGTH = 1024
 *
@@ -202,16 +206,36 @@
     mc_rt_hfile = fopen(mc_rt_File, "r");
     if(!mc_rt_hfile)
     {
-      char mc_rt_path[256];
-      char mc_rt_dir[256];
+      char mc_rt_path[1024];
+      char mc_rt_dir[1024];
 
-      if (!mc_rt_hfile)
+      if (!mc_rt_hfile) /* search in instrument location */
+      {
+        char *path_pos   = NULL;
+        /* extract path: searches for last file separator */
+        path_pos    = strrchr(mcinstrument_source, MC_PATHSEP_C);  /* last PATHSEP */
+        if (path_pos) {
+          long path_length = path_pos +1 - mcinstrument_source;  /* from start to path+sep */
+          if (path_length) {
+            strncpy(mc_rt_dir, mcinstrument_source, path_length);
+            sprintf(mc_rt_path, "%s%c%s", mc_rt_dir, MC_PATHSEP_C, mc_rt_File);
+            mc_rt_hfile = fopen(mc_rt_path, "r");
+          }
+        }
+      }
+      if (!mc_rt_hfile) /* search in HOME */
+      {
+        strcpy(mc_rt_dir, getenv("HOME") ? getenv("HOME") : ".");
+        sprintf(mc_rt_path, "%s%c%s", mc_rt_dir, MC_PATHSEP_C, mc_rt_File);
+        mc_rt_hfile = fopen(mc_rt_path, "r");
+      }
+      if (!mc_rt_hfile) /* search in MCSTAS data */
       {
         strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
         mc_rt_hfile = fopen(mc_rt_path, "r");
       }
-      if (!mc_rt_hfile)
+      if (!mc_rt_hfile) /* search in MVCSTAS/contrib */
       {
         strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, mc_rt_File);
@@ -219,9 +243,10 @@
       }
       if(!mc_rt_hfile)
       {
-        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read)\n", mc_rt_File);
+        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", mc_rt_File);
         return (-1);
-      }
+      } else
+        fprintf(stderr, "Opening input file '%s' (Table_Read)\n", mc_rt_path);
     }
     stat(mc_rt_File,&mc_rt_stfile); mc_rt_filesize = mc_rt_stfile.st_size;
     if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
@@ -271,16 +296,36 @@
     mc_rt_hfile = fopen(mc_rt_File, "r");
     if(!mc_rt_hfile)
     {
-      char mc_rt_path[256];
-      char mc_rt_dir[256];
+      char mc_rt_path[1024];
+      char mc_rt_dir[1024];
 
-      if (!mc_rt_hfile)
+      if (!mc_rt_hfile) /* search in instrument location */
+      {
+        char *path_pos   = NULL;
+        /* extract path: searches for last file separator */
+        path_pos    = strrchr(mcinstrument_source, MC_PATHSEP_C);  /* last PATHSEP */
+        if (path_pos) {
+          long path_length = path_pos +1 - mcinstrument_source;  /* from start to path+sep */
+          if (path_length) {
+            strncpy(mc_rt_dir, mcinstrument_source, path_length);
+            sprintf(mc_rt_path, "%s%c%s", mc_rt_dir, MC_PATHSEP_C, mc_rt_File);
+            mc_rt_hfile = fopen(mc_rt_path, "r");
+          }
+        }
+      }
+      if (!mc_rt_hfile) /* search in HOME */
+      {
+        strcpy(mc_rt_dir, getenv("HOME") ? getenv("HOME") : ".");
+        sprintf(mc_rt_path, "%s%c%s", mc_rt_dir, MC_PATHSEP_C, mc_rt_File);
+        mc_rt_hfile = fopen(mc_rt_path, "r");
+      }
+      if (!mc_rt_hfile) /* search in MCSTAS data */
       {
         strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
         mc_rt_hfile = fopen(mc_rt_path, "r");
       }
-      if (!mc_rt_hfile)
+      if (!mc_rt_hfile) /* search in MVCSTAS/contrib */
       {
         strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
         sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, mc_rt_File);
@@ -290,7 +335,8 @@
       {
         fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", mc_rt_File);
         return (-1);
-      }
+      } else
+        fprintf(stderr, "Opening input file '%s' (Table_Read)\n", mc_rt_path);
     }
     stat(mc_rt_File,&mc_rt_stfile);
     mc_rt_filesize = mc_rt_stfile.st_size;
