@@ -5,3 +5,4 @@ cd /usr/local/lib/mcstas
 mcdoc --text
 cd /usr/local/lib/mcstas/tools/perl/
 ./mcstas_reconfigure
+cp /usr/local/lib/mcstas/tools/McStas.desktop /usr/share/applications/

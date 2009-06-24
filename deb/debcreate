@@ -17,16 +17,15 @@ tar xzf /root/mcstas-${RELEASE}-src.tar.gz
 mv mcstas-${RELEASE} mcstas-${RELEASE}-srcdir
 cd mcstas-${RELEASE}-srcdir
 
+make
+make install
+
 ./configure
 
 make install-pgplot
 
 ./configure
 
-make pgplot
-
-make
-make install
 cd /build
 rm -rf /usr/local/lib/mcstas.*
 
