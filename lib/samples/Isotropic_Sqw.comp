@@ -8,7 +8,7 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.89 $
+* Version: $Revision: 1.90 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
@@ -267,7 +267,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.89 $
+#define ISOTROPIC_SQW $Revision: 1.90 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -1060,21 +1060,20 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
     Sqw_Data->SW[j].omega = w;
     Sqw_Data->SW[j].value = local_val; /* S(w) */
-    val                  += local_val; /* total intensity */
+    val                  += local_val;
+    /* compute cumulated probability */
+    Sqw_Data->SW[j].cumul_proba = local_val;
+    if (j) Sqw_Data->SW[j].cumul_proba += Sqw_Data->SW[j-1].cumul_proba;
   }
   if (!val) {
     printf("Isotropic_Sqw: %s: Total S(q,w) intensity is NULL.\n"
-           "ERROR          Exiting.\n",
-      Sqw->compname);
+           "ERROR          Exiting.\n", Sqw->compname);
     return(NULL);
   }
-
-  /* compute normalized cumulated probability */
-  for (j=0; j < (Sqw_Data->nb_w) ; j++) {
-    Sqw_Data->SW[j].cumul_proba = Sqw_Data->SW[j].value/val;
-    /* cumulated probabilities for the random choice */
-    if (j) Sqw_Data->SW[j].cumul_proba += Sqw_Data->SW[j-1].cumul_proba;
-  }
+  /* normalize Pw distribution to 0:1 range */
+  for (j=0; j < (Sqw_Data->nb_w) ; 
+    Sqw_Data->SW[j++].cumul_proba /= Sqw_Data->SW[Sqw_Data->nb_w-1].cumul_proba
+  );
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated normalized SW[%li] in range [0:%g]\n",
       Sqw->compname, Sqw_Data->nb_w, Sqw_Data->SW[Sqw_Data->nb_w-1].cumul_proba);
@@ -1105,20 +1104,15 @@ struct Sqw_Data_struct *Sqw_readfile(
       q  = Table_Index(Table_Array[0], 0, i);
       Sqw_Data->SQW[j][i].Q     = q;
       Sqw_Data->SQW[j][i].value = Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha; /* S(q,w) */
-    }
-    for (i=0; i < (Sqw_Data->nb_q) ; i++) {
-      Sqw_Data->SQW[j][i].cumul_proba = Sqw_Data->SQW[j][i].value/Sqw_Data->SW[j].value; 
-      /* compute cumulated probability */
+      
+      /* compute cumulated probability and take into account Jacobian with additional 'q' factor */
+      Sqw_Data->SQW[j][i].cumul_proba = q*Sqw_Data->SQW[j][i].value; 
       if (i) Sqw_Data->SQW[j][i].cumul_proba += Sqw_Data->SQW[j][i-1].cumul_proba;
     }
-    /* modify cumulated S(q,w) distribution to include the Jacobian dOmega/dq */
-    for (i=0; i < (Sqw_Data->nb_q) ; i++) {
-      q  = Table_Index(Table_Array[0], 0, i);
-      Sqw_Data->SQW[j][i].cumul_proba *= q;
-    }
-    /* normalize distribution to 0:1 range */
+    /* normalize P(q|w) distribution to 0:1 range */
     for (i=0; i < (Sqw_Data->nb_q) ; 
-    	Sqw_Data->SQW[j][i++].cumul_proba /= Sqw_Data->SQW[j][Sqw_Data->nb_q-1].cumul_proba);
+    	Sqw_Data->SQW[j][i++].cumul_proba /= Sqw_Data->SQW[j][Sqw_Data->nb_q-1].cumul_proba
+    );
     
   }
   if (Sqw->verbose_output > 1)
