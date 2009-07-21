@@ -3,6 +3,7 @@
 # Data by V. Hugouvieux, PhD (2004), classical MD with 520 atoms.
 # potential by Kahl, Phys. Rev. A 46 (1992) 3255.
 # Sqw data obtained using nMoldyn
+# E. Farhi, V. Hugouvieux, M.R. Johnson, W. Kob, Journal of Computational Physics 228 (2009) 5251–5261
 #
 # Physical parameters:
 # V_rho       0.0103 atom density per Angs^3
