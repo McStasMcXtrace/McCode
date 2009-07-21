@@ -16,7 +16,7 @@
 # v_sound_l 4760    velocity of longitudinal sound in [m/s]
 # v_sound_t 2325    velocity of transversal sound in [m/s]
 # T_m       1357.8  melting temperature in [K]
-# T_b       3200    boiling temperature in [K]
+# T_b       2840    boiling temperature in [K]
 # At_number 29      atomic number Z
 # lattice_a 3.61505 lattice parameter a in [Angs]
 #

@@ -580,7 +580,7 @@ sub menu_save_config {
     $initdir = $MCSTAS::perl_dir
   }
   my $file = $w->getSaveFile(-defaultextension => ".perl",
-                                -title => "Select instrument file name",
+                                -title => "Select preference file name",
                                 -initialdir => $initdir,
                                 -initialfile => "mcstas_config.perl");
   if ($file) { save_config($w,$file); }

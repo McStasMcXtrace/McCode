@@ -2,6 +2,7 @@
 # liquid Ge: coherent part, atomic number 32
 # Data by V. Hugouvieux, PhD (2004), ab-initio MD using VASP
 # pseudopotential by Vanderbilt, CGA with PW91 exchange correlation.
+# Hugouvieux V, Farhi E, Johnson MR, et al., , PRB 75 (2007) 104208
 #
 # Physical parameters:
 # V_rho       0.0441 atom density per Angs^3
@@ -10,8 +11,10 @@
 # sigma_abs   2.20   absorption scattering cross section in [barn]
 # sigma_coh   8.42   coherent scattering cross section in [barn]
 # sigma_inc   0.18   incoherent scattering cross section in [barn]
-# Temperature 1400   in [K]
+# Temperature 1350   in [K]
 # v_sound     2430   in [m/s]
+# D           1.30e-4 diffusion coefficient from the MD simulation in [cm^2/s]
+# v_sound     2700   velocity of sound from the MD simulation in [m/s]
 #
 # q axis values
 # vector of m values in Angstroem-1

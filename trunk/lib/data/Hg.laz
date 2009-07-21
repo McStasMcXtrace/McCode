@@ -9,7 +9,7 @@
 # sigma_coh 20.24   coherent scattering cross section in [barn]
 # sigma_inc 6.6     incoherent scattering cross section in [barn]
 # sigma_abs 372.3   absorption scattering cross section in [barn]
-# density   13.53   in [g/cm^3]
+# density   14.24   in [g/cm^3]
 # weight    200.6   in [g/mol]
 # nb_atoms  2       in [atoms/unit cell]
 # v_sound   1407    in [m/s]
