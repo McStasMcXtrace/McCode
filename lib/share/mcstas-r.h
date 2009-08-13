@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.111 $
+* Version: $Revision: 1.112 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,28 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.111 2009-08-13 11:39:41 pkwi Exp $
+* $Id: mcstas-r.h,v 1.112 2009-08-13 14:52:01 farhi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.111  2009/08/13 11:39:41  pkwi
+*       Commits from Morten Siebuhr after EK and PW code review.
+*
+*       A few test instruments have prolonged compile time, but more things are in the
+*       pipe that should remedy this.
+*
+*         Changes:
+*
+*              * Compute-intensive #defines -> functions
+*              * Change memcpy() to just copy data for small values - somewhat
+*                faster.
+*              * Correct a bug in coords_mirror(), as previously discussed on
+*                this list.
+*              * Remove unneeded parameters to mccoordschange() - improves speed
+*                slightly.
+*
+*         The changes are mostly in mcstas-r.c, mcstas-r.h and two lines in
+*         cogen.c.
+*
 *       Revision 1.110  2009/06/12 13:48:32  farhi
 *       mcstas-r: nan and inf detection in PROP and detector output
 *       mcstas-r: MPI writing files when p0==0. Now divide by MPI_nodes.
@@ -317,7 +336,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.111 $"
+#define MCSTAS_R_H "$Revision: 1.112 $"
 
 #include <math.h>
 #include <string.h>
@@ -528,7 +547,6 @@ static int mpi_node_count;
 void   mcset_ncount(double count);
 double mcget_ncount(void);
 double mcget_run_num(void);
-double mcdetector_out(char *cname, double p0, double p1, double p2, char *filename);
 double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
 double mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *xvar, double x1, double x2, int n,
@@ -542,12 +560,6 @@ double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
                   double x1, double x2, double y1, double y2, double z1, double z2, int m,
                   int n, int p, double *p0, double *p1, double *p2, char *f,
                   char *c, Coords pos);
-void   mcinfo_simulation(FILE *f, struct mcformats_struct format,
-  char *pre, char *name); /* used to add sim parameters (e.g. in Res_monitor) */
-void   mcsiminfo_init(FILE *f);
-void   mcsiminfo_close(void);
-char *mcfull_file(char *name, char *ext);
-
 #ifndef FLT_MAX
 #define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
 #endif
@@ -721,7 +733,7 @@ char *mcfull_file(char *name, char *ext);
     double mc_dt, mc_gx, mc_gy, mc_gz; \
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
-    mc_ret = solve_2nd_order(&mc_dt, -mc_gz/2, -mcnlvz, -mcnlz); \
+    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gz/2, -mcnlvz, -mcnlz); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
     else { if (mcallowbackprop ==0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Z0; \
@@ -745,7 +757,7 @@ char *mcfull_file(char *name, char *ext);
     double mc_dt, mc_gx, mc_gy, mc_gz; \
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
-    mc_ret = solve_2nd_order(&mc_dt, -mc_gx/2, -mcnlvx, -mcnlx); \
+    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gx/2, -mcnlvx, -mcnlx); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
     else { if (mcallowbackprop ==0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_X0; \
@@ -769,7 +781,7 @@ char *mcfull_file(char *name, char *ext);
     double mc_dt, mc_gx, mc_gy, mc_gz; \
     mcLocG = rot_apply(ROT_A_CURRENT_COMP, coords_set(0,-GRAVITY,0)); \
     coords_get(mcLocG, &mc_gx, &mc_gy, &mc_gz); \
-    mc_ret = solve_2nd_order(&mc_dt, -mc_gy/2, -mcnlvy, -mcnly); \
+    mc_ret = solve_2nd_order(&mc_dt, NULL, -mc_gy/2, -mcnlvy, -mcnly); \
     if (mc_ret && mc_dt>=0) PROP_GRAV_DT(mc_dt, mc_gx, mc_gy, mc_gz); \
     else { if (mcallowbackprop ==0) {mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }}; }\
     else mcPROP_Y0; \
@@ -988,8 +1000,8 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
                  double vx, double vy, double vz, double r);
-/* ADD: E. Farhi, Aug 6th, 2001 solve_2nd_order */
-int solve_2nd_order(double *Idt,
+                 
+int solve_2nd_order(double *t1, double *t2,
     double A,  double B,  double C);
 void randvec_target_circle(double *xo, double *yo, double *zo,
     double *solid_angle, double xi, double yi, double zi, double radius);
@@ -1002,7 +1014,6 @@ void randvec_target_rect_real(double *xo, double *yo, double *zo,
     double *solid_angle,
 	       double xi, double yi, double zi, double height, double width, Rotation A,
 			 double lx, double ly, double lz, int order);
-void extend_list(int count, void **list, int *size, size_t elemsize);
 
 int mcstas_main(int argc, char *argv[]);
 
