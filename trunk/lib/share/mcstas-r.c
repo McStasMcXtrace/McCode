@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.226 $
+* Version: $Revision: 1.227 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.226 2009-06-16 12:34:02 erkn Exp $
+* $Id: mcstas-r.c,v 1.227 2009-08-13 11:39:40 pkwi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.226  2009/06/16 12:34:02  erkn
+* fixed bug in planer_intersect
+*
 * Revision 1.225  2009/06/12 13:48:32  farhi
 * mcstas-r: nan and inf detection in PROP and detector output
 * mcstas-r: MPI writing files when p0==0. Now divide by MPI_nodes.
@@ -3662,14 +3665,18 @@ Coords coords_xp(Coords b, Coords c) {
 
 /* coords_mirror: Mirror a in plane (through the origin) defined by normal n*/
 Coords coords_mirror(Coords a, Coords n) {
-  double t;
+  double t = scalar_prod(n.x, n.y, n.z, n.x, n.y, n.z);
   Coords b;
-  if ((t=scalar_prod(n.x,n.y,n.z, n.x,n.y,n.z))!=1)
-    n.x/=sqrt(t);n.y/=sqrt(t);n.z/=sqrt(t);
-  t=scalar_prod(a.x,a.y,a.z,n.x,n.y,n.z);
-  b.x=a.x-2*t*n.x;
-  b.y=a.y-2*t*n.y;
-  b.z=a.z-2*t*n.z;
+  if (t!=1) {
+    t = sqrt(t);
+    n.x /= t;
+    n.y /= t;
+    n.z /= t;
+  }
+  t=scalar_prod(a.x, a.y, a.z, n.x, n.y, n.z);
+  b.x = a.x-2*t*n.x;
+  b.y = a.y-2*t*n.y;
+  b.z = a.z-2*t*n.z;
   return b;
 }
 
@@ -3758,12 +3765,12 @@ rot_test_identity(Rotation t)
 void
 rot_mul(Rotation t1, Rotation t2, Rotation t3)
 {
-  int i,j;
   if (rot_test_identity(t1)) {
-    memcpy(t3, t2, 9 * sizeof (double));
+    rot_copy(t3, t2);
   } else if (rot_test_identity(t2)) {
-    memcpy(t3, t1, 9 * sizeof (double));
+    rot_copy(t3, t1);
   } else {
+    int i,j;
     for(i = 0; i < 3; i++)
       for(j = 0; j < 3; j++)
 	t3[i][j] = t1[i][0]*t2[0][j] + t1[i][1]*t2[1][j] + t1[i][2]*t2[2][j];
@@ -3776,7 +3783,10 @@ rot_mul(Rotation t1, Rotation t2, Rotation t3)
 void
 rot_copy(Rotation dest, Rotation src)
 {
-	memcpy(dest, src, 9 * sizeof (double));
+  int i,j;
+  for(i = 0; i < 3; i++)
+    for(j = 0; j < 3; j++)
+      dest[i][j] = src[i][j];
 }
 
 /*******************************************************************************
@@ -3813,13 +3823,74 @@ rot_apply(Rotation t, Coords a)
   }
 }
 
+/**
+ * Pretty-printing of rotation matrices.
+ */
+void rotation_print(Rotation rot) {
+	printf("[ %4.2f %4.2f %4.2f ]\n",
+			rot[0][0], rot[0][1], rot[0][2]);
+	printf("[ %4.2f %4.2f %4.2f ]\n",
+			rot[1][0], rot[1][1], rot[1][2]);
+	printf("[ %4.2f %4.2f %4.2f ]\n\n",
+			rot[2][0], rot[2][1], rot[2][2]);
+}
+
+/**
+ * Vector product.
+ */
+inline void vec_prod_func(double *x, double *y, double *z,
+		double x1, double y1, double z1,
+		double x2, double y2, double z2) {
+    *x = (y1)*(z2) - (y2)*(z1);
+    *y = (z1)*(x2) - (z2)*(x1);
+    *z = (x1)*(y2) - (x2)*(y1);
+}
+
+/**
+ * Do vector product of a and b, saved into ret.
+ */
+void coord_vector_product(Coords* ret, Coords* a, Coords* b) {
+	ret->x = (a->y * b->z) - (b->y * a->z);
+	ret->y = (a->z * b->x) - (b->z * a->x);
+	ret->z = (a->x * b->y) - (b->x * a->y);
+}
+
+/**
+ * Scalar product
+ */
+inline double scalar_prod(
+		double x1, double y1, double z1,
+		double x2, double y2, double z2) {
+	return ((x1 * x2) + (y1 * y2) + (z1 * z2));
+}
+
+/**
+ * Scalar products for coords.
+ */
+double coord_scalar_product(Coords* a, Coords* b) {
+	return ((a->x * b->x) + (a->y * b->y) + (a->z * b->z));
+}
+
+inline void coord_norm(Coords* c) {
+	double temp = (c->x * c->x) + 
+		(c->y * c->y) + (c->z * c->z);
+
+	// Skip if we will end dividing by zero
+	if (temp == 0) return;
+
+	temp = sqrt(temp);
+
+	c->x /= temp;
+	c->y /= temp;
+	c->z /= temp;
+}
+
 /*******************************************************************************
 * mccoordschange: applies rotation to (x y z) and (vx vy vz). Spin unchanged
 *******************************************************************************/
 void
 mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-               double *vx, double *vy, double *vz, double *time,
-               double *s1, double *s2)
+               double *vx, double *vy, double *vz)
 {
   Coords b, c;
 
@@ -4307,11 +4378,51 @@ randnorm(void)
   return X;
 }
 
-/* generate a random number from -1 to 1 with triangle distribution */
+/**
+ * Generate a random number from -1 to 1 with triangle distribution
+ */
 double randtriangle(void) {
-  double randnum=rand01();
-  if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
-  else return(sqrt(2*randnum)-1);
+	double randnum = rand01();
+	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
+	else return(sqrt(2*randnum)-1);
+}
+
+/**
+ * Random number between 0.0 and 1.0 (including?)
+ */
+double rand01() {
+	double rand;
+	rand = (double) random();
+	rand /= (double) MC_RAND_MAX + 1;
+	return rand;
+}
+
+/** 
+ * Return a random number between 1 and -1
+ */
+double randpm1() {
+	double rand;
+	rand = (double) random();
+	rand /= ((double) MC_RAND_MAX + 1) / 2;
+	rand -= 1;
+	return rand;
+}
+
+/**
+ * Return a random number between 0 and max.
+ */
+double rand0max(double max) {
+	double rand;
+	rand = (double) random();
+	rand /= ((double) MC_RAND_MAX + 1) / max;
+	return rand;
+}
+
+/**
+ * Return a random number between min and max.
+ */
+double randminmax(double min, double max) {
+	return rand0max(max - min) + max;
 }
 
 /* intersect handling ======================================================= */
