@@ -12,11 +12,30 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.88 $
+* Version: $Revision: 1.89 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.88  2009/08/13 11:39:40  pkwi
+* Commits from Morten Siebuhr after EK and PW code review.
+*
+* A few test instruments have prolonged compile time, but more things are in the
+* pipe that should remedy this.
+*
+*   Changes:
+*
+*        * Compute-intensive #defines -> functions
+*        * Change memcpy() to just copy data for small values - somewhat
+*          faster.
+*        * Correct a bug in coords_mirror(), as previously discussed on
+*          this list.
+*        * Remove unneeded parameters to mccoordschange() - improves speed
+*          slightly.
+*
+*   The changes are mostly in mcstas-r.c, mcstas-r.h and two lines in
+*   cogen.c.
+*
 * Revision 1.87  2009/06/12 13:48:32  farhi
 * mcstas-r: nan and inf detection in PROP and detector output
 * mcstas-r: MPI writing files when p0==0. Now divide by MPI_nodes.
@@ -216,7 +235,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.88 2009-08-13 11:39:40 pkwi Exp $
+* $Id: cogen.c,v 1.89 2009-08-13 13:43:50 farhi Exp $
 *
 *******************************************************************************/
 
@@ -634,12 +653,12 @@ cogen_comp_scope_rec(struct comp_inst *comp, List_handle def, List set_list,
     List_handle set;
 
     if(infunc && list_len(set_list) > 0)
-      coutf("{   /* Declarations of SETTING parameters. */");
+      coutf("{   /* Declarations of %s SETTING parameters. */", comp->name);
     set = list_iterate(set_list);
     cogen_comp_scope_setpar(comp, set, infunc, func, data);
     list_iterate_end(set);
     if(infunc && list_len(set_list) > 0)
-      coutf("}   /* End of SETTING parameter declarations. */");
+      coutf("}   /* End of %s SETTING parameter declarations. */", comp->name);
   }
 } /* cogen_comp_scope_rec */
 
@@ -833,7 +852,7 @@ cogen_decls(struct instr_def *instr)
         char *val = exp_tostring(entry->val);
         if (c_formal->type != instr_type_string)
         	coutf("#define %sc%s_%s %s", ID_PRE, comp->name, c_formal->id, val);
-        else
+        else /* this #define produces warnings: format ‘%s’ expects type ‘char *’, but argument X has type ‘int’ */
         	coutf("#define %sc%s_%s %s /* this is declared as a string */", ID_PRE, comp->name, c_formal->id, val);
         str_free(val);
       }
