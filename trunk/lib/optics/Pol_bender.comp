@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: August 2006
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -314,19 +314,19 @@ TRACE
     xVec = coords_set(x, y, z);
     vVec = coords_set(vx, vy, vz);
     
-    solve_2nd_order(&tTop, 0.5*coords_sp(normTopBot,localG), 
+    solve_2nd_order(&tTop, NULL, 0.5*coords_sp(normTopBot,localG), 
 		    coords_sp(normTopBot, vVec),
 		    coords_sp(normTopBot, coords_sub(xVec, pointTop)));
     
-    solve_2nd_order(&tBot, 0.5*coords_sp(normTopBot,localG), 
+    solve_2nd_order(&tBot, NULL, 0.5*coords_sp(normTopBot,localG), 
 		    coords_sp(normTopBot, vVec),
 		    coords_sp(normTopBot, coords_sub(xVec, pointBot)));
     
-    solve_2nd_order(&tIn, 0.5*coords_sp(normIn,localG), 
+    solve_2nd_order(&tIn, NULL, 0.5*coords_sp(normIn,localG), 
 		    coords_sp(normIn, vVec),
 		    coords_sp(normIn, coords_sub(xVec, pointIn)));
 
-    solve_2nd_order(&tOut, 0.5*coords_sp(normOut,localG), 
+    solve_2nd_order(&tOut, NULL, 0.5*coords_sp(normOut,localG), 
 		    coords_sp(normOut, vVec),
 		    coords_sp(normOut, coords_sub(xVec, pointOut)));
     

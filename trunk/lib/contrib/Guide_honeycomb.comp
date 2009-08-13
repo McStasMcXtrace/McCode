@@ -10,7 +10,7 @@
 * %I
 * Written by: G. Venturi
 * Date: Apr 2003
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>.
 * Release: McStas 1.6
 * Modified by: G. Venturi, Made Honeycomb from Guide_gravity (Apr 2003)
@@ -82,7 +82,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 SHARE
 %{
 #ifndef Honeycomb_guide_Version
-#define Honeycomb_guide_Version "$Revision: 1.10 $"
+#define Honeycomb_guide_Version "$Revision: 1.11 $"
 
 #ifndef PROP_GRAV_DT
 #error McStas : You need PROP_GRAV_DT (McStas >= 1.4.3) to run this component
@@ -202,7 +202,7 @@ SHARE
     /* A = 0.5 n.g; B = n.v; C = n.(r-W); */
     /* 5=+Z side: n=(0, 0, -l) ; W = (0, 0, l) (at z=l, guide exit)*/
     B = aVars->nz[7]*cvz; C = aVars->nz[7]*(cz - aVars->wz[7]);
-    ret = solve_2nd_order(&dt0, aVars->A[7], B, C);
+    ret = solve_2nd_order(&dt0, NULL, aVars->A[7], B, C);
     if (ret && dt0>10e-10)
     { dt_min = dt0; side=7; }
 
@@ -222,7 +222,7 @@ SHARE
       B = aVars->nx[i]*cvx + aVars->ny[i]*cvy + aVars->nz[i]*cvz;                            /* n.v */
       C = aVars->nx[i]*(cx-aVars->wx[i]) + aVars->ny[i]*(cy-aVars->wy[i]) + aVars->nz[i]*cz; /* n.(r-W) */
 
-      ret = solve_2nd_order(&dt0, aVars->A[i], B, C);
+      ret = solve_2nd_order(&dt0, NULL, aVars->A[i], B, C);
       if (ret && dt0>10e-10 && (dt0<dt_min || !dt_min))
       { dt_min = dt0; side=i;
         if (aVars->nzC[i] != 0)
@@ -284,7 +284,7 @@ TRACE
   /* 0=Z0 side: n=(0, 0, l) ; W = (0, 0, 0) (at z=0, guide input)*/
   B = -l*vz; C = -l*z;
 
-  ret = plane_intersect_Gfast(&dt, GVars.A[0], B, C);
+  ret = solve_2nd_order(&dt, NULL, GVars.A[0], B, C);
   if (ret && dt>0)
   {
     PROP_GRAV_DT(dt, GVars.gx, GVars.gy, GVars.gz);

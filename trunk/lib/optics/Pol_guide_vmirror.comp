@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.3 $
+* Version: $Revision: 1.4 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -214,31 +214,31 @@ TRACE
     xVec = coords_set(x, y, z);
     vVec = coords_set(vx, vy, vz);
     
-    solve_2nd_order(&tTop, 0.5*coords_sp(normalTop,localG), 
+    solve_2nd_order(&tTop, NULL, 0.5*coords_sp(normalTop,localG), 
 		    coords_sp(normalTop, vVec),
 		    coords_sp(normalTop, coords_sub(xVec, pointTop)));
     
-    solve_2nd_order(&tBot, 0.5*coords_sp(normalBot,localG), 
+    solve_2nd_order(&tBot, NULL, 0.5*coords_sp(normalBot,localG), 
 		    coords_sp(normalBot, vVec),
 		    coords_sp(normalBot, coords_sub(xVec, pointBot)));
     
-    solve_2nd_order(&tRight, 0.5*coords_sp(normalRight,localG), 
+    solve_2nd_order(&tRight, NULL, 0.5*coords_sp(normalRight,localG), 
 		    coords_sp(normalRight, vVec),
 		    coords_sp(normalRight, coords_sub(xVec, pointRight)));
     
-    solve_2nd_order(&tLeft, 0.5*coords_sp(normalLeft,localG), 
+    solve_2nd_order(&tLeft, NULL, 0.5*coords_sp(normalLeft,localG), 
 		    coords_sp(normalLeft, vVec),
 		    coords_sp(normalLeft, coords_sub(xVec, pointLeft)));
 
-    solve_2nd_order(&tIn, 0.5*coords_sp(normalInOut,localG), 
+    solve_2nd_order(&tIn, NULL, 0.5*coords_sp(normalInOut,localG), 
 		    coords_sp(normalInOut, vVec),
 		    coords_sp(normalInOut, coords_sub(xVec, pointIn)));
 
-    solve_2nd_order(&tOut, 0.5*coords_sp(normalInOut,localG), 
+    solve_2nd_order(&tOut, NULL, 0.5*coords_sp(normalInOut,localG), 
 		    coords_sp(normalInOut, vVec),
 		    coords_sp(normalInOut, coords_sub(xVec, pointOut)));
 
-    solve_2nd_order(&tMirror, 0.5*coords_sp(normalMirror,localG), 
+    solve_2nd_order(&tMirror, NULL, 0.5*coords_sp(normalMirror,localG), 
 		    coords_sp(normalMirror, vVec),
 		    coords_sp(normalMirror, coords_sub(xVec, pointMirror)));
     
