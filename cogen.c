@@ -12,11 +12,15 @@
 * Date: Aug  20, 1997
 * Origin: Risoe
 * Release: McStas 1.6
-* Version: $Revision: 1.87 $
+* Version: $Revision: 1.88 $
 *
 * Code generation from instrument definition.
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.87  2009/06/12 13:48:32  farhi
+* mcstas-r: nan and inf detection in PROP and detector output
+* mcstas-r: MPI writing files when p0==0. Now divide by MPI_nodes.
+*
 * Revision 1.86  2009/04/16 13:11:03  farhi
 * Corrected bug for SPLIT on 'passive' components.
 *
@@ -212,7 +216,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.87 2009-06-12 13:48:32 farhi Exp $
+* $Id: cogen.c,v 1.88 2009-08-13 11:39:40 pkwi Exp $
 *
 *******************************************************************************/
 
@@ -1261,8 +1265,7 @@ cogen_trace(struct instr_def *instr)
     coutf("  %scoordschange(%sposr%s, %srotr%s,", ID_PRE, ID_PRE, comp->name,
           ID_PRE, comp->name);
     coutf("    &%snlx, &%snly, &%snlz,", ID_PRE, ID_PRE, ID_PRE);
-    coutf("    &%snlvx, &%snlvy, &%snlvz,", ID_PRE, ID_PRE, ID_PRE);
-    coutf("    &%snlt, &%snlsx, &%snlsy);", ID_PRE, ID_PRE, ID_PRE);
+    coutf("    &%snlvx, &%snlvy, &%snlvz);", ID_PRE, ID_PRE, ID_PRE);
     if(instr->polarised)
       coutf("  %scoordschange_polarisation("
             "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",

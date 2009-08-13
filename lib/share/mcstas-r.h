@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.110 $
+* Version: $Revision: 1.111 $
 *
 * Runtime system header for McStas.
 *
@@ -29,9 +29,13 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.110 2009-06-12 13:48:32 farhi Exp $
+* $Id: mcstas-r.h,v 1.111 2009-08-13 11:39:41 pkwi Exp $
 *
 *       $Log: not supported by cvs2svn $
+*       Revision 1.110  2009/06/12 13:48:32  farhi
+*       mcstas-r: nan and inf detection in PROP and detector output
+*       mcstas-r: MPI writing files when p0==0. Now divide by MPI_nodes.
+*
 *       Revision 1.109  2009/05/14 22:15:31  farhi
 *       Hopefuly fix last GCC 4 'Invalid %N$ use detected' issues by using custom made
 *       pfprintf and other minor similar fixes.
@@ -313,7 +317,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.110 $"
+#define MCSTAS_R_H "$Revision: 1.111 $"
 
 #include <math.h>
 #include <string.h>
@@ -785,28 +789,35 @@ char *mcfull_file(char *name, char *ext);
   } while(0)
 
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
-  do { \
-    double mcvp_tmpx, mcvp_tmpy, mcvp_tmpz; \
-    mcvp_tmpx = (y1)*(z2) - (y2)*(z1); \
-    mcvp_tmpy = (z1)*(x2) - (z2)*(x1); \
-    mcvp_tmpz = (x1)*(y2) - (x2)*(y1); \
-    (x) = mcvp_tmpx; (y) = mcvp_tmpy; (z) = mcvp_tmpz; \
-  } while(0)
+	vec_prod_func(&x, &y, &z, x1, y1, z1, x2, y2, z2)
+inline void vec_prod_func(double *x, double *y, double *z,
+		double x1, double y1, double z1, double x2, double y2, double z2);
 
-#define scalar_prod(x1, y1, z1, x2, y2, z2) \
-  ((x1)*(x2) + (y1)*(y2) + (z1)*(z2))
+void coord_vector_product(Coords* ret, Coords* a, Coords* b);
+
+inline double scalar_prod(
+		double x1, double y1, double z1, double x2, double y2, double z2);
+
+inline double coord_scalar_product(Coords* a, Coords* b);
 
 #define NORM(x,y,z) \
-  do { \
-    double mcnm_tmp = sqrt((x)*(x) + (y)*(y) + (z)*(z)); \
-    if(mcnm_tmp != 0.0) \
-    { \
-      (x) /= mcnm_tmp; \
-      (y) /= mcnm_tmp; \
-      (z) /= mcnm_tmp; \
-    } \
-  } while(0)
+	norm_func(&x, &y, &z)
+inline void norm_func(double *x, double *y, double *z) {
+	double temp = (*x * *x) + (*y * *y) + (*z * *z);
+	if (temp != 0) {
+		temp = sqrt(temp);
+		*x /= temp;
+		*y /= temp;
+		*z /= temp;
+	}
+}
 
+inline void coord_norm(Coords* c);
+
+/**
+ * Rotate the given xyz in a certain way. This does not seem to be used
+ * anywhere, so I haven't bothered to reverse-engineer the maths.
+ */
 #define rotate(x, y, z, vx, vy, vz, phi, ax, ay, az) \
   do { \
     double mcrt_tmpx = (ax), mcrt_tmpy = (ay), mcrt_tmpz = (az); \
@@ -833,6 +844,11 @@ char *mcfull_file(char *name, char *ext);
     (z) = mcrt_vpz + mcrt_vn1z; \
   } while(0)
 
+/**
+ * Mirror (xyz) in the plane given by the point (rx,ry,rz) and normal (nx,ny,nz)
+ *
+ * TODO: This define is seemingly never used...
+ */
 #define mirror(x,y,z,rx,ry,rz,nx,ny,nz) \
   do { \
     double mcrt_tmpx= (nx), mcrt_tmpy = (ny), mcrt_tmpz = (nz); \
@@ -907,10 +923,10 @@ char *mcfull_file(char *name, char *ext);
 #  error "Bad value for random number generator choice."
 #endif
 
-#define rand01() ( ((double)random())/((double)MC_RAND_MAX+1) )
-#define randpm1() ( ((double)random()) / (((double)MC_RAND_MAX+1)/2) - 1 )
-#define rand0max(max) ( ((double)random()) / (((double)MC_RAND_MAX+1)/(max)) )
-#define randminmax(min,max) ( rand0max((max)-(min)) + (min) )
+double rand01();
+double randpm1();
+double rand0max(double max);
+double randminmax(double min, double max);
 
 #ifndef DANSE
 void mcinit(void);
@@ -952,8 +968,7 @@ void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);
 Coords rot_apply(Rotation t, Coords a);
 void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
-    double *vx, double *vy, double *vz, double *time,
-    double *s1, double *s2);
+    double *vx, double *vy, double *vz);
 void mccoordschange_polarisation(Rotation t,
     double *sx, double *sy, double *sz);
 double mcestimate_error(double N, double p1, double p2);
