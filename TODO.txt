@@ -22,12 +22,15 @@ Components:
  D  add 'radius' parameter to Monitor_nD for easier specs
  D  remove 'searching' messages in SNS and ISIS sources (not useful)
 (*) more V_sample to obsolete and use Incoherent instead
- D check Virtual_* comps with MPI
+ D  check Virtual_* comps with MPI
+(*) check MPI examples that fail
 
 Doc:
     sync with new comp parameter names
     check new instrument definitions doc in manual
     update new testing mechanism doc and McDoc %example DONE
+    add doc on mcdetector structure (members)
+    add Iso Sqw qSqw fix in doc
 
 Instruments:
 (*) Laue_diff in examples
@@ -36,8 +39,8 @@ Instruments:
  D  Test_Fermi DONE ; Test_Sources DONE; Test_Guides DONE; Monochromator_test DONE
 (*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off,  Tomography
  D  TESTS: accuracy must take into account I_ERR value instead of default 20 % DONE
-    use %include where ever possible e.g. ILL_H142_IN12=ILL_H142+templateTAS, ILL_H15_IN6=ILL_H15+templateTOF
-    templateTAS: recompute Ki, Kf, ... when giving angles as input. Check KFIX/FX/KI/KF values.
+    use %include where ever possible  DONE
+    templateTAS: recompute Ki, Kf, ... when giving angles as input. Check KFIX/FX/KI/KF values. DONE
 
 Metalanguage / runtime
     New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
@@ -58,7 +61,7 @@ Tools/platform:
 (*) mcstas2vitess, only supports double parms, should also do ones with explicit type.
     mcrun --test: need to add plotter test
     Update mcrun --test=compatible to include --test=FP6 (etc)
-(*) gfortran update for PGPLOT build
+ D  gfortran update for PGPLOT build
     SWARM / Genetic algo? 
 (*) Scan over 'strings' filename=whatever.dat;whatever2.dat;whatever3.dat -N 3  (incl optim?)
 (N) 2D-scans?

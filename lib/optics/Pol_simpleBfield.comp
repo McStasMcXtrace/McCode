@@ -10,7 +10,7 @@
 * %I
 * Written by: Peter Christiansen and Peter Willendrup
 * Date: August 2006
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: RISOE
 * Release: McStas 1.10
 *
@@ -196,7 +196,7 @@ TRACE
   } else {
     
     // exit
-    solve_2nd_order(&dt, -gz/2, -vz, length-z);
+    solve_2nd_order(&dt, NULL, -gz/2, -vz, length-z);
     PROP_DT(dt);
     MAGNET_OFF;
     mcMagneticField = NULL;

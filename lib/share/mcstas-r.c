@@ -11,16 +11,35 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.227 $
+* Version: $Revision: 1.228 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.227 2009-08-13 11:39:40 pkwi Exp $
+* $Id: mcstas-r.c,v 1.228 2009-08-13 14:12:00 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.227  2009/08/13 11:39:40  pkwi
+* Commits from Morten Siebuhr after EK and PW code review.
+*
+* A few test instruments have prolonged compile time, but more things are in the
+* pipe that should remedy this.
+*
+*   Changes:
+*
+*        * Compute-intensive #defines -> functions
+*        * Change memcpy() to just copy data for small values - somewhat
+*          faster.
+*        * Correct a bug in coords_mirror(), as previously discussed on
+*          this list.
+*        * Remove unneeded parameters to mccoordschange() - improves speed
+*          slightly.
+*
+*   The changes are mostly in mcstas-r.c, mcstas-r.h and two lines in
+*   cogen.c.
+*
 * Revision 1.226  2009/06/16 12:34:02  erkn
 * fixed bug in planer_intersect
 *
@@ -916,7 +935,7 @@ mcparmprinter_string(char *f, void *vptr)
     }
   }
   /* strcat(f, "\""); */
-}
+} /* mcparmprinter_string */
 
 /* now we may define the parameter structure, using previous functions */
 static struct
@@ -1009,7 +1028,7 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 
   free(lrbuf);
   return res;
-}
+} /* mc_MPI_Reduce */
 
 /*******************************************************************************
 * mc_MPI_Send: Send array to MPI node by blocks to avoid buffer limit
@@ -1038,7 +1057,7 @@ int mc_MPI_Send(void *sbuf,
     fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%li, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
 
   return res;
-}
+} /* mc_MPI_Send */
 
 /*******************************************************************************
 * mc_MPI_Recv: Receives arrays from MPI nodes by blocks to avoid buffer limit
@@ -1068,7 +1087,7 @@ int mc_MPI_Recv(void *sbuf,
     fprintf(stderr, "Warning: node %i: MPI_Recv error (mc_MPI_Recv) at offset=%li, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
 
   return res;
-}
+} /* mc_MPI_Recv */
 
 #endif /* USE_MPI */
 
@@ -1712,7 +1731,7 @@ char *mcfull_file(char *name, char *ext)
     strcat(mem, ext);
   }
   return(mem);
-}
+} /* mcfull_file */
 
 /*******************************************************************************
 * mcnew_file: opens a new file within mcdirname if non NULL
@@ -1764,7 +1783,7 @@ char *str_rep(char *string, char *from, char *to)
     for (index=0; index<strlen(to); index++) p[index]=to[index];
   }
   return(string);
-}
+} /* str_rep */
 
 #define VALID_NAME_LENGTH 64
 /*******************************************************************************
@@ -1953,7 +1972,7 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
 
   }
   return(this_arg);
-}
+} /* pfprintf */
 
 /*******************************************************************************
 * mcfile_header: output header/footer using specific file format.
@@ -4674,8 +4693,11 @@ sphere_intersect(double *t0, double *t1, double x, double y, double z,
 }
 
 /* solve_2nd_order: second order equation solve: A*t^2 + B*t + C = 0
- * returns 0 if no solution was found, or set 't' to the smallest positive
- * solution.
+ * solve_2nd_order(&t1, NULL, A,B,C)
+ *   returns 0 if no solution was found, or set 't1' to the smallest positive
+ *   solution.
+ * solve_2nd_order(&t1, &t2, A,B,C)
+ *   same as with &t2=NULL, but also returns the second solution.
  * EXAMPLE usage for intersection of a trajectory with a plane in gravitation
  * field (gx,gy,gz):
  * The neutron starts at point r=(x,y,z) with velocityv=(vx vy vz). The plane
@@ -4685,16 +4707,18 @@ sphere_intersect(double *t0, double *t1, double x, double y, double z,
  * so that A = 0.5 n.g; B = n.v; C = n.(r-W);
  * Without acceleration, t=-n.(r-W)/n.v
  */
-int solve_2nd_order(double *Idt,
+int solve_2nd_order(double *t1, double *t2,
                   double A,  double B,  double C)
 {
   int ret=0;
-
-  *Idt = 0;
+  
+  if (!t1) return 0;
+  *t1 = 0;
+  if (t2) *t2=0;
 
   if (fabs(A) < 1E-10) /* this plane is parallel to the acceleration: A ~ 0 */
   {
-    if (B) {  *Idt = -C/B; ret=3; }
+    if (B) {  *t1 = -C/B; ret=3; if (t2) *t2=*t1; }
     /* else the speed is parallel to the plane, no intersection: A=B=0 ret=0 */
   }
   else
@@ -4717,7 +4741,8 @@ int solve_2nd_order(double *Idt,
       else if (dt1> 0.0 && dt2>0.0)
       {  if (dt1 < dt2) ret=1; else ret=2; } /* all positive: min(dt1,dt2) */
       /* else two solutions are negative. ret=0 */
-      if (ret==1) *Idt = dt1; else if (ret==2) *Idt=dt2;
+      if (ret==1 || ret==0) { *t1 = dt1;  if (t2) *t2=dt2; }
+      else if (ret==2) { *t1=dt2;  if (t2) *t2=dt1; }
     } /* else Delta <0: no intersection.  ret=0 */
   }
   return(ret);
@@ -5327,7 +5352,7 @@ mcparseoptions(int argc, char *argv[])
 } /* mcparseoptions */
 
 #ifndef NOSIGNALS
-mcstatic char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
+mcstatic char  mcsig_message[256]; 
 
 
 /* sighandler: signal handler that makes simulation stop, and save results */
