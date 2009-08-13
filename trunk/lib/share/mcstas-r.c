@@ -11,16 +11,19 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.228 $
+* Version: $Revision: 1.229 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.228 2009-08-13 14:12:00 farhi Exp $
+* $Id: mcstas-r.c,v 1.229 2009-08-13 14:52:01 farhi Exp $
 *
 * $Log: not supported by cvs2svn $
+* Revision 1.228  2009/08/13 14:12:00  farhi
+* Upgrade solve_2nd_order to return 2 solutions and update relevant comps
+*
 * Revision 1.227  2009/08/13 11:39:40  pkwi
 * Commits from Morten Siebuhr after EK and PW code review.
 *
@@ -4981,39 +4984,6 @@ randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle
       for (counter = 0; counter < order; counter++) {
 	*solid_angle = *solid_angle * cos_theta;
       }
-    }
-  }
-}
-
-
-/* extend_list: Make sure a list is big enough to hold element COUNT.
-*
-* The list is an array, and the argument 'list' is a pointer to a pointer to
-* the array start. The argument 'size' is a pointer to the number of elements
-* in the array. The argument 'elemsize' is the sizeof() an element. The
-* argument 'count' is the minimum number of elements needed in the list.
-*
-* If the old array is to small (or if *list is NULL or *size is 0), a
-* sufficuently big new array is allocated, and *list and *size are updated.
-*/
-void extend_list(int count, void **list, int *size, size_t elemsize)
-{
-  if(count >= *size)
-  {
-    void *oldlist = *list;
-    if(*size > 0)
-      *size *= 2;
-    else
-      *size = 32;
-    *list = malloc(*size*elemsize);
-    if(!*list)
-    {
-      exit(fprintf(stderr, "\nError: Out of memory %li (extend_list).\n", (long)*size*elemsize));
-    }
-    if(oldlist)
-    {
-      memcpy(*list, oldlist, count*elemsize);
-      free(oldlist);
     }
   }
 }

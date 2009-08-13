@@ -74,6 +74,7 @@ Tools/platform:
  D  update mcstas.lang for gedit to gtksourceview-2 
 (*) mcrun --test --mpi: some instruments do not scale with n_nodes
 (*) mcrun --test to check under windows
+(*) check installation procedure regarding loosing PGPLOT libs after upgrade
     
 
 Infrastructure:
