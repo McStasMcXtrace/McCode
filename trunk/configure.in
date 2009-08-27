@@ -20,7 +20,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, CVS_081127, www.mcstas.org)
-AC_REVISION($Revision: 1.66 $)
+AC_REVISION($Revision: 1.65 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
@@ -100,7 +100,7 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl support/pgplot/pgplot.sh support/scilab/scilab.sh)
+AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl support/Makefile)
 
 chmod a+x support/pgplot/pgplot.sh
 chmod a+x support/scilab/scilab.sh
@@ -141,7 +141,7 @@ echo ""
 if test "$WGET" != no ; then
   echo "Gnome support: If you experience crashes of mcgui when running in the "
   echo "  Gnome environment, please come back here and do a"
-  echo "# make tk"
+  echo "# make install-tk"
   echo "will install our patched version of perl-tk from the net"
 fi
 if test "$PGPLOT" == "no" ; then
