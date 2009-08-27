@@ -34,25 +34,25 @@ TMPDIR='..'
 PW=`pwd`
 DIST=$TMPDIR/mcstas-$1
 
-# Create the doc's from tex
-cd $PW/../tex
-./build $1
-#mv *.ps.gz $PW/..
-mv *.pdf $PW/..
-
 # Copy current PW checkout to DIST
-cd $PW
 cp -rp $PW $DIST
-# copy the doc in DIST/lib/doc. Only use PDF files in distro.
-#cp $PW/../mcstas-$1-manual.ps.gz $DIST/lib/doc/mcstas-manual.ps.gz
-cp $PW/../mcstas-$1-manual.pdf $DIST/lib/doc/mcstas-manual.pdf
-#cp $PW/../mcstas-$1-components.ps.gz $DIST/lib/doc/mcstas-components.ps.gz
-cp $PW/../mcstas-$1-components.pdf $DIST/lib/doc/mcstas-components.pdf
+
+# Create the doc's from tex - if a checkout is avail.
+if [ -d $PW/../tex ] ;
+then
+  cd $PW/../tex
+  ./build $1
+  
+  # copy the doc in DIST/lib/doc. Only use PDF files in distro.
+  mv mcstas-$1-manual.pdf $DIST/lib/doc/mcstas-manual.pdf
+  mv mcstas-$1-components.pdf $DIST/lib/doc/mcstas-components.pdf
+fi
 
 # Go in DIST, clean up CVS information
 cd $DIST
-echo "Clean up CVS info"
-find . -name CVS -exec rm -r \{\} \; 2> /dev/null
+echo "Clean up SVN info"
+find . -name .svn -exec rm -rf \{\} \; 2> /dev/null
+echo done...
 # Remove other unneeded stuff
 rm -rf support/Syntax-Highlight-Perl-1.0
 rm -rf preCVStest*
@@ -75,34 +75,38 @@ mv deb/control.new deb/control
 sed 's/MCSTAS_VERSION/'$1'/' configure.in > configure.in.new
 mv configure.in.new configure.in
 
-# Create ps/pdf/html based install info
-cd install_docs/tex
-latex install
-latex install
-whichdvipdf=`which dvipdf`
-if [ -e "$whichdvipdf" ] ;
+# Create the doc's from tex - if a checkout is avail.
+if [ -d $PW/../tex ] ;
 then
-  echo "Generate install PDF files using dvipdf (better quality than ps2pdf)"
-  dvipdf install.dvi install.pdf
-else
-  echo "Generate install PDF files using ps2pdf"
-  dvips -o install.ps install.dvi
-  ps2pdf install.ps install.pdf
+  # Create ps/pdf/html based install info
+  cd install_docs/tex
+  latex install
+  latex install
+  whichdvipdf=`which dvipdf`
+  if [ -e "$whichdvipdf" ] ;
+  then
+      echo "Generate install PDF files using dvipdf (better quality than ps2pdf)"
+      dvipdf install.dvi install.pdf
+  else
+      echo "Generate install PDF files using ps2pdf"
+      dvips -o install.ps install.dvi
+      ps2pdf install.ps install.pdf
   # gzip install.ps
-  rm *.ps *.ps.gz
-fi
-
-mkdir ../html
-latex2html -local_icons -dir ../html install.tex
-# clean up
-rm install.aux
-rm install.log
-cd ../..
-# Update the tutorial files
-cd lib/doc/tutorial
-./update
-rm update
-cd ../../..
+      rm *.ps *.ps.gz
+  fi
+  
+  mkdir ../html
+  latex2html -local_icons -dir ../html install.tex
+  # clean up
+  rm install.aux
+  rm install.log
+  cd ../..
+  # Update the tutorial files
+  cd lib/doc/tutorial
+  ./update
+  rm update
+fi  
+cd $DIST
 
 # A bit ugly with seperate date commands..
 MONTH=`date +"%b"`
