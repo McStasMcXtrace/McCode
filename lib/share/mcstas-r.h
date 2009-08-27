@@ -29,9 +29,13 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.112 2009-08-13 14:52:01 farhi Exp $
+* $Id: mcstas-r.h,v 1.112 2009/08/13 14:52:01 farhi Exp $
 *
-*       $Log: not supported by cvs2svn $
+*       $Log: mcstas-r.h,v $
+*       Revision 1.112  2009/08/13 14:52:01  farhi
+*       Upgrade of solve_2nd order in mcstas-r.h. Removed extend_list (not used)
+*       from .c
+*
 *       Revision 1.111  2009/08/13 11:39:41  pkwi
 *       Commits from Morten Siebuhr after EK and PW code review.
 *
@@ -487,20 +491,6 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 
 /* Useful macros ============================================================ */
 
-#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
-     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
-     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_OUT_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f) \
-     mcdetector_out_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
-#define DETECTOR_CUSTOM_HEADER(t)  if (t && strlen(t)) { \
-     mcDetectorCustomHeader=malloc(strlen(t)); \
-     if (mcDetectorCustomHeader) strcpy(mcDetectorCustomHeader, t); }
-
-#define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9)  randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)
-
 /* MPI stuff ================================================================ */
 
 #ifdef USE_MPI
@@ -539,34 +529,89 @@ static int mpi_node_count;
 
 /* I/O function prototypes ================================================== */
 
-/* The mcformat.Name may contain additional keywords:
- *  no header: omit the format header
- *  no footer: omit the format footer
- */
-
-void   mcset_ncount(double count);
-double mcget_ncount(void);
-double mcget_run_num(void);
-double mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
-double mcdetector_out_1D(char *t, char *xl, char *yl,
-                  char *xvar, double x1, double x2, int n,
-                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos);
-double mcdetector_out_2D(char *t, char *xl, char *yl,
-                  double x1, double x2, double y1, double y2, int m,
-                  int n, double *p0, double *p1, double *p2, char *f,
-                  char *c, Coords pos);
-double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
-      char *xvar, char *yvar, char *zvar,
-                  double x1, double x2, double y1, double y2, double z1, double z2, int m,
-                  int n, int p, double *p0, double *p1, double *p2, char *f,
-                  char *c, Coords pos);
-#ifndef FLT_MAX
-#define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
-#endif
 
 #ifndef CHAR_BUF_LENGTH
 #define CHAR_BUF_LENGTH 1024
 #endif
+
+struct mcdetector_struct {
+  char   prefix[CHAR_BUF_LENGTH];
+  char   filename[CHAR_BUF_LENGTH];
+  char   position[CHAR_BUF_LENGTH];
+  char   component[CHAR_BUF_LENGTH];
+  char   instrument[CHAR_BUF_LENGTH];
+  char   simulation[CHAR_BUF_LENGTH];
+  char   type[CHAR_BUF_LENGTH];
+  char   user[CHAR_BUF_LENGTH];
+  char   date[CHAR_BUF_LENGTH];
+  char   title[CHAR_BUF_LENGTH];
+  char   xlabel[CHAR_BUF_LENGTH];
+  char   ylabel[CHAR_BUF_LENGTH];
+  char   zlabel[CHAR_BUF_LENGTH];
+  char   xvar[CHAR_BUF_LENGTH];
+  char   yvar[CHAR_BUF_LENGTH];
+  char   zvar[CHAR_BUF_LENGTH];
+  char   ncount[CHAR_BUF_LENGTH];
+  char   limits[CHAR_BUF_LENGTH];
+  char   variables[CHAR_BUF_LENGTH];
+  char   statistics[CHAR_BUF_LENGTH];
+  char   signal[CHAR_BUF_LENGTH];
+  char   values[CHAR_BUF_LENGTH];
+  double xmin,xmax;
+  double ymin,ymax;
+  double zmin,zmax;
+  double intensity;
+  double error;
+  double events;
+  double min;
+  double max;
+  double mean;
+  double centerX;
+  double halfwidthX;
+  double centerY;
+  double halfwidthY;
+  int    rank;
+  char   istransposed;
+  
+  long   m,n,p;
+  long   date_l;
+  
+  double *p0, *p1, *p2;
+  
+  FILE   *file_handle;
+  struct mcformats_struct format;
+};
+
+typedef struct mcdetector_struct MCDETECTOR;
+
+void   mcset_ncount(double count);
+double mcget_ncount(void);
+double mcget_run_num(void);
+MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
+MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
+                  char *xvar, double x1, double x2, int n,
+                  double *p0, double *p1, double *p2, char *f, char *c, Coords pos);
+MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
+                  double x1, double x2, double y1, double y2, int m,
+                  int n, double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords pos);
+MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
+      char *xvar, char *yvar, char *zvar,
+                  double x1, double x2, double y1, double y2, double z1, double z2, int m,
+                  int n, int p, double *p0, double *p1, double *p2, char *f,
+                  char *c, Coords pos);             
+                  
+#define DETECTOR_OUT(p0,p1,p2) mcdetector_out_0D(NAME_CURRENT_COMP,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_0D(t,p0,p1,p2) mcdetector_out_0D(t,p0,p1,p2,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f) \
+     mcdetector_out_1D(t,xl,yl,xvar,x1,x2,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f) \
+     mcdetector_out_2D(t,xl,yl,x1,x2,y1,y2,m,n,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_OUT_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f) \
+     mcdetector_out_3D(t,xl,yl,zl,xv,yv,zv,x1,x2,y1,y2,z1,z2,m,n,p,p0,p1,p2,f,NAME_CURRENT_COMP,POS_A_CURRENT_COMP)
+#define DETECTOR_CUSTOM_HEADER(t)  if (t && strlen(t)) { \
+     mcDetectorCustomHeader=malloc(strlen(t)); \
+     if (mcDetectorCustomHeader) strcpy(mcDetectorCustomHeader, t); }
 
 /* Following part is only embedded when not redundent with mcstas.h ========= */
 
@@ -582,6 +627,10 @@ double mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 
 
 /* Useful macros ============================================================ */
+
+#ifndef FLT_MAX
+#define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
+#endif
 
 #define RAD2MIN  ((180*60)/PI)
 #define MIN2RAD  (PI/(180*60))
@@ -1010,6 +1059,7 @@ void randvec_target_circle(double *xo, double *yo, double *zo,
 void randvec_target_rect_angular(double *xo, double *yo, double *zo,
     double *solid_angle,
                double xi, double yi, double zi, double height, double width, Rotation A);
+#define randvec_target_rect(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9)  randvec_target_rect_real(p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,0,0,0,1)               
 void randvec_target_rect_real(double *xo, double *yo, double *zo,
     double *solid_angle,
 	       double xi, double yi, double zi, double height, double width, Rotation A,
