@@ -615,37 +615,6 @@ t_Table *Sqw_read_PowderN(struct Sqw_sample_struct *Sqw, t_Table sqwTable)
 } /* Sqw_read_PowderN */
 
 /*****************************************************************************
-*  Sqw_search_root: Search for the roots of A*x**2 + B*x + C
-*   The roots are returned as x1 and x2
-* Used in : TRACE (1)
-*****************************************************************************/
-int Sqw_search_root(double A, double B, double C,
-             double *x1, double *x2)
-{
-  double delta, sqrtdelta, inv_2A;
-  int    OK = 0;
-
-  if (fabs(A) < 1E-10) {
-    if (B) {  *x1 = -C/B; *x2 = *x1; OK=3; }
-    return 1;
-  } else {
-    delta = B*B - 4*A*C;
-    if (delta < 0) {
-      /* Imaginary roots */
-      OK=0;
-    } else {
-      /* Real roots */
-      sqrtdelta = sqrt(delta);
-      inv_2A = 1/(2*A);
-      *x1 = inv_2A*(-B - sqrtdelta);
-      *x2 = inv_2A*(-B + sqrtdelta);
-      OK = 1;
-    }
-    return(OK);
-  }
-}
-
-/*****************************************************************************
 *  Sqw_search_SW: For a given random number 'randnum', search for the bin
 *   containing  the corresponding Sqw->SW
 * Used in : TRACE (1)
@@ -1789,7 +1758,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         /* Search for length of final wave vector kf */
         /* kf is such that : hbar*w = hbar*hbar/2/m*(k*k - kf*kf) */
         /* acceptable values for kf are kf1 and kf2 */
-        if (!Sqw_search_root(1, 0, -k*k + VarSqw.sqSE2K*omega, &kf1, &kf2)) {
+        if (!solve_2nd_order(&kf1, &kf2, 1, 0, -k*k + VarSqw.sqSE2K*omega)) {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
             printf("Isotropic_Sqw: %s: Warning: imaginary root for\n"
                  "               w=%g q=%g (triangle can not close)\n",
