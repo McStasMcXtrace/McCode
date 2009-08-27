@@ -20,9 +20,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.h,v 1.19 2008-10-21 15:19:19 farhi Exp $
+* $Id: monitor_nd-lib.h,v 1.19 2008/10/21 15:19:19 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: monitor_nd-lib.h,v $
+* Revision 1.19  2008/10/21 15:19:19  farhi
+* use common CHAR_BUFFER_LENGTH = 1024
+*
 * Revision 1.18  2008/07/17 12:50:18  farhi
 * MAJOR commit to McStas 2.x
 * uniformized parameter naming in components
@@ -212,7 +215,7 @@
 
 void Monitor_nD_Init(MonitornD_Defines_type *, MonitornD_Variables_type *, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM, MCNUM);
 double Monitor_nD_Trace(MonitornD_Defines_type *, MonitornD_Variables_type *);
-void Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *);
+MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_Finally(MonitornD_Defines_type *, MonitornD_Variables_type *);
 void Monitor_nD_McDisplay(MonitornD_Defines_type *,
  MonitornD_Variables_type *);

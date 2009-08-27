@@ -21,9 +21,12 @@
 * Usage: within SHARE
 * %include "monitor_nd-lib"
 *
-* $Id: monitor_nd-lib.c,v 1.46 2009-04-16 13:47:15 farhi Exp $
+* $Id: monitor_nd-lib.c,v 1.46 2009/04/16 13:47:15 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: monitor_nd-lib.c,v $
+* Revision 1.46  2009/04/16 13:47:15  farhi
+* correct bug when used with shape=previous (was exiting)
+*
 * Revision 1.45  2009/02/11 15:11:05  farhi
 * printf format fixes revealed with gcc 4.3
 *
@@ -165,8 +168,7 @@
 #endif
 
 /* ========================================================================= */
-/* ADD: E.Farhi, Aug 6th, 2001: Monitor_nD section */
-/* this routine is used to parse options */
+/* Monitor_nD_Init: this routine is used to parse options                    */
 /* ========================================================================= */
 
 void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
@@ -811,8 +813,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
   } /* end Monitor_nD_Init */
 
 /* ========================================================================= */
-/* ADD: E.Farhi, Aug 6th, 2001: Monitor_nD section */
-/* this routine is used to monitor one propagating neutron */
+/* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
 /* ========================================================================= */
 
 double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_type *mc_mn_Vars)
@@ -1098,11 +1099,10 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
 } /* end Monitor_nD_Trace */
 
 /* ========================================================================= */
-/* ADD: E.Farhi, Aug 6th, 2001: Monitor_nD section */
-/* this routine is used to save data files */
+/* Monitor_nD_Save: this routine is used to save data files                  */
 /* ========================================================================= */
 
-void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_type *mc_mn_Vars)
+MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_type *mc_mn_Vars)
   {
     char   *mc_mn_fname;
     long    mc_mn_i,mc_mn_j;
@@ -1120,6 +1120,8 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
     long    mc_mn_Coord_Index[MONnD_COORD_NMAX];
     char    mc_mn_label[CHAR_BUF_LENGTH];
     double  mc_mn_ratio;
+    
+    MCDETECTOR detector;
 
     mc_mn_ratio = 100*mcget_run_num()/mcget_ncount();
     if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area && mc_mn_Vars->Flag_Verbose)
@@ -1227,7 +1229,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       if (mc_mn_Vars->Flag_signal != mc_mn_DEFS->COORD_P && mc_mn_Nsum > 0)
       { mc_mn_psum /=mc_mn_Nsum; mc_mn_p2sum /= mc_mn_Nsum*mc_mn_Nsum; }
       /* DETECTOR_OUT_0D(mc_mn_Vars->Monitor_Label, mc_mn_Vars->Nsum, mc_mn_Vars->psum, mc_mn_Vars->p2sum); */
-      mcdetector_out_0D(mc_mn_Vars->Monitor_Label, mc_mn_Nsum, mc_mn_psum, mc_mn_p2sum, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
+      detector = mcdetector_out_0D(mc_mn_Vars->Monitor_Label, mc_mn_Nsum, mc_mn_psum, mc_mn_p2sum, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
     }
     else
     if (strlen(mc_mn_Vars->Mon_File) > 0)
@@ -1291,7 +1293,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
         if (!mc_mn_Vars->Flag_Binary_List)
         { mc_mn_bin2d=-mc_mn_bin2d; }
         mcformat.Name = formatName;
-        mcdetector_out_2D(
+        detector = mcdetector_out_2D(
               mc_mn_label,
               "List of neutron events",
               mc_mn_Coord_X_Label,
@@ -1327,7 +1329,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
             {
               if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for output. Using raw data.\n", mc_mn_Vars->compcurname);
               if (mc_mn_p1m != NULL) free(mc_mn_p1m);
-              mcdetector_out_1D(
+              detector = mcdetector_out_1D(
               mc_mn_label,
               mc_mn_Vars->Coord_Label[mc_mn_i+1],
               mc_mn_Vars->Coord_Label[0],
@@ -1370,7 +1372,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
                   }
                 }
               } /* for */
-              mcdetector_out_1D(
+              detector = mcdetector_out_1D(
                 mc_mn_label,
                 mc_mn_Vars->Coord_Label[mc_mn_i+1],
                 mc_mn_Vars->Coord_Label[0],
@@ -1384,7 +1386,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
             if (mc_mn_p1m != NULL) free(mc_mn_p1m); mc_mn_p1m=NULL;
             if (mc_mn_p2m != NULL) free(mc_mn_p2m); mc_mn_p2m=NULL;
           } else { /* 0d monitor */
-            mcdetector_out_0D(mc_mn_label, mc_mn_Vars->Mon2D_p[mc_mn_i][0], mc_mn_Vars->Mon2D_p2[mc_mn_i][0], mc_mn_Vars->Mon2D_N[mc_mn_i][0], mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
+            detector = mcdetector_out_0D(mc_mn_label, mc_mn_Vars->Mon2D_p[mc_mn_i][0], mc_mn_Vars->Mon2D_p2[mc_mn_i][0], mc_mn_Vars->Mon2D_N[mc_mn_i][0], mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
           }
 
 
@@ -1461,7 +1463,7 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
            && mc_mn_Vars->Flag_signal == mc_mn_DEFS->COORD_P)
             strcat(mc_mn_label, " per bin");
 
-          mcdetector_out_2D(
+          detector = mcdetector_out_2D(
             mc_mn_label,
             mc_mn_Vars->Coord_Label[1],
             mc_mn_Vars->Coord_Label[2],
@@ -1479,11 +1481,11 @@ void Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_typ
       }
       free(mc_mn_fname);
     }
+    return(detector);
   } /* end Monitor_nD_Save */
 
 /* ========================================================================= */
-/* ADD: E.Farhi, Aug 6th, 2001: Monitor_nD section */
-/* this routine is used to free memory */
+/* Monitor_nD_Finally: this routine is used to free memory                   */
 /* ========================================================================= */
 
 void Monitor_nD_Finally(MonitornD_Defines_type *mc_mn_DEFS,
@@ -1528,8 +1530,7 @@ void Monitor_nD_Finally(MonitornD_Defines_type *mc_mn_DEFS,
   } /* end Monitor_nD_Finally */
 
 /* ========================================================================= */
-/* ADD: E.Farhi, Aug 6th, 2001: Monitor_nD section */
-/* this routine is used to display component */
+/* Monitor_nD_McDisplay: this routine is used to display component           */
 /* ========================================================================= */
 
 void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,

@@ -1089,17 +1089,16 @@ int mcformat_output(struct McStas_file_format McStasStruct)
                   McStasStruct.p0, McStasStruct.p1, McStasStruct.p2, McStasStruct.outputname,
                   McStasStruct.component, McStasStruct.POSITION);
   } else if (!mctestmode)
-  mcdetector_out_012D(mcformat,
-    McStasStruct.component,
-    McStasStruct.title,
-    McStasStruct.m, McStasStruct.n,  McStasStruct.p,
+  mcdetector_out_3D(McStasStruct.title,
     McStasStruct.xlabel, McStasStruct.ylabel, McStasStruct.zlabel,
     McStasStruct.xvar, McStasStruct.yvar, McStasStruct.zvar,
     McStasStruct.x1, McStasStruct.x2, McStasStruct.y1, McStasStruct.y2, McStasStruct.z1, McStasStruct.z2,
-    McStasStruct.outputname,
+    McStasStruct.m, McStasStruct.n,  McStasStruct.p,
     McStasStruct.p0,
     McStasStruct.p1,
     McStasStruct.p2,
+    McStasStruct.outputname,
+    McStasStruct.component,
     McStasStruct.POSITION);
 
   mcdirname = currentdir;
@@ -1606,17 +1605,16 @@ void mcformat_scan_compare(int nb)
     if (mcverbose)
       printf("Writing scan file=%s (%s) into directory %s\n", datfile, mcsiminfo_name, mcdirname);
     if (!mctestmode)
-    mcdetector_out_012D(mcformat,
-      Files_to_Merge[scan_index1].component, title,
-      -scan_length1, Files_to_Merge[scan_index1].mcnumipar+2*mon_count,  1,
+    mcdetector_out_3D(title,
       Files_to_Merge[scan_index1].mcinputtable[ipar_var].name,
       Files_to_Merge[scan_index1].ylabel, "",
       Files_to_Merge[scan_index1].mcinputtable[ipar_var].name,
       youts,
       header,
       ipar_min, ipar_max, 0, 0, 0, 0,
-      datfile,
-      NULL, Scan.data, NULL,
+      -scan_length1, Files_to_Merge[scan_index1].mcnumipar+2*mon_count,  1,
+      NULL, Scan.data, NULL, datfile,
+      Files_to_Merge[scan_index1].component, 
       Files_to_Merge[scan_index1].POSITION);
 
     /* for PGPLOT: close mcstas.sim */
