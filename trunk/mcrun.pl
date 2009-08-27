@@ -204,7 +204,7 @@ sub parse_args {
             $MCSTAS::mcstas_config{'PLOTTER'} = $2;
         } elsif(/^--test$/) {
             $exec_test=1;
-        } elsif(/^--nocflags$/) {
+        } elsif(/^--no-cflags$/) {
             $cflags=0;
         } elsif(/^--(data-only|help|info|trace|no-output-files|gravitation)$/) {
             push @options, "--$1";
