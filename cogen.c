@@ -16,7 +16,12 @@
 *
 * Code generation from instrument definition.
 *
-* $Log: not supported by cvs2svn $
+* $Log: cogen.c,v $
+* Revision 1.89  2009/08/13 13:43:50  farhi
+* Cosmetics on automatic comments. Also added a note about GCC4 warnings
+* when using definition parameters. We should probably move most of them
+* to SETTING parameters in comps.
+*
 * Revision 1.88  2009/08/13 11:39:40  pkwi
 * Commits from Morten Siebuhr after EK and PW code review.
 *
@@ -235,7 +240,7 @@
 * Revision 1.24 2002/09/17 10:34:45 ef
 * added comp setting parameter types
 *
-* $Id: cogen.c,v 1.89 2009-08-13 13:43:50 farhi Exp $
+* $Id: cogen.c,v 1.89 2009/08/13 13:43:50 farhi Exp $
 *
 *******************************************************************************/
 
@@ -852,8 +857,11 @@ cogen_decls(struct instr_def *instr)
         char *val = exp_tostring(entry->val);
         if (c_formal->type != instr_type_string)
         	coutf("#define %sc%s_%s %s", ID_PRE, comp->name, c_formal->id, val);
-        else /* this #define produces warnings: format ‘%s’ expects type ‘char *’, but argument X has type ‘int’ */
-        	coutf("#define %sc%s_%s %s /* this is declared as a string */", ID_PRE, comp->name, c_formal->id, val);
+        else {
+          /* a string definition parameter is concerted into a setting parameter to avoid e.g.
+           * warning: format ‘%s’ expects type ‘char *’, but argument X has type ‘int’    */
+        	coutf("%s %sc%s_%s[16384];", instr_formal_type_names_real[c_formal->type+1], ID_PRE, comp->name, c_formal->id);
+        }
         str_free(val);
       }
       list_iterate_end(liter2);
@@ -867,7 +875,7 @@ cogen_decls(struct instr_def *instr)
         if (c_formal->type != instr_type_string)
           coutf("%s %sc%s_%s;", instr_formal_type_names_real[c_formal->type], ID_PRE, comp->name, c_formal->id);
         else  /* char type for component */
-          coutf("%s %sc%s_%s[1024];", instr_formal_type_names_real[c_formal->type+1], ID_PRE, comp->name, c_formal->id);
+          coutf("%s %sc%s_%s[16384];", instr_formal_type_names_real[c_formal->type+1], ID_PRE, comp->name, c_formal->id);
       }
       list_iterate_end(liter2);
     }
@@ -1120,11 +1128,25 @@ cogen_init(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-    List_handle setpar;
+    List_handle setpar, defpar;
     struct comp_iformal *par;
 
     coutf("  /* Initializations for component %s. */", comp->name);
     coutf("  SIG_MESSAGE(\"%s (Init)\");", comp->name); /* signal handler message */
+    /* Initialization of the component string definition parameters. */
+    defpar = list_iterate(comp->def->def_par);
+    while((par = list_next(defpar)) != NULL) {
+      if (par->type == instr_type_string) {
+        char *val;
+        struct Symtab_entry *entry;
+
+        entry = symtab_lookup(comp->defpar, par->id);
+        val = exp_tostring(entry->val);
+        coutf("  if(%s) strncpy(%sc%s_%s,%s, 16384); else %sc%s_%s[0]='\\0';"
+          " /* string definition parameter changed into setting one */", 
+          val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
+      }
+    }
     /* Initialization of the component setting parameters. */
     setpar = list_iterate(comp->def->set_par);
     while((par = list_next(setpar)) != NULL)
@@ -1141,7 +1163,7 @@ cogen_init(struct instr_def *instr)
       }
       else
       {
-        coutf("  if(%s) strncpy(%sc%s_%s,%s, 1024); else %sc%s_%s[0]='\\0';", val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
+        coutf("  if(%s) strncpy(%sc%s_%s,%s, 16384); else %sc%s_%s[0]='\\0';", val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
       }
       str_free(val);
     }
