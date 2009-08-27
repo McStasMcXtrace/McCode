@@ -416,7 +416,7 @@ sub do_test {
     my $k;
     if (!@val_par) { 
     	&$printer("Instrument without test: $base"); 
-    	my $this_cmd = "mcrun -c -n0 --nocflags $base";
+    	my $this_cmd = "mcrun -c -n0 --no-cflags $base";
     	&$printer("Executing: $this_cmd");
     	my $res = qx/$this_cmd/;
     	if ($child_error_code) {
@@ -440,7 +440,7 @@ sub do_test {
       if ($this_cmd !~ m/--format/) { $this_cmd.= " --format=$plotter"; }
       if ($this_cmd !~ m/-d/ && $this_cmd !~ m/--dir/) { $this_cmd.= " -d $base" . "_$index"; }
       
-      if ($this_cmd =~ m/mcrun/) { $this_cmd .= " --nocflags"; }
+      if ($this_cmd =~ m/mcrun/) { $this_cmd .= " --no-cflags"; }
       &$printer("Executing: $this_cmd");
       my $res = qx/$this_cmd/;
       my $child_error_text = $!;
