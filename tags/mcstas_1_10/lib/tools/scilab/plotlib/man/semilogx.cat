@@ -1,7 +1,0 @@
-SEMILOGX Semi-log scale plot.
-    SEMILOGX(...) is the same as PLOT(...), except a
-    logarithmic (base 10) scale is used for the X-axis.
-
-
-
- See also SEMILOGY, LOGLOG

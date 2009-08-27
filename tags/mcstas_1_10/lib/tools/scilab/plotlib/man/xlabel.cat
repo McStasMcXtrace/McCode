@@ -1,2 +1,0 @@
- XLABEL X-axis label.
-    XLABEL('text') adds text beside the X-axis on the current axis.
