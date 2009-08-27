@@ -30,8 +30,8 @@
 
 
 # Create temporary workdir:
-TMPDIR='..'
 PW=`pwd`
+TMPDIR=$PWD/..
 DIST=$TMPDIR/mcstas-$1
 
 # Copy current PW checkout to DIST
