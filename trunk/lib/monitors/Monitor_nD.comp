@@ -204,7 +204,7 @@ DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0)
 /* these are protected C variables */
-OUTPUT PARAMETERS (DEFS, Vars)
+OUTPUT PARAMETERS (DEFS, Vars, detector)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
@@ -217,6 +217,7 @@ DECLARE
 %{
   MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
+  MCDETECTOR detector;
 %}
 
 INITIALIZE
@@ -262,6 +263,7 @@ INITIALIZE
   { char *XY; XY = strrchr(Vars.Mon_File,'.'); *XY='_'; }
   
   if (restore_neutron) Vars.Flag_parallel=1;
+  detector.m = 0;
 %}
 
 TRACE
@@ -326,17 +328,17 @@ TRACE
     /* Now get the data to monitor: current or keep from PreMonitor */
     if (Vars.Flag_UsePreMonitor != 1)
     {
-      Vars.cp = p;
-      Vars.cx = x;
+      Vars.cp  = p;
+      Vars.cx  = x;
       Vars.cvx = vx;
       Vars.csx = sx;
-      Vars.cy = y;
+      Vars.cy  = y;
       Vars.cvy = vy;
       Vars.csy = sy;
-      Vars.cz = z;
+      Vars.cz  = z;
       Vars.cvz = vz;
       Vars.csz = sz;
-      Vars.ct = t;
+      Vars.ct  = t;
     }
 
     if ((Vars.He3_pressure > 0) && (t1 != t0) && ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX)))
@@ -384,7 +386,7 @@ TRACE
 SAVE
 %{
   /* save results, but do not free pointers */
-  Monitor_nD_Save(&DEFS, &Vars);
+  detector = Monitor_nD_Save(&DEFS, &Vars);
 %}
 
 FINALLY
