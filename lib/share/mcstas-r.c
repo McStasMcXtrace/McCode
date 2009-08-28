@@ -2128,7 +2128,7 @@ MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *s
   char valid_section[VALID_NAME_LENGTH];
   char valid_parent[VALID_NAME_LENGTH];
 
-  if(!detector.file_handle || !section || !strlen(section)) return(detector);
+  if((!detector.file_handle && detector.rank > 0) || !section || !strlen(section)) return(detector);
   if (strcmp(part,"begin") && strstr(detector.format.Name, "no header")) return (detector);
   if (strcmp(part,"end")   && strstr(detector.format.Name, "no footer")) return (detector);
   
@@ -2303,8 +2303,7 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
   if (strlen(detector.filename)) {
     mcfile_tag(detector, parent, "filename", detector.filename);
     mcfile_tag(detector, parent, "format",   detector.format.Name);
-  } else 
-    mcfile_tag(detector, parent, "filename", "");
+  }
 
   mcfile_tag(detector, parent, "statistics", detector.statistics);
   mcfile_tag(detector, parent, strstr(detector.format.Name, "NeXus") ? 
@@ -2446,8 +2445,8 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   strncpy(detector.ylabel,     ylabel && strlen(ylabel) ? ylabel : "Y", CHAR_BUF_LENGTH);
   strncpy(detector.zlabel,     zlabel && strlen(zlabel) ? zlabel : "Z", CHAR_BUF_LENGTH);
   strncpy(detector.xvar,       xvar && strlen(xvar) ? xvar :       "x", CHAR_BUF_LENGTH); /* axis variables */
-  strncpy(detector.yvar,       yvar && strlen(yvar) ? yvar :       "y", CHAR_BUF_LENGTH);
-  strncpy(detector.zvar,       zvar && strlen(zvar) ? zvar :       "z", CHAR_BUF_LENGTH);
+  strncpy(detector.yvar,       yvar && strlen(yvar) ? yvar :       detector.xvar, CHAR_BUF_LENGTH);
+  strncpy(detector.zvar,       zvar && strlen(zvar) ? zvar :       detector.yvar, CHAR_BUF_LENGTH);
   
   /* init default values for statistics */
   detector.intensity  = 0;
@@ -2466,9 +2465,9 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   
   /* set "variables" as e.g. "I I_err N" */
   strcpy(c, "I ");
-  if (detector.zvar)      strncpy(c, detector.zvar,32);
-  else if (detector.yvar) strncpy(c, detector.yvar,32);
-  else if (detector.xvar) strncpy(c, detector.xvar,32);
+  if (strlen(detector.zvar))      strncpy(c, detector.zvar,32);
+  else if (strlen(detector.yvar)) strncpy(c, detector.yvar,32);
+  else if (strlen(detector.xvar)) strncpy(c, detector.xvar,32);
 
   if (detector.rank == 1)
     snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
@@ -2634,8 +2633,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
          detector.component, detector.intensity, 
          detector.component, detector.error, 
          detector.component, detector.events);
-  if (strlen(detector.filename)) printf(" \"%s\"", filename);
-  printf("\n");
+  printf(" \"%s\"\n", strlen(detector.filename) ? detector.filename : detector.component);
   
   if (hasnan) 
     printf("WARNING: Nan detected in component %s\n", detector.component);
@@ -2704,8 +2702,8 @@ static int mcsiminfo_init(FILE *f)
   /* only for Master */
   if(mpi_node_rank != mpi_node_root)                      return(-1); 
 #endif
-  if (mcdisable_output_files)                             return(-1);
-  if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return(-1);
+  if (mcdisable_output_files)                             return(-2);
+  if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return(-3);
   
   /* clear list of opened files to start new save session */
   if (mcopenedfiles && strlen(mcopenedfiles) > 0) strcpy(mcopenedfiles, "");
@@ -2726,7 +2724,7 @@ static int mcsiminfo_init(FILE *f)
   } else /* not NX - includes next if+else */
 #endif
   {
-    if (!f || !mcsiminfo_file) 
+    if (!f || (!mcsiminfo_file && f != stdout))
       mcsiminfo_file = mcnew_file(mcsiminfo_name, mcformat.Extension, "w");
     else mcsiminfo_file = f;
   }
@@ -2828,6 +2826,7 @@ void mcsiminfo_close(void)
 /*******************************************************************************
 * mcfile_data: output a single data block using specific file format, e.g. "part=[ array ]"
 *   'part' can be 'data','errors','ncount'
+* Used by: mcdetector_write_sim, mcdetector_write_data
 *******************************************************************************/
 int mcfile_data(MCDETECTOR detector, char *part)
 {
@@ -2894,7 +2893,7 @@ int mcfile_data(MCDETECTOR detector, char *part)
       mcnxfile_section(mcnxHandle,"end_data", NULL, filename, NULL, NULL, NULL, NULL, 0);
       if(mcnxfile_datablock(mcnxHandle, detector, part, 
         valid_parent, valid_xlabel, valid_ylabel, valid_zlabel) == NX_ERROR) {
-        fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
+        fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_data)\n", parent, filename);
       }
       return(1);
     } /* end if NeXus */
@@ -2930,7 +2929,7 @@ int mcfile_data(MCDETECTOR detector, char *part)
       long count=0;
       count = fwrite(this_p1, sizeof(double), detector.m*detector.n*detector.p, detector.file_handle);
       if (count != detector.m*detector.n*detector.p) 
-        fprintf(stderr, "Error: writing double binary file '%s' (%li instead of %li, mcfile_datablock)\n", detector.filename,count, detector.m*detector.n*detector.p);
+        fprintf(stderr, "Error: writing double binary file '%s' (%li instead of %li, mcfile_data)\n", detector.filename,count, detector.m*detector.n*detector.p);
     } /* end if Binary double */
 
     /* array binary float =================================================== */
@@ -2945,11 +2944,11 @@ int mcfile_data(MCDETECTOR detector, char *part)
           s[i] = (float)this_p1[i]; }
         count = fwrite(s, sizeof(float), detector.m*detector.n*detector.p, detector.file_handle);
         if (count != detector.m*detector.n*detector.p) 
-          fprintf(stderr, "Error writing float binary file '%s' (%li instead of %li, mcfile_datablock)\n",
+          fprintf(stderr, "Error writing float binary file '%s' (%li instead of %li, mcfile_data)\n",
             detector.filename,count, detector.m*detector.n*detector.p);
         free(s);
       } else 
-      fprintf(stderr, "Error: Out of memory for writing %li float binary file '%s' (mcfile_datablock)\n",
+      fprintf(stderr, "Error: Out of memory for writing %li float binary file '%s' (mcfile_data)\n",
         detector.m*detector.n*detector.p*sizeof(float), detector.filename);
     } /* end if Binary float */
   } /* end if not empty array */
@@ -3056,6 +3055,8 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
   /* skip if 0D or no filename or no data (only stored in sim file) */
   if (!detector.rank || !strlen(detector.filename) 
    || !detector.m || mcdisable_output_files) return(detector);
+
+  if (detector.rank == 0) return(detector);
   
   /* OPEN data file (possibly appending if already opened) ================== */
   if (mcformat_data.Name && strlen(mcformat_data.Name) && !mcsingle_file)
