@@ -860,10 +860,11 @@ cogen_decls(struct instr_def *instr)
         else {
           /* a string definition parameter is concerted into a setting parameter to avoid e.g.
            * warning: format ‘%s’ expects type ‘char *’, but argument X has type ‘int’    */
-          fprintf(stderr,"Warning: Component %s definition parameter %s is changed into a setting parameter\n",
+          fprintf(stderr,"Warning: Component %s definition parameter (string) %s\n"
+                         "         may be changed into a setting parameter to avoid warnings at compile time.\n",
           	comp->name, c_formal->id);
-        	coutf("%s %sc%s_%s[16384];", instr_formal_type_names_real[c_formal->type+1], ID_PRE, comp->name, c_formal->id);
-        }
+        	coutf("#define %sc%s_%s %s /* declared as a string. May produce warnings at compile */", ID_PRE, comp->name, c_formal->id, val);
+				}
         str_free(val);
       }
       list_iterate_end(liter2);
@@ -1130,25 +1131,11 @@ cogen_init(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-    List_handle setpar, defpar;
+    List_handle setpar;
     struct comp_iformal *par;
 
     coutf("  /* Initializations for component %s. */", comp->name);
     coutf("  SIG_MESSAGE(\"%s (Init)\");", comp->name); /* signal handler message */
-    /* Initialization of the component string definition parameters. */
-    defpar = list_iterate(comp->def->def_par);
-    while((par = list_next(defpar)) != NULL) {
-      if (par->type == instr_type_string) {
-        char *val;
-        struct Symtab_entry *entry;
-
-        entry = symtab_lookup(comp->defpar, par->id);
-        val = exp_tostring(entry->val);
-        coutf("  if(%s) strncpy(%sc%s_%s,%s, 16384); else %sc%s_%s[0]='\\0';"
-          " /* string definition parameter changed into setting one */", 
-          val, ID_PRE, comp->name, par->id, val, ID_PRE, comp->name, par->id);
-      }
-    }
     /* Initialization of the component setting parameters. */
     setpar = list_iterate(comp->def->set_par);
     while((par = list_next(setpar)) != NULL)
