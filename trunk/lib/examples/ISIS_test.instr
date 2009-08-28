@@ -1,10 +1,17 @@
 /*******************************************************************************
+* *         McStas instrument definition URL=http://mcstas.risoe.dk
+*
+* Instrument: ISIS_test
+*
 * %Identification
 * Written by: <a href="mailto:D.Champion@rl.ac.uk">Dickon Champion</a>
 * Date: Aug 2004
 * Origin: <a href="http://www.isis.rl.ac.uk/">ISIS</a>
-*
+* Release: McStas 1.6
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ISIS
+*
+* Simple test instrument for the ISIS_moderator component
 *
 * %Description
 * Simple test instrument for the ISIS_moderator component.
