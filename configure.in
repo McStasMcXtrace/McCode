@@ -102,8 +102,6 @@ fi
 
 AC_OUTPUT(Makefile lib/tools/perl/mcstas_config.perl support/Makefile)
 
-chmod a+x support/pgplot/pgplot.sh
-chmod a+x support/scilab/scilab.sh
 chmod a+x lib/tools/perl/mcstas_reconfigure
 
 # warnings and errors
