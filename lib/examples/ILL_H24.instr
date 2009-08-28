@@ -7,7 +7,7 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: April 7, 2004
 * Origin:ILL
-* Release: McStas CVS_080624
+* Release: McStas 2.0
 * Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: ILL
 *
@@ -27,7 +27,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_H24(m=1, lambda=4, dlambda=3.9, mip=0)
+DEFINE INSTRUMENT ILL_H24(m=2, lambda=4, dlambda=3.9, mip=0)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -83,18 +83,19 @@ INITIALIZE
 /* Here comes the TRACE section, where the actual      */
 /* instrument is defined as a sequence of components.  */
 TRACE
-
-COMPONENT Origin = Progress_bar()
+/* Source description */
+COMPONENT Origin = Progress_bar(percent=5)
   AT (0,0,0) ABSOLUTE
-
+  
+/* H24 Guide description */
 COMPONENT Thermal = Source_gen(
   yheight  = 0.22,
   xwidth   = 0.14,
-  dist     = 2.525,
+  dist     = 2.38+0.8,
   focus_xw = 0.038,
   focus_yh = 0.2,
-  lambda0     = lambda,
-  dlambda     = dlambda,
+  lambda0  = lambda,
+  dlambda  = dlambda,
   T1       = sT1,
   I1       = sI1,
   T2       = sT2,
@@ -104,32 +105,22 @@ COMPONENT Thermal = Source_gen(
   verbose  = 1)
   AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT Al_window1 = Al_window(thickness=Al_Thickness)
-AT (0,0,0.21) RELATIVE Thermal
-
-COMPONENT Al_window2 = Al_window(thickness=Al_Thickness)
-AT (0,0,0.61) RELATIVE Thermal
-
-COMPONENT Al_window3 = Al_window(thickness=Al_Thickness)
-AT (0,0,0.78) RELATIVE Thermal
-
-COMPONENT Al_window4 = Al_window(thickness=Al_Thickness)
-AT (0,0,0.92) RELATIVE Thermal
-
-COMPONENT Al_window5 = Al_window(thickness=Al_Thickness)
-AT (0,0,2.43) RELATIVE Thermal
-
-/* H24-1: L=3.17 m in 1 element. no curvature */
-
+/* L=3.3 m in 2 elements. 'Pink Carter'.  starts at about 2.5 m from core center */
 COMPONENT PinkCarter = Guide_gravity(
-  w1=0.038, h1=0.2, w2=0.032, h2=0.2, l=3.170,
+  w1=0.038, h1=0.2, w2=0.032, h2=0.2, l=0.8,
   R0=gR0, Qc=gQc, alpha=gAlpha, m=mip, W=gW)
-AT (0,0,2.525) RELATIVE Thermal
+AT (0,0,2.38) RELATIVE Thermal
+/* core to glass SM elements=3.182 m */
+COMPONENT PinkCarterSM = Guide_gravity(
+  w1=0.038, h1=0.2, w2=0.032, h2=0.2, l=2.5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=mip, W=gW)
+AT (0,0,0.8+gGap) RELATIVE PREVIOUS
 
-COMPONENT FirstObturator = Guide_gravity(
+/* Lead Shutter */
+COMPONENT LeadShutter = Guide_gravity(
   w1=0.031, h1=0.2, w2=0.031, h2=0.2, l=0.228,
-  R0=gR0, Qc=gQc, alpha=gAlpha, m=mip, W=gW)
-AT (0,0,3.17+0.02) RELATIVE PinkCarter
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=m, W=gW)
+AT (0,0,0.8+2.5+gGap) RELATIVE PinkCarter
 
 /* ******************** swiming pool guide ******************** */
 
@@ -432,4 +423,5 @@ AT (0,0,0) RELATIVE PREVIOUS
 
 /* The END token marks the instrument definition end */
 END
+
 
