@@ -8,13 +8,13 @@
 * Component: Chopper_Monitor
 *
 * %Identification
-* Written by: Monzat Christophe
+* Written by: C. Monzat/E. Farhi
 * Date: 2009
 * Version:
 * Origin: ILL
 * Release:
 *
-* Monitor designed for Statistical Chopper
+* Monitor designed to compute the autocorrelation signal for the Statistical Chopper
 *
 * %Description
 * This component is a time sensitive monitor which calculates the cross 

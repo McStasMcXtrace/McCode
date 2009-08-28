@@ -9,13 +9,13 @@
 *
 * %Identification
 *
-* Written by: Monzat Christophe
+* Written by: C. Monzat/E. Farhi/S. Rozenkranz
 * Date: 2009
-* Version:
+* Version: $Revision 1.0$
 * Origin: ILL
-* Release:
+* Release: McStas 2.0
 *
-* Statistical Chopper
+* Statistical (correlation) Chopper
 *
 * %Description
 * This component is a statistical chopper based on a pseudo random sequence that the user

@@ -8,10 +8,11 @@
 * Component: Virtual_mcnp_output
 *
 * %I
-* Written by: <a href="mailto hennanec@ensimag.fr">Chama Hennane</a>
+* Written by: <a href="mailto hennanec@ensimag.fr">Chama Hennane</a> and E. Farhi
 * Date: July 7th, 2006
 * Version:  $Revision: 1.6 $
 * Release: McStas 1.10
+* Origin: <a href="http://www.ill.fr/">ILL</a>
 *
 * Detector-like component that writes neutron state parameters into a
 * 'virtual source' neutron file with MCNP/PTRAC format.

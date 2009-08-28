@@ -13,8 +13,7 @@
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
 * Version:    $Revision: 1.5 $
 * Release:    McStas 1.9
-* Modified:   Kim Lefmann
-* Date:       7 June 2005
+* Modified by:   Kim Lefmann, 7 June 2005
 *
 * Position-sensitive monitor with radially averaging.
 *

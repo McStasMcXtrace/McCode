@@ -11,10 +11,12 @@
 * Version: $Revision: 1.9 $
 * %INSTRUMENT_SITE: PSI
 *
+* McStas model of the DMC powder diffractometer at PSI, CH.
+*
 * %Description
 * McStas model of the DMC powder diffractometer at PSI, CH.
 *
-* Please note that this instrumentfile does not include the radial collimator of DMC. 
+* Please note that this instrument file does not include the radial collimator of DMC. 
 * To generate the full 800-bin angle coverage at DMC, you should combine two simulations
 * using this instrumentfile, with SHIFT=0 and 0.1. This will displace the detector by half
 * a bin-width, which is a standard procedure at the DMC diffractometer

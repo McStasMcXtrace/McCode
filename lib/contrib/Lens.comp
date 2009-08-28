@@ -9,13 +9,13 @@
 *
 * %Identification
 *
-* Written by: Monzat Christophe
+* Written by: C. Monzat/E. Farhi/S. Desert
 * Date: 2009
-* Version:
+* Version: $Revision 1.0$
 * Origin: ILL
-* Release:
+* Release: McStas 2.0
 *
-* Refractive Lens
+* Refractive Lens with absorption, incoherent scattering and surface imperfection. May be spherical or parabolic
 *
 * %Description
 *

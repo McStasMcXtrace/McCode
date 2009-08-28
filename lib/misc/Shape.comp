@@ -15,7 +15,7 @@
 * Release: McStas 1.9
 * Modified by: E. Farhi, based on Incoherent
 *
-* A geometric shape without effect on neutron
+* A geometric shape without effect on neutron, for instrument display purpose.
 *
 * %D
 * An inactive geometrical shape, for drawing purposes only. 

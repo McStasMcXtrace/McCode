@@ -11,7 +11,10 @@
 * Written by: G. Granroth
 * Date: July 2004
 * Origin: SNS Project Oak Ridge National Laboratory
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE:SNS
+*
+* Simple test instrument for the SNS_source component.
 *
 * %Description
 * Simple test instrument for the SNS_source component.
