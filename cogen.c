@@ -860,6 +860,8 @@ cogen_decls(struct instr_def *instr)
         else {
           /* a string definition parameter is concerted into a setting parameter to avoid e.g.
            * warning: format ‘%s’ expects type ‘char *’, but argument X has type ‘int’    */
+          fprintf(stderr,"Warning: Component %s definition parameter %s is changed into a setting parameter\n",
+          	comp->name, c_formal->id);
         	coutf("%s %sc%s_%s[16384];", instr_formal_type_names_real[c_formal->type+1], ID_PRE, comp->name, c_formal->id);
         }
         str_free(val);
