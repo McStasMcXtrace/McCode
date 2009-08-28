@@ -151,7 +151,7 @@ if test "$PGPLOT" == "no" ; then
   echo "= X11-dev libraries/includes (libx11-dev, xserver-xorg-dev, libxt-dev)"
 fi
 if test "$PGPLOT" == "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
-  echo "PGPLOT install: you may try our automatic PGPLOT installation AFTER installing McStas"
+  echo "PGPLOT install: you may try our automatic pgplot5 installation AFTER installing McStas"
   echo "# make install-pgplot"
   echo "# make reconfigure"
   echo "(For 64-bit machines, reconfigure first: # ./configure --with-pic )"
@@ -177,7 +177,7 @@ if test "$MATLAB" != "no" ; then
 echo "# make matlab (selects matlab)"
 fi
 if test "$PGPLOT" != "no" ; then
-echo "# make pgplot (selects pgplot)"
+echo "# make pgplot (selects pgplot and installs perl-PGPLOT)"
 fi
 if test "$VRMLVIEW" != "no" ; then
 echo "# make vrml   (selects vrml)"
@@ -190,5 +190,5 @@ echo ""
 if test "$DASH" != "no" ; then
 echo
 echo WARNING: Your system includes the $DASH shell which is known to cause problems.
-echo On Debian/Ubuntu systems, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh
+echo "On Debian/Ubuntu systems, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh"
 fi
