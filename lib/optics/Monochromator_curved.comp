@@ -42,12 +42,15 @@
 * Example: Monochromator_curved(zwidth=0.01, yheight=0.01, gap=0.0005,
 *           NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
 *
-* Example values for lattice parameters
+* Monochromator lattice parameter
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
 * PG       004 DM=1.607 AA
 * Heusler  111 DM=3.362 AA (Cu2MnAl)
 * CoFe         DM=1.771 AA (Co0.92Fe0.08)
+* Ge       111 DM=3.266 AA
 * Ge       311 DM=1.714 AA
+* Ge       511 DM=1.089 AA
+* Ge       533 DM=0.863 AA
 * Si       111 DM=3.135 AA
 * Cu       111 DM=2.087 AA
 * Cu       002 DM=1.807 AA

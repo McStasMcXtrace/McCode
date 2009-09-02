@@ -53,6 +53,21 @@
 * Example: Monochromator_pol(zwidth=0.2, yheight=0.2, mosaic=30.0, dspread=0.0025,
 *                            Rup=1.0, Rdown=0.0, Q=1.8734)
 *
+* Monochromator lattice parameter
+* PG       002 DM=3.355 AA (Highly Oriented Pyrolythic Graphite)
+* PG       004 DM=1.607 AA
+* Heusler  111 DM=3.362 AA (Cu2MnAl)
+* CoFe         DM=1.771 AA (Co0.92Fe0.08)
+* Ge       111 DM=3.266 AA
+* Ge       311 DM=1.714 AA
+* Ge       511 DM=1.089 AA
+* Ge       533 DM=0.863 AA
+* Si       111 DM=3.135 AA
+* Cu       111 DM=2.087 AA
+* Cu       002 DM=1.807 AA
+* Cu       220 DM=1.278 AA
+* Cu       111 DM=2.095 AA
+*
 * %P
 * INPUT PARAMETERS:
 *
