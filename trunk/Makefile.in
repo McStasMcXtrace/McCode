@@ -81,161 +81,40 @@ INSTALL_DATA = @INSTALL_DATA@
 # End of configuration section.
 #
 
-OBJECTS=instrument.tab.o lex.yy.o debug.o \
-	memory.o list.o symtab.o coords.o cexp.o \
-	file.o cogen.o port.o
-COBJECTS=instrument.tab.c lex.yy.c debug.c \
-	memory.c list.c symtab.c coords.c cexp.c \
-	file.c cogen.c port.c
+PERLOBJ=src/mcdisplay.fixpl src/mcplot.fixpl src/mcresplot.fixpl src/mcrun.fixpl \
+        src/mcgui.fixpl src/mcdoc.fixpl src/mcstas2vitess.fixpl src/mcconvert.fixpl src/mcdaemon.fixpl src/mcformatgui.fixpl
 
-PERLOBJ=gscan.fixpl mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
-        mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl mcformatgui.fixpl
-PERLBIN=gscan mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon mcformatgui
-BINOBJS=$(PERLOBJ) mcstas mcformat
+BINOBJS=$(PERLOBJ) src/mcstas src/mcformat
 
-.SUFFIXES: .c .o .pl .fixpl
-
-.c.o:
-	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(mc_libdir)'"' $(DEFS) $<
-
-.pl.fixpl:
-	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
-	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(mc_libdir)'"+' \
-	    < $(srcdir)/$< > $@
-	chmod +x $@
-
-
-all: $(BINOBJS)
+all: mcstas
 
 mcstas: $(OBJECTS)
-	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
-
-mcstas.win32: $(COBJECTS)
-	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
-	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
-
-
-mcformat:
-	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
+	cd src/ && make
 
 clean:
-	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \
-	instrument.tab.c instrument.tab.h instrument.output lex.yy.c \
-	config.cache Makefile
-	rm -rf selftest_*/ selftest/
+	cd src/ && make clean
+	rm -f src/config.cache src/Makefile config.cache Makefile
 
-TAGS:
-	etags *.[chly]
+distclean:
+	cd src/ && make distclean
+	rm -f src/config.cache src/Makefile config.cache Makefile
 
-install: installdirs $(BINOBJS)
-	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
-	$(INSTALL_PROGRAM) mcformat $(bindir)/mcformat
-	for pgm in $(PERLBIN); do \
-	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
-	done
-	if [ -d $(mc_libdir) ]; then \
-	  echo "Moving your old library dir $(mc_libdir) to $(mc_libdir).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(mc_libdir) $(mc_libdir).`date +%Y%m%d_%H.%M`;\
-        fi;
-	$(srcdir)/mkinstalldirs $(mc_libdir)
-	for file in `cd lib; ls`; do \
-	  if [ -d lib/$$file ]; then \
-	    $(srcdir)/mkinstalldirs $(mc_libdir)/$$file; \
-	    for comp in `cd lib/$$file; ls`; do \
-        if [ -f $(mc_libdir)/$$file/$$comp ]; then \
-          echo "Renaming old library element version $(mc_libdir)/$$file/$$comp to $(mc_libdir)/$$file/$$comp.old"; \
-          mv -f $(mc_libdir)/$$file/$$comp $(mc_libdir)/$$file/$$comp.old; \
-        fi; \
-	      if [ -d lib/$$file/$$comp ]; then \
-          $(srcdir)/mkinstalldirs $(mc_libdir)/$$file/$$comp; \
-          for tool in `cd lib/$$file/$$comp; ls`; do \
-	      if [ -d lib/$$file/$$comp/$$tool ]; then \
-          $(srcdir)/mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool ; \
-	        for subtool in `cd lib/$$file/$$comp/$$tool; ls`; do \
-		  if [ -d lib/$$file/$$comp/$$tool/$$subtool ]; then \
-		     $(srcdir)/mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool/$$subtool ; \
-	             for subsubtool in `cd lib/$$file/$$comp/$$tool/$$subtool; ls`; do \
-                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
-                     done \
-		  else \
-                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool; \
-		  fi; \
-                done \
-              else \
-                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(mc_libdir)/$$file/$$comp/$$tool; \
-	      fi; \
-          done \
-        else \
-	        $(INSTALL_DATA) lib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
-        fi; \
-	    done \
-	  else \
-	    $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
-	  fi \
-	done
-	MCSTAS=$(mc_libdir)
-	export MCSTAS
-	./mcdoc.fixpl --text
-	$(INSTALL_DATA) *.1 $(mandir)/man1
-	cd support && make perl-modules
-	chmod a+x $(mc_libdir)/tools/perl/mcstas_reconfigure
-	@echo McStas library has been installed in MCSTAS=$(mc_libdir), and binaries in $(bindir)
-	@echo "Start McStas with: mcgui or use mcrun for command line simulations"
-	@echo "==== Installation finished. Thanks for using McStas ===="
-
-installdirs:
-	$(srcdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir) $(mandir)/man1
-
-instrument.tab.o: mcstas.h
-lex.yy.o: mcstas.h instrument.tab.h
-debug.o: mcstas.h
-memory.o: mcstas.h
-symtab.o: mcstas.h
-list.o: mcstas.h
-coords.o: mcstas.h
-cexp.o: mcstas.h
-file.o: mcstas.h
-cogen.o: mcstas.h
-port.o: port.h
-mcformat.o: mcstas.h
-
-instrument.tab.c instrument.tab.h: instrument.y
-	$(BISON) $(BISONFLAGS) instrument.y
-
-lex.yy.c: instrument.l
-	$(FLEX) $(FLEXFLAGS) instrument.l
+install: 
+	cd src/ && make install
 
 # Prefer PGPLOT over Matlab over Scilab over VRML
 config:
-	if [ $(VRML) != no ]; then \
-		make vrml; \
-	fi; \
-	if [ $(SCILAB) != no ]; then \
-		make scilab; \
-	fi; \
-	if [ $(MATLAB) != no ]; then \
-		make matlab; \
-	fi; \
-	if [ $(PGPLOT) != no ]; then \
-		make pgplot; \
-	fi;
-
+	cd src/ && make config
 scilab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Scilab'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
+	cd src/ && make scilab
 matlab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Matlab'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
+	cd src/ && make matlab
 pgplot:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'McStas'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-	cd support && make perl-PGPLOT
+	cd src/ && make pgplot
 vrml:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-	
+	cd src/ && make vrml
 PGPLOT:
-	make pgplot
+	cd src/ && make pgplot
 Matlab:
 	make matlab
 Scilab:
@@ -244,24 +123,21 @@ VRML:
 	make vrml
 
 test:
-	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/lib; export PERL5LIB=${PWD}/lib/tools/perl; ./mcrun.fixpl --test
+	cd src && make test
 
 uninstall:
-	cd $(bindir); rm -f $(BINOBJS)
-	rm -rf $(mc_libdir)
+	cd src && make uninstall
 
 reconfigure:
 	cd $(mc_libdir)/tools/perl/
-	$(mc_libdir)/tools/perl/mcstas_reconfigurels /usr/sha	
+	$(mc_libdir)/tools/perl/mcstas_reconfigure
 
 # Optional auto install of patched perl-Tk, scilab and pgplot5 libs
 install-pgplot:
-	cd support && make install-pgplot
+	cd support/common && make install-pgplot
 	make pgplot
 	@echo "McStas: run 'make reconfigure'"
 
 install-scilab:
-	cd support && make compile-scilab && echo "McStas: run './configure; make; make install' again"
-	
-install-tk:
-	cd support && make compile-tk && echo "McStas: run './configure; make; make install' again"
+	cd suppor/common && make compile-scilab && echo "McStas: run './configure; make; make install' again"
+

@@ -65,18 +65,18 @@
 typedef struct Pool_header *Pool; /* allows memory to be included */
 #include "memory.c"
 
-#include "lib/share/mcstas-r.h" /* with decl of MC_PATHSEP */
+#include "../nlib/share/mcstas-r.h" /* with decl of MC_PATHSEP */
 
 #ifdef USE_NEXUS
-#include "lib/share/nexus-lib.h"
+#include "../lib/share/nexus-lib.h"
 #endif
 
-#include "lib/share/mcstas-r.c"
+#include "../nlib/share/mcstas-r.c"
 
 /* end of parts copied from mcstas.h */
 
-#include "lib/share/read_table-lib.h" /* independent library */
-#include "lib/share/read_table-lib.c"
+#include "../lib/share/read_table-lib.h" /* independent library */
+#include "../lib/share/read_table-lib.c"
 
 #include <dirent.h>
 #include <errno.h>
@@ -104,7 +104,7 @@ struct mcinputtable_struct mcinputtable[MAX_LENGTH];
 mcstatic FILE *mcsiminfo_file        = NULL;
 
 #ifdef USE_NEXUS
-#include "lib/share/nexus-lib.c"
+#include "../lib/share/nexus-lib.c"
 #endif
 
 
