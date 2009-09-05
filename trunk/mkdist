@@ -68,10 +68,14 @@ find . -wholename './setyear'    -prune -o -type d -o -exec ./setyear \{\} \;
 
 sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
 mv build.bat.new build.bat
-sed 's/MCSTAS_VERSION/'$1'/' mcstas.nsi > mcstas.nsi.new
-mv mcstas.nsi.new mcstas.nsi
+
+cd support
+sed 's/MCSTAS_VERSION/'$1'/' Win32/install/mcstas.nsi > Win32/install/mcstas.nsi.new
+mv Win32/install/mcstas.nsi.new Win32/install/mcstas.nsi
 sed 's/MCSTAS_VERSION/'$1'/' deb/control > deb/control.new
 mv deb/control.new deb/control
+cd ..
+
 sed 's/MCSTAS_VERSION/'$1'/' configure.in > configure.in.new
 mv configure.in.new configure.in
 
@@ -79,7 +83,7 @@ mv configure.in.new configure.in
 if [ -d $PW/../tex ] ;
 then
   # Create ps/pdf/html based install info
-  cd install_docs/tex
+  cd doc/install_docs/tex
   latex install
   latex install
   whichdvipdf=`which dvipdf`
@@ -100,9 +104,8 @@ then
   # clean up
   rm install.aux
   rm install.log
-  cd ../..
+  cd $PW/doc/tutorial
   # Update the tutorial files
-  cd lib/doc/tutorial
   ./update
   rm update
 fi  
@@ -112,10 +115,13 @@ cd $DIST
 MONTH=`date +"%b"`
 DAY=`date +"%d"`
 YEAR=`date +"%Y"`
+
+cd src
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.h > mcstas.h.tmp
 mv mcstas.h.tmp  mcstas.h
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.c > mcformat.c.tmp
 mv mcformat.c.tmp  mcformat.c
+cd ../doc/man
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.1 > mcstas.1.tmp
 mv mcstas.1.tmp  mcstas.1
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcrun.1 > mcrun.1.tmp
@@ -132,9 +138,11 @@ sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcconvert.1 > m
 mv mcconvert.1.tmp  mcconvert.1
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.1 > mcformat.1.tmp
 mv mcformat.1.tmp  mcformat.1
+cd ../../support
 sed 's/@RELEASE@/'$1'/' deb/debcreate > deb/debcreate.new
 mv deb/debcreate.new deb/debcreate
 chmod a+x deb/debcreate
+cd ..
 
 # Create configure
 autoconf configure.in > configure
@@ -144,8 +152,10 @@ chmod a+x lib/tools/perl/mcstas_reconfigure
 chmod a+w lib/tools/perl/mcstas_config.perl
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
+cd src
 flex -i instrument.l
 bison -v -d instrument.y
+cd ..
 
 # Set the INSTALL environment variable to make the src archive
 # default to ./install-sh in the contributed Makefile.
@@ -198,12 +208,14 @@ tar cfz $PW/../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz mcstas-$1
 cd $PW
 cd $DIST
 make clean
+cd src
 flex -i instrument.l
 bison -v -d instrument.y
+cd ..
 ./configure
 sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
 sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
-cp support/Win32/which.exe .
+cp support/Win32/install/which.exe .
 cd ..
 tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
 if [ `which makensis` ]; then
