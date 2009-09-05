@@ -88,33 +88,35 @@ BINOBJS=$(PERLOBJ) src/mcstas src/mcformat
 
 all: mcstas
 
+mcxtrace: $(OBJECTS)
+
 mcstas: $(OBJECTS)
-	cd src/ && make
+	cd src/ && $(MAKE)
 
 clean:
-	cd src/ && make clean
+	cd src/ && $(MAKE) clean
 	rm -f src/config.cache src/Makefile config.cache Makefile
 
 distclean:
-	cd src/ && make distclean
+	cd src/ && $(MAKE) distclean
 	rm -f src/config.cache src/Makefile config.cache Makefile
 
 install: 
-	cd src/ && make install
+	cd src/ && $(MAKE) install
 
 # Prefer Scilab over Matlab over PGPLOT
 config:
 	if [ $(VRML) != no ]; then \
-		make vrml; \
+		$(MAKE) vrml; \
 	fi; \
 	if [ $(SCILAB) != no ]; then \
-		make scilab; \
+		$(MAKE) scilab; \
 	fi; \
 	if [ $(MATLAB) != no ]; then \
-		make matlab; \
+		$(MAKE) matlab; \
 	fi; \
 	if [ $(PGPLOT) != no ]; then \
-		make pgplot; \
+		$(MAKE) pgplot; \
 	fi;
 
 scilab:
@@ -130,19 +132,19 @@ vrml:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
 PGPLOT:
-	make pgplot
+	$(MAKE) pgplot
 Matlab:
-	make matlab
+	$(MAKE) matlab
 Scilab:
-	make scilab
+	$(MAKE) scilab
 VRML:
-	make vrml
+	$(MAKE) vrml
 
 test:
-	cd src && make test
+	cd src && $(MAKE) test
 
 uninstall:
-	cd src && make uninstall
+	cd src && $(MAKE) uninstall
 
 reconfigure:
 	cd $(mc_libdir)/tools/perl/
@@ -150,7 +152,7 @@ reconfigure:
 
 # Optional auto install of patched perl-Tk, scilab and pgplot5 libs
 install-pgplot:
-	cd support/common && make install-pgplot
+	cd support/common && $(MAKE) install-pgplot
 	make pgplot
 	@echo "McStas: run 'make reconfigure'"
 
