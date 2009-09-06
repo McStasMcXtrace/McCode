@@ -167,9 +167,9 @@ install: installdirs
 	$(topdir)/src/mcdoc.fixpl --text
 	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
 	mkdir $(mc_libdir)/tools/perl/modules
-	cd $(topdir)/support/common/Perl/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
-	cd $(topdir)/support/common/Perl/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
-	cd $(topdir)/support/common/Perl/Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
+	cd $(topdir)/support/common/Perl/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
+	cd $(topdir)/support/common/Perl/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
+	cd $(topdir)/support/common/Perl/Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
 	chmod a+x $(mc_libdir)/tools/perl/mcstas_reconfigure
 	@echo McStas library has been installed in MCSTAS=$(mc_libdir), and binaries in $(bindir)
 	@echo "Start McStas with: mcgui or use mcrun for command line simulations"
@@ -200,16 +200,16 @@ lex.yy.c: instrument.l
 # Prefer Scilab over Matlab over PGPLOT
 config:
 	if [ $(VRML) != no ]; then \
-		make vrml; \
+		$(MAKE) vrml; \
 	fi; \
 	if [ $(SCILAB) != no ]; then \
-		make scilab; \
+		$(MAKE) scilab; \
 	fi; \
 	if [ $(MATLAB) != no ]; then \
-		make matlab; \
+		$(MAKE) matlab; \
 	fi; \
 	if [ $(PGPLOT) != no ]; then \
-		make pgplot; \
+		$(MAKE) pgplot; \
 	fi;
 
 scilab:
@@ -225,18 +225,18 @@ vrml:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
 PGPLOT:
-	make pgplot
+	$(MAKE) pgplot
 Matlab:
-	make matlab
+	$(MAKE) matlab
 Scilab:
-	make scilab
+	$(MAKE) scilab
 VRML:
-	make vrml
+	$(MAKE) vrml
 install-pgplot:
-	cd support/pgplot && ./pgplot.sh && echo "McStas: run 'make reconfigure'"
+	cd support/pgplot && ./pgplot.sh && echo "McStas: run '$(MAKE) reconfigure'"
 
 install-scilab:
-	cd support/scilab && ./scilab.sh && echo "McStas: run './configure; make; make install' again"
+	cd support/scilab && ./scilab.sh && echo "McStas: run './configure; $(MAKE); $(MAKE) install' again"
 
 test:
 	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/lib; export PERL5LIB=${PWD}/lib/tools/perl; ./mcrun.fixpl --test
@@ -254,5 +254,5 @@ tk:
 	if [ $(WGET) != no ]; then \
 		$(WGET) http://www.mcstas.org/download/Tk-804.027_gtk2_patch.tar.gz &&\
 		tar xzvf Tk-804.027_gtk2_patch.tar.gz > /dev/null && \
-		cd Tk-804.027_gtk2_patch && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install ;\
+		cd Tk-804.027_gtk2_patch && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install ;\
 	fi;

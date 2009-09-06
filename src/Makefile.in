@@ -119,56 +119,27 @@ mcformat:
 
 clean:
 	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \
-	instrument.tab.c instrument.tab.h instrument.output lex.yy.c \
-	config.cache Makefile
 	rm -rf selftest_*/ selftest/
+
+distclean: clean
+	rm -f instrument.tab.c instrument.tab.h instrument.output lex.yy.c 
 
 TAGS:
 	etags *.[chly]
 
-install: installdirs
+install: installdirs $(BINOBJS)
+	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
+	$(INSTALL_PROGRAM) mcformat $(bindir)/mcformat
+	for pgm in $(PERLBIN); do \
+	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
+	done
 	if [ -d $(mc_libdir) ]; then \
 	  echo "Moving your old library dir $(mc_libdir) to $(mc_libdir).`date +%Y%m%d_%H.%M`"; \
 	  mv -f $(mc_libdir) $(mc_libdir).`date +%Y%m%d_%H.%M`;\
         fi;
 	$(topdir)/mkinstalldirs $(mc_libdir)
 
-	cd $(topdir) && for file in `cd lib; ls | grep -v .svn| grep -v Make`; do \
-	  if [ -d lib/$$file ]; then \
-	    ./mkinstalldirs $(mc_libdir)/$$file; \
-	    for comp in `cd lib/$$file; ls | grep -v .svn`; do \
-        if [ -f $(mc_libdir)/$$file/$$comp ]; then \
-          echo "Renaming old library element version $(mc_libdir)/$$file/$$comp to $(mc_libdir)/$$file/$$comp.old"; \
-          mv -f $(mc_libdir)/$$file/$$comp $(mc_libdir)/$$file/$$comp.old; \
-        fi; \
-	      if [ -d lib/$$file/$$comp ]; then \
-          ./mkinstalldirs $(mc_libdir)/$$file/$$comp; \
-          for tool in `cd lib/$$file/$$comp; ls | grep -v .svn`; do \
-	      if [ -d lib/$$file/$$comp/$$tool ]; then \
-          ./mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool ; \
-	        for subtool in `cd lib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
-		  if [ -d lib/$$file/$$comp/$$tool/$$subtool ]; then \
-		     ./mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool/$$subtool ; \
-	             for subsubtool in `cd lib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
-                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
-                     done \
-		  else \
-                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool; \
-		  fi; \
-                done \
-              else \
-                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(mc_libdir)/$$file/$$comp/$$tool; \
-	      fi; \
-          done \
-        else \
-	        $(INSTALL_DATA) lib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
-        fi; \
-	    done \
-	  else \
-	    $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
-	  fi \
-	done
-	cd $(topdir)/nlib && $(MAKE) install
+	cd $(topdir)/lib && $(MAKE) install 
 
 installdirs:
 	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir) $(mandir)/man1
@@ -233,8 +204,8 @@ install-pgplot:
 install-scilab:
 	cd support/scilab && ./scilab.sh && echo "McStas: run './configure; $(MAKE); $(MAKE) install' again"
 
-test:
-	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/lib; export PERL5LIB=${PWD}/lib/tools/perl; ./mcrun.fixpl --test
+test: mcstas
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ./mcrun.fixpl --test
 
 uninstall:
 	cd $(bindir); rm -f $(BINOBJS)
