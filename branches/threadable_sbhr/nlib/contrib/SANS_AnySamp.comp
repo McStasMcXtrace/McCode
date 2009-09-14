@@ -1,0 +1,191 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright 1997-2003, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: SANS_AnySamp
+*
+* %I
+* Written by: Henrich Frielinghaus
+* Date:       Sept 2004
+* Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
+* Version:    $Revision: 1.4 $
+* Release:    McStas 1.9
+*
+* Sample for Small Angle Neutron Scattering. To be customized.
+*
+* %D
+* Sample for Small Angle Neutron Scattering.
+* May be customized for Any Sample model.
+* Copy this component and modify it to your needs.
+* Just give shape of scattering function.
+* Normalization of scattering will be done in INITIALIZE.
+*
+* Some remarks:
+* Scattering function should be a defined the same way in INITIALIZE and TRACE sections
+* There exist maybe better library functions for the integral.
+*
+* Here for comparison: Guinier.
+* Transmitted paths set to 3% of all paths. In this simulation method paths are
+* well distributed among transmission and scattering (equally in Q-space).
+*
+* Sample components leave the units of flux for the probability
+* of the individual paths. That is more consitent than the
+* Sans_spheres routine. Furthermore one can simulate the
+* transmitted beam. This allows to determine the needed size of
+* the beam stop. Only absorption has not been included yet to
+* these sample-components. But thats really nothing.
+*
+* Example: SANS_AnySamp(transm=0.5, Rg=100, qmax=0.03, xwidth=0.01, yheight=0.01, zdepth=0.001)
+*
+* %P
+*
+* INPUT PARAMETERS
+*
+* transm  (1): coherent transmission of sample for the optical path "zdepth"
+* Rg   (Angs): Radius of Gyration
+* qmax (AA-1): Maximum scattering vector
+* xwidth  (m): horiz. dimension of sample, as a width (m)
+* yheight (m): vert.. dimension of sample, as a height (m)
+* zdepth  (m): thickness of sample (m)
+*
+* %Link
+* Sans_spheres component
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT SANS_AnySamp
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (transm=0.5, Rg=100, qmax=0.03,
+                    xwidth=0.01, yheight=0.01, zdepth=0.001)
+OUTPUT PARAMETERS (q_v,isq)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double q_v,isq;
+%}
+
+INITIALIZE
+%{
+    if (!xwidth || !yheight || !zdepth) {
+  exit(fprintf(stderr,"SANS_AnySamp: %s:   sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    }
+
+  int    iqmax=30000,iq=iqmax;    // number of intervals
+  double q,sq;
+
+  double a=Rg*Rg/3.0;  // internal for function sq
+
+  isq = 0.0;           // integral = 0
+
+  while (iq > 1)       // start integrating with low intensities at large q
+  {                               // MODIFIY HERE
+  q  = (iq-0.5)*qmax/iqmax;       // q always slightly larger than 0
+  sq = exp(-a*q*q);               // define this function in INITIALIZE and TRACE part
+  sq*= q;
+  isq+= sq;
+  --iq;
+  }
+
+  isq*=qmax/iqmax;
+
+%}
+
+TRACE
+%{
+  double a,q,qm,sq;
+  double transsim=0.03;                  // portion of paths for transmission
+
+  double transmr, t0, t1, v, l_full, l, dt, d_phi, theta;
+  double axis_x, axis_y, axis_z;
+  double arg, tmp_vx, tmp_vy, tmp_vz, vout_x, vout_y, vout_z;
+  char   intersect=0;
+
+
+  transmr = transm;                      /* real transmission */
+  if (transmr<1e-10) transmr = 1e-10;
+  if (transmr>0.99 ) transmr = 0.99;
+
+  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+  if(intersect)
+  {
+    if(t0 < 0) ABSORB;                   /* Neutron enters at t=t0. */
+
+    v = sqrt(vx*vx + vy*vy + vz*vz);
+    l_full = v * (t1 - t0);              /* Length of full path through sample */
+    transmr = exp(log(transmr)*l_full/zdepth);  /* real transmission */
+
+    dt = rand01()*(t1 - t0) + t0;        /* Time of scattering */
+    PROP_DT(dt);                         /* Point of scattering */
+    l = v*dt;                            /* Penetration in sample */
+
+    qm = qmax;                           // adjust maximal q
+    if (qm > 2.0*v/K2V) qm = 2.0*v/K2V;  // should not be totally wrong
+    q = sqrt(rand01())*qm;               // otherwise normalization with isq is wrong
+
+    q_v = q*K2V;                         /* scattering possible ??? */
+    arg = q_v/(2.0*v);
+
+    if(rand01()>transsim)
+    {
+    a = Rg*Rg/3.0;                       // MODIFIY HERE
+    sq= exp(-a*q*q);                     // identical to INITIALIZE
+
+    p*= sq*(qmax*qmax*0.5)*(1.0-transmr)/(1.0-transsim)/isq;
+
+    theta = asin(arg);                   /* Bragg scattering law */
+    d_phi = 2*PI*rand01();
+
+    vec_prod(axis_x, axis_y, axis_z, vx, vy, vz, 0, 1, 0);
+    rotate(tmp_vx, tmp_vy, tmp_vz, vx, vy, vz, 2*theta, axis_x, axis_y, axis_z);
+    rotate(vout_x, vout_y, vout_z, tmp_vx, tmp_vy, tmp_vz, d_phi, vx, vy, vz);
+
+    vx = vout_x;
+    vy = vout_y;
+    vz = vout_z;
+
+    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth))    fprintf(stderr, "SANS_AnySamp: FATAL ERROR: Did not hit box from inside.\n");
+    }
+    else
+    {
+    p*= transmr / transsim;
+    }
+
+    SCATTER;
+  }
+%}
+
+MCDISPLAY
+%{
+  double radius = 0;
+  double h = 0;
+  magnify("xyz");
+  {
+    double xmin = -0.5*xwidth;
+    double xmax =  0.5*xwidth;
+    double ymin = -0.5*yheight;
+    double ymax =  0.5*yheight;
+    double zmin = -0.5*zdepth;
+    double zmax =  0.5*zdepth;
+    multiline(5, xmin, ymin, zmin,
+                 xmax, ymin, zmin,
+                 xmax, ymax, zmin,
+                 xmin, ymax, zmin,
+                 xmin, ymin, zmin);
+    multiline(5, xmin, ymin, zmax,
+                 xmax, ymin, zmax,
+                 xmax, ymax, zmax,
+                 xmin, ymax, zmax,
+                 xmin, ymin, zmax);
+    line(xmin, ymin, zmin, xmin, ymin, zmax);
+    line(xmax, ymin, zmin, xmax, ymin, zmax);
+    line(xmin, ymax, zmin, xmin, ymax, zmax);
+    line(xmax, ymax, zmin, xmax, ymax, zmax);
+  }
+
+%}
+END
