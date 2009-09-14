@@ -89,6 +89,7 @@ BINOBJS=$(PERLOBJ) src/mcstas src/mcformat
 all: mcstas
 
 mcxtrace: $(OBJECTS)
+	cd src/ && $(MAKE) mxall
 
 mcstas: $(OBJECTS)
 	cd src/ && $(MAKE)
@@ -103,6 +104,10 @@ distclean:
 
 install: 
 	cd src/ && $(MAKE) install
+
+mxinstall: 
+	cd src/ && $(MAKE) mxinstall
+
 
 # Prefer Scilab over Matlab over PGPLOT
 config:

@@ -42,6 +42,7 @@ PWD = `pwd`
 
 DEBUG = -DDEBUG=0
 mc_libdir = $(libdir)/mcstas
+mx_libdir = $(libdir)/mcxtrace
 
 CC = @CC@
 MINGW = @MINGW@
@@ -92,7 +93,12 @@ PERLOBJ=mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
 PERLBIN=mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon mcformatgui
 BINOBJS=$(PERLOBJ) mcstas mcformat
 
-.SUFFIXES: .c .o .pl .fixpl
+MXPERLOBJ=mcdisplay.mxfixpl mcplot.mxfixpl mcresplot.mxfixpl mcrun.mxfixpl \
+        mcgui.mxfixpl mcdoc.mxfixpl mcstas2vitess.mxfixpl mcconvert.mxfixpl mcdaemon.mxfixpl mcformatgui.mxfixpl
+MXPERLBIN=mxdisplay mxplot mxresplot mxrun mxgui mxdoc mxstas2vitess mxconvert mxdaemon mxformatgui
+MXBINOBJS=$(MXPERLOBJ) mcxtrace mxformat
+
+.SUFFIXES: .c .o .pl .fixpl .mxfixpl
 
 .c.o:
 	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(mc_libdir)'"' $(DEFS) $<
@@ -103,8 +109,15 @@ BINOBJS=$(PERLOBJ) mcstas mcformat
 	    < $< > $@
 	chmod +x $@
 
+.pl.mxfixpl:
+	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
+	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(mx_libdir)'"+' \
+	    < $< > $(subst mc,mx,$@)
+	chmod +x $(subst mc,mx,$@)
 
 all: $(BINOBJS)
+
+mxall: $(MXBINOBJS)
 
 mcstas: $(OBJECTS)
 	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
@@ -113,9 +126,20 @@ mcstas.win32: $(COBJECTS)
 	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
 	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
 
+mcxtrace: $(OBJECTS)
+	$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
+
+mcxtrace.win32: $(COBJECTS)
+	$(MINGW) -o mcxtrace.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
+	$(MINGW) -o mxformat.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
+
 
 mcformat:
 	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
+
+mxformat:
+	$(CC) -o mxformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
+
 
 clean:
 	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \
@@ -140,6 +164,26 @@ install: installdirs $(BINOBJS)
 	$(topdir)/mkinstalldirs $(mc_libdir)
 
 	cd $(topdir)/lib && $(MAKE) install 
+	cd $(topdir)/nlib && $(MAKE) install 
+
+mxinstall: mxinstalldirs $(MXBINOBJS)
+	$(INSTALL_PROGRAM) mcxtrace $(bindir)/mcxtrace
+	$(INSTALL_PROGRAM) mxformat $(bindir)/mxformat
+	for pgm in $(MXPERLBIN); do \
+	  $(INSTALL_PROGRAM) $$pgm.mxfixpl $(bindir)/$$pgm; \
+	done
+	if [ -d $(mx_libdir) ]; then \
+	  echo "Moving your old library dir $(mx_libdir) to $(mx_libdir).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(mx_libdir) $(mx_libdir).`date +%Y%m%d_%H.%M`;\
+        fi;
+	$(topdir)/mkinstalldirs $(mc_libdir)
+
+	cd $(topdir)/lib && $(MAKE) mxinstall 
+	cd $(topdir)/xlib && $(MAKE) install 
+
+
+mxinstalldirs: 
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mx_libdir) $(mandir)/man1
 
 installdirs:
 	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir) $(mandir)/man1
