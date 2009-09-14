@@ -1729,10 +1729,10 @@ mcformat_parseoptions(int argc, char *argv[])
       mcuse_file(argv[++i]);
     else if(!strncmp("--file=", argv[i], 7))
       mcuse_file(&argv[i][7]);
-    else if(!strcmp("-h", argv[i]))
+    else if(!strcmp("-h", argv[i]) || !strcmp("--help", argv[i]))
     {  mcformat_usage(argv[0]); exit(-1); }
-    else if(!strcmp("--help", argv[i]))
-    {  mcformat_usage(argv[0]); exit(-1); }
+    else if(!strcmp("-v", argv[i]) || !strcmp("--version", argv[i]))
+    {  fprintf(stderr, "mcformat version %s format conversion tool (McStas " PACKAGE_VERSION ")\n", MCFORMAT); exit(-1); }
     else if(!strcmp("-a", argv[i]))
       mcascii_only = 1;
     else if(!strcmp("+a", argv[i]))
