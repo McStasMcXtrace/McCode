@@ -3646,6 +3646,13 @@ coords_add(Coords a, Coords b)
   return c;
 }
 
+/** Add two coordinates. The result will be stored in the first. */
+void coords_add_ptr(Coords* a, Coords* b) {
+	a->x += b->x;
+	a->y += b->y;
+	a->z += b->z;
+}
+
 /* coords_sub: Subtract two coordinates. */
 Coords
 coords_sub(Coords a, Coords b)
@@ -3786,7 +3793,7 @@ rot_set_rotation(Rotation t, double phx, double phy, double phz)
 /*******************************************************************************
 * rot_test_identity: Test if rotation is identity
 *******************************************************************************/
-int 
+int
 rot_test_identity(Rotation t)
 {
   return (t[0][0] + t[1][1] + t[2][2] == 3);
@@ -3809,7 +3816,7 @@ rot_mul(Rotation t1, Rotation t2, Rotation t3)
     int i,j;
     for(i = 0; i < 3; i++)
       for(j = 0; j < 3; j++)
-	t3[i][j] = t1[i][0]*t2[0][j] + t1[i][1]*t2[1][j] + t1[i][2]*t2[2][j];
+        t3[i][j] = t1[i][0]*t2[0][j] + t1[i][1]*t2[1][j] + t1[i][2]*t2[2][j];
   }
 }
 
@@ -3859,11 +3866,25 @@ rot_apply(Rotation t, Coords a)
   }
 }
 
+void
+rot_apply_ptr(Rotation t, Coords *c) {
+  if (rot_test_identity(t))
+    return;
+
+  MCNUM x = t[0][0]*c->x + t[0][1]*c->y + t[0][2]*c->z;
+  MCNUM y = t[1][0]*c->x + t[1][1]*c->y + t[1][2]*c->z;
+  MCNUM z = t[2][0]*c->x + t[2][1]*c->y + t[2][2]*c->z;
+
+  c->x = x;
+  c->y = y;
+  c->z = z;
+}
+
 /**
  * Pretty-printing of rotation matrices.
  */
 void rotation_print(Rotation rot) {
-	printf("[ %4.2f %4.2f %4.2f ]\n",
+  printf("[ %4.2f %4.2f %4.2f ]\n",
 			rot[0][0], rot[0][1], rot[0][2]);
 	printf("[ %4.2f %4.2f %4.2f ]\n",
 			rot[1][0], rot[1][1], rot[1][2]);
@@ -3904,21 +3925,57 @@ inline double scalar_prod(
  * Scalar products for coords.
  */
 double coord_scalar_product(Coords* a, Coords* b) {
-	return ((a->x * b->x) + (a->y * b->y) + (a->z * b->z));
+  return ((a->x * b->x) + (a->y * b->y) + (a->z * b->z));
 }
 
-inline void coord_norm(Coords* c) {
-	double temp = (c->x * c->x) + 
-		(c->y * c->y) + (c->z * c->z);
+inline void
+coord_norm(Coords* c) {
+  double temp = (c->x * c->x) + 
+    (c->y * c->y) + (c->z * c->z);
 
-	// Skip if we will end dividing by zero
-	if (temp == 0) return;
+  /* Skip if we will end dividing by zero */
+  if (temp == 0) return;
 
-	temp = sqrt(temp);
+  temp = sqrt(temp);
 
-	c->x /= temp;
-	c->y /= temp;
-	c->z /= temp;
+  c->x /= temp;
+  c->y /= temp;
+  c->z /= temp;
+}
+
+/** Allocate a neutron */
+neutron_t*
+neutron_t_allocate() {
+  return malloc(sizeof(neutron_t));
+}
+
+void
+neutron_t_free(neutron_t* n) {
+  free(n);
+  n = NULL;
+}
+
+/** Print a neuton */
+void
+neutron_t_print(neutron_t* n) {
+  printf("(pos(%g, %g, %g), "
+      "v(%g, %g, %g), "
+      "t(%g), "
+      "s(%g, %g, %g), "
+      "p(%g), "
+      "scatter(%i)"
+      ")\n",
+      n->pos.x, n->pos.y, n->pos.z,
+      n->vel.x, n->vel.y, n->vel.z,
+      n->t,
+      n->pol.x, n->pol.y, n->pol.z,
+      n->p,
+      n->scatter);
+}
+
+/** Copy the neutron data from source to target */
+void neutron_t_copy(neutron_t* target, neutron_t* source) {
+  memcpy(target, source, sizeof(neutron_t));
 }
 
 /*******************************************************************************
@@ -3946,7 +4003,22 @@ mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
   *vx = c.x;
   *vy = c.y;
   *vz = c.z;
-  /* spin handled with mccoordschange_polarisation */
+  /* polarisation handled with mccoordschange_polarisation */
+}
+
+/** Change coordinate system */
+void mccoordschange_nt(Coords a, Rotation t, neutron_t* n) {
+  /* Position */
+  rot_apply_ptr(t, &n->pos);
+  coords_add_ptr(&n->pos, &a);
+
+  /* Velocity */
+  rot_apply_ptr(t, &n->vel);
+}
+
+/** Change coordinate system for polarisation */
+void mccoordschange_polarisation_nt(Rotation t, neutron_t* n) {
+  rot_apply_ptr(t, &n->pol);
 }
 
 /*******************************************************************************
@@ -3970,44 +4042,53 @@ mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 * mcstore_neutron: stores neutron coodinates into global array (per component)
 *******************************************************************************/
 void
-mcstore_neutron(MCNUM *s, int index, double x, double y, double z,
+mcstore_neutron(neutron_t *s, int index, double x, double y, double z,
                double vx, double vy, double vz, double t,
                double sx, double sy, double sz, double p)
 {
-    double *dptr = &s[11*index];
-    *dptr++  = x;
-    *dptr++  = y ;
-    *dptr++  = z ;
-    *dptr++  = vx;
-    *dptr++  = vy;
-    *dptr++  = vz;
-    *dptr++  = t ;
-    *dptr++  = sx;
-    *dptr++  = sy;
-    *dptr++  = sz;
-    *dptr    = p ;
+  neutron_t *n = &s[index];
+
+  n->pos.x = x;
+  n->pos.y = y;
+  n->pos.z = z;
+  n->vel.x = vx;
+  n->vel.y = vy;
+  n->vel.z = vz;
+  n->t = t;
+  n->pol.x = sx;
+  n->pol.y = sy;
+  n->pol.z = sz;
+  n->p = p;
+}
+
+void mcstore_neutron_nt(neutron_t *s, int index, neutron_t *n) {
+  neutron_t_copy(&s[index], n);
 }
 
 /*******************************************************************************
 * mcrestore_neutron: restores neutron coodinates from global array
 *******************************************************************************/
 void
-mcrestore_neutron(MCNUM *s, int index, double *x, double *y, double *z,
+mcrestore_neutron(neutron_t *s, int index, double *x, double *y, double *z,
                double *vx, double *vy, double *vz, double *t,
                double *sx, double *sy, double *sz, double *p)
 {
-    double *dptr = &s[11*index];
-    *x  =  *dptr++;
-    *y  =  *dptr++;
-    *z  =  *dptr++;
-    *vx =  *dptr++;
-    *vy =  *dptr++;
-    *vz =  *dptr++;
-    *t  =  *dptr++;
-    *sx =  *dptr++;
-    *sy =  *dptr++;
-    *sz =  *dptr++;
-    *p  =  *dptr;
+  neutron_t *n = &s[index];
+  *x = n->pos.x;
+  *y = n->pos.y;
+  *z = n->pos.z;
+  *vx = n->vel.x;
+  *vy = n->vel.y;
+  *vz = n->vel.z;
+  *t = n->t;
+  *sx = n->pol.x;
+  *sy = n->pol.y;
+  *sz = n->pol.z;
+  *p = n->p;
+}
+
+void mcrestore_neutron_nt(neutron_t *s, int index, neutron_t *n) {
+  neutron_t_copy(n, &s[index]);
 }
 
 /* init/run/rand handling =================================================== */
@@ -4091,35 +4172,6 @@ mcreadparams(void)
       }
     } while(!status);
   }
-}
-
-/* mcsetstate: transfer parameters into global McStas variables */
-void
-mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-           double t, double sx, double sy, double sz, double p)
-{
-  extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
-  extern double mcnt, mcnsx, mcnsy, mcnsz, mcnp;
-
-  mcnx = x;
-  mcny = y;
-  mcnz = z;
-  mcnvx = vx;
-  mcnvy = vy;
-  mcnvz = vz;
-  mcnt = t;
-  mcnsx = sx;
-  mcnsy = sy;
-  mcnsz = sz;
-  mcnp = p;
-}
-
-/* mcgenstate: set default neutron parameters */
-void
-mcgenstate(void)
-{
-  mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-  /* old initialisation: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
 }
 
 /* McStas random number routine. */
@@ -4418,47 +4470,43 @@ randnorm(void)
  * Generate a random number from -1 to 1 with triangle distribution
  */
 double randtriangle(void) {
-	double randnum = rand01();
-	if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
-	else return(sqrt(2*randnum)-1);
+  double randnum = rand01();
+  if (randnum>0.5) return(1-sqrt(2*(randnum-0.5)));
+  else return(sqrt(2*randnum)-1);
 }
 
-/**
- * Random number between 0.0 and 1.0 (including?)
+/** Random number between 0.0 and 1.0 (including?)
  */
 double rand01() {
-	double rand;
-	rand = (double) random();
-	rand /= (double) MC_RAND_MAX + 1;
-	return rand;
+  double rand;
+  rand = (double) random();
+  rand /= (double) MC_RAND_MAX + 1;
+  return rand;
 }
 
-/** 
- * Return a random number between 1 and -1
+/** Return a random number between 1 and -1
  */
 double randpm1() {
-	double rand;
-	rand = (double) random();
-	rand /= ((double) MC_RAND_MAX + 1) / 2;
-	rand -= 1;
-	return rand;
+  double rand;
+  rand = (double) random();
+  rand /= ((double) MC_RAND_MAX + 1) / 2;
+  rand -= 1;
+  return rand;
 }
 
-/**
- * Return a random number between 0 and max.
+/** Return a random number between 0 and max.
  */
 double rand0max(double max) {
-	double rand;
-	rand = (double) random();
-	rand /= ((double) MC_RAND_MAX + 1) / max;
-	return rand;
+  double rand;
+  rand = (double) random();
+  rand /= ((double) MC_RAND_MAX + 1) / max;
+  return rand;
 }
 
-/**
- * Return a random number between min and max.
+/** Return a random number between min and max.
  */
 double randminmax(double min, double max) {
-	return rand0max(max - min) + max;
+  return rand0max(max - min) + max;
 }
 
 /* intersect handling ======================================================= */
@@ -4724,11 +4772,11 @@ sphere_intersect(double *t0, double *t1, double x, double y, double z,
  * so that A = 0.5 n.g; B = n.v; C = n.(r-W);
  * Without acceleration, t=-n.(r-W)/n.v
  */
-int solve_2nd_order(double *t1, double *t2,
-                  double A,  double B,  double C)
+int
+solve_2nd_order(double *t1, double *t2, double A,  double B,  double C)
 {
   int ret=0;
-  
+
   if (!t1) return 0;
   *t1 = 0;
   if (t2) *t2=0;
@@ -4997,8 +5045,40 @@ randvec_target_rect_real(double *xo, double *yo, double *zo, double *solid_angle
       *solid_angle = width * height / (dist_p * dist_p); 
       int counter;
       for (counter = 0; counter < order; counter++) {
-	*solid_angle = *solid_angle * cos_theta;
+        *solid_angle = *solid_angle * cos_theta;
       }
+    }
+  }
+}
+
+/* extend_list: Make sure a list is big enough to hold element COUNT.
+*
+* The list is an array, and the argument 'list' is a pointer to a pointer to
+* the array start. The argument 'size' is a pointer to the number of elements
+* in the array. The argument 'elemsize' is the sizeof() an element. The
+* argument 'count' is the minimum number of elements needed in the list.
+*
+* If the old array is to small (or if *list is NULL or *size is 0), a
+* sufficuently big new array is allocated, and *list and *size are updated.
+*/
+void extend_list(int count, void **list, int *size, size_t elemsize)
+{
+  if(count >= *size)
+  {
+    void *oldlist = *list;
+    if(*size > 0)
+      *size *= 2;
+    else
+      *size = 32;
+    *list = malloc(*size*elemsize);
+    if(!*list)
+    {
+      exit(fprintf(stderr, "\nError: Out of memory %li (extend_list).\n", (long)*size*elemsize));
+    }
+    if(oldlist)
+    {
+      memcpy(*list, oldlist, count*elemsize);
+      free(oldlist);
     }
   }
 }
@@ -5046,6 +5126,7 @@ mchelp(char *pgmname)
 "  --no-output-files          Do not write any data files.\n"
 "  -h        --help           Show this help message.\n"
 "  -i        --info           Detailed instrument information.\n"
+"  --no-param-query           Do not ask interactively about parameters\n"
 "  --format=FORMAT            Output data files using format FORMAT\n"
 "                             (use option +a to include text header in files\n"
 #ifdef USE_MPI
@@ -5268,6 +5349,8 @@ mcparseoptions(int argc, char *argv[])
       mcascii_only = 0;
       mcformat=mcuse_format(&argv[i][9]);
     }
+    else if(!strcmp("--no-param-query", argv[i]))
+      paramset = 1;
     else if(!strcmp("--format", argv[i]) && (i + 1) < argc) {
       mcascii_only = 0;
       mcformat=mcuse_format(argv[++i]);
@@ -5463,14 +5546,30 @@ void sighandler(int sig)
 void *mcstas_raytrace(void *p_node_ncount)
 {
   double node_ncount = *((double*)p_node_ncount);
+
+  /* Allocate a neutron to pass around. */
+  neutron_t *N = neutron_t_allocate();
   
   while(mcrun_num < node_ncount || mcrun_num < mcget_ncount())
   {
-    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-    /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
-    mcraytrace();
+    /* Reset neutron state */
+    N->pos.x = 0;
+    N->pos.y = 0;
+    N->pos.z = 0;
+    N->vel.x = 0;
+    N->vel.y = 0;
+    N->vel.z = 1;
+    N->t = 0;
+    N->pol.x = 0;
+    N->pol.y = 0;
+    N->pol.z = 0;
+    N->p = 1;
+
+    mcraytrace(N);
     mcrun_num++;
   }
+
+  neutron_t_free(N);
   return (NULL);
 }
 

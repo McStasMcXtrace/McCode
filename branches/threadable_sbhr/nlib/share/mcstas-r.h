@@ -385,6 +385,10 @@
 #include <sys/stat.h>
 #endif
 
+#ifndef uint
+#define uint unsigned long int
+#endif
+
 #ifndef MC_PATHSEP_C
 #ifdef WIN32
 #define MC_PATHSEP_C '\\'
@@ -446,15 +450,23 @@ typedef double MCNUM;
 typedef struct {MCNUM x, y, z;} Coords;
 typedef MCNUM Rotation[3][3];
 
+typedef struct {
+  Coords pos;   /* Position */
+  Coords vel;   /* Velocity */
+  MCNUM t;      /* Time */
+  Coords pol;   /* Polarization */
+  MCNUM p;      /* Probability */
+  unsigned char scatter; /* scatter */
+} neutron_t;
+
 /* the following variables are defined in the McStas generated C code
    but should be defined externally in case of independent library usage */
 #ifndef DANSE
 extern struct mcinputtable_struct mcinputtable[];
 extern int    mcnumipar;
 extern char   mcinstrument_name[], mcinstrument_source[];
-extern MCNUM  mccomp_storein[]; /* 11 coords * number of components in instrument */
+extern neutron_t* mccomp_storein;
 extern MCNUM  mcAbsorbProp[];
-extern MCNUM  mcScattered;
 #ifndef MC_ANCIENT_COMPATIBILITY
 extern int mctraceenabled, mcdefaultmain;
 #endif
@@ -476,7 +488,15 @@ struct mcformats_struct {
   char *EndErrors;
   char *BeginNcount;
   char *EndNcount;
-  };
+};
+
+/* Neutron manipulation */
+neutron_t* neutron_t_allocate();
+void neutron_t_free(neutron_t* n);
+void neutron_t_print(neutron_t* n);
+void neutron_t_copy(neutron_t* target, neutron_t* source);
+void mccoordschange_nt(Coords a, Rotation t, neutron_t* n);
+void mccoordschange_polarisation_nt(Rotation t, neutron_t* n);
 
 #ifndef MC_EMBEDDED_RUNTIME /* the mcstatic variables (from mcstas-r.c) */
 extern FILE * mcsiminfo_file;
@@ -663,8 +683,6 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
     (mccomp_posa[index])
 #define POS_R_COMP_INDEX(index) \
     (mccomp_posr[index])
-/* mcScattered defined in McStas generated C code */
-#define SCATTERED mcScattered
 
 /* Retrieve component information from the kernel */
 /* Name, position and orientation (both absolute and relative)  */
@@ -691,7 +709,7 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 
 
 #define SCATTER do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-        mcnlt,mcnlsx,mcnlsy, mcnlp); mcScattered++;} while(0)
+        mcnlt,mcnlsx,mcnlsy, mcnlp); mcN->scatter++;} while(0)
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
         mcnlt,mcnlsx,mcnlsy, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
 /* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
@@ -746,7 +764,7 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
     mcnly += mcnlvy*(dt); \
     mcnlz += mcnlvz*(dt); \
     mcnlt += (dt); \
-    if (isnan(p) || isinf(p)) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
+    if (isnan(mcnlp) || isinf(mcnlp)) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }\
   } while(0)
 
 /* ADD: E. Farhi, Aug 6th, 2001 PROP_GRAV_DT propagation with acceleration */
@@ -940,6 +958,7 @@ inline void coord_norm(Coords* c);
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
   printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          x,y,z,vx,vy,vz,t,s1,s2,p);
+#define mcDEBUG_STATE_nt(p) if(mcdotrace) neutron_t_print(p);
 #define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
   printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
          x,y,z,vx,vy,vz,t,s1,s2,p);
@@ -952,6 +971,7 @@ inline void coord_norm(Coords* c);
 #define mcDEBUG_ENTER()
 #define mcDEBUG_COMP(c)
 #define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p)
+#define mcDEBUG_STATE_nt(p)
 #define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,s1,s2,p)
 #define mcDEBUG_LEAVE()
 #define mcDEBUG_ABSORB()
@@ -991,7 +1011,7 @@ double randminmax(double min, double max);
 
 #ifndef DANSE
 void mcinit(void);
-void mcraytrace(void);
+neutron_t *mcraytrace(neutron_t *mcN);
 void mcsave(FILE *);
 void mcfinally(void);
 void mcdisplay(void);
@@ -1035,9 +1055,6 @@ void mccoordschange_polarisation(Rotation t,
 double mcestimate_error(double N, double p1, double p2);
 void mcreadparams(void);
 
-void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-                double t, double sx, double sy, double sz, double p);
-void mcgenstate(void);
 double randnorm(void);
 double randtriangle(void);
 void normal_vec(double *nx, double *ny, double *nz,
@@ -1049,7 +1066,7 @@ int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     double vx, double vy, double vz, double r, double h);
 int sphere_intersect(double *t0, double *t1, double x, double y, double z,
                  double vx, double vy, double vz, double r);
-                 
+
 int solve_2nd_order(double *t1, double *t2,
     double A,  double B,  double C);
 void randvec_target_circle(double *xo, double *yo, double *zo,
@@ -1064,6 +1081,7 @@ void randvec_target_rect_real(double *xo, double *yo, double *zo,
     double *solid_angle,
 	       double xi, double yi, double zi, double height, double width, Rotation A,
 			 double lx, double ly, double lz, int order);
+void extend_list(int count, void **list, int *size, size_t elemsize);
 
 int mcstas_main(int argc, char *argv[]);
 

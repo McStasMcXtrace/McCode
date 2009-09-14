@@ -300,22 +300,10 @@
 * ##tc1            Temporary variable used to compute transformations.
 * ##tc2
 * ##tr1
-* ##nx             Neutron state (position, velocity, time, and spin).
-* ##ny
-* ##nz
-* ##nvx
-* ##nvy
-* ##nvz
-* ##nt
-* ##nsx
-* ##nsy
-* ##nsz
-* ##np
 * ##compcurname
 * ##compcurtype
 * ##compcurindex
 * ##absorb          label for ABSORB (goto)
-* ##Scattered       Incremented each time a SCATTER is done
 * ##NCounter        Incremented each time a neutron is entering the component
 * ##AbsorbProp      single counter for removed events in PROP calls
 * ##comp_storein    Positions of neutron entering each comp (loc. coords)
@@ -603,24 +591,6 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
         coutf("if (%s)\n", exp_tostring(comp->when));
       codeblock_out(comp->extend);
     }
-    if (infunc==2 && list_len(comp->jump) > 0) {
-      List_handle liter2;
-      liter2 = list_iterate(comp->jump);
-      struct jump_struct *this_jump;
-      while(this_jump = list_next(liter2)) {
-        char *exp=exp_tostring(this_jump->condition);
-        if (this_jump->iterate)
-          coutf("if (%sJumpCounter%s_%i < (%s)-1)"
-                "{ %sJumpCounter%s_%i++; goto %sJumpTrace_%s; }",
-            ID_PRE, comp->name, this_jump->index, exp,
-            ID_PRE, comp->name, this_jump->index,
-            ID_PRE, this_jump->target);
-        else
-          coutf("if (%s) goto %sJumpTrace_%s;",
-            exp, ID_PRE, this_jump->target);
-      }
-      list_iterate_end(liter2);
-    }
   }
 } /* cogen_comp_scope_setpar */
 
@@ -740,7 +710,7 @@ cogen_decls(struct instr_def *instr)
 
   /* 1. Function prototypes. */
   coutf("void %sinit(void);", ID_PRE);
-  coutf("void %sraytrace(void);", ID_PRE);
+  coutf("neutron_t *%sraytrace(neutron_t *%sN);", ID_PRE, ID_PRE);
   coutf("void %ssave(FILE *);", ID_PRE);
   coutf("void %sfinally(void);", ID_PRE);
   coutf("void %sdisplay(void);", ID_PRE);
@@ -804,7 +774,7 @@ cogen_decls(struct instr_def *instr)
   /* 6. Table to store neutron states when entering each component */
   cout("/* Neutron state table at each component input (local coords) */");
   cout("/* [x, y, z, vx, vy, vz, t, sx, sy, sz, p] */");
-  coutf("MCNUM %scomp_storein[11*%i];", ID_PRE, list_len(instr->complist)+2);
+  coutf("neutron_t* %scomp_storein;", ID_PRE);
 
   /* 7. Table to store position (abs/rel) for each component */
   cout("/* Components position table (absolute and relative coords) */");
@@ -817,10 +787,6 @@ cogen_decls(struct instr_def *instr)
   coutf("#define %sNUMCOMP %d /* number of components */", ID_PRE, list_len(instr->complist)+1);
   cout("/* Counter for PROP ABSORB */");
   coutf("MCNUM  %sAbsorbProp[%i];", ID_PRE, list_len(instr->complist)+2);
-
-  /* 8. Declaration of SCATTER flags */
-  cout("/* Flag true when previous component acted on the neutron (SCATTER) */");
-  coutf("MCNUM %sScattered=0;", ID_PRE);
 
   if (list_len(instr->grouplist) > 0)
   {
@@ -959,12 +925,6 @@ cogen_decls(struct instr_def *instr)
   list_iterate_end(liter);
   cout("");
 
-  /* 12. Neutron state. */
-  coutf("MCNUM %snx, %sny, %snz, %snvx, %snvy, %snvz, %snt, "
-        "%snsx, %snsy, %snsz, %snp;",
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-  cout("");
   cout("/* end declare */");
   cout("");
 
@@ -990,6 +950,10 @@ cogen_init(struct instr_def *instr)
 
   /* MOD: E. Farhi Sep 20th, 2001 moved transformation block so that */
   /*                              it can be used in following init block */
+
+  /* Initialize neutron storage arrays */
+  coutf(  "%scomp_storein = malloc(sizeof(neutron_t) * (%i + 2));",
+		  ID_PRE, list_len(instr->complist));
 
   /* Compute the necessary vectors and transformation matrices for coordinate
      system changes between components. */
@@ -1185,6 +1149,172 @@ cogen_init(struct instr_def *instr)
   cout("");
 } /* cogen_init */
 
+/** 
+ * Create a function for each part of each component.
+ */
+/* {{{ cogen_comp_funct */
+static void cogen_comp_funct(struct instr_def *instr) {
+	struct comp_inst *comp;
+	int i;
+
+	/* Handle state parameter names. */
+	char *statepars[10];
+	static char *statepars_names[10] =
+	{
+		"pos.x", "pos.y", "pos.z", "vel.x", "vel.y", "vel.z",
+		"t", "pol.x", "pol.y", "p"
+	};
+	List_handle statepars_handle;
+
+	List_handle liter = list_iterate(instr->complist);
+	while((comp = list_next(liter)) != NULL) {
+
+		/* Write out a function for the component */
+		coutf("/* Functions for '%s' ('%s') */",
+				comp->name, comp->type);
+		coutf("uint component_%d_%s(neutron_t *%sN) {", comp->index, comp->name, ID_PRE);
+
+		coutf("#define mcabsorb mcabsorb_comp%d", comp->index);
+
+		/* {{{ Unfold mcN */
+		cout("  /* Unfold neutron struct to 'free' variables. */");
+
+		/* Set up the user-defined variables. */
+		for(i = 0; i < 10; i++) statepars[i] = NULL;
+		statepars_handle = list_iterate(comp->def->state_par);
+		for(i = 0; i < 10; i++) {
+			statepars[i] = list_next(statepars_handle);
+			if(statepars[i] == NULL)
+				break;
+		}
+		list_iterate_end(statepars_handle);
+
+		/* If more than one parameter, unpack the struct. */
+		if(list_len(comp->def->state_par) != 1) {
+			for(i = 0; i < 10; i++)
+			{
+				if(statepars[i] != NULL)
+					coutf("  MCNUM %s = %sN->%s;", statepars[i], ID_PRE, statepars_names[i]);
+				else
+					break;
+			}
+
+			coutf("  #define %snlx x", ID_PRE);
+			coutf("  #define %snly y", ID_PRE);
+			coutf("  #define %snlz z", ID_PRE);
+			coutf("  #define %snlvx vx", ID_PRE);
+			coutf("  #define %snlvy vy", ID_PRE);
+			coutf("  #define %snlvz vz", ID_PRE);
+			coutf("  #define %snlt t", ID_PRE);
+			coutf("  #define %snlsx sx", ID_PRE);
+			coutf("  #define %snlsy sy", ID_PRE);
+			coutf("  #define %snlsz sz", ID_PRE);
+			coutf("  #define %snlp p", ID_PRE);
+
+			coutf("  #define SCATTERED %sN->scatter", ID_PRE);
+			coutf("  #define %sScattered %sN->scatter", ID_PRE, ID_PRE);
+
+			/* Polarization ? */
+			if(comp->def->polarisation_par)
+			{
+				coutf("  MCNUM %s = %sN->pol.x;", comp->def->polarisation_par[0], ID_PRE);
+				coutf("  MCNUM %s = %sN->pol.y;", comp->def->polarisation_par[1], ID_PRE);
+				coutf("  MCNUM %s = %sN->pol.z;", comp->def->polarisation_par[2], ID_PRE);
+			} else {
+				coutf("  MCNUM sx = %sN->pol.x;", ID_PRE);
+				coutf("  MCNUM sy = %sN->pol.y;", ID_PRE);
+				coutf("  MCNUM sz = %sN->pol.z;", ID_PRE);
+			}
+			/* Only one parameter -- use the struct directly. */
+		} else {
+			coutf("  neutron_t* %s = %sN;", statepars[0], ID_PRE);
+
+			coutf("  #define %snlx %sN->pos.x", ID_PRE, ID_PRE);
+			coutf("  #define %snly %sN->pos.y", ID_PRE, ID_PRE);
+			coutf("  #define %snlz %sN->pos.z", ID_PRE, ID_PRE);
+			coutf("  #define %snlvx %sN->vel.x", ID_PRE, ID_PRE);
+			coutf("  #define %snlvy %sN->vel.y", ID_PRE, ID_PRE);
+			coutf("  #define %snlvz %sN->vel.z", ID_PRE, ID_PRE);
+			coutf("  #define %snlt %sN->t", ID_PRE, ID_PRE);
+			coutf("  #define %snlsx %sN->pol.x", ID_PRE, ID_PRE);
+			coutf("  #define %snlsy %sN->pol.y", ID_PRE, ID_PRE);
+			coutf("  #define %snlsz %sN->pol.z", ID_PRE, ID_PRE);
+			coutf("  #define %snlp %sN->p", ID_PRE, ID_PRE);
+
+			coutf("  #define SCATTERED %sN->scatter", ID_PRE);
+			coutf("  #define %sScattered %sN->scatter", ID_PRE, ID_PRE);
+
+
+		}
+		cout("");
+		/* }}} Unfold mcN */
+
+		/* write component parameters and trace+extend code */
+		/* also handles jumps after extend */
+		cout("/* {{{ cogen_comp_scope - codeblock_out_brace */");
+		cogen_comp_scope(comp, 2, (void (*)(void *))codeblock_out_brace,
+				comp->def->trace_code);
+		cout("/* }}} cogen_comp_scope - codeblock_out_brace */");
+
+		/* {{{ Refold mcN */
+		coutf("  #undef %snlx", ID_PRE);
+		coutf("  #undef %snly", ID_PRE);
+		coutf("  #undef %snlz", ID_PRE);
+		coutf("  #undef %snlvx", ID_PRE);
+		coutf("  #undef %snlvy", ID_PRE);
+		coutf("  #undef %snlvz", ID_PRE);
+		coutf("  #undef %snlp", ID_PRE);
+		coutf("  #undef %snlsx", ID_PRE);
+		coutf("  #undef %snlsy", ID_PRE);
+		coutf("  #undef %snlsz", ID_PRE);
+		coutf("  #undef %snlt", ID_PRE);
+
+		coutf("  #undef SCATTERED");
+		coutf("  #undef %sScattered", ID_PRE);
+
+		if(list_len(comp->def->state_par) != 1) {
+			cout("  /* Re-fold variables to neutron struct */");
+						for(i = 0; i < 10; i++)
+			{
+				if(statepars[i] != NULL)
+					coutf("  %sN->%s = %s;", ID_PRE, statepars_names[i], statepars[i]);
+				else
+					break;
+			}
+
+			/* Polarization ? */
+			if(comp->def->polarisation_par)
+			{
+				coutf("  %sN->pol.x = %s;", ID_PRE, comp->def->polarisation_par[0]);
+				coutf("  %sN->pol.y = %s;", ID_PRE, comp->def->polarisation_par[1]);
+				coutf("  %sN->pol.z = %s;", ID_PRE, comp->def->polarisation_par[2]);
+			} else {
+				coutf("  %sN->pol.x = sx;", ID_PRE);
+				coutf("  %sN->pol.y = sy;", ID_PRE);
+				coutf("  %sN->pol.z = sz;", ID_PRE);
+			}
+		}
+		cout("");
+		/* }}} Refold mcN */
+
+		cout("#undef mcabsorb");
+
+		/* Debugging (exit from component). */
+		coutf("  %sDEBUG_STATE_nt(%sN)", ID_PRE, ID_PRE);
+
+		cout("  return 0;");
+
+		coutf("mcabsorb_comp%d:", comp->index);
+		coutf("%sDEBUG_STATE_nt(%sN)", ID_PRE, ID_PRE);
+		cout("return 1;");
+
+		coutf("}");
+		cout("");
+	}
+	list_iterate_end(liter);
+
+} /* }}} cogen_comp_funct */
+
 /*******************************************************************************
 * cogen_trace: Generate the TRACE section.
 * Extended Grammar: uses goto and labels and installs tests
@@ -1204,31 +1334,20 @@ cogen_trace(struct instr_def *instr)
   struct comp_inst *comp;
   struct group_inst *group;
 
+  /* Variables for inserting JUMP-statements */
+  List_handle liter_jumps;
+  struct jump_struct *this_jump;
+
   if (verbose) fprintf(stderr, "Writing instrument and components TRACE\n");
 
   /* Output the function header. */
-  coutf("void %sraytrace(void) {", ID_PRE);
+  coutf("neutron_t *%sraytrace(neutron_t *%sN) {", ID_PRE, ID_PRE);
   /* Local neutron state. */
-  cout("  /* Copy neutron state to local variables. */");
-  coutf("  MCNUM %snlx = %snx;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snly = %sny;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlz = %snz;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlvx = %snvx;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlvy = %snvy;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlvz = %snvz;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlt = %snt;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlsx = %snsx;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlsy = %snsy;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlsz = %snsz;", ID_PRE, ID_PRE);
-  coutf("  MCNUM %snlp = %snp;", ID_PRE, ID_PRE);
-  cout("");
+  cout("  uint result = 0;");
 
   /* Debugging (initial state). */
   coutf("  %sDEBUG_ENTER()", ID_PRE);
-  coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-        "%snlt,%snlsx,%snlsy, %snlp)",
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+  coutf("  %sDEBUG_STATE_nt(%sN)", ID_PRE, ID_PRE);
 
   /* Set group flags */
   if (list_len(instr->grouplist) > 0)
@@ -1241,6 +1360,7 @@ cogen_trace(struct instr_def *instr)
     }
     list_iterate_end(liter);
   }
+
   /* default is the normal ABSORB to end of TRACE */
   coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
 
@@ -1275,95 +1395,70 @@ cogen_trace(struct instr_def *instr)
   }
   list_iterate_end(liter);
 
-  /* Now the trace code for each component. Proper scope is set up for each
-     component using #define/#undef. */
+  /* {{{ Trace components */
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-    char *statepars[10];
-    static char *statepars_names[10] =
-      {
-        "nlx", "nly", "nlz", "nlvx", "nlvy", "nlvz",
-        "nlt", "nlsx", "nlsy", "nlp"
-      };
-    int i;
-    List_handle statepars_handle;
-
     coutf("  /* TRACE Component %s [%i] */", comp->name, comp->index);
 
-    /* Change of coordinates. */
-    coutf("  %scoordschange(%sposr%s, %srotr%s,", ID_PRE, ID_PRE, comp->name,
-          ID_PRE, comp->name);
-    coutf("    &%snlx, &%snly, &%snlz,", ID_PRE, ID_PRE, ID_PRE);
-    coutf("    &%snlvx, &%snlvy, &%snlvz);", ID_PRE, ID_PRE, ID_PRE);
-    if(instr->polarised)
-      coutf("  %scoordschange_polarisation("
-            "%srotr%s, &%snlsx, &%snlsy, &%snlsz);",
-            ID_PRE, ID_PRE, comp->name, ID_PRE, ID_PRE, ID_PRE);
+	/* Change of coordinates. */
+	coutf("  %scoordschange_nt(%sposr%s, %srotr%s, %sN);", ID_PRE, ID_PRE, comp->name, ID_PRE, comp->name, ID_PRE);
+
+    if(instr->polarised) {
+	  coutf("  %scoordschange_polarisation_nt("
+			  "%srotr%s, %sN);",
+        ID_PRE, ID_PRE, comp->name, ID_PRE);
+    }
+
     /* JUMP RELATIVE comp */
     coutf("  /* define label inside component %s (without coords transformations) */", comp->name);
     coutf("  %sJumpTrace_%s:", ID_PRE, comp->name);
 
+	/* Add iterative jumps */
+	liter_jumps = list_iterate(comp->jump);
+	while(this_jump = list_next(liter_jumps)) {
+		char *exp = exp_tostring(this_jump->condition);
+		if (this_jump->iterate) {
+			cout("  /* Processing iterate-jumps - is inserted slightly different than normal... */");
+			coutf("  for(%sJumpCounter%s_%i=0; %sJumpCounter%s_%i < %s; %sJumpCounter%s_%i++) {",
+					ID_PRE, comp->name, this_jump->index,
+					ID_PRE, comp->name, this_jump->index, exp,
+					ID_PRE, comp->name, this_jump->index);
+		}
+	}
+	list_iterate_end(liter_jumps);
+
     coutf("  SIG_MESSAGE(\"%s (Trace)\");", comp->name); /* signal handler message */
     coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
-    /* Debugging (entry into component). */
-    coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-          "%snlt,%snlsx,%snlsy, %snlp)",
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
-    /* Trace code. */
-    for(i = 0; i < 10; i++)
-      statepars[i] = NULL;
-    statepars_handle = list_iterate(comp->def->state_par);
-    for(i = 0; i < 10; i++)
-    {
-      statepars[i] = list_next(statepars_handle);
-      if(statepars[i] == NULL)
-        break;
-    }
-    list_iterate_end(statepars_handle);
-    for(i = 0; i < 10; i++)
-    {
-      if(statepars[i] != NULL)
-        coutf("#define %s %s%s", statepars[i], ID_PRE, statepars_names[i]);
-      else
-        break;
-    }
-    if(comp->def->polarisation_par)
-    {
-      coutf("#define %s %s%s", comp->def->polarisation_par[0], ID_PRE, "nlsx");
-      coutf("#define %s %s%s", comp->def->polarisation_par[1], ID_PRE, "nlsy");
-      coutf("#define %s %s%s", comp->def->polarisation_par[2], ID_PRE, "nlsz");
-    }
-    /* store neutron state in mccomp_storein */
-    if (!comp->split)
-    coutf("  STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
-          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
-    else {
+    /* Debugging (entry into component). */
+    coutf("  %sDEBUG_STATE_nt(%sN)", ID_PRE, ID_PRE);
+
+	/* store neutron state in mccomp_storein */
+	cout("/* {{{ Processing splits */");
+    if (!comp->split) {
+	coutf("  %sstore_neutron_nt(%scomp_storein, %i, %sN);",
+			ID_PRE, ID_PRE, comp->index, ID_PRE);
+	} else {
       /* spliting: store first time, then restore neutron */
       char *exp=exp_tostring(comp->split); /* number of splits */
       coutf("  if (!%sSplit_%s) {                   /* STORE only the first time */", ID_PRE, comp->name);
-      coutf("    if (floor(%s) > 1) p /= floor(%s); /* adapt weight for SPLITed neutron */", exp, exp);
-      coutf("    STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
-          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+      coutf("    if (floor(%s) > 1) %sN->p /= floor(%s); /* adapt weight for SPLITed neutron */", exp, ID_PRE, exp);
+	  coutf("  %sstore_neutron_nt(%scomp_storein, %i, %sN);",
+			  ID_PRE, ID_PRE, comp->index, ID_PRE);
       coutf("  } else {");
-      coutf("    RESTORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
-          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp); }",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+	  coutf("  %srestore_neutron_nt(%scomp_storein, %i, %sN);",
+			ID_PRE, ID_PRE, comp->index, ID_PRE);
+	  cout("  }");
       coutf("  %sSplit_%s++; /* SPLIT number */", ID_PRE, comp->name);
       str_free(exp);
     }
+	cout("/* }}} Processing splits */");
 
-    coutf("  %sScattered=0;", ID_PRE);
+    coutf("  %sN->scatter = 0;", ID_PRE);
     coutf("  %sNCounter[%i]++;", ID_PRE, comp->index);
-    coutf("  %sPCounter[%i] += p;", ID_PRE, comp->index);
-    coutf("  %sP2Counter[%i] += p*p;", ID_PRE, comp->index);
+    coutf("  %sPCounter[%i] += %sN->p;", ID_PRE, comp->index, ID_PRE);
+    coutf("  %sP2Counter[%i] += (%sN->p)*(%sN->p);", ID_PRE, comp->index, ID_PRE, ID_PRE);
 
     if (comp->group)
     {
@@ -1374,27 +1469,24 @@ cogen_trace(struct instr_def *instr)
 
     }
 
-    /* write component parameters and trace+extend code */
-    /* also handles jumps after extend */
-    cogen_comp_scope(comp, 2, (void (*)(void *))codeblock_out_brace,
-                     comp->def->trace_code);
+    /* Call the component */
+    coutf("  result = component_%d_%s(%sN);", comp->index, comp->name, ID_PRE);
+    coutf("  if(result == 1) { goto mcabsorbAll; }");
 
     if (comp->group) {
       coutf("#undef %sabsorb", ID_PRE);
       coutf("#define %sabsorb %sabsorbAll", ID_PRE, ID_PRE);
       coutf("  } /* end comp %s in GROUP %s */", comp->name, comp->group->name);
-      coutf("  if (SCATTERED) %sGroup%s=%i;",
-        ID_PRE, comp->group->name, comp->index);
+      coutf("  if (%sN->scatter) %sGroup%s=%i;",
+        ID_PRE, ID_PRE, comp->group->name, comp->index);
       cout ("  /* Label to skip component instead of ABSORB */");
       coutf("  %sabsorbComp%s:", ID_PRE, comp->name);
       
       if (strcmp(comp->name, comp->group->last_comp)) {
         /* not the last comp of GROUP: check if SCATTERED */
         coutf("  if (!%sGroup%s) /* restore neutron if was not scattered in GROUP yet */", ID_PRE, comp->group->name);
-        coutf("    { RESTORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
-          "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp); }",
-          comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+		coutf("    { %srestore_neutron_nt(%scomp_storein, %i, %sN); }",
+			ID_PRE, ID_PRE, comp->index, ID_PRE);
       } else {
         /* last comp of GROUP: restore default ABSORB */
         coutf("/* end of GROUP %s */", comp->group->name);
@@ -1402,25 +1494,31 @@ cogen_trace(struct instr_def *instr)
       }
     }
 
-    if(comp->def->polarisation_par)
-    {
-      coutf("#undef %s", comp->def->polarisation_par[2]);
-      coutf("#undef %s", comp->def->polarisation_par[1]);
-      coutf("#undef %s", comp->def->polarisation_par[0]);
-    }
-    for(i = 9; i >= 0; i--)
-    {
-      if(statepars[i] != NULL)
-        coutf("#undef %s", statepars[i]);
-    }
+	/* Conditional jumps and end of iterative jumps */
+	liter_jumps = list_iterate(comp->jump);
+	while(this_jump = list_next(liter_jumps)) {
+		char *exp = exp_tostring(this_jump->condition);
+		if (this_jump->iterate) {
+			coutf("  } /* %sJumpCounter%s_%i */",
+					ID_PRE, comp->name, this_jump->index);
+		} else {
+			/* A conditional jump */
+			cout("  {");
+			coutf("    neutron_t* N = %sN;", ID_PRE);
+			coutf("    if (%s) goto %sJumpTrace_%s;",
+					exp, ID_PRE, this_jump->target);
+			cout("  }");
+		}
+	}
+	list_iterate_end(liter_jumps);
+
     /* Debugging (exit from component). */
-    coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-          "%snlt,%snlsx,%snlsy, %snlp)",
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+    coutf("  %sDEBUG_STATE_nt(%sN)", ID_PRE, ID_PRE);
     cout("");
   }
   list_iterate_end(liter);
+  /* }}} Trace components */
+
   /* SPLITing: should loop components if required */
   liter = list_iterate(instr->complist);
   char *reverse_SplitJumps = str_dup("");
@@ -1457,27 +1555,11 @@ cogen_trace(struct instr_def *instr)
 
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
-  coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-        "%snlt,%snlsx,%snlsy, %snlp)",
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+  coutf("  %sDEBUG_STATE_nt(%sN)", ID_PRE, ID_PRE);
 
-
-  /* Copy back neutron state to global variables. */
   /* ToDo: Currently, this will be in the local coordinate system of the last
      component - should be transformed back into the global system. */
-  cout("  /* Copy neutron state to global variables. */");
-  coutf("  %snx = %snlx;", ID_PRE, ID_PRE);
-  coutf("  %sny = %snly;", ID_PRE, ID_PRE);
-  coutf("  %snz = %snlz;", ID_PRE, ID_PRE);
-  coutf("  %snvx = %snlvx;", ID_PRE, ID_PRE);
-  coutf("  %snvy = %snlvy;", ID_PRE, ID_PRE);
-  coutf("  %snvz = %snlvz;", ID_PRE, ID_PRE);
-  coutf("  %snt = %snlt;", ID_PRE, ID_PRE);
-  coutf("  %snsx = %snlsx;", ID_PRE, ID_PRE);
-  coutf("  %snsy = %snlsy;", ID_PRE, ID_PRE);
-  coutf("  %snsz = %snlsz;", ID_PRE, ID_PRE);
-  coutf("  %snp = %snlp;", ID_PRE, ID_PRE);
+  coutf("  return %sN;", ID_PRE);
 
   /* Function end. */
   cout("} /* end trace */");
@@ -1545,6 +1627,10 @@ cogen_finally(struct instr_def *instr)
 
   /* User FINALLY code from component definitions (for each instance). */
   coutf("void %sfinally(void) {", ID_PRE);
+  cout("  /* De-allocate used structures. */");
+  coutf("  free(%scomp_storein);", ID_PRE);
+  cout("");
+
   cout("  /* User component FINALLY code. */");
   /* first call SAVE code to save any remaining data */
   coutf("  %ssiminfo_init(NULL);", ID_PRE);
@@ -1750,6 +1836,7 @@ cogen(char *output_name, struct instr_def *instr)
   coutf("#define MCSTAS_VERSION \"%s\"", MCSTAS_VERSION);
   cogen_runtime(instr);
   cogen_decls(instr);
+  cogen_comp_funct(instr);
   cogen_init(instr);
   cogen_trace(instr);
   cogen_save(instr);
