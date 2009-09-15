@@ -79,7 +79,6 @@
 %token TOK_DEFINITION "DEFINITION"
 %token TOK_END        "END"
 %token TOK_FINALLY    "FINALLY"
-%token TOK_EXTERN     "EXTERN"  /* optional */
 %token TOK_INITIALIZE "INITIALIZE"
 %token TOK_INSTRUMENT "INSTRUMENT"
 %token TOK_MCDISPLAY  "MCDISPLAY"
@@ -103,7 +102,8 @@
 %token TOK_ITERATE    "ITERATE" /* extended McStas grammar */
 %token TOK_MYSELF     "MYSELF"  /* extended McStas grammar */
 %token TOK_COPY       "COPY"    /* extended McStas grammar */
-%token TOK_SPLIT      "SPLIT"    /* extended McStas grammar */
+%token TOK_SPLIT      "SPLIT"   /* extended McStas grammar */
+%token TOK_REMOVABLE  "REMOVABLE" /* extended McStas grammar with include */
 
 /*******************************************************************************
 * Declarations of terminals and nonterminals.
@@ -140,7 +140,7 @@
 %type <jumps>   jumps jumps1
 %type <jumpname> jumpname
 %type <jumpcondition> jumpcondition
-%type <linenum> notshare
+%type <linenum> removable
 %%
 
 main:     TOK_GENERAL compdefs instrument
@@ -346,7 +346,7 @@ comp_iformal:  TOK_ID TOK_ID
           formal->type = instr_type_string;
         } else {
           print_error("Illegal type %s* for component "
-          "parameter %s at line $s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
+          "parameter %s at line %s:%d.\n", $1, $3, instr_current_filename, instr_current_line);
           formal->type = instr_type_double;
         }
         formal->id = $3;
@@ -808,7 +808,7 @@ complist:   /* empty */
       }
     | complist component
       {
-        if (!$2->removable) { /* must not be an INSTRUMENT COMPONENT after %include instr */
+        if (!$2->removable) { /* must not be an INSTRUMENT/REMOVABLE COMPONENT after %include instr */
           /* Check that the component instance name has not
                         been used before. */
           if(symtab_lookup(comp_instances, $2->name))
@@ -836,7 +836,7 @@ complist:   /* empty */
         } /* if shared */
         else
         {
-          if (verbose) fprintf(stderr, "Component[%li]: %s = %s() SKIPPED (INSTRUMENT COMPONENT, removable when included)\n", comp_current_index, $2->name, $2->type);
+          if (verbose) fprintf(stderr, "Component[%li]: %s = %s() SKIPPED (REMOVABLE COMPONENT when included)\n", comp_current_index, $2->name, $2->type);
         }
       }
     | complist instrument
@@ -917,7 +917,7 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
       }
 ;
 
-notshare:    /* empty */
+removable:    /* empty */
       {
         $$ = 0;
       }
@@ -925,15 +925,20 @@ notshare:    /* empty */
       {
         $$ = instrument_definition->has_included_instr; /* ignore comp if included from other instrument */
       }
+    | "REMOVABLE"
+      {
+        $$ = instrument_definition->has_included_instr; /* ignore comp if included from other instrument */
+      }
 ;
 
 /* INSTRUMENT TRACE grammar ******************************************************* */
 
-component: notshare split "COMPONENT" instname '=' instref when place orientation groupref extend jumps
+component: removable split "COMPONENT" instname '=' instref when place orientation groupref extend jumps
       {
         struct comp_inst *comp;
 
         comp = $6;
+        comp->type = str_dup(comp->def->name);
         if (comp->def != NULL) comp->def->comp_inst_number--;
 
         comp->name  = $4;
@@ -1151,7 +1156,7 @@ compref: "PREVIOUS"
         ent = symtab_lookup(comp_instances, $1);
         comp = NULL;
         if(ent == NULL)
-          print_error("Reference to undefined component %s at line %s:%d.\n",
+          print_error("Reference to undefined component instance %s at line %s:%d.\n",
           $1, instr_current_filename, instr_current_line);
         else
           comp = ent->val;
@@ -1262,15 +1267,6 @@ exp:      { $<linenum>$ = instr_current_line; } topexp
       {
         CExp e = $2;
         exp_setlineno(e, $<linenum>1 );
-        $$ = e;
-      }
-    | "EXTERN" { $<linenum>$ = instr_current_line; } TOK_ID
-      {
-        CExp e;
-        /* Note: "EXTERN" is now obsolete and redundant. */
-        e = exp_extern_id($3);
-        exp_setlineno(e, $<linenum>2 );
-        str_free($3);
         $$ = e;
       }
 ;
@@ -1815,7 +1811,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         /* Use default value for unassigned optional parameter */
         symtab_add(defpar, formal->id, formal->default_value);
       } else {
-        print_error("Unassigned DEFINITION parameter %s for component %s at line %s:%d.\n",
+        print_error("Unassigned DEFINITION parameter %s for component %s() at line %s:%d. Please set its value.\n",
               formal->id, comp->type,
               instr_current_filename, instr_current_line);
         symtab_add(defpar, formal->id, exp_number("0.0"));
@@ -1829,10 +1825,10 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
          are assigned using #define's. */
       if(!exp_isvalue(entry->val))
       {
-  print_warn(NULL, "Using DEFINITION parameter of component %s (potential syntax error) at line %s:%d\n"
-    "  %s=%s\n",
-    comp->type, instr_current_filename, instr_current_line,
-    formal->id, exp_tostring(entry->val));
+        print_warn(NULL, "Using DEFINITION parameter of component %s() (potential syntax error) at line %s:%d\n"
+          "  %s=%s\n",
+          comp->type, instr_current_filename, instr_current_line,
+          formal->id, exp_tostring(entry->val));
       }
     }
   }
@@ -1848,7 +1844,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
         /* Use default value for unassigned optional parameter */
         symtab_add(setpar, formal->id, formal->default_value);
       } else {
-        print_error("Unassigned SETTING parameter %s for component %s at line %s:%d.\n",
+        print_error("Unassigned SETTING parameter %s for component %s() at line %s:%d. Please set its value.\n",
               formal->id, comp->type,
               instr_current_filename, instr_current_line);
         symtab_add(setpar, formal->id, exp_number("0.0"));
@@ -1869,7 +1865,7 @@ comp_formals_actuals(struct comp_inst *comp, Symtab actuals)
       Symtab_handle siter2;
       struct Symtab_entry *entry2;
 
-      fprintf(stderr, "Unmatched actual parameter %s for component %s at line %s:%d.\n",
+      fprintf(stderr, "\nUnmatched actual parameter %s for component %s() at line %s:%d. Please change its name to a valid one:\n",
         entry->name, comp->type,
         instr_current_filename, instr_current_line);
       siter2 = symtab_iterate(defpar);
@@ -1960,7 +1956,7 @@ read_component(char *name)
     }
     else
     {
-      print_error("Definition of component %s not found.\n", name);
+      print_error("Definition of component %s not found (file was found but does not contain the component definition).\n", name);
       return NULL;
     }
   }
