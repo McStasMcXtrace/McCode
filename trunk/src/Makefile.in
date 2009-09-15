@@ -88,6 +88,14 @@ COBJECTS=instrument.tab.c lex.yy.c debug.c \
 	memory.c list.c symtab.c coords.c cexp.c \
 	file.c cogen.c port.c
 
+MXOBJECTS=instrument.tab.o lex.yy.o debug.o \
+	memory.o list.o symtab.o coords.o cexp.o \
+	file.o cogenmx.o port.o
+MXCOBJECTS=instrument.tab.c lex.yy.c debug.c \
+	memory.c list.c symtab.c coords.c cexp.c \
+	file.c cogenmx.c port.c
+
+
 PERLOBJ=mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
         mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl mcformatgui.fixpl
 PERLBIN=mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon mcformatgui
@@ -126,11 +134,11 @@ mcstas.win32: $(COBJECTS)
 	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
 	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
 
-mcxtrace: $(OBJECTS)
-	$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
+mcxtrace: $(MXOBJECTS)
+	$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(MXOBJECTS) -lm
 
-mcxtrace.win32: $(COBJECTS)
-	$(MINGW) -o mcxtrace.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
+mcxtrace.win32: $(CMXOBJECTS)
+	$(MINGW) -o mcxtrace.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(CMXOBJECTS) -lm $(USE_NEXUS)
 	$(MINGW) -o mxformat.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
 
 
