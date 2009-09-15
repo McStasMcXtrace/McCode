@@ -63,8 +63,8 @@ find . -name \*.instr -exec dos2unix \{\} \;
 
 # Put in new version info:
 echo "Set version $1 and date"
-find . -wholename './setversion' -prune -o -type d -o -exec ./setversion \{\} $1 \;
-find . -wholename './setyear'    -prune -o -type d -o -exec ./setyear \{\} \;
+find . -wholename './setversion' -prune -o -type d -prune -o -path ./src/McStasTest -exec ./setversion \{\} $1 \;
+find . -wholename './setyear'    -prune -o -type d -prune -o -path ./src/McStasTest -exec ./setyear \{\} \;
 
 sed 's/MCSTAS_VERSION/'$1'/' build.bat > build.bat.new
 mv build.bat.new build.bat
@@ -149,7 +149,6 @@ autoconf configure.in > configure
 chmod a+x configure
 autoconf lib/tools/perl/mcstas_reconfigure.in > lib/tools/perl/mcstas_reconfigure
 chmod a+x lib/tools/perl/mcstas_reconfigure
-chmod a+w lib/tools/perl/mcstas_config.perl
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
 cd src
