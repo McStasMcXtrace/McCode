@@ -2394,7 +2394,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   if (strlen(detector.date))   detector.date[strlen(detector.date)-1] = '\0'; /* remove last \n in date */
   detector.date_l = date_l;
   
-  if (!mcget_run_num() || mcget_run_num() == mcget_ncount())
+  if (!mcget_run_num() || mcget_run_num() >= mcget_ncount())
     snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g", mcget_ncount());
   else 
     snprintf(detector.ncount, CHAR_BUF_LENGTH, "%g/%g", mcget_run_num(), mcget_ncount());
@@ -2425,10 +2425,10 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   
   /* from rank, set type */
   switch (detector.rank) {
-    case -1: sprintf(detector.type, "multiarray_1d(%d)", n); break;
-    case 0:  strcpy(detector.type,  "array_0d"); break;
-    case 1:  sprintf(detector.type, "array_1d(%d)", m*n*p); break;
-    case 2:  sprintf(detector.type, "array_2d(%d, %d)", m, n*p); break;
+    case -1: sprintf(detector.type, "multiarray_1d(%d)", n); p=1; break;
+    case 0:  strcpy(detector.type,  "array_0d"); m=n=p=1; break;
+    case 1:  sprintf(detector.type, "array_1d(%d)", m*n*p); m *= n*p; n=p=1; break;
+    case 2:  sprintf(detector.type, "array_2d(%d, %d)", m, n*p); n *= p; p=1; break;
     case 3:  sprintf(detector.type, "array_3d(%d, %d, %d)", m, n, p); break;
     default: m=0; strcpy(detector.type, ""); strcpy(detector.filename, "");/* invalid */
   }
@@ -2572,7 +2572,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
       if (isnan(z) || isnan(E) || isnan(N)) hasnan=1;
       if (isinf(z) || isinf(E) || isinf(N)) hasinf=1;
       
-      if (detector.rank == 1 && strstr(detector.format.Name,"McStas")) {
+      if (detector.rank == 1 && this_p1 && strstr(detector.format.Name,"McStas")) {
         /* fill-in 1D McStas array [x I E N] */
         this_p1[index*4]   = x; 
         this_p1[index*4+1] = z;
@@ -2604,7 +2604,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   detector.halfwidthY= smon_y;
   
   /* if McStas/PGPLOT and rank==1 replace p1 with new m*4 1D McStas and clear others */
-  if (detector.rank == 1 && strstr(detector.format.Name,"McStas")) {
+  if (detector.rank == 1 && this_p1 && strstr(detector.format.Name,"McStas")) {
     detector.p1 = this_p1;
     detector.n=detector.m; detector.m  = 4; 
     detector.p0 = NULL;
@@ -3058,6 +3058,12 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
    || !detector.m || mcdisable_output_files) return(detector);
 
   if (detector.rank == 0) return(detector);
+
+#ifdef USE_MPI
+  /* only by MASTER for non lists (MPI reduce has been done in detector_import) */
+  if (!strstr(detector.format.Name," list ") && mpi_node_rank != mpi_node_root)
+    return(detector);
+#endif
   
   /* OPEN data file (possibly appending if already opened) ================== */
   if (mcformat_data.Name && strlen(mcformat_data.Name) && !mcsingle_file)
@@ -3172,8 +3178,10 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
   if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
     free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL; }
     
-  if (detector.rank == 1 && strstr(detector.format.Name,"McStas"))
+  if (detector.rank == 1 && detector.p1 && strstr(detector.format.Name,"McStas")) {
     free(detector.p1);  /* 'this_p1' allocated in mcdetector_write_sim for 1D McStas data sets [x I E N] */
+    detector.p1 = NULL;
+  }
   
   if (!strstr(mcformat.Name, "NeXus") && detector.file_handle != mcsiminfo_file) 
     fclose(detector.file_handle);
