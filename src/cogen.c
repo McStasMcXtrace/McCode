@@ -591,13 +591,13 @@ cogen_comp_scope_setpar(struct comp_inst *comp, List_handle set, int infunc,
   {
     /* adds conditional execution for the TRACE */
     if (infunc==2 && comp->when) {
-      coutf("/* '%s' component has conditional execution */",comp->name);
+      coutf("/* '%s=%s()' component instance has conditional execution */",comp->name, comp->type);
       coutf("if (%s)\n", exp_tostring(comp->when));
     }
     (*func)(data);                /* Now do the body. */
     if(infunc == 2 && list_len(comp->extend->lines) > 0)
     {
-      coutf("/* '%s' component extend code */",comp->name);
+      coutf("/* '%s=%s()' component instance extend code */",comp->name, comp->type);
       coutf("    SIG_MESSAGE(\"%s (Trace:Extend)\");", comp->name); /* signal handler message */
       if (comp->when)
         coutf("if (%s)\n", exp_tostring(comp->when));
@@ -658,12 +658,12 @@ cogen_comp_scope_rec(struct comp_inst *comp, List_handle def, List set_list,
     List_handle set;
 
     if(infunc && list_len(set_list) > 0)
-      coutf("{   /* Declarations of %s SETTING parameters. */", comp->name);
+      coutf("{   /* Declarations of %s=%s() SETTING parameters. */", comp->name, comp->type);
     set = list_iterate(set_list);
     cogen_comp_scope_setpar(comp, set, infunc, func, data);
     list_iterate_end(set);
     if(infunc && list_len(set_list) > 0)
-      coutf("}   /* End of %s SETTING parameter declarations. */", comp->name);
+      coutf("}   /* End of %s=%s() SETTING parameter declarations. */", comp->name, comp->type);
   }
 } /* cogen_comp_scope_rec */
 
@@ -860,9 +860,9 @@ cogen_decls(struct instr_def *instr)
         else {
           /* a string definition parameter is concerted into a setting parameter to avoid e.g.
            * warning: format ‘%s’ expects type ‘char *’, but argument X has type ‘int’    */
-          fprintf(stderr,"Warning: Component %s definition parameter (string) %s\n"
+          fprintf(stderr,"Warning: Component %s=%s(string %s) definition parameter\n"
                          "         may be changed into a setting parameter to avoid warnings at compile time.\n",
-          	comp->name, c_formal->id);
+          	comp->name, comp->type, c_formal->id);
         	coutf("#define %sc%s_%s %s /* declared as a string. May produce warnings at compile */", ID_PRE, comp->name, c_formal->id, val);
 				}
         str_free(val);
@@ -1269,8 +1269,8 @@ cogen_trace(struct instr_def *instr)
     if (comp->split) {
       coutf("  /* SPLIT counter for component %s */", comp->name);
       coutf("  int %sSplit_%s=0;", ID_PRE, comp->name);
-      fprintf(stderr,"Info:    Defining SPLIT from %s to END in instrument %s\n",
-          comp->name, instr->name);
+      fprintf(stderr,"Info:    Defining SPLIT from %s=%s() to END in instrument %s\n",
+          comp->name, comp->type, instr->name);
     }
   }
   list_iterate_end(liter);
@@ -1567,17 +1567,17 @@ cogen_finally(struct instr_def *instr)
     if (comp->split) {
       char *exp=exp_tostring(comp->split); /* number of splits */
       coutf("    if (%sNCounter[%i] < 1000*(%s)) fprintf(stderr, \n"
-        "\"Warning: Number of events %%g reaching SPLIT position Component[%i] %s\\n\"\n"
+        "\"Warning: Number of events %%g reaching SPLIT position Component[%i] %s=%s()\\n\"\n"
         "\"         is probably too low. Increase Ncount.\\n\", %sNCounter[%i]);\n",
-          ID_PRE, comp->index, exp, comp->index, comp->name, ID_PRE, comp->index);
+          ID_PRE, comp->index, exp, comp->index, comp->name, comp->type, ID_PRE, comp->index);
       str_free(exp);
     }
     coutf("    if (%sAbsorbProp[%i]) "
       "fprintf(stderr, "
-        "\"Warning: %%g events were removed in Component[%i] %s\\n\"\n"
+        "\"Warning: %%g events were removed in Component[%i] %s=%s()\\n\"\n"
         "\"         (negative time, miss next components, rounding errors, Nan, Inf).\\n\""
         ", %sAbsorbProp[%i]);"
-    , ID_PRE, comp->index, comp->index, comp->name, ID_PRE, comp->index);
+    , ID_PRE, comp->index, comp->index, comp->name, comp->type, ID_PRE, comp->index);
   }
   list_iterate_end(liter);
 
