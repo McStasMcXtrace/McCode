@@ -2502,6 +2502,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
     if(mpi_node_rank != mpi_node_root) return detector;
     
     if (!p0) {  /* additive signal must be then divided by the number of nodes */
+      int i;
       for (i=0; i<abs(m*n*p); i++) {
         p1[i] /= mpi_node_count;
         if (p2) p2[i] /= mpi_node_count;
