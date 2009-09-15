@@ -3236,8 +3236,8 @@ mccoordschange_polarisation(Rotation t, double *sx, double *sy, double *sz)
 *******************************************************************************/
 void
 mcstore_xray(MCNUM *s, int index, double x, double y, double z,
-               double vx, double vy, double vz, double t,
-               double sx, double sy, double sz, double p)
+               double kx, double ky, double kz, double phi,
+               double Ex, double Ey, double Ez, double p)
 {
     double *dptr = &s[11*index];
     *dptr++  = x;
@@ -3258,8 +3258,8 @@ mcstore_xray(MCNUM *s, int index, double x, double y, double z,
 *******************************************************************************/
 void
 mcrestore_xray(MCNUM *s, int index, double *x, double *y, double *z,
-               double *vx, double *vy, double *vz, double *t,
-               double *sx, double *sy, double *sz, double *p)
+               double *kx, double *ky, double *kz, double *phi,
+               double *Ex, double *Ey, double *Ez, double *p)
 {
     double *dptr = &s[11*index];
     *x  =  *dptr++;
@@ -3360,22 +3360,22 @@ mcreadparams(void)
 
 /* mcsetstate: transfer parameters into global McStas variables */
 void
-mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-           double t, double sx, double sy, double sz, double p)
+mcsetstate(double x, double y, double z, double kx, double ky, double kz,
+           double phi, double Ex, double Ey, double Ez, double p)
 {
-  extern double mcnx, mcny, mcnz, mcnvx, mcnvy, mcnvz;
-  extern double mcnt, mcnsx, mcnsy, mcnsz, mcnp;
+  extern double mcnx, mcny, mcnz, mcnkx, mcnky, mcnkz;
+  extern double mcnphi, mcnEx, mcnEy, mcnEz, mcnp;
 
   mcnx = x;
   mcny = y;
   mcnz = z;
-  mcnvx = vx;
-  mcnvy = vy;
-  mcnvz = vz;
-  mcnt = t;
-  mcnsx = sx;
-  mcnsy = sy;
-  mcnsz = sz;
+  mcnkx = kx;
+  mcnky = ky;
+  mcnkz = kz;
+  mcnphi = phi;
+  mcnEx = Ex;
+  mcnEy = Ey;
+  mcnEz = Ez;
   mcnp = p;
 }
 
@@ -3792,9 +3792,9 @@ int box_intersect(double *dl_in, double *dl_out,
                   double dx, double dy, double dz)
 {
 
-  double k, l_[6],dx_2,dy_2,dz_2;
+  double k, l,lx,ly,lz, l_[6],dx_2,dy_2,dz_2;
   double ab[2];
-
+  unsigned int count;
   k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
   dx_2=dx/2.0;dy_2=dy/2.0;dz_2=dz/2.0;
  
@@ -4016,7 +4016,7 @@ plane_intersect(double *l, double x, double y, double z,
 {
   double s,k2;
   k2=scalar_prod(kx,ky,kz,kx,ky,kz);
-  s=scalar_prod(kx,ky,kz,vx,vy,vz);
+  s=scalar_prod(kx,ky,kz,nx,ny,nz);
   if (k2<FLT_EPSILON || fabs(s)<FLT_EPSILON) return 0;
   *l = - sqrt(k2)*scalar_prod(nx,ny,nz,x-wx,y-wy,z-wz)/s;
   if (*l<0) return -1;

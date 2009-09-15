@@ -366,7 +366,7 @@ char *mcfull_file(char *name, char *ext);
 #define STORE_XRAY(index, x,y,z, kx,ky,kz, phi, Ex,Ey,Ez, p) \
   mcstore_xray(mccomp_storein,index, x,y,z, kx,ky,kz, phi, Ex,Ey,Ez, p);
 #define RESTORE_XRAY(index, x,y,z, kx,ky,kz, phi, Ex,Ey,Ez, p) \
-  mcrestore_xray(mccomp_storein,index, x,y,z, kx,ky,kz, phi, Ex,Ey,Ez, p);
+  mcrestore_xray(mccomp_storein,index, &x,&y,&z, &kx,&ky,&kz, &phi, &Ex,&Ey,&Ez, &p);
 
 /*magnet stuff is probably redundant*/
 #define MAGNET_ON \
@@ -415,10 +415,10 @@ char *mcfull_file(char *name, char *ext);
 
 #define mcPROP_DL(dl) \
   do { \
-    MCNUM k=sqrt( scalarprod(mcnlkx,mnclky,mcnlkz,mcnlkx,mnclky,mcnlkz));\
-    mcnlx += (dl)*mnclkx/k;\
-    mcnly += (dl)*mnclky/k;\
-    mcnlz += (dl)*mnclkz/k;\
+    MCNUM k=sqrt( scalar_prod(mcnlkx,mcnlky,mcnlkz,mcnlkx,mcnlky,mcnlkz));\
+    mcnlx += (dl)*mcnlkx/k;\
+    mcnly += (dl)*mcnlky/k;\
+    mcnlz += (dl)*mcnlkz/k;\
     mcnlphi += k*(dl);\
   }while (0)
 
@@ -469,14 +469,14 @@ char *mcfull_file(char *name, char *ext);
   do { \
     MCNUM mc_dl,mc_k; \
     if(mcnlk ## P == 0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; }; \
-    mc_k=sqrt(scalarprod(mcnlkx,mnclky,mcnlkz,mcnlkx,mnclky,mcnlkz));\
+    mc_k=sqrt(scalar_prod(mcnlkx,mcnlky,mcnlkz,mcnlkx,mcnlky,mcnlkz));\
     mc_dl= -mcnl ## P * mc_k / mcnlk ## P;\
     if(mc_dl<0 && mcallowbackprop==0) { mcAbsorbProp[INDEX_CURRENT_COMP]++; ABSORB; };\
-    PROP_DL(dl);\
+    PROP_DL(mc_dl);\
   } while(0)
 
 /*mcstas versions
-#define PROP_Z0 \/*{{{*/
+#define PROP_Z0 \
   do { \
     if (mcgravitation) { Coords mcLocG; int mc_ret; \
     double mc_dt, mc_gx, mc_gy, mc_gz; \
@@ -548,7 +548,7 @@ char *mcfull_file(char *name, char *ext);
     mcnly = 0; \
     DISALLOW_BACKPROP; \
   } while(0)
-*//*}}}*/
+*/
 
 #define vec_prod(x, y, z, x1, y1, z1, x2, y2, z2) \
 	vec_prod_func(&x, &y, &z, x1, y1, z1, x2, y2, z2)
@@ -737,8 +737,8 @@ void mccoordschange_polarisation(Rotation t,
 double mcestimate_error(double N, double p1, double p2);
 void mcreadparams(void);
 
-void mcsetstate(double x, double y, double z, double vx, double vy, double vz,
-                double t, double sx, double sy, double sz, double p);
+void mcsetstate(double x, double y, double z, double kx, double ky, double kz,
+    double phi, double Ex, double Ey, double Ez, double p);
 void mcgenstate(void);
 double randnorm(void);
 double randtriangle(void);
