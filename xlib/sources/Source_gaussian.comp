@@ -7,12 +7,14 @@
  *
  * Component: Source_gaussian
  *
+ *%I
  * Written by: Erik Knudsen
  * Date: February 11th, 2009
  * Version: $Revision: $
  * Origin: Risoe
  * Release: McXtrace 0.1
- * 
+ *
+ * A gaussian cross-section source with focussing 
  * %D
  * A simple source model emitting photons from a gaussian distribution in the X-Y plane with the specified
  * standard deviations (in mm) into a cone of angular width gamma^-1. A square target centered on the beam (Z-axis)
