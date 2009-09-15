@@ -238,7 +238,6 @@ DEFINITION    return TOK_DEFINITION;
 END           return TOK_END;
 MCDISPLAY     return TOK_MCDISPLAY;
 FINALLY       return TOK_FINALLY;
-EXTERN        return TOK_EXTERN;        /* optional */
 INITIALIZE    return TOK_INITIALIZE;
 INSTRUMENT    return TOK_INSTRUMENT;
 OUTPUT        return TOK_OUTPUT;
@@ -261,7 +260,8 @@ NEXT          return TOK_NEXT;          /* extended McStas grammar */
 ITERATE       return TOK_ITERATE;       /* extended McStas grammar */
 MYSELF        return TOK_MYSELF;        /* extended McStas grammar */
 COPY          return TOK_COPY;          /* extended McStas grammar */
-SPLIT         return TOK_SPLIT;       /* extended McStas grammar */
+SPLIT         return TOK_SPLIT;         /* extended McStas grammar */
+REMOVABLE     return TOK_REMOVABLE;     /* extended McStas grammar with include */
 
 "("|")"|"["|"]"|"{"|"}"|"," return yytext[0]; /* Punctuation. */
 "="|"*"       return yytext[0]; /* Operator. */
