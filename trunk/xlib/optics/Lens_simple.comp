@@ -40,6 +40,11 @@ SETTING PARAMETERS (xwidth,yheight,T=1,focal_length)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
+DECLARE
+%{
+  double xmax,xmin,ymax,ymin;
+%}
+
 INITIALIZE
 %{
   if(!xwidth || !yheight){
@@ -54,7 +59,7 @@ INITIALIZE
 
 TRACE
 %{
-  double nx,ny.nz,rnx,rny,rnz;  
+  double nx,ny,nz,rcnx,rcny,rcnz;  
   double sp,theta;
 
   PROP_Z0;
@@ -67,16 +72,16 @@ TRACE
     
     /*change direction towards focal pt.*/
     /*rotation is around the vector n given by k_xy and z-axis.*/
-    vec_prod(kx,ky,0,0,0,focal_length,nx,ny,nz);
+    vec_prod(nx,ny,nz,kx,ky,0,0,0,focal_length);
     NORM(nx,ny,nz);
     /*rotation angle is given by the x and y coordinates and the focal length*/
-    theta=atan(sqrt(x*x+y*y)/fabs(f));
+    theta=atan(sqrt(x*x+y*y)/fabs(focal_length));
     sp=scalar_prod(nx,ny,nz,kx,ky,kz);
-    vec_prod(kx,ky,kz,nx,ny,nz,rcnx,rcny,rcnz);
+    vec_prod(rcnx,rcny,rcnz,kx,ky,kz,nx,ny,nz);
     /*update k-vector using rotation formula*/
-    kx= rx*cos(theta)+ sp*nx*(1-cos(theta)) + sin(theta)*rcnx;
-    ky= ry*cos(theta)+ sp*ny*(1-cos(theta)) + sin(theta)*rcny;
-    kz= rz*cos(theta)+ sp*nz*(1-cos(theta)) + sin(theta)*rcnz;
+    kx= rcnx*cos(theta)+ sp*nx*(1-cos(theta)) + sin(theta)*rcnx;
+    ky= rcny*cos(theta)+ sp*ny*(1-cos(theta)) + sin(theta)*rcny;
+    kz= rcnz*cos(theta)+ sp*nz*(1-cos(theta)) + sin(theta)*rcnz;
   }
   else{
     ABSORB;
@@ -86,7 +91,7 @@ TRACE
 MCDISPLAY
 %{
   magnify("xy");
-  rectangle(0,0,0,xwidth,yheight);
+  rectangle(0,0,0,xwidth,yheight,0);
 %}
 
 END
