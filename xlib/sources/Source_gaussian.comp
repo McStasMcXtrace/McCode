@@ -62,7 +62,7 @@ INITIALIZE
     exit(0);
   }
 
-  if (E && dE){
+  if (E0 && dE){
     lambda=E0;
     dlambda=dE;
   }else if (!lambda || !dlambda){
@@ -88,13 +88,15 @@ TRACE
   /*draw random number from gaussian distribution in both x and y*/
   double xx=randnorm();
   double yy=randnorm();
+  double k;
+
   x=xx*sig_x;
   y=yy*sig_y;
   z=0;
 
   /*draw random coordinates in the acceptance window*/
-  kx= (xwidth /2.0 * randpm1() -x)/distance;
-  ky= (yheight/2.0 * randpm1() -y)/distance;
+  kx= (focus_xw /2.0 * randpm1() -x)/distance;
+  ky= (focus_yh/2.0 * randpm1() -y)/distance;
   kz= distance;
   NORM(kx,ky,kz);
 
