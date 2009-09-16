@@ -83,6 +83,14 @@ AC_ARG_WITH([pic],
   [USE_PIC=no])
 AC_SUBST(USE_PIC)
 
+# handle McStas/McXtrace options
+AC_ARG_WITH([mccode],
+  [AS_HELP_STRING([--with-mccode],
+     [Switch between mcstas and mcxtrace config])],
+  [MCCODE=$withval],
+  [MCCODE=mcstas])
+AC_SUBST(MCCODE)
+
 # check for MPI
 if test "$MPICC" != "no"; then
   AC_CHECK_HEADER(mpi.h, , [ echo "WARNING: $MPICC may fail to compile without mpi.h" ] )
