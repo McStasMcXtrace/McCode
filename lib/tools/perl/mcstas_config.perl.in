@@ -5,6 +5,7 @@
 #
 # CFLAGS   - compiler flags (should not require changes)
 # LDFLAGS  - linker flags (should not require changes)
+# MCCODE   - code generator to run (mcstas/mcxtrace)
 # CC       - c compiler command (should not requrire changes)
 # TERMINAL - (Unix only) Command to launch mcplot with (xterm/konsole/...)
 # PGPLOT   - location of PGPLOT
@@ -65,6 +66,7 @@ use Config;
 %MCSTAS::mcstas_config = (
      CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
+     MCCODE => '@MCCODE@',
      CC => '@CC@',
      AT => '@AT@',
      TERMINAL => '@TERMINAL@',
