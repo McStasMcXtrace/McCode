@@ -64,7 +64,7 @@ install:
 	cd $(topdir)/support/common/Perl/Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mx_libdir)/tools/perl/modules PREFIX=$(mx_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
 	chmod a+x $(mx_libdir)/tools/perl/mcstas_reconfigure
 	@echo McXtrace library has been installed in MCSTAS=$(mx_libdir), and binaries in $(bindir)
-	@echo "Start McXtrace with: mcgui or use mcrun for command line simulations"
+	@echo "Start McXtrace with: mxgui or use mxrun for command line simulations"
 	@echo "==== Installation finished. Thanks for using McXtrace ===="
 
 installdirs:
