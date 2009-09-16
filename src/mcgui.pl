@@ -51,8 +51,8 @@ use lib $MCSTAS::perl_modules;
 require "mcstas_config.perl";
 
 # Overload with user's personal config
-if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
-  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl";
 }
 
 use strict;
@@ -417,7 +417,7 @@ sub tools_dsa {
 
 sub mcdoc_about {
   my ($w) = @_;
-  my $version = `mcstas --version`;
+  my $version = `$MCSTAS::mcstas_config{'MCCODE'} --version`;
   # create a small font for Message Box
   $w->fontCreate('small',
     -family=>'Helvetica',
@@ -1783,7 +1783,7 @@ sub setup_cmdwin {
     # Insert "mcstas --version" message in window. Do it a line at the
     # time, since otherwise the tags mechanism seems to get confused.
     my $l;
-    for $l (split "\n", `mcstas --version`) {
+    for $l (split "\n", `$MCSTAS::mcstas_config{'MCCODE'} --version`) {
         $cmdwin->insert('end', "$l\n", 'msg');
     }
 

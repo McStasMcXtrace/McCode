@@ -250,7 +250,7 @@ sub get_out_file_next {
 	$v->{'stage'} = POST_MCSTAS;
       return (RUN_CMD, $cmd);
       } else {
-      my $cmd = ["mcstas", @inc, "-t", "-o", $c_name, $sim_def];
+      my $cmd = [$MCSTAS::mcstas_config{'MCCODE'}, @inc, "-t", "-o", $c_name, $sim_def];
       &$printer(join(" ", @$cmd));
       $v->{'stage'} = POST_MCSTAS;
       return (RUN_CMD, $cmd);

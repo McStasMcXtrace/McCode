@@ -24,8 +24,8 @@ use lib $MCSTAS::perl_dir;
 require "mcstas_config.perl";
 
 # Overload with user's personal config
-if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
-  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl") {
+  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl";
 }
 
 use FileHandle;
