@@ -46,24 +46,24 @@ AT (0,0,0) ABSOLUTE
 
 COMPONENT generic_source=Source_gaussian(
     lambda=0.123, dlambda=0.1, sig_x=0.1, sig_y=0.01, 
-    focus_xh=1,focus_yh=0.5, distance=L1
+    focus_xw=1,focus_yh=0.5, distance=L1
 
 )
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Be_lens = Lens_simple(xwidth=0.5,yheight=0.5,f=L2)
+COMPONENT Be_lens = Lens_simple(xwidth=0.5,yheight=0.5,focal_length=L2)
 AT(0,0,L1) RELATIVE generic_source
 
-COMPONENT slit = Slit(xwidth=0.003, yheihgt=0.003)
+COMPONENT slit = Slit(xwidth=0.003, yheight=0.003)
 AT(0,0,L2) RELATIVE Be_lens
 
 COMPONENT psd1 = PSD_monitor(xwidth=0.2,yheight=0.2)
   AT (0,0,0.1) RELATIVE slit
 
-COMPONENT wavel_mon=L_Monitor(xwidth=0.5,yheight=0.5,nL=101)
+COMPONENT wavel_mon=L_monitor(Lmin=0, Lmax=1,xwidth=0.5,yheight=0.5,nL=101)
   AT(0,0,1) RELATIVE slit
 
-COMPONENT psd1 = PSD_monitor(xwidth=0.2,yheight=0.2)
+COMPONENT psd2 = PSD_monitor(xwidth=0.2,yheight=0.2)
   AT (0,0,.1) RELATIVE PREVIOUS
 
 END
