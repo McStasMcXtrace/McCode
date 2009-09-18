@@ -108,7 +108,7 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT(Makefile src/Makefile lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/mcstas_config.perl lib/tools/perl/mcstas_reconfigure support/common/Makefile)
+AC_OUTPUT(Makefile src/Makefile lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/mcstas_config.perl lib/tools/perl/mcstas_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex)
 
 chmod a+x lib/tools/perl/mcstas_reconfigure
 
