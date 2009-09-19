@@ -95,7 +95,8 @@ PG_NON_STANDARD= pgadvance.o pgbegin.o   pgcurse.o   pglabel.o   pgmtext.o   pgn
 GR_ROUTINES= grarea.o grbpic.o grchsz.o grclip.o grclos.o grclpl.o grctoi.o grcurs.o grdot0.o grdot1.o grdtyp.o gresc.o  grepic.o gretxt.o grfa.o   grfao.o  grgfil.o grgray.o grimg0.o grimg1.o grimg2.o grimg3.o grinit.o gritoc.o grlen.o  grlin0.o grlin1.o grlin2.o grlin3.o grlina.o grmcur.o grmker.o grmova.o grmsg.o gropen.o grpage.o grpars.o grpixl.o grpocl.o grprom.o grpxpo.o grpxps.o grpxpx.o grpxre.o grqcap.o grqci.o  grqcol.o grqcr.o  grqdev.o grqdt.o  grqfnt.o grqls.o  grqlw.o  grqpos.o grqtxt.o grqtyp.o grquit.o grrec0.o grrect.o grsci.o  grscr.o  grscrl.o grsetc.o grsets.o grsfnt.o grsize.o grskpb.o grslct.o grsls.o  grslw.o  grsyds.o grsymk.o grsyxd.o grterm.o grtext.o grtoup.o grtrim.o grtrn0.o grtxy0.o grvct0.o grwarn.o grxhls.o grxrgb.o
 SYSTEM_ROUTINES= grdate.o grfileio.o grflun.o grgcom.o grgenv.o grgetc.o grglun.o grgmem.o grgmsg.o grlgtr.o groptx.o grsy00.o grtermio.o grtrml.o grtter.o gruser.o
 OBSOLETE_ROUTINES= grchar.o grchr0.o grdat2.o grgtc0.o grinqfont.o grinqli.o grinqpen.o grlinr.o grmark.o grmovr.o grsetfont.o grsetli.o grsetpen.o grtran.o grvect.o pgsetc.o pgsize.o
-DRIVERS=figdisp_comm.o gidriv.o lxdriv.o nudriv.o ppdriv.o psdriv.o x2driv.o xwdriv.o 
+DRIVERS_SAFE=figdisp_comm.o lxdriv.o nudriv.o psdriv.o x2driv.o xwdriv.o
+DRIVERS=$(DRIVERS_SAFE) gidriv.o ppdriv.o 
 PGDISP_ROUTINES= cleanup.o pgdisp.o figcurs.o getdata.o getvisuals.o handlexevent.o proccom.o resdb.o exposelgwin.o getcolors.o initlgluts.o initlgwin.o initlock.o initwmattr.o mainloop.o resizelgwin.o returnbuf.o waitevent.o updatelgtitle.o
 DEMOS= pgdemo1 pgdemo2 pgdemo3 pgdemo4 pgdemo5 pgdemo6 pgdemo7 pgdemo8 pgdemo9 pgdemo10 pgdemo11 pgdemo12 pgdemo13 pgdemo14 pgdemo15 pgdemo16 pgdemo17
 #
@@ -103,6 +104,24 @@ DEMOS= pgdemo1 pgdemo2 pgdemo3 pgdemo4 pgdemo5 pgdemo6 pgdemo7 pgdemo8 pgdemo9 p
 # Target "all" makes everything (except the library of obsolete routines)
 #-----------------------------------------------------------------------
 all: lib grfont.dat prog pgplot.doc pgdisp pgxwin_server cpg
+	@echo ' ';echo '*** Finished compilation of PGPLOT ***';echo ' '
+	@echo 'Note that if you plan to install PGPLOT in a different'
+	@echo 'directory than the current one, the following files will be'
+	@echo 'needed.'
+	@echo ' '
+	@echo '       libpgplot.a'
+	@echo '       libpgplot.so'
+	@echo '       grfont.dat'
+	@echo '       rgb.txt'
+	@echo '       pgdisp'
+	@echo '       pgxwin_server'
+	@echo ' '
+	@echo 'Also note that subsequent usage of PGPLOT programs requires that'
+	@echo 'the full path of the chosen installation directory be named in'
+	@echo 'an environment variable named PGPLOT_DIR.'
+	@echo ' '
+
+safe: lib_safe grfont.dat prog pgplot.doc pgdisp pgxwin_server cpg_safe
 	@echo ' ';echo '*** Finished compilation of PGPLOT ***';echo ' '
 	@echo 'Note that if you plan to install PGPLOT in a different'
 	@echo 'directory than the current one, the following files will be'
@@ -694,9 +713,13 @@ xwdriv.o: $(DRVDIR)/xwdriv.c
 #-----------------------------------------------------------------------
 
 DISPATCH_ROUTINE=grexec.o
+DISPATCH_ROUTINE_SAFE=grexec_safe.o
 
 grexec.o: grexec.f
 	$(FCOMPL) -c $(FFLAGC) grexec.f
+
+grexec_safe.o: grexec_safe.f
+	$(FCOMPL) -c $(FFLAGC) grexec_safe.f
 
 #-----------------------------------------------------------------------
 # Target "lib" is used to built the PGPLOT subroutine library.
@@ -720,6 +743,22 @@ $(SHARED_LIB): $(PG_ROUTINES) $(PG_NON_STANDARD) \
 	$(SHARED_LD) `ls $(PG_ROUTINES) \
 	$(PG_NON_STANDARD) $(GR_ROUTINES) $(DISPATCH_ROUTINE) \
 	$(DRIVERS) $(SYSTEM_ROUTINES) | sort | uniq` $(SHARED_LIB_LIBS)
+
+lib_safe : libpgplot.a_safe $(SHARED_LIB)_safe
+
+libpgplot.a_safe : $(PG_ROUTINES) $(PG_NON_STANDARD) $(GR_ROUTINES) \
+	   $(DISPATCH_ROUTINE_SAFE) $(DRIVERS_SAFE) $(SYSTEM_ROUTINES)
+	ar ru libpgplot.a \
+		`ls $(PG_ROUTINES) \
+		$(PG_NON_STANDARD) $(GR_ROUTINES) $(DISPATCH_ROUTINE_SAFE) \
+		$(DRIVERS_SAFE) $(SYSTEM_ROUTINES) | sort | uniq`
+	$(RANLIB) libpgplot.a
+
+$(SHARED_LIB)_safe: $(PG_ROUTINES) $(PG_NON_STANDARD) \
+	$(GR_ROUTINES) $(DISPATCH_ROUTINE_SAFE) $(DRIVERS_SAFE) $(SYSTEM_ROUTINES)
+	$(SHARED_LD) `ls $(PG_ROUTINES) \
+	$(PG_NON_STANDARD) $(GR_ROUTINES) $(DISPATCH_ROUTINE_SAFE) \
+	$(DRIVERS_SAFE) $(SYSTEM_ROUTINES) | sort | uniq` $(SHARED_LIB_LIBS)
 
 #-----------------------------------------------------------------------
 # libpgobs.a contains obsolete routines used by some programs
@@ -919,6 +958,15 @@ x2driv.o figdisp_comm.o: $(DRVDIR)/commands.h
 
 
 cpg:	libcpgplot.a cpgplot.h cpgdemo 
+	@echo ' '
+	@echo '*** Finished compilation of the C PGPLOT wrapper library ***'
+	@echo ' '
+	@echo 'Note that if you plan to install the library in a different'
+	@echo 'directory than the current one, both libcpgplot.a and cpgplot.h'
+	@echo 'will be needed.'
+	@echo ' '
+
+cpg_safe:	libcpgplot.a cpgplot.h cpgdemo 
 	@echo ' '
 	@echo '*** Finished compilation of the C PGPLOT wrapper library ***'
 	@echo ' '
