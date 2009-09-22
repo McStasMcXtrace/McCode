@@ -63,8 +63,8 @@ INITIALIZE
   }
 
   if (E0 && dE){
-    lambda=E0;
-    dlambda=dE;
+    lambda=2*M_PI/(E0*E2K);
+    dlambda=2*M_PI/(dE*E2K);
   }else if (!lambda || !dlambda){
     fprintf(stderr,"Source_gaussian (%s): Must specify either wavelength or energy distribution\n",NAME_CURRENT_COMP);
     exit(0);
@@ -103,9 +103,9 @@ TRACE
   /*sample photon energy or wavelength - for now - do it uniformly in the window*/
   l=randpm1()*dlambda*0.5 + lambda;
   k=2*M_PI/l;
-  kx/=k;
-  ky/=k;
-  kz/=k;
+  kx*=k;
+  ky*=k;
+  kz*=k;
   
   /*randomly pick phase*/
   if (phase==-1){
