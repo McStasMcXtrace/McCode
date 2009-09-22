@@ -14,39 +14,54 @@
 * Origin: Risoe
 * Release: McXtrace 0.1
 *
-* Rectangular/circular slit
-*
+* Simple refractive x-ray lens
+* 
 * %D
-* Models an infinitely thin refractive lens, with focal_length f and 
+* Models a refractive lens, with a radius of curvature radius
 * a numerical transmission of 0<T<=1
-* the lens plane is in the X-Y plane at Z=0
+* the theoretical lens plane is in the X-Y plane at Z=0
 *
 * %P
 * INPUT PARAMETERS
 *
 * xwidth: Width of lens. Overrides xmin,xmax. (m)
 * yheight:Height of lens. Overrides ymin,ymax. (m)
-* focal_length: Focal length of the lens. If >0 the lens is in focusing mode, <0 divergent (m)
+* material_datafile: file where the material parameters for the lens may be found. Format is similar to what may be found off the NISP website. [Be.txt] 
 *
 * Optional parameters:
-* T: Transmission efficieny of the lens. (1)
+* T: Transmission efficiency of the lens. (1)
 *
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
-DEFINITION PARAMETERS ()
-SETTING PARAMETERS (xwidth,yheight,T=1,focal_length) 
-
+  DEFINITION PARAMETERS (string material_datafile="Be.txt")
+  SETTING PARAMETERS (xwidth,yheight,T=1,radius=0.3e-3) 
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+
+SHARE
+%{
+  %include "read_table-lib.h"
+%}
 
 DECLARE
 %{
   double xmax,xmin,ymax,ymin;
+
+  struct mat_prms {
+    int Z;
+    double At, rho;
+    double *E,*delta;
+  };
+  struct mat_prms *prms;
+
 %}
 
 INITIALIZE
 %{
+  const double RE=2.8179402894e-15;
+  const double NA=6.02214179e23;
+  
   if(!xwidth || !yheight){
     fprintf(stderr,"%s: Lens has zero area\n",NAME_CURRENT_COMP);
     exit(0);
@@ -55,33 +70,67 @@ INITIALIZE
   xmin=-xmax;
   ymax=yheight/2.0;
   ymin=-ymax;
+
+  t_Table t;
+  Table_Read(&t,material_datafile,0);
+  char **header_parsed;
+  header_parsed=Table_ParseHeader(t.header,"Z","A[r]","rho","sigma[a]");
+  prms=calloc(1,sizeof(struct mat_prms));
+  if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
+  if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
+  if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
+  prms->E=malloc(sizeof(double)*t.rows);
+  prms->delta=malloc(sizeof(double)*t.rows);
+
+  int i;
+  for (i=0;i<t.rows;i++){
+    prms->E[i]=t.data[i*t.columns]*1e3;
+    prms->delta[i]=pow(2*M_PI/(t.data[i*t.columns]*1e3*E2K),2)*1e-20 * t.data[1+i*t.columns] * prms->rho/prms->At*1e6 * RE * NA* 0.5*M_1_PI;
+  }
 %}
 
 TRACE
 %{
-  double nx,ny,nz,rcnx,rcny,rcnz;  
-  double sp,theta;
-
+  double sx,sy,sz,s;  
+  double F,k,e,theta,alpha,delta;
   PROP_Z0;
   if (x >xmin && x<xmax && y>ymin && y<ymax){
     SCATTER;
-    if(T=0) 
+    if(T==0) 
       ABSORB;
     else
       p*=T;
     
-    /*change direction towards focal pt.*/
-    /*rotation is around the vector n given by k_xy and z-axis.*/
-    vec_prod(nx,ny,nz,kx,ky,0,0,0,focal_length);
-    NORM(nx,ny,nz);
-    /*rotation angle is given by the x and y coordinates and the focal length*/
-    theta=atan(sqrt(x*x+y*y)/fabs(focal_length));
-    sp=scalar_prod(nx,ny,nz,kx,ky,kz);
-    vec_prod(rcnx,rcny,rcnz,kx,ky,kz,nx,ny,nz);
-    /*update k-vector using rotation formula*/
-    kx= rcnx*cos(theta)+ sp*nx*(1-cos(theta)) + sin(theta)*rcnx;
-    ky= rcny*cos(theta)+ sp*ny*(1-cos(theta)) + sin(theta)*rcny;
-    kz= rcnz*cos(theta)+ sp*nz*(1-cos(theta)) + sin(theta)*rcnz;
+    /*change direction towards focal*/
+    /*Focal length given by lambda and delta*/
+    k=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz));
+    e=K2E*k;
+    int i=0;
+    double alpha,delta;
+    while (e>prms->E[i])
+    {
+      i++;
+    }
+    /*protect against out of range errors*/
+    alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
+    delta=(1-alpha)*prms->delta[i-1] + alpha*prms->delta[i];
+    F=radius/2/delta;
+    //Only focussing in the y-direction for now.*/
+    /*auxiliary vector s*/ 
+    sx=0;sy=-y;sz=F;
+    s=sqrt(scalar_prod(sx,sy,sz,sx,sy,sz));
+    theta=acos(scalar_prod(sx,sy,sz,0,0,1)/s);
+    printf("theta=%g,s=%g sx=%g,sy=%g,sz=%g\n",theta,s,sx,sy,sz);
+    /*apply the rotation around the x-axis to focus in y*/
+    Rotation R;
+    R[0][0]=1; R[0][1]=0;R[0][2]=0;
+    R[1][0]=0; R[1][1]=cos(theta); R[1][2]=-sin(theta);
+    R[2][0]=0; R[2][1]=sin(theta); R[2][2]=cos(theta);
+    /*reuse the vector s as temp sotrage*/
+    sx=kx;
+    sy=ky*R[1][1]+kz*R[1][2];
+    sz=ky*R[2][1]+kz*R[2][2];
+    kx=sx;ky=sy;kz=sz;
   }
   else{
     ABSORB;
