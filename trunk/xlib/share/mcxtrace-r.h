@@ -308,7 +308,8 @@ char *mcfull_file(char *name, char *ext);
 #define GRAVITY  9.81              /* [m/s^2] gravitational acceleration */
 #define CELE     1.602176487e-19   /* [C] Elementary charge CODATA 2006*/
 #define M_C      299792458         /* [m/s] speed of light CODATA 2006*/
-#define K2E      (HBAR*M_C*1e10*CELE*1e3)   /* Convert k[1/AA] to E [meV]*/
+#define E2K      ((CELE/(HBAR*M_C)*1e10)   /* Convert k[1/AA] to E [eV]*/
+#define K2E      (1e-10*M_C*HBAR/CELE) /*Convert E[eV] to k[1/AA] */ 
 
 #ifndef PI
 # ifdef M_PI
