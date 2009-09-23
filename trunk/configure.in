@@ -18,8 +18,7 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 dnl Process this file with autoconf to produce a configure script.
-
-AC_INIT(McStas, McStas 2.0, www.mcstas.org)
+AC_INIT(McStas, 2.0, www.mcstas.org)
 AC_REVISION($Revision: 1.65 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
@@ -89,6 +88,10 @@ AC_ARG_WITH([mccode],
      [Switch between mcstas and mcxtrace config])],
   [MCCODE=$withval],
   [MCCODE=mcstas])
+AC_ARG_WITH([mcxtrace],[AS_HELP_STRING([--with-mcxtrace],
+     [Use mcxtrace config (overrides --with-mccode)])],[MCCODE=mcxtrace])
+AC_ARG_WITH([mcstas],[AS_HELP_STRING([--with-mcstas],
+     [Use mcstas config (overrides --with-mccode & --with-mcxtrace)])],[MCCODE=mcstas])
 AC_SUBST(MCCODE)
 
 # check for MPI
