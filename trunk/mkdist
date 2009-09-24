@@ -34,6 +34,12 @@ PW=`pwd`
 TMPDIR=$PWD/..
 DIST=$TMPDIR/mcstas-$1
 
+if [ "y$2" == "ymcxtrace" ]; then
+  CONFIGURE_IN=xconfigure.in
+else
+  CONFIGURE_IN=nconfigure.in
+fi
+
 # Copy current PW checkout to DIST
 cp -rp $PW $DIST
 
@@ -76,8 +82,8 @@ sed 's/MCSTAS_VERSION/'$1'/' deb/control > deb/control.new
 mv deb/control.new deb/control
 cd ..
 
-sed 's/MCSTAS_VERSION/'$1'/' configure.in > configure.in.new
-mv configure.in.new configure.in
+#sed 's/MCSTAS_VERSION/'$1'/' configure.in > configure.in.new
+#mv configure.in.new configure.in
 
 # Create the doc's from tex - if a checkout is avail.
 if [ -d $PW/../tex ] ;
@@ -145,10 +151,10 @@ chmod a+x deb/debcreate
 cd ..
 
 # Create configure
-autoconf configure.in > configure
-chmod a+x configure
-autoconf lib/tools/perl/mcstas_reconfigure.in > lib/tools/perl/mcstas_reconfigure
-chmod a+x lib/tools/perl/mcstas_reconfigure
+autoconf -o ${CONFIGURE_IN%%.in} $CONFIGURE_IN
+#chmod a+x configure
+autoconf -o lib/tools/perl/mcstas_reconfigure lib/tools/perl/mcstas_reconfigure.in 
+#chmod a+x lib/tools/perl/mcstas_reconfigure
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
 cd src
