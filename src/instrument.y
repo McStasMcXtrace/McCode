@@ -1516,7 +1516,7 @@ print_usage(void)
 static void
 print_version(void)
 { /* MOD: E. Farhi Sep 20th, 2001 version number */
-  printf("McStas version " MCSTAS_VERSION "\n"
+  printf(PACKAGE_NAME " version " MCSTAS_VERSION "\n"
     "Copyright (C) Risoe National Laboratory, 1997-2007\n"
     "Additions (C) Institut Laue Langevin, 2003-2007\n"
     "All rights reserved\n");
