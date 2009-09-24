@@ -113,10 +113,10 @@ if test "$USE_PIC" != "no" ; then
 echo "Activating PIC compilation for: make install-pgplot"
 fi
 if test "x$HAVE_NEXUS" != "x" ; then
-echo "Activating NeXus support in McStas ($HAVE_NEXUS)"
+echo "Activating NeXus support in McXtrace ($HAVE_NEXUS)"
 fi
 if test "$MAKE" == "no" ; then
-  echo "ERROR: McStas installation requires 'make' or 'gmake'"
+  echo "ERROR: McXtrace installation requires 'make' or 'gmake'"
   exit
 fi
 
@@ -147,18 +147,18 @@ if test "$WGET" != no ; then
   echo "will install our patched version of perl-tk from the net"
 fi
 if test "$PGPLOT" == "no" ; then
-  echo "To install PGPLOT for McStas, you need:"
+  echo "To install PGPLOT for McXtrace, you need:"
   echo "= perl-PDL (perldl, pdl)"
   echo "= a fortran compiler (g77, gfortran)"
   echo "= X11-dev libraries/includes (libx11-dev, xserver-xorg-dev, libxt-dev)"
 fi
 if test "$PGPLOT" == "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
-  echo "PGPLOT install: you may try our automatic pgplot5 installation AFTER installing McStas"
+  echo "PGPLOT install: you may try our automatic pgplot5 installation AFTER installing McXtrace"
   echo "# make install-pgplot"
   echo "# make reconfigure"
   echo "(For 64-bit machines, reconfigure first: # ./configure --with-pic )"
 else if test "$PGPLOT" == "no" ; then
-  echo "To use PGPLOT, install these packages and re-run McStas installation ./configure"
+  echo "To use PGPLOT, install these packages and re-run McXtrace installation ./configure"
   fi
 fi
 if test "$SCILAB" == "no" && test "$WGET" != no ; then
@@ -185,9 +185,9 @@ if test "$VRMLVIEW" != "no" ; then
 echo "# make vrml   (selects vrml)"
 fi
 echo ""
-echo "After (optional) plotter config, build and install McStas by executing"
+echo "After (optional) plotter config, build and install McXtrace by executing"
 echo "# make; make install"
-echo "will install McStas into $prefix"
+echo "will install McXtrace into $prefix"
 echo ""
 if test "$DASH" != "no" ; then
 echo
