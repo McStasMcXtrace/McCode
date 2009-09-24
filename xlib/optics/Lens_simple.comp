@@ -34,25 +34,25 @@
 * %E
 *******************************************************************************/
 DEFINE COMPONENT Lens_simple
-  DEFINITION PARAMETERS (string material_datafile="Be.txt")
-  SETTING PARAMETERS (xwidth,yheight,T=1,radius=0.3e-3) 
+DEFINITION PARAMETERS (string material_datafile="Be.txt")
+SETTING PARAMETERS (xwidth,yheight,T=1,radius=0.3e-3,N=1) 
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
 SHARE
 %{
   %include "read_table-lib.h"
+  struct mat_prms {
+    int Z;
+    double At, rho;
+    double *E,*delta;
+  };
 %}
 
 DECLARE
 %{
   double xmax,xmin,ymax,ymin;
 
-  struct mat_prms {
-    int Z;
-    double At, rho;
-    double *E,*delta;
-  };
   struct mat_prms *prms;
 
 %}
@@ -63,7 +63,7 @@ INITIALIZE
   const double NA=6.02214179e23;
   
   if(!xwidth || !yheight){
-    fprintf(stderr,"%s: Lens has zero area\n",NAME_CURRENT_COMP);
+    fprintf(stderr,"%s: Lens has zero effective area\n",NAME_CURRENT_COMP);
     exit(0);
   }
   xmax=xwidth/2.0;
@@ -79,16 +79,19 @@ INITIALIZE
   if (!prms->At) prms->At=strtod(header_parsed[1],NULL);
   if (!prms->Z) prms->Z=strtol(header_parsed[0],NULL,10);
   if (!prms->rho) prms->rho=strtod(header_parsed[2],NULL);
-  prms->E=malloc(sizeof(double)*t.rows+1);
-  prms->delta=malloc(sizeof(double)*t.rows+1);
+  prms->E=malloc(sizeof(double)*(t.rows+1));
+  prms->delta=malloc(sizeof(double)*(t.rows+1));
 
   int i;
   for (i=0;i<t.rows;i++){
     prms->E[i]=t.data[i*t.columns]*1e3;
     prms->delta[i]=pow(2*M_PI/(t.data[i*t.columns]*1e3*E2K),2)*1e-20 * t.data[1+i*t.columns] * prms->rho/prms->At*1e6 * RE * NA* 0.5*M_1_PI;
   }
-  prms->E[t.rows]=(double)-1.0;
-  prms->delta[t.rows-1]=-FLT_MAX;
+
+  prms->E[t.rows]=-1.0;
+  prms->delta[t.rows]=-FLT_MAX;
+  
+  Table_Free(&t);
 %}
 
 TRACE
@@ -119,7 +122,7 @@ TRACE
     /*protect against out of range errors*/
     alpha=(e-prms->E[i-1])/(prms->E[i]-prms->E[i-1]);
     delta=(1-alpha)*prms->delta[i-1] + alpha*prms->delta[i];
-    F=radius/2/delta;
+    F=radius/2/delta/N;
     /*Only focusing in the y-direction for now.*/
     /*auxiliary vector s*/ 
     sx=0;sy=-y;sz=F;
@@ -143,6 +146,7 @@ TRACE
     ABSORB;
   }
 %}
+
 
 MCDISPLAY
 %{
