@@ -51,7 +51,7 @@ COMPONENT generic_source=Source_gaussian(
 )
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Be_lens = Lens_simple(xwidth=0.5,yheight=0.5,focal_length=L2)
+COMPONENT Be_lens = Lens_simple(xwidth=0.5,yheight=0.5,T=1,radius=0.3e-3,N=1)
 AT(0,0,L1) RELATIVE generic_source
 
 COMPONENT slit = Slit(xwidth=0.003, yheight=0.003)

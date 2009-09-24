@@ -41,7 +41,7 @@ STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
 
 SHARE
 %{
-  %include "read_table-lib.h"
+  %include "read_table-lib"
   struct mat_prms {
     int Z;
     double At, rho;
