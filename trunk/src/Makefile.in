@@ -81,17 +81,17 @@ INSTALL_DATA = @INSTALL_DATA@
 # End of configuration section.
 #
 
-OBJECTS=instrument.tab.o lex.yy.o debug.o \
+OBJECTS_mcstas=instrument.tab.o lex.yy.o debug.o \
 	memory.o list.o symtab.o coords.o cexp.o \
 	file.o cogen.o port.o
-COBJECTS=instrument.tab.c lex.yy.c debug.c \
+COBJECTS_mcstas=instrument.tab.c lex.yy.c debug.c \
 	memory.c list.c symtab.c coords.c cexp.c \
 	file.c cogen.c port.c
 
-MXOBJECTS=instrument.tab.o lex.yy.o debug.o \
+OBJECTS_mcxtrace=instrument.tab.o lex.yy.o debug.o \
 	memory.o list.o symtab.o coords.o cexp.o \
 	file.o cogenmx.o port.o
-MXCOBJECTS=instrument.tab.c lex.yy.c debug.c \
+COBJECTS_mcxtrace=instrument.tab.c lex.yy.c debug.c \
 	memory.c list.c symtab.c coords.c cexp.c \
 	file.c cogenmx.c port.c
 
@@ -125,8 +125,8 @@ BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 
 all: $(BINOBJS_@MCCODE@)
 
-@MCCODE@: $(OBJECTS)
-	$(CC) -o @MCCODE@ $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
+@MCCODE@: $(OBJECTS_@MCCODE@)
+	$(CC) -o @MCCODE@ $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_@MCCODE@) -lm
 
 mcstas.win32: $(COBJECTS)
 	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
