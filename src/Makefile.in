@@ -249,8 +249,13 @@ install-pgplot:
 install-scilab:
 	cd support/scilab && ./scilab.sh && echo "@PACKAGE_NAME@: run './configure; $(MAKE); $(MAKE) install' again"
 
-test: @MCCODE@
-	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/@PACKAGE_NAME@Test; export PERL5LIB=../lib/tools/perl; ./mcrun.fixpl --test
+test: test_@MCCODE@
+
+test_mcstas:
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ./mcrun.fixpl --test
+
+test_mcxtrace:
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ./mxrun.mxfixpl --test
 
 uninstall:
 	cd $(bindir); rm -f $(BINOBJS_@MCCODE@)
