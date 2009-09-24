@@ -13,99 +13,97 @@ INSTALL=@INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-mc_libdir = $(libdir)/mcstas
-mx_libdir = $(libdir)/mcxtrace
+libdir_mcstas = $(libdir)/mcstas
+libdir_mcxtrace = $(libdir)/mcxtrace
 
-install: installdirs
-	if [ -d $(mc_libdir) ]; then \
-	  echo "Moving your old library dir $(mc_libdir) to $(mc_libdir).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(mc_libdir) $(mc_libdir).`date +%Y%m%d_%H.%M`;\
+install: install_@MCCODE@
+
+install_mcstas: installdirs
+	if [ -d $(libdir_mcstas) ]; then \
+	  echo "Moving your old library dir $(libdir_mcstas) to $(libdir_mcstas).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(libdir_mcstas) $(libdir_mcstas).`date +%Y%m%d_%H.%M`;\
         fi;
-	$(topdir)/mkinstalldirs $(mc_libdir)
+	$(topdir)/mkinstalldirs $(libdir_mcstas)
 
 	cd $(topdir) && for file in `cd lib; ls | grep -v .svn| grep -v Make`; do \
 	  if [ -d lib/$$file ]; then \
-	    ./mkinstalldirs $(mc_libdir)/$$file; \
+	    ./mkinstalldirs $(libdir_mcstas)/$$file; \
 	    for comp in `cd lib/$$file; ls | grep -v .svn`; do \
-        if [ -f $(mc_libdir)/$$file/$$comp ]; then \
-          echo "Renaming old library element version $(mc_libdir)/$$file/$$comp to $(mc_libdir)/$$file/$$comp.old"; \
-          mv -f $(mc_libdir)/$$file/$$comp $(mc_libdir)/$$file/$$comp.old; \
+        if [ -f $(libdir_mcstas)/$$file/$$comp ]; then \
+          echo "Renaming old library element version $(libdir_mcstas)/$$file/$$comp to $(libdir_mcstas)/$$file/$$comp.old"; \
+          mv -f $(libdir_mcstas)/$$file/$$comp $(libdir_mcstas)/$$file/$$comp.old; \
         fi; \
 	      if [ -d lib/$$file/$$comp ]; then \
-          ./mkinstalldirs $(mc_libdir)/$$file/$$comp; \
+          ./mkinstalldirs $(libdir_mcstas)/$$file/$$comp; \
           for tool in `cd lib/$$file/$$comp; ls | grep -v .svn`; do \
 	      if [ -d lib/$$file/$$comp/$$tool ]; then \
-          ./mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool ; \
+          ./mkinstalldirs $(libdir_mcstas)/$$file/$$comp/$$tool ; \
 	        for subtool in `cd lib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
 		  if [ -d lib/$$file/$$comp/$$tool/$$subtool ]; then \
-		     ./mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool/$$subtool ; \
+		     ./mkinstalldirs $(libdir_mcstas)/$$file/$$comp/$$tool/$$subtool ; \
 	             for subsubtool in `cd lib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
-                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
+                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(libdir_mcstas)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
                      done \
 		  else \
-                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool; \
+                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(libdir_mcstas)/$$file/$$comp/$$tool/$$subtool; \
 		  fi; \
                 done \
               else \
-                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(mc_libdir)/$$file/$$comp/$$tool; \
+                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(libdir_mcstas)/$$file/$$comp/$$tool; \
 	      fi; \
           done \
         else \
-	        $(INSTALL_DATA) lib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
+	        $(INSTALL_DATA) lib/$$file/$$comp $(libdir_mcstas)/$$file/$$comp; \
         fi; \
 	    done \
 	  else \
-	    $(INSTALL_DATA) lib/$$file $(mc_libdir)/$$file; \
+	    $(INSTALL_DATA) lib/$$file $(libdir_mcstas)/$$file; \
 	  fi \
 	done
-#	cd $(topdir)/nlib && $(MAKE) install
+
+install_mcxtrace: installdirs
+	if [ -d $(libdir_mcxtrace) ]; then \
+	  echo "Moving your old library dir $(libdir_mcxtrace) to $(libdir_mcxtrace).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(libdir_mcxtrace) $(libdir_mcxtrace).`date +%Y%m%d_%H.%M`;\
+        fi;
+	$(topdir)/mkinstalldirs $(libdir_mcxtrace)
+
+	cd $(topdir) && for file in `cd lib; ls | grep -v .svn| grep -v Make`; do \
+	  if [ -d lib/$$file ]; then \
+	    ./mkinstalldirs $(libdir_mcxtrace)/$$file; \
+	    for comp in `cd lib/$$file; ls | grep -v .svn`; do \
+        if [ -f $(libdir_mcxtrace)/$$file/$$comp ]; then \
+          echo "Renaming old library element version $(libdir_mcxtrace)/$$file/$$comp to $(libdir_mcxtrace)/$$file/$$comp.old"; \
+          mv -f $(libdir_mcxtrace)/$$file/$$comp $(libdir_mcxtrace)/$$file/$$comp.old; \
+        fi; \
+	      if [ -d lib/$$file/$$comp ]; then \
+          ./mkinstalldirs $(libdir_mcxtrace)/$$file/$$comp; \
+          for tool in `cd lib/$$file/$$comp; ls | grep -v .svn`; do \
+	      if [ -d lib/$$file/$$comp/$$tool ]; then \
+          ./mkinstalldirs $(libdir_mcxtrace)/$$file/$$comp/$$tool ; \
+	        for subtool in `cd lib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
+		  if [ -d lib/$$file/$$comp/$$tool/$$subtool ]; then \
+		     ./mkinstalldirs $(libdir_mcxtrace)/$$file/$$comp/$$tool/$$subtool ; \
+	             for subsubtool in `cd lib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
+                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(libdir_mcxtrace)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
+                     done \
+		  else \
+                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(libdir_mcxtrace)/$$file/$$comp/$$tool/$$subtool; \
+		  fi; \
+                done \
+              else \
+                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(libdir_mcxtrace)/$$file/$$comp/$$tool; \
+	      fi; \
+          done \
+        else \
+	        $(INSTALL_DATA) lib/$$file/$$comp $(libdir_mcxtrace)/$$file/$$comp; \
+        fi; \
+	    done \
+	  else \
+	    $(INSTALL_DATA) lib/$$file $(libdir_mcxtrace)/$$file; \
+	  fi \
+	done
 
 installdirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir) $(mandir)/man1
-
-mxinstall: mxinstalldirs
-	if [ -d $(mx_libdir) ]; then \
-	  echo "Moving your old library dir $(mx_libdir) to $(mx_libdir).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(mx_libdir) $(mx_libdir).`date +%Y%m%d_%H.%M`;\
-        fi;
-	$(topdir)/mkinstalldirs $(mx_libdir)
-
-	cd $(topdir) && for file in `cd lib; ls | grep -v .svn| grep -v Make`; do \
-	  if [ -d lib/$$file ]; then \
-	    ./mkinstalldirs $(mx_libdir)/$$file; \
-	    for comp in `cd lib/$$file; ls | grep -v .svn`; do \
-        if [ -f $(mx_libdir)/$$file/$$comp ]; then \
-          echo "Renaming old library element version $(mx_libdir)/$$file/$$comp to $(mx_libdir)/$$file/$$comp.old"; \
-          mv -f $(mx_libdir)/$$file/$$comp $(mx_libdir)/$$file/$$comp.old; \
-        fi; \
-	      if [ -d lib/$$file/$$comp ]; then \
-          ./mkinstalldirs $(mx_libdir)/$$file/$$comp; \
-          for tool in `cd lib/$$file/$$comp; ls | grep -v .svn`; do \
-	      if [ -d lib/$$file/$$comp/$$tool ]; then \
-          ./mkinstalldirs $(mx_libdir)/$$file/$$comp/$$tool ; \
-	        for subtool in `cd lib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
-		  if [ -d lib/$$file/$$comp/$$tool/$$subtool ]; then \
-		     ./mkinstalldirs $(mx_libdir)/$$file/$$comp/$$tool/$$subtool ; \
-	             for subsubtool in `cd lib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
-                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mx_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
-                     done \
-		  else \
-                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(mx_libdir)/$$file/$$comp/$$tool/$$subtool; \
-		  fi; \
-                done \
-              else \
-                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(mx_libdir)/$$file/$$comp/$$tool; \
-	      fi; \
-          done \
-        else \
-	        $(INSTALL_DATA) lib/$$file/$$comp $(mx_libdir)/$$file/$$comp; \
-        fi; \
-	    done \
-	  else \
-	    $(INSTALL_DATA) lib/$$file $(mx_libdir)/$$file; \
-	  fi \
-	done
-
-mxinstalldirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mx_libdir) $(mandir)/man1
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@MCCODE@) $(mandir)/man1
 

@@ -26,7 +26,7 @@ Institut Laue Langevin, Grenoble, France
 This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
 see file COPYING for further information])
 
-MCCODE=PACKAGE_TARNAME
+MCCODE=${PACKAGE_TARNAME}
 AC_SUBST(MCCODE)
 
 AC_PREFIX_DEFAULT(/usr/local)
