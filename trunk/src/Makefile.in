@@ -1,6 +1,6 @@
-# Makefile for McStas.
+# Makefile for @PACKAGE_NAME@.
 #
-#   This file is part of the McStas neutron ray-trace simulation package
+#   This file is part of the @PACKAGE_NAME@ ray-trace simulation package
 #   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
@@ -25,7 +25,7 @@
 # make clean           clean distro
 # make test            distro self-test
 # make plotter         best plotter choice
-# make reconfigure     reconfigure mcstas installation (after software update)
+# make reconfigure     reconfigure @MCCODE@ installation (after software update)
 
 
 SHELL = /bin/sh
@@ -41,8 +41,8 @@ PWD = `pwd`
 
 
 DEBUG = -DDEBUG=0
-mc_libdir = $(libdir)/mcstas
-mx_libdir = $(libdir)/mcxtrace
+libdir_mcstas = $(libdir)/mcstas
+libdir_mcxtrace = $(libdir)/mcxtrace
 
 CC = @CC@
 MINGW = @MINGW@
@@ -99,43 +99,38 @@ MXCOBJECTS=instrument.tab.c lex.yy.c debug.c \
 PERLOBJ=mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \
         mcgui.fixpl mcdoc.fixpl mcstas2vitess.fixpl mcconvert.fixpl mcdaemon.fixpl mcformatgui.fixpl
 PERLBIN=mcdisplay mcplot mcresplot mcrun mcgui mcdoc mcstas2vitess mcconvert mcdaemon mcformatgui
-BINOBJS=$(PERLOBJ) mcstas mcformat
+BINOBJS_mcstas=$(PERLOBJ) mcstas mcformat
 
 MXPERLOBJ=mcdisplay.mxfixpl mcplot.mxfixpl mcresplot.mxfixpl mcrun.mxfixpl \
         mcgui.mxfixpl mcdoc.mxfixpl mcconvert.mxfixpl mcdaemon.mxfixpl mcformatgui.mxfixpl
 MXPERLBIN=mxdisplay mxplot mxresplot mxrun mxgui mxdoc mxconvert mxdaemon mxformatgui
-MXBINOBJS=$(MXPERLOBJ) mcxtrace mxformat
+BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 
 .SUFFIXES: .c .o .pl .fixpl .mxfixpl
 
 .c.o:
-	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(mc_libdir)'"' $(DEFS) $<
+	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@MCCODE@)'"' $(DEFS) $<
 
 .pl.fixpl:
 	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
-	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(mc_libdir)'"+' \
+	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mcstas)'"+' \
 	    < $< > $@
 	chmod +x $@
 
 .pl.mxfixpl:
 	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
-	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(mx_libdir)'"+' \
+	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mcxtrace)'"+' \
 	    < $< > $(subst mc,mx,$@)
 	chmod +x $(subst mc,mx,$@)
 
-all: $(BINOBJS)
+all: $(BINOBJS_@MCCODE@)
 
-mxall: $(MXBINOBJS)
-
-mcstas: $(OBJECTS)
-	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
+@MCCODE@: $(OBJECTS)
+	$(CC) -o @MCCODE@ $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS) -lm
 
 mcstas.win32: $(COBJECTS)
 	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
 	$(MINGW) -o mcformat.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(USE_NEXUS)
-
-mcxtrace: $(MXOBJECTS)
-	$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(MXOBJECTS) -lm
 
 mcxtrace.win32: $(CMXOBJECTS)
 	$(MINGW) -o mcxtrace.exe -DMCSTAS='"C:\\McXtrace\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(CMXOBJECTS) -lm $(USE_NEXUS)
@@ -150,7 +145,7 @@ mxformat:
 
 
 clean:
-	rm -f $(BINOBJS) $(OBJECTS) $(PERLOBJ) TAGS \
+	rm -f $(BINOBJS_@MCCODE@) $(OBJECTS) $(PERLOBJ) TAGS \
 	rm -rf selftest_*/ selftest/
 
 distclean: clean
@@ -159,42 +154,40 @@ distclean: clean
 TAGS:
 	etags *.[chly]
 
-install: installdirs $(BINOBJS)
+install: install_@MCCODE@
+
+install_mcstas: installdirs $(BINOBJS_mcstas)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
 	$(INSTALL_PROGRAM) mcformat $(bindir)/mcformat
 	for pgm in $(PERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.fixpl $(bindir)/$$pgm; \
 	done
-	if [ -d $(mc_libdir) ]; then \
-	  echo "Moving your old library dir $(mc_libdir) to $(mc_libdir).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(mc_libdir) $(mc_libdir).`date +%Y%m%d_%H.%M`;\
+	if [ -d $(libdir_mcstas) ]; then \
+	  echo "Moving your old library dir $(libdir_mcstas) to $(libdir_mcstas).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(libdir_mcstas) $(libdir_mcstas).`date +%Y%m%d_%H.%M`;\
         fi;
-	$(topdir)/mkinstalldirs $(mc_libdir)
+	$(topdir)/mkinstalldirs $(libdir_mcstas)
 
 	cd $(topdir)/lib && $(MAKE) install 
 	cd $(topdir)/nlib && $(MAKE) install 
 
-mxinstall: mxinstalldirs $(MXBINOBJS)
+install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	$(INSTALL_PROGRAM) mcxtrace $(bindir)/mcxtrace
 	$(INSTALL_PROGRAM) mxformat $(bindir)/mxformat
 	for pgm in $(MXPERLBIN); do \
 	  $(INSTALL_PROGRAM) $$pgm.mxfixpl $(bindir)/$$pgm; \
 	done
-	if [ -d $(mx_libdir) ]; then \
-	  echo "Moving your old library dir $(mx_libdir) to $(mx_libdir).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(mx_libdir) $(mx_libdir).`date +%Y%m%d_%H.%M`;\
+	if [ -d $(libdir_mcxtrace) ]; then \
+	  echo "Moving your old library dir $(libdir_mcxtrace) to $(libdir_mcxtrace).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(libdir_mcxtrace) $(libdir_mcxtrace).`date +%Y%m%d_%H.%M`;\
         fi;
-	$(topdir)/mkinstalldirs $(mc_libdir)
+	$(topdir)/mkinstalldirs $(libdir_mcxtrace)
 
-	cd $(topdir)/lib && $(MAKE) mxinstall 
+	cd $(topdir)/lib && $(MAKE) install 
 	cd $(topdir)/xlib && $(MAKE) install 
 
-
-mxinstalldirs: 
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mx_libdir) $(mandir)/man1
-
 installdirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir) $(mandir)/man1
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@MCCODE@) $(mandir)/man1
 
 instrument.tab.o: mcstas.h
 lex.yy.o: mcstas.h instrument.tab.h
@@ -251,26 +244,19 @@ Scilab:
 VRML:
 	$(MAKE) vrml
 install-pgplot:
-	cd support/pgplot && ./pgplot.sh && echo "McStas: run '$(MAKE) reconfigure'"
+	cd support/pgplot && ./pgplot.sh && echo "@PACKAGE_NAME@: run '$(MAKE) reconfigure'"
 
 install-scilab:
-	cd support/scilab && ./scilab.sh && echo "McStas: run './configure; $(MAKE); $(MAKE) install' again"
+	cd support/scilab && ./scilab.sh && echo "@PACKAGE_NAME@: run './configure; $(MAKE); $(MAKE) install' again"
 
-test: mcstas
-	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ./mcrun.fixpl --test
+test: @MCCODE@
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/@PACKAGE_NAME@Test; export PERL5LIB=../lib/tools/perl; ./mcrun.fixpl --test
 
 uninstall:
-	cd $(bindir); rm -f $(BINOBJS)
-	rm -rf $(mc_libdir)
+	cd $(bindir); rm -f $(BINOBJS_@MCCODE@)
+	rm -rf $(libdir_@MCCODE@)
 
 reconfigure:
-	cd $(mc_libdir)/tools/perl/
-	$(mc_libdir)/tools/perl/mcstas_reconfigure
+	cd $(libdir_@MCCODE@)/tools/perl/
+	$(libdir_@MCCODE@)/tools/perl/mcstas_reconfigure
 
-# Optional auto install of patched perl-Tk package
-tk:
-	if [ $(WGET) != no ]; then \
-		$(WGET) http://www.mcstas.org/download/Tk-804.027_gtk2_patch.tar.gz &&\
-		tar xzvf Tk-804.027_gtk2_patch.tar.gz > /dev/null && \
-		cd Tk-804.027_gtk2_patch && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install ;\
-	fi;

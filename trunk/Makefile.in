@@ -1,6 +1,6 @@
-# Makefile for McStas.
+# Makefile for @PACKAGE_NAME@.
 #
-#   This file is part of the McStas neutron ray-trace simulation package
+#   This file is part of the @PACKAGE_NAME@ ray-trace simulation package
 #   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
@@ -25,7 +25,7 @@
 # make test            distro self-test
 # make plotter         best plotter choice
 # make pgplot          plotter PGPLOT selection and perl-PGPLOT install
-# make reconfigure     reconfigure mcstas installation (after software update)
+# make reconfigure     reconfigure @MCCODE@ installation (after software update)
 # make install-pgplot  build and install PGPLOT
 # make install-scilab  build and install Scilab
 # make install-tk      build and install Tk
@@ -42,7 +42,7 @@ PWD = `pwd`
 
 
 DEBUG = -DDEBUG=0
-mc_libdir = $(libdir)/mcstas
+libdir_@MCCODE@ = $(libdir)/@MCCODE@
 
 CC = @CC@
 MINGW = @MINGW@
@@ -52,7 +52,7 @@ LDFLAGS= @LDFLAGS@
 HAVE_QSORT = @HAVE_QSORT@
 USE_NEXUS = @HAVE_NEXUS@
 
-DEFS = @DEFS@ $(DEBUG)
+DEFS = @PACKAGE_NAME@ @DEFS@ $(DEBUG)
 LIBS = @LIBS@
 
 PERL = @PERL@
@@ -81,17 +81,9 @@ INSTALL_DATA = @INSTALL_DATA@
 # End of configuration section.
 #
 
-PERLOBJ=src/mcdisplay.fixpl src/mcplot.fixpl src/mcresplot.fixpl src/mcrun.fixpl \
-        src/mcgui.fixpl src/mcdoc.fixpl src/mcstas2vitess.fixpl src/mcconvert.fixpl src/mcdaemon.fixpl src/mcformatgui.fixpl
+all: @MCCODE@
 
-BINOBJS=$(PERLOBJ) src/mcstas src/mcformat
-
-all: mcstas
-
-mcxtrace: $(OBJECTS)
-	cd src/ && $(MAKE) mxall
-
-mcstas: $(OBJECTS)
+@MCCODE@: $(OBJECTS)
 	cd src/ && $(MAKE)
 
 clean:
@@ -104,10 +96,6 @@ distclean:
 
 install: 
 	cd src/ && $(MAKE) install
-
-mxinstall: 
-	cd src/ && $(MAKE) mxinstall
-
 
 # Prefer Scilab over Matlab over PGPLOT
 config:
@@ -152,15 +140,15 @@ uninstall:
 	cd src && $(MAKE) uninstall
 
 reconfigure:
-	cd $(mc_libdir)/tools/perl/
-	$(mc_libdir)/tools/perl/mcstas_reconfigure
+	cd $(libdir_@MCCODE@)/tools/perl/
+	$(libdir_@MCCODE@)/tools/perl/mcstas_reconfigure
 
 # Optional auto install of patched perl-Tk, scilab and pgplot5 libs
 install-pgplot:
 	cd support/common && $(MAKE) install-pgplot
 	make pgplot
-	@echo "McStas: run 'make reconfigure'"
+	@echo "@PACKAGE_NAME@: run 'make reconfigure'"
 
 install-scilab:
-	cd suppor/common && make compile-scilab && echo "McStas: run './configure; make; make install' again"
+	cd suppor/common && make compile-scilab && echo "@PACKAGE_NAME@: run './configure; make; make install' again"
 
