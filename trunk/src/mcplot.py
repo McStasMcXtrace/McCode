@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys;
 import os;
+import string;
 
 import matplotlib
 if sys.platform == 'darwin':
@@ -9,81 +10,61 @@ if sys.platform == 'darwin':
 from numpy import loadtxt
 from pylab import *
 
-def mcplot_single(File):
-    # Pattern matches
-    isHeader = lambda line: line.startswith('#');
-    isYlabel = lambda line: line.startswith('# ylabel');
-    isXlabel = lambda line: line.startswith('# xlabel');
-    isComp = lambda line: line.startswith('# component');
-    isFilename = lambda line: line.startswith('# filename');
-    isTitle = lambda line: line.startswith('# title');
-    isValues = lambda line: line.startswith('# values');
-    isVariables = lambda line: line.startswith('# variables');
-    isStatistics = lambda line: line.startswith('# statistics');
-    isXlimits = lambda line: line.startswith('# xlimits');
-    isXYlimits = lambda line: line.startswith('# xylimits');
-    isType = lambda line: line.startswith('# type');
-    # Read the header and determine type of dataset
-    Header = filter(isHeader, open(File).readlines())
-    Type = filter(isType,Header); Type = Type[0].split(': '); Type = Type[1].strip(); Type = Type.split('('); Type = Type[0];
-
-    Xlabel = filter(isXlabel,Header); Xlabel = Xlabel[0].split(': '); Xlabel = Xlabel[1].strip();
+def mcplot_single(FileStruct):
+    Type = FileStruct['type'].split('(')[0].strip();
 
     if Type == 'multiarray_1d':
-        Variables = filter(isVariables,Header); Variables = Variables[0].split(': '); Variables = Variables[1].split();
-        L=len(Variables);
-        dims = calc_panel_size((L-1)/2);    
-        data=loadtxt(File);
-        x=data[:,0];
-        for j in range(1, 1+(L-1)/2):
-            subplot(dims[0],dims[1],j);
-            I=data[:,2*j-1];
-            E=data[:,2*j];
-            errorbar(x,I,E);
-            xlabel(Variables[0], fontsize=4);
-            ylabel("Intensity " + Variables[2*j-1], fontsize=4);
-            title(Variables[2*j-1] + " " + File + "\n Scan of " + Variables[0], fontsize=4)
-    else:
-        # Common stuff for 1 and 2 d:
-        Ylabel = filter(isYlabel,Header); Ylabel = Ylabel[0].split(': '); Ylabel = Ylabel[1].strip();
-        Component = filter(isComp,Header); Component = Component[0].split(': '); Component = Component[1].strip();
-        Filename = filter(isFilename,Header); Filename = Filename[0].split(': '); Filename = Filename[1].strip();
-        Title = filter(isTitle,Header); Title = Title[0].split(': '); Title = Title[1].strip();
-        Values = filter(isValues,Header); Values = Values[0].split(': '); Values = Values[1].split();
-        Statistics = filter(isStatistics,Header); Statistics = Statistics[0].split(': '); Statistics = Statistics[1].strip();
-        
-        data=loadtxt(File);
-    
-    
-
-        if Type == 'array_1d':
-            Xlimits = filter(isXlimits,Header); Xlimits = Xlimits[0].split(': '); Xlimits = Xlimits[1].split(); 
-            Xmin = eval(Xlimits[0]); Xmax = eval(Xlimits[1]);
-        
-            x=data[:,0];
-            y=data[:,1];
-            dy=data[:,2];
-            errorbar(x,y,dy);
-            xlim(Xmin,Xmax);
-        elif Type == 'array_2d':
-            mysize=data.shape;
-            I=data[0:mysize[0]/3,...];
-            mysize=I.shape;
-            XYlimits = filter(isXYlimits,Header); XYlimits = XYlimits[0].split(': '); XYlimits = XYlimits[1].split(); 
-            Xmin = eval(XYlimits[0]); Xmax = eval(XYlimits[1]);
-            Ymin = eval(XYlimits[2]); Ymax = eval(XYlimits[3]);
-            x = linspace(Xmin,Xmax,mysize[1]);
-            y = linspace(Ymin,Ymax,mysize[0]);       
-            pcolor(x,y,I);
-            ylim(Ymin,Ymax);
-            
+        # Only a single panel is plotted here, Struct has field member 'selected' with integer value from outer function
+        Variables = FileStruct['variables'].split();
+        #if exist(FileStruct['selected']):
+        j = FileStruct['selected'];
+        #else:
+        #    j=0;
+        x=FileStruct['data'][:,0];
+        I=FileStruct['data'][:,2*j+1];
+        E=FileStruct['data'][:,2*j+2];
+        errorbar(x,I,E);
+        Xmin = eval(FileStruct['xlimits'].split()[0]);
+        Xmax = eval(FileStruct['xlimits'].split()[1]);        
         xlim(Xmin,Xmax);
-        xlabel(Xlabel);
-        ylabel(Ylabel);
+        xlabel(Variables[0], fontsize=4);
+        ylabel("Intensity " + Variables[2*j-1], fontsize=4);
+        Title = Variables[2*j-1] + " " + File + "\n Scan of " + Variables[0]
+    elif Type == 'array_1d':
+        Xmin = eval(FileStruct['xlimits'].split()[0]);
+        Xmax = eval(FileStruct['xlimits'].split()[1]);        
+        x=FileStruct['data'][:,0];
+        y=FileStruct['data'][:,1];
+        dy=FileStruct['data'][:,2];
+        errorbar(x,y,dy);
+        xlim(Xmin,Xmax);
+        xlabel(FileStruct['xlabel']);
+        ylabel(FileStruct['ylabel']);
+        Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' + FileStruct['title'] + '\n';
+        Title = Title + "I=" + FileStruct['values'].split()[0];
+        Title = Title + " E=" + FileStruct['values'].split()[1];
+        Title = Title + " N=" + FileStruct['values'].split()[2];
+    elif Type == 'array_2d':
+        mysize=FileStruct['data'].shape;
+        I=FileStruct['data'][0:mysize[0]/3,...];
+        mysize=I.shape;
+        Xmin = eval(FileStruct['xylimits'].split()[0]);
+        Xmax = eval(FileStruct['xylimits'].split()[1]);
+        Ymin = eval(FileStruct['xylimits'].split()[2]);
+        Ymax = eval(FileStruct['xylimits'].split()[3]);
+        x = linspace(Xmin,Xmax,mysize[1]);
+        y = linspace(Ymin,Ymax,mysize[0]);       
+        pcolor(x,y,I);
+        xlim(Xmin,Xmax);
+        ylim(Ymin,Ymax);
+        xlabel(FileStruct['xlabel']);
+        ylabel(FileStruct['ylabel']);
+        Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' + FileStruct['title'] + '\n';
+        Title = Title + "I=" + FileStruct['values'].split()[0];
+        Title = Title + " E=" + FileStruct['values'].split()[1];
+        Title = Title + " N=" + FileStruct['values'].split()[2];
     
-        Title = Component + ' [' + Filename + '], ' + Title + '\n' + 'I=' + Values[0] + ' E=' + Values[1] + ' N=' + Values[2] + '; ' + Statistics;
-    
-        title(Title, fontsize=8)
+    title(Title, fontsize=8)
     return 0;
 
 def calc_panel_size(num):
@@ -110,38 +91,75 @@ def calc_panel_size(num):
 
     return nx,ny;
 
+def read_monitor(File):
+    # Read header
+    isHeader = lambda line: line.startswith('#');
+    Header = filter(isHeader, open(File).readlines())
+    
+    # Traverse header and define corresponding 'struct'
+    str ="{";
+    for j in range(0, len(Header)):
+        # Field name and data
+        Line = Header[j]; Line = Line[2:len(Line)].strip();
+        Line = Line.split(':');
+        Field = Line[0];
+        Value = "";
+        Value = string.join(string.join(Line[1:len(Line)], ':').split("'"), '');
+        str = str + "'" + Field + "':'" + Value + "'";
+        if j<len(Header)-1:
+            str = str + ","
+    str = str + "}";
+    Filestruct = eval(str);
+    # Add the data block:
+    Filestruct['data']=loadtxt(File);
+    
+    return Filestruct;
 
+    
 File = sys.argv[1];
 
 isBegin = lambda line: line.startswith('begin');
 isCompFilename = lambda line: line.startswith('    filename:');
 # First, determine if this is single or overview plot...
 SimFile = filter(isBegin, open(File).readlines());
-
+Datfile = 0;
 if SimFile == []:
-    mcplot_single(File);
-    show();
-else:
-    # Get filenames from the sim file
-    MonFiles = filter(isCompFilename, open(File).readlines());
-    L = len(MonFiles);
-    
-    # Scan or oveview?
-    if L==0:
+    FS = read_monitor(File);
+    Type = FS['type'].split('(')[0].strip();
+    if Type!='multiarray_1d':
+        FS['FontSize']=8;
+        mcplot_single(FS);
+        show();
+        exit();
+    Datfile = 1;
+
+# Get filenames from the sim file
+MonFiles = filter(isCompFilename, open(File).readlines());
+L = len(MonFiles);
+# Scan or oveview?
+if L==0:
+    if Datfile==0:
         isFilename = lambda line: line.startswith('filename');
         Scanfile = filter(isFilename, open(File).readlines()); Scanfile = Scanfile[0].split(': '); 
         Scanfile = os.path.join(os.path.dirname(File),Scanfile[1].strip()); 
-        # Proceed to scan datafile
-        mcplot_single(Scanfile);
-
-    else:
-        dims = calc_panel_size(L);
-
-        for j in range(0, L):
-            subplot(dims[0],dims[1],j+1);
-            MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip();
-            mcplot_single(MonFile);
-    show();
+        # Proceed to load scan datafile
+        FS = read_monitor(Scanfile);
+    FS['FontSize']=4;
+    L=(len(FS['variables'].split())-1)/2;
+    dims = calc_panel_size(L);
+    for j in range(0, L):
+        subplot(dims[1],dims[0],j+1);
+        FS['selected'] = j;
+        mcplot_single(FS);
+else:
+    dims = calc_panel_size(L);
+    for j in range(0, L):
+        subplot(dims[1],dims[0],j+1);
+        MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip();
+        FS=read_monitor(MonFile);
+        FS['FontSize']=4;
+        mcplot_single(FS);
+show();
     
 
 
