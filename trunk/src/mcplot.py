@@ -3,23 +3,13 @@ import sys;
 import os;
 import string;
 
-import matplotlib
-if sys.platform == 'darwin':
-    matplotlib.use('MacOSX');
-
-from numpy import loadtxt
-from pylab import *
-
 def mcplot_single(FileStruct):
     Type = FileStruct['type'].split('(')[0].strip();
 
     if Type == 'multiarray_1d':
         # Only a single panel is plotted here, Struct has field member 'selected' with integer value from outer function
         Variables = FileStruct['variables'].split();
-        #if exist(FileStruct['selected']):
         j = FileStruct['selected'];
-        #else:
-        #    j=0;
         x=FileStruct['data'][:,0];
         I=FileStruct['data'][:,2*j+1];
         E=FileStruct['data'][:,2*j+2];
@@ -27,8 +17,8 @@ def mcplot_single(FileStruct):
         Xmin = eval(FileStruct['xlimits'].split()[0]);
         Xmax = eval(FileStruct['xlimits'].split()[1]);        
         xlim(Xmin,Xmax);
-        xlabel(Variables[0], fontsize=4);
-        ylabel("Intensity " + Variables[2*j-1], fontsize=4);
+        xlabel(Variables[0], fontsize=FileStruct['FontSize']);
+        ylabel("Intensity " + Variables[2*j-1], fontsize=FileStruct['FontSize']);
         Title = Variables[2*j-1] + " " + File + "\n Scan of " + Variables[0]
     elif Type == 'array_1d':
         Xmin = eval(FileStruct['xlimits'].split()[0]);
@@ -38,8 +28,8 @@ def mcplot_single(FileStruct):
         dy=FileStruct['data'][:,2];
         errorbar(x,y,dy);
         xlim(Xmin,Xmax);
-        xlabel(FileStruct['xlabel']);
-        ylabel(FileStruct['ylabel']);
+        xlabel(FileStruct['xlabel'],fontsize=FileStruct['FontSize']);
+        ylabel(FileStruct['ylabel'],fontsize=FileStruct['FontSize']);
         Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' + FileStruct['title'] + '\n';
         Title = Title + "I=" + FileStruct['values'].split()[0];
         Title = Title + " E=" + FileStruct['values'].split()[1];
@@ -57,14 +47,14 @@ def mcplot_single(FileStruct):
         pcolor(x,y,I);
         xlim(Xmin,Xmax);
         ylim(Ymin,Ymax);
-        xlabel(FileStruct['xlabel']);
-        ylabel(FileStruct['ylabel']);
+        xlabel(FileStruct['xlabel'],fontsize=FileStruct['FontSize']);
+        ylabel(FileStruct['ylabel'],fontsize=FileStruct['FontSize']);
         Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' + FileStruct['title'] + '\n';
         Title = Title + "I=" + FileStruct['values'].split()[0];
         Title = Title + " E=" + FileStruct['values'].split()[1];
         Title = Title + " N=" + FileStruct['values'].split()[2];
     
-    title(Title, fontsize=8)
+    title(Title, fontsize=FileStruct['FontSize'])
     return 0;
 
 def calc_panel_size(num):
@@ -115,8 +105,19 @@ def read_monitor(File):
     
     return Filestruct;
 
-    
+import matplotlib
+#if sys.platform == 'darwin':
+#    matplotlib.use('MacOSX');
 File = sys.argv[1];
+Format = 0;
+if len(sys.argv)>2:
+    Format = sys.argv[2];
+    matplotlib.use(Format);
+
+from numpy import loadtxt
+from pylab import *
+    
+
 
 isBegin = lambda line: line.startswith('begin');
 isCompFilename = lambda line: line.startswith('    filename:');
@@ -129,7 +130,10 @@ if SimFile == []:
     if Type!='multiarray_1d':
         FS['FontSize']=8;
         mcplot_single(FS);
-        show();
+        if Format!=0: 
+            savefig(File + "." + Format);
+            print "Saved " + File + "." + Format
+        show()
         exit();
     Datfile = 1;
 
@@ -149,17 +153,31 @@ if L==0:
     dims = calc_panel_size(L);
     for j in range(0, L):
         subplot(dims[1],dims[0],j+1);
+        for xlabel_i in gca().get_xticklabels():
+            xlabel_i.set_fontsize(6)
+        for ylabel_i in gca().get_yticklabels():
+            ylabel_i.set_fontsize(6)    
         FS['selected'] = j;
+        FS['FontSize']=6;
         mcplot_single(FS);
 else:
     dims = calc_panel_size(L);
     for j in range(0, L):
         subplot(dims[1],dims[0],j+1);
+        ax=gca()
+        for xlabel_i in gca().get_xticklabels():
+            xlabel_i.set_fontsize(6)
+        for ylabel_i in gca().get_yticklabels():
+            ylabel_i.set_fontsize(6)    
         MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip();
         FS=read_monitor(MonFile);
-        FS['FontSize']=4;
+        FS['FontSize']=6;
         mcplot_single(FS);
+if Format!=0: 
+    savefig(File + "." + Format);
+    print "Saved " + File + "." + Format
 show();
+        
     
 
 
