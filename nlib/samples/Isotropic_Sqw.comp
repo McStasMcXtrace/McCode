@@ -364,7 +364,8 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double mean_scatt;
   double mean_abs;
   double psum_scatt;
-  double single;
+  double single_coh;
+  double single_inc;
   double multi;
   double barns;
 };
@@ -1283,7 +1284,8 @@ INITIALIZE
   VarSqw.mean_scatt= 0;
   VarSqw.mean_abs  = 0;
   VarSqw.psum_scatt= 0;
-  VarSqw.single    = 0;
+  VarSqw.single_coh= 0;
+  VarSqw.single_inc= 0;
   VarSqw.multi     = 0;
   VarSqw.barns     = powder_barns;
 
@@ -1922,8 +1924,10 @@ if (SCATTERED) {
                   +(VarSqw.kf_z-VarSqw.ki_z)*(VarSqw.kf_z-VarSqw.ki_z));
   VarSqw.dw = VS2E*(VarSqw.vf*VarSqw.vf - VarSqw.vi*VarSqw.vi);
 
-  if (SCATTERED == 1) VarSqw.single += p;
-  else VarSqw.multi += p;
+  if (SCATTERED == 1) {
+    if (VarSqw.type == 'c') VarSqw.single_coh += p;
+    else                    VarSqw.single_inc += p;
+  } else VarSqw.multi += p;
 
 } else VarSqw.dq=VarSqw.dw=0;
 
@@ -2042,9 +2046,9 @@ FINALLY
            "               Absorption fraction           =%g\n",
            NAME_CURRENT_COMP,
            VarSqw.mean_scatt/VarSqw.psum_scatt, VarSqw.mean_abs/VarSqw.psum_scatt);
-    printf("               Single   scattering intensity =%g\n"
+    printf("               Single   scattering intensity =%g (coh=%g inc=%g)\n"
            "               Multiple scattering intensity =%g\n",
-           VarSqw.single, VarSqw.multi);
+           VarSqw.single_coh+VarSqw.single_inc, VarSqw.single_coh, VarSqw.single_inc, VarSqw.multi);
   }
 
 /* end FINALLY */
