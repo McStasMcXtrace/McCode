@@ -746,12 +746,12 @@ double randtriangle(void);
 void normal_vec(double *nx, double *ny, double *nz,
     double x, double y, double z);
 int inside_rectangle(double, double, double, double);
-int box_intersect(double *dt_in, double *dt_out, double x, double y, double z,
-    double vx, double vy, double vz, double dx, double dy, double dz);
-int cylinder_intersect(double *t0, double *t1, double x, double y, double z,
-    double vx, double vy, double vz, double r, double h);
-int sphere_intersect(double *t0, double *t1, double x, double y, double z,
-                 double vx, double vy, double vz, double r);
+int box_intersect(double *dl_in, double *dl_out, double x, double y, double z,
+    double kx, double ky, double kz, double dx, double dy, double dz);
+int cylinder_intersect(double *l0, double *l1, double x, double y, double z,
+    double kx, double ky, double kz, double r, double h);
+int sphere_intersect(double *l0, double *l1, double x, double y, double z,
+                 double kx, double ky, double kz, double r);
 /* ADD: E. Farhi, Aug 6th, 2001 solve_2nd_order */
 int solve_2nd_order(double *Idt,
     double A,  double B,  double C);
