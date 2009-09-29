@@ -145,7 +145,7 @@ mxformat:
 
 
 clean:
-	rm -f $(BINOBJS_@MCCODE@) $(OBJECTS) $(PERLOBJ) TAGS \
+	rm -f $(BINOBJS_@MCCODE@) $(OBJECTS) $(PERLOBJ) $(MXPERLOBJ) TAGS \
 	rm -rf selftest_*/ selftest/
 
 distclean: clean
@@ -251,10 +251,10 @@ install-scilab:
 
 test: test_@MCCODE@
 
-test_mcstas:
+test_mcstas: mcrun.fixpl
 	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ./mcrun.fixpl --test
 
-test_mcxtrace:
+test_mcxtrace: mxrun.mxfixpl
 	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ./mxrun.mxfixpl --test
 
 uninstall:
