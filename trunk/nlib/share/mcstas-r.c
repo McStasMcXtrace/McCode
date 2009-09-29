@@ -5189,6 +5189,7 @@ mcparseoptions(int argc, char *argv[])
   int i, j;
   char *p;
   int paramset = 0, *paramsetarray;
+  char *usedir=NULL;
 
   /* Add one to mcnumipar to avoid allocating zero size memory block. */
   paramsetarray = malloc((mcnumipar + 1)*sizeof(*paramsetarray));
@@ -5234,13 +5235,13 @@ mcparseoptions(int argc, char *argv[])
     else if(!strncmp("--ncount=", argv[i], 9))
       mcsetn_arg(&argv[i][9]);
     else if(!strcmp("-d", argv[i]) && (i + 1) < argc)
-      mcuse_dir(argv[++i]);
+      usedir=argv[++i];  /* will create directory after parsing all arguments (end of this function) */
     else if(!strncmp("-d", argv[i], 2))
-      mcuse_dir(&argv[i][2]);
+      usedir=&argv[i][2];
     else if(!strcmp("--dir", argv[i]) && (i + 1) < argc)
-      mcuse_dir(argv[++i]);
+      usedir=argv[++i];
     else if(!strncmp("--dir=", argv[i], 6))
-      mcuse_dir(&argv[i][6]);
+      usedir=&argv[i][6];
     else if(!strcmp("-f", argv[i]) && (i + 1) < argc)
       mcuse_file(argv[++i]);
     else if(!strncmp("-f", argv[i], 2))
@@ -5343,6 +5344,7 @@ mcparseoptions(int argc, char *argv[])
 #ifdef USE_MPI
   if (mcdotrace) mpi_node_count=1; /* disable threading when in trace mode */
 #endif
+  if (usedir) mcuse_dir(usedir);
 } /* mcparseoptions */
 
 #ifndef NOSIGNALS
@@ -5468,7 +5470,7 @@ void sighandler(int sig)
 }
 #endif /* !NOSIGNALS */
 
-/* main raytrace loop */
+/* mcstas_raytrace: main raytrace loop */
 void *mcstas_raytrace(void *p_node_ncount)
 {
   double node_ncount = *((double*)p_node_ncount);
