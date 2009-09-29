@@ -36,8 +36,10 @@ DIST=$TMPDIR/mcstas-$1
 
 if [ "y$2" == "ymcxtrace" ]; then
   CONFIGURE_IN=xconfigure.in
+  MCCODE=mcxtrace
 else
   CONFIGURE_IN=nconfigure.in
+  MCCODE=mcstas
 fi
 
 # Copy current PW checkout to DIST
@@ -184,7 +186,7 @@ rm config.*
 cd ..
 
 # Create tar archive
-tar cfz $PW/../mcstas-$1-src.tar.gz mcstas-$1
+tar cfz $PW/../$MCCODE-$1-src.tar.gz $MCCODE-$1
 
 # Do a 'make' for creation of binary version (should apply to 'any' Unix)
 cd $PW
@@ -204,7 +206,7 @@ PROC=Intel
 cd ..
 
 # Create tar archive
-tar cfz $PW/../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz mcstas-$1
+tar cfz $PW/../$MCCODE-$1-$MACH-$PROC-$UNAME.tar.gz $MCCODE-$1
 
 # Remove temporary dir
 # rm -rf $TMPDIR
@@ -222,7 +224,7 @@ sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
 sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/install/which.exe .
 cd ..
-tar cfz $PW/../mcstas-$1-Win32-src.tar.gz mcstas-$1
+tar cfz $PW/../$MCCODE-$1-Win32-src.tar.gz $MCCODE-$1
 if [ `which makensis` ]; then
     cd -
     ./configure
@@ -244,17 +246,17 @@ fi
 echo
 echo
 echo Your mcstas dist packages are placed in
-echo ../mcstas-$1-src.tar.gz
-echo ../mcstas-$1-$MACH-$PROC-$UNAME.tar.gz
-echo ../mcstas-$1-Win32-src.tar.gz
+echo ../$MCCODE-$1-src.tar.gz
+echo ../$MCCODE-$1-$MACH-$PROC-$UNAME.tar.gz
+echo ../$MCCODE-$1-Win32-src.tar.gz
 echo
 echo NOTE: Win32 version must be built using \'build.bat\' of the Win32-src package
 echo
 echo Your mcstas doc packages are placed in
-echo ../mcstas-$1-manual.ps.gz
-echo ../mcstas-$1-manual.pdf
-echo ../mcstas-$1-components.ps.gz
-echo ../mcstas-$1-components.pdf
+echo ../$MCCODE-$1-manual.ps.gz
+echo ../$MCCODE-$1-manual.pdf
+echo ../$MCCODE-$1-components.ps.gz
+echo ../$MCCODE-$1-components.pdf
 echo
 echo WARNING: Please install to a test system and run the following tools
 echo before release:
