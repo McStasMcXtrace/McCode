@@ -4,29 +4,34 @@ import os;
 import string;
 
 def mcplot_single(FileStruct):
-    Type = FileStruct['type'].split('(')[0].strip();
+    type = FileStruct['type'].split('(')[0].strip();
 
-    if Type == 'multiarray_1d':
+    if type == 'multiarray_1d':
         # Only a single panel is plotted here, Struct has field member 'selected' with integer value from outer function
         Variables = FileStruct['variables'].split();
         j = FileStruct['selected'];
+        print str(j) + " is selected"
         x=FileStruct['data'][:,0];
         I=FileStruct['data'][:,2*j+1];
         E=FileStruct['data'][:,2*j+2];
-        errorbar(x,I,E);
+        h=errorbar(x,I,E);
+        FileStruct['axes']=gca()
+        #h.RawData=FileStruct;
         Xmin = eval(FileStruct['xlimits'].split()[0]);
         Xmax = eval(FileStruct['xlimits'].split()[1]);        
         xlim(Xmin,Xmax);
         xlabel(Variables[0], fontsize=FileStruct['FontSize']);
         ylabel("Intensity " + Variables[2*j-1], fontsize=FileStruct['FontSize']);
         Title = Variables[2*j-1] + " " + File + "\n Scan of " + Variables[0]
-    elif Type == 'array_1d':
+    elif type == 'array_1d':
         Xmin = eval(FileStruct['xlimits'].split()[0]);
         Xmax = eval(FileStruct['xlimits'].split()[1]);        
         x=FileStruct['data'][:,0];
         y=FileStruct['data'][:,1];
         dy=FileStruct['data'][:,2];
-        errorbar(x,y,dy);
+        h=errorbar(x,y,dy);
+        FileStruct['axes']=gca()
+        #h.RawData=FileStruct;
         xlim(Xmin,Xmax);
         xlabel(FileStruct['xlabel'],fontsize=FileStruct['FontSize']);
         ylabel(FileStruct['ylabel'],fontsize=FileStruct['FontSize']);
@@ -34,7 +39,7 @@ def mcplot_single(FileStruct):
         Title = Title + "I=" + FileStruct['values'].split()[0];
         Title = Title + " E=" + FileStruct['values'].split()[1];
         Title = Title + " N=" + FileStruct['values'].split()[2];
-    elif Type == 'array_2d':
+    elif type == 'array_2d':
         mysize=FileStruct['data'].shape;
         I=FileStruct['data'][0:mysize[0]/3,...];
         mysize=I.shape;
@@ -44,7 +49,9 @@ def mcplot_single(FileStruct):
         Ymax = eval(FileStruct['xylimits'].split()[3]);
         x = linspace(Xmin,Xmax,mysize[1]);
         y = linspace(Ymin,Ymax,mysize[0]);       
-        pcolor(x,y,I);
+        h=pcolor(x,y,I);
+        FileStruct['axes']=gca()
+        #h.RawData=FileStruct;
         xlim(Xmin,Xmax);
         ylim(Ymin,Ymax);
         xlabel(FileStruct['xlabel'],fontsize=FileStruct['FontSize']);
@@ -53,9 +60,10 @@ def mcplot_single(FileStruct):
         Title = Title + "I=" + FileStruct['values'].split()[0];
         Title = Title + " E=" + FileStruct['values'].split()[1];
         Title = Title + " N=" + FileStruct['values'].split()[2];
-    
+        colorbar()
+
     title(Title, fontsize=FileStruct['FontSize'])
-    return 0;
+    return FileStruct;
 
 def calc_panel_size(num):
     Panels = ( [1,1], [2,1], [2,2], [3,2], [3,3], [4,3], [5,3], [4,4],
@@ -105,6 +113,32 @@ def read_monitor(File):
     
     return Filestruct;
 
+def get_monitor(FS,j):
+    # Ugly, hard-coded...
+    data=FS['data'][:,(0,2*j+1,2*j+2)];
+    FSsingle={'xlimits':FS['xlimits'],'data':data,'component':'dummey','values':'Scan Scan Scan','type':'array_1d(100)',
+              'xlabel':FS['xlabel'],'ylabel':FS['ylabel'],'File':FS['filename']+" subset",'title':'','FontSize':6}
+    return FSsingle
+
+
+def click(event):
+    """If the left mouse button is pressed: draw a little square. """
+    tb = get_current_fig_manager().toolbar
+    if event.button==1 and event.inaxes and tb.mode == '':
+        g = event.inaxes
+        # Determine number of clicked axis
+        ax = get(gcf(),'axes')
+        jused = 0
+        for j in range(0, len(FSlist)):
+            FS = FSlist[j]
+            if g==FS['axes']:
+                #                print "Match at " + str(juse) + " in array of length " + str(len(FSlist))
+                h=figure(2)
+                clf()
+                mcplot_single(FS)
+                jused = j
+        FSlist[jused]['axes']=g
+
 import matplotlib
 #if sys.platform == 'darwin':
 #    matplotlib.use('MacOSX');
@@ -126,8 +160,8 @@ SimFile = filter(isBegin, open(File).readlines());
 Datfile = 0;
 if SimFile == []:
     FS = read_monitor(File);
-    Type = FS['type'].split('(')[0].strip();
-    if Type!='multiarray_1d':
+    type = FS['type'].split('(')[0].strip();
+    if type!='multiarray_1d':
         FS['FontSize']=8;
         mcplot_single(FS);
         if Format!=0: 
@@ -141,6 +175,7 @@ if SimFile == []:
 MonFiles = filter(isCompFilename, open(File).readlines());
 L = len(MonFiles);
 # Scan or oveview?
+FSlist = list();
 if L==0:
     if Datfile==0:
         isFilename = lambda line: line.startswith('filename');
@@ -148,18 +183,25 @@ if L==0:
         Scanfile = os.path.join(os.path.dirname(File),Scanfile[1].strip()); 
         # Proceed to load scan datafile
         FS = read_monitor(Scanfile);
-    FS['FontSize']=4;
     L=(len(FS['variables'].split())-1)/2;
     dims = calc_panel_size(L);
     for j in range(0, L):
+        FSsingle = get_monitor(FS,j);
+        
+        #FSlist[len(FSlist):] = [copy(FS)]
         subplot(dims[1],dims[0],j+1);
+        ax=gca()
         for xlabel_i in gca().get_xticklabels():
             xlabel_i.set_fontsize(6)
         for ylabel_i in gca().get_yticklabels():
             ylabel_i.set_fontsize(6)    
-        FS['selected'] = j;
-        FS['FontSize']=6;
-        mcplot_single(FS);
+        FSlist[len(FSlist):] = [FSsingle]
+        FSlist[j]=mcplot_single(FSsingle);
+
+        #FS['selected'] = j;
+        #
+        #FS=mcplot_single(FS);
+#        connect('button_press_event',click)
 else:
     dims = calc_panel_size(L);
     for j in range(0, L):
@@ -172,7 +214,9 @@ else:
         MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip();
         FS=read_monitor(MonFile);
         FS['FontSize']=6;
-        mcplot_single(FS);
+        FSlist[len(FSlist):] = [FS]
+        FSlist[j]=mcplot_single(FS);
+connect('button_press_event',click)
 if Format!=0: 
     savefig(File + "." + Format);
     print "Saved " + File + "." + Format
