@@ -35,10 +35,12 @@ def mcplot_single(FileStruct):
         xlim(Xmin,Xmax);
         xlabel(FileStruct['xlabel'],fontsize=FileStruct['FontSize']);
         ylabel(FileStruct['ylabel'],fontsize=FileStruct['FontSize']);
-        Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' + FileStruct['title'] + '\n';
-        Title = Title + "I=" + FileStruct['values'].split()[0];
-        Title = Title + " E=" + FileStruct['values'].split()[1];
-        Title = Title + " N=" + FileStruct['values'].split()[2];
+        Title = FileStruct['component'] + ' [' + FileStruct['File'] + '], ' + FileStruct['title'];
+        if len(FileStruct['values'])>0:
+            Title = Title + '\n';
+            Title = Title + "I=" + FileStruct['values'].split()[0];
+            Title = Title + " E=" + FileStruct['values'].split()[1];
+            Title = Title + " N=" + FileStruct['values'].split()[2];
     elif type == 'array_2d':
         mysize=FileStruct['data'].shape;
         I=FileStruct['data'][0:mysize[0]/3,...];
@@ -116,8 +118,9 @@ def read_monitor(File):
 def get_monitor(FS,j):
     # Ugly, hard-coded...
     data=FS['data'][:,(0,2*j+1,2*j+2)];
-    FSsingle={'xlimits':FS['xlimits'],'data':data,'component':'dummey','values':'Scan Scan Scan','type':'array_1d(100)',
-              'xlabel':FS['xlabel'],'ylabel':FS['ylabel'],'File':FS['filename']+" subset",'title':'','FontSize':6}
+    vars=FS['variables'].split()   
+    FSsingle={'xlimits':FS['xlimits'],'data':data,'component':vars[j+1],'values':'','type':'array_1d(100)',
+              'xlabel':FS['xlabel'],'ylabel':FS['ylabel'],'File':'Scan','title':'','FontSize':6}
     return FSsingle
 
 
