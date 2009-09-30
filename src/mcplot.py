@@ -210,9 +210,10 @@ if __name__ == "__main__":
     if os.path.isdir(File)==1:
         # dirname given, assume mcstas.sim in that dir.
         File = os.path.join(File,'mcstas.sim')
-    
-    os.chdir(os.path.dirname(File))
-    File = os.path.basename(File)
+ 
+    if os.path.dirname(File) != '':
+        os.chdir(os.path.dirname(File))
+        File = os.path.basename(File)
 
     if os.path.isfile(File)==0:
         print "Dataset " + File + " does not exist!"
