@@ -139,8 +139,16 @@ def click(event):
                 h=figure(2)
                 clf()
                 mcplot_single(FS)
+                connect('button_press_event',close_click)
                 jused = j
         FSlist[jused]['axes']=g
+
+def close_click(event):
+    tb = get_current_fig_manager().toolbar
+    if event.button==1 and event.inaxes and tb.mode == '':
+        g = event.inaxes
+        close(2)
+
 
 import matplotlib
 #if sys.platform == 'darwin':
@@ -153,7 +161,6 @@ if len(sys.argv)>2:
 
 from numpy import loadtxt
 from pylab import *
-    
 
 
 isBegin = lambda line: line.startswith('begin');
