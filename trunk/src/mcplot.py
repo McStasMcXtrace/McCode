@@ -202,7 +202,21 @@ if __name__ == "__main__":
         matplotlib.use(options.Format)
     from pylab import connect,subplot,gca,savefig,show
     File=string.join(args)
-    Counter = 0
+
+    if File =="":
+        # No filename given, assume mcstas.sim in current dir
+        File = "mcstas.sim"
+    
+    if os.path.isdir(File)==1:
+        # dirname given, assume mcstas.sim in that dir.
+        File = os.path.join(File,'mcstas.sim')
+    
+    os.chdir(os.path.dirname(File))
+    File = os.path.basename(File)
+
+    if os.path.isfile(File)==0:
+        print "Dataset " + File + " does not exist!"
+        exit()
     
     isBegin = lambda line: line.startswith('begin')
     isCompFilename = lambda line: line.startswith('    filename:')
