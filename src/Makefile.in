@@ -125,8 +125,11 @@ BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 
 all: $(BINOBJS_@MCCODE@)
 
-@MCCODE@: $(OBJECTS_@MCCODE@)
-	$(CC) -o @MCCODE@ $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_@MCCODE@) -lm
+mcstas: $(OBJECTS_mcstas)
+	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcstas) -lm
+
+mcxtrace: $(OBJECTS_mcxtrace)
+	$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcxtrace) -lm
 
 mcstas.win32: $(COBJECTS)
 	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
@@ -145,8 +148,8 @@ mxformat:
 
 
 clean:
-	rm -f $(BINOBJS_@MCCODE@) $(OBJECTS) $(PERLOBJ) $(MXPERLOBJ) TAGS \
-	rm -rf selftest_*/ selftest/
+	rm -f $(BINOBJS_mcstas) $(BINOBJS_mcxtrace) $(OBJECTS_mcstas) $(OBJECTS_mcxtrace) $(PERLOBJ) $(MXPERLOBJ) *.fixpl *.mxfixpl *.o port.h TAGS
+	rm -rf selftest_* selftest/
 
 distclean: clean
 	rm -f instrument.tab.c instrument.tab.h instrument.output lex.yy.c 
