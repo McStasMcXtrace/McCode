@@ -138,10 +138,11 @@ def click(event):
                 h=figure(2)
                 clf()
                 mcplot_single(FS)
-                connect('button_press_event',close_click)
+#                connect('button_press_event',close_click)
                 connect('key_press_event', keypress)
                 jused = j
         FSlist[jused]['axes']=g
+        show()
 
 def keypress(event):
     from pylab import close
@@ -168,10 +169,11 @@ def dumpfile(format):
     
 
 def close_click(event):
-    from pylab import get_current_fig_manager,close
+    from pylab import get_current_fig_manager,close,figure
     tb = get_current_fig_manager().toolbar
     if event.button==1 and event.inaxes and tb.mode == '':
         g = event.inaxes
+        figure(1)
         close(2)
 
 if __name__ == "__main__":
