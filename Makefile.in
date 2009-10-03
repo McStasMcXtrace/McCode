@@ -88,7 +88,7 @@ all: @MCCODE@
 
 clean:
 	cd src/ && $(MAKE) clean
-	rm -f src/config.cache src/Makefile config.cache Makefile
+	rm -f src/config.cache config.cache
 
 distclean:
 	cd src/ && $(MAKE) distclean
