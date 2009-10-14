@@ -1383,8 +1383,11 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variabl
                 mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
 
             } /* else */
+            /* comment out 'free memory' lines to avoid loosing arrays if 
+               'detector' structure is used by other instrument parts 
             if (mc_mn_p1m != NULL) free(mc_mn_p1m); mc_mn_p1m=NULL;
             if (mc_mn_p2m != NULL) free(mc_mn_p2m); mc_mn_p2m=NULL;
+            */
           } else { /* 0d monitor */
             detector = mcdetector_out_0D(mc_mn_label, mc_mn_Vars->Mon2D_p[mc_mn_i][0], mc_mn_Vars->Mon2D_p2[mc_mn_i][0], mc_mn_Vars->Mon2D_N[mc_mn_i][0], mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
           }
@@ -1403,8 +1406,11 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variabl
         if (mc_mn_p2m == NULL)
         {
           if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%li). Skipping.\n", mc_mn_Vars->compcurname, 3*mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2]*sizeof(double));
+          /* comment out 'free memory' lines to avoid loosing arrays if 
+               'detector' structure is used by other instrument parts 
           if (mc_mn_p0m != NULL) free(mc_mn_p0m);
           if (mc_mn_p1m != NULL) free(mc_mn_p1m);
+          */
         }
         else
         {
@@ -1474,9 +1480,12 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variabl
             mc_mn_p0m,mc_mn_p1m,mc_mn_p2m,
             mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
 
+          /* comment out 'free memory' lines to avoid loosing arrays if 
+               'detector' structure is used by other instrument parts 
           if (mc_mn_p0m != NULL) free(mc_mn_p0m);
           if (mc_mn_p1m != NULL) free(mc_mn_p1m);
           if (mc_mn_p2m != NULL) free(mc_mn_p2m);
+          */
         }
       }
       free(mc_mn_fname);
