@@ -552,11 +552,17 @@ cogen_instrument_scope(struct instr_def *instr,
 {
   List_handle parlist;
 
-  coutf("#define %scompcurname %s", ID_PRE, instr->name);
+  coutf("#define %scompcurname  %s", ID_PRE,  instr->name);
+  coutf("#define %scompcurtype  %s", ID_PRE, "INSTRUMENT");
+  coutf("#define %scompcurindex %i", ID_PRE, 0);
+  coutf("#define %sposa%s coords_set(0,0,0)", ID_PRE, instr->name);
   /* This simply starts up the recursion on parameters. */
   parlist = list_iterate(instr->formals);
   cogen_instrument_scope_rec(parlist, func, data);
   list_iterate_end(parlist);
+  coutf("#undef %sposa%s",      ID_PRE, instr->name);
+  coutf("#undef %scompcurindex",ID_PRE);
+  coutf("#undef %scompcurtype", ID_PRE);
   coutf("#undef %scompcurname", ID_PRE);
 }
 
