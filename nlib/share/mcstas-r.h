@@ -577,6 +577,7 @@ struct mcdetector_struct {
   long   date_l;
   
   double *p0, *p1, *p2;
+  double *p0_orig,*p1_orig,*p2_orig;
   
   FILE   *file_handle;
   struct mcformats_struct format;
