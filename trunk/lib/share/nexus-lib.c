@@ -90,6 +90,7 @@ int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
   strcpy(mcnxExt, ext);
   char nxversion[CHAR_BUF_LENGTH];
   int i;
+  if (mcdisable_output_files) return(NX_OK);
   if (!mcnxversion || !strlen(mcnxversion)) strcpy(nxversion, "5 zip");
   else for (i=0; i< strlen(mcnxversion) && i < 128; nxversion[i]=tolower(mcnxversion[i++]));
 
@@ -107,6 +108,7 @@ int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
 
 int mcnxfile_close(NXhandle *nxHandle)
 {
+  if (mcdisable_output_files) return(NX_OK);
   return(NXclose(nxHandle));
 }
 
@@ -122,6 +124,7 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     char *valid_parent,         /* %7$s  PAR = file */
     long  date_l)               /* %8$li DATL */
 {
+  if (mcdisable_output_files) return(NX_OK);
   if (!strcmp(part, "header")) {
     if (NXputattr(nxhandle, "user_name", user, strlen(user), NX_CHAR) == NX_ERROR)
       return(NX_ERROR);
@@ -148,6 +151,7 @@ int mcnxfile_tag(NXhandle nxhandle,
     char *name,         /* %3$s NAM */
     char *value)        /* %4$s VAL */
 {
+  if (mcdisable_output_files) return(NX_OK);
   return(NXputattr(nxhandle, name, value, strlen(value), NX_CHAR));
 } /* mcnxfile_tag */
 
@@ -163,6 +167,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
 {
   char nxname[CHAR_BUF_LENGTH];
   int length;
+  if (mcdisable_output_files) return(NX_OK);
   if (!strcmp(part, "end_data"))   return(NXclosedata(nxhandle));
   if (!strcmp(part, "end"))        return(NXclosegroup(nxhandle));
 
@@ -219,6 +224,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
 int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
   char *valid_parent, char *valid_xlabel, char *valid_ylabel, char *valid_zlabel)
 {
+  if (mcdisable_output_files) return(NX_OK);
   /* write axes, only for data */
   if (strstr(part, "data")) {
     int i;
