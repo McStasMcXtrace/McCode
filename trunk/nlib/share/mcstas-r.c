@@ -1780,7 +1780,7 @@ FILE *mcnew_file(char *name, char *ext, char *mode)
   char *mem;
   FILE *file;
 
-  if (!name || strlen(name) == 0) return(NULL);
+  if (!name || strlen(name) == 0 || mcdisable_output_files) return(NULL);
 
   mem = mcfull_file(name, ext);
   file = fopen(mem, (mode ? mode : "w"));
@@ -2027,7 +2027,7 @@ static int mcfile_header(MCDETECTOR detector, char *part)
   char date[CHAR_BUF_LENGTH]; /* date as a string */
   char valid_parent[VALID_NAME_LENGTH];     /* who generates that: the simulation or mcstas */
   
-  if (!detector.file_handle) return(-1);
+  if (!detector.file_handle || mcdisable_output_files) return(-1);
   if (strcmp(part,"header") && strstr(detector.format.Name, "no header")) return (-2);
   if (strcmp(part,"footer") && strstr(detector.format.Name, "no footer")) return (-3);
   
@@ -2095,7 +2095,9 @@ static int mcfile_tag(MCDETECTOR detector, char *section, char *name, char *valu
   char valid_name[VALID_NAME_LENGTH];
   int i;
 
-  if (!strlen(detector.format.AssignTag) || (!detector.file_handle) || !name || !strlen(name)) return(-1);
+  if (!strlen(detector.format.AssignTag) || !detector.file_handle
+   || !name || !strlen(name)
+   || mcdisable_output_files) return(-1);
 
   mcvalid_name(valid_section, section, VALID_NAME_LENGTH);
   mcvalid_name(valid_name,    name,    VALID_NAME_LENGTH);
@@ -2139,7 +2141,9 @@ MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *s
   char valid_section[VALID_NAME_LENGTH];
   char valid_parent[VALID_NAME_LENGTH];
 
-  if((!detector.file_handle && detector.rank > 0) || !section || !strlen(section)) return(detector);
+  if((!detector.file_handle && detector.rank > 0)
+   || !section || !strlen(section)
+   || mcdisable_output_files) return(detector);
   if (strcmp(part,"begin") && strstr(detector.format.Name, "no header")) return (detector);
   if (strcmp(part,"end")   && strstr(detector.format.Name, "no footer")) return (detector);
   
@@ -2201,7 +2205,8 @@ static int mcinfo_instrument(MCDETECTOR detector, char *name)
   char Parameters[CHAR_BUF_LENGTH] = "";
   int  i;
 
-  if (!detector.file_handle || !name || !strlen(name)) return(-1);
+  if (!detector.file_handle || !name || !strlen(name)
+   || mcdisable_output_files) return(-1);
   
   /* create parameter string ================================================ */
 
@@ -2244,7 +2249,8 @@ MCDETECTOR mcinfo_simulation(MCDETECTOR detector, char *instr)
   int i;
   char Parameters[CHAR_BUF_LENGTH];
 
-  if (!detector.file_handle || !instr || !strlen(instr)) return(detector);
+  if (!detector.file_handle || !instr || !strlen(instr)
+   || mcdisable_output_files) return(detector);
 
   mcfile_tag(detector, instr, "Ncount",      detector.ncount);
   mcfile_tag(detector, instr, "Trace",       mcdotrace ? "yes" : "no");
@@ -2288,7 +2294,7 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
 {
   char parent[CHAR_BUF_LENGTH];
   
-  if (!detector.m) return;
+  if (!detector.m || mcdisable_output_files) return;
   
   /* access either SIM or Data file */
   if (!filename) {
@@ -2864,7 +2870,7 @@ int mcfile_data(MCDETECTOR detector, char *part)
   if (strstr(part,"ncount") || strstr(part,"events"))
   { this_p1=detector.p0;Begin = detector.format.BeginNcount; End = detector.format.EndNcount; }
   
-  if (!this_p1) return(-1);
+  if (!this_p1 || mcdisable_output_files || !detector.file_handle) return(-1);
   
   mcvalid_name(valid_xlabel, detector.xlabel, VALID_NAME_LENGTH);
   mcvalid_name(valid_ylabel, detector.ylabel, VALID_NAME_LENGTH);
@@ -3075,7 +3081,7 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 {
   /* skip if 0D or no filename or no data (only stored in sim file) */
   if (!detector.rank || !strlen(detector.filename) 
-   || !detector.m || mcdisable_output_files) return(detector);
+   || !detector.m) return(detector);
 
   if (detector.rank == 0) return(detector);
 
@@ -3209,7 +3215,8 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
   if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
     free(mcDetectorCustomHeader); mcDetectorCustomHeader=NULL; }
   
-  if (!strstr(mcformat.Name, "NeXus") && detector.file_handle != mcsiminfo_file) 
+  if (!strstr(mcformat.Name, "NeXus") && detector.file_handle != mcsiminfo_file
+   && !mcdisable_output_files && detector.file_handle) 
     fclose(detector.file_handle);
   
   return(detector); 
