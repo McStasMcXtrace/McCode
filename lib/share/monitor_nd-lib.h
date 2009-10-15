@@ -84,7 +84,7 @@
 
 #ifndef MONITOR_ND_LIB_H
 
-#define MONITOR_ND_LIB_H "1.1.1"
+#define MONITOR_ND_LIB_H "$Revision: 1.19 $"
 #define MONnD_COORD_NMAX  30  /* max number of variables to record */
 
   typedef struct MonitornD_Defines

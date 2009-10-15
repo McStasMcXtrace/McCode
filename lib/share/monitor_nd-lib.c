@@ -202,7 +202,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
 
 
     mc_mn_t = (long)time(NULL);
-
+    
+/* initialize DEFS */  
+/* Variables to monitor */
     mc_mn_DEFS->COORD_NONE   =0;
     mc_mn_DEFS->COORD_X      =1;
     mc_mn_DEFS->COORD_Y      =2;
@@ -235,20 +237,20 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_DEFS->COORD_KXY    =29;
     mc_mn_DEFS->COORD_VXY    =30;
 
-/* mc_mn_token modifiers */
-    mc_mn_DEFS->COORD_VAR    =0;    /* next mc_mn_token should be a variable or normal option */
-    mc_mn_DEFS->COORD_MIN    =1;    /* next mc_mn_token is a min value */
-    mc_mn_DEFS->COORD_MAX    =2;    /* next mc_mn_token is a max value */
-    mc_mn_DEFS->COORD_DIM    =3;    /* next mc_mn_token is a bin value */
-    mc_mn_DEFS->COORD_FIL    =4;    /* next mc_mn_token is a filename */
-    mc_mn_DEFS->COORD_EVNT   =5;    /* next mc_mn_token is a buffer size value */
-    mc_mn_DEFS->COORD_3HE    =6;    /* next mc_mn_token is a 3He pressure value */
+/* token modifiers */
+    mc_mn_DEFS->COORD_VAR    =0;    /* next token should be a variable or normal option */
+    mc_mn_DEFS->COORD_MIN    =1;    /* next token is a min value */
+    mc_mn_DEFS->COORD_MAX    =2;    /* next token is a max value */
+    mc_mn_DEFS->COORD_DIM    =3;    /* next token is a bin value */
+    mc_mn_DEFS->COORD_FIL    =4;    /* next token is a filename */
+    mc_mn_DEFS->COORD_EVNT   =5;    /* next token is a buffer size value */
+    mc_mn_DEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
     mc_mn_DEFS->COORD_LOG    =32;   /* next variable will be in log scale */
     mc_mn_DEFS->COORD_ABS    =64;   /* next variable will be in abs scale */
     mc_mn_DEFS->COORD_SIGNAL =128;  /* next variable will be the signal var */
     mc_mn_DEFS->COORD_AUTO   =256;  /* set auto limits */
 
-    strcpy(mc_mn_DEFS->TOKEN_DEL, " =,;[](){}:");  /* mc_mn_token separators */
+    strcpy(mc_mn_DEFS->TOKEN_DEL, " =,;[](){}:");  /* token separators */
 
     mc_mn_DEFS->SHAPE_SQUARE =0;    /* shape of the monitor */
     mc_mn_DEFS->SHAPE_DISK   =1;
@@ -323,7 +325,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_option_copy = (char*)malloc(strlen(mc_mn_Vars->option)+1);
     if (mc_mn_option_copy == NULL)
     {
-      fprintf(stderr,"Monitor_nD: %s cannot allocate mc_mn_option_copy (%li). Fatal.\n", mc_mn_Vars->compcurname, (long)strlen(mc_mn_Vars->option));
+      fprintf(stderr,"Monitor_nD: %s cannot allocate 'options' copy (%li). Fatal.\n", mc_mn_Vars->compcurname, (long)strlen(mc_mn_Vars->option));
       exit(-1);
     }
 
@@ -348,14 +350,14 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     mc_mn_Vars->Coord_Min[0] = 0;
     mc_mn_Vars->Coord_Max[0] = FLT_MAX;
 
-    /* default file name is comp name+dateID */
+    /* default file name is comp_name+dateID */
     sprintf(mc_mn_Vars->Mon_File, "%s_%li", mc_mn_Vars->compcurname, mc_mn_t);
 
     mc_mn_carg = 1;
     while((mc_mn_Flag_End == 0) && (mc_mn_carg < 128))
     {
 
-      if (mc_mn_Flag_New_token) /* to get the previous mc_mn_token sometimes */
+      if (mc_mn_Flag_New_token) /* retain previous token or get a new one */
       {
         if (mc_mn_carg == 1) mc_mn_token=(char *)strtok(mc_mn_option_copy,mc_mn_DEFS->TOKEN_DEL);
         else mc_mn_token=(char *)strtok(NULL,mc_mn_DEFS->TOKEN_DEL);
@@ -366,9 +368,9 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       {
         char mc_mn_iskeyword=0;
         int  mc_mn_old_Mode;
-        /* first handle option values from preceeding keyword mc_mn_token detected */
+        /* first handle option values from preceeding keyword token detected */
         mc_mn_old_Mode = mc_mn_Set_Coord_Mode;
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_MAX)
+        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_MAX)  /* max=%i */
         {
           if (!mc_mn_Flag_All)
             mc_mn_Vars->Coord_Max[mc_mn_Vars->Coord_Number] = atof(mc_mn_token);
@@ -376,7 +378,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
             for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_Vars->Coord_Max[mc_mn_i++] = atof(mc_mn_token));
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_MIN)
+        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_MIN)  /* min=%i */
         {
           if (!mc_mn_Flag_All)
             mc_mn_Vars->Coord_Min[mc_mn_Vars->Coord_Number] = atof(mc_mn_token);
@@ -384,7 +386,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
             for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_Vars->Coord_Min[mc_mn_i++] = atof(mc_mn_token));
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_MAX;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_DIM)
+        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_DIM)  /* bins=%i */
         {
           if (!mc_mn_Flag_All)
             mc_mn_Vars->Coord_Bin[mc_mn_Vars->Coord_Number] = atoi(mc_mn_token);
@@ -392,20 +394,20 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
             for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_Vars->Coord_Bin[mc_mn_i++] = atoi(mc_mn_token));
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_FIL)
+        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_FIL)  /* file=%s */
         {
           if (!mc_mn_Flag_No) strncpy(mc_mn_Vars->Mon_File,mc_mn_token,128);
           else { strcpy(mc_mn_Vars->Mon_File,""); mc_mn_Vars->Coord_Number = 0; mc_mn_Flag_End = 1;}
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_EVNT)
+        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_EVNT) /* list=%i */
         {
           if (!strcmp(mc_mn_token, "all") || mc_mn_Flag_All) mc_mn_Vars->Flag_List = 2;
           else { mc_mn_i = (long)ceil(atof(mc_mn_token)); if (mc_mn_i) mc_mn_Vars->Buffer_Block = mc_mn_i;
             mc_mn_Vars->Flag_List = 1; }
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_3HE)
+        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_3HE)  /* pressure=%g */
         {
             mc_mn_Vars->He3_pressure = atof(mc_mn_token);
             mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
@@ -418,15 +420,15 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
         if (!strcmp(mc_mn_token, "abs"))      {mc_mn_Flag_abs                = 1; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "multiple")) {mc_mn_Vars->Flag_Multiple     = 1; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "exclusive")){mc_mn_Vars->Flag_Exclusive    = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "list")) {
+        if (!strcmp(mc_mn_token, "list") || !strcmp(mc_mn_token, "events")) {
           mc_mn_Vars->Flag_List = 1; mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_EVNT;  }
         if (!strcmp(mc_mn_token, "limits") || !strcmp(mc_mn_token, "min"))
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_MIN;
         if (!strcmp(mc_mn_token, "slit") || !strcmp(mc_mn_token, "absorb")) {
           mc_mn_Vars->Flag_Absorb = 1;  mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "max"))  mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_MAX;
-        if (!strcmp(mc_mn_token, "bins")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_DIM;
-        if (!strcmp(mc_mn_token, "file")) {
+        if (!strcmp(mc_mn_token, "bins") || !strcmp(mc_mn_token, "dim")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_DIM;
+        if (!strcmp(mc_mn_token, "file") || !strcmp(mc_mn_token, "filename")) {
           mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_FIL;
           if (mc_mn_Flag_No) { strcpy(mc_mn_Vars->Mon_File,""); mc_mn_Vars->Coord_Number = 0; mc_mn_Flag_End = 1; }
         }
@@ -449,12 +451,12 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
           mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "premonitor")) {
           mc_mn_Vars->Flag_UsePreMonitor = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "3He_pressure")) {
+        if (!strcmp(mc_mn_token, "3He_pressure") || !strcmp(mc_mn_token, "pressure")) {
           mc_mn_Vars->He3_pressure = 3; mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "no") || !strcmp(mc_mn_token, "not")) { mc_mn_Flag_No = 1;  mc_mn_iskeyword=1; }
         if (!strcmp(mc_mn_token, "signal")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_SIGNAL;
 
-        /* Mode has changed: this was a keyword or value */
+        /* Mode has changed: this was a keyword or value  ? */
         if (mc_mn_Set_Coord_Mode != mc_mn_old_Mode) mc_mn_iskeyword=1;
 
         /* now look for variable names to monitor */
@@ -586,7 +588,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       } /* end if mc_mn_token */
     } /* end while mc_mn_carg */
     free(mc_mn_option_copy);
-    if (mc_mn_carg == 128) printf("Monitor_nD: %s reached max number of mc_mn_tokens (%i). Skipping.\n", mc_mn_Vars->compcurname, 128);
+    if (mc_mn_carg == 128) printf("Monitor_nD: %s reached max number of tokens (%i). Skipping.\n", mc_mn_Vars->compcurname, 128);
 
     if ((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX) && (fabs(mc_mn_Vars->mzmax - mc_mn_Vars->mzmin) == 0)) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE;
 
@@ -594,7 +596,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     if (mc_mn_Vars->Coord_Number == 0)
     { mc_mn_Vars->Flag_Auto_Limits=0; mc_mn_Vars->Flag_Multiple=0; mc_mn_Vars->Flag_List=0; }
 
-    /* now setting Monitor Name from variable mc_mn_labels */
+    /* now setting Monitor Name from variable labels */
     strcpy(mc_mn_Vars->Monitor_Label,"");
     mc_mn_XY = 1; /* will contain total bin number */
     for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
@@ -678,7 +680,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
           strncat(mc_mn_Vars->Coord_Label[0], "/st", 30);
         else
           printf("Monitor_nD: %s: Flux per steradian requires Auto limits mode\n"
-                 "WARNING     use options='.. auto ...'\n", mc_mn_Vars->compcurname);
+                 "WARNING     use options='... auto ...'\n", mc_mn_Vars->compcurname);
       }
       if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number)
         strncat(mc_mn_Vars->Coord_Label[0], "/bin", 30);
@@ -689,7 +691,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number) {
       if (mc_mn_Vars->Flag_capture)
         printf("Monitor_nD: %s: Using capture flux weightening on %ld bins.\n"
-               "            Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", mc_mn_Vars->compcurname, (long)mc_mn_XY);
+               "WARNING     Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", mc_mn_Vars->compcurname, (long)mc_mn_XY);
     }
 
     strcat(mc_mn_Vars->Monitor_Label, " Monitor");
@@ -720,21 +722,22 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
     }
     if (mc_mn_Vars->Flag_log == 1) strcat(mc_mn_Vars->Monitor_Label, " [log] ");
 
+    /* now allocate memory to store variables in TRACE */
+    
     /* mc_mn_Vars->Coord_Number  0   : intensity or signal
      * mc_mn_Vars->Coord_Number  1:n : detector variables */
-
-    /* now allocate memory to store variables in TRACE */
+     
     if ((mc_mn_Vars->Coord_Number != 2) && !mc_mn_Vars->Flag_Multiple && !mc_mn_Vars->Flag_List)
     { mc_mn_Vars->Flag_Multiple = 1; mc_mn_Vars->Flag_List = 0; } /* default is n1D */
 
-   /* list and auto limits case : mc_mn_Vars->Flag_List or mc_mn_Vars->Flag_Auto_Limits
-    * -> Buffer to flush and suppress after mc_mn_Vars->Flag_Auto_Limits
-    */
+    /* list and auto limits case : mc_mn_Vars->Flag_List or mc_mn_Vars->Flag_Auto_Limits
+     * -> Buffer to flush and suppress after mc_mn_Vars->Flag_Auto_Limits
+     */
     if ((mc_mn_Vars->Flag_Auto_Limits || mc_mn_Vars->Flag_List) && mc_mn_Vars->Coord_Number)
     { /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, dp) */
       mc_mn_Vars->Mon2D_Buffer = (double *)malloc((mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block*sizeof(double));
       if (mc_mn_Vars->Mon2D_Buffer == NULL)
-      { printf("Monitor_nD: %s cannot allocate mc_mn_Vars->Mon2D_Buffer (%li). No list and auto limits.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Buffer_Block*(mc_mn_Vars->Coord_Number+1)*sizeof(double)); mc_mn_Vars->Flag_List = 0; mc_mn_Vars->Flag_Auto_Limits = 0; }
+      { printf("Monitor_nD: %s cannot allocate Vars->Mon2D_Buffer (%li). No list and auto limits.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Buffer_Block*(mc_mn_Vars->Coord_Number+1)*sizeof(double)); mc_mn_Vars->Flag_List = 0; mc_mn_Vars->Flag_Auto_Limits = 0; }
       else
       {
         for (mc_mn_i=0; mc_mn_i < (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block; mc_mn_Vars->Mon2D_Buffer[mc_mn_i++] = (double)0);
@@ -749,14 +752,14 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       mc_mn_Vars->Mon2D_p  = (double **)malloc((mc_mn_Vars->Coord_Number)*sizeof(double *));
       mc_mn_Vars->Mon2D_p2 = (double **)malloc((mc_mn_Vars->Coord_Number)*sizeof(double *));
       if ((mc_mn_Vars->Mon2D_N == NULL) || (mc_mn_Vars->Mon2D_p == NULL) || (mc_mn_Vars->Mon2D_p2 == NULL))
-      { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate mc_mn_Vars->Mon2D_N/p/2p (%li). Fatal.\n", mc_mn_Vars->compcurname, (mc_mn_Vars->Coord_Number)*sizeof(double *)); exit(-1); }
+      { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate Vars->Mon2D_N/p/p2 (%li). Fatal.\n", mc_mn_Vars->compcurname, (mc_mn_Vars->Coord_Number)*sizeof(double *)); exit(-1); }
       for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
       {
         mc_mn_Vars->Mon2D_N[mc_mn_i-1]  = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i]*sizeof(double));
         mc_mn_Vars->Mon2D_p[mc_mn_i-1]  = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i]*sizeof(double));
         mc_mn_Vars->Mon2D_p2[mc_mn_i-1] = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i]*sizeof(double));
         if ((mc_mn_Vars->Mon2D_N == NULL) || (mc_mn_Vars->Mon2D_p == NULL) || (mc_mn_Vars->Mon2D_p2 == NULL))
-        { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate %s mc_mn_Vars->Mon2D_N/p/2p[%li] (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[mc_mn_i], mc_mn_i, (mc_mn_Vars->Coord_Bin[mc_mn_i])*sizeof(double *)); exit(-1); }
+        { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[mc_mn_i], mc_mn_i, (mc_mn_Vars->Coord_Bin[mc_mn_i])*sizeof(double *)); exit(-1); }
         else
         {
           for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i]; mc_mn_j++ )
@@ -771,14 +774,14 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
       mc_mn_Vars->Mon2D_p  = (double **)malloc((mc_mn_Vars->Coord_Bin[1])*sizeof(double *));
       mc_mn_Vars->Mon2D_p2 = (double **)malloc((mc_mn_Vars->Coord_Bin[1])*sizeof(double *));
       if ((mc_mn_Vars->Mon2D_N == NULL) || (mc_mn_Vars->Mon2D_p == NULL) || (mc_mn_Vars->Mon2D_p2 == NULL))
-      { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s mc_mn_Vars->Mon2D_N/p/2p (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[1], (mc_mn_Vars->Coord_Bin[1])*sizeof(double *)); exit(-1); }
+      { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2 (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[1], (mc_mn_Vars->Coord_Bin[1])*sizeof(double *)); exit(-1); }
       for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Bin[1]; mc_mn_i++)
       {
         mc_mn_Vars->Mon2D_N[mc_mn_i]  = (double *)malloc(mc_mn_Vars->Coord_Bin[2]*sizeof(double));
         mc_mn_Vars->Mon2D_p[mc_mn_i]  = (double *)malloc(mc_mn_Vars->Coord_Bin[2]*sizeof(double));
         mc_mn_Vars->Mon2D_p2[mc_mn_i] = (double *)malloc(mc_mn_Vars->Coord_Bin[2]*sizeof(double));
         if ((mc_mn_Vars->Mon2D_N == NULL) || (mc_mn_Vars->Mon2D_p == NULL) || (mc_mn_Vars->Mon2D_p2 == NULL))
-        { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s mc_mn_Vars->Mon2D_N/p/2p[%li] (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[1], mc_mn_i, (mc_mn_Vars->Coord_Bin[2])*sizeof(double *)); exit(-1); }
+        { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[1], mc_mn_i, (mc_mn_Vars->Coord_Bin[2])*sizeof(double *)); exit(-1); }
         else
         {
           for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[2]; mc_mn_j++ )
@@ -828,7 +831,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
   long    mc_mn_While_Buffer=0;
   char    mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE;
 
-  /* mc_mn_Vars->Flag_Auto_Limits */
+  /* mc_mn_Vars->Flag_Auto_Limits: we read the Buffer, and determine min and max bounds */
   if ((mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_Auto_Limits == 1) && (mc_mn_Vars->Coord_Number > 0))
   {
     /* auto limits case : get limits in Buffer for each variable */
@@ -848,10 +851,10 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         }
       }
     }
-    mc_mn_Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
+    mc_mn_Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new venets to store in histograms) */
   }
 
-  /* manage realloc for list all if Buffer size exceeded */
+  /* manage realloc for 'list all' if Buffer size exceeded: flush Buffer to file */
   if ((mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_List >= 2))
   {
     if (mc_mn_Vars->Buffer_Size >= 20000 || mc_mn_Vars->Flag_List == 3)
@@ -866,23 +869,23 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
     {
       mc_mn_Vars->Mon2D_Buffer  = (double *)realloc(mc_mn_Vars->Mon2D_Buffer, (mc_mn_Vars->Coord_Number+1)*(mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double));
       if (mc_mn_Vars->Mon2D_Buffer == NULL)
-            { printf("Monitor_nD: %s cannot reallocate mc_mn_Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", mc_mn_Vars->compcurname, mc_mn_i, (mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double)); mc_mn_Vars->Flag_List = 1; }
+            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", mc_mn_Vars->compcurname, mc_mn_i, (mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double)); mc_mn_Vars->Flag_List = 1; }
       else { mc_mn_Vars->Buffer_Counter = 0; mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block; }
     }
   }
 
   while (!mc_mn_While_End)
-  { /* we generate mc_mn_Coord[] and Coord_mc_mn_index[] from Buffer (auto limits) or passing neutron */
+  { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
     if ((mc_mn_Vars->Flag_Auto_Limits == 2) && (mc_mn_Vars->Coord_Number > 0))
-    {
+    { /* Vars->Flag_Auto_Limits == 2: read back from Buffer (Buffer is filled or auto limits have been computed) */
       if (mc_mn_While_Buffer < mc_mn_Vars->Buffer_Block)
       {
         /* first while loops (mc_mn_While_Buffer) */
         /* auto limits case : scan Buffer within limits and store in Mon2D */
         mc_mn_pp = mc_mn_Vars->Mon2D_Buffer[mc_mn_While_Buffer*(mc_mn_Vars->Coord_Number+1)];
-	/* For some reason the Intel c compiler version 10.1 gives 0 counts with Monitor_nD!
-	   An ugly patch seems to be the following printf */
-	printf("");
+        /* For some reason the Intel c compiler version 10.1 gives 0 counts with Monitor_nD!
+           An ugly patch seems to be the following printf */
+        printf("");
         mc_mn_Coord[0] = mc_mn_pp;
 
         for (mc_mn_i = 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
@@ -904,39 +907,41 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
       else /* (mc_mn_While_Buffer >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_Auto_Limits == 2) */
       {
         mc_mn_Vars->Flag_Auto_Limits = 0;
-        if (!mc_mn_Vars->Flag_List) /* free Buffer not needed (no list to output) */
-        { /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, dp) */
+        if (!mc_mn_Vars->Flag_List) /* free Buffer not needed anymore (no list to output) */
+        { /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, p2) */
           free(mc_mn_Vars->Mon2D_Buffer); mc_mn_Vars->Mon2D_Buffer = NULL;
         }
       }
     }
-    else /* mc_mn_Vars->Flag_Auto_Limits == 0 or 1 */
+    else /* Vars->Flag_Auto_Limits == 0 (no auto limits/list) or 1 (store events into Buffer) */
     {
+      /* automatically compute area and steradian solid angle when in AUTO mode */
+      if (mc_mn_Vars->Flag_Auto_Limits==1) {
+        double v;
+        v=sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx
+              +mc_mn_Vars->cvy*mc_mn_Vars->cvy
+              +mc_mn_Vars->cvz*mc_mn_Vars->cvz);
+        if (mc_mn_Vars->min_x > mc_mn_Vars->cx) mc_mn_Vars->min_x = mc_mn_Vars->cx;
+        if (mc_mn_Vars->max_x < mc_mn_Vars->cx) mc_mn_Vars->max_x = mc_mn_Vars->cx;
+        if (mc_mn_Vars->min_y > mc_mn_Vars->cy) mc_mn_Vars->min_y = mc_mn_Vars->cy;
+        if (mc_mn_Vars->max_y < mc_mn_Vars->cy) mc_mn_Vars->max_y = mc_mn_Vars->cy;
+        mc_mn_Vars->mean_p  += mc_mn_Vars->cp;
+        if (v) {
+          mc_mn_Vars->mean_dx += mc_mn_Vars->cp*fabs(mc_mn_Vars->cvx/v);
+          mc_mn_Vars->mean_dy += mc_mn_Vars->cp*fabs(mc_mn_Vars->cvy/v);
+        }
+        mc_mn_Vars->area =(mc_mn_Vars->max_x-mc_mn_Vars->min_x)
+                         *(mc_mn_Vars->max_y-mc_mn_Vars->min_y)*1E4; /* cm2 */
+        if (mc_mn_Vars->Flag_per_st)
+        mc_mn_Vars->steradian = 2*fabs(2*atan(mc_mn_Vars->mean_dx/mc_mn_Vars->mean_p)
+                                  *sin(2*atan(mc_mn_Vars->mean_dy/mc_mn_Vars->mean_p)/2));
+      }
+        
       for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
       { /* handle current neutron : last while */
-        if (mc_mn_Vars->Flag_Auto_Limits==1) {
-          double v;
-          v=sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx
-                +mc_mn_Vars->cvy*mc_mn_Vars->cvy
-                +mc_mn_Vars->cvz*mc_mn_Vars->cvz);
-          if (mc_mn_Vars->min_x > mc_mn_Vars->cx) mc_mn_Vars->min_x = mc_mn_Vars->cx;
-          if (mc_mn_Vars->max_x < mc_mn_Vars->cx) mc_mn_Vars->max_x = mc_mn_Vars->cx;
-          if (mc_mn_Vars->min_y > mc_mn_Vars->cy) mc_mn_Vars->min_y = mc_mn_Vars->cy;
-          if (mc_mn_Vars->max_y < mc_mn_Vars->cy) mc_mn_Vars->max_y = mc_mn_Vars->cy;
-          mc_mn_Vars->mean_p  += mc_mn_Vars->cp;
-          if (v) {
-            mc_mn_Vars->mean_dx += mc_mn_Vars->cp*fabs(mc_mn_Vars->cvx/v);
-            mc_mn_Vars->mean_dy += mc_mn_Vars->cp*fabs(mc_mn_Vars->cvy/v);
-          }
-          mc_mn_Vars->area =(mc_mn_Vars->max_x-mc_mn_Vars->min_x)
-                           *(mc_mn_Vars->max_y-mc_mn_Vars->min_y)*1E4; /* cm2 */
-          if (mc_mn_Vars->Flag_per_st)
-          mc_mn_Vars->steradian = 2*fabs(2*atan(mc_mn_Vars->mean_dx/mc_mn_Vars->mean_p)
-                                    *sin(2*atan(mc_mn_Vars->mean_dy/mc_mn_Vars->mean_p)/2));
-        }
-
         mc_mn_XY = 0;
         mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
+        /* get values for variables to monitor */
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_X) mc_mn_XY = mc_mn_Vars->cx;
         else
         if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Y) mc_mn_XY = mc_mn_Vars->cy;
@@ -1005,6 +1010,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         else
         mc_mn_XY = 0;
 
+        /* handle 'abs' and 'log' keywords */
         if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_ABS) mc_mn_XY=fabs(mc_mn_XY);
 
         if (mc_mn_i && (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_LOG)) /* not for the flux */
@@ -1014,7 +1020,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
         mc_mn_Coord[mc_mn_i] = mc_mn_XY;
         if (mc_mn_i == 0) { mc_mn_pp = mc_mn_XY; mc_mn_Coord_Index[mc_mn_i] = 0; }
         else if (!mc_mn_Vars->Flag_Auto_Limits)
-        {
+        { /* compute index in histograms for each variable to monitor */
           mc_mn_XY = (mc_mn_Vars->Coord_Max[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i]);
           if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY);
           else mc_mn_Coord_Index[mc_mn_i] = 0;
@@ -1023,13 +1029,13 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
             if (mc_mn_Coord_Index[mc_mn_i] < 0) mc_mn_Coord_Index[mc_mn_i] = 0;
             if (mc_mn_Coord_Index[mc_mn_i] >= mc_mn_Vars->Coord_Bin[mc_mn_i]) mc_mn_Coord_Index[mc_mn_i] = mc_mn_Vars->Coord_Bin[mc_mn_i] - 1;
           }
-        } /* else Auto_Limits will get Index later from Buffer */
+        } /* else will get Index later from Buffer when Flag_Auto_Limits == 2 */
       } /* end for mc_mn_i */
       mc_mn_While_End = 1;
     } /* end else if mc_mn_Vars->Flag_Auto_Limits == 2 */
 
     if (mc_mn_Vars->Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
-    { /* now store Coord into Buffer (no mc_mn_index needed) if necessary */
+    { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
       if ((mc_mn_Vars->Buffer_Counter < mc_mn_Vars->Buffer_Block) && ((mc_mn_Vars->Flag_List) || (mc_mn_Vars->Flag_Auto_Limits == 1)))
       {
         for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
@@ -1042,16 +1048,16 @@ double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_
       mc_mn_Vars->Neutron_Counter++;
     } /* end (mc_mn_Vars->Flag_Auto_Limits != 2) */
 
-    /* store n1d/2d section for Buffer or current neutron in while */
+    /* store n1d/2d section from Buffer (Auto_Limits == 2) or current neutron in while */
     if (mc_mn_Vars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
     {
-
+      /* apply per cm2 or per st */
       if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area      != 0)
         mc_mn_pp /= mc_mn_Vars->area;
       if (mc_mn_Vars->Flag_per_st  && mc_mn_Vars->steradian != 0)
         mc_mn_pp /= mc_mn_Vars->steradian;
 
-    /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
+      /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
       if (mc_mn_Vars->Flag_Multiple)
       { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors (intensity is not included) */
         /* check limits: monitors define a phase space to record */
@@ -1158,7 +1164,8 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variabl
       mc_mn_Vars->Buffer_Block = mc_mn_Vars->Buffer_Counter;
 
       while (!mc_mn_While_End)
-      { /* we generate mc_mn_Coord[] and Coord_mc_mn_index[] from Buffer (auto limits) or passing neutron */
+      { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) */
+        /* simulation ended before Buffer was filled. Limits have to be computed, and stored events must be sent into histograms */
         if (mc_mn_While_Buffer < mc_mn_Vars->Buffer_Block)
         {
           /* first while loops (mc_mn_While_Buffer) */
@@ -1187,8 +1194,14 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variabl
         }
 
         /* store n1d/2d section from Buffer */
-
+        
         mc_mn_pp = mc_mn_Coord[0];
+        /* apply per cm2 or per st */
+        if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area      != 0)
+          mc_mn_pp /= mc_mn_Vars->area;
+        if (mc_mn_Vars->Flag_per_st  && mc_mn_Vars->steradian != 0)
+          mc_mn_pp /= mc_mn_Vars->steradian;
+
         /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
         if (mc_mn_Vars->Flag_Multiple)
         { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors (intensity is not included) */
