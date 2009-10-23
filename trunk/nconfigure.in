@@ -76,7 +76,7 @@ AC_PATH_PROGS(HDFVIEW,  [hdfview], no, /usr/local/bin:/usr/local/hdfview:$PATH)
 # Hence we allow only gnome-terminal.wrapper which is debian only
 # :(
 AC_PATH_PROGS(TERMINAL,   [xterm konsole gnome-terminal.wrapper], no)
-AC_PATH_PROGS(MCXTRACE, [mcxtrace], no, ./src/)
+AC_PATH_PROGS(MCXTRACE_build, [mcxtrace], no, ./src/)
 
 # handle PIC options
 AC_ARG_WITH([pic],
@@ -193,6 +193,6 @@ echo WARNING: Your system includes the $DASH shell which is known to cause probl
 echo "On Debian/Ubuntu systems, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh"
 fi
 fi
-if test "$MCXTRACE" != "no" ; then
-echo "McXtrace build in src/ detected - please perform make clean and ./configure again before building McStas!"
+if test "$MCXTRACE_build" != "no" ; then
+AC_WARN("McXtrace build in src/ detected - please perform make clean and ./configure again before building McStas!")
 fi
