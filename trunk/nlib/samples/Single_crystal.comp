@@ -206,8 +206,9 @@
  */
 
 DEFINE COMPONENT Single_crystal
-DEFINITION PARAMETERS(string reflections=0, string geometry=0)
-SETTING PARAMETERS(xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
+DEFINITION PARAMETERS()
+SETTING PARAMETERS(string reflections=0, string geometry=0,
+            xwidth=0, yheight=0, zdepth=0, radius=0, delta_d_d=1e-4,
             mosaic = -1, mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
             recip_cell=0,
             ax = 0, ay = 0, az = 0,
