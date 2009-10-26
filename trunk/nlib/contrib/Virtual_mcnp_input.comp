@@ -97,8 +97,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Virtual_mcnp_input
-DEFINITION PARAMETERS (string filename=0, string autocenter=0)
-SETTING PARAMETERS (repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,int surface_id=-1,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename=0, string autocenter=0, repeat_count=1, verbose=0, intensity=0,MCNP_ANALYSE=10000,int surface_id=-1,
                     nps=0,smooth=1)
 OUTPUT PARAMETERS (hfile,head,rep,begin_neutrons,do_rotate,do_translate,
                    bx,by,bz,angle2z,mean_x, mean_y, mean_z,

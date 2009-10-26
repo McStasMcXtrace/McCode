@@ -54,8 +54,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SNS_source
-DEFINITION PARAMETERS (string filename=0)
-SETTING PARAMETERS (xwidth=0.1, yheight=0.12, dist=0, focus_xw=.1, focus_yh=.24, Emin=1, Emax=10, int target_index=+1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename=0, xwidth=0.1, yheight=0.12, dist=0, focus_xw=.1, focus_yh=.24, Emin=1, Emax=10, int target_index=+1)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in,
   inxvec,inyvec,Pvec,xylength,tcol,Ecol,txval,tyval,tPvec,Ptmat,
   EPmax, EPmin,INorm,INorm2,
