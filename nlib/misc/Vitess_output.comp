@@ -43,8 +43,8 @@
 
 
 DEFINE COMPONENT Vitess_output
-DEFINITION PARAMETERS (string filename = 0)
-SETTING PARAMETERS (int bufsize = 10000, int progress = 0)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename = 0, int bufsize = 10000, int progress = 0)
 OUTPUT PARAMETERS (hfile, obuf, pos, p_out, p2_out)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
