@@ -71,8 +71,8 @@
 
 
 DEFINE COMPONENT Res_monitor
-DEFINITION PARAMETERS (string filename=0, string options=0, res_sample_comp)
-SETTING PARAMETERS (xwidth=.1, yheight=.1, zdepth=0, radius=0,
+DEFINITION PARAMETERS (res_sample_comp)
+SETTING PARAMETERS (string filename=0, string options=0, xwidth=.1, yheight=.1, zdepth=0, radius=0,
   xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
