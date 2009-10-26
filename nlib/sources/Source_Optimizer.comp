@@ -134,8 +134,8 @@ Mar 10 2000 : v0.07.2 gathered all variables into 2 structures
  /* PB : the use of 's2' in a component makes a conflict with McStas kernel */
 
 DEFINE COMPONENT Source_Optimizer
-DEFINITION PARAMETERS (string options=0)
-SETTING PARAMETERS (bins=10, step=0.1, keep=0.1)
+DEFINITION PARAMETERS ()
+  SETTING PARAMETERS (bins=10, step=0.1, keep=0.1, string options=0)
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx, sy, sz)
