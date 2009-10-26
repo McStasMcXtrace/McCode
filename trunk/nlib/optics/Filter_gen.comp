@@ -76,8 +76,8 @@
 *%E
 ***********************************************************************/
 DEFINE COMPONENT Filter_gen
-DEFINITION PARAMETERS (string filename=0, string options=0)
-SETTING PARAMETERS (xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename=0, string options=0, xmin=-0.05, xmax=0.05, ymin=-0.05, ymax=0.05, 
   xwidth=0, yheight=0, thickness=1, scaling=1)
 OUTPUT PARAMETERS (pTable, Mode_Table, Type_Table)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)

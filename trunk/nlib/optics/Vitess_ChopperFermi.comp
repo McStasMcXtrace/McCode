@@ -117,8 +117,8 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Vitess_ChopperFermi
-DEFINITION PARAMETERS (string sGeomFileName=0)
-SETTING PARAMETERS (int GeomOption=0, int zerotime=0, int Nchannels=20, int Ngates=4,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string sGeomFileName=0, int GeomOption=0, int zerotime=0, int Nchannels=20, int Ngates=4,
                     freq=300.0, height=0.05, width=0.04,
                     depth=0.03, r_curv=0.5, diameter=0.071, Phase=0.0,
                     wallwidth=0.0002)
