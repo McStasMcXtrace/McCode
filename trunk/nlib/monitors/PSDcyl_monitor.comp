@@ -43,8 +43,8 @@ the axis vertical. The monitor covers the whole cylinder (360 degrees).
 
 
 DEFINE COMPONENT PSDcyl_monitor
-DEFINITION PARAMETERS (nr=20, ny=20, string filename=0)
-SETTING PARAMETERS (yheight=0.3, radius=1, restore_neutron=0)
+DEFINITION PARAMETERS (nr=20, ny=20)
+SETTING PARAMETERS (string filename=0, yheight=0.3, radius=1, restore_neutron=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
