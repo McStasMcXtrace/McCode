@@ -42,8 +42,8 @@
 
 
 DEFINE COMPONENT Vitess_input
-DEFINITION PARAMETERS (string filename = 0)
-SETTING PARAMETERS (int bufsize = 10000, repeat_count = 1)
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string filename = 0, int bufsize = 10000, repeat_count = 1)
 OUTPUT PARAMETERS (hfile, ibuf, size, pos, rep, finished)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
