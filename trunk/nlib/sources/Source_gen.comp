@@ -133,8 +133,9 @@
 
 
 DEFINE COMPONENT Source_gen
-DEFINITION PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=0)
-SETTING PARAMETERS (radius=0.0, dist=0, focus_xw=0.045, focus_yh=0.12, focus_aw=0, focus_ah=0,
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=0,
+		    radius=0.0, dist=0, focus_xw=0.045, focus_yh=0.12, focus_aw=0, focus_ah=0,
                     E0=0, dE=0, lambda0=0, dlambda=0, I1=1,
                     yheight=0.1, xwidth=0.1, verbose=0, T1=0,
                     flux_file_perAA=0, flux_file_log=0,
