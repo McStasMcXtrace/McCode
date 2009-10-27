@@ -34,7 +34,7 @@ PW=`pwd`
 TMPDIR=$PWD/..
 DIST=$TMPDIR/mcstas-$1
 
-if [ "y$2" == "ymcxtrace" ]; then
+if [ "y$2" = "ymcxtrace" ]; then
   CONFIGURE_IN=xconfigure.in
   MCCODE=mcxtrace
 else
