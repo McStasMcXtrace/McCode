@@ -153,7 +153,7 @@ chmod a+x deb/debcreate
 cd ..
 
 # Create configure
-autoconf -o ${CONFIGURE_IN%%.in} $CONFIGURE_IN
+autoconf -o configure $CONFIGURE_IN
 #chmod a+x configure
 autoconf -o lib/tools/perl/mcstas_reconfigure lib/tools/perl/mcstas_reconfigure.in 
 #chmod a+x lib/tools/perl/mcstas_reconfigure
