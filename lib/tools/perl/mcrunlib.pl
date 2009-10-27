@@ -362,7 +362,7 @@ sub do_test {
   # copy all instruments
   my @paths=();
   if ($sim_def && $sim_def !~ m'\.[^/]*$') { $sim_def .= ".instr"; }
-  if ($sim_def && -e "$sim_def.instr") {    # local instrument to test
+  if ($sim_def && -e $sim_def) {    # local instrument to test
     &$printer("# Using instrument $sim_def");
     push @paths, "$sim_def";
     copy("$sim_def","$tmpdir/$sim_def");
