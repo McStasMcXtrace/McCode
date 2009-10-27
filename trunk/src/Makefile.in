@@ -255,10 +255,10 @@ install-scilab:
 test: test_@MCCODE@
 
 test_mcstas: mcrun.fixpl
-	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ./mcrun.fixpl --test
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ln -s mcrun.fixpl mcrun; ./mcrun.fixpl --test; rm mcrun
 
 test_mcxtrace: mxrun.mxfixpl
-	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ./mxrun.mxfixpl --test
+	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ln -s mxrun.fixpl mcrun; ./mxrun.mxfixpl --test; rm mcrun
 
 uninstall:
 	cd $(bindir); rm -f $(BINOBJS_@MCCODE@)
