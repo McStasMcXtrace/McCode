@@ -692,9 +692,9 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 
 
 #define SCATTER do {mcDEBUG_SCATTER(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-        mcnlt,mcnlsx,mcnlsy, mcnlp); mcScattered++;} while(0)
+        mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcScattered++;} while(0)
 #define ABSORB do {mcDEBUG_STATE(mcnlx, mcnly, mcnlz, mcnlvx, mcnlvy, mcnlvz, \
-        mcnlt,mcnlsx,mcnlsy, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
+        mcnlt,mcnlsx,mcnlsy,mcnlsz, mcnlp); mcDEBUG_ABSORB(); MAGNET_OFF; goto mcabsorb;} while(0)
 /* Note: The two-stage approach to MC_GETPAR is NOT redundant; without it,
 * after #define C sample, MC_GETPAR(C,x) would refer to component C, not to
 * component sample. Such are the joys of ANSI C.
@@ -938,12 +938,12 @@ inline void coord_norm(Coords* c);
 #define mcDEBUG_INSTR_END() if(!mcdotrace); else printf("INSTRUMENT END:\n");
 #define mcDEBUG_ENTER() if(!mcdotrace); else printf("ENTER:\n");
 #define mcDEBUG_COMP(c) if(!mcdotrace); else printf("COMP: \"%s\"\n", c);
-#define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
-  printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-         x,y,z,vx,vy,vz,t,s1,s2,p);
-#define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,s1,s2,p) if(!mcdotrace); else \
-  printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
-         x,y,z,vx,vy,vz,t,s1,s2,p);
+#define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,sx,sy,sz,p) if(!mcdotrace); else \
+  printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+         x,y,z,vx,vy,vz,t,sx,sy,sz,p);
+#define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,sx,sy,sz,p) if(!mcdotrace); else \
+  printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+         x,y,z,vx,vy,vz,t,sx,sy,sz,p);
 #define mcDEBUG_LEAVE() if(!mcdotrace); else printf("LEAVE:\n");
 #define mcDEBUG_ABSORB() if(!mcdotrace); else printf("ABSORB:\n");
 #else
@@ -952,8 +952,8 @@ inline void coord_norm(Coords* c);
 #define mcDEBUG_INSTR_END()
 #define mcDEBUG_ENTER()
 #define mcDEBUG_COMP(c)
-#define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,s1,s2,p)
-#define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,s1,s2,p)
+#define mcDEBUG_STATE(x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+#define mcDEBUG_SCATTER(x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 #define mcDEBUG_LEAVE()
 #define mcDEBUG_ABSORB()
 #endif

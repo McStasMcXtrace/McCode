@@ -97,8 +97,7 @@ DEFINITION PARAMETERS
 
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (bk, mWin)
-STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
-
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 SHARE
  %{
 #ifndef BENDER_DECLARE
