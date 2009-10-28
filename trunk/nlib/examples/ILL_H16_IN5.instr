@@ -18,8 +18,8 @@
 *  with angle restriction (neutrons that scatter in Fe in front of a tube and 
 *  enter a different tube are absorbed).
 *
-* %Example: lambda=4.5 Detector: Det_sample_t_I=2.60328e+07
-* %Example: lambda=4.5 Detector: Det_PSD_I=2700
+* %Example: lambda=4.5 Detector: Det_sample_t_I=3.4043e+07
+* %Example: lambda=4.5 Detector: Det_PSD_I=3946
 *
 * %Parameters
 * lambda:   [AA]     mean incident wavelength
