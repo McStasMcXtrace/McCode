@@ -972,7 +972,7 @@ double mcestimate_error(double N, double p1, double p2)
   n1 = N - 1;
   /* Note: underflow may cause p2 to become zero; the fabs() below guards
      against this. */
-  return sqrt((N/n1)*fabs(p2/N - pmean*pmean));
+  return sqrt((N/n1)*fabs(p2 - pmean*pmean));
 }
 
 double (*mcestimate_error_p)
