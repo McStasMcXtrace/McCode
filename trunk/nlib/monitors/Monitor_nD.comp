@@ -205,8 +205,7 @@ DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{

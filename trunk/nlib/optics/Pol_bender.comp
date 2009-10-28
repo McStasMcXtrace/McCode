@@ -53,7 +53,6 @@
 * give the same intensities. Gravity option has not been tested.
 *
 * GRAVITY: YES (when gravity is along y-axis)
-* POLARISATION: YES
 *
 * %P
 * INPUT PARAMETERS:
@@ -103,8 +102,7 @@ OUTPUT PARAMETERS (localG, normTopBot, normIn, normOut,
 		   rBotUpParPtr, rBotDownParPtr,
 		   rLeftUpParPtr, rLeftDownParPtr, 
 		   rRightUpParPtr, rRightDownParPtr)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{

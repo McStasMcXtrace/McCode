@@ -77,8 +77,7 @@ SETTING PARAMETERS (w1=0.015, h1=.3, w2=0.015, h2=.3, length=.35,
                     theta_min=5, theta_max=165, nchan=128, radius=0, nslit=0, roc=0, verbose=0)
 OUTPUT PARAMETERS (soller_theta1, soller_theta2, window_theta,
                    use_approx, ideal)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 DECLARE
 %{
   double soller_theta1, soller_theta2, window_theta;

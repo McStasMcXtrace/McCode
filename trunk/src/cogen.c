@@ -1232,9 +1232,9 @@ cogen_trace(struct instr_def *instr)
   /* Debugging (initial state). */
   coutf("  %sDEBUG_ENTER()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-        "%snlt,%snlsx,%snlsy, %snlp)",
+        " %snlt, %snlsx,%snlsy,%snlsz, %snlp)",
         ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
   /* Set group flags */
   if (list_len(instr->grouplist) > 0)
@@ -1286,11 +1286,11 @@ cogen_trace(struct instr_def *instr)
   liter = list_iterate(instr->complist);
   while((comp = list_next(liter)) != NULL)
   {
-    char *statepars[10];
-    static char *statepars_names[10] =
+    char *statepars[11];
+    static char *statepars_names[11] =
       {
         "nlx", "nly", "nlz", "nlvx", "nlvy", "nlvz",
-        "nlt", "nlsx", "nlsy", "nlp"
+        "nlt", "nlsx", "nlsy", "nlsz", "nlp"
       };
     int i;
     List_handle statepars_handle;
@@ -1314,33 +1314,27 @@ cogen_trace(struct instr_def *instr)
     coutf("  %sDEBUG_COMP(\"%s\")", ID_PRE, comp->name);
     /* Debugging (entry into component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-          "%snlt,%snlsx,%snlsy, %snlp)",
+          "%snlt, %snlsx,%snlsy,%snlsz, %snlp)",
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
     /* Trace code. */
-    for(i = 0; i < 10; i++)
+    for(i = 0; i < 11; i++)
       statepars[i] = NULL;
     statepars_handle = list_iterate(comp->def->state_par);
-    for(i = 0; i < 10; i++)
+    for(i = 0; i < 11; i++)
     {
       statepars[i] = list_next(statepars_handle);
       if(statepars[i] == NULL)
         break;
     }
     list_iterate_end(statepars_handle);
-    for(i = 0; i < 10; i++)
+    for(i = 0; i < 11; i++)
     {
       if(statepars[i] != NULL)
         coutf("#define %s %s%s", statepars[i], ID_PRE, statepars_names[i]);
       else
         break;
-    }
-    if(comp->def->polarisation_par)
-    {
-      coutf("#define %s %s%s", comp->def->polarisation_par[0], ID_PRE, "nlsx");
-      coutf("#define %s %s%s", comp->def->polarisation_par[1], ID_PRE, "nlsy");
-      coutf("#define %s %s%s", comp->def->polarisation_par[2], ID_PRE, "nlsz");
     }
     /* store neutron state in mccomp_storein */
     if (!comp->split)
@@ -1356,12 +1350,12 @@ cogen_trace(struct instr_def *instr)
       coutf("    STORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp);",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
       coutf("  } else {");
       coutf("    RESTORE_NEUTRON(%i,%snlx, %snly, %snlz, %snlvx,"
           "%snlvy,%snlvz,%snlt,%snlsx,%snlsy, %snlsz, %snlp); }",
           comp->index, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
       coutf("  %sSplit_%s++; /* SPLIT number */", ID_PRE, comp->name);
       str_free(exp);
     }
@@ -1408,22 +1402,16 @@ cogen_trace(struct instr_def *instr)
       }
     }
 
-    if(comp->def->polarisation_par)
-    {
-      coutf("#undef %s", comp->def->polarisation_par[2]);
-      coutf("#undef %s", comp->def->polarisation_par[1]);
-      coutf("#undef %s", comp->def->polarisation_par[0]);
-    }
-    for(i = 9; i >= 0; i--)
+    for(i = 10; i >= 0; i--)
     {
       if(statepars[i] != NULL)
         coutf("#undef %s", statepars[i]);
     }
     /* Debugging (exit from component). */
     coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-          "%snlt,%snlsx,%snlsy, %snlp)",
+          "%snlt, %snlsx,%snlsy,%snlsz, %snlp)",
           ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-          ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+          ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
     cout("");
   }
   list_iterate_end(liter);
@@ -1464,9 +1452,9 @@ cogen_trace(struct instr_def *instr)
   /* Debugging (final state). */
   coutf("  %sDEBUG_LEAVE()", ID_PRE);
   coutf("  %sDEBUG_STATE(%snlx, %snly, %snlz, %snlvx, %snlvy, %snlvz,"
-        "%snlt,%snlsx,%snlsy, %snlp)",
+        " %snlt, %snlsx,%snlsy,%snlsz, %snlp)",
         ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE,
-        ID_PRE, ID_PRE, ID_PRE, ID_PRE);
+        ID_PRE, ID_PRE, ID_PRE, ID_PRE, ID_PRE);
 
 
   /* Copy back neutron state to global variables. */

@@ -26,7 +26,6 @@
 * The up direction is hardcoded to be along the y-axis (0, 1, 0)
 *
 * GRAVITY: YES
-* POLARISATION: YES
 *
 * %BUGS 
 * No absorption by mirror.
@@ -70,8 +69,7 @@ OUTPUT PARAMETERS (localG,
 		   pointTop, pointBot, pointLeft, pointRight,
 		   pointIn, pointOut, 
 		   rParPtr, rUpParPtr, rDownParPtr)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{

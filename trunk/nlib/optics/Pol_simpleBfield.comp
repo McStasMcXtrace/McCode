@@ -41,7 +41,6 @@
 * and does not handle gravity.
 *
 * GRAVITY: NO
-* POLARISATION: YES
 *
 * Example: Pol_simpleBfield(xwidth=0.1, yheight=0.1, length=0.2, Bx=0, By=1, Bz=0)
 *
@@ -74,8 +73,7 @@ DEFINITION PARAMETERS (xwidth, yheight, length,
 		       fieldFunction=const_magnetic_field)
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS(gz, parPtr)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{

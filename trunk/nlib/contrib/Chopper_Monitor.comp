@@ -39,8 +39,7 @@ DEFINE COMPONENT Chopper_Monitor COPY Monitor_nD
 DEFINITION PARAMETERS (comp)
 SETTING PARAMETERS (tmin=0.0,tmax=0.0)
 OUTPUT PARAMETERS(delta_t,T_p)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 
 DECLARE COPY Monitor_nD EXTEND

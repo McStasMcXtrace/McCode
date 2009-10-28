@@ -52,7 +52,6 @@
 * See also the example instrument Test_Pol_Mirror (under tests).  
 *
 * GRAVITY: YES
-* POLARISATION: YES
 *
 * %BUGS 
 * NO ABSORPTION
@@ -82,8 +81,7 @@ DEFINITION PARAMETERS (rUpFunc=StdReflecFunc, rDownFunc=rUpFunc,
                        useTables=0, zwidth, yheight)
 SETTING PARAMETERS (int option=1)
 OUTPUT PARAMETERS (rUpParPtr, rDownParPtr)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-POLARISATION PARAMETERS (sx,sy,sz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{
