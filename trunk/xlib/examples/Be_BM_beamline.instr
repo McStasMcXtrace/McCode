@@ -23,17 +23,20 @@
 * %Parameters
 * L1: [m] Distance between source and lens
 * L2: [m] Distance between lens and and slit
-* f: [m] focal length of lens at centre wavelength
-* %Link
+* dS: [m] Slit opening. Slit opening is quadratic.
+* N:  [1] NUmber of Lenses in the compund lens arrangement
+ %Link
 *
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT Be_BM_beamline(L1=10,L2=1,f=1)
+DEFINE INSTRUMENT Be_BM_beamline(L1=10,L2=1,dS=1e-2, N=1)
+
 
 DECLARE
 %{
 %}
+
 
 INITIALIZE
 %{
@@ -45,25 +48,37 @@ COMPONENT Origin = Progress_bar()
 AT (0,0,0) ABSOLUTE
 
 COMPONENT generic_source=Source_gaussian(
-    lambda=0.123, dlambda=0.1, sig_x=0.1, sig_y=0.01, 
+    lambda=0.413, dlambda=0.412,
+    sig_x=0.08e-3, sig_y=0.08e-3, 
     focus_xw=1,focus_yh=0.5, distance=L1
 
 )
 AT (0,0,0) RELATIVE PREVIOUS
 
-COMPONENT Be_lens = Lens_simple(xwidth=0.5,yheight=0.5,T=1,radius=0.3e-3,N=1)
+COMPONENT psd0 = PSD_monitor(filename="psd0.dat",xwidth=0.2,yheight=0.2)
+  AT (0,0,0.1) RELATIVE PREVIOUS
+COMPONENT wavel_mon0=L_monitor(filename="lmon0.dat",Lmin=0,Lmax=1,xwidth=0.5,yheight=0.5,nL=101)
+  AT(0,0,0.01) RELATIVE PREVIOUS
+
+COMPONENT Be_lens = Lens_simple(xwidth=10.5,yheight=10.5,N=N)
 AT(0,0,L1) RELATIVE generic_source
 
-COMPONENT slit = Slit(xwidth=0.003, yheight=0.003)
+COMPONENT Be_lens2 = Lens_simple(xwidth=10.5,yheight=10.5,N=N)
+AT(0,0,0.01) RELATIVE PREVIOUS
+ROTATED (0,0,90) RELATIVE PREVIOUS
+
+COMPONENT slit = Slit(xwidth=dS, yheight=dS)
 AT(0,0,L2) RELATIVE Be_lens
+ROTATED (0,0,0) RELATIVE Be_lens
 
-COMPONENT psd1 = PSD_monitor(xwidth=0.2,yheight=0.2)
-  AT (0,0,0.1) RELATIVE slit
+COMPONENT psd1 = PSD_monitor(filename="psd1.dat",xwidth=0.2,yheight=0.2)
+  AT (0,0,0) RELATIVE slit
 
-COMPONENT wavel_mon=L_monitor(Lmin=0, Lmax=1,xwidth=0.5,yheight=0.5,nL=101)
-  AT(0,0,1) RELATIVE slit
+COMPONENT wavel_mon=L_monitor(filename="lmon.dat",Lmin=0,Lmax=1,xwidth=10.1,yheight=10.1,nL=101)
+  AT(0,0,1e-3) RELATIVE PREVIOUS
 
-COMPONENT psd2 = PSD_monitor(xwidth=0.2,yheight=0.2)
-  AT (0,0,.1) RELATIVE PREVIOUS
+COMPONENT psd2 = PSD_monitor(filename="psd2.dat",xwidth=0.2,yheight=0.2)
+  AT (0,0,1e-3) RELATIVE PREVIOUS
 
 END
+
