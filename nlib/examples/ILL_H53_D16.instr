@@ -21,7 +21,7 @@
 * two beam holes at take-off angles of 90 deg and 115 deg, corresponding to 4.7
 * Angs and 5.6 Angs beams and incorporates the slit systems.
 * 
-* %Example: m=0 Detector: Mon_P8_L_I=4.97e+09
+* %Example: m=1.2 Detector: Det_psd_I=58447
 *
 * %Parameters
 * m:      [1]    m-value of whole guide coating
