@@ -21,8 +21,8 @@
 * This instrument is a model of IN22@ILL with PG002 monochromator/analyzer,
 * installed at the end of the H25 supermirror thermal guide.
 *
-* %Example: KI=3.84 QM=1 Detector: Sample_Cradle_I=9.67841e+07
-* %Example: KI=3.84 QM=1 Detector: He3H_I=420
+* %Example: KI=3.84 QM=1 Detector: Sample_Cradle_I=9.85568e+07
+* %Example: KI=3.84 QM=1 Detector: He3H_I=386
 *
 * %Parameters
 * m:         m-value of guide coating (H14/H142) [1]
