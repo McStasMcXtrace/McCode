@@ -8,10 +8,10 @@
 * Library: share/pol-lib.c
 *
 * %Identification
-* Written by: Peter Christiansen
-* Date: August, 2006
+* Written by: Erik Knudsen, Astrid Rømer & Peter Christiansen
+* Date: Oct 08
 * Origin: RISOE
-* Release: McStas 1.10
+* Release: McStas 1.12
 * Version: $Revision: 1.3 $
 *
 * This file is to be imported by polarisation components. 
@@ -23,9 +23,20 @@
 * Usage: within SHARE
 * %include "pol-lib"
 *
-* $Id: pol-lib.c,v 1.3 2006-08-31 12:56:59 pchr Exp $
+* $Id: pol-lib.c,v 1.3 2006/08/31 12:56:59 pchr Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: pol-lib.c,v $
+* Revision 1.3  2006/08/31 12:56:59  pchr
+* Removed the two components Pol_filter and Pol_arm and have instead made
+* a special Set_pol component which can do this kind of unphysical but very
+* useful trick to hardcode the polarisation.
+* Updated examples using Pol_filter and Pol_arm.
+*
+* Made the larmor frequency into a constant (define) in pol-lib and
+* made a small function that calculates the constant field required for
+* a certain precession angle given magnetLength and lambda.
+* This is now used in Test_Magnetic_Constant.
+*
 * Revision 1.2  2006/08/28 10:12:25  pchr
 * Basic infrastructure for spin propagation in magnetic fields.
 *
@@ -38,6 +49,187 @@
 #ifndef POL_LIB_H
 #include "pol-lib.h"
 #endif
+
+enum {MCMAGNET_STACKSIZE=12} mcmagnet_constants;
+
+/*definition of the magnetic stack*/
+mcmagnet_field_info *stack[MCMAGNET_STACKSIZE];
+
+/*traverse the stack and return the magnetic field*/
+int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
+  mcmagnet_field_info *p=stack[0];
+  Coords in,loc,b,bsum={0,0,0};
+  Rotation r;
+
+  /*PROP_MAGNET takes care of transforming local "PROP" coordinates to lab system*/
+  in.x=x;in.y=y;in.z=z;
+  
+  int i=0,stat=1;
+  p=stack[i];
+  *bx=0;*by=0;*bz=0;
+  if (!p) return 0;
+  //mcmagnet_print_stack();
+  //printf("(xyz,t)=(%g %g %g %g)\n",x,y,z,t);
+  while(p){
+    /*transform to the coordinate system of the particular magnetifc function*/
+    loc=coords_add(*(p->pos),rot_apply(*(p->rot),in));
+    stat=(p->func) (loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->data);
+    /*check if the field function should be garbage collected*/
+    if (stat){
+      /*transform to the lab system and add up. (resusing loc variable - to now contain the field in lab coords)*/
+      rot_transpose(*(p->rot),r);
+      loc=rot_apply(r,b);
+      bsum.x+=loc.x;bsum.y+=loc.y;bsum.z+=loc.z;
+      //printf("Bs=(%g %g %g), B=(%g %g %g)\n",bsum.x,bsum.y,bsum.z,loc.x,loc.y,loc.z);
+    }
+    if (p->stop) break;
+    p=stack[++i];
+  }
+  /*we now have the magnetic field in lab coords in loc., transfer it back to caller*/ 
+  *bx=loc.x;
+  *by=loc.y;
+  *bz=loc.z;
+  return 1;
+}
+
+/*void mcmagnet_init(void){
+  mcmagnet_field_info *p;
+  for (p=&(stack[0]);p<&(stack[MCMAGNET_STACKSIZE]);p++){
+    *p = malloc (sizeof(mcmagnet_field_info));
+  }
+}
+*/
+void *mcmagnet_push(mcmagnet_field_func *func,  Rotation *magnet_rot, Coords *magnet_pos, int stopbit, void * prms){
+  mcmagnet_field_info *p;
+  int i;
+  /*move the stack one step down start from -2 since we have 0-indexing (i.e. last item is stacksize-1) */
+  for (i=MCMAGNET_STACKSIZE-2;i>=0;i--){
+    stack[i+1]=stack[i];
+  }
+  stack[0]=(mcmagnet_field_info *)malloc(sizeof(mcmagnet_field_info));
+  mcmagnet_pack(stack[0],func,magnet_rot,magnet_pos,stopbit,prms);
+  mcmagnet_set_active(stack[0]);
+  if(stack[0] && stack[0]->func){
+    MAGNET_ON;
+  }
+  return (void *) stack[0];
+}
+
+void *mcmagnet_pop(void) {
+  mcmagnet_field_info **p,*t;
+  /*move the stack one step up*/
+  int i;
+  t=stack[0];
+  for (i=0;i<MCMAGNET_STACKSIZE-2;i++){
+    stack[i]=stack[i+1];
+  }
+  stack[MCMAGNET_STACKSIZE-1]=NULL;
+  mcmagnet_set_active(stack[0]);
+  if(stack[0] && stack[0]->func){
+    MAGNET_ON;
+  }else{
+    MAGNET_OFF;
+  }
+  return (void*) t;
+}
+
+void mcmagnet_free_stack(void){
+  mcmagnet_field_info **p;
+  for (p=&(stack[0]);p<&(stack[MCMAGNET_STACKSIZE]);p++){
+    free(*p);
+  }
+}
+
+void *mcmagnet_init_par_backend(int dummy, ...){
+  void * data;
+  unsigned char *p=NULL;
+  int q,dp=0;
+  va_list arg_list;
+
+  va_start(arg_list,dummy);
+  p=(unsigned char *)arg_list;
+  q=va_arg(arg_list,int);
+  while (q!=MCMAGNET_STOP_ARG){
+    q=va_arg(arg_list,int);
+  }
+  dp=(unsigned char *)arg_list-p;
+  data=(void *) malloc(sizeof(int)*dp);
+  memcpy(data,p,sizeof(int)*dp);
+  return data;
+}
+
+void mcmagnet_print_active(){
+  Rotation *p;
+  printf("address of magnetic field function:%p\n",mcMagneticField);
+  p=&mcMagnetRot;
+  printf("rotation matrix of magnetic field:[%g %g %g; %g %g %g; %g %g %g]\n",(*p)[0][0],(*p)[0][1],(*p)[0][2],(*p)[1][0],(*p)[1][1],(*p)[1][2],(*p)[2][0],(*p)[2][1],(*p)[2][2]);
+  printf("origin position of magnet (x,y,z) :[%g %g %g]\n",mcMagnetPos.x,mcMagnetPos.y,mcMagnetPos.z);
+  printf("address of magnetic field parameters: %p\n",mcMagnetData);
+}
+
+void mcmagnet_print_field(mcmagnet_field_info *magnet){
+  Rotation *p;
+  if (magnet!=NULL){
+    printf("address of magnetic field function:%p\n",magnet->func);
+    p=magnet->rot;
+    printf("rotation matrix of magnetic field:[%g %g %g; %g %g %g; %g %g %g]\n",(*p)[0][0],(*p)[0][1],(*p)[0][2],(*p)[1][0],(*p)[1][1],(*p)[1][2],(*p)[2][0],(*p)[2][1],(*p)[2][2]);
+    printf("origin position of magnet (x,y,z) :[%g %g %g]\n",magnet->pos->x,magnet->pos->y,magnet->pos->z);
+    printf("address of magnetic field parameters: %p\n",magnet->data);
+  } else {
+    printf("magnet is NULL\n");
+  }
+}
+
+void mcmagnet_print_stack(){
+  mcmagnet_field_info *p=stack[0];
+  int i=0;
+  p=stack[i];
+  printf("magnetic stack info:\n");
+  if (!p) return;
+  while(p) {
+    printf("magnet %d:\n",i);
+    mcmagnet_print_field(p);
+    if (p->stop) break;
+    p=stack[++i];
+  }
+}
+
+
+/*Example magnetic field functions*/
+int const_magnetic_field(double x, double y, double z, double t,
+    double *bx, double *by, double *bz, void *data) {
+  int stat=1;
+  *bx=((double *)data)[0];
+  *by=((double *)data)[1];
+  *bz=((double *)data)[2];
+  return stat;
+}
+
+int rot_magnetic_field(double x, double y, double z, double t,
+    double *bx, double *by, double *bz, void *data) {
+  /* Field of magnitude By that rotates to x in magnetLength m*/
+  double Bmagnitude=((double *)data)[0];//   = mcMagnetData[1];
+  double magnetLength=((double *)data)[1];// = mcMagnetData[5];
+  *bx =  Bmagnitude * sin(PI/2*z/magnetLength);
+  *by =  Bmagnitude * cos(PI/2*z/magnetLength);
+  *bz =  0;
+  return 1;  
+}
+  
+int majorana_magnetic_field(double x, double y, double z, double t,
+    double *bx, double *by, double *bz, void *data) {
+  /* Large linearly decreasing (from +Bx to -Bx in magnetLength) component along x axis, 
+   * small constant component along y axis
+   */ 
+  double Blarge       = ((double *)data)[0];
+  double Bsmall       = ((double *)data)[1];
+  double magnetLength = ((double *)data)[2];
+  *bx =  Blarge -2*Blarge*z/magnetLength;
+  *by =  Bsmall;
+  *bz =  0;
+  return 1;
+}
+
 
 /****************************************************************************
 * void GetMonoPolFNFM(double Rup, double Rdown, double *FN, double *FM)
@@ -163,18 +355,20 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
   const double mc_pol_spThreshold  = cos(1.0*DEG2RAD);
   const double mc_pol_startTimeStep = 1e-5; // s
   double dummy1, dummy2;
-  Rotation mc_pol_rotBack;
+  //Rotation mc_pol_rotBack;
+
+  mcMagneticField=mcmagnet_get_field;
   
   // change coordinates from local system to magnet system
-  mccoordschange(mc_pol_posLM, mc_pol_rotLM,
+/*  mccoordschange(mc_pol_posLM, mc_pol_rotLM,
 		 &mc_pol_x, &mc_pol_y, &mc_pol_z, 
 		 &mc_pol_vx, &mc_pol_vy, &mc_pol_vz, &mc_pol_time,
 		 &dummy1, &dummy2);
   mccoordschange_polarisation(mc_pol_rotLM, mc_pol_sx, mc_pol_sy, mc_pol_sz);
-  
+*/  
   // get initial B-field value
   mcMagneticField(mc_pol_x, mc_pol_y, mc_pol_z, mc_pol_time, 
-		  &mc_pol_BxTemp, &mc_pol_ByTemp, &mc_pol_BzTemp);
+		  &mc_pol_BxTemp, &mc_pol_ByTemp, &mc_pol_BzTemp,NULL);
   
   do {
     
@@ -195,8 +389,8 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
 		      mc_pol_y+mc_pol_vy*mc_pol_timeStep, 
 		      mc_pol_z+mc_pol_vz*mc_pol_timeStep, 
 		      mc_pol_time+mc_pol_timeStep,
-		      &mc_pol_BxTemp, &mc_pol_ByTemp, &mc_pol_BzTemp);
-      // not so elegant, but this is how we kame sure that the steps decrease
+		      &mc_pol_BxTemp, &mc_pol_ByTemp, &mc_pol_BzTemp,NULL);
+      // not so elegant, but this is how we make sure that the steps decrease
       // when the WHILE condition is not met
       mc_pol_timeStep *= 0.5;
       
@@ -244,8 +438,9 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
   } while (mc_pol_deltaT>0);
   
   // change back spin coordinates from magnet system to local system
-  rot_transpose(mc_pol_rotLM, mc_pol_rotBack); 
+  /*rot_transpose(mc_pol_rotLM, mc_pol_rotBack); 
   mccoordschange_polarisation(mc_pol_rotBack, mc_pol_sx, mc_pol_sy, mc_pol_sz);
+  */
 }
 
 /****************************************************************************
@@ -266,4 +461,6 @@ double GetConstantField(double mc_pol_length, double mc_pol_lambda,
   return mc_pol_angle*DEG2RAD/mc_pol_omegaL/mc_pol_time; // T
 }
 
-/* end of pol-lib.c */
+/* end of regular pol-lib.c */
+
+
