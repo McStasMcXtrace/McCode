@@ -31,7 +31,7 @@
 ****************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT Test_Magnetic_Rotation()
+DEFINE INSTRUMENT Test_Magnetic_Rotation(RESTORE=1)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -57,7 +57,6 @@ INITIALIZE
   printf("deltaT = %f\n", deltaT);
   
   Bmagnitude = PI/2*20/deltaT/183.247e6; // Tesla
-
   printf("Bmagnitude = %f T\n", Bmagnitude);
   %}
 
@@ -103,31 +102,33 @@ PolLambda_monitor(xwidth=0.1, yheight=0.1,
      AT (0, 0, 0.75) RELATIVE Origin
 
 COMPONENT magnetNum =
-Pol_simpleBfield(xwidth=0.08, yheight=0.08, length=magnetLength,
+Pol_simpleBfield(xwidth=0.08, yheight=0.08, zdepth=magnetLength,
 		 Bx = 0, By = Bmagnitude, Bz = 0,
 		 fieldFunction=rot_magnetic_field)
      AT (0, 0, 1.0) RELATIVE Origin
-
+/*
 COMPONENT MPLMonNum2X_1 =
 MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0,
 		  mx=1, my=0, mz=0, filename="MPLMonNum2X_1.data")
      AT (0, 0, magnetLength/2) RELATIVE magnetNum
+*/
 
 COMPONENT MPLMonNum2Y_1 =
 MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0,
-		  mx=0, my=1, mz=0, filename="MPLMonNum2Y_1.data")
+		  mx=0, my=1, mz=0, filename="MPLMonNum2Y_1.data",restore_neutron=RESTORE)
      AT (0, 0, magnetLength/2) RELATIVE magnetNum
-
+/*
 COMPONENT MPLMonNum2Z_1 =
 MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		  nL=100, Lmin = 0.0, Lmax = 10.0,
 		  mx=0, my=0, mz=1, filename="MPLMonNum2Z_1.data")
      AT (0, 0, magnetLength/2) RELATIVE magnetNum
-
-COMPONENT magnetNumCp = COPY(magnetNum)
-     AT (0, 0, 1.0) RELATIVE Origin
+*/
+COMPONENT magnetNumCp = 
+Pol_simpleBfield_stop(magnet_comp_stop=magnetNum)
+  AT(0,0,magnetLength) RELATIVE magnetNum
 
 COMPONENT MPLMonNum2X =
 MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,

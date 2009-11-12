@@ -68,14 +68,6 @@ typedef va_list mcmagnet_data;
 /*here's where the mcstas magnet stack is declared*/
 /*the magnet stack*/
 
-extern double*  mcMagnetData;
-extern Coords   mcMagnetPos;
-extern Rotation mcMagnetRot;
-
-//mcmagnet_field_func *mcMagneticField;
-
-//#define mcmagnet_field_func (void *)(double, double, double, double, double *, double *, double *)
-
 typedef struct mcmagnet_field_info {
   mcmagnet_field_func *func;
   Rotation *rot;
