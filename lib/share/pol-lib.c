@@ -53,12 +53,50 @@
 enum {MCMAGNET_STACKSIZE=12} mcmagnet_constants;
 
 /*definition of the magnetic stack*/
-mcmagnet_field_info *stack[MCMAGNET_STACKSIZE];
+static mcmagnet_field_info *stack[MCMAGNET_STACKSIZE];
+/*definition of the precession function*/
+#ifdef MC_POL_COMPAT
+extern mcmagnet_prec_func *mcMagnetPrecession;
+extern Coords   mcMagnetPos;
+extern Rotation mcMagnetRot;
+extern double*  mcMagnetData;
+/* mcMagneticField(x, y, z, t, Bx, By, Bz) */
+extern int (*mcMagneticField) (double, double, double, double,
+    double*, double*, double*, void *);
+#else
+#ifndef POL_LIB_C
+static mcmagnet_prec_func *mcMagnetPrecession=SimpleNumMagnetPrecession;
+static Coords mcMagnetPos;
+static Rotation mcMagnetRot;
+static double*  mcMagnetData                = NULL;
+static int (*mcMagneticField) (double, double, double, double,
+    double*, double*, double*, void *);
+#define POL_LIB_C 1
+#endif
+#endif
+
+int mcmagnet_init(){
+  mcMagnetPrecession=SimpleNumMagnetPrecession;
+  return 1;
+}
+
+#ifdef PROP_MAGNET
+#undef PROP_MAGNET
+#define PROP_MAGNET(dt) \
+  do { \
+    /* change coordinates from local system to magnet system */ \
+    Rotation rotLM; \
+    Coords   posLM = POS_A_CURRENT_COMP; \
+    rot_transpose(ROT_A_CURRENT_COMP, rotLM); \
+    mcMagnetPrecession(mcnlx, mcnly, mcnlz, mcnlt, mcnlvx, mcnlvy, mcnlvz, \
+	   	       &mcnlsx, &mcnlsy, &mcnlsz, dt, posLM, rotLM); \
+  } while(0)
+#endif
 
 /*traverse the stack and return the magnetic field*/
 int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double *by, double *bz, void *dummy){
   mcmagnet_field_info *p=stack[0];
-  Coords in,loc,b,bsum={0,0,0};
+  Coords in,loc,b,bsum={0,0,0},zero={0,0,0};
   Rotation r;
 
   /*PROP_MAGNET takes care of transforming local "PROP" coordinates to lab system*/
@@ -69,12 +107,13 @@ int mcmagnet_get_field(double x, double y, double z, double t, double *bx,double
   *bx=0;*by=0;*bz=0;
   if (!p) return 0;
   //mcmagnet_print_stack();
-  //printf("(xyz,t)=(%g %g %g %g)\n",x,y,z,t);
+  //printf("getfield_(lab):_(xyz,t)=( %g %g %g %g )\n",x,y,z,t);
   while(p){
-    /*transform to the coordinate system of the particular magnetifc function*/
-    loc=coords_add(*(p->pos),rot_apply(*(p->rot),in));
+    /*transform to the coordinate system of the particular magnetic function*/
+    loc=coords_sub(rot_apply(*(p->rot),in),*(p->pos));
     stat=(p->func) (loc.x,loc.y,loc.z,t,&(b.x),&(b.y),&(b.z),p->data);
     /*check if the field function should be garbage collected*/
+    //printf("getfield_(loc):_(xyz,t)=( %g %g %g %g )\n",loc.x,loc.y,loc.z,t);
     if (stat){
       /*transform to the lab system and add up. (resusing loc variable - to now contain the field in lab coords)*/
       rot_transpose(*(p->rot),r);
@@ -213,6 +252,7 @@ int rot_magnetic_field(double x, double y, double z, double t,
   *bx =  Bmagnitude * sin(PI/2*z/magnetLength);
   *by =  Bmagnitude * cos(PI/2*z/magnetLength);
   *bz =  0;
+  //printf("mag field at (x,y,z)=( %g %g %g ) t=%g is B=( %g %g %g )\n",x,y,z,t,*bx,*by,*bz);
   return 1;  
 }
   
@@ -355,17 +395,18 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
   const double mc_pol_spThreshold  = cos(1.0*DEG2RAD);
   const double mc_pol_startTimeStep = 1e-5; // s
   double dummy1, dummy2;
-  //Rotation mc_pol_rotBack;
+  Rotation mc_pol_rotBack;
 
   mcMagneticField=mcmagnet_get_field;
-  
-  // change coordinates from local system to magnet system
-/*  mccoordschange(mc_pol_posLM, mc_pol_rotLM,
+
+  //printf("pos_at_caller(xyz)( %g %g %g )\n", mc_pol_x,mc_pol_y,mc_pol_z);
+  // change coordinates from current local system to lab system
+  mccoordschange(mc_pol_posLM, mc_pol_rotLM,
 		 &mc_pol_x, &mc_pol_y, &mc_pol_z, 
-		 &mc_pol_vx, &mc_pol_vy, &mc_pol_vz, &mc_pol_time,
-		 &dummy1, &dummy2);
+		 &mc_pol_vx, &mc_pol_vy, &mc_pol_vz);
   mccoordschange_polarisation(mc_pol_rotLM, mc_pol_sx, mc_pol_sy, mc_pol_sz);
-*/  
+  //printf("pos_at_labaftertranformation(xyz)( %g %g %g )\n", mc_pol_x,mc_pol_y,mc_pol_z);
+  
   // get initial B-field value
   mcMagneticField(mc_pol_x, mc_pol_y, mc_pol_z, mc_pol_time, 
 		  &mc_pol_BxTemp, &mc_pol_ByTemp, &mc_pol_BzTemp,NULL);
@@ -437,10 +478,10 @@ void SimpleNumMagnetPrecession(double mc_pol_x, double mc_pol_y,
     
   } while (mc_pol_deltaT>0);
   
-  // change back spin coordinates from magnet system to local system
-  /*rot_transpose(mc_pol_rotLM, mc_pol_rotBack); 
+  // change back spin coordinates from lab system to local system
+  rot_transpose(mc_pol_rotLM, mc_pol_rotBack); 
   mccoordschange_polarisation(mc_pol_rotBack, mc_pol_sx, mc_pol_sy, mc_pol_sz);
-  */
+  
 }
 
 /****************************************************************************

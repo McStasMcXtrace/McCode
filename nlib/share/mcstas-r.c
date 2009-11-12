@@ -777,20 +777,22 @@ static   char *mcdirname             = NULL;
 static   char *mcsiminfo_name        = "mcstas";
 int      mcallowbackprop             = 0;
 int      mcMagnet                    = 0;
-/*the magnet stack*/
-double*  mcMagnetData                = NULL;
-Coords   mcMagnetPos;
-Rotation mcMagnetRot;
 char*    mcDetectorCustomHeader      = NULL;
 char*    mcopenedfiles               = "";
 long     mcopenedfiles_size          = 0;
 #endif
 
+/*the magnet stack*/
+#ifdef MC_POL_COMPAT
+void (*mcMagnetPrecession) (double, double, double, double, double, double,
+    double, double*, double*, double*, double, Coords, Rotation)=NULL;
+Coords   mcMagnetPos;
+Rotation mcMagnetRot;
+double*  mcMagnetData                = NULL;
 /* mcMagneticField(x, y, z, t, Bx, By, Bz) */
 int (*mcMagneticField) (double, double, double, double,
     double*, double*, double*, void *) = NULL;
-void (*mcMagnetPrecession) (double, double, double, double, double, double,
-			    double, double*, double*, double*, double, Coords, Rotation) = NULL;
+#endif
 
 /* Number of neutron histories to simulate. */
 #ifndef DANSE
