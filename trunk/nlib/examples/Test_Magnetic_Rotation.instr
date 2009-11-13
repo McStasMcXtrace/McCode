@@ -21,7 +21,7 @@
 * See: 
 * Seeger et al. NIM A: Volume 457, Issues 1-2 , 11 January 2001, Pages 338-346
 *
-* %Example: mcrun Test_Magnetic_Rotation --mpi=1 Detector: MPLMonNum2Y_I=3.54525
+* %Example: mcrun Test_Magnetic_Rotation -n1e5 RESTORE=0 Detector: MPLMonNum2Y_I=3.54525
 *
 * %Parameters
 *
