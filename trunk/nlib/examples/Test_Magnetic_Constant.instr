@@ -102,11 +102,12 @@ COMPONENT armMSF = Arm()
 // The By field is set to rotate the spin 180 degrees for neutrons of wavelenth
 // 5 AA
 COMPONENT msf =
-Pol_simpleBfield(xwidth=0.08, yheight=0.08, length=MAGNETLENGTH, Bx=0, By=BVALUE, Bz=0)
+Pol_simpleBfield(xwidth=0.08, yheight=0.08, zdepth=MAGNETLENGTH, Bx=0, By=BVALUE, Bz=0)
      AT (0, 0, 0) RELATIVE armMSF
 
-COMPONENT msfCp = COPY(msf)
-     AT (0, 0, 0) RELATIVE armMSF
+COMPONENT msfCp = Pol_simpleBfield_stop(magnet_comp_stop=msf)
+AT (0, 0, MAGNETLENGTH) RELATIVE armMSF
+
 
 COMPONENT pollambdaMonitor2x =
 PolLambda_monitor(xwidth=0.1, yheight=0.1,
@@ -143,6 +144,7 @@ MeanPolLambda_monitor(xwidth=0.1, yheight=0.1,
 		      nL=100, Lmin = 0.0, Lmax = 10.0,
 		      mx=0, my=0, mz=1, filename="mpollambdaMon2z.data")
      AT (0, 0, 0.3) RELATIVE armMSF
+
 
 /* This section is executed when the simulation ends (C code). Other    */
 /* optional sections are : SAVE                                         */
