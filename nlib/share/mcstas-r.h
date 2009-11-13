@@ -731,14 +731,15 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 
 #define PROP_MAGNET(dt) \
   do { \
-    /* change coordinates from local system to magnet system */ \
-    Rotation rotLM, rotTemp; \
-    Coords   posLM = coords_sub(POS_A_CURRENT_COMP, mcMagnetPos); \
-    rot_transpose(ROT_A_CURRENT_COMP, rotTemp); \
-    rot_mul(rotTemp, mcMagnetRot, rotLM); \
-    mcMagnetPrecession(mcnlx, mcnly, mcnlz, mcnlt, mcnlvx, mcnlvy, mcnlvz, \
-	   	       &mcnlsx, &mcnlsy, &mcnlsz, dt, posLM, rotLM); \
-  } while(0)
+  }while (0)
+    /* change coordinates from local system to magnet system */
+//    Rotation rotLM, rotTemp; \
+//    Coords   posLM = coords_sub(POS_A_CURRENT_COMP, mcMagnetPos); \
+//    rot_transpose(ROT_A_CURRENT_COMP, rotTemp); \
+//    rot_mul(rotTemp, mcMagnetRot, rotLM); \
+//    mcMagnetPrecession(mcnlx, mcnly, mcnlz, mcnlt, mcnlvx, mcnlvy, mcnlvz, \
+//	   	       &mcnlsx, &mcnlsy, &mcnlsz, dt, posLM, rotLM); \
+//  } while(0)
 
 #define mcPROP_DT(dt) \
   do { \
