@@ -16,7 +16,6 @@
 *
 * This file is to be imported by the monitor_nd related components
 * It handles some shared functions. Embedded within instrument in runtime mode.
-* Variable names have prefix 'mc_mn_' for 'McStas Monitor' to avoid conflicts
 *
 * Usage: within SHARE
 * %include "monitor_nd-lib"
@@ -171,647 +170,649 @@
 /* Monitor_nD_Init: this routine is used to parse options                    */
 /* ========================================================================= */
 
-void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
-  MonitornD_Variables_type *mc_mn_Vars,
-  MCNUM mc_mn_xwidth,
-  MCNUM mc_mn_yheight,
-  MCNUM mc_mn_zdepth,
-  MCNUM mc_mn_xmin,
-  MCNUM mc_mn_xmax,
-  MCNUM mc_mn_ymin,
-  MCNUM mc_mn_ymax,
-  MCNUM mc_mn_zmin,
-  MCNUM mc_mn_zmax)
+void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
+  MonitornD_Variables_type *Vars,
+  MCNUM xwidth,
+  MCNUM yheight,
+  MCNUM zdepth,
+  MCNUM xmin,
+  MCNUM xmax,
+  MCNUM ymin,
+  MCNUM ymax,
+  MCNUM zmin,
+  MCNUM zmax)
   {
-    long mc_mn_carg = 1;
-    char *mc_mn_option_copy, *mc_mn_token;
-    char mc_mn_Flag_New_token = 1;
-    char mc_mn_Flag_End       = 1;
-    char mc_mn_Flag_All       = 0;
-    char mc_mn_Flag_No        = 0;
-    char mc_mn_Flag_abs       = 0;
-    int  mc_mn_Flag_auto      = 0;  /* -1: all, 1: the current variable */
-    int  mc_mn_Set_Vars_Coord_Type;
-    char mc_mn_Set_Vars_Coord_Label[64];
-    char mc_mn_Set_Vars_Coord_Var[64];
-    char mc_mn_Short_Label[MONnD_COORD_NMAX][64];
-    int  mc_mn_Set_Coord_Mode;
-    long mc_mn_i=0, mc_mn_j=0;
-    double mc_mn_lmin, mc_mn_lmax, mc_mn_XY;
-    long mc_mn_t;
+    long carg = 1;
+    char *option_copy, *token;
+    char Flag_New_token = 1;
+    char Flag_End       = 1;
+    char Flag_All       = 0;
+    char Flag_No        = 0;
+    char Flag_abs       = 0;
+    int  Flag_auto      = 0;  /* -1: all, 1: the current variable */
+    int  Set_Vars_Coord_Type;
+    char Set_Vars_Coord_Label[64];
+    char Set_Vars_Coord_Var[64];
+    char Short_Label[MONnD_COORD_NMAX][64];
+    int  Set_Coord_Mode;
+    long i=0, j=0;
+    double lmin, lmax, XY;
+    long t;
 
 
-    mc_mn_t = (long)time(NULL);
+    t = (long)time(NULL);
     
 /* initialize DEFS */  
 /* Variables to monitor */
-    mc_mn_DEFS->COORD_NONE   =0;
-    mc_mn_DEFS->COORD_X      =1;
-    mc_mn_DEFS->COORD_Y      =2;
-    mc_mn_DEFS->COORD_Z      =3;
-    mc_mn_DEFS->COORD_VX     =4;
-    mc_mn_DEFS->COORD_VY     =5;
-    mc_mn_DEFS->COORD_VZ     =6;
-    mc_mn_DEFS->COORD_T      =7;
-    mc_mn_DEFS->COORD_P      =8;
-    mc_mn_DEFS->COORD_SX     =9;
-    mc_mn_DEFS->COORD_SY     =10;
-    mc_mn_DEFS->COORD_SZ     =11;
-    mc_mn_DEFS->COORD_KX     =12;
-    mc_mn_DEFS->COORD_KY     =13;
-    mc_mn_DEFS->COORD_KZ     =14;
-    mc_mn_DEFS->COORD_K      =15;
-    mc_mn_DEFS->COORD_V      =16;
-    mc_mn_DEFS->COORD_ENERGY =17;
-    mc_mn_DEFS->COORD_LAMBDA =18;
-    mc_mn_DEFS->COORD_RADIUS =19;
-    mc_mn_DEFS->COORD_HDIV   =20;
-    mc_mn_DEFS->COORD_VDIV   =21;
-    mc_mn_DEFS->COORD_ANGLE  =22;
-    mc_mn_DEFS->COORD_NCOUNT =23;
-    mc_mn_DEFS->COORD_THETA  =24;
-    mc_mn_DEFS->COORD_PHI    =25;
-    mc_mn_DEFS->COORD_USER1  =26;
-    mc_mn_DEFS->COORD_USER2  =27;
-    mc_mn_DEFS->COORD_USER3  =28;
-    mc_mn_DEFS->COORD_KXY    =29;
-    mc_mn_DEFS->COORD_VXY    =30;
+    DEFS->COORD_NONE   =0;
+    DEFS->COORD_X      =1;
+    DEFS->COORD_Y      =2;
+    DEFS->COORD_Z      =3;
+    DEFS->COORD_VX     =4;
+    DEFS->COORD_VY     =5;
+    DEFS->COORD_VZ     =6;
+    DEFS->COORD_T      =7;
+    DEFS->COORD_P      =8;
+    DEFS->COORD_SX     =9;
+    DEFS->COORD_SY     =10;
+    DEFS->COORD_SZ     =11;
+    DEFS->COORD_KX     =12;
+    DEFS->COORD_KY     =13;
+    DEFS->COORD_KZ     =14;
+    DEFS->COORD_K      =15;
+    DEFS->COORD_V      =16;
+    DEFS->COORD_ENERGY =17;
+    DEFS->COORD_LAMBDA =18;
+    DEFS->COORD_RADIUS =19;
+    DEFS->COORD_HDIV   =20;
+    DEFS->COORD_VDIV   =21;
+    DEFS->COORD_ANGLE  =22;
+    DEFS->COORD_NCOUNT =23;
+    DEFS->COORD_THETA  =24;
+    DEFS->COORD_PHI    =25;
+    DEFS->COORD_USER1  =26;
+    DEFS->COORD_USER2  =27;
+    DEFS->COORD_USER3  =28;
+    DEFS->COORD_KXY    =29;
+    DEFS->COORD_VXY    =30;
 
 /* token modifiers */
-    mc_mn_DEFS->COORD_VAR    =0;    /* next token should be a variable or normal option */
-    mc_mn_DEFS->COORD_MIN    =1;    /* next token is a min value */
-    mc_mn_DEFS->COORD_MAX    =2;    /* next token is a max value */
-    mc_mn_DEFS->COORD_DIM    =3;    /* next token is a bin value */
-    mc_mn_DEFS->COORD_FIL    =4;    /* next token is a filename */
-    mc_mn_DEFS->COORD_EVNT   =5;    /* next token is a buffer size value */
-    mc_mn_DEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
-    mc_mn_DEFS->COORD_LOG    =32;   /* next variable will be in log scale */
-    mc_mn_DEFS->COORD_ABS    =64;   /* next variable will be in abs scale */
-    mc_mn_DEFS->COORD_SIGNAL =128;  /* next variable will be the signal var */
-    mc_mn_DEFS->COORD_AUTO   =256;  /* set auto limits */
+    DEFS->COORD_VAR    =0;    /* next token should be a variable or normal option */
+    DEFS->COORD_MIN    =1;    /* next token is a min value */
+    DEFS->COORD_MAX    =2;    /* next token is a max value */
+    DEFS->COORD_DIM    =3;    /* next token is a bin value */
+    DEFS->COORD_FIL    =4;    /* next token is a filename */
+    DEFS->COORD_EVNT   =5;    /* next token is a buffer size value */
+    DEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
+    DEFS->COORD_LOG    =32;   /* next variable will be in log scale */
+    DEFS->COORD_ABS    =64;   /* next variable will be in abs scale */
+    DEFS->COORD_SIGNAL =128;  /* next variable will be the signal var */
+    DEFS->COORD_AUTO   =256;  /* set auto limits */
 
-    strcpy(mc_mn_DEFS->TOKEN_DEL, " =,;[](){}:");  /* token separators */
+    strcpy(DEFS->TOKEN_DEL, " =,;[](){}:");  /* token separators */
 
-    mc_mn_DEFS->SHAPE_SQUARE =0;    /* shape of the monitor */
-    mc_mn_DEFS->SHAPE_DISK   =1;
-    mc_mn_DEFS->SHAPE_SPHERE =2;
-    mc_mn_DEFS->SHAPE_CYLIND =3;
-    mc_mn_DEFS->SHAPE_BANANA =4;
-    mc_mn_DEFS->SHAPE_BOX    =5;
-    mc_mn_DEFS->SHAPE_PREVIOUS=6;
+    DEFS->SHAPE_SQUARE =0;    /* shape of the monitor */
+    DEFS->SHAPE_DISK   =1;
+    DEFS->SHAPE_SPHERE =2;
+    DEFS->SHAPE_CYLIND =3;
+    DEFS->SHAPE_BANANA =4;
+    DEFS->SHAPE_BOX    =5;
+    DEFS->SHAPE_PREVIOUS=6;
 
-    mc_mn_Vars->Sphere_Radius     = 0;
-    mc_mn_Vars->Cylinder_Height   = 0;
-    mc_mn_Vars->Flag_With_Borders = 0;   /* 2 means xy borders too */
-    mc_mn_Vars->Flag_List         = 0;   /* 1=store 1 buffer, 2=list all, 3=re-use buffer */
-    mc_mn_Vars->Flag_Multiple     = 0;   /* 1 when n1D, 0 for 2D */
-    mc_mn_Vars->Flag_Verbose      = 0;
-    mc_mn_Vars->Flag_Shape        = mc_mn_DEFS->SHAPE_SQUARE;
-    mc_mn_Vars->Flag_Auto_Limits  = 0;   /* get limits from first Buffer */
-    mc_mn_Vars->Flag_Absorb       = 0;   /* monitor is also a slit */
-    mc_mn_Vars->Flag_Exclusive    = 0;   /* absorb neutrons out of monitor limits */
-    mc_mn_Vars->Flag_per_cm2      = 0;   /* flux is per cm2 */
-    mc_mn_Vars->Flag_per_st       = 0;   /* flux is per steradian (in Auto mode only) */
-    mc_mn_Vars->Flag_log          = 0;   /* log10 of the flux */
-    mc_mn_Vars->Flag_parallel     = 0;   /* set neutron state back after detection (parallel components) */
-    mc_mn_Vars->Flag_Binary_List  = 0;   /* save list as a binary file (smaller) */
-    mc_mn_Vars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
-    mc_mn_Vars->Buffer_Block      = 10000;     /* Buffer size for list or auto limits */
-    mc_mn_Vars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
-    mc_mn_Vars->Buffer_Counter    = 0;   /* mc_mn_index in Buffer size (for realloc) */
-    mc_mn_Vars->Buffer_Size       = 0;
-    mc_mn_Vars->UserVariable1     = 0;
-    mc_mn_Vars->UserVariable2     = 0;
-    mc_mn_Vars->He3_pressure      = 0;
-    mc_mn_Vars->Flag_capture      = 0;
-    mc_mn_Vars->Flag_signal       = mc_mn_DEFS->COORD_P;
-    mc_mn_Vars->mean_dx=mc_mn_Vars->mean_dy=0;
-    mc_mn_Vars->min_x = mc_mn_Vars->max_x  =0;
-    mc_mn_Vars->min_y = mc_mn_Vars->max_y  =0;
-    mc_mn_Vars->steradian=0;
+    Vars->Sphere_Radius     = 0;
+    Vars->Cylinder_Height   = 0;
+    Vars->Flag_With_Borders = 0;   /* 2 means xy borders too */
+    Vars->Flag_List         = 0;   /* 1=store 1 buffer, 2=list all, 3=re-use buffer */
+    Vars->Flag_Multiple     = 0;   /* 1 when n1D, 0 for 2D */
+    Vars->Flag_Verbose      = 0;
+    Vars->Flag_Shape        = DEFS->SHAPE_SQUARE;
+    Vars->Flag_Auto_Limits  = 0;   /* get limits from first Buffer */
+    Vars->Flag_Absorb       = 0;   /* monitor is also a slit */
+    Vars->Flag_Exclusive    = 0;   /* absorb neutrons out of monitor limits */
+    Vars->Flag_per_cm2      = 0;   /* flux is per cm2 */
+    Vars->Flag_per_st       = 0;   /* flux is per steradian (in Auto mode only) */
+    Vars->Flag_log          = 0;   /* log10 of the flux */
+    Vars->Flag_parallel     = 0;   /* set neutron state back after detection (parallel components) */
+    Vars->Flag_Binary_List  = 0;   /* save list as a binary file (smaller) */
+    Vars->Coord_Number      = 0;   /* total number of variables to monitor, plus intensity (0) */
+    Vars->Buffer_Block      = 10000;     /* Buffer size for list or auto limits */
+    Vars->Neutron_Counter   = 0;   /* event counter, simulation total counts is mcget_ncount() */
+    Vars->Buffer_Counter    = 0;   /* index in Buffer size (for realloc) */
+    Vars->Buffer_Size       = 0;
+    Vars->UserVariable1     = 0;
+    Vars->UserVariable2     = 0;
+    Vars->He3_pressure      = 0;
+    Vars->Flag_capture      = 0;
+    Vars->Flag_signal       = DEFS->COORD_P;
+    Vars->mean_dx=Vars->mean_dy=0;
+    Vars->min_x = Vars->max_x  =0;
+    Vars->min_y = Vars->max_y  =0;
+    Vars->steradian=0;
 
-    mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE;
-    mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR;
+    Set_Vars_Coord_Type = DEFS->COORD_NONE;
+    Set_Coord_Mode = DEFS->COORD_VAR;
 
     /* handle size parameters */
     /* normal use is with xwidth, yheight, zdepth */
     /* if xmin,xmax,ymin,ymax,zmin,zmax are non 0, use them */
-    if (fabs(mc_mn_xmin-mc_mn_xmax) == 0)
-      { mc_mn_Vars->mxmin = -fabs(mc_mn_xwidth)/2; mc_mn_Vars->mxmax = fabs(mc_mn_xwidth)/2; }
+    if (fabs(xmin-xmax) == 0)
+      { Vars->mxmin = -fabs(xwidth)/2; Vars->mxmax = fabs(xwidth)/2; }
     else
-      { if (mc_mn_xmin < mc_mn_xmax) {mc_mn_Vars->mxmin = mc_mn_xmin; mc_mn_Vars->mxmax = mc_mn_xmax;}
-        else {mc_mn_Vars->mxmin = mc_mn_xmax; mc_mn_Vars->mxmax = mc_mn_xmin;}
+      { if (xmin < xmax) {Vars->mxmin = xmin; Vars->mxmax = xmax;}
+        else {Vars->mxmin = xmax; Vars->mxmax = xmin;}
       }
-    if (fabs(mc_mn_ymin-mc_mn_ymax) == 0)
-      { mc_mn_Vars->mymin = -fabs(mc_mn_yheight)/2; mc_mn_Vars->mymax = fabs(mc_mn_yheight)/2; }
+    if (fabs(ymin-ymax) == 0)
+      { Vars->mymin = -fabs(yheight)/2; Vars->mymax = fabs(yheight)/2; }
     else
-      { if (mc_mn_ymin < mc_mn_ymax) {mc_mn_Vars->mymin = mc_mn_ymin; mc_mn_Vars->mymax = mc_mn_ymax;}
-        else {mc_mn_Vars->mymin = mc_mn_ymax; mc_mn_Vars->mymax = mc_mn_ymin;}
+      { if (ymin < ymax) {Vars->mymin = ymin; Vars->mymax = ymax;}
+        else {Vars->mymin = ymax; Vars->mymax = ymin;}
       }
-    if (fabs(mc_mn_zmin-mc_mn_zmax) == 0)
-      { mc_mn_Vars->mzmin = -fabs(mc_mn_zdepth)/2; mc_mn_Vars->mzmax = fabs(mc_mn_zdepth)/2; }
+    if (fabs(zmin-zmax) == 0)
+      { Vars->mzmin = -fabs(zdepth)/2; Vars->mzmax = fabs(zdepth)/2; }
     else
-      { if (mc_mn_zmin < mc_mn_zmax) {mc_mn_Vars->mzmin = mc_mn_zmin; mc_mn_Vars->mzmax = mc_mn_zmax; }
-        else {mc_mn_Vars->mzmin = mc_mn_zmax; mc_mn_Vars->mzmax = mc_mn_zmin; }
+      { if (zmin < zmax) {Vars->mzmin = zmin; Vars->mzmax = zmax; }
+        else {Vars->mzmin = zmax; Vars->mzmax = zmin; }
       }
 
-    if (fabs(mc_mn_Vars->mzmax-mc_mn_Vars->mzmin) == 0)
-      mc_mn_Vars->Flag_Shape        = mc_mn_DEFS->SHAPE_SQUARE;
+    if (fabs(Vars->mzmax-Vars->mzmin) == 0)
+      Vars->Flag_Shape        = DEFS->SHAPE_SQUARE;
     else
-      mc_mn_Vars->Flag_Shape        = mc_mn_DEFS->SHAPE_BOX;
+      Vars->Flag_Shape        = DEFS->SHAPE_BOX;
 
     /* parse option string */
 
-    mc_mn_option_copy = (char*)malloc(strlen(mc_mn_Vars->option)+1);
-    if (mc_mn_option_copy == NULL)
+    option_copy = (char*)malloc(strlen(Vars->option)+1);
+    if (option_copy == NULL)
     {
-      fprintf(stderr,"Monitor_nD: %s cannot allocate 'options' copy (%li). Fatal.\n", mc_mn_Vars->compcurname, (long)strlen(mc_mn_Vars->option));
+      fprintf(stderr,"Monitor_nD: %s cannot allocate 'options' copy (%li). Fatal.\n", Vars->compcurname, (long)strlen(Vars->option));
       exit(-1);
     }
 
-    if (strlen(mc_mn_Vars->option))
+    if (strlen(Vars->option))
     {
-      mc_mn_Flag_End = 0;
-      strcpy(mc_mn_option_copy, mc_mn_Vars->option);
+      Flag_End = 0;
+      strcpy(option_copy, Vars->option);
     }
 
-    if (strstr(mc_mn_Vars->option, "cm2") || strstr(mc_mn_Vars->option, "cm^2")) mc_mn_Vars->Flag_per_cm2 = 1;
-    if (strstr(mc_mn_Vars->option, "steradian")) mc_mn_Vars->Flag_per_st = 1;
+    if (strstr(Vars->option, "cm2") || strstr(Vars->option, "cm^2")) Vars->Flag_per_cm2 = 1;
+    if (strstr(Vars->option, "steradian")) Vars->Flag_per_st = 1;
 
-    if (strstr(mc_mn_Vars->option, "binary") || strstr(mc_mn_Vars->option, "float"))
-      mc_mn_Vars->Flag_Binary_List  = 1;
-    if (strstr(mc_mn_Vars->option, "double"))
-      mc_mn_Vars->Flag_Binary_List  = 2;
+    if (strstr(Vars->option, "binary") || strstr(Vars->option, "float"))
+      Vars->Flag_Binary_List  = 1;
+    if (strstr(Vars->option, "double"))
+      Vars->Flag_Binary_List  = 2;
 
-    strcpy(mc_mn_Vars->Coord_Label[0],"Intensity");
-    strncpy(mc_mn_Vars->Coord_Var[0],"p",30);
-    mc_mn_Vars->Coord_Type[0] = mc_mn_DEFS->COORD_P;
-    mc_mn_Vars->Coord_Bin[0] = 1;
-    mc_mn_Vars->Coord_Min[0] = 0;
-    mc_mn_Vars->Coord_Max[0] = FLT_MAX;
+    strcpy(Vars->Coord_Label[0],"Intensity");
+    strncpy(Vars->Coord_Var[0],"p",30);
+    Vars->Coord_Type[0] = DEFS->COORD_P;
+    Vars->Coord_Bin[0] = 1;
+    Vars->Coord_Min[0] = 0;
+    Vars->Coord_Max[0] = FLT_MAX;
 
     /* default file name is comp_name+dateID */
-    sprintf(mc_mn_Vars->Mon_File, "%s_%li", mc_mn_Vars->compcurname, mc_mn_t);
+    sprintf(Vars->Mon_File, "%s_%li", Vars->compcurname, t);
 
-    mc_mn_carg = 1;
-    while((mc_mn_Flag_End == 0) && (mc_mn_carg < 128))
+    carg = 1;
+    while((Flag_End == 0) && (carg < 128))
     {
 
-      if (mc_mn_Flag_New_token) /* retain previous token or get a new one */
+      if (Flag_New_token) /* retain previous token or get a new one */
       {
-        if (mc_mn_carg == 1) mc_mn_token=(char *)strtok(mc_mn_option_copy,mc_mn_DEFS->TOKEN_DEL);
-        else mc_mn_token=(char *)strtok(NULL,mc_mn_DEFS->TOKEN_DEL);
-        if (mc_mn_token == NULL) mc_mn_Flag_End=1;
+        if (carg == 1) token=(char *)strtok(option_copy,DEFS->TOKEN_DEL);
+        else token=(char *)strtok(NULL,DEFS->TOKEN_DEL);
+        if (token == NULL) Flag_End=1;
       }
-      mc_mn_Flag_New_token = 1;
-      if ((mc_mn_token != NULL) && (strlen(mc_mn_token) != 0))
+      Flag_New_token = 1;
+      if ((token != NULL) && (strlen(token) != 0))
       {
-        char mc_mn_iskeyword=0;
-        int  mc_mn_old_Mode;
+        char iskeyword=0;
+        int  old_Mode;
+        /* change token to lower case */
+        for (i=0; i<strlen(token); i++) token[i]=tolower(token[i]);
         /* first handle option values from preceeding keyword token detected */
-        mc_mn_old_Mode = mc_mn_Set_Coord_Mode;
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_MAX)  /* max=%i */
+        old_Mode = Set_Coord_Mode;
+        if (Set_Coord_Mode == DEFS->COORD_MAX)  /* max=%i */
         {
-          if (!mc_mn_Flag_All)
-            mc_mn_Vars->Coord_Max[mc_mn_Vars->Coord_Number] = atof(mc_mn_token);
+          if (!Flag_All)
+            Vars->Coord_Max[Vars->Coord_Number] = atof(token);
           else
-            for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_Vars->Coord_Max[mc_mn_i++] = atof(mc_mn_token));
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
+            for (i = 0; i <= Vars->Coord_Number; Vars->Coord_Max[i++] = atof(token));
+          Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_MIN)  /* min=%i */
+        if (Set_Coord_Mode == DEFS->COORD_MIN)  /* min=%i */
         {
-          if (!mc_mn_Flag_All)
-            mc_mn_Vars->Coord_Min[mc_mn_Vars->Coord_Number] = atof(mc_mn_token);
+          if (!Flag_All)
+            Vars->Coord_Min[Vars->Coord_Number] = atof(token);
           else
-            for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_Vars->Coord_Min[mc_mn_i++] = atof(mc_mn_token));
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_MAX;
+            for (i = 0; i <= Vars->Coord_Number; Vars->Coord_Min[i++] = atof(token));
+          Set_Coord_Mode = DEFS->COORD_MAX;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_DIM)  /* bins=%i */
+        if (Set_Coord_Mode == DEFS->COORD_DIM)  /* bins=%i */
         {
-          if (!mc_mn_Flag_All)
-            mc_mn_Vars->Coord_Bin[mc_mn_Vars->Coord_Number] = atoi(mc_mn_token);
+          if (!Flag_All)
+            Vars->Coord_Bin[Vars->Coord_Number] = atoi(token);
           else
-            for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_Vars->Coord_Bin[mc_mn_i++] = atoi(mc_mn_token));
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
+            for (i = 0; i <= Vars->Coord_Number; Vars->Coord_Bin[i++] = atoi(token));
+          Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_FIL)  /* file=%s */
+        if (Set_Coord_Mode == DEFS->COORD_FIL)  /* file=%s */
         {
-          if (!mc_mn_Flag_No) strncpy(mc_mn_Vars->Mon_File,mc_mn_token,128);
-          else { strcpy(mc_mn_Vars->Mon_File,""); mc_mn_Vars->Coord_Number = 0; mc_mn_Flag_End = 1;}
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR;
+          if (!Flag_No) strncpy(Vars->Mon_File,token,128);
+          else { strcpy(Vars->Mon_File,""); Vars->Coord_Number = 0; Flag_End = 1;}
+          Set_Coord_Mode = DEFS->COORD_VAR;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_EVNT) /* list=%i */
+        if (Set_Coord_Mode == DEFS->COORD_EVNT) /* list=%i */
         {
-          if (!strcmp(mc_mn_token, "all") || mc_mn_Flag_All) mc_mn_Vars->Flag_List = 2;
-          else { mc_mn_i = (long)ceil(atof(mc_mn_token)); if (mc_mn_i) mc_mn_Vars->Buffer_Block = mc_mn_i;
-            mc_mn_Vars->Flag_List = 1; }
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
+          if (!strcmp(token, "all") || Flag_All) Vars->Flag_List = 2;
+          else { i = (long)ceil(atof(token)); if (i) Vars->Buffer_Block = i;
+            Vars->Flag_List = 1; }
+          Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
         }
-        if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_3HE)  /* pressure=%g */
+        if (Set_Coord_Mode == DEFS->COORD_3HE)  /* pressure=%g */
         {
-            mc_mn_Vars->He3_pressure = atof(mc_mn_token);
-            mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR; mc_mn_Flag_All = 0;
+            Vars->He3_pressure = atof(token);
+            Set_Coord_Mode = DEFS->COORD_VAR; Flag_All = 0;
         }
 
         /* now look for general option keywords */
-        if (!strcmp(mc_mn_token, "borders"))  {mc_mn_Vars->Flag_With_Borders = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "verbose"))  {mc_mn_Vars->Flag_Verbose      = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "log"))      {mc_mn_Vars->Flag_log          = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "abs"))      {mc_mn_Flag_abs                = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "multiple")) {mc_mn_Vars->Flag_Multiple     = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "exclusive")){mc_mn_Vars->Flag_Exclusive    = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "list") || !strcmp(mc_mn_token, "events")) {
-          mc_mn_Vars->Flag_List = 1; mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_EVNT;  }
-        if (!strcmp(mc_mn_token, "limits") || !strcmp(mc_mn_token, "min"))
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_MIN;
-        if (!strcmp(mc_mn_token, "slit") || !strcmp(mc_mn_token, "absorb")) {
-          mc_mn_Vars->Flag_Absorb = 1;  mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "max"))  mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_MAX;
-        if (!strcmp(mc_mn_token, "bins") || !strcmp(mc_mn_token, "dim")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_DIM;
-        if (!strcmp(mc_mn_token, "file") || !strcmp(mc_mn_token, "filename")) {
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_FIL;
-          if (mc_mn_Flag_No) { strcpy(mc_mn_Vars->Mon_File,""); mc_mn_Vars->Coord_Number = 0; mc_mn_Flag_End = 1; }
+        if (!strcmp(token, "borders"))  {Vars->Flag_With_Borders = 1; iskeyword=1; }
+        if (!strcmp(token, "verbose"))  {Vars->Flag_Verbose      = 1; iskeyword=1; }
+        if (!strcmp(token, "log"))      {Vars->Flag_log          = 1; iskeyword=1; }
+        if (!strcmp(token, "abs"))      {Flag_abs                = 1; iskeyword=1; }
+        if (!strcmp(token, "multiple")) {Vars->Flag_Multiple     = 1; iskeyword=1; }
+        if (!strcmp(token, "exclusive")){Vars->Flag_Exclusive    = 1; iskeyword=1; }
+        if (!strcmp(token, "list") || !strcmp(token, "events")) {
+          Vars->Flag_List = 1; Set_Coord_Mode = DEFS->COORD_EVNT;  }
+        if (!strcmp(token, "limits") || !strcmp(token, "min"))
+          Set_Coord_Mode = DEFS->COORD_MIN;
+        if (!strcmp(token, "slit") || !strcmp(token, "absorb")) {
+          Vars->Flag_Absorb = 1;  iskeyword=1; }
+        if (!strcmp(token, "max"))  Set_Coord_Mode = DEFS->COORD_MAX;
+        if (!strcmp(token, "bins") || !strcmp(token, "dim")) Set_Coord_Mode = DEFS->COORD_DIM;
+        if (!strcmp(token, "file") || !strcmp(token, "filename")) {
+          Set_Coord_Mode = DEFS->COORD_FIL;
+          if (Flag_No) { strcpy(Vars->Mon_File,""); Vars->Coord_Number = 0; Flag_End = 1; }
         }
-        if (!strcmp(mc_mn_token, "unactivate")) {
-          mc_mn_Flag_End = 1; mc_mn_Vars->Coord_Number = 0; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "all"))    { mc_mn_Flag_All = 1;  mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "sphere")) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SPHERE; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "cylinder")) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_CYLIND; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "banana")) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_BANANA; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "square")) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "disk"))   { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_DISK; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "box"))     { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_BOX; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "previous")) { mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_PREVIOUS; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "parallel")){ mc_mn_Vars->Flag_parallel = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "capture")) { mc_mn_Vars->Flag_capture = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "auto") && (mc_mn_Flag_auto != -1)) {
-          mc_mn_Vars->Flag_Auto_Limits = 1;
-          if (mc_mn_Flag_All) mc_mn_Flag_auto = -1;
-          else mc_mn_Flag_auto = 1;
-          mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "premonitor")) {
-          mc_mn_Vars->Flag_UsePreMonitor = 1; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "3He_pressure") || !strcmp(mc_mn_token, "pressure")) {
-          mc_mn_Vars->He3_pressure = 3; mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "no") || !strcmp(mc_mn_token, "not")) { mc_mn_Flag_No = 1;  mc_mn_iskeyword=1; }
-        if (!strcmp(mc_mn_token, "signal")) mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_SIGNAL;
+        if (!strcmp(token, "unactivate")) {
+          Flag_End = 1; Vars->Coord_Number = 0; iskeyword=1; }
+        if (!strcmp(token, "all"))    { Flag_All = 1;  iskeyword=1; }
+        if (!strcmp(token, "sphere")) { Vars->Flag_Shape = DEFS->SHAPE_SPHERE; iskeyword=1; }
+        if (!strcmp(token, "cylinder")) { Vars->Flag_Shape = DEFS->SHAPE_CYLIND; iskeyword=1; }
+        if (!strcmp(token, "banana")) { Vars->Flag_Shape = DEFS->SHAPE_BANANA; iskeyword=1; }
+        if (!strcmp(token, "square")) { Vars->Flag_Shape = DEFS->SHAPE_SQUARE; iskeyword=1; }
+        if (!strcmp(token, "disk"))   { Vars->Flag_Shape = DEFS->SHAPE_DISK; iskeyword=1; }
+        if (!strcmp(token, "box"))     { Vars->Flag_Shape = DEFS->SHAPE_BOX; iskeyword=1; }
+        if (!strcmp(token, "previous")) { Vars->Flag_Shape = DEFS->SHAPE_PREVIOUS; iskeyword=1; }
+        if (!strcmp(token, "parallel")){ Vars->Flag_parallel = 1; iskeyword=1; }
+        if (!strcmp(token, "capture")) { Vars->Flag_capture = 1; iskeyword=1; }
+        if (!strcmp(token, "auto") && (Flag_auto != -1)) {
+          Vars->Flag_Auto_Limits = 1;
+          if (Flag_All) Flag_auto = -1;
+          else Flag_auto = 1;
+          iskeyword=1; }
+        if (!strcmp(token, "premonitor")) {
+          Vars->Flag_UsePreMonitor = 1; iskeyword=1; }
+        if (!strcmp(token, "3He_pressure") || !strcmp(token, "pressure")) {
+          Vars->He3_pressure = 3; iskeyword=1; }
+        if (!strcmp(token, "no") || !strcmp(token, "not")) { Flag_No = 1;  iskeyword=1; }
+        if (!strcmp(token, "signal")) Set_Coord_Mode = DEFS->COORD_SIGNAL;
 
         /* Mode has changed: this was a keyword or value  ? */
-        if (mc_mn_Set_Coord_Mode != mc_mn_old_Mode) mc_mn_iskeyword=1;
+        if (Set_Coord_Mode != old_Mode) iskeyword=1;
 
         /* now look for variable names to monitor */
-        mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE; mc_mn_lmin = 0; mc_mn_lmax = 0;
+        Set_Vars_Coord_Type = DEFS->COORD_NONE; lmin = 0; lmax = 0;
 
-        if (!strcmp(mc_mn_token, "x"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_X; strcpy(mc_mn_Set_Vars_Coord_Label,"x [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"x");
-          mc_mn_lmin = mc_mn_Vars->mxmin; mc_mn_lmax = mc_mn_Vars->mxmax;
-          mc_mn_Vars->Coord_Min[mc_mn_Vars->Coord_Number+1] = mc_mn_Vars->mxmin;
-          mc_mn_Vars->Coord_Max[mc_mn_Vars->Coord_Number+1] = mc_mn_Vars->mxmax;}
-        if (!strcmp(mc_mn_token, "y"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_Y; strcpy(mc_mn_Set_Vars_Coord_Label,"y [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"y");
-          mc_mn_lmin = mc_mn_Vars->mymin; mc_mn_lmax = mc_mn_Vars->mymax;
-          mc_mn_Vars->Coord_Min[mc_mn_Vars->Coord_Number+1] = mc_mn_Vars->mymin;
-          mc_mn_Vars->Coord_Max[mc_mn_Vars->Coord_Number+1] = mc_mn_Vars->mymax;}
-        if (!strcmp(mc_mn_token, "z"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_Z; strcpy(mc_mn_Set_Vars_Coord_Label,"z [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"z"); mc_mn_lmin = mc_mn_Vars->mzmin; mc_mn_lmax = mc_mn_Vars->mzmax; }
-        if (!strcmp(mc_mn_token, "k") || !strcmp(mc_mn_token, "wavevector"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_K; strcpy(mc_mn_Set_Vars_Coord_Label,"|k| [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"k"); mc_mn_lmin = 0; mc_mn_lmax = 10; }
-        if (!strcmp(mc_mn_token, "v"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_V; strcpy(mc_mn_Set_Vars_Coord_Label,"Velocity [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"v"); mc_mn_lmin = 0; mc_mn_lmax = 10000; }
-        if (!strcmp(mc_mn_token, "t") || !strcmp(mc_mn_token, "time"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_T; strcpy(mc_mn_Set_Vars_Coord_Label,"TOF [s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"t"); mc_mn_lmin = 0; mc_mn_lmax = .1; }
-        if ((!strcmp(mc_mn_token, "p") || !strcmp(mc_mn_token, "intensity") || !strcmp(mc_mn_token, "flux")))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_P;
-            strcpy(mc_mn_Set_Vars_Coord_Label,"Intensity");
-            strncat(mc_mn_Set_Vars_Coord_Label, " [n/s", 30);
-            if (mc_mn_Vars->Flag_per_cm2) strncat(mc_mn_Set_Vars_Coord_Label, "/cm2", 30);
-            if (mc_mn_Vars->Flag_per_st) {
-              if (mc_mn_Vars->Flag_Auto_Limits)
-                strncat(mc_mn_Set_Vars_Coord_Label, "/st", 30);
+        if (!strcmp(token, "x"))
+          { Set_Vars_Coord_Type = DEFS->COORD_X; strcpy(Set_Vars_Coord_Label,"x [m]"); strcpy(Set_Vars_Coord_Var,"x");
+          lmin = Vars->mxmin; lmax = Vars->mxmax;
+          Vars->Coord_Min[Vars->Coord_Number+1] = Vars->mxmin;
+          Vars->Coord_Max[Vars->Coord_Number+1] = Vars->mxmax;}
+        if (!strcmp(token, "y"))
+          { Set_Vars_Coord_Type = DEFS->COORD_Y; strcpy(Set_Vars_Coord_Label,"y [m]"); strcpy(Set_Vars_Coord_Var,"y");
+          lmin = Vars->mymin; lmax = Vars->mymax;
+          Vars->Coord_Min[Vars->Coord_Number+1] = Vars->mymin;
+          Vars->Coord_Max[Vars->Coord_Number+1] = Vars->mymax;}
+        if (!strcmp(token, "z"))
+          { Set_Vars_Coord_Type = DEFS->COORD_Z; strcpy(Set_Vars_Coord_Label,"z [m]"); strcpy(Set_Vars_Coord_Var,"z"); lmin = Vars->mzmin; lmax = Vars->mzmax; }
+        if (!strcmp(token, "k") || !strcmp(token, "wavevector"))
+          { Set_Vars_Coord_Type = DEFS->COORD_K; strcpy(Set_Vars_Coord_Label,"|k| [Angs-1]"); strcpy(Set_Vars_Coord_Var,"k"); lmin = 0; lmax = 10; }
+        if (!strcmp(token, "v"))
+          { Set_Vars_Coord_Type = DEFS->COORD_V; strcpy(Set_Vars_Coord_Label,"Velocity [m/s]"); strcpy(Set_Vars_Coord_Var,"v"); lmin = 0; lmax = 10000; }
+        if (!strcmp(token, "t") || !strcmp(token, "time"))
+          { Set_Vars_Coord_Type = DEFS->COORD_T; strcpy(Set_Vars_Coord_Label,"TOF [s]"); strcpy(Set_Vars_Coord_Var,"t"); lmin = 0; lmax = .1; }
+        if ((!strcmp(token, "p") || !strcmp(token, "i") || !strcmp(token, "intensity") || !strcmp(token, "flux")))
+          { Set_Vars_Coord_Type = DEFS->COORD_P;
+            strcpy(Set_Vars_Coord_Label,"Intensity");
+            strncat(Set_Vars_Coord_Label, " [n/s", 30);
+            if (Vars->Flag_per_cm2) strncat(Set_Vars_Coord_Label, "/cm2", 30);
+            if (Vars->Flag_per_st) {
+              if (Vars->Flag_Auto_Limits)
+                strncat(Set_Vars_Coord_Label, "/st", 30);
             }
-            if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number)
-              strncat(mc_mn_Set_Vars_Coord_Label, "/bin", 30);
-            strncat(mc_mn_Set_Vars_Coord_Label, "]", 30);
-            strcpy(mc_mn_Set_Vars_Coord_Var,"I");
-            mc_mn_lmin = 0; mc_mn_lmax = FLT_MAX;
+            if (XY > 1 && Vars->Coord_Number)
+              strncat(Set_Vars_Coord_Label, "/bin", 30);
+            strncat(Set_Vars_Coord_Label, "]", 30);
+            strcpy(Set_Vars_Coord_Var,"I");
+            lmin = 0; lmax = FLT_MAX;
           }
 
-        if (!strcmp(mc_mn_token, "vx"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VX; strcpy(mc_mn_Set_Vars_Coord_Label,"vx [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"vx"); mc_mn_lmin = -1000; mc_mn_lmax = 1000; }
-        if (!strcmp(mc_mn_token, "vy"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VY; strcpy(mc_mn_Set_Vars_Coord_Label,"vy [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"vy"); mc_mn_lmin = -1000; mc_mn_lmax = 1000; }
-        if (!strcmp(mc_mn_token, "vz"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VZ; strcpy(mc_mn_Set_Vars_Coord_Label,"vz [m/s]"); strcpy(mc_mn_Set_Vars_Coord_Var,"vz"); mc_mn_lmin = -10000; mc_mn_lmax = 10000; }
-        if (!strcmp(mc_mn_token, "kx"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_KX; strcpy(mc_mn_Set_Vars_Coord_Label,"kx [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"kx"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
-        if (!strcmp(mc_mn_token, "ky"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_KY; strcpy(mc_mn_Set_Vars_Coord_Label,"ky [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"ky"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
-        if (!strcmp(mc_mn_token, "kz"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_KZ; strcpy(mc_mn_Set_Vars_Coord_Label,"kz [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"kz"); mc_mn_lmin = -10; mc_mn_lmax = 10; }
-        if (!strcmp(mc_mn_token, "sx"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_SX; strcpy(mc_mn_Set_Vars_Coord_Label,"sx [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"sx"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
-        if (!strcmp(mc_mn_token, "sy"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_SY; strcpy(mc_mn_Set_Vars_Coord_Label,"sy [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"sy"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
-        if (!strcmp(mc_mn_token, "sz"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_SZ; strcpy(mc_mn_Set_Vars_Coord_Label,"sz [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"sz"); mc_mn_lmin = -1; mc_mn_lmax = 1; }
+        if (!strcmp(token, "vx"))
+          { Set_Vars_Coord_Type = DEFS->COORD_VX; strcpy(Set_Vars_Coord_Label,"vx [m/s]"); strcpy(Set_Vars_Coord_Var,"vx"); lmin = -1000; lmax = 1000; }
+        if (!strcmp(token, "vy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_VY; strcpy(Set_Vars_Coord_Label,"vy [m/s]"); strcpy(Set_Vars_Coord_Var,"vy"); lmin = -1000; lmax = 1000; }
+        if (!strcmp(token, "vz"))
+          { Set_Vars_Coord_Type = DEFS->COORD_VZ; strcpy(Set_Vars_Coord_Label,"vz [m/s]"); strcpy(Set_Vars_Coord_Var,"vz"); lmin = -10000; lmax = 10000; }
+        if (!strcmp(token, "kx"))
+          { Set_Vars_Coord_Type = DEFS->COORD_KX; strcpy(Set_Vars_Coord_Label,"kx [Angs-1]"); strcpy(Set_Vars_Coord_Var,"kx"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "ky"))
+          { Set_Vars_Coord_Type = DEFS->COORD_KY; strcpy(Set_Vars_Coord_Label,"ky [Angs-1]"); strcpy(Set_Vars_Coord_Var,"ky"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "kz"))
+          { Set_Vars_Coord_Type = DEFS->COORD_KZ; strcpy(Set_Vars_Coord_Label,"kz [Angs-1]"); strcpy(Set_Vars_Coord_Var,"kz"); lmin = -10; lmax = 10; }
+        if (!strcmp(token, "sx"))
+          { Set_Vars_Coord_Type = DEFS->COORD_SX; strcpy(Set_Vars_Coord_Label,"sx [1]"); strcpy(Set_Vars_Coord_Var,"sx"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "sy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_SY; strcpy(Set_Vars_Coord_Label,"sy [1]"); strcpy(Set_Vars_Coord_Var,"sy"); lmin = -1; lmax = 1; }
+        if (!strcmp(token, "sz"))
+          { Set_Vars_Coord_Type = DEFS->COORD_SZ; strcpy(Set_Vars_Coord_Label,"sz [1]"); strcpy(Set_Vars_Coord_Var,"sz"); lmin = -1; lmax = 1; }
 
-        if (!strcmp(mc_mn_token, "energy") || !strcmp(mc_mn_token, "omega"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_ENERGY; strcpy(mc_mn_Set_Vars_Coord_Label,"Energy [meV]"); strcpy(mc_mn_Set_Vars_Coord_Var,"E"); mc_mn_lmin = 0; mc_mn_lmax = 100; }
-        if (!strcmp(mc_mn_token, "lambda") || !strcmp(mc_mn_token, "wavelength"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_LAMBDA; strcpy(mc_mn_Set_Vars_Coord_Label,"Wavelength [Angs]"); strcpy(mc_mn_Set_Vars_Coord_Var,"L"); mc_mn_lmin = 0; mc_mn_lmax = 100; }
-        if (!strcmp(mc_mn_token, "radius") || !strcmp(mc_mn_token, "xy"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_RADIUS; strcpy(mc_mn_Set_Vars_Coord_Label,"Radius [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"R"); mc_mn_lmin = 0; mc_mn_lmax = mc_mn_xmax; }
-        if (!strcmp(mc_mn_token, "vxy"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VXY; strcpy(mc_mn_Set_Vars_Coord_Label,"Radial Velocity [m]"); strcpy(mc_mn_Set_Vars_Coord_Var,"Vxy"); mc_mn_lmin = 0; mc_mn_lmax = 2000; }
-        if (!strcmp(mc_mn_token, "kxy"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_KXY; strcpy(mc_mn_Set_Vars_Coord_Label,"Radial Wavevector [Angs-1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"Kxy"); mc_mn_lmin = 0; mc_mn_lmax = 2; }
-        if (!strcmp(mc_mn_token, "angle"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_ANGLE; strcpy(mc_mn_Set_Vars_Coord_Label,"Angle [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"A"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
-        if (!strcmp(mc_mn_token, "hdiv")|| !strcmp(mc_mn_token, "divergence") || !strcmp(mc_mn_token, "xdiv") || !strcmp(mc_mn_token, "dx"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_HDIV; strcpy(mc_mn_Set_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"HD"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
-        if (!strcmp(mc_mn_token, "vdiv") || !strcmp(mc_mn_token, "ydiv") || !strcmp(mc_mn_token, "dy"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_VDIV; strcpy(mc_mn_Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"VD"); mc_mn_lmin = -5; mc_mn_lmax = 5; }
-        if (!strcmp(mc_mn_token, "theta") || !strcmp(mc_mn_token, "longitude"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_THETA; strcpy(mc_mn_Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"th"); mc_mn_lmin = -180; mc_mn_lmax = 180; }
-        if (!strcmp(mc_mn_token, "phi") || !strcmp(mc_mn_token, "lattitude"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_PHI; strcpy(mc_mn_Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(mc_mn_Set_Vars_Coord_Var,"ph"); mc_mn_lmin = -180; mc_mn_lmax = 180; }
-        if (!strcmp(mc_mn_token, "ncounts"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NCOUNT; strcpy(mc_mn_Set_Vars_Coord_Label,"Neutrons [1]"); strcpy(mc_mn_Set_Vars_Coord_Var,"N"); mc_mn_lmin = 0; mc_mn_lmax = 1e10; }
-        if (!strcmp(mc_mn_token, "user") || !strcmp(mc_mn_token, "user1"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER1; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName1,30); strcpy(mc_mn_Set_Vars_Coord_Var,"U1"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
-        if (!strcmp(mc_mn_token, "user2"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER2; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName2,30); strcpy(mc_mn_Set_Vars_Coord_Var,"U2"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
-        if (!strcmp(mc_mn_token, "user3"))
-          { mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_USER3; strncpy(mc_mn_Set_Vars_Coord_Label,mc_mn_Vars->UserName3,30); strcpy(mc_mn_Set_Vars_Coord_Var,"U3"); mc_mn_lmin = -1e10; mc_mn_lmax = 1e10; }
+        if (!strcmp(token, "energy") || !strcmp(token, "omega") || !strcmp(token, "e"))
+          { Set_Vars_Coord_Type = DEFS->COORD_ENERGY; strcpy(Set_Vars_Coord_Label,"Energy [meV]"); strcpy(Set_Vars_Coord_Var,"E"); lmin = 0; lmax = 100; }
+        if (!strcmp(token, "lambda") || !strcmp(token, "wavelength") || !strcmp(token, "l"))
+          { Set_Vars_Coord_Type = DEFS->COORD_LAMBDA; strcpy(Set_Vars_Coord_Label,"Wavelength [Angs]"); strcpy(Set_Vars_Coord_Var,"L"); lmin = 0; lmax = 100; }
+        if (!strcmp(token, "radius") || !strcmp(token, "xy") || !strcmp(token, "r"))
+          { Set_Vars_Coord_Type = DEFS->COORD_RADIUS; strcpy(Set_Vars_Coord_Label,"Radius [m]"); strcpy(Set_Vars_Coord_Var,"R"); lmin = 0; lmax = xmax; }
+        if (!strcmp(token, "vxy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_VXY; strcpy(Set_Vars_Coord_Label,"Radial Velocity [m]"); strcpy(Set_Vars_Coord_Var,"Vxy"); lmin = 0; lmax = 2000; }
+        if (!strcmp(token, "kxy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_KXY; strcpy(Set_Vars_Coord_Label,"Radial Wavevector [Angs-1]"); strcpy(Set_Vars_Coord_Var,"Kxy"); lmin = 0; lmax = 2; }
+        if (!strcmp(token, "angle") || !strcmp(token, "a"))
+          { Set_Vars_Coord_Type = DEFS->COORD_ANGLE; strcpy(Set_Vars_Coord_Label,"Angle [deg]"); strcpy(Set_Vars_Coord_Var,"A"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "hdiv")|| !strcmp(token, "divergence") || !strcmp(token, "xdiv") || !strcmp(token, "hd") || !strcmp(token, "dx"))
+          { Set_Vars_Coord_Type = DEFS->COORD_HDIV; strcpy(Set_Vars_Coord_Label,"Hor. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"hd"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "vdiv") || !strcmp(token, "ydiv") || !strcmp(token, "vd") || !strcmp(token, "dy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_VDIV; strcpy(Set_Vars_Coord_Label,"Vert. Divergence [deg]"); strcpy(Set_Vars_Coord_Var,"vd"); lmin = -5; lmax = 5; }
+        if (!strcmp(token, "theta") || !strcmp(token, "longitude") || !strcmp(token, "th"))
+          { Set_Vars_Coord_Type = DEFS->COORD_THETA; strcpy(Set_Vars_Coord_Label,"Longitude [deg]"); strcpy(Set_Vars_Coord_Var,"th"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "phi") || !strcmp(token, "lattitude") || !strcmp(token, "ph"))
+          { Set_Vars_Coord_Type = DEFS->COORD_PHI; strcpy(Set_Vars_Coord_Label,"Lattitude [deg]"); strcpy(Set_Vars_Coord_Var,"ph"); lmin = -180; lmax = 180; }
+        if (!strcmp(token, "ncounts") || !strcmp(token, "n"))
+          { Set_Vars_Coord_Type = DEFS->COORD_NCOUNT; strcpy(Set_Vars_Coord_Label,"Neutrons [1]"); strcpy(Set_Vars_Coord_Var,"n"); lmin = 0; lmax = 1e10; }
+        if (!strcmp(token, "user") || !strcmp(token, "user1") || !strcmp(token, "u1"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USER1; strncpy(Set_Vars_Coord_Label,Vars->UserName1,30); strcpy(Set_Vars_Coord_Var,"U1"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "user2") || !strcmp(token, "u2"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USER2; strncpy(Set_Vars_Coord_Label,Vars->UserName2,30); strcpy(Set_Vars_Coord_Var,"U2"); lmin = -1e10; lmax = 1e10; }
+        if (!strcmp(token, "user3") || !strcmp(token, "u3"))
+          { Set_Vars_Coord_Type = DEFS->COORD_USER3; strncpy(Set_Vars_Coord_Label,Vars->UserName3,30); strcpy(Set_Vars_Coord_Var,"U3"); lmin = -1e10; lmax = 1e10; }
 
         /* now stores variable keywords detected, if any */
-        if (mc_mn_Set_Vars_Coord_Type != mc_mn_DEFS->COORD_NONE)
+        if (Set_Vars_Coord_Type != DEFS->COORD_NONE)
         {
-          int mc_mn_Coord_Number = mc_mn_Vars->Coord_Number;
-          if (mc_mn_Vars->Flag_log) { mc_mn_Set_Vars_Coord_Type |= mc_mn_DEFS->COORD_LOG; mc_mn_Vars->Flag_log = 0; }
-          if (mc_mn_Flag_abs) { mc_mn_Set_Vars_Coord_Type |= mc_mn_DEFS->COORD_ABS; mc_mn_Flag_abs = 0; }
-          if (mc_mn_Flag_auto != 0) { mc_mn_Set_Vars_Coord_Type |= mc_mn_DEFS->COORD_AUTO; mc_mn_Flag_auto = 0; }
-          if (mc_mn_Set_Coord_Mode == mc_mn_DEFS->COORD_SIGNAL)
+          int Coord_Number = Vars->Coord_Number;
+          if (Vars->Flag_log) { Set_Vars_Coord_Type |= DEFS->COORD_LOG; Vars->Flag_log = 0; }
+          if (Flag_abs) { Set_Vars_Coord_Type |= DEFS->COORD_ABS; Flag_abs = 0; }
+          if (Flag_auto != 0) { Set_Vars_Coord_Type |= DEFS->COORD_AUTO; Flag_auto = 0; }
+          if (Set_Coord_Mode == DEFS->COORD_SIGNAL)
           {
-            mc_mn_Coord_Number = 0;
-            mc_mn_Vars->Flag_signal = mc_mn_Set_Vars_Coord_Type;
+            Coord_Number = 0;
+            Vars->Flag_signal = Set_Vars_Coord_Type;
           }
           else
           {
-            if (mc_mn_Coord_Number < MONnD_COORD_NMAX)
-            { mc_mn_Coord_Number++;
-              mc_mn_Vars->Coord_Number = mc_mn_Coord_Number; }
-            else if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", mc_mn_Vars->compcurname, MONnD_COORD_NMAX);
+            if (Coord_Number < MONnD_COORD_NMAX)
+            { Coord_Number++;
+              Vars->Coord_Number = Coord_Number; }
+            else if (Vars->Flag_Verbose) printf("Monitor_nD: %s reached max number of variables (%i).\n", Vars->compcurname, MONnD_COORD_NMAX);
           }
-          mc_mn_Vars->Coord_Type[mc_mn_Coord_Number] = mc_mn_Set_Vars_Coord_Type;
-          strncpy(mc_mn_Vars->Coord_Label[mc_mn_Coord_Number], mc_mn_Set_Vars_Coord_Label,30);
-          strncpy(mc_mn_Vars->Coord_Var[mc_mn_Coord_Number], mc_mn_Set_Vars_Coord_Var,30);
-          if (mc_mn_lmin > mc_mn_lmax) { mc_mn_XY = mc_mn_lmin; mc_mn_lmin=mc_mn_lmax; mc_mn_lmax = mc_mn_XY; }
-          mc_mn_Vars->Coord_Min[mc_mn_Coord_Number] = mc_mn_lmin;
-          mc_mn_Vars->Coord_Max[mc_mn_Coord_Number] = mc_mn_lmax;
-          if (mc_mn_Set_Coord_Mode != mc_mn_DEFS->COORD_SIGNAL) mc_mn_Vars->Coord_Bin[mc_mn_Coord_Number] = 20;
-          mc_mn_Set_Coord_Mode = mc_mn_DEFS->COORD_VAR;
-          mc_mn_Flag_All = 0;
-          mc_mn_Flag_No  = 0;
+          Vars->Coord_Type[Coord_Number] = Set_Vars_Coord_Type;
+          strncpy(Vars->Coord_Label[Coord_Number], Set_Vars_Coord_Label,30);
+          strncpy(Vars->Coord_Var[Coord_Number], Set_Vars_Coord_Var,30);
+          if (lmin > lmax) { XY = lmin; lmin=lmax; lmax = XY; }
+          Vars->Coord_Min[Coord_Number] = lmin;
+          Vars->Coord_Max[Coord_Number] = lmax;
+          if (Set_Coord_Mode != DEFS->COORD_SIGNAL) Vars->Coord_Bin[Coord_Number] = 20;
+          Set_Coord_Mode = DEFS->COORD_VAR;
+          Flag_All = 0;
+          Flag_No  = 0;
         } else {
           /* no variable name could be read from options */
-          if (!mc_mn_iskeyword) {
-            if (strcmp(mc_mn_token, "cm2") && strcmp(mc_mn_token, "incoming")
-             && strcmp(mc_mn_token, "outgoing") && strcmp(mc_mn_token, "cm2")
-             && strcmp(mc_mn_token, "cm^2") && strcmp(mc_mn_token, "float")
-             && strcmp(mc_mn_token, "double") && strcmp(mc_mn_token, "binary")
-             && strcmp(mc_mn_token, "steradian") && mc_mn_Vars->Flag_Verbose)
-              printf("Monitor_nD: %s: unknown '%s' keyword in 'options'. Ignoring.\n", mc_mn_Vars->compcurname, mc_mn_token);
+          if (!iskeyword) {
+            if (strcmp(token, "cm2") && strcmp(token, "incoming")
+             && strcmp(token, "outgoing") && strcmp(token, "cm2")
+             && strcmp(token, "cm^2") && strcmp(token, "float")
+             && strcmp(token, "double") && strcmp(token, "binary")
+             && strcmp(token, "steradian") && Vars->Flag_Verbose)
+              printf("Monitor_nD: %s: unknown '%s' keyword in 'options'. Ignoring.\n", Vars->compcurname, token);
           }
         }
-      mc_mn_carg++;
-      } /* end if mc_mn_token */
-    } /* end while mc_mn_carg */
-    free(mc_mn_option_copy);
-    if (mc_mn_carg == 128) printf("Monitor_nD: %s reached max number of tokens (%i). Skipping.\n", mc_mn_Vars->compcurname, 128);
+      carg++;
+      } /* end if token */
+    } /* end while carg */
+    free(option_copy);
+    if (carg == 128) printf("Monitor_nD: %s reached max number of tokens (%i). Skipping.\n", Vars->compcurname, 128);
 
-    if ((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX) && (fabs(mc_mn_Vars->mzmax - mc_mn_Vars->mzmin) == 0)) mc_mn_Vars->Flag_Shape = mc_mn_DEFS->SHAPE_SQUARE;
+    if ((Vars->Flag_Shape == DEFS->SHAPE_BOX) && (fabs(Vars->mzmax - Vars->mzmin) == 0)) Vars->Flag_Shape = DEFS->SHAPE_SQUARE;
 
-    if (mc_mn_Vars->Flag_log == 1) mc_mn_Vars->Coord_Type[0] |= mc_mn_DEFS->COORD_LOG;
-    if (mc_mn_Vars->Coord_Number == 0)
-    { mc_mn_Vars->Flag_Auto_Limits=0; mc_mn_Vars->Flag_Multiple=0; mc_mn_Vars->Flag_List=0; }
+    if (Vars->Flag_log == 1) Vars->Coord_Type[0] |= DEFS->COORD_LOG;
+    if (Vars->Coord_Number == 0)
+    { Vars->Flag_Auto_Limits=0; Vars->Flag_Multiple=0; Vars->Flag_List=0; }
 
     /* now setting Monitor Name from variable labels */
-    strcpy(mc_mn_Vars->Monitor_Label,"");
-    mc_mn_XY = 1; /* will contain total bin number */
-    for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+    strcpy(Vars->Monitor_Label,"");
+    XY = 1; /* will contain total bin number */
+    for (i = 0; i <= Vars->Coord_Number; i++)
     {
-      if (mc_mn_Flag_auto != 0) mc_mn_Vars->Coord_Type[mc_mn_i] |= mc_mn_DEFS->COORD_AUTO;
-      mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
-      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_X)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Y)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Z)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS))
-       strcpy(mc_mn_Short_Label[mc_mn_i],"Position");
+      if (Flag_auto != 0) Vars->Coord_Type[i] |= DEFS->COORD_AUTO;
+      Set_Vars_Coord_Type = (Vars->Coord_Type[i] & 31);
+      if ((Set_Vars_Coord_Type == DEFS->COORD_THETA)
+       || (Set_Vars_Coord_Type == DEFS->COORD_PHI)
+       || (Set_Vars_Coord_Type == DEFS->COORD_X)
+       || (Set_Vars_Coord_Type == DEFS->COORD_Y)
+       || (Set_Vars_Coord_Type == DEFS->COORD_Z)
+       || (Set_Vars_Coord_Type == DEFS->COORD_RADIUS))
+       strcpy(Short_Label[i],"Position");
       else
-      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VX)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VY)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VZ)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_V)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VXY))
-       strcpy(mc_mn_Short_Label[mc_mn_i],"Velocity");
+      if ((Set_Vars_Coord_Type == DEFS->COORD_VX)
+       || (Set_Vars_Coord_Type == DEFS->COORD_VY)
+       || (Set_Vars_Coord_Type == DEFS->COORD_VZ)
+       || (Set_Vars_Coord_Type == DEFS->COORD_V)
+       || (Set_Vars_Coord_Type == DEFS->COORD_VXY))
+       strcpy(Short_Label[i],"Velocity");
       else
-      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KX)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KY)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KZ)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KXY)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_K))
-       strcpy(mc_mn_Short_Label[mc_mn_i],"Wavevector");
+      if ((Set_Vars_Coord_Type == DEFS->COORD_KX)
+       || (Set_Vars_Coord_Type == DEFS->COORD_KY)
+       || (Set_Vars_Coord_Type == DEFS->COORD_KZ)
+       || (Set_Vars_Coord_Type == DEFS->COORD_KXY)
+       || (Set_Vars_Coord_Type == DEFS->COORD_K))
+       strcpy(Short_Label[i],"Wavevector");
       else
-      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SX)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SY)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SZ))
-       strcpy(mc_mn_Short_Label[mc_mn_i],"Spin");
+      if ((Set_Vars_Coord_Type == DEFS->COORD_SX)
+       || (Set_Vars_Coord_Type == DEFS->COORD_SY)
+       || (Set_Vars_Coord_Type == DEFS->COORD_SZ))
+       strcpy(Short_Label[i],"Spin");
       else
-      if ((mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV)
-       || (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE))
-       strcpy(mc_mn_Short_Label[mc_mn_i],"Divergence");
+      if ((Set_Vars_Coord_Type == DEFS->COORD_HDIV)
+       || (Set_Vars_Coord_Type == DEFS->COORD_VDIV)
+       || (Set_Vars_Coord_Type == DEFS->COORD_ANGLE))
+       strcpy(Short_Label[i],"Divergence");
       else
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ENERGY)
-       strcpy(mc_mn_Short_Label[mc_mn_i],"Energy");
+      if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY)
+       strcpy(Short_Label[i],"Energy");
       else
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_LAMBDA)
-       strcpy(mc_mn_Short_Label[mc_mn_i],"Wavelength");
+      if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA)
+       strcpy(Short_Label[i],"Wavelength");
       else
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_NCOUNT)
-       strcpy(mc_mn_Short_Label[mc_mn_i],"Neutron counts");
+      if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT)
+       strcpy(Short_Label[i],"Neutron counts");
       else
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_T)
-          strcpy(mc_mn_Short_Label[mc_mn_i],"Time Of Flight");
+      if (Set_Vars_Coord_Type == DEFS->COORD_T)
+          strcpy(Short_Label[i],"Time Of Flight");
       else
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_P)
-          strcpy(mc_mn_Short_Label[mc_mn_i],"Intensity");
+      if (Set_Vars_Coord_Type == DEFS->COORD_P)
+          strcpy(Short_Label[i],"Intensity");
       else
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1)
-          strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName1,30);
+      if (Set_Vars_Coord_Type == DEFS->COORD_USER1)
+          strncpy(Short_Label[i],Vars->UserName1,30);
       else
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2)
-          strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName2,30);
+      if (Set_Vars_Coord_Type == DEFS->COORD_USER2)
+          strncpy(Short_Label[i],Vars->UserName2,30);
       else
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER3)
-          strncpy(mc_mn_Short_Label[mc_mn_i],mc_mn_Vars->UserName3,30);
+      if (Set_Vars_Coord_Type == DEFS->COORD_USER3)
+          strncpy(Short_Label[i],Vars->UserName3,30);
       else
-          strcpy(mc_mn_Short_Label[mc_mn_i],"Unknown");
+          strcpy(Short_Label[i],"Unknown");
 
-      if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_ABS)
-      { strcat(mc_mn_Vars->Coord_Label[mc_mn_i]," (abs)"); }
+      if (Vars->Coord_Type[i] & DEFS->COORD_ABS)
+      { strcat(Vars->Coord_Label[i]," (abs)"); }
 
-      if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_LOG)
-      { strcat(mc_mn_Vars->Coord_Label[mc_mn_i]," (log)"); }
+      if (Vars->Coord_Type[i] & DEFS->COORD_LOG)
+      { strcat(Vars->Coord_Label[i]," (log)"); }
 
-      strcat(mc_mn_Vars->Monitor_Label, " ");
-      strcat(mc_mn_Vars->Monitor_Label, mc_mn_Short_Label[mc_mn_i]);
-      mc_mn_XY *= mc_mn_Vars->Coord_Bin[mc_mn_i];
-    } /* end for mc_mn_Short_Label */
+      strcat(Vars->Monitor_Label, " ");
+      strcat(Vars->Monitor_Label, Short_Label[i]);
+      XY *= Vars->Coord_Bin[i];
+    } /* end for Short_Label */
 
-    if ((mc_mn_Vars->Coord_Type[0] & 31) == mc_mn_DEFS->COORD_P) {
-      strncat(mc_mn_Vars->Coord_Label[0], " [n/s", 30);
-      if (mc_mn_Vars->Flag_per_cm2) strncat(mc_mn_Vars->Coord_Label[0], "/cm2", 30);
-      if (mc_mn_Vars->Flag_per_st) {
-        if (mc_mn_Vars->Flag_Auto_Limits)
-          strncat(mc_mn_Vars->Coord_Label[0], "/st", 30);
+    if ((Vars->Coord_Type[0] & 31) == DEFS->COORD_P) {
+      strncat(Vars->Coord_Label[0], " [n/s", 30);
+      if (Vars->Flag_per_cm2) strncat(Vars->Coord_Label[0], "/cm2", 30);
+      if (Vars->Flag_per_st) {
+        if (Vars->Flag_Auto_Limits)
+          strncat(Vars->Coord_Label[0], "/st", 30);
         else
           printf("Monitor_nD: %s: Flux per steradian requires Auto limits mode\n"
-                 "WARNING     use options='... auto ...'\n", mc_mn_Vars->compcurname);
+                 "WARNING     use options='... auto ...'\n", Vars->compcurname);
       }
-      if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number)
-        strncat(mc_mn_Vars->Coord_Label[0], "/bin", 30);
-      strncat(mc_mn_Vars->Coord_Label[0], "]", 30);
+      if (XY > 1 && Vars->Coord_Number)
+        strncat(Vars->Coord_Label[0], "/bin", 30);
+      strncat(Vars->Coord_Label[0], "]", 30);
     }
 
     /* update label 'signal per bin' if more than 1 bin */
-    if (mc_mn_XY > 1 && mc_mn_Vars->Coord_Number) {
-      if (mc_mn_Vars->Flag_capture)
+    if (XY > 1 && Vars->Coord_Number) {
+      if (Vars->Flag_capture)
         printf("Monitor_nD: %s: Using capture flux weightening on %ld bins.\n"
-               "WARNING     Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", mc_mn_Vars->compcurname, (long)mc_mn_XY);
+               "WARNING     Use binned data with caution, and prefer monitor integral value (I,Ierr).\n", Vars->compcurname, (long)XY);
     }
 
-    strcat(mc_mn_Vars->Monitor_Label, " Monitor");
-    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SQUARE) strcat(mc_mn_Vars->Monitor_Label, " (Square)");
-    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_DISK)   strcat(mc_mn_Vars->Monitor_Label, " (Disk)");
-    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) strcat(mc_mn_Vars->Monitor_Label, " (Sphere)");
-    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) strcat(mc_mn_Vars->Monitor_Label, " (Cylinder)");
-    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) strcat(mc_mn_Vars->Monitor_Label, " (Banana)");
-    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX)    strcat(mc_mn_Vars->Monitor_Label, " (Box)");
-    if (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_PREVIOUS) strcat(mc_mn_Vars->Monitor_Label, " (on PREVIOUS)");
-    if ((mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_CYLIND) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BANANA) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_SPHERE) || (mc_mn_Vars->Flag_Shape == mc_mn_DEFS->SHAPE_BOX))
+    strcat(Vars->Monitor_Label, " Monitor");
+    if (Vars->Flag_Shape == DEFS->SHAPE_SQUARE) strcat(Vars->Monitor_Label, " (Square)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_DISK)   strcat(Vars->Monitor_Label, " (Disk)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_SPHERE) strcat(Vars->Monitor_Label, " (Sphere)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_CYLIND) strcat(Vars->Monitor_Label, " (Cylinder)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_BANANA) strcat(Vars->Monitor_Label, " (Banana)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_BOX)    strcat(Vars->Monitor_Label, " (Box)");
+    if (Vars->Flag_Shape == DEFS->SHAPE_PREVIOUS) strcat(Vars->Monitor_Label, " (on PREVIOUS)");
+    if ((Vars->Flag_Shape == DEFS->SHAPE_CYLIND) || (Vars->Flag_Shape == DEFS->SHAPE_BANANA) || (Vars->Flag_Shape == DEFS->SHAPE_SPHERE) || (Vars->Flag_Shape == DEFS->SHAPE_BOX))
     {
-      if (strstr(mc_mn_Vars->option, "incoming"))
+      if (strstr(Vars->option, "incoming"))
       {
-        mc_mn_Vars->Flag_Shape = abs(mc_mn_Vars->Flag_Shape);
-        strcat(mc_mn_Vars->Monitor_Label, " [in]");
+        Vars->Flag_Shape = abs(Vars->Flag_Shape);
+        strcat(Vars->Monitor_Label, " [in]");
       }
-      else /* if strstr(mc_mn_Vars->option, "outgoing")) */
+      else /* if strstr(Vars->option, "outgoing")) */
       {
-        mc_mn_Vars->Flag_Shape = -abs(mc_mn_Vars->Flag_Shape);
-        strcat(mc_mn_Vars->Monitor_Label, " [out]");
+        Vars->Flag_Shape = -abs(Vars->Flag_Shape);
+        strcat(Vars->Monitor_Label, " [out]");
       }
     }
-    if (mc_mn_Vars->Flag_UsePreMonitor == 1)
+    if (Vars->Flag_UsePreMonitor == 1)
     {
-        strcat(mc_mn_Vars->Monitor_Label, " at ");
-        strncat(mc_mn_Vars->Monitor_Label, mc_mn_Vars->UserName1,30);
+        strcat(Vars->Monitor_Label, " at ");
+        strncat(Vars->Monitor_Label, Vars->UserName1,30);
     }
-    if (mc_mn_Vars->Flag_log == 1) strcat(mc_mn_Vars->Monitor_Label, " [log] ");
+    if (Vars->Flag_log == 1) strcat(Vars->Monitor_Label, " [log] ");
 
     /* now allocate memory to store variables in TRACE */
     
-    /* mc_mn_Vars->Coord_Number  0   : intensity or signal
-     * mc_mn_Vars->Coord_Number  1:n : detector variables */
+    /* Vars->Coord_Number  0   : intensity or signal
+     * Vars->Coord_Number  1:n : detector variables */
      
-    if ((mc_mn_Vars->Coord_Number != 2) && !mc_mn_Vars->Flag_Multiple && !mc_mn_Vars->Flag_List)
-    { mc_mn_Vars->Flag_Multiple = 1; mc_mn_Vars->Flag_List = 0; } /* default is n1D */
+    if ((Vars->Coord_Number != 2) && !Vars->Flag_Multiple && !Vars->Flag_List)
+    { Vars->Flag_Multiple = 1; Vars->Flag_List = 0; } /* default is n1D */
 
-    /* list and auto limits case : mc_mn_Vars->Flag_List or mc_mn_Vars->Flag_Auto_Limits
-     * -> Buffer to flush and suppress after mc_mn_Vars->Flag_Auto_Limits
+    /* list and auto limits case : Vars->Flag_List or Vars->Flag_Auto_Limits
+     * -> Buffer to flush and suppress after Vars->Flag_Auto_Limits
      */
-    if ((mc_mn_Vars->Flag_Auto_Limits || mc_mn_Vars->Flag_List) && mc_mn_Vars->Coord_Number)
-    { /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, dp) */
-      mc_mn_Vars->Mon2D_Buffer = (double *)malloc((mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block*sizeof(double));
-      if (mc_mn_Vars->Mon2D_Buffer == NULL)
-      { printf("Monitor_nD: %s cannot allocate Vars->Mon2D_Buffer (%li). No list and auto limits.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Buffer_Block*(mc_mn_Vars->Coord_Number+1)*sizeof(double)); mc_mn_Vars->Flag_List = 0; mc_mn_Vars->Flag_Auto_Limits = 0; }
+    if ((Vars->Flag_Auto_Limits || Vars->Flag_List) && Vars->Coord_Number)
+    { /* Dim : (Vars->Coord_Number+1)*Vars->Buffer_Block matrix (for p, dp) */
+      Vars->Mon2D_Buffer = (double *)malloc((Vars->Coord_Number+1)*Vars->Buffer_Block*sizeof(double));
+      if (Vars->Mon2D_Buffer == NULL)
+      { printf("Monitor_nD: %s cannot allocate Vars->Mon2D_Buffer (%li). No list and auto limits.\n", Vars->compcurname, Vars->Buffer_Block*(Vars->Coord_Number+1)*sizeof(double)); Vars->Flag_List = 0; Vars->Flag_Auto_Limits = 0; }
       else
       {
-        for (mc_mn_i=0; mc_mn_i < (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block; mc_mn_Vars->Mon2D_Buffer[mc_mn_i++] = (double)0);
+        for (i=0; i < (Vars->Coord_Number+1)*Vars->Buffer_Block; Vars->Mon2D_Buffer[i++] = (double)0);
       }
-      mc_mn_Vars->Buffer_Size = mc_mn_Vars->Buffer_Block;
+      Vars->Buffer_Size = Vars->Buffer_Block;
     }
 
-    /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
-    if (mc_mn_Vars->Flag_Multiple && mc_mn_Vars->Coord_Number)
-    { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors */
-      mc_mn_Vars->Mon2D_N  = (double **)malloc((mc_mn_Vars->Coord_Number)*sizeof(double *));
-      mc_mn_Vars->Mon2D_p  = (double **)malloc((mc_mn_Vars->Coord_Number)*sizeof(double *));
-      mc_mn_Vars->Mon2D_p2 = (double **)malloc((mc_mn_Vars->Coord_Number)*sizeof(double *));
-      if ((mc_mn_Vars->Mon2D_N == NULL) || (mc_mn_Vars->Mon2D_p == NULL) || (mc_mn_Vars->Mon2D_p2 == NULL))
-      { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate Vars->Mon2D_N/p/p2 (%li). Fatal.\n", mc_mn_Vars->compcurname, (mc_mn_Vars->Coord_Number)*sizeof(double *)); exit(-1); }
-      for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+    /* 1D and n1D case : Vars->Flag_Multiple */
+    if (Vars->Flag_Multiple && Vars->Coord_Number)
+    { /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors */
+      Vars->Mon2D_N  = (double **)malloc((Vars->Coord_Number)*sizeof(double *));
+      Vars->Mon2D_p  = (double **)malloc((Vars->Coord_Number)*sizeof(double *));
+      Vars->Mon2D_p2 = (double **)malloc((Vars->Coord_Number)*sizeof(double *));
+      if ((Vars->Mon2D_N == NULL) || (Vars->Mon2D_p == NULL) || (Vars->Mon2D_p2 == NULL))
+      { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate Vars->Mon2D_N/p/p2 (%li). Fatal.\n", Vars->compcurname, (Vars->Coord_Number)*sizeof(double *)); exit(-1); }
+      for (i= 1; i <= Vars->Coord_Number; i++)
       {
-        mc_mn_Vars->Mon2D_N[mc_mn_i-1]  = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i]*sizeof(double));
-        mc_mn_Vars->Mon2D_p[mc_mn_i-1]  = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i]*sizeof(double));
-        mc_mn_Vars->Mon2D_p2[mc_mn_i-1] = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i]*sizeof(double));
-        if ((mc_mn_Vars->Mon2D_N == NULL) || (mc_mn_Vars->Mon2D_p == NULL) || (mc_mn_Vars->Mon2D_p2 == NULL))
-        { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[mc_mn_i], mc_mn_i, (mc_mn_Vars->Coord_Bin[mc_mn_i])*sizeof(double *)); exit(-1); }
+        Vars->Mon2D_N[i-1]  = (double *)malloc(Vars->Coord_Bin[i]*sizeof(double));
+        Vars->Mon2D_p[i-1]  = (double *)malloc(Vars->Coord_Bin[i]*sizeof(double));
+        Vars->Mon2D_p2[i-1] = (double *)malloc(Vars->Coord_Bin[i]*sizeof(double));
+        if ((Vars->Mon2D_N == NULL) || (Vars->Mon2D_p == NULL) || (Vars->Mon2D_p2 == NULL))
+        { fprintf(stderr,"Monitor_nD: %s n1D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[i], i, (Vars->Coord_Bin[i])*sizeof(double *)); exit(-1); }
         else
         {
-          for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i]; mc_mn_j++ )
-          { mc_mn_Vars->Mon2D_N[mc_mn_i-1][mc_mn_j] = (double)0; mc_mn_Vars->Mon2D_p[mc_mn_i-1][mc_mn_j] = (double)0; mc_mn_Vars->Mon2D_p2[mc_mn_i-1][mc_mn_j] = (double)0; }
+          for (j=0; j < Vars->Coord_Bin[i]; j++ )
+          { Vars->Mon2D_N[i-1][j] = (double)0; Vars->Mon2D_p[i-1][j] = (double)0; Vars->Mon2D_p2[i-1][j] = (double)0; }
         }
       }
     }
-    else /* 2D case : mc_mn_Vars->Coord_Number==2 and !mc_mn_Vars->Flag_Multiple and !mc_mn_Vars->Flag_List */
-    if ((mc_mn_Vars->Coord_Number == 2) && !mc_mn_Vars->Flag_Multiple)
-    { /* Dim : mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2] matrix */
-      mc_mn_Vars->Mon2D_N  = (double **)malloc((mc_mn_Vars->Coord_Bin[1])*sizeof(double *));
-      mc_mn_Vars->Mon2D_p  = (double **)malloc((mc_mn_Vars->Coord_Bin[1])*sizeof(double *));
-      mc_mn_Vars->Mon2D_p2 = (double **)malloc((mc_mn_Vars->Coord_Bin[1])*sizeof(double *));
-      if ((mc_mn_Vars->Mon2D_N == NULL) || (mc_mn_Vars->Mon2D_p == NULL) || (mc_mn_Vars->Mon2D_p2 == NULL))
-      { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2 (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[1], (mc_mn_Vars->Coord_Bin[1])*sizeof(double *)); exit(-1); }
-      for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Bin[1]; mc_mn_i++)
+    else /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
+    if ((Vars->Coord_Number == 2) && !Vars->Flag_Multiple)
+    { /* Dim : Vars->Coord_Bin[1]*Vars->Coord_Bin[2] matrix */
+      Vars->Mon2D_N  = (double **)malloc((Vars->Coord_Bin[1])*sizeof(double *));
+      Vars->Mon2D_p  = (double **)malloc((Vars->Coord_Bin[1])*sizeof(double *));
+      Vars->Mon2D_p2 = (double **)malloc((Vars->Coord_Bin[1])*sizeof(double *));
+      if ((Vars->Mon2D_N == NULL) || (Vars->Mon2D_p == NULL) || (Vars->Mon2D_p2 == NULL))
+      { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2 (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[1], (Vars->Coord_Bin[1])*sizeof(double *)); exit(-1); }
+      for (i= 0; i < Vars->Coord_Bin[1]; i++)
       {
-        mc_mn_Vars->Mon2D_N[mc_mn_i]  = (double *)malloc(mc_mn_Vars->Coord_Bin[2]*sizeof(double));
-        mc_mn_Vars->Mon2D_p[mc_mn_i]  = (double *)malloc(mc_mn_Vars->Coord_Bin[2]*sizeof(double));
-        mc_mn_Vars->Mon2D_p2[mc_mn_i] = (double *)malloc(mc_mn_Vars->Coord_Bin[2]*sizeof(double));
-        if ((mc_mn_Vars->Mon2D_N == NULL) || (mc_mn_Vars->Mon2D_p == NULL) || (mc_mn_Vars->Mon2D_p2 == NULL))
-        { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Var[1], mc_mn_i, (mc_mn_Vars->Coord_Bin[2])*sizeof(double *)); exit(-1); }
+        Vars->Mon2D_N[i]  = (double *)malloc(Vars->Coord_Bin[2]*sizeof(double));
+        Vars->Mon2D_p[i]  = (double *)malloc(Vars->Coord_Bin[2]*sizeof(double));
+        Vars->Mon2D_p2[i] = (double *)malloc(Vars->Coord_Bin[2]*sizeof(double));
+        if ((Vars->Mon2D_N == NULL) || (Vars->Mon2D_p == NULL) || (Vars->Mon2D_p2 == NULL))
+        { fprintf(stderr,"Monitor_nD: %s 2D cannot allocate %s Vars->Mon2D_N/p/p2[%li] (%li). Fatal.\n", Vars->compcurname, Vars->Coord_Var[1], i, (Vars->Coord_Bin[2])*sizeof(double *)); exit(-1); }
         else
         {
-          for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[2]; mc_mn_j++ )
-          { mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j] = (double)0; mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j] = (double)0; mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j] = (double)0; }
+          for (j=0; j < Vars->Coord_Bin[2]; j++ )
+          { Vars->Mon2D_N[i][j] = (double)0; Vars->Mon2D_p[i][j] = (double)0; Vars->Mon2D_p2[i][j] = (double)0; }
         }
       }
     }
       /* no Mon2D allocated for
-       * (mc_mn_Vars->Coord_Number != 2) && !mc_mn_Vars->Flag_Multiple && mc_mn_Vars->Flag_List */
+       * (Vars->Coord_Number != 2) && !Vars->Flag_Multiple && Vars->Flag_List */
 
-    mc_mn_Vars->psum  = 0;
-    mc_mn_Vars->p2sum = 0;
-    mc_mn_Vars->Nsum  = 0;
+    Vars->psum  = 0;
+    Vars->p2sum = 0;
+    Vars->Nsum  = 0;
 
-    mc_mn_Vars->area  = fabs(mc_mn_Vars->mxmax - mc_mn_Vars->mxmin)*fabs(mc_mn_Vars->mymax - mc_mn_Vars->mymin)*1E4; /* in cm**2 for square and box shapes */
-    mc_mn_Vars->Sphere_Radius = fabs(mc_mn_Vars->mxmax - mc_mn_Vars->mxmin)/2;
-    if ((abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_DISK) || (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE))
+    Vars->area  = fabs(Vars->mxmax - Vars->mxmin)*fabs(Vars->mymax - Vars->mymin)*1E4; /* in cm**2 for square and box shapes */
+    Vars->Sphere_Radius = fabs(Vars->mxmax - Vars->mxmin)/2;
+    if ((abs(Vars->Flag_Shape) == DEFS->SHAPE_DISK) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE))
     {
-      mc_mn_Vars->area = PI*mc_mn_Vars->Sphere_Radius*mc_mn_Vars->Sphere_Radius; /* disk shapes */
+      Vars->area = PI*Vars->Sphere_Radius*Vars->Sphere_Radius; /* disk shapes */
     }
-    if (mc_mn_Vars->area == 0 && abs(mc_mn_Vars->Flag_Shape) != mc_mn_DEFS->SHAPE_PREVIOUS) 
-      mc_mn_Vars->Coord_Number = 0;
-    if (mc_mn_Vars->Coord_Number == 0 && mc_mn_Vars->Flag_Verbose)
-      printf("Monitor_nD: %s is unactivated (0D)\n", mc_mn_Vars->compcurname);
-    mc_mn_Vars->Cylinder_Height = fabs(mc_mn_Vars->mymax - mc_mn_Vars->mymin);
+    if (Vars->area == 0 && abs(Vars->Flag_Shape) != DEFS->SHAPE_PREVIOUS) 
+      Vars->Coord_Number = 0;
+    if (Vars->Coord_Number == 0 && Vars->Flag_Verbose)
+      printf("Monitor_nD: %s is unactivated (0D)\n", Vars->compcurname);
+    Vars->Cylinder_Height = fabs(Vars->mymax - Vars->mymin);
 
-    if (mc_mn_Vars->Flag_Verbose)
+    if (Vars->Flag_Verbose)
     {
-      printf("Monitor_nD: %s is a %s.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Monitor_Label);
-      printf("Monitor_nD: version %s with options=%s\n", MONITOR_ND_LIB_H, mc_mn_Vars->option);
+      printf("Monitor_nD: %s is a %s.\n", Vars->compcurname, Vars->Monitor_Label);
+      printf("Monitor_nD: version %s with options=%s\n", MONITOR_ND_LIB_H, Vars->option);
     }
   } /* end Monitor_nD_Init */
 
@@ -819,689 +820,689 @@ void Monitor_nD_Init(MonitornD_Defines_type *mc_mn_DEFS,
 /* Monitor_nD_Trace: this routine is used to monitor one propagating neutron */
 /* ========================================================================= */
 
-double Monitor_nD_Trace(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_type *mc_mn_Vars)
+double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
 {
 
-  double  mc_mn_XY=0;
-  long    mc_mn_i,mc_mn_j;
-  double  mc_mn_pp;
-  double  mc_mn_Coord[MONnD_COORD_NMAX];
-  long    mc_mn_Coord_Index[MONnD_COORD_NMAX];
-  char    mc_mn_While_End   =0;
-  long    mc_mn_While_Buffer=0;
-  char    mc_mn_Set_Vars_Coord_Type = mc_mn_DEFS->COORD_NONE;
+  double  XY=0;
+  long    i,j;
+  double  pp;
+  double  Coord[MONnD_COORD_NMAX];
+  long    Coord_Index[MONnD_COORD_NMAX];
+  char    While_End   =0;
+  long    While_Buffer=0;
+  char    Set_Vars_Coord_Type = DEFS->COORD_NONE;
 
-  /* mc_mn_Vars->Flag_Auto_Limits: we read the Buffer, and determine min and max bounds */
-  if ((mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_Auto_Limits == 1) && (mc_mn_Vars->Coord_Number > 0))
+  /* Vars->Flag_Auto_Limits: we read the Buffer, and determine min and max bounds */
+  if ((Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_Auto_Limits == 1) && (Vars->Coord_Number > 0))
   {
     /* auto limits case : get limits in Buffer for each variable */
-          /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, dp) */
-    if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Number, mc_mn_Vars->Buffer_Counter);
-    for (mc_mn_i = 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+          /* Dim : (Vars->Coord_Number+1)*Vars->Buffer_Block matrix (for p, dp) */
+    if (Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
+    for (i = 1; i <= Vars->Coord_Number; i++)
     {
-      if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_AUTO)
+      if (Vars->Coord_Type[i] & DEFS->COORD_AUTO)
       {
-        mc_mn_Vars->Coord_Min[mc_mn_i] = FLT_MAX;
-        mc_mn_Vars->Coord_Max[mc_mn_i] = -FLT_MAX;
-        for (mc_mn_j = 0; mc_mn_j < mc_mn_Vars->Buffer_Block; mc_mn_j++)
+        Vars->Coord_Min[i] = FLT_MAX;
+        Vars->Coord_Max[i] = -FLT_MAX;
+        for (j = 0; j < Vars->Buffer_Block; j++)
         {
-          mc_mn_XY = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_j*(mc_mn_Vars->Coord_Number+1)];  /* scanning variables in Buffer */
-          if (mc_mn_XY < mc_mn_Vars->Coord_Min[mc_mn_i]) mc_mn_Vars->Coord_Min[mc_mn_i] = mc_mn_XY;
-          if (mc_mn_XY > mc_mn_Vars->Coord_Max[mc_mn_i]) mc_mn_Vars->Coord_Max[mc_mn_i] = mc_mn_XY;
+          XY = Vars->Mon2D_Buffer[i+j*(Vars->Coord_Number+1)];  /* scanning variables in Buffer */
+          if (XY < Vars->Coord_Min[i]) Vars->Coord_Min[i] = XY;
+          if (XY > Vars->Coord_Max[i]) Vars->Coord_Max[i] = XY;
         }
       }
     }
-    mc_mn_Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new venets to store in histograms) */
+    Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new venets to store in histograms) */
   }
 
   /* manage realloc for 'list all' if Buffer size exceeded: flush Buffer to file */
-  if ((mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_List >= 2))
+  if ((Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List >= 2))
   {
-    if (mc_mn_Vars->Buffer_Size >= 20000 || mc_mn_Vars->Flag_List == 3)
+    if (Vars->Buffer_Size >= 20000 || Vars->Flag_List == 3)
     { /* save current (possibly append) and re-use Buffer */
-      Monitor_nD_Save(mc_mn_DEFS, mc_mn_Vars);
-      mc_mn_Vars->Flag_List = 3;
-      mc_mn_Vars->Buffer_Block = mc_mn_Vars->Buffer_Size;
-      mc_mn_Vars->Buffer_Counter  = 0;
-      mc_mn_Vars->Neutron_Counter = 0;
+      Monitor_nD_Save(DEFS, Vars);
+      Vars->Flag_List = 3;
+      Vars->Buffer_Block = Vars->Buffer_Size;
+      Vars->Buffer_Counter  = 0;
+      Vars->Neutron_Counter = 0;
     }
     else
     {
-      mc_mn_Vars->Mon2D_Buffer  = (double *)realloc(mc_mn_Vars->Mon2D_Buffer, (mc_mn_Vars->Coord_Number+1)*(mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double));
-      if (mc_mn_Vars->Mon2D_Buffer == NULL)
-            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", mc_mn_Vars->compcurname, mc_mn_i, (mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block)*sizeof(double)); mc_mn_Vars->Flag_List = 1; }
-      else { mc_mn_Vars->Buffer_Counter = 0; mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter+mc_mn_Vars->Buffer_Block; }
+      Vars->Mon2D_Buffer  = (double *)realloc(Vars->Mon2D_Buffer, (Vars->Coord_Number+1)*(Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double));
+      if (Vars->Mon2D_Buffer == NULL)
+            { printf("Monitor_nD: %s cannot reallocate Vars->Mon2D_Buffer[%li] (%li). Skipping.\n", Vars->compcurname, i, (Vars->Neutron_Counter+Vars->Buffer_Block)*sizeof(double)); Vars->Flag_List = 1; }
+      else { Vars->Buffer_Counter = 0; Vars->Buffer_Size = Vars->Neutron_Counter+Vars->Buffer_Block; }
     }
   }
 
-  while (!mc_mn_While_End)
+  while (!While_End)
   { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) or passing neutron */
-    if ((mc_mn_Vars->Flag_Auto_Limits == 2) && (mc_mn_Vars->Coord_Number > 0))
+    if ((Vars->Flag_Auto_Limits == 2) && (Vars->Coord_Number > 0))
     { /* Vars->Flag_Auto_Limits == 2: read back from Buffer (Buffer is filled or auto limits have been computed) */
-      if (mc_mn_While_Buffer < mc_mn_Vars->Buffer_Block)
+      if (While_Buffer < Vars->Buffer_Block)
       {
-        /* first while loops (mc_mn_While_Buffer) */
+        /* first while loops (While_Buffer) */
         /* auto limits case : scan Buffer within limits and store in Mon2D */
-        mc_mn_pp = mc_mn_Vars->Mon2D_Buffer[mc_mn_While_Buffer*(mc_mn_Vars->Coord_Number+1)];
+        pp = Vars->Mon2D_Buffer[While_Buffer*(Vars->Coord_Number+1)];
         /* For some reason the Intel c compiler version 10.1 gives 0 counts with Monitor_nD!
            An ugly patch seems to be the following printf */
         printf("");
-        mc_mn_Coord[0] = mc_mn_pp;
+        Coord[0] = pp;
 
-        for (mc_mn_i = 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+        for (i = 1; i <= Vars->Coord_Number; i++)
         {
           /* scanning variables in Buffer */
-          mc_mn_XY = (mc_mn_Vars->Coord_Max[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i]);
+          XY = (Vars->Coord_Max[i]-Vars->Coord_Min[i]);
 
-          mc_mn_Coord[mc_mn_i] = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_While_Buffer*(mc_mn_Vars->Coord_Number+1)];
-          if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY);
-          else mc_mn_Coord_Index[mc_mn_i] = 0;
-          if (mc_mn_Vars->Flag_With_Borders)
+          Coord[i] = Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)];
+          if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars->Coord_Min[i])*Vars->Coord_Bin[i]/XY);
+          else Coord_Index[i] = 0;
+          if (Vars->Flag_With_Borders)
           {
-            if (mc_mn_Coord_Index[mc_mn_i] < 0) mc_mn_Coord_Index[mc_mn_i] = 0;
-            if (mc_mn_Coord_Index[mc_mn_i] >= mc_mn_Vars->Coord_Bin[mc_mn_i]) mc_mn_Coord_Index[mc_mn_i] = mc_mn_Vars->Coord_Bin[mc_mn_i] - 1;
+            if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+            if (Coord_Index[i] >= Vars->Coord_Bin[i]) Coord_Index[i] = Vars->Coord_Bin[i] - 1;
           }
         } /* end for */
-        mc_mn_While_Buffer++;
+        While_Buffer++;
       } /* end if in Buffer */
-      else /* (mc_mn_While_Buffer >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_Auto_Limits == 2) */
+      else /* (While_Buffer >= Vars->Buffer_Block) && (Vars->Flag_Auto_Limits == 2) */
       {
-        mc_mn_Vars->Flag_Auto_Limits = 0;
-        if (!mc_mn_Vars->Flag_List) /* free Buffer not needed anymore (no list to output) */
-        { /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, p2) */
-          free(mc_mn_Vars->Mon2D_Buffer); mc_mn_Vars->Mon2D_Buffer = NULL;
+        Vars->Flag_Auto_Limits = 0;
+        if (!Vars->Flag_List) /* free Buffer not needed anymore (no list to output) */
+        { /* Dim : (Vars->Coord_Number+1)*Vars->Buffer_Block matrix (for p, p2) */
+          free(Vars->Mon2D_Buffer); Vars->Mon2D_Buffer = NULL;
         }
       }
     }
     else /* Vars->Flag_Auto_Limits == 0 (no auto limits/list) or 1 (store events into Buffer) */
     {
       /* automatically compute area and steradian solid angle when in AUTO mode */
-      if (mc_mn_Vars->Flag_Auto_Limits==1) {
+      if (Vars->Flag_Auto_Limits==1) {
         double v;
-        v=sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx
-              +mc_mn_Vars->cvy*mc_mn_Vars->cvy
-              +mc_mn_Vars->cvz*mc_mn_Vars->cvz);
-        if (mc_mn_Vars->min_x > mc_mn_Vars->cx) mc_mn_Vars->min_x = mc_mn_Vars->cx;
-        if (mc_mn_Vars->max_x < mc_mn_Vars->cx) mc_mn_Vars->max_x = mc_mn_Vars->cx;
-        if (mc_mn_Vars->min_y > mc_mn_Vars->cy) mc_mn_Vars->min_y = mc_mn_Vars->cy;
-        if (mc_mn_Vars->max_y < mc_mn_Vars->cy) mc_mn_Vars->max_y = mc_mn_Vars->cy;
-        mc_mn_Vars->mean_p  += mc_mn_Vars->cp;
+        v=sqrt(Vars->cvx*Vars->cvx
+              +Vars->cvy*Vars->cvy
+              +Vars->cvz*Vars->cvz);
+        if (Vars->min_x > Vars->cx) Vars->min_x = Vars->cx;
+        if (Vars->max_x < Vars->cx) Vars->max_x = Vars->cx;
+        if (Vars->min_y > Vars->cy) Vars->min_y = Vars->cy;
+        if (Vars->max_y < Vars->cy) Vars->max_y = Vars->cy;
+        Vars->mean_p  += Vars->cp;
         if (v) {
-          mc_mn_Vars->mean_dx += mc_mn_Vars->cp*fabs(mc_mn_Vars->cvx/v);
-          mc_mn_Vars->mean_dy += mc_mn_Vars->cp*fabs(mc_mn_Vars->cvy/v);
+          Vars->mean_dx += Vars->cp*fabs(Vars->cvx/v);
+          Vars->mean_dy += Vars->cp*fabs(Vars->cvy/v);
         }
-        mc_mn_Vars->area =(mc_mn_Vars->max_x-mc_mn_Vars->min_x)
-                         *(mc_mn_Vars->max_y-mc_mn_Vars->min_y)*1E4; /* cm2 */
-        if (mc_mn_Vars->Flag_per_st)
-        mc_mn_Vars->steradian = 2*fabs(2*atan(mc_mn_Vars->mean_dx/mc_mn_Vars->mean_p)
-                                  *sin(2*atan(mc_mn_Vars->mean_dy/mc_mn_Vars->mean_p)/2));
+        Vars->area =(Vars->max_x-Vars->min_x)
+                         *(Vars->max_y-Vars->min_y)*1E4; /* cm2 */
+        if (Vars->Flag_per_st)
+        Vars->steradian = 2*fabs(2*atan(Vars->mean_dx/Vars->mean_p)
+                                  *sin(2*atan(Vars->mean_dy/Vars->mean_p)/2));
       }
         
-      for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+      for (i = 0; i <= Vars->Coord_Number; i++)
       { /* handle current neutron : last while */
-        mc_mn_XY = 0;
-        mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
+        XY = 0;
+        Set_Vars_Coord_Type = (Vars->Coord_Type[i] & 31);
         /* get values for variables to monitor */
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_X) mc_mn_XY = mc_mn_Vars->cx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_X) XY = Vars->cx;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Y) mc_mn_XY = mc_mn_Vars->cy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_Y) XY = Vars->cy;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_Z) mc_mn_XY = mc_mn_Vars->cz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_Z) XY = Vars->cz;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VX) mc_mn_XY = mc_mn_Vars->cvx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VX) XY = Vars->cvx;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VY) mc_mn_XY = mc_mn_Vars->cvy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VY) XY = Vars->cvy;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VZ) mc_mn_XY = mc_mn_Vars->cvz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_VZ) XY = Vars->cvz;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KX) mc_mn_XY = V2K*mc_mn_Vars->cvx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KX) XY = V2K*Vars->cvx;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KY) mc_mn_XY = V2K*mc_mn_Vars->cvy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KY) XY = V2K*Vars->cvy;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KZ) mc_mn_XY = V2K*mc_mn_Vars->cvz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_KZ) XY = V2K*Vars->cvz;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SX) mc_mn_XY = mc_mn_Vars->csx;
+        if (Set_Vars_Coord_Type == DEFS->COORD_SX) XY = Vars->csx;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SY) mc_mn_XY = mc_mn_Vars->csy;
+        if (Set_Vars_Coord_Type == DEFS->COORD_SY) XY = Vars->csy;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_SZ) mc_mn_XY = mc_mn_Vars->csz;
+        if (Set_Vars_Coord_Type == DEFS->COORD_SZ) XY = Vars->csz;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_T) mc_mn_XY = mc_mn_Vars->ct;
+        if (Set_Vars_Coord_Type == DEFS->COORD_T) XY = Vars->ct;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_P) mc_mn_XY = mc_mn_Vars->cp;
+        if (Set_Vars_Coord_Type == DEFS->COORD_P) XY = Vars->cp;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cvx,mc_mn_Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_HDIV) XY = RAD2DEG*atan2(Vars->cvx,Vars->cvz);
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cvy,mc_mn_Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VDIV) XY = RAD2DEG*atan2(Vars->cvy,Vars->cvz);
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_V) mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);
+        if (Set_Vars_Coord_Type == DEFS->COORD_V) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS) mc_mn_XY = sqrt(mc_mn_Vars->cx*mc_mn_Vars->cx+mc_mn_Vars->cy*mc_mn_Vars->cy);
+        if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS) XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy);
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VXY) mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy);
+        if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_K) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);  mc_mn_XY *= V2K; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_K) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; }
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_KXY) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy);  mc_mn_XY *= V2K; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_KXY) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);  XY *= V2K; }
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ENERGY) { mc_mn_XY = mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz;  mc_mn_XY *= VS2E; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY) { XY = Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz;  XY *= VS2E; }
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_LAMBDA) { mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy+mc_mn_Vars->cvz*mc_mn_Vars->cvz);  mc_mn_XY *= V2K; if (mc_mn_XY != 0) mc_mn_XY = 2*PI/mc_mn_XY; }
+        if (Set_Vars_Coord_Type == DEFS->COORD_LAMBDA) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; if (XY != 0) XY = 2*PI/XY; }
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_NCOUNT) mc_mn_XY = mc_mn_Coord[mc_mn_i]+1;
+        if (Set_Vars_Coord_Type == DEFS->COORD_NCOUNT) XY = Coord[i]+1;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE)
-        {  mc_mn_XY = sqrt(mc_mn_Vars->cvx*mc_mn_Vars->cvx+mc_mn_Vars->cvy*mc_mn_Vars->cvy);
-           if (mc_mn_Vars->cvz != 0)
+        if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
+        {  XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
+           if (Vars->cvz != 0)
            {
-             mc_mn_XY= RAD2DEG*atan2(mc_mn_XY,mc_mn_Vars->cvz);
-           } else mc_mn_XY = 0;
+             XY= RAD2DEG*atan2(XY,Vars->cvz);
+           } else XY = 0;
         }
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)  { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*atan2(mc_mn_Vars->cx,mc_mn_Vars->cz); }
+        if (Set_Vars_Coord_Type == DEFS->COORD_THETA)  { if (Vars->cz != 0) XY = RAD2DEG*atan2(Vars->cx,Vars->cz); }
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI) { if (mc_mn_Vars->cz != 0) mc_mn_XY = RAD2DEG*asin(mc_mn_Vars->cy/mc_mn_Vars->cz); }
+        if (Set_Vars_Coord_Type == DEFS->COORD_PHI) { if (Vars->cz != 0) XY = RAD2DEG*asin(Vars->cy/Vars->cz); }
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER1) mc_mn_XY = mc_mn_Vars->UserVariable1;
+        if (Set_Vars_Coord_Type == DEFS->COORD_USER1) XY = Vars->UserVariable1;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER2) mc_mn_XY = mc_mn_Vars->UserVariable2;
+        if (Set_Vars_Coord_Type == DEFS->COORD_USER2) XY = Vars->UserVariable2;
         else
-        if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_USER3) mc_mn_XY = mc_mn_Vars->UserVariable3;
+        if (Set_Vars_Coord_Type == DEFS->COORD_USER3) XY = Vars->UserVariable3;
         else
-        mc_mn_XY = 0;
+        XY = 0;
 
         /* handle 'abs' and 'log' keywords */
-        if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_ABS) mc_mn_XY=fabs(mc_mn_XY);
+        if (Vars->Coord_Type[i] & DEFS->COORD_ABS) XY=fabs(XY);
 
-        if (mc_mn_i && (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_LOG)) /* not for the flux */
-        {  if (mc_mn_XY > 0) mc_mn_XY = log(mc_mn_XY)/log(10);
-           else mc_mn_XY = -100; }
+        if (i && (Vars->Coord_Type[i] & DEFS->COORD_LOG)) /* not for the flux */
+        {  if (XY > 0) XY = log(XY)/log(10);
+           else XY = -100; }
 
-        mc_mn_Coord[mc_mn_i] = mc_mn_XY;
-        if (mc_mn_i == 0) { mc_mn_pp = mc_mn_XY; mc_mn_Coord_Index[mc_mn_i] = 0; }
-        else if (!mc_mn_Vars->Flag_Auto_Limits)
+        Coord[i] = XY;
+        if (i == 0) { pp = XY; Coord_Index[i] = 0; }
+        else if (!Vars->Flag_Auto_Limits)
         { /* compute index in histograms for each variable to monitor */
-          mc_mn_XY = (mc_mn_Vars->Coord_Max[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i]);
-          if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY);
-          else mc_mn_Coord_Index[mc_mn_i] = 0;
-          if (mc_mn_Vars->Flag_With_Borders)
+          XY = (Vars->Coord_Max[i]-Vars->Coord_Min[i]);
+          if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars->Coord_Min[i])*Vars->Coord_Bin[i]/XY);
+          else Coord_Index[i] = 0;
+          if (Vars->Flag_With_Borders)
           {
-            if (mc_mn_Coord_Index[mc_mn_i] < 0) mc_mn_Coord_Index[mc_mn_i] = 0;
-            if (mc_mn_Coord_Index[mc_mn_i] >= mc_mn_Vars->Coord_Bin[mc_mn_i]) mc_mn_Coord_Index[mc_mn_i] = mc_mn_Vars->Coord_Bin[mc_mn_i] - 1;
+            if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+            if (Coord_Index[i] >= Vars->Coord_Bin[i]) Coord_Index[i] = Vars->Coord_Bin[i] - 1;
           }
         } /* else will get Index later from Buffer when Flag_Auto_Limits == 2 */
-      } /* end for mc_mn_i */
-      mc_mn_While_End = 1;
-    } /* end else if mc_mn_Vars->Flag_Auto_Limits == 2 */
+      } /* end for i */
+      While_End = 1;
+    } /* end else if Vars->Flag_Auto_Limits == 2 */
 
-    if (mc_mn_Vars->Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
+    if (Vars->Flag_Auto_Limits != 2) /* not when reading auto limits Buffer */
     { /* now store Coord into Buffer (no index needed) if necessary (list or auto limits) */
-      if ((mc_mn_Vars->Buffer_Counter < mc_mn_Vars->Buffer_Block) && ((mc_mn_Vars->Flag_List) || (mc_mn_Vars->Flag_Auto_Limits == 1)))
+      if ((Vars->Buffer_Counter < Vars->Buffer_Block) && ((Vars->Flag_List) || (Vars->Flag_Auto_Limits == 1)))
       {
-        for (mc_mn_i = 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+        for (i = 0; i <= Vars->Coord_Number; i++)
         {
-          mc_mn_Vars->Mon2D_Buffer[mc_mn_i + mc_mn_Vars->Neutron_Counter*(mc_mn_Vars->Coord_Number+1)] = mc_mn_Coord[mc_mn_i];
+          Vars->Mon2D_Buffer[i + Vars->Neutron_Counter*(Vars->Coord_Number+1)] = Coord[i];
         }
-        mc_mn_Vars->Buffer_Counter++;
-        if (mc_mn_Vars->Flag_Verbose && (mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", mc_mn_Vars->compcurname, mc_mn_Vars->Buffer_Counter);
+        Vars->Buffer_Counter++;
+        if (Vars->Flag_Verbose && (Vars->Buffer_Counter >= Vars->Buffer_Block) && (Vars->Flag_List == 1)) printf("Monitor_nD: %s %li neutrons stored in List.\n", Vars->compcurname, Vars->Buffer_Counter);
       }
-      mc_mn_Vars->Neutron_Counter++;
-    } /* end (mc_mn_Vars->Flag_Auto_Limits != 2) */
+      Vars->Neutron_Counter++;
+    } /* end (Vars->Flag_Auto_Limits != 2) */
 
     /* store n1d/2d section from Buffer (Auto_Limits == 2) or current neutron in while */
-    if (mc_mn_Vars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
+    if (Vars->Flag_Auto_Limits != 1) /* not when storing auto limits Buffer */
     {
       /* apply per cm2 or per st */
-      if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area      != 0)
-        mc_mn_pp /= mc_mn_Vars->area;
-      if (mc_mn_Vars->Flag_per_st  && mc_mn_Vars->steradian != 0)
-        mc_mn_pp /= mc_mn_Vars->steradian;
+      if (Vars->Flag_per_cm2 && Vars->area      != 0)
+        pp /= Vars->area;
+      if (Vars->Flag_per_st  && Vars->steradian != 0)
+        pp /= Vars->steradian;
 
-      /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
-      if (mc_mn_Vars->Flag_Multiple)
-      { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors (intensity is not included) */
+      /* 1D and n1D case : Vars->Flag_Multiple */
+      if (Vars->Flag_Multiple)
+      { /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors (intensity is not included) */
         /* check limits: monitors define a phase space to record */
         char within_limits=1;
-        for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+        for (i= 1; i <= Vars->Coord_Number; i++)
         {
-          mc_mn_j = mc_mn_Coord_Index[mc_mn_i];
-          if (mc_mn_j < 0 || mc_mn_j >= mc_mn_Vars->Coord_Bin[mc_mn_i])
+          j = Coord_Index[i];
+          if (j < 0 || j >= Vars->Coord_Bin[i])
             within_limits=0;
         }
         if (within_limits)
-        { for (mc_mn_i= 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+        { for (i= 1; i <= Vars->Coord_Number; i++)
           {
-            mc_mn_j = mc_mn_Coord_Index[mc_mn_i];
-            if (mc_mn_j >= 0 && mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i])
+            j = Coord_Index[i];
+            if (j >= 0 && j < Vars->Coord_Bin[i])
             {
-              mc_mn_Vars->Mon2D_N[mc_mn_i-1][mc_mn_j]++;
-              mc_mn_Vars->Mon2D_p[mc_mn_i-1][mc_mn_j] += mc_mn_pp;
-              mc_mn_Vars->Mon2D_p2[mc_mn_i-1][mc_mn_j] += mc_mn_pp*mc_mn_pp;
+              Vars->Mon2D_N[i-1][j]++;
+              Vars->Mon2D_p[i-1][j] += pp;
+              Vars->Mon2D_p2[i-1][j] += pp*pp;
             }
           }
         }
-        else if (mc_mn_Vars->Flag_Exclusive)
-        { mc_mn_pp = 0.0;
+        else if (Vars->Flag_Exclusive)
+        { pp = 0.0;
         }
       }
-      else /* 2D case : mc_mn_Vars->Coord_Number==2 and !mc_mn_Vars->Flag_Multiple and !mc_mn_Vars->Flag_List */
-      if ((mc_mn_Vars->Coord_Number == 2) && !mc_mn_Vars->Flag_Multiple)
-      { /* Dim : mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2] matrix */
-        mc_mn_i = mc_mn_Coord_Index[1];
-        mc_mn_j = mc_mn_Coord_Index[2];
-        if (mc_mn_i >= 0 && mc_mn_i < mc_mn_Vars->Coord_Bin[1] && mc_mn_j >= 0 && mc_mn_j < mc_mn_Vars->Coord_Bin[2])
+      else /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
+      if ((Vars->Coord_Number == 2) && !Vars->Flag_Multiple)
+      { /* Dim : Vars->Coord_Bin[1]*Vars->Coord_Bin[2] matrix */
+        i = Coord_Index[1];
+        j = Coord_Index[2];
+        if (i >= 0 && i < Vars->Coord_Bin[1] && j >= 0 && j < Vars->Coord_Bin[2])
         {
-          mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j]++;
-          mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j] += mc_mn_pp;
-          mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j] += mc_mn_pp*mc_mn_pp;
+          Vars->Mon2D_N[i][j]++;
+          Vars->Mon2D_p[i][j] += pp;
+          Vars->Mon2D_p2[i][j] += pp*pp;
         }
-        else if (mc_mn_Vars->Flag_Exclusive)
-        { mc_mn_pp = 0.0;
+        else if (Vars->Flag_Exclusive)
+        { pp = 0.0;
         }
       }
-    } /* end (mc_mn_Vars->Flag_Auto_Limits != 1) */
+    } /* end (Vars->Flag_Auto_Limits != 1) */
   } /* end while */
-  return mc_mn_pp;
+  return pp;
 } /* end Monitor_nD_Trace */
 
 /* ========================================================================= */
 /* Monitor_nD_Save: this routine is used to save data files                  */
 /* ========================================================================= */
 
-MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variables_type *mc_mn_Vars)
+MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *Vars)
   {
-    char   *mc_mn_fname;
-    long    mc_mn_i,mc_mn_j;
-    double *mc_mn_p0m = NULL;
-    double *mc_mn_p1m = NULL;
-    double *mc_mn_p2m = NULL;
-    char    mc_mn_Coord_X_Label[CHAR_BUF_LENGTH];
-    double  mc_mn_min1d, mc_mn_max1d;
-    double  mc_mn_min2d, mc_mn_max2d;
-    long    mc_mn_bin1d, mc_mn_bin2d;
-    char    mc_mn_While_End = 0;
-    long    mc_mn_While_Buffer = 0;
-    double  mc_mn_XY, mc_mn_pp;
-    double  mc_mn_Coord[MONnD_COORD_NMAX];
-    long    mc_mn_Coord_Index[MONnD_COORD_NMAX];
-    char    mc_mn_label[CHAR_BUF_LENGTH];
-    double  mc_mn_ratio;
+    char   *fname;
+    long    i,j;
+    double *p0m = NULL;
+    double *p1m = NULL;
+    double *p2m = NULL;
+    char    Coord_X_Label[CHAR_BUF_LENGTH];
+    double  min1d, max1d;
+    double  min2d, max2d;
+    long    bin1d, bin2d;
+    char    While_End = 0;
+    long    While_Buffer = 0;
+    double  XY, pp;
+    double  Coord[MONnD_COORD_NMAX];
+    long    Coord_Index[MONnD_COORD_NMAX];
+    char    label[CHAR_BUF_LENGTH];
+    double  ratio;
     
     MCDETECTOR detector;
 
-    mc_mn_ratio = 100*mcget_run_num()/mcget_ncount();
-    if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area && mc_mn_Vars->Flag_Verbose)
+    ratio = 100*mcget_run_num()/mcget_ncount();
+    if (Vars->Flag_per_cm2 && Vars->area && Vars->Flag_Verbose)
       printf("Monitor_nD: %s: detector area is %g [cm2]\n",
-        mc_mn_Vars->compcurname, mc_mn_Vars->area);
-    if (mc_mn_Vars->Flag_per_st && mc_mn_Vars->steradian && mc_mn_Vars->Flag_Verbose)
+        Vars->compcurname, Vars->area);
+    if (Vars->Flag_per_st && Vars->steradian && Vars->Flag_Verbose)
       printf("Monitor_nD: %s: beam solid angle is %g [st] (%g x %g [deg2])\n",
-        mc_mn_Vars->compcurname, mc_mn_Vars->steradian,
-        atan(mc_mn_Vars->mean_dx/mc_mn_Vars->mean_p)*RAD2DEG,
-        atan(mc_mn_Vars->mean_dy/mc_mn_Vars->mean_p)*RAD2DEG);
+        Vars->compcurname, Vars->steradian,
+        atan(Vars->mean_dx/Vars->mean_p)*RAD2DEG,
+        atan(Vars->mean_dy/Vars->mean_p)*RAD2DEG);
 
     /* check Buffer flush when end of simulation reached */
-    if ((mc_mn_Vars->Buffer_Counter <= mc_mn_Vars->Buffer_Block) && mc_mn_Vars->Flag_Auto_Limits && mc_mn_Vars->Mon2D_Buffer && mc_mn_Vars->Buffer_Counter)
+    if ((Vars->Buffer_Counter <= Vars->Buffer_Block) && Vars->Flag_Auto_Limits && Vars->Mon2D_Buffer && Vars->Buffer_Counter)
     {
       /* Get Auto Limits */
-      if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", mc_mn_Vars->compcurname, mc_mn_Vars->Coord_Number, mc_mn_Vars->Buffer_Counter);
-      for (mc_mn_i = 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+      if (Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
+      for (i = 1; i <= Vars->Coord_Number; i++)
       {
-        if (mc_mn_Vars->Coord_Type[mc_mn_i] & mc_mn_DEFS->COORD_AUTO)
+        if (Vars->Coord_Type[i] & DEFS->COORD_AUTO)
         {
-          mc_mn_Vars->Coord_Min[mc_mn_i] = FLT_MAX;
-          mc_mn_Vars->Coord_Max[mc_mn_i] = -FLT_MAX;
+          Vars->Coord_Min[i] = FLT_MAX;
+          Vars->Coord_Max[i] = -FLT_MAX;
 
-          for (mc_mn_j = 0; mc_mn_j < mc_mn_Vars->Buffer_Counter; mc_mn_j++)
+          for (j = 0; j < Vars->Buffer_Counter; j++)
           {
-            mc_mn_XY = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_j*(mc_mn_Vars->Coord_Number+1)];  /* scanning variables in Buffer */
-            if (mc_mn_XY < mc_mn_Vars->Coord_Min[mc_mn_i]) mc_mn_Vars->Coord_Min[mc_mn_i] = mc_mn_XY;
-            if (mc_mn_XY > mc_mn_Vars->Coord_Max[mc_mn_i]) mc_mn_Vars->Coord_Max[mc_mn_i] = mc_mn_XY;
+            XY = Vars->Mon2D_Buffer[i+j*(Vars->Coord_Number+1)];  /* scanning variables in Buffer */
+            if (XY < Vars->Coord_Min[i]) Vars->Coord_Min[i] = XY;
+            if (XY > Vars->Coord_Max[i]) Vars->Coord_Max[i] = XY;
 
           }
         }
       }
-      mc_mn_Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
-      mc_mn_Vars->Buffer_Block = mc_mn_Vars->Buffer_Counter;
+      Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
+      Vars->Buffer_Block = Vars->Buffer_Counter;
 
-      while (!mc_mn_While_End)
+      while (!While_End)
       { /* we generate Coord[] and Coord_index[] from Buffer (auto limits) */
         /* simulation ended before Buffer was filled. Limits have to be computed, and stored events must be sent into histograms */
-        if (mc_mn_While_Buffer < mc_mn_Vars->Buffer_Block)
+        if (While_Buffer < Vars->Buffer_Block)
         {
-          /* first while loops (mc_mn_While_Buffer) */
-          mc_mn_Coord[0] = mc_mn_Vars->Mon2D_Buffer[mc_mn_While_Buffer*(mc_mn_Vars->Coord_Number+1)];
+          /* first while loops (While_Buffer) */
+          Coord[0] = Vars->Mon2D_Buffer[While_Buffer*(Vars->Coord_Number+1)];
 
           /* auto limits case : scan Buffer within limits and store in Mon2D */
-          for (mc_mn_i = 1; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+          for (i = 1; i <= Vars->Coord_Number; i++)
           {
             /* scanning variables in Buffer */
-            mc_mn_XY = (mc_mn_Vars->Coord_Max[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i]);
-            mc_mn_Coord[mc_mn_i] = mc_mn_Vars->Mon2D_Buffer[mc_mn_i+mc_mn_While_Buffer*(mc_mn_Vars->Coord_Number+1)];
-            if (mc_mn_XY > 0) mc_mn_Coord_Index[mc_mn_i] = floor((mc_mn_Coord[mc_mn_i]-mc_mn_Vars->Coord_Min[mc_mn_i])*mc_mn_Vars->Coord_Bin[mc_mn_i]/mc_mn_XY);
-            else mc_mn_Coord_Index[mc_mn_i] = 0;
-            if (mc_mn_Vars->Flag_With_Borders)
+            XY = (Vars->Coord_Max[i]-Vars->Coord_Min[i]);
+            Coord[i] = Vars->Mon2D_Buffer[i+While_Buffer*(Vars->Coord_Number+1)];
+            if (XY > 0) Coord_Index[i] = floor((Coord[i]-Vars->Coord_Min[i])*Vars->Coord_Bin[i]/XY);
+            else Coord_Index[i] = 0;
+            if (Vars->Flag_With_Borders)
             {
-              if (mc_mn_Coord_Index[mc_mn_i] < 0) mc_mn_Coord_Index[mc_mn_i] = 0;
-              if (mc_mn_Coord_Index[mc_mn_i] >= mc_mn_Vars->Coord_Bin[mc_mn_i]) mc_mn_Coord_Index[mc_mn_i] = mc_mn_Vars->Coord_Bin[mc_mn_i] - 1;
+              if (Coord_Index[i] < 0) Coord_Index[i] = 0;
+              if (Coord_Index[i] >= Vars->Coord_Bin[i]) Coord_Index[i] = Vars->Coord_Bin[i] - 1;
             }
           } /* end for */
-          mc_mn_While_Buffer++;
+          While_Buffer++;
         } /* end if in Buffer */
-        else /* (mc_mn_While_Buffer >= mc_mn_Vars->Buffer_Block) && (mc_mn_Vars->Flag_Auto_Limits == 2) */
+        else /* (While_Buffer >= Vars->Buffer_Block) && (Vars->Flag_Auto_Limits == 2) */
         {
-          mc_mn_Vars->Flag_Auto_Limits = 0;
-          mc_mn_While_End = 1;
+          Vars->Flag_Auto_Limits = 0;
+          While_End = 1;
         }
 
         /* store n1d/2d section from Buffer */
         
-        mc_mn_pp = mc_mn_Coord[0];
+        pp = Coord[0];
         /* apply per cm2 or per st */
-        if (mc_mn_Vars->Flag_per_cm2 && mc_mn_Vars->area      != 0)
-          mc_mn_pp /= mc_mn_Vars->area;
-        if (mc_mn_Vars->Flag_per_st  && mc_mn_Vars->steradian != 0)
-          mc_mn_pp /= mc_mn_Vars->steradian;
+        if (Vars->Flag_per_cm2 && Vars->area      != 0)
+          pp /= Vars->area;
+        if (Vars->Flag_per_st  && Vars->steradian != 0)
+          pp /= Vars->steradian;
 
-        /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
-        if (mc_mn_Vars->Flag_Multiple)
-        { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors (intensity is not included) */
-          for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Number; mc_mn_i++)
+        /* 1D and n1D case : Vars->Flag_Multiple */
+        if (Vars->Flag_Multiple)
+        { /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors (intensity is not included) */
+          for (i= 0; i < Vars->Coord_Number; i++)
           {
-            mc_mn_j = mc_mn_Coord_Index[mc_mn_i+1];
-            if (mc_mn_j >= 0 && mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i+1])
+            j = Coord_Index[i+1];
+            if (j >= 0 && j < Vars->Coord_Bin[i+1])
             {
-              mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j]++;
-              mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j] += mc_mn_pp;
-              mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j] += mc_mn_pp*mc_mn_pp;
+              Vars->Mon2D_N[i][j]++;
+              Vars->Mon2D_p[i][j] += pp;
+              Vars->Mon2D_p2[i][j] += pp*pp;
             }
           }
         }
-        else /* 2D case : mc_mn_Vars->Coord_Number==2 and !mc_mn_Vars->Flag_Multiple and !mc_mn_Vars->Flag_List */
-        if ((mc_mn_Vars->Coord_Number == 2) && !mc_mn_Vars->Flag_Multiple)
-        { /* Dim : mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2] matrix */
-          mc_mn_i = mc_mn_Coord_Index[1];
-          mc_mn_j = mc_mn_Coord_Index[2];
-          if (mc_mn_i >= 0 && mc_mn_i < mc_mn_Vars->Coord_Bin[1] && mc_mn_j >= 0 && mc_mn_j < mc_mn_Vars->Coord_Bin[2])
+        else /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
+        if ((Vars->Coord_Number == 2) && !Vars->Flag_Multiple)
+        { /* Dim : Vars->Coord_Bin[1]*Vars->Coord_Bin[2] matrix */
+          i = Coord_Index[1];
+          j = Coord_Index[2];
+          if (i >= 0 && i < Vars->Coord_Bin[1] && j >= 0 && j < Vars->Coord_Bin[2])
           {
-            mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j]++;
-            mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j] += mc_mn_pp;
-            mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j] += mc_mn_pp*mc_mn_pp;
+            Vars->Mon2D_N[i][j]++;
+            Vars->Mon2D_p[i][j] += pp;
+            Vars->Mon2D_p2[i][j] += pp*pp;
           }
         } /* end store 2D/1D */
       } /* end while */
     } /* end Force Get Limits */
 
     /* write output files (sent to file as p[i*n + j] vectors) */
-    if (mc_mn_Vars->Coord_Number == 0)
+    if (Vars->Coord_Number == 0)
     {
-      double mc_mn_Nsum;
-      double mc_mn_psum, mc_mn_p2sum;
-      mc_mn_Nsum = mc_mn_Vars->Nsum;
-      mc_mn_psum = mc_mn_Vars->psum;
-      mc_mn_p2sum= mc_mn_Vars->p2sum;
-      if (mc_mn_Vars->Flag_signal != mc_mn_DEFS->COORD_P && mc_mn_Nsum > 0)
-      { mc_mn_psum /=mc_mn_Nsum; mc_mn_p2sum /= mc_mn_Nsum*mc_mn_Nsum; }
-      /* DETECTOR_OUT_0D(mc_mn_Vars->Monitor_Label, mc_mn_Vars->Nsum, mc_mn_Vars->psum, mc_mn_Vars->p2sum); */
-      detector = mcdetector_out_0D(mc_mn_Vars->Monitor_Label, mc_mn_Nsum, mc_mn_psum, mc_mn_p2sum, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
+      double Nsum;
+      double psum, p2sum;
+      Nsum = Vars->Nsum;
+      psum = Vars->psum;
+      p2sum= Vars->p2sum;
+      if (Vars->Flag_signal != DEFS->COORD_P && Nsum > 0)
+      { psum /=Nsum; p2sum /= Nsum*Nsum; }
+      /* DETECTOR_OUT_0D(Vars->Monitor_Label, Vars->Nsum, Vars->psum, Vars->p2sum); */
+      detector = mcdetector_out_0D(Vars->Monitor_Label, Nsum, psum, p2sum, Vars->compcurname, Vars->compcurpos);
     }
     else
-    if (strlen(mc_mn_Vars->Mon_File) > 0)
+    if (strlen(Vars->Mon_File) > 0)
     {
-      mc_mn_fname = (char*)malloc(strlen(mc_mn_Vars->Mon_File)+10*mc_mn_Vars->Coord_Number);
-      if (mc_mn_Vars->Flag_List && mc_mn_Vars->Mon2D_Buffer) /* List: DETECTOR_OUT_2D */
+      fname = (char*)malloc(strlen(Vars->Mon_File)+10*Vars->Coord_Number);
+      if (Vars->Flag_List && Vars->Mon2D_Buffer) /* List: DETECTOR_OUT_2D */
       {
         int  ascii_only_orig;
         char formatName[256];
         char *formatName_orig;
 
-        if (mc_mn_Vars->Flag_List >= 2) mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter;
-        if (mc_mn_Vars->Buffer_Size >= mc_mn_Vars->Neutron_Counter)
-          mc_mn_Vars->Buffer_Size = mc_mn_Vars->Neutron_Counter;
-        strcpy(mc_mn_fname,mc_mn_Vars->Mon_File);
-        if (strchr(mc_mn_Vars->Mon_File,'.') == NULL) strcat(mc_mn_fname, "_list");
+        if (Vars->Flag_List >= 2) Vars->Buffer_Size = Vars->Neutron_Counter;
+        if (Vars->Buffer_Size >= Vars->Neutron_Counter)
+          Vars->Buffer_Size = Vars->Neutron_Counter;
+        strcpy(fname,Vars->Mon_File);
+        if (strchr(Vars->Mon_File,'.') == NULL) strcat(fname, "_list");
 
-        mc_mn_min1d = 1; mc_mn_max1d = mc_mn_Vars->Coord_Number+1;
-        mc_mn_min2d = 0; mc_mn_max2d = mc_mn_Vars->Buffer_Size;
-        mc_mn_bin1d = mc_mn_Vars->Coord_Number+1; mc_mn_bin2d = mc_mn_Vars->Buffer_Size;
-        strcpy(mc_mn_Coord_X_Label,"");
-        for (mc_mn_i= 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+        min1d = 1; max1d = Vars->Coord_Number+1;
+        min2d = 0; max2d = Vars->Buffer_Size;
+        bin1d = Vars->Coord_Number+1; bin2d = Vars->Buffer_Size;
+        strcpy(Coord_X_Label,"");
+        for (i= 0; i <= Vars->Coord_Number; i++)
         {
-          if (mc_mn_min2d < mc_mn_Vars->Coord_Min[mc_mn_i]) mc_mn_min2d = mc_mn_Vars->Coord_Min[mc_mn_i];
-          if (mc_mn_max2d < mc_mn_Vars->Coord_Max[mc_mn_i]) mc_mn_max2d = mc_mn_Vars->Coord_Max[mc_mn_i];
-          strcat(mc_mn_Coord_X_Label, mc_mn_Vars->Coord_Var[mc_mn_i]);
-          strcat(mc_mn_Coord_X_Label, " ");
-          if (strchr(mc_mn_Vars->Mon_File,'.') == NULL)
-          { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i]); }
+          if (min2d < Vars->Coord_Min[i]) min2d = Vars->Coord_Min[i];
+          if (max2d < Vars->Coord_Max[i]) max2d = Vars->Coord_Max[i];
+          strcat(Coord_X_Label, Vars->Coord_Var[i]);
+          strcat(Coord_X_Label, " ");
+          if (strchr(Vars->Mon_File,'.') == NULL)
+          { strcat(fname, "."); strcat(fname, Vars->Coord_Var[i]); }
         }
-        if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname,mc_mn_bin2d,mc_mn_bin1d);
+        if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s List (%lix%li).\n", Vars->compcurname, fname,bin2d,bin1d);
 
         /* handle the type of list output */
         ascii_only_orig = mcascii_only;
         formatName_orig = mcformat.Name;  /* copy the pointer position */
         strcpy(formatName, mcformat.Name);
-        if (mc_mn_Vars->Flag_List >= 1)
+        if (Vars->Flag_List >= 1)
         { /* Flag_List mode:
                1=store 1 buffer
                2=list all, triggers 3 when 1st buffer reallocated
                3=re-used buffer (file already opened)
              Format modifiers for Flag_List
                1= normal monitor file (no modifier, export in one go)
-               2= write data+header, and footer if buffer not full (mc_mn_Vars->Buffer_Counter < mc_mn_Vars->Buffer_Block)
+               2= write data+header, and footer if buffer not full (Vars->Buffer_Counter < Vars->Buffer_Block)
                3= write data, and footer if buffer not full (final)
            */
           strcat(formatName, " list ");
-          if (mc_mn_Vars->Flag_List == 3) strcat(formatName, " no header ");
-          if (mc_mn_Vars->Flag_List >= 2 && mc_mn_Vars->Buffer_Counter >= mc_mn_Vars->Buffer_Block)
+          if (Vars->Flag_List == 3) strcat(formatName, " no header ");
+          if (Vars->Flag_List >= 2 && Vars->Buffer_Counter >= Vars->Buffer_Block)
             strcat(formatName, " no footer ");
 
-          if (mc_mn_Vars->Flag_Binary_List) mcascii_only = 1;
-          if (mc_mn_Vars->Flag_Binary_List == 1)
+          if (Vars->Flag_Binary_List) mcascii_only = 1;
+          if (Vars->Flag_Binary_List == 1)
             strcat(formatName, " binary float ");
-          else if (mc_mn_Vars->Flag_Binary_List == 2)
+          else if (Vars->Flag_Binary_List == 2)
             strcat(formatName, " binary double ");
         }
-        if (mc_mn_min2d == mc_mn_max2d) mc_mn_max2d = mc_mn_min2d+1e-6;
-        if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
-        strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
-        if (!mc_mn_Vars->Flag_Binary_List)
-        { mc_mn_bin2d=-mc_mn_bin2d; }
+        if (min2d == max2d) max2d = min2d+1e-6;
+        if (min1d == max1d) max1d = min1d+1e-6;
+        strcpy(label, Vars->Monitor_Label);
+        if (!Vars->Flag_Binary_List)
+        { bin2d=-bin2d; }
         mcformat.Name = formatName;
         detector = mcdetector_out_2D(
-              mc_mn_label,
+              label,
               "List of neutron events",
-              mc_mn_Coord_X_Label,
-              mc_mn_min2d, mc_mn_max2d,
-              mc_mn_min1d, mc_mn_max1d,
-              mc_mn_bin2d,
-              mc_mn_bin1d,
-            NULL,mc_mn_Vars->Mon2D_Buffer,NULL,
-            mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
+              Coord_X_Label,
+              min2d, max2d,
+              min1d, max1d,
+              bin2d,
+              bin1d,
+            NULL,Vars->Mon2D_Buffer,NULL,
+            fname, Vars->compcurname, Vars->compcurpos);
 
         /* reset the original type of output */
         mcascii_only = ascii_only_orig;
         mcformat.Name= formatName_orig;
       }
-      if (mc_mn_Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
+      if (Vars->Flag_Multiple) /* n1D: DETECTOR_OUT_1D */
       {
-        for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Number; mc_mn_i++)
+        for (i= 0; i < Vars->Coord_Number; i++)
         {
 
-          strcpy(mc_mn_fname,mc_mn_Vars->Mon_File);
-          if (strchr(mc_mn_Vars->Mon_File,'.') == NULL)
-          { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[mc_mn_i+1]); }
-          sprintf(mc_mn_Coord_X_Label, "%s monitor", mc_mn_Vars->Coord_Label[mc_mn_i+1]);
-          strcpy(mc_mn_label, mc_mn_Coord_X_Label);
-          if (mc_mn_Vars->Coord_Bin[mc_mn_i+1] > 0) { /* 1D monitor */
-            if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 1D (%li).\n", mc_mn_Vars->compcurname, mc_mn_fname, mc_mn_Vars->Coord_Bin[mc_mn_i+1]);
-            mc_mn_min1d = mc_mn_Vars->Coord_Min[mc_mn_i+1];
-            mc_mn_max1d = mc_mn_Vars->Coord_Max[mc_mn_i+1];
-            if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
-            mc_mn_p1m = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i+1]*sizeof(double));
-            mc_mn_p2m = (double *)malloc(mc_mn_Vars->Coord_Bin[mc_mn_i+1]*sizeof(double));
-            if (mc_mn_p2m == NULL) /* use Raw Buffer line output */
+          strcpy(fname,Vars->Mon_File);
+          if (strchr(Vars->Mon_File,'.') == NULL)
+          { strcat(fname, "."); strcat(fname, Vars->Coord_Var[i+1]); }
+          sprintf(Coord_X_Label, "%s monitor", Vars->Coord_Label[i+1]);
+          strcpy(label, Coord_X_Label);
+          if (Vars->Coord_Bin[i+1] > 0) { /* 1D monitor */
+            if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 1D (%li).\n", Vars->compcurname, fname, Vars->Coord_Bin[i+1]);
+            min1d = Vars->Coord_Min[i+1];
+            max1d = Vars->Coord_Max[i+1];
+            if (min1d == max1d) max1d = min1d+1e-6;
+            p1m = (double *)malloc(Vars->Coord_Bin[i+1]*sizeof(double));
+            p2m = (double *)malloc(Vars->Coord_Bin[i+1]*sizeof(double));
+            if (p2m == NULL) /* use Raw Buffer line output */
             {
-              if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for output. Using raw data.\n", mc_mn_Vars->compcurname);
-              if (mc_mn_p1m != NULL) free(mc_mn_p1m);
+              if (Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for output. Using raw data.\n", Vars->compcurname);
+              if (p1m != NULL) free(p1m);
               detector = mcdetector_out_1D(
-              mc_mn_label,
-              mc_mn_Vars->Coord_Label[mc_mn_i+1],
-              mc_mn_Vars->Coord_Label[0],
-              mc_mn_Vars->Coord_Var[mc_mn_i+1],
-              mc_mn_min1d, mc_mn_max1d,
-              mc_mn_Vars->Coord_Bin[mc_mn_i+1],
-              mc_mn_Vars->Mon2D_N[mc_mn_i],mc_mn_Vars->Mon2D_p[mc_mn_i],mc_mn_Vars->Mon2D_p2[mc_mn_i],
-              mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
-            } /* if (mc_mn_p2m == NULL) */
+              label,
+              Vars->Coord_Label[i+1],
+              Vars->Coord_Label[0],
+              Vars->Coord_Var[i+1],
+              min1d, max1d,
+              Vars->Coord_Bin[i+1],
+              Vars->Mon2D_N[i],Vars->Mon2D_p[i],Vars->Mon2D_p2[i],
+              fname, Vars->compcurname, Vars->compcurpos);
+            } /* if (p2m == NULL) */
             else
             {
-              if (mc_mn_Vars->Flag_log != 0)
+              if (Vars->Flag_log != 0)
               {
-                mc_mn_XY = FLT_MAX;
-                for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i+1]; mc_mn_j++) /* search min of signal */
-                  if ((mc_mn_XY > mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j]) && (mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j] > 0)) mc_mn_XY = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
-                if (mc_mn_XY <= 0) mc_mn_XY = -log(FLT_MAX)/log(10); else mc_mn_XY = log(mc_mn_XY)/log(10)-1;
+                XY = FLT_MAX;
+                for (j=0; j < Vars->Coord_Bin[i+1]; j++) /* search min of signal */
+                  if ((XY > Vars->Mon2D_p[i][j]) && (Vars->Mon2D_p[i][j] > 0)) XY = Vars->Mon2D_p[i][j];
+                if (XY <= 0) XY = -log(FLT_MAX)/log(10); else XY = log(XY)/log(10)-1;
               } /* if */
 
-              for (mc_mn_j=0; mc_mn_j < mc_mn_Vars->Coord_Bin[mc_mn_i+1]; mc_mn_j++)
+              for (j=0; j < Vars->Coord_Bin[i+1]; j++)
               {
-                mc_mn_p1m[mc_mn_j] = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
-                mc_mn_p2m[mc_mn_j] = mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j];
-                if (mc_mn_Vars->Flag_signal != mc_mn_DEFS->COORD_P && mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j] > 0)
+                p1m[j] = Vars->Mon2D_p[i][j];
+                p2m[j] = Vars->Mon2D_p2[i][j];
+                if (Vars->Flag_signal != DEFS->COORD_P && Vars->Mon2D_N[i][j] > 0)
                 { /* normalize mean signal to the number of events */
-                  mc_mn_p1m[mc_mn_j] /= mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
-                  mc_mn_p2m[mc_mn_j] /= mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j]*mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
+                  p1m[j] /= Vars->Mon2D_N[i][j];
+                  p2m[j] /= Vars->Mon2D_N[i][j]*Vars->Mon2D_N[i][j];
                 }
-                if (mc_mn_Vars->Flag_log != 0)
+                if (Vars->Flag_log != 0)
                 {
-                  if ((mc_mn_p1m[mc_mn_j] > 0) && (mc_mn_p2m[mc_mn_j] > 0))
+                  if ((p1m[j] > 0) && (p2m[j] > 0))
                   {
-                    mc_mn_p2m[mc_mn_j] /= mc_mn_p1m[mc_mn_j]*mc_mn_p1m[mc_mn_j];
-                    mc_mn_p1m[mc_mn_j] = log(mc_mn_p1m[mc_mn_j])/log(10);
+                    p2m[j] /= p1m[j]*p1m[j];
+                    p1m[j] = log(p1m[j])/log(10);
                   }
                   else
                   {
-                    mc_mn_p1m[mc_mn_j] = mc_mn_XY;
-                    mc_mn_p2m[mc_mn_j] = 0;
+                    p1m[j] = XY;
+                    p2m[j] = 0;
                   }
                 }
               } /* for */
               detector = mcdetector_out_1D(
-                mc_mn_label,
-                mc_mn_Vars->Coord_Label[mc_mn_i+1],
-                mc_mn_Vars->Coord_Label[0],
-                mc_mn_Vars->Coord_Var[mc_mn_i+1],
-                mc_mn_min1d, mc_mn_max1d,
-                mc_mn_Vars->Coord_Bin[mc_mn_i+1],
-                mc_mn_Vars->Mon2D_N[mc_mn_i],mc_mn_p1m,mc_mn_p2m,
-                mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
+                label,
+                Vars->Coord_Label[i+1],
+                Vars->Coord_Label[0],
+                Vars->Coord_Var[i+1],
+                min1d, max1d,
+                Vars->Coord_Bin[i+1],
+                Vars->Mon2D_N[i],p1m,p2m,
+                fname, Vars->compcurname, Vars->compcurpos);
 
             } /* else */
             /* comment out 'free memory' lines to avoid loosing arrays if 
                'detector' structure is used by other instrument parts 
-            if (mc_mn_p1m != NULL) free(mc_mn_p1m); mc_mn_p1m=NULL;
-            if (mc_mn_p2m != NULL) free(mc_mn_p2m); mc_mn_p2m=NULL;
+            if (p1m != NULL) free(p1m); p1m=NULL;
+            if (p2m != NULL) free(p2m); p2m=NULL;
             */
           } else { /* 0d monitor */
-            detector = mcdetector_out_0D(mc_mn_label, mc_mn_Vars->Mon2D_p[mc_mn_i][0], mc_mn_Vars->Mon2D_p2[mc_mn_i][0], mc_mn_Vars->Mon2D_N[mc_mn_i][0], mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
+            detector = mcdetector_out_0D(label, Vars->Mon2D_p[i][0], Vars->Mon2D_p2[i][0], Vars->Mon2D_N[i][0], Vars->compcurname, Vars->compcurpos);
           }
 
 
         } /* for */
       } /* if 1D */
       else
-      if (mc_mn_Vars->Coord_Number == 2)  /* 2D: DETECTOR_OUT_2D */
+      if (Vars->Coord_Number == 2)  /* 2D: DETECTOR_OUT_2D */
       {
-        strcpy(mc_mn_fname,mc_mn_Vars->Mon_File);
+        strcpy(fname,Vars->Mon_File);
 
-        mc_mn_p0m = (double *)malloc(mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2]*sizeof(double));
-        mc_mn_p1m = (double *)malloc(mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2]*sizeof(double));
-        mc_mn_p2m = (double *)malloc(mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2]*sizeof(double));
-        if (mc_mn_p2m == NULL)
+        p0m = (double *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
+        p1m = (double *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
+        p2m = (double *)malloc(Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
+        if (p2m == NULL)
         {
-          if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%li). Skipping.\n", mc_mn_Vars->compcurname, 3*mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2]*sizeof(double));
+          if (Vars->Flag_Verbose) printf("Monitor_nD: %s cannot allocate memory for 2D array (%li). Skipping.\n", Vars->compcurname, 3*Vars->Coord_Bin[1]*Vars->Coord_Bin[2]*sizeof(double));
           /* comment out 'free memory' lines to avoid loosing arrays if 
                'detector' structure is used by other instrument parts 
-          if (mc_mn_p0m != NULL) free(mc_mn_p0m);
-          if (mc_mn_p1m != NULL) free(mc_mn_p1m);
+          if (p0m != NULL) free(p0m);
+          if (p1m != NULL) free(p1m);
           */
         }
         else
         {
-          if (mc_mn_Vars->Flag_log != 0)
+          if (Vars->Flag_log != 0)
           {
-            mc_mn_XY = FLT_MAX;
-            for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Bin[1]; mc_mn_i++)
-              for (mc_mn_j= 0; mc_mn_j < mc_mn_Vars->Coord_Bin[2]; mc_mn_j++) /* search min of signal */
-                if ((mc_mn_XY > mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j]) && (mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j]>0)) mc_mn_XY = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
-            if (mc_mn_XY <= 0) mc_mn_XY = -log(FLT_MAX)/log(10); else mc_mn_XY = log(mc_mn_XY)/log(10)-1;
+            XY = FLT_MAX;
+            for (i= 0; i < Vars->Coord_Bin[1]; i++)
+              for (j= 0; j < Vars->Coord_Bin[2]; j++) /* search min of signal */
+                if ((XY > Vars->Mon2D_p[i][j]) && (Vars->Mon2D_p[i][j]>0)) XY = Vars->Mon2D_p[i][j];
+            if (XY <= 0) XY = -log(FLT_MAX)/log(10); else XY = log(XY)/log(10)-1;
           }
-          for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Bin[1]; mc_mn_i++)
+          for (i= 0; i < Vars->Coord_Bin[1]; i++)
           {
-            for (mc_mn_j= 0; mc_mn_j < mc_mn_Vars->Coord_Bin[2]; mc_mn_j++)
+            for (j= 0; j < Vars->Coord_Bin[2]; j++)
             {
-              long mc_mn_index;
-              mc_mn_index = mc_mn_j + mc_mn_i*mc_mn_Vars->Coord_Bin[2];
-              mc_mn_p0m[mc_mn_index] = mc_mn_Vars->Mon2D_N[mc_mn_i][mc_mn_j];
-              mc_mn_p1m[mc_mn_index] = mc_mn_Vars->Mon2D_p[mc_mn_i][mc_mn_j];
-              mc_mn_p2m[mc_mn_index] = mc_mn_Vars->Mon2D_p2[mc_mn_i][mc_mn_j];
-              if (mc_mn_Vars->Flag_signal != mc_mn_DEFS->COORD_P && mc_mn_p0m[mc_mn_index] > 0)
+              long index;
+              index = j + i*Vars->Coord_Bin[2];
+              p0m[index] = Vars->Mon2D_N[i][j];
+              p1m[index] = Vars->Mon2D_p[i][j];
+              p2m[index] = Vars->Mon2D_p2[i][j];
+              if (Vars->Flag_signal != DEFS->COORD_P && p0m[index] > 0)
               {
-                  mc_mn_p1m[mc_mn_index] /= mc_mn_p0m[mc_mn_index];
-                  mc_mn_p2m[mc_mn_index] /= mc_mn_p0m[mc_mn_index]*mc_mn_p0m[mc_mn_index];
+                  p1m[index] /= p0m[index];
+                  p2m[index] /= p0m[index]*p0m[index];
               }
 
-              if (mc_mn_Vars->Flag_log != 0)
+              if (Vars->Flag_log != 0)
               {
-                if ((mc_mn_p1m[mc_mn_index] > 0) && (mc_mn_p2m[mc_mn_index] > 0))
+                if ((p1m[index] > 0) && (p2m[index] > 0))
                 {
-                  mc_mn_p2m[mc_mn_index] /= (mc_mn_p1m[mc_mn_index]*mc_mn_p1m[mc_mn_index]);
-                  mc_mn_p1m[mc_mn_index] = log(mc_mn_p1m[mc_mn_index])/log(10);
+                  p2m[index] /= (p1m[index]*p1m[index]);
+                  p1m[index] = log(p1m[index])/log(10);
 
                 }
                 else
                 {
-                  mc_mn_p1m[mc_mn_index] = mc_mn_XY;
-                  mc_mn_p2m[mc_mn_index] = 0;
+                  p1m[index] = XY;
+                  p2m[index] = 0;
                 }
               }
             }
           }
-          if (strchr(mc_mn_Vars->Mon_File,'.') == NULL)
-          { strcat(mc_mn_fname, "."); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[1]);
-              strcat(mc_mn_fname, "_"); strcat(mc_mn_fname, mc_mn_Vars->Coord_Var[2]); }
-          if (mc_mn_Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 2D (%lix%li).\n", mc_mn_Vars->compcurname, mc_mn_fname, mc_mn_Vars->Coord_Bin[1], mc_mn_Vars->Coord_Bin[2]);
+          if (strchr(Vars->Mon_File,'.') == NULL)
+          { strcat(fname, "."); strcat(fname, Vars->Coord_Var[1]);
+              strcat(fname, "_"); strcat(fname, Vars->Coord_Var[2]); }
+          if (Vars->Flag_Verbose) printf("Monitor_nD: %s write monitor file %s 2D (%lix%li).\n", Vars->compcurname, fname, Vars->Coord_Bin[1], Vars->Coord_Bin[2]);
 
-          mc_mn_min1d = mc_mn_Vars->Coord_Min[1];
-          mc_mn_max1d = mc_mn_Vars->Coord_Max[1];
-          if (mc_mn_min1d == mc_mn_max1d) mc_mn_max1d = mc_mn_min1d+1e-6;
-          mc_mn_min2d = mc_mn_Vars->Coord_Min[2];
-          mc_mn_max2d = mc_mn_Vars->Coord_Max[2];
-          if (mc_mn_min2d == mc_mn_max2d) mc_mn_max2d = mc_mn_min2d+1e-6;
-          strcpy(mc_mn_label, mc_mn_Vars->Monitor_Label);
-          if (mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2] > 1
-           && mc_mn_Vars->Flag_signal == mc_mn_DEFS->COORD_P)
-            strcat(mc_mn_label, " per bin");
+          min1d = Vars->Coord_Min[1];
+          max1d = Vars->Coord_Max[1];
+          if (min1d == max1d) max1d = min1d+1e-6;
+          min2d = Vars->Coord_Min[2];
+          max2d = Vars->Coord_Max[2];
+          if (min2d == max2d) max2d = min2d+1e-6;
+          strcpy(label, Vars->Monitor_Label);
+          if (Vars->Coord_Bin[1]*Vars->Coord_Bin[2] > 1
+           && Vars->Flag_signal == DEFS->COORD_P)
+            strcat(label, " per bin");
 
           detector = mcdetector_out_2D(
-            mc_mn_label,
-            mc_mn_Vars->Coord_Label[1],
-            mc_mn_Vars->Coord_Label[2],
-            mc_mn_min1d, mc_mn_max1d,
-            mc_mn_min2d, mc_mn_max2d,
-            mc_mn_Vars->Coord_Bin[1],
-            mc_mn_Vars->Coord_Bin[2],
-            mc_mn_p0m,mc_mn_p1m,mc_mn_p2m,
-            mc_mn_fname, mc_mn_Vars->compcurname, mc_mn_Vars->compcurpos);
+            label,
+            Vars->Coord_Label[1],
+            Vars->Coord_Label[2],
+            min1d, max1d,
+            min2d, max2d,
+            Vars->Coord_Bin[1],
+            Vars->Coord_Bin[2],
+            p0m,p1m,p2m,
+            fname, Vars->compcurname, Vars->compcurpos);
 
           /* comment out 'free memory' lines to avoid loosing arrays if 
                'detector' structure is used by other instrument parts 
-          if (mc_mn_p0m != NULL) free(mc_mn_p0m);
-          if (mc_mn_p1m != NULL) free(mc_mn_p1m);
-          if (mc_mn_p2m != NULL) free(mc_mn_p2m);
+          if (p0m != NULL) free(p0m);
+          if (p1m != NULL) free(p1m);
+          if (p2m != NULL) free(p2m);
           */
         }
       }
-      free(mc_mn_fname);
+      free(fname);
     }
     return(detector);
   } /* end Monitor_nD_Save */
@@ -1510,44 +1511,44 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *mc_mn_DEFS, MonitornD_Variabl
 /* Monitor_nD_Finally: this routine is used to free memory                   */
 /* ========================================================================= */
 
-void Monitor_nD_Finally(MonitornD_Defines_type *mc_mn_DEFS,
-  MonitornD_Variables_type *mc_mn_Vars)
+void Monitor_nD_Finally(MonitornD_Defines_type *DEFS,
+  MonitornD_Variables_type *Vars)
   {
-    int mc_mn_i;
+    int i;
 
     /* Now Free memory Mon2D.. */
-    if ((mc_mn_Vars->Flag_Auto_Limits || mc_mn_Vars->Flag_List) && mc_mn_Vars->Coord_Number)
-    { /* Dim : (mc_mn_Vars->Coord_Number+1)*mc_mn_Vars->Buffer_Block matrix (for p, dp) */
-      if (mc_mn_Vars->Mon2D_Buffer != NULL) free(mc_mn_Vars->Mon2D_Buffer);
+    if ((Vars->Flag_Auto_Limits || Vars->Flag_List) && Vars->Coord_Number)
+    { /* Dim : (Vars->Coord_Number+1)*Vars->Buffer_Block matrix (for p, dp) */
+      if (Vars->Mon2D_Buffer != NULL) free(Vars->Mon2D_Buffer);
     }
 
-    /* 1D and n1D case : mc_mn_Vars->Flag_Multiple */
-    if (mc_mn_Vars->Flag_Multiple && mc_mn_Vars->Coord_Number)
-    { /* Dim : mc_mn_Vars->Coord_Number*mc_mn_Vars->Coord_Bin[mc_mn_i] vectors */
-      for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Number; mc_mn_i++)
+    /* 1D and n1D case : Vars->Flag_Multiple */
+    if (Vars->Flag_Multiple && Vars->Coord_Number)
+    { /* Dim : Vars->Coord_Number*Vars->Coord_Bin[i] vectors */
+      for (i= 0; i < Vars->Coord_Number; i++)
       {
-        free(mc_mn_Vars->Mon2D_N[mc_mn_i]);
-        free(mc_mn_Vars->Mon2D_p[mc_mn_i]);
-        free(mc_mn_Vars->Mon2D_p2[mc_mn_i]);
+        free(Vars->Mon2D_N[i]);
+        free(Vars->Mon2D_p[i]);
+        free(Vars->Mon2D_p2[i]);
       }
-      free(mc_mn_Vars->Mon2D_N);
-      free(mc_mn_Vars->Mon2D_p);
-      free(mc_mn_Vars->Mon2D_p2);
+      free(Vars->Mon2D_N);
+      free(Vars->Mon2D_p);
+      free(Vars->Mon2D_p2);
     }
 
 
-    /* 2D case : mc_mn_Vars->Coord_Number==2 and !mc_mn_Vars->Flag_Multiple and !mc_mn_Vars->Flag_List */
-    if ((mc_mn_Vars->Coord_Number == 2) && !mc_mn_Vars->Flag_Multiple)
-    { /* Dim : mc_mn_Vars->Coord_Bin[1]*mc_mn_Vars->Coord_Bin[2] matrix */
-      for (mc_mn_i= 0; mc_mn_i < mc_mn_Vars->Coord_Bin[1]; mc_mn_i++)
+    /* 2D case : Vars->Coord_Number==2 and !Vars->Flag_Multiple and !Vars->Flag_List */
+    if ((Vars->Coord_Number == 2) && !Vars->Flag_Multiple)
+    { /* Dim : Vars->Coord_Bin[1]*Vars->Coord_Bin[2] matrix */
+      for (i= 0; i < Vars->Coord_Bin[1]; i++)
       {
-        free(mc_mn_Vars->Mon2D_N[mc_mn_i]);
-        free(mc_mn_Vars->Mon2D_p[mc_mn_i]);
-        free(mc_mn_Vars->Mon2D_p2[mc_mn_i]);
+        free(Vars->Mon2D_N[i]);
+        free(Vars->Mon2D_p[i]);
+        free(Vars->Mon2D_p2[i]);
       }
-      free(mc_mn_Vars->Mon2D_N);
-      free(mc_mn_Vars->Mon2D_p);
-      free(mc_mn_Vars->Mon2D_p2);
+      free(Vars->Mon2D_N);
+      free(Vars->Mon2D_p);
+      free(Vars->Mon2D_p2);
     }
   } /* end Monitor_nD_Finally */
 
@@ -1555,71 +1556,71 @@ void Monitor_nD_Finally(MonitornD_Defines_type *mc_mn_DEFS,
 /* Monitor_nD_McDisplay: this routine is used to display component           */
 /* ========================================================================= */
 
-void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,
-  MonitornD_Variables_type *mc_mn_Vars)
+void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
+  MonitornD_Variables_type *Vars)
   {
-    double mc_mn_radius, mc_mn_h;
-    double mc_mn_xmin;
-    double mc_mn_xmax;
-    double mc_mn_ymin;
-    double mc_mn_ymax;
-    double mc_mn_zmin;
-    double mc_mn_zmax;
-    int    mc_mn_i;
-    double mc_mn_hdiv_min=-180, mc_mn_hdiv_max=180, mc_mn_vdiv_min=-180, mc_mn_vdiv_max=180;
-    char   mc_mn_restricted = 0;
+    double radius, h;
+    double xmin;
+    double xmax;
+    double ymin;
+    double ymax;
+    double zmin;
+    double zmax;
+    int    i;
+    double hdiv_min=-180, hdiv_max=180, vdiv_min=-180, vdiv_max=180;
+    char   restricted = 0;
 
-    mc_mn_radius = mc_mn_Vars->Sphere_Radius;
-    mc_mn_h = mc_mn_Vars->Cylinder_Height;
-    mc_mn_xmin = mc_mn_Vars->mxmin;
-    mc_mn_xmax = mc_mn_Vars->mxmax;
-    mc_mn_ymin = mc_mn_Vars->mymin;
-    mc_mn_ymax = mc_mn_Vars->mymax;
-    mc_mn_zmin = mc_mn_Vars->mzmin;
-    mc_mn_zmax = mc_mn_Vars->mzmax;
+    radius = Vars->Sphere_Radius;
+    h = Vars->Cylinder_Height;
+    xmin = Vars->mxmin;
+    xmax = Vars->mxmax;
+    ymin = Vars->mymin;
+    ymax = Vars->mymax;
+    zmin = Vars->mzmin;
+    zmax = Vars->mzmax;
 
     /* determine if there are angular limits set at start (no auto) in coord_types
      * cylinder/banana: look for hdiv
-     * sphere: look for angle, radius (->atan2(val,mc_mn_radius)), hdiv, vdiv
+     * sphere: look for angle, radius (->atan2(val,radius)), hdiv, vdiv
      * this activates a 'restricted' flag, to draw a region as blades on cylinder/sphere
      */
-    for (mc_mn_i= 0; mc_mn_i <= mc_mn_Vars->Coord_Number; mc_mn_i++)
+    for (i= 0; i <= Vars->Coord_Number; i++)
     {
-      int mc_mn_Set_Vars_Coord_Type;
-      mc_mn_Set_Vars_Coord_Type = (mc_mn_Vars->Coord_Type[mc_mn_i] & 31);
-      if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_HDIV || mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_THETA)
-      { mc_mn_hdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i]; mc_mn_hdiv_max = mc_mn_Vars->Coord_Max[mc_mn_i]; mc_mn_restricted = 1; }
-      else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_VDIV || mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_PHI)
-      { mc_mn_vdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i]; mc_mn_vdiv_max = mc_mn_Vars->Coord_Max[mc_mn_i];mc_mn_restricted = 1;  }
-      else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_ANGLE)
-      { mc_mn_hdiv_min = mc_mn_vdiv_min = mc_mn_Vars->Coord_Min[mc_mn_i];
-        mc_mn_hdiv_max = mc_mn_vdiv_max = mc_mn_Vars->Coord_Max[mc_mn_i];
-        mc_mn_restricted = 1; }
-      else if (mc_mn_Set_Vars_Coord_Type == mc_mn_DEFS->COORD_RADIUS)
+      int Set_Vars_Coord_Type;
+      Set_Vars_Coord_Type = (Vars->Coord_Type[i] & 31);
+      if (Set_Vars_Coord_Type == DEFS->COORD_HDIV || Set_Vars_Coord_Type == DEFS->COORD_THETA)
+      { hdiv_min = Vars->Coord_Min[i]; hdiv_max = Vars->Coord_Max[i]; restricted = 1; }
+      else if (Set_Vars_Coord_Type == DEFS->COORD_VDIV || Set_Vars_Coord_Type == DEFS->COORD_PHI)
+      { vdiv_min = Vars->Coord_Min[i]; vdiv_max = Vars->Coord_Max[i];restricted = 1;  }
+      else if (Set_Vars_Coord_Type == DEFS->COORD_ANGLE)
+      { hdiv_min = vdiv_min = Vars->Coord_Min[i];
+        hdiv_max = vdiv_max = Vars->Coord_Max[i];
+        restricted = 1; }
+      else if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS)
       { double angle;
-        angle = RAD2DEG*atan2(mc_mn_Vars->Coord_Max[mc_mn_i], mc_mn_radius);
-        mc_mn_hdiv_min = mc_mn_vdiv_min = angle;
-        mc_mn_hdiv_max = mc_mn_vdiv_max = angle;
-        mc_mn_restricted = 1; }
+        angle = RAD2DEG*atan2(Vars->Coord_Max[i], radius);
+        hdiv_min = vdiv_min = angle;
+        hdiv_max = vdiv_max = angle;
+        restricted = 1; }
     }
 
-    if ((!mc_mn_restricted && (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE))
-    || abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_PREVIOUS)
+    if ((!restricted && (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE))
+    || abs(Vars->Flag_Shape) == DEFS->SHAPE_PREVIOUS)
     {
       mcdis_magnify("");
-      mcdis_circle("xy",0,0,0,mc_mn_radius);
-      mcdis_circle("xz",0,0,0,mc_mn_radius);
-      mcdis_circle("yz",0,0,0,mc_mn_radius);
+      mcdis_circle("xy",0,0,0,radius);
+      mcdis_circle("xz",0,0,0,radius);
+      mcdis_circle("yz",0,0,0,radius);
     }
-    else if (mc_mn_restricted && ((abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_CYLIND) || (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_BANANA) || (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE)))
+    else if (restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE)))
     {
       int NH=24, NV=24;
       int ih, iv;
       double width, height;
       int issphere;
-      issphere = (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SPHERE);
-      width = (mc_mn_hdiv_max-mc_mn_hdiv_min)/NH;
-      height= (mc_mn_vdiv_max-mc_mn_vdiv_min)/NV;
+      issphere = (abs(Vars->Flag_Shape) == DEFS->SHAPE_SPHERE);
+      width = (hdiv_max-hdiv_min)/NH;
+      height= (vdiv_max-vdiv_min)/NV;
       mcdis_magnify("xyz");
       for(ih = 0; ih < NH; ih++)
         for(iv = 0; iv < NV; iv++)
@@ -1627,29 +1628,29 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,
           double theta0, phi0, theta1, phi1;
           double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;
           double ymin, ymax;
-          phi0 = (mc_mn_hdiv_min+ width*ih)*DEG2RAD; /* in xz plane */
-          phi1 = (mc_mn_hdiv_min+ width*(ih+1))*DEG2RAD;
+          phi0 = (hdiv_min+ width*ih)*DEG2RAD; /* in xz plane */
+          phi1 = (hdiv_min+ width*(ih+1))*DEG2RAD;
           if (issphere)
           {
-            theta0= (90-mc_mn_vdiv_min+height*iv)*DEG2RAD;
-            theta1= (90-mc_mn_vdiv_min+height*(iv+1))*DEG2RAD;
+            theta0= (90-vdiv_min+height*iv)*DEG2RAD;
+            theta1= (90-vdiv_min+height*(iv+1))*DEG2RAD;
           } else
           {
             theta0= theta1 = PI/2;
-            ymin  = mc_mn_ymin+(mc_mn_ymax-mc_mn_ymin)*(iv/NV);
-            ymax  = mc_mn_ymin+(mc_mn_ymax-mc_mn_ymin)*((iv+1)/NV);
+            ymin  = ymin+(ymax-ymin)*(iv/NV);
+            ymax  = ymin+(ymax-ymin)*((iv+1)/NV);
           }
-          z0 = mc_mn_radius*sin(theta0)*cos(phi0);
-          x0 = mc_mn_radius*sin(theta0)*sin(phi0);
-          if (issphere) y0 = mc_mn_radius*cos(theta0); else y0 = ymin;
-          z1 = mc_mn_radius*sin(theta1)*cos(phi0);
-          x1 = mc_mn_radius*sin(theta1)*sin(phi0);
-          if (issphere) y1 = mc_mn_radius*cos(theta1); else y1 = ymax;
-          z2 = mc_mn_radius*sin(theta1)*cos(phi1);
-          x2 = mc_mn_radius*sin(theta1)*sin(phi1);
+          z0 = radius*sin(theta0)*cos(phi0);
+          x0 = radius*sin(theta0)*sin(phi0);
+          if (issphere) y0 = radius*cos(theta0); else y0 = ymin;
+          z1 = radius*sin(theta1)*cos(phi0);
+          x1 = radius*sin(theta1)*sin(phi0);
+          if (issphere) y1 = radius*cos(theta1); else y1 = ymax;
+          z2 = radius*sin(theta1)*cos(phi1);
+          x2 = radius*sin(theta1)*sin(phi1);
           y2 = y1;
-          z3 = mc_mn_radius*sin(theta0)*cos(phi1);
-          x3 = mc_mn_radius*sin(theta0)*sin(phi1);
+          z3 = radius*sin(theta0)*cos(phi1);
+          x3 = radius*sin(theta0)*sin(phi1);
           y3 = y0;
           mcdis_multiline(5,
             x0,y0,z0,
@@ -1660,50 +1661,50 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *mc_mn_DEFS,
         }
     }
     else
-    if (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_DISK)
+    if (abs(Vars->Flag_Shape) == DEFS->SHAPE_DISK)
     {
       mcdis_magnify("");
-      mcdis_circle("xy",0,0,0,mc_mn_radius);
+      mcdis_circle("xy",0,0,0,radius);
     }
     else
-    if (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_SQUARE)
+    if (abs(Vars->Flag_Shape) == DEFS->SHAPE_SQUARE)
     {
       mcdis_magnify("xy");
-      mcdis_multiline(5, (double)mc_mn_xmin, (double)mc_mn_ymin, 0.0,
-             (double)mc_mn_xmax, (double)mc_mn_ymin, 0.0,
-             (double)mc_mn_xmax, (double)mc_mn_ymax, 0.0,
-             (double)mc_mn_xmin, (double)mc_mn_ymax, 0.0,
-             (double)mc_mn_xmin, (double)mc_mn_ymin, 0.0);
+      mcdis_multiline(5, (double)xmin, (double)ymin, 0.0,
+             (double)xmax, (double)ymin, 0.0,
+             (double)xmax, (double)ymax, 0.0,
+             (double)xmin, (double)ymax, 0.0,
+             (double)xmin, (double)ymin, 0.0);
     }
     else
-    if (!mc_mn_restricted && ((abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_CYLIND) || (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_BANANA)))
+    if (!restricted && ((abs(Vars->Flag_Shape) == DEFS->SHAPE_CYLIND) || (abs(Vars->Flag_Shape) == DEFS->SHAPE_BANANA)))
     {
       mcdis_magnify("xyz");
-      mcdis_circle("xz", 0,  mc_mn_h/2.0, 0, mc_mn_radius);
-      mcdis_circle("xz", 0, -mc_mn_h/2.0, 0, mc_mn_radius);
-      mcdis_line(-mc_mn_radius, -mc_mn_h/2.0, 0, -mc_mn_radius, +mc_mn_h/2.0, 0);
-      mcdis_line(+mc_mn_radius, -mc_mn_h/2.0, 0, +mc_mn_radius, +mc_mn_h/2.0, 0);
-      mcdis_line(0, -mc_mn_h/2.0, -mc_mn_radius, 0, +mc_mn_h/2.0, -mc_mn_radius);
-      mcdis_line(0, -mc_mn_h/2.0, +mc_mn_radius, 0, +mc_mn_h/2.0, +mc_mn_radius);
+      mcdis_circle("xz", 0,  h/2.0, 0, radius);
+      mcdis_circle("xz", 0, -h/2.0, 0, radius);
+      mcdis_line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+      mcdis_line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+      mcdis_line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+      mcdis_line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
     }
     else
-    if (abs(mc_mn_Vars->Flag_Shape) == mc_mn_DEFS->SHAPE_BOX)
+    if (abs(Vars->Flag_Shape) == DEFS->SHAPE_BOX)
     {
       mcdis_magnify("xyz");
-      mcdis_multiline(5, mc_mn_xmin, mc_mn_ymin, mc_mn_zmin,
-                   mc_mn_xmax, mc_mn_ymin, mc_mn_zmin,
-                   mc_mn_xmax, mc_mn_ymax, mc_mn_zmin,
-                   mc_mn_xmin, mc_mn_ymax, mc_mn_zmin,
-                   mc_mn_xmin, mc_mn_ymin, mc_mn_zmin);
-      mcdis_multiline(5, mc_mn_xmin, mc_mn_ymin, mc_mn_zmax,
-                   mc_mn_xmax, mc_mn_ymin, mc_mn_zmax,
-                   mc_mn_xmax, mc_mn_ymax, mc_mn_zmax,
-                   mc_mn_xmin, mc_mn_ymax, mc_mn_zmax,
-                   mc_mn_xmin, mc_mn_ymin, mc_mn_zmax);
-      mcdis_line(mc_mn_xmin, mc_mn_ymin, mc_mn_zmin, mc_mn_xmin, mc_mn_ymin, mc_mn_zmax);
-      mcdis_line(mc_mn_xmax, mc_mn_ymin, mc_mn_zmin, mc_mn_xmax, mc_mn_ymin, mc_mn_zmax);
-      mcdis_line(mc_mn_xmin, mc_mn_ymax, mc_mn_zmin, mc_mn_xmin, mc_mn_ymax, mc_mn_zmax);
-      mcdis_line(mc_mn_xmax, mc_mn_ymax, mc_mn_zmin, mc_mn_xmax, mc_mn_ymax, mc_mn_zmax);
+      mcdis_multiline(5, xmin, ymin, zmin,
+                   xmax, ymin, zmin,
+                   xmax, ymax, zmin,
+                   xmin, ymax, zmin,
+                   xmin, ymin, zmin);
+      mcdis_multiline(5, xmin, ymin, zmax,
+                   xmax, ymin, zmax,
+                   xmax, ymax, zmax,
+                   xmin, ymax, zmax,
+                   xmin, ymin, zmax);
+      mcdis_line(xmin, ymin, zmin, xmin, ymin, zmax);
+      mcdis_line(xmax, ymin, zmin, xmax, ymin, zmax);
+      mcdis_line(xmin, ymax, zmin, xmin, ymax, zmax);
+      mcdis_line(xmax, ymax, zmin, xmax, ymax, zmax);
     }
   } /* end Monitor_nD_McDisplay */
 
