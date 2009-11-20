@@ -44,88 +44,34 @@ SCIREL=scilab-$REL
 SCIFILE=$SCIREL.bin.linux-i686.tar.gz
 	
 perl-modules:
-	$(srcdir)/../mkinstalldirs  $(mc_libdir)/tools/perl/modules
+	$(srcdir)/../../mkinstalldirs  $(mc_libdir)/tools/perl/modules
 	# install Proc-Simple
-	cd Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
+	cd $(srcdir)/Perl/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
 	# install Tk-CodeText
-	cd Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
+	cd $(srcdir)/Perl/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
 	# install Math-Amoeba
-	cd Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
+	cd $(srcdir)/Perl/Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
+	@echo "Installed Proc-Simple Tk-CodeText Math-Amoeba perl modules in @prefix@/lib/mcstas/tools/perl/modules"
 
 perl-PGPLOT:
-	$(srcdir)/../mkinstalldirs  $(mc_libdir)/tools/perl/modules
+	$(srcdir)/../../mkinstalldirs  $(mc_libdir)/tools/perl/modules
 	# install F77 
-	cd pgplot && gunzip -c ExtUtils-F77-1.16.tar.gz | tar xf - && cd ExtUtils-F77-1.16 && perl Makefile.PL PREFIX=@prefix@/lib/mcstas/tools/perl/modules LIB=@prefix@/lib/mcstas/tools/perl/modules && make && make install
+	cd $(srcdir)/Perl/ExtUtils-F77-1.16 && perl Makefile.PL PREFIX=@prefix@/lib/mcstas/tools/perl/modules LIB=@prefix@/lib/mcstas/tools/perl/modules && make && make install
 	# install perl-PGPLOT
-	cd pgplot && gunzip -c PGPLOT-2.20.tar.gz | tar xf - 
+	cd $(srcdir)/Perl/PGPLOT-2.20
 	if test "`basename ${G77}`" == "g77" ; then \
-		  sed 's/#use ExtUtils::F77 qw(generic g77);/use ExtUtils::F77 qw(generic g77);/' pgplot/PGPLOT-2.20/Makefile.PL > pgplot/PGPLOT-2.20/Makefile.PL.new ; \
-		  mv pgplot/PGPLOT-2.20/Makefile.PL.new pgplot/PGPLOT-2.20/Makefile.PL; \
+		  sed 's/#use ExtUtils::F77 qw(generic g77);/use ExtUtils::F77 qw(generic g77);/' $(srcdir)/Perl/PGPLOT-2.20/Makefile.PL > $(srcdir)/Perl/PGPLOT-2.20/Makefile.PL.new ; \
+		  mv $(srcdir)/Perl/PGPLOT-2.20/Makefile.PL.new $(srcdir)/Perl/PGPLOT-2.20/Makefile.PL; \
 	fi
-	cd pgplot/PGPLOT-2.20 && export PERL5LIB=${PERL5LIB} && perl Makefile.PL PREFIX=@prefix@/lib/mcstas/tools/perl/modules LIB=@prefix@/lib/mcstas/tools/perl/modules && make && make install
-	
-compile-pgplot:
-	# requires: g77 and perl, and probably super user rights
-	# install pgplot 5.2
-	export LD_LIBRARY_PATH
-	cd pgplot && gunzip -c pgplot5.2.tar.gz | tar xf -
-	# pgplot: add patch for pgdisp/malloc error
-	cp pgplot/pgdispd/* pgplot/pgplot/pgdispd/
-	# pgplot: create drivers list
-	$(srcdir)/../mkinstalldirs ${PGPLOT_DIR}
-	cd pgplot/pgplot && cp drivers.list ${PGPLOT_DIR}/drivers.list
-	cd ${PGPLOT_DIR} && sed 's/! GIDRIV/  GIDRIV/' drivers.list > drivers1.list && sed 's/! PSDRIV/  PSDRIV/' drivers1.list > drivers2.list && sed 's/! PPDRIV/  PPDRIV/' drivers2.list > drivers3.list && sed 's/! X2DRIV/  X2DRIV/' drivers3.list > drivers4.list && sed 's/! XWDRIV/  XWDRIV/' drivers4.list > drivers5.list && sed 's/! LXDRIV/  LXDRIV/' drivers5.list > drivers.list && rm -f drivers?.list
-	# pgplot: configure doc scripts
-	cd pgplot/pgplot && sed 's+^#!/usr/local/bin/perl+#!'${PERLBIN}'+' makehtml > makehtml.fixed
-	cd pgplot/pgplot && cp makehtml.fixed makehtml
-	chmod a+x pgplot/pgplot/makehtml
-	rm pgplot/pgplot/makehtml.fixed
-	cd pgplot/pgplot && sed 's+^#!/usr/local/bin/perl+#!'${PERLBIN}'+' maketex > maketex.fixed
-	cd pgplot/pgplot && cp maketex.fixed maketex
-	chmod a+x pgplot/pgplot/maketex
-	rm pgplot/pgplot/maketex.fixed
-	# pgplot: create makefile and configure it
-	cd ${PGPLOT_DIR} && pgplot/pgplot/makemake pgplot/pgplot linux   g77_gcc
-	if test "`basename ${G77}`" == "gfortran" ; then
-		  sed 's/g77/gfortran/' pgplot/pgplot/makefile > pgplot/pgplot/makefile.new
-		  mv pgplot/pgplot/makefile.new pgplot/pgplot/makefile
-	fi
-	sed 's/-lbsd//' pgplot/pgplot/makefile > pgplot/pgplot/makefile.new
-	# On Debian stable make fails without X11R6/lib on lib path
-	sed 's+-L/usr/X11/lib+-L/usr/X11/lib -L/usr/X11R6/lib -L@prefix/pgplot+' pgplot/pgplot/makefile.new > pgplot/pgplot/makefile
-	if test "$USE_PIC" == "no" ; then
-		rm pgplot/pgplot/makefile.new
-	else
-		echo Using 64-bit PIC configuration
-		sed 's/CFLAGC=/CFLAGC=-fPIC /' pgplot/pgplot/makefile > pgplot/pgplot/makefile.new
-		sed 's/CFLAGD=/CFLAGD=-fPIC /' pgplot/pgplot/makefile.new > pgplot/pgplot/makefile
-		sed 's/FFLAGC=/FFLAGC=-fPIC /' pgplot/pgplot/makefile > pgplot/pgplot/makefile.new
-		sed 's/FFLAGD=/FFLAGD=-fPIC /' pgplot/pgplot/makefile.new > pgplot/pgplot/makefile
-		# customize for 64-bit machines
-		sed 's/INTEGER PIXMAP/INTEGER*8 PIXMAP/' pgplot/pgplot/drivers/wddriv.f > pgplot/pgplot/drivers/wddriv64.f
-		cp pgplot/pgplot/drivers/wddriv64.f pgplot/pgplot/drivers/wddriv.f
-		rm pgplot/pgplot/drivers/wddriv64.f
-		sed 's/INTEGER PIXMAP/INTEGER*8 PIXMAP/' pgplot/pgplot/drivers/gidriv.f > pgplot/pgplot/drivers/gidriv64.f
-		cp pgplot/pgplot/drivers/gidriv64.f pgplot/pgplot/drivers/gidriv.f
-		rm pgplot/pgplot/drivers/gidriv64.f
-		sed 's/INTEGER PIXMAP/INTEGER*8 PIXMAP/' pgplot/pgplot/drivers/ppdriv.f > pgplot/pgplot/drivers/ppdriv64.f
-		sed 's/INTEGER\*8 PIXMAP(/INTEGER PIXMAP(/' pgplot/pgplot/drivers/ppdriv64.f > pgplot/pgplot/drivers/ppdriv.f
-		rm pgplot/pgplot/drivers/ppdriv64.f
-	fi
-	# pgplot: compile
-	cd pgplot && make
-	# pgplot: compile cpg
-	cd pgplot && make cpg
-	# pgplot: create doc
-	cd pgplot && rm pgplot.html pgplot-routines.tex
-	cd pgplot && make pgplot.html
-	cd pgplot && make pgplot-routines.tex
-	cd pgplot && make clean
-	# create links
-	ln -sf ${PGPLOT_DIR}/pgdisp @prefix@/bin/pgdisp
-	ln -sf ${PGPLOT_DIR}/pgxwin_server @prefix@/bin/pgxwin_server
-	ln -sf ${PGPLOT_DIR}/libpgplot.so @prefix@/lib/libpgplot.so
+	cd $(srcdir)/Perl/PGPLOT-2.20 && export PERL5LIB=${PERL5LIB} && perl Makefile.PL PREFIX=@prefix@/lib/mcstas/tools/perl/modules LIB=@prefix@/lib/mcstas/tools/perl/modules && make && make install
+	@echo "Installed perl-PGPLOT modules in @prefix@/lib/mcstas/tools/perl/modules"
 
+install-pgplot: compile-pgplot perl-PGPLOT
+compile-pgplot:
+	cd pgplot && make && make install
+	@echo "Installed pgplot libraries in ${PGPLOT_DIR}"
+
+install-scilab: compile-scilab
 compile-scilab:
 	export TMPDIR=`mktemp -d`
 	# Get + unpack scilab from the net...
