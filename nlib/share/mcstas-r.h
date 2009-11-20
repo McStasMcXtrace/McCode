@@ -536,7 +536,7 @@ static int mpi_node_count;
 
 struct mcdetector_struct {
   char   prefix[CHAR_BUF_LENGTH];
-  char   filename[CHAR_BUF_LENGTH];
+  char   filename[CHAR_BUF_LENGTH]; /* file name of monitor */
   char   position[CHAR_BUF_LENGTH];
   char   component[CHAR_BUF_LENGTH];
   char   instrument[CHAR_BUF_LENGTH];
@@ -570,13 +570,13 @@ struct mcdetector_struct {
   double halfwidthX;
   double centerY;
   double halfwidthY;
-  int    rank;
+  int    rank;          /* dimensionaly of monitor */
   char   istransposed;
   
   long   m,n,p;
   long   date_l;
   
-  double *p0, *p1, *p2;
+  double *p0, *p1, *p2; /* saved data */
   double *p0_orig,*p1_orig,*p2_orig;
   
   FILE   *file_handle;
