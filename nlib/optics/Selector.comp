@@ -23,7 +23,7 @@
 * The origin is at the ENTRANCE of the selector.
 *
 * Example: Selector(xmin=-0.015,  xmax=0.015,  ymin=-0.025, ymax=0.025, length=0.25,
-*            num=72,width=0.0004, radius=0.12, alpha=48.298, nu=500)
+*            nslit=72,width=0.0004, radius=0.12, alpha=48.298, nu=500)
 * These are values for the D11@ILL Dornier 'Dolores' Velocity Selector (NVS 023)
 *
 * %VALIDATION
@@ -44,7 +44,7 @@
 * xwidth:      Width of entry. Overrides xmin,xmax. (m)
 * yheight:     Height of entry. Overrides ymin,ymax. (m)
 * length:      rotor length  (m)
-* num:         number of absorbing subdivinding spokes/lamella (1)
+* nslit:       number of absorbing subdivinding spokes/lamella (1)
 * d:           width of spokes at beam-center (m)
 * radius:      radius of beam-center (m)
 * alpha:       angle of torsion (deg)
@@ -60,7 +60,7 @@
 DEFINE COMPONENT Selector
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xmin=-0.015, xmax=0.015, ymin=-0.025, ymax=0.025, length=0.25,
-  xwidth=0, yheight=0, num=72, d=0.0004, radius=0.12, alpha=48.298, nu=500)
+  xwidth=0, yheight=0, nslit=72, d=0.0004, radius=0.12, alpha=48.298, nu=500)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 INITIALIZE
@@ -88,7 +88,7 @@ TRACE
   n_angle_in = atan2( x,y+radius)*RAD2DEG;
   act_radius = sqrt(x*x + pow(radius+y,2));
   closed_angle = d/act_radius*RAD2DEG;
-  open_angle = 360/num-closed_angle;
+  open_angle = 360/nslit-closed_angle;
   sel_phase = open_angle*rand01();
   p *= (open_angle/(closed_angle+open_angle));
 
