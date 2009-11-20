@@ -211,47 +211,6 @@ instrument.tab.c instrument.tab.h: instrument.y
 lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
 
-# Prefer Scilab over Matlab over PGPLOT
-config:
-	if [ $(VRML) != no ]; then \
-		$(MAKE) vrml; \
-	fi; \
-	if [ $(SCILAB) != no ]; then \
-		$(MAKE) scilab; \
-	fi; \
-	if [ $(MATLAB) != no ]; then \
-		$(MAKE) matlab; \
-	fi; \
-	if [ $(PGPLOT) != no ]; then \
-		$(MAKE) pgplot; \
-	fi;
-
-scilab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Scilab'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-matlab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Matlab'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-pgplot:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'McStas'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-vrml:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-PGPLOT:
-	$(MAKE) pgplot
-Matlab:
-	$(MAKE) matlab
-Scilab:
-	$(MAKE) scilab
-VRML:
-	$(MAKE) vrml
-install-pgplot:
-	cd support/pgplot && ./pgplot.sh && echo "@PACKAGE_NAME@: run '$(MAKE) reconfigure'"
-
-install-scilab:
-	cd support/scilab && ./scilab.sh && echo "@PACKAGE_NAME@: run './configure; $(MAKE); $(MAKE) install' again"
-
 test: test_@MCCODE@
 
 test_mcstas: mcrun.fixpl
