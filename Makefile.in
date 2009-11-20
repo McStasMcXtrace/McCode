@@ -124,14 +124,10 @@ pgplot:
 vrml:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-PGPLOT:
-	$(MAKE) pgplot
-Matlab:
-	$(MAKE) matlab
-Scilab:
-	$(MAKE) scilab
-VRML:
-	$(MAKE) vrml
+PGPLOT: pgplot
+Matlab: matlab
+Scilab: scilab
+VRML: vrml
 
 test:
 	cd src && $(MAKE) test
