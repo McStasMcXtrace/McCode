@@ -59,9 +59,7 @@ install:
 	$(topdir)/src/mcdoc.fixpl --text
 	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
 	mkdir $(mc_libdir)/tools/perl/modules
-	cd $(topdir)/support/common/Perl/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
-	cd $(topdir)/support/common/Perl/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
-	cd $(topdir)/support/common/Perl/Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
+	cd $(topdir)/support/common && $(MAKE) perl-modules
 	chmod a+x $(mc_libdir)/tools/perl/mcstas_reconfigure
 	@echo McStas library has been installed in MCSTAS=$(mc_libdir), and binaries in $(bindir)
 	@echo "Start McStas with: mcgui or use mcrun for command line simulations"
