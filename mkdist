@@ -46,14 +46,14 @@ fi
 cp -rp $PW $DIST
 
 # Create the doc's from tex - if a checkout is avail.
-if [ -d $PW/../tex ] ;
+if [ -d $PW/../../McStasTeX/trunk ] ;
 then
-  cd $PW/../tex
+  cd $PW/../../McStasTeX/trunk
   ./build $1
   
-  # copy the doc in DIST/lib/doc. Only use PDF files in distro.
-  mv mcstas-$1-manual.pdf $DIST/lib/doc/mcstas-manual.pdf
-  mv mcstas-$1-components.pdf $DIST/lib/doc/mcstas-components.pdf
+  # copy the doc in DIST/doc. Only use PDF files in distro.
+  mv mcstas-$1-manual.pdf $DIST/doc/manuals/mcstas-manual.pdf
+  mv mcstas-$1-components.pdf $DIST/doc/manuals/mcstas-components.pdf
 fi
 
 # Go in DIST, clean up CVS information
@@ -88,10 +88,10 @@ cd ..
 #mv configure.in.new configure.in
 
 # Create the doc's from tex - if a checkout is avail.
-if [ -d $PW/../tex ] ;
+if [ -d $DIST/doc/install_docs/tex ] ;
 then
   # Create ps/pdf/html based install info
-  cd doc/install_docs/tex
+  cd $DIST/doc/install_docs/tex
   latex install
   latex install
   whichdvipdf=`which dvipdf`
@@ -112,10 +112,15 @@ then
   # clean up
   rm install.aux
   rm install.log
-  cd $PW/doc/tutorial
+  cd $DIST/doc/tutorial
   # Update the tutorial files
   ./update
   rm update
+  mkdir $DIST/lib/doc
+  cp -r $DIST/doc/install_docs/ $DIST/lib/doc
+  cp -r $DIST/doc/tutorial/ $DIST/lib/doc/
+  cp -r $DIST/doc/man/ $DIST/lib/doc/
+  cp  $DIST/doc/manuals/* $DIST/lib/doc/
 fi  
 cd $DIST
 
@@ -150,12 +155,12 @@ cd ../../support
 sed 's/@RELEASE@/'$1'/' deb/debcreate > deb/debcreate.new
 mv deb/debcreate.new deb/debcreate
 chmod a+x deb/debcreate
-cd ..
+cd $DIST
 
 # Create configure
 autoconf -o configure $CONFIGURE_IN
 #chmod a+x configure
-autoconf -o lib/tools/perl/mcstas_reconfigure lib/tools/perl/mcstas_reconfigure.in 
+autoconf lib/tools/perl/mcstas_reconfigure.in > lib/tools/perl/mcstas_reconfigure
 #chmod a+x lib/tools/perl/mcstas_reconfigure
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
