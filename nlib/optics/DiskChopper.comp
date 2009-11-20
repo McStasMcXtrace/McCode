@@ -19,9 +19,7 @@
 * %D
 * Models a disc chopper with nslit identical slits, which are symmetrically disposed
 * on the disc. At time t=0, the centre of the first slit opening will be situated at the
-* vertical axis.
-*
-* Possibly, the slits can have central absorbing inserts ('beamstops'). 
+* vertical axis when phase=0.
 *
 * For more complicated gemometries, see component manual example of DiskChopper GROUPing.
 *
@@ -39,34 +37,30 @@
 * radius:  (m)      Radius of the disc
 * nu:      (Hz)     Frequency of the Chopper, omega=2*PI*nu
 *                     (algebraic sign defines the direction of rotation)
-* nslit:   (1)      Number of slits
+* nslit:   (1)      Number of slits, regularly arranged around the disk
 *
 * Optional parameters:
 * isfirst: (0/1)    Set it to 1 for the first chopper position in a cw source
-*                   (it then spreads the neutron time distribution)
+*                     (it then spreads the neutron time distribution)
 * n_pulse: (1)      Number of pulses (Only if isfirst)
 * jitter   (s)      Jitter in the time phase
-* theta_1: (deg)    Angular width of optional beamstop in chopper windows
 * abs_out: (0/1)    Absorb neutrons hitting outside of chopper radius?
 * delay:   (s)      Time 'delay'.
 * phase:   (deg)    Angular 'delay' (overrides delay)
 * xwidth:  (m)      Horizontal slit width opening at beam center 
 * verbose: (1)      Set to 1 to display Disk chopper configuration
 *
-* %D
-* Example values: theta_0=10 yheight=0.2 radius=0.5 nu=400 nslit=3 n_pulse=1
-*
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT DiskChopper
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (theta_0=0, radius=0.5, yheight=0, nu, nslit=3, jitter=0, theta_1=0, delay=0, isfirst=0, n_pulse=1, abs_out=1, phase=0, xwidth=0, verbose=0)
-OUTPUT PARAMETERS (Tg, T, To, Tc, delta_y, height,omega)
+SETTING PARAMETERS (theta_0=0, radius=0.5, yheight=0, nu, nslit=3, jitter=0, delay=0, isfirst=0, n_pulse=1, abs_out=1, phase=0, xwidth=0, verbose=0)
+OUTPUT PARAMETERS (Tg, To, delta_y, height,omega)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 DECLARE
  %{
-  double Tg,To,Tc,delta_y,height,omega;
+  double Tg,To,delta_y,height,omega;
  %}
 
 INITIALIZE
@@ -87,9 +81,6 @@ INITIALIZE
       if (nslit*theta_0 >= 360)
       { fprintf(stderr,"DiskChopper: %s: nslit * theta_0 exceeds 2PI\n", NAME_CURRENT_COMP);
         exit(-1); }
-      if (theta_1 >= theta_0)
-      { fprintf(stderr,"DiskChopper: %s: theta_1 must me lower than theta_0\n", NAME_CURRENT_COMP);
-        exit(-1); }
       if (yheight && yheight>radius) {
         fprintf(stderr,"DiskChopper: %s: yheight must be < radius\n", NAME_CURRENT_COMP);
         exit(-1); }
@@ -100,17 +91,11 @@ INITIALIZE
         fprintf(stderr,"DiskChopper: %s WARNING: chopper frequency is 0!\n", NAME_CURRENT_COMP);
         omega = 1e-15; /* We should actually use machine epsilon here... */
       }
-      if (!(abs_out==1)) {
+      if (!abs_out) {
         fprintf(stderr,"DiskChopper: %s WARNING: chopper will NOT absorb neutrons outside radius %g [m]\n", NAME_CURRENT_COMP, radius);
-        abs_out=0;
-      }
-      if (isfirst && theta_1) {
-        fprintf(stderr,"DiskChopper: %s WARNING: Options isfirst and beamstops not compatible. Beamstops removed.\n", NAME_CURRENT_COMP);
-        theta_1=0;
       }
       
       theta_0*=DEG2RAD;
-      theta_1*=DEG2RAD;
 
       
       /* Calulate delay from phase and vice versa, 'direction' moderated by sign of omega */
@@ -132,9 +117,6 @@ INITIALIZE
       /* How long can neutrons pass the Chopper at a single point */
       To=theta_0/fabs(omega);
       
-      /* How long are neutrons absorbed by beamstop in chopper windows? */
-      Tc=theta_1/fabs(omega);
-      
       if (!xwidth) xwidth=2*delta_y*sin(theta_0/2);
       
       if (verbose && nu) {
@@ -153,7 +135,7 @@ TRACE
     yprime = y+delta_y;
     
     /* Is neutron outside the vertical slit range and should we absorb? */
-    if ((x*x+yprime*yprime)>radius*radius && abs_out==1) {
+    if (abs_out && (x*x+yprime*yprime)>radius*radius) {
       ABSORB;
     }
     /* Does neutron hit inner solid part of chopper in case of yheight!=radius? */
@@ -165,15 +147,14 @@ TRACE
     if (isfirst)
       {
         /* all events are put in the transmitted time frame */
-        t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + floor(n_pulse*rand01())*Tg;
+        t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + (n_pulse > 1 ? floor(n_pulse*rand01())*Tg : 0);
         /* correction: chopper slits transmission opening/full disk */
         p *= nslit*theta_0/2.0/PI; 
       }
     else 
       {
         toff=fabs(t-atan2(x,yprime)/omega - delay + jitter*randnorm());
-        /* does neutron hit beamstop? */
-        if (fmod(toff+Tc/2.0,Tg)<Tc) ABSORB;
+
         /* does neutron hit outside slit? */
         if (fmod(toff+To/2.0,Tg)>To) ABSORB; 
       }
@@ -184,56 +165,28 @@ TRACE
 MCDISPLAY
 %{
   
-  int j,k,l;
+  int j;
   /* Arrays for storing geometry of slit/beamstop */
-  double X[5];
-  double Y[5];
-  double thetas[4];
-  double Radius;
-  double theta;
   magnify("xy");
   circle("xy", 0, -delta_y, 0, radius);
-  /* Drawing the slit(s)/internal beamstop(s): */
   
+  /* Drawing the slit(s) */
   for (j=0; j<nslit; j++) {
     /* Angular start/end of slit */
-    thetas[0] = j*(theta_0+(Tg-To)*omega) - theta_0/2.0 + phase;
-    thetas[3] = j*(theta_0+(Tg-To)*omega) + theta_0/2.0 + phase;
-    /* Angular start/end of beamstop (possibly identical) */
-    thetas[1] = thetas[0] + (theta_0 - theta_1)/2.0;
-    thetas[2] = thetas[1] + theta_1;
-    /* Draw two 'multilines' from start of slit to start of beamstop
-       and end of beamstop to end of slit. */
-    for (l=0; l<2; l++) {
-      for (k=0; k<5; k++) {
-        if (k==0) {
-          theta = thetas[2*l];
-          if (l==1 && (!theta_1)) {
-            Radius = radius-height;
-          } else {
-            Radius = radius;
-          }
-        } else if (k==4) {
-          theta = thetas[2*l+1];
-          if (l==0 && (!theta_1)) {
-            Radius = radius-height;
-          } else {
-            Radius = radius;
-          }
-        } else {
-          theta = thetas[2*l]+(k-1)*(thetas[2*l+1]-thetas[2*l])/2.0;
-          Radius = radius-height;
-        }
-        X[k] = Radius * sin(theta);
-        Y[k] = Radius * cos(theta)-delta_y;
-      }
-      multiline(5, 
-                (double)X[0], (double)Y[0], (double)0,
-                (double)X[1], (double)Y[1], (double)0,
-                (double)X[2], (double)Y[2], (double)0,
-                (double)X[3], (double)Y[3], (double)0,
-                (double)X[4], (double)Y[4], (double)0);
-    }
+    double tmin = j*(2.0*PI/nslit) - theta_0/2.0 + phase;
+    double tmax = tmin+theta_0;
+    /* Draw lines for each slit. */
+       
+    line(
+      radius*sin(tmin),          radius*cos(tmin)-delta_y,          0,
+      (radius-height)*sin(tmin), (radius-height)*cos(tmin)-delta_y, 0
+      );
+    line(
+      (radius-height)*sin(tmin), (radius-height)*cos(tmin)-delta_y, 0,
+      (radius-height)*sin(tmax), (radius-height)*cos(tmax)-delta_y, 0);
+    line(
+      (radius-height)*sin(tmax), (radius-height)*cos(tmax)-delta_y, 0,
+      radius*sin(tmax),          radius*cos(tmax)-delta_y,          0);
   }
 %}
 
