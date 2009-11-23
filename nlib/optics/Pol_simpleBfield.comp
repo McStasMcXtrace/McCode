@@ -108,6 +108,11 @@ INITIALIZE
     t=malloc(2*sizeof(double));
     t[0]=By;
     t[1]=zdepth;
+  } else if (fieldFunction==majorana_magnetic_field){
+    t=malloc(3*sizeof(double));
+    t[0]=Bx;
+    t[1]=By;
+    t[2]=zdepth;
   }
   parPtr=(void *)t;
 

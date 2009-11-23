@@ -44,6 +44,7 @@ DEFINE INSTRUMENT Test_Magnetic_Majorana(Blarge=1.0, Bsmall=0.003,
 /* functions in C syntax. These may be used in the whole instrument. */
 DECLARE
 %{
+  void *data; 
 %}
 
 /* The INITIALIZE section is executed when the simulation starts     */
@@ -99,13 +100,13 @@ COMPONENT armMagnet = Arm()
 // The By field is set to rotate the spin 180 degrees for neutrons of wavelenth
 // 5 AA
 COMPONENT msf =
-Pol_simpleBfield(xwidth=0.08, yheight=0.08, length=magnetLength, 
+Pol_simpleBfield(xwidth=0.08, yheight=0.08, zdepth=magnetLength, 
 		 Bx=Blarge, By=Bsmall, Bz=0,
 		 fieldFunction=majorana_magnetic_field)
      AT (0, 0, 0) RELATIVE armMagnet
 
-COMPONENT msfCp = COPY(msf)
-     AT (0, 0, 0) RELATIVE armMagnet
+COMPONENT msfCp = Pol_simpleBfield_stop(magnet_comp_stop=msf)
+     AT (0, 0, magnetLength) RELATIVE armMagnet
 
 COMPONENT armMagnetEnd = Arm()
      AT (0,0,magnetLength) RELATIVE armMagnet
