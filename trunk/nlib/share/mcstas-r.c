@@ -3104,11 +3104,13 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 #ifdef USE_MPI
   /* only by MASTER for non lists (MPI reduce has been done in detector_import) */
   if (!strstr(detector.format.Name," list ") && mpi_node_rank != mpi_node_root) {
+    if (detector.rank == 1 && detector.p1 && strstr(detector.format.Name,"McStas")) {
       free(detector.p1);  /* 'this_p1' allocated in mcdetector_write_sim for 1D McStas data sets [x I E N] */
       detector.p0 = detector.p0_orig;
       detector.p1 = detector.p1_orig;
       detector.p2 = detector.p2_orig;
       detector.m = detector.n; detector.n=1; detector.istransposed=0;
+    }
     return(detector);
   }
 #endif
