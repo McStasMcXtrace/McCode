@@ -336,7 +336,7 @@
         fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", mc_rt_File);
         return (-1);
       } else
-        fprintf("Opening input file '%s' (Table_Read)\n", mc_rt_path);
+        printf("Opening input file '%s' (Table_Read)\n", mc_rt_path);
     }
     stat(mc_rt_File,&mc_rt_stfile);
     mc_rt_filesize = mc_rt_stfile.st_size;
