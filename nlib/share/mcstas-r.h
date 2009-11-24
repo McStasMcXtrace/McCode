@@ -510,8 +510,8 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 #endif
 
 int mc_MPI_Reduce(void* sbuf, void* rbuf,
-                  int count, MPI_Datatype dtype,
-                  MPI_Op op, int root, MPI_Comm comm);
+                  long count, MPI_Datatype dtype,
+                  MPI_Op op, MPI_Comm comm);
 
 #define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
 

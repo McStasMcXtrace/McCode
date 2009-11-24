@@ -1007,35 +1007,34 @@ static int mpi_node_root = 0;
 * mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
 *******************************************************************************/
 int mc_MPI_Reduce(void *sbuf, void *rbuf,
-                  int count, MPI_Datatype dtype,
-                  MPI_Op op, int root, MPI_Comm comm)
+                  long count, MPI_Datatype dtype,
+                  MPI_Op op, MPI_Comm comm)
 {
-  void *lrbuf;
+
   int dsize;
   int res= MPI_SUCCESS;
   
   if (!sbuf || count <= 0) return(-1);
-
   MPI_Type_size(dtype, &dsize);
-  lrbuf = malloc(count*dsize);
-  if (lrbuf == NULL)
-    exit(fprintf(stderr, "Error: Out of memory %li (mc_MPI_Reduce).\n", (long)count*dsize));
+
+
+
   /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
   long offset=0;
-  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
+  long length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
   while (offset < count && res == MPI_SUCCESS) {
     if (!length || offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
-    res = MPI_Reduce((void*)(sbuf+offset*dsize), (void*)(lrbuf+offset*dsize), length, dtype, op, root, comm);
+    res = MPI_Allreduce(MPI_IN_PLACE, (void*)(sbuf+offset*dsize), length, dtype, op, comm);
     offset += length;
   }
+  if(res != MPI_SUCCESS) {
+    char error_string[CHAR_BUF_LENGTH];
+    int length_of_error_string;
+    MPI_Error_string(res, error_string, &length_of_error_string);
+    fprintf(stderr, "Warning: node %i: MPI_Reduce error %i '%s' (mc_MPI_Reduce) at offset=%li, count=%li\n",
+      mpi_node_rank, res, error_string, offset, count);
+  }
 
-  if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Reduce error %i (mc_MPI_Reduce) at offset=%li, count=%i\n", mpi_node_rank, res, offset, count);
-
-  if(mpi_node_rank == root)
-    memcpy(rbuf, lrbuf, count*dsize);
-
-  free(lrbuf);
   return res;
 } /* mc_MPI_Reduce */
 
@@ -1062,8 +1061,13 @@ int mc_MPI_Send(void *sbuf,
     offset += length;
   }
 
-  if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Send error %i (mc_MPI_Send) at offset=%li, count=%i tag=%i\n", mpi_node_rank, res, offset, count, tag);
+  if(res != MPI_SUCCESS) {
+    char error_string[CHAR_BUF_LENGTH];
+    int length_of_error_string;
+    MPI_Error_string(res, error_string, &length_of_error_string);
+    fprintf(stderr, "Warning: node %i: MPI_Send error %i '%s' (mc_MPI_Send) at offset=%li, count=%i\n",
+      mpi_node_rank, res, error_string, offset, count);
+  }
 
   return res;
 } /* mc_MPI_Send */
@@ -1092,8 +1096,13 @@ int mc_MPI_Recv(void *sbuf,
     offset += length;
   }
 
-  if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Recv error %i (mc_MPI_Recv) at offset=%li, count=%i tag=%i\n", mpi_node_rank, res, offset, count, tag);
+  if(res != MPI_SUCCESS) {
+    char error_string[CHAR_BUF_LENGTH];
+    int length_of_error_string;
+    MPI_Error_string(res, error_string, &length_of_error_string);
+    fprintf(stderr, "Warning: node %i: MPI_Recv error %i '%s' (mc_MPI_Recv) at offset=%li, count=%i\n",
+      mpi_node_rank, res, error_string, offset, count);
+  }
 
   return res;
 } /* mc_MPI_Recv */
@@ -2356,216 +2365,8 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
 } /* mcinfo_data */
 
 /*******************************************************************************
-* mcdetector_statistics: compute detector staistics and set information fields
-*                    compute basic stats, write "Detector:" line through mcdetector_statistics
-*                    also sets detector.p1=this_p1 field which may hold 1D McStas [x I Ierr N] array or list
-*                    which is set free in mcdetector_write_data
-* Used by: mcdetector_import
-*******************************************************************************/
-MCDETECTOR mcdetector_statistics(MCDETECTOR detector)
-{
-  /* compute statistics and update MCDETECTOR structure ===================== */
-  double sum_z   = 0;
-  double min_z   = 0;
-  double max_z   = 0;
-  double fmon_x=0, smon_x=0, fmon_y=0, smon_y=0, mean_z=0;
-  double Nsum=0;
-  double P2sum=0;
-  
-  double sum_xz  = 0;
-  double sum_yz  = 0;
-  double sum_x   = 0;
-  double sum_y   = 0;
-  double sum_x2z = 0;
-  double sum_y2z = 0;
-  int    i,j;
-  char   israw = (strstr(detector.format.Name," raw") != NULL);
-  double *this_p1=NULL; /* new 1D McStas array [x I E N]. Freed after writing data */
-  
-  char   hasnan=0;
-  char   hasinf=0;
-  
-  char   c[CHAR_BUF_LENGTH]; /* temp var for signal label */
-  
-  /* if McStas/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */
-  if (detector.rank == 1 && strstr(detector.format.Name,"McStas")) {
-    this_p1 = (double *)calloc(detector.m*detector.n*detector.p*4, sizeof(double));
-    if (!this_p1)
-      exit(-fprintf(stderr, "Error: Out of memory creating %li 1D McStas data set for file '%s' (mcdetector_statistics)\n", 
-        detector.m*detector.n*detector.p*4*sizeof(double*), detector.filename));
-  }
-  
-  max_z = min_z = detector.p1[0];
-  
-  for(j = 0; j < detector.n*detector.p; j++)
-  {
-    for(i = 0; i < detector.m; i++)
-    {
-      double x,y,z;
-      double N, E;
-      long   index= !detector.istransposed ? i*detector.n*detector.p + j : i+j*detector.m;
-
-      if (detector.m) x = detector.xmin + (i + 0.5)/detector.m*(detector.xmax - detector.xmin); else x = 0;
-      if (detector.n && detector.p) y = detector.ymin + (j + 0.5)/detector.n/detector.p*(detector.ymax - detector.ymin); else y = 0;
-      z = detector.p1[index];
-      N = detector.p0 ? detector.p0[index] : 1;
-      E = detector.p2 ? detector.p2[index] : 0;
-      if (detector.p2 && !israw) detector.p2[index] = (*mcestimate_error_p)(detector.p0[i],detector.p1[i],detector.p2[i]); /* set sigma */
-      
-      /* compute stats integrals */
-      sum_xz += x*z;
-      sum_yz += y*z;
-      sum_x += x;
-      sum_y += y;
-      sum_z += z;
-      sum_x2z += x*x*z;
-      sum_y2z += y*y*z;
-      if (z > max_z) max_z = z;
-      if (z < min_z) min_z = z;
-
-      Nsum += N;
-      P2sum += E;
-      
-      if (isnan(z) || isnan(E) || isnan(N)) hasnan=1;
-      if (isinf(z) || isinf(E) || isinf(N)) hasinf=1;
-      
-      if (detector.rank == 1 && this_p1 && strstr(detector.format.Name,"McStas")) {
-        /* fill-in 1D McStas array [x I E N] */
-        this_p1[index*4]   = x; 
-        this_p1[index*4+1] = z;
-        this_p1[index*4+2] = detector.p2 ? detector.p2[index] : 0;
-        this_p1[index*4+3] = N;
-      }
-    }
-  } /* for j */
-  
-  /* compute 1st and 2nd moments */
-  if (sum_z && detector.n*detector.m*detector.p)
-  {
-    fmon_x = sum_xz/sum_z;
-    fmon_y = sum_yz/sum_z;
-    smon_x = sqrt(sum_x2z/sum_z-fmon_x*fmon_x);
-    smon_y = sqrt(sum_y2z/sum_z-fmon_y*fmon_y);
-    mean_z = sum_z/detector.n/detector.m/detector.p;
-  }
-  /* store statistics into detector */
-  detector.intensity = sum_z;
-  detector.error     = (*mcestimate_error_p)(Nsum, sum_z, P2sum);
-  detector.events    = Nsum;
-  detector.min       = min_z;
-  detector.max       = max_z;
-  detector.mean      = mean_z;
-  detector.centerX   = fmon_x;
-  detector.halfwidthX= smon_x;
-  detector.centerY   = fmon_y;
-  detector.halfwidthY= smon_y;
-  
-  /* store stats */
-  switch (detector.rank) {
-    case 0:  strcpy(detector.statistics, ""); break;
-    case 1:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g;", 
-      detector.centerX, detector.halfwidthX); break;
-    case 2:
-    case 3:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g; Y0=%g; dY=%g;", 
-      detector.centerX, detector.halfwidthX, detector.centerY, detector.halfwidthY); 
-      break;
-    default: strcpy(detector.statistics, "");
-  }
-  
-  /* from rank, set type */
-  switch (detector.rank) {
-    case -1: sprintf(detector.type, "multiarray_1d(%ld)", detector.n); 
-      detector.p=1; break;
-    case 0:  strcpy(detector.type,  "array_0d"); 
-      detector.m=detector.n=detector.p=1; break;
-    case 1:  sprintf(detector.type, "array_1d(%ld)", detector.m*detector.n*detector.p); 
-      detector.m *= detector.n*detector.p; detector.n=detector.p=1; break;
-    case 2:  sprintf(detector.type, "array_2d(%ld, %ld)", detector.m, detector.n*detector.p); 
-      detector.n *= detector.p; detector.p=1; break;
-    case 3:  sprintf(detector.type, "array_3d(%ld, %ld, %ld)", detector.m, detector.n, detector.p); break;
-    default: detector.m=0; strcpy(detector.type, ""); strcpy(detector.filename, "");/* invalid */
-  }
-  
-  /* set limits */
-  if (abs(detector.rank) == 1 && strstr(detector.format.Name, "McStas"))
-    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g", 
-      detector.xmin, detector.xmax);
-  else if (detector.rank == 2)
-    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g", 
-      detector.xmin, detector.xmax, detector.ymin, detector.ymax);
-  else
-    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g %g %g", 
-      detector.xmin, detector.xmax, detector.ymin, detector.ymax, detector.zmin, detector.zmax);
-    
-  if (detector.n*detector.m*detector.p > 1)
-    sprintf(detector.signal, "Min=%g; Max=%g; Mean=%g;", detector.min, detector.max, detector.mean);
-  else 
-    strcpy(detector.signal, "");
-  sprintf(detector.values, "%g %g %g", detector.intensity, detector.error, detector.events);
-  
-  /* set "variables" as e.g. "I I_err N" */
-  strcpy(c, "I ");
-  if (strlen(detector.zvar))      strncpy(c, detector.zvar,32);
-  else if (strlen(detector.yvar)) strncpy(c, detector.yvar,32);
-  else if (strlen(detector.xvar)) strncpy(c, detector.xvar,32);
-
-  if (detector.rank == 1)
-    snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
-  else
-    snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s_err N", c, c);
-  
-  /* if McStas/PGPLOT and rank==1 replace p1 with new m*4 1D McStas and clear others */
-  if (detector.rank == 1 && this_p1 && strstr(detector.format.Name,"McStas")) {
-    detector.p1 = this_p1;
-    detector.n=detector.m; detector.m  = 4; 
-    detector.p0 = NULL;
-    detector.p2 = NULL;
-    detector.istransposed = 1;
-  }
-  
-  if (hasnan) 
-    printf("WARNING: Nan detected in component %s\n", detector.component);
-  if (hasinf) 
-    printf("WARNING: Inf detected in component %s\n", detector.component);
-    
-  /* output "Detector:" line ================================================ */
-  if (!strcmp(detector.component, mcinstrument_name)) { /* this is a detector written by instrument */
-    if (strlen(detector.filename))  /* we name it from its filename, or from its title */
-      mcvalid_name(c, detector.filename, CHAR_BUF_LENGTH);
-    else
-      mcvalid_name(c, detector.title, CHAR_BUF_LENGTH);
-  } else
-    strncpy(c, detector.component, CHAR_BUF_LENGTH);  /* usual detectors written by components */
-    
-  printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
-         c, detector.intensity, 
-         c, detector.error, 
-         c, detector.events);
-  printf(" \"%s\"\n", strlen(detector.filename) ? detector.filename : detector.component);
-    
-  /* add warning in case of low statistics or large number of bins in text format mode */
-  if (detector.error > detector.intensity/4) 
-    printf("WARNING: file '%s': Low Statistics\n",    detector.filename);
-  else if (strlen(detector.filename)) {
-    if (detector.m*detector.n*detector.p > 1000 && detector.events < detector.m*detector.n*detector.p && detector.events) 
-       printf(
-        "WARNING: file '%s': Low Statistics (%g events in %ldx%ldx%ld bins).\n",
-        detector.filename, detector.events, detector.m,detector.n,detector.p);
-    if ( !strstr(detector.format.Name, "binary")
-      && (strstr(detector.format.Name, "Scilab") || strstr(detector.format.Name, "Matlab"))
-      && (detector.n*detector.m*detector.p > 10000 || detector.m > 1000) ) printf(
-        "WARNING: file '%s' (%s format)\n"
-        "         Large matrices (%ldx%ldx%ld) in text mode may be\n"
-        "         slow or fail at import. Prefer binary mode e.g. --format='Matlab_binary'.\n",
-        detector.filename, detector.format.Name, detector.m,detector.n,detector.p);
-  }
-  
-  return(detector);
-} /* mcdetector_statistics */
-
-/*******************************************************************************
 * mcdetector_import: build detector structure, merge non-lists from MPI
-*                    compute basic stats, write "Detector:" line through mcdetector_statistics
+*                    compute basic stat, write "Detector:" line
 *                    mcdetector_import(... filename=NULL ...) sets siminfo data
 * RETURN:            detector structure. Invalid data if detector.p1 == NULL
 *                    Invalid detector sets m=0 and filename=""
@@ -2574,7 +2375,7 @@ MCDETECTOR mcdetector_statistics(MCDETECTOR detector)
 *******************************************************************************/
 MCDETECTOR mcdetector_import(struct mcformats_struct format,
   char *component, char *title,
-  int m, int n,  int p,
+  long m, long n,  long p,
   char *xlabel, char *ylabel, char *zlabel,
   char *xvar, char *yvar, char *zvar,
   double x1, double x2, double y1, double y2, double z1, double z2,
@@ -2585,6 +2386,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   time_t t;       /* for detector.date */
   long   date_l;  /* date as a long number */
   char   istransposed=0;
+  char   c[CHAR_BUF_LENGTH]; /* temp var for signal label */
   
   MCDETECTOR detector;
   
@@ -2648,13 +2450,27 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   else if (p == 1)           detector.rank = 2; /* 2D */
   else                       detector.rank = 3; /* 3D */
   
+  /* from rank, set type */
+  switch (detector.rank) {
+    case -1: sprintf(detector.type, "multiarray_1d(%ld)", n); p=1; break;
+    case 0:  strcpy(detector.type,  "array_0d"); m=n=p=1; break;
+    case 1:  sprintf(detector.type, "array_1d(%ld)", m*n*p); m *= n*p; n=p=1; break;
+    case 2:  sprintf(detector.type, "array_2d(%ld, %ld)", m, n*p); n *= p; p=1; break;
+    case 3:  sprintf(detector.type, "array_3d(%ld, %ld, %ld)", m, n, p); break;
+    default: m=0; strcpy(detector.type, ""); strcpy(detector.filename, "");/* invalid */
+  }
+  
   detector.m    = m;
   detector.n    = n;
   detector.p    = p;
-  
+
   if (!m || !n || !p) return(detector);
   
   /* these only apply to detector files ===================================== */
+
+  snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
+  /* may also store actual detector orientation in the future */
+
   strncpy(detector.title,      title,       CHAR_BUF_LENGTH); /* already checked in mcdetector_out_nD */
   strncpy(detector.xlabel,     xlabel && strlen(xlabel) ? xlabel : "X", CHAR_BUF_LENGTH); /* axis labels */
   strncpy(detector.ylabel,     ylabel && strlen(ylabel) ? ylabel : "Y", CHAR_BUF_LENGTH);
@@ -2662,7 +2478,32 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   strncpy(detector.xvar,       xvar && strlen(xvar) ? xvar :       "x", CHAR_BUF_LENGTH); /* axis variables */
   strncpy(detector.yvar,       yvar && strlen(yvar) ? yvar :       detector.xvar, CHAR_BUF_LENGTH);
   strncpy(detector.zvar,       zvar && strlen(zvar) ? zvar :       detector.yvar, CHAR_BUF_LENGTH);
+
+  /* set "variables" as e.g. "I I_err N" */
+  strcpy(c, "I ");
+  if (strlen(detector.zvar))      strncpy(c, detector.zvar,32);
+  else if (strlen(detector.yvar)) strncpy(c, detector.yvar,32);
+  else if (strlen(detector.xvar)) strncpy(c, detector.xvar,32);
+
+  if (detector.rank == 1)
+    snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s %s_err N", detector.xvar, c, c);
+  else
+    snprintf(detector.variables, CHAR_BUF_LENGTH, "%s %s_err N", c, c);
   
+  /* limits */
+  detector.xmin = x1;
+  detector.xmax = x2;
+  detector.ymin = y1;
+  detector.ymax = y2;
+  detector.zmin = z1;
+  detector.zmax = z2;
+  if (abs(detector.rank) == 1 && strstr(format.Name, "McStas"))
+    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g", x1, x2);
+  else if (detector.rank == 2)
+    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g", x1, x2, y1, y2);
+  else
+    snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g %g %g", x1, x2, y1, y2, z1, z2);
+
   /* init default values for statistics */
   detector.intensity  = 0;
   detector.error      = 0;
@@ -2675,41 +2516,185 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   detector.centerY    = 0;
   detector.halfwidthY = 0;
   
-  snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
-  /* may also store actual detector orientation in the future */
-  
-  /* limits */
-  detector.xmin = x1;
-  detector.xmax = x2;
-  detector.ymin = y1;
-  detector.ymax = y2;
-  detector.zmin = z1;
-  detector.zmax = z2;
-  
   if (!m || !n || !p) return(detector);
   
   /* if MPI and nodes_nb > 1: reduce data sets when using MPI =============== */
 #ifdef USE_MPI
   if (!strstr(format.Name," list ") && mpi_node_count > 1) {
     /* we save additive data: reduce everything into mpi_node_root */
-    if (detector.p0) mc_MPI_Reduce(detector.p0, detector.p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-    if (detector.p1) mc_MPI_Reduce(detector.p1, detector.p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-    if (detector.p2) mc_MPI_Reduce(detector.p2, detector.p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-
-    /* slaves are done */
-    if(mpi_node_rank != mpi_node_root) return detector;
+    if (p0) mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    if (p1) mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    if (p2) mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     
-    if (!detector.p0) {  /* additive signal must be then divided by the number of nodes */
+    if (!p0) {  /* additive signal must be then divided by the number of nodes */
       int i;
       for (i=0; i<abs(m*n*p); i++) {
-        detector.p1[i] /= mpi_node_count;
-        if (detector.p2) detector.p2[i] /= mpi_node_count;
+        p1[i] /= mpi_node_count;
+        if (p2) p2[i] /= mpi_node_count;
       }
     }
   }
 #endif /* USE_MPI */
+
+  /* compute statistics and update MCDETECTOR structure ===================== */
+  double sum_z   = 0;
+  double min_z   = 0;
+  double max_z   = 0;
+  double fmon_x=0, smon_x=0, fmon_y=0, smon_y=0, mean_z=0;
+  double Nsum=0;
+  double P2sum=0;
   
-  detector = mcdetector_statistics(detector);
+  double sum_xz  = 0;
+  double sum_yz  = 0;
+  double sum_x   = 0;
+  double sum_y   = 0;
+  double sum_x2z = 0;
+  double sum_y2z = 0;
+  int    i,j;
+  char   hasnan=0;
+  char   hasinf=0;
+  char   israw = (strstr(detector.format.Name," raw") != NULL);
+  double *this_p1=NULL; /* new 1D McStas array [x I E N]. Freed after writing data */
+  
+  /* if McStas/PGPLOT and rank==1 we create a new m*4 data block=[x I E N] */
+  if (detector.rank == 1 && strstr(detector.format.Name,"McStas")) {
+    this_p1 = (double *)calloc(detector.m*detector.n*detector.p*4, sizeof(double));
+    if (!this_p1)
+      exit(-fprintf(stderr, "Error: Out of memory creating %li 1D McStas data set for file '%s' (mcdetector_import)\n", detector.m*detector.n*detector.p*4*sizeof(double*), detector.filename));
+  }
+  
+  max_z = min_z = p1[0];
+  
+  for(j = 0; j < n*p; j++)
+  {
+    for(i = 0; i < m; i++)
+    {
+      double x,y,z;
+      double N, E;
+      long   index= !detector.istransposed ? i*n*p + j : i+j*m;
+
+      if (m) x = x1 + (i + 0.5)/m*(x2 - x1); else x = 0;
+      if (n && p) y = y1 + (j + 0.5)/n/p*(y2 - y1); else y = 0;
+      z = p1[index];
+      N = p0 ? p0[index] : 1;
+      E = p2 ? p2[index] : 0;
+      if (p2 && !israw) p2[index] = (*mcestimate_error_p)(p0[i],p1[i],p2[i]); /* set sigma */
+      
+      /* compute stats integrals */
+      sum_xz += x*z;
+      sum_yz += y*z;
+      sum_x += x;
+      sum_y += y;
+      sum_z += z;
+      sum_x2z += x*x*z;
+      sum_y2z += y*y*z;
+      if (z > max_z) max_z = z;
+      if (z < min_z) min_z = z;
+
+      Nsum += N;
+      P2sum += E;
+      
+      if (isnan(z) || isnan(E) || isnan(N)) hasnan=1;
+      if (isinf(z) || isinf(E) || isinf(N)) hasinf=1;
+      
+      if (detector.rank == 1 && this_p1 && strstr(detector.format.Name,"McStas")) {
+        /* fill-in 1D McStas array [x I E N] */
+        this_p1[index*4]   = x; 
+        this_p1[index*4+1] = z;
+        this_p1[index*4+2] = p2 ? p2[index] : 0;
+        this_p1[index*4+3] = N;
+      }
+    }
+  } /* for j */
+  
+  /* compute 1st and 2nd moments */
+  if (sum_z && n*m*p)
+  {
+    fmon_x = sum_xz/sum_z;
+    fmon_y = sum_yz/sum_z;
+    smon_x = sqrt(sum_x2z/sum_z-fmon_x*fmon_x);
+    smon_y = sqrt(sum_y2z/sum_z-fmon_y*fmon_y);
+    mean_z = sum_z/n/m/p;
+  }
+  /* store statistics into detector */
+  detector.intensity = sum_z;
+  detector.error     = (*mcestimate_error_p)(Nsum, sum_z, P2sum);
+  detector.events    = Nsum;
+  detector.min       = min_z;
+  detector.max       = max_z;
+  detector.mean      = mean_z;
+  detector.centerX   = fmon_x;
+  detector.halfwidthX= smon_x;
+  detector.centerY   = fmon_y;
+  detector.halfwidthY= smon_y;
+  
+  /* if McStas/PGPLOT and rank==1 replace p1 with new m*4 1D McStas and clear others */
+  if (detector.rank == 1 && this_p1 && strstr(detector.format.Name,"McStas")) {
+    detector.p1 = this_p1;
+    detector.n=detector.m; detector.m  = 4; 
+    detector.p0 = NULL;
+    detector.p2 = NULL;
+    detector.istransposed = 1;
+  }
+  
+  if (n*m*p > 1)
+    sprintf(detector.signal, "Min=%g; Max=%g; Mean=%g;", detector.min, detector.max, detector.mean);
+  else 
+    strcpy(detector.signal, "");
+  sprintf(detector.values, "%g %g %g", detector.intensity, detector.error, detector.events);
+  
+  switch (detector.rank) {
+    case 0:  strcpy(detector.statistics, ""); break;
+    case 1:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g;", 
+      detector.centerX, detector.halfwidthX); break;
+    case 2:
+    case 3:  snprintf(detector.statistics, CHAR_BUF_LENGTH, "X0=%g; dX=%g; Y0=%g; dY=%g;", 
+      detector.centerX, detector.halfwidthX, detector.centerY, detector.halfwidthY); 
+      break;
+    default: strcpy(detector.statistics, "");
+  }
+
+#ifdef USE_MPI
+  /* slaves are done */
+  if(mpi_node_rank != mpi_node_root) return detector;
+#endif
+  
+  /* output "Detector:" line ================================================ */
+  if (!strcmp(detector.component, mcinstrument_name)) { /* this is a detector written by instrument */
+    if (strlen(detector.filename))  /* we name it from its filename, or from its title */
+      mcvalid_name(c, detector.filename, CHAR_BUF_LENGTH);
+    else
+      mcvalid_name(c, detector.title, CHAR_BUF_LENGTH);
+  } else
+    strncpy(c, detector.component, CHAR_BUF_LENGTH);  /* usual detectors written by components */
+    
+  printf("Detector: %s_I=%g %s_ERR=%g %s_N=%g",
+         c, detector.intensity, 
+         c, detector.error, 
+         c, detector.events);
+  printf(" \"%s\"\n", strlen(detector.filename) ? detector.filename : detector.component);
+  
+  if (hasnan) 
+    printf("WARNING: Nan detected in component %s\n", detector.component);
+  if (hasinf) 
+    printf("WARNING: Inf detected in component %s\n", detector.component);
+    
+  /* add warning in case of low statistics or large number of bins in text format mode */
+  if (detector.error > detector.intensity/4) 
+    printf("WARNING: file '%s': Low Statistics\n",    detector.filename);
+  else if (strlen(detector.filename)) {
+    if (m*n*p > 1000 && Nsum < m*n*p && Nsum) 
+       printf(
+        "WARNING: file '%s': Low Statistics (%g events in %ldx%ldx%ld bins).\n",
+        detector.filename, Nsum, m,n,p);
+    if ( !strstr(format.Name, "binary")
+      && (strstr(format.Name, "Scilab") || strstr(format.Name, "Matlab"))
+      && (n*m*p > 10000 || m > 1000) ) printf(
+        "WARNING: file '%s' (%s format)\n"
+        "         Large matrices (%ldx%ldx%ld) in text mode may be\n"
+        "         slow or fail at import. Prefer binary mode e.g. --format='Matlab_binary'.\n",
+        detector.filename, format.Name, m,n,p);
+  }
   
   if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
    if (strstr(detector.format.Name, "Octave") || strstr(detector.format.Name, "Matlab"))
@@ -3118,8 +3103,14 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 
 #ifdef USE_MPI
   /* only by MASTER for non lists (MPI reduce has been done in detector_import) */
-  if (!strstr(detector.format.Name," list ") && mpi_node_rank != mpi_node_root)
+  if (!strstr(detector.format.Name," list ") && mpi_node_rank != mpi_node_root) {
+      free(detector.p1);  /* 'this_p1' allocated in mcdetector_write_sim for 1D McStas data sets [x I E N] */
+      detector.p0 = detector.p0_orig;
+      detector.p1 = detector.p1_orig;
+      detector.p2 = detector.p2_orig;
+      detector.m = detector.n; detector.n=1; detector.istransposed=0;
     return(detector);
+  }
 #endif
   
   /* OPEN data file (possibly appending if already opened) ================== */
@@ -5583,7 +5574,7 @@ int mcstas_main(int argc, char *argv[])
 #ifdef USE_MPI
   if (mpi_node_count > 1) {
     MPI_MASTER(
-    printf("Simulation %s (%s): running on %i nodes (master is %s, MPI version %i.%i).\n", 
+    printf("Simulation '%s' (%s): running on %i nodes (master is '%s', MPI version %i.%i).\n",
       mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
     );
     /* adapt random seed for each node */
@@ -5669,12 +5660,8 @@ mcstas_raytrace(&mcncount);
 #ifdef USE_MPI
  /* merge data from MPI nodes */
   if (mpi_node_count > 1) {
-  MPI_MASTER(
-  printf("Simulation %s (%s): master %s waiting for %i nodes to synchronize.\n", 
-      mcinstrument_name, mcinstrument_source, mpi_node_name, mpi_node_count);
-  );
   MPI_Barrier(MPI_COMM_WORLD);
-  mc_MPI_Reduce(&mcrun_num, &mcrun_num, 1, MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+  mc_MPI_Reduce(&mcrun_num, &mcrun_num, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   }
 #endif
 
