@@ -246,7 +246,7 @@ INITIALIZE
     xwidth=2*radius;
     if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
       strcat(Vars.option, " banana");
-    else if (!strstr(Vars.option ,"sphere"))
+    else if (!yheight && !strstr(Vars.option ,"sphere"))
       strcat(Vars.option, " sphere");
   }
   
