@@ -842,8 +842,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
   /* when using multiple machines, we must make sure they record data on the same range
    * this means we must use the same limits 
    */
-    MPI_MASTER(printf("Monitor_nD: %s synchronize nodes for common auto limits...", Vars->compcurname););
-    MPI_Barrier(MPI_COMM_WORLD); /* synchronize nodes before we merge limits */
 #endif
     for (i = 1; i <= Vars->Coord_Number; i++)
     {
@@ -858,18 +856,13 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
           if (XY > Vars->Coord_Max[i]) Vars->Coord_Max[i] = XY;
         }
 #ifdef USE_MPI
-        MPI_Allreduce(MPI_IN_PLACE, &(Vars->Coord_Min[i]), 
-          1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE, &(Vars->Coord_Max[i]), 
-          1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        mc_MPI_Sum(&(Vars->Coord_Min[i]), 1);
+        mc_MPI_Sum(&(Vars->Coord_Max[i]), 1);
         Vars->Coord_Min[i] /= mpi_node_count; /* use mean min/max values */
         Vars->Coord_Max[i] /= mpi_node_count;
 #endif  
       }
-    }
-#ifdef USE_MPI
-    MPI_MASTER(printf(" DONE\n"););
-#endif    
+    } 
     Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new events to store in histograms) */
   }
 
@@ -1168,8 +1161,6 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     /* when using multiple machines, we must make sure they record data on the same range
      * this means we must use the same limits 
      */
-      MPI_MASTER(printf("Monitor_nD: %s synchronize nodes for common auto limits...", Vars->compcurname););
-      MPI_Barrier(MPI_COMM_WORLD); /* synchronize nodes before we merge limits */
   #endif
       for (i = 1; i <= Vars->Coord_Number; i++)
       {
@@ -1184,18 +1175,13 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             if (XY > Vars->Coord_Max[i]) Vars->Coord_Max[i] = XY;
           }
   #ifdef USE_MPI
-          MPI_Allreduce(MPI_IN_PLACE, &(Vars->Coord_Min[i]), 
-            1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-          MPI_Allreduce(MPI_IN_PLACE, &(Vars->Coord_Max[i]), 
-            1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+          mc_MPI_Sum(&(Vars->Coord_Min[i]), 1);
+          mc_MPI_Sum(&(Vars->Coord_Max[i]), 1);
           Vars->Coord_Min[i] /= mpi_node_count; /* use mean min/max values */
           Vars->Coord_Max[i] /= mpi_node_count;
   #endif  
         }
-      }
-  #ifdef USE_MPI
-      MPI_MASTER(printf(" DONE (from Save)\n"););
-  #endif    
+      } 
       Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
       Vars->Buffer_Block = Vars->Buffer_Counter;
 
