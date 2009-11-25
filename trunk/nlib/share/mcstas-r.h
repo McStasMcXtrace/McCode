@@ -509,9 +509,9 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 #define MPI_REDUCE_BLOCKSIZE 10000
 #endif
 
-int mc_MPI_Reduce(void* sbuf, void* rbuf,
-                  long count, MPI_Datatype dtype,
-                  MPI_Op op, MPI_Comm comm);
+int mc_MPI_Sum(double* buf, long count);
+int mc_MPI_Send(void *sbuf, long count, MPI_Datatype dtype, int dest);
+int mc_MPI_Recv(void *rbuf, long count, MPI_Datatype dtype, int source);
 
 #define exit(code) MPI_Abort(MPI_COMM_WORLD, code)
 
