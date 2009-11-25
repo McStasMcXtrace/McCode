@@ -74,6 +74,7 @@ TRACE
   }
   time_t NowTime;
   time(&NowTime);
+  /* compute initial estimate of computation duration */
   if (!EndTime && ncount >= IntermediateCnts) {
     CurrentTime = NowTime;
     if (difftime(NowTime,StartTime) > 10) { /* wait 10 sec before writing ETA */
@@ -90,15 +91,20 @@ TRACE
     } else IntermediateCnts += 1e3;
     fflush(stdout);
   }
-
+  
+  /* display percentage when percent or minutes have reached step */
   if (EndTime &&
     (    (minutes && difftime(NowTime,CurrentTime) > minutes*60)
       || (percent && !minutes && ncount >= IntermediateCnts))   )
   {
     fprintf(stdout, "%d ", (int)(ncount*100/mcget_ncount())); fflush(stdout);
     CurrentTime = NowTime;
+    
     IntermediateCnts = ncount + percent*mcget_ncount()/100;
-    if (IntermediateCnts >= mcget_ncount()) fprintf(stdout, "\n");
+    /* check that next intermediate ncount check is a multiple of the desired percentage */
+    IntermediateCnts = floor(IntermediateCnts*100/percent/mcget_ncount())*percent*mcget_ncount()/100;
+    /* raise flag to indicate that we did something */
+    SCATTER;
     if (flag_save) mcsave(NULL);
   }
 %}
