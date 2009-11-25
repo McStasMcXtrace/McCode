@@ -1006,106 +1006,76 @@ static int mpi_node_root = 0;
 /*******************************************************************************
 * mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
 *******************************************************************************/
-int mc_MPI_Reduce(void *sbuf, void *rbuf,
-                  long count, MPI_Datatype dtype,
-                  MPI_Op op, MPI_Comm comm)
+int mc_MPI_Sum(double *sbuf, long count)
 {
 
-  int dsize;
   int res= MPI_SUCCESS;
   
-  if (!sbuf || count <= 0) return(-1);
-  MPI_Type_size(dtype, &dsize);
+  if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
 
+  res = MPI_Allreduce(MPI_IN_PLACE, sbuf, count, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-
-  /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
-  long offset=0;
-  long length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
-  while (offset < count && res == MPI_SUCCESS) {
-    if (!length || offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
-    res = MPI_Allreduce(MPI_IN_PLACE, (void*)(sbuf+offset*dsize), length, dtype, op, comm);
-    offset += length;
-  }
   if(res != MPI_SUCCESS) {
     char error_string[CHAR_BUF_LENGTH];
     int length_of_error_string;
     MPI_Error_string(res, error_string, &length_of_error_string);
-    fprintf(stderr, "Warning: node %i: MPI_Reduce error %i '%s' (mc_MPI_Reduce) at offset=%li, count=%li\n",
-      mpi_node_rank, res, error_string, offset, count);
+    fprintf(stderr, "Warning: node %i: MPI_Reduce error %i '%s' (mc_MPI_Reduce) count=%li\n",
+      mpi_node_rank, res, error_string, count);
   }
 
   return res;
 } /* mc_MPI_Reduce */
 
 /*******************************************************************************
-* mc_MPI_Send: Send array to MPI node by blocks to avoid buffer limit
+* mc_MPI_Send: Send array to MPI node
 *******************************************************************************/
 int mc_MPI_Send(void *sbuf, 
-                  int count, MPI_Datatype dtype,
-                  int dest, MPI_Comm comm)
+                  long count, MPI_Datatype dtype,
+                  int dest)
 {
-  int dsize;
   int res= MPI_SUCCESS;
   
-  if (!sbuf || count <= 0) return(-1);
+  if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
 
-  MPI_Type_size(dtype, &dsize);
-
-  long offset=0;
-  int  tag=1;
-  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
-  while (offset < count && res == MPI_SUCCESS) {
-    if (offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
-    res = MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, comm);
-    offset += length;
-  }
+  res = MPI_Send(sbuf, count, dtype, dest, 1, MPI_COMM_WORLD);
 
   if(res != MPI_SUCCESS) {
     char error_string[CHAR_BUF_LENGTH];
     int length_of_error_string;
     MPI_Error_string(res, error_string, &length_of_error_string);
-    fprintf(stderr, "Warning: node %i: MPI_Send error %i '%s' (mc_MPI_Send) at offset=%li, count=%i\n",
-      mpi_node_rank, res, error_string, offset, count);
+    fprintf(stderr, "Warning: node %i: MPI_Send error %i '%s' (mc_MPI_Send) count=%li\n",
+      mpi_node_rank, res, error_string, count);
   }
 
   return res;
 } /* mc_MPI_Send */
 
 /*******************************************************************************
-* mc_MPI_Recv: Receives arrays from MPI nodes by blocks to avoid buffer limit
+* mc_MPI_Recv: Receives arrays from MPI nodes
 *             the buffer must have been allocated previously.
 *******************************************************************************/
-int mc_MPI_Recv(void *sbuf, 
-                  int count, MPI_Datatype dtype,
-                  int source, MPI_Comm comm)
+int mc_MPI_Recv(void *rbuf, 
+                  long count, MPI_Datatype dtype,
+                  int source)
 {
-  int dsize;
   int res= MPI_SUCCESS;
   
-  if (!sbuf || count <= 0) return(-1);
+  if (!rbuf || count <= 0) return(MPI_ERR_COUNT);
 
-  MPI_Type_size(dtype, &dsize);
-
-  long offset=0;
-  int  tag=1;
-  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
-  while (offset < count && res == MPI_SUCCESS) {
-    if (offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
-    res = MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++, comm, MPI_STATUS_IGNORE);
-    offset += length;
-  }
+  res = MPI_Recv(rbuf, count, dtype, source, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
   if(res != MPI_SUCCESS) {
     char error_string[CHAR_BUF_LENGTH];
     int length_of_error_string;
     MPI_Error_string(res, error_string, &length_of_error_string);
-    fprintf(stderr, "Warning: node %i: MPI_Recv error %i '%s' (mc_MPI_Recv) at offset=%li, count=%i\n",
-      mpi_node_rank, res, error_string, offset, count);
+    fprintf(stderr, "Warning: node %i: MPI_Recv error %i '%s' (mc_MPI_Recv) count=%li\n",
+      mpi_node_rank, res, error_string, count);
   }
 
   return res;
 } /* mc_MPI_Recv */
+
+
 
 #endif /* USE_MPI */
 
@@ -2464,14 +2434,24 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   detector.n    = n;
   detector.p    = p;
 
-  if (!m || !n || !p) return(detector);
+/* init default values for statistics */
+  detector.intensity  = 0;
+  detector.error      = 0;
+  detector.events     = 0;
+  detector.min        = 0;
+  detector.max        = 0;
+  detector.mean       = 0;
+  detector.centerX    = 0;
+  detector.halfwidthX = 0;
+  detector.centerY    = 0;
+  detector.halfwidthY = 0;
   
   /* these only apply to detector files ===================================== */
 
   snprintf(detector.position, CHAR_BUF_LENGTH, "%g %g %g", position.x, position.y, position.z);
   /* may also store actual detector orientation in the future */
 
-  strncpy(detector.title,      title,       CHAR_BUF_LENGTH); /* already checked in mcdetector_out_nD */
+  strncpy(detector.title,      title && strlen(title) ? title : component,       CHAR_BUF_LENGTH);
   strncpy(detector.xlabel,     xlabel && strlen(xlabel) ? xlabel : "X", CHAR_BUF_LENGTH); /* axis labels */
   strncpy(detector.ylabel,     ylabel && strlen(ylabel) ? ylabel : "Y", CHAR_BUF_LENGTH);
   strncpy(detector.zlabel,     zlabel && strlen(zlabel) ? zlabel : "Z", CHAR_BUF_LENGTH);
@@ -2503,28 +2483,18 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
     snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g", x1, x2, y1, y2);
   else
     snprintf(detector.limits, CHAR_BUF_LENGTH, "%g %g %g %g %g %g", x1, x2, y1, y2, z1, z2);
-
-  /* init default values for statistics */
-  detector.intensity  = 0;
-  detector.error      = 0;
-  detector.events     = 0;
-  detector.min        = 0;
-  detector.max        = 0;
-  detector.mean       = 0;
-  detector.centerX    = 0;
-  detector.halfwidthX = 0;
-  detector.centerY    = 0;
-  detector.halfwidthY = 0;
   
-  if (!m || !n || !p) return(detector);
+  if (!m || !n || !p) { 
+    return(detector);
+  }
   
   /* if MPI and nodes_nb > 1: reduce data sets when using MPI =============== */
 #ifdef USE_MPI
   if (!strstr(format.Name," list ") && mpi_node_count > 1) {
     /* we save additive data: reduce everything into mpi_node_root */
-    if (p0) mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    if (p1) mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    if (p2) mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    if (p0) mc_MPI_Sum(p0, abs(m*n*p));
+    if (p1) mc_MPI_Sum(p1, abs(m*n*p));
+    if (p2) mc_MPI_Sum(p2, abs(m*n*p));
     
     if (!p0) {  /* additive signal must be then divided by the number of nodes */
       int i;
@@ -2656,7 +2626,9 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
 
 #ifdef USE_MPI
   /* slaves are done */
-  if(mpi_node_rank != mpi_node_root) return detector;
+  if(mpi_node_rank != mpi_node_root) {
+    return detector;
+  }
 #endif
   
   /* output "Detector:" line ================================================ */
@@ -2703,7 +2675,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
    else if (strstr(detector.format.Name, "Scilab")) str_rep(mcDetectorCustomHeader, "%PRE", "//  ");
    else if (strstr(detector.format.Name, "McStas")) str_rep(mcDetectorCustomHeader, "%PRE", "#   ");
    else str_rep(mcDetectorCustomHeader, "%PRE", "    ");
- }
+  }
     
   return(detector);
 } /* mcdetector_import */
@@ -2715,7 +2687,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
 *******************************************************************************/
 MCDETECTOR mcdetector_import_sim(void) {
   Coords zero={0.0,0.0,0.0};
-  MCDETECTOR detector=mcdetector_import(mcformat, NULL, NULL, 
+  MCDETECTOR detector=mcdetector_import(mcformat, "mcstas", NULL, 
     0,0,0,            /* mnp */
     NULL, NULL, NULL, /* labels */
     NULL, NULL, NULL, /* vars */
@@ -3153,10 +3125,10 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
       /* m, n, p must be sent too, since all slaves do not have the same number of events */
       int mnp[3]={detector.m,detector.n,detector.p};
 
-      if (MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 0, MPI_COMM_WORLD)!= MPI_SUCCESS)
+      if (mc_MPI_Send(mnp, 3, MPI_INT, mpi_node_root)!= MPI_SUCCESS)
         fprintf(stderr, "Warning: node %i to master: MPI_Send mnp list error (mcdetector_write_data)", mpi_node_rank);
-      if (!detector.p1 || mc_MPI_Send(detector.p1, abs(mnp[0]*mnp[1]*mnp[2]), 
-        MPI_DOUBLE, mpi_node_root, MPI_COMM_WORLD)!= MPI_SUCCESS)
+      if (!detector.p1 
+       || mc_MPI_Send(detector.p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, mpi_node_root) != MPI_SUCCESS)
         fprintf(stderr, "Warning: node %i to master: MPI_Send p1 list error (mcdetector_write_data)", mpi_node_rank);
       /* slaves are done */
       return (detector);
@@ -3173,12 +3145,11 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
       double *this_p1=NULL;                               /* buffer to hold the list to save */
       int     mnp[3]={detector.m,detector.m,detector.p};  /* size of this buffer */
       if (node_i != mpi_node_root) { /* get data from slaves */
-        if (MPI_Recv(mnp, 3, MPI_INT, node_i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE)
-         != MPI_SUCCESS)
+        if (mc_MPI_Recv(mnp, 3, MPI_INT, node_i) != MPI_SUCCESS)
           fprintf(stderr, "Warning: master from node %i: "
             "MPI_Recv mnp list error (mcdetector_write_data)", node_i);
         this_p1 = (double *)calloc(abs(mnp[0]*mnp[1]*mnp[2]), sizeof(double));
-        if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i, MPI_COMM_WORLD)!= MPI_SUCCESS)
+        if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
           fprintf(stderr, "Warning: master from node %i: "
             "MPI_Recv p1 list error (mcdetector_write_data)", node_i);
         detector.p1 = this_p1;
@@ -5527,21 +5498,6 @@ void sighandler(int sig)
 }
 #endif /* !NOSIGNALS */
 
-/* mcstas_raytrace: main raytrace loop */
-void *mcstas_raytrace(void *p_node_ncount)
-{
-  double node_ncount = *((double*)p_node_ncount);
-  
-  while(mcrun_num < node_ncount || mcrun_num < mcget_ncount())
-  {
-    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-    /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
-    mcraytrace();
-    mcrun_num++;
-  }
-  return (NULL);
-}
-
 /* mcstas_main: McStas main() function. */
 int mcstas_main(int argc, char *argv[])
 {
@@ -5550,9 +5506,6 @@ int mcstas_main(int argc, char *argv[])
 #ifdef USE_MPI
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
-#endif /* USE_MPI */
-#if defined (USE_MPI)
-  double mpi_mcncount;
 #endif /* USE_MPI */
 
 #ifdef MAC
@@ -5650,20 +5603,25 @@ int mcstas_main(int argc, char *argv[])
 
 /* ================ main neutron generation/propagation loop ================ */
 #if defined (USE_MPI)
-  mpi_mcncount = mpi_node_count > 1 ?
+  /* sliced Ncount on each MPI node */
+  mcncount = mpi_node_count > 1 ?
     floor(mcncount / mpi_node_count) :
     mcncount; /* number of neutrons per node */
-  mcncount = mpi_mcncount;  /* sliced Ncount on each MPI node */
 #endif
 
 /* main neutron event loop */
-mcstas_raytrace(&mcncount);
+while(mcrun_num < mcncount || mcrun_num < mcget_ncount())
+  {
+    mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+    /* old init: mcsetstate(0, 0, 0, 0, 0, 1, 0, sx=0, sy=1, sz=0, 1); */
+    mcraytrace();
+    mcrun_num++;
+  }
 
 #ifdef USE_MPI
- /* merge data from MPI nodes */
+ /* merge run_num from MPI nodes */
   if (mpi_node_count > 1) {
-  MPI_Barrier(MPI_COMM_WORLD);
-  mc_MPI_Reduce(&mcrun_num, &mcrun_num, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  mc_MPI_Sum(&mcrun_num, 1);
   }
 #endif
 
