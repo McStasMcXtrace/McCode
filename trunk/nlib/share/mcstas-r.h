@@ -506,7 +506,7 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 }
 
 #ifndef MPI_REDUCE_BLOCKSIZE
-#define MPI_REDUCE_BLOCKSIZE 10000
+#define MPI_REDUCE_BLOCKSIZE 1000
 #endif
 
 int mc_MPI_Sum(double* buf, long count);

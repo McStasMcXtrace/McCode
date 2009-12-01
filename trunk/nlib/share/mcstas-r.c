@@ -1003,78 +1003,84 @@ double mcget_run_num(void)
 static int mpi_node_rank;
 static int mpi_node_root = 0;
 
+
 /*******************************************************************************
 * mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
 *******************************************************************************/
 int mc_MPI_Sum(double *sbuf, long count)
 {
-
-  int res= MPI_SUCCESS;
   
   if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
-
-  res = MPI_Allreduce(MPI_IN_PLACE, sbuf, count, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-  if(res != MPI_SUCCESS) {
-    char error_string[CHAR_BUF_LENGTH];
-    int length_of_error_string;
-    MPI_Error_string(res, error_string, &length_of_error_string);
-    fprintf(stderr, "Warning: node %i: MPI_Reduce error %i '%s' (mc_MPI_Reduce) count=%li\n",
-      mpi_node_rank, res, error_string, count);
+  else {
+    /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
+    long   offset=0;
+    double rbuf[count];
+    int    length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
+    int    i=0;
+    while (offset < count) {
+      if (!length || offset+length > count-1) length=count-offset; 
+      else length=MPI_REDUCE_BLOCKSIZE;
+      MPI_Allreduce((double*)(sbuf+offset), (double*)(rbuf+offset), 
+              length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      offset += length;
+    }
+    
+    for (i=0; i<count; i++) sbuf[i] = rbuf[i];
   }
-
-  return res;
-} /* mc_MPI_Reduce */
+  return MPI_SUCCESS;
+} /* mc_MPI_Sum */
 
 /*******************************************************************************
-* mc_MPI_Send: Send array to MPI node
+* mc_MPI_Send: Send array to MPI node by blocks to avoid buffer limit
 *******************************************************************************/
 int mc_MPI_Send(void *sbuf, 
                   long count, MPI_Datatype dtype,
                   int dest)
 {
-  int res= MPI_SUCCESS;
+  int dsize;
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
   
   if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
+  MPI_Type_size(dtype, &dsize);
 
-  res = MPI_Send(sbuf, count, dtype, dest, 1, MPI_COMM_WORLD);
-
-  if(res != MPI_SUCCESS) {
-    char error_string[CHAR_BUF_LENGTH];
-    int length_of_error_string;
-    MPI_Error_string(res, error_string, &length_of_error_string);
-    fprintf(stderr, "Warning: node %i: MPI_Send error %i '%s' (mc_MPI_Send) count=%li\n",
-      mpi_node_rank, res, error_string, count);
+  while (offset < count) {
+    if (offset+length > count-1) length=count-offset; 
+    else length=MPI_REDUCE_BLOCKSIZE;
+    MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, MPI_COMM_WORLD);
+    offset += length;
   }
 
-  return res;
+  return MPI_SUCCESS;
 } /* mc_MPI_Send */
 
 /*******************************************************************************
-* mc_MPI_Recv: Receives arrays from MPI nodes
+* mc_MPI_Recv: Receives arrays from MPI nodes by blocks to avoid buffer limit
 *             the buffer must have been allocated previously.
 *******************************************************************************/
-int mc_MPI_Recv(void *rbuf, 
+int mc_MPI_Recv(void *sbuf, 
                   long count, MPI_Datatype dtype,
                   int source)
 {
-  int res= MPI_SUCCESS;
+  int dsize;
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
   
-  if (!rbuf || count <= 0) return(MPI_ERR_COUNT);
+  if (!sbuf || count <= 0) return(MPI_ERR_COUNT);
+  MPI_Type_size(dtype, &dsize);
 
-  res = MPI_Recv(rbuf, count, dtype, source, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-  if(res != MPI_SUCCESS) {
-    char error_string[CHAR_BUF_LENGTH];
-    int length_of_error_string;
-    MPI_Error_string(res, error_string, &length_of_error_string);
-    fprintf(stderr, "Warning: node %i: MPI_Recv error %i '%s' (mc_MPI_Recv) count=%li\n",
-      mpi_node_rank, res, error_string, count);
+  while (offset < count) {
+    if (offset+length > count-1) length=count-offset; 
+    else length=MPI_REDUCE_BLOCKSIZE;
+    MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++, 
+            MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    offset += length;
   }
 
-  return res;
+  return MPI_SUCCESS;
 } /* mc_MPI_Recv */
-
 
 
 #endif /* USE_MPI */
@@ -3063,7 +3069,7 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
 * mcdetector_write_data: write information to data file and catenate lists
 *                        this is where we open/close data files
 *                        also free detector.p1=this_p1 field which may hold 1D McStas [x I Ierr N] array
-*                        which is set in mcdetector_statistics (called from mcdetector_import)
+*                        which is set in mcdetector_import
 *******************************************************************************/
 MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 {
@@ -3077,7 +3083,7 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
   /* only by MASTER for non lists (MPI reduce has been done in detector_import) */
   if (!strstr(detector.format.Name," list ") && mpi_node_rank != mpi_node_root) {
     if (detector.rank == 1 && detector.p1 && strstr(detector.format.Name,"McStas")) {
-      free(detector.p1);  /* 'this_p1' allocated in mcdetector_write_sim for 1D McStas data sets [x I E N] */
+      free(detector.p1);  /* 'this_p1' allocated in mcdetector_import for 1D McStas data sets [x I E N] */
       detector.p0 = detector.p0_orig;
       detector.p1 = detector.p1_orig;
       detector.p2 = detector.p2_orig;
@@ -5517,11 +5523,6 @@ int mcstas_main(int argc, char *argv[])
   MPI_Comm_size(MPI_COMM_WORLD, &mpi_node_count); /* get number of nodes */
   MPI_Comm_rank(MPI_COMM_WORLD, &mpi_node_rank);
   MPI_Get_processor_name(mpi_node_name, &mpi_node_name_len);
-  #if MPI_VERSION > 1
-  MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-  #else
-  MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-  #endif
 #endif /* USE_MPI */
 
 /* *** print number of nodes *********************************************** */
