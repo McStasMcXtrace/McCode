@@ -5,14 +5,14 @@
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: Chopper_Monitor
+* Component: StatisticalChopper_Monitor
 *
 * %Identification
 * Written by: C. Monzat/E. Farhi
 * Date: 2009
-* Version:
+* Version: $Revision: 1.0$
 * Origin: ILL
-* Release:
+* Release: McStas 2.0
 *
 * Monitor designed to compute the autocorrelation signal for the Statistical Chopper
 *
@@ -24,377 +24,171 @@
 * specify "time" in the options. Auto detection of the time limits is possible if the 
 * user chooses tmin=>tmax.
 *
+* StatisticalChopper_Monitor(options ="banana bins=500, abs theta limits=[5,105],bins=1000")
+*
 * %Parameters
 * INPUT PARAMETERS:
-* comp : name of the component monitored (must be a Stat_Chopper)
-* tmin : minimal time of detection (s)
-* tmax : maximal time of detection (s)
+* comp: name of the component monitored. Do not use quotes (StatisticalChopper)
+* tmin: minimal time of detection (s)
+* tmax: maximal time of detection (s)
+*
 * OUTPUT PARAMETERS:
-* delta_t : interval of time of the detection
-* T_p : period of the statistical chopper comp
+* delta_t: interval of time of the detection (s)
+* T_p: period of the statistical chopper comp (s)
+*
+* %L
+* R. Von Jan and R. Scherm. The statistical chopper for neutron time-of-flight spectroscopy. Nuclear Instruments and Methods, 80 (1970) 69-76.
+*
 * %End
 *******************************************************************************/
-
-DEFINE COMPONENT Chopper_Monitor COPY Monitor_nD
+DEFINE COMPONENT StatisticalChopper_Monitor COPY Monitor_nD
 DEFINITION PARAMETERS (comp)
 SETTING PARAMETERS (tmin=0.0,tmax=0.0)
-OUTPUT PARAMETERS(delta_t,T_p)
+OUTPUT PARAMETERS()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
-
-DECLARE COPY Monitor_nD EXTEND
-%{
-
-struct ChopVars VarsC;
-double delta_t;
-int Nseq;
-double T_p;
-double c;
-
-%}
+DECLARE COPY Monitor_nD
 
 INITIALIZE COPY Monitor_nD EXTEND
-
 %{
+  char op[CHAR_BUF_LENGTH];
+  /* check if time is already in the variables to monitor */
+  if (!strstr(Vars.option, "time")) {
+    sprintf(op, "time %s", Vars.option);
+    strcpy(Vars.option,op);
+  } else {
+    /* we must make sure time is the first variable */
+    if (Vars.Coord_Number < 1 || strcmp(Vars.Coord_Var[1], "t"))
+      exit(fprintf(stderr, "StatisticalChopper_Monitor: %s: First variable must be 'time', currently '%s (%s)'\n.", NAME_CURRENT_COMP, Vars.Coord_Label[1], Vars.Coord_Var[1]));
+    if (strcmp(Vars.Coord_Var[0], "I") && strcmp(Vars.Coord_Var[0], "p"))
+      exit(fprintf(stderr, "StatisticalChopper_Monitor: %s: Must record signal intensity 'Intensity', currently '%s (%s)'\n.", NAME_CURRENT_COMP, Vars.Coord_Label[0], Vars.Coord_Var[0]));
+  }
 
-double A,Aint;
-char * op= (char *)malloc(1024*sizeof(char));
-char * op2= (char *)malloc(1024*sizeof(char));
-if (op==NULL||op2==NULL){
-	fprintf(stderr,"Memory not allocated : op , op2", NAME_CURRENT_COMP);
-	exit(-1);
-}
-
-VarsC = MC_GETPAR(comp,VarsC);
-c=(VarsC.m-1)/(double)(VarsC.Nseq-1);
-
-// VarsC.Nseq=0;
-// VarsC.m=0;
-// VarsC.ChopSeq=NULL;
-// VarsC.ww=0.0;
-// VarsC.phi=0.0;
-
-
-Nseq=VarsC.Nseq;
-T_p=2*PI/VarsC.ww;
-
-if (tmin<tmax){
-	sprintf(op2,"%s%f%s%f%s","time limits=[",tmin,",",tmax,"],");
-	//printf("op2 : %s \n",op2);
-	strcpy(op,op2);
-	//printf("options : %s \n",Vars.option);
-	sprintf(op,"%s %s",op2,Vars.option);
-	//printf("op : %s \n",op);
-}else{
-	sprintf(op,"%s %s","auto time,",Vars.option);
-}
-strcpy(Vars.option,op);
-//printf("options : %s \n",Vars.option);
-
-//  printf("delta_t : %f\n",delta_t*(1E-6));
-printf("Chopper Period : %f\n",T_p);
-//  printf("f : %i\n",f);
-printf("m : %i\n",VarsC.m);
-printf("c : %e\n",c);
-
-Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight,zdepth,xmin,xmax,ymin,ymax,zmin,zmax);
-
-
-
-
-A=(double) VarsC.m*(VarsC.m-1) / (double) (VarsC.Nseq-1);
-Aint=(double) rint(A);
-//printf("A : %f\n",A);
-
-if (A!=Aint){
-	printf("WARNING : A must take integer values, Incorrect Chopper sequence\n\n");
-}
-%}
-
-TRACE COPY Monitor_nD EXTEND
-%{
-%}
-
-
-SAVE COPY Monitor_nD EXTEND
-%{
-int i,j,k;
-int bin_nD,bin_nD2;
-int bin_tau;
-int f;
-printf("test3\n");
-double N_tot,I_min,theta,nu,S_sum,sum_chop,Z_sum,coeff_ZS;
-
-bin_nD=(int)Vars.Coord_Bin[1];
-printf("Bin1 : %i \n",bin_nD);
-printf("Coord_Number : %i \n",Vars.Coord_Number);
-f=(int)floor((Vars.Coord_Max[1]-Vars.Coord_Min[1])/T_p);
-if (!f){
-	f=1;
-}
-if (!bin_nD){
-	bin_nD=20;
-}
-bin_tau=bin_nD/f;
-N_tot=0;
-S_sum=0.0;
-Z_sum=0.0;
-sum_chop=0.0;
-I_min=FLT_MAX;
-theta=T_p/(double)Nseq;
-nu=theta*bin_tau/(T_p);
-
-printf("theta : %e \n",theta);
-printf("T_p : %e \n",T_p);
-printf("nu : %e \n",nu);
-
-
-if (Vars.Coord_Number==1){
-	double S_mon[bin_tau];
-	double S_monp[bin_tau];
-	double S_monpp[bin_tau];
-	
-	for (i=0;i<bin_tau;i++){
-		S_mon[i]=0.0;
-		S_monp[i]=0.0;
-		S_monpp[i]=0.0;
-	}
-	
-	
-// 	for (j=0;j<f*Nseq;j++){
-// 		sum_chop+=VarsC.ChopSeq[j % Nseq];
-// 	}
-	printf("tmin : %e, tmax : %e \n",Vars.Coord_Min[1],Vars.Coord_Max[1]);
-	//printf("delta2 : %e \n",(Vars.Coord_Max[1]-Vars.Coord_Min[1]));
-	//printf("TP : %e \n",T_p);
-	printf("Number of periods : %i \n",f);
-	printf("float period : %e\n",(Vars.Coord_Max[1]-Vars.Coord_Min[1])/T_p);
-	//printf("Nseq : %i \n",Nseq);
-
-	for (i=0;i<bin_nD;i++){
-		N_tot+=Vars.Mon2D_N[0][i];
-		Z_sum+=Vars.Mon2D_p[0][i];
-		if (I_min>Vars.Mon2D_p[0][i]){
-			I_min=Vars.Mon2D_p[0][i];
-		}
-	}
-	printf("I_min : %e coef1=%g\n",I_min, 1/(double)(VarsC.m*f*(1-c)));
-	for (i=0;i<bin_tau;i++){
-		for (j=0;j<f*Nseq;j++){
-			//K_mon[i/f]+=Vars.Mon2D_N[0][(j*(bin_nD-1)/(f*Nseq-1)+i) % bin_nD];
-			S_monp[i]+=(VarsC.ChopSeq[j % Nseq]-c)*Vars.Mon2D_p[0][(j*(bin_nD-1)/(f*Nseq-1)+(i*(bin_nD-1))/(bin_tau-1)) % bin_nD];
-	// 		printf("Smon[%i] pour j = %i : %e\n",i,j,S_mon[i]);
-	// 		printf("Smonp[%i] pour j = %i : %e\n",i,j,S_monp[i]);
-	// 		printf("Smonpp[%i] pour j = %i : %e\n",i,j,S_monpp[i]);
-			//printf("ChopSeq[%i] : %i\n",j,VarsC.ChopSeq[j % Nseq]);
-			
-		}
-		S_monp[i]*=1/(double)(VarsC.m*f*(1-c));
-		S_monp[i]+=-I_min/(double)VarsC.m;
-		
-		//K_monpp[i/f]*=(VarsC.m/(Nseq*Nseq)*(2*Nseq-VarsC.m));
-		S_mon[i]=N_tot/(double)bin_tau;
-		S_sum+=S_monp[i];
-	}
-	//printf("S_sum : %e\n",i,S_sum);
-
-
-	/*Normalization of S_monp compared to Z*/
-	//printf("Coeff_ZS0 : %e\n",S_sum/Z_sum*f);
-	coeff_ZS=(S_sum/(VarsC.m*Z_sum-T_p*I_min))*(VarsC.m*f*(1-c)+c*Nseq);
-	printf("Coeff_ZS : %e\n",coeff_ZS);
-	S_sum=0.0;
-	for (i=0;i<bin_tau;i++){
-		S_monp[i]/=coeff_ZS;
-		S_sum+=S_monp[i];
-	}
-	//printf("S_sum : %e\n",i,S_sum);
-	
-
-	/*New Calculation of delta(S)^2*/
-	for (i=0;i<bin_tau;i++){
-		for (j=0;j<f*Nseq;j++){
-			//K_mon[i/f]+=Vars.Mon2D_N[0][(j*(bin_nD-1)/(f*Nseq-1)+i) % bin_nD];
-			S_monpp[i]+=(VarsC.ChopSeq[j % Nseq]-c)*(VarsC.ChopSeq[j % Nseq]-c)*Vars.Mon2D_p[0][(j*(bin_nD-1)/(f*Nseq-1)+(i*(bin_nD-1))/(bin_tau-1)) % bin_nD]*Vars.Mon2D_p[0][(j*(bin_nD-1)/(f*Nseq-1)+(i*(bin_nD-1))/(bin_tau-1)) % bin_nD];
-	// 		printf("Smon[%i] pour j = %i : %e\n",i,j,S_mon[i]);
-	// 		printf("Smonp[%i] pour j = %i : %e\n",i,j,S_monp[i]);
-	// 		printf("Smonpp[%i] pour j = %i : %e\n",i,j,S_monpp[i]);
-			//printf("ChopSeq[%i] : %i\n",j,VarsC.ChopSeq[j % Nseq]);
-			
-		}
-		S_monpp[i]*=1/(double)(VarsC.m*VarsC.m*f*f*(1-c)*(1-c));
-		
-		//K_monpp[i/f]*=(VarsC.m/(Nseq*Nseq)*(2*Nseq-VarsC.m));
-	}
-
-
-	/*Transformation for the detector*/
-	for (i=0;i<bin_tau;i++){
-		S_monpp[i]=((S_mon[i]-1)*(S_monpp[i])+(S_monp[i]*S_monp[i])/S_mon[i]);
-		//printf("S_monp[%i] : %e\t",i,S_monp[i]);
-		//printf("S_monpp1[%i] : %e\t",i,S_monpp[i]);
-	}
-
-
-	/*Old Calculation of delta(S)^2*/
-// 	for (i=0;i<bin_tau;i++){
-// 		S_monpp[i]=(S_monp[i]+I_min+c*(S_sum/nu-2*S_monp[i]))/(f*(1-c)*(c*Nseq+1));
-// 		//printf("S_monpp0[%i] : %e\t",i,S_monpp[i]);
-// 		S_sumpp+=S_monpp[i];
-// 	}
-// 
-// 	/*Normalization of S_monpp compared to S_monp*/
-// 	coeff_ZS2=f*(1-c)*(c*Nseq+1)*S_sumpp/(S_sum*(T_p*c/nu+1-2*c)+T_p*I_min/(double)bin_tau);
-// 	printf("Coeff_ZS2 : %e\n",coeff_ZS2);
-// 
-// 	for (i=0;i<bin_tau;i++){
-// 		S_monpp[i]/=coeff_ZS2;
-// 	}
-// 
-// 	/*Transformation for the detector*/
-// 	for (i=0;i<bin_tau;i++){
-// 		S_monpp[i]=((S_mon[i]-1)*(S_monpp[i])+(S_monp[i]*S_monp[i])/S_mon[i]);
-// 		//printf("S_monp[%i] : %e\t",i,S_monp[i]);
-// 		//printf("S_monpp1[%i] : %e\t",i,S_monpp[i]);
-// 	}
-
-
-	DETECTOR_OUT_1D(
-	"Chopper monitor",
-	"TOF [s]",
-	"Intensity",
-	"t", Vars.Coord_Min[1],Vars.Coord_Max[1], (long)bin_tau,
-	&S_mon[0],&S_monp[0],&S_monpp[0],
-	filename);
-
-}else if (Vars.Coord_Number==2){
-
-	double sum;
-	bin_nD2=(int)Vars.Coord_Bin[2];
-	if (!bin_nD2){
-		bin_nD2=20;
-	}
-	if (bin_nD2*bin_tau>3.5e5){
-		bin_nD2=500;
-		bin_tau=500;
-	}
-	double S_mon[bin_tau][bin_nD2];
-	double S_monp[bin_tau][bin_nD2];
-	double S_monpp[bin_tau][bin_nD2];
-
-// 	S_mon = (double **) malloc ( bin_nD2 * sizeof(double *));
-// 	for (i=0;i<bin_nD2;i++){
-// 		S_mon[i]=(double *)malloc(bin_tau*sizeof(double));
-// 	}
-// 
-// 	S_monp = (double **) malloc ( bin_nD2 * sizeof(double *));
-// 	for (i=0;i<bin_nD2;i++){
-// 		S_monp[i]=(double *)malloc(bin_tau*sizeof(double));
-// 	}
-// 
-// 	S_monpp = (double **) malloc ( bin_tau * sizeof(double *));
-// 	for (i=0;i<bin_tau;i++){
-// 		S_monpp[i]=(double *)malloc(bin_nD2*sizeof(double));
-// 	}
-
-
-	printf("test0\n");
-	for (i=0;i<bin_tau;i++){
-		for (k=0;k<bin_nD2;k++){
-			S_mon[i][k]=0.0;
-			S_monp[i][k]=0.0;
-			S_monpp[i][k]=0.0;
-		}
-	}
-	printf("Bin2 : %i \n",bin_nD2);
-	printf("Bin_tau : %i \n",bin_tau);
-	printf("tmin : %e, tmax : %e \n",Vars.Coord_Min[1],Vars.Coord_Max[1]);
-	//printf("delta2 : %e \n",(Vars.Coord_Max[1]-Vars.Coord_Min[1]));
-	//printf("TP : %e \n",T_p);
-	printf("Number of periods : %i coef1=%g %i %i %i\n",f,1/(double)(VarsC.m*f*(1-c)), bin_tau, bin_nD2, f*Nseq);
-	printf("Float period : %e \n",(Vars.Coord_Max[1]-Vars.Coord_Min[1])/T_p);
-		
-	
-
-	for (i=0;i<bin_nD;i++){
-		for (k=0;k<bin_nD2;k++){
-			N_tot+=Vars.Mon2D_N[i][k];
-			Z_sum+=Vars.Mon2D_p[i][k];
-			if (I_min>Vars.Mon2D_p[i][k]){
-				I_min=Vars.Mon2D_p[i][k];
-			}
-		}
-	}
-	for (i=0;i<bin_tau;i++){
-		for (k=0;k<bin_nD2;k++){
-			for (j=0;j<f*Nseq;j++){
-			  //printf("[%i][%i] ", j % Nseq, (j*(bin_nD-1)/(f*Nseq-1)+(i*(bin_nD-1))/(bin_tau-1)) % bin_nD);
-				S_monp[i][k]+=(VarsC.ChopSeq[j % Nseq]-c)*Vars.Mon2D_p[(j*(bin_nD-1)/(f*Nseq-1)+(i*(bin_nD-1))/(bin_tau-1)) % bin_nD][k];
-		
-			}
-		S_monp[i][k]*=1/(double)(VarsC.m*f*(1-c));
-		S_monp[i][k]+=-I_min/(double)VarsC.m;
-		//printf("S_monp[%i][%i] : %e\t",i,k,S_monp[i][k]);
-		S_mon[i][k]=N_tot/(double)bin_tau/(double)bin_nD2;
-		sum+=S_mon[i][k];
-		S_sum+=S_monp[i][k];
-		}
-		//printf("S_monp[%i][%i] : %e\t",i,0,S_monp[i][0]);
-	}
-	
-
-	/*Normalization of S_monp compared to Z*/
-	coeff_ZS=(S_sum/Z_sum)*f;
-	printf("Z_sum : %e\n",Z_sum);
-	printf("sum : %e\n",sum);
-	printf("S_sum : %e\n",S_sum);
-	printf("Coeff_ZS : %e\n",coeff_ZS);
-	for (i=0;i<bin_tau;i++){
-		for (k=0;k<bin_nD2;k++){
-			S_monp[i][k]/=coeff_ZS;
-			S_sum+=S_monp[i][k];
-		}
-	}
-
-	for (i=0;i<bin_tau;i++){
-		for (k=0;k<bin_nD2;k++){
-			/*Calculation of delta(S)^2*/
-			for (j=0;j<f*Nseq;j++){
-				S_monpp[i][k]+=(VarsC.ChopSeq[j % Nseq]-c)*(VarsC.ChopSeq[j % Nseq]-c)*Vars.Mon2D_p[(j*(bin_nD-1)/(f*Nseq-1)+(i*(bin_nD-1))/(bin_tau-1)) % bin_nD][k]*Vars.Mon2D_p[(j*(bin_nD-1)/(f*Nseq-1)+(i*(bin_nD-1))/(bin_tau-1)) % bin_nD][k];
-			}
-			//printf("S_monpp0[%i][%i] : %e\t",i,k,S_monpp[i][k]);
-		S_monpp[i][k]*=1/(double)(VarsC.m*VarsC.m*f*f*(1-c)*(1-c));
-		}
-		
-	}
-	/*Transformation for the detector*/
-	for (i=0;i<bin_tau;i++){
-		for (k=0;k<bin_nD2;k++){
-			S_monpp[i][k]=((S_mon[i][k]-1)*(S_monpp[i][k])+(S_monp[i][k]*S_monp[i][k])/S_mon[i][k]);
-			//printf("S_monp[%i] : %e\t",i,S_monp[i]);
-			//printf("S_monpp1[%i] : %e\t",i,S_monpp[i]);
-		}
-	}
-	
-	DETECTOR_OUT_2D(
-	"Chopper monitor",
-	Vars.Coord_Label[1],
-	Vars.Coord_Label[2],
-	Vars.Coord_Min[1], Vars.Coord_Max[1],Vars.Coord_Min[2],Vars.Coord_Max[2],(long)bin_tau,(long)bin_nD2,
-	&S_mon[0][0],&S_monp[0][0],&S_monpp[0][0],
-	filename);
-	
-}
-%}
-
-FINALLY COPY Monitor_nD EXTEND
-%{
+  /* set up Monitor_nD time limits */
+  if (tmin<tmax){
+    sprintf(op,"limits=[%g %g] %s",tmin, tmax, Vars.option);
+  }else{
+    sprintf(op,"auto %s",Vars.option);
+  }
+  strcpy(Vars.option,op);
+  
+  /* re-initialize Monitor_nD */
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight,zdepth,xmin,xmax,ymin,ymax,zmin,zmax);
 
 %}
 
+TRACE COPY Monitor_nD
 
-MCDISPLAY COPY Monitor_nD EXTEND
+SAVE
 %{
+  /* the detector file written by the Monitor_nD is stored in a 'MCDETECTOR detector' structure */
+
+  /* get back information from the StatisticalChopper */
+  int    m       = MC_GETPAR(comp,m);               /* number of appertures in the sequence */
+  int    nslit   = MC_GETPAR(comp,nslit);           /* length of the sequence (number of possible slits around disk) */
+  double nu      = MC_GETPAR(comp,nu);
+  int   *Sequence= MC_GETPAR(comp,Sequence);
+  double c       = (double)(m-1)/(double)(nslit-1); /* duty cycle */
+  int    f;      /* number of periods in the detected time range */
+  
+  
+  /* save results, but do not free pointers */
+  detector = Monitor_nD_Save(&DEFS, &Vars);
+  
+  f = (int)floor((detector.xmax-detector.xmin)*nu);
+  if (f < 1) f=1;
+  
+  if (detector.intensity && m >= 1 && f >= 1 && nslit > 1 && detector.m > 1 && c < 1 && nu > 0 && Sequence) {
+  
+    double S_sum = 0;
+    int    i,j,k; /* indices for loops */
+    
+    /* copy raw detector as correlation base */
+    long correlation_m = detector.m/f; /* new time binning for autocorrelation */
+    
+    double p0[correlation_m*detector.n*detector.p]; /* static arrays to store correlation monitor */
+    double p1[correlation_m*detector.n*detector.p];
+    double p2[correlation_m*detector.n*detector.p];
+    
+    /* initialize arrays to zero */
+    for (i=0;i<correlation_m*detector.n*detector.p;i++) p0[i]=p1[i]=p2[i]=0;
+    
+    /* indices in loops for detector */
+    /* p1[i][j] = p1[index] with index= (!detector.istransposed ? i*n*p + j : i+j*m); */
+
+    /* compute scattering function S: Von Jan and Scherm, Eq (18) */
+    for (i=0;i<correlation_m;i++){
+      for (k=0;k<detector.n*detector.p;k++){
+        long index_new= !detector.istransposed ? i*detector.n*detector.p + k : i+k*correlation_m; /* [i][k] index in correlation */
+        for (j=0;j<f*nslit;j++){
+          long i2       = ( j*(detector.m-1)/(f*nslit-1) + i*(detector.m-1)/(correlation_m-1) ) % detector.m; /* time index in raw detector */
+          long index_old= !detector.istransposed ? i2*detector.n*detector.p + k : i2+k*detector.m;            /* full [i][k] index in raw detector */
+
+          p1[index_new]+=(Sequence[j % nslit]-c) * detector.p1[ index_old ];
+        }
+        p1[index_new] /=  m*f*(1-c);
+        p1[index_new] += -detector.min/m;
+        p0[index_new]  =  detector.events/correlation_m;
+        S_sum += p1[index_new];
+      }
+    }
+
+    /* Normalization of p1 compared to detector.p1: must have same integrated intensity */
+    /* normalizations: 
+      coeff_ZS=(S_sum/detector.intensity)*f; 
+      coeff_ZS=(S_sum/(m*detector.intensity-detector.min/nu))*(m*f*(1-m/nslit)+m);
+    */
+    double coeff_ZS=(S_sum/(m*detector.intensity-detector.min/nu))*(m*f*(1.0-(double)m/nslit)+m);
+    for (i=0;i<correlation_m*detector.n*detector.p;i++) {
+      p1[i] /= coeff_ZS;
+    }
+
+    /* Calculation of delta(S)^2: Von Jan and Scherm, Eq (19) */
+    for (i=0;i<correlation_m;i++){
+      for (k=0;k<detector.n*detector.p;k++){
+        long index_new= !detector.istransposed ? i*detector.n*detector.p + k : i+k*correlation_m; /* [i][k] index in correlation */
+        for (j=0;j<f*nslit;j++){
+          long i2       = ( j*(detector.m-1)/(f*nslit-1) + i*(detector.m-1)/(correlation_m-1) ) % detector.m; /* time index in raw detector */
+          long index_old= !detector.istransposed ? i2*detector.n*detector.p + k : i2+k*detector.m;            /* full [i][k] index in raw detector */
+          p2[index_new]+= (Sequence[j % nslit]-c)*(Sequence[j % nslit]-c)
+                        *  detector.p1[index_old]*detector.p1[index_old];
+        }
+      }
+    }
+    /* Transformation from sigma to p2 before output */
+    for (i=0;i<correlation_m*detector.n*detector.p;i++){
+      p2[i] /= (double)(m*m*f*f*(1-c)*(1-c));
+      if (p2[i] > 0) p2[i] = (p0[i] > 1 ? ((p0[i]-1)*p2[i]*p2[i] + p1[i]*p1[i]/p0[i])/p0[i]
+                                        : p1[i]);
+    }
+    
+    char file[CHAR_BUF_LENGTH];
+    sprintf(file, "%s_corr", filename ? filename : NAME_CURRENT_COMP);
+
+    if (detector.rank == 1)
+      DETECTOR_OUT_1D("Correlation monitor",
+        detector.xlabel,detector.ylabel,
+        detector.xvar,detector.xmin,detector.xmax,correlation_m,
+        p0,p1,p2,file);
+    else if (detector.rank == 2)
+      DETECTOR_OUT_2D("Correlation monitor",
+        detector.xlabel,detector.ylabel,
+        detector.xmin,detector.xmax,detector.ymin,detector.ymax,
+        correlation_m,detector.n,
+        p0,p1,p2,file);
+    else
+      DETECTOR_OUT_3D("Correlation monitor",
+        detector.xlabel,detector.ylabel,detector.zlabel,detector.xvar,detector.yvar,detector.zvar,
+        detector.xmin,detector.xmax,detector.ymin,detector.ymax,detector.zmin,detector.zmax,
+        correlation_m,detector.n,detector.p,
+        p0,p1,p2,file);
+
+  }
+  
 %}
+
+FINALLY COPY Monitor_nD 
+
+MCDISPLAY COPY Monitor_nD 
 
 END
