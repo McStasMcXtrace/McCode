@@ -15,6 +15,9 @@
 * Origin: ILL
 * Release: McStas 2.0
 *
+* Refractive lens with absorption, incoherent scattering and surface imperfection.
+*
+* %Description
 * Refractive Lens with absorption, incoherent scattering and surface imperfection. 
 * May be spherical, planar or parabolic. The lens is seen as a 2*radius disk from
 * the beam Z axis.
@@ -23,12 +26,14 @@
 *
 * Common material: 
 *   MgF2: density=3.148,weight=62.3018,sigma_coh=11.74,sigma_inc=0.0816,sigma_abs=0.0822
-diamond: density=3.52n  = sqrt(1-(lambda*lambda*rho*bc/PI))
-*   Quartz/silica:
+*   diamond: density=3.52,weight=12.01,sigma_coh=5.551,sigma_inc=0.001,sigma_abs=0.0035
+*   Quartz/silica:density=2.53,weight=60.08,sigma_coh=10.625,sigma_inc=0.0056,sigma_abs=0.1714
 *   perfluoropolymer
 *
-* %Description
 * Example: Lens(r1=0.025,r2=0.025, thickness=0.001,radius=0.0150)
+*
+* %BUGS
+* parabolic shape is not fully validated yet, but should do still...
 *
 * %Parameters
 * INPUT PARAMETERS:
