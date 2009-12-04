@@ -634,7 +634,7 @@ TRACE
            NAME_CURRENT_COMP, t3, dt, x,y,z);
         
         /* check if intersection point is still in the slit package, else exit loop */
-        zp1 = zp1 = FC_zrot(x,z, t, FCVars); /* Z'(t+t3) */
+        zp1 = FC_zrot(x,z, t, FCVars); /* Z'(t+t3) */
         if (fabs(zp1) > length/2) {
           if (verbose > 2) 
             printf("FermiChopper: %s: Neutron is outside slit pack (on slit wall).\n", 
