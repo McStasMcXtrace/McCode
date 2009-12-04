@@ -1364,6 +1364,7 @@ double omega=0;       /* energy transfer */
 double q=0;           /* wavevector transfer */
 long   index_w;       /* energy index for table look-up SW */
 long   index_q;       /* Q index for table look-up P(Q|w) */
+ double theta=0, costheta=0; /* for the choice of kf direction */
 double u1x,u1y,u1z;
 double u2x,u2y,u2z;
 double u0x,u0y,u0z;
@@ -1584,7 +1585,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
   else break;
 
   if (intersect) { /* scattering event */
-    double kf=0, kf1, kf2
+    double kf=0, kf1, kf2;
     /* mean scattering probability and absorption fraction */
     VarSqw.mean_scatt += (1-exp(-VarSqw.my_s*d_path))*p;
     VarSqw.mean_abs   += (1-ws)*p;
@@ -1651,7 +1652,6 @@ do { /* Main interaction loop. Ends with intersect=0 */
       /* give us a limited number of tries for scattering */
       for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
 
-        double theta=0, costheta=0; /* for the choice of kf direction */
         /* MC choice: energy transfer in the SW */
         tmp_rand = rand01();
         /* index for rand > cumul SW */
