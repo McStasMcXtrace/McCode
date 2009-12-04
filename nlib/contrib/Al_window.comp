@@ -68,16 +68,9 @@ SHARE
 
 TRACE
 %{
-  double t0, t3;                /* Entry/exit time for outer cylinder */
-  double t1, t2;                /* Entry/exit time for inner cylinder */
   double v;                     /* Neutron velocity */
-  double dt0, dt1, dt2, dt;     /* Flight times through sample */
-  double l_full;                /* Flight path length for non-scattered neutron */
-  double l_i, l_o;              /* Flight path lenght in/out for scattered neutron */
-  double my_a;                  /* Velocity-dependent attenuation factor */
-  double solid_angle;           /* Solid angle of target as seen from scattering point */
+  double dt0;     /* Flight times through sample */
   double dist;
-  double nx, ny, nz, xt, yt, zt,xi,yi,zi;
   double Al_s_tot_lambda,Al_my_tot,Al_my_a ; /* total XS (barn), total scattering length (m-1), absorption scat. length */
   double lambda; /* neutrons wavelength */
 

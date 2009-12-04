@@ -698,8 +698,8 @@ struct Sqw_Data_struct *Sqw_readfile(
   long    *SW_lookup;
   long   **QW_lookup;
   char   **parsing;
-  double   q_min_data, q_max_data;
-  double   w_min_data, w_max_data;
+  double   q_min_data=0, q_max_data=0;
+  double   w_min_data=0, w_max_data=0;
   long     nb_q_data=0, nb_w_data=0;
 
   /* setup default */
@@ -1351,8 +1351,8 @@ TRACE
 int    intersect=0;     /* flag to continue/stop */
 double t0,  t1,  t2,  t3; /* times for intersections */
 double dt0, dt1, dt2, dt; /* time intervals */
-double k=0, kf, kf1, kf2;
-double v=0, vf;
+double k=0;
+double v=0, vf=0;
 double d_path;        /* total path length for straight trajectory */
 double my_a;          /* absorption cross-section scaled to velocity (2200) */
 double ws, p_scatt;   /* probability for scattering/absorption and for */
@@ -1364,7 +1364,6 @@ double omega=0;       /* energy transfer */
 double q=0;           /* wavevector transfer */
 long   index_w;       /* energy index for table look-up SW */
 long   index_q;       /* Q index for table look-up P(Q|w) */
-double theta, costheta; /* for the choice of kf direction */
 double u1x,u1y,u1z;
 double u2x,u2y,u2z;
 double u0x,u0y,u0z;
@@ -1375,7 +1374,6 @@ int    flag_ishollow=0;
 double solid_angle=0;
 double my_t=0;
 double p_mult=1;
-double alpha, alpha0;
 double mc_trans, p_trans, mc_scatt;
 double coh=0, inc=0;
 struct Sqw_Data_struct Data_sqw;
@@ -1586,6 +1584,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
   else break;
 
   if (intersect) { /* scattering event */
+    double kf=0, kf1, kf2
     /* mean scattering probability and absorption fraction */
     VarSqw.mean_scatt += (1-exp(-VarSqw.my_s*d_path))*p;
     VarSqw.mean_abs   += (1-ws)*p;
@@ -1648,9 +1647,11 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     if (flag) { /* true when S(q,w) table exists (Data_sqw) */
 
+      double alpha=0, alpha0;
       /* give us a limited number of tries for scattering */
       for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
 
+        double theta=0, costheta=0; /* for the choice of kf direction */
         /* MC choice: energy transfer in the SW */
         tmp_rand = rand01();
         /* index for rand > cumul SW */

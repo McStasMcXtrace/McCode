@@ -196,7 +196,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     char Short_Label[MONnD_COORD_NMAX][64];
     int  Set_Coord_Mode;
     long i=0, j=0;
-    double lmin, lmax, XY;
+    double lmin, lmax, XY=0;
     long t;
 
 
@@ -824,8 +824,8 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
 {
 
   double  XY=0;
-  long    i,j;
-  double  pp;
+  long    i=0,j;
+  double  pp=0;
   double  Coord[MONnD_COORD_NMAX];
   long    Coord_Index[MONnD_COORD_NMAX];
   char    While_End   =0;
@@ -1133,7 +1133,7 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
     long    bin1d, bin2d;
     char    While_End = 0;
     long    While_Buffer = 0;
-    double  XY, pp;
+    double  XY=0, pp;
     double  Coord[MONnD_COORD_NMAX];
     long    Coord_Index[MONnD_COORD_NMAX];
     char    label[CHAR_BUF_LENGTH];
@@ -1648,7 +1648,6 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
         {
           double theta0, phi0, theta1, phi1;
           double x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3;
-          double ymin, ymax;
           phi0 = (hdiv_min+ width*ih)*DEG2RAD; /* in xz plane */
           phi1 = (hdiv_min+ width*(ih+1))*DEG2RAD;
           if (issphere)

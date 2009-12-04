@@ -475,7 +475,7 @@ INITIALIZE
 
 TRACE
 %{
-  double dx,dy,xf,yf,rf,pdir,chi,v,r, lambda;
+  double dx=0,dy=0,xf,yf,rf,pdir,chi,v,r, lambda;
   double Maxwell;
 
   if (verbose >= 0)
@@ -517,6 +517,7 @@ TRACE
 
       randvec_target_rect_angular(&vx, &vy, &vz, &pdir,
           0, 0, 1, focus_aw*DEG2RAD, focus_ah*DEG2RAD, ROT_A_CURRENT_COMP);
+      dx = vx; dy = vy; /* from unit vector */
       vx *= v; vy *= v; vz *= v;
     }
     p = p_in*pdir;
