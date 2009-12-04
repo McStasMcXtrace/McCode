@@ -207,7 +207,7 @@ TRACE
 
   if(vx != 0.0 && (dt = -x/vx) >= 0.0 && r0)
   {                             /* Moving towards crystal? */
-    double zmin,zmax, ymin,ymax, zp,yp;
+    double zmin,zmax, ymin,ymax;
 
     /* Propagate to crystal plane */
     PROP_DT(dt);    /* now in the vertical plane of monochromator */
@@ -304,7 +304,7 @@ TRACE
 
           if(rand01() <= p_reflect) { /* Reflect */
             double bx,by,bz,ax,ay,az,phi;
-            double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
+            double cos_2theta,k_sin_2theta,cos_phi,sin_phi,q_x,q_y,q_z;
             double total,c1x,c1y,c1z,width,mos_sample;
             int i=0;
 
@@ -441,7 +441,7 @@ MCDISPLAY
     for(iv = 0; iv < NV; iv++)
     {
       double zmin,zmax,ymin,ymax;
-      double xt, xt1, yt, yt1;
+      double xt, yt;
 
       zmin = (SlabWidth+gap)*(ih-NH/2.0)+gap/2;
       zmax = zmin+SlabWidth;

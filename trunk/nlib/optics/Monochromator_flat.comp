@@ -121,7 +121,7 @@ TRACE
 %{
   double y1,z1,t1,dt,kix,kiy,kiz,ratio,order,q0x,k,q0,theta;
   double bx,by,bz,kux,kuy,kuz,ax,ay,az,phi;
-  double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
+  double cos_2theta,k_sin_2theta,cos_phi,sin_phi,q_x,q_y,q_z;
   double delta,p_reflect,total,c1x,c1y,c1z,zwidth,mos_sample;
   int i;
 
