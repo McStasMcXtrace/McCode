@@ -2303,7 +2303,9 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
   mcfile_tag(detector, parent, "position",   detector.position);
 
   mcfile_tag(detector, parent, "title",      detector.title);
-  mcfile_tag(detector, parent, "ratio",      detector.ncount);
+  mcfile_tag(detector, parent, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ? 
+      "Ncount" : "ratio",      detector.ncount);
+    
   if (strlen(detector.filename)) {
     mcfile_tag(detector, parent, "filename", detector.filename);
     mcfile_tag(detector, parent, "format",   detector.format.Name);
