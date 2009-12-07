@@ -9,20 +9,24 @@
 *
 * %Identification
 *
-* Written by: C. Monzat/E. Farhi/S. Desert
+* Written by: C. Monzat/E. Farhi/S. Desert/G.Euzin
 * Date: 2009
 * Version: $Revision 1.0$
-* Origin: ILL
+* Origin: ILL/LLB
 * Release: McStas 2.0
 *
 * Refractive lens with absorption, incoherent scattering and surface imperfection.
 *
 * %Description
 * Refractive Lens with absorption, incoherent scattering and surface imperfection. 
-* May be spherical, planar or parabolic. The lens is seen as a 2*radius disk from
-* the beam Z axis.
+* Geometry may be:
+*   spherical (use r1 and r2 to specify radius of curvature), 
+*   planar (use phiy1 and phiy2 to specify rotation angle of plane w.r.t beam) 
+*   or parabolic (use focus1 and focus2 as optical focal length). 
+* The lens cross-section is seen as a 2*radius disk from the beam Z axis.
 * Usually, you should stack more than one of these to get a significant effect 
-* on the neutron beam, so-called 'compound refractive lens'..
+* on the neutron beam, so-called 'compound refractive lens'.
+* The focal length for N lenses with focal 'f' is f/N.
 *
 * Common material: 
 *   MgF2: density=3.148,weight=62.3018,sigma_coh=11.74,sigma_inc=0.0816,sigma_abs=0.0822
@@ -66,7 +70,7 @@ SETTING PARAMETERS (r1=0,r2=0,focus1=0,focus2=0,phiy1=0,phiy2=0,
   sigma_coh=11.74,sigma_inc=0.0816,sigma_abs=0.0822,
   density=3.148,weight=62.3018,
   p_interact=0.1,focus_aw=10,focus_ah=10,RMS=0)
-OUTPUT PARAMETERS ()
+OUTPUT PARAMETERS (rho, bc, my_s, my_a_v, mean_n, events)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
@@ -160,13 +164,21 @@ DECLARE
 %{
   double rho, bc;
   double my_s, my_a_v;
+  double mean_n;
+  double events;
 %}
 
 INITIALIZE
 %{
   /* density: Number of atoms by AA^3, pow(10,-24) stands for conversion from cm^3 to AA^3 */
-  rho= density*6.02214179*pow(10,23)*pow(10,-24)/weight; 
-  bc=sqrt(sigma_coh*100/4/PI)*pow(10,-5);      /* bound coherent cross section */
+  if (density<=0 || !weight<=0)
+    exit(printf("Lens: %s: FATAL: invalid material density or molar weight: density=%g weight=%g\n", 
+      NAME_CURRENT_COMP, density, weight));
+  rho= density*6.02214179*1e23*1e-24/weight; 
+  if (sigma_coh<=0)
+    exit(printf("Lens: %s: FATAL: invalid material coherent cross section: sigma_coh=%g\n", 
+      NAME_CURRENT_COMP, sigma_coh));
+  bc=sqrt(sigma_coh*100/4/PI)*1e-5;      /* bound coherent cross section */
 
   phiy1 *= DEG2RAD; /* planes orientation */
   phiy2 *= DEG2RAD;
@@ -188,19 +200,6 @@ double nx, ny, nz; /* normal vector to surface */
 double ax, ay, az; /* temporary vector for surface refraction */
 double alpha1, beta1, theta1, theta2; /* angles for refraction computation */
 
-v=sqrt(vx*vx+vy*vy+vz*vz);
-
-if (v) lambda=3956.0032/v; else ABSORB;
-
-/* compute refractive index */
-/* without inc nor abs: n  = sqrt(1-(lambda*lambda*rho*bc/PI));   */
-/* M. L. Goldberger et al, Phys. Rev. 71, 294 - 310 (1947) */
-/*alpha1 = (sigma_inc+sigma_abs*2200/v)/2/lambda;
-n  = 1-lambda*lambda*rho/2/PI*sqrt(bc*bc-alpha1*alpha1);   */
-n  = sqrt(1-(lambda*lambda*rho*bc/PI));
-
-theta_RMS=atan(2*RMS/lambda);           /* cone angle from RMS roughtness */
-
 /* ======================== First face of the lens ========================== */
 /* determine intersection time */
 if (r1 && !focus1)
@@ -218,6 +217,21 @@ PROP_DT(dt);
 /* check for lens cross section (radius) */
 if (x*x+y*y > radius*radius) ABSORB;
 SCATTER;
+
+v=sqrt(vx*vx+vy*vy+vz*vz);
+
+if (v) lambda=3956.0032/v; else ABSORB;
+
+/* compute refractive index */
+/* without inc nor abs: n  = sqrt(1-(lambda*lambda*rho*bc/PI));   */
+/* M. L. Goldberger et al, Phys. Rev. 71, 294 - 310 (1947) */
+/*alpha1 = (sigma_inc+sigma_abs*2200/v)/2/lambda;
+n  = 1-lambda*lambda*rho/2/PI*sqrt(bc*bc-alpha1*alpha1);   */
+n  = sqrt(1-(lambda*lambda*rho*bc/PI));
+mean_n += n*p;
+events += p;
+
+theta_RMS=atan(2*RMS/lambda);           /* cone angle from RMS roughtness */
 
 /* compute normal vector */
 if (r1 && !focus1) {
@@ -391,11 +405,32 @@ vz = beta1*nz + alpha1*vz;
 
 %}
 
+FINALLY %{
+  /* compute focal length */
+  double f1=0, f2=0, f=0;
+  double n = mean_n / events;
+  
+  if (n != 1) {
+    if (r1 && !focus1)      f1 = r1/2/(1-n);
+    else if (!r1 && focus1) f1 = focus1/(1-n);
+    
+    if (r2 && !focus2)      f2 = r2/2/(1-n);
+    else if (!r2 && focus2) f2 = focus2/(1-n);
+  }
+  
+  if (f1) f+= 1/f1;
+  if (f2) f+= 1/f2;
+  if (f)  {
+    f = 1/f;
+    printf("Lens: %s: focal length f=%g [m]. Focal length for N lenses is f/N.\n", NAME_CURRENT_COMP);
+  }
+  
+%}
+
 MCDISPLAY
 %{
   magnify("xy");
   double theta1,theta00=0,theta01=0,eps,eps2,theta_line,distance,height,height2,dist_parab1,dist_parab2;
-  int test=0;
   height=radius/2;
   height2=radius/2;
   dist_parab1=0.0;
