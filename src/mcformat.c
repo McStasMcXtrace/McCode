@@ -681,7 +681,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
     if (ext) McStasStruct.InstrName = str_dup_n(McStasStruct.Source, (ext-McStasStruct.Source));
     else McStasStruct.InstrName = str_dup(McStasStruct.Source);
   } else if (McStasStruct.InstrName && !McStasStruct.Source) {
-    char *ext=NULL; /* if not found, use instr file name without extension */
+    char *ext=NULL; /* if not found, use instr name without extension */
     ext = strstr(McStasStruct.InstrName, ".ins");
     if (!ext) ext = strstr(McStasStruct.InstrName, " ins");
     if (ext) McStasStruct.Source = str_dup_n(McStasStruct.InstrName, (ext-McStasStruct.InstrName));
@@ -701,7 +701,8 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
       else if (ncount && McStasStruct.Ncount != ncount)
         fprintf(stderr, "Warning: %s: conflicting Ncount %f value with 'ratio' one %f\n",
           filename, McStasStruct.Ncount, ncount);
-    }
+    } else if (!McStasStruct.Ncount) /* no Ncount and ratio is a single value: Ncount == runnum */
+      McStasStruct.Ncount = McStasStruct.RunNum;
   }
   if (!McStasStruct.Ncount) {
     McStasStruct.Ncount = 1e6;
