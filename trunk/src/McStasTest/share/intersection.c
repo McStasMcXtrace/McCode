@@ -1,1 +1,1 @@
-../../../lib/share/intersection.c
+../../../nlib/share/intersection.c
