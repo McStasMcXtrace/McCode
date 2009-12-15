@@ -16,40 +16,6 @@
 *
 * Symbol tables.
 *
-*	$Id: symtab.c,v 1.18 2006-11-06 14:30:00 farhi Exp $
-*
-*	$Log: not supported by cvs2svn $
-*	Revision 1.17  2006/04/19 13:06:26  farhi
-*	* Updated Release, Version and Origin fields in headers
-*	* Improved setversion to update all McStasx.y occurencies into current release
-*	* Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
-*	* Added possibility to save log of the session to a file (appended) in mcgui
-*	* Made Scilab use either TCL_EvalStr or TK_EvalStr
-*	
-*	Revision 1.16  2003/10/06 15:00:12  farhi
-*	Added symtab_previous function for PREVIOUS keyword
-*
-*	Revision 1.15  2003/02/11 12:28:45  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
-*
-*	Revision 1.4  1999/04/16 07:41:31  kn
-*	Make the value_free argument for the symtab_free function optional.
-*
-*	Revision 1.3  1998/10/02 08:39:25  kn
-*	Fixed header comment.
-*
-*	Revision 1.2  1997/09/07 17:58:45  kn
-*	Snapshot with (untested) code generation complete.
-*
-*	Revision 1.1  1997/08/13 09:16:14  kn
-*	Initial revision
-*
 *******************************************************************************/
 
 #include <string.h>
