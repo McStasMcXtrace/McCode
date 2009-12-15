@@ -1,1 +1,1 @@
-../../../lib/share/vitess-lib.c
+../../../nlib/share/vitess-lib.c
