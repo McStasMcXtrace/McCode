@@ -1516,9 +1516,9 @@ print_usage(void)
 static void
 print_version(void)
 { /* MOD: E. Farhi Sep 20th, 2001 version number */
-  printf(PACKAGE_NAME " version " MCSTAS_VERSION "\n"
-    "Copyright (C) Risoe National Laboratory, 1997-2007\n"
-    "Additions (C) Institut Laue Langevin, 2003-2007\n"
+  printf(PACKAGE_NAME " version " PACKAGE_VERSION "\n"
+    "Copyright (C) Risoe National Laboratory, 1997-2010\n"
+    "Additions (C) Institut Laue Langevin, 2003-2010\n"
     "All rights reserved\n");
   exit(0);
 }
@@ -1671,12 +1671,12 @@ main(int argc, char *argv[])
     file = fopen(instr_current_filename, "r");
   }
   if(file == NULL)
-    fatal_error("mcstas: Instrument definition file `%s' not found\n",
+    fatal_error(PACKAGE_NAME ": Instrument definition file `%s' not found\n",
     instr_current_filename);
   instrument_definition->quoted_source =
     str_quote(instrument_definition->source);
   if (verbose) {
-    fprintf(stderr, "McStas version " MCSTAS_VERSION "\n");
+    fprintf(stderr, PACKAGE_NAME " version " PACKAGE_VERSION "\n");
     fprintf(stderr, "Analyzing file      %s\n", instrument_definition->quoted_source);
   }
   instr_current_line = 1;
@@ -1687,7 +1687,7 @@ main(int argc, char *argv[])
   fclose(file);
   if(err != 0 || error_encountered != 0)
   {
-    print_error("mcstas: Errors encountered during parse of %s.\n", instr_current_filename);
+    print_error(PACKAGE_NAME ": Errors encountered during parse of %s.\n", instr_current_filename);
     exit(1);
   }
   else
