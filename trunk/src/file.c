@@ -16,47 +16,6 @@
 *
 * Code to handle files and command line arguments.
 *
-*	$Id: file.c,v 1.21 2009-04-16 13:11:39 farhi Exp $
-*
-*	$Log: not supported by cvs2svn $
-*	Revision 1.20  2008/09/05 09:55:19  farhi
-*	mcstas now prints a hint if component to be included is not found but
-*	matches a name from the library (case insensitive name match)
-*	
-*	Revision 1.19  2007/03/12 14:57:18  farhi
-*	Cosmetics
-*	
-*	Revision 1.18  2006/04/19 13:06:25  farhi
-*	* Updated Release, Version and Origin fields in headers
-*	* Improved setversion to update all McStasx.y occurencies into current release
-*	* Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
-*	* Added possibility to save log of the session to a file (appended) in mcgui
-*	* Made Scilab use either TCL_EvalStr or TK_EvalStr
-*
-*	Revision 1.17  2005/03/02 10:07:23  farhi
-*	Now displays info/warning when using contributed components
-*
-*	Revision 1.16  2004/09/10 15:09:56  farhi
-*	Use same macro symbols for mcstas kernel and run-time for code uniformity
-*
-*	Revision 1.15  2003/02/11 12:28:45  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
-*
-*	Revision 1.3  2000/02/15 07:40:59  kn
-*	Also search for components in a fixed list of system dir subdirectories.
-*
-*	Revision 1.2  1998/10/02 08:36:21  kn
-*	Fixed header comment.
-*
-*	Revision 1.1  1998/10/01 08:13:41  kn
-*	Initial revision
-*
 *******************************************************************************/
 
 #include <stdlib.h>

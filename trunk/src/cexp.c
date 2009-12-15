@@ -16,39 +16,8 @@
 *
 * Handle expressions used as arguments to components etc.
 *
-*	$Id: cexp.c,v 1.19 2006-04-19 13:06:25 farhi Exp $
-*
-*	$Log: not supported by cvs2svn $
-*	Revision 1.18  2003/02/11 12:28:45  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
-*
-*	Revision 1.6  2000/07/27 09:04:59  kn
-*	Support full C expressions. Now stores source line numbers within
-*	expression representation, and distinguishes between values and compound
-*	expressions.
-*
-*	Revision 1.5  2000/07/05 13:32:10  kn
-*	Properly quote constant string expressions.
-*
-*	Revision 1.4  1998/10/02 08:35:04  kn
-*	Fixed header comment.
-*
-*	Revision 1.3  1998/10/01 11:44:07  kn
-*	Added support for string expressions.
-*
-*	Revision 1.2  1997/09/07 17:54:28  kn
-*	Snapshot with (untested) code generation complete.
-*
-*	Revision 1.1  1997/08/13 09:11:24  kn
-*	Initial revision
-*
 *******************************************************************************/
+
 #include <stdarg.h>
 #include <stdio.h>
 

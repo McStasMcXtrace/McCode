@@ -16,36 +16,6 @@
 *
 * Support for conditional output of debugging information.
 *
-*	$Id: debug.c,v 1.19 2006-04-19 13:06:25 farhi Exp $
-*
-*	$Log: not supported by cvs2svn $
-*	Revision 1.18  2003/02/11 12:28:45  farhi
-*	Variouxs bug fixes after tests in the lib directory
-*	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*	read_table:corrected MC_SYS_DIR -> MCSTAS define
-*	monitor_nd-lib: fix Log(signal) log(coord)
-*	HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*	Progress_bar: precent -> percent parameter
-*	CS: ----------------------------------------------------------------------
-*
-*	Revision 1.6  1999/03/18 07:29:10  kn
-*	Fix bug in print_warn().
-*
-*	Revision 1.5  1998/10/02 08:36:12  kn
-*	Fixed header comment.
-*
-*	Revision 1.4  1998/10/01 11:44:33  kn
-*	Set a flag when print_error is called.
-*
-*	Revision 1.3  1998/09/24 12:15:30  kn
-*	Added print_warn() function.
-*
-*	Revision 1.2  1997/07/02 07:22:53  kn
-*	Error reporting functions.
-*
-*	Revision 1.1  1997/07/01 08:17:57  kn
-*	Initial revision
-*
 *******************************************************************************/
 
 #include <stdarg.h>

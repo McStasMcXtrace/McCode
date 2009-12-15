@@ -19,46 +19,6 @@
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: nexus-lib.h,v 1.8 2008/02/09 22:26:27 farhi Exp $
-*
-* $Log: nexus-lib.h,v $
-* Revision 1.8  2008/02/09 22:26:27  farhi
-* Major contrib for clusters/multi-core: OpenMP support
-* 	try ./configure --with-cc=gcc4.2 or icc
-* then mcrun --threads ...
-* Also tidy-up configure. Made relevant changes to mcrun/mcgui to enable OpenMP
-* Updated install-doc accordingly
-*
-* Revision 1.7  2007/03/05 19:02:55  farhi
-* NEXUS support now works as MPI. NEXUS keyword is optional and only -DUSE_NEXUS is required. All instruments may then export in NEXUS if McStas
-* has been installed with --with-nexus
-*
-* Revision 1.6  2007/03/02 14:35:56  farhi
-* Updated install doc for NeXus and reconfigure tool.
-* better NeXus support with compression
-*
-* Revision 1.5  2007/02/09 13:21:38  farhi
-* NeXus compression does not work right. Use flat NeXus as default.
-*
-* Revision 1.4  2007/01/26 16:23:25  farhi
-* NeXus final integration (mcplot, mcgui, mcrun).
-* Only mcgui initiate mcstas.nxs as default output file, whereas
-* simulation may use instr_time.nxs
-*
-* Revision 1.3  2007/01/22 15:13:42  farhi
-* Fully functional NeXus output format.
-* Works also for lists, but as catenation is not working in NAPI, one
-* has to store all in memory (e.g. with large Monitor_nD bufsize), so that
-* its written in one go at the end of sim.
-*
-* Revision 1.2  2007/01/22 01:38:25  farhi
-* Improved NeXus/NXdata support. Attributes may not be at the right place
-* yet.
-*
-* Revision 1.1  2007/01/21 15:43:08  farhi
-* NeXus support. Draft version (functional). To be tuned.
-*
-*
 *******************************************************************************/
 
 #ifdef USE_NEXUS

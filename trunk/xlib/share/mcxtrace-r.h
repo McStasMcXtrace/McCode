@@ -29,9 +29,6 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id:$
-*
-* $Log:$
 *******************************************************************************/
 
 #ifndef MCXTRACE_R_H

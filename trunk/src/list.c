@@ -16,46 +16,6 @@
 *
 * Implementation of lists.
 *
-*       $Id: list.c,v 1.19 2007-09-03 16:10:26 farhi Exp $
-*
-*       $Log: not supported by cvs2svn $
-*       Revision 1.18  2007/02/27 16:25:48  farhi
-*       Increased list max size in code gen to 50000 lines/elements
-*       removed perl warnings in Win$
-*       plus cosmetics
-*
-*       Revision 1.17  2006/11/06 14:30:00  farhi
-*       Improved COPY grammar, enabling to either redefine sections, or extend them (with e.g. INITIALIZE COPY parent EXTEND %{ %})
-*       over-definition of parameters for comp instances in the .instr works OK.
-*
-*       Revision 1.16  2006/04/19 13:06:25  farhi
-*       * Updated Release, Version and Origin fields in headers
-*       * Improved setversion to update all McStasx.y occurencies into current release
-*       * Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
-*       * Added possibility to save log of the session to a file (appended) in mcgui
-*       * Made Scilab use either TCL_EvalStr or TK_EvalStr
-*
-*       Revision 1.15  2003/02/11 12:28:45  farhi
-*       Variouxs bug fixes after tests in the lib directory
-*       mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-*       read_table:corrected MC_SYS_DIR -> MCSTAS define
-*       monitor_nd-lib: fix Log(signal) log(coord)
-*       HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-*       Progress_bar: precent -> percent parameter
-*       CS: ----------------------------------------------------------------------
-*
-*       Revision 1.4  2001/03/15 15:11:13  peo
-*       Changed MAXELEMENTS to 5000
-*
-*       Revision 1.3  1998/10/02 08:37:44  kn
-*       Fixed header comment.
-*
-*       Revision 1.2  1997/09/07 17:58:11  kn
-*       Snapshot with (untested) code generation complete.
-*
-*       Revision 1.1  1997/08/13 09:15:16  kn
-*       Initial revision
-*
 *******************************************************************************/
 
 #include "mccode.h"
