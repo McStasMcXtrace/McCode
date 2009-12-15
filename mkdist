@@ -130,8 +130,8 @@ DAY=`date +"%d"`
 YEAR=`date +"%Y"`
 
 cd src
-sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcstas.h > mcstas.h.tmp
-mv mcstas.h.tmp  mcstas.h
+sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mccode.h > mccode.h.tmp
+mv mccode.h.tmp  mccode.h
 sed 's/X.Y.Z, Month Day, Year/'$1' - '$MONTH'. '$DAY', '$YEAR'/' mcformat.c > mcformat.c.tmp
 mv mcformat.c.tmp  mcformat.c
 cd ../doc/man
