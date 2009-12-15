@@ -1257,10 +1257,6 @@ int mcformat_merge_compare(int nb)
         (flag_list==1 || ThisStruct.m == McStasStruct.m) &&
         ThisStruct.n == McStasStruct.n &&
         ThisStruct.p == McStasStruct.p &&
-        (mcforcemode || mcscanmode ||
-          (ThisStruct.n == 1 && ThisStruct.x1 == McStasStruct.x1) ||
-          (ThisStruct.x1 == McStasStruct.x1 && ThisStruct.y1 == McStasStruct.y1)
-          ) &&
         (!ThisStruct.xvar || !McStasStruct.xvar || !strcmp(ThisStruct.xvar, McStasStruct.xvar)) &&
         (!ThisStruct.yvar || !McStasStruct.yvar || !strcmp(ThisStruct.yvar, McStasStruct.yvar)) &&
         (!ThisStruct.zvar || !McStasStruct.zvar || !strcmp(ThisStruct.zvar, McStasStruct.zvar)) &&
@@ -1268,6 +1264,16 @@ int mcformat_merge_compare(int nb)
         (!ThisStruct.ylabel || !McStasStruct.ylabel || !strcmp(ThisStruct.ylabel, McStasStruct.ylabel)) &&
         (!ThisStruct.zlabel || !McStasStruct.zlabel || !strcmp(ThisStruct.zlabel, McStasStruct.zlabel)) );
       if (!flag_data) continue;
+      
+      char flag_limits=(mcforcemode || mcscanmode || 
+          (ThisStruct.n == 1 && ThisStruct.x1 == McStasStruct.x1) ||
+          (ThisStruct.x1 == McStasStruct.x1 && ThisStruct.y1 == McStasStruct.y1)
+          );
+      if (!flag_limits)  {
+        fprintf(stderr, "Warning: Axes limits are not identical for %s and %s. Skipping (use --force to override).\n",
+          McStasStruct.filename, ThisStruct.filename);
+        continue;
+      }
 
       /* Warning if gravitation not constant (may be forced) */
       char flag_gravitation = mcforcemode || (
@@ -1432,7 +1438,17 @@ void mcformat_scan_compare(int nb)
       -same ipar values define rows
    */
   int scan_index1=0;
-  int i,j;
+  int i=0,j;
+  
+  /* test if there is scan data to be processed */
+  for (scan_index1=0; scan_index1<nb; scan_index1++) {
+    if (Scans_to_merge[scan_index1] < 0 || Scans_to_merge[scan_index1] < scan_index1) continue;
+    else { i=1; break; }
+  }
+    
+  if (i == 0)
+    fprintf(stderr, "Warning: Could not find scanned parameter within 'Param' lines in data file headers.\n"
+          "Ignoring [mcformat:mcformat_scan_compare].\n");
 
   /* loop on Scans_to_merge: index > -1  */
   for (scan_index1=0; scan_index1<nb; scan_index1++) {
