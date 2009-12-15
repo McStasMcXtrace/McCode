@@ -52,28 +52,28 @@
 #undef USE_MPI
 #endif
 
-/* Instead of including mcstas.h file, which would then require to link most
+/* Instead of including mccode.h file, which would then require to link most
    of the functions of the mcstas executable, we just put there some parts of
-   the mcstas.h file.
+   the mccode.h file.
    Build: cc -o mcformat mcformat.c -lm
 */
 
 #define fatal_error printf  /* remove debug.c dependency */
 #define debug(msg)
 
-#define MCSTAS_H                  /* avoids memory.c to import mcstas.h */
+#define MCCODE_H                  /* avoids memory.c to import mccode.h */
 typedef struct Pool_header *Pool; /* allows memory to be included */
 #include "memory.c"
 
-#include "../nlib/share/mcstas-r.h" /* with decl of MC_PATHSEP */
+#include "../lib/share/mccode-r.h" /* with decl of MC_PATHSEP */
 
 #ifdef USE_NEXUS
 #include "../lib/share/nexus-lib.h"
 #endif
 
-#include "../nlib/share/mcstas-r.c"
+#include "../lib/share/mccode-r.c"
 
-/* end of parts copied from mcstas.h */
+/* end of parts copied from mccode.h */
 
 #include "../lib/share/read_table-lib.h" /* independent library */
 #include "../lib/share/read_table-lib.c"
@@ -91,16 +91,13 @@ char *str_cat(char *first, ...);/* Concatenate strings to allocated string. */
 char *str_quote(char *string);  /* Quote string for inclusion in C code */
 void  str_free(char *);   /* Free memory for string. */
 
-
-#define MAX_LENGTH 1024
-
 /* default global variables required by mcstas-r (usually generated in cogen) */
 int  mcdefaultmain         = 1;
 int  mctraceenabled        = 0;
-char mcinstrument_name[MAX_LENGTH];
-char mcinstrument_source[MAX_LENGTH];
+char mcinstrument_name[CHAR_BUF_LENGTH];
+char mcinstrument_source[CHAR_BUF_LENGTH];
 int  mcnumipar             = 0;
-struct mcinputtable_struct mcinputtable[MAX_LENGTH];
+struct mcinputtable_struct mcinputtable[CHAR_BUF_LENGTH];
 mcstatic FILE *mcsiminfo_file        = NULL;
 
 #ifdef USE_NEXUS
@@ -110,7 +107,7 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 
 /* default global variables for mcformat converter */
 int  files_to_convert_NB    = 0;          /* nb of files to convert */
-int  files_to_convert_Array[MAX_LENGTH];  /* index of argv[] for these files */
+int  files_to_convert_Array[CHAR_BUF_LENGTH];  /* index of argv[] for these files */
 char mcforcemode =0;
 char mcverbose   =0;
 char mctestmode  =0;
@@ -911,7 +908,7 @@ struct McStas_file_format mcformat_read_mcstas(char *filename)
 *******************************************************************************/
 int mcformat_dirwalk(char *dir, int (*fcn)(char *))
 {
-  char name[MAX_LENGTH];
+  char name[CHAR_BUF_LENGTH];
   int  ret=0;
   struct dirent *dp;
   DIR *dfd;
@@ -1055,8 +1052,8 @@ int mcformat_output(struct McStas_file_format McStasStruct)
       mcdirname      = McStasStruct.mcdirname;
       mcinstrnames[i]= str_dup(McStasStruct.InstrName);
       mcsources[i]   = str_dup(McStasStruct.Source);
-      strncpy(mcinstrument_name,     str_last_word(mcinstrnames[i]), MAX_LENGTH);
-      strncpy(mcinstrument_source  , str_dup(mcsources[i]), MAX_LENGTH);
+      strncpy(mcinstrument_name,     str_last_word(mcinstrnames[i]), CHAR_BUF_LENGTH);
+      strncpy(mcinstrument_source  , str_dup(mcsources[i]), CHAR_BUF_LENGTH);
       mcsiminfo_init(NULL); /* open new SIM file in this dir for the first time */
       mcsimfiles[i]  = mcsiminfo_file;
     } else mcsiminfo_file = mcsimfiles[i];
@@ -1072,8 +1069,8 @@ int mcformat_output(struct McStas_file_format McStasStruct)
   mcgravitation       = (McStasStruct.gravitation && strstr(McStasStruct.gravitation, "yes") ? 1 : 0);
   mcrun_num = McStasStruct.RunNum;
   mcncount  = McStasStruct.Ncount;
-  strncpy(mcinstrument_source, str_dup(McStasStruct.Source), MAX_LENGTH);
-  strncpy(mcinstrument_name  , str_last_word(McStasStruct.InstrName), MAX_LENGTH);
+  strncpy(mcinstrument_source, str_dup(McStasStruct.Source), CHAR_BUF_LENGTH);
+  strncpy(mcinstrument_name  , str_last_word(McStasStruct.InstrName), CHAR_BUF_LENGTH);
   /* transfer mcnumipar */
   mcnumipar = McStasStruct.mcnumipar;
   for (i=0; i<mcnumipar; i++) {
@@ -1548,8 +1545,8 @@ void mcformat_scan_compare(int nb)
           mon_count);
       continue;
     }
-    char *header=(char*)mem(64*MAX_LENGTH); strcpy(header, "");
-    char *youts =(char*)mem(64*MAX_LENGTH); strcpy(youts,  "");
+    char *header=(char*)mem(64*CHAR_BUF_LENGTH); strcpy(header, "");
+    char *youts =(char*)mem(64*CHAR_BUF_LENGTH); strcpy(youts,  "");
     double ipar_min=FLT_MAX, ipar_max=0;
 
     /* we first sort Scan_columns(monitors) with distance */
@@ -1726,7 +1723,7 @@ void
 mcformat_parseoptions(int argc, char *argv[])
 {
   int i;
-  char cwd[MAX_LENGTH];
+  char cwd[CHAR_BUF_LENGTH];
   mcdirname = NULL;
   for(i = 1; i < argc; i++)
   {
@@ -1800,12 +1797,12 @@ mcformat_parseoptions(int argc, char *argv[])
       mcmergesamedir=mcmergemode=1;
     else {
       /* convert argv[i]: store index of argument */
-      if (files_to_convert_NB <MAX_LENGTH)
+      if (files_to_convert_NB <CHAR_BUF_LENGTH)
         files_to_convert_Array[files_to_convert_NB++] = i;
       else
         fprintf(stderr, "Warning: Exceeding maximum number of files to process (%d).\n"
           "Ignoring %s [mcformat:mcformat_parseoptions].\n",
-          MAX_LENGTH, argv[i]);
+          CHAR_BUF_LENGTH, argv[i]);
     }
   }
   if (!mcascii_only) {
@@ -1815,7 +1812,7 @@ mcformat_parseoptions(int argc, char *argv[])
     strcat(mcformat.Name, " with text headers");
   }
   if (!mcdirname) {
-    getcwd(cwd, MAX_LENGTH);
+    getcwd(cwd, CHAR_BUF_LENGTH);
     mcdirname = str_dup(cwd); /* default is to export to PWD */
   }
 } /* mcformat_parseoptions */
@@ -1902,8 +1899,8 @@ int main(int argc, char *argv[])
         if (mcsimfiles[j]) {
           mcdirname = mcdirnames[j];
           mcsiminfo_file     = mcsimfiles[j];
-          strncpy(mcinstrument_source, str_last_word(mcinstrnames[j]), MAX_LENGTH);
-          strncpy(mcinstrument_name  , str_last_word(mcsources[j]), MAX_LENGTH);
+          strncpy(mcinstrument_source, str_last_word(mcinstrnames[j]), CHAR_BUF_LENGTH);
+          strncpy(mcinstrument_name  , str_last_word(mcsources[j]), CHAR_BUF_LENGTH);
           mcsiminfo_close();
           mcsimfiles[j] = NULL;
           memfree(mcinstrnames[j]);
