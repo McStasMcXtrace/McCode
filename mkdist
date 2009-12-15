@@ -2,9 +2,10 @@
 #
 # Simple script for setting up a mcstas distribution package.
 #
-# To be called with one input parameter - distribution tail filename, e.g.
+# To be called with one/two input parameter(s) - distribution tail filename, e.g.
 #
-# ./mkdist 1.7.3c -> ../mcstas-1.7.3c.tar.gz
+# ./mkdist version          -> ../mcstas-version.tar.gz
+# ./mkdist version mcxtrace -> ../mcxtrace-version.tar.gz
 #
 # Assumes you have write access to ..
 #
