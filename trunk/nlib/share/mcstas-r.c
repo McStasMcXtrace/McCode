@@ -1124,7 +1124,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREbegin %TYP\n",
     "%PREend %TYP\n",
     "%PRE%NAM: %VAL\n",
-    "", "",
+    "%PREData [%PAR/%FIL] I: \n", "",
     "%PREErrors [%PAR/%FIL] E: \n", "",
     "%PREEvents [%PAR/%FIL] N: \n", "" },
   { "Scilab", "sci",
@@ -3121,6 +3121,7 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
       /* skip in data-only mode or binary */
       mcfile_header(detector, "header");
       mcinfo_data(detector, detector.filename);
+      mcinfo_simulation(detector, detector.filename);
     }
   }
   
