@@ -192,18 +192,18 @@ install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 installdirs:
 	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@MCCODE@) $(mandir)/man1
 
-instrument.tab.o: mcstas.h
-lex.yy.o: mcstas.h instrument.tab.h
-debug.o: mcstas.h
-memory.o: mcstas.h
-symtab.o: mcstas.h
-list.o: mcstas.h
-coords.o: mcstas.h
-cexp.o: mcstas.h
-file.o: mcstas.h
-cogen.o: mcstas.h
+instrument.tab.o: mccode.h
+lex.yy.o: mccode.h instrument.tab.h
+debug.o: mccode.h
+memory.o: mccode.h
+symtab.o: mccode.h
+list.o: mccode.h
+coords.o: mccode.h
+cexp.o: mccode.h
+file.o: mccode.h
+cogen.o: mccode.h
 port.o: port.h
-mcformat.o: mcstas.h
+mcformat.o: mccode.h
 
 instrument.tab.c instrument.tab.h: instrument.y
 	$(BISON) $(BISONFLAGS) instrument.y
