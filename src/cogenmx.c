@@ -23,7 +23,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
-#include "mcstas.h"
+#include "mccode.h"
 
 
 /*******************************************************************************
@@ -1453,17 +1453,21 @@ cogen_runtime(struct instr_def *instr)
   if(instr->include_runtime)
   {
     cout("#define MC_EMBEDDED_RUNTIME"); /* Some stuff will be static. */
+    embed_file("mccode-r.h");
     embed_file("mcxtrace-r.h");
     /* NeXus support, only active with -DUSE_NEXUS */
     embed_file("nexus-lib.h"); /* will require linking with -DUSE_NEXUS -lNeXus */
     embed_file("nexus-lib.c");
     if (verbose) printf("Requires library    -DUSE_NEXUS -lNeXus (to enable NeXus support)\n");
+    embed_file("mccode-r.c");
     embed_file("mcxtrace-r.c");
   }
   else
   {
+    coutf("#include \"%s%sshare%smccode-r.h\"",  sysdir_new, pathsep, pathsep);
     coutf("#include \"%s%sshare%smcxtrace-r.h\"",  sysdir_new, pathsep, pathsep);
     coutf("#include \"%s%sshare%snexus-lib.h\"", sysdir_new, pathsep, pathsep);
+    fprintf(stderr,"Dependency: %s.o\n", "mccode-r");
     fprintf(stderr,"Dependency: %s.o\n", "mcxtrace-r");
     fprintf(stderr,"Dependency: %s.o and '-DUSE_NEXUS -lNeXus' to enable NeXus support\n", "nexus-lib");
     fprintf(stderr,"To build instrument %s, compile and link with these libraries (in %s%sshare)\n", instrument_definition->quoted_source, sysdir_new, pathsep);
@@ -1479,7 +1483,7 @@ cogen_runtime(struct instr_def *instr)
   coutf("char %sinstrument_name[] = \"%s\";", ID_PRE, instr->name);
   coutf("char %sinstrument_source[] = \"%s\";", ID_PRE, instr->source);
   if(instr->use_default_main)
-    cout("int main(int argc, char *argv[]){return mcstas_main(argc, argv);}");
+    cout("int main(int argc, char *argv[]){return mccode_main(argc, argv);}");
 } /* cogen_runtime */
 
 

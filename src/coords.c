@@ -39,7 +39,7 @@
 *
 *******************************************************************************/
 
-#include "mcstas.h"
+#include "mccode.h"
 
 /*******************************************************************************
 * Since we use a lot of geometric calculations using Cartesian coordinates,

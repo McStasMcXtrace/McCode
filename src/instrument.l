@@ -157,7 +157,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include "mcstas.h"
+#include "mccode.h"
 #include "instrument.tab.h"
 
 /* Fix things for bison option %pure_parser. */

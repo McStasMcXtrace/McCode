@@ -26,7 +26,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include "mcstas.h"
+#include "mccode.h"
 
 
 /*******************************************************************************
