@@ -109,27 +109,32 @@ BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 .SUFFIXES: .c .o .pl .fixpl .mxfixpl
 
 .c.o:
-	$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@MCCODE@)'"' $(DEFS) $<
+	@echo "Building" $(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@MCCODE@)'"' ... $<
+	@$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@MCCODE@)'"' $(DEFS) $<
 
 .pl.fixpl:
-	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
+	@echo "Fixing PERL dirs:" $< "->" $@
+	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
 	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mcstas)'"+' \
 	    < $< > $@
-	chmod +x $@
+	@chmod +x $@
 
 .pl.mxfixpl:
-	sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
+	@echo "Fixing PERL dirs:" $< "->" $(subst mc,mx,$@)
+	@sed -e 's+#! /usr/bin/perl+#! '$(PERL)'+' \
 	    -e 's+\$MCSTAS::sys_dir = "/usr/local/lib/mcstas"+\$MCSTAS::sys_dir = "'$(libdir_mcxtrace)'"+' \
 	    < $< > $(subst mc,mx,$@)
-	chmod +x $(subst mc,mx,$@)
+	@chmod +x $(subst mc,mx,$@)
 
 all: $(BINOBJS_@MCCODE@)
 
 mcstas: $(OBJECTS_mcstas)
-	$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcstas) -lm
+	@echo "Building" $(CC) -o mcstas $(CFLAGS) $(LDFLAGS) ... $(OBJECTS_mcstas) -lm
+	@$(CC) -o mcstas $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcstas) -lm
 
 mcxtrace: $(OBJECTS_mcxtrace)
-	$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcxtrace) -lm
+	@echo "Building" $(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) ... $(OBJECTS_mcxtrace) -lm
+	@$(CC) -o mcxtrace $(CFLAGS) $(LDFLAGS) $(DEFS) $(OBJECTS_mcxtrace) -lm
 
 mcstas.win32: $(COBJECTS)
 	$(MINGW) -o mcstas.exe -DMCSTAS='"C:\\McStas\\lib"' $(CFLAGS) $(LDFLAGS) $(DEFS) $(COBJECTS) -lm $(USE_NEXUS)
@@ -141,10 +146,12 @@ mcxtrace.win32: $(CMXOBJECTS)
 
 
 mcformat:
-	$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
+	@echo "Building" $(CC) -o mcformat $(CFLAGS) $(LDFLAGS) ... mcformat.c -lm $(LIBS) $(USE_NEXUS)
+	@$(CC) -o mcformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
 
 mxformat:
-	$(CC) -o mxformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
+	@echo "Building" $(CC) -o mxformat $(CFLAGS) $(LDFLAGS) ... mcformat.c -lm $(LIBS) $(USE_NEXUS)
+	@$(CC) -o mxformat $(CFLAGS) $(LDFLAGS) $(DEFS) mcformat.c -lm $(LIBS) $(USE_NEXUS)
 
 
 clean:
