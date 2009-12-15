@@ -1,1 +1,1 @@
-../../../lib/share/general.c
+../../../nlib/share/general.c

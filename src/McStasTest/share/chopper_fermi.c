@@ -1,1 +1,1 @@
-../../../lib/share/chopper_fermi.c
+../../../nlib/share/chopper_fermi.c
