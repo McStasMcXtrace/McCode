@@ -51,7 +51,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "mcstas.h"
+#include "mccode.h"
 
 /*******************************************************************************
 * Error messages.

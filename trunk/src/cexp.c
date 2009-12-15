@@ -52,7 +52,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "mcstas.h"
+#include "mccode.h"
 
 /* The internal structure implementing a C expression. */
 struct cexp

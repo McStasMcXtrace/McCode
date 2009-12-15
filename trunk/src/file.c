@@ -63,7 +63,7 @@
 #include <stdio.h>
 #include <dirent.h>
 
-#include "mcstas.h"
+#include "mccode.h"
 
 static List search_list = NULL;
 

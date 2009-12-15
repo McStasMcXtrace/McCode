@@ -26,7 +26,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "mcstas.h"
+#include "mccode.h"
 
 #define YYERROR_VERBOSE 1
 #define YYDEBUG 1
