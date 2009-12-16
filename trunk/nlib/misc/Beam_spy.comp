@@ -107,7 +107,7 @@ SAVE
   /* now estimates total ncount */
 
   mean_k = V2K*smean_v;
-  if (mean_k) mean_L = 2*PI/smean_k;
+  if (mean_k) mean_L = 2*PI/mean_k;
   mean_w = VS2E*smean_v*smean_v;
   printf("Beam analysis for Component preceeding %s\n", NAME_CURRENT_COMP);
   printf("Absolute position AT (%g, %g, %g)\n", c.x, c.y, c.z);
