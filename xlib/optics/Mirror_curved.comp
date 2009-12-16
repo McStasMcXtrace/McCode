@@ -41,7 +41,7 @@ TRACE
 
   /*do we hit the mirror within range?*/
   PROP_Z0;
-  if (solve_2nd_order(&dl,kx*kx+kz*kz,2*(x*kx+z*kz+radius*kx),x*x+2*x*radius+z*z))
+  if (solve_2nd_order(&dl,NULL, kx*kx+kz*kz,2*(x*kx+z*kz+radius*kx),x*x+2*x*radius+z*z))
   {
     /*correction for only solving in xz-plane*/
     dl*=sqrt(scalar_prod(kx,ky,kz,kx,ky,kz)/scalar_prod(kx,0,kz,kx,0,kz));
