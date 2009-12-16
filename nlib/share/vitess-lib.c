@@ -22,34 +22,6 @@
 * Usage: within SHARE
 * %include "vitess-lib"
 *
-* $Id: vitess-lib.c,v 1.15 2006-02-06 18:18:42 lieutenant Exp $
-*
-* $Log: not supported by cvs2svn $
-* Revision 1.14  2005/11/07 08:14:41  farhi
-* Modifications by Klaus: made mcstas2vitess work again.
-*
-* Revision 1.13  2005/07/25 14:55:08  farhi
-* DOC update:
-* checked all parameter [unit] + text to be OK
-* set all versions to CVS Revision
-*
-* Revision 1.12  2005/04/27 14:46:10  lieutenant
-* new: McInitVt(), McCleanupVt(), setParDirectory(), FullParName(); correction: coordinate change
-*
-* Revision 1.10  2003/02/11 12:28:46  farhi
-* Variouxs bug fixes after tests in the lib directory
-* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-* read_table:corrected MC_SYS_DIR -> MCSTAS define
-* monitor_nd-lib: fix Log(signal) log(coord)
-* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-* Progress_bar: precent -> percent parameter
-* CS: ----------------------------------------------------------------------
-*
-* Revision 1.2 2002/08/28 11:39:00 ef
-* Changed to lib/share/c code.
-*
-* Revision 1.1 2000/08/28 11:39:00 kn
-* Initial revision
 *******************************************************************************/
 
 #ifndef VITESS_LIB_H

@@ -23,10 +23,6 @@
 * Usage: within SHARE
 * %include "ref-lib"
 *
-* $Id: ref-lib.c,v 1.1 2006-08-10 13:10:49 pchr Exp $
-*
-* $Log: not supported by cvs2svn $
-*
 ****************************************************************************/
 
 #ifndef REF_LIB_H

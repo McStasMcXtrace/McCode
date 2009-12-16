@@ -21,25 +21,6 @@
 * Usage: within SHARE
 * %include "adapt_tree-lib"
 *
-* $Id: adapt_tree-lib.h,v 1.8 2007-03-12 14:57:21 farhi Exp $
-*
-* $Log: not supported by cvs2svn $
-* Revision 1.7  2005/07/25 14:55:08  farhi
-* DOC update:
-* checked all parameter [unit] + text to be OK
-* set all versions to CVS Revision
-*
-* Revision 1.6  2003/02/11 12:28:46  farhi
-* Variouxs bug fixes after tests in the lib directory
-* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-* read_table:corrected MC_SYS_DIR -> MCSTAS define
-* monitor_nd-lib: fix Log(signal) log(coord)
-* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-* Progress_bar: precent -> percent parameter
-* CS: ----------------------------------------------------------------------
-*
-* Revision 1.1 2002/09/02 18:59:05 ef
-* Initial revision extracted from mcstas-r.c/h
 *******************************************************************************/
 
 #ifndef ADAPT_TREE_LIB_H

@@ -22,12 +22,6 @@
 * Usage: within SHARE
 * %include "ref-lib"
 *
-*
-* $Id: ref-lib.h,v 1.1 2006-08-10 13:10:49 pchr Exp $
-*
-* $Log: not supported by cvs2svn $
-*
-*
 ****************************************************************************/
 %include "read_table-lib"
 
