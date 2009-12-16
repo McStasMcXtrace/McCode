@@ -63,6 +63,7 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 SHARE
 %{
 %include "read_table-lib"
+%include "ref-lib"
 %}
 
 DECLARE
@@ -99,25 +100,15 @@ TRACE
       q = fabs(2*vz*V2Q);
       vz = -vz;
       /* Reflectivity (see component Guide). */
-      if(m == 0)
-        ABSORB;
       if (reflect && strlen(reflect))
-         B=Table_Value(pTable, q, 1);
+        TableReflecFunc(q, &pTable, &B);
       else {
-          B = R0;
-          if(q > Qc)
-          {
-            double arg = (q-m*Qc)/W;
-            if(arg < 10)
-              B *= .5*(1-tanh(arg))*(1-alpha*(q-Qc));
-            else  B=0;
-          }
+        double par[] = {R0, Qc, alpha, m, W};
+        StdReflecFunc(q, par, &B);
       }
-      if (B < 0) B=0;
-      else if (B > 1) B=1;
       /* now handle either probability when transmit or weight */
       if (!transmit) {
-        if (!B) ABSORB;
+        if (B <= 0) ABSORB;
         p *= B;
         SCATTER;
       } else {
