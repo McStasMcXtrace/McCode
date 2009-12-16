@@ -405,8 +405,7 @@ inline void norm_func(double *x, double *y, double *z) {
 inline void coord_norm(Coords* c);
 
 /**
- * Rotate the given xyz in a certain way. This does not seem to be used
- * anywhere, so I haven't bothered to reverse-engineer the maths.
+ * Rotate the given xyz in a certain way. Used in pol-lib
  */
 #define rotate(x, y, z, vx, vy, vz, phi, ax, ay, az) \
   do { \
@@ -574,7 +573,6 @@ int solve_2nd_order(double *t1, double *t2,
 void randvec_target_circle(double *xo, double *yo, double *zo,
     double *solid_angle, double xi, double yi, double zi, double radius);
 #define randvec_target_sphere randvec_target_circle
-#define plane_intersect_Gfast solve_2nd_order
 void randvec_target_rect_angular(double *xo, double *yo, double *zo,
     double *solid_angle,
                double xi, double yi, double zi, double height, double width, Rotation A);
