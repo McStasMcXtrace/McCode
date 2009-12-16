@@ -422,7 +422,7 @@ FINALLY %{
   if (f2) f+= 1/f2;
   if (f)  {
     f = 1/f;
-    printf("Lens: %s: focal length f=%g [m]. Focal length for N lenses is f/N.\n", NAME_CURRENT_COMP);
+    printf("Lens: %s: focal length f=%g [m]. Focal length for N lenses is f/N.\n", NAME_CURRENT_COMP, f);
   }
   
 %}
