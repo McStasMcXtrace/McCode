@@ -57,10 +57,10 @@ LIBS = @LIBS@
 
 PERL = @PERL@
 
-FLEX = flex
+FLEX = @FLEX@
 FLEXFLAGS=-i
 
-BISON = bison
+BISON = @BISON@
 BISONFLAGS = -v -d
 
 SCILAB = @SCILAB@
