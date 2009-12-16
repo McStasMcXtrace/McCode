@@ -29,6 +29,11 @@
 #include "ref-lib.h"
 #endif
 
+#ifndef READ_TABLE_LIB_H
+#include "read_table-lib.h"
+#include "read_table-lib.c"
+#endif
+
 /****************************************************************************
 * void StdReflecFunc(double q, double *par, double *r)
 * 
@@ -46,15 +51,15 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
     double alpha = mc_pol_par[2];
     double m     = mc_pol_par[3];
     double W     = mc_pol_par[4];
-    double arg   = (mc_pol_q - m*Qc)/W;
+    double arg   = W > 0 ? (mc_pol_q - m*Qc)/W : 11;
     
-    if(mc_pol_q <= Qc) {      
-      *mc_pol_r = R0;
+    if (arg > 10 || m <= 0 || Qc <=0 || R0 <= 0) {
+      *mc_pol_r = 0;
       return;
     }
     
-    if (arg > 10) {
-      *mc_pol_r = 0;
+    if(mc_pol_q <= Qc) {      
+      *mc_pol_r = R0;
       return;
     }
     
