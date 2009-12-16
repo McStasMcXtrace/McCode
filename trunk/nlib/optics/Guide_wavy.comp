@@ -72,6 +72,9 @@ alpha4=4.38, m4=2, W4=0.003,
 wavy_z=0, wavy_xy=0)
 OUTPUT PARAMETERS (whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+SHARE %{
+%include "ref-lib"
+%}
 DECLARE
 %{
  double whalf,hhalf, lwhalf, lhhalf, norm_nv, norm_nh, f_h, f_v, eta_z, eta_xy;
@@ -252,21 +255,13 @@ and the rotated bottom normal vector is { -l d_xy,  l + f_v d_z,  f_v + l d_z }
         exit(1);
     }
     /* Now compute reflectivity. */
-    if(m == 0)
-      ABSORB;
-    if(q > Qc)
     {
-      double arg = (q-m*Qc)/W;
-      if(arg < 10)
-      {
-        R = .5*(1-tanh(arg))*(1-alpha*(q-Qc));
-        p *= R;
-        /* printf("q,Qc,alpha,arg,R: %g %g %g %g %g \n",q,Qc,alpha,arg,R); */
-      }
-      else
-        ABSORB;                               /* Cutoff ~ 1E-10 */
+        double par[] = {R0, Qc, alpha, m, W};
+        StdReflecFunc(q, par, &R);
+        if (R > 0)
+          p *= R;
+        else ABSORB;
     }
-    p *= R0;               /* Correct for max. reflectivity for both cases */
     vx += dvx;
     vy += dvy;
     vz += dvz;

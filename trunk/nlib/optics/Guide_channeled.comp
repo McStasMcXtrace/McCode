@@ -80,6 +80,9 @@ SETTING PARAMETERS (w1, h1, w2=0, h2=0, l,
   Qcx=0.0218, Qcy=0.0218, alphax=4.38, alphay=4.38, W=0.003, mx=1, my=1, nu=0, phase=0)
 OUTPUT PARAMETERS (w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+SHARE %{
+%include "ref-lib"
+%}
 DECLARE
 %{
   double w1c;
@@ -258,28 +261,28 @@ TRACE
     }
     if((i <= 2 && q > Qcx) || (i > 2 && q > Qcy))
     {
+      double ref=1;
       if (i <= 2)
       {
-        double arg = (q - mx*Qcx)/W;
-        if(arg < 10 && mx > 0 && Qcx > 0 && R0 > 0)
-          p *= .5*(1-tanh(arg))*(1-alphax*(q-Qcx));
-        else
-        {
+        double par[] = {R0, Qcx, alphax, mx, W};
+        StdReflecFunc(q, par, &ref);
+        if (ref > 0)
+          p *= ref;
+        else {
           x += hadj; /* Re-adjust origin */
           ABSORB;                               /* Cutoff ~ 1E-10 */
         }
       } else {
-        double arg = (q - my*Qcy)/W;
-        if(arg < 10 && my > 0 && Qcy > 0 && R0 > 0)
-          p *= .5*(1-tanh(arg))*(1-alphay*(q-Qcy));
-        else
-        {
+        double par[] = {R0, Qcy, alphay, my, W};
+        StdReflecFunc(q, par, &ref);
+        if (ref > 0)
+          p *= ref;
+        else {
           x += hadj; /* Re-adjust origin */
           ABSORB;                               /* Cutoff ~ 1E-10 */
         }
       }
     }
-    p *= R0;
     x += hadj; SCATTER; x -= hadj;
   } /* end for */
   x += hadj; /* Re-adjust origin */

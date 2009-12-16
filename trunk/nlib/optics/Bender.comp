@@ -92,22 +92,17 @@
 *******************************************************************************/
 
 DEFINE COMPONENT Bender
-DEFINITION PARAMETERS
-(w,h,r,Win=0.04,k=1,d=0.001,R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003,l=0)
+DEFINITION PARAMETERS(w,h,r,Win=0.04,k=1,d=0.001,l=0,
+  R0a=0.99,Qca=0.021,alphaa=6.07,ma=2,Wa=0.003,
+  R0i=0.99,Qci=0.021,alphai=6.07,mi=2,Wi=0.003,
+  R0s=0.99,Qcs=0.021,alphas=6.07,ms=2,Ws=0.003)
 
 SETTING PARAMETERS ()
 OUTPUT PARAMETERS (bk, mWin)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 SHARE
  %{
-#ifndef BENDER_DECLARE
-#define BENDER_DECLARE
-    double bd_sgn(double x) {
-      if (x>=0)
-         return 1.0;
-      else
-         return -1.0; }
-#endif
+%include "ref-lib"
  %}
 
 DECLARE
@@ -139,7 +134,7 @@ INITIALIZE
 TRACE
  %{
     int i,num,numa,numi;
-    double dru,ab,dab,R,Q,arg,arga,argi,Ta,vpl;
+    double dru,ab,dab,R,Q,Ta,vpl;
     double einmWin,ausmWin,zykmWin,aeumWin,innmWin,ref,innref,aeuref;
     double einzei,auszei,zykzei;
 
@@ -159,6 +154,7 @@ TRACE
       /* does the neutron hit the partition at the entrance? */
       if (ab<bk-d)
       {
+        double aeu[] = {R0a, Qca, alphaa, ma, Wa};
         /* velocity in the XZ-plane */
         vpl=sqrt(vx*vx+vz*vz);
 
@@ -172,38 +168,29 @@ TRACE
         aeumWin=acos((R-dab)/R);
 
         /* reflection coefficient at the concave side */
-        arga=0.0;
         Q=2.0*V2K*vpl*sin(aeumWin);
-        if (Q<=Qca)
-           aeuref=R0a;
-        else {
-           arga=(Q-ma*Qca)/Wa;
-           aeuref=0.5*R0a*(1.0-tanh(arga))*(1.0-alphaa*(Q-Qca)); }
+        StdReflecFunc(Q, aeu, &aeuref);
 
         /* does the neutron hit the convex side of the channel? */
         innmWin=0.0;
         innref=1.0;
-        argi=0.0;
         if (dab>bk-d)
         {
+           double inn[] = {R0i, Qci, alphai, mi, Wi};
            /* reflection coefficient at the convex side */
            innmWin=acos((R-dab)/(R-bk+d));
            Q=2.0*V2K*vpl*sin(innmWin);
-           if (Q<=Qci)
-              innref=R0i;
-           else {
-              argi=(Q-mi*Qci)/Wi;
-              innref=0.5*R0i*(1.0-tanh(argi))*(1.0-alphai*(Q-Qci)); }
+           StdReflecFunc(Q, inn, &innref);
         }
 
         /* divergence of the neutron at the exit */
         zykmWin=2.0*(aeumWin-innmWin);
         ausmWin=fmod(mWin+einmWin+aeumWin-innmWin
-          *(1.0+bd_sgn(einmWin)),zykmWin)-zykmWin/2.0;
-        ausmWin+=innmWin*bd_sgn(ausmWin);
+          *(1.0+SIGN(einmWin)),zykmWin)-zykmWin/2.0;
+        ausmWin+=innmWin*SIGN(ausmWin);
 
         /* number of reflections at the concave side */
-        numa=(mWin+einmWin+aeumWin-innmWin*(1.0+bd_sgn(einmWin)))/zykmWin;
+        numa=(mWin+einmWin+aeumWin-innmWin*(1.0+SIGN(einmWin)))/zykmWin;
 
         /* number of reflections at the convex side */
         numi=numa;
@@ -216,7 +203,7 @@ TRACE
         }
 
         /* is the reflection coefficient too small? */
-        if (((numa>0) && (arga>10.0)) || ((numi>0) && (argi>10.0)))
+        if (((numa>0) && (aeuref<=0)) || ((numi>0) && (innref<=0)))
            ABSORB;
 
         /* calculation of the neutron probability weight p */
@@ -228,7 +215,7 @@ TRACE
         /* time to cross the bender */
         Ta=(2*numa*(tan(aeumWin)-tan(innmWin))
           +tan(ausmWin)-tan(einmWin)
-          -tan(innmWin)*(bd_sgn(ausmWin)-bd_sgn(einmWin)))
+          -tan(innmWin)*(SIGN(ausmWin)-SIGN(einmWin)))
           *(R-dab)/vpl;
         t+=Ta;
 
@@ -245,13 +232,10 @@ TRACE
 
         if (vy!=0.0)
         {
+          double s[] = {R0s, Qcs, alphas, ms, Ws};
           /* reflection coefficent at the top and bottom side */
           Q=2.0*V2K*fabs(vy);
-          if (Q<=Qcs) {
-             ref=R0s; arg=0; }
-          else {
-             arg=(Q-ms*Qcs)/Ws;
-             ref=0.5*R0s*(1.0-tanh(arg))*(1.0-alphas*(Q-Qcs)); }
+          StdReflecFunc(Q, s, &ref);
 
           /* number of reflections at top and bottom */
           einzei=h/2.0/fabs(vy)+y/vy;
@@ -262,7 +246,7 @@ TRACE
           auszei=fmod(Ta+einzei,zykzei);
 
           /* is the reflection coefficient too small? */
-          if ((num>0) && (arg>10.0))
+          if ((num>0) && (ref<=0))
              ABSORB;
 
           /* calculation of the probability weight p */

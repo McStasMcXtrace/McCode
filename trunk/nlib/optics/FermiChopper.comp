@@ -98,6 +98,7 @@ OUTPUT PARAMETERS(FCVars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 SHARE
 %{
+%include "ref-lib"
 #ifndef FermiChopper_TimeAccuracy
 #define FermiChopper_TimeAccuracy 1e-9
 #define FermiChopper_MAXITER      100
@@ -656,18 +657,17 @@ TRACE
 
         q    = 2*V2Q*(fabs(vxp1));
 
-        if(q > Qc && W)
         {
-          double arg = (q-m*Qc)/W;
-          if(arg < 10)
-            p *= .5*(1-tanh(arg))*(1-alpha*(q-Qc));
+          double ref = 0;
+          double par[] = {R0, Qc, alpha, m, W};
+          StdReflecFunc(q, par, &ref);
+          if (ref>0) p *= ref;
           else { 
             if (verbose > 2) printf("FermiChopper: %s: ABSORB Neutron hits absorbing coating (on slit wall).\n", 
               NAME_CURRENT_COMP);
             FCVars.absorb_slitcoating++; ABSORB; 
           } /* Cutoff ~ 1E-10 */
         }
-        p *= R0;
         if (mcdotrace) {
           xp1 = FC_xrot(x,z, t,FCVars);
           zp1 = FC_zrot(x,z, t,FCVars);
