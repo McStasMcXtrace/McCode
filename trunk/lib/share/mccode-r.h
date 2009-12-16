@@ -217,7 +217,6 @@ static int mpi_node_count;
 
 /* I/O function prototypes ================================================== */
 
-
 #ifndef CHAR_BUF_LENGTH
 #define CHAR_BUF_LENGTH 1024
 #endif
@@ -319,6 +318,19 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
 
 #ifndef FLT_MAX
 #define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
+#endif
+
+#ifndef MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef SQR
+#define SQR(x) ( (x) * (x) )
+#endif
+#ifndef SIGN
+#define SIGN(x) (((x)>0.0)?(1):(-1))
 #endif
 
 #define RAD2MIN  ((180*60)/PI)
