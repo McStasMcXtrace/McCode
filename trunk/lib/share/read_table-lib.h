@@ -22,60 +22,6 @@
 * Usage: within SHARE
 * %include "read_table-lib"
 *
-*
-* $Id: read_table-lib.h,v 1.21 2006-11-27 15:29:39 farhi Exp $
-*
-* $Log: not supported by cvs2svn $
-* Revision 1.20  2006/03/15 16:04:14  farhi
-* interpolation decl.
-*
-* Revision 1.19  2005/10/14 11:38:28  farhi
-* Corrected missing #define
-*
-* Revision 1.18  2005/10/12 14:04:29  farhi
-* Added function to parse header, Table_ParseHeader(header, "symbol1", ... , NULL)
-* Useful for complex sample components, as well as mcformat/mcconvert stuff.
-*
-* Revision 1.17  2005/09/30 14:53:04  farhi
-* REdiced length of title line in subplot's
-*
-* Revision 1.16  2005/07/25 14:55:08  farhi
-* DOC update:
-* checked all parameter [unit] + text to be OK
-* set all versions to CVS Revision
-*
-* Revision 1.15  2005/07/20 13:08:43  farhi
-* Changed Table_Init calling sequence (overrides Table_Alloc)
-*
-* Revision 1.14  2005/07/12 14:46:34  farhi
-* Added Table_Alloc to create a user empty Table
-* and Table_SetElement
-*
-* Revision 1.13  2005/07/05 14:25:59  farhi
-* Added filesize in t_Table struct
-*
-* Revision 1.12  2005/07/05 12:06:40  farhi
-* added new functions for table Array handling
-* to be used in Isotropic_sqw and mcformat
-*
-* Revision 1.10  2005/01/20 14:16:43  farhi
-* New functions to read separately all numerical bmocks in a text data file
-* Will be used for Data conversion from PGPLOT/McStas (mcformat tool)
-*
-* Revision 1.9  2004/09/10 15:12:02  farhi
-* Make these libs easier to externalize (lower dependencies) and add comment about how to make these independent for external linkage.
-*
-* Revision 1.8  2003/02/11 12:28:46  farhi
-* Variouxs bug fixes after tests in the lib directory
-* mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output
-* read_table:corrected MC_SYS_DIR -> MCSTAS define
-* monitor_nd-lib: fix Log(signal) log(coord)
-* HOPG.trm: reduce 4000 points -> 400 which is enough and faster to resample
-* Progress_bar: precent -> percent parameter
-* CS: ----------------------------------------------------------------------
-*
-* Revision 1.1 2002/08/29 11:39:00 ef
-* Initial revision extracted from lib/optics/Monochromators...
 *******************************************************************************/
 
 #ifndef READ_TABLE_LIB_H
