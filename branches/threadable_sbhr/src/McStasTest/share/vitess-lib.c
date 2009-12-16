@@ -1,1 +1,0 @@
-../../../lib/share/vitess-lib.c

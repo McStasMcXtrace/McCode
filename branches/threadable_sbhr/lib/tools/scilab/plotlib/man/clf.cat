@@ -1,6 +1,0 @@
- CLF Clears a figure
-
-    
-    clf(H) Clears the figure number H. 
-
-       clear() deletes the current active figure

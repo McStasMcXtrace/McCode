@@ -1,6 +1,0 @@
-PLOTLIBVER  returns the Plotlib version.
-
-	 v=plotlibver()  returns a string containing the plotlib version.
-    
-     This function is used in the startup script scilab.star to display
-     the Plotlib version number.
