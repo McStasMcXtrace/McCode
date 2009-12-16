@@ -73,7 +73,7 @@ INITIALIZE
 #endif
 
   /* Open neutron output filename. */
-  if (!filename || !strcmp(filename,"NULL") || !strcmp(filename,"0") || !strcmp(filename,"stdout")))
+  if (!filename || !strcmp(filename,"NULL") || !strcmp(filename,"0") || !strcmp(filename,"stdout"))
   {
     hfile = stdout;
   }
