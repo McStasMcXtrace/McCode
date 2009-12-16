@@ -72,7 +72,6 @@ SHARE
 %{
 #ifndef PHONON_SIMPLE
 #define PHONON_SIMPLE $Revision: 1.7 $
-#define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 #define T2E (1/11.605)   /* Kelvin to meV */
 
 double nbose(double omega, double T)  /* Other name ?? */
@@ -131,7 +130,7 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
           parms[0]=ans;
           fnew=(*func)(parms);
           if (fnew == 0.0) return ans;
-          if (SIGN(fm,fnew) != fm)
+          if (fabs(fm)*SIGN(fnew) != fm)
           {
             xl=xm;
             fl=fm;
@@ -139,13 +138,13 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
             fh=fnew;
           }
           else
-            if (SIGN(fl,fnew) != fl)
+            if (fabs(fl)*SIGN(fnew) != fl)
             {
               xh=ans;
               fh=fnew;
             }
             else
-              if(SIGN(fh,fnew) != fh)
+              if(fabs(fh)*SIGN(fnew) != fh)
               {
                 xl=ans;
                 fl=fnew;
