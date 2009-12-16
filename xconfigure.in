@@ -71,6 +71,8 @@ AC_PATH_PROGS(MINGW, [i586-mingw32msvc-gcc], no)
 AC_PATH_PROGS(MAKE,   [make gmake], no)
 AC_PATH_PROGS(AT,  [at], no)
 AC_PATH_PROGS(HDFVIEW,  [hdfview], no, /usr/local/bin:/usr/local/hdfview:$PATH)
+AC_PATH_PROGS(FLEX,   [flex], no, /bin:/usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(BISON,   [bison], no, /bin:/usr/bin:/usr/local/bin:$PATH)
 # Important here: gnome-terminal is broken:
 #  Any commandline arguments after -e must contain escaped spaces.
 # BUT: If escaped in the perl code, use of xterm/konsole is broken....
@@ -120,6 +122,15 @@ if test "$MAKE" == "no" ; then
   echo "ERROR: McXtrace installation requires 'make' or 'gmake'"
   exit
 fi
+if test "$FLEX" == "no" ; then
+  echo "ERROR: Installation requires Flex, but it is not found."
+  exit
+fi
+if test "$BISON" == "no" ; then
+  echo "ERROR: Installation requires Bison, but it is not found."
+  exit
+fi
+
 
 if test "$PERL" = "no" ; then
   echo "WARNING: No Perl executable could be found !"
