@@ -66,7 +66,7 @@ use Config;
 %MCSTAS::mcstas_config = (
      CFLAGS => '@CFLAGS@',
      LDFLAGS => '@LDFLAGS@',
-     MCCODE => '@MCCODE@',
+     MCCODE => '@PACKAGE_TARNAME@',
      CC => '@CC@',
      AT => '@AT@',
      TERMINAL => '@TERMINAL@',

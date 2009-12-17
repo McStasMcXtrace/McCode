@@ -19,9 +19,9 @@
 #
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(McStas, X.Y.Z, www.mcstas.org)
-AC_REVISION($Revision: 1.14 $)
-AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
+AC_INIT(@PACKAGE_NAME@, @PACKAGE_VERSION@, @PACKAGE_TARNAME@-support@@PACKAGE_TARNAME@.org)
+AC_REVISION($Revision: 1.1$)
+AC_COPYRIGHT([Copyright (C) Copyright, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
 This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
@@ -48,17 +48,10 @@ AC_PATH_PROGS(PGPLOT, [pgxwin_server], no, /usr/local/bin:/usr/local/pgplot:$PAT
 AC_PATH_PROGS(TCLTK,  [wish tclsh], no, /usr/local/bin:$PATH)
 AC_PATH_PROGS(SSH,    [ssh plink], no, /usr/local/bin:$PATH)
 AC_PATH_PROGS(SCP,    [scp pscp], no, /usr/local/bin:$PATH)
-AC_PATH_PROGS(DASH,   [dash], no, /bin:/usr/bin:/usr/local/bin:$PATH)
 AC_PATH_PROGS(MPIRUN, [mpirun], no, /usr/local/bin:$PATH)
 AC_PATH_PROGS(MPICC,  [mpicc hcc mpxlc_r mpxlc mpcc cmpicc], no, /usr/local/bin:$PATH)
 AC_PATH_PROGS(BROWSER,[gnome-open firefox mozilla-firefox mozilla konqueror epiphany galeon netscape Safari], no,  /Applications/Safari.app/Contents/MacOS:/Applications/Firefox.app/Contents/MacOS:/usr/local/bin:$PATH)
 AC_PATH_PROGS(EDITOR, [gedit nedit kate xemacs gnome-open xedit vim notepad wordpad], no)
-AC_PATH_PROGS(VRMLVIEW, [octagaplayer freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
-AC_PATH_PROGS(WGET, [wget], no)
-AC_PATH_PROGS(PERLDL,   [perldl], no, /usr/bin:/usr/local/bin:$PATH)
-AC_PATH_PROGS(G77, [g77 f77 gfortran g95 f95], no)
-AC_PATH_PROGS(MINGW, [i586-mingw32msvc-gcc], no)
-AC_PATH_PROGS(MAKE,   [make gmake], no)
 AC_PATH_PROGS(AT,  [at], no)
 AC_PATH_PROGS(HDFVIEW,  [hdfview], no, /usr/local/bin:/usr/local/hdfview:$PATH)
 # Important here: gnome-terminal is broken:
@@ -93,8 +86,8 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT($prefix/lib/mcstas/tools/perl/mcstas_config.perl)
+AC_OUTPUT($prefix/lib/@PACKAGE_TARNAME@/tools/perl/@PACKAGE_TARNAME@_config.perl)
 
-chmod a+w $prefix/lib/mcstas/tools/perl/mcstas_config.perl
+chmod a+w $prefix/lib/@PACKAGE_TARNAME@/tools/perl/@PACKAGE_TARNAME@_config.perl
 
-echo "McStas has been reconfigured in $prefix/lib/mcstas/tools/perl/mcstas_config.perl"
+echo "McStas has been reconfigured in $prefix/lib/mcstas/tools/perl/@PACKAGE_TARNAME@_config.perl"
