@@ -123,11 +123,9 @@ if test "$MAKE" == "no" ; then
 fi
 if test "$FLEX" == "no" ; then
   echo "Warning: Installation may require Flex, but it is not found. I can do without."
-  exit
 fi
 if test "$BISON" == "no" ; then
   echo "Warning: Installation may require Bison, but it is not found. I can do without."
-  exit
 fi
 
 
