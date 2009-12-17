@@ -70,7 +70,7 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     if (NXputattr(nxhandle, "user_name", user, strlen(user), NX_CHAR) == NX_ERROR)
       return(NX_ERROR);
     char creator[CHAR_BUF_LENGTH];
-    sprintf(creator, "%s McStas " MCSTAS_VERSION " [www.mcstas.org]", instrname);
+    sprintf(creator, "%s " MCCODE_VERSION " [www.mcstas.org]", instrname);
     NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR);
     NXputattr(nxhandle, "simulation_begin", date, strlen(date), NX_CHAR);
     char *url="http://www.nexusformat.org/";
@@ -136,7 +136,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
         NXputdata (nxhandle, instr_code);
         NXputattr (nxhandle, "file_name", name, strlen(name), NX_CHAR);
         NXputattr (nxhandle, "file_size", &length, 1, NX_INT32);
-        NXputattr (nxhandle, "McStas_version", MCSTAS_VERSION, strlen(MCSTAS_VERSION), NX_CHAR);
+        NXputattr (nxhandle, "McCode_version", MCCODE_VERSION, strlen(MCCODE_VERSION), NX_CHAR);
         NXputattr (nxhandle, "instr_name", parent, strlen(parent), NX_CHAR);
       return(NXclosedata(nxhandle));
     } else

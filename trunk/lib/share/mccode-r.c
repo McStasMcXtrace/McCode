@@ -393,7 +393,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREFormat: %FMT file. Use mcplot/PGPLOT to view.\n"
       "%PREURL:    http://www.mccode.org/\n"
       "%PREEditor: %USR\n"
-      "%PRECreator:%SRC simulation (McStas " MCSTAS_VERSION ")\n"
+      "%PRECreator:%SRC simulation (" MCCODE_VERSION ")\n"
       "%PREDate:   Simulation started (%DATL) %DAT\n"
       "%PREFile:   %FIL\n",
     "%PREEndDate:%DAT\n",
@@ -414,7 +414,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "mc_%VPA.Format ='%FMT';\n"
       "mc_%VPA.URL    ='http://www.mccode.org';\n"
       "mc_%VPA.Editor ='%USR';\n"
-      "mc_%VPA.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%VPA.Creator='%SRC " MCCODE_VERSION " simulation';\n"
       "mc_%VPA.Date   =%DATL; // for getdate\n"
       "mc_%VPA.File   ='%FIL';\n",
     "mc_%VPA.EndDate=%DATL; // for getdate\nendfunction\n"
@@ -489,7 +489,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "mc_%VPA.Format ='%FMT';\n"
       "mc_%VPA.URL    ='http://www.mccode.org';\n"
       "mc_%VPA.Editor ='%USR';\n"
-      "mc_%VPA.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%VPA.Creator='%SRC " MCCODE_VERSION " simulation';\n"
       "mc_%VPA.Date   =%DATL; %% for datestr\n"
       "mc_%VPA.File   ='%FIL';\n",
     "mc_%VPA.EndDate=%DATL; %% for datestr\n"
@@ -642,7 +642,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "if keyword_set(plot) then p=1 else p=0\n"
       "%7$s={Format:'%FMT',URL:'http://www.mccode.org',"
       "Editor:'%USR',$\n"
-      "Creator:'%SRC McStas " MCSTAS_VERSION " simulation',$\n"
+      "Creator:'%SRC " MCCODE_VERSION " simulation',$\n"
       "Date:%DATL,"
       "File:'%FIL'}\n",
     "stv,%VPA,'EndDate',%DATL ; for systime\nreturn, %VPA\nend\n",
@@ -661,12 +661,12 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "<?xml version=\"1.0\" ?>\n<!--\n"
       "URL:    http://www.nexusformat.org/\n"
       "Editor: %USR\n"
-      "Creator:%SRC McStas " MCSTAS_VERSION " [www.mccode.org].\n"
+      "Creator:%SRC " MCCODE_VERSION " [www.mccode.org].\n"
       "Date:   Simulation started (%DATL) %DAT\n"
       "File:   %FIL\n"
       "View with Mozilla, InternetExplorer, gxmlviewer, kxmleditor\n-->\n"
       "<NX%PAR file_name=\"%FIL\" file_time=\"%DAT\" user=\"%USR\">\n"
-        "<NXentry name=\"McStas " MCSTAS_VERSION "\"><start_time>%DAT</start_time>\n",
+        "<NXentry name=\"" MCCODE_VERSION "\"><start_time>%DAT</start_time>\n",
     "<end_time>%DAT</end_time></NXentry></NX%PAR>\n<!-- EndDate:%DAT -->\n",
     "%PRE<NX%TYP name=\"%NAM\">\n",
     "%PRE</NX%TYP>\n",
@@ -685,13 +685,13 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD %DAT//EN\"\n"
       "\"http://www.w3.org/TR/html4/strict.dtd\">\n"
       "<HTML><HEAD><META name=\"Author\" content=\"%PAR\">\n"
-      "<META name=\"Creator\" content=\"%PAR (%SRC) McStas " MCSTAS_VERSION " [www.mccode.org] simulation\">\n"
+      "<META name=\"Creator\" content=\"%PAR (%SRC) " MCCODE_VERSION " [www.mccode.org] simulation\">\n"
       "<META name=\"Date\" content=\"%DAT\">\n"
       "<TITLE>[McStas %PAR (%SRC)]%FIL</TITLE></HEAD>\n"
       "<BODY><center><h1><a name=\"%PAR\">"
         "McStas simulation %SRC (%SRC): Result file %FIL.html</a></h1></center><br>\n"
         "This simulation report was automatically created by"
-        " <a href=\"http://www.mccode.org/\"><i>McStas " MCSTAS_VERSION "</i></a><br>\n"
+        " <a href=\"http://www.mccode.org/\"><i>" MCCODE_VERSION "</i></a><br>\n"
         "<pre>User:   %USR<br>\n"
         "%PRECreator: <a href=\"%SRC\">%SRC</a> %PAR McStas simulation<br>\n"
         "%PREFormat:  %FMT<br>\n"
@@ -714,7 +714,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "mc_%VPA.Format ='%FMT';\n"
       "mc_%VPA.URL    ='http://www.mccode.org';\n"
       "mc_%VPA.Editor ='%USR';\n"
-      "mc_%VPA.Creator='%SRC McStas " MCSTAS_VERSION " simulation';\n"
+      "mc_%VPA.Creator='%SRC " MCCODE_VERSION " simulation';\n"
       "mc_%VPA.Date   =%DATL; %% for datestr\n"
       "mc_%VPA.File   ='%FIL';\n",
     "mc_%VPA.EndDate=%DATL; %% for datestr\nendfunction\n"
@@ -968,7 +968,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "  import data using python> s=%VPA(p); with p=0/1 for no plot/plot\n  '''\n"
       "  %VPA={'Format':'%FMT','URL':'http://www.mccode.org',\\\n"
       "  'Editor':'%USR',\\\n"
-      "  'Creator':'%SRC McStas " MCSTAS_VERSION " [www.mccode.org]',\\\n"
+      "  'Creator':'%SRC " MCCODE_VERSION " [www.mccode.org]',\\\n"
       "  'Date':%DATL,\\\n"
       "  'File':'%FIL'}\n",
     "  %VPA['EndDate']=%DATL\nreturn %VPA\n",
@@ -989,7 +989,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "%PREFormat: %FMT file. Use hdfview to view.\n"
       "%PREURL:    http://www.mccode.org/\n"
       "%PREEditor: %USR\n"
-      "%PRECreator:%SRC simulation (McStas " MCSTAS_VERSION ")\n"
+      "%PRECreator:%SRC simulation (" MCCODE_VERSION ")\n"
       "%PREDate:   Simulation started (%DATL) %DAT\n"
       "%PREFile:   %FIL\n",
     "%PREEndDate:%DAT\n",

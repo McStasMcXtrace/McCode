@@ -40,7 +40,7 @@
 @set DONSIS="0"
 @rem *** End of User configuration ***
 @rem
-@set VERSION=MCSTAS_VERSION
+@set VERSION=@PACKAGE_VERSION@
 @echo Doing Win32 build using %CC% -I%INCLUDE% -L%LIB%
 @del *.o
 @del mcstas.exe mcformat.exe

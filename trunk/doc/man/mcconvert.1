@@ -1,18 +1,20 @@
-.TH mcconvert 1  "" "McStas X.Y.Z, Month Day, Year" "USER COMMANDS"
+.TH mcconvert 1  "" "@MCCODE_VERSION@" "USER COMMANDS"
 .SH NAME
-mcconvert \- Matlab/Scilab conversion tool of the McStas neutron ray-trace simulation package
+mcconvert \- Matlab/Scilab conversion tool of the McStas/McXtrace neutron ray-trace simulation package
 .SH SYNOPSIS
 .B mcconvert [\-\-format=FORMAT][\-\-indir=IN][\-\-outdir=OUT] [file]
 .SH DESCRIPTION
 The
 .B mcconvert
-command is the Matlab/Scilab conversion tool of the McStas package. It converts Matlab files into Scilab equivalents, and vice-versa. As it works by replacing functions calls, it can handle data sets with binary files, as well as parameter scan data sets.
+command is the Matlab/Scilab conversion tool of the @PACKAGE_NAME@ package. It converts Matlab files into Scilab equivalents, and vice-versa. As it works by replacing functions calls, it can handle data sets with binary files, as well as parameter scan data sets.
 .PP
 .B McStas
 is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
 .I Risoe National Laboratory
 and
 .I ILL
+.B McXtrace
+is the X-ray version of the package.
 
 .PP
 McStas is based on a compiler [mcstas(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.

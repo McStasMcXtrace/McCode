@@ -11,7 +11,7 @@
 * Written by: K.N.
 * Date: Jul  1, 1997
 * Origin: Risoe
-* Release: McStas 1.6
+* Release: @MCCODE_VERSION@
 * Version: $Revision: 1.50 $
 *
 * Main header file containing declarations of external functions and
@@ -38,7 +38,10 @@
 #define TRUE 1
 #endif
 
-#define MCSTAS_VERSION "X.Y.Z, Month Day, Year"
+/* the version string is replaced when building distribution with mkdist */
+#ifndef MCCODE_VERSION
+#define MCCODE_VERSION "@MCCODE_VERSION@"
+#endif
 
 /* Functions defined in memory.c */
 

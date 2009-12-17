@@ -1,5 +1,5 @@
 Package: mcstas
-Version: MCSTAS_VERSION
+Version: @MCCODE_VERSION@
 Architecture: i386
 Depends: perl, perl-tk, gcc, libc6-dev, libg2c0, pdl
 Suggests: scilab, freewrl, mpich-bin, libmpich1.0-dev, openmpi-common, openmpi-bin, libopenmpi-dev

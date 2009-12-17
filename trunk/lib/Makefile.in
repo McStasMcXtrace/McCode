@@ -16,7 +16,7 @@ INSTALL_DATA = @INSTALL_DATA@
 libdir_mcstas = $(libdir)/mcstas
 libdir_mcxtrace = $(libdir)/mcxtrace
 
-install: install_@MCCODE@
+install: install_@PACKAGE_TARNAME@
 
 install_mcstas: installdirs
 	if [ -d $(libdir_mcstas) ]; then \
@@ -105,5 +105,5 @@ install_mcxtrace: installdirs
 	done
 
 installdirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@MCCODE@) $(mandir)/man1
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@PACKAGE_TARNAME@) $(mandir)/man1
 
