@@ -258,9 +258,7 @@ TRACE
     {
       x += hadj; /* Re-adjust origin */
       ABSORB;
-    }
-    if((i <= 2 && q > Qcx) || (i > 2 && q > Qcy))
-    {
+    } else {
       double ref=1;
       if (i <= 2)
       {

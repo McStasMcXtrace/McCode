@@ -83,6 +83,7 @@ TRACE
   SCATTER;
   for(;;)
   {
+    double par[]={R0, Qc, alpha, m, W};
     /* Find itersection points of neutron with inside and outside guide walls */
     ii = cylinder_intersect(&t11, &t12 ,x - r, y, z, vx, vy, vz, R1, h1);
     ii = cylinder_intersect(&t21, &t22 ,x - r, y, z, vx, vy, vz, R2, h1);
@@ -118,15 +119,8 @@ TRACE
     if (m == 0 || !R0) ABSORB;
 
     q = 4.0*PI*sin(theta)/lambda;
-    if(q > Qc)
-    {
-      double arg = (q - m*Qc)/W;
-      if (arg < 10)
-        p *= .5*(1 - tanh(arg))*(1 - alpha*(q - Qc));
-      else
-        ABSORB;                               /* Cutoff ~ 1E-10 */
-    }
-    p *= R0;
+    StdReflecFunc(q, par, &R);
+    if (R >= 0) p *= R; else ABSORB;
     SCATTER;
   }
 %}
