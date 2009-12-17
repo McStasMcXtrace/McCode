@@ -559,31 +559,29 @@ TRACE
       {
         x += hadj; /* Re-adjust origin */
         ABSORB;
-      }
-      if((i <= 2 && q > Qcx) || (i > 2 && q > Qcy))
-      {
+      } else {
+        double ref=1;
         if (i <= 2)
         {
-          double arg = (q - mx*Qcx)/W;
-          if(arg < 10)
-            p *= .5*(1-tanh(arg))*(1-alphax*(q-Qcx));
-          else
-          {
+          double par[] = {R0, Qcx, alphax, mx, W};
+          StdReflecFunc(q, par, &ref);
+          if (ref > 0)
+            p *= ref;
+          else {
             x += hadj; /* Re-adjust origin */
             ABSORB;                               /* Cutoff ~ 1E-10 */
           }
         } else {
-          double arg = (q - my*Qcy)/W;
-          if(arg < 10)
-            p *= .5*(1-tanh(arg))*(1-alphay*(q-Qcy));
-          else
-          {
+          double par[] = {R0, Qcy, alphay, my, W};
+          StdReflecFunc(q, par, &ref);
+          if (ref > 0)
+            p *= ref;
+          else {
             x += hadj; /* Re-adjust origin */
             ABSORB;                               /* Cutoff ~ 1E-10 */
           }
         }
       }
-      p *= R0;
       x += hadj; SCATTER; x -= hadj;
     }
     x += hadj; /* Re-adjust origin */

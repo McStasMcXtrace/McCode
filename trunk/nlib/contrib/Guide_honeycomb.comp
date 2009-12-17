@@ -385,19 +385,12 @@ TRACE
       /* compute q and modify neutron weight */
       /* scattering q=|nslit_i-nslit_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
       q = 2*V2Q*fabs(B)/GVars.norm_n[side];
-      B = R0;
-      if(q > Qc)
       {
-        double arg;
-        if (W>0) arg = (q-GVars.M[side]*Qc)/W;
-        else arg = (q-GVars.M[side]*Qc)*10000; /* W = 0.00001 */
-
-        if(arg < 10) B *= .5*(1-tanh(arg))*(1-alpha*(q-Qc));
-        else { x += w_adj; y += h_adj; ABSORB; }; /* Cutoff ~ 1E-10 */
+        double par[] = {R0, Qc, GVars.Alpha[side], GVars.M[side], W};
+        StdReflecFunc(q, par, &B);
       }
-      if (B < 0) B=0;
-      else if (B > 1) B=1;
-      p *= B;
+      if (B <= 0) { x += w_adj; y += h_adj; ABSORB; }
+      else p *= B;
       x += w_adj; y += h_adj; SCATTER; x -= w_adj; y -= h_adj;
       GVars.N_reflection[0]++;
       /* go to the next reflection */
