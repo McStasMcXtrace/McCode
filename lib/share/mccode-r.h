@@ -25,7 +25,7 @@
 *   extern MCNUM  mccomp_storein[];
 *   extern MCNUM  mcAbsorbProp[];
 *   extern MCNUM  mcScattered;
-*   #define MCSTAS_VERSION "the McStas version"
+*   #define MCCODE_VERSION "the McStas/McXtrace version"
 *
 * Usage: Automatically embbeded in the c code.
 *
@@ -88,8 +88,8 @@
 #endif /* !WIN32 */
 #endif /* MC_PATHSEP_C */
 
-#ifndef MCSTAS_VERSION
-#define MCSTAS_VERSION "External Run-time"
+#ifndef MCCODE_VERSION
+#define MCCODE_VERSION "@MCCODE_VERSION@"
 #endif
 
 #ifdef MC_PORTABLE

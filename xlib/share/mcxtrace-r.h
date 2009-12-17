@@ -25,7 +25,7 @@
 *   extern MCNUM  mccomp_storein[];
 *   extern MCNUM  mcAbsorbProp[];
 *   extern MCNUM  mcScattered;
-*   #define MCXTRACE_VERSION "the McXtrace version"
+*   #define MCCODE_VERSION "the McXtrace version"
 *
 * Usage: Automatically embbeded in the c code.
 *
@@ -33,12 +33,6 @@
 
 #ifndef MCXTRACE_R_H
 #define MCXTRACE_R_H "$Revision: $"
-
-#ifndef MCXTRACE
-#ifdef PACKAGE_VERSION
-#define MCXTRACE_VERSION PACKAGE_VERSION
-#endif
-#endif
 
 /* Following part is only embedded when not redundent with mcstas.h ========= */
 

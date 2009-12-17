@@ -1,7 +1,6 @@
 #!/bin/sh
-export RELEASE="@RELEASE@"
-export BUILDDIR="/build/mcstas-$RELEASE"
-export SRCDIR="/build/mcstas-$RELEASE-srcdir"
+export BUILDDIR="/build/@PACKAGE_TARNAME@-@PACKAGE_VERSION@"
+export SRCDIR="/build/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir"
 export MACHINETYPE=`uname -m`
 
 apt-get -y --force-yes install perl-tk pdl gcc libc6-dev g77 libx11-dev xorg-dev libxt-dev lintian
@@ -10,12 +9,12 @@ rm -rf /build/*
 rm -rf /usr/local/lib/*
 rm -rf /usr/local/pgplot
 
-echo Performing mcstas install to /usr/local
+echo Performing @PACKAGE_STRING@ install to /usr/local
 
 cd /build
-tar xzf /root/mcstas-${RELEASE}-src.tar.gz
-mv mcstas-${RELEASE} mcstas-${RELEASE}-srcdir
-cd mcstas-${RELEASE}-srcdir
+tar xzf /root/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-src.tar.gz
+mv @PACKAGE_TARNAME@-@PACKAGE_VERSION@ @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir
+cd @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir
 
 make
 make install
@@ -44,9 +43,9 @@ cp -rp /usr/local/bin ${BUILDDIR}/usr/local
 cp -rp /usr/local/lib/* ${BUILDDIR}/usr/local/lib
 cp -rp /usr/local/pgplot ${BUILDDIR}/usr/local
 
-cp mcstas-${RELEASE}-srcdir/deb/control ${BUILDDIR}/DEBIAN
-cp mcstas-${RELEASE}-srcdir/deb/prerm ${BUILDDIR}/DEBIAN
-cp mcstas-${RELEASE}-srcdir/deb/postinst ${BUILDDIR}/DEBIAN
+cp @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir/deb/control ${BUILDDIR}/DEBIAN
+cp @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir/deb/prerm ${BUILDDIR}/DEBIAN
+cp @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir/deb/postinst ${BUILDDIR}/DEBIAN
 
 find ${BUILDDIR} -type d -exec chmod 0755 \{\} \;
 
@@ -57,9 +56,9 @@ cp ${SRCDIR}/CHANGES ${BUILDDIR}/usr/share/doc/mcstas/changelog
 cp ${SRCDIR}/CHANGES ${BUILDDIR}/usr/share/doc/mcstas/changelog.Debian
 cp ${SRCDIR}/COPYING ${BUILDDIR}/usr/share/doc/mcstas/copyright
 
-dpkg-deb --build mcstas-${RELEASE}
+dpkg-deb --build @PACKAGE_TARNAME@-@PACKAGE_VERSION@
 
-mv mcstas-${RELEASE}.deb mcstas-${RELEASE}-${MACHINETYPE}.deb
+mv @PACKAGE_TARNAME@-@PACKAGE_VERSION@.deb @PACKAGE_TARNAME@-@PACKAGE_VERSION@-${MACHINETYPE}.deb
 
 rm -rf $BUILDDIR
 

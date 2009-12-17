@@ -11,7 +11,7 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 1st Feb 2001.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_090504
+* Release: @MCCODE_VERSION@
 * Version: $Revision: 1.36 $
 *
 * A McStas format converter to merge/convert data files.
@@ -42,10 +42,6 @@
 
 #ifndef MCFORMAT
 #define MCFORMAT  "$Revision: 1.36 $" /* avoid memory.c to define Pool functions */
-#endif
-
-#ifndef PACKAGE_STRING
-#define PACKAGE_STRING MCFORMAT
 #endif
 
 #ifdef USE_MPI
@@ -1683,7 +1679,7 @@ void mcformat_usage(char *pgmname)
 {
   int i;
 
-  fprintf(stderr, "mcformat version %s format conversion tool (" PACKAGE_STRING ")\n", MCFORMAT);
+  fprintf(stderr, "mcformat version %s format conversion tool (" MCCODE_VERSION ")\n", MCFORMAT);
   fprintf(stderr, "Usage: %s [options] file1|dir1 file2|dir2 ...\n", pgmname);
   fprintf(stderr,
 "Convert/merge files and directories from McStas format to an other specified format\n"
@@ -1746,7 +1742,7 @@ mcformat_parseoptions(int argc, char *argv[])
     else if(!strcmp("-h", argv[i]) || !strcmp("--help", argv[i]))
     {  mcformat_usage(argv[0]); exit(-1); }
     else if(!strcmp("-v", argv[i]) || !strcmp("--version", argv[i]))
-    {  fprintf(stderr, "mcformat version %s format conversion tool (" PACKAGE_STRING ")\n", MCFORMAT); exit(-1); }
+    {  fprintf(stderr, "mcformat version %s format conversion tool (" MCCODE_VERSION ")\n", MCFORMAT); exit(-1); }
     else if(!strcmp("-a", argv[i]))
       mcascii_only = 1;
     else if(!strcmp("+a", argv[i]))

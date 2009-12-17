@@ -26,4 +26,6 @@
 
 sed 's/McStas [0-9]\.[0-9.]\+/McStas '$2'/' $1 > $1.tmp
 sed 's/Release: McStas ....\+/Release: McStas '$2'/' $1.tmp > $1
+sed 's/McXtrace [0-9]\.[0-9.]\+/McXtrace '$2'/' $1 > $1.tmp
+sed 's/Release: McXtrace ....\+/Release: McXtrace '$2'/' $1.tmp > $1
 rm -f $1.tmp

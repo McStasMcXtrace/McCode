@@ -25,7 +25,7 @@
 # make clean           clean distro
 # make test            distro self-test
 # make plotter         best plotter choice
-# make reconfigure     reconfigure @MCCODE@ installation (after software update)
+# make reconfigure     reconfigure @PACKAGE_TARNAME@ installation (after software update)
 
 
 SHELL = /bin/sh
@@ -108,8 +108,8 @@ BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 .SUFFIXES: .c .o .pl .fixpl .mxfixpl
 
 .c.o:
-	@echo "Building" $(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@MCCODE@)'"' ... $<
-	@$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@MCCODE@)'"' $(DEFS) $<
+	@echo "Building" $(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@PACKAGE_TARNAME@)'"' ... $<
+	@$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@PACKAGE_TARNAME@)'"' $(DEFS) $<
 
 .pl.fixpl:
 	@echo "Fixing PERL dirs:" $< "->" $@
@@ -125,7 +125,7 @@ BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 	    < $< > $(subst mc,mx,$@)
 	@chmod +x $(subst mc,mx,$@)
 
-all: $(BINOBJS_@MCCODE@)
+all: $(BINOBJS_@PACKAGE_TARNAME@)
 
 mcstas: $(OBJECTS_mcstas)
 	@echo "Building" $(CC) -o mcstas $(CFLAGS) $(LDFLAGS) ... $(OBJECTS_mcstas) -lm
@@ -163,7 +163,7 @@ distclean: clean
 TAGS:
 	etags *.[chly]
 
-install: install_@MCCODE@
+install: install_@PACKAGE_TARNAME@
 
 install_mcstas: installdirs $(BINOBJS_mcstas)
 	$(INSTALL_PROGRAM) mcstas $(bindir)/mcstas
@@ -196,7 +196,7 @@ install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	cd $(topdir)/xlib && $(MAKE) install 
 
 installdirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@MCCODE@) $(mandir)/man1
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@PACKAGE_TARNAME@) $(mandir)/man1
 
 instrument.tab.o: mccode.h
 lex.yy.o: mccode.h instrument.tab.h
@@ -217,7 +217,7 @@ instrument.tab.c instrument.tab.h: instrument.y
 lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
 
-test: test_@MCCODE@
+test: test_@PACKAGE_TARNAME@
 
 test_mcstas: mcrun.fixpl
 	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ln -s mcrun.fixpl mcrun; ./mcrun.fixpl --test; rm mcrun
@@ -226,10 +226,10 @@ test_mcxtrace: mxrun.mxfixpl
 	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ln -s mxrun.fixpl mcrun; ./mxrun.mxfixpl --test; rm mcrun
 
 uninstall:
-	cd $(bindir); rm -f $(BINOBJS_@MCCODE@)
-	rm -rf $(libdir_@MCCODE@)
+	cd $(bindir); rm -f $(BINOBJS_@PACKAGE_TARNAME@)
+	rm -rf $(libdir_@PACKAGE_TARNAME@)
 
 reconfigure:
-	cd $(libdir_@MCCODE@)/tools/perl/
-	$(libdir_@MCCODE@)/tools/perl/mcstas_reconfigure
+	cd $(libdir_@PACKAGE_TARNAME@)/tools/perl/
+	$(libdir_@PACKAGE_TARNAME@)/tools/perl/mcstas_reconfigure
 

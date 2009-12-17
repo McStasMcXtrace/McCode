@@ -48,18 +48,18 @@
 
 #ifndef MCSTAS
 #ifdef WIN32
-#define MCSTAS "C:\\@MCCODE@\\lib"
+#define MCSTAS "C:\\@PACKAGE_TARNAME@\\lib"
 #else  /* !WIN32 */
 #ifdef MAC
-#define MCSTAS ":@MCCODE@:lib" /* ToDo: What to put here? */
+#define MCSTAS ":@PACKAGE_TARNAME@:lib" /* ToDo: What to put here? */
 #else  /* !MAC */
-#define MCSTAS "/usr/local/lib/@MCCODE@"
+#define MCSTAS "/usr/local/lib/@PACKAGE_TARNAME@"
 #endif /* !MAC */
 #endif /* !WIN32 */
 #endif /* MCSTAS */
 
 #ifdef WIN32
-#define PACKAGE_BUGREPORT "www.@MCCODE@.org"
+#define PACKAGE_BUGREPORT "www.@PACKAGE_TARNAME@.org"
 #ifndef HAVE_STRCASECMP
 #define HAVE_STRCASECMP
 #endif

@@ -25,7 +25,7 @@
 *   extern MCNUM  mccomp_storein[];
 *   extern MCNUM  mcAbsorbProp[];
 *   extern MCNUM  mcScattered;
-*   #define MCSTAS_VERSION "the McStas version"
+*   #define MCCODE_VERSION "the McStas version"
 *
 * Usage: Automatically embbeded in the c code.
 *
@@ -35,12 +35,6 @@
 
 #ifndef MCSTAS_R_H
 #define MCSTAS_R_H "$Revision: 1.112 $"
-
-#ifndef MCSTAS_VERSION
-#ifdef PACKAGE_VERSION
-#define MCSTAS_VERSION PACKAGE_VERSION
-#endif
-#endif
 
 /* Following part is only embedded when not redundent with mcstas.h ========= */
 

@@ -29,12 +29,12 @@ SHELL = /bin/sh
 
 prefix = @prefix@
 srcdir = @srcdir@
-mc_libdir = @prefix@/lib/@MCCODE@/
+mc_libdir = @prefix@/lib/@PACKAGE_TARNAME@/
 G77  = @G77@
 
 PERL = @PERL@
 PERLBIN=`which perl`
-PERL5LIB=@prefix@/lib/@MCCODE@/tools/perl/modules:`perl -e "print join(\":\", @INC);"`
+PERL5LIB=@prefix@/lib/@PACKAGE_TARNAME@/tools/perl/modules:`perl -e "print join(\":\", @INC);"`
 PGPLOT_DIR=@prefix@/pgplot
 LD_LIBRARY_PATH=${PGPLOT_DIR}
 USE_PIC=@USE_PIC@
@@ -51,20 +51,20 @@ perl-modules:
 	cd $(srcdir)/Perl/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
 	# install Math-Amoeba
 	cd $(srcdir)/Perl/Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install
-	@echo "Installed Proc-Simple Tk-CodeText Math-Amoeba perl modules in @prefix@/lib/@MCCODE@/tools/perl/modules"
+	@echo "Installed Proc-Simple Tk-CodeText Math-Amoeba perl modules in @prefix@/lib/@PACKAGE_TARNAME@/tools/perl/modules"
 
 perl-PGPLOT:
 	$(srcdir)/../../mkinstalldirs  $(mc_libdir)/tools/perl/modules
 	# install F77 
-	cd $(srcdir)/Perl/ExtUtils-F77-1.16 && perl Makefile.PL PREFIX=@prefix@/lib/@MCCODE@/tools/perl/modules LIB=@prefix@/lib/@MCCODE@/tools/perl/modules && make && make install
+	cd $(srcdir)/Perl/ExtUtils-F77-1.16 && perl Makefile.PL PREFIX=@prefix@/lib/@PACKAGE_TARNAME@/tools/perl/modules LIB=@prefix@/lib/@PACKAGE_TARNAME@/tools/perl/modules && make && make install
 	# install perl-PGPLOT
 	cd $(srcdir)/Perl/PGPLOT-2.20
 	if test "`basename ${G77}`" == "g77" ; then \
 		  sed 's/#use ExtUtils::F77 qw(generic g77);/use ExtUtils::F77 qw(generic g77);/' $(srcdir)/Perl/PGPLOT-2.20/Makefile.PL > $(srcdir)/Perl/PGPLOT-2.20/Makefile.PL.new ; \
 		  mv $(srcdir)/Perl/PGPLOT-2.20/Makefile.PL.new $(srcdir)/Perl/PGPLOT-2.20/Makefile.PL; \
 	fi
-	cd $(srcdir)/Perl/PGPLOT-2.20 && export PERL5LIB=${PERL5LIB} && perl Makefile.PL PREFIX=@prefix@/lib/@MCCODE@/tools/perl/modules LIB=@prefix@/lib/@MCCODE@/tools/perl/modules && make && make install
-	@echo "Installed perl-PGPLOT modules in @prefix@/lib/@MCCODE@/tools/perl/modules"
+	cd $(srcdir)/Perl/PGPLOT-2.20 && export PERL5LIB=${PERL5LIB} && perl Makefile.PL PREFIX=@prefix@/lib/@PACKAGE_TARNAME@/tools/perl/modules LIB=@prefix@/lib/@PACKAGE_TARNAME@/tools/perl/modules && make && make install
+	@echo "Installed perl-PGPLOT modules in @prefix@/lib/@PACKAGE_TARNAME@/tools/perl/modules"
 
 install-pgplot: compile-pgplot perl-PGPLOT
 compile-pgplot:

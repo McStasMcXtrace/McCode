@@ -22,7 +22,7 @@
 !define TEMP1 $R0
 
 !ifndef VERSION
-  !define VERSION "MCSTAS_VERSION"
+  !define VERSION "@MCCODE_VERSION@"
 !endif
 
  

@@ -52,8 +52,8 @@
 /* Modified from Monochromator.comp to paint a "color" on the neutron
    if it is scattered. */
 DEFINE COMPONENT Monochromator_color
-DEFINITION PARAMETERS (zmin, zmax, ymin, ymax, mosaich, mosaicv, r0, Q, color)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (zmin, zmax, ymin, ymax, mosaich, mosaicv, r0, Q, color)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
@@ -130,17 +130,13 @@ END
 /* Modified from TOF_monitor.comp to bin neutrons according to their
    "color". */
 DEFINE COMPONENT TOF_monitor_color
-DEFINITION PARAMETERS (xmin, xmax, ymin, ymax, nchan, dt, filename, maxcolor)
-SETTING PARAMETERS ()
+DEFINITION PARAMETERS (filename)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, nchan, dt, maxcolor)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
   %{
-#ifdef MCSTAS_VERSION
     double TOF_N[maxcolor+1][nchan];
-#else
-    int    TOF_N[maxcolor+1][nchan];
-#endif
     double TOF_p[maxcolor+1][nchan];
     double TOF_p2[maxcolor+1][nchan];
   %}

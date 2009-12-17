@@ -1519,7 +1519,7 @@ cogen(char *output_name, struct instr_def *instr)
   coutf(" * Date:       %s", date);
   cout(" */\n");
   cout("");
-  coutf("#define MCSTAS_VERSION \"%s\"", MCSTAS_VERSION);
+  coutf("#define MCCODE_VERSION \"%s\"", MCCODE_VERSION);
   cogen_runtime(instr);
   cogen_decls(instr);
   cogen_init(instr);
