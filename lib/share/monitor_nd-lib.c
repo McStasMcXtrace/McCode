@@ -698,11 +698,6 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
     /* auto limits case : get limits in Buffer for each variable */
           /* Dim : (Vars->Coord_Number+1)*Vars->Buffer_Block matrix (for p, dp) */
     if (Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
-#ifdef USE_MPI
-  /* when using multiple machines, we must make sure they record data on the same range
-   * this means we must use the same limits 
-   */
-#endif
     for (i = 1; i <= Vars->Coord_Number; i++)
     {
       if (Vars->Coord_Type[i] & DEFS->COORD_AUTO)
@@ -714,13 +709,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
           XY = Vars->Mon2D_Buffer[i+j*(Vars->Coord_Number+1)];  /* scanning variables in Buffer */
           if (XY < Vars->Coord_Min[i]) Vars->Coord_Min[i] = XY;
           if (XY > Vars->Coord_Max[i]) Vars->Coord_Max[i] = XY;
-        }
-#ifdef USE_MPI
-        mc_MPI_Sum(&(Vars->Coord_Min[i]), 1);
-        mc_MPI_Sum(&(Vars->Coord_Max[i]), 1);
-        Vars->Coord_Min[i] /= mpi_node_count; /* use mean min/max values */
-        Vars->Coord_Max[i] /= mpi_node_count;
-#endif  
+        } 
       }
     } 
     Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step (read Buffer and generate new events to store in histograms) */
@@ -1017,11 +1006,6 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
       /* Get Auto Limits */
       if (Vars->Flag_Verbose) printf("Monitor_nD: %s getting %li Auto Limits from List (%li).\n", Vars->compcurname, Vars->Coord_Number, Vars->Buffer_Counter);
 
-#ifdef USE_MPI
-    /* when using multiple machines, we must make sure they record data on the same range
-     * this means we must use the same limits 
-     */
-  #endif
       for (i = 1; i <= Vars->Coord_Number; i++)
       {
         if (Vars->Coord_Type[i] & DEFS->COORD_AUTO)
@@ -1034,12 +1018,6 @@ MCDETECTOR Monitor_nD_Save(MonitornD_Defines_type *DEFS, MonitornD_Variables_typ
             if (XY < Vars->Coord_Min[i]) Vars->Coord_Min[i] = XY;
             if (XY > Vars->Coord_Max[i]) Vars->Coord_Max[i] = XY;
           }
-  #ifdef USE_MPI
-          mc_MPI_Sum(&(Vars->Coord_Min[i]), 1);
-          mc_MPI_Sum(&(Vars->Coord_Max[i]), 1);
-          Vars->Coord_Min[i] /= mpi_node_count; /* use mean min/max values */
-          Vars->Coord_Max[i] /= mpi_node_count;
-  #endif  
         }
       } 
       Vars->Flag_Auto_Limits = 2;  /* pass to 2nd auto limits step */
