@@ -28,7 +28,6 @@
 # make reconfigure     reconfigure @PACKAGE_TARNAME@ installation (after software update)
 # make install-pgplot  build and install PGPLOT
 # make install-scilab  build and install Scilab
-# make install-tk      build and install Tk
 
 SHELL = /bin/sh
 
@@ -113,17 +112,17 @@ config:
 	fi;
 
 scilab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Scilab'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
+	sed "s/PLOTTER => '.*'./PLOTTER => 'Scilab'\,/" lib/tools/perl/@PACKAGE_TARNAME@_config.perl > lib/tools/perl/@PACKAGE_TARNAME@_config.perl.tmp
+	mv lib/tools/perl/@PACKAGE_TARNAME@_config.perl.tmp lib/tools/perl/@PACKAGE_TARNAME@_config.perl
 matlab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Matlab'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
+	sed "s/PLOTTER => '.*'./PLOTTER => 'Matlab'\,/" lib/tools/perl/@PACKAGE_TARNAME@_config.perl > lib/tools/perl/@PACKAGE_TARNAME@_config.perl.tmp
+	mv lib/tools/perl/@PACKAGE_TARNAME@_config.perl.tmp lib/tools/perl/@PACKAGE_TARNAME@_config.perl
 pgplot:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'McStas'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
+	sed "s/PLOTTER => '.*'./PLOTTER => 'McStas'\,/" lib/tools/perl/@PACKAGE_TARNAME@_config.perl > lib/tools/perl/@PACKAGE_TARNAME@_config.perl.tmp
+	mv lib/tools/perl/@PACKAGE_TARNAME@_config.perl.tmp lib/tools/perl/@PACKAGE_TARNAME@_config.perl
 vrml:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
-	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
+	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/@PACKAGE_TARNAME@_config.perl > lib/tools/perl/@PACKAGE_TARNAME@_config.perl.tmp
+	mv lib/tools/perl/@PACKAGE_TARNAME@_config.perl.tmp lib/tools/perl/@PACKAGE_TARNAME@_config.perl
 PGPLOT: pgplot
 Matlab: matlab
 Scilab: scilab
@@ -137,7 +136,7 @@ uninstall:
 
 reconfigure:
 	cd $(libdir_@PACKAGE_TARNAME@)/tools/perl/
-	$(libdir_@PACKAGE_TARNAME@)/tools/perl/mcstas_reconfigure
+	$(libdir_@PACKAGE_TARNAME@)/tools/perl/@PACKAGE_TARNAME@_reconfigure
 
 # Optional auto install of patched perl-Tk, scilab and pgplot5 libs
 install-pgplot:
@@ -146,5 +145,5 @@ install-pgplot:
 	@echo "@PACKAGE_NAME@: run 'make reconfigure'"
 
 install-scilab:
-	cd suppor/common && make compile-scilab && echo "@PACKAGE_NAME@: run './configure; make; make install' again"
+	cd support/common && $(MAKE) compile-scilab && echo "@PACKAGE_NAME@: run './configure; make; make install' again"
 

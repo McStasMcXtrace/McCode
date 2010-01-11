@@ -61,6 +61,7 @@ then
   # copy the doc in DIST/doc. Only use PDF files in distro.
   mv $PACKAGE_TARNAME-$PACKAGE_VERSION-manual.pdf $DIST/doc/manuals/$PACKAGE_TARNAME-manual.pdf
   mv $PACKAGE_TARNAME-$PACKAGE_VERSION-components.pdf $DIST/doc/manuals/$PACKAGE_TARNAME-components.pdf
+  cp  $DIST/doc/manuals/* $DIST/lib/doc/
 fi
 
 # Go in DIST, clean up CVS/SVN information
@@ -127,14 +128,13 @@ then
   cp -r $DIST/doc/install_docs/ $DIST/lib/doc
   cp -r $DIST/doc/tutorial/ $DIST/lib/doc/
   cp -r $DIST/doc/man/ $DIST/lib/doc/
-  cp  $DIST/doc/manuals/* $DIST/lib/doc/
 fi  
 cd $DIST
 
 # Create configure
 autoconf -o configure $CONFIGURE_IN
 #chmod a+x configure
-autoconf lib/tools/perl/mccode_reconfigure.in > lib/tools/perl/${PACKAGE_TARNAME}_reconfigure
+autoconf lib/tools/perl/mccode_reconfigure.in > lib/tools/perl/${PACKAGE_TARNAME}_reconfigure.in
 mv lib/tools/perl/mccode_config.perl.in lib/tools/perl/${PACKAGE_TARNAME}_config.perl.in
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)

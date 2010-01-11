@@ -13,96 +13,52 @@ INSTALL=@INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-libdir_mcstas = $(libdir)/mcstas
-libdir_mcxtrace = $(libdir)/mcxtrace
+libdir_mccode = $(libdir)/@PACKAGE_TARNAME@
 
 install: install_@PACKAGE_TARNAME@
 
-install_mcstas: installdirs
-	if [ -d $(libdir_mcstas) ]; then \
-	  echo "Moving your old library dir $(libdir_mcstas) to $(libdir_mcstas).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(libdir_mcstas) $(libdir_mcstas).`date +%Y%m%d_%H.%M`;\
-        fi;
-	$(topdir)/mkinstalldirs $(libdir_mcstas)
-
+install_@PACKAGE_TARNAME@: installdirs
+	if [ -d $(libdir_mccode) ]; then \
+	  echo "Moving your old library dir $(libdir_mccode) to $(libdir_mccode).`date +%Y%m%d_%H.%M`"; \
+	  mv -f $(libdir_mccode) $(libdir_mccode).`date +%Y%m%d_%H.%M`;\
+	      fi;
+	$(topdir)/mkinstalldirs $(libdir_mccode)
 	cd $(topdir) && for file in `cd lib; ls | grep -v .svn| grep -v Make`; do \
 	  if [ -d lib/$$file ]; then \
-	    ./mkinstalldirs $(libdir_mcstas)/$$file; \
+	    ./mkinstalldirs $(libdir_mccode)/$$file; \
 	    for comp in `cd lib/$$file; ls | grep -v .svn`; do \
-        if [ -f $(libdir_mcstas)/$$file/$$comp ]; then \
-          echo "Renaming old library element version $(libdir_mcstas)/$$file/$$comp to $(libdir_mcstas)/$$file/$$comp.old"; \
-          mv -f $(libdir_mcstas)/$$file/$$comp $(libdir_mcstas)/$$file/$$comp.old; \
-        fi; \
+	      if [ -f $(libdir_mccode)/$$file/$$comp ]; then \
+	        echo "Renaming old library element version $(libdir_mccode)/$$file/$$comp to $(libdir_mccode)/$$file/$$comp.old"; \
+	         mv -f $(libdir_mccode)/$$file/$$comp $(libdir_mccode)/$$file/$$comp.old; \
+	      fi; \
 	      if [ -d lib/$$file/$$comp ]; then \
-          ./mkinstalldirs $(libdir_mcstas)/$$file/$$comp; \
-          for tool in `cd lib/$$file/$$comp; ls | grep -v .svn`; do \
+	        ./mkinstalldirs $(libdir_mccode)/$$file/$$comp; \
+	        for tool in `cd lib/$$file/$$comp; ls | grep -v .svn`; do \
 	      if [ -d lib/$$file/$$comp/$$tool ]; then \
-          ./mkinstalldirs $(libdir_mcstas)/$$file/$$comp/$$tool ; \
+	        ./mkinstalldirs $(libdir_mccode)/$$file/$$comp/$$tool ; \
 	        for subtool in `cd lib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
 		  if [ -d lib/$$file/$$comp/$$tool/$$subtool ]; then \
-		     ./mkinstalldirs $(libdir_mcstas)/$$file/$$comp/$$tool/$$subtool ; \
+		     ./mkinstalldirs $(libdir_mccode)/$$file/$$comp/$$tool/$$subtool ; \
 	             for subsubtool in `cd lib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
-                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(libdir_mcstas)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
-                     done \
+	                     $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(libdir_mccode)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
+	                   done \
 		  else \
-                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(libdir_mcstas)/$$file/$$comp/$$tool/$$subtool; \
+	                  $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(libdir_mccode)/$$file/$$comp/$$tool/$$subtool; \
 		  fi; \
-                done \
-              else \
-                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(libdir_mcstas)/$$file/$$comp/$$tool; \
+	              done \
+	            else \
+	              $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(libdir_mccode)/$$file/$$comp/$$tool; \
 	      fi; \
-          done \
-        else \
-	        $(INSTALL_DATA) lib/$$file/$$comp $(libdir_mcstas)/$$file/$$comp; \
-        fi; \
+	        done \
+	      else \
+	        $(INSTALL_DATA) lib/$$file/$$comp $(libdir_mccode)/$$file/$$comp; \
+	      fi; \
 	    done \
 	  else \
-	    $(INSTALL_DATA) lib/$$file $(libdir_mcstas)/$$file; \
+	    $(INSTALL_DATA) lib/$$file $(libdir_mccode)/$$file; \
 	  fi \
 	done
 
-install_mcxtrace: installdirs
-	if [ -d $(libdir_mcxtrace) ]; then \
-	  echo "Moving your old library dir $(libdir_mcxtrace) to $(libdir_mcxtrace).`date +%Y%m%d_%H.%M`"; \
-	  mv -f $(libdir_mcxtrace) $(libdir_mcxtrace).`date +%Y%m%d_%H.%M`;\
-        fi;
-	$(topdir)/mkinstalldirs $(libdir_mcxtrace)
-
-	cd $(topdir) && for file in `cd lib; ls | grep -v .svn| grep -v Make`; do \
-	  if [ -d lib/$$file ]; then \
-	    ./mkinstalldirs $(libdir_mcxtrace)/$$file; \
-	    for comp in `cd lib/$$file; ls | grep -v .svn`; do \
-        if [ -f $(libdir_mcxtrace)/$$file/$$comp ]; then \
-          echo "Renaming old library element version $(libdir_mcxtrace)/$$file/$$comp to $(libdir_mcxtrace)/$$file/$$comp.old"; \
-          mv -f $(libdir_mcxtrace)/$$file/$$comp $(libdir_mcxtrace)/$$file/$$comp.old; \
-        fi; \
-	      if [ -d lib/$$file/$$comp ]; then \
-          ./mkinstalldirs $(libdir_mcxtrace)/$$file/$$comp; \
-          for tool in `cd lib/$$file/$$comp; ls | grep -v .svn`; do \
-	      if [ -d lib/$$file/$$comp/$$tool ]; then \
-          ./mkinstalldirs $(libdir_mcxtrace)/$$file/$$comp/$$tool ; \
-	        for subtool in `cd lib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
-		  if [ -d lib/$$file/$$comp/$$tool/$$subtool ]; then \
-		     ./mkinstalldirs $(libdir_mcxtrace)/$$file/$$comp/$$tool/$$subtool ; \
-	             for subsubtool in `cd lib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
-                       $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(libdir_mcxtrace)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
-                     done \
-		  else \
-                    $(INSTALL_DATA) lib/$$file/$$comp/$$tool/$$subtool $(libdir_mcxtrace)/$$file/$$comp/$$tool/$$subtool; \
-		  fi; \
-                done \
-              else \
-                $(INSTALL_DATA) lib/$$file/$$comp/$$tool $(libdir_mcxtrace)/$$file/$$comp/$$tool; \
-	      fi; \
-          done \
-        else \
-	        $(INSTALL_DATA) lib/$$file/$$comp $(libdir_mcxtrace)/$$file/$$comp; \
-        fi; \
-	    done \
-	  else \
-	    $(INSTALL_DATA) lib/$$file $(libdir_mcxtrace)/$$file; \
-	  fi \
-	done
 
 installdirs:
 	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@PACKAGE_TARNAME@) $(mandir)/man1
