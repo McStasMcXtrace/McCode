@@ -19,53 +19,42 @@ PWD = `pwd`
 mx_libdir = $(libdir)/mcxtrace
 
 install: 
+	@echo "Install library (mcxtrace part)..."
 	cd $(topdir) && for file in `cd xlib; ls | grep -v .svn| grep -v Make`; do \
 	  if [ -d xlib/$$file ]; then \
 	    ./mkinstalldirs $(mx_libdir)/$$file; \
 	    for comp in `cd xlib/$$file; ls | grep -v .svn`; do \
-              if [ -f $(mx_libdir)/$$file/$$comp ]; then \
-                 echo "Renaming old library element version $(mx_libdir)/$$file/$$comp to $(mx_libdir)/$$file/$$comp.old"; \
-                 mv -f $(mx_libdir)/$$file/$$comp $(mx_libdir)/$$file/$$comp.old; \
-              fi; \
+	      if [ -f $(mx_libdir)/$$file/$$comp ]; then \
+	        echo "Renaming old library element version $(mx_libdir)/$$file/$$comp to $(mx_libdir)/$$file/$$comp.old"; \
+	        mv -f $(mx_libdir)/$$file/$$comp $(mx_libdir)/$$file/$$comp.old; \
+	      fi; \
 	      if [ -d xlib/$$file/$$comp ]; then \
-                ./mkinstalldirs $(mx_libdir)/$$file/$$comp; \
-                for tool in `cd xlib/$$file/$$comp; ls | grep -v .svn`; do \
+	        ./mkinstalldirs $(mx_libdir)/$$file/$$comp; \
+	        for tool in `cd xlib/$$file/$$comp; ls | grep -v .svn`; do \
 	          if [ -d xlib/$$file/$$comp/$$tool ]; then \
-                    ./mkinstalldirs $(mx_libdir)/$$file/$$comp/$$tool ; \
+	            ./mkinstalldirs $(mx_libdir)/$$file/$$comp/$$tool ; \
 	            for subtool in `cd xlib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
-		      if [ -d xlib/$$file/$$comp/$$tool/$$subtool ]; then \
-		        ./mkinstalldirs $(mx_libdir)/$$file/$$comp/$$tool/$$subtool ; \
+	              if [ -d xlib/$$file/$$comp/$$tool/$$subtool ]; then \
+	                ./mkinstalldirs $(mx_libdir)/$$file/$$comp/$$tool/$$subtool ; \
 	                for subsubtool in `cd xlib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
-                          $(INSTALL_DATA) xlib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mx_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
-                        done \
-		      else \
-                        $(INSTALL_DATA) xlib/$$file/$$comp/$$tool/$$subtool $(mx_libdir)/$$file/$$comp/$$tool/$$subtool; \
-		      fi; \
-                    done \
-                  else \
-                    $(INSTALL_DATA) xlib/$$file/$$comp/$$tool $(mx_libdir)/$$file/$$comp/$$tool; \
+	                  $(INSTALL_DATA) xlib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mx_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
+	                done \
+	              else \
+	                $(INSTALL_DATA) xlib/$$file/$$comp/$$tool/$$subtool $(mx_libdir)/$$file/$$comp/$$tool/$$subtool; \
+	              fi; \
+	            done \
+	          else \
+	            $(INSTALL_DATA) xlib/$$file/$$comp/$$tool $(mx_libdir)/$$file/$$comp/$$tool; \
 	          fi; \
-                done \
-              else \
+	        done \
+	      else \
 	        $(INSTALL_DATA) xlib/$$file/$$comp $(mx_libdir)/$$file/$$comp; \
-              fi; \
+	      fi; \
 	    done \
 	  else \
 	    $(INSTALL_DATA) xlib/$$file $(mx_libdir)/$$file; \
 	  fi \
 	done
-	MCSTAS=$(mx_libdir)
-	export MCSTAS
-	$(topdir)/src/mxdoc.mxfixpl --text
-	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
-	mkdir $(mx_libdir)/tools/perl/modules
-	cd $(topdir)/support/common/Perl/Proc-Simple-1.19 && $(PERL) Makefile.PL LIB=$(mx_libdir)/tools/perl/modules PREFIX=$(mx_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
-	cd $(topdir)/support/common/Perl/Tk-CodeText-0.3.4 && $(PERL) Makefile.PL LIB=$(mx_libdir)/tools/perl/modules PREFIX=$(mx_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
-	cd $(topdir)/support/common/Perl/Math-Amoeba-0.04 && $(PERL) Makefile.PL LIB=$(mx_libdir)/tools/perl/modules PREFIX=$(mx_libdir)/tools/perl/modules && $(MAKE) && $(MAKE) install
-	chmod a+x $(mx_libdir)/tools/perl/mcstas_reconfigure
-	@echo McXtrace library has been installed in MCSTAS=$(mx_libdir), and binaries in $(bindir)
-	@echo "Start McXtrace with: mxgui or use mxrun for command line simulations"
-	@echo "==== Installation finished. Thanks for using McXtrace ===="
 
 installdirs:
 	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mx_libdir) $(mandir)/man1

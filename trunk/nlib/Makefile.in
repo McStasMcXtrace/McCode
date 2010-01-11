@@ -19,51 +19,42 @@ PWD = `pwd`
 mc_libdir = $(libdir)/mcstas
 
 install:
+	@echo "Install library (mcstas part)..."
 	cd $(topdir) && for file in `cd nlib; ls | grep -v .svn| grep -v Make`; do \
 	  if [ -d nlib/$$file ]; then \
 	    ./mkinstalldirs $(mc_libdir)/$$file; \
 	    for comp in `cd nlib/$$file; ls | grep -v .svn`; do \
-        if [ -f $(mc_libdir)/$$file/$$comp ]; then \
-          echo "Renaming old library element version $(mc_libdir)/$$file/$$comp to $(mc_libdir)/$$file/$$comp.old"; \
-          mv -f $(mc_libdir)/$$file/$$comp $(mc_libdir)/$$file/$$comp.old; \
-        fi; \
-	      if [ -d nlib/$$file/$$comp ]; then \
-          ./mkinstalldirs $(mc_libdir)/$$file/$$comp; \
-          for tool in `cd nlib/$$file/$$comp; ls | grep -v .svn`; do \
-	      if [ -d nlib/$$file/$$comp/$$tool ]; then \
-          ./mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool ; \
-	        for subtool in `cd nlib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
-		  if [ -d nlib/$$file/$$comp/$$tool/$$subtool ]; then \
-		     ./mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool/$$subtool ; \
-	             for subsubtool in `cd nlib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
-                       $(INSTALL_DATA) nlib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
-                     done \
-		  else \
-                    $(INSTALL_DATA) nlib/$$file/$$comp/$$tool/$$subtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool; \
-		  fi; \
-                done \
-              else \
-                $(INSTALL_DATA) nlib/$$file/$$comp/$$tool $(mc_libdir)/$$file/$$comp/$$tool; \
+	      if [ -f $(mc_libdir)/$$file/$$comp ]; then \
+	        echo "Renaming old library element version $(mc_libdir)/$$file/$$comp to $(mc_libdir)/$$file/$$comp.old"; \
+	        mv -f $(mc_libdir)/$$file/$$comp $(mc_libdir)/$$file/$$comp.old; \
 	      fi; \
-          done \
-        else \
+	      if [ -d nlib/$$file/$$comp ]; then \
+	        ./mkinstalldirs $(mc_libdir)/$$file/$$comp; \
+	        for tool in `cd nlib/$$file/$$comp; ls | grep -v .svn`; do \
+	          if [ -d nlib/$$file/$$comp/$$tool ]; then \
+	            ./mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool ; \
+	            for subtool in `cd nlib/$$file/$$comp/$$tool; ls | grep -v .svn`; do \
+	              if [ -d nlib/$$file/$$comp/$$tool/$$subtool ]; then \
+	                ./mkinstalldirs $(mc_libdir)/$$file/$$comp/$$tool/$$subtool ; \
+	                for subsubtool in `cd nlib/$$file/$$comp/$$tool/$$subtool; ls | grep -v .svn`; do \
+	                  $(INSTALL_DATA) nlib/$$file/$$comp/$$tool/$$subtool/$$subsubtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool/$$subsubtool; \
+	                done \
+	              else \
+	                $(INSTALL_DATA) nlib/$$file/$$comp/$$tool/$$subtool $(mc_libdir)/$$file/$$comp/$$tool/$$subtool; \
+	              fi; \
+	            done \
+	          else \
+	            $(INSTALL_DATA) nlib/$$file/$$comp/$$tool $(mc_libdir)/$$file/$$comp/$$tool; \
+	          fi; \
+	        done \
+	      else \
 	        $(INSTALL_DATA) nlib/$$file/$$comp $(mc_libdir)/$$file/$$comp; \
-        fi; \
+	      fi; \
 	    done \
 	  else \
 	    $(INSTALL_DATA) nlib/$$file $(mc_libdir)/$$file; \
 	  fi \
 	done
-	MCSTAS=$(mc_libdir)
-	export MCSTAS
-	$(topdir)/src/mcdoc.fixpl --text
-	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
-	mkdir $(mc_libdir)/tools/perl/modules
-	cd $(topdir)/support/common && $(MAKE) perl-modules
-	chmod a+x $(mc_libdir)/tools/perl/mcstas_reconfigure
-	@echo McStas library has been installed in MCSTAS=$(mc_libdir), and binaries in $(bindir)
-	@echo "Start McStas with: mcgui or use mcrun for command line simulations"
-	@echo "==== Installation finished. Thanks for using McStas ===="
 
 installdirs:
 	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(mc_libdir) $(mandir)/man1
