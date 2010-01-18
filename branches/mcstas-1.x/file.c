@@ -18,7 +18,10 @@
 *
 *	$Id: file.c,v 1.19 2007-03-12 14:57:18 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
+*	$Log: file.c,v $
+*	Revision 1.19  2007-03-12 14:57:18  farhi
+*	Cosmetics
+*
 *	Revision 1.18  2006/04/19 13:06:25  farhi
 *	* Updated Release, Version and Origin fields in headers
 *	* Improved setversion to update all McStasx.y occurencies into current release

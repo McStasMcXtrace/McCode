@@ -24,7 +24,10 @@
 *
 * $Id: vitess-lib.c,v 1.15 2006-02-06 18:18:42 lieutenant Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: vitess-lib.c,v $
+* Revision 1.15  2006-02-06 18:18:42  lieutenant
+* function 'vitess_main' removed; WIN32 instead of _MSC_VER used
+*
 * Revision 1.14  2005/11/07 08:14:41  farhi
 * Modifications by Klaus: made mcstas2vitess work again.
 *

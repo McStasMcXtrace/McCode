@@ -25,7 +25,7 @@ COMPONENT a1 = Arm()
   AT (0,0,0) ABSOLUTE
 
 COMPONENT isis_mod = ISIS_moderator(
-	Face ="merlin", E0 = -0.3,E1 = -12, dist = 0.01, xw = 0.1,
+	Face ="hydrogen", E0 = -0.3,E1 = -12, dist = 0.01, xw = 0.1,
     yh = 0.1,modXsize=-0.5, modYsize=-0.8, CAngle = 0.0,SAC=0)
   AT (0, 0, 0) RELATIVE a1
 

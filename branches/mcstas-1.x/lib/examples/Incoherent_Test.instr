@@ -7,7 +7,7 @@
 * Written by: Peter Willendrup, Erik Knudsen, Aziz Aziz Daoud-aladine
 * Date: August 14th, 2007
 * Origin: RISOE
-* Release: McStas CVS_080624
+* Release: McStas 1.12
 * Version: 0.1
 * %INSTRUMENT_SITE: tests
 *
@@ -81,19 +81,20 @@ COMPONENT Coord = Arm()
    AT (0.0,0.0,8.3000) RELATIVE Source
 
 COMPONENT Vsample = V_sample(
-xwidth=0.005, yheight=0.005, zdepth=0.005 , sigma_abs=ABS, sigma_inc=INC, multiples=V_multiples)
+xwidth=0.005, yheight=0.005, zthick=0.005 , sig_a=ABS, sig_i=INC, multiples=V_multiples)
 WHEN (SAMPLE==1) AT (0, 0, 0) RELATIVE Coord
 
 COMPONENT PowN = PowderN(reflections="", d_phi=0, Vc = 13.827, tfrac = 0.5, frac = 0.5,
-			 xwidth=0.005, yheight=0.005, zdepth=0.005 , sigma_abs=ABS, sigma_inc=INC, radius=0)
+			 xwidth=0.005, yheight=0.005, zthick=0.005 , sigma_abs=ABS, sigma_inc=INC, radius=0)
 WHEN (SAMPLE==2) AT (0, 0, 0) RELATIVE Coord
 
 COMPONENT SX = Single_crystal(reflections="", order=Order,
-    xwidth=0.005, yheight=0.005, zdepth=0.005 , sigma_abs=ABS, sigma_inc=INC, ax=3.0282, by=3.0282, cz=3.0282/2)
+    xwidth=0.005, yheight=0.005, zthick=0.005 , absorption=ABS, incoherent=INC, ax=3.0282, by=3.0282, cz=3.0282/2)
 WHEN (SAMPLE==3) AT (0, 0, 0) RELATIVE Coord
 
-COMPONENT Sqw = Isotropic_Sqw(xwidth=0.005, yheight=0.005, zdepth=0.005 , V_rho=1/13.827, sigma_abs=ABS, sigma_inc=INC, 
-			      sigma_coh=0, order=Order)
+COMPONENT Sqw = Isotropic_Sqw(V_rho=1/13.827, order=Order,
+  sigma_abs=ABS, sigma_inc=INC, sigma_coh=0, 
+  xwidth=0.005, yheight=0.005, zdepth=0.005)
 WHEN (SAMPLE==4) AT (0,0,0) RELATIVE Coord
 
 COMPONENT Dirbeam = PSD_monitor(nx=128,ny=128,filename="beamstopPSD",xwidth=0.01,yheight=0.01)
@@ -103,7 +104,7 @@ COMPONENT Stop = Beamstop(radius=0.005)
 WHEN (STOP==1) AT (0,0,0.04) RELATIVE Sqw 
 
 COMPONENT Tof_Sphere_4pi = Monitor_nD(
-    options = "sphere abs lambda, limits=[0.38,7.13], bins=2000, file=TOF", xwidth = 0.1)
+    options = "sphere abs lambda, limits=[0.38,7.13], bins=2000, file=TOF", xwidth = 0.1, yheight = 0, zthick = 0)
   AT (0, 0, 0) RELATIVE Coord
 
 COMPONENT PSD_Sphere_4pi = PSD_monitor_4PI(radius=0.051, nx=180, ny=180, filename="PSD")

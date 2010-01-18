@@ -18,7 +18,11 @@
 *
 *	$Id: symtab.c,v 1.18 2006-11-06 14:30:00 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
+*	$Log: symtab.c,v $
+*	Revision 1.18  2006-11-06 14:30:00  farhi
+*	Improved COPY grammar, enabling to either redefine sections, or extend them (with e.g. INITIALIZE COPY parent EXTEND %{ %})
+*	over-definition of parameters for comp instances in the .instr works OK.
+*
 *	Revision 1.17  2006/04/19 13:06:26  farhi
 *	* Updated Release, Version and Origin fields in headers
 *	* Improved setversion to update all McStasx.y occurencies into current release

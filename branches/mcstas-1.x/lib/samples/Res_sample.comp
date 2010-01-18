@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: Risoe
-* Release: McStas 1.6
+* Release: McStas 1.12
 *
 * Sample for resolution function calculation.
 *
@@ -24,7 +24,7 @@
 *
 * The shape of the sample is either a hollow cylinder or a rectangular box. The
 * hollow cylinder shape is specified with an inner and outer radius.
-* The box is specified with dimensions xwidth, yheight, zdepth.
+* The box is specified with dimensions xwidth, yheight, zthick.
 *
 * The scattered neutrons will have directions towards a given disk and
 * energies betweed E0-dE and E0+dE.
@@ -35,15 +35,16 @@
 * This target position will be set to its AT position. When targeting to centered
 * components, such as spheres or cylinders, define an Arm component where to focus at.
 *
-* Example: Res_sample(thickness=0.001,radius=0.02,yheight=0.4,focus_r=0.05,
+* Example: Res_sample(radius_i=0.001,radius_o=0.02,h=0.4,focus_r=0.05,
 *     E0=14.6,dE=2, target_x=0, target_y=0, target_z=1)
 *
 * %P
 * INPUT PARAMETERS:
-* thickness:Thickness of hollow cylinder in (x,z) plane, or width of
+*
+* radius_i: Inner radius of hollow cylinder in (x,z) plane, or width of
 *             box along X (m)
-* radius:   Outer radius of hollow cylinder (m)
-* yheight:  vert. dimension of sample, as a height (m)
+* radius_o: Outer radius of hollow cylinder (m)
+* h:        Height of box or cylinder along Y (m)
 * focus_r:  Radius of sphere containing target. (m)
 * target_x:
 * target_y: position of target to focus at (m)
@@ -53,7 +54,8 @@
 *
 * Optional parameters
 * xwidth:   horiz. dimension of sample, as a width (m)
-* zdepth:   depth of sample (m)
+* yheight:  vert. dimension of sample, as a height (m)
+* zthick:   thickness of sample (m)
 * focus_xw: horiz. dimension of a rectangular area (m)
 * focus_yh: vert. dimension of a rectangular area (m)
 * focus_aw: horiz. angular dimension of a rectangular area (deg)
@@ -65,9 +67,9 @@
 
 DEFINE COMPONENT Res_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (thickness=0,radius=0.01,focus_r=0.05,E0=14,dE=2,
+SETTING PARAMETERS (radius_i=0,radius_o=0.01,h=0.05,focus_r=0.05,E0=14,dE=2,
         target_x=0, target_y=0, target_z=.5, focus_xw=0, focus_yh=0,
-        focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, int target_index=0)
+        focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, int target_index=0)
 OUTPUT PARAMETERS (res_struct)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -88,8 +90,8 @@ DECLARE
 INITIALIZE
 %{
 
-  if (!radius || !yheight) {
-    if (!xwidth || !yheight || !zdepth) exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+  if (!radius_o || !h) {
+    if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"Res_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     else res_struct.isrect=1; }
   else res_struct.isrect=0;
 
@@ -136,19 +138,19 @@ TRACE
   int    intersect=0;
 
   if(res_struct.isrect)
-    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
   else
-    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
 
   if(intersect)
   {
     if(t0 < 0) ABSORB;
-    if(res_struct.isrect) { t1 = t2 = t3; scat_factor = 2*zdepth; } /* box sample */
+    if(res_struct.isrect) { t1 = t2 = t3; scat_factor = 2*zthick; } /* box sample */
     else {  /* Hollow cylinder sample */
       /* Neutron enters at t=t0. */
-      if(!thickness || !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight))
+      if(!cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
         t1 = t2 = t3;
-      scat_factor = 2*radius; }
+      scat_factor = 2*radius_o; }
     dt0 = t1-t0;                  /* Time in sample, ingoing */
     dt1 = t2-t1;                  /* Time in hole */
     dt2 = t3-t2;                  /* Time in sample, outgoing */
@@ -208,7 +210,7 @@ MCDISPLAY
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
     double ymax =  0.5*yheight;
-    double len = zdepth/2;
+    double len = zthick/2;
     multiline(5, xmin, ymin, -len,
                  xmax, ymin, -len,
                  xmax, ymax, -len,
@@ -226,21 +228,18 @@ MCDISPLAY
   }
   else
   {
-    circle("xz", 0,  yheight/2.0, 0, radius);
-    circle("xz", 0, -yheight/2.0, 0, radius);
-    line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
-    line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
-    line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
-    line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
-    if (thickness) {
-      double radius_i=radius-thickness;
-      circle("xz", 0,  yheight/2.0, 0, radius_i);
-      circle("xz", 0, -yheight/2.0, 0, radius_i);
-      line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
-      line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
-      line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
-      line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
-    }
+    circle("xz", 0,  h/2.0, 0, radius_i);
+    circle("xz", 0,  h/2.0, 0, radius_o);
+    circle("xz", 0, -h/2.0, 0, radius_i);
+    circle("xz", 0, -h/2.0, 0, radius_o);
+    line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
+    line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
+    line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
+    line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
+    line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
+    line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
+    line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
+    line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
   }
 %}
 

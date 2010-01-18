@@ -22,7 +22,11 @@
 *
 * $Id: monitor_nd-lib.h,v 1.17 2008-04-01 09:15:04 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: monitor_nd-lib.h,v $
+* Revision 1.17  2008-04-01 09:15:04  farhi
+* Monitor_nD now accepts up to 3 user variables, e.g. for coordinates
+* to be stored into "list".
+*
 * Revision 1.16  2006/07/21 14:09:07  farhi
 * Fix wrong structure member
 *

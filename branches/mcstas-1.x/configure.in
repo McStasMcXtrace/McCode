@@ -20,7 +20,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_INIT(McStas, 1.12, www.mcstas.org)
-AC_REVISION($Revision: 1.57 $)
+AC_REVISION($Revision: 1.58 $)
 AC_COPYRIGHT([Copyright (C) 1997-2008  Copyright (C) 1997-2008, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
@@ -44,7 +44,7 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS(strcasecmp fdopen qsort)
 
-AC_PATH_PROGS(PERL,   [perl5 perl /usr/local/bin/perl], no)
+AC_PATH_PROGS(PERL,   [perl5 perl /usr/bin/perl /usr/local/bin/perl], no)
 AC_PATH_PROGS(SCILAB, [scilab runscilab /usr/local/bin/scilab /usr/lib/scilab/bin/scilab /lib/scilab/bin/scilab scilex], no)
 AC_PATH_PROGS(MATLAB, [matlab /usr/local/bin/matlab], no)
 AC_PATH_PROGS(GNUPLOT, [gnuplot /usr/local/bin/gnuplot], no)

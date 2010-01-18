@@ -23,7 +23,10 @@
 *
 * $Id: adapt_tree-lib.h,v 1.8 2007-03-12 14:57:21 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: adapt_tree-lib.h,v $
+* Revision 1.8  2007-03-12 14:57:21  farhi
+* Cosmetics
+*
 * Revision 1.7  2005/07/25 14:55:08  farhi
 * DOC update:
 * checked all parameter [unit] + text to be OK

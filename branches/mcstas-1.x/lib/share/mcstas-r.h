@@ -11,7 +11,7 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.99 $
+* Version: $Revision: 1.101 $
 *
 * Runtime system header for McStas.
 *
@@ -29,15 +29,59 @@
 *
 * Usage: Automatically embbeded in the c code.
 *
-* $Id: mcstas-r.h,v 1.99 2008-04-25 08:26:33 erkn Exp $
+* $Id: mcstas-r.h,v 1.101 2009-04-02 09:47:46 pkwi Exp $
 *
-*       $Log: not supported by cvs2svn $
+*       $Log: mcstas-r.h,v $
+*       Revision 1.101  2009-04-02 09:47:46  pkwi
+*       Updated runtime and interoff from dev branch (bugfixes etc.)
+*
+*       Proceeding to test before release
+*
+*       Revision 1.108  2009/01/23 14:01:12  farhi
+*       Back to smaller buffer size for MPI exchange, to ensure that it works on
+*       *most* machines.
+*
+*       Revision 1.107  2009/01/23 10:51:30  farhi
+*       Minor speedup: Identity rotation matrices are now checked for and
+*       caculations reduced.
+*       It seems this McSatsStable commit did not got through for McStas 2.0
+*
+*       Revision 1.106  2009/01/15 15:42:44  farhi
+*       Saving lists using MPI: must use MPI_Ssend to avoid the buffer max size
+*       in MPI1
+*
+*       Revision 1.105  2008/10/21 15:19:18  farhi
+*       use common CHAR_BUFFER_LENGTH = 1024
+*
+*       Revision 1.104  2008/09/02 08:36:17  farhi
+*       MPI support: block size defined in mcstas-r.h as 1e5. Correct bug when
+*       p0, p1 or p2 are NULL, and re-enable S(q,w) save in Isotropic_Sqw with
+*       MPI.
+*
+*       Revision 1.103  2008/08/26 13:32:05  farhi
+*       Remove Threading support which is poor efficiency and may give wrong
+*       results
+*       Add quotes around string instrument parameters from mcgui simulation
+*       dialog
+*
+*       Revision 1.102  2008/08/25 14:13:28  farhi
+*       changed neutron-mc to mcstas-users
+*
+*       Revision 1.101  2008/07/17 12:50:18  farhi
+*       MAJOR commit to McStas 2.x
+*       uniformized parameter naming in components
+*       uniformized SITE for instruments
+*       all compile OK
+*
+*       Revision 1.99  2008/04/25 08:26:33  erkn
+*       added utility functions/macros for intersecting with a plane and mirroring a vector in a plane
+*
 *       Revision 1.98  2008/04/21 15:50:19  pkwi
 *       Name change randvec_target_rect -> randvec_target_rect_real .
 *
 *       The renamed routine takes local emmission coordinate into account, correcting for the
 *       effects mentioned by George Apostolopoulus <gapost@ipta.demokritos.gr> to the
-*       neutron-mc list (parameter list extended by four parms).
+*       mcstas-users list (parameter list extended by four parms).
 *
 *       For backward-compatibility, a define has been added that maps randvec_target_rect
 *       to the new routine, defaulting to the "old" behaviour.
@@ -270,7 +314,7 @@
 *******************************************************************************/
 
 #ifndef MCSTAS_R_H
-#define MCSTAS_R_H "$Revision: 1.99 $"
+#define MCSTAS_R_H "$Revision: 1.101 $"
 
 #include <math.h>
 #include <string.h>
@@ -344,11 +388,6 @@
 #ifndef NOSIGNALS
 #define NOSIGNALS
 #endif
-#endif
-
-#ifdef USE_THREADS  /* user want threads */
-#define USE_OPENMP  /* we choose OpenMP, as POSIX threads are REALLY slow */
-#include <omp.h>
 #endif
 
 #if (USE_NEXUS == 0)
@@ -448,6 +487,10 @@ mcstatic FILE *mcsiminfo_file        = NULL;
   { statement; } \
 }
 
+#ifndef MPI_REDUCE_BLOCKSIZE
+#define MPI_REDUCE_BLOCKSIZE 10000
+#endif
+
 int mc_MPI_Reduce(void* sbuf, void* rbuf,
                   int count, MPI_Datatype dtype,
                   MPI_Op op, int root, MPI_Comm comm);
@@ -461,8 +504,9 @@ int mc_MPI_Reduce(void* sbuf, void* rbuf,
 #ifdef USE_MPI
 static int mpi_node_count;
 #endif
-#ifdef USE_OPENMP
-static int threads_node_count=0;
+
+#ifdef USE_THREADS  /* user want threads */
+#error Threading (USE_THREADS) support has been removed for very poor efficiency. Use MPI/SSH grid instead.
 #endif
 
 /* I/O function prototypes ================================================== */
@@ -497,6 +541,10 @@ char *mcfull_file(char *name, char *ext);
 
 #ifndef FLT_MAX
 #define FLT_MAX         3.40282347E+38F /* max decimal value of a "float" */
+#endif
+
+#ifndef CHAR_BUF_LENGTH
+#define CHAR_BUF_LENGTH 1024
 #endif
 
 /* Following part is only embedded when not redundent with mcstas.h ========= */
@@ -892,6 +940,7 @@ Coords coords_xp(Coords b, Coords c);
 void   coords_print(Coords a);
 
 void rot_set_rotation(Rotation t, double phx, double phy, double phz);
+int  rot_test_identity(Rotation t);
 void rot_mul(Rotation t1, Rotation t2, Rotation t3);
 void rot_copy(Rotation dest, Rotation src);
 void rot_transpose(Rotation src, Rotation dst);

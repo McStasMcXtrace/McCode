@@ -21,7 +21,14 @@
 *
 * $Id: nexus-lib.h,v 1.8 2008-02-09 22:26:27 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: nexus-lib.h,v $
+* Revision 1.8  2008-02-09 22:26:27  farhi
+* Major contrib for clusters/multi-core: OpenMP support
+* 	try ./configure --with-cc=gcc4.2 or icc
+* then mcrun --threads ...
+* Also tidy-up configure. Made relevant changes to mcrun/mcgui to enable OpenMP
+* Updated install-doc accordingly
+*
 * Revision 1.7  2007/03/05 19:02:55  farhi
 * NEXUS support now works as MPI. NEXUS keyword is optional and only -DUSE_NEXUS is required. All instruments may then export in NEXUS if McStas
 * has been installed with --with-nexus

@@ -147,7 +147,7 @@ EXTEND
 %}
 
 COMPONENT Container_out=Isotropic_Sqw(
-  radius=radius+0.0001+container_thickness,yheight=height,thickness=container_thickness,
+  radius = radius+0.0001+container_thickness, yheight = height, thickness=container_thickness,
   auto_qw=0, Sqw_coh=container, verbose=0
   ) WHEN(height && container_thickness)
 AT (0, 0, 0) RELATIVE SampleIn
@@ -158,7 +158,7 @@ EXTEND
 
 /* external shield */
 COMPONENT Environment_out=Isotropic_Sqw(
-  radius = environment_radius, yheight = 0.1, thickness=environment_thickness,
+radius = environment_radius, yheight = 0.1, thickness=environment_thickness,
   auto_qw=0, Sqw_coh=environment, verbose=0
 ) WHEN (environment_thickness > 0)
 AT (0, 0, 0) RELATIVE SampleIn

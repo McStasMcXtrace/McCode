@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: December 1999
-* Version: $Revision: 1.48 $
+* Version: $Revision: 1.49 $
 * Origin: Risoe
-* Release: McStas 1.6
+* Release: McStas 1.12
 * Modified by: EF, 22nd Apr 2003 : now uses Read_Table library
 *
 * Mosaic single crystal with multiple scattering vectors.
@@ -43,8 +43,8 @@
 *    #column_F2 <index of the squared str. factor '|F|^2' column [b]>
 *    #column_F  <index of the structure factor norm '|F|' column>
 * and for material specification:
-*    #sigma_abs <value of sigma_abs cross section [barns]>
-*    #sigma_inc <value of sigma_inc cross section [barns]>
+*    #sigma_abs <value of Absorption cross section [barns]>
+*    #sigma_inc <value of Incoherent cross section [barns]>
 *    #Delta_d/d <value of Detla_d/d width for all lines>
 *    #lattice_a <value of the a lattice parameter [Angs]>
 *    #lattice_a <value of the b lattice parameter [Angs]>
@@ -55,16 +55,16 @@
 *
 * See the Component Manual for more defails.
 *
-* Example: Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
+* Example: Single_crystal(xwidth=0.01, yheight=0.01, zthick=0.01,
 *           delta_d_d=1e-4, mosaic = 5,
 *           ax = 3.8186, ay = 0, az = 0,
 *           bx = 0, by = 3.8843, bz = 0,
 *           cx = 0, cy = 0, cz = 11.6777,
 *           reflections="YBaCuO.lau")
 *
-* Vanadium sigma_inc elastic scattering with multiple scattering
-* Single_crystal(xwidth=0.01, yheight=0.01, zdepth=0.01,
-*           reflections="", sigma_abs=5.08, sigma_inc=4.935,
+* Vanadium incoherent elastic scattering with multiple scattering
+* Single_crystal(xwidth=0.01, yheight=0.01, zthick=0.01,
+*           reflections="", absorption=5.08, incoherent=4.935,
 *           ax=3.0282, by=3.0282, cz=3.0282/2)
 *
 * %BUGS:
@@ -82,7 +82,7 @@
 *
 * xwidth:    Width of crystal [m]
 * yheight:   Height of crystal [m]
-* zdepth:    Depth of crystal (no extinction simulated) [m]
+* zthick:    Thichness of crystal (no extinction simulated) [m]
 * delta_d_d: Lattice spacing variance, gaussian RMS [1]
 * mosaic:    Crystal mosaic (isotropic), gaussian RMS [arc minutes]
 * mosaic_h:  Horizontal (rotation around Y) mosaic (anisotropic),
@@ -102,7 +102,7 @@
 * cy:        Coordinates of third (direct/recip) unit cell vector [AA or AA^-1]
 * cz:        
 * reflections: File name containing structure factors of reflections. Use
-*              empty ("") or NULL for sigma_inc scattering only [string]
+*              empty ("") or NULL for incoherent scattering only [string]
 * order:      limit multiple scattering up to given order
 *                 (0: all, 1: first, 2: second, ...) [1]
 *
@@ -111,8 +111,8 @@
 * p_transmit: Monte Carlo probability for neutrons to be transmitted
 *               without any scattering. Used to improve statistics from
 *               weak reflections [1]
-* sigma_abs:  absorption cross-section per unit cell at 2200 m/s [barns]
-* sigma_inc:  incoherent scattering cross-section per unit cell [barns]
+* absorption: Absorption cross-section per unit cell at 2200 m/s [barns]
+* incoherent: Incoherent scattering cross-section per unit cell [barns]
 * aa:         [deg].
 * bb:         unit cell angles alpha, beta and gamma. Then uses norms of
 *               vectors a,b and c as lattice parameters [deg]
@@ -146,13 +146,13 @@
        tau.
 
   (3). The total coherent scattering cross section is computed as the
-       sum over all tau. Together with the sigma_abs and sigma_inc
+       sum over all tau. Together with the absorption and incoherent
        scattering cross section and known potential flight-length
        l_full through the sample, we can compute the probability of
-       the four events sigma_abs, coherent scattering, sigma_inc
+       the four events absorption, coherent scattering, incoherent
        scattering, and transmission.
 
-  (4). sigma_abs is never simulated explicitly, just incorporated in
+  (4). Absorption is never simulated explicitly, just incorporated in
        the neutron weight.
 
   (5). Transmission in the first event is selected with the Monte
@@ -160,7 +160,7 @@
        transmission probability. After the first event, transmission
        is selected with the correct Monte Carlo probability.
 
-  (6). sigma_inc scattering is done simply by selecting a random
+  (6). Incoherent scattering is done simply by selecting a random
        direction for the outgoing wave vector kf.
 
   (7). For coherent scattering, a reciprocal lattice point is selected
@@ -183,13 +183,13 @@
 
 DEFINE COMPONENT Single_crystal
 DEFINITION PARAMETERS(string reflections)
-SETTING PARAMETERS(xwidth, yheight, zdepth, delta_d_d=1e-4,
+SETTING PARAMETERS(xwidth, yheight, zthick, delta_d_d=1e-4,
             mosaic = -1, mosaic_h = -1, mosaic_v = -1, mosaic_n = -1,
 	    recip_cell=0,
             ax = 0, ay = 0, az = 0,
             bx = 0, by = 0, bz = 0,
             cx = 0, cy = 0, cz = 0,
-            p_transmit = -1, sigma_abs = 0, sigma_inc = 0,
+            p_transmit = -1, absorption = 0, incoherent = 0,
             aa=0, bb=0, cc=0, order=0, powder=0)
 OUTPUT PARAMETERS(hkl_info)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -647,8 +647,8 @@ INITIALIZE
   hkl_info.m_cx = cx;
   hkl_info.m_cy = cy;
   hkl_info.m_cz = cz;
-  hkl_info.sigma_a = sigma_abs;
-  hkl_info.sigma_i = sigma_inc;
+  hkl_info.sigma_a = absorption;
+  hkl_info.sigma_i = incoherent;
   hkl_info.recip = recip_cell;
 
   /* default format h,k,l,F,F2  */
@@ -664,7 +664,7 @@ INITIALIZE
   if (hkl_info.count)
     printf("Single_crystal: %s: Read %d reflections from file '%s'\n",
       NAME_CURRENT_COMP, hkl_info.count, reflections);
-  else printf("Single_crystal: %s: Using sigma_inc elastic scattering only (s_inc=%g barn)\n",
+  else printf("Single_crystal: %s: Using incoherent elastic scattering only (s_inc=%g barn)\n",
       NAME_CURRENT_COMP, hkl_info.sigma_i);
 %}
 
@@ -698,8 +698,8 @@ TRACE
   double V0;                    /* Volume of unit cell */
   double l_full;                /* Neutron path length for transmission */
   double l;                     /* Path length to scattering event */
-  double abs_xsect, abs_xlen;   /* sigma_abs cross section and length */
-  double inc_xsect, inc_xlen;   /* sigma_inc cross section and length */
+  double abs_xsect, abs_xlen;   /* Absorption cross section and length */
+  double inc_xsect, inc_xlen;   /* Incoherent cross section and length */
   double coh_xsect, coh_xlen;   /* Coherent cross section and length */
   double tot_xsect, tot_xlen;   /* Total cross section and length */
   double z1, z2, y1, y2;        /* Temporaries to choose kf from 2D Gauss */
@@ -710,7 +710,7 @@ TRACE
   double mc_trans, mc_interact; /* Transmission, interaction MC choices */
 
   if(box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
-                   xwidth, yheight, zdepth) && t2 > 0)
+                   xwidth, yheight, zthick) && t2 > 0)
   {                             /* Neutron intersects crystal */
     if(t1 > 0)
       PROP_DT(t1);                /* Move to crystal surface if not inside */
@@ -728,7 +728,7 @@ TRACE
     {
       /* Compute intersection between neutron flight path and sample. */
       if(!box_intersect(&t1, &t2, x, y, z, vx, vy, vz,
-                        xwidth, yheight, zdepth) || t2*v < -1e-9 || t1*v > 1e-9)
+                        xwidth, yheight, zthick) || t2*v < -1e-9 || t1*v > 1e-9)
       {
         /* neutron is leaving the sample */
         fprintf(stderr,
@@ -887,12 +887,12 @@ TRACE
       PROP_DT(l/v);
       event_counter++;
 
-      /* (4). Account for the probability of sigma_abs */
+      /* (4). Account for the probability of absorption */
       p *= (coh_xlen + inc_xlen)/tot_xlen;
-      /* Choose between coherent and sigma_inc scattering */
+      /* Choose between coherent and incoherent scattering */
       if(coh_xlen == 0 || rand0max(coh_xlen + inc_xlen) <= inc_xlen)
       {
-        /* (6). sigma_inc scattering */
+        /* (6). Incoherent scattering */
         randvec_target_circle(&kix, &kiy, &kiz, NULL, vx, vy, vz, 0);
         vx = kix; /* ki vector is used as tmp var with norm v */
         vy = kiy;
@@ -950,8 +950,8 @@ MCDISPLAY
   double xmax =  0.5*xwidth;
   double ymin = -0.5*yheight;
   double ymax =  0.5*yheight;
-  double zmin = -0.5*zdepth;
-  double zmax =  0.5*zdepth;
+  double zmin = -0.5*zthick;
+  double zmax =  0.5*zthick;
   magnify("xyz");
   multiline(5, xmin, ymin, zmin,
                xmax, ymin, zmin,

@@ -1008,7 +1008,7 @@ sub do_scan {
             if ($Config{'osname'} eq 'MSWin32') {
                 # Win32 needs all possible parameters here, since we can not open(SIM,"-|");
                 my @cmdlist = ("mcrun$MCSTAS::mcstas_config{'SUFFIX'}",
-                              $out_file, @options, map("$_=$vals{$_}", @params),
+                              $out_file, "--ncount=$ncount", @options, map("$_=$vals{$_}", @params),
                               $force_compile && ($multi >= 1 || $slave ne 0) ? "--force-compile" : "",
                 							$output_opt ? "--dir=$output_opt" : "--no-output-files",
                 							"--format=$MCSTAS::mcstas_config{'PLOTTER'}");

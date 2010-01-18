@@ -11,8 +11,8 @@
 * Written by: A. Abrahamsen, N. B. Christensen, and E. Lauridsen
 * Date: 1998
 * Origin: Risoe
-* Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Release: McStas 1.12
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: Risoe
 *
 * The conventional cold-source triple-axis spectrometer TAS1 at Risoe National
@@ -207,8 +207,8 @@ COMPONENT emon1 = E_monitor(
   AT(0, 0, 1.5) RELATIVE a2 ROTATED (0,0,0) RELATIVE a2
 
 COMPONENT sample = V_sample(
-  thickness = 0.0025, radius = 0.010,
-  yheight = 0.019,
+  radius_i = 0.0075, radius_o = 0.010,
+  h = 0.019,
   focus_r = 0.05, /* Guess focus (no GET_X yet...); check with PSD. */
   pack = 1,
   target_x = 0.2046, target_y = 0, target_z = 0.3083)

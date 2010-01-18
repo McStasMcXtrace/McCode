@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 14th Feb 2000.
 * Origin: <a href="http://www.ill.fr">ILL</a>
-* Release: McStas 1.6
-* Version: $Revision: 1.38 $
+* Release: McStas 1.12
+* Version: $Revision: 1.39 $
 * Modified by: EF, 29th Feb 2000 : added more options, monitor shape, theta, phi
 * Modified by: EF, 01st Feb 2001 : PreMonitor for correlation studies (0.13.6)
 * Modified by: EF, 5th  Apr 2001 : use global functions (0.14) compile faster
@@ -113,8 +113,8 @@
 *     3He_pressure=[3 in bars]  The 3He gas pressure in detector.
 *                               3He_pressure=0 is perfect detector (default)
 *
-* Detector shape options (specified as xwidth,yheight,zdepth or x/y/z/min/max)
-*     box                       Box of size xwidth, yheight, zdepth.
+* Detector shape options (specified as xwidth,yheight,zthick or x/y/z/min/max)
+*     box                       Box of size xwidth, yheight, zthick.
 *     cylinder                  To get a cylindrical monitor
 *                                (diameter is xwidth, height is yheight).
 *     banana                    Same as cylinder, without top/bottom,
@@ -130,7 +130,7 @@
 *
 * <b>EXAMPLES:</b>
 * MyMon = Monitor_nD(
-*   xwidth = 0.1, yheight = 0.1, zdepth = 0,
+*   xwidth = 0.1, yheight = 0.1, zthick = 0,
 *   options = "intensity per cm2 angle,limits=[-5 5] bins=10,with
 *              borders, file = mon1");
 *                  will monitor neutron angle from [z] axis, between -5
@@ -163,11 +163,11 @@
 *
 * xwidth:  [m]  Width/diameter of detector (x). Default is 10 cm.
 * yheight: [m]  Height of detector (y). Default is 10 cm.
-* zdepth:  [m]  Thichness of detector (z).
+* zthick:  [m]  Thichness of detector (z).
 * options: [str]  String that specifies the configuration of the monitor
 *                 The general syntax is "[x] options..." (see <b>Descr.</b>).
 *
-* Optional input parameters (override xwidth yheight zdepth):
+* Optional input parameters (override xwidth yheight zthick):
 * xmin:   [m]    Lower x bound of opening
 * xmax:   [m]    Upper x bound of opening
 * ymin:   [m]    Lower y bound of opening
@@ -204,7 +204,7 @@
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
-SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0)
+SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -245,7 +245,7 @@ INITIALIZE
   strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
   strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 32);
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
 
   if (filename != NULL) strncpy(Vars.Mon_File, filename, 128);
 

@@ -1,7 +1,7 @@
 /**************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: Peter Christiansen
 * Date: July 2006
-* Version: $Revision: 1.4 $
+* Version: $Revision: 1.5 $
 * Origin: Risoe
-* Release: McStas 1.10
+* Release: McStas 1.12
 *
 * Polarisation sensitive monitor.
 *
@@ -108,9 +108,13 @@ TRACE
     
     i = floor((pol_proj+1.0)*npol/2.0);
     
-    // To take care of the case when m.s=1
+    /* To take care of the case when m.s=1 */
     if(i==npol)
       i--;
+    /* To handle the case when m.s<-1 can happen due to rounding errors in trig functions */
+    if(i<0)
+      i=0;
+
     
     if(i >= 0 && i < npol) {
 	Pol_N[i]++;

@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:kim.lefmann@risoe.dk">Kim Lefmann</a>
 * Date: 19th Dec 2003.
 * Origin: <a href="http://www.risoe.dk">Risoe</a>
-* Release: McStas CVS_080624
-* Version: $Revision: 1.7 $
+* Release: McStas 1.12
+* Version: $Revision: 1.8 $
 * %INSTRUMENT_SITE: tests
 *
 * Test instrument for the Sans_spheres component. No guide / velocity selector
@@ -66,7 +66,7 @@ COMPONENT coll2 = Slit(
     radius = 0.005)
   AT (0, 0, 6) RELATIVE arm
 
-COMPONENT sample = Sans_spheres(R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_abs=Sigma_a, qmax=Qmax)
+COMPONENT sample = Sans_spheres(R=r, Phi=PHI, Delta_rho=Delta_Rho, sigma_a=Sigma_a, qmax=Qmax)
    AT (0,0,0.2) RELATIVE coll2
 
 

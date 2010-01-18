@@ -21,7 +21,14 @@
 *
 * $Id: nexus-lib.c,v 1.12 2008-02-09 22:26:27 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: nexus-lib.c,v $
+* Revision 1.12  2008-02-09 22:26:27  farhi
+* Major contrib for clusters/multi-core: OpenMP support
+* 	try ./configure --with-cc=gcc4.2 or icc
+* then mcrun --threads ...
+* Also tidy-up configure. Made relevant changes to mcrun/mcgui to enable OpenMP
+* Updated install-doc accordingly
+*
 * Revision 1.11  2007/03/06 09:39:15  farhi
 * NeXus default output is now "5 zip". Then NEXUS keyword is purely optional.
 *

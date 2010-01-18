@@ -11,16 +11,107 @@
 * Written by: KN
 * Date:    Aug 29, 1997
 * Release: McStas X.Y
-* Version: $Revision: 1.192 $
+* Version: $Revision: 1.194 $
 *
 * Runtime system for McStas.
 * Embedded within instrument in runtime mode.
 *
 * Usage: Automatically embbeded in the c code whenever required.
 *
-* $Id: mcstas-r.c,v 1.192 2008-04-25 08:26:33 erkn Exp $
+* $Id: mcstas-r.c,v 1.194 2009-04-02 09:47:46 pkwi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: mcstas-r.c,v $
+* Revision 1.194  2009-04-02 09:47:46  pkwi
+* Updated runtime and interoff from dev branch (bugfixes etc.)
+*
+* Proceeding to test before release
+*
+* Revision 1.217  2009/03/26 13:41:36  erkn
+* fixed bug in mcestimate_error. Missing factor 1/N in quadratic (1st) term of square sum.
+*
+* Revision 1.216  2009/02/20 16:17:55  farhi
+* Fixed warnings and a few bugs detected with GCC 4.3.
+*
+* Revision 1.215  2009/02/13 14:03:20  farhi
+* Fixed GCC 4.3 warnings. More will come in components.
+*
+* Revision 1.214  2009/02/12 10:43:48  erkn
+* check abs. value to protect for rounding errors - not signed value.
+*
+* Revision 1.213  2009/02/11 15:11:05  farhi
+* printf format fixes revealed with gcc 4.3
+*
+* Revision 1.212  2009/01/23 10:51:30  farhi
+* Minor speedup: Identity rotation matrices are now checked for and
+* caculations reduced.
+* It seems this McSatsStable commit did not got through for McStas 2.0
+*
+* Revision 1.211  2009/01/18 14:43:13  farhi
+* Fixed MPI event list output (broken and reported first by A. Percival).
+* This required to split lists in small blocks not to overflow the MPI
+* buffer.
+*
+* Revision 1.207  2008/10/21 15:19:18  farhi
+* use common CHAR_BUFFER_LENGTH = 1024
+*
+* Revision 1.206  2008/10/14 14:29:50  farhi
+* sans sample expanded with cylinder and sphere. cosmetics and updated
+* todo.
+*
+* Revision 1.205  2008/10/09 14:47:53  farhi
+* cosmetics for SIGNAL displaying starting date
+*
+* Revision 1.204  2008/09/08 10:08:21  farhi
+* in save sessions, filename was not registered in mcopenedfiles,
+* but was searching for simfile (always opened) leading
+* to always catenated files. This happen when e.g. sending USR2 or using
+* intermediate saves.
+*
+* Revision 1.203  2008/09/05 10:04:20  farhi
+* sorry, my mistake...
+*
+* Revision 1.202  2008/09/02 14:50:42  farhi
+* cosmetics
+*
+* Revision 1.201  2008/09/02 08:36:17  farhi
+* MPI support: block size defined in mcstas-r.h as 1e5. Correct bug when
+* p0, p1 or p2 are NULL, and re-enable S(q,w) save in Isotropic_Sqw with
+* MPI.
+*
+* Revision 1.200  2008/08/29 15:35:08  farhi
+* Split MPI_Reduce into 1e5 bits to avoid de-sync of nodes.. This was done
+* in fact in last commit.
+*
+* Revision 1.199  2008/08/29 15:32:28  farhi
+* Indicate memory allocation size when reporting error.
+*
+* Revision 1.198  2008/08/26 13:32:05  farhi
+* Remove Threading support which is poor efficiency and may give wrong
+* results
+* Add quotes around string instrument parameters from mcgui simulation
+* dialog
+*
+* Revision 1.197  2008/08/25 14:13:28  farhi
+* changed neutron-mc to mcstas-users
+*
+* Revision 1.196  2008/08/19 11:25:52  farhi
+* make sure the opened file list is reset when calling mcsave (same save
+* session). already opened files are catenated, just as with the catenate
+* word in mcformat.Name
+*
+* Revision 1.195  2008/08/07 21:52:10  farhi
+* Second major commit for v2: fixed sources, and most instruments for
+* automatic testing. A few instruments need more work still.
+*
+* Revision 1.194  2008/07/17 12:50:18  farhi
+* MAJOR commit to McStas 2.x
+* uniformized parameter naming in components
+* uniformized SITE for instruments
+* all compile OK
+*
+* Revision 1.192  2008/04/25 08:26:33  erkn
+* added utility functions/macros for intersecting with a plane and mirroring a vector in a plane
+*
 * Revision 1.191  2008/04/21 16:08:05  pkwi
 * OpenMPI mpicc dislikes declaration of the counter var in the for(   ) (C99 extension)
 *
@@ -29,7 +120,7 @@
 *
 * The renamed routine takes local emmission coordinate into account, correcting for the
 * effects mentioned by George Apostolopoulus <gapost@ipta.demokritos.gr> to the
-* neutron-mc list (parameter list extended by four parms).
+* mcstas-users list (parameter list extended by four parms).
 *
 * For backward-compatibility, a define has been added that maps randvec_target_rect
 * to the new routine, defaulting to the "old" behaviour.
@@ -139,7 +230,7 @@
 * These bugs had effect on use of virtual sources plus the new SPLIT keyword...
 *
 * Will double-check if this is a problem with current stable relase 1.10 and
-* report to neutron-mc.
+* report to mcstas-users.
 *
 * Thanks to Kim Lefmann / Linda Udby for noticing a subtile energy-widening
 * effect when using a virtual source!
@@ -638,6 +729,8 @@ double*  mcMagnetData                = NULL;
 Coords   mcMagnetPos;
 Rotation mcMagnetRot;
 char*    mcDetectorCustomHeader      = NULL;
+char*    mcopenedfiles               = "";
+long     mcopenedfiles_size          = 0;
 #endif
 
 /* mcMagneticField(x, y, z, t, Bx, By, Bz) */
@@ -745,8 +838,7 @@ mcparm_string(char *s, void *vptr)
   *v = (char *)malloc(strlen(s) + 1);
   if(*v == NULL)
   {
-    fprintf(stderr, "Error: Out of memory (mcparm_string).\n");
-    exit(1);
+    exit(fprintf(stderr, "Error: Out of memory %li (mcparm_string).\n", (long)strlen(s) + 1));
   }
   strcpy(*v, s);
   return 1;                        /* Success */
@@ -826,7 +918,7 @@ double mcestimate_error(double N, double p1, double p2)
   n1 = N - 1;
   /* Note: underflow may cause p2 to become zero; the fabs() below guards
      against this. */
-  return sqrt((N/n1)*fabs(p2 - pmean*pmean));
+  return sqrt((N/n1)*fabs(p2/N - pmean*pmean));
 }
 
 /* mcset_ncount: set total number of neutrons to generate */
@@ -852,10 +944,6 @@ double mcget_run_num(void)
 static int mpi_node_rank;
 static int mpi_node_root = 0;
 
-/* mpi_p <- [p0, p1, p2] */
-double mpi_p[3];
-
-
 /*******************************************************************************
 * mc_MPI_Reduce: Gathers arrays from MPI nodes using Reduce function.
 *******************************************************************************/
@@ -865,19 +953,89 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
 {
   void *lrbuf;
   int dsize;
-  int res;
+  int res= MPI_SUCCESS;
+  
+  if (!sbuf || count <= 0) return(-1);
 
   MPI_Type_size(dtype, &dsize);
   lrbuf = malloc(count*dsize);
+  if (lrbuf == NULL)
+    exit(fprintf(stderr, "Error: Out of memory %li (mc_MPI_Reduce).\n", (long)count*dsize));
+  /* we must cut the buffer into blocks not exceeding the MPI max buffer size of 32000 */
+  long offset=0;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
+  while (offset < count && res == MPI_SUCCESS) {
+    if (!length || offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
+    res = MPI_Reduce((void*)(sbuf+offset*dsize), (void*)(lrbuf+offset*dsize), length, dtype, op, root, comm);
+    offset += length;
+  }
 
-  res = MPI_Reduce(sbuf, lrbuf, count, dtype, op, root, comm);
   if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce)", mpi_node_rank);
+    fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce) at offset=%i, count=%i\n", mpi_node_rank, offset, count);
 
   if(mpi_node_rank == root)
     memcpy(rbuf, lrbuf, count*dsize);
 
   free(lrbuf);
+  return res;
+}
+
+/*******************************************************************************
+* mc_MPI_Send: Send array to MPI node by blocks to avoid buffer limit
+*******************************************************************************/
+int mc_MPI_Send(void *sbuf, 
+                  int count, MPI_Datatype dtype,
+                  int dest, MPI_Comm comm)
+{
+  int dsize;
+  int res= MPI_SUCCESS;
+  
+  if (!sbuf || count <= 0) return(-1);
+
+  MPI_Type_size(dtype, &dsize);
+
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
+  while (offset < count && res == MPI_SUCCESS) {
+    if (offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
+    res = MPI_Send((void*)(sbuf+offset*dsize), length, dtype, dest, tag++, comm);
+    offset += length;
+  }
+
+  if(res != MPI_SUCCESS)
+    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%i, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
+
+  return res;
+}
+
+/*******************************************************************************
+* mc_MPI_Recv: Receives arrays from MPI nodes by blocks to avoid buffer limit
+*             the buffer must have been allocated previously.
+*******************************************************************************/
+int mc_MPI_Recv(void *sbuf, 
+                  int count, MPI_Datatype dtype,
+                  int source, MPI_Comm comm)
+{
+  int dsize;
+  int res= MPI_SUCCESS;
+  
+  if (!sbuf || count <= 0) return(-1);
+
+  MPI_Type_size(dtype, &dsize);
+
+  long offset=0;
+  int  tag=1;
+  int  length=MPI_REDUCE_BLOCKSIZE; /* defined in mcstas.h */
+  while (offset < count && res == MPI_SUCCESS) {
+    if (offset+length > count-1) length=count-offset; else length=MPI_REDUCE_BLOCKSIZE;
+    res = MPI_Recv((void*)(sbuf+offset*dsize), length, dtype, source, tag++, comm, MPI_STATUS_IGNORE);
+    offset += length;
+  }
+
+  if(res != MPI_SUCCESS)
+    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%i, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
+
   return res;
 }
 
@@ -1506,8 +1664,7 @@ char *mcfull_file(char *name, char *ext)
   mem = malloc(dirlen + strlen(name) + 256);
   if(!mem)
   {
-    fprintf(stderr, "Error: Out of memory (mcfull_file)\n");
-    exit(1);
+    exit(fprintf(stderr, "Error: Out of memory %li (mcfull_file)\n", (long)(dirlen + strlen(name) + 256)));
   }
   strcpy(mem, "");
   if(dirlen)
@@ -1541,7 +1698,20 @@ FILE *mcnew_file(char *name, char *ext, char *mode)
   file = fopen(mem, (mode ? mode : "w"));
   if(!file)
     fprintf(stderr, "Warning: could not open output file '%s' in mode '%s' (mcnew_file)\n", mem, mode);
+  else {
+    if (!mcopenedfiles || 
+        (mcopenedfiles && mcopenedfiles_size <= strlen(mcopenedfiles)+strlen(mem))) {
+      mcopenedfiles_size+=CHAR_BUF_LENGTH;
+      if (!mcopenedfiles || !strlen(mcopenedfiles))
+        mcopenedfiles = calloc(1, mcopenedfiles_size);
+      else
+        mcopenedfiles = realloc(mcopenedfiles, mcopenedfiles_size);
+    } 
+    strcat(mcopenedfiles, " ");
+    strcat(mcopenedfiles, mem);
+  }
   free(mem);
+  
   return file;
 } /* mcnew_file */
 
@@ -1564,8 +1734,8 @@ char *str_rep(char *string, char *from, char *to)
   }
   return(string);
 }
-#define VALID_NAME_LENGTH 64
 
+#define VALID_NAME_LENGTH 64
 /*******************************************************************************
 * mcvalid_name: makes a valid string for variable names.
 *   copy 'original' into 'valid', replacing invalid characters by '_'
@@ -1959,7 +2129,7 @@ static void mcinfo_instrument(FILE *f, struct mcformats_struct format,
             (*mcinputtypes[mcinputtable[i].type].parminfo)
                 (mcinputtable[i].name));
     strcat(Value, ThisParam);
-    if (strlen(Value) > 1024) break;
+    if (strlen(Value) > CHAR_BUF_LENGTH) break;
   }
   mcfile_tag(f, format, pre, name, "Parameters", Value);
   mcfile_tag(f, format, pre, name, "Source", mcinstrument_source);
@@ -2089,7 +2259,7 @@ static void mcinfo_data(FILE *f, struct mcformats_struct format,
         if (p2) E = p2[index];
 
         if (m) x = *x1 + (i + 0.5)/m*(*x2 - *x1); else x = 0;
-        if (n) y = *y1 + (j + 0.5)/n/p*(*y2 - *y1); else y = 0;
+        if (n && p) y = *y1 + (j + 0.5)/n/p*(*y2 - *y1); else y = 0;
         z = p1[index];
         sum_xz += x*z;
         sum_yz += y*z;
@@ -2225,6 +2395,8 @@ void mcsiminfo_init(FILE *f)
 #endif
   if (mcdisable_output_files) return;
   if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return;
+  /* clear list of opened files to start new save session */
+  if (mcopenedfiles && strlen(mcopenedfiles) > 0) strcpy(mcopenedfiles, "");
 #ifdef USE_NEXUS
   /* NeXus sim info is the NeXus root file */
   if(strstr(mcformat.Name, "NeXus")) {
@@ -2236,7 +2408,10 @@ void mcsiminfo_init(FILE *f)
   } else
 #endif
   if (!f) mcsiminfo_file = mcnew_file(mcsiminfo_name, mcformat.Extension,
-    strstr(mcformat.Name, "append") || strstr(mcformat.Name, "catenate") ? "a":"w");
+    strstr(mcformat.Name, "append") 
+      || strstr(mcformat.Name, "catenate")  
+      || strstr(mcopenedfiles, mcsiminfo_name) 
+    ? "a":"w");
   else mcsiminfo_file = f;
   if(!mcsiminfo_file)
     fprintf(stderr,
@@ -2246,7 +2421,7 @@ void mcsiminfo_init(FILE *f)
   {
     char *pre; /* allocate enough space for indentations */
     int  ismcstas_nx;
-    char simname[1024];
+    char simname[CHAR_BUF_LENGTH];
     char root[10];
 
     pre = (char *)malloc(20);
@@ -2263,7 +2438,7 @@ void mcsiminfo_init(FILE *f)
 #ifdef USE_NEXUS
     if (strstr(mcformat.Name, "NeXus")) {
       /* NXentry class */
-      char file_time[1024];
+      char file_time[CHAR_BUF_LENGTH];
       sprintf(file_time, "%s_%li", mcinstrument_name, mcstartdate);
       mcfile_section(mcsiminfo_file, mcformat, "begin", pre, file_time, "entry", root, 1);
     }
@@ -2311,7 +2486,7 @@ void mcsiminfo_close(void)
   if(mcsiminfo_file)
   {
     int  ismcstas_nx;
-    char simname[1024];
+    char simname[CHAR_BUF_LENGTH];
     char root[10];
     char *pre;
 
@@ -2469,7 +2644,9 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
 
       strcpy(mode,
              (isdata != 1 || strstr(format.Name, "no header")
-             || strstr(format.Name, "append") || strstr(format.Name, "catenate") ?
+              || strstr(format.Name, "append") 
+              || strstr(format.Name, "catenate") 
+              || strstr(mcopenedfiles, filename) ?
              "a" : "w"));
       if (strstr(format.Name, "binary")) strcat(mode, "b");
       if (mcformat_data.Name) dataformat = mcformat_data;
@@ -2576,7 +2753,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
           }
         }
       }
-      if (isdata_present && !is1d) fprintf(datafile, eol_char);
+      if (isdata_present && !is1d) fprintf(datafile, "%s", eol_char);
     } /* end 2 loops if not Binary */
     if (datafile && isBinary)
     {
@@ -2598,7 +2775,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
             count = fwrite(s, sizeof(float), abs(m*n*p), datafile);
           if (count != abs(m*n*p)) fprintf(stderr, "McStas: error writing float binary file '%s' (%li instead of %li, mcfile_datablock)\n", filename,count, (long)abs(m*n*p));
           free(s);
-        } else fprintf(stderr, "McStas: Out of memory for writing float binary file '%s' (mcfile_datablock)\n", filename);
+        } else fprintf(stderr, "McStas: Out of memory for writing %li float binary file '%s' (mcfile_datablock)\n", (long)abs(m*n*p)*sizeof(float), filename);
       }
       else if (d && isBinary == 2)  /* double */
       {
@@ -2612,7 +2789,7 @@ static int mcfile_datablock(FILE *f, struct mcformats_struct format,
               s[i] = (double)mcestimate_error(p0[i],p1[i],p2[i]);
             d = s;
           }
-          else fprintf(stderr, "McStas: Out of memory for writing 'errors' part of double binary file '%s' (mcfile_datablock)\n", filename);
+          else fprintf(stderr, "McStas: Out of memory for writing %li 'errors' part of double binary file '%s' (mcfile_datablock)\n", (long)abs(m*n*p)*sizeof(double), filename);
         }
         count = fwrite(d, sizeof(double), abs(m*n*p), datafile);
         if (isdata == 2 && s) free(s);
@@ -2785,7 +2962,7 @@ static double mcdetector_out_012D(struct mcformats_struct format,
   strcpy(pre, strstr(format.Name, "VRML")
            || strstr(format.Name, "OpenGENIE") ? "# " : "");
   if (filename_orig && abs(m*n*p) > 1) {
-    filename = (char *)malloc(1024);
+    filename = (char *)malloc(CHAR_BUF_LENGTH);
     if (!filename) exit(fprintf(stderr, "Error: insufficient memory (mcdetector_out_012D)\n"));
     strcpy(filename, filename_orig);
     if (!strchr(filename, '.') && !strstr(format.Name, "NeXus"))
@@ -2802,23 +2979,24 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 
   if (!mpi_event_list && mpi_node_count > 1) {
     /* we save additive data: reduce everything */
-    mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-    mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
-    mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+    if (p0) mc_MPI_Reduce(p0, p0, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+    if (p1) mc_MPI_Reduce(p1, p1, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
+    if (p2) mc_MPI_Reduce(p2, p2, abs(m*n*p), MPI_DOUBLE, MPI_SUM, mpi_node_root, MPI_COMM_WORLD);
 
     /* slaves are done */
     if(mpi_node_rank != mpi_node_root) return 0;
   }
 #endif /* USE_MPI */
 
-  if (!strstr(format.Name, "NeXus")
-  && (m<0 || n<0 || p<0 || strstr(format.Name, "binary")))
-  { /* do the swap once for all */
-    istransposed = 1;
-    i=m; m=abs(n); n=abs(i); p=abs(p);
+  if (!strstr(format.Name, "NeXus")) {
+    if (m<0 || n<0 || p<0)                istransposed = !istransposed;
+    if (strstr(format.Name, "binary"))    istransposed = !istransposed;
+    if (strstr(format.Name, "transpose")) istransposed = !istransposed;
+    if (istransposed)
+    { /* do the swap once for all */
+      i=m; m=abs(n); n=abs(i); p=abs(p);
+    }
   } else m=abs(m); n=abs(n); p=abs(p);
-
-  if (!strstr(format.Name, "NeXus") && strstr(format.Name, "transpose")) istransposed = !istransposed;
 
   if (!strstr(format.Name," list ")) simfile_f = mcsiminfo_file; /* use sim file */
   if (mcdirname)
@@ -2850,42 +3028,55 @@ static double mcdetector_out_012D(struct mcformats_struct format,
       /* m, n, p must be sent too, since all slaves do not have the same number of events */
       int mnp[3];
       mnp[0] = m; mnp[1] = n; mnp[2] = p;
-      MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 1, MPI_COMM_WORLD);
-      MPI_Send(p1, abs(m*n*p), MPI_DOUBLE, mpi_node_root, 1, MPI_COMM_WORLD);
+        
+      if (MPI_Send(mnp, 3, MPI_INT, mpi_node_root, 0, MPI_COMM_WORLD)!= MPI_SUCCESS)
+        fprintf(stderr, "Warning: node %i to master: MPI_Send mnp list error (mcdetector_out_012D)", mpi_node_rank);
+      if (!p1 || mc_MPI_Send(p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, mpi_node_root, MPI_COMM_WORLD)!= MPI_SUCCESS)
+        fprintf(stderr, "Warning: node %i to master: MPI_Send p1 list error (mcdetector_out_012D)", mpi_node_rank);
       /* slaves are done */
       return 0;
     } else { /* master node list */
       int node_i;
       /* get, then save master and slaves event lists */
       for(node_i=0; node_i<mpi_node_count; node_i++) {
-        char *no_footer = strstr(format.Name, "no footer");
-        if (node_i > 0) { /* get data from slaves */
-          MPI_Status mpi_status;
-          int mnp[3];
-          MPI_Recv(mnp, 3, MPI_INT, node_i, 1, MPI_COMM_WORLD, &mpi_status);
-          m = mnp[0]; n = mnp[1]; p = mnp[2];
-          MPI_Recv(p1, abs(m*n*p), MPI_DOUBLE, node_i, 1, MPI_COMM_WORLD, &mpi_status);
+        double *this_p1=NULL; /* buffer to hold the list to save */
+        int    mnp[3]={0,0,0};        /* size of this buffer */
+        if (node_i != mpi_node_root) { /* get data from slaves */
+          if (MPI_Recv(mnp, 3, MPI_INT, node_i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE)!= MPI_SUCCESS)
+            fprintf(stderr, "Warning: master from node %i: MPI_Recv mnp list error (mcdetector_out_012D)", node_i);
+          this_p1 = (double *)calloc(abs(mnp[0]*mnp[1]*mnp[2]), sizeof(double));
+          if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i, MPI_COMM_WORLD)!= MPI_SUCCESS)
+            fprintf(stderr, "Warning: master from node %i: MPI_Recv p1 list error (mcdetector_out_012D)", node_i);
+        } else {
+          this_p1 = p1; 
+          mnp[0] = m; mnp[1] = n; mnp[2] = p;
         }
         if (!strstr(format.Name, "NeXus")) { /* not MPI+NeXus format */
+          char *formatName_orig = mcformat.Name;  /* copy the pointer position */
+          char  formatName[256];
+          strcpy(formatName, mcformat.Name);
+          if (!strstr(formatName, "append")) strcat(formatName, " append ");
           if (node_i == 1) { /* first slave */
             /* disables header: it has been written by master */
-            if (!strstr(format.Name, "no header")) strcat(format.Name, " no header ");
+            if (!strstr(formatName, "no header")) strcat(formatName, " no header ");
           }
-
+          char *no_footer = strstr(formatName, "no footer");
           if (node_i == mpi_node_count-1) { /* last node */
             /* we write the last data block: request a footer */
-            if (!no_footer) strncpy(no_footer, "         ", 9);
-          } else if (node_i == 0) {
+            if (no_footer) strncpy(no_footer, "         ", 9);
+          } else if (node_i == mpi_node_root) {
             /* master does not need footer (followed by slaves) */
-            if (!no_footer) strcat(format.Name, " no footer "); /* slaves do not need footer */
+            if (!no_footer) strcat(formatName, " no footer "); /* slaves do not need footer */
           }
-          if (!mcdisable_output_files) {
+          if (!mcdisable_output_files && this_p1) {
+            mcformat.Name = formatName; /* use special customized format for list MPI */
             mcfile_data(simfile_f, format,
                         pre, parent,
-                        p0, p1, p2, m, n, p,
+                        NULL, this_p1, NULL, mnp[0], mnp[1], mnp[2],
                         xlabel, ylabel, zlabel, title,
                         xvar, yvar, zvar,
                         x1, x2, y1, y2, z1, z2, filename, istransposed, posa);
+            mcformat.Name= formatName_orig; /* restore original format */
           }
         }
 #ifdef USE_NEXUS
@@ -2895,12 +3086,13 @@ static double mcdetector_out_012D(struct mcformats_struct format,
           sprintf(part, "data_node_%i", node_i);
           if(mcnxfile_datablock(mcnxHandle, part,
               format.Name, parent, filename, xlabel, xlabel, ylabel, ylabel, zlabel, zlabel, title,
-              xvar, yvar, zvar, abs(m), abs(n), abs(p), x1, x2, y1, y2, z1, z2, NULL, p1, NULL)
+              xvar, yvar, zvar, abs(mnp[0]), abs(mnp[1]), abs(mnp[2]), x1, x2, y1, y2, z1, z2, NULL, this_p1, NULL)
               == NX_ERROR) {
             fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_datablock)\n", parent, filename);
           }
         }
 #endif /* USE_NEXUS */
+        if (node_i != mpi_node_root && this_p1) free(this_p1);
       } /* end for node_i */
     } /* end list for master node */
   } else
@@ -3223,7 +3415,7 @@ static void mcuse_file(char *file)
   if (file && strcmp(file, "NULL"))
     mcsiminfo_name = file;
   else {
-    char *filename=(char*)malloc(1024);
+    char *filename=(char*)malloc(CHAR_BUF_LENGTH);
     sprintf(filename, "%s_%li", mcinstrument_name, mcstartdate);
     mcsiminfo_name = filename;
   }
@@ -3490,22 +3682,43 @@ void coords_print(Coords a) {
 void
 rot_set_rotation(Rotation t, double phx, double phy, double phz)
 {
-  double cx = cos(phx);
-  double sx = sin(phx);
-  double cy = cos(phy);
-  double sy = sin(phy);
-  double cz = cos(phz);
-  double sz = sin(phz);
+  if ((phx == 0) && (phy == 0) && (phz == 0)) {
+    t[0][0] = 1.0;
+    t[0][1] = 0.0;
+    t[0][2] = 0.0;
+    t[1][0] = 0.0;
+    t[1][1] = 1.0;
+    t[1][2] = 0.0;
+    t[2][0] = 0.0;
+    t[2][1] = 0.0;
+    t[2][2] = 1.0;
+  } else {
+    double cx = cos(phx);
+    double sx = sin(phx);
+    double cy = cos(phy);
+    double sy = sin(phy);
+    double cz = cos(phz);
+    double sz = sin(phz);
+    
+    t[0][0] = cy*cz;
+    t[0][1] = sx*sy*cz + cx*sz;
+    t[0][2] = sx*sz - cx*sy*cz;
+    t[1][0] = -cy*sz;
+    t[1][1] = cx*cz - sx*sy*sz;
+    t[1][2] = sx*cz + cx*sy*sz;
+    t[2][0] = sy;
+    t[2][1] = -sx*cy;
+    t[2][2] = cx*cy;
+  } 
+}
 
-  t[0][0] = cy*cz;
-  t[0][1] = sx*sy*cz + cx*sz;
-  t[0][2] = sx*sz - cx*sy*cz;
-  t[1][0] = -cy*sz;
-  t[1][1] = cx*cz - sx*sy*sz;
-  t[1][2] = sx*cz + cx*sy*sz;
-  t[2][0] = sy;
-  t[2][1] = -sx*cy;
-  t[2][2] = cx*cy;
+/*******************************************************************************
+* rot_test_identity: Test if rotation is identity
+*******************************************************************************/
+int 
+rot_test_identity(Rotation t)
+{
+  return (t[0][0] + t[1][1] + t[2][2] == 3);
 }
 
 /*******************************************************************************
@@ -3518,10 +3731,15 @@ void
 rot_mul(Rotation t1, Rotation t2, Rotation t3)
 {
   int i,j;
-
-  for(i = 0; i < 3; i++)
-    for(j = 0; j < 3; j++)
-      t3[i][j] = t1[i][0]*t2[0][j] + t1[i][1]*t2[1][j] + t1[i][2]*t2[2][j];
+  if (rot_test_identity(t1)) {
+    memcpy(t3, t2, 9 * sizeof (double));
+  } else if (rot_test_identity(t2)) {
+    memcpy(t3, t1, 9 * sizeof (double));
+  } else {
+    for(i = 0; i < 3; i++)
+      for(j = 0; j < 3; j++)
+	t3[i][j] = t1[i][0]*t2[0][j] + t1[i][1]*t2[1][j] + t1[i][2]*t2[2][j];
+  }
 }
 
 /*******************************************************************************
@@ -3530,15 +3748,7 @@ rot_mul(Rotation t1, Rotation t2, Rotation t3)
 void
 rot_copy(Rotation dest, Rotation src)
 {
-  dest[0][0] = src[0][0];
-  dest[0][1] = src[0][1];
-  dest[0][2] = src[0][2];
-  dest[1][0] = src[1][0];
-  dest[1][1] = src[1][1];
-  dest[1][2] = src[1][2];
-  dest[2][0] = src[2][0];
-  dest[2][1] = src[2][1];
-  dest[2][2] = src[2][2];
+	memcpy(dest, src, 9 * sizeof (double));
 }
 
 /*******************************************************************************
@@ -3565,11 +3775,14 @@ Coords
 rot_apply(Rotation t, Coords a)
 {
   Coords b;
-
-  b.x = t[0][0]*a.x + t[0][1]*a.y + t[0][2]*a.z;
-  b.y = t[1][0]*a.x + t[1][1]*a.y + t[1][2]*a.z;
-  b.z = t[2][0]*a.x + t[2][1]*a.y + t[2][2]*a.z;
-  return b;
+  if (rot_test_identity(t)) { 
+    return a;
+  } else {
+    b.x = t[0][0]*a.x + t[0][1]*a.y + t[0][2]*a.z;
+    b.y = t[1][0]*a.x + t[1][1]*a.y + t[1][2]*a.z;
+    b.z = t[2][0]*a.x + t[2][1]*a.y + t[2][2]*a.z;
+    return b;
+  }
 }
 
 /*******************************************************************************
@@ -3669,7 +3882,7 @@ void
 mcreadparams(void)
 {
   int i,j,status;
-  static char buf[1024];
+  static char buf[CHAR_BUF_LENGTH];
   char *p;
   int len;
 
@@ -3696,7 +3909,7 @@ mcreadparams(void)
 #ifdef USE_MPI
       if(mpi_node_rank == mpi_node_root)
         {
-          p = fgets(buf, 1024, stdin);
+          p = fgets(buf, CHAR_BUF_LENGTH, stdin);
           if(p == NULL)
             {
               fprintf(stderr, "Error: empty input for paramater %s (mcreadparams)\n", mcinputtable[i].name);
@@ -3705,9 +3918,9 @@ mcreadparams(void)
         }
       else
         p = buf;
-      MPI_Bcast(buf, 1024, MPI_CHAR, mpi_node_root, MPI_COMM_WORLD);
+      MPI_Bcast(buf, CHAR_BUF_LENGTH, MPI_CHAR, mpi_node_root, MPI_COMM_WORLD);
 #else /* !USE_MPI */
-      p = fgets(buf, 1024, stdin);
+      p = fgets(buf, CHAR_BUF_LENGTH, stdin);
       if(p == NULL)
         {
           fprintf(stderr, "Error: empty input for paramater %s (mcreadparams)\n", mcinputtable[i].name);
@@ -3718,7 +3931,7 @@ mcreadparams(void)
       if (!len || (len == 1 && (buf[0] == '\n' || buf[0] == '\r')))
       {
         if (mcinputtable[i].val && strlen(mcinputtable[i].val)) {
-          strncpy(buf, mcinputtable[i].val, 1024);  /* use default value */
+          strncpy(buf, mcinputtable[i].val, CHAR_BUF_LENGTH);  /* use default value */
           len = strlen(buf);
         }
       }
@@ -4376,7 +4589,7 @@ plane_intersect(double *t, double x, double y, double z,
                  double vx, double vy, double vz, double nx, double ny, double nz, double wx, double wy, double wz)
 {
   double s;
-  if ((s=scalar_prod(nx,ny,nz,vx,vy,vz))<FLT_EPSILON) return 0;
+  if (fabs(s=scalar_prod(nx,ny,nz,vx,vy,vz))<FLT_EPSILON) return 0;
   *t = - scalar_prod(nx,ny,nz,x-wx,y-wy,z-wz)/s;
   if (t<0) return -1;
   else return 1;
@@ -4516,7 +4729,7 @@ randvec_target_rect_angular(double *xo, double *yo, double *zo, double *solid_an
  * with given dimension height x width (in meters !).
  *
  * Local emission coordinate is taken into account and corrected for 'order' times.
- * (See remarks posted to neutron-mc by George Apostolopoulus <gapost@ipta.demokritos.gr>)
+ * (See remarks posted to mcstas-users by George Apostolopoulus <gapost@ipta.demokritos.gr>)
  *
  * If height or width is zero, choose random direction in full 4PI, no target. 
  * 
@@ -4627,8 +4840,7 @@ void extend_list(int count, void **list, int *size, size_t elemsize)
     *list = malloc(*size*elemsize);
     if(!*list)
     {
-      fprintf(stderr, "\nError: Out of memory (extend_list).\n");
-      exit(1);
+      exit(fprintf(stderr, "\nError: Out of memory %li (extend_list).\n", (long)*size*elemsize));
     }
     if(oldlist)
     {
@@ -4683,11 +4895,6 @@ mchelp(char *pgmname)
 "  -i        --info           Detailed instrument information.\n"
 "  --format=FORMAT            Output data files using format FORMAT\n"
 "                             (use option +a to include text header in files\n"
-#ifdef USE_THREADS
-"  --threads=NB_CPU           Split simulation into NB_CPU threads\n"
-"  --threads                  Split simulation into optimal machine threads\n"
-"This instrument has been compiled with threading support.\n"
-#endif
 #ifdef USE_MPI
 "This instrument has been compiled with MPI support. Use 'mpirun'.\n"
 #endif
@@ -4789,10 +4996,10 @@ mcuse_dir(char *dir)
          exit(1);
 #endif
      }
-     mcdirname = dir;
 #ifdef USE_MPI
    }
 #endif
+   mcdirname = dir;
 #endif /* !MC_PORTABLE */
 }
 
@@ -4834,8 +5041,8 @@ mcparseoptions(int argc, char *argv[])
       if (mcinputtable[j].val != NULL && strlen(mcinputtable[j].val))
       {
         int  status;
-        char buf[1024];
-        strncpy(buf, mcinputtable[j].val, 1024);
+        char buf[CHAR_BUF_LENGTH];
+        strncpy(buf, mcinputtable[j].val, CHAR_BUF_LENGTH);
         status = (*mcinputtypes[mcinputtable[j].type].getparm)
                    (buf, mcinputtable[j].par);
         if(!status) fprintf(stderr, "Invalid '%s' default value %s in instrument definition (mcparseoptions)\n", mcinputtable[j].name, buf);
@@ -4922,14 +5129,6 @@ mcparseoptions(int argc, char *argv[])
     }
     else if(!strcmp("--no-output-files", argv[i]))
       mcdisable_output_files = 1;   
-#ifdef USE_OPENMP
-    else if(!strcmp("--threads", argv[i])) {
-      threads_node_count=-1; /* will use available nodes */
-    }
-    else if(!strncmp("--threads=", argv[i],10)) {
-      threads_node_count=atoi(&argv[i][10]);
-    }
-#endif
     else if(argv[i][0] != '-' && (p = strchr(argv[i], '=')) != NULL)
     {
       *p++ = '\0';
@@ -4982,9 +5181,6 @@ mcparseoptions(int argc, char *argv[])
 #ifdef USE_MPI
   if (mcdotrace) mpi_node_count=1; /* disable threading when in trace mode */
 #endif
-#ifdef USE_THREADS
-  if (mcdotrace) threads_node_count=1; /* disable threading when in trace mode */
-#endif
 } /* mcparseoptions */
 
 #ifndef NOSIGNALS
@@ -4995,7 +5191,7 @@ mcstatic char  mcsig_message[256];  /* ADD: E. Farhi, Sep 20th 2001 */
 void sighandler(int sig)
 {
   /* MOD: E. Farhi, Sep 20th 2001: give more info */
-  time_t t1;
+  time_t t1, t0;
 #define SIG_SAVE 0
 #define SIG_TERM 1
 #define SIG_STAT 2
@@ -5069,8 +5265,10 @@ void sighandler(int sig)
   {
     printf("%.2f %% (%10.1f/%10.1f)\n", 100*mcget_run_num()/mcget_ncount(), mcget_run_num(), mcget_ncount());
   }
+  t0 = (time_t)mcstartdate;
   t1 = time(NULL);
-  printf("# Date      : %s",ctime(&t1));
+  printf("# Date:      %s", ctime(&t1));
+  printf("# Started:   %s", ctime(&t0));
 
   if (sig == SIG_STAT)
   {
@@ -5113,10 +5311,6 @@ void *mcstas_raytrace(void *p_node_ncount)
 {
   double node_ncount = *((double*)p_node_ncount);
   
-#ifdef USE_OPENMP
-#pragma omp parallel if(threads_node_count>1) default(shared)
-{
-#endif
   while(mcrun_num < node_ncount || mcrun_num < mcget_ncount())
   {
     mcsetstate(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
@@ -5124,9 +5318,6 @@ void *mcstas_raytrace(void *p_node_ncount)
     mcraytrace();
     mcrun_num++;
   }
-#ifdef USE_OPENMP  
-} /*-- End of parallel region --*/
-#endif
   return (NULL);
 }
 
@@ -5139,7 +5330,7 @@ int mcstas_main(int argc, char *argv[])
   char mpi_node_name[MPI_MAX_PROCESSOR_NAME];
   int  mpi_node_name_len;
 #endif /* USE_MPI */
-#if defined (USE_MPI) || defined(USE_THREADS)
+#if defined (USE_MPI)
   double mpi_mcncount;
 #endif /* USE_MPI */
 
@@ -5159,8 +5350,8 @@ int mcstas_main(int argc, char *argv[])
 #ifdef USE_MPI
   if (mpi_node_count > 1) {
     MPI_MASTER(
-    printf("Simulation %s (%s) running on %i MPI nodes (master is %s)\n", 
-      mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name);
+    printf("Simulation %s (%s) running on %i nodes (master is %s, MPI version %i.%i).\n", 
+      mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
     );
     /* adapt random seed for each node */
     srandom(time(&t) + mpi_node_rank);
@@ -5184,17 +5375,6 @@ int mcstas_main(int argc, char *argv[])
   }
   if (!mcformat_data.Name && strstr(mcformat.Name, "HTML"))
     mcformat_data = mcuse_format("VRML");
-    
-#ifdef USE_OPENMP 
-  #pragma omp parallel shared(threads_node_count)
-  {
-    if (threads_node_count<0) threads_node_count=omp_get_num_threads();
-    #pragma omp master
-    if (threads_node_count>1)
-      printf("Simulation %s (%s) running on %i OpenMP threads\n", 
-        mcinstrument_name, mcinstrument_source, threads_node_count);
-  }
-#endif
 
 /* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS

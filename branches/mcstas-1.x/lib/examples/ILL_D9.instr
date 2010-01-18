@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:ling@ill.fr">Chris Ling</a>. DIF Group.
 * Date: 6th Jan 2004.
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Release: McStas 1.12
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: ILL
 *
 * The D9 hot diffractometer at the ILL.
@@ -286,7 +286,7 @@ COMPONENT detector_cradle = Arm(   /* position detector in nu */
   ROTATED (0, 0, A5) RELATIVE four_circle
 
 COMPONENT sample = Single_crystal( /* rotate sample in omega */
-    xwidth = CS, yheight = CS, zdepth = CS,
+    xwidth = CS, yheight = CS, zthick = CS,
     delta_d_d = CD, mosaic = CM,
     ax = DS, ay = 0, az = 0,
     bx = 0, by = DS, bz = 0,

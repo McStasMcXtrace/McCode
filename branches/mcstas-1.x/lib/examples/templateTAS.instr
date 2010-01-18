@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_080624
-* Version: $Revision: 1.5 $
+* Release: McStas 1.12
+* Version: $Revision: 1.6 $
 * %INSTRUMENT_SITE: Tutorial
 *
 * Template RESCAL type triple-axis machine (TAS)
@@ -528,7 +528,7 @@ COMPONENT Sample_Cradle = Arm()
   ROTATED (0, machine_real.a3, 0) RELATIVE Mono_Out
 
 COMPONENT Sample = V_sample(
- radius = 0.0064, yheight = 0.0254,
+ radius_i = 0.0, radius_o = 0.0064, h = 0.0254,
  focus_xw = 0.06, focus_yh=0.12, pack = 1,
  target_index=2)
 AT (0,0,0) RELATIVE Sample_Cradle

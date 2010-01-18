@@ -12,7 +12,7 @@
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
 * Release: McStas 1.8
-* Version: $Revision: 1.47 $
+* Version: $Revision: 1.49 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
 * Modified by: KN, January 31, 2000 : release 1.2
@@ -27,11 +27,65 @@
 * Modified by: PW, EF, December 4th 2006: version 1.10
 * Modified by: PW, EF, July 3rd 2007: version 1.11
 * Modified by: PW, EF, EK May 8th 2008: version 1.12
+* Modified by: PW, EF, EK April 2nd 2009: version 1.12a
 *
-* This file is part of McStas  version 1.12, released May 8th, 2008.
+* This file is part of McStas  version 1.12a, released April 3rd, 2009.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
+Changes in McStas v1.12a, April 3rd, 2009
+
+ McStas 1.12a is essentially a bugfix release, and the last release in the 1.x series.
+
+ McStas 2.0 will be released late 2009 / early 2010 and will introduce new features that
+ could break ceartain backward compatibility, hence we move from the 1.x series.
+
+ Bugfixes include:
+
+  Runtime
+  - Adjustments to the MPI implementation, solves problems of hanging processes on large cluster runs.
+
+  Components
+  - Various minor bugfixes to
+    - Isotropic_sqw.comp
+    - Vitess_input.comp
+    - Pol_bender.comp
+    - Pol_monitor.comp
+    - PolLambda_monitor.comp
+    - SNS_source.comp
+    - ISIS_moderator.comp
+    - FermiChopper_ILL.comp
+    - Progress_bar.comp
+    - TOFRes_sample.comp
+    - Virtual_tripoli4_output.comp
+    - Guide_honeycomb.comp
+   
+  Example instruments
+  - Minor improvements to
+    - PSI_DMC.instr (source-guide focusing corrected)
+    - templateDIFF.instr (SPLIT improves statistics)
+    - templateTAS.instr (SPLIT improves statistics)
+    - SNS_test.instr (Cleanup)
+
+  Datafiles
+  - Added SNS moderator input file source_sct091_tu_02_1.dat
+
+  Tools
+  - Fixed mcrun / mcgui for Win32 for 'fixed --ncount at 1e6' when scanning/optimizing
+ 
+  Platform support
+  - Mac OS X, fix for problems with multiple perl install
+  - Windows XP,  Windows Vista - see Tools section
+  - Linux, pgplot and pgperl now builds using gfortran (replacing g77)
+  
+  Parallelisation
+  - Improved stability of MPI simulations
+  - Preference for OpenMPI (standard on Ubuntu and Mac OS X)
+
+  Various
+  - A number of unlisted minor bugs ironed out, both in components, runtime code and tools.
+
+
 Changes in McStas v1.12, May 8th, 2008
 
   Metalanguage
@@ -43,7 +97,7 @@ Changes in McStas v1.12, May 8th, 2008
   - Please take care when combining WHEN, GROUP and EXTEND %{ %} - see the manual.
 
   Runtime
-  - Fix of a limiting case focusing problem reported to neutron-mc by George Apostolopoulos.
+  - Fix of a limiting case focusing problem reported to mcstas-users by George Apostolopoulos.
      ( See http://mailman.risoe.dk/pipermail/neutron-mc/2007q4/002915.html )
 
   Components

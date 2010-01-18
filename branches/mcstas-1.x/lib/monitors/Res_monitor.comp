@@ -1,6 +1,6 @@
 /*******************************************************************************
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -9,9 +9,9 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: 1999
-* Version: $Revision: 1.26 $
+* Version: $Revision: 1.27 $
 * Origin: Risoe
-* Release: McStas 1.6
+* Release: McStas 1.12
 * Modified by: EF, 16th Apr 2003: imported from Monitor_nD to enable many shapes
 *
 * Monitor for resolution calculations
@@ -28,7 +28,7 @@
 * Setting the monitor geometry.
 *   The optional parameter 'options' may be set as a string with the
 *   following keywords. Default is rectangular ('square'):
-*     box                       Box of size xwidth, yheight, zdepth
+*     box                       Box of size xwidth, yheight, zthick
 *     cylinder                  To get a cylindrical monitor
 *                                (diameter is xwidth, height is yheight).
 *     banana                    Same as cylinder, without top/bottom,
@@ -56,7 +56,7 @@
 *
 * xwidth:  (m)  Width/diameter of detector (x)
 * yheight: (m)  Height of detector (y)
-* zdepth:  (m)  Thichness of detector (z)
+* zthick:  (m)  Thichness of detector (z)
 * options: (str)  String that specifies the geometry of the monitor</br>
 *
 * OUTPUT PARAMETERS:
@@ -71,7 +71,7 @@
 
 DEFINE COMPONENT Res_monitor
 DEFINITION PARAMETERS (string filename=0, string options=0, res_sample_comp)
-SETTING PARAMETERS (xwidth=.1, yheight=.1, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
+SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -107,7 +107,7 @@ INITIALIZE
   else
     sprintf(Vars.option, "%s list=%f, x vx sx y vy sy z vz sz t ", tmp, bufsize);
 
-  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
+  Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
 
   if (Vars.Coord_Number != 10) exit(fprintf(stderr,"Res_monitor: %s: Error: Invalid number of variables to monitor (%d).\n", NAME_CURRENT_COMP, Vars.Coord_Number+1));
   /* set the labels */

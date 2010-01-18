@@ -20,7 +20,10 @@
 *
 * $Id: instrument.l,v 1.44 2007-04-02 12:11:31 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: instrument.l,v $
+* Revision 1.44  2007-04-02 12:11:31  farhi
+* changed ENHANCE keyword to SPLIT
+*
 * Revision 1.43  2007/03/12 14:12:16  farhi
 * SPLIT COMPONENT grammar: new rule for yacc. Code generation and cleaner GROUP handling.
 *

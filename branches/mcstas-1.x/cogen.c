@@ -16,7 +16,10 @@
 *
 * Code generation from instrument definition.
 *
-* $Log: not supported by cvs2svn $
+* $Log: cogen.c,v $
+* Revision 1.81  2008-06-13 09:16:47  pkwi
+* Reverting to next-to-last version of cogen.c
+*
 * Revision 1.79  2008/02/09 22:26:26  farhi
 * Major contrib for clusters/multi-core: OpenMP support
 * 	try ./configure --with-cc=gcc4.2 or icc

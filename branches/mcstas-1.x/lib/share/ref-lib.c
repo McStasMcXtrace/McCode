@@ -25,7 +25,10 @@
 *
 * $Id: ref-lib.c,v 1.1 2006-08-10 13:10:49 pchr Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: ref-lib.c,v $
+* Revision 1.1  2006-08-10 13:10:49  pchr
+* Added new library with reflection functions.
+*
 *
 ****************************************************************************/
 

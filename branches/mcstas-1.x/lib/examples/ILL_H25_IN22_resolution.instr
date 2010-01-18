@@ -11,8 +11,8 @@
 * Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
 * Date: 2006
 * Origin: <a href="http://www.ill.fr">ILL (France)</a>
-* Release: McStas CVS_080624
-* Version: $Revision: 1.2 $
+* Release: McStas 1.12
+* Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: ILL
 *
 * IN22 RESCAL type triple-axis machine (TAS) with resolution monitor
@@ -910,7 +910,7 @@ SPLIT 10 COMPONENT Sample_Cradle = Arm()
 
 /* sample position */
 COMPONENT Sample=Res_sample(
-  thickness=thickness, radius=radius,yheight=height,
+  radius_i=(thickness > 0 ? radius-thickness : 0), radius_o=radius,h=height,
   focus_xw=0.04,focus_yh=0.07,
   E0=EF, dE=3.0/100*EF, target_index=+2)
   AT (0,0,0) RELATIVE Sample_Cradle

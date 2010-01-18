@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,11 +10,11 @@
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
-* Version: $Revision: 1.42 $
+* Version: $Revision: 1.43 $
 * Origin: Risoe
-* Release: McStas 1.6
-* Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
-* Modified by: Peter Christiansen, Risoe: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P NB! Multiple scattering is ignored .
+* Release: McStas 1.12
+* Modified by: Aziz Daoud-aladine, ISIS, 2007
+* Modified by: Added option to handle a spherical sample shape
 *
 * Vanadium sample.
 *
@@ -33,44 +33,44 @@
 * centered components, such as spheres or cylinders, define an Arm component
 * where to focus to.
 *
+* Peter Christiansen: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P
+* NB! As above multiple scattering is ignored .
+*
+* Aziz Daoud-aladine: Added option to handle a spherical sample shape
+* Date: 10 July 2007
+*
 * Example: V_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,pack=1,
 *           target_index=1)
 *
 * %P
 * INPUT PARAMETERS:
 *
-* radius:       Outer radius of sample in (x,z) plane [m]
-* thickness:    Thickness of outer wall [m]
-* xwidth:       horiz. dimension of sample [m]
-* yheight:      vert.  dimension of sample [m]
-* zdepth:       thickness of sample [m]
-* focus_r:      Radius of disk containing target. Use 0 for full space [m]
-* target_index: relative index of component to focus at, e.g. next is +1 [1]
-* sigma_abs:    Absorbtion cross section pr. unit cell [barns]
-* sigma_inc:    Incoherent scattering cross section pr. unit cell [barns]
-* Vc:           Unit cell volume [AA^3]
-*
-* Optional parameters
-* h:        Same as yheight [m]
-* radius_i: Same as radius [m]
-* radius_o: radius-thickness [m]
-* zthick:     Same as zdepth [m]
-* rad_sphere: Radius for a spherical sample [m]
+* radius_i: Inner radius of sample in (x,z) plane [m]
+* radius_o: Outer radius of sample in (x,z) plane [m]
+* h:        Height of sample y direction [m]
+* focus_r:  Radius of disk containing target. Use 0 for full space [m]
 * target_x:
 * target_y: position of target to focus at [m]
 * target_z:
+*
+* Optional parameters
+* xwidth:     horiz. dimension of sample, as a width [m]
+* yheight:    vert.  dimension of sample, as a height [m]
+* zthick:     thickness of sample [m]
+* rad_sphere: Radius for a spherical sample [m]
 * focus_xw:   horiz. dimension of a rectangular area [m]
 * focus_yh:   vert.  dimension of a rectangular area [m]
 * focus_aw:   horiz. angular dimension of a rectangular area [deg]
 * focus_ah:   vert.  angular dimension of a rectangular area [deg]
-* sig_a:      Same as sigma_abs [barns]
-* sig_i:      Same as sigma_inc [barns]
+* sig_a:      Absorbtion cross section pr. unit cell [barns]
+* sig_i:      Incoherent scattering cross section pr. unit cell [barns]
 * multiples:  Apply crude estimate for multiple scattering [1]
-* V0:         Same as Vc [AA^3]
+* V0:         Unit cell volume [AA^3]
 * pack:       Packing factor [1]
 * frac:       MC Probability for scattering the ray; otherwise penetrate [1]
 * f_QE:       Fraction of quasielastic scattering (rest is elastic) [1]
 * gamma:      Lorentzian width of quasielastic broadening (HWHM) [1]
+* target_index: relative index of component to focus at, e.g. next is +1 [1]
 *
 * Variables calculated in the component
 *
@@ -90,10 +90,10 @@
 
 DEFINE COMPONENT V_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius=0, thickness=0, zdepth=0, Vc=13.827, sigma_abs=5.08, sigma_inc=5.08, radius_i=0, radius_o=0, h=0, focus_r = 0,
+SETTING PARAMETERS (radius_i=0, radius_o=0, h=0, focus_r = 0,
 		    pack = 1, frac=1, f_QE=0, gamma=0,
   target_x = 0, target_y = 0, target_z = 0, focus_xw=0, focus_yh=0,
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=0, sig_i=0, V0=0, int target_index=0, multiples=1)
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, multiples=1)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
@@ -117,23 +117,22 @@ DECLARE
 
 INITIALIZE
 %{
-
-  /* Backward compatibility */
-  if (radius) radius_o = radius;
-  if (thickness) radius_i = radius_o - thickness;
-  if (zdepth) zthick = zdepth;
-  if (yheight) h = yheight;
-  if (Vc) V0 = Vc;
-  if (sigma_abs) sig_a = sigma_abs;
-  if (sigma_inc) sig_i = sigma_inc;
-
-  VarsV.shapetyp = -1;
-  if (xwidth && yheight && zdepth)  VarsV.shapetyp=1; /* box */
-  else if (radius > 0 && yheight)        VarsV.shapetyp=0; /* cylinder */
-  else if (radius && !yheight)           VarsV.shapetyp=2; /* sphere */
+  if ( (rad_sphere && (xwidth || yheight || zthick)) || (rad_sphere && (radius_o || h)) || ((xwidth || yheight || zthick) && (radius_o || h)) )
+        exit(fprintf(stderr,"V_sample: %s: multiple and imcompatible sample shape definitions\n", NAME_CURRENT_COMP));
+	
+  if (!rad_sphere)                      /* Cannot define a sphere */
+    if (!xwidth || !yheight || !zthick) /* Cannot define a rectangle */
+      if (!radius_o || !h)              /* Cannot define a cylinder either */
+        exit(fprintf(stderr,"V_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+      else                              /* It is a cylinder */
+        VarsV.shapetyp=0;
+    else                                /* It is a rectangle */
+      VarsV.shapetyp=1;
+  else 
+      VarsV.shapetyp=2;
   
-  if (VarsV.shapetyp < 0)
-    exit(fprintf(stderr,"V_sample: %s: sample has invalid dimensions. Please check parameter values.\n", NAME_CURRENT_COMP));
+
+/*  if(VarsV.isrect) printf("isrect"); else printf("not isrect"); */
 
   VarsV.sigma_a=sig_a;
   VarsV.sigma_i=sig_i;

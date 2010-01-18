@@ -25,7 +25,10 @@
 *
 * $Id: read_table-lib.h,v 1.21 2006-11-27 15:29:39 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: read_table-lib.h,v $
+* Revision 1.21  2006-11-27 15:29:39  farhi
+* Small improvement in interpolation methods of read-table lib.
+*
 * Revision 1.20  2006/03/15 16:04:14  farhi
 * interpolation decl.
 *

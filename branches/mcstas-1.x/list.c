@@ -18,7 +18,11 @@
 *
 *       $Id: list.c,v 1.19 2007-09-03 16:10:26 farhi Exp $
 *
-*       $Log: not supported by cvs2svn $
+*       $Log: list.c,v $
+*       Revision 1.19  2007-09-03 16:10:26  farhi
+*       Bug correction for param=NULL specification in instruments (which in fact
+*       disables default values).
+*
 *       Revision 1.18  2007/02/27 16:25:48  farhi
 *       Increased list max size in code gen to 50000 lines/elements
 *       removed perl warnings in Win$

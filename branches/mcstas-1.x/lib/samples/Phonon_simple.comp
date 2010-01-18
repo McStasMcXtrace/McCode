@@ -6,7 +6,7 @@
 * %I
 * Written by: Kim Lefmann
 * Date: 04.02.04
-* Version: $Revision: 1.6 $
+* Version: $Revision: 1.7 $
 * Origin: Risoe
 *
 * A sample for phonon scattering
@@ -31,16 +31,9 @@
 *
 * %P
 * INPUT PARAMETERS:
-* radius:  [m] Outer radius of sample in (x,z) plane
-* yheight: [m] Height of sample in y direction
-* sigma_abs:[barns] Absorption cross section at 2200 m/s per atom
-* sigma_inc:[barns] Incoherent scattering cross section per atom
-* a:      [AA] Lattice constant (fcc)
-* b:      [fm] Scattering length
-* M:    [a.u.] Atomic mass
-* c:[meV/AA^(-1)] Velocity of sound
-* DW:      [1] Debye-Waller factor
-* T:       [K] Temperature
+*
+* radius_o:[m] Outer radius of sample in (x,z) plane
+* h:       [m] Height of sample in y direction
 * focus_r: [m] Radius of sphere containing target.
 * focus_xw:[m] horiz. dimension of a rectangular area
 * focus_yh:[m] vert.  dimension of a rectangular area [m]
@@ -49,9 +42,18 @@
 * target_x:[m] position of target to focus at . Transverse coordinate
 * target_y:[m] position of target to focus at [m]. Vertical coordinate
 * target_z:[m] position of target to focus at [m]. Straight ahead.
-* target_index: relative index of component to focus at, e.g. next is +1 [1]
+* sigma_a:[barns] Absorption cross section at 2200 m/s per atom
+* sigma_i:[barns] Incoherent scattering cross section per atom
+* a:      [AA] Lattice constant (fcc)
+* b:      [fm] Scattering length
+* M:    [a.u.] Atomic mass
+* c:[meV/AA^(-1)] Velocity of sound
+* DW:      [1] Debye-Waller factor
+* T:       [K] Temperature
 *
-* OUTPUT PARAMETERS:
+*
+*OUTPUT PARAMETERS:
+*
 * V_rho:  [AA^-3] Atomic density
 * V_my_s: [m^-1]  Attenuation factor due to incoherent scattering
 * V_my_a: [m^-1]  Attenuation factor due to absorbtion
@@ -64,16 +66,14 @@
 
 DEFINE COMPONENT Phonon_simple
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (radius,yheight,sigma_abs,sigma_inc,a,b,M,c,DW,T,
-  target_x=0, target_y=0, target_z=0, int target_index=0,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0)
-OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a, DV, parms)
+SETTING PARAMETERS (radius_o,h,focus_r=0,focus_xw=0,focus_yh=0,focus_aw=0,focus_ah=0,sigma_a,sigma_i,a,b,M,c,DW,T,target_x=0, target_y=0, target_z=0, int target_index=0)
+OUTPUT PARAMETERS (V_rho, V_my_s, V_my_a)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-SHARE
+DECLARE
 %{
-#ifndef PHONON_SIMPLE
-#define PHONON_SIMPLE $Revision: 1.6 $
 #define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 #define T2E (1/11.605)   /* Kelvin to meV */
+double parms[8];
 
 double nbose(double omega, double T)  /* Other name ?? */
   {
@@ -93,7 +93,7 @@ void fatalerror(char *s)
      exit(1);
   }
 
-double zridd(double (*func)(double*), double x1, double x2, double *parms, double xacc)
+double zridd(double (*func)(int,double*), double x1, double x2, int Nparms, double *parms, double xacc)
     {
       int j;
       double ans, fh, fl, fm, fnew, s, xh, xl, xm, xnew;
@@ -101,9 +101,9 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
 /*      printf("zridd called with brackets %g %g acceptance %g \n",x1,x2,xacc);
       printf("and %i parameters %g %g %g %g %g \n",Nparms,parms[0],parms[1],parms[2],parms[3], parms[4]); */
       parms[0]=x1;
-      fl=(*func)(parms);
+      fl=(*func)(Nparms,parms);
       parms[0]=x2;
-      fh=(*func)(parms);
+      fh=(*func)(Nparms,parms);
 /*      printf("Function values: %g %g \n",fl,fh); */
       if (fl*fh >= 0)
       {
@@ -120,7 +120,7 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
         {
           xm=0.5*(xl+xh);
           parms[0]=xm;
-          fm=(*func)(parms);
+          fm=(*func)(Nparms,parms);
           s=sqrt(fm*fm-fl*fh);
           if (s == 0.0)
             return ans;
@@ -129,7 +129,7 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
             return ans;
           ans=xnew;
           parms[0]=ans;
-          fnew=(*func)(parms);
+          fnew=(*func)(Nparms,parms);
           if (fnew == 0.0) return ans;
           if (SIGN(fm,fnew) != fm)
           {
@@ -161,7 +161,7 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
     }
 
 #define ROOTACC 1e-8
-  int findroots(double brack_low, double brack_mid, double brack_high, double *list, int* index, double (*f)(double*), double *parms)
+  int findroots(double brack_low, double brack_mid, double brack_high, double *list, int* index, double (*f)(int, double*) )
     {
       double root,range=brack_mid-brack_low;
       int i, steps=100;
@@ -169,15 +169,15 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
      for (i=0; i<steps; i++)
      {
       root = zridd(f, brack_low+range*i/(int)steps,
-                   brack_low+range*(i+1)/(int)steps, 
-                   (double *)parms, ROOTACC);
+                   brack_low+range*(i+1)/(int)steps,
+                   8, (double *)parms, ROOTACC);
       if (root != UNUSED)
       {
         list[(*index)++]=root;
 /*        printf("findroots found a  low root: %g \n",root); */
       }
      }
-      root = zridd(f, brack_mid, brack_high, (double *)parms, ROOTACC);
+      root = zridd(f, brack_mid, brack_high, 8, (double *)parms, ROOTACC);
       if (root != UNUSED)
       {
         list[(*index)++]=root;
@@ -185,12 +185,12 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       }
     }
 
-  double omega_q(double* parms)
+  double omega_q(int dummy, double* parms)
     {
       /* dispersion in units of meV  */
       double vi, vf, vv_x, vv_y, vv_z, vi_x, vi_y, vi_z;
       double q, qx, qy, qz, Jq, res_phonon, res_neutron;
-      double ah, a, c;
+      double ah=a/2.0;
 
       vf=parms[0];
       vi=parms[1];
@@ -200,9 +200,6 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
       vi_x=parms[5];
       vi_y=parms[6];
       vi_z=parms[7];
-      a   =parms[8];
-      c   =parms[9];
-      ah=a/2.0;
 
 /*    printf("omega_q called with parameters vf= %g, vi=%g (%g %g %g) vv=(%g, %g, %g) \n",vf,vi,vi_x,vi_y,vi_z,vv_x,vv_y,vv_z); */
       qx=V2K*(vi_x-vf*vv_x);
@@ -220,25 +217,21 @@ double zridd(double (*func)(double*), double x1, double x2, double *parms, doubl
 
       return (res_phonon - res_neutron);
     }
+
 #undef UNUSED
 #undef MAXRIDD
 #undef SIGN
-#endif
-%}
 
-DECLARE
-%{
   double V_rho;
   double V_my_s;
   double V_my_a_v;
   double DV;
-  double parms[10];
 %}
 INITIALIZE
 %{
   V_rho = 4/(a*a*a);
-  V_my_s = (V_rho * 100 * sigma_inc);
-  V_my_a_v = (V_rho * 100 * sigma_abs * 2200);
+  V_my_s = (V_rho * 100 * sigma_i);
+  V_my_a_v = (V_rho * 100 * sigma_a * 2200);
   DV = 0.001;   /* Velocity change used for numerical derivative */
 %}
 TRACE
@@ -263,7 +256,7 @@ TRACE
   double f1, f2;            /* probed values of omega_q minus omega */
   double p1,p2,p3,p4,p5;    /* temporary multipliers */
 
-  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
+  if(cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius_o, h))
   {
     if(t0 < 0)
       ABSORB; /* Neutron came from the sample or begins inside */
@@ -310,16 +303,14 @@ TRACE
       parms[5]=vx_i;
       parms[6]=vy_i;
       parms[7]=vz_i;
-      parms[8]=a;
-      parms[9]=c;
-    findroots(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, omega_q, parms);
+    findroots(0, v_i, v_i+2*c*V2K/VS2E, vf_list, &nf, omega_q);
     index=(int)floor(rand01()*nf);
 /*    printf("Root index: %i %g \n", index, vf_list[index]); */
     v_f=vf_list[index];
     parms[0]=v_f-DV;
-    f1=omega_q(parms);
+    f1=omega_q(8,parms);
     parms[0]=v_f+DV;
-    f2=omega_q(parms);
+    f2=omega_q(8,parms);
     J_factor = fabs(f2-f1)/(2*DV*K2V);
 /*    printf("f1,f2: %g %g , J factor %g \n",f1,f2,J_factor); */
     omega=VS2E*(v_i*v_i-v_f*v_f);
@@ -334,7 +325,7 @@ TRACE
     kappa_z=V2K*(vz_i-vz);
     kappa2=kappa_z*kappa_z+kappa_y*kappa_y+kappa_x*kappa_x;
 
-    if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius, yheight))
+    if(!cylinder_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius_o, h))
     {
       /* ??? did not hit cylinder */
       printf("FATAL ERROR: Did not hit cylinder from inside.\n");
@@ -363,12 +354,12 @@ TRACE
 MCDISPLAY
 %{
   magnify("xyz");
-  circle("xz", 0,  yheight/2.0, 0, radius);
-  circle("xz", 0, -yheight/2.0, 0, radius);
-  line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
-  line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
-  line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
-  line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
+  circle("xz", 0,  h/2.0, 0, radius_o);
+  circle("xz", 0, -h/2.0, 0, radius_o);
+  line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
+  line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
+  line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
+  line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
 %}
 
 END

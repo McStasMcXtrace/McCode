@@ -10,8 +10,10 @@
 * %I
 * Written by: G. Granroth
 * Date: July 2004
-* Version: $Revision: 1.5 $
+* Version: $Revision: 1.6 $
 * Origin: SNS Project Oak Ridge National Laboratory
+* Release: McStas 1.6
+* Modified by: E. Farhi, uniformize parameter names (Jul 2008)
 *
 * A source that produces a time and energy distribution from the SNS moderator files
 *
@@ -26,18 +28,24 @@
 * component, respectively. The dist parameter should then be set as the distance
 * from the moderator to the first component.
 * (2) This component works purely by interpolation. Therefore be sure that Emin and
-* Emax are within the limits of the moderator file
+* Emax are within the limits of the moderator filename
+*
+* Example: SNS_source(S_filename="source_sct091_tu_02_1.dat",
+*                        width=0.1, height=0.12,
+*                        dist=1, xw=0.10, yh=0.24, Emin=1.0,Emax=10.0)
 *
 * %P
 * Input parameters:
-* S_filename:   Filename of source data (str)
-* width:  (m)   width of moderator
-* height: (m)   height of moderator
-* dist:   (m)   Distance from source to the focusing rectangle
-* xw:     (m)   Width of focusing rectangle
-* yh:     (m)   Height of focusing rectangle
-* Emin: (meV)   minimum energy of neutron to generate
-* Emax: (meV)   maximum energy of neutron to generate
+* S_filename:(str) File of source data
+* width:  (m)   Width of moderator
+* height: (m)   Height of moderator
+* dist:    (m)   Distance from source to the focusing rectangle
+* xw:(m)   Width of focusing rectangle
+* yh:(m)   Height of focusing rectangle
+* Emin:    (meV) Minimum energy of neutron to generate
+* Emax:    (meV) Maximum energy of neutron to generate
+* target_index:(1) relative index of component to focus at, e.g. next is +1
+*                    this is used to compute 'dist' automatically.
 *
 * %L
 * <A href="http://www.sns.gov/users/instrument_systems/components/moderator/">Source files </A>
@@ -46,11 +54,11 @@
 *******************************************************************************/
 
 DEFINE COMPONENT SNS_source
-DEFINITION PARAMETERS (string S_filename)
-SETTING PARAMETERS (width, height, dist, xw, yh, Emin, Emax)
+DEFINITION PARAMETERS (string S_filename=0)
+SETTING PARAMETERS (width=0.1, height=0.12, dist=0, xw=.1, yh=.24, Emin=1, Emax=10, int target_index=+1)
 OUTPUT PARAMETERS (hdiv,vdiv,p_in,
   inxvec,inyvec,Pvec,xylength,tcol,Ecol,txval,tyval,tPvec,Ptmat,
-  EPmax, EPmin,INorm,INorm,
+  EPmax, EPmin,INorm,INorm2,
   ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals,
   xonly,Pfunc,txonly,tPfunc)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -62,41 +70,88 @@ DECLARE
   double tPfunc(double,double);
   double hdiv,vdiv;
   double p_in;
-  double *inxvec,*inyvec,*Pvec;
   int xylength;
-  double *tcol, *Ecol;
-  double *txval, *tyval;
-  double *tPvec;
   double **Ptmat;
   double EPmax, EPmin,INorm,INorm2;
   int ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals;
-  #define Maxlength 200
-  #define MAXCOLS 500
+  #define Maxlength 1024
+  double Ecol[Maxlength];
+  double tcol[Maxlength];
+  double Pvec[Maxlength];
+  double inxvec[Maxlength];
+  double inyvec[Maxlength];
+  double tyval[Maxlength];
+  double txval[Maxlength];
+  double tPvec[Maxlength];
   /* ----------------------------------------------------------------
       routine to load E, I and t I data from SNS source files
   -----------------------------------------------------------------*/
 
-  void sns_source_load(char filename[], double *xvec, double *yvec, int xcol, int ycol, int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
+  void sns_source_load(char file[], double *xvec, double *yvec, int xcol, int ycol, int *veclenptr, double *tcol, double *Ecol, double **Imat,int *ntvals, int *nEvals)
   {
-    FILE *fp;
+    FILE *fp=NULL;
     int idx1,idx2,idx3; /* counter for number of x, y values */
     int jk,idx3max;
     int numtvals;
     int totalvals;
     float indat[6];
-    double *Icoltmp, *tcoltmp, *Ecoltmp;
-    char *line;
     char *lntoken, *cp;
-    Icoltmp=malloc(100000*sizeof(double));
-    tcoltmp=malloc(100000*sizeof(double));
-    Ecoltmp=malloc(100000*sizeof(double));
-    line=malloc(200*sizeof(char));
-    /* open file */
-    printf("%s\n",filename);
-    fp=fopen(filename,"r");
-    if (fp==NULL){
-      printf("Error opening file");
+    char ss[1024];
+    char line [Maxlength];
+    double Icoltmp[Maxlength];
+    double tcoltmp[Maxlength];
+    double Ecoltmp[Maxlength];
+    /* open filename */
+    if (file) {
+      
+      if (!fp && getenv("MCTABLES")) {
+        /* Is MCTABLES set, files located there? */
+        sprintf(ss, "%s%c%s", getenv("MCTABLES"), MC_PATHSEP_C, file);
+        fp=fopen(ss,"r");
       }
+
+      /* Is the filename located in working dir? */
+      if (!fp) {
+        sprintf(ss, "%s", file);
+        fp=fopen(ss,"r");
+      }
+      if (!fp) {
+        /* Try locating the file in ./SNS_tables library */
+        sprintf(ss,"%s%c%s%c%s", ".", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, file);
+        fp=fopen(ss,"r");
+      }
+      if (!fp) {
+        /* Try locating the file in the MCSTAS contrib/SNS_tables library */
+        sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, file);
+        fp=fopen(ss,"r");
+      }
+      if (!fp) {
+        /* Try locating the file in the MCSTAS data library */
+        sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, file);
+        fp=fopen(ss,"r");
+      }
+      if (!fp) {
+        /* Try locating the file in the MCSTAS data/SNS_tables library */
+        sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "data", MC_PATHSEP_C, "SNS_tables", MC_PATHSEP_C, file);
+        fp=fopen(ss,"r");
+      }
+      if (!fp) {
+        /* Try locating the file in the MCSTAS data library */
+        sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "data", MC_PATHSEP_C, file);
+        fp=fopen(ss,"r");
+      }
+    }
+    if (!fp) { /* Still no file - die! */
+      fprintf(stderr,"SNS_source: ERROR: Could not read Etable file %s.\n", file ? file : "NULL");
+      fprintf(stderr,"            Please check your McStas installation and/or MCTABLES/SNS_tables setting!\n");
+      exit(1);
+    }
+    else
+      printf("Opening -- %s\n",ss);
     /* skip header lines any line that begin with # */
     while((fgets(line,Maxlength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){
     }
@@ -130,23 +185,21 @@ DECLARE
     while((fgets(line,Maxlength,fp)!=NULL)&&(strchr(line,'#')!=NULL)){
     }
   /* read in t data */
- /*printf("t data read start\n");*/
     idx2=0;
-   // while(fgets(line,Maxlength,fp)!=NULL){
-   do {
-        jk=sscanf(line," %f %f %f %f",&indat[0], &indat[1], &indat[2], &indat[3]);
-          if ((line!=NULL)&&(jk>3)){
-            tcoltmp[idx2]=indat[0];
-            Ecoltmp[idx2]=indat[1];
-            Icoltmp[idx2]=indat[2];
-           // printf("%d %d %g %g %g %g\n",idx2,jk,tcoltmp[idx2],Ecoltmp[idx2],Icoltmp[idx2],indat[3]);
-            idx2++;
-          }
+    while(fgets(line,Maxlength,fp)!=NULL && idx2 < Maxlength){
+      jk=sscanf(line," %f %f %f %f",&indat[0], &indat[1], &indat[2], &indat[3]);
+      if ((line!=NULL)&&(jk>3)){
+        tcoltmp[idx2]=indat[0];
+        Ecoltmp[idx2]=indat[1];
+        Icoltmp[idx2]=indat[2];
+       // printf("%d %d %g %g %g %g\n",idx2,jk,tcoltmp[idx2],Ecoltmp[idx2],Icoltmp[idx2],indat[3]);
+        idx2++;
+      }
     }
     while(fgets(line,Maxlength,fp)!=NULL);
     fclose(fp);
     totalvals=idx2+1;
-    printf("total vals: %d\n",totalvals);
+    printf("Loaded %d rows\n",idx2);
     /* reformat data into an Ecol, a tcol, and an I matrix*/
     idx1=0;idx2=0;idx3=0;
     Ecol[idx2]=Ecoltmp[idx1];
@@ -171,10 +224,9 @@ DECLARE
     }
    *ntvals=idx3max+1;*nEvals=idx2;
    printf("ntvals: %i idx: %i\n",*ntvals, idx3);
-   free(Icoltmp);free(tcoltmp);free(Ecoltmp);free(line);
   }
 /*-------------------------------------------------------------
-        End load file routines
+        End load filename routines
 --------------------------------------------------------------*/
 /*----------------------------------------------------------------------
                 routine to do a 1D linear interpolation
@@ -418,33 +470,36 @@ INITIALIZE
   double tycol[200];
   double **Imat;
   int idx1,idx2;
-  Pvec=malloc(500*sizeof(double));
-  inxvec=malloc(500*sizeof(double));
-  inyvec=malloc(500*sizeof(double));
-  tcol=malloc(200*sizeof(double));
-  Ecol=malloc(200*sizeof(double));
-  tyval=malloc(500*sizeof(double));
-  txval=malloc(500*sizeof(double));
-  tPvec=malloc(500*sizeof(double));
-  Ptmat=malloc(200*sizeof(double *));
-  for(idx1=0;idx1<200;idx1++){
-    Ptmat[idx1]=malloc(200*sizeof(double));
+  
+  if (target_index && !dist)
+  {
+    Coords ToTarget;
+    double tx,ty,tz;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+    dist=sqrt(tx*tx+ty*ty+tz*tz);
   }
-  Imat=malloc(200*sizeof(double*));
-  for(idx1=0;idx1<200;idx1++){
-    Imat[idx1]=malloc(500*sizeof(double));
+  
+  Ptmat=malloc(Maxlength*sizeof(double *));
+  for(idx1=0;idx1<Maxlength;idx1++){
+    Ptmat[idx1]=malloc(Maxlength*sizeof(double));
+  }
+  Imat=malloc(Maxlength*sizeof(double*));
+  for(idx1=0;idx1<Maxlength;idx1++){
+    Imat[idx1]=malloc(Maxlength*sizeof(double));
   }
   ltlim=0.1;
   htlim=1.8e3;
- /* read file */
+  /* read filename */
   printf("%s%s\n","Loading moderator file ",S_filename);
    sns_source_load(S_filename,inxvec,inyvec,0,2,&xylength,tcol,Ecol,Imat,&ntvals,&nEvals);
- /* calculate probabilty distribution function points for use in interpolation routine */
+  /* calculate probabilty distribution function points for use in interpolation routine */
 
- llim=inxvec[1];hlim=inxvec[xylength];
- printf("Start calculating probability distribution\n");
- /* calculate total number of neutrons in specified energy window */
- INorm2=integ1(xonly,Emin/1000.0,Emax/1000.0,0.001);
+  llim=inxvec[1];hlim=inxvec[xylength];
+  printf("Start calculating probability distribution\n");
+  /* calculate total number of neutrons in specified energy window */
+  INorm2=integ1(xonly,Emin/1000.0,Emax/1000.0,0.001);
   Pcalc(xonly,llim,hlim,inxvec,Pvec,xylength,&idxstart,&idxstop);
   /*calculate probability distribution as a function of t for each energy value */
   tyval[0]=Imat[0][0];
@@ -471,7 +526,7 @@ INITIALIZE
     free(Imat[idx1]);
   }
   free(Imat);
-printf("Finished calculating probability distribution\n");
+  printf("Finished calculating probability distribution\n");
 
 %}
 TRACE
@@ -530,8 +585,6 @@ TRACE
 FINALLY
 %{
   int idxf;
-  free(txval);free(tyval);free(tPvec);
-  free(inxvec);free(inyvec);free(Pvec);free(tcol);free(Ecol);
   for(idxf=0;idxf<200;idxf++){
     free(Ptmat[idxf]);
   }

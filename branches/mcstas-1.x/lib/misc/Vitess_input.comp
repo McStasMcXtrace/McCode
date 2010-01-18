@@ -8,7 +8,7 @@
 * %I
 * Written by: Kristian Nielsen
 * Date: June 6, 2000
-* Version: $Revision: 1.22 $
+* Version: $Revision: 1.23 $
 * Origin: Risoe/ILL
 * Release: McStas 1.6
 * Modified by: E. Farhi, Sep 28th, 2001: added spin
@@ -64,7 +64,7 @@ int finished=0;			/* Set to 1 when last neutron read */
 INITIALIZE
 %{
   /* Open neutron input file. */
-  if (file==NULL) {
+  if (!file || !strcmp(file,"NULL") || !strcmp(file,"0") || !strcmp(file,"stdin")) {
     hfile = stdin;
   } else if (!strlen(file)) {
     hfile = NULL;
@@ -75,6 +75,7 @@ INITIALIZE
       exit(1);
     }
   }
+
 #ifdef WIN32
   if(hfile==stdin)
   { if( _setmode(_fileno( stdin ), _O_BINARY ) == -1)

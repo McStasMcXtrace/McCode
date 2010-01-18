@@ -1,10 +1,10 @@
 #!/bin/sh
-export RELEASE="@RELEASE@"
+export RELEASE="1.12a"
 export BUILDDIR="/build/mcstas-$RELEASE"
 export SRCDIR="/build/mcstas-$RELEASE-srcdir"
 export MACHINETYPE=`uname -m`
 
-apt-get -y --force-yes install perl-tk pdl gcc libc6-dev g77 libx11-dev xorg-dev libxt-dev lintian
+apt-get -y --force-yes install perl-tk pdl gcc libc6-dev gfortran libx11-dev xorg-dev libxt-dev lintian
 
 rm -rf /build/*
 rm -rf /usr/local/lib/*

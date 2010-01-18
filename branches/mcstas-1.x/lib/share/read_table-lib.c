@@ -23,7 +23,10 @@
 *
 * $Id: read_table-lib.c,v 1.38 2008-07-03 09:40:01 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: read_table-lib.c,v $
+* Revision 1.38  2008-07-03 09:40:01  farhi
+* Handle "NULL" and "0" file names
+*
 * Revision 1.37  2006/12/01 16:17:10  farhi
 * cosmetics
 *

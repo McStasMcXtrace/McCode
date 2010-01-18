@@ -11,8 +11,8 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision: 1.5 $
-* Release:    McStas CVS_080624
+* Version:    $Revision: 1.6 $
+* Release:    McStas 1.12
 * %INSTRUMENT_SITE: FZ_Juelich
 *
 * KWS2 SANS instrument at FZ-Juelich. No sample, 2 detectors.

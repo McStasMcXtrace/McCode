@@ -11,7 +11,7 @@
  * %I
  * Written by: S. Ansell and D. Champion
  * Date: AUGUST 2005
- * Version: $Revision: 1.10 $
+ * Version: $Revision: 1.11 $
  * Origin: ISIS
  * Release: McStas 1.9
  *
@@ -34,15 +34,19 @@
  * Face:   (word) Name of the face - TS2:groove,hydrogen,narrow,broad -
  *                                 - TS1:Water,ch4,h2,merlin or instrument name eg maps, crisp etc.
  *                                 - TS2: W1-9 E1-9
- * E0:       (meV) Lower edge of energy distribution
- * E1:       (meV) Upper edge of energy distribution
+ * E0:     (meV) Lower edge of energy distribution
+ * E1:     (meV) Upper edge of energy distribution
+ * Lmin:     (meV) Lower edge of wavelength distribution
+ * Lmax:     (meV) Upper edge of wavelength distribution
  * dist:     (m)   Distance from source to the focusing rectangle
- * xw:       (m)   Width of focusing rectangle
- * yh:       (m)   Height of focusing rectangle
- * modXsize: (m)  Moderator vertical size
- * modYsize: (m)  Moderator Horizontal size
+ * xw: (m)   Width of focusing rectangle
+ * yh: (m)   Height of focusing rectangle
+ * modXsize:   (m)  Moderator vertical size
+ * modYsize:  (m)  Moderator Horizontal size
  * CAngle:   (radians)  Angle from the centre line
  * SAC:      (boolean)  Apply solid angle correction or not (1/0)
+ * target_index:(1) relative index of component to focus at, e.g. next is +1
+*                    this is used to compute 'dist' automatically.
  *
  * %L
  * Further <A HREF="http://www.isis.rl.ac.uk/Computing/Software/MC/index.htm">information</A> should be
@@ -52,7 +56,8 @@
 
 DEFINE COMPONENT ISIS_moderator
 DEFINITION PARAMETERS (string Face="hydrogen")
-SETTING PARAMETERS (E0, E1,dist,xw,yh,modXsize,modYsize,CAngle,SAC)
+SETTING PARAMETERS (E0 = 49.0,E1 = 51.0, dist = 1.0, xw = 0.01,
+  yh = 0.01, modXsize = 0.074, modYsize = 0.074, CAngle = 0.0,SAC= 1, Lmin=0, Lmax=0, int target_index=+1)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
@@ -60,8 +65,6 @@ DECLARE
 %{
 
 #include <ctype.h>
-
-
 
 typedef struct
 {
@@ -427,6 +430,7 @@ readHtable(FILE* TFile,const double Einit,const double Eend)
     Double Read File to determine how many bins and
     memery size
   */
+  if (!TFile) return(0);
   Ea=0.0;
   Eb=0.0;
   fprintf(stderr,"Energy == %g %g\n",Einit,Eend);
@@ -743,42 +747,56 @@ cmdnumberI(char *mc,int* num,const int len)
   FILE* openFile(char* FileName)
     {
       FILE* efile=0;
-      char ss[256];
-      char mct[256];
-      char mcdir[256];
-
-
+      char ss[1024];
+      if (!FileName) return(NULL);
+      
+      if (!efile && getenv("MCTABLES")) {
+        /* Is MCTABLES set, files located there? */
+        sprintf(ss, "%s%c%s", getenv("MCTABLES"), MC_PATHSEP_C, FileName);
+        efile=fopen(ss,"r");
+      }
 
       /* Is the file located in working dir? */
-      efile=fopen(FileName,"r");
       if (!efile) {
-	/* Is the file in a local 'tablefiles' folder? */
-	sprintf(ss,"%s%c%s%c%s", ".", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
-	efile=fopen(ss,"r");
-	fprintf(stderr,"Searching -- %s\n",ss);
+      sprintf(ss,"%s", FileName);
+        efile=fopen(FileName,"r");
       }
       if (!efile) {
-	/* Is MCTABLES set, files located there? */
-	if (getenv("MCTABLES")) {
-	  strcpy(mct, getenv("MCTABLES"));
-	  sprintf(ss, "%s%c%s", mct, MC_PATHSEP_C, FileName);
-	  efile=fopen(ss,"r");
-	  fprintf(stderr,"Searching -- %s, MCTABLES directory\n",ss);
-	}
+        /* Try locating the file in ./ISIS_tables library */
+        sprintf(ss,"%s%c%s%c%s", ".", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
+        efile=fopen(ss,"r");
       }
       if (!efile) {
-	/* Try locating the file in the MCSTAS contrib library */
-	if (getenv("MCSTAS")) strcpy(mcdir, getenv("MCSTAS"));
-	else strcpy(mcdir, MCSTAS); /* Get from the define symbol */
-	sprintf(ss, "%s%c%s%c%s%c%s", mcdir, MC_PATHSEP_C,"contrib", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
-	efile=fopen(ss,"r");
-	fprintf(stderr,"Searching -- %s, MCSTAS contrib library\n",ss);
+        /* Try locating the file in the MCSTAS contrib/ISIS_tables library */
+        sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
+        efile=fopen(ss,"r");
+      }
+      if (!efile) {
+        /* Try locating the file in the MCSTAS data library */
+        sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "contrib", MC_PATHSEP_C, FileName);
+        efile=fopen(ss,"r");
+      }
+      if (!efile) {
+        /* Try locating the file in the MCSTAS data/ISIS_tables library */
+        sprintf(ss, "%s%c%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "data", MC_PATHSEP_C, "ISIS_tables", MC_PATHSEP_C, FileName);
+        efile=fopen(ss,"r");
+      }
+      if (!efile) {
+        /* Try locating the file in the MCSTAS data library */
+        sprintf(ss, "%s%c%s%c%s", getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS, 
+          MC_PATHSEP_C, "data", MC_PATHSEP_C, FileName);
+        efile=fopen(ss,"r");
       }
       if (!efile) { /* Still no file - die! */
-	fprintf(stderr,"Fatal: Could not read Etable file %s from:\n.\n.%ctablefiles\n%s%ccontrib%cISIS_tables\nor using MCTABLES...\n", FileName, MC_PATHSEP_C, mcdir, MC_PATHSEP_C, MC_PATHSEP_C);
-	fprintf(stderr,"\nPlease check your McStas installation and/or MCTABLES environment variable!\n");
-	exit(1);
+        fprintf(stderr,"ISIS_moderator: ERROR: Could not read Etable file %s.\n", FileName);
+        fprintf(stderr,"                Please check your McStas installation and/or MCTABLES/ISIS_tables setting!\n");
+        exit(1);
       }
+      else 
+        printf("Opening -- %s\n",ss);
       return efile;
     }
 
@@ -837,7 +855,7 @@ INITIALIZE
   /* READ IN THE ENERGY FILE */
 
   char fname[256];   /* Variables */
-  FILE* Tfile;
+  FILE* TFile;
   double tmp;
   char lowerFace[255];
   int Bcnt;
@@ -848,6 +866,17 @@ INITIALIZE
       double Xsize;
       double Ysize;
     } Olist[50];
+    
+  if (target_index && !dist)
+  {
+    Coords ToTarget;
+    double tx,ty,tz;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+    dist=sqrt(tx*tx+ty*ty+tz*tz);
+  }
+  
   Nsim=mcget_ncount();
   Bcnt=0;
   // CH4 face 1 (north)
@@ -942,6 +971,12 @@ INITIALIZE
       rtE0=81.793936/(rtE0*rtE0);
       rtE1=81.793936/(rtE1*rtE1);
     }
+  if (Lmin && Lmax)
+    {
+      fprintf (stderr,"converting Angstroms to meV\n");
+      rtE0=81.793936/(Lmin*Lmin);
+      rtE1=81.793936/(Lmax*Lmax);
+    }
   if (rtE0>rtE1)
     {
       tmp=rtE1;
@@ -1001,14 +1036,14 @@ INITIALIZE
 
   /* READ PARAMETER FILE */
 
-    Tfile=openFile(fname);
+  TFile=openFile(fname);
 
-  if (!readHtable(Tfile,rtE0,rtE1))
+  if (!readHtable(TFile,rtE0,rtE1))
     {
-      fprintf(stderr,"Failed to read the Hzone file \n");
+      fprintf(stderr,"Failed to read the Hzone from file %s\n", fname);
       exit(1);
     }
-  fclose(Tfile);
+  fclose(TFile);
 
   fprintf(stderr,"nEnergy == %d\n",TS.nEnergy);
 

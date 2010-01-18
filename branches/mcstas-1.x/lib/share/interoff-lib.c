@@ -11,10 +11,10 @@
 * Written by: Reynald Arnerin
 * Date:    Jun 12, 2008
 * Origin: ILL
-* Release: $Revision: 1.4 $
+* Release: $Revision: 1.5 $
 * Version: McStas X.Y
 *
-* Runtime system header for McStas.
+* Object File Format intersection library for McStas.
 *
 *******************************************************************************/
 
@@ -112,7 +112,7 @@ int off_pnpoly(polygon p, Coords v)
       return c;
 }
 
-//gives the intersection vertex between ray [a,b) and polygon p and its prametric value on (a b)
+//gives the intersection vertex between ray [a,b) and polygon p and its parametric value on (a b)
 //based on http://geometryalgorithms.com/Archive/algorithm_0105/algorithm_0105.htm
 int off_intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
 {
@@ -144,8 +144,6 @@ int off_intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
 
   // get intersect point of ray with polygon plane
   inter->time = nw0 / ndir;            //parametric value the point on line (a,b)
-  if (inter->time < 0.0)               // ray goes away from polygon
-    return 0;          // => no intersect
 
 	//printf("----------t=%f",*t);
   inter->v.x = a.x + inter->time * dir.x;// intersect point of ray and plane
@@ -459,7 +457,7 @@ long off_init(	char *offfile, double xwidth, double yheight, double zdepth, off_
   // get the indexes
   if (off_getBlocksIndex(offfile,&vtxIndex,&vtxSize,&faceIndex, &polySize) <=0) 
     return(0);
-  printf("  Number of polygons: %d\n",polySize);
+  printf("  Number of polygons: %ld\n",polySize);
  
   //read vertex table = [x y z | x y z | ...]
   Table_Read_Offset(&vtxTable, offfile, 0, &vtxIndex, vtxSize);
@@ -615,7 +613,7 @@ int off_intersect(double* t0, double* t3, double x, double y, double z, double v
     {		
 	    *t0 = t[0].time;
 	    *t3 = t[1].time;
-	    return 1;
+	    return t_size;
     }
     return 0;
 }

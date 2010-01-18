@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: Emmanuel Farhi, Kim Lefmann
 * Date: Aug 27, 2001
-* Version: $Revision: 1.40 $
+* Version: $Revision: 1.41 $
 * Origin: ILL/Risoe
-* Release: McStas 1.10
+* Release: McStas 1.12
 * Modified by: EF, Aug 27, 2001 ; can use Energy/wavelength and I1
 * Modified by: EF, Sep 18, 2001 ; corrected illumination bug. Add options
 * Modified by: EF, Oct 30, 2001 ; minor changes. mccompcurname replaced
@@ -42,7 +42,7 @@
 *   Monitor_nD(options="x hdiv, all auto")
 *   Monitor_nD(options="y vdiv, all auto")
 * The source shape is defined by its radius, or can alternatively be squared
-* if you specify non-zero yheight and xwidth parameters.
+* if you specify non-zero h and w parameters.
 * The beam is divergence uniform,.
 * The source may have a thickness, which will broaden the default zero time
 * distribution.
@@ -51,7 +51,7 @@
 *
 * Usage example:
 *   Source_gen(radius=0.1,Lambda0=2.36,dLambda=0.16,T1=20,I1=1e13,xw=0.01,yh=0.01)
-*   Source_gen(yheight=0.1,xwidth=0.1,Emin=1,Emax=3,I1=1e13,verbose=1,xw=0.01,yh=0.01)
+*   Source_gen(h=0.1,w=0.1,Emin=1,Emax=3,I1=1e13,verbose=1,xw=0.01,yh=0.01)
 *   EXTEND
 *   %{
 *      t = rand0max(1e-3); // set time from 0 to 1 ms for TOF instruments.
@@ -74,7 +74,7 @@
 *
 * %P
 * radius: [m]   Radius of circle in (x,y,0) plane where neutrons
-*               are generated. You may also use 'yheight' and 'xwidth' for a square source
+*               are generated. You may also use 'h' and 'w' for a square source
 * dist:   [m]   Distance to target along z axis.
 * xw:     [m]   Width(x) of target.
 *                 If dist=0.0, xw = full horz. div  in deg
@@ -93,9 +93,9 @@
 * dLambda:  [AA]  Wavelength spread of neutrons,half width
 *
 * Optional parameters:
-* yheight:  [m]   Source y-height, then does not use radius parameter
-* xwidth:   [m]   Source x-width, then does not use radius parameter
-* zdepth:   [m]   Source z-zdepth, not anymore flat
+* h:        [m]   Source y-height, then does not use radius parameter
+* w:        [m]   Source x-width, then does not use radius parameter
+* length:   [m]   Source z-length, not anymore flat
 * T1:       [K]   Temperature of the Maxwellian source, 0=none
 * I1:       [1/(cm**2*st*AA)] Source flux per solid angle, area and Angstrom
 * T2:       [K]   Second Maxwellian source Temperature, 0=none
@@ -130,9 +130,9 @@
 DEFINE COMPONENT Source_gen
 DEFINITION PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=0)
 SETTING PARAMETERS (radius=0.0, dist=0, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0,
-                    yheight=0, xwidth=0, verbose=0, T1=0,
+                    h=0, w=0, verbose=0, T1=0,
                     flux_file_perAA=0, flux_file_log=0,
-                    Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,zdepth=0)
+                    Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
 OUTPUT PARAMETERS (p_in, lambda0, lambda02, L2P, lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc, pTable, pTable_x, pTable_y,pTable_xmin, pTable_xmax, pTable_xsum, pTable_ymin, pTable_ymax, pTable_ysum, pTable_dxmin, pTable_dxmax, pTable_dymin, pTable_dymax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -301,7 +301,7 @@ INITIALIZE
       fprintf(stderr, "Source_gen: %s: invalid xylimits '%s' from file %s. extracted %i values\n",
         NAME_CURRENT_COMP, xylimits, xdiv_file, i);
 
-    if (!xwidth) xwidth=pTable_xmax-pTable_xmin;
+    if (!w) w=pTable_xmax-pTable_xmin;
     if (!xw && !dist) xw=fabs(pTable_dxmax-pTable_dxmin);
   }
 
@@ -337,7 +337,7 @@ INITIALIZE
     if (i != 2 && i != 4 && verbose)
       fprintf(stderr, "Source_gen: %s: invalid xylimits '%s' from file %s. extracted %i values\n",
         NAME_CURRENT_COMP, xylimits, ydiv_file, i);
-    if (!yheight)  yheight=pTable_ymax-pTable_ymin;
+    if (!h)  h=pTable_ymax-pTable_ymin;
     if (!yh && !dist) yh=fabs(pTable_dymax-pTable_dymin);
   }
 
@@ -376,7 +376,7 @@ INITIALIZE
     exit(-1);
   }
 
-  radius = fabs(radius); xwidth=fabs(xwidth); yheight=fabs(yheight);  I1=fabs(I1);
+  radius = fabs(radius); w=fabs(w); h=fabs(h);  I1=fabs(I1);
   Lambda0=fabs(Lambda0); dLambda=fabs(dLambda);
   xw = fabs(xw); yh=fabs(yh); dist=fabs(dist);
 
@@ -395,7 +395,7 @@ INITIALIZE
     if (radius)
       source_area = radius*radius*PI*1e4; /* circular cm^2 */
     else
-      source_area = yheight*xwidth*1e4; /* square cm^2 */
+      source_area = h*w*1e4; /* square cm^2 */
     p_in  = source_area; /* cm2 */
     p_in *= (Lmax-Lmin); /* AA. 1 bin=AA/n */
     if (flux_file && strlen(flux_file) && !flux_file_perAA)  p_in *= pTable.rows/(Lmax-Lmin);
@@ -405,9 +405,9 @@ INITIALIZE
   p_in /= mcget_ncount();
   if (!T1 && I1) p_in *= I1;
 
-  if (radius == 0 && yheight == 0 && xwidth == 0)
+  if (radius == 0 && h == 0 && w == 0)
   {
-    fprintf(stderr,"Source_gen: %s: Error: Please specify source geometry (radius, yheight, xwidth)\n",
+    fprintf(stderr,"Source_gen: %s: Error: Please specify source geometry (radius, h, w)\n",
       NAME_CURRENT_COMP);
     exit(-1);
   }
@@ -421,10 +421,10 @@ INITIALIZE
   if (verbose)
   {
     printf("Source_gen: component %s ", NAME_CURRENT_COMP);
-    if ((yheight == 0) || (xwidth == 0))
+    if ((h == 0) || (w == 0))
       printf("(disk, radius=%g)", radius);
     else
-      printf("(square %g x %g)",yheight,xwidth);
+      printf("(square %g x %g)",h,w);
     printf("\n            spectra ");
     printf("%.3f to %.3f AA (%.3f to %.3f meV)", Lmin, Lmax, 81.81/Lmax/Lmax, 81.81/Lmin/Lmin);
     printf("\n");
@@ -466,7 +466,7 @@ TRACE
 
     z=0;
 
-    if ((yheight == 0) || (xwidth == 0))
+    if ((h == 0) || (w == 0))
     {
       chi=2*PI*rand01();                          /* Choose point on source */
       r=sqrt(rand01())*radius;                    /* with uniform distribution. */
@@ -475,11 +475,11 @@ TRACE
     }
     else
     {
-      x = xwidth*randpm1()/2;   /* select point on source (uniform) */
-      y = yheight*randpm1()/2;
+      x = w*randpm1()/2;   /* select point on source (uniform) */
+      y = h*randpm1()/2;
     }
-    if (zdepth != 0)
-      z = zdepth*randpm1()/2;
+    if (length != 0)
+      z = length*randpm1()/2;
   /* Assume linear wavelength distribution */
     lambda = Lambda0+dLambda*randpm1();
     if (lambda <= 0) ABSORB;
@@ -507,9 +507,9 @@ TRACE
     /* spectral dependency from files or Maxwellians */
     if (flux_file && strlen(flux_file) > 0)
     {
-       double xwidth=Table_Value(pTable, lambda, 1);
-       if (flux_file_log) xwidth=exp(xwidth);
-       p *= xwidth;
+       double w=Table_Value(pTable, lambda, 1);
+       if (flux_file_log) w=exp(w);
+       p *= w;
     }
     else if (T1 > 0 && I1 > 0)
     {
@@ -561,15 +561,15 @@ MCDISPLAY
   double ymin;
   double ymax;
 
-  if ((yheight == 0) || (xwidth == 0))
+  if ((h == 0) || (w == 0))
   {
     magnify("xy");
     circle("xy",0,0,0,radius);
   }
   else
   {
-    xmin = -xwidth/2; xmax = xwidth/2;
-    ymin = -yheight/2; ymax = yheight/2;
+    xmin = -w/2; xmax = w/2;
+    ymin = -h/2; ymax = h/2;
 
     magnify("xy");
     multiline(5, (double)xmin, (double)ymin, 0.0,

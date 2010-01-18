@@ -1,8 +1,8 @@
 Package: mcstas
 Version: MCSTAS_VERSION
 Architecture: i386
-Depends: perl, perl-Tk, gcc, libc6-dev, libg2c0, pdl
-Suggests: scilab, freewrl
+Depends: perl, perl-tk, gcc, libc6-dev, libg2c0, pdl, libgfortran3
+Suggests: scilab, freewrl, openmpi-bin, libopenmpi-dev
 Conflicts: pgplot5
 Replaces: pgplot5
 Installed-Size: 31120

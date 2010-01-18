@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2003, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,8 +11,8 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision: 1.4 $
-* Release:    McStas 1.9
+* Version:    $Revision: 1.5 $
+* Release:    McStas 1.12
 *
 * Sample for Small Angle Neutron Scattering: Debye-Scherrer Ring
 *
@@ -32,17 +32,17 @@
 * the beam stop. Only absorption has not been included yet to
 * these sample-components. But thats really nothing.
 *
-* Example: SANS_DebyeS(transm=0.5, qDS=0.008, xwidth=0.01, yheight=0.01, zdepth=0.001)
+* Example: SANS_DebyeS(transm=0.5, qDS=0.008, xwidth=0.01, yheight=0.01, zthick=0.001)
 *
 * %P
 *
 * INPUT PARAMETERS
 *
-* transm  (1): coherent transmission of sample for the optical path "zdepth"
+* transm  (1): coherent transmission of sample for the optical path "zthick"
 * qDS  (AA-1): Scattering vector of Debye-Sherrer ring
 * xwidth  (m): horiz. dimension of sample, as a width (m)
 * yheight (m): vert.. dimension of sample, as a height (m)
-* zdepth  (m): thickness of sample (m)
+* zthick  (m): thickness of sample (m)
 *
 * %Link
 * Sans_spheres component
@@ -52,7 +52,7 @@
 
 DEFINE COMPONENT SANS_DebyeS
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (transm=0.5, qDS=0.008, xwidth=0.01, yheight=0.01, zdepth=0.001)
+SETTING PARAMETERS (transm=0.5, qDS=0.008, xwidth=0.01, yheight=0.01, zthick=0.001)
 OUTPUT PARAMETERS (q_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -63,7 +63,7 @@ DECLARE
 
 INITIALIZE
 %{
-    if (!xwidth || !yheight || !zdepth) {
+    if (!xwidth || !yheight || !zthick) {
   exit(fprintf(stderr,"SANS_DebyeS: %s:  sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     }
 %}
@@ -80,14 +80,14 @@ TRACE
   if (transmr<1e-10) transmr = 1e-10;
   if (transmr>1e0  ) transmr = 1e0;
 
-  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+  intersect = box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
   if(intersect)
   {
     if(t0 < 0) ABSORB;                   /* Neutron enters at t=t0. */
 
     v = sqrt(vx*vx + vy*vy + vz*vz);
     l_full = v * (t1 - t0);              /* Length of full path through sample */
-    transmr = exp(log(transmr)*l_full/zdepth);  /* real transmission */
+    transmr = exp(log(transmr)*l_full/zthick);  /* real transmission */
 
     dt = rand01()*(t1 - t0) + t0;        /* Time of scattering */
     PROP_DT(dt);                         /* Point of scattering */
@@ -109,7 +109,7 @@ TRACE
     vy = vout_y;
     vz = vout_z;
 
-    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zdepth))    fprintf(stderr, "SANS_DebyeS: FATAL ERROR: Did not hit box from inside.\n");
+    if(!box_intersect(&t0, &t1, x, y, z, vx, vy, vz, xwidth, yheight, zthick))    fprintf(stderr, "SANS_DebyeS: FATAL ERROR: Did not hit box from inside.\n");
     }
 
     SCATTER;
@@ -126,8 +126,8 @@ MCDISPLAY
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
     double ymax =  0.5*yheight;
-    double zmin = -0.5*zdepth;
-    double zmax =  0.5*zdepth;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
     multiline(5, xmin, ymin, zmin,
                  xmax, ymin, zmin,
                  xmax, ymax, zmin,

@@ -11,8 +11,8 @@
 * Written by: Kristian Nielsen and Mark Hagen
 * Date: August 1998.
 * Origin: ISIS/Risoe
-* Release: McStas CVS_080624
-* Version: $Revision: 1.9 $
+* Release: McStas 1.12
+* Version: $Revision: 1.10 $
 * %INSTRUMENT_SITE: ISIS
 *
 * Simple simulation of PRISMA2 with RITA-style analyser backend.
@@ -278,9 +278,8 @@ COMPONENT mon2 = Monitor(xmin = -0.1, xmax = 0.1, ymin = -0.1, ymax = 0.1)
      AT(0,0,9) RELATIVE mod
 
 COMPONENT sample = V_sample(
-        radius = 0.01,
-	thickness = 0.00999,
-        yheight = 0.02,
+        radius_i = 0.00001, radius_o = 0.01,
+        h = 0.02,
         focus_r = 0.03,
         pack = 1,
         target_x = focus_x, target_y = 0, target_z = focus_z)

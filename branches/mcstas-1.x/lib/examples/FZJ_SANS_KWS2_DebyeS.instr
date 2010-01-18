@@ -11,8 +11,8 @@
 * Written by: Henrich Frielinghaus
 * Date:       Sept 2004
 * Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
-* Version:    $Revision: 1.5 $
-* Release:    McStas CVS_080624
+* Version:    $Revision: 1.6 $
+* Release:    McStas 1.12
 * %INSTRUMENT_SITE: FZ_Juelich
 *
 * KWS2 SANS instrument at FZ-Juelich. Debye Scherrer sample, 2 detectors.
@@ -71,7 +71,7 @@ COMPONENT SmpAp = Slit(xmin=-0.005, xmax=0.005,
 
 
 COMPONENT sample = SANS_DebyeS(transm=0.5, qDS=0.022,
-                               xwidth=0.02, yheight=0.02, zdepth=0.001)
+                               xwidth=0.02, yheight=0.02, zthick=0.001)
    AT (0,0, 20.00) RELATIVE Cguide
 
 /*COMPONENT Lmon = L_monitor(

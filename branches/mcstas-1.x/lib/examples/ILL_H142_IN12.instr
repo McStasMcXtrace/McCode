@@ -7,8 +7,8 @@
 * Written by: FARHI Emmanuel (farhi@ill.fr)
 * Date: April 7, 2004
 * Origin:ILL
-* Release: McStas CVS_080624
-* Version: $Revision: 1.6 $
+* Release: McStas 1.12
+* Version: $Revision: 1.7 $
 * %INSTRUMENT_SITE: ILL
 *
 * The H142 S-curved cold guide at the ILL feeding IN12 TAS spectrometer
@@ -888,7 +888,7 @@ COMPONENT Sample_Out = Arm() /*        this is the sample-ana axis */
 AT (0,0,0.0001) RELATIVE Sample_Cradle ROTATED (0, A4, 0) RELATIVE Mono_Out
 
 SPLIT COMPONENT Sample = V_sample(
- radius = 0.0064, yheight = 0.0254,
+ radius_i = 0.0, radius_o = 0.0064, h = 0.0254,
  focus_r = 0.013, pack = 1,
  target_x = 0, target_y = 0, target_z = 0.234)
 AT (0,0,0) RELATIVE Sample_Out
@@ -951,4 +951,9 @@ AT (0, 0, L4) RELATIVE Ana_Out
 
 /* The END token marks the instrument definition end */
 END
+
+
+
+
+
 

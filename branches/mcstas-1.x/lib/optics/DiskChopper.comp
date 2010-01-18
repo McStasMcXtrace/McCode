@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2006, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,9 +10,9 @@
 * %I
 * Written by: Peter Willendrup
 * Date: March 9 2006
-* Version: $Revision: 1.10 $
+* Version: $Revision: 1.11 $
 * Origin: Risoe
-* Release: McStas 1.9.1
+* Release: McStas 1.12
 * Based on Chopper (Philipp Bernhardt), Jitter and beamstop from work by 
 * Kaspar Hewitt Klenoe (jan 2006), adjustments by Rob Bewey (march 2006)
 * 
@@ -29,15 +29,15 @@
 * If the chopper is the 1st chopper of the instrument, it sets t time with phase
 * - Only relevant for when using continuous source modules.
 *
-* Example: DiskChopper(radius=0.2, theta_0=10, omega=2500.0, n=3, t_0=0, IsFirst=1) First chopper
-*          DiskChopper(radius=0.2, theta_0=10, omega=2500.0, n=3, t_0=0, IsFirst=0)
+* Example: DiskChopper(R=0.2, theta_0=10, omega=2500.0, n=3, t_0=0, IsFirst=1) First chopper
+*          DiskChopper(R=0.2, theta_0=10, omega=2500.0, n=3, t_0=0, IsFirst=0)
 *
 * %P
 * INPUT PARAMETERS:
 *
 * theta_0: (deg)    Angular width of the slits.
-* h:       (m)      Slit height (if = 0, equal to radius). Auto centering of beam at h/2.
-* radius:  (m)      Radius of the disc
+* h:       (m)      Slit height (if = 0, equal to R). Auto centering of beam at h/2.
+* R:       (m)      Radius of the disc
 * omega:   (rad/s)  Angular frequency of the Chopper
 *                   (algebraic sign defines the direction of rotation)
 * n:       (1)      Number of slits
@@ -50,20 +50,20 @@
 * theta_1: (deg)    Angular width of optional beamstop in chopper windows
 * abs_out: (0/1)    Absorb neutrons hitting outside of chopper radius?
 * t_0:     (s)      Time 'delay'.
-* phi_0:   (deg)    Angular 'delay' phase (suppresses t_0)
+* phi_0:   (deg)    Angular 'delay' (suppresses t_0)
 * w:       (m)      'width' of slits for compatibility with Chopper.comp
 * wc:      (m)      'width' of beamstops for compatibility with Chopper.comp
 * compat:  (1)      Chopper placement compatible with original Chopper.comp
 *
 * %D
-* Example values: theta_0=10 h=0.2 radius=0.5 omega=2500 n=3 t_0=0 n_pulse=1 j=0 wc=0
+* Example values: theta_0=10 h=0.2 R=0.5 omega=2500 n=3 t_0=0 n_pulse=1 j=0 wc=0
 *
 * %E
 *******************************************************************************/
 
 DEFINE COMPONENT DiskChopper
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (theta_0, radius, h=0, omega, n=3, j=0, theta_1=0, t_0=0, IsFirst=0, n_pulse=1, abs_out=1, phi_0=0, w=0, wc=0, compat=0)
+SETTING PARAMETERS (theta_0, R, h=0, omega, n=3, j=0, theta_1=0, t_0=0, IsFirst=0, n_pulse=1, abs_out=1, phi_0=0, w=0, wc=0, compat=0)
 OUTPUT PARAMETERS (Tg, T, To, Tc, delta_y, height)
 STATE PARAMETERS (x, y, z, vx, vy, vz, t, s1, s2, p)
 
@@ -76,25 +76,25 @@ INITIALIZE
  %{
       /* If slit height 'unset', assume full opening */
       if (h == 0) {
-	height=radius;
+	height=R;
       } else {
 	height=h;
       }
       /* Compatibility with old Chopper.comp interface */
       if (w) {
-	theta_0=2*RAD2DEG*asin((w/2)/radius);
+	theta_0=2*RAD2DEG*asin((w/2)/R);
       }
       if (wc) {
-	theta_1=2*RAD2DEG*asin((wc/2)/radius);
+	theta_1=2*RAD2DEG*asin((wc/2)/R);
       }
       if (compat) {
-	delta_y = radius;
+	delta_y = R;
       } else {
-	delta_y = radius-height/2;
+	delta_y = R-height/2;
       }
       
-      if (n<=0 || theta_0 < 0 || radius <=0)
-      { fprintf(stderr,"DiskChopper: %s: n, theta_0 and radius must be > 0\n", NAME_CURRENT_COMP);
+      if (n<=0 || theta_0 < 0 || R <=0)
+      { fprintf(stderr,"DiskChopper: %s: n, theta_0 and R must be > 0\n", NAME_CURRENT_COMP);
         exit(-1); }
       if (n*theta_0 >= 360)
       { fprintf(stderr,"DiskChopper: %s: n * theta_0 exceeds 2PI\n", NAME_CURRENT_COMP);
@@ -102,8 +102,8 @@ INITIALIZE
       if (theta_1 >= theta_0)
       { fprintf(stderr,"DiskChopper: %s: theta_1 must me lower than theta_0\n", NAME_CURRENT_COMP);
         exit(-1); }
-      if (h && h>radius) {
-	fprintf(stderr,"DiskChopper: %s: h must be < radius\n", NAME_CURRENT_COMP);
+      if (h && h>R) {
+	fprintf(stderr,"DiskChopper: %s: h must be < R\n", NAME_CURRENT_COMP);
         exit(-1); }
       if (IsFirst && n_pulse <=0)
       { fprintf(stderr,"DiskChopper: %s: wrong First chopper pulse number (n_pulse)\n", NAME_CURRENT_COMP);
@@ -113,7 +113,7 @@ INITIALIZE
 	omega = 1e-15; /* We should actually use machine epsilon here... */
       }
       if (!(abs_out==1)) {
-	fprintf(stderr,"DiskChopper: %s WARNING: chopper will NOT absorb neutrons outside radius radius\n", NAME_CURRENT_COMP);
+	fprintf(stderr,"DiskChopper: %s WARNING: chopper will NOT absorb neutrons outside radius R\n", NAME_CURRENT_COMP);
 	abs_out=0;
       }
       if (IsFirst && theta_1) {
@@ -157,11 +157,11 @@ TRACE
     PROP_Z0;
     
     /* Is neutron outside the vertical slit range and should we absorb? */
-    if ((x*x+yprime*yprime)>radius*radius && abs_out==1) {
+    if ((x*x+yprime*yprime)>R*R && abs_out==1) {
       ABSORB;
     }
-    /* Does neutron hit inner solid part of chopper in case of h!=radius? */
-    if ((x*x+yprime*yprime)<(radius-height)*(radius-height)) {
+    /* Does neutron hit inner solid part of chopper in case of h!=R? */
+    if ((x*x+yprime*yprime)<(R-height)*(R-height)) {
       ABSORB;
     }
     
@@ -194,7 +194,7 @@ MCDISPLAY
   double Radius;
   double theta;
   magnify("xy");
-  circle("xy", 0, -delta_y, 0, radius);
+  circle("xy", 0, -delta_y, 0, R);
   /* Drawing the slit(s)/internal beamstop(s): */
   
   for (j=0; j<n; j++) {
@@ -211,20 +211,20 @@ MCDISPLAY
 	if (k==0) {
 	  theta = thetas[2*l];
 	  if (l==1 && (!theta_1)) {
-	    Radius = radius-height;
+	    Radius = R-height;
 	  } else {
-	    Radius = radius;
+	    Radius = R;
 	  }
 	} else if (k==4) {
 	  theta = thetas[2*l+1];
 	  if (l==0 && (!theta_1)) {
-	    Radius = radius-height;
+	    Radius = R-height;
 	  } else {
-	    Radius = radius;
+	    Radius = R;
 	  }
 	} else {
 	  theta = thetas[2*l]+(k-1)*(thetas[2*l+1]-thetas[2*l])/2;
-	  Radius = radius-height;
+	  Radius = R-height;
 	}
 	X[k] = Radius * sin(theta);
 	Y[k] = Radius * cos(theta)-delta_y;

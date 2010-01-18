@@ -772,11 +772,16 @@ sub plot_neutron {
     } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
       # Matlab (split across multiple lines - otherwise sometimes
       # crashes with component-rich instrs.) 
+      # - Unless on Win32 where this will not work with the OLE connection
       $retval=write_process("mcdisplay('Timeout');\n");
-      $retval=write_process("mcdisplay('PlotNeutron',...\n");
-      $retval=write_process("[@$x],...\n");
-      $retval=write_process("[@$y],...\n");
-      $retval=write_process("[@$z]);\n");
+      if ($Config{'osname'} eq 'MSWin32' && (!$file_output)) {
+	$retval=write_process("mcdisplay('PlotNeutron',[@$x],[@$y],[@$z]);\n");
+      } else {
+	$retval=write_process("mcdisplay('PlotNeutron',...\n");
+	$retval=write_process("[@$x],...\n");
+	$retval=write_process("[@$y],...\n");
+	$retval=write_process("[@$z]);\n");
+      }
       return $retval;
     } elsif ($MCSTAS::mcstas_config{'PLOTTER'} =~ /Scilab/i) {
       # Scilab
@@ -918,7 +923,7 @@ sub write_process {
     (kill 0, $pid) || print STDERR "$plotter process terminated - ending...\n";
     return 2;
   }
-  if ($Config{'osname'} eq 'MSWin32' && $MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i) {
+  if ($Config{'osname'} eq 'MSWin32' && $MCSTAS::mcstas_config{'PLOTTER'} =~ /Matlab/i && (!$file_output)) {
     $ML->Execute($command);
     my $err = Win32::OLE::LastError();
     if ($err) {

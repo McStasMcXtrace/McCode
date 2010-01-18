@@ -41,9 +41,9 @@ COMPONENT source = Source_div(
   AT (0,0,0) RELATIVE a1 ROTATED (0,0,0) RELATIVE a1
 
 COMPONENT sample = Phonon_simple(
-     radius=0.01, yheight=0.02, focus_r=0.001, 
+     radius_o=0.01, h=0.02, focus_r=0.001, 
      target_x=tx, target_y=0.00, target_z=tz,
-     sigma_abs=0.17, sigma_inc=0.003, b=0.90, M=208, 
+     sigma_a=0.17, sigma_i=0.003, b=0.90, M=208, 
      c=C, a=4.95, DW=1.00, T=300)
   AT (0, 0, 1.00) RELATIVE a1 ROTATED (0,OM,0) RELATIVE a1
 

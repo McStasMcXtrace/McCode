@@ -18,7 +18,14 @@
 *
 *	$Id: cexp.c,v 1.19 2006-04-19 13:06:25 farhi Exp $
 *
-*	$Log: not supported by cvs2svn $
+*	$Log: cexp.c,v $
+*	Revision 1.19  2006-04-19 13:06:25  farhi
+*	* Updated Release, Version and Origin fields in headers
+*	* Improved setversion to update all McStasx.y occurencies into current release
+*	* Added 'string' type for DEFINITION parameters to be handled as this type so that auto-quoting occurs in mcgui
+*	* Added possibility to save log of the session to a file (appended) in mcgui
+*	* Made Scilab use either TCL_EvalStr or TK_EvalStr
+*
 *	Revision 1.18  2003/02/11 12:28:45  farhi
 *	Variouxs bug fixes after tests in the lib directory
 *	mcstas_r  : disable output with --no-out.. flag. Fix 1D McStas output

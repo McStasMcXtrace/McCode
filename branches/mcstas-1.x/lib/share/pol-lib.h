@@ -26,7 +26,18 @@
 *
 * $Id: pol-lib.h,v 1.3 2006-08-31 12:56:59 pchr Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: pol-lib.h,v $
+* Revision 1.3  2006-08-31 12:56:59  pchr
+* Removed the two components Pol_filter and Pol_arm and have instead made
+* a special Set_pol component which can do this kind of unphysical but very
+* useful trick to hardcode the polarisation.
+* Updated examples using Pol_filter and Pol_arm.
+*
+* Made the larmor frequency into a constant (define) in pol-lib and
+* made a small function that calculates the constant field required for
+* a certain precession angle given magnetLength and lambda.
+* This is now used in Test_Magnetic_Constant.
+*
 * Revision 1.2  2006/08/28 10:12:25  pchr
 * Basic infrastructure for spin propagation in magnetic fields.
 *

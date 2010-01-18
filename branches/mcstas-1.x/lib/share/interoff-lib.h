@@ -13,12 +13,12 @@
 * Release: 
 * Version: 
 *
-* Runtime system header for McStas.
+* Object File Format intersection header for McStas.
 *
 *******************************************************************************/
 
 #ifndef INTEROFF_LIB_H
-#define INTEROFF_LIB_H "$Revision: 1.3 $"
+#define INTEROFF_LIB_H "$Revision: 1.4 $"
 
 #ifndef EPSILON
 #define EPSILON 10e-13

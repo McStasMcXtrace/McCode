@@ -342,7 +342,7 @@ COMPONENT EMON_SAMPLE = E_monitor(
 /* sample position */
 
 COMPONENT FoSample = V_sample(
-    radius = 0.008, yheight = 0.055, focus_r=0.4, pack=1,
+    radius_i = 0.0, radius_o = 0.008, h = 0.055, focus_r=0.4, pack=1,
     target_x=fo_x, target_y=0, target_z=fo_z)
   AT (0, 0, 1.5) RELATIVE a2
 

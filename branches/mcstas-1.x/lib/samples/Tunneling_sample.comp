@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -10,7 +10,7 @@
 * %I
 * Written by: Kim Lefmann 
 * Date: 10.05.07
-* Version: $Revision: 1.2 $
+* Version: $Revision: 1.3 $
 * Origin: Risoe
 * Release: McStas 1.12
 * Modified from: Vanadium sample.
@@ -19,7 +19,7 @@
 * A Double-cylinder shaped all-incoherent scatterer
 * with both elastic, quasielastic (Lorentzian), and tunneling (sharp) 
 * components. No multiple scattering. Absorbtion included.
-* The shape of the sample may be a box with dimensions xwidth, yheight, zdepth.
+* The shape of the sample may be a box with dimensions xwidth, yheight, zthick.
 * The area to scatter to is a disk of radius 'focus_r' situated at the target.
 * This target area may also be rectangular if specified focus_xw and focus_yh
 * or focus_aw and focus_ah, respectively in meters and degrees.
@@ -34,36 +34,37 @@
 *   P' = 1/3*P-2/3P = -1/3P 
 * As above multiple scattering is ignored .
 *
-* Example: Tunneling_sample(thickness=0.001,radius=0.01,yheight=0.02,focus_r=0.035,
+* Example: Tunneling_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,
 *           target_index=1)
 *
 * %P
 * INPUT PARAMETERS:
-* radius: Outer radius of sample in (x,z) plane [m]
-* yheight:  vert.  dimension of sample, as a height [m]
-* thickness: Thickness of cylindrical sample in (x,z) plane [m]
-* focus_r:  Radius of disk containing target. Use 0 for full space [m]
-* target_index: relative index of component to focus at, e.g. next is +1 [1]
 *
-
+* radius_i: Inner radius of sample in (x,z) plane [m]
+* radius_o: Outer radius of sample in (x,z) plane [m]
+* h:        Height of sample y direction [m]
+* focus_r:  Radius of disk containing target. Use 0 for full space [m]
+* target_x:
+* target_y: position of target to focus at [m]
+* target_z:
+*
 * Optional parameters
 * xwidth:   horiz. dimension of sample, as a width [m]
-* zdepth:   depth of sample [m]
+* yheight:  vert.  dimension of sample, as a height [m]
+* zthick:   thickness of sample [m]
 * focus_xw: horiz. dimension of a rectangular area [m]
 * focus_yh: vert.  dimension of a rectangular area [m]
 * focus_aw: horiz. angular dimension of a rectangular area [deg]
 * focus_ah: vert.  angular dimension of a rectangular area [deg]
-* sigma_abs:Absorbtion cross section pr. unit cell [barns]
-* sigma_inc:Total incoherent scattering cross section pr. unit cell [barns]
-* Vc:       Unit cell volume [AA^3]
+* sig_a:    Absorbtion cross section pr. unit cell [barns]
+* sig_i:    Total incoherent scattering cross section pr. unit cell [barns]
+* V0:       Unit cell volume [AA^3]
 * frac:     MC Probability for scattering the ray; otherwise penetrate [1]
 * f_QE:     Fraction of quasielastic scattering [1]
 * f_tun:    Fraction of tunneling scattering (f_QE+f_tun < 1) [1] 
 * gamma:    Lorentzian width of quasielastic broadening (HWHM) [meV]
 * E_tun:    Tunneling energy [meV]
-* target_x:
-* target_y: position of target to focus at [m]
-* target_z:
+* target_index: relative index of component to focus at, e.g. next is +1 [1]
 *
 * Variables calculated in the component
 *
@@ -79,10 +80,10 @@
 
 DEFINE COMPONENT Tunneling_sample
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (thickness=0, radius=0.01, focus_r = 0,
+SETTING PARAMETERS (radius_i=0, radius_o=0.01, h=0.05, focus_r = 0,
 		    frac = 1, f_QE=0, f_tun=0, gamma=0, E_tun=0, 
   target_x = 0, target_y = 0, target_z = 0.235, focus_xw=0, focus_yh=0,
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0.05, zdepth=0, sigma_abs=5.08, sigma_inc=4.935, Vc=13.827, int target_index=0)
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, sig_a=5.08, sig_i=4.935, V0=13.827, int target_index=0)
 OUTPUT PARAMETERS(StructVarsV, VarsV)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
@@ -108,8 +109,8 @@ DECLARE
 INITIALIZE
 %{
 
-  if (!xwidth || !yheight || !zdepth) /* Cannot define a rectangle */
-    if (!radius || !yheight)              /* Cannot define a cylinder either */
+  if (!xwidth || !yheight || !zthick) /* Cannot define a rectangle */
+    if (!radius_o || !h)              /* Cannot define a cylinder either */
       exit(fprintf(stderr,"V_sample: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
     else                              /* It is a cylinder */
       VarsV.isrect=0;
@@ -118,9 +119,9 @@ INITIALIZE
 
 /*  if(VarsV.isrect) printf("isrect"); else printf("not isrect"); */
 
-  VarsV.sigma_a=sigma_abs;
-  VarsV.sigma_i=sigma_inc;
-  VarsV.rho = (1/Vc);
+  VarsV.sigma_a=sig_a;
+  VarsV.sigma_i=sig_i;
+  VarsV.rho = (1/V0);
   VarsV.my_s=(VarsV.rho * 100 * VarsV.sigma_i);
   VarsV.my_a_v=(VarsV.rho * 100 * VarsV.sigma_a);
 
@@ -194,9 +195,9 @@ TRACE
   int    intersect=0;
 
   if (VarsV.isrect)
-    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
+    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
   else
-    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+    intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
   if(intersect)
   {
     if(t0 < 0) ABSORB; /* we already passed the sample; this is illegal */
@@ -204,7 +205,7 @@ TRACE
     if(VarsV.isrect)
       t1 = t2 = t3;
     else
-      if(!thickness || !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight))
+      if(!radius_i || !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
         t1 = t2 = t3;
 
     dt0 = t1-t0;                /* Time in sample, ingoing */
@@ -270,20 +271,20 @@ TRACE
       vz *= v;
 
       if(!VarsV.isrect) {
-        if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight))
+        if(!cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h))
         {
           /* ??? did not hit cylinder */
           printf("FATAL ERROR: Did not hit cylinder from inside.\n");
           exit(1);
         }
         dt = t3; /* outgoing point */
-        if(thickness && cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius-thickness, yheight) &&
+        if(cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h) &&
            t2 > 0)
           dt -= (t2-t1);            /* Subtract hollow part */
       }
       else
       {
-      if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth))
+      if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick))
         {
           /* ??? did not hit box */
           printf("FATAL ERROR: Did not hit box from inside.\n");
@@ -317,21 +318,18 @@ MCDISPLAY
 %{
   magnify("xyz");
   if (!VarsV.isrect) {
-    circle("xz", 0,  yheight/2.0, 0, radius);
-    circle("xz", 0, -yheight/2.0, 0, radius);
-    line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
-    line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
-    line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
-    line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
-    if (thickness) {
-      double radius_i=radius-thickness;
-      circle("xz", 0,  yheight/2.0, 0, radius_i);
-      circle("xz", 0, -yheight/2.0, 0, radius_i);
-      line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
-      line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
-      line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
-      line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
-    }
+    circle("xz", 0,  h/2.0, 0, radius_i);
+    circle("xz", 0,  h/2.0, 0, radius_o);
+    circle("xz", 0, -h/2.0, 0, radius_i);
+    circle("xz", 0, -h/2.0, 0, radius_o);
+    line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
+    line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
+    line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
+    line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
+    line(-radius_o, -h/2.0, 0, -radius_o, +h/2.0, 0);
+    line(+radius_o, -h/2.0, 0, +radius_o, +h/2.0, 0);
+    line(0, -h/2.0, -radius_o, 0, +h/2.0, -radius_o);
+    line(0, -h/2.0, +radius_o, 0, +h/2.0, +radius_o);
   }
   else
   {
@@ -339,8 +337,8 @@ MCDISPLAY
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
     double ymax =  0.5*yheight;
-    double zmin = -0.5*zdepth;
-    double zmax =  0.5*zdepth;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
     multiline(5, xmin, ymin, zmin,
                  xmax, ymin, zmin,
                  xmax, ymax, zmin,

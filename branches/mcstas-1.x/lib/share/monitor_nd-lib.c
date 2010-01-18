@@ -23,7 +23,10 @@
 *
 * $Id: monitor_nd-lib.c,v 1.41 2008-07-01 20:28:13 farhi Exp $
 *
-* $Log: not supported by cvs2svn $
+* $Log: monitor_nd-lib.c,v $
+* Revision 1.41  2008-07-01 20:28:13  farhi
+* Fixed zthick -> zdepth
+*
 * Revision 1.40  2008/07/01 19:50:23  farhi
 * Common naming convention for components:
 *   xwidth, yheight, zdepth, radius, thickness

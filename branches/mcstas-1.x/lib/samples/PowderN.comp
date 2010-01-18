@@ -7,7 +7,7 @@
 * %I
 * Written by: P. Willendrup, L. Chapon, K. Lefmann, A.B.Abrahamsen, N.B.Christensen, E.M.Lauridsen.
 * Date: 4.2.98
-* Version: $Revision: 1.43 $
+* Version: $Revision: 1.44 $
 * Origin: McStas release
 * Modified by: KL, KN 20.03.98   (rewrite)
 * Modified by: KL,    28.09.01   (two lines)
@@ -85,7 +85,7 @@
 * optional inner hollow. Example, Sample in Al cryostat:
 *
 *
-* COMPONENT Cryo = PowderN(reflections="Al.laz", radius = 0.01, thickness = 0.001,
+* COMPONENT Cryo = PowderN(reflections="Al.laz", radius = 0.01, radius_i = 0.009,
 *                          concentric = 1)
 * AT (0,0,0) RELATIVE Somewhere
 *
@@ -101,35 +101,39 @@
 *
 * %P
 * INPUT PARAMETERS
-* radius:   Outer radius of sample in (x,z) plane [m]
-* xwidth:   Horiz. dimension of sample, as a width [m]
-* yheight:  Height of sample y direction [m]
-* zdepth:   Depth of box sample [m]
-* thickness:Thickness of hollow sample [m]
-* reflections: Input file for reflections.
-*                Use only incoherent scattering if NULL or "" [string]
 *
-* Optional parameters:
-* pack:     Packing factor [1]
-* Delta_d:  Global relative Delta_d/d spreading when the 'w' column
-*             is not available. Use 0 if ideal. [Angs]
-* format:   Name of the format, or list of column indexes
-*             (see Description). [no quotes]
-* frac:     Fraction of incoherently scattered neutron rays [1]
-* tfrac:    Fraction of transmitted (only attenuated) neutron rays [1]
 * d_phi:    Angle corresponding to the vertical angular range
 *             to focus to, e.g. detector height. 0 for no focusing [deg,0-180]
-* concentric: Flag to indicate if sample is 'concentric' [1] 
-* barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 
-*             (barns=1 for laz, barns=0 for lau type files).[1]
+* radius:   Outer radius of sample in (x,z) plane [m]
+* radius_i:  Radius of optional inner hollow [m]
+* yheight:  Height of sample y direction [m]
+* Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
 * sigma_abs:Absorption cross section per unit cell at 2200 m/s [barns]
 * sigma_inc:Incoherent cross section per unit cell [barns]
-* Vc:       Volume of unit cell=nb atoms per cell/density of atoms [AA^3]
-* DW:       Global Debey-Waller factor when the 'DW' column
+* reflections: Input file for reflections.
+*                Use only incoherent scattering if NULL or "" [string]
+* format:   name of the format, or list of column indexes
+              (see Description). [no quotes]
+*
+* Optional parameters:
+* xwidth:  horiz. dimension of sample, as a width [m]
+* zthick:  thickness of sample [m]
+* xwidth_i: horiz. dimension of optional inner hollow when in cubic geometry [m]
+* yheight_i: vertical dimension of optional innher hollow in cubic and cyl geometry. If zero assumed == h. [m]
+* zthick_i:  thickness of optional innner hollow when in cubic geometry [m]
+* h:       the same as yheight [m]
+* Delta_d:  global relative Delta_d/d spreading when the 'w' column
+*             is not available. Use 0 if ideal. [Angs]
+* DW:       global Debey-Waller factor when the 'DW' column
 *             is not available. Use 1 if included in F2 [1]
-* weight:   Atomic/molecular weight of material [g/mol]
-* density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
-* nb_atoms: Number of atoms per unit cell [1]
+* frac:     Fraction of incoherently scattered neutron rays [1]
+* tfrac:    Fraction of transmitted (only attenuated) neutron rays [1]
+* pack:     Packing factor [1]
+* weight:   atomic/molecular weight of material [g/mol]
+* density:  density of material. V_rho=density/weight/1e24*N_A. [g/cm^3]
+* nb_atoms: number of atoms per unit cell [1]
+* barns:    Flag to indicate if |F|^2 from 'reflections' is in barns or fm^2 (barns=1 for laz, barns=0 for lau type files).[1]
+* concentric: Flag to indicate if sample is 'concentric' [1] 
 *
 * %L
 * See also: Powder1, Powder2 and PowderN
@@ -148,13 +152,12 @@
 *****************************************************************************/
 DEFINE COMPONENT PowderN
 DEFINITION PARAMETERS (string reflections, format=Undefined)
-SETTING PARAMETERS (radius=0, yheight=0, xwidth=0, zdepth=0, thickness=0,
+SETTING PARAMETERS (d_phi=0, radius=0, radius_i=0, yheight=0,
 		    pack=1, Vc=0, sigma_abs=0, sigma_inc=0, Delta_d=0, frac=0.1, tfrac=0.1,
-		    DW=0, nb_atoms=1, d_phi=0, 
+		    xwidth=0, zthick=0, xwidth_i=0, yheight_i=0, zthick_i=0, h=0, DW=0, nb_atoms=1, 
 		    concentric=0, density=0, weight=0, barns=1)
-OUTPUT PARAMETERS (line_info, Nq, my_s_v2, XsectionFactor,
-  my_s_v2_sum, my_a_v, my_inc, q_v, w_v, isrect, columns, 
-  radius_i, xwidth_i, yheight_i, zdepth_i)
+OUTPUT PARAMETERS (line_info, Nq, my_s_v2, 
+  my_s_v2_sum, my_a_v, my_inc, q_v, w_v, isrect, columns)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE
@@ -386,7 +389,6 @@ DECLARE
   char   isrect=0;
   int    columns[8] = format;
   double XsectionFactor;
-  double radius_i=0, xwidth_i=0, yheight_i=0, zdepth_i=0;
 %}
 INITIALIZE
 %{
@@ -404,23 +406,23 @@ INITIALIZE
   for (i=0; i< 8; i++) line_info.column_order[i] = columns[i];
   strncpy(line_info.compname, NAME_CURRENT_COMP, 256);
   
-  if (!radius || !yheight ) {
-    if (!xwidth || !yheight || !zdepth) exit(fprintf(stderr,"PowderN: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
-    else isrect=1; }
-    
-  if (thickness>0) {
-    if (radius>0) radius_i=radius-thickness;
-    else {
-      xwidth_i=xwidth-thickness; yheight_i=yheight-thickness; zdepth_i=zdepth-thickness;
-    }
+  /* Early cross-copy yheight and h */
+  if (h && !yheight) {
+    yheight = h;
+  } else if (yheight && !h) {
+    h = yheight;
   }
+  
+  if (!radius || !yheight ) {
+    if (!xwidth || !yheight || !zthick) exit(fprintf(stderr,"PowderN: %s: sample has no volume (zero dimensions)\n", NAME_CURRENT_COMP));
+    else isrect=1; }
   
   if (!yheight_i) {
     yheight_i = yheight;
   }
   
-  if ((isrect && ((zdepth_i > zdepth) || (xwidth_i > xwidth) || (yheight_i > yheight))) || (!isrect && (radius_i > radius) || (yheight_i > yheight))) {
-    exit(fprintf(stderr,"PowderN: %s: Inner hollow exeeds sample volume. Check dimensions.\n", NAME_CURRENT_COMP));
+  if ((isrect && ((zthick_i > zthick) || (xwidth_i > xwidth) || (yheight_i > yheight))) || (!isrect && (radius_i > radius) || (yheight_i > yheight))) {
+    exit(fprintf(stderr,"PowderN: %s: Inner hollow exeeds sample volume\n", NAME_CURRENT_COMP));
   }
   
   if (frac + tfrac > 1) {
@@ -499,8 +501,8 @@ TRACE
   char   intersecti=0;
 
   if (isrect) {
-    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-    intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+    intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+    intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zthick_i);
   } else {
     intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
     intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
@@ -638,8 +640,8 @@ TRACE
 	      
 	      /* Since now scattered and new direction given, calculate path to exit */
 	      if (isrect) {
-		intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-		intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+		intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+		intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zthick_i);
 	      } else {
 		intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
 		intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
@@ -691,8 +693,8 @@ TRACE
 	    
 	    /* Since now scattered and new direction given, calculate path to exit */
 	    if (isrect) {
-	      intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zdepth);
-	      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zdepth_i);
+	      intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+	      intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zthick_i);
 	    } else {
 	      intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
 	      intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
@@ -739,30 +741,32 @@ TRACE
 
 MCDISPLAY
 %{
+  double h;
+  h=yheight;
   magnify("xyz");
   if (!isrect) {
-    circle("xz", 0,  yheight/2.0, 0, radius);
-    circle("xz", 0, -yheight/2.0, 0, radius);
-    line(-radius, -yheight/2.0, 0, -radius, +yheight/2.0, 0);
-    line(+radius, -yheight/2.0, 0, +radius, +yheight/2.0, 0);
-    line(0, -yheight/2.0, -radius, 0, +yheight/2.0, -radius);
-    line(0, -yheight/2.0, +radius, 0, +yheight/2.0, +radius);
-    if (thickness) {
-      double radius_i=radius-thickness;
-      circle("xz", 0,  yheight/2.0, 0, radius_i);
-      circle("xz", 0, -yheight/2.0, 0, radius_i);
-      line(-radius_i, -yheight/2.0, 0, -radius_i, +yheight/2.0, 0);
-      line(+radius_i, -yheight/2.0, 0, +radius_i, +yheight/2.0, 0);
-      line(0, -yheight/2.0, -radius_i, 0, +yheight/2.0, -radius_i);
-      line(0, -yheight/2.0, +radius_i, 0, +yheight/2.0, +radius_i);
+    circle("xz", 0,  h/2.0, 0, radius);
+    circle("xz", 0, -h/2.0, 0, radius);
+    line(-radius, -h/2.0, 0, -radius, +h/2.0, 0);
+    line(+radius, -h/2.0, 0, +radius, +h/2.0, 0);
+    line(0, -h/2.0, -radius, 0, +h/2.0, -radius);
+    line(0, -h/2.0, +radius, 0, +h/2.0, +radius);
+    if (radius_i) {
+      h=yheight_i;
+      circle("xz", 0,  h/2.0, 0, radius_i);
+      circle("xz", 0, -h/2.0, 0, radius_i);
+      line(-radius_i, -h/2.0, 0, -radius_i, +h/2.0, 0);
+      line(+radius_i, -h/2.0, 0, +radius_i, +h/2.0, 0);
+      line(0, -h/2.0, -radius_i, 0, +h/2.0, -radius_i);
+      line(0, -h/2.0, +radius_i, 0, +h/2.0, +radius_i);
     }
   } else {
     double xmin = -0.5*xwidth;
     double xmax =  0.5*xwidth;
     double ymin = -0.5*yheight;
     double ymax =  0.5*yheight;
-    double zmin = -0.5*zdepth;
-    double zmax =  0.5*zdepth;
+    double zmin = -0.5*zthick;
+    double zmax =  0.5*zthick;
     multiline(5, xmin, ymin, zmin,
                  xmax, ymin, zmin,
                  xmax, ymax, zmin,
@@ -777,13 +781,13 @@ MCDISPLAY
     line(xmax, ymin, zmin, xmax, ymin, zmax);
     line(xmin, ymax, zmin, xmin, ymax, zmax);
     line(xmax, ymax, zmin, xmax, ymax, zmax);
-    if (zdepth_i) {
+    if (zthick_i) {
       xmin = -0.5*xwidth_i;
       xmax =  0.5*xwidth_i;
       ymin = -0.5*yheight_i;
       ymax =  0.5*yheight_i;
-      zmin = -0.5*zdepth_i;
-      zmax =  0.5*zdepth_i;
+      zmin = -0.5*zthick_i;
+      zmax =  0.5*zthick_i;
       multiline(5, xmin, ymin, zmin,
 		xmax, ymin, zmin,
 		xmax, ymax, zmin,
