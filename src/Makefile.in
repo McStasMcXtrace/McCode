@@ -107,8 +107,8 @@ BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 .SUFFIXES: .c .o .pl .fixpl .mxfixpl
 
 .c.o:
-	@echo "Building" $(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@PACKAGE_TARNAME@)'"' ... $<
-	@$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_@PACKAGE_TARNAME@)'"' $(DEFS) $<
+	@echo "Building" $(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_mccode)'"' ... $<
+	@$(CC) -I. -I$(srcdir) -c $(CFLAGS) -DMCSTAS='"'$(libdir_mccode)'"' $(DEFS) $<
 
 .pl.fixpl:
 	@echo "Fixing PERL dirs:" $< "->" $@
@@ -211,7 +211,7 @@ install_mcxtrace: installdirs $(BINOBJS_mcxtrace)
 	cd $(topdir)/xlib && $(MAKE) install 
 
 installdirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@PACKAGE_TARNAME@) $(mandir)/man1
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_mccode) $(mandir)/man1
 
 instrument.tab.o: mccode.h
 lex.yy.o: mccode.h instrument.tab.h
@@ -252,6 +252,6 @@ uninstall_mcxtrace:
 	rm -f $(MXPERLBIN)
 
 reconfigure:
-	cd $(libdir_@PACKAGE_TARNAME@)/tools/perl/
-	$(libdir_@PACKAGE_TARNAME@)/tools/perl/@PACKAGE_TARNAME@_reconfigure
+	cd $(libdir_mccode)/tools/perl/
+	$(libdir_mccode)/tools/perl/@PACKAGE_TARNAME@_reconfigure
 

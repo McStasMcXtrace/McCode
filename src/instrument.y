@@ -1502,11 +1502,12 @@ print_usage(void)
   fprintf(stderr, "      --no-runtime               Do not embed run-time libraries.\n");
   fprintf(stderr, "      --verbose                  Display compilation process steps.\n");
   fprintf(stderr, "  The file will be processed and translated into a C code program.\n");
-  fprintf(stderr, "  The default component search list is usually defined by the 'MCSTAS'\n");
-  fprintf(stderr, "  environment variable. Use 'mcrun' to both run mcstas and the C compiler.\n");
-  fprintf(stderr, "  Use 'mcgui' to run the McStas GUI.\n");
   fprintf(stderr, "  If run-time libraries are not embedded, you will have to pre-compile\n");
-  fprintf(stderr, "  them (.c -> .o) before assembling the program.\n");
+  fprintf(stderr, "    them (.c -> .o) before assembling the program.\n");
+  fprintf(stderr, "  The default component search list is usually defined by the environment\n");
+  fprintf(stderr, "    variable 'MCSTAS' (default is " MCSTAS ") \n");
+  fprintf(stderr, "  Use 'mcrun' to both run mcstas and the C compiler.\n");
+  fprintf(stderr, "  Use 'mcgui' to run the McStas GUI.\n");  
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
   fprintf(stderr, "DOC:      Please visit " PACKAGE_BUGREPORT "\n");
   exit(1);
