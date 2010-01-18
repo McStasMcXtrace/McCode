@@ -81,16 +81,15 @@ find . -wholename './setyear'    -prune -o -type d -prune -o -path ./src/McStasT
 
 # we update all package/version strings
 echo "Set package $PACKAGE_VERSION information"
-for file in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in;
+for file in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in;
 do
   sed 's/@MCCODE_VERSION@/'$PACKAGE_NAME'-'$PACKAGE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
-  sed 's/@PACKAGE_DATE@/'$MONTH'. '$DAY', '$YEAR'/' $file.tmp > $file
-  sed 's/@PACKAGE_TARNAME@/'$PACKAGE_TARNAME'/' $file > $file.tmp
-  sed 's/@PACKAGE_NAME@/'$PACKAGE_NAME'/' $file.tmp > $file
-  sed 's/@PACKAGE_VERSION@/'$PACKAGE_VERSION'/' $file > $file.tmp
-  sed 's/@PACKAGE_STRING@/'$PACKAGE_NAME'-'$PACKAGE_VERSION'/' $file.tmp > $file
-  sed 's/@PACKAGE_TARNAME@/'$PACKAGE_TARNAME'/' $file > $file.tmp
-  mv $file.tmp $file
+  sed 's/@PACKAGE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                        $file.tmp > $file
+  sed 's/@PACKAGE_TARNAME@/'$PACKAGE_TARNAME'/'                                            $file > $file.tmp
+  sed 's/@PACKAGE_NAME@/'$PACKAGE_NAME'/'                                                  $file.tmp > $file
+  sed 's/@PACKAGE_VERSION@/'$PACKAGE_VERSION'/'                                            $file > $file.tmp
+  sed 's/@PACKAGE_STRING@/'$PACKAGE_NAME'-'$PACKAGE_VERSION'/'                             $file.tmp > $file
+  rm $file.tmp
 done
 chmod a+x support/deb/debcreate
 
