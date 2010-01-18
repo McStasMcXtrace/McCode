@@ -1,0 +1,90 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: SANS_KWS2_Guinier
+*
+* %I
+* Written by: Henrich Frielinghaus
+* Date:       Sept 2004
+* Origin:     FZ-Juelich/FRJ-2/IFF/KWS-2
+* Version:    $Revision: 1.5 $
+* Release:    McStas CVS_080624
+* %INSTRUMENT_SITE: FZ_Juelich
+*
+* KWS2 SANS instrument at FZ-Juelich. Guinier sample, 2 detectors.
+*
+* %D
+*
+* KWS2 SANS instrument at FZ-Juelich. Guinier sample, 2 detectors.
+*
+* %P
+* INPUT PARAMETERS:
+* Lambda    : Mean wavelength of neutrons      [AA]
+* D_lambda  : Wavelength spread of neutrons    [AA]
+* r         : Radius of scattering hard spheres [AA]
+* PHI       : Particle volume fraction [1]
+* Delta_Rho : Excess scattering length density (fm/AA^3)
+* Sigma_a   : Absorption cross section density at 2200 m/s [m^-1]
+* Qmax      : Maximum momentum transfer [AA^-1]
+*
+* %E
+*******************************************************************************/
+DEFINE INSTRUMENT SANS_KWS2_Guinier(lam=7.0, dlam=0.7, FLUX=1e8,
+     NGblen=0.05,
+     Clen = 10.0, Dlen = 10.0)
+
+TRACE
+
+COMPONENT origin = Arm()
+  AT (0,0,0) ABSOLUTE
+
+
+COMPONENT source = Source_flux_lambda(
+    radius = 1.414*NGblen, dist = Clen, xw = NGblen, yh = NGblen,
+    lambda_0 = lam, d_lambda = dlam, flux = FLUX)
+  AT (0, 0, 0) RELATIVE origin
+
+
+COMPONENT guide = Guide(w1=NGblen, h1=NGblen, w2=NGblen, h2=NGblen, l=20.0,
+                        R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
+  AT (0, 0, Clen) RELATIVE source
+
+
+COMPONENT Cguide= Guide(w1=NGblen, h1=NGblen, w2=NGblen, h2=NGblen, l=20.0-Clen,
+                        R0=0.99, Qc=0.0219, alpha=6.07, m=2, W=0.003)
+  AT (0, 0, 20) RELATIVE guide
+
+
+COMPONENT SmpAp = Slit(xmin=-0.005, xmax=0.005,
+                       ymin=-0.005, ymax=0.005)
+  AT (0, 0, 19.95) RELATIVE Cguide
+
+
+COMPONENT sample = SANS_Guinier(transm=0.5, Rg=300, qmax=0.031416,
+                               xwidth=0.02, yheight=0.02, zdepth=0.001)
+   AT (0,0, 20.00) RELATIVE Cguide
+
+/*COMPONENT Lmon = L_monitor(
+    nchan = 1000, filename = "Lmon.dat",    xmin = -0.75*NGblen,
+    xmax = 0.75*NGblen, ymin = -0.75*NGblen, ymax = 0.75*NGblen, Lmin = 4.5, Lmax = 12.5)
+  AT (0, 0, Dlen-0.05) RELATIVE sample
+*/
+
+/*Component Bstop = Beamstop(xmin=-0.75*NGblen, xmax=0.75*NGblen,
+                             ymin=-0.75*NGblen, ymax=0.75*NGblen)
+  AT (0, 0, Dlen-0.005) RELATIVE sample
+*/
+
+COMPONENT detector = PSD_monitor(
+    nx = 128, ny = 128, filename = "PSD.dat", xmin = -0.3,
+    xmax = 0.3, ymin = -0.3, ymax = 0.3)
+  AT (0, 0, Dlen) RELATIVE sample
+
+COMPONENT detector2 = PSD_monitor_rad(rmax=0.35, nr=500, filename="PSDr.dat", filename_av="PSDr_av.dat")
+  AT (0, 0, 0.01) RELATIVE detector
+
+END

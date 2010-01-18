@@ -1,0 +1,986 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: Light_H15_IN6
+*
+* %Identification
+* Written by: <a href="mailto:farhi@ill.fr">Emmanuel Farhi</a>
+* Date: 17th Jan 2005.
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Release: McStas CVS_080624
+* Version: 0.1
+* %INSTRUMENT_SITE: ILL
+*
+* The IN6 Time-of-Flight simulation, positioned as the first instrument in the
+* cold guide H15 (Nickel coating) at the ILL.
+*
+* %Description
+*
+* IN6 is a time focussing time-of-flight spectrometer designed for quasielastic and
+* inelastic scattering for incident wavelengths in the range of 4 to 6 Angs.
+*
+* An intense beam is extracted from the H15 guide by a vertically focussing
+* monochromator array. It consists of three composite pyrolytic graphite
+* monochromators using the full height (20 cm) of the guide and focussing the beam
+* at the sample position. In order to minimise the interference with the
+* subsequent instruments, the monochromator can deliver only four wavelengths:
+* 4.1; 4.6; 5.1; and 5.9 Angs. The second order reflection from the graphite
+* monochromator is removed by a beryllium-filter cooled at liquid nitrogen
+* temperature.
+
+* To achieve the time-focussing condition, the beam is pulsed by a Fermi chopper.
+* It has a small slot length to ensure a good transmission. The normal distance
+* between the Fermi chopper and the sample is 38 cm. To prevent frame-overlap when
+* the chopper is rotating faster than 7500 rpm, a suppressor chopper is placed
+* before the Fermi chopper and rotates in phase with the latter.
+*
+* The secondary spectrometer consists first of an evacuated sample area. The
+* detector bank is entirely covered with detector boxes, thus avoiding the
+* inconvenience of moving the counters.
+*
+* This instrument model contains the complete H15 guide, a triple monochromator
+* (using the GROUP), two Fermi Choppers (including one background chopper), a
+* liquid sample handling coherent and incoherent processes (elastic and inelastic)
+* with multiple scattering, customized monitors, and the SPLIT mechanism to
+* improve the statistics.
+*
+* Example: mcrun ILL_H15_IN6.instr -n 1e4 --no-output-files LAMBDA=4.14000
+*
+* %Parameters
+* INPUT PARAMETERS:
+*   LAMBDA:        [Angs] wavelength within 4.14|4.6|5.12|5.92
+*   DLAMBDA:       [Angs] wavelength HALF spread. default is 0.075
+*   SPEED:         [rpm]  Fermi chopper speed.  -1=auto, 0=stopped in open pos.
+*   RATIO:         [1]  Suppressor speed ratio. -1=no suppressor.
+*   PHASE:         [deg] Fermi phase w/r/ to Suppressor. -360=auto
+*   M1:                 monochromator motor 1 position. -1=auto [coder values]
+*   M2:                 monochromator motor 2 positinn. -1=auto [coder values]
+*   M3:                 monochromator motor 3 position. -1=auto [coder values]
+*   MONITOR:            monitor preset [something like time in s]
+*   CHA_WIDTH:     [us] channel width. -1=auto
+*   TOF_CHA_RESOL: [1]  number of channels.
+*   TOF_DELAY:     [us] TOF delay. -1=auto
+*   ELPEAK:        [1]  elastic peak channel. -1=auto
+*   m:             [1]  super mirror guide m-value. 1 for Ni, 1.2 for Ni58, 2-4 for SM
+*   mFC:           [1]  super mirror FermiChopper coating m-value
+*   Sqw_coh:       [str] coherent S(q,w) file name
+*   Sqw_inc:       [str] incoherent S(q,w) file name
+*   radius:        [m]  outer radius of sample hollow cylinder
+*   thickness:     [m]  thickness of sample hollow cylinder
+*
+* %Link
+* <a href="http://www.ill.fr/YellowBook/IN6/home.html">The IN6@ILL Yellow Pages</a>
+* %Link
+* R.Scherm et al, "Another Time of Flight Spectrometer", ILL Report 76S235, 1976
+* %Link
+* R.Scherm, "A high-resolution spectrometer ...", report Jul-295-NP, Kernforschungsanlage Julich, 1965
+* %Link
+* Y.Blanc, "Le spectrometre a temps de vol IN6", ILL Report 83BL21G, 1983
+* %Link
+* K.H.Beckurts et al, Neutron physics, Kernforschungsanlage Karlsruhe, 1964 (p317)
+* %Link
+* R.Scherm and T.Springer, "Proposal of a multiple Chopper...", Kernforschungsanlage Julich, 19xx
+*
+* %End
+*******************************************************************************/
+DEFINE INSTRUMENT ILL_H15_IN6(LAMBDA=4.14, DLAMBDA=0.075, SPEED=-1,
+  M1=-1, M2=-1, M3=-1, MONITOR=1, CHA_WIDTH=-1,
+  TOF_DELAY=-1, TOF_CHA_RESOL=128, ELPEAK=-1, RATIO=1, m=1, mFC=0, PHASE=-360,
+  string Sqw_coh="Rb_liq_coh.sqw", string Sqw_inc="Rb_liq_inc.sqw",
+  radius=0.01, thickness=0.005)
+
+DECLARE
+%{
+%include "monitor_nd-lib"
+/* VCS (H1) source parameters */
+  double sT1=216.8,sI1=1.24e+13;
+  double sT2=33.9, sI2=1.02e+13;
+  double sT3=16.7 ,sI3=3.0423e+12;
+  double sLambda=4.14, sDLambda=0.1;
+/* H15 guide coating parameters */
+  double gR0          = 1;
+  double gQc          = 0.021;
+  double gAlpha       = 4.07;
+  double gW           = 1.0/300.0;
+  double gMvalue      = 1;
+/* H15 gaps and Al windows parameters */
+  double Al_Thickness = 0.002;
+  double gGap         = 0.001;
+/* H15 guide curvatures */
+  double gRh          = 2700; /* upwards */
+/* H15 guide section parameters (total length/number of elements) */
+  double gH =0.2;
+  double L_H15_2 =5.5  /6,  Rh_H15_2 =0;
+  double L_H15_3 =9.973/10, Rh_H15_3 =0; /* end: d ~ 15.5 moderator at -5.9 */
+  double L_H15_4 =6.973/7,  Rh_H15_4 =0; /* end: d ~ 22.5 ... */
+  double L_H15_5 =4.75 /5,  Rh_H15_5 =0; /* VTE is at the end of this section */
+  double L_H15_6 =11.473/12,Rh_H15_6 =0; /* end of H15 MAN spec sheet after 2 elements */
+  double L_H15_7 =9.473/10, Rh_H15_7 =0; /* end: IN6 */
+  double L_H15_8 =5.573/6,  Rh_H15_8 =0; /* end MAN spec drawing (d ~ 55.3): D7 */
+  double L_H15_9 =1.25,     Rh_H15_9 =0;
+
+/* capture flux positions from moderator: 21.4    28.4    61.2 */
+
+/* variables for IN6 */
+  double DM = 3.355;        /*   mono d-spacing (Angs)  */
+  double mos= 40;
+  double RV = 3;
+
+/* Bragg angles of the 3 monochromators */
+  double A1;
+  double A2;
+  double A3;
+  double LME = 2.1;   /* distance monochromator 2 <--> sample */
+  double LMM = 0.030; /* distance between 2 monochromators    */
+  double LED = 2.483; /* distance sample <--> detector        */
+  double LCE = 0.395; /* distance fermi chopper <--> sample   */
+  double LCC = 0.2;   /* [m] Chopper1-Chopper2 distance */
+  double Frequency, vi;
+  double ref_phas=0, phas_ferm;
+
+  double iTOF_DELAY;   /* time of arrival at sample position, from source */
+  double iCHA_WIDTH;
+  double iTOF_CHA_RESOL;
+  double iELPEAK;
+  double iRATIO;
+  double iSPEED;
+  double A2cradle;
+  double iPHASE, period;
+
+/* monitoring monochromator index for neutrons being sent to IN6 */
+  MONND_DECLARE(MonokMonitor);
+
+/* flags per event type */
+ char flag_ci, flag_co, flag_ct; /* cryo-in/out container */
+ char flag_single, flag_multi;
+
+/* monitoring sample env */
+ double ki_x, ki_y, ki_z;
+ double kf_x, kf_y, kf_z;
+ double dq=0, dw=0, vf;
+ char opt1[256]; /* options for Monitor_nD */
+ char opt2[256];
+%}
+
+INITIALIZE
+%{
+
+  double chopper_const = 252.77;  /*constant in chopper SPEED formula*/
+  double Ki, Ei, theta;
+  double tmin, tmax;
+
+  double dE  = 0.0;   /* energy transfer */
+
+/* VCS/H15: transfert guide parameters for components */
+  if (m)       gMvalue  = m;
+  if (LAMBDA)  sLambda  = LAMBDA;
+  if (DLAMBDA) sDLambda = DLAMBDA;
+
+  Ki = 2*PI/sLambda;
+  vi = K2V*fabs(Ki);
+  Ei = VS2E*vi*vi;
+
+/* H15: Element rotations = Element length / Curvature Radius * RAD2DEG */
+  if (gRh) {
+    Rh_H15_2  = L_H15_2 /gRh*RAD2DEG;
+    Rh_H15_3  = L_H15_3 /gRh*RAD2DEG;
+    Rh_H15_4  = L_H15_4 /gRh*RAD2DEG;
+    Rh_H15_5  = L_H15_5 /gRh*RAD2DEG;
+  }
+
+/* IN6: calculate theta angles for 3 monochromators*/
+  theta = asin(sLambda/DM/2);
+  A2 = theta*2;
+
+  A1 = atan2(LME*sin(A2),(LME*cos(A2)+LMM))*RAD2DEG;
+  A3 = atan2(LME*sin(A2),(LME*cos(A2)-LMM))*RAD2DEG;
+  A2 *=RAD2DEG;
+
+  A2cradle = A2;
+
+  RV = 2*LME*sin(theta);
+
+  if (A1<0.0) A1=180+A1;
+  if (A2<0.0) A2=180+A2;
+  if (A3<0.0) A3=180+A3;
+
+  if (M1 == 0) A1 = 0; else
+    if (M1>=0) A1 = -0.0210199*M1+178.55; else  M1 = -(A1-178.55)/0.0210199;
+  if (M2 == 0) A2 = 0; else
+    if (M2>=0) A2 = -0.0210302*M2+182.558; else M2 = -(A2-182.558)/0.0210302;
+  if (M3 == 0) A3 = 0; else
+    if (M3>=0) A3 = -0.0206945*M3+187.566; else M3 = -(A3-187.566)/0.0206945;
+
+  MONND_USER_TITLE(MonokMonitor, 1, "Monok index");
+
+/* IN6: compute Tof settings from Light.Custom.Light_Custom_IN6_Calc_TOF_Choppers */
+  {
+    double el_t_resol  = 0.125;   /* [us] Electronic Time Base */
+    ref_phas    = 0;      /* [deg] Reference Phase */
+    double phase_offset= 0;       /* [deg] Phase Offset (added to Fermi phase) */
+    double el_delay    = 44.875;  /* [us]  Default Electronic Delay */
+
+    double speed, chan_width, dead_time, time_of_flight, trav_time;
+    double delta_phase, el_peak_O, delay;
+
+    if (TOF_CHA_RESOL<=0) iTOF_CHA_RESOL=128; else iTOF_CHA_RESOL=TOF_CHA_RESOL;
+    if (RATIO <= 0)       iRATIO = 1;         else iRATIO        =RATIO;
+    if (ELPEAK >= 0 && ELPEAK<=iTOF_CHA_RESOL) iELPEAK  = ELPEAK;
+    else iELPEAK=ceil(iTOF_CHA_RESOL/2);
+
+    speed       = 60*K2V/(DM*cos(theta)*(LCE+(LED*pow((1-dE/Ei),-1.5))));
+    period      = 0.5e6 * 60 * iRATIO/speed;
+
+    chan_width  = floor(period/el_t_resol/iTOF_CHA_RESOL)*el_t_resol;
+    dead_time   = period-(iTOF_CHA_RESOL*chan_width);
+    time_of_flight = (LCC+LCE+LED)/vi*1e6;
+    trav_time   = LCC/vi*1e6;
+    delta_phase = (trav_time/period)*180;
+    phas_ferm   = ref_phas + delta_phase;
+    if (fmod(iRATIO, 2) == 0) phas_ferm *= 2;
+    phas_ferm  += phase_offset;
+    el_peak_O   = floor((time_of_flight + el_delay)/chan_width);
+    delay       =  (el_peak_O-iELPEAK) * chan_width;
+    if (iELPEAK >= el_peak_O) delay +=  period;
+    if (delay <= 1) delay = 2;
+
+    if (PHASE>-180 && PHASE <360) iPHASE=PHASE;    else iPHASE=-phas_ferm;
+    if (CHA_WIDTH <=0)    iCHA_WIDTH=chan_width;   else iCHA_WIDTH=CHA_WIDTH;
+    if (TOF_DELAY <=0)    iTOF_DELAY=delay;        else iTOF_DELAY=TOF_DELAY;
+    if (SPEED     <0)     iSPEED=speed;            else iSPEED=SPEED;
+    Frequency = iSPEED/60;
+
+    printf("Instrument Simulation %s (%s)\n", mcinstrument_name, mcinstrument_source);
+    printf("  using computed monochromator take-off angles: %g %g %g [deg]\n", A1, A2, A3);
+    printf("Wavelength               [AA]  %g\n",  sLambda);
+    printf("Neutron velocity         [m/s] %g\n",  vi);
+    printf("Monochr. Bragg angle     [deg] %g\n",  A2/2);
+    printf("Incident Energy          [meV] %g\n",  Ei);
+    printf("Focusing Energy Transfert[meV] %g\n",  dE);
+    printf("Travel time: Supp./Fermi [us]  %g\n",  trav_time);
+    printf("Travel time: Supp./Det.  [us]  %g\n",  time_of_flight);
+    printf("TOF Delay                [us]  %g\n",  delay);
+    printf("TOF Dead Time            [us]  %g\n",  dead_time);
+    printf("TOF Period (1 cycle)     [us]  %g\n",  period);
+    printf("TOF Channel width        [us]  %g\n",  chan_width);
+    printf("CHOP Fermi Phase         [deg] %g\n",  iPHASE);
+    printf("CHOP Suppressor Phase    [deg] %g\n",  ref_phas);
+    printf("CHOP Fermi Speed         [rpm] %g\n",  iSPEED);
+    printf("CHOP Suppressor Speed    [rpm] %g\n",  iSPEED/iRATIO);
+    printf("Number of time channels        %g\n",  iTOF_CHA_RESOL);
+    printf("Current Elastic Peak Ch.       %g\n",  iELPEAK);
+    printf("Elast. peak ch. for 0-delay    %g\n",  el_peak_O);
+
+    /* chopper to detector */
+    tmin = time_of_flight*1e-6 - (iCHA_WIDTH*iELPEAK-iTOF_DELAY)*1e-6;
+  }
+
+
+ /* distance to cover to detector from chopper: LCE+LED
+      Center time on 0 at Fermi center
+      LCE     from chopper to sample pos
+      LED     from sample to detector
+      propagation time t_p =(LCE+LED)/vi;
+      falls on ELPEAK channel.
+      Tmin = t_p-iCHA_WIDTH*1e-6*iELPEAK
+      Tmax = Tmin +N_CHan...
+   */
+
+
+  tmax = tmin+iTOF_CHA_RESOL*iCHA_WIDTH*1e-6;
+
+  printf("Time window:                   min=%g max=%g delay=%g tof-width=%g [ms]\n", tmin*1000, tmax*1000, iTOF_DELAY*1e-3, (tmax-tmin)*1000);
+
+  sprintf(opt2, "kxy limits=[0 5] bins=50, energy limits=[%g %g] bins=40, banana, parallel",
+  (Ei-20 < 0 ? 0 : Ei-20), Ei+20);
+  sprintf(opt1, "angle limits=[0 180] bins=180, energy limits=[%g %g] bins=40, banana, parallel",
+  (Ei-20 < 0 ? 0 : Ei-20), Ei+20);
+
+%}
+
+/* -------------------------------- TRACE -------------------------------- */
+TRACE
+
+COMPONENT Origin = Progress_bar(profile="profile")
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT VCS = Source_gen(
+  h        = 0.22,
+  w        = 0.14,
+  dist     = 2.525,
+  xw       = 0.038,
+  yh       = 0.2,
+  Lmin     = sLambda-sDLambda,
+  Lmax     = sLambda+sDLambda,
+  T1       = sT1,
+  I1       = sI1,
+  T2       = sT2,
+  I2       = sI2,
+  T3       = sT3,
+  I3       = sI3,
+  verbose  = 1)
+  AT (0, 0, 0) RELATIVE Origin
+
+  COMPONENT Al_window1 = Al_window(win_thick=Al_Thickness)
+AT (0,0,0.21) RELATIVE VCS
+
+COMPONENT Al_window2 = Al_window(win_thick=Al_Thickness)
+AT (0,0,0.61) RELATIVE VCS
+
+COMPONENT Al_window3 = Al_window(win_thick=Al_Thickness)
+AT (0,0,0.78) RELATIVE VCS
+
+COMPONENT Al_window4 = Al_window(win_thick=Al_Thickness)
+AT (0,0,0.92) RELATIVE VCS
+
+COMPONENT Al_window5 = Al_window(win_thick=Al_Thickness)
+AT (0,0,2.43) RELATIVE VCS
+
+/* H15-1: L=3.17 m in 1 element. no curvature */
+
+COMPONENT PinkCarter = Guide_gravity(
+  w1=0.038, h1=0.2, w2=0.032, h2=0.2, l=3.170,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,2.525) RELATIVE VCS
+
+COMPONENT FirstObturator = Guide_gravity(
+  w1=0.031, h1=0.2, w2=0.031, h2=0.2, l=0.228,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,3.17+0.02) RELATIVE PinkCarter
+
+/* ******************** swiming pool guide ******************** */
+
+/* H15-2: L=5.5 m in 6 elements R horiz=2700 m */
+
+COMPONENT H15_2 = Arm()
+AT (0,0,3.59) RELATIVE PinkCarter
+
+/*
+COMPONENT Mon_2_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_2_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_2_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_2_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+*/
+
+COMPONENT H15_2_In = Al_window(win_thick=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H15_2_1 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
+
+COMPONENT H15_2_2 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
+
+COMPONENT H15_2_3 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
+
+COMPONENT H15_2_4 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
+
+COMPONENT H15_2_5 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
+
+COMPONENT H15_2_6 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_2,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_2,0) RELATIVE PREVIOUS
+
+COMPONENT H15_2_Out = Al_window(win_thick=Al_Thickness)
+AT (0,0,L_H15_2+gGap) RELATIVE PREVIOUS
+
+/* gap 0.198 m (VS) */
+
+/* H15-3: L=9.973 m in 10 elements Rh=2700 m. */
+
+COMPONENT H15_3 = Arm()
+AT (0,0,0.198) RELATIVE H15_2_Out
+
+/*
+COMPONENT Mon_3_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_3_dxdy = Monitor_nD(
+  xwidth=0.6, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_3_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_3_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+*/
+
+COMPONENT H15_3_In = Al_window(win_thick=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_1 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_2 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_3 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_4 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_5 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_6 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_7 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_8 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_9 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_10 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_3,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_3,0) RELATIVE PREVIOUS
+
+COMPONENT H15_3_Out = Al_window(win_thick=Al_Thickness)
+AT (0,0,L_H15_3+gGap) RELATIVE PREVIOUS
+
+/* gap 0.03 m */
+
+/* H15-4: L=6.973 m in 7 elements Rh=2700 m. Here d_c ~ 21.4 */
+
+COMPONENT H15_4 = Arm()
+AT (0,0,0.03) RELATIVE H15_3_Out
+
+/*
+COMPONENT Mon_4_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_4_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_4_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_4_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+*/
+
+COMPONENT H15_4_In = Al_window(win_thick=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H15_4_1 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
+
+COMPONENT H15_4_2 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
+
+COMPONENT H15_4_3 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
+
+COMPONENT H15_4_4 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
+
+COMPONENT H15_4_5 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
+
+COMPONENT H15_4_6 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
+
+COMPONENT H15_4_7 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_4,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_4,0) RELATIVE PREVIOUS
+
+COMPONENT H15_4_Out = Al_window(win_thick=Al_Thickness)
+AT (0,0,L_H15_4+gGap) RELATIVE PREVIOUS
+
+/* gap 0.03 m */
+
+/* H15-5: L=4.75 m in 5 elements Rh=2700 m. Here d_c ~ 28.4 */
+
+COMPONENT H15_5 = Arm()
+AT (0,0,0.03) RELATIVE H15_4_Out
+
+/*
+COMPONENT Mon_5_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_5_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_5_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_5_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+*/
+
+COMPONENT H15_5_In = Al_window(win_thick=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H15_5_1 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
+
+COMPONENT H15_5_2 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
+
+COMPONENT H15_5_3 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
+
+COMPONENT H15_5_4 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
+
+COMPONENT H15_5_5 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_5,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_5,0) RELATIVE PREVIOUS
+
+COMPONENT H15_5_Out = Al_window(win_thick=Al_Thickness)
+AT (0,0,L_H15_5+gGap) RELATIVE PREVIOUS
+
+/* gap .330 m (VTE) */
+
+/* ******************** after the VTE ******************** */
+
+/* H15-6: L=11.473 m in 12 elements Rh=2700 m */
+
+COMPONENT H15_6 = Arm()
+AT (0,0,0.330) RELATIVE H15_5_Out
+
+/*
+COMPONENT Mon_6_xy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_6_dxdy = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_6_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_6_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+*/
+
+COMPONENT H15_6_In = Al_window(win_thick=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_1 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_2 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_3 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_4 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_5 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_6 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_7 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_8 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_9 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_10 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_11 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_12 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_6,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_6,0) RELATIVE PREVIOUS
+
+COMPONENT H15_6_Out = Al_window(win_thick=Al_Thickness)
+AT (0,0,L_H15_6+gGap) RELATIVE PREVIOUS
+
+/* gap 0.03 m */
+
+/* H15-7: L=9.973 m in 10 elements Rh=2700 m */
+
+COMPONENT H15_7 = Arm()
+AT (0,0,0.03) RELATIVE H15_6_Out
+
+/*
+COMPONENT Mon_7_xy = Monitor_nD(
+  xwidth=0.06, yheight=gH,
+  options="x y, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_7_dxdy = Monitor_nD(
+  xwidth=0.06, yheight=gH,
+  options="dx dy, all auto, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_7_Phic = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="x y dx dy, all auto, parallel, per cm2, capture, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT Mon_7_L = Monitor_nD(
+  xwidth=0.03, yheight=0.2,
+  options="lambda, limits=[1 21] bins=20, parallel, per cm2, slit")
+AT (0,0,0) RELATIVE PREVIOUS
+*/
+
+COMPONENT H15_7_In = Al_window(win_thick=Al_Thickness)
+AT (0,0,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_1 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,Al_Thickness+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_2 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_3 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_4 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_5 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_6 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_7 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_8 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_9 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_10 = Guide_gravity(
+  w1=0.03, h1=0.2, w2=0.03, h2=0.2, l=L_H15_7,
+  R0=gR0, Qc=gQc, alpha=gAlpha, m=gMvalue, W=gW)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS ROTATED (0,Rh_H15_7,0) RELATIVE PREVIOUS
+
+COMPONENT H15_7_Out = Al_window(win_thick=Al_Thickness)
+AT (0,0,L_H15_7+gGap) RELATIVE PREVIOUS
+
+// 9.3e9 down to 6.7e9 capture flux (28/02/2002) with white beam
+
+/* gap 0.3 m */
+
+/* H15-7: L=5.573 m in 6 elements Rh=2700 m. Here IN6 position. */
+
+COMPONENT H15_8 = Arm()
+AT (0,0,0.15) RELATIVE H15_7_Out
+
+/* ----------------------- IN6 Monochromators GROUP ----------------------- */
+
+COMPONENT Cradle = Arm()
+AT (0,0,0) RELATIVE H15_8
+
+/* triple-monochromator description:
+ *   7 blades, vertically focusing RV=3 m, fixed.
+ *   Each blade is 54 mm width, 29 mm heigh. Vertical angle +/- 3 deg.
+ *   mosaic 23 to 40 min. Motors 0.012 deg/step
+ *   distance between each crystal ensemble 4 cm
+ */
+
+SPLIT COMPONENT Mono1 = Monochromator_curved(
+  RV     = RV, NV = 7,NH=1,
+  zwidth = 0.054, yheight = 0.029,
+  DM     = 3.355, gap = 0.001,
+  mosaic = 40, r0=1, t0=1,
+  reflect="HOPG.rfl", transmit="HOPG.trm")
+AT (0,0, -LMM) RELATIVE Cradle ROTATED (0,A1/2,0) RELATIVE Craddle
+GROUP IN6Monoks
+EXTEND
+%{
+  if (SCATTERED) { MONND_USER_VALUE(MonokMonitor, 1, 1); }
+%}
+
+COMPONENT Mono2 = Monochromator_curved(
+  RV     = RV, NV = 7,NH=1,
+  zwidth = 0.054, yheight = 0.029,
+  DM     = 3.355, gap = 0.001,
+  mosaic = 40, r0=1, t0=1,
+  reflect="HOPG.rfl", transmit="HOPG.trm")
+AT (0,0, 0) RELATIVE Cradle ROTATED (0,A2/2,0) RELATIVE Craddle
+GROUP IN6Monoks
+EXTEND
+%{
+  if (SCATTERED) { MONND_USER_VALUE(MonokMonitor, 1, 2); }
+%}
+
+COMPONENT Mono3 = Monochromator_curved(
+  RV     = RV, NV = 7,NH=1,
+  zwidth = 0.054, yheight = 0.029,
+  DM     = 3.355, gap = 0.001,
+  mosaic = 40, r0=1, t0=1,
+  reflect="HOPG.rfl", transmit="HOPG.trm")
+AT (0,0, +LMM) RELATIVE Cradle ROTATED (0,A3/2,0) RELATIVE Craddle
+GROUP IN6Monoks
+EXTEND
+%{
+  if (SCATTERED) { MONND_USER_VALUE(MonokMonitor, 1, 3); }
+%}
+
+/* sample position direction  */
+COMPONENT mono_out = Arm()
+AT (0,0,0) RELATIVE Cradle ROTATED (0,A2craddle,0) RELATIVE Craddle
+
+/* --------------------------- IN6 Suppressor ------------------------ */
+
+COMPONENT SuppPos = Arm()
+AT (0,0,LME-LCE-LCC) RELATIVE mono_out
+
+COMPONENT Mon_SuppInL = Monitor_nD(
+  xwidth = 0.05, yheight = 0.098,
+  options="lambda, all auto")
+AT (0,0,-0.07-0.002) RELATIVE SuppPos
+
+COMPONENT Mon_SuppInT = Monitor_nD(
+  xwidth = 0.052, yheight = 0.098,
+  options="t slit, all auto", bins=iTOF_CHA_RESOL)
+AT (0,0,-0.07-0.001) RELATIVE SuppPos
+EXTEND
+%{
+
+  double Vi=sqrt(vx*vx+vy*vy+vz*vz);
+  if (iRATIO && Vi) {
+    /* compress flux/s into opening time atan(w/length)/PI/frequency */
+    /* suppressor time spread */
+    t = -0.07/Vi+(rand01()-0.5)/PI/Frequency*iRATIO*atan(0.052/0.14);
+    p /= PI*Frequency/iRATIO/atan(0.052/0.14);
+  }
+%}
+
+/* Suppressor Chopper position. */
+COMPONENT Suppressor = FermiChopper(radius=0.07, nu=-Frequency/iRATIO,
+   height=0.098, width=0.052, Nslit=1, R0=0, phase=0,
+   length=0.012, eff=1, verbose=1)
+   WHEN (iRATIO > 0)
+AT (0,0,0) RELATIVE SuppPos
+
+COMPONENT Mon_SuppOutT = Monitor_nD(
+  xwidth = 0.052, yheight = 0.098,
+  options="auto t slit", bins=iTOF_CHA_RESOL)
+AT (0,0,+0.07+0.001) RELATIVE SuppPos
+
+/* --------------------------- IN6 Fermi ------------------------ */
+
+COMPONENT FermiPos = Arm()
+AT (0,0,LME-LCE) RELATIVE mono_out
+
+COMPONENT FermiM = FermiChopper(phase=-iPHASE, radius=0.04, nu=-Frequency,
+   height=0.064, width=0.044, Nslit=200.0, R0=.99,
+   Qc=(mFC < 1 && mFC ? mFC*0.02176 : 0.02176), alpha=2.33, m=mFC, length=0.012, eff=1.0, verbose=1)
+AT (0,0,0) RELATIVE FermiPos
+
+COMPONENT Mon_FermiOutdT = Monitor_nD(
+  xwidth = 0.044, yheight = 0.064,
+  options="auto t slit", bins=iTOF_CHA_RESOL)
+AT (0,0,+0.06+0.001) RELATIVE FermiPos
+
+/* --------------------------- IN6 Fermi END --------------------- */
+
+COMPONENT MonokMonitor = Monitor_nD(
+  xwidth = 0.2, yheight = 0.2,
+  options="user1 limits=[0.5,3.5] bins=9, auto lambda bins=20, square, per cm2")
+AT (0,0,+0.06+0.002) RELATIVE FermiPos
+
+/* sample position (at 2.1 m from monoks) */
+
+COMPONENT Mon_SampleInT = Monitor_nD(
+  xwidth = 0.05, yheight = 0.05,
+  options="auto t parallel, per cm2", bins=iTOF_CHA_RESOL)
+AT (0,0,LME-.273) RELATIVE mono_out
+
+COMPONENT Mon_SampleInXY = Monitor_nD(
+  xwidth = 0.2, yheight = 0.1,
+  options="auto x y parallel, per cm2")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/* BEGIN ********************************** Sample environment and sample */
+
+COMPONENT sample_pos = Arm()
+AT (0,0,LME) RELATIVE mono_out
+
+SPLIT COMPONENT Sample=Isotropic_Sqw(
+  radius = radius, thickness=thickness, yheight = 0.055,
+  Sqw_coh=Sqw_coh, Sqw_inc=Sqw_inc, p_interact=0.9
+) AT (0, 0, 0) RELATIVE sample_pos
+EXTEND
+%{
+  if (!SCATTERED) ABSORB;
+%}
+
+COMPONENT M_theta_t_all = Monitor_nD(
+ xwidth=2.5, yheight=0.2,
+ options=opt1,
+ bins=100)
+AT (0,0,0) RELATIVE sample_pos
+
+COMPONENT M_omega_q_all = Monitor_nD(
+ xwidth=2.6, yheight=0.2,
+ options=opt2,
+ bins=100)
+AT (0,0,0) RELATIVE sample_pos
+
+
+END
+
+
+
+
+
+

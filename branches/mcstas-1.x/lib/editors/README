@@ -1,0 +1,22 @@
+20050206, code for setting up editors for McStas syntax highlighting
+
+NEDIT:
+nedit should be copied to a .nedit file in your home directory
+
+KATE (KDE):
+mcstas.xml is for usage with the excellent kate editor of KDE. Copy the 
+file to e.g. /usr/share/apps/katepart/syntax/ (Correct path on a Debian 
+testing system)
+
+GEDIT (Gnome):
+mcstas.lang is for usage under Gnome. Gedit uses gtksourceview. The 
+syntax definition file should be copied in e.g.
+/usr/share/gtksourceview-1.0/language-specs/ (Correct path on a Debian 
+testing system)
+
+(X)EMACS:
+McStas is not C only, but quite close. The contents of the provided emacs
+file should be entered in your .emacs file, setting font-lock-mode by
+default and using the standard c-mode for McStas .instr files.
+Note: Works also on Win32, copy the .emacs file to c:\ :-)
+

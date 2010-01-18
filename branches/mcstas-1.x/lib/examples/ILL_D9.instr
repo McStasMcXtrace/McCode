@@ -1,0 +1,310 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: ILL_D9
+*
+* %Identification
+* Written by: <a href="mailto:ling@ill.fr">Chris Ling</a>. DIF Group.
+* Date: 6th Jan 2004.
+* Origin: <a href="http://www.ill.fr">ILL (France)</a>
+* Release: McStas CVS_080624
+* Version: $Revision: 1.5 $
+* %INSTRUMENT_SITE: ILL
+*
+* The D9 hot diffractometer at the ILL.
+*
+* %Description
+* The hot neutron four-circle diffractometer D9 at the ILL.
+* For structural analysis beyond the determination of average atomic positions,
+* high resolution nuclear density maps are required. D9 is ideally suited for
+* this purpose. Because of the short wavelength very small atomic displacements
+* can be identified, accurate to typically 0.001 � A two-dimensional
+* multidetector is employed.
+* This simulation uses a quartz single crystal sample.
+*
+* NOTE: as no transmission monochromator component is presently available,
+* this simulation uses a monochromator in reflection, the width of which is
+* automatically adjusted so that the outcoming beam has the same width as
+* that of a 6.5 cm wide transmission monochromator at the same take-off angle
+*
+* example (single image on detector):
+*   mcrun D9_instr -n 1e8 Lambda=0.65 TwoTheta=60 Nu=15 delta_Omega=0
+*
+* example (peak scan):
+*   mcrun D9_instr -n 1e7 Lambda=0.65 TwoTheta=60 Nu=0
+*     delta_Omega=-1.8,1.8 -N 31 -d Scan_0.65_60_0
+*
+* %Parameters
+* input parameters :
+*    Lambda              : wavelength [Angstrom]
+*    TwoTheta            : 2-Theta of sample reflection [degree]
+*    Nu                  : lifting-arm angle [degree]
+*    delta_Omega         : start,end of omega scan [degree]
+*
+* %Link
+* <a href="http://www.ill.fr/YellowBook/D9">D9@ILL</a> (YellowBook)
+* %End
+*/
+
+DEFINE INSTRUMENT ILL_D9(Lambda=0.65,TwoTheta=60,Nu=15,delta_Omega=0)
+
+DECLARE
+%{
+
+/* global variables */
+
+  double L1 = 7.0;      /* source-mono distance (m) */
+  double L2 = 2.58;     /* mono-sample */
+  double L3 = 0.49;     /* sample-det */
+
+  double VD = 0.0835;   /* opening of vertical diaphragm before mono (m) */
+                        /* fully open VD = 0.0835 m for Cu mono 6 cm high */
+  double HD = 0.0525;   /* opening of horizontal diaphragm before mono (m) */
+                        /* fully open HD = 0.0525 m for Cu mono 6.5 cm wide */
+
+  double DM = 1.2815;   /* monochromator d-spacing [Angstrom] */
+                        /* Cu220 1st order d = 1.2815 */
+
+  double AP = 0.003;    /* radius of final B4C aperture before sample (m) */
+  double ND = 0.05;     /* distance of final B4C aperture from sample (m) */
+  double CS = 0.005;    /* side length of cubic sample crystal (m) */
+  double CD = 1e-4;     /* delta_d/d of sample crystal */
+  double CM = 5;        /* mosaic of sample crystal */
+
+  int    SM = 1;        /* scattering at mono to the right (-1)/left(+1) */
+  int    SS = -1;       /* scattering at sample to the right (-1)/left(+1) */
+  int    SN = -1;       /* scattering at sample up (-1)/down(+1) */
+
+/* variables to be computed */
+
+  double A1,A2,A3,A4,A5;
+
+  double DS;
+
+  double MW,R_vf,R_hf;
+
+  double dLambda;
+
+  double MN,BN;
+
+  double VD_l,VD_u,HD_l,HD_u;
+
+  int    SM,SS,SN;
+
+%}
+
+INITIALIZE
+%{
+
+  DS = Lambda/(2*(sin((TwoTheta/2)*DEG2RAD)));
+                           /* d-spacing sample [Angstrom] */
+
+  A2 = 2*asin(Lambda/(2*DM))*RAD2DEG;
+                          /* mono 2 theta (arm to sample) */
+  A2 *= SM;
+  A1 = A2/2;              /* mono theta (crystal) */
+
+  A4 = TwoTheta;
+  A4 *= SS;               /* sample 2 theta (arm to detector) */
+  A3 = A4/2;              /* sample theta (crystal omega) */
+
+  A5 = Nu;
+  A5 *= SN;               /* lifting angle Nu (arm to detector) */
+
+  MW = 0.009/tan(A1*DEG2RAD);
+                          /* width of one blade of a 7-blade reflection mono */
+                          /* required to output a beam the same size as that */
+                          /* from a 6.5 cm wide 7-blade transmission mono */
+
+  R_vf = 2*(L2)*sin(A1*DEG2RAD);
+  R_hf = 2*(L2)/sin(A1*DEG2RAD);
+                          /* vertical and horizontal mono focussing */
+                          /* radii (to detector) */
+
+  dLambda = Lambda*0.025; /* delta lambda out of source */
+
+  VD_u = VD/2;
+  VD_l = -VD_u;           /* upper and lower bounds of vertical diaphragm */
+  HD_u = HD/2;
+  HD_l = -HD_u;           /* upper and lower bounds of horizontal diaphragm */
+
+  MN = L2 - ND - 0.01;    /* used to place monitor 1 cm before nose */
+  BN = L2 - ND;           /* used to place B4C aperture ND m before mono */
+
+%}
+
+TRACE
+
+/*
+ * 2000 K hot source 20 cm thick defined by beamtube entrance 5 cm wide
+ * by 20 cm high, sending neutrons towards the exit of the graphite nose
+ * at the end of the beamtube
+ */
+
+COMPONENT source = Source_gen(
+    dist = 3.1943, xw = 0.03264, yh = 0.136114, Lambda0 = Lambda,
+    dLambda = dLambda, h = 0.2, w = 0.05, T1 = 2000, length = 0.2)
+  AT (0, 0, 0) ABSOLUTE
+
+/* exit of graphite nose of beamtube */
+
+COMPONENT beamtube_nose = Slit(
+    xmin = -0.01632, xmax = 0.01632,
+    ymin = -0.068057, ymax = 0.068057)
+  AT (0, 0, 3.1943) RELATIVE source
+
+/* exits of the 3 rotating slits in the "bouchon" */
+
+COMPONENT rotor_1 = Slit(
+    xmin = -0.015355, xmax = 0.015355,
+    ymin = -0.064507, ymax = 0.064507)
+  AT (0, 0, 3.5893) RELATIVE source
+
+COMPONENT rotor_2 = Slit(
+    xmin = -0.01395, xmax = 0.01395,
+    ymin = -0.05935, ymax = 0.05935)
+  AT (0, 0, 4.0668) RELATIVE source
+
+COMPONENT rotor_3 = Slit(
+    xmin = -0.0125745, xmax = 0.0125745,
+    ymin = -0.054257, ymax = 0.054257)
+  AT (0, 0, 4.6103) RELATIVE source
+
+/* diaphragm in box with Al windows */
+
+     COMPONENT mon_d_b = PSD_monitor(
+         nx = 60, ny = 60, filename = "Before_Diaphragms",
+         xmin = -0.06, xmax = 0.06, ymin = -0.06, ymax = 0.06)
+       AT (0, 0, 5.374) RELATIVE source
+
+COMPONENT window_in = Al_window(
+    win_thick = 0.0005)
+  AT (0, 0, 5.384) RELATIVE source
+
+COMPONENT diaphragm_v = Slit(
+    xmin = -0.05, xmax = 0.05, ymin = VD_l, ymax = VD_u)
+  AT (0, 0, 5.821) RELATIVE source
+
+COMPONENT diaphragm_h = Slit(
+    xmin = HD_l, xmax = HD_u, ymin = -0.1, ymax = 0.1)
+  AT (0, 0, 6.239) RELATIVE source
+
+COMPONENT window_out = Al_window(
+    win_thick = 0.0005)
+  AT (0, 0, 6.254) RELATIVE source
+
+     COMPONENT mon_d_a = PSD_monitor(
+         nx = 60, ny = 60, filename = "After_Diaphragms",
+         xmin = -0.06, xmax = 0.06, ymin = -0.06, ymax = 0.06)
+       AT (0, 0, 0.01) RELATIVE diaphragm_h
+
+/* monochromator */
+
+COMPONENT mono_cradle = Arm(
+    )
+  AT (0, 0, L1) RELATIVE source
+  ROTATED (0, A1, 0) RELATIVE source
+
+COMPONENT mono = Monochromator_curved(
+    zwidth = MW, yheight = 0.0085, gap = 0.0005, NH = 7, NV = 7,
+    mosaich = 12.3, mosaicv = 30, r0 = 0.7, t0 = 0.3, DM = DM,
+    RV = R_vf, RH = R_hf)
+  AT (0, 0, 0) RELATIVE mono_cradle
+
+COMPONENT mono_out = Arm(
+    )
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, A2, 0) RELATIVE source
+
+     COMPONENT mon_m = PSD_monitor(
+         nx = 60, ny = 60, filename = "After_Mono_20cm", xmin = -0.06,
+         xmax = 0.06, ymin = -0.06, ymax = 0.06)
+       AT (0, 0, 0.2) RELATIVE mono_out
+
+/* B4C collimator at exit of mono housing, in and out positions */
+
+     COMPONENT mon_c_b = PSD_monitor(
+         nx = 60, ny = 60, filename = "Before_Coll", xmin = -0.06,
+         xmax = 0.06, ymin = -0.06, ymax = 0.06)
+       AT (0, 0, 1.19) RELATIVE mono_out
+
+COMPONENT coll_in = Slit(
+    xmin = -0.022, xmax = 0.022,
+    ymin = -0.0205, ymax = 0.0205)
+  AT (0, 0, 1.2) RELATIVE mono_out
+
+COMPONENT coll_out = Slit(
+    xmin = -0.0185, xmax = 0.0185,
+    ymin = -0.0175, ymax = 0.0175)
+  AT (0, 0, 1.6) RELATIVE mono_out
+
+     COMPONENT mon_c_e = PSD_monitor(
+         nx = 60, ny = 60, filename = "After_Coll", xmin = -0.06,
+         xmax = 0.06, ymin = -0.06, ymax = 0.06)
+       AT (0, 0, 0.01) RELATIVE coll_out
+
+/* B4C aperture */
+
+     COMPONENT mon_n_b = PSD_monitor(
+         nx = 60, ny = 60, filename = "Before_Nose", xmin = -0.06,
+         xmax = 0.06, ymin = -0.06, ymax = 0.06)
+       AT (0, 0, MN) RELATIVE mono_out
+
+COMPONENT nose = Slit(
+    radius = AP)
+  AT (0, 0, BN) RELATIVE mono_out
+
+     COMPONENT mon_n_a = PSD_monitor(
+         nx = 60, ny = 60, filename = "After_Nose", xmin = -0.06,
+         xmax = 0.06, ymin = -0.06, ymax = 0.06)
+       AT (0, 0, 0.01) RELATIVE nose
+
+/* sample */
+
+COMPONENT four_circle = Arm(       /* sample reference frame */
+    )
+  AT (0, 0, L2) RELATIVE mono_out
+  ROTATED (0, 0, 0) RELATIVE mono_out
+
+COMPONENT omega_circle = Arm(      /* rotate sample in omega scan */
+    )
+  AT (0, 0, 0) RELATIVE four_circle
+  ROTATED (0, delta_Omega, 0) RELATIVE four_circle
+
+COMPONENT sample_cradle = Arm(     /* rotate sample in nu */
+    )
+  AT (0, 0, 0) RELATIVE omega_circle
+  ROTATED (0, 0, A5) RELATIVE omega_circle
+
+COMPONENT detector_cradle = Arm(   /* position detector in nu */
+    )
+  AT (0, 0, 0) RELATIVE four_circle
+  ROTATED (0, 0, A5) RELATIVE four_circle
+
+COMPONENT sample = Single_crystal( /* rotate sample in omega */
+    xwidth = CS, yheight = CS, zdepth = CS,
+    delta_d_d = CD, mosaic = CM,
+    ax = DS, ay = 0, az = 0,
+    bx = 0, by = DS, bz = 0,
+    cx = 0, cy = 0, cz = DS,
+    reflections = "quartz.lau")
+  AT (0, 0, 0) RELATIVE sample_cradle
+  ROTATED (0, A3, 0) RELATIVE sample_cradle
+
+COMPONENT sample_out = Arm(        /* position detector in gamma */
+    )
+  AT (0, 0, 0) RELATIVE detector_cradle
+  ROTATED (0, A4, 0) RELATIVE detector_cradle
+
+/* detector */
+
+COMPONENT PSD_flat = PSD_monitor(
+    nx = 32, ny = 32, filename = "Detector", xmin = -0.032,
+    xmax = 0.032, ymin = -0.032, ymax = 0.032)
+  AT (0, 0, L3) RELATIVE sample_out
+
+END

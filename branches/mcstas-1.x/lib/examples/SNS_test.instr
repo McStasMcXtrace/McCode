@@ -1,0 +1,58 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Instrument: SNS_test
+*
+* %Identification
+* Written by: G. Granroth
+* Date: July 2004
+* Origin: SNS Project Oak Ridge National Laboratory
+* %INSTRUMENT_SITE:tests
+*
+* %Description
+* Simple test instrument for the SNS_source component.
+* Refer to SNS <A href="http://www.sns.gov/users/instrument_systems/components/moderator/">Source files.</A>
+*
+* Example: mcrun SNS_test.instr
+*
+* %Link
+* Written by G. Granroth
+* SNS_source component
+* <A href="http://www.sns.gov/users/instrument_systems/components/moderator/">Source files </A>
+* %End
+*******************************************************************************/
+
+DEFINE INSTRUMENT SNS_test()
+
+TRACE
+COMPONENT mod=SNS_source(S_filename="source_sct091_tu_02_1.dat",
+                         width=0.1,
+                         height=0.12,
+                         dist=1,
+                         xw=0.10,
+                         yh=0.24,
+Emin=1.0,Emax=10.0)
+AT(0,0,0) ABSOLUTE
+
+COMPONENT dett=TOF_monitor(xmin = -.025,
+	              xmax = .025,
+		      ymin = -.06,
+		      ymax = .06,
+		      nchan=500,
+                      dt=10,
+                      filename="tout.det")
+At (0,0,1) RELATIVE mod
+
+COMPONENT det=Monitor_nD(
+                      xmin = -.5,
+	              xmax = .5,
+		      ymin = -.5,
+		      ymax = .5,
+		      options=" square x bins 100 limits=[-0.05 0.05]; y bins 100 limits=[-0.12 0.12]")
+AT (0,0,1.0000000000001) RELATIVE mod
+END
+

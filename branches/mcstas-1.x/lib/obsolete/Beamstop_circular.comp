@@ -1,0 +1,47 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Beamstop_circular component
+*         Copyright 2000-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* %I
+* Written by: Kristian Nielsen
+* Date: January 2000
+* Version: $Revision: 1.18 $
+* Origin: Risoe
+* Release: McStas 1.5 (Obsolete)
+* Modified by: EF, 2004. Renamed to optics/Beamstop with rect/circle shapes
+*
+* Circular beam stop.
+*
+* %D
+* A simple circular beam stop. Infinitely thin and infinitely absorbing.
+* OBSOLETE: rather use optics/Beamstop supporting both rect/circle shapes
+*
+* %P
+* INPUT PARAMETERS
+*
+* radius: radius of the beam stop (m)
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Beamstop_circular
+DEFINITION PARAMETERS ()
+SETTING PARAMETERS (radius=0.1)
+OUTPUT PARAMETERS ()
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+TRACE
+%{
+    PROP_Z0;
+    if(x*x + y*y <= radius*radius)
+      ABSORB;
+%}
+
+MCDISPLAY
+%{
+  magnify("xy");
+  circle("xy", 0, 0, 0, radius);
+%}
+
+END

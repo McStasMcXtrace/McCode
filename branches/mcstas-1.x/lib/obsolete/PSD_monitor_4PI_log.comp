@@ -1,0 +1,131 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: PSD_monitor_4PI_log.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* %I
+* Written by: Kim Lefmann and Kristian Nielsen
+* Date: April 17, 1998
+* Version: $Revision: 1.21 $
+* Release: McStas 1.5 (Obsolete)
+* Origin: Risoe
+* Modified by: EF, 2004. Obsoleted as other comps do the same task
+*
+* Spherical position-sensitive detector with logarithmic scale.
+*
+* %D
+* This component is a hack. It is identical to the PSD_monitor_4PI component,
+* except that the values in the output histogram are the logarithms of the
+* intensities rather than the intensities themselves. This is useful in
+* Laue-diffraction patterns (like in the McStas tutorial), but does not work
+* together too well with the current McStas method of handling detectors.
+* OBSOLETE: rather use monitors/Monitor_nD with options="sphere log x y ..."
+*
+* %P
+* INPUT PARAMETERS:
+*
+* radius:   Radius of detector (m)
+* nx:       Number of pixel columns (1)
+* ny:       Number of pixel rows (1)
+* filename: Name of file in which to store the detector image (text)
+*
+* OUTPUT PARAMETERS:
+*
+* PSD_N:    Array of neutron counts
+* PSD_p:    Array of neutron weight counts
+* PSD_p2:   Array of second moments
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT PSD_monitor_4PI_log
+DEFINITION PARAMETERS (nx=90, ny=90, filename)
+SETTING PARAMETERS (radius=0.1)
+OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+
+DECLARE
+%{
+  double PSD_N[nx][ny];
+  double PSD_p[nx][ny];
+  double PSD_p2[nx][ny];
+%}
+INITIALIZE
+%{
+  int i,j;
+
+  for (i=0; i<nx; i++)
+    for (j=0; j<ny; j++)
+    {
+      PSD_N[i][j] = 0;
+      PSD_p[i][j] = 0;
+      PSD_p2[i][j] = 0;
+    }
+%}
+TRACE
+%{
+  double t0, t1, phi;
+  int i,j;
+
+  if(sphere_intersect(&t0, &t1, x, y, z, vx, vy, vz, radius) && t1 > 0)
+  {
+    if(t0 < 0)
+      t0 = t1;
+    /* t0 is now time of intersection with the sphere. */
+    PROP_DT(t0);
+    phi = atan2(z,x);
+    i = floor(nx*(phi/(2*PI) + 0.5));
+    if(i == nx)
+      i--;                      /* Special case for phi = PI. */
+    else if(i < 0)
+      y = 0;
+    j = floor(ny*(y/(2*radius) + 0.5));
+    if(j == ny)
+      j--;                      /* Special case for y = radius. */
+    else if(j < 0)
+      j = 0;
+    PSD_N[i][j]++;
+    PSD_p[i][j] += p;
+    PSD_p2[i][j] += p*p;
+  }
+%}
+
+FINALLY
+%{
+  double l_p[nx][ny];
+  int i,j;
+  double minp;
+
+  minp = 0;
+  for (i=0; i<nx; i++)
+    for (j=0; j<ny; j++)
+    {
+      if((PSD_p[i][j] < minp || minp == 0) && PSD_p[i][j] > 0)
+        minp = PSD_p[i][j];
+    }
+  if(minp <= 0)
+    minp = 1;                   /* Avoid logarithm of zero */
+  for (i=0; i<nx; i++)
+    for (j=0; j<ny; j++)
+    {
+      l_p[i][j] = log(PSD_p[i][j] > 0 ? PSD_p[i][j] : minp*0.1)/log(10);
+    }
+  DETECTOR_OUT_2D(
+    "4PI PSD monitor (log scale)",
+    "Longitude [deg]",
+    "Lattitude [deg]",
+    -180, 180, -90, 90,
+    nx, ny,
+    &PSD_N[0][0],&l_p[0][0],NULL,
+    filename);
+%}
+
+MCDISPLAY
+%{
+  magnify("");
+  circle("xy",0,0,0,radius);
+  circle("xz",0,0,0,radius);
+  circle("yz",0,0,0,radius);
+%}
+
+END

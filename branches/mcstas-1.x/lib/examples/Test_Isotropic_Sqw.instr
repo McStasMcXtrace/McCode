@@ -1,0 +1,76 @@
+/* Instrument: Test_Isotropic_Sqw.instr
+ *
+ * %Identification
+ * Written by: E. Farhi
+ * Date: Jan 2004
+ * Origin: ILL
+ *
+ * %INSTRUMENT_SITE: tests
+ *
+ * A test instrument for the S(q,w) sample
+ *
+ * %Description
+ * This instrument is a test instrument for the S(q,w) sample.
+ * It produces a tof-angle and angle-energy detectors and also exports the
+ * S(q,w) and S(q) data.
+ *
+ *
+ * Example: mcrun Test_Isotropic_Sqw.instr lambda=3.4
+ *
+ * %Parameters
+ * INPUT PARAMETERS:
+ *    lambda:      source energy                               [Angs]
+ *    sample_coh:  name of coherent Sqw data file              [str]
+ *    sample_inc:  name of incoherent Sqw data file            [str]
+ *
+ * %Link
+ * The Isotropic_Sqw sample
+ * %End
+*/
+
+DEFINE INSTRUMENT Test_Isotropic_Sqw(lambda=3.4,
+  string sample_coh="Rb_liq_coh.sqw", string sample_inc="Rb_liq_inc.sqw")
+
+TRACE
+
+COMPONENT Origin = Progress_bar(percent=5)
+  AT (0,0,0) ABSOLUTE
+
+COMPONENT Source=Source_gen(
+        radius=0.01, xw=0.01, yh=0.02, dist=1.5, Lambda0=lambda, dLambda=0.01*lambda)
+AT (0,0,0) RELATIVE Origin
+
+COMPONENT PSD=Monitor_nD(options="x,y, auto, parallel")
+AT (0,0,0) RELATIVE PREVIOUS
+
+/* sample position */
+COMPONENT Sample_pos = Arm()
+AT (0, 0, 1.5) RELATIVE Origin
+
+COMPONENT Sample=Isotropic_Sqw(
+  radius = 0.01, yheight = 0.055, p_interact=0.8, save_sqw=1,
+  Sqw_coh=sample_coh, Sqw_inc=sample_inc
+) AT (0, 0, 0) RELATIVE Sample_pos
+EXTEND
+%{
+if (!SCATTERED) ABSORB;
+%}
+
+  /* detectors */
+
+COMPONENT M_theta_t = Monitor_nD(
+ xwidth=2.5, yheight=0.2,
+ options="auto time, abs angle limits=[0 180], banana, parallel",
+ bins=100)
+AT (0,0,0) RELATIVE Sample_pos
+
+COMPONENT M_qw = Monitor_nD(
+ xwidth=2.5, yheight=0.4,
+ options="angle limits=[0 180], auto energy, banana, parallel",
+ bins=100)
+AT (0,0,0) RELATIVE Sample_pos
+
+END
+
+
+

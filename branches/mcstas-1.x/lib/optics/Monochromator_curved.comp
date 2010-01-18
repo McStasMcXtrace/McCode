@@ -1,0 +1,466 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2007, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Component: Monochromator_curved
+*
+* %I
+*
+* Written by: Emmanuel Farhi, Kim, Lefmann, Peter Link
+* Date: Aug. 24th 2001
+* Version: $Revision: 1.26 $
+* Origin: <a href="http://www.ill.fr">ILL</a>
+* Release: McStas CVS_070701
+* Modified by: EF, Aug. 24th 2001: From Mosaic_anisotropic and Mon_2foc
+* Modified by: EF, Feb 13th 2002:  Read reflectivity table
+* Modified by: EF, Oct 24th 2002:  Read transmission table
+*
+* Double bent multiple crystal slabs with anisotropic gaussian mosaic.
+*
+* %Description
+* Double bent infinitely thin mosaic crystal, useful as a monochromator or
+* analyzer. which uses a small-mosaicity approximation and taking into account
+* higher  order scattering. The mosaic is anisotropic gaussian, with different
+* FWHMs in the Y and Z directions. The scattering vector is perpendicular to the
+* surface. For an unrotated monochromator component, the crystal plane lies in
+* the y-z plane (ie. parallel to the beam). The component works in reflection, but
+* also transmits the non-diffracted beam. Reflectivity and transmission files may
+* be used. The slabs are positioned in the vertical plane (not on a
+* cylinder/sphere), and are rotated according to the curvature radius.
+* When curvatures are set to 0, the monochromator is flat.
+* The curvatures approximation for parallel beam focusing to distance L, with
+* monochromator rotation angle A1 are:
+*   RV = 2*L*sin(DEG2RAD*A1);
+*   RH = 2*L/sin(DEG2RAD*A1);
+*
+* When you rotate the component by A1 = asin(Q/2/Ki)*RAD2DEG, do not forget to
+* rotate the following components by A2=2*A1 (for 1st order) !
+*
+* Example: Monochromator_curved(zwidth=0.01, yheight=0.01, gap=0.0005,
+*           NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, Q=1.8734)
+*
+* Example values for lattice parameters
+* PG       002 DM=3.355 AA (Highly Oriented Pyrolytic Graphite)
+* PG       004 DM=1.607 AA
+* Heusler  111 DM=3.362 AA (Cu2MnAl)
+* CoFe         DM=1.771 AA (Co0.92Fe0.08)
+* Ge       311 DM=1.714 AA
+* Si       111 DM=3.135 AA
+* Cu       111 DM=2.087 AA
+* Cu       002 DM=1.807 AA
+* Cu       220 DM=1.278 AA
+* Cu       111 DM=2.095 AA
+*
+* %Parameters
+* INPUT PARAMETERS:
+*
+* zwidth:  horizontal width of an individual slab (m)
+* yheight: vertical height of an individual slab (m)
+* gap:     typical gap  between adjacent slabs (m)
+* NH:      number of slabs horizontal (columns)
+* NV:      number of slabs vertical   (rows)
+* mosaich: Horisontal mosaic FWHM (arc minutes)
+* mosaicv: Vertical mosaic FWHM (arc minutes)
+* r0:      Maximum reflectivity. O unactivates component (1)
+* Q:       Scattering vector (AA-1)
+* RV:      radius of vertical focussing. flat for 0 (m)
+* RH:      radius of horizontal focussing. flat for 0 (m)
+*
+* optional parameters
+* DM:      monochromator d-spacing instead of Q=2*pi/DM (Angstrom)
+* mosaic:  sets mosaich=mosaicv (arc minutes)
+* width:   total width of monochromator (m)
+* height:  total height of monochromator (m)
+* verbose: verbosity level (0/1)
+* reflect: reflectivity file name of text file as 2 columns [k, R] [str]
+* transmit:transmission file name of text file as 2 columns [k, T] [str]
+* t0:      transmission efficiency [1]
+*
+* OUTPUT PARAMETERS:
+* col:     column index for last hit blade (1:NH)
+* row:     row index for last hit blade (1:NV)
+*
+* %Link
+* <a href="http://mcstas.risoe.dk/pipermail/neutron-mc/1999q1/000133.html">Additional note</a> from Peter Link.
+* %L
+* Obsolete Mosaic_anisotropic by Kristian Nielsen
+* %L
+* Contributed Monochromator_2foc by Peter Link
+*
+* %End
+*******************************************************************************/
+
+DEFINE COMPONENT Monochromator_curved
+DEFINITION PARAMETERS (string reflect=0, string transmit=0)
+SETTING PARAMETERS (zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
+OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable, tTable, row, col)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+SHARE
+%{
+#ifndef GAUSS
+  /* Define these arrays only once for all instances. */
+  /* Values for Gauss quadrature. Taken from Brice Carnahan, H. A. Luther and
+     James O Wilkes, "Applied numerical methods", Wiley, 1969, page 103.
+     This reference is available from the Copenhagen UB2 library */
+  double Gauss_X[] = {-0.987992518020485, -0.937273392400706, -0.848206583410427,
+                -0.724417731360170, -0.570972172608539, -0.394151347077563,
+                -0.201194093997435, 0, 0.201194093997435,
+                0.394151347077563, 0.570972172608539, 0.724417731360170,
+                0.848206583410427, 0.937273392400706, 0.987992518020485};
+  double Gauss_W[] = {0.030753241996117, 0.070366047488108, 0.107159220467172,
+                0.139570677926154, 0.166269205816994, 0.186161000115562,
+                0.198431485327111, 0.202578241925561, 0.198431485327111,
+                0.186161000115562, 0.166269205816994, 0.139570677926154,
+                0.107159220467172, 0.070366047488108, 0.030753241996117};
+
+
+#define GAUSS(x,mean,rms) \
+  (exp(-((x)-(mean))*((x)-(mean))/(2*(rms)*(rms)))/(sqrt(2*PI)*(rms)))
+#endif
+
+%include "read_table-lib"
+%}
+
+DECLARE
+%{
+  double mos_rms_y; /* root-mean-square of mosaic, in radians */
+  double mos_rms_z;
+  double mos_rms_max;
+  double mono_Q;
+  double SlabWidth, SlabHeight;
+  t_Table rTable, tTable;
+  double row,col;
+%}
+
+INITIALIZE
+%{
+  if (mosaic != 0) {
+    mos_rms_y = MIN2RAD*mosaic/sqrt(8*log(2));
+    mos_rms_z = mos_rms_y; }
+  else {
+    mos_rms_y = MIN2RAD*mosaich/sqrt(8*log(2));
+    mos_rms_z = MIN2RAD*mosaicv/sqrt(8*log(2)); }
+  mos_rms_max = mos_rms_y > mos_rms_z ? mos_rms_y : mos_rms_z;
+
+  mono_Q = Q;
+  if (DM != 0) mono_Q = 2*PI/DM;
+
+  if (mono_Q <= 0) { fprintf(stderr,"Monochromator_curved: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
+  if (r0 <  0) { fprintf(stderr,"Monochromator_curved: %s: Error reflectivity r0 is negative\n", NAME_CURRENT_COMP); exit(-1); }
+  if (r0 == 0) { fprintf(stderr,"Monochromator_curved: %s: Reflectivity r0 is null. Ingnoring component.\n", NAME_CURRENT_COMP); }
+  if (NH*NV == 0) { fprintf(stderr,"Monochromator_curved: %s: no slabs ??? (NH or NV=0)\n", NAME_CURRENT_COMP); exit(-1); }
+
+
+  if (verbose && r0)
+  {
+    printf("Monochromator_curved: component %s Q=%.3g Angs-1 (DM=%.4g Angs)\n", NAME_CURRENT_COMP, mono_Q, 2*PI/mono_Q);
+    if (NH*NV == 1) printf("            flat.\n");
+    else
+    { if (NH > 1)
+      { printf("            horizontal: %i blades", (int)NH);
+        if (RH != 0) printf(" focusing with RH=%.3g [m]", RH);
+        printf("\n");
+      }
+      if (NV > 1)
+      { printf("            vertical:   %i blades", (int)NV);
+        if (RV != 0) printf(" focusing with RV=%.3g [m]", RV);
+        printf("\n");
+      }
+    }
+  }
+
+  if (reflect != NULL && r0)
+  {
+    if (verbose) fprintf(stdout, "Monochromator_curved : %s : Reflectivity data (k, R)\n", NAME_CURRENT_COMP);
+    Table_Read(&rTable, reflect, 1); /* read 1st block data from file into rTable */
+    Table_Rebin(&rTable);         /* rebin as evenly, increasing array */
+    if (rTable.rows < 2) Table_Free(&rTable);
+    if (verbose) Table_Info(rTable);
+  } else rTable.data = NULL;
+
+  if (transmit != NULL)
+  {
+    if (verbose) fprintf(stdout, "Monochromator_curved : %s : Transmission data (k, T)\n", NAME_CURRENT_COMP);
+    Table_Read(&tTable, transmit, 1); /* read 1st block data from file into rTable */
+    Table_Rebin(&tTable);         /* rebin as evenly, increasing array */
+    if (tTable.rows < 2) Table_Free(&tTable);
+    if (verbose) Table_Info(tTable);
+  } else tTable.data = NULL;
+
+  if (width == 0) SlabWidth = zwidth;
+  else SlabWidth = (width+gap)/NH - gap;
+  if (height == 0) SlabHeight = yheight;
+  else SlabHeight = (height+gap)/NV - gap;
+
+%}
+
+TRACE
+%{
+  double dt;
+
+  if(vx != 0.0 && (dt = -x/vx) >= 0.0 && r0)
+  {                             /* Moving towards crystal? */
+    double zmin,zmax, ymin,ymax, zp,yp;
+
+    /* Propagate to crystal plane */
+    PROP_DT(dt);    /* now in the vertical plane of monochromator */
+
+    zmax = ((NH*(SlabWidth+gap))-gap)/2;
+    zmin = -zmax;
+    ymax = ((NV*(SlabHeight+gap))-gap)/2;
+    ymin = -ymax;
+
+    /* hit a slab or a gap ? */
+
+    if (z>zmin && z<zmax && y>ymin && y<ymax) { /* Intersect the crystal? */
+      double tilth,tiltv;         /* used to calculate tilt angle of slab */
+      double ratio, order, k, kux,kuy,kuz;
+      double kix,kiy,kiz;
+      int    do_transmit = 0;
+
+      col = ceil ( (z-zmin)/(SlabWidth+gap));  /* which slab hit ? */
+      row = ceil ( (y-ymin)/(SlabHeight+gap));
+      if (RH != 0) tilth = asin((col-(NH+1)/2)*(SlabWidth+gap)/RH);
+      else tilth=0;
+      if (RV != 0) tiltv = -asin((row-(NV+1)/2)*(SlabHeight+gap)/RV);
+      else tiltv=0;
+
+      /* restore neutron in order to transform to slab coordinates */
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+
+      /* rotate with tilth (around Y) and tiltv (around Z), center on plate */
+      double center_z=zmin+(col-0.5)*(SlabWidth+gap) -gap/2;
+      double center_y=ymin+(row-0.5)*(SlabHeight+gap)-gap/2;
+      Rotation T;
+      rot_set_rotation(T, 0, tilth,    tiltv);
+      /* now make the coordinate system change */
+      mccoordschange_polarisation(T, &vx, &vy, &vz);
+      y-=center_y;
+      z-=center_z;
+      coords_get(rot_apply(T,coords_set(x,y,z)),&x,&y,&z);
+
+      /* this is where polaisation should be handled, plus further down */
+      /* mccoordschange_polarisation(t, &sx, &sy, &sz); */
+
+      /* now propagate to slab plane */
+      PROP_X0;
+
+      if (fabs(z) <= SlabWidth/2 && fabs(y) <= SlabHeight/2) { /* not in gap ? */
+        kix = V2K*vx;             /* Initial wave vector */
+        kiy = V2K*vy;
+        kiz = V2K*vz;
+        /* Get reflection order and corresponding nominal scattering vector q0
+          of correct length and direction. Only the order with the closest
+          scattering vector is considered */
+        ratio = -2*kix/mono_Q;
+        order = floor(ratio + .5);
+        if(order == 0.0) order = ratio < 0 ? -1 : 1;
+        /* Order will be negative when the neutron enters from the back, in
+          which case the direction of Q0 is flipped. */
+        if(order < 0) order = -order;
+        /* Make sure the order is small enough to allow Bragg scattering at the
+          given neutron wavelength */
+        k = sqrt(kix*kix + kiy*kiy + kiz*kiz);
+        kux = kix/k;              /* Unit vector along ki */
+        kuy = kiy/k;
+        kuz = kiz/k;
+        if(order > 2*k/mono_Q) order--;
+        if(order > 0) {           /* Bragg scattering possible? */
+          double q0, q0x, theta, delta, p_reflect, my_r0;
+
+          q0 = order*mono_Q;
+          q0x = ratio < 0 ? -q0 : q0;
+          theta = asin(q0/(2*k)); /* Actual bragg angle */
+          /* Make MC choice: reflect or transmit? */
+          delta = asin(fabs(kux)) - theta;
+
+          if (rTable.data != NULL)
+          {
+            my_r0 = r0*Table_Value(rTable, k, 1); /* 2nd column */
+          }
+          else my_r0 = r0;
+          if (my_r0 > 1)
+          {
+            if (my_r0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered reflectivity from %f to 1 (k=%f)\n", my_r0, k);
+            my_r0=0.999;
+          }
+          if (my_r0 < 0)
+          {
+            if (verbose) fprintf(stdout, "Warning: Monochromator_curved : raised reflectivity from %f to 0 (k=%f)\n", my_r0, k);
+            my_r0=0;
+          }
+
+          p_reflect = fabs(my_r0)*exp(-kiz*kiz/(kiy*kiy + kiz*kiz)*(delta*delta)/
+                            (2*mos_rms_y*mos_rms_y))*
+                        exp(-kiy*kiy/(kiy*kiy + kiz*kiz)*(delta*delta)/
+                            (2*mos_rms_z*mos_rms_z));
+
+          if(rand01() <= p_reflect) { /* Reflect */
+            double bx,by,bz,ax,ay,az,phi;
+            double cos_2theta,k_sin_2theta,cos_phi,sin_phi,kfx,kfy,kfz,q_x,q_y,q_z;
+            double total,c1x,c1y,c1z,width,mos_sample;
+            int i=0;
+
+            cos_2theta   = cos(2*theta);
+            k_sin_2theta = k*sin(2*theta);
+            /* Get unit normal to plane containing ki and most probable kf */
+            vec_prod(bx, by, bz, kix, kiy, kiz, q0x, 0, 0);
+            NORM(bx,by,bz);
+            bx *= k_sin_2theta;
+            by *= k_sin_2theta;
+            bz *= k_sin_2theta;
+            /* Get unit vector normal to ki and b */
+            vec_prod(ax, ay, az, bx, by, bz, kux, kuy, kuz);
+            /* Compute the total scattering probability at this ki */
+            total = 0;
+            /* Choose width of Gaussian distribution to sample the angle
+            * phi on the Debye-Scherrer cone for the scattered neutron.
+            * The radius of the Debye-Scherrer cone is smaller by a
+            * factor 1/cos(theta) than the radius of the (partial) sphere
+            * describing the possible orientations of Q due to mosaicity, so we
+            * start with a width 1/cos(theta) greater than the largest of
+            * the two mosaics. */
+            mos_sample = mos_rms_max/cos(theta);
+            c1x = kix*(cos_2theta-1);
+            c1y = kiy*(cos_2theta-1);
+            c1z = kiz*(cos_2theta-1);
+            /* Loop, repeatedly reducing the sample width until it is small
+            * enough to avoid sampling scattering directions with
+            * ridiculously low scattering probability.
+            * Use a cut-off at 5 times the gauss width for considering
+            * scattering probability as well as for integration limits
+            * when integrating the sampled distribution below. */
+            for(i=0; i<100; i++) {
+              width = 5*mos_sample;
+              cos_phi = cos(width);
+              sin_phi = sin(width);
+              q_x =  c1x + cos_phi*ax + sin_phi*bx;
+              q_y = (c1y + cos_phi*ay + sin_phi*by)/mos_rms_z;
+              q_z = (c1z + cos_phi*az + sin_phi*bz)/mos_rms_y;
+              /* Stop when we get near a factor of 25=5^2. */
+              if(q_z*q_z + q_y*q_y < (25/(2.0/3.0))*(q_x*q_x))
+                break;
+              mos_sample *= (2.0/3.0);
+            }
+            /* Now integrate the chosen sampling distribution, using a
+            * cut-off at five times sigma. */
+            for(i = 0; i < (sizeof(Gauss_X)/sizeof(double)); i++)
+            {
+              phi = width*Gauss_X[i];
+              cos_phi = cos(phi);
+              sin_phi = sin(phi);
+              q_x = c1x + cos_phi*ax + sin_phi*bx;
+              q_y = c1y + cos_phi*ay + sin_phi*by;
+              q_z = c1z + cos_phi*az + sin_phi*bz;
+              p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
+                          GAUSS((q_y/q_x),0,mos_rms_z);
+              total += Gauss_W[i]*p_reflect;
+            }
+            total *= width;
+            /* Choose point on Debye-Scherrer cone. Sample from a Gaussian of
+             * width 1/cos(theta) greater than the mosaic and correct for any
+             * error by adjusting the neutron weight later. */
+            phi = mos_sample*randnorm();
+            /* Compute final wave vector kf and scattering vector q = ki - kf */
+            cos_phi = cos(phi);
+            sin_phi = sin(phi);
+            q_x = c1x + cos_phi*ax + sin_phi*bx;
+            q_y = c1y + cos_phi*ay + sin_phi*by;
+            q_z = c1z + cos_phi*az + sin_phi*bz;
+            p_reflect = GAUSS((q_z/q_x),0,mos_rms_y)*
+                        GAUSS((q_y/q_x),0,mos_rms_z);
+
+            vx = K2V*(kix+q_x);
+            vy = K2V*(kiy+q_y);
+            vz = K2V*(kiz+q_z);
+            p *= p_reflect/(total*GAUSS(phi,0,mos_sample));
+
+            SCATTER;
+          } /* End MC choice to reflect or transmit neutron (if tmp<p_reflect) */
+          else do_transmit = 1;
+            /* else transmit neutron */
+        } /* End bragg scattering possible (if order) */
+        else do_transmit=1;
+        if (do_transmit)
+        {
+          double my_t0;
+          if (tTable.data != NULL)
+          {
+            my_t0 = t0*Table_Value(tTable, k, 1); /* 2nd column */
+          }
+          else my_t0 = t0;
+          /* do not SCATTER, else GROUP does not work */
+          if (my_t0 > 1)
+          {
+            if (my_t0 > 1.01 && verbose) fprintf(stdout, "Warning: Monochromator_curved : lowered transmission from %f to 1 (k=%f)\n", my_t0, k);
+            my_t0=0.999;
+          }
+          if (my_t0 > 0) p*= my_t0;
+          else ABSORB;
+        }
+      } /* end if not in gap */
+      /* rotate back in component frame */
+      Rotation TT;
+      rot_transpose(T, TT);
+      /* now make the coordinate system change */
+      mccoordschange_polarisation(TT, &vx, &vy, &vz);
+      coords_get(rot_apply(TT,coords_set(x,y,z)),&x,&y,&z);
+      y+=center_y;
+      z+=center_z;
+
+      /* mccoordschange_polarisation(tt, &sx, &sy, &sz); */
+    } /* End intersect the crystal (if z) */
+    else {
+      /* restore neutron state when no interaction */
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }
+  } /* End neutron moving towards crystal (if vx)*/
+%}
+
+FINALLY
+%{
+  Table_Free(&rTable);
+  Table_Free(&tTable);
+%}
+
+MCDISPLAY
+%{
+  int ih;
+
+  magnify("xy");
+  for(ih = 0; ih < NH; ih++)
+  {
+    int iv;
+    for(iv = 0; iv < NV; iv++)
+    {
+      double zmin,zmax,ymin,ymax;
+      double xt, xt1, yt, yt1;
+
+      zmin = (SlabWidth+gap)*(ih-NH/2.0)+gap/2;
+      zmax = zmin+SlabWidth;
+      ymin = (SlabHeight+gap)*(iv-NV/2.0)+gap/2;
+      ymax = ymin+SlabHeight;
+
+      if (RH) xt = -(zmax*zmax - zmin*zmin)/RH/2;
+      else    xt = 0;
+
+      if (RV) yt = -(ymax*ymax - ymin*ymin)/RV/2;
+      else    yt = 0;
+      multiline(5, xt+yt, (double)ymin, (double)zmin,
+                   xt-yt, (double)ymax, (double)zmin,
+                  -xt-yt, (double)ymax, (double)zmax,
+                  -xt+yt, (double)ymin, (double)zmax,
+                   xt+yt, (double)ymin, (double)zmin);
+     }
+   }
+%}
+
+END
+
+
+
