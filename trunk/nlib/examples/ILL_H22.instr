@@ -27,7 +27,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ILL_H22(m=1, lambda=4, dlambda=3.9, mip=2)
+DEFINE INSTRUMENT ILL_H22(m=2, lambda=4, dlambda=3.9, mip=2)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
