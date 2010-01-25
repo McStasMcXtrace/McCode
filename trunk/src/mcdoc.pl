@@ -18,6 +18,15 @@ BEGIN {
     }
   }
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
+  
+  # custom configuration (this script)
+  END {
+    if (-f $out_file ) {
+      print "mcdoc: Removing temporary $out_file (10 sec)\n";
+      sleep 10;
+      unlink($out_file) or die "mcdoc: Couldn't unlink $out_file : $!";
+    }
+  }
 }
 
 use lib $MCSTAS::perl_dir;
@@ -35,7 +44,7 @@ require "mcrunlib.pl";
 my $is_single_file= 0;  # true when doc requested for a single component
 my $is_user_lib   = 0;  # true when doc requested for a directory
 my $lib_dir       = $MCSTAS::sys_dir;
-my $out_file      = "index.html"; # default name for output of catalog
+our $out_file      = ""; # default name for output of catalog will be index
 my $use_local     = 0;  # true when also looking into current path
 my $single_comp_name = 0;  # component single name
 my $browser       = $MCSTAS::mcstas_config{'BROWSER'};
@@ -536,6 +545,8 @@ for($i = 0; $i < @ARGV; $i++) {
         $use_local = 1;
   } elsif(/^--force$/i || /^-f$/i) {
         $is_forced = 1;
+  } elsif(/^--out-file\=(.*)$/ || /^-o(.+)$/) {
+        $out_file = $1;
   } elsif(/^--help$/i || /^-h$/i || /^-v$/i) {
       print "Usage: mcdoc [options] <dir|file>\n";
       print "Generate/show component/instrument documentation using $browser\n";
@@ -574,8 +585,15 @@ for($i = 0; $i < @ARGV; $i++) {
   }
 } # end for
 
+require File::Temp;
+if ($out_file eq "") {
+  ($fh, $out_file) = File::Temp::tempfile("mcdoc_tmpXXXXXX", SUFFIX => '.html');
+  if (not defined $fh) { $out_file=""; }
+}
+if ($out_file eq "") { $out_file="index.html"; }
+
 if ($show_website) {
-  # open the index.html
+  # open the web site
   my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} http://www.mcstas.org/ ";
   print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   die "mcdoc: web site done.\n";
@@ -583,20 +601,20 @@ if ($show_website) {
 
 if ($show_manual) {
   # open the manual using embedded acroread plugin
-  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/mcstas-manual.pdf";
+  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/manuals/mcstas-manual.pdf";
   print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   die "mcdoc: User manual done.\n";
 }
 
 if ($show_compman) {
   # open the component manual
-  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/mcstas-components.pdf";
+  $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/manuals/mcstas-components.pdf";
   print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   die "mcdoc: Component manual done.\n";
 }
 
 if ($show_tutorial) {
-  # open the index.html
+  # open the tutorial
   $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $HTTP_SYSDIR/doc/tutorial/html/tutorial.html";
   print "mcdoc: Starting $cmd\n"; system("$cmd\n");
   die "mcdoc: Tutorial done.\n";
@@ -671,8 +689,8 @@ if ($use_local) {
 }
 my @tblist = map "<A href=\"#$_\">$_</A>", @sections;
 my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";
-$toolbar .= "<P ALIGN=CENTER>\n [ <a href=\"$HTTP_SYSDIR/doc/mcstas-manual.pdf\">User Manual</a>
-| <a href=\"$HTTP_SYSDIR/doc/mcstas-components.pdf\">Component Manual</a>
+$toolbar .= "<P ALIGN=CENTER>\n [ <a href=\"$HTTP_SYSDIR/doc/manuals/mcstas-manual.pdf\">User Manual</a>
+| <a href=\"$HTTP_SYSDIR/doc/manuals/mcstas-components.pdf\">Component Manual</a>
 | <a href=\"$HTTP_SYSDIR/doc/tutorial/html/tutorial.html\">McStas tutorial</a>
 | <a href=\"$HTTP_SYSDIR/data\">Data files</a> ]\n</P>\n";
 
