@@ -17,7 +17,7 @@
 * Overrides default mcstas runtime functions.
 * Embedded within instrument in runtime mode.
 *
-* Usage: Automatically embbeded in the c code whenever required.
+* Usage: Automatically embbeded in the C code whenever required.
 *
 *******************************************************************************/
 
@@ -31,7 +31,6 @@ int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
   strcpy(mcnxExt, ext);
   char nxversion[CHAR_BUF_LENGTH];
   int i;
-  if (mcdisable_output_files) return(NX_OK);
   if (!mcnxversion || !strlen(mcnxversion)) strcpy(nxversion, "5 zip");
   else for (i=0; i< strlen(mcnxversion) && i < 128; nxversion[i]=tolower(mcnxversion[i++]));
 
@@ -49,7 +48,6 @@ int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
 
 int mcnxfile_close(NXhandle *nxHandle)
 {
-  if (mcdisable_output_files) return(NX_OK);
   return(NXclose(nxHandle));
 }
 
@@ -65,7 +63,6 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     char *valid_parent,         /* %7$s  PAR = file */
     long  date_l)               /* %8$li DATL */
 {
-  if (mcdisable_output_files) return(NX_OK);
   if (!strcmp(part, "header")) {
     if (NXputattr(nxhandle, "user_name", user, strlen(user), NX_CHAR) == NX_ERROR)
       return(NX_ERROR);
@@ -92,7 +89,6 @@ int mcnxfile_tag(NXhandle nxhandle,
     char *name,         /* %3$s NAM */
     char *value)        /* %4$s VAL */
 {
-  if (mcdisable_output_files) return(NX_OK);
   return(NXputattr(nxhandle, name, value, strlen(value), NX_CHAR));
 } /* mcnxfile_tag */
 
@@ -108,7 +104,6 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
 {
   char nxname[CHAR_BUF_LENGTH];
   int length;
-  if (mcdisable_output_files) return(NX_OK);
   if (!strcmp(part, "end_data"))   return(NXclosedata(nxhandle));
   if (!strcmp(part, "end"))        return(NXclosegroup(nxhandle));
 
@@ -165,7 +160,6 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
 int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
   char *valid_parent, char *valid_xlabel, char *valid_ylabel, char *valid_zlabel)
 {
-  if (mcdisable_output_files) return(NX_OK);
   /* write axes, only for data */
   if (strstr(part, "data")) {
     int i;
@@ -173,12 +167,13 @@ int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
     /* X axis */
     if (detector.m > 1) {
       double axis[detector.m];
+      int dim=(int)detector.m;
       for(i = 0; i < detector.m; i++)
         axis[i] = detector.xmin+(detector.xmax-detector.xmin)*(i+0.5)/detector.m;
       if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
-        NXcompmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &detector.m, NX_COMP_LZW, &detector.m);
+        NXcompmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
       else
-        NXmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &detector.m);
+        NXmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &dim);
 
       NXopendata(nxhandle, valid_xlabel);
       NXputdata (nxhandle, axis);
@@ -191,14 +186,15 @@ int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
       NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
       NXclosedata(nxhandle);
     }
-    if (n >= 1) {
+    if (detector.n >= 1) {
       double axis[detector.n];
+      int dim=(int)detector.n;
       for(i = 0; i < detector.n; i++)
         axis[i] = detector.ymin+(detector.ymax-detector.ymin)*(i+0.5)/detector.n;
       if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
-        NXcompmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &detector.n, NX_COMP_LZW, &detector.n);
+        NXcompmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
       else
-        NXmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &detector.n);
+        NXmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &dim);
 
       NXopendata(nxhandle, valid_ylabel);
       NXputdata (nxhandle, axis);
@@ -211,14 +207,15 @@ int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
       NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
       NXclosedata(nxhandle);
     }
-    if (p > 1) {
+    if (detector.p > 1) {
       double axis[detector.p];
+      int dim=(int)detector.p;
       for(i = 0; i < detector.p; i++)
         axis[i] = detector.zmin+(detector.zmax-detector.zmin)*(i+0.5)/detector.p;
       if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
-        NXcompmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &detector.p, NX_COMP_LZW, &detector.p);
+        NXcompmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
       else
-        NXmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &detector.p);
+        NXmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &dim);
 
       NXopendata(nxhandle, valid_zlabel);
       NXputdata (nxhandle, axis);
@@ -234,14 +231,14 @@ int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
   } } /* end format != list for data */
   /* write data */
   int dims[3]={detector.m,detector.n,detector.p};  /* number of elements to write */
-  if (detector.m > 1) { rank++; dims[0]=m; }
-  if (detector.n > 1) { rank++; dims[1]=n; }
-  if (detector.p > 1) { rank++; dims[2]=p; }
+  if (detector.m > 1) { dims[0]=detector.m; }
+  if (detector.n > 1) { dims[1]=detector.n; }
+  if (detector.p > 1) { dims[2]=detector.p; }
   char *nxname=part;
   double *data;
-  if (strstr(part,"data"))         { data=p1; }
-  else if (strstr(part,"errors"))  { data=p2; }
-  else if (strstr(part,"ncount"))  { data=p0; }
+  if (strstr(part,"data"))         { data=detector.p1; }
+  else if (strstr(part,"errors"))  { data=detector.p2; }
+  else if (strstr(part,"ncount"))  { data=detector.p0; }
   /* ignore errors for making/opening data (in case this has already been done */
   if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
     NXmakedata(nxhandle, nxname, NX_FLOAT64, detector.rank, dims);

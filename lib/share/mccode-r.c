@@ -1316,7 +1316,7 @@ static int mcfile_header(MCDETECTOR detector, char *part)
   /* output header ========================================================== */
 
 #ifdef USE_NEXUS
-  if (strstr(format.Name, "NeXus")) {
+  if (strstr(detector.format.Name, "NeXus")) {
     if(mcnxfile_header(mcnxHandle, part,
     detector.prefix,                          /* %1$s  PRE  */
     detector.instrument,                      /* %2$s  SRC  */
@@ -1327,7 +1327,9 @@ static int mcfile_header(MCDETECTOR detector, char *part)
     detector.user,                            /* %6$s  USR  */
     valid_parent,                             /* %7$s  PAR  */
     detector.date_l) == NX_ERROR) {           /* %8$li DATL */
-      fprintf(stderr, "Error: writing NeXus header file %s (mcfile_header)\n", file);
+      fprintf(stderr, "Error: writing NeXus header file %s (mcfile_header)\n",
+        strlen(detector.filename) ? 
+          detector.filename: detector.simulation);
       return(-1);
     } else return(1); }
   else
@@ -1425,7 +1427,7 @@ MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *s
   /* output section ========================================================= */
 
 #ifdef USE_NEXUS
-  if (strstr(format.Name, "NeXus")) {
+  if (strstr(detector.format.Name, "NeXus")) {
     if (mcnxfile_section(mcnxHandle,part,
       detector.prefix, type, section, valid_section, parent, valid_parent, level) == NX_ERROR) {
       fprintf(stderr, "Error: writing NeXus section %s/%s=NX%s (mcfile_section)\n", parent, section, type);
@@ -2057,7 +2059,7 @@ static int mcsiminfo_init(FILE *f)
   if (strstr(mcformat.Name, "NeXus")) {
     mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0); /* NXclosedata */
     mcnxfile_section(mcnxHandle,"instr_code",   /* insert instrument source code */
-      detector.prefix, "instrument", mcinstrument_source, NULL, mcinstrument_name, NULL, 0);
+      "", "instrument", mcinstrument_source, NULL, mcinstrument_name, NULL, 0);
   }
 #endif
   if (ismcstas_nx)
@@ -2183,10 +2185,10 @@ int mcfile_data(MCDETECTOR detector, char *part)
 #ifdef USE_NEXUS  
     /* array NeXus ========================================================== */
     if (strstr(detector.format.Name,"NeXus")) {
-      mcnxfile_section(mcnxHandle,"end_data", NULL, filename, NULL, NULL, NULL, NULL, 0);
+      mcnxfile_section(mcnxHandle,"end_data", NULL, detector.filename, NULL, NULL, NULL, NULL, 0);
       if(mcnxfile_datablock(mcnxHandle, detector, part, 
         valid_parent, valid_xlabel, valid_ylabel, valid_zlabel) == NX_ERROR) {
-        fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_data)\n", parent, filename);
+        fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_data)\n", valid_parent, detector.filename);
       }
       return(1);
     } /* end if NeXus */
