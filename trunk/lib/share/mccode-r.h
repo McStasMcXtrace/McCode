@@ -275,6 +275,7 @@ typedef struct mcdetector_struct MCDETECTOR;
 void   mcset_ncount(double count);
 double mcget_ncount(void);
 double mcget_run_num(void);
+char *mcfull_file(char *name, char *ext);
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2, char *c, Coords pos);
 MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
                   char *xvar, double x1, double x2, int n,

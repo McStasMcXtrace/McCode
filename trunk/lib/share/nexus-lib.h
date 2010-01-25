@@ -65,31 +65,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
     int   level);        /* %7$i  LVL */
 
 /* data block begin/end */
-int mcnxfile_datablock(NXhandle nxhandle, char *part,
-      char *pre,          /* %1$s   PRE  */
-      char *valid_parent, /* %2$s   PAR  */
-      char *filename,     /* %3$s   FIL  */
-      char *xlabel,       /* %4$s   XLA  */
-      char *valid_xlabel, /* %5$s   XVL  */
-      char *ylabel,       /* %6$s   YLA  */
-      char *valid_ylabel, /* %7$s   YVL  */
-      char *zlabel,       /* %8$s   ZLA  */
-      char *valid_zlabel, /* %9$s   ZVL  */
-      char *title,        /* %10$s  TITL */
-      char *xvar,         /* %11$s  XVAR */
-      char *yvar,         /* %12$s  YVAR */
-      char *zvar,         /* %13$s  ZVAR */
-      int  m,            /* %14$i  MDIM */
-      int  n,            /* %15$i  NDIM */
-      int  p,            /* %16$i  PDIM */
-      double x1,           /* %17$g  XMIN */
-      double x2,           /* %18$g  XMAX */
-      double y1,           /* %19$g  YMIN */
-      double y2,           /* %20$g  YMAX */
-      double z1,           /* %21$g  ZMIN */
-      double z2,           /* %22$g  ZMAX */
-      double *p0,
-      double *p1,
-      double *p2);
+int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
+  char *valid_parent, char *valid_xlabel, char *valid_ylabel, char *valid_zlabel);
 
 #endif
