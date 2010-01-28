@@ -1572,9 +1572,12 @@ MCDETECTOR mcinfo_simulation(MCDETECTOR detector, char *instr)
   
   /* output parameter string ================================================ */
   if (!strstr(detector.format.Name, "McStas")) {
+#ifdef USE_NEXUS    
     /* close simulation/information */
+    if (strstr(detector.format.Name, "NeXus"))
     if (NXclosedata(mcnxHandle) == NX_ERROR)
       fprintf(stderr, "Warning: NeXus: could not close data set simulation/information in %s\n", detector.filename);
+#endif      
     detector = mcfile_section(detector, "begin", instr, "parameters", "parameters", 3);
   }
   
