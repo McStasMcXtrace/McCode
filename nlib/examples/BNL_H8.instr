@@ -240,7 +240,7 @@ AT (0, 0, 0.3048+0.00001) RELATIVE SC4
 */
 COMPONENT He3H = PSD_monitor(
   xwidth = 0.0508, yheight = 0.0857,
-  nx=20, ny=20, filename="D10_SC4_In.psd")
+  nx=20, ny=20, filename="He3.psd")
 AT (0, 0, 0.3049) RELATIVE SC4
 
 END
