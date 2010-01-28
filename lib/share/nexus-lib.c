@@ -23,7 +23,10 @@
 
 #ifdef USE_NEXUS
 
-/* NeXus output functions that replace calls to pfprintf in mcstas-r */
+/*******************************************************************************
+* mcnxfile_init: Initialize NeXus file (open it). handles NeXus 4/5 and compression
+* Returns: NX_ERROR or NX_OK
+*******************************************************************************/
 int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
 {
   int mcnxMode=NXACC_CREATE5;
@@ -35,25 +38,34 @@ int mcnxfile_init(char *name, char *ext, char *mode, NXhandle *nxhandle)
   else for (i=0; i< strlen(mcnxversion) && i < 128; nxversion[i]=tolower(mcnxversion[i++]));
 
   if    (strstr(nxversion,"xml")) { mcnxMode =NXACC_CREATEXML; strcpy(mcnxExt, "xml"); }
-  else if (strstr(nxversion,"4")) { mcnxMode =NXACC_CREATE;     }
-  else if (strstr(nxversion,"5")) { mcnxMode =NXACC_CREATE5;    }
+  else if (strstr(nxversion,"4")) { mcnxMode =NXACC_CREATE;    strcpy(mcnxExt, "h4"); }
+  else if (strstr(nxversion,"5")) { mcnxMode =NXACC_CREATE5;   strcpy(mcnxExt, "h5"); }
 
   if (!strcmp(mode, "a"))    mcnxMode |= NXACC_RDWR;
   mcnxFilename = mcfull_file(name, mcnxExt);
   if (NXopen(mcnxFilename, mcnxMode, nxhandle) == NX_ERROR) {
+    fprintf(stderr, "Warning: NeXus: could not open file %s\n", mcnxFilename);
     mcsiminfo_file = NULL;
   } else { mcsiminfo_file=(FILE*)mcnxFilename; }
   return(mcsiminfo_file != NULL);
 }
 
+/*******************************************************************************
+* mcnxfile_close: Close NeXus file
+* Returns: NX_ERROR or NX_OK
+*******************************************************************************/
 int mcnxfile_close(NXhandle *nxHandle)
 {
   return(NXclose(nxHandle));
 }
 
-/* mcnxfile_header: header/footer. f=mcsiminfo_file, datafile */
-/* write class attributes in current SDS. Returns: NX_ERROR or NX_OK */
-int mcnxfile_header(NXhandle nxhandle, char *part,
+/*******************************************************************************
+* mcnxinfo_header: Write general header/footer information tags (header/footer)
+*                  into e.g. mcsiminfo_file, datafile
+*                  Group and DataSet (information) must have been opened
+* Returns: NX_ERROR or NX_OK
+*******************************************************************************/
+int mcnxinfo_header(NXhandle nxhandle, char *part,
     char *pre,                  /* %1$s  PRE  */
     char *instrname,            /* %2$s  SRC  */
     char *file,                 /* %3$s  FIL  */
@@ -64,8 +76,11 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     long  date_l)               /* %8$li DATL */
 {
   if (!strcmp(part, "header")) {
-    if (NXputattr(nxhandle, "user_name", user, strlen(user), NX_CHAR) == NX_ERROR)
+    if (NXputattr(nxhandle, "user_name", user, strlen(user), NX_CHAR) == NX_ERROR) {
+      fprintf(stderr, "Warning: NeXus: could not write header information in /%s/%s/%s\n", 
+        file, instrname, valid_parent);
       return(NX_ERROR);
+    }
     char creator[CHAR_BUF_LENGTH];
     sprintf(creator, "%s " MCCODE_VERSION " [www.mcstas.org]", instrname);
     NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR);
@@ -80,19 +95,81 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     return(NXputattr(nxhandle, "Format", format_name, strlen(format_name), NX_CHAR));
   } else
     return(NXputattr(nxhandle, "simulation_end", date, strlen(date), NX_CHAR));
-} /* mcnxfile_header */
+  
+} /* mcnxinfo_header */
 
-/* mcnxfile_tag: tag=value in the current group. Returns: NX_ERROR or NX_OK */
-int mcnxfile_tag(NXhandle nxhandle,
+/*******************************************************************************
+* mcnxinfo_tag: write a single tag
+*               Group and DataSet (information) must have been opened
+* Returns: NX_ERROR or NX_OK
+*******************************************************************************/
+int mcnxinfo_tag(NXhandle nxhandle,
     char *pre,          /* %1$s PRE */
     char *valid_section,/* %2$s SEC */
     char *name,         /* %3$s NAM */
     char *value)        /* %4$s VAL */
 {
   return(NXputattr(nxhandle, name, value, strlen(value), NX_CHAR));
-} /* mcnxfile_tag */
+} /* mcnxinfo_tag */
 
-/* mcnxfile_section: begin/end section. Returns: NX_ERROR or NX_OK */
+/*******************************************************************************
+* mcnxfile_instrcode: writes the instrument description file
+*                   open/close a new 'description' Data Set in the current opened Group
+* Returns: NX_ERROR or NX_OK
+*******************************************************************************/
+int mcnxfile_instrcode(NXhandle nxhandle, 
+    char *name,
+    char *parent)
+{
+  FILE *f;
+  char *instr_code=NULL;
+  char nxname[CHAR_BUF_LENGTH];
+  int length;
+  
+  struct stat stfile;
+  if (stat(name,&stfile) != 0) {
+    instr_code = (char*)malloc(CHAR_BUF_LENGTH);
+    if (instr_code) 
+      sprintf(instr_code, "File %s not found (instrument description %s is missing)", 
+        name, parent);
+  } else {
+    long filesize = stfile.st_size;
+    f=fopen(name, "r");
+    instr_code = (char*)malloc(filesize);
+    if (instr_code && f) fread(instr_code, 1, filesize, f);
+    if (f) fclose(f);
+  }
+  length = instr_code ? strlen(instr_code) : 0;
+  if (length) {
+    time_t t;
+    NXmakedata(nxhandle, "description", NX_CHAR, 1, &length);
+    if (NXopendata(nxhandle, "description") == NX_ERROR) {
+      fprintf(stderr, "Warning: NeXus: could not write instrument description %s (%s)\n", 
+        name, parent);
+      free(instr_code);
+      return(NX_ERROR);
+    }
+    NXputdata (nxhandle, instr_code);
+    free(instr_code);
+    NXputattr (nxhandle, "file_name", name, strlen(name), NX_CHAR);
+    NXputattr (nxhandle, "file_size", &length, 1, NX_INT32);
+    t=stfile.st_mtime; strncpy(nxname, ctime(&t), CHAR_BUF_LENGTH);
+    NXputattr (nxhandle, "file_date", nxname, strlen(nxname), NX_CHAR);
+    NXputattr (nxhandle, "McCode_version", MCCODE_VERSION, strlen(MCCODE_VERSION), NX_CHAR);
+    NXputattr (nxhandle, "name", parent, strlen(parent), NX_CHAR);
+    
+    return(NXclosedata(nxhandle));
+  } else
+  return(NX_ERROR);
+} /* mcnxfile_instrcode */
+
+/*******************************************************************************
+* mcnxfile_section: begin/end a section
+*                   open a new 'section' Group and an 'information' Data Set
+*                   close the current Group when part="end"
+*                   the Data Set 'information' is not closed here
+* Returns: NX_ERROR or NX_OK
+*******************************************************************************/
 int mcnxfile_section(NXhandle nxhandle, char *part,
     char *pre,          /* %1$s  PRE  */
     char *type,         /* %2$s  TYP  */
@@ -102,138 +179,152 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
     char *valid_parent, /* %6$s  VPA  */
     int   level)        /* %7$i  LVL */
 {
-  char nxname[CHAR_BUF_LENGTH];
-  int length;
-  if (!strcmp(part, "end_data"))   return(NXclosedata(nxhandle));
-  if (!strcmp(part, "end"))        return(NXclosegroup(nxhandle));
-
-  if (!strcmp(type, "instrument"))      strcpy(nxname, "instrument");
-  else if (!strcmp(type, "simulation")) strcpy(nxname, "simulation");
-  else strcpy(nxname, valid_name);
-  if (!strcmp(part, "instr_code")) {
-    FILE *f;
-    char *instr_code=NULL;
-    struct stat stfile;
-    if (stat(name,&stfile) != 0) {
-      instr_code = (char*)malloc(CHAR_BUF_LENGTH);
-      if (instr_code) sprintf(instr_code, "File %s not found", name);
-    } else {
-      long filesize = stfile.st_size;
-      f=fopen(name, "r");
-      instr_code = (char*)malloc(filesize);
-      if (instr_code && f) fread(instr_code, 1, filesize, f);
-      if (f) fclose(f);
-    }
-    length = strlen(instr_code);
-    if (length) {
-      NXmakedata(nxhandle, "instr_code", NX_CHAR, 1, &length);
-        NXopendata(nxhandle, "instr_code");
-        NXputdata (nxhandle, instr_code);
-        NXputattr (nxhandle, "file_name", name, strlen(name), NX_CHAR);
-        NXputattr (nxhandle, "file_size", &length, 1, NX_INT32);
-        NXputattr (nxhandle, "McCode_version", MCCODE_VERSION, strlen(MCCODE_VERSION), NX_CHAR);
-        NXputattr (nxhandle, "instr_name", parent, strlen(parent), NX_CHAR);
-      return(NXclosedata(nxhandle));
-    } else
-    return(NX_ERROR);
+  if (!strcmp(part, "end")) {
+    int ret;
+    ret = NXclosegroup(nxhandle);
+    if (ret == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close group %s (%s)\n", 
+          valid_name, type);
+    return(ret);
   }
+  
   if (!strcmp(part, "begin")) {
+    int length;
     char nxtype[CHAR_BUF_LENGTH];
-    sprintf(nxtype, "NX%s", type);
-    if (NXmakegroup(nxhandle, nxname, nxtype) == NX_ERROR)
-      fprintf(stderr, "Warning: could not open SDS to store %s %s information\n",
-        nxname, nxtype);
-    NXopengroup(nxhandle, nxname, nxtype);
+    char nxname[CHAR_BUF_LENGTH];
+    
+    if (!strcmp(type, "instrument"))      strcpy(nxname, "instrument");
+    else if (!strcmp(type, "simulation")) strcpy(nxname, "simulation");
+    else strcpy(nxname, valid_name);
+    snprintf(nxtype, CHAR_BUF_LENGTH, "NX%s", type);
+    
+    NXMDisableErrorReporting(); /* unactivate NeXus error messages */
+    NXmakegroup(nxhandle, nxname, nxtype);
+    NXMEnableErrorReporting();  /* enable NeXus error messages */
+    
+    if (NXopengroup(nxhandle, nxname, nxtype) == NX_ERROR) {
+      fprintf(stderr, "Warning: NeXus: could not open group %s (%s) to store 'information'\n", 
+          nxname, nxtype);
+      return(NX_ERROR);
+    }
     /* open a SDS to store attributes */
-    sprintf(nxname, "Information about %s of type %s is stored in attributes", name, nxtype);
+    snprintf(nxname, CHAR_BUF_LENGTH, "Information about %s of type %s is stored in attributes", name, nxtype);
     length = strlen(nxname);
+    
+    NXMDisableErrorReporting(); /* unactivate NeXus error messages */
     NXmakedata(nxhandle, "information", NX_CHAR, 1, &length);
-    NXopendata(nxhandle, "information");
+    NXMEnableErrorReporting();  /* enable NeXus error messages */
+    if (NXopendata(nxhandle, "information") == NX_ERROR) {
+      fprintf(stderr, "Warning: NeXus: could not open 'information' for %s (%s)\n", 
+          name, nxtype);
+      return(NX_ERROR);
+    }
     NXputdata (nxhandle, nxname);
     NXputattr(nxhandle, "name", name, strlen(name), NX_CHAR);
     NXputattr(nxhandle, "parent", parent, strlen(parent), NX_CHAR);
+
   }
   return(NX_OK);
 } /* mcnxfile_section */
 
+/*******************************************************************************
+* mcnxfile_section: begin/end a data block (data/errors/events)
+*                   open/close a 'part' Data Set
+*                   open/close Axes (except for lists)
+*                   handles compressed Data Set
+* Returns: NX_ERROR or NX_OK
+*******************************************************************************/
 /* mcnxfile_datablock: data block begin/end. Returns: NX_ERROR or NX_OK */
-int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
+int mcnxfile_data(NXhandle nxhandle, MCDETECTOR detector, char *part,
   char *valid_parent, char *valid_xlabel, char *valid_ylabel, char *valid_zlabel)
 {
   /* write axes, only for data */
   if (strstr(part, "data")) {
     int i;
     if (!strstr(detector.format.Name, "list")) {
-    /* X axis */
-    if (detector.m > 1) {
-      double axis[detector.m];
-      int dim=(int)detector.m;
-      for(i = 0; i < detector.m; i++)
-        axis[i] = detector.xmin+(detector.xmax-detector.xmin)*(i+0.5)/detector.m;
-      if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
-        NXcompmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
-      else
-        NXmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &dim);
+    
+      if (detector.m > 1) {       /* X axis */
+        double axis[detector.m];
+        int dim=(int)detector.m;
+        for(i = 0; i < detector.m; i++)
+          axis[i] = detector.xmin+(detector.xmax-detector.xmin)*(i+0.5)/detector.m;
+        if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
+          NXcompmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
+        else
+          NXmakedata(nxhandle, valid_xlabel, NX_FLOAT64, 1, &dim);
 
-      NXopendata(nxhandle, valid_xlabel);
-      NXputdata (nxhandle, axis);
-      NXputattr (nxhandle, "long_name", detector.xlabel, strlen(detector.xlabel), NX_CHAR);
-      NXputattr (nxhandle, "short_name", detector.xvar, strlen(detector.xvar), NX_CHAR);
-      int naxis=1;
-      NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
-      NXputattr (nxhandle, "units", detector.xvar, strlen(detector.xvar), NX_CHAR);
-      int nprimary=1;
-      NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
-      NXclosedata(nxhandle);
-    }
-    if (detector.n >= 1) {
-      double axis[detector.n];
-      int dim=(int)detector.n;
-      for(i = 0; i < detector.n; i++)
-        axis[i] = detector.ymin+(detector.ymax-detector.ymin)*(i+0.5)/detector.n;
-      if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
-        NXcompmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
-      else
-        NXmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &dim);
+        if (NXopendata(nxhandle, valid_xlabel) == NX_ERROR) {
+          fprintf(stderr, "Warning: could not open X axis %s in %s\n",
+            valid_xlabel, detector.filename);
+          return(NX_ERROR);
+        }
+        NXputdata (nxhandle, axis);
+        NXputattr (nxhandle, "long_name", detector.xlabel, strlen(detector.xlabel), NX_CHAR);
+        NXputattr (nxhandle, "short_name", detector.xvar, strlen(detector.xvar), NX_CHAR);
+        int naxis=1;
+        NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+        NXputattr (nxhandle, "units", detector.xvar, strlen(detector.xvar), NX_CHAR);
+        int nprimary=1;
+        NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
+        NXclosedata(nxhandle);
+      }
+      
+      if (detector.n >= 1) {      /* Y axis */
+        double axis[detector.n];
+        int dim=(int)detector.n;
+        for(i = 0; i < detector.n; i++)
+          axis[i] = detector.ymin+(detector.ymax-detector.ymin)*(i+0.5)/detector.n;
+        if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
+          NXcompmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
+        else
+          NXmakedata(nxhandle, valid_ylabel, NX_FLOAT64, 1, &dim);
 
-      NXopendata(nxhandle, valid_ylabel);
-      NXputdata (nxhandle, axis);
-      NXputattr (nxhandle, "long_name", detector.ylabel, strlen(detector.ylabel), NX_CHAR);
-      NXputattr (nxhandle, "short_name", detector.yvar, strlen(detector.yvar), NX_CHAR);
-      int naxis=2;
-      NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
-      NXputattr (nxhandle, "units", detector.yvar, strlen(detector.yvar), NX_CHAR);
-      int nprimary=1;
-      NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
-      NXclosedata(nxhandle);
-    }
-    if (detector.p > 1) {
-      double axis[detector.p];
-      int dim=(int)detector.p;
-      for(i = 0; i < detector.p; i++)
-        axis[i] = detector.zmin+(detector.zmax-detector.zmin)*(i+0.5)/detector.p;
-      if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
-        NXcompmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
-      else
-        NXmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &dim);
+        if (NXopendata(nxhandle, valid_ylabel) == NX_ERROR) {
+          fprintf(stderr, "Warning: could not open Y axis %s in %s\n",
+            valid_ylabel, detector.filename);
+          return(NX_ERROR);
+        }
+        NXputdata (nxhandle, axis);
+        NXputattr (nxhandle, "long_name", detector.ylabel, strlen(detector.ylabel), NX_CHAR);
+        NXputattr (nxhandle, "short_name", detector.yvar, strlen(detector.yvar), NX_CHAR);
+        int naxis=2;
+        NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+        NXputattr (nxhandle, "units", detector.yvar, strlen(detector.yvar), NX_CHAR);
+        int nprimary=1;
+        NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
+        NXclosedata(nxhandle);
+      }
+      
+      if (detector.p > 1) {     /* Z axis */
+        double axis[detector.p];
+        int dim=(int)detector.p;
+        for(i = 0; i < detector.p; i++)
+          axis[i] = detector.zmin+(detector.zmax-detector.zmin)*(i+0.5)/detector.p;
+        if (strstr(mcnxversion,"compress") || strstr(mcnxversion,"zip"))
+          NXcompmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &dim, NX_COMP_LZW, &dim);
+        else
+          NXmakedata(nxhandle, valid_zlabel, NX_FLOAT64, 1, &dim);
 
-      NXopendata(nxhandle, valid_zlabel);
-      NXputdata (nxhandle, axis);
-      NXputattr (nxhandle, "long_name", detector.zlabel, strlen(detector.zlabel), NX_CHAR);
-      NXputattr (nxhandle, "short_name", detector.zvar, strlen(detector.zvar), NX_CHAR);
-      int naxis=3;
-      NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
-       NXputattr (nxhandle, "units", detector.zvar, strlen(detector.zvar), NX_CHAR);
-      int nprimary=1;
-      NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
-      NXclosedata(nxhandle);
-    }
-  } } /* end format != list for data */
+        if (NXopendata(nxhandle, valid_zlabel) == NX_ERROR) {
+          fprintf(stderr, "Warning: could not open Z axis %s in %s\n",
+            valid_ylabel, detector.filename);
+          return(NX_ERROR);
+        }
+        NXputdata (nxhandle, axis);
+        NXputattr (nxhandle, "long_name", detector.zlabel, strlen(detector.zlabel), NX_CHAR);
+        NXputattr (nxhandle, "short_name", detector.zvar, strlen(detector.zvar), NX_CHAR);
+        int naxis=3;
+        NXputattr (nxhandle, "axis", &naxis, 1, NX_INT32);
+        NXputattr (nxhandle, "units", detector.zvar, strlen(detector.zvar), NX_CHAR);
+        int nprimary=1;
+        NXputattr (nxhandle, "primary", &nprimary, 1, NX_INT32);
+        NXclosedata(nxhandle);
+      }
+    } /* !list */
+  } /* end format != list for data */
+  
   /* write data */
   int dims[3]={detector.m,detector.n,detector.p};  /* number of elements to write */
-  if (detector.m > 1) { dims[0]=detector.m; }
-  if (detector.n > 1) { dims[1]=detector.n; }
-  if (detector.p > 1) { dims[2]=detector.p; }
   char *nxname=part;
   double *data;
   if (strstr(part,"data"))         { data=detector.p1; }
@@ -245,7 +336,11 @@ int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
   else
     NXcompmakedata(nxhandle, nxname, NX_FLOAT64, detector.rank, dims, NX_COMP_LZW, dims);
 
-  NXopendata(nxhandle, nxname);
+  if (NXopendata(nxhandle, nxname) == NX_ERROR) {
+        fprintf(stderr, "Warning: could not open DataSet '%s' in %s\n",
+          nxname, detector.filename);
+        return(NX_ERROR);
+      }
   NXputdata (nxhandle, data);
   NXputattr(nxhandle, "parent", valid_parent, strlen(valid_parent), NX_CHAR);
   int signal=1;
@@ -263,4 +358,4 @@ int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
   return(NXclosedata(nxhandle));
 } /* mcnxfile_datablock */
 
-#endif
+#endif /* USE_NEXUS */

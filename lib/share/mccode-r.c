@@ -1276,19 +1276,20 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
 } /* pfprintf */
 
 /*******************************************************************************
-* mcfile_header: output header/footer using specific file format.
+* mcinfo_header: output header/footer tags/info using specific file format.
 *   the 'part' may be 'header' or 'footer' depending on part to write.
 * RETURN: negative==error, positive=all went fine
 * Used by: mcsiminfo_init, mcsiminfo_close
 *******************************************************************************/
-static int mcfile_header(MCDETECTOR detector, char *part)
+static int mcinfo_header(MCDETECTOR detector, char *part)
 {
   char*HeadFoot;              /* format string */
   long date_l;                /* date as a long number */
   char date[CHAR_BUF_LENGTH]; /* date as a string */
   char valid_parent[VALID_NAME_LENGTH];     /* who generates that: the simulation or mcstas */
   
-  if (!detector.file_handle || mcdisable_output_files) return(-1);
+  if (mcdisable_output_files) return(-1);
+  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
   if (strcmp(part,"header") && strstr(detector.format.Name, "no header")) return (-2);
   if (strcmp(part,"footer") && strstr(detector.format.Name, "no footer")) return (-3);
   
@@ -1311,27 +1312,31 @@ static int mcfile_header(MCDETECTOR detector, char *part)
   }
 
   mcvalid_name(valid_parent, 
-    strlen(detector.filename) && detector.file_handle!=mcsiminfo_file ? detector.filename : detector.simulation, VALID_NAME_LENGTH);
+    strlen(detector.filename) && detector.file_handle!=mcsiminfo_file ?
+      detector.filename : detector.simulation, VALID_NAME_LENGTH);
     
   /* output header ========================================================== */
 
 #ifdef USE_NEXUS
   if (strstr(detector.format.Name, "NeXus")) {
-    if(mcnxfile_header(mcnxHandle, part,
-    detector.prefix,                          /* %1$s  PRE  */
-    detector.instrument,                      /* %2$s  SRC  */
-    strlen(detector.filename) ? 
-      detector.filename: detector.simulation, /* %3$s  FIL  */
-    detector.format.Name,                     /* %4$s  FMT  */
-    detector.date,                            /* %5$s  DAT  */
-    detector.user,                            /* %6$s  USR  */
-    valid_parent,                             /* %7$s  PAR  */
-    detector.date_l) == NX_ERROR) {           /* %8$li DATL */
-      fprintf(stderr, "Error: writing NeXus header file %s (mcfile_header)\n",
-        strlen(detector.filename) ? 
-          detector.filename: detector.simulation);
+    if(mcnxinfo_header(mcnxHandle, part,
+      detector.prefix,                          /* %1$s  PRE  */
+      detector.instrument,                      /* %2$s  SRC  */
+      strlen(detector.filename) ? 
+        detector.filename: detector.simulation, /* %3$s  FIL  */
+      detector.format.Name,                     /* %4$s  FMT  */
+      detector.date,                            /* %5$s  DAT  */
+      detector.user,                            /* %6$s  USR  */
+      valid_parent,                             /* %7$s  PAR  */
+      detector.date_l) == NX_ERROR) {           /* %8$li DATL */
+        fprintf(stderr, "Error: writing NeXus header file %s (mcinfo_header)\n",
+          strlen(detector.filename) ? 
+            detector.filename: detector.simulation);
+        /* close information data set opened by mcnxfile_section */
       return(-1);
-    } else return(1); }
+    } 
+    else return(1);
+  }
   else
 #endif
   return(pfprintf(detector.file_handle, HeadFoot, "sssssssl",
@@ -1344,21 +1349,22 @@ static int mcfile_header(MCDETECTOR detector, char *part)
     detector.user,                            /* %6$s  USR  */
     valid_parent,                             /* %7$s  PAR  */
     detector.date_l));                        /* %8$li DATL */
-} /* mcfile_header */
+} /* mcinfo_header */
 
 /*******************************************************************************
-* mcfile_tag: output tag/value using specific file format.
+* mcinfo_tag: output tag/value using specific file format.
 *   outputs a tag/value pair e.g. section.name=value
 * RETURN: negative==error, positive=all went fine
 * Used by: mcfile_section, mcinfo_instrument, mcinfo_simulation, mcinfo_data
 *******************************************************************************/
-static int mcfile_tag(MCDETECTOR detector, char *section, char *name, char *value)
+static int mcinfo_tag(MCDETECTOR detector, char *section, char *name, char *value)
 {
   char valid_section[VALID_NAME_LENGTH];
   char valid_name[VALID_NAME_LENGTH];
   int i;
 
-  if (!strlen(detector.format.AssignTag) || !detector.file_handle
+  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
+  if (!strlen(detector.format.AssignTag)
    || !name || !strlen(name)
    || mcdisable_output_files) return(-1);
 
@@ -1377,8 +1383,8 @@ static int mcfile_tag(MCDETECTOR detector, char *section, char *name, char *valu
   /* output tag ============================================================= */
 #ifdef USE_NEXUS
   if (strstr(detector.format.Name, "NeXus")) {
-    if(mcnxfile_tag(mcnxHandle, detector.prefix, valid_section, name, value) == NX_ERROR) {
-      fprintf(stderr, "Error: writing NeXus tag file %s/%s=%s (mcfile_tag)\n", section, name, value);
+    if(mcnxinfo_tag(mcnxHandle, detector.prefix, valid_section, name, value) == NX_ERROR) {
+      fprintf(stderr, "Error: writing NeXus tag file %s/%s=%s (mcinfo_tag)\n", section, name, value);
       return(-1);
     } else return(1); }
   else
@@ -1388,7 +1394,7 @@ static int mcfile_tag(MCDETECTOR detector, char *section, char *name, char *valu
     valid_section,    /* %2$s SEC */
     valid_name,       /* %3$s NAM */
     value));          /* %4$s VAL */
-} /* mcfile_tag */
+} /* mcinfo_tag */
 
 /*******************************************************************************
 * mcfile_section: output section start/end using specific file format.
@@ -1404,7 +1410,7 @@ MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *s
   char valid_section[VALID_NAME_LENGTH];
   char valid_parent[VALID_NAME_LENGTH];
 
-  if((!detector.file_handle && detector.rank > 0)
+  if((!detector.file_handle && !strstr(detector.format.Name,"NeXus"))
    || !section || !strlen(section)
    || mcdisable_output_files) return(detector);
   if (strcmp(part,"begin") && strstr(detector.format.Name, "no header")) return (detector);
@@ -1431,6 +1437,7 @@ MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *s
     if (mcnxfile_section(mcnxHandle,part,
       detector.prefix, type, section, valid_section, parent, valid_parent, level) == NX_ERROR) {
       fprintf(stderr, "Error: writing NeXus section %s/%s=NX%s (mcfile_section)\n", parent, section, type);
+      return(detector);
     } 
   }
   else
@@ -1450,16 +1457,16 @@ MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *s
   {
     if (strlen(detector.prefix) < CHAR_BUF_LENGTH-2) strcat(detector.prefix,"  ");  /* indent prefix */
     if (section && strlen(section))
-      mcfile_tag(detector, section, "name",   section);
+      mcinfo_tag(detector, section, "name",   section);
     if (parent && strlen(parent))
-      mcfile_tag(detector, section, "parent", parent);
+      mcinfo_tag(detector, section, "parent", parent);
   }
 
   return(detector);
 } /* mcfile_section */
 
 /*******************************************************************************
-* mcinfo_instrument: output instrument info. Only written to SIM file
+* mcinfo_instrument: output instrument tags/info. Only written to SIM file
 * RETURN: negative==error, positive=all went fine
 * Used by: mcsiminfo_init, mcdetector_write_sim
 *******************************************************************************/
@@ -1468,7 +1475,8 @@ static int mcinfo_instrument(MCDETECTOR detector, char *name)
   char Parameters[CHAR_BUF_LENGTH] = "";
   int  i;
 
-  if (!detector.file_handle || !name || !strlen(name)
+  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
+  if (!name || !strlen(name)
    || mcdisable_output_files) return(-1);
   
   /* create parameter string ================================================ */
@@ -1485,11 +1493,11 @@ static int mcinfo_instrument(MCDETECTOR detector, char *name)
   }
   
   /* output data ============================================================ */
-  mcfile_tag(detector, name, "Parameters",    Parameters);
-  mcfile_tag(detector, name, "Source",        mcinstrument_source);
-  mcfile_tag(detector, name, "Trace_enabled", mctraceenabled ? "yes" : "no");
-  mcfile_tag(detector, name, "Default_main",  mcdefaultmain ? "yes" : "no");
-  mcfile_tag(detector, name, "Embedded_runtime",
+  mcinfo_tag(detector, name, "Parameters",    Parameters);
+  mcinfo_tag(detector, name, "Source",        mcinstrument_source);
+  mcinfo_tag(detector, name, "Trace_enabled", mctraceenabled ? "yes" : "no");
+  mcinfo_tag(detector, name, "Default_main",  mcdefaultmain ? "yes" : "no");
+  mcinfo_tag(detector, name, "Embedded_runtime",
 #ifdef MC_EMBEDDED_RUNTIME
          "yes"
 #else
@@ -1502,8 +1510,46 @@ static int mcinfo_instrument(MCDETECTOR detector, char *name)
   return(1);
 } /* mcinfo_instrument */
 
+#ifdef USE_NEXUS
 /*******************************************************************************
-* mcinfo_simulation: output simulation info
+* mcnxfile_parameters: writes the simulation parameters
+*                   open/close a new Data Setper parameter in the current simulation Group
+* NOTE: this function can not be included in nexus-lib as it depends on mcinputtypes
+*       and mcinputtable are defined at compile time in here.
+* Returns: NX_OK
+*******************************************************************************/
+int mcnxfile_parameters(NXhandle nxhandle)
+{
+  int i;
+  char Parameters[CHAR_BUF_LENGTH];
+  /* in the parameter group, create one SDS per parameter */
+  for(i = 0; i < mcnumipar; i++) {
+    if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
+      char nxname[CHAR_BUF_LENGTH];
+      int length;
+      if (mcinputtable[i].par == NULL) 
+        strncpy(Parameters, (mcinputtable[i].val ? mcinputtable[i].val : ""), CHAR_BUF_LENGTH);
+      else 
+        (*mcinputtypes[mcinputtable[i].type].printer)(Parameters, mcinputtable[i].par);
+      sprintf(nxname, "%s", Parameters);
+      length = strlen(nxname);
+      NXmakedata(mcnxHandle, mcinputtable[i].name, NX_CHAR, 1, &length);
+      NXopendata(mcnxHandle, mcinputtable[i].name);
+      NXputdata (mcnxHandle, nxname);
+      strcpy(nxname, (*mcinputtypes[mcinputtable[i].type].parminfo)(mcinputtable[i].name));
+      NXputattr (mcnxHandle, "type", nxname, strlen(nxname), NX_CHAR);
+      strcpy(nxname, mcinputtable[i].val ? mcinputtable[i].val : "");
+      NXputattr (mcnxHandle, "default_value", nxname, strlen(nxname), NX_CHAR);
+      NXputattr (mcnxHandle, "name", mcinputtable[i].name, strlen(mcinputtable[i].name), NX_CHAR);
+      NXclosedata(mcnxHandle);
+    }
+  }
+  return(NX_OK);
+} /* mcnxfile_parameters */
+#endif
+
+/*******************************************************************************
+* mcinfo_simulation: output simulation tags/info
 * RETURN: detector structure with updated prefix (indentation)
 * Used by: mcsiminfo_init, mcdetector_write_sim
 *******************************************************************************/
@@ -1512,20 +1558,25 @@ MCDETECTOR mcinfo_simulation(MCDETECTOR detector, char *instr)
   int i;
   char Parameters[CHAR_BUF_LENGTH];
 
-  if (!detector.file_handle || !instr || !strlen(instr)
+  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(detector);
+  if (!instr || !strlen(instr)
    || mcdisable_output_files) return(detector);
 
-  mcfile_tag(detector, instr, "Ncount",      detector.ncount);
-  mcfile_tag(detector, instr, "Trace",       mcdotrace ? "yes" : "no");
-  mcfile_tag(detector, instr, "Gravitation", mcgravitation ? "yes" : "no");
+  mcinfo_tag(detector, instr, "Ncount",      detector.ncount);
+  mcinfo_tag(detector, instr, "Trace",       mcdotrace ? "yes" : "no");
+  mcinfo_tag(detector, instr, "Gravitation", mcgravitation ? "yes" : "no");
   if(mcseed) {
     snprintf(Parameters, CHAR_BUF_LENGTH, "%ld", mcseed);
-    mcfile_tag(detector, instr, "Seed", Parameters);
+    mcinfo_tag(detector, instr, "Seed", Parameters);
   }
   
   /* output parameter string ================================================ */
-  if (!strstr(detector.format.Name, "McStas")) 
+  if (!strstr(detector.format.Name, "McStas")) {
+    /* close simulation/information */
+    if (NXclosedata(mcnxHandle) == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close data set simulation/information in %s\n", detector.filename);
     detector = mcfile_section(detector, "begin", instr, "parameters", "parameters", 3);
+  }
   
   for(i = 0; i < mcnumipar; i++) {
     if (mcget_run_num() || (mcinputtable[i].val && strlen(mcinputtable[i].val))) {
@@ -1536,9 +1587,27 @@ MCDETECTOR mcinfo_simulation(MCDETECTOR detector, char *instr)
       if (strstr(detector.format.Name, "McStas")) 
         fprintf(detector.file_handle, "%sParam: %s=%s\n", detector.prefix, mcinputtable[i].name, Parameters);
       else
-        mcfile_tag(detector, "parameters", mcinputtable[i].name, Parameters);
+        mcinfo_tag(detector, "parameters", mcinputtable[i].name, Parameters);
     }
   }
+#ifdef USE_NEXUS
+  if (strstr(mcformat.Name, "NeXus")) {
+    /* close information SDS opened with mcfile_section(detector, "parameters") */
+    if (NXclosedata(mcnxHandle) == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close data set simulation/parameters/information in %s\n", detector.filename);
+    /* in the parameter group, create one SDS per parameter */
+    mcnxfile_parameters(mcnxHandle);
+    
+    /* this can not be included in nexus-lib as it requires mcinputtypes which 
+      is defined only in mccode-r.c (points to function that are defined here) */
+    
+    
+    /* re-open the simulation/information dataset */
+    if (NXopendata(mcnxHandle, "information") == NX_ERROR) {
+      fprintf(stderr, "Warning: NeXus: could not re-open 'information' for simulation in %s\n", detector.filename);
+    }
+  }
+#endif
   if (!strstr(detector.format.Name, "McStas")) 
     detector = mcfile_section(detector, "end", instr, "parameters", "parameters", 3);
     
@@ -1548,7 +1617,7 @@ MCDETECTOR mcinfo_simulation(MCDETECTOR detector, char *instr)
 } /* mcinfo_simulation */
 
 /*******************************************************************************
-* mcinfo_data: output data info
+* mcinfo_data: output data tags/info
 *              mcinfo_data(detector, NULL)        writes data info to SIM file
 *              mcinfo_data(detector, "data file") writes info to data file
 * Used by: mcdetector_write_sim, mcdetector_write_data
@@ -1572,48 +1641,48 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
   mcvalid_name(parent, detector.filename, VALID_NAME_LENGTH);
   
   /* output data ============================================================ */
-  mcfile_tag(detector, parent, "type",       detector.type);
-  mcfile_tag(detector, parent, "Source",     mcinstrument_source);
-  mcfile_tag(detector, parent, (strstr(detector.format.Name,"McStas") ? 
+  mcinfo_tag(detector, parent, "type",       detector.type);
+  mcinfo_tag(detector, parent, "Source",     mcinstrument_source);
+  mcinfo_tag(detector, parent, (strstr(detector.format.Name,"McStas") ? 
         "component" : "parent"),             detector.component);
-  mcfile_tag(detector, parent, "position",   detector.position);
+  mcinfo_tag(detector, parent, "position",   detector.position);
 
-  mcfile_tag(detector, parent, "title",      detector.title);
-  mcfile_tag(detector, parent, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ? 
+  mcinfo_tag(detector, parent, "title",      detector.title);
+  mcinfo_tag(detector, parent, !mcget_run_num() || mcget_run_num() >= mcget_ncount() ? 
       "Ncount" : "ratio",      detector.ncount);
     
   if (strlen(detector.filename)) {
-    mcfile_tag(detector, parent, "filename", detector.filename);
-    mcfile_tag(detector, parent, "format",   detector.format.Name);
+    mcinfo_tag(detector, parent, "filename", detector.filename);
+    mcinfo_tag(detector, parent, "format",   detector.format.Name);
   }
 
-  mcfile_tag(detector, parent, "statistics", detector.statistics);
-  mcfile_tag(detector, parent, strstr(detector.format.Name, "NeXus") ? 
+  mcinfo_tag(detector, parent, "statistics", detector.statistics);
+  mcinfo_tag(detector, parent, strstr(detector.format.Name, "NeXus") ? 
        "Signal" : "signal",                  detector.signal);
-  mcfile_tag(detector, parent, "values",     detector.values);
+  mcinfo_tag(detector, parent, "values",     detector.values);
 
   if (detector.rank >= 1)
   {
-    mcfile_tag(detector, parent, (strstr(detector.format.Name," scan ") ? 
+    mcinfo_tag(detector, parent, (strstr(detector.format.Name," scan ") ? 
           "xvars" : "xvar"),                 detector.xvar);
-    mcfile_tag(detector, parent, (strstr(detector.format.Name," scan ") ? 
+    mcinfo_tag(detector, parent, (strstr(detector.format.Name," scan ") ? 
           "yvars" : "yvar"),                 detector.yvar);
-    mcfile_tag(detector, parent, "xlabel",   detector.xlabel);
-    mcfile_tag(detector, parent, "ylabel",   detector.ylabel);
+    mcinfo_tag(detector, parent, "xlabel",   detector.xlabel);
+    mcinfo_tag(detector, parent, "ylabel",   detector.ylabel);
     if (detector.rank > 1) {
-      mcfile_tag(detector, parent, "zvar",   detector.zvar);
-      mcfile_tag(detector, parent, "zlabel", detector.zlabel);
+      mcinfo_tag(detector, parent, "zvar",   detector.zvar);
+      mcinfo_tag(detector, parent, "zlabel", detector.zlabel);
     }
   }
 
-  mcfile_tag(detector, parent, abs(detector.rank)==1 && strstr(detector.format.Name, "McStas") ? 
+  mcinfo_tag(detector, parent, abs(detector.rank)==1 && strstr(detector.format.Name, "McStas") ? 
                     "xlimits" : "xylimits", detector.limits);
-  mcfile_tag(detector, parent, "variables", detector.rank == -1 ?
+  mcinfo_tag(detector, parent, "variables", detector.rank == -1 ?
                                             detector.zvar : detector.variables);
       
    if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
-     mcfile_tag(detector, parent, "custom",  mcDetectorCustomHeader);
-   }
+     mcinfo_tag(detector, parent, "custom",  mcDetectorCustomHeader);
+   } 
    
    fflush(NULL);
 } /* mcinfo_data */
@@ -2045,10 +2114,12 @@ static int mcsiminfo_init(FILE *f)
     mcsiminfo = mcfile_section(mcsiminfo, "begin", "mcstas", file_time, "entry", 1);
   }
 #endif
-    mcfile_header(mcsiminfo, "header");
+  mcinfo_header(mcsiminfo, "header");
 #ifdef USE_NEXUS
+  /* close information SDS opened with mcfile_section(siminfo, "mcstas (header)") */
   if (strstr(mcformat.Name, "NeXus"))
-    mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0); /* NXclosedata */
+    if (NXclosedata(mcnxHandle) == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close data set mcstas/information (header)\n");
 #endif
 
   /* begin-end instrument =================================================== */
@@ -2057,9 +2128,11 @@ static int mcsiminfo_init(FILE *f)
   
 #ifdef USE_NEXUS
   if (strstr(mcformat.Name, "NeXus")) {
-    mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0); /* NXclosedata */
-    mcnxfile_section(mcnxHandle,"instr_code",   /* insert instrument source code */
-      "", "instrument", mcinstrument_source, NULL, mcinstrument_name, NULL, 0);
+    /* close information SDS opened with mcfile_section(siminfo, "instrument") */
+    if (NXclosedata(mcnxHandle) == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close data set instrument/information\n");
+    /* insert instrument source code */
+    mcnxfile_instrcode(mcnxHandle, mcinstrument_source, mcinstrument_name);
   }
 #endif
   if (ismcstas_nx)
@@ -2070,8 +2143,10 @@ static int mcsiminfo_init(FILE *f)
   mcsiminfo = mcinfo_simulation(mcsiminfo, mcsiminfo_name);
   
 #ifdef USE_NEXUS
+  /* close information SDS opened with mcfile_section(siminfo,"simulation") */
   if (strstr(mcformat.Name, "NeXus"))
-    mcnxfile_section(mcnxHandle,"end_data", NULL, NULL, NULL, NULL, NULL, NULL, 0); /* NXclosedata */
+    if (NXclosedata(mcnxHandle) == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close data set simulation/information\n");
 #endif
   if (ismcstas_nx)
     mcsiminfo = mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcsiminfo_name, "simulation", 2);
@@ -2101,9 +2176,19 @@ void mcsiminfo_close(void)
     mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcinstrument_name, "instrument", 1);
   }
 #ifdef USE_NEXUS
-  if (strstr(mcformat.Name, "NeXus")) mcfile_section(mcsiminfo, "end", "mcstas", mcinstrument_name, "entry", 1);
+  /* re-open the simulation/information dataset */
+  if (NXopendata(mcnxHandle, "information") == NX_ERROR)
+    fprintf(stderr, "Warning: NeXus: could not re-open 'information' for mcstas NXentry\n");
 #endif
-  mcfile_header(mcsiminfo, "footer");
+  mcinfo_header(mcsiminfo, "footer");
+#ifdef USE_NEXUS
+  /* close information SDS opened with mcfile_section(siminfo, "mcstas(footer)" */
+  if (strstr(mcformat.Name, "NeXus")) {
+    if (NXclosedata(mcnxHandle) == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close data set mcstas/information (footer)\n");
+    mcfile_section(mcsiminfo, "end", "mcstas", mcinstrument_name, "entry", 1);
+  }
+#endif  
   
   /* close sim file ========================================================= */
 #ifdef USE_NEXUS
@@ -2140,7 +2225,9 @@ int mcfile_data(MCDETECTOR detector, char *part)
   if (strstr(part,"ncount") || strstr(part,"events"))
   { this_p1=detector.p0;Begin = detector.format.BeginNcount; End = detector.format.EndNcount; }
   
-  if (!this_p1 || mcdisable_output_files || !detector.file_handle) return(-1);
+  if (!this_p1 || mcdisable_output_files) return(-1);
+  if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
+  if (!detector.rank) return(-1);
   
   mcvalid_name(valid_xlabel, detector.xlabel, VALID_NAME_LENGTH);
   mcvalid_name(valid_ylabel, detector.ylabel, VALID_NAME_LENGTH);
@@ -2185,10 +2272,10 @@ int mcfile_data(MCDETECTOR detector, char *part)
 #ifdef USE_NEXUS  
     /* array NeXus ========================================================== */
     if (strstr(detector.format.Name,"NeXus")) {
-      mcnxfile_section(mcnxHandle,"end_data", NULL, detector.filename, NULL, NULL, NULL, NULL, 0);
-      if(mcnxfile_datablock(mcnxHandle, detector, part, 
+      if(mcnxfile_data(mcnxHandle, detector, part, 
         valid_parent, valid_xlabel, valid_ylabel, valid_zlabel) == NX_ERROR) {
         fprintf(stderr, "Error: writing NeXus data %s/%s (mcfile_data)\n", valid_parent, detector.filename);
+        return(-1);
       }
       return(1);
     } /* end if NeXus */
@@ -2296,7 +2383,7 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
   /* sim file has been initialized when starting simulation and when calling 
    * mcsave ; this defines mcsiminfo_file as the SIM file handle
    * and calls: 
-   *    mcfile_header
+   *    mcinfo_header
    *    mcfile_section begin instrument
    *    mcinfo_instrument
    *    mcfile_section end instrument
@@ -2310,7 +2397,7 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
    */
    
   MCDETECTOR simfile = mcdetector_import_sim(); /* store reference structure to SIM file */
-   
+  
   /* add component and data section to SIM file */
   if (!strstr(detector.format.Name,"NeXus"))
     simfile = mcfile_section(simfile, "begin", detector.simulation, detector.component, "component", 3);
@@ -2323,6 +2410,13 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
   
   /* WRITE detector information to sim file ================================= */
   mcinfo_data(detector, NULL);
+#ifdef USE_NEXUS
+  /* close information SDS opened with mcfile_section(siminfo,"data") */
+  if (strstr(mcformat.Name, "NeXus"))
+    if (NXclosedata(mcnxHandle) == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close data set %s/information\n",
+        detector.filename);
+#endif    
   /* WRITE data link to SIM file */
   if (!strstr(detector.format.Name,"McStas") && !mcsingle_file) {
     FILE *file=detector.file_handle;
@@ -2346,16 +2440,14 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
 /*******************************************************************************
 * mcdetector_write_data: write information to data file and catenate lists
 *                        this is where we open/close data files
-*                        also free detector.p1=this_p1 field which may hold 1D McStas [x I Ierr N] array
-*                        which is set in mcdetector_import
+*                        also free detector.p1=this_p1 field which may hold 
+*                        1D McStas [x I Ierr N] array which is set in mcdetector_import
 *******************************************************************************/
 MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 {
   /* skip if 0D or no filename or no data (only stored in sim file) */
   if (!detector.rank || !strlen(detector.filename) 
    || !detector.m) return(detector);
-
-  if (detector.rank == 0) return(detector);
 
 #ifdef USE_MPI
   /* only by MASTER for non lists (MPI reduce has been done in detector_import) */
@@ -2389,17 +2481,30 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
     detector.file_handle = mcnew_file(!mcsingle_file ? 
       detector.filename : mcsiminfo_name, 
       detector.format.Extension, mode);
-  } /* NeXus file mcnxHandle has been opened in mcsiminfo_init */
+  } else {
+    /* NeXus file mcnxHandle has been opened in mcsiminfo_init */
+    /* but we must open the proper Data Set group and write information */
+    mcfile_section(detector, "begin", detector.component, detector.filename, "data", 4);
+  }
   
   /* WRITE data header (except when in 'no header') */
   if (!strstr(detector.format.Name, "no header")) {
     if (!strstr(detector.format.Name, "binary") && !mcascii_only)  {
       /* skip in data-only mode or binary */
-      mcfile_header(detector, "header");
+      mcinfo_header(detector, "header");
       mcinfo_data(detector, detector.filename);
-      mcinfo_simulation(detector, detector.filename);
+      /* mcinfo_simulation(detector, detector.filename); */
     }
   }
+#ifdef USE_NEXUS
+  /* close information SDS opened with mcfile_section(detector,"data") */
+  if (strstr(mcformat.Name, "NeXus"))
+    mcinfo_header(detector, "footer");
+    if (NXclosedata(mcnxHandle) == NX_ERROR)
+      fprintf(stderr, "Warning: NeXus: could not close data set %s/information (footer)\n",
+        detector.filename);
+  /* group remains opened for data to be written */    
+#endif   
   
   /* case: list of events =================================================== */
   if (strstr(detector.format.Name," list ")) {
@@ -2485,10 +2590,10 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
   } /* end normal detector case */
   
   /* WRITE data footer (except when 'no footer') */
-  if (!strstr(detector.format.Name, "no footer") ) {
+  if (!strstr(detector.format.Name, "no footer") && !strstr(mcformat.Name, "NeXus")) {
     /* skip in data-only mode or binary */
     if (!strstr(detector.format.Name, "binary") && !mcascii_only)
-      mcfile_header(detector, "footer");
+      mcinfo_header(detector, "footer");
   }
     
   /* close data file and free memory */
@@ -2498,6 +2603,10 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
   if (!strstr(mcformat.Name, "NeXus") && detector.file_handle != mcsiminfo_file
    && !mcdisable_output_files && detector.file_handle) 
     fclose(detector.file_handle);
+  else if (strstr(mcformat.Name, "NeXus")) {
+    /* close data set group */
+    mcfile_section(detector, "end", detector.component, detector.filename, "data", 4);
+  }
   
   return(detector); 
 } /* mcdetector_write_data */
