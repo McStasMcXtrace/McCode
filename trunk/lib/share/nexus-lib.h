@@ -37,7 +37,7 @@ int mcnxfile_close(NXhandle *nxHandle);
 
 /* header/footer. f=mcsiminfo_file, datafile */
 /* creates Entry=valid_parent+file+timestamp */
-int mcnxfile_header(NXhandle nxhandle, char *part,
+int mcnxinfo_header(NXhandle nxhandle, char *part,
     char *pre,                  /* %1$s  PRE  */
     char *instrname,            /* %2$s  SRC  */
     char *file,                 /* %3$s  FIL  */
@@ -48,11 +48,16 @@ int mcnxfile_header(NXhandle nxhandle, char *part,
     long  date_l);               /* %8$li DATL */
 
 /* tag=value */
-int mcnxfile_tag(NXhandle nxhandle,
+int mcnxinfo_tag(NXhandle nxhandle,
     char *pre,          /* %1$s PRE */
     char *valid_section,/* %2$s SEC */
     char *name,         /* %3$s NAM */
     char *value);        /* %4$s VAL */
+
+/* output instrument/description */
+int mcnxfile_instrcode(NXhandle nxhandle, 
+    char *name,
+    char *parent);
 
 /* begin/end section */
 int mcnxfile_section(NXhandle nxhandle, char *part,
@@ -65,7 +70,7 @@ int mcnxfile_section(NXhandle nxhandle, char *part,
     int   level);        /* %7$i  LVL */
 
 /* data block begin/end */
-int mcnxfile_datablock(NXhandle nxhandle, MCDETECTOR detector, char *part,
+int mcnxfile_data(NXhandle nxhandle, MCDETECTOR detector, char *part,
   char *valid_parent, char *valid_xlabel, char *valid_ylabel, char *valid_zlabel);
 
 #endif
