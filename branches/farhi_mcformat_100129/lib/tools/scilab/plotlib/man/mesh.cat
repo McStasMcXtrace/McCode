@@ -1,0 +1,53 @@
+ MESH   3-D mesh surface.
+
+    mesh(x,y,Z) plots the colored parametric or non parametric
+    mesh defined by three arguments.  The view point is specified by the
+    'view' property (see below).
+    The axis labels are determined by the range of X, Y and Z,
+    or by a 'axis' property setting. The color of edges and faces
+    is by default respectively foreground/background and can be
+    changed by the properties 'edgecolor' and 'facecolor'. Some
+    examples :
+    
+    - When x,y and Z are matrices of the same size, surfl(x,y,Z)
+    plots the parametric surface defined by vertices 
+    (x(i,j), y(i,j), Z(i,j)).
+
+    - When x,y are vector arguments you must have length(x) = n and
+    length(y) = m where [m,n] = size(Z).In this case, the vertices
+    of the mesh lines are the triples (x(j), y(i), Z(i,j)).
+    Note that x corresponds to the columns of Z and y corresponds to
+    the rows. Examples :
+    
+    x=linspace(-1,1,20); y=linspace(-2,2,40);
+    Z=cos(y'*x);
+    mesh(x,y,Z);
+    mesh(x,y,Z,'axis','off','facecolor',[1 1 1],'edgecolor',[0 0 1]);
+ 
+    Note that mesh(Z) use x = 1:n and y = 1:m. 
+  
+    - When f is a function/macro and x,y are vectors, mesh(x,y,f) plots
+    the parametric or non parametric surface defined by f : 
+    
+    	-> if Z has the syntax z=f(x,y) then mesh(x,y,f) plots a non
+	parametric surface.
+	
+	-> if Z has the syntax [x,y,z]=f(u,v), then mesh(u,v,f) plots
+	a parametric surface.
+	
+    Examples :
+    
+    x=linspace(-1,1,20); y=linspace(-2,2,40);
+    deff('z=f(x,y)','z=x.^2-y.^2');
+    mesh(x,y,f)
+    
+    u=linspace(0,2*%pi,50);
+    v=linspace(0,%pi,25);
+    
+    deff('[x,y,z]=sphere(u,v)',['x=sin(v).*cos(u)';...
+                                'y=sin(v).*sin(u)';...
+			        'z=cos(v)']);
+ 
+    mesh(u,v,sphere,'view',[30 30]);
+ 
+    See also plot, plot3, surf, surfl

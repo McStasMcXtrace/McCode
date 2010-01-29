@@ -1,0 +1,253 @@
+#
+#   This file is part of the McStas/McXtrace @PACKAGE_STRING@ neutron ray-trace simulation package
+#   Copyright (C) 1997-2010, All rights reserved
+#   Risoe National Laborartory, Roskilde, Denmark
+#   Institut Laue Langevin, Grenoble, France
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; version 2 of the License.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(@PACKAGE_NAME@, @PACKAGE_VERSION@, @PACKAGE_TARNAME@-support@@PACKAGE_TARNAME@.org)
+AC_REVISION($Revision: 1.1$)
+AC_COPYRIGHT([Copyright (C) Copyright, All rights reserved
+Risoe National Laborartory, Roskilde, Denmark
+Institut Laue Langevin, Grenoble, France
+This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
+see file COPYING for further information])
+
+AC_PREFIX_DEFAULT(/usr/local)
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+
+AC_ARG_WITH([cc], AC_HELP_STRING([--with-cc=c compiler], [Specify name of C compiler]),
+        [with_cc=$withval], [with_cc=yes])
+if test x"$with_cc" != x"no" ; then
+        if test x"$with_cc" != x"yes" ; then CC="$with_cc"; fi
+        AC_PROG_CC
+else
+        AC_MSG_ERROR([You need a C compiler to compile this package])
+fi
+
+# Have the user select wich version they want to build.
+AC_ARG_ENABLE([mcstas], AC_HELP_STRING([--enable-mcstas], [Enable building McStas binaries.]))
+AC_ARG_ENABLE([mcxtrace], AC_HELP_STRING([--enable-mcxtrace], [Enable building McXtrace binaries.]))
+
+# optional target change (mcstas -> mcxtrace or vice versa)
+if test x"$enable_mcstas" == "xyes" -a x"$enable_mcxtrace" == "xyes" ; then
+  echo "ERROR: It is currently not possible to build both mcstas and mcxtrace."
+  exit 1
+elif test x"$enable_mcstas" == "xyes" ; then
+  PACKAGE_TARNAME=[mcstas]
+  PACKAGE_NAME=McStas
+  PACKAGE_STRING="$PACKAGE_NAME-$PACKAGE_VERSION"
+  if [[ -e lib/tools/perl/mcxtrace_config.perl.in ]]; then
+    mv lib/tools/perl/mcxtrace_config.perl.in lib/tools/perl/mccode_config.perl.in
+  fi
+  if [[ -e lib/tools/perl/mcxtrace_reconfigure.in ]]; then
+    mv lib/tools/perl/mcxtrace_reconfigure.in lib/tools/perl/mccode_reconfigure.in
+  fi
+elif test x"$enable_mcxtrace" == "xyes" ; then
+  PACKAGE_TARNAME=[mcxtrace]
+  PACKAGE_NAME=McXtrace
+  PACKAGE_STRING="$PACKAGE_NAME-$PACKAGE_VERSION"
+  if [[ -e lib/tools/perl/mcstas_config.perl.in ]]; then
+    mv lib/tools/perl/mcstas_config.perl.in lib/tools/perl/mccode_config.perl.in
+  fi
+  if [[ -e lib/tools/perl/mcxtrace_reconfigure.in ]]; then
+    mv lib/tools/perl/mcxtrace_reconfigure.in lib/tools/perl/mccode_reconfigure.in
+  fi
+fi
+
+# check if VERSION is defined (in principle, done in mkdist)
+if test x"$enable_mcstas" == "xyes" -o x"$enable_mcxtrace" == "xyes" ; then
+  MONTH=`date +"%b"`
+  DAY=`date +"%d"`
+  YEAR=`date +"%Y"`
+  PACKAGE_DATE="'$MONTH-$DAY-$YEAR'"
+  PACKAGE_VERSION="'$MONTH-$DAY-$YEAR'"
+  MCCODE_VERSION="$PACKAGE_NAME $PACKAGE_VERSION - $MONTH $DAY $YEAR"
+  AC_DEFINE([MCCODE_VERSION])
+  AC_SUBST([MCCODE_VERSION])
+  for file in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in;
+  do
+    sed 's/@MCCODE_VERSION@/'$PACKAGE_NAME'-'$PACKAGE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
+    sed 's/@PACKAGE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                        $file.tmp > $file
+    sed 's/@PACKAGE_TARNAME@/'$PACKAGE_TARNAME'/'                                            $file > $file.tmp
+    sed 's/@PACKAGE_NAME@/'$PACKAGE_NAME'/'                                                  $file.tmp > $file
+    sed 's/@PACKAGE_VERSION@/'$PACKAGE_VERSION'/'                                            $file > $file.tmp
+    sed 's/@PACKAGE_STRING@/'$PACKAGE_NAME'-'$PACKAGE_VERSION'/'                             $file.tmp > $file
+    rm $file.tmp
+  done
+fi
+AC_SUBST([PACKAGE_DATE])
+AC_SUBST([PACKAGE_TARNAME])
+AC_SUBST([PACKAGE_NAME])
+AC_SUBST([PACKAGE_VERSION])
+AC_SUBST([PACKAGE_STRING])
+
+AC_PROG_INSTALL
+CF_ANSI_CC_CHECK
+MC_ANSI_MATH_PROTO
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AC_FUNC_STRTOD
+AC_CHECK_FUNCS(strcasecmp fdopen qsort strcasestr)
+
+AC_PATH_PROGS(PERL,   [perl perl5], no, /usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(SCILAB, [scilab runscilab scilex], no, /usr/local/bin:/usr/lib/scilab/bin:/lib/scilab/bin:$PATH)
+AC_PATH_PROGS(MATLAB, [matlab], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(GNUPLOT,[gnuplot /usr/local/bin/gnuplot], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(PGPLOT, [pgxwin_server], no, /usr/local/bin:/usr/local/pgplot:$PATH)
+AC_PATH_PROGS(TCLTK,  [wish tclsh], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(SSH,    [ssh plink], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(SCP,    [scp pscp], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(DASH,   [dash], no, /bin:/usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(MPIRUN, [mpirun], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(MPICC,  [mpicc hcc mpxlc_r mpxlc mpcc cmpicc], no, /usr/local/bin:$PATH)
+AC_PATH_PROGS(BROWSER,[gnome-open firefox mozilla-firefox mozilla konqueror epiphany galeon netscape Safari], no,  /Applications/Safari.app/Contents/MacOS:/Applications/Firefox.app/Contents/MacOS:/usr/local/bin:$PATH)
+AC_PATH_PROGS(EDITOR, [gedit nedit kate xemacs gnome-open xedit vim notepad wordpad], no)
+AC_PATH_PROGS(VRMLVIEW, [octagaplayer freewrl gtklookat qtlookat xmlookat maclookat fltklookat lookat], no)
+AC_PATH_PROGS(PERLDL,   [perldl], no, /usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(G77, [g77 f77 gfortran g95 f95], no)
+AC_PATH_PROGS(MINGW, [i586-mingw32msvc-gcc], no)
+AC_PATH_PROGS(MAKE,   [make gmake], no)
+AC_PATH_PROGS(AT,  [at], no)
+AC_PATH_PROGS(HDFVIEW,  [hdfview], no, /usr/local/bin:/usr/local/hdfview:$PATH)
+AC_PATH_PROGS(FLEX,   [flex], flex, /bin:/usr/bin:/usr/local/bin:$PATH)
+AC_PATH_PROGS(BISON,   [bison], bison, /bin:/usr/bin:/usr/local/bin:$PATH)
+# Important here: gnome-terminal is broken:
+#  Any commandline arguments after -e must contain escaped spaces.
+# BUT: If escaped in the perl code, use of xterm/konsole is broken....
+# Hence we allow only gnome-terminal.wrapper which is debian only
+# :(
+AC_PATH_PROGS(TERMINAL,   [xterm konsole gnome-terminal.wrapper], no)
+
+# handle PIC options
+AC_ARG_WITH([pic],
+  [AS_HELP_STRING([--with-pic],
+     [enable support for PIC libraries (required to compile PGPLOT on some systems)])],
+  [USE_PIC=$withval],
+  [USE_PIC=no])
+AC_SUBST(USE_PIC)
+
+
+# check for MPI
+if test "$MPICC" != "no"; then
+  AC_CHECK_HEADER(mpi.h, , [ echo "WARNING: $MPICC may fail to compile without mpi.h" ] )
+fi
+
+# check for NeXus libraries
+AC_ARG_WITH([nexus],
+  [AS_HELP_STRING([--with-nexus],
+     [enable support for NeXus/HDF libraries])])
+if test "${with_nexus+set}" = set; then
+  AC_SUBST([HAVE_NEXUS], ["-DUSE_NEXUS -lNeXus "])
+  AC_DEFINE([HAVE_NEXUS], ["-DUSE_NEXUS -lNeXus "])
+else
+  AC_SUBST([HAVE_NEXUS], [])
+  AC_DEFINE([HAVE_NEXUS], [])
+fi
+
+# make sure the target config file and reconfigure scripts are named properly
+if [[ -e lib/tools/perl/mccode_config.perl.in ]]; then
+  mv lib/tools/perl/mccode_config.perl.in lib/tools/perl/${PACKAGE_TARNAME}_config.perl.in
+fi
+if [[ -e lib/tools/perl/mccode_reconfigure.in ]]; then
+  mv lib/tools/perl/mccode_reconfigure.in lib/tools/perl/${PACKAGE_TARNAME}_reconfigure.in
+fi
+
+AC_OUTPUT(Makefile src/Makefile src/port.h lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/${PACKAGE_TARNAME}_config.perl lib/tools/perl/${PACKAGE_TARNAME}_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex)
+
+chmod a+x lib/tools/perl/${PACKAGE_TARNAME}_reconfigure
+
+# warnings and errors
+if test "$USE_PIC" != "no" ; then
+echo "Activating PIC compilation for: make install-pgplot"
+fi
+if test "x$HAVE_NEXUS" != "x" ; then
+echo "Activating NeXus support in $PACKAGE_STRING ($HAVE_NEXUS)"
+fi
+if test "$MAKE" == "no" ; then
+  echo "ERROR: $PACKAGE_STRING installation requires 'make' or 'gmake'"
+  exit
+fi
+
+if test "$PERL" = "no" ; then
+  echo "WARNING: No Perl executable could be found !"
+  echo "The commands mcrun and mcgui won't be available. You will have to use:"
+  echo "   $PACKAGE_TARNAME <file>.instr"
+  echo "   $CC -o <file>.out <file>.instr -lm"
+  echo "   <file>.out [simulation parameters]"
+fi
+if test "$TCLTK" = "no" ; then
+  echo "WARNING: No Tcl/Tk installation could be found !"
+  echo "You might not be able to use McGUI interface"
+fi
+if test "$BROWSER" = "no" ; then
+  echo "WARNING: No HTML browser could be found !"
+fi
+if test "$SCILAB" == "no" && test "$MATLAB" == "no" && test "$PGPLOT" == "no" && test "$VRMLVIEW" == "no" ; then
+  echo "WARNING: No Plotter (Matlab, Scilab, PGPLOT, VRML) could be found !"
+fi
+
+# final message at end of configure
+echo ""
+if test "$PGPLOT" == "no" ; then
+  echo "To install PGPLOT for $PACKAGE_STRING, you need:"
+  echo "= perl-PDL (perldl, pdl)"
+  echo "= a fortran compiler (g77, gfortran)"
+  echo "= X11-dev libraries/includes (libx11-dev, xserver-xorg-dev, libxt-dev)"
+fi
+if test "$PGPLOT" == "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
+  echo "PGPLOT install: you may try our automatic pgplot5 installation AFTER installing @PACKAGE_STRING@"
+  echo "# make install-pgplot"
+  echo "# make reconfigure"
+  echo "(For 64-bit machines, reconfigure first: # ./configure --with-pic )"
+else if test "$PGPLOT" == "no" ; then
+  echo "To use PGPLOT, install these packages and re-run $PACKAGE_STRING installation ./configure"
+  fi
+fi
+if test "$SCILAB" == "no" && test "$WGET" != no ; then
+  echo "Scilab install: you may try our automatic Scilab installation with"
+  echo ""
+  echo "# make install-scilab; ./configure; make; make install"
+  echo ""
+  echo "(requires Linux/Intel, wget and root priviliges)"
+fi
+echo ""
+echo "To setup the plotting environment, execute either"
+echo "# make config (automatically selects plotter, "
+echo "       prefers PGPLOT before Matlab before Scilab before VRML)"
+if test "$SCILAB" != "no" ; then
+echo "# make scilab (selects scilab)"
+fi
+if test "$MATLAB" != "no" ; then
+echo "# make matlab (selects matlab)"
+fi
+if test "$PGPLOT" != "no" ; then
+echo "# make pgplot (selects pgplot and installs perl-PGPLOT)"
+fi
+if test "$VRMLVIEW" != "no" ; then
+echo "# make vrml   (selects vrml)"
+fi
+echo ""
+echo "After (optional) plotter config, build and install $PACKAGE_STRING by executing"
+echo "# make; make install"
+echo "will install $PACKAGE_STRING into $prefix"
+echo ""
+if test "$DASH" != "no" ; then
+echo
+echo WARNING: Your system includes the $DASH shell which is known to cause problems.
+echo "On Debian/Ubuntu systems, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh"
+fi
+
