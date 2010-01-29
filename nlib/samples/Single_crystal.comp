@@ -65,8 +65,8 @@
 *    #sigma_inc <value of sigma_inc cross section [barns]>
 *    #Delta_d/d <value of Detla_d/d width for all lines>
 *    #lattice_a <value of the a lattice parameter [Angs]>
-*    #lattice_a <value of the b lattice parameter [Angs]>
-*    #lattice_a <value of the c lattice parameter [Angs]>
+*    #lattice_b <value of the b lattice parameter [Angs]>
+*    #lattice_c <value of the c lattice parameter [Angs]>
 *    #lattice_aa <value of the alpha lattice angle [deg]>
 *    #lattice_bb <value of the beta  lattice angle [deg]>
 *    #lattice_cc <value of the gamma lattice angle [deg]>

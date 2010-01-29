@@ -98,15 +98,14 @@ INITIALIZE
       theta_0*=DEG2RAD;
 
       
-      /* Calulate delay from phase and vice versa, 'direction' moderated by sign of omega */
-      delay *=omega/fabs(omega);
+      /* Calulate delay from phase and vice versa */
       if (phase) {
         if (delay) {
           fprintf(stderr,"DiskChopper: %s WARNING: delay AND phase specified. Using phase setting\n", NAME_CURRENT_COMP);  
         }
         phase*=DEG2RAD;
         /* 'Delay' should always be a delay, taking rotation direction into account: */
-        delay=omega*phase/(omega*omega);
+        delay=phase/fabs(omega);
       } else {
         phase=delay*omega;  /* rad */
       } 
@@ -147,13 +146,13 @@ TRACE
     if (isfirst)
       {
         /* all events are put in the transmitted time frame */
-        t=atan2(x,yprime)/omega + To*randpm1()/2.0 - delay + jitter*randnorm() + (n_pulse > 1 ? floor(n_pulse*rand01())*Tg : 0);
+        t=atan2(x,yprime)/omega + To*randpm1()/2.0 + delay + jitter*randnorm() + (n_pulse > 1 ? floor(n_pulse*rand01())*Tg : 0);
         /* correction: chopper slits transmission opening/full disk */
         p *= nslit*theta_0/2.0/PI; 
       }
     else 
       {
-        toff=fabs(t-atan2(x,yprime)/omega - delay + jitter*randnorm());
+        toff=fabs(t-atan2(x,yprime)/omega - delay - jitter*randnorm());
 
         /* does neutron hit outside slit? */
         if (fmod(toff+To/2.0,Tg)>To) ABSORB; 
