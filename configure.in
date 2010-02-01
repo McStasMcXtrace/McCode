@@ -49,7 +49,6 @@ if test x"$enable_mcstas" == "xyes" -a x"$enable_mcxtrace" == "xyes" ; then
 elif test x"$enable_mcstas" == "xyes" ; then
   PACKAGE_TARNAME=[mcstas]
   PACKAGE_NAME=McStas
-  PACKAGE_STRING="$PACKAGE_NAME-$PACKAGE_VERSION"
   if [[ -e lib/tools/perl/mcxtrace_config.perl.in ]]; then
     mv lib/tools/perl/mcxtrace_config.perl.in lib/tools/perl/mccode_config.perl.in
   fi
@@ -59,7 +58,6 @@ elif test x"$enable_mcstas" == "xyes" ; then
 elif test x"$enable_mcxtrace" == "xyes" ; then
   PACKAGE_TARNAME=[mcxtrace]
   PACKAGE_NAME=McXtrace
-  PACKAGE_STRING="$PACKAGE_NAME-$PACKAGE_VERSION"
   if [[ -e lib/tools/perl/mcstas_config.perl.in ]]; then
     mv lib/tools/perl/mcstas_config.perl.in lib/tools/perl/mccode_config.perl.in
   fi
@@ -73,22 +71,36 @@ if test x"$enable_mcstas" == "xyes" -o x"$enable_mcxtrace" == "xyes" ; then
   MONTH=`date +"%b"`
   DAY=`date +"%d"`
   YEAR=`date +"%Y"`
-  PACKAGE_DATE="'$MONTH-$DAY-$YEAR'"
-  PACKAGE_VERSION="'$MONTH-$DAY-$YEAR'"
+  PACKAGE_DATE="$MONTH-$DAY-$YEAR"
+  PACKAGE_VERSION="$MONTH-$DAY-$YEAR"
+  PACKAGE_STRING="$PACKAGE_NAME-$PACKAGE_VERSION"
   MCCODE_VERSION="$PACKAGE_NAME $PACKAGE_VERSION - $MONTH $DAY $YEAR"
-  AC_DEFINE([MCCODE_VERSION])
-  AC_SUBST([MCCODE_VERSION])
-  for file in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in;
+  
+  echo "Configurating McCode with $PACKAGE_NAME flavour"
+  echo "PACKAGE_DATE=$PACKAGE_DATE"
+  echo "PACKAGE_VERSION=$PACKAGE_VERSION"
+  echo "MCCODE_VERSION=$MCCODE_VERSION"
+  echo "PACKAGE_TARNAME=$PACKAGE_TARNAME"
+  echo "PACKAGE_NAME=$PACKAGE_NAME"
+  echo "PACKAGE_STRING=$PACKAGE_STRING"
+  for file in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h lib/tools/perl/mccode_reconfigure.in;
   do
-    sed 's/@MCCODE_VERSION@/'$PACKAGE_NAME'-'$PACKAGE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
-    sed 's/@PACKAGE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                        $file.tmp > $file
-    sed 's/@PACKAGE_TARNAME@/'$PACKAGE_TARNAME'/'                                            $file > $file.tmp
-    sed 's/@PACKAGE_NAME@/'$PACKAGE_NAME'/'                                                  $file.tmp > $file
-    sed 's/@PACKAGE_VERSION@/'$PACKAGE_VERSION'/'                                            $file > $file.tmp
-    sed 's/@PACKAGE_STRING@/'$PACKAGE_NAME'-'$PACKAGE_VERSION'/'                             $file.tmp > $file
-    rm $file.tmp
+    for iter in 1 2 3;
+    do
+      sed 's/@MCCODE_VERSION@/'$PACKAGE_NAME'-'$PACKAGE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
+      sed 's/@PACKAGE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                        $file.tmp > $file
+      sed 's/@PACKAGE_TARNAME@/'$PACKAGE_TARNAME'/'                                            $file > $file.tmp
+      sed 's/@PACKAGE_NAME@/'$PACKAGE_NAME'/'                                                  $file.tmp > $file
+      sed 's/@PACKAGE_VERSION@/'$PACKAGE_VERSION'/'                                            $file > $file.tmp
+      sed 's/@PACKAGE_STRING@/'$PACKAGE_NAME'-'$PACKAGE_VERSION'/'                             $file.tmp > $file
+      rm $file.tmp
+    done
   done
+  # update corresponding DEFINE string in all makefiles
+  AC_DEFINE_UNQUOTED([MCCODE_VERSION], "${MCCODE_VERSION}")
+  AC_SUBST([MCCODE_VERSION])
 fi
+# activate substitution in all .in files
 AC_SUBST([PACKAGE_DATE])
 AC_SUBST([PACKAGE_TARNAME])
 AC_SUBST([PACKAGE_NAME])
