@@ -1,0 +1,23 @@
+ TRISURF Triangular surface plot.
+ 
+    trisurf(TRI,X,Y,Z,C) displays the triangles defined in the 3-by-M
+    face matrix TRI as a surface.  A row of TRI contains indexes into
+    the X,Y, and Z vertex vectors to define a single triangular face.
+    The color is defined by the vector C.
+
+    trisurf(TRI,X,Y,Z) uses C = Z, so color is proportional to surface
+    height.
+
+    trisurf(...,'param','value','param','value'...) allows additional
+    param/value pairs to be used. See mesh, surf, surfl for the 
+    possible param/value pairs.
+    
+    example :
+       
+    load(PLOTLIB+'tridem.dat')
+    trisurf(nodes,xy(1,:),xy(2,:),P(:,1),'shading','interp', ...
+            'view',[135 60],'colorbar','on')
+    
+
+    See also surf, trimesh, trisurfl.
+                                          

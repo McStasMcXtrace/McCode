@@ -1,0 +1,25 @@
+ COLORBAR  (property) adds a colorbar to the current shaded plot
+ 
+    The property/value pair 'colorbar',S where S is a string, can be
+    used in the functions that produce shaded color graphs, e.g.
+    surf, surfl, pcolor, ...
+    
+    The string S can take the values :
+    
+    'on' or 'left' : the colorbar is placed at the left
+    'right'	   : at the right
+    'top'	   : at the top
+    'bot'	   : at the bottom
+    
+    Examples : 
+    
+    r=linspace(0,1,25);
+    theta=%pi/4+linspace(0,3*%pi/2,25);
+    deff('[x,y,c]=camenbert(r,t)',['x=r.*cos(t)'; ...
+                                 'y=r.*sin(t)'; ...
+				 'c=rand(t)']);    
+    pcolor(r,theta,camenbert,'colorbar','on')
+    
+    
+    
+    see also : caxis 
