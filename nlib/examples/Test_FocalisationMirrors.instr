@@ -94,7 +94,7 @@ COMPONENT source1 = Source_gen(focus_aw = divergence , focus_ah = .0001, lambda0
 			       dlambda=0.01, yheight = H/1000, xwidth = BeamWidth) 
 AT (0,0,0.1) RELATIVE PREVIOUS 
 
-COMPONENT mirpara = MirrorPara(reflect="supermirror_m3.rfl", xwidth = BeamWidth, xshift=y1b,
+COMPONENT mirpara = Mirror_Parabolic(reflect="supermirror_m3.rfl", xwidth = BeamWidth, xshift=y1b,
 				  yheight = H*2, focus = F) 
 AT (-(y1b+BeamWidth/2), 0,0.1001) RELATIVE base
 
@@ -104,7 +104,7 @@ AT ((rayon1+y1h)/(x1h-F)*(x1b-x1h)+y1h,0, x1h-x1b) RELATIVE PREVIOUS
 COMPONENT spatialfilter = Slit(radius=rayon1) 
 AT (0, 0, xf) RELATIVE mirpara
 
-COMPONENT mirelli = MirrorElli(reflect="supermirror_m3.rfl",focus= F*G, interfocus = DET, yheight = H*2,
+COMPONENT mirelli = Mirror_Elliptic(reflect="supermirror_m3.rfl",focus= F*G, interfocus = DET, yheight = H*2,
 				  zmin=-x2b-DET/2, zmax=-x2h-DET/2)
 AT (0, 0, DET/2-G*F+x1h) RELATIVE mirpara
 
