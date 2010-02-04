@@ -131,7 +131,7 @@ END
    "color". */
 DEFINE COMPONENT TOF_monitor_color
 DEFINITION PARAMETERS (filename)
-SETTING PARAMETERS (xmin, xmax, ymin, ymax, nchan, dt, maxcolor)
+SETTING PARAMETERS (xmin, xmax, ymin, ymax, int nchan, dt, int maxcolor)
 OUTPUT PARAMETERS (TOF_N, TOF_p, TOF_p2)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 DECLARE
