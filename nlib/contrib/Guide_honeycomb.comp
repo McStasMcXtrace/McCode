@@ -386,7 +386,7 @@ TRACE
       /* scattering q=|nslit_i-nslit_f| = V2Q*|vf - v| = V2Q*2*n.v/|n| */
       q = 2*V2Q*fabs(B)/GVars.norm_n[side];
       {
-        double par[] = {R0, Qc, GVars.Alpha[side], GVars.M[side], W};
+        double par[] = {R0, Qc, alpha, GVars.M[side], W};
         StdReflecFunc(q, par, &B);
       }
       if (B <= 0) { x += w_adj; y += h_adj; ABSORB; }
