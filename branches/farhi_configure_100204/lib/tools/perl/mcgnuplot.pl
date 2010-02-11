@@ -29,7 +29,7 @@ my $instr_inf, $sim_inf, $datalist, $sim_error;
 my $TkUp = 0;
 my $termnum = 0;
 my $default_term;
-# This part should perhaps go to mcstas_config.perl
+# This part should perhaps go to mccode_config.perl
 if ($Config{'osname'} eq 'MSWin32') {
   $default_term="windows";
   $termnum ="";
