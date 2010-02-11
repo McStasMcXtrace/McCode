@@ -123,7 +123,8 @@ pgplot:
 vrml:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/@MCCODE_TARNAME@_config.perl > lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp
 	mv lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp lib/tools/perl/@MCCODE_TARNAME@_config.perl
-PGPLOT: pgploMatlab: matlab
+PGPLOT: pgplot
+Matlab: matlab
 Scilab: scilab
 VRML: vrml
 
