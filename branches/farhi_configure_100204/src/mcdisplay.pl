@@ -66,11 +66,11 @@ BEGIN {
 
 use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
-require "mcstas_config.perl";
+require "mccode_config.perl";
 
 # Overload with user's personal config
-if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl") {
-  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl";
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl") {
+  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl";
 }
 
 require "mcrunlib.pl";
@@ -1305,7 +1305,7 @@ if ($plotter =~ /McStas|PGPLOT/i && $MCSTAS::mcstas_config{'PGPLOT'} eq "no") {
   print STDERR "PGPLOT.pm not found on Perl \@INC path\n\nSolution:\n\n";
   print STDERR "1) Install pgplot + pgperl packages (Unix/Linux/Cygwin) \n";
   print STDERR "2) Rerun mcdisplay with -p/--plotter set to Scilab/Matlab \n";
-  print STDERR "3) Modify $MCSTAS::perl_dir/mcstas_config.perl\n";
+  print STDERR "3) Modify $MCSTAS::perl_dir/mccode_config.perl\n";
   print STDERR "   to set a different default plotter\n\n";
   print STDERR "******************************************************\n\n";
   die "mcdisplay: PGPLOT problems...\n";
