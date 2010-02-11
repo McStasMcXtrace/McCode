@@ -164,7 +164,7 @@ TAGS:
 
 install: install_@MCCODE_TARNAME@
 	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
-	chmod a+x $(libdir_mccode)/tools/perl/@MCCODE_TARNAME@_reconfigure
+	chmod a+x $(libdir_mccode)/tools/perl/mccode_reconfigure
 	@echo "Install additional Perl modules..."
 	mkdir $(libdir_mccode)/tools/perl/modules
 	cd $(topdir)/support/common && $(MAKE) perl-modules
