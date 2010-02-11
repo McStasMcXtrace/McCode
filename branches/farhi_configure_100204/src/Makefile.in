@@ -168,9 +168,6 @@ install: install_@MCCODE_TARNAME@
 	@echo "Install additional Perl modules..."
 	mkdir $(libdir_mccode)/tools/perl/modules
 	cd $(topdir)/support/common && $(MAKE) perl-modules
-	if [ $(PGPLOT) != no ]; then \
-	cd $(topdir)/support/common && $(MAKE) perl-PGPLOT; \
-	fi
 	@echo "================================================================"
 	@echo "Installation of @MCCODE_STRING@ finished."
 	@echo "  library  in MCSTAS=$(libdir_mccode)"
