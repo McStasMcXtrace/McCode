@@ -123,8 +123,7 @@ pgplot:
 vrml:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/@MCCODE_TARNAME@_config.perl > lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp
 	mv lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp lib/tools/perl/@MCCODE_TARNAME@_config.perl
-PGPLOT: pgplot
-Matlab: matlab
+PGPLOT: pgploMatlab: matlab
 Scilab: scilab
 VRML: vrml
 
@@ -136,7 +135,7 @@ uninstall:
 
 reconfigure:
 	cd $(libdir_@MCCODE_TARNAME@)/tools/perl/
-	$(libdir_@MCCODE_TARNAME@)/tools/perl/@MCCODE_TARNAME@_reconfigure
+	$(libdir_@MCCODE_TARNAME@)/tools/perl/mccode_reconfigure
 
 # Optional auto install of patched perl-Tk, scilab and pgplot5 libs
 install-pgplot:

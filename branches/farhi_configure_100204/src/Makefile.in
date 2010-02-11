@@ -254,5 +254,5 @@ uninstall_mcxtrace:
 
 reconfigure:
 	cd $(libdir_mccode)/tools/perl/
-	$(libdir_mccode)/tools/perl/@MCCODE_TARNAME@_reconfigure
+	$(libdir_mccode)/tools/perl/mccode_reconfigure
 
