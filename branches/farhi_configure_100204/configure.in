@@ -159,15 +159,7 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-# make sure the target config file and reconfigure scripts are named properly
-if [[ -e lib/tools/perl/mccode_config.perl.in ]]; then
-  cp lib/tools/perl/mccode_config.perl.in lib/tools/perl/${MCCODE_TARNAME}_config.perl.in
-fi
-if [[ -e lib/tools/perl/mccode_reconfigure.in ]]; then
-  cp lib/tools/perl/mccode_reconfigure.in lib/tools/perl/${MCCODE_TARNAME}_reconfigure.in
-fi
-
-AC_OUTPUT(Makefile src/Makefile src/port.h lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/${MCCODE_TARNAME}_config.perl lib/tools/perl/${MCCODE_TARNAME}_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat)
+AC_OUTPUT(Makefile src/Makefile src/port.h lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/mccode_config.perl lib/tools/perl/mccode_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat)
 
 chmod a+x lib/tools/perl/${MCCODE_TARNAME}_reconfigure
 
