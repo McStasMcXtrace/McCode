@@ -160,6 +160,15 @@
     PROP_DL(mc_dl);\
   } while(0)
 
+#ifdef DEBUG
+#define mcDEBUG_STATE(x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p) if(!mcdotrace); else \
+  printf("STATE: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+      x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p);
+#define mcDEBUG_SCATTER(x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p) if(!mcdotrace); else \
+  printf("SCATTER: %g, %g, %g, %g, %g, %g, %g, %g, %g, %g, %g\n", \
+      x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p);
+#endif
+
 void mccoordschange(Coords a, Rotation t, double *x, double *y, double *z,
     double *kx, double *ky, double *kz);
 void mccoordschange_polarisation(Rotation t,
