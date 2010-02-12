@@ -1,20 +1,19 @@
-.TH mcconvert 1  "" "@MCCODE_VERSION@" "USER COMMANDS"
+.TH mcdisplay 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
-mcconvert \- Matlab/Scilab conversion tool of the McStas/McXtrace neutron ray-trace simulation package
+mcdisplay \- instrument geometry and neutron trajectory viewer of the McStas neutron ray-trace simulation package
 .SH SYNOPSIS
-.B mcconvert [\-\-format=FORMAT][\-\-indir=IN][\-\-outdir=OUT] [file]
+.B mcdisplay
+[\-mzipfh][\-gif|\-ps|\-psc] file.instr param1=val ...
 .SH DESCRIPTION
 The
-.B mcconvert
-command is the Matlab/Scilab conversion tool of the @PACKAGE_NAME@ package. It converts Matlab files into Scilab equivalents, and vice-versa. As it works by replacing functions calls, it can handle data sets with binary files, as well as parameter scan data sets.
+.B mcdisplay
+command is the instrument geometry and neutron trajectory viewer of the McStas package. It opens a plot window showing the instrument geometry. Additionally, neutron trajectories can be followed during their propagation between components. It also compiles the instrument whenever necessary.
 .PP
 .B McStas
 is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
 .I Risoe National Laboratory
 and
 .I ILL
-.B McXtrace
-is the X-ray version of the package.
 
 .PP
 McStas is based on a compiler [mcstas(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
@@ -36,7 +35,7 @@ is the command-line tool for building and running simulations
 mcplot(1)
 is the simulation results plotting tool
 .TP
-mcdisplay(1)
+.B mcdisplay(1)
 is the instrument geometry and neutron trajectory viewer
 .TP
 mcdoc(1)
@@ -45,7 +44,7 @@ is the documentation tool
 mcstas(1)
 is the instrument compiler
 .TP
-.B mcconvert(1)
+mcconvert(1)
 can convert Matlab data files into Scilab data files, and vice-versa. It also handles data sets with binary encoding. It also handles parameter scan results.
 .TP
 mcformat(1)
@@ -57,22 +56,77 @@ mcdoc
 .P
 .SH OPTIONS
 .TP
+\-h | \-\-help
+displays the command help
+.TP
+\-m | \-\-multi
+.TP
+Show the three instrument side views
+.TP
+\-T | \-\-TOF
+Special Time Of Flight acceptance diagram mode, only with PGPLOT plotter
+.TP
+\-\-tmax=TMAX
+Maximum TOF [ms] (defaults to 50 ms) to be used together with \-\-TOF, only with PGPLOT plotter
+.TP
+\-iCOMP | \-\-inspect=COMP
+Show only trajectories reaching component COMP
+.TP
+\-pPLOTTER | \-\-plotter=PLOTTER
+Output graphics using PLOTTER={PGPLOT,Scilab,Matlab}
+.TP
+\-k | \-\-keep
+Plot all neutrons events together (Primarily for use with PGPLOT and \-psc / \-gif etc.)
+.TP
+\-gif | \-ps | \-psc
+Export figure as gif/b&w ps/color ps and exit
+.SH INSTRUMENT OPTIONS
+These options apply to the generated instrument code (foo.c and foo.out)
+.TP
+\-s SEED | \-\-seed=SEED
+Set random seed (must be non zero)
+.TP
+\-n COUNT | \-\-ncount=COUNT
+Set number of neutrons to simulate
+.TP
+\-d DIR | \-\-dir=DIR
+Put all data files in directory DIR
+.TP
+\-f FILE | \-\-file=FILE
+Put all data in a single file
+.TP
+\-t | \-\-trace
+Enable trace of neutron through instrument (must have been set during code generation with mcstas(1)). This is necessary for mcdisplay(1) to run
+.TP
+\-g | \-\-gravitation
+Enable gravitation for all trajectories
+.TP
+\-a | \-\-data-only
+Do not put any headers in the data files
+.TP
+\-\-no-output-files
+Do not write any data files
+.TP
+\-h | \-\-help
+Show help message for the instrument
+.TP
+\-i | \-\-info
+Detailed instrument information, including valid parameters
+.TP
 \-\-format=FORMAT
-Specifies wanted output format, i.e. Matlab or Scilab
-.TP
-\-\-outdir=DIR
-Specifies wanted output directory
-.TP
-\-\-indir=DIR
-Specifies wanted input directory. Default is current directory.
-.TP
-\-\-quiet
-Suppress status info (e.g. 'mcstas.m \-> mcstas.sci')
+Output data files using format FORMAT (format list obtained from foo.out -h)
 .SH EXAMPLES
 .TP
 Typical usage
-.B mcconvert
-\-\-format=Matlab \-\-indir=SciData \-\-outdir=MatData
+.B mcdisplay
+foo.instr param1=value1 ...
+.TP
+Display 3D view with Matlab (when installed)
+mcdisplay -pMatlab foo.instr param1=value1 ..
+.SH ENVIRONMENT
+The
+.B MCSTAS
+environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
 .SH BUGS
 McStas is a large package, and bugs might be found. If so, please report to
 .B http://mcstas.org/McZilla/

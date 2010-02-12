@@ -1,13 +1,13 @@
-.TH mcdoc 1  "" "@MCCODE_VERSION@" "USER COMMANDS"
+.TH mcgui 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
-mcdoc \- documentation tool of the McStas neutron ray-trace simulation package
+mcgui \- graphical user interface of the McStas neutron ray-trace simulation package
 .SH SYNOPSIS
-.B mcdoc
-[\-mc] [comp|instr]
+.B mcgui
+[\-\-open] [file.instr]
 .SH DESCRIPTION
 The
-.B mcdoc
-command is the documentation tool of the McStas package. It opens a browser to display help ressources.
+.B mcgui
+command is the graphical user interface of the McStas package. It has the following features: Loading instruments and editing their descriptions, compiling them, running single simulations, as well as scans of parameters, usage of parallel computation (when available), parameter optimization to maximize monitor values, plotting of simulation results and instrument geometry, access to instrument templates and plenty of documentation.
 .PP
 .B McStas
 is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
@@ -22,7 +22,7 @@ McStas supports all neutron scattering instruments, including triple-axis,  time
 .PP
 The package consists of the following user commands:
 .TP
-mcgui(1)
+.B mcgui(1)
 is the graphical user interface. Then use the
 .I Neutron Site
 menu to select an example instrument, and access the whole documentation for the
@@ -38,7 +38,7 @@ is the simulation results plotting tool
 mcdisplay(1)
 is the instrument geometry and neutron trajectory viewer
 .TP
-.B mcdoc(1)
+mcdoc(1)
 is the documentation tool
 .TP
 mcstas(1)
@@ -55,29 +55,50 @@ We encourage users to refer to the User and Component Manuals, which are availab
 mcdoc
 .P
 .SH OPTIONS
-The usage of the command does not require option. Refer to mcplot \-h for special uses.
 .TP
-\-h | \-\-help
-displays the command help
+file.instr
+loads the specified instrument when starting
 .TP
-\-c
-opens the Component manual
+\-\-open
+will open the instrument editor window
 .TP
-\-m
-opens the User manual
+\-\-edit
+will only open the instrument editor window (no main/simulation window)
+.TP
+\-\-help
+display command help
 .SH EXAMPLES
 .TP
 Typical usage
-.B mcdoc
+.B mcgui
+.TP
+Open the foo.instr instrument
+mcgui foo.instr
 .SH ENVIRONMENT
 The
 .B MCSTAS
 environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
+The McStas configuration file is MCSTAS/tools/perl/mcstas_config.perl
+.P
+The
+.B MCSTAS_FORMAT
+environment variable may be set to define the default data format used for storing results. This is usually 'PGPLOT', 'Matlab', or 'Scilab'.
+.P
+The
+.B
+MCSTAS_CC
+environment variable may be set to define the compiler to use (e.g. gcc)
+.P
+The
+.B
+MCSTAS_CFLAGS
+environment variable may be set to define the options for compilation (e.g. -O2)
 .P
 The
 .B BROWSER
 environment variable may be set to define the default HTML browser to use
 .SH BUGS
+Some implementations of Perl-Tk do not support desktop switching and windows redraw. This may crash mcgui.
 McStas is a large package, and bugs might be found. If so, please report to
 .B http://mcstas.org/McZilla/
 and the mailing list

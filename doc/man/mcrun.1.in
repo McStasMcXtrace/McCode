@@ -1,4 +1,4 @@
-.TH mcrun 1  "" "@MCCODE_VERSION@" "USER COMMANDS"
+.TH mcrun 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
 mcrun \- Command-line simulator of the McStas neutron ray-trace simulation package
 .SH SYNOPSIS

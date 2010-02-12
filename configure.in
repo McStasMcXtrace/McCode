@@ -1,5 +1,5 @@
 #
-#   This file is part of the McStas/McXtrace @PACKAGE_STRING@ neutron ray-trace simulation package
+#   This file is part of the McStas/McXtrace @MCCODE_STRING@ neutron ray-trace simulation package
 #   Copyright (C) 1997-2010, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
@@ -18,13 +18,21 @@
 #   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(@PACKAGE_NAME@, @PACKAGE_VERSION@, @PACKAGE_TARNAME@-support@@PACKAGE_TARNAME@.org)
+AC_INIT(@MCCODE_NAME@, @MCCODE_VERSION@, @MCCODE_TARNAME@-support@@MCCODE_TARNAME@.org)
 AC_REVISION($Revision: 1.1$)
 AC_COPYRIGHT([Copyright (C) Copyright, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
 Institut Laue Langevin, Grenoble, France
 This software is covered by the GNU LESSER GENERAL PUBLIC LICENSE
 see file COPYING for further information])
+
+# set default package defines
+MCCODE_TARNAME=$PACKAGE_TARNAME
+MCCODE_NAME=$PACKAGE_NAME
+MCCODE_VERSION=$PACKAGE_VERSION
+MCCODE_STRING=$PACKAGE_STRING
+MCCODE_BUGREPORT=$PACKAGE_BUGREPORT
+MCCODE_DATE="@MCCODE_DATE@"
 
 AC_PREFIX_DEFAULT(/usr/local)
 test "x$prefix" = xNONE && prefix=$ac_default_prefix
@@ -47,23 +55,11 @@ if test x"$enable_mcstas" == "xyes" -a x"$enable_mcxtrace" == "xyes" ; then
   echo "ERROR: It is currently not possible to build both mcstas and mcxtrace."
   exit 1
 elif test x"$enable_mcstas" == "xyes" ; then
-  PACKAGE_TARNAME=[mcstas]
-  PACKAGE_NAME=McStas
-  if [[ -e lib/tools/perl/mcxtrace_config.perl.in ]]; then
-    mv lib/tools/perl/mcxtrace_config.perl.in lib/tools/perl/mccode_config.perl.in
-  fi
-  if [[ -e lib/tools/perl/mcxtrace_reconfigure.in ]]; then
-    mv lib/tools/perl/mcxtrace_reconfigure.in lib/tools/perl/mccode_reconfigure.in
-  fi
+  MCCODE_TARNAME=[mcstas]
+  MCCODE_NAME=McStas
 elif test x"$enable_mcxtrace" == "xyes" ; then
-  PACKAGE_TARNAME=[mcxtrace]
-  PACKAGE_NAME=McXtrace
-  if [[ -e lib/tools/perl/mcstas_config.perl.in ]]; then
-    mv lib/tools/perl/mcstas_config.perl.in lib/tools/perl/mccode_config.perl.in
-  fi
-  if [[ -e lib/tools/perl/mcxtrace_reconfigure.in ]]; then
-    mv lib/tools/perl/mcxtrace_reconfigure.in lib/tools/perl/mccode_reconfigure.in
-  fi
+  MCCODE_TARNAME=[mcxtrace]
+  MCCODE_NAME=McXtrace
 fi
 
 # check if VERSION is defined (in principle, done in mkdist)
@@ -71,41 +67,34 @@ if test x"$enable_mcstas" == "xyes" -o x"$enable_mcxtrace" == "xyes" ; then
   MONTH=`date +"%b"`
   DAY=`date +"%d"`
   YEAR=`date +"%Y"`
-  PACKAGE_DATE="$MONTH-$DAY-$YEAR"
-  PACKAGE_VERSION="$MONTH-$DAY-$YEAR"
-  PACKAGE_STRING="$PACKAGE_NAME-$PACKAGE_VERSION"
-  MCCODE_VERSION="$PACKAGE_NAME $PACKAGE_VERSION - $MONTH $DAY $YEAR"
+  MCCODE_DATE="$MONTH. $DAY, $YEAR"
+  MCCODE_VERSION="$MONTH-$DAY-$YEAR"
+  MCCODE_STRING="$MCCODE_NAME $MCCODE_VERSION - $MONTH. $DAY, $YEAR"
+  MCCODE_BUGREPORT="$MCCODE_TARNAME-support@$MCCODE_TARNAME.org"
   
-  echo "Configurating McCode with $PACKAGE_NAME flavour"
-  echo "PACKAGE_DATE=$PACKAGE_DATE"
-  echo "PACKAGE_VERSION=$PACKAGE_VERSION"
+  echo "Configurating McCode with $MCCODE_NAME flavour"
+  echo "MCCODE_DATE=$MCCODE_DATE"
+  echo "MCCODE_TARNAME=$MCCODE_TARNAME"
+  echo "MCCODE_NAME=$MCCODE_NAME"
   echo "MCCODE_VERSION=$MCCODE_VERSION"
-  echo "PACKAGE_TARNAME=$PACKAGE_TARNAME"
-  echo "PACKAGE_NAME=$PACKAGE_NAME"
-  echo "PACKAGE_STRING=$PACKAGE_STRING"
-  for file in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h lib/tools/perl/mccode_reconfigure.in;
-  do
-    for iter in 1 2 3;
-    do
-      sed 's/@MCCODE_VERSION@/'$PACKAGE_NAME'-'$PACKAGE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
-      sed 's/@PACKAGE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                        $file.tmp > $file
-      sed 's/@PACKAGE_TARNAME@/'$PACKAGE_TARNAME'/'                                            $file > $file.tmp
-      sed 's/@PACKAGE_NAME@/'$PACKAGE_NAME'/'                                                  $file.tmp > $file
-      sed 's/@PACKAGE_VERSION@/'$PACKAGE_VERSION'/'                                            $file > $file.tmp
-      sed 's/@PACKAGE_STRING@/'$PACKAGE_NAME'-'$PACKAGE_VERSION'/'                             $file.tmp > $file
-      rm $file.tmp
-    done
-  done
-  # update corresponding DEFINE string in all makefiles
-  AC_DEFINE_UNQUOTED([MCCODE_VERSION], "${MCCODE_VERSION}")
-  AC_SUBST([MCCODE_VERSION])
+  echo "MCCODE_STRING=$MCCODE_STRING"
+  echo "MCCODE_BUGREPORT=$MCCODE_BUGREPORT"
+
 fi
+# update corresponding DEFINE string in all makefiles
+AC_DEFINE_UNQUOTED([MCCODE_DATE], "${MCCODE_DATE}")
+AC_DEFINE_UNQUOTED([MCCODE_TARNAME], "${MCCODE_TARNAME}")
+AC_DEFINE_UNQUOTED([MCCODE_NAME], "${MCCODE_NAME}")
+AC_DEFINE_UNQUOTED([MCCODE_VERSION], "${MCCODE_VERSION}")
+AC_DEFINE_UNQUOTED([MCCODE_STRING], "${MCCODE_STRING}")
+AC_DEFINE_UNQUOTED([MCCODE_BUGREPORT], "${MCCODE_BUGREPORT}")
 # activate substitution in all .in files
-AC_SUBST([PACKAGE_DATE])
-AC_SUBST([PACKAGE_TARNAME])
-AC_SUBST([PACKAGE_NAME])
-AC_SUBST([PACKAGE_VERSION])
-AC_SUBST([PACKAGE_STRING])
+AC_SUBST([MCCODE_DATE])
+AC_SUBST([MCCODE_TARNAME])
+AC_SUBST([MCCODE_NAME])
+AC_SUBST([MCCODE_VERSION])
+AC_SUBST([MCCODE_STRING])
+AC_SUBST([MCCODE_BUGREPORT])
 
 AC_PROG_INSTALL
 CF_ANSI_CC_CHECK
@@ -170,34 +159,26 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-# make sure the target config file and reconfigure scripts are named properly
-if [[ -e lib/tools/perl/mccode_config.perl.in ]]; then
-  mv lib/tools/perl/mccode_config.perl.in lib/tools/perl/${PACKAGE_TARNAME}_config.perl.in
-fi
-if [[ -e lib/tools/perl/mccode_reconfigure.in ]]; then
-  mv lib/tools/perl/mccode_reconfigure.in lib/tools/perl/${PACKAGE_TARNAME}_reconfigure.in
-fi
+AC_OUTPUT(Makefile src/Makefile src/port.h lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/mccode_config.perl lib/tools/perl/mccode_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat)
 
-AC_OUTPUT(Makefile src/Makefile src/port.h lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/${PACKAGE_TARNAME}_config.perl lib/tools/perl/${PACKAGE_TARNAME}_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex)
-
-chmod a+x lib/tools/perl/${PACKAGE_TARNAME}_reconfigure
+chmod a+x lib/tools/perl/${MCCODE_TARNAME}_reconfigure
 
 # warnings and errors
 if test "$USE_PIC" != "no" ; then
 echo "Activating PIC compilation for: make install-pgplot"
 fi
 if test "x$HAVE_NEXUS" != "x" ; then
-echo "Activating NeXus support in $PACKAGE_STRING ($HAVE_NEXUS)"
+echo "Activating NeXus support in $MCCODE_STRING ($HAVE_NEXUS)"
 fi
 if test "$MAKE" == "no" ; then
-  echo "ERROR: $PACKAGE_STRING installation requires 'make' or 'gmake'"
+  echo "ERROR: $MCCODE_STRING installation requires 'make' or 'gmake'"
   exit
 fi
 
 if test "$PERL" = "no" ; then
   echo "WARNING: No Perl executable could be found !"
   echo "The commands mcrun and mcgui won't be available. You will have to use:"
-  echo "   $PACKAGE_TARNAME <file>.instr"
+  echo "   $MCCODE_TARNAME <file>.instr"
   echo "   $CC -o <file>.out <file>.instr -lm"
   echo "   <file>.out [simulation parameters]"
 fi
@@ -215,18 +196,18 @@ fi
 # final message at end of configure
 echo ""
 if test "$PGPLOT" == "no" ; then
-  echo "To install PGPLOT for $PACKAGE_STRING, you need:"
+  echo "To install PGPLOT for $MCCODE_STRING, you need:"
   echo "= perl-PDL (perldl, pdl)"
   echo "= a fortran compiler (g77, gfortran)"
   echo "= X11-dev libraries/includes (libx11-dev, xserver-xorg-dev, libxt-dev)"
 fi
 if test "$PGPLOT" == "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
-  echo "PGPLOT install: you may try our automatic pgplot5 installation AFTER installing @PACKAGE_STRING@"
+  echo "PGPLOT install: you may try our automatic pgplot5 installation AFTER installing @MCCODE_STRING@"
   echo "# make install-pgplot"
   echo "# make reconfigure"
   echo "(For 64-bit machines, reconfigure first: # ./configure --with-pic )"
 else if test "$PGPLOT" == "no" ; then
-  echo "To use PGPLOT, install these packages and re-run $PACKAGE_STRING installation ./configure"
+  echo "To use PGPLOT, install these packages and re-run $MCCODE_STRING installation ./configure"
   fi
 fi
 if test "$SCILAB" == "no" && test "$WGET" != no ; then
@@ -253,9 +234,9 @@ if test "$VRMLVIEW" != "no" ; then
 echo "# make vrml   (selects vrml)"
 fi
 echo ""
-echo "After (optional) plotter config, build and install $PACKAGE_STRING by executing"
+echo "After (optional) plotter config, build and install $MCCODE_STRING by executing"
 echo "# make; make install"
-echo "will install $PACKAGE_STRING into $prefix"
+echo "will install $MCCODE_STRING into $prefix"
 echo ""
 if test "$DASH" != "no" ; then
 echo

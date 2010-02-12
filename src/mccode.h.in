@@ -11,7 +11,7 @@
 * Written by: K.N.
 * Date: Jul  1, 1997
 * Origin: Risoe
-* Release: @MCCODE_VERSION@
+* Release: @MCCODE_STRING@
 * Version: $Revision: 1.50 $
 *
 * Main header file containing declarations of external functions and
@@ -39,8 +39,20 @@
 #endif
 
 /* the version string is replaced when building distribution with mkdist */
+#ifndef MCCODE_STRING
+#define MCCODE_STRING "@MCCODE_STRING@"
+#endif
+
+#ifndef MCCODE_DATE
+#define MCCODE_DATE "@MCCODE_DATE@"
+#endif
+
 #ifndef MCCODE_VERSION
 #define MCCODE_VERSION "@MCCODE_VERSION@"
+#endif
+
+#ifndef MCCODE_NAME
+#define MCCODE_NAME "@MCCODE_NAME@"
 #endif
 
 /* Functions defined in memory.c */
