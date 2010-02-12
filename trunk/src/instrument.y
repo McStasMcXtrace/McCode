@@ -1491,8 +1491,9 @@ Symtab read_components = NULL;
 static void
 print_usage(void)
 {
+  fprintf(stderr, MCCODE_NAME " version " MCCODE_STRING " (" MCCODE_DATE ")\n");
   fprintf(stderr, "Usage:\n"
-    "  mcstas [-o file] [-I dir1 ...] [-t] [-p] [-v] "
+    "  " MCCODE_NAME " [-o file] [-I dir1 ...] [-t] [-p] [-v] "
     "[--no-main] [--no-runtime] [--verbose] file\n");
   fprintf(stderr, "      -o FILE --output-file=FILE Place C output in file FILE.\n");
   fprintf(stderr, "      -I DIR  --search-dir=DIR   Append DIR to the component search list. \n");
@@ -1509,15 +1510,15 @@ print_usage(void)
   fprintf(stderr, "  Use 'mcrun' to both run mcstas and the C compiler.\n");
   fprintf(stderr, "  Use 'mcgui' to run the McStas GUI.\n");  
   fprintf(stderr, "SEE ALSO: mcrun, mcplot, mcdisplay, mcresplot, mcstas2vitess, mcgui, mcformat, mcdoc\n");
-  fprintf(stderr, "DOC:      Please visit " PACKAGE_BUGREPORT "\n");
+  fprintf(stderr, "DOC:      Please visit " MCCODE_BUGREPORT "\n");
   exit(1);
 }
 
 /* Print McStas version and copyright. */
 static void
 print_version(void)
-{ /* MOD: E. Farhi Sep 20th, 2001 version number */
-  printf(PACKAGE_NAME " version " PACKAGE_VERSION "\n"
+{ 
+  printf(MCCODE_NAME " version " MCCODE_VERSION " (" MCCODE_DATE ")\n"
     "Copyright (C) Risoe National Laboratory, 1997-2010\n"
     "Additions (C) Institut Laue Langevin, 2003-2010\n"
     "All rights reserved\n");
@@ -1672,12 +1673,12 @@ main(int argc, char *argv[])
     file = fopen(instr_current_filename, "r");
   }
   if(file == NULL)
-    fatal_error(PACKAGE_NAME ": Instrument definition file `%s' not found\n",
+    fatal_error(MCCODE_NAME ": Instrument definition file `%s' not found\n",
     instr_current_filename);
   instrument_definition->quoted_source =
     str_quote(instrument_definition->source);
   if (verbose) {
-    fprintf(stderr, PACKAGE_NAME " version " PACKAGE_VERSION "\n");
+    fprintf(stderr, MCCODE_NAME " version " MCCODE_VERSION "\n");
     fprintf(stderr, "Analyzing file      %s\n", instrument_definition->quoted_source);
   }
   instr_current_line = 1;
@@ -1688,7 +1689,7 @@ main(int argc, char *argv[])
   fclose(file);
   if(err != 0 || error_encountered != 0)
   {
-    print_error(PACKAGE_NAME ": Errors encountered during parse of %s.\n", instr_current_filename);
+    print_error(MCCODE_NAME ": Errors encountered during parse of %s.\n", instr_current_filename);
     exit(1);
   }
   else

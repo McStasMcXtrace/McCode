@@ -19,7 +19,7 @@
 #
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(@PACKAGE_NAME@, @PACKAGE_VERSION@, @PACKAGE_TARNAME@-support@@PACKAGE_TARNAME@.org)
+AC_INIT(@MCCODE_NAME@, @MCCODE_VERSION@, @MCCODE_TARNAME@-support@@MCCODE_TARNAME@.org)
 AC_REVISION($Revision: 1.1$)
 AC_COPYRIGHT([Copyright (C) Copyright, All rights reserved
 Risoe National Laborartory, Roskilde, Denmark
@@ -86,8 +86,8 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT($prefix/lib/@PACKAGE_TARNAME@/tools/perl/@PACKAGE_TARNAME@_config.perl)
+AC_OUTPUT($prefix/lib/@MCCODE_TARNAME@/tools/perl/@MCCODE_TARNAME@_config.perl)
 
-chmod a+w $prefix/lib/@PACKAGE_TARNAME@/tools/perl/@PACKAGE_TARNAME@_config.perl
+chmod a+w $prefix/lib/@MCCODE_TARNAME@/tools/perl/@MCCODE_TARNAME@_config.perl
 
-echo "McStas has been reconfigured in $prefix/lib/mcstas/tools/perl/@PACKAGE_TARNAME@_config.perl"
+echo "McStas has been reconfigured in $prefix/lib/mcstas/tools/perl/@MCCODE_TARNAME@_config.perl"

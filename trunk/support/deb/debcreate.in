@@ -1,6 +1,6 @@
 #!/bin/sh
-export BUILDDIR="/build/@PACKAGE_TARNAME@-@PACKAGE_VERSION@"
-export SRCDIR="/build/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir"
+export BUILDDIR="/build/@MCCODE_TARNAME@-@MCCODE_VERSION@"
+export SRCDIR="/build/@MCCODE_TARNAME@-@MCCODE_VERSION@-srcdir"
 export MACHINETYPE=`uname -m`
 
 apt-get -y --force-yes install perl-tk pdl gcc libc6-dev g77 libx11-dev xorg-dev libxt-dev lintian
@@ -9,12 +9,12 @@ rm -rf /build/*
 rm -rf /usr/local/lib/*
 rm -rf /usr/local/pgplot
 
-echo Performing @PACKAGE_STRING@ install to /usr/local
+echo Performing @MCCODE_STRING@ install to /usr/local
 
 cd /build
-tar xzf /root/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-src.tar.gz
-mv @PACKAGE_TARNAME@-@PACKAGE_VERSION@ @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir
-cd @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir
+tar xzf /root/@MCCODE_TARNAME@-@MCCODE_VERSION@-src.tar.gz
+mv @MCCODE_TARNAME@-@MCCODE_VERSION@ @MCCODE_TARNAME@-@MCCODE_VERSION@-srcdir
+cd @MCCODE_TARNAME@-@MCCODE_VERSION@-srcdir
 
 make
 make install
@@ -43,9 +43,9 @@ cp -rp /usr/local/bin ${BUILDDIR}/usr/local
 cp -rp /usr/local/lib/* ${BUILDDIR}/usr/local/lib
 cp -rp /usr/local/pgplot ${BUILDDIR}/usr/local
 
-cp @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir/deb/control ${BUILDDIR}/DEBIAN
-cp @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir/deb/prerm ${BUILDDIR}/DEBIAN
-cp @PACKAGE_TARNAME@-@PACKAGE_VERSION@-srcdir/deb/postinst ${BUILDDIR}/DEBIAN
+cp @MCCODE_TARNAME@-@MCCODE_VERSION@-srcdir/deb/control ${BUILDDIR}/DEBIAN
+cp @MCCODE_TARNAME@-@MCCODE_VERSION@-srcdir/deb/prerm ${BUILDDIR}/DEBIAN
+cp @MCCODE_TARNAME@-@MCCODE_VERSION@-srcdir/deb/postinst ${BUILDDIR}/DEBIAN
 
 find ${BUILDDIR} -type d -exec chmod 0755 \{\} \;
 
@@ -56,9 +56,9 @@ cp ${SRCDIR}/CHANGES ${BUILDDIR}/usr/share/doc/mcstas/changelog
 cp ${SRCDIR}/CHANGES ${BUILDDIR}/usr/share/doc/mcstas/changelog.Debian
 cp ${SRCDIR}/COPYING ${BUILDDIR}/usr/share/doc/mcstas/copyright
 
-dpkg-deb --build @PACKAGE_TARNAME@-@PACKAGE_VERSION@
+dpkg-deb --build @MCCODE_TARNAME@-@MCCODE_VERSION@
 
-mv @PACKAGE_TARNAME@-@PACKAGE_VERSION@.deb @PACKAGE_TARNAME@-@PACKAGE_VERSION@-${MACHINETYPE}.deb
+mv @MCCODE_TARNAME@-@MCCODE_VERSION@.deb @MCCODE_TARNAME@-@MCCODE_VERSION@-${MACHINETYPE}.deb
 
 rm -rf $BUILDDIR
 

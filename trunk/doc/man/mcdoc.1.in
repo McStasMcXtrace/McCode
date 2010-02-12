@@ -1,13 +1,13 @@
-.TH mcplot 1  "" "@MCCODE_VERSION@" "USER COMMANDS"
+.TH mcdoc 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
-mcplot \- simulation results plotter of the McStas neutron ray-trace simulation package
+mcdoc \- documentation tool of the McStas neutron ray-trace simulation package
 .SH SYNOPSIS
-.B mcplot
-[\-ps|\-psc|\-gif] <simfile | detector_file>
+.B mcdoc
+[\-mc] [comp|instr]
 .SH DESCRIPTION
 The
-.B mcplot
-command is the simulation results plotter of the McStas package.
+.B mcdoc
+command is the documentation tool of the McStas package. It opens a browser to display help ressources.
 .PP
 .B McStas
 is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
@@ -18,7 +18,7 @@ and
 .PP
 McStas is based on a compiler [mcstas(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
 .PP
-McStas supportsall neutron scattering instruments, including  triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
+McStas supports all neutron scattering instruments, including triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
 .PP
 The package consists of the following user commands:
 .TP
@@ -32,13 +32,13 @@ menu. It contains an instrument editor, methods to plot simulation results, and 
 mcrun(1)
 is the command-line tool for building and running simulations
 .TP
-.B mcplot(1)
+mcplot(1)
 is the simulation results plotting tool
 .TP
 mcdisplay(1)
 is the instrument geometry and neutron trajectory viewer
 .TP
-mcdoc(1)
+.B mcdoc(1)
 is the documentation tool
 .TP
 mcstas(1)
@@ -60,19 +60,23 @@ The usage of the command does not require option. Refer to mcplot \-h for specia
 \-h | \-\-help
 displays the command help
 .TP
-\-ps|\-psc|\-gif|\-png
-saves plot as a ps/color ps/gif/png file and exits
+\-c
+opens the Component manual
+.TP
+\-m
+opens the User manual
 .SH EXAMPLES
 .TP
-Typical usage (plots last results in current directory)
-.B mcplot
-.TP
-Plots results in current directory DIR
-mcplot DIR
+Typical usage
+.B mcdoc
 .SH ENVIRONMENT
 The
 .B MCSTAS
 environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
+.P
+The
+.B BROWSER
+environment variable may be set to define the default HTML browser to use
 .SH BUGS
 McStas is a large package, and bugs might be found. If so, please report to
 .B http://mcstas.org/McZilla/

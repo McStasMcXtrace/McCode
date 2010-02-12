@@ -82,7 +82,7 @@ int mcnxinfo_header(NXhandle nxhandle, char *part,
       return(NX_ERROR);
     }
     char creator[CHAR_BUF_LENGTH];
-    sprintf(creator, "%s " MCCODE_VERSION " [www.mcstas.org]", instrname);
+    sprintf(creator, "%s gerenated with " MCCODE_STRING " (" MCCODE_DATE ") [www.mccode.org]", instrname);
     NXputattr(nxhandle, "creator", creator, strlen(creator), NX_CHAR);
     NXputattr(nxhandle, "simulation_begin", date, strlen(date), NX_CHAR);
     char *url="http://www.nexusformat.org/";
@@ -155,7 +155,7 @@ int mcnxfile_instrcode(NXhandle nxhandle,
     NXputattr (nxhandle, "file_size", &length, 1, NX_INT32);
     t=stfile.st_mtime; strncpy(nxname, ctime(&t), CHAR_BUF_LENGTH);
     NXputattr (nxhandle, "file_date", nxname, strlen(nxname), NX_CHAR);
-    NXputattr (nxhandle, "McCode_version", MCCODE_VERSION, strlen(MCCODE_VERSION), NX_CHAR);
+    NXputattr (nxhandle, "MCCODE_STRING", MCCODE_STRING, strlen(MCCODE_STRING), NX_CHAR);
     NXputattr (nxhandle, "name", parent, strlen(parent), NX_CHAR);
     
     return(NXclosedata(nxhandle));

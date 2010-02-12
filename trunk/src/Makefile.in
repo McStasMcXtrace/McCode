@@ -1,6 +1,6 @@
-# Makefile for @PACKAGE_NAME@.
+# Makefile for @MCCODE_NAME@.
 #
-#   This file is part of the @PACKAGE_NAME@ ray-trace simulation package
+#   This file is part of the @MCCODE_NAME@ ray-trace simulation package
 #   Copyright (C) 1997-2008, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
@@ -25,7 +25,7 @@
 # make clean           clean distro
 # make test            distro self-test
 # make plotter         best plotter choice
-# make reconfigure     reconfigure @PACKAGE_TARNAME@ installation (after software update)
+# make reconfigure     reconfigure @MCCODE_TARNAME@ installation (after software update)
 
 
 SHELL = /bin/sh
@@ -41,7 +41,7 @@ PWD = `pwd`
 
 
 DEBUG = -DDEBUG=0
-libdir_mccode = $(libdir)/@PACKAGE_TARNAME@
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@
 
 CC = @CC@
 MINGW = @MINGW@
@@ -124,7 +124,7 @@ BINOBJS_mcxtrace=$(MXPERLOBJ) mcxtrace mxformat
 	    < $< > $(subst mc,mx,$@)
 	@chmod +x $(subst mc,mx,$@)
 
-all: $(BINOBJS_@PACKAGE_TARNAME@)
+all: $(BINOBJS_@MCCODE_TARNAME@)
 
 mcstas: $(OBJECTS_mcstas)
 	@echo "Building" $(CC) -o mcstas $(CFLAGS) $(LDFLAGS) ... $(OBJECTS_mcstas) -lm
@@ -162,16 +162,17 @@ distclean: clean
 TAGS:
 	etags *.[chly]
 
-install: install_@PACKAGE_TARNAME@
+install: install_@MCCODE_TARNAME@
 	$(INSTALL_DATA) $(topdir)/doc/man/*.1 $(mandir)/man1
-	chmod a+x $(libdir_mccode)/tools/perl/@PACKAGE_TARNAME@_reconfigure
+	chmod a+x $(libdir_mccode)/tools/perl/mccode_reconfigure
 	@echo "Install additional Perl modules..."
 	mkdir $(libdir_mccode)/tools/perl/modules
 	cd $(topdir)/support/common && $(MAKE) perl-modules
 	@echo "================================================================"
-	@echo "Installation finished. Thanks for using @PACKAGE_NAME@"
-	@echo @PACKAGE_NAME@ library has been installed in 
-	@echo MCSTAS=$(libdir_mccode), and binaries in $(bindir)
+	@echo "Installation of @MCCODE_STRING@ finished."
+	@echo "  library  in MCSTAS=$(libdir_mccode)"
+	@echo "  binaries in        $(bindir)"
+	@echo "Thanks for using @MCCODE_NAME@"	
 	@echo "================================================================"
 
 # TODO: currently, all Perl scripts use MCSTAS env. Should be changed in the future.
@@ -232,7 +233,7 @@ instrument.tab.c instrument.tab.h: instrument.y
 lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
 
-test: test_@PACKAGE_TARNAME@
+test: test_@MCCODE_TARNAME@
 
 test_mcstas: mcrun.fixpl
 	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McStasTest; export PERL5LIB=../lib/tools/perl; ln -s mcrun.fixpl mcrun; ./mcrun.fixpl --test; rm mcrun
@@ -240,18 +241,18 @@ test_mcstas: mcrun.fixpl
 test_mcxtrace: mxrun.mxfixpl
 	export PATH=${PWD}:$$PATH; export MCSTAS=${PWD}/McXtraceTest; export PERL5LIB=../lib/tools/perl; ln -s mxrun.fixpl mcrun; ./mxrun.mxfixpl --test; rm mcrun
 
-uninstall: uninstall_@PACKAGE_TARNAME@
+uninstall: uninstall_@MCCODE_TARNAME@
 	rm -rf $(libdir_mccode)
 
 uninstall_mcstas: 
-	cd $(bindir); rm -f $(BINOBJS_@PACKAGE_TARNAME@)
+	cd $(bindir); rm -f $(BINOBJS_@MCCODE_TARNAME@)
 	rm -f $(PERLBIN)
 
 uninstall_mcxtrace: 
-	cd $(bindir); rm -f $(BINOBJS_@PACKAGE_TARNAME@)
+	cd $(bindir); rm -f $(BINOBJS_@MCCODE_TARNAME@)
 	rm -f $(MXPERLBIN)
 
 reconfigure:
 	cd $(libdir_mccode)/tools/perl/
-	$(libdir_mccode)/tools/perl/@PACKAGE_TARNAME@_reconfigure
+	$(libdir_mccode)/tools/perl/mccode_reconfigure
 

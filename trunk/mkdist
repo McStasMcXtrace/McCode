@@ -31,23 +31,23 @@
 
 # define version and symbols that will be replaced in many places
 if [ "y$2" = "ymcxtrace" ]; then
-  PACKAGE_TARNAME=mcxtrace
-  PACKAGE_NAME=McXtrace
+  MCCODE_TARNAME=mcxtrace
+  MCCODE_NAME=McXtrace
 else
-  PACKAGE_TARNAME=mcstas
-  PACKAGE_NAME=McStas
+  MCCODE_TARNAME=mcstas
+  MCCODE_NAME=McStas
 fi
-PACKAGE_VERSION=$1
-PACKAGE_STRING="$PACKAGE_NAME $PACKAGE_VERSION"
+MCCODE_VERSION=$1
 MONTH=`date +"%b"`
 DAY=`date +"%d"`
 YEAR=`date +"%Y"`
-PACKAGE_DATE="'$MONTH'. '$DAY', '$YEAR'"
+MCCODE_DATE="$MONTH. $DAY, $YEAR"
+MCCODE_STRING="$MCCODE_NAME $MCCODE_VERSION - $MONTH. $DAY, $YEAR"
 
 # Create temporary workdir:
 PW=`pwd`
 TMPDIR=$PWD/..
-DIST=$TMPDIR/$PACKAGE_TARNAME-$PACKAGE_VERSION
+DIST=$TMPDIR/$MCCODE_TARNAME-$MCCODE_VERSION
 
 # Copy current PW checkout to DIST
 cp -rp $PW $DIST
@@ -56,11 +56,11 @@ cp -rp $PW $DIST
 if [ -d $PW/../../McStasTeX/trunk ] ;
 then
   cd $PW/../../McStasTeX/trunk
-  ./build $PACKAGE_VERSION
+  ./build $MCCODE_VERSION
   
   # copy the doc in DIST/doc. Only use PDF files in distro.
-  mv $PACKAGE_TARNAME-$PACKAGE_VERSION-manual.pdf $DIST/doc/manuals/$PACKAGE_TARNAME-manual.pdf
-  mv $PACKAGE_TARNAME-$PACKAGE_VERSION-components.pdf $DIST/doc/manuals/$PACKAGE_TARNAME-components.pdf
+  mv $MCCODE_TARNAME-$MCCODE_VERSION-manual.pdf $DIST/doc/manuals/$MCCODE_TARNAME-manual.pdf
+  mv $MCCODE_TARNAME-$MCCODE_VERSION-components.pdf $DIST/doc/manuals/$MCCODE_TARNAME-components.pdf
   cp -r $DIST/doc $DIST/lib
 fi
 
@@ -74,22 +74,24 @@ find . -name \*.comp  -exec dos2unix \{\} \;
 find . -name \*.instr -exec dos2unix \{\} \;
 
 # Put in new version info:
-# MCCODE_VERSION="PACKAGE_NAME PACKAGE_VERSION - PACKAGE_DATE"
-echo "Set version $PACKAGE_VERSION and date"
-find . -wholename './setversion' -prune -o -type d -prune -o -path ./src/McStasTest -exec ./setversion \{\} $PACKAGE_VERSION \;
+# MCCODE_STRING="MCCODE_NAME MCCODE_VERSION - MCCODE_DATE"
+echo "Set version $MCCODE_VERSION and date"
+find . -wholename './setversion' -prune -o -type d -prune -o -path ./src/McStasTest -exec ./setversion \{\} $MCCODE_VERSION \;
 find . -wholename './setyear'    -prune -o -type d -prune -o -path ./src/McStasTest -exec ./setyear \{\} \;
 
 # we update all package/version strings
-echo "Set package $PACKAGE_VERSION information"
-for file in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat lib/share/mccode-r.h configure.in lib/tools/perl/mccode_reconfigure.in;
+echo "Set package $MCCODE_VERSION information"
+for iter in 1 2 3;
 do
-  sed 's/@MCCODE_VERSION@/'$PACKAGE_NAME'-'$PACKAGE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
-  sed 's/@PACKAGE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                        $file.tmp > $file
-  sed 's/@PACKAGE_TARNAME@/'$PACKAGE_TARNAME'/'                                            $file > $file.tmp
-  sed 's/@PACKAGE_NAME@/'$PACKAGE_NAME'/'                                                  $file.tmp > $file
-  sed 's/@PACKAGE_VERSION@/'$PACKAGE_VERSION'/'                                            $file > $file.tmp
-  sed 's/@PACKAGE_STRING@/'$PACKAGE_NAME'-'$PACKAGE_VERSION'/'                             $file.tmp > $file
-  rm $file.tmp
+for file in configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat  ;
+	do
+	  sed 's/@MCCODE_STRING@/'$MCCODE_NAME'-'$MCCODE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
+    sed 's/@MCCODE_NAME@/'$MCCODE_NAME'/'                                                 $file.tmp > $file
+    sed 's/@MCCODE_TARNAME@/'$MCCODE_TARNAME'/'                                           $file > $file.tmp
+    sed 's/@MCCODE_VERSION@/'$MCCODE_VERSION'/'                                           $file.tmp > $file
+    sed 's/@MCCODE_DATE@/'$MONTH'. '$DAY', '$YEAR'/'                                      $file > $file.tmp
+    mv $file.tmp $file
+	done
 done
 chmod a+x support/deb/debcreate
 
@@ -133,8 +135,8 @@ cd $DIST
 # Create configure
 autoconf -o configure $CONFIGURE_IN
 #chmod a+x configure
-autoconf -o lib/tools/perl/${PACKAGE_TARNAME}_reconfigure.in lib/tools/perl/mccode_reconfigure.in
-mv lib/tools/perl/mccode_config.perl.in lib/tools/perl/${PACKAGE_TARNAME}_config.perl.in
+autoconf -o lib/tools/perl/${MCCODE_TARNAME}_reconfigure.in lib/tools/perl/mccode_reconfigure.in
+mv lib/tools/perl/mccode_config.perl.in lib/tools/perl/${MCCODE_TARNAME}_config.perl.in
 rm lib/tools/perl/mccode_reconfigure.in
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
@@ -165,7 +167,7 @@ rm config.*
 cd ..
 
 # Create tar archive
-tar cfz $PW/../$PACKAGE_TARNAME-$PACKAGE_VERSION-src.tar.gz $PACKAGE_TARNAME-$PACKAGE_VERSION
+tar cfz $PW/../$MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
 
 # Do a 'make' for creation of binary version (should apply to 'any' Unix)
 cd $PW
@@ -185,7 +187,7 @@ PROC=Intel
 cd ..
 
 # Create tar archive
-tar cfz $PW/../$PACKAGE_TARNAME-$PACKAGE_VERSION-$MACH-$PROC-$UNAME.tar.gz $PACKAGE_TARNAME-$PACKAGE_VERSION
+tar cfz $PW/../$MCCODE_TARNAME-$MCCODE_VERSION-$MACH-$PROC-$UNAME.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
 
 # Remove temporary dir
 # rm -rf $TMPDIR
@@ -203,7 +205,10 @@ sed 's/DOZIP="0"/DOZIP="1"/' build.bat > build.bat.new
 sed 's/DONSIS="0"/DONSIS="1"/' build.bat.new > build.bat
 cp support/Win32/install/which.exe .
 cd ..
-tar cfz $PW/../$PACKAGE_TARNAME-$PACKAGE_VERSION-Win32-src.tar.gz $PACKAGE_TARNAME-$PACKAGE_VERSION
+tar cfz $PW/../$MCCODE_TARNAME-$MCCODE_VERSION-Win32-src.tar.gz $MCCODE_TARNAME-$MCCODE_VERSION
+echo "  "
+echo "========================================================================="
+echo "mkdist: Distro creation for $MCCODE_STRING"
 if [ `which makensis` ]; then
     cd -
     ./configure
@@ -215,7 +220,7 @@ if [ `which makensis` ]; then
     cp mcstas.bmp ..
     cp LICENSE.rtf ..
     cd ..
-    zip -r $PACKAGE_TARNAME-$PACKAGE_VERSION-i686-Intel-Win32.zip $PACKAGE_TARNAME-$PACKAGE_VERSION
+    zip -r $MCCODE_TARNAME-$MCCODE_VERSION-i686-Intel-Win32.zip $MCCODE_TARNAME-$MCCODE_VERSION
     cp winsupport/* .
     makensis mcstas.nsi
     echo Created Win32 binary packages: `ls *zip *exe`
@@ -224,18 +229,21 @@ else
 fi
 echo
 echo
-echo Your $PACKAGE_STRING dist packages are placed in
-echo ../$PACKAGE_TARNAME-$PACKAGE_VERSION-src.tar.gz
-echo ../$PACKAGE_TARNAME-$PACKAGE_VERSION-$MACH-$PROC-$UNAME.tar.gz
-echo ../$PACKAGE_TARNAME-$PACKAGE_VERSION-Win32-src.tar.gz
+echo Your $MCCODE_STRING dist packages are placed in
+echo ../$MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz
+echo ../$MCCODE_TARNAME-$MCCODE_VERSION-$MACH-$PROC-$UNAME.tar.gz
+echo ../$MCCODE_TARNAME-$MCCODE_VERSION-Win32-src.tar.gz
 echo
 echo NOTE: Win32 version must be built using \'build.bat\' of the Win32-src package
 echo
-echo Your $PACKAGE_STRING doc packages are placed in
-echo ../$PACKAGE_TARNAME-$PACKAGE_VERSION-manual.ps.gz
-echo ../$PACKAGE_TARNAME-$PACKAGE_VERSION-manual.pdf
-echo ../$PACKAGE_TARNAME-$PACKAGE_VERSION-components.ps.gz
-echo ../$PACKAGE_TARNAME-$PACKAGE_VERSION-components.pdf
+if [ -d $PW/../../McStasTeX/trunk ] ;
+then
+echo Your $MCCODE_STRING doc packages are placed in
+echo ../$MCCODE_TARNAME-$MCCODE_VERSION-manual.ps.gz
+echo ../$MCCODE_TARNAME-$MCCODE_VERSION-manual.pdf
+echo ../$MCCODE_TARNAME-$MCCODE_VERSION-components.ps.gz
+echo ../$MCCODE_TARNAME-$MCCODE_VERSION-components.pdf
+fi
 echo
 echo WARNING: Please install to a test system and run the following tools
 echo before release:
@@ -253,22 +261,22 @@ if [ -e /sbin/mkfs.hfsplus ]
 then
     # Note: DMG file needs enough space to hold the support tools plus
     # our own code. April 2008 this is about 120 megs...
-    dd if=/dev/zero of=./$PACKAGE_TARNAME-$PACKAGE_VERSION.dmg bs=1M count=130
-    /sbin/mkfs.hfsplus -v $PACKAGE_NAME ./$PACKAGE_TARNAME-$PACKAGE_VERSION.dmg
+    dd if=/dev/zero of=./$MCCODE_TARNAME-$MCCODE_VERSION.dmg bs=1M count=130
+    /sbin/mkfs.hfsplus -v $MCCODE_NAME ./$MCCODE_TARNAME-$MCCODE_VERSION.dmg
     # Likely needs root level access:
     sudo mkdir /mnt/dmg
-    sudo mount -t hfsplus -o loop ./$PACKAGE_TARNAME-$PACKAGE_VERSION.dmg /mnt/dmg
+    sudo mount -t hfsplus -o loop ./$MCCODE_TARNAME-$MCCODE_VERSION.dmg /mnt/dmg
     # Copy the ./adm/OSX/DMG stuff to the mountpoint
     sudo cp -rp ./adm/OSX/DMG/Applications /mnt/dmg
     sudo cp ./adm/OSX/DMG/README.TXT /mnt/dmg
     # Clear out CVS stuff
     sudo find /mnt/dmg -type d -name CVS -exec rm -rf \{\} \;
     # Copy McStas there
-    sudo cp ./$PACKAGE_TARNAME-$$PACKAGE_VERSION-src.tar.gz /mnt/dmg/Applications
+    sudo cp ./$MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz /mnt/dmg/Applications
     # Unmount
     sudo umount /mnt/dmg
     sudo rm -rf /mnt/dmg
-    ls -l ./$PACKAGE_TARNAME-$$PACKAGE_VERSION.dmg
+    ls -l ./$MCCODE_TARNAME-$MCCODE_VERSION.dmg
 fi
 
 
@@ -284,15 +292,15 @@ then
     sudo rm -f etch-chroot/usr/local/bin/*
     sudo rm -rf etch-chroot/usr/local/lib/*
     sudo rm -rf etch-chroot/usr/local/pgplot
-    sudo cp $PACKAGE_TARNAME-$$PACKAGE_VERSION/deb/debcreate etch-chroot/root
-    sudo cp $PACKAGE_TARNAME-$$PACKAGE_VERSION-src.tar.gz etch-chroot/root
+    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION/deb/debcreate etch-chroot/root
+    sudo cp $MCCODE_TARNAME-$MCCODE_VERSION-src.tar.gz etch-chroot/root
     sudo chroot etch-chroot /root/debcreate
     echo
     echo
     echo Build packages created:
     echo
     cp etch-chroot/build/*deb .
-    ls -lf $PACKAGE_TARNAME-$$PACKAGE_VERSION*.*
+    ls -lf $MCCODE_TARNAME-$MCCODE_VERSION*.*
     echo
   else
     echo You need a chroot environment based on debootstrap in etch-chroot before building deb packages

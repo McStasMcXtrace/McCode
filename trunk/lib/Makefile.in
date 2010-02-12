@@ -13,11 +13,11 @@ INSTALL=@INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-libdir_mccode = $(libdir)/@PACKAGE_TARNAME@
+libdir_mccode = $(libdir)/@MCCODE_TARNAME@
 
-install: install_@PACKAGE_TARNAME@
+install: install_@MCCODE_TARNAME@
 
-install_@PACKAGE_TARNAME@: installdirs
+install_@MCCODE_TARNAME@: installdirs
 	if [ -d $(libdir_mccode) ]; then \
 	  echo "Moving your old library dir $(libdir_mccode) to $(libdir_mccode).`date +%Y%m%d_%H.%M`"; \
 	  mv -f $(libdir_mccode) $(libdir_mccode).`date +%Y%m%d_%H.%M`;\
@@ -61,5 +61,5 @@ install_@PACKAGE_TARNAME@: installdirs
 
 
 installdirs:
-	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@PACKAGE_TARNAME@) $(mandir)/man1
+	$(topdir)/mkinstalldirs $(bindir) $(libdir) $(libdir_@MCCODE_TARNAME@) $(mandir)/man1
 

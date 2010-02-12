@@ -1,14 +1,13 @@
-.TH mcformat 1  "" "@MCCODE_VERSION@" "USER COMMANDS"
+.TH mcstas 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
-mcformat \- Text data set conversion/merging tool of the McStas neutron ray-trace simulation package
+mcstas \- Compiler of the McStas neutron ray-trace simulation package
 .SH SYNOPSIS
-.B mcformat [\-\-format=FORMAT] [file|dir ...]
+.B mcstas
+[\-o file][\-I dir1 ...][\-tv][--verbose] file.instr
 .SH DESCRIPTION
 The
-.B mcformat
-command is the text data conversion tool of the McStas package. It may convert any kind of McStas data into an other format. Additionally, it can
-.I merge
-equivalent data sets. These might be for instance two simulations made independently (e.g. on a grid or cluster) with the same instrument and parameters. The result will be as if the simulation was performed once on a single machine. The command can merge at the same time many data sets into families. When given directories as input, mcformat works recursively, and the resulting data set follows the same directory hierarchy as the input data sets.
+.B mcstas
+command is the instrument compiler of the McStas package.
 .PP
 .B McStas
 is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
@@ -20,6 +19,8 @@ and
 McStas is based on a compiler [mcstas(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
 .PP
 McStas supports all neutron scattering instruments, including triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
+.PP
+To start mcstas, use: mcgui(1)
 .PP
 The package consists of the following user commands:
 .TP
@@ -42,13 +43,13 @@ is the instrument geometry and neutron trajectory viewer
 mcdoc(1)
 is the documentation tool
 .TP
-mcstas(1)
+.B mcstas(1)
 is the instrument compiler
 .TP
 mcconvert(1)
 can convert Matlab data files into Scilab data files, and vice-versa. It also handles data sets with binary encoding. It also handles parameter scan results.
 .TP
-.B mcformat(1)
+mcformat(1)
 can transform any text data set from one format to an other. It does not support conversion from binary data sets. It can also merge equivalent results.
 .PP
 We encourage users to refer to the User and Component Manuals, which are available with the command
@@ -57,56 +58,81 @@ mcdoc
 .P
 .SH OPTIONS
 .TP
-\-\-format=FORMAT
-Specifies wanted output format, i.e. PGPLOT, Matlab, Scilab, HTML, XML, Octave, ...
-.TP
-\-d DIR | \-\-dir=DIR
-Put all data files in directory DIR.
-.TP
-\-f FILE | \-\-file=FILE
-Put all data in a single file.
-.TP
-\-a | \-\-data-only
-Do not put any headers in the data files.
-.TP
-\-\-no-output-files | \-t | \-\-test
-Do not write any data files (test mode).
-.TP
 \-h | \-\-help
-Show the command help.
+displays the command help
 .TP
-\-c | \-\-force
-Force writting in existing directories and enable relaxed merging mode (no name check). Use with caution !
+\-t | \-\-trace
+Enable 'trace' mode for instrument display.
 .TP
-\-m | \-\-merge
-Add/Append equivalent data files and lists
-.TP
-\-s | \-\-scan
-Gather simulations per scan series (and merge equivalent data sets)
-.TP
-\-so | \-\-scan-only
-Create scan series but does not merge data
+\-v | \-\-version
+Prints McStas version.
 .TP
 \-\-verbose
-Verbose mode
-
+Display compilation process steps.
+.SH INSTRUMENT OPTIONS
+These options apply to the generated instrument code (foo.c and foo.out)
+.TP
+\-s SEED | \-\-seed=SEED
+Set random seed (must be non zero)
+.TP
+\-n COUNT | \-\-ncount=COUNT
+Set number of neutrons to simulate
+.TP
+\-d DIR | \-\-dir=DIR
+Put all data files in directory DIR
+.TP
+\-f FILE | \-\-file=FILE
+Put all data in a single file
+.TP
+\-t | \-\-trace
+Enable trace of neutron through instrument (must have been set during code generation with mcstas(1)). This is necessary for mcdisplay(1) to run
+.TP
+\-g | \-\-gravitation
+Enable gravitation for all trajectories
+.TP
+\-a | \-\-data-only
+Do not put any headers in the data files
+.TP
+\-\-no-output-files
+Do not write any data files
+.TP
+\-h | \-\-help
+Show help message for the instrument
+.TP
+\-i | \-\-info
+Detailed instrument information, including valid parameters
+.TP
+\-\-format=FORMAT
+Output data files using format FORMAT (format list obtained from foo.out -h, e.g. Matlab, Scilab, PGPLOT, HTML, XML, Octave)
 .SH EXAMPLES
+The three following examples are equivalent to the single command:
+ mcrun -c foo.instr param1=value1 ...
 .TP
-Typical usage (put translated files in outdir)
-.B mcformat
-indir -d outdir
+Typical usage (creates a C file to be compiled)
+.B mcstas
+foo.instr
 .TP
-Merge two equivalent simulations dir1 and dir2 into dir3
-mcformat \-\-format=Matlab dir1 dir2 -d dir3
+gcc -O -o foo.out foo.c -lm
+Compile the instrument (with basic optimization and math libraries)
+.TP
+foo.out param1=value1 ...
+Execute instrument simulation
+.SH ENVIRONMENT
+The
+.B MCSTAS
+environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
+The McStas configuration file is MCSTAS/tools/perl/mcstas_config.perl which you can reconfigure by running: MCSTAS/tools/perl/mcstas_reconfigure
+.P
+The
+.B MCSTAS_FORMAT
+environment variable may be set to define the default data format used for storing results. This is usually 'PGPLOT', 'Matlab', or 'Scilab'.
 .SH BUGS
-mcformat can only handle text data sets. Data sets generated with binary files can not be translated.
-.PP
-Additionally, as mcformat works by identification of specific keywords in each data file, if these keywords match some file or component names, the meta data used to identify the simulation might be guessed wrong. Anyway, the data set will still be exact.
-.PP
 McStas is a large package, and bugs might be found. If so, please report to
 .B http://mcstas.org/McZilla/
 and the mailing list
 .B mcstas-users@mcstas.org
+.SH EXIT STATUS
+mcstas returns 1 in case of error, 0 when all went fine
 .SH AUTHOR
 Peter Kjaer Willendrup, Emmanuel FARHI, Kim Lefmann, and Klaus Lieutenant
 .SH SEE ALSO

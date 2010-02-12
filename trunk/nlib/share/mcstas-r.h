@@ -25,7 +25,7 @@
 *   extern MCNUM  mccomp_storein[];
 *   extern MCNUM  mcAbsorbProp[];
 *   extern MCNUM  mcScattered;
-*   #define MCCODE_VERSION "the McStas version"
+*   #define MCCODE_STRING "the McStas version"
 *
 * Usage: Automatically embbeded in the c code.
 *

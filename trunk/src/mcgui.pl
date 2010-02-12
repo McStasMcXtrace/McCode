@@ -48,11 +48,11 @@ BEGIN {
   }
 use lib $MCSTAS::perl_dir;
 use lib $MCSTAS::perl_modules;
-require "mcstas_config.perl";
+require "mccode_config.perl";
 
 # Overload with user's personal config
-if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl") {
-  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl";
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl") {
+  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl";
 }
 
 # In case of mcxtrace, redefine mcrun command to mxrun
@@ -579,17 +579,17 @@ sub menu_save_config {
   my $initdir;
   
   if (-d $ENV{"HOME"}) {
-    if (!(-d $ENV{"HOME"}."/.mcstas")) {
-      mkdir $ENV{"HOME"}."/.mcstas";
+    if (!(-d $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'})) {
+      mkdir $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'};
     }
-    $initdir = $ENV{"HOME"}."/.mcstas/";
+    $initdir = $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'};
   } else {
     $initdir = $MCSTAS::perl_dir
   }
   my $file = $w->getSaveFile(-defaultextension => ".perl",
                                 -title => "Select preference file name",
                                 -initialdir => $initdir,
-                                -initialfile => "mcstas_config.perl");
+                                -initialfile => "mccode_config.perl");
   if ($file) { save_config($w,$file); }
 }
 
@@ -603,7 +603,7 @@ sub save_config {
   my $found_head = 0; my $found_foot = 0;
 
   my $fh = new FileHandle;
-  my $fid = open($fh, "<", "$MCSTAS::perl_dir/mcstas_config.perl");
+  my $fid = open($fh, "<", "$MCSTAS::perl_dir/mccode_config.perl");
   while (<$fh>) {
     if (!$found_head) {
       $HEADER = $HEADER.$_;
@@ -1808,7 +1808,7 @@ sub setup_cmdwin {
         ||  $MCSTAS::mcstas_config{'SSH'} ne "no") ) {
       $cmdwin->insert('end',
 "Warning: No MPI/grid machine list. Running locally.
-  Define $ENV{'HOME'}/.mcstas/hosts
+  Define ".$ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/hosts
   or $MCSTAS::sys_dir/tools/perl/hosts
   or use option --machines=<file>\n");
     }

@@ -21,11 +21,11 @@
 use Config;
 
 use Math::Amoeba qw(MinimiseND);
-require "mcstas_config.perl";
+require "mccode_config.perl";
 
 # Overload with user's personal config
-if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.mcstas/mcstas_config.perl") {
-  require $ENV{"HOME"}."/.mcstas/mcstas_config.perl";
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.mcstas/mccode_config.perl") {
+  require $ENV{"HOME"}."/.mcstas/mccode_config.perl";
 }
 
 our $optim_bestvalue=0;

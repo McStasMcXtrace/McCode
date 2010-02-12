@@ -30,11 +30,11 @@ BEGIN {
 }
 
 use lib $MCSTAS::perl_dir;
-require "mcstas_config.perl";
+require "mccode_config.perl";
 
 # Overload with user's personal config
-if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl") {
-  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mcstas_config.perl";
+if ($ENV{"HOME"} && -e $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl") {
+  require $ENV{"HOME"}."/.".$MCSTAS::mcstas_config{'MCCODE'}."/mccode_config.perl";
 }
 
 use FileHandle;
@@ -586,11 +586,11 @@ for($i = 0; $i < @ARGV; $i++) {
 } # end for
 
 require File::Temp;
-if ($out_file eq "") {
+if ($out_file eq "" && $browser ne "text") {
   ($fh, $out_file) = File::Temp::tempfile("mcdoc_tmpXXXXXX", SUFFIX => '.html');
   if (not defined $fh) { $out_file=""; }
 }
-if ($out_file eq "") { $out_file="index.html"; }
+if ($out_file eq "" && $browser ne "text") { $out_file="index.html"; }
 
 if ($show_website) {
   # open the web site
@@ -631,7 +631,7 @@ my $filehandle = 0;
 my @sections;
 my %section_headers;
 
-if (not $is_single_file) {
+if ((not $is_single_file) && ($browser ne "text") && ($out_file ne "")) {
   # Open the local documentation file
   $filehandle = new FileHandle;
   my $no_lib_write  = 0;
@@ -643,6 +643,8 @@ if (not $is_single_file) {
     if ($no_local_write) {
       $filehandle = 0; # will not write the catalog
       print STDERR "mcdoc: Could not open $out_file for writing.\n";
+    } else {
+      print "mcdoc: Opening $out_file\n";
     }
   } else {
     $out_file = "$lib_dir/$out_file";
@@ -712,20 +714,20 @@ if ($filehandle) {
 
 if (-f $out_file) {
     if ($browser ne "text") {
-	# In case of multiple matches, create table of results:
-	if (@valid_names > 1) { 
-	    require File::Temp;
-	    my $searchfile;
-	    ($filehandle, $searchfile) = File::Temp::tempfile("McDoc_XXXX", SUFFIX => '.html', UNLINK => 1);
-	    open($filehandle, ">$searchfile") || die "Could not write to search output file\n";
-	    add_comp_search_html($file, $filehandle, @valid_names);
-	    html_main_end($filehandle, $toolbar);
-	    close($filehandle);
-	    $out_file = "$searchfile";
-	} 
-	
-	# open the index.html
-	my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $out_file";
-	print "mcdoc: Starting $cmd\n"; system("$cmd\n");
+      # In case of multiple matches, create table of results:
+      if (@valid_names > 1) { 
+          require File::Temp;
+          my $searchfile;
+          ($filehandle, $searchfile) = File::Temp::tempfile("McDoc_XXXX", SUFFIX => '.html', UNLINK => 1);
+          open($filehandle, ">$searchfile") || die "Could not write to search output file\n";
+          add_comp_search_html($file, $filehandle, @valid_names);
+          html_main_end($filehandle, $toolbar);
+          close($filehandle);
+          $out_file = "$searchfile";
+      } 
+
+      # open the index.html
+      my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $out_file";
+      print "mcdoc: Starting $cmd\n"; system("$cmd\n");
     }
 }

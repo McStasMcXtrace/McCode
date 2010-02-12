@@ -1,13 +1,13 @@
-.TH mcgui 1  "" "@MCCODE_VERSION@" "USER COMMANDS"
+.TH mcplot 1  "" "@MCCODE_STRING@" "USER COMMANDS"
 .SH NAME
-mcgui \- graphical user interface of the McStas neutron ray-trace simulation package
+mcplot \- simulation results plotter of the McStas neutron ray-trace simulation package
 .SH SYNOPSIS
-.B mcgui
-[\-\-open] [file.instr]
+.B mcplot
+[\-ps|\-psc|\-gif] <simfile | detector_file>
 .SH DESCRIPTION
 The
-.B mcgui
-command is the graphical user interface of the McStas package. It has the following features: Loading instruments and editing their descriptions, compiling them, running single simulations, as well as scans of parameters, usage of parallel computation (when available), parameter optimization to maximize monitor values, plotting of simulation results and instrument geometry, access to instrument templates and plenty of documentation.
+.B mcplot
+command is the simulation results plotter of the McStas package.
 .PP
 .B McStas
 is a general tool for simulating neutron scattering instruments and experiments. It is actively supported by
@@ -18,11 +18,11 @@ and
 .PP
 McStas is based on a compiler [mcstas(1)] that reads a high-level specification language defining the instrument to be simulated and produces C code that performs the Monte Carlo Simulation. The system is very fast in use, both when setting up the instrument definition and when doing calculations.
 .PP
-McStas supports all neutron scattering instruments, including triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
+McStas supportsall neutron scattering instruments, including  triple-axis,  time-of-flight instruments, and polarised neutrons. It comes with a comprehensive manual and a library of well-tested components that include most standard elements of neutron scattering instruments, including steady-state and pulsed sources, monochromators/analysers, guides, collimators, vanadium and powder samples, velocity selectors and choppers, and a variety of detectors.
 .PP
 The package consists of the following user commands:
 .TP
-.B mcgui(1)
+mcgui(1)
 is the graphical user interface. Then use the
 .I Neutron Site
 menu to select an example instrument, and access the whole documentation for the
@@ -32,7 +32,7 @@ menu. It contains an instrument editor, methods to plot simulation results, and 
 mcrun(1)
 is the command-line tool for building and running simulations
 .TP
-mcplot(1)
+.B mcplot(1)
 is the simulation results plotting tool
 .TP
 mcdisplay(1)
@@ -55,50 +55,25 @@ We encourage users to refer to the User and Component Manuals, which are availab
 mcdoc
 .P
 .SH OPTIONS
+The usage of the command does not require option. Refer to mcplot \-h for special uses.
 .TP
-file.instr
-loads the specified instrument when starting
+\-h | \-\-help
+displays the command help
 .TP
-\-\-open
-will open the instrument editor window
-.TP
-\-\-edit
-will only open the instrument editor window (no main/simulation window)
-.TP
-\-\-help
-display command help
+\-ps|\-psc|\-gif|\-png
+saves plot as a ps/color ps/gif/png file and exits
 .SH EXAMPLES
 .TP
-Typical usage
-.B mcgui
+Typical usage (plots last results in current directory)
+.B mcplot
 .TP
-Open the foo.instr instrument
-mcgui foo.instr
+Plots results in current directory DIR
+mcplot DIR
 .SH ENVIRONMENT
 The
 .B MCSTAS
 environment variable may be set to define the McStas library location. This is /usr/local/lib/mcstas on Linux systems. Executables are usually located in /usr/local/bin.
-The McStas configuration file is MCSTAS/tools/perl/mcstas_config.perl
-.P
-The
-.B MCSTAS_FORMAT
-environment variable may be set to define the default data format used for storing results. This is usually 'PGPLOT', 'Matlab', or 'Scilab'.
-.P
-The
-.B
-MCSTAS_CC
-environment variable may be set to define the compiler to use (e.g. gcc)
-.P
-The
-.B
-MCSTAS_CFLAGS
-environment variable may be set to define the options for compilation (e.g. -O2)
-.P
-The
-.B BROWSER
-environment variable may be set to define the default HTML browser to use
 .SH BUGS
-Some implementations of Perl-Tk do not support desktop switching and windows redraw. This may crash mcgui.
 McStas is a large package, and bugs might be found. If so, please report to
 .B http://mcstas.org/McZilla/
 and the mailing list
