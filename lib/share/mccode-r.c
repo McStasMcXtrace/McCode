@@ -1664,7 +1664,7 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
        "Signal" : "signal",                  detector.signal);
   mcinfo_tag(detector, parent, "values",     detector.values);
 
-  if (detector.rank >= 1)
+  if (detector.rank >= 1 || detector.rank == -1)
   {
     mcinfo_tag(detector, parent, (strstr(detector.format.Name," scan ") ? 
           "xvars" : "xvar"),                 detector.xvar);
@@ -1672,7 +1672,7 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
           "yvars" : "yvar"),                 detector.yvar);
     mcinfo_tag(detector, parent, "xlabel",   detector.xlabel);
     mcinfo_tag(detector, parent, "ylabel",   detector.ylabel);
-    if (detector.rank > 1) {
+    if (detector.rank > 1 || detector.rank == -1) {
       mcinfo_tag(detector, parent, "zvar",   detector.zvar);
       mcinfo_tag(detector, parent, "zlabel", detector.zlabel);
     }
