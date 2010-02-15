@@ -88,7 +88,7 @@ INITIALIZE
   divergence=(iw+ow)/(sqrt(4*length*length-(ow-iw)*(ow-iw)));
 
   if (verbose) {
-    printf("Collimator_radial: %s: foil thickness is %.2g [millimeter]\n", NAME_CURRENT_COMP, d*1000);
+    printf("Exact_radial_coll: %s: foil thickness is %.2g [millimeter]\n", NAME_CURRENT_COMP, d*1000);
     printf("                  opening each  input slit [%.3g:%.0f] [millimeter]\n", iw*1000, h_in*1000);
     printf("                  opening each output slit [%.3g:%.0f] [millimeter]\n", ow*1000, h_out*1000);
     printf("                  divergence per channel is %g [min] \n", divergence*RAD2MIN);
