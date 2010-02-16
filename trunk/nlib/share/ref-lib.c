@@ -58,6 +58,8 @@ void StdReflecFunc(double mc_pol_q, double *mc_pol_par, double *mc_pol_r) {
       return;
     }
     
+    if (m < 1) { Qc *= m; m=1; }
+    
     if(mc_pol_q <= Qc) {      
       *mc_pol_r = R0;
       return;
