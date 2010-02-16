@@ -43,21 +43,24 @@ int mcdefaultmain  = 0;
 #endif
 /* else defined directly in the McStas generated C code */
 
-static   long mcseed                 = 0;
-static   int  mcascii_only           = 0;
-static   int  mcsingle_file          = 0;
-static   long mcstartdate            = 0;
-static   int  mcdisable_output_files = 0;
-mcstatic int  mcgravitation          = 0;
-int      mcMagnet                    = 0;
-mcstatic int  mcdotrace              = 0;
+static   long mcseed                 = 0; /* seed for random generator */
+static   int  mcascii_only           = 0; /* flag for no header */
+static   int  mcsingle_file          = 0; /* flag for storing all detectors into a single file */
+static   long mcstartdate            = 0; /* start simulation time */
+static   int  mcdisable_output_files = 0; /* --no-output-files */
+mcstatic int  mcgravitation          = 0; /* use gravir=tation flag, for PROP macros */
+int      mcMagnet                    = 0; /* megnet stack flag */
+mcstatic int  mcdotrace              = 0; /* flag for --trace and messages for DISPLAY */
 /* mcstatic FILE *mcsiminfo_file        = NULL; */
-static   char *mcdirname             = NULL;
-static   char *mcsiminfo_name        = "mcstas";
-int      mcallowbackprop             = 0;
-char*    mcDetectorCustomHeader      = NULL;
-char*    mcopenedfiles               = "";
-long     mcopenedfiles_size          = 0;
+static   char *mcdirname             = NULL;      /* name of output directory */
+static   char *mcsiminfo_name        = "mcstas";  /* default output sim file name */
+int      mcallowbackprop             = 0;         /* flag to enable negative/backprop */
+char*    mcDetectorCustomHeader      = NULL;      /* additional user output Tag in data files */
+char*    mcopenedfiles               = "";        /* list of opened files (for append) */
+long     mcopenedfiles_size          = 0;         /* size of that opened files list */
+MCDETECTOR* mcDetectorArray          = NULL;      /* array of all opened detectors */
+long     mcDetectorArray_size        = 0;         /* allocated detector array size */
+long     mcDetectorArray_index       = 0;         /* current detector length (number of detectors so far) */
 
 /* Number of neutron histories to simulate. */
 mcstatic double mcncount             = 1e6;
@@ -1009,6 +1012,7 @@ char *mcfull_file(char *name, char *ext)
 {
   int dirlen;
   char *mem;
+  char  tmp[CHAR_BUF_LENGTH];
   dirlen = mcdirname ? strlen(mcdirname) : 0;
   mem = malloc(dirlen + strlen(name) + 256);
   if(!mem)
@@ -1016,7 +1020,9 @@ char *mcfull_file(char *name, char *ext)
     exit(-fprintf(stderr, "Error: Out of memory %li (mcfull_file)\n", (long)(dirlen + strlen(name) + 256)));
   }
   strcpy(mem, "");
-  if(dirlen && (!dirlen || !strstr(name, mcdirname)))
+  strncpy(tmp, mcdirname, CHAR_BUF_LENGTH);
+  strncat(tmp, MC_PATHSEP_S, CHAR_BUF_LENGTH);
+  if(dirlen && !strstr(name, tmp))  /* add directory name to path if not already present */
   {
     strcat(mem, mcdirname);
     if(mcdirname[dirlen - 1] != MC_PATHSEP_C &&
@@ -1513,7 +1519,7 @@ static int mcinfo_instrument(MCDETECTOR detector, char *name)
 #ifdef USE_NEXUS
 /*******************************************************************************
 * mcnxfile_parameters: writes the simulation parameters
-*                   open/close a new Data Setper parameter in the current simulation Group
+*                   open/close a new Data Set per parameter in the current simulation Group
 * NOTE: this function can not be included in nexus-lib as it depends on mcinputtypes
 *       and mcinputtable are defined at compile time in here.
 * Returns: NX_OK
@@ -1770,9 +1776,9 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   
   /* determine detector rank (dimensionality) */
   if (!m || !n || !p || !p1) detector.rank = 4; /* invalid: exit with m=0 filename="" */
+  else if (strstr(format.Name," scan ")) detector.rank=-1;  /* 1D scan: multiarray */
   else if (m*n*p == 1)       detector.rank = 0; /* 0D */
   else if (n == 1 || m == 1) detector.rank = 1; /* 1D */
-  else if (strstr(format.Name," scan ")) detector.rank=-1;  /* 1D scan: multiarray */
   else if (p == 1)           detector.rank = 2; /* 2D */
   else                       detector.rank = 3; /* 3D */
   
@@ -2032,9 +2038,32 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
    else if (strstr(detector.format.Name, "McStas")) str_rep(mcDetectorCustomHeader, "%PRE", "#   ");
    else str_rep(mcDetectorCustomHeader, "%PRE", "    ");
   }
-    
+  
   return(detector);
 } /* mcdetector_import */
+
+/*******************************************************************************
+* mcdetector_register: adds detector to the detector array, for scans and sim abstract
+* RETURN:            detector array pointer
+* Used by: mcdetector_out_xD
+*******************************************************************************/
+MCDETECTOR* mcdetector_register(MCDETECTOR detector)
+{
+  if (detector.m) {
+    /* add detector entry in the mcDetectorArray */
+    if (!mcDetectorArray || 
+        (mcDetectorArray && mcDetectorArray_size <= mcDetectorArray_index)) {
+      mcDetectorArray_size+=CHAR_BUF_LENGTH;
+      if (!mcDetectorArray || !mcDetectorArray_index)
+        mcDetectorArray = (MCDETECTOR*)calloc(mcDetectorArray_size, sizeof(MCDETECTOR));
+      else
+        mcDetectorArray = (MCDETECTOR*)realloc(mcDetectorArray, mcDetectorArray_size*sizeof(MCDETECTOR));
+    }
+    mcDetectorArray[mcDetectorArray_index++]=detector;
+  }
+  return(mcDetectorArray);
+    
+} /* mcdetector_register */
 
 /*******************************************************************************
 * mcdetector_import_sim: build detector structure as SIM data
@@ -2158,17 +2187,20 @@ static int mcsiminfo_init(FILE *f)
 } /* mcsiminfo_init */
 
 /*******************************************************************************
-* mcsiminfo_close: close simulation file (mcstas.sim)
+* mcsiminfo_close: close simulation file (mcstas.sim) and write mcstas.dat
 * Used by: mcsave/mcfinally from code generation (cogen), mcinfo, mcstas_main
 *******************************************************************************/
 void mcsiminfo_close(void)
 {
+  int i;
 #ifdef USE_MPI
   if(mpi_node_rank != mpi_node_root) return;
 #endif
   if (mcdisable_output_files || !mcsiminfo_file) return;
 
   int  ismcstas_nx  = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
+  
+  mcdetector_out_abstract(mcDetectorArray, mcDetectorArray_index);
   
   /* initialize sim file information, sets detector.file_handle=mcsiminfo_file */
   MCDETECTOR mcsiminfo = mcdetector_import_sim();
@@ -2201,7 +2233,6 @@ void mcsiminfo_close(void)
   if (mcsiminfo_file != stdout && mcsiminfo_file) {
     fclose(mcsiminfo_file);
   }
-  
   mcsiminfo_file = NULL;
 
 } /* mcsiminfo_close */
@@ -2495,6 +2526,7 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
     if (!strstr(detector.format.Name, "binary") && !mcascii_only)  {
       /* skip in data-only mode or binary */
       mcinfo_header(detector, "header");
+      mcinfo_simulation(detector, mcsiminfo_name);
       mcinfo_data(detector, detector.filename);
       /* mcinfo_simulation(detector, detector.filename); */
     }
@@ -2615,6 +2647,64 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 } /* mcdetector_write_data */
 
 /*******************************************************************************
+* mcdetector_out_abstract: write mcstas.dat, which has integrated intensities for all monitors
+* Used by: mcsiminfo_close
+*******************************************************************************/
+mcdetector_out_abstract(MCDETECTOR *DetectorArray, long DetectorArray_index)
+{
+  /* build p1 array from all detector integrated counts */
+  double *this_p1 = (double *)calloc(DetectorArray_index*2, sizeof(double));
+  int i;
+  
+  if (this_p1 && DetectorArray) {
+    char   *labels=NULL;
+    long    labels_size=0;
+    long    index=0;
+    for (i=0; i < DetectorArray_index; i++) {
+        char mem[CHAR_BUF_LENGTH];
+        char valid[CHAR_BUF_LENGTH];
+        /* store I I_err */
+        this_p1[index++] = DetectorArray[i].intensity;
+        this_p1[index++] = DetectorArray[i].error;
+        /* add corresponding label */
+        mcvalid_name(valid, DetectorArray[i].filename, CHAR_BUF_LENGTH);
+        sprintf(mem, "%s_I %s_Err ", valid, valid);
+        if (!labels || 
+          (labels && labels_size <= strlen(labels)+strlen(mem))) {
+          labels_size+=CHAR_BUF_LENGTH;
+          if (!labels || !strlen(labels))
+            labels = calloc(1, labels_size);
+          else
+            labels = realloc(labels, labels_size);
+        } 
+        strcat(labels, " ");
+        strcat(labels, mem);
+    } /* for */
+    
+    struct mcformats_struct format=mcformat;
+    strcat(format.Name, " scan step");
+    
+    /* now create detector and write 'abstract' file */
+    MCDETECTOR detector = mcdetector_import(format,
+      mcinstrument_name, "Monitor integrated counts",
+      index, 1, 1,
+      "Monitors", "I", "Integrated Signal",
+      "Index", labels, "I",
+      0, index-1, 0, 0, 0, 0, "content",        /* use name from OpenOffice content.xml description file */
+      NULL, this_p1, NULL, coords_set(0,0,0));  /* write Detector: line */
+      
+    mcdetector_write_data(detector);
+    
+    printf("array: %i: DONE\n", __LINE__);
+    free(labels); labels=NULL; labels_size=0;
+    
+    /* free DETECTOR array */
+    free(this_p1); this_p1=NULL;
+    free(mcDetectorArray); mcDetectorArray=NULL;
+  } /* if this_p1 */
+} /* mcdetector_out_abstract */
+
+/*******************************************************************************
 * mcdetector_out_0D: wrapper to mcdetector_out_012D for 0D (single value).
 *******************************************************************************/
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
@@ -2631,6 +2721,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
     
   /* write detector to simulation file (incl custom header if any) */
   detector = mcdetector_write_sim(detector); 
+  mcdetector_register(detector);
   return(detector);
 }
 
@@ -2654,7 +2745,8 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
     
   /* write detector to simulation and data file (incl custom header if any) */
   detector = mcdetector_write_sim(detector);
-  detector = mcdetector_write_data(detector); /* will also merge lists */
+  detector = mcdetector_write_data(detector);  /* will also merge lists */
+  mcdetector_register(detector);
   return(detector);
 }
 
@@ -2693,6 +2785,7 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
   /* write detector to simulation and data file (incl custom header if any) */
   detector = mcdetector_write_sim(detector);
   detector = mcdetector_write_data(detector); /* will also merge lists */
+  mcdetector_register(detector);
   return(detector);
 }
 
@@ -2719,6 +2812,7 @@ MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
   /* write detector to simulation and data file (incl custom header if any) */
   detector = mcdetector_write_sim(detector);
   detector = mcdetector_write_data(detector); /* will also merge lists */
+  mcdetector_register(detector);
   return(detector);
 }
 
