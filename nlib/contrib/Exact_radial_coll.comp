@@ -52,7 +52,7 @@ DEFINE COMPONENT Exact_radial_coll
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (theta_min=-5, theta_max=5, nslit=100,
                     radius=1.0, length=.5, h_in=.3, h_out=.4,
-                    d=0.0001, verbose=0)
+                    d=0.0001, verbose=1)
 OUTPUT PARAMETERS (alpha_in, alpha_out, out_radius, beta_in, beta_out, divergence)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 DECLARE
@@ -88,7 +88,7 @@ INITIALIZE
   divergence=(iw+ow)/(sqrt(4*length*length-(ow-iw)*(ow-iw)));
 
   if (verbose) {
-    printf("Exact_radial_coll: %s: foil thickness is %.2g [millimeter]\n", NAME_CURRENT_COMP, d*1000);
+    printf("Collimator_radial: %s: foil thickness is %.2g [millimeter]\n", NAME_CURRENT_COMP, d*1000);
     printf("                  opening each  input slit [%.3g:%.0f] [millimeter]\n", iw*1000, h_in*1000);
     printf("                  opening each output slit [%.3g:%.0f] [millimeter]\n", ow*1000, h_out*1000);
     printf("                  divergence per channel is %g [min] \n", divergence*RAD2MIN);

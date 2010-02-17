@@ -83,7 +83,7 @@ find . -wholename './setyear'    -prune -o -type d -prune -o -path ./src/McStasT
 echo "Set package $MCCODE_VERSION information"
 for iter in 1 2 3;
 do
-for file in configure.in lib/tools/perl/mccode_reconfigure.in ;
+for file in configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat  ;
 	do
 	  sed 's/@MCCODE_STRING@/'$MCCODE_NAME'-'$MCCODE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
     sed 's/@MCCODE_NAME@/'$MCCODE_NAME'/'                                                 $file.tmp > $file
@@ -132,8 +132,12 @@ then
 fi  
 cd $DIST
 
-# Create configure (which will itself create mccode_config.perl and mccode_reconfigure)
+# Create configure
 autoconf -o configure $CONFIGURE_IN
+#chmod a+x configure
+autoconf -o lib/tools/perl/${MCCODE_TARNAME}_reconfigure.in lib/tools/perl/mccode_reconfigure.in
+mv lib/tools/perl/mccode_config.perl.in lib/tools/perl/${MCCODE_TARNAME}_config.perl.in
+rm lib/tools/perl/mccode_reconfigure.in
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
 cd src

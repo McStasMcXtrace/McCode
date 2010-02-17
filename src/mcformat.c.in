@@ -126,32 +126,6 @@ struct fileparts_struct {
   char *Extension;
 };
 
-/* list of functions ******************************************************** */
-/*
-  char                     *str_dup_numeric(char *orig)
-  char                     *str_dup_name(char *orig, int length)
-  char                     *str_dup_label(char *orig)
-  char                     *str_last_word(char *orig)
-  struct                    fileparts_struct fileparts_init(void)
-  struct                    fileparts_struct fileparts(char *name)
-  void                      fileparts_free(struct fileparts_struct parts)
-  struct McStas_file_format mcformat_init_mcstas_struct(void)
-  void                      mcformat_print_mcstas_struct(struct McStas_file_format McStasStruct)
-  struct McStas_file_format mcformat_free_mcstas_struct(struct McStas_file_format McStasStruct)
-  struct McStas_file_format mcformat_read_mcstas(char *filename)
-  int                       mcformat_dirwalk(char *dir, int (*fcn)(char *))
-  static void               mcformat_usedir(char *dir)
-  int                       mcformat_output(struct McStas_file_format McStasStruct)
-  int                       mcformat_convert(char *name)
-  int                       mcformat_count(char *name)
-  int                       mcformat_merge_compare(int nb)
-  void                      mcformat_scan_compare(int nb)
-  int                       mcformat_merge_output(int nb)
-  void                      mcformat_usage(char *pgmname)
-  void                      mcformat_parseoptions(int argc, char *argv[])
-  int                       main(int argc, char *argv[])
-*/
-
 /*******************************************************************************
 * str_dup_numeric: makes a clean copy of a string and allocate as numeric
 *******************************************************************************/
@@ -574,7 +548,7 @@ struct McStas_file_format mcformat_free_mcstas_struct(struct McStas_file_format 
 } /* mcformat_free_mcstas_struct */
 
 /*******************************************************************************
-* mcformat_read_mcstas:  Reads filename and checks for McStas format
+* mcformat_read_mcstas:  Reads filename and chacks for McStas format
 *                        extracts header and data and return structure
 *                        structure.p1 is NULL in case of failure
 *******************************************************************************/
@@ -1598,15 +1572,11 @@ void mcformat_scan_compare(int nb)
       /* extract sorted column and set Scan */
       for (i=0; i<scan_length1; i++) { /* loop on column elements(row) */
         Table_SetElement(&Scan,
-          i, 
-          Files_to_Merge[scan_index1].mcnumipar+2*j,
+          i, Files_to_Merge[scan_index1].mcnumipar+2*j,
           Files_to_Merge[Monitor_column[i]].Psum);
         Table_SetElement(&Scan,
           i, Files_to_Merge[scan_index1].mcnumipar+2*j+1,
-          mcestimate_error(
-            Files_to_Merge[Monitor_column[i]].Ncount,
-            Files_to_Merge[Monitor_column[i]].Psum,
-            Files_to_Merge[Monitor_column[i]].P2sum));
+          mcestimate_error(Files_to_Merge[Monitor_column[i]].Ncount,Files_to_Merge[Monitor_column[i]].Psum,Files_to_Merge[Monitor_column[i]].P2sum));
         if (j==0) { /* first monitor in row also sets ipar */
           for (k=0; k<Files_to_Merge[Monitor_column[i]].mcnumipar; k++) {
             Table_SetElement(&Scan,
@@ -1643,11 +1613,7 @@ void mcformat_scan_compare(int nb)
     if (!datfile) datfile = str_cat("mcstas.", strstr(mcformat.Name, "McStas") ? "dat" : mcformat.Extension, NULL);
     strcat(mcformat.Name, " scan ");
     if (mcverbose)
-      printf("Writing scan file=%s (%s) into directory %s: %s=%g:%g\n", 
-        datfile, mcsiminfo_name, mcdirname,
-        Files_to_Merge[scan_index1].mcinputtable[ipar_var].name, ipar_min, ipar_max);
-    strcpy(mcinstrument_name,   Files_to_Merge[scan_index1].InstrName);
-    strcpy(mcinstrument_source, Files_to_Merge[scan_index1].Source);
+      printf("Writing scan file=%s (%s) into directory %s\n", datfile, mcsiminfo_name, mcdirname);
     if (!mctestmode)
     mcdetector_out_3D(title,
       Files_to_Merge[scan_index1].mcinputtable[ipar_var].name,
@@ -1708,9 +1674,7 @@ int mcformat_merge_output(int nb)
   return(nb);
 }
 
-/*******************************************************************************
-* mcformat_usage: print mcformat usage/help
-*******************************************************************************/
+
 void mcformat_usage(char *pgmname)
 {
   int i;
@@ -1751,9 +1715,6 @@ getenv("MCSTAS_FORMAT") ? getenv("MCSTAS_FORMAT") : MCSTAS_FORMAT);
   fprintf(stderr, "  The MCSTAS_FORMAT environment variable may set the default FORMAT to use.\n");
 } /* mcformat_usage */
 
-/*******************************************************************************
-* mcformat_parseoptions: parse command line parameters
-*******************************************************************************/
 void
 mcformat_parseoptions(int argc, char *argv[])
 {
@@ -1852,9 +1813,6 @@ mcformat_parseoptions(int argc, char *argv[])
   }
 } /* mcformat_parseoptions */
 
-/*******************************************************************************
-* main: program entry point (start):calls parseoptions, convert and merge
-*******************************************************************************/
 int main(int argc, char *argv[])
 {
   time_t t;
