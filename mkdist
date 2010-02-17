@@ -132,12 +132,8 @@ then
 fi  
 cd $DIST
 
-# Create configure
+# Create configure (which will itself create mccode_config.perl and mccode_reconfigure)
 autoconf -o configure $CONFIGURE_IN
-#chmod a+x configure
-autoconf -o lib/tools/perl/${MCCODE_TARNAME}_reconfigure.in lib/tools/perl/mccode_reconfigure.in
-mv lib/tools/perl/mccode_config.perl.in lib/tools/perl/${MCCODE_TARNAME}_config.perl.in
-rm lib/tools/perl/mccode_reconfigure.in
 
 # run lex, yacc (assuming linux - flex -i & bison -v -d)
 cd src

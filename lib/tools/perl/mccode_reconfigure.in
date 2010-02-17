@@ -86,8 +86,9 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT($prefix/lib/@MCCODE_TARNAME@/tools/perl/@MCCODE_TARNAME@_config.perl)
+AC_OUTPUT($prefix/lib/@MCCODE_TARNAME@/tools/perl/mccode_config.perl)
 
-chmod a+w $prefix/lib/@MCCODE_TARNAME@/tools/perl/@MCCODE_TARNAME@_config.perl
+chmod a+w $prefix/lib/@MCCODE_TARNAME@/tools/perl/mccode_config.perl
 
-echo "McStas has been reconfigured in $prefix/lib/mcstas/tools/perl/@MCCODE_TARNAME@_config.perl"
+@echo "@MCCODE_NAME@ has been reconfigured in $prefix/lib/mcstas/tools/perl/mccode_config.perl"
+
