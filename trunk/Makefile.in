@@ -23,8 +23,8 @@
 # make install         normal installation
 # make clean           clean distro
 # make test            distro self-test
-# make plotter         best plotter choice
-# make pgplot          plotter PGPLOT selection and perl-PGPLOT install
+# make config          best plotter choice
+# make pgplot          plotter PGPLOT selection
 # make reconfigure     reconfigure @MCCODE_TARNAME@ installation (after software update)
 # make install-pgplot  build and install PGPLOT
 # make install-scilab  build and install Scilab
@@ -112,17 +112,17 @@ config:
 	fi;
 
 scilab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Scilab'\,/" lib/tools/perl/@MCCODE_TARNAME@_config.perl > lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp
-	mv lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp lib/tools/perl/@MCCODE_TARNAME@_config.perl
+	sed "s/PLOTTER => '.*'./PLOTTER => 'Scilab'\,/" lib/tools/perl/mccode_config.perl > lib/tools/perl/mccode_config.perl.tmp
+	mv lib/tools/perl/mccode_config.perl.tmp lib/tools/perl/mccode_config.perl
 matlab:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'Matlab'\,/" lib/tools/perl/@MCCODE_TARNAME@_config.perl > lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp
-	mv lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp lib/tools/perl/@MCCODE_TARNAME@_config.perl
+	sed "s/PLOTTER => '.*'./PLOTTER => 'Matlab'\,/" lib/tools/perl/mccode_config.perl > lib/tools/perl/mccode_config.perl.tmp
+	mv lib/tools/perl/mccode_config.perl.tmp lib/tools/perl/@MCCODE_TARNAME@_config.perl
 pgplot:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'McStas'\,/" lib/tools/perl/@MCCODE_TARNAME@_config.perl > lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp
-	mv lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp lib/tools/perl/@MCCODE_TARNAME@_config.perl
+	sed "s/PLOTTER => '.*'./PLOTTER => 'McStas'\,/" lib/tools/perl/mccode_config.perl > lib/tools/perl/mccode_config.perl.tmp
+	mv lib/tools/perl/mccode_config.perl.tmp lib/tools/perl/mccode_config.perl
 vrml:
-	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/@MCCODE_TARNAME@_config.perl > lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp
-	mv lib/tools/perl/@MCCODE_TARNAME@_config.perl.tmp lib/tools/perl/@MCCODE_TARNAME@_config.perl
+	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mccode_config.perl > lib/tools/perl/mccode_config.perl.tmp
+	mv lib/tools/perl/mccode_config.perl.tmp lib/tools/perl/mccode_config.perl
 PGPLOT: pgplot
 Matlab: matlab
 Scilab: scilab
@@ -141,8 +141,9 @@ reconfigure:
 # Optional auto install of patched perl-Tk, scilab and pgplot5 libs
 install-pgplot:
 	cd support/common && $(MAKE) install-pgplot
+	cd support/common && $(MAKE) perl-PGPLOT
 	make pgplot
-	@echo "@MCCODE_NAME@: run 'make reconfigure'"
+	@echo "@MCCODE_NAME@: pgplot installed, run 'make reconfigure'"
 
 install-scilab:
 	cd support/common && $(MAKE) compile-scilab && echo "@MCCODE_NAME@: run './configure; make; make install' again"
