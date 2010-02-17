@@ -2200,7 +2200,7 @@ void mcsiminfo_close(void)
 
   int  ismcstas_nx  = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
   
-  mcdetector_out_abstract(mcDetectorArray, mcDetectorArray_index);
+  mcdetector_out_content(mcDetectorArray, mcDetectorArray_index);
   
   /* initialize sim file information, sets detector.file_handle=mcsiminfo_file */
   MCDETECTOR mcsiminfo = mcdetector_import_sim();
@@ -2647,10 +2647,10 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 } /* mcdetector_write_data */
 
 /*******************************************************************************
-* mcdetector_out_abstract: write mcstas.dat, which has integrated intensities for all monitors
+* mcdetector_out_content: write mcstas.dat, which has integrated intensities for all monitors
 * Used by: mcsiminfo_close
 *******************************************************************************/
-mcdetector_out_abstract(MCDETECTOR *DetectorArray, long DetectorArray_index)
+mcdetector_out_content(MCDETECTOR *DetectorArray, long DetectorArray_index)
 {
   /* build p1 array from all detector integrated counts */
   double *this_p1 = (double *)calloc(DetectorArray_index*2, sizeof(double));
@@ -2683,6 +2683,7 @@ mcdetector_out_abstract(MCDETECTOR *DetectorArray, long DetectorArray_index)
     
     struct mcformats_struct format=mcformat;
     strcat(format.Name, " scan step");
+    Coords zero={0.0,0.0,0.0};
     
     /* now create detector and write 'abstract' file */
     MCDETECTOR detector = mcdetector_import(format,
@@ -2690,22 +2691,21 @@ mcdetector_out_abstract(MCDETECTOR *DetectorArray, long DetectorArray_index)
       index, 1, 1,
       "Monitors", "I", "Integrated Signal",
       "Index", labels, "I",
-      0, index-1, 0, 0, 0, 0, "content",        /* use name from OpenOffice content.xml description file */
-      NULL, this_p1, NULL, coords_set(0,0,0));  /* write Detector: line */
+      0, index-1, 0, 0, 0, 0, "content",  /* use name from OpenOffice content.xml description file */
+      NULL, this_p1, NULL, zero);         /* write Detector: line */
       
     mcdetector_write_data(detector);
-    
-    printf("array: %i: DONE\n", __LINE__);
+
     free(labels); labels=NULL; labels_size=0;
     
     /* free DETECTOR array */
     free(this_p1); this_p1=NULL;
     free(mcDetectorArray); mcDetectorArray=NULL;
   } /* if this_p1 */
-} /* mcdetector_out_abstract */
+} /* mcdetector_out_content */
 
 /*******************************************************************************
-* mcdetector_out_0D: wrapper to mcdetector_out_012D for 0D (single value).
+* mcdetector_out_0D: wrapper for 0D (single value).
 *******************************************************************************/
 MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
                          char *c, Coords posa)
@@ -2726,7 +2726,7 @@ MCDETECTOR mcdetector_out_0D(char *t, double p0, double p1, double p2,
 }
 
 /*******************************************************************************
-* mcdetector_out_1D: wrapper to mcdetector_out_012D for 1D.
+* mcdetector_out_1D: wrapper for 1D.
 *******************************************************************************/
 MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
         char *xvar, double x1, double x2, 
@@ -2751,7 +2751,7 @@ MCDETECTOR mcdetector_out_1D(char *t, char *xl, char *yl,
 }
 
 /*******************************************************************************
-* mcdetector_out_2D: wrapper to mcdetector_out_012D for 2D.
+* mcdetector_out_2D: wrapper for 2D.
 *******************************************************************************/
 MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
                   double x1, double x2, double y1, double y2, 
@@ -2790,8 +2790,8 @@ MCDETECTOR mcdetector_out_2D(char *t, char *xl, char *yl,
 }
 
 /*******************************************************************************
-* mcdetector_out_3D: wrapper to mcdetector_out_012D for 3D.
-*   exported as a large 2D array, but the " dims are given in the header
+* mcdetector_out_3D: wrapper for 3D.
+*   exported as a large 2D array, but the 3 dims are given in the header
 *******************************************************************************/
 MCDETECTOR mcdetector_out_3D(char *t, char *xl, char *yl, char *zl,
       char *xvar, char *yvar, char *zvar,
