@@ -83,7 +83,7 @@ find . -wholename './setyear'    -prune -o -type d -prune -o -path ./src/McStasT
 echo "Set package $MCCODE_VERSION information"
 for iter in 1 2 3;
 do
-for file in configure.in lib/tools/perl/mccode_reconfigure.in src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat  ;
+for file in configure.in lib/tools/perl/mccode_reconfigure.in ;
 	do
 	  sed 's/@MCCODE_STRING@/'$MCCODE_NAME'-'$MCCODE_VERSION' - '$MONTH'. '$DAY', '$YEAR'/' $file > $file.tmp
     sed 's/@MCCODE_NAME@/'$MCCODE_NAME'/'                                                 $file.tmp > $file
