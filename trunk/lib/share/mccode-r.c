@@ -1997,7 +1997,9 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   /* output "Detector:" line ================================================ */
   /* when this is a detector written by a component (not the SAVE from instrument), 
      not a multiarray */
-  if (!strcmp(detector.component, mcinstrument_name) && (detector.rank != -1)) { 
+  if (detector.rank == -1) return(detector);
+  
+  if (!strcmp(detector.component, mcinstrument_name)) {
     if (strlen(detector.filename))  /* we name it from its filename, or from its title */
       mcvalid_name(c, detector.filename, CHAR_BUF_LENGTH);
     else
