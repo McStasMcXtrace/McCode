@@ -1,1 +1,0 @@
-../../../lib/share/read_table-lib.c

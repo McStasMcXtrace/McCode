@@ -1,1 +1,0 @@
-../../../lib/share/mccode-r.h

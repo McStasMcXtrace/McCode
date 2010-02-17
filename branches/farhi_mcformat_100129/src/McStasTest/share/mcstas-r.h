@@ -1,1 +1,0 @@
-../../../nlib/share/mcstas-r.h
