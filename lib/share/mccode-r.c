@@ -1851,8 +1851,9 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   }
   
   /* if MPI and nodes_nb > 1: reduce data sets when using MPI =============== */
+  /* not for scan steps/multiarray (only processed by root */
 #ifdef USE_MPI
-  if (!strstr(format.Name," list ") && mpi_node_count > 1) {
+  if (!strstr(format.Name," list ") && mpi_node_count > 1 && detector.rank != -1) {
     /* we save additive data: reduce everything into mpi_node_root */
     if (p0) mc_MPI_Sum(p0, abs(m*n*p));
     if (p1) mc_MPI_Sum(p1, abs(m*n*p));
@@ -1994,7 +1995,9 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
 #endif
   
   /* output "Detector:" line ================================================ */
-  if (!strcmp(detector.component, mcinstrument_name)) { /* this is a detector written by instrument */
+  /* when this is a detector written by a component (not the SAVE from instrument), 
+     not a multiarray */
+  if (!strcmp(detector.component, mcinstrument_name) && (detector.rank != -1)) { 
     if (strlen(detector.filename))  /* we name it from its filename, or from its title */
       mcvalid_name(c, detector.filename, CHAR_BUF_LENGTH);
     else
@@ -2049,6 +2052,10 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
 *******************************************************************************/
 MCDETECTOR* mcdetector_register(MCDETECTOR detector)
 {
+#ifdef USE_MPI
+  /* only for Master */
+  if(mpi_node_rank != mpi_node_root)                      return(NULL); 
+#endif
   if (detector.m) {
     /* add detector entry in the mcDetectorArray */
     if (!mcDetectorArray || 
@@ -2200,7 +2207,7 @@ void mcsiminfo_close(void)
 
   int  ismcstas_nx  = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
   
-  mcdetector_out_content(mcDetectorArray, mcDetectorArray_index);
+  mcdetector_write_content(mcDetectorArray, mcDetectorArray_index);
   
   /* initialize sim file information, sets detector.file_handle=mcsiminfo_file */
   MCDETECTOR mcsiminfo = mcdetector_import_sim();
@@ -2647,11 +2654,18 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
 } /* mcdetector_write_data */
 
 /*******************************************************************************
-* mcdetector_out_content: write mcstas.dat, which has integrated intensities for all monitors
+* mcdetector_write_content: write mcstas.dat, which has integrated intensities for all monitors
 * Used by: mcsiminfo_close
 *******************************************************************************/
-mcdetector_out_content(MCDETECTOR *DetectorArray, long DetectorArray_index)
+int mcdetector_write_content(MCDETECTOR *DetectorArray, long DetectorArray_index)
 {
+#ifdef USE_MPI
+  /* only for Master */
+  if(mpi_node_rank != mpi_node_root)                      return(-1); 
+#endif
+  if (mcdisable_output_files)                             return(-2);
+  if (!mcsiminfo_name || !strlen(mcsiminfo_name))         return(-3);
+  
   /* build p1 array from all detector integrated counts */
   double *this_p1 = (double *)calloc(DetectorArray_index*2, sizeof(double));
   int i;
@@ -2692,7 +2706,7 @@ mcdetector_out_content(MCDETECTOR *DetectorArray, long DetectorArray_index)
       "Monitors", "I", "Integrated Signal",
       "Index", labels, "I",
       0, index-1, 0, 0, 0, 0, "content",  /* use name from OpenOffice content.xml description file */
-      NULL, this_p1, NULL, zero);         /* write Detector: line */
+      NULL, this_p1, NULL, zero);
       
     mcdetector_write_data(detector);
 
@@ -2702,7 +2716,7 @@ mcdetector_out_content(MCDETECTOR *DetectorArray, long DetectorArray_index)
     free(this_p1); this_p1=NULL;
     free(mcDetectorArray); mcDetectorArray=NULL;
   } /* if this_p1 */
-} /* mcdetector_out_content */
+} /* mcdetector_write_content */
 
 /*******************************************************************************
 * mcdetector_out_0D: wrapper for 0D (single value).
