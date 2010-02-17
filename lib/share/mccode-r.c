@@ -1020,14 +1020,17 @@ char *mcfull_file(char *name, char *ext)
     exit(-fprintf(stderr, "Error: Out of memory %li (mcfull_file)\n", (long)(dirlen + strlen(name) + 256)));
   }
   strcpy(mem, "");
-  strncpy(tmp, mcdirname, CHAR_BUF_LENGTH);
-  strncat(tmp, MC_PATHSEP_S, CHAR_BUF_LENGTH);
-  if(dirlen && !strstr(name, tmp))  /* add directory name to path if not already present */
+  if (mcdirname)
   {
-    strcat(mem, mcdirname);
-    if(mcdirname[dirlen - 1] != MC_PATHSEP_C &&
-       name[0] != MC_PATHSEP_C)
-      strcat(mem, MC_PATHSEP_S);
+    strncpy(tmp, mcdirname, CHAR_BUF_LENGTH);
+    strncat(tmp, MC_PATHSEP_S, CHAR_BUF_LENGTH);
+    if(dirlen && !strstr(name, tmp))  /* add directory name to path if not already present */
+    {
+      strcat(mem, mcdirname);
+      if(mcdirname[dirlen - 1] != MC_PATHSEP_C &&
+          name[0] != MC_PATHSEP_C)
+        strcat(mem, MC_PATHSEP_S);
+    }
   }
   strcat(mem, name);
   if (!strchr(name, '.') && ext)
