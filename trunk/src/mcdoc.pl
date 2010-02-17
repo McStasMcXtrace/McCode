@@ -19,14 +19,6 @@ BEGIN {
   }
   $MCSTAS::perl_dir = "$MCSTAS::sys_dir/tools/perl";
   
-  # custom configuration (this script)
-  END {
-    if (-f $out_file ) {
-      print "mcdoc: Removing temporary $out_file (10 sec)\n";
-      sleep 10;
-      unlink($out_file) or die "mcdoc: Couldn't unlink $out_file : $!";
-    }
-  }
 }
 
 use lib $MCSTAS::perl_dir;
@@ -468,12 +460,13 @@ sub add_comp_search_html {
     }
     return unless @comps;
     if ($filehandle) {
-	print $filehandle <<END;
+      my $pwd = getcwd();
+      print $filehandle <<END;
 <html>
 <header><title>McDoc: Search result for "$search"</title></header>
 <body>
 <h1>Result of search for "$search" in your McStas library</h1>
-<p>(Please note that only current dir and $lib_dir were searched, discarding 'obsolete' components)
+<p>(Please note that only current dir $pwd and $lib_dir were searched, discarding 'obsolete' components)
 <p><TABLE BORDER COLS=5 WIDTH="100%" NOSAVE>
 <TR>
 <TD><B><I>Name</I></B></TD>
@@ -484,7 +477,7 @@ sub add_comp_search_html {
 </TR>
 END
     } else {
-	 print "Could not write to search output file\n";
+      print "Could not write to search output file $outfile\n";
     }
 
     my $name;
@@ -587,7 +580,7 @@ for($i = 0; $i < @ARGV; $i++) {
 
 require File::Temp;
 if ($out_file eq "" && $browser ne "text") {
-  ($fh, $out_file) = File::Temp::tempfile("mcdoc_tmpXXXXXX", SUFFIX => '.html');
+  ($fh, $out_file) = File::Temp::tempfile("mcdoc_tmpXXXXXX", SUFFIX => '.html', UNLINK => 1);
   if (not defined $fh) { $out_file=""; }
 }
 if ($out_file eq "" && $browser ne "text") { $out_file="index.html"; }
@@ -694,7 +687,7 @@ my $toolbar = "<P ALIGN=CENTER>\n [ " . join("\n | ", @tblist) . " ]\n</P>\n";
 $toolbar .= "<P ALIGN=CENTER>\n [ <a href=\"$HTTP_SYSDIR/doc/manuals/mcstas-manual.pdf\">User Manual</a>
 | <a href=\"$HTTP_SYSDIR/doc/manuals/mcstas-components.pdf\">Component Manual</a>
 | <a href=\"$HTTP_SYSDIR/doc/tutorial/html/tutorial.html\">McStas tutorial</a>
-| <a href=\"$HTTP_SYSDIR/data\">Data files</a> ]\n</P>\n";
+| <a href=\"$HTTP_SYSDIR/data\">Data files</a> | <a href=\"$HTTP_SYSDIR\">$lib_dir</a> ]\n</P>\n";
 
 if ($filehandle) {
   html_main_start($filehandle, $toolbar);
@@ -718,7 +711,7 @@ if (-f $out_file) {
       if (@valid_names > 1) { 
           require File::Temp;
           my $searchfile;
-          ($filehandle, $searchfile) = File::Temp::tempfile("McDoc_XXXX", SUFFIX => '.html', UNLINK => 1);
+          ($filehandle, $searchfile) = File::Temp::tempfile("mcdoc_tmpXXXXXX", SUFFIX => '.html', UNLINK => 1);
           open($filehandle, ">$searchfile") || die "Could not write to search output file\n";
           add_comp_search_html($file, $filehandle, @valid_names);
           html_main_end($filehandle, $toolbar);
@@ -728,6 +721,8 @@ if (-f $out_file) {
 
       # open the index.html
       my $cmd = "$MCSTAS::mcstas_config{'BROWSER'} $out_file";
-      print "mcdoc: Starting $cmd\n"; system("$cmd\n");
+      print "mcdoc: Starting $cmd\n"; 
+      system("$cmd\n");
+      sleep(10); # gives time for browser to start and display page before removing it
     }
 }
