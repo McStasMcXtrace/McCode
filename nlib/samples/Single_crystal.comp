@@ -467,17 +467,18 @@ SHARE
       info->V0 = 1/fabs(scalar_prod(info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI), tmp_x, tmp_y, tmp_z));
       printf("V0=%g\n", info->V0);
       
-      info->asx = 2*PI/info->V0*tmp_x;
-      info->asy = 2*PI/info->V0*tmp_y;
-      info->asz = 2*PI/info->V0*tmp_z;
-      vec_prod(tmp_x, tmp_y, tmp_z, info->m_cx, info->m_cy, info->m_cz, info->m_ax, info->m_ay, info->m_az);
-      info->bsx = 2*PI/info->V0*tmp_x;
-      info->bsy = 2*PI/info->V0*tmp_y;
-      info->bsz = 2*PI/info->V0*tmp_z;
-      vec_prod(tmp_x, tmp_y, tmp_z, info->m_ax, info->m_ay, info->m_az, info->m_bx, info->m_by, info->m_bz);
-      info->csx = 2*PI/info->V0*tmp_x;
-      info->csy = 2*PI/info->V0*tmp_y;
-      info->csz = 2*PI/info->V0*tmp_z;
+      /*compute the direct cell parameters, ofr completeness*/ 
+      info->m_ax = tmp_x*info->V0;
+      info->m_ay = tmp_y*info->V0;
+      info->m_az = tmp_z*info->V0;
+      vec_prod(tmp_x, tmp_y, tmp_z,info->csx/(2*PI), info->csy/(2*PI), info->csz/(2*PI),info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI));
+      info->m_bx = tmp_x*info->V0;
+      info->m_by = tmp_y*info->V0;
+      info->m_bz = tmp_z*info->V0;
+      vec_prod(tmp_x, tmp_y, tmp_z,info->asx/(2*PI), info->asy/(2*PI), info->asz/(2*PI),info->bsx/(2*PI), info->bsy/(2*PI), info->bsz/(2*PI));
+      info->m_cx = tmp_x*info->V0;
+      info->m_cy = tmp_y*info->V0;
+      info->m_cz = tmp_z*info->V0;
     }
 
     if (flag) return(-1);
