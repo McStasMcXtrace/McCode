@@ -69,7 +69,7 @@
 
 DEFINE COMPONENT Pol_simpleBfield
 DEFINITION PARAMETERS (fieldFunction=const_magnetic_field)
-SETTING PARAMETERS (xwidth, yheight, zdepth,
+SETTING PARAMETERS (xwidth, yheight,zdepth,
 		       Bx, By, Bz,
 		       int nx=5, int ny=5, int nz=5)
   OUTPUT PARAMETERS(gz, magnet, parPtr)
@@ -132,6 +132,10 @@ TRACE
 %{
   //enter
   PROP_Z0;
+  /*terminate neutrons which miss the component*/
+  if (2*x>xwidth || 2*x<-xwidth || 2*y>yheight || 2*y<-yheight){
+    ABSORB;
+  }
   mcmagnet_push(fieldFunction,&(ROT_A_CURRENT_COMP),&(POS_A_CURRENT_COMP),0,parPtr); 
 //  mcmagnet_print_stack();
 %}
