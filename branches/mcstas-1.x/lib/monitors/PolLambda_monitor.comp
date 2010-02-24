@@ -122,7 +122,7 @@ TRACE
       i=0;
     else 
       i = floor((pol_proj+1.0)*npol/2.0);
-    j = floor((lambda - Lmin)*nL/(Lmax - Lmin));
+    j = floor((lambda - Lmin)*nlam/(Lmax - Lmin));
 
     PolL_N[j][i]++;
     PolL_p[j][i] += p;
