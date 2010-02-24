@@ -196,7 +196,7 @@ TRACE
            * Use a cut-off at 5 times the gauss zwidth for considering
            * scattering probability as well as for integration limits
            * when integrating the sampled distribution below. */
-          for(;;) {
+          for(i=0; i<100; i++) {
             zwidth = 5*mos_sample;
             cos_phi = cos(zwidth);
             sin_phi = sin(zwidth);
