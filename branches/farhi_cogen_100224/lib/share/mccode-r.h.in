@@ -115,20 +115,28 @@
 
 #ifdef MC_PORTABLE
 #ifndef NOSIGNALS
-#define NOSIGNALS
+#define NOSIGNALS 1
 #endif
 #endif
 
 #ifdef MAC
 #ifndef NOSIGNALS
-#define NOSIGNALS
+#define NOSIGNALS 1
 #endif
 #endif
 
-#ifdef USE_MPI
-#ifndef NOSIGNALS
-#define NOSIGNALS
+#if (USE_MPI == 0)
+#undef USE_MPI
 #endif
+
+#ifdef USE_MPI  /* default is to disable signals with MPI, as MPICH uses them to communicate */
+#ifndef NOSIGNALS
+#define NOSIGNALS 1
+#endif
+#endif
+
+#if (NOSIGNALS == 0)
+#undef NOSIGNALS
 #endif
 
 #if (USE_NEXUS == 0)
@@ -204,6 +212,10 @@ mcstatic FILE *mcsiminfo_file        = NULL;
 
 #ifdef USE_MPI
 #include "mpi.h"
+
+#ifdef OMPI_MPI_H  /* openmpi does not use signals: we may install our sighandler */
+#undef NOSIGNALS
+#endif
 
 /*
  * MPI_MASTER(i):
