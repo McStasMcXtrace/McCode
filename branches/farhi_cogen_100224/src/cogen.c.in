@@ -130,7 +130,7 @@
 
 /* PROJECT=1 for McStas, 2 for McXtrace. Now using @MCCODE_PARTICULE@ @MCCODE_NAME@ */
 #ifndef MCCODE_PROJECT
-#define MCCODE_PROJECT 1
+#define MCCODE_PROJECT @MCCODE_PROJECT@
 #endif
 
 /* Functions for outputting code. */
