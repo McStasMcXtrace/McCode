@@ -1021,7 +1021,7 @@ char *mcfull_file(char *name, char *ext)
   strcpy(mem, "");
   
   /* prepend directory name to path if name does not contain a path */
-  if (dirlen > 0 && !strstr(name, MC_PATHSEP_S)) {
+  if (dirlen > 0 && !strchr(name, MC_PATHSEP_C)) {
     strcat(mem, mcdirname);
     strcat(mem, MC_PATHSEP_S);
   } /* dirlen */
@@ -1418,12 +1418,7 @@ MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *s
    || mcdisable_output_files) return(detector);
   if (strcmp(part,"begin") && strstr(detector.format.Name, "no header")) return (detector);
   if (strcmp(part,"end")   && strstr(detector.format.Name, "no footer")) return (detector);
-  
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcfile_section: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
-  
+
   /* initiate format string and handle prefix-- ============================= */
 
   if (part && !strcmp(part,"end")) Section = detector.format.EndSection;
@@ -1469,11 +1464,6 @@ MCDETECTOR mcfile_section(MCDETECTOR detector, char *part, char *parent, char *s
     if (parent && strlen(parent))
       mcinfo_tag(detector, section, "parent", parent);
   }
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcfile_section: #%i: exit for filename='%s'\n", __LINE__, detector.filename);
 
   return(detector);
 } /* mcfile_section */
@@ -1491,12 +1481,7 @@ static int mcinfo_instrument(MCDETECTOR detector, char *name)
   if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
   if (!name || !strlen(name)
    || mcdisable_output_files) return(-1);
-   
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcinfo_instrument: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
-  
+
   /* create parameter string ================================================ */
 
   for(i = 0; i < mcnumipar; i++)
@@ -1522,14 +1507,9 @@ static int mcinfo_instrument(MCDETECTOR detector, char *name)
          "no"
 #endif
          );
-  
+
   fflush(NULL);
-  
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcinfo_instrument: #%i: exit for filename='%s'\n", __LINE__, detector.filename);
-  
+
   return(1);
 } /* mcinfo_instrument */
 
@@ -1584,11 +1564,6 @@ MCDETECTOR mcinfo_simulation(MCDETECTOR detector, char *instr)
   if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(detector);
   if (!instr || !strlen(instr)
    || mcdisable_output_files) return(detector);
-   
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcinfo_simulation: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
 
   mcinfo_tag(detector, instr, "Ncount",      detector.ncount);
   mcinfo_tag(detector, instr, "Trace",       mcdotrace ? "yes" : "no");
@@ -1641,12 +1616,7 @@ MCDETECTOR mcinfo_simulation(MCDETECTOR detector, char *instr)
     detector = mcfile_section(detector, "end", instr, "parameters", "parameters", 3);
     
   fflush(NULL);
-  
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcinfo_simulation: #%i: exit for filename='%s'\n", __LINE__, detector.filename);
-  
+
   return(detector);
 } /* mcinfo_simulation */
 
@@ -1661,12 +1631,7 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
   char parent[CHAR_BUF_LENGTH];
   
   if (!detector.m || mcdisable_output_files) return;
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcinfo_data: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
-  
+
   /* access either SIM or Data file */
   if (!filename) {
     /* use SIM file which has already be opened with instrument/simulation info */
@@ -1722,12 +1687,7 @@ void mcinfo_data(MCDETECTOR detector, char *filename)
    if (mcDetectorCustomHeader && strlen(mcDetectorCustomHeader)) {
      mcinfo_tag(detector, parent, "custom",  mcDetectorCustomHeader);
    } 
-   
-   #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcinfo_data: #%i: exit for filename='%s'\n", __LINE__, detector.filename);
-   
+
    fflush(NULL);
 } /* mcinfo_data */
 
@@ -1756,12 +1716,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
   char   c[CHAR_BUF_LENGTH]; /* temp var for signal label */
   
   MCDETECTOR detector;
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_import: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
-  
+
   /* build MCDETECTOR structure ============================================= */
   /* make sure we do not have NULL for char fields */
   
@@ -2083,12 +2038,7 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
    else if (strstr(detector.format.Name, "McStas")) str_rep(mcDetectorCustomHeader, "%PRE", "#   ");
    else str_rep(mcDetectorCustomHeader, "%PRE", "    ");
   }
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_import: #%i: exit for filename='%s'\n", __LINE__, detector.filename);
-  
+
   return(detector);
 } /* mcdetector_import */
 
@@ -2104,11 +2054,6 @@ MCDETECTOR* mcdetector_register(MCDETECTOR detector)
   if(mpi_node_rank != mpi_node_root)                      return(NULL); 
 #endif
 
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_register: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
-  
   if (detector.m) {
     /* add detector entry in the mcDetectorArray */
     if (!mcDetectorArray || 
@@ -2121,11 +2066,7 @@ MCDETECTOR* mcdetector_register(MCDETECTOR detector)
     }
     mcDetectorArray[mcDetectorArray_index++]=detector;
   }
-  
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_register: #%i: exit for filename='%s'\n", __LINE__, detector.filename);
+
   return(mcDetectorArray);
     
 } /* mcdetector_register */
@@ -2165,12 +2106,7 @@ static int mcsiminfo_init(FILE *f)
 #endif
   if (mcdisable_output_files)                             return(-2);
   if (!f && (!mcsiminfo_name || !strlen(mcsiminfo_name))) return(-3);
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcsiminfo_init: #%i: enter for filename='%s'\n", __LINE__, "ROOT");
-  
+
   /* clear list of opened files to start new save session */
   if (mcopenedfiles && strlen(mcopenedfiles) > 0) strcpy(mcopenedfiles, "");
   
@@ -2252,12 +2188,7 @@ static int mcsiminfo_init(FILE *f)
 #endif
   if (ismcstas_nx)
     mcsiminfo = mcfile_section(mcsiminfo, "end", mcsiminfo.simulation, mcsiminfo_name, "simulation", 2);
-    
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcsiminfo_init: #%i: exit for filename='%s'\n", __LINE__, "ROOT");
-    
+
   return(1);
 } /* mcsiminfo_init */
 
@@ -2274,12 +2205,7 @@ void mcsiminfo_close(void)
   if (mcdisable_output_files || !mcsiminfo_file) return;
 
   int  ismcstas_nx  = (strstr(mcformat.Name, "McStas") || strstr(mcformat.Name, "NeXus"));
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcsiminfo_close: #%i: enter for filename='%s'\n", __LINE__, "ROOT");
-  
+
   mcdetector_write_content(mcDetectorArray, mcDetectorArray_index);
   
   /* initialize sim file information, sets detector.file_handle=mcsiminfo_file */
@@ -2314,11 +2240,6 @@ void mcsiminfo_close(void)
     fclose(mcsiminfo_file);
   }
   mcsiminfo_file = NULL;
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcsiminfo_close: #%i: exit for filename='%s'\n", __LINE__, "ROOT");
 
 } /* mcsiminfo_close */
 
@@ -2347,11 +2268,7 @@ int mcfile_data(MCDETECTOR detector, char *part)
   if (!this_p1 || mcdisable_output_files) return(-1);
   if (!detector.file_handle && !strstr(detector.format.Name,"NeXus")) return(-1);
   if (!detector.rank) return(-1);
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcfile_data: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
+
   
   mcvalid_name(valid_xlabel, detector.xlabel, VALID_NAME_LENGTH);
   mcvalid_name(valid_ylabel, detector.ylabel, VALID_NAME_LENGTH);
@@ -2489,11 +2406,6 @@ int mcfile_data(MCDETECTOR detector, char *part)
       detector.zmin,         /* %21$g  ZMIN */
       detector.zmax);        /* %22$g  ZMAX */
 
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcfile_data: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
-  
   return(2);
 } /* mcfile_data */
 
@@ -2508,12 +2420,7 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
 #endif
   /* skip invalid detectors */
   if (!detector.m || mcdisable_output_files) return(detector);
-  
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_write_sim: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
-  
+
   /* sim file has been initialized when starting simulation and when calling 
    * mcsave ; this defines mcsiminfo_file as the SIM file handle
    * and calls: 
@@ -2567,12 +2474,7 @@ MCDETECTOR mcdetector_write_sim(MCDETECTOR detector)
     simfile = mcfile_section(simfile, "end", detector.simulation, detector.component, "component", 3);
     
   strncpy(detector.prefix, prefix, CHAR_BUF_LENGTH);
-  
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_write_sim: #%i: exit for filename='%s'\n", __LINE__, detector.filename);
-  
+
   return(detector); 
 } /* mcdetector_write_sim */
 
@@ -2587,11 +2489,6 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
   /* skip if 0D or no filename or no data (only stored in sim file) */
   if (!detector.rank || !strlen(detector.filename) 
    || !detector.m) return(detector);
-   
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_write_data: #%i: enter for filename='%s'\n", __LINE__, detector.filename);
 
 #ifdef USE_MPI
   /* only by MASTER for non lists (MPI reduce has been done in detector_import) */
@@ -2752,12 +2649,7 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
     /* close data set group */
     mcfile_section(detector, "end", detector.component, detector.filename, "data", 4);
   }
-  
-  #ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_write_data: #%i: exit for filename='%s'\n", __LINE__, detector.filename);
-  
+
   return(detector); 
 } /* mcdetector_write_data */
 
@@ -2774,12 +2666,7 @@ int mcdetector_write_content(MCDETECTOR *DetectorArray, long DetectorArray_index
   if (mcdisable_output_files)                             return(-2);
   if (!mcsiminfo_name || !strlen(mcsiminfo_name))         return(-3);
   if (!DetectorArray_index)                               return(-4);
-  
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_write_content: #%i: enter for filename='%s'\n", __LINE__, "ROOT");
-  
+
   /* build p1 array from all detector integrated counts */
   double *this_p1 = (double *)calloc(DetectorArray_index*2, sizeof(double));
   int i;
@@ -2830,12 +2717,7 @@ int mcdetector_write_content(MCDETECTOR *DetectorArray, long DetectorArray_index
     free(this_p1); this_p1=NULL;
     free(mcDetectorArray); mcDetectorArray=NULL;
   } /* if this_p1 */
-  
-#ifdef USE_MPI
-  printf("[node %i] ", mpi_node_rank);
-#endif
-  printf("mcdetector_write_content: #%i: exit for filename='%s'\n", __LINE__, "ROOT");
-  
+
 } /* mcdetector_write_content */
 
 /*******************************************************************************
@@ -4950,34 +4832,44 @@ int mccode_main(int argc, char *argv[])
 /* *** install sig handler, but only once !! after parameters parsing ******* */
 #ifndef NOSIGNALS
 #ifdef SIGQUIT
-  signal( SIGQUIT ,sighandler);   /* quit (ASCII FS) */
+  if (signal( SIGQUIT ,sighandler) == SIG_IGN)
+    signal( SIGQUIT,SIG_IGN);   /* quit (ASCII FS) */
 #endif
 #ifdef SIGABRT
-  signal( SIGABRT ,sighandler);   /* used by abort, replace SIGIOT in the future */
+  if (signal( SIGABRT ,sighandler) == SIG_IGN)
+    signal( SIGABRT,SIG_IGN);   /* used by abort, replace SIGIOT in the future */
 #endif
 #ifdef SIGTERM
-  signal( SIGTERM ,sighandler);   /* software termination signal from kill */
+  if (signal( SIGTERM ,sighandler) == SIG_IGN)
+    signal( SIGTERM,SIG_IGN);   /* software termination signal from kill */
 #endif
 #ifdef SIGUSR1
-  signal( SIGUSR1 ,sighandler);   /* display simulation status */
+  if (signal( SIGUSR1 ,sighandler) == SIG_IGN)
+    signal( SIGUSR1,SIG_IGN);   /* display simulation status */
 #endif
 #ifdef SIGUSR2
-  signal( SIGUSR2 ,sighandler);
+  if (signal( SIGUSR2 ,sighandler) == SIG_IGN)
+    signal( SIGUSR2,SIG_IGN);
 #endif
 #ifdef SIGHUP
-  signal( SIGHUP ,sighandler);
+  if (signal( SIGHUP ,sighandler) == SIG_IGN)
+    signal( SIGHUP,SIG_IGN);
 #endif
 #ifdef SIGILL
-  signal( SIGILL ,sighandler);    /* illegal instruction (not reset when caught) */
+  if (signal( SIGILL ,sighandler) == SIG_IGN)
+    signal( SIGILL,SIG_IGN);    /* illegal instruction (not reset when caught) */
 #endif
 #ifdef SIGFPE
-  signal( SIGFPE ,sighandler);    /* floating point exception */
+  if (signal( SIGFPE ,sighandler) == SIG_IGN)
+    signal( SIGSEGV,SIG_IGN);    /* floating point exception */
 #endif
 #ifdef SIGBUS
-  signal( SIGBUS ,sighandler);    /* bus error */
+  if (signal( SIGBUS ,sighandler) == SIG_IGN)
+    signal( SIGSEGV,SIG_IGN);    /* bus error */
 #endif
 #ifdef SIGSEGV
-  signal( SIGSEGV ,sighandler);   /* segmentation violation */
+  if (signal( SIGSEGV ,sighandler) == SIG_IGN)
+    signal( SIGSEGV,SIG_IGN);   /* segmentation violation */
 #endif
 #endif /* !NOSIGNALS */
   if (!strstr(mcformat.Name,"NeXus")) {
@@ -4987,7 +4879,8 @@ int mccode_main(int argc, char *argv[])
   mcinit();
 #ifndef NOSIGNALS
 #ifdef SIGINT
-  signal( SIGINT ,sighandler);    /* interrupt (rubout) only after INIT */
+  if (signal( SIGINT ,sighandler) == SIG_IGN)
+    signal( SIGINT,SIG_IGN);    /* interrupt (rubout) only after INIT */
 #endif
 #endif /* !NOSIGNALS */
 
