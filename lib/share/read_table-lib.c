@@ -16,7 +16,7 @@
 *
 * This file is to be imported by components that may read data from table files
 * It handles some shared functions. Embedded within instrument in runtime mode.
-* Variable names have prefix 'mc_rt_' for 'McStas Read Table' to avoid conflicts
+* Variable names have prefix '' for 'McStas Read Table' to avoid conflicts
 *
 * Usage: within SHARE
 * %include "read_table-lib"
@@ -43,9 +43,9 @@
 * Data block should be a rectangular matrix or vector.
 * Data block may be rebined with Table_Rebin (also sort in ascending order)
 *******************************************************************************/
-  long Table_Read(t_Table *mc_rt_Table, char *mc_rt_File, long mc_rt_block_number)
+  long Table_Read(t_Table *Table, char *File, long block_number)
   { /* reads all or a single data block from 'file' and returns a Table structure  */
-    return(Table_Read_Offset(mc_rt_Table, mc_rt_File, mc_rt_block_number, NULL, 0));
+    return(Table_Read_Offset(Table, File, block_number, NULL, 0));
   } /* end Table_Read */
 
 /*******************************************************************************
@@ -59,28 +59,28 @@
 *           number of read elements (-1: error, 0:header only)
 *           updated *offset position (where end of reading occured)
 *******************************************************************************/
-  long Table_Read_Offset(t_Table *mc_rt_Table, char *mc_rt_File,
-                         long mc_rt_block_number, long *mc_rt_offset,
-                         long mc_rt_max_lines)
+  long Table_Read_Offset(t_Table *Table, char *File,
+                         long block_number, long *offset,
+                         long max_lines)
   { /* reads all/a data block in 'file' and returns a Table structure  */
-    FILE *mc_rt_hfile;
-    long  mc_rt_nelements;
-    long  mc_rt_begin;
-    long  mc_rt_filesize=0;
-    struct stat mc_rt_stfile;
+    FILE *hfile;
+    long  nelements;
+    long  begin;
+    long  filesize=0;
+    struct stat stfile;
 
-    if (!mc_rt_Table) return(-1);
-    Table_Init(mc_rt_Table, 0, 0);
-    if (!mc_rt_File)  return(-1);
-    if (strlen(mc_rt_File) == 0) return (-1);
-    if (!strcmp(mc_rt_File,"NULL") || !strcmp(mc_rt_File,"0"))  return(-1);
-    mc_rt_hfile = fopen(mc_rt_File, "r");
-    if(!mc_rt_hfile)
+    if (!Table) return(-1);
+    Table_Init(Table, 0, 0);
+    if (!File)  return(-1);
+    if (strlen(File) == 0) return (-1);
+    if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(-1);
+    hfile = fopen(File, "r");
+    if(!hfile)
     {
-      char mc_rt_path[1024];
-      char mc_rt_dir[1024];
+      char path[1024];
+      char dir[1024];
 
-      if (!mc_rt_hfile) /* search in instrument location */
+      if (!hfile) /* search in instrument location */
       {
         char *path_pos   = NULL;
         /* extract path: searches for last file separator */
@@ -88,48 +88,48 @@
         if (path_pos) {
           long path_length = path_pos +1 - mcinstrument_source;  /* from start to path+sep */
           if (path_length) {
-            strncpy(mc_rt_dir, mcinstrument_source, path_length);
-            sprintf(mc_rt_path, "%s%c%s", mc_rt_dir, MC_PATHSEP_C, mc_rt_File);
-            mc_rt_hfile = fopen(mc_rt_path, "r");
+            strncpy(dir, mcinstrument_source, path_length);
+            sprintf(path, "%s%c%s", dir, MC_PATHSEP_C, File);
+            hfile = fopen(path, "r");
           }
         }
       }
-      if (!mc_rt_hfile) /* search in HOME */
+      if (!hfile) /* search in HOME */
       {
-        strcpy(mc_rt_dir, getenv("HOME") ? getenv("HOME") : ".");
-        sprintf(mc_rt_path, "%s%c%s", mc_rt_dir, MC_PATHSEP_C, mc_rt_File);
-        mc_rt_hfile = fopen(mc_rt_path, "r");
+        strcpy(dir, getenv("HOME") ? getenv("HOME") : ".");
+        sprintf(path, "%s%c%s", dir, MC_PATHSEP_C, File);
+        hfile = fopen(path, "r");
       }
-      if (!mc_rt_hfile) /* search in MCSTAS data */
+      if (!hfile) /* search in MCSTAS data */
       {
-        strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
-        sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
-        mc_rt_hfile = fopen(mc_rt_path, "r");
+        strcpy(dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
+        sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
+        hfile = fopen(path, "r");
       }
-      if (!mc_rt_hfile) /* search in MVCSTAS/contrib */
+      if (!hfile) /* search in MVCSTAS/contrib */
       {
-        strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
-        sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, mc_rt_File);
-        mc_rt_hfile = fopen(mc_rt_path, "r");
+        strcpy(dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
+        sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
+        hfile = fopen(path, "r");
       }
-      if(!mc_rt_hfile)
+      if(!hfile)
       {
-        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", mc_rt_File);
+        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", File);
         return (-1);
       } else
-        printf("Opening input file '%s' (Table_Read)\n", mc_rt_path);
+        printf("Opening input file '%s' (Table_Read)\n", path);
     }
-    stat(mc_rt_File,&mc_rt_stfile); mc_rt_filesize = mc_rt_stfile.st_size;
-    if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
-    mc_rt_begin     = ftell(mc_rt_hfile);
-    mc_rt_nelements = Table_Read_Handle(mc_rt_Table, mc_rt_hfile, mc_rt_block_number, mc_rt_max_lines);
-    strncpy(mc_rt_Table->filename, mc_rt_File, 128);
-    mc_rt_Table->begin = mc_rt_begin;
-    mc_rt_Table->end   = ftell(mc_rt_hfile);
-    mc_rt_Table->filesize = (mc_rt_filesize>0 ? mc_rt_filesize : 0);
-    if (mc_rt_offset) *mc_rt_offset=mc_rt_Table->end;
-    fclose(mc_rt_hfile);
-    return(mc_rt_nelements);
+    stat(File,&stfile); filesize = stfile.st_size;
+    if (offset && *offset) fseek(hfile, *offset, SEEK_SET);
+    begin     = ftell(hfile);
+    nelements = Table_Read_Handle(Table, hfile, block_number, max_lines);
+    strncpy(Table->filename, File, 128);
+    Table->begin = begin;
+    Table->end   = ftell(hfile);
+    Table->filesize = (filesize>0 ? filesize : 0);
+    if (offset) *offset=Table->end;
+    fclose(hfile);
+    return(nelements);
 
   } /* end Table_Read_Offset */
 
@@ -139,38 +139,38 @@
 *   ACTION: read a single Table from a binary file, starting at offset
 *     Same as Table_Read_Offset(..) except that it handles binary files.
 *   input   type: may be "float"/NULL or "double"
-*           offset: pointer to an mc_rt_offset (*offset should be 0 at start)
+*           offset: pointer to an offset (*offset should be 0 at start)
 *           rows   : number of rows (0 means read all)
 *           columns: number of columns
 *   return  initialized single Table t_Table structure containing data, header, ...
 *           number of read elements (-1: error, 0:header only)
 *           updated *offset position (where end of reading occured)
 *******************************************************************************/
-  long Table_Read_Offset_Binary(t_Table *mc_rt_Table, char *mc_rt_File, char *mc_rt_type,
-                                long *mc_rt_offset, long mc_rt_rows, long mc_rt_columns)
+  long Table_Read_Offset_Binary(t_Table *Table, char *File, char *type,
+                                long *offset, long rows, long columns)
   { /* reads all/a data block in binary 'file' and returns a Table structure  */
-    long    mc_rt_nelements, mc_rt_sizeofelement;
-    long    mc_rt_filesize;
-    FILE   *mc_rt_hfile;
-    struct stat mc_rt_stfile;
-    double *mc_rt_data;
-    long    mc_rt_i;
-    long    mc_rt_begin;
+    long    nelements, sizeofelement;
+    long    filesize;
+    FILE   *hfile;
+    struct stat stfile;
+    double *data;
+    long    i;
+    long    begin;
 
-    if (!mc_rt_Table) return(-1);
+    if (!Table) return(-1);
 
-    Table_Init(mc_rt_Table, 0, 0);
-    if (!mc_rt_File)  return(-1);
-    if (strlen(mc_rt_File) == 0) return (-1);
-    if (!strcmp(mc_rt_File,"NULL") || !strcmp(mc_rt_File,"0"))  return(-1);
+    Table_Init(Table, 0, 0);
+    if (!File)  return(-1);
+    if (strlen(File) == 0) return (-1);
+    if (!strcmp(File,"NULL") || !strcmp(File,"0"))  return(-1);
 
-    mc_rt_hfile = fopen(mc_rt_File, "r");
-    if(!mc_rt_hfile)
+    hfile = fopen(File, "r");
+    if(!hfile)
     {
-      char mc_rt_path[1024];
-      char mc_rt_dir[1024];
+      char path[1024];
+      char dir[1024];
 
-      if (!mc_rt_hfile) /* search in instrument location */
+      if (!hfile) /* search in instrument location */
       {
         char *path_pos   = NULL;
         /* extract path: searches for last file separator */
@@ -178,86 +178,86 @@
         if (path_pos) {
           long path_length = path_pos +1 - mcinstrument_source;  /* from start to path+sep */
           if (path_length) {
-            strncpy(mc_rt_dir, mcinstrument_source, path_length);
-            sprintf(mc_rt_path, "%s%c%s", mc_rt_dir, MC_PATHSEP_C, mc_rt_File);
-            mc_rt_hfile = fopen(mc_rt_path, "r");
+            strncpy(dir, mcinstrument_source, path_length);
+            sprintf(path, "%s%c%s", dir, MC_PATHSEP_C, File);
+            hfile = fopen(path, "r");
           }
         }
       }
-      if (!mc_rt_hfile) /* search in HOME */
+      if (!hfile) /* search in HOME */
       {
-        strcpy(mc_rt_dir, getenv("HOME") ? getenv("HOME") : ".");
-        sprintf(mc_rt_path, "%s%c%s", mc_rt_dir, MC_PATHSEP_C, mc_rt_File);
-        mc_rt_hfile = fopen(mc_rt_path, "r");
+        strcpy(dir, getenv("HOME") ? getenv("HOME") : ".");
+        sprintf(path, "%s%c%s", dir, MC_PATHSEP_C, File);
+        hfile = fopen(path, "r");
       }
-      if (!mc_rt_hfile) /* search in MCSTAS data */
+      if (!hfile) /* search in MCSTAS data */
       {
-        strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
-        sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, mc_rt_File);
-        mc_rt_hfile = fopen(mc_rt_path, "r");
+        strcpy(dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
+        sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, File);
+        hfile = fopen(path, "r");
       }
-      if (!mc_rt_hfile) /* search in MVCSTAS/contrib */
+      if (!hfile) /* search in MVCSTAS/contrib */
       {
-        strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
-        sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, mc_rt_File);
-        mc_rt_hfile = fopen(mc_rt_path, "r");
+        strcpy(dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
+        sprintf(path, "%s%c%s%c%s", dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, File);
+        hfile = fopen(path, "r");
       }
-      if(!mc_rt_hfile)
+      if(!hfile)
       {
-        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", mc_rt_File);
+        fprintf(stderr, "Error: Could not open input file '%s' (Table_Read_Offset_Binary)\n", File);
         return (-1);
       } else
-        printf("Opening input file '%s' (Table_Read)\n", mc_rt_path);
+        printf("Opening input file '%s' (Table_Read)\n", path);
     }
-    stat(mc_rt_File,&mc_rt_stfile);
-    mc_rt_filesize = mc_rt_stfile.st_size;
-    mc_rt_Table->filesize=mc_rt_filesize;
-    if (mc_rt_type && !strcmp(mc_rt_type,"double")) mc_rt_sizeofelement = sizeof(double);
-    else  mc_rt_sizeofelement = sizeof(float);
-    if (mc_rt_offset && *mc_rt_offset) fseek(mc_rt_hfile, *mc_rt_offset, SEEK_SET);
-    mc_rt_begin     = ftell(mc_rt_hfile);
-    if (mc_rt_rows && mc_rt_filesize > mc_rt_sizeofelement*mc_rt_columns*mc_rt_rows)
-      mc_rt_nelements = mc_rt_columns*mc_rt_rows;
-    else mc_rt_nelements = (long)(mc_rt_filesize/mc_rt_sizeofelement);
-    if (!mc_rt_nelements || mc_rt_filesize <= *mc_rt_offset) return(0);
-    mc_rt_data    = (double*)malloc(mc_rt_nelements*mc_rt_sizeofelement);
-    if (!mc_rt_data) {
-      fprintf(stderr,"Error: allocating %ld elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
+    stat(File,&stfile);
+    filesize = stfile.st_size;
+    Table->filesize=filesize;
+    if (type && !strcmp(type,"double")) sizeofelement = sizeof(double);
+    else  sizeofelement = sizeof(float);
+    if (offset && *offset) fseek(hfile, *offset, SEEK_SET);
+    begin     = ftell(hfile);
+    if (rows && filesize > sizeofelement*columns*rows)
+      nelements = columns*rows;
+    else nelements = (long)(filesize/sizeofelement);
+    if (!nelements || filesize <= *offset) return(0);
+    data    = (double*)malloc(nelements*sizeofelement);
+    if (!data) {
+      fprintf(stderr,"Error: allocating %ld elements for %s file '%s'. Too big (Table_Read_Offset_Binary).\n", nelements, type, File);
       exit(-1);
     }
-    mc_rt_nelements = fread(mc_rt_data, mc_rt_sizeofelement, mc_rt_nelements, mc_rt_hfile);
+    nelements = fread(data, sizeofelement, nelements, hfile);
 
-    if (!mc_rt_data || !mc_rt_nelements)
+    if (!data || !nelements)
     {
-      fprintf(stderr,"Error: reading %ld elements from %s file '%s' (Table_Read_Offset_Binary)\n", mc_rt_nelements, mc_rt_type, mc_rt_File);
+      fprintf(stderr,"Error: reading %ld elements from %s file '%s' (Table_Read_Offset_Binary)\n", nelements, type, File);
       exit(-1);
     }
-    mc_rt_Table->begin   = mc_rt_begin;
-    mc_rt_Table->end     = ftell(mc_rt_hfile);
-    if (mc_rt_offset) *mc_rt_offset=mc_rt_Table->end;
-    fclose(mc_rt_hfile);
-    mc_rt_data = (double*)realloc(mc_rt_data, (double)mc_rt_nelements*mc_rt_sizeofelement);
+    Table->begin   = begin;
+    Table->end     = ftell(hfile);
+    if (offset) *offset=Table->end;
+    fclose(hfile);
+    data = (double*)realloc(data, (double)nelements*sizeofelement);
     /* copy file data into Table */
-    if (mc_rt_type && !strcmp(mc_rt_type,"double")) mc_rt_Table->data = mc_rt_data;
+    if (type && !strcmp(type,"double")) Table->data = data;
     else {
-      float  *mc_rt_s;
-      double *mc_rt_dataf;
-      mc_rt_s     = (float*)mc_rt_data;
-      mc_rt_dataf = (double*)malloc(sizeof(double)*mc_rt_nelements);
-      for (mc_rt_i=0; mc_rt_i<mc_rt_nelements; mc_rt_i++)
-        mc_rt_dataf[mc_rt_i]=mc_rt_s[mc_rt_i];
-      free(mc_rt_data);
-      mc_rt_Table->data = mc_rt_dataf;
+      float  *s;
+      double *dataf;
+      s     = (float*)data;
+      dataf = (double*)malloc(sizeof(double)*nelements);
+      for (i=0; i<nelements; i++)
+        dataf[i]=s[i];
+      free(data);
+      Table->data = dataf;
     }
-    strcpy(mc_rt_Table->filename, mc_rt_File);
-    mc_rt_Table->rows    = mc_rt_nelements/mc_rt_columns;
-    mc_rt_Table->columns = mc_rt_columns;
-    mc_rt_Table->array_length = 1;
-    mc_rt_Table->block_number = 1;
+    strcpy(Table->filename, File);
+    Table->rows    = nelements/columns;
+    Table->columns = columns;
+    Table->array_length = 1;
+    Table->block_number = 1;
 
-    Table_Stat(mc_rt_Table);
+    Table_Stat(Table);
 
-    return(mc_rt_nelements);
+    return(nelements);
   } /* end Table_Read_Offset_Binary */
 
 /*******************************************************************************
@@ -277,184 +277,184 @@
 * Data block should be a rectangular matrix or vector.
 * Data block may be rebined with Table_Rebin (also sort in ascending order)
 *******************************************************************************/
-  long Table_Read_Handle(t_Table *mc_rt_Table, FILE *mc_rt_hfile,
-                         long mc_rt_block_number, long mc_rt_max_lines)
+  long Table_Read_Handle(t_Table *Table, FILE *hfile,
+                         long block_number, long max_lines)
   { /* reads all/a data block from 'file' handle and returns a Table structure  */
-    double *mc_rt_Data;
-    char *mc_rt_Header;
-    long  mc_rt_malloc_size         = CHAR_BUF_LENGTH;
-    long  mc_rt_malloc_size_h       = 4096;
-    long  mc_rt_Rows = 0,   mc_rt_Columns = 0;
-    long  mc_rt_count_in_array      = 0;
-    long  mc_rt_count_in_header     = 0;
-    long  mc_rt_block_Current_index = 0;
-    char  mc_rt_flag_In_array       = 0;
-    char  mc_rt_flag_End_row_loop   = 0;
+    double *Data;
+    char *Header;
+    long  malloc_size         = CHAR_BUF_LENGTH;
+    long  malloc_size_h       = 4096;
+    long  Rows = 0,   Columns = 0;
+    long  count_in_array      = 0;
+    long  count_in_header     = 0;
+    long  block_Current_index = 0;
+    char  flag_In_array       = 0;
+    char  flag_End_row_loop   = 0;
 
-    if (!mc_rt_Table) return(-1);
-    Table_Init(mc_rt_Table, 0, 0);
+    if (!Table) return(-1);
+    Table_Init(Table, 0, 0);
 
-    if(!mc_rt_hfile) {
+    if(!hfile) {
        fprintf(stderr, "Error: File handle is NULL (Table_Read_Handle).\n");
        return (-1);
     }
-    mc_rt_Header = (char*)  malloc(mc_rt_malloc_size_h*sizeof(char));
-    mc_rt_Data   = (double*)malloc(mc_rt_malloc_size  *sizeof(double));
-    if ((mc_rt_Header == NULL) || (mc_rt_Data == NULL)) {
+    Header = (char*)  malloc(malloc_size_h*sizeof(char));
+    Data   = (double*)malloc(malloc_size  *sizeof(double));
+    if ((Header == NULL) || (Data == NULL)) {
        fprintf(stderr, "Error: Could not allocate Table and Header (Table_Read_Handle).\n");
        return (-1);
     }
-    mc_rt_Header[0] = '\0';
+    Header[0] = '\0';
 
-    do { /* while (!mc_rt_flag_End_row_loop) */
-      char  mc_rt_line[64*CHAR_BUF_LENGTH];
-      long  mc_rt_back_pos=0;   /* ftell start of line */
+    do { /* while (!flag_End_row_loop) */
+      char  line[64*CHAR_BUF_LENGTH];
+      long  back_pos=0;   /* ftell start of line */
 
-      mc_rt_back_pos = ftell(mc_rt_hfile);
-      if (fgets(mc_rt_line, 64*CHAR_BUF_LENGTH, mc_rt_hfile) != NULL) { /* analyse line */
-        int mc_rt_i=0;
-        char  mc_rt_flag_Store_into_header=0;
+      back_pos = ftell(hfile);
+      if (fgets(line, 64*CHAR_BUF_LENGTH, hfile) != NULL) { /* analyse line */
+        int i=0;
+        char  flag_Store_into_header=0;
         /* first skip blank and tabulation characters */
-        while (mc_rt_line[mc_rt_i] == ' ' || mc_rt_line[mc_rt_i] == '\t') mc_rt_i++;
+        while (line[i] == ' ' || line[i] == '\t') i++;
         /* handle comments: stored in header */
-        if ((mc_rt_line[mc_rt_i] == '#') || (mc_rt_line[mc_rt_i] == '%')
-        || (mc_rt_line[mc_rt_i] == ';') || (mc_rt_line[mc_rt_i] == '/'))
+        if ((line[i] == '#') || (line[i] == '%')
+        || (line[i] == ';') || (line[i] == '/'))
         { /* line is a comment */
-          mc_rt_flag_Store_into_header=1;
-          mc_rt_flag_In_array = 0;
+          flag_Store_into_header=1;
+          flag_In_array = 0;
         } else {
-          double mc_rt_X;
+          double X;
 
           /* get the number of columns splitting line with strtok */
-          if (sscanf(mc_rt_line,"%lg ",&mc_rt_X) == 1)
+          if (sscanf(line,"%lg ",&X) == 1)
           { /* line begins at least with one num */
-            char  *mc_rt_InputTokens, *mc_rt_lexeme;
-            char   mc_rt_flag_End_Line= 0;
-            long   mc_rt_block_Num_Columns     = 0;
+            char  *InputTokens, *lexeme;
+            char   flag_End_Line= 0;
+            long   block_Num_Columns     = 0;
 
-            mc_rt_InputTokens            = mc_rt_line;
+            InputTokens            = line;
 
-            do { /* while (!mc_rt_flag_End_Line) */
-              mc_rt_lexeme      = (char *)strtok(mc_rt_InputTokens, " ,;\t\n");
-              mc_rt_InputTokens = NULL;
-              if ((mc_rt_lexeme != NULL) && (strlen(mc_rt_lexeme) != 0))
+            do { /* while (!flag_End_Line) */
+              lexeme      = (char *)strtok(InputTokens, " ,;\t\n");
+              InputTokens = NULL;
+              if ((lexeme != NULL) && (strlen(lexeme) != 0))
               { /* reading line: the token is not empty */
-                if (sscanf(mc_rt_lexeme,"%lg ",&mc_rt_X) == 1)
+                if (sscanf(lexeme,"%lg ",&X) == 1)
                 { /* reading line: the token is a number in the line */
-                  if (!mc_rt_flag_In_array)
+                  if (!flag_In_array)
                   { /* reading num: not already in a block: starts a new data block */
-                    mc_rt_block_Current_index++;
-                    mc_rt_flag_In_array    = 1;
-                    mc_rt_block_Num_Columns= 0;
-                    if (mc_rt_block_number)
+                    block_Current_index++;
+                    flag_In_array    = 1;
+                    block_Num_Columns= 0;
+                    if (block_number)
                     { /* initialise a new data block */
-                      mc_rt_Rows = 0;
-                      mc_rt_count_in_array = 0;
+                      Rows = 0;
+                      count_in_array = 0;
                     } /* else append */
                   }
                   /* reading num: all blocks or selected block */
-                  if ( mc_rt_flag_In_array &&  ((mc_rt_block_number == 0) || (mc_rt_block_number == mc_rt_block_Current_index)) )
+                  if ( flag_In_array &&  ((block_number == 0) || (block_number == block_Current_index)) )
                   {
                     /* starting block: already the desired number of rows ? */
-                    if (mc_rt_block_Num_Columns == 0
-                      && mc_rt_max_lines && mc_rt_Rows >= mc_rt_max_lines) {
-                      mc_rt_flag_End_Line      = 1;
-                      mc_rt_flag_End_row_loop  = 1;
-                      mc_rt_flag_In_array      = 0;
+                    if (block_Num_Columns == 0
+                      && max_lines && Rows >= max_lines) {
+                      flag_End_Line      = 1;
+                      flag_End_row_loop  = 1;
+                      flag_In_array      = 0;
                       /* reposition to begining of line (ignore line) */
-                      fseek(mc_rt_hfile, mc_rt_back_pos, SEEK_SET);
+                      fseek(hfile, back_pos, SEEK_SET);
                     } else { /* store into data array */
-                      if (mc_rt_count_in_array >= mc_rt_malloc_size)
+                      if (count_in_array >= malloc_size)
                       { /* realloc data buffer if necessary */
-                        mc_rt_malloc_size = mc_rt_count_in_array+CHAR_BUF_LENGTH;
-                        mc_rt_Data     = (double*)realloc(mc_rt_Data, mc_rt_malloc_size*sizeof(double));
-                        if (mc_rt_Data == NULL)
+                        malloc_size = count_in_array+CHAR_BUF_LENGTH;
+                        Data     = (double*)realloc(Data, malloc_size*sizeof(double));
+                        if (Data == NULL)
                         {
-                          fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n", mc_rt_malloc_size*sizeof(double));
+                          fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Handle).\n", malloc_size*sizeof(double));
                           return (-1);
                         }
                       }
-                      if (mc_rt_block_Num_Columns == 0) mc_rt_Rows++;
-                      mc_rt_Data[mc_rt_count_in_array] = mc_rt_X;
-                      mc_rt_count_in_array++;
-                      mc_rt_block_Num_Columns++;
+                      if (block_Num_Columns == 0) Rows++;
+                      Data[count_in_array] = X;
+                      count_in_array++;
+                      block_Num_Columns++;
                     }
-                  } /* reading num: end if mc_rt_flag_In_array */
+                  } /* reading num: end if flag_In_array */
                   else
                   { /* reading num: passed selected block */
-                    if (mc_rt_block_number < mc_rt_block_Current_index)
+                    if (block_number < block_Current_index)
                     { /* we finished to extract block -> force end of file reading */
-                      mc_rt_flag_End_Line      = 1;
-                      mc_rt_flag_End_row_loop  = 1;
-                      mc_rt_flag_In_array  = 0;
+                      flag_End_Line      = 1;
+                      flag_End_row_loop  = 1;
+                      flag_In_array  = 0;
                     }
                     /* else (if read all blocks) continue */
                   }
-                } /* end reading num: end if sscanf mc_rt_lexeme -> numerical */
+                } /* end reading num: end if sscanf lexeme -> numerical */
                 else
                 { /* reading line: the token is not numerical in that line. end block */
-                  mc_rt_flag_End_Line = 1;
-                  mc_rt_flag_In_array = 0;
+                  flag_End_Line = 1;
+                  flag_In_array = 0;
                 }
               }
               else
-              { /* no more tokens in mc_rt_line */
-                mc_rt_flag_End_Line = 1;
-                if (mc_rt_block_Num_Columns) mc_rt_Columns = mc_rt_block_Num_Columns;
+              { /* no more tokens in line */
+                flag_End_Line = 1;
+                if (block_Num_Columns) Columns = block_Num_Columns;
               }
-            } while (!mc_rt_flag_End_Line); /* end while mc_rt_flag_End_Line */
+            } while (!flag_End_Line); /* end while flag_End_Line */
           }
           else
           { /* ascii line: does not begin with a number: ignore line */
-            mc_rt_flag_In_array          = 0;
-            mc_rt_flag_Store_into_header = 1;
+            flag_In_array          = 0;
+            flag_Store_into_header = 1;
           }
         } /* end: if not line comment else numerical */
-        if (mc_rt_flag_Store_into_header) { /* add line into header */
-          mc_rt_count_in_header += strlen(mc_rt_line);
-          if (mc_rt_count_in_header+4096 > mc_rt_malloc_size_h)
+        if (flag_Store_into_header) { /* add line into header */
+          count_in_header += strlen(line);
+          if (count_in_header+4096 > malloc_size_h)
           { /* if succeed and in array : add (and realloc if necessary) */
-            mc_rt_malloc_size_h = mc_rt_count_in_header+4096;
-            mc_rt_Header     = (char*)realloc(mc_rt_Header, mc_rt_malloc_size_h*sizeof(char));
+            malloc_size_h = count_in_header+4096;
+            Header     = (char*)realloc(Header, malloc_size_h*sizeof(char));
           }
-          strncat(mc_rt_Header, mc_rt_line, 4096);
-          mc_rt_flag_In_array  = 0; /* will start a new data block */
+          strncat(Header, line, 4096);
+          flag_In_array  = 0; /* will start a new data block */
           /* exit line and file if passed desired block */
-          if (mc_rt_block_number && mc_rt_block_number == mc_rt_block_Current_index) {
-            mc_rt_flag_End_row_loop  = 1;
+          if (block_number && block_number == block_Current_index) {
+            flag_End_row_loop  = 1;
 
           }
         }
       } /* end: if fgets */
-      else mc_rt_flag_End_row_loop = 1; /* else fgets : end of file */
-    } while (!mc_rt_flag_End_row_loop); /* end while mc_rt_flag_End_row_loop */
+      else flag_End_row_loop = 1; /* else fgets : end of file */
+    } while (!flag_End_row_loop); /* end while flag_End_row_loop */
 
-    mc_rt_Table->block_number = mc_rt_block_number;
-    mc_rt_Table->array_length = 1;
-    if (mc_rt_count_in_header) mc_rt_Header    = (char*)realloc(mc_rt_Header, mc_rt_count_in_header*sizeof(char));
-    mc_rt_Table->header       = mc_rt_Header;
-    if (mc_rt_count_in_array*mc_rt_Rows*mc_rt_Columns == 0)
+    Table->block_number = block_number;
+    Table->array_length = 1;
+    if (count_in_header) Header    = (char*)realloc(Header, count_in_header*sizeof(char));
+    Table->header       = Header;
+    if (count_in_array*Rows*Columns == 0)
     {
-      mc_rt_Table->rows         = 0;
-      mc_rt_Table->columns      = 0;
-      free(mc_rt_Data);
+      Table->rows         = 0;
+      Table->columns      = 0;
+      free(Data);
       return (0);
     }
-    if (mc_rt_Rows * mc_rt_Columns != mc_rt_count_in_array)
+    if (Rows * Columns != count_in_array)
     {
       fprintf(stderr, "Warning: Read_Table :%s %s Data has %li values that should be %li x %li\n",
-        (mc_rt_Table->filename ? mc_rt_Table->filename : ""),
-        (!mc_rt_block_number ? " catenated" : ""),
-        mc_rt_count_in_array, mc_rt_Rows, mc_rt_Columns);
-      mc_rt_Columns = mc_rt_count_in_array; mc_rt_Rows = 1;
+        (Table->filename ? Table->filename : ""),
+        (!block_number ? " catenated" : ""),
+        count_in_array, Rows, Columns);
+      Columns = count_in_array; Rows = 1;
     }
-    mc_rt_Data     = (double*)realloc(mc_rt_Data, mc_rt_count_in_array*sizeof(double));
-    mc_rt_Table->data         = mc_rt_Data;
-    mc_rt_Table->rows         = mc_rt_Rows;
-    mc_rt_Table->columns      = mc_rt_Columns;
+    Data     = (double*)realloc(Data, count_in_array*sizeof(double));
+    Table->data         = Data;
+    Table->rows         = Rows;
+    Table->columns      = Columns;
 
-    Table_Stat(mc_rt_Table);
-    return (mc_rt_count_in_array);
+    Table_Stat(Table);
+    return (count_in_array);
 
   } /* end Table_Read_Handle */
 
@@ -466,45 +466,45 @@
 *   return  updated Table with increasing, evenly spaced first column (index 0)
 *           number of data elements (-1: error, 0:empty data)
 *******************************************************************************/
-  long Table_Rebin(t_Table *mc_rt_Table)
+  long Table_Rebin(t_Table *Table)
   {
-    double mc_rt_new_step=0;
-    long   mc_rt_i;
+    double new_step=0;
+    long   i;
     /* performs linear interpolation on X axis (0-th column) */
 
-    if (!mc_rt_Table) return(-1);
-    if (!mc_rt_Table->data
-    || mc_rt_Table->rows*mc_rt_Table->columns == 0 || !mc_rt_Table->step_x)
+    if (!Table) return(-1);
+    if (!Table->data
+    || Table->rows*Table->columns == 0 || !Table->step_x)
       return(0);
-    Table_Stat(mc_rt_Table); /* recompute statitstics and minimal step */
-    mc_rt_new_step = mc_rt_Table->step_x; /* minimal step in 1st column */
+    Table_Stat(Table); /* recompute statitstics and minimal step */
+    new_step = Table->step_x; /* minimal step in 1st column */
 
-    if (mc_rt_Table->constantstep) /* already evenly spaced */
-      return (mc_rt_Table->rows*mc_rt_Table->columns);
+    if (Table->constantstep) /* already evenly spaced */
+      return (Table->rows*Table->columns);
     else {
-      long mc_rt_Length_Table;
-      double *mc_rt_New_Table;
+      long Length_Table;
+      double *New_Table;
 
-      mc_rt_Length_Table = ceil(fabs(mc_rt_Table->max_x - mc_rt_Table->min_x)/mc_rt_new_step);
-      mc_rt_New_Table    = (double*)malloc(mc_rt_Length_Table*mc_rt_Table->columns*sizeof(double));
+      Length_Table = ceil(fabs(Table->max_x - Table->min_x)/new_step);
+      New_Table    = (double*)malloc(Length_Table*Table->columns*sizeof(double));
 
-      for (mc_rt_i=0; mc_rt_i < mc_rt_Length_Table; mc_rt_i++)
+      for (i=0; i < Length_Table; i++)
       {
-        long   mc_rt_j;
-        double mc_rt_X;
-        mc_rt_X = mc_rt_Table->min_x + mc_rt_i*mc_rt_new_step;
-        mc_rt_New_Table[mc_rt_i*mc_rt_Table->columns] = mc_rt_X;
-        for (mc_rt_j=1; mc_rt_j < mc_rt_Table->columns; mc_rt_j++)
-          mc_rt_New_Table[mc_rt_i*mc_rt_Table->columns+mc_rt_j]
-                = Table_Value(*mc_rt_Table, mc_rt_X, mc_rt_j);
-      } /* end for mc_rt_i */
+        long   j;
+        double X;
+        X = Table->min_x + i*new_step;
+        New_Table[i*Table->columns] = X;
+        for (j=1; j < Table->columns; j++)
+          New_Table[i*Table->columns+j]
+                = Table_Value(*Table, X, j);
+      } /* end for i */
 
-      mc_rt_Table->rows = mc_rt_Length_Table;
-      mc_rt_Table->step_x = mc_rt_new_step;
-      free(mc_rt_Table->data);
-      mc_rt_Table->data = mc_rt_New_Table;
+      Table->rows = Length_Table;
+      Table->step_x = new_step;
+      free(Table->data);
+      Table->data = New_Table;
     } /* end else (!constantstep) */
-    return (mc_rt_Table->rows*mc_rt_Table->columns);
+    return (Table->rows*Table->columns);
   } /* end Rebin_Table */
 
 /*******************************************************************************
@@ -517,25 +517,25 @@
 * Returns Value from the i-th row, j-th column of Table
 * Tests are performed on indexes i,j to avoid errors
 *******************************************************************************/
-  double Table_Index(t_Table mc_rt_Table, long mc_rt_i, long mc_rt_j)
+  double Table_Index(t_Table Table, long i, long j)
   {
-    long mc_rt_AbsIndex;
+    long AbsIndex;
 
-    if (mc_rt_i < 0)        mc_rt_i = 0;
-    if (mc_rt_j < 0)        mc_rt_j = 0;
+    if (i < 0)        i = 0;
+    if (j < 0)        j = 0;
     /* handle vectors specifically */
-    if (mc_rt_Table.columns == 1 || mc_rt_Table.rows == 1) {
-      mc_rt_AbsIndex = mc_rt_i+mc_rt_j;
+    if (Table.columns == 1 || Table.rows == 1) {
+      AbsIndex = i+j;
     } else {
-      if (mc_rt_i >= mc_rt_Table.rows)    mc_rt_i = mc_rt_Table.rows-1;
-      if (mc_rt_j >= mc_rt_Table.columns) mc_rt_j = mc_rt_Table.columns-1;
-      mc_rt_AbsIndex = mc_rt_i*(mc_rt_Table.columns)+mc_rt_j;
+      if (i >= Table.rows)    i = Table.rows-1;
+      if (j >= Table.columns) j = Table.columns-1;
+      AbsIndex = i*(Table.columns)+j;
     }
-    if (mc_rt_AbsIndex >= mc_rt_Table.rows*mc_rt_Table.columns)
-      mc_rt_AbsIndex = mc_rt_Table.rows*mc_rt_Table.columns-1;
-    else if (mc_rt_AbsIndex < 0) mc_rt_AbsIndex=0;
-    if (mc_rt_Table.data != NULL)
-      return(mc_rt_Table.data[mc_rt_AbsIndex]);
+    if (AbsIndex >= Table.rows*Table.columns)
+      AbsIndex = Table.rows*Table.columns-1;
+    else if (AbsIndex < 0) AbsIndex=0;
+    if (Table.data != NULL)
+      return(Table.data[AbsIndex]);
     else
       return(0);
   } /* end Table_Index */
@@ -544,24 +544,24 @@
 * void Table_SetElement(t_Table *Table, long i, long j, double value)
 *   ACTION: set an element [i,j] of a single Table
 *   input   Table: table containing data
-*           i : index of row      (0:mc_rt_Rows-1)
+*           i : index of row      (0:Rows-1)
 *           j : index of column   (0:Columns-1)
 *           value = data[i][j]
 * Returns 0 in case of error
 * Tests are performed on indexes i,j to avoid errors
 *******************************************************************************/
-  int Table_SetElement(t_Table *mc_rt_Table, long mc_rt_i, long mc_rt_j,
-                        double mc_rt_value)
+  int Table_SetElement(t_Table *Table, long i, long j,
+                        double value)
   {
-    long mc_rt_AbsIndex;
+    long AbsIndex;
 
-    if (mc_rt_i < 0)        mc_rt_i = 0;
-    if (mc_rt_i >= mc_rt_Table->rows)    mc_rt_i = mc_rt_Table->rows-1;
-    if (mc_rt_j < 0)        mc_rt_j = 0;
-    if (mc_rt_j >= mc_rt_Table->columns) mc_rt_j = mc_rt_Table->columns-1;
-    mc_rt_AbsIndex = mc_rt_i*(mc_rt_Table->columns)+mc_rt_j;
-    if (mc_rt_Table->data != NULL)
-      mc_rt_Table->data[mc_rt_AbsIndex] = mc_rt_value;
+    if (i < 0)        i = 0;
+    if (i >= Table->rows)    i = Table->rows-1;
+    if (j < 0)        j = 0;
+    if (j >= Table->columns) j = Table->columns-1;
+    AbsIndex = i*(Table->columns)+j;
+    if (Table->data != NULL)
+      Table->data[AbsIndex] = value;
     else return(0);
     return(1);
   } /* end Table_SetElement */
@@ -578,37 +578,37 @@
 * Tests are performed (within Table_Index) on indexes i,j to avoid errors
 * NOTE: data should rather be monotonic, and evenly sampled.
 *******************************************************************************/
-  double Table_Value(t_Table mc_rt_Table, double X, long j)
+  double Table_Value(t_Table Table, double X, long j)
   {
-    long   mc_rt_Index;
-    double mc_rt_X1=0, mc_rt_Y1=0, mc_rt_X2=0, mc_rt_Y2=0;
+    long   Index;
+    double X1=0, Y1=0, X2=0, Y2=0;
     double ret=0;
 
-    if (X > mc_rt_Table.max_x) return Table_Index(mc_rt_Table,mc_rt_Table.rows-1  ,j);
-    if (X < mc_rt_Table.min_x) return Table_Index(mc_rt_Table,0  ,j);
+    if (X > Table.max_x) return Table_Index(Table,Table.rows-1  ,j);
+    if (X < Table.min_x) return Table_Index(Table,0  ,j);
 
-    if (!mc_rt_Table.constantstep)
-      /* look for index surrounding X in the table -> mc_rt_Index */
-      for (mc_rt_Index=1; mc_rt_Index < mc_rt_Table.rows-1; mc_rt_Index++)
+    if (!Table.constantstep)
+      /* look for index surrounding X in the table -> Index */
+      for (Index=1; Index < Table.rows-1; Index++)
       {
-        mc_rt_X2 = Table_Index(mc_rt_Table, mc_rt_Index  ,0);
-        mc_rt_X1 = Table_Index(mc_rt_Table, mc_rt_Index-1,0);
-        if ((mc_rt_X1 <= X) && (X < mc_rt_X2)) break;
-      } /* end for mc_rt_Index */
+        X2 = Table_Index(Table, Index  ,0);
+        X1 = Table_Index(Table, Index-1,0);
+        if ((X1 <= X) && (X < X2)) break;
+      } /* end for Index */
     else {
-        mc_rt_Index = (long)floor((X - mc_rt_Table.min_x)
-                          /(mc_rt_Table.max_x - mc_rt_Table.min_x)
-                           *mc_rt_Table.rows);
-        mc_rt_X1 = Table_Index(mc_rt_Table,mc_rt_Index  ,0);
-        mc_rt_X2 = Table_Index(mc_rt_Table,mc_rt_Index+1,0);
+        Index = (long)floor((X - Table.min_x)
+                          /(Table.max_x - Table.min_x)
+                           *Table.rows);
+        X1 = Table_Index(Table,Index  ,0);
+        X2 = Table_Index(Table,Index+1,0);
     }
-    mc_rt_Y2 = Table_Index(mc_rt_Table,mc_rt_Index  ,j);
-    mc_rt_Y1 = Table_Index(mc_rt_Table,mc_rt_Index-1,j);
+    Y2 = Table_Index(Table,Index  ,j);
+    Y1 = Table_Index(Table,Index-1,j);
 
-    if (!strcmp(mc_rt_Table.method,"linear"))
-      ret = Table_Interp1d(X, mc_rt_X1,mc_rt_Y1, mc_rt_X2,mc_rt_Y2);
-    else if (!strcmp(mc_rt_Table.method,"nearest"))
-      ret = Table_Interp1d_nearest(X, mc_rt_X1,mc_rt_Y1, mc_rt_X2,mc_rt_Y2);
+    if (!strcmp(Table.method,"linear"))
+      ret = Table_Interp1d(X, X1,Y1, X2,Y2);
+    else if (!strcmp(Table.method,"nearest"))
+      ret = Table_Interp1d_nearest(X, X1,Y1, X2,Y2);
 
     return (ret);
   } /* end Table_Value */
@@ -657,50 +657,51 @@
 *   ACTION: free a single Table
 *   return: empty Table
 *******************************************************************************/
-  void Table_Free(t_Table *mc_rt_Table)
+  void Table_Free(t_Table *Table)
   {
-    if (!mc_rt_Table) return;
-    if (mc_rt_Table->data   != NULL) free(mc_rt_Table->data);
-    if (mc_rt_Table->header != NULL) free(mc_rt_Table->header);
-    mc_rt_Table->data   = NULL;
-    mc_rt_Table->header = NULL;
+    if (!Table) return;
+    if (Table->data   != NULL) free(Table->data);
+    if (Table->header != NULL) free(Table->header);
+    Table->data   = NULL;
+    Table->header = NULL;
   } /* end Table_Free */
 
 /******************************************************************************
 * void Table_Info(t_Table Table)
 *    ACTION: print informations about a single Table
 *******************************************************************************/
-  long Table_Info(t_Table mc_rt_Table)
+  long Table_Info(t_Table Table)
   {
-    char mc_rt_buffer[256];
+    char buffer[256];
     long ret=0;
 
-    if (!mc_rt_Table.block_number) strcpy(mc_rt_buffer, "catenated");
-    else sprintf(mc_rt_buffer, "block %li", mc_rt_Table.block_number);
-    printf("Table from file '%s' (%s)", mc_rt_Table.filename, mc_rt_buffer);
-    if ((mc_rt_Table.data   != NULL) && (mc_rt_Table.rows*mc_rt_Table.columns))
+    if (!Table.block_number) strcpy(buffer, "catenated");
+    else sprintf(buffer, "block %li", Table.block_number);
+    printf("Table from file '%s' (%s)", 
+      Table.filename && strlen(Table.filename) ? Table.filename : "", buffer);
+    if ((Table.data != NULL) && (Table.rows*Table.columns))
     {
-      printf(" is %li x %li ", mc_rt_Table.rows, mc_rt_Table.columns);
-      if (mc_rt_Table.rows*mc_rt_Table.columns > 1)
-        printf("(x=%g:%g)", mc_rt_Table.min_x, mc_rt_Table.max_x);
-      else printf("(x=%g) ", mc_rt_Table.min_x);
-      ret = mc_rt_Table.rows*mc_rt_Table.columns;
-      if (mc_rt_Table.monotonic)    printf(", monotonic");
-      if (mc_rt_Table.constantstep) printf(", constant step");
-      printf(". interpolation: %s\n", mc_rt_Table.method);
+      printf(" is %li x %li ", Table.rows, Table.columns);
+      if (Table.rows*Table.columns > 1)
+        printf("(x=%g:%g)", Table.min_x, Table.max_x);
+      else printf("(x=%g) ", Table.min_x);
+      ret = Table.rows*Table.columns;
+      if (Table.monotonic)    printf(", monotonic");
+      if (Table.constantstep) printf(", constant step");
+      printf(". interpolation: %s\n", Table.method);
     }
     else printf(" is empty.\n");
 
-    if (mc_rt_Table.header && strlen(mc_rt_Table.header)) {
+    if (Table.header && strlen(Table.header)) {
       char *header;
       int  i;
       header = malloc(80);
       if (!header) return(ret);
       for (i=0; i<80; header[i++]=0);
-      if (strlen(mc_rt_Table.header) > 75) {
-        strncpy(header, mc_rt_Table.header, 75-5);
+      strncpy(header, Table.header, 75);
+      if (strlen(Table.header) > 75) {
         strcat( header, " ...");
-      } else strcpy(header, mc_rt_Table.header);
+      }
       for (i=0; i<strlen(header); i++)
         if (header[i] == '\n' || header[i] == '\r') header[i] = ';';
       printf("  '%s'\n", header);
@@ -714,40 +715,40 @@
 *   ACTION: initialise a Table to empty m by n table
 *   return: empty Table
 ******************************************************************************/
-long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
+long Table_Init(t_Table *Table, long rows, long columns)
 {
-  double *mc_rt_data=NULL;
+  double *data=NULL;
   long   i;
 
-  if (!mc_rt_Table) return(0);
+  if (!Table) return(0);
 
-  mc_rt_Table->header  = NULL;
-  mc_rt_Table->filename[0]= '\0';
-  mc_rt_Table->filesize= 0;
-  mc_rt_Table->min_x   = 0;
-  mc_rt_Table->max_x   = 0;
-  mc_rt_Table->step_x  = 0;
-  mc_rt_Table->block_number = 0;
-  mc_rt_Table->array_length = 0;
-  mc_rt_Table->monotonic    = 0;
-  mc_rt_Table->constantstep = 0;
-  mc_rt_Table->begin   = 0;
-  mc_rt_Table->end     = 0;
-  strcpy(mc_rt_Table->method,"linear");
+  Table->header  = NULL;
+  Table->filename[0]= '\0';
+  Table->filesize= 0;
+  Table->min_x   = 0;
+  Table->max_x   = 0;
+  Table->step_x  = 0;
+  Table->block_number = 0;
+  Table->array_length = 0;
+  Table->monotonic    = 0;
+  Table->constantstep = 0;
+  Table->begin   = 0;
+  Table->end     = 0;
+  strcpy(Table->method,"linear");
 
   if (rows*columns >= 1) {
-    mc_rt_data    = (double*)malloc(rows*columns*sizeof(double));
-    if (mc_rt_data) for (i=0; i < rows*columns; mc_rt_data[i++]=0);
+    data    = (double*)malloc(rows*columns*sizeof(double));
+    if (data) for (i=0; i < rows*columns; data[i++]=0);
     else {
       fprintf(stderr,"Error: allocating %ld double elements."
                      "Too big (Table_Init).\n", rows*columns);
       rows = columns = 0;
     }
   }
-  mc_rt_Table->rows    = (rows >= 1 ? rows : 0);
-  mc_rt_Table->columns = (columns >= 1 ? columns : 0);
-  mc_rt_Table->data    = mc_rt_data;
-  return(mc_rt_Table->rows*mc_rt_Table->columns);
+  Table->rows    = (rows >= 1 ? rows : 0);
+  Table->columns = (columns >= 1 ? columns : 0);
+  Table->data    = data;
+  return(Table->rows*Table->columns);
 } /* end Table_Init */
 
 
@@ -756,64 +757,64 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 *   ACTION: computes min/max/mean step of 1st column for a single table (private)
 *   return: updated Table
 *******************************************************************************/
-  static void Table_Stat(t_Table *mc_rt_Table)
+  static void Table_Stat(t_Table *Table)
   {
-    long   mc_rt_i;
-    double mc_rt_max_x, mc_rt_min_x;
-    double mc_rt_row=1;
-    char   mc_rt_monotonic=1;
-    char   mc_rt_constantstep=1;
-    double mc_rt_step=0;
-    double mc_rt_n;
+    long   i;
+    double max_x, min_x;
+    double row=1;
+    char   monotonic=1;
+    char   constantstep=1;
+    double step=0;
+    double n;
 
-    if (!mc_rt_Table) return;
-    if (!mc_rt_Table->rows || !mc_rt_Table->columns) return;
-    if (mc_rt_Table->rows == 1) mc_rt_row=0;
-    mc_rt_max_x = -FLT_MAX;
-    mc_rt_min_x =  FLT_MAX;
-    mc_rt_n     = (mc_rt_row ? mc_rt_Table->rows : mc_rt_Table->columns);
+    if (!Table) return;
+    if (!Table->rows || !Table->columns) return;
+    if (Table->rows == 1) row=0;
+    max_x = -FLT_MAX;
+    min_x =  FLT_MAX;
+    n     = (row ? Table->rows : Table->columns);
 
     /* get min and max of first column/vector */
-    for (mc_rt_i=0; mc_rt_i < mc_rt_n; mc_rt_i++)
+    for (i=0; i < n; i++)
     {
-      double mc_rt_X;
-      mc_rt_X = (mc_rt_row ? Table_Index(*mc_rt_Table,mc_rt_i  ,0)
-                               : Table_Index(*mc_rt_Table,0, mc_rt_i));
-      if (mc_rt_X < mc_rt_min_x) mc_rt_min_x = mc_rt_X;
-      if (mc_rt_X > mc_rt_max_x) mc_rt_max_x = mc_rt_X;
+      double X;
+      X = (row ? Table_Index(*Table,i  ,0)
+                               : Table_Index(*Table,0, i));
+      if (X < min_x) min_x = X;
+      if (X > max_x) max_x = X;
     } /* for */
-    if (mc_rt_n > 1) {
+    if (n > 1) {
       /* mean step */
-      mc_rt_step = (mc_rt_max_x - mc_rt_min_x)/(mc_rt_n-1);
+      step = (max_x - min_x)/(n-1);
       /* now test if table is monotonic on first column, and get minimal step size */
-      for (mc_rt_i=0; mc_rt_i < mc_rt_n-1; mc_rt_i++) {
-        double mc_rt_X, mc_rt_diff;;
-        mc_rt_X = (mc_rt_row ? Table_Index(*mc_rt_Table,mc_rt_i  ,0)
-                            : Table_Index(*mc_rt_Table,0, mc_rt_i));
-        mc_rt_diff         = Table_Index(*mc_rt_Table,mc_rt_i+1,0) - mc_rt_X;
-        if (fabs(mc_rt_diff) < fabs(mc_rt_step)) mc_rt_step = mc_rt_diff;
+      for (i=0; i < n-1; i++) {
+        double X, diff;;
+        X = (row ? Table_Index(*Table,i  ,0)
+                            : Table_Index(*Table,0, i));
+        diff         = Table_Index(*Table,i+1,0) - X;
+        if (fabs(diff) < fabs(step)) step = diff;
         /* change sign ? */
-        if ((mc_rt_Table->max_x - mc_rt_Table->min_x)*mc_rt_diff < 0 && mc_rt_monotonic)
-          mc_rt_monotonic = 0;
+        if ((Table->max_x - Table->min_x)*diff < 0 && monotonic)
+          monotonic = 0;
       } /* end for */
       /* now test if steps are constant within READ_TABLE_STEPTOL */
-      if (mc_rt_monotonic) {
-      for (mc_rt_i=0; mc_rt_i < mc_rt_n-1; mc_rt_i++) {
-        double mc_rt_X, mc_rt_diff;
-        mc_rt_X = (mc_rt_row ? Table_Index(*mc_rt_Table,mc_rt_i  ,0)
-                            : Table_Index(*mc_rt_Table,0, mc_rt_i));
-        mc_rt_diff         = Table_Index(*mc_rt_Table,mc_rt_i+1,0) - mc_rt_X;
-        if ( !(fabs(mc_rt_step)*(1-READ_TABLE_STEPTOL) < fabs(mc_rt_diff)
-               && fabs(mc_rt_diff) < fabs(mc_rt_step)*(1+READ_TABLE_STEPTOL)) )
-        { mc_rt_constantstep = 0; break; }
+      if (monotonic) {
+      for (i=0; i < n-1; i++) {
+        double X, diff;
+        X = (row ? Table_Index(*Table,i  ,0)
+                            : Table_Index(*Table,0, i));
+        diff         = Table_Index(*Table,i+1,0) - X;
+        if ( !(fabs(step)*(1-READ_TABLE_STEPTOL) < fabs(diff)
+               && fabs(diff) < fabs(step)*(1+READ_TABLE_STEPTOL)) )
+        { constantstep = 0; break; }
       }
 }
     }
-    mc_rt_Table->step_x= mc_rt_step;
-    mc_rt_Table->max_x = mc_rt_max_x;
-    mc_rt_Table->min_x = mc_rt_min_x;
-    mc_rt_Table->monotonic = mc_rt_monotonic;
-    mc_rt_Table->constantstep = mc_rt_constantstep;
+    Table->step_x= step;
+    Table->max_x = max_x;
+    Table->min_x = min_x;
+    Table->monotonic = monotonic;
+    Table->constantstep = constantstep;
   } /* end Table_Stat */
 
 /******************************************************************************
@@ -822,72 +823,72 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 *   return: initialized t_Table array, last element is an empty Table.
 *           the number of extracted blocks in non NULL pointer *blocks
 *******************************************************************************/
-  t_Table *Table_Read_Array(char *mc_rt_File, long *mc_rt_blocks)
+  t_Table *Table_Read_Array(char *File, long *blocks)
   {
-    t_Table *mc_rt_Table_Array=NULL;
-    long mc_rt_offset=0;
-    long mc_rt_block_number=0;
-    long mc_rt_allocated=256;
-    long mc_rt_nelements=1;
+    t_Table *Table_Array=NULL;
+    long offset=0;
+    long block_number=0;
+    long allocated=256;
+    long nelements=1;
 
     /* fisrt allocate an initial empty t_Table array */
-    mc_rt_Table_Array = (t_Table *)malloc(mc_rt_allocated*sizeof(t_Table));
-    if (!mc_rt_Table_Array) {
+    Table_Array = (t_Table *)malloc(allocated*sizeof(t_Table));
+    if (!Table_Array) {
       fprintf(stderr, "Error: Can not allocate memory %li (Table_Read_Array).\n",
-         mc_rt_allocated*sizeof(t_Table));
-      *mc_rt_blocks = 0;
+         allocated*sizeof(t_Table));
+      *blocks = 0;
       return (NULL);
     }
 
-    while (mc_rt_nelements > 0)
+    while (nelements > 0)
     {
-      t_Table mc_rt_Table;
+      t_Table Table;
 
-      /* access file at mc_rt_offset and get following block */
-      mc_rt_nelements = Table_Read_Offset(&mc_rt_Table, mc_rt_File, 1,
-      &mc_rt_offset,0);
+      /* access file at offset and get following block */
+      nelements = Table_Read_Offset(&Table, File, 1,
+      &offset,0);
       /* if ok, set t_Table block number else exit loop */
-      mc_rt_block_number++;
-      mc_rt_Table.block_number = mc_rt_block_number;
+      block_number++;
+      Table.block_number = block_number;
       /* if t_Table array is not long enough, expand and realocate */
-      if (mc_rt_block_number >= mc_rt_allocated-1) {
-        mc_rt_allocated += 256;
-        mc_rt_Table_Array = (t_Table *)realloc(mc_rt_Table_Array,
-           mc_rt_allocated*sizeof(t_Table));
-        if (!mc_rt_Table_Array) {
+      if (block_number >= allocated-1) {
+        allocated += 256;
+        Table_Array = (t_Table *)realloc(Table_Array,
+           allocated*sizeof(t_Table));
+        if (!Table_Array) {
           fprintf(stderr, "Error: Can not re-allocate memory %li (Table_Read_Array).\n",
-              mc_rt_allocated*sizeof(t_Table));
-          *mc_rt_blocks = 0;
+              allocated*sizeof(t_Table));
+          *blocks = 0;
           return (NULL);
         }
       }
       /* store it into t_Table array */
-      mc_rt_Table_Array[mc_rt_block_number-1] = mc_rt_Table;
+      Table_Array[block_number-1] = Table;
       /* continues until we find an empty block */
     }
     /* send back number of extracted blocks */
-    if (mc_rt_blocks) *mc_rt_blocks = mc_rt_block_number-1;
+    if (blocks) *blocks = block_number-1;
 
     /* now store total number of elements in Table array */
-    for (mc_rt_offset=0; mc_rt_offset < mc_rt_block_number;
-      mc_rt_Table_Array[mc_rt_offset++].array_length = mc_rt_block_number-1);
+    for (offset=0; offset < block_number;
+      Table_Array[offset++].array_length = block_number-1);
 
-    return(mc_rt_Table_Array);
+    return(Table_Array);
   } /* end Table_Read_Array */
 /*******************************************************************************
 * void Table_Free_Array(t_Table *Table)
 *   ACTION: free a Table array
 *******************************************************************************/
-  void Table_Free_Array(t_Table *mc_rt_Table)
+  void Table_Free_Array(t_Table *Table)
   {
-    long mc_rt_index=0;
-    if (!mc_rt_Table) return;
+    long index=0;
+    if (!Table) return;
     do {
-        if (mc_rt_Table[mc_rt_index].data || mc_rt_Table[mc_rt_index].header)
-          Table_Free(&mc_rt_Table[mc_rt_index]);
-        else mc_rt_index=-1;
-    } while (mc_rt_index>= 0);
-    free(mc_rt_Table);
+        if (Table[index].data || Table[index].header)
+          Table_Free(&Table[index]);
+        else index=-1;
+    } while (index>= 0);
+    free(Table);
   } /* end Table_Free_Array */
 
 /******************************************************************************
@@ -895,19 +896,19 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 *    ACTION: print informations about a Table array
 *    return: number of elements in the Table array
 *******************************************************************************/
-  long Table_Info_Array(t_Table *mc_rt_Table)
+  long Table_Info_Array(t_Table *Table)
   {
-    long mc_rt_index=0;
+    long index=0;
 
-    if (!mc_rt_Table) return(-1);
-    while (mc_rt_index < mc_rt_Table[mc_rt_index].array_length
-       && (mc_rt_Table[mc_rt_index].data || mc_rt_Table[mc_rt_index].header)
-       && (mc_rt_Table[mc_rt_index].rows*mc_rt_Table[mc_rt_index].columns) ) {
-      Table_Info(mc_rt_Table[mc_rt_index]);
-      mc_rt_index++;
+    if (!Table) return(-1);
+    while (index < Table[index].array_length
+       && (Table[index].data || Table[index].header)
+       && (Table[index].rows*Table[index].columns) ) {
+      Table_Info(Table[index]);
+      index++;
     }
-    printf("This Table array contains %li elements\n", mc_rt_index);
-    return(mc_rt_index);
+    printf("This Table array contains %li elements\n", index);
+    return(index);
   } /* end Table_Info_Array */
 
 /******************************************************************************
@@ -923,10 +924,9 @@ long Table_Init(t_Table *mc_rt_Table, long rows, long columns)
 char **Table_ParseHeader(char *header, ...){
   va_list ap;
   char exit_flag=0;
-  int counter=0;
-  char **ret;
-
-  if (!header) return(NULL);
+  int counter   =0;
+  char **ret    =NULL;
+  if (!header || !strlen(header)) return(NULL);
 
   ret = (char**)calloc(MyNL_ARGMAX, sizeof(char*));
   if (!ret) {
@@ -934,16 +934,17 @@ char **Table_ParseHeader(char *header, ...){
       MyNL_ARGMAX);
     return(NULL);
   }
+  for (counter=0; counter < MyNL_ARGMAX; ret[counter++] = NULL);
+  counter=0;
 
   va_start(ap, header);
   while(!exit_flag && counter < MyNL_ARGMAX-1)
   {
-    char *arg_char;
-    char *pos;
+    char *arg_char=NULL;
+    char *pos     =NULL;
     /* get variable argument value as a char */
     arg_char = va_arg(ap, char *);
-    ret[counter] = NULL;
-    if (!arg_char){
+    if (!arg_char || !strlen(arg_char)){
       exit_flag = 1; break;
     }
     /* search for the symbol in the header */
@@ -953,11 +954,12 @@ char **Table_ParseHeader(char *header, ...){
       eol_pos = strchr(pos+strlen(arg_char), '\n');
       if (!eol_pos)
         eol_pos = strchr(pos+strlen(arg_char), '\r');
-      if (!eol_pos) eol_pos = pos+strlen(pos)-1;
+      if (!eol_pos) 
+        eol_pos = pos+strlen(pos)-1;
       ret[counter] = (char*)malloc(eol_pos - pos);
       if (!ret[counter]) {
-        printf("Table_ParseHeader: Cannot allocate value[%i] array for Parser (Table_ParseHeader).\n",
-          counter);
+        printf("Table_ParseHeader: Cannot allocate value[%i] array for Parser searching for %s (Table_ParseHeader).\n",
+          counter, arg_char);
         exit_flag = 1; break;
       }
       strncpy(ret[counter], pos+strlen(arg_char), eol_pos - pos - strlen(arg_char));
