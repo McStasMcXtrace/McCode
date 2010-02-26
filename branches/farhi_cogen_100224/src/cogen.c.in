@@ -133,6 +133,14 @@
 #define MCCODE_PROJECT @MCCODE_PROJECT@
 #endif
 
+#ifndef MCCODE_LIBENV
+#define MCCODE_LIBENV @MCCODE_LIBENV@
+#endif
+
+#ifndef MCCODE_PARTICULE
+#define MCCODE_PARTICULE @MCCODE_PARTICULE@
+#endif
+
 /* Functions for outputting code. */
 
 /* Handle for output file. */
