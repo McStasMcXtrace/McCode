@@ -10,10 +10,10 @@ Components:
 (*) DiskChopper bug - rotation by PI in N=2 situation changes time structure?! (Asked Uwe, no response yet)
     Robert McGreevy 4D- S(Q,w) - Analytical
 (*) Single_crystal, new approaches / validation still..
-(*) Focusing lenses ala VitESS
-    Refraction? lens comp planned for student at ILL
+ D  Focusing lenses ala VitESS. DONE
+ D  Refraction? lens comp planned for student at ILL
     Single crystal / powder with magnetic order / polarisation / spin wave comp
-(*) Kill very old comps in obsolete (all? - will then allow "refill during 2.0 series)
+ D  Kill very old comps in obsolete (all? - will then allow "refill during 2.0 series)
 (*) Checkup - use of PROP_DT in all comps?
     monochromator_reflect (Lucia Alianelli) + resolving IDL dependency
 (*) monochromator_ ... (Lucia Alianelli) full monte carlo
@@ -21,7 +21,7 @@ Components:
  D  Sans_sphere: add other geometry than box, add target_index+rect area DONE (box,cyl,sphere)
  D  add 'radius' parameter to Monitor_nD for easier specs
  D  remove 'searching' messages in SNS and ISIS sources (not useful)
-(*) more V_sample to obsolete and use Incoherent instead
+ D  more V_sample to obsolete and use Incoherent instead
  D  check Virtual_* comps with MPI
 (*) check MPI examples that fail
 
@@ -39,8 +39,8 @@ Instruments:
  D  Test_Fermi DONE ; Test_Sources DONE; Test_Guides DONE; Monochromator_test DONE
 (*) TESTS: ILL_D9, ILL_H25_IN22_*, linup-3, Samples_Incoherent_off,  Tomography
  D  TESTS: accuracy must take into account I_ERR value instead of default 20 % DONE
-    use %include where ever possible  DONE
-    templateTAS: recompute Ki, Kf, ... when giving angles as input. Check KFIX/FX/KI/KF values. DONE
+ D  use %include where ever possible  DONE
+ D  templateTAS: recompute Ki, Kf, ... when giving angles as input. Check KFIX/FX/KI/KF values. DONE
 
 Metalanguage / runtime
     New grammar(s) for 'Metacomponents' or 'Multicomponents' : 
