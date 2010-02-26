@@ -526,11 +526,11 @@ if (verbose) {
 TRACE
 /* Source description */
 
-INSTRUMENT COMPONENT Origin=Progress_bar()
+REMOVABLE COMPONENT Origin=Progress_bar()
 AT (0,0,0) ABSOLUTE
 
 /* a flat constant source */
-INSTRUMENT COMPONENT Source = Source_gen(
+REMOVABLE COMPONENT Source = Source_gen(
   radius  = 0.10,
   dist = machine_hkl.l1,
   focus_xw = 0.1, focus_yh = 0.08,
@@ -538,7 +538,7 @@ INSTRUMENT COMPONENT Source = Source_gen(
   dE = machine_hkl.ei*0.03)
 AT (0,0,0) ABSOLUTE
 
-INSTRUMENT COMPONENT SC1 = Collimator_linear(
+REMOVABLE COMPONENT SC1 = Collimator_linear(
   xmin =-0.08/2, ymin =-0.11/2,
   xmax = 0.08/2, ymax = 0.11/2,
   length = 5.34,
@@ -547,7 +547,7 @@ INSTRUMENT COMPONENT SC1 = Collimator_linear(
 WHEN (ALF1 && BET1)
 AT (0, 0, (machine_hkl.l1-5.34)/2) ABSOLUTE
 
-INSTRUMENT COMPONENT Guide_out=Arm()
+REMOVABLE COMPONENT Guide_out=Arm()
 AT (0, 0, machine_hkl.l1) ABSOLUTE
 
 COMPONENT Mono_Cradle = Arm()

@@ -215,14 +215,14 @@ INITIALIZE
 
 TRACE 
 
-INSTRUMENT COMPONENT arm = Progress_bar() 
+REMOVABLE COMPONENT arm = Progress_bar() 
 AT (0,0,0) ABSOLUTE
 
 /*------------------*/
 /*  SOURCE          */
 /*------------------*/
 
-INSTRUMENT COMPONENT VCS = Source_gen(
+REMOVABLE COMPONENT VCS = Source_gen(
   yheight  = 0.22,
   xwidth   = 0.14,
   focus_xw = 0.038,
@@ -235,7 +235,7 @@ INSTRUMENT COMPONENT VCS = Source_gen(
   verbose  = 1)
 AT (0, 0, 0) RELATIVE PREVIOUS
   
-INSTRUMENT COMPONENT SourceTarget = Arm()
+REMOVABLE COMPONENT SourceTarget = Arm()
 AT (0,0,2.55) RELATIVE PREVIOUS
 
 /*--------------------------------------------*/
