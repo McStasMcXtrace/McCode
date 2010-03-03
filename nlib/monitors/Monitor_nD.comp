@@ -54,10 +54,12 @@
 *
 * <b>Possible options are</b>
 * Variables to record:
-*     kx ky kz k wavevector [Angs-1] (    usually axis are
-*     vx vy vz v            [m/s]         x=horz., y=vert., z=on axis)
-*     x y z                 [m]      Distance, Position
-*     kxy vxy xy radius     [m]      Radial wavevector, velocity and position
+*     kx ky kz k wavevector [Angs-1] Wavevector on x,y,z and norm
+*     vx vy vz v            [m/s]    Velocity on x,y,z and norm
+*     x y z radius          [m]      Distance, Position and norm
+*     xy, yz, xz            [m]      Radial position in xy, yz and xz plane
+*     kxy kyz kxz           [Angs-1] Radial wavevector in xy, yz and xz plane
+*     vxy vyz vxz           [m/s]    Radial velocity in xy, yz and xz plane
 *     t time                [s]      Time of Flight
 *     energy omega          [meV]
 *     lambda wavelength     [Angs]
