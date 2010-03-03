@@ -73,14 +73,32 @@ if test x"$enable_mcstas" = "xyes" -o x"$enable_mcxtrace" = "xyes" ; then
   MCCODE_BUGREPORT="$MCCODE_TARNAME-support@$MCCODE_TARNAME.org"
   
   echo "Configurating McCode with $MCCODE_NAME flavour"
-  echo "MCCODE_DATE=$MCCODE_DATE"
-  echo "MCCODE_TARNAME=$MCCODE_TARNAME"
-  echo "MCCODE_NAME=$MCCODE_NAME"
-  echo "MCCODE_VERSION=$MCCODE_VERSION"
-  echo "MCCODE_STRING=$MCCODE_STRING"
+  echo "MCCODE_DATE     =$MCCODE_DATE"
+  echo "MCCODE_TARNAME  =$MCCODE_TARNAME"
+  echo "MCCODE_NAME     =$MCCODE_NAME"
+  echo "MCCODE_VERSION  =$MCCODE_VERSION"
+  echo "MCCODE_STRING   =$MCCODE_STRING"
   echo "MCCODE_BUGREPORT=$MCCODE_BUGREPORT"
 
 fi
+
+# determine particule to use: n or X and name of the env variable for location of library
+if test P"$MCCODE_TARNAME" = "Pmcstas" ; then
+  MCCODE_PARTICULE=neutron
+  MCCODE_PROJECT=1
+  MCCODE_LIBENV=[MCSTAS]
+else
+  MCCODE_PARTICULE=Xray
+  MCCODE_PROJECT=2
+  MCCODE_LIBENV=[MCXTRACE]
+fi
+
+if test x"$enable_mcstas" = "xyes" -o x"$enable_mcxtrace" = "xyes" ; then
+  echo "MCCODE_PARTICULE=$MCCODE_PARTICULE"
+  echo "MCCODE_PROJECT  =$MCCODE_PROJECT"
+  echo "MCCODE_LIBENV   =$MCCODE_LIBENV"
+fi
+
 # update corresponding DEFINE string in all makefiles
 AC_DEFINE_UNQUOTED([MCCODE_DATE], "${MCCODE_DATE}")
 AC_DEFINE_UNQUOTED([MCCODE_TARNAME], "${MCCODE_TARNAME}")
@@ -88,6 +106,10 @@ AC_DEFINE_UNQUOTED([MCCODE_NAME], "${MCCODE_NAME}")
 AC_DEFINE_UNQUOTED([MCCODE_VERSION], "${MCCODE_VERSION}")
 AC_DEFINE_UNQUOTED([MCCODE_STRING], "${MCCODE_STRING}")
 AC_DEFINE_UNQUOTED([MCCODE_BUGREPORT], "${MCCODE_BUGREPORT}")
+AC_DEFINE_UNQUOTED([MCCODE_PARTICULE],[$MCCODE_PARTICULE])
+AC_DEFINE_UNQUOTED([MCCODE_LIBENV],[$MCCODE_LIBENV])
+AC_DEFINE_UNQUOTED([MCCODE_PROJECT],[$MCCODE_PROJECT])
+
 # activate substitution in all .in files
 AC_SUBST([MCCODE_DATE])
 AC_SUBST([MCCODE_TARNAME])
@@ -95,6 +117,9 @@ AC_SUBST([MCCODE_NAME])
 AC_SUBST([MCCODE_VERSION])
 AC_SUBST([MCCODE_STRING])
 AC_SUBST([MCCODE_BUGREPORT])
+AC_SUBST([MCCODE_PARTICULE])
+AC_SUBST([MCCODE_LIBENV])
+AC_SUBST([MCCODE_PROJECT])
 
 AC_PROG_INSTALL
 CF_ANSI_CC_CHECK
@@ -159,7 +184,7 @@ else
   AC_DEFINE([HAVE_NEXUS], [])
 fi
 
-AC_OUTPUT(Makefile src/Makefile src/port.h lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/mccode_config.perl lib/tools/perl/mccode_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat)
+AC_OUTPUT(Makefile src/Makefile src/port.h src/cogen.c lib/Makefile nlib/Makefile xlib/Makefile lib/tools/perl/mccode_config.perl lib/tools/perl/mccode_reconfigure support/common/Makefile support/common/pgplot/Makefile support/common/pgplot/makehtml support/common/pgplot/maketex src/mccode.h lib/share/mccode-r.h src/mcformat.c doc/man/*.1 support/deb/debcreate support/deb/control support/Win32/install/mcstas.nsi build.bat)
 
 chmod a+x lib/tools/perl/mccode_reconfigure
 
@@ -197,50 +222,58 @@ fi
 echo ""
 if test "$PGPLOT" = "no" ; then
   echo "To install PGPLOT for $MCCODE_STRING, you need:"
-  echo "= perl-PDL (perldl, pdl)"
-  echo "= a fortran compiler (g77, gfortran)"
-  echo "= X11-dev libraries/includes (libx11-dev, xserver-xorg-dev, libxt-dev)"
+  echo "  = perl-PDL (perldl, pdl)"
+  echo "  = a fortran compiler (g77, gfortran)"
+  echo "  = X11-dev libraries/includes (libx11-dev, xserver-xorg-dev, libxt-dev)"
+  echo "On Debian/Ubuntu systems, use:"
+  echo "  # sudo apt-get install libx11-dev libxt-dev gfortran pdl"
 fi
 if test "$PGPLOT" = "no" && test "$PERLDL" != "no" && test "$G77" != "no" ; then
   echo "PGPLOT install: you may try our automatic pgplot5 installation AFTER installing @MCCODE_STRING@"
-  echo "# make install-pgplot"
-  echo "# make reconfigure"
-  echo "(For 64-bit machines, reconfigure first: # ./configure --with-pic )"
+  echo "  # make install-pgplot"
+  echo "  # make reconfigure"
 else if test "$PGPLOT" = "no" ; then
   echo "To use PGPLOT, install these packages and re-run $MCCODE_STRING installation ./configure"
   fi
 fi
+echo ""
 if test "$SCILAB" = "no" && test "$WGET" != no ; then
   echo "Scilab install: you may try our automatic Scilab installation with"
-  echo ""
-  echo "# make install-scilab; ./configure; make; make install"
-  echo ""
-  echo "(requires Linux/Intel, wget and root priviliges)"
+  echo "  # make install-scilab; ./configure; make; make install"
+  echo "    (requires Linux/Intel, wget and root priviliges)"
+fi
+if test "$SCILAB" = "no" ; then
+  echo "On Debian/Ubuntu systems, use:"
+  echo "  # sudo apt-get install scilab"
 fi
 echo ""
 echo "To setup the plotting environment, execute either"
-echo "# make config (automatically selects plotter, "
-echo "       prefers PGPLOT before Matlab before Scilab before VRML)"
+echo "  # make plotter (automatically selects plotter, "
+echo "         prefers PGPLOT before Matlab before Scilab before VRML)"
 if test "$SCILAB" != "no" ; then
-echo "# make scilab (selects scilab)"
+echo "  # make scilab (selects scilab)"
 fi
 if test "$MATLAB" != "no" ; then
-echo "# make matlab (selects matlab)"
+echo "  # make matlab (selects matlab)"
 fi
 if test "$PGPLOT" != "no" ; then
-echo "# make pgplot (selects pgplot and installs perl-PGPLOT)"
+echo "  # make pgplot (selects pgplot and installs perl-PGPLOT)"
 fi
 if test "$VRMLVIEW" != "no" ; then
-echo "# make vrml   (selects vrml)"
+echo "  # make vrml   (selects vrml)"
 fi
-echo ""
-echo "After (optional) plotter config, build and install $MCCODE_STRING by executing"
-echo "# make; make install"
-echo "will install $MCCODE_STRING into $prefix"
 echo ""
 if test "$DASH" != "no" ; then
 echo
 echo WARNING: Your system includes the $DASH shell which is known to cause problems.
-echo "On Debian/Ubuntu systems, please dpkg-reconfigure dash and say 'no' to install dash as /bin/sh"
+echo "On Debian/Ubuntu systems, please use:"
+echo "  # sudo dpkg-reconfigure dash"
+echo "and say 'no' to install dash as /bin/sh"
 fi
+echo ""
+echo "After (optional) plotter config, build and install $MCCODE_STRING by executing"
+echo "  # make; make install"
+echo "will install $MCCODE_STRING into $prefix"
+echo ""
+
 

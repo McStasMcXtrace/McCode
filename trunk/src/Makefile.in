@@ -88,10 +88,10 @@ COBJECTS_mcstas=instrument.tab.c lex.yy.c debug.c \
 
 OBJECTS_mcxtrace=instrument.tab.o lex.yy.o debug.o \
 	memory.o list.o symtab.o coords.o cexp.o \
-	file.o cogenmx.o port.o
+	file.o cogen.o port.o
 COBJECTS_mcxtrace=instrument.tab.c lex.yy.c debug.c \
 	memory.c list.c symtab.c coords.c cexp.c \
-	file.c cogenmx.c port.c
+	file.c cogen.c port.c
 
 
 PERLOBJ=mcdisplay.fixpl mcplot.fixpl mcresplot.fixpl mcrun.fixpl \

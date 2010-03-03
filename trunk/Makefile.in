@@ -23,7 +23,7 @@
 # make install         normal installation
 # make clean           clean distro
 # make test            distro self-test
-# make config          best plotter choice
+# make plotter         best plotter choice
 # make pgplot          plotter PGPLOT selection
 # make reconfigure     reconfigure @MCCODE_TARNAME@ installation (after software update)
 # make install-pgplot  build and install PGPLOT (including perl-PGPLOT)
@@ -99,7 +99,8 @@ install:
 	cd src/ && $(MAKE) install
 
 # Prefer Scilab over Matlab over PGPLOT
-config:
+config: plotter
+plotter:
 	if [ $(VRML) != no ]; then \
 		$(MAKE) vrml; \
 	fi; \
