@@ -54,9 +54,7 @@
   struct instr_formal *iformal; /* Single formal instrument parameter */
   struct comp_iformal *cformal; /* Single formal component input parameter */
   Symtab actuals;   /* Values for formal parameters */
-  char **polform;   /* Polarisation state formal parameter */
-  struct {List def, set, out, state;
-    char **polarisation;} parms;  /* Parameter lists */
+  struct {List def, set, out, state; } parms;  /* Parameter lists */
   struct instr_def *instrument; /* Instrument definition */
   struct comp_inst *instance; /* Component instance */
   struct comp_place place;  /* Component place */
@@ -84,7 +82,6 @@
 %token TOK_MCDISPLAY  "MCDISPLAY"
 %token TOK_OUTPUT     "OUTPUT"
 %token TOK_PARAMETERS "PARAMETERS"
-%token TOK_POLARISATION "POLARISATION"
 %token TOK_RELATIVE   "RELATIVE"
 %token TOK_ROTATED    "ROTATED"
 %token TOK_PREVIOUS   "PREVIOUS"
@@ -129,7 +126,6 @@
 %type <formals> formallist formals formals1 def_par set_par out_par state_par
 %type <iformals> instrpar_list instr_formals instr_formals1
 %type <iformal> instr_formal
-%type <polform> polarisation_par
 %type <parms>   parameters
 %type <place>   place
 %type <ori>     orientation
@@ -163,7 +159,6 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         c->set_par = $4.set;
         c->out_par = $4.out;
         c->state_par = $4.state;
-        c->polarisation_par = $4.polarisation;
         c->share_code = $5;
         c->decl_code = $6;
         c->init_code = $7;
@@ -202,8 +197,7 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
         c->out_par   = list_create(); list_cat(c->out_par, def->out_par);
         if (list_len($6.out)) list_cat(c->out_par,$6.out);
 
-        c->state_par = (list_len($6.state) ? $6.state : def->state_par);
-        c->polarisation_par = ($6.polarisation ? $6.polarisation : def->polarisation_par);
+        c->state_par = (list_len($6.state) ? $6.state : def->state_par); /* includes polarisation par */
 
         c->share_code = ($7->linenum ?  $7  : def->share_code);
         c->decl_code  = ($8->linenum ?  $8  : def->decl_code);
@@ -226,13 +220,12 @@ compdef:    "DEFINE" "COMPONENT" TOK_ID parameters share declare initialize trac
       }
 ;
 
-parameters:   def_par set_par out_par state_par polarisation_par
+parameters:   def_par set_par out_par state_par
       {
         $$.def = $1;
         $$.set = $2;
         $$.out = $3;
         $$.state = $4;
-        $$.polarisation = $5;
       }
 ;
 
@@ -274,21 +267,6 @@ state_par:    /* empty */
     | "STATE" "PARAMETERS" formallist
       {
         $$ = $3;
-      }
-;
-
-polarisation_par: /* empty */
-      {
-        $$ = NULL;
-      }
-    | "POLARISATION" "PARAMETERS" '(' TOK_ID ',' TOK_ID ',' TOK_ID ')'
-      {
-        char **polform;
-        nalloc(polform, 3);
-        polform[0] = $4;
-        polform[1] = $6;
-        polform[2] = $8;
-        $$ = polform;
       }
 ;
 
@@ -808,7 +786,7 @@ complist:   /* empty */
       }
     | complist component
       {
-        if (!$2->removable) { /* must not be an INSTRUMENT/REMOVABLE COMPONENT after %include instr */
+        if (!$2->removable) { /* must not be a REMOVABLE COMPONENT after %include instr */
           /* Check that the component instance name has not
                         been used before. */
           if(symtab_lookup(comp_instances, $2->name))
@@ -823,14 +801,6 @@ complist:   /* empty */
           {
             symtab_add(comp_instances, $2->name, $2);
             list_add(comp_instances_list, $2);
-            if($2->def)
-            {
-              /* Check if the component handles polarisation. */
-              if($2->def->polarisation_par)
-              {
-                instrument_definition->polarised = 1;
-              }
-            }
             if (verbose) fprintf(stderr, "Component[%li]: %s = %s().\n", comp_current_index, $2->name, $2->type);
           }
         } /* if shared */
@@ -920,10 +890,6 @@ instref: "COPY" '(' compref ')' actuallist /* make a copy of a previous instance
 removable:    /* empty */
       {
         $$ = 0;
-      }
-    | "INSTRUMENT"
-      {
-        $$ = instrument_definition->has_included_instr; /* ignore comp if included from other instrument */
       }
     | "REMOVABLE"
       {
@@ -1492,6 +1458,7 @@ static void
 print_usage(void)
 {
   fprintf(stderr, MCCODE_NAME " version " MCCODE_STRING " (" MCCODE_DATE ")\n");
+  fprintf(stderr, "Compiler of the " MCCODE_NAME " ray-trace simulation package\n");
   fprintf(stderr, "Usage:\n"
     "  " MCCODE_NAME " [-o file] [-I dir1 ...] [-t] [-p] [-v] "
     "[--no-main] [--no-runtime] [--verbose] file\n");
@@ -1575,7 +1542,6 @@ parse_command_line(int argc, char *argv[])
   instrument_definition->include_runtime = 1;
   instrument_definition->enable_trace = 0;
   instrument_definition->portable = 0;
-  instrument_definition->polarised = 0;
   for(i = 1; i < argc; i++)
   {
     if(!strcmp("-o", argv[i]) && (i + 1) < argc)
