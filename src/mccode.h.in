@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
+* McCode, neutron/xray ray-tracing package
 *         Copyright 1997-2002, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
@@ -53,6 +53,14 @@
 
 #ifndef MCCODE_NAME
 #define MCCODE_NAME "@MCCODE_NAME@"
+#endif
+
+#ifndef MCCODE_PARTICULE
+#define MCCODE_PARTICULE "@MCCODE_PARTICULE@"
+#endif
+
+#ifndef MCCODE_LIBENV
+#define MCCODE_LIBENV "@MCCODE_LIBENV@"
 #endif
 
 /* Functions defined in memory.c */
@@ -384,7 +392,6 @@ struct comp_def
     char *source;                   /*  Name of source file for definition */
     int  comp_inst_number;          /* Number of this comp in the instrument  */
     List def_par, set_par, out_par, state_par; /* Formal parameters. */
-    char **polarisation_par;        /* Polarisation state formal parameters. */
     struct code_block *share_code;  /* Unique Declaration code (shared). */
     struct code_block *decl_code;   /* Declaration code. */
     struct code_block *init_code;   /* Initializeation code. */
@@ -460,9 +467,8 @@ struct instr_def
     struct NXinfo *nxinfo;    /* NeXus declarations */
     int use_default_main;     /* If set, output a main() function */
     int include_runtime;      /* If set, include runtime in output */
-    int enable_trace;         /* If set, enable output of neutron traces */
+    int enable_trace;         /* If set, enable output of ray traces */
     int portable;             /* If set, emit strictly portable ANSI C */
-    int polarised;            /* If set, handle neutron polarisation */
     int has_included_instr;   /* Flag set when instruments are %included in instr */
   };
 
