@@ -478,7 +478,7 @@ sub add_comp_search_html {
 </TR>
 END
     } else {
-      print "Could not write to search output file $outfile\n";
+      print "Could not write $comp to search output file ('$search').\n";
     }
 
     my $name;
