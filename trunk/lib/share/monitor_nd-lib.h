@@ -29,50 +29,57 @@
 
   typedef struct MonitornD_Defines
   {
-    char COORD_NONE  ;
-    char COORD_X     ;
-    char COORD_Y     ;
-    char COORD_Z     ;
-    char COORD_VX    ;
-    char COORD_VY    ;
-    char COORD_VZ    ;
-    char COORD_T     ;
-    char COORD_P     ;
-    char COORD_SX    ;
-    char COORD_SY    ;
-    char COORD_SZ    ;
-    char COORD_KX    ;
-    char COORD_KY    ;
-    char COORD_KZ    ;
-    char COORD_K     ;
-    char COORD_V     ;
-    char COORD_ENERGY;
-    char COORD_LAMBDA;
-    char COORD_RADIUS;
-    char COORD_KXY   ;
-    char COORD_VXY   ;
-    char COORD_HDIV  ;
-    char COORD_VDIV  ;
-    char COORD_ANGLE ;
-    char COORD_NCOUNT;
-    char COORD_THETA ;
-    char COORD_PHI   ;
-    char COORD_USER1 ;
-    char COORD_USER2 ;
-    char COORD_USER3 ;
+    int COORD_NONE  ;
+    int COORD_X     ;
+    int COORD_Y     ;
+    int COORD_Z     ;
+    int COORD_RADIUS; 
+    int COORD_VX    ;
+    int COORD_VY    ;
+    int COORD_VZ    ;
+    int COORD_V     ;
+    int COORD_T     ;
+    int COORD_P     ;
+    int COORD_SX    ;
+    int COORD_SY    ;
+    int COORD_SZ    ;
+    int COORD_KX    ;
+    int COORD_KY    ;
+    int COORD_KZ    ;
+    int COORD_K     ;
+    int COORD_ENERGY;
+    int COORD_LAMBDA;
+    int COORD_KXY   ;
+    int COORD_KYZ   ;
+    int COORD_KXZ   ;
+    int COORD_VXY   ;
+    int COORD_VYZ   ;
+    int COORD_VXZ   ;
+    int COORD_HDIV  ;
+    int COORD_VDIV  ;
+    int COORD_ANGLE ;
+    int COORD_NCOUNT;
+    int COORD_THETA ;
+    int COORD_PHI   ;
+    int COORD_USER1 ;
+    int COORD_USER2 ;
+    int COORD_USER3 ;
+    int COORD_XY    ;
+    int COORD_XZ    ;
+    int COORD_YZ    ;
 
     /* token modifiers */
-    char COORD_VAR   ; /* next token should be a variable or normal option */
-    char COORD_MIN   ; /* next token is a min value */
-    char COORD_MAX   ; /* next token is a max value */
-    char COORD_DIM   ; /* next token is a bin value */
-    char COORD_FIL   ; /* next token is a filename */
-    char COORD_EVNT  ; /* next token is a buffer size value */
-    char COORD_3HE   ; /* next token is a 3He pressure value */
-    char COORD_LOG   ; /* next variable will be in log scale */
-    char COORD_ABS   ; /* next variable will be in abs scale */
-    char COORD_SIGNAL; /* next variable will be the signal var */
-    int  COORD_AUTO  ; /* set auto limits */
+    int COORD_VAR   ; /* next token should be a variable or normal option */
+    int COORD_MIN   ; /* next token is a min value */
+    int COORD_MAX   ; /* next token is a max value */
+    int COORD_DIM   ; /* next token is a bin value */
+    int COORD_FIL   ; /* next token is a filename */
+    int COORD_EVNT  ; /* next token is a buffer size value */
+    int COORD_3HE   ; /* next token is a 3He pressure value */
+    int COORD_LOG   ; /* next variable will be in log scale */
+    int COORD_ABS   ; /* next variable will be in abs scale */
+    int COORD_SIGNAL; /* next variable will be the signal var */
+    int COORD_AUTO  ; /* set auto limits */
 
     char TOKEN_DEL[32]; /* token separators */
 

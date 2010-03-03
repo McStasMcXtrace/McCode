@@ -68,9 +68,11 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_X      =1;
     DEFS->COORD_Y      =2;
     DEFS->COORD_Z      =3;
+    DEFS->COORD_RADIUS =19;
     DEFS->COORD_VX     =4;
     DEFS->COORD_VY     =5;
     DEFS->COORD_VZ     =6;
+    DEFS->COORD_V      =16;
     DEFS->COORD_T      =7;
     DEFS->COORD_P      =8;
     DEFS->COORD_SX     =9;
@@ -80,10 +82,8 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_KY     =13;
     DEFS->COORD_KZ     =14;
     DEFS->COORD_K      =15;
-    DEFS->COORD_V      =16;
     DEFS->COORD_ENERGY =17;
     DEFS->COORD_LAMBDA =18;
-    DEFS->COORD_RADIUS =19;
     DEFS->COORD_HDIV   =20;
     DEFS->COORD_VDIV   =21;
     DEFS->COORD_ANGLE  =22;
@@ -93,8 +93,17 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_USER1  =26;
     DEFS->COORD_USER2  =27;
     DEFS->COORD_USER3  =28;
-    DEFS->COORD_KXY    =29;
+    DEFS->COORD_XY     =37;
+    DEFS->COORD_YZ     =31;
+    DEFS->COORD_XZ     =32;
     DEFS->COORD_VXY    =30;
+    DEFS->COORD_VYZ    =34;
+    DEFS->COORD_VXZ    =36;
+    DEFS->COORD_KXY    =29;
+    DEFS->COORD_KYZ    =33;
+    DEFS->COORD_KXZ    =35;
+    
+    
 
 /* token modifiers */
     DEFS->COORD_VAR    =0;    /* next token should be a variable or normal option */
@@ -104,10 +113,10 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     DEFS->COORD_FIL    =4;    /* next token is a filename */
     DEFS->COORD_EVNT   =5;    /* next token is a buffer size value */
     DEFS->COORD_3HE    =6;    /* next token is a 3He pressure value */
-    DEFS->COORD_LOG    =32;   /* next variable will be in log scale */
-    DEFS->COORD_ABS    =64;   /* next variable will be in abs scale */
-    DEFS->COORD_SIGNAL =128;  /* next variable will be the signal var */
-    DEFS->COORD_AUTO   =256;  /* set auto limits */
+    DEFS->COORD_LOG    =64;   /* next variable will be in log scale */
+    DEFS->COORD_ABS    =128;  /* next variable will be in abs scale */
+    DEFS->COORD_SIGNAL =256;  /* next variable will be the signal var */
+    DEFS->COORD_AUTO   =512;  /* set auto limits */
 
     strcpy(DEFS->TOKEN_DEL, " =,;[](){}:");  /* token separators */
 
@@ -380,12 +389,26 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
           { Set_Vars_Coord_Type = DEFS->COORD_ENERGY; strcpy(Set_Vars_Coord_Label,"Energy [meV]"); strcpy(Set_Vars_Coord_Var,"E"); lmin = 0; lmax = 100; }
         if (!strcmp(token, "lambda") || !strcmp(token, "wavelength") || !strcmp(token, "l"))
           { Set_Vars_Coord_Type = DEFS->COORD_LAMBDA; strcpy(Set_Vars_Coord_Label,"Wavelength [Angs]"); strcpy(Set_Vars_Coord_Var,"L"); lmin = 0; lmax = 100; }
-        if (!strcmp(token, "radius") || !strcmp(token, "xy") || !strcmp(token, "r"))
-          { Set_Vars_Coord_Type = DEFS->COORD_RADIUS; strcpy(Set_Vars_Coord_Label,"Radius [m]"); strcpy(Set_Vars_Coord_Var,"R"); lmin = 0; lmax = xmax; }
+        if (!strcmp(token, "radius") || !strcmp(token, "r"))
+          { Set_Vars_Coord_Type = DEFS->COORD_RADIUS; strcpy(Set_Vars_Coord_Label,"Radius [m]"); strcpy(Set_Vars_Coord_Var,"xy"); lmin = 0; lmax = xmax; }
+        if (!strcmp(token, "xy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_XY; strcpy(Set_Vars_Coord_Label,"Radius (xy) [m]"); strcpy(Set_Vars_Coord_Var,"xy"); lmin = 0; lmax = xmax; }
+        if (!strcmp(token, "yz"))
+          { Set_Vars_Coord_Type = DEFS->COORD_YZ; strcpy(Set_Vars_Coord_Label,"Radius (yz) [m]"); strcpy(Set_Vars_Coord_Var,"yz"); lmin = 0; lmax = xmax; }
+        if (!strcmp(token, "xz"))
+          { Set_Vars_Coord_Type = DEFS->COORD_XZ; strcpy(Set_Vars_Coord_Label,"Radius (xz) [m]"); strcpy(Set_Vars_Coord_Var,"xz"); lmin = 0; lmax = xmax; }
         if (!strcmp(token, "vxy"))
-          { Set_Vars_Coord_Type = DEFS->COORD_VXY; strcpy(Set_Vars_Coord_Label,"Radial Velocity [m]"); strcpy(Set_Vars_Coord_Var,"Vxy"); lmin = 0; lmax = 2000; }
+          { Set_Vars_Coord_Type = DEFS->COORD_VXY; strcpy(Set_Vars_Coord_Label,"Radial Velocity (xy) [m]"); strcpy(Set_Vars_Coord_Var,"Vxy"); lmin = 0; lmax = 2000; }
         if (!strcmp(token, "kxy"))
-          { Set_Vars_Coord_Type = DEFS->COORD_KXY; strcpy(Set_Vars_Coord_Label,"Radial Wavevector [Angs-1]"); strcpy(Set_Vars_Coord_Var,"Kxy"); lmin = 0; lmax = 2; }
+          { Set_Vars_Coord_Type = DEFS->COORD_KXY; strcpy(Set_Vars_Coord_Label,"Radial Wavevector (xy) [Angs-1]"); strcpy(Set_Vars_Coord_Var,"Kxy"); lmin = 0; lmax = 2; }
+        if (!strcmp(token, "vxy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_VYZ; strcpy(Set_Vars_Coord_Label,"Radial Velocity (yz) [m]"); strcpy(Set_Vars_Coord_Var,"Vxy"); lmin = 0; lmax = 2000; }
+        if (!strcmp(token, "kxy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_KYZ; strcpy(Set_Vars_Coord_Label,"Radial Wavevector (yz) [Angs-1]"); strcpy(Set_Vars_Coord_Var,"Kxy"); lmin = 0; lmax = 2; }
+        if (!strcmp(token, "vxy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_VXZ; strcpy(Set_Vars_Coord_Label,"Radial Velocity (xz) [m]"); strcpy(Set_Vars_Coord_Var,"Vxy"); lmin = 0; lmax = 2000; }
+        if (!strcmp(token, "kxy"))
+          { Set_Vars_Coord_Type = DEFS->COORD_KXZ; strcpy(Set_Vars_Coord_Label,"Radial Wavevector (xz) [Angs-1]"); strcpy(Set_Vars_Coord_Var,"Kxy"); lmin = 0; lmax = 2; }
         if (!strcmp(token, "angle") || !strcmp(token, "a"))
           { Set_Vars_Coord_Type = DEFS->COORD_ANGLE; strcpy(Set_Vars_Coord_Label,"Angle [deg]"); strcpy(Set_Vars_Coord_Var,"A"); lmin = -5; lmax = 5; }
         if (!strcmp(token, "hdiv")|| !strcmp(token, "divergence") || !strcmp(token, "xdiv") || !strcmp(token, "hd") || !strcmp(token, "dx"))
@@ -463,26 +486,37 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
     for (i = 0; i <= Vars->Coord_Number; i++)
     {
       if (Flag_auto != 0) Vars->Coord_Type[i] |= DEFS->COORD_AUTO;
-      Set_Vars_Coord_Type = (Vars->Coord_Type[i] & 31);
-      if ((Set_Vars_Coord_Type == DEFS->COORD_THETA)
-       || (Set_Vars_Coord_Type == DEFS->COORD_PHI)
-       || (Set_Vars_Coord_Type == DEFS->COORD_X)
+      Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
+      if ((Set_Vars_Coord_Type == DEFS->COORD_X)
        || (Set_Vars_Coord_Type == DEFS->COORD_Y)
-       || (Set_Vars_Coord_Type == DEFS->COORD_Z)
-       || (Set_Vars_Coord_Type == DEFS->COORD_RADIUS))
+       || (Set_Vars_Coord_Type == DEFS->COORD_Z))
        strcpy(Short_Label[i],"Position");
+      else
+      if ((Set_Vars_Coord_Type == DEFS->COORD_THETA)
+       || (Set_Vars_Coord_Type == DEFS->COORD_PHI))
+       strcpy(Short_Label[i],"Angle");
+      else
+      if ((Set_Vars_Coord_Type == DEFS->COORD_XY)
+       || (Set_Vars_Coord_Type == DEFS->COORD_XZ)
+       || (Set_Vars_Coord_Type == DEFS->COORD_YZ)
+       || (Set_Vars_Coord_Type == DEFS->COORD_RADIUS))
+       strcpy(Short_Label[i],"Radius");
       else
       if ((Set_Vars_Coord_Type == DEFS->COORD_VX)
        || (Set_Vars_Coord_Type == DEFS->COORD_VY)
        || (Set_Vars_Coord_Type == DEFS->COORD_VZ)
        || (Set_Vars_Coord_Type == DEFS->COORD_V)
-       || (Set_Vars_Coord_Type == DEFS->COORD_VXY))
+       || (Set_Vars_Coord_Type == DEFS->COORD_VXY)
+       || (Set_Vars_Coord_Type == DEFS->COORD_VYZ)
+       || (Set_Vars_Coord_Type == DEFS->COORD_VXZ))
        strcpy(Short_Label[i],"Velocity");
       else
       if ((Set_Vars_Coord_Type == DEFS->COORD_KX)
        || (Set_Vars_Coord_Type == DEFS->COORD_KY)
        || (Set_Vars_Coord_Type == DEFS->COORD_KZ)
        || (Set_Vars_Coord_Type == DEFS->COORD_KXY)
+       || (Set_Vars_Coord_Type == DEFS->COORD_KYZ)
+       || (Set_Vars_Coord_Type == DEFS->COORD_KXZ)
        || (Set_Vars_Coord_Type == DEFS->COORD_K))
        strcpy(Short_Label[i],"Wavevector");
       else
@@ -533,7 +567,7 @@ void Monitor_nD_Init(MonitornD_Defines_type *DEFS,
       XY *= Vars->Coord_Bin[i];
     } /* end for Short_Label */
 
-    if ((Vars->Coord_Type[0] & 31) == DEFS->COORD_P) {
+    if ((Vars->Coord_Type[0] & (DEFS->COORD_LOG-1)) == DEFS->COORD_P) {
       strncat(Vars->Coord_Label[0], " [n/s", 30);
       if (Vars->Flag_per_cm2) strncat(Vars->Coord_Label[0], "/cm2", 30);
       if (Vars->Flag_per_st) {
@@ -801,7 +835,7 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
       for (i = 0; i <= Vars->Coord_Number; i++)
       { /* handle current neutron : last while */
         XY = 0;
-        Set_Vars_Coord_Type = (Vars->Coord_Type[i] & 31);
+        Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
         /* get values for variables to monitor */
         if (Set_Vars_Coord_Type == DEFS->COORD_X) XY = Vars->cx;
         else
@@ -837,13 +871,27 @@ double Monitor_nD_Trace(MonitornD_Defines_type *DEFS, MonitornD_Variables_type *
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_V) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);
         else
-        if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS) XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy);
+        if (Set_Vars_Coord_Type == DEFS->COORD_RADIUS) XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy+Vars->cz*Vars->cz);
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_XY) XY = sqrt(Vars->cx*Vars->cx+Vars->cy*Vars->cy);
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_YZ) XY = sqrt(Vars->cy*Vars->cy+Vars->cz*Vars->cz);
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_XZ) XY = sqrt(Vars->cx*Vars->cx+Vars->cz*Vars->cz);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_VXY) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_VXZ) XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvz*Vars->cvz);
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_VYZ) XY = sqrt(Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_K) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_KXY) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy);  XY *= V2K; }
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_KXZ) { XY = sqrt(Vars->cvx*Vars->cvx+Vars->cvz*Vars->cvz);  XY *= V2K; }
+        else
+        if (Set_Vars_Coord_Type == DEFS->COORD_KYZ) { XY = sqrt(Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz);  XY *= V2K; }
         else
         if (Set_Vars_Coord_Type == DEFS->COORD_ENERGY) { XY = Vars->cvx*Vars->cvx+Vars->cvy*Vars->cvy+Vars->cvz*Vars->cvz;  XY *= VS2E; }
         else
@@ -1446,7 +1494,7 @@ void Monitor_nD_McDisplay(MonitornD_Defines_type *DEFS,
     for (i= 0; i <= Vars->Coord_Number; i++)
     {
       int Set_Vars_Coord_Type;
-      Set_Vars_Coord_Type = (Vars->Coord_Type[i] & 31);
+      Set_Vars_Coord_Type = (Vars->Coord_Type[i] & (DEFS->COORD_LOG-1));
       if (Set_Vars_Coord_Type == DEFS->COORD_HDIV || Set_Vars_Coord_Type == DEFS->COORD_THETA)
       { hdiv_min = Vars->Coord_Min[i]; hdiv_max = Vars->Coord_Max[i]; restricted = 1; }
       else if (Set_Vars_Coord_Type == DEFS->COORD_VDIV || Set_Vars_Coord_Type == DEFS->COORD_PHI)
