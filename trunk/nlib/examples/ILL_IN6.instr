@@ -258,10 +258,10 @@ INITIALIZE
 /* -------------------------------- TRACE -------------------------------- */
 TRACE
 
-INSTRUMENT COMPONENT Origin = Progress_bar()
+REMOVABLE COMPONENT Origin = Progress_bar()
   AT (0,0,0) ABSOLUTE
 
-INSTRUMENT COMPONENT VCS = Source_gen(
+REMOVABLE COMPONENT VCS = Source_gen(
   yheight  = 0.2,
   xwidth   = 0.03,
   focus_xw = 0.03,
@@ -274,7 +274,7 @@ INSTRUMENT COMPONENT VCS = Source_gen(
   verbose  = 1)
   AT (0, 0, 0) RELATIVE Origin
 
-INSTRUMENT COMPONENT SourceTarget = Arm()
+REMOVABLE COMPONENT SourceTarget = Arm()
 AT (0,0,2.55) RELATIVE PREVIOUS
 
 /* ----------------------- IN6 Monochromators GROUP ----------------------- */
