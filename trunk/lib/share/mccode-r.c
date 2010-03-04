@@ -790,7 +790,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
     "# begin %TYP %PAR\n",
     "# end %TYP %PAR\n",
     "%PRE%SEC.%NAM= '%VAL'\n",
-    "%# The Proto that contains data values and objects to plot these\n"
+    "# The Proto that contains data values and objects to plot these\n"
       "PROTO I_ERR_N_%VPA [\n"
       "# the PROTO parameters\n"
       "  field MFFloat Data [ ]\n"
@@ -1170,11 +1170,11 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
         char  printf_formats[]="dliouxXeEfgGcs\0";
 
         /* extract positional argument index %*$ in fmt */
-        strncpy(this_arg_chr, arg_posB[this_arg]+1, arg_posE[this_arg]-arg_posB[this_arg]-1);
+        strncpy(this_arg_chr, arg_posB[this_arg]+1, arg_posE[this_arg]-arg_posB[this_arg]-1 < 10 ? arg_posE[this_arg]-arg_posB[this_arg]-1 : 9);
         this_arg_chr[arg_posE[this_arg]-arg_posB[this_arg]-1] = '\0';
         arg_num[this_arg] = atoi(this_arg_chr);
         if (arg_num[this_arg] <=0 || arg_num[this_arg] >= MyNL_ARGMAX)
-          return(-fprintf(stderr,"pfprintf: invalid positional argument number (<=0 or >=%i) %s.\n", MyNL_ARGMAX, arg_posB[this_arg]));
+          return(-fprintf(stderr,"pfprintf: invalid positional argument number (%i is <=0 or >=%i) from '%s'.\n", arg_num[this_arg], MyNL_ARGMAX, this_arg_chr));
         /* get type of positional argument: follows '%' -> arg_posE[this_arg]+1 */
         fmt_pos = arg_posE[this_arg]+1;
         fmt_pos[0] = tolower(fmt_pos[0]);
