@@ -34,7 +34,8 @@ if nargin==1
   title(INSTRUMENT.descr,'interpreter','none');
   set(INSTRUMENT.fig,'Name',[ 'mcdisplay: ' INSTRUMENT.descr ' (Trace/3D view)' ]);
 else
-  Myview=view;
+  [AZ,EL] = view;
+  Myview=[AZ EL];
 end
 % Be sure to keep what ever is plotted
 hold on
