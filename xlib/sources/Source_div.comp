@@ -1,8 +1,9 @@
 /*******************************************************************************
 *
-* McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+* McXtrace, X-ray tracing package
+*         Copyright, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
+*         University of Copenhagen, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
 * Component: Source_div
@@ -34,12 +35,12 @@
 * %P
 * xwidth:   (m)  Width of source
 * yheight:  (m)  Height of source
-* focus_aw:(deg) FWHM (Gaussian) or maximal (uniform) horz. width divergence
-* focus_ah:(deg) FWHM (Gaussian) or maximal (uniform) vert. height divergence
-* E0:      (meV) Mean energy of neutrons.
-* dE:      (meV) Energy spread of neutrons.
-* lambda0: (Ang) Mean wavelength of neutrons (only relevant for E0=0)
-* dlambda: (Ang) Wavelength half spread of neutrons.
+* focus_aw:(rd) FWHM (Gaussian) or maximal (uniform) horz. width divergence
+* focus_ah:(rd) FWHM (Gaussian) or maximal (uniform) vert. height divergence
+* E0:      (eV) Mean energy of X-rays.
+* dE:      (eV) Energy spread of X-rays.
+* lambda0: (Ang) Mean wavelength of X-rays (only relevant for E0=0)
+* dlambda: (Ang) Wavelength half spread of X-rays.
 * gauss:  (0|1)  Criterion: 0: uniform, 1: Gaussian distributions
 * flux:   [1/(s*cm**2*st*energy unit)] flux per energy unit, Angs or meV
 *
@@ -54,14 +55,21 @@
 DEFINE COMPONENT Source_div
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (xwidth, yheight, focus_xw=0,focus_yh=0,focus_aw, focus_ah, E0=0.0, dE=0.0, lambda0=0.0, dlambda=0.0, gauss=0, flux=1)
-OUTPUT PARAMETERS (thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
+OUTPUT PARAMETERS (prms,thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh)
 STATE PARAMETERS (x,y,z,kx,ky,kz,phi,Ex,Ey,Ez,p)
+
+SHARE
+%{
+#ifndef MX_COHERENT
+#define MX_COHERENT 0
+#endif
+%}
 
 DECLARE
 %{
   double thetah, thetav, sigmah, sigmav, tan_h, tan_v, p_init, dist, focus_xw, focus_yh;
   struct {
-    double xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2;
+    double K,dK,xmin,xmax,xw_2,focus_xw_2,ymin,ymax,yh_2,focus_yh_2;
   } prms;
 %}
 
@@ -70,12 +78,12 @@ INITIALIZE
   if (E0==0 && lambda0==0){
     fprintf(stderr,"Error in %s, must specify energy or wavelength\n",NAME_CURRENT_COMP);exit(0);
   }
-  if (lambda==0){
-    K=E2K*E0;
-    dK=E2K*dE;
+  if (lambda0==0){
+    prms.K=E2K*E0;
+    prms.dK=E2K*dE;
   }else{
-    K=M_2_PI/lambda0;
-    dK=M_2_PI/dlambda;
+    prms.K=2*M_PI/lambda0;
+    prms.dK=2*M_PI/dlambda;
   }
 
   prms.focus_xw_2=focus_xw/2.0;
@@ -96,25 +104,25 @@ TRACE
     if(focus_xw!=0.0){
       if (theta_x>0){
         x=prms.xmin + rand01()*prms.focus_xw_2-dist*tan(theta_x);
-        p*=xwidth-(prms.focus_xw_2-dist*tan(theta_x)-prms.xmin)
+        p*=xwidth-(prms.focus_xw_2-dist*tan(theta_x)-prms.xmin);
       }else{
         x=prms.xmax + rand01()*prms.focus_xw_2-dist*tan(theta_x);
-        p*=xwidth-(prms.focus_xw_2-dist*tan(theta_x)+prms.xmax)
+        p*=xwidth-(prms.focus_xw_2-dist*tan(theta_x)+prms.xmax);
       }
     }
     theta_y=(rand01()-0.5)*focus_ah;
-    ½if(focus_yh!=0.0){
+    if(focus_yh!=0.0){
       if (theta_y>0){
-        y=prms.ymin + rand01()*focus_yh_2-dist*tan(theta_y);
-        p*=yheight-(prms.focus_yh_2-dist*tan(theta_y)-prms.ymin)
+        y=prms.ymin + rand01()*prms.focus_yh_2-dist*tan(theta_y);
+        p*=yheight-(prms.focus_yh_2-dist*tan(theta_y)-prms.ymin);
       }else{
         y=prms.ymax + rand01()*prms.focus_yh_2-dist*tan(theta_y);
-        p*=yheight-(prms.focus_yh_2-dist*tan(theta_y)+prms.ymax)
+        p*=yheight-(prms.focus_yh_2-dist*tan(theta_y)+prms.ymax);
       }
     }
   }else{
-    theta_x=randnorm(0,focus_aw);
-    theta_y=randnorm(0,focus_ah);
+    theta_x=randnorm()*focus_aw;
+    theta_y=randnorm()*focus_ah;
     x=prms.xmin+rand01()*xwidth;
     y=prms.ymin+rand01()*yheight;
   }
@@ -124,8 +132,10 @@ TRACE
   kz=1;
   NORM(kx,ky,kz);
 
-  if (dK!=0){
-    kk==K+rand01()*DK;
+  if (prms.dK!=0){
+    kk=prms.K+rand01()*prms.dK;
+  }else{
+    kk=prms.K;
   }
 
   kx*=kk;
@@ -134,7 +144,11 @@ TRACE
 
   /*set polarization and phase to something known*/
   Ex=0;Ey=0;Ez=0;
-  phi=0;
+  if (MX_COHERENT){
+    phi=0;
+  }else{
+    phi=rand01()*M_2_PI;
+  }
 %}
 
 MCDISPLAY
