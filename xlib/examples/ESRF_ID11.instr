@@ -1,7 +1,7 @@
 /*******************************************************************************
 *         McXtrace instrument definition URL=http://www.mcxtrace.org
 *
-* Instrument: ID11-nanofocus beamline
+* Instrument: ESRF-ID11-nanofocus beamline
 *
 * %Identification
 * Written by: E. Knudsen (erkn@risoe.dtu.dk)
@@ -19,7 +19,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT ID11_lens(ANGLE=0,SOURCE=0,T1_N=16,T2_N=16,T3_N=16,SI_N=2)
+DEFINE INSTRUMENT ESRF_ID11(ANGLE=0,SOURCE=0,T1_N=16,T2_N=16,T3_N=16,SI_N=2)
 
 
 DECLARE
