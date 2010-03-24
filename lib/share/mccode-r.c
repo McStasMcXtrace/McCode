@@ -2558,10 +2558,10 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
       int mnp[3]={detector.m,detector.n,detector.p};
 
       if (mc_MPI_Send(mnp, 3, MPI_INT, mpi_node_root)!= MPI_SUCCESS)
-        fprintf(stderr, "Warning: node %i to master: MPI_Send mnp list error (mcdetector_write_data)", mpi_node_rank);
+        fprintf(stderr, "Warning: proc %i to master: MPI_Send mnp list error (mcdetector_write_data)", mpi_node_rank);
       if (!detector.p1 
        || mc_MPI_Send(detector.p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, mpi_node_root) != MPI_SUCCESS)
-        fprintf(stderr, "Warning: node %i to master: MPI_Send p1 list error (mcdetector_write_data)", mpi_node_rank);
+        fprintf(stderr, "Warning: proc %i to master: MPI_Send p1 list error (mcdetector_write_data)", mpi_node_rank);
       /* slaves are done */
       return (detector);
     }
@@ -2578,11 +2578,11 @@ MCDETECTOR mcdetector_write_data(MCDETECTOR detector)
       int     mnp[3]={detector.m,detector.m,detector.p};  /* size of this buffer */
       if (node_i != mpi_node_root) { /* get data from slaves */
         if (mc_MPI_Recv(mnp, 3, MPI_INT, node_i) != MPI_SUCCESS)
-          fprintf(stderr, "Warning: master from node %i: "
+          fprintf(stderr, "Warning: master from proc %i: "
             "MPI_Recv mnp list error (mcdetector_write_data)", node_i);
         this_p1 = (double *)calloc(abs(mnp[0]*mnp[1]*mnp[2]), sizeof(double));
         if (!this_p1 || mc_MPI_Recv(this_p1, abs(mnp[0]*mnp[1]*mnp[2]), MPI_DOUBLE, node_i)!= MPI_SUCCESS)
-          fprintf(stderr, "Warning: master from node %i: "
+          fprintf(stderr, "Warning: master from proc %i: "
             "MPI_Recv p1 list error (mcdetector_write_data)", node_i);
         detector.p1 = this_p1;
         detector.m  = mnp[0]; detector.n  = mnp[1]; detector.p  = mnp[2];
@@ -4666,6 +4666,9 @@ void sighandler(int sig)
 #define SIG_ABRT 3
 
   printf("\n# McStas: [pid %i] Signal %i detected", getpid(), sig);
+#ifdef USE_MPI
+  printf("[proc %i]", mpi_node_rank);
+#endif
 #if defined(SIGUSR1) && defined(SIGUSR2) && defined(SIGKILL)
   if (!strcmp(mcsig_message, "sighandler") && (sig != SIGUSR1) && (sig != SIGUSR2))
   {
