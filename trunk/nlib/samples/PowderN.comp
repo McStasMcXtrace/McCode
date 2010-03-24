@@ -124,7 +124,8 @@
 * xwidth:   Horiz. dimension of sample, as a width [m]
 * yheight:  Height of sample y direction [m]
 * zdepth:   Depth of box sample [m]
-* thickness:Thickness of hollow sample [m]
+* thickness:Thickness of hollow sample. 
+*                Negative value extends the hollow volume outside of the box/cylinder. [m]
 * reflections: Input file for reflections.
 *                Use only incoherent scattering if NULL or "" [string]
 *
@@ -489,9 +490,9 @@ INITIALIZE
       xwidth_i =xwidth;
       yheight_i=yheight;
       zdepth_i =zdepth;
-      xwidth_i =xwidth +2*thickness; 
-      yheight_i=yheight+2*thickness; 
-      zdepth_i =zdepth +2*thickness;
+      xwidth   =xwidth +2*thickness; 
+      yheight  =yheight+2*thickness; 
+      zdepth   =zdepth +2*thickness;
     }
   }
   
@@ -641,7 +642,8 @@ TRACE
     if (t3 < 0) {
       t3=0; /* Already past sample?! */
       if (line_info.flag_warning < 100) 
-      printf("PowderN: %s: Warning: Neutron has already passed us? (Skipped).\n", NAME_CURRENT_COMP);
+      printf("PowderN: %s: Warning: Neutron has already passed us? (Skipped).\n"
+             "         In concentric geometry, this may be caused by a missing concentric=0 option in 2nd enclosing instance.\n", NAME_CURRENT_COMP);
       line_info.flag_warning++;
     } else {
       if (dt<0) { /* Calculate scattering point position */
