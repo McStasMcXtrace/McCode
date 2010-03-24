@@ -176,6 +176,7 @@
 *                     shapes
 * zdepth:       [m] depth for a box sample shape
 * thickness:    [m] Thickness of hollow sample
+*                     Negative value extends the hollow volume outside of the box/cylinder.
 *
 * OPTIONAL PARAMETERS:
 * concentric:   [1] Indicate that this component has a hollow geometry and
@@ -1222,6 +1223,8 @@ INITIALIZE
     exit(fprintf(stderr,"Isotropic_Sqw: %s: sample has invalid dimensions.\n"
                         "ERROR          Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   
+  
+  
   if (thickness) {
     if (radius && (radius < fabs(thickness) )) {
       fprintf(stderr,"Isotropic_Sqw: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
@@ -1394,7 +1397,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
   /* Intersection neutron trajectory / sample (sample surface) */
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
-    if (thickness>=0) {
+    if (thickness >= 0) {
       if (VarSqw.shape==0)
         intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius,yheight);
       else if (VarSqw.shape==1)
@@ -1422,7 +1425,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
   /* Computing the intermediate times */
   if (intersect) {
     flag_ishollow = 0;
-    if (thickness>0) {
+    if (thickness > 0) {
       if (VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz, radius-thickness,
         yheight-2*thickness > 0 ? yheight-2*thickness : yheight))
         flag_ishollow=1;
@@ -1466,7 +1469,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     /* initialize concentric mode */
     if (concentric && !flag_concentric && t0 >= 0
-     && VarSqw.shape==0 && thickness>0) {
+     && VarSqw.shape==0 && thickness) {
       flag_concentric=1;
     }
 
