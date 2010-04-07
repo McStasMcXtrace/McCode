@@ -89,8 +89,11 @@ usage = usage + "  (some formats might not work on your platform)\n\n"
 def display_single(FileStruct):
     """
     Plot a single 1D/2D axis with data, using matplotlib and optionally mplot3d.
+      called from: click, display
+      input:  FileStruct as obtained from read_monitor()
+      output: FileStruct data structure
     """
-    from pylab import gcf,errorbar,gca,xlim,ylim,ylabel,xlabel,title,linspace,pcolor,colorbar,log,contour
+    from pylab import errorbar,gca,xlim,ylim,ylabel,xlabel,title,linspace,pcolor,colorbar,log,contour
     from numpy import where
     type = FileStruct['type'].split('(')[0].strip()
 
@@ -139,19 +142,18 @@ def display_single(FileStruct):
         x = linspace(Xmin,Xmax,mysize[1])
         y = linspace(Ymin,Ymax,mysize[0])
         
-        # Dead code for now, does not work properly with mplot3d
-        #try:
-        # use mplot3d toolkit
-        #from mpl_toolkits.mplot3d import Axes3D
-        #from pylab import gcf
-          
-        #ax = Axes3D(gcf())
-        #if options.contour==True:
-        #ax.contour(x,y,I)
-        #else:
-        #ax.plot_surface(x,y,I)
-        
-        #except ImportError:
+#        try:
+#          # use mplot3d toolkit
+#          from mpl_toolkits.mplot3d import Axes3D
+#          from pylab import gcf
+#          
+#          ax = Axes3D(gcf())
+#          if options.contour==True:
+#            ax.contour(x,y,I)
+#          else:
+#            ax.plot_surface(x,y,I)
+#        
+#        except ImportError:
         # use default flat rendering
         ax = gca()
         if options.contour==True:
@@ -181,6 +183,9 @@ def display_single(FileStruct):
 def calc_panel_size(num):
     """
     Compute size of subplot to use
+      called from: display
+      input:  number of slots to prepare
+      output: dimension of subplot
     """
     from pylab import sqrt
     Panels = ( [1,1], [2,1], [2,2], [3,2], [3,3], [4,3], [5,3], [4,4],
@@ -210,6 +215,9 @@ def calc_panel_size(num):
 def read_monitor(this_File):
     """
     Read a monitor file (McCode format) using loadtxt module
+      called from: display
+      input: this_File file name as a string
+      output: FileStruct data structure
     """
     from numpy import loadtxt
 
@@ -240,6 +248,10 @@ def read_monitor(this_File):
 def get_monitor(FS,j):
     """
     Extract one of the monitor in scan steps
+      called from: display
+      input:  FileStruct obtained from read_monitor(scan data file) 
+              j          index of monitor column to extract
+      output: FileStruct with selected monitor 'j'
     """
     # Ugly, hard-coded...
     data=FS['data'][:,(0,2*j+1,2*j+2)]
@@ -248,11 +260,14 @@ def get_monitor(FS,j):
               'type':'array_1d(100)',
               'xlabel':FS['xlabel'],'ylabel':FS['ylabel'],'File':'Scan','title':'','FontSize':6}
     return FSsingle
-    # get_monitor
+    # end get_monitor
 
 def click(event):
     """
-    Handle mouse click in the main matplotlib overview window
+    Handle mouse click in the main matplotlib overview window, opens single monitor window
+      called from: display
+      input:  event structure
+      output: None
     """
     from pylab import get_current_fig_manager,get,gcf,figure,clf,connect,show
     tb = get_current_fig_manager().toolbar
@@ -267,7 +282,6 @@ def click(event):
                 h=figure()
                 clf()
                 FS=display_single(FS)
-#                connect('button_press_event',close_click)
                 connect('key_press_event', keypress)
                 jused = j
         FSlist[jused]['axes']=g
@@ -277,6 +291,9 @@ def click(event):
 def keypress(event):
     """
     Handle key shortcut in a window
+      called from: click, display
+      input:  event structure
+      output: None
     """
     from pylab import close,gcf,figure,gca,text,title,show
     event.key = event.key.lower()
@@ -327,6 +344,10 @@ def keypress(event):
 def display_scanstep(this_File, relative_index):
     """
     When displaying a scan data set, displays next/previous scan step in a separate window
+      called from: keypress
+      input:  this_File file name of scan data set/directory
+              relative_index +1 or -1 to indicate forward/backward circulate in scan steps
+      output: None
     """
     global scan_index,scan_window,scan_flag
 
@@ -339,6 +360,7 @@ def display_scanstep(this_File, relative_index):
     # open or re-open scan_window
     if scan_window is not None:
         close(scan_window)
+        
     scan_window=figure()
     
     if scan_flag == 1:
@@ -354,12 +376,15 @@ def display_scanstep(this_File, relative_index):
       index = scan_length-1
 
     scan_index = index
-    display(os.path.join(File, "%i" % index))
+    display(os.path.join(this_File, "%i" % index))
     # end display_scanstep
 
 def dumpfile(format):
     """
     Save current fig to hardcopy. 
+      called from: keypress
+      input:  format of hardcopy to generate, e.g. pdf, ps, png, ...
+      output: None
     """
     global exp_counter
     from pylab import savefig
@@ -369,17 +394,13 @@ def dumpfile(format):
     print "Saved " + Filename
     # end dumpfile
 
-#def close_click(event):
-#    from pylab import get_current_fig_manager,close,figure
-#    tb = get_current_fig_manager().toolbar
-#    if event.button==1 and event.inaxes and tb.mode == '':
-#        g = event.inaxes
-#        figure(1)
-#        close(2)
-
 def display(this_File):
     """
-    Display data set from File: overview or scan data set
+    Display data set from File: overview or scan data set. Installs button and keyboard events.
+    Only returns after show().
+      called from: main
+      input:  this_File file name to show as a string
+      output: None
     """
     from pylab import connect,subplot,gca,savefig,show,gcf
     global scan_flag,scan_length
@@ -441,13 +462,13 @@ def display(this_File):
             for j in range(0, L):
                 FSsingle = get_monitor(FS,j)
                 subplot(dims[1],dims[0],j+1)
-                try:
-                    # use mplot3d toolkit
-                    from mpl_toolkits.mplot3d import Axes3D
-                    from pylab import gcf
-                    ax = Axes3D(gcf())
-                except ImportError:
-                    ax=gca()
+#                try:
+#                    # use mplot3d toolkit
+#                    from mpl_toolkits.mplot3d import Axes3D
+#                    from pylab import gcf
+#                    ax = Axes3D(gcf())
+#                except ImportError:
+                ax=gca()
                  
                 FSlist[len(FSlist):] = [FSsingle]
                 FSlist[j]=display_single(FSsingle)
@@ -458,13 +479,12 @@ def display(this_File):
         dims = calc_panel_size(L)
         for j in range(0, L):
             subplot(dims[1],dims[0],j+1)
-            # Dead code for now, subplots don't work properly with mplot3d
-            #try:
-            # use mplot3d toolkit
-            #    from mpl_toolkits.mplot3d import Axes3D
-            #   from pylab import gcf
-            #   ax = Axes3D(gcf())
-            #except ImportError:
+#            try:
+#                # use mplot3d toolkit
+#                from mpl_toolkits.mplot3d import Axes3D
+#                from pylab import gcf
+#                ax = Axes3D(gcf())
+#            except ImportError:
             ax=gca()
             MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip()
             FS=read_monitor(MonFile)
@@ -489,7 +509,7 @@ def display(this_File):
     connect('button_press_event',click)
     connect('key_press_event', keypress)
     
-    #os.chdir(pwd)
+    os.chdir(pwd)
     show()
     # end display
 
