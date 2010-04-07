@@ -65,6 +65,7 @@ scan_flag   = 0     # indicates if data set is a scan one.
                     #   Set to 1 when showing overview. Set to 2 when starting to show separate scan steps
 scan_length = 0     # length of scan data set
 File        = 0     # hold initial filename/path to data set
+exp_counter = 0     # Incremented on each hardcopy
 
 """string used for Usage (--help) and 'h' key stroke on plot"""
 usage =         "usage: %s [options] <simfile | detectorfile | scanfile>\n\n" \
@@ -89,7 +90,7 @@ def display_single(FileStruct):
     """
     Plot a single 1D/2D axis with data, using matplotlib and optionally mplot3d.
     """
-    from pylab import errorbar,gca,xlim,ylim,ylabel,xlabel,title,linspace,pcolor,colorbar,log,contour
+    from pylab import gcf,errorbar,gca,xlim,ylim,ylabel,xlabel,title,linspace,pcolor,colorbar,log,contour
     from numpy import where
     type = FileStruct['type'].split('(')[0].strip()
 
@@ -138,24 +139,25 @@ def display_single(FileStruct):
         x = linspace(Xmin,Xmax,mysize[1])
         y = linspace(Ymin,Ymax,mysize[0])
         
-        try:
-          # use mplot3d toolkit
-          from mpl_toolkits.mplot3d import Axes3D
-          from pylab import gcf
+        # Dead code for now, does not work properly with mplot3d
+        #try:
+        # use mplot3d toolkit
+        #from mpl_toolkits.mplot3d import Axes3D
+        #from pylab import gcf
           
-          ax = Axes3D(gcf())
-          if options.contour==True:
-            ax.contour(x,y,I)
-          else:
-            ax.plot_surface(x,y,I)
+        #ax = Axes3D(gcf())
+        #if options.contour==True:
+        #ax.contour(x,y,I)
+        #else:
+        #ax.plot_surface(x,y,I)
         
-        except ImportError:
-          # use default flat rendering
-          ax = gca()
-          if options.contour==True:
-              h=contour(x,y,I)
-          else:
-              h=pcolor(x,y,I)
+        #except ImportError:
+        # use default flat rendering
+        ax = gca()
+        if options.contour==True:
+            h=contour(x,y,I)
+        else:
+            h=pcolor(x,y,I)
         
         FileStruct['axes']=gca()
         xlim(Xmin,Xmax)
@@ -359,8 +361,10 @@ def dumpfile(format):
     """
     Save current fig to hardcopy. 
     """
+    global exp_counter
     from pylab import savefig
-    Filename = File +"." + format
+    Filename = "mcplot_" + str(exp_counter) + "." + format
+    exp_counter = exp_counter + 1
     savefig(Filename)
     print "Saved " + Filename
     # end dumpfile
@@ -454,13 +458,14 @@ def display(this_File):
         dims = calc_panel_size(L)
         for j in range(0, L):
             subplot(dims[1],dims[0],j+1)
-            try:
-                # use mplot3d toolkit
-                from mpl_toolkits.mplot3d import Axes3D
-                from pylab import gcf
-                ax = Axes3D(gcf())
-            except ImportError:
-                ax=gca()
+            # Dead code for now, subplots don't work properly with mplot3d
+            #try:
+            # use mplot3d toolkit
+            #    from mpl_toolkits.mplot3d import Axes3D
+            #   from pylab import gcf
+            #   ax = Axes3D(gcf())
+            #except ImportError:
+            ax=gca()
             MonFile = MonFiles[j].split(':'); MonFile = MonFile[1].strip()
             FS=read_monitor(MonFile)
             FS['FontSize']=6
@@ -484,7 +489,7 @@ def display(this_File):
     connect('button_press_event',click)
     connect('key_press_event', keypress)
     
-    os.chdir(pwd)
+    #os.chdir(pwd)
     show()
     # end display
 
