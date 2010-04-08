@@ -450,7 +450,7 @@ mcstatic struct mcformats_struct mcformats[mcNUMFORMATS] = {
       "if ~p, return; end;\n"
       "execstr(['l=[',d.xylimits,'];']); S=size(d.data);\n"
       "t1=['['+d.parent+'] '+d.filename+': '+d.title];t = [t1;['  '+d.variables+'=['+d.values+']'];['  '+d.signal];['  '+d.statistics]];\n"
-      "mprintf('%%s\\n',t(:));\n"
+      "mprintf('%s\\n',t(:));\n"
       "if length(strindex(d.type,'0d')),return; end\n"
       "w=winsid();if length(w),w=w($)+1; else w=0; end\n"
       "xbasr(w); xset('window',w);\n"
@@ -1161,13 +1161,14 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
 
     arg_posB[this_arg] = (char *)strchr(fmt_pos, '%');
     tmp = arg_posB[this_arg];
-    if (tmp)
+    if (tmp)	/* found a percent */
     {
+      char  printf_formats[]="dliouxXeEfgGcs\0";
       arg_posE[this_arg] = (char *)strchr(tmp, '$');
-      if (arg_posE[this_arg] && tmp[1] != '%')
-      {
+      if (arg_posE[this_arg] && isdigit(tmp[1]))
+      { /* found a dollar following a percent  and a digit after percent */
         char  this_arg_chr[10];
-        char  printf_formats[]="dliouxXeEfgGcs\0";
+        
 
         /* extract positional argument index %*$ in fmt */
         strncpy(this_arg_chr, arg_posB[this_arg]+1, arg_posE[this_arg]-arg_posB[this_arg]-1 < 10 ? arg_posE[this_arg]-arg_posB[this_arg]-1 : 9);
@@ -1186,11 +1187,13 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
         this_arg++;
       }
       else
-      {
-        if  (tmp[1] != '%')
-          return(-fprintf(stderr,"pfprintf: must use only positional arguments (%s).\n", arg_posB[this_arg]));
-        else { 
+      { /* no dollar or no digit */
+        if  (tmp[1] == '%') {
           fmt_pos = arg_posB[this_arg]+2;  /* found %% */
+        } else if (strchr(printf_formats,tmp[1])) {
+          fmt_pos = arg_posB[this_arg]+1;  /* found %s */
+        } else { 
+          return(-fprintf(stderr,"pfprintf: must use only positional arguments (%s).\n", arg_posB[this_arg]));
         }
       }
     } else
