@@ -658,6 +658,7 @@ sub do_instr_init {
         print $OUT <<ENDCODE
 function mcstas = get_mcstas(p)
 % Embedded function for building 'mcplot' compatible structure
+% Matlab with text headers function
 % PW, RISOE, 20030701
 %
 % import data using $filename; s=get_mcstas('plot');
@@ -667,6 +668,7 @@ ENDCODE
         print $OUT <<ENDCODE
 function mcstas = get_mcstas(p)
 // Embedded function for building 'mcplot' compatible structure
+// Scilab with text headers function
 // PW, RISOE, 20030701
 //
 // import data using exec('mcstas.sci',-1); s=get_mcstas('plot');
