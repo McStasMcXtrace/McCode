@@ -1624,9 +1624,9 @@ void mcformat_scan_compare(int nb)
         if (ipar_max < this) ipar_max=this;
       } /* for i */
       strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_I ");
-      strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_Err ");
+      strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_ERR ");
       strcat(youts, "("); strcat(youts, Files_to_Merge[Scan_distances[j]].outputname); strcat(youts, "_I,");
-      strcat(youts, Files_to_Merge[Scan_distances[j]].outputname); strcat(youts, "_Err) ");
+      strcat(youts, Files_to_Merge[Scan_distances[j]].outputname); strcat(youts, "_ERR) ");
     } /* for j */
     Scan.header=header;
 
