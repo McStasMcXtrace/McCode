@@ -1769,7 +1769,8 @@ MCDETECTOR mcdetector_import(struct mcformats_struct format,
     if (istransposed) { /* do the swap once for all */
       long i=m; m=abs(n); n=abs(i); p=abs(p);
     }
-  } else m=abs(m); n=abs(n); p=abs(p);
+  } 
+  m=abs(m); n=abs(n); p=abs(p); /* make sure dimensions are positive */
   detector.istransposed = istransposed;
   
   /* determine detector rank (dimensionality) */
