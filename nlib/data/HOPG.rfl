@@ -1,7 +1,8 @@
+# Format: McStas Reflectivity file
 # Highly oriented Pyrolithic Graphite PG (002) reflectivity.
 # Data taken from 'La diffusion inelastique des neutrons' 
 # JDN5, 20 mai 1996 by B. Hennion (LLB) and ILL/IN20. farhi@ill.fr, March 2000
-# [ k (Angs-1) , Reflectivity (%) ]
+# [ k(Angs-1) Reflectivity(% in 0-1) ]
 # wavevector multiply
  1.238265 0.89224335
  1.243265 0.890469470813722

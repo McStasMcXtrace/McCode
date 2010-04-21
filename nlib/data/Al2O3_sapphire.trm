@@ -1,7 +1,8 @@
+# Format: McStas Transmission file
 # Single crystal Sapphire (Al2O3) transmission. T=80 K.
 # Thickness: 0.05 [m]
 # From: Tennant, Rev. Sci. Instrum., 59 (1988) 380
-# [ lambda(Angs) Transmission (0-1) ]
+# [ lambda(Angs) Transmission(% in 0-1) ]
 # wavelenght multiply
 0.20    0.04
 0.69    0.38
@@ -20,17 +21,3 @@
 4.20    0.76
 5.18    0.71
 
-
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    

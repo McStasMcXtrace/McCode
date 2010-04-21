@@ -1,9 +1,10 @@
+# Format: McStas Transmission file
 # Highly oriented Pyrolithic Graphite PG (002) transmission.
 # with 3rd order correction
 # thickness: 0.05 [m]
 # Data taken from 'La diffusion inelastique des neutrons' 
 # JDN5, 20 mai 1996 by B. Hennion (LLB) and ILL/IN20. farhi@ill.fr, March 2000
-# [ k (Angs-1) , Transmission (%) ]
+# [ k(Angs-1) Transmission(% in 0-1) ]
 # wavevector multiply
    1.5890272e+00   9.4429150e-01
    1.6151183e+00   9.2451720e-01

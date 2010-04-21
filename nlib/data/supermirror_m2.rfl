@@ -1,8 +1,10 @@
+# Format: McStas Reflectivity file
 # Swiss Neutronics Ni/Ti supermirror coating on glass
 # Reference: http://www.swissneutronics.ch/
 # m=2 super mirror
 # Measurement at lambda=4.73 Angs
-# Data: q [AA-1], R[0-1]
+# [ k(Angs-1) Reflectivity(% in 0-1) ]
+# wavevector multiply
 0.000206084 1.00487804878
 0.00144259 0.998460704607
 0.00226692 0.992014453478
