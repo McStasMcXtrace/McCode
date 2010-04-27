@@ -90,7 +90,11 @@ function data = mcplot(varargin)
   end
 
   if isempty(filename)
-    [filename, pathname] = uigetfile('*.*', 'Select data file to load');
+    if ~exist('uigetfile')
+      [filename, pathname] = mcplot_uigetfile('*.*', 'Select data file to load');
+    else
+      [filename, pathname] = uigetfile('*.*', 'Select data file to load');
+    end
     if isempty(filename), return; end
     filename = fullfile(pathname, filename);
   end
@@ -100,6 +104,8 @@ function data = mcplot(varargin)
   
   % plot (overview or single)
   data = mcplot_display(data);
+  
+  drawnow;
 
 end % mcplot (main)
 
@@ -295,7 +301,11 @@ function structure=mcplot_load_data(filename)
     if fid == -1, return; end % also returns when filename is empty
     
     % read header
-    header = textscan(fid,'#%s','endOfLine','\n','delimiter','\n');
+    if ~exist('textscan')
+      [header, data] = mcplot_textscan(fid);
+    else
+      header = textscan(fid,'#%s','endOfLine','\n','delimiter','\n');
+    end
     if iscellstr(header{1}) & length(header)==1
       header = header{1};
     end
@@ -303,23 +313,27 @@ function structure=mcplot_load_data(filename)
     paramstr = '';
     % build structure from header fields
     for index=1:length(header)
-      line = strread(header{index},'%s','delimiter',':'); % field:value
-      if length(line) < 2, continue; end
-      value = strtrim(strcat(line{2:end})); value=strrep(value,'''','');
+      % use strtok to split line around':'
+      [field, value] = strtok(header{index}, ':');
+      value(find(value == ':')) = ''; value=strtrim(value); field=strtrim(field);
+      value=strrep(value,'''','');  % remove quotes
+      % keep 'value' as a string for further use before converting to num
+      value_str=value;  
       num   = str2num(value);
       if ~isempty(num), value = num; end
-      if strncmp(line{1},'Instrument', length('Instrument'))
+      if strncmp(field,'Instrument', length('Instrument'))
         field = 'Instrument';
       else
-        field = genvarname(line{1});                      % validate variable name
+        field = genvarname(field);                        % validate variable name
       end
       if isempty(strfind(field, 'Param'))
         structure = setfield(structure, field, value);    % set new field
       else  % special case for parameters. Build 'Param' sub structure
         if ~isfield(structure,'Param'), structure = setfield(structure, 'Param',[]); end  % create if needed
         param        = getfield(structure, 'Param');
-        [var,value]  = strread(value,'%s %s','delimiter','=');  % get 'parameter=value' pair
-        value        = strcat(value{1:end}); var = var{1};
+        % use strtok to split line around'='
+        [var,value]  = strtok(value_str,'=');
+        value(find(value == '=')) = ''; value=strtrim(value); var=strtrim(var);
         paramstr = [ paramstr var '=' value '; ' ];
         num          = str2num(value);
         if ~isempty(num), value = num; end
@@ -332,12 +346,16 @@ function structure=mcplot_load_data(filename)
   elseif isstruct(filename)
     structure=filename;
   end
+  clear header
   
   % extract type and theoretical dimension of data block
   if isfield(structure,'type')
-    [t s]=strread(structure.type, '%s %d','delimiter','() ');
-    structure.type = t{1};
-    structure.size = s(:)';
+    % use strtok to split line around'()'
+    [t s]=strtok(structure.type, '()');
+    structure.type = t;
+    % remove parenthesis
+    s=strrep(s,'(',''); s=strrep(s,')','');
+    structure.size = str2num(s);
   else
     return;
   end
@@ -354,8 +372,11 @@ function structure=mcplot_load_data(filename)
   
   if ischar(filename)
     % load data block
-    frewind(fid);
-    data     = textscan(fid,'%f','CommentStyle','#');
+    if exist('textscan')
+      frewind(fid);
+      data     = textscan(fid,'%f','CommentStyle','#');
+    end
+    % else was obtained in one call to mcplot_textscan
     fclose(fid);
     if iscell(data) & length(data)==1
       data = data{1};
@@ -393,17 +414,32 @@ function structure=mcplot_load_data(filename)
   if ischar(filename)
     % reshape data block from 'type'
     len      = prod(structure.size);
-    signal   = transpose(reshape(data(1:len), fliplr(structure.size)));
-    if prod(size(data)) >= 2*len
-      errors = transpose(reshape(data((len+1):(2*len)), fliplr(structure.size)));
-    else 
-      errors = []; 
+    if exist('textscan')  % Matlab read file and produces a single vector to be re-organized
+      
+      signal   = transpose(reshape(data(1:len), fliplr(structure.size)));
+      if prod(size(data)) >= 2*len
+        errors = transpose(reshape(data((len+1):(2*len)), fliplr(structure.size)));
+      else 
+        errors = []; 
+      end
+      if prod(size(data)) >= 3*len
+        events = transpose(reshape(data((2*len+1):(3*len)), fliplr(structure.size)));
+      else 
+        events = []; 
+      end
+    else
+      % we used our own data reader, which already shaped data block
+      l = structure.size(1);
+      signal = data(1:l,1:structure.size(2));
+      
+      if prod(size(data)) >= 2*len
+        errors = data((l+1):(2*l),1:structure.size(2));
+      end
+      if prod(size(data)) >= 3*len
+        events = data((2*l+1):(3*l),1:structure.size(2));
+      end
     end
-    if prod(size(data)) >= 3*len
-      events = transpose(reshape(data((2*len+1):(3*len)), fliplr(structure.size)));
-    else 
-      events = []; 
-    end
+    clear data
     % add data block
     structure.data     = signal;
     structure.errors   = errors;
@@ -694,7 +730,7 @@ function data = mcplot_display(data, fig)
     xlim([l(1) l(2)]);
   end
   % add labels, title
-  t=title({ data.title, data.filename }); 
+  t=title(sprintf('%s\n%s', data.title, data.filename)); 
   set(t,'interpreter','none','fontweight','bold');
   xlabel(data.xlabel);
   ylabel(data.ylabel);
@@ -703,62 +739,201 @@ function data = mcplot_display(data, fig)
   set(h, 'UserData', data, 'Tag',[ 'mcplot_data_' data.filename ]);
   
   % add contextual menu
-  hm = uicontextmenu;
-  uimenu(hm, 'Label',['About ' data.filename ],'Callback', ...
-    [ 'h=get(gco,''userdata''); t=evalc(''data=h''); p=evalc(''parameters=h.Param'',[]); msgbox([ h.title '': '' h.filename, t, p ], [ h.title '': '' h.filename ],''help'');' ])
-    
-  uimenu(hm, 'Label', [ 'Source:    '    data.Source ]);
-  uimenu(hm, 'Label', [ 'Component: '    data.component ]);
-  uimenu(hm, 'Label', [ 'Filename:  '    data.filename ]);
-  uimenu(hm, 'Separator','on','Label','Toggle grid', 'Callback','grid');
-  if strcmp(data.type,'array_1d')
-    uimenu(hm, 'Label','Toggle error bars', 'Callback','tmp_h=get(gco,''children''); if strcmp(get(tmp_h(2),''visible''),''off''), tmp_v=''on''; else tmp_v=''off''; end; set(tmp_h(2),''visible'',tmp_v); clear tmp_h tmp_v');
-    uimenu(hm, 'Label','Linear/Log scale','Callback', 'if strcmp(get(gca,''yscale''),''linear'')  set(gca,''yscale'',''log''); else set(gca,''yscale'',''linear''); end');
-  else
-    uimenu(hm, 'Label','Reset Flat/3D View', 'Callback','[tmp_a,tmp_e]=view; if (tmp_a==0 & tmp_e==90) view(3); else view(2); end; clear tmp_a, tmp_e; lighting none;alpha(1);shading flat;rotate3d off;axis tight;');
-    uimenu(hm, 'Label','Smooth View','Callback', 'shading interp;');
-    uimenu(hm, 'Label','Add Light','Callback', 'light;lighting phong;');
-    uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.7);');
-    uimenu(hm, 'Label','Linear/Log scale','Callback', 'if strcmp(get(gca,''zscale''),''linear'')  set(gca,''zscale'',''log''); else set(gca,''zscale'',''linear''); end');
-  end
-  
-  
-  % export menu items
-  uimenu(hm, 'Label',['Duplicate ' data.component ' view'], 'Callback', ...
-    [ 'h=get(gco,''userdata''); h.filename = ''' data.component '''; mcplot(h);' ]);
-  if ~isempty(dir(data.filename))
-    uimenu(hm, 'Label',['Edit ' data.filename], 'Callback', ...
-      [ 'h=get(gco,''userdata''); if ~isempty(dir(h.filename)), edit(h.filename); end' ]);
-  end
-  if ~isdeployed
-    uimenu(hm, 'Label',['Export into ' genvarname(data.filename) ],'Callback', ...
-      [ 'evalin(''base'',''' genvarname(data.filename) ' = get(gco,''''userdata''''); disp([''''Exported data into variable ' genvarname(data.filename) ''''']);'');'])
-  end
-    
-  uimenu(hm, 'Label',['Save as ' data.filename '.png'], 'Callback', [ 'saveas(gcf, ''' data.filename '.png'',''png''); disp(''Exported as ' data.filename '.png'')' ]);
-  uimenu(hm, 'Label',['Save as ' data.filename '.jpg'], 'Callback', [ 'saveas(gcf, ''' data.filename '.jpg'',''jpg''); disp(''Exported as ' data.filename '.jpg'')' ]);
-  uimenu(hm, 'Label',['Save as ' data.filename '.fig (Matlab)'], 'Callback',[ 'saveas(gcf, ''' data.filename '.fig'',''fig''); disp(''Exported as ' data.filename '.fig'')' ]);
-  uimenu(hm, 'Label',['Save as ' data.filename '.eps'], 'Callback',[ 'saveas(gcf, ''' data.filename '.eps'',''eps''); disp(''Exported as ' data.filename '.eps'')' ]);
-  uimenu(hm, 'Label',['Save as ' data.filename '.pdf'], 'Callback',[ 'saveas(gcf, ''' data.filename '.pdf'',''pdf''); disp(''Exported as ' data.filename '.pdf'')' ]);
- 
-  % add rotate/pan/zoom tools in case java machine is not started
-  if ~usejava('jvm')
-    uimenu(hm, 'Separator','on','Label','Zoom on/off', 'Callback','zoom');
-    uimenu(hm, 'Label','Pan (move)', 'Callback','pan');
-    set(gcf, 'KeyPressFcn', @(src,evnt) eval('if lower(evnt.Character)==''r'', lighting none;alpha(1);shading flat;axis tight;rotate3d off;; end') );
-    if strcmp(data.type,'array_2d')
-      uimenu(hm, 'Label', 'Rotate', 'Callback','rotate3d on');
+  if exist('uicontextmenu')
+    hm = uicontextmenu;
+    uimenu(hm, 'Label',['About ' data.filename ],'Callback', ...
+      [ 'h=get(gco,''userdata''); t=evalc(''data=h''); p=evalc(''parameters=h.Param'',[]); msgbox([ h.title '': '' h.filename, t, p ], [ h.title '': '' h.filename ],''help'');' ])
+      
+    uimenu(hm, 'Label', [ 'Source:    '    data.Source ]);
+    uimenu(hm, 'Label', [ 'Component: '    data.component ]);
+    uimenu(hm, 'Label', [ 'Filename:  '    data.filename ]);
+    uimenu(hm, 'Separator','on','Label','Toggle grid', 'Callback','grid');
+    if strcmp(data.type,'array_1d')
+      uimenu(hm, 'Label','Toggle error bars', 'Callback','tmp_h=get(gco,''children''); if strcmp(get(tmp_h(2),''visible''),''off''), tmp_v=''on''; else tmp_v=''off''; end; set(tmp_h(2),''visible'',tmp_v); clear tmp_h tmp_v');
+      uimenu(hm, 'Label','Linear/Log scale','Callback', 'if strcmp(get(gca,''yscale''),''linear'')  set(gca,''yscale'',''log''); else set(gca,''yscale'',''linear''); end');
+    else
+      uimenu(hm, 'Label','Reset Flat/3D View', 'Callback','[tmp_a,tmp_e]=view; if (tmp_a==0 & tmp_e==90) view(3); else view(2); end; clear tmp_a, tmp_e; lighting none;alpha(1);shading flat;rotate3d off;axis tight;');
+      uimenu(hm, 'Label','Smooth View','Callback', 'shading interp;');
+      uimenu(hm, 'Label','Add Light','Callback', 'light;lighting phong;');
+      uimenu(hm, 'Label','Transparency','Callback', 'alpha(0.7);');
+      uimenu(hm, 'Label','Linear/Log scale','Callback', 'if strcmp(get(gca,''zscale''),''linear'')  set(gca,''zscale'',''log''); else set(gca,''zscale'',''linear''); end');
     end
-    uimenu(hm, 'Label','Print ...', 'Callback', 'printdlg(gcf)');
+    
+    
+    % export menu items
+    uimenu(hm, 'Label',['Duplicate ' data.component ' view'], 'Callback', ...
+      [ 'h=get(gco,''userdata''); h.filename = ''' data.component '''; mcplot(h);' ]);
+    if ~isempty(dir(data.filename))
+      uimenu(hm, 'Label',['Edit ' data.filename], 'Callback', ...
+        [ 'h=get(gco,''userdata''); if ~isempty(dir(h.filename)), edit(h.filename); end' ]);
+    end
+    if ~isdeployed
+      uimenu(hm, 'Label',['Export into ' genvarname(data.filename) ],'Callback', ...
+        [ 'evalin(''base'',''' genvarname(data.filename) ' = get(gco,''''userdata''''); disp([''''Exported data into variable ' genvarname(data.filename) ''''']);'');'])
+    end
+      
+    uimenu(hm, 'Label',['Save as ' data.filename '.png'], 'Callback', [ 'saveas(gcf, ''' data.filename '.png'',''png''); disp(''Exported as ' data.filename '.png'')' ]);
+    uimenu(hm, 'Label',['Save as ' data.filename '.jpg'], 'Callback', [ 'saveas(gcf, ''' data.filename '.jpg'',''jpg''); disp(''Exported as ' data.filename '.jpg'')' ]);
+    uimenu(hm, 'Label',['Save as ' data.filename '.fig (Matlab)'], 'Callback',[ 'saveas(gcf, ''' data.filename '.fig'',''fig''); disp(''Exported as ' data.filename '.fig'')' ]);
+    uimenu(hm, 'Label',['Save as ' data.filename '.eps'], 'Callback',[ 'saveas(gcf, ''' data.filename '.eps'',''eps''); disp(''Exported as ' data.filename '.eps'')' ]);
+    uimenu(hm, 'Label',['Save as ' data.filename '.pdf'], 'Callback',[ 'saveas(gcf, ''' data.filename '.pdf'',''pdf''); disp(''Exported as ' data.filename '.pdf'')' ]);
+   
+    % add rotate/pan/zoom tools in case java machine is not started
+    if ~usejava('jvm')
+      uimenu(hm, 'Separator','on','Label','Zoom on/off', 'Callback','zoom');
+      uimenu(hm, 'Label','Pan (move)', 'Callback','pan');
+      set(gcf, 'KeyPressFcn', @(src,evnt) eval('lighting none;alpha(1);shading flat;axis tight;rotate3d off') );
+      if strcmp(data.type,'array_2d')
+        uimenu(hm, 'Label', 'Rotate', 'Callback','rotate3d on');
+      end
+      uimenu(hm, 'Label','Print ...', 'Callback', 'printdlg(gcf)');
+    end
+    uimenu(hm, 'Separator','on', 'Label', 'About McCode/McPlot', 'Callback','msgbox({''MCPLOT a Tool to display McCode data set'',''E.Farhi, ILL 2010 <www.mccode.org>''},''About McCode/mcplot'',''help'')');
+    
+    set(h, 'UIContextMenu', hm);
   end
-  uimenu(hm, 'Separator','on', 'Label', 'About McCode/McPlot', 'Callback','msgbox({''MCPLOT a Tool to display McCode data set'',''E.Farhi, ILL 2010 <www.mccode.org>''},''About McCode/mcplot'',''help'')');
-  
-  set(h, 'UIContextMenu', hm);
 
   % update data structure
   data.handle = h;
 end % mcplot_display
 
+% ==============================================================================
+% Matlab -> Octave compatibility layer
+% ==============================================================================
 
+%% uigetfile: a file selector
+%% A list of files is displayed, and a prompt requests user's choice.
+%% Whenever Xdialog, kdialog (KDE) or zenity (Gnome) are present, a nice file 
+%% selector will be opened.
+%%
+%% Usage:
+%%   [filename, pathname, filterindex ] = uigetfile(filter, title);
+%% If dialog is canceled, then zeros are returned.
+%%
+%% Example:
+%%   [fname, pname ] = uigetfile('*.m', 'Select an m-file');
+%%
+%% Author: Petr Mikulik, Emmanuel Farhi
+%% Version: October 2009
+%% License: Free as much as possible / public domain.
 
+function [a, b, c] = mcplot_uigetfile (files, title)
+
+  if nargin==0 files='*'; end
+  if nargin<2  title='Choose file'; end
+
+  a=0; b=[];
+
+  c=1; % no support for file filters more than 1
+  
+  % check that selection is non void
+  d = dir(files);
+  if isempty(d)
+    disp('No (such) file available.');
+    a=0; b=0; c=0;
+    return
+  end
+  
+  if isempty(b) % try with Xdialog
+    [a,b]=system(['Xdialog --stdout --title "', title, '" --fselect ''', files, ''' 0 0 2>/dev/null' ]);
+    if a==1 && isempty(b), return; end % User pressed Cancel
+  end
+
+  if isempty(b) % try with Kdialog (takes time to init/close on non KDE systems)
+    [a,b]=system(['kdialog --getopenfilename . ''', files, ''' --title "', title, '" 2>/dev/null' ]);
+    if a==1 && isempty(b), return; end % User pressed Cancel
+  end
+  
+  if isempty(b) % try with Zenity (filter selection does not work properly)
+    [a,b]=system([ 'zenity --file-selection --filename=''', files, ''' --title="', title, '" 2>/dev/null' ]);
+    if a==1 && isempty(b), return; end % User pressed Cancel
+  end
+
+  if isempty(b) % fall back solution using 'dir'
+    fprintf('\n=== [%s: %s] ===\n', title, files);
+    fprintf('       Size         Date           File Name\n');
+    list = '';
+    for index=1:length(d)
+      if ~d(index).isdir
+        if d(index).bytes > 1073741824
+          fprintf('[%7f Gb][%s] %s\n', d(index).bytes/1073741824, d(index).date, d(index).name);
+        else
+          fprintf('[%10i][%s] %s\n', d(index).bytes, d(index).date, d(index).name);
+        end
+      else
+        fprintf('[%s][%s] %s%c\n', ' Directory', d(index).date, d(index).name,filesep);
+      end
+    end
+    b=input('Please enter filename: (RETURN to Cancel)', 's');
+    if ~exist(b, 'file') b={}; end
+    a='';
+    if length(b)>0 && b(1)~=filesep b=[pwd, filesep, b]; end
+  end
+
+  if ~isempty(b)
+    if b(end)=='\n' b=b(1:end-1); end
+  end
+
+  % no file selected => a and b are zeros
+  if isempty(b)
+      a=0; b=0; c=0;
+      return
+  end
+
+  % split b into name and path
+  k=rindex(b, filesep());
+  a=b(k+1:end);
+  b=b(1:k);
+
+end % mcplot_uigetfile
+
+% ==============================================================================
+
+function [header, data] = mcplot_textscan(file)
+  % mcplot_textscan: extract header and data blocks from McCode data format
+  % reads a McCode data file, putting all comment lines '#...' into header, 
+  % and the rest in data
+  
+  if ischar(file), fid = fopen(file);
+  else             fid = file; end
+  
+  header={};
+  data  ={};
+  current_data = [];
+  flag_exit = 0;
+  
+  while flag_exit == 0
+    line = fgetl(fid);
+    if line == -1, flag_exit=1; break; end  % reached EOF: end reading
+    [first_tok, reminder] = strtok(line);
+    switch first_tok
+      case {'#','%','//'} % detected comment line
+        header = { header{:} reminder };
+      otherwise           % consider this is data
+        % replace non numerics into spaces, and keep [0-9] +- eE
+        index = find(~isstrprop(line, 'digit') & line ~= '+' & line ~= '-' & line ~= 'e' & line ~= 'E');
+        line = sscanf(line, '%g');  % get numerical values
+        line = transpose(line(:));  % a row
+        % check if we are currently catenating into a block
+        if ~isempty(current_data)
+          % same number of columns ? catenate to current data block
+          if size(current_data, 2) == size(line, 2)
+            current_data = [ current_data ; line ];
+          else
+           % number of columns changed ? create new data block
+           data = { data{:} current_data };
+           current_data=[];
+          end
+        end
+        if isempty(current_data), current_data=line; end
+      end
+  end % while
+  
+  if ~isempty(current_data)
+    data = { data{:} current_data };
+  end
+  
+  if ischar(file), fclose(fid); end
+
+end % mcplot_textscan
 
