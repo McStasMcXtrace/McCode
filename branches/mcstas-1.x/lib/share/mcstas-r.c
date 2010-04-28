@@ -1769,14 +1769,17 @@ static char *mcvalid_name(char *valid, char *original, int n)
   return(valid);
 } /* mcvalid_name */
 
-#if defined(NL_ARGMAX) || defined(WIN32)
 /*******************************************************************************
-* pfprintf: just as fprintf, but with (char *)fmt_args being the list of arg type
+* pfprintf: just as fprintf with positional arguments %N$t, 
+*   but with (char *)fmt_args being the list of arg type 't'.
 *   Needed as the vfprintf is not correctly handled on some platforms.
 *   1- look for the maximum %d$ field in fmt
 *   2- look for all %d$ fields up to max in fmt and set their type (next alpha)
 *   3- retrieve va_arg up to max, and save pointer to arg in local arg array
 *   4- use strchr to split around '%' chars, until all pieces are written
+*   returns number of arguments written.
+* Warning: this function is restricted to only handles types t=s,g,i,li
+*          without additional field formating, e.g. %N$t
 *******************************************************************************/
 static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
 {
@@ -1806,34 +1809,40 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
 
     arg_posB[this_arg] = (char *)strchr(fmt_pos, '%');
     tmp = arg_posB[this_arg];
-    if (tmp)
+    if (tmp)	/* found a percent */
     {
+      char  printf_formats[]="dliouxXeEfgGcs\0";
       arg_posE[this_arg] = (char *)strchr(tmp, '$');
-      if (arg_posE[this_arg] && tmp[1] != '%')
-      {
+      if (arg_posE[this_arg] && isdigit(tmp[1]))
+      { /* found a dollar following a percent  and a digit after percent */
         char  this_arg_chr[10];
-        char  printf_formats[]="dliouxXeEfgGcs\0";
+        
 
         /* extract positional argument index %*$ in fmt */
-        strncpy(this_arg_chr, arg_posB[this_arg]+1, arg_posE[this_arg]-arg_posB[this_arg]-1);
+        strncpy(this_arg_chr, arg_posB[this_arg]+1, arg_posE[this_arg]-arg_posB[this_arg]-1 < 10 ? arg_posE[this_arg]-arg_posB[this_arg]-1 : 9);
         this_arg_chr[arg_posE[this_arg]-arg_posB[this_arg]-1] = '\0';
         arg_num[this_arg] = atoi(this_arg_chr);
         if (arg_num[this_arg] <=0 || arg_num[this_arg] >= MyNL_ARGMAX)
-          return(-fprintf(stderr,"pfprintf: invalid positional argument number (<=0 or >=%i) %s.\n", MyNL_ARGMAX, arg_posB[this_arg]));
+          return(-fprintf(stderr,"pfprintf: invalid positional argument number (%i is <=0 or >=%i) from '%s'.\n", arg_num[this_arg], MyNL_ARGMAX, this_arg_chr));
         /* get type of positional argument: follows '%' -> arg_posE[this_arg]+1 */
         fmt_pos = arg_posE[this_arg]+1;
+        fmt_pos[0] = tolower(fmt_pos[0]);
         if (!strchr(printf_formats, fmt_pos[0]))
           return(-fprintf(stderr,"pfprintf: invalid positional argument type (%c != expected %c).\n", fmt_pos[0], fmt_args[arg_num[this_arg]-1]));
-        if (fmt_pos[0] == 'l' && fmt_pos[1] == 'i') fmt_pos++;
+        if (fmt_pos[0] == 'l' && (fmt_pos[1] == 'i' || fmt_pos[1] == 'd')) fmt_pos++;
         arg_posT[this_arg] = fmt_pos;
         /* get next argument... */
         this_arg++;
       }
       else
-      {
-        if  (tmp[1] != '%')
+      { /* no dollar or no digit */
+        if  (tmp[1] == '%') {
+          fmt_pos = arg_posB[this_arg]+2;  /* found %% */
+        } else if (strchr(printf_formats,tmp[1])) {
+          fmt_pos = arg_posB[this_arg]+1;  /* found %s */
+        } else { 
           return(-fprintf(stderr,"pfprintf: must use only positional arguments (%s).\n", arg_posB[this_arg]));
-        else fmt_pos = arg_posB[this_arg]+2;  /* found %% */
+        }
       }
     } else
       break;  /* no more % argument */
@@ -1844,22 +1853,22 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
   for (this_arg=0; this_arg<strlen(fmt_args); this_arg++)
   {
 
-    switch(fmt_args[this_arg])
+    switch(tolower(fmt_args[this_arg]))
     {
       case 's':                       /* string */
               arg_char[this_arg] = va_arg(ap, char *);
               break;
       case 'd':
       case 'i':
-      case 'c':                     /* int */
+      case 'c':                      /* int */
               arg_int[this_arg] = va_arg(ap, int);
               break;
-      case 'l':                       /* int */
+      case 'l':                       /* long int */
               arg_long[this_arg] = va_arg(ap, long int);
               break;
       case 'f':
       case 'g':
-      case 'G':                      /* double */
+      case 'e':                      /* double */
               arg_double[this_arg] = va_arg(ap, double);
               break;
       default: fprintf(stderr,"pfprintf: argument type is not implemented (arg %%%i$ type %c).\n", this_arg+1, fmt_args[this_arg]);
@@ -1879,7 +1888,7 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
       if (!fmt_bit) return(-fprintf(stderr,"pfprintf: not enough memory.\n"));
       strncpy(fmt_bit, fmt_pos, arg_posB[this_arg]-fmt_pos);
       fmt_bit[arg_posB[this_arg]-fmt_pos] = '\0';
-      fprintf(f, fmt_bit); /* fmt part without argument */
+      fprintf(f, "%s", fmt_bit); /* fmt part without argument */
     } else
     {
       fmt_bit = (char*)malloc(10);
@@ -1890,7 +1899,7 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
     strncat(fmt_bit, arg_posE[this_arg]+1, arg_posT[this_arg]-arg_posE[this_arg]);
     fmt_bit[arg_posT[this_arg]-arg_posE[this_arg]+1] = '\0';
 
-    switch(fmt_args[arg_n])
+    switch(tolower(fmt_args[arg_n]))
     {
       case 's': fprintf(f, fmt_bit, arg_char[arg_n]);
                 break;
@@ -1904,7 +1913,7 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
               break;
       case 'f':
       case 'g':
-      case 'G':                       /* double */
+      case 'e':                       /* double */
               fprintf(f, fmt_bit, arg_double[arg_n]);
               break;
     }
@@ -1918,19 +1927,7 @@ static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
 
   }
   return(this_arg);
-}
-#else
-static int pfprintf(FILE *f, char *fmt, char *fmt_args, ...)
-{ /* wrapper to standard fprintf when the library function is OK (linux) */
-  va_list ap;
-  int tmp;
-
-  va_start(ap, fmt_args);
-  tmp=vfprintf(f, fmt, ap);
-  va_end(ap);
-  return(tmp);
-}
-#endif
+} /* pfprintf */
 
 /*******************************************************************************
 * mcfile_header: output header/footer using specific file format.
