@@ -4,11 +4,10 @@ export BUILDDIR="/build/mcstas-$RELEASE"
 export SRCDIR="/build/mcstas-$RELEASE-srcdir"
 export MACHINETYPE=`uname -m`
 
-apt-get -y --force-yes install perl-tk pdl gcc libc6-dev gfortran libx11-dev xorg-dev libxt-dev lintian
+apt-get -y --force-yes install perl-tk pdl gcc libc6-dev gfortran libx11-dev xorg-dev libxt-dev lintian pgplot5 libpgplot-perl
 
 rm -rf /build/*
 rm -rf /usr/local/lib/*
-rm -rf /usr/local/pgplot
 
 echo Performing mcstas install to /usr/local
 
@@ -16,10 +15,6 @@ cd /build
 tar xzf /root/mcstas-${RELEASE}-src.tar.gz
 mv mcstas-${RELEASE} mcstas-${RELEASE}-srcdir
 cd mcstas-${RELEASE}-srcdir
-
-./configure
-
-make install-pgplot
 
 ./configure
 
@@ -43,7 +38,6 @@ mkdir ${BUILDDIR}/usr/share/doc/mcstas
 
 cp -rp /usr/local/bin ${BUILDDIR}/usr/local
 cp -rp /usr/local/lib/* ${BUILDDIR}/usr/local/lib
-cp -rp /usr/local/pgplot ${BUILDDIR}/usr/local
 
 cp mcstas-${RELEASE}-srcdir/deb/control ${BUILDDIR}/DEBIAN
 cp mcstas-${RELEASE}-srcdir/deb/prerm ${BUILDDIR}/DEBIAN
