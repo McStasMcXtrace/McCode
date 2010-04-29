@@ -1,5 +1,5 @@
 #!/bin/sh
-export RELEASE="1.12a"
+export RELEASE="1.12b"
 export BUILDDIR="/build/mcstas-$RELEASE"
 export SRCDIR="/build/mcstas-$RELEASE-srcdir"
 export MACHINETYPE=`uname -m`
