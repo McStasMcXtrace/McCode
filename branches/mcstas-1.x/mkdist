@@ -269,24 +269,26 @@ fi
 # (.rpm was tried using alien - did not work too well)
 if [ -e /etc/debian_version ]
 then
-  if [ -e lenny-chroot ]
+  if [ -e build-chroot ]
   then
     echo Proceeding to .deb build
     # First, clean up in case of previous McStas installs in the chrooot
-    sudo rm -f lenny-chroot/usr/local/bin/*
-    sudo rm -rf lenny-chroot/usr/local/lib/*
-    sudo rm -rf lenny-chroot/usr/local/pgplot
-    sudo cp mcstas-$1/deb/debcreate lenny-chroot/root
-    sudo cp mcstas-$1-src.tar.gz lenny-chroot/root
-    sudo chroot lenny-chroot /root/debcreate
+    sudo rm -f build-chroot/usr/local/bin/*
+    sudo rm -rf build-chroot/usr/local/lib/*
+    sudo cp mcstas-$1/deb/debcreate build-chroot/root
+    sudo cp mcstas-$1/deb/sources.list build-chroot/etc/apt/
+    sudo cp mcstas-$1-src.tar.gz build-chroot/root
+    sudo mkdir build-chroot/build
+    sudo chroot build-chroot /root/debcreate $1
     echo
     echo
     echo Build packages created:
     echo
-    cp lenny-chroot/build/*deb .
+    cp build-chroot/build/*deb .
     ls -lf mcstas-$1*.* McStas-$1*.*
     echo
   else
-    echo You need a chroot environment based on debootstrap in lenny-chroot before building deb packages
+    echo You need a chroot environment based on debootstrap in build-chroot before building deb packages - create using something like
+    echo sudo debootstrap --arch i386 karmic build-chroot
   fi
 fi
