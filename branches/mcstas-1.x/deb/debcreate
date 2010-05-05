@@ -2,7 +2,7 @@
 export RELEASE=$1
 export BUILDDIR="/build/mcstas-$RELEASE"
 export SRCDIR="/build/mcstas-$RELEASE-srcdir"
-export MACHINETYPE=`uname -m`
+export MACHINETYPE=$2
 
 apt-get -y --force-yes install perl-tk pdl gcc libc6-dev gfortran libx11-dev xorg-dev libxt-dev lintian pgplot5 libpgplot-perl
 

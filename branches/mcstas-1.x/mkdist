@@ -49,9 +49,10 @@ cp $PW/../mcstas-$1-manual.pdf $DIST/lib/doc/mcstas-manual.pdf
 cp $PW/../mcstas-$1-components.ps.gz $DIST/lib/doc/mcstas-components.ps.gz
 cp $PW/../mcstas-$1-components.pdf $DIST/lib/doc/mcstas-components.pdf
 
-# Go in DIST, clean up CVS information
+# Go in DIST, clean up CVS and svn information
 cd $DIST
 find . -name CVS -exec rm -r \{\} \; 2> /dev/null
+find . -name .svn -exec rm -r \{\} \; 2> /dev/null
 # Remove other unneeded stuff
 rm -rf support/Syntax-Highlight-Perl-1.0
 rm -rf preCVStest*
@@ -269,26 +270,50 @@ fi
 # (.rpm was tried using alien - did not work too well)
 if [ -e /etc/debian_version ]
 then
-  if [ -e build-chroot ]
+  if [ -e build-chroot-i386 ]
   then
-    echo Proceeding to .deb build
+    echo Proceeding to i386 .deb build
     # First, clean up in case of previous McStas installs in the chrooot
-    sudo rm -f build-chroot/usr/local/bin/*
-    sudo rm -rf build-chroot/usr/local/lib/*
-    sudo cp mcstas-$1/deb/debcreate build-chroot/root
-    sudo cp mcstas-$1/deb/sources.list build-chroot/etc/apt/
-    sudo cp mcstas-$1-src.tar.gz build-chroot/root
-    sudo mkdir build-chroot/build
-    sudo chroot build-chroot /root/debcreate $1
+    sudo rm -f build-chroot-i386/usr/local/bin/*
+    sudo rm -rf build-chroot-i386/usr/local/lib/*
+    sudo cp mcstas-$1/deb/debcreate build-chroot-i386/root
+    sudo cp mcstas-$1/deb/sources.list build-chroot-i386/etc/apt/
+    sudo cp mcstas-$1-src.tar.gz build-chroot-i386/root
+    sudo mkdir build-chroot-i386/build
+    sudo chroot build-chroot-i386 apt-get update
+    sudo chroot build-chroot-i386 /root/debcreate $1 i686
     echo
     echo
     echo Build packages created:
     echo
-    cp build-chroot/build/*deb .
+    cp build-chroot-i386/build/*deb .
     ls -lf mcstas-$1*.* McStas-$1*.*
     echo
   else
-    echo You need a chroot environment based on debootstrap in build-chroot before building deb packages - create using something like
+    echo You need a chroot environment based on debootstrap in build-chroot-i386 before building the i386 deb package - create using something like
     echo sudo debootstrap --arch i386 karmic build-chroot
+  fi  
+  if [ -e build-chroot-x86_64 ]
+  then
+    echo Proceeding to .deb build
+    # First, clean up in case of previous McStas installs in the chrooot
+    sudo rm -f build-chroot-x86_64/usr/local/bin/*
+    sudo rm -rf build-chroot-x86_64/usr/local/lib/*
+    sudo cp mcstas-$1/deb/debcreate build-chroot-x86_64/root
+    sudo cp mcstas-$1/deb/sources.list build-chroot-x86_64/etc/apt/
+    sudo cp mcstas-$1-src.tar.gz build-chroot-x86_64/root
+    sudo mkdir build-chroot-x86_64/build
+    sudo chroot build-chroot-x86_64 apt-get update
+    sudo chroot build-chroot-x86_64 /root/debcreate $1 x86_64
+    echo
+    echo
+    echo Build packages created:
+    echo
+    cp build-chroot-x86_64/build/*deb .
+    ls -lf mcstas-$1*.* McStas-$1*.*
+    echo
+  else
+    echo You need a chroot environment based on debootstrap in build-chroot-x86_64 before building the x86_64 deb package - create using something like
+    echo sudo debootstrap --arch x86_64 karmic build-chroot-x86_64
   fi
 fi
