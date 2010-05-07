@@ -23,7 +23,7 @@
 * of the guide, and trajectories.  Guide is not focusing.
 *
 * Example: Guide_curved(w1=0.1, h1=0.1, l=2.0, R0=0.99, Qc=0.021,
-*                alpha=6.07, m=2, W=0.003, r=2700)
+*                alpha=6.07, m=2, W=0.003, curvature=2700)
 *
 * %BUGS
 * This component does not work with gravitation on. Use component Guide_gravity then.
@@ -40,7 +40,7 @@
 * alpha:   [AA]   Slope of reflectivity
 * m:       [1]    m-value of material. Zero means completely absorbing.
 * W:       [AA-1] Width of supermirror cut-off
-* r:       [m]    Radius of curvature of the guide
+* curvature:[m]    Radius of curvature of the guide
 *
 * %L
 * <a href="../optics/Bender.comp.html">Bender</a>
@@ -49,7 +49,7 @@
 *******************************************************************************/
 DEFINE COMPONENT Guide_curved
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (w1, h1, l, R0=0.995, Qc=0.0218, alpha=4.38, m=2, W=0.003, r=2700)
+SETTING PARAMETERS (w1, h1, l, R0=0.995, Qc=0.0218, alpha=4.38, m=2, W=0.003, curvature=2700)
 OUTPUT PARAMETERS ()
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 INITIALIZE
@@ -67,9 +67,9 @@ TRACE
   int ii, i_bounce;
 
   double whalf  = 0.5*w1, hhalf = 0.5*h1;   /* half width and height of guide */
-  double z_off  = r*sin(l/r);       /* z-component of total guide length */
-  double R1     = r - whalf;        /* radius of curvature of inside mirror */
-  double R2     = r + whalf;        /* radius of curvature of outside mirror */
+  double z_off  = curvature*sin(l/curvature);       /* z-component of total guide length */
+  double R1     = curvature - whalf;        /* radius of curvature of inside mirror */
+  double R2     = curvature + whalf;        /* radius of curvature of outside mirror */
   double vel    = sqrt(vx*vx + vy*vy + vz*vz);  /* neutron velocity */
   double vel_xz = sqrt(vx*vx + vz*vz);      /* in plane velocity */
   double K      = V2K*vel;        /* neutron wavevector */
@@ -85,8 +85,8 @@ TRACE
   {
     double par[]={R0, Qc, alpha, m, W};
     /* Find itersection points of neutron with inside and outside guide walls */
-    ii = cylinder_intersect(&t11, &t12 ,x - r, y, z, vx, vy, vz, R1, h1);
-    ii = cylinder_intersect(&t21, &t22 ,x - r, y, z, vx, vy, vz, R2, h1);
+    ii = cylinder_intersect(&t11, &t12 ,x - curvature, y, z, vx, vy, vz, R1, h1);
+    ii = cylinder_intersect(&t21, &t22 ,x - curvature, y, z, vx, vy, vz, R2, h1);
 
     /* Choose appropriate reflection time */
     time1 = (t11 < 1e-7) ? t12 : t11;
@@ -131,18 +131,18 @@ MCDISPLAY
   double xplot1[100], xplot2[100], zplot1[100], zplot2[100];
   int n = 100;
   int j = 1;
-  double R1 = (r - 0.5*w1);    /* radius of inside arc */
-  double R2 = (r + 0.5*w1);    /* radius of outside arc */
+  double R1 = (curvature - 0.5*w1);    /* radius of inside arc */
+  double R2 = (curvature + 0.5*w1);    /* radius of outside arc */
 
   magnify("xy");
 
   for(;;) {
     if(j == n + 1) break;
-      z1 = ((double)j - 1.0)*(R1*l/r)/(double)(n - 1);
-      z2 = ((double)j - 1.0)*(R2*l/r)/(double)(n - 1);
-    x1 = r - sqrt(R1*R1 - z1*z1);
-    x2 = r - sqrt(R2*R2 - z2*z2);
-            xplot1[j] = x1;
+    z1 = ((double)j - 1.0)*(R1*l/curvature)/(double)(n - 1);
+    z2 = ((double)j - 1.0)*(R2*l/curvature)/(double)(n - 1);
+    x1 = curvature - sqrt(R1*R1 - z1*z1);
+    x2 = curvature - sqrt(R2*R2 - z2*z2);
+    xplot1[j] = x1;
     xplot2[j] = x2;
     zplot1[j] = z1;
     zplot2[j] = z2;
@@ -150,9 +150,9 @@ MCDISPLAY
   }
   j = 1;
   line(xplot1[j], 0.5*h1,zplot1[j],xplot2[j], 0.5*h1,zplot2[j]);
-      line(xplot1[j], 0.5*h1,zplot1[j],xplot1[j],-0.5*h1,zplot1[j]);
-      line(xplot2[j],-0.5*h1,zplot2[j],xplot2[j], 0.5*h1,zplot2[j]);
-      line(xplot1[j],-0.5*h1,zplot1[j],xplot2[j],-0.5*h1,zplot2[j]);
+  line(xplot1[j], 0.5*h1,zplot1[j],xplot1[j],-0.5*h1,zplot1[j]);
+  line(xplot2[j],-0.5*h1,zplot2[j],xplot2[j], 0.5*h1,zplot2[j]);
+  line(xplot1[j],-0.5*h1,zplot1[j],xplot2[j],-0.5*h1,zplot2[j]);
   for(;;) {
     if(j == n) break;
     line(xplot1[j],  0.5*h1, zplot1[j], xplot1[j+1],  0.5*h1, zplot1[j+1]);
