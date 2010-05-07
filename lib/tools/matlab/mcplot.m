@@ -4,6 +4,7 @@ function data = mcplot(varargin)
 %
 % This function displays a McCode simulation result a single window with 
 % subplots. It also returns the McStas simulation structures. 
+% It may import both McCode and Matlab format data sets.
 %
 % input:
 %  filename: one or more simulation name(s) or directory
@@ -102,6 +103,9 @@ function data = mcplot(varargin)
   % import data set
   data = mcplot_load(filename);
   
+  % check data structures
+  data = mcplot_check_data(data);
+  
   % plot (overview or single)
   data = mcplot_display(data);
   
@@ -116,7 +120,7 @@ end % mcplot (main)
 % function match= mcplot_filestrfind(filename, pattern, {buffer})
 % function match= mcplot_filefgetl(filename, positions)
 % function data = mcplot_load(filename)
-% function data = mcplot_load_data(filename)
+% function data = mcplot_load_mccode(filename)
 % function data = mcplot_load_matlab(filename)
 % function data = mcplot_load_structure(s)
 % function data = mcplot_load_sim(filename)
@@ -144,7 +148,7 @@ function match = mcplot_filestrfind(filename, string, buffer)
   if buffer == Inf, buffer   = 0;      readToEOF= 1; else readToEOF = 0; end
   if ~buffer,       buffer   = 10000;  end  % default buffer size
   
-  invalid         = find(~isstrprop(string, 'print'));
+  invalid         = find(~isstrprop(string,'print'));
   string(invalid) = ' ';  % replace non printable characters with spaces
   
   if iscellstr(filename), filename = filename{1}; end
@@ -269,7 +273,7 @@ function data=mcplot_load(filename)
         this_data = mcplot_load_matlab(filename{index});  % load Matlab format files
       end
       if isempty(this_data)
-        this_data = mcplot_load_data(filename{index});    % load single McCode monitor files
+        this_data = mcplot_load_mccode(filename{index});    % load single McCode monitor files
       end
       data = { data{:} this_data };
     end
@@ -287,78 +291,68 @@ end % mcplot_load
 
 % ==============================================================================
 
-function structure=mcplot_load_data(filename)
-  % mcplot_load_data: load a single data set (not sim nor multiarray) or a structure
+function structure=mcplot_load_mccode(filename)
+  % mcplot_load_mccode: load a single data set (not sim) or a structure
   % filename: name of file to load
   %   RETURN: a cell array of data structures
   
   structure = [];
   
-  if ischar(filename)
+  isMcCode = [ mcplot_filestrfind(filename, 'McStas with text headers', 10000) ...
+               mcplot_filestrfind(filename, 'McCode with text headers', 10000) ...
+               mcplot_filestrfind(filename, 'multiarray_1d', 10000) ];
   
-    % with scilab, a call to fscanfMat will extract data and header
-    fid = fopen(filename);
-    if fid == -1, return; end % also returns when filename is empty
-    
-    % read header
-    if ~exist('textscan')
-      [header, data] = mcplot_textscan(fid);
-    else
-      header = textscan(fid,'#%s','endOfLine','\n','delimiter','\n');
-    end
-    if iscellstr(header{1}) & length(header)==1
-      header = header{1};
-    end
-    
-    paramstr = '';
-    % build structure from header fields
-    for index=1:length(header)
-      % use strtok to split line around':'
-      [field, value] = strtok(header{index}, ':');
-      value(find(value == ':')) = ''; value=strtrim(value); field=strtrim(field);
-      value=strrep(value,'''','');  % remove quotes
-      % keep 'value' as a string for further use before converting to num
-      value_str=value;  
-      num   = str2num(value);
-      if ~isempty(num), value = num; end
-      if strncmp(field,'Instrument', length('Instrument'))
-        field = 'Instrument';
-      else
-        field = genvarname(field);                        % validate variable name
-      end
-      if isempty(strfind(field, 'Param'))
-        structure = setfield(structure, field, value);    % set new field
-      else  % special case for parameters. Build 'Param' sub structure
-        if ~isfield(structure,'Param'), structure = setfield(structure, 'Param',[]); end  % create if needed
-        param        = getfield(structure, 'Param');
-        % use strtok to split line around'='
-        [var,value]  = strtok(value_str,'=');
-        value(find(value == '=')) = ''; value=strtrim(value); var=strtrim(var);
-        paramstr = [ paramstr var '=' value '; ' ];
-        num          = str2num(value);
-        if ~isempty(num), value = num; end
-        param        = setfield(param, var, value);
-        structure    = setfield(structure, 'Param', param);     % store updated sub-structure
-      end
-    end
-    structure = setfield(structure, 'Parameters', paramstr);
-    structure.filename = filename;
-  elseif isstruct(filename)
-    structure=filename;
-  end
-  clear header
+  if isempty(isMcCode), return; end % also returns when filename is empty
   
-  % extract type and theoretical dimension of data block
-  if isfield(structure,'type')
-    % use strtok to split line around'()'
-    [t s]=strtok(structure.type, '()');
-    structure.type = t;
-    % remove parenthesis
-    s=strrep(s,'(',''); s=strrep(s,')','');
-    structure.size = str2num(s);
+  disp([ 'Loading ' filename ' (McCode format)' ]);
+  % with scilab, a call to fscanfMat will extract data and header
+  fid = fopen(filename);
+  if fid == -1, return; end % also returns when filename is empty
+  
+  % read header
+  if ~exist('textscan')
+    [header, data] = mcplot_textscan(fid);
   else
-    return;
+    header = textscan(fid,'#%s','endOfLine','\n','delimiter','\n');
   end
+  if iscellstr(header{1}) & length(header)==1
+    header = header{1};
+  end
+  
+  paramstr = '';
+  % build structure from header fields
+  for index=1:length(header)
+    % use strtok to split line around':'
+    [field, value] = strtok(header{index}, ':');
+    value(find(value == ':')) = ''; value=strtrim(value); field=strtrim(field);
+    value=strrep(value,'''','');  % remove quotes
+    % keep 'value' as a string for further use before converting to num
+    value_str=value;  
+    num   = str2num(value);
+    if ~isempty(num), value = num; end
+    if strncmp(field,'Instrument', length('Instrument'))
+      field = 'Instrument';
+    else
+      field = genvarname(field);                        % validate variable name
+    end
+    if isempty(strfind(field, 'Param'))
+      if ~isempty(value), structure = setfield(structure, field, value); end   % set new field
+    else  % special case for parameters. Build 'Param' sub structure
+      if ~isfield(structure,'Param'), structure = setfield(structure, 'Param',[]); end  % create if needed
+      param        = getfield(structure, 'Param');
+      % use strtok to split line around'='
+      [var,value]  = strtok(value_str,'=');
+      value(find(value == '=')) = ''; value=strtrim(value); var=strtrim(var);
+      paramstr = [ paramstr var '=' value '; ' ];
+      num          = str2num(value);
+      if ~isempty(num), value = num; end
+      param        = setfield(param, var, value);
+      structure    = setfield(structure, 'Param', param);     % store updated sub-structure
+    end
+  end
+  structure = setfield(structure, 'Parameters', paramstr);
+  structure.filename = filename;
+  clear header
   
   % additional compatibility checks (from McCode/Matlab format)
   if isfield(structure, 'parameters') && ~isfield(structure,'Param')
@@ -370,24 +364,90 @@ function structure=mcplot_load_data(filename)
     structure = setfield(structure, 'Param', 'Unknown instrument parameters');
   end
   
-  if ischar(filename)
-    % load data block
-    if exist('textscan')
-      frewind(fid);
-      data     = textscan(fid,'%f','CommentStyle','#');
-    end
-    % else was obtained in one call to mcplot_textscan
-    fclose(fid);
-    if iscell(data) & length(data)==1
-      data = data{1};
-    end
-  elseif isfield(structure, 'data')
-    data = structure.data;
-  else data=[]; end
-  
-  if ~isfield(structure, 'size')
-    structure.size = size(data);
+  % extract type and theoretical dimension of data block
+  if isfield(structure,'type')
+    % use strtok to split line around'()'
+    [t s]=strtok(structure.type, '()');
+    structure.type = t;
+    % remove parenthesis
+    s=strrep(s,'(',''); s=strrep(s,')','');
+    structure.size = str2num(s);
   end
+  
+  % load data block
+  if exist('textscan')
+    frewind(fid);
+    data     = textscan(fid,'%f','CommentStyle','#');
+  end % else was obtained in one call to mcplot_textscan
+  
+  fclose(fid);
+  if iscell(data) & length(data)==1
+    data = data{1};
+  end
+  
+  structure.data = data;
+  clear data
+  
+  % reshape data block
+  if ~isempty(strmatch('array_1d',structure.type))
+    if prod(size(structure.data))/prod(structure.size) == 4
+      % textscan provides a single vector: we must reshape as 4 columns
+      structure.data = transpose(reshape(structure.data,[ 4 structure.size ]));
+      % extract signal, errors and events
+      if size(structure.data,2) >= 4, structure.events=structure.data(:,4); end
+      if size(structure.data,2) >= 3, structure.errors=structure.data(:,3); end
+      structure.x     =structure.data(:,1);
+      structure.data  =structure.data(:,2);
+    end
+  elseif ~isempty(strmatch('array_2d',structure.type)) % 2d
+    len      = prod(structure.size);
+    structure.errors=[];
+    structure.events=[];
+    if exist('textscan')  % Matlab read file and produces a single vector to be re-organized
+      this_data        = structure.data;
+      structure.data   = transpose(reshape(this_data(1:len),structure.size));
+      if prod(size(this_data)) >= 2*len
+        structure.errors = transpose(reshape(this_data((len+1):(2*len)),structure.size));
+      end
+      if prod(size(this_data)) >= 3*len
+        structure.events = transpose(reshape(this_data((2*len+1):(3*len)),structure.size));
+      end
+    else
+      % we used our own data reader (slower), which already shaped data block
+      l = structure.size(1);
+      this_data        = structure.data;
+      structure.data = this_data(1:l,1:structure.size(2));
+      
+      if prod(size(data)) >= 2*len
+        structure.errors = this_data((l+1):(2*l),1:structure.size(2));
+      end
+      if prod(size(data)) >= 3*len
+        structure.events = this_data((2*l+1):(3*l),1:structure.size(2));
+      end
+    end
+  elseif ~isempty(strmatch('multiarray_1d',structure.type)) % multiarray_1d
+    % reshape data block according to the multiarray_1d(dim)
+    n = prod(size(structure.data))/prod(structure.size);
+    structure.size= [ structure.size n ];
+    structure.data = transpose(reshape(structure.data,fliplr(structure.size)));
+  end
+
+end % mcplot_load_mccode
+
+% ==============================================================================
+
+function data = mcplot_check_data(structure)
+  % mcplot_check_data: check all data sets for consistency
+  data={};
+  if iscell(structure)
+    for index=1:length(structure)
+      data = { data{:} mcplot_check_data(structure{index}) };
+    end
+    return
+  end
+  
+  % check a single structure format
+  % fields
   if ~isfield(structure, 'Source')
     if isfield(structure,'Instrument')
       structure.Source = structure.Instrument;
@@ -395,58 +455,35 @@ function structure=mcplot_load_data(filename)
       structure.Source = filename;
     end
   end
-  if ~isfield(structure, 'component')
-    structure.component = 'unknown';
-  end
-  if ~isfield(structure, 'filename')
-    structure.filename = 'unknown';
-  end
+  if ~isfield(structure, 'component') structure.component = 'unknown'; end
+  if ~isfield(structure, 'filename')  structure.filename  = pwd; end
+  if ~isfield(structure, 'errors')    structure.errors    = [];  end
+  if ~isfield(structure, 'events')    structure.events    = [];  end
+  if ~isfield(structure, 'title'),    structure.title     = '';  end
 
-  if isempty(data), return; end
-
-  % handle multiarray dimension (number of scan steps)
-  if length(structure.size) == 1
-    n = length(data)/structure.size;
-    m = structure.size;
-    structure.size = [m n];
+  % extract type and theoretical dimension of data block
+  if ~isfield(structure, 'size')
+    structure.size = [];
   end
-
-  if ischar(filename)
-    % reshape data block from 'type'
-    len      = prod(structure.size);
-    if exist('textscan')  % Matlab read file and produces a single vector to be re-organized
-      
-      signal   = transpose(reshape(data(1:len), fliplr(structure.size)));
-      if prod(size(data)) >= 2*len
-        errors = transpose(reshape(data((len+1):(2*len)), fliplr(structure.size)));
-      else 
-        errors = []; 
-      end
-      if prod(size(data)) >= 3*len
-        events = transpose(reshape(data((2*len+1):(3*len)), fliplr(structure.size)));
-      else 
-        events = []; 
-      end
-    else
-      % we used our own data reader, which already shaped data block
-      l = structure.size(1);
-      signal = data(1:l,1:structure.size(2));
-      
-      if prod(size(data)) >= 2*len
-        errors = data((l+1):(2*l),1:structure.size(2));
-      end
-      if prod(size(data)) >= 3*len
-        events = data((2*l+1):(3*l),1:structure.size(2));
-      end
-    end
-    clear data
-    % add data block
-    structure.data     = signal;
-    structure.errors   = errors;
-    structure.events   = events;
+  if isfield(structure,'type')
+    % use strtok to split line around'()'
+    [t s]=strtok(structure.type, '()');
+    structure.type = t;
+    % remove parenthesis
+    s=strrep(s,'(',''); s=strrep(s,')','');
+    structure.size = str2num(s);
+  end
+  
+  if isempty(structure.size)
+    structure.size = size(structure.data);
   end
 
-end % mcplot_load_data
+  % reshape data block from 'type'
+  
+  data = structure;
+  
+  % dimensions
+end % mcplot_check_data
 
 % ==============================================================================
 
@@ -464,7 +501,7 @@ function data=mcplot_load_matlab(filename)
   
   if isempty(isMatlabScript), return; end % also returns when filename is empty
   
-  % in principle, McCode/Matlab data format contains is own 'mcload_inline' routine
+  % in principle, McCode/Matlab data format contains its own 'mcload_inline' routine
   % make sure we get a Matlab .m file
   cur_dir = pwd;
   [pathname, object, ext]=fileparts(filename);
@@ -483,9 +520,10 @@ function data=mcplot_load_matlab(filename)
   end
   cd(cur_dir);
   data.filename = filename;
-  
+  disp([ 'Loading ' filename ' (Matlab format)' ]);
+
   [data, parameters] = mcplot_load_structure(data);   % extract monitors recursively
-  
+
   % insert extracted parameteres in each monitor structure
   if isstruct(data), 
     data.Param=parameters;
@@ -493,7 +531,8 @@ function data=mcplot_load_matlab(filename)
     for index=1:length(data)
       this_data = data{index};
       if isstruct(this_data), 
-        this_data.Param=parameters; data{index} = this_data; 
+        this_data.Param=parameters; 
+        data{index} = this_data; 
       end
     end
   end
@@ -516,8 +555,10 @@ function [data,parameters]=mcplot_load_structure(s,parameters)
   
   if isfield(s,'data') & isnumeric(s.data)                  % found 'data': we keep that
     data = s;
-    data = mcplot_load_data(data);      % check structure
     data.Param = parameters;
+    disp([ 'Loading ' data.filename ]);
+    data = { data };
+    % return it as a structure
   elseif isfield(s,'name') && strcmp(s.name, 'parameters')
     parameters = s;
   else
@@ -528,12 +569,15 @@ function [data,parameters]=mcplot_load_structure(s,parameters)
         [this_data,parameters] = mcplot_load_structure(d,parameters);
         if ~isempty(this_data)
           if iscell(this_data) && length(this_data) == 1 && isstruct(this_data{1})
-            this_data = this_data{1};
+            this_data = this_data(1);
           end
-          data = { data{:} this_data };
+          data = { data{:} this_data{:} };
         end
       end
     end
+  end
+  if iscell(data) && length(data) == 1 && isstruct(data{1}) 
+    data=data(1);
   end
 end % mcplot_load_structure
   
@@ -551,7 +595,7 @@ function data=mcplot_load_sim(filename)
   if isempty(isSimFile)
     return  % also returns when filename is empty
   end
-  
+  disp([ 'Loading ' filename ' (McCode simulation overview)' ]);
   % search for 'filename:' tags, and extract links to other files
   filenameReferences = mcplot_filestrfind(filename, 'filename:');
   filenameLines      = mcplot_filefgetl  (filename, filenameReferences+length('filename:'));
@@ -559,10 +603,11 @@ function data=mcplot_load_sim(filename)
 
   % loop on filenames
   for index = 1:length(filenameLines)
-    % calls mcplot_load_data
+    % calls mcplot_load_mccode
     this_filename = fullfile(filepath, filenameLines{index});
-    this_data     = mcplot_load_data(this_filename);
-    if strcmp(this_data.type,'multiarray_1d')
+    this_data     = mcplot_load_mccode(this_filename);
+    if ~isempty(strmatch('multiarray_1d',this_data.type))
+      this_data.size = size(this_data.data);
       this_data = mcplot_split_multiarray(this_data);
     end
     data = { data{:} this_data }; % IMPORT sim file references
@@ -586,7 +631,7 @@ function data=mcplot_load_scan(filename)
   end
   
   % % IMPORT multiarray file
-  data = mcplot_load_data(filename);                      
+  data = mcplot_load_mccode(filename);                
 
   % then extract columns in a loop
   data = mcplot_split_multiarray(data);
@@ -601,9 +646,10 @@ function data = mcplot_split_multiarray(structure)
   %    RETURN: a cell array of data structures, one for each monitor in the multiarray
   
   data = {};
-  
   % first check if this is a multiarray
-  if ~strcmp(structure.type,'multiarray_1d'), return; end
+  if ~~isempty(strmatch('multiarray_1d',structure.type)), return; end
+  
+  disp([ 'Loading ' structure.filename ' (extracting McCode scan steps)' ]);
   
   % extract all column labels (each word is reversed to ease _I and _ERR search)
   column_labels = flipud(strread(fliplr(structure.variables),'%s'));  % reverse string so that _I and _ERR start words
@@ -621,7 +667,7 @@ function data = mcplot_split_multiarray(structure)
   
   % get indices that refer to scan variable parameters (i.e. not monitors)
   scan_labels  = setdiff(1:length(column_labels), [ monitor_I ; monitor_ERR ]);
-  xvars        = strmatch(fliplr(strtok(structure.xvars)), column_labels, 'exact');
+  xvars        = ~isempty(strmatch(fliplr(strtok(structure.xvars)), column_labels, 'exact'));
   if isempty(xvars)
     warning('McPlot:ScanFormatError', ...
       'File: %s: Can not find scanned variable ''%s'' within columns\n%s', ...
@@ -642,8 +688,12 @@ function data = mcplot_split_multiarray(structure)
     intensity      = structure.data(:,monitor_I(index));
     errors         = structure.data(:,monitor_ERR(index));
     events         = ones(size(intensity));
-    this_data.data = [ xvars intensity errors events ];
+    this_data.data = intensity;
+    this_data.x    = xvars;
+    this_data.errors=errors;
+    this_data.events=events;
     data = { data{:} this_data };
+    disp([ 'Loading ' this_data.filename '#' this_monitor ' (scan steps)' ]);
   end
 end % mcplot_split_multiarray
 
@@ -656,7 +706,6 @@ function data = mcplot_display(data, fig)
   %  RETURN: updated data sets (with plot handle)
   
   h=[];
-  
   if nargin < 2, fig = []; end
   if fig == 0,   fig = []; end
   if isempty(fig), fig = figure; end  % create a new figure if required
@@ -666,6 +715,7 @@ function data = mcplot_display(data, fig)
     n = ceil(length(data)/m);
     for index=1:length(data)
       subplot(m,n, index);
+      data{index}.subplot = index;
       data{index} =  mcplot_display(data{index}, fig);
     end
     return
@@ -673,16 +723,16 @@ function data = mcplot_display(data, fig)
   
   % handle a single plot (a structure)
   if isempty(data), return; end
-  if ~isfield(data,'title'), return; end
+
   set(fig, 'Name', [ data.title ':' data.filename ]);
-  S = data.size;
+  S = size(data.data);
   if isfield(data,'xylimits')
     l = data.xylimits; 
   else
     l = data.xlimits;
   end
   if ischar(l), l=str2num(l); end
-  if strcmp(data.type,'array_2d')
+  if ~isempty(strmatch('array_2d',data.type))
     % builds the XY axes from limits
     if ~isfield(data,'x')
       if S(2) > 1, data.stepx=abs(l(1)-l(2))/(S(2)-1); 
@@ -695,13 +745,12 @@ function data = mcplot_display(data, fig)
       data.y=linspace(l(3)+data.stepy/2,l(4)-data.stepy/2,S(1));
     end
     % plot the data as a surface
-    z=data.data;
     h=surface(data.x, data.y, data.data);
     xlim([l(1) l(2)]); ylim([l(3) l(4)]);
     shading flat;
-  elseif strcmp(data.type,'array_1d')
+  elseif ~isempty(strmatch('array_1d',data.type))
     if ~isfield(data,'x') || (isfield(data,'x') && length(data.x) ~= size(data.data,1))
-      if size(data.data,2) == 1
+      if any(size(data.data) == 1)
         % builds the X axis from limits
         if strfind(data.title, 'Scan of')
           % check if this is a scan
@@ -716,13 +765,9 @@ function data = mcplot_display(data, fig)
         data.x     =data.data(:,1);
       end
     end
-    if size(data.data,2) > 1 & size(data.errors,2) == 0
-      if size(data.data,2) >= 4, data.events=data.data(:,4); end
-      if size(data.data,2) >= 3, data.errors=data.data(:,3); end
-      data.data  =data.data(:,2);
-    end
+
     % plot the data as a curve with error bars or single curve
-    if isfield(data, 'errors') && ~isempty(data.errors)
+    if ~isempty(data.errors)
       h=errorbar(data.x, data.data, data.errors);
     else
       h=plot(data.x, data.data);
@@ -738,7 +783,7 @@ function data = mcplot_display(data, fig)
   % store data into plot UserData
   set(h, 'UserData', data, 'Tag',[ 'mcplot_data_' data.filename ]);
   
-  % add contextual menu
+  % add contextual menu on each plot
   if exist('uicontextmenu')
     hm = uicontextmenu;
     uimenu(hm, 'Label',['About ' data.filename ],'Callback', ...
@@ -748,7 +793,7 @@ function data = mcplot_display(data, fig)
     uimenu(hm, 'Label', [ 'Component: '    data.component ]);
     uimenu(hm, 'Label', [ 'Filename:  '    data.filename ]);
     uimenu(hm, 'Separator','on','Label','Toggle grid', 'Callback','grid');
-    if strcmp(data.type,'array_1d')
+    if ~isempty(strmatch('array_1d',data.type))
       uimenu(hm, 'Label','Toggle error bars', 'Callback','tmp_h=get(gco,''children''); if strcmp(get(tmp_h(2),''visible''),''off''), tmp_v=''on''; else tmp_v=''off''; end; set(tmp_h(2),''visible'',tmp_v); clear tmp_h tmp_v');
       uimenu(hm, 'Label','Linear/Log scale','Callback', 'if strcmp(get(gca,''yscale''),''linear'')  set(gca,''yscale'',''log''); else set(gca,''yscale'',''linear''); end');
     else
@@ -759,6 +804,14 @@ function data = mcplot_display(data, fig)
       uimenu(hm, 'Label','Linear/Log scale','Callback', 'if strcmp(get(gca,''zscale''),''linear'')  set(gca,''zscale'',''log''); else set(gca,''zscale'',''linear''); end');
     end
     
+    % add rotate/pan/zoom tools in case java machine is not started
+    if ~usejava('jvm')
+      uimenu(hm, 'Separator','on','Label','Zoom on/off', 'Callback','zoom');
+      uimenu(hm, 'Label','Pan (move)', 'Callback','pan');
+      if ~isempty(strmatch('array_2d',data.type))
+        uimenu(hm, 'Label', 'Rotate', 'Callback','rotate3d on');
+      end
+    end
     
     % export menu items
     uimenu(hm, 'Label',['Duplicate ' data.component ' view'], 'Callback', ...
@@ -771,27 +824,52 @@ function data = mcplot_display(data, fig)
       uimenu(hm, 'Label',['Export into ' genvarname(data.filename) ],'Callback', ...
         [ 'evalin(''base'',''' genvarname(data.filename) ' = get(gco,''''userdata''''); disp([''''Exported data into variable ' genvarname(data.filename) ''''']);'');'])
     end
-      
-    uimenu(hm, 'Label',['Save as ' data.filename '.png'], 'Callback', [ 'saveas(gcf, ''' data.filename '.png'',''png''); disp(''Exported as ' data.filename '.png'')' ]);
-    uimenu(hm, 'Label',['Save as ' data.filename '.jpg'], 'Callback', [ 'saveas(gcf, ''' data.filename '.jpg'',''jpg''); disp(''Exported as ' data.filename '.jpg'')' ]);
-    uimenu(hm, 'Label',['Save as ' data.filename '.fig (Matlab)'], 'Callback',[ 'saveas(gcf, ''' data.filename '.fig'',''fig''); disp(''Exported as ' data.filename '.fig'')' ]);
-    uimenu(hm, 'Label',['Save as ' data.filename '.eps'], 'Callback',[ 'saveas(gcf, ''' data.filename '.eps'',''eps''); disp(''Exported as ' data.filename '.eps'')' ]);
-    uimenu(hm, 'Label',['Save as ' data.filename '.pdf'], 'Callback',[ 'saveas(gcf, ''' data.filename '.pdf'',''pdf''); disp(''Exported as ' data.filename '.pdf'')' ]);
-   
-    % add rotate/pan/zoom tools in case java machine is not started
-    if ~usejava('jvm')
-      uimenu(hm, 'Separator','on','Label','Zoom on/off', 'Callback','zoom');
-      uimenu(hm, 'Label','Pan (move)', 'Callback','pan');
-      set(gcf, 'KeyPressFcn', @(src,evnt) eval('lighting none;alpha(1);shading flat;axis tight;rotate3d off') );
-      if strcmp(data.type,'array_2d')
-        uimenu(hm, 'Label', 'Rotate', 'Callback','rotate3d on');
-      end
-      uimenu(hm, 'Label','Print ...', 'Callback', 'printdlg(gcf)');
-    end
-    uimenu(hm, 'Separator','on', 'Label', 'About McCode/McPlot', 'Callback','msgbox({''MCPLOT a Tool to display McCode data set'',''E.Farhi, ILL 2010 <www.mccode.org>''},''About McCode/mcplot'',''help'')');
     
     set(h, 'UIContextMenu', hm);
   end
+  
+  % add figure menu
+  reset_callback = 'lighting none;alpha(1);shading flat;axis tight;rotate3d off';
+  if ~isfield(data,'subplot'), filename = data.filename;
+  else
+    pathname = fileparts(data.filename);
+    filename = fullfile(pathname, 'mccode');
+  end
+  if exist('uimenu') && (~isfield(data,'subplot') || data.subplot==1)
+    % in case of nojvm, we create a small button to attach the menu on
+    if ~usejava('jvm')
+      button = uicontrol(gcf, 'style','pushbutton', 'position', [ 5 5 20 20 ], 'String','>',...
+      'BackgroundColor','green','Tooltip','Reset view. Right click for menu.',...
+      'Callback',reset_callback);
+      hm = uicontextmenu;
+    else
+      hm = uimenu(gcf, 'Label','McCode','Accelerator','m');
+    end
+    uimenu(hm, 'Label',['Save as ' filename '.png'], 'Callback', ...
+      [ 'print(''-dpng'',''-noui'', ''' filename '.png''); disp(''Exported as ' filename '.png'')' ]);
+    uimenu(hm, 'Label',['Save as ' filename '.jpg'], 'Callback', [ 'print(''-djpeg'',''-noui'', ''' filename '.jpg''); disp(''Exported as ' filename '.jpg'')' ]);
+    uimenu(hm, 'Label',['Save as ' filename '.fig'], 'Callback', [ 'saveas(gcf, ''' filename '.fig''); disp(''Exported as ' filename '.fig'')' ]);
+    uimenu(hm, 'Label',['Save as ' filename '.eps'], 'Callback', [ 'print(''-depsc'',''-noui'', ''' filename '.eps''); disp(''Exported as ' filename '.eps'')' ]);
+    uimenu(hm, 'Label',['Save as ' filename '.pdf'], 'Callback', [ 'print(''-dpdf'',''-noui'', ''' filename '.pdf''); disp(''Exported as ' filename '.pdf'')' ]);
+    
+    uimenu(hm, 'Separator','on', 'Label', 'About McCode/McPlot', ...
+      'Callback','msgbox({''MCPLOT a Tool to display McCode data set'',''E.Farhi, ILL 2010 <www.mccode.org>''},''About McCode/mcplot'',''help'')');
+    % add rotate/pan/zoom tools in case java machine is not started
+    if ~usejava('jvm')
+      uimenu(hm, 'Label','Print ...', 'Callback', 'printdlg(gcf)');
+
+      uimenu(hm, 'Separator','on','Label','Zoom on/off', 'Callback','zoom');
+      uimenu(hm, 'Label','Pan (move)', 'Callback','pan');
+      if ~isempty(strmatch('array_2d',data.type))
+        uimenu(hm, 'Label', 'Rotate', 'Callback','rotate3d on');
+      end
+      uimenu(hm, 'Label','Reset view/menu', 'Callback',reset_callback);
+      set(button, 'UIContextMenu', hm);
+    end
+  end
+  if isfield(data,'subplot'), data=rmfield(data,'subplot'); end
+  % store data into plot UserData
+  set(h, 'UserData', data, 'Tag',[ 'mcplot_data_' data.filename ]);
 
   % update data structure
   data.handle = h;
@@ -911,7 +989,7 @@ function [header, data] = mcplot_textscan(file)
         header = { header{:} reminder };
       otherwise           % consider this is data
         % replace non numerics into spaces, and keep [0-9] +- eE
-        index = find(~isstrprop(line, 'digit') & line ~= '+' & line ~= '-' & line ~= 'e' & line ~= 'E');
+        index = find(~isdigit(line) & line ~= '+' & line ~= '-' & line ~= 'e' & line ~= 'E');
         line = sscanf(line, '%g');  % get numerical values
         line = transpose(line(:));  % a row
         % check if we are currently catenating into a block
