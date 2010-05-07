@@ -18,7 +18,7 @@
 * Models a rectangular guide tube centered on the Z axis. The entrance lies
 * in the X-Y plane.
 * The guide may be tapered.
-*
+* 
 * The component includes a feature to read in self-defined functions for
 * guide tapering. Under the parameter 'option' the KEYWORD 'file=' offers
 * the possibility to read in parameters from an ASC-file. The file structure
@@ -28,6 +28,8 @@
 * length of each segment is constant l(i)=l/segments . The number of
 * segments is defined through the number of lines minus the first 3
 * lines taken from the Input-File.
+* The guide can be made curved both horizontally and vertically (not shown in 3d
+* view), and m-coating, when set negative, is varied in 1/width.
 *
 * Example Input-File:
 *
