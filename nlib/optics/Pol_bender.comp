@@ -60,7 +60,7 @@
 * xwidth:       Width at the guide entry (m)
 * yheight:      Height at the guide entry (m)
 * length:       length of guide along center (m)
-* radius:       Radius of curvature of the guide (+:curve left/-:right) (m) 
+* curvature:    Radius of curvature of the guide (+:curve left/-:right) (m) 
 * nslit:        Number of slits (1)
 * d:            Width of spacers (subdividing absorbing walls) (m)
 * endFlat:      If endflat>0 then entrance and exit planes are parallel. (1)
