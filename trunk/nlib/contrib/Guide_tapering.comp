@@ -60,19 +60,20 @@
 *
 * w1:      [m]    Width at the guide entry
 * h1:      [m]    Height at the guide entry
-* linw     [m]    distance of 1. focal point and real guide entry -
+* linw     [m]    distance from 1st focal point to real guide entry -
 *                 left and right horizontal mirrors
-* loutw    [m]    distance of real guide exit and 2nd focal point -
+* loutw    [m]    distance from real guide exit to 2nd focal point -
 *                 left and right horizontal mirrors
 * l:       [m]    length of guide
-* linh:    [m]    distance of 1st focal point and real guide entry -
+* linh:    [m]    distance from 1st focal point to real guide entry -
 *                 top and bottom vertical mirrors
-* louth:   [m]    distance of real guide exit and 2nd focal point -
+* louth:   [m]    distance from real guide exit to 2nd focal point -
 *                 top and bottom vertical mirrors
 * option   [str]  define the input function for the curve of the guide walls
 *                 options are:
-*                 "elliptical" - define elliptical function of guide walls
+*                 "elliptical"  - define elliptical function of guide walls
 *                 "parabolical" - define parabolical function of guide walls
+*                 "straight"    - define a straight elements guide
 *                 "file=[filename]" - read in ASC-file with arbitrary
 *                 definition for the curve of the guide walls
 * R0:      [1]    Low-angle reflectivity
@@ -83,11 +84,15 @@
 *                 mirrors in each channel
 * alphay:  [AA]   Slope of reflectivity for top and bottom mirrors
 * mx:      [1]    m-value of material for left and right vertical mirrors
-*                 in each channel. Zero means completely absorbing.
+*                 in each channel. Zero means completely absorbing. Negative 
+*                 value will adapt coating as e.g. m=mx*w1/w
 * my:      [1]    m-value of material for top and bottom mirrors. Zero
-*                 means completely absorbing.
+*                 means completely absorbing. Negative value will adapt coating 
+*                 as e.g. m=my*h1/h
 * W:       [AA-1] Width of supermirror cut-off for all mirrors
 * segno:   [1]    number of segments (z-axis) for cutting the tube
+* curvature:[m]   guide horizontal radius of curvature. Zero means straight.
+* curvature_v:[m] guide vertical radius of curvature. Zero means straight.
 *
 * %End
 *
@@ -97,11 +102,16 @@ DEFINE COMPONENT Guide_tapering
 DEFINITION PARAMETERS ()
 SETTING PARAMETERS (string option=0, w1=0,h1=0,l,linw=0,loutw=0,linh=0,louth=0, R0=0.99,
                     Qcx=0.021,Qcy=0.021, alphax=6.07, alphay=6.07, W=0.003,
-                    mx=1, my=1,segno=800)
+                    mx=1, my=1,segno=800,curvature=0,curvature_v=0)
 OUTPUT PARAMETERS(w1c,w2c,ww,hh,whalf,hhalf,lwhalf,lhhalf,h1_in,h2_out,w1_in,w2_out,l_seg,seg,
 		  h12, h2, w12, w2, a_ell_q, b_ell_q, lbw, lbh, mxi ,u1 ,u2 ,div1, p2_para,
-		  test,Div1, i,ii,seg, fu, pos, file_name, ep, num)
+		  test,Div1, i,ii,seg, fu, pos, file_name, ep, num, rotation_h,rotation_v)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+
+SHARE
+%{
+%include "ref-lib"
+%}
 DECLARE
 %{
   double *w1c;
@@ -119,7 +129,7 @@ DECLARE
   char file_name[1024];
   char *ep;
   FILE *num;
-
+  double rotation_h=0, rotation_v=0;
 %}
 
 INITIALIZE
@@ -168,6 +178,7 @@ INITIALIZE
   } else {
      exit(-1);
   }
+  /* handle guide geometry ================================================== */
   if (!strcmp(fu,"elliptical"))
   {
      /* calculate parameter b of elliptical equestion - vertical mirrors */
@@ -267,6 +278,11 @@ INITIALIZE
      {
       fprintf(stderr,"%d: %lf %lf %lf %lf \n",i,h1_in[i],h2_out[i],w1_in[i],w2_out[i]);
      }
+  } else if (!strcmp(fu,"straight")) {
+    for (i=0;i<seg;i++) {
+      h1_in[i] = h2_out[i] = h2 = h1;
+      w1_in[i] = w2_out[i] = w2 = w1;
+    }
   } else {
      fprintf(stderr,"Component: %s (Guide_tapering)\n",NAME_CURRENT_COMP);
      fprintf(stderr,"           Unknown KEYWORD: %s \n", fu);
@@ -380,11 +396,11 @@ INITIALIZE
      }
   }
   fprintf(stderr,"Component: %s (Guide_tapering)\n",NAME_CURRENT_COMP);
-  fprintf(stderr,"           Weigth at the guide exit (w2): %lf \n", w2);
+  fprintf(stderr,"           Width at the guide exit (w2): %lf \n", w2);
   if (w2 <= 0)
   {
    fprintf(stderr,"Component: %s (Guide_tapering)\n", NAME_CURRENT_COMP);
-   fprintf(stderr,"           Weigth at the guide exit (w2) was calculated\n");
+   fprintf(stderr,"           Width at the guide exit (w2) was calculated\n");
    fprintf(stderr,"           <=0; Please change the parameter w1 and/or\n");
    fprintf(stderr,"           l! \n");
     free(fu);exit(-1);
@@ -445,6 +461,9 @@ INITIALIZE
     lwhalf[i] = l_seg*whalf[i];
     lhhalf[i] = l_seg*hhalf[i];
   }
+  /* guide curvature: rotation angle [rad] between each guide segment */
+  if (curvature && l && segno)   rotation_h = l/curvature/segno;
+  if (curvature_v && l && segno) rotation_v = l/curvature_v/segno;
 %}
 
 TRACE
@@ -563,7 +582,8 @@ TRACE
         double ref=1;
         if (i <= 2)
         {
-          double par[] = {R0, Qcx, alphax, mx, W};
+          double m     = (mx > 0 ? mx : fabs(mx*w1/w1_in[ii]));
+          double par[] = {R0, Qcx, alphax, m, W};
           StdReflecFunc(q, par, &ref);
           if (ref > 0)
             p *= ref;
@@ -572,7 +592,8 @@ TRACE
             ABSORB;                               /* Cutoff ~ 1E-10 */
           }
         } else {
-          double par[] = {R0, Qcy, alphay, my, W};
+          double m     = (my > 0 ? my : fabs(my*h1/h1_in[ii]));
+          double par[] = {R0, Qcy, alphay, m, W};
           StdReflecFunc(q, par, &ref);
           if (ref > 0)
             p *= ref;
@@ -583,9 +604,21 @@ TRACE
         }
       }
       x += hadj; SCATTER; x -= hadj;
-    }
+    } /* loop on reflections inside segment */
     x += hadj; /* Re-adjust origin */
-  }
+    
+    /* rotate neutron according to actual guide curvature */
+    if (rotation_h) {
+      double nvx, nvy, nvz;
+      rotate(nvx,nvy,nvz, vx,vy,vz, -rotation_h, 0,1,0);
+      vx = nvx; vy=nvy; vz=nvz;
+    }
+    if (rotation_v) {
+      double nvx, nvy, nvz;
+      rotate(nvx,nvy,nvz, vx,vy,vz, -rotation_v, 1,0,0);
+      vx = nvx; vy=nvy; vz=nvz;
+    }
+  } /* loop on segments */
 
 %}
 
