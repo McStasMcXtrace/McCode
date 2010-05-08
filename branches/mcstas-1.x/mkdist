@@ -304,7 +304,7 @@ then
     sudo cp mcstas-$1-src.tar.gz build-chroot-x86_64/root
     sudo mkdir build-chroot-x86_64/build
     sudo chroot build-chroot-x86_64 apt-get update
-    sudo chroot build-chroot-x86_64 /root/debcreate $1 x86_64
+    sudo chroot build-chroot-x86_64 /root/debcreate $1 amd64
     echo
     echo
     echo Build packages created:
