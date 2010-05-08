@@ -43,6 +43,8 @@ cp mcstas-${RELEASE}-srcdir/deb/control ${BUILDDIR}/DEBIAN
 cp mcstas-${RELEASE}-srcdir/deb/prerm ${BUILDDIR}/DEBIAN
 cp mcstas-${RELEASE}-srcdir/deb/postinst ${BUILDDIR}/DEBIAN
 
+sed -i "s/any/$2/g" ${BUILDDIR}/DEBIAN/control
+
 find ${BUILDDIR} -type d -exec chmod 0755 \{\} \;
 
 chmod 0755 ${BUILDDIR}/DEBIAN/prerm
