@@ -205,10 +205,10 @@ if ($plotter =~ /Scilab/i && $MCSTAS::mcstas_config{'SCILAB'} ne "no") {
   autoflush $fh 1;
   # write the scilab script
   printf $fh "if execstr('stacksize(1e8);','errcatch') then execstr('stacksize(1e7);','errcatch'); end\n";
-  printf $fh "getf('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
+  printf $fh "exec('$MCSTAS::sys_dir/tools/scilab/mcplot.sci',-1);\n";
   printf $fh "global McPlotTempFile;\nMcPlotTempFile='$tmp_file';\n";
-  printf $fh "s=mcplot('$file','$passed_arg_str $passed_arg_str_quit','$inspect');\n";
-  printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str $passed_arg_str_quit'',''$inspect'')\\n');\n";
+  printf $fh "s=mcplot('$file','$passed_arg_str');\n";
+  printf $fh "mprintf('s=mcplot(''$file'',''$passed_arg_str'',)\\n');\n";
   if ($passed_arg_str_quit) {
     printf $fh "quit\n";
   } else {
