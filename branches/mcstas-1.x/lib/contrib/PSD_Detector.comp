@@ -89,31 +89,31 @@
 * imperfections in his physical machine and correct for them.
 *
 * Example: PSD_Detector(xwidth=0.192, yheight=0.192, nx=64, ny=64,
-*                       depth=0.03, thres=100, borderx=-1, bordery=-1,
+*                       zdepth=0.03, threshold=100, borderx=-1, bordery=-1,
 *                       PressureConv=5, PressureStop=1,
-*                       FN_Conv="He-3.table", FN_Stop="He3inCF4.table",
+*                       FN_Conv="Gas_tables/He3inHe.table", FN_Stop="Gas_tables/He3inCF4.table",
 *                       xChDivRelSigma=0, yChDivRelSigma=0,
 *                       filename="BIDIM19.psd")
 *
 * Example: PSD_Detector(xwidth=0.26, yheight=0.26, nx=128, ny=128,
-*                       depth=0.03, thres=100, borderx=-1, bordery=-1,
+*                       zdepth=0.03, threshold=100, borderx=-1, bordery=-1,
 *                       PressureConv=5, PressureStop=1,
-*                       FN_Conv="He-3.table", FN_Stop="He3inCF4.table",
+*                       FN_Conv="Gas_tables/He3inHe.table", FN_Stop="Gas_tables/He3inCF4.table",
 *                       xChDivRelSigma=0, yChDivRelSigma=0,
 *                       filename="BIDIM26.psd")
 *
 * Example: PSD_Detector(radius=0.0127, yheight=0.20, nx=1, ny=128,
-*                       thres=100, borderx=-1,
+*                       threshold=100, borderx=-1,
 *                       PressureConv=9.9, PressureStop=0.1,
-*                       FN_Conv="He3inHe.table", FN_Stop="He3inCO2.table",
+*                       FN_Conv="Gas_tables/He3inHe.table", FN_Stop="Gas_tables/He3inCO2.table",
 *                       yChDivRelSigma=0.006,
 *                       filename="ReuterStokes.psd")
 *
 * Example: PSD_Detector(awidth=1.533, yheight=0.4, na=640, ny=256,
-*                       re=0.73, depth=0.032, dc=0.026, thres=100,
+*                       radius=0.73, zdepth=0.032, dc=0.026, threshold=100,
 *                       borderx=-1, bordery=-1,
 *                       PressureConv=5, PressureStop=1,
-*                       FN_Conv="He3inHe.table", FN_Stop="He3inCF4.table",
+*                       FN_Conv="Gas_tables/He3inHe.table", FN_Stop="Gas_tables/He3inCF4.table",
 *                       xChDivRelSigma=0, yChDivRelSigma=0.0037,
 *                       LensOn=1, filename="D19.psd")
 *
