@@ -125,6 +125,7 @@ char **mcdirnames;
 char **mcinstrnames;
 char **mcsources;
 char *mcoutputdir=NULL;
+	int  ipar_var    =0;  /* column index of scan variable (used in mcformat_scan_compare) */ 
 
 struct fileparts_struct {
   char *FullName;
@@ -1392,15 +1393,15 @@ int sort_ipar_mon (const void *a, const void *b)
   const int *pb = (const int *) b;
   int ia=*pa;
   int ib=*pb;
-  double da=Files_to_Merge[ia].mcinputtable[0].type == instr_type_string ?
-    0 : atof(Files_to_Merge[ia].mcinputtable[0].val);
-  double db=Files_to_Merge[ib].mcinputtable[0].type == instr_type_string ?
-    0 : atof(Files_to_Merge[ib].mcinputtable[0].val);
+  double da=Files_to_Merge[ia].mcinputtable[ipar_var.type == instr_type_string ?
+    0 : atof(Files_to_Merge[ia].mcinputtable[ipar_var].val);
+  double db=Files_to_Merge[ib].mcinputtable[ipar_var].type == instr_type_string ?
+    0 : atof(Files_to_Merge[ib].mcinputtable[ipar_var].val);
   if       (da > db) return 1;
   else if (da < db) return -1;
   else {/* same distance, sort on ipar value then filenames */
-   int tmp=strcmp(Files_to_Merge[ia].mcinputtable[0].val,
-                  Files_to_Merge[ib].mcinputtable[0].val);
+   int tmp=strcmp(Files_to_Merge[ia].mcinputtable[ipar_var].val,
+                  Files_to_Merge[ib].mcinputtable[ipar_var].val);
    if (tmp) return(tmp);
    else return strcmp(Files_to_Merge[ia].filename, Files_to_Merge[ib].filename);
   }
@@ -1430,7 +1431,7 @@ void mcformat_scan_compare(int nb)
     /* get all sets of given index: Scans_to_merge[j] = index */
     int scan_length1= 1;
     int next_in_scan=-1;
-    int ipar_var    = 0;
+    ipar_var    = 0;  /* global variable, as it is used in sorting function 'sort_ipar_mon' */ 
     int scan_index2;
     /* compute length of monitor column (length of scan): scan_length1 */
     for (scan_index2=scan_index1+1; scan_index2<nb; scan_index2++)
@@ -1524,7 +1525,7 @@ void mcformat_scan_compare(int nb)
     }
     char *header=(char*)mem(64*MAX_LENGTH); strcpy(header, "");
     char *youts =(char*)mem(64*MAX_LENGTH); strcpy(youts,  "");
-    double ipar_min, ipar_max;
+    double ipar_min=FLT_MAX, ipar_max=0;
 
     /* we first sort Scan_columns(monitors) with distance */
     int Scan_distances[mon_count];  /* this is column index */
@@ -1570,10 +1571,9 @@ void mcformat_scan_compare(int nb)
             }
           }
         } /* if j==0 */
-        if (i == 0)
-          ipar_min=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[0].val);
-        else if (i == scan_length1-1)
-          ipar_max=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[0].val);
+        double this=atof(Files_to_Merge[Monitor_column[i]].mcinputtable[ipar_var].val); 
+        if (ipar_min > this) ipar_min=this; 
+        if (ipar_max < this) ipar_max=this; 
       } /* for i */
       strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_I ");
       strcat(header, Files_to_Merge[Scan_distances[j]].outputname); strcat(header, "_Err ");
