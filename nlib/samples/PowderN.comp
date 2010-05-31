@@ -53,6 +53,9 @@
 *   The default size of the object depends of the OFF file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
+* If you use this component and produce valuable scientific results, please
+* cite authors with references bellow (in <a href="#links">Links</a>).
+*
 * Example: PowderN(reflections = "c60.lau", d_phi = 15 , radius = 0.01,
 *   yheight = 0.05, Vc = 1076.89, sigma_abs = 0, Delta_d=0, DW=1,
 *   format=Crystallographica)
@@ -156,6 +159,8 @@
 * density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
 * nb_atoms: Number of atoms per unit cell [1]
 *
+* %L
+* “Validation of a realistic powder sample using data from DMC at PSI” Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.  
 * %L
 * See also: Powder1, Powder2 and PowderN
 * %L
