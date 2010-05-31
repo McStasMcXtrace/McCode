@@ -383,8 +383,8 @@ DECLARE
 %{
   struct line_info_struct line_info;
   int Nq=0;
-  double my_s_v2_sum;
-  double my_a_v, my_inc;
+  double my_s_v2_sum=0;
+  double my_a_v=0, my_inc=0; 
   double *w_v,*q_v, *my_s_v2;
   char   isrect=0;
   int    columns[8] = format;
@@ -640,11 +640,11 @@ TRACE
 	      
 	      /* Since now scattered and new direction given, calculate path to exit */
 	      if (isrect) {
-		intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
-		intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zthick_i);
+          intersect = box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick);
+          intersecti = box_intersect(&t1, &t2, x, y, z, vx, vy, vz, xwidth_i, yheight_i, zthick_i);
 	      } else {
-		intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
-		intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
+          intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius, yheight);
+          intersecti = cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, yheight_i);
 	      }
 	      
 	      if (!intersect) {

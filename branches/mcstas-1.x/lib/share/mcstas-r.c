@@ -2982,6 +2982,13 @@ static double mcdetector_out_012D(struct mcformats_struct format,
 
     /* slaves are done */
     if(mpi_node_rank != mpi_node_root) return 0;
+      
+    if (!p0) {  /* additive signal must be then divided by the number of nodes */ 
+      for (i=0; i<abs(m*n*p); i++) { 
+        p1[i] /= mpi_node_count; 
+        if (p2) p2[i] /= mpi_node_count; 
+      } 
+    } 
   }
 #endif /* USE_MPI */
 
@@ -3631,14 +3638,18 @@ Coords coords_xp(Coords b, Coords c) {
 
 /* coords_mirror: Mirror a in plane (through the origin) defined by normal n*/
 Coords coords_mirror(Coords a, Coords n) {
-  double t;
+  double t = scalar_prod(n.x, n.y, n.z, n.x, n.y, n.z);
   Coords b;
-  if ((t=scalar_prod(n.x,n.y,n.z, n.x,n.y,n.z))!=1)
-    n.x/=sqrt(t);n.y/=sqrt(t);n.z/=sqrt(t);
-  t=scalar_prod(a.x,a.y,a.z,n.x,n.y,n.z);
-  b.x=a.x-2*t*n.x;
-  b.y=a.y-2*t*n.y;
-  b.z=a.z-2*t*n.z;
+  if (t!=1) {
+    t = sqrt(t);
+    n.x /= t;
+    n.y /= t;
+    n.z /= t;
+  }
+  t=scalar_prod(a.x, a.y, a.z, n.x, n.y, n.z);
+  b.x = a.x-2*t*n.x;
+  b.y = a.y-2*t*n.y;
+  b.z = a.z-2*t*n.z;
   return b;
 }
 
@@ -4453,10 +4464,10 @@ int box_intersect(double *dt_in, double *dt_out,
 
 }
 
-/* cylinder_intersect: compute intersction with a cylinder
+/* cylinder_intersect: compute intersection with a cylinder
  * returns 0 when no intersection is found
  *      or 2/4/8/16 bits depending on intersection,
- *     and resulting times t0 and tdt_out1
+ *     and resulting times t0 and t1
  * Written by: EM,NB,ABA 4.2.98 */
 int
 cylinder_intersect(double *t0, double *t1, double x, double y, double z,
@@ -4476,6 +4487,10 @@ cylinder_intersect(double *t0, double *t1, double x, double y, double z,
     } else if (vy) { /* trajectory parallel to cylinder axis */
       t_in = (y + h/2)/vy;
       t_out = (y - h/2)/vy;
+      if (t_in>t_out){ 
+	        double tmp=t_in; 
+	        t_in=t_out;t_out=tmp; 
+	    } 
     } else return 0;
     y_in = vy*t_in + y;
     y_out =vy*t_out + y;
@@ -4588,7 +4603,7 @@ plane_intersect(double *t, double x, double y, double z,
   double s;
   if (fabs(s=scalar_prod(nx,ny,nz,vx,vy,vz))<FLT_EPSILON) return 0;
   *t = - scalar_prod(nx,ny,nz,x-wx,y-wy,z-wz)/s;
-  if (t<0) return -1;
+  if (*t<0) return -1;
   else return 1;
 }
 
@@ -5351,11 +5366,13 @@ int mcstas_main(int argc, char *argv[])
       mcinstrument_name, mcinstrument_source, mpi_node_count, mpi_node_name, MPI_VERSION, MPI_SUBVERSION);
     );
     /* adapt random seed for each node */
-    srandom(time(&t) + mpi_node_rank);
+    mcseed=(long)(time(&t) + mpi_node_rank); 
+    srandom(mcseed); 
     t += mpi_node_rank;
   }
 #else /* !USE_MPI */
-  srandom(time(&t));
+  mcseed=(long)time(&t);
+  srandom(mcseed); 
 #endif /* !USE_MPI */
   mcstartdate = t;  /* set start date before parsing options and creating sim file */
 

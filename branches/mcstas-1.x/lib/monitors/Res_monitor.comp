@@ -57,7 +57,8 @@
 * xwidth:  (m)  Width/diameter of detector (x)
 * yheight: (m)  Height of detector (y)
 * zthick:  (m)  Thichness of detector (z)
-* options: (str)  String that specifies the geometry of the monitor</br>
+* options: (str)  String that specifies the geometry of the monitor
+* restore_neutron(1): If set, the monitor does not influence the neutron state
 *
 * OUTPUT PARAMETERS:
 *
@@ -71,7 +72,7 @@
 
 DEFINE COMPONENT Res_monitor
 DEFINITION PARAMETERS (string filename=0, string options=0, res_sample_comp)
-SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=10000)
+SETTING PARAMETERS (xwidth=.1, yheight=.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bufsize=0,restore_neutron=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, buffer_index)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -202,7 +203,9 @@ TRACE
     } /* if p */
 
   } /* end if intersection */
-
+  if (restore_neutron) {
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }
 %}
 
 SAVE

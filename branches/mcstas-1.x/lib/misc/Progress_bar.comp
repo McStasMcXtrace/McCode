@@ -107,7 +107,7 @@ TRACE
 SAVE
 %{
   MPI_MASTER(fprintf(stdout, "\nSave [%s]\n", mcinstrument_name););
-  if (profile) {
+  if (profile && strlen(profile)) {
     char filename[256];
     if (!strlen(profile)) strcpy(filename, mcinstrument_name);
     else strcpy(filename, profile);

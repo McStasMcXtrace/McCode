@@ -57,7 +57,7 @@ double L;
 double KI, Vi, EI;
 
 A1 =asin(lambda/(2*DM))*RAD2DEG;
-L = 1/(1/17+1/3.2);
+L = 1/(1/L1+1/L2); 
 if (RV < 0) RV=2*L*sin(DEG2RAD*A1);
 KI=2*PI/lambda;
 Vi = K2V*fabs(KI);
@@ -82,7 +82,7 @@ COMPONENT Origin = Progress_bar()
 /* source with constant flux */
 COMPONENT Source = Source_simple(
     radius = 0.05, dist = L1, xw = 0.1, yh = 0.1,
-    Lambda0 = lambda, dLambda = lambda*0.03)
+    Lambda0 = lambda, dLambda = lambda*0.01)
   AT (0, 0, 0) RELATIVE Origin
 
 COMPONENT PSD = PSD_monitor(

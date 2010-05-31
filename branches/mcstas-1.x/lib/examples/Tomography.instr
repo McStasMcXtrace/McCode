@@ -59,7 +59,7 @@ COMPONENT samplearm = Arm()
 AT (0,0,1+0) RELATIVE Origin
 ROTATED (0,omega,0) RELATIVE Origin
 
-COMPONENT sample=V_sample(frac = frac_scatt, offfile = offfile, yheight=0.1, sigma_abs=sigma_abs,
+COMPONENT sample=V_sample(frac = frac_scatt, offfile = offfile, yheight=0.1, sig_a=sigma_abs,
 			  focus_xw=det_w, focus_yh=det_h, target_index=1)
 AT (0,0,0) RELATIVE samplearm 
 

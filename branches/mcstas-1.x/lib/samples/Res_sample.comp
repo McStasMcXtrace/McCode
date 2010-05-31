@@ -73,7 +73,7 @@ SETTING PARAMETERS (radius_i=0,radius_o=0.01,h=0.05,focus_r=0.05,E0=14,dE=2,
 OUTPUT PARAMETERS (res_struct)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
-DECLARE
+SHARE
 %{
   struct Res_sample_struct
     {
@@ -84,7 +84,11 @@ DECLARE
       double aw,ah;       /* rectangular angular dimensions */
       double xw,yh;       /* rectangular metrical dimensions */
       double tx,ty,tz;    /* target coords */
-    } res_struct;
+    };
+%}
+
+DECLARE %{
+  struct Res_sample_struct res_struct;
 %}
 
 INITIALIZE

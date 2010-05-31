@@ -40,7 +40,7 @@ COMPONENT source = Source_gen(
     radius = 0.05, dist = 1, xw = .1, yh = .1, E0 = 14, dE = .5)
   AT (0, 0, 0) RELATIVE Origin
 
-COMPONENT sample=V_sample(offfile=offfile, xwidth=0, yheight=0, zdepth=0.15,
+COMPONENT sample=V_sample(offfile=offfile, xwidth=0, yheight=0, zthick=0.15,
 	focus_xw=1, focus_yh=1, target_index=1)
 AT (0,0,1.5) RELATIVE source /*ROTATED (0,90,0) RELATIVE source*/
 

@@ -182,7 +182,7 @@ SETTING PARAMETERS (xwidth=0, radius=0, awidth=0, yheight=0, depth=0.03,
   yChDivRelSigma=0)
 OUTPUT PARAMETERS (PSD_N, PSD_p, PSD_p2, EAP,M1P1,PosAP, EAT,M1T1,PosAT,
   CrossSectionHe, CountNeutrons, GeomCumul, AbsCumul, DetCumul, PHSpectrum,
-  PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors)
+  PHSpectrum2,PHSpectrum_n,nH_p,nH_t,FullEnergyP,FullEnergyT,VariousErrors,SensVolCumul)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 SHARE

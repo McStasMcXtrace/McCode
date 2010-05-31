@@ -91,7 +91,7 @@ DEFINE INSTRUMENT ILL_H15_IN6(LAMBDA=4.14, DLAMBDA=0.075, SPEED=-1,
   M1=-1, M2=-1, M3=-1, MONITOR=1, CHA_WIDTH=-1,
   TOF_DELAY=-1, TOF_CHA_RESOL=128, ELPEAK=-1, RATIO=1, m=1, mFC=0, PHASE=-360,
   string Sqw_coh="Rb_liq_coh.sqw", string Sqw_inc="Rb_liq_inc.sqw",
-  radius_o=0.01, thickness=0.005)
+  radius=0.01, thickness=0.005)
 
 DECLARE
 %{

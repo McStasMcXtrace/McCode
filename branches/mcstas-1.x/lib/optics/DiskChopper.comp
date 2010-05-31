@@ -153,8 +153,8 @@ TRACE
     double toff;
     double yprime;
 
-    yprime = y+delta_y;
     PROP_Z0;
+    yprime = y+delta_y;
     
     /* Is neutron outside the vertical slit range and should we absorb? */
     if ((x*x+yprime*yprime)>R*R && abs_out==1) {

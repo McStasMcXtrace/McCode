@@ -8,11 +8,10 @@
 * %I
 * Written by: Virginie Hugouvieux, E. Farhi
 * Date: August 2003
-* Version: $Revision: 1.74 $
+* Version: $Revision: 1.90 $
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
-* Modified by: E. Farhi, Oct 2008: added any shape sample geometry
 *
 * Isotropic sample handling multiple scattering and absorption for a general
 * S(q,w) (coherent and/or incoherent/self)
@@ -37,7 +36,7 @@
 *
 * Focusing on the relevant [q,w] data range corresponding to the instrument
 * setting may improve computation accuracy and prevent some neutrons
-* to be removed when energy transfert is higher than actual neutron energy.
+* to be removed when energy transfer is higher than actual neutron energy.
 * An automatic such process may be activated when 'auto_qw=1'.
 * On the other hand, if the input S(q,w) data is too restricted in q, the
 * scattering conditions will be limited, leading to incomplete result.
@@ -60,17 +59,6 @@
 *   hollow cylinder: radius x yheight and thickness>0
 *   sphere:          radius (yheight=0 thickness=0)
 *   hollow sphere:   radius and thickness>0 (yheight=0)
-*   any shape:       geometry=OFF file
-*
-*   The complex geometry option handles any closed non-convex polyhedra.
-*   It computes the intersection points of the neutron ray with the object  
-*   transparently, so that it can be used like a regular sample object.
-*   It supports the OFF and NOFF file format but not COFF (colored faces). 
-*   Such files may be generated from XYZ data using qhull/powercrust, and 
-*   viewed with geomview
-*   The default size of the object depends of the OFF file data, but its 
-*   bounding box may be resized using xwidth,yheight and zdepth.
-
 *
 * <b>Concentric components:</b>
 * This component has the ability to contain other components when used in
@@ -176,22 +164,20 @@
 *                     shapes
 * zdepth:       [m] depth for a box sample shape
 * thickness:    [m] Thickness of hollow sample
+*                     Negative value extends the hollow volume outside of the box/cylinder.
 *
 * OPTIONAL PARAMETERS:
 * concentric:   [1] Indicate that this component has a hollow geometry and
 *                   may contain other components. It should then be duplicated 
 *                   after the inside part (only for box, cylinder, sphere) [1] 
 *                   See description for an example.
-* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
-*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * order:        [1] Limit multiple scattering up to given order
 *                     0:all (default), 1:single, 2:double, ...
 * verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug).
-* d_phi:      [deg] scattering vertical angular spreading (usually the heigh
+* d_phi:      [deg] scattering vertical angular spreading (usually the height
 *                     of the next component/detector). Use 0 for full space.
 *                     This is only relevant for single scattering (order=1).
 * save_sqw:     [1] When set to 1, saves S(q), S(w) and S(q,w) as monitors.
-*                     not available in MPI mode.
 * weight:   [g/mol] atomic/molecular weight of material
 * density: [g/cm^3] density of material. V_rho=density/weight/1e24*N_A
 * qmin:    [Angs-1] Minimum Q value to use in S(q,w).
@@ -217,15 +203,17 @@
 *
 * OUTPUT PARAMETERS:
 * VarSqw : internal structure containing many members/info
-* VarSqw.dq wavevector transfert [Angs-1]
-* VarSqw.dw energy transfert [Angs-1]
+* VarSqw.dq wavevector transfer [Angs-1]
+* VarSqw.dw energy transfer [Angs-1]
 * VarSqw.type interaction type of event
 *         'c' (coherent),  't' (transmitted)
 *         'i' (incoherent) 'v' (isotropic incoherent, Vanadium-like).
 * SCATTERED: order of multiple scattering
 *
 * %Links
-* Hugouvieux V, Farhi E, Johnson MR, Virtual neutron scattering experiments, Physica B, 350 (2004) 151.
+* E. Farhi, V. Hugouvieux, M.R. Johnson, and W. Kob, Journal of Computational Physics 228 (2009) 5251-5261 "Virtual experiments: Combining realistic neutron scattering instrument and sample simulations"
+* %L
+* Hugouvieux V, Farhi E, Johnson MR, Physica B, 350 (2004) 151 "Virtual neutron scattering experiments"
 * %L
 * Hugouvieux V, PhD, University of Montpellier II, France (2004).
 * %L
@@ -240,25 +228,21 @@
 * Web Elements                        http://www.webelements.com/
 * %L
 * The test/example instrument <a href="../examples/Test_Isotropic_Sqw.instr">Test_Isotropic_Sqw.instr</a>.
-* %L
-* Geomview and Object File Format (OFF) <http|://www.geomview.org>
-* %L
-* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
 * %E
 *****************************************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
-  DEFINITION PARAMETERS (string Sqw_coh=0, string Sqw_inc=0, powder_format=Undefined, string geometry=0)
-  SETTING PARAMETERS(radius=0,thickness=0,
+DEFINITION PARAMETERS (powder_format=Undefined)
+SETTING PARAMETERS(string Sqw_coh=0, string Sqw_inc=0, 
+    radius=0,thickness=0,
     xwidth=0, yheight=0, zdepth=0,
     qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,
     threshold=1e-10, int order=0, T=0, verbose=1, d_phi=0, int concentric=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
     p_interact=-1, auto_norm=0, powder_barns=1)
-  OUTPUT PARAMETERS (VarSqw, columns, offdata)
-  STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
-
+OUTPUT PARAMETERS (VarSqw, columns)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
 /*****************************************************************************/
 /*****************************************************************************/
 
@@ -266,7 +250,7 @@ SHARE
 %{
 
 #ifndef ISOTROPIC_SQW
-#define ISOTROPIC_SQW $Revision: 1.74 $
+#define ISOTROPIC_SQW $Revision: 1.90 $
 
 /* {j d F2 DW Dd inv2d q F} + { Sq if j == -1}*/
 #ifndef Crystallographica
@@ -345,7 +329,7 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   char   verbose_output;
   int    shape; /* 0:cylinder, 1:box, 2:sphere 3:any shape*/
 
-  double dq, dw; /* q/w transfert */
+  double dq, dw; /* q/w transfer */
   char   type; /* interaction type: c(coherent), i(incoherent),
                                   V(isotropic incoherent), t(transmitted) */
   /* store information from the last event */
@@ -363,7 +347,8 @@ struct Sqw_sample_struct { /* global parameters gathered as a structure */
   double mean_scatt;
   double mean_abs;
   double psum_scatt;
-  double single;
+  double single_coh;
+  double single_inc;
   double multi;
   double barns;
 };
@@ -394,8 +379,6 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->Sq           =NULL;
   Sqw_Data->iqSq         =NULL;
 }
-
-off_struct offdata;
 
 /* gaussian distribution to appply around Bragg peaks in a powder */
 double Sqw_powder_gauss(double x, double mean, double rms) {
@@ -727,8 +710,8 @@ struct Sqw_Data_struct *Sqw_readfile(
   long    *SW_lookup;
   long   **QW_lookup;
   char   **parsing;
-  double   q_min_data, q_max_data;
-  double   w_min_data, w_max_data;
+  double   q_min_data=0, q_max_data=0;
+  double   w_min_data=0, w_max_data=0;
   long     nb_q_data=0, nb_w_data=0;
 
   /* setup default */
@@ -1059,21 +1042,20 @@ struct Sqw_Data_struct *Sqw_readfile(
     }
     Sqw_Data->SW[j].omega = w;
     Sqw_Data->SW[j].value = local_val; /* S(w) */
-    val                  += local_val; /* total intensity */
+    val                  += local_val;
+    /* compute cumulated probability */
+    Sqw_Data->SW[j].cumul_proba = local_val;
+    if (j) Sqw_Data->SW[j].cumul_proba += Sqw_Data->SW[j-1].cumul_proba;
   }
   if (!val) {
     printf("Isotropic_Sqw: %s: Total S(q,w) intensity is NULL.\n"
-           "ERROR          Exiting.\n",
-      Sqw->compname);
+           "ERROR          Exiting.\n", Sqw->compname);
     return(NULL);
   }
-
-  /* compute normalized cumulated probability */
-  for (j=0; j < (Sqw_Data->nb_w) ; j++) {
-    Sqw_Data->SW[j].cumul_proba = Sqw_Data->SW[j].value/val;
-    /* cumulated probabilities for the random choice */
-    if (j) Sqw_Data->SW[j].cumul_proba += Sqw_Data->SW[j-1].cumul_proba;
-  }
+  /* normalize Pw distribution to 0:1 range */
+  for (j=0; j < (Sqw_Data->nb_w) ; 
+    Sqw_Data->SW[j++].cumul_proba /= Sqw_Data->SW[Sqw_Data->nb_w-1].cumul_proba
+  );
   if (Sqw->verbose_output > 1)
     printf("Isotropic_Sqw: %s: Generated normalized SW[%li] in range [0:%g]\n",
       Sqw->compname, Sqw_Data->nb_w, Sqw_Data->SW[Sqw_Data->nb_w-1].cumul_proba);
@@ -1104,20 +1086,15 @@ struct Sqw_Data_struct *Sqw_readfile(
       q  = Table_Index(Table_Array[0], 0, i);
       Sqw_Data->SQW[j][i].Q     = q;
       Sqw_Data->SQW[j][i].value = Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha; /* S(q,w) */
-    }
-    for (i=0; i < (Sqw_Data->nb_q) ; i++) {
-      Sqw_Data->SQW[j][i].cumul_proba = Sqw_Data->SQW[j][i].value/Sqw_Data->SW[j].value; 
-      /* compute cumulated probability */
+      
+      /* compute cumulated probability and take into account Jacobian with additional 'q' factor */
+      Sqw_Data->SQW[j][i].cumul_proba = q*Sqw_Data->SQW[j][i].value; 
       if (i) Sqw_Data->SQW[j][i].cumul_proba += Sqw_Data->SQW[j][i-1].cumul_proba;
     }
-    /* modify cumulated S(q,w) distribution to include the Jacobian dOmega/dq */
-    for (i=0; i < (Sqw_Data->nb_q) ; i++) {
-      q  = Table_Index(Table_Array[0], 0, i);
-      Sqw_Data->SQW[j][i].cumul_proba *= q;
-    }
-    /* normalize distribution to 0:1 range */
+    /* normalize P(q|w) distribution to 0:1 range */
     for (i=0; i < (Sqw_Data->nb_q) ; 
-    	Sqw_Data->SQW[j][i++].cumul_proba /= Sqw_Data->SQW[j][Sqw_Data->nb_q-1].cumul_proba);
+    	Sqw_Data->SQW[j][i++].cumul_proba /= Sqw_Data->SQW[j][Sqw_Data->nb_q-1].cumul_proba
+    );
     
   }
   if (Sqw->verbose_output > 1)
@@ -1230,7 +1207,6 @@ DECLARE
 
   struct Sqw_sample_struct VarSqw;
   int    columns[8] = powder_format;
-  off_struct offdata;
 /* end DECLARE */
 %}
 
@@ -1244,12 +1220,7 @@ INITIALIZE
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
-	  if (off_init(geometry, xwidth, yheight, zdepth, &offdata)) {
-      VarSqw.shape=3; thickness=0; concentric=0;
-    }
-  }
-  else if (xwidth && yheight && zdepth)  VarSqw.shape=1; /* box */
+  if (xwidth && yheight && zdepth)  VarSqw.shape=1; /* box */
   else if (radius > 0 && yheight)        VarSqw.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       VarSqw.shape=2; /* sphere */
 
@@ -1257,35 +1228,35 @@ INITIALIZE
     exit(fprintf(stderr,"Isotropic_Sqw: %s: sample has invalid dimensions.\n"
                         "ERROR          Please check parameter values (xwidth, yheight, zdepth, radius).\n", NAME_CURRENT_COMP));
   
+  
+  
   if (thickness) {
-    if (radius && (radius < fabs(thickness) )) { 
+    if (radius && (radius < fabs(thickness) )) {
       fprintf(stderr,"Isotropic_Sqw: %s: hollow sample thickness is larger than its volume (sphere/cylinder).\n"
-                     "WARNING        Please check parameter values.\n", NAME_CURRENT_COMP);
+                     "WARNING        Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
       thickness=0;
     }
-    else if (!radius && (xwidth < 2*fabs(thickness) || yheight < 2*fabs(thickness) || zdepth < 2*fabs(thickness))) { 
+    else if (!radius && (xwidth < 2*fabs(thickness) || yheight < 2*fabs(thickness) || zdepth < 2*fabs(thickness))) {
       fprintf(stderr,"Isotropic_Sqw: %s: hollow sample thickness is larger than its volume (box).\n"
-                     "WARNING        Please check parameter values. Using bulk sample (thickness=0).\n", NAME_CURRENT_COMP);
+                     "WARNING        Please check parameter values.\n", NAME_CURRENT_COMP);
     }
   }
   
   if (VarSqw.verbose_output) {
     switch (VarSqw.shape) {
-      case 0: printf("Isotropic_Sqw: %s: is a %s%s : radius=%f thickness=%f height=%f \n",
-              NAME_CURRENT_COMP, (thickness ? "hollow ":""),
+      case 0: printf("Isotropic_Sqw: %s: is a %s %s : radius=%f thickness=%f height=%f \n",
+              NAME_CURRENT_COMP, (thickness ? "hollow " : ""),
               "Cylinder",
-              radius,fabs(thickness),yheight); 
+              radius,fabs(thickness),yheight);
               break;
-      case 1: printf("Isotropic_Sqw: %s: is a %sBox : width=%f height=%f depth=%f \n",
+      case 1: printf("Isotropic_Sqw: %s: is a %s Box : width=%f height=%f depth=%f \n",
               NAME_CURRENT_COMP, (thickness ? "hollow" : ""), xwidth,yheight,zdepth);
               break;
-      case 2: printf("Isotropic_Sqw: %s: is a %s%s : radius=%f thickness=%f\n",
-              NAME_CURRENT_COMP, (thickness ? "hollow ":""),
+      case 2: printf("Isotropic_Sqw: %s: is a %s %s : radius=%f thickness=%f\n",
+              NAME_CURRENT_COMP, (thickness ? "hollow " : ""),
               "Sphere",
-              radius,fabs(thickness)); 
+              radius,fabs(thickness));
               break;
-      case 3: printf("Isotropic_Sqw: %s: is a volume defined from file %s\n",
-              NAME_CURRENT_COMP, geometry);
     }
   }
 
@@ -1319,7 +1290,8 @@ INITIALIZE
   VarSqw.mean_scatt= 0;
   VarSqw.mean_abs  = 0;
   VarSqw.psum_scatt= 0;
-  VarSqw.single    = 0;
+  VarSqw.single_coh= 0;
+  VarSqw.single_inc= 0;
   VarSqw.multi     = 0;
   VarSqw.barns     = powder_barns;
 
@@ -1365,9 +1337,9 @@ INITIALIZE
 
   if (d_phi && order != 1) {
     printf("Isotropic_Sqw: %s: Focusing can only apply for single\n"
-           "               scattering. Setting to 4*PI mode.\n",
+           "               scattering. Setting to order=1.\n",
            NAME_CURRENT_COMP);
-    d_phi = 0;
+    order = 1;
   }
 
   VarSqw.w_max     = (wmax > 0 ? wmax : 0);
@@ -1385,8 +1357,8 @@ TRACE
 int    intersect=0;     /* flag to continue/stop */
 double t0,  t1,  t2,  t3; /* times for intersections */
 double dt0, dt1, dt2, dt; /* time intervals */
-double k=0, kf, kf1, kf2;
-double v=0, vf;
+double k=0;
+double v=0, vf=0;
 double d_path;        /* total path length for straight trajectory */
 double my_a;          /* absorption cross-section scaled to velocity (2200) */
 double ws, p_scatt;   /* probability for scattering/absorption and for */
@@ -1394,11 +1366,11 @@ double ws, p_scatt;   /* probability for scattering/absorption and for */
 double tmp_rand;      /* temporary var */
 double ratio_w=0, ratio_q=0; /* variables for bilinear interpolation */
 double q11, q21, q22, q12;
-double omega=0;       /* energy transfert */
-double q=0;           /* wavevector transfert */
+double omega=0;       /* energy transfer */
+double q=0;           /* wavevector transfer */
 long   index_w;       /* energy index for table look-up SW */
 long   index_q;       /* Q index for table look-up P(Q|w) */
-double theta, costheta; /* for the choice of kf direction */
+ double theta=0, costheta=0; /* for the choice of kf direction */
 double u1x,u1y,u1z;
 double u2x,u2y,u2z;
 double u0x,u0y,u0z;
@@ -1409,7 +1381,6 @@ int    flag_ishollow=0;
 double solid_angle=0;
 double my_t=0;
 double p_mult=1;
-double alpha, alpha0;
 double mc_trans, p_trans, mc_scatt;
 double coh=0, inc=0;
 struct Sqw_Data_struct Data_sqw;
@@ -1429,52 +1400,48 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
   /* Intersection neutron trajectory / sample (sample surface) */
   if (VarSqw.s_coh > 0 || VarSqw.s_inc > 0) {
-    if (thickness>=0) {
-      if (VarSqw.shape==0) 
-        intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius,yheight); 
-      else if (VarSqw.shape==1) 
-        intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth); 
-      else if (VarSqw.shape==2) 
-        intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius); 
-      else if (VarSqw.shape == 3) 
-        intersect=off_intersect(&t0, &t3, x, y, z, vx, vy, vz, offdata ); 
+    if (thickness >= 0) {
+      if (VarSqw.shape==0)
+        intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius,yheight);
+      else if (VarSqw.shape==1)
+        intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
+      else if (VarSqw.shape==2)
+        intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius);
     } else {
-      if (VarSqw.shape==0) 
+      if (VarSqw.shape==0)
         intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius-thickness, 
-          yheight-2*thickness > 0 ? yheight-2*thickness : yheight); 
-      else if (VarSqw.shape==1) 
-        intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz,  
-	          xwidth-2*thickness > 0 ?  xwidth-2*thickness : xwidth,  
-	          yheight-2*thickness > 0 ? yheight-2*thickness : yheight,  
-	          zdepth-2*thickness > 0 ?  zdepth-2*thickness : zdepth); 
-      else if (VarSqw.shape==2) 
-        intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius-thickness); 
-      else if (VarSqw.shape == 3) 
-        intersect=off_intersect(&t0, &t3, x, y, z, vx, vy, vz, offdata ); 
-    } 
+          yheight-2*thickness > 0 ? yheight-2*thickness : yheight);
+      else if (VarSqw.shape==1)
+        intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, 
+          xwidth-2*thickness > 0 ?  xwidth-2*thickness : xwidth, 
+          yheight-2*thickness > 0 ? yheight-2*thickness : yheight, 
+          zdepth-2*thickness > 0 ?  zdepth-2*thickness : zdepth);
+      else if (VarSqw.shape==2)
+        intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius-thickness);
+    }
   } else intersect=0;
 
   /* Computing the intermediate times */
   if (intersect) {
     flag_ishollow = 0;
-    if (thickness>0) {
-      if (VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz, radius-thickness, 
-	        yheight-2*thickness > 0 ? yheight-2*thickness : yheight)) 
+    if (thickness > 0) {
+      if (VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz, radius-thickness,
+        yheight-2*thickness > 0 ? yheight-2*thickness : yheight))
         flag_ishollow=1;
       else if (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz, radius-thickness))
         flag_ishollow=1;
-      else if (VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz,  
-	        xwidth-2*thickness > 0 ? xwidth-2*thickness : xwidth,  
-	        yheight-2*thickness > 0 ? yheight-2*thickness : yheight,  
-	        zdepth-2*thickness > 0 ? zdepth-2*thickness : zdepth)) 
+      else if (VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz, 
+        xwidth-2*thickness > 0 ? xwidth-2*thickness : xwidth, 
+        yheight-2*thickness > 0 ? yheight-2*thickness : yheight, 
+        zdepth-2*thickness > 0 ? zdepth-2*thickness : zdepth))
         flag_ishollow=1;
     } else if (thickness<0) {
-      if (VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz, radius,yheight)) 
-        flag_ishollow=1; 
-      else if (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz, radius)) 
-        flag_ishollow=1; 
+      if (VarSqw.shape==0 && cylinder_intersect(&t1,&t2, x,y,z,vx,vy,vz, radius,yheight))
+        flag_ishollow=1;
+      else if (VarSqw.shape==2 && sphere_intersect   (&t1,&t2, x,y,z,vx,vy,vz, radius))
+        flag_ishollow=1;
       else if (VarSqw.shape==1 && box_intersect(&t1,&t2, x,y,z,vx,vy,vz, xwidth, yheight, zdepth))
-        flag_ishollow=1; 
+        flag_ishollow=1;
     }
     if (!flag_ishollow) t1 = t2 = t3; /* no empty space inside */
   } else break; /* neutron does not hit sample: transmitted  */
@@ -1501,7 +1468,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     /* initialize concentric mode */
     if (concentric && !flag_concentric && t0 >= 0
-     && VarSqw.shape==0 && thickness>0) {
+     && VarSqw.shape==0 && thickness) {
       flag_concentric=1;
     }
 
@@ -1601,10 +1568,12 @@ do { /* Main interaction loop. Ends with intersect=0 */
     if (!flag && mc_scatt > 0 && (mc_scatt >= 1 || rand01() < mc_scatt)) { /* Interaction neutron/sample */
       p_mult *= ws; /* Update weight ; account for absorption and retain scattered fraction */
       /* we have chosen portion mc_scatt of beam instead of p_scatt, so we compensate */
+      if (!mc_scatt) ABSORB;
       p_mult *= fabs(p_scatt/mc_scatt); /* lower than 1 */
     } else {
       flag = 1; /* Transmission : no interaction neutron/sample */
       if (!VarSqw.type) VarSqw.type = 't';
+      if (!mc_trans) ABSORB;
       p_mult *= fabs(p_trans/mc_trans);  /* attenuate beam by portion which is scattered (and left along) */
     }
 
@@ -1618,6 +1587,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
   else break;
 
   if (intersect) { /* scattering event */
+    double kf=0, kf1, kf2;
     /* mean scattering probability and absorption fraction */
     VarSqw.mean_scatt += (1-exp(-VarSqw.my_s*d_path))*p;
     VarSqw.mean_abs   += (1-ws)*p;
@@ -1680,6 +1650,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
 
     if (flag) { /* true when S(q,w) table exists (Data_sqw) */
 
+      double alpha=0, alpha0;
       /* give us a limited number of tries for scattering */
       for (index_counter=VarSqw.maxloop; index_counter > 0 ; index_counter--) {
 
@@ -1710,7 +1681,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           }
         } else {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: No suitable w transfert\n"
+            printf("Isotropic_Sqw: %s: Warning: No suitable w transfer\n"
                    "               for index_w=%li. Using w=0.\n",
               NAME_CURRENT_COMP, index_w);
           omega=0;
@@ -1736,7 +1707,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
         index_q = Sqw_search_Q_proba_per_w(Data_sqw, tmp_rand, index_w);
         if (index_q == -1) {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: No suitable (q|w) transfert\n"
+            printf("Isotropic_Sqw: %s: Warning: No suitable (q|w) transfer\n"
                "               for w=%g index_w=%li\n",
             NAME_CURRENT_COMP, omega, index_w);
           VarSqw.neutron_removed++;
@@ -1775,7 +1746,7 @@ do { /* Main interaction loop. Ends with intersect=0 */
           }
         } else {
           if (VarSqw.verbose_output >= 3 && VarSqw.neutron_removed<VarSqw.maxloop)
-            printf("Isotropic_Sqw: %s: Warning: No suitable q transfert\n"
+            printf("Isotropic_Sqw: %s: Warning: No suitable q transfer\n"
                "               for w=%g\n",
             NAME_CURRENT_COMP, omega);
           VarSqw.neutron_removed++;
@@ -1956,8 +1927,10 @@ if (SCATTERED) {
                   +(VarSqw.kf_z-VarSqw.ki_z)*(VarSqw.kf_z-VarSqw.ki_z));
   VarSqw.dw = VS2E*(VarSqw.vf*VarSqw.vf - VarSqw.vi*VarSqw.vi);
 
-  if (SCATTERED == 1) VarSqw.single += p;
-  else VarSqw.multi += p;
+  if (SCATTERED == 1) {
+    if (VarSqw.type == 'c') VarSqw.single_coh += p;
+    else                    VarSqw.single_inc += p;
+  } else VarSqw.multi += p;
 
 } else VarSqw.dq=VarSqw.dw=0;
 
@@ -1983,6 +1956,7 @@ SAVE
 
     if (save_sqw && Data_sqw.intensity) {
       double SW[Data_sqw.nb_w];
+      double SQ[Data_sqw.nb_q];
       double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
       long   i,j;
 
@@ -1995,6 +1969,7 @@ SAVE
         SW[j] = Data_sqw.SW[j].value;
         for (i=0; i < (Data_sqw.nb_q) ; i++)
           SQW[i][j] = Data_sqw.SQW[j][i].value;
+          if (j==1) SQ[i]=Data_sqw.Sq[i]/Data_sqw.SW[j].omega; /* S(q)/dw */
       }
       sprintf(tmp_str, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sq", NAME_CURRENT_COMP, ext);
@@ -2002,7 +1977,7 @@ SAVE
       if (Data_sqw.nb_q_data > 1)
         DETECTOR_OUT_1D(tmp_str,"Wavevector [Angs-1]",xvar,"q",
         Data_sqw.q_min, Data_sqw.q_max,
-        Data_sqw.nb_q_data,NULL,Data_sqw.Sq,NULL,
+        Data_sqw.nb_q_data,NULL,SQ,NULL,
         filename);
       sprintf(tmp_str, "Energy Density from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sw", NAME_CURRENT_COMP, ext);
@@ -2076,9 +2051,9 @@ FINALLY
            "               Absorption fraction           =%g\n",
            NAME_CURRENT_COMP,
            VarSqw.mean_scatt/VarSqw.psum_scatt, VarSqw.mean_abs/VarSqw.psum_scatt);
-    printf("               Single   scattering intensity =%g\n"
+    printf("               Single   scattering intensity =%g (coh=%g inc=%g)\n"
            "               Multiple scattering intensity =%g\n",
-           VarSqw.single, VarSqw.multi);
+           VarSqw.single_coh+VarSqw.single_inc, VarSqw.single_coh, VarSqw.single_inc, VarSqw.multi);
   }
 
 /* end FINALLY */
@@ -2113,7 +2088,7 @@ MCDISPLAY
       line(xmin, ymax, zmin, xmin, ymax, zmax);
       line(xmax, ymax, zmin, xmax, ymax, zmax);
 
-      if (thickness>0) {
+      if (thickness) {
         xmin = -0.5*xwidth+thickness;
         xmax = -xmin;
         ymin = -0.5*yheight+thickness;
@@ -2163,8 +2138,6 @@ MCDISPLAY
       circle("xy",0,0,0,radius);
       circle("xz",0,0,0,radius);
       circle("yz",0,0,0,radius);
-    } else if (VarSqw.shape == 3) {	/* OFF file */
-      off_display(offdata);
     }
   }
 /* end MCDISPLAY */
