@@ -112,18 +112,14 @@ SETTING PARAMETERS (string geometry=0, radius=0, xwidth=0, yheight=0, zdepth=0, 
   focus_xw=0, focus_yh=0, focus_aw=0, focus_ah=0, int target_index=0, 
 	pack = 1, p_interact=1, f_QE=0, gamma=0,
   sigma_abs=5.08, sigma_inc=5.08, Vc=13.827, concentric=0, order=0)
-OUTPUT PARAMETERS(StructVarsInc, VarsInc, offdata)
+OUTPUT PARAMETERS(VarsInc, offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{
   %include "read_table-lib"
   %include "interoff-lib"
-%}
-
-DECLARE
-%{
-
+  
   struct StructVarsInc
   {
     double  sigma_a; /* Absorption cross section per atom (barns) */
@@ -135,9 +131,15 @@ DECLARE
     double  aw,ah;       /* rectangular angular dimensions */
     double  xw,yh;       /* rectangular metrical dimensions */
     double  tx,ty,tz;    /* target coords */
-    } VarsInc;
+    };
+%}
 
-    off_struct offdata;
+DECLARE
+%{
+
+  struct StructVarsInc VarsInc;
+  off_struct offdata;
+  
 %}
 
 INITIALIZE
