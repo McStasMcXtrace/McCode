@@ -131,17 +131,19 @@ TRACE
 
 MCDISPLAY
 %{
+  double y1 = h/2.0;
+  double y2 = -y1;
   double x1, x2, z1, z2;
   double xplot1[100], xplot2[100], zplot1[100], zplot2[100];
   int n = 100;
-  int j = 1;
+  int j = 0;
   double R1 = (r - 0.5*w);    /* radius of inside arc */
   double R2 = (r + 0.5*w);    /* radius of outside arc */
-
+  
   magnify("xy");
 
   for(;;) {
-    if(j == n + 1) break;
+    if(j == n) break;
       z1 = ((double)j - 1.0)*(R1*l/r)/(double)(n - 1);
       z2 = ((double)j - 1.0)*(R2*l/r)/(double)(n - 1);
     x1 = r - sqrt(R1*R1 - z1*z1);
@@ -152,23 +154,26 @@ MCDISPLAY
     zplot2[j] = z2;
     j++;
   }
-  j = 1;
-  line(xplot1[j], 0.5*h,zplot1[j],xplot2[j], 0.5*h,zplot2[j]);
-      line(xplot1[j], 0.5*h,zplot1[j],xplot1[j],-0.5*h,zplot1[j]);
-      line(xplot2[j],-0.5*h,zplot2[j],xplot2[j], 0.5*h,zplot2[j]);
-      line(xplot1[j],-0.5*h,zplot1[j],xplot2[j],-0.5*h,zplot2[j]);
-  for(;;) {
-    if(j == n) break;
-    line(xplot1[j],  0.5*h, zplot1[j], xplot1[j+1],  0.5*h, zplot1[j+1]);
-    line(xplot2[j],  0.5*h, zplot2[j], xplot2[j+1],  0.5*h, zplot2[j+1]);
-    line(xplot1[j], -0.5*h, zplot1[j], xplot1[j+1], -0.5*h, zplot1[j+1]);
-    line(xplot2[j], -0.5*h, zplot2[j], xplot2[j+1], -0.5*h, zplot2[j+1]);
-    j++;
+  /* Draw opening aperture */
+  j=0;
+  line(xplot1[j],y1,zplot1[j],xplot2[j],y1,zplot2[j]);
+  line(xplot1[j],y1,zplot1[j],xplot1[j],y2,zplot1[j]);
+  line(xplot2[j],y2,zplot2[j],xplot2[j],y1,zplot2[j]);
+  line(xplot1[j],y2,zplot1[j],xplot2[j],y2,zplot2[j]);
+  
+  for(j=0;j<n-1;j++) {
+    /* Arc elements in xz-plane(s) */
+    line(xplot1[j],y1,zplot1[j],xplot1[j+1],y1,zplot1[j+1]);
+    line(xplot2[j],y1,zplot2[j],xplot2[j+1],y1,zplot2[j+1]);
+    line(xplot1[j],y2,zplot1[j],xplot1[j+1],y2,zplot1[j+1]);
+    line(xplot2[j],y2,zplot2[j],xplot2[j+1],y2,zplot2[j+1]);
   }
-      line(xplot1[j], 0.5*h,zplot1[j],xplot2[j], 0.5*h,zplot2[j]);
-      line(xplot1[j], 0.5*h,zplot1[j],xplot1[j],-0.5*h,zplot1[j]);
-      line(xplot2[j],-0.5*h,zplot2[j],xplot2[j], 0.5*h,zplot2[j]);
-      line(xplot1[j],-0.5*h,zplot1[j],xplot2[j],-0.5*h,zplot2[j]);
+  /* Draw closing aperture */
+  j=n-1;
+  line(xplot1[j],y1,zplot1[j],xplot2[j],y1,zplot2[j]);
+  line(xplot1[j],y1,zplot1[j],xplot1[j],y2,zplot1[j]);
+  line(xplot2[j],y2,zplot2[j],xplot2[j],y1,zplot2[j]);
+  line(xplot1[j],y2,zplot1[j],xplot2[j],y2,zplot2[j]);
 %}
 
 END
