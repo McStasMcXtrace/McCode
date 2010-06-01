@@ -1,18 +1,41 @@
+/*******************************************************************************
+*
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2009, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+*
+* Runtime: share/interoff-lib.c
+*
+* %Identification
+* Written by: Reynald Arnerin
+* Date:    Jun 12, 2008
+* Origin: ILL
+* Release: $Revision: 1.5 $
+* Version: McStas X.Y
+*
+* Object File Format intersection library for McStas.
+*
+*******************************************************************************/
+
+#ifndef INTEROFF_LIB_H
+#include "interoff-lib.h"
+#endif
 
 //gives the normal vector of p
-void normal(Coords* n, polygon p)
+void off_normal(Coords* n, polygon p)
 {
         //using Newell method  
-	long i;
+	int i,j;
 	n->x=0;n->y=0;n->z=0;
-	for(i=0;i<p.npol;++i)
+	for(i = 0, j = p.npol-1; i < p.npol; j = i++)
 	{
-		double x1=p.p[i].x,
-		       y1=p.p[i].y, 
-		       z1=p.p[i].z;
-		double x2=p.p[(i+1)%p.npol].x,
-		       y2=p.p[(i+1)%p.npol].y, 
-		       z2=p.p[(i+1)%p.npol].z;
+		MCNUM x1=p.p[3*i],
+		       y1=p.p[3*i+1], 
+		       z1=p.p[3*i+2];
+		MCNUM x2=p.p[3*j],
+		       y2=p.p[3*j+1], 
+		       z2=p.p[3*j+2];
 		// n is the cross product of v1*v2
 		n->x += (y1 - y2) * (z1 + z2);
         	n->y += (z1 - z2) * (x1 + x2);
@@ -20,130 +43,114 @@ void normal(Coords* n, polygon p)
 	}
 }
 
-//scalar product
-double scalarp(Coords a, Coords b)
-{
-        return a.x*b.x + a.y*b.y + a.z*b.z;
-}
 
 //based on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-//return 0 if the Coords is out
-//	 1 if it is in
+//return 0 if the vertex is out
+//	  1 if it is in
 //	 -1 if on the boundary
-int pnpoly(polygon p, Coords v)
+int off_pnpoly(polygon p, Coords v)
 {
       int i, j, c = 0;
-      double minx=DBL_MAX,maxx=-DBL_MAX,miny=DBL_MAX,maxy=-DBL_MAX,minz=DBL_MAX,maxz=-DBL_MAX;
-      double rangex,rangey,rangez;
-      double* polx,*poly,*polz;
-      double x=v.x,y=v.y;
-      polx=malloc(p.npol*sizeof(double));
-      poly=malloc(p.npol*sizeof(double));
-      polz=malloc(p.npol*sizeof(double));
+      MCNUM minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
+      MCNUM rangex,rangey,rangez;
+
+      int pol2dx,pol2dy;			    //2d restriction of the poly
+      MCNUM x=v.x,y=v.y;
+
+
       //take the most relevant 2D projection (prevent from instability)
       for(i=0;i<p.npol;++i)
       {
-	  polx[i]=p.p[i].x;
-	  poly[i]=p.p[i].y;
-	  polz[i]=p.p[i].z;
-	  if(polx[i]<minx)minx=polx[i];
-	  if(polx[i]>maxx)maxx=polx[i];
-	  if(poly[i]<miny)miny=poly[i];
-	  if(poly[i]>maxy)maxy=poly[i];
-	  if(polz[i]<minz)minz=polz[i];
-	  if(polz[i]>maxz)maxz=polz[i];	
+	      if(p.p[3*i]<minx)minx=p.p[3*i];
+	      if(p.p[3*i]>maxx)maxx=p.p[3*i];
+	      if(p.p[3*i+1]<miny)miny=p.p[3*i+1];
+	      if(p.p[3*i+1]>maxy)maxy=p.p[3*i+1];
+	      if(p.p[3*i+2]<minz)minz=p.p[3*i+2];
+	      if(p.p[3*i+2]>maxz)maxz=p.p[3*i+2];	
       }
       rangex=maxx-minx;
       rangey=maxy-miny;
       rangez=maxz-minz;
+
+      pol2dx=0;
+      pol2dy=1;
       if(rangex<rangez)
       {
-	  if(rangex<rangey) 
-          {
-		polx=polz;
-                x=v.z;
-		//printf("yz\n");
-          }
-	  else
-	  {
-		poly=polz;
-                y=v.z;
-		//printf("xz\n");
-          }
+	      if(rangex<rangey) {
+	        pol2dx=2;		
+          x=v.z;
+        } else {
+		      pol2dy=2;
+          y=v.z;
+        }
       }
-      else if(rangey<rangez)
-      {
-	  poly=polz;
-          y=v.z;	  
-		//printf("xz\n");
+      else if(rangey<rangez) {
+	      pol2dy=2;
+        y=v.z;	  
       }
-	//else printf("xy\n");
-	//printf("x=%f,y=%f,z=%f\n",rangex,rangey,rangez);
+ 
       //trace rays and test number of intersection
       for (i = 0, j = p.npol-1; i < p.npol; j = i++) {
-        if (((((poly[i])<=y) && (y<(poly[j]))) ||
-             (((poly[j])<=y) && (y<(poly[i])))) &&
-            (x < ( (polx[j] - polx[i]) * (y - poly[i]) / (poly[j] - poly[i]) + polx[i])))	
+        if (((((p.p[3*i+pol2dy])<=y) && (y<(p.p[3*j+pol2dy]))) ||
+             (((p.p[3*j+pol2dy])<=y) && (y<(p.p[3*i+pol2dy])))) &&
+            (x < ( (p.p[3*j+pol2dx] - p.p[3*i+pol2dx]) * (y - p.p[3*i+pol2dy]) 
+                 / (p.p[3*j+pol2dy] - p.p[3*i+pol2dy]) + p.p[3*i+pol2dx]) ))	
           c = !c;
 
-	if (((fabs(poly[i]-y)<=EPSILON) || ((fabs(poly[j]-y)<=EPSILON))) &&
-            fabs(x -((polx[j] - polx[i]) * (y - poly[i]) / (poly[j] - poly[i]) + polx[i])) < EPSILON)
-	{
-		//the point lies on the edge
-		c=-1;
-		break;
-	}
-		
-	//printf("%d\n",c);
+	      if (((fabs(p.p[3*i+pol2dy]-y)<=EPSILON) || ((fabs(p.p[3*j+pol2dy]-y)<=EPSILON))) &&
+            fabs(x -((p.p[3*j+pol2dx] - p.p[3*i+pol2dx]) * (y - p.p[3*i+pol2dy]) 
+              / (p.p[3*j+pol2dy] - p.p[3*i+pol2dy]) + p.p[3*i+pol2dx])) < EPSILON)
+	      {
+		      //the point lies on the edge
+		      c=-1;
+		      break;
+	      }
       }
+      //free(polx);
+      //free(poly);
 
       return c;
 }
 
-//gives the intersection Coords between ray [a,b) and polygon p and its prametric value on (a b)
-//http://geometryalgorithms.com/Archive/algorithm_0105/algorithm_0105.htm
-int intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
+//gives the intersection vertex between ray [a,b) and polygon p and its parametric value on (a b)
+//based on http://geometryalgorithms.com/Archive/algorithm_0105/algorithm_0105.htm
+int off_intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
 {
-        //direction vector of [a,b]
-        Coords dir;
-        dir.x = (b.x-a.x);
-        dir.y = (b.y-a.y);
-        dir.z = (b.z-a.z);
-        
-        //the normal vector to the polygon
-        Coords normale;
-        normal(&normale, p);       
-        
-        //direction vector from a to a Coords of the polygon
-        Coords w0;
-        w0.x = (a.x-p.p[0].x);
-        w0.y = (a.y-p.p[0].y);
-        w0.z = (a.z-p.p[0].z);
+  //direction vector of [a,b]
+  Coords dir;
+  dir.x = (b.x-a.x);
+  dir.y = (b.y-a.y);
+  dir.z = (b.z-a.z);
+  
+  //the normal vector to the polygon
+  Coords normale=p.normal;
+  //off_normal(&normale, p);       
+  
+  //direction vector from a to a vertex of the polygon
+  Coords w0;
+  w0.x = (a.x-p.p[0]);
+  w0.y = (a.y-p.p[1]);
+  w0.z = (a.z-p.p[2]);
 
-        //scalar product
-        double nw0 = -scalarp(normale,w0);
-        double ndir = scalarp(normale,dir);
-        if (fabs(ndir) < EPSILON)          // ray is parallel to polygon plane
-        {     
-                if (nw0 == 0)                // ray lies in polygon plane (infinite number of solution)
-                    return 0;
-                else return 0;             // ray disjoint from plane (no solution)
-        }
+  //scalar product
+  MCNUM nw0 = -scalar_prod(normale.x,normale.y,normale.z,w0.x,w0.y,w0.z);
+  MCNUM ndir = scalar_prod(normale.x,normale.y,normale.z,dir.x,dir.y,dir.z);
+  if (fabs(ndir) < EPSILON)          // ray is parallel to polygon plane
+  {     
+    if (nw0 == 0)                // ray lies in polygon plane (infinite number of solution)
+        return 0;
+    else return 0;             // ray disjoint from plane (no solution)
+  }
 
-        // get intersect point of ray with polygon plane
-        inter->time = nw0 / ndir;            //parametric value the point on line (a,b)
-        if (inter->time < 0.0)               // ray goes away from polygon
-                return 0;          // => no intersect
+  // get intersect point of ray with polygon plane
+  inter->time = nw0 / ndir;            //parametric value the point on line (a,b)
 
 	//printf("----------t=%f",*t);
-        inter->v.x = a.x + inter->time * dir.x;// intersect point of ray and plane
-        inter->v.y = a.y + inter->time * dir.y;//
-	inter->v.z = a.z + inter->time * dir.z;//
+  inter->v.x = a.x + inter->time * dir.x;// intersect point of ray and plane
+  inter->v.y = a.y + inter->time * dir.y;//
+  inter->v.z = a.z + inter->time * dir.z;//
         
-//	if(pnpoly(p,*inter)==1)
-//		printf("%s\n",(ndir<0)?"in":"out");
-
-	int res=pnpoly(p,inter->v);
+	int res=off_pnpoly(p,inter->v);
 	
 	inter->edge=(res==-1);
 	if(ndir<0)
@@ -151,46 +158,88 @@ int intersectPoly(intersection *inter, Coords a, Coords b, polygon p)
 	else
 		inter->in_out=-1;
 	
+	inter->normal=p.normal;
+
 	return res;	//true if the intersection point lies inside the poly
 }
+
 
 
 /*reads the indexes at the beginning of the off file as this :
 line 1  OFF
 line 2  nbVertex nbFaces nbEdges
 */
-void getBlocksIndex(char* filename, unsigned long* vtxIndex, unsigned long* vtxSize, unsigned long* faceIndex )
+long off_getBlocksIndex(char* filename, long* vtxIndex, long* vtxSize, long* faceIndex, long* polySize )
 {
-       FILE* f = fopen(filename,"r");
-        char line[buf];
+  if (!filename)  return(0);
+  if (strlen(filename) == 0) return (0);
+  if (!strcmp(filename,"NULL") || !strcmp(filename,"0"))  return(0);
+  FILE* f = fopen(filename,"r");
+  if(!f) {
+    char mc_rt_path[256];
+    char mc_rt_dir[256];
+
+    if (!f)
+    {
+      strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
+      sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "data", MC_PATHSEP_C, filename);
+      f = fopen(mc_rt_path, "r");
+    }
+    if (!f)
+    {
+      strcpy(mc_rt_dir, getenv("MCSTAS") ? getenv("MCSTAS") : MCSTAS);
+      sprintf(mc_rt_path, "%s%c%s%c%s", mc_rt_dir, MC_PATHSEP_C, "contrib", MC_PATHSEP_C, filename);
+      f = fopen(mc_rt_path, "r");
+    }
+    if(!f)
+    {
+      fprintf(stderr, "Error: Could not open input file '%s' (interoff/off_getBlocksIndex)\n", filename);
+      return (0);
+    }
+  }
+  
+  printf("Loading file: %s\n",filename);
+	char line[buf];
  	*vtxIndex=0;
-        *vtxSize=0;
-        *faceIndex=0;
-        fgets(line,buf , f);// line 1 = "OFF"
-        *vtxIndex+= strlen(line);
-          
-        fgets(line,buf,f); //line 2 = nblines of Coords,faces and edges arrays
-        *vtxIndex+=strlen(line);
-        sscanf(line,"%ld",vtxSize);
+  *vtxSize=0;
+  *faceIndex=0;
+  fgets(line,buf , f);// line 1 = "OFF"
 
-        *faceIndex=*vtxIndex;
-        int i;
-        for(i=0;i<*vtxSize;++i)
-        {                              
-                fgets(line,buf,f);
-                *faceIndex+=strlen(line);                
-        }
-       
-        fclose(f);
+	if(strncmp(line,"OFF",3))
+	{
+		fprintf(stderr, "Error: %s is probably not an OFF or NOFF file (interoff/off_getBlocksIndex)\n",filename);
+		return(0);
+	}
+
+  *vtxIndex+= strlen(line);
+        
+	do
+	{
+		fgets(line,buf , f);
+		*vtxIndex+= strlen(line);
+	}
+	while(line[0]=='#');
+  
+  //line = nblines of vertex,faces and edges arrays
+  sscanf(line,"%lu %lu",vtxSize,polySize);
+
+  *faceIndex=*vtxIndex;
+  int i;
+  for(i=0;i<*vtxSize;)
+  {                              
+    fgets(line,buf,f);
+    *faceIndex+=strlen(line); 
+    if(line[0]!='#')i++;               
+  }
+ 
+  fclose(f);
+  return(*vtxIndex);
 }
 
-double F(Coords v, double A, double B, double C, double D)
-{
-	return A*v.x + B*v.y + C*v.z + D;
-}
 
 //gives the equations of 2 perpandicular planes of [ab]
-void init_planes(Coords a, Coords b, double* A1, double* C1, double* D1, double *A2, double* B2, double* C2, double* D2)
+void off_init_planes(Coords a, Coords b, 
+  MCNUM* A1, MCNUM* C1, MCNUM* D1, MCNUM *A2, MCNUM* B2, MCNUM* C2, MCNUM* D2)
 {
 	//direction vector of [a b]	
 	Coords dir={b.x-a.x, b.y-a.y, b.z-a.z};
@@ -202,7 +251,7 @@ void init_planes(Coords a, Coords b, double* A1, double* C1, double* D1, double 
 		*D1=-(a.x)**A1-(a.z)**C1;
 	else
 	{
-		//the plane do not support the vector, take the one parallel to 'z''
+		//the plane do not suppoindPolyrt the vector, take the one parallel to 'z''
 		*A1=1;
 		//B1=dir.x=0
 		*D1=-(a.x);
@@ -233,96 +282,89 @@ void init_planes(Coords a, Coords b, double* A1, double* C1, double* D1, double 
 }
 
 
-int sign(double a)
+int off_clip_3D_mod(intersection* t, Coords a, Coords b, 
+  Coords* vtxArray, unsigned long vtxSize, unsigned long* faceArray, 
+  unsigned long faceSize, Coords* normalArray)
 {
-	return (a<0)?-1:(a!=0);
-}	
-
-int clip_3D_mod(intersection* t, Coords a, Coords b, t_Table vtxTable, t_Table faceTable )
-{
-	double A1, C1, D1, A2, B2, C2, D2;			//perpandicular plane equations to [a,b]
-	init_planes(a, b, &A1, &C1, &D1, &A2, &B2, &C2, &D2);	//	
+	MCNUM A1, C1, D1, A2, B2, C2, D2;			//perpendicular plane equations to [a,b]
+	off_init_planes(a, b, &A1, &C1, &D1, &A2, &B2, &C2, &D2);	//	
 	
 	int t_size=0;
-	unsigned long vtxSize=vtxTable.rows, faceSize=faceTable.columns;	//Size of the corresponding tables
-	int sg[vtxSize];	//array telling if Coords is left or right of the plane
-	
-	int i;
-	for(i=0; i < vtxSize; ++i)
+	//unsigned long vtxSize=vtxTable.rows, faceSize=faceTable.columns;	//Size of the corresponding tables
+	char sg[vtxSize];	//array telling if vertex is left or right of the plane
+	MCNUM popol[3*MAX_POL_SIZE];
+	unsigned long i,indPoly;
+	for(i=0; i < vtxSize;++i)
 	{
-		Coords x={	Table_Index(vtxTable, i,0),
-				Table_Index(vtxTable, i,1),
-				Table_Index(vtxTable, i,2)};
-		sg[i]=sign(F(x,A1,0,C1,D1));
+		sg[i]=sign(F(vtxArray[i].x,vtxArray[i].y,vtxArray[i].z,A1,0,C1,D1));
 	}
-
+	
 	//exploring the polygons :
-	i=0;
+	i=0;indPoly=0;
 	while(i<faceSize)
 	{	
 		polygon pol;
-		pol.npol=Table_Index(faceTable, 0,i);			//nb Coords of polygon
-		pol.p=malloc(pol.npol*sizeof(Coords));
-		unsigned long indVertP1=Table_Index(faceTable, 0,++i);	//polygon's first Coords index in vtxTable
+		pol.npol=faceArray[i];					//nb vertex of polygon
+				
+		pol.p=popol;
+		unsigned long indVertP1=faceArray[++i];			//polygon's first vertex index in vtxTable
 		int j=1;
 		while(j<pol.npol)
 		{
-			long indVertPi=Table_Index(faceTable, 0, i+j);	//polygon's j-th Coords index in vtxTable
-			if(sg[indVertP1]!=sg[indVertPi])		//if the plane intersect the polygon
+									//polygon's j-th vertex index in vtxTable
+			if(sg[indVertP1]!=sg[faceArray[i+j]])		//if the plane intersect the polygon
 				break;	
 
 			++j;
 		}
 		
-		if(j<pol.npol)						//ok, let's test with the second plane
+		if((j<pol.npol))					//ok, let's test with the second plane
 		{	
-			Coords x1={	Table_Index(vtxTable, indVertP1 ,0),	//Coords coordinates
-					Table_Index(vtxTable, indVertP1 ,1),	//
-					Table_Index(vtxTable, indVertP1 ,2)};	//			
-
-			int sg1=sign(F(x1,A2,B2,C2,D2));	//tells if Coords is left or right of the plane	
-			//printf("prout %d\n",sign(F(x1,0,B2,C2,D2)));
+			char sg1=sign(F(vtxArray[indVertP1].x,vtxArray[indVertP1].y,vtxArray[indVertP1].z,A2,B2,C2,D2));//tells if vertex is left or right of the plane	
+			
 			j=1;		
 			while(j<pol.npol)
 			{
-				long indVertPi=Table_Index(faceTable, 0, i+j);	//polyg's j-th Coords index in vtxTable
-				Coords xj={	Table_Index(vtxTable, indVertPi ,0),	//Coords coordinates
-						Table_Index(vtxTable, indVertPi ,1),	//
-						Table_Index(vtxTable, indVertPi ,2)};	//				
-				
-				if(sg1!=sign(F(xj,A2,B2,C2,D2)))		//if the plane intersect the polygon
+				//unsigned long indVertPi=faceArray[i+j];	//polyg's j-th vertex index in vtxTable		
+				Coords vertPi=vtxArray[faceArray[i+j]];
+				if(sg1!=sign(F(vertPi.x,vertPi.y,vertPi.z,A2,B2,C2,D2)))//if the plane intersect the polygon
 					break;
 				++j;
 			}
 			if(j<pol.npol)
-			{
+			{	
+				if(t_size>MAX_INTERSECTION_SIZE)
+				{
+					fprintf(stderr, "Error: number of intersection exceeded (%d)\n", MAX_INTERSECTION_SIZE);
+      					return (0);
+				}
 				//both planes intersect the polygon, let's find the intersection point
 				//our polygon :
-				int k;//printf("\n");
+				int k;
 				for(k=0;k<pol.npol;++k)
 				{	
-					unsigned long indVertPk=Table_Index(faceTable, 0, i+k);	//k-th Coords index in vtxTable
-					pol.p[k].x = Table_Index(vtxTable, indVertPk ,0),	//Coords coordinates
-					pol.p[k].y = Table_Index(vtxTable, indVertPk ,1),	//
-					pol.p[k].z = Table_Index(vtxTable, indVertPk ,2);	//
-					//printf("%f %f %f\n",pol.p[k].x,pol.p[k].y,pol.p[k].z);
+					Coords vertPk=vtxArray[faceArray[i+k]];
+					pol.p[3*k]=vertPk.x;
+					pol.p[3*k+1]=vertPk.y;
+					pol.p[3*k+2]=vertPk.z;
 				}
-				
+				pol.normal=normalArray[indPoly];	
 				intersection x;
-				if(intersectPoly(&x, a, b, pol))
+				if(off_intersectPoly(&x, a, b, pol))
 				{						
-					t[t_size]=x;
-					++t_size;
-				}
+					t[t_size++]=x;
+				}					
 			}	
 		}
 		i+=pol.npol;
+		indPoly++;
 	}
 	return t_size;
 }
 
 
-int compare (void const *a, void const *b)
+
+int off_compare (void const *a, void const *b)
 {
    intersection const *pa = a;
    intersection const *pb = b;
@@ -332,7 +374,7 @@ int compare (void const *a, void const *b)
 
 //given an array of intesction throw those which appear several times
 //returns 1 if there is a possibility of error
-int cleanDouble(intersection* t, int* t_size)
+int off_cleanDouble(intersection* t, int* t_size)
 {
 	int i=1;
 	intersection prev;
@@ -367,7 +409,7 @@ int cleanDouble(intersection* t, int* t_size)
 //given an array of intesction throw those which enter and exit in the same time
 //Meaning the ray passes very close to the volume
 //returns 1 if there is a possibility of error
-int cleanInOut(intersection* t, int* t_size)
+int off_cleanInOut(intersection* t, int* t_size)
 {
 	int i=1;
 	intersection prev;
@@ -375,7 +417,7 @@ int cleanInOut(intersection* t, int* t_size)
 	while(i<*t_size)	
 	{
 		//if two intersection have the same time but one enters and the other exits erase both
-		//(such intersections must be adjacent in the array : run cleanDouble before)
+		//(such intersections must be adjacent in the array : run off_cleanDouble before)
 		if(fabs(prev.time-t[i].time)<EPSILON && prev.in_out!=t[i].in_out)
 		{
 			int j;		
@@ -395,76 +437,202 @@ int cleanInOut(intersection* t, int* t_size)
 	return 1;
 }
 
-/*
-int main()
+/* PUBLIC functions ******************************************************** */
+
+long off_init(	char *offfile, double xwidth, double yheight, double zdepth, off_struct* datas)
 {
-        t_Table vtxTable, faceTable;
-        unsigned long vtxIndex, vtxSize, faceIndex;
+  //datas to be initialized
+  long faceSize;
+  long vtxSize;
+  long polySize;	 
+  Coords* vtxArray;
+  Coords* normalArray;
+  unsigned long* faceArray;
 
-        // get the indexes
-        getBlocksIndex(file,&vtxIndex,&vtxSize,&faceIndex);
-       
-        //read Coords table = [x y z | x y z | ...]
-        Table_Read_Offset(&vtxTable, file, 0, &vtxIndex, vtxSize);
+  t_Table vtxTable, faceTable;
+  long vtxIndex, faceIndex;
 
-        //Table_Info(vtxTable);
-        
-        // Data is (double)table.data of size table.rows x table.columns 
+  double minx=FLT_MAX,maxx=-FLT_MAX,miny=FLT_MAX,maxy=-FLT_MAX,minz=FLT_MAX,maxz=-FLT_MAX;
 
-        //double a = Table_Index(vtxTable, 0,0); /* first element of table 
-        //double b = Table_Index(vtxTable, vtxSize, 0); /* last element of table 
-        //printf("%f %f\n",a,b);
+  // get the indexes
+  if (off_getBlocksIndex(offfile,&vtxIndex,&vtxSize,&faceIndex, &polySize) <=0) 
+    return(0);
+  printf("  Number of polygons: %ld\n",polySize);
+ 
+  //read vertex table = [x y z | x y z | ...]
+  Table_Read_Offset(&vtxTable, offfile, 0, &vtxIndex, vtxSize);
 
-        //read face table = [nbvertex v1 v2 vn nbvertex v1 v2 vn ...]
-        Table_Read_Offset(&faceTable, file, 0, &faceIndex, 0);
+  //read face table = [nbvertex v1 v2 vn nbvertex v1 v2 vn ...]
+  Table_Read_Offset(&faceTable, offfile, 0, &faceIndex, 0);
 
-        //Table_Info(faceTable);
-        
-        // Data is (double)table.data of size table.rows x table.columns 
+  //initialize Arrays
+  faceSize=faceTable.columns;
+  vtxArray=malloc(vtxSize*sizeof(Coords));
+  normalArray=malloc(polySize*sizeof(Coords));
 
-        //int c = Table_Index(faceTable, 0,0); // first element of table 
-        
-
-	//Coords A={34,-90,-60};
-	//Coords B={23,74,53};
-	Coords A={100 ,-26.498593, 12.98};
-	Coords B={3.541977, -1.032849, 0.289808};
-	intersection t[200];
-        
-
-	int i, t_size;    
-
-	t_size=clip_3D_mod(t, A, B,vtxTable, faceTable );
-	qsort(t,t_size,sizeof(intersection),compare);
-	cleanDouble(t,&t_size);
-	cleanInOut(t,&t_size);
-	if(GEOMVIEW)
-	{
-		printf("OFF\n%d %d 0\n-200 0 0\n200 0 0\n0 -200 0\n0 200 0\n0 0 -200\n0 0 200\n",t_size*6+8,t_size*3+4);
-		printf("%f %f %f\n",A.x,A.y,A.z);
-		printf("%f %f %f\n",B.x,B.y,B.z);
-
-		for(i=0;i<t_size;++i)
-		{
-			printf("%f %f %f\n",t[i].v.x-5,t[i].v.y,t[i].v.z);
-			printf("%f %f %f\n",t[i].v.x+5,t[i].v.y,t[i].v.z);
-			printf("%f %f %f\n",t[i].v.x,t[i].v.y+5,t[i].v.z);
-			printf("%f %f %f\n",t[i].v.x,t[i].v.y-5,t[i].v.z);
-			printf("%f %f %f\n",t[i].v.x,t[i].v.y,t[i].v.z+5);
-			printf("%f %f %f\n",t[i].v.x,t[i].v.y,t[i].v.z-5);
-		}			
-		printf("2 0 1\n2 2 3\n2 4 5\n2 6 7\n");
-		for(i=0;i<t_size;++i)
-		{
-			//printf("t=%f\n",t[i].time);
-			//printf("%s\n",(t[i].in_out==1)?"in":"out");
-			printf("2 %d %d\n",8+i*6,8+i*6+1);
-			printf("2 %d %d\n",8+i*6+2,8+i*6+3);
-			printf("2 %d %d\n",8+i*6+4,8+i*6+5);		
-		}
-	}
-
+  long i,j;
+  for(i=0;i<vtxSize;++i)
+  {
+	  vtxArray[i].x=Table_Index(vtxTable, i,0);
+	  vtxArray[i].y=Table_Index(vtxTable, i,1);
+	  vtxArray[i].z=Table_Index(vtxTable, i,2);
 	
+	  //bounding box
+	  if(vtxArray[i].x<minx)minx=vtxArray[i].x;
+    if(vtxArray[i].x>maxx)maxx=vtxArray[i].x;
+	  if(vtxArray[i].y<miny)miny=vtxArray[i].y;
+	  if(vtxArray[i].y>maxy)maxy=vtxArray[i].y;
+	  if(vtxArray[i].z<minz)minz=vtxArray[i].z;
+	  if(vtxArray[i].z>maxz)maxz=vtxArray[i].z;
+  }
+
+        //resizing and repositioning params
+  double centrex=(minx+maxx)*0.5,
+  centrey=(miny+maxy)*0.5,
+  centrez=(minz+maxz)*0.5;
+  
+  double rangex=-minx+maxx,
+  rangey=-miny+maxy,
+  rangez=-minz+maxz;
+
+  double ratiox=1,ratioy=1,ratioz=1;
+
+  if(xwidth)
+  {
+    ratiox=xwidth/rangex;
+    ratioy=ratiox;
+    ratioz=ratiox;
+  }
+
+  if(yheight)
+  {
+	  ratioy=yheight/rangey;
+	  if(!xwidth)  ratiox=ratioy;
+	  ratioz=ratioy;
+  }
+
+  if(zdepth)
+  {
+	  ratioz=zdepth/rangez;
+	  if(!xwidth)  ratiox=ratioz;
+	  if(!yheight) ratioy=ratioz;
+  }
+	
+   
+
+  //center  and resize the object 
+  for(i=0;i<vtxSize;++i)
+  {
+	  vtxArray[i].x=(vtxArray[i].x-centrex)*ratiox;
+	  vtxArray[i].y=(vtxArray[i].y-centrey)*ratioy;
+	  vtxArray[i].z=(vtxArray[i].z-centrez)*ratioz;        
+  }
+
+
+  //table_read create a table on one line if the number of columns is not constant, so there are 2 cases :
+  if(faceTable.rows==1)
+  {
+	  //copy the table in a 1-row array
+	  faceArray=malloc(faceSize*sizeof(unsigned long));
+	  for(i=0;i<faceSize;++i)
+	  {
+		  faceArray[i]=Table_Index(faceTable, 0, i);
+	  }
+  }
+  else
+  {
+	  //read each row of the table and concatenate in a 1-row array
+	  faceArray=malloc(polySize*(faceSize)*sizeof(unsigned long));
+	  for(i=0;i<polySize;++i)
+	  {
+		  for(j=0;j<faceSize;++j)
+			  faceArray[i*(faceSize)+j]=Table_Index(faceTable, i, j);
+	  }
+	  faceSize*=polySize;	
+  }
+
+  //precomputes normals
+  long indNormal=0;//index in polyArray
+  i=0;		//index in faceArray
+  while(i<faceSize)
+  {	
+	  int nbVertex=faceArray[i];//nb of vertices of this polygon
+	  double vertices[3*nbVertex];
+	  int j;
+	
+	  for(j=0;j<nbVertex;++j)
+	  {
+		  unsigned long indVertPj=faceArray[i+j+1];
+		  vertices[3*j]=vtxArray[indVertPj].x;
+		  vertices[3*j+1]=vtxArray[indVertPj].y;
+		  vertices[3*j+2]=vtxArray[indVertPj].z;
+	  }
+	  
+	  polygon p;		
+	  p.p=vertices;
+	  p.npol=nbVertex;
+	  off_normal(&(p.normal),p);
+		
+	  normalArray[indNormal]=p.normal;
+	
+	  i+=nbVertex+1;
+	  indNormal++;	
+	
+  }
+
+  
+  if(ratiox!=ratioy || ratiox!=ratioz || ratioy!=ratioz)
+	  printf("Warning: Aspect ratio of the sample were modified.\n"
+	         "         If you want to keep the originial proportions, specifiy only one of the dimensions.\n");
+  printf("  Bounding box dimensions:\n");
+  printf("    Length=%f (%.3f%%)\n",rangex*ratiox,ratiox*100);
+  printf("    Width= %f (%.3f%%)\n",rangey*ratioy,ratioy*100);
+  printf("    Depth= %f (%.3f%%)\n",rangez*ratioz,ratioz*100);
+
+  datas->vtxArray=vtxArray;
+  datas->normalArray=normalArray;
+  datas->faceArray=faceArray;
+  datas->vtxSize=vtxSize;
+  datas->polySize=polySize;
+  datas->faceSize=faceSize;
 }
-*/
+
+
+int off_intersect(double* t0, double* t3, double x, double y, double z, double vx, double vy, double vz, off_struct datas )
+{
+    intersection t[MAX_INTERSECTION_SIZE];
+    Coords A={x, y, z};
+    Coords B={x+vx, y+vy, z+vz};
+    int t_size=off_clip_3D_mod(t, A, B,
+      datas.vtxArray, datas.vtxSize, datas.faceArray, datas.faceSize, datas.normalArray );
+    qsort(t,t_size,sizeof(intersection),off_compare);
+    off_cleanDouble(t,&t_size);
+    off_cleanInOut(t,&t_size);
+
+    if(t_size>1)	
+    {		
+	    *t0 = t[0].time;
+	    *t3 = t[1].time;
+	    return t_size;
+    }
+    return 0;
+}
+
+void off_display(off_struct datas)
+{
+	int step=ceil((double)datas.vtxSize/N_VERTEX_DISPLAYED);
+	unsigned int i;
+	for (i=0; i<datas.vtxSize-1; i+=step) {
+		double x1,y1,z1,x2,y2,z2;
+		x1 = datas.vtxArray[i].x;
+		y1 = datas.vtxArray[i].y;
+		z1 = datas.vtxArray[i].z;
+		x2 = datas.vtxArray[i].x+.0001;
+		y2 = datas.vtxArray[i].y+.0001;
+		z2 = datas.vtxArray[i].z+.0001;
+
+		mcdis_line(x1,y1,z1,x2,y2,z2);
+	}
+}
+/* end of interoff-lib.c */
 
