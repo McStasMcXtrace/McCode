@@ -971,7 +971,7 @@ int mc_MPI_Reduce(void *sbuf, void *rbuf,
   }
 
   if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce) at offset=%i, count=%i\n", mpi_node_rank, offset, count);
+    fprintf(stderr, "Warning: node %i: MPI_Reduce error (mc_MPI_Reduce) at offset=%li, count=%i\n", mpi_node_rank, offset, count);
 
   if(mpi_node_rank == root)
     memcpy(rbuf, lrbuf, count*dsize);
@@ -1004,7 +1004,7 @@ int mc_MPI_Send(void *sbuf,
   }
 
   if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%i, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
+    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%li, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
 
   return res;
 }
@@ -1034,7 +1034,7 @@ int mc_MPI_Recv(void *sbuf,
   }
 
   if(res != MPI_SUCCESS)
-    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%i, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
+    fprintf(stderr, "Warning: node %i: MPI_Send error (mc_MPI_Send) at offset=%li, count=%i tag=%i\n", mpi_node_rank, offset, count, tag);
 
   return res;
 }

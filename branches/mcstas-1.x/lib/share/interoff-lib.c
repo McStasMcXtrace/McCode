@@ -171,7 +171,7 @@ void getBlocksIndex(char* filename, unsigned long* vtxIndex, unsigned long* vtxS
           
         fgets(line,buf,f); //line 2 = nblines of Coords,faces and edges arrays
         *vtxIndex+=strlen(line);
-        sscanf(line,"%d",vtxSize);
+        sscanf(line,"%ld",vtxSize);
 
         *faceIndex=*vtxIndex;
         int i;
