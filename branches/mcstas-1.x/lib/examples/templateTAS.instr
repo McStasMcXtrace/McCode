@@ -501,7 +501,7 @@ COMPONENT Mono_Cradle = Arm()
   AT (0, 0, machine_hkl.l1) RELATIVE Source
   ROTATED (0, machine_real.a1, 0) RELATIVE Source
 
-COMPONENT PG1Xtal = Monochromator_curved(
+SPLIT COMPONENT PG1Xtal = Monochromator_curved(
   width  = 0.10,
   height = 0.12,
   NH=1, NV=9,
@@ -527,7 +527,7 @@ COMPONENT Sample_Cradle = Arm()
   AT (0, 0, machine_hkl.l2) RELATIVE Mono_Out
   ROTATED (0, machine_real.a3, 0) RELATIVE Mono_Out
 
-COMPONENT Sample = V_sample(
+SPLIT COMPONENT Sample = V_sample(
  radius_i = 0.0, radius_o = 0.0064, h = 0.0254,
  focus_xw = 0.06, focus_yh=0.12, pack = 1,
  target_index=2)
@@ -549,7 +549,7 @@ COMPONENT Ana_Cradle = Arm()
   AT (0, 0, machine_hkl.l3) RELATIVE Sample_Out
   ROTATED (0, machine_real.a5, 0) RELATIVE Sample_Out
 
-COMPONENT PG2Xtal = Monochromator_curved(
+SPLIT COMPONENT PG2Xtal = Monochromator_curved(
   width  = 0.10,
   height = 0.12,
   NH=1, NV=9,
