@@ -16,6 +16,7 @@
 * Release:    McStas 1.10
 * Modified by: K.Lieutenant, June 2005: added phase parameter. Comp validation.
 * Modified by: EF, Nov 2005: completely rewrote comp.
+* Modified by: EF, May 2010 fix orientation issue 
 *
 * Fermi Chopper with rotating frame.
 *
@@ -333,6 +334,10 @@ INITIALIZE
   FCVars.absorb_nocontrol        = 0;
   FCVars.absorb_cylexit          = 0;
   FCVars.warn_notreachslitoutput=0;
+  
+  /* fix for the wrong coordinate frame orientation to come back to McStas XYZ system */
+  FCVars.omega *= -1;
+  FCVars.ph0   *= -1;
 
 %}
 
