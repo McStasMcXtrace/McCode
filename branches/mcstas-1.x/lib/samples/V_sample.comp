@@ -1,21 +1,21 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2002, All rights reserved
+*         Copyright (C) 1997-2008, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
-* Component: V_sample_off
+* Component: V_sample
 *
 * %I
 * Written by: Kim Lefmann and Kristian Nielsen
 * Date: 15.4.98
 * Version: $Revision: 1.36 $
 * Origin: Risoe
-* Release: McStas 1.6
-* Modified by: Peter Christiansen: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P
-* Modified by: Aziz Daoud-aladine, ISIS, 2007
-* Modified by: Added option to handle a spherical sample shape, 10 July 2007
+* Release: McStas CVS_080612
+* Modified by: Aziz Daoud-aladine, ISIS, 2007: Added option to handle a spherical sample shape
+* Modified by: Peter Christiansen, Risoe: Added outgoing polarization: P' = 1/3*P-2/3P = -1/3P NB! Multiple scattering is ignored .
+* Modified by: Reynald Arnerin, ILL, 2008: Added option to handle a complex geometry (OFF files)
 *
 * Vanadium sample.
 *
@@ -33,11 +33,16 @@
 * This target position will be set to its AT position. When targeting to
 * centered components, such as spheres or cylinders, define an Arm component
 * where to focus to.
+* The complex geometry option handles any closed non-convex polyhedra.
+* It computes the intersection points of the neutron ray with the object transparently 
+* so that it can be used like a regular sample object.
+* It supports the OFF and NOFF file format but not COFF (colored faces).
+* The default size of the object depends of the file datas.
 *
 * Example: V_sample(radius_i=0.001,radius_o=0.01,h=0.02,focus_r=0.035,pack=1,
 *           target_index=1)
 *
-* Example: V_sample_off(offfile=pc.off,focus_r=0.035,pack=1,
+* Example: V_sample(offfile=pc.off,focus_r=0.035,pack=1,
 *           target_index=1)
 *
 * %P
@@ -52,9 +57,9 @@
 * target_z:
 *
 * Optional parameters
-* xwidth:     horiz. dimension of sample, as a width [m]
-* yheight:    vert.  dimension of sample, as a height [m]
-* zthick:     thickness of sample [m]
+* xwidth:     horiz. dimension of sample (bounding box if off file), as a width [m]
+* yheight:    vert.  dimension of sample (bounding box if off file), as a height [m]
+* zthick:     thickness of sample (bounding box if off file)[m]
 * rad_sphere: Radius for a spherical sample [m]
 * focus_xw:   horiz. dimension of a rectangular area [m]
 * focus_yh:   vert.  dimension of a rectangular area [m]
@@ -71,7 +76,6 @@
 * target_index: relative index of component to focus at, e.g. next is +1 [1]
 * offfile:    name of an OFF file for complex geometry. The OFF file may be 
 *             generated from XYZ coordinates using qhull/powercrust.
-* ratio:      multiplication ratio for OFF files [1]
 *
 * Variables calculated in the component
 *
@@ -94,8 +98,8 @@ DEFINITION PARAMETERS (char *offfile=0)
 SETTING PARAMETERS (radius_i=0, radius_o=0, h=0, focus_r = 0,
 		    pack = 1, frac=1, f_QE=0, gamma=0,
   target_x = 0, target_y = 0, target_z = 0, focus_xw=0, focus_yh=0,
-  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, multiples=1, ratio=0.01)
-OUTPUT PARAMETERS(VarsV,vtxTable, faceTable,vtxSize)
+  focus_aw=0, focus_ah=0, xwidth=0, yheight=0, zthick=0, rad_sphere=0, sig_a=5.08, sig_i=5.08, V0=13.827, int target_index=0, multiples=1)
+OUTPUT PARAMETERS(VarsV,offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 POLARISATION PARAMETERS (sx,sy,sz)
 
@@ -119,36 +123,22 @@ SHARE
     double  tx,ty,tz;    /* target coords */
     };
 %}
-
-DECLARE %{
-    struct StructVarsV VarsV;
-
-    /* tables required for OFF file */
-    t_Table vtxTable, faceTable;
-	
-    unsigned long vtxSize;
+    
+DECLARE
+%{
+   struct StructVarsV VarsV;
+   
+   off_struct offdata;
 	
 %}
 
 INITIALIZE
 %{
-   if (offfile) {
-	unsigned long vtxIndex, faceIndex;
 
-        /* get the indexes */
-        getBlocksIndex(offfile,&vtxIndex,&vtxSize,&faceIndex);
-       
-        /* read vertex table = [x y z | x y z | ...] */
-        Table_Read_Offset(&vtxTable, offfile, 0, &vtxIndex, vtxSize);
-        int i;
-        for (i=0; i<vtxTable.rows*vtxTable.columns; vtxTable.data[i++] *= ratio);
+  if (offfile && strlen(offfile) && strcmp(offfile,"NULL") && strcmp(offfile,"0")) {
+	  off_init(offfile, xwidth, yheight, zthick, &offdata);
 
-	/* read face table = [nbvertex v1 v2 vn nbvertex v1 v2 vn ...] */
-        Table_Read_Offset(&faceTable, offfile, 0, &faceIndex, 0);
-
-
-
-        VarsV.shapetyp=3;
+    VarsV.shapetyp=3;
  } else {
   if ( (rad_sphere && (xwidth || yheight || zthick)) || (rad_sphere && (radius_o || h)) || ((xwidth || yheight || zthick) && (radius_o || h)) )
         exit(fprintf(stderr,"V_sample: %s: multiple and imcompatible sample shape definitions\n", NAME_CURRENT_COMP));
@@ -224,6 +214,7 @@ TRACE
   double dE;                 /* Energy transfer */
   int    intersect=0;
 
+
   if (VarsV.shapetyp == 2)
     intersect = sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, rad_sphere);
   else
@@ -232,29 +223,14 @@ TRACE
   else if (VarsV.shapetyp == 0)
     intersect = cylinder_intersect(&t0, &t3, x, y, z, vx, vy, vz, radius_o, h);
   else if (VarsV.shapetyp == 3) {
-	intersection t[200];
-  Coords A={x, y, z};
-	Coords B={x+vx, y+vy, z+vz};
-        //coords_set(A, x, y z);
-	//coords_set(B, x+vx, y+vy, z+vz);
-  int t_size=clip_3D_mod(t, A, B,vtxTable, faceTable );
-	qsort(t,t_size,sizeof(intersection),compare);
-	cleanDouble(t,&t_size);
-	cleanInOut(t,&t_size);
-	printf("size=%d",t_size);
-	if(t_size>1)	
-	{		
-		t0 = t[0].time;
-		t3 = t[1].time;
-                intersect=1;
-		printf("intersection in=%f, out=%f\n",t0,t3);
-	}
+    intersect = off_intersect(&t0, &t3, x, y, z, vx, vy, vz, offdata );
+    
   }
   if(intersect)
   {
     if(t0 < 0) ABSORB; /* we already passed the sample; this is illegal */
     /* Neutron enters at t=t0. */
-    if(VarsV.shapetyp == 1 || VarsV.shapetyp == 2)
+    if(VarsV.shapetyp == 1 || VarsV.shapetyp == 2 || VarsV.shapetyp == 3)
       t1 = t2 = t3;
     else
       if(!radius_i || !cylinder_intersect(&t1, &t2, x, y, z, vx, vy, vz, radius_i, h))
@@ -294,17 +270,17 @@ TRACE
 
       v_i = v;          /* Store initial velocity in case of quasielastic */
       if (rand01()<f_QE)	/* Quasielastic contribution */
-	{
+	    {
           E_i = VS2E*v_i*v_i;
           dE = gamma*tan(PI/2*randpm1());
           E_f = E_i + dE;
           if (E_f <= 0)
             ABSORB;
-	  v_f = SE2V*sqrt(E_f);
+	        v_f = SE2V*sqrt(E_f);
           v = v_f;
 	  /*          printf("vi: %g Ei: %g dE: %g Ef %g vf: %g v: %g \n",
 		      v_i,E_i,dE,E_f,v_f,v); */
-	}
+	    }
 
       vx *= v;
       vy *= v;
@@ -322,7 +298,7 @@ TRACE
           dt -= (t2-t1);            /* Subtract hollow part */
       }
       else {
-        if(VarsV.shapetyp == 1) {
+        if(VarsV.shapetyp == 1 || VarsV.shapetyp == 3) {
 	      if(!box_intersect(&t0, &t3, x, y, z, vx, vy, vz, xwidth, yheight, zthick)) {
             /* ??? did not hit box */
             printf("FATAL ERROR: Did not hit box from inside.\n");
@@ -331,14 +307,18 @@ TRACE
           dt = t3;
         }
         else {
-	  if(VarsV.shapetyp == 1){
-	      if(!sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, rad_sphere)) {
-            	/* ??? did not hit sphere */
-            	printf("FATAL ERROR: Did not hit sphere from inside.\n");
-              	exit(1);
-              }
-              dt = t3;  
-	  }
+	      if(VarsV.shapetyp == 2){
+	        if(!sphere_intersect(&t0, &t3, x, y, z, vx, vy, vz, rad_sphere)) {
+              	/* ??? did not hit sphere */
+              	printf("FATAL ERROR: Did not hit sphere from inside.\n");
+                	exit(1);
+                }
+                dt = t3;  
+	        }
+	      else{
+		if(VarsV.shapetyp == 3)
+		  dt = t3;
+	      }
         }
       }
       l_o = v*dt; /* trajectory after scattering point: absorption only */
@@ -349,7 +329,7 @@ TRACE
 	   implicitly "absorb" further scattering (as in PowderN) 
 	   We are currently (august 2007) having a debate on which solution 
 	   is the most reasonable */
-	p *= exp(-VarsV.my_s*l_o);
+	      p *= exp(-VarsV.my_s*l_o);
       }
       /* We do not consider scattering from 2nd part (outgoing) */
       p /= 4*PI/solid_angle;
@@ -415,19 +395,7 @@ MCDISPLAY
       circle("yz", 0,  0.0, 0, rad_sphere);        
     }
     else if (VarsV.shapetyp == 3) {	/* OFF file */
-	int step=ceil((double)vtxSize/1000.0);
-	int i;
-	for (i=0; i<vtxSize-1; i+=step) {
-		double x1,y1,z1,x2,y2,z2;
-		x1 = Table_Index(vtxTable, i,0);
-		y1 = Table_Index(vtxTable, i,1);
-		z1 = Table_Index(vtxTable, i,2);
-		x2 = Table_Index(vtxTable, i+1,0);
-		y2 = Table_Index(vtxTable, i+1,1);
-		z2 = Table_Index(vtxTable, i+1,2);
-
-		line(x1,y1,z1,x2,y2,z2);
-	}
+      off_display(offdata);
     }
 %}
 
