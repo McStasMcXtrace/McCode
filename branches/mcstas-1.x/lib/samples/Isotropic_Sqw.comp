@@ -12,6 +12,7 @@
 * Origin:  ILL
 * Modified by: E. Farhi, Jul 2005: made it work, concentric mode, multiple use
 * Modified by: E. Farhi, Mar 2007: improved implementation, correct small bugs
+* Modified by: E. Farhi, Oct 2008: added any shape sample geometry
 *
 * Isotropic sample handling multiple scattering and absorption for a general
 * S(q,w) (coherent and/or incoherent/self)
@@ -59,6 +60,17 @@
 *   hollow cylinder: radius x yheight and thickness>0
 *   sphere:          radius (yheight=0 thickness=0)
 *   hollow sphere:   radius and thickness>0 (yheight=0)
+*   any shape:       geometry=OFF file
+*
+*   The complex geometry option handles any closed non-convex polyhedra.
+*   It computes the intersection points of the neutron ray with the object  
+*   transparently, so that it can be used like a regular sample object.
+*   It supports the OFF and NOFF file format but not COFF (colored faces). 
+*   Such files may be generated from XYZ data using qhull/powercrust, and 
+*   viewed with geomview
+*   The default size of the object depends of the OFF file data, but its 
+*   bounding box may be resized using xwidth,yheight and zdepth.
+
 *
 * <b>Concentric components:</b>
 * This component has the ability to contain other components when used in
@@ -171,6 +183,8 @@
 *                   may contain other components. It should then be duplicated 
 *                   after the inside part (only for box, cylinder, sphere) [1] 
 *                   See description for an example.
+* geometry:   Name of an Object File Format (OFF) file for complex geometry. 
+*               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * order:        [1] Limit multiple scattering up to given order
 *                     0:all (default), 1:single, 2:double, ...
 * verbose:      [1] Verbosity level (0:silent, 1:normal, 2:verbose, 3:debug).
@@ -228,12 +242,16 @@
 * Web Elements                        http://www.webelements.com/
 * %L
 * The test/example instrument <a href="../examples/Test_Isotropic_Sqw.instr">Test_Isotropic_Sqw.instr</a>.
+* %L
+* Geomview and Object File Format (OFF) <http|://www.geomview.org>
+* %L
+* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
 * %E
 *****************************************************************************/
 
 DEFINE COMPONENT Isotropic_Sqw
 DEFINITION PARAMETERS (powder_format=Undefined)
-SETTING PARAMETERS(string Sqw_coh=0, string Sqw_inc=0, 
+SETTING PARAMETERS(string Sqw_coh=0, string Sqw_inc=0, string geometry=0,
     radius=0,thickness=0,
     xwidth=0, yheight=0, zdepth=0,
     qmin=0, qmax=0, wmin=0, wmax=0, auto_qw=0,
@@ -241,7 +259,7 @@ SETTING PARAMETERS(string Sqw_coh=0, string Sqw_inc=0,
     V_rho=0, sigma_abs=0, sigma_coh=0, sigma_inc=0, save_sqw=0,
     powder_Dd=0, powder_DW=0, powder_Vc=0, density=0, weight=0,
     p_interact=-1, auto_norm=0, powder_barns=1)
-OUTPUT PARAMETERS (VarSqw, columns)
+OUTPUT PARAMETERS (VarSqw, columns, offdata)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
 /*****************************************************************************/
 /*****************************************************************************/
@@ -379,6 +397,8 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->Sq           =NULL;
   Sqw_Data->iqSq         =NULL;
 }
+
+off_struct offdata;
 
 /* gaussian distribution to appply around Bragg peaks in a powder */
 double Sqw_powder_gauss(double x, double mean, double rms) {
@@ -625,7 +645,7 @@ int Sqw_search_root(double A, double B, double C,
     }
     return(OK);
   }
-}
+} /* Sqw_search_root */
 
 /*****************************************************************************
 *  Sqw_search_SW: For a given random number 'randnum', search for the bin
@@ -1207,6 +1227,7 @@ DECLARE
 
   struct Sqw_sample_struct VarSqw;
   int    columns[8] = powder_format;
+  off_struct offdata;
 /* end DECLARE */
 %}
 
@@ -1220,7 +1241,12 @@ INITIALIZE
 
   VarSqw.verbose_output= verbose;
   VarSqw.shape = -1; /* -1:no shape, 0:cyl, 1:box, 2:sphere, 3:any-shape  */
-  if (xwidth && yheight && zdepth)  VarSqw.shape=1; /* box */
+  if (geometry && strlen(geometry) && strcmp(geometry, "NULL") && strcmp(geometry, "0")) {
+	  if (off_init(geometry, xwidth, yheight, zdepth, &offdata)) {
+      VarSqw.shape=3; thickness=0; concentric=0;
+    }
+  }
+  else if (xwidth && yheight && zdepth)  VarSqw.shape=1; /* box */
   else if (radius > 0 && yheight)        VarSqw.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       VarSqw.shape=2; /* sphere */
 
@@ -1257,6 +1283,8 @@ INITIALIZE
               "Sphere",
               radius,fabs(thickness));
               break;
+      case 3: printf("Isotropic_Sqw: %s: is a volume defined from file %s\n",
+              NAME_CURRENT_COMP, geometry);
     }
   }
 
@@ -1407,6 +1435,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
         intersect=box_intersect     (&t0,&t3, x,y,z,vx,vy,vz, xwidth,yheight,zdepth);
       else if (VarSqw.shape==2)
         intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius);
+      else if (VarSqw.shape == 3)
+        intersect=off_intersect(&t0, &t3, x, y, z, vx, vy, vz, offdata );
     } else {
       if (VarSqw.shape==0)
         intersect=cylinder_intersect(&t0,&t3, x,y,z,vx,vy,vz, radius-thickness, 
@@ -1418,6 +1448,8 @@ do { /* Main interaction loop. Ends with intersect=0 */
           zdepth-2*thickness > 0 ?  zdepth-2*thickness : zdepth);
       else if (VarSqw.shape==2)
         intersect=sphere_intersect  (&t0,&t3, x,y,z,vx,vy,vz, radius-thickness);
+      else if (VarSqw.shape == 3)
+        intersect=off_intersect(&t0, &t3, x, y, z, vx, vy, vz, offdata );
     }
   } else intersect=0;
 
@@ -1956,7 +1988,6 @@ SAVE
 
     if (save_sqw && Data_sqw.intensity) {
       double SW[Data_sqw.nb_w];
-      double SQ[Data_sqw.nb_q];
       double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
       long   i,j;
 
@@ -1969,7 +2000,6 @@ SAVE
         SW[j] = Data_sqw.SW[j].value;
         for (i=0; i < (Data_sqw.nb_q) ; i++)
           SQW[i][j] = Data_sqw.SQW[j][i].value;
-          if (j==1) SQ[i]=Data_sqw.Sq[i]/Data_sqw.SW[j].omega; /* S(q)/dw */
       }
       sprintf(tmp_str, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sq", NAME_CURRENT_COMP, ext);
@@ -1977,7 +2007,7 @@ SAVE
       if (Data_sqw.nb_q_data > 1)
         DETECTOR_OUT_1D(tmp_str,"Wavevector [Angs-1]",xvar,"q",
         Data_sqw.q_min, Data_sqw.q_max,
-        Data_sqw.nb_q_data,NULL,SQ,NULL,
+        Data_sqw.nb_q_data,NULL,Data_sqw.Sq,NULL,
         filename);
       sprintf(tmp_str, "Energy Density from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sw", NAME_CURRENT_COMP, ext);
@@ -2138,6 +2168,8 @@ MCDISPLAY
       circle("xy",0,0,0,radius);
       circle("xz",0,0,0,radius);
       circle("yz",0,0,0,radius);
+    } else if (VarSqw.shape == 3) {	/* OFF file */
+      off_display(offdata);
     }
   }
 /* end MCDISPLAY */
