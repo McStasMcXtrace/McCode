@@ -93,13 +93,11 @@ TRACE
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     {
       i = (int)floor(ndec*log(1E6*t/tlow)/log(10.0));         /* Bin number */
-      if(i >= nchan)
-        i = nchan - 1;
-      if(i < 0)
-        i = 0;
-      TOF_N[i]++;
-      TOF_p[i] += p;
-      TOF_p2[i] += p*p;
+      if(i >= 0 && i < nchan) {
+	TOF_N[i]++;
+	TOF_p[i] += p;
+	TOF_p2[i] += p*p;
+      }
     } 
     if (restore_neutron) {
       RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
