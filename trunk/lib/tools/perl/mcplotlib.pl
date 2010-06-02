@@ -139,6 +139,7 @@ sub plot_array_1d {
     $min = 0 if($min > 0 && $min/$max < 0.2);
     pgpage;
     pgbbuf;
+    pgsci(1);
     hold;
     pgvstd;
     pgswin($x0,$x1,$min,$max);
