@@ -9,7 +9,7 @@
 * Origin: Risoe
 * Release: McStas CVS_080624
 * Version: $Revision: 1.4 $
-* %INSTRUMENT_SITE: tests
+* %INSTRUMENT_SITE: Templates
 *
 * Instrument to study tomographic imaging by means of the new V_sample feature of OFF shape samples.
 *

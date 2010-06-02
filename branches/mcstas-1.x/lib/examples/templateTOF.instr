@@ -1,11 +1,11 @@
-/* Instrument: ILL_TOF_Env.instr
+/* Instrument: templateTOF.instr
  *
  * %Identification
  * Written by: E. Farhi
  * Date: Jan 2004
  * Origin: ILL
  *
- * %INSTRUMENT_SITE: ILL
+ * %INSTRUMENT_SITE: Tutorials
  *
  * A test instrument for the S(q,w) sample, with furnace/container
  *
@@ -19,8 +19,8 @@
  * detector is 2.5 m diameter, with 40 cm heigh, 1 inch diameter detector tubes.
  *
  * Example:
- *   mcrun ILL_TOF_Env.instr E0=4.94 dE=.24 dt=6.4e-6   cold TOF
- *   mcrun ILL_TOF_Env.instr E0=33 dE=1.07 dt=9.6e-6    thermal TOF
+ *   mcrun templateTOF.instr E0=4.94 dE=.24 dt=6.4e-6   cold TOF
+ *   mcrun templateTOF.instr E0=33 dE=1.07 dt=9.6e-6    thermal TOF
  *
  * %Parameters
  * INPUT PARAMETERS:
@@ -45,7 +45,7 @@
  * %End
 */
 
-DEFINE INSTRUMENT ILL_TOF_Env(E0=4.94, dE=0.24, dt=6.4e-6,
+DEFINE INSTRUMENT templateTOF(E0=4.94, dE=0.24, dt=6.4e-6,
   string coh="Rb_liq_coh.sqw", string inc="Rb_liq_inc.sqw",
   thickness=1e-4,height=0.0168,radius=0.005,
   string container="Nb.laz", container_thickness=50e-6,
