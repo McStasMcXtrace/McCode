@@ -313,8 +313,8 @@ struct Sqw_Data_struct /* contains normalized Sqw data for probabilities */
   long   nb_w; /* length of q and w vectors/axes on restricted range */
   long   nb_q_data; /* on total range */
   long   nb_w_data;
-  double q_min, q_max;
-  double w_min, w_max;
+  double q_min, q_max, q_step;
+  double w_min, w_max, w_step;
   long   lookup_length;
   char   filename[80];
   double intensity;
@@ -383,8 +383,10 @@ void Sqw_Data_init(struct Sqw_Data_struct *Sqw_Data)
   Sqw_Data->nb_w_data    =0;
   Sqw_Data->q_min        =0;
   Sqw_Data->q_max        =0;
+  Sqw_Data->q_step       =1;
   Sqw_Data->w_min        =0;
   Sqw_Data->w_max        =0;
+  Sqw_Data->w_step       =1;
   Sqw_Data->alpha        =0;
   Sqw_Data->lookup_length=100; /* length of lookup tables */
   Sqw_Data->intensity    =0;
@@ -912,6 +914,17 @@ struct Sqw_Data_struct *Sqw_readfile(
       Sqw->compname, file, Sqw_Data->nb_w, Sqw_Data->nb_q);
     return(NULL);
   }
+  
+  /* compute axes steps */
+  if (Sqw_Data->nb_q > 1)
+    Sqw_Data->q_step = (Sqw_Data->q_max - Sqw_Data->q_min)/(Sqw_Data->nb_q-1);
+  else
+    Sqw_Data->q_step =  1;
+  
+  if (Sqw_Data->nb_w > 1)
+    Sqw_Data->w_step = (Sqw_Data->w_max - Sqw_Data->w_min)/(Sqw_Data->nb_w-1);
+  else
+    Sqw_Data->w_step =  1;
 
   /* test if sampling is regular */
   if (!Table_Array[0].constantstep || !Table_Array[1].constantstep) {
@@ -1988,6 +2001,7 @@ SAVE
 
     if (save_sqw && Data_sqw.intensity) {
       double SW[Data_sqw.nb_w];
+      double SQ[Data_sqw.nb_q_data];
       double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
       long   i,j;
 
@@ -1997,17 +2011,20 @@ SAVE
       )
 
       for (j=0; j < (Data_sqw.nb_w) ; j++) {
-        SW[j] = Data_sqw.SW[j].value;
+        SW[j] = Data_sqw.SW[j].value*Data_sqw.q_step; 
         for (i=0; i < (Data_sqw.nb_q) ; i++)
           SQW[i][j] = Data_sqw.SQW[j][i].value;
       }
+      for (i=0; i < (Data_sqw.nb_q_data) ; i++)
+        SQ[i] = Data_sqw.Sq[i]*Data_sqw.w_step; 
+        
       sprintf(tmp_str, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sq", NAME_CURRENT_COMP, ext);
       sprintf(xvar, "S_%s(q)", ext);
       if (Data_sqw.nb_q_data > 1)
         DETECTOR_OUT_1D(tmp_str,"Wavevector [Angs-1]",xvar,"q",
         Data_sqw.q_min, Data_sqw.q_max,
-        Data_sqw.nb_q_data,NULL,Data_sqw.Sq,NULL,
+        Data_sqw.nb_q_data,NULL,SQ,NULL,
         filename);
       sprintf(tmp_str, "Energy Density from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sw", NAME_CURRENT_COMP, ext);
