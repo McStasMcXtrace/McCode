@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * McStas, neutron ray-tracing package
-*         Copyright 1997-2007, All rights reserved
+*         Copyright 1997-2010, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -11,7 +11,7 @@
 * Written by: KN, KL, PEO, EF, PW
 * Date: 1997
 * Origin: Risoe, ILL, ANSTO
-* Release: McStas 1.8
+* Release: McStas 1.12b
 * Version: $Revision: 1.49 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
 * Modified by: KN, March 31, 1999   : release 1.1
@@ -28,12 +28,52 @@
 * Modified by: PW, EF, July 3rd 2007: version 1.11
 * Modified by: PW, EF, EK May 8th 2008: version 1.12
 * Modified by: PW, EF, EK April 2nd 2009: version 1.12a
+* Modified by: PW, EF, EK June 2nd 2010: version 1.12b
 *
-* This file is part of McStas  version 1.12a, released April 3rd, 2009.
+* This file is part of McStas  version 1.12b, released June 2nd, 2010.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v1.12a, April 3rd, 2009
+Changes in McStas v1.12b, June 2nd, 2010
+
+ McStas 1.12b is essentially a bugfix release, and the VERY last release in the 1.x series.
+
+ McStas 2.0 will be released late 2010 and will introduce new features that
+ could break ceartain backward compatibility, hence we move from the 1.x series.
+
+ Bugfixes include:
+
+  Runtime
+  - Further adjustments to the MPI implementation, solves problems of hanging processes on large cluster runs.
+
+  Components
+  - Various minor bugfixes to
+    - DiskChopper.comp
+    - SNS_source.comp
+   
+  Example instruments
+  - Minor improvements to
+    - templateDIFF.instr (SPLIT improves statistics)
+    - templateTAS.instr (SPLIT improves statistics)
+    - SNS_test.instr (Cleanup)
+
+  Datafiles
+  - Added SNS moderator input file source_sct091_tu_02_1.dat
+
+  Tools
+  - Fixed mcrun / mcgui for Win32 for missing transfer of mpi parameters
+ 
+  Platform support
+  - Mac OS X, fix for problems with multiple perl installs, currently locked to perl 5.8.
+  - Windows XP,  Windows Vista, Windows 7 - see Tools section
+  - Ubuntu is now our only "reference" Linux, our debian package uses PGPLOT and perl-pgplot from repos
+  
+  Parallelisation
+  - Improved stability of MPI simulations
+ 
+  Various
+  - A number of unlisted minor bugs ironed out, both in components, runtime code and tools.
+
 
  McStas 1.12a is essentially a bugfix release, and the last release in the 1.x series.
 
