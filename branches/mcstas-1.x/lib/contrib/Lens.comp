@@ -71,7 +71,7 @@ SETTING PARAMETERS (r1=0,r2=0,focus1=0,focus2=0,phiy1=0,phiy2=0,
   density=3.148,weight=62.3018,
   p_interact=0.1,focus_aw=10,focus_ah=10,RMS=0)
 OUTPUT PARAMETERS (rho, bc, my_s, my_a_v, mean_n, events)
-STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,p)
 
 SHARE
 %{
@@ -114,8 +114,9 @@ SHARE
      double A = vx*vx+vy*vy;
      double B = 2*vx*x+2*vy*y-4*vz*f;
      double C = x*x+y*y-4*f*z;
-     
-     return(solve_2nd_order(t0, t1, A,B,C));
+     int ret = solve_2nd_order(t0,A,B,C);
+     t1 = NULL;
+     return(ret);
   }
   
   /* Lens_intersect: function to compute intersection with lens surface
