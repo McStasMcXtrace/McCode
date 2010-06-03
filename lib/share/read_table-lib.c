@@ -307,11 +307,11 @@
     Header[0] = '\0';
 
     do { /* while (!flag_End_row_loop) */
-      char  line[64*CHAR_BUF_LENGTH];
+      char  line[1024*CHAR_BUF_LENGTH];
       long  back_pos=0;   /* ftell start of line */
 
       back_pos = ftell(hfile);
-      if (fgets(line, 64*CHAR_BUF_LENGTH, hfile) != NULL) { /* analyse line */
+      if (fgets(line, 1024*CHAR_BUF_LENGTH, hfile) != NULL) { /* analyse line */
         int i=0;
         char  flag_Store_into_header=0;
         /* first skip blank and tabulation characters */
