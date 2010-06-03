@@ -1,0 +1,342 @@
+/*******************************************************************************
+*
+* McStas, the neutron ray-tracing package: Reflecting_sample.comp
+*         Copyright 1997-2001 Risoe National Laboratory, Roskilde, Denmark
+*
+* Component: Multilayer_Sample
+*
+* %I
+* Written by: Robert Dalgliesh
+* Date: June 2010
+* Version: 1.0
+* Origin: McStas 1.12b
+* 
+* Multilayer Reflecting sample using matrix Formula.
+*
+* %D
+*
+***************************************************************
+*** in order to get this to compile you need to link against
+*** the gsl and gslcblas libraries.
+***
+*** to do this automatically edit
+*** /usr/local/lib/mcstas/tools/perl/mcstas_config.perl
+***
+*** add -lgsl and -lgslcblas to the CFLAGS line
+***************************************************************
+*
+* Horizontal reflecting substrate defined by SLDs,Thicknesses, roughnesses
+* The superphase may also be determined
+* 
+* Example: Multilayer_Sample(xmin=-0.1, xmax=0.1,zmin=-0.1, 
+* zmax=0.1, nlayer=1,sldPar={0.0,2.0e-6,0.0e-6},dPar={20.0},
+* sigmaPar={5.0,5.0})
+*
+* %P
+* INPUT PARAMETERS:
+*
+* xwidth: (m) Width of substrate
+* zlength: (m) Length of substrate
+* ythick: (m)  Thickness of substrate
+* mu_inc: (m^-1) Incoherent scattering length
+* frac_inc: (1) Fraction of statistics to assign to incoherent scattering
+* V0: (AA^3) Unit cell volume, substrate
+* pack: (1)  Substrate packing factor
+* nlayer: (1)	Number of film layers
+* sldPar: (1)  (Angstoms ^-2) Scattering length Density's of layers
+* dPar:   (1)  (Angstroms) Thicknesses of film layers 
+* sigmaPar: (1)  (Angstroms) r.m.s roughnesses of the interfaces
+*
+* %D
+* Example values: d1 500: sld1 (air) 0.0: sld2 (Si) 2.07e-6:
+*                 sldf1(film Ni) 9.1e-6
+*
+* %E
+*******************************************************************************/
+
+DEFINE COMPONENT Multilayer_Sample
+DEFINITION PARAMETERS (xwidth = 0.2, zlength = 0.2,
+	 nlayer=1,sldPar={0.0,2.0e-6,0.0e-6},dPar={20.0},
+	 sigmaPar={5.0,5.0}, frac_inc=0, ythick=0, mu_inc=5.62, int target_index=0, focus_xw=0, focus_yh=0)
+OUTPUT PARAMETERS (sldParPtr, dParPtr, sigmaParPtr, tx, ty, tz)
+STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
+POLARISATION PARAMETERS (sx,sy,sz)
+
+
+SHARE
+%{
+#ifndef GSL_VERSION
+#include <gsl/gsl_complex.h>
+#include <gsl/gsl_complex_math.h>
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_cblas.h>
+#endif
+%}
+
+DECLARE
+%{
+  double sldParPtr[]   = sldPar;
+  double dParPtr[] = dPar;
+  double sigmaParPtr[] = sigmaPar;
+  double xmin, xmax, zmin, zmax;
+  double tx, ty, tz;
+ %}
+
+INITIALIZE %{
+  if (frac_inc>0) {
+    if (!(ythick) || !(mu_inc)) {
+      fprintf(stderr,"Multilayer: error: %s: You requested a non-meaningful combination of frac_inc, ythick, mu_inc. EXIT\n", NAME_CURRENT_COMP);
+      exit(1);
+    }
+  }
+  xmin = -xwidth/2.0;
+  xmax =  xwidth/2.0;
+  zmin = -zlength/2.0;
+  zmax =  zlength/2.0;
+  if (target_index) {
+    Coords ToTarget;
+    ToTarget = coords_sub(POS_A_COMP_INDEX(INDEX_CURRENT_COMP+target_index),POS_A_CURRENT_COMP);
+    ToTarget = rot_apply(ROT_A_CURRENT_COMP, ToTarget);
+    coords_get(ToTarget, &tx, &ty, &tz);
+  } else {
+    tx = 0; ty = 0; tz = 0;
+  }
+   
+%}
+
+TRACE
+%{
+  double dt,q,n1,n2,pfn,R0,lambda,theta,s0,c0,kx,ky,kz,t0,t1,t2,l_i,l_o,v, solid_angle;
+  double intersect = 0;
+  
+  /* First check if neutron has the right direction. */
+  /* calculate time to reach the mirror i.e. y=0*/
+  if(vy != 0.0 && (dt = -y/vy) >= 0)
+  {
+    double old_x = x, old_y = y, old_z = z;
+    //printf("x %g y %g z %g vx %g vy %g vz %g \n",x,y,z,vx,vy,vz);
+    x += vx*dt;
+    //y += vy*dt;
+    z += vz*dt;
+    y=0;
+    /* Now check if neutron intersects mirror. */
+    if(x >= xmin && x <= xmax && z >= zmin && z <= zmax)
+    { 
+      // Incoherent scattering from substrate or coherent scattering from thin film?
+      if (rand01()<frac_inc) {
+	RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+	// This part is basically from V_sample
+	
+	intersect = box_intersect(&t0, &t2, x, y, z, vx, vy, vz, xwidth, ythick, zlength);
+	if (intersect) {
+	  if (t0 < 0) ABSORB; /* we already passed the sample; this is illegal */
+	  dt = rand01()*(t2-t0);/* Time of scattering (relative to t0) */
+	  PROP_DT(dt+t0);
+	  SCATTER;
+	  v = sqrt(vx*vx + vy*vy + vz*vz);
+	  l_i = v*dt;                 /* Penetration in sample until scattering */
+	  
+	  // If target comp and focus area set, work with that. Otherwise scatter in 4PI
+	  if (target_index && (focus_xw>0) && (focus_yh>0)) {
+	    randvec_target_rect(&vx, &vy, &vz, &solid_angle, tx, ty, tz, focus_xw, focus_yh, ROT_A_CURRENT_COMP);
+	  } else {
+	    if (tx == ty == tz == 0) {
+	      ty = 1e-9;
+	    }
+	    randvec_target_circle(&vx, &vy, &vz, &solid_angle, tx, ty, tz, 0);
+	  }
+	  NORM(vx, vy, vz);
+	  vx *= v;
+	  vy *= v;
+	  vz *= v;
+	  intersect = box_intersect(&t0, &t2, x, y, z, vx, vy, vz, xwidth, ythick, zlength);
+	  if (intersect) {
+	    l_o = v*t2;
+	    p *= (l_i+l_o)*(mu_inc/100.0)*exp(mu_inc*(l_i+l_o)/100.0);
+	    p /= 4*PI/solid_angle;
+	    p /= frac_inc;
+	  } else {
+	    // Kill neutron!
+	    printf("Could not hit sample from inside. ABSORBED\n");
+	    ABSORB;
+	  }
+	} else { // Otherwise simply leave alone
+	  RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+	}
+	
+      } else {
+//
+// If neutron intersect mirror calculate reflectivity from a thin
+// film using simple fresnel coefficients formula found in e.g. Born and Wolf
+// this could be generalised to many layers using the matrix formalism
+// but we'll get this bit to work first. 
+//
+      double dbl0,dbl1,tvar;
+      int arrsize=nlayer+2;
+      int i;
+
+      gsl_complex rnf,rnf1;
+      gsl_complex a12t,a22t,cr,c0,ci;
+      gsl_complex btm,btm1,cbtm,cbtm1;
+      gsl_complex ac1,ac2,ac3,ac4;
+      gsl_complex cans,tcvar1,tcvar2,tcvar3,tcvar4;
+
+      gsl_matrix_complex * ris = gsl_matrix_complex_alloc(500,1);
+      gsl_matrix_complex * pfn = gsl_matrix_complex_alloc(500,1);
+      gsl_matrix_complex * betan = gsl_matrix_complex_alloc(500,1);
+      gsl_matrix_complex * a1 = gsl_matrix_complex_alloc(2,2);
+      gsl_matrix_complex * a2 = gsl_matrix_complex_alloc(2,2);
+      gsl_matrix_complex * a3 = gsl_matrix_complex_alloc(2,2);
+
+      t += dt;
+      //q = fabs(2*vy*V2Q);
+      kx = vx*V2K;
+      ky = vy*V2K;
+      kz = vz*V2K;
+      lambda = 2*PI/sqrt(kx*kx+ky*ky+kz*kz);
+      theta = atan(fabs(old_y)/fabs(z-old_z));
+
+      double lsq=lambda*lambda;
+      double tpi=2*PI;
+      double tlc=8.0*PI*PI/lsq;
+
+      double st0 = sin(theta);
+      double ct0 = cos(theta);
+      dbl0=0.0;
+      dbl1=1.0;
+      cr=gsl_complex_rect(dbl1,dbl0);
+      ci=gsl_complex_rect(dbl0,dbl1);
+      c0=gsl_complex_rect(dbl0,dbl0);
+      a12t=c0;
+      a22t=c0;
+
+      for(i=0; i< nlayer+2; i++)
+      {
+        tcvar1=gsl_complex_rect(1.0 - (lsq * sldParPtr[i] / tpi),dbl0);
+	gsl_matrix_complex_set(ris,i,0,tcvar1);
+      }
+
+      gsl_matrix_complex_set(pfn,0,0,gsl_complex_mul_real(gsl_matrix_complex_get(ris,0,0),st0));
+      rnf1=gsl_complex_mul(gsl_matrix_complex_get(ris,0,0),gsl_matrix_complex_get(ris,0,0));
+      if(nlayer > 0){
+            for(i=1;i<nlayer+1;i++){
+	            rnf=gsl_complex_mul(gsl_matrix_complex_get(ris,i,0),gsl_matrix_complex_get(ris,i,0));
+		    tcvar1=gsl_complex_sub(rnf,gsl_complex_mul_real(rnf1,ct0*ct0));
+	            gsl_matrix_complex_set(pfn,i,0,gsl_complex_sqrt(tcvar1));
+            }
+      }
+      tcvar1=gsl_matrix_complex_get(ris,nlayer+1,0);
+      rnf=gsl_complex_mul(tcvar1,tcvar1);
+      tcvar1=gsl_complex_sub(rnf,gsl_complex_mul_real(rnf1,ct0*ct0));
+      gsl_matrix_complex_set(pfn,nlayer + 1,0,gsl_complex_sqrt(tcvar1));
+
+      if(nlayer > 0){
+            for(i=0;i<nlayer;i++){
+		tcvar1=gsl_matrix_complex_get(pfn,i+1,0);
+		gsl_matrix_complex_set(betan,i+1,0,gsl_complex_mul_real(tcvar1,tpi*dParPtr[i]/lambda));
+	    }
+      }
+      
+      gsl_matrix_complex_set(a1,0,0,cr);
+      tcvar1=gsl_matrix_complex_get(pfn,0,0);
+      tcvar2=gsl_matrix_complex_get(pfn,1,0);
+      if(GSL_REAL(gsl_complex_add(tcvar1,tcvar2))!=0.0 || GSL_IMAG(gsl_complex_add(tcvar1,tcvar2))!=0.0){
+	a12t=gsl_complex_div(gsl_complex_sub(tcvar1,tcvar2),gsl_complex_add(tcvar1,tcvar2));
+      }else{
+	a12t=c0;
+      }
+      tcvar3=gsl_complex_mul(tcvar1,tcvar2);
+      tcvar4=gsl_complex_mul_real(tcvar3,-1.0*tlc*sigmaParPtr[0]*sigmaParPtr[0]);
+      gsl_matrix_complex_set(a1,0,1,gsl_complex_mul(a12t,gsl_complex_exp(tcvar4)));
+      gsl_matrix_complex_set(a1,1,0,gsl_matrix_complex_get(a1,0,1));
+      gsl_matrix_complex_set(a1,1,1,cr);
+      
+      if(nlayer > 0){
+            for(i=1;i<nlayer+1;i++){
+		btm=gsl_complex_mul(gsl_matrix_complex_get(betan,i,0),ci);
+                btm1=gsl_complex_mul(gsl_complex_mul_real(gsl_matrix_complex_get(betan,i,0),-1.0),ci);
+	        cbtm=gsl_complex_exp(btm);
+                cbtm1=gsl_complex_exp(btm1);
+                gsl_matrix_complex_set(a2,0,0,cbtm);
+        	tcvar1=gsl_matrix_complex_get(pfn,i,0);
+      		tcvar2=gsl_matrix_complex_get(pfn,i+1,0);
+      		if(GSL_REAL(gsl_complex_add(tcvar1,tcvar2))!=0.0 || GSL_IMAG(gsl_complex_add(tcvar1,tcvar2))!=0.0){
+		  a22t=gsl_complex_div(gsl_complex_sub(tcvar1,tcvar2),gsl_complex_add(tcvar1,tcvar2));
+      		}else{
+		  a22t=c0;
+		}
+		tcvar3=gsl_complex_mul(tcvar1,tcvar2);
+      		tcvar4=gsl_complex_mul_real(tcvar3,-1.0*tlc*sigmaParPtr[i]*sigmaParPtr[i]);
+		a22t=gsl_complex_mul(a22t,gsl_complex_exp(tcvar4));
+      		gsl_matrix_complex_set(a2,0,1,gsl_complex_mul(a22t,cbtm));
+      		gsl_matrix_complex_set(a2,1,0,gsl_complex_mul(a22t,cbtm1));
+                gsl_matrix_complex_set(a2,1,1,cbtm1);
+      	
+		tcvar1=gsl_matrix_complex_get(a1,0,0);
+		tcvar2=gsl_complex_mul(tcvar1,gsl_matrix_complex_get(a2,0,0));
+		tcvar3=gsl_matrix_complex_get(a1,0,1);
+		tcvar4=gsl_complex_mul(tcvar3,gsl_matrix_complex_get(a2,1,0));
+                gsl_matrix_complex_set(a3,0,0,gsl_complex_add(tcvar2,tcvar4));
+
+		tcvar1=gsl_matrix_complex_get(a1,0,0);
+		tcvar2=gsl_complex_mul(tcvar1,gsl_matrix_complex_get(a2,0,1));
+		tcvar3=gsl_matrix_complex_get(a1,0,1);
+		tcvar4=gsl_complex_mul(tcvar3,gsl_matrix_complex_get(a2,1,1));
+                gsl_matrix_complex_set(a3,0,1,gsl_complex_add(tcvar2,tcvar4));
+
+       		tcvar1=gsl_matrix_complex_get(a1,1,0);
+		tcvar2=gsl_complex_mul(tcvar1,gsl_matrix_complex_get(a2,0,0));
+		tcvar3=gsl_matrix_complex_get(a1,1,1);
+		tcvar4=gsl_complex_mul(tcvar3,gsl_matrix_complex_get(a2,1,0));
+                gsl_matrix_complex_set(a3,1,0,gsl_complex_add(tcvar2,tcvar4));
+
+		tcvar1=gsl_matrix_complex_get(a1,1,0);
+		tcvar2=gsl_complex_mul(tcvar1,gsl_matrix_complex_get(a2,0,1));
+		tcvar3=gsl_matrix_complex_get(a1,1,1);
+		tcvar4=gsl_complex_mul(tcvar3,gsl_matrix_complex_get(a2,1,1));
+                gsl_matrix_complex_set(a3,1,1,gsl_complex_add(tcvar2,tcvar4));
+		
+		gsl_matrix_complex_set(a1,0,0,gsl_matrix_complex_get(a3,0,0));
+		gsl_matrix_complex_set(a1,0,1,gsl_matrix_complex_get(a3,0,1));
+		gsl_matrix_complex_set(a1,1,0,gsl_matrix_complex_get(a3,1,0));
+		gsl_matrix_complex_set(a1,1,1,gsl_matrix_complex_get(a3,1,1));
+            }
+      }        
+      ac1=gsl_matrix_complex_get(a1,1,0);
+      ac2=gsl_complex_conjugate(ac1);
+      ac3=gsl_matrix_complex_get(a1,0,0);
+      ac4=gsl_complex_conjugate(ac3);
+      cans=gsl_complex_div(gsl_complex_mul(ac1,ac2),gsl_complex_mul(ac3,ac4));
+      R0 = gsl_complex_abs(cans);
+
+      //printf("Q %g pfn %g lambda %g \n",q,pfn,lambda);
+      /*reflect off horizontal surface so reverse y component of velocity*/      
+      vy = -vy;
+      /* Reflectivity (see component Guide). */
+      p *= R0;
+      if (frac_inc>0) {
+	p /= (1-frac_inc);
+      }
+      SCATTER;
+
+      gsl_matrix_complex_free(ris);
+      gsl_matrix_complex_free(pfn);
+      gsl_matrix_complex_free(betan);
+      gsl_matrix_complex_free(a1);
+      gsl_matrix_complex_free(a2);
+      gsl_matrix_complex_free(a3);
+      }
+    }
+    else
+    {
+      /* No intersection: restore neutron state. */
+      RESTORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
+    }
+  }
+%}
+
+MCDISPLAY
+%{
+  box(0.0, (double)-ythick/2.0, 0.0, (double)xwidth, (double)ythick, (double)zlength);
+%}
+END
