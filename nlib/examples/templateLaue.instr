@@ -50,6 +50,9 @@ COMPONENT sample = Single_crystal(
           cx = 0,      cy = 0,      cz = 11.6777,
           reflections="YBaCuO.lau")
 AT (0,0,0.10) RELATIVE slit
+EXTEND %{
+  if (!SCATTERED) ABSORB; /* perfect beam stop */
+%}
 
 COMPONENT det= PSD_monitor_4PI(radius=1, nx=360,ny=180,filename="psd")
 AT (0,0,0) RELATIVE sample
