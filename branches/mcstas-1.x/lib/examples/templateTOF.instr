@@ -5,7 +5,7 @@
  * Date: Jan 2004
  * Origin: ILL
  *
- * %INSTRUMENT_SITE: Tutorials
+ * %INSTRUMENT_SITE: Templates
  *
  * A test instrument for the S(q,w) sample, with furnace/container
  *
@@ -134,7 +134,7 @@ EXTEND
   if (SCATTERED) flag_container=1;
 %}
 
-COMPONENT FoSample_in=Isotropic_Sqw(
+COMPONENT Sample=Isotropic_Sqw(
   radius = radius, thickness=thickness, yheight = height, save_sqw=1,
   Sqw_coh=coh, Sqw_inc=inc, auto_qw=0, p_interact=0.9
 ) AT (0, 0, 0) RELATIVE SampleIn
