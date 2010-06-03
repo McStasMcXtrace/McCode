@@ -1,7 +1,7 @@
 # Makefile for McStas.
 #
 #   This file is part of the McStas neutron ray-trace simulation package
-#   Copyright (C) 1997-2008, All rights reserved
+#   Copyright (C) 1997-2010, All rights reserved
 #   Risoe National Laborartory, Roskilde, Denmark
 #   Institut Laue Langevin, Grenoble, France
 #
@@ -21,11 +21,14 @@
 # Available methods for installation
 # make                 normal build
 # make install         normal installation
-# make install-pgplot  build and install PGPLOT, requires super-user
 # make clean           clean distro
 # make test            distro self-test
 # make plotter         best plotter choice
-
+# make reconfigure     reconfigure McStas installation (after software update)
+# make install-pgplot  build and install PGPLOT (including perl-PGPLOT)
+# make install-scilab  build and install Scilab
+# make install-apps    install highligh syntax in gedit/kate 
+#                          and icon in menu/education (requires administrator permissions)
 
 SHELL = /bin/sh
 
@@ -203,7 +206,8 @@ lex.yy.c: instrument.l
 	$(FLEX) $(FLEXFLAGS) instrument.l
 
 # Prefer Scilab over Matlab over PGPLOT
-config:
+config: plotter
+plotter:
 	if [ $(VRML) != no ]; then \
 		make vrml; \
 	fi; \
@@ -229,14 +233,11 @@ pgplot:
 vrml:
 	sed "s/PLOTTER => '.*'./PLOTTER => 'VRML'\,/" lib/tools/perl/mcstas_config.perl > lib/tools/perl/mcstas_config.perl.tmp
 	mv lib/tools/perl/mcstas_config.perl.tmp lib/tools/perl/mcstas_config.perl
-PGPLOT:
-	make pgplot
-Matlab:
-	make matlab
-Scilab:
-	make scilab
-VRML:
-	make vrml
+PGPLOT: pgplot
+Matlab: matlab
+Scilab: scilab
+VRML: vrml
+
 install-pgplot:
 	cd support/pgplot && ./pgplot.sh && echo "McStas: run './configure; make; make install' again"
 
@@ -261,3 +262,21 @@ tk:
 		tar xzvf Tk-804.027_gtk2_patch.tar.gz > /dev/null && \
 		cd Tk-804.027_gtk2_patch && $(PERL) Makefile.PL LIB=$(mc_libdir)/tools/perl/modules PREFIX=$(mc_libdir)/tools/perl/modules && make && make install ;\
 	fi;
+	
+install-apps:
+	if [ -d /usr/share/applications/ ]; then \
+	  cp support/Desktop/McStas.desktop /usr/share/applications/; \
+	fi;
+	if [ -d /usr/share/pixmaps/ ]; then \
+	  cp support/Desktop/mcstas-icon.png /usr/share/pixmaps/; \
+	fi;
+	if [ -d /usr/share/gtksourceview-1.0/ ]; then \
+	  cp lib/editors/mcstas1.lang /usr/share/gtksourceview-1.0/language-specs/; \
+	fi;
+	if [ -d /usr/share/gtksourceview-2.0/ ]; then \
+	  cp lib/editors/mcstas2.lang /usr/share/gtksourceview-2.0/language-specs/; \
+	fi;
+	if [ -d /usr/share/apps/katepart/syntax/ ]; then \
+	  cp lib/editors/mcstas.xml /usr/share/apps/katepart/syntax/; \
+	fi;
+
