@@ -171,7 +171,7 @@ DECLARE
 INITIALIZE
 %{
   /* density: Number of atoms by AA^3, pow(10,-24) stands for conversion from cm^3 to AA^3 */
-  if (density<=0 || !weight<=0)
+  if (density<=0 || weight<=0)
     exit(printf("Lens: %s: FATAL: invalid material density or molar weight: density=%g weight=%g\n", 
       NAME_CURRENT_COMP, density, weight));
   rho= density*6.02214179*1e23*1e-24/weight; 
