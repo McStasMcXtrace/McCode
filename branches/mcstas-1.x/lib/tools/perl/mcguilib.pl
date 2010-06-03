@@ -336,14 +336,10 @@ sub simulation_dialog {
 * MPI on clusters/multi-core machines");
     my $choicecluster_val;
     if ($si{'cluster'} == 0) { $choicecluster_val='None (single CPU)'; }
-    elsif ($si{'cluster'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($si{'cluster'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($si{'cluster'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choicecluster_orig=$choicecluster_val;
     my $choices=[ 'None (single CPU)'];
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
-      push @{ $choices }, 'Threads (multi-core)';
-    }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }

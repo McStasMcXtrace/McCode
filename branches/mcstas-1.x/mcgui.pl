@@ -1772,7 +1772,6 @@ sub setup_cmdwin {
   or use option --machines=<file>\n");
     }
     my $text_grid="Single ";
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "") { $text_grid .= "Threads "; }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no")  { $text_grid .= "MPI "; }
     if ($MCSTAS::mcstas_config{'SSH'} ne "no")     { $text_grid .= "Grid "; }
     if ($text_grid ne "") { $cmdwin->insert('end', "Clustering methods: $text_grid\n"); }
