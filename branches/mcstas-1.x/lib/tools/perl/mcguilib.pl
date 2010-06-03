@@ -579,13 +579,9 @@ sub preferences_dialog {
     my $choicecluster=$lf->Label(-text => "Clustering:", -anchor => 'w', -fg=>'blue')->pack(-fill => 'x');
     my $choicecluster_val;
     if    ($MCSTAS::mcstas_config{'CLUSTER'} == 0) { $choicecluster_val='None (single CPU)'; }
-    elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 1) { $choicecluster_val='Threads (multi-core)'; }
     elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 2) { $choicecluster_val='MPI (clusters)'; }
     elsif ($MCSTAS::mcstas_config{'CLUSTER'} == 3) { $choicecluster_val='SSH (grid)'; }
     my $choices=[ 'None (single CPU)'];
-    if ($MCSTAS::mcstas_config{'THREADS'} ne "") {
-      push @{ $choices }, 'Threads (multi-core)';
-    }
     if ($MCSTAS::mcstas_config{'MPIRUN'} ne "no") {
       push @{ $choices }, 'MPI (clusters)';
     }
