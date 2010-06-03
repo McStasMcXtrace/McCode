@@ -383,11 +383,11 @@
     mc_rt_Header[0] = '\0';
 
     do { /* while (!mc_rt_flag_End_row_loop) */
-      char  mc_rt_line[64*1024];
+      char  mc_rt_line[1024*1024];
       long  mc_rt_back_pos=0;   /* ftell start of line */
 
       mc_rt_back_pos = ftell(mc_rt_hfile);
-      if (fgets(mc_rt_line, 64*1024, mc_rt_hfile) != NULL) { /* analyse line */
+      if (fgets(mc_rt_line, 1024*1024, mc_rt_hfile) != NULL) { /* analyse line */
         int mc_rt_i=0;
         char  mc_rt_flag_Store_into_header=0;
         /* first skip blank and tabulation characters */
