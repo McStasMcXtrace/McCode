@@ -22,6 +22,7 @@ make pgplot
 
 make
 make install
+make install-apps
 cd /build
 rm -rf /usr/local/lib/mcstas.*
 
