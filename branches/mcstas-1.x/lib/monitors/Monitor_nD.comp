@@ -87,7 +87,6 @@
 *     file=string               Detector image file name. default is component
 *                                name, plus date and variable extension.
 *     incoming                  Monitor incoming beam in non flat det
-*     intermediate=[5 in %]     Save ALL results every n% steps in simulation
 *     limits=[min max]          Lower/Upper limits for axes
 *                                (see up for the variable unit)
 *     list=[counts=1000] or all For a long file of neutron characteristics
@@ -161,11 +160,12 @@
 * %Parameters
 * INPUT PARAMETERS:
 *
-* xwidth:  [m]  Width/diameter of detector (x). Default is 10 cm.
-* yheight: [m]  Height of detector (y). Default is 10 cm.
+* xwidth:  [m]  Width of detector (x).
+* yheight: [m]  Height of detector (y).
 * zthick:  [m]  Thichness of detector (z).
+* radius:  [m]  Radius of sphere/banana shape monitor
 * options: [str]  String that specifies the configuration of the monitor
-*                 The general syntax is "[x] options..." (see <b>Descr.</b>).
+*                 The general syntax is "variables options..." (see <b>Descr.</b>).
 *
 * Optional input parameters (override xwidth yheight zthick):
 * xmin:   [m]    Lower x bound of opening
@@ -204,7 +204,7 @@
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
 DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
-SETTING PARAMETERS (xwidth=0.1, yheight=0.1, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0)
+SETTING PARAMETERS (xwidth=0, yheight=0, zthick=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0,radius=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
@@ -212,7 +212,7 @@ POLARISATION PARAMETERS (sx,sy,sz)
 
 SHARE
 %{
-%include "monitor_nd-lib"
+  %include "monitor_nd-lib"
 %}
 
 DECLARE
@@ -244,6 +244,18 @@ INITIALIZE
   strncpy(Vars.UserName1, username1 && strlen(username1) ? username1 : "", 32);
   strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
   strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 32);
+  
+  if (radius) { 
+    xwidth = zthick = 2*radius;
+    if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
+      strcat(Vars.option, " banana");
+    else if (!yheight && !strstr(Vars.option ,"sphere"))
+      strcat(Vars.option, " sphere"); 
+      yheight=2*radius;
+  }
+  
+  if (!radius && !xwidth && !yheight && !zthick && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous"))
+    exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zthick,previous).\n", NAME_CURRENT_COMP));
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zthick, xmin,xmax,ymin,ymax,zmin,zmax);
 
@@ -318,17 +330,17 @@ TRACE
     /* Now get the data to monitor: current or keep from PreMonitor */
     if (Vars.Flag_UsePreMonitor != 1)
     {
-      Vars.cp = p;
-      Vars.cx = x;
+      Vars.cp  = p;
+      Vars.cx  = x;
       Vars.cvx = vx;
       Vars.csx = sx;
-      Vars.cy = y;
+      Vars.cy  = y;
       Vars.cvy = vy;
       Vars.csy = sy;
-      Vars.cz = z;
+      Vars.cz  = z;
       Vars.cvz = vz;
       Vars.csz = sz;
-      Vars.ct = t;
+      Vars.ct  = t;
     }
 
     if ((Vars.He3_pressure > 0) && (t1 != t0) && ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX)))
@@ -359,13 +371,6 @@ TRACE
       SCATTER;
     }
 
-    /* now handles intermediate results saving */
-    if ((Vars.Intermediate > 0) && (mcget_run_num() > Vars.IntermediateCnts))
-    {
-      Vars.IntermediateCnts += Vars.Intermediate*mcget_ncount();
-      /* save results for all monitors in the simulation */
-      mcsave(NULL);
-    }
     if (Vars.Flag_parallel) /* back to neutron state before detection */
       Flag_Restore = 1;
   } /* end if intersection */
