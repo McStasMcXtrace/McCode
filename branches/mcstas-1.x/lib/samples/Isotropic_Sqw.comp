@@ -984,17 +984,16 @@ struct Sqw_Data_struct *Sqw_readfile(
                Sqw->compname, i,j, sqw, file);
       sq += sqw;
     }
+    sq *= Sqw_Data->w_step; /* S(q) = \int S(q,w) dw */
     Sqw_Data->Sq[i] = sq;
-    iq2Sq += q*q*sq;
-    iqSq  += q*sq;
-    Sqw_Data->iqSq[i] = iqSq*(q_max_data-q_min_data)/nb_q_data;
+    iq2Sq += q*q*sq*Sqw_Data->q_step;  /* iq2Sq = \int q^2 S(q) dq */
+    iqSq  += q*sq*Sqw_Data->q_step;
+    Sqw_Data->iqSq[i] = iqSq;
   }
-  /* iq2Sq is \int q^2 S(q) dq */
-  iq2Sq *= (q_max_data-q_min_data)/nb_q_data;
 
-  /* norm S(q ,w) = sum(S)*q_range/nb_q */
-  val *= (Sqw_Data->q_max-Sqw_Data->q_min)/Sqw_Data->nb_q; /* restricted q,w range */
-  sum *= (q_max_data-q_min_data)/nb_q_data;                /* total q,w range      */
+  /* norm S(q ,w) = \int S(q,w)*dq*dw */
+  val *= Sqw_Data->q_step*Sqw_Data->w_step;  /* restricted q,w range */
+  sum *= Sqw_Data->q_step*Sqw_Data->q_step;  /* total q,w range      */
 
   if      (Sqw->sqw_norm >0) Sqw_Data->alpha=Sqw->sqw_norm;
   else if (!Sqw->sqw_norm)   Sqw_Data->alpha=1;
@@ -1071,10 +1070,10 @@ struct Sqw_Data_struct *Sqw_readfile(
     double local_val=0;
     w  = Table_Index(Table_Array[1], 0, j);
     for (i=0; i < (Sqw_Data->nb_q) ; i++) { /* integrate on all q values */
-      local_val += Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha; /* S(q,w) */
+      local_val += Table_Index(Sqw_restrict, i, j)*Sqw_Data->alpha*Sqw_Data->q_step; /* S(q,w) */
     }
     Sqw_Data->SW[j].omega = w;
-    Sqw_Data->SW[j].value = local_val; /* S(w) */
+    Sqw_Data->SW[j].value = local_val; /* S(w)=\int S(q,w) dq */
     val                  += local_val;
     /* compute cumulated probability */
     Sqw_Data->SW[j].cumul_proba = local_val;
@@ -1551,18 +1550,14 @@ do { /* Main interaction loop. Ends with intersect=0 */
     coh = VarSqw.s_coh;
     inc = VarSqw.s_inc;
     if (k && VarSqw.s_coh>0 && VarSqw.Data_coh.intensity) {
-      int index_2k = (int)floor(VarSqw.Data_coh.nb_q_data
-                   * (2*k - VarSqw.Data_coh.q_min)
-                   / (VarSqw.Data_coh.q_max-VarSqw.Data_coh.q_min));
+      int index_2k = (int)floor((2*k - VarSqw.Data_coh.q_min) / VarSqw.Data_coh.q_step);
       if (index_2k < 0) index_2k=0;
       if (index_2k >= VarSqw.Data_coh.nb_q_data)
         index_2k=VarSqw.Data_coh.nb_q_data-1;
       coh = VarSqw.s_coh/2/k/k*VarSqw.Data_coh.iqSq[index_2k];
     }
     if (k && VarSqw.s_inc>0 && VarSqw.Data_inc.intensity) {
-      int index_2k = (int)floor(VarSqw.Data_inc.nb_q_data
-                   * (2*k - VarSqw.Data_inc.q_min)
-                   / (VarSqw.Data_inc.q_max-VarSqw.Data_inc.q_min));
+      int index_2k = (int)floor((2*k - VarSqw.Data_inc.q_min) / VarSqw.Data_inc.q_step);
       if (index_2k < 0) index_2k=0;
       if (index_2k >= VarSqw.Data_inc.nb_q_data)
         index_2k=VarSqw.Data_inc.nb_q_data-1;
@@ -2001,7 +1996,6 @@ SAVE
 
     if (save_sqw && Data_sqw.intensity) {
       double SW[Data_sqw.nb_w];
-      double SQ[Data_sqw.nb_q_data];
       double SQW[Data_sqw.nb_q][Data_sqw.nb_w];
       long   i,j;
 
@@ -2011,12 +2005,10 @@ SAVE
       )
 
       for (j=0; j < (Data_sqw.nb_w) ; j++) {
-        SW[j] = Data_sqw.SW[j].value*Data_sqw.q_step; 
+        SW[j] = Data_sqw.SW[j].value; 
         for (i=0; i < (Data_sqw.nb_q) ; i++)
           SQW[i][j] = Data_sqw.SQW[j][i].value;
       }
-      for (i=0; i < (Data_sqw.nb_q_data) ; i++)
-        SQ[i] = Data_sqw.Sq[i]*Data_sqw.w_step; 
         
       sprintf(tmp_str, "S(q) from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sq", NAME_CURRENT_COMP, ext);
@@ -2024,7 +2016,7 @@ SAVE
       if (Data_sqw.nb_q_data > 1)
         DETECTOR_OUT_1D(tmp_str,"Wavevector [Angs-1]",xvar,"q",
         Data_sqw.q_min, Data_sqw.q_max,
-        Data_sqw.nb_q_data,NULL,SQ,NULL,
+        Data_sqw.nb_q_data,NULL,Data_sqw.Sq,NULL,
         filename);
       sprintf(tmp_str, "Energy Density from %s (%s)", Data_sqw.filename, type_ci);
       sprintf(filename, "%s_%s.sw", NAME_CURRENT_COMP, ext);
