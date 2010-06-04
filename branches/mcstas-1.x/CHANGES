@@ -10,7 +10,7 @@
 * %Identification
 * Written by: KN, KL, PEO, EF, PW
 * Date: 1997
-* Origin: Risoe, ILL, ANSTO
+* Origin: Risoe DTU, ILL, Uni Copenhagen, PSI
 * Release: McStas 1.12b
 * Version: $Revision: 1.49 $
 * Modified by: KN, October 26, 1998 : initial release 1.0
@@ -30,13 +30,14 @@
 * Modified by: PW, EF, EK April 2nd 2009: version 1.12a
 * Modified by: PW, EF, EK June 2nd 2010: version 1.12b
 *
-* This file is part of McStas  version 1.12b, released June 2nd, 2010.
+* This file is part of McStas  version 1.12b, released June 7th, 2010.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v1.12b, June 2nd, 2010
+Changes in McStas v1.12b, June 7th, 2010
 
- McStas 1.12b is essentially a bugfix release, and the VERY last release in the 1.x series.
+ McStas 1.12b is mostly a bugfix release, and the VERY last release in the 1.x series.
+ - A few extra features and contributions have been included.
 
  McStas 2.0 will be released late 2010 and will introduce new features that
  could break ceartain backward compatibility, hence we move from the 1.x series.
@@ -45,28 +46,64 @@ Changes in McStas v1.12b, June 2nd, 2010
 
   Runtime
   - Further adjustments to the MPI implementation, solves problems of hanging processes on large cluster runs.
+  - Threading support completely removed.
 
   Components
+  - New contributions
+    - Multilayer_Sample.comp (Robert Dalgliesh, ISIS)
+      Multilayer Reflecting sample using matrix Formula. Requires GSL (GNU Scientific Library)
+    - Lens.comp (C. Monzat/E. Farhi/S. Desert/G.Euzin, ILL/LLB)
+      Refractive lens with absorption, incoherent scattering and surface imperfection.
+    - Lens_simple.comp (Henrich Frielinghaus, FZ Juelich)
+      Rectangular/circular slit with parabolic/spherical LENS
+    - Guide_four_side.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls. 
+    - Guide_four_side_2_shells.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls. 
+      As -"- with 2 outer mirror layer shells.
+    - Guide_four_side_10_shells.comp (Tobias Panzner, PSI)
+      Models a guide with elliptic, parabolic or straight shaped side walls.
+      As -"- with 10 outer mirror layer shells.
+
+  - New component features
+    - Addition of high-energy tail to Source_gen.comp (edits by Uwe Filges, PSI)  
+    - Single_crystal.comp extended for anisotropic mosaicity (EXPERIMENTAL), (edits by Erik Knudsen, Risoe DTU)
+
   - Various minor bugfixes to
+    - Guide_curved.comp
     - DiskChopper.comp
     - SNS_source.comp
    
   Example instruments
+  - New examples
+    - ISIS_CRISP.instr, CRISP reflectometer from ISIS, test instrument for Multilayer_Sample.comp above
+    - Test_Lens.instr, test instrument for Lens.comp above
+    - FZJ_KWS2_Lens.instr, KWS2 SANS from FZJ, test instrument for Lens_simple.comp above
+    - templateTOF.instr (Was ILL_TOF_Env before)
+    - templateLaue.instr (Derived from the old tutorial Laue instrument)
+    - template.instr ("Void" instrument skeleton - like Insert->Instrument Template)
+
   - Minor improvements to
     - templateDIFF.instr (SPLIT improves statistics)
     - templateTAS.instr (SPLIT improves statistics)
     - SNS_test.instr (Cleanup)
-
+    
   Datafiles
   - Added SNS moderator input file source_sct091_tu_02_1.dat
+  - Added ISIS moderator input file h.crisp
 
   Tools
-  - Fixed mcrun / mcgui for Win32 for missing transfer of mpi parameters
  
-  Platform support
-  - Mac OS X, fix for problems with multiple perl installs, currently locked to perl 5.8.
-  - Windows XP,  Windows Vista, Windows 7 - see Tools section
-  - Ubuntu is now our only "reference" Linux, our debian package uses PGPLOT and perl-pgplot from repos
+  Platform support/Tools
+  - Mac OS X 10.3 Panther, 10.4 Tiger, 10.5 Leopard, 10.6 Snow Leopard (PPC/Intel, 32/64bit)  
+    - Fix for problems with multiple perl installs, currently locked to perl 5.8.
+    - Instructions for using Matlab visualisation in the .dmg README file
+  - Windows XP 32/64bit, Windows Vista 32/64bit, Windows 7 32/64bit
+    - Note that we provide only a 32 bit package, but shown to work on 64 bit
+    - Fixed mcrun / mcgui for Windows for missing transfer of mpi parameters
+    - Fixed mcplot for Windows, foreground color is now black, not cyan
+  - Linux: Ubuntu is now our only "reference" Linux, our debian package uses PGPLOT and perl-pgplot from repos
+    - Ubuntu .deb's for 32 and 64bit, work for both for 9.10 Karmic Koala and 10.04 Lucid Lynx
   
   Parallelisation
   - Improved stability of MPI simulations
