@@ -102,9 +102,10 @@ Changes in McStas v1.12b, June 7th, 2010
     - Note that we provide only a 32 bit package, but shown to work on 64 bit
     - Fixed mcrun / mcgui for Windows for missing transfer of mpi parameters
     - Fixed mcplot for Windows, foreground color is now black, not cyan
-  - Linux: Ubuntu is now our only "reference" Linux, our debian package uses PGPLOT and perl-pgplot from repos
+  - Linux: Ubuntu is now our only "reference" Linux (Debian does not provide perl-pgplot)
     - Ubuntu .deb's for 32 and 64bit, work for both for 9.10 Karmic Koala and 10.04 Lucid Lynx
-  
+    - The .deb's require PGPLOT and perl-pgplot from Ubuntu Universe/Multiverse repositories
+
   Parallelisation
   - Improved stability of MPI simulations
  
