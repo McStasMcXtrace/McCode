@@ -74,7 +74,7 @@ DECLARE
   double **Ptmat;
   double EPmax, EPmin,INorm,INorm2;
   int ntvals,idxstart,idxstop,tidxstart,tidxstop,nEvals;
-  #define Maxlength 1024
+  #define Maxlength 16384
   double Ecol[Maxlength];
   double tcol[Maxlength];
   double Pvec[Maxlength];
