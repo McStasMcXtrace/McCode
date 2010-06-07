@@ -245,7 +245,7 @@ INITIALIZE
   strncpy(Vars.UserName2, username2 && strlen(username2) ? username2 : "", 32);
   strncpy(Vars.UserName3, username3 && strlen(username3) ? username3 : "", 32);
   if (radius) { 
-    xwidth = zthick = 2*radius;
+    xwidth = zdepth = 2*radius;
     if (yheight && !strstr(Vars.option, "cylinder") && !strstr(Vars.option, "banana")) 
       strcat(Vars.option, " banana");
     else if (!yheight && !strstr(Vars.option ,"sphere"))

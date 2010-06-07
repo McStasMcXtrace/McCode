@@ -96,7 +96,7 @@ TRACE
     if (x>xmin && x<xmax && y>ymin && y<ymax)
     { 
       i = floor((1E6*t-t_min)/delta_t);              /* Bin number */
-      if(i >= 0 && i < nchan) {
+      if(i >= 0 && i < nt) {
         TOF_N[i]++;
         TOF_p[i] += p;
         TOF_p2[i] += p*p;
