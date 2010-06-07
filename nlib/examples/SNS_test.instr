@@ -29,7 +29,7 @@
 * %End
 *******************************************************************************/
 
-DEFINE INSTRUMENT SNS_test(string filename="source_sct091_tu_02_1.dat")
+DEFINE INSTRUMENT SNS_test(string filename="source_sct21a_td_05_1.dat")
 
 TRACE
 COMPONENT mod=SNS_source(filename=filename,
