@@ -1,0 +1,235 @@
+/*******************************************************************************
+*         McStas instrument definition URL=http://www.mcstas.org
+*
+* Instrument: ILL_D1A monochromator Diffractometer
+*
+* %Identification
+* Written by: E. Farhi
+* Date: 13 Apr 2006
+* Origin: LLB/ILL
+* Release: McStas CVS_080624
+* Version: $Revision: 1.3 $
+* %INSTRUMENT_SITE: ILL
+*
+* Simple monochromator Diffractometer for powders (D1A)
+*
+* %Description
+* D1A is a reliable diffractometer for standard crystallographic problems. It gives
+* excellent results with the Rietveld method owing to its near perfect Gaussian
+* peak-shape in the 2θ-range 30° to 150°.
+* 
+* Special features include
+*   a high fixed take-off angle of 122 deg, giving high resolution at large 
+*     scattering angles (up to 160 deg);
+*   a bank of 25 high efficiency collimators and counters;
+*     an anisotropically squashed germanium monochromator focussing a 250
+*     mm high beam onto only 30 mm;
+* a wide choice of wavelengths, from 1.39 Angs to 2.99 Angs, quickly available by
+*   simple rotation of the focussing monochromator;
+* 
+* The large monochromator take-off angle means that the diffraction pattern is
+* focussed for the parallel geometry shown (2θ = 122°). The counter can be swept
+* through 0 deg to 2θ = 160° deg for the highest angle counter, usually in steps 
+* of 0.05 deg.
+* Monochromator           Neutron wavelength
+* Ge 117 DM=0.7946 AA     1.390     
+* Ge 335 DM=0.8655 AA     1.514
+* Ge 115 DM=1.0925 AA     1.911 (optimal)
+* Ge 113 DM=1.712 AA      2.994
+*
+* Example: mcrun D1A.instr lambda=1.911
+*
+* %Parameters
+* lambda: [Angs] Wavelength at monochromator
+* DM:     [Angs] d-spacing of monochromator. Use DM=0 to compute the values 
+*                  from the requested wavelength.
+* powder: [str]  File name for powder description
+* Temperature:[K] Sample temperature, to study phase changes. 
+*                   Only applies when Powder is set to SiO2.
+*
+* %End
+*******************************************************************************/
+
+/* Change name of instrument and input parameters with default values */
+DEFINE INSTRUMENT ILL_D1A(lambda=1.911, DM=0,
+  string powder="SiO2",
+  Temperature=300)
+
+/* The DECLARE section allows us to declare variables or  small      */
+/* functions in C syntax. These may be used in the whole instrument. */
+DECLARE
+%{
+double A1; /* rotation of monok and d-spacing */
+double RV; /* vertical curvature of monochromator */
+double flag_container,flag_sample,flag_env;
+double verbose=1;
+double L1=17, L2=1.25, L3=0.5;
+double RV=-1;
+char container[]="V.laz";
+char   Powder[256];
+%}
+
+/* The INITIALIZE section is executed when the simulation starts     */
+/* (C code). You may use them as component parameter values.         */
+INITIALIZE
+%{
+double L;
+double KI, Vi, EI;
+
+A1 =122/2;
+if (!lambda && DM)
+  lambda=sin(A1*DEG2RAD)*2*DM;
+else if (lambda && !DM)
+  DM=lambda/2/sin(A1*DEG2RAD);
+  
+if (!lambda || !DM)
+  exit(printf("%s: ERROR: wavelength and DM are unset. Exit.\n", NAME_CURRENT_COMP));
+
+L = 1/(1/L1+1/L2);
+if (RV < 0) RV=2*L*sin(DEG2RAD*A1);
+KI=2*PI/lambda;
+Vi = K2V*fabs(KI);
+EI = VS2E*Vi*Vi;
+A1 *= -1;
+
+/* handling silica sample with temperature */
+if (strstr(powder, "SiO2") || strstr(powder, "sio2")) {
+  /* liquid T_m=1650 C */
+  /* α-quartz converts to β-quartz at 573°C */
+  if (Temperature < 573+273) strcpy(Powder, "SiO2_quartza.laz");
+  else if (Temperature < 1650+273) strcpy(Powder, "SiO2_quartzb.laz");
+  else strcpy(Powder, "SiO2.qSq");
+} else strcpy(Powder,powder);
+
+if (verbose) {
+  printf("%s: Detailed DIF configuration\n", NAME_CURRENT_COMP);
+  printf("* Incoming beam: lambda=%.4g [Angs] EI=%.4g [meV]  KI=%.4g [Angs-1] Vi=%g [m/s]\n",
+    lambda, EI, KI, Vi);
+  printf("* Monochromator:  DM=%.4g [Angs] RV=%.4g [m] %s, take-off A2=%.4g [deg]\n",
+    DM, RV, (!RV ? "flat" : "curved"), 2*A1);
+  printf("* Sample: %s in %s cylinder container\n", powder, container);
+}
+%}
+
+/* Here comes the TRACE section, where the actual      */
+/* instrument is defined as a sequence of components.  */
+TRACE
+
+COMPONENT Origin = Progress_bar()
+  AT (0,0,0) ABSOLUTE
+
+/* source with constant flux */
+COMPONENT Source = Source_simple(
+    radius = 0.05, dist = L1, xw = 0.1, yh = 0.1,
+    Lambda0 = lambda, dLambda = lambda*0.01)
+  AT (0, 0, 0) RELATIVE Origin
+
+/* TIP: monochromator cradle */
+COMPONENT mono_cradle = Arm()
+  AT (0, 0, L1) RELATIVE Origin
+  ROTATED (0, A1, 0) RELATIVE Origin
+
+/* TIP: could use curved monochromator with NH>1 NV>1 et RH>0 RV>0 */
+SPLIT COMPONENT Monok = Monochromator_curved(
+    width = 0.1, height = 0.1, NH = 1, NV = 11, RV=RV,
+    mosaich = 30, mosaicv = 30, DM = DM)
+  AT (0, 0, 0) RELATIVE mono_cradle
+
+/* TIP: positing diffraction direction for monok (order 1) */
+COMPONENT mono_out = Arm()
+  AT (0, 0, 0) RELATIVE mono_cradle
+  ROTATED (0, 2*A1, 0) RELATIVE Origin
+
+COMPONENT Lmon = Monitor_nD(
+    bins = 50,options="auto lambda", xwidth = 0.05, yheight = 0.05)
+  AT (0, 0, 0.2) RELATIVE mono_out
+
+COMPONENT PSDsample = Monitor_nD(
+    bins = 20, options="x y", xwidth = 0.1, yheight = 0.1)
+  AT (0, 0, L2-0.1) RELATIVE mono_out
+
+/* sample position ********************************************************** */
+SPLIT COMPONENT SamplePos=Arm()
+AT (0, 0, L2) RELATIVE mono_out
+EXTEND %{
+  flag_container=flag_sample=flag_env=0;
+%}
+  
+COMPONENT Environment_in=PowderN(
+  radius = 0.05, yheight = 0.1, radius_i=0.05-0.002,
+  reflections="Al.laz", concentric=1, d_phi=RAD2DEG*atan2(0.5,L3), 
+  tfrac=0.95, frac=0, barns=1)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  flag_env=SCATTERED;
+%}
+
+COMPONENT Container_in=PowderN(radius=0.008/2+1e-4, radius_i=0.008/2, yheight=0.05,
+  reflections=container, concentric=1, d_phi=RAD2DEG*atan2(0.5,L3) ,
+  tfrac=0.93, frac=0.05)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  flag_container=SCATTERED;
+%}
+  
+COMPONENT Sample_liq=Isotropic_Sqw(Sqw_coh = Powder, radius = 0.008/2, yheight = 0.03,
+    d_phi=RAD2DEG*atan2(0.5,L3), order=1, p_interact=0.99)
+  WHEN (strstr(Powder,".qSq"))
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  if (SCATTERED)
+    flag_sample=SCATTERED;
+%}
+
+COMPONENT Sample=PowderN(reflections = Powder, 
+    radius = 0.008/2, yheight = 0.03,
+    d_phi=RAD2DEG*atan2(0.5,L3), tfrac=0.08, frac=0.05)
+  WHEN (!strstr(Powder,".qSq"))
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  if (SCATTERED)
+    flag_sample=SCATTERED;
+%}
+
+COMPONENT Container_out=COPY(Container_in)(concentric=0)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  if (SCATTERED) flag_container=1;
+%}
+
+COMPONENT Environment_out=COPY(Environment_in)(concentric=0)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  if (SCATTERED) flag_env=1;
+%}
+
+/* sample position (end) **************************************************** */
+
+COMPONENT Collimator=Collimator_radial(xwidth=0, yheight=.25, length=.2,
+    divergence=40,transmission=1, nchan=27,
+    theta_min=0, theta_max=160, radius=0.25)
+  AT (0, 0, 0) RELATIVE SamplePos
+EXTEND %{
+  if (!flag_sample && !flag_container) ABSORB;
+%}
+
+/* perfect detector: 1D(theta) */
+COMPONENT BananaTheta = Monitor_nD(
+    options = "banana, theta limits=[3 160], bins=380",
+    xwidth = L3*2, yheight = 0.15)
+  AT (0, 0, 0) RELATIVE SamplePos
+
+/* perfect detector: 2D(theta,y) to see diffraction rings */
+COMPONENT BananaPSD = Monitor_nD(
+    options = "banana, theta limits=[5 160] bins=380, y bins=25",
+    xwidth = L3*2*1.005, yheight = 0.5)
+  AT (0, 0, 0) RELATIVE SamplePos
+
+/* The END token marks the instrument definition end */
+END
+
+
+
+
+
+
