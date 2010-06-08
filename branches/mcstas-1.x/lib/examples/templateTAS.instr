@@ -27,6 +27,13 @@
 * PG       002 DM=3.355 AA (Highly Oriented Pyrolytic Graphite)
 * Ge       311 DM=1.714 AA
 *
+* IN22 configuration: 
+*     KI=3.84, QM=1.0, EN=0.0, verbose=1,
+*     WM=0.15, HM=0.12,    NHM=1, NVM=9, RMV=-1,
+*     WA=0.20, HA=0.10,  NHA=11, NVA=3, RAV=-1, RAH=-1, 
+*     SM=-1, SS=1, SA=-1,
+*     L1=10.0, L2=1.7, L3=1.0, L4=0.8
+*
 * Example: mcrun templateTAS.instr EN=0.5 QM=1
 * Example: mcrun templateTAS.instr A1=20.6
 *
