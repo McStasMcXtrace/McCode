@@ -45,7 +45,7 @@
 * yheight:    (m)          Collimator height.
 * length:     (m)          Length/Distance between inner and outer slits.
 * divergence: (min of arc) Divergence angle. May also be specified with the
-*                            nslit parameter
+*                            nslit parameter. A zero value unactivates component.
 * theta_min:  (deg)        Minimum Theta angle for the radial setting.
 * theta_max:  (deg)        Maximum Theta angle for the radial setting.
 * nchan:      (1)          Number of Soller channels in the theta range.
@@ -119,11 +119,11 @@ INITIALIZE
   }
   
   if (nslit <= 0)
-    exit(printf("Collimator_radial: %s: number of channels must be positive nslit=%g.\n"
-                "                   Specify alternatively divergence, xwidth and nchan.\n", 
-                NAME_CURRENT_COMP, nslit));
+    printf("Collimator_radial: %s: number of channels must be positive nslit=%g.\n"
+                "WARNING            Specify alternatively divergence, xwidth and nchan.\n", 
+                NAME_CURRENT_COMP, nslit);
   
-  if (verbose) {
+  if (verbose && nslit && width_of_slit) {
     printf("Collimator_radial: %s: divergence %g [min] %s"
            ". Total opening [%g:%g] [deg]\n",
            NAME_CURRENT_COMP, divergence*RAD2MIN,
@@ -147,83 +147,86 @@ TRACE
 %{
   double intersect=0;
   double t0, t1, t2, t3;
-  /* determine intersection with inner and outer cylinders */
-  intersect=cylinder_intersect(&t0,&t3,x,y,z,vx,vy,vz,radius,yheight);
-  if (!intersect) ABSORB;
-  else if (t3 > t0) t0 = t3;
+  
+  if (width_of_slit && nslit) {
+    /* determine intersection with inner and outer cylinders */
+    intersect=cylinder_intersect(&t0,&t3,x,y,z,vx,vy,vz,radius,yheight);
+    if (!intersect) ABSORB;
+    else if (t3 > t0) t0 = t3;
 
-  intersect=cylinder_intersect(&t1,&t2,x,y,z,vx,vy,vz,radius+length,yheight);
-  if (!intersect) ABSORB;
-  else if (t2 > t1) t1 = t2;
-  
-  /* propagate/determine neutron position at inner cylinder */
-  if (t0 > 0 && t1 > t0) {
-    double input_chan=0;
-    double input_theta=0, output_theta=0;
-    double roc_theta=0;
-    double input_slit=0,  output_slit=0;
+    intersect=cylinder_intersect(&t1,&t2,x,y,z,vx,vy,vz,radius+length,yheight);
+    if (!intersect) ABSORB;
+    else if (t2 > t1) t1 = t2;
     
-    PROP_DT(t0);
-  
-    /* apply ROC oscillation with a linear random distribution */
-    if (roc) roc_theta = roc*randpm1()/2; else roc_theta=0;
+    /* propagate/determine neutron position at inner cylinder */
+    if (t0 > 0 && t1 > t0) {
+      double input_chan=0;
+      double input_theta=0, output_theta=0;
+      double roc_theta=0;
+      double input_slit=0,  output_slit=0;
+      
+      PROP_DT(t0);
     
-    /* angle on inner cylinder */
-    input_theta = atan2(x, z) + roc_theta;  
-    
-    /* check if we are within min/max collimator input bounds */
-    if (input_theta >= theta_min && input_theta <= theta_max) {
-      SCATTER;
-      /* input Soller channel index */
-      if (width_of_Soller) {
-        input_chan = radius*(input_theta-theta_min)/width_of_Soller;
-        input_chan = input_chan-floor(input_chan); /* position within Soller [0:1] */
+      /* apply ROC oscillation with a linear random distribution */
+      if (roc) roc_theta = roc*randpm1()/2; else roc_theta=0;
+      
+      /* angle on inner cylinder */
+      input_theta = atan2(x, z) + roc_theta;  
+      
+      /* check if we are within min/max collimator input bounds */
+      if (input_theta >= theta_min && input_theta <= theta_max) {
+        SCATTER;
+        /* input Soller channel index */
+        if (width_of_Soller) {
+          input_chan = radius*(input_theta-theta_min)/width_of_Soller;
+          input_chan = input_chan-floor(input_chan); /* position within Soller [0:1] */
+          
+          /* check if we hit an absorbing housing (between Sollers): ABSORB
+           *   total Soller aperture is width_of_Soller, 
+           *   containg a slit pack  of aperture xwidth 
+           */
+          if (input_chan < (1-xwidth/width_of_Soller)/2 
+           || input_chan > (1+xwidth/width_of_Soller)/2) ABSORB;
+        }
+
+        /* determine input slit index */
+        input_slit = floor(input_theta*radius/width_of_slit);
         
-        /* check if we hit an absorbing housing (between Sollers): ABSORB
-         *   total Soller aperture is width_of_Soller, 
-         *   containg a slit pack  of aperture xwidth 
-         */
-        if (input_chan < (1-xwidth/width_of_Soller)/2 
-         || input_chan > (1+xwidth/width_of_Soller)/2) ABSORB;
-      }
-
-      /* determine input slit index */
-      input_slit = floor(input_theta*radius/width_of_slit);
-      
-    } else /* neutron missed collimator input range */
-      input_theta=4*PI;
-  
-    /* propagate to outer cylinder */
-    PROP_DT(t1-t0);
+      } else /* neutron missed collimator input range */
+        input_theta=4*PI;
     
-    /* angle on outer cylinder */
-    output_theta = atan2(x, z) + roc_theta;
+      /* propagate to outer cylinder */
+      PROP_DT(t1-t0);
+      
+      /* angle on outer cylinder */
+      output_theta = atan2(x, z) + roc_theta;
+      
+      /* check if we are within min/max collimator output bounds */
+      if (output_theta >= theta_min && output_theta <= theta_max) {
+        /* check if we come from sides:   ABSORB */
+        if (input_theta > 2*PI) ABSORB; /* input_theta=4*PI when missed input */
+        
+        if (approx) {
+          double phi=atan2(x, z)-atan2(vx, vz); /* difference between positional slit angle and velocity */
+          if (fabs(phi) > divergence) 
+            ABSORB; /* get outside transmission */
+          else
+            p *= (1.0 - phi/divergence);
+        } else {
+          /* check if we have changed slit: ABSORB */
+          /* slits are considered radial so that their output size is:
+             width_of_slit*(radius+length)/radius and it turns out this the same exp as for input
+           */
+          output_slit = floor(output_theta*radius/width_of_slit);
+          if (input_slit != output_slit) ABSORB;
+        }
+        SCATTER;
+        p *= transmission;
+        
+      } /* else neutron missed collimator output range */
     
-    /* check if we are within min/max collimator output bounds */
-    if (output_theta >= theta_min && output_theta <= theta_max) {
-      /* check if we come from sides:   ABSORB */
-      if (input_theta > 2*PI) ABSORB; /* input_theta=4*PI when missed input */
-      
-      if (approx) {
-        double phi=atan2(x, z)-atan2(vx, vz); /* difference between positional slit angle and velocity */
-        if (fabs(phi) > divergence) 
-          ABSORB; /* get outside transmission */
-        else
-          p *= (1.0 - phi/divergence);
-      } else {
-        /* check if we have changed slit: ABSORB */
-        /* slits are considered radial so that their output size is:
-           width_of_slit*(radius+length)/radius and it turns out this the same exp as for input
-         */
-        output_slit = floor(output_theta*radius/width_of_slit);
-        if (input_slit != output_slit) ABSORB;
-      }
-      SCATTER;
-      p *= transmission;
-      
-    } /* else neutron missed collimator output range */
-  
-  } /* else did not encounter collimator cylinders */
+    } /* else did not encounter collimator cylinders */
+  } /* if nslit */
 
 %}
 
