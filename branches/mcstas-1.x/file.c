@@ -64,7 +64,7 @@ static List search_list = NULL;
 
 /* MOD: E. Farhi, Oct 2nd, 2001: add obsolete dir. Aug 27th, 2002: added share+contrib */
 static char *sys_subdir_table[] =
-  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "share" };
+  { "samples", "monitors", "sources", "optics", "misc" , "obsolete", "contrib", "share", "examples" };
 
 /* Attempt to open FILE in directory DIR (or current directory if DIR is
    NULL). */
