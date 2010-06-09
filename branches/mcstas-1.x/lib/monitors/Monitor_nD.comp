@@ -157,6 +157,10 @@
 * See also the example in <a href="PreMonitor_nD.html">PreMonitor_nD</a> to
 * monitor neutron parameters cross-correlations.
 *
+* %BUGS
+* The 'auto' option for guessing optimal variable bounds should NOT be used with MPI
+* as each process may use different limits.
+*
 * %Parameters
 * INPUT PARAMETERS:
 *
@@ -266,6 +270,12 @@ INITIALIZE
   { char *XY; XY = strrchr(Vars.Mon_File,'.'); *XY='_'; }
   
   if (restore_neutron) Vars.Flag_parallel=1;
+  
+#ifdef USE_MPI
+  if (strstr(Vars.option, "auto") && mpi_node_count > 1)
+    printf("Monitor_nD: %s is using automatic limits option 'auto' together with MPI.\n"
+           "WARNING     this will probably create incorrect output\n", NAME_CURRENT_COMP);
+#endif
 %}
 
 TRACE
