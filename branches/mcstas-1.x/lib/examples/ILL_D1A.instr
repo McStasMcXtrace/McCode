@@ -11,7 +11,8 @@
 * Version: $Revision: 1.3 $
 * %INSTRUMENT_SITE: ILL
 *
-* Simple monochromator Diffractometer for powders (D1A)
+* Simple monochromator Diffractometer for powders (D1A), with container/sample
+* environment and radial collimator. May simulate a silica phase transition experiment.
 *
 * %Description
 * D1A is a reliable diffractometer for standard crystallographic problems. It gives
@@ -24,8 +25,8 @@
 *   a bank of 25 high efficiency collimators and counters;
 *     an anisotropically squashed germanium monochromator focussing a 250
 *     mm high beam onto only 30 mm;
-* a wide choice of wavelengths, from 1.39 Angs to 2.99 Angs, quickly available by
-*   simple rotation of the focussing monochromator;
+*   a wide choice of wavelengths, from 1.39 Angs to 2.99 Angs, quickly available by
+*     simple rotation of the focussing monochromator;
 * 
 * The large monochromator take-off angle means that the diffraction pattern is
 * focussed for the parallel geometry shown (2θ = 122°). The counter can be swept
@@ -37,13 +38,21 @@
 * Ge 115 DM=1.0925 AA     1.911 (optimal)
 * Ge 113 DM=1.712 AA      2.994
 *
+* The sample is a powder or a liquid, in a container can, all positioned in an
+* Al environment (e.g. cryostat/furnace shield).
+* This instrument model does not include the guide. For the 'SiO2' sample, one may 
+* change the Temperature to simulate a phase transition (for teaching purposes):
+*    T[C]        573          1650
+*    quartz alpha < quartz beta < melt silica
+*
 * Example: mcrun D1A.instr lambda=1.911
+*          mcrun D1A.instr -N 10 lambda=1.911 Powder="SiO2" Temperature=300,2000
 *
 * %Parameters
 * lambda: [Angs] Wavelength at monochromator
 * DM:     [Angs] d-spacing of monochromator. Use DM=0 to compute the values 
 *                  from the requested wavelength.
-* powder: [str]  File name for powder description
+* powder: [str]  File name for powder description, or S(q) file (extension .qSq)
 * Temperature:[K] Sample temperature, to study phase changes. 
 *                   Only applies when Powder is set to SiO2.
 *
@@ -98,7 +107,7 @@ if (strstr(powder, "SiO2") || strstr(powder, "sio2")) {
   /* α-quartz converts to β-quartz at 573°C */
   if (Temperature < 573+273) strcpy(Powder, "SiO2_quartza.laz");
   else if (Temperature < 1650+273) strcpy(Powder, "SiO2_quartzb.laz");
-  else strcpy(Powder, "SiO2.qSq");
+  else strcpy(Powder, "SiO2_liq.qSq");
 } else strcpy(Powder,powder);
 
 if (verbose) {
