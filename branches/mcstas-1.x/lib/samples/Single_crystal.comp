@@ -111,7 +111,7 @@
 * in-plane mosaic model. [arc minutes]
 * mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS. [arc minutes]
 * mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS [arc minutes]
-* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in the in-plane mosaic state. Vectors A and B define plane in which the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the the two reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
+* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l, input as a {}-delimited, 8-element vector. Puts the component in the in-plane mosaic state. Vectors A and B define plane in which the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the the two reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
 * 
 * recip_cell: Choice of direct/reciprocal (0/1) unit cell definition [1]
 * ax:        
@@ -208,7 +208,7 @@
  */
 
 DEFINE COMPONENT Single_crystal
-DEFINITION PARAMETERS(mosaic_AB={0,0, 0,0,0, 0,0,0})
+DEFINITION PARAMETERS(mosaic_AB=Mosaic_AB_Undefined)
 SETTING PARAMETERS(string reflections=0, string geometry=0,
             xwidth=0, yheight=0, zthick=0, radius=0, delta_d_d=1e-4,
             mosaic = -1, mosaic_a = -1, mosaic_b = -1, mosaic_c = -1,
@@ -228,6 +228,10 @@ SHARE
 /* Declare structures and functions only once in each instrument. */
 #ifndef SINGLE_CRYSTAL_DECL
 #define SINGLE_CRYSTAL_DECL
+
+#ifndef Mosaic_AB_Undefined
+#define Mosaic_AB_Undefined {0,0, 0,0,0, 0,0,0}
+#endif
 
     struct hkl_data
     {
