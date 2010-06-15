@@ -39090,7 +39090,7 @@ if (((i==162) ||(i==163) || (i == 164 ))){
               }
             }
 
-  if (((i==308) || (i=309) || (i==310 )) ){
+  if (((i==308) || (i==309) || (i==310 )) ){
 	  if (UOreflect7 && strlen(UOreflect7))
               {
                p=Table_Value(uoTable7, q, 1);
