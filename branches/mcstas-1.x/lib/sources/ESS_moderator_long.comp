@@ -1,7 +1,7 @@
 /*******************************************************************************
 *
 * Mcstas, neutron ray-tracing package
-*         Copyright (C) 1997-2006, All rights reserved
+*         Copyright (C) 1997-2010, All rights reserved
 *         Risoe National Laboratory, Roskilde, Denmark
 *         Institut Laue Langevin, Grenoble, France
 *
@@ -12,7 +12,7 @@
 * Modified by: KL, 18 November 2001
 * Version: $Revision: 1.23 $
 * Origin: Risoe
-* Release: McStas 1.9.1
+* Release: McStas 1.12b
 *
 * A parametrised pulsed source for modelling ESS long pulses.
 *
@@ -83,8 +83,7 @@
 *                (default value 0.5)
 * branch_tail: (1)   limit for switching between pulse and tail
 *                (suggested value: tau/d - default defined this way)
-* branchframe: (1) limit for switching between 1st and 2nd pulse
-*                  (if only one pulse wanted: 1)
+* twopulses: (1) Flag for selecting one or two pulses. 0 is one pulse. 
 *
 * %E
 ******************************************************************************/
@@ -94,13 +93,13 @@ DEFINITION PARAMETERS ()
 SETTING PARAMETERS (size=0.12, l_low, l_high, dist, xw, yh, freq=50.0/3.0,
                     T=50, tau=287e-6, tau1=0, tau2=20e-6, d=2e-3, n=20,
 		    n2=5, chi2=0.9, I0=6.9e11, I2=27.6e10,
-                    branch1=1, branch2=0.5, branch_tail=0.14350, branchframe=0)
+                    branch1=1, branch2=0.5, branch_tail=0.14350, twopulses=0)
 OUTPUT PARAMETERS (M, F, l_range, w_mult)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
 DECLARE
 %{
-  double l_range, w_mult;
+  double l_range, w_mult, branchframe;
 
   double M(double l, double temp)
     {
@@ -128,11 +127,19 @@ INITIALIZE
     printf("ESS_moderator_long: %s: WARNING: Setting tau1 to zero implies branch 1=1.\n", NAME_CURRENT_COMP);
   }
 
+  if (twopulses) {
+    branchframe = 0.5;
+    printf("ESS_moderator_long: %s: INFO: Running with TWO pulses\n", NAME_CURRENT_COMP);
+  } else {
+    branchframe = 0;
+    printf("ESS_moderator_long: %s: INFO: Running with ONE pulse\n", NAME_CURRENT_COMP);
+  }
+
   l_range = l_high-l_low;
   w_mult = size*size*1.0e4;     /* source area correction */
   w_mult *= l_range;            /* wavelength range correction */
   w_mult *= 1/mcget_ncount();   /* Correct for number of rays */
-  w_mult *= freq;               /* Correct for frequency */
+  w_mult *= 50.0/3.0;           /* Correct for baseline frequency setting */
 %}
 TRACE
 %{
@@ -235,13 +242,9 @@ TRACE
                                           /* Calculate true intensity */
   }
  }
- if (rand01()<branchframe)
-   {
-     t+=1/freq;
-     p/=(branchframe);
-   }
- else
-   p/=(1-branchframe);
+ if (rand01()<branchframe){
+   t+=1/freq;
+ }
 %}
 
 MCDISPLAY
