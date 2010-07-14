@@ -1,7 +1,7 @@
  /*******************************************************************************
 *         McStas instrument definition URL=http://www.mcstas.org
 *
-* Instrument: SE_example
+* Instrument: SE_example2
 *
 * %Identification
 * Written by: Erik Knudsen, Peter Willendrup
@@ -11,16 +11,16 @@
 * Version: 0.2
 * %INSTRUMENT_SITE: Templates
 *
-* Mockup of transmission Spin-Echo, written for PNCMI 2010 school in Delft.
+* Mockup of transmission Spin-Echo, written for PNCMI 2010 school in Delft. This version uses Pol_FieldBox for description of the fields.
 *
 * %Description
-* This instrument shows the use of essential McStas polarisation components, including Pol_mirror, Pol_simpleBfield and MeanPolLambda_monitor.
+* This instrument shows the use of essential McStas polarisation components, including Pol_mirror, Pol_FieldBox and MeanPolLambda_monitor.
 *
 * Pol_mirror is used to polarize and analyze the incoming and scattered beams.
 * Pol_simpleBfield is used to define guidefields and flippers.
 * MeanPolLambda_montior is used to monitor beam polarisation.
 *
-* Example: mcrun SE_example.instr dBz=-0.0001,0.0001 -N41 -n1e5 
+* Example: mcrun SE_example2.instr dBz=-0.0001,0.0001 -N41 -n1e5 
 *
 * %Parameters
 * POL_ANGLE: [deg] Reflection angle of polarizer/analyzer
@@ -37,7 +37,7 @@
 *******************************************************************************/
 
 /* Change name of instrument and input parameters with default values */
-DEFINE INSTRUMENT SE_example(POL_ANGLE=2, SAMPLE=0, Bguide=0.1, Bflip=3e-4, dBz=0, Lam=8, dLam=0.8)
+DEFINE INSTRUMENT SE_example2(POL_ANGLE=2, SAMPLE=0, Bguide=0.1, Bflip=3e-4, dBz=0, Lam=8, dLam=0.8)
 
 /* The DECLARE section allows us to declare variables or  small      */
 /* functions in C syntax. These may be used in the whole instrument. */
@@ -112,14 +112,11 @@ ROTATED (0, 0, 0) RELATIVE Source
 
 /*beam is now polarized in the flight direction - flip it to the vertical*/
 
-COMPONENT flipper1 = Pol_simpleBfield(
+COMPONENT flipper1 = Pol_FieldBox(
   xw=0.1,yh=0.1,length=0.02,
   Bx=0, By=Bflip, Bz=Bflip)
 AT( 0,0,0.32) RELATIVE polariser_pt
 ROTATED (0,0,0) RELATIVE Source
-
-COMPONENT flipper1_stop=COPY(flipper1)
-AT(0,0,0) RELATIVE flipper1
 
 COMPONENT pl_mon1 = MeanPolLambda_monitor(
   xw = 0.1, yh = 0.01, filename = "pol_lam1",
@@ -130,15 +127,9 @@ ROTATED (0, 0, 0) RELATIVE Source
 
 /*the precession region*/
 
-COMPONENT guide_field_1_slit=Slit(width=0.1, height=0.1)
-AT(0,0,0.0205) RELATIVE flipper1
-
-COMPONENT guide_field_1 = Pol_simpleBfield(
+COMPONENT guide_field_1 = Pol_FieldBox(
     xw=0.1, yh=0.1, length=1, Bx=0, By=0, Bz=Bguide+dBz)
 AT(0, 0, 0.021) RELATIVE flipper1
-
-COMPONENT guide_field_1_stop = COPY(guide_field_1)
-  AT(0,0,0) RELATIVE guide_field_1
 
 COMPONENT guide_field_1_end=Slit(width=0.1, height=0.01)
 AT(0,0,1.001) RELATIVE guide_field_1
@@ -148,25 +139,19 @@ COMPONENT pl_mon2 = MeanPolLambda_monitor(
   xw = 0.1, yh = 0.1, filename = "pol_lam2",
   restore_neutron = 1, mx = 0, my = 1, mz = 0, Lmin = 1,
   Lmax = 10)
-AT (0, 0, 0.001) RELATIVE guide_field_1_end
+AT (0, 0, 1.001) RELATIVE guide_field_1
 ROTATED (0, 0, 0) RELATIVE Source
 
 /*two flippers after one another*/
-COMPONENT flipper2_1 = Pol_simpleBfield(
+COMPONENT flipper2_1 = Pol_FieldBox(
   xw=0.1,yh=0.1,length=0.02,
   Bx=0, By=Bflip, Bz=Bflip)
-AT( 0,0,2e-3) RELATIVE guide_field_1_end
+AT( 0,0,1.001+2e-3) RELATIVE guide_field_1
 
-COMPONENT flipper2_1_stop=COPY(flipper2_1)
-AT(0,0,0) RELATIVE flipper2_1
-
-COMPONENT flipper2_2 = Pol_simpleBfield(
+COMPONENT flipper2_2 = Pol_FieldBox(
   xw=0.1,yh=0.1,length=0.02,
   Bx=0, By=-Bflip, Bz=Bflip)
 AT( 0,0,0.021) RELATIVE flipper2_1
-
-COMPONENT flipper2_2_stop=COPY(flipper2_2)
-AT(0,0,0) RELATIVE flipper2_2
 
 COMPONENT flipper_2_2_end=Slit(width=0.1, height=0.01)
 AT(0,0,0.0201) RELATIVE flipper2_2
@@ -187,18 +172,12 @@ WHEN (SAMPLE==0) AT(0,0,0) RELATIVE sample_mnt
 
 /*2nd precession region */
 
-COMPONENT guide_field_2_slit=Slit(width=0.1, height=0.1)
-  AT(0,0,0.0205) RELATIVE sample_mnt
-
-COMPONENT guide_field_2 = Pol_simpleBfield(
+COMPONENT guide_field_2 = Pol_FieldBox(
     xw = 0.1, yh = 0.1, length = 1, Bx=0, By=0, Bz=Bguide)
 AT (0, 0, 0.021) RELATIVE sample_mnt
   
-COMPONENT guide_field_2_stop=COPY(guide_field_2)
-AT(0,0,0) RELATIVE guide_field_2
-
 COMPONENT guide_field_2_end=Slit(width=0.1, height=0.01)
-AT(0,0,1.001) RELATIVE guide_field_2_stop
+AT(0,0,1.001) RELATIVE guide_field_2
 ROTATED (0,0,0) RELATIVE Source
 
 /*final flipper*/
@@ -206,17 +185,14 @@ COMPONENT pl_mon40 = MeanPolLambda_monitor(
   xw = 0.1, yh = 0.1, filename = "pol_lam40",
   restore_neutron = 0, mx = 0, my = 0, mz = 1, Lmin = 1,
   Lmax = 10)
-AT (0, 0, 0.001) RELATIVE guide_field_2_end
+AT (0, 0, 1.001) RELATIVE guide_field_2
 ROTATED (0, 0, 0) RELATIVE Source
 
-COMPONENT flipper3 = Pol_simpleBfield(
+COMPONENT flipper3 = Pol_FieldBox(
   xw=0.1,yh=0.1,length=0.02,
   Bx=0, By=-Bflip, Bz=Bflip)
-AT( 0,0,0.001) RELATIVE guide_field_2_end 
+AT( 0,0,1.001) RELATIVE guide_field_2
 ROTATED (0,0,0) RELATIVE Source
-
-COMPONENT flipper3_stop=COPY(flipper3)
-AT(0,0,0) RELATIVE flipper3
 
 COMPONENT pl_mon4 = MeanPolLambda_monitor(
   xw = 0.1, yh = 0.1, filename = "pol_lam4",
