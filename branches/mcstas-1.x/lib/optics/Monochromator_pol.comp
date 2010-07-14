@@ -86,7 +86,7 @@ SHARE
 
 DECLARE
 %{
-#include <assert.h>
+/*#include <assert.h> - debugging only */
 
   double mos_rms; /* root-mean-square of mosaic, in radians */
   double d_rms;   /* root-mean-square of d-spread, in AA */
@@ -176,7 +176,7 @@ TRACE
       if(debug > 0)
 	printf("S_out: (%f, %f, %f)\n", sx, sy, sz);
       
-      assert(sx*sx+sy*sy+sz*sz <= 1);
+      /* assert(sx*sx+sy*sy+sz*sz <= 1); */
       
       SCATTER;
     } /* End MC choice to reflect or transmit neutron */

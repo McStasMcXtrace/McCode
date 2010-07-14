@@ -87,7 +87,7 @@ POLARISATION PARAMETERS (sx,sy,sz)
 
 SHARE
 %{
-#include <assert.h>
+/* #include <assert.h> - debugging use only */
   %include "pol-lib"
   %include "ref-lib"
      %}
@@ -147,7 +147,7 @@ TRACE
     
     // calculate scattering vector magnitude
     Q = fabs(2*vx*V2K); 
-    assert(Q>=0);
+    /* assert(Q>=0); */
     
     // calculate reflection probability
     rUpFunc(Q, rUpParPtr, &Rup);
@@ -162,7 +162,7 @@ TRACE
       refWeight = Rup;
     
     // check that refWeight is meaningfull
-    assert(refWeight>=0 && refWeight<=1); 
+    /* assert(refWeight>=0 && refWeight<=1); */
     
     // find out if neutrons is reflected or transmitted
     if (option==1) { // reflect OR transmit
@@ -190,7 +190,7 @@ TRACE
       
     } 
 
-    assert(reflect==0 || reflect==1);
+    /* assert(reflect==0 || reflect==1); */
 
     // set outgoing velocity and polarisation
     if (reflect==1) { // reflect
@@ -206,9 +206,10 @@ TRACE
       
     } 
     
-    if(isPolarising)
+    /*if(isPolarising)
       assert(sx*sx+sy*sy+sz*sz<=1); // check that polarisation is meaningfull
-    
+    */
+
     SCATTER;
   } /* End intersect the mirror */
   %}

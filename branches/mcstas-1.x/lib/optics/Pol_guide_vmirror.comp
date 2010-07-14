@@ -76,7 +76,7 @@ POLARISATION PARAMETERS (sx,sy,sz)
 
 SHARE
 %{
-#include <assert.h>
+/* #include <assert.h> - debugging use only */
 %include "pol-lib"
 %include "ref-lib"
    %}
@@ -340,11 +340,11 @@ TRACE
       // we have hit one of the mirrors
       rUpFunc(fabs(Q), rUpParPtr, &Rup);
       rDownFunc(fabs(Q), rDownParPtr, &Rdown);
-      assert(Rup>=0 && Rup<=1 && Rdown>=0 && Rdown<=1); 
+      /* assert(Rup>=0 && Rup<=1 && Rdown>=0 && Rdown<=1); */
 
       GetMonoPolFNFM(Rup, Rdown, &FN, &FM);
       GetMonoPolRefProb(FN, FM, sy, &refWeight);
-      assert(refWeight>=0 && refWeight<=1); // check that refWeight is meaningfull
+      /* assert(refWeight>=0 && refWeight<=1); // check that refWeight is meaningfull */
       
       if (rand01()<refWeight) {
 	//reflect 
@@ -357,7 +357,7 @@ TRACE
 	SetMonoPolTransOut(FN, FM, refWeight, &sx, &sy, &sz);
       }
 
-      assert(sx*sx+sy*sy+sz*sz<=1); // check that polarisation is meaningfull
+      /* assert(sx*sx+sy*sy+sz*sz<=1); // check that polarisation is meaningfull */
     }
 
     if(p==0) {
