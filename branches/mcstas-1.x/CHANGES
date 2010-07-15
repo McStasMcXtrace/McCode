@@ -30,11 +30,11 @@
 * Modified by: PW, EF, EK April 2nd 2009: version 1.12a
 * Modified by: PW, EF, EK June/July 2010: version 1.12b
 *
-* This file is part of McStas  version 1.12b, released June 14th, 2010.
+* This file is part of McStas  version 1.12b, released June 15th, 2010.
 * It gives a 'changes' list from the beginning of the project
 *
 *******************************************************************************/
-Changes in McStas v1.12b, July 14th, 2010
+Changes in McStas v1.12b, July 15th, 2010
 
  McStas 1.12b is mostly a bugfix release, and the VERY last release in the 1.x series.
  - A few extra features and contributions have been included.
@@ -66,6 +66,7 @@ Changes in McStas v1.12b, July 14th, 2010
       As -"- with 10 outer mirror layer shells.
     - Pol_FieldBox (Peter Willendrup)
       Easier to use precession area. Corresponds to a set of Pol_simpleBfield's plus slits.
+    - Sapphire_Filter (Jonas O Birk, Uni CPH). Filter component, defaulting to saphire material properties
 
   - New component features
     - Addition of high-energy tail to Source_gen.comp (edits by Uwe Filges, PSI)  
@@ -86,7 +87,7 @@ Changes in McStas v1.12b, July 14th, 2010
     - templateLaue.instr (Derived from the old tutorial Laue instrument)
     - SE_example.instr and SE_example2.instr, simplistic Spin-Echo machines for illustrating use of Pol options
     - template.instr ("Void" instrument skeleton - like Insert->Instrument Template)
-
+    - Test_shellguides.instr, test instrument for contributions from Tobias Panzner and Jonas O Birk.
 
   - Minor improvements to
     - templateDIFF.instr (SPLIT improves statistics)
