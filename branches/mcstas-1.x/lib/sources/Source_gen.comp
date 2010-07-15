@@ -8,7 +8,7 @@
 * Component: Source_gen
 *
 * %I
-* Written by: Emmanuel Farhi, Kim Lefmann
+* Written by: Emmanuel Farhi, Kim Lefmann, edits Jonas O Birk
 * Date: Aug 27, 2001
 * Version: $Revision: 1.41 $
 * Origin: ILL/Risoe
@@ -17,8 +17,8 @@
 * Modified by: EF, Sep 18, 2001 ; corrected illumination bug. Add options
 * Modified by: EF, Oct 30, 2001 ; minor changes. mccompcurname replaced
 *
-* Circular/squared neutron source with flat or Maxwellian energy/wavelength
-* spectrum
+* Circular/squared or spatially gaussian neutron source with flat or 
+* Maxwellian energy/wavelength spectrum.
 *
 * %D
 * This routine is a neutron source (rectangular or circular), which aims at
@@ -29,7 +29,9 @@
 * Emax=E0+dE or Lmin=Lambda0-dLambda and Lmax=Lambda0+dLambda. The I1 may
 * be either arbitrary (I1=0), or specified in neutrons per steradian per
 * square cm per Angstrom. A Maxwellian spectra may be selected if you give
-* the source temperatures (up to 3). Finally, a file with the flux as a
+* the source temperatures (up to 3). A high-energy tail of shape 
+* A/(lambda0-lambda) is added by setting the HEtailA and HEtailL0 parameters.
+* Finally, a file with the flux as a
 * function of the wavelength [lambda(AA) flux(n/s/cm^2/st/AA)] may be used
 * with the 'flux_file' parameter. Format is 2 columns free text.
 * Additionl distributions for the horizontal and vertical phase spaces
@@ -102,7 +104,9 @@
 * I2:       [1/(cm**2*st*AA)] Second Maxwellian Source flux
 * T3:       [K]   Third Maxwellian source Temperature, 0=none
 * I3:       [1/(cm**2*st*AA)] Third Maxwellian Source flux
-* flux_file:[str] Name of a two columns [lambda flux] text file that contains
+* HEtailA:  [1/(cm**2*st*AA**2)] Amplitude of heigh energy tail
+* HEtailL0  [AA]  Offset of heigh energy tail
+flux_file:[str] Name of a two columns [lambda flux] text file that contains
 *                 the wavelength distribution of the flux in [1/(s*cm**2*st*AA)].
 *                 Comments (#) and further columns are ignored. Format is
 *                 compatible with McStas/PGPLOT wavelength monitor files.
@@ -132,7 +136,8 @@ DEFINITION PARAMETERS (string flux_file=0, string xdiv_file=0, string ydiv_file=
 SETTING PARAMETERS (radius=0.0, dist=0, xw=0, yh=0, E0=0, dE=0, Lambda0=0, dLambda=0, I1=0,
                     h=0, w=0, verbose=0, T1=0,
                     flux_file_perAA=0, flux_file_log=0,
-                    Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0)
+                    Lmin=0,Lmax=0,Emin=0,Emax=0,T2=0,I2=0,T3=0,I3=0,length=0,
+		    HEtailA=0,HEtailL0=0)
 OUTPUT PARAMETERS (p_in, lambda0, lambda02, L2P, lambda0b, lambda02b, L2Pb,lambda0c, lambda02c, L2Pc, pTable, pTable_x, pTable_y,pTable_xmin, pTable_xmax, pTable_xsum, pTable_ymin, pTable_ymax, pTable_ysum, pTable_dxmin, pTable_dxmax, pTable_dymin, pTable_dymax)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,s1,s2,p)
 
@@ -524,6 +529,10 @@ TRACE
       if ((T3 > 0) && (I3 > 0))
       {
         Maxwell += I3 * L2Pc/lambda5 * exp(-lambda02c/lambda2);
+      }
+      if (HEtailA>0)
+      {
+        Maxwell+=HEtailA/(lambda-HEtailL0)/(lambda-HEtailL0);
       }
       p *= Maxwell;
     }
