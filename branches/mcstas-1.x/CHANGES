@@ -97,7 +97,10 @@ Changes in McStas v1.12b, July 14th, 2010
   - Added SNS moderator input file source_sct091_tu_02_1.dat
   - Added ISIS moderator input file h.crisp
 
-  Tools
+  Licensing
+  - We have decided to distribute the components and the other runtime code under the LGPL license (see the LGPL
+    file under lib/ . This allows to link (unmodified) code from that directory with other software and achieve
+    non-GPL binaries.
  
   Platform support/Tools
   - Mac OS X 10.3 Panther, 10.4 Tiger, 10.5 Leopard, 10.6 Snow Leopard (PPC/Intel, 32/64bit)  

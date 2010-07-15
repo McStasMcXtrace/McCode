@@ -12,7 +12,11 @@
  is concerned is _this_ particular version of the license (ie v2, not
  v2.2 or v3.x or whatever), unless explicitly otherwise stated.
 
-                        Peter Willendrup 
+ Further note that the files in the lib/ directory are licenesed under the
+ LGPL or GNU LIBRARY GENERAL PUBLIC LICENSE, which allows to link (unmodified)
+ versions of that code with other software. 
+
+                       Peter Willendrup 
                         on behalf of the McStas developers
 
 -----------------------------------------
