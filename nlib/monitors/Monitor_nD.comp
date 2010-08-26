@@ -195,6 +195,7 @@
 * username3:  [str] Name assigned to User3
 * restore_neutron: [0|1] If set, the monitor does not influence the neutron state.
 *                        Equivalent to setting the 'parallel' option.
+* geometry:   [str] Name of an OFF file to specify a complex geometry detector
 *
 * OUTPUT PARAMETERS:
 *
@@ -207,7 +208,8 @@
 * %End
 ******************************************************************************/
 DEFINE COMPONENT Monitor_nD
-DEFINITION PARAMETERS (string options=0, string filename=0, user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
+DEFINITION PARAMETERS (string options=0, string filename=0,string geometry=0, 
+  user1=FLT_MAX, user2=FLT_MAX, user3=FLT_MAX, username1=0, username2=0,username3=0)
 SETTING PARAMETERS (xwidth=0, yheight=0, zdepth=0, xmin=0, xmax=0, ymin=0, ymax=0, zmin=0, zmax=0, bins=0, min=-1e40, max=1e40, restore_neutron=0, radius=0)
 /* these are protected C variables */
 OUTPUT PARAMETERS (DEFS, Vars, detector)
@@ -215,7 +217,8 @@ STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
 SHARE
 %{
-%include "monitor_nd-lib"
+  %include "monitor_nd-lib"
+  %include "interoff-lib"
 %}
 
 DECLARE
@@ -223,14 +226,15 @@ DECLARE
   MonitornD_Defines_type DEFS;
   MonitornD_Variables_type Vars;
   MCDETECTOR detector;
+  off_struct offdata;
 %}
 
 INITIALIZE
 %{
-  char tmp[256];
+  char tmp[CHAR_BUF_LENGTH];
   strcpy(Vars.compcurname, NAME_CURRENT_COMP);
   if (options != NULL)
-    strncpy(Vars.option, options, 1024);
+    strncpy(Vars.option, options, CHAR_BUF_LENGTH);
   else {
     strcpy(Vars.option, "x y");
     printf("Monitor_nD: %s has no option specified. Setting to PSD ('x y') monitor.\n", NAME_CURRENT_COMP);
@@ -257,8 +261,15 @@ INITIALIZE
       yheight=2*radius;
   }
   
+  if (geometry && strlen(geometry))
+    if (!off_init(  geometry, xwidth, yheight, zdepth, 0, &offdata )) {
+      printf("Monitor_nD: %s could not initiate the OFF geometry. \n"
+             "            Defaulting to normal Monitor dimensions.\n", NAME_CURRENT_COMP);
+      strcpy(geometry, "");
+    }
+  
   if (!radius && !xwidth && !yheight && !zdepth && !xmin && !xmax && !ymin && !ymax && !strstr(Vars.option, "previous"))
-    exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth,previous).\n", NAME_CURRENT_COMP));
+    exit(printf("Monitor_nD: %s has no dimension specified. Aborting (radius, xwidth, yheight, zdepth, previous).\n", NAME_CURRENT_COMP));
 
   Monitor_nD_Init(&DEFS, &Vars, xwidth, yheight, zdepth, xmin,xmax,ymin,ymax,zmin,zmax);
 
@@ -294,8 +305,15 @@ TRACE
   /* this is done automatically
     STORE_NEUTRON(INDEX_CURRENT_COMP, x, y, z, vx, vy, vz, t, sx, sy, sz, p);
   */
-
-  if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
+  
+  if (geometry && strlen(geometry))
+  {
+    Coords n0, n1, n={0,0,0};
+    /* determine intersections with object */
+    intersect = off_intersect(&t0, &t1, &n0, &n1,
+       x,y,z, vx, vy, vz, offdata );
+  }
+  else if (abs(Vars.Flag_Shape) == DEFS.SHAPE_SQUARE) /* square xy */
   {
     PROP_Z0;
     intersect = (x>=Vars.mxmin && x<=Vars.mxmax && y>=Vars.mymin && y<=Vars.mymax);
@@ -324,7 +342,9 @@ TRACE
 
   if (intersect)
   {
-    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA))
+    if ((abs(Vars.Flag_Shape) == DEFS.SHAPE_SPHERE) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_CYLIND) 
+     || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BOX) || (abs(Vars.Flag_Shape) == DEFS.SHAPE_BANANA)
+     || (geometry && strlen(geometry)) )
     {
       if (t0 < 0 && t1 > 0)
         t0 = t;  /* neutron was already inside ! */
