@@ -241,6 +241,8 @@ def read_monitor(this_File):
     Filestruct = eval(str)
     # Add the data block:
     Filestruct['data']=loadtxt(this_File)
+    Filestruct['fullpath'] = this_File
+    print "Loading " + this_File
     
     return Filestruct
     # end read_monitor
@@ -332,7 +334,7 @@ def keypress(event):
         h=figure()
         text(0.05,0.05,usage)
         title(os.path.basename(sys.argv[0]) + ": plotting tool for McCode data set",fontweight='bold')
-        show(h)
+        show()
     elif event.key == 'right' or event.key == 'pagedown':
         'show next scan step/monitor'
         display_scanstep(File, +1)
@@ -376,7 +378,8 @@ def display_scanstep(this_File, relative_index):
       index = scan_length-1
 
     scan_index = index
-    display(os.path.join(this_File, "%i" % index))
+    print "Loading " + os.path.join(this_File, "%i" % index)
+    display(os.path.join(this_File, "%i" % index), "/%i" % index)
     # end display_scanstep
 
 def dumpfile(format):
@@ -394,7 +397,7 @@ def dumpfile(format):
     print "Saved " + Filename
     # end dumpfile
 
-def display(this_File):
+def display(this_File, comment):
     """
     Display data set from File: overview or scan data set. Installs button and keyboard events.
     Only returns after show().
@@ -502,7 +505,7 @@ def display(this_File):
     else:
         from pylab import get_current_fig_manager
         tb = get_current_fig_manager().toolbar
-        tb.set_message('mcplot: Keys: h=help [goc|x|pdnj] ' + File);
+        tb.set_message('File: ' + File + comment + ' mcplot: Keys: h=help [goc|x|pdnj] ' + File + comment);
         
     # install handlers for keyboard and mouse events
 
@@ -537,6 +540,6 @@ if __name__ == "__main__":
     if options.Format!=None:
         matplotlib.use(options.Format)
         
-    display(File)
+    display(File, "")
     # End of __main__
     
