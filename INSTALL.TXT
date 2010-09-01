@@ -19,6 +19,14 @@
 *
 *******************************************************************************/
 
+To install from the SVN repository, use e.g.:
+
+  ./configure --enable-mcstas OR ./configure --enable-mcxtrace
+  make
+  sudo make install
+
+
+
 NOTE: This document is obsolete - please refer to the documents in
 
   install_docs/tex/install.*
