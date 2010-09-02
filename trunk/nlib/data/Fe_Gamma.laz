@@ -11,7 +11,7 @@
 # sigma_abs 2.56    absorption scattering cross section in [barn]
 # density   8.00    in [g/cm^3]
 # weight    55.84   in [g/mol]
-# nb_atoms  2       in [atoms/unit cell]
+# nb_atoms  4       in [atoms/unit cell]
 # At_number 26      atomic number Z
 # lattice_a 3.6468  lattice parameter a in [Angs]
 #
