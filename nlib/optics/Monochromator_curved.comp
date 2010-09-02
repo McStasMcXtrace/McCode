@@ -81,6 +81,7 @@
 * reflect: reflectivity file name of text file as 2 columns [k, R] [str]
 * transmit:transmission file name of text file as 2 columns [k, T] [str]
 * t0:      transmission efficiency [1]
+* order:   specify the diffraction order, 1 is usually prefered. Use 0 for all [1]
 *
 * OUTPUT PARAMETERS:
 * col:     column index for last hit blade (1:NH)
@@ -98,7 +99,9 @@
 
 DEFINE COMPONENT Monochromator_curved
 DEFINITION PARAMETERS ()
-SETTING PARAMETERS (string reflect=0, string transmit=0, zwidth=0.01, yheight=0.01, gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734, RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0)
+SETTING PARAMETERS (string reflect=0, string transmit=0, zwidth=0.01, yheight=0.01, 
+  gap=0.0005, NH=11, NV=11, mosaich=30.0, mosaicv=30.0, r0=0.7, t0=1.0,Q=1.8734, 
+  RV=0, RH=0, DM=0, mosaic=0, width=0, height=0, verbose=0, order=0)
 OUTPUT PARAMETERS (mos_rms_y, mos_rms_z, mos_rms_max, mono_Q,SlabWidth,SlabHeight,rTable, tTable, row, col)
 STATE PARAMETERS (x,y,z,vx,vy,vz,t,sx,sy,sz,p)
 
@@ -154,7 +157,7 @@ INITIALIZE
 
   if (mono_Q <= 0) { fprintf(stderr,"Monochromator_curved: %s: Error scattering vector Q = 0\n", NAME_CURRENT_COMP); exit(-1); }
   if (r0 <  0) { fprintf(stderr,"Monochromator_curved: %s: Error reflectivity r0 is negative\n", NAME_CURRENT_COMP); exit(-1); }
-  if (r0 == 0) { fprintf(stderr,"Monochromator_curved: %s: Reflectivity r0 is null. Ingnoring component.\n", NAME_CURRENT_COMP); }
+  if (r0 == 0) { fprintf(stderr,"Monochromator_curved: %s: Reflectivity r0 is null. Ignoring component.\n", NAME_CURRENT_COMP); }
   if (NH*NV == 0) { fprintf(stderr,"Monochromator_curved: %s: no slabs ??? (NH or NV=0)\n", NAME_CURRENT_COMP); exit(-1); }
 
 
@@ -221,7 +224,7 @@ TRACE
 
     if (z>zmin && z<zmax && y>ymin && y<ymax) { /* Intersect the crystal? */
       double tilth,tiltv;         /* used to calculate tilt angle of slab */
-      double ratio, order, k, kux,kuy,kuz;
+      double ratio, Q_order, k, kux,kuy,kuz;
       double kix,kiy,kiz;
       int    do_transmit = 0;
 
@@ -260,22 +263,22 @@ TRACE
           of correct length and direction. Only the order with the closest
           scattering vector is considered */
         ratio = -2*kix/mono_Q;
-        order = floor(ratio + .5);
-        if(order == 0.0) order = ratio < 0 ? -1 : 1;
+        Q_order = floor(ratio + .5);
+        if(Q_order == 0.0) Q_order = ratio < 0 ? -1 : 1;
         /* Order will be negative when the neutron enters from the back, in
           which case the direction of Q0 is flipped. */
-        if(order < 0) order = -order;
+        if(Q_order < 0) Q_order = -Q_order;
         /* Make sure the order is small enough to allow Bragg scattering at the
           given neutron wavelength */
         k = sqrt(kix*kix + kiy*kiy + kiz*kiz);
         kux = kix/k;              /* Unit vector along ki */
         kuy = kiy/k;
         kuz = kiz/k;
-        if(order > 2*k/mono_Q) order--;
-        if(order > 0) {           /* Bragg scattering possible? */
+        if(Q_order > 2*k/mono_Q) Q_order--;
+        if((!order && Q_order > 0) || (Q_order == fabs(order) && order)) {           /* Bragg scattering possible? */
           double q0, q0x, theta, delta, p_reflect, my_r0;
 
-          q0 = order*mono_Q;
+          q0 = Q_order*mono_Q;
           q0x = ratio < 0 ? -q0 : q0;
           theta = asin(q0/(2*k)); /* Actual bragg angle */
           /* Make MC choice: reflect or transmit? */
