@@ -47,8 +47,9 @@
 *   It computes the intersection points of the neutron ray with the object  
 *   transparently, so that it can be used like a regular sample object.
 *   It supports the OFF and NOFF file format but not COFF (colored faces). 
-*   Such files may be generated from XYZ data using qhull/powercrust, and 
-*   viewed with geomview
+*   Such files may be generated from XYZ data using:
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*   and viewed with geomview or java -jar jroff.jar (see below).
 *   The default size of the object depends of the OFF file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
@@ -73,7 +74,7 @@
 * focus_yh:   vert.  dimension of a rectangular area [m]
 * focus_aw:   horiz. angular dimension of a rectangular area [deg]
 * focus_ah:   vert.  angular dimension of a rectangular area [deg]
-* sigma_abs:  Absorbtion cross section pr. unit cell [barns]
+* sigma_abs:  Absorbtion cross section pr. unit cell at 2200 m/s [barns]
 * sigma_inc:  Incoherent scattering cross section pr. unit cell [barns]
 * Vc:         Unit cell volume [AA^3]
 * f_QE:       Fraction of quasielastic scattering (rest is elastic) [1]
@@ -98,9 +99,11 @@
 * %L
 * The test/example instrument <a href="../examples/QENS_test.instr">QENS_test.instr</a>.
 * %L
-* Geomview and Object File Format (OFF) <http|://www.geomview.org>
+* Geomview and Object File Format (OFF) <http://www.geomview.org>
 * %L
-* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
+* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* %L
+* Powercrust/qhull <http://qhull.org>
 *
 * %E
 *******************************************************************************/
@@ -151,7 +154,7 @@ INITIALIZE
     }
   }
   else if (xwidth && yheight && zdepth)  VarsInc.shape=1; /* box */
-  else if (radius > 0 && yheight)        VarsInc.shape=0; /* cylinder */
+  else if (radius > 0 &&  yheight)       VarsInc.shape=0; /* cylinder */
   else if (radius > 0 && !yheight)       VarsInc.shape=2; /* sphere */
 
   if (VarsInc.shape < 0) 
@@ -177,11 +180,11 @@ INITIALIZE
     concentric=0;
   }
 
-  VarsInc.sigma_a=sigma_abs;
-  VarsInc.sigma_i=sigma_inc;
-  VarsInc.rho = (pack/Vc);
-  VarsInc.my_s=(VarsInc.rho * 100 * VarsInc.sigma_i);
-  VarsInc.my_a_v=(VarsInc.rho * 100 * VarsInc.sigma_a);
+  VarsInc.sigma_a= sigma_abs;
+  VarsInc.sigma_i= sigma_inc;
+  VarsInc.rho    = (pack/Vc);
+  VarsInc.my_s   = (VarsInc.rho * 100 * VarsInc.sigma_i);
+  VarsInc.my_a_v = (VarsInc.rho * 100 * VarsInc.sigma_a);
 
   /* now compute target coords if a component index is supplied */
   VarsInc.tx= VarsInc.ty=VarsInc.tz=0;
