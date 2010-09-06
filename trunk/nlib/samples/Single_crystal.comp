@@ -35,8 +35,9 @@
 *   It computes the intersection points of the neutron ray with the object  
 *   transparently, so that it can be used like a regular sample object.
 *   It supports the OFF and NOFF file format but not COFF (colored faces). 
-*   Such files may be generated from XYZ data using qhull/powercrust, and 
-*   viewed with geomview
+*   Such files may be generated from XYZ data using:
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*   and viewed with geomview or java -jar jroff.jar (see below).
 *   The default size of the object depends of the OFF file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
@@ -85,11 +86,6 @@
 *           reflections="", sigma_abs=5.08, sigma_inc=4.935,
 *           ax=3.0282, by=3.0282, cz=3.0282/2)
 *
-* %BUGS:
-* The component is known not to work properly as a Bragg monochromator. The 
-* reason is likely to relate to the internal definition of reciprocal space 
-* orientation. Investigation undergoing. 
-*
 * Also, always use a non-zero value of delta_d_d.
 *
 * %VALIDATION:
@@ -104,14 +100,22 @@
 * geometry:   Name of an Object File Format (OFF) file for complex geometry. 
 *               The OFF file may be generated from XYZ coordinates using qhull/powercrust [str]
 * delta_d_d: Lattice spacing variance, gaussian RMS [1]
-* mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
+* mosaic:    Crystal mosaic (isotropic), gaussian RMS. Puts the crystal in the 
+*            isotropic mosaic model state, thus disregarding other mosaicity parameters. [arc minutes]
 * mosaic_a:  Horizontal (rotation around lattice vector a) mosaic (anisotropic), gaussian RMS. 
-* Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity
-* through rotation around the crystal lattice vectors. Has precedence over
-* in-plane mosaic model. [arc minutes]
-* mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), gaussian RMS. [arc minutes]
-* mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), gaussian RMS [arc minutes]
-* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in the in-plane mosaic state. Vectors A and B define plane in which the crystal roation is defined, and mosaic_A, mosaic_B, denotes the resp. mosaicities (gaussian RMS) with respect to the the two reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
+*            Put the crystal in the anisotropic crystal vector state. I.e. model mosaicity
+*            through rotation around the crystal lattice vectors. Has precedence over
+*            in-plane mosaic model. [arc minutes]
+* mosaic_b:  Vertical (rotation around lattice vector b) mosaic (anisotropic), 
+*            gaussian RMS. [arc minutes]
+* mosaic_c:  Out-of-plane (Rotation around lattice vector c) mosaic (anisotropic), 
+*            gaussian RMS [arc minutes]
+* mosaic_AB: In Plane mosaic rotation and plane vectors (anisotropic), 
+*            mosaic_A, mosaic_B, A_h,A_k,A_l, B_h,B_k,B_l. Puts the crystal in 
+*            the in-plane mosaic state. Vectors A and B define plane in which 
+*            the crystal roation is defined, and mosaic_A, mosaic_B, denotes the 
+*            resp. mosaicities (gaussian RMS) with respect to the the two 
+*            reflections chosen by A and B (Miller indices). [arc_minutes, arc_minutes,1, 1, 1, 1, 1, 1]
 * 
 * recip_cell: Choice of direct/reciprocal (0/1) unit cell definition [1]
 * ax:        
@@ -151,9 +155,15 @@
 * %L
 * Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
 * %L
-* Geomview and Object File Format (OFF) <http|://www.geomview.org>
+* Fullprof powder refinement:         http://www.ill.eu/sites/fullprof/index.html
 * %L
-* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
+* Crystallographica software:         http://www.crystallographica.com/
+* %L
+* Geomview and Object File Format (OFF) <http://www.geomview.org>
+* %L
+* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* %L
+* Powercrust/qhull <http://qhull.org>
 *
 * %E
 ****************************************************************************/
@@ -332,7 +342,7 @@ SHARE
         "lattice_aa",
         "lattice_bb",
         "lattice_cc",
-        "nb_atoms",
+        "nb_atoms","multiplicity",
         NULL);
 
       if (parsing) {
@@ -353,10 +363,13 @@ SHARE
         if (parsing[14] && !info->m_bb)   info->m_bb=atof(parsing[14]);
         if (parsing[15] && !info->m_cc)   info->m_cc=atof(parsing[15]);
         if (parsing[16])   nb_atoms=atof(parsing[16]);
-        for (i=0; i<=16; i++) if (parsing[i]) free(parsing[i]);
+        if (parsing[17])   nb_atoms=atof(parsing[17]);
+        for (i=0; i<=17; i++) if (parsing[i]) free(parsing[i]);
         free(parsing);
       }
     }
+    
+    if (nb_atoms > 1) { info->sigma_a *= nb_atoms; info->sigma_i *= nb_atoms; }
 
     /* special cases for the structure definition */
     if (info->m_ax || info->m_ay || info->m_az) info->m_a=0;
@@ -684,7 +697,7 @@ SHARE
       return(0);
     }
     return(info->count = i);
-  }
+  } /* read_hkl_data */
 #endif /* !SINGLE_CRYSTAL_DECL */
 
 %}
@@ -718,7 +731,7 @@ INITIALIZE
   hkl_info.m_cz = cz;
   hkl_info.sigma_a = sigma_abs;
   hkl_info.sigma_i = sigma_inc;
-  hkl_info.recip = recip_cell;
+  hkl_info.recip   = recip_cell;
 
   /* default format h,k,l,F,F2  */
   hkl_info.column_order[0]=1;

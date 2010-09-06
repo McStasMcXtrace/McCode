@@ -66,8 +66,9 @@
 *   It computes the intersection points of the neutron ray with the object  
 *   transparently, so that it can be used like a regular sample object.
 *   It supports the OFF and NOFF file format but not COFF (colored faces). 
-*   Such files may be generated from XYZ data using qhull/powercrust, and 
-*   viewed with geomview
+*   Such files may be generated from XYZ data using:
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*   and viewed with geomview or java -jar jroff.jar (see below).
 *   The default size of the object depends of the OFF file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
 
@@ -166,7 +167,7 @@
 * sigma_coh:[barns] Coherent Scattering cross-section. Use -1 to unactivate.
 * sigma_inc:[barns] Incoherent Scattering cross-section. Use -1 to unactivate.
 * sigma_abs:[barns] Absorption cross-section at 2200 m/s. Use -1 to unactivate.
-* V_rho:     [AA-3] Density of atoms (nb atoms/unit cell V_0).
+* V_rho:     [AA-3] Density of scattering elements (nb atoms/unit cell V_0).
 * T:            [K] Temperature of sample, detailed balance
 *
 * Geometry parameters:
@@ -235,17 +236,23 @@
 * %L
 * Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
 * %L
+* Web Elements                        http://www.webelements.com/
+* %L
+* Fullprof powder refinement:         http://www.ill.eu/sites/fullprof/index.html
+* %L
+* Crystallographica software:         http://www.crystallographica.com/
+* %L
 * Example data file <a href="../data/He4_liq_coh.sqw">He4_liq_coh.sqw</a>
 * %L
 * The <a href="PowderN.html">PowderN</a> component.
 * %L
-* Web Elements                        http://www.webelements.com/
-* %L
 * The test/example instrument <a href="../examples/Test_Isotropic_Sqw.instr">Test_Isotropic_Sqw.instr</a>.
 * %L
-* Geomview and Object File Format (OFF) <http|://www.geomview.org>
+* Geomview and Object File Format (OFF) <http://www.geomview.org>
 * %L
-* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
+* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* %L
+* Powercrust/qhull <http://qhull.org>
 * %E
 *****************************************************************************/
 
@@ -753,7 +760,7 @@ struct Sqw_Data_struct *Sqw_readfile(
     "V_rho",
     "density",
     "weight",
-    "nb_atoms",
+    "nb_atoms","multiplicity",
     NULL);
   if (parsing) {
     if (parsing[0] && !Sqw->rho)   Sqw->rho    =1/atof(parsing[0]);
@@ -780,15 +787,25 @@ struct Sqw_Data_struct *Sqw_readfile(
     if (parsing[21] )     mat_density =atof(parsing[21]);
     if (parsing[22] )     mat_weight  =atof(parsing[22]);
     if (parsing[23] )     mat_at_nb   =atof(parsing[23]);
-    for (i=0; i<=23; i++) if (parsing[i]) free(parsing[i]);
+    if (parsing[24] )     mat_at_nb   =atof(parsing[24]);
+    for (i=0; i<=24; i++) if (parsing[i]) free(parsing[i]);
     free(parsing);
   }
-
+  
+  /* compute the scattering unit density from material weight and density */
+  /* the weight of the scattering element is the chemical formula molecular weight 
+   * times the nb of chemical formulae in the scattering element (nb_atoms) */
   if (!Sqw->rho && mat_density > 0 && mat_weight > 0 && mat_at_nb > 0) {
     /* molar volume [cm^3/mol] = weight [g/mol] / density [g/cm^3] */
     /* atom density per Angs^3 = [mol/cm^3] * N_Avogadro *(1e-8)^3 */
-    Sqw->rho = mat_density/mat_weight/1e24*6.02214199e23/mat_at_nb;
-    if (Sqw->verbose_output > 0) printf("Isotropic_Sqw: %s: Computing atom density V_rho=%g [AA^-3] from file %s\n", Sqw->compname, Sqw->rho, file);
+    Sqw->rho = mat_density/(mat_weight*mat_at_nb)/1e24*6.02214199e23;
+    if (Sqw->verbose_output > 0) printf("Isotropic_Sqw: %s: Computing scattering unit density V_rho=%g [AA^-3] from file %s\n", Sqw->compname, Sqw->rho, file);
+  }
+  
+  /* the scattering unit cross sections are the chemical formula onces 
+   * times the nb of chemical formulae in the scattering element */
+  if (mat_at_nb > 0) { 
+    Sqw->s_abs *= mat_at_nb; Sqw->s_inc *= mat_at_nb; Sqw->s_coh *= mat_at_nb; 
   }
 
   if (nblocks) {
