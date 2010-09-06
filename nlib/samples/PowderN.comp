@@ -48,8 +48,9 @@
 *   It computes the intersection points of the neutron ray with the object  
 *   transparently, so that it can be used like a regular sample object.
 *   It supports the OFF and NOFF file format but not COFF (colored faces). 
-*   Such files may be generated from XYZ data using qhull/powercrust, and 
-*   viewed with geomview
+*   Such files may be generated from XYZ data using:
+*     qhull < coordinates.xyz Qx Qv Tv o > geomview.off 
+*   and viewed with geomview or java -jar jroff.jar (see below).
 *   The default size of the object depends of the OFF file data, but its 
 *   bounding box may be resized using xwidth,yheight and zdepth.
 *
@@ -157,7 +158,7 @@
 *             is not available. Use 1 if included in F2 [1]
 * weight:   Atomic/molecular weight of material [g/mol]
 * density:  Density of material. rho=density/weight/1e24*N_A. [g/cm^3]
-* nb_atoms: Number of atoms per unit cell [1]
+* nb_atoms: Number of sub-unit per unit cell, that is ratio of sigma for chemical formula to sigma per unit cell [1]
 *
 * %L
 * “Validation of a realistic powder sample using data from DMC at PSI” Willendrup P, Filges U, Keller L, Farhi E, Lefmann K, Physica B-Cond Matt 385 (2006) 1032.  
@@ -170,13 +171,17 @@
 * %L
 * Cross sections for compounds:       http://www.ncnr.nist.gov/resources/sldcalc.html
 * %L
-* Fullprof powder refinement:         http://www-llb.cea.fr/fullweb/fp2k/fp2k.htm
-* %L
 * Web Elements                        http://www.webelements.com/
 * %L
-* Geomview and Object File Format (OFF) <http|://www.geomview.org>
+* Fullprof powder refinement:         http://www.ill.eu/sites/fullprof/index.html
 * %L
-* Powercrust/qhull <http://www.cs.utexas.edu/users/amenta/powercrust>
+* Crystallographica software:         http://www.crystallographica.com/
+* %L
+* Geomview and Object File Format (OFF) <http://www.geomview.org>
+* %L
+* Java version of Geomview (display only) jroff.jar <http://www.holmes3d.net/graphics/roffview/> 
+* %L
+* Powercrust/qhull <http://qhull.org>
 *
 * %E
 *****************************************************************************/
@@ -275,7 +280,7 @@ SHARE
       "V_rho",
       "density",
       "weight",
-      "nb_atoms",
+      "nb_atoms","multiplicity",
       NULL);
 
     if (parsing) {
@@ -302,7 +307,8 @@ SHARE
       if (parsing[20] && !info->rho)    info->rho    =atof(parsing[20]);
       if (parsing[21] && !info->at_weight)     info->at_weight    =atof(parsing[21]);
       if (parsing[22] && info->at_nb <= 1)  info->at_nb    =atof(parsing[22]);
-      for (i=0; i<=22; i++) if (parsing[i]) free(parsing[i]);
+      if (parsing[23] && info->at_nb <= 1)  info->at_nb    =atof(parsing[23]);
+      for (i=0; i<=23; i++) if (parsing[i]) free(parsing[i]);
       free(parsing);
     }
 
@@ -534,12 +540,21 @@ INITIALIZE
                         "ERROR    Please check file format (laz or lau).\n", NAME_CURRENT_COMP, reflections));
   }
 
+  /* compute the scattering unit density from material weight and density */
+  /* the weight of the scattering element is the chemical formula molecular weight 
+   * times the nb of chemical formulae in the scattering element (nb_atoms) */
   if (!line_info.V_0 && line_info.at_nb > 0
     && line_info.at_weight > 0 && line_info.rho > 0) {
     /* molar volume [cm^3/mol] = weight [g/mol] / density [g/cm^3] */
     /* atom density per Angs^3 = [mol/cm^3] * N_Avogadro *(1e-8)^3 */
     line_info.V_0 = line_info.at_nb
       /(line_info.rho/line_info.at_weight/1e24*6.02214199e23);
+  }
+  
+  /* the scattering unit cross sections are the chemical formula onces 
+   * times the nb of chemical formulae in the scattering element */
+  if (line_info.at_nb > 0) { 
+    line_info.sigma_a *= line_info.at_nb; line_info.sigma_i *= line_info.at_nb;
   }
 
   if (line_info.V_0 <= 0)
