@@ -1,22 +1,23 @@
 # TITLE *-Ge-[FD3-MS] Cooper, A.S.[1983] [irritant]
-# CELL 5.656750 5.656750 5.656750 90.000000 90.000000 90.000000
+# CELL 5.657906 5.657906 5.657906 90.000000 90.000000 90.000000
 # SPCGRP F D 3 M   CUBIC STRUCTURE
 # ATOM GE 1 0.000000 0.000000 0.000000
 # SCATTERING FACTOR  COEFFICIENTS: GE     F= 0.819 CM-12
 # Reference: Physical Review, Serie 3. B - Condensed Matter (1994) 50, 14947-14951
 #
 # Physical parameters:
-# sigma_coh 8.42    coherent scattering cross section in [barn]
-# sigma_inc 0.18    incoherent scattering cross section in [barn]
-# sigma_abs 2.2     absorption scattering cross section in [barn]
+# sigma_coh 8.42    coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.18    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 2.2     absorption scattering cross section (single atom) in [barn]
 # density   5.323   in [g/cm^3]
-# weight    72.64   in [g/mol]
-# nb_atoms  16      in [atoms/unit cell]
+# weight    72.64   in [g/mol] (single atom)
+# multiplicity 8    in [atoms/unit cell]
+# Vc        181.12  volume of unit cell in [A^3]
 # v_sound   5400    in [m/s]
 # T_m       1211.4  melting temperature in [K]
 # T_b       3093    boiling temperature in [K]
 # At_number 32      atomic number Z
-# lattice_a 5.65675 lattice parameter a in [Angs]
+# lattice_a 657906  lattice parameter a in [Angs]
 #
 # Format parameters: Lazy format <http://icsd.ill.fr>
 # column_j 17 multiplicity 'j'

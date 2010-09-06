@@ -6,12 +6,13 @@
 # Reference:  Physical Review, Serie 3. B - Solid State (1977) 16, 4404-4412
 #
 # Physical parameters:
-# sigma_coh 7.98    coherent scattering cross section in [barn]
-# sigma_inc 0.32    incoherent scattering cross section in [barn]
-# sigma_abs 11.7    absorption scattering cross section in [barn]
-# density   4.39    in [g/cm^3]
-# weight    78.96   in [g/mol]
-# nb_atoms  3       in [atoms/unit cell]
+# sigma_coh 7.98    coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.32    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 11.7    absorption scattering cross section (single atom) in [barn]
+# density   4.81    in [g/cm^3]
+# weight    78.96   in [g/mol] (single atom)
+# multiplicity 3    in [atoms/unit cell]
+# Vc        81.78   volume of unit cell in [A^3]
 # v_sound   3350    in [m/s]
 # T_m       494     melting temperature in [K]
 # T_b       958     boiling temperature in [K]

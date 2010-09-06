@@ -6,12 +6,13 @@
 # Reference: Nature (1954) 174, 1011-1011 ; Phase Transition (1992) 38, 127-220
 #
 # Physical parameters:
-# sigma_coh 4.871   coherent scattering cross section in [barn]
-# sigma_inc 0.022   incoherent scattering cross section in [barn]
-# sigma_abs 0.626   absorption scattering cross section in [barn]
+# sigma_coh 4.871   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.022   incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 0.626   absorption scattering cross section (single atom) in [barn]
 # density   5.77    in [g/cm^3]
-# weight    118.7   in [g/mol]
-# nb_atoms  16      in [atoms/unit cell]
+# weight    118.7   in [g/mol] (single atom)
+# multiplicity 8    in [atoms/unit cell]
+# Vc        273.26  volume of unit cell in [A^3]
 # T_m       505.08  melting temperature in [K]
 # T_b       2875    boiling temperature in [K]
 # At_number 50      atomic number Z

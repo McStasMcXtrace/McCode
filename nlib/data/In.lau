@@ -6,12 +6,13 @@
 # Reference: Zeitschrift fuer Anorganische und Allgemeine Chemie (1956) 286, 118-135
 #
 # Physical parameters:
-# sigma_coh 2.08    coherent scattering cross section in [barn]
-# sigma_inc 0.54    incoherent scattering cross section in [barn]
-# sigma_abs 193.8   absorption scattering cross section in [barn]
+# sigma_coh 2.08    coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.54    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 193.8   absorption scattering cross section (single atom) in [barn]
 # density   7.31    in [g/cm^3]
-# weight    114.8   in [g/mol]
-# nb_atoms  2       in [atoms/unit cell]
+# weight    114.8   in [g/mol] (single atom)
+# multiplicity 2    in [atom/unit cell]
+# Vc        52.26   volume of unit cell in [A^3]
 # v_sound   1215    in [m/s]
 # T_m       429.75  melting temperature in [K]
 # T_b       2345    boiling temperature in [K]

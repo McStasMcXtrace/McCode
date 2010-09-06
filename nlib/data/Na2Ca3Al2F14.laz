@@ -11,12 +11,13 @@
 # Reference: Journal of Solid State Chemistry (1988) 76, 426-431
 #
 # Physical parameters:
-# sigma_coh 70.890  coherent scattering cross section in [barn]
-# sigma_inc 3.4176  incoherent scattering cross section in [barn]
-# sigma_abs 2.9464  absorption scattering cross section in [barn]
-# weight    486.15  in [g/mol]
-# V_0       1079.1  in [Angs^3]
-# nb_atoms  84      in [atoms/unit cell]
+# sigma_coh 70.890  coherent scattering cross section for Na2Ca3Al2F14 in [barn]
+# sigma_inc 3.4176  incoherent scattering cross section for Na2Ca3Al2F14 in [barn]
+# sigma_abs 2.9464  absorption scattering cross section for Na2Ca3Al2F14 in [barn]
+# density   2.99    in [g/cm^3]
+# weight    486.15  in [g/mol] for Na2Ca3Al2F14
+# multiplicity 4    in [atoms/unit cell]
+# Vc        1079.1  volume of unit cell in [A^3]
 # lattice_a 10.2531 lattice parameter a in [Angs]
 #
 # Format parameters: Lazy format <http://icsd.ill.fr>

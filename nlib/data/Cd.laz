@@ -6,12 +6,13 @@
 # Reference: Physical Review, Serie 3. B - Condensed Matter (1997) 56, 5170-5179
 #
 # Physical parameters:
-# sigma_coh 3.04    coherent scattering cross section in [barn]
-# sigma_inc 3.46    incoherent scattering cross section in [barn]
-# sigma_abs 2520    absorption scattering cross section in [barn]
+# sigma_coh 3.04    coherent scattering cross section (single atom) in [barn]
+# sigma_inc 3.46    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 2520    absorption scattering cross section (single atom) in [barn]
 # density   8.65    in [g/cm^3]
-# weight    112.4   in [g/mol]
-# nb_atoms  2       in [atoms/unit cell]
+# weight    112.4   in [g/mol] (single atom)
+# multiplicity 2    in [atoms/unit cell]
+# Vc        43.11   volume of unit cell in [A^3]
 # v_sound   2310    in [m/s]
 # T_m       594.2   melting temperature in [K]
 # T_b       1040    boiling temperature in [K]

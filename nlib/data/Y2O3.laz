@@ -10,12 +10,14 @@
 # Stable up to 2570 K (2nd ref., Tomaszewski), above hexagonal, m.p. 2670 K
 #
 # Physical parameters:
-# sigma_coh 27.79   coherent scattering cross section in [barn]
-# sigma_inc 0.302   incoherent scattering cross section in [barn]
-# sigma_abs 2.56    absorption scattering cross section in [barn]
-# density   5.03.87 in [g/cm^3]
-# weight    225.81  in [g/mol]
-# Vc        1192.3  in [Angs^3] volume of the cell
+# sigma_coh 27.79   coherent scattering cross section for Y2O3 in [barn]
+# sigma_inc 0.302   incoherent scattering cross section for Y2O3 in [barn]
+# sigma_abs 2.56    absorption scattering cross section for Y2O3 in [barn]
+# density   5.03    in [g/cm^3]
+# weight    225.81  in [g/mol] for Y2O3
+# multiplicity 16    in [atoms/unit cell]
+# Vc        1192.3  volume of unit cell in [A^3]
+# lattice_a 10.6056 lattice parameter a in [Angs]
 #
 # Format parameters: Lazy format <http://icsd.ill.fr>
 # column_j 17 multiplicity 'j'

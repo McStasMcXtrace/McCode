@@ -1,13 +1,19 @@
-# quartz (SiO2): rhombohedric
-# a=b=4.9133, c=5.4053, aa=bb=90, cc=120;
+# TITLE *Quartz $-alpha-SiO2-[P3121] Tucker, M.G.;Keen, D.A.;Dove[2001] [Quartz-alpha at 20 K]
+# CELL 4.901900 4.901900 5.398800 90.000000 90.000000 120.000000
+# SPCGRP P 31 21   TRIGONAL STRUCTURE
+# ATOM SI 1 0.467300 0.000000 0.333300
+# ATOM O 1 0.413000 0.271100 0.217200
+# SCATTERING FACTOR  COEFFICIENTS: SI     F= 0.416 CM-12 ; O      F= 0.581 CM-12
+# Reference:
 #
 # Physical parameters:
-# sigma_coh 10.625  coherent scattering cross section in [barn]
-# sigma_inc 0.0056  incoherent scattering cross section in [barn]
-# sigma_abs 0.1714  absorption scattering cross section in [barn]
+# sigma_coh 10.625  coherent scattering cross section for SiO2 in [barn]
+# sigma_inc 0.0056  incoherent scattering cross section for SiO2 in [barn]
+# sigma_abs 0.1714  absorption scattering cross section for SiO2 in [barn]
 # density   2.65    in [g/cm^3]
-# weight    60.08   in [g/mol]
-# nb_atoms  9       in [atoms/unit cell]
+# weight    60.08   in [g/mol] for SiO2
+# multiplicity 3    in [atoms/unit cell]
+# Vc        112.35  volume of unit cell in [A^3]
 # T_m       846     melting temperature in [K]
 # T_b       2503    boiling temperature in [K]
 # lattice_a 4.9019  lattice parameter a in [Angs]

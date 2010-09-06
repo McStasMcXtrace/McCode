@@ -6,12 +6,13 @@
 # Reference: Analytical Chemistry (1959) 31, 1922-1923
 #
 # Physical parameters:
-# sigma_coh 8.57    coherent scattering cross section in [barn]
-# sigma_inc 0.0024  incoherent scattering cross section in [barn]
-# sigma_abs 1.15    absorption scattering cross section in [barn]
+# sigma_coh 8.57    coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.0024  incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 1.15    absorption scattering cross section (single atom) in [barn]
 # density   7.87    in [g/cm^3]
-# weight    92.90   in [g/mol]
-# nb_atoms  2       in [atoms/unit cell]
+# weight    92.90   in [g/mol] (single atom)
+# multiplicity 2    in [atoms/unit cell]
+# Vc        36.14   volume of unit cell in [A^3]
 # v_sound   3480    in [m/s]
 # T_m       2750    melting temperature in [K]
 # T_b       5017    boiling temperature in [K]

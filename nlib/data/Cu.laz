@@ -6,12 +6,13 @@
 # Reference: Journal of Applied Physics (1961) 32, 1536-1546
 #
 # Physical parameters:
-# sigma_coh 7.485   coherent scattering cross section in [barn]
-# sigma_inc 0.55    incoherent scattering cross section in [barn]
-# sigma_abs 3.78    absorption scattering cross section in [barn]
+# sigma_coh 7.485   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.55    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 3.78    absorption scattering cross section (single atom) in [barn]
 # density   8.92    in [g/cm^3]
-# weight    63.55   in [g/mol]
-# nb_atoms  4       in [atoms/unit cell]
+# weight    63.55   in [g/mol] (single atom)
+# multiplicity 4    in [atoms/unit cell]
+# Vc        47.24   volume of unit cell in [A^3]
 # v_sound   3570    in [m/s]
 # v_sound_l 4760    velocity of longitudinal sound in [m/s]
 # v_sound_t 2325    velocity of transversal sound in [m/s]

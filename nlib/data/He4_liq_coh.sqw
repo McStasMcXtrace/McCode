@@ -1,7 +1,7 @@
 # Sqw data file for Isotropic_Sqw
 # liquid He4: coherent part, no incoherent, atomic number 2
 # Elementary Excitation Data by R.J. Donnelly et al., J. Low Temp. Phys., 44 (1981) 471
-# line width is constant
+# WARNING: line width is constant, intensity is not right
 #
 # Physical parameters:
 # V_rho       0.072   atom density per Angs^3

@@ -6,12 +6,13 @@
 # Reference: Journal of Physics F (1978) 8, 15-26
 #
 # Physical parameters:
-# sigma_coh 4.39    coherent scattering cross section in [barn]
-# sigma_inc 0.093   incoherent scattering cross section in [barn]
-# sigma_abs 6.9     absorption scattering cross section in [barn]
+# sigma_coh 4.39    coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.093   incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 6.9     absorption scattering cross section (single atom) in [barn]
 # density   12.02   in [g/cm^3]
-# weight    106.4   in [g/mol]
-# nb_atoms  4       in [atoms/unit cell]
+# weight    106.4   in [g/mol] (single atom)
+# multiplicity 4    in [atoms/unit cell]
+# Vc        58.75   volume of unit cell in [A^3]
 # v_sound   3070    in [m/s]
 # T_m       1828.05 melting temperature in [K]
 # T_b       3236    boiling temperature in [K]

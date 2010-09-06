@@ -10,12 +10,13 @@
 # Reference: Acta Crystallographica B (1975) 31, 2233-2240 
 #
 # Physical parameters:
-# sigma_coh 129.52  coherent scattering cross section in [barn]
-# sigma_inc 2.459   incoherent scattering cross section in [barn]
-# sigma_abs 16.64   absorption scattering cross section in [barn]
+# sigma_coh 129.52  coherent scattering cross section for Y3Fe5O12 in [barn]
+# sigma_inc 2.459   incoherent scattering cross section for Y3Fe5O12 in [barn]
+# sigma_abs 16.64   absorption scattering cross section for Y3Fe5O12 in [barn]
 # density   5.17    in [g/cm^3]
-# weight    737.9   in [g/mol]
-# nb_atoms  160     in [atoms/unit cell]
+# weight    737.9   in [g/mol] for Y3Fe5O12
+# multiplicity 8  in [atoms/unit cell]
+# Vc        1895.57 volume of unit cell in [A^3]
 # T_m       1828    melting temperature in [K]
 # lattice_a 12.376  lattice parameter a in [Angs]
 #

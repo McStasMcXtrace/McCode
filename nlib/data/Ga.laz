@@ -1,4 +1,4 @@
-# TITLE *-Ga-[CMCA] Sharma, B.D.;Donohue, J.[1932]
+# TITLE *-Ga-[CMCA] Sharma, B.D.;Donohue, J.[1962]
 # CELL 4.523000 7.661000 4.524000 90.000000 90.000000 90.000000
 # SPCGRP C M C A         ORTHORHOMBIC STRUCTURE
 # ATOM GA 1 0.000000 0.154900 0.081000
@@ -6,12 +6,13 @@
 # Reference: Zeitschrift fuer Kristallographie, Kristallgeometrie, Kristallphysik, Kristallchemie (1962) 117, 293-300
 #
 # Physical parameters:
-# sigma_coh 6.675   coherent scattering cross section in [barn]
-# sigma_inc 0.16    incoherent scattering cross section in [barn]
-# sigma_abs 2.75    absorption scattering cross section in [barn]
+# sigma_coh 6.675   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.16    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 2.75    absorption scattering cross section (single atom) in [barn]
 # density   5.90    in [g/cm^3]
-# weight    69.72   in [g/mol]
-# nb_atoms  8       in [atoms/unit cell]
+# weight    69.72   in [g/mol] (single atom)
+# multiplicity 8    in [atoms/unit cell]
+# Vc        156.76  volume of unit cell in [A^3]
 # v_sound   2740    in [m/s]
 # T_m       302.91  melting temperature in [K]
 # T_b       2477    boiling temperature in [K]

@@ -2,17 +2,18 @@
 # CELL 4.757000 4.757000 12.987700 90.000000 90.000000 120.000000
 # SPCGRP R -3 C   TRIGONAL STRUCTURE
 # ATOM AL 1 0.000000 0.000000 0.352110
-# ATOM O 1 0.306260 0.306260 0.250000
+# ATOM O  1 0.306260 0.306260 0.250000
 # SCATTERING FACTOR  COEFFICIENTS: AL     F= 0.345 CM-12 ; O      F= 0.581 CM-12
 # Reference: Acta Crystallographica B (1998) 54, 193-195
 #
 # Physical parameters:
-# sigma_coh 15.683  coherent scattering cross section in [barn]
-# sigma_inc 0.0188  incoherent scattering cross section in [barn]
-# sigma_abs 0.4625  absorption scattering cross section in [barn]
+# sigma_coh 15.683  coherent scattering cross section for Al2O3 in [barn]
+# sigma_inc 0.0188  incoherent scattering cross section for Al2O3 in [barn]
+# sigma_abs 0.4625  absorption scattering cross section for Al2O3 in [barn]
 # density   4.05    in [g/cm^3]
-# weight    101.96  in [g/mol]
-# nb_atoms  30      in [atoms/unit cell]
+# weight    101.96  in [g/mol] for Al2O3
+# multiplicity 6    in [Al2O3/unit cell]
+# Vc        254.52  volume of unit cell in [A^3]
 # T_m       2273    melting temperature in [K]
 # T_b       3773    boiling temperature in [K]
 # lattice_a 4.757   lattice parameter a in [Angs]
