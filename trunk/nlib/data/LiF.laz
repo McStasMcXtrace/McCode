@@ -7,12 +7,13 @@
 # Reference: Physical Review, Serie 3. B - Condensed Matter (1992) 46, 2008-2014
 #
 # Physical parameters:
-# sigma_coh 4.46    coherent scattering cross section in [barn]
-# sigma_inc 0.921   incoherent scattering cross section in [barn]
-# sigma_abs 70.51   absorption scattering cross section in [barn]
+# sigma_coh 4.46    coherent scattering cross section for LiF in [barn]
+# sigma_inc 0.921   incoherent scattering cross section for LiF in [barn]
+# sigma_abs 70.51   absorption scattering cross section for LiF in [barn]
 # density   2.60    in [g/cm^3]
-# weight    25.94   in [g/mol]
-# nb_atoms  8       in [atoms/unit cell]
+# weight    25.94   in [g/mol] for LiF
+# multiplicity 4    in [atoms/unit cell]
+# Vc        65.3    volume of unit cell in [A^3]
 # T_m       1140    melting temperature in [K]
 # T_b       1949    boiling temperature in [K]
 # lattice_a 4.0500  lattice parameter a in [Angs]

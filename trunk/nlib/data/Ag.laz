@@ -6,12 +6,13 @@
 # Reference: Journal of Materials Science (1988) 23, 757-760
 #
 # Physical parameters:
-# sigma_coh 4.407   coherent scattering cross section in [barn]
-# sigma_inc 0.58    incoherent scattering cross section in [barn]
-# sigma_abs 63.3    absorption scattering cross section in [barn]
+# sigma_coh 4.407   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.58    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 63.3    absorption scattering cross section (single atom) in [barn]
 # density   10.5    in [g/cm^3]
-# weight    107.87  in [g/mol]
-# nb_atoms  4       in [atoms/unit cell]
+# weight    107.87  in [g/mol] (single atom)
+# multiplicity 4    in [atoms/unit cell]
+# Vc        68.22   volume of unit cell in [A^3]
 # v_sound   2600    in [m/s]
 # v_sound_l 3650    velocity of longitudinal sound in [m/s]
 # v_sound_t 1610    velocity of transversal sound in [m/s]

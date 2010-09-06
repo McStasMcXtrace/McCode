@@ -1,13 +1,19 @@
-# Graphite (C): 'P 63 m c' (186) hexagonal
-# a=b=2.47, c=6.79; aa=bb=90, c=120;
+# TITLE *Graphite 2H-C-[P63/MMC] Trucano, P.;Chen, R.[1975] [graphite 2H]
+# CELL 2.464000 2.464000 6.711000 90.000000 90.000000 120.000000
+# SPCGRP P 63/M M C   HEXAGONAL STRUCTURE
+# ATOM C 1 0.000000 0.000000 0.250000
+# ATOM C 2 0.333300 0.666700 0.250000
+# SCATTERING FACTOR  COEFFICIENTS: C      F= 0.665 CM-12
+# Reference: Nature (1975) 258, 136-137
 #
 # Physical parameters:
-# sigma_coh 5.551   coherent scattering cross section in [barn]
-# sigma_inc 0.001   incoherent scattering cross section in [barn]
-# sigma_abs 0.0035  absorption scattering cross section in [barn]
+# sigma_coh 5.551   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.001   incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 0.0035  absorption scattering cross section (single atom) in [barn]
 # density   2.267   in [g/cm^3]
-# weight    12.01   in [g/mol]
-# nb_atoms  4       in [atoms/unit cell]
+# weight    12.01   in [g/mol] (single atom)
+# multiplicity 4    in [atoms/unit cell]
+# Vc        35.29   volume of unit cell in [A^3]
 # v_sound   18350   in [m/s]
 # T_m       3800    melting temperature in [K]
 # T_b       4300    boiling temperature in [K]

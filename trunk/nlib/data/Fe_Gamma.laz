@@ -1,17 +1,18 @@
-# TITLE *-Fe-[FM3-M] Basinski, Z.S.;Hume-Rothery, W.;Sutton, A.L.[1955] [gamma phase]
+# TITLE *-Fe-[FM3-M] Basinski, Z.S.;Hume-Rothery, W.;Sutton, A.L.[1955] [Iron gamma phase]
 # CELL 3.646800 3.646800 3.646800 90.000000 90.000000 90.000000
-# SPCGRP F M 3 M
+# SPCGRP F M 3 M  CUBIC STRUCTURE
 # ATOM FE 1 0.000000 0.000000 0.000000  
 # SCATTERING FACTOR  COEFFICIENTS: FE     F= 0.945 CM-12
 # Reference: Proceedings of the Royal Society of London, Series A: Mathematical and Physical Sciences (1955) 229, 459-467 
 #
 # Physical parameters:
-# sigma_coh 11.22   coherent scattering cross section in [barn]
-# sigma_inc 0.4     incoherent scattering cross section in [barn]
-# sigma_abs 2.56    absorption scattering cross section in [barn]
+# sigma_coh 11.22   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.4     incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 2.56    absorption scattering cross section (single atom) in [barn]
 # density   8.00    in [g/cm^3]
-# weight    55.84   in [g/mol]
-# nb_atoms  4       in [atoms/unit cell]
+# weight    55.84   in [g/mol] (single atom)
+# multiplicity 4    in [atoms/unit cell]
+# Vc        49.02   volume of unit cell in [A^3]
 # At_number 26      atomic number Z
 # lattice_a 3.6468  lattice parameter a in [Angs]
 #

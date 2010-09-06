@@ -6,12 +6,13 @@
 # Reference: Acta Crystallographica (1961) 14, 333-356
 #
 # Physical parameters:
-# sigma_coh 4.871   coherent scattering cross section in [barn]
-# sigma_inc 0.022   incoherent scattering cross section in [barn]
-# sigma_abs 0.626   absorption scattering cross section in [barn]
+# sigma_coh 4.871   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.022   incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 0.626   absorption scattering cross section (single atom) in [barn]
 # density   7.31    in [g/cm^3]
-# weight    118.7   in [g/mol]
-# nb_atoms  8       in [atoms/unit cell]
+# weight    118.7   in [g/mol] (single atom)
+# multiplicity 4    in [atoms/unit cell]
+# Vc        108.25  volume of unit cell in [A^3]
 # v_sound   2500    in [m/s]
 # v_sound_l 3320    velocity of longitudinal sound in [m/s]
 # v_sound_t 1670    velocity of transversal sound in [m/s]

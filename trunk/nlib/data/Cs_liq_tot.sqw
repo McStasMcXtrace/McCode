@@ -13,7 +13,6 @@
 # V_rho     0.0083  atom density per Angs^3
 # density   1.843   in [g/cm^3]
 # weight    132.90  in [g/mol]
-# nb_atoms  1       in [atoms/unit cell]
 # v_sound   1090    in [m/s] in liquid
 # T_m       301.6   melting temperature in [K]
 # T_b       944     boiling temperature in [K]

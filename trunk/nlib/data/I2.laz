@@ -6,12 +6,13 @@
 # Reference: Molecular Physics (1992) 76, 395-403
 #
 # Physical parameters:
-# sigma_coh 7.0     coherent scattering cross section in [barn]
-# sigma_inc 0.62    incoherent scattering cross section in [barn]
-# sigma_abs 12.3    absorption scattering cross section in [barn]
+# sigma_coh 3.5     coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.31    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 6.15    absorption scattering cross section (single atom) in [barn]
 # density   4.94    in [g/cm^3]
-# weight    253.8   in [g/mol] (2x126.9)
-# nb_atoms  8       in [atoms/unit cell]
+# weight    126.90  in [g/mol] (single atom)
+# multiplicity 8    in [atom/unit cell]
+# Vc        331.78  volume of unit cell in [A^3]
 # T_m       386.85  melting temperature in [K]
 # T_b       457.4   boiling temperature in [K]
 # At_number 53      atomic number Z

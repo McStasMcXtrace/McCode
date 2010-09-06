@@ -9,12 +9,12 @@
 # Reference: Journal of the American Chemical Society (1943) 65, 2115-2119
 #
 # Physical parameters:
-# sigma_coh 19.71   coherent scattering cross section in [barn]
-# sigma_inc 6.801   incoherent scattering cross section in [barn]
-# sigma_abs 3068    absorption scattering cross section in [barn]
+# sigma_coh 19.71   coherent scattering cross section for B4C in [barn]
+# sigma_inc 6.801   incoherent scattering cross section for B4C in [barn]
+# sigma_abs 3068    absorption scattering cross section for B4C in [barn]
 # density   2.52    in [g/cm^3]
-# weight    55.25   in [g/mol]
-# nb_atoms  45      in [atoms/unit cell]
+# weight    55.25   in [g/mol] for B4C
+# multiplicity  9   in [B4C/unit cell]
 # Vc        328.9   volume of unit cell in [A^3]
 # T_m       2718    melting temperature in [K]
 # T_b       3773    boiling temperature in [K]

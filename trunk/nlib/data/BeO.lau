@@ -1,13 +1,19 @@
-# BeO crystal, used for Berylium filters
-# a=b=2.714, c=4.405; aa=bb=90, cc=120;
+# TITLE *Bromellite-BeO-[P63MC] Xu, Y.-N.;Ching, W.Y.[1993] [Bromellite, extremelly stable, very toxic]
+# CELL 2.698000 2.698000 4.380000 90.000000 90.000000 120.000000
+# SPCGRP P 63 M C   HEXAGONAL STRUCTURE
+# ATOM BE 1 -0.333300 -0.666700 0.000000
+# ATOM O 1 -0.333300 -0.666700 0.378000
+# SCATTERING FACTOR  COEFFICIENTS: BE     F= 0.779 CM-12; O      F= 0.581 CM-12
+# Reference: Physical Review, Serie 3. B - Condensed Matter (1993) 48, 4335-4351
 #
 # Physical parameters:
-# sigma_coh 11.85   coherent scattering cross section in [barn]
-# sigma_inc 0.003   incoherent scattering cross section in [barn]
-# sigma_abs 0.008   absorption scattering cross section in [barn]
+# sigma_coh 11.85   coherent scattering cross section for BeO in [barn]
+# sigma_inc 0.003   incoherent scattering cross section for BeO in [barn]
+# sigma_abs 0.008   absorption scattering cross section for BeO in [barn]
 # density   3.01    in [g/cm^3]
-# weight    25.01   in [g/mol]
-# nb_atoms  4       in [atoms/unit cell]
+# weight    25.01   in [g/mol] for BeO
+# multiplicity 2    in [BeO/unit cell]
+# Vc        27.61   volume of unit cell in [A^3]
 # T_m       2650    melting temperature in [K]
 # T_b       3243    boiling temperature in [K]
 # lattice_a 2.9508  lattice parameter a in [Angs]

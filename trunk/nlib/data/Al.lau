@@ -1,17 +1,23 @@
-# Aluminum-Al-[FM3-M]
+# TITLE *Aluminum-Al-[FM3-M] Miller, H.P.jr.;DuMond, J.W.M.[1942] at 298 K
+# CELL 4.049320 4.049320 4.049320 90.000000 90.000000 90.000000
+# SPCGRP F M 3 M   CUBIC STRUCTURE
+# ATOM AL 1 0.000000 0.000000 0.000000
+# SCATTERING FACTOR  COEFFICIENTS: AL     F= 0.345 CM-12
+# Reference: Physical Review (1940) 57, 198-206
 #
 # Physical parameters:
-# sigma_coh 1.495   coherent scattering cross section in [barn]
-# sigma_inc 0.0082  incoherent scattering cross section in [barn]
-# sigma_abs 0.231   absorption scattering cross section in [barn]
+# sigma_coh 1.495   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.0082  incoherent scattering cross section (single atom)in [barn]
+# sigma_abs 0.231   absorption scattering cross section (single atom) in [barn]
 # density   2.70    in [g/cm^3]
-# weight    26.98   in [g/mol]
-# nb_atoms  4       in [atoms/unit cell]
+# weight    26.98   in [g/mol] (single atom)
+# multiplicity 4    in [atoms/unit cell]
+# Vc        66.4    volume of unit cell in [A^3]
 # v_sound   5100    in [m/s]
 # v_sound_l 6420    velocity of longitudinal sound in [m/s]
 # v_sound_t 3040    velocity of transversal sound in [m/s]
 # T_m       933.5   melting temperature in [K]
-# T_b       2792.2  boiling  temperature in [K]
+# T_b       2792.2  boiling temperature in [K]
 # At_number 13      atomic number Z
 # lattice_a 4.04932 lattice parameter a in [Angs]
 #

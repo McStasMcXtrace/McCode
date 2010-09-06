@@ -6,12 +6,13 @@
 # Reference: Journal of Physics and Chemistry of Solids (1986) 47, 1067-1072
 #
 # Physical parameters:
-# sigma_coh 1.69    coherent scattering cross section in [barn]
-# sigma_inc 0.27    incoherent scattering cross section in [barn]
-# sigma_abs 2.1     absorption scattering cross section in [barn]
+# sigma_coh 1.69    coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.27    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 2.1     absorption scattering cross section (single atom) in [barn]
 # density   0.856   in [g/cm^3]
-# weight    39.10   in [g/mol]
-# nb_atoms  2       in [atoms/unit cell]
+# weight    39.10   in [g/mol] (single atom)
+# multiplicity 2    in [atom/unit cell]
+# Vc        151.25  volume of unit cell in [A^3]
 # v_sound   2000    in [m/s]
 # T_m       336.53  melting temperature in [K]
 # T_b       1032    boiling temperature in [K]

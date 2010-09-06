@@ -6,12 +6,13 @@
 # Reference: National Bureau of Standards (1953) 359, 1-95
 #
 # Physical parameters:
-# sigma_coh 11.58   coherent scattering cross section in [barn]
-# sigma_inc 0.13    incoherent scattering cross section in [barn]
-# sigma_abs 10.3    absorption scattering cross section in [barn]
-# density   21.5   in [g/cm^3]
-# weight    195.1   in [g/mol]
-# nb_atoms  4       in [atoms/unit cell]
+# sigma_coh 11.58   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.13    incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 10.3    absorption scattering cross section (single atom) in [barn]
+# density   21.5    in [g/cm^3]
+# weight    195.1   in [g/mol] (single atom)
+# multiplicity 4    in [atoms/unit cell]
+# Vc        60.38   volume of unit cell in [A^3]
 # v_sound   2680    in [m/s]
 # v_sound_l 3260    velocity of longitudinal sound in [m/s]
 # v_sound_t 1730    velocity of transversal sound in [m/s]

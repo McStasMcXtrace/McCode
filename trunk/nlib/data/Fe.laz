@@ -1,4 +1,4 @@
-# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [alpha phase]
+# TITLE *Iron-Fe-[IM3-M] Swanson, H.E.;Tatge, E.[1954] [Iron alpha phase]
 # CELL 2.886000 2.886000 2.886000 90.000000 90.000000 90.000000
 # SPCGRP I M 3 M   CUBIC STRUCTURE
 # ATOM FE 1 0.000000 0.000000 0.000000
@@ -6,12 +6,13 @@
 # Reference: Acta Crystallographica (1954) 7, 464-464
 #
 # Physical parameters:
-# sigma_coh 11.22   coherent scattering cross section in [barn]
-# sigma_inc 0.4     incoherent scattering cross section in [barn]
-# sigma_abs 2.56    absorption scattering cross section in [barn]
+# sigma_coh 11.22   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.4     incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 2.56    absorption scattering cross section (single atom) in [barn]
 # density   7.87    in [g/cm^3]
-# weight    55.84   in [g/mol]
-# nb_atoms  2       in [atoms/unit cell]
+# weight    55.84   in [g/mol] (single atom)
+# multiplicity 2    in [atoms/unit cell]
+# Vc        24.04   volume of unit cell in [A^3]
 # v_sound   4910    in [m/s]
 # v_sound_l 4994    velocity of longitudinal sound in [m/s]
 # v_sound_t 2809    velocity of transversal sound in [m/s]

@@ -1,23 +1,24 @@
 # TITLE *Bismuth-Bi-[R3-MH] Cucka, P.;Barrett, C.S.[1960] at 298 K
 # CELL 4.546000 4.546000 11.862000 90.000000 90.000000 120.000000
-# SPCGRP R -3 M   RHOMBOHEDRAL BRAVAIS LATTICE
+# SPCGRP R -3 M   TRIGONAL STRUCTURE RHOMBOHEDRAL BRAVAIS LATTICE
 # ATOM BI 1 0.000000 0.000000 0.233890 1.114000
 # SCATTERING FACTOR  COEFFICIENTS: BI     F= 0.853 CM-12
 # Reference: Acta Crystallographica (1962) 15, 865-872
 #
 # Physical parameters:
-# sigma_coh 9.148   coherent scattering cross section in [barn]
-# sigma_inc 0.0084  incoherent scattering cross section in [barn]
-# sigma_abs 0.0338  absorption scattering cross section in [barn]
+# sigma_coh 9.148   coherent scattering cross section (single atom) in [barn]
+# sigma_inc 0.0084  incoherent scattering cross section (single atom) in [barn]
+# sigma_abs 0.0338  absorption scattering cross section (single atom) in [barn]
 # density   9.79    in [g/cm^3]
-# weight    208.98  in [g/mol]
-# nb_atoms  6       in [atoms/unit cell]
+# weight    208.98  in [g/mol] (single atom)
+# multiplicity 6    in [atoms/unit cell]
+# Vc        209.93  volume of unit cell in [A^3]
 # v_sound   1790    in [m/s]
 # T_m       544.5   melting temperature in [K]
 # T_b       1837    boiling temperature in [K]
 # At_number 83      atomic number Z
 # lattice_a 4.546   lattice parameter a in [Angs]
-# lattice_c 1.862   lattice parameter c in [Angs]
+# lattice_c 11.862  lattice parameter c in [Angs]
 # lattice_cc 120    lattice angle gamma in [deg]
 #
 # Format parameters: Lazy format <http://icsd.ill.fr>

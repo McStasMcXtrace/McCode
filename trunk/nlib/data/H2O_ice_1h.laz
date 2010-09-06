@@ -1,4 +1,4 @@
-# TITLE *Ice 1h-H2O-[P63/MMC] Goto, A.;Hondoh, T.;Mae, S.[1994] [normal hexagonal Ice 1h at 243 K]
+# TITLE *Ice 1h-H2O-[P63/MMC] Goto, A.;Hondoh, T.;Mae, S.[1990] [normal hexagonal Ice 1h at 243 K]
 # CELL 4.511000 4.511000 7.346000 90.000000 90.000000 120.000000
 # SPCGRP P 63/M M C   HEXAGONAL STRUCTURE
 # ATOM O 1 0.333300 0.666700 0.062260
@@ -8,12 +8,13 @@
 # Reference: Journal of Chemical Physics (1990) 93, 1412-1417
 #
 # Physical parameters:
-# sigma_coh 7.75    coherent scattering cross section in [barn]
-# sigma_inc 160.52  incoherent scattering cross section in [barn]
-# sigma_abs 0.6652  absorption scattering cross section in [barn]
+# sigma_coh 7.75    coherent scattering cross section for H2O in [barn]
+# sigma_inc 160.52  incoherent scattering cross section for H2O in [barn]
+# sigma_abs 0.6652  absorption scattering cross section for H2O in [barn]
 # density   0.92    in [g/cm^3]
-# weight    18.01   in [g/mol]
-# nb_atoms  12      in [atoms/unit cell]
+# weight    18.01   in [g/mol] for H2O
+# multiplicity 4    in [H2O/unit cell]
+# Vc        129.17  volume of unit cell in [A^3]
 # v_sound_l 2919    velocity of longitudinal sound in [m/s]
 # v_sound_t 1788    velocity of transversal sound in [m/s]
 # T_m       273     melting temperature in [K]
